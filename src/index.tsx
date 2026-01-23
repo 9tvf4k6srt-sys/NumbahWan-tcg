@@ -148,10 +148,13 @@ app.get('/', (c) => {
             filter: drop-shadow(0 0 25px rgba(255, 140, 0, 0.95));
         }
         
-        /* Pixel-style title - single line, responsive */
+        /* Pixel-style title - single line, responsive, centered */
         .pixel-title {
             font-family: 'Press Start 2P', cursive;
             font-size: clamp(1.2rem, 5vw, 4rem);
+            display: block;
+            width: 100%;
+            text-align: center;
             background: linear-gradient(180deg, #ffcc70 0%, #ff9500 30%, #ff6b00 60%, #cc4400 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
@@ -1011,30 +1014,32 @@ app.get('/', (c) => {
 // Helper function to generate SVG N emblem - matches original exactly
 // Solid N shape with smooth edges and vertical gradient (light top to dark bottom)
 function generateEmblemSVG(className = 'emblem-n', size = 60) {
+  // Generate unique ID for gradient to avoid conflicts
+  const gradId = 'nGrad' + size + Math.random().toString(36).substr(2, 5)
   return `
     <svg class="${className}" viewBox="0 0 100 100" width="${size}" height="${size}" xmlns="http://www.w3.org/2000/svg">
       <defs>
-        <linearGradient id="nGrad${size}" x1="0%" y1="0%" x2="0%" y2="100%">
+        <linearGradient id="${gradId}" x1="0%" y1="0%" x2="0%" y2="100%">
           <stop offset="0%" stop-color="#ffb347"/>
           <stop offset="30%" stop-color="#ff9500"/>
           <stop offset="60%" stop-color="#ff6b00"/>
           <stop offset="100%" stop-color="#994400"/>
         </linearGradient>
       </defs>
-      <!-- Single unified N shape path with rounded corners -->
+      <!-- Correct N shape: left bar, diagonal going down-right, right bar -->
       <path d="
         M 10,10 
         L 35,10 
-        L 35,45 
+        L 35,50 
         L 65,10 
         L 90,10 
         L 90,90 
         L 65,90 
-        L 65,55 
+        L 65,40 
         L 35,90 
         L 10,90 
         Z
-      " fill="url(#nGrad${size})" rx="6"/>
+      " fill="url(#${gradId})"/>
     </svg>
   `
 }
