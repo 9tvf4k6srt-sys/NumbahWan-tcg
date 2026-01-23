@@ -124,44 +124,69 @@ app.get('/', (c) => {
                 0 0 40px var(--primary-dark);
         }
         
-        /* Pixel art N emblem - exact match to original */
+        /* Pixel art N emblem - solid with gradient darker at bottom */
         .pixel-n {
             display: grid;
             grid-template-columns: repeat(7, 1fr);
             grid-template-rows: repeat(7, 1fr);
-            gap: 1px;
+            gap: 2px;
             width: 56px;
             height: 56px;
         }
         
         .pixel-n .pixel {
-            border-radius: 1px;
+            border-radius: 2px;
             transition: all 0.3s ease;
         }
         
-        /* Exact colors from the original emblem image */
-        .pixel-n .pixel.c1 { background: #e85d04; } /* Main orange */
-        .pixel-n .pixel.c2 { background: #f48c06; } /* Light orange */
-        .pixel-n .pixel.c3 { background: #faa307; } /* Lighter orange/yellow */
-        .pixel-n .pixel.c4 { background: #dc2f02; } /* Dark red-orange */
-        .pixel-n .pixel.c5 { background: #9d0208; } /* Darkest shade */
-        .pixel-n .pixel.c6 { background: #ffba08; } /* Highlight yellow */
+        /* Solid fill with vertical gradient - light orange top to dark orange bottom */
+        .pixel-n .pixel.fill {
+            background: linear-gradient(180deg, #ffb347 0%, #ff8c00 40%, #cc5500 100%);
+        }
         .pixel-n .pixel.empty { background: transparent; }
         
-        .pixel-n:hover .pixel:not(.empty) {
-            box-shadow: 0 0 8px rgba(255, 107, 0, 0.9);
-            filter: brightness(1.2);
+        .pixel-n:hover .pixel.fill {
+            box-shadow: 0 0 12px rgba(255, 140, 0, 0.9);
+            filter: brightness(1.15);
         }
         
         /* Large emblem for hero */
         .pixel-n-large {
             width: 140px;
             height: 140px;
-            gap: 2px;
+            gap: 3px;
         }
         
         .pixel-n-large .pixel {
-            border-radius: 2px;
+            border-radius: 3px;
+        }
+        
+        /* Pixel-style title */
+        .pixel-title {
+            font-family: 'Press Start 2P', cursive;
+            font-size: clamp(1.8rem, 8vw, 5rem);
+            background: linear-gradient(180deg, #ffcc70 0%, #ff9500 30%, #ff6b00 60%, #cc4400 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            filter: drop-shadow(0 0 20px rgba(255, 107, 0, 0.8)) drop-shadow(0 0 40px rgba(255, 107, 0, 0.5));
+            letter-spacing: 0.05em;
+            line-height: 1.4;
+        }
+        
+        .pixel-title-outline {
+            position: relative;
+        }
+        
+        .pixel-title-outline::before {
+            content: attr(data-text);
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            -webkit-text-stroke: 3px rgba(139, 69, 19, 0.6);
+            z-index: -1;
         }
         
         /* Navigation */
@@ -464,7 +489,7 @@ app.get('/', (c) => {
                     ${generatePixelN()}
                 </div>
             </div>
-            <h1 class="text-3xl sm:text-5xl md:text-7xl lg:text-8xl font-black mb-4 neon-text pixel-font px-4 text-center" id="guild-name">
+            <h1 class="pixel-title pixel-title-outline mb-6 px-4 text-center" id="guild-name" data-text="NumbahWan">
                 NumbahWan
             </h1>
             <p class="text-xl md:text-2xl text-orange-300 mb-8 opacity-0" id="tagline">
@@ -1011,24 +1036,22 @@ app.get('/', (c) => {
   `)
 })
 
-// Helper function to generate pixel N emblem - exact match to original image
+// Helper function to generate pixel N emblem - solid orange with gradient
 function generatePixelN() {
-  // 7x7 pixel grid matching the uploaded emblem image exactly
-  // The image shows an orange pixelated "N" with 3D shading effect
-  // Colors: c1=main orange, c2=light orange, c3=highlight, c4=dark, c5=darkest, c6=yellow highlight
-  // E = empty/transparent
+  // 7x7 pixel grid - F = fill (solid orange gradient), E = empty
+  // Shape matches the original N emblem exactly
   const pattern = [
-    ['c3', 'c2', 'E',  'E',  'E',  'c2', 'c3'],
-    ['c2', 'c1', 'c2', 'E',  'E',  'c1', 'c2'],
-    ['c2', 'c1', 'c4', 'c2', 'E',  'c1', 'c2'],
-    ['c2', 'c1', 'c4', 'c5', 'c2', 'c1', 'c2'],
-    ['c2', 'c1', 'E',  'c4', 'c5', 'c1', 'c2'],
-    ['c2', 'c1', 'E',  'E',  'c4', 'c1', 'c2'],
-    ['c3', 'c2', 'E',  'E',  'E',  'c2', 'c3'],
+    ['F', 'F', 'E', 'E', 'E', 'F', 'F'],
+    ['F', 'F', 'F', 'E', 'E', 'F', 'F'],
+    ['F', 'F', 'F', 'F', 'E', 'F', 'F'],
+    ['F', 'F', 'E', 'F', 'F', 'F', 'F'],
+    ['F', 'F', 'E', 'E', 'F', 'F', 'F'],
+    ['F', 'F', 'E', 'E', 'E', 'F', 'F'],
+    ['F', 'F', 'E', 'E', 'E', 'F', 'F'],
   ]
   
   return pattern.flat().map(p => {
-    const className = p === 'E' ? 'empty' : p
+    const className = p === 'F' ? 'fill' : 'empty'
     return `<div class="pixel ${className}"></div>`
   }).join('')
 }
