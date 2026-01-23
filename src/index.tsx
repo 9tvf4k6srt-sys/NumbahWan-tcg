@@ -124,36 +124,44 @@ app.get('/', (c) => {
                 0 0 40px var(--primary-dark);
         }
         
-        /* Pixel art N emblem */
+        /* Pixel art N emblem - exact match to original */
         .pixel-n {
             display: grid;
-            grid-template-columns: repeat(8, 1fr);
-            grid-template-rows: repeat(8, 1fr);
-            gap: 2px;
-            width: 80px;
-            height: 80px;
+            grid-template-columns: repeat(7, 1fr);
+            grid-template-rows: repeat(7, 1fr);
+            gap: 1px;
+            width: 56px;
+            height: 56px;
         }
         
         .pixel-n .pixel {
-            border-radius: 2px;
+            border-radius: 1px;
             transition: all 0.3s ease;
         }
         
-        .pixel-n .pixel.orange { background: linear-gradient(135deg, #ff9d4d 0%, #ff6b00 50%, #cc5500 100%); box-shadow: 0 0 4px rgba(255, 107, 0, 0.6); }
-        .pixel-n .pixel.dark-orange { background: linear-gradient(135deg, #cc5500 0%, #994400 100%); }
-        .pixel-n .pixel.light-orange { background: linear-gradient(135deg, #ffb366 0%, #ff9d4d 100%); box-shadow: 0 0 6px rgba(255, 157, 77, 0.8); }
+        /* Exact colors from the original emblem image */
+        .pixel-n .pixel.c1 { background: #e85d04; } /* Main orange */
+        .pixel-n .pixel.c2 { background: #f48c06; } /* Light orange */
+        .pixel-n .pixel.c3 { background: #faa307; } /* Lighter orange/yellow */
+        .pixel-n .pixel.c4 { background: #dc2f02; } /* Dark red-orange */
+        .pixel-n .pixel.c5 { background: #9d0208; } /* Darkest shade */
+        .pixel-n .pixel.c6 { background: #ffba08; } /* Highlight yellow */
         .pixel-n .pixel.empty { background: transparent; }
         
-        .pixel-n:hover .pixel.orange,
-        .pixel-n:hover .pixel.light-orange {
-            box-shadow: 0 0 10px rgba(255, 107, 0, 0.9);
+        .pixel-n:hover .pixel:not(.empty) {
+            box-shadow: 0 0 8px rgba(255, 107, 0, 0.9);
+            filter: brightness(1.2);
         }
         
         /* Large emblem for hero */
         .pixel-n-large {
-            width: 160px;
-            height: 160px;
-            gap: 3px;
+            width: 140px;
+            height: 140px;
+            gap: 2px;
+        }
+        
+        .pixel-n-large .pixel {
+            border-radius: 2px;
         }
         
         /* Navigation */
@@ -456,7 +464,7 @@ app.get('/', (c) => {
                     ${generatePixelN()}
                 </div>
             </div>
-            <h1 class="text-6xl md:text-8xl font-black mb-4 neon-text pixel-font" id="guild-name">
+            <h1 class="text-3xl sm:text-5xl md:text-7xl lg:text-8xl font-black mb-4 neon-text pixel-font px-4 text-center" id="guild-name">
                 NumbahWan
             </h1>
             <p class="text-xl md:text-2xl text-orange-300 mb-8 opacity-0" id="tagline">
@@ -1003,23 +1011,24 @@ app.get('/', (c) => {
   `)
 })
 
-// Helper function to generate pixel N emblem - matches the exact image
+// Helper function to generate pixel N emblem - exact match to original image
 function generatePixelN() {
-  // 8x8 pixel grid matching the uploaded emblem image exactly
-  // The image shows an orange pixelated "N" with shading
+  // 7x7 pixel grid matching the uploaded emblem image exactly
+  // The image shows an orange pixelated "N" with 3D shading effect
+  // Colors: c1=main orange, c2=light orange, c3=highlight, c4=dark, c5=darkest, c6=yellow highlight
+  // E = empty/transparent
   const pattern = [
-    ['L', 'O', 'E', 'E', 'E', 'E', 'O', 'L'],
-    ['L', 'O', 'O', 'E', 'E', 'E', 'O', 'L'],
-    ['L', 'O', 'D', 'O', 'E', 'E', 'O', 'L'],
-    ['L', 'O', 'D', 'D', 'O', 'E', 'O', 'L'],
-    ['L', 'O', 'E', 'D', 'D', 'O', 'O', 'L'],
-    ['L', 'O', 'E', 'E', 'D', 'O', 'O', 'L'],
-    ['L', 'O', 'E', 'E', 'E', 'O', 'O', 'L'],
-    ['L', 'O', 'E', 'E', 'E', 'E', 'O', 'L'],
+    ['c3', 'c2', 'E',  'E',  'E',  'c2', 'c3'],
+    ['c2', 'c1', 'c2', 'E',  'E',  'c1', 'c2'],
+    ['c2', 'c1', 'c4', 'c2', 'E',  'c1', 'c2'],
+    ['c2', 'c1', 'c4', 'c5', 'c2', 'c1', 'c2'],
+    ['c2', 'c1', 'E',  'c4', 'c5', 'c1', 'c2'],
+    ['c2', 'c1', 'E',  'E',  'c4', 'c1', 'c2'],
+    ['c3', 'c2', 'E',  'E',  'E',  'c2', 'c3'],
   ]
   
   return pattern.flat().map(p => {
-    const className = p === 'O' ? 'orange' : p === 'D' ? 'dark-orange' : p === 'L' ? 'light-orange' : 'empty'
+    const className = p === 'E' ? 'empty' : p
     return `<div class="pixel ${className}"></div>`
   }).join('')
 }
