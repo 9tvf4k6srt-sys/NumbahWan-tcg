@@ -124,58 +124,41 @@ app.get('/', (c) => {
                 0 0 40px var(--primary-dark);
         }
         
-        /* Pixel art N emblem - solid with gradient darker at bottom */
-        .pixel-n {
-            display: grid;
-            grid-template-columns: repeat(7, 1fr);
-            grid-template-rows: repeat(7, 1fr);
-            gap: 2px;
-            width: 56px;
-            height: 56px;
-        }
-        
-        .pixel-n .pixel {
-            border-radius: 2px;
+        /* Pixel art N emblem - SVG based, smooth connected pixels with gradient */
+        .emblem-n {
+            width: 60px;
+            height: 60px;
+            filter: drop-shadow(0 0 8px rgba(255, 140, 0, 0.6));
             transition: all 0.3s ease;
         }
         
-        /* Solid fill with vertical gradient - light orange top to dark orange bottom */
-        .pixel-n .pixel.fill {
-            background: linear-gradient(180deg, #ffb347 0%, #ff8c00 40%, #cc5500 100%);
-        }
-        .pixel-n .pixel.empty { background: transparent; }
-        
-        .pixel-n:hover .pixel.fill {
-            box-shadow: 0 0 12px rgba(255, 140, 0, 0.9);
-            filter: brightness(1.15);
+        .emblem-n:hover {
+            filter: drop-shadow(0 0 15px rgba(255, 140, 0, 0.9));
+            transform: scale(1.05);
         }
         
         /* Large emblem for hero */
-        .pixel-n-large {
-            width: 140px;
-            height: 140px;
-            gap: 3px;
+        .emblem-n-large {
+            width: 120px;
+            height: 120px;
+            filter: drop-shadow(0 0 15px rgba(255, 140, 0, 0.7));
         }
         
-        .pixel-n-large .pixel {
-            border-radius: 3px;
+        .emblem-n-large:hover {
+            filter: drop-shadow(0 0 25px rgba(255, 140, 0, 0.95));
         }
         
-        /* Pixel-style title */
+        /* Pixel-style title - single line, responsive */
         .pixel-title {
             font-family: 'Press Start 2P', cursive;
-            font-size: clamp(1.8rem, 8vw, 5rem);
+            font-size: clamp(1.2rem, 5vw, 4rem);
             background: linear-gradient(180deg, #ffcc70 0%, #ff9500 30%, #ff6b00 60%, #cc4400 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
             filter: drop-shadow(0 0 20px rgba(255, 107, 0, 0.8)) drop-shadow(0 0 40px rgba(255, 107, 0, 0.5));
-            letter-spacing: 0.05em;
-            line-height: 1.4;
-        }
-        
-        .pixel-title-outline {
-            position: relative;
+            letter-spacing: 0.02em;
+            white-space: nowrap;
         }
         
         .pixel-title-outline::before {
@@ -463,9 +446,7 @@ app.get('/', (c) => {
     <nav class="fixed top-0 left-0 right-0 z-50 glass-card mx-4 mt-4 rounded-full">
         <div class="container mx-auto px-6 py-4 flex items-center justify-between">
             <a href="#hero" class="flex items-center gap-3">
-                <div class="pixel-n" id="nav-emblem">
-                    ${generatePixelN()}
-                </div>
+                ${generateEmblemSVG('emblem-n')}
                 <span class="pixel-font text-sm text-orange-400">NumbahWan</span>
             </a>
             <div class="hidden md:flex items-center gap-8">
@@ -484,12 +465,10 @@ app.get('/', (c) => {
     <!-- Hero Section -->
     <section id="hero" class="min-h-screen flex items-center justify-center relative pt-20">
         <div class="text-center">
-            <div class="flex justify-center mb-8">
-                <div class="pixel-n pixel-n-large" id="hero-emblem">
-                    ${generatePixelN()}
-                </div>
+            <div class="flex justify-center mb-8" id="hero-emblem">
+                ${generateEmblemSVG('emblem-n emblem-n-large', 120)}
             </div>
-            <h1 class="pixel-title pixel-title-outline mb-6 px-4 text-center" id="guild-name" data-text="NumbahWan">
+            <h1 class="pixel-title mb-6 px-4 text-center" id="guild-name">
                 NumbahWan
             </h1>
             <p class="text-xl md:text-2xl text-orange-300 mb-8 opacity-0" id="tagline">
@@ -554,9 +533,7 @@ app.get('/', (c) => {
                         </p>
                     </div>
                     <div class="flex justify-center">
-                        <div class="pixel-n pixel-n-large" style="width: 200px; height: 200px; gap: 4px;">
-                            ${generatePixelN()}
-                        </div>
+                        ${generateEmblemSVG('emblem-n', 180)}
                     </div>
                 </div>
             </div>
@@ -799,9 +776,7 @@ app.get('/', (c) => {
     <footer class="py-12 px-4 border-t border-orange-900/30">
         <div class="container mx-auto max-w-4xl text-center">
             <div class="flex justify-center mb-6">
-                <div class="pixel-n">
-                    ${generatePixelN()}
-                </div>
+                ${generateEmblemSVG('emblem-n')}
             </div>
             <p class="pixel-font text-orange-400 mb-2">NumbahWan Guild</p>
             <p class="text-gray-400 mb-6">"We are not just a guild, but FAMILY"</p>
@@ -845,14 +820,11 @@ app.get('/', (c) => {
         const heroTL = gsap.timeline({ delay: 0.5 });
         
         heroTL
-            .from('#hero-emblem .pixel', {
+            .from('#hero-emblem svg', {
                 scale: 0,
                 opacity: 0,
-                duration: 0.05,
-                stagger: { 
-                    each: 0.02,
-                    from: "random"
-                },
+                rotation: -180,
+                duration: 1,
                 ease: "back.out(1.7)"
             })
             .from('#guild-name', {
@@ -1036,24 +1008,35 @@ app.get('/', (c) => {
   `)
 })
 
-// Helper function to generate pixel N emblem - solid orange with gradient
-function generatePixelN() {
-  // 7x7 pixel grid - F = fill (solid orange gradient), E = empty
-  // Shape matches the original N emblem exactly
-  const pattern = [
-    ['F', 'F', 'E', 'E', 'E', 'F', 'F'],
-    ['F', 'F', 'F', 'E', 'E', 'F', 'F'],
-    ['F', 'F', 'F', 'F', 'E', 'F', 'F'],
-    ['F', 'F', 'E', 'F', 'F', 'F', 'F'],
-    ['F', 'F', 'E', 'E', 'F', 'F', 'F'],
-    ['F', 'F', 'E', 'E', 'E', 'F', 'F'],
-    ['F', 'F', 'E', 'E', 'E', 'F', 'F'],
-  ]
-  
-  return pattern.flat().map(p => {
-    const className = p === 'F' ? 'fill' : 'empty'
-    return `<div class="pixel ${className}"></div>`
-  }).join('')
+// Helper function to generate SVG N emblem - matches original exactly
+// Solid N shape with smooth edges and vertical gradient (light top to dark bottom)
+function generateEmblemSVG(className = 'emblem-n', size = 60) {
+  return `
+    <svg class="${className}" viewBox="0 0 100 100" width="${size}" height="${size}" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="nGrad${size}" x1="0%" y1="0%" x2="0%" y2="100%">
+          <stop offset="0%" stop-color="#ffb347"/>
+          <stop offset="30%" stop-color="#ff9500"/>
+          <stop offset="60%" stop-color="#ff6b00"/>
+          <stop offset="100%" stop-color="#994400"/>
+        </linearGradient>
+      </defs>
+      <!-- Single unified N shape path with rounded corners -->
+      <path d="
+        M 10,10 
+        L 35,10 
+        L 35,45 
+        L 65,10 
+        L 90,10 
+        L 90,90 
+        L 65,90 
+        L 65,55 
+        L 35,90 
+        L 10,90 
+        Z
+      " fill="url(#nGrad${size})" rx="6"/>
+    </svg>
+  `
 }
 
 // Custom SVG Icons
