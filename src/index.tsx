@@ -619,6 +619,98 @@ app.get('/', (c) => {
             width: 100%;
             height: 100%;
         }
+        
+        /* Liquid Glass Menu */
+        .liquid-glass-menu {
+            background: linear-gradient(135deg, 
+                rgba(255, 107, 0, 0.15) 0%, 
+                rgba(139, 69, 19, 0.1) 50%,
+                rgba(255, 107, 0, 0.15) 100%);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 107, 0, 0.3);
+            border-radius: 24px;
+            box-shadow: 
+                0 8px 32px rgba(0, 0, 0, 0.3),
+                inset 0 1px 0 rgba(255, 255, 255, 0.1),
+                0 0 40px rgba(255, 107, 0, 0.2);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .liquid-glass-menu::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, 
+                transparent, 
+                rgba(255, 255, 255, 0.1), 
+                transparent);
+            animation: liquidShine 4s ease-in-out infinite;
+        }
+        
+        @keyframes liquidShine {
+            0%, 100% { left: -100%; }
+            50% { left: 100%; }
+        }
+        
+        .menu-item {
+            background: rgba(255, 107, 0, 0.1);
+            border: 1px solid rgba(255, 107, 0, 0.2);
+            border-radius: 16px;
+            padding: 1.5rem;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .menu-item:hover {
+            background: rgba(255, 107, 0, 0.25);
+            border-color: rgba(255, 107, 0, 0.5);
+            transform: translateY(-4px) scale(1.02);
+            box-shadow: 0 12px 24px rgba(255, 107, 0, 0.3);
+        }
+        
+        .menu-item::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background: linear-gradient(90deg, var(--primary), var(--primary-light));
+            transform: scaleX(0);
+            transition: transform 0.3s ease;
+        }
+        
+        .menu-item:hover::after {
+            transform: scaleX(1);
+        }
+        
+        .menu-icon {
+            width: 48px;
+            height: 48px;
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            margin-bottom: 0.75rem;
+            box-shadow: 0 4px 12px rgba(255, 107, 0, 0.4);
+        }
+        
+        .menu-emblem {
+            position: absolute;
+            top: -30px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 10;
+        }
     </style>
 </head>
 <body>
@@ -700,6 +792,104 @@ app.get('/', (c) => {
         <div class="absolute bottom-4 left-1/2 transform -translate-x-1/2 opacity-0 z-10" id="scroll-indicator">
             <div class="w-5 h-8 border-2 border-orange-400/60 rounded-full flex justify-center">
                 <div class="w-1 h-2 bg-orange-400 rounded-full mt-1.5 animate-bounce"></div>
+            </div>
+        </div>
+    </section>
+    
+    <!-- Liquid Glass Menu Section -->
+    <section id="quick-menu" class="py-16 px-4 relative">
+        <div class="container mx-auto max-w-5xl">
+            <div class="liquid-glass-menu p-8 pt-16 relative">
+                <!-- Floating N Emblem -->
+                <div class="menu-emblem">
+                    ${generateEmblemSVG('emblem-n', 60)}
+                </div>
+                
+                <!-- Menu Grid -->
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <!-- Guild Content Ranking -->
+                    <a href="#race" class="menu-item text-center group">
+                        <div class="menu-icon mx-auto">
+                            <span>🏆</span>
+                        </div>
+                        <h3 class="font-bold text-orange-400 text-sm mb-1" data-i18n="cpLeaderboard">CP Leaderboard</h3>
+                        <p class="text-xs text-gray-400" data-i18n="contentRankDesc">Guild Power Rankings</p>
+                        <div class="mt-2 text-xs text-orange-300 font-bold">#47 Server</div>
+                    </a>
+                    
+                    <!-- GM PvP Ranking -->
+                    <a href="#about" class="menu-item text-center group">
+                        <div class="menu-icon mx-auto">
+                            <span>⚔️</span>
+                        </div>
+                        <h3 class="font-bold text-orange-400 text-sm mb-1" data-i18n="gmPvp">GM PvP</h3>
+                        <p class="text-xs text-gray-400" data-i18n="pvpRankDesc">Battle Rankings</p>
+                        <div class="mt-2 text-xs text-orange-300 font-bold">RegginA #1</div>
+                    </a>
+                    
+                    <!-- Members -->
+                    <a href="#roster" class="menu-item text-center group">
+                        <div class="menu-icon mx-auto">
+                            <span>👥</span>
+                        </div>
+                        <h3 class="font-bold text-orange-400 text-sm mb-1" data-i18n="theFamily">The Family</h3>
+                        <p class="text-xs text-gray-400" data-i18n="membersDesc">Our Guild Members</p>
+                        <div class="mt-2 text-xs text-orange-300 font-bold">12 Members</div>
+                    </a>
+                    
+                    <!-- Guild Shenanigans -->
+                    <a href="#gallery" class="menu-item text-center group">
+                        <div class="menu-icon mx-auto">
+                            <span>📸</span>
+                        </div>
+                        <h3 class="font-bold text-orange-400 text-sm mb-1" data-i18n="shenanigans">Shenanigans</h3>
+                        <p class="text-xs text-gray-400" data-i18n="funDesc">Fun Moments</p>
+                        <div class="mt-2 text-xs text-orange-300 font-bold">6 Photos</div>
+                    </a>
+                </div>
+                
+                <!-- Second Row - More Options -->
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
+                    <!-- Progress -->
+                    <a href="#progress" class="menu-item text-center group">
+                        <div class="menu-icon mx-auto">
+                            <span>📈</span>
+                        </div>
+                        <h3 class="font-bold text-orange-400 text-sm mb-1" data-i18n="roadToOne">Road to #1</h3>
+                        <p class="text-xs text-gray-400" data-i18n="progressDesc2">Guild Progress</p>
+                        <div class="mt-2 text-xs text-orange-300 font-bold">58% CP Goal</div>
+                    </a>
+                    
+                    <!-- Boss Raids -->
+                    <a href="#progress" class="menu-item text-center group">
+                        <div class="menu-icon mx-auto">
+                            <span>🐉</span>
+                        </div>
+                        <h3 class="font-bold text-orange-400 text-sm mb-1" data-i18n="bossRaids">Boss Raids</h3>
+                        <p class="text-xs text-gray-400" data-i18n="raidsDesc">Weekly Battles</p>
+                        <div class="mt-2 text-xs text-orange-300 font-bold">24/35 Done</div>
+                    </a>
+                    
+                    <!-- Guild Master -->
+                    <a href="#about" class="menu-item text-center group">
+                        <div class="menu-icon mx-auto">
+                            <span>👑</span>
+                        </div>
+                        <h3 class="font-bold text-orange-400 text-sm mb-1" data-i18n="guildMaster">Guild Master</h3>
+                        <p class="text-xs text-gray-400" data-i18n="gmDesc2">Our Leader</p>
+                        <div class="mt-2 text-xs text-orange-300 font-bold">RegginA Lv.76</div>
+                    </a>
+                    
+                    <!-- Join Us -->
+                    <a href="#roster" class="menu-item text-center group bg-gradient-to-br from-orange-500/20 to-orange-700/20 border-orange-500/40">
+                        <div class="menu-icon mx-auto bg-gradient-to-br from-orange-500 to-red-600">
+                            <span>🚀</span>
+                        </div>
+                        <h3 class="font-bold text-orange-400 text-sm mb-1" data-i18n="joinUs">Join Us</h3>
+                        <p class="text-xs text-gray-400" data-i18n="joinDesc">Become Family</p>
+                        <div class="mt-2 text-xs text-green-400 font-bold">Recruiting!</div>
+                    </a>
+                </div>
             </div>
         </div>
     </section>
@@ -1254,10 +1444,13 @@ app.get('/', (c) => {
                 storyText2: "What makes us special isn't just our CP or rankings - it's our bond. Whether it's boss raids or just hanging out, we're always there for each other.",
                 theFamily: "The Family", rosterDesc: "Meet our amazing guild members", cpLeaderboard: "CP Leaderboard",
                 leaderboardDesc: "Who's the strongest?", roadToOne: "Road to #1", progressDesc: "Our journey to becoming NumbahWan",
-                guildLevel: "Guild Level", totalCP: "Total Guild CP", members: "Members", bossRaids: "Boss Raids This Week",
-                serverRanking: "Server Ranking", milestones: "Milestones", shenanigans: "Guild Shenanigans",
+                guildLevel: "Guild Level", totalCP: "Total Guild CP", members: "Members", bossRaids: "Boss Raids",
+                serverRanking: "Server Ranking", milestones: "Milestones", shenanigans: "Shenanigans",
                 memories: "Memories of our adventures together", submitPhoto: "Submit Photo", wantToAdd: "Want to add your screenshots?",
-                server: "Server: TW", madeWith: "Made with ❤️ by the family."
+                server: "Server: TW", madeWith: "Made with ❤️ by the family.",
+                gmPvp: "GM PvP", contentRankDesc: "Guild Power Rankings", pvpRankDesc: "Battle Rankings",
+                membersDesc: "Our Guild Members", funDesc: "Fun Moments", progressDesc2: "Guild Progress",
+                raidsDesc: "Weekly Battles", gmDesc2: "Our Leader", joinDesc: "Become Family"
             },
             zh: {
                 joinUs: "加入我們", about: "關於", roster: "成員", cpRace: "戰力榜", 
@@ -1271,10 +1464,13 @@ app.get('/', (c) => {
                 storyText2: "讓我們特別的不只是戰力或排名 - 而是我們的羈絆。無論是打王還是閒聊，我們永遠在彼此身邊。",
                 theFamily: "家族成員", rosterDesc: "認識我們優秀的公會成員", cpLeaderboard: "戰力排行榜",
                 leaderboardDesc: "誰是最強的？", roadToOne: "邁向第一", progressDesc: "我們成為NumbahWan的旅程",
-                guildLevel: "公會等級", totalCP: "公會總戰力", members: "成員數量", bossRaids: "本週打王次數",
+                guildLevel: "公會等級", totalCP: "公會總戰力", members: "成員數量", bossRaids: "打王",
                 serverRanking: "伺服器排名", milestones: "里程碑", shenanigans: "公會趣事",
                 memories: "我們一起冒險的回憶", submitPhoto: "上傳照片", wantToAdd: "想要分享你的截圖嗎？",
-                server: "伺服器：台灣", madeWith: "家人們用 ❤️ 製作"
+                server: "伺服器：台灣", madeWith: "家人們用 ❤️ 製作",
+                gmPvp: "會長PvP", contentRankDesc: "公會戰力排名", pvpRankDesc: "戰鬥排名",
+                membersDesc: "我們的成員", funDesc: "歡樂時刻", progressDesc2: "公會進度",
+                raidsDesc: "每週戰鬥", gmDesc2: "我們的領袖", joinDesc: "成為家人"
             },
             th: {
                 joinUs: "เข้าร่วม", about: "เกี่ยวกับ", roster: "สมาชิก", cpRace: "อันดับ CP", 
@@ -1288,10 +1484,13 @@ app.get('/', (c) => {
                 storyText2: "สิ่งที่ทำให้เราพิเศษไม่ใช่แค่ CP หรืออันดับ - แต่เป็นสายสัมพันธ์ของเรา ไม่ว่าจะบุกบอสหรือแค่แฮงเอาท์ เราอยู่ด้วยกันเสมอ",
                 theFamily: "ครอบครัว", rosterDesc: "พบกับสมาชิกกิลด์สุดเจ๋งของเรา", cpLeaderboard: "อันดับ CP",
                 leaderboardDesc: "ใครแข็งแกร่งที่สุด?", roadToOne: "สู่อันดับ 1", progressDesc: "การเดินทางสู่การเป็น NumbahWan",
-                guildLevel: "เลเวลกิลด์", totalCP: "CP รวมกิลด์", members: "จำนวนสมาชิก", bossRaids: "บุกบอสสัปดาห์นี้",
-                serverRanking: "อันดับเซิร์ฟเวอร์", milestones: "เหตุการณ์สำคัญ", shenanigans: "กิลด์สนุกๆ",
+                guildLevel: "เลเวลกิลด์", totalCP: "CP รวมกิลด์", members: "จำนวนสมาชิก", bossRaids: "บุกบอส",
+                serverRanking: "อันดับเซิร์ฟเวอร์", milestones: "เหตุการณ์สำคัญ", shenanigans: "สนุกๆ",
                 memories: "ความทรงจำการผจญภัยด้วยกัน", submitPhoto: "ส่งรูป", wantToAdd: "อยากเพิ่มภาพหน้าจอของคุณไหม?",
-                server: "เซิร์ฟเวอร์: TW", madeWith: "สร้างด้วย ❤️ โดยครอบครัว"
+                server: "เซิร์ฟเวอร์: TW", madeWith: "สร้างด้วย ❤️ โดยครอบครัว",
+                gmPvp: "GM PvP", contentRankDesc: "อันดับพลังกิลด์", pvpRankDesc: "อันดับต่อสู้",
+                membersDesc: "สมาชิกกิลด์", funDesc: "ช่วงเวลาสนุก", progressDesc2: "ความคืบหน้ากิลด์",
+                raidsDesc: "ต่อสู้รายสัปดาห์", gmDesc2: "ผู้นำของเรา", joinDesc: "เป็นครอบครัว"
             }
         };
         
