@@ -712,47 +712,76 @@ app.get('/', (c) => {
             z-index: 10;
         }
         
-        /* Nav Menu Items - Liquid Glass Style */
-        .nav-menu-item {
+        /* Hamburger Menu Button */
+        .hamburger-icon {
+            width: 20px;
+            height: 14px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+        
+        .hamburger-icon span {
+            display: block;
+            height: 2px;
+            width: 100%;
+            background: var(--primary);
+            border-radius: 2px;
+            transition: all 0.3s ease;
+        }
+        
+        .hamburger-btn.active .hamburger-icon span:nth-child(1) {
+            transform: rotate(45deg) translate(4px, 4px);
+        }
+        
+        .hamburger-btn.active .hamburger-icon span:nth-child(2) {
+            opacity: 0;
+        }
+        
+        .hamburger-btn.active .hamburger-icon span:nth-child(3) {
+            transform: rotate(-45deg) translate(4px, -4px);
+        }
+        
+        /* Dropdown Menu */
+        .nav-dropdown {
+            animation: slideDown 0.3s ease;
+        }
+        
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .dropdown-item {
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            padding: 0.35rem 0.5rem;
+            padding: 1rem 0.5rem;
             border-radius: 12px;
             background: rgba(255, 107, 0, 0.1);
             border: 1px solid rgba(255, 107, 0, 0.2);
             transition: all 0.3s ease;
             text-decoration: none;
-            min-width: 45px;
+            text-align: center;
         }
         
-        @media (min-width: 640px) {
-            .nav-menu-item {
-                padding: 0.4rem 0.75rem;
-                min-width: 55px;
-            }
-        }
-        
-        .nav-menu-item:hover {
+        .dropdown-item:hover {
             background: rgba(255, 107, 0, 0.25);
             border-color: rgba(255, 107, 0, 0.5);
             transform: translateY(-2px);
             box-shadow: 0 4px 12px rgba(255, 107, 0, 0.3);
         }
         
-        .nav-menu-label {
-            font-size: 0.6rem;
-            color: var(--primary);
-            font-weight: 600;
-            margin-top: 2px;
-            white-space: nowrap;
-        }
-        
-        @media (min-width: 640px) {
-            .nav-menu-label {
-                font-size: 0.65rem;
-            }
+        .dropdown-item.highlight {
+            background: rgba(255, 107, 0, 0.2);
+            border-color: rgba(255, 107, 0, 0.4);
         }
     </style>
 </head>
@@ -764,38 +793,25 @@ app.get('/', (c) => {
     <div id="particles"></div>
     
     <!-- Navigation -->
-    <nav class="fixed top-0 left-0 right-0 z-50 glass-card mx-4 mt-4 rounded-2xl">
-        <div class="container mx-auto px-3 py-2 flex items-center justify-between">
+    <nav class="fixed top-0 left-0 right-0 z-50 glass-card mx-4 mt-4 rounded-full">
+        <div class="container mx-auto px-4 py-3 flex items-center justify-between">
+            <!-- Logo -->
             <a href="#hero" class="flex items-center gap-2">
-                <div id="nav-emblem">${generateEmblemSVG('emblem-n', 36)}</div>
+                <div id="nav-emblem">${generateEmblemSVG('emblem-n', 40)}</div>
+                <span class="pixel-font text-xs text-orange-400 hidden sm:inline">NumbahWan</span>
             </a>
             
-            <!-- Liquid Glass Menu Icons (center) -->
-            <div class="flex items-center gap-1 sm:gap-2">
-                <a href="#race" class="nav-menu-item" title="CP Leaderboard">
-                    <span class="text-base sm:text-lg">🏆</span>
-                    <span class="nav-menu-label" data-i18n="cpRace">CP</span>
-                </a>
-                <a href="#about" class="nav-menu-item" title="GM PvP">
-                    <span class="text-base sm:text-lg">⚔️</span>
-                    <span class="nav-menu-label" data-i18n="gmPvp">PvP</span>
-                </a>
-                <a href="#roster" class="nav-menu-item" title="Members">
-                    <span class="text-base sm:text-lg">👥</span>
-                    <span class="nav-menu-label" data-i18n="roster">Family</span>
-                </a>
-                <a href="#gallery" class="nav-menu-item" title="Shenanigans">
-                    <span class="text-base sm:text-lg">📸</span>
-                    <span class="nav-menu-label" data-i18n="guildFun">Fun</span>
-                </a>
-                <a href="#progress" class="nav-menu-item" title="Progress">
-                    <span class="text-base sm:text-lg">📈</span>
-                    <span class="nav-menu-label" data-i18n="progress">Goal</span>
-                </a>
-            </div>
+            <!-- Hamburger Menu Button -->
+            <button onclick="toggleNavMenu()" class="hamburger-btn p-2 rounded-lg hover:bg-orange-500/20 transition-all" aria-label="Menu">
+                <div class="hamburger-icon">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </div>
+            </button>
             
-            <div class="flex items-center gap-1 sm:gap-2">
-                <!-- Language Switcher (in nav) -->
+            <div class="flex items-center gap-2">
+                <!-- Language Switcher -->
                 <div class="relative" id="lang-switcher">
                     <button onclick="toggleLangMenu()" class="px-2 py-1 rounded-full text-xs flex items-center gap-1 hover:bg-orange-500/20 transition-all border border-orange-500/30">
                         <span id="current-lang-flag">🇬🇧</span>
@@ -813,12 +829,58 @@ app.get('/', (c) => {
                         </button>
                     </div>
                 </div>
-                <button class="magnetic-btn text-xs px-2 py-1 sm:px-3 sm:py-2" onclick="document.getElementById('roster').scrollIntoView({behavior: 'smooth'})" data-i18n="joinUs">
+                <button class="magnetic-btn text-xs sm:text-sm px-3 py-2" onclick="document.getElementById('roster').scrollIntoView({behavior: 'smooth'})" data-i18n="joinUs">
                     Join Us
                 </button>
             </div>
         </div>
     </nav>
+    
+    <!-- Dropdown Menu Panel -->
+    <div id="nav-dropdown" class="fixed top-20 left-4 right-4 z-40 glass-card rounded-2xl p-4 hidden nav-dropdown">
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            <a href="#race" onclick="closeNavMenu()" class="dropdown-item">
+                <span class="text-2xl mb-1">🏆</span>
+                <span class="font-bold text-orange-400 text-sm" data-i18n="cpLeaderboard">CP Ranking</span>
+                <span class="text-xs text-gray-400">#47 Server</span>
+            </a>
+            <a href="#about" onclick="closeNavMenu()" class="dropdown-item">
+                <span class="text-2xl mb-1">⚔️</span>
+                <span class="font-bold text-orange-400 text-sm" data-i18n="gmPvp">GM PvP</span>
+                <span class="text-xs text-gray-400">RegginA #1</span>
+            </a>
+            <a href="#roster" onclick="closeNavMenu()" class="dropdown-item">
+                <span class="text-2xl mb-1">👥</span>
+                <span class="font-bold text-orange-400 text-sm" data-i18n="theFamily">Members</span>
+                <span class="text-xs text-gray-400">12 Family</span>
+            </a>
+            <a href="#gallery" onclick="closeNavMenu()" class="dropdown-item">
+                <span class="text-2xl mb-1">📸</span>
+                <span class="font-bold text-orange-400 text-sm" data-i18n="shenanigans">Shenanigans</span>
+                <span class="text-xs text-gray-400">6 Photos</span>
+            </a>
+            <a href="#progress" onclick="closeNavMenu()" class="dropdown-item">
+                <span class="text-2xl mb-1">📈</span>
+                <span class="font-bold text-orange-400 text-sm" data-i18n="roadToOne">Progress</span>
+                <span class="text-xs text-gray-400">Road to #1</span>
+            </a>
+            <a href="#progress" onclick="closeNavMenu()" class="dropdown-item">
+                <span class="text-2xl mb-1">🐉</span>
+                <span class="font-bold text-orange-400 text-sm" data-i18n="bossRaids">Boss Raids</span>
+                <span class="text-xs text-gray-400">24/35</span>
+            </a>
+            <a href="#about" onclick="closeNavMenu()" class="dropdown-item">
+                <span class="text-2xl mb-1">👑</span>
+                <span class="font-bold text-orange-400 text-sm" data-i18n="guildMaster">Guild Master</span>
+                <span class="text-xs text-gray-400">RegginA</span>
+            </a>
+            <a href="#roster" onclick="closeNavMenu()" class="dropdown-item highlight">
+                <span class="text-2xl mb-1">🚀</span>
+                <span class="font-bold text-orange-400 text-sm" data-i18n="joinUs">Join Us</span>
+                <span class="text-xs text-green-400">Recruiting!</span>
+            </a>
+        </div>
+    </div>
     
     <!-- Hero Section with Banner Image -->
     <section id="hero" class="hero-banner">
@@ -1509,10 +1571,34 @@ app.get('/', (c) => {
             if (!switcher.contains(e.target)) {
                 document.getElementById('lang-menu').classList.add('hidden');
             }
+            
+            // Close nav dropdown when clicking outside
+            const hamburger = document.querySelector('.hamburger-btn');
+            const dropdown = document.getElementById('nav-dropdown');
+            if (!hamburger.contains(e.target) && !dropdown.contains(e.target)) {
+                closeNavMenu();
+            }
         });
         
         // Initialize language on load
         setLanguage(currentLang);
+        
+        // ========== HAMBURGER MENU ==========
+        function toggleNavMenu() {
+            const dropdown = document.getElementById('nav-dropdown');
+            const hamburger = document.querySelector('.hamburger-btn');
+            
+            dropdown.classList.toggle('hidden');
+            hamburger.classList.toggle('active');
+        }
+        
+        function closeNavMenu() {
+            const dropdown = document.getElementById('nav-dropdown');
+            const hamburger = document.querySelector('.hamburger-btn');
+            
+            dropdown.classList.add('hidden');
+            hamburger.classList.remove('active');
+        }
     </script>
 </body>
 </html>
