@@ -819,67 +819,45 @@ app.get('/', (c) => {
             50% { box-shadow: 0 4px 30px rgba(255, 107, 0, 0.8), 0 0 40px rgba(255, 107, 0, 0.4); }
         }
         
-        /* Music prompt overlay */
-        .music-prompt {
+        /* Hidden YouTube player for BGM */
+        .yt-bgm-container {
             position: fixed;
-            inset: 0;
-            background: rgba(0, 0, 0, 0.8);
-            backdrop-filter: blur(10px);
-            z-index: 200;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            opacity: 1;
-            transition: opacity 0.5s ease;
-        }
-        
-        .music-prompt.hidden {
+            bottom: 90px;
+            right: 24px;
+            z-index: 99;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+            transition: all 0.3s ease;
             opacity: 0;
             pointer-events: none;
+            transform: translateY(10px);
         }
         
-        .music-prompt-card {
-            background: linear-gradient(135deg, rgba(255, 107, 0, 0.2) 0%, rgba(10, 10, 15, 0.95) 100%);
-            border: 2px solid rgba(255, 107, 0, 0.5);
-            border-radius: 24px;
-            padding: 3rem;
-            text-align: center;
-            max-width: 400px;
-            animation: slideUp 0.5s ease;
-        }
-        
-        @keyframes slideUp {
-            from { transform: translateY(30px); opacity: 0; }
-            to { transform: translateY(0); opacity: 1; }
+        .yt-bgm-container.visible {
+            opacity: 1;
+            pointer-events: auto;
+            transform: translateY(0);
         }
     </style>
 </head>
 <body>
-    <!-- BGM Audio -->
-    <audio id="bgm" loop preload="auto">
-        <source src="/static/guild-bgm.mp3" type="audio/mpeg">
-    </audio>
-    
-    <!-- Music Prompt Overlay -->
-    <div id="music-prompt" class="music-prompt">
-        <div class="music-prompt-card">
-            <div class="text-6xl mb-4">🎵</div>
-            <h3 class="text-2xl font-bold text-orange-400 mb-2 pixel-font">NumbahWan</h3>
-            <p class="text-gray-300 mb-6">Would you like to enjoy the guild BGM?</p>
-            <div class="flex gap-4 justify-center">
-                <button onclick="startWithMusic()" class="magnetic-btn px-6 py-3">
-                    🎶 Play Music
-                </button>
-                <button onclick="startWithoutMusic()" class="magnetic-btn px-6 py-3" style="background: transparent; border: 2px solid var(--primary);">
-                    🔇 No Thanks
-                </button>
-            </div>
-        </div>
+    <!-- YouTube BGM Player (hidden, for audio only) -->
+    <div id="yt-bgm-container" class="yt-bgm-container">
+        <iframe id="yt-player" 
+            width="280" 
+            height="158" 
+            src="https://www.youtube.com/embed/iQLVn3QoXXk?enablejsapi=1&autoplay=1&loop=1&playlist=iQLVn3QoXXk&controls=1" 
+            title="Kerning City BGM" 
+            frameborder="0" 
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+            allowfullscreen>
+        </iframe>
     </div>
     
-    <!-- Floating Music Button -->
+    <!-- Floating Music Toggle Button -->
     <button id="music-btn" class="music-btn" onclick="toggleMusic()" title="Toggle Music">
-        🔇
+        🎵
     </button>
     
     <!-- Aurora Background -->
@@ -1693,63 +1671,27 @@ app.get('/', (c) => {
             hamburger.classList.remove('active');
         }
         
-        // ========== BGM MUSIC SYSTEM ==========
-        const bgm = document.getElementById('bgm');
+        // ========== YOUTUBE BGM SYSTEM ==========
+        const ytContainer = document.getElementById('yt-bgm-container');
         const musicBtn = document.getElementById('music-btn');
-        const musicPrompt = document.getElementById('music-prompt');
-        let isMusicPlaying = false;
-        
-        // Set initial volume
-        bgm.volume = 0.4;
-        
-        function startWithMusic() {
-            musicPrompt.classList.add('hidden');
-            playMusic();
-            localStorage.setItem('bgmPreference', 'on');
-        }
-        
-        function startWithoutMusic() {
-            musicPrompt.classList.add('hidden');
-            localStorage.setItem('bgmPreference', 'off');
-        }
-        
-        function playMusic() {
-            bgm.play().then(() => {
-                isMusicPlaying = true;
-                musicBtn.textContent = '🎵';
-                musicBtn.classList.add('playing');
-            }).catch(err => {
-                console.log('Audio play failed:', err);
-            });
-        }
-        
-        function pauseMusic() {
-            bgm.pause();
-            isMusicPlaying = false;
-            musicBtn.textContent = '🔇';
-            musicBtn.classList.remove('playing');
-        }
+        let isPlayerVisible = false;
         
         function toggleMusic() {
-            if (isMusicPlaying) {
-                pauseMusic();
-                localStorage.setItem('bgmPreference', 'off');
+            isPlayerVisible = !isPlayerVisible;
+            
+            if (isPlayerVisible) {
+                ytContainer.classList.add('visible');
+                musicBtn.textContent = '🎵';
+                musicBtn.classList.add('playing');
             } else {
-                playMusic();
-                localStorage.setItem('bgmPreference', 'on');
+                ytContainer.classList.remove('visible');
+                musicBtn.textContent = '🔇';
+                musicBtn.classList.remove('playing');
             }
         }
         
-        // Check user's previous preference
-        const bgmPref = localStorage.getItem('bgmPreference');
-        if (bgmPref === 'on') {
-            musicPrompt.classList.add('hidden');
-            // Try to autoplay (may be blocked by browser)
-            playMusic();
-        } else if (bgmPref === 'off') {
-            musicPrompt.classList.add('hidden');
-        }
-        // If no preference, show prompt
+        // Start with player visible (music on)
+        toggleMusic();
     </script>
 </body>
 </html>
