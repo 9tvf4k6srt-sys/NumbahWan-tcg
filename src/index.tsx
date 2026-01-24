@@ -169,23 +169,34 @@ app.get('/', (c) => {
             white-space: nowrap;
         }
         
-        /* Hero banner with image */
+        /* Hero banner with image - RegginA centered */
         .hero-banner {
             position: relative;
             width: 100%;
             min-height: 100vh;
-            background: url('/static/hero-banner.jpg') center center / cover no-repeat;
+            background: url('/static/hero-banner.jpg') center 30% / contain no-repeat;
+            background-color: #1a1a2e;
             display: flex;
             flex-direction: column;
-            justify-content: center;
+            justify-content: flex-end;
             align-items: center;
+            padding-bottom: 5vh;
+        }
+        
+        @media (min-width: 768px) {
+            .hero-banner {
+                background-size: cover;
+                background-position: center center;
+                justify-content: center;
+                padding-bottom: 0;
+            }
         }
         
         .hero-banner::before {
             content: '';
             position: absolute;
             inset: 0;
-            background: linear-gradient(180deg, rgba(10,10,15,0.3) 0%, rgba(10,10,15,0.6) 50%, rgba(10,10,15,0.95) 100%);
+            background: linear-gradient(180deg, rgba(10,10,15,0.1) 0%, rgba(10,10,15,0.3) 40%, rgba(10,10,15,0.85) 85%, rgba(10,10,15,0.98) 100%);
             z-index: 1;
         }
         
@@ -1085,7 +1096,7 @@ app.get('/', (c) => {
 })
 
 // Helper function to generate SVG N emblem - matches original exactly
-// Standard N: left bar, diagonal from top-left to bottom-right, right bar
+// Thick blocky N like the original pixelated emblem
 function generateEmblemSVG(className = 'emblem-n', size = 60) {
   const gradId = 'nGrad' + size + Math.random().toString(36).substr(2, 5)
   return `
@@ -1093,27 +1104,15 @@ function generateEmblemSVG(className = 'emblem-n', size = 60) {
       <defs>
         <linearGradient id="${gradId}" x1="0%" y1="0%" x2="0%" y2="100%">
           <stop offset="0%" stop-color="#ffb347"/>
-          <stop offset="35%" stop-color="#ff9500"/>
-          <stop offset="65%" stop-color="#e86500"/>
+          <stop offset="30%" stop-color="#ff9500"/>
+          <stop offset="60%" stop-color="#e86500"/>
           <stop offset="100%" stop-color="#8B4513"/>
         </linearGradient>
       </defs>
-      <!-- Standard N: | diagonal \\ | -->
-      <path d="
-        M 12,8 
-        L 34,8 
-        L 34,20 
-        L 66,75 
-        L 66,8 
-        L 88,8 
-        L 88,92 
-        L 66,92 
-        L 66,80 
-        L 34,25 
-        L 34,92 
-        L 12,92 
-        Z
-      " fill="url(#${gradId})" stroke="none"/>
+      <!-- Thick blocky N: left bar + THICK diagonal + right bar -->
+      <rect x="10" y="8" width="24" height="84" rx="3" fill="url(#${gradId})"/>
+      <rect x="66" y="8" width="24" height="84" rx="3" fill="url(#${gradId})"/>
+      <polygon points="10,8 34,8 90,92 66,92" fill="url(#${gradId})"/>
     </svg>
   `
 }
