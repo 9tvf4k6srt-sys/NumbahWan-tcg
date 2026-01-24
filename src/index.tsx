@@ -197,7 +197,7 @@ app.get('/', (c) => {
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=5.0, user-scalable=yes">
     <title>NumbahWan Guild | MapleStory Idle RPG</title>
     <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
     <script src="https://cdn.tailwindcss.com"></script>
@@ -221,11 +221,22 @@ app.get('/', (c) => {
             box-sizing: border-box;
         }
         
+        /* Prevent zoom out - fill entire viewport */
+        html {
+            width: 100%;
+            height: 100%;
+            overflow-x: hidden;
+            background: var(--bg-dark);
+        }
+        
         body {
             font-family: 'Orbitron', sans-serif;
             background: var(--bg-dark);
             color: #fff;
             overflow-x: hidden;
+            min-height: 100vh;
+            min-width: 100vw;
+            position: relative;
             cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 100 100'%3E%3Cdefs%3E%3ClinearGradient id='nG' x1='0%25' y1='0%25' x2='0%25' y2='100%25'%3E%3Cstop offset='0%25' stop-color='%23ffb347'/%3E%3Cstop offset='100%25' stop-color='%238B4513'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect x='10' y='8' width='24' height='84' rx='3' fill='url(%23nG)'/%3E%3Crect x='66' y='8' width='24' height='84' rx='3' fill='url(%23nG)'/%3E%3Cpolygon points='10,8 34,8 90,92 66,92' fill='url(%23nG)'/%3E%3C/svg%3E") 12 12, auto;
         }
         
