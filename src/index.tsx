@@ -170,7 +170,7 @@ app.get('/', (c) => {
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>NumbahWan Guild | MapleStory Idle RPG</title>
     <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
     <script src="https://cdn.tailwindcss.com"></script>
@@ -831,28 +831,16 @@ app.get('/', (c) => {
             50% { box-shadow: 0 4px 30px rgba(0, 255, 0, 0.6), 0 0 40px rgba(255, 107, 0, 0.4); }
         }
         
-        /* YouTube player for BGM - visible mini player */
+        /* YouTube player for BGM - completely hidden, audio only */
         .yt-bgm-container {
             position: fixed;
-            bottom: 100px;
-            right: 24px;
-            width: 320px;
-            height: 180px;
-            z-index: 99;
-            border-radius: 16px;
-            overflow: hidden;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6), 0 0 20px rgba(255, 107, 0, 0.3);
-            border: 2px solid rgba(255, 107, 0, 0.5);
-            transform: translateY(20px);
+            bottom: -9999px;
+            left: -9999px;
+            width: 1px;
+            height: 1px;
             opacity: 0;
             pointer-events: none;
-            transition: all 0.4s ease;
-        }
-        
-        .yt-bgm-container.visible {
-            opacity: 1;
-            pointer-events: auto;
-            transform: translateY(0);
+            z-index: -1;
         }
     </style>
 </head>
@@ -1678,12 +1666,11 @@ app.get('/', (c) => {
             hamburger.classList.remove('active');
         }
         
-        // ========== SIMPLE YOUTUBE BGM SYSTEM ==========
+        // ========== SIMPLE YOUTUBE BGM SYSTEM - AUDIO ONLY (HIDDEN) ==========
         const musicBtn = document.getElementById('music-btn');
         const speakerPath = document.getElementById('speaker-path');
         const ytContainer = document.getElementById('yt-bgm-container');
         let isMusicPlaying = false;
-        let isPlayerVisible = false;
         
         // SVG paths for speaker icons
         const SPEAKER_ON = "M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z";
@@ -1691,11 +1678,11 @@ app.get('/', (c) => {
         
         function toggleMusic() {
             if (!isMusicPlaying) {
-                // Start music - create iframe and show
+                // Start music - create hidden iframe (audio only, no video shown)
                 ytContainer.innerHTML = \`
                     <iframe 
-                        width="320" 
-                        height="180" 
+                        width="1" 
+                        height="1" 
                         src="https://www.youtube.com/embed/QvSpcNrF7-E?autoplay=1&loop=1&playlist=QvSpcNrF7-E" 
                         title="MapleStory BGM" 
                         frameborder="0" 
@@ -1704,8 +1691,6 @@ app.get('/', (c) => {
                     </iframe>
                 \`;
                 isMusicPlaying = true;
-                isPlayerVisible = true;
-                ytContainer.classList.add('visible');
                 speakerPath.setAttribute('d', SPEAKER_ON);
                 musicBtn.classList.add('playing');
                 musicBtn.classList.remove('muted');
@@ -1713,24 +1698,11 @@ app.get('/', (c) => {
                 // Stop music - remove iframe
                 ytContainer.innerHTML = '';
                 isMusicPlaying = false;
-                isPlayerVisible = false;
-                ytContainer.classList.remove('visible');
                 speakerPath.setAttribute('d', SPEAKER_OFF);
                 musicBtn.classList.remove('playing');
                 musicBtn.classList.add('muted');
             }
         }
-        
-        // Click elsewhere to hide player (but keep music playing)
-        document.addEventListener('click', (e) => {
-            if (isMusicPlaying && isPlayerVisible && 
-                !ytContainer.contains(e.target) && 
-                !musicBtn.contains(e.target)) {
-                // Hide player but keep music playing
-                ytContainer.classList.remove('visible');
-                isPlayerVisible = false;
-            }
-        });
         
         // Click music button - always toggle music on/off
         musicBtn.addEventListener('click', (e) => {
