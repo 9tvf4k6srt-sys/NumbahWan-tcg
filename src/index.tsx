@@ -493,7 +493,7 @@ app.get('/', (c) => {
     <nav class="fixed top-0 left-0 right-0 z-50 glass-card mx-4 mt-4 rounded-full">
         <div class="container mx-auto px-6 py-4 flex items-center justify-between">
             <a href="#hero" class="flex items-center gap-3">
-                ${generateEmblemSVG('emblem-n')}
+                <div id="nav-emblem">${generateEmblemSVG('emblem-n')}</div>
                 <span class="pixel-font text-sm text-orange-400">NumbahWan</span>
             </a>
             <div class="hidden md:flex items-center gap-8">
@@ -1017,25 +1017,25 @@ app.get('/', (c) => {
             });
         });
         
-        // Nav emblem hover effect
+        // Nav emblem hover effect (SVG version)
         const navEmblem = document.getElementById('nav-emblem');
-        navEmblem.addEventListener('mouseenter', () => {
-            gsap.to('#nav-emblem .pixel', {
-                scale: 1.1,
-                duration: 0.1,
-                stagger: { each: 0.01, from: "random" },
-                ease: "back.out(1.7)"
+        if (navEmblem) {
+            navEmblem.addEventListener('mouseenter', () => {
+                gsap.to(navEmblem, {
+                    scale: 1.1,
+                    duration: 0.2,
+                    ease: "back.out(1.7)"
+                });
             });
-        });
-        
-        navEmblem.addEventListener('mouseleave', () => {
-            gsap.to('#nav-emblem .pixel', {
-                scale: 1,
-                duration: 0.2,
-                stagger: { each: 0.01, from: "random" },
-                ease: "power2.out"
+            
+            navEmblem.addEventListener('mouseleave', () => {
+                gsap.to(navEmblem, {
+                    scale: 1,
+                    duration: 0.2,
+                    ease: "power2.out"
+                });
             });
-        });
+        }
         
         // Smooth scroll for navigation
         document.querySelectorAll('a[href^="#"]').forEach(anchor => {
