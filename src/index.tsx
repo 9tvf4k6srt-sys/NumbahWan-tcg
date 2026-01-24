@@ -151,17 +151,60 @@ app.get('/', (c) => {
         /* Pixel-style title - single line, responsive, centered */
         .pixel-title {
             font-family: 'Press Start 2P', cursive;
-            font-size: clamp(1.2rem, 5vw, 4rem);
-            display: block;
+            font-size: clamp(1.5rem, 6vw, 5rem);
+            display: flex;
+            justify-content: center;
+            align-items: center;
             width: 100%;
+            margin: 0 auto;
             text-align: center;
             background: linear-gradient(180deg, #ffcc70 0%, #ff9500 30%, #ff6b00 60%, #cc4400 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
-            filter: drop-shadow(0 0 20px rgba(255, 107, 0, 0.8)) drop-shadow(0 0 40px rgba(255, 107, 0, 0.5));
+            filter: drop-shadow(0 0 25px rgba(255, 107, 0, 0.9)) drop-shadow(0 0 50px rgba(255, 107, 0, 0.6));
             letter-spacing: 0.02em;
             white-space: nowrap;
+        }
+        
+        /* Hero banner with image */
+        .hero-banner {
+            position: relative;
+            width: 100%;
+            min-height: 100vh;
+            background: url('https://www.genspark.ai/api/files/s/y68bEe5Y') center center / cover no-repeat;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .hero-banner::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(180deg, rgba(10,10,15,0.3) 0%, rgba(10,10,15,0.6) 50%, rgba(10,10,15,0.95) 100%);
+            z-index: 1;
+        }
+        
+        .hero-content {
+            position: relative;
+            z-index: 2;
+            text-align: center;
+            padding: 2rem;
+        }
+        
+        /* Guild master portrait */
+        .gm-portrait {
+            border-radius: 16px;
+            border: 4px solid var(--primary);
+            box-shadow: 0 0 30px rgba(255, 107, 0, 0.5);
+            transition: all 0.4s ease;
+        }
+        
+        .gm-portrait:hover {
+            transform: scale(1.02);
+            box-shadow: 0 0 50px rgba(255, 107, 0, 0.8);
         }
         
         .pixel-title-outline::before {
@@ -465,24 +508,24 @@ app.get('/', (c) => {
         </div>
     </nav>
     
-    <!-- Hero Section -->
-    <section id="hero" class="min-h-screen flex items-center justify-center relative pt-20">
-        <div class="text-center">
-            <div class="flex justify-center mb-8" id="hero-emblem">
-                ${generateEmblemSVG('emblem-n emblem-n-large', 120)}
+    <!-- Hero Section with Banner Image -->
+    <section id="hero" class="hero-banner">
+        <div class="hero-content w-full max-w-4xl mx-auto">
+            <div class="flex justify-center mb-6" id="hero-emblem">
+                ${generateEmblemSVG('emblem-n emblem-n-large', 100)}
             </div>
-            <h1 class="pixel-title mb-6 px-4 text-center" id="guild-name">
+            <h1 class="pixel-title mb-4" id="guild-name">
                 NumbahWan
             </h1>
-            <p class="text-xl md:text-2xl text-orange-300 mb-8 opacity-0" id="tagline">
+            <p class="text-xl md:text-2xl text-orange-300 mb-6 opacity-0" id="tagline">
                 MapleStory Idle RPG Guild
             </p>
-            <div class="glass-card p-6 max-w-2xl mx-auto mb-12 opacity-0" id="motto-card">
-                <p class="text-lg md:text-xl italic text-orange-200">
+            <div class="glass-card p-4 md:p-6 max-w-xl mx-auto mb-8 opacity-0" id="motto-card">
+                <p class="text-base md:text-xl italic text-orange-200">
                     "We are not just a guild, but <span class="text-orange-400 font-bold">FAMILY</span>"
                 </p>
             </div>
-            <div class="flex justify-center gap-4 opacity-0" id="hero-buttons">
+            <div class="flex flex-wrap justify-center gap-4 opacity-0" id="hero-buttons">
                 <button class="magnetic-btn" onclick="document.getElementById('roster').scrollIntoView({behavior: 'smooth'})">
                     ${iconSword()} Meet The Family
                 </button>
@@ -493,7 +536,7 @@ app.get('/', (c) => {
         </div>
         
         <!-- Scroll indicator -->
-        <div class="absolute bottom-10 left-1/2 transform -translate-x-1/2 opacity-0" id="scroll-indicator">
+        <div class="absolute bottom-10 left-1/2 transform -translate-x-1/2 opacity-0 z-10" id="scroll-indicator">
             <div class="w-6 h-10 border-2 border-orange-400 rounded-full flex justify-center">
                 <div class="w-1 h-3 bg-orange-400 rounded-full mt-2 animate-bounce"></div>
             </div>
@@ -520,9 +563,40 @@ app.get('/', (c) => {
                     <p class="text-orange-300 mt-2">Billion+ CP</p>
                 </div>
             </div>
+            <!-- Guild Master Section -->
             <div class="glass-card p-8 mt-12 reveal">
                 <div class="grid md:grid-cols-2 gap-8 items-center">
                     <div>
+                        <h3 class="text-2xl font-bold text-orange-400 mb-4">${iconStar()} Our Guild Master</h3>
+                        <div class="flex items-center gap-4 mb-4">
+                            <span class="text-4xl">👑</span>
+                            <div>
+                                <p class="text-2xl font-bold text-white">RegginA</p>
+                                <p class="text-orange-300">Level 76 • CP: 2B 325M</p>
+                            </div>
+                        </div>
+                        <p class="text-gray-300 leading-relaxed">
+                            The legendary leader of NumbahWan, RegginA leads by example - always at the frontline 
+                            protecting guild members and pushing the limits of what's possible. With over 2 billion CP, 
+                            our GM shows us that dedication and teamwork can overcome any challenge.
+                        </p>
+                        <p class="text-gray-300 leading-relaxed mt-4">
+                            "We rise together, we fall together. That's the NumbahWan way."
+                        </p>
+                    </div>
+                    <div class="flex justify-center">
+                        <img src="https://www.genspark.ai/api/files/s/h4ICNbmP" alt="Guild Master RegginA" class="gm-portrait w-full max-w-sm rounded-lg" />
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Our Story Section -->
+            <div class="glass-card p-8 mt-8 reveal">
+                <div class="grid md:grid-cols-2 gap-8 items-center">
+                    <div class="flex justify-center order-2 md:order-1">
+                        <img src="https://www.genspark.ai/api/files/s/3JTop6hF" alt="NumbahWan Guild Base" class="gm-portrait w-full max-w-md rounded-lg" />
+                    </div>
+                    <div class="order-1 md:order-2">
                         <h3 class="text-2xl font-bold text-orange-400 mb-4">${iconStar()} Our Story</h3>
                         <p class="text-gray-300 leading-relaxed">
                             NumbahWan started with a simple dream - to become the #1 guild in MapleStory Idle RPG. 
@@ -534,9 +608,6 @@ app.get('/', (c) => {
                             Whether it's grinding bosses at 3 AM or celebrating someone's rare drop, 
                             we're always there for each other. That's what makes us NumbahWan.
                         </p>
-                    </div>
-                    <div class="flex justify-center">
-                        ${generateEmblemSVG('emblem-n', 180)}
                     </div>
                 </div>
             </div>
@@ -1026,20 +1097,8 @@ function generateEmblemSVG(className = 'emblem-n', size = 60) {
           <stop offset="100%" stop-color="#994400"/>
         </linearGradient>
       </defs>
-      <!-- Correct N shape: left bar, diagonal going down-right, right bar -->
-      <path d="
-        M 10,10 
-        L 35,10 
-        L 35,50 
-        L 65,10 
-        L 90,10 
-        L 90,90 
-        L 65,90 
-        L 65,40 
-        L 35,90 
-        L 10,90 
-        Z
-      " fill="url(#${gradId})"/>
+      <!-- Correct N: left bar at left, diagonal goes TOP-LEFT to BOTTOM-RIGHT, right bar at right -->
+      <path d="M10,10 L30,10 L30,45 L70,10 L90,10 L90,90 L70,90 L70,55 L30,90 L10,90 Z" fill="url(#${gradId})"/>
     </svg>
   `
 }
