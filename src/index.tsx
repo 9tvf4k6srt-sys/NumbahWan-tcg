@@ -860,7 +860,7 @@ app.get('/', (c) => {
     <div id="yt-bgm-container" class="yt-bgm-container"></div>
     
     <!-- Floating Music Toggle Button -->
-    <button id="music-btn" class="music-btn muted" onclick="toggleMusic()" title="Click to Play Music">
+    <button id="music-btn" class="music-btn muted" title="Click to Play Music">
         <svg class="speaker-icon" viewBox="0 0 24 24" fill="currentColor">
             <path id="speaker-path" d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51C20.63 14.91 21 13.5 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06c1.38-.31 2.63-.95 3.69-1.81L19.73 21 21 19.73l-9-9L4.27 3zM12 4L9.91 6.09 12 8.18V4z"/>
         </svg>
@@ -1682,16 +1682,15 @@ app.get('/', (c) => {
         const speakerPath = document.getElementById('speaker-path');
         const ytContainer = document.getElementById('yt-bgm-container');
         let isMusicPlaying = false;
+        let isPlayerVisible = false;
         
         // SVG paths for speaker icons
         const SPEAKER_ON = "M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z";
         const SPEAKER_OFF = "M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51C20.63 14.91 21 13.5 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06c1.38-.31 2.63-.95 3.69-1.81L19.73 21 21 19.73l-9-9L4.27 3zM12 4L9.91 6.09 12 8.18V4z";
         
         function toggleMusic() {
-            isMusicPlaying = !isMusicPlaying;
-            
-            if (isMusicPlaying) {
-                // Show player with autoplay iframe
+            if (!isMusicPlaying) {
+                // Start music - create iframe and show
                 ytContainer.innerHTML = \`
                     <iframe 
                         width="320" 
@@ -1703,19 +1702,46 @@ app.get('/', (c) => {
                         allowfullscreen>
                     </iframe>
                 \`;
+                isMusicPlaying = true;
+                isPlayerVisible = true;
                 ytContainer.classList.add('visible');
                 speakerPath.setAttribute('d', SPEAKER_ON);
                 musicBtn.classList.add('playing');
                 musicBtn.classList.remove('muted');
             } else {
-                // Remove iframe to stop music
+                // Stop music - remove iframe
                 ytContainer.innerHTML = '';
+                isMusicPlaying = false;
+                isPlayerVisible = false;
                 ytContainer.classList.remove('visible');
                 speakerPath.setAttribute('d', SPEAKER_OFF);
                 musicBtn.classList.remove('playing');
                 musicBtn.classList.add('muted');
             }
         }
+        
+        // Click elsewhere to hide player (but keep music playing)
+        document.addEventListener('click', (e) => {
+            if (isMusicPlaying && isPlayerVisible && 
+                !ytContainer.contains(e.target) && 
+                !musicBtn.contains(e.target)) {
+                // Hide player but keep music playing
+                ytContainer.classList.remove('visible');
+                isPlayerVisible = false;
+            }
+        });
+        
+        // Click music button to show player again if music is playing
+        musicBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            if (isMusicPlaying && !isPlayerVisible) {
+                // Just show the player again
+                ytContainer.classList.add('visible');
+                isPlayerVisible = true;
+            } else {
+                toggleMusic();
+            }
+        }, true);
     </script>
 </body>
 </html>
