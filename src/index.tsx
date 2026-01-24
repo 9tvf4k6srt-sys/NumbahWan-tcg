@@ -819,40 +819,26 @@ app.get('/', (c) => {
             50% { box-shadow: 0 4px 30px rgba(255, 107, 0, 0.8), 0 0 40px rgba(255, 107, 0, 0.4); }
         }
         
-        /* Hidden YouTube player for BGM */
+        /* Hidden YouTube player for BGM - completely hidden */
         .yt-bgm-container {
             position: fixed;
-            bottom: 90px;
-            right: 24px;
-            z-index: 99;
-            border-radius: 12px;
-            overflow: hidden;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
-            transition: all 0.3s ease;
+            bottom: 0;
+            right: 0;
+            width: 1px;
+            height: 1px;
             opacity: 0;
             pointer-events: none;
-            transform: translateY(10px);
-        }
-        
-        .yt-bgm-container.visible {
-            opacity: 1;
-            pointer-events: auto;
-            transform: translateY(0);
+            z-index: -1;
         }
     </style>
 </head>
 <body>
-    <!-- YouTube BGM Player (hidden, for audio only) -->
+    <!-- YouTube IFrame API -->
+    <script src="https://www.youtube.com/iframe_api"></script>
+    
+    <!-- Hidden YouTube Player Container -->
     <div id="yt-bgm-container" class="yt-bgm-container">
-        <iframe id="yt-player" 
-            width="280" 
-            height="158" 
-            src="https://www.youtube.com/embed/iQLVn3QoXXk?enablejsapi=1&autoplay=1&loop=1&playlist=iQLVn3QoXXk&controls=1" 
-            title="Kerning City BGM" 
-            frameborder="0" 
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
-            allowfullscreen>
-        </iframe>
+        <div id="yt-player"></div>
     </div>
     
     <!-- Floating Music Toggle Button -->
@@ -1672,26 +1658,59 @@ app.get('/', (c) => {
         }
         
         // ========== YOUTUBE BGM SYSTEM ==========
-        const ytContainer = document.getElementById('yt-bgm-container');
         const musicBtn = document.getElementById('music-btn');
-        let isPlayerVisible = false;
+        let ytPlayer = null;
+        let isMusicPlaying = false;
+        
+        // YouTube IFrame API callback
+        window.onYouTubeIframeAPIReady = function() {
+            ytPlayer = new YT.Player('yt-player', {
+                height: '1',
+                width: '1',
+                videoId: 'iQLVn3QoXXk',
+                playerVars: {
+                    autoplay: 1,
+                    loop: 1,
+                    playlist: 'iQLVn3QoXXk',
+                    controls: 0,
+                    disablekb: 1,
+                    fs: 0,
+                    modestbranding: 1,
+                    rel: 0
+                },
+                events: {
+                    onReady: function(e) {
+                        e.target.setVolume(50);
+                        e.target.playVideo();
+                        isMusicPlaying = true;
+                        musicBtn.textContent = '🎵';
+                        musicBtn.classList.add('playing');
+                    },
+                    onStateChange: function(e) {
+                        // Loop when video ends
+                        if (e.data === YT.PlayerState.ENDED) {
+                            e.target.playVideo();
+                        }
+                    }
+                }
+            });
+        };
         
         function toggleMusic() {
-            isPlayerVisible = !isPlayerVisible;
+            if (!ytPlayer) return;
             
-            if (isPlayerVisible) {
-                ytContainer.classList.add('visible');
-                musicBtn.textContent = '🎵';
-                musicBtn.classList.add('playing');
-            } else {
-                ytContainer.classList.remove('visible');
+            if (isMusicPlaying) {
+                ytPlayer.pauseVideo();
+                isMusicPlaying = false;
                 musicBtn.textContent = '🔇';
                 musicBtn.classList.remove('playing');
+            } else {
+                ytPlayer.playVideo();
+                isMusicPlaying = true;
+                musicBtn.textContent = '🎵';
+                musicBtn.classList.add('playing');
             }
         }
-        
-        // Start with player visible (music on)
-        toggleMusic();
     </script>
 </body>
 </html>
