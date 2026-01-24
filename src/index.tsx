@@ -198,6 +198,7 @@ app.get('/', (c) => {
             background: var(--bg-dark);
             color: #fff;
             overflow-x: hidden;
+            cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 100 100'%3E%3Cdefs%3E%3ClinearGradient id='nG' x1='0%25' y1='0%25' x2='0%25' y2='100%25'%3E%3Cstop offset='0%25' stop-color='%23ffb347'/%3E%3Cstop offset='100%25' stop-color='%238B4513'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect x='10' y='8' width='24' height='84' rx='3' fill='url(%23nG)'/%3E%3Crect x='66' y='8' width='24' height='84' rx='3' fill='url(%23nG)'/%3E%3Cpolygon points='10,8 34,8 90,92 66,92' fill='url(%23nG)'/%3E%3C/svg%3E") 12 12, auto;
         }
         
         .pixel-font {
@@ -921,27 +922,27 @@ app.get('/', (c) => {
     <section id="about" class="py-20 px-4">
         <div class="container mx-auto max-w-6xl">
             <h2 class="text-4xl font-bold text-center mb-12 neon-orange reveal">
-                ${iconInfo()} About NumbahWan
+                <span data-i18n="aboutTitle">About NumbahWan</span>
             </h2>
             <div class="grid md:grid-cols-3 gap-8">
                 <div class="glass-card p-8 text-center reveal">
                     <div class="stat-number" data-count="12">0</div>
-                    <p class="text-orange-300 mt-2">Family Members</p>
+                    <p class="text-orange-300 mt-2" data-i18n="familyMembers">Family Members</p>
                 </div>
                 <div class="glass-card p-8 text-center reveal">
                     <div class="stat-number" data-count="76">0</div>
-                    <p class="text-orange-300 mt-2">Highest Level</p>
+                    <p class="text-orange-300 mt-2" data-i18n="highestLevel">Highest Level</p>
                 </div>
                 <div class="glass-card p-8 text-center reveal">
                     <div class="stat-number" data-count="2">0</div>
-                    <p class="text-orange-300 mt-2">Billion+ CP</p>
+                    <p class="text-orange-300 mt-2" data-i18n="billionCP">Billion+ CP</p>
                 </div>
             </div>
             <!-- Guild Master Section -->
             <div class="glass-card p-8 mt-12 reveal">
                 <div class="grid md:grid-cols-2 gap-8 items-center">
                     <div>
-                        <h3 class="text-2xl font-bold text-orange-400 mb-4">${iconStar()} Our Guild Master</h3>
+                        <h3 class="text-2xl font-bold text-orange-400 mb-4">${iconStar()} <span data-i18n="guildMaster">Our Guild Master</span></h3>
                         <div class="flex items-center gap-4 mb-4">
                             <span class="text-4xl">👑</span>
                             <div>
@@ -949,13 +950,11 @@ app.get('/', (c) => {
                                 <p class="text-orange-300">Level 76 • CP: 2B 325M</p>
                             </div>
                         </div>
-                        <p class="text-gray-300 leading-relaxed">
-                            The legendary leader of NumbahWan, RegginA leads by example - always at the frontline 
-                            protecting guild members and pushing the limits of what's possible. With over 2 billion CP, 
-                            our GM shows us that dedication and teamwork can overcome any challenge.
+                        <p class="text-gray-300 leading-relaxed" data-i18n="gmDesc">
+                            The legendary leader of NumbahWan, RegginA leads by example - always at the frontline protecting the family.
                         </p>
-                        <p class="text-gray-300 leading-relaxed mt-4">
-                            "We rise together, we fall together. That's the NumbahWan way."
+                        <p class="text-gray-300 leading-relaxed mt-4 italic">
+                            "<span data-i18n="gmQuote">We rise together, we fall together. That's the NumbahWan way.</span>"
                         </p>
                     </div>
                     <div class="flex justify-center">
@@ -971,16 +970,12 @@ app.get('/', (c) => {
                         <img src="/static/guild-base.jpg" alt="NumbahWan Guild Base" class="gm-portrait w-full max-w-md rounded-lg" />
                     </div>
                     <div class="order-1 md:order-2">
-                        <h3 class="text-2xl font-bold text-orange-400 mb-4">${iconStar()} Our Story</h3>
-                        <p class="text-gray-300 leading-relaxed">
-                            NumbahWan started with a simple dream - to become the #1 guild in MapleStory Idle RPG. 
-                            But along the way, we discovered something more valuable: each other. 
-                            Our members come from different backgrounds, but we share one thing in common - 
-                            the passion for the game and the bonds we've formed.
+                        <h3 class="text-2xl font-bold text-orange-400 mb-4">${iconStar()} <span data-i18n="ourStory">Our Story</span></h3>
+                        <p class="text-gray-300 leading-relaxed" data-i18n="storyText1">
+                            NumbahWan started with a simple dream - to become the #1 guild in MapleStory Idle RPG.
                         </p>
-                        <p class="text-gray-300 leading-relaxed mt-4">
-                            Whether it's grinding bosses at 3 AM or celebrating someone's rare drop, 
-                            we're always there for each other. That's what makes us NumbahWan.
+                        <p class="text-gray-300 leading-relaxed mt-4" data-i18n="storyText2">
+                            What makes us special isn't just our CP or rankings - it's our bond. Whether it's boss raids or just hanging out, we're always there for each other.
                         </p>
                     </div>
                 </div>
@@ -992,9 +987,9 @@ app.get('/', (c) => {
     <section id="roster" class="py-20 px-4">
         <div class="container mx-auto max-w-7xl">
             <h2 class="text-4xl font-bold text-center mb-4 neon-orange reveal">
-                ${iconUsers()} The Family
+                ${iconUsers()} <span data-i18n="theFamily">The Family</span>
             </h2>
-            <p class="text-center text-orange-300 mb-12 reveal">Our beloved guild members</p>
+            <p class="text-center text-orange-300 mb-12 reveal" data-i18n="rosterDesc">Meet our amazing guild members</p>
             
             <div class="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                 ${members.map((member, index) => `
@@ -1048,9 +1043,9 @@ app.get('/', (c) => {
     <section id="race" class="py-20 px-4">
         <div class="container mx-auto max-w-5xl">
             <h2 class="text-4xl font-bold text-center mb-4 neon-orange reveal">
-                ${iconRace()} CP Race
+                ${iconRace()} <span data-i18n="cpLeaderboard">CP Race</span>
             </h2>
-            <p class="text-center text-orange-300 mb-12 reveal">Who's leading the pack?</p>
+            <p class="text-center text-orange-300 mb-12 reveal" data-i18n="leaderboardDesc">Who's the strongest?</p>
             
             <div class="glass-card p-8 reveal">
                 <div class="space-y-6">
@@ -1082,16 +1077,16 @@ app.get('/', (c) => {
     <section id="progress" class="py-20 px-4">
         <div class="container mx-auto max-w-4xl">
             <h2 class="text-4xl font-bold text-center mb-4 neon-orange reveal">
-                ${iconTarget()} Road to #1
+                ${iconTarget()} <span data-i18n="roadToOne">Road to #1</span>
             </h2>
-            <p class="text-center text-orange-300 mb-12 reveal">Our journey to becoming NumbahWan</p>
+            <p class="text-center text-orange-300 mb-12 reveal" data-i18n="progressDesc">Our journey to becoming NumbahWan</p>
             
             <div class="glass-card p-8 reveal">
                 <div class="space-y-8">
                     <!-- Guild Level Progress -->
                     <div>
                         <div class="flex justify-between items-center mb-2">
-                            <span class="font-bold">${iconLevel()} Guild Level</span>
+                            <span class="font-bold">${iconLevel()} <span data-i18n="guildLevel">Guild Level</span></span>
                             <span class="text-orange-400">Level 15 / 50</span>
                         </div>
                         <div class="progress-container h-8">
@@ -1104,7 +1099,7 @@ app.get('/', (c) => {
                     <!-- Total Guild CP -->
                     <div>
                         <div class="flex justify-between items-center mb-2">
-                            <span class="font-bold">${iconPower()} Total Guild CP</span>
+                            <span class="font-bold">${iconPower()} <span data-i18n="totalCP">Total Guild CP</span></span>
                             <span class="text-orange-400">5.8B / 10B</span>
                         </div>
                         <div class="progress-container h-8">
@@ -1117,7 +1112,7 @@ app.get('/', (c) => {
                     <!-- Member Capacity -->
                     <div>
                         <div class="flex justify-between items-center mb-2">
-                            <span class="font-bold">${iconUsers()} Members</span>
+                            <span class="font-bold">${iconUsers()} <span data-i18n="members">Members</span></span>
                             <span class="text-orange-400">12 / 30</span>
                         </div>
                         <div class="progress-container h-8">
@@ -1130,7 +1125,7 @@ app.get('/', (c) => {
                     <!-- Boss Raids Completed -->
                     <div>
                         <div class="flex justify-between items-center mb-2">
-                            <span class="font-bold">${iconBoss()} Boss Raids This Week</span>
+                            <span class="font-bold">${iconBoss()} <span data-i18n="bossRaids">Boss Raids This Week</span></span>
                             <span class="text-orange-400">24 / 35</span>
                         </div>
                         <div class="progress-container h-8">
@@ -1143,7 +1138,7 @@ app.get('/', (c) => {
                     <!-- Guild Ranking -->
                     <div>
                         <div class="flex justify-between items-center mb-2">
-                            <span class="font-bold">${iconTrophy()} Server Ranking</span>
+                            <span class="font-bold">${iconTrophy()} <span data-i18n="serverRanking">Server Ranking</span></span>
                             <span class="text-orange-400">#47 → #1</span>
                         </div>
                         <div class="progress-container h-8">
@@ -1156,7 +1151,7 @@ app.get('/', (c) => {
                 
                 <!-- Milestones -->
                 <div class="mt-12 pt-8 border-t border-orange-900/30">
-                    <h3 class="text-xl font-bold mb-6">${iconMilestone()} Recent Milestones</h3>
+                    <h3 class="text-xl font-bold mb-6">${iconMilestone()} <span data-i18n="milestones">Milestones</span></h3>
                     <div class="space-y-4">
                         <div class="flex items-center gap-4">
                             <span class="text-2xl">✅</span>
@@ -1229,9 +1224,9 @@ app.get('/', (c) => {
                 ${generateEmblemSVG('emblem-n')}
             </div>
             <p class="pixel-font text-orange-400 mb-2">NumbahWan Guild</p>
-            <p class="text-gray-400 mb-6">"We are not just a guild, but FAMILY"</p>
-            <p class="text-gray-500 text-sm">MapleStory Idle RPG | Server: TW</p>
-            <p class="text-gray-600 text-xs mt-4">© 2024 NumbahWan Guild. Made with ❤️ by the family.</p>
+            <p class="text-gray-400 mb-6">"<span data-i18n="motto">We are not just a guild, but</span> <span data-i18n="family">FAMILY</span>"</p>
+            <p class="text-gray-500 text-sm">MapleStory Idle RPG | <span data-i18n="server">Server: TW</span></p>
+            <p class="text-gray-600 text-xs mt-4">© 2024 NumbahWan Guild. <span data-i18n="madeWith">Made with ❤️ by the family.</span></p>
         </div>
     </footer>
 
@@ -1637,7 +1632,8 @@ function iconTrophy() {
 }
 
 function iconInfo() {
-  return `<svg class="inline w-6 h-6 mr-2" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 16v-4M12 8h.01"/></svg>`
+  // No circle - just return empty string or a simple star/sparkle
+  return `<svg class="inline w-6 h-6 mr-2" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>`
 }
 
 function iconUsers() {
