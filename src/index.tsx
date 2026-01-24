@@ -1731,16 +1731,10 @@ app.get('/', (c) => {
             }
         });
         
-        // Click music button to show player again if music is playing
+        // Click music button - always toggle music on/off
         musicBtn.addEventListener('click', (e) => {
             e.stopPropagation();
-            if (isMusicPlaying && !isPlayerVisible) {
-                // Just show the player again
-                ytContainer.classList.add('visible');
-                isPlayerVisible = true;
-            } else {
-                toggleMusic();
-            }
+            toggleMusic();
         }, true);
     </script>
 </body>
