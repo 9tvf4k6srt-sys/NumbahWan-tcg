@@ -1085,7 +1085,7 @@ app.get('/', (c) => {
 })
 
 // Helper function to generate SVG N emblem - matches original exactly
-// The N has: left vertical bar, diagonal going from TOP-LEFT down to BOTTOM-RIGHT, right vertical bar
+// Standard N: left bar, diagonal from top-left to bottom-right, right bar
 function generateEmblemSVG(className = 'emblem-n', size = 60) {
   const gradId = 'nGrad' + size + Math.random().toString(36).substr(2, 5)
   return `
@@ -1098,9 +1098,21 @@ function generateEmblemSVG(className = 'emblem-n', size = 60) {
           <stop offset="100%" stop-color="#8B4513"/>
         </linearGradient>
       </defs>
-      <!-- N shape: LEFT bar (full height) + DIAGONAL (top-left to bottom-right) + RIGHT bar (full height) -->
+      <!-- Standard N: | diagonal \\ | -->
       <path d="
-        M 10,8 L 32,8 L 32,38 L 68,8 L 90,8 L 90,92 L 68,92 L 68,62 L 32,92 L 10,92 Z
+        M 12,8 
+        L 34,8 
+        L 34,20 
+        L 66,75 
+        L 66,8 
+        L 88,8 
+        L 88,92 
+        L 66,92 
+        L 66,80 
+        L 34,25 
+        L 34,92 
+        L 12,92 
+        Z
       " fill="url(#${gradId})" stroke="none"/>
     </svg>
   `
