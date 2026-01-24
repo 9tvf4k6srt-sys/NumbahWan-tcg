@@ -26,15 +26,142 @@ const members = [
 const sortedMembers = [...members].sort((a, b) => b.cpValue - a.cpValue)
 const maxCP = sortedMembers[0].cpValue
 
-// Guild Fun photos data (placeholder for AI-generated images)
+// Guild Fun photos data with actual images
 const guildFunPhotos = [
-  { id: 1, title: "Boss Raid Party", description: "The gang taking down Zakum!" },
-  { id: 2, title: "Guild Hangout", description: "Chilling at Henesys" },
-  { id: 3, title: "Epic Loot Drop", description: "When RNG blesses us" },
-  { id: 4, title: "Training Session", description: "Grinding together" },
-  { id: 5, title: "Victory Pose", description: "After defeating Black Mage" },
-  { id: 6, title: "Guild Photo", description: "All members assembled" },
+  { id: 1, title: { en: "Henesys Market Day", zh: "乾坤西斯市集日", th: "วันตลาดเฮเนซิส" }, description: { en: "Shopping with the squad!", zh: "和夥伴們一起逛街！", th: "ช้อปปิ้งกับทีม!" }, image: "/static/guild-fun-1.jpg" },
+  { id: 2, title: { en: "Selfie Time!", zh: "自拍時間！", th: "เวลาเซลฟี่!" }, description: { en: "Best friends forever", zh: "永遠的好朋友", th: "เพื่อนที่ดีที่สุดตลอดไป" }, image: "/static/guild-fun-2.jpg" },
+  { id: 3, title: { en: "Sunset Chill", zh: "夕陽時光", th: "พักผ่อนยามเย็น" }, description: { en: "RegginA & friend on cloud nine", zh: "RegginA和朋友在雲端", th: "RegginA และเพื่อนบนเมฆ" }, image: "/static/guild-fun-3.jpg" },
+  { id: 4, title: { en: "Wings of Destiny", zh: "命運之翼", th: "ปีกแห่งโชคชะตา" }, description: { en: "Power couple goals", zh: "戰力夫妻目標", th: "เป้าหมายคู่รักสุดแกร่ง" }, image: "/static/guild-fun-4.jpg" },
+  { id: 5, title: { en: "First Time Together", zh: "第一次一起", th: "ครั้งแรกด้วยกัน" }, description: { en: "Where it all began", zh: "一切的開始", th: "จุดเริ่มต้นของทุกอย่าง" }, image: "/static/guild-fun-5.jpg" },
+  { id: 6, title: { en: "Boss Raid!", zh: "打王啦！", th: "บุกบอส!" }, description: { en: "Kerning City throwdown", zh: "乾坤城大戰", th: "ศึกเคอร์นิ่งซิตี้" }, image: "/static/guild-fun-6.jpg" },
 ]
+
+// Translations
+const translations = {
+  en: {
+    joinUs: "Join Us",
+    about: "About",
+    roster: "Roster",
+    cpRace: "CP Race",
+    progress: "Progress",
+    guildFun: "Guild Fun",
+    tagline: "MapleStory Idle RPG Guild",
+    motto: "We are not just a guild, but",
+    family: "FAMILY",
+    meetFamily: "Meet The Family",
+    ourJourney: "Our Journey",
+    aboutTitle: "About NumbahWan",
+    familyMembers: "Family Members",
+    highestLevel: "Highest Level",
+    billionCP: "Billion+ CP",
+    guildMaster: "Guild Master",
+    gmDesc: "The legendary leader of NumbahWan, RegginA leads by example - always at the frontline protecting the family.",
+    gmQuote: "We rise together, we fall together. That's the NumbahWan way.",
+    ourStory: "Our Story",
+    storyText1: "NumbahWan started with a simple dream - to become the #1 guild in MapleStory Idle RPG.",
+    storyText2: "What makes us special isn't just our CP or rankings - it's our bond. Whether it's boss raids or just hanging out, we're always there for each other.",
+    theFamily: "The Family",
+    rosterDesc: "Meet our amazing guild members",
+    cpLeaderboard: "CP Leaderboard",
+    leaderboardDesc: "Who's the strongest?",
+    roadToOne: "Road to #1",
+    progressDesc: "Our journey to becoming NumbahWan",
+    guildLevel: "Guild Level",
+    totalCP: "Total Guild CP",
+    members: "Members",
+    bossRaids: "Boss Raids This Week",
+    serverRanking: "Server Ranking",
+    milestones: "Milestones",
+    shenanigans: "Guild Shenanigans",
+    memories: "Memories of our adventures together",
+    submitPhoto: "Submit Photo",
+    wantToAdd: "Want to add your screenshots?",
+    server: "Server: TW",
+    madeWith: "Made with ❤️ by the family."
+  },
+  zh: {
+    joinUs: "加入我們",
+    about: "關於",
+    roster: "成員",
+    cpRace: "戰力榜",
+    progress: "進度",
+    guildFun: "公會趣事",
+    tagline: "楓之谷放置RPG公會",
+    motto: "我們不只是公會，更是",
+    family: "家人",
+    meetFamily: "認識家人們",
+    ourJourney: "我們的旅程",
+    aboutTitle: "關於 NumbahWan",
+    familyMembers: "家族成員",
+    highestLevel: "最高等級",
+    billionCP: "十億+戰力",
+    guildMaster: "公會會長",
+    gmDesc: "NumbahWan的傳奇領袖，RegginA以身作則 - 永遠站在最前線保護家人。",
+    gmQuote: "我們一起崛起，一起承擔。這就是NumbahWan的精神。",
+    ourStory: "我們的故事",
+    storyText1: "NumbahWan從一個簡單的夢想開始 - 成為楓之谷放置RPG的第一公會。",
+    storyText2: "讓我們特別的不只是戰力或排名 - 而是我們的羈絆。無論是打王還是閒聊，我們永遠在彼此身邊。",
+    theFamily: "家族成員",
+    rosterDesc: "認識我們優秀的公會成員",
+    cpLeaderboard: "戰力排行榜",
+    leaderboardDesc: "誰是最強的？",
+    roadToOne: "邁向第一",
+    progressDesc: "我們成為NumbahWan的旅程",
+    guildLevel: "公會等級",
+    totalCP: "公會總戰力",
+    members: "成員數量",
+    bossRaids: "本週打王次數",
+    serverRanking: "伺服器排名",
+    milestones: "里程碑",
+    shenanigans: "公會趣事",
+    memories: "我們一起冒險的回憶",
+    submitPhoto: "上傳照片",
+    wantToAdd: "想要分享你的截圖嗎？",
+    server: "伺服器：台灣",
+    madeWith: "家人們用 ❤️ 製作"
+  },
+  th: {
+    joinUs: "เข้าร่วม",
+    about: "เกี่ยวกับ",
+    roster: "สมาชิก",
+    cpRace: "อันดับ CP",
+    progress: "ความคืบหน้า",
+    guildFun: "กิลด์สนุกๆ",
+    tagline: "กิลด์ MapleStory Idle RPG",
+    motto: "เราไม่ได้เป็นแค่กิลด์ แต่เป็น",
+    family: "ครอบครัว",
+    meetFamily: "พบกับครอบครัว",
+    ourJourney: "การเดินทางของเรา",
+    aboutTitle: "เกี่ยวกับ NumbahWan",
+    familyMembers: "สมาชิกครอบครัว",
+    highestLevel: "เลเวลสูงสุด",
+    billionCP: "พันล้าน+ CP",
+    guildMaster: "หัวหน้ากิลด์",
+    gmDesc: "ผู้นำในตำนานของ NumbahWan, RegginA เป็นแบบอย่าง - อยู่แนวหน้าปกป้องครอบครัวเสมอ",
+    gmQuote: "เราขึ้นด้วยกัน เราลงด้วยกัน นี่คือวิถี NumbahWan",
+    ourStory: "เรื่องราวของเรา",
+    storyText1: "NumbahWan เริ่มต้นจากความฝันง่ายๆ - เป็นกิลด์อันดับ 1 ใน MapleStory Idle RPG",
+    storyText2: "สิ่งที่ทำให้เราพิเศษไม่ใช่แค่ CP หรืออันดับ - แต่เป็นสายสัมพันธ์ของเรา ไม่ว่าจะบุกบอสหรือแค่แฮงเอาท์ เราอยู่ด้วยกันเสมอ",
+    theFamily: "ครอบครัว",
+    rosterDesc: "พบกับสมาชิกกิลด์สุดเจ๋งของเรา",
+    cpLeaderboard: "อันดับ CP",
+    leaderboardDesc: "ใครแข็งแกร่งที่สุด?",
+    roadToOne: "สู่อันดับ 1",
+    progressDesc: "การเดินทางสู่การเป็น NumbahWan",
+    guildLevel: "เลเวลกิลด์",
+    totalCP: "CP รวมกิลด์",
+    members: "จำนวนสมาชิก",
+    bossRaids: "บุกบอสสัปดาห์นี้",
+    serverRanking: "อันดับเซิร์ฟเวอร์",
+    milestones: "เหตุการณ์สำคัญ",
+    shenanigans: "กิลด์สนุกๆ",
+    memories: "ความทรงจำการผจญภัยด้วยกัน",
+    submitPhoto: "ส่งรูป",
+    wantToAdd: "อยากเพิ่มภาพหน้าจอของคุณไหม?",
+    server: "เซิร์ฟเวอร์: TW",
+    madeWith: "สร้างด้วย ❤️ โดยครอบครัว"
+  }
+}
 
 app.get('/', (c) => {
   return c.html(`
@@ -501,21 +628,41 @@ app.get('/', (c) => {
     <!-- Particles -->
     <div id="particles"></div>
     
+    <!-- Language Switcher (floating) -->
+    <div class="fixed top-20 right-4 z-50" id="lang-switcher">
+        <button onclick="toggleLangMenu()" class="glass-card px-3 py-2 rounded-full text-sm flex items-center gap-2 hover:bg-orange-500/20 transition-all">
+            <span id="current-lang-flag">🇬🇧</span>
+            <span id="current-lang-code">EN</span>
+            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+        </button>
+        <div id="lang-menu" class="hidden absolute right-0 mt-2 glass-card rounded-lg overflow-hidden min-w-[120px]">
+            <button onclick="setLanguage('en')" class="w-full px-4 py-2 text-left hover:bg-orange-500/20 flex items-center gap-2 text-sm">
+                <span>🇬🇧</span> English
+            </button>
+            <button onclick="setLanguage('zh')" class="w-full px-4 py-2 text-left hover:bg-orange-500/20 flex items-center gap-2 text-sm">
+                <span>🇹🇼</span> 繁體中文
+            </button>
+            <button onclick="setLanguage('th')" class="w-full px-4 py-2 text-left hover:bg-orange-500/20 flex items-center gap-2 text-sm">
+                <span>🇹🇭</span> ไทย
+            </button>
+        </div>
+    </div>
+    
     <!-- Navigation -->
     <nav class="fixed top-0 left-0 right-0 z-50 glass-card mx-4 mt-4 rounded-full">
-        <div class="container mx-auto px-6 py-4 flex items-center justify-between">
-            <a href="#hero" class="flex items-center gap-3">
-                <div id="nav-emblem">${generateEmblemSVG('emblem-n')}</div>
-                <span class="pixel-font text-sm text-orange-400">NumbahWan</span>
+        <div class="container mx-auto px-4 py-3 flex items-center justify-between">
+            <a href="#hero" class="flex items-center gap-2">
+                <div id="nav-emblem">${generateEmblemSVG('emblem-n', 40)}</div>
+                <span class="pixel-font text-xs text-orange-400 hidden sm:inline">NumbahWan</span>
             </a>
-            <div class="hidden md:flex items-center gap-8">
-                <a href="#about" class="nav-link text-sm">About</a>
-                <a href="#roster" class="nav-link text-sm">Roster</a>
-                <a href="#race" class="nav-link text-sm">CP Race</a>
-                <a href="#progress" class="nav-link text-sm">Progress</a>
-                <a href="#gallery" class="nav-link text-sm">Guild Fun</a>
+            <div class="hidden md:flex items-center gap-6">
+                <a href="#about" class="nav-link text-sm" data-i18n="about">About</a>
+                <a href="#roster" class="nav-link text-sm" data-i18n="roster">Roster</a>
+                <a href="#race" class="nav-link text-sm" data-i18n="cpRace">CP Race</a>
+                <a href="#progress" class="nav-link text-sm" data-i18n="progress">Progress</a>
+                <a href="#gallery" class="nav-link text-sm" data-i18n="guildFun">Guild Fun</a>
             </div>
-            <button class="magnetic-btn text-sm" onclick="document.getElementById('roster').scrollIntoView({behavior: 'smooth'})">
+            <button class="magnetic-btn text-xs sm:text-sm px-3 py-2" onclick="document.getElementById('roster').scrollIntoView({behavior: 'smooth'})" data-i18n="joinUs">
                 Join Us
             </button>
         </div>
@@ -530,28 +677,28 @@ app.get('/', (c) => {
             <h1 class="pixel-title mb-4" id="guild-name" style="display: block; width: 100%; text-align: center; margin-left: auto; margin-right: auto;">
                 NumbahWan
             </h1>
-            <p class="text-xl md:text-2xl text-orange-300 mb-6 opacity-0" id="tagline">
+            <p class="text-xl md:text-2xl text-orange-300 mb-6 opacity-0" id="tagline" data-i18n="tagline">
                 MapleStory Idle RPG Guild
             </p>
             <div class="glass-card p-4 md:p-6 max-w-xl mx-auto mb-8 opacity-0" id="motto-card">
                 <p class="text-base md:text-xl italic text-orange-200">
-                    "We are not just a guild, but <span class="text-orange-400 font-bold">FAMILY</span>"
+                    "<span data-i18n="motto">We are not just a guild, but</span> <span class="text-orange-400 font-bold" data-i18n="family">FAMILY</span>"
                 </p>
             </div>
             <div class="flex flex-wrap justify-center gap-4 opacity-0" id="hero-buttons">
                 <button class="magnetic-btn" onclick="document.getElementById('roster').scrollIntoView({behavior: 'smooth'})">
-                    ${iconSword()} Meet The Family
+                    ${iconSword()} <span data-i18n="meetFamily">Meet The Family</span>
                 </button>
                 <button class="magnetic-btn" style="background: transparent; border: 2px solid var(--primary);" onclick="document.getElementById('progress').scrollIntoView({behavior: 'smooth'})">
-                    ${iconTrophy()} Our Journey
+                    ${iconTrophy()} <span data-i18n="ourJourney">Our Journey</span>
                 </button>
             </div>
         </div>
         
-        <!-- Scroll indicator -->
-        <div class="absolute bottom-10 left-1/2 transform -translate-x-1/2 opacity-0 z-10" id="scroll-indicator">
-            <div class="w-6 h-10 border-2 border-orange-400 rounded-full flex justify-center">
-                <div class="w-1 h-3 bg-orange-400 rounded-full mt-2 animate-bounce"></div>
+        <!-- Scroll indicator - positioned lower to avoid overlap -->
+        <div class="absolute bottom-4 left-1/2 transform -translate-x-1/2 opacity-0 z-10" id="scroll-indicator">
+            <div class="w-5 h-8 border-2 border-orange-400/60 rounded-full flex justify-center">
+                <div class="w-1 h-2 bg-orange-400 rounded-full mt-1.5 animate-bounce"></div>
             </div>
         </div>
     </section>
@@ -835,25 +982,27 @@ app.get('/', (c) => {
     <section id="gallery" class="py-20 px-4">
         <div class="container mx-auto max-w-6xl">
             <h2 class="text-4xl font-bold text-center mb-4 neon-orange reveal">
-                ${iconCamera()} Guild Shenanigans
+                ${iconCamera()} <span data-i18n="shenanigans">Guild Shenanigans</span>
             </h2>
-            <p class="text-center text-orange-300 mb-12 reveal">Memories of our adventures together</p>
+            <p class="text-center text-orange-300 mb-12 reveal" data-i18n="memories">Memories of our adventures together</p>
             
             <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
                 ${guildFunPhotos.map((photo, index) => `
-                    <div class="photo-card glass-card reveal" style="animation-delay: ${index * 0.1}s">
-                        <div class="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/80 to-transparent">
-                            <h3 class="font-bold text-orange-400">${photo.title}</h3>
-                            <p class="text-sm text-gray-300">${photo.description}</p>
+                    <div class="photo-card glass-card reveal overflow-hidden group cursor-pointer" style="animation-delay: ${index * 0.1}s">
+                        <img src="${photo.image}" alt="${photo.title.en}" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" loading="lazy" />
+                        <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent opacity-80 group-hover:opacity-100 transition-opacity"></div>
+                        <div class="absolute bottom-0 left-0 right-0 p-4">
+                            <h3 class="font-bold text-orange-400 text-lg" data-i18n-photo="${photo.id}" data-i18n-field="title">${photo.title.en}</h3>
+                            <p class="text-sm text-gray-300" data-i18n-photo="${photo.id}" data-i18n-field="description">${photo.description.en}</p>
                         </div>
                     </div>
                 `).join('')}
             </div>
             
             <div class="text-center mt-12 reveal">
-                <p class="text-gray-400 mb-4">Want to add your screenshots?</p>
+                <p class="text-gray-400 mb-4" data-i18n="wantToAdd">Want to add your screenshots?</p>
                 <button class="magnetic-btn">
-                    ${iconUpload()} Submit Photo
+                    ${iconUpload()} <span data-i18n="submitPhoto">Submit Photo</span>
                 </button>
             </div>
         </div>
@@ -1089,6 +1238,120 @@ app.get('/', (c) => {
                 ease: "power2.out"
             });
         });
+        
+        // ========== LANGUAGE SYSTEM ==========
+        const translations = {
+            en: {
+                joinUs: "Join Us", about: "About", roster: "Roster", cpRace: "CP Race", 
+                progress: "Progress", guildFun: "Guild Fun", tagline: "MapleStory Idle RPG Guild",
+                motto: "We are not just a guild, but", family: "FAMILY", meetFamily: "Meet The Family",
+                ourJourney: "Our Journey", aboutTitle: "About NumbahWan", familyMembers: "Family Members",
+                highestLevel: "Highest Level", billionCP: "Billion+ CP", guildMaster: "Guild Master",
+                gmDesc: "The legendary leader of NumbahWan, RegginA leads by example - always at the frontline protecting the family.",
+                gmQuote: "We rise together, we fall together. That's the NumbahWan way.",
+                ourStory: "Our Story", storyText1: "NumbahWan started with a simple dream - to become the #1 guild in MapleStory Idle RPG.",
+                storyText2: "What makes us special isn't just our CP or rankings - it's our bond. Whether it's boss raids or just hanging out, we're always there for each other.",
+                theFamily: "The Family", rosterDesc: "Meet our amazing guild members", cpLeaderboard: "CP Leaderboard",
+                leaderboardDesc: "Who's the strongest?", roadToOne: "Road to #1", progressDesc: "Our journey to becoming NumbahWan",
+                guildLevel: "Guild Level", totalCP: "Total Guild CP", members: "Members", bossRaids: "Boss Raids This Week",
+                serverRanking: "Server Ranking", milestones: "Milestones", shenanigans: "Guild Shenanigans",
+                memories: "Memories of our adventures together", submitPhoto: "Submit Photo", wantToAdd: "Want to add your screenshots?",
+                server: "Server: TW", madeWith: "Made with ❤️ by the family."
+            },
+            zh: {
+                joinUs: "加入我們", about: "關於", roster: "成員", cpRace: "戰力榜", 
+                progress: "進度", guildFun: "公會趣事", tagline: "楓之谷放置RPG公會",
+                motto: "我們不只是公會，更是", family: "家人", meetFamily: "認識家人們",
+                ourJourney: "我們的旅程", aboutTitle: "關於 NumbahWan", familyMembers: "家族成員",
+                highestLevel: "最高等級", billionCP: "十億+戰力", guildMaster: "公會會長",
+                gmDesc: "NumbahWan的傳奇領袖，RegginA以身作則 - 永遠站在最前線保護家人。",
+                gmQuote: "我們一起崛起，一起承擔。這就是NumbahWan的精神。",
+                ourStory: "我們的故事", storyText1: "NumbahWan從一個簡單的夢想開始 - 成為楓之谷放置RPG的第一公會。",
+                storyText2: "讓我們特別的不只是戰力或排名 - 而是我們的羈絆。無論是打王還是閒聊，我們永遠在彼此身邊。",
+                theFamily: "家族成員", rosterDesc: "認識我們優秀的公會成員", cpLeaderboard: "戰力排行榜",
+                leaderboardDesc: "誰是最強的？", roadToOne: "邁向第一", progressDesc: "我們成為NumbahWan的旅程",
+                guildLevel: "公會等級", totalCP: "公會總戰力", members: "成員數量", bossRaids: "本週打王次數",
+                serverRanking: "伺服器排名", milestones: "里程碑", shenanigans: "公會趣事",
+                memories: "我們一起冒險的回憶", submitPhoto: "上傳照片", wantToAdd: "想要分享你的截圖嗎？",
+                server: "伺服器：台灣", madeWith: "家人們用 ❤️ 製作"
+            },
+            th: {
+                joinUs: "เข้าร่วม", about: "เกี่ยวกับ", roster: "สมาชิก", cpRace: "อันดับ CP", 
+                progress: "ความคืบหน้า", guildFun: "กิลด์สนุกๆ", tagline: "กิลด์ MapleStory Idle RPG",
+                motto: "เราไม่ได้เป็นแค่กิลด์ แต่เป็น", family: "ครอบครัว", meetFamily: "พบกับครอบครัว",
+                ourJourney: "การเดินทางของเรา", aboutTitle: "เกี่ยวกับ NumbahWan", familyMembers: "สมาชิกครอบครัว",
+                highestLevel: "เลเวลสูงสุด", billionCP: "พันล้าน+ CP", guildMaster: "หัวหน้ากิลด์",
+                gmDesc: "ผู้นำในตำนานของ NumbahWan, RegginA เป็นแบบอย่าง - อยู่แนวหน้าปกป้องครอบครัวเสมอ",
+                gmQuote: "เราขึ้นด้วยกัน เราลงด้วยกัน นี่คือวิถี NumbahWan",
+                ourStory: "เรื่องราวของเรา", storyText1: "NumbahWan เริ่มต้นจากความฝันง่ายๆ - เป็นกิลด์อันดับ 1 ใน MapleStory Idle RPG",
+                storyText2: "สิ่งที่ทำให้เราพิเศษไม่ใช่แค่ CP หรืออันดับ - แต่เป็นสายสัมพันธ์ของเรา ไม่ว่าจะบุกบอสหรือแค่แฮงเอาท์ เราอยู่ด้วยกันเสมอ",
+                theFamily: "ครอบครัว", rosterDesc: "พบกับสมาชิกกิลด์สุดเจ๋งของเรา", cpLeaderboard: "อันดับ CP",
+                leaderboardDesc: "ใครแข็งแกร่งที่สุด?", roadToOne: "สู่อันดับ 1", progressDesc: "การเดินทางสู่การเป็น NumbahWan",
+                guildLevel: "เลเวลกิลด์", totalCP: "CP รวมกิลด์", members: "จำนวนสมาชิก", bossRaids: "บุกบอสสัปดาห์นี้",
+                serverRanking: "อันดับเซิร์ฟเวอร์", milestones: "เหตุการณ์สำคัญ", shenanigans: "กิลด์สนุกๆ",
+                memories: "ความทรงจำการผจญภัยด้วยกัน", submitPhoto: "ส่งรูป", wantToAdd: "อยากเพิ่มภาพหน้าจอของคุณไหม?",
+                server: "เซิร์ฟเวอร์: TW", madeWith: "สร้างด้วย ❤️ โดยครอบครัว"
+            }
+        };
+        
+        const photoTranslations = {
+            1: { title: { en: "Henesys Market Day", zh: "乾坤西斯市集日", th: "วันตลาดเฮเนซิส" }, description: { en: "Shopping with the squad!", zh: "和夥伴們一起逛街！", th: "ช้อปปิ้งกับทีม!" }},
+            2: { title: { en: "Selfie Time!", zh: "自拍時間！", th: "เวลาเซลฟี่!" }, description: { en: "Best friends forever", zh: "永遠的好朋友", th: "เพื่อนที่ดีที่สุดตลอดไป" }},
+            3: { title: { en: "Sunset Chill", zh: "夕陽時光", th: "พักผ่อนยามเย็น" }, description: { en: "RegginA & friend on cloud nine", zh: "RegginA和朋友在雲端", th: "RegginA และเพื่อนบนเมฆ" }},
+            4: { title: { en: "Wings of Destiny", zh: "命運之翼", th: "ปีกแห่งโชคชะตา" }, description: { en: "Power couple goals", zh: "戰力夫妻目標", th: "เป้าหมายคู่รักสุดแกร่ง" }},
+            5: { title: { en: "First Time Together", zh: "第一次一起", th: "ครั้งแรกด้วยกัน" }, description: { en: "Where it all began", zh: "一切的開始", th: "จุดเริ่มต้นของทุกอย่าง" }},
+            6: { title: { en: "Boss Raid!", zh: "打王啦！", th: "บุกบอส!" }, description: { en: "Kerning City throwdown", zh: "乾坤城大戰", th: "ศึกเคอร์นิ่งซิตี้" }}
+        };
+        
+        const langFlags = { en: "🇬🇧", zh: "🇹🇼", th: "🇹🇭" };
+        const langCodes = { en: "EN", zh: "中文", th: "ไทย" };
+        
+        let currentLang = localStorage.getItem('lang') || 'en';
+        
+        function toggleLangMenu() {
+            const menu = document.getElementById('lang-menu');
+            menu.classList.toggle('hidden');
+        }
+        
+        function setLanguage(lang) {
+            currentLang = lang;
+            localStorage.setItem('lang', lang);
+            
+            // Update flag and code
+            document.getElementById('current-lang-flag').textContent = langFlags[lang];
+            document.getElementById('current-lang-code').textContent = langCodes[lang];
+            
+            // Update all translatable elements
+            document.querySelectorAll('[data-i18n]').forEach(el => {
+                const key = el.getAttribute('data-i18n');
+                if (translations[lang][key]) {
+                    el.textContent = translations[lang][key];
+                }
+            });
+            
+            // Update photo titles and descriptions
+            document.querySelectorAll('[data-i18n-photo]').forEach(el => {
+                const photoId = el.getAttribute('data-i18n-photo');
+                const field = el.getAttribute('data-i18n-field');
+                if (photoTranslations[photoId] && photoTranslations[photoId][field]) {
+                    el.textContent = photoTranslations[photoId][field][lang];
+                }
+            });
+            
+            // Close menu
+            document.getElementById('lang-menu').classList.add('hidden');
+        }
+        
+        // Close language menu when clicking outside
+        document.addEventListener('click', (e) => {
+            const switcher = document.getElementById('lang-switcher');
+            if (!switcher.contains(e.target)) {
+                document.getElementById('lang-menu').classList.add('hidden');
+            }
+        });
+        
+        // Initialize language on load
+        setLanguage(currentLang);
     </script>
 </body>
 </html>
