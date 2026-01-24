@@ -148,21 +148,22 @@ app.get('/', (c) => {
             filter: drop-shadow(0 0 25px rgba(255, 140, 0, 0.95));
         }
         
-        /* Pixel-style title - single line, responsive, centered */
+        /* Pixel-style title - single line, responsive, CENTERED */
         .pixel-title {
             font-family: 'Press Start 2P', cursive;
-            font-size: clamp(1.5rem, 6vw, 5rem);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            width: 100%;
-            margin: 0 auto;
-            text-align: center;
+            font-size: clamp(2rem, 8vw, 6rem);
+            display: block !important;
+            width: 100% !important;
+            max-width: 100vw;
+            margin: 0 auto !important;
+            text-align: center !important;
+            padding: 0 1rem;
+            box-sizing: border-box;
             background: linear-gradient(180deg, #ffcc70 0%, #ff9500 30%, #ff6b00 60%, #cc4400 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
-            filter: drop-shadow(0 0 25px rgba(255, 107, 0, 0.9)) drop-shadow(0 0 50px rgba(255, 107, 0, 0.6));
+            filter: drop-shadow(0 0 30px rgba(255, 107, 0, 0.95)) drop-shadow(0 0 60px rgba(255, 107, 0, 0.7));
             letter-spacing: 0.02em;
             white-space: nowrap;
         }
@@ -172,7 +173,7 @@ app.get('/', (c) => {
             position: relative;
             width: 100%;
             min-height: 100vh;
-            background: url('https://www.genspark.ai/api/files/s/y68bEe5Y') center center / cover no-repeat;
+            background: url('/static/hero-banner.jpg') center center / cover no-repeat;
             display: flex;
             flex-direction: column;
             justify-content: center;
@@ -514,7 +515,7 @@ app.get('/', (c) => {
             <div class="flex justify-center mb-6" id="hero-emblem">
                 ${generateEmblemSVG('emblem-n emblem-n-large', 100)}
             </div>
-            <h1 class="pixel-title mb-4" id="guild-name">
+            <h1 class="pixel-title mb-4" id="guild-name" style="display: block; width: 100%; text-align: center; margin-left: auto; margin-right: auto;">
                 NumbahWan
             </h1>
             <p class="text-xl md:text-2xl text-orange-300 mb-6 opacity-0" id="tagline">
@@ -585,7 +586,7 @@ app.get('/', (c) => {
                         </p>
                     </div>
                     <div class="flex justify-center">
-                        <img src="https://www.genspark.ai/api/files/s/h4ICNbmP" alt="Guild Master RegginA" class="gm-portrait w-full max-w-sm rounded-lg" />
+                        <img src="/static/gm-portrait.jpg" alt="Guild Master RegginA" class="gm-portrait w-full max-w-sm rounded-lg" />
                     </div>
                 </div>
             </div>
@@ -594,7 +595,7 @@ app.get('/', (c) => {
             <div class="glass-card p-8 mt-8 reveal">
                 <div class="grid md:grid-cols-2 gap-8 items-center">
                     <div class="flex justify-center order-2 md:order-1">
-                        <img src="https://www.genspark.ai/api/files/s/3JTop6hF" alt="NumbahWan Guild Base" class="gm-portrait w-full max-w-md rounded-lg" />
+                        <img src="/static/guild-base.jpg" alt="NumbahWan Guild Base" class="gm-portrait w-full max-w-md rounded-lg" />
                     </div>
                     <div class="order-1 md:order-2">
                         <h3 class="text-2xl font-bold text-orange-400 mb-4">${iconStar()} Our Story</h3>
@@ -1083,22 +1084,23 @@ app.get('/', (c) => {
 })
 
 // Helper function to generate SVG N emblem - matches original exactly
-// Solid N shape with smooth edges and vertical gradient (light top to dark bottom)
+// The N has: left vertical bar, diagonal going from TOP-LEFT down to BOTTOM-RIGHT, right vertical bar
 function generateEmblemSVG(className = 'emblem-n', size = 60) {
-  // Generate unique ID for gradient to avoid conflicts
   const gradId = 'nGrad' + size + Math.random().toString(36).substr(2, 5)
   return `
     <svg class="${className}" viewBox="0 0 100 100" width="${size}" height="${size}" xmlns="http://www.w3.org/2000/svg">
       <defs>
         <linearGradient id="${gradId}" x1="0%" y1="0%" x2="0%" y2="100%">
           <stop offset="0%" stop-color="#ffb347"/>
-          <stop offset="30%" stop-color="#ff9500"/>
-          <stop offset="60%" stop-color="#ff6b00"/>
-          <stop offset="100%" stop-color="#994400"/>
+          <stop offset="35%" stop-color="#ff9500"/>
+          <stop offset="65%" stop-color="#e86500"/>
+          <stop offset="100%" stop-color="#8B4513"/>
         </linearGradient>
       </defs>
-      <!-- Correct N: left bar at left, diagonal goes TOP-LEFT to BOTTOM-RIGHT, right bar at right -->
-      <path d="M10,10 L30,10 L30,45 L70,10 L90,10 L90,90 L70,90 L70,55 L30,90 L10,90 Z" fill="url(#${gradId})"/>
+      <!-- N shape: LEFT bar (full height) + DIAGONAL (top-left to bottom-right) + RIGHT bar (full height) -->
+      <path d="
+        M 10,8 L 32,8 L 32,38 L 68,8 L 90,8 L 90,92 L 68,92 L 68,62 L 32,92 L 10,92 Z
+      " fill="url(#${gradId})" stroke="none"/>
     </svg>
   `
 }
