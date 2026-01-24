@@ -711,6 +711,49 @@ app.get('/', (c) => {
             transform: translateX(-50%);
             z-index: 10;
         }
+        
+        /* Nav Menu Items - Liquid Glass Style */
+        .nav-menu-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 0.35rem 0.5rem;
+            border-radius: 12px;
+            background: rgba(255, 107, 0, 0.1);
+            border: 1px solid rgba(255, 107, 0, 0.2);
+            transition: all 0.3s ease;
+            text-decoration: none;
+            min-width: 45px;
+        }
+        
+        @media (min-width: 640px) {
+            .nav-menu-item {
+                padding: 0.4rem 0.75rem;
+                min-width: 55px;
+            }
+        }
+        
+        .nav-menu-item:hover {
+            background: rgba(255, 107, 0, 0.25);
+            border-color: rgba(255, 107, 0, 0.5);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(255, 107, 0, 0.3);
+        }
+        
+        .nav-menu-label {
+            font-size: 0.6rem;
+            color: var(--primary);
+            font-weight: 600;
+            margin-top: 2px;
+            white-space: nowrap;
+        }
+        
+        @media (min-width: 640px) {
+            .nav-menu-label {
+                font-size: 0.65rem;
+            }
+        }
     </style>
 </head>
 <body>
@@ -721,26 +764,42 @@ app.get('/', (c) => {
     <div id="particles"></div>
     
     <!-- Navigation -->
-    <nav class="fixed top-0 left-0 right-0 z-50 glass-card mx-4 mt-4 rounded-full">
-        <div class="container mx-auto px-4 py-3 flex items-center justify-between">
+    <nav class="fixed top-0 left-0 right-0 z-50 glass-card mx-4 mt-4 rounded-2xl">
+        <div class="container mx-auto px-3 py-2 flex items-center justify-between">
             <a href="#hero" class="flex items-center gap-2">
-                <div id="nav-emblem">${generateEmblemSVG('emblem-n', 40)}</div>
-                <span class="pixel-font text-xs text-orange-400 hidden sm:inline">NumbahWan</span>
+                <div id="nav-emblem">${generateEmblemSVG('emblem-n', 36)}</div>
             </a>
-            <div class="hidden md:flex items-center gap-6">
-                <a href="#about" class="nav-link text-sm" data-i18n="about">About</a>
-                <a href="#roster" class="nav-link text-sm" data-i18n="roster">Roster</a>
-                <a href="#race" class="nav-link text-sm" data-i18n="cpRace">CP Race</a>
-                <a href="#progress" class="nav-link text-sm" data-i18n="progress">Progress</a>
-                <a href="#gallery" class="nav-link text-sm" data-i18n="guildFun">Guild Fun</a>
+            
+            <!-- Liquid Glass Menu Icons (center) -->
+            <div class="flex items-center gap-1 sm:gap-2">
+                <a href="#race" class="nav-menu-item" title="CP Leaderboard">
+                    <span class="text-base sm:text-lg">🏆</span>
+                    <span class="nav-menu-label" data-i18n="cpRace">CP</span>
+                </a>
+                <a href="#about" class="nav-menu-item" title="GM PvP">
+                    <span class="text-base sm:text-lg">⚔️</span>
+                    <span class="nav-menu-label" data-i18n="gmPvp">PvP</span>
+                </a>
+                <a href="#roster" class="nav-menu-item" title="Members">
+                    <span class="text-base sm:text-lg">👥</span>
+                    <span class="nav-menu-label" data-i18n="roster">Family</span>
+                </a>
+                <a href="#gallery" class="nav-menu-item" title="Shenanigans">
+                    <span class="text-base sm:text-lg">📸</span>
+                    <span class="nav-menu-label" data-i18n="guildFun">Fun</span>
+                </a>
+                <a href="#progress" class="nav-menu-item" title="Progress">
+                    <span class="text-base sm:text-lg">📈</span>
+                    <span class="nav-menu-label" data-i18n="progress">Goal</span>
+                </a>
             </div>
-            <div class="flex items-center gap-2">
+            
+            <div class="flex items-center gap-1 sm:gap-2">
                 <!-- Language Switcher (in nav) -->
                 <div class="relative" id="lang-switcher">
                     <button onclick="toggleLangMenu()" class="px-2 py-1 rounded-full text-xs flex items-center gap-1 hover:bg-orange-500/20 transition-all border border-orange-500/30">
                         <span id="current-lang-flag">🇬🇧</span>
                         <span id="current-lang-code" class="hidden sm:inline">EN</span>
-                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
                     </button>
                     <div id="lang-menu" class="hidden absolute right-0 top-full mt-2 glass-card rounded-lg overflow-hidden min-w-[120px] z-50">
                         <button onclick="setLanguage('en')" class="w-full px-4 py-2 text-left hover:bg-orange-500/20 flex items-center gap-2 text-sm">
@@ -754,7 +813,7 @@ app.get('/', (c) => {
                         </button>
                     </div>
                 </div>
-                <button class="magnetic-btn text-xs sm:text-sm px-3 py-2" onclick="document.getElementById('roster').scrollIntoView({behavior: 'smooth'})" data-i18n="joinUs">
+                <button class="magnetic-btn text-xs px-2 py-1 sm:px-3 sm:py-2" onclick="document.getElementById('roster').scrollIntoView({behavior: 'smooth'})" data-i18n="joinUs">
                     Join Us
                 </button>
             </div>
@@ -792,104 +851,6 @@ app.get('/', (c) => {
         <div class="absolute bottom-4 left-1/2 transform -translate-x-1/2 opacity-0 z-10" id="scroll-indicator">
             <div class="w-5 h-8 border-2 border-orange-400/60 rounded-full flex justify-center">
                 <div class="w-1 h-2 bg-orange-400 rounded-full mt-1.5 animate-bounce"></div>
-            </div>
-        </div>
-    </section>
-    
-    <!-- Liquid Glass Menu Section -->
-    <section id="quick-menu" class="py-16 px-4 relative">
-        <div class="container mx-auto max-w-5xl">
-            <div class="liquid-glass-menu p-8 pt-16 relative">
-                <!-- Floating N Emblem -->
-                <div class="menu-emblem">
-                    ${generateEmblemSVG('emblem-n', 60)}
-                </div>
-                
-                <!-- Menu Grid -->
-                <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    <!-- Guild Content Ranking -->
-                    <a href="#race" class="menu-item text-center group">
-                        <div class="menu-icon mx-auto">
-                            <span>🏆</span>
-                        </div>
-                        <h3 class="font-bold text-orange-400 text-sm mb-1" data-i18n="cpLeaderboard">CP Leaderboard</h3>
-                        <p class="text-xs text-gray-400" data-i18n="contentRankDesc">Guild Power Rankings</p>
-                        <div class="mt-2 text-xs text-orange-300 font-bold">#47 Server</div>
-                    </a>
-                    
-                    <!-- GM PvP Ranking -->
-                    <a href="#about" class="menu-item text-center group">
-                        <div class="menu-icon mx-auto">
-                            <span>⚔️</span>
-                        </div>
-                        <h3 class="font-bold text-orange-400 text-sm mb-1" data-i18n="gmPvp">GM PvP</h3>
-                        <p class="text-xs text-gray-400" data-i18n="pvpRankDesc">Battle Rankings</p>
-                        <div class="mt-2 text-xs text-orange-300 font-bold">RegginA #1</div>
-                    </a>
-                    
-                    <!-- Members -->
-                    <a href="#roster" class="menu-item text-center group">
-                        <div class="menu-icon mx-auto">
-                            <span>👥</span>
-                        </div>
-                        <h3 class="font-bold text-orange-400 text-sm mb-1" data-i18n="theFamily">The Family</h3>
-                        <p class="text-xs text-gray-400" data-i18n="membersDesc">Our Guild Members</p>
-                        <div class="mt-2 text-xs text-orange-300 font-bold">12 Members</div>
-                    </a>
-                    
-                    <!-- Guild Shenanigans -->
-                    <a href="#gallery" class="menu-item text-center group">
-                        <div class="menu-icon mx-auto">
-                            <span>📸</span>
-                        </div>
-                        <h3 class="font-bold text-orange-400 text-sm mb-1" data-i18n="shenanigans">Shenanigans</h3>
-                        <p class="text-xs text-gray-400" data-i18n="funDesc">Fun Moments</p>
-                        <div class="mt-2 text-xs text-orange-300 font-bold">6 Photos</div>
-                    </a>
-                </div>
-                
-                <!-- Second Row - More Options -->
-                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
-                    <!-- Progress -->
-                    <a href="#progress" class="menu-item text-center group">
-                        <div class="menu-icon mx-auto">
-                            <span>📈</span>
-                        </div>
-                        <h3 class="font-bold text-orange-400 text-sm mb-1" data-i18n="roadToOne">Road to #1</h3>
-                        <p class="text-xs text-gray-400" data-i18n="progressDesc2">Guild Progress</p>
-                        <div class="mt-2 text-xs text-orange-300 font-bold">58% CP Goal</div>
-                    </a>
-                    
-                    <!-- Boss Raids -->
-                    <a href="#progress" class="menu-item text-center group">
-                        <div class="menu-icon mx-auto">
-                            <span>🐉</span>
-                        </div>
-                        <h3 class="font-bold text-orange-400 text-sm mb-1" data-i18n="bossRaids">Boss Raids</h3>
-                        <p class="text-xs text-gray-400" data-i18n="raidsDesc">Weekly Battles</p>
-                        <div class="mt-2 text-xs text-orange-300 font-bold">24/35 Done</div>
-                    </a>
-                    
-                    <!-- Guild Master -->
-                    <a href="#about" class="menu-item text-center group">
-                        <div class="menu-icon mx-auto">
-                            <span>👑</span>
-                        </div>
-                        <h3 class="font-bold text-orange-400 text-sm mb-1" data-i18n="guildMaster">Guild Master</h3>
-                        <p class="text-xs text-gray-400" data-i18n="gmDesc2">Our Leader</p>
-                        <div class="mt-2 text-xs text-orange-300 font-bold">RegginA Lv.76</div>
-                    </a>
-                    
-                    <!-- Join Us -->
-                    <a href="#roster" class="menu-item text-center group bg-gradient-to-br from-orange-500/20 to-orange-700/20 border-orange-500/40">
-                        <div class="menu-icon mx-auto bg-gradient-to-br from-orange-500 to-red-600">
-                            <span>🚀</span>
-                        </div>
-                        <h3 class="font-bold text-orange-400 text-sm mb-1" data-i18n="joinUs">Join Us</h3>
-                        <p class="text-xs text-gray-400" data-i18n="joinDesc">Become Family</p>
-                        <div class="mt-2 text-xs text-green-400 font-bold">Recruiting!</div>
-                    </a>
-                </div>
             </div>
         </div>
     </section>
