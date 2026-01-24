@@ -628,26 +628,6 @@ app.get('/', (c) => {
     <!-- Particles -->
     <div id="particles"></div>
     
-    <!-- Language Switcher (floating) -->
-    <div class="fixed top-20 right-4 z-50" id="lang-switcher">
-        <button onclick="toggleLangMenu()" class="glass-card px-3 py-2 rounded-full text-sm flex items-center gap-2 hover:bg-orange-500/20 transition-all">
-            <span id="current-lang-flag">🇬🇧</span>
-            <span id="current-lang-code">EN</span>
-            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
-        </button>
-        <div id="lang-menu" class="hidden absolute right-0 mt-2 glass-card rounded-lg overflow-hidden min-w-[120px]">
-            <button onclick="setLanguage('en')" class="w-full px-4 py-2 text-left hover:bg-orange-500/20 flex items-center gap-2 text-sm">
-                <span>🇬🇧</span> English
-            </button>
-            <button onclick="setLanguage('zh')" class="w-full px-4 py-2 text-left hover:bg-orange-500/20 flex items-center gap-2 text-sm">
-                <span>🇹🇼</span> 繁體中文
-            </button>
-            <button onclick="setLanguage('th')" class="w-full px-4 py-2 text-left hover:bg-orange-500/20 flex items-center gap-2 text-sm">
-                <span>🇹🇭</span> ไทย
-            </button>
-        </div>
-    </div>
-    
     <!-- Navigation -->
     <nav class="fixed top-0 left-0 right-0 z-50 glass-card mx-4 mt-4 rounded-full">
         <div class="container mx-auto px-4 py-3 flex items-center justify-between">
@@ -662,9 +642,30 @@ app.get('/', (c) => {
                 <a href="#progress" class="nav-link text-sm" data-i18n="progress">Progress</a>
                 <a href="#gallery" class="nav-link text-sm" data-i18n="guildFun">Guild Fun</a>
             </div>
-            <button class="magnetic-btn text-xs sm:text-sm px-3 py-2" onclick="document.getElementById('roster').scrollIntoView({behavior: 'smooth'})" data-i18n="joinUs">
-                Join Us
-            </button>
+            <div class="flex items-center gap-2">
+                <!-- Language Switcher (in nav) -->
+                <div class="relative" id="lang-switcher">
+                    <button onclick="toggleLangMenu()" class="px-2 py-1 rounded-full text-xs flex items-center gap-1 hover:bg-orange-500/20 transition-all border border-orange-500/30">
+                        <span id="current-lang-flag">🇬🇧</span>
+                        <span id="current-lang-code" class="hidden sm:inline">EN</span>
+                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                    </button>
+                    <div id="lang-menu" class="hidden absolute right-0 top-full mt-2 glass-card rounded-lg overflow-hidden min-w-[120px] z-50">
+                        <button onclick="setLanguage('en')" class="w-full px-4 py-2 text-left hover:bg-orange-500/20 flex items-center gap-2 text-sm">
+                            <span>🇬🇧</span> English
+                        </button>
+                        <button onclick="setLanguage('zh')" class="w-full px-4 py-2 text-left hover:bg-orange-500/20 flex items-center gap-2 text-sm">
+                            <span>🇹🇼</span> 繁體中文
+                        </button>
+                        <button onclick="setLanguage('th')" class="w-full px-4 py-2 text-left hover:bg-orange-500/20 flex items-center gap-2 text-sm">
+                            <span>🇹🇭</span> ไทย
+                        </button>
+                    </div>
+                </div>
+                <button class="magnetic-btn text-xs sm:text-sm px-3 py-2" onclick="document.getElementById('roster').scrollIntoView({behavior: 'smooth'})" data-i18n="joinUs">
+                    Join Us
+                </button>
+            </div>
         </div>
     </nav>
     
