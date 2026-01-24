@@ -6,21 +6,48 @@ const app = new Hono()
 // Serve static files
 app.use('/static/*', serveStatic())
 
-// Member roster data from screenshots - with realistic in-game style avatars
-// Updated with latest stats from game screenshots
+// ============================================================================
+// MEMBER ROSTER DATA - Last Updated: 2026-01-24
+// ============================================================================
+// Avatar naming convention: avatar-[username]-[description].png
+// All avatars stored in /public/static/ with meaningful names for easy debugging
+// ============================================================================
 const members = [
-  { name: "RegginA", level: 77, cp: "2B 382M", cpValue: 2382000000, contribution: 2180, upgrade: 3, role: "Master", online: false, daysAgo: "Today", avatar: "/static/avatar-reggina.png" },
-  { name: "Yuluner晴", level: 75, cp: "1B 247M", cpValue: 1247000000, contribution: 1100, upgrade: 3, role: "Guild Member", online: false, daysAgo: "Today", avatar: "/static/avatar-yuluner.png" },
-  { name: "泰拳寒玉", level: 49, cp: "7,567,864", cpValue: 7567864, contribution: 990, upgrade: 10, role: "Guild Member", online: false, daysAgo: "1d", avatar: "/static/avatar-taiquanhanyu.png" },
-  { name: "RegginO", level: 73, cp: "566M 603K", cpValue: 566603000, contribution: 2020, upgrade: 3, role: "Vice Master", online: true, daysAgo: null, avatar: "/static/avatar-reggino.png" },
-  { name: "阿光Yo", level: 67, cp: "144M 110K", cpValue: 144110000, contribution: 780, upgrade: 0, role: "Guild Member", online: false, daysAgo: "1d", avatar: "/static/avatar-aguangyo.png" },
-  { name: "Natehouoho", level: 72, cp: "959M 627K", cpValue: 959627000, contribution: 320, upgrade: 3, role: "Guild Member", online: true, daysAgo: null, avatar: "/static/avatar-natehouoho.png" },
-  { name: "紈稀祝著", level: 71, cp: "458M 115K", cpValue: 458115000, contribution: 2560, upgrade: 0, role: "領導", online: false, daysAgo: "1d", avatar: "/static/avatar-wandaoshuizhu.png" },
-  { name: "碼農小孫", level: 61, cp: "22M 566K", cpValue: 22566000, contribution: 150, upgrade: 0, role: "Guild Member", online: false, daysAgo: "Today", avatar: "/static/avatar-manongxiaosun.png" },
-  { name: "騎鳥回家", level: 70, cp: "354M 744K", cpValue: 354744000, contribution: 990, upgrade: 10, role: "Guild Member", online: false, daysAgo: "Today", avatar: "/static/avatar-qiniaohuijia.png" },
-  { name: "TW#VWQG7R9C03", level: 65, cp: "99M 969K", cpValue: 99969000, contribution: 0, upgrade: 0, role: "Guild Member", online: false, daysAgo: "6d", avatar: "/static/avatar-twvwqg.png" },
-  { name: "小亨寶寶", level: 54, cp: "13M 174K", cpValue: 13174000, contribution: 0, upgrade: 0, role: "Guild Member", online: false, daysAgo: "15d", avatar: "/static/avatar-xiaohengbaobao.png" },
-  { name: "葉陽", level: 46, cp: "2,572,190", cpValue: 2572190, contribution: 0, upgrade: 0, role: "Guild Member", online: false, daysAgo: "16d", avatar: "/static/avatar-yeyang.png" },
+  // Master - RegginA: White masked warrior, alpha leader
+  { name: "RegginA", level: 77, cp: "2B 382M", cpValue: 2382000000, contribution: 2180, upgrade: 3, role: "Master", online: false, daysAgo: "Today", avatar: "/static/avatar-reggina-master-masked-warrior.png" },
+  
+  // Yuluner晴: 晴 = sunny/clear - Bright cheerful sun theme
+  { name: "Yuluner晴", level: 75, cp: "1B 247M", cpValue: 1247000000, contribution: 1100, upgrade: 3, role: "Guild Member", online: false, daysAgo: "Today", avatar: "/static/avatar-yuluner-sunny-cheerful.png" },
+  
+  // 泰拳寒玉: Thai Boxing + Cold Jade - Martial artist ice theme
+  { name: "泰拳寒玉", level: 49, cp: "7,567,864", cpValue: 7567864, contribution: 990, upgrade: 10, role: "Guild Member", online: false, daysAgo: "1d", avatar: "/static/avatar-taiquanhanyu-thaiboxer-jade.png" },
+  
+  // Vice Master - RegginO: Pink hair with flower crown
+  { name: "RegginO", level: 73, cp: "566M 603K", cpValue: 566603000, contribution: 2020, upgrade: 3, role: "Vice Master", online: true, daysAgo: null, avatar: "/static/avatar-reggino-vicemaster-pinkhair.png" },
+  
+  // 阿光Yo: 光 = light - Glowing light mage
+  { name: "阿光Yo", level: 67, cp: "144M 110K", cpValue: 144110000, contribution: 780, upgrade: 0, role: "Guild Member", online: false, daysAgo: "1d", avatar: "/static/avatar-aguangyo-light-mage.png" },
+  
+  // Natehouoho: Playful fun adventurer
+  { name: "Natehouoho", level: 72, cp: "959M 627K", cpValue: 959627000, contribution: 320, upgrade: 3, role: "Guild Member", online: true, daysAgo: null, avatar: "/static/avatar-natehouoho-playful-adventurer.png" },
+  
+  // 紈稻税著 (Leader): Sleepy gamer falling asleep with phone
+  { name: "紈稻税著", level: 71, cp: "458M 115K", cpValue: 458115000, contribution: 2560, upgrade: 0, role: "領導", online: false, daysAgo: "1d", avatar: "/static/avatar-wandaoshuizhu-sleepy-gamer.png" },
+  
+  // 碼農小孫: 碼農 = programmer/coder - Tech geek with glasses
+  { name: "碼農小孫", level: 61, cp: "22M 566K", cpValue: 22566000, contribution: 150, upgrade: 0, role: "Guild Member", online: false, daysAgo: "Today", avatar: "/static/avatar-manongxiaosun-programmer.png" },
+  
+  // 騎鳥回家: "Riding bird home" - Character on bird mount
+  { name: "騎鳥回家", level: 70, cp: "354M 744K", cpValue: 354744000, contribution: 990, upgrade: 10, role: "Guild Member", online: false, daysAgo: "Today", avatar: "/static/avatar-qiniaohuijia-riding-bird.png" },
+  
+  // TW#VWQG7R9C03: Random ID - Mystery anonymous character
+  { name: "TW#VWQG7R9C03", level: 65, cp: "99M 969K", cpValue: 99969000, contribution: 0, upgrade: 0, role: "Guild Member", online: false, daysAgo: "6d", avatar: "/static/avatar-twvwqg-mystery-anonymous.png" },
+  
+  // 小亨寶寶: 寶寶 = baby - Adorable cute baby character
+  { name: "小亨寶寶", level: 54, cp: "13M 174K", cpValue: 13174000, contribution: 0, upgrade: 0, role: "Guild Member", online: false, daysAgo: "15d", avatar: "/static/avatar-xiaohengbaobao-baby-cute.png" },
+  
+  // 葉陽: 葉 = leaf, 陽 = sun - Nature druid with sun aura
+  { name: "葉陽", level: 46, cp: "2,572,190", cpValue: 2572190, contribution: 0, upgrade: 0, role: "Guild Member", online: false, daysAgo: "16d", avatar: "/static/avatar-yeyang-leaf-sun-nature.png" },
 ]
 
 // Sort by CP for leaderboard
@@ -170,7 +197,7 @@ app.get('/', (c) => {
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>NumbahWan Guild | MapleStory Idle RPG</title>
     <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
     <script src="https://cdn.tailwindcss.com"></script>
@@ -820,6 +847,18 @@ app.get('/', (c) => {
             border-color: #ff4444;
         }
         
+        .music-btn.loading {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            border-color: #fbbf24;
+            animation: spin-loading 1s linear infinite;
+        }
+        
+        .music-btn.error {
+            background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%);
+            border-color: #f87171;
+            animation: shake-error 0.5s ease-in-out;
+        }
+        
         /* Speaker icon styles */
         .speaker-icon {
             width: 28px;
@@ -829,6 +868,17 @@ app.get('/', (c) => {
         @keyframes pulse-music {
             0%, 100% { box-shadow: 0 4px 20px rgba(255, 107, 0, 0.5); }
             50% { box-shadow: 0 4px 30px rgba(0, 255, 0, 0.6), 0 0 40px rgba(255, 107, 0, 0.4); }
+        }
+        
+        @keyframes spin-loading {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        @keyframes shake-error {
+            0%, 100% { transform: translateX(0); }
+            20%, 60% { transform: translateX(-5px); }
+            40%, 80% { transform: translateX(5px); }
         }
         
         /* YouTube player for BGM - completely hidden, audio only */
@@ -1666,42 +1716,143 @@ app.get('/', (c) => {
             hamburger.classList.remove('active');
         }
         
-        // ========== SIMPLE YOUTUBE BGM SYSTEM - AUDIO ONLY (HIDDEN) ==========
+        // ========== YOUTUBE BGM SYSTEM WITH LOADING/ERROR STATES ==========
         const musicBtn = document.getElementById('music-btn');
         const speakerPath = document.getElementById('speaker-path');
         const ytContainer = document.getElementById('yt-bgm-container');
         let isMusicPlaying = false;
+        let isLoading = false;
+        let ytPlayer = null;
         
-        // SVG paths for speaker icons
+        // SVG paths for icons
         const SPEAKER_ON = "M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z";
         const SPEAKER_OFF = "M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51C20.63 14.91 21 13.5 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06c1.38-.31 2.63-.95 3.69-1.81L19.73 21 21 19.73l-9-9L4.27 3zM12 4L9.91 6.09 12 8.18V4z";
+        const LOADING_ICON = "M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z";
+        const ERROR_ICON = "M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z";
+        
+        function setButtonState(state) {
+            musicBtn.classList.remove('playing', 'muted', 'loading', 'error');
+            musicBtn.classList.add(state);
+            
+            if (state === 'loading') {
+                speakerPath.setAttribute('d', LOADING_ICON);
+                musicBtn.title = 'Loading BGM...';
+            } else if (state === 'error') {
+                speakerPath.setAttribute('d', ERROR_ICON);
+                musicBtn.title = 'Failed to load - Click to retry';
+            } else if (state === 'playing') {
+                speakerPath.setAttribute('d', SPEAKER_ON);
+                musicBtn.title = 'Click to Stop Music';
+            } else {
+                speakerPath.setAttribute('d', SPEAKER_OFF);
+                musicBtn.title = 'Click to Play Music';
+            }
+        }
+        
+        // Load YouTube IFrame API
+        const tag = document.createElement('script');
+        tag.src = "https://www.youtube.com/iframe_api";
+        const firstScriptTag = document.getElementsByTagName('script')[0];
+        firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+        
+        // YouTube API ready callback
+        window.onYouTubeIframeAPIReady = function() {
+            console.log('YouTube API Ready');
+        };
         
         function toggleMusic() {
+            if (isLoading) return; // Prevent double-clicks while loading
+            
             if (!isMusicPlaying) {
-                // Start music - create hidden iframe (audio only, no video shown)
-                ytContainer.innerHTML = \`
-                    <iframe 
-                        width="1" 
-                        height="1" 
-                        src="https://www.youtube.com/embed/QvSpcNrF7-E?autoplay=1&loop=1&playlist=QvSpcNrF7-E" 
-                        title="MapleStory BGM" 
-                        frameborder="0" 
-                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
-                        allowfullscreen>
-                    </iframe>
-                \`;
-                isMusicPlaying = true;
-                speakerPath.setAttribute('d', SPEAKER_ON);
-                musicBtn.classList.add('playing');
-                musicBtn.classList.remove('muted');
+                // Show loading state
+                isLoading = true;
+                setButtonState('loading');
+                
+                // Create player container
+                ytContainer.innerHTML = '<div id="yt-player"></div>';
+                
+                // Set timeout for error detection
+                const loadTimeout = setTimeout(() => {
+                    if (isLoading) {
+                        console.error('YouTube load timeout');
+                        showError();
+                    }
+                }, 10000); // 10 second timeout
+                
+                try {
+                    ytPlayer = new YT.Player('yt-player', {
+                        height: '1',
+                        width: '1',
+                        videoId: 'QvSpcNrF7-E',
+                        playerVars: {
+                            autoplay: 1,
+                            loop: 1,
+                            playlist: 'QvSpcNrF7-E',
+                            controls: 0,
+                            disablekb: 1,
+                            fs: 0,
+                            modestbranding: 1,
+                            rel: 0
+                        },
+                        events: {
+                            onReady: function(event) {
+                                clearTimeout(loadTimeout);
+                                isLoading = false;
+                                isMusicPlaying = true;
+                                event.target.setVolume(50);
+                                event.target.playVideo();
+                                setButtonState('playing');
+                                console.log('Music started successfully');
+                            },
+                            onStateChange: function(event) {
+                                // YT.PlayerState: PLAYING=1, PAUSED=2, ENDED=0
+                                if (event.data === YT.PlayerState.PLAYING) {
+                                    clearTimeout(loadTimeout);
+                                    isLoading = false;
+                                    isMusicPlaying = true;
+                                    setButtonState('playing');
+                                } else if (event.data === YT.PlayerState.ENDED) {
+                                    // Loop - replay
+                                    event.target.playVideo();
+                                }
+                            },
+                            onError: function(event) {
+                                clearTimeout(loadTimeout);
+                                console.error('YouTube Error:', event.data);
+                                showError();
+                            }
+                        }
+                    });
+                } catch (e) {
+                    clearTimeout(loadTimeout);
+                    console.error('Failed to create player:', e);
+                    showError();
+                }
             } else {
-                // Stop music - remove iframe
+                // Stop music
+                if (ytPlayer && ytPlayer.stopVideo) {
+                    ytPlayer.stopVideo();
+                    ytPlayer.destroy();
+                }
+                ytPlayer = null;
                 ytContainer.innerHTML = '';
                 isMusicPlaying = false;
-                speakerPath.setAttribute('d', SPEAKER_OFF);
-                musicBtn.classList.remove('playing');
-                musicBtn.classList.add('muted');
+                setButtonState('muted');
             }
+        }
+        
+        function showError() {
+            isLoading = false;
+            isMusicPlaying = false;
+            ytContainer.innerHTML = '';
+            setButtonState('error');
+            
+            // Reset to muted state after 3 seconds
+            setTimeout(() => {
+                if (!isMusicPlaying && !isLoading) {
+                    setButtonState('muted');
+                }
+            }, 3000);
         }
         
         // Click music button - always toggle music on/off
