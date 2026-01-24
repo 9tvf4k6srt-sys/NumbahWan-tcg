@@ -14,7 +14,7 @@ const members = [
   { name: "RegginO", level: 73, cp: "515M 709K", cpValue: 515709000, contribution: 1870, upgrade: 4, role: "Vice Master", online: false, daysAgo: null },
   { name: "阿光Yo", level: 67, cp: "144M 110K", cpValue: 144110000, contribution: 780, upgrade: 0, role: "Guild Member", online: false, daysAgo: "Today" },
   { name: "Natehouoho", level: 71, cp: "746M 509K", cpValue: 746509000, contribution: 20, upgrade: 0, role: "Guild Member", online: true, daysAgo: null },
-  { name: "紈稀祝著", level: 71, cp: "458M 115K", cpValue: 458115000, contribution: 2560, upgrade: 10, role: "領導", online: false, daysAgo: null, avatar: "/static/member-wanxizhuozhu.png" },
+  { name: "紈稻税著", level: 71, cp: "458M 115K", cpValue: 458115000, contribution: 2560, upgrade: 10, role: "領導", online: false, daysAgo: null, avatar: "/static/member-wanxizhuozhu.png" },
   { name: "碼農小孫", level: 61, cp: "17M 501K", cpValue: 17501000, contribution: 150, upgrade: 0, role: "Guild Member", online: false, daysAgo: "Today" },
   { name: "騎鳥回家", level: 69, cp: "320M 240K", cpValue: 320240000, contribution: 490, upgrade: 0, role: "Guild Member", online: true, daysAgo: null },
   { name: "TW#VWQG7R9C03", level: 65, cp: "99M 969K", cpValue: 99969000, contribution: 0, upgrade: 0, role: "Guild Member", online: false, daysAgo: "5d" },
