@@ -789,13 +789,12 @@ app.get('/', (c) => {
             position: fixed;
             bottom: 24px;
             right: 24px;
-            width: 56px;
-            height: 56px;
+            width: 60px;
+            height: 60px;
             border-radius: 50%;
             background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
-            border: 2px solid rgba(255, 255, 255, 0.2);
+            border: 3px solid rgba(255, 255, 255, 0.3);
             color: white;
-            font-size: 24px;
             cursor: pointer;
             z-index: 100;
             display: flex;
@@ -812,23 +811,44 @@ app.get('/', (c) => {
         
         .music-btn.playing {
             animation: pulse-music 2s infinite;
+            border-color: #00ff00;
+        }
+        
+        .music-btn.muted {
+            background: linear-gradient(135deg, #666 0%, #333 100%);
+            border-color: #ff4444;
+        }
+        
+        /* Speaker icon styles */
+        .speaker-icon {
+            width: 28px;
+            height: 28px;
         }
         
         @keyframes pulse-music {
             0%, 100% { box-shadow: 0 4px 20px rgba(255, 107, 0, 0.5); }
-            50% { box-shadow: 0 4px 30px rgba(255, 107, 0, 0.8), 0 0 40px rgba(255, 107, 0, 0.4); }
+            50% { box-shadow: 0 4px 30px rgba(0, 255, 0, 0.6), 0 0 40px rgba(255, 107, 0, 0.4); }
         }
         
-        /* Hidden YouTube player for BGM - completely hidden */
+        /* Hidden YouTube player for BGM */
         .yt-bgm-container {
             position: fixed;
-            bottom: 0;
-            right: 0;
-            width: 1px;
-            height: 1px;
+            bottom: 100px;
+            right: 24px;
+            width: 280px;
+            height: 158px;
+            z-index: 99;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
             opacity: 0;
             pointer-events: none;
-            z-index: -1;
+            transition: all 0.3s ease;
+        }
+        
+        .yt-bgm-container.visible {
+            opacity: 1;
+            pointer-events: auto;
         }
     </style>
 </head>
@@ -836,14 +856,16 @@ app.get('/', (c) => {
     <!-- YouTube IFrame API -->
     <script src="https://www.youtube.com/iframe_api"></script>
     
-    <!-- Hidden YouTube Player Container -->
+    <!-- YouTube Player Container (small, visible when playing) -->
     <div id="yt-bgm-container" class="yt-bgm-container">
         <div id="yt-player"></div>
     </div>
     
-    <!-- Floating Music Toggle Button -->
-    <button id="music-btn" class="music-btn" onclick="toggleMusic()" title="Toggle Music">
-        🎵
+    <!-- Floating Music Toggle Button with Speaker Icons -->
+    <button id="music-btn" class="music-btn muted" onclick="toggleMusic()" title="Toggle Music">
+        <svg class="speaker-icon" viewBox="0 0 24 24" fill="currentColor">
+            <path id="speaker-path" d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51C20.63 14.91 21 13.5 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06c1.38-.31 2.63-.95 3.69-1.81L19.73 21 21 19.73l-9-9L4.27 3zM12 4L9.91 6.09 12 8.18V4z"/>
+        </svg>
     </button>
     
     <!-- Aurora Background -->
@@ -1659,56 +1681,72 @@ app.get('/', (c) => {
         
         // ========== YOUTUBE BGM SYSTEM ==========
         const musicBtn = document.getElementById('music-btn');
+        const speakerPath = document.getElementById('speaker-path');
+        const ytContainer = document.getElementById('yt-bgm-container');
         let ytPlayer = null;
         let isMusicPlaying = false;
         
-        // YouTube IFrame API callback
+        // SVG paths for speaker icons
+        const SPEAKER_ON = "M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z";
+        const SPEAKER_OFF = "M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51C20.63 14.91 21 13.5 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06c1.38-.31 2.63-.95 3.69-1.81L19.73 21 21 19.73l-9-9L4.27 3zM12 4L9.91 6.09 12 8.18V4z";
+        
+        // YouTube IFrame API callback - Henesys Theme
         window.onYouTubeIframeAPIReady = function() {
             ytPlayer = new YT.Player('yt-player', {
-                height: '1',
-                width: '1',
-                videoId: 'iQLVn3QoXXk',
+                height: '158',
+                width: '280',
+                videoId: 'QvSpcNrF7-E',
                 playerVars: {
-                    autoplay: 1,
+                    autoplay: 0,
                     loop: 1,
-                    playlist: 'iQLVn3QoXXk',
-                    controls: 0,
-                    disablekb: 1,
-                    fs: 0,
+                    playlist: 'QvSpcNrF7-E',
+                    controls: 1,
                     modestbranding: 1,
                     rel: 0
                 },
                 events: {
                     onReady: function(e) {
                         e.target.setVolume(50);
-                        e.target.playVideo();
-                        isMusicPlaying = true;
-                        musicBtn.textContent = '🎵';
-                        musicBtn.classList.add('playing');
+                        // Don't autoplay - let user click to start
                     },
                     onStateChange: function(e) {
-                        // Loop when video ends
-                        if (e.data === YT.PlayerState.ENDED) {
-                            e.target.playVideo();
+                        if (e.data === YT.PlayerState.PLAYING) {
+                            isMusicPlaying = true;
+                            updateMusicUI(true);
+                        } else if (e.data === YT.PlayerState.PAUSED || e.data === YT.PlayerState.ENDED) {
+                            if (e.data === YT.PlayerState.ENDED) {
+                                e.target.playVideo(); // Loop
+                            } else {
+                                isMusicPlaying = false;
+                                updateMusicUI(false);
+                            }
                         }
                     }
                 }
             });
         };
         
+        function updateMusicUI(playing) {
+            if (playing) {
+                speakerPath.setAttribute('d', SPEAKER_ON);
+                musicBtn.classList.add('playing');
+                musicBtn.classList.remove('muted');
+                ytContainer.classList.add('visible');
+            } else {
+                speakerPath.setAttribute('d', SPEAKER_OFF);
+                musicBtn.classList.remove('playing');
+                musicBtn.classList.add('muted');
+                ytContainer.classList.remove('visible');
+            }
+        }
+        
         function toggleMusic() {
-            if (!ytPlayer) return;
+            if (!ytPlayer || typeof ytPlayer.getPlayerState !== 'function') return;
             
             if (isMusicPlaying) {
                 ytPlayer.pauseVideo();
-                isMusicPlaying = false;
-                musicBtn.textContent = '🔇';
-                musicBtn.classList.remove('playing');
             } else {
                 ytPlayer.playVideo();
-                isMusicPlaying = true;
-                musicBtn.textContent = '🎵';
-                musicBtn.classList.add('playing');
             }
         }
     </script>
