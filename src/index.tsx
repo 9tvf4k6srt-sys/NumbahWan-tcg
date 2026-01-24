@@ -6,20 +6,21 @@ const app = new Hono()
 // Serve static files
 app.use('/static/*', serveStatic())
 
-// Member roster data from screenshots - with cute avatar icons
+// Member roster data from screenshots - with realistic in-game style avatars
+// Updated with latest stats from game screenshots
 const members = [
-  { name: "RegginA", level: 76, cp: "2B 325M", cpValue: 2325000000, contribution: 2030, upgrade: 6, role: "Master", online: false, daysAgo: null, avatar: "/static/avatar-reggina.png" },
-  { name: "Yuluner晴", level: 75, cp: "1B 199M", cpValue: 1199000000, contribution: 950, upgrade: 3, role: "Guild Member", online: false, daysAgo: "Today", avatar: "/static/avatar-yuluner.png" },
-  { name: "泰拳寒玉", level: 49, cp: "7,567,864", cpValue: 7567864, contribution: 760, upgrade: 3, role: "Guild Member", online: false, daysAgo: "Today", avatar: "/static/avatar-taiquanhanyu.png" },
-  { name: "RegginO", level: 73, cp: "515M 709K", cpValue: 515709000, contribution: 1870, upgrade: 4, role: "Vice Master", online: false, daysAgo: null, avatar: "/static/avatar-reggino.png" },
-  { name: "阿光Yo", level: 67, cp: "144M 110K", cpValue: 144110000, contribution: 780, upgrade: 0, role: "Guild Member", online: false, daysAgo: "Today", avatar: "/static/avatar-aguangyo.png" },
-  { name: "Natehouoho", level: 71, cp: "746M 509K", cpValue: 746509000, contribution: 20, upgrade: 0, role: "Guild Member", online: true, daysAgo: null, avatar: "/static/avatar-natehouoho.png" },
-  { name: "紈稻税著", level: 71, cp: "458M 115K", cpValue: 458115000, contribution: 2560, upgrade: 10, role: "領導", online: false, daysAgo: null, avatar: "/static/member-wanxizhuozhu.png" },
-  { name: "碼農小孫", level: 61, cp: "17M 501K", cpValue: 17501000, contribution: 150, upgrade: 0, role: "Guild Member", online: false, daysAgo: "Today", avatar: "/static/avatar-manongxiaosun.png" },
-  { name: "騎鳥回家", level: 69, cp: "320M 240K", cpValue: 320240000, contribution: 490, upgrade: 0, role: "Guild Member", online: true, daysAgo: null, avatar: "/static/avatar-qiniaohuijia.png" },
-  { name: "TW#VWQG7R9C03", level: 65, cp: "99M 969K", cpValue: 99969000, contribution: 0, upgrade: 0, role: "Guild Member", online: false, daysAgo: "5d", avatar: "/static/avatar-twvwqg.png" },
-  { name: "小亨寶寶", level: 54, cp: "13M 174K", cpValue: 13174000, contribution: 0, upgrade: 0, role: "Guild Member", online: false, daysAgo: "14d", avatar: "/static/avatar-xiaohengbaobao.png" },
-  { name: "葉陽", level: 46, cp: "2,572,190", cpValue: 2572190, contribution: 0, upgrade: 0, role: "Guild Member", online: false, daysAgo: "15d", avatar: "/static/avatar-yeyang.png" },
+  { name: "RegginA", level: 77, cp: "2B 382M", cpValue: 2382000000, contribution: 2180, upgrade: 3, role: "Master", online: false, daysAgo: "Today", avatar: "/static/avatar-reggina.png" },
+  { name: "Yuluner晴", level: 75, cp: "1B 247M", cpValue: 1247000000, contribution: 1100, upgrade: 3, role: "Guild Member", online: false, daysAgo: "Today", avatar: "/static/avatar-yuluner.png" },
+  { name: "泰拳寒玉", level: 49, cp: "7,567,864", cpValue: 7567864, contribution: 990, upgrade: 10, role: "Guild Member", online: false, daysAgo: "1d", avatar: "/static/avatar-taiquanhanyu.png" },
+  { name: "RegginO", level: 73, cp: "566M 603K", cpValue: 566603000, contribution: 2020, upgrade: 3, role: "Vice Master", online: true, daysAgo: null, avatar: "/static/avatar-reggino.png" },
+  { name: "阿光Yo", level: 67, cp: "144M 110K", cpValue: 144110000, contribution: 780, upgrade: 0, role: "Guild Member", online: false, daysAgo: "1d", avatar: "/static/avatar-aguangyo.png" },
+  { name: "Natehouoho", level: 72, cp: "959M 627K", cpValue: 959627000, contribution: 320, upgrade: 3, role: "Guild Member", online: true, daysAgo: null, avatar: "/static/avatar-natehouoho.png" },
+  { name: "紈稀祝著", level: 71, cp: "458M 115K", cpValue: 458115000, contribution: 2560, upgrade: 0, role: "領導", online: false, daysAgo: "1d", avatar: "/static/avatar-wandaoshuizhu.png" },
+  { name: "碼農小孫", level: 61, cp: "22M 566K", cpValue: 22566000, contribution: 150, upgrade: 0, role: "Guild Member", online: false, daysAgo: "Today", avatar: "/static/avatar-manongxiaosun.png" },
+  { name: "騎鳥回家", level: 70, cp: "354M 744K", cpValue: 354744000, contribution: 990, upgrade: 10, role: "Guild Member", online: false, daysAgo: "Today", avatar: "/static/avatar-qiniaohuijia.png" },
+  { name: "TW#VWQG7R9C03", level: 65, cp: "99M 969K", cpValue: 99969000, contribution: 0, upgrade: 0, role: "Guild Member", online: false, daysAgo: "6d", avatar: "/static/avatar-twvwqg.png" },
+  { name: "小亨寶寶", level: 54, cp: "13M 174K", cpValue: 13174000, contribution: 0, upgrade: 0, role: "Guild Member", online: false, daysAgo: "15d", avatar: "/static/avatar-xiaohengbaobao.png" },
+  { name: "葉陽", level: 46, cp: "2,572,190", cpValue: 2572190, contribution: 0, upgrade: 0, role: "Guild Member", online: false, daysAgo: "16d", avatar: "/static/avatar-yeyang.png" },
 ]
 
 // Sort by CP for leaderboard
