@@ -883,57 +883,57 @@ app.get('/', (c) => {
     <div id="nav-dropdown" class="fixed top-20 left-4 right-4 z-40 glass-card rounded-2xl p-4 hidden nav-dropdown">
         <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
             <a href="#race" onclick="closeNavMenu()" class="dropdown-item">
-                <svg class="nw-icon mb-1" width="28" height="28" style="fill:#ffd700"><use href="/static/icons/nw-icons.svg#trophy"></use></svg>
+                <svg class="nw-icon mb-1" width="28" height="28" style="color:#ffd700"><use href="/static/icons/nw-icons.svg#trophy"></use></svg>
                 <span class="font-bold text-orange-400 text-sm" data-i18n="cpLeaderboard">CP Ranking</span>
                 <span class="text-xs text-gray-400">#47 Server</span>
             </a>
             <a href="/pvp" class="dropdown-item">
-                <svg class="nw-icon mb-1" width="28" height="28" style="fill:#ef4444"><use href="/static/icons/nw-icons.svg#swords"></use></svg>
+                <svg class="nw-icon mb-1" width="28" height="28" style="color:#ef4444"><use href="/static/icons/nw-icons.svg#swords"></use></svg>
                 <span class="font-bold text-orange-400 text-sm" data-i18n="gmPvp">GM PvP</span>
                 <span class="text-xs text-gray-400">Grandmaster 5</span>
             </a>
             <a href="/fashion" class="dropdown-item">
-                <svg class="nw-icon mb-1" width="28" height="28" style="fill:#ec4899"><use href="/static/icons/nw-icons.svg#dress"></use></svg>
+                <svg class="nw-icon mb-1" width="28" height="28" style="color:#ec4899"><use href="/static/icons/nw-icons.svg#dress"></use></svg>
                 <span class="font-bold text-orange-400 text-sm" data-i18n="gmFashion">GM Fashion</span>
                 <span class="text-xs text-gray-400">12 Disasters</span>
             </a>
             <a href="/merch" class="dropdown-item highlight">
-                <svg class="nw-icon mb-1" width="28" height="28" style="fill:#a855f7"><use href="/static/icons/nw-icons.svg#shopping-bag"></use></svg>
+                <svg class="nw-icon mb-1" width="28" height="28" style="color:#a855f7"><use href="/static/icons/nw-icons.svg#shopping-bag"></use></svg>
                 <span class="font-bold text-purple-400 text-sm" data-i18n="exclusiveMerch">Merch</span>
                 <span class="text-xs text-yellow-400">Members Only</span>
             </a>
             <a href="/fortune" class="dropdown-item">
-                <svg class="nw-icon mb-1" width="28" height="28" style="fill:#a855f7"><use href="/static/icons/nw-icons.svg#crystal-ball"></use></svg>
+                <svg class="nw-icon mb-1" width="28" height="28" style="color:#a855f7"><use href="/static/icons/nw-icons.svg#crystal-ball"></use></svg>
                 <span class="font-bold text-purple-400 text-sm" data-i18n="dailyFortune">Fortune</span>
                 <span class="text-xs text-purple-300">Daily Luck</span>
             </a>
             <a href="#roster" onclick="closeNavMenu()" class="dropdown-item">
-                <svg class="nw-icon mb-1" width="28" height="28" style="fill:#ff6b00"><use href="/static/icons/nw-icons.svg#users"></use></svg>
+                <svg class="nw-icon mb-1" width="28" height="28" style="color:#ff6b00"><use href="/static/icons/nw-icons.svg#users"></use></svg>
                 <span class="font-bold text-orange-400 text-sm" data-i18n="theFamily">Members</span>
                 <span class="text-xs text-gray-400">12 Family</span>
             </a>
             <a href="#gallery" onclick="closeNavMenu()" class="dropdown-item">
-                <svg class="nw-icon mb-1" width="28" height="28" style="fill:#ec4899"><use href="/static/icons/nw-icons.svg#camera"></use></svg>
+                <svg class="nw-icon mb-1" width="28" height="28" style="color:#ec4899"><use href="/static/icons/nw-icons.svg#camera"></use></svg>
                 <span class="font-bold text-orange-400 text-sm" data-i18n="shenanigans">Shenanigans</span>
                 <span class="text-xs text-gray-400">6 Photos</span>
             </a>
             <a href="#progress" onclick="closeNavMenu()" class="dropdown-item">
-                <svg class="nw-icon mb-1" width="28" height="28" style="fill:#22c55e"><use href="/static/icons/nw-icons.svg#chart"></use></svg>
+                <svg class="nw-icon mb-1" width="28" height="28" style="color:#22c55e"><use href="/static/icons/nw-icons.svg#chart"></use></svg>
                 <span class="font-bold text-orange-400 text-sm" data-i18n="roadToOne">Progress</span>
                 <span class="text-xs text-gray-400">Road to #1</span>
             </a>
             <a href="#progress" onclick="closeNavMenu()" class="dropdown-item">
-                <svg class="nw-icon mb-1" width="28" height="28" style="fill:#ef4444"><use href="/static/icons/nw-icons.svg#dragon"></use></svg>
+                <svg class="nw-icon mb-1" width="28" height="28" style="color:#ef4444"><use href="/static/icons/nw-icons.svg#dragon"></use></svg>
                 <span class="font-bold text-orange-400 text-sm" data-i18n="bossRaids">Boss Raids</span>
                 <span class="text-xs text-gray-400">24/35</span>
             </a>
             <a href="#about" onclick="closeNavMenu()" class="dropdown-item">
-                <svg class="nw-icon mb-1" width="28" height="28" style="fill:#ffd700"><use href="/static/icons/nw-icons.svg#crown"></use></svg>
+                <svg class="nw-icon mb-1" width="28" height="28" style="color:#ffd700"><use href="/static/icons/nw-icons.svg#crown"></use></svg>
                 <span class="font-bold text-orange-400 text-sm" data-i18n="guildMaster">Guild Master</span>
                 <span class="text-xs text-gray-400">RegginA</span>
             </a>
-            <a href="#roster" onclick="closeNavMenu()" class="dropdown-item highlight">
-                <svg class="nw-icon mb-1" width="28" height="28" style="fill:#ff6b00"><use href="/static/icons/nw-icons.svg#rocket"></use></svg>
+            <a href="/apply" class="dropdown-item highlight">
+                <svg class="nw-icon mb-1" width="28" height="28" style="color:#ff6b00"><use href="/static/icons/nw-icons.svg#rocket"></use></svg>
                 <span class="font-bold text-orange-400 text-sm" data-i18n="joinUs">Join Us</span>
                 <span class="text-xs text-green-400">Recruiting!</span>
             </a>
