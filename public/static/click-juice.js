@@ -161,6 +161,114 @@
         box-shadow: 0 0 30px #ff6b00, inset 0 0 5px #ff6b00;
       }
     }
+    
+    /* ========== NAV MENU JUICE EFFECTS ========== */
+    
+    /* Nav item click burst */
+    .nw-nav-clicked {
+      animation: nwNavPop 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55) forwards;
+    }
+    
+    @keyframes nwNavPop {
+      0% { transform: scale(1); }
+      40% { transform: scale(0.85); }
+      70% { transform: scale(1.08); }
+      100% { transform: scale(1); }
+    }
+    
+    /* Icon spin on nav click */
+    .nw-icon-spin svg,
+    .nw-icon-spin .nw-icon {
+      animation: nwIconSpin 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55) forwards;
+    }
+    
+    @keyframes nwIconSpin {
+      0% { transform: rotate(0deg) scale(1); }
+      50% { transform: rotate(-15deg) scale(1.3); }
+      100% { transform: rotate(0deg) scale(1); }
+    }
+    
+    /* Shockwave effect */
+    .nw-shockwave {
+      position: fixed;
+      border-radius: 50%;
+      pointer-events: none;
+      z-index: 99996;
+      border: 2px solid rgba(255, 107, 0, 0.6);
+      animation: nwShockwave 0.5s ease-out forwards;
+    }
+    
+    @keyframes nwShockwave {
+      0% { 
+        width: 10px; 
+        height: 10px; 
+        opacity: 1;
+      }
+      100% { 
+        width: 200px; 
+        height: 200px; 
+        opacity: 0;
+      }
+    }
+    
+    /* Spark trail effect */
+    .nw-spark {
+      position: fixed;
+      width: 4px;
+      height: 4px;
+      background: #ffd700;
+      border-radius: 50%;
+      pointer-events: none;
+      z-index: 99999;
+      box-shadow: 0 0 6px #ffd700, 0 0 12px #ff6b00;
+      animation: nwSparkFade 0.4s ease-out forwards;
+    }
+    
+    @keyframes nwSparkFade {
+      0% { transform: scale(1); opacity: 1; }
+      100% { transform: scale(0); opacity: 0; }
+    }
+    
+    /* Text highlight flash */
+    .nw-text-flash {
+      animation: nwTextFlash 0.3s ease-out;
+    }
+    
+    @keyframes nwTextFlash {
+      0% { color: inherit; text-shadow: none; }
+      50% { color: #ffd700; text-shadow: 0 0 10px #ffd700, 0 0 20px #ff6b00; }
+      100% { color: inherit; text-shadow: none; }
+    }
+    
+    /* Border glow pulse for nav items */
+    .nw-border-glow {
+      animation: nwBorderGlow 0.4s ease-out;
+    }
+    
+    @keyframes nwBorderGlow {
+      0% { border-color: rgba(255, 107, 0, 0.2); }
+      50% { border-color: #ffd700; box-shadow: 0 0 15px rgba(255, 215, 0, 0.5), inset 0 0 10px rgba(255, 107, 0, 0.2); }
+      100% { border-color: rgba(255, 107, 0, 0.2); }
+    }
+    
+    /* Checkmark confirmation */
+    .nw-confirm::before {
+      content: '✓';
+      position: absolute;
+      top: 50%;
+      right: 10px;
+      transform: translateY(-50%) scale(0);
+      color: #22c55e;
+      font-weight: bold;
+      animation: nwConfirmPop 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55) forwards;
+      text-shadow: 0 0 10px #22c55e;
+    }
+    
+    @keyframes nwConfirmPop {
+      0% { transform: translateY(-50%) scale(0) rotate(-180deg); opacity: 0; }
+      70% { transform: translateY(-50%) scale(1.3) rotate(10deg); opacity: 1; }
+      100% { transform: translateY(-50%) scale(1) rotate(0deg); opacity: 1; }
+    }
   `;
   document.head.appendChild(styles);
 
@@ -234,6 +342,88 @@
     setTimeout(() => ripple.remove(), 600);
   }
 
+  // Create shockwave effect
+  function createShockwave(x, y) {
+    const wave = document.createElement('div');
+    wave.className = 'nw-shockwave';
+    wave.style.left = (x - 5) + 'px';
+    wave.style.top = (y - 5) + 'px';
+    document.body.appendChild(wave);
+    setTimeout(() => wave.remove(), 500);
+  }
+
+  // Create spark trail
+  function createSparkTrail(x, y, count = 8) {
+    for (let i = 0; i < count; i++) {
+      setTimeout(() => {
+        const spark = document.createElement('div');
+        spark.className = 'nw-spark';
+        const offsetX = (Math.random() - 0.5) * 40;
+        const offsetY = (Math.random() - 0.5) * 40;
+        spark.style.left = (x + offsetX) + 'px';
+        spark.style.top = (y + offsetY) + 'px';
+        document.body.appendChild(spark);
+        setTimeout(() => spark.remove(), 400);
+      }, i * 30);
+    }
+  }
+
+  // Nav menu item click handler - FULL JUICE
+  function handleNavItemClick(e) {
+    const item = e.currentTarget;
+    const rect = item.getBoundingClientRect();
+    const x = e.clientX || rect.left + rect.width / 2;
+    const y = e.clientY || rect.top + rect.height / 2;
+    
+    // Don't prevent default - let navigation happen, just add juice
+    
+    // Visual feedback classes
+    item.classList.add('nw-nav-clicked', 'nw-icon-spin', 'nw-border-glow');
+    item.style.position = 'relative';
+    item.classList.add('nw-confirm');
+    
+    // Text flash effect
+    const textEl = item.querySelector('span, .font-bold, .text-sm');
+    if (textEl) textEl.classList.add('nw-text-flash');
+    
+    // Effects
+    createRipple(item, x, y);
+    createParticleBurst(x, y, 10);
+    createShockwave(x, y);
+    createSparkTrail(x, y, 6);
+    createEnergyRing(x, y);
+    
+    // Subtle screen flash
+    createFlash(x, y);
+    
+    // Mini shake
+    document.body.style.transform = 'translateY(-1px)';
+    setTimeout(() => document.body.style.transform = 'translateY(1px)', 40);
+    setTimeout(() => document.body.style.transform = '', 80);
+    
+    // Cleanup classes after animation
+    setTimeout(() => {
+      item.classList.remove('nw-nav-clicked', 'nw-icon-spin', 'nw-border-glow', 'nw-confirm');
+      if (textEl) textEl.classList.remove('nw-text-flash');
+    }, 500);
+  }
+
+  // Hamburger menu button click
+  function handleHamburgerClick(e) {
+    const btn = e.currentTarget;
+    const rect = btn.getBoundingClientRect();
+    const x = rect.left + rect.width / 2;
+    const y = rect.top + rect.height / 2;
+    
+    btn.classList.add('nw-pressed', 'nw-glow-pulse');
+    createParticleBurst(x, y, 8);
+    createEnergyRing(x, y);
+    
+    setTimeout(() => {
+      btn.classList.remove('nw-pressed', 'nw-glow-pulse');
+    }, 400);
+  }
+
   // Main click handler for back buttons
   function handleBackButtonClick(e) {
     const btn = e.currentTarget;
@@ -289,27 +479,52 @@
   // Initialize when DOM is ready
   function init() {
     // Find all back buttons
-    const backButtons = document.querySelectorAll('.back-btn, [data-i18n="back"], [data-i18n="backBtn"], a[href="/"]');
+    const backButtons = document.querySelectorAll('.back-btn, [data-i18n="back"], [data-i18n="backBtn"]');
     
     backButtons.forEach(btn => {
-      // Skip if it's the main logo/home link in nav
-      if (btn.closest('nav') && !btn.classList.contains('back-btn')) return;
-      
       btn.addEventListener('click', handleBackButtonClick);
     });
     
-    // Add subtle click juice to all buttons and links (optional)
+    // Find all nav dropdown items
+    const navItems = document.querySelectorAll('.dropdown-item, #nav-dropdown a, .nav-dropdown a');
+    navItems.forEach(item => {
+      item.addEventListener('click', handleNavItemClick);
+    });
+    
+    // Hamburger menu button
+    const hamburgerBtns = document.querySelectorAll('.hamburger-btn, [onclick*="toggleNavMenu"]');
+    hamburgerBtns.forEach(btn => {
+      btn.addEventListener('click', handleHamburgerClick);
+    });
+    
+    // Language switcher buttons
+    const langBtns = document.querySelectorAll('.lang-btn, #lang-menu button, [onclick*="setLanguage"]');
+    langBtns.forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const rect = btn.getBoundingClientRect();
+        const x = e.clientX || rect.left + rect.width / 2;
+        const y = e.clientY || rect.top + rect.height / 2;
+        
+        btn.classList.add('nw-pressed', 'nw-glow-pulse');
+        createParticleBurst(x, y, 8);
+        createShockwave(x, y);
+        
+        setTimeout(() => btn.classList.remove('nw-pressed', 'nw-glow-pulse'), 400);
+      });
+    });
+    
+    // Add subtle click juice to all other buttons
     document.addEventListener('click', (e) => {
-      // Don't double-trigger on back buttons
-      if (e.target.closest('.back-btn')) return;
+      // Skip if already handled
+      if (e.target.closest('.back-btn, .dropdown-item, #nav-dropdown a, .hamburger-btn, .lang-btn')) return;
       
-      const clickable = e.target.closest('button, .magnetic-btn, .lang-btn');
+      const clickable = e.target.closest('button, .magnetic-btn, a.glass-card');
       if (clickable) {
         handleGenericClick(e);
       }
     });
     
-    console.log('[NW Click Juice] Initialized on', backButtons.length, 'back buttons');
+    console.log('[NW Click Juice] Initialized:', backButtons.length, 'back buttons,', navItems.length, 'nav items');
   }
 
   // Run init
