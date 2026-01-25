@@ -9,45 +9,45 @@ app.use('/static/*', serveStatic())
 // ============================================================================
 // MEMBER ROSTER DATA - Last Updated: 2026-01-24
 // ============================================================================
-// Avatar naming convention: avatar-[username]-[description].png
+// Avatar naming convention: avatar-[username]-[description].jpg
 // All avatars stored in /public/static/ with meaningful names for easy debugging
 // ============================================================================
 const members = [
   // Master - RegginA: White masked warrior, alpha leader
-  { name: "RegginA", level: 77, cp: "2B 382M", cpValue: 2382000000, contribution: 2180, upgrade: 3, role: "Master", online: false, daysAgo: "Today", avatar: "/static/avatar-reggina-master-masked-warrior.png" },
+  { name: "RegginA", level: 77, cp: "2B 382M", cpValue: 2382000000, contribution: 2180, upgrade: 3, role: "Master", online: false, daysAgo: "Today", avatar: "/static/avatar-reggina-master-masked-warrior.jpg" },
   
   // Yuluner晴: 晴 = sunny/clear - Bright cheerful sun theme
-  { name: "Yuluner晴", level: 75, cp: "1B 247M", cpValue: 1247000000, contribution: 1100, upgrade: 3, role: "Guild Member", online: false, daysAgo: "Today", avatar: "/static/avatar-yuluner-sunny-cheerful.png" },
+  { name: "Yuluner晴", level: 75, cp: "1B 247M", cpValue: 1247000000, contribution: 1100, upgrade: 3, role: "Guild Member", online: false, daysAgo: "Today", avatar: "/static/avatar-yuluner-sunny-cheerful.jpg" },
   
   // 泰拳寒玉: Thai Boxing + Cold Jade - Martial artist ice theme
-  { name: "泰拳寒玉", level: 49, cp: "7,567,864", cpValue: 7567864, contribution: 990, upgrade: 10, role: "Guild Member", online: false, daysAgo: "1d", avatar: "/static/avatar-taiquanhanyu-thaiboxer-jade.png" },
+  { name: "泰拳寒玉", level: 49, cp: "7,567,864", cpValue: 7567864, contribution: 990, upgrade: 10, role: "Guild Member", online: false, daysAgo: "1d", avatar: "/static/avatar-taiquanhanyu-thaiboxer-jade.jpg" },
   
   // Vice Master - RegginO: Pink hair with flower crown
-  { name: "RegginO", level: 73, cp: "566M 603K", cpValue: 566603000, contribution: 2020, upgrade: 3, role: "Vice Master", online: true, daysAgo: null, avatar: "/static/avatar-reggino-vicemaster-pinkhair.png" },
+  { name: "RegginO", level: 73, cp: "566M 603K", cpValue: 566603000, contribution: 2020, upgrade: 3, role: "Vice Master", online: true, daysAgo: null, avatar: "/static/avatar-reggino-vicemaster-pinkhair.jpg" },
   
   // 阿光Yo: 光 = light - Glowing light mage
-  { name: "阿光Yo", level: 67, cp: "144M 110K", cpValue: 144110000, contribution: 780, upgrade: 0, role: "Guild Member", online: false, daysAgo: "1d", avatar: "/static/avatar-aguangyo-light-mage.png" },
+  { name: "阿光Yo", level: 67, cp: "144M 110K", cpValue: 144110000, contribution: 780, upgrade: 0, role: "Guild Member", online: false, daysAgo: "1d", avatar: "/static/avatar-aguangyo-light-mage.jpg" },
   
   // Natehouoho: Playful fun adventurer
-  { name: "Natehouoho", level: 72, cp: "959M 627K", cpValue: 959627000, contribution: 320, upgrade: 3, role: "Guild Member", online: true, daysAgo: null, avatar: "/static/avatar-natehouoho-playful-adventurer.png" },
+  { name: "Natehouoho", level: 72, cp: "959M 627K", cpValue: 959627000, contribution: 320, upgrade: 3, role: "Guild Member", online: true, daysAgo: null, avatar: "/static/avatar-natehouoho-playful-adventurer.jpg" },
   
   // 紈稻税著 (Leader): Sleepy gamer falling asleep with phone
-  { name: "紈稻税著", level: 71, cp: "458M 115K", cpValue: 458115000, contribution: 2560, upgrade: 0, role: "領導", online: false, daysAgo: "1d", avatar: "/static/avatar-wandaoshuizhu-sleepy-gamer.png" },
+  { name: "紈稻税著", level: 71, cp: "458M 115K", cpValue: 458115000, contribution: 2560, upgrade: 0, role: "領導", online: false, daysAgo: "1d", avatar: "/static/avatar-wandaoshuizhu-sleepy-gamer.jpg" },
   
   // 碼農小孫: 碼農 = programmer/coder - Tech geek with glasses
-  { name: "碼農小孫", level: 61, cp: "22M 566K", cpValue: 22566000, contribution: 150, upgrade: 0, role: "Guild Member", online: false, daysAgo: "Today", avatar: "/static/avatar-manongxiaosun-programmer.png" },
+  { name: "碼農小孫", level: 61, cp: "22M 566K", cpValue: 22566000, contribution: 150, upgrade: 0, role: "Guild Member", online: false, daysAgo: "Today", avatar: "/static/avatar-manongxiaosun-programmer.jpg" },
   
   // 騎鳥回家: "Riding bird home" - Character on bird mount
-  { name: "騎鳥回家", level: 70, cp: "354M 744K", cpValue: 354744000, contribution: 990, upgrade: 10, role: "Guild Member", online: false, daysAgo: "Today", avatar: "/static/avatar-qiniaohuijia-riding-bird.png" },
+  { name: "騎鳥回家", level: 70, cp: "354M 744K", cpValue: 354744000, contribution: 990, upgrade: 10, role: "Guild Member", online: false, daysAgo: "Today", avatar: "/static/avatar-qiniaohuijia-riding-bird.jpg" },
   
   // TW#VWQG7R9C03: Random ID - Mystery anonymous character
-  { name: "TW#VWQG7R9C03", level: 65, cp: "99M 969K", cpValue: 99969000, contribution: 0, upgrade: 0, role: "Guild Member", online: false, daysAgo: "6d", avatar: "/static/avatar-twvwqg-mystery-anonymous.png" },
+  { name: "TW#VWQG7R9C03", level: 65, cp: "99M 969K", cpValue: 99969000, contribution: 0, upgrade: 0, role: "Guild Member", online: false, daysAgo: "6d", avatar: "/static/avatar-twvwqg-mystery-anonymous.jpg" },
   
   // 小亨寶寶: 寶寶 = baby - Adorable cute baby character
-  { name: "小亨寶寶", level: 54, cp: "13M 174K", cpValue: 13174000, contribution: 0, upgrade: 0, role: "Guild Member", online: false, daysAgo: "15d", avatar: "/static/avatar-xiaohengbaobao-baby-cute.png" },
+  { name: "小亨寶寶", level: 54, cp: "13M 174K", cpValue: 13174000, contribution: 0, upgrade: 0, role: "Guild Member", online: false, daysAgo: "15d", avatar: "/static/avatar-xiaohengbaobao-baby-cute.jpg" },
   
   // 葉陽: 葉 = leaf, 陽 = sun - Nature druid with sun aura
-  { name: "葉陽", level: 46, cp: "2,572,190", cpValue: 2572190, contribution: 0, upgrade: 0, role: "Guild Member", online: false, daysAgo: "16d", avatar: "/static/avatar-yeyang-leaf-sun-nature.png" },
+  { name: "葉陽", level: 46, cp: "2,572,190", cpValue: 2572190, contribution: 0, upgrade: 0, role: "Guild Member", online: false, daysAgo: "16d", avatar: "/static/avatar-yeyang-leaf-sun-nature.jpg" },
 ]
 
 // Sort by CP for leaderboard
@@ -1127,7 +1127,7 @@ app.get('/', (c) => {
                             ${index === 0 ? '<span class="crown">👑</span>' : ''}
                             <div class="flex items-center gap-4 mb-4">
                                 ${member.avatar 
-                                    ? `<img src="${member.avatar}" alt="${member.name}" class="w-16 h-16 rounded-full object-cover border-2 border-orange-500" />`
+                                    ? `<img src="${member.avatar}" alt="${member.name}" class="w-16 h-16 rounded-full object-cover border-2 border-orange-500" loading="lazy" />`
                                     : `<div class="w-16 h-16 rounded-full bg-gradient-to-br from-orange-400 to-orange-600 flex items-center justify-center text-2xl font-bold">
                                     ${member.name.charAt(0).toUpperCase()}
                                 </div>`
