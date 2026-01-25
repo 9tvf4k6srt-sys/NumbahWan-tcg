@@ -883,57 +883,57 @@ app.get('/', (c) => {
     <div id="nav-dropdown" class="fixed top-20 left-4 right-4 z-40 glass-card rounded-2xl p-4 hidden nav-dropdown">
         <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
             <a href="#race" onclick="closeNavMenu()" class="dropdown-item">
-                <svg class="nw-icon mb-1" width="28" height="28" style="color:#ffd700"><use href="/static/icons/nw-icons.svg#trophy"></use></svg>
+                <svg class="mb-1" width="28" height="28" viewBox="0 0 24 24"><path fill="#ffd700" d="M19 5H17V3H7V5H5C3.9 5 3 5.9 3 7V8C3 10.2 4.6 12 6.7 12.5C7.4 14 8.9 15.1 10.6 15.4L10 17H8V19H16V17H14L13.4 15.4C15.1 15.1 16.6 14 17.3 12.5C19.4 12 21 10.2 21 8V7C21 5.9 20.1 5 19 5ZM5 8V7H7V10.5C5.8 10 5 9.1 5 8ZM19 8C19 9.1 18.2 10 17 10.5V7H19V8Z"/><rect fill="#ffd700" x="9" y="19" width="6" height="2"/></svg>
                 <span class="font-bold text-orange-400 text-sm" data-i18n="cpLeaderboard">CP Ranking</span>
                 <span class="text-xs text-gray-400">#47 Server</span>
             </a>
             <a href="/pvp" class="dropdown-item">
-                <svg class="nw-icon mb-1" width="28" height="28" style="color:#ef4444"><use href="/static/icons/nw-icons.svg#swords"></use></svg>
+                <svg class="mb-1" width="28" height="28" viewBox="0 0 24 24"><path fill="#ef4444" d="M6 2L3 5L9 11L6 14L4 12L2 14L5 17L7 15L9 17L12 14L7 9L10 6L15 11L12 14L14 16L17 13L20 16L22 14L19 11L22 8L16 2L13 5L10 2L6 2Z"/><path fill="#ffd700" d="M9 15L7 17L9 19L11 21L13 19L11 17L9 15Z"/></svg>
                 <span class="font-bold text-orange-400 text-sm" data-i18n="gmPvp">GM PvP</span>
                 <span class="text-xs text-gray-400">Grandmaster 5</span>
             </a>
             <a href="/fashion" class="dropdown-item">
-                <svg class="nw-icon mb-1" width="28" height="28" style="color:#ec4899"><use href="/static/icons/nw-icons.svg#dress"></use></svg>
+                <svg class="mb-1" width="28" height="28" viewBox="0 0 24 24"><path fill="#ec4899" d="M12 2C10 2 9 3 9 4V6L6 10L8 12L6 20H18L16 12L18 10L15 6V4C15 3 14 2 12 2Z"/><circle fill="#ffd700" cx="12" cy="5" r="1.3"/><circle fill="#fff" cx="10" cy="15" r="1" opacity="0.7"/><circle fill="#fff" cx="14" cy="15" r="1" opacity="0.7"/></svg>
                 <span class="font-bold text-orange-400 text-sm" data-i18n="gmFashion">GM Fashion</span>
                 <span class="text-xs text-gray-400">12 Disasters</span>
             </a>
             <a href="/merch" class="dropdown-item highlight">
-                <svg class="nw-icon mb-1" width="28" height="28" style="color:#a855f7"><use href="/static/icons/nw-icons.svg#shopping-bag"></use></svg>
+                <svg class="mb-1" width="28" height="28" viewBox="0 0 24 24"><path fill="#a855f7" d="M5 7H19L21 21H3L5 7Z"/><path fill="none" stroke="#0a0a0f" stroke-width="2" stroke-linecap="round" d="M8 7V5C8 3 9.8 1.5 12 1.5C14.2 1.5 16 3 16 5V7"/><rect fill="#ffd700" x="9" y="11" width="6" height="2" rx="1"/></svg>
                 <span class="font-bold text-purple-400 text-sm" data-i18n="exclusiveMerch">Merch</span>
                 <span class="text-xs text-yellow-400">Members Only</span>
             </a>
             <a href="/fortune" class="dropdown-item">
-                <svg class="nw-icon mb-1" width="28" height="28" style="color:#a855f7"><use href="/static/icons/nw-icons.svg#crystal-ball"></use></svg>
+                <svg class="mb-1" width="28" height="28" viewBox="0 0 24 24"><circle fill="#a855f7" cx="12" cy="10" r="8"/><ellipse fill="#0a0a0f" cx="12" cy="20" rx="5" ry="2" opacity="0.7"/><circle fill="#fff" cx="8" cy="7" r="2" opacity="0.5"/><path fill="#ffd700" d="M10 11L12 9L15 12L12 14L10 11Z" opacity="0.6"/></svg>
                 <span class="font-bold text-purple-400 text-sm" data-i18n="dailyFortune">Fortune</span>
                 <span class="text-xs text-purple-300">Daily Luck</span>
             </a>
             <a href="#roster" onclick="closeNavMenu()" class="dropdown-item">
-                <svg class="nw-icon mb-1" width="28" height="28" style="color:#ff6b00"><use href="/static/icons/nw-icons.svg#users"></use></svg>
+                <svg class="mb-1" width="28" height="28" viewBox="0 0 24 24"><circle fill="#ff6b00" cx="9" cy="7" r="4"/><path fill="#ff6b00" d="M2 20C2 16 5 13 9 13C13 13 16 16 16 20H2Z"/><circle fill="#ffd700" cx="17" cy="8" r="3"/><path fill="#ffd700" d="M13 20C13 16.5 15 14 17 14C19 14 22 16.5 22 20H13Z"/></svg>
                 <span class="font-bold text-orange-400 text-sm" data-i18n="theFamily">Members</span>
                 <span class="text-xs text-gray-400">12 Family</span>
             </a>
             <a href="#gallery" onclick="closeNavMenu()" class="dropdown-item">
-                <svg class="nw-icon mb-1" width="28" height="28" style="color:#ec4899"><use href="/static/icons/nw-icons.svg#camera"></use></svg>
+                <svg class="mb-1" width="28" height="28" viewBox="0 0 24 24"><path fill="#ec4899" d="M20 5H17L15 3H9L7 5H4C2.9 5 2 5.9 2 7V19C2 20.1 2.9 21 4 21H20C21.1 21 22 20.1 22 19V7C22 5.9 21.1 5 20 5Z"/><circle fill="#0a0a0f" cx="12" cy="13" r="5"/><circle fill="#3b82f6" cx="12" cy="13" r="3"/><circle fill="#fff" cx="10" cy="11" r="1"/></svg>
                 <span class="font-bold text-orange-400 text-sm" data-i18n="shenanigans">Shenanigans</span>
                 <span class="text-xs text-gray-400">6 Photos</span>
             </a>
             <a href="#progress" onclick="closeNavMenu()" class="dropdown-item">
-                <svg class="nw-icon mb-1" width="28" height="28" style="color:#22c55e"><use href="/static/icons/nw-icons.svg#chart"></use></svg>
+                <svg class="mb-1" width="28" height="28" viewBox="0 0 24 24"><rect fill="#22c55e" x="3" y="3" width="18" height="18" rx="2"/><rect fill="#0a0a0f" x="5" y="5" width="14" height="14" rx="1" opacity="0.4"/><path fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" d="M6 16L10 11L14 14L18 7"/><circle fill="#ffd700" cx="18" cy="7" r="2"/></svg>
                 <span class="font-bold text-orange-400 text-sm" data-i18n="roadToOne">Progress</span>
                 <span class="text-xs text-gray-400">Road to #1</span>
             </a>
             <a href="#progress" onclick="closeNavMenu()" class="dropdown-item">
-                <svg class="nw-icon mb-1" width="28" height="28" style="color:#ef4444"><use href="/static/icons/nw-icons.svg#dragon"></use></svg>
+                <svg class="mb-1" width="28" height="28" viewBox="0 0 24 24"><path fill="#ef4444" d="M18 3L20 6L18 9L21 7V11L18 14L21 17L17 19L14 17L11 19L8 17L4 19L2 15L5 12L2 9L5 6L8 8L11 5L14 7L17 4L18 3Z"/><circle fill="#ffd700" cx="15" cy="10" r="1.8"/><circle fill="#0a0a0f" cx="15" cy="10" r="0.7"/><path fill="#ff6b00" d="M9 18L7 22L10 21L12 23L14 21L17 22L15 18H9Z"/></svg>
                 <span class="font-bold text-orange-400 text-sm" data-i18n="bossRaids">Boss Raids</span>
                 <span class="text-xs text-gray-400">24/35</span>
             </a>
             <a href="#about" onclick="closeNavMenu()" class="dropdown-item">
-                <svg class="nw-icon mb-1" width="28" height="28" style="color:#ffd700"><use href="/static/icons/nw-icons.svg#crown"></use></svg>
+                <svg class="mb-1" width="28" height="28" viewBox="0 0 24 24"><path fill="#ffd700" d="M3 18H21V16L18 8L14 12L12 6L10 12L6 8L3 16V18Z"/><circle fill="#fff" cx="6" cy="7" r="2"/><circle fill="#fff" cx="12" cy="5" r="2"/><circle fill="#fff" cx="18" cy="7" r="2"/><circle fill="#ef4444" cx="6" cy="7" r="1"/><circle fill="#3b82f6" cx="12" cy="5" r="1"/><circle fill="#22c55e" cx="18" cy="7" r="1"/></svg>
                 <span class="font-bold text-orange-400 text-sm" data-i18n="guildMaster">Guild Master</span>
                 <span class="text-xs text-gray-400">RegginA</span>
             </a>
             <a href="/apply" class="dropdown-item highlight">
-                <svg class="nw-icon mb-1" width="28" height="28" style="color:#ff6b00"><use href="/static/icons/nw-icons.svg#rocket"></use></svg>
+                <svg class="mb-1" width="28" height="28" viewBox="0 0 24 24"><path fill="#ff6b00" d="M12 2C12 2 6 8 6 14C6 16 7 18 8 19L10 17V14L12 12L14 14V17L16 19C17 18 18 16 18 14C18 8 12 2 12 2Z"/><circle fill="#0a0a0f" cx="12" cy="10" r="2.5"/><circle fill="#3b82f6" cx="12" cy="10" r="1.5"/><path fill="#ff4500" d="M10 19L8 23L10 21L12 24L14 21L16 23L14 19H10Z"/></svg>
                 <span class="font-bold text-orange-400 text-sm" data-i18n="joinUs">Join Us</span>
                 <span class="text-xs text-green-400">Recruiting!</span>
             </a>
