@@ -974,10 +974,10 @@ app.get('/', (c) => {
                 <span class="font-bold text-orange-400 text-sm" data-i18n="cpLeaderboard">CP Ranking</span>
                 <span class="text-xs text-gray-400">#47 Server</span>
             </a>
-            <a href="#about" onclick="closeNavMenu()" class="dropdown-item">
+            <a href="/pvp" class="dropdown-item">
                 <span class="text-2xl mb-1">⚔️</span>
                 <span class="font-bold text-orange-400 text-sm" data-i18n="gmPvp">GM PvP</span>
-                <span class="text-xs text-gray-400">RegginA #1</span>
+                <span class="text-xs text-gray-400">Grandmaster 5</span>
             </a>
             <a href="#roster" onclick="closeNavMenu()" class="dropdown-item">
                 <span class="text-2xl mb-1">👥</span>
@@ -2000,6 +2000,22 @@ app.get('/regina', async (c) => {
   
   // Fallback - redirect to static file
   return c.redirect('/regina.html')
+})
+
+// PvP Arena page route
+app.get('/pvp', async (c) => {
+  try {
+    // @ts-ignore - env is provided by Cloudflare Pages
+    const asset = await c.env?.ASSETS?.fetch(new Request('https://dummy/pvp.html'))
+    if (asset) {
+      return new Response(asset.body, {
+        headers: { 'Content-Type': 'text/html; charset=utf-8' }
+      })
+    }
+  } catch (e) {
+    // Fallback for local development
+  }
+  return c.redirect('/pvp.html')
 })
 
 export default app

@@ -1,0 +1,868 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Arena PvP | NumbahWan Guild</title>
+    <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #ff6b00;
+            --primary-light: #ff9d4d;
+            --primary-dark: #cc5500;
+            --bg-dark: #0a0a0f;
+            --win-green: #22c55e;
+            --loss-red: #ef4444;
+            --gold: #ffd700;
+            --silver: #c0c0c0;
+            --bronze: #cd7f32;
+        }
+        
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        html {
+            width: 100%;
+            height: 100%;
+            overflow-x: hidden;
+            background: var(--bg-dark);
+        }
+        
+        body {
+            font-family: 'Orbitron', sans-serif;
+            background: var(--bg-dark);
+            color: #fff;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+        
+        .pixel-font { font-family: 'Press Start 2P', cursive; }
+        
+        /* Aurora gradient background */
+        .aurora-bg {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: 
+                radial-gradient(ellipse at 20% 20%, rgba(255, 107, 0, 0.15) 0%, transparent 50%),
+                radial-gradient(ellipse at 80% 80%, rgba(239, 68, 68, 0.1) 0%, transparent 50%),
+                radial-gradient(ellipse at 50% 50%, rgba(34, 197, 94, 0.08) 0%, transparent 70%);
+            z-index: -1;
+            animation: auroraMove 20s ease-in-out infinite;
+        }
+        
+        @keyframes auroraMove {
+            0%, 100% { transform: scale(1) rotate(0deg); }
+            50% { transform: scale(1.1) rotate(3deg); }
+        }
+        
+        .glass-card {
+            background: rgba(255, 107, 0, 0.08);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 107, 0, 0.2);
+            border-radius: 16px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+        }
+        
+        .neon-orange {
+            text-shadow: 0 0 5px var(--primary), 0 0 10px var(--primary), 0 0 20px var(--primary);
+        }
+        
+        /* Player card styling */
+        .player-card {
+            background: linear-gradient(135deg, rgba(255, 107, 0, 0.15) 0%, rgba(139, 69, 19, 0.1) 100%);
+            border: 2px solid rgba(255, 107, 0, 0.3);
+            transition: all 0.3s ease;
+        }
+        
+        .player-card:hover {
+            transform: translateY(-4px);
+            border-color: var(--primary);
+            box-shadow: 0 12px 40px rgba(255, 107, 0, 0.3);
+        }
+        
+        .player-card.master {
+            border-color: var(--gold);
+            background: linear-gradient(135deg, rgba(255, 215, 0, 0.15) 0%, rgba(255, 107, 0, 0.1) 100%);
+        }
+        
+        .player-card.vice {
+            border-color: var(--silver);
+            background: linear-gradient(135deg, rgba(192, 192, 192, 0.15) 0%, rgba(255, 107, 0, 0.1) 100%);
+        }
+        
+        /* Battle record styling */
+        .battle-row {
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.2s ease;
+        }
+        
+        .battle-row:hover {
+            background: rgba(255, 107, 0, 0.1);
+            border-color: rgba(255, 107, 0, 0.3);
+        }
+        
+        .win-badge {
+            background: linear-gradient(135deg, var(--win-green) 0%, #16a34a 100%);
+            color: white;
+            font-weight: bold;
+            padding: 4px 12px;
+            border-radius: 4px;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+        }
+        
+        .loss-badge {
+            background: linear-gradient(135deg, var(--loss-red) 0%, #dc2626 100%);
+            color: white;
+            font-weight: bold;
+            padding: 4px 12px;
+            border-radius: 4px;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+        }
+        
+        .defense-tag {
+            background: rgba(59, 130, 246, 0.3);
+            color: #93c5fd;
+            font-size: 0.7rem;
+            padding: 2px 8px;
+            border-radius: 4px;
+        }
+        
+        .attack-tag {
+            background: rgba(239, 68, 68, 0.3);
+            color: #fca5a5;
+            font-size: 0.7rem;
+            padding: 2px 8px;
+            border-radius: 4px;
+        }
+        
+        .lp-gain { color: var(--win-green); }
+        .lp-loss { color: var(--loss-red); }
+        
+        /* Rank badge */
+        .rank-badge {
+            background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-weight: bold;
+        }
+        
+        .grandmaster-badge {
+            background: linear-gradient(135deg, var(--gold) 0%, #f59e0b 100%);
+            color: #000;
+        }
+        
+        /* Stats */
+        .stat-box {
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid rgba(255, 107, 0, 0.2);
+            border-radius: 8px;
+            padding: 12px;
+            text-align: center;
+        }
+        
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: 900;
+            background: linear-gradient(135deg, var(--primary-light), var(--primary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        /* Win rate circle */
+        .win-rate-circle {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            background: conic-gradient(var(--win-green) var(--win-percent), rgba(239, 68, 68, 0.3) var(--win-percent));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+        
+        .win-rate-circle::before {
+            content: '';
+            position: absolute;
+            width: 90px;
+            height: 90px;
+            background: var(--bg-dark);
+            border-radius: 50%;
+        }
+        
+        .win-rate-text {
+            position: relative;
+            z-index: 1;
+            font-size: 1.5rem;
+            font-weight: 900;
+            color: var(--win-green);
+        }
+        
+        /* Navigation */
+        .nav-link {
+            padding: 0.5rem 1rem;
+            transition: all 0.3s ease;
+            border-radius: 8px;
+        }
+        
+        .nav-link:hover {
+            background: rgba(255, 107, 0, 0.2);
+            color: var(--primary);
+        }
+        
+        /* Tabs */
+        .tab-btn {
+            padding: 12px 24px;
+            background: transparent;
+            border: none;
+            color: #888;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border-bottom: 2px solid transparent;
+        }
+        
+        .tab-btn.active {
+            color: var(--primary);
+            border-bottom-color: var(--primary);
+        }
+        
+        .tab-btn:hover {
+            color: var(--primary-light);
+        }
+        
+        /* Class icons */
+        .class-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            background: rgba(255, 107, 0, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+        }
+        
+        /* Floating back button */
+        .back-btn {
+            position: fixed;
+            top: 24px;
+            left: 24px;
+            z-index: 100;
+            background: rgba(255, 107, 0, 0.2);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 107, 0, 0.3);
+            padding: 12px 20px;
+            border-radius: 12px;
+            color: var(--primary);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s ease;
+        }
+        
+        .back-btn:hover {
+            background: rgba(255, 107, 0, 0.3);
+            transform: translateX(-4px);
+        }
+        
+        /* Trophy animation */
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+        
+        .trophy-float {
+            animation: float 3s ease-in-out infinite;
+        }
+        
+        /* Insight cards */
+        .insight-card {
+            background: linear-gradient(135deg, rgba(34, 197, 94, 0.1) 0%, rgba(0, 0, 0, 0.3) 100%);
+            border: 1px solid rgba(34, 197, 94, 0.3);
+            border-radius: 12px;
+            padding: 20px;
+        }
+        
+        .insight-card.warning {
+            background: linear-gradient(135deg, rgba(239, 68, 68, 0.1) 0%, rgba(0, 0, 0, 0.3) 100%);
+            border-color: rgba(239, 68, 68, 0.3);
+        }
+        
+        /* Language switcher */
+        .lang-btn {
+            padding: 6px 12px;
+            border-radius: 6px;
+            border: 1px solid rgba(255, 107, 0, 0.3);
+            background: transparent;
+            color: #888;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .lang-btn.active {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+        
+        .lang-btn:hover:not(.active) {
+            border-color: var(--primary);
+            color: var(--primary);
+        }
+    </style>
+</head>
+<body>
+    <div class="aurora-bg"></div>
+    
+    <!-- Back button -->
+    <a href="/" class="back-btn">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M19 12H5M12 19l-7-7 7-7"/>
+        </svg>
+        <span data-i18n="backToGuild">Back to Guild</span>
+    </a>
+    
+    <!-- Language switcher -->
+    <div class="fixed top-6 right-6 z-50 flex gap-2">
+        <button class="lang-btn active" onclick="setLanguage('en')">EN</button>
+        <button class="lang-btn" onclick="setLanguage('zh')">中文</button>
+        <button class="lang-btn" onclick="setLanguage('th')">ไทย</button>
+    </div>
+    
+    <div class="container mx-auto px-4 py-20 max-w-6xl">
+        <!-- Header -->
+        <div class="text-center mb-12">
+            <div class="text-6xl mb-4 trophy-float">⚔️</div>
+            <h1 class="pixel-font text-3xl md:text-4xl text-orange-400 mb-4" data-i18n="arenaTitle">ARENA PVP</h1>
+            <p class="text-gray-400 text-lg" data-i18n="arenaSubtitle">NumbahWan's Finest Warriors</p>
+        </div>
+        
+        <!-- The Story Section -->
+        <div class="glass-card p-6 mb-8">
+            <h2 class="text-xl font-bold text-orange-400 mb-4 flex items-center gap-2">
+                <span>🎯</span>
+                <span data-i18n="theStory">The Underdog Story</span>
+            </h2>
+            <p class="text-gray-300 leading-relaxed" data-i18n="storyText">
+                In the Arena, opponents always pick the "weakest" target. They see RegginA's CP and think "easy win." 
+                What they don't realize is that RegginA has mastered the art of defense. Despite having lower CP than most challengers, 
+                RegginA consistently defeats higher-level opponents on defense. The lesson? Never underestimate the NumbahWan way.
+            </p>
+        </div>
+        
+        <!-- Player Cards -->
+        <div class="grid md:grid-cols-2 gap-6 mb-12">
+            <!-- RegginA Card -->
+            <div class="player-card master rounded-2xl p-6">
+                <div class="flex items-center justify-between mb-6">
+                    <div class="flex items-center gap-4">
+                        <div class="w-20 h-20 rounded-full bg-gradient-to-br from-yellow-400 to-orange-500 flex items-center justify-center text-3xl border-4 border-yellow-400 shadow-lg">
+                            👑
+                        </div>
+                        <div>
+                            <h2 class="text-2xl font-bold text-white">RegginA</h2>
+                            <p class="text-yellow-400 text-sm" data-i18n="guildMaster">Guild Master</p>
+                        </div>
+                    </div>
+                    <div class="rank-badge grandmaster-badge">
+                        <span data-i18n="grandmaster">Grandmaster</span> 5
+                    </div>
+                </div>
+                
+                <div class="grid grid-cols-3 gap-4 mb-6">
+                    <div class="stat-box">
+                        <div class="text-gray-400 text-xs mb-1" data-i18n="ranking">Ranking</div>
+                        <div class="stat-value">#420</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="text-gray-400 text-xs mb-1" data-i18n="score">Score</div>
+                        <div class="stat-value">2277</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="text-gray-400 text-xs mb-1">CP</div>
+                        <div class="stat-value text-lg">2B 86M</div>
+                    </div>
+                </div>
+                
+                <!-- Win Rate -->
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-4">
+                        <div class="win-rate-circle" style="--win-percent: 60%;">
+                            <span class="win-rate-text">60%</span>
+                        </div>
+                        <div>
+                            <p class="text-gray-400 text-sm" data-i18n="defenseWinRate">Defense Win Rate</p>
+                            <p class="text-green-400 font-bold">3W - 2L</p>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <p class="text-gray-500 text-xs" data-i18n="settlement">Until Settlement</p>
+                        <p class="text-orange-400 font-bold">15 hr</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- RegginO Card -->
+            <div class="player-card vice rounded-2xl p-6">
+                <div class="flex items-center justify-between mb-6">
+                    <div class="flex items-center gap-4">
+                        <div class="w-20 h-20 rounded-full bg-gradient-to-br from-gray-300 to-gray-500 flex items-center justify-center text-3xl border-4 border-gray-300 shadow-lg">
+                            ⚔️
+                        </div>
+                        <div>
+                            <h2 class="text-2xl font-bold text-white">RegginO</h2>
+                            <p class="text-gray-400 text-sm" data-i18n="viceMaster">Vice Master</p>
+                        </div>
+                    </div>
+                    <div class="rank-badge grandmaster-badge">
+                        <span data-i18n="grandmaster">Grandmaster</span> 4
+                    </div>
+                </div>
+                
+                <div class="grid grid-cols-3 gap-4 mb-6">
+                    <div class="stat-box">
+                        <div class="text-gray-400 text-xs mb-1" data-i18n="ranking">Ranking</div>
+                        <div class="stat-value">#348</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="text-gray-400 text-xs mb-1" data-i18n="score">Score</div>
+                        <div class="stat-value">2300</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="text-gray-400 text-xs mb-1">CP</div>
+                        <div class="stat-value text-lg">1B 995M</div>
+                    </div>
+                </div>
+                
+                <!-- Win Rate -->
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-4">
+                        <div class="win-rate-circle" style="--win-percent: 100%;">
+                            <span class="win-rate-text">100%</span>
+                        </div>
+                        <div>
+                            <p class="text-gray-400 text-sm" data-i18n="defenseWinRate">Defense Win Rate</p>
+                            <p class="text-green-400 font-bold">6W - 0L 🔥</p>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <p class="text-gray-500 text-xs" data-i18n="settlement">Until Settlement</p>
+                        <p class="text-orange-400 font-bold">1 day</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Battle Records Section -->
+        <div class="glass-card rounded-2xl overflow-hidden mb-8">
+            <div class="flex border-b border-orange-900/30">
+                <button class="tab-btn active flex-1" onclick="showTab('reggina')" id="tab-reggina">
+                    👑 RegginA <span data-i18n="battleRecord">Battle Record</span>
+                </button>
+                <button class="tab-btn flex-1" onclick="showTab('reggino')" id="tab-reggino">
+                    ⚔️ RegginO <span data-i18n="battleRecord">Battle Record</span>
+                </button>
+            </div>
+            
+            <!-- RegginA Battles -->
+            <div id="battles-reggina" class="p-6">
+                <div class="space-y-3">
+                    <!-- Battle 1 - Win -->
+                    <div class="battle-row rounded-lg p-4 flex items-center justify-between">
+                        <div class="flex items-center gap-4">
+                            <span class="defense-tag">⛊ Defense</span>
+                            <span class="win-badge">Win</span>
+                            <span class="lp-gain text-sm">+5 LP</span>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <div class="class-icon">🗡️</div>
+                            <div>
+                                <p class="text-orange-300 text-xs">Hero</p>
+                                <p class="font-bold">龍飛雲野</p>
+                            </div>
+                            <span class="text-gray-500 text-sm">Lv.78</span>
+                        </div>
+                        <span class="text-gray-500 text-sm">1 hr</span>
+                    </div>
+                    
+                    <!-- Battle 2 - Win -->
+                    <div class="battle-row rounded-lg p-4 flex items-center justify-between">
+                        <div class="flex items-center gap-4">
+                            <span class="defense-tag">⛊ Defense</span>
+                            <span class="win-badge">Win</span>
+                            <span class="lp-gain text-sm">+5 LP</span>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <div class="class-icon">🌑</div>
+                            <div>
+                                <p class="text-orange-300 text-xs">Shadower</p>
+                                <p class="font-bold">潘朵拉</p>
+                            </div>
+                            <span class="text-gray-500 text-sm">Lv.76</span>
+                        </div>
+                        <span class="text-gray-500 text-sm">6 hr</span>
+                    </div>
+                    
+                    <!-- Battle 3 - Loss -->
+                    <div class="battle-row rounded-lg p-4 flex items-center justify-between">
+                        <div class="flex items-center gap-4">
+                            <span class="defense-tag">⛊ Defense</span>
+                            <span class="loss-badge">Loss</span>
+                            <span class="lp-loss text-sm">-8 LP</span>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <div class="class-icon">⚡</div>
+                            <div>
+                                <p class="text-orange-300 text-xs">Arch Mage (Ice/Lightning)</p>
+                                <p class="font-bold">好哦</p>
+                            </div>
+                            <span class="text-gray-500 text-sm">Lv.81</span>
+                        </div>
+                        <span class="text-gray-500 text-sm">7 hr</span>
+                    </div>
+                    
+                    <!-- Battle 4 - Loss -->
+                    <div class="battle-row rounded-lg p-4 flex items-center justify-between">
+                        <div class="flex items-center gap-4">
+                            <span class="defense-tag">⛊ Defense</span>
+                            <span class="loss-badge">Loss</span>
+                            <span class="lp-loss text-sm">-7 LP</span>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <div class="class-icon">🎯</div>
+                            <div>
+                                <p class="text-orange-300 text-xs">Marksman</p>
+                                <p class="font-bold">sybau</p>
+                            </div>
+                            <span class="text-gray-500 text-sm">Lv.79</span>
+                        </div>
+                        <span class="text-gray-500 text-sm">7 hr</span>
+                    </div>
+                    
+                    <!-- Battle 5 - Win -->
+                    <div class="battle-row rounded-lg p-4 flex items-center justify-between">
+                        <div class="flex items-center gap-4">
+                            <span class="defense-tag">⛊ Defense</span>
+                            <span class="win-badge">Win</span>
+                            <span class="lp-gain text-sm">+5 LP</span>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <div class="class-icon">🖤</div>
+                            <div>
+                                <p class="text-orange-300 text-xs">Dark Knight</p>
+                                <p class="font-bold">水漾森森</p>
+                            </div>
+                            <span class="text-gray-500 text-sm">Lv.79</span>
+                        </div>
+                        <span class="text-gray-500 text-sm">10 hr</span>
+                    </div>
+                </div>
+                
+                <p class="text-center text-gray-500 text-sm mt-4 italic" data-i18n="disclaimer">
+                    Battle results may be inaccurate when looking up replays of past records.
+                </p>
+            </div>
+            
+            <!-- RegginO Battles -->
+            <div id="battles-reggino" class="p-6 hidden">
+                <div class="space-y-3">
+                    <!-- Battle 1 - Win -->
+                    <div class="battle-row rounded-lg p-4 flex items-center justify-between">
+                        <div class="flex items-center gap-4">
+                            <span class="defense-tag">⛊ Defense</span>
+                            <span class="win-badge">Win</span>
+                            <span class="lp-gain text-sm">+5 LP</span>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <div class="class-icon">🖤</div>
+                            <div>
+                                <p class="text-orange-300 text-xs">Dark Knight</p>
+                                <p class="font-bold">桃園徐老師</p>
+                            </div>
+                            <span class="text-gray-500 text-sm">Lv.78</span>
+                        </div>
+                        <span class="text-gray-500 text-sm">1 hr</span>
+                    </div>
+                    
+                    <!-- Battle 2 - Win -->
+                    <div class="battle-row rounded-lg p-4 flex items-center justify-between">
+                        <div class="flex items-center gap-4">
+                            <span class="defense-tag">⛊ Defense</span>
+                            <span class="win-badge">Win</span>
+                            <span class="lp-gain text-sm">+5 LP</span>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <div class="class-icon">🖤</div>
+                            <div>
+                                <p class="text-orange-300 text-xs">Dark Knight</p>
+                                <p class="font-bold">yuyuch</p>
+                            </div>
+                            <span class="text-gray-500 text-sm">Lv.78</span>
+                        </div>
+                        <span class="text-gray-500 text-sm">2 hr</span>
+                    </div>
+                    
+                    <!-- Battle 3 - Win -->
+                    <div class="battle-row rounded-lg p-4 flex items-center justify-between">
+                        <div class="flex items-center gap-4">
+                            <span class="defense-tag">⛊ Defense</span>
+                            <span class="win-badge">Win</span>
+                            <span class="lp-gain text-sm">+5 LP</span>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <div class="class-icon">🌑</div>
+                            <div>
+                                <p class="text-orange-300 text-xs">Shadower</p>
+                                <p class="font-bold">梨梨c</p>
+                            </div>
+                            <span class="text-gray-500 text-sm">Lv.79</span>
+                        </div>
+                        <span class="text-gray-500 text-sm">5 hr</span>
+                    </div>
+                    
+                    <!-- Battle 4 - Win -->
+                    <div class="battle-row rounded-lg p-4 flex items-center justify-between">
+                        <div class="flex items-center gap-4">
+                            <span class="defense-tag">⛊ Defense</span>
+                            <span class="win-badge">Win</span>
+                            <span class="lp-gain text-sm">+5 LP</span>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <div class="class-icon">🌑</div>
+                            <div>
+                                <p class="text-orange-300 text-xs">Shadower</p>
+                                <p class="font-bold">美麗海水族館</p>
+                            </div>
+                            <span class="text-gray-500 text-sm">Lv.79</span>
+                        </div>
+                        <span class="text-gray-500 text-sm">7 hr</span>
+                    </div>
+                    
+                    <!-- Battle 5 - Win (Attack) -->
+                    <div class="battle-row rounded-lg p-4 flex items-center justify-between">
+                        <div class="flex items-center gap-4">
+                            <span class="attack-tag">⚔ Attack</span>
+                            <span class="win-badge">Win</span>
+                            <span class="lp-gain text-sm">+40 LP</span>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <div class="class-icon">⚡</div>
+                            <div>
+                                <p class="text-orange-300 text-xs">Arch Mage (Ice/Lightning)</p>
+                                <p class="font-bold">KungPoBacon</p>
+                            </div>
+                            <span class="text-gray-500 text-sm">Lv.78</span>
+                        </div>
+                        <span class="text-gray-500 text-sm">10 hr</span>
+                    </div>
+                    
+                    <!-- Battle 6 - Win -->
+                    <div class="battle-row rounded-lg p-4 flex items-center justify-between">
+                        <div class="flex items-center gap-4">
+                            <span class="defense-tag">⛊ Defense</span>
+                            <span class="win-badge">Win</span>
+                            <span class="lp-gain text-sm">+4 LP</span>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <div class="class-icon">🔥</div>
+                            <div>
+                                <p class="text-orange-300 text-xs">Arch Mage (Fire/Poison)</p>
+                                <p class="font-bold">睇鰻蚊</p>
+                            </div>
+                            <span class="text-gray-500 text-sm">Lv.79</span>
+                        </div>
+                        <span class="text-gray-500 text-sm">11 hr</span>
+                    </div>
+                </div>
+                
+                <p class="text-center text-gray-500 text-sm mt-4 italic" data-i18n="disclaimer">
+                    Battle results may be inaccurate when looking up replays of past records.
+                </p>
+            </div>
+        </div>
+        
+        <!-- Insights Section -->
+        <div class="grid md:grid-cols-2 gap-6 mb-8">
+            <div class="insight-card">
+                <h3 class="text-lg font-bold text-green-400 mb-3 flex items-center gap-2">
+                    <span>💡</span>
+                    <span data-i18n="proTip">Pro Tip</span>
+                </h3>
+                <p class="text-gray-300" data-i18n="proTipText">
+                    Opponents always target who they think is "weakest" based on CP. But smart gear builds and skill setups 
+                    can make you a defense monster. RegginA proves that CP isn't everything!
+                </p>
+            </div>
+            
+            <div class="insight-card warning">
+                <h3 class="text-lg font-bold text-red-400 mb-3 flex items-center gap-2">
+                    <span>⚠️</span>
+                    <span data-i18n="theIrony">The Irony</span>
+                </h3>
+                <p class="text-gray-300" data-i18n="ironyText">
+                    With 2B+ CP, RegginA should theoretically lose every defense. Yet attackers keep losing because they 
+                    underestimate the NumbahWan spirit. Pick on the weak? Get wrecked.
+                </p>
+            </div>
+        </div>
+        
+        <!-- Fun Stats -->
+        <div class="glass-card p-6">
+            <h2 class="text-xl font-bold text-orange-400 mb-6 text-center" data-i18n="funStats">Fun Stats</h2>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div class="text-center">
+                    <div class="text-4xl mb-2">🎯</div>
+                    <div class="text-2xl font-bold text-orange-400">9</div>
+                    <div class="text-gray-500 text-sm" data-i18n="totalDefenseWins">Defense Wins</div>
+                </div>
+                <div class="text-center">
+                    <div class="text-4xl mb-2">😤</div>
+                    <div class="text-2xl font-bold text-red-400">2</div>
+                    <div class="text-gray-500 text-sm" data-i18n="totalDefenseLoss">Defense Losses</div>
+                </div>
+                <div class="text-center">
+                    <div class="text-4xl mb-2">⚔️</div>
+                    <div class="text-2xl font-bold text-green-400">82%</div>
+                    <div class="text-gray-500 text-sm" data-i18n="combinedWinRate">Combined Win Rate</div>
+                </div>
+                <div class="text-center">
+                    <div class="text-4xl mb-2">👑</div>
+                    <div class="text-2xl font-bold text-yellow-400">2</div>
+                    <div class="text-gray-500 text-sm" data-i18n="grandmasters">Grandmasters</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Footer -->
+        <div class="text-center mt-12 text-gray-500 text-sm">
+            <p data-i18n="lastUpdated">Last updated: January 25, 2026</p>
+            <p class="mt-2">NumbahWan Guild • Server: TW</p>
+        </div>
+    </div>
+    
+    <script>
+        // Tab switching
+        function showTab(player) {
+            document.getElementById('battles-reggina').classList.add('hidden');
+            document.getElementById('battles-reggino').classList.add('hidden');
+            document.getElementById('tab-reggina').classList.remove('active');
+            document.getElementById('tab-reggino').classList.remove('active');
+            
+            document.getElementById('battles-' + player).classList.remove('hidden');
+            document.getElementById('tab-' + player).classList.add('active');
+        }
+        
+        // Translations
+        const translations = {
+            en: {
+                backToGuild: "Back to Guild",
+                arenaTitle: "ARENA PVP",
+                arenaSubtitle: "NumbahWan's Finest Warriors",
+                theStory: "The Underdog Story",
+                storyText: "In the Arena, opponents always pick the \"weakest\" target. They see RegginA's CP and think \"easy win.\" What they don't realize is that RegginA has mastered the art of defense. Despite having lower CP than most challengers, RegginA consistently defeats higher-level opponents on defense. The lesson? Never underestimate the NumbahWan way.",
+                guildMaster: "Guild Master",
+                viceMaster: "Vice Master",
+                grandmaster: "Grandmaster",
+                ranking: "Ranking",
+                score: "Score",
+                defenseWinRate: "Defense Win Rate",
+                settlement: "Until Settlement",
+                battleRecord: "Battle Record",
+                disclaimer: "Battle results may be inaccurate when looking up replays of past records.",
+                proTip: "Pro Tip",
+                proTipText: "Opponents always target who they think is \"weakest\" based on CP. But smart gear builds and skill setups can make you a defense monster. RegginA proves that CP isn't everything!",
+                theIrony: "The Irony",
+                ironyText: "With 2B+ CP, RegginA should theoretically lose every defense. Yet attackers keep losing because they underestimate the NumbahWan spirit. Pick on the weak? Get wrecked.",
+                funStats: "Fun Stats",
+                totalDefenseWins: "Defense Wins",
+                totalDefenseLoss: "Defense Losses",
+                combinedWinRate: "Combined Win Rate",
+                grandmasters: "Grandmasters",
+                lastUpdated: "Last updated: January 25, 2026"
+            },
+            zh: {
+                backToGuild: "返回公會",
+                arenaTitle: "競技場 PVP",
+                arenaSubtitle: "NumbahWan 最強戰士",
+                theStory: "以弱勝強的故事",
+                storyText: "在競技場中，對手總是挑選「最弱」的目標。他們看到 RegginA 的戰力，以為是「穩贏」。他們不知道的是，RegginA 已經精通防禦的藝術。儘管戰力比大多數挑戰者低，RegginA 總是在防禦中擊敗更高等級的對手。教訓？永遠不要小看 NumbahWan 精神。",
+                guildMaster: "公會會長",
+                viceMaster: "副會長",
+                grandmaster: "宗師",
+                ranking: "排名",
+                score: "積分",
+                defenseWinRate: "防守勝率",
+                settlement: "結算倒數",
+                battleRecord: "戰鬥記錄",
+                disclaimer: "查看過去記錄的重播時，戰鬥結果可能不準確。",
+                proTip: "小技巧",
+                proTipText: "對手總是根據戰力挑選他們認為「最弱」的人。但聰明的裝備配置和技能設定可以讓你成為防守怪物。RegginA 證明了戰力不是一切！",
+                theIrony: "諷刺的是",
+                ironyText: "以 20 億以上的戰力，RegginA 理論上應該輸掉每場防守。然而攻擊者不斷失敗，因為他們低估了 NumbahWan 精神。欺負弱者？被反殺。",
+                funStats: "有趣數據",
+                totalDefenseWins: "防守勝場",
+                totalDefenseLoss: "防守敗場",
+                combinedWinRate: "綜合勝率",
+                grandmasters: "宗師數量",
+                lastUpdated: "最後更新：2026年1月25日"
+            },
+            th: {
+                backToGuild: "กลับไปกิลด์",
+                arenaTitle: "อารีน่า PVP",
+                arenaSubtitle: "นักรบที่แข็งแกร่งที่สุดของ NumbahWan",
+                theStory: "เรื่องราวของผู้ด้อยกว่า",
+                storyText: "ในอารีน่า คู่ต่อสู้มักจะเลือกเป้าหมายที่ \"อ่อนแอที่สุด\" พวกเขาเห็น CP ของ RegginA และคิดว่า \"ชนะง่าย\" สิ่งที่พวกเขาไม่รู้คือ RegginA เชี่ยวชาญศิลปะการป้องกัน แม้จะมี CP ต่ำกว่าผู้ท้าชิงส่วนใหญ่ RegginA ก็เอาชนะคู่ต่อสู้ระดับสูงกว่าในการป้องกันอย่างสม่ำเสมอ บทเรียน? อย่าดูถูกวิถี NumbahWan",
+                guildMaster: "หัวหน้ากิลด์",
+                viceMaster: "รองหัวหน้า",
+                grandmaster: "แกรนด์มาสเตอร์",
+                ranking: "อันดับ",
+                score: "คะแนน",
+                defenseWinRate: "อัตราชนะป้องกัน",
+                settlement: "จนกว่าจะตัดสิน",
+                battleRecord: "บันทึกการต่อสู้",
+                disclaimer: "ผลการต่อสู้อาจไม่ถูกต้องเมื่อดูรีเพลย์ของบันทึกที่ผ่านมา",
+                proTip: "เคล็ดลับ",
+                proTipText: "คู่ต่อสู้มักจะเล็งเป้าหมายที่พวกเขาคิดว่า \"อ่อนแอที่สุด\" ตาม CP แต่การสร้างอุปกรณ์และการตั้งค่าทักษะที่ชาญฉลาดสามารถทำให้คุณเป็นมอนสเตอร์ป้องกัน RegginA พิสูจน์ว่า CP ไม่ใช่ทุกอย่าง!",
+                theIrony: "ความย้อนแย้ง",
+                ironyText: "ด้วย CP มากกว่า 2B RegginA ควรจะแพ้ทุกการป้องกันตามทฤษฎี แต่ผู้โจมตียังคงแพ้เพราะพวกเขาดูถูกจิตวิญญาณ NumbahWan เลือกคนอ่อนแอ? โดนถล่ม",
+                funStats: "สถิติสนุกๆ",
+                totalDefenseWins: "ชนะป้องกัน",
+                totalDefenseLoss: "แพ้ป้องกัน",
+                combinedWinRate: "อัตราชนะรวม",
+                grandmasters: "แกรนด์มาสเตอร์",
+                lastUpdated: "อัปเดตล่าสุด: 25 มกราคม 2026"
+            }
+        };
+        
+        let currentLang = localStorage.getItem('lang') || 'en';
+        
+        function setLanguage(lang) {
+            currentLang = lang;
+            localStorage.setItem('lang', lang);
+            
+            // Update button states
+            document.querySelectorAll('.lang-btn').forEach(btn => {
+                btn.classList.remove('active');
+                if (btn.textContent.includes(lang === 'en' ? 'EN' : lang === 'zh' ? '中文' : 'ไทย')) {
+                    btn.classList.add('active');
+                }
+            });
+            
+            // Update all translatable elements
+            document.querySelectorAll('[data-i18n]').forEach(el => {
+                const key = el.getAttribute('data-i18n');
+                if (translations[lang][key]) {
+                    el.textContent = translations[lang][key];
+                }
+            });
+        }
+        
+        // Initialize language on load
+        setLanguage(currentLang);
+    </script>
+</body>
+</html>
