@@ -1,0 +1,1604 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Daily Fortune | NumbahWan Guild</title>
+    <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Orbitron:wght@400;500;600;700;900&family=Cinzel:wght@400;700;900&family=Mystery+Quest&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #ff6b00;
+            --primary-light: #ff8c00;
+            --gold: #ffd700;
+            --gold-dark: #b8860b;
+            --mystic-purple: #6b21a8;
+            --mystic-blue: #1e3a8a;
+            --bg-dark: #0a0a0f;
+            --card-bg: #0f0f1a;
+        }
+        
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: 'Orbitron', sans-serif;
+            background: var(--bg-dark);
+            color: #fff;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+        
+        /* Mystical Background */
+        .mystic-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            background: 
+                radial-gradient(ellipse at 30% 20%, rgba(107, 33, 168, 0.3) 0%, transparent 50%),
+                radial-gradient(ellipse at 70% 80%, rgba(30, 58, 138, 0.3) 0%, transparent 50%),
+                radial-gradient(ellipse at 50% 50%, rgba(255, 215, 0, 0.05) 0%, transparent 60%),
+                linear-gradient(180deg, #050510 0%, #0a0a1a 50%, #050510 100%);
+        }
+        
+        /* Floating Stars */
+        .stars-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
+            overflow: hidden;
+        }
+        
+        .star {
+            position: absolute;
+            width: 3px;
+            height: 3px;
+            background: #fff;
+            border-radius: 50%;
+            animation: twinkle 3s infinite ease-in-out;
+        }
+        
+        .star::before {
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: inherit;
+            border-radius: 50%;
+            filter: blur(1px);
+        }
+        
+        @keyframes twinkle {
+            0%, 100% { opacity: 0.3; transform: scale(1); }
+            50% { opacity: 1; transform: scale(1.5); }
+        }
+        
+        .shooting-star {
+            position: absolute;
+            width: 100px;
+            height: 2px;
+            background: linear-gradient(90deg, #fff, transparent);
+            animation: shoot 3s infinite ease-out;
+            opacity: 0;
+        }
+        
+        @keyframes shoot {
+            0% { transform: translateX(0) translateY(0); opacity: 1; }
+            100% { transform: translateX(-500px) translateY(500px); opacity: 0; }
+        }
+        
+        /* Navigation */
+        .back-btn {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 100;
+            background: rgba(107, 33, 168, 0.3);
+            border: 1px solid var(--mystic-purple);
+            color: #a78bfa;
+            padding: 12px 24px;
+            border-radius: 30px;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .back-btn:hover {
+            background: var(--mystic-purple);
+            color: #fff;
+            transform: translateX(-5px);
+        }
+        
+        /* Language Switcher */
+        .lang-switcher {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 100;
+            display: flex;
+            gap: 5px;
+            background: rgba(0, 0, 0, 0.5);
+            padding: 5px;
+            border-radius: 25px;
+            border: 1px solid rgba(167, 139, 250, 0.3);
+        }
+        
+        .lang-btn {
+            padding: 8px 16px;
+            border: none;
+            background: transparent;
+            color: rgba(255, 255, 255, 0.6);
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.7rem;
+            cursor: pointer;
+            border-radius: 20px;
+            transition: all 0.3s ease;
+        }
+        
+        .lang-btn.active {
+            background: var(--mystic-purple);
+            color: #fff;
+        }
+        
+        .lang-btn:hover:not(.active) {
+            color: #fff;
+            background: rgba(107, 33, 168, 0.3);
+        }
+        
+        /* Main Container */
+        .fortune-container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 100px 20px 60px;
+            position: relative;
+            z-index: 1;
+        }
+        
+        /* Header */
+        .fortune-header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+        
+        .crystal-ball-container {
+            position: relative;
+            width: 150px;
+            height: 150px;
+            margin: 0 auto 30px;
+        }
+        
+        .crystal-ball {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            background: radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.4), rgba(107, 33, 168, 0.6) 50%, rgba(30, 58, 138, 0.8));
+            box-shadow: 
+                0 0 60px rgba(107, 33, 168, 0.5),
+                0 0 100px rgba(255, 215, 0, 0.2),
+                inset 0 0 60px rgba(255, 255, 255, 0.1);
+            animation: pulse-glow 3s infinite ease-in-out;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .crystal-ball::before {
+            content: '';
+            position: absolute;
+            top: 10%;
+            left: 15%;
+            width: 30%;
+            height: 20%;
+            background: rgba(255, 255, 255, 0.4);
+            border-radius: 50%;
+            filter: blur(5px);
+        }
+        
+        .crystal-ball::after {
+            content: 'N';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-family: 'Cinzel', serif;
+            font-size: 3rem;
+            font-weight: 900;
+            color: var(--gold);
+            text-shadow: 0 0 20px var(--gold), 0 0 40px var(--primary);
+            animation: float-n 4s infinite ease-in-out;
+        }
+        
+        @keyframes pulse-glow {
+            0%, 100% { box-shadow: 0 0 60px rgba(107, 33, 168, 0.5), 0 0 100px rgba(255, 215, 0, 0.2); }
+            50% { box-shadow: 0 0 80px rgba(107, 33, 168, 0.7), 0 0 120px rgba(255, 215, 0, 0.4); }
+        }
+        
+        @keyframes float-n {
+            0%, 100% { transform: translate(-50%, -50%) scale(1); opacity: 0.8; }
+            50% { transform: translate(-50%, -55%) scale(1.1); opacity: 1; }
+        }
+        
+        .crystal-stand {
+            width: 80px;
+            height: 30px;
+            background: linear-gradient(180deg, #4a3f35, #2a2520);
+            margin: -10px auto 0;
+            border-radius: 0 0 40px 40px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.5);
+        }
+        
+        .page-title {
+            font-family: 'Cinzel', serif;
+            font-size: clamp(2rem, 5vw, 3.5rem);
+            font-weight: 900;
+            background: linear-gradient(135deg, #a78bfa 0%, var(--gold) 50%, #a78bfa 100%);
+            background-size: 200% auto;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: shine 4s linear infinite;
+            margin-bottom: 10px;
+        }
+        
+        @keyframes shine {
+            to { background-position: 200% center; }
+        }
+        
+        .page-subtitle {
+            font-size: 0.9rem;
+            color: rgba(167, 139, 250, 0.8);
+            font-style: italic;
+        }
+        
+        .fortune-date {
+            margin-top: 20px;
+            padding: 10px 30px;
+            background: rgba(107, 33, 168, 0.2);
+            border: 1px solid rgba(167, 139, 250, 0.3);
+            border-radius: 30px;
+            display: inline-block;
+            font-size: 0.85rem;
+            color: var(--gold);
+        }
+        
+        /* Fortune Card */
+        .fortune-card {
+            background: linear-gradient(135deg, rgba(15, 15, 30, 0.9), rgba(30, 20, 50, 0.9));
+            border: 2px solid rgba(167, 139, 250, 0.3);
+            border-radius: 24px;
+            padding: 40px;
+            margin-bottom: 30px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .fortune-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--mystic-purple), var(--gold), var(--mystic-purple));
+        }
+        
+        .fortune-card::after {
+            content: '✧';
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            font-size: 2rem;
+            color: var(--gold);
+            opacity: 0.3;
+            animation: sparkle 2s infinite;
+        }
+        
+        @keyframes sparkle {
+            0%, 100% { opacity: 0.3; transform: rotate(0deg); }
+            50% { opacity: 0.6; transform: rotate(180deg); }
+        }
+        
+        /* Draw Button */
+        .draw-section {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+        
+        .draw-btn {
+            background: linear-gradient(135deg, var(--mystic-purple), var(--mystic-blue));
+            border: 2px solid var(--gold);
+            color: #fff;
+            padding: 20px 50px;
+            border-radius: 50px;
+            font-family: 'Cinzel', serif;
+            font-size: 1.2rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.4s ease;
+            position: relative;
+            overflow: hidden;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+        }
+        
+        .draw-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.5s ease;
+        }
+        
+        .draw-btn:hover::before {
+            left: 100%;
+        }
+        
+        .draw-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 40px rgba(107, 33, 168, 0.6), 0 0 60px rgba(255, 215, 0, 0.3);
+        }
+        
+        .draw-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .draw-btn.drawing {
+            animation: shake 0.5s infinite;
+        }
+        
+        @keyframes shake {
+            0%, 100% { transform: translateX(0) rotate(0); }
+            25% { transform: translateX(-5px) rotate(-2deg); }
+            75% { transform: translateX(5px) rotate(2deg); }
+        }
+        
+        .already-drawn {
+            color: rgba(167, 139, 250, 0.6);
+            font-size: 0.85rem;
+            margin-top: 15px;
+        }
+        
+        .countdown {
+            color: var(--gold);
+            font-weight: 600;
+        }
+        
+        /* Fortune Result */
+        .fortune-result {
+            display: none;
+        }
+        
+        .fortune-result.visible {
+            display: block;
+            animation: fadeInUp 0.8s ease;
+        }
+        
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .fortune-rank {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .rank-badge {
+            display: inline-block;
+            padding: 15px 40px;
+            border-radius: 50px;
+            font-family: 'Cinzel', serif;
+            font-size: 1.5rem;
+            font-weight: 900;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            position: relative;
+        }
+        
+        .rank-badge.legendary {
+            background: linear-gradient(135deg, #ffd700, #ff8c00);
+            color: #1a1a2e;
+            box-shadow: 0 0 40px rgba(255, 215, 0, 0.5);
+            animation: legendary-pulse 2s infinite;
+        }
+        
+        .rank-badge.epic {
+            background: linear-gradient(135deg, #a78bfa, #6b21a8);
+            color: #fff;
+            box-shadow: 0 0 30px rgba(167, 139, 250, 0.5);
+        }
+        
+        .rank-badge.rare {
+            background: linear-gradient(135deg, #60a5fa, #1e3a8a);
+            color: #fff;
+            box-shadow: 0 0 25px rgba(96, 165, 250, 0.5);
+        }
+        
+        .rank-badge.common {
+            background: linear-gradient(135deg, #4ade80, #166534);
+            color: #fff;
+            box-shadow: 0 0 20px rgba(74, 222, 128, 0.4);
+        }
+        
+        .rank-badge.unlucky {
+            background: linear-gradient(135deg, #6b7280, #374151);
+            color: #fff;
+        }
+        
+        @keyframes legendary-pulse {
+            0%, 100% { box-shadow: 0 0 40px rgba(255, 215, 0, 0.5); }
+            50% { box-shadow: 0 0 60px rgba(255, 215, 0, 0.8), 0 0 80px rgba(255, 140, 0, 0.4); }
+        }
+        
+        .rank-stars {
+            margin-top: 10px;
+            font-size: 1.5rem;
+            color: var(--gold);
+        }
+        
+        /* Fortune Categories */
+        .fortune-categories {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .category-card {
+            background: rgba(107, 33, 168, 0.1);
+            border: 1px solid rgba(167, 139, 250, 0.2);
+            border-radius: 16px;
+            padding: 20px;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+        
+        .category-card:hover {
+            transform: translateY(-5px);
+            border-color: rgba(167, 139, 250, 0.5);
+            box-shadow: 0 10px 30px rgba(107, 33, 168, 0.2);
+        }
+        
+        .category-icon {
+            font-size: 2rem;
+            margin-bottom: 10px;
+        }
+        
+        .category-name {
+            font-size: 0.75rem;
+            color: rgba(167, 139, 250, 0.8);
+            letter-spacing: 2px;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+        }
+        
+        .category-rating {
+            display: flex;
+            justify-content: center;
+            gap: 4px;
+        }
+        
+        .rating-bar {
+            width: 20px;
+            height: 6px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 3px;
+            overflow: hidden;
+        }
+        
+        .rating-bar.filled {
+            background: linear-gradient(90deg, var(--gold), var(--primary));
+        }
+        
+        /* Main Fortune Message */
+        .fortune-message {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 30px;
+            background: rgba(255, 215, 0, 0.05);
+            border-radius: 16px;
+            border: 1px solid rgba(255, 215, 0, 0.2);
+        }
+        
+        .fortune-quote {
+            font-family: 'Cinzel', serif;
+            font-size: 1.3rem;
+            color: var(--gold);
+            line-height: 1.8;
+            margin-bottom: 15px;
+            font-style: italic;
+        }
+        
+        .fortune-advice {
+            font-size: 0.9rem;
+            color: rgba(255, 255, 255, 0.7);
+            line-height: 1.7;
+        }
+        
+        /* Lucky Items */
+        .lucky-section {
+            margin-bottom: 30px;
+        }
+        
+        .lucky-title {
+            font-size: 0.8rem;
+            color: rgba(167, 139, 250, 0.8);
+            letter-spacing: 2px;
+            margin-bottom: 15px;
+            text-transform: uppercase;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .lucky-title::before,
+        .lucky-title::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(167, 139, 250, 0.3), transparent);
+        }
+        
+        .lucky-items {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            flex-wrap: wrap;
+        }
+        
+        .lucky-item {
+            text-align: center;
+        }
+        
+        .lucky-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: rgba(107, 33, 168, 0.2);
+            border: 2px solid rgba(167, 139, 250, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.8rem;
+            margin: 0 auto 10px;
+            transition: all 0.3s ease;
+        }
+        
+        .lucky-item:hover .lucky-icon {
+            transform: scale(1.1) rotate(10deg);
+            border-color: var(--gold);
+            box-shadow: 0 0 20px rgba(255, 215, 0, 0.3);
+        }
+        
+        .lucky-label {
+            font-size: 0.7rem;
+            color: rgba(255, 255, 255, 0.5);
+            letter-spacing: 1px;
+        }
+        
+        .lucky-value {
+            font-size: 0.85rem;
+            color: #fff;
+            margin-top: 4px;
+        }
+        
+        /* Guild Member Compatibility */
+        .compatibility-section {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 16px;
+            padding: 25px;
+        }
+        
+        .compatibility-title {
+            font-size: 0.8rem;
+            color: var(--gold);
+            letter-spacing: 2px;
+            margin-bottom: 20px;
+            text-transform: uppercase;
+            text-align: center;
+        }
+        
+        .compatibility-members {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+        
+        .compat-member {
+            text-align: center;
+            padding: 15px;
+            background: rgba(107, 33, 168, 0.1);
+            border-radius: 12px;
+            border: 1px solid rgba(167, 139, 250, 0.2);
+            min-width: 100px;
+            transition: all 0.3s ease;
+        }
+        
+        .compat-member:hover {
+            transform: translateY(-5px);
+            border-color: var(--gold);
+        }
+        
+        .compat-member.best {
+            border-color: var(--gold);
+            background: rgba(255, 215, 0, 0.1);
+        }
+        
+        .compat-avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            margin: 0 auto 10px;
+            object-fit: cover;
+            border: 2px solid rgba(167, 139, 250, 0.3);
+        }
+        
+        .compat-member.best .compat-avatar {
+            border-color: var(--gold);
+            box-shadow: 0 0 15px rgba(255, 215, 0, 0.4);
+        }
+        
+        .compat-name {
+            font-size: 0.75rem;
+            color: #fff;
+            margin-bottom: 5px;
+        }
+        
+        .compat-percent {
+            font-size: 0.9rem;
+            font-weight: 700;
+            color: var(--gold);
+        }
+        
+        .compat-label {
+            font-size: 0.6rem;
+            color: rgba(255, 255, 255, 0.4);
+            margin-top: 2px;
+        }
+        
+        /* Share Section */
+        .share-section {
+            text-align: center;
+            margin-top: 30px;
+            padding-top: 30px;
+            border-top: 1px solid rgba(167, 139, 250, 0.2);
+        }
+        
+        .share-btn {
+            background: rgba(107, 33, 168, 0.3);
+            border: 1px solid rgba(167, 139, 250, 0.5);
+            color: #a78bfa;
+            padding: 12px 30px;
+            border-radius: 30px;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin: 0 10px;
+        }
+        
+        .share-btn:hover {
+            background: var(--mystic-purple);
+            color: #fff;
+        }
+        
+        /* History Section */
+        .history-section {
+            margin-top: 40px;
+        }
+        
+        .history-title {
+            font-family: 'Cinzel', serif;
+            font-size: 1.2rem;
+            color: rgba(167, 139, 250, 0.8);
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        
+        .history-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 8px;
+        }
+        
+        .history-day {
+            aspect-ratio: 1;
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.7rem;
+            background: rgba(107, 33, 168, 0.1);
+            border: 1px solid rgba(167, 139, 250, 0.1);
+            transition: all 0.3s ease;
+        }
+        
+        .history-day.has-fortune {
+            cursor: pointer;
+        }
+        
+        .history-day.has-fortune:hover {
+            transform: scale(1.1);
+            z-index: 10;
+        }
+        
+        .history-day.legendary { background: linear-gradient(135deg, rgba(255, 215, 0, 0.3), rgba(255, 140, 0, 0.3)); border-color: var(--gold); }
+        .history-day.epic { background: rgba(167, 139, 250, 0.3); border-color: #a78bfa; }
+        .history-day.rare { background: rgba(96, 165, 250, 0.3); border-color: #60a5fa; }
+        .history-day.common { background: rgba(74, 222, 128, 0.3); border-color: #4ade80; }
+        .history-day.unlucky { background: rgba(107, 114, 128, 0.3); border-color: #6b7280; }
+        
+        .history-day.today {
+            border: 2px solid var(--gold);
+            box-shadow: 0 0 10px rgba(255, 215, 0, 0.3);
+        }
+        
+        .history-date {
+            font-weight: 600;
+            color: rgba(255, 255, 255, 0.8);
+        }
+        
+        .history-rank {
+            font-size: 0.5rem;
+            margin-top: 2px;
+            opacity: 0.7;
+        }
+        
+        /* Streak Counter */
+        .streak-section {
+            display: flex;
+            justify-content: center;
+            gap: 40px;
+            margin-top: 30px;
+            padding: 20px;
+            background: rgba(255, 215, 0, 0.05);
+            border-radius: 16px;
+            border: 1px solid rgba(255, 215, 0, 0.1);
+        }
+        
+        .streak-item {
+            text-align: center;
+        }
+        
+        .streak-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--gold);
+            text-shadow: 0 0 20px rgba(255, 215, 0, 0.3);
+        }
+        
+        .streak-label {
+            font-size: 0.7rem;
+            color: rgba(255, 255, 255, 0.5);
+            letter-spacing: 1px;
+            margin-top: 5px;
+        }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            .fortune-container {
+                padding: 80px 15px 40px;
+            }
+            
+            .fortune-card {
+                padding: 25px 20px;
+            }
+            
+            .crystal-ball-container {
+                width: 120px;
+                height: 120px;
+            }
+            
+            .fortune-categories {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .history-grid {
+                grid-template-columns: repeat(7, 1fr);
+                gap: 4px;
+            }
+            
+            .history-day {
+                font-size: 0.6rem;
+            }
+            
+            .lang-switcher {
+                top: auto;
+                bottom: 20px;
+            }
+            
+            .streak-section {
+                gap: 20px;
+            }
+            
+            .streak-value {
+                font-size: 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="mystic-bg"></div>
+    <div class="stars-container" id="starsContainer"></div>
+    
+    <!-- Back Button -->
+    <a href="/" class="back-btn">
+        <i class="fas fa-arrow-left"></i>
+        <span data-i18n="back">Back</span>
+    </a>
+    
+    <!-- Language Switcher -->
+    <div class="lang-switcher">
+        <button class="lang-btn active" data-lang="en">EN</button>
+        <button class="lang-btn" data-lang="zh">中文</button>
+        <button class="lang-btn" data-lang="th">ไทย</button>
+    </div>
+    
+    <div class="fortune-container">
+        <!-- Header -->
+        <header class="fortune-header">
+            <div class="crystal-ball-container">
+                <div class="crystal-ball"></div>
+                <div class="crystal-stand"></div>
+            </div>
+            <h1 class="page-title" data-i18n="pageTitle">Daily Fortune</h1>
+            <p class="page-subtitle" data-i18n="pageSubtitle">The crystal ball reveals your MapleStory destiny...</p>
+            <div class="fortune-date" id="fortuneDate"></div>
+        </header>
+        
+        <!-- Draw Section -->
+        <div class="draw-section" id="drawSection">
+            <button class="draw-btn" id="drawBtn" onclick="drawFortune()">
+                <i class="fas fa-star"></i>
+                <span data-i18n="drawFortune">Reveal My Fortune</span>
+            </button>
+            <p class="already-drawn" id="alreadyDrawn" style="display: none;">
+                <span data-i18n="alreadyDrawnText">You've already drawn today's fortune!</span><br>
+                <span data-i18n="nextDrawIn">Next fortune in:</span> <span class="countdown" id="countdown"></span>
+            </p>
+        </div>
+        
+        <!-- Fortune Result -->
+        <div class="fortune-result" id="fortuneResult">
+            <div class="fortune-card">
+                <!-- Rank Badge -->
+                <div class="fortune-rank">
+                    <div class="rank-badge" id="rankBadge">LEGENDARY</div>
+                    <div class="rank-stars" id="rankStars">★★★★★</div>
+                </div>
+                
+                <!-- Fortune Categories -->
+                <div class="fortune-categories" id="fortuneCategories">
+                    <!-- Generated dynamically -->
+                </div>
+                
+                <!-- Main Message -->
+                <div class="fortune-message">
+                    <p class="fortune-quote" id="fortuneQuote">"The stars align in your favor today..."</p>
+                    <p class="fortune-advice" id="fortuneAdvice">Focus on team play and you shall prosper.</p>
+                </div>
+                
+                <!-- Lucky Items -->
+                <div class="lucky-section">
+                    <div class="lucky-title" data-i18n="luckyItems">Today's Lucky Elements</div>
+                    <div class="lucky-items" id="luckyItems">
+                        <!-- Generated dynamically -->
+                    </div>
+                </div>
+                
+                <!-- Guild Compatibility -->
+                <div class="compatibility-section">
+                    <div class="compatibility-title" data-i18n="guildCompatibility">Guild Partner Compatibility</div>
+                    <div class="compatibility-members" id="compatMembers">
+                        <!-- Generated dynamically -->
+                    </div>
+                </div>
+                
+                <!-- Share -->
+                <div class="share-section">
+                    <button class="share-btn" onclick="copyFortune()">
+                        <i class="fas fa-copy"></i>
+                        <span data-i18n="copyFortune">Copy Fortune</span>
+                    </button>
+                    <button class="share-btn" onclick="shareFortune()">
+                        <i class="fas fa-share"></i>
+                        <span data-i18n="shareFortune">Share</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Streak Section -->
+        <div class="streak-section">
+            <div class="streak-item">
+                <div class="streak-value" id="currentStreak">0</div>
+                <div class="streak-label" data-i18n="currentStreak">DAY STREAK</div>
+            </div>
+            <div class="streak-item">
+                <div class="streak-value" id="totalDraws">0</div>
+                <div class="streak-label" data-i18n="totalDraws">TOTAL DRAWS</div>
+            </div>
+            <div class="streak-item">
+                <div class="streak-value" id="legendaryCount">0</div>
+                <div class="streak-label" data-i18n="legendaryDraws">LEGENDARY</div>
+            </div>
+        </div>
+        
+        <!-- History -->
+        <div class="history-section">
+            <h2 class="history-title" data-i18n="fortuneHistory">Past 14 Days</h2>
+            <div class="history-grid" id="historyGrid">
+                <!-- Generated dynamically -->
+            </div>
+        </div>
+    </div>
+    
+    <script src="/static/loader.js"></script>
+    <script src="/static/bgm.js"></script>
+    <script>
+        // ========= GUILD MEMBERS DATA =========
+        const guildMembers = [
+            { name: "RegginA", avatar: "/static/avatar-reggina-master-masked-warrior.jpg", role: "Master" },
+            { name: "RegginO", avatar: "/static/avatar-reggino-vicemaster-pinkhair.jpg", role: "Vice Master" },
+            { name: "Yuluner晴", avatar: "/static/avatar-yuluner-sunny-cheerful.jpg", role: "Member" },
+            { name: "Natehouoho", avatar: "/static/avatar-natehouoho-playful-adventurer.jpg", role: "Member" },
+            { name: "紈稻税著", avatar: "/static/avatar-wandaoshuizhu-sleepy-gamer.jpg", role: "Leader" },
+            { name: "騎鳥回家", avatar: "/static/avatar-qiniaohuijia-riding-bird.jpg", role: "Member" },
+            { name: "阿光Yo", avatar: "/static/avatar-aguangyo-light-mage.jpg", role: "Member" },
+            { name: "碼農小孫", avatar: "/static/avatar-manongxiaosun-programmer.jpg", role: "Member" },
+            { name: "泰拳寒玉", avatar: "/static/avatar-taiquanhanyu-thaiboxer-jade.jpg", role: "Member" },
+            { name: "TW#VWQG7R9C03", avatar: "/static/avatar-twvwqg-mystery-anonymous.jpg", role: "Member" },
+            { name: "小亨寶寶", avatar: "/static/avatar-xiaohengbaobao-baby-cute.jpg", role: "Member" },
+            { name: "葉陽", avatar: "/static/avatar-yeyang-leaf-sun-nature.jpg", role: "Member" }
+        ];
+        
+        // ========= FORTUNE DATA =========
+        const fortuneRanks = [
+            { id: 'legendary', weight: 5, stars: 5, class: 'legendary' },
+            { id: 'epic', weight: 15, stars: 4, class: 'epic' },
+            { id: 'rare', weight: 30, stars: 3, class: 'rare' },
+            { id: 'common', weight: 40, stars: 2, class: 'common' },
+            { id: 'unlucky', weight: 10, stars: 1, class: 'unlucky' }
+        ];
+        
+        const fortuneCategories = [
+            { id: 'battle', icon: '⚔️' },
+            { id: 'loot', icon: '💎' },
+            { id: 'social', icon: '💬' },
+            { id: 'growth', icon: '📈' }
+        ];
+        
+        const luckyColors = ['🔴', '🟠', '🟡', '🟢', '🔵', '🟣', '⚪', '🟤'];
+        const luckyNumbers = [1, 3, 5, 7, 8, 9, 11, 12, 13, 21, 28, 33, 42, 47, 77, 88, 99];
+        const luckyDirections = ['↗️', '➡️', '↘️', '⬇️', '↙️', '⬅️', '↖️', '⬆️'];
+        const luckyElements = ['🔥', '💧', '🌿', '⚡', '❄️', '🌙', '☀️', '⭐'];
+        
+        const fortuneQuotes = {
+            en: {
+                legendary: [
+                    "The stars bow before your greatness! Today, even Zakum trembles!",
+                    "Golden light surrounds you! Every boss drop is destined to be yours!",
+                    "The prophecy speaks of your legendary day! CP gains will be MASSIVE!",
+                    "RegginA herself would be proud! This is your moment of glory!",
+                    "The Maple Gods have chosen you! Prepare for an EPIC adventure!"
+                ],
+                epic: [
+                    "A purple aura of power surrounds you! Great things await!",
+                    "The winds of fortune blow strongly in your favor!",
+                    "Your party members will feel your strength today!",
+                    "Boss raids will bend to your will! Lead with confidence!",
+                    "The guild's power flows through you! Strike while the stars align!"
+                ],
+                rare: [
+                    "Steady progress marks your path today. Keep pushing!",
+                    "Opportunities will knock - make sure you answer!",
+                    "Team up with guildmates for optimal results!",
+                    "Your efforts will bear fruit, patience is key!",
+                    "Focus on upgrades today - the returns will be worth it!"
+                ],
+                common: [
+                    "A calm day for grinding and growing. Consistency is king!",
+                    "Small gains add up. Don't underestimate today's potential!",
+                    "Help a fellow guild member - karma will reward you!",
+                    "Review your strategy and prepare for better days ahead!",
+                    "Even legends have ordinary days. Use it wisely!"
+                ],
+                unlucky: [
+                    "The stars suggest caution today. Save your resources!",
+                    "Mercury is in retrograde... maybe skip the risky pulls?",
+                    "Not every day is meant for glory. Rest and recover!",
+                    "Bad luck today means GREAT luck is coming soon!",
+                    "Even dark days pass. The guild stands with you! 💪"
+                ]
+            },
+            zh: {
+                legendary: [
+                    "星辰在你面前俯首！今天連乾坤扎昆都會顫抖！",
+                    "金光環繞著你！每個BOSS掉落都注定是你的！",
+                    "預言說今天是你的傳奇日！戰力增長將是巨大的！",
+                    "連RegginA都會為你驕傲！這是你輝煌的時刻！",
+                    "楓葉之神選擇了你！準備迎接史詩級的冒險！"
+                ],
+                epic: [
+                    "紫色的力量光環環繞著你！偉大的事情在等待！",
+                    "幸運之風強烈地吹向你！",
+                    "你的隊友今天會感受到你的力量！",
+                    "BOSS戰會屈服於你的意志！自信地領導！",
+                    "公會的力量流經你！趁星星對齊時出擊！"
+                ],
+                rare: [
+                    "穩步前進標誌著你今天的道路。繼續加油！",
+                    "機會會來敲門——確保你會回應！",
+                    "與公會成員組隊以獲得最佳結果！",
+                    "你的努力會結出果實，耐心是關鍵！",
+                    "今天專注於升級——回報將是值得的！"
+                ],
+                common: [
+                    "平靜的一天適合練級和成長。堅持就是王道！",
+                    "小收益累積起來。不要低估今天的潛力！",
+                    "幫助公會成員——因果會回報你！",
+                    "審視你的策略，為更好的日子做準備！",
+                    "即使是傳奇也有普通的日子。明智地使用它！"
+                ],
+                unlucky: [
+                    "星星建議今天謹慎。節省你的資源！",
+                    "水星逆行中...也許跳過有風險的抽獎？",
+                    "不是每天都為了榮耀。休息和恢復！",
+                    "今天運氣不好意味著好運即將來臨！",
+                    "即使是黑暗的日子也會過去。公會與你同在！💪"
+                ]
+            },
+            th: {
+                legendary: [
+                    "ดวงดาวก้มหัวต่อความยิ่งใหญ่ของคุณ! วันนี้แม้แต่ซาคุมก็สั่น!",
+                    "แสงทองล้อมรอบคุณ! ของดรอปจากบอสทุกชิ้นเป็นของคุณแน่นอน!",
+                    "คำทำนายพูดถึงวันตำนานของคุณ! CP จะเพิ่มขึ้นอย่างมหาศาล!",
+                    "แม้แต่ RegginA ก็จะภูมิใจ! นี่คือช่วงเวลาแห่งความรุ่งโรจน์ของคุณ!",
+                    "เทพเมเปิ้ลเลือกคุณแล้ว! เตรียมพร้อมสำหรับการผจญภัยระดับ EPIC!"
+                ],
+                epic: [
+                    "ออร่าสีม่วงแห่งพลังล้อมรอบคุณ! สิ่งยิ่งใหญ่รออยู่!",
+                    "สายลมแห่งโชคลาภพัดเข้าหาคุณอย่างแรงกล้า!",
+                    "สมาชิกปาร์ตี้จะรู้สึกถึงพลังของคุณวันนี้!",
+                    "บอสเรดจะยอมจำนนต่อเจตจำนงของคุณ! นำทีมด้วยความมั่นใจ!",
+                    "พลังกิลด์ไหลผ่านคุณ! โจมตีขณะที่ดวงดาวเรียงตัว!"
+                ],
+                rare: [
+                    "ความก้าวหน้าที่มั่นคงเป็นเครื่องหมายเส้นทางของคุณวันนี้ สู้ต่อไป!",
+                    "โอกาสจะมาเคาะประตู - อย่าลืมตอบรับ!",
+                    "จับทีมกับสมาชิกกิลด์เพื่อผลลัพธ์ที่ดีที่สุด!",
+                    "ความพยายามของคุณจะเกิดผล ความอดทนคือกุญแจ!",
+                    "โฟกัสที่การอัปเกรดวันนี้ - ผลตอบแทนจะคุ้มค่า!"
+                ],
+                common: [
+                    "วันสงบสำหรับการฟาร์มและเติบโต ความสม่ำเสมอคือราชา!",
+                    "กำไรเล็กน้อยรวมกัน อย่าประมาทศักยภาพของวันนี้!",
+                    "ช่วยเพื่อนกิลด์ - กรรมจะตอบแทนคุณ!",
+                    "ทบทวนกลยุทธ์และเตรียมพร้อมสำหรับวันที่ดีกว่า!",
+                    "แม้แต่ตำนานก็มีวันธรรมดา ใช้มันอย่างชาญฉลาด!"
+                ],
+                unlucky: [
+                    "ดวงดาวแนะนำความระมัดระวังวันนี้ เก็บทรัพยากรไว้!",
+                    "ดาวพุธถอยหลัง... บางทีข้ามการสุ่มเสี่ยงไปก่อน?",
+                    "ไม่ใช่ทุกวันที่สร้างเพื่อความรุ่งโรจน์ พักผ่อนและฟื้นตัว!",
+                    "โชคร้ายวันนี้หมายความว่าโชคดีกำลังจะมา!",
+                    "แม้วันมืดก็ผ่านไป กิลด์อยู่เคียงข้างคุณ! 💪"
+                ]
+            }
+        };
+        
+        const fortuneAdvice = {
+            en: {
+                legendary: "Go all out today! Every boss raid, every upgrade attempt - the universe supports you!",
+                epic: "Take calculated risks today. Your instincts are sharp!",
+                rare: "Team activities will boost your fortune. Don't solo today!",
+                common: "Focus on daily tasks and guild contributions. Steady wins the race!",
+                unlucky: "Conserve resources and help others. Tomorrow brings better luck!"
+            },
+            zh: {
+                legendary: "今天全力以赴！每次BOSS戰、每次升級嘗試——宇宙都支持你！",
+                epic: "今天冒險要三思。你的直覺很敏銳！",
+                rare: "團隊活動會提升你的運勢。今天不要單刷！",
+                common: "專注於日常任務和公會貢獻。穩紮穩打贏得比賽！",
+                unlucky: "節省資源並幫助他人。明天會有更好的運氣！"
+            },
+            th: {
+                legendary: "ทุ่มสุดตัววันนี้! ทุกบอสเรด ทุกการอัปเกรด - จักรวาลสนับสนุนคุณ!",
+                epic: "เสี่ยงอย่างรอบคอบวันนี้ สัญชาตญาณของคุณคมมาก!",
+                rare: "กิจกรรมทีมจะเพิ่มโชคของคุณ อย่าเล่นคนเดียววันนี้!",
+                common: "โฟกัสที่งานประจำวันและการช่วยเหลือกิลด์ ช้าแต่ชัวร์!",
+                unlucky: "ประหยัดทรัพยากรและช่วยเหลือผู้อื่น พรุ่งนี้โชคจะดีกว่า!"
+            }
+        };
+        
+        const categoryNames = {
+            en: { battle: 'BATTLE', loot: 'LOOT', social: 'SOCIAL', growth: 'GROWTH' },
+            zh: { battle: '戰鬥', loot: '掉寶', social: '社交', growth: '成長' },
+            th: { battle: 'ต่อสู้', loot: 'ของดรอป', social: 'สังคม', growth: 'เติบโต' }
+        };
+        
+        const rankNames = {
+            en: { legendary: 'LEGENDARY', epic: 'EPIC', rare: 'RARE', common: 'COMMON', unlucky: 'CHALLENGING' },
+            zh: { legendary: '傳奇', epic: '史詩', rare: '稀有', common: '普通', unlucky: '挑戰' },
+            th: { legendary: 'ตำนาน', epic: 'มหากาพย์', rare: 'หายาก', common: 'ธรรมดา', unlucky: 'ท้าทาย' }
+        };
+        
+        const uiTranslations = {
+            en: {
+                back: 'Back',
+                pageTitle: 'Daily Fortune',
+                pageSubtitle: 'The crystal ball reveals your MapleStory destiny...',
+                drawFortune: 'Reveal My Fortune',
+                alreadyDrawnText: "You've already drawn today's fortune!",
+                nextDrawIn: 'Next fortune in:',
+                luckyItems: "Today's Lucky Elements",
+                guildCompatibility: 'Guild Partner Compatibility',
+                copyFortune: 'Copy Fortune',
+                shareFortune: 'Share',
+                fortuneHistory: 'Past 14 Days',
+                currentStreak: 'DAY STREAK',
+                totalDraws: 'TOTAL DRAWS',
+                legendaryDraws: 'LEGENDARY',
+                luckyColor: 'Color',
+                luckyNumber: 'Number',
+                luckyDirection: 'Direction',
+                luckyElement: 'Element',
+                bestMatch: 'Best Match!'
+            },
+            zh: {
+                back: '返回',
+                pageTitle: '每日運勢',
+                pageSubtitle: '水晶球揭示你的楓之谷命運...',
+                drawFortune: '揭示我的運勢',
+                alreadyDrawnText: '你已經抽過今天的運勢了！',
+                nextDrawIn: '下次抽籤倒計時：',
+                luckyItems: '今日幸運元素',
+                guildCompatibility: '公會夥伴相容度',
+                copyFortune: '複製運勢',
+                shareFortune: '分享',
+                fortuneHistory: '過去14天',
+                currentStreak: '連續天數',
+                totalDraws: '總抽籤數',
+                legendaryDraws: '傳奇次數',
+                luckyColor: '顏色',
+                luckyNumber: '數字',
+                luckyDirection: '方向',
+                luckyElement: '元素',
+                bestMatch: '最佳搭檔！'
+            },
+            th: {
+                back: 'กลับ',
+                pageTitle: 'ดวงประจำวัน',
+                pageSubtitle: 'ลูกแก้วเผยโชคชะตา MapleStory ของคุณ...',
+                drawFortune: 'เปิดเผยดวงของฉัน',
+                alreadyDrawnText: 'คุณสุ่มดวงวันนี้แล้ว!',
+                nextDrawIn: 'สุ่มครั้งต่อไปใน:',
+                luckyItems: 'องค์ประกอบโชคดีวันนี้',
+                guildCompatibility: 'ความเข้ากันได้กับสมาชิกกิลด์',
+                copyFortune: 'คัดลอกดวง',
+                shareFortune: 'แชร์',
+                fortuneHistory: '14 วันที่ผ่านมา',
+                currentStreak: 'วันติดต่อกัน',
+                totalDraws: 'สุ่มทั้งหมด',
+                legendaryDraws: 'ตำนาน',
+                luckyColor: 'สี',
+                luckyNumber: 'เลข',
+                luckyDirection: 'ทิศทาง',
+                luckyElement: 'ธาตุ',
+                bestMatch: 'คู่ที่ดีที่สุด!'
+            }
+        };
+        
+        // ========= STATE =========
+        let currentLang = localStorage.getItem('numbahwan_lang') || 'en';
+        const STORAGE_KEY = 'numbahwan_fortune';
+        
+        // ========= UTILITY FUNCTIONS =========
+        function getTodayKey() {
+            const today = new Date();
+            return `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+        }
+        
+        function seededRandom(seed) {
+            const x = Math.sin(seed) * 10000;
+            return x - Math.floor(x);
+        }
+        
+        function getFortuneData() {
+            try {
+                return JSON.parse(localStorage.getItem(STORAGE_KEY)) || { history: {}, streak: 0, total: 0 };
+            } catch {
+                return { history: {}, streak: 0, total: 0 };
+            }
+        }
+        
+        function saveFortuneData(data) {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+        }
+        
+        function selectWeightedRandom(items, seed) {
+            const totalWeight = items.reduce((sum, item) => sum + item.weight, 0);
+            let random = seededRandom(seed) * totalWeight;
+            
+            for (const item of items) {
+                random -= item.weight;
+                if (random <= 0) return item;
+            }
+            return items[items.length - 1];
+        }
+        
+        // ========= GENERATE FORTUNE =========
+        function generateFortune(dateKey) {
+            // Create seed from date for consistent daily fortune
+            const seed = dateKey.split('-').reduce((acc, val) => acc * 100 + parseInt(val), 0);
+            
+            // Select rank
+            const rank = selectWeightedRandom(fortuneRanks, seed);
+            
+            // Generate category ratings (1-5)
+            const categories = fortuneCategories.map((cat, i) => ({
+                ...cat,
+                rating: Math.floor(seededRandom(seed + i * 100) * 5) + 1
+            }));
+            
+            // Boost ratings based on rank
+            if (rank.id === 'legendary') {
+                categories.forEach(c => c.rating = Math.min(5, c.rating + 2));
+            } else if (rank.id === 'epic') {
+                categories.forEach(c => c.rating = Math.min(5, c.rating + 1));
+            } else if (rank.id === 'unlucky') {
+                categories.forEach(c => c.rating = Math.max(1, c.rating - 1));
+            }
+            
+            // Select lucky items
+            const luckyColor = luckyColors[Math.floor(seededRandom(seed + 1000) * luckyColors.length)];
+            const luckyNumber = luckyNumbers[Math.floor(seededRandom(seed + 2000) * luckyNumbers.length)];
+            const luckyDirection = luckyDirections[Math.floor(seededRandom(seed + 3000) * luckyDirections.length)];
+            const luckyElement = luckyElements[Math.floor(seededRandom(seed + 4000) * luckyElements.length)];
+            
+            // Generate member compatibility (shuffle and assign percentages)
+            const shuffledMembers = [...guildMembers].sort(() => seededRandom(seed + 5000) - 0.5);
+            const compatibility = shuffledMembers.slice(0, 4).map((member, i) => ({
+                ...member,
+                percent: Math.floor(60 + seededRandom(seed + 6000 + i) * 40),
+                isBest: i === 0
+            }));
+            // Sort by percent descending
+            compatibility.sort((a, b) => b.percent - a.percent);
+            compatibility[0].isBest = true;
+            
+            // Select quote
+            const quotes = fortuneQuotes[currentLang][rank.id];
+            const quoteIndex = Math.floor(seededRandom(seed + 7000) * quotes.length);
+            
+            return {
+                rank,
+                categories,
+                luckyColor,
+                luckyNumber,
+                luckyDirection,
+                luckyElement,
+                compatibility,
+                quote: quotes[quoteIndex],
+                advice: fortuneAdvice[currentLang][rank.id]
+            };
+        }
+        
+        // ========= RENDER FUNCTIONS =========
+        function renderFortune(fortune) {
+            // Rank badge
+            const rankBadge = document.getElementById('rankBadge');
+            rankBadge.className = `rank-badge ${fortune.rank.class}`;
+            rankBadge.textContent = rankNames[currentLang][fortune.rank.id];
+            
+            // Stars
+            document.getElementById('rankStars').textContent = '★'.repeat(fortune.rank.stars) + '☆'.repeat(5 - fortune.rank.stars);
+            
+            // Categories
+            const categoriesHTML = fortune.categories.map(cat => `
+                <div class="category-card">
+                    <div class="category-icon">${cat.icon}</div>
+                    <div class="category-name">${categoryNames[currentLang][cat.id]}</div>
+                    <div class="category-rating">
+                        ${Array(5).fill(0).map((_, i) => `
+                            <div class="rating-bar ${i < cat.rating ? 'filled' : ''}"></div>
+                        `).join('')}
+                    </div>
+                </div>
+            `).join('');
+            document.getElementById('fortuneCategories').innerHTML = categoriesHTML;
+            
+            // Quote and advice
+            document.getElementById('fortuneQuote').textContent = `"${fortune.quote}"`;
+            document.getElementById('fortuneAdvice').textContent = fortune.advice;
+            
+            // Lucky items
+            const luckyItemsHTML = `
+                <div class="lucky-item">
+                    <div class="lucky-icon">${fortune.luckyColor}</div>
+                    <div class="lucky-label" data-i18n="luckyColor">${uiTranslations[currentLang].luckyColor}</div>
+                </div>
+                <div class="lucky-item">
+                    <div class="lucky-icon">${fortune.luckyNumber}</div>
+                    <div class="lucky-label" data-i18n="luckyNumber">${uiTranslations[currentLang].luckyNumber}</div>
+                </div>
+                <div class="lucky-item">
+                    <div class="lucky-icon">${fortune.luckyDirection}</div>
+                    <div class="lucky-label" data-i18n="luckyDirection">${uiTranslations[currentLang].luckyDirection}</div>
+                </div>
+                <div class="lucky-item">
+                    <div class="lucky-icon">${fortune.luckyElement}</div>
+                    <div class="lucky-label" data-i18n="luckyElement">${uiTranslations[currentLang].luckyElement}</div>
+                </div>
+            `;
+            document.getElementById('luckyItems').innerHTML = luckyItemsHTML;
+            
+            // Compatibility
+            const compatHTML = fortune.compatibility.map(member => `
+                <div class="compat-member ${member.isBest ? 'best' : ''}">
+                    <img class="compat-avatar" src="${member.avatar}" alt="${member.name}" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect fill=%22%236b21a8%22 width=%22100%22 height=%22100%22/><text x=%2250%22 y=%2260%22 text-anchor=%22middle%22 fill=%22white%22 font-size=%2240%22>?</text></svg>'">
+                    <div class="compat-name">${member.name.length > 8 ? member.name.slice(0, 8) + '...' : member.name}</div>
+                    <div class="compat-percent">${member.percent}%</div>
+                    ${member.isBest ? `<div class="compat-label" data-i18n="bestMatch">${uiTranslations[currentLang].bestMatch}</div>` : ''}
+                </div>
+            `).join('');
+            document.getElementById('compatMembers').innerHTML = compatHTML;
+            
+            // Show result
+            document.getElementById('fortuneResult').classList.add('visible');
+        }
+        
+        function renderHistory() {
+            const data = getFortuneData();
+            const today = new Date();
+            const historyHTML = [];
+            
+            for (let i = 13; i >= 0; i--) {
+                const date = new Date(today);
+                date.setDate(date.getDate() - i);
+                const dateKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+                const fortune = data.history[dateKey];
+                const isToday = i === 0;
+                
+                let classes = 'history-day';
+                if (fortune) {
+                    classes += ` ${fortune.rankClass} has-fortune`;
+                }
+                if (isToday) classes += ' today';
+                
+                historyHTML.push(`
+                    <div class="${classes}" ${fortune ? `onclick="showHistoryFortune('${dateKey}')"` : ''}>
+                        <span class="history-date">${date.getDate()}</span>
+                        ${fortune ? `<span class="history-rank">${fortune.rankClass.slice(0, 3).toUpperCase()}</span>` : ''}
+                    </div>
+                `);
+            }
+            
+            document.getElementById('historyGrid').innerHTML = historyHTML.join('');
+        }
+        
+        function renderStats() {
+            const data = getFortuneData();
+            document.getElementById('currentStreak').textContent = data.streak || 0;
+            document.getElementById('totalDraws').textContent = data.total || 0;
+            
+            // Count legendaries
+            const legendaryCount = Object.values(data.history).filter(f => f.rankClass === 'legendary').length;
+            document.getElementById('legendaryCount').textContent = legendaryCount;
+        }
+        
+        function updateCountdown() {
+            const now = new Date();
+            const tomorrow = new Date(now);
+            tomorrow.setDate(tomorrow.getDate() + 1);
+            tomorrow.setHours(0, 0, 0, 0);
+            
+            const diff = tomorrow - now;
+            const hours = Math.floor(diff / (1000 * 60 * 60));
+            const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+            
+            document.getElementById('countdown').textContent = 
+                `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+        }
+        
+        // ========= ACTIONS =========
+        function drawFortune() {
+            const todayKey = getTodayKey();
+            const data = getFortuneData();
+            
+            // Check if already drawn today
+            if (data.history[todayKey]) {
+                return;
+            }
+            
+            // Animation
+            const btn = document.getElementById('drawBtn');
+            btn.classList.add('drawing');
+            btn.disabled = true;
+            
+            setTimeout(() => {
+                btn.classList.remove('drawing');
+                
+                // Generate fortune
+                const fortune = generateFortune(todayKey);
+                
+                // Save to history
+                data.history[todayKey] = {
+                    rankClass: fortune.rank.class,
+                    date: todayKey
+                };
+                
+                // Update streak
+                const yesterday = new Date();
+                yesterday.setDate(yesterday.getDate() - 1);
+                const yesterdayKey = `${yesterday.getFullYear()}-${String(yesterday.getMonth() + 1).padStart(2, '0')}-${String(yesterday.getDate()).padStart(2, '0')}`;
+                
+                if (data.history[yesterdayKey]) {
+                    data.streak = (data.streak || 0) + 1;
+                } else {
+                    data.streak = 1;
+                }
+                
+                data.total = (data.total || 0) + 1;
+                saveFortuneData(data);
+                
+                // Render
+                renderFortune(fortune);
+                renderHistory();
+                renderStats();
+                
+                // Hide draw button, show countdown
+                document.getElementById('drawSection').style.display = 'none';
+                
+            }, 1500);
+        }
+        
+        function showHistoryFortune(dateKey) {
+            const fortune = generateFortune(dateKey);
+            renderFortune(fortune);
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+        
+        function copyFortune() {
+            const todayKey = getTodayKey();
+            const fortune = generateFortune(todayKey);
+            const text = `🔮 NumbahWan Daily Fortune - ${todayKey}\n\n` +
+                `Rank: ${rankNames[currentLang][fortune.rank.id]} ${'★'.repeat(fortune.rank.stars)}\n\n` +
+                `"${fortune.quote}"\n\n` +
+                `Lucky: ${fortune.luckyColor} ${fortune.luckyNumber} ${fortune.luckyDirection} ${fortune.luckyElement}\n\n` +
+                `Best Partner: ${fortune.compatibility[0].name} (${fortune.compatibility[0].percent}%)\n\n` +
+                `#NumbahWan #MapleStoryIdle`;
+            
+            navigator.clipboard.writeText(text).then(() => {
+                alert(currentLang === 'zh' ? '已複製到剪貼板！' : currentLang === 'th' ? 'คัดลอกแล้ว!' : 'Copied to clipboard!');
+            });
+        }
+        
+        function shareFortune() {
+            const todayKey = getTodayKey();
+            const fortune = generateFortune(todayKey);
+            const text = `🔮 My NumbahWan Fortune: ${rankNames.en[fortune.rank.id]}! ${'★'.repeat(fortune.rank.stars)}\n"${fortuneQuotes.en[fortune.rank.id][0].slice(0, 50)}..."\n#NumbahWan`;
+            
+            if (navigator.share) {
+                navigator.share({ text, url: window.location.href });
+            } else {
+                copyFortune();
+            }
+        }
+        
+        // ========= LANGUAGE =========
+        function setLanguage(lang) {
+            currentLang = lang;
+            localStorage.setItem('numbahwan_lang', lang);
+            
+            document.querySelectorAll('.lang-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.lang === lang);
+            });
+            
+            document.querySelectorAll('[data-i18n]').forEach(el => {
+                const key = el.dataset.i18n;
+                if (uiTranslations[lang][key]) {
+                    el.textContent = uiTranslations[lang][key];
+                }
+            });
+            
+            // Re-render fortune if visible
+            const todayKey = getTodayKey();
+            const data = getFortuneData();
+            if (data.history[todayKey]) {
+                const fortune = generateFortune(todayKey);
+                renderFortune(fortune);
+            }
+        }
+        
+        // ========= STARS BACKGROUND =========
+        function createStars() {
+            const container = document.getElementById('starsContainer');
+            
+            // Regular stars
+            for (let i = 0; i < 100; i++) {
+                const star = document.createElement('div');
+                star.className = 'star';
+                star.style.left = Math.random() * 100 + '%';
+                star.style.top = Math.random() * 100 + '%';
+                star.style.animationDelay = Math.random() * 3 + 's';
+                star.style.width = (1 + Math.random() * 3) + 'px';
+                star.style.height = star.style.width;
+                container.appendChild(star);
+            }
+            
+            // Shooting stars
+            for (let i = 0; i < 3; i++) {
+                const shooting = document.createElement('div');
+                shooting.className = 'shooting-star';
+                shooting.style.top = (10 + Math.random() * 40) + '%';
+                shooting.style.right = '-100px';
+                shooting.style.animationDelay = (i * 5 + Math.random() * 5) + 's';
+                shooting.style.animationDuration = (2 + Math.random() * 2) + 's';
+                container.appendChild(shooting);
+            }
+        }
+        
+        // ========= INITIALIZATION =========
+        document.addEventListener('DOMContentLoaded', () => {
+            // Set date
+            const today = new Date();
+            const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+            document.getElementById('fortuneDate').textContent = today.toLocaleDateString(
+                currentLang === 'zh' ? 'zh-TW' : currentLang === 'th' ? 'th-TH' : 'en-US', 
+                options
+            );
+            
+            // Create background
+            createStars();
+            
+            // Language switcher
+            document.querySelectorAll('.lang-btn').forEach(btn => {
+                btn.addEventListener('click', () => setLanguage(btn.dataset.lang));
+            });
+            
+            // Check if already drawn today
+            const todayKey = getTodayKey();
+            const data = getFortuneData();
+            
+            if (data.history[todayKey]) {
+                // Already drawn - show result
+                const fortune = generateFortune(todayKey);
+                renderFortune(fortune);
+                document.getElementById('drawSection').style.display = 'none';
+            }
+            
+            // Render history and stats
+            renderHistory();
+            renderStats();
+            
+            // Start countdown
+            updateCountdown();
+            setInterval(updateCountdown, 1000);
+            
+            // Set initial language
+            setLanguage(currentLang);
+        });
+    </script>
+</body>
+</html>
