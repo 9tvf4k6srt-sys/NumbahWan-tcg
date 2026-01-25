@@ -1321,29 +1321,35 @@
                 .join('');
             document.getElementById('story-content').innerHTML = formattedStory;
             
-            // Render quotes
+            // Render quotes (with translation support)
             if (story.quotes && story.quotes.length > 0) {
-                const quotesHtml = story.quotes.map(q => `
-                    <div class="quote-text">"${q.text}"</div>
+                const quotesHtml = story.quotes.map(q => {
+                    const quoteText = typeof q.text === 'object' ? getText(q.text) : q.text;
+                    const quoteRole = typeof q.role === 'object' ? getText(q.role) : q.role;
+                    return `
+                    <div class="quote-text">"${quoteText}"</div>
                     <div class="quote-author">${q.author}</div>
-                    <div class="quote-role">${q.role}</div>
-                `).join('');
+                    <div class="quote-role">${quoteRole}</div>
+                `}).join('');
                 document.getElementById('story-quotes').innerHTML = quotesHtml;
                 document.getElementById('story-quotes').style.display = 'block';
             } else {
                 document.getElementById('story-quotes').style.display = 'none';
             }
             
-            // Render fun facts
+            // Render fun facts (with translation support)
             if (story.funFacts && story.funFacts.length > 0) {
+                const funFactsTitle = storiesData.ui && storiesData.ui.funFacts ? getText(storiesData.ui.funFacts) : 'Fun Facts';
                 const factsHtml = `
-                    <h4>💡 Fun Facts</h4>
-                    ${story.funFacts.map(fact => `
+                    <h4>💡 ${funFactsTitle}</h4>
+                    ${story.funFacts.map(fact => {
+                        const factText = typeof fact === 'object' ? getText(fact) : fact;
+                        return `
                         <div class="fact-item">
                             <span class="fact-icon">✨</span>
-                            <span>${fact}</span>
+                            <span>${factText}</span>
                         </div>
-                    `).join('')}
+                    `}).join('')}
                 `;
                 document.getElementById('story-facts').innerHTML = factsHtml;
             }
@@ -1365,15 +1371,17 @@
             const deckMapSection = document.getElementById('deck-map-container');
             if (!deckMapSection) return;
             
-            const decksHtml = storiesData.deckMap.decks.map(deck => `
+            const decksHtml = storiesData.deckMap.decks.map(deck => {
+                const deckName = typeof deck.name === 'object' ? getText(deck.name) : deck.name;
+                return `
                 <div class="deck-item">
                     <div class="deck-number">${deck.number}</div>
                     <div class="deck-info">
-                        <div class="deck-name">${deck.name}</div>
+                        <div class="deck-name">${deckName}</div>
                         <div class="deck-features">${deck.features.join(' • ')}</div>
                     </div>
                 </div>
-            `).join('');
+            `}).join('');
             
             deckMapSection.innerHTML = decksHtml;
         }
@@ -1386,19 +1394,24 @@
             if (!creditsSection) return;
             
             const credits = storiesData.credits;
+            const ui = storiesData.ui || {};
+            const workersLabel = ui.workers ? getText(ui.workers) : 'Workers';
+            const countriesLabel = ui.countries ? getText(ui.countries) : 'Countries';
+            const yearsToBuildLabel = ui.yearsToBuild ? getText(ui.yearsToBuild) : 'Years to Build';
+            
             creditsSection.innerHTML = `
                 <div class="credits-stats">
                     <div class="stat-item">
                         <div class="stat-value orbitron">${credits.totalWorkers}</div>
-                        <div class="stat-label">Workers</div>
+                        <div class="stat-label">${workersLabel}</div>
                     </div>
                     <div class="stat-item">
                         <div class="stat-value orbitron">${credits.countries}</div>
-                        <div class="stat-label">Countries</div>
+                        <div class="stat-label">${countriesLabel}</div>
                     </div>
                     <div class="stat-item">
                         <div class="stat-value orbitron">${credits.yearsOfConstruction}</div>
-                        <div class="stat-label">Years to Build</div>
+                        <div class="stat-label">${yearsToBuildLabel}</div>
                     </div>
                 </div>
                 <div class="credits-message">${getText(credits.finalMessage)}</div>
