@@ -1,0 +1,1107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Meme Gallery | NumbahWan Guild</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="/static/icons/icons.js" defer></script>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #ff6b00;
+            --primary-light: #ff9d4d;
+            --bg-dark: #0a0a0f;
+        }
+        
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: 'Orbitron', sans-serif;
+            background: var(--bg-dark);
+            color: #fff;
+            min-height: 100vh;
+        }
+        
+        .pixel-font { font-family: 'Press Start 2P', cursive; }
+        
+        .glass-card {
+            background: rgba(255, 107, 0, 0.08);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 107, 0, 0.2);
+            border-radius: 16px;
+        }
+        
+        .neon-orange {
+            text-shadow: 0 0 10px var(--primary), 0 0 20px var(--primary), 0 0 40px var(--primary);
+        }
+        
+        /* Meme card styles */
+        .meme-card {
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            cursor: pointer;
+        }
+        
+        .meme-card:hover {
+            transform: translateY(-8px) scale(1.02);
+            box-shadow: 0 20px 40px rgba(255, 107, 0, 0.4);
+        }
+        
+        .meme-card:hover .meme-overlay {
+            opacity: 1;
+        }
+        
+        .meme-overlay {
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        
+        /* Upvote animation */
+        .upvote-btn:active {
+            animation: upvotePop 0.3s ease;
+        }
+        
+        @keyframes upvotePop {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.3); }
+            100% { transform: scale(1); }
+        }
+        
+        /* Floating emojis */
+        .floating-emoji {
+            position: fixed;
+            font-size: 2rem;
+            pointer-events: none;
+            animation: floatUp 3s ease-out forwards;
+            z-index: 100;
+        }
+        
+        @keyframes floatUp {
+            0% { opacity: 1; transform: translateY(0) rotate(0deg); }
+            100% { opacity: 0; transform: translateY(-300px) rotate(360deg); }
+        }
+        
+        /* Category pills */
+        .category-pill {
+            transition: all 0.3s ease;
+        }
+        
+        .category-pill:hover, .category-pill.active {
+            background: var(--primary);
+            color: #000;
+            box-shadow: 0 0 20px rgba(255, 107, 0, 0.5);
+        }
+        
+        /* Marquee */
+        .marquee {
+            overflow: hidden;
+            white-space: nowrap;
+        }
+        
+        .marquee-content {
+            display: inline-block;
+            animation: marquee 25s linear infinite;
+        }
+        
+        @keyframes marquee {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-50%); }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="fixed top-0 left-0 right-0 z-50 glass-card mx-4 mt-4 rounded-full">
+        <div class="container mx-auto px-4 py-3 flex items-center justify-between">
+            <a href="/" class="flex items-center gap-2">
+                <svg class="nw-icon" width="28" height="28"><use href="/static/icons/nw-icons.svg#gaming"></use></svg>
+                <span class="pixel-font text-xs text-orange-400">NumbahWan</span>
+            </a>
+            <div class="flex items-center gap-3">
+                <a href="/" class="text-sm hover:text-orange-400 transition-colors" data-i18n="home">Home</a>
+                
+                <!-- Language Switcher -->
+                <div class="relative" id="lang-switcher">
+                    <button onclick="toggleLangMenu()" class="px-3 py-1.5 rounded-full text-sm flex items-center gap-2 hover:bg-orange-500/20 transition-all border border-orange-500/30">
+                        <span id="current-lang-flag">🇬🇧</span>
+                        <span id="current-lang-code" class="hidden sm:inline">EN</span>
+                        <svg class="nw-icon opacity-50" width="12" height="12"><use href="/static/icons/nw-icons.svg#chevron-down"></use></svg>
+                    </button>
+                    <div id="lang-menu" class="hidden absolute right-0 top-full mt-2 glass-card rounded-lg overflow-hidden min-w-[140px] z-50 border border-orange-500/30">
+                        <button onclick="setLanguage('en')" class="w-full px-4 py-2.5 text-left hover:bg-orange-500/20 flex items-center gap-3 text-sm transition-colors">
+                            <span>🇬🇧</span> English
+                        </button>
+                        <button onclick="setLanguage('zh')" class="w-full px-4 py-2.5 text-left hover:bg-orange-500/20 flex items-center gap-3 text-sm transition-colors">
+                            <span>🇹🇼</span> 繁體中文
+                        </button>
+                        <button onclick="setLanguage('th')" class="w-full px-4 py-2.5 text-left hover:bg-orange-500/20 flex items-center gap-3 text-sm transition-colors">
+                            <span>🇹🇭</span> ไทย
+                        </button>
+                    </div>
+                </div>
+                
+                <a href="/apply" class="px-4 py-2 bg-orange-500 rounded-full text-sm font-bold hover:bg-orange-400 transition-colors" data-i18n="joinUs">Join Us</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="pt-32 pb-12 px-4">
+        <div class="container mx-auto max-w-6xl text-center">
+            <h1 class="text-5xl md:text-7xl font-bold mb-4 neon-orange pixel-font">
+                😂 <span data-i18n="pageTitle">MEME VAULT</span> 😂
+            </h1>
+            <p class="text-xl text-orange-300 mb-2" data-i18n="pageSubtitle">Where legends become laughs</p>
+            <p class="text-gray-400 text-sm" data-i18n="pageWarning">Warning: Side effects include snorting, wheezing, and waking up your neighbors</p>
+            
+            <!-- Scrolling meme marquee -->
+            <div class="marquee mt-8 py-3 glass-card rounded-full">
+                <div class="marquee-content text-xl" id="marquee-text"></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Category Filter -->
+    <section class="px-4 pb-8">
+        <div class="container mx-auto max-w-6xl">
+            <div class="flex flex-wrap justify-center gap-3">
+                <button class="category-pill active px-4 py-2 rounded-full glass-card text-sm font-bold flex items-center gap-2" onclick="filterMemes('all')">
+                    <svg class="nw-icon" width="18" height="18"><use href="/static/icons/nw-icons.svg#fire"></use></svg>
+                    <span data-i18n="catAll">All Memes</span>
+                </button>
+                <button class="category-pill px-4 py-2 rounded-full glass-card text-sm font-bold flex items-center gap-2" onclick="filterMemes('reggina')">
+                    <svg class="nw-icon" width="18" height="18"><use href="/static/icons/nw-icons.svg#crown"></use></svg>
+                    <span data-i18n="catReggina">RegginA Roasts</span>
+                </button>
+                <button class="category-pill px-4 py-2 rounded-full glass-card text-sm font-bold flex items-center gap-2" onclick="filterMemes('guild')">
+                    <svg class="nw-icon" width="18" height="18"><use href="/static/icons/nw-icons.svg#users"></use></svg>
+                    <span data-i18n="catGuild">Guild Life</span>
+                </button>
+                <button class="category-pill px-4 py-2 rounded-full glass-card text-sm font-bold flex items-center gap-2" onclick="filterMemes('raids')">
+                    <svg class="nw-icon" width="18" height="18"><use href="/static/icons/nw-icons.svg#swords"></use></svg>
+                    <span data-i18n="catRaids">Raid Fails</span>
+                </button>
+                <button class="category-pill px-4 py-2 rounded-full glass-card text-sm font-bold flex items-center gap-2" onclick="filterMemes('random')">
+                    <svg class="nw-icon" width="18" height="18"><use href="/static/icons/nw-icons.svg#dice"></use></svg>
+                    <span data-i18n="catRandom">Random Chaos</span>
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Meme Gallery -->
+    <section class="px-4 pb-20">
+        <div class="container mx-auto max-w-7xl">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="meme-grid">
+                <!-- Memes will be rendered by JavaScript -->
+            </div>
+        </div>
+    </section>
+
+    <!-- Submit Meme CTA -->
+    <section class="px-4 pb-20">
+        <div class="container mx-auto max-w-2xl">
+            <div class="glass-card p-8 text-center">
+                <h2 class="text-3xl font-bold mb-4 neon-orange" data-i18n="submitTitle">Got a spicy meme? 🌶️</h2>
+                <p class="text-gray-300 mb-6" data-i18n="submitDesc">Submit your guild memes and become a legend (or get roasted trying)</p>
+                <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                    <button class="px-6 py-3 bg-orange-500 rounded-full font-bold hover:bg-orange-400 transition-colors flex items-center gap-2">
+                        <svg class="nw-icon" width="20" height="20"><use href="/static/icons/nw-icons.svg#upload"></use></svg>
+                        <span data-i18n="submitBtn">Submit Meme</span>
+                    </button>
+                    <button class="px-6 py-3 glass-card rounded-full font-bold hover:bg-orange-500/20 transition-colors flex items-center gap-2">
+                        <svg class="nw-icon" width="20" height="20"><use href="/static/icons/nw-icons.svg#document"></use></svg>
+                        <span data-i18n="guidelinesBtn">Meme Guidelines</span>
+                    </button>
+                </div>
+                <p class="text-xs text-gray-500 mt-4" data-i18n="submitDisclaimer">*RegginA's feelings may or may not be protected</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="py-8 px-4 border-t border-orange-900/30">
+        <div class="container mx-auto max-w-4xl text-center">
+            <p class="text-gray-400 text-sm" data-i18n="footerMade">Made with 😂 by NumbahWan Guild</p>
+            <p class="text-gray-600 text-xs mt-2" data-i18n="footerDisclaimer">No RegginAs were harmed in the making of these memes (just their ego)</p>
+        </div>
+    </footer>
+
+    <!-- Lightbox for Full Size Meme -->
+    <div id="meme-lightbox" class="fixed inset-0 z-[100] hidden bg-black/90 backdrop-blur-sm flex items-center justify-center p-4" onclick="closeLightbox(event)">
+        <button class="absolute top-4 right-4 text-white hover:text-orange-400 transition-colors" onclick="closeLightbox(event)">
+            <svg class="nw-icon" width="32" height="32"><use href="/static/icons/nw-icons.svg#close"></use></svg>
+        </button>
+        <div class="glass-card max-w-2xl w-full max-h-[90vh] overflow-auto p-8 rounded-2xl" onclick="event.stopPropagation()">
+            <div id="lightbox-content" class="text-center"></div>
+            <div class="mt-6 flex justify-center gap-4">
+                <button onclick="closeLightbox(event)" class="px-6 py-3 glass-card rounded-full font-bold hover:bg-orange-500/20 transition-colors flex items-center gap-2">
+                    <svg class="nw-icon" width="20" height="20"><use href="/static/icons/nw-icons.svg#close"></use></svg>
+                    Close
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ============================================================
+        // MEME DATA WITH TRILINGUAL SUPPORT
+        // ============================================================
+        const memeData = [
+            {
+                id: 1,
+                category: 'reggina',
+                votes: 420,
+                comments: 69,
+                content: {
+                    en: {
+                        emoji: '🧔',
+                        title: '"Nice beard, RegginA"',
+                        subtitle: 'Everyone: 😬',
+                        caption: "That's... that's a Zakum tentacle on your chin"
+                    },
+                    zh: {
+                        emoji: '🧔',
+                        title: '"好鬍子啊，RegginA"',
+                        subtitle: '所有人：😬',
+                        caption: '那...那是你下巴上的乾坤觸手吧'
+                    },
+                    th: {
+                        emoji: '🧔',
+                        title: '"เคราสวยนะ RegginA"',
+                        subtitle: 'ทุกคน: 😬',
+                        caption: 'นั่น...นั่นมันหนวด Zakum บนคางนายนี่'
+                    }
+                }
+            },
+            {
+                id: 2,
+                category: 'guild',
+                votes: 384,
+                comments: 42,
+                content: {
+                    en: {
+                        title: 'Guild Chat at 3AM:',
+                        lines: [
+                            { name: 'RegginA', color: 'text-orange-400', text: 'Anyone online?' },
+                            { name: 'RegginO', color: 'text-pink-400', text: 'Go to sleep' },
+                            { name: 'RegginA', color: 'text-orange-400', text: 'But boss raid...' },
+                            { name: 'RegginO', color: 'text-pink-400', text: '🔪' },
+                            { name: '', color: 'text-gray-500', text: '紈稀稀著 is typing...' },
+                            { name: '', color: 'text-gray-500', text: '紈稀稀著 fell asleep' }
+                        ],
+                        emoji: '😴💀'
+                    },
+                    zh: {
+                        title: '凌晨3點的公會聊天：',
+                        lines: [
+                            { name: 'RegginA', color: 'text-orange-400', text: '有人在線嗎？' },
+                            { name: 'RegginO', color: 'text-pink-400', text: '去睡覺' },
+                            { name: 'RegginA', color: 'text-orange-400', text: '但是要打王...' },
+                            { name: 'RegginO', color: 'text-pink-400', text: '🔪' },
+                            { name: '', color: 'text-gray-500', text: '紈稀稀著 正在輸入...' },
+                            { name: '', color: 'text-gray-500', text: '紈稀稀著 睡著了' }
+                        ],
+                        emoji: '😴💀'
+                    },
+                    th: {
+                        title: 'แชทกิลด์ตอนตี 3:',
+                        lines: [
+                            { name: 'RegginA', color: 'text-orange-400', text: 'มีใครออนไลน์ไหม?' },
+                            { name: 'RegginO', color: 'text-pink-400', text: 'ไปนอน' },
+                            { name: 'RegginA', color: 'text-orange-400', text: 'แต่ว่าเรดบอส...' },
+                            { name: 'RegginO', color: 'text-pink-400', text: '🔪' },
+                            { name: '', color: 'text-gray-500', text: '紈稀稀著 กำลังพิมพ์...' },
+                            { name: '', color: 'text-gray-500', text: '紈稀稀著 หลับไปแล้ว' }
+                        ],
+                        emoji: '😴💀'
+                    }
+                }
+            },
+            {
+                id: 3,
+                category: 'raids',
+                votes: 512,
+                comments: 88,
+                content: {
+                    en: {
+                        header: 'POV: You\'re watching our "Elite" raid team',
+                        emoji: '💀⚔️🔥',
+                        lines: [
+                            { status: 'fail', text: 'RegginA died to AoE' },
+                            { status: 'fail', text: 'Natehouoho disconnected' },
+                            { status: 'fail', text: '紈稀稀著 is AFK' },
+                            { status: 'fail', text: '碼農小孫 forgot skills' },
+                            { status: 'success', text: 'Boss: Still at 99% HP' }
+                        ]
+                    },
+                    zh: {
+                        header: 'POV：你正在看我們的「精英」打王隊',
+                        emoji: '💀⚔️🔥',
+                        lines: [
+                            { status: 'fail', text: 'RegginA 被 AoE 秒了' },
+                            { status: 'fail', text: 'Natehouoho 斷線了' },
+                            { status: 'fail', text: '紈稀稀著 掛機中' },
+                            { status: 'fail', text: '碼農小孫 忘了放技能' },
+                            { status: 'success', text: 'Boss：血量還有 99%' }
+                        ]
+                    },
+                    th: {
+                        header: 'POV: คุณกำลังดูทีมเรด "อีลิท" ของเรา',
+                        emoji: '💀⚔️🔥',
+                        lines: [
+                            { status: 'fail', text: 'RegginA ตายจาก AoE' },
+                            { status: 'fail', text: 'Natehouoho หลุด' },
+                            { status: 'fail', text: '紈稀稀著 AFK อยู่' },
+                            { status: 'fail', text: '碼農小孫 ลืมใช้สกิล' },
+                            { status: 'success', text: 'บอส: เลือดยังเหลือ 99%' }
+                        ]
+                    }
+                }
+            },
+            {
+                id: 4,
+                category: 'reggina',
+                votes: 666,
+                comments: 123,
+                content: {
+                    en: {
+                        title: "RegginA's Fashion Evolution:",
+                        stages: [
+                            { emoji: '👶', day: 'Day 1', status: 'Normal', color: 'text-green-400' },
+                            { emoji: '🦑', day: 'Day 30', status: 'Questionable', color: 'text-yellow-400' },
+                            { emoji: '🎪', day: 'Now', status: 'Disaster', color: 'text-red-400' }
+                        ],
+                        caption: 'Zakum Cape + Seal + Beard = 🤡'
+                    },
+                    zh: {
+                        title: 'RegginA 的時尚進化史：',
+                        stages: [
+                            { emoji: '👶', day: '第1天', status: '正常', color: 'text-green-400' },
+                            { emoji: '🦑', day: '第30天', status: '可疑', color: 'text-yellow-400' },
+                            { emoji: '🎪', day: '現在', status: '災難', color: 'text-red-400' }
+                        ],
+                        caption: '乾坤披風 + 海豹 + 鬍子 = 🤡'
+                    },
+                    th: {
+                        title: 'วิวัฒนาการแฟชั่นของ RegginA:',
+                        stages: [
+                            { emoji: '👶', day: 'วันที่ 1', status: 'ปกติ', color: 'text-green-400' },
+                            { emoji: '🦑', day: 'วันที่ 30', status: 'น่าสงสัย', color: 'text-yellow-400' },
+                            { emoji: '🎪', day: 'ตอนนี้', status: 'หายนะ', color: 'text-red-400' }
+                        ],
+                        caption: 'ผ้าคลุม Zakum + แมวน้ำ + เครา = 🤡'
+                    }
+                }
+            },
+            {
+                id: 5,
+                category: 'guild',
+                votes: 789,
+                comments: 156,
+                content: {
+                    en: {
+                        title: 'NumbahWan Hierarchy:',
+                        hierarchy: [
+                            { emoji: '👑', role: 'RegginA (Guild Master)' },
+                            { emoji: '💅', role: 'RegginO (Actually in charge)' },
+                            { emoji: '😴', role: '紈稀稀著 (Moral support)' },
+                            { emoji: '🤷', role: 'Everyone else (Chaos)' }
+                        ]
+                    },
+                    zh: {
+                        title: 'NumbahWan 階級制度：',
+                        hierarchy: [
+                            { emoji: '👑', role: 'RegginA（公會會長）' },
+                            { emoji: '💅', role: 'RegginO（實際掌權者）' },
+                            { emoji: '😴', role: '紈稀稀著（精神支柱）' },
+                            { emoji: '🤷', role: '其他人（混亂）' }
+                        ]
+                    },
+                    th: {
+                        title: 'ลำดับชั้นของ NumbahWan:',
+                        hierarchy: [
+                            { emoji: '👑', role: 'RegginA (หัวหน้ากิลด์)' },
+                            { emoji: '💅', role: 'RegginO (คนที่คุมจริง)' },
+                            { emoji: '😴', role: '紈稀稀著 (กำลังใจ)' },
+                            { emoji: '🤷', role: 'คนอื่นๆ (วุ่นวาย)' }
+                        ]
+                    }
+                }
+            },
+            {
+                id: 6,
+                category: 'random',
+                votes: 234,
+                comments: 31,
+                content: {
+                    en: {
+                        title: 'How we describe CP:',
+                        comparisons: [
+                            { label: 'Normal guilds:', value: '"2.3 Billion"', color: 'text-green-400' },
+                            { label: 'NumbahWan:', value: '"2B 382M"', color: 'text-orange-400' },
+                            { label: 'RegginA:', value: '"Enough to carry you noobs"', color: 'text-purple-400' },
+                            { label: '葉陽:', value: '"What\'s CP?"', color: 'text-gray-400' }
+                        ],
+                        emoji: '📊❓'
+                    },
+                    zh: {
+                        title: '我們怎麼描述戰力：',
+                        comparisons: [
+                            { label: '一般公會：', value: '"23億"', color: 'text-green-400' },
+                            { label: 'NumbahWan：', value: '"2B 382M"', color: 'text-orange-400' },
+                            { label: 'RegginA：', value: '"夠Carry你們這些菜雞"', color: 'text-purple-400' },
+                            { label: '葉陽：', value: '"戰力是什麼？"', color: 'text-gray-400' }
+                        ],
+                        emoji: '📊❓'
+                    },
+                    th: {
+                        title: 'วิธีที่เราอธิบาย CP:',
+                        comparisons: [
+                            { label: 'กิลด์ทั่วไป:', value: '"2.3 พันล้าน"', color: 'text-green-400' },
+                            { label: 'NumbahWan:', value: '"2B 382M"', color: 'text-orange-400' },
+                            { label: 'RegginA:', value: '"พอแบกพวกนูบได้"', color: 'text-purple-400' },
+                            { label: '葉陽:', value: '"CP คืออะไร?"', color: 'text-gray-400' }
+                        ],
+                        emoji: '📊❓'
+                    }
+                }
+            },
+            {
+                id: 7,
+                category: 'raids',
+                votes: 567,
+                comments: 72,
+                content: {
+                    en: {
+                        before: 'Me: "I\'ll just do one quick raid"',
+                        emoji1: '🕐',
+                        after: '3 hours later...',
+                        emoji2: '🕕',
+                        result: 'Still wiping on the same boss',
+                        stats: [
+                            { label: 'Guild contribution:', value: '+5', color: 'text-gray-500' },
+                            { label: 'Sanity:', value: '-9999', color: 'text-red-400' }
+                        ]
+                    },
+                    zh: {
+                        before: '我："就打一場快速的"',
+                        emoji1: '🕐',
+                        after: '3小時後...',
+                        emoji2: '🕕',
+                        result: '還在同一隻王那邊滅團',
+                        stats: [
+                            { label: '公會貢獻：', value: '+5', color: 'text-gray-500' },
+                            { label: '理智值：', value: '-9999', color: 'text-red-400' }
+                        ]
+                    },
+                    th: {
+                        before: 'ฉัน: "แค่เรดเร็วๆ สักตัว"',
+                        emoji1: '🕐',
+                        after: '3 ชั่วโมงต่อมา...',
+                        emoji2: '🕕',
+                        result: 'ยังไวป์บอสตัวเดิมอยู่',
+                        stats: [
+                            { label: 'คอนทริบิวชั่นกิลด์:', value: '+5', color: 'text-gray-500' },
+                            { label: 'ความมีสติ:', value: '-9999', color: 'text-red-400' }
+                        ]
+                    }
+                }
+            },
+            {
+                id: 8,
+                category: 'reggina',
+                votes: 888,
+                comments: 200,
+                content: {
+                    en: {
+                        title: "RegginA motivation speech:",
+                        quote: '"We rise together, we fall together..."',
+                        actions: [
+                            '*proceeds to solo boss*',
+                            '*dies*',
+                            '*blames lag*'
+                        ],
+                        emoji: '🙄👑💀'
+                    },
+                    zh: {
+                        title: 'RegginA 的激勵演講：',
+                        quote: '"我們一起崛起，一起承擔..."',
+                        actions: [
+                            '*然後自己去單挑王*',
+                            '*死了*',
+                            '*怪網路Lag*'
+                        ],
+                        emoji: '🙄👑💀'
+                    },
+                    th: {
+                        title: 'RegginA สุนทรพจน์สร้างแรงบันดาลใจ:',
+                        quote: '"เราขึ้นด้วยกัน เราลงด้วยกัน..."',
+                        actions: [
+                            '*แล้วก็โซโล่บอสเอง*',
+                            '*ตาย*',
+                            '*โทษแลค*'
+                        ],
+                        emoji: '🙄👑💀'
+                    }
+                }
+            },
+            {
+                id: 9,
+                category: 'random',
+                votes: 432,
+                comments: 56,
+                content: {
+                    en: {
+                        title: 'Types of NumbahWan players:',
+                        types: [
+                            { emoji: '🔥', type: 'Tryhard', color: 'text-orange-400', members: 'RegginA, Yuluner晴' },
+                            { emoji: '😴', type: 'AFK Lord', color: 'text-blue-400', members: '紈稀稀著, 小亨寶寶' },
+                            { emoji: '🤡', type: 'Chaos Agent', color: 'text-pink-400', members: 'Natehouoho' },
+                            { emoji: '👻', type: 'Ghost', color: 'text-gray-400', members: 'TW#VWQG7R9C03' }
+                        ]
+                    },
+                    zh: {
+                        title: 'NumbahWan 玩家類型：',
+                        types: [
+                            { emoji: '🔥', type: '肝帝', color: 'text-orange-400', members: 'RegginA, Yuluner晴' },
+                            { emoji: '😴', type: '掛機王', color: 'text-blue-400', members: '紈稀稀著, 小亨寶寶' },
+                            { emoji: '🤡', type: '搗亂份子', color: 'text-pink-400', members: 'Natehouoho' },
+                            { emoji: '👻', type: '幽靈', color: 'text-gray-400', members: 'TW#VWQG7R9C03' }
+                        ]
+                    },
+                    th: {
+                        title: 'ประเภทผู้เล่น NumbahWan:',
+                        types: [
+                            { emoji: '🔥', type: 'สายลุย', color: 'text-orange-400', members: 'RegginA, Yuluner晴' },
+                            { emoji: '😴', type: 'ราชา AFK', color: 'text-blue-400', members: '紈稀稀著, 小亨寶寶' },
+                            { emoji: '🤡', type: 'ตัวป่วน', color: 'text-pink-400', members: 'Natehouoho' },
+                            { emoji: '👻', type: 'ผี', color: 'text-gray-400', members: 'TW#VWQG7R9C03' }
+                        ]
+                    }
+                }
+            }
+        ];
+
+        // ============================================================
+        // PAGE TRANSLATIONS
+        // ============================================================
+        const pageTranslations = {
+            en: {
+                // Nav
+                home: "Home",
+                joinUs: "Join Us",
+                
+                // Hero
+                pageTitle: "MEME VAULT",
+                pageSubtitle: "Where legends become laughs",
+                pageWarning: "Warning: Side effects include snorting, wheezing, and waking up your neighbors",
+                
+                // Categories
+                catAll: "All Memes",
+                catReggina: "RegginA Roasts",
+                catGuild: "Guild Life",
+                catRaids: "Raid Fails",
+                catRandom: "Random Chaos",
+                
+                // CTA
+                submitTitle: "Got a spicy meme? 🌶️",
+                submitDesc: "Submit your guild memes and become a legend (or get roasted trying)",
+                submitBtn: "Submit Meme",
+                guidelinesBtn: "Meme Guidelines",
+                submitDisclaimer: "*RegginA's feelings may or may not be protected",
+                
+                // Footer
+                footerMade: "Made with 😂 by NumbahWan Guild",
+                footerDisclaimer: "No RegginAs were harmed in the making of these memes (just their ego)",
+                
+                // Marquee
+                marquee: [
+                    "🤣", "RegginA's beard is NOT a fashion choice", "😭",
+                    "When you forget to do Guild Check-in", "💀",
+                    "紈稀稀著 falling asleep mid-raid AGAIN", "🤡",
+                    "CP? More like Can't Play"
+                ],
+                
+                // Actions
+                viewFull: "View Full Size",
+                share: "Share"
+            },
+            zh: {
+                // Nav
+                home: "首頁",
+                joinUs: "加入我們",
+                
+                // Hero
+                pageTitle: "迷因金庫",
+                pageSubtitle: "傳奇變成笑話的地方",
+                pageWarning: "警告：副作用包括噴笑、喘氣和吵醒鄰居",
+                
+                // Categories
+                catAll: "全部迷因",
+                catReggina: "RegginA 被烤",
+                catGuild: "公會日常",
+                catRaids: "打王失敗",
+                catRandom: "隨機混亂",
+                
+                // CTA
+                submitTitle: "有辣迷因嗎？🌶️",
+                submitDesc: "提交你的公會迷因，成為傳奇（或被烤）",
+                submitBtn: "提交迷因",
+                guidelinesBtn: "迷因規則",
+                submitDisclaimer: "*RegginA 的感情可能受到保護，也可能沒有",
+                
+                // Footer
+                footerMade: "由 NumbahWan 公會用 😂 製作",
+                footerDisclaimer: "製作這些迷因時沒有 RegginA 受傷（只有他的自尊心）",
+                
+                // Marquee
+                marquee: [
+                    "🤣", "RegginA 的鬍子不是時尚選擇", "😭",
+                    "當你忘記公會簽到時", "💀",
+                    "紈稀稀著 又在打王時睡著了", "🤡",
+                    "戰力？不如說不會玩"
+                ],
+                
+                // Actions
+                viewFull: "查看大圖",
+                share: "分享"
+            },
+            th: {
+                // Nav
+                home: "หน้าแรก",
+                joinUs: "เข้าร่วม",
+                
+                // Hero
+                pageTitle: "คลังมีม",
+                pageSubtitle: "ที่ที่ตำนานกลายเป็นเรื่องตลก",
+                pageWarning: "คำเตือน: ผลข้างเคียงรวมถึงการหัวเราะจนสำลัก หายใจไม่ออก และปลุกเพื่อนบ้าน",
+                
+                // Categories
+                catAll: "มีมทั้งหมด",
+                catReggina: "ย่าง RegginA",
+                catGuild: "ชีวิตกิลด์",
+                catRaids: "เรดพัง",
+                catRandom: "วุ่นวายสุ่ม",
+                
+                // CTA
+                submitTitle: "มีมีมเผ็ดๆ ไหม? 🌶️",
+                submitDesc: "ส่งมีมกิลด์ของคุณและกลายเป็นตำนาน (หรือโดนย่าง)",
+                submitBtn: "ส่งมีม",
+                guidelinesBtn: "กฎมีม",
+                submitDisclaimer: "*ความรู้สึกของ RegginA อาจได้รับการปกป้องหรือไม่ก็ได้",
+                
+                // Footer
+                footerMade: "สร้างด้วย 😂 โดย NumbahWan Guild",
+                footerDisclaimer: "ไม่มี RegginA ได้รับบาดเจ็บในการทำมีมเหล่านี้ (แค่อีโก้เขา)",
+                
+                // Marquee
+                marquee: [
+                    "🤣", "เคราของ RegginA ไม่ใช่ตัวเลือกแฟชั่น", "😭",
+                    "เมื่อคุณลืมเช็คอินกิลด์", "💀",
+                    "紈稀稀著 หลับกลางเรดอีกแล้ว", "🤡",
+                    "CP? น่าจะเป็น Can't Play"
+                ],
+                
+                // Actions
+                viewFull: "ดูขนาดเต็ม",
+                share: "แชร์"
+            }
+        };
+
+        // ============================================================
+        // I18N FUNCTIONS
+        // ============================================================
+        const langMeta = {
+            en: { flag: "🇬🇧", code: "EN" },
+            zh: { flag: "🇹🇼", code: "中文" },
+            th: { flag: "🇹🇭", code: "ไทย" }
+        };
+        
+        let currentLang = localStorage.getItem('lang') || 'en';
+        
+        function setLanguage(lang) {
+            currentLang = lang;
+            localStorage.setItem('lang', lang);
+            
+            // Update flag and code
+            document.getElementById('current-lang-flag').textContent = langMeta[lang].flag;
+            document.getElementById('current-lang-code').textContent = langMeta[lang].code;
+            
+            // Update all data-i18n elements
+            document.querySelectorAll('[data-i18n]').forEach(el => {
+                const key = el.getAttribute('data-i18n');
+                if (pageTranslations[lang][key]) {
+                    el.textContent = pageTranslations[lang][key];
+                }
+            });
+            
+            // Re-render memes with new language
+            renderMemes();
+            
+            // Update marquee
+            updateMarquee();
+            
+            // Close menu
+            document.getElementById('lang-menu').classList.add('hidden');
+        }
+        
+        function toggleLangMenu() {
+            document.getElementById('lang-menu').classList.toggle('hidden');
+        }
+        
+        // Close menu on outside click
+        document.addEventListener('click', (e) => {
+            const switcher = document.getElementById('lang-switcher');
+            if (!switcher.contains(e.target)) {
+                document.getElementById('lang-menu').classList.add('hidden');
+            }
+        });
+
+        // ============================================================
+        // RENDER FUNCTIONS
+        // ============================================================
+        function updateMarquee() {
+            const marqueeItems = pageTranslations[currentLang].marquee;
+            const content = marqueeItems.map(item => `<span class="mx-4">${item}</span>`).join('');
+            document.getElementById('marquee-text').innerHTML = content + content; // Duplicate for seamless loop
+        }
+        
+        function renderMemes(filter = 'all') {
+            const grid = document.getElementById('meme-grid');
+            const t = pageTranslations[currentLang];
+            
+            const filtered = filter === 'all' 
+                ? memeData 
+                : memeData.filter(m => m.category === filter);
+            
+            grid.innerHTML = filtered.map(meme => {
+                const content = meme.content[currentLang];
+                return `
+                    <div class="meme-card glass-card overflow-hidden" data-category="${meme.category}" data-meme-id="${meme.id}">
+                        <div class="relative">
+                            <div class="aspect-square bg-gradient-to-br from-orange-900/50 to-purple-900/50 flex items-center justify-center p-6">
+                                ${renderMemeContent(meme, content)}
+                            </div>
+                            <div class="meme-overlay absolute inset-0 bg-black/70 flex items-center justify-center">
+                                <button onclick="openLightbox(${meme.id})" class="px-6 py-3 bg-orange-500 rounded-full font-bold hover:bg-orange-400 flex items-center gap-2">
+                                    <svg class="nw-icon" width="20" height="20" style="fill:#000"><use href="/static/icons/nw-icons.svg#eye"></use></svg>
+                                    ${t.viewFull}
+                                </button>
+                            </div>
+                        </div>
+                        <div class="p-4 flex items-center justify-between">
+                            <div class="flex items-center gap-2">
+                                <button class="upvote-btn hover:scale-110 transition-transform text-orange-400" onclick="upvote(this, event)">
+                                    <svg class="nw-icon" width="24" height="24" style="fill:#ff6b00"><use href="/static/icons/nw-icons.svg#upvote"></use></svg>
+                                </button>
+                                <span class="text-orange-400 font-bold vote-count">${meme.votes}</span>
+                            </div>
+                            <div class="flex items-center gap-4 text-gray-400 text-sm">
+                                <span class="flex items-center gap-1"><svg class="nw-icon" width="16" height="16" style="fill:#9ca3af"><use href="/static/icons/nw-icons.svg#chat"></use></svg> ${meme.comments}</span>
+                                <button onclick="shareMeme(${meme.id})" class="flex items-center gap-1 hover:text-orange-400 transition-colors"><svg class="nw-icon" width="16" height="16" style="fill:currentColor"><use href="/static/icons/nw-icons.svg#share"></use></svg> ${t.share}</button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+        
+        // Icon helper function - converts emoji to our custom SVG icons
+        // Color mapping for different icon types
+        const iconColors = {
+            'fire': '#ff6b00', 'crown': '#ffd700', 'skull': '#a855f7', 'sleep': '#a855f7',
+            'party': '#ff6b00', 'confetti': '#ff6b00', 'hero': '#3b82f6', 'camera': '#ec4899',
+            'runner': '#22c55e', 'baby': '#fbbf24', 'squid': '#a855f7', 'circus': '#ef4444',
+            'shrug': '#9ca3af', 'ghost': '#9ca3af', 'meme': '#fbbf24', 'swords': '#ef4444',
+            'sword': '#ef4444', 'heart': '#ec4899', 'nail': '#ec4899', 'music': '#8b5cf6',
+            'spicy': '#ef4444', 'x-circle': '#ef4444', 'check-circle': '#22c55e',
+            'trophy': '#ffd700', 'star': '#ffd700', 'chat': '#3b82f6', 'target': '#ef4444',
+            'thinking': '#fbbf24', 'question': '#9ca3af', 'clock': '#60a5fa', 'share': '#ff6b00'
+        };
+        
+        function getIcon(emoji, size = 48, extraClass = '') {
+            const emojiMap = {
+                '🧔': 'beard', '🔥': 'fire', '👑': 'crown', '⚔️': 'swords', '💀': 'skull',
+                '😴': 'sleep', '💤': 'sleep', '🎉': 'party', '💬': 'chat', '📤': 'share',
+                '📸': 'camera', '🦸': 'hero', '🏃': 'runner', '😈': 'spicy', '🎵': 'music',
+                '👶': 'baby', '🦑': 'squid', '🎪': 'circus', '💅': 'nail', '🤷': 'shrug',
+                '👻': 'ghost', '🤡': 'meme', '⬆️': 'upvote', '🏆': 'trophy', '⭐': 'star',
+                '🎮': 'gaming', '🛡️': 'shield', '🎯': 'target', '❤️': 'heart', '⚙️': 'settings',
+                '🔒': 'lock', '📜': 'document', '🎲': 'dice', '⏰': 'clock', '🕐': 'clock',
+                '🕕': 'clock', '📊': 'question', '❓': 'question', '🙄': 'thinking',
+                '❌': 'x-circle', '✅': 'check-circle', '🔪': 'sword'
+            };
+            const iconName = emojiMap[emoji] || 'question';
+            const color = iconColors[iconName] || '#ff6b00';
+            return `<svg class="nw-icon ${extraClass}" width="${size}" height="${size}" style="color:${color};fill:${color}"><use href="/static/icons/nw-icons.svg#${iconName}"></use></svg>`;
+        }
+        
+        // Multi-emoji helper
+        function getMultiIcon(emojiStr, size = 48) {
+            if (!emojiStr) return '';
+            const emojis = emojiStr.match(/[\u{1F300}-\u{1F9FF}]|[\u{2600}-\u{26FF}]|[\u{2700}-\u{27BF}]|[\u{1F600}-\u{1F64F}]|[\u{1F680}-\u{1F6FF}]|[\u{1FA00}-\u{1FAFF}]/gu) || [];
+            return emojis.map(e => getIcon(e, size)).join(' ');
+        }
+
+        function renderMemeContent(meme, content) {
+            // Different rendering based on meme structure
+            if (content.emoji && content.title && content.subtitle) {
+                // Type 1: Simple emoji + title + subtitle
+                return `
+                    <div class="text-center">
+                        <div class="mb-4 flex justify-center">${getIcon(content.emoji, 64, 'text-orange-400')}</div>
+                        <p class="text-2xl font-bold text-white mb-2">${content.title}</p>
+                        <p class="text-lg text-orange-300">${content.subtitle}</p>
+                        ${content.caption ? `<p class="text-sm text-gray-400 mt-4 italic">${content.caption}</p>` : ''}
+                    </div>
+                `;
+            } else if (content.lines && content.title) {
+                // Type 2: Chat log style
+                return `
+                    <div class="text-center">
+                        <p class="text-lg text-gray-400 mb-2">${content.title}</p>
+                        <div class="text-left space-y-2 text-sm">
+                            ${content.lines.map(line => 
+                                line.name 
+                                    ? `<p><span class="${line.color}">${line.name}:</span> ${line.text.includes('🔪') ? line.text.replace('🔪', getIcon('🔪', 16)) : line.text}</p>`
+                                    : `<p class="${line.color}">${line.text}</p>`
+                            ).join('')}
+                        </div>
+                        <div class="mt-4 flex justify-center gap-2">${getMultiIcon(content.emoji, 40)}</div>
+                    </div>
+                `;
+            } else if (content.header && content.lines) {
+                // Type 3: Raid fail style
+                return `
+                    <div class="text-center">
+                        <p class="text-sm text-gray-400 mb-2">${content.header}</p>
+                        <div class="mb-4 flex justify-center gap-2">${getMultiIcon(content.emoji, 48)}</div>
+                        <div class="space-y-1 text-sm">
+                            ${content.lines.map(line => `
+                                <p class="${line.status === 'fail' ? 'text-red-400' : 'text-green-400'} flex items-center gap-1 justify-center">
+                                    ${line.status === 'fail' ? getIcon('❌', 16) : getIcon('✅', 16)} ${line.text}
+                                </p>
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
+            } else if (content.stages) {
+                // Type 4: Evolution style
+                return `
+                    <div class="text-center">
+                        <p class="text-lg text-gray-300 mb-4">${content.title}</p>
+                        <div class="grid grid-cols-3 gap-2 text-center text-xs">
+                            ${content.stages.map(stage => `
+                                <div>
+                                    <div class="flex justify-center mb-1">${getIcon(stage.emoji, 36, stage.color)}</div>
+                                    <p class="text-gray-400">${stage.day}</p>
+                                    <p class="${stage.color}">${stage.status}</p>
+                                </div>
+                            `).join('')}
+                        </div>
+                        <p class="text-2xl mt-4">${content.caption}</p>
+                    </div>
+                `;
+            } else if (content.hierarchy) {
+                // Type 5: Hierarchy style
+                return `
+                    <div class="text-center">
+                        <p class="text-lg text-gray-300 mb-4">${content.title}</p>
+                        <div class="space-y-2">
+                            ${content.hierarchy.map((item, i) => `
+                                <div class="flex items-center justify-center gap-2">
+                                    ${getIcon(item.emoji, 28)}
+                                    <span>${item.role}</span>
+                                </div>
+                                ${i < content.hierarchy.length - 1 ? '<div class="text-gray-500">↓</div>' : ''}
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
+            } else if (content.comparisons) {
+                // Type 6: Comparison style
+                return `
+                    <div class="text-center">
+                        <p class="text-lg text-gray-300 mb-4">${content.title}</p>
+                        <div class="space-y-3">
+                            ${content.comparisons.map(c => `
+                                <div class="flex items-center justify-between px-4">
+                                    <span>${c.label}</span>
+                                    <span class="${c.color}">${c.value}</span>
+                                </div>
+                            `).join('')}
+                        </div>
+                        <div class="mt-4 flex justify-center gap-2">${getMultiIcon(content.emoji, 40)}</div>
+                    </div>
+                `;
+            } else if (content.before && content.after) {
+                // Type 7: Before/After style
+                return `
+                    <div class="text-center">
+                        <p class="text-sm text-gray-400 mb-2">${content.before}</p>
+                        <div class="mb-4 flex justify-center">${getIcon(content.emoji1 || '⏰', 56, 'text-orange-400')}</div>
+                        <p class="text-lg text-white mb-2">${content.after}</p>
+                        <div class="mb-4 flex justify-center">${getIcon(content.emoji2 || '⏰', 56, 'text-red-400')}</div>
+                        <p class="text-orange-300">${content.result}</p>
+                        ${content.stats.map(s => `<p class="text-xs ${s.color} mt-1">${s.label} ${s.value}</p>`).join('')}
+                    </div>
+                `;
+            } else if (content.quote) {
+                // Type 8: Quote style
+                return `
+                    <div class="text-center">
+                        <p class="text-lg text-gray-300 mb-4">${content.title}</p>
+                        <div class="glass-card p-4 rounded-lg">
+                            <p class="text-xl italic text-orange-300">${content.quote}</p>
+                        </div>
+                        <div class="mt-4 text-sm text-gray-400">
+                            ${content.actions.map(a => `<p>${a}</p>`).join('')}
+                        </div>
+                        <div class="mt-4 flex justify-center gap-2">${getMultiIcon(content.emoji, 36)}</div>
+                    </div>
+                `;
+            } else if (content.types) {
+                // Type 9: Grid types
+                return `
+                    <div class="text-center">
+                        <p class="text-lg text-gray-300 mb-4">${content.title}</p>
+                        <div class="grid grid-cols-2 gap-3 text-sm">
+                            ${content.types.map(t => `
+                                <div class="glass-card p-2 rounded">
+                                    <div class="flex justify-center mb-1">${getIcon(t.emoji, 32, t.color)}</div>
+                                    <p class="${t.color}">${t.type}</p>
+                                    <p class="text-xs text-gray-500">${t.members}</p>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
+            }
+            return '<div class="text-center text-gray-400">Meme loading...</div>';
+        }
+
+        // ============================================================
+        // INTERACTIONS
+        // ============================================================
+        function upvote(btn, event) {
+            event.stopPropagation();
+            const countSpan = btn.nextElementSibling;
+            let count = parseInt(countSpan.textContent);
+            count++;
+            countSpan.textContent = count;
+            
+            // Spawn floating icon
+            const icons = ['fire', 'meme', 'skull', 'crown', 'upvote', 'party'];
+            const iconName = icons[Math.floor(Math.random() * icons.length)];
+            const color = iconColors[iconName] || '#ff6b00';
+            const floater = document.createElement('div');
+            floater.className = 'floating-emoji';
+            floater.innerHTML = `<svg class="nw-icon" width="32" height="32" style="fill:${color}"><use href="/static/icons/nw-icons.svg#${iconName}"></use></svg>`;
+            floater.style.left = event.clientX + 'px';
+            floater.style.top = event.clientY + 'px';
+            document.body.appendChild(floater);
+            
+            setTimeout(() => floater.remove(), 3000);
+        }
+        
+        function filterMemes(category) {
+            const pills = document.querySelectorAll('.category-pill');
+            pills.forEach(pill => pill.classList.remove('active'));
+            event.target.closest('.category-pill').classList.add('active');
+            
+            renderMemes(category);
+        }
+        
+        // ============================================================
+        // LIGHTBOX
+        // ============================================================
+        function openLightbox(memeId) {
+            const meme = memeData.find(m => m.id === memeId);
+            if (!meme) return;
+            
+            const content = meme.content[currentLang];
+            const lightbox = document.getElementById('meme-lightbox');
+            const lightboxContent = document.getElementById('lightbox-content');
+            
+            // Render larger version of meme content
+            lightboxContent.innerHTML = `
+                <div class="text-center py-4">
+                    ${renderMemeContent(meme, content)}
+                </div>
+                <div class="mt-6 pt-4 border-t border-orange-500/20 flex items-center justify-between">
+                    <div class="flex items-center gap-3">
+                        <button class="upvote-btn hover:scale-110 transition-transform flex items-center gap-2" onclick="upvoteLightbox(this, event, ${meme.id})">
+                            <svg class="nw-icon" width="28" height="28" style="fill:#ff6b00"><use href="/static/icons/nw-icons.svg#upvote"></use></svg>
+                            <span class="text-orange-400 font-bold text-xl lightbox-vote-count">${meme.votes}</span>
+                        </button>
+                    </div>
+                    <div class="flex items-center gap-4">
+                        <span class="flex items-center gap-2 text-gray-400">
+                            <svg class="nw-icon" width="20" height="20" style="fill:#9ca3af"><use href="/static/icons/nw-icons.svg#chat"></use></svg>
+                            <span>${meme.comments} comments</span>
+                        </span>
+                        <button onclick="shareMeme(${meme.id})" class="flex items-center gap-2 text-gray-400 hover:text-orange-400 transition-colors">
+                            <svg class="nw-icon" width="20" height="20" style="fill:currentColor"><use href="/static/icons/nw-icons.svg#share"></use></svg>
+                            Share
+                        </button>
+                    </div>
+                </div>
+            `;
+            
+            lightbox.classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+        }
+        
+        function closeLightbox(event) {
+            if (event) event.stopPropagation();
+            document.getElementById('meme-lightbox').classList.add('hidden');
+            document.body.style.overflow = '';
+        }
+        
+        function upvoteLightbox(btn, event, memeId) {
+            event.stopPropagation();
+            const countSpan = btn.querySelector('.lightbox-vote-count');
+            let count = parseInt(countSpan.textContent);
+            count++;
+            countSpan.textContent = count;
+            
+            // Also update the card in the grid
+            const card = document.querySelector(`[data-meme-id="${memeId}"] .vote-count`);
+            if (card) card.textContent = count;
+            
+            // Update the data
+            const meme = memeData.find(m => m.id === memeId);
+            if (meme) meme.votes = count;
+        }
+        
+        function shareMeme(memeId) {
+            const url = `${window.location.origin}/memes#meme-${memeId}`;
+            if (navigator.share) {
+                navigator.share({
+                    title: 'NumbahWan Guild Meme',
+                    text: 'Check out this meme from NumbahWan Guild!',
+                    url: url
+                });
+            } else {
+                navigator.clipboard.writeText(url).then(() => {
+                    alert('Meme link copied to clipboard!');
+                });
+            }
+        }
+        
+        // Close lightbox on Escape key
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') closeLightbox();
+        });
+
+        // ============================================================
+        // INIT
+        // ============================================================
+        document.addEventListener('DOMContentLoaded', () => {
+            setLanguage(currentLang);
+        });
+    </script>
+</body>
+</html>

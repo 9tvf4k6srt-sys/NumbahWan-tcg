@@ -1,0 +1,1122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Apply to NumbahWan | Prepare Your Soul</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="/static/icons/icons.js" defer></script>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #ff6b00;
+            --primary-light: #ff9d4d;
+            --bg-dark: #0a0a0f;
+        }
+        
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: 'Orbitron', sans-serif;
+            background: var(--bg-dark);
+            color: #fff;
+            min-height: 100vh;
+        }
+        
+        .pixel-font { font-family: 'Press Start 2P', cursive; }
+        
+        .glass-card {
+            background: rgba(255, 107, 0, 0.08);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 107, 0, 0.2);
+            border-radius: 16px;
+        }
+        
+        .neon-orange {
+            text-shadow: 0 0 10px var(--primary), 0 0 20px var(--primary), 0 0 40px var(--primary);
+        }
+        
+        /* Form styles */
+        .form-input {
+            background: rgba(0, 0, 0, 0.4);
+            border: 2px solid rgba(255, 107, 0, 0.3);
+            border-radius: 12px;
+            padding: 1rem;
+            color: #fff;
+            width: 100%;
+            transition: all 0.3s ease;
+        }
+        
+        .form-input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 20px rgba(255, 107, 0, 0.3);
+        }
+        
+        .form-input::placeholder {
+            color: rgba(255, 255, 255, 0.3);
+        }
+        
+        /* Radio/Checkbox custom */
+        .custom-option {
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .custom-option:hover {
+            background: rgba(255, 107, 0, 0.2);
+            transform: scale(1.02);
+        }
+        
+        .custom-option.selected {
+            background: rgba(255, 107, 0, 0.3);
+            border-color: var(--primary);
+        }
+        
+        /* Progress bar */
+        .progress-bar {
+            height: 8px;
+            background: rgba(255, 107, 0, 0.2);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary), var(--primary-light));
+            border-radius: 4px;
+            transition: width 0.5s ease;
+        }
+        
+        /* Step indicator */
+        .step-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: rgba(255, 107, 0, 0.3);
+            transition: all 0.3s ease;
+        }
+        
+        .step-dot.active {
+            background: var(--primary);
+            box-shadow: 0 0 15px var(--primary);
+        }
+        
+        .step-dot.completed {
+            background: #22c55e;
+            box-shadow: 0 0 15px #22c55e;
+        }
+        
+        /* Warning flash */
+        .warning-flash {
+            animation: warningFlash 1s ease infinite;
+        }
+        
+        @keyframes warningFlash {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        
+        /* Hidden sections */
+        .form-step {
+            display: none;
+        }
+        
+        .form-step.active {
+            display: block;
+        }
+        
+        /* Slider */
+        input[type="range"] {
+            -webkit-appearance: none;
+            width: 100%;
+            height: 8px;
+            background: rgba(255, 107, 0, 0.2);
+            border-radius: 4px;
+            outline: none;
+        }
+        
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 24px;
+            height: 24px;
+            background: var(--primary);
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: 0 0 15px var(--primary);
+        }
+        
+        /* Confetti */
+        .confetti {
+            position: fixed;
+            width: 10px;
+            height: 10px;
+            pointer-events: none;
+            animation: confettiFall 3s ease-out forwards;
+        }
+        
+        @keyframes confettiFall {
+            0% { opacity: 1; transform: translateY(0) rotate(0deg); }
+            100% { opacity: 0; transform: translateY(100vh) rotate(720deg); }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="fixed top-0 left-0 right-0 z-50 glass-card mx-4 mt-4 rounded-full">
+        <div class="container mx-auto px-4 py-3 flex items-center justify-between">
+            <a href="/" class="flex items-center gap-2">
+                <svg class="nw-icon" width="28" height="28"><use href="/static/icons/nw-icons.svg#gaming"></use></svg>
+                <span class="pixel-font text-xs text-orange-400">NumbahWan</span>
+            </a>
+            <div class="flex items-center gap-3">
+                <a href="/" class="text-sm hover:text-orange-400 transition-colors" data-i18n="home">Home</a>
+                <a href="/memes" class="text-sm hover:text-orange-400 transition-colors" data-i18n="memes">Memes</a>
+                
+                <!-- Language Switcher -->
+                <div class="relative" id="lang-switcher">
+                    <button onclick="toggleLangMenu()" class="px-3 py-1.5 rounded-full text-sm flex items-center gap-2 hover:bg-orange-500/20 transition-all border border-orange-500/30">
+                        <span id="current-lang-flag">🇬🇧</span>
+                        <span id="current-lang-code" class="hidden sm:inline">EN</span>
+                        <svg class="nw-icon opacity-50" width="12" height="12"><use href="/static/icons/nw-icons.svg#chevron-down"></use></svg>
+                    </button>
+                    <div id="lang-menu" class="hidden absolute right-0 top-full mt-2 glass-card rounded-lg overflow-hidden min-w-[140px] z-50 border border-orange-500/30">
+                        <button onclick="setLanguage('en')" class="w-full px-4 py-2.5 text-left hover:bg-orange-500/20 flex items-center gap-3 text-sm transition-colors">
+                            <span>🇬🇧</span> English
+                        </button>
+                        <button onclick="setLanguage('zh')" class="w-full px-4 py-2.5 text-left hover:bg-orange-500/20 flex items-center gap-3 text-sm transition-colors">
+                            <span>🇹🇼</span> 繁體中文
+                        </button>
+                        <button onclick="setLanguage('th')" class="w-full px-4 py-2.5 text-left hover:bg-orange-500/20 flex items-center gap-3 text-sm transition-colors">
+                            <span>🇹🇭</span> ไทย
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="pt-28 pb-20 px-4">
+        <div class="container mx-auto max-w-3xl">
+            
+            <!-- Header -->
+            <div class="text-center mb-12">
+                <h1 class="text-4xl md:text-6xl font-bold mb-4 neon-orange pixel-font" data-i18n="pageTitle">
+                    JOIN US
+                </h1>
+                <p class="text-xl text-orange-300 mb-2" data-i18n="pageSubtitle">...if you dare <svg class="nw-icon inline-block" width="24" height="24" style="color:#a855f7"><use href="/static/icons/nw-icons.svg#devil"></use></svg></p>
+                <p class="text-gray-400 text-sm" data-i18n="pageWarning">Warning: This application may contain traces of sarcasm, judgment, and existential questions</p>
+            </div>
+
+            <!-- Progress -->
+            <div class="mb-8">
+                <div class="flex justify-between items-center mb-2">
+                    <span class="text-sm text-gray-400" data-i18n="progressLabel">Your Journey to Family</span>
+                    <span class="text-sm text-orange-400" id="progress-text">Step 1 of 5</span>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progress-fill" style="width: 20%"></div>
+                </div>
+                <div class="flex justify-between mt-4">
+                    <div class="step-dot active" data-step="1"></div>
+                    <div class="step-dot" data-step="2"></div>
+                    <div class="step-dot" data-step="3"></div>
+                    <div class="step-dot" data-step="4"></div>
+                    <div class="step-dot" data-step="5"></div>
+                </div>
+            </div>
+
+            <!-- Form Container -->
+            <form id="application-form" class="glass-card p-8">
+                
+                <!-- Step 1: Basic Info -->
+                <div class="form-step active" data-step="1">
+                    <h2 class="text-2xl font-bold mb-2 text-orange-400"><svg class="nw-icon inline-block mr-2" width="28" height="28"><use href="/static/icons/nw-icons.svg#form"></use></svg><span data-i18n="step1Title">The Basics</span></h2>
+                    <p class="text-gray-400 mb-6 text-sm" data-i18n="step1Desc">Let's see who we're dealing with...</p>
+                    
+                    <div class="space-y-6">
+                        <div>
+                            <label class="block text-sm font-bold mb-2" data-i18n="nameLabel">What do they call you? (In-Game Name) *</label>
+                            <input type="text" class="form-input" data-i18n-placeholder="namePlaceholder" placeholder="Your MapleStory Idle character name" required>
+                            <p class="text-xs text-gray-500 mt-1" data-i18n="nameHint">We'll use this to judge you before we even meet you</p>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-bold mb-2" data-i18n="levelLabel">Your Level *</label>
+                            <input type="number" class="form-input" data-i18n-placeholder="levelPlaceholder" placeholder="Be honest, we WILL check" min="1" max="999" required>
+                            <p class="text-xs text-gray-500 mt-1" data-i18n="levelHint">Lying adds 50 points to your application... in the REJECTION pile</p>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-bold mb-2" data-i18n="cpLabel">Current CP (Combat Power) *</label>
+                            <input type="text" class="form-input" data-i18n-placeholder="cpPlaceholder" placeholder="e.g., 500M, 1B 200M, 2B 382M">
+                            <p class="text-xs text-gray-500 mt-1" data-i18n="cpHint">Don't worry if it's low. We've accepted worse. *stares at 葉陽*</p>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-bold mb-2" data-i18n="currentGuildLabel">Current Guild (if any)</label>
+                            <input type="text" class="form-input" data-i18n-placeholder="currentGuildPlaceholder" placeholder="Leave blank if guildless (we don't judge... much)">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Step 2: The Interrogation -->
+                <div class="form-step" data-step="2">
+                    <h2 class="text-2xl font-bold mb-2 text-orange-400"><svg class="nw-icon inline-block mr-2" width="28" height="28"><use href="/static/icons/nw-icons.svg#detective"></use></svg><span data-i18n="step2Title">The Interrogation</span></h2>
+                    <p class="text-gray-400 mb-6 text-sm" data-i18n="step2Desc">Time to reveal your true nature...</p>
+                    
+                    <div class="space-y-6">
+                        <div>
+                            <label class="block text-sm font-bold mb-3" data-i18n="playtimeLabel">How often do you play? *</label>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-3" id="playtime-options"></div>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-bold mb-3" data-i18n="whyJoinLabel">Why do you want to join NumbahWan? *</label>
+                            <textarea class="form-input h-32" data-i18n-placeholder="whyJoinPlaceholder" placeholder="Convince us. Be creative. Bribery is acceptable."></textarea>
+                            <p class="text-xs text-gray-500 mt-1" data-i18n="whyJoinHint">Pro tip: Complimenting RegginA's fashion sense will NOT help your application</p>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-bold mb-3" data-i18n="bringLabel">What can you bring to the family?</label>
+                            <div class="space-y-2" id="bring-options"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Step 3: Personality Test -->
+                <div class="form-step" data-step="3">
+                    <h2 class="text-2xl font-bold mb-2 text-orange-400"><svg class="nw-icon inline-block mr-2" width="28" height="28" style="color:#ec4899"><use href="/static/icons/nw-icons.svg#brain"></use></svg><span data-i18n="step3Title">Personality Assessment</span></h2>
+                    <p class="text-gray-400 mb-6 text-sm" data-i18n="step3Desc">Let's find out what kind of chaos you'll bring...</p>
+                    
+                    <div class="space-y-8">
+                        <div>
+                            <label class="block text-sm font-bold mb-3" data-i18n="wipeLabel">The guild is about to wipe on a boss. What do you do?</label>
+                            <div class="space-y-3" id="wipe-options"></div>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-bold mb-3" data-i18n="fashionToleranceLabel">Rate your tolerance for RegginA's questionable fashion choices:</label>
+                            <input type="range" min="0" max="100" value="50" class="w-full" id="fashion-tolerance" oninput="updateFashionLabel(this.value)">
+                            <div class="flex justify-between text-xs text-gray-400 mt-2">
+                                <span data-i18n="fashionMin">0 - "My eyes!"</span>
+                                <span id="fashion-label" class="text-orange-400">50</span>
+                                <span data-i18n="fashionMax">100 - "Actually stylish"</span>
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-bold mb-3" data-i18n="raid3amLabel">It's 3AM and RegginA is asking if anyone wants to raid. You:</label>
+                            <div class="space-y-3" id="raid3am-options"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Step 4: Absurd Questions -->
+                <div class="form-step" data-step="4">
+                    <h2 class="text-2xl font-bold mb-2 text-orange-400"><svg class="nw-icon inline-block mr-2" width="28" height="28" style="color:#a855f7"><use href="/static/icons/nw-icons.svg#circus"></use></svg><span data-i18n="step4Title">The Final Test</span></h2>
+                    <p class="text-gray-400 mb-6 text-sm" data-i18n="step4Desc">Answer these completely normal and rational questions...</p>
+                    
+                    <div class="space-y-6">
+                        <div>
+                            <label class="block text-sm font-bold mb-3" data-i18n="pizzaLabel">If NumbahWan was a pizza, what topping would you be?</label>
+                            <input type="text" class="form-input" data-i18n-placeholder="pizzaPlaceholder" placeholder="Think carefully. This matters more than your CP.">
+                            <p class="text-xs text-gray-500 mt-1" data-i18n="pizzaHint">Wrong answers: Pineapple (unless you want war)</p>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-bold mb-3" data-i18n="wakeLabel">紈稀稀著 has fallen asleep mid-raid again. How do you wake them?</label>
+                            <div class="space-y-3" id="wake-options"></div>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-bold mb-3" data-i18n="mottoLabel">Complete this sentence: "We are not just a guild, but ___"</label>
+                            <input type="text" class="form-input" data-i18n-placeholder="mottoPlaceholder" placeholder="If you don't know this, have you even visited our website?">
+                            <p class="text-xs text-orange-400 mt-1 warning-flash" data-i18n="mottoHint">⚠️ Critical question - 99% fail rate</p>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-bold mb-3" data-i18n="fearLabel">On a scale of 1-10, how much do you fear RegginO?</label>
+                            <input type="range" min="1" max="10" value="7" class="w-full" id="fear-scale" oninput="updateFearLabel(this.value)">
+                            <p class="text-center text-orange-400 mt-2" id="fear-label">7</p>
+                            <p class="text-xs text-gray-500 text-center mt-1" data-i18n="fearHint">(Correct answer is 10. Always 10.)</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Step 5: The Oath -->
+                <div class="form-step" data-step="5">
+                    <h2 class="text-2xl font-bold mb-2 text-orange-400"><svg class="nw-icon inline-block mr-2" width="28" height="28" style="color:#d4a574"><use href="/static/icons/nw-icons.svg#scroll"></use></svg><span data-i18n="step5Title">The Sacred Oath</span></h2>
+                    <p class="text-gray-400 mb-6 text-sm" data-i18n="step5Desc">This is it. The final step. No turning back.</p>
+                    
+                    <div class="glass-card p-6 mb-6 border-2 border-orange-500/50">
+                        <p class="text-lg leading-relaxed" data-i18n-html="oathIntro">
+                            I, <span class="text-orange-400 font-bold">[Your Name]</span>, do solemnly swear that:
+                        </p>
+                        <ul class="mt-4 space-y-3 text-gray-300" id="oath-list"></ul>
+                    </div>
+                    
+                    <div class="space-y-4" id="checkboxes"></div>
+                    
+                    <div class="mt-6">
+                        <label class="block text-sm font-bold mb-2" data-i18n="signatureLabel">Sign here (type your name dramatically):</label>
+                        <input type="text" class="form-input text-center text-xl" data-i18n-placeholder="signaturePlaceholder" placeholder="Your signature" id="signature" required>
+                    </div>
+                </div>
+
+                <!-- Navigation Buttons -->
+                <div class="flex justify-between mt-8 pt-6 border-t border-orange-900/30">
+                    <button type="button" id="prev-btn" class="px-6 py-3 glass-card rounded-full font-bold hover:bg-orange-500/20 transition-all hidden" onclick="prevStep()">
+                        ← <span data-i18n="backBtn">Back</span>
+                    </button>
+                    <button type="button" id="next-btn" class="px-8 py-3 bg-orange-500 rounded-full font-bold hover:bg-orange-400 transition-all ml-auto" onclick="nextStep()">
+                        <span data-i18n="continueBtn">Continue</span> →
+                    </button>
+                    <button type="submit" id="submit-btn" class="px-8 py-3 bg-gradient-to-r from-orange-500 to-red-500 rounded-full font-bold hover:from-orange-400 hover:to-red-400 transition-all ml-auto hidden">
+                        🎉 <span data-i18n="submitBtn">SUBMIT MY SOUL</span> 🎉
+                    </button>
+                </div>
+            </form>
+
+            <!-- Success Message (Hidden) -->
+            <div id="success-message" class="glass-card p-8 text-center hidden">
+                <div class="text-6xl mb-4"><svg class="nw-icon inline-block" width="64" height="64" style="color:#ec4899"><use href="/static/icons/nw-icons.svg#celebration"></use></svg></div>
+                <h2 class="text-3xl font-bold mb-4 neon-orange pixel-font" data-i18n="successTitle">APPLICATION RECEIVED!</h2>
+                <p class="text-xl text-orange-300 mb-2" data-i18n="successSubtitle">Your fate is now in our hands...</p>
+                <p class="text-gray-400 mb-6" data-i18n="successTime">Expected response time: Somewhere between 5 minutes and the heat death of the universe</p>
+                
+                <div class="glass-card p-4 mb-6">
+                    <p class="text-sm text-gray-300" data-i18n="whatNextTitle">What happens next:</p>
+                    <ol class="text-left text-sm text-gray-400 mt-2 space-y-1" id="what-next-list"></ol>
+                </div>
+                
+                <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                    <a href="/" class="px-6 py-3 bg-orange-500 rounded-full font-bold hover:bg-orange-400 transition-colors" data-i18n="returnHome">
+                        Return Home
+                    </a>
+                    <a href="/memes" class="px-6 py-3 glass-card rounded-full font-bold hover:bg-orange-500/20 transition-colors" data-i18n="browseMemes">
+                        Browse Memes While You Wait
+                    </a>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="py-8 px-4 border-t border-orange-900/30">
+        <div class="container mx-auto max-w-4xl text-center">
+            <p class="text-gray-400 text-sm" data-i18n="footerTitle">NumbahWan Guild Applications</p>
+            <p class="text-gray-600 text-xs mt-2" data-i18n="footerDisclaimer">*Acceptance not guaranteed. Terms and conditions apply. May cause addiction to MapleStory Idle.</p>
+        </div>
+    </footer>
+
+    <script>
+        // ============================================================
+        // TRILINGUAL TRANSLATIONS
+        // ============================================================
+        const translations = {
+            en: {
+                // Nav
+                home: "Home",
+                memes: "Memes",
+                
+                // Header
+                pageTitle: "JOIN US",
+                pageSubtitle: "...if you dare 😈",
+                pageWarning: "Warning: This application may contain traces of sarcasm, judgment, and existential questions",
+                progressLabel: "Your Journey to Family",
+                
+                // Step 1
+                step1Title: "The Basics",
+                step1Desc: "Let's see who we're dealing with...",
+                nameLabel: "What do they call you? (In-Game Name) *",
+                namePlaceholder: "Your MapleStory Idle character name",
+                nameHint: "We'll use this to judge you before we even meet you",
+                levelLabel: "Your Level *",
+                levelPlaceholder: "Be honest, we WILL check",
+                levelHint: "Lying adds 50 points to your application... in the REJECTION pile",
+                cpLabel: "Current CP (Combat Power) *",
+                cpPlaceholder: "e.g., 500M, 1B 200M, 2B 382M",
+                cpHint: "Don't worry if it's low. We've accepted worse. *stares at 葉陽*",
+                currentGuildLabel: "Current Guild (if any)",
+                currentGuildPlaceholder: "Leave blank if guildless (we don't judge... much)",
+                
+                // Step 2
+                step2Title: "The Interrogation",
+                step2Desc: "Time to reveal your true nature...",
+                playtimeLabel: "How often do you play? *",
+                playtimeOptions: [
+                    { emoji: "🔥", title: "Daily Addict", desc: "Sleep is for the weak" },
+                    { emoji: "😎", title: "Regular", desc: "Few times a week" },
+                    { emoji: "🦥", title: "Casual", desc: "When I remember" },
+                    { emoji: "👻", title: "Ghost Mode", desc: "I'm here for the memes" }
+                ],
+                whyJoinLabel: "Why do you want to join NumbahWan? *",
+                whyJoinPlaceholder: "Convince us. Be creative. Bribery is acceptable.",
+                whyJoinHint: "Pro tip: Complimenting RegginA's fashion sense will NOT help your application",
+                bringLabel: "What can you bring to the family?",
+                bringOptions: [
+                    "🗡️ High CP (carry potential)",
+                    "😂 Quality memes",
+                    "💬 Active in chat",
+                    "🎯 Always shows up for raids",
+                    "🧘 Emotional support during wipes",
+                    "🎁 I'll bring snacks (virtual or otherwise)"
+                ],
+                
+                // Step 3
+                step3Title: "Personality Assessment",
+                step3Desc: "Let's find out what kind of chaos you'll bring...",
+                wipeLabel: "The guild is about to wipe on a boss. What do you do?",
+                wipeOptions: [
+                    { emoji: "🦸", text: "Try to clutch save and become a legend" },
+                    { emoji: "📸", text: "Screenshot for the meme gallery" },
+                    { emoji: "🏃", text: "Die first so I can watch everyone else suffer" },
+                    { emoji: "😴", text: "I was AFK, what happened?" }
+                ],
+                fashionToleranceLabel: "Rate your tolerance for RegginA's questionable fashion choices:",
+                fashionMin: "0 - \"My eyes!\"",
+                fashionMax: "100 - \"Actually stylish\"",
+                fashionLabels: { 0: "My eyes burn!", 25: "It's... something", 50: "I've seen worse", 75: "Growing on me", 100: "Actually fire 🔥" },
+                raid3amLabel: "It's 3AM and RegginA is asking if anyone wants to raid. You:",
+                raid3amOptions: [
+                    { emoji: "⚔️", text: "\"LET'S GO!\" (Sleep is a myth)" },
+                    { emoji: "🤔", text: "Pretend to be offline" },
+                    { emoji: "💤", text: "Already asleep like a normal person" },
+                    { emoji: "👀", text: "\"Only if RegginO isn't watching\"" }
+                ],
+                
+                // Step 4
+                step4Title: "The Final Test",
+                step4Desc: "Answer these completely normal and rational questions...",
+                pizzaLabel: "If NumbahWan was a pizza, what topping would you be?",
+                pizzaPlaceholder: "Think carefully. This matters more than your CP.",
+                pizzaHint: "Wrong answers: Pineapple (unless you want war)",
+                wakeLabel: "紈稀稀著 has fallen asleep mid-raid again. How do you wake them?",
+                wakeOptions: [
+                    { emoji: "📢", text: "Spam ping them 47 times" },
+                    { emoji: "🎵", text: "Play Kerning City theme at max volume" },
+                    { emoji: "😈", text: "\"Free gacha pulls in 10 seconds\"" },
+                    { emoji: "🤷", text: "Let them rest. They're doing their best." }
+                ],
+                mottoLabel: "Complete this sentence: \"We are not just a guild, but ___\"",
+                mottoPlaceholder: "If you don't know this, have you even visited our website?",
+                mottoHint: "⚠️ Critical question - 99% fail rate",
+                fearLabel: "On a scale of 1-10, how much do you fear RegginO?",
+                fearLabels: { 1: "Dangerously confident", 2: "Foolish bravery", 3: "Slightly nervous", 4: "Cautious", 5: "Reasonable fear", 6: "Wise caution", 7: "Healthy respect", 8: "Proper fear", 9: "Absolute terror", 10: "CORRECT ANSWER ✓" },
+                fearHint: "(Correct answer is 10. Always 10.)",
+                
+                // Step 5
+                step5Title: "The Sacred Oath",
+                step5Desc: "This is it. The final step. No turning back.",
+                oathIntro: "I, <span class=\"text-orange-400 font-bold\">[Your Name]</span>, do solemnly swear that:",
+                oathItems: [
+                    { emoji: "⚔️", text: "I will show up to raids (unless I have a really good excuse, like my cat is on fire)" },
+                    { emoji: "😂", text: "I will laugh at guild memes even when they're about me" },
+                    { emoji: "👑", text: "I will respect RegginA's authority (but never his fashion sense)" },
+                    { emoji: "💅", text: "I understand that RegginO is the REAL boss" },
+                    { emoji: "😴", text: "I will not judge 紈稀稀著 for sleeping. We all cope differently." },
+                    { emoji: "❤️", text: "I accept that this is not just a guild, but <span class=\"text-orange-400 font-bold\">FAMILY</span>" }
+                ],
+                checkboxes: [
+                    "I have read and agree to the Sacred Oath (and I'm not crossing my fingers)",
+                    "I understand this application may be screenshotted and memed",
+                    "I accept that rejection may come with roasting"
+                ],
+                signatureLabel: "Sign here (type your name dramatically):",
+                signaturePlaceholder: "Your signature",
+                
+                // Buttons
+                backBtn: "Back",
+                continueBtn: "Continue",
+                submitBtn: "SUBMIT MY SOUL",
+                
+                // Success
+                successTitle: "APPLICATION RECEIVED!",
+                successSubtitle: "Your fate is now in our hands...",
+                successTime: "Expected response time: Somewhere between 5 minutes and the heat death of the universe",
+                whatNextTitle: "What happens next:",
+                whatNextItems: [
+                    "RegginA will review your application (while procrastinating on raids)",
+                    "RegginO will actually make the decision",
+                    "The guild will vote (democratically, but RegginO's vote counts triple)",
+                    "You'll receive a dramatic acceptance or rejection message"
+                ],
+                returnHome: "Return Home",
+                browseMemes: "Browse Memes While You Wait",
+                
+                // Footer
+                footerTitle: "NumbahWan Guild Applications",
+                footerDisclaimer: "*Acceptance not guaranteed. Terms and conditions apply. May cause addiction to MapleStory Idle."
+            },
+            zh: {
+                // Nav
+                home: "首頁",
+                memes: "迷因",
+                
+                // Header
+                pageTitle: "加入我們",
+                pageSubtitle: "...如果你敢的話 😈",
+                pageWarning: "警告：此申請可能含有諷刺、評判和存在主義問題",
+                progressLabel: "你的入會之旅",
+                
+                // Step 1
+                step1Title: "基本資料",
+                step1Desc: "讓我們看看是誰...",
+                nameLabel: "你的遊戲名稱是？*",
+                namePlaceholder: "你的楓之谷放置角色名",
+                nameHint: "我們會用這個在見面前先審判你",
+                levelLabel: "你的等級 *",
+                levelPlaceholder: "老實說，我們會查的",
+                levelHint: "說謊會讓你的申請加50分...在拒絕名單裡",
+                cpLabel: "目前戰力 *",
+                cpPlaceholder: "例如：500M、1B 200M、2B 382M",
+                cpHint: "戰力低沒關係，我們接受過更低的。*看向葉陽*",
+                currentGuildLabel: "目前公會（如果有的話）",
+                currentGuildPlaceholder: "沒公會就留空（我們不會評判...太多）",
+                
+                // Step 2
+                step2Title: "審問時間",
+                step2Desc: "是時候展現你的本性了...",
+                playtimeLabel: "你多常玩？*",
+                playtimeOptions: [
+                    { emoji: "🔥", title: "每日肝帝", desc: "睡眠是弱者的藉口" },
+                    { emoji: "😎", title: "正常玩家", desc: "一週玩幾次" },
+                    { emoji: "🦥", title: "休閒玩家", desc: "想到才玩" },
+                    { emoji: "👻", title: "幽靈模式", desc: "我來看迷因的" }
+                ],
+                whyJoinLabel: "為什麼想加入 NumbahWan？*",
+                whyJoinPlaceholder: "說服我們。發揮創意。賄賂也可以。",
+                whyJoinHint: "小提示：誇獎 RegginA 的時尚品味不會幫助你的申請",
+                bringLabel: "你能為家族帶來什麼？",
+                bringOptions: [
+                    "🗡️ 高戰力（Carry潛力）",
+                    "😂 優質迷因",
+                    "💬 聊天活躍",
+                    "🎯 打王必到",
+                    "🧘 滅團時的精神支持",
+                    "🎁 我會帶零食（虛擬或實體）"
+                ],
+                
+                // Step 3
+                step3Title: "性格測試",
+                step3Desc: "讓我們看看你會帶來什麼混亂...",
+                wipeLabel: "公會即將滅團。你會怎麼做？",
+                wipeOptions: [
+                    { emoji: "🦸", text: "嘗試神操作拯救全場成為傳奇" },
+                    { emoji: "📸", text: "截圖給迷因庫" },
+                    { emoji: "🏃", text: "先死，這樣可以看其他人受苦" },
+                    { emoji: "😴", text: "我在掛機，發生什麼事了？" }
+                ],
+                fashionToleranceLabel: "評價你對 RegginA 可疑時尚選擇的容忍度：",
+                fashionMin: "0 - \"我的眼睛！\"",
+                fashionMax: "100 - \"其實很潮\"",
+                fashionLabels: { 0: "我的眼睛在燃燒！", 25: "這是...某種東西", 50: "我看過更糟的", 75: "越看越順眼", 100: "其實很潮 🔥" },
+                raid3amLabel: "凌晨3點 RegginA 問有沒有人要打王。你會：",
+                raid3amOptions: [
+                    { emoji: "⚔️", text: "「衝啊！」（睡眠是神話）" },
+                    { emoji: "🤔", text: "假裝不在線" },
+                    { emoji: "💤", text: "像正常人一樣已經睡了" },
+                    { emoji: "👀", text: "「只要 RegginO 沒在看的話」" }
+                ],
+                
+                // Step 4
+                step4Title: "最終測試",
+                step4Desc: "回答這些完全正常合理的問題...",
+                pizzaLabel: "如果 NumbahWan 是披薩，你會是什麼配料？",
+                pizzaPlaceholder: "仔細想。這比你的戰力重要。",
+                pizzaHint: "錯誤答案：鳳梨（除非你想開戰）",
+                wakeLabel: "紈稀稀著 又在打王時睡著了。你怎麼叫醒他？",
+                wakeOptions: [
+                    { emoji: "📢", text: "@他 47 次" },
+                    { emoji: "🎵", text: "把乾坤城音樂開到最大" },
+                    { emoji: "😈", text: "「10秒內有免費抽卡」" },
+                    { emoji: "🤷", text: "讓他休息吧。他已經盡力了。" }
+                ],
+                mottoLabel: "完成這句話：「我們不只是公會，更是___」",
+                mottoPlaceholder: "如果你不知道，你真的有看過我們網站嗎？",
+                mottoHint: "⚠️ 關鍵問題 - 99%失敗率",
+                fearLabel: "1到10分，你有多怕 RegginO？",
+                fearLabels: { 1: "危險的自信", 2: "愚蠢的勇敢", 3: "有點緊張", 4: "謹慎", 5: "合理的恐懼", 6: "明智的小心", 7: "健康的尊重", 8: "正確的恐懼", 9: "絕對的恐懼", 10: "正確答案 ✓" },
+                fearHint: "（正確答案是10。永遠是10。）",
+                
+                // Step 5
+                step5Title: "神聖誓言",
+                step5Desc: "就是這一刻。最後一步。沒有回頭路。",
+                oathIntro: "我，<span class=\"text-orange-400 font-bold\">[你的名字]</span>，在此莊嚴宣誓：",
+                oathItems: [
+                    { emoji: "⚔️", text: "我會準時參加打王（除非有很好的理由，例如我的貓著火了）" },
+                    { emoji: "😂", text: "我會對公會迷因笑，即使是關於我的" },
+                    { emoji: "👑", text: "我會尊重 RegginA 的權威（但永遠不會尊重他的時尚品味）" },
+                    { emoji: "💅", text: "我明白 RegginO 才是真正的老大" },
+                    { emoji: "😴", text: "我不會批評紈稀稀著睡覺。每個人都有自己的方式。" },
+                    { emoji: "❤️", text: "我接受這不只是公會，更是<span class=\"text-orange-400 font-bold\">家人</span>" }
+                ],
+                checkboxes: [
+                    "我已閱讀並同意神聖誓言（而且我沒有交叉手指）",
+                    "我理解此申請可能被截圖並做成迷因",
+                    "我接受拒絕可能伴隨著被烤"
+                ],
+                signatureLabel: "在此簽名（戲劇性地輸入你的名字）：",
+                signaturePlaceholder: "你的簽名",
+                
+                // Buttons
+                backBtn: "返回",
+                continueBtn: "繼續",
+                submitBtn: "交出我的靈魂",
+                
+                // Success
+                successTitle: "申請已收到！",
+                successSubtitle: "你的命運現在掌握在我們手中...",
+                successTime: "預計回覆時間：5分鐘到宇宙熱寂之間",
+                whatNextTitle: "接下來會發生什麼：",
+                whatNextItems: [
+                    "RegginA 會審核你的申請（同時在打王上摸魚）",
+                    "RegginO 會做實際決定",
+                    "公會會投票（民主投票，但 RegginO 的票算三票）",
+                    "你會收到一個戲劇性的接受或拒絕訊息"
+                ],
+                returnHome: "返回首頁",
+                browseMemes: "等待時逛逛迷因",
+                
+                // Footer
+                footerTitle: "NumbahWan 公會申請",
+                footerDisclaimer: "*不保證錄取。條款適用。可能導致楓之谷放置成癮。"
+            },
+            th: {
+                // Nav
+                home: "หน้าแรก",
+                memes: "มีม",
+                
+                // Header
+                pageTitle: "เข้าร่วมเรา",
+                pageSubtitle: "...ถ้าคุณกล้า 😈",
+                pageWarning: "คำเตือน: ใบสมัครนี้อาจมีการเสียดสี การตัดสิน และคำถามเชิงปรัชญา",
+                progressLabel: "การเดินทางสู่ครอบครัว",
+                
+                // Step 1
+                step1Title: "ข้อมูลพื้นฐาน",
+                step1Desc: "มาดูกันว่าเราจะเจอใคร...",
+                nameLabel: "ชื่อในเกมของคุณคือ? *",
+                namePlaceholder: "ชื่อตัวละคร MapleStory Idle ของคุณ",
+                nameHint: "เราจะใช้ตัดสินคุณก่อนที่จะเจอกัน",
+                levelLabel: "เลเวลของคุณ *",
+                levelPlaceholder: "ซื่อสัตย์นะ เราจะตรวจสอบ",
+                levelHint: "โกหกจะได้ 50 คะแนน...ในกองถูกปฏิเสธ",
+                cpLabel: "CP ปัจจุบัน *",
+                cpPlaceholder: "เช่น 500M, 1B 200M, 2B 382M",
+                cpHint: "ไม่ต้องห่วงถ้า CP ต่ำ เรารับแย่กว่านี้มาแล้ว *มองไปที่ 葉陽*",
+                currentGuildLabel: "กิลด์ปัจจุบัน (ถ้ามี)",
+                currentGuildPlaceholder: "เว้นว่างถ้าไม่มีกิลด์ (เราไม่ตัดสิน...มาก)",
+                
+                // Step 2
+                step2Title: "การสอบสวน",
+                step2Desc: "ถึงเวลาเปิดเผยตัวตนที่แท้จริง...",
+                playtimeLabel: "คุณเล่นบ่อยแค่ไหน? *",
+                playtimeOptions: [
+                    { emoji: "🔥", title: "เล่นทุกวัน", desc: "การนอนมีไว้สำหรับคนอ่อนแอ" },
+                    { emoji: "😎", title: "ปกติ", desc: "สัปดาห์ละไม่กี่ครั้ง" },
+                    { emoji: "🦥", title: "เล่นเรื่อยๆ", desc: "เมื่อนึกได้" },
+                    { emoji: "👻", title: "โหมดผี", desc: "มาดูมีม" }
+                ],
+                whyJoinLabel: "ทำไมอยากเข้า NumbahWan? *",
+                whyJoinPlaceholder: "โน้มน้าวเรา ใช้ความคิดสร้างสรรค์ ติดสินบนได้",
+                whyJoinHint: "เคล็ดลับ: ชมแฟชั่นของ RegginA จะไม่ช่วยใบสมัครของคุณ",
+                bringLabel: "คุณจะนำอะไรมาสู่ครอบครัว?",
+                bringOptions: [
+                    "🗡️ CP สูง (แบกได้)",
+                    "😂 มีมคุณภาพ",
+                    "💬 แอคทีฟในแชท",
+                    "🎯 มาเรดทุกครั้ง",
+                    "🧘 กำลังใจตอนไวป์",
+                    "🎁 จะเอาขนมมา (เสมือนหรือจริง)"
+                ],
+                
+                // Step 3
+                step3Title: "ประเมินบุคลิกภาพ",
+                step3Desc: "มาดูว่าคุณจะนำความวุ่นวายแบบไหนมา...",
+                wipeLabel: "กิลด์กำลังจะไวป์บอส คุณจะทำอะไร?",
+                wipeOptions: [
+                    { emoji: "🦸", text: "พยายามกู้และกลายเป็นตำนาน" },
+                    { emoji: "📸", text: "แคปหน้าจอเอาไปทำมีม" },
+                    { emoji: "🏃", text: "ตายก่อนจะได้ดูคนอื่นทรมาน" },
+                    { emoji: "😴", text: "ฉัน AFK อยู่ เกิดอะไรขึ้น?" }
+                ],
+                fashionToleranceLabel: "ให้คะแนนความทนทานต่อแฟชั่นน่าสงสัยของ RegginA:",
+                fashionMin: "0 - \"ตาฉัน!\"",
+                fashionMax: "100 - \"ดูดีจริง\"",
+                fashionLabels: { 0: "ตาฉันลุกไหม้!", 25: "มัน...อะไรสักอย่าง", 50: "เคยเห็นแย่กว่านี้", 75: "เริ่มชอบ", 100: "ไฟจริง 🔥" },
+                raid3amLabel: "ตี 3 RegginA ถามว่ามีใครอยากเรดไหม คุณ:",
+                raid3amOptions: [
+                    { emoji: "⚔️", text: "\"ไปเลย!\" (การนอนเป็นตำนาน)" },
+                    { emoji: "🤔", text: "แกล้งทำเป็นออฟไลน์" },
+                    { emoji: "💤", text: "นอนแล้วเหมือนคนปกติ" },
+                    { emoji: "👀", text: "\"ถ้า RegginO ไม่ดูอยู่นะ\"" }
+                ],
+                
+                // Step 4
+                step4Title: "การทดสอบสุดท้าย",
+                step4Desc: "ตอบคำถามปกติและมีเหตุผลเหล่านี้...",
+                pizzaLabel: "ถ้า NumbahWan เป็นพิซซ่า คุณจะเป็นท็อปปิ้งอะไร?",
+                pizzaPlaceholder: "คิดดีๆ นี่สำคัญกว่า CP ของคุณ",
+                pizzaHint: "คำตอบผิด: สับปะรด (นอกจากอยากทะเลาะ)",
+                wakeLabel: "紈稀稀著 หลับกลางเรดอีกแล้ว คุณจะปลุกเขายังไง?",
+                wakeOptions: [
+                    { emoji: "📢", text: "แท็กเขา 47 ครั้ง" },
+                    { emoji: "🎵", text: "เปิดเพลง Kerning City ดังสุด" },
+                    { emoji: "😈", text: "\"กาชาฟรีใน 10 วินาที\"" },
+                    { emoji: "🤷", text: "ปล่อยเขาพักเถอะ เขาพยายามแล้ว" }
+                ],
+                mottoLabel: "ต่อประโยคนี้: \"เราไม่ได้เป็นแค่กิลด์ แต่เป็น___\"",
+                mottoPlaceholder: "ถ้าไม่รู้ คุณเข้าเว็บเราจริงหรือเปล่า?",
+                mottoHint: "⚠️ คำถามสำคัญ - อัตราล้มเหลว 99%",
+                fearLabel: "1-10 คุณกลัว RegginO แค่ไหน?",
+                fearLabels: { 1: "มั่นใจอันตราย", 2: "กล้าโง่ๆ", 3: "ประหม่านิดหน่อย", 4: "ระมัดระวัง", 5: "กลัวพอสมควร", 6: "ระวังอย่างฉลาด", 7: "เคารพอย่างแข็งแรง", 8: "กลัวถูกต้อง", 9: "สยองขวัญสุดๆ", 10: "คำตอบถูกต้อง ✓" },
+                fearHint: "(คำตอบที่ถูกคือ 10 เสมอ 10)",
+                
+                // Step 5
+                step5Title: "คำสาบานศักดิ์สิทธิ์",
+                step5Desc: "นี่แหละ ขั้นตอนสุดท้าย ไม่มีทางกลับ",
+                oathIntro: "ข้าพเจ้า <span class=\"text-orange-400 font-bold\">[ชื่อของคุณ]</span> ขอสาบานอย่างเคร่งขรึมว่า:",
+                oathItems: [
+                    { emoji: "⚔️", text: "ฉันจะมาเรด (นอกจากมีข้อแก้ตัวดีๆ เช่น แมวฉันไฟไหม้)" },
+                    { emoji: "😂", text: "ฉันจะหัวเราะกับมีมกิลด์แม้มันจะเกี่ยวกับฉัน" },
+                    { emoji: "👑", text: "ฉันจะเคารพอำนาจของ RegginA (แต่ไม่มีวันเคารพแฟชั่นเขา)" },
+                    { emoji: "💅", text: "ฉันเข้าใจว่า RegginO คือบอสตัวจริง" },
+                    { emoji: "😴", text: "ฉันจะไม่ตัดสิน 紈稀稀著 ที่นอน ทุกคนมีวิธีรับมือของตัวเอง" },
+                    { emoji: "❤️", text: "ฉันยอมรับว่านี่ไม่ใช่แค่กิลด์ แต่เป็น<span class=\"text-orange-400 font-bold\">ครอบครัว</span>" }
+                ],
+                checkboxes: [
+                    "ฉันอ่านและยอมรับคำสาบานศักดิ์สิทธิ์แล้ว (และฉันไม่ได้ไขว้นิ้ว)",
+                    "ฉันเข้าใจว่าใบสมัครนี้อาจถูกแคปไปทำมีม",
+                    "ฉันยอมรับว่าการถูกปฏิเสธอาจมาพร้อมการถูกย่าง"
+                ],
+                signatureLabel: "เซ็นที่นี่ (พิมพ์ชื่ออย่างดราม่า):",
+                signaturePlaceholder: "ลายเซ็นของคุณ",
+                
+                // Buttons
+                backBtn: "กลับ",
+                continueBtn: "ต่อไป",
+                submitBtn: "ส่งมอบวิญญาณ",
+                
+                // Success
+                successTitle: "ได้รับใบสมัครแล้ว!",
+                successSubtitle: "ชะตาของคุณอยู่ในมือเราแล้ว...",
+                successTime: "เวลาตอบกลับที่คาดไว้: ระหว่าง 5 นาทีถึงจักรวาลสลาย",
+                whatNextTitle: "จะเกิดอะไรต่อไป:",
+                whatNextItems: [
+                    "RegginA จะรีวิวใบสมัครของคุณ (ขณะผัดวันประกันพรุ่งเรื่องเรด)",
+                    "RegginO จะเป็นคนตัดสินจริง",
+                    "กิลด์จะโหวต (แบบประชาธิปไตย แต่โหวตของ RegginO นับสาม)",
+                    "คุณจะได้รับข้อความยอมรับหรือปฏิเสธแบบดราม่า"
+                ],
+                returnHome: "กลับหน้าแรก",
+                browseMemes: "ดูมีมระหว่างรอ",
+                
+                // Footer
+                footerTitle: "ใบสมัครกิลด์ NumbahWan",
+                footerDisclaimer: "*ไม่รับประกันการรับเข้า มีเงื่อนไข อาจทำให้ติด MapleStory Idle"
+            }
+        };
+
+        // ============================================================
+        // I18N FUNCTIONS
+        // ============================================================
+        const langMeta = {
+            en: { flag: "🇬🇧", code: "EN" },
+            zh: { flag: "🇹🇼", code: "中文" },
+            th: { flag: "🇹🇭", code: "ไทย" }
+        };
+        
+        let currentLang = localStorage.getItem('lang') || 'en';
+        let currentStep = 1;
+        const totalSteps = 5;
+        
+        function setLanguage(lang) {
+            currentLang = lang;
+            localStorage.setItem('lang', lang);
+            
+            const t = translations[lang];
+            
+            // Update flag and code
+            document.getElementById('current-lang-flag').textContent = langMeta[lang].flag;
+            document.getElementById('current-lang-code').textContent = langMeta[lang].code;
+            
+            // Update all data-i18n elements
+            document.querySelectorAll('[data-i18n]').forEach(el => {
+                const key = el.getAttribute('data-i18n');
+                if (t[key]) el.textContent = t[key];
+            });
+            
+            // Update all data-i18n-html elements
+            document.querySelectorAll('[data-i18n-html]').forEach(el => {
+                const key = el.getAttribute('data-i18n-html');
+                if (t[key]) el.innerHTML = t[key];
+            });
+            
+            // Update placeholders
+            document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+                const key = el.getAttribute('data-i18n-placeholder');
+                if (t[key]) el.placeholder = t[key];
+            });
+            
+            // Render dynamic content
+            renderPlaytimeOptions();
+            renderBringOptions();
+            renderWipeOptions();
+            renderRaid3amOptions();
+            renderWakeOptions();
+            renderOathItems();
+            renderCheckboxes();
+            renderWhatNext();
+            
+            // Update progress text
+            updateProgressText();
+            
+            // Update slider labels
+            updateFashionLabel(document.getElementById('fashion-tolerance').value);
+            updateFearLabel(document.getElementById('fear-scale').value);
+            
+            // Close menu
+            document.getElementById('lang-menu').classList.add('hidden');
+        }
+        
+        function toggleLangMenu() {
+            document.getElementById('lang-menu').classList.toggle('hidden');
+        }
+        
+        // Close menu on outside click
+        document.addEventListener('click', (e) => {
+            const switcher = document.getElementById('lang-switcher');
+            if (!switcher.contains(e.target)) {
+                document.getElementById('lang-menu').classList.add('hidden');
+            }
+        });
+
+        // ============================================================
+        // RENDER FUNCTIONS
+        // Icon helper function - converts emoji to our custom SVG icons with colors
+        function getIcon(emoji, size = 24, extraClass = '') {
+            const emojiMap = {
+                '🔥': 'fire', '😎': 'cool', '🦥': 'sloth', '👻': 'ghost',
+                '🗡️': 'sword', '😂': 'laugh', '💬': 'chat', '🎯': 'target',
+                '🧘': 'thinking', '🎁': 'gift', '🦸': 'hero', '📸': 'camera',
+                '🏃': 'runner', '😴': 'sleep', '⚔️': 'swords', '🤔': 'thinking',
+                '💤': 'sleep', '👀': 'eye', '📢': 'chat', '🎵': 'music',
+                '😈': 'devil', '🤷': 'shrug', '👑': 'crown', '💅': 'nail',
+                '❤️': 'heart'
+            };
+            const iconColors = {
+                fire: '#ff6b00', crown: '#ffd700', skull: '#a855f7', sleep: '#8b5cf6',
+                hero: '#3b82f6', camera: '#ec4899', runner: '#22c55e', ghost: '#6b7280',
+                swords: '#ef4444', meme: '#f97316', heart: '#ef4444', star: '#fbbf24',
+                trophy: '#ffd700', devil: '#a855f7', cool: '#fbbf24', sloth: '#9ca3af',
+                laugh: '#fbbf24', thinking: '#8b5cf6', chat: '#3b82f6', music: '#ec4899',
+                eye: '#6b7280', shrug: '#9ca3af', nail: '#ec4899', gift: '#ec4899',
+                target: '#22c55e', sword: '#ef4444', question: '#6b7280'
+            };
+            const iconName = emojiMap[emoji] || 'question';
+            const color = iconColors[iconName] || '#f97316';
+            return `<svg class="nw-icon ${extraClass}" width="${size}" height="${size}" style="color:${color}"><use href="/static/icons/nw-icons.svg#${iconName}"></use></svg>`;
+        }
+        
+        // Replace emoji in text string with colored icons
+        function replaceEmojisInText(text) {
+            const emojiMap = {
+                '🗡️': { icon: 'sword', color: '#ef4444' },
+                '😂': { icon: 'laugh', color: '#fbbf24' },
+                '💬': { icon: 'chat', color: '#3b82f6' },
+                '🎯': { icon: 'target', color: '#22c55e' },
+                '🧘': { icon: 'thinking', color: '#8b5cf6' },
+                '🎁': { icon: 'gift', color: '#ec4899' }
+            };
+            let result = text;
+            for (const [emoji, data] of Object.entries(emojiMap)) {
+                if (result.includes(emoji)) {
+                    result = result.replace(emoji, `<svg class="nw-icon inline-block align-middle" width="18" height="18" style="color:${data.color}"><use href="/static/icons/nw-icons.svg#${data.icon}"></use></svg>`);
+                }
+            }
+            return result;
+        }
+        
+        // ============================================================
+        function renderPlaytimeOptions() {
+            const t = translations[currentLang];
+            document.getElementById('playtime-options').innerHTML = t.playtimeOptions.map(opt => `
+                <div class="custom-option glass-card p-4 rounded-lg" onclick="selectOption(this, 'playtime')">
+                    ${getIcon(opt.emoji, 32, 'text-orange-400')}
+                    <p class="font-bold">${opt.title}</p>
+                    <p class="text-xs text-gray-400">${opt.desc}</p>
+                </div>
+            `).join('');
+        }
+        
+        function renderBringOptions() {
+            const t = translations[currentLang];
+            document.getElementById('bring-options').innerHTML = t.bringOptions.map(opt => `
+                <label class="flex items-center gap-3 cursor-pointer">
+                    <input type="checkbox" class="w-5 h-5 accent-orange-500">
+                    <span>${replaceEmojisInText(opt)}</span>
+                </label>
+            `).join('');
+        }
+        
+        function renderWipeOptions() {
+            const t = translations[currentLang];
+            document.getElementById('wipe-options').innerHTML = t.wipeOptions.map(opt => `
+                <div class="custom-option glass-card p-4 rounded-lg flex items-center gap-2" onclick="selectOption(this, 'wipe')">
+                    ${getIcon(opt.emoji, 24, 'text-orange-400 flex-shrink-0')} <span>${opt.text}</span>
+                </div>
+            `).join('');
+        }
+        
+        function renderRaid3amOptions() {
+            const t = translations[currentLang];
+            document.getElementById('raid3am-options').innerHTML = t.raid3amOptions.map(opt => `
+                <div class="custom-option glass-card p-4 rounded-lg flex items-center gap-2" onclick="selectOption(this, 'raid3am')">
+                    ${getIcon(opt.emoji, 24, 'text-orange-400 flex-shrink-0')} <span>${opt.text}</span>
+                </div>
+            `).join('');
+        }
+        
+        function renderWakeOptions() {
+            const t = translations[currentLang];
+            document.getElementById('wake-options').innerHTML = t.wakeOptions.map(opt => `
+                <div class="custom-option glass-card p-4 rounded-lg flex items-center gap-2" onclick="selectOption(this, 'wake')">
+                    ${getIcon(opt.emoji, 24, 'text-orange-400 flex-shrink-0')} <span>${opt.text}</span>
+                </div>
+            `).join('');
+        }
+        
+        function renderOathItems() {
+            const t = translations[currentLang];
+            document.getElementById('oath-list').innerHTML = t.oathItems.map(item => `
+                <li class="flex items-start gap-2">
+                    ${getIcon(item.emoji, 20, 'text-orange-400 flex-shrink-0 mt-1')}
+                    <span>${item.text}</span>
+                </li>
+            `).join('');
+        }
+        
+        function renderCheckboxes() {
+            const t = translations[currentLang];
+            document.getElementById('checkboxes').innerHTML = t.checkboxes.map(text => `
+                <label class="flex items-center gap-3 cursor-pointer">
+                    <input type="checkbox" class="w-6 h-6 accent-orange-500" required>
+                    <span>${text}</span>
+                </label>
+            `).join('');
+        }
+        
+        function renderWhatNext() {
+            const t = translations[currentLang];
+            document.getElementById('what-next-list').innerHTML = t.whatNextItems.map((item, i) => `
+                <li>${i + 1}. ${item}</li>
+            `).join('');
+        }
+
+        // ============================================================
+        // FORM NAVIGATION
+        // ============================================================
+        function updateProgressText() {
+            const t = translations[currentLang];
+            const stepText = currentLang === 'zh' ? `第 ${currentStep} 步，共 ${totalSteps} 步` :
+                            currentLang === 'th' ? `ขั้นตอนที่ ${currentStep} จาก ${totalSteps}` :
+                            `Step ${currentStep} of ${totalSteps}`;
+            document.getElementById('progress-text').textContent = stepText;
+        }
+        
+        function updateProgress() {
+            const progress = (currentStep / totalSteps) * 100;
+            document.getElementById('progress-fill').style.width = progress + '%';
+            updateProgressText();
+            
+            // Update dots
+            document.querySelectorAll('.step-dot').forEach((dot, index) => {
+                dot.classList.remove('active', 'completed');
+                if (index + 1 < currentStep) {
+                    dot.classList.add('completed');
+                } else if (index + 1 === currentStep) {
+                    dot.classList.add('active');
+                }
+            });
+            
+            // Update buttons
+            document.getElementById('prev-btn').classList.toggle('hidden', currentStep === 1);
+            document.getElementById('next-btn').classList.toggle('hidden', currentStep === totalSteps);
+            document.getElementById('submit-btn').classList.toggle('hidden', currentStep !== totalSteps);
+        }
+        
+        function nextStep() {
+            if (currentStep < totalSteps) {
+                document.querySelector(`.form-step[data-step="${currentStep}"]`).classList.remove('active');
+                currentStep++;
+                document.querySelector(`.form-step[data-step="${currentStep}"]`).classList.add('active');
+                updateProgress();
+                window.scrollTo({ top: 200, behavior: 'smooth' });
+            }
+        }
+        
+        function prevStep() {
+            if (currentStep > 1) {
+                document.querySelector(`.form-step[data-step="${currentStep}"]`).classList.remove('active');
+                currentStep--;
+                document.querySelector(`.form-step[data-step="${currentStep}"]`).classList.add('active');
+                updateProgress();
+                window.scrollTo({ top: 200, behavior: 'smooth' });
+            }
+        }
+        
+        function selectOption(element, group) {
+            element.parentElement.querySelectorAll('.custom-option').forEach(opt => {
+                opt.classList.remove('selected');
+            });
+            element.classList.add('selected');
+        }
+        
+        function updateFashionLabel(value) {
+            const t = translations[currentLang];
+            const closest = Math.round(value / 25) * 25;
+            document.getElementById('fashion-label').textContent = t.fashionLabels[closest] || value;
+        }
+        
+        function updateFearLabel(value) {
+            const t = translations[currentLang];
+            document.getElementById('fear-label').textContent = t.fearLabels[value] || value;
+        }
+        
+        // Form submission
+        document.getElementById('application-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            this.classList.add('hidden');
+            document.getElementById('success-message').classList.remove('hidden');
+            
+            // Confetti!
+            for (let i = 0; i < 50; i++) {
+                setTimeout(() => createConfetti(), i * 50);
+            }
+        });
+        
+        function createConfetti() {
+            const confetti = document.createElement('div');
+            confetti.className = 'confetti';
+            confetti.style.left = Math.random() * 100 + 'vw';
+            confetti.style.top = '-10px';
+            confetti.style.background = ['#ff6b00', '#ff9d4d', '#fff', '#22c55e', '#ec4899'][Math.floor(Math.random() * 5)];
+            confetti.style.borderRadius = Math.random() > 0.5 ? '50%' : '0';
+            document.body.appendChild(confetti);
+            setTimeout(() => confetti.remove(), 3000);
+        }
+
+        // ============================================================
+        // INIT
+        // ============================================================
+        document.addEventListener('DOMContentLoaded', () => {
+            setLanguage(currentLang);
+        });
+    </script>
+</body>
+</html>

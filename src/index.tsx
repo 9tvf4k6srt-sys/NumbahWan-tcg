@@ -206,6 +206,7 @@ app.get('/', (c) => {
     <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
     <script src="/static/loader.js"></script>
     <script src="/static/bgm.js" defer></script>
+    <script src="/static/icons/icons.js" defer></script>
     <style>
         :root {
             --primary: #ff6b00;
@@ -882,57 +883,57 @@ app.get('/', (c) => {
     <div id="nav-dropdown" class="fixed top-20 left-4 right-4 z-40 glass-card rounded-2xl p-4 hidden nav-dropdown">
         <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
             <a href="#race" onclick="closeNavMenu()" class="dropdown-item">
-                <span class="text-2xl mb-1">🏆</span>
+                <svg class="nw-icon mb-1" width="28" height="28" style="fill:#ffd700"><use href="/static/icons/nw-icons.svg#trophy"></use></svg>
                 <span class="font-bold text-orange-400 text-sm" data-i18n="cpLeaderboard">CP Ranking</span>
                 <span class="text-xs text-gray-400">#47 Server</span>
             </a>
             <a href="/pvp" class="dropdown-item">
-                <span class="text-2xl mb-1">⚔️</span>
+                <svg class="nw-icon mb-1" width="28" height="28" style="fill:#ef4444"><use href="/static/icons/nw-icons.svg#swords"></use></svg>
                 <span class="font-bold text-orange-400 text-sm" data-i18n="gmPvp">GM PvP</span>
                 <span class="text-xs text-gray-400">Grandmaster 5</span>
             </a>
             <a href="/fashion" class="dropdown-item">
-                <span class="text-2xl mb-1">👗</span>
+                <svg class="nw-icon mb-1" width="28" height="28" style="fill:#ec4899"><use href="/static/icons/nw-icons.svg#dress"></use></svg>
                 <span class="font-bold text-orange-400 text-sm" data-i18n="gmFashion">GM Fashion</span>
                 <span class="text-xs text-gray-400">12 Disasters</span>
             </a>
             <a href="/merch" class="dropdown-item highlight">
-                <span class="text-2xl mb-1">🛍️</span>
+                <svg class="nw-icon mb-1" width="28" height="28" style="fill:#a855f7"><use href="/static/icons/nw-icons.svg#shopping-bag"></use></svg>
                 <span class="font-bold text-purple-400 text-sm" data-i18n="exclusiveMerch">Merch</span>
                 <span class="text-xs text-yellow-400">Members Only</span>
             </a>
             <a href="/fortune" class="dropdown-item">
-                <span class="text-2xl mb-1">🔮</span>
+                <svg class="nw-icon mb-1" width="28" height="28" style="fill:#a855f7"><use href="/static/icons/nw-icons.svg#crystal-ball"></use></svg>
                 <span class="font-bold text-purple-400 text-sm" data-i18n="dailyFortune">Fortune</span>
                 <span class="text-xs text-purple-300">Daily Luck</span>
             </a>
             <a href="#roster" onclick="closeNavMenu()" class="dropdown-item">
-                <span class="text-2xl mb-1">👥</span>
+                <svg class="nw-icon mb-1" width="28" height="28" style="fill:#ff6b00"><use href="/static/icons/nw-icons.svg#users"></use></svg>
                 <span class="font-bold text-orange-400 text-sm" data-i18n="theFamily">Members</span>
                 <span class="text-xs text-gray-400">12 Family</span>
             </a>
             <a href="#gallery" onclick="closeNavMenu()" class="dropdown-item">
-                <span class="text-2xl mb-1">📸</span>
+                <svg class="nw-icon mb-1" width="28" height="28" style="fill:#ec4899"><use href="/static/icons/nw-icons.svg#camera"></use></svg>
                 <span class="font-bold text-orange-400 text-sm" data-i18n="shenanigans">Shenanigans</span>
                 <span class="text-xs text-gray-400">6 Photos</span>
             </a>
             <a href="#progress" onclick="closeNavMenu()" class="dropdown-item">
-                <span class="text-2xl mb-1">📈</span>
+                <svg class="nw-icon mb-1" width="28" height="28" style="fill:#22c55e"><use href="/static/icons/nw-icons.svg#chart"></use></svg>
                 <span class="font-bold text-orange-400 text-sm" data-i18n="roadToOne">Progress</span>
                 <span class="text-xs text-gray-400">Road to #1</span>
             </a>
             <a href="#progress" onclick="closeNavMenu()" class="dropdown-item">
-                <span class="text-2xl mb-1">🐉</span>
+                <svg class="nw-icon mb-1" width="28" height="28" style="fill:#ef4444"><use href="/static/icons/nw-icons.svg#dragon"></use></svg>
                 <span class="font-bold text-orange-400 text-sm" data-i18n="bossRaids">Boss Raids</span>
                 <span class="text-xs text-gray-400">24/35</span>
             </a>
             <a href="#about" onclick="closeNavMenu()" class="dropdown-item">
-                <span class="text-2xl mb-1">👑</span>
+                <svg class="nw-icon mb-1" width="28" height="28" style="fill:#ffd700"><use href="/static/icons/nw-icons.svg#crown"></use></svg>
                 <span class="font-bold text-orange-400 text-sm" data-i18n="guildMaster">Guild Master</span>
                 <span class="text-xs text-gray-400">RegginA</span>
             </a>
             <a href="#roster" onclick="closeNavMenu()" class="dropdown-item highlight">
-                <span class="text-2xl mb-1">🚀</span>
+                <svg class="nw-icon mb-1" width="28" height="28" style="fill:#ff6b00"><use href="/static/icons/nw-icons.svg#rocket"></use></svg>
                 <span class="font-bold text-orange-400 text-sm" data-i18n="joinUs">Join Us</span>
                 <span class="text-xs text-green-400">Recruiting!</span>
             </a>
@@ -1000,7 +1001,7 @@ app.get('/', (c) => {
                     <div>
                         <h3 class="text-2xl font-bold text-orange-400 mb-4">${iconStar()} <span data-i18n="guildMaster">Our Guild Master</span></h3>
                         <div class="flex items-center gap-4 mb-4">
-                            <span class="text-4xl">👑</span>
+                            <svg class="nw-icon" width="48" height="48" style="color:#ffd700"><use href="/static/icons/nw-icons.svg#crown"></use></svg>
                             <div>
                                 <p class="text-2xl font-bold text-white">RegginA</p>
                                 <p class="text-orange-300">Level 76 • CP: 2B 325M</p>
@@ -1051,7 +1052,7 @@ app.get('/', (c) => {
                 ${members.map((member, index) => `
                     <div class="member-card glass-card p-6 reveal" style="animation-delay: ${index * 0.1}s">
                         <div class="relative">
-                            ${index === 0 ? '<span class="crown">👑</span>' : ''}
+                            ${index === 0 ? '<span class="crown"><svg class="nw-icon" width="24" height="24" style="color:#ffd700"><use href="/static/icons/nw-icons.svg#crown"></use></svg></span>' : ''}
                             <div class="flex items-center gap-4 mb-4">
                                 ${member.avatar 
                                     ? `<img src="${member.avatar}" alt="${member.name}" class="w-16 h-16 rounded-full object-cover border-2 border-orange-500" loading="lazy" />`
@@ -1213,28 +1214,28 @@ app.get('/', (c) => {
                     <h3 class="text-xl font-bold mb-6">${iconMilestone()} <span data-i18n="milestones">Milestones</span></h3>
                     <div class="space-y-4">
                         <div class="flex items-center gap-4">
-                            <span class="text-2xl">✅</span>
+                            <svg class="nw-icon" width="28" height="28" style="color:#22c55e"><use href="/static/icons/nw-icons.svg#check-circle"></use></svg>
                             <div>
                                 <p class="font-bold text-orange-400">First 2B CP Member!</p>
                                 <p class="text-gray-400 text-sm">RegginA reached 2B 325M CP</p>
                             </div>
                         </div>
                         <div class="flex items-center gap-4">
-                            <span class="text-2xl">✅</span>
+                            <svg class="nw-icon" width="28" height="28" style="color:#22c55e"><use href="/static/icons/nw-icons.svg#check-circle"></use></svg>
                             <div>
                                 <p class="font-bold text-orange-400">12 Members Strong</p>
                                 <p class="text-gray-400 text-sm">Our family keeps growing!</p>
                             </div>
                         </div>
                         <div class="flex items-center gap-4">
-                            <span class="text-2xl">⏳</span>
+                            <svg class="nw-icon" width="28" height="28" style="color:#fbbf24"><use href="/static/icons/nw-icons.svg#clock"></use></svg>
                             <div>
                                 <p class="font-bold text-gray-400">Top 10 Server Ranking</p>
                                 <p class="text-gray-500 text-sm">Coming soon...</p>
                             </div>
                         </div>
                         <div class="flex items-center gap-4">
-                            <span class="text-2xl">⏳</span>
+                            <svg class="nw-icon" width="28" height="28" style="color:#fbbf24"><use href="/static/icons/nw-icons.svg#clock"></use></svg>
                             <div>
                                 <p class="font-bold text-gray-400">NumbahWan - #1 Guild</p>
                                 <p class="text-gray-500 text-sm">The ultimate goal!</p>
@@ -1682,66 +1683,86 @@ function generateEmblemSVG(className = 'emblem-n', size = 60) {
   `
 }
 
-// Custom SVG Icons
+// Custom SVG Icons - Using NumbahWan Guild Icon Sprite
+// All icons now reference /static/icons/nw-icons.svg for consistent guild branding
+function nwIcon(name, size = 20, extraClass = 'mr-2') {
+  return `<svg class="inline nw-icon ${extraClass}" width="${size}" height="${size}" aria-hidden="true"><use href="/static/icons/nw-icons.svg#${name}"></use></svg>`
+}
+
 function iconSword() {
-  return `<svg class="inline w-5 h-5 mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.5 17.5L3 6V3h3l11.5 11.5M13 19l6-6M17 15l4 4M19 9l-6 6"/></svg>`
+  return nwIcon('sword', 20)
 }
 
 function iconTrophy() {
-  return `<svg class="inline w-5 h-5 mr-2" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C13.1 2 14 2.9 14 4H19C19.55 4 20 4.45 20 5V8C20 10.21 18.21 12 16 12H15.92C15.43 13.68 13.99 14.96 12.24 15.24V17H14C15.1 17 16 17.9 16 19V20C16 20.55 15.55 21 15 21H9C8.45 21 8 20.55 8 20V19C8 17.9 8.9 17 10 17H11.76V15.24C10.01 14.96 8.57 13.68 8.08 12H8C5.79 12 4 10.21 4 8V5C4 4.45 4.45 4 5 4H10C10 2.9 10.9 2 12 2ZM6 6V8C6 9.1 6.9 10 8 10V6H6ZM16 10C17.1 10 18 9.1 18 8V6H16V10Z"/></svg>`
+  return nwIcon('trophy', 20)
 }
 
 function iconInfo() {
-  // No circle - just return empty string or a simple star/sparkle
-  return `<svg class="inline w-6 h-6 mr-2" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>`
+  return nwIcon('star', 24)
 }
 
 function iconUsers() {
-  return `<svg class="inline w-6 h-6 mr-2" viewBox="0 0 24 24" fill="currentColor"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5s-3 1.34-3 3 1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>`
+  return nwIcon('users', 24)
 }
 
 function iconPower() {
-  return `<svg class="inline w-4 h-4" viewBox="0 0 24 24" fill="currentColor"><path d="M13 3h-2v10h2V3zm4.83 2.17l-1.42 1.42C17.99 7.86 19 9.81 19 12c0 3.87-3.13 7-7 7s-7-3.13-7-7c0-2.19 1.01-4.14 2.58-5.42L6.17 5.17C4.23 6.82 3 9.26 3 12c0 4.97 4.03 9 9 9s9-4.03 9-9c0-2.74-1.23-5.18-3.17-6.83z"/></svg>`
+  return nwIcon('fire', 16, '')
 }
 
 function iconHeart() {
-  return `<svg class="inline w-4 h-4" viewBox="0 0 24 24" fill="currentColor"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>`
+  return nwIcon('heart', 16, '')
 }
 
 function iconUpgrade() {
-  return `<svg class="inline w-4 h-4" viewBox="0 0 24 24" fill="currentColor"><path d="M4 12l1.41 1.41L11 7.83V20h2V7.83l5.58 5.59L20 12l-8-8-8 8z"/></svg>`
+  return nwIcon('upvote', 16, '')
 }
 
 function iconStar() {
-  return `<svg class="inline w-5 h-5 mr-2" viewBox="0 0 24 24" fill="currentColor"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>`
+  return nwIcon('star', 20)
 }
 
 function iconRace() {
-  return `<svg class="inline w-6 h-6 mr-2" viewBox="0 0 24 24" fill="currentColor"><path d="M14.4 6L14 4H5v17h2v-7h5.6l.4 2h7V6z"/></svg>`
+  return nwIcon('flag', 24)
 }
 
 function iconTarget() {
-  return `<svg class="inline w-6 h-6 mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>`
+  return nwIcon('target', 24)
 }
 
 function iconLevel() {
-  return `<svg class="inline w-5 h-5 mr-2" viewBox="0 0 24 24" fill="currentColor"><path d="M19 5h-2V3H7v2H5c-1.1 0-2 .9-2 2v1c0 2.55 1.92 4.63 4.39 4.94.63 1.5 1.98 2.63 3.61 2.96V19H7v2h10v-2h-4v-3.1c1.63-.33 2.98-1.46 3.61-2.96C19.08 12.63 21 10.55 21 8V7c0-1.1-.9-2-2-2zM5 8V7h2v3.82C5.84 10.4 5 9.3 5 8zm14 0c0 1.3-.84 2.4-2 2.82V7h2v1z"/></svg>`
+  return nwIcon('trophy', 20)
 }
 
 function iconBoss() {
-  return `<svg class="inline w-5 h-5 mr-2" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>`
+  return nwIcon('skull', 20)
 }
 
 function iconMilestone() {
-  return `<svg class="inline w-5 h-5 mr-2" viewBox="0 0 24 24" fill="currentColor"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg>`
+  return nwIcon('flag', 20)
 }
 
 function iconCamera() {
-  return `<svg class="inline w-6 h-6 mr-2" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="3.2"/><path d="M9 2L7.17 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2h-3.17L15 2H9zm3 15c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5z"/></svg>`
+  return nwIcon('camera', 24)
 }
 
 function iconUpload() {
-  return `<svg class="inline w-5 h-5 mr-2" viewBox="0 0 24 24" fill="currentColor"><path d="M9 16h6v-6h4l-7-7-7 7h4zm-4 2h14v2H5z"/></svg>`
+  return nwIcon('upload', 20)
+}
+
+function iconCrown() {
+  return nwIcon('crown', 20)
+}
+
+function iconGaming() {
+  return nwIcon('gaming', 24)
+}
+
+function iconShield() {
+  return nwIcon('shield', 20)
+}
+
+function iconParty() {
+  return nwIcon('party', 20)
 }
 
 // API endpoint for member data
@@ -1831,6 +1852,38 @@ app.get('/fortune', async (c) => {
     // Fallback for local development
   }
   return c.redirect('/fortune.html')
+})
+
+// Meme Gallery page route
+app.get('/memes', async (c) => {
+  try {
+    // @ts-ignore - env is provided by Cloudflare Pages
+    const asset = await c.env?.ASSETS?.fetch(new Request('https://dummy/memes.html'))
+    if (asset) {
+      return new Response(asset.body, {
+        headers: { 'Content-Type': 'text/html; charset=utf-8' }
+      })
+    }
+  } catch (e) {
+    // Fallback for local development
+  }
+  return c.redirect('/memes.html')
+})
+
+// Guild Application page route
+app.get('/apply', async (c) => {
+  try {
+    // @ts-ignore - env is provided by Cloudflare Pages
+    const asset = await c.env?.ASSETS?.fetch(new Request('https://dummy/apply.html'))
+    if (asset) {
+      return new Response(asset.body, {
+        headers: { 'Content-Type': 'text/html; charset=utf-8' }
+      })
+    }
+  } catch (e) {
+    // Fallback for local development
+  }
+  return c.redirect('/apply.html')
 })
 
 export default app
