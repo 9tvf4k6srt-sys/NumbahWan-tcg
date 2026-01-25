@@ -1966,4 +1966,24 @@ app.get('/api/members', (c) => {
   return c.json({ members, sortedMembers })
 })
 
+// Regina page route - serves the static HTML file
+app.get('/regina', async (c) => {
+  // For Cloudflare Pages, we need to serve static HTML differently
+  // The regina.html is in public/ and will be served via the static file serving
+  try {
+    // @ts-ignore - env is provided by Cloudflare Pages
+    const asset = await c.env?.ASSETS?.fetch(new Request('https://dummy/regina.html'))
+    if (asset) {
+      return new Response(asset.body, {
+        headers: { 'Content-Type': 'text/html; charset=utf-8' }
+      })
+    }
+  } catch (e) {
+    // Fallback for local development - serve inline redirect
+  }
+  
+  // Fallback - redirect to static file
+  return c.redirect('/regina.html')
+})
+
 export default app
