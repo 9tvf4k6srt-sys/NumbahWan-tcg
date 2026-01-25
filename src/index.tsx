@@ -1727,13 +1727,16 @@ app.get('/', (c) => {
             hamburger.classList.remove('active');
         }
         
-        // ========== YOUTUBE BGM SYSTEM WITH LOADING/ERROR STATES ==========
+        // ========== YOUTUBE BGM SYSTEM WITH PERSISTENCE ==========
         const musicBtn = document.getElementById('music-btn');
         const speakerPath = document.getElementById('speaker-path');
         const ytContainer = document.getElementById('yt-bgm-container');
         let isMusicPlaying = false;
         let isLoading = false;
         let ytPlayer = null;
+        
+        // LocalStorage key for BGM state persistence
+        const BGM_STATE_KEY = 'numbahwan_bgm_enabled';
         
         // SVG paths for icons
         const SPEAKER_ON = "M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z";
@@ -1769,86 +1772,99 @@ app.get('/', (c) => {
         // YouTube API ready callback
         window.onYouTubeIframeAPIReady = function() {
             console.log('YouTube API Ready');
+            // Auto-start BGM if it was previously enabled
+            if (localStorage.getItem(BGM_STATE_KEY) === 'true') {
+                setTimeout(() => startMusic(), 500);
+            }
         };
         
-        function toggleMusic() {
-            if (isLoading) return; // Prevent double-clicks while loading
+        function startMusic() {
+            if (isLoading || isMusicPlaying) return;
             
-            if (!isMusicPlaying) {
-                // Show loading state
-                isLoading = true;
-                setButtonState('loading');
-                
-                // Create player container
-                ytContainer.innerHTML = '<div id="yt-player"></div>';
-                
-                // Set timeout for error detection
-                const loadTimeout = setTimeout(() => {
-                    if (isLoading) {
-                        console.error('YouTube load timeout');
-                        showError();
-                    }
-                }, 10000); // 10 second timeout
-                
-                try {
-                    ytPlayer = new YT.Player('yt-player', {
-                        height: '1',
-                        width: '1',
-                        videoId: 'QvSpcNrF7-E',
-                        playerVars: {
-                            autoplay: 1,
-                            loop: 1,
-                            playlist: 'QvSpcNrF7-E',
-                            controls: 0,
-                            disablekb: 1,
-                            fs: 0,
-                            modestbranding: 1,
-                            rel: 0
+            isLoading = true;
+            setButtonState('loading');
+            
+            // Create player container
+            ytContainer.innerHTML = '<div id="yt-player"></div>';
+            
+            // Set timeout for error detection
+            const loadTimeout = setTimeout(() => {
+                if (isLoading) {
+                    console.error('YouTube load timeout');
+                    showError();
+                }
+            }, 10000);
+            
+            try {
+                ytPlayer = new YT.Player('yt-player', {
+                    height: '1',
+                    width: '1',
+                    videoId: 'QvSpcNrF7-E',
+                    playerVars: {
+                        autoplay: 1,
+                        loop: 1,
+                        playlist: 'QvSpcNrF7-E',
+                        controls: 0,
+                        disablekb: 1,
+                        fs: 0,
+                        modestbranding: 1,
+                        rel: 0
+                    },
+                    events: {
+                        onReady: function(event) {
+                            clearTimeout(loadTimeout);
+                            isLoading = false;
+                            isMusicPlaying = true;
+                            event.target.setVolume(50);
+                            event.target.playVideo();
+                            setButtonState('playing');
+                            localStorage.setItem(BGM_STATE_KEY, 'true');
+                            console.log('Music started successfully');
                         },
-                        events: {
-                            onReady: function(event) {
+                        onStateChange: function(event) {
+                            if (event.data === YT.PlayerState.PLAYING) {
                                 clearTimeout(loadTimeout);
                                 isLoading = false;
                                 isMusicPlaying = true;
-                                event.target.setVolume(50);
-                                event.target.playVideo();
                                 setButtonState('playing');
-                                console.log('Music started successfully');
-                            },
-                            onStateChange: function(event) {
-                                // YT.PlayerState: PLAYING=1, PAUSED=2, ENDED=0
-                                if (event.data === YT.PlayerState.PLAYING) {
-                                    clearTimeout(loadTimeout);
-                                    isLoading = false;
-                                    isMusicPlaying = true;
-                                    setButtonState('playing');
-                                } else if (event.data === YT.PlayerState.ENDED) {
-                                    // Loop - replay
-                                    event.target.playVideo();
-                                }
-                            },
-                            onError: function(event) {
-                                clearTimeout(loadTimeout);
-                                console.error('YouTube Error:', event.data);
-                                showError();
+                            } else if (event.data === YT.PlayerState.ENDED) {
+                                event.target.playVideo();
                             }
+                        },
+                        onError: function(event) {
+                            clearTimeout(loadTimeout);
+                            console.error('YouTube Error:', event.data);
+                            showError();
                         }
-                    });
-                } catch (e) {
-                    clearTimeout(loadTimeout);
-                    console.error('Failed to create player:', e);
-                    showError();
-                }
+                    }
+                });
+            } catch (e) {
+                clearTimeout(loadTimeout);
+                console.error('Failed to create player:', e);
+                showError();
+            }
+        }
+        
+        function stopMusic() {
+            if (ytPlayer && ytPlayer.stopVideo) {
+                ytPlayer.stopVideo();
+                ytPlayer.destroy();
+            }
+            ytPlayer = null;
+            ytContainer.innerHTML = '';
+            isMusicPlaying = false;
+            isLoading = false;
+            setButtonState('muted');
+            localStorage.setItem(BGM_STATE_KEY, 'false');
+        }
+        
+        function toggleMusic() {
+            if (isLoading) return;
+            
+            if (!isMusicPlaying) {
+                startMusic();
             } else {
-                // Stop music
-                if (ytPlayer && ytPlayer.stopVideo) {
-                    ytPlayer.stopVideo();
-                    ytPlayer.destroy();
-                }
-                ytPlayer = null;
-                ytContainer.innerHTML = '';
-                isMusicPlaying = false;
-                setButtonState('muted');
+                stopMusic();
             }
         }
         
@@ -1857,8 +1873,8 @@ app.get('/', (c) => {
             isMusicPlaying = false;
             ytContainer.innerHTML = '';
             setButtonState('error');
+            localStorage.setItem(BGM_STATE_KEY, 'false');
             
-            // Reset to muted state after 3 seconds
             setTimeout(() => {
                 if (!isMusicPlaying && !isLoading) {
                     setButtonState('muted');
@@ -1866,7 +1882,7 @@ app.get('/', (c) => {
             }, 3000);
         }
         
-        // Click music button - always toggle music on/off
+        // Click music button
         musicBtn.addEventListener('click', (e) => {
             e.stopPropagation();
             toggleMusic();
