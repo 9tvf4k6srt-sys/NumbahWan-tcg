@@ -225,6 +225,7 @@ app.get('/', (c) => {
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
     <script src="/static/bgm.js" defer></script>
+    <script src="/static/click-juice.js" defer></script>
     <script src="/static/icons/icons.js" defer></script>
     <style>
         :root {
