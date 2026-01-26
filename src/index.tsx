@@ -1066,58 +1066,6 @@ app.get('/', (c) => {
                 </p>
             </div>
             
-            <!-- Live HP Bar - RegginA Status -->
-            <div class="max-w-md mx-auto mb-8" id="live-hp-container" data-nw-reveal="up" data-nw-delay="0.35s">
-                <div class="relative bg-gradient-to-b from-gray-700 to-gray-800 rounded-lg p-3 border-2 border-gray-600 shadow-lg" style="font-family: 'Arial', sans-serif;">
-                    <!-- Header Row -->
-                    <div class="flex items-center justify-between mb-2">
-                        <div class="flex items-center gap-2">
-                            <span class="text-pink-400 font-bold text-lg" style="text-shadow: 1px 1px 2px #000;">Lv. 78</span>
-                            <span class="text-white font-bold text-xl" style="text-shadow: 1px 1px 2px #000;">RegginA</span>
-                        </div>
-                        <div class="flex items-center gap-1 text-xs">
-                            <span id="combat-mode-icon">🌾</span>
-                            <span id="combat-mode-text" class="text-yellow-300 font-bold">Farming</span>
-                        </div>
-                    </div>
-                    
-                    <!-- HP Bar -->
-                    <div class="mb-1.5">
-                        <div class="flex items-center gap-2">
-                            <span class="text-orange-400 font-bold text-sm w-8">HP</span>
-                            <div class="flex-1 h-5 bg-gray-900 rounded-sm border border-gray-600 overflow-hidden relative">
-                                <div id="hp-bar-fill" class="h-full bg-gradient-to-b from-pink-400 via-pink-500 to-pink-600 transition-all duration-300 ease-out" style="width: 98%;"></div>
-                                <div class="absolute inset-0 bg-gradient-to-b from-white/20 to-transparent pointer-events-none"></div>
-                            </div>
-                        </div>
-                        <div class="text-right mt-0.5">
-                            <span id="hp-current" class="text-yellow-300 font-bold text-sm" style="text-shadow: 1px 1px 1px #000;">2012280</span>
-                            <span class="text-gray-400 text-sm">/</span>
-                            <span class="text-gray-300 text-sm">2046533</span>
-                        </div>
-                    </div>
-                    
-                    <!-- MP Bar -->
-                    <div>
-                        <div class="flex items-center gap-2">
-                            <span class="text-blue-400 font-bold text-sm w-8">MP</span>
-                            <div class="flex-1 h-4 bg-gray-900 rounded-sm border border-gray-600 overflow-hidden relative">
-                                <div id="mp-bar-fill" class="h-full bg-gradient-to-b from-cyan-400 via-cyan-500 to-cyan-600 transition-all duration-500" style="width: 73%;"></div>
-                                <div class="absolute inset-0 bg-gradient-to-b from-white/20 to-transparent pointer-events-none"></div>
-                            </div>
-                        </div>
-                        <div class="text-right mt-0.5">
-                            <span id="mp-current" class="text-cyan-300 font-bold text-xs">1203</span>
-                            <span class="text-gray-400 text-xs">/</span>
-                            <span class="text-gray-300 text-xs">1645</span>
-                        </div>
-                    </div>
-                    
-                    <!-- Combat Log -->
-                    <div id="combat-log" class="mt-2 text-[10px] text-gray-400 h-4 overflow-hidden text-center italic"></div>
-                </div>
-            </div>
-            
             <div class="flex flex-wrap justify-center gap-4 opacity-0" id="hero-buttons">
                 <button class="magnetic-btn nw-btn-shine" data-nw-magnetic data-nw-ripple onclick="document.getElementById('roster').scrollIntoView({behavior: 'smooth'})">
                     ${iconSword()} <span data-i18n="meetFamily">Meet The Family</span>
@@ -1168,6 +1116,51 @@ app.get('/', (c) => {
                                 <p class="text-orange-300">Level 76 • CP: 2B 325M</p>
                             </div>
                         </div>
+                        
+                        <!-- Live HP/MP Bars -->
+                        <div class="mb-4 relative" id="live-hp-container">
+                            <div class="bg-gradient-to-b from-gray-800/80 to-gray-900/80 rounded-lg p-3 border border-gray-600/50">
+                                <!-- Mode & Potion Indicator -->
+                                <div class="flex items-center justify-between mb-2">
+                                    <div class="flex items-center gap-2 text-xs">
+                                        <span id="combat-mode-icon">🌾</span>
+                                        <span id="combat-mode-text" class="text-yellow-300 font-bold">Farming</span>
+                                    </div>
+                                    <div id="potion-indicator" class="hidden items-center gap-1 text-xs animate-bounce">
+                                        <span>🧪</span>
+                                        <span class="text-green-400 font-bold">+20% HP</span>
+                                    </div>
+                                </div>
+                                
+                                <!-- HP Bar -->
+                                <div class="mb-2">
+                                    <div class="flex items-center gap-2">
+                                        <span class="text-pink-400 font-bold text-xs w-7">HP</span>
+                                        <div class="flex-1 h-4 bg-gray-900 rounded-sm border border-gray-600 overflow-hidden relative">
+                                            <div id="hp-bar-fill" class="h-full bg-gradient-to-b from-pink-400 via-pink-500 to-pink-600 transition-all duration-300" style="width: 98%;"></div>
+                                            <div class="absolute inset-0 bg-gradient-to-b from-white/20 to-transparent pointer-events-none"></div>
+                                        </div>
+                                        <span id="hp-current" class="text-yellow-300 font-bold text-xs w-24 text-right">2,012,280</span>
+                                    </div>
+                                </div>
+                                
+                                <!-- MP Bar -->
+                                <div class="mb-2">
+                                    <div class="flex items-center gap-2">
+                                        <span class="text-cyan-400 font-bold text-xs w-7">MP</span>
+                                        <div class="flex-1 h-3 bg-gray-900 rounded-sm border border-gray-600 overflow-hidden relative">
+                                            <div id="mp-bar-fill" class="h-full bg-gradient-to-b from-cyan-400 via-cyan-500 to-cyan-600 transition-all duration-300" style="width: 73%;"></div>
+                                            <div class="absolute inset-0 bg-gradient-to-b from-white/20 to-transparent pointer-events-none"></div>
+                                        </div>
+                                        <span id="mp-current" class="text-cyan-300 font-bold text-xs w-24 text-right">1,203</span>
+                                    </div>
+                                </div>
+                                
+                                <!-- Combat Log -->
+                                <div id="combat-log" class="text-[10px] text-gray-400 h-3 overflow-hidden text-center italic transition-opacity"></div>
+                            </div>
+                        </div>
+                        
                         <p class="text-gray-300 leading-relaxed" data-i18n="gmDesc">
                             The legendary leader of NumbahWan, RegginA leads by example - always at the frontline protecting the family.
                         </p>
@@ -1869,57 +1862,77 @@ app.get('/', (c) => {
             const MAX_HP = 2046533;
             const MAX_MP = 1645;
             const HEAL_RATE = 0.011; // 1.1% per second (Hero passive)
+            const POTION_HEAL = 0.20; // 20% HP heal
             
-            let currentHP = Math.floor(MAX_HP * 0.98);
-            let currentMP = 1203;
-            let combatMode = 'farming'; // farming, bossing, pvp
+            let currentHP = Math.floor(MAX_HP * 0.85);
+            let currentMP = Math.floor(MAX_MP * 0.65);
+            let combatMode = 'farming';
             let modeTimer = 0;
+            let potionTimer = 0;
+            let mpDrainPhase = true; // true = draining, false = refilling
             
             const modes = {
-                farming: { icon: '🌾', text: 'Farming', dmgMin: 5000, dmgMax: 25000, dmgFreq: 0.3, bigHitChance: 0.02 },
-                bossing: { icon: '🐉', text: 'Bossing', dmgMin: 50000, dmgMax: 200000, dmgFreq: 0.5, bigHitChance: 0.15 },
-                pvp: { icon: '⚔️', text: 'PvP', dmgMin: 30000, dmgMax: 150000, dmgFreq: 0.4, bigHitChance: 0.1 }
+                farming: { icon: '🌾', text: 'Farming', dmgMin: 8000, dmgMax: 35000, dmgFreq: 0.25, bigHitChance: 0.03 },
+                bossing: { icon: '🐉', text: 'Bossing', dmgMin: 80000, dmgMax: 250000, dmgFreq: 0.4, bigHitChance: 0.12 },
+                pvp: { icon: '⚔️', text: 'PvP', dmgMin: 50000, dmgMax: 180000, dmgFreq: 0.35, bigHitChance: 0.08 }
             };
             
             const combatLogs = {
-                farming: ['Slaying mobs...', 'Exp +1,250', 'Meso +3,420', 'Auto-battle active', 'Combo x15!', 'Drop acquired!'],
-                bossing: ['Dodge!', 'Boss enraged!', 'CRITICAL HIT!', 'Potion used', 'Revive ready', 'Phase 2...', '⚠️ BIG ATTACK'],
-                pvp: ['Clash!', 'Combo breaker!', 'Counter attack!', 'Shield up!', 'Ultimate ready!', 'Enemy retreating']
+                farming: ['Slaying mobs...', 'Exp +1,250', 'Meso +3,420', 'Auto-battle ✓', 'Combo x15!', 'Drop! 📦'],
+                bossing: ['Dodge! 💨', 'Boss enraged!', '💥 CRIT!', 'Phase 2...', '⚠️ AOE incoming!', 'Bind success!'],
+                pvp: ['Clash! ⚔️', 'Counter!', 'Shield up! 🛡️', 'Ultimate ready!', 'Enemy stunned!', 'Combo break!']
             };
             
             function updateDisplay() {
                 const hpPercent = (currentHP / MAX_HP) * 100;
                 const mpPercent = (currentMP / MAX_MP) * 100;
                 
-                document.getElementById('hp-bar-fill').style.width = hpPercent + '%';
-                document.getElementById('mp-bar-fill').style.width = mpPercent + '%';
+                const hpFill = document.getElementById('hp-bar-fill');
+                const mpFill = document.getElementById('mp-bar-fill');
+                if (!hpFill || !mpFill) return;
+                
+                hpFill.style.width = hpPercent + '%';
+                mpFill.style.width = mpPercent + '%';
                 document.getElementById('hp-current').textContent = currentHP.toLocaleString();
                 document.getElementById('mp-current').textContent = currentMP.toLocaleString();
                 
-                // Color change when low HP
-                const hpBar = document.getElementById('hp-bar-fill');
+                // HP bar color based on health
                 if (hpPercent < 30) {
-                    hpBar.className = 'h-full bg-gradient-to-b from-red-400 via-red-500 to-red-600 transition-all duration-300 ease-out';
+                    hpFill.className = 'h-full bg-gradient-to-b from-red-400 via-red-500 to-red-600 transition-all duration-300';
                 } else if (hpPercent < 50) {
-                    hpBar.className = 'h-full bg-gradient-to-b from-orange-400 via-orange-500 to-orange-600 transition-all duration-300 ease-out';
+                    hpFill.className = 'h-full bg-gradient-to-b from-orange-400 via-orange-500 to-orange-600 transition-all duration-300';
                 } else {
-                    hpBar.className = 'h-full bg-gradient-to-b from-pink-400 via-pink-500 to-pink-600 transition-all duration-300 ease-out';
+                    hpFill.className = 'h-full bg-gradient-to-b from-pink-400 via-pink-500 to-pink-600 transition-all duration-300';
                 }
             }
             
             function showCombatLog(msg) {
                 const log = document.getElementById('combat-log');
+                if (!log) return;
                 log.textContent = msg;
                 log.style.opacity = '1';
-                setTimeout(() => { log.style.opacity = '0.6'; }, 500);
+                setTimeout(() => { log.style.opacity = '0.5'; }, 800);
+            }
+            
+            function showPotion() {
+                const indicator = document.getElementById('potion-indicator');
+                if (!indicator) return;
+                indicator.classList.remove('hidden');
+                indicator.classList.add('flex');
+                setTimeout(() => {
+                    indicator.classList.add('hidden');
+                    indicator.classList.remove('flex');
+                }, 1500);
             }
             
             function switchMode() {
                 const modeKeys = Object.keys(modes);
                 combatMode = modeKeys[Math.floor(Math.random() * modeKeys.length)];
                 const mode = modes[combatMode];
-                document.getElementById('combat-mode-icon').textContent = mode.icon;
-                document.getElementById('combat-mode-text').textContent = mode.text;
+                const modeIcon = document.getElementById('combat-mode-icon');
+                const modeText = document.getElementById('combat-mode-text');
+                if (modeIcon) modeIcon.textContent = mode.icon;
+                if (modeText) modeText.textContent = mode.text;
             }
             
             function simulate() {
@@ -1935,24 +1948,45 @@ app.get('/', (c) => {
                     
                     // Big hit chance
                     if (Math.random() < mode.bigHitChance) {
-                        dmg = Math.floor(dmg * 3);
-                        showCombatLog('💥 CRITICAL HIT! -' + dmg.toLocaleString());
-                    } else if (Math.random() < 0.3) {
+                        dmg = Math.floor(dmg * 2.5);
+                        showCombatLog('💥 -' + dmg.toLocaleString() + ' CRIT!');
+                    } else if (Math.random() < 0.25) {
                         const logs = combatLogs[combatMode];
                         showCombatLog(logs[Math.floor(Math.random() * logs.length)]);
                     }
                     
-                    currentHP = Math.max(Math.floor(MAX_HP * 0.15), currentHP - dmg); // Never below 15%
+                    currentHP = Math.max(Math.floor(MAX_HP * 0.12), currentHP - dmg);
                 }
                 
-                // MP fluctuation
-                if (Math.random() < 0.1) {
-                    currentMP = Math.max(500, Math.min(MAX_MP, currentMP + Math.floor(Math.random() * 200 - 100)));
+                // Potion every 8-11 seconds (80-110 ticks)
+                potionTimer++;
+                if (potionTimer > (80 + Math.random() * 30)) {
+                    const potionHeal = Math.floor(MAX_HP * POTION_HEAL);
+                    currentHP = Math.min(MAX_HP, currentHP + potionHeal);
+                    showPotion();
+                    showCombatLog('🧪 Potion! +' + potionHeal.toLocaleString() + ' HP');
+                    potionTimer = 0;
                 }
                 
-                // Mode switch every 15-30 seconds
+                // MP drain/refill cycle (drain to <40%, then refill to 100%)
+                if (mpDrainPhase) {
+                    // Drain MP gradually
+                    currentMP = Math.max(0, currentMP - Math.floor(Math.random() * 15 + 5));
+                    if (currentMP < MAX_MP * 0.35) {
+                        mpDrainPhase = false; // Start refilling
+                        showCombatLog('💙 MP Restore!');
+                    }
+                } else {
+                    // Refill MP quickly
+                    currentMP = Math.min(MAX_MP, currentMP + Math.floor(Math.random() * 80 + 40));
+                    if (currentMP >= MAX_MP * 0.98) {
+                        mpDrainPhase = true; // Start draining again
+                    }
+                }
+                
+                // Mode switch every 20-40 seconds
                 modeTimer++;
-                if (modeTimer > (150 + Math.random() * 150)) {
+                if (modeTimer > (200 + Math.random() * 200)) {
                     switchMode();
                     modeTimer = 0;
                 }
