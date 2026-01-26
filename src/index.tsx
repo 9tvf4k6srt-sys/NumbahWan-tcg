@@ -5,6 +5,7 @@ import { serveStatic } from 'hono/cloudflare-pages'
 import rosterData from './data/roster.json'
 import photosData from './data/photos.json'
 import translationsData from './data/translations.json'
+import performanceData from './data/performance.json'
 
 const app = new Hono()
 
@@ -31,6 +32,12 @@ app.get('/api/roster', (c) => {
 app.get('/api/photos', (c) => {
   c.header('Cache-Control', 'public, max-age=3600, stale-while-revalidate=86400')
   return c.json(photosData)
+})
+
+// API: Get performance tracking data (snapshots, gains, commentary)
+app.get('/api/performance', (c) => {
+  c.header('Cache-Control', 'public, max-age=300, stale-while-revalidate=3600')
+  return c.json(performanceData)
 })
 
 // ============================================================================
@@ -975,7 +982,7 @@ app.get('/', (c) => {
                             <svg class="nw-icon" width="48" height="48" style="color:#ffd700"><use href="/static/icons/nw-icons.svg#crown"></use></svg>
                             <div>
                                 <p class="text-2xl font-bold text-white">RegginA</p>
-                                <p class="text-orange-300">Level 76 • CP: 2B 325M</p>
+                                <p class="text-orange-300">Level 78 • CP: 3B 521M</p>
                             </div>
                         </div>
                         
@@ -1122,7 +1129,34 @@ app.get('/', (c) => {
             <h2 class="text-4xl font-bold text-center mb-4 neon-orange reveal">
                 ${iconRace()} <span data-i18n="cpLeaderboard">CP Race</span>
             </h2>
-            <p class="text-center text-orange-300 mb-12 reveal" data-i18n="leaderboardDesc">Who's the strongest?</p>
+            <p class="text-center text-orange-300 mb-8 reveal" data-i18n="leaderboardDesc">Who's the strongest?</p>
+            
+            <!-- Weekly Highlights Banner -->
+            <div class="glass-card p-6 mb-8 bg-gradient-to-r from-orange-900/30 via-yellow-900/20 to-orange-900/30 border border-orange-500/50" data-nw-reveal="slide">
+                <div class="text-center mb-4">
+                    <p class="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-orange-400 via-yellow-300 to-orange-400">
+                        🔥 ${performanceData.commentary.headline} 🔥
+                    </p>
+                    <p class="text-gray-400 text-sm mt-1">${performanceData.commentary.subheadline}</p>
+                </div>
+                <div class="grid md:grid-cols-3 gap-4 mt-4">
+                    <div class="text-center p-3 bg-black/30 rounded-lg">
+                        <p class="text-xs text-gray-500 mb-1">🏆 Weekly MVP</p>
+                        <p class="text-lg font-bold text-yellow-400">${performanceData.weeklyHighlights.mvp}</p>
+                        <p class="text-green-400 text-sm">${performanceData.weeklyHighlights.mvpGain}</p>
+                    </div>
+                    <div class="text-center p-3 bg-black/30 rounded-lg">
+                        <p class="text-xs text-gray-500 mb-1">📈 Guild Growth</p>
+                        <p class="text-lg font-bold text-orange-400">${performanceData.weeklyHighlights.totalGuildGain}</p>
+                        <p class="text-green-400 text-sm">${performanceData.weeklyHighlights.totalGuildGainPercent}</p>
+                    </div>
+                    <div class="text-center p-3 bg-black/30 rounded-lg">
+                        <p class="text-xs text-gray-500 mb-1">😴 Slacker Award</p>
+                        <p class="text-lg font-bold text-gray-400">${performanceData.weeklyHighlights.slacker}</p>
+                        <p class="text-red-400 text-sm">+0% gains</p>
+                    </div>
+                </div>
+            </div>
             
             <div class="glass-card p-8 nw-border-animated" data-nw-reveal="scale">
                 <!-- Race Bulletin Header -->
@@ -1172,12 +1206,12 @@ app.get('/', (c) => {
                 <div class="mt-8 pt-6 border-t border-orange-500/30 grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
                     <div class="glass-card p-3">
                         <div class="text-2xl">🔥</div>
-                        <div class="text-green-400 font-bold">+2.1B</div>
+                        <div class="text-green-400 font-bold">${performanceData.weeklyHighlights.totalGuildGain}</div>
                         <div class="text-xs text-gray-400">Total Gain</div>
                     </div>
                     <div class="glass-card p-3">
                         <div class="text-2xl">🚀</div>
-                        <div class="text-yellow-400 font-bold">Yuluner晴</div>
+                        <div class="text-yellow-400 font-bold">${performanceData.weeklyHighlights.mostImproved}</div>
                         <div class="text-xs text-gray-400">Biggest Jump</div>
                     </div>
                     <div class="glass-card p-3">
@@ -1278,15 +1312,15 @@ app.get('/', (c) => {
                         <div class="flex items-center gap-4">
                             <svg class="nw-icon" width="28" height="28" style="color:#22c55e"><use href="/static/icons/nw-icons.svg#check-circle"></use></svg>
                             <div>
-                                <p class="font-bold text-orange-400">First 2B CP Member!</p>
-                                <p class="text-gray-400 text-sm">RegginA reached 2B 325M CP</p>
+                                <p class="font-bold text-orange-400">First 3B CP Member! 🔥</p>
+                                <p class="text-gray-400 text-sm">RegginA smashed through 3B 521M CP (Jan 2026)</p>
                             </div>
                         </div>
                         <div class="flex items-center gap-4">
                             <svg class="nw-icon" width="28" height="28" style="color:#22c55e"><use href="/static/icons/nw-icons.svg#check-circle"></use></svg>
                             <div>
-                                <p class="font-bold text-orange-400">12 Members Strong</p>
-                                <p class="text-gray-400 text-sm">Our family keeps growing!</p>
+                                <p class="font-bold text-orange-400">9 Active Members</p>
+                                <p class="text-gray-400 text-sm">Quality over quantity - the grinders stay!</p>
                             </div>
                         </div>
                         <div class="flex items-center gap-4">
