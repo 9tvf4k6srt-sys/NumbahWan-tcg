@@ -192,15 +192,16 @@ const translations = {
 }
 
 app.get('/', (c) => {
-  return c.html(`
-<!DOCTYPE html>
+  return c.html(`<!DOCTYPE html>
 <html lang="en">
 <head>
+    <!-- FIRST PAINT LOADER - renders before anything else, even before charset -->
+    <style>*{margin:0;padding:0}html,body{background:#0a0a0f}#fp{position:fixed;inset:0;background:#0a0a0f;z-index:999999;display:flex;align-items:center;justify-content:center}#fp svg{width:80px;height:80px;animation:fpp 1.5s ease-in-out infinite}@keyframes fpp{0%,100%{transform:scale(1);filter:drop-shadow(0 0 15px #ff6b00)}50%{transform:scale(1.15);filter:drop-shadow(0 0 30px #ffd700)}}.fp-hide{display:none!important}</style>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=5.0, user-scalable=yes">
     <title>NumbahWan Guild | MapleStory Idle RPG</title>
     <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
-    <!-- INSTANT LOADING SCREEN - renders immediately before any external resources -->
+    <!-- FULL LOADING SCREEN - replaces first-paint loader -->
     <style id="instant-loader-styles">
       #instant-loader{position:fixed;top:0;left:0;width:100%;height:100%;background:linear-gradient(135deg,#0a0a0f 0%,#1a1a2e 50%,#0a0a0f 100%);z-index:999999;display:flex;flex-direction:column;align-items:center;justify-content:center;transition:opacity .5s,visibility .5s}
       #instant-loader.hidden{opacity:0;visibility:hidden;pointer-events:none}
@@ -212,13 +213,14 @@ app.get('/', (c) => {
       .il-ring-1{width:150px;height:150px;animation:ilSpin 3s linear infinite}
       .il-ring-2{width:170px;height:170px;animation:ilSpin 4s linear infinite reverse;border-top-color:#ffd700;border-right-color:#ff6b00}
       @keyframes ilSpin{0%{transform:rotate(0)}100%{transform:rotate(360deg)}}
-      .il-title{font-family:'Orbitron',Arial,sans-serif;font-size:clamp(1.2rem,4vw,2rem);font-weight:700;background:linear-gradient(180deg,#ffcc70 0%,#ff9500 30%,#ff6b00 60%,#cc4400 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-top:30px;animation:ilGlow 2s ease-in-out infinite}
+      .il-title{font-family:Arial,sans-serif;font-size:clamp(1.2rem,4vw,2rem);font-weight:700;background:linear-gradient(180deg,#ffcc70 0%,#ff9500 30%,#ff6b00 60%,#cc4400 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-top:30px;animation:ilGlow 2s ease-in-out infinite}
       @keyframes ilGlow{0%,100%{filter:drop-shadow(0 0 10px rgba(255,107,0,.8))}50%{filter:drop-shadow(0 0 20px rgba(255,215,0,1))}}
       .il-dots{display:flex;gap:8px;margin-top:20px}
       .il-dot{width:10px;height:10px;background:#ff6b00;border-radius:50%;animation:ilBounce 1.4s ease-in-out infinite;box-shadow:0 0 10px #ff6b00}
       .il-dot:nth-child(2){animation-delay:.2s;background:#ffd700;box-shadow:0 0 10px #ffd700}
       .il-dot:nth-child(3){animation-delay:.4s}
       @keyframes ilBounce{0%,80%,100%{transform:scale(0)}40%{transform:scale(1)}}
+      #fp{display:none}
     </style>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
@@ -849,7 +851,9 @@ app.get('/', (c) => {
     </style>
 </head>
 <body>
-    <!-- INSTANT LOADING SCREEN - shows immediately before anything else loads -->
+    <!-- FIRST PAINT LOADER - ultra minimal, shows in first bytes -->
+    <div id="fp"><svg viewBox="0 0 100 100"><defs><linearGradient id="ng" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#ffcc70"/><stop offset="50%" stop-color="#ff6b00"/><stop offset="100%" stop-color="#8B4513"/></linearGradient></defs><rect x="10" y="8" width="24" height="84" rx="3" fill="url(#ng)"/><rect x="66" y="8" width="24" height="84" rx="3" fill="url(#ng)"/><polygon points="10,8 34,8 90,92 66,92" fill="url(#ng)"/></svg></div>
+    <!-- FULL LOADING SCREEN - replaces first paint once styles load -->
     <div id="instant-loader">
         <div class="il-aurora"></div>
         <div style="position:relative;display:flex;flex-direction:column;align-items:center;z-index:10">
@@ -868,7 +872,9 @@ app.get('/', (c) => {
         </div>
     </div>
     <script>
-        // Hide loader when page is ready (min 500ms display time)
+        // Hide first-paint loader immediately (full loader takes over)
+        var fp=document.getElementById('fp');if(fp)fp.style.display='none';
+        // Hide full loader when page is ready (min 500ms display time)
         (function(){
             var startTime = Date.now();
             var minDisplay = 500;
@@ -881,6 +887,8 @@ app.get('/', (c) => {
                         loader.classList.add('hidden');
                         setTimeout(function() { loader.remove(); }, 500);
                     }
+                    var fp = document.getElementById('fp');
+                    if (fp) fp.remove();
                 }, remaining);
             }
             if (document.readyState === 'complete') { hideLoader(); }
