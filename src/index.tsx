@@ -958,7 +958,7 @@ app.get('/', (c) => {
                         </button>
                     </div>
                 </div>
-                <button class="magnetic-btn text-xs sm:text-sm px-3 py-2" onclick="document.getElementById('roster').scrollIntoView({behavior: 'smooth'})" data-i18n="joinUs">
+                <button class="magnetic-btn text-xs sm:text-sm px-3 py-2" onclick="window.location.href='/apply'" data-i18n="joinUs">
                     Join Us
                 </button>
             </div>
