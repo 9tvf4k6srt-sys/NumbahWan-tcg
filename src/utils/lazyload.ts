@@ -126,3 +126,54 @@ export function lazyImage(
     loading="lazy"
   />`
 }
+
+/**
+ * Generate responsive image with srcset
+ * For optimal loading across different screen sizes
+ */
+export function responsiveImage(
+  src: string,
+  alt: string,
+  sizes: string = '(max-width: 768px) 100vw, 50vw',
+  className: string = ''
+): string {
+  // Generate srcset for common breakpoints
+  // Assumes images follow naming: image.jpg -> image-400w.jpg, image-800w.jpg etc
+  const baseName = src.replace(/\.(jpg|png|webp)$/, '')
+  const ext = src.match(/\.(jpg|png|webp)$/)?.[0] || '.jpg'
+  
+  return `<img 
+    src="${src}" 
+    srcset="${baseName}-400w${ext} 400w, ${baseName}-800w${ext} 800w, ${src} 1200w"
+    sizes="${sizes}"
+    alt="${alt}" 
+    class="${className}"
+    loading="lazy"
+  />`
+}
+
+// CSS for optimized image display
+export const imageOptimizationStyles = `
+<style>
+/* Image Optimization Styles */
+img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+
+/* Aspect ratio containers for CLS prevention */
+.aspect-video { aspect-ratio: 16/9; }
+.aspect-square { aspect-ratio: 1/1; }
+.aspect-portrait { aspect-ratio: 3/4; }
+
+/* Object fit utilities */
+.img-cover { object-fit: cover; }
+.img-contain { object-fit: contain; }
+
+/* Prevent layout shift */
+.img-placeholder {
+  background: linear-gradient(135deg, rgba(255,107,0,0.1) 0%, rgba(255,107,0,0.05) 100%);
+}
+</style>
+`
