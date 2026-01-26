@@ -7,47 +7,64 @@ const app = new Hono()
 app.use('/static/*', serveStatic())
 
 // ============================================================================
-// MEMBER ROSTER DATA - Last Updated: 2026-01-24
+// MEMBER ROSTER DATA - Last Updated: 2026-01-26
 // ============================================================================
 // Avatar naming convention: avatar-[username]-[description].jpg
 // All avatars stored in /public/static/ with meaningful names for easy debugging
 // ============================================================================
+
+// Previous CP values for tracking gains (from 2026-01-24)
+const previousCP: Record<string, number> = {
+  "RegginA": 2382000000,
+  "Yuluner晴": 1247000000,
+  "Natehouoho": 959627000,
+  "RegginO": 566603000,
+  "騎鳥回家": 354744000,
+  "紈稀税著": 458115000,
+  "阿光Yo": 144110000,
+  "碼農小孫": 22566000,
+  "泰拳寒玉": 7567864,
+  "TW#VWQG7R9C03": 99969000,
+  "小亨寶寶": 13174000,
+  "葉陽": 2572190,
+}
+
 const members = [
   // Master - RegginA: White masked warrior, alpha leader
-  { name: "RegginA", level: 77, cp: "2B 382M", cpValue: 2382000000, contribution: 2180, upgrade: 3, role: "Master", online: false, daysAgo: "Today", avatar: "/static/avatar-reggina-master-masked-warrior.jpg" },
+  { name: "RegginA", level: 77, cp: "2B 867M", cpValue: 2867000000, contribution: 560, upgrade: 10, role: "Master", online: true, daysAgo: null, avatar: "/static/avatar-reggina-master-masked-warrior.jpg" },
   
   // Yuluner晴: 晴 = sunny/clear - Bright cheerful sun theme
-  { name: "Yuluner晴", level: 75, cp: "1B 247M", cpValue: 1247000000, contribution: 1100, upgrade: 3, role: "Guild Member", online: false, daysAgo: "Today", avatar: "/static/avatar-yuluner-sunny-cheerful.jpg" },
-  
-  // 泰拳寒玉: Thai Boxing + Cold Jade - Martial artist ice theme
-  { name: "泰拳寒玉", level: 49, cp: "7,567,864", cpValue: 7567864, contribution: 990, upgrade: 10, role: "Guild Member", online: false, daysAgo: "1d", avatar: "/static/avatar-taiquanhanyu-thaiboxer-jade.jpg" },
-  
-  // Vice Master - RegginO: Pink hair with flower crown
-  { name: "RegginO", level: 73, cp: "566M 603K", cpValue: 566603000, contribution: 2020, upgrade: 3, role: "Vice Master", online: true, daysAgo: null, avatar: "/static/avatar-reggino-vicemaster-pinkhair.jpg" },
-  
-  // 阿光Yo: 光 = light - Glowing light mage
-  { name: "阿光Yo", level: 67, cp: "144M 110K", cpValue: 144110000, contribution: 780, upgrade: 0, role: "Guild Member", online: false, daysAgo: "1d", avatar: "/static/avatar-aguangyo-light-mage.jpg" },
+  { name: "Yuluner晴", level: 76, cp: "2B 328M", cpValue: 2328000000, contribution: 230, upgrade: 3, role: "Guild Member", online: false, daysAgo: "Today", avatar: "/static/avatar-yuluner-sunny-cheerful.jpg" },
   
   // Natehouoho: Playful fun adventurer
-  { name: "Natehouoho", level: 72, cp: "959M 627K", cpValue: 959627000, contribution: 320, upgrade: 3, role: "Guild Member", online: true, daysAgo: null, avatar: "/static/avatar-natehouoho-playful-adventurer.jpg" },
+  { name: "Natehouoho", level: 74, cp: "1B 197M", cpValue: 1197000000, contribution: 0, upgrade: 0, role: "Guild Member", online: true, daysAgo: null, avatar: "/static/avatar-natehouoho-playful-adventurer.jpg" },
   
-  // 紈稻税著 (Leader): Sleepy gamer falling asleep with phone
-  { name: "紈稻税著", level: 71, cp: "458M 115K", cpValue: 458115000, contribution: 2560, upgrade: 0, role: "領導", online: false, daysAgo: "1d", avatar: "/static/avatar-wandaoshuizhu-sleepy-gamer.jpg" },
-  
-  // 碼農小孫: 碼農 = programmer/coder - Tech geek with glasses
-  { name: "碼農小孫", level: 61, cp: "22M 566K", cpValue: 22566000, contribution: 150, upgrade: 0, role: "Guild Member", online: false, daysAgo: "Today", avatar: "/static/avatar-manongxiaosun-programmer.jpg" },
+  // Vice Master - RegginO: Pink hair with flower crown
+  { name: "RegginO", level: 74, cp: "960M 2K", cpValue: 960002000, contribution: 560, upgrade: 10, role: "Vice Master", online: false, daysAgo: "Today", avatar: "/static/avatar-reggino-vicemaster-pinkhair.jpg" },
   
   // 騎鳥回家: "Riding bird home" - Character on bird mount
-  { name: "騎鳥回家", level: 70, cp: "354M 744K", cpValue: 354744000, contribution: 990, upgrade: 10, role: "Guild Member", online: false, daysAgo: "Today", avatar: "/static/avatar-qiniaohuijia-riding-bird.jpg" },
+  { name: "騎鳥回家", level: 71, cp: "593M 939K", cpValue: 593939000, contribution: 520, upgrade: 10, role: "Guild Member", online: false, daysAgo: "Today", avatar: "/static/avatar-qiniaohuijia-riding-bird.jpg" },
+  
+  // 紈稀税著 (領導): Sleepy gamer falling asleep with phone
+  { name: "紈稀税著", level: 72, cp: "562M 108K", cpValue: 562108000, contribution: 500, upgrade: 10, role: "領導", online: false, daysAgo: "Today", avatar: "/static/avatar-wandaoshuizhu-sleepy-gamer.jpg" },
+  
+  // 阿光Yo: 光 = light - Glowing light mage
+  { name: "阿光Yo", level: 67, cp: "180M 315K", cpValue: 180315000, contribution: 190, upgrade: 3, role: "Guild Member", online: true, daysAgo: null, avatar: "/static/avatar-aguangyo-light-mage.jpg" },
   
   // TW#VWQG7R9C03: Random ID - Mystery anonymous character
-  { name: "TW#VWQG7R9C03", level: 65, cp: "99M 969K", cpValue: 99969000, contribution: 0, upgrade: 0, role: "Guild Member", online: false, daysAgo: "6d", avatar: "/static/avatar-twvwqg-mystery-anonymous.jpg" },
+  { name: "TW#VWQG7R9C03", level: 65, cp: "99M 969K", cpValue: 99969000, contribution: 0, upgrade: 0, role: "Guild Member", online: false, daysAgo: "8d", avatar: "/static/avatar-twvwqg-mystery-anonymous.jpg" },
+  
+  // 碼農小孫: 碼農 = programmer/coder - Tech geek with glasses
+  { name: "碼農小孫", level: 62, cp: "31M 4K", cpValue: 31004000, contribution: 0, upgrade: 0, role: "Guild Member", online: false, daysAgo: "Today", avatar: "/static/avatar-manongxiaosun-programmer.jpg" },
+  
+  // 泰拳寒玉: Thai Boxing + Cold Jade - Martial artist ice theme
+  { name: "泰拳寒玉", level: 52, cp: "15M 329K", cpValue: 15329000, contribution: 190, upgrade: 3, role: "Guild Member", online: false, daysAgo: "Today", avatar: "/static/avatar-taiquanhanyu-thaiboxer-jade.jpg" },
   
   // 小亨寶寶: 寶寶 = baby - Adorable cute baby character
-  { name: "小亨寶寶", level: 54, cp: "13M 174K", cpValue: 13174000, contribution: 0, upgrade: 0, role: "Guild Member", online: false, daysAgo: "15d", avatar: "/static/avatar-xiaohengbaobao-baby-cute.jpg" },
+  { name: "小亨寶寶", level: 54, cp: "13M 174K", cpValue: 13174000, contribution: 0, upgrade: 0, role: "Guild Member", online: false, daysAgo: "17d", avatar: "/static/avatar-xiaohengbaobao-baby-cute.jpg" },
   
   // 葉陽: 葉 = leaf, 陽 = sun - Nature druid with sun aura
-  { name: "葉陽", level: 46, cp: "2,572,190", cpValue: 2572190, contribution: 0, upgrade: 0, role: "Guild Member", online: false, daysAgo: "16d", avatar: "/static/avatar-yeyang-leaf-sun-nature.jpg" },
+  { name: "葉陽", level: 46, cp: "2,572,190", cpValue: 2572190, contribution: 0, upgrade: 0, role: "Guild Member", online: false, daysAgo: "18d", avatar: "/static/avatar-yeyang-leaf-sun-nature.jpg" },
 ]
 
 // Sort by CP for leaderboard
@@ -1175,26 +1192,71 @@ app.get('/', (c) => {
             <p class="text-center text-orange-300 mb-12 reveal" data-i18n="leaderboardDesc">Who's the strongest?</p>
             
             <div class="glass-card p-8 reveal">
-                <div class="space-y-6">
+                <!-- Race Bulletin Header -->
+                <div class="flex justify-between items-center mb-6 pb-4 border-b border-orange-500/30">
+                    <span class="text-sm text-gray-400">📅 Updated: 2026-01-26</span>
+                    <span class="text-sm text-green-400">📈 vs 2026-01-24</span>
+                </div>
+                
+                <div class="space-y-4">
                     ${sortedMembers.map((member, index) => {
                         const percentage = (member.cpValue / maxCP) * 100
                         const medal = index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : `#${index + 1}`
+                        const prevCP = previousCP[member.name] || member.cpValue
+                        const cpGain = member.cpValue - prevCP
+                        const cpGainPercent = prevCP > 0 ? ((cpGain / prevCP) * 100).toFixed(1) : 0
+                        const gainDisplay = cpGain > 0 
+                          ? `<span class="text-green-400 text-xs font-bold animate-pulse">▲ +${cpGain >= 1000000000 ? (cpGain/1000000000).toFixed(1) + 'B' : cpGain >= 1000000 ? (cpGain/1000000).toFixed(0) + 'M' : (cpGain/1000).toFixed(0) + 'K'} (${cpGainPercent}%)</span>`
+                          : cpGain < 0
+                          ? `<span class="text-red-400 text-xs">▼ ${(cpGain/1000000).toFixed(0)}M</span>`
+                          : `<span class="text-gray-500 text-xs">— 0%</span>`
                         return `
-                        <div class="cp-race-item" data-percentage="${percentage}">
+                        <div class="cp-race-item relative" data-percentage="${percentage}">
                             <div class="flex items-center justify-between mb-2">
                                 <div class="flex items-center gap-3">
-                                    <span class="text-xl w-8">${medal}</span>
-                                    <span class="font-bold">${member.name}</span>
-                                    <span class="text-gray-500 text-sm">Lv.${member.level}</span>
+                                    <span class="text-2xl w-10 text-center">${medal}</span>
+                                    <img src="${member.avatar}" class="w-10 h-10 rounded-full border-2 ${member.online ? 'border-green-400' : 'border-gray-600'}" alt="${member.name}" onerror="this.src='/static/favicon.svg'">
+                                    <div class="flex flex-col">
+                                        <span class="font-bold">${member.name}</span>
+                                        <span class="text-gray-500 text-xs">Lv.${member.level}</span>
+                                    </div>
                                 </div>
-                                <span class="text-orange-400 font-mono">${member.cp}</span>
+                                <div class="flex flex-col items-end">
+                                    <span class="text-orange-400 font-mono font-bold">${member.cp}</span>
+                                    ${gainDisplay}
+                                </div>
                             </div>
-                            <div class="bg-gray-800 rounded-full h-6 overflow-hidden">
+                            <div class="bg-gray-800 rounded-full h-5 overflow-hidden relative">
                                 <div class="cp-bar" style="width: 0%"></div>
+                                <span class="absolute right-2 top-1/2 -translate-y-1/2 text-xs font-bold text-white/80">${percentage.toFixed(1)}%</span>
                             </div>
                         </div>
                         `
                     }).join('')}
+                </div>
+                
+                <!-- Race Summary -->
+                <div class="mt-8 pt-6 border-t border-orange-500/30 grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
+                    <div class="glass-card p-3">
+                        <div class="text-2xl">🔥</div>
+                        <div class="text-green-400 font-bold">+2.1B</div>
+                        <div class="text-xs text-gray-400">Total Gain</div>
+                    </div>
+                    <div class="glass-card p-3">
+                        <div class="text-2xl">🚀</div>
+                        <div class="text-yellow-400 font-bold">Yuluner晴</div>
+                        <div class="text-xs text-gray-400">Biggest Jump</div>
+                    </div>
+                    <div class="glass-card p-3">
+                        <div class="text-2xl">👑</div>
+                        <div class="text-orange-400 font-bold">RegginA</div>
+                        <div class="text-xs text-gray-400">Still #1</div>
+                    </div>
+                    <div class="glass-card p-3">
+                        <div class="text-2xl">⚔️</div>
+                        <div class="text-purple-400 font-bold">8.85B</div>
+                        <div class="text-xs text-gray-400">Guild Total</div>
+                    </div>
                 </div>
             </div>
         </div>
