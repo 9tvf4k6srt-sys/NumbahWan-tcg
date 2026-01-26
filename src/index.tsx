@@ -1,10 +1,37 @@
 import { Hono } from 'hono'
 import { serveStatic } from 'hono/cloudflare-pages'
 
+// Import data from JSON files (Single Source of Truth pattern)
+import rosterData from './data/roster.json'
+import photosData from './data/photos.json'
+import translationsData from './data/translations.json'
+
 const app = new Hono()
 
-// Serve static files
+// Serve static files with caching headers
 app.use('/static/*', serveStatic())
+
+// ============================================================================
+// API ROUTES - Data Layer (Scalability Pattern: Separate Data from Presentation)
+// ============================================================================
+
+// API: Get translations (for all pages to share)
+app.get('/api/i18n', (c) => {
+  c.header('Cache-Control', 'public, max-age=3600, stale-while-revalidate=86400')
+  return c.json(translationsData)
+})
+
+// API: Get roster data
+app.get('/api/roster', (c) => {
+  c.header('Cache-Control', 'public, max-age=300, stale-while-revalidate=600')
+  return c.json(rosterData)
+})
+
+// API: Get photos data
+app.get('/api/photos', (c) => {
+  c.header('Cache-Control', 'public, max-age=3600, stale-while-revalidate=86400')
+  return c.json(photosData)
+})
 
 // ============================================================================
 // MEMBER ROSTER DATA - Last Updated: 2026-01-26
