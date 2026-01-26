@@ -869,7 +869,7 @@ app.get('/', (c) => {
         }
     </style>
 </head>
-<body>
+<body data-nw-progress data-nw-backtop>
     <!-- FIRST PAINT LOADER - ultra minimal, shows in first bytes -->
     <div id="fp"><svg viewBox="0 0 100 100"><defs><linearGradient id="ng" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#ffcc70"/><stop offset="50%" stop-color="#ff6b00"/><stop offset="100%" stop-color="#8B4513"/></linearGradient></defs><rect x="10" y="8" width="24" height="84" rx="3" fill="url(#ng)"/><rect x="66" y="8" width="24" height="84" rx="3" fill="url(#ng)"/><polygon points="10,8 34,8 90,92 66,92" fill="url(#ng)"/></svg></div>
     <!-- FULL LOADING SCREEN - replaces first paint once styles load -->
@@ -1389,7 +1389,7 @@ app.get('/', (c) => {
             <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
                 ${guildFunPhotos.map((photo, index) => `
                     <div class="photo-card glass-card overflow-hidden group cursor-pointer nw-hover-scale nw-img-shine" data-nw-reveal="up" data-nw-delay="${index * 0.1}s">
-                        <img src="${photo.image}" alt="${photo.title.en}" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" loading="lazy" />
+                        <img src="${photo.image}" alt="${photo.title.en}" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" loading="lazy" data-nw-lazy />
                         <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent opacity-80 group-hover:opacity-100 transition-opacity"></div>
                         <div class="absolute bottom-0 left-0 right-0 p-4">
                             <h3 class="font-bold text-orange-400 text-lg" data-i18n-photo="${photo.id}" data-i18n-field="title">${photo.title.en}</h3>

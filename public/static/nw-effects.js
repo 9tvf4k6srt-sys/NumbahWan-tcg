@@ -289,6 +289,102 @@
     },
 
     // ═══════════════════════════════════════════════════════════════
+    // LAZY IMAGES - Blur-to-sharp loading
+    // ═══════════════════════════════════════════════════════════════
+    lazyImages: {
+      init() {
+        document.querySelectorAll('[data-nw-lazy]').forEach(img => {
+          img.style.filter = 'blur(10px)';
+          img.style.transition = 'filter 0.5s ease-out';
+          
+          const load = () => {
+            img.style.filter = 'blur(0)';
+            img.classList.add('nw-lazy-loaded');
+          };
+          
+          if (img.complete) {
+            load();
+          } else {
+            img.addEventListener('load', load);
+          }
+        });
+      }
+    },
+
+    // ═══════════════════════════════════════════════════════════════
+    // SCROLL PROGRESS - Top progress bar
+    // ═══════════════════════════════════════════════════════════════
+    scrollProgress: {
+      init() {
+        if (!document.querySelector('[data-nw-progress]') && !document.body.dataset.nwProgress) return;
+        
+        const bar = document.createElement('div');
+        bar.id = 'nw-progress-bar';
+        bar.style.cssText = `
+          position:fixed;top:0;left:0;height:3px;width:0%;
+          background:linear-gradient(90deg,var(--nw-primary,#ff6b00),var(--nw-secondary,#ffd700));
+          z-index:99999;transition:width 0.1s ease-out;
+        `;
+        document.body.appendChild(bar);
+        
+        const update = () => {
+          const scrollTop = window.scrollY;
+          const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+          const progress = docHeight > 0 ? (scrollTop / docHeight) * 100 : 0;
+          bar.style.width = progress + '%';
+        };
+        
+        window.addEventListener('scroll', update, { passive: true });
+        update();
+      }
+    },
+
+    // ═══════════════════════════════════════════════════════════════
+    // BACK TO TOP - Floating button
+    // ═══════════════════════════════════════════════════════════════
+    backToTop: {
+      init() {
+        if (!document.querySelector('[data-nw-backtop]') && !document.body.dataset.nwBacktop) return;
+        
+        const btn = document.createElement('button');
+        btn.id = 'nw-back-top';
+        btn.innerHTML = '↑';
+        btn.style.cssText = `
+          position:fixed;bottom:80px;right:20px;width:44px;height:44px;
+          background:var(--nw-primary,#ff6b00);color:#fff;border:none;
+          border-radius:50%;font-size:20px;cursor:pointer;opacity:0;
+          visibility:hidden;transition:all 0.3s ease;z-index:9998;
+          box-shadow:0 4px 15px rgba(255,107,0,0.4);
+        `;
+        document.body.appendChild(btn);
+        
+        btn.addEventListener('click', () => {
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        });
+        
+        btn.addEventListener('mouseenter', () => {
+          btn.style.transform = 'scale(1.1)';
+        });
+        btn.addEventListener('mouseleave', () => {
+          btn.style.transform = 'scale(1)';
+        });
+        
+        const toggle = () => {
+          if (window.scrollY > 300) {
+            btn.style.opacity = '1';
+            btn.style.visibility = 'visible';
+          } else {
+            btn.style.opacity = '0';
+            btn.style.visibility = 'hidden';
+          }
+        };
+        
+        window.addEventListener('scroll', toggle, { passive: true });
+        toggle();
+      }
+    },
+
+    // ═══════════════════════════════════════════════════════════════
     // INIT - Start everything
     // ═══════════════════════════════════════════════════════════════
     init(options = {}) {
@@ -322,6 +418,9 @@
       this.particles.init();
       this.parallax.init();
       this.pageTransition.init();
+      this.lazyImages.init();
+      this.scrollProgress.init();
+      this.backToTop.init();
       
       console.log('🎨 NW Effects initialized');
     }
