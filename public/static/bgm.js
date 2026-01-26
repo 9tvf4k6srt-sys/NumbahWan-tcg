@@ -1,27 +1,27 @@
 /**
  * NumbahWan Guild - Persistent BGM System
- * Local MP3 with HTML5 Audio API
- * Loops infinitely, persists across page navigations
+ * Music continues seamlessly across page navigations
+ * Uses timestamp-based position tracking for perfect sync
  */
 
 (function() {
   'use strict';
 
-  const BGM_CONFIG = {
+  const CONFIG = {
     audioSrc: '/static/kerning-bgm.mp3',
     volume: 0.5,
-    storageKeys: {
-      enabled: 'numbahwan_bgm_enabled',
-      position: 'numbahwan_bgm_position',
-      lastUpdate: 'numbahwan_bgm_lastupdate'
+    duration: 180, // 3 minutes in seconds
+    keys: {
+      enabled: 'nw_bgm_on',
+      startTime: 'nw_bgm_start', // When playback started (timestamp)
+      pausePos: 'nw_bgm_pos'     // Position when paused
     }
   };
 
   let audio = null;
   let isPlaying = false;
-  let positionInterval = null;
 
-  // SVG icons
+  // Icons
   const ICONS = {
     playing: `<svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor">
       <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/>
@@ -34,11 +34,47 @@
     </svg>`
   };
 
-  function createBGMElements() {
-    if (document.getElementById('bgm-btn')) return;
+  // Storage helpers
+  function isEnabled() {
+    return localStorage.getItem(CONFIG.keys.enabled) === '1';
+  }
 
-    // Inject styles
+  function setEnabled(val) {
+    localStorage.setItem(CONFIG.keys.enabled, val ? '1' : '0');
+  }
+
+  function getStartTime() {
+    return parseInt(localStorage.getItem(CONFIG.keys.startTime) || '0');
+  }
+
+  function setStartTime(ts) {
+    localStorage.setItem(CONFIG.keys.startTime, ts.toString());
+  }
+
+  function getPausePos() {
+    return parseFloat(localStorage.getItem(CONFIG.keys.pausePos) || '0');
+  }
+
+  function setPausePos(pos) {
+    localStorage.setItem(CONFIG.keys.pausePos, pos.toString());
+  }
+
+  // Calculate current position based on when playback started
+  function calculatePosition() {
+    const startTime = getStartTime();
+    if (!startTime) return 0;
+
+    const elapsed = (Date.now() - startTime) / 1000;
+    // Loop: position = elapsed % duration
+    return elapsed % CONFIG.duration;
+  }
+
+  // Inject styles
+  function injectStyles() {
+    if (document.getElementById('bgm-styles')) return;
+    
     const style = document.createElement('style');
+    style.id = 'bgm-styles';
     style.textContent = `
       #bgm-btn {
         position: fixed;
@@ -76,10 +112,6 @@
         border: 2px solid rgba(0, 255, 0, 0.5);
         animation: bgmWave 1.5s ease-out infinite;
       }
-      #bgm-btn.loading {
-        background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
-        border-color: #fbbf24;
-      }
       #bgm-btn.muted {
         background: linear-gradient(135deg, #666 0%, #333 100%);
         border-color: rgba(255, 255, 255, 0.2);
@@ -96,13 +128,120 @@
         0% { transform: rotate(0deg); }
         100% { transform: rotate(360deg); }
       }
-      .bgm-spin {
-        animation: bgmSpin 1s linear infinite;
-      }
+      .bgm-spin { animation: bgmSpin 1s linear infinite; }
     `;
     document.head.appendChild(style);
+  }
 
-    // Create button
+  // Update button
+  function updateButton(state) {
+    const btn = document.getElementById('bgm-btn');
+    if (!btn) return;
+
+    btn.classList.remove('playing', 'muted');
+    
+    if (state === 'playing') {
+      btn.classList.add('playing');
+      btn.innerHTML = ICONS.playing;
+      btn.title = 'Click to Stop Music';
+    } else {
+      btn.classList.add('muted');
+      btn.innerHTML = ICONS.muted;
+      btn.title = 'Click to Play Music';
+    }
+  }
+
+  // Create audio
+  function createAudio() {
+    if (audio) return audio;
+
+    audio = new Audio(CONFIG.audioSrc);
+    audio.loop = true;
+    audio.volume = CONFIG.volume;
+    audio.preload = 'auto';
+
+    audio.addEventListener('playing', () => {
+      isPlaying = true;
+      updateButton('playing');
+    });
+
+    audio.addEventListener('pause', () => {
+      isPlaying = false;
+    });
+
+    audio.addEventListener('error', (e) => {
+      console.error('BGM error:', e);
+      isPlaying = false;
+      updateButton('muted');
+    });
+
+    return audio;
+  }
+
+  // Start playing
+  async function startBGM(fromToggle = false) {
+    const a = createAudio();
+
+    // Calculate where we should be in the track
+    let pos = 0;
+    
+    if (fromToggle) {
+      // Fresh start - record start time
+      const pausePos = getPausePos();
+      const now = Date.now();
+      // Set start time adjusted for pause position
+      setStartTime(now - (pausePos * 1000));
+      pos = pausePos;
+    } else {
+      // Resuming on page load - calculate position
+      pos = calculatePosition();
+    }
+
+    // Seek to position
+    if (pos > 0 && pos < CONFIG.duration) {
+      a.currentTime = pos;
+    }
+
+    try {
+      await a.play();
+      setEnabled(true);
+      isPlaying = true;
+      updateButton('playing');
+    } catch (e) {
+      console.error('Play failed:', e);
+      // Autoplay blocked - need user interaction
+      if (e.name === 'NotAllowedError' && !fromToggle) {
+        // Will play on next toggle
+        updateButton('muted');
+      }
+    }
+  }
+
+  // Stop playing
+  function stopBGM() {
+    if (audio) {
+      // Save current position for resume
+      setPausePos(audio.currentTime);
+      audio.pause();
+    }
+    setEnabled(false);
+    isPlaying = false;
+    updateButton('muted');
+  }
+
+  // Toggle
+  function toggleBGM() {
+    if (isPlaying) {
+      stopBGM();
+    } else {
+      startBGM(true);
+    }
+  }
+
+  // Create button
+  function createButton() {
+    if (document.getElementById('bgm-btn')) return;
+
     const btn = document.createElement('button');
     btn.id = 'bgm-btn';
     btn.className = 'muted';
@@ -112,196 +251,18 @@
     document.body.appendChild(btn);
   }
 
-  function updateButtonState(state) {
-    const btn = document.getElementById('bgm-btn');
-    if (!btn) return;
-
-    btn.classList.remove('playing', 'muted', 'loading');
-    
-    switch(state) {
-      case 'playing':
-        btn.classList.add('playing');
-        btn.innerHTML = ICONS.playing;
-        btn.title = 'Click to Stop Music';
-        break;
-      case 'loading':
-        btn.classList.add('loading');
-        btn.innerHTML = ICONS.loading;
-        btn.title = 'Loading BGM...';
-        break;
-      default:
-        btn.classList.add('muted');
-        btn.innerHTML = ICONS.muted;
-        btn.title = 'Click to Play Music';
-    }
-  }
-
-  function savePosition() {
-    if (audio && !audio.paused) {
-      try {
-        localStorage.setItem(BGM_CONFIG.storageKeys.position, audio.currentTime.toString());
-        localStorage.setItem(BGM_CONFIG.storageKeys.lastUpdate, Date.now().toString());
-      } catch (e) {}
-    }
-  }
-
-  function getSavedPosition() {
-    try {
-      const position = parseFloat(localStorage.getItem(BGM_CONFIG.storageKeys.position) || '0');
-      const lastUpdate = parseInt(localStorage.getItem(BGM_CONFIG.storageKeys.lastUpdate) || '0');
-      const now = Date.now();
-      
-      // If was playing recently, estimate position
-      if (lastUpdate > 0 && localStorage.getItem(BGM_CONFIG.storageKeys.enabled) === 'true') {
-        const elapsed = (now - lastUpdate) / 1000;
-        // Only add elapsed if it was very recent (within 5 seconds - page navigation)
-        if (elapsed < 5) {
-          return position + elapsed;
-        }
-      }
-      return position;
-    } catch (e) {
-      return 0;
-    }
-  }
-
-  function shouldAutoPlay() {
-    return localStorage.getItem(BGM_CONFIG.storageKeys.enabled) === 'true';
-  }
-
-  function setBGMEnabled(enabled) {
-    localStorage.setItem(BGM_CONFIG.storageKeys.enabled, enabled.toString());
-  }
-
-  function startPositionTracking() {
-    stopPositionTracking();
-    positionInterval = setInterval(savePosition, 500);
-  }
-
-  function stopPositionTracking() {
-    if (positionInterval) {
-      clearInterval(positionInterval);
-      positionInterval = null;
-    }
-  }
-
-  async function startBGM() {
-    updateButtonState('loading');
-
-    try {
-      // Create audio element if needed
-      if (!audio) {
-        audio = new Audio(BGM_CONFIG.audioSrc);
-        audio.loop = true;
-        audio.volume = BGM_CONFIG.volume;
-        audio.preload = 'auto';
-
-        // Event handlers
-        audio.addEventListener('playing', () => {
-          isPlaying = true;
-          updateButtonState('playing');
-          startPositionTracking();
-        });
-
-        audio.addEventListener('pause', () => {
-          isPlaying = false;
-          savePosition();
-        });
-
-        audio.addEventListener('ended', () => {
-          // Should auto-loop, but just in case
-          audio.currentTime = 0;
-          audio.play();
-        });
-
-        audio.addEventListener('error', (e) => {
-          console.error('BGM Error:', e);
-          updateButtonState('muted');
-          setBGMEnabled(false);
-        });
-      }
-
-      // Restore position
-      const savedPosition = getSavedPosition();
-      if (savedPosition > 0 && savedPosition < audio.duration) {
-        audio.currentTime = savedPosition;
-      }
-
-      // Play
-      await audio.play();
-      setBGMEnabled(true);
-      isPlaying = true;
-      updateButtonState('playing');
-
-    } catch (error) {
-      console.error('Failed to start BGM:', error);
-      updateButtonState('muted');
-      
-      // If autoplay blocked, that's expected - user needs to click
-      if (error.name === 'NotAllowedError') {
-        setBGMEnabled(false);
-      }
-    }
-  }
-
-  function stopBGM() {
-    savePosition();
-    stopPositionTracking();
-
-    if (audio) {
-      audio.pause();
-    }
-
-    isPlaying = false;
-    setBGMEnabled(false);
-    updateButtonState('muted');
-  }
-
-  function toggleBGM() {
-    if (isPlaying) {
-      stopBGM();
-    } else {
-      startBGM();
-    }
-  }
-
-  function handleVisibilityChange() {
-    if (document.hidden) {
-      savePosition();
-    } else if (shouldAutoPlay() && !isPlaying) {
-      startBGM();
-    }
-  }
-
-  function handleBeforeUnload() {
-    savePosition();
-  }
-
+  // Initialize
   function init() {
-    createBGMElements();
+    injectStyles();
+    createButton();
 
-    // Auto-play if was playing before
-    if (shouldAutoPlay()) {
+    // If BGM was enabled, auto-resume at correct position
+    if (isEnabled()) {
       // Small delay for page to settle
       setTimeout(() => {
-        startBGM().catch(() => {
-          // Autoplay blocked - that's fine, user will click
-          updateButtonState('muted');
-        });
-      }, 300);
+        startBGM(false);
+      }, 100);
     }
-
-    // Event listeners
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-    window.addEventListener('beforeunload', handleBeforeUnload);
-    window.addEventListener('pagehide', handleBeforeUnload);
-
-    // Handle back/forward navigation
-    window.addEventListener('pageshow', (event) => {
-      if (event.persisted && shouldAutoPlay() && !isPlaying) {
-        setTimeout(startBGM, 200);
-      }
-    });
   }
 
   // Start when DOM ready
@@ -313,12 +274,10 @@
 
   // Expose API
   window.NumbahWanBGM = {
-    start: startBGM,
+    play: () => startBGM(true),
     stop: stopBGM,
     toggle: toggleBGM,
-    isPlaying: () => isPlaying,
-    getPosition: () => audio ? audio.currentTime : 0,
-    setVolume: (v) => { if (audio) audio.volume = Math.max(0, Math.min(1, v)); }
+    isPlaying: () => isPlaying
   };
 
 })();
