@@ -1131,38 +1131,32 @@ app.get('/', (c) => {
             </h2>
             <p class="text-center text-orange-300 mb-8 reveal" data-i18n="leaderboardDesc">Who's the strongest?</p>
             
-            <!-- Weekly Highlights Banner -->
-            <div class="glass-card p-6 mb-8 bg-gradient-to-r from-orange-900/30 via-yellow-900/20 to-orange-900/30 border border-orange-500/50" data-nw-reveal="slide">
-                <div class="text-center mb-4">
-                    <p class="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-orange-400 via-yellow-300 to-orange-400">
-                        🔥 ${performanceData.commentary.headline} 🔥
-                    </p>
-                    <p class="text-gray-400 text-sm mt-1">${performanceData.commentary.subheadline}</p>
-                </div>
-                <div class="grid md:grid-cols-3 gap-4 mt-4">
-                    <div class="text-center p-3 bg-black/30 rounded-lg">
-                        <p class="text-xs text-gray-500 mb-1">🏆 Weekly MVP</p>
-                        <p class="text-lg font-bold text-yellow-400">${performanceData.weeklyHighlights.mvp}</p>
-                        <p class="text-green-400 text-sm">${performanceData.weeklyHighlights.mvpGain}</p>
+            <!-- Race Stats Bar -->
+            <div class="glass-card p-4 mb-6 border border-gray-700" data-nw-reveal="slide">
+                <div class="grid grid-cols-3 gap-3 text-center text-sm">
+                    <div class="border-r border-gray-700">
+                        <p class="text-gray-500 text-xs" data-i18n="weeklyMvp">Weekly MVP</p>
+                        <p class="font-bold text-yellow-400">${performanceData.weeklyHighlights.mvp}</p>
+                        <p class="text-green-400 text-xs">${performanceData.weeklyHighlights.mvpGain}</p>
                     </div>
-                    <div class="text-center p-3 bg-black/30 rounded-lg">
-                        <p class="text-xs text-gray-500 mb-1">📈 Guild Growth</p>
-                        <p class="text-lg font-bold text-orange-400">${performanceData.weeklyHighlights.totalGuildGain}</p>
-                        <p class="text-green-400 text-sm">${performanceData.weeklyHighlights.totalGuildGainPercent}</p>
+                    <div class="border-r border-gray-700">
+                        <p class="text-gray-500 text-xs" data-i18n="guildGrowth">Guild Growth</p>
+                        <p class="font-bold text-orange-400">${performanceData.weeklyHighlights.totalGuildGain}</p>
+                        <p class="text-green-400 text-xs">${performanceData.weeklyHighlights.totalGuildGainPercent}</p>
                     </div>
-                    <div class="text-center p-3 bg-black/30 rounded-lg">
-                        <p class="text-xs text-gray-500 mb-1">😴 Slacker Award</p>
-                        <p class="text-lg font-bold text-gray-400">${performanceData.weeklyHighlights.slacker}</p>
-                        <p class="text-red-400 text-sm">+0% gains</p>
+                    <div>
+                        <p class="text-gray-500 text-xs" data-i18n="slackerAward">Slacker Award</p>
+                        <p class="font-bold text-gray-400">${performanceData.weeklyHighlights.slacker}</p>
+                        <p class="text-red-400 text-xs" data-i18n="noGains">+0% gains</p>
                     </div>
                 </div>
             </div>
             
-            <div class="glass-card p-8 nw-border-animated" data-nw-reveal="scale">
-                <!-- Race Bulletin Header -->
-                <div class="flex justify-between items-center mb-6 pb-4 border-b border-orange-500/30">
-                    <span class="text-sm text-gray-400">📅 Updated: 2026-01-26</span>
-                    <span class="text-sm text-green-400">📈 vs 2026-01-24</span>
+            <div class="glass-card p-6" data-nw-reveal="scale">
+                <!-- Race Header -->
+                <div class="flex justify-between items-center mb-4 pb-3 border-b border-gray-700 text-xs">
+                    <span class="text-gray-500"><span data-i18n="raceUpdate">Updated</span>: ${performanceData.lastUpdated}</span>
+                    <span class="text-gray-500"><span data-i18n="vsLast">vs last update</span></span>
                 </div>
                 
                 <div class="space-y-4">
@@ -1173,7 +1167,7 @@ app.get('/', (c) => {
                         const cpGain = member.cpValue - prevCP
                         const cpGainPercent = prevCP > 0 ? ((cpGain / prevCP) * 100).toFixed(1) : 0
                         const gainDisplay = cpGain > 0 
-                          ? `<span class="text-green-400 text-xs font-bold animate-pulse">▲ +${cpGain >= 1000000000 ? (cpGain/1000000000).toFixed(1) + 'B' : cpGain >= 1000000 ? (cpGain/1000000).toFixed(0) + 'M' : (cpGain/1000).toFixed(0) + 'K'} (${cpGainPercent}%)</span>`
+                          ? `<span class="text-green-400 text-xs font-bold">▲ +${cpGain >= 1000000000 ? (cpGain/1000000000).toFixed(1) + 'B' : cpGain >= 1000000 ? (cpGain/1000000).toFixed(0) + 'M' : (cpGain/1000).toFixed(0) + 'K'} (${cpGainPercent}%)</span>`
                           : cpGain < 0
                           ? `<span class="text-red-400 text-xs">▼ ${(cpGain/1000000).toFixed(0)}M</span>`
                           : `<span class="text-gray-500 text-xs">— 0%</span>`
@@ -1203,26 +1197,22 @@ app.get('/', (c) => {
                 </div>
                 
                 <!-- Race Summary -->
-                <div class="mt-8 pt-6 border-t border-orange-500/30 grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
-                    <div class="glass-card p-3">
-                        <div class="text-2xl">🔥</div>
+                <div class="mt-6 pt-4 border-t border-gray-700 grid grid-cols-4 gap-2 text-center text-xs">
+                    <div>
                         <div class="text-green-400 font-bold">${performanceData.weeklyHighlights.totalGuildGain}</div>
-                        <div class="text-xs text-gray-400">Total Gain</div>
+                        <div class="text-gray-500" data-i18n="totalGain">Total Gain</div>
                     </div>
-                    <div class="glass-card p-3">
-                        <div class="text-2xl">🚀</div>
+                    <div>
                         <div class="text-yellow-400 font-bold">${performanceData.weeklyHighlights.mostImproved}</div>
-                        <div class="text-xs text-gray-400">Biggest Jump</div>
+                        <div class="text-gray-500" data-i18n="biggestJump">Biggest Jump</div>
                     </div>
-                    <div class="glass-card p-3">
-                        <div class="text-2xl">👑</div>
+                    <div>
                         <div class="text-orange-400 font-bold">RegginA</div>
-                        <div class="text-xs text-gray-400">Still #1</div>
+                        <div class="text-gray-500" data-i18n="stillFirst">Still #1</div>
                     </div>
-                    <div class="glass-card p-3">
-                        <div class="text-2xl">⚔️</div>
-                        <div class="text-purple-400 font-bold">8.85B</div>
-                        <div class="text-xs text-gray-400">Guild Total</div>
+                    <div>
+                        <div class="text-purple-400 font-bold">${(rosterData.guildStats.totalCP)}</div>
+                        <div class="text-gray-500" data-i18n="guildTotal">Guild Total</div>
                     </div>
                 </div>
             </div>
