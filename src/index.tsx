@@ -1220,7 +1220,7 @@ app.get('/', (c) => {
                                     <img src="${member.avatar}" class="w-10 h-10 rounded-full border-2 ${member.online ? 'border-green-400' : 'border-gray-600'}" alt="${member.name}" onerror="this.src='/static/favicon.svg'">
                                     <div class="flex flex-col">
                                         <span class="font-bold">${member.name}</span>
-                                        <span class="text-gray-500 text-xs">Lv.${member.level}</span>
+                                        <span class="text-orange-300 text-sm font-bold">Lv.${member.level}</span>
                                     </div>
                                 </div>
                                 <div class="flex flex-col items-end">
