@@ -978,6 +978,11 @@ app.get('/', (c) => {
                 <span class="font-bold text-orange-400 text-sm" data-i18n="gmPvp">GM PvP</span>
                 <span class="text-xs text-gray-400">Grandmaster 5</span>
             </a>
+            <a href="/arcade" class="dropdown-item" data-nw-transition>
+                <svg class="mb-1" width="28" height="28" viewBox="0 0 24 24"><rect fill="#9333ea" x="2" y="8" width="20" height="12" rx="2"/><circle fill="#22c55e" cx="7" cy="14" r="2"/><circle fill="#ef4444" cx="17" cy="12" r="1.5"/><circle fill="#3b82f6" cx="17" cy="16" r="1.5"/><rect fill="#ffd700" x="10" y="11" width="4" height="6" rx="1"/></svg>
+                <span class="font-bold text-purple-400 text-sm" data-i18n="arcade">Arcade</span>
+                <span class="text-xs text-green-400">Win Merch!</span>
+            </a>
             <a href="/memes" class="dropdown-item" data-nw-transition>
                 <svg class="mb-1" width="28" height="28" viewBox="0 0 24 24"><rect fill="#ffd700" x="3" y="3" width="18" height="18" rx="3"/><circle fill="#0a0a0f" cx="8" cy="9" r="2"/><circle fill="#0a0a0f" cx="16" cy="9" r="2"/><path fill="#0a0a0f" d="M7 15Q12 20 17 15" stroke="#0a0a0f" stroke-width="2" fill="none"/></svg>
                 <span class="font-bold text-yellow-400 text-sm" data-i18n="memes">Memes</span>
@@ -1662,7 +1667,7 @@ app.get('/', (c) => {
                 serverRanking: "Server Ranking", milestones: "Milestones", shenanigans: "Shenanigans",
                 memories: "Memories of our adventures together", submitPhoto: "Submit Photo", wantToAdd: "Want to add your screenshots?",
                 server: "Server: TW", madeWith: "Made with ❤️ by the family.",
-                gmPvp: "GM PvP", gmFashion: "GM Fashion", memes: "Memes", exclusiveMerch: "Merch", dailyFortune: "Fortune", contentRankDesc: "Guild Power Rankings", pvpRankDesc: "Battle Rankings",
+                gmPvp: "GM PvP", gmFashion: "GM Fashion", memes: "Memes", arcade: "Arcade", exclusiveMerch: "Merch", dailyFortune: "Fortune", contentRankDesc: "Guild Power Rankings", pvpRankDesc: "Battle Rankings",
                 membersDesc: "Our Guild Members", funDesc: "Fun Moments", progressDesc2: "Guild Progress",
                 raidsDesc: "Weekly Battles", gmDesc2: "Our Leader", joinDesc: "Become Family"
             },
@@ -1682,7 +1687,7 @@ app.get('/', (c) => {
                 serverRanking: "伺服器排名", milestones: "里程碑", shenanigans: "公會趣事",
                 memories: "我們一起冒險的回憶", submitPhoto: "上傳照片", wantToAdd: "想要分享你的截圖嗎？",
                 server: "伺服器：台灣", madeWith: "家人們用 ❤️ 製作",
-                gmPvp: "會長PvP", gmFashion: "會長時尚", memes: "迷因", exclusiveMerch: "限定商品", dailyFortune: "每日運勢", contentRankDesc: "公會戰力排名", pvpRankDesc: "戰鬥排名",
+                gmPvp: "會長PvP", gmFashion: "會長時尚", memes: "迷因", arcade: "遊戲廳", exclusiveMerch: "限定商品", dailyFortune: "每日運勢", contentRankDesc: "公會戰力排名", pvpRankDesc: "戰鬥排名",
                 membersDesc: "我們的成員", funDesc: "歡樂時刻", progressDesc2: "公會進度",
                 raidsDesc: "每週戰鬥", gmDesc2: "我們的領袖", joinDesc: "成為家人"
             },
@@ -1702,7 +1707,7 @@ app.get('/', (c) => {
                 serverRanking: "อันดับเซิร์ฟเวอร์", milestones: "เหตุการณ์สำคัญ", shenanigans: "สนุกๆ",
                 memories: "ความทรงจำการผจญภัยด้วยกัน", submitPhoto: "ส่งรูป", wantToAdd: "อยากเพิ่มภาพหน้าจอของคุณไหม?",
                 server: "เซิร์ฟเวอร์: TW", madeWith: "สร้างด้วย ❤️ โดยครอบครัว",
-                gmPvp: "GM PvP", gmFashion: "แฟชั่น GM", memes: "มีม", exclusiveMerch: "สินค้า", dailyFortune: "ดวงประจำวัน", contentRankDesc: "อันดับพลังกิลด์", pvpRankDesc: "อันดับต่อสู้",
+                gmPvp: "GM PvP", gmFashion: "แฟชั่น GM", memes: "มีม", arcade: "อาร์เคด", exclusiveMerch: "สินค้า", dailyFortune: "ดวงประจำวัน", contentRankDesc: "อันดับพลังกิลด์", pvpRankDesc: "อันดับต่อสู้",
                 membersDesc: "สมาชิกกิลด์", funDesc: "ช่วงเวลาสนุก", progressDesc2: "ความคืบหน้ากิลด์",
                 raidsDesc: "ต่อสู้รายสัปดาห์", gmDesc2: "ผู้นำของเรา", joinDesc: "เป็นครอบครัว"
             }
@@ -1988,6 +1993,22 @@ app.get('/fortune', async (c) => {
     // Fallback for local development
   }
   return c.redirect('/fortune.html')
+})
+
+// Arcade page route
+app.get('/arcade', async (c) => {
+  try {
+    // @ts-ignore - env is provided by Cloudflare Pages
+    const asset = await c.env?.ASSETS?.fetch(new Request('https://dummy/arcade.html'))
+    if (asset) {
+      return new Response(asset.body, {
+        headers: { 'Content-Type': 'text/html; charset=utf-8' }
+      })
+    }
+  } catch (e) {
+    // Fallback for local development
+  }
+  return c.redirect('/arcade.html')
 })
 
 // Meme Gallery page route

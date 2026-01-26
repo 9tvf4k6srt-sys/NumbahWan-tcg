@@ -1,0 +1,1453 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>NumbahWan Arcade | Guild Currency Games</title>
+    <link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --wood: #8B4513;
+            --stone: #708090;
+            --iron: #B0C4DE;
+            --gold: #FFD700;
+            --diamond: #00BFFF;
+            --bg-dark: #0a0a0f;
+            --primary: #ff6b00;
+        }
+        
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Orbitron', sans-serif;
+            background: var(--bg-dark);
+            color: #fff;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+        
+        .pixel-font { font-family: 'Press Start 2P', cursive; }
+        
+        .glass-card {
+            background: rgba(255, 107, 0, 0.08);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 107, 0, 0.2);
+            border-radius: 16px;
+        }
+        
+        /* Currency Colors */
+        .currency-wood { color: #8B4513; text-shadow: 0 0 10px #8B4513; }
+        .currency-stone { color: #708090; text-shadow: 0 0 10px #708090; }
+        .currency-iron { color: #B0C4DE; text-shadow: 0 0 10px #B0C4DE; }
+        .currency-gold { color: #FFD700; text-shadow: 0 0 10px #FFD700; }
+        .currency-diamond { color: #00BFFF; text-shadow: 0 0 10px #00BFFF; }
+        
+        .bg-wood { background: linear-gradient(135deg, #8B4513, #A0522D); }
+        .bg-stone { background: linear-gradient(135deg, #708090, #778899); }
+        .bg-iron { background: linear-gradient(135deg, #B0C4DE, #C0D0E0); }
+        .bg-gold { background: linear-gradient(135deg, #FFD700, #FFA500); }
+        .bg-diamond { background: linear-gradient(135deg, #00BFFF, #1E90FF); }
+        
+        /* Wallet Bar */
+        .wallet-bar {
+            background: linear-gradient(180deg, rgba(0,0,0,0.9) 0%, rgba(10,10,15,0.95) 100%);
+            border-bottom: 2px solid rgba(255,107,0,0.3);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        
+        .currency-chip {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            padding: 4px 10px;
+            border-radius: 20px;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            font-size: 12px;
+            transition: all 0.3s;
+        }
+        
+        .currency-chip:hover {
+            transform: scale(1.05);
+            background: rgba(255,255,255,0.1);
+        }
+        
+        .currency-icon {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+        }
+        
+        /* Game Cards */
+        .game-card {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            cursor: pointer;
+        }
+        
+        .game-card:hover {
+            transform: translateY(-5px) scale(1.02);
+            box-shadow: 0 20px 40px rgba(255,107,0,0.2);
+        }
+        
+        /* Daily Reward Animation */
+        @keyframes claimPulse {
+            0%, 100% { box-shadow: 0 0 20px rgba(0,191,255,0.5); }
+            50% { box-shadow: 0 0 40px rgba(0,191,255,0.8), 0 0 60px rgba(0,191,255,0.4); }
+        }
+        
+        .claim-ready {
+            animation: claimPulse 2s infinite;
+        }
+        
+        /* Slot Machine */
+        .slot-reel {
+            height: 80px;
+            overflow: hidden;
+            background: #1a1a2e;
+            border-radius: 8px;
+            border: 2px solid rgba(255,107,0,0.3);
+        }
+        
+        .slot-item {
+            height: 80px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 40px;
+        }
+        
+        @keyframes slotSpin {
+            0% { transform: translateY(0); }
+            100% { transform: translateY(-400px); }
+        }
+        
+        .spinning .slot-strip {
+            animation: slotSpin 0.1s linear infinite;
+        }
+        
+        /* Scratch Card */
+        .scratch-area {
+            position: relative;
+            width: 200px;
+            height: 150px;
+            border-radius: 12px;
+            overflow: hidden;
+            cursor: crosshair;
+        }
+        
+        .scratch-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: 10;
+        }
+        
+        .scratch-reward {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            background: linear-gradient(135deg, #1a1a2e, #2a2a4e);
+        }
+        
+        /* Gacha Wheel */
+        .gacha-wheel {
+            width: 300px;
+            height: 300px;
+            border-radius: 50%;
+            position: relative;
+            transition: transform 5s cubic-bezier(0.17, 0.67, 0.12, 0.99);
+        }
+        
+        .wheel-segment {
+            position: absolute;
+            width: 50%;
+            height: 50%;
+            top: 0;
+            right: 0;
+            transform-origin: bottom left;
+        }
+        
+        .wheel-pointer {
+            position: absolute;
+            top: -20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 0;
+            height: 0;
+            border-left: 15px solid transparent;
+            border-right: 15px solid transparent;
+            border-top: 30px solid #ff6b00;
+            z-index: 10;
+            filter: drop-shadow(0 0 10px #ff6b00);
+        }
+        
+        /* Coin Flip */
+        .coin {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            position: relative;
+            transform-style: preserve-3d;
+            transition: transform 1s ease-out;
+        }
+        
+        .coin-face {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 40px;
+            backface-visibility: hidden;
+        }
+        
+        .coin-heads {
+            background: linear-gradient(135deg, #FFD700, #FFA500);
+        }
+        
+        .coin-tails {
+            background: linear-gradient(135deg, #C0C0C0, #A0A0A0);
+            transform: rotateY(180deg);
+        }
+        
+        @keyframes coinFlip {
+            0% { transform: rotateY(0) translateY(0); }
+            50% { transform: rotateY(900deg) translateY(-150px); }
+            100% { transform: rotateY(1800deg) translateY(0); }
+        }
+        
+        .coin-flipping {
+            animation: coinFlip 1s ease-out;
+        }
+        
+        /* Number Guess */
+        .guess-input {
+            background: rgba(255,255,255,0.1);
+            border: 2px solid rgba(255,107,0,0.3);
+            border-radius: 8px;
+            padding: 12px 20px;
+            font-size: 24px;
+            color: #fff;
+            text-align: center;
+            width: 120px;
+            font-family: 'Orbitron', sans-serif;
+        }
+        
+        .guess-input:focus {
+            outline: none;
+            border-color: #ff6b00;
+            box-shadow: 0 0 20px rgba(255,107,0,0.3);
+        }
+        
+        /* Modal */
+        .modal {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s;
+        }
+        
+        .modal.active {
+            opacity: 1;
+            visibility: visible;
+        }
+        
+        .modal-content {
+            background: linear-gradient(135deg, #1a1a2e, #0a0a0f);
+            border: 2px solid rgba(255,107,0,0.3);
+            border-radius: 20px;
+            padding: 30px;
+            max-width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+            transform: scale(0.9);
+            transition: transform 0.3s;
+        }
+        
+        .modal.active .modal-content {
+            transform: scale(1);
+        }
+        
+        /* Merch Shop */
+        .merch-item {
+            transition: all 0.3s;
+        }
+        
+        .merch-item:hover {
+            transform: scale(1.05);
+        }
+        
+        .merch-item.owned {
+            opacity: 0.5;
+            pointer-events: none;
+        }
+        
+        /* Toast */
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background: rgba(0,0,0,0.9);
+            border: 1px solid rgba(255,107,0,0.5);
+            padding: 15px 30px;
+            border-radius: 10px;
+            z-index: 2000;
+            transition: transform 0.3s;
+        }
+        
+        .toast.show {
+            transform: translateX(-50%) translateY(0);
+        }
+        
+        /* Streak Fire */
+        @keyframes fireGlow {
+            0%, 100% { filter: drop-shadow(0 0 5px #ff4500); }
+            50% { filter: drop-shadow(0 0 15px #ff4500) drop-shadow(0 0 25px #ff6b00); }
+        }
+        
+        .streak-fire {
+            animation: fireGlow 1s infinite;
+        }
+        
+        /* Progress Bar */
+        .progress-bar {
+            height: 8px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #ff6b00, #ffd700);
+            border-radius: 4px;
+            transition: width 0.5s ease-out;
+        }
+    </style>
+</head>
+<body>
+    <!-- Wallet Bar -->
+    <div class="wallet-bar py-3 px-4">
+        <div class="max-w-6xl mx-auto">
+            <div class="flex items-center justify-between mb-2">
+                <a href="/" class="flex items-center gap-2 text-orange-400 hover:text-orange-300">
+                    <span class="text-xl">←</span>
+                    <span class="pixel-font text-xs">NumbahWan</span>
+                </a>
+                <div class="flex items-center gap-2">
+                    <span class="text-xs text-gray-400">Day</span>
+                    <span class="pixel-font text-orange-400" id="streak-count">0</span>
+                    <span class="text-xl streak-fire">🔥</span>
+                </div>
+            </div>
+            <div class="flex items-center justify-center gap-2 flex-wrap">
+                <div class="currency-chip">
+                    <div class="currency-icon bg-diamond">💎</div>
+                    <span class="currency-diamond font-bold" id="diamonds">0</span>
+                </div>
+                <div class="currency-chip">
+                    <div class="currency-icon bg-gold">🪙</div>
+                    <span class="currency-gold font-bold" id="gold">0</span>
+                </div>
+                <div class="currency-chip">
+                    <div class="currency-icon bg-iron">⚙️</div>
+                    <span class="currency-iron font-bold" id="iron">0</span>
+                </div>
+                <div class="currency-chip">
+                    <div class="currency-icon bg-stone">🪨</div>
+                    <span class="currency-stone font-bold" id="stone">0</span>
+                </div>
+                <div class="currency-chip">
+                    <div class="currency-icon bg-wood">🪵</div>
+                    <span class="currency-wood font-bold" id="wood">0</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Main Content -->
+    <div class="max-w-6xl mx-auto p-4">
+        <!-- Daily Login -->
+        <div id="daily-section" class="glass-card p-6 mb-6">
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="pixel-font text-lg text-orange-400">📅 DAILY LOGIN</h2>
+                <div class="text-sm text-gray-400">
+                    Next reset: <span id="reset-timer" class="text-orange-300">--:--:--</span>
+                </div>
+            </div>
+            <div class="grid grid-cols-7 gap-2 mb-4" id="daily-rewards">
+                <!-- Generated by JS -->
+            </div>
+            <button id="claim-daily" class="w-full py-3 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-lg font-bold text-lg hover:opacity-90 transition claim-ready" onclick="claimDaily()">
+                💎 CLAIM DAILY REWARD
+            </button>
+        </div>
+        
+        <!-- Games Grid -->
+        <h2 class="pixel-font text-xl text-center text-orange-400 mb-4">🎮 MINI GAMES</h2>
+        <p class="text-center text-gray-400 text-sm mb-6">Spend 💎 Diamonds to play • Win rarer currencies by chance!</p>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
+            <!-- Slot Machine -->
+            <div class="game-card glass-card p-6" onclick="openGame('slots')">
+                <div class="text-4xl mb-3">🎰</div>
+                <h3 class="pixel-font text-sm text-orange-400 mb-2">LUCKY SLOTS</h3>
+                <p class="text-xs text-gray-400 mb-3">Match 3 for big wins!</p>
+                <div class="flex items-center gap-2 text-xs">
+                    <span class="text-gray-500">Cost:</span>
+                    <span class="currency-diamond">💎 10</span>
+                </div>
+                <div class="text-xs text-green-400 mt-1">Win up to 🪵 Wood!</div>
+            </div>
+            
+            <!-- Scratch Card -->
+            <div class="game-card glass-card p-6" onclick="openGame('scratch')">
+                <div class="text-4xl mb-3">🎫</div>
+                <h3 class="pixel-font text-sm text-orange-400 mb-2">SCRATCH CARD</h3>
+                <p class="text-xs text-gray-400 mb-3">Scratch to reveal prize!</p>
+                <div class="flex items-center gap-2 text-xs">
+                    <span class="text-gray-500">Cost:</span>
+                    <span class="currency-diamond">💎 15</span>
+                </div>
+                <div class="text-xs text-green-400 mt-1">Guaranteed reward!</div>
+            </div>
+            
+            <!-- Coin Flip -->
+            <div class="game-card glass-card p-6" onclick="openGame('coinflip')">
+                <div class="text-4xl mb-3">🪙</div>
+                <h3 class="pixel-font text-sm text-orange-400 mb-2">COIN FLIP</h3>
+                <p class="text-xs text-gray-400 mb-3">Double or nothing!</p>
+                <div class="flex items-center gap-2 text-xs">
+                    <span class="text-gray-500">Cost:</span>
+                    <span class="currency-diamond">💎 20</span>
+                </div>
+                <div class="text-xs text-yellow-400 mt-1">50% chance to double!</div>
+            </div>
+            
+            <!-- Number Guess -->
+            <div class="game-card glass-card p-6" onclick="openGame('guess')">
+                <div class="text-4xl mb-3">🔢</div>
+                <h3 class="pixel-font text-sm text-orange-400 mb-2">NUMBER GUESS</h3>
+                <p class="text-xs text-gray-400 mb-3">Guess 1-10 correctly!</p>
+                <div class="flex items-center gap-2 text-xs">
+                    <span class="text-gray-500">Cost:</span>
+                    <span class="currency-diamond">💎 25</span>
+                </div>
+                <div class="text-xs text-purple-400 mt-1">10x reward if correct!</div>
+            </div>
+            
+            <!-- Dice Roll -->
+            <div class="game-card glass-card p-6" onclick="openGame('dice')">
+                <div class="text-4xl mb-3">🎲</div>
+                <h3 class="pixel-font text-sm text-orange-400 mb-2">DICE DUEL</h3>
+                <p class="text-xs text-gray-400 mb-3">Beat the dealer!</p>
+                <div class="flex items-center gap-2 text-xs">
+                    <span class="text-gray-500">Cost:</span>
+                    <span class="currency-diamond">💎 30</span>
+                </div>
+                <div class="text-xs text-blue-400 mt-1">Higher roll wins!</div>
+            </div>
+            
+            <!-- Treasure Box -->
+            <div class="game-card glass-card p-6" onclick="openGame('treasure')">
+                <div class="text-4xl mb-3">📦</div>
+                <h3 class="pixel-font text-sm text-orange-400 mb-2">MYSTERY BOX</h3>
+                <p class="text-xs text-gray-400 mb-3">Pick 1 of 3 boxes!</p>
+                <div class="flex items-center gap-2 text-xs">
+                    <span class="text-gray-500">Cost:</span>
+                    <span class="currency-diamond">💎 50</span>
+                </div>
+                <div class="text-xs text-orange-400 mt-1">Rare items inside!</div>
+            </div>
+        </div>
+        
+        <!-- Gacha Wheel Section -->
+        <div class="glass-card p-6 mb-8">
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="pixel-font text-lg text-orange-400">🎡 GACHA WHEEL</h2>
+                <div class="flex items-center gap-2 text-sm">
+                    <span class="text-gray-400">Spins:</span>
+                    <span class="currency-wood font-bold" id="spin-count">0</span>
+                    <span class="text-gray-500">🪵</span>
+                </div>
+            </div>
+            <p class="text-center text-gray-400 text-sm mb-4">Use 🪵 Wood to spin for exclusive Guild Merch!</p>
+            <div class="flex justify-center mb-4">
+                <button class="px-8 py-3 bg-gradient-to-r from-amber-700 to-amber-900 rounded-lg font-bold hover:opacity-90 transition" onclick="openGame('gacha')">
+                    🎡 SPIN THE WHEEL (1 🪵)
+                </button>
+            </div>
+            <div class="text-center text-xs text-gray-500">
+                Wood is the rarest currency. Earn it by winning big in mini-games!
+            </div>
+        </div>
+        
+        <!-- Merch Collection -->
+        <div class="glass-card p-6 mb-8">
+            <h2 class="pixel-font text-lg text-orange-400 mb-4">🛍️ MY MERCH COLLECTION</h2>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4" id="merch-collection">
+                <!-- Generated by JS -->
+            </div>
+            <div class="text-center mt-4">
+                <span class="text-gray-400 text-sm">Collected: </span>
+                <span class="text-orange-400 font-bold" id="collection-count">0</span>
+                <span class="text-gray-400 text-sm"> / </span>
+                <span class="text-gray-400" id="collection-total">12</span>
+            </div>
+        </div>
+        
+        <!-- Currency Exchange -->
+        <div class="glass-card p-6 mb-8">
+            <h2 class="pixel-font text-lg text-orange-400 mb-4">💱 CURRENCY EXCHANGE</h2>
+            <p class="text-center text-gray-400 text-sm mb-4">Trade up! 100 of lower tier = 1 of higher tier</p>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+                <button class="p-3 bg-gradient-to-r from-blue-600 to-yellow-600 rounded-lg text-xs hover:opacity-90" onclick="exchange('diamond', 'gold')">
+                    💎 100 → 🪙 1
+                </button>
+                <button class="p-3 bg-gradient-to-r from-yellow-600 to-gray-400 rounded-lg text-xs hover:opacity-90" onclick="exchange('gold', 'iron')">
+                    🪙 100 → ⚙️ 1
+                </button>
+                <button class="p-3 bg-gradient-to-r from-gray-400 to-gray-600 rounded-lg text-xs hover:opacity-90" onclick="exchange('iron', 'stone')">
+                    ⚙️ 100 → 🪨 1
+                </button>
+                <button class="p-3 bg-gradient-to-r from-gray-600 to-amber-800 rounded-lg text-xs hover:opacity-90" onclick="exchange('stone', 'wood')">
+                    🪨 100 → 🪵 1
+                </button>
+            </div>
+        </div>
+        
+        <!-- Stats -->
+        <div class="glass-card p-6">
+            <h2 class="pixel-font text-lg text-orange-400 mb-4">📊 STATS</h2>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
+                <div>
+                    <div class="text-2xl font-bold text-white" id="stat-games">0</div>
+                    <div class="text-xs text-gray-400">Games Played</div>
+                </div>
+                <div>
+                    <div class="text-2xl font-bold text-green-400" id="stat-wins">0</div>
+                    <div class="text-xs text-gray-400">Wins</div>
+                </div>
+                <div>
+                    <div class="text-2xl font-bold text-purple-400" id="stat-spins">0</div>
+                    <div class="text-xs text-gray-400">Gacha Spins</div>
+                </div>
+                <div>
+                    <div class="text-2xl font-bold text-orange-400" id="stat-streak">0</div>
+                    <div class="text-xs text-gray-400">Best Streak</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Game Modals -->
+    <div id="game-modal" class="modal" onclick="closeModal(event)">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <div id="modal-game-content">
+                <!-- Game content loaded here -->
+            </div>
+        </div>
+    </div>
+    
+    <!-- Toast -->
+    <div id="toast" class="toast">
+        <span id="toast-message"></span>
+    </div>
+    
+    <script>
+        // ============================================================
+        // GAME STATE
+        // ============================================================
+        const CURRENCY_ORDER = ['diamond', 'gold', 'iron', 'stone', 'wood']; // Cheapest to rarest
+        const CURRENCY_ICONS = {
+            diamond: '💎', gold: '🪙', iron: '⚙️', stone: '🪨', wood: '🪵'
+        };
+        
+        const MERCH_ITEMS = [
+            { id: 1, name: 'NW Cap', emoji: '🧢', rarity: 'common' },
+            { id: 2, name: 'NW T-Shirt', emoji: '👕', rarity: 'common' },
+            { id: 3, name: 'NW Hoodie', emoji: '🧥', rarity: 'uncommon' },
+            { id: 4, name: 'NW Mug', emoji: '☕', rarity: 'common' },
+            { id: 5, name: 'NW Poster', emoji: '🖼️', rarity: 'uncommon' },
+            { id: 6, name: 'NW Mousepad', emoji: '🖱️', rarity: 'uncommon' },
+            { id: 7, name: 'NW Plushie', emoji: '🧸', rarity: 'rare' },
+            { id: 8, name: 'NW Jacket', emoji: '🧥', rarity: 'rare' },
+            { id: 9, name: 'NW Watch', emoji: '⌚', rarity: 'rare' },
+            { id: 10, name: 'RegginA Figure', emoji: '🗿', rarity: 'legendary' },
+            { id: 11, name: 'Gold Trophy', emoji: '🏆', rarity: 'legendary' },
+            { id: 12, name: 'NW Crown', emoji: '👑', rarity: 'legendary' }
+        ];
+        
+        const DAILY_REWARDS = [
+            { day: 1, amount: 50, currency: 'diamond' },
+            { day: 2, amount: 75, currency: 'diamond' },
+            { day: 3, amount: 100, currency: 'diamond' },
+            { day: 4, amount: 5, currency: 'gold' },
+            { day: 5, amount: 150, currency: 'diamond' },
+            { day: 6, amount: 10, currency: 'gold' },
+            { day: 7, amount: 1, currency: 'iron' }
+        ];
+        
+        let gameState = {
+            currencies: { diamond: 0, gold: 0, iron: 0, stone: 0, wood: 0 },
+            streak: 0,
+            lastClaim: null,
+            stats: { games: 0, wins: 0, spins: 0, bestStreak: 0 },
+            merch: [],
+            totalSpins: 0
+        };
+        
+        // ============================================================
+        // LOAD/SAVE STATE
+        // ============================================================
+        function loadState() {
+            const saved = localStorage.getItem('nw_arcade_state');
+            if (saved) {
+                gameState = JSON.parse(saved);
+            }
+            updateUI();
+        }
+        
+        function saveState() {
+            localStorage.setItem('nw_arcade_state', JSON.stringify(gameState));
+        }
+        
+        // ============================================================
+        // UI UPDATES
+        // ============================================================
+        function updateUI() {
+            // Update currencies
+            document.getElementById('diamonds').textContent = formatNumber(gameState.currencies.diamond);
+            document.getElementById('gold').textContent = formatNumber(gameState.currencies.gold);
+            document.getElementById('iron').textContent = formatNumber(gameState.currencies.iron);
+            document.getElementById('stone').textContent = formatNumber(gameState.currencies.stone);
+            document.getElementById('wood').textContent = formatNumber(gameState.currencies.wood);
+            
+            // Update streak
+            document.getElementById('streak-count').textContent = gameState.streak;
+            
+            // Update stats
+            document.getElementById('stat-games').textContent = gameState.stats.games;
+            document.getElementById('stat-wins').textContent = gameState.stats.wins;
+            document.getElementById('stat-spins').textContent = gameState.stats.spins;
+            document.getElementById('stat-streak').textContent = gameState.stats.bestStreak;
+            
+            // Update spin count
+            document.getElementById('spin-count').textContent = gameState.currencies.wood;
+            
+            // Update daily rewards
+            renderDailyRewards();
+            
+            // Update merch collection
+            renderMerchCollection();
+            
+            // Check daily claim
+            updateDailyButton();
+        }
+        
+        function formatNumber(n) {
+            if (n >= 1000000) return (n/1000000).toFixed(1) + 'M';
+            if (n >= 1000) return (n/1000).toFixed(1) + 'K';
+            return n.toString();
+        }
+        
+        function renderDailyRewards() {
+            const container = document.getElementById('daily-rewards');
+            container.innerHTML = DAILY_REWARDS.map((reward, i) => {
+                const claimed = i < (gameState.streak % 7);
+                const current = i === (gameState.streak % 7);
+                return `
+                    <div class="p-2 rounded-lg text-center ${claimed ? 'bg-green-900/50' : current ? 'bg-orange-900/50 ring-2 ring-orange-500' : 'bg-gray-900/50'}">
+                        <div class="text-xs text-gray-400 mb-1">Day ${i + 1}</div>
+                        <div class="text-lg">${CURRENCY_ICONS[reward.currency]}</div>
+                        <div class="text-xs font-bold ${claimed ? 'text-green-400' : 'text-white'}">${reward.amount}</div>
+                        ${claimed ? '<div class="text-green-400 text-xs">✓</div>' : ''}
+                    </div>
+                `;
+            }).join('');
+        }
+        
+        function renderMerchCollection() {
+            const container = document.getElementById('merch-collection');
+            container.innerHTML = MERCH_ITEMS.map(item => {
+                const owned = gameState.merch.includes(item.id);
+                const rarityColors = {
+                    common: 'border-gray-500',
+                    uncommon: 'border-green-500',
+                    rare: 'border-blue-500',
+                    legendary: 'border-yellow-500'
+                };
+                return `
+                    <div class="merch-item p-4 rounded-lg bg-gray-900/50 border-2 ${rarityColors[item.rarity]} ${owned ? '' : 'opacity-30'}">
+                        <div class="text-3xl mb-2">${owned ? item.emoji : '❓'}</div>
+                        <div class="text-xs ${owned ? 'text-white' : 'text-gray-500'}">${owned ? item.name : '???'}</div>
+                        <div class="text-xs text-${item.rarity === 'legendary' ? 'yellow' : item.rarity === 'rare' ? 'blue' : item.rarity === 'uncommon' ? 'green' : 'gray'}-400 capitalize">${item.rarity}</div>
+                    </div>
+                `;
+            }).join('');
+            
+            document.getElementById('collection-count').textContent = gameState.merch.length;
+            document.getElementById('collection-total').textContent = MERCH_ITEMS.length;
+        }
+        
+        function updateDailyButton() {
+            const btn = document.getElementById('claim-daily');
+            const canClaim = canClaimDaily();
+            
+            if (canClaim) {
+                btn.disabled = false;
+                btn.className = 'w-full py-3 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-lg font-bold text-lg hover:opacity-90 transition claim-ready';
+                btn.textContent = '💎 CLAIM DAILY REWARD';
+            } else {
+                btn.disabled = true;
+                btn.className = 'w-full py-3 bg-gray-700 rounded-lg font-bold text-lg opacity-50 cursor-not-allowed';
+                btn.textContent = '✓ CLAIMED TODAY';
+            }
+        }
+        
+        function canClaimDaily() {
+            if (!gameState.lastClaim) return true;
+            const last = new Date(gameState.lastClaim);
+            const now = new Date();
+            return last.toDateString() !== now.toDateString();
+        }
+        
+        // ============================================================
+        // DAILY CLAIM
+        // ============================================================
+        function claimDaily() {
+            if (!canClaimDaily()) return;
+            
+            const now = new Date();
+            const last = gameState.lastClaim ? new Date(gameState.lastClaim) : null;
+            
+            // Check streak
+            if (last) {
+                const diffDays = Math.floor((now - last) / (1000 * 60 * 60 * 24));
+                if (diffDays > 1) {
+                    gameState.streak = 0; // Reset streak if missed a day
+                }
+            }
+            
+            const dayIndex = gameState.streak % 7;
+            const reward = DAILY_REWARDS[dayIndex];
+            
+            gameState.currencies[reward.currency] += reward.amount;
+            gameState.streak++;
+            gameState.lastClaim = now.toISOString();
+            
+            if (gameState.streak > gameState.stats.bestStreak) {
+                gameState.stats.bestStreak = gameState.streak;
+            }
+            
+            saveState();
+            updateUI();
+            
+            showToast(`+${reward.amount} ${CURRENCY_ICONS[reward.currency]} Day ${dayIndex + 1} reward claimed!`);
+        }
+        
+        // ============================================================
+        // CURRENCY FUNCTIONS
+        // ============================================================
+        function addCurrency(type, amount) {
+            gameState.currencies[type] += amount;
+            saveState();
+            updateUI();
+        }
+        
+        function spendCurrency(type, amount) {
+            if (gameState.currencies[type] >= amount) {
+                gameState.currencies[type] -= amount;
+                saveState();
+                updateUI();
+                return true;
+            }
+            showToast(`Not enough ${CURRENCY_ICONS[type]}!`);
+            return false;
+        }
+        
+        function exchange(from, to) {
+            if (gameState.currencies[from] >= 100) {
+                gameState.currencies[from] -= 100;
+                gameState.currencies[to] += 1;
+                saveState();
+                updateUI();
+                showToast(`Exchanged 100 ${CURRENCY_ICONS[from]} → 1 ${CURRENCY_ICONS[to]}`);
+            } else {
+                showToast(`Need 100 ${CURRENCY_ICONS[from]} to exchange!`);
+            }
+        }
+        
+        // ============================================================
+        // GAME MODALS
+        // ============================================================
+        function openGame(game) {
+            const modal = document.getElementById('game-modal');
+            const content = document.getElementById('modal-game-content');
+            
+            switch(game) {
+                case 'slots': content.innerHTML = renderSlots(); break;
+                case 'scratch': content.innerHTML = renderScratch(); break;
+                case 'coinflip': content.innerHTML = renderCoinFlip(); break;
+                case 'guess': content.innerHTML = renderNumberGuess(); break;
+                case 'dice': content.innerHTML = renderDice(); break;
+                case 'treasure': content.innerHTML = renderTreasure(); break;
+                case 'gacha': content.innerHTML = renderGacha(); break;
+            }
+            
+            modal.classList.add('active');
+        }
+        
+        function closeModal(e) {
+            if (e.target.id === 'game-modal' || e.target.classList.contains('close-modal')) {
+                document.getElementById('game-modal').classList.remove('active');
+            }
+        }
+        
+        // ============================================================
+        // SLOT MACHINE
+        // ============================================================
+        function renderSlots() {
+            return `
+                <div class="text-center">
+                    <h3 class="pixel-font text-xl text-orange-400 mb-4">🎰 LUCKY SLOTS</h3>
+                    <p class="text-gray-400 text-sm mb-4">Cost: 💎 10 | Match 3 to win!</p>
+                    
+                    <div class="flex justify-center gap-2 mb-6">
+                        <div class="slot-reel w-20" id="reel1">
+                            <div class="slot-strip">
+                                <div class="slot-item">💎</div>
+                            </div>
+                        </div>
+                        <div class="slot-reel w-20" id="reel2">
+                            <div class="slot-strip">
+                                <div class="slot-item">💎</div>
+                            </div>
+                        </div>
+                        <div class="slot-reel w-20" id="reel3">
+                            <div class="slot-strip">
+                                <div class="slot-item">💎</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div id="slot-result" class="text-lg mb-4 h-8"></div>
+                    
+                    <button onclick="playSlots()" class="px-8 py-3 bg-gradient-to-r from-orange-500 to-red-500 rounded-lg font-bold hover:opacity-90">
+                        🎰 SPIN (💎 10)
+                    </button>
+                    <button onclick="closeModal({target:{id:'game-modal'}})" class="ml-2 px-6 py-3 bg-gray-700 rounded-lg hover:bg-gray-600">
+                        Close
+                    </button>
+                </div>
+            `;
+        }
+        
+        function playSlots() {
+            if (!spendCurrency('diamond', 10)) return;
+            
+            gameState.stats.games++;
+            const symbols = ['💎', '🪙', '⚙️', '🪨', '🪵', '7️⃣', '🍀'];
+            const results = [
+                symbols[Math.floor(Math.random() * symbols.length)],
+                symbols[Math.floor(Math.random() * symbols.length)],
+                symbols[Math.floor(Math.random() * symbols.length)]
+            ];
+            
+            // Animate reels
+            for (let i = 1; i <= 3; i++) {
+                const reel = document.getElementById(`reel${i}`);
+                reel.classList.add('spinning');
+                setTimeout(() => {
+                    reel.classList.remove('spinning');
+                    reel.querySelector('.slot-item').textContent = results[i-1];
+                }, 500 + i * 300);
+            }
+            
+            setTimeout(() => {
+                let reward = null;
+                const resultDiv = document.getElementById('slot-result');
+                
+                if (results[0] === results[1] && results[1] === results[2]) {
+                    // Jackpot!
+                    gameState.stats.wins++;
+                    if (results[0] === '🪵') {
+                        reward = { type: 'wood', amount: 1 };
+                    } else if (results[0] === '🪨') {
+                        reward = { type: 'stone', amount: 3 };
+                    } else if (results[0] === '⚙️') {
+                        reward = { type: 'iron', amount: 5 };
+                    } else if (results[0] === '🪙') {
+                        reward = { type: 'gold', amount: 10 };
+                    } else if (results[0] === '7️⃣') {
+                        reward = { type: 'gold', amount: 50 };
+                    } else {
+                        reward = { type: 'diamond', amount: 100 };
+                    }
+                    addCurrency(reward.type, reward.amount);
+                    resultDiv.innerHTML = `<span class="text-green-400">🎉 JACKPOT! +${reward.amount} ${CURRENCY_ICONS[reward.type]}</span>`;
+                } else if (results[0] === results[1] || results[1] === results[2]) {
+                    // Two match
+                    gameState.stats.wins++;
+                    reward = { type: 'diamond', amount: 15 };
+                    addCurrency('diamond', 15);
+                    resultDiv.innerHTML = `<span class="text-yellow-400">Nice! +15 💎</span>`;
+                } else {
+                    resultDiv.innerHTML = `<span class="text-red-400">No match. Try again!</span>`;
+                }
+                
+                saveState();
+                updateUI();
+            }, 1500);
+        }
+        
+        // ============================================================
+        // SCRATCH CARD
+        // ============================================================
+        function renderScratch() {
+            return `
+                <div class="text-center">
+                    <h3 class="pixel-font text-xl text-orange-400 mb-4">🎫 SCRATCH CARD</h3>
+                    <p class="text-gray-400 text-sm mb-4">Cost: 💎 15 | Scratch to reveal!</p>
+                    
+                    <div class="flex justify-center mb-4">
+                        <div class="scratch-area" id="scratch-area">
+                            <div class="scratch-reward" id="scratch-reward">
+                                <div class="text-4xl mb-2" id="scratch-prize">?</div>
+                                <div class="text-sm" id="scratch-text">Buy a card!</div>
+                            </div>
+                            <canvas id="scratch-canvas" class="scratch-canvas" width="200" height="150"></canvas>
+                        </div>
+                    </div>
+                    
+                    <button onclick="buyScratchCard()" id="buy-scratch-btn" class="px-8 py-3 bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg font-bold hover:opacity-90">
+                        🎫 BUY CARD (💎 15)
+                    </button>
+                    <button onclick="closeModal({target:{id:'game-modal'}})" class="ml-2 px-6 py-3 bg-gray-700 rounded-lg hover:bg-gray-600">
+                        Close
+                    </button>
+                </div>
+            `;
+        }
+        
+        let scratchReward = null;
+        
+        function buyScratchCard() {
+            if (!spendCurrency('diamond', 15)) return;
+            
+            gameState.stats.games++;
+            gameState.stats.wins++;
+            
+            // Determine reward
+            const rand = Math.random();
+            if (rand < 0.01) {
+                scratchReward = { type: 'wood', amount: 1, text: '🪵 WOOD!' };
+            } else if (rand < 0.05) {
+                scratchReward = { type: 'stone', amount: 2, text: '🪨 Stone x2' };
+            } else if (rand < 0.15) {
+                scratchReward = { type: 'iron', amount: 3, text: '⚙️ Iron x3' };
+            } else if (rand < 0.35) {
+                scratchReward = { type: 'gold', amount: 5, text: '🪙 Gold x5' };
+            } else {
+                scratchReward = { type: 'diamond', amount: 20, text: '💎 x20' };
+            }
+            
+            document.getElementById('scratch-prize').textContent = CURRENCY_ICONS[scratchReward.type];
+            document.getElementById('scratch-text').textContent = scratchReward.text;
+            document.getElementById('buy-scratch-btn').disabled = true;
+            document.getElementById('buy-scratch-btn').textContent = 'Scratch to reveal!';
+            
+            // Setup canvas
+            const canvas = document.getElementById('scratch-canvas');
+            const ctx = canvas.getContext('2d');
+            ctx.fillStyle = '#4a4a6a';
+            ctx.fillRect(0, 0, 200, 150);
+            ctx.fillStyle = '#8a8aaa';
+            ctx.font = '14px Orbitron';
+            ctx.textAlign = 'center';
+            ctx.fillText('Scratch Here!', 100, 80);
+            
+            let isDrawing = false;
+            let scratched = 0;
+            
+            canvas.onmousedown = () => isDrawing = true;
+            canvas.onmouseup = () => isDrawing = false;
+            canvas.onmousemove = (e) => {
+                if (!isDrawing) return;
+                const rect = canvas.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                ctx.globalCompositeOperation = 'destination-out';
+                ctx.beginPath();
+                ctx.arc(x, y, 20, 0, Math.PI * 2);
+                ctx.fill();
+                scratched += 0.5;
+                
+                if (scratched > 30) {
+                    canvas.style.display = 'none';
+                    addCurrency(scratchReward.type, scratchReward.amount);
+                    showToast(`+${scratchReward.amount} ${CURRENCY_ICONS[scratchReward.type]}`);
+                    document.getElementById('buy-scratch-btn').disabled = false;
+                    document.getElementById('buy-scratch-btn').textContent = '🎫 BUY CARD (💎 15)';
+                    saveState();
+                    updateUI();
+                }
+            };
+            
+            // Touch support
+            canvas.ontouchstart = () => isDrawing = true;
+            canvas.ontouchend = () => isDrawing = false;
+            canvas.ontouchmove = (e) => {
+                if (!isDrawing) return;
+                e.preventDefault();
+                const rect = canvas.getBoundingClientRect();
+                const touch = e.touches[0];
+                const x = touch.clientX - rect.left;
+                const y = touch.clientY - rect.top;
+                ctx.globalCompositeOperation = 'destination-out';
+                ctx.beginPath();
+                ctx.arc(x, y, 20, 0, Math.PI * 2);
+                ctx.fill();
+                scratched += 0.5;
+                
+                if (scratched > 30) {
+                    canvas.style.display = 'none';
+                    addCurrency(scratchReward.type, scratchReward.amount);
+                    showToast(`+${scratchReward.amount} ${CURRENCY_ICONS[scratchReward.type]}`);
+                    document.getElementById('buy-scratch-btn').disabled = false;
+                    document.getElementById('buy-scratch-btn').textContent = '🎫 BUY CARD (💎 15)';
+                    saveState();
+                    updateUI();
+                }
+            };
+        }
+        
+        // ============================================================
+        // COIN FLIP
+        // ============================================================
+        function renderCoinFlip() {
+            return `
+                <div class="text-center">
+                    <h3 class="pixel-font text-xl text-orange-400 mb-4">🪙 COIN FLIP</h3>
+                    <p class="text-gray-400 text-sm mb-4">Cost: 💎 20 | 50% chance to double!</p>
+                    
+                    <div class="flex justify-center mb-6">
+                        <div class="coin" id="coin">
+                            <div class="coin-face coin-heads">👑</div>
+                            <div class="coin-face coin-tails">💀</div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <p class="text-sm text-gray-400 mb-2">Choose your side:</p>
+                        <button onclick="flipCoin('heads')" class="px-6 py-2 bg-yellow-600 rounded-lg font-bold mr-2 hover:bg-yellow-500">
+                            👑 Heads
+                        </button>
+                        <button onclick="flipCoin('tails')" class="px-6 py-2 bg-gray-600 rounded-lg font-bold hover:bg-gray-500">
+                            💀 Tails
+                        </button>
+                    </div>
+                    
+                    <div id="coin-result" class="text-lg mb-4 h-8"></div>
+                    
+                    <button onclick="closeModal({target:{id:'game-modal'}})" class="px-6 py-3 bg-gray-700 rounded-lg hover:bg-gray-600">
+                        Close
+                    </button>
+                </div>
+            `;
+        }
+        
+        function flipCoin(choice) {
+            if (!spendCurrency('diamond', 20)) return;
+            
+            gameState.stats.games++;
+            const coin = document.getElementById('coin');
+            const result = Math.random() < 0.5 ? 'heads' : 'tails';
+            
+            coin.classList.add('coin-flipping');
+            
+            setTimeout(() => {
+                coin.classList.remove('coin-flipping');
+                coin.style.transform = result === 'tails' ? 'rotateY(180deg)' : 'rotateY(0)';
+                
+                const resultDiv = document.getElementById('coin-result');
+                if (choice === result) {
+                    gameState.stats.wins++;
+                    addCurrency('diamond', 40);
+                    resultDiv.innerHTML = `<span class="text-green-400">🎉 WIN! +40 💎</span>`;
+                } else {
+                    resultDiv.innerHTML = `<span class="text-red-400">😢 Lost! It was ${result}</span>`;
+                }
+                saveState();
+                updateUI();
+            }, 1000);
+        }
+        
+        // ============================================================
+        // NUMBER GUESS
+        // ============================================================
+        function renderNumberGuess() {
+            return `
+                <div class="text-center">
+                    <h3 class="pixel-font text-xl text-orange-400 mb-4">🔢 NUMBER GUESS</h3>
+                    <p class="text-gray-400 text-sm mb-4">Cost: 💎 25 | Guess 1-10 for 10x reward!</p>
+                    
+                    <input type="number" min="1" max="10" class="guess-input mb-4" id="guess-input" placeholder="?">
+                    
+                    <div id="guess-result" class="text-lg mb-4 h-8"></div>
+                    
+                    <button onclick="submitGuess()" class="px-8 py-3 bg-gradient-to-r from-purple-500 to-blue-500 rounded-lg font-bold hover:opacity-90">
+                        🎯 GUESS (💎 25)
+                    </button>
+                    <button onclick="closeModal({target:{id:'game-modal'}})" class="ml-2 px-6 py-3 bg-gray-700 rounded-lg hover:bg-gray-600">
+                        Close
+                    </button>
+                </div>
+            `;
+        }
+        
+        function submitGuess() {
+            const guess = parseInt(document.getElementById('guess-input').value);
+            if (isNaN(guess) || guess < 1 || guess > 10) {
+                showToast('Enter a number between 1-10!');
+                return;
+            }
+            
+            if (!spendCurrency('diamond', 25)) return;
+            
+            gameState.stats.games++;
+            const answer = Math.floor(Math.random() * 10) + 1;
+            const resultDiv = document.getElementById('guess-result');
+            
+            if (guess === answer) {
+                gameState.stats.wins++;
+                const rand = Math.random();
+                let reward;
+                if (rand < 0.1) {
+                    reward = { type: 'stone', amount: 1 };
+                } else if (rand < 0.3) {
+                    reward = { type: 'iron', amount: 2 };
+                } else if (rand < 0.6) {
+                    reward = { type: 'gold', amount: 10 };
+                } else {
+                    reward = { type: 'diamond', amount: 250 };
+                }
+                addCurrency(reward.type, reward.amount);
+                resultDiv.innerHTML = `<span class="text-green-400">🎉 CORRECT! +${reward.amount} ${CURRENCY_ICONS[reward.type]}</span>`;
+            } else {
+                resultDiv.innerHTML = `<span class="text-red-400">❌ Wrong! It was ${answer}</span>`;
+            }
+            
+            document.getElementById('guess-input').value = '';
+            saveState();
+            updateUI();
+        }
+        
+        // ============================================================
+        // DICE DUEL
+        // ============================================================
+        function renderDice() {
+            return `
+                <div class="text-center">
+                    <h3 class="pixel-font text-xl text-orange-400 mb-4">🎲 DICE DUEL</h3>
+                    <p class="text-gray-400 text-sm mb-4">Cost: 💎 30 | Beat the dealer!</p>
+                    
+                    <div class="flex justify-center gap-8 mb-6">
+                        <div>
+                            <div class="text-sm text-gray-400 mb-2">You</div>
+                            <div class="text-6xl" id="player-dice">🎲</div>
+                        </div>
+                        <div class="text-4xl self-center">VS</div>
+                        <div>
+                            <div class="text-sm text-gray-400 mb-2">Dealer</div>
+                            <div class="text-6xl" id="dealer-dice">🎲</div>
+                        </div>
+                    </div>
+                    
+                    <div id="dice-result" class="text-lg mb-4 h-8"></div>
+                    
+                    <button onclick="rollDice()" class="px-8 py-3 bg-gradient-to-r from-green-500 to-teal-500 rounded-lg font-bold hover:opacity-90">
+                        🎲 ROLL (💎 30)
+                    </button>
+                    <button onclick="closeModal({target:{id:'game-modal'}})" class="ml-2 px-6 py-3 bg-gray-700 rounded-lg hover:bg-gray-600">
+                        Close
+                    </button>
+                </div>
+            `;
+        }
+        
+        function rollDice() {
+            if (!spendCurrency('diamond', 30)) return;
+            
+            gameState.stats.games++;
+            const diceEmoji = ['⚀', '⚁', '⚂', '⚃', '⚄', '⚅'];
+            const playerRoll = Math.floor(Math.random() * 6) + 1;
+            const dealerRoll = Math.floor(Math.random() * 6) + 1;
+            
+            document.getElementById('player-dice').textContent = diceEmoji[playerRoll - 1];
+            document.getElementById('dealer-dice').textContent = diceEmoji[dealerRoll - 1];
+            
+            const resultDiv = document.getElementById('dice-result');
+            
+            if (playerRoll > dealerRoll) {
+                gameState.stats.wins++;
+                const reward = playerRoll === 6 ? { type: 'gold', amount: 15 } : { type: 'diamond', amount: 60 };
+                addCurrency(reward.type, reward.amount);
+                resultDiv.innerHTML = `<span class="text-green-400">🎉 YOU WIN! +${reward.amount} ${CURRENCY_ICONS[reward.type]}</span>`;
+            } else if (playerRoll < dealerRoll) {
+                resultDiv.innerHTML = `<span class="text-red-400">😢 Dealer wins!</span>`;
+            } else {
+                addCurrency('diamond', 30); // Refund on tie
+                resultDiv.innerHTML = `<span class="text-yellow-400">🤝 Tie! Refunded.</span>`;
+            }
+            
+            saveState();
+            updateUI();
+        }
+        
+        // ============================================================
+        // MYSTERY BOX
+        // ============================================================
+        function renderTreasure() {
+            return `
+                <div class="text-center">
+                    <h3 class="pixel-font text-xl text-orange-400 mb-4">📦 MYSTERY BOX</h3>
+                    <p class="text-gray-400 text-sm mb-4">Cost: 💎 50 | Pick wisely!</p>
+                    
+                    <div class="flex justify-center gap-4 mb-6" id="treasure-boxes">
+                        <button onclick="openTreasure(1)" class="text-6xl hover:scale-110 transition">📦</button>
+                        <button onclick="openTreasure(2)" class="text-6xl hover:scale-110 transition">📦</button>
+                        <button onclick="openTreasure(3)" class="text-6xl hover:scale-110 transition">📦</button>
+                    </div>
+                    
+                    <div id="treasure-result" class="text-lg mb-4 h-8"></div>
+                    
+                    <button onclick="resetTreasure()" id="treasure-reset" class="px-8 py-3 bg-gradient-to-r from-orange-500 to-red-500 rounded-lg font-bold hover:opacity-90 hidden">
+                        🔄 Play Again (💎 50)
+                    </button>
+                    <button onclick="closeModal({target:{id:'game-modal'}})" class="px-6 py-3 bg-gray-700 rounded-lg hover:bg-gray-600">
+                        Close
+                    </button>
+                </div>
+            `;
+        }
+        
+        let treasurePaid = false;
+        
+        function openTreasure(box) {
+            if (!treasurePaid) {
+                if (!spendCurrency('diamond', 50)) return;
+                treasurePaid = true;
+                gameState.stats.games++;
+            }
+            
+            const prizes = [
+                { type: 'diamond', amount: 25, emoji: '💎' },
+                { type: 'diamond', amount: 75, emoji: '💎' },
+                { type: 'gold', amount: 20, emoji: '🪙' },
+                { type: 'iron', amount: 5, emoji: '⚙️' },
+                { type: 'stone', amount: 2, emoji: '🪨' },
+                { type: 'wood', amount: 1, emoji: '🪵' }
+            ];
+            
+            // Weighted random
+            const rand = Math.random();
+            let prize;
+            if (rand < 0.02) prize = prizes[5]; // Wood 2%
+            else if (rand < 0.08) prize = prizes[4]; // Stone 6%
+            else if (rand < 0.18) prize = prizes[3]; // Iron 10%
+            else if (rand < 0.38) prize = prizes[2]; // Gold 20%
+            else if (rand < 0.68) prize = prizes[1]; // 75 diamond 30%
+            else prize = prizes[0]; // 25 diamond 32%
+            
+            gameState.stats.wins++;
+            addCurrency(prize.type, prize.amount);
+            
+            // Show all boxes
+            const boxes = document.getElementById('treasure-boxes');
+            boxes.innerHTML = `
+                <div class="text-6xl ${box === 1 ? 'ring-4 ring-green-500 rounded-lg' : 'opacity-50'}">${box === 1 ? prize.emoji : '📦'}</div>
+                <div class="text-6xl ${box === 2 ? 'ring-4 ring-green-500 rounded-lg' : 'opacity-50'}">${box === 2 ? prize.emoji : '📦'}</div>
+                <div class="text-6xl ${box === 3 ? 'ring-4 ring-green-500 rounded-lg' : 'opacity-50'}">${box === 3 ? prize.emoji : '📦'}</div>
+            `;
+            
+            document.getElementById('treasure-result').innerHTML = `<span class="text-green-400">🎉 +${prize.amount} ${CURRENCY_ICONS[prize.type]}</span>`;
+            document.getElementById('treasure-reset').classList.remove('hidden');
+            
+            saveState();
+            updateUI();
+        }
+        
+        function resetTreasure() {
+            treasurePaid = false;
+            document.getElementById('treasure-boxes').innerHTML = `
+                <button onclick="openTreasure(1)" class="text-6xl hover:scale-110 transition">📦</button>
+                <button onclick="openTreasure(2)" class="text-6xl hover:scale-110 transition">📦</button>
+                <button onclick="openTreasure(3)" class="text-6xl hover:scale-110 transition">📦</button>
+            `;
+            document.getElementById('treasure-result').innerHTML = '';
+            document.getElementById('treasure-reset').classList.add('hidden');
+        }
+        
+        // ============================================================
+        // GACHA WHEEL
+        // ============================================================
+        function renderGacha() {
+            const availableMerch = MERCH_ITEMS.filter(m => !gameState.merch.includes(m.id));
+            
+            return `
+                <div class="text-center">
+                    <h3 class="pixel-font text-xl text-orange-400 mb-4">🎡 GACHA WHEEL</h3>
+                    <p class="text-gray-400 text-sm mb-2">Cost: 🪵 1 Wood | Win exclusive merch!</p>
+                    <p class="text-xs text-gray-500 mb-4">You have: ${gameState.currencies.wood} 🪵</p>
+                    
+                    <div class="relative inline-block mb-6">
+                        <div class="wheel-pointer"></div>
+                        <div class="gacha-wheel bg-gradient-to-br from-orange-900 to-purple-900 border-4 border-orange-500" id="gacha-wheel">
+                            ${generateWheelSegments()}
+                        </div>
+                    </div>
+                    
+                    <div id="gacha-result" class="text-lg mb-4 h-12"></div>
+                    
+                    <button onclick="spinGacha()" class="px-8 py-3 bg-gradient-to-r from-amber-600 to-amber-800 rounded-lg font-bold hover:opacity-90" ${gameState.currencies.wood < 1 ? 'disabled style="opacity:0.5"' : ''}>
+                        🎡 SPIN (🪵 1)
+                    </button>
+                    <button onclick="closeModal({target:{id:'game-modal'}})" class="ml-2 px-6 py-3 bg-gray-700 rounded-lg hover:bg-gray-600">
+                        Close
+                    </button>
+                    
+                    <div class="mt-4 text-xs text-gray-500">
+                        ${availableMerch.length} items remaining to collect
+                    </div>
+                </div>
+            `;
+        }
+        
+        function generateWheelSegments() {
+            const colors = ['#ff6b00', '#ffd700', '#00bfff', '#ff69b4', '#32cd32', '#9370db', '#ff4500', '#00ced1'];
+            let html = '';
+            for (let i = 0; i < 8; i++) {
+                const rotation = i * 45;
+                html += `
+                    <div class="absolute w-full h-full" style="transform: rotate(${rotation}deg)">
+                        <div class="absolute top-0 left-1/2 w-1/2 h-1/2 origin-bottom-left" 
+                             style="transform: rotate(22.5deg) skewY(-45deg); background: ${colors[i]}; opacity: 0.8;">
+                        </div>
+                    </div>
+                `;
+            }
+            return html;
+        }
+        
+        function spinGacha() {
+            if (!spendCurrency('wood', 1)) return;
+            
+            gameState.stats.spins++;
+            gameState.stats.games++;
+            
+            const wheel = document.getElementById('gacha-wheel');
+            const spins = 5 + Math.random() * 5; // 5-10 full rotations
+            const finalAngle = spins * 360 + Math.random() * 360;
+            
+            wheel.style.transform = `rotate(${finalAngle}deg)`;
+            
+            setTimeout(() => {
+                // Determine prize
+                const availableMerch = MERCH_ITEMS.filter(m => !gameState.merch.includes(m.id));
+                const resultDiv = document.getElementById('gacha-result');
+                
+                if (availableMerch.length === 0) {
+                    // All collected - give bonus currency
+                    addCurrency('gold', 50);
+                    resultDiv.innerHTML = `<span class="text-yellow-400">🎉 All merch collected! Bonus: +50 🪙</span>`;
+                } else {
+                    // Weighted by rarity (legendary harder to get)
+                    const weighted = [];
+                    availableMerch.forEach(item => {
+                        const weight = item.rarity === 'legendary' ? 1 : item.rarity === 'rare' ? 3 : item.rarity === 'uncommon' ? 6 : 10;
+                        for (let i = 0; i < weight; i++) weighted.push(item);
+                    });
+                    
+                    const prize = weighted[Math.floor(Math.random() * weighted.length)];
+                    gameState.merch.push(prize.id);
+                    gameState.stats.wins++;
+                    
+                    const rarityColor = {
+                        common: 'text-gray-300',
+                        uncommon: 'text-green-400',
+                        rare: 'text-blue-400',
+                        legendary: 'text-yellow-400'
+                    };
+                    
+                    resultDiv.innerHTML = `
+                        <div class="text-4xl mb-2">${prize.emoji}</div>
+                        <span class="${rarityColor[prize.rarity]}">🎉 ${prize.name}!</span>
+                        <div class="text-xs text-gray-400 capitalize">${prize.rarity}</div>
+                    `;
+                }
+                
+                saveState();
+                updateUI();
+            }, 5000);
+        }
+        
+        // ============================================================
+        // TOAST
+        // ============================================================
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            document.getElementById('toast-message').textContent = message;
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 3000);
+        }
+        
+        // ============================================================
+        // TIMER
+        // ============================================================
+        function updateResetTimer() {
+            const now = new Date();
+            const tomorrow = new Date(now);
+            tomorrow.setDate(tomorrow.getDate() + 1);
+            tomorrow.setHours(0, 0, 0, 0);
+            
+            const diff = tomorrow - now;
+            const hours = Math.floor(diff / (1000 * 60 * 60));
+            const mins = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+            const secs = Math.floor((diff % (1000 * 60)) / 1000);
+            
+            document.getElementById('reset-timer').textContent = 
+                `${hours.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+        }
+        
+        // ============================================================
+        // INIT
+        // ============================================================
+        loadState();
+        setInterval(updateResetTimer, 1000);
+        updateResetTimer();
+    </script>
+</body>
+</html>
