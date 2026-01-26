@@ -1124,11 +1124,11 @@ app.get('/', (c) => {
                                 <div class="flex items-center justify-between mb-2">
                                     <div class="flex items-center gap-2 text-xs">
                                         <span id="combat-mode-icon">🌾</span>
-                                        <span id="combat-mode-text" class="text-yellow-300 font-bold">Farming</span>
+                                        <span id="combat-mode-text" class="text-yellow-300 font-bold" data-i18n="hpFarming">Farming</span>
                                     </div>
                                     <div id="potion-indicator" class="hidden items-center gap-1 text-xs animate-bounce">
                                         <span>🧪</span>
-                                        <span class="text-green-400 font-bold">+20% HP</span>
+                                        <span class="text-green-400 font-bold" data-i18n="potionHeal">+20% HP</span>
                                     </div>
                                 </div>
                                 
@@ -1727,6 +1727,7 @@ app.get('/', (c) => {
                 server: "Server: TW", madeWith: "Made with ❤️ by the family.",
                 gmPvp: "GM PvP", gmFashion: "GM Fashion", memes: "Memes", arcade: "Arcade", exclusiveMerch: "Merch", dailyFortune: "Fortune", contentRankDesc: "Guild Power Rankings", pvpRankDesc: "Battle Rankings",
                 gallery: "Gallery", shop: "Shop", miniGames: "Mini Games",
+                hpFarming: "Farming", hpBossing: "Bossing", hpPvp: "PvP", potionHeal: "+20% HP",
                 membersDesc: "Our Guild Members", funDesc: "Fun Moments", progressDesc2: "Guild Progress",
                 raidsDesc: "Weekly Battles", gmDesc2: "Our Leader", joinDesc: "Become Family"
             },
@@ -1748,6 +1749,7 @@ app.get('/', (c) => {
                 server: "伺服器：台灣", madeWith: "家人們用 ❤️ 製作",
                 gmPvp: "會長PvP", gmFashion: "會長時尚", memes: "迷因", arcade: "遊戲廳", exclusiveMerch: "限定商品", dailyFortune: "每日運勢", contentRankDesc: "公會戰力排名", pvpRankDesc: "戰鬥排名",
                 gallery: "相簿", shop: "商店", miniGames: "小遊戲",
+                hpFarming: "打怪中", hpBossing: "打王中", hpPvp: "PvP戰", potionHeal: "+20% 血量",
                 membersDesc: "我們的成員", funDesc: "歡樂時刻", progressDesc2: "公會進度",
                 raidsDesc: "每週戰鬥", gmDesc2: "我們的領袖", joinDesc: "成為家人"
             },
@@ -1769,6 +1771,7 @@ app.get('/', (c) => {
                 server: "เซิร์ฟเวอร์: TW", madeWith: "สร้างด้วย ❤️ โดยครอบครัว",
                 gmPvp: "GM PvP", gmFashion: "แฟชั่น GM", memes: "มีม", arcade: "อาร์เคด", exclusiveMerch: "สินค้า", dailyFortune: "ดวงประจำวัน", contentRankDesc: "อันดับพลังกิลด์", pvpRankDesc: "อันดับต่อสู้",
                 gallery: "แกลเลอรี่", shop: "ร้านค้า", miniGames: "มินิเกม",
+                hpFarming: "ฟาร์ม", hpBossing: "บุกบอส", hpPvp: "PvP", potionHeal: "+20% HP",
                 membersDesc: "สมาชิกกิลด์", funDesc: "ช่วงเวลาสนุก", progressDesc2: "ความคืบหน้ากิลด์",
                 raidsDesc: "ต่อสู้รายสัปดาห์", gmDesc2: "ผู้นำของเรา", joinDesc: "เป็นครอบครัว"
             }
@@ -1820,6 +1823,9 @@ app.get('/', (c) => {
             
             // Close menu
             document.getElementById('lang-menu').classList.add('hidden');
+            
+            // Update HP bar language
+            if (window.updateHPBarLang) window.updateHPBarLang();
         }
         
         // Close language menu when clicking outside
@@ -1872,16 +1878,50 @@ app.get('/', (c) => {
             let mpDrainPhase = true; // true = draining, false = refilling
             
             const modes = {
-                farming: { icon: '🌾', text: 'Farming', dmgMin: 8000, dmgMax: 35000, dmgFreq: 0.25, bigHitChance: 0.03 },
-                bossing: { icon: '🐉', text: 'Bossing', dmgMin: 80000, dmgMax: 250000, dmgFreq: 0.4, bigHitChance: 0.12 },
-                pvp: { icon: '⚔️', text: 'PvP', dmgMin: 50000, dmgMax: 180000, dmgFreq: 0.35, bigHitChance: 0.08 }
+                farming: { icon: '🌾', dmgMin: 8000, dmgMax: 35000, dmgFreq: 0.25, bigHitChance: 0.03 },
+                bossing: { icon: '🐉', dmgMin: 80000, dmgMax: 250000, dmgFreq: 0.4, bigHitChance: 0.12 },
+                pvp: { icon: '⚔️', dmgMin: 50000, dmgMax: 180000, dmgFreq: 0.35, bigHitChance: 0.08 }
+            };
+            
+            const modeText = {
+                en: { farming: 'Farming', bossing: 'Bossing', pvp: 'PvP' },
+                zh: { farming: '打怪中', bossing: '打王中', pvp: 'PvP戰' },
+                th: { farming: 'ฟาร์ม', bossing: 'บุกบอส', pvp: 'PvP' }
             };
             
             const combatLogs = {
-                farming: ['Slaying mobs...', 'Exp +1,250', 'Meso +3,420', 'Auto-battle ✓', 'Combo x15!', 'Drop! 📦'],
-                bossing: ['Dodge! 💨', 'Boss enraged!', '💥 CRIT!', 'Phase 2...', '⚠️ AOE incoming!', 'Bind success!'],
-                pvp: ['Clash! ⚔️', 'Counter!', 'Shield up! 🛡️', 'Ultimate ready!', 'Enemy stunned!', 'Combo break!']
+                en: {
+                    farming: ['Slaying mobs...', 'Exp +1,250', 'Meso +3,420', 'Auto-battle ✓', 'Combo x15!', 'Drop! 📦'],
+                    bossing: ['Dodge! 💨', 'Boss enraged!', '💥 CRIT!', 'Phase 2...', '⚠️ AOE incoming!', 'Bind success!'],
+                    pvp: ['Clash! ⚔️', 'Counter!', 'Shield up! 🛡️', 'Ultimate ready!', 'Enemy stunned!', 'Combo break!']
+                },
+                zh: {
+                    farming: ['刷怪中...', '經驗 +1,250', '楓幣 +3,420', '自動戰鬥 ✓', '連擊 x15!', '掉寶! 📦'],
+                    bossing: ['閃避! 💨', 'Boss狂暴!', '💥 爆擊!', '第二階段...', '⚠️ 範圍攻擊!', '定身成功!'],
+                    pvp: ['交鋒! ⚔️', '反擊!', '護盾! 🛡️', '大招準備!', '敵人暈眩!', '連擊中斷!']
+                },
+                th: {
+                    farming: ['ล่ามอน...', 'Exp +1,250', 'เมโซ +3,420', 'ออโต้ ✓', 'คอมโบ x15!', 'ดรอป! 📦'],
+                    bossing: ['หลบ! 💨', 'บอสโกรธ!', '💥 คริ!', 'เฟส 2...', '⚠️ AOE มา!', 'ล็อคสำเร็จ!'],
+                    pvp: ['ปะทะ! ⚔️', 'สวนกลับ!', 'โล่! 🛡️', 'อัลติพร้อม!', 'ศัตรูสตัน!', 'คอมโบเบรค!']
+                }
             };
+            
+            const potionText = {
+                en: 'Potion!',
+                zh: '喝水!',
+                th: 'ยา!'
+            };
+            
+            const mpRestoreText = {
+                en: '💙 MP Restore!',
+                zh: '💙 MP恢復!',
+                th: '💙 MP เติม!'
+            };
+            
+            function getLang() {
+                return localStorage.getItem('lang') || 'en';
+            }
             
             function updateDisplay() {
                 const hpPercent = (currentHP / MAX_HP) * 100;
@@ -1929,11 +1969,19 @@ app.get('/', (c) => {
                 const modeKeys = Object.keys(modes);
                 combatMode = modeKeys[Math.floor(Math.random() * modeKeys.length)];
                 const mode = modes[combatMode];
-                const modeIcon = document.getElementById('combat-mode-icon');
-                const modeText = document.getElementById('combat-mode-text');
-                if (modeIcon) modeIcon.textContent = mode.icon;
-                if (modeText) modeText.textContent = mode.text;
+                const lang = getLang();
+                const modeIconEl = document.getElementById('combat-mode-icon');
+                const modeTextEl = document.getElementById('combat-mode-text');
+                if (modeIconEl) modeIconEl.textContent = mode.icon;
+                if (modeTextEl) modeTextEl.textContent = modeText[lang][combatMode];
             }
+            
+            // Update mode text when language changes
+            window.updateHPBarLang = function() {
+                const lang = getLang();
+                const modeTextEl = document.getElementById('combat-mode-text');
+                if (modeTextEl) modeTextEl.textContent = modeText[lang][combatMode];
+            };
             
             function simulate() {
                 const mode = modes[combatMode];
@@ -1947,11 +1995,12 @@ app.get('/', (c) => {
                     let dmg = Math.floor(Math.random() * (mode.dmgMax - mode.dmgMin) + mode.dmgMin);
                     
                     // Big hit chance
+                    const lang = getLang();
                     if (Math.random() < mode.bigHitChance) {
                         dmg = Math.floor(dmg * 2.5);
                         showCombatLog('💥 -' + dmg.toLocaleString() + ' CRIT!');
                     } else if (Math.random() < 0.25) {
-                        const logs = combatLogs[combatMode];
+                        const logs = combatLogs[lang][combatMode];
                         showCombatLog(logs[Math.floor(Math.random() * logs.length)]);
                     }
                     
@@ -1964,7 +2013,8 @@ app.get('/', (c) => {
                     const potionHeal = Math.floor(MAX_HP * POTION_HEAL);
                     currentHP = Math.min(MAX_HP, currentHP + potionHeal);
                     showPotion();
-                    showCombatLog('🧪 Potion! +' + potionHeal.toLocaleString() + ' HP');
+                    const lang = getLang();
+                    showCombatLog('🧪 ' + potionText[lang] + ' +' + potionHeal.toLocaleString() + ' HP');
                     potionTimer = 0;
                 }
                 
@@ -1974,7 +2024,8 @@ app.get('/', (c) => {
                     currentMP = Math.max(0, currentMP - Math.floor(Math.random() * 15 + 5));
                     if (currentMP < MAX_MP * 0.35) {
                         mpDrainPhase = false; // Start refilling
-                        showCombatLog('💙 MP Restore!');
+                        const lang = getLang();
+                        showCombatLog(mpRestoreText[lang]);
                     }
                 } else {
                     // Refill MP quickly
