@@ -243,6 +243,8 @@ app.get('/', (c) => {
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/nw-core.css">
+    <script src="/static/nw-effects.js" defer></script>
     <script src="/static/bgm.js" defer></script>
     <script src="/static/click-juice.js" defer></script>
     <script src="/static/icons/icons.js" defer></script>
@@ -1030,22 +1032,22 @@ app.get('/', (c) => {
             <div class="flex justify-center mb-6" id="hero-emblem">
                 ${generateEmblemSVG('emblem-n emblem-n-large', 100)}
             </div>
-            <h1 class="pixel-title mb-4" id="guild-name" style="display: block; width: 100%; text-align: center; margin-left: auto; margin-right: auto;">
+            <h1 class="pixel-title mb-4 nw-text-glow" id="guild-name" data-nw-reveal="scale" style="display: block; width: 100%; text-align: center; margin-left: auto; margin-right: auto;">
                 NumbahWan
             </h1>
-            <p class="text-xl md:text-2xl text-orange-300 mb-6 opacity-0" id="tagline" data-i18n="tagline">
+            <p class="text-xl md:text-2xl text-orange-300 mb-6 nw-text-gradient" id="tagline" data-nw-reveal="up" data-nw-delay="0.2s" data-i18n="tagline">
                 MapleStory Idle RPG Guild
             </p>
-            <div class="glass-card p-4 md:p-6 max-w-xl mx-auto mb-8 opacity-0" id="motto-card">
+            <div class="glass-card p-4 md:p-6 max-w-xl mx-auto mb-8 nw-glow-pulse" id="motto-card" data-nw-reveal="up" data-nw-delay="0.3s">
                 <p class="text-base md:text-xl italic text-orange-200">
                     "<span data-i18n="motto">We are not just a guild, but</span> <span class="text-orange-400 font-bold" data-i18n="family">FAMILY</span>"
                 </p>
             </div>
             <div class="flex flex-wrap justify-center gap-4 opacity-0" id="hero-buttons">
-                <button class="magnetic-btn" onclick="document.getElementById('roster').scrollIntoView({behavior: 'smooth'})">
+                <button class="magnetic-btn nw-btn-shine" data-nw-magnetic data-nw-ripple onclick="document.getElementById('roster').scrollIntoView({behavior: 'smooth'})">
                     ${iconSword()} <span data-i18n="meetFamily">Meet The Family</span>
                 </button>
-                <button class="magnetic-btn" style="background: transparent; border: 2px solid var(--primary);" onclick="document.getElementById('progress').scrollIntoView({behavior: 'smooth'})">
+                <button class="magnetic-btn nw-btn-shine" data-nw-magnetic data-nw-ripple style="background: transparent; border: 2px solid var(--primary);" onclick="document.getElementById('progress').scrollIntoView({behavior: 'smooth'})">
                     ${iconTrophy()} <span data-i18n="ourJourney">Our Journey</span>
                 </button>
             </div>
@@ -1066,16 +1068,16 @@ app.get('/', (c) => {
                 <span data-i18n="aboutTitle">About NumbahWan</span>
             </h2>
             <div class="grid md:grid-cols-3 gap-8">
-                <div class="glass-card p-8 text-center reveal">
-                    <div class="stat-number" data-count="12">0</div>
+                <div class="glass-card p-8 text-center nw-hover-lift nw-glow" data-nw-reveal="up" data-nw-tilt>
+                    <div class="stat-number nw-text-gradient" data-nw-counter="12">0</div>
                     <p class="text-orange-300 mt-2" data-i18n="familyMembers">Family Members</p>
                 </div>
-                <div class="glass-card p-8 text-center reveal">
-                    <div class="stat-number" data-count="76">0</div>
+                <div class="glass-card p-8 text-center nw-hover-lift nw-glow" data-nw-reveal="up" data-nw-delay="0.1s" data-nw-tilt>
+                    <div class="stat-number nw-text-gradient" data-nw-counter="76">0</div>
                     <p class="text-orange-300 mt-2" data-i18n="highestLevel">Highest Level</p>
                 </div>
-                <div class="glass-card p-8 text-center reveal">
-                    <div class="stat-number" data-count="2">0</div>
+                <div class="glass-card p-8 text-center nw-hover-lift nw-glow" data-nw-reveal="up" data-nw-delay="0.2s" data-nw-tilt>
+                    <div class="stat-number nw-text-gradient" data-nw-counter="2">0</div>
                     <p class="text-orange-300 mt-2" data-i18n="billionCP">Billion+ CP</p>
                 </div>
             </div>
@@ -1134,7 +1136,7 @@ app.get('/', (c) => {
             
             <div class="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                 ${members.map((member, index) => `
-                    <div class="member-card glass-card p-6 reveal" style="animation-delay: ${index * 0.1}s">
+                    <div class="member-card glass-card p-6 nw-hover-lift" data-nw-reveal="up" data-nw-delay="${index * 0.08}s" data-nw-tilt>
                         <div class="relative">
                             ${index === 0 ? '<span class="crown"><svg class="nw-icon" width="24" height="24" style="color:#ffd700"><use href="/static/icons/nw-icons.svg#crown"></use></svg></span>' : ''}
                             <div class="flex items-center gap-4 mb-4">
@@ -1191,7 +1193,7 @@ app.get('/', (c) => {
             </h2>
             <p class="text-center text-orange-300 mb-12 reveal" data-i18n="leaderboardDesc">Who's the strongest?</p>
             
-            <div class="glass-card p-8 reveal">
+            <div class="glass-card p-8 nw-border-animated" data-nw-reveal="scale">
                 <!-- Race Bulletin Header -->
                 <div class="flex justify-between items-center mb-6 pb-4 border-b border-orange-500/30">
                     <span class="text-sm text-gray-400">📅 Updated: 2026-01-26</span>
@@ -1386,7 +1388,7 @@ app.get('/', (c) => {
             
             <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
                 ${guildFunPhotos.map((photo, index) => `
-                    <div class="photo-card glass-card reveal overflow-hidden group cursor-pointer" style="animation-delay: ${index * 0.1}s">
+                    <div class="photo-card glass-card overflow-hidden group cursor-pointer nw-hover-scale nw-img-shine" data-nw-reveal="up" data-nw-delay="${index * 0.1}s">
                         <img src="${photo.image}" alt="${photo.title.en}" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" loading="lazy" />
                         <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent opacity-80 group-hover:opacity-100 transition-opacity"></div>
                         <div class="absolute bottom-0 left-0 right-0 p-4">
@@ -1399,7 +1401,7 @@ app.get('/', (c) => {
             
             <div class="text-center mt-12 reveal">
                 <p class="text-gray-400 mb-4" data-i18n="wantToAdd">Want to add your screenshots?</p>
-                <button class="magnetic-btn">
+                <button class="magnetic-btn nw-btn-shine" data-nw-magnetic data-nw-confetti>
                     ${iconUpload()} <span data-i18n="submitPhoto">Submit Photo</span>
                 </button>
             </div>
