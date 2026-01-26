@@ -40,59 +40,9 @@ app.get('/api/photos', (c) => {
 // All avatars stored in /public/static/ with meaningful names for easy debugging
 // ============================================================================
 
-// Previous CP values for tracking gains (from 2026-01-24)
-const previousCP: Record<string, number> = {
-  "RegginA": 2382000000,
-  "Yuluner晴": 1247000000,
-  "Natehouoho": 959627000,
-  "RegginO": 566603000,
-  "騎鳥回家": 354744000,
-  "紈稀税著": 458115000,
-  "阿光Yo": 144110000,
-  "碼農小孫": 22566000,
-  "泰拳寒玉": 7567864,
-  "TW#VWQG7R9C03": 99969000,
-  "小亨寶寶": 13174000,
-  "葉陽": 2572190,
-}
-
-const members = [
-  // Master - RegginA: White masked warrior, alpha leader
-  { name: "RegginA", level: 77, cp: "2B 867M", cpValue: 2867000000, contribution: 560, upgrade: 10, role: "Master", online: true, daysAgo: null, avatar: "/static/avatar-reggina-master-masked-warrior.jpg" },
-  
-  // Yuluner晴: 晴 = sunny/clear - Bright cheerful sun theme
-  { name: "Yuluner晴", level: 76, cp: "2B 328M", cpValue: 2328000000, contribution: 230, upgrade: 3, role: "Guild Member", online: false, daysAgo: "Today", avatar: "/static/avatar-yuluner-sunny-cheerful.jpg" },
-  
-  // Natehouoho: Playful fun adventurer
-  { name: "Natehouoho", level: 74, cp: "1B 197M", cpValue: 1197000000, contribution: 0, upgrade: 0, role: "Guild Member", online: true, daysAgo: null, avatar: "/static/avatar-natehouoho-playful-adventurer.jpg" },
-  
-  // Vice Master - RegginO: Pink hair with flower crown
-  { name: "RegginO", level: 74, cp: "960M 2K", cpValue: 960002000, contribution: 560, upgrade: 10, role: "Vice Master", online: false, daysAgo: "Today", avatar: "/static/avatar-reggino-vicemaster-pinkhair.jpg" },
-  
-  // 騎鳥回家: "Riding bird home" - Character on bird mount
-  { name: "騎鳥回家", level: 71, cp: "593M 939K", cpValue: 593939000, contribution: 520, upgrade: 10, role: "Guild Member", online: false, daysAgo: "Today", avatar: "/static/avatar-qiniaohuijia-riding-bird.jpg" },
-  
-  // 紈稀税著 (領導): Sleepy gamer falling asleep with phone
-  { name: "紈稀税著", level: 72, cp: "562M 108K", cpValue: 562108000, contribution: 500, upgrade: 10, role: "領導", online: false, daysAgo: "Today", avatar: "/static/avatar-wandaoshuizhu-sleepy-gamer.jpg" },
-  
-  // 阿光Yo: 光 = light - Glowing light mage
-  { name: "阿光Yo", level: 67, cp: "180M 315K", cpValue: 180315000, contribution: 190, upgrade: 3, role: "Guild Member", online: true, daysAgo: null, avatar: "/static/avatar-aguangyo-light-mage.jpg" },
-  
-  // TW#VWQG7R9C03: Random ID - Mystery anonymous character
-  { name: "TW#VWQG7R9C03", level: 65, cp: "99M 969K", cpValue: 99969000, contribution: 0, upgrade: 0, role: "Guild Member", online: false, daysAgo: "8d", avatar: "/static/avatar-twvwqg-mystery-anonymous.jpg" },
-  
-  // 碼農小孫: 碼農 = programmer/coder - Tech geek with glasses
-  { name: "碼農小孫", level: 62, cp: "31M 4K", cpValue: 31004000, contribution: 0, upgrade: 0, role: "Guild Member", online: false, daysAgo: "Today", avatar: "/static/avatar-manongxiaosun-programmer.jpg" },
-  
-  // 泰拳寒玉: Thai Boxing + Cold Jade - Martial artist ice theme
-  { name: "泰拳寒玉", level: 52, cp: "15M 329K", cpValue: 15329000, contribution: 190, upgrade: 3, role: "Guild Member", online: false, daysAgo: "Today", avatar: "/static/avatar-taiquanhanyu-thaiboxer-jade.jpg" },
-  
-  // 小亨寶寶: 寶寶 = baby - Adorable cute baby character
-  { name: "小亨寶寶", level: 54, cp: "13M 174K", cpValue: 13174000, contribution: 0, upgrade: 0, role: "Guild Member", online: false, daysAgo: "17d", avatar: "/static/avatar-xiaohengbaobao-baby-cute.jpg" },
-  
-  // 葉陽: 葉 = leaf, 陽 = sun - Nature druid with sun aura
-  { name: "葉陽", level: 46, cp: "2,572,190", cpValue: 2572190, contribution: 0, upgrade: 0, role: "Guild Member", online: false, daysAgo: "18d", avatar: "/static/avatar-yeyang-leaf-sun-nature.jpg" },
-]
+// Use data from JSON files (Single Source of Truth)
+const previousCP: Record<string, number> = rosterData.previousCP
+const members = rosterData.members
 
 // Sort by CP for leaderboard
 const sortedMembers = [...members].sort((a, b) => b.cpValue - a.cpValue)
@@ -487,6 +437,7 @@ app.get('/', (c) => {
         .role-master { background: linear-gradient(135deg, #ffd700 0%, #ffaa00 100%); color: #000; }
         .role-vice { background: linear-gradient(135deg, #c0c0c0 0%, #808080 100%); color: #000; }
         .role-leader { background: linear-gradient(135deg, #cd7f32 0%, #8b4513 100%); }
+        .role-inactive { background: linear-gradient(135deg, #ff69b4 0%, #ff1493 100%); color: #fff; }
         .role-member { background: rgba(255, 107, 0, 0.3); }
         
         /* Online indicator */
@@ -1151,7 +1102,8 @@ app.get('/', (c) => {
                                 <span class="px-3 py-1 rounded-full text-xs font-bold ${
                                     member.role === 'Master' ? 'role-master' : 
                                     member.role === 'Vice Master' ? 'role-vice' : 
-                                    member.role === '領導' ? 'role-leader' : 'role-member'
+                                    member.role === '領導' ? 'role-leader' :
+                                    member.role === '小可愛' ? 'role-inactive' : 'role-member'
                                 }">
                                     ${member.role}
                                 </span>
