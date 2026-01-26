@@ -157,7 +157,7 @@
     },
 
     // ═══════════════════════════════════════════════════════════════
-    // PARTICLES - Confetti, sparkles, floating
+    // PARTICLES - Confetti, sparkles, floating ambient
     // ═══════════════════════════════════════════════════════════════
     particles: {
       confetti(x, y, count = 30) {
@@ -204,6 +204,29 @@
         }
       },
 
+      // Floating ambient particles
+      floating(container, count = 20) {
+        const el = typeof container === 'string' ? document.querySelector(container) : container;
+        if (!el) return;
+        el.style.position = 'relative';
+        el.style.overflow = 'hidden';
+        const colors = ['#ff6b00', '#ffd700', '#ff9d4d', '#ffffff'];
+        for (let i = 0; i < count; i++) {
+          const p = document.createElement('div');
+          const size = 2 + Math.random() * 4;
+          const duration = 10 + Math.random() * 20;
+          const delay = Math.random() * duration;
+          p.style.cssText = `
+            position:absolute;width:${size}px;height:${size}px;
+            background:${colors[i % colors.length]};border-radius:50%;
+            left:${Math.random() * 100}%;top:${Math.random() * 100}%;
+            opacity:${0.2 + Math.random() * 0.4};pointer-events:none;
+            animation:nwFloat ${duration}s ${delay}s ease-in-out infinite;
+          `;
+          el.appendChild(p);
+        }
+      },
+
       init() {
         // Auto-confetti on click
         document.querySelectorAll('[data-nw-confetti]').forEach(el => {
@@ -213,6 +236,37 @@
         document.querySelectorAll('[data-nw-sparkle]').forEach(el => {
           el.addEventListener('mouseenter', () => this.sparkle(el));
         });
+        // Auto floating particles
+        document.querySelectorAll('[data-nw-particles]').forEach(el => {
+          const count = parseInt(el.dataset.nwParticles) || 20;
+          this.floating(el, count);
+        });
+      }
+    },
+
+    // ═══════════════════════════════════════════════════════════════
+    // PARALLAX - Smooth scroll depth effect
+    // ═══════════════════════════════════════════════════════════════
+    parallax: {
+      init() {
+        const elements = document.querySelectorAll('[data-nw-parallax]');
+        if (!elements.length) return;
+        
+        const update = () => {
+          const scrollY = window.scrollY;
+          elements.forEach(el => {
+            const speed = parseFloat(el.dataset.nwParallax) || 0.5;
+            const rect = el.getBoundingClientRect();
+            const inView = rect.top < window.innerHeight && rect.bottom > 0;
+            if (inView) {
+              const offset = (scrollY - el.offsetTop + window.innerHeight) * speed;
+              el.style.transform = `translateY(${offset}px)`;
+            }
+          });
+        };
+        
+        window.addEventListener('scroll', update, { passive: true });
+        update();
       }
     },
 
@@ -252,7 +306,11 @@
           .nw-page-exit{animation:nwFadeOut 0.3s ease-in forwards}
           @keyframes nwFadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
           @keyframes nwFadeOut{to{opacity:0;transform:translateY(-10px)}}
+          @keyframes nwFloat{0%,100%{transform:translateY(0) translateX(0)}25%{transform:translateY(-20px) translateX(10px)}50%{transform:translateY(-10px) translateX(-10px)}75%{transform:translateY(-30px) translateX(5px)}}
           [data-nw-tilt],[data-nw-magnetic]{transition:transform 0.15s ease-out}
+          [data-nw-parallax]{will-change:transform}
+          .nw-avatar-glow{transition:box-shadow 0.3s ease,transform 0.3s ease}
+          .nw-avatar-glow:hover{box-shadow:0 0 20px var(--nw-primary,#ff6b00),0 0 40px var(--nw-primary,#ff6b00);transform:scale(1.1)}
         `;
         document.head.appendChild(style);
       }
@@ -262,6 +320,7 @@
       this.hoverJuice.init();
       this.textEffects.init();
       this.particles.init();
+      this.parallax.init();
       this.pageTransition.init();
       
       console.log('🎨 NW Effects initialized');

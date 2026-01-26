@@ -916,7 +916,7 @@ app.get('/', (c) => {
     </script>
     
     <!-- Aurora Background -->
-    <div class="aurora-bg"></div>
+    <div class="aurora-bg" data-nw-parallax="0.3"></div>
     
     <!-- Particles -->
     <div id="particles"></div>
@@ -973,22 +973,22 @@ app.get('/', (c) => {
                 <span class="font-bold text-orange-400 text-sm" data-i18n="cpLeaderboard">CP Ranking</span>
                 <span class="text-xs text-gray-400">#47 Server</span>
             </a>
-            <a href="/pvp" class="dropdown-item">
+            <a href="/pvp" class="dropdown-item" data-nw-transition>
                 <svg class="mb-1" width="28" height="28" viewBox="0 0 24 24"><path fill="#ef4444" d="M6 2L3 5L9 11L6 14L4 12L2 14L5 17L7 15L9 17L12 14L7 9L10 6L15 11L12 14L14 16L17 13L20 16L22 14L19 11L22 8L16 2L13 5L10 2L6 2Z"/><path fill="#ffd700" d="M9 15L7 17L9 19L11 21L13 19L11 17L9 15Z"/></svg>
                 <span class="font-bold text-orange-400 text-sm" data-i18n="gmPvp">GM PvP</span>
                 <span class="text-xs text-gray-400">Grandmaster 5</span>
             </a>
-            <a href="/fashion" class="dropdown-item">
+            <a href="/fashion" class="dropdown-item" data-nw-transition>
                 <svg class="mb-1" width="28" height="28" viewBox="0 0 24 24"><path fill="#ec4899" d="M12 2C10 2 9 3 9 4V6L6 10L8 12L6 20H18L16 12L18 10L15 6V4C15 3 14 2 12 2Z"/><circle fill="#ffd700" cx="12" cy="5" r="1.3"/><circle fill="#fff" cx="10" cy="15" r="1" opacity="0.7"/><circle fill="#fff" cx="14" cy="15" r="1" opacity="0.7"/></svg>
                 <span class="font-bold text-orange-400 text-sm" data-i18n="gmFashion">GM Fashion</span>
                 <span class="text-xs text-gray-400">12 Disasters</span>
             </a>
-            <a href="/merch" class="dropdown-item highlight">
+            <a href="/merch" class="dropdown-item highlight" data-nw-transition>
                 <svg class="mb-1" width="28" height="28" viewBox="0 0 24 24"><path fill="#a855f7" d="M5 7H19L21 21H3L5 7Z"/><path fill="none" stroke="#0a0a0f" stroke-width="2" stroke-linecap="round" d="M8 7V5C8 3 9.8 1.5 12 1.5C14.2 1.5 16 3 16 5V7"/><rect fill="#ffd700" x="9" y="11" width="6" height="2" rx="1"/></svg>
                 <span class="font-bold text-purple-400 text-sm" data-i18n="exclusiveMerch">Merch</span>
                 <span class="text-xs text-yellow-400">Members Only</span>
             </a>
-            <a href="/fortune" class="dropdown-item">
+            <a href="/fortune" class="dropdown-item" data-nw-transition>
                 <svg class="mb-1" width="28" height="28" viewBox="0 0 24 24"><circle fill="#a855f7" cx="12" cy="10" r="8"/><ellipse fill="#0a0a0f" cx="12" cy="20" rx="5" ry="2" opacity="0.7"/><circle fill="#fff" cx="8" cy="7" r="2" opacity="0.5"/><path fill="#ffd700" d="M10 11L12 9L15 12L12 14L10 11Z" opacity="0.6"/></svg>
                 <span class="font-bold text-purple-400 text-sm" data-i18n="dailyFortune">Fortune</span>
                 <span class="text-xs text-purple-300">Daily Luck</span>
@@ -1018,7 +1018,7 @@ app.get('/', (c) => {
                 <span class="font-bold text-orange-400 text-sm" data-i18n="guildMaster">Guild Master</span>
                 <span class="text-xs text-gray-400">RegginA</span>
             </a>
-            <a href="/apply" class="dropdown-item highlight">
+            <a href="/apply" class="dropdown-item highlight" data-nw-transition>
                 <svg class="mb-1" width="28" height="28" viewBox="0 0 24 24"><path fill="#ff6b00" d="M12 2C12 2 6 8 6 14C6 16 7 18 8 19L10 17V14L12 12L14 14V17L16 19C17 18 18 16 18 14C18 8 12 2 12 2Z"/><circle fill="#0a0a0f" cx="12" cy="10" r="2.5"/><circle fill="#3b82f6" cx="12" cy="10" r="1.5"/><path fill="#ff4500" d="M10 19L8 23L10 21L12 24L14 21L16 23L14 19H10Z"/></svg>
                 <span class="font-bold text-orange-400 text-sm" data-i18n="joinUs">Join Us</span>
                 <span class="text-xs text-green-400">Recruiting!</span>
@@ -1027,7 +1027,7 @@ app.get('/', (c) => {
     </div>
     
     <!-- Hero Section with Banner Image -->
-    <section id="hero" class="hero-banner">
+    <section id="hero" class="hero-banner" data-nw-particles="25">
         <div class="hero-content w-full max-w-4xl mx-auto">
             <div class="flex justify-center mb-6" id="hero-emblem">
                 ${generateEmblemSVG('emblem-n emblem-n-large', 100)}
@@ -1141,7 +1141,7 @@ app.get('/', (c) => {
                             ${index === 0 ? '<span class="crown"><svg class="nw-icon" width="24" height="24" style="color:#ffd700"><use href="/static/icons/nw-icons.svg#crown"></use></svg></span>' : ''}
                             <div class="flex items-center gap-4 mb-4">
                                 ${member.avatar 
-                                    ? `<img src="${member.avatar}" alt="${member.name}" class="w-16 h-16 rounded-full object-cover border-2 border-orange-500" loading="lazy" />`
+                                    ? `<img src="${member.avatar}" alt="${member.name}" class="w-16 h-16 rounded-full object-cover border-2 border-orange-500 nw-avatar-glow" loading="lazy" />`
                                     : `<div class="w-16 h-16 rounded-full bg-gradient-to-br from-orange-400 to-orange-600 flex items-center justify-center text-2xl font-bold">
                                     ${member.name.charAt(0).toUpperCase()}
                                 </div>`
