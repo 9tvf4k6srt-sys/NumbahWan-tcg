@@ -978,6 +978,11 @@ app.get('/', (c) => {
                 <span class="font-bold text-orange-400 text-sm" data-i18n="gmPvp">GM PvP</span>
                 <span class="text-xs text-gray-400">Grandmaster 5</span>
             </a>
+            <a href="/memes" class="dropdown-item" data-nw-transition>
+                <svg class="mb-1" width="28" height="28" viewBox="0 0 24 24"><rect fill="#ffd700" x="3" y="3" width="18" height="18" rx="3"/><circle fill="#0a0a0f" cx="8" cy="9" r="2"/><circle fill="#0a0a0f" cx="16" cy="9" r="2"/><path fill="#0a0a0f" d="M7 15Q12 20 17 15" stroke="#0a0a0f" stroke-width="2" fill="none"/></svg>
+                <span class="font-bold text-yellow-400 text-sm" data-i18n="memes">Memes</span>
+                <span class="text-xs text-gray-400">15 Memes</span>
+            </a>
             <a href="/fashion" class="dropdown-item" data-nw-transition>
                 <svg class="mb-1" width="28" height="28" viewBox="0 0 24 24"><path fill="#ec4899" d="M12 2C10 2 9 3 9 4V6L6 10L8 12L6 20H18L16 12L18 10L15 6V4C15 3 14 2 12 2Z"/><circle fill="#ffd700" cx="12" cy="5" r="1.3"/><circle fill="#fff" cx="10" cy="15" r="1" opacity="0.7"/><circle fill="#fff" cx="14" cy="15" r="1" opacity="0.7"/></svg>
                 <span class="font-bold text-orange-400 text-sm" data-i18n="gmFashion">GM Fashion</span>
@@ -1657,7 +1662,7 @@ app.get('/', (c) => {
                 serverRanking: "Server Ranking", milestones: "Milestones", shenanigans: "Shenanigans",
                 memories: "Memories of our adventures together", submitPhoto: "Submit Photo", wantToAdd: "Want to add your screenshots?",
                 server: "Server: TW", madeWith: "Made with ❤️ by the family.",
-                gmPvp: "GM PvP", gmFashion: "GM Fashion", exclusiveMerch: "Merch", dailyFortune: "Fortune", contentRankDesc: "Guild Power Rankings", pvpRankDesc: "Battle Rankings",
+                gmPvp: "GM PvP", gmFashion: "GM Fashion", memes: "Memes", exclusiveMerch: "Merch", dailyFortune: "Fortune", contentRankDesc: "Guild Power Rankings", pvpRankDesc: "Battle Rankings",
                 membersDesc: "Our Guild Members", funDesc: "Fun Moments", progressDesc2: "Guild Progress",
                 raidsDesc: "Weekly Battles", gmDesc2: "Our Leader", joinDesc: "Become Family"
             },
@@ -1677,7 +1682,7 @@ app.get('/', (c) => {
                 serverRanking: "伺服器排名", milestones: "里程碑", shenanigans: "公會趣事",
                 memories: "我們一起冒險的回憶", submitPhoto: "上傳照片", wantToAdd: "想要分享你的截圖嗎？",
                 server: "伺服器：台灣", madeWith: "家人們用 ❤️ 製作",
-                gmPvp: "會長PvP", gmFashion: "會長時尚", exclusiveMerch: "限定商品", dailyFortune: "每日運勢", contentRankDesc: "公會戰力排名", pvpRankDesc: "戰鬥排名",
+                gmPvp: "會長PvP", gmFashion: "會長時尚", memes: "迷因", exclusiveMerch: "限定商品", dailyFortune: "每日運勢", contentRankDesc: "公會戰力排名", pvpRankDesc: "戰鬥排名",
                 membersDesc: "我們的成員", funDesc: "歡樂時刻", progressDesc2: "公會進度",
                 raidsDesc: "每週戰鬥", gmDesc2: "我們的領袖", joinDesc: "成為家人"
             },
@@ -1697,7 +1702,7 @@ app.get('/', (c) => {
                 serverRanking: "อันดับเซิร์ฟเวอร์", milestones: "เหตุการณ์สำคัญ", shenanigans: "สนุกๆ",
                 memories: "ความทรงจำการผจญภัยด้วยกัน", submitPhoto: "ส่งรูป", wantToAdd: "อยากเพิ่มภาพหน้าจอของคุณไหม?",
                 server: "เซิร์ฟเวอร์: TW", madeWith: "สร้างด้วย ❤️ โดยครอบครัว",
-                gmPvp: "GM PvP", gmFashion: "แฟชั่น GM", exclusiveMerch: "สินค้า", dailyFortune: "ดวงประจำวัน", contentRankDesc: "อันดับพลังกิลด์", pvpRankDesc: "อันดับต่อสู้",
+                gmPvp: "GM PvP", gmFashion: "แฟชั่น GM", memes: "มีม", exclusiveMerch: "สินค้า", dailyFortune: "ดวงประจำวัน", contentRankDesc: "อันดับพลังกิลด์", pvpRankDesc: "อันดับต่อสู้",
                 membersDesc: "สมาชิกกิลด์", funDesc: "ช่วงเวลาสนุก", progressDesc2: "ความคืบหน้ากิลด์",
                 raidsDesc: "ต่อสู้รายสัปดาห์", gmDesc2: "ผู้นำของเรา", joinDesc: "เป็นครอบครัว"
             }
