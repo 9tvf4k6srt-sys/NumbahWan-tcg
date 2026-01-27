@@ -2219,10 +2219,9 @@ app.get('/', (c) => {
                 isDragging = false;
                 deck.style.cursor = 'grab';
                 
-                // REAL PHYSICS - velocity directly from swipe power, no modifications
-                // velocityX is pixels/ms from actual finger movement
-                const sensitivity = 200;
-                let velocity = velocityX * sensitivity; // Direct conversion, no caps, no multipliers
+                // REAL PHYSICS - velocity from swipe power
+                // velocityX is pixels/ms, scale down for reasonable card movement
+                let velocity = velocityX * 30; // Lower = less sensitive
                 
                 // Start from current visual position
                 floatIndex = currentIndex - dragOffset;
