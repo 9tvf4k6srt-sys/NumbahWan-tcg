@@ -765,24 +765,135 @@ app.get('/', (c) => {
                 inset 0 1px 0 rgba(255, 255, 255, 0.2);
         }
         
-        /* Card image */
-        .deck-card img {
+        /* Card image - FULL PICTURE visible */
+        .deck-card img.card-image {
             width: 100%;
-            height: 100%;
-            object-fit: cover;
+            height: calc(100% - 70px); /* Leave space for text */
+            object-fit: contain; /* Show full image, no crop */
+            object-position: center top;
             pointer-events: none;
+            background: rgba(0, 0, 0, 0.3);
         }
         
-        /* Card overlay gradient */
+        /* Card overlay gradient - subtle */
         .deck-card .card-overlay {
             position: absolute;
             inset: 0;
             background: linear-gradient(180deg,
                 transparent 0%,
-                transparent 50%,
-                rgba(0, 0, 0, 0.7) 100%);
+                transparent 60%,
+                rgba(0, 0, 0, 0.8) 100%);
             pointer-events: none;
         }
+        
+        /* ============================================
+           LIGHTBOX - Full screen image viewer
+           ============================================ */
+        .lightbox {
+            position: fixed;
+            inset: 0;
+            z-index: 99999;
+            background: rgba(0, 0, 0, 0.95);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+        
+        .lightbox.active {
+            opacity: 1;
+            visibility: visible;
+        }
+        
+        .lightbox img {
+            max-width: 95vw;
+            max-height: 90vh;
+            object-fit: contain;
+            border-radius: 12px;
+            box-shadow: 0 0 60px rgba(255, 107, 0, 0.3);
+            transform: scale(0.9);
+            transition: transform 0.3s ease;
+        }
+        
+        .lightbox.active img {
+            transform: scale(1);
+        }
+        
+        .lightbox-close {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: rgba(255, 107, 0, 0.3);
+            border: 2px solid rgba(255, 107, 0, 0.5);
+            color: #fff;
+            font-size: 1.5rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+        
+        .lightbox-close:hover {
+            background: rgba(255, 107, 0, 0.6);
+            transform: scale(1.1);
+        }
+        
+        .lightbox-info {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            text-align: center;
+            color: #fff;
+            padding: 12px 24px;
+            background: rgba(0, 0, 0, 0.6);
+            border-radius: 12px;
+            backdrop-filter: blur(10px);
+        }
+        
+        .lightbox-title {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: #ff9500;
+            margin-bottom: 4px;
+        }
+        
+        .lightbox-desc {
+            font-size: 0.9rem;
+            color: rgba(255, 255, 255, 0.8);
+        }
+        
+        .lightbox-nav {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: rgba(255, 107, 0, 0.2);
+            border: 2px solid rgba(255, 107, 0, 0.4);
+            color: #fff;
+            font-size: 1.5rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+        
+        .lightbox-nav:hover {
+            background: rgba(255, 107, 0, 0.5);
+        }
+        
+        .lightbox-nav.prev { left: 20px; }
+        .lightbox-nav.next { right: 20px; }
         
         /* Card content */
         .deck-card .card-content {
@@ -1902,8 +2013,8 @@ app.get('/', (c) => {
             <!-- Stacked Deck Carousel - Zero Jitter -->
             <div class="card-deck" id="photo-deck">
                 ${guildFunPhotos.map((photo, index) => `
-                    <div class="deck-card" data-index="${index}" data-position="${index}">
-                        <img src="${photo.image}" alt="${photo.title.en}" loading="lazy" />
+                    <div class="deck-card" data-index="${index}" data-position="${index}" data-image="${photo.image}" data-title="${photo.title.en}" data-desc="${photo.description.en}">
+                        <img src="${photo.image}" alt="${photo.title.en}" loading="lazy" class="card-image" />
                         <div class="card-overlay"></div>
                         <div class="card-index">${index + 1}</div>
                         <div class="card-content">
@@ -1931,6 +2042,18 @@ app.get('/', (c) => {
         </div>
     </section>
     
+    <!-- Lightbox for Full Screen Image View -->
+    <div class="lightbox" id="lightbox" onclick="closeLightbox(event)">
+        <button class="lightbox-close" onclick="closeLightbox()">&times;</button>
+        <button class="lightbox-nav prev" onclick="lightboxNav(-1, event)">‹</button>
+        <button class="lightbox-nav next" onclick="lightboxNav(1, event)">›</button>
+        <img id="lightbox-img" src="" alt="Full size image" />
+        <div class="lightbox-info">
+            <div class="lightbox-title" id="lightbox-title"></div>
+            <div class="lightbox-desc" id="lightbox-desc"></div>
+        </div>
+    </div>
+
     <!-- Footer -->
     <footer class="py-12 px-4 border-t border-orange-900/30">
         <div class="container mx-auto max-w-4xl text-center">
@@ -2033,11 +2156,17 @@ app.get('/', (c) => {
                 }
             }
             
-            // Click on side cards to navigate
+            // Click on side cards to navigate, active card opens lightbox
             cards.forEach((card, i) => {
-                card.addEventListener('click', () => {
+                card.addEventListener('click', (e) => {
                     if (i !== currentIndex) {
                         goTo(i);
+                    } else {
+                        // Active card clicked - open lightbox if it has image data
+                        const image = card.getAttribute('data-image');
+                        if (image) {
+                            openLightbox(image, card.getAttribute('data-title'), card.getAttribute('data-desc'), deckId);
+                        }
                     }
                 });
             });
@@ -2063,6 +2192,68 @@ app.get('/', (c) => {
             
             return { goTo, navigate, currentIndex: () => currentIndex };
         }
+        
+        // ============================================
+        // LIGHTBOX - Full Screen Image Viewer
+        // ============================================
+        let currentLightboxDeck = null;
+        
+        function openLightbox(imageSrc, title, desc, deckId) {
+            const lightbox = document.getElementById('lightbox');
+            const img = document.getElementById('lightbox-img');
+            const titleEl = document.getElementById('lightbox-title');
+            const descEl = document.getElementById('lightbox-desc');
+            
+            img.src = imageSrc;
+            titleEl.textContent = title || '';
+            descEl.textContent = desc || '';
+            currentLightboxDeck = deckId;
+            
+            lightbox.classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+        
+        function closeLightbox(e) {
+            // Don't close if clicking on nav buttons or image
+            if (e && (e.target.classList.contains('lightbox-nav') || e.target.tagName === 'IMG')) {
+                return;
+            }
+            const lightbox = document.getElementById('lightbox');
+            lightbox.classList.remove('active');
+            document.body.style.overflow = '';
+            currentLightboxDeck = null;
+        }
+        
+        function lightboxNav(direction, e) {
+            e.stopPropagation();
+            
+            // Navigate the deck
+            if (currentLightboxDeck === 'photo-deck' && photoDeck) {
+                photoDeck.navigate(direction);
+                // Update lightbox image
+                const deck = document.getElementById('photo-deck');
+                const cards = deck.querySelectorAll('.deck-card');
+                const currentIndex = photoDeck.currentIndex();
+                const card = cards[currentIndex];
+                if (card) {
+                    document.getElementById('lightbox-img').src = card.getAttribute('data-image');
+                    document.getElementById('lightbox-title').textContent = card.getAttribute('data-title') || '';
+                    document.getElementById('lightbox-desc').textContent = card.getAttribute('data-desc') || '';
+                }
+            }
+        }
+        
+        // Close lightbox on ESC key
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') closeLightbox();
+            if (e.key === 'ArrowLeft' && currentLightboxDeck) lightboxNav(-1, e);
+            if (e.key === 'ArrowRight' && currentLightboxDeck) lightboxNav(1, e);
+        });
+        
+        // Global functions
+        window.openLightbox = openLightbox;
+        window.closeLightbox = closeLightbox;
+        window.lightboxNav = lightboxNav;
         
         // Photo Deck
         const photoBgTexts = ['MEMORIES', 'MOMENTS', 'FRIENDS', 'ADVENTURE', 'GOALS', 'RAID'];
