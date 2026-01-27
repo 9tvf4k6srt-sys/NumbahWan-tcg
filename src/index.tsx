@@ -2219,14 +2219,10 @@ app.get('/', (c) => {
                 isDragging = false;
                 deck.style.cursor = 'grab';
                 
-                // Apply momentum physics - REAL physics, no artificial caps
-                // velocityX is in pixels/ms, convert to cards/sec
+                // REAL PHYSICS - velocity directly from swipe power, no modifications
+                // velocityX is pixels/ms from actual finger movement
                 const sensitivity = 200;
-                let velocity = velocityX * sensitivity; // cards per second (real velocity)
-                
-                // No max velocity cap - fast swipe = scroll to end
-                // Just a small multiplier for feel
-                velocity = velocity * 1.5;
+                let velocity = velocityX * sensitivity; // Direct conversion, no caps, no multipliers
                 
                 // Start from current visual position
                 floatIndex = currentIndex - dragOffset;
