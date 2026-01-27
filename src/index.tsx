@@ -659,11 +659,10 @@ app.get('/', (c) => {
             transform-style: preserve-3d;
             backface-visibility: hidden;
             -webkit-backface-visibility: hidden;
+            will-change: transform, opacity;
             
-            /* Smooth 60fps transitions */
-            transition: transform 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94),
-                        opacity 0.4s ease,
-                        filter 0.4s ease;
+            /* NO CSS transition - JS controls smooth animation */
+            /* This prevents jitter and allows momentum physics */
             
             /* Glassmorphism */
             background: linear-gradient(145deg, 
@@ -2128,16 +2127,120 @@ app.get('/', (c) => {
                 goTo(currentIndex + direction);
             }
             
-            // Touch/Mouse handlers for swipe
+            // ============================================
+            // MOMENTUM SCROLL - Physics-based like phone
+            // ============================================
+            let startX = 0;
+            let startTime = 0;
+            let lastX = 0;
+            let lastTime = 0;
+            let velocityX = 0;
+            let isDragging = false;
+            let dragOffset = 0; // Visual offset during drag
+            let momentumAnimation = null;
+            
+            // Fractional index for smooth scrolling
+            let floatIndex = 0;
+            
+            // Update card positions with fractional offset for smooth scroll
+            function updatePositionsSmooth(offset = 0) {
+                cards.forEach((card, i) => {
+                    const position = i - currentIndex - offset;
+                    
+                    // Clamp position for CSS
+                    const clampedPos = Math.max(-3, Math.min(3, Math.round(position)));
+                    card.setAttribute('data-position', clampedPos);
+                    
+                    // Apply smooth fractional transform
+                    const baseTransforms = {
+                        '-3': { x: -420, z: -150, ry: 25, s: 0.75, o: 0.3 },
+                        '-2': { x: -280, z: -100, ry: 18, s: 0.82, o: 0.5 },
+                        '-1': { x: -150, z: -50, ry: 10, s: 0.9, o: 0.75 },
+                        '0': { x: 0, z: 50, ry: 0, s: 1, o: 1 },
+                        '1': { x: 150, z: -50, ry: -10, s: 0.9, o: 0.75 },
+                        '2': { x: 280, z: -100, ry: -18, s: 0.82, o: 0.5 },
+                        '3': { x: 420, z: -150, ry: -25, s: 0.75, o: 0.3 },
+                    };
+                    
+                    // Interpolate between positions for smooth movement
+                    const fromPos = Math.floor(position);
+                    const toPos = Math.ceil(position);
+                    const frac = position - fromPos;
+                    
+                    const from = baseTransforms[Math.max(-3, Math.min(3, fromPos))] || baseTransforms['3'];
+                    const to = baseTransforms[Math.max(-3, Math.min(3, toPos))] || baseTransforms['3'];
+                    
+                    const x = from.x + (to.x - from.x) * frac;
+                    const z = from.z + (to.z - from.z) * frac;
+                    const ry = from.ry + (to.ry - from.ry) * frac;
+                    const s = from.s + (to.s - from.s) * frac;
+                    const o = from.o + (to.o - from.o) * frac;
+                    
+                    card.style.transform = \`translateX(\${x}px) translateZ(\${z}px) rotateY(\${ry}deg) scale(\${s})\`;
+                    card.style.opacity = o;
+                    card.style.filter = o < 1 ? \`brightness(\${0.5 + o * 0.5})\` : 'brightness(1)';
+                    
+                    // Hide cards too far away
+                    if (Math.abs(position) > 3.5) {
+                        card.classList.add('hidden-card');
+                    } else {
+                        card.classList.remove('hidden-card');
+                    }
+                });
+                
+                // Update dots
+                dots.forEach((dot, i) => {
+                    dot.classList.toggle('active', i === currentIndex);
+                });
+                
+                // Update background text
+                if (bgText && bgTexts[currentIndex]) {
+                    bgText.textContent = bgTexts[currentIndex];
+                }
+            }
+            
+            // Touch/Mouse handlers for momentum swipe
             function handleStart(e) {
+                // Cancel any ongoing momentum
+                if (momentumAnimation) {
+                    cancelAnimationFrame(momentumAnimation);
+                    momentumAnimation = null;
+                }
+                
                 isDragging = true;
-                startX = e.type.includes('mouse') ? e.clientX : e.touches[0].clientX;
+                const clientX = e.type.includes('mouse') ? e.clientX : e.touches[0].clientX;
+                startX = clientX;
+                lastX = clientX;
+                startTime = Date.now();
+                lastTime = startTime;
+                velocityX = 0;
+                dragOffset = 0;
                 deck.style.cursor = 'grabbing';
             }
             
             function handleMove(e) {
                 if (!isDragging) return;
                 e.preventDefault();
+                
+                const clientX = e.type.includes('mouse') ? e.clientX : e.touches[0].clientX;
+                const now = Date.now();
+                const dt = now - lastTime;
+                
+                // Calculate velocity (pixels per ms)
+                if (dt > 0) {
+                    velocityX = (clientX - lastX) / dt;
+                }
+                
+                lastX = clientX;
+                lastTime = now;
+                
+                // Calculate drag offset (convert pixels to card units)
+                // Sensitivity: 400px drag = 1 card (slower, more phone-like)
+                const sensitivity = 400;
+                dragOffset = (clientX - startX) / sensitivity;
+                
+                // Live update positions during drag
+                updatePositionsSmooth(-dragOffset);
             }
             
             function handleEnd(e) {
@@ -2145,22 +2248,118 @@ app.get('/', (c) => {
                 isDragging = false;
                 deck.style.cursor = 'grab';
                 
-                const endX = e.type.includes('mouse') ? e.clientX : e.changedTouches[0].clientX;
-                const diffX = endX - startX;
-                const threshold = 50;
+                // Apply momentum physics - Phone-like scroll feel
+                // velocityX is in pixels/ms, convert to cards/ms
+                const sensitivity = 400;
+                let velocity = velocityX * sensitivity / 1000; // cards per second
                 
-                if (diffX > threshold) {
-                    navigate(-1); // Swipe right = previous
-                } else if (diffX < -threshold) {
-                    navigate(1); // Swipe left = next
+                // Clamp velocity for smooth phone-like feel (not too fast)
+                const maxVelocity = 2; // max 2 cards per second (slower)
+                velocity = Math.max(-maxVelocity, Math.min(maxVelocity, velocity * 0.6)); // reduced multiplier
+                
+                // Start from current visual position
+                floatIndex = currentIndex - dragOffset;
+                
+                // Friction/deceleration - Phone-like slow down to stop
+                const friction = 0.96; // Higher = less friction, smoother slow-down
+                const minVelocity = 0.005; // Lower threshold for smoother stop
+                
+                function momentumStep() {
+                    // Apply velocity with smooth deceleration
+                    floatIndex -= velocity * 0.016; // ~60fps frame time
+                    
+                    // Progressive friction - slows more as velocity decreases (phone-like)
+                    const dynamicFriction = friction - (Math.abs(velocity) * 0.02);
+                    velocity *= Math.max(0.9, dynamicFriction);
+                    
+                    // Clamp to valid range with soft bounce at edges
+                    if (floatIndex < 0) {
+                        floatIndex = 0;
+                        velocity = Math.abs(velocity) * 0.3; // Soft bounce
+                    }
+                    if (floatIndex > totalCards - 1) {
+                        floatIndex = totalCards - 1;
+                        velocity = -Math.abs(velocity) * 0.3; // Soft bounce
+                    }
+                    
+                    // Update visual smoothly
+                    const visualOffset = floatIndex - Math.round(floatIndex);
+                    currentIndex = Math.round(floatIndex);
+                    updatePositionsSmooth(visualOffset);
+                    
+                    // Continue or stop - smoother threshold
+                    if (Math.abs(velocity) > minVelocity) {
+                        momentumAnimation = requestAnimationFrame(momentumStep);
+                    } else {
+                        // Snap to nearest card
+                        currentIndex = Math.round(floatIndex);
+                        currentIndex = Math.max(0, Math.min(totalCards - 1, currentIndex));
+                        
+                        // Smooth snap animation
+                        const snapDuration = 200;
+                        const snapStart = performance.now();
+                        const startOffset = floatIndex - currentIndex;
+                        
+                        function snapStep(timestamp) {
+                            const elapsed = timestamp - snapStart;
+                            const progress = Math.min(1, elapsed / snapDuration);
+                            // Ease out
+                            const eased = 1 - Math.pow(1 - progress, 3);
+                            const offset = startOffset * (1 - eased);
+                            
+                            updatePositionsSmooth(offset);
+                            
+                            if (progress < 1) {
+                                momentumAnimation = requestAnimationFrame(snapStep);
+                            } else {
+                                updatePositions(); // Final clean state
+                                momentumAnimation = null;
+                            }
+                        }
+                        
+                        momentumAnimation = requestAnimationFrame(snapStep);
+                    }
+                }
+                
+                // Start momentum
+                if (Math.abs(velocity) > minVelocity || Math.abs(dragOffset) > 0.1) {
+                    momentumAnimation = requestAnimationFrame(momentumStep);
+                } else {
+                    // No momentum, just snap back
+                    updatePositions();
                 }
             }
             
             // Click on side cards to navigate, active card opens lightbox
             cards.forEach((card, i) => {
                 card.addEventListener('click', (e) => {
+                    // Only handle click if not dragging
+                    if (Math.abs(dragOffset) > 0.1) return;
+                    
                     if (i !== currentIndex) {
-                        goTo(i);
+                        // Animate to clicked card
+                        floatIndex = currentIndex;
+                        const targetIndex = i;
+                        const duration = 400;
+                        const startTime = performance.now();
+                        
+                        function animateToCard(timestamp) {
+                            const elapsed = timestamp - startTime;
+                            const progress = Math.min(1, elapsed / duration);
+                            const eased = 1 - Math.pow(1 - progress, 3);
+                            
+                            floatIndex = currentIndex + (targetIndex - currentIndex) * eased;
+                            updatePositionsSmooth(floatIndex - Math.round(floatIndex));
+                            
+                            if (progress < 1) {
+                                requestAnimationFrame(animateToCard);
+                            } else {
+                                currentIndex = targetIndex;
+                                updatePositions();
+                            }
+                        }
+                        
+                        requestAnimationFrame(animateToCard);
                     } else {
                         // Active card clicked - open lightbox if it has image data
                         const image = card.getAttribute('data-image');
@@ -2176,15 +2375,19 @@ app.get('/', (c) => {
             deck.addEventListener('mousemove', handleMove);
             deck.addEventListener('mouseup', handleEnd);
             deck.addEventListener('mouseleave', handleEnd);
-            deck.addEventListener('touchstart', handleStart, { passive: true });
+            deck.addEventListener('touchstart', handleStart, { passive: false });
             deck.addEventListener('touchmove', handleMove, { passive: false });
             deck.addEventListener('touchend', handleEnd);
             
-            // Keyboard navigation
+            // Keyboard navigation with smooth animation
             deck.setAttribute('tabindex', '0');
             deck.addEventListener('keydown', (e) => {
-                if (e.key === 'ArrowLeft') navigate(-1);
-                if (e.key === 'ArrowRight') navigate(1);
+                if (e.key === 'ArrowLeft') {
+                    goTo(currentIndex - 1);
+                }
+                if (e.key === 'ArrowRight') {
+                    goTo(currentIndex + 1);
+                }
             });
             
             // Initial state
