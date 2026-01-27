@@ -2219,29 +2219,28 @@ app.get('/', (c) => {
                 isDragging = false;
                 deck.style.cursor = 'grab';
                 
-                // Apply momentum physics
-                // velocityX is in pixels/ms, convert to cards/ms
+                // Apply momentum physics - REAL physics, no artificial caps
+                // velocityX is in pixels/ms, convert to cards/sec
                 const sensitivity = 200;
-                let velocity = velocityX * sensitivity / 1000; // cards per second
+                let velocity = velocityX * sensitivity; // cards per second (real velocity)
                 
-                // Clamp velocity for natural feel
-                const maxVelocity = 4; // max 4 cards per second
-                velocity = Math.max(-maxVelocity, Math.min(maxVelocity, velocity));
+                // No max velocity cap - fast swipe = scroll to end
+                // Just a small multiplier for feel
+                velocity = velocity * 1.5;
                 
                 // Start from current visual position
                 floatIndex = currentIndex - dragOffset;
                 
-                // Friction/deceleration - Phone-like slow down to stop
-                const friction = 0.96; // Higher = less friction, smoother slow-down
-                const minVelocity = 0.005; // Lower threshold for smoother stop
+                // Friction/deceleration - Real physics
+                const friction = 0.98; // High = less friction, scrolls further
+                const minVelocity = 0.1; // Stop threshold
                 
                 function momentumStep() {
-                    // Apply velocity with smooth deceleration
+                    // Apply velocity - real physics
                     floatIndex -= velocity * 0.016; // ~60fps frame time
                     
-                    // Progressive friction - slows more as velocity decreases (phone-like)
-                    const dynamicFriction = friction - (Math.abs(velocity) * 0.02);
-                    velocity *= Math.max(0.9, dynamicFriction);
+                    // Simple friction - just multiply
+                    velocity *= friction;
                     
                     // Clamp to valid range with soft bounce at edges
                     if (floatIndex < 0) {
