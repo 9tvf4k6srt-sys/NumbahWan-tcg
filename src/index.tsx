@@ -720,14 +720,13 @@ app.get('/', (c) => {
                 inset 0 1px 0 rgba(255, 255, 255, 0.2);
         }
         
-        /* Card image - FULL PICTURE visible */
+        /* Card image - FILL the card, show important part */
         .deck-card img.card-image {
             width: 100%;
             height: calc(100% - 70px); /* Leave space for text */
-            object-fit: contain; /* Show full image, no crop */
-            object-position: center top;
+            object-fit: cover; /* Fill card, crop edges */
+            object-position: center 30%; /* Show upper portion (characters/action) */
             pointer-events: none;
-            background: rgba(0, 0, 0, 0.3);
         }
         
         /* Card overlay gradient - subtle */
