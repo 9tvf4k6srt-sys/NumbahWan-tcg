@@ -627,125 +627,266 @@ app.get('/', (c) => {
             opacity: 0.5;
         }
         
-        /* Carousel Container - FIXED: stronger snap, smoother scroll */
-        .photo-carousel, .member-carousel {
-            display: flex;
-            gap: 24px;
-            padding: 40px 0;
-            overflow-x: auto;
-            scroll-snap-type: x mandatory;
-            scroll-behavior: smooth;
-            -webkit-overflow-scrolling: touch;
-            scrollbar-width: none;
-            -ms-overflow-style: none;
-            perspective: 1200px;
-            padding-left: calc(50% - 160px);
-            padding-right: calc(50% - 160px);
-        }
+        /* ============================================
+           STACKED DECK CAROUSEL - Zero Jitter
+           Cards stacked like a deck, swipe to fan out
+           ============================================ */
         
-        .photo-carousel::-webkit-scrollbar,
-        .member-carousel::-webkit-scrollbar {
-            display: none;
-        }
-        
-        /* Individual Photo Card - Premium Glass Style - FIXED: no shake */
-        .photo-card, .member-card {
-            flex: 0 0 320px;
-            height: 420px;
-            scroll-snap-align: center;
-            scroll-snap-stop: always; /* Force stop at each card */
+        /* Deck Container - No scroll, pure transforms */
+        .card-deck {
             position: relative;
-            border-radius: 24px;
+            width: 100%;
+            height: 480px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            perspective: 1500px;
+            overflow: visible;
+            touch-action: pan-y;
+            user-select: none;
+        }
+        
+        /* Individual Card in Deck */
+        .deck-card {
+            position: absolute;
+            width: 300px;
+            height: 420px;
+            border-radius: 20px;
             overflow: hidden;
-            cursor: pointer;
+            cursor: grab;
             
-            /* GPU ACCELERATION - prevents shaking */
-            will-change: transform, opacity, box-shadow;
+            /* CRITICAL: GPU-only transforms, no layout changes */
+            transform-style: preserve-3d;
             backface-visibility: hidden;
             -webkit-backface-visibility: hidden;
-            transform: translateZ(0) scale(0.92);
             
-            /* Smooth transitions */
-            transition: 
-                transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1),
-                opacity 0.3s ease,
-                box-shadow 0.4s ease,
-                border-color 0.3s ease,
-                filter 0.3s ease;
+            /* Smooth 60fps transitions */
+            transition: transform 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+                        opacity 0.4s ease,
+                        filter 0.4s ease;
             
-            /* Glassmorphism base */
-            background: linear-gradient(135deg, 
-                rgba(255, 107, 0, 0.12) 0%, 
-                rgba(139, 69, 19, 0.08) 50%,
-                rgba(255, 157, 77, 0.06) 100%);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            
-            /* Subtle rim light */
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            /* Glassmorphism */
+            background: linear-gradient(145deg, 
+                rgba(30, 30, 40, 0.9) 0%, 
+                rgba(20, 20, 30, 0.95) 100%);
+            border: 1px solid rgba(255, 140, 0, 0.2);
             box-shadow: 
-                0 20px 40px -10px rgba(0, 0, 0, 0.4),
-                0 0 0 1px rgba(255, 107, 0, 0.05);
-            
-            opacity: 0.7;
-            filter: brightness(0.85);
+                0 25px 50px -12px rgba(0, 0, 0, 0.6),
+                0 0 0 1px rgba(255, 107, 0, 0.1);
         }
         
-        /* Active card - ENHANCED GLOW */
-        .photo-card.active,
-        .member-card.active {
-            transform: translateZ(0) scale(1.05);
+        .deck-card:active {
+            cursor: grabbing;
+        }
+        
+        /* Card positions in deck - Fanned out sideways */
+        .deck-card[data-position="-3"] {
+            transform: translateX(-420px) translateZ(-150px) rotateY(25deg) scale(0.75);
+            opacity: 0.3;
+            filter: brightness(0.5) blur(2px);
+            z-index: 1;
+        }
+        
+        .deck-card[data-position="-2"] {
+            transform: translateX(-280px) translateZ(-100px) rotateY(18deg) scale(0.82);
+            opacity: 0.5;
+            filter: brightness(0.6) blur(1px);
+            z-index: 2;
+        }
+        
+        .deck-card[data-position="-1"] {
+            transform: translateX(-150px) translateZ(-50px) rotateY(10deg) scale(0.9);
+            opacity: 0.75;
+            filter: brightness(0.8);
+            z-index: 3;
+        }
+        
+        /* ACTIVE CENTER CARD - Full glow */
+        .deck-card[data-position="0"] {
+            transform: translateX(0) translateZ(50px) rotateY(0deg) scale(1);
             opacity: 1;
             filter: brightness(1);
             z-index: 10;
-            
-            /* INTENSE GLOW */
-            border-color: rgba(255, 140, 0, 0.6);
+            border-color: rgba(255, 140, 0, 0.5);
             box-shadow: 
-                0 30px 60px -15px rgba(0, 0, 0, 0.5),
-                0 0 40px rgba(255, 107, 0, 0.6),
-                0 0 80px rgba(255, 140, 0, 0.4),
-                0 0 120px rgba(255, 180, 0, 0.2),
-                inset 0 1px 0 rgba(255, 255, 255, 0.2),
-                inset 0 0 20px rgba(255, 107, 0, 0.1);
+                0 30px 60px -10px rgba(0, 0, 0, 0.5),
+                0 0 60px rgba(255, 107, 0, 0.5),
+                0 0 100px rgba(255, 140, 0, 0.3),
+                0 0 140px rgba(255, 180, 0, 0.15),
+                inset 0 1px 0 rgba(255, 255, 255, 0.15);
         }
         
-        /* Hover also gets glow */
-        .photo-card:hover,
-        .member-card:hover {
-            transform: translateZ(0) scale(1.02);
-            opacity: 0.95;
+        .deck-card[data-position="1"] {
+            transform: translateX(150px) translateZ(-50px) rotateY(-10deg) scale(0.9);
+            opacity: 0.75;
+            filter: brightness(0.8);
+            z-index: 3;
+        }
+        
+        .deck-card[data-position="2"] {
+            transform: translateX(280px) translateZ(-100px) rotateY(-18deg) scale(0.82);
+            opacity: 0.5;
+            filter: brightness(0.6) blur(1px);
+            z-index: 2;
+        }
+        
+        .deck-card[data-position="3"] {
+            transform: translateX(420px) translateZ(-150px) rotateY(-25deg) scale(0.75);
+            opacity: 0.3;
+            filter: brightness(0.5) blur(2px);
+            z-index: 1;
+        }
+        
+        /* Hidden cards beyond visible range */
+        .deck-card[data-position^="-"][data-position*="4"],
+        .deck-card[data-position^="-"][data-position*="5"],
+        .deck-card[data-position="4"],
+        .deck-card[data-position="5"],
+        .deck-card.hidden-card {
+            transform: translateX(0) translateZ(-200px) scale(0.5);
+            opacity: 0;
+            pointer-events: none;
+            z-index: 0;
+        }
+        
+        /* Hover effect on visible cards */
+        .deck-card:not([data-position="0"]):hover {
             filter: brightness(0.95);
-            box-shadow: 
-                0 25px 50px -12px rgba(0, 0, 0, 0.45),
-                0 0 30px rgba(255, 107, 0, 0.3),
-                0 0 60px rgba(255, 140, 0, 0.15);
         }
         
-        /* Active + hover = max glow */
-        .photo-card.active:hover,
-        .member-card.active:hover {
-            transform: translateZ(0) scale(1.08);
+        /* Active card hover - extra pop */
+        .deck-card[data-position="0"]:hover {
+            transform: translateX(0) translateZ(70px) rotateY(0deg) scale(1.02);
             box-shadow: 
-                0 35px 70px -15px rgba(0, 0, 0, 0.5),
-                0 0 50px rgba(255, 107, 0, 0.7),
-                0 0 100px rgba(255, 140, 0, 0.5),
-                0 0 150px rgba(255, 180, 0, 0.3),
-                inset 0 1px 0 rgba(255, 255, 255, 0.25),
-                inset 0 0 30px rgba(255, 107, 0, 0.15);
+                0 35px 70px -10px rgba(0, 0, 0, 0.5),
+                0 0 80px rgba(255, 107, 0, 0.6),
+                0 0 120px rgba(255, 140, 0, 0.4),
+                0 0 160px rgba(255, 180, 0, 0.2),
+                inset 0 1px 0 rgba(255, 255, 255, 0.2);
         }
         
         /* Card image */
-        .photo-card img {
+        .deck-card img {
             width: 100%;
             height: 100%;
             object-fit: cover;
-            transition: transform 0.6s ease;
+            pointer-events: none;
         }
         
-        .photo-card:hover img,
-        .photo-card.active img {
-            transform: scale(1.1);
+        /* Card overlay gradient */
+        .deck-card .card-overlay {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(180deg,
+                transparent 0%,
+                transparent 50%,
+                rgba(0, 0, 0, 0.7) 100%);
+            pointer-events: none;
+        }
+        
+        /* Card content */
+        .deck-card .card-content {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            padding: 20px;
+            pointer-events: none;
+        }
+        
+        .deck-card .card-title {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: #fff;
+            text-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+            margin-bottom: 4px;
+        }
+        
+        .deck-card .card-desc {
+            font-size: 0.85rem;
+            color: rgba(255, 200, 150, 0.9);
+        }
+        
+        /* Card index badge */
+        .deck-card .card-index {
+            position: absolute;
+            top: 12px;
+            left: 12px;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #ff6b00, #ff9500);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 0.8rem;
+            color: #fff;
+            box-shadow: 0 4px 12px rgba(255, 107, 0, 0.4);
+            pointer-events: none;
+        }
+        
+        /* Navigation dots */
+        .deck-nav {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            margin-top: 20px;
+        }
+        
+        .deck-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: rgba(255, 107, 0, 0.25);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .deck-dot.active {
+            background: linear-gradient(135deg, #ff6b00, #ffd700);
+            box-shadow: 0 0 12px rgba(255, 107, 0, 0.6);
+            transform: scale(1.2);
+        }
+        
+        .deck-dot:hover:not(.active) {
+            background: rgba(255, 107, 0, 0.5);
+        }
+        
+        /* Swipe hint */
+        .swipe-hint {
+            text-align: center;
+            color: rgba(255, 255, 255, 0.4);
+            font-size: 0.75rem;
+            margin-top: 12px;
+        }
+        
+        /* Mobile adjustments */
+        @media (max-width: 768px) {
+            .deck-card {
+                width: 260px;
+                height: 360px;
+            }
+            
+            .deck-card[data-position="-2"],
+            .deck-card[data-position="2"],
+            .deck-card[data-position="-3"],
+            .deck-card[data-position="3"] {
+                opacity: 0;
+                pointer-events: none;
+            }
+            
+            .deck-card[data-position="-1"] {
+                transform: translateX(-100px) translateZ(-30px) rotateY(8deg) scale(0.88);
+            }
+            
+            .deck-card[data-position="1"] {
+                transform: translateX(100px) translateZ(-30px) rotateY(-8deg) scale(0.88);
+            }
+            
+            .card-deck {
+                height: 420px;
+            }
         }
         
         /* Gradient overlay for text readability */
@@ -1465,7 +1606,7 @@ app.get('/', (c) => {
         </div>
     </section>
     
-    <!-- Member Roster Section - Premium Carousel -->
+    <!-- Member Roster Section - Stacked Deck -->
     <section id="roster" class="gallery-section py-20 px-4 relative">
         <!-- Parallax Background Text -->
         <div class="gallery-bg-text" id="roster-bg-text">FAMILY</div>
@@ -1476,86 +1617,64 @@ app.get('/', (c) => {
             </h2>
             <p class="text-center text-orange-300 mb-8 reveal" data-i18n="rosterDesc">Meet our amazing guild members</p>
             
-            <!-- Premium Member Carousel -->
-            <div class="relative">
-                <!-- Navigation Arrows -->
-                <button class="carousel-arrow prev" onclick="scrollMemberCarousel(-1)" aria-label="Previous">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/></svg>
-                </button>
-                <button class="carousel-arrow next" onclick="scrollMemberCarousel(1)" aria-label="Next">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M8.59 16.59L10 18l6-6-6-6-1.41 1.41L13.17 12z"/></svg>
-                </button>
-                
-                <!-- Carousel Container -->
-                <div class="member-carousel" id="member-carousel">
-                    ${members.map((member, index) => `
-                        <div class="member-card" data-index="${index}">
-                            <!-- Card Background Glow -->
-                            <div class="card-overlay"></div>
+            <!-- Stacked Deck - Member Cards -->
+            <div class="card-deck" id="member-deck">
+                ${members.map((member, index) => `
+                    <div class="deck-card" data-index="${index}" data-position="${index}">
+                        <div class="card-overlay"></div>
+                        <div class="card-index">${index + 1}</div>
+                        
+                        ${index === 0 ? '<div class="absolute top-3 right-3 text-2xl" style="animation: bounce 1s infinite">👑</div>' : ''}
+                        
+                        <!-- Member Avatar -->
+                        <div class="absolute top-8 left-1/2 -translate-x-1/2">
+                            ${member.avatar 
+                                ? `<img src="${member.avatar}" alt="${member.name}" class="w-20 h-20 rounded-full object-cover border-3 border-orange-500 shadow-lg shadow-orange-500/30" loading="lazy" />`
+                                : `<div class="w-20 h-20 rounded-full bg-gradient-to-br from-orange-400 to-orange-600 flex items-center justify-center text-3xl font-bold">
+                                    ${member.name.charAt(0).toUpperCase()}
+                                </div>`
+                            }
+                            ${member.online ? '<span class="absolute bottom-0 right-0 w-4 h-4 bg-green-500 rounded-full border-2 border-black"></span>' : ''}
+                        </div>
+                        
+                        <!-- Member Info -->
+                        <div class="card-content" style="padding-top: 90px;">
+                            <h3 class="card-title text-center text-lg mb-0">${member.name}</h3>
+                            <p class="text-center text-orange-300 text-sm mb-3">Lv. ${member.level}</p>
                             
-                            <!-- Rank Badge -->
-                            <div class="card-index">${index + 1}</div>
-                            
-                            <!-- Crown for #1 -->
-                            ${index === 0 ? '<div class="absolute top-3 right-3 text-2xl animate-bounce">👑</div>' : ''}
-                            
-                            <!-- Member Avatar - Large -->
-                            <div class="absolute top-6 left-1/2 -translate-x-1/2">
-                                ${member.avatar 
-                                    ? `<img src="${member.avatar}" alt="${member.name}" class="w-24 h-24 rounded-full object-cover border-3 border-orange-500 shadow-lg shadow-orange-500/30" loading="lazy" />`
-                                    : `<div class="w-24 h-24 rounded-full bg-gradient-to-br from-orange-400 to-orange-600 flex items-center justify-center text-4xl font-bold border-3 border-orange-300">
-                                        ${member.name.charAt(0).toUpperCase()}
-                                    </div>`
-                                }
-                                ${member.online ? '<span class="absolute bottom-1 right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-black animate-pulse"></span>' : ''}
+                            <div class="space-y-2 text-xs">
+                                <div class="flex justify-between px-2 py-1 bg-black/30 rounded">
+                                    <span class="text-gray-400">CP</span>
+                                    <span class="text-orange-400 font-bold">${member.cp}</span>
+                                </div>
+                                <div class="flex justify-between px-2 py-1">
+                                    <span class="text-gray-400">Contrib</span>
+                                    <span class="text-orange-300">${member.contribution}</span>
+                                </div>
                             </div>
                             
-                            <!-- Member Info -->
-                            <div class="card-content" style="padding-top: 100px;">
-                                <h3 class="card-title text-center text-xl mb-1">${member.name}</h3>
-                                <p class="text-center text-orange-300 text-sm mb-4">Level ${member.level}</p>
-                                
-                                <!-- Stats Grid -->
-                                <div class="space-y-3 text-sm">
-                                    <div class="flex justify-between items-center px-2 py-1 rounded bg-black/20">
-                                        <span class="text-gray-400">${iconPower()} CP</span>
-                                        <span class="text-orange-400 font-bold">${member.cp}</span>
-                                    </div>
-                                    <div class="flex justify-between items-center px-2 py-1">
-                                        <span class="text-gray-400">${iconHeart()} Contrib</span>
-                                        <span class="text-orange-300">${member.contribution}</span>
-                                    </div>
-                                    <div class="flex justify-between items-center px-2 py-1 rounded bg-black/20">
-                                        <span class="text-gray-400">${iconUpgrade()} Upgrades</span>
-                                        <span class="text-orange-300">${member.upgrade}</span>
-                                    </div>
-                                </div>
-                                
-                                <!-- Role Badge -->
-                                <div class="mt-4 flex justify-center">
-                                    <span class="px-4 py-1.5 rounded-full text-xs font-bold ${
-                                        member.role === 'Master' ? 'role-master' : 
-                                        member.role === 'Vice Master' ? 'role-vice' : 
-                                        member.role === '領導' ? 'role-leader' :
-                                        member.role === '小可愛' ? 'role-inactive' : 'role-member'
-                                    }">
-                                        ${member.role}
-                                    </span>
-                                </div>
-                                
-                                ${member.daysAgo ? `<p class="text-center text-gray-500 text-xs mt-2">${member.daysAgo}</p>` : ''}
+                            <div class="mt-3 flex justify-center">
+                                <span class="px-3 py-1 rounded-full text-xs font-bold ${
+                                    member.role === 'Master' ? 'role-master' : 
+                                    member.role === 'Vice Master' ? 'role-vice' : 
+                                    member.role === '領導' ? 'role-leader' :
+                                    member.role === '小可愛' ? 'role-inactive' : 'role-member'
+                                }">
+                                    ${member.role}
+                                </span>
                             </div>
                         </div>
-                    `).join('')}
-                </div>
-                
-                <!-- Carousel Dots -->
-                <div class="carousel-nav" id="member-carousel-nav">
-                    ${members.map((_, index) => `
-                        <div class="carousel-dot ${index === 0 ? 'active' : ''}" data-index="${index}" onclick="scrollToMember(${index})"></div>
-                    `).join('')}
-                </div>
+                    </div>
+                `).join('')}
             </div>
+            
+            <!-- Navigation Dots -->
+            <div class="deck-nav" id="member-deck-nav">
+                ${members.map((_, index) => `
+                    <div class="deck-dot ${index === 0 ? 'active' : ''}" data-index="${index}" onclick="goToMemberCard(${index})"></div>
+                `).join('')}
+            </div>
+            <p class="swipe-hint">← Swipe or click cards →</p>
         </div>
     </section>
     
@@ -1769,7 +1888,7 @@ app.get('/', (c) => {
         </div>
     </section>
     
-    <!-- Guild Fun Gallery Section - Premium 3D Carousel -->
+    <!-- Guild Fun Gallery Section - Stacked Deck Carousel -->
     <section id="gallery" class="gallery-section py-20 px-4 relative">
         <!-- Parallax Background Text -->
         <div class="gallery-bg-text" id="gallery-bg-text">MEMORIES</div>
@@ -1780,38 +1899,28 @@ app.get('/', (c) => {
             </h2>
             <p class="text-center text-orange-300 mb-8 reveal" data-i18n="memories">Memories of our adventures together</p>
             
-            <!-- Premium 3D Card Carousel -->
-            <div class="relative">
-                <!-- Navigation Arrows -->
-                <button class="carousel-arrow prev" onclick="scrollCarousel(-1)" aria-label="Previous">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/></svg>
-                </button>
-                <button class="carousel-arrow next" onclick="scrollCarousel(1)" aria-label="Next">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M8.59 16.59L10 18l6-6-6-6-1.41 1.41L13.17 12z"/></svg>
-                </button>
-                
-                <!-- Carousel Container -->
-                <div class="photo-carousel" id="photo-carousel">
-                    ${guildFunPhotos.map((photo, index) => `
-                        <div class="photo-card" data-index="${index}">
-                            <img src="${photo.image}" alt="${photo.title.en}" loading="lazy" />
-                            <div class="card-overlay"></div>
-                            <div class="card-index">${index + 1}</div>
-                            <div class="card-content">
-                                <h3 class="card-title" data-i18n-photo="${photo.id}" data-i18n-field="title">${photo.title.en}</h3>
-                                <p class="card-desc" data-i18n-photo="${photo.id}" data-i18n-field="description">${photo.description.en}</p>
-                            </div>
+            <!-- Stacked Deck Carousel - Zero Jitter -->
+            <div class="card-deck" id="photo-deck">
+                ${guildFunPhotos.map((photo, index) => `
+                    <div class="deck-card" data-index="${index}" data-position="${index}">
+                        <img src="${photo.image}" alt="${photo.title.en}" loading="lazy" />
+                        <div class="card-overlay"></div>
+                        <div class="card-index">${index + 1}</div>
+                        <div class="card-content">
+                            <h3 class="card-title" data-i18n-photo="${photo.id}" data-i18n-field="title">${photo.title.en}</h3>
+                            <p class="card-desc" data-i18n-photo="${photo.id}" data-i18n-field="description">${photo.description.en}</p>
                         </div>
-                    `).join('')}
-                </div>
-                
-                <!-- Carousel Dots -->
-                <div class="carousel-nav" id="carousel-nav">
-                    ${guildFunPhotos.map((_, index) => `
-                        <div class="carousel-dot ${index === 0 ? 'active' : ''}" data-index="${index}" onclick="scrollToCard(${index})"></div>
-                    `).join('')}
-                </div>
+                    </div>
+                `).join('')}
             </div>
+            
+            <!-- Navigation Dots -->
+            <div class="deck-nav" id="photo-deck-nav">
+                ${guildFunPhotos.map((_, index) => `
+                    <div class="deck-dot ${index === 0 ? 'active' : ''}" data-index="${index}" onclick="goToPhotoCard(${index})"></div>
+                `).join('')}
+            </div>
+            <p class="swipe-hint">← Swipe or click cards →</p>
             
             <div class="text-center mt-12 reveal">
                 <p class="text-gray-400 mb-4" data-i18n="wantToAdd">Want to add your screenshots?</p>
@@ -1840,194 +1949,161 @@ app.get('/', (c) => {
         gsap.registerPlugin(ScrollTrigger);
         
         // ============================================
-        // PREMIUM 3D PHOTO CAROUSEL
+        // STACKED DECK CAROUSEL - Zero Jitter System
+        // Pure transform-based, no scroll events
         // ============================================
-        const photoCarousel = document.getElementById('photo-carousel');
-        const carouselCards = document.querySelectorAll('.photo-card');
-        const carouselDots = document.querySelectorAll('.carousel-dot');
-        const galleryBgText = document.getElementById('gallery-bg-text');
         
-        // Update active card states based on scroll position
-        function updateCarouselState() {
-            if (!photoCarousel) return;
+        // Create deck controller
+        function createDeckController(deckId, dotsId, bgTextId, bgTexts) {
+            const deck = document.getElementById(deckId);
+            if (!deck) return null;
             
-            const containerRect = photoCarousel.getBoundingClientRect();
-            const containerCenter = containerRect.left + containerRect.width / 2;
+            const cards = deck.querySelectorAll('.deck-card');
+            const dots = document.querySelectorAll(\`#\${dotsId} .deck-dot\`);
+            const bgText = document.getElementById(bgTextId);
+            const totalCards = cards.length;
+            let currentIndex = 0;
+            let startX = 0;
+            let isDragging = false;
             
-            let closestCard = null;
-            let closestDistance = Infinity;
-            
-            carouselCards.forEach((card, index) => {
-                const cardRect = card.getBoundingClientRect();
-                const cardCenter = cardRect.left + cardRect.width / 2;
-                const distance = Math.abs(containerCenter - cardCenter);
-                
-                // Remove active state
-                card.classList.remove('active');
-                
-                // Find closest card
-                if (distance < closestDistance) {
-                    closestDistance = distance;
-                    closestCard = { card, index };
-                }
-            });
-            
-            // Apply active state to center card only
-            if (closestCard) {
-                closestCard.card.classList.add('active');
+            // Update card positions based on current index
+            function updatePositions() {
+                cards.forEach((card, i) => {
+                    const position = i - currentIndex;
+                    
+                    // Clamp position for CSS
+                    const clampedPos = Math.max(-3, Math.min(3, position));
+                    card.setAttribute('data-position', clampedPos);
+                    
+                    // Hide cards too far away
+                    if (Math.abs(position) > 3) {
+                        card.classList.add('hidden-card');
+                    } else {
+                        card.classList.remove('hidden-card');
+                    }
+                });
                 
                 // Update dots
-                carouselDots.forEach((dot, i) => {
-                    dot.classList.toggle('active', i === closestCard.index);
+                dots.forEach((dot, i) => {
+                    dot.classList.toggle('active', i === currentIndex);
                 });
                 
-                // Parallax background text based on active card
-                if (galleryBgText) {
-                    const bgTexts = ['MEMORIES', 'MOMENTS', 'FAMILY', 'FRIENDS', 'ADVENTURE', 'GUILD'];
-                    galleryBgText.textContent = bgTexts[closestCard.index % bgTexts.length];
+                // Update background text
+                if (bgText && bgTexts[currentIndex]) {
+                    bgText.textContent = bgTexts[currentIndex];
                 }
             }
-        }
-        
-        // Scroll to specific card
-        function scrollToCard(index) {
-            const cards = photoCarousel.querySelectorAll('.photo-card');
-            if (cards[index]) {
-                const cardWidth = cards[index].offsetWidth;
-                const gap = 20;
-                const scrollPosition = index * (cardWidth + gap);
-                photoCarousel.scrollTo({
-                    left: scrollPosition,
-                    behavior: 'smooth'
-                });
+            
+            // Go to specific card
+            function goTo(index) {
+                currentIndex = Math.max(0, Math.min(totalCards - 1, index));
+                updatePositions();
             }
-        }
-        
-        // Navigate carousel with arrows
-        function scrollCarousel(direction) {
-            const cardWidth = carouselCards[0]?.offsetWidth || 320;
-            const gap = 20;
-            const scrollAmount = (cardWidth + gap) * direction;
-            photoCarousel.scrollBy({
-                left: scrollAmount,
-                behavior: 'smooth'
+            
+            // Navigate by direction
+            function navigate(direction) {
+                goTo(currentIndex + direction);
+            }
+            
+            // Touch/Mouse handlers for swipe
+            function handleStart(e) {
+                isDragging = true;
+                startX = e.type.includes('mouse') ? e.clientX : e.touches[0].clientX;
+                deck.style.cursor = 'grabbing';
+            }
+            
+            function handleMove(e) {
+                if (!isDragging) return;
+                e.preventDefault();
+            }
+            
+            function handleEnd(e) {
+                if (!isDragging) return;
+                isDragging = false;
+                deck.style.cursor = 'grab';
+                
+                const endX = e.type.includes('mouse') ? e.clientX : e.changedTouches[0].clientX;
+                const diffX = endX - startX;
+                const threshold = 50;
+                
+                if (diffX > threshold) {
+                    navigate(-1); // Swipe right = previous
+                } else if (diffX < -threshold) {
+                    navigate(1); // Swipe left = next
+                }
+            }
+            
+            // Click on side cards to navigate
+            cards.forEach((card, i) => {
+                card.addEventListener('click', () => {
+                    if (i !== currentIndex) {
+                        goTo(i);
+                    }
+                });
             });
-        }
-        
-        // Listen for scroll events - Photo Carousel
-        if (photoCarousel) {
-            photoCarousel.addEventListener('scroll', updateCarouselState);
+            
+            // Event listeners
+            deck.addEventListener('mousedown', handleStart);
+            deck.addEventListener('mousemove', handleMove);
+            deck.addEventListener('mouseup', handleEnd);
+            deck.addEventListener('mouseleave', handleEnd);
+            deck.addEventListener('touchstart', handleStart, { passive: true });
+            deck.addEventListener('touchmove', handleMove, { passive: false });
+            deck.addEventListener('touchend', handleEnd);
+            
+            // Keyboard navigation
+            deck.setAttribute('tabindex', '0');
+            deck.addEventListener('keydown', (e) => {
+                if (e.key === 'ArrowLeft') navigate(-1);
+                if (e.key === 'ArrowRight') navigate(1);
+            });
+            
             // Initial state
-            updateCarouselState();
+            updatePositions();
             
-            // GSAP parallax for background text
-            gsap.to('#gallery-bg-text', {
-                scrollTrigger: {
-                    trigger: '#gallery',
-                    start: 'top bottom',
-                    end: 'bottom top',
-                    scrub: 1
-                },
-                y: -100,
-                opacity: 0.3,
-                ease: 'none'
-            });
+            return { goTo, navigate, currentIndex: () => currentIndex };
         }
         
-        // ============================================
-        // MEMBER CAROUSEL - Same premium style
-        // ============================================
-        const memberCarousel = document.getElementById('member-carousel');
-        const memberCards = document.querySelectorAll('.member-card');
-        const memberDots = document.querySelectorAll('#member-carousel-nav .carousel-dot');
-        const rosterBgText = document.getElementById('roster-bg-text');
+        // Photo Deck
+        const photoBgTexts = ['MEMORIES', 'MOMENTS', 'FRIENDS', 'ADVENTURE', 'GOALS', 'RAID'];
+        const photoDeck = createDeckController('photo-deck', 'photo-deck-nav', 'gallery-bg-text', photoBgTexts);
         
-        function updateMemberCarouselState() {
-            if (!memberCarousel) return;
-            
-            const containerRect = memberCarousel.getBoundingClientRect();
-            const containerCenter = containerRect.left + containerRect.width / 2;
-            
-            let closestCard = null;
-            let closestDistance = Infinity;
-            
-            memberCards.forEach((card, index) => {
-                const cardRect = card.getBoundingClientRect();
-                const cardCenter = cardRect.left + cardRect.width / 2;
-                const distance = Math.abs(containerCenter - cardCenter);
-                
-                // Remove active state
-                card.classList.remove('active');
-                
-                // Find closest card
-                if (distance < closestDistance) {
-                    closestDistance = distance;
-                    closestCard = { card, index };
-                }
-            });
-            
-            // Apply active state to center card
-            if (closestCard) {
-                closestCard.card.classList.add('active');
-                
-                // Update dots
-                memberDots.forEach((dot, i) => {
-                    dot.classList.toggle('active', i === closestCard.index);
-                });
-                
-                // Update background text with member name
-                if (rosterBgText) {
-                    const memberNames = ['REGGINA', 'YULUNER', 'NATEHOUOHO', 'REGGINO', '騎鳥', '紈蹈', '阿光YO', '碼農', '泰拳'];
-                    rosterBgText.textContent = memberNames[closestCard.index % memberNames.length] || 'FAMILY';
-                }
-            }
-        }
+        // Global functions for onclick
+        window.goToPhotoCard = (index) => photoDeck?.goTo(index);
         
-        // Scroll to specific member
-        function scrollToMember(index) {
-            const cards = memberCarousel?.querySelectorAll('.member-card');
-            if (cards && cards[index]) {
-                const cardWidth = cards[index].offsetWidth;
-                const gap = 24;
-                const scrollPosition = index * (cardWidth + gap);
-                memberCarousel.scrollTo({
-                    left: scrollPosition,
-                    behavior: 'smooth'
-                });
-            }
-        }
+        // Member Deck
+        const memberBgTexts = ['REGGINA', 'YULUNER', 'NATEHOUOHO', 'REGGINO', '騎鳥', '紈蹈', '阿光YO', '碼農', '泰拳'];
+        const memberDeck = createDeckController('member-deck', 'member-deck-nav', 'roster-bg-text', memberBgTexts);
         
-        // Navigate member carousel with arrows
-        function scrollMemberCarousel(direction) {
-            if (!memberCarousel) return;
-            const cardWidth = memberCards[0]?.offsetWidth || 320;
-            const gap = 24;
-            const scrollAmount = (cardWidth + gap) * direction;
-            memberCarousel.scrollBy({
-                left: scrollAmount,
-                behavior: 'smooth'
-            });
-        }
+        // Global functions for onclick
+        window.goToMemberCard = (index) => memberDeck?.goTo(index);
         
-        // Listen for scroll events - Member Carousel
-        if (memberCarousel) {
-            memberCarousel.addEventListener('scroll', updateMemberCarouselState);
-            // Initial state
-            updateMemberCarouselState();
-            
-            // GSAP parallax for roster background text
-            gsap.to('#roster-bg-text', {
-                scrollTrigger: {
-                    trigger: '#roster',
-                    start: 'top bottom',
-                    end: 'bottom top',
-                    scrub: 1
-                },
-                y: -80,
-                opacity: 0.2,
-                ease: 'none'
-            });
-        }
+        // GSAP parallax for background texts
+        gsap.to('#gallery-bg-text', {
+            scrollTrigger: {
+                trigger: '#gallery',
+                start: 'top bottom',
+                end: 'bottom top',
+                scrub: 1
+            },
+            y: -80,
+            opacity: 0.2,
+            ease: 'none'
+        });
+        
+        gsap.to('#roster-bg-text', {
+            scrollTrigger: {
+                trigger: '#roster',
+                start: 'top bottom',
+                end: 'bottom top',
+                scrub: 1
+            },
+            y: -80,
+            opacity: 0.2,
+            ease: 'none'
+        });
+        
+
         
         // ============================================
         // LIVING BACKGROUND - Maple Leaves + Magic Orbs
