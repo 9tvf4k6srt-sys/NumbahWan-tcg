@@ -2085,8 +2085,6 @@ app.get('/', (c) => {
             const bgText = document.getElementById(bgTextId);
             const totalCards = cards.length;
             let currentIndex = 0;
-            let startX = 0;
-            let isDragging = false;
             
             // Update card positions based on current index
             function updatePositions() {
