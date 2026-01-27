@@ -5,7 +5,7 @@
 
 -- Insert members
 INSERT OR REPLACE INTO members (name, level, cp, cp_value, previous_cp, contribution, upgrade, role, online, days_ago, avatar, note) VALUES
-('RegginA', 78, '3B 521M', 3521000000, 2867000000, 760, 4, 'Master', 1, NULL, '/static/avatar-reggina-master-masked-warrior.jpg', 'White masked warrior, alpha leader'),
+('RegginA', 78, '3B 521M', 3521000000, 2867000000, 760, 4, 'Master', 1, NULL, '/static/avatar-reggina-zakum-gm.png', 'Zakum boss warrior - Guild Master'),
 ('Yuluner晴', 76, '2B 694M', 2694000000, 2328000000, 230, 0, 'Guild Member', 0, 'Today', '/static/avatar-yuluner-sunny-cheerful.jpg', '晴 = sunny/clear - Bright cheerful sun theme'),
 ('Natehouoho', 75, '2B 29M', 2029000000, 1197000000, 190, 0, 'Guild Member', 0, 'Today', '/static/avatar-natehouoho-playful-adventurer.jpg', 'Playful fun adventurer'),
 ('RegginO', 74, '1B 36M', 1036000000, 960002000, 560, 0, 'Vice Master', 0, 'Today', '/static/avatar-reggino-vicemaster-pinkhair.jpg', 'Pink hair with flower crown'),
