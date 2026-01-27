@@ -86,7 +86,16 @@ app.get('/', (c) => {
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="NumbahWan">
-    <!-- FULL LOADING SCREEN - replaces first-paint loader -->
+    <!-- SPLASH SCREEN - Shows INSTANTLY before anything loads (0 dependencies) -->
+    <style id="splash-styles">
+      #splash{position:fixed;inset:0;background:#0a0a0f;z-index:9999999;display:flex;flex-direction:column;align-items:center;justify-content:center;transition:opacity .4s ease-out}
+      #splash.fade-out{opacity:0;pointer-events:none}
+      .splash-logo{width:100px;height:100px;animation:splashPulse 1.5s ease-in-out infinite}
+      @keyframes splashPulse{0%,100%{transform:scale(1);filter:drop-shadow(0 0 15px rgba(255,107,0,.6))}50%{transform:scale(1.05);filter:drop-shadow(0 0 25px rgba(255,107,0,.9))}}
+      .splash-title{font-family:system-ui,-apple-system,sans-serif;font-size:28px;font-weight:800;color:#ff6b00;margin-top:20px;letter-spacing:2px;text-shadow:0 0 20px rgba(255,107,0,.5)}
+      .splash-tagline{font-family:system-ui,-apple-system,sans-serif;font-size:12px;color:#666;margin-top:8px;letter-spacing:1px}
+    </style>
+    <!-- FULL LOADING SCREEN - replaces splash once styles load -->
     <style id="instant-loader-styles">
       #instant-loader{position:fixed;top:0;left:0;width:100%;height:100%;background:linear-gradient(135deg,#0a0a0f 0%,#1a1a2e 50%,#0a0a0f 100%);z-index:999999;display:flex;flex-direction:column;align-items:center;justify-content:center;transition:opacity .5s,visibility .5s}
       #instant-loader.hidden{opacity:0;visibility:hidden;pointer-events:none}
@@ -741,9 +750,28 @@ app.get('/', (c) => {
     </style>
 </head>
 <body data-nw-progress data-nw-backtop>
-    <!-- FIRST PAINT LOADER - ultra minimal, shows in first bytes -->
-    <div id="fp"><svg viewBox="0 0 100 100"><defs><linearGradient id="ng" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#ffcc70"/><stop offset="50%" stop-color="#ff6b00"/><stop offset="100%" stop-color="#8B4513"/></linearGradient></defs><rect x="10" y="8" width="24" height="84" rx="3" fill="url(#ng)"/><rect x="66" y="8" width="24" height="84" rx="3" fill="url(#ng)"/><polygon points="10,8 34,8 90,92 66,92" fill="url(#ng)"/></svg></div>
-    <!-- FULL LOADING SCREEN - replaces first paint once styles load -->
+    <!-- SPLASH SCREEN - Shows instantly with zero dependencies -->
+    <div id="splash">
+        <svg class="splash-logo" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+            <defs><linearGradient id="splashG" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#ffcc70"/><stop offset="30%" stop-color="#ff9500"/><stop offset="60%" stop-color="#ff6b00"/><stop offset="100%" stop-color="#8B4513"/></linearGradient></defs>
+            <rect x="10" y="8" width="24" height="84" rx="3" fill="url(#splashG)"/>
+            <rect x="66" y="8" width="24" height="84" rx="3" fill="url(#splashG)"/>
+            <polygon points="10,8 34,8 90,92 66,92" fill="url(#splashG)"/>
+        </svg>
+        <div class="splash-title">NumbahWan</div>
+        <div class="splash-tagline">MAPLESTORY IDLE RPG GUILD</div>
+    </div>
+    <script>
+        // Transition from splash to loader after minimum display time
+        (function(){
+            var splash = document.getElementById('splash');
+            setTimeout(function() {
+                if (splash) splash.classList.add('fade-out');
+                setTimeout(function() { if (splash) splash.remove(); }, 400);
+            }, 800);
+        })();
+    </script>
+    <!-- FULL LOADING SCREEN - replaces splash once scripts load -->
     <div id="instant-loader">
         <div class="il-aurora"></div>
         <div style="position:relative;display:flex;flex-direction:column;align-items:center;z-index:10">
@@ -762,12 +790,10 @@ app.get('/', (c) => {
         </div>
     </div>
     <script>
-        // Hide first-paint loader immediately (full loader takes over)
-        var fp=document.getElementById('fp');if(fp)fp.style.display='none';
-        // Hide full loader when page is ready (min 500ms display time)
+        // Hide full loader when page is ready (min 800ms to let splash show first)
         (function(){
             var startTime = Date.now();
-            var minDisplay = 500;
+            var minDisplay = 800;
             function hideLoader() {
                 var elapsed = Date.now() - startTime;
                 var remaining = Math.max(0, minDisplay - elapsed);
@@ -777,8 +803,6 @@ app.get('/', (c) => {
                         loader.classList.add('hidden');
                         setTimeout(function() { loader.remove(); }, 500);
                     }
-                    var fp = document.getElementById('fp');
-                    if (fp) fp.remove();
                 }, remaining);
             }
             if (document.readyState === 'complete') { hideLoader(); }
