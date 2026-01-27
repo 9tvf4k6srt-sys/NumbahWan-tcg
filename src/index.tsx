@@ -678,63 +678,19 @@ app.get('/', (c) => {
             cursor: grabbing;
         }
         
-        /* Card positions in deck - Fanned out sideways */
-        .deck-card[data-position="-3"] {
-            transform: translateX(-420px) translateZ(-150px) rotateY(25deg) scale(0.75);
-            opacity: 0.3;
-            filter: brightness(0.5) blur(2px);
-            z-index: 1;
-        }
+        /* Card positions in deck - z-index only, transforms handled by JS */
+        .deck-card[data-position="-3"] { z-index: 1; }
+        .deck-card[data-position="-2"] { z-index: 2; }
+        .deck-card[data-position="-1"] { z-index: 3; }
         
-        .deck-card[data-position="-2"] {
-            transform: translateX(-280px) translateZ(-100px) rotateY(18deg) scale(0.82);
-            opacity: 0.5;
-            filter: brightness(0.6) blur(1px);
-            z-index: 2;
-        }
-        
-        .deck-card[data-position="-1"] {
-            transform: translateX(-150px) translateZ(-50px) rotateY(10deg) scale(0.9);
-            opacity: 0.75;
-            filter: brightness(0.8);
-            z-index: 3;
-        }
-        
-        /* ACTIVE CENTER CARD - Full glow */
+        /* ACTIVE CENTER CARD - z-index only, glow handled by JS */
         .deck-card[data-position="0"] {
-            transform: translateX(0) translateZ(50px) rotateY(0deg) scale(1);
-            opacity: 1;
-            filter: brightness(1);
             z-index: 10;
-            border-color: rgba(255, 140, 0, 0.5);
-            box-shadow: 
-                0 30px 60px -10px rgba(0, 0, 0, 0.5),
-                0 0 60px rgba(255, 107, 0, 0.5),
-                0 0 100px rgba(255, 140, 0, 0.3),
-                0 0 140px rgba(255, 180, 0, 0.15),
-                inset 0 1px 0 rgba(255, 255, 255, 0.15);
         }
         
-        .deck-card[data-position="1"] {
-            transform: translateX(150px) translateZ(-50px) rotateY(-10deg) scale(0.9);
-            opacity: 0.75;
-            filter: brightness(0.8);
-            z-index: 3;
-        }
-        
-        .deck-card[data-position="2"] {
-            transform: translateX(280px) translateZ(-100px) rotateY(-18deg) scale(0.82);
-            opacity: 0.5;
-            filter: brightness(0.6) blur(1px);
-            z-index: 2;
-        }
-        
-        .deck-card[data-position="3"] {
-            transform: translateX(420px) translateZ(-150px) rotateY(-25deg) scale(0.75);
-            opacity: 0.3;
-            filter: brightness(0.5) blur(2px);
-            z-index: 1;
-        }
+        .deck-card[data-position="1"] { z-index: 3; }
+        .deck-card[data-position="2"] { z-index: 2; }
+        .deck-card[data-position="3"] { z-index: 1; }
         
         /* Hidden cards beyond visible range */
         .deck-card[data-position^="-"][data-position*="4"],
@@ -2144,6 +2100,7 @@ app.get('/', (c) => {
             function updatePositionsSmooth(offset = 0) {
                 cards.forEach((card, i) => {
                     const position = i - currentIndex - offset;
+                    const absPos = Math.abs(position);
                     
                     // Clamp position for CSS
                     const clampedPos = Math.max(-3, Math.min(3, Math.round(position)));
@@ -2176,10 +2133,26 @@ app.get('/', (c) => {
                     
                     card.style.transform = \`translateX(\${x}px) translateZ(\${z}px) rotateY(\${ry}deg) scale(\${s})\`;
                     card.style.opacity = o;
-                    card.style.filter = o < 1 ? \`brightness(\${0.5 + o * 0.5})\` : 'brightness(1)';
+                    card.style.filter = \`brightness(\${0.5 + o * 0.5})\`;
+                    
+                    // SMOOTH GLOW - interpolate based on distance from center (0 = active)
+                    // Glow intensity: 1 at center, 0 at position >= 1
+                    const glowIntensity = Math.max(0, 1 - absPos);
+                    const glowSize1 = 40 * glowIntensity;
+                    const glowSize2 = 80 * glowIntensity;
+                    const glowSize3 = 120 * glowIntensity;
+                    const glowAlpha1 = 0.6 * glowIntensity;
+                    const glowAlpha2 = 0.4 * glowIntensity;
+                    const glowAlpha3 = 0.2 * glowIntensity;
+                    const borderAlpha = 0.3 + (0.3 * glowIntensity);
+                    
+                    card.style.boxShadow = glowIntensity > 0.01 
+                        ? \`0 0 \${glowSize1}px rgba(255, 107, 0, \${glowAlpha1}), 0 0 \${glowSize2}px rgba(255, 140, 0, \${glowAlpha2}), 0 0 \${glowSize3}px rgba(255, 180, 0, \${glowAlpha3}), inset 0 0 \${15 * glowIntensity}px rgba(255, 107, 0, \${0.1 * glowIntensity})\`
+                        : '0 8px 32px rgba(0, 0, 0, 0.4)';
+                    card.style.borderColor = \`rgba(255, 140, 0, \${borderAlpha})\`;
                     
                     // Hide cards too far away
-                    if (Math.abs(position) > 3.5) {
+                    if (absPos > 3.5) {
                         card.classList.add('hidden-card');
                     } else {
                         card.classList.remove('hidden-card');
