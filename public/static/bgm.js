@@ -127,6 +127,29 @@
       updateButton(false);
     });
 
+    // Seamless loop: restart slightly before end to avoid gap
+    audio.addEventListener('timeupdate', () => {
+      // If within 0.1s of end, loop early for seamless transition
+      if (audio.duration && audio.currentTime > audio.duration - 0.1) {
+        audio.currentTime = 0;
+      }
+    });
+
+    // Handle tab visibility - resume when tab becomes visible
+    document.addEventListener('visibilitychange', () => {
+      if (!document.hidden && isPlaying && audio.paused) {
+        audio.play().catch(() => {});
+      }
+    });
+
+    // Handle unexpected stops (buffer issues, etc)
+    audio.addEventListener('ended', () => {
+      if (isPlaying) {
+        audio.currentTime = 0;
+        audio.play().catch(() => {});
+      }
+    });
+
     return audio;
   }
 
