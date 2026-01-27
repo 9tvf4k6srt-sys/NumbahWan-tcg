@@ -627,10 +627,10 @@ app.get('/', (c) => {
             opacity: 0.5;
         }
         
-        /* Carousel Container */
-        .photo-carousel {
+        /* Carousel Container - FIXED: stronger snap, smoother scroll */
+        .photo-carousel, .member-carousel {
             display: flex;
-            gap: 20px;
+            gap: 24px;
             padding: 40px 0;
             overflow-x: auto;
             scroll-snap-type: x mandatory;
@@ -638,61 +638,101 @@ app.get('/', (c) => {
             -webkit-overflow-scrolling: touch;
             scrollbar-width: none;
             -ms-overflow-style: none;
-            perspective: 1000px;
+            perspective: 1200px;
             padding-left: calc(50% - 160px);
             padding-right: calc(50% - 160px);
         }
         
-        .photo-carousel::-webkit-scrollbar {
+        .photo-carousel::-webkit-scrollbar,
+        .member-carousel::-webkit-scrollbar {
             display: none;
         }
         
-        /* Individual Photo Card - Premium Glass Style */
-        .photo-card {
+        /* Individual Photo Card - Premium Glass Style - FIXED: no shake */
+        .photo-card, .member-card {
             flex: 0 0 320px;
             height: 420px;
             scroll-snap-align: center;
+            scroll-snap-stop: always; /* Force stop at each card */
             position: relative;
             border-radius: 24px;
             overflow: hidden;
-            transition: all 0.5s cubic-bezier(0.23, 1, 0.32, 1);
-            transform-style: preserve-3d;
             cursor: pointer;
+            
+            /* GPU ACCELERATION - prevents shaking */
+            will-change: transform, opacity, box-shadow;
+            backface-visibility: hidden;
+            -webkit-backface-visibility: hidden;
+            transform: translateZ(0) scale(0.92);
+            
+            /* Smooth transitions */
+            transition: 
+                transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1),
+                opacity 0.3s ease,
+                box-shadow 0.4s ease,
+                border-color 0.3s ease,
+                filter 0.3s ease;
             
             /* Glassmorphism base */
             background: linear-gradient(135deg, 
-                rgba(255, 107, 0, 0.15) 0%, 
-                rgba(139, 69, 19, 0.1) 50%,
-                rgba(255, 157, 77, 0.08) 100%);
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
+                rgba(255, 107, 0, 0.12) 0%, 
+                rgba(139, 69, 19, 0.08) 50%,
+                rgba(255, 157, 77, 0.06) 100%);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
             
-            /* Premium rim light */
-            border: 1px solid rgba(255, 255, 255, 0.15);
+            /* Subtle rim light */
+            border: 1px solid rgba(255, 255, 255, 0.1);
             box-shadow: 
-                0 25px 50px -12px rgba(0, 0, 0, 0.5),
-                0 0 0 1px rgba(255, 107, 0, 0.1),
-                inset 0 1px 0 rgba(255, 255, 255, 0.1);
+                0 20px 40px -10px rgba(0, 0, 0, 0.4),
+                0 0 0 1px rgba(255, 107, 0, 0.05);
+            
+            opacity: 0.7;
+            filter: brightness(0.85);
         }
         
-        /* Active card - larger and glowing */
+        /* Active card - ENHANCED GLOW */
         .photo-card.active,
-        .photo-card:hover {
-            transform: scale(1.08) translateZ(50px);
-            box-shadow: 
-                0 35px 60px -15px rgba(0, 0, 0, 0.6),
-                0 0 60px rgba(255, 107, 0, 0.4),
-                0 0 120px rgba(255, 140, 0, 0.2),
-                inset 0 1px 0 rgba(255, 255, 255, 0.2);
-            border-color: rgba(255, 140, 0, 0.4);
+        .member-card.active {
+            transform: translateZ(0) scale(1.05);
+            opacity: 1;
+            filter: brightness(1);
             z-index: 10;
+            
+            /* INTENSE GLOW */
+            border-color: rgba(255, 140, 0, 0.6);
+            box-shadow: 
+                0 30px 60px -15px rgba(0, 0, 0, 0.5),
+                0 0 40px rgba(255, 107, 0, 0.6),
+                0 0 80px rgba(255, 140, 0, 0.4),
+                0 0 120px rgba(255, 180, 0, 0.2),
+                inset 0 1px 0 rgba(255, 255, 255, 0.2),
+                inset 0 0 20px rgba(255, 107, 0, 0.1);
         }
         
-        /* Inactive cards - smaller and faded */
-        .photo-card.inactive {
-            transform: scale(0.85) translateZ(-50px);
-            opacity: 0.6;
-            filter: brightness(0.7) saturate(0.8);
+        /* Hover also gets glow */
+        .photo-card:hover,
+        .member-card:hover {
+            transform: translateZ(0) scale(1.02);
+            opacity: 0.95;
+            filter: brightness(0.95);
+            box-shadow: 
+                0 25px 50px -12px rgba(0, 0, 0, 0.45),
+                0 0 30px rgba(255, 107, 0, 0.3),
+                0 0 60px rgba(255, 140, 0, 0.15);
+        }
+        
+        /* Active + hover = max glow */
+        .photo-card.active:hover,
+        .member-card.active:hover {
+            transform: translateZ(0) scale(1.08);
+            box-shadow: 
+                0 35px 70px -15px rgba(0, 0, 0, 0.5),
+                0 0 50px rgba(255, 107, 0, 0.7),
+                0 0 100px rgba(255, 140, 0, 0.5),
+                0 0 150px rgba(255, 180, 0, 0.3),
+                inset 0 1px 0 rgba(255, 255, 255, 0.25),
+                inset 0 0 30px rgba(255, 107, 0, 0.15);
         }
         
         /* Card image */
@@ -1425,62 +1465,96 @@ app.get('/', (c) => {
         </div>
     </section>
     
-    <!-- Member Roster Section -->
-    <section id="roster" class="py-20 px-4">
-        <div class="container mx-auto max-w-7xl">
+    <!-- Member Roster Section - Premium Carousel -->
+    <section id="roster" class="gallery-section py-20 px-4 relative">
+        <!-- Parallax Background Text -->
+        <div class="gallery-bg-text" id="roster-bg-text">FAMILY</div>
+        
+        <div class="container mx-auto max-w-7xl relative z-10">
             <h2 class="text-4xl font-bold text-center mb-4 neon-orange reveal">
                 ${iconUsers()} <span data-i18n="theFamily">The Family</span>
             </h2>
-            <p class="text-center text-orange-300 mb-12 reveal" data-i18n="rosterDesc">Meet our amazing guild members</p>
+            <p class="text-center text-orange-300 mb-8 reveal" data-i18n="rosterDesc">Meet our amazing guild members</p>
             
-            <div class="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                ${members.map((member, index) => `
-                    <div class="member-card glass-card p-6 nw-hover-lift" data-nw-reveal="up" data-nw-delay="${index * 0.08}s" data-nw-tilt>
-                        <div class="relative">
-                            ${index === 0 ? '<span class="crown"><svg class="nw-icon" width="24" height="24" style="color:#ffd700"><use href="/static/icons/nw-icons.svg#crown"></use></svg></span>' : ''}
-                            <div class="flex items-center gap-4 mb-4">
+            <!-- Premium Member Carousel -->
+            <div class="relative">
+                <!-- Navigation Arrows -->
+                <button class="carousel-arrow prev" onclick="scrollMemberCarousel(-1)" aria-label="Previous">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/></svg>
+                </button>
+                <button class="carousel-arrow next" onclick="scrollMemberCarousel(1)" aria-label="Next">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M8.59 16.59L10 18l6-6-6-6-1.41 1.41L13.17 12z"/></svg>
+                </button>
+                
+                <!-- Carousel Container -->
+                <div class="member-carousel" id="member-carousel">
+                    ${members.map((member, index) => `
+                        <div class="member-card" data-index="${index}">
+                            <!-- Card Background Glow -->
+                            <div class="card-overlay"></div>
+                            
+                            <!-- Rank Badge -->
+                            <div class="card-index">${index + 1}</div>
+                            
+                            <!-- Crown for #1 -->
+                            ${index === 0 ? '<div class="absolute top-3 right-3 text-2xl animate-bounce">👑</div>' : ''}
+                            
+                            <!-- Member Avatar - Large -->
+                            <div class="absolute top-6 left-1/2 -translate-x-1/2">
                                 ${member.avatar 
-                                    ? `<img src="${member.avatar}" alt="${member.name}" class="w-16 h-16 rounded-full object-cover border-2 border-orange-500 nw-avatar-glow" loading="lazy" />`
-                                    : `<div class="w-16 h-16 rounded-full bg-gradient-to-br from-orange-400 to-orange-600 flex items-center justify-center text-2xl font-bold">
-                                    ${member.name.charAt(0).toUpperCase()}
-                                </div>`
+                                    ? `<img src="${member.avatar}" alt="${member.name}" class="w-24 h-24 rounded-full object-cover border-3 border-orange-500 shadow-lg shadow-orange-500/30" loading="lazy" />`
+                                    : `<div class="w-24 h-24 rounded-full bg-gradient-to-br from-orange-400 to-orange-600 flex items-center justify-center text-4xl font-bold border-3 border-orange-300">
+                                        ${member.name.charAt(0).toUpperCase()}
+                                    </div>`
                                 }
-                                <div class="flex-1">
-                                    <div class="flex items-center gap-2">
-                                        <h3 class="font-bold text-lg truncate">${member.name}</h3>
-                                        ${member.online ? '<span class="online-dot"></span>' : ''}
+                                ${member.online ? '<span class="absolute bottom-1 right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-black animate-pulse"></span>' : ''}
+                            </div>
+                            
+                            <!-- Member Info -->
+                            <div class="card-content" style="padding-top: 100px;">
+                                <h3 class="card-title text-center text-xl mb-1">${member.name}</h3>
+                                <p class="text-center text-orange-300 text-sm mb-4">Level ${member.level}</p>
+                                
+                                <!-- Stats Grid -->
+                                <div class="space-y-3 text-sm">
+                                    <div class="flex justify-between items-center px-2 py-1 rounded bg-black/20">
+                                        <span class="text-gray-400">${iconPower()} CP</span>
+                                        <span class="text-orange-400 font-bold">${member.cp}</span>
                                     </div>
-                                    <p class="text-orange-300 text-sm">Lv. ${member.level}</p>
+                                    <div class="flex justify-between items-center px-2 py-1">
+                                        <span class="text-gray-400">${iconHeart()} Contrib</span>
+                                        <span class="text-orange-300">${member.contribution}</span>
+                                    </div>
+                                    <div class="flex justify-between items-center px-2 py-1 rounded bg-black/20">
+                                        <span class="text-gray-400">${iconUpgrade()} Upgrades</span>
+                                        <span class="text-orange-300">${member.upgrade}</span>
+                                    </div>
                                 </div>
-                            </div>
-                            <div class="space-y-2">
-                                <div class="flex justify-between items-center">
-                                    <span class="text-gray-400 text-sm">${iconPower()} CP</span>
-                                    <span class="text-orange-400 font-bold">${member.cp}</span>
+                                
+                                <!-- Role Badge -->
+                                <div class="mt-4 flex justify-center">
+                                    <span class="px-4 py-1.5 rounded-full text-xs font-bold ${
+                                        member.role === 'Master' ? 'role-master' : 
+                                        member.role === 'Vice Master' ? 'role-vice' : 
+                                        member.role === '領導' ? 'role-leader' :
+                                        member.role === '小可愛' ? 'role-inactive' : 'role-member'
+                                    }">
+                                        ${member.role}
+                                    </span>
                                 </div>
-                                <div class="flex justify-between items-center">
-                                    <span class="text-gray-400 text-sm">${iconHeart()} Contribution</span>
-                                    <span class="text-orange-300">${member.contribution}</span>
-                                </div>
-                                <div class="flex justify-between items-center">
-                                    <span class="text-gray-400 text-sm">${iconUpgrade()} Upgrades</span>
-                                    <span class="text-orange-300">${member.upgrade}</span>
-                                </div>
-                            </div>
-                            <div class="mt-4 pt-4 border-t border-orange-900/30 flex justify-between items-center">
-                                <span class="px-3 py-1 rounded-full text-xs font-bold ${
-                                    member.role === 'Master' ? 'role-master' : 
-                                    member.role === 'Vice Master' ? 'role-vice' : 
-                                    member.role === '領導' ? 'role-leader' :
-                                    member.role === '小可愛' ? 'role-inactive' : 'role-member'
-                                }">
-                                    ${member.role}
-                                </span>
-                                ${member.daysAgo ? `<span class="text-gray-500 text-xs">${member.daysAgo}</span>` : ''}
+                                
+                                ${member.daysAgo ? `<p class="text-center text-gray-500 text-xs mt-2">${member.daysAgo}</p>` : ''}
                             </div>
                         </div>
-                    </div>
-                `).join('')}
+                    `).join('')}
+                </div>
+                
+                <!-- Carousel Dots -->
+                <div class="carousel-nav" id="member-carousel-nav">
+                    ${members.map((_, index) => `
+                        <div class="carousel-dot ${index === 0 ? 'active' : ''}" data-index="${index}" onclick="scrollToMember(${index})"></div>
+                    `).join('')}
+                </div>
             </div>
         </div>
     </section>
@@ -1788,25 +1862,19 @@ app.get('/', (c) => {
                 const cardCenter = cardRect.left + cardRect.width / 2;
                 const distance = Math.abs(containerCenter - cardCenter);
                 
-                // Remove all states first
-                card.classList.remove('active', 'inactive');
+                // Remove active state
+                card.classList.remove('active');
                 
                 // Find closest card
                 if (distance < closestDistance) {
                     closestDistance = distance;
                     closestCard = { card, index };
                 }
-                
-                // Apply inactive state to cards far from center
-                if (distance > cardRect.width * 0.8) {
-                    card.classList.add('inactive');
-                }
             });
             
-            // Apply active state to center card
+            // Apply active state to center card only
             if (closestCard) {
                 closestCard.card.classList.add('active');
-                closestCard.card.classList.remove('inactive');
                 
                 // Update dots
                 carouselDots.forEach((dot, i) => {
@@ -1846,7 +1914,7 @@ app.get('/', (c) => {
             });
         }
         
-        // Listen for scroll events
+        // Listen for scroll events - Photo Carousel
         if (photoCarousel) {
             photoCarousel.addEventListener('scroll', updateCarouselState);
             // Initial state
@@ -1862,6 +1930,101 @@ app.get('/', (c) => {
                 },
                 y: -100,
                 opacity: 0.3,
+                ease: 'none'
+            });
+        }
+        
+        // ============================================
+        // MEMBER CAROUSEL - Same premium style
+        // ============================================
+        const memberCarousel = document.getElementById('member-carousel');
+        const memberCards = document.querySelectorAll('.member-card');
+        const memberDots = document.querySelectorAll('#member-carousel-nav .carousel-dot');
+        const rosterBgText = document.getElementById('roster-bg-text');
+        
+        function updateMemberCarouselState() {
+            if (!memberCarousel) return;
+            
+            const containerRect = memberCarousel.getBoundingClientRect();
+            const containerCenter = containerRect.left + containerRect.width / 2;
+            
+            let closestCard = null;
+            let closestDistance = Infinity;
+            
+            memberCards.forEach((card, index) => {
+                const cardRect = card.getBoundingClientRect();
+                const cardCenter = cardRect.left + cardRect.width / 2;
+                const distance = Math.abs(containerCenter - cardCenter);
+                
+                // Remove active state
+                card.classList.remove('active');
+                
+                // Find closest card
+                if (distance < closestDistance) {
+                    closestDistance = distance;
+                    closestCard = { card, index };
+                }
+            });
+            
+            // Apply active state to center card
+            if (closestCard) {
+                closestCard.card.classList.add('active');
+                
+                // Update dots
+                memberDots.forEach((dot, i) => {
+                    dot.classList.toggle('active', i === closestCard.index);
+                });
+                
+                // Update background text with member name
+                if (rosterBgText) {
+                    const memberNames = ['REGGINA', 'YULUNER', 'NATEHOUOHO', 'REGGINO', '騎鳥', '紈蹈', '阿光YO', '碼農', '泰拳'];
+                    rosterBgText.textContent = memberNames[closestCard.index % memberNames.length] || 'FAMILY';
+                }
+            }
+        }
+        
+        // Scroll to specific member
+        function scrollToMember(index) {
+            const cards = memberCarousel?.querySelectorAll('.member-card');
+            if (cards && cards[index]) {
+                const cardWidth = cards[index].offsetWidth;
+                const gap = 24;
+                const scrollPosition = index * (cardWidth + gap);
+                memberCarousel.scrollTo({
+                    left: scrollPosition,
+                    behavior: 'smooth'
+                });
+            }
+        }
+        
+        // Navigate member carousel with arrows
+        function scrollMemberCarousel(direction) {
+            if (!memberCarousel) return;
+            const cardWidth = memberCards[0]?.offsetWidth || 320;
+            const gap = 24;
+            const scrollAmount = (cardWidth + gap) * direction;
+            memberCarousel.scrollBy({
+                left: scrollAmount,
+                behavior: 'smooth'
+            });
+        }
+        
+        // Listen for scroll events - Member Carousel
+        if (memberCarousel) {
+            memberCarousel.addEventListener('scroll', updateMemberCarouselState);
+            // Initial state
+            updateMemberCarouselState();
+            
+            // GSAP parallax for roster background text
+            gsap.to('#roster-bg-text', {
+                scrollTrigger: {
+                    trigger: '#roster',
+                    start: 'top bottom',
+                    end: 'bottom top',
+                    scrub: 1
+                },
+                y: -80,
+                opacity: 0.2,
                 ease: 'none'
             });
         }
