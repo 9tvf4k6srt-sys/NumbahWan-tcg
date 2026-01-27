@@ -3196,100 +3196,27 @@ app.get('/pvp', async (c) => {
   return c.redirect('/pvp.html')
 })
 
-// Fashion Disasters page route
-app.get('/fashion', async (c) => {
-  try {
-    // @ts-ignore - env is provided by Cloudflare Pages
-    const asset = await c.env?.ASSETS?.fetch(new Request('https://dummy/fashion.html'))
-    if (asset) {
-      return new Response(asset.body, {
-        headers: { 'Content-Type': 'text/html; charset=utf-8' }
-      })
-    }
-  } catch (e) {
-    // Fallback for local development
-  }
-  return c.redirect('/fashion.html')
-})
+// ============================================================================
+// ROUTE FACTORY - DRY Pattern (Don't Repeat Yourself)
+// Add new pages by just adding to the array - no copy-paste needed!
+// ============================================================================
+const staticPages = ['fashion', 'merch', 'fortune', 'arcade', 'memes', 'apply']
 
-// Exclusive Merch page route
-app.get('/merch', async (c) => {
-  try {
-    // @ts-ignore - env is provided by Cloudflare Pages
-    const asset = await c.env?.ASSETS?.fetch(new Request('https://dummy/merch.html'))
-    if (asset) {
-      return new Response(asset.body, {
-        headers: { 'Content-Type': 'text/html; charset=utf-8' }
-      })
+staticPages.forEach(page => {
+  app.get(`/${page}`, async (c) => {
+    try {
+      // @ts-ignore - env is provided by Cloudflare Pages
+      const asset = await c.env?.ASSETS?.fetch(new Request(`https://dummy/${page}.html`))
+      if (asset) {
+        return new Response(asset.body, {
+          headers: { 'Content-Type': 'text/html; charset=utf-8' }
+        })
+      }
+    } catch (e) {
+      // Fallback for local development
     }
-  } catch (e) {
-    // Fallback for local development
-  }
-  return c.redirect('/merch.html')
-})
-
-// Daily Fortune page route
-app.get('/fortune', async (c) => {
-  try {
-    // @ts-ignore - env is provided by Cloudflare Pages
-    const asset = await c.env?.ASSETS?.fetch(new Request('https://dummy/fortune.html'))
-    if (asset) {
-      return new Response(asset.body, {
-        headers: { 'Content-Type': 'text/html; charset=utf-8' }
-      })
-    }
-  } catch (e) {
-    // Fallback for local development
-  }
-  return c.redirect('/fortune.html')
-})
-
-// Arcade page route
-app.get('/arcade', async (c) => {
-  try {
-    // @ts-ignore - env is provided by Cloudflare Pages
-    const asset = await c.env?.ASSETS?.fetch(new Request('https://dummy/arcade.html'))
-    if (asset) {
-      return new Response(asset.body, {
-        headers: { 'Content-Type': 'text/html; charset=utf-8' }
-      })
-    }
-  } catch (e) {
-    // Fallback for local development
-  }
-  return c.redirect('/arcade.html')
-})
-
-// Meme Gallery page route
-app.get('/memes', async (c) => {
-  try {
-    // @ts-ignore - env is provided by Cloudflare Pages
-    const asset = await c.env?.ASSETS?.fetch(new Request('https://dummy/memes.html'))
-    if (asset) {
-      return new Response(asset.body, {
-        headers: { 'Content-Type': 'text/html; charset=utf-8' }
-      })
-    }
-  } catch (e) {
-    // Fallback for local development
-  }
-  return c.redirect('/memes.html')
-})
-
-// Guild Application page route
-app.get('/apply', async (c) => {
-  try {
-    // @ts-ignore - env is provided by Cloudflare Pages
-    const asset = await c.env?.ASSETS?.fetch(new Request('https://dummy/apply.html'))
-    if (asset) {
-      return new Response(asset.body, {
-        headers: { 'Content-Type': 'text/html; charset=utf-8' }
-      })
-    }
-  } catch (e) {
-    // Fallback for local development
-  }
-  return c.redirect('/apply.html')
+    return c.redirect(`/${page}.html`)
+  })
 })
 
 export default app
