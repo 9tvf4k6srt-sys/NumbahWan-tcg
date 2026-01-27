@@ -156,24 +156,156 @@ app.get('/', (c) => {
             font-family: 'Press Start 2P', cursive;
         }
         
-        /* Aurora gradient background */
+        /* ============================================
+           LIVING BACKGROUND SYSTEM
+           - Multi-layer aurora waves
+           - Floating maple leaves (MapleStory themed)
+           - Glowing magic orbs
+           ============================================ */
+        
+        /* Aurora gradient background - Enhanced with multiple layers */
         .aurora-bg {
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background: 
-                radial-gradient(ellipse at 20% 20%, rgba(255, 107, 0, 0.15) 0%, transparent 50%),
-                radial-gradient(ellipse at 80% 80%, rgba(255, 157, 77, 0.1) 0%, transparent 50%),
-                radial-gradient(ellipse at 50% 50%, rgba(139, 69, 19, 0.1) 0%, transparent 70%);
             z-index: -1;
-            animation: auroraMove 20s ease-in-out infinite;
+            overflow: hidden;
         }
         
-        @keyframes auroraMove {
-            0%, 100% { transform: scale(1) rotate(0deg); }
-            50% { transform: scale(1.1) rotate(5deg); }
+        /* Aurora Layer 1 - Main orange glow */
+        .aurora-bg::before {
+            content: '';
+            position: absolute;
+            inset: -50%;
+            background: 
+                radial-gradient(ellipse at 30% 20%, rgba(255, 107, 0, 0.25) 0%, transparent 50%),
+                radial-gradient(ellipse at 70% 60%, rgba(255, 157, 77, 0.2) 0%, transparent 45%),
+                radial-gradient(ellipse at 20% 80%, rgba(255, 140, 0, 0.15) 0%, transparent 40%);
+            animation: auroraWave1 15s ease-in-out infinite;
+        }
+        
+        /* Aurora Layer 2 - Deeper accent */
+        .aurora-bg::after {
+            content: '';
+            position: absolute;
+            inset: -50%;
+            background: 
+                radial-gradient(ellipse at 60% 30%, rgba(139, 69, 19, 0.2) 0%, transparent 50%),
+                radial-gradient(ellipse at 40% 70%, rgba(255, 200, 100, 0.1) 0%, transparent 40%);
+            animation: auroraWave2 20s ease-in-out infinite;
+        }
+        
+        @keyframes auroraWave1 {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            25% { transform: translate(5%, -3%) scale(1.05); }
+            50% { transform: translate(-3%, 5%) scale(1.1); }
+            75% { transform: translate(-5%, -2%) scale(1.05); }
+        }
+        
+        @keyframes auroraWave2 {
+            0%, 100% { transform: translate(0, 0) rotate(0deg); }
+            33% { transform: translate(-4%, 4%) rotate(3deg); }
+            66% { transform: translate(4%, -3%) rotate(-3deg); }
+        }
+        
+        /* ============================================
+           MAPLE LEAVES - Floating Animation
+           ============================================ */
+        #maple-leaves {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
+            overflow: hidden;
+        }
+        
+        .maple-leaf {
+            position: absolute;
+            opacity: 0;
+            filter: drop-shadow(0 0 3px rgba(255, 140, 0, 0.5));
+            animation: leafFall linear infinite;
+        }
+        
+        @keyframes leafFall {
+            0% {
+                opacity: 0;
+                transform: translateY(-10vh) rotate(0deg) translateX(0);
+            }
+            10% {
+                opacity: 0.8;
+            }
+            90% {
+                opacity: 0.6;
+            }
+            100% {
+                opacity: 0;
+                transform: translateY(110vh) rotate(720deg) translateX(100px);
+            }
+        }
+        
+        /* Different leaf variations */
+        .maple-leaf.type-1 { animation-duration: 18s; }
+        .maple-leaf.type-2 { animation-duration: 22s; animation-direction: reverse; }
+        .maple-leaf.type-3 { animation-duration: 15s; }
+        .maple-leaf.type-4 { animation-duration: 25s; }
+        
+        /* ============================================
+           MAGIC ORBS - Floating glow particles
+           ============================================ */
+        #magic-orbs {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
+        }
+        
+        .magic-orb {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(1px);
+            animation: orbFloat ease-in-out infinite;
+        }
+        
+        .magic-orb.orange {
+            background: radial-gradient(circle, rgba(255, 140, 0, 0.9) 0%, rgba(255, 107, 0, 0.4) 50%, transparent 70%);
+            box-shadow: 0 0 20px rgba(255, 140, 0, 0.6), 0 0 40px rgba(255, 107, 0, 0.3);
+        }
+        
+        .magic-orb.gold {
+            background: radial-gradient(circle, rgba(255, 215, 0, 0.8) 0%, rgba(255, 180, 0, 0.3) 50%, transparent 70%);
+            box-shadow: 0 0 15px rgba(255, 215, 0, 0.5), 0 0 30px rgba(255, 200, 0, 0.2);
+        }
+        
+        .magic-orb.amber {
+            background: radial-gradient(circle, rgba(255, 191, 0, 0.7) 0%, rgba(255, 150, 0, 0.3) 50%, transparent 70%);
+            box-shadow: 0 0 12px rgba(255, 191, 0, 0.4);
+        }
+        
+        @keyframes orbFloat {
+            0%, 100% {
+                transform: translate(0, 0) scale(1);
+                opacity: 0.6;
+            }
+            25% {
+                transform: translate(30px, -50px) scale(1.2);
+                opacity: 0.9;
+            }
+            50% {
+                transform: translate(-20px, -80px) scale(0.8);
+                opacity: 0.5;
+            }
+            75% {
+                transform: translate(40px, -30px) scale(1.1);
+                opacity: 0.8;
+            }
         }
         
         /* Glassmorphism */
@@ -462,29 +594,253 @@ app.get('/', (c) => {
             50% { transform: scale(1.2); opacity: 0.7; }
         }
         
-        /* Photo gallery */
-        .photo-card {
-            aspect-ratio: 4/3;
-            background: linear-gradient(135deg, rgba(255, 107, 0, 0.2) 0%, rgba(139, 69, 19, 0.2) 100%);
-            border-radius: 12px;
-            overflow: hidden;
+        /* ============================================
+           PREMIUM 3D CARD CAROUSEL - Aniimo Style
+           Fan-out cards with glassmorphism
+           ============================================ */
+        
+        /* Gallery Section Background */
+        .gallery-section {
             position: relative;
-            transition: all 0.4s ease;
+            overflow: hidden;
+            background: linear-gradient(180deg, 
+                rgba(10, 10, 15, 0.95) 0%,
+                rgba(20, 10, 30, 0.9) 50%,
+                rgba(10, 10, 15, 0.95) 100%);
         }
         
-        .photo-card:hover {
-            transform: scale(1.05);
-            box-shadow: 0 0 30px rgba(255, 107, 0, 0.5);
-        }
-        
-        .photo-card::before {
-            content: '📸';
+        /* Floating Background Text (parallax layer) */
+        .gallery-bg-text {
             position: absolute;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            font-size: 3rem;
+            font-size: clamp(4rem, 15vw, 12rem);
+            font-weight: 900;
+            text-transform: uppercase;
+            color: transparent;
+            -webkit-text-stroke: 1px rgba(255, 107, 0, 0.15);
+            letter-spacing: 0.1em;
+            pointer-events: none;
+            z-index: 0;
+            white-space: nowrap;
             opacity: 0.5;
+        }
+        
+        /* Carousel Container */
+        .photo-carousel {
+            display: flex;
+            gap: 20px;
+            padding: 40px 0;
+            overflow-x: auto;
+            scroll-snap-type: x mandatory;
+            scroll-behavior: smooth;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+            perspective: 1000px;
+            padding-left: calc(50% - 160px);
+            padding-right: calc(50% - 160px);
+        }
+        
+        .photo-carousel::-webkit-scrollbar {
+            display: none;
+        }
+        
+        /* Individual Photo Card - Premium Glass Style */
+        .photo-card {
+            flex: 0 0 320px;
+            height: 420px;
+            scroll-snap-align: center;
+            position: relative;
+            border-radius: 24px;
+            overflow: hidden;
+            transition: all 0.5s cubic-bezier(0.23, 1, 0.32, 1);
+            transform-style: preserve-3d;
+            cursor: pointer;
+            
+            /* Glassmorphism base */
+            background: linear-gradient(135deg, 
+                rgba(255, 107, 0, 0.15) 0%, 
+                rgba(139, 69, 19, 0.1) 50%,
+                rgba(255, 157, 77, 0.08) 100%);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            
+            /* Premium rim light */
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            box-shadow: 
+                0 25px 50px -12px rgba(0, 0, 0, 0.5),
+                0 0 0 1px rgba(255, 107, 0, 0.1),
+                inset 0 1px 0 rgba(255, 255, 255, 0.1);
+        }
+        
+        /* Active card - larger and glowing */
+        .photo-card.active,
+        .photo-card:hover {
+            transform: scale(1.08) translateZ(50px);
+            box-shadow: 
+                0 35px 60px -15px rgba(0, 0, 0, 0.6),
+                0 0 60px rgba(255, 107, 0, 0.4),
+                0 0 120px rgba(255, 140, 0, 0.2),
+                inset 0 1px 0 rgba(255, 255, 255, 0.2);
+            border-color: rgba(255, 140, 0, 0.4);
+            z-index: 10;
+        }
+        
+        /* Inactive cards - smaller and faded */
+        .photo-card.inactive {
+            transform: scale(0.85) translateZ(-50px);
+            opacity: 0.6;
+            filter: brightness(0.7) saturate(0.8);
+        }
+        
+        /* Card image */
+        .photo-card img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.6s ease;
+        }
+        
+        .photo-card:hover img,
+        .photo-card.active img {
+            transform: scale(1.1);
+        }
+        
+        /* Gradient overlay for text readability */
+        .photo-card .card-overlay {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(
+                180deg,
+                transparent 0%,
+                transparent 40%,
+                rgba(0, 0, 0, 0.3) 60%,
+                rgba(0, 0, 0, 0.85) 100%
+            );
+            transition: opacity 0.4s ease;
+        }
+        
+        /* Card content area */
+        .photo-card .card-content {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            padding: 24px;
+            transform: translateY(10px);
+            opacity: 0.8;
+            transition: all 0.4s ease;
+        }
+        
+        .photo-card:hover .card-content,
+        .photo-card.active .card-content {
+            transform: translateY(0);
+            opacity: 1;
+        }
+        
+        /* Card title with glow */
+        .photo-card .card-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #fff;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+            margin-bottom: 4px;
+        }
+        
+        /* Card description */
+        .photo-card .card-desc {
+            font-size: 0.875rem;
+            color: rgba(255, 200, 150, 0.9);
+            text-shadow: 0 1px 5px rgba(0, 0, 0, 0.5);
+        }
+        
+        /* Card index indicator */
+        .photo-card .card-index {
+            position: absolute;
+            top: 16px;
+            left: 16px;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: rgba(255, 107, 0, 0.8);
+            backdrop-filter: blur(10px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 0.875rem;
+            color: #fff;
+            box-shadow: 0 4px 15px rgba(255, 107, 0, 0.4);
+        }
+        
+        /* Scroll indicators */
+        .carousel-nav {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            margin-top: 24px;
+        }
+        
+        .carousel-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: rgba(255, 107, 0, 0.3);
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .carousel-dot.active {
+            width: 24px;
+            border-radius: 4px;
+            background: linear-gradient(90deg, #ff6b00, #ffd700);
+            box-shadow: 0 0 15px rgba(255, 107, 0, 0.5);
+        }
+        
+        /* Scroll hint arrows */
+        .carousel-arrow {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: rgba(255, 107, 0, 0.2);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 107, 0, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            z-index: 20;
+            color: #fff;
+            font-size: 1.5rem;
+        }
+        
+        .carousel-arrow:hover {
+            background: rgba(255, 107, 0, 0.4);
+            transform: translateY(-50%) scale(1.1);
+            box-shadow: 0 0 20px rgba(255, 107, 0, 0.5);
+        }
+        
+        .carousel-arrow.prev { left: 16px; }
+        .carousel-arrow.next { right: 16px; }
+        
+        @media (max-width: 768px) {
+            .photo-card {
+                flex: 0 0 280px;
+                height: 380px;
+            }
+            .photo-carousel {
+                padding-left: calc(50% - 140px);
+                padding-right: calc(50% - 140px);
+            }
+            .carousel-arrow {
+                display: none;
+            }
         }
         
         /* Scroll animations */
@@ -786,10 +1142,16 @@ app.get('/', (c) => {
         })();
     </script>
     
-    <!-- Aurora Background -->
+    <!-- Aurora Background - Enhanced multi-layer -->
     <div class="aurora-bg" data-nw-parallax="0.3"></div>
     
-    <!-- Particles -->
+    <!-- Floating Maple Leaves (MapleStory themed) -->
+    <div id="maple-leaves"></div>
+    
+    <!-- Magic Orbs (subtle glowing particles) -->
+    <div id="magic-orbs"></div>
+    
+    <!-- Particles (original system) -->
     <div id="particles"></div>
     
     <!-- Navigation -->
@@ -1333,25 +1695,48 @@ app.get('/', (c) => {
         </div>
     </section>
     
-    <!-- Guild Fun Gallery Section -->
-    <section id="gallery" class="py-20 px-4">
-        <div class="container mx-auto max-w-6xl">
+    <!-- Guild Fun Gallery Section - Premium 3D Carousel -->
+    <section id="gallery" class="gallery-section py-20 px-4 relative">
+        <!-- Parallax Background Text -->
+        <div class="gallery-bg-text" id="gallery-bg-text">MEMORIES</div>
+        
+        <div class="container mx-auto max-w-6xl relative z-10">
             <h2 class="text-4xl font-bold text-center mb-4 neon-orange reveal">
                 ${iconCamera()} <span data-i18n="shenanigans">Guild Shenanigans</span>
             </h2>
-            <p class="text-center text-orange-300 mb-12 reveal" data-i18n="memories">Memories of our adventures together</p>
+            <p class="text-center text-orange-300 mb-8 reveal" data-i18n="memories">Memories of our adventures together</p>
             
-            <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-                ${guildFunPhotos.map((photo, index) => `
-                    <div class="photo-card glass-card overflow-hidden group cursor-pointer nw-hover-scale nw-img-shine" data-nw-reveal="up" data-nw-delay="${index * 0.1}s">
-                        <img src="${photo.image}" alt="${photo.title.en}" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" loading="lazy" data-nw-lazy />
-                        <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent opacity-80 group-hover:opacity-100 transition-opacity"></div>
-                        <div class="absolute bottom-0 left-0 right-0 p-4">
-                            <h3 class="font-bold text-orange-400 text-lg" data-i18n-photo="${photo.id}" data-i18n-field="title">${photo.title.en}</h3>
-                            <p class="text-sm text-gray-300" data-i18n-photo="${photo.id}" data-i18n-field="description">${photo.description.en}</p>
+            <!-- Premium 3D Card Carousel -->
+            <div class="relative">
+                <!-- Navigation Arrows -->
+                <button class="carousel-arrow prev" onclick="scrollCarousel(-1)" aria-label="Previous">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/></svg>
+                </button>
+                <button class="carousel-arrow next" onclick="scrollCarousel(1)" aria-label="Next">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M8.59 16.59L10 18l6-6-6-6-1.41 1.41L13.17 12z"/></svg>
+                </button>
+                
+                <!-- Carousel Container -->
+                <div class="photo-carousel" id="photo-carousel">
+                    ${guildFunPhotos.map((photo, index) => `
+                        <div class="photo-card" data-index="${index}">
+                            <img src="${photo.image}" alt="${photo.title.en}" loading="lazy" />
+                            <div class="card-overlay"></div>
+                            <div class="card-index">${index + 1}</div>
+                            <div class="card-content">
+                                <h3 class="card-title" data-i18n-photo="${photo.id}" data-i18n-field="title">${photo.title.en}</h3>
+                                <p class="card-desc" data-i18n-photo="${photo.id}" data-i18n-field="description">${photo.description.en}</p>
+                            </div>
                         </div>
-                    </div>
-                `).join('')}
+                    `).join('')}
+                </div>
+                
+                <!-- Carousel Dots -->
+                <div class="carousel-nav" id="carousel-nav">
+                    ${guildFunPhotos.map((_, index) => `
+                        <div class="carousel-dot ${index === 0 ? 'active' : ''}" data-index="${index}" onclick="scrollToCard(${index})"></div>
+                    `).join('')}
+                </div>
             </div>
             
             <div class="text-center mt-12 reveal">
@@ -1380,10 +1765,178 @@ app.get('/', (c) => {
         // Register GSAP plugins
         gsap.registerPlugin(ScrollTrigger);
         
-        // Create floating particles
+        // ============================================
+        // PREMIUM 3D PHOTO CAROUSEL
+        // ============================================
+        const photoCarousel = document.getElementById('photo-carousel');
+        const carouselCards = document.querySelectorAll('.photo-card');
+        const carouselDots = document.querySelectorAll('.carousel-dot');
+        const galleryBgText = document.getElementById('gallery-bg-text');
+        
+        // Update active card states based on scroll position
+        function updateCarouselState() {
+            if (!photoCarousel) return;
+            
+            const containerRect = photoCarousel.getBoundingClientRect();
+            const containerCenter = containerRect.left + containerRect.width / 2;
+            
+            let closestCard = null;
+            let closestDistance = Infinity;
+            
+            carouselCards.forEach((card, index) => {
+                const cardRect = card.getBoundingClientRect();
+                const cardCenter = cardRect.left + cardRect.width / 2;
+                const distance = Math.abs(containerCenter - cardCenter);
+                
+                // Remove all states first
+                card.classList.remove('active', 'inactive');
+                
+                // Find closest card
+                if (distance < closestDistance) {
+                    closestDistance = distance;
+                    closestCard = { card, index };
+                }
+                
+                // Apply inactive state to cards far from center
+                if (distance > cardRect.width * 0.8) {
+                    card.classList.add('inactive');
+                }
+            });
+            
+            // Apply active state to center card
+            if (closestCard) {
+                closestCard.card.classList.add('active');
+                closestCard.card.classList.remove('inactive');
+                
+                // Update dots
+                carouselDots.forEach((dot, i) => {
+                    dot.classList.toggle('active', i === closestCard.index);
+                });
+                
+                // Parallax background text based on active card
+                if (galleryBgText) {
+                    const bgTexts = ['MEMORIES', 'MOMENTS', 'FAMILY', 'FRIENDS', 'ADVENTURE', 'GUILD'];
+                    galleryBgText.textContent = bgTexts[closestCard.index % bgTexts.length];
+                }
+            }
+        }
+        
+        // Scroll to specific card
+        function scrollToCard(index) {
+            const cards = photoCarousel.querySelectorAll('.photo-card');
+            if (cards[index]) {
+                const cardWidth = cards[index].offsetWidth;
+                const gap = 20;
+                const scrollPosition = index * (cardWidth + gap);
+                photoCarousel.scrollTo({
+                    left: scrollPosition,
+                    behavior: 'smooth'
+                });
+            }
+        }
+        
+        // Navigate carousel with arrows
+        function scrollCarousel(direction) {
+            const cardWidth = carouselCards[0]?.offsetWidth || 320;
+            const gap = 20;
+            const scrollAmount = (cardWidth + gap) * direction;
+            photoCarousel.scrollBy({
+                left: scrollAmount,
+                behavior: 'smooth'
+            });
+        }
+        
+        // Listen for scroll events
+        if (photoCarousel) {
+            photoCarousel.addEventListener('scroll', updateCarouselState);
+            // Initial state
+            updateCarouselState();
+            
+            // GSAP parallax for background text
+            gsap.to('#gallery-bg-text', {
+                scrollTrigger: {
+                    trigger: '#gallery',
+                    start: 'top bottom',
+                    end: 'bottom top',
+                    scrub: 1
+                },
+                y: -100,
+                opacity: 0.3,
+                ease: 'none'
+            });
+        }
+        
+        // ============================================
+        // LIVING BACKGROUND - Maple Leaves + Magic Orbs
+        // ============================================
+        
+        // Create floating maple leaves (MapleStory themed)
+        function createMapleLeaves() {
+            const container = document.getElementById('maple-leaves');
+            if (!container) return;
+            
+            const leafCount = 12; // Keep subtle
+            const leafColors = ['#ff6b00', '#ff8c00', '#ffd700', '#ff4500', '#ff7f50'];
+            
+            for (let i = 0; i < leafCount; i++) {
+                const leaf = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+                const size = 20 + Math.random() * 25;
+                const color = leafColors[Math.floor(Math.random() * leafColors.length)];
+                const type = Math.floor(Math.random() * 4) + 1;
+                
+                leaf.setAttribute('width', size);
+                leaf.setAttribute('height', size);
+                leaf.setAttribute('viewBox', '0 0 24 24');
+                leaf.classList.add('maple-leaf', 'type-' + type);
+                
+                // Maple leaf SVG path
+                leaf.innerHTML = \`
+                    <path fill="\${color}" d="M12 2C12 2 9 5 9 8C7 6 4 6 4 6C4 6 5 9 7 10C5 10 2 12 2 12C2 12 5 13 8 12C6 14 6 18 6 18C6 18 9 16 10 14C10 16 12 22 12 22C12 22 14 16 14 14C15 16 18 18 18 18C18 18 18 14 16 12C19 13 22 12 22 12C22 12 19 10 17 10C19 9 20 6 20 6C20 6 17 6 15 8C15 5 12 2 12 2Z"/>
+                \`;
+                
+                // Random starting position
+                leaf.style.left = Math.random() * 100 + '%';
+                leaf.style.animationDelay = (Math.random() * 20) + 's';
+                
+                container.appendChild(leaf);
+            }
+        }
+        
+        // Create magic orbs (glowing particles)
+        function createMagicOrbs() {
+            const container = document.getElementById('magic-orbs');
+            if (!container) return;
+            
+            const orbCount = 8;
+            const orbTypes = ['orange', 'gold', 'amber'];
+            
+            for (let i = 0; i < orbCount; i++) {
+                const orb = document.createElement('div');
+                const size = 8 + Math.random() * 20;
+                const type = orbTypes[Math.floor(Math.random() * orbTypes.length)];
+                
+                orb.classList.add('magic-orb', type);
+                orb.style.width = size + 'px';
+                orb.style.height = size + 'px';
+                orb.style.left = Math.random() * 100 + '%';
+                orb.style.top = 20 + Math.random() * 60 + '%'; // Keep in middle area
+                orb.style.animationDuration = (8 + Math.random() * 12) + 's';
+                orb.style.animationDelay = (Math.random() * 5) + 's';
+                
+                container.appendChild(orb);
+            }
+        }
+        
+        // Initialize living background
+        createMapleLeaves();
+        createMagicOrbs();
+        
+        // Create floating particles (original system)
         function createParticles() {
             const container = document.getElementById('particles');
-            const particleCount = 50;
+            if (!container) return;
+            
+            const particleCount = 30; // Reduced for performance
             
             for (let i = 0; i < particleCount; i++) {
                 const particle = document.createElement('div');
