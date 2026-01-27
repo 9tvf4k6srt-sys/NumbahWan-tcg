@@ -2254,7 +2254,7 @@ app.get('/', (c) => {
                 
                 // REAL PHYSICS - velocity from swipe power
                 // velocityX is pixels/ms, scale down for reasonable card movement
-                let velocity = velocityX * 21; // 30% slower (30 * 0.7 = 21)
+                let velocity = velocityX * 15; // Another 30% slower (21 * 0.7 = ~15)
                 
                 // Start from current visual position
                 floatIndex = currentIndex - dragOffset;
