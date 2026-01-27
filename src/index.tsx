@@ -2170,6 +2170,9 @@ app.get('/', (c) => {
             }
             
             // Touch/Mouse handlers for momentum swipe
+            let startY = 0;
+            let directionLocked = null; // 'horizontal', 'vertical', or null
+            
             function handleStart(e) {
                 // Cancel any ongoing momentum
                 if (momentumAnimation) {
@@ -2177,9 +2180,14 @@ app.get('/', (c) => {
                     momentumAnimation = null;
                 }
                 
+                const isTouch = e.type.includes('touch');
+                const clientX = isTouch ? e.touches[0].clientX : e.clientX;
+                const clientY = isTouch ? e.touches[0].clientY : e.clientY;
+                
                 isDragging = true;
-                const clientX = e.type.includes('mouse') ? e.clientX : e.touches[0].clientX;
+                directionLocked = null; // Reset direction lock
                 startX = clientX;
+                startY = clientY;
                 lastX = clientX;
                 startTime = Date.now();
                 lastTime = startTime;
@@ -2190,9 +2198,35 @@ app.get('/', (c) => {
             
             function handleMove(e) {
                 if (!isDragging) return;
-                e.preventDefault();
                 
-                const clientX = e.type.includes('mouse') ? e.clientX : e.touches[0].clientX;
+                const isTouch = e.type.includes('touch');
+                const clientX = isTouch ? e.touches[0].clientX : e.clientX;
+                const clientY = isTouch ? e.touches[0].clientY : e.clientY;
+                
+                // Determine direction on first significant movement
+                if (!directionLocked) {
+                    const diffX = Math.abs(clientX - startX);
+                    const diffY = Math.abs(clientY - startY);
+                    const threshold = 10; // pixels before locking direction
+                    
+                    if (diffX > threshold || diffY > threshold) {
+                        // Lock to horizontal only if X movement is dominant
+                        directionLocked = diffX > diffY ? 'horizontal' : 'vertical';
+                    }
+                }
+                
+                // If vertical swipe, let page scroll - don't capture
+                if (directionLocked === 'vertical') {
+                    isDragging = false;
+                    deck.style.cursor = 'grab';
+                    return;
+                }
+                
+                // Only prevent default for horizontal swipes
+                if (directionLocked === 'horizontal') {
+                    e.preventDefault();
+                }
+                
                 const now = Date.now();
                 const dt = now - lastTime;
                 
@@ -2339,8 +2373,8 @@ app.get('/', (c) => {
             deck.addEventListener('mousemove', handleMove);
             deck.addEventListener('mouseup', handleEnd);
             deck.addEventListener('mouseleave', handleEnd);
-            deck.addEventListener('touchstart', handleStart, { passive: false });
-            deck.addEventListener('touchmove', handleMove, { passive: false });
+            deck.addEventListener('touchstart', handleStart, { passive: true }); // Allow scroll detection
+            deck.addEventListener('touchmove', handleMove, { passive: false }); // May need to prevent default
             deck.addEventListener('touchend', handleEnd);
             
             // Keyboard navigation with smooth animation
