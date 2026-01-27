@@ -2233,8 +2233,8 @@ app.get('/', (c) => {
                 lastTime = now;
                 
                 // Calculate drag offset (convert pixels to card units)
-                // Sensitivity: 400px drag = 1 card (slower, more phone-like)
-                const sensitivity = 400;
+                // Sensitivity: 200px drag = 1 card (normal feel)
+                const sensitivity = 200;
                 dragOffset = (clientX - startX) / sensitivity;
                 
                 // Live update positions during drag
@@ -2246,14 +2246,14 @@ app.get('/', (c) => {
                 isDragging = false;
                 deck.style.cursor = 'grab';
                 
-                // Apply momentum physics - Phone-like scroll feel
+                // Apply momentum physics
                 // velocityX is in pixels/ms, convert to cards/ms
-                const sensitivity = 400;
+                const sensitivity = 200;
                 let velocity = velocityX * sensitivity / 1000; // cards per second
                 
-                // Clamp velocity for smooth phone-like feel (not too fast)
-                const maxVelocity = 2; // max 2 cards per second (slower)
-                velocity = Math.max(-maxVelocity, Math.min(maxVelocity, velocity * 0.6)); // reduced multiplier
+                // Clamp velocity for natural feel
+                const maxVelocity = 4; // max 4 cards per second
+                velocity = Math.max(-maxVelocity, Math.min(maxVelocity, velocity));
                 
                 // Start from current visual position
                 floatIndex = currentIndex - dragOffset;
