@@ -3191,6 +3191,19 @@
             z-index: 100;
         }
         
+        /* Fix: Ensure dropdown shows all 3 language options */
+        .nw-lang-dropdown {
+            min-height: auto !important;
+            max-height: none !important;
+            overflow: visible !important;
+        }
+        
+        .nw-lang-item {
+            display: flex !important;
+            visibility: visible !important;
+            opacity: 1 !important;
+        }
+        
         /* ========== RESPONSIVE ========== */
         @media (max-width: 500px) {
             .card-number { font-size: 14px; letter-spacing: 2px; }
@@ -5987,12 +6000,17 @@ function confirmCancelListing(listingId) {
 
 function cancelListing(listingId) {
     const listing = marketListings.find(l => l.id === listingId);
-    if (!listing) return;
+    if (!listing) {
+        toast('Listing not found!', 'error');
+        return;
+    }
     
     const card = CARD_DB.find(c => c.id === listing.cardId);
     
-    // Return card to collection
-    NW_WALLET.addCard(listing.cardId);
+    // Return card to collection (use correct method name)
+    if (NW_WALLET && NW_WALLET.addToCollection) {
+        NW_WALLET.addToCollection(listing.cardId);
+    }
     
     // Remove listing
     marketListings = marketListings.filter(l => l.id !== listingId);
