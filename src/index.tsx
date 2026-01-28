@@ -21,6 +21,107 @@ app.use('/static/*', serveStatic())
 // API ROUTES - Data Layer (Scalability Pattern: Separate Data from Presentation)
 // ============================================================================
 
+// ============================================================================
+// DEBUG & HEALTH APIs - For AI assistants and monitoring
+// ============================================================================
+
+// Health check - simple ping
+app.get('/api/health', (c) => {
+  return c.json({ status: 'ok', timestamp: Date.now() })
+})
+
+// Debug endpoint - comprehensive system diagnostics
+app.get('/api/debug', (c) => {
+  const staticPages = ['fashion', 'merch', 'fortune', 'arcade', 'memes', 'apply', 'wallet', 'forge', 'tcg', 'market', 'cards', 'guide', 'pvp', 'regina']
+  
+  return c.json({
+    status: 'ok',
+    timestamp: new Date().toISOString(),
+    version: '2.0.0',
+    
+    project: {
+      name: 'NumbahWan Guild',
+      codeName: 'webapp',
+      path: '/home/user/webapp'
+    },
+    
+    pages: {
+      total: staticPages.length + 2, // +2 for / and /index.html
+      list: ['/', ...staticPages.map(p => `/${p}`)],
+      htmlFiles: staticPages.map(p => `${p}.html`)
+    },
+    
+    apis: {
+      health: '/api/health',
+      debug: '/api/debug',
+      cards: {
+        list: '/api/cards',
+        stats: '/api/cards/stats',
+        byId: '/api/cards/:id',
+        byRarity: '/api/cards/rarity/:rarity',
+        pull: 'POST /api/cards/pull'
+      },
+      market: {
+        listings: '/api/market/listings',
+        chat: '/api/market/chat',
+        buy: 'POST /api/market/buy',
+        list: 'POST /api/market/list'
+      },
+      admin: {
+        addCard: 'POST /api/admin/cards',
+        updateCard: 'PUT /api/admin/cards/:id',
+        deleteCard: 'DELETE /api/admin/cards/:id',
+        exportCards: '/api/admin/cards/export?gmKey=numbahwan-gm-2026'
+      }
+    },
+    
+    dataFiles: {
+      cards: '/static/data/cards.json',
+      config: '/static/data/config.json',
+      navigation: '/static/data/navigation.json',
+      pages: '/static/data/pages.json'
+    },
+    
+    scripts: {
+      wallet: '/static/nw-wallet.js',
+      cards: '/static/nw-cards.js',
+      icons: '/static/nw-icons-inline.js',
+      effects: '/static/nw-effects.js'
+    },
+    
+    styles: {
+      utilities: '/static/nw-utilities.css',
+      tokens: '/static/nw-tokens.css',
+      core: '/static/nw-core.css'
+    },
+    
+    commands: {
+      build: 'cd /home/user/webapp && npm run build',
+      start: 'cd /home/user/webapp && pm2 start ecosystem.config.cjs',
+      restart: 'cd /home/user/webapp && pm2 restart numbahwan-guild',
+      logs: 'pm2 logs numbahwan-guild --nostream',
+      test: 'curl http://localhost:3000/api/health'
+    },
+    
+    troubleshooting: {
+      '404_page': 'Check staticPages array in src/index.tsx, ensure HTML file exists in public/',
+      'api_error': 'Check pm2 logs, verify route in src/index.tsx',
+      'cards_missing': 'Verify /static/data/cards.json, check nw-cards.js loaded',
+      'wallet_broken': 'Clear localStorage, check nw-wallet.js loaded',
+      'full_rebuild': 'rm -rf dist node_modules && npm install && npm run build'
+    },
+    
+    gmMode: {
+      activateCommand: 'NW_WALLET.activateGM("numbahwan-gm-2026")',
+      deactivateCommand: 'NW_WALLET.deactivateGM()'
+    },
+    
+    backups: [
+      { date: '2026-01-28', name: 'Infinite Scaling v2', url: 'https://www.genspark.ai/api/files/s/mxiiyZG5' }
+    ]
+  })
+})
+
 // API: Get translations (for all pages to share)
 app.get('/api/i18n', (c) => {
   c.header('Cache-Control', 'public, max-age=3600, stale-while-revalidate=86400')
