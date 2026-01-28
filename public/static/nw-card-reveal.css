@@ -1,0 +1,583 @@
+/* =====================================================
+   NUMBAHWAN TCG - CARD REVEAL ANIMATIONS v1.0
+   Premium reveal effects for each rarity tier
+   - Mythic: RED explosion + screen shake
+   - Legendary: GOLD shine burst
+   - Epic: Purple pulse
+   - Rare: Blue glow
+   - Uncommon: Green flash
+   - Common: Simple fade
+   ===================================================== */
+
+/* ===== REVEAL OVERLAY ===== */
+.nw-reveal-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0, 0, 0, 0.95);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s;
+}
+
+.nw-reveal-overlay.active {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+/* ===== CARD REVEAL CONTAINER ===== */
+.nw-reveal-card {
+    position: relative;
+    width: 320px;
+    height: 448px;
+    perspective: 1500px;
+    transform-style: preserve-3d;
+}
+
+.nw-reveal-card-inner {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    transform-style: preserve-3d;
+    transition: transform 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ===== COMMON REVEAL - Simple Fade ===== */
+.nw-reveal-card.common .nw-reveal-card-inner {
+    animation: revealCommon 0.6s ease-out forwards;
+}
+
+@keyframes revealCommon {
+    0% { opacity: 0; transform: scale(0.8); }
+    100% { opacity: 1; transform: scale(1); }
+}
+
+/* ===== UNCOMMON REVEAL - Green Flash ===== */
+.nw-reveal-card.uncommon .nw-reveal-card-inner {
+    animation: revealUncommon 0.8s ease-out forwards;
+}
+
+.nw-reveal-card.uncommon::before {
+    content: '';
+    position: absolute;
+    inset: -50px;
+    background: radial-gradient(circle, rgba(34, 197, 94, 0.6) 0%, transparent 70%);
+    animation: uncommonFlash 0.6s ease-out forwards;
+    pointer-events: none;
+}
+
+@keyframes revealUncommon {
+    0% { opacity: 0; transform: scale(0.6) rotateY(180deg); }
+    50% { opacity: 1; transform: scale(1.1) rotateY(90deg); }
+    100% { opacity: 1; transform: scale(1) rotateY(0deg); }
+}
+
+@keyframes uncommonFlash {
+    0% { opacity: 0; transform: scale(0.5); }
+    50% { opacity: 1; transform: scale(1.5); }
+    100% { opacity: 0; transform: scale(2); }
+}
+
+/* ===== RARE REVEAL - Blue Glow Pulse ===== */
+.nw-reveal-card.rare .nw-reveal-card-inner {
+    animation: revealRare 1s ease-out forwards;
+}
+
+.nw-reveal-card.rare::before {
+    content: '';
+    position: absolute;
+    inset: -80px;
+    background: radial-gradient(circle, rgba(59, 130, 246, 0.7) 0%, transparent 60%);
+    animation: rareGlow 1s ease-out forwards;
+    pointer-events: none;
+}
+
+.nw-reveal-card.rare::after {
+    content: '';
+    position: absolute;
+    inset: -100px;
+    background: conic-gradient(from 0deg, transparent, rgba(59, 130, 246, 0.3), transparent, rgba(59, 130, 246, 0.3), transparent);
+    animation: rareRotate 2s linear infinite;
+    pointer-events: none;
+}
+
+@keyframes revealRare {
+    0% { opacity: 0; transform: scale(0.3) rotateY(360deg); }
+    60% { opacity: 1; transform: scale(1.15) rotateY(0deg); }
+    80% { transform: scale(0.95); }
+    100% { transform: scale(1); }
+}
+
+@keyframes rareGlow {
+    0% { opacity: 0; transform: scale(0.3); }
+    50% { opacity: 1; transform: scale(1); }
+    100% { opacity: 0.5; transform: scale(1.2); }
+}
+
+@keyframes rareRotate {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+/* ===== EPIC REVEAL - Purple Pulse + Holo ===== */
+.nw-reveal-card.epic .nw-reveal-card-inner {
+    animation: revealEpic 1.2s ease-out forwards;
+}
+
+.nw-reveal-card.epic::before {
+    content: '';
+    position: absolute;
+    inset: -100px;
+    background: 
+        radial-gradient(circle at 30% 30%, rgba(168, 85, 247, 0.8) 0%, transparent 50%),
+        radial-gradient(circle at 70% 70%, rgba(236, 72, 153, 0.6) 0%, transparent 50%);
+    animation: epicPulse 1.5s ease-out forwards;
+    pointer-events: none;
+}
+
+.nw-reveal-card.epic::after {
+    content: '';
+    position: absolute;
+    inset: -20px;
+    background: linear-gradient(
+        45deg,
+        transparent 30%,
+        rgba(168, 85, 247, 0.4) 45%,
+        rgba(236, 72, 153, 0.4) 55%,
+        transparent 70%
+    );
+    background-size: 200% 200%;
+    animation: epicShine 1s ease-out forwards;
+    pointer-events: none;
+}
+
+@keyframes revealEpic {
+    0% { opacity: 0; transform: scale(0.2) rotateX(180deg) rotateY(180deg); }
+    40% { opacity: 1; transform: scale(1.2) rotateX(0deg) rotateY(90deg); }
+    70% { transform: scale(1.1) rotateY(0deg); }
+    85% { transform: scale(0.95); }
+    100% { transform: scale(1); }
+}
+
+@keyframes epicPulse {
+    0% { opacity: 0; transform: scale(0.2); }
+    30% { opacity: 1; transform: scale(1); }
+    60% { opacity: 0.8; transform: scale(1.3); }
+    100% { opacity: 0.3; transform: scale(1.5); }
+}
+
+@keyframes epicShine {
+    0% { background-position: -100% -100%; opacity: 0; }
+    50% { opacity: 1; }
+    100% { background-position: 200% 200%; opacity: 0; }
+}
+
+/* ===== LEGENDARY REVEAL - GOLD EXPLOSION ===== */
+.nw-reveal-card.legendary {
+    animation: legendaryShake 0.6s ease-out;
+}
+
+.nw-reveal-card.legendary .nw-reveal-card-inner {
+    animation: revealLegendary 1.5s ease-out forwards;
+}
+
+/* Gold burst rays */
+.nw-reveal-card.legendary::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 600px;
+    height: 600px;
+    margin: -300px 0 0 -300px;
+    background: conic-gradient(
+        from 0deg,
+        transparent 0deg,
+        rgba(255, 215, 0, 0.8) 5deg,
+        transparent 10deg,
+        transparent 20deg,
+        rgba(255, 215, 0, 0.6) 25deg,
+        transparent 30deg,
+        transparent 40deg,
+        rgba(255, 140, 0, 0.7) 45deg,
+        transparent 50deg
+    );
+    animation: legendaryRays 2s ease-out forwards;
+    pointer-events: none;
+}
+
+/* Gold sparkles */
+.nw-reveal-card.legendary::after {
+    content: '';
+    position: absolute;
+    inset: -150px;
+    background: 
+        radial-gradient(circle at 20% 20%, #ffd700 2px, transparent 2px),
+        radial-gradient(circle at 80% 30%, #ffed4e 3px, transparent 3px),
+        radial-gradient(circle at 40% 80%, #ffd700 2px, transparent 2px),
+        radial-gradient(circle at 70% 70%, #ff8c00 3px, transparent 3px),
+        radial-gradient(circle at 10% 60%, #ffed4e 2px, transparent 2px),
+        radial-gradient(circle at 90% 80%, #ffd700 2px, transparent 2px),
+        radial-gradient(circle at 50% 10%, #ff8c00 3px, transparent 3px),
+        radial-gradient(circle at 30% 50%, #ffed4e 2px, transparent 2px);
+    animation: legendarySparkle 1.5s ease-out forwards;
+    pointer-events: none;
+}
+
+@keyframes revealLegendary {
+    0% { opacity: 0; transform: scale(0.1) rotateY(720deg); filter: brightness(3); }
+    30% { opacity: 1; transform: scale(1.3) rotateY(360deg); filter: brightness(2); }
+    50% { transform: scale(1.2) rotateY(180deg); filter: brightness(1.5); }
+    70% { transform: scale(1.1) rotateY(90deg); filter: brightness(1.2); }
+    85% { transform: scale(0.95) rotateY(0deg); }
+    100% { transform: scale(1); filter: brightness(1); }
+}
+
+@keyframes legendaryRays {
+    0% { opacity: 0; transform: rotate(0deg) scale(0.3); }
+    30% { opacity: 1; transform: rotate(180deg) scale(1); }
+    100% { opacity: 0; transform: rotate(360deg) scale(1.5); }
+}
+
+@keyframes legendarySparkle {
+    0% { opacity: 0; transform: scale(0.5); }
+    30% { opacity: 1; transform: scale(1); }
+    100% { opacity: 0; transform: scale(2) rotate(30deg); }
+}
+
+@keyframes legendaryShake {
+    0%, 100% { transform: translateX(0); }
+    10% { transform: translateX(-5px); }
+    20% { transform: translateX(5px); }
+    30% { transform: translateX(-5px); }
+    40% { transform: translateX(5px); }
+    50% { transform: translateX(-3px); }
+    60% { transform: translateX(3px); }
+    70% { transform: translateX(-2px); }
+    80% { transform: translateX(2px); }
+}
+
+/* ===== MYTHIC REVEAL - RED EXPLOSION + SCREEN SHAKE ===== */
+.nw-reveal-overlay.mythic {
+    animation: mythicScreenShake 1s ease-out;
+}
+
+.nw-reveal-card.mythic {
+    animation: mythicCardShake 0.8s ease-out;
+}
+
+.nw-reveal-card.mythic .nw-reveal-card-inner {
+    animation: revealMythic 2s ease-out forwards;
+}
+
+/* Red explosion core */
+.nw-reveal-card.mythic::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 800px;
+    height: 800px;
+    margin: -400px 0 0 -400px;
+    background: 
+        radial-gradient(circle, rgba(255, 0, 0, 1) 0%, rgba(255, 0, 0, 0.8) 20%, transparent 50%),
+        radial-gradient(ellipse at 30% 30%, rgba(255, 100, 0, 0.8) 0%, transparent 40%),
+        radial-gradient(ellipse at 70% 70%, rgba(255, 0, 100, 0.8) 0%, transparent 40%);
+    animation: mythicExplosion 1.5s ease-out forwards;
+    pointer-events: none;
+    filter: blur(2px);
+}
+
+/* Mythic rays - red/magenta/cyan */
+.nw-reveal-card.mythic::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 1000px;
+    height: 1000px;
+    margin: -500px 0 0 -500px;
+    background: conic-gradient(
+        from 0deg,
+        transparent 0deg,
+        rgba(255, 0, 0, 0.9) 3deg,
+        transparent 6deg,
+        transparent 12deg,
+        rgba(255, 0, 255, 0.8) 15deg,
+        transparent 18deg,
+        transparent 24deg,
+        rgba(255, 50, 0, 0.7) 27deg,
+        transparent 30deg,
+        transparent 36deg,
+        rgba(0, 255, 255, 0.6) 39deg,
+        transparent 42deg
+    );
+    animation: mythicRays 2s ease-out forwards;
+    pointer-events: none;
+}
+
+/* Particle explosion effect */
+.mythic-particles {
+    position: absolute;
+    inset: -200px;
+    pointer-events: none;
+    overflow: visible;
+}
+
+.mythic-particle {
+    position: absolute;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    animation: mythicParticleFly 1.5s ease-out forwards;
+}
+
+@keyframes revealMythic {
+    0% { 
+        opacity: 0; 
+        transform: scale(0.05) rotateY(1080deg) rotateX(360deg); 
+        filter: brightness(5) saturate(2);
+    }
+    20% { 
+        opacity: 1; 
+        transform: scale(1.5) rotateY(720deg) rotateX(180deg); 
+        filter: brightness(3) saturate(1.5);
+    }
+    40% { 
+        transform: scale(1.3) rotateY(360deg) rotateX(90deg); 
+        filter: brightness(2);
+    }
+    60% { 
+        transform: scale(1.2) rotateY(180deg) rotateX(0deg); 
+        filter: brightness(1.5);
+    }
+    80% { 
+        transform: scale(0.95) rotateY(0deg); 
+        filter: brightness(1.2);
+    }
+    100% { 
+        transform: scale(1); 
+        filter: brightness(1);
+    }
+}
+
+@keyframes mythicExplosion {
+    0% { 
+        opacity: 0; 
+        transform: scale(0.1); 
+        filter: blur(20px);
+    }
+    20% { 
+        opacity: 1; 
+        transform: scale(0.8); 
+        filter: blur(5px);
+    }
+    40% { 
+        opacity: 0.9; 
+        transform: scale(1.2); 
+        filter: blur(2px);
+    }
+    100% { 
+        opacity: 0; 
+        transform: scale(2); 
+        filter: blur(10px);
+    }
+}
+
+@keyframes mythicRays {
+    0% { 
+        opacity: 0; 
+        transform: rotate(0deg) scale(0.2); 
+    }
+    20% { 
+        opacity: 1; 
+        transform: rotate(90deg) scale(0.8); 
+    }
+    50% { 
+        opacity: 0.8; 
+        transform: rotate(270deg) scale(1); 
+    }
+    100% { 
+        opacity: 0; 
+        transform: rotate(540deg) scale(1.5); 
+    }
+}
+
+@keyframes mythicScreenShake {
+    0%, 100% { transform: translate(0, 0); }
+    5% { transform: translate(-15px, -10px); }
+    10% { transform: translate(15px, 10px); }
+    15% { transform: translate(-12px, 8px); }
+    20% { transform: translate(12px, -8px); }
+    25% { transform: translate(-10px, -6px); }
+    30% { transform: translate(10px, 6px); }
+    35% { transform: translate(-8px, 5px); }
+    40% { transform: translate(8px, -5px); }
+    45% { transform: translate(-5px, -3px); }
+    50% { transform: translate(5px, 3px); }
+    55% { transform: translate(-3px, 2px); }
+    60% { transform: translate(3px, -2px); }
+}
+
+@keyframes mythicCardShake {
+    0%, 100% { transform: rotate(0deg); }
+    10% { transform: rotate(-3deg) scale(1.02); }
+    20% { transform: rotate(3deg) scale(1.02); }
+    30% { transform: rotate(-2deg) scale(1.01); }
+    40% { transform: rotate(2deg) scale(1.01); }
+    50% { transform: rotate(-1deg); }
+    60% { transform: rotate(1deg); }
+}
+
+@keyframes mythicParticleFly {
+    0% { 
+        opacity: 1; 
+        transform: translate(0, 0) scale(1); 
+    }
+    100% { 
+        opacity: 0; 
+        transform: translate(var(--tx), var(--ty)) scale(0); 
+    }
+}
+
+/* ===== RARITY TEXT BANNER ===== */
+.nw-reveal-banner {
+    position: absolute;
+    bottom: -60px;
+    left: 50%;
+    transform: translateX(-50%);
+    padding: 12px 32px;
+    border-radius: 8px;
+    font-family: 'Orbitron', sans-serif;
+    font-size: 24px;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: 3px;
+    white-space: nowrap;
+    opacity: 0;
+    animation: bannerReveal 0.5s ease-out 0.8s forwards;
+}
+
+.nw-reveal-banner.common {
+    background: linear-gradient(135deg, #6b7280, #4b5563);
+    color: #fff;
+    box-shadow: 0 4px 20px rgba(107, 114, 128, 0.5);
+}
+
+.nw-reveal-banner.uncommon {
+    background: linear-gradient(135deg, #22c55e, #16a34a);
+    color: #fff;
+    box-shadow: 0 4px 25px rgba(34, 197, 94, 0.6);
+}
+
+.nw-reveal-banner.rare {
+    background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+    color: #fff;
+    box-shadow: 0 4px 30px rgba(59, 130, 246, 0.7);
+}
+
+.nw-reveal-banner.epic {
+    background: linear-gradient(135deg, #a855f7, #7c3aed);
+    color: #fff;
+    box-shadow: 0 4px 35px rgba(168, 85, 247, 0.8);
+    animation: bannerReveal 0.5s ease-out 0.8s forwards, epicBannerPulse 2s ease-in-out 1.3s infinite;
+}
+
+.nw-reveal-banner.legendary {
+    background: linear-gradient(135deg, #ffd700, #ff8c00, #ffd700);
+    background-size: 200% 100%;
+    color: #1a1a2e;
+    box-shadow: 0 4px 40px rgba(255, 215, 0, 0.9);
+    animation: bannerReveal 0.5s ease-out 0.8s forwards, legendaryBannerShine 2s linear 1.3s infinite;
+}
+
+.nw-reveal-banner.mythic {
+    background: linear-gradient(135deg, #ff0000, #ff00ff, #00ffff, #ff0000);
+    background-size: 300% 100%;
+    color: #fff;
+    text-shadow: 0 0 10px rgba(255, 0, 0, 0.8), 0 0 20px rgba(255, 0, 255, 0.6);
+    box-shadow: 0 4px 50px rgba(255, 0, 0, 0.9), 0 0 80px rgba(255, 0, 255, 0.5);
+    animation: bannerReveal 0.5s ease-out 0.8s forwards, mythicBannerGlow 1.5s linear 1.3s infinite;
+}
+
+@keyframes bannerReveal {
+    0% { opacity: 0; transform: translateX(-50%) translateY(20px) scale(0.8); }
+    100% { opacity: 1; transform: translateX(-50%) translateY(0) scale(1); }
+}
+
+@keyframes epicBannerPulse {
+    0%, 100% { box-shadow: 0 4px 35px rgba(168, 85, 247, 0.8); }
+    50% { box-shadow: 0 4px 50px rgba(168, 85, 247, 1), 0 0 30px rgba(236, 72, 153, 0.5); }
+}
+
+@keyframes legendaryBannerShine {
+    0% { background-position: 0% 50%; }
+    100% { background-position: 200% 50%; }
+}
+
+@keyframes mythicBannerGlow {
+    0% { 
+        background-position: 0% 50%; 
+        box-shadow: 0 4px 50px rgba(255, 0, 0, 0.9), 0 0 80px rgba(255, 0, 255, 0.5);
+    }
+    50% { 
+        box-shadow: 0 4px 70px rgba(255, 0, 255, 1), 0 0 100px rgba(0, 255, 255, 0.7);
+    }
+    100% { 
+        background-position: 300% 50%; 
+        box-shadow: 0 4px 50px rgba(255, 0, 0, 0.9), 0 0 80px rgba(255, 0, 255, 0.5);
+    }
+}
+
+/* ===== CONTINUE BUTTON ===== */
+.nw-reveal-continue {
+    position: absolute;
+    bottom: -120px;
+    left: 50%;
+    transform: translateX(-50%);
+    padding: 14px 40px;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05));
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-radius: 12px;
+    color: #fff;
+    font-family: 'Orbitron', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    opacity: 0;
+    animation: continueReveal 0.4s ease-out 1.5s forwards;
+    transition: all 0.3s;
+}
+
+.nw-reveal-continue:hover {
+    background: rgba(255, 255, 255, 0.2);
+    border-color: rgba(255, 255, 255, 0.5);
+    transform: translateX(-50%) scale(1.05);
+}
+
+@keyframes continueReveal {
+    0% { opacity: 0; transform: translateX(-50%) translateY(10px); }
+    100% { opacity: 1; transform: translateX(-50%) translateY(0); }
+}
+
+/* ===== SOUND INDICATOR ===== */
+.nw-reveal-sound {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    padding: 10px 16px;
+    background: rgba(0, 0, 0, 0.8);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 8px;
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 12px;
+    z-index: 10000;
+    cursor: pointer;
+}
+
+.nw-reveal-sound:hover {
+    background: rgba(255, 255, 255, 0.1);
+}

@@ -3428,7 +3428,7 @@ app.get('/pvp', async (c) => {
 // ROUTE FACTORY - DRY Pattern (Don't Repeat Yourself)
 // Add new pages by just adding to the array - no copy-paste needed!
 // ============================================================================
-const staticPages = ['fashion', 'merch', 'fortune', 'arcade', 'memes', 'apply']
+const staticPages = ['fashion', 'merch', 'fortune', 'arcade', 'memes', 'apply', 'wallet', 'forge']
 
 staticPages.forEach(page => {
   app.get(`/${page}`, async (c) => {
