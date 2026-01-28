@@ -22,6 +22,7 @@
 | Main | `/` | Hero, roster, CP race, gallery, about, nav menu |
 | 💰 Wallet | `/wallet` | Currency vault, daily login, card staking, marketplace |
 | 🔥 Mythic Forge | `/forge` | Gacha system with multi-tier pity |
+| 🏪 FREE MARKET | `/market` | Trade cards with live chat! |
 | 🃏 TCG Hub | `/tcg` | Card collection viewer |
 | PvP Diary | `/pvp` | RegginA's arena battles, GM1 flex |
 | Fashion | `/fashion` | 12 Disasters costume showcase |
@@ -37,10 +38,26 @@
 - **Physical Credit Card UI** - Premium animated design
 - **Daily Login Streak** - 7-day rewards with free Sacred Log on day 7
 - **Card Staking** - Earn passive income from staked cards
-- **Free Market** - Buy/sell cards with other players
+- **Free Market Integration** - Buy/sell cards from wallet
 - **Transaction Logging** - Full history
 - **Export/Import** - Backup your wallet
 - **GM Mode** - For testing with infinite resources
+
+### 🏪 FREE MARKET (NEW!)
+- **Live Trading** - Buy/sell cards with guild mates
+- **Live Chat** - Real-time chat with online users
+- **Rarity Filters** - Filter by Mythic/Legendary/Epic/Rare
+- **Price Sorting** - Sort by newest, price, rarity
+- **Online Counter** - See who's online
+- **Deal Badges** - Highlights good deals
+- **Purchase Animations** - Satisfying success overlays
+- **API Endpoints**:
+  - `GET /api/market/listings` - View all listings
+  - `POST /api/market/buy` - Purchase cards
+  - `POST /api/market/list` - Create listings
+  - `GET /api/market/chat` - Get chat messages
+  - `POST /api/market/chat` - Send messages
+  - `POST /api/market/heartbeat` - Track online users
 
 ### 🔥 Mythic Forge (Gacha)
 - **Multi-tier Pity System**:
@@ -65,11 +82,12 @@
 
 ```
 webapp/
-├── src/index.tsx           # Main Hono app (API routes only)
+├── src/index.tsx           # Main Hono app (API routes + Market APIs)
 ├── public/
 │   ├── index.html          # Main page
 │   ├── wallet.html         # Wallet system
 │   ├── forge.html          # Gacha system
+│   ├── market.html         # FREE MARKET with Live Chat
 │   ├── tcg.html            # Card collection
 │   ├── *.html              # Other pages
 │   └── static/
@@ -104,6 +122,30 @@ Activate GM mode for infinite resources:
 1. Visit `/wallet`
 2. Open browser console
 3. Run: `NW_WALLET.activateGM("numbahwan-gm-2026")`
+
+---
+
+## API Reference
+
+### Guild Data APIs
+- `GET /api/roster` - Guild member roster
+- `GET /api/photos` - Guild gallery photos
+- `GET /api/i18n` - Translations (EN/ZH/TH)
+- `GET /api/performance` - CP tracking data
+
+### D1 Database APIs
+- `GET /api/db/members` - All members (D1 or JSON fallback)
+- `GET /api/db/members/:name` - Single member
+- `POST /api/db/members` - Add member
+- `PUT /api/db/members/:name` - Update member
+
+### Market APIs
+- `GET /api/market/listings` - All card listings
+- `POST /api/market/buy` - Purchase a listing
+- `POST /api/market/list` - Create new listing
+- `GET /api/market/chat` - Chat messages (with ?since=timestamp)
+- `POST /api/market/chat` - Send chat message
+- `POST /api/market/heartbeat` - Register online presence
 
 ---
 
