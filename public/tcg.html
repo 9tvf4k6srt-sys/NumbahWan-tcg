@@ -1,0 +1,951 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+    <title>NumbahWan TCG | Rise of RegginA - Command Center</title>
+    <link rel="stylesheet" href="/static/nw-utilities.css">
+    <link rel="stylesheet" href="/static/nw-tokens.css">
+    <script src="/static/nw-icons-inline.js"></script>
+    <link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
+    
+    
+    <style>
+        :root {
+            --gold: #ffd700; --orange: #ff6b00; --purple: #a855f7; --blue: #3b82f6;
+            --green: #22c55e; --red: #ef4444; --dark: #0a0a0f; --mythic: #ff00ff;
+            --card-w: min(120px, 25vw);
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box;
+            -webkit-user-select: none; user-select: none;
+            -webkit-tap-highlight-color: transparent; }
+        html { scroll-behavior: smooth; }
+        body { font-family: var(--nw-font-display), sans-serif; background: var(--dark); color: #fff;
+            min-height: 100vh; overflow-x: hidden; }
+        
+        /* Header */
+        .hdr { position: fixed; top: 0; left: 0; right: 0; z-index: 100; padding: 12px 16px;
+            background: linear-gradient(to bottom, rgba(10,10,15,0.98), rgba(10,10,15,0.9));
+            display: flex; justify-content: space-between; align-items: center; backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(255,215,0,0.2); }
+        .logo { font-family: var(--nw-font-serif), serif; font-size: clamp(14px, 4vw, 20px); font-weight: 900;
+            background: linear-gradient(135deg, var(--gold), var(--orange));
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent; text-decoration: none; }
+        .hdr-right { display: flex; align-items: center; gap: 12px; }
+        .lang { display: flex; gap: 4px; background: rgba(255,255,255,0.1); padding: 3px; border-radius: 14px; }
+        .lang button { padding: 4px 8px; border: none; background: transparent;
+            color: rgba(255,255,255,0.5); font-size: 13px; border-radius: 10px; cursor: pointer; }
+        .lang button.on { background: linear-gradient(135deg, var(--orange), var(--gold)); color: #000; font-weight: bold; }
+        
+        /* VIP Badge in header */
+        .vip-badge { padding: 4px 10px; border-radius: 12px; font-size: 13px; font-weight: bold;
+            background: linear-gradient(135deg, #333, #222); border: 1px solid rgba(255,255,255,0.2); color: #888; }
+        .vip-badge.bronze { background: linear-gradient(135deg, #cd7f32, #8b4513); color: #fff; border-color: #cd7f32; }
+        .vip-badge.silver { background: linear-gradient(135deg, #c0c0c0, #808080); color: #000; border-color: #c0c0c0; }
+        .vip-badge.gold { background: linear-gradient(135deg, var(--gold), var(--orange)); color: #000; border-color: var(--gold); }
+        .vip-badge.diamond { background: linear-gradient(135deg, #00ffff, #ff00ff); color: #000; border-color: #00ffff;
+            animation: diamondPulse 2s ease-in-out infinite; }
+        @keyframes diamondPulse { 0%, 100% { box-shadow: 0 0 10px rgba(0,255,255,0.5); } 50% { box-shadow: 0 0 20px rgba(255,0,255,0.8); } }
+        
+        /* Main content */
+        main { padding: 70px 16px 100px; max-width: 1200px; margin: 0 auto; }
+        
+        /* Hero Section */
+        .hero { text-align: center; padding: 40px 0 30px; position: relative; }
+        .hero-title { font-family: var(--nw-font-serif), serif; font-size: clamp(28px, 8vw, 48px); font-weight: 900;
+            background: linear-gradient(135deg, var(--gold), var(--orange), var(--mythic));
+            background-size: 200% 200%; animation: heroGradient 3s ease-in-out infinite;
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 8px; }
+        @keyframes heroGradient { 0%, 100% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } }
+        .hero-subtitle { font-size: 15px; color: rgba(255,255,255,0.6); letter-spacing: 3px; text-transform: uppercase; }
+        
+        /* Stats Dashboard */
+        .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin: 24px 0; }
+        .stat-card { background: rgba(20,20,30,0.8); border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 16px; padding: 16px; text-align: center; transition: all 0.3s; }
+        .stat-card:hover { border-color: var(--gold); transform: translateY(-2px); }
+        .stat-icon { font-size: 24px; margin-bottom: 8px; }
+        .stat-value { font-size: clamp(18px, 5vw, 28px); font-weight: bold;
+            background: linear-gradient(135deg, var(--gold), var(--orange));
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .stat-label { font-size: 13px; color: rgba(255,255,255,0.5); text-transform: uppercase; letter-spacing: 1px; margin-top: 4px; }
+        
+        /* Section Headers */
+        .section-header { display: flex; justify-content: space-between; align-items: center;
+            margin: 32px 0 16px; padding-bottom: 12px; border-bottom: 1px solid rgba(255,255,255,0.1); }
+        .section-title { font-family: var(--nw-font-serif), serif; font-size: clamp(16px, 4vw, 22px);
+            background: linear-gradient(135deg, var(--gold), var(--orange));
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .section-link { font-size: 16px; color: var(--blue); text-decoration: none; }
+        .section-link:hover { text-decoration: underline; }
+        
+        /* Quick Actions */
+        .actions-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 24px; }
+        .action-card { background: linear-gradient(135deg, rgba(30,30,45,0.9), rgba(20,20,35,0.9));
+            border: 2px solid rgba(255,255,255,0.1); border-radius: 20px; padding: 24px 16px;
+            text-align: center; cursor: pointer; transition: all 0.3s; text-decoration: none; }
+        .action-card:hover { transform: translateY(-4px); border-color: var(--orange); }
+        .action-card.featured { border-color: var(--gold); background: linear-gradient(135deg, rgba(255,215,0,0.15), rgba(255,107,0,0.1)); }
+        .action-card.featured:hover { box-shadow: 0 10px 40px rgba(255,215,0,0.3); }
+        .action-icon { font-size: 36px; margin-bottom: 12px; display: flex; justify-content: center; align-items: center; }
+        .action-title { font-size: 16px; font-weight: bold; color: #fff; margin-bottom: 4px; }
+        .action-desc { font-size: 16px; color: rgba(255,255,255,0.5); }
+        .action-badge { display: inline-block; margin-top: 8px; padding: 4px 10px; border-radius: 10px;
+            font-size: 15px; font-weight: bold; background: var(--red); color: #fff; }
+        
+        /* Featured Card Showcase */
+        .featured-card { background: linear-gradient(135deg, rgba(255,0,255,0.1), rgba(0,255,255,0.05));
+            border: 2px solid rgba(255,0,255,0.3); border-radius: 24px; padding: 24px; margin: 24px 0;
+            display: flex; gap: 20px; align-items: center; position: relative; overflow: hidden; }
+        .featured-card::before { content: ''; position: absolute; inset: 0;
+            background: linear-gradient(45deg, transparent, rgba(255,255,255,0.05), transparent);
+            animation: featuredShine 3s ease-in-out infinite; }
+        @keyframes featuredShine { 0%, 100% { transform: translateX(-100%); } 50% { transform: translateX(100%); } }
+        .featured-img { width: var(--card-w); height: calc(var(--card-w) * 1.4); border-radius: 12px;
+            object-fit: cover; box-shadow: 0 0 40px rgba(255,0,255,0.5); flex-shrink: 0; }
+        .featured-info { flex: 1; position: relative; z-index: 1; }
+        .featured-badge { display: inline-block; padding: 4px 12px; border-radius: 12px; font-size: 13px;
+            background: linear-gradient(135deg, #ff00ff, #00ffff); color: #000; font-weight: bold; margin-bottom: 8px; }
+        .featured-name { font-family: var(--nw-font-serif), serif; font-size: clamp(16px, 4vw, 22px); margin-bottom: 8px; }
+        .featured-desc { font-size: 15px; color: rgba(255,255,255,0.7); line-height: 1.5; margin-bottom: 12px; }
+        .featured-stats { display: flex; gap: 16px; flex-wrap: wrap; }
+        .featured-stat { font-size: 16px; }
+        .featured-stat span { color: var(--gold); font-weight: bold; }
+        
+        /* Reserved List Banner */
+        .reserved-banner { background: linear-gradient(135deg, rgba(139,0,0,0.3), rgba(255,215,0,0.1));
+            border: 2px solid rgba(255,215,0,0.4); border-radius: 16px; padding: 20px; margin: 24px 0;
+            display: flex; align-items: center; gap: 16px; cursor: pointer; transition: all 0.3s; }
+        .reserved-banner:hover { border-color: var(--gold); transform: scale(1.01); }
+        .reserved-icon { font-size: 40px; }
+        .reserved-content { flex: 1; }
+        .reserved-title { font-size: 16px; font-weight: bold; color: var(--gold); margin-bottom: 4px; }
+        .reserved-desc { font-size: 16px; color: rgba(255,255,255,0.6); }
+        .reserved-count { font-size: 24px; font-weight: bold; color: var(--gold); }
+        
+        /* VIP Tiers Section */
+        .vip-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+        .vip-tier { background: rgba(20,20,30,0.8); border: 2px solid rgba(255,255,255,0.1);
+            border-radius: 16px; padding: 16px; text-align: center; transition: all 0.3s; cursor: pointer; }
+        .vip-tier:hover { transform: translateY(-4px); }
+        .vip-tier.bronze { border-color: #cd7f32; }
+        .vip-tier.bronze:hover { box-shadow: 0 8px 30px rgba(205,127,50,0.3); }
+        .vip-tier.silver { border-color: #c0c0c0; }
+        .vip-tier.silver:hover { box-shadow: 0 8px 30px rgba(192,192,192,0.3); }
+        .vip-tier.gold { border-color: var(--gold); }
+        .vip-tier.gold:hover { box-shadow: 0 8px 30px rgba(255,215,0,0.3); }
+        .vip-tier.diamond { border-color: #00ffff; background: linear-gradient(135deg, rgba(0,255,255,0.1), rgba(255,0,255,0.1)); }
+        .vip-tier.diamond:hover { box-shadow: 0 8px 30px rgba(0,255,255,0.4); }
+        .vip-tier-icon { font-size: 28px; margin-bottom: 8px; }
+        .vip-tier-name { font-size: 15px; font-weight: bold; margin-bottom: 4px; }
+        .vip-tier.bronze .vip-tier-name { color: #cd7f32; }
+        .vip-tier.silver .vip-tier-name { color: #c0c0c0; }
+        .vip-tier.gold .vip-tier-name { color: var(--gold); }
+        .vip-tier.diamond .vip-tier-name { background: linear-gradient(135deg, #00ffff, #ff00ff);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .vip-tier-req { font-size: 13px; color: rgba(255,255,255,0.5); }
+        .vip-tier-perk { font-size: 15px; color: var(--green); margin-top: 8px; }
+        
+        /* Recent Pulls / Activity Feed */
+        .activity-feed { background: rgba(15,15,25,0.8); border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 16px; overflow: hidden; }
+        .activity-header { padding: 12px 16px; background: rgba(0,0,0,0.3);
+            border-bottom: 1px solid rgba(255,255,255,0.1); display: flex; justify-content: space-between; align-items: center; }
+        .activity-title { font-size: 15px; color: var(--gold); font-family: var(--nw-font-serif), serif; }
+        .activity-live { font-size: 13px; color: var(--green); display: flex; align-items: center; gap: 4px; }
+        .activity-live::before { content: ''; width: 6px; height: 6px; background: var(--green);
+            border-radius: 50%; animation: livePulse 1s ease-in-out infinite; }
+        @keyframes livePulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+        .activity-list { max-height: 300px; overflow-y: auto; }
+        .activity-item { display: flex; align-items: center; gap: 12px; padding: 12px 16px;
+            border-bottom: 1px solid rgba(255,255,255,0.05); }
+        .activity-item:last-child { border: none; }
+        .activity-img { width: 40px; height: 56px; border-radius: 6px; object-fit: cover; }
+        .activity-info { flex: 1; }
+        .activity-user { font-size: 16px; color: #fff; }
+        .activity-card { font-size: 13px; color: rgba(255,255,255,0.6); }
+        .activity-rarity { font-size: 15px; padding: 2px 8px; border-radius: 8px; }
+        .activity-rarity.mythic { background: linear-gradient(135deg, #ff00ff, #00ffff); color: #000; }
+        .activity-rarity.legendary { background: linear-gradient(135deg, var(--gold), var(--orange)); color: #000; }
+        .activity-rarity.epic { background: var(--purple); color: #fff; }
+        .activity-time { font-size: 15px; color: rgba(255,255,255,0.3); }
+        
+        /* Collection Progress */
+        .collection-progress { background: rgba(15,15,25,0.8); border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 16px; padding: 20px; }
+        .progress-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+        .progress-title { font-size: 16px; color: #fff; }
+        .progress-pct { font-size: 20px; font-weight: bold; color: var(--gold); }
+        .progress-bars { display: flex; flex-direction: column; gap: 12px; }
+        .progress-row { display: flex; align-items: center; gap: 12px; }
+        .progress-label { width: 80px; font-size: 13px; color: rgba(255,255,255,0.6); }
+        .progress-track { flex: 1; height: 8px; background: rgba(255,255,255,0.1); border-radius: 4px; overflow: hidden; }
+        .progress-fill { height: 100%; border-radius: 4px; transition: width 1s; }
+        .progress-fill.mythic { background: linear-gradient(90deg, #ff00ff, #00ffff); }
+        .progress-fill.legendary { background: linear-gradient(90deg, var(--gold), var(--orange)); }
+        .progress-fill.epic { background: var(--purple); }
+        .progress-fill.rare { background: var(--blue); }
+        .progress-fill.uncommon { background: var(--green); }
+        .progress-fill.common { background: #6b7280; }
+        .progress-count { width: 50px; font-size: 13px; color: rgba(255,255,255,0.5); text-align: right; }
+        
+        /* Pity System Display */
+        .pity-display { background: linear-gradient(135deg, rgba(168,85,247,0.2), rgba(59,130,246,0.1));
+            border: 1px solid rgba(168,85,247,0.3); border-radius: 16px; padding: 16px; margin: 16px 0; }
+        .pity-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+        .pity-title { font-size: 15px; color: var(--purple); font-weight: bold; }
+        .pity-info { font-size: 13px; color: rgba(255,255,255,0.5); cursor: help; }
+        .pity-bars { display: flex; gap: 16px; }
+        .pity-bar { flex: 1; }
+        .pity-bar-label { font-size: 13px; color: rgba(255,255,255,0.6); margin-bottom: 4px;
+            display: flex; justify-content: space-between; }
+        .pity-bar-track { height: 10px; background: rgba(255,255,255,0.1); border-radius: 5px; overflow: hidden; }
+        .pity-bar-fill { height: 100%; border-radius: 5px; transition: width 0.5s; }
+        .pity-bar-fill.epic { background: linear-gradient(90deg, var(--purple), var(--blue)); }
+        .pity-bar-fill.legendary { background: linear-gradient(90deg, var(--gold), var(--orange)); }
+        .pity-bar-fill.near { animation: pityPulse 1s ease-in-out infinite; }
+        @keyframes pityPulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.7; } }
+        
+        /* Trading Board Preview */
+        .trading-preview { background: rgba(15,15,25,0.8); border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 16px; padding: 20px; }
+        .trading-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+        .trading-title { font-size: 16px; color: #fff; display: flex; align-items: center; gap: 8px; }
+        .trading-badge { font-size: 15px; padding: 3px 8px; background: var(--blue); border-radius: 8px; }
+        .trading-list { display: flex; flex-direction: column; gap: 8px; }
+        .trading-item { display: flex; align-items: center; gap: 12px; padding: 10px;
+            background: rgba(0,0,0,0.3); border-radius: 10px; }
+        .trading-item-img { width: 36px; height: 50px; border-radius: 6px; object-fit: cover; }
+        .trading-item-info { flex: 1; }
+        .trading-item-name { font-size: 16px; color: #fff; }
+        .trading-item-user { font-size: 15px; color: rgba(255,255,255,0.5); }
+        .trading-item-price { font-size: 15px; color: var(--gold); font-weight: bold; }
+        
+        /* Launch Timer */
+        .launch-banner { background: linear-gradient(135deg, rgba(255,107,0,0.2), rgba(255,215,0,0.1));
+            border: 2px solid rgba(255,215,0,0.4); border-radius: 16px; padding: 20px; margin: 24px 0;
+            text-align: center; }
+        .launch-title { font-size: 15px; color: rgba(255,255,255,0.6); text-transform: uppercase;
+            letter-spacing: 2px; margin-bottom: 8px; }
+        .launch-event { font-family: var(--nw-font-serif), serif; font-size: clamp(18px, 5vw, 24px); color: var(--gold); margin-bottom: 12px; }
+        .launch-timer { display: flex; justify-content: center; gap: 16px; }
+        .timer-block { text-align: center; }
+        .timer-value { font-size: clamp(24px, 6vw, 32px); font-weight: bold; color: #fff; }
+        .timer-label { font-size: 13px; color: rgba(255,255,255,0.5); }
+        
+        /* Bottom Navigation */
+        .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background: rgba(10,10,15,0.98);
+            border-top: 1px solid rgba(255,255,255,0.1); padding: 8px 16px; z-index: 100;
+            display: flex; justify-content: space-around; backdrop-filter: blur(10px); }
+        .nav-item { display: flex; flex-direction: column; align-items: center; gap: 4px;
+            padding: 8px 16px; border-radius: 12px; text-decoration: none; transition: all 0.3s; }
+        .nav-item:hover, .nav-item.active { background: rgba(255,215,0,0.1); }
+        .nav-item.active .nav-icon { color: var(--gold); }
+        .nav-icon { font-size: 20px; color: rgba(255,255,255,0.5); }
+        .nav-label { font-size: 15px; color: rgba(255,255,255,0.5); }
+        .nav-item.active .nav-label { color: var(--gold); }
+        
+        /* Responsive */
+        @media (max-width: 600px) {
+            .stats-grid { grid-template-columns: repeat(2, 1fr); }
+            .vip-grid { grid-template-columns: repeat(2, 1fr); }
+            .featured-card { flex-direction: column; text-align: center; }
+            .featured-stats { justify-content: center; }
+            .pity-bars { flex-direction: column; gap: 12px; }
+        }
+    </style>
+</head>
+<body>
+    <!-- Captivating Background -->
+    <div class="nw-bg-captivating">
+        <div class="bg-image"></div>
+        <div class="bg-gradient"></div>
+        <div class="bg-particles"></div>
+        <div class="bg-grid"></div>
+    </div>
+    <header class="hdr">
+        <a href="/" class="logo">NumbahWan TCG</a>
+        <div class="hdr-right">
+            <span class="vip-badge" id="vipBadge">NEWCOMER</span>
+            <div class="lang">
+                <button class="on" data-l="en">EN</button>
+                <button data-l="zh">中文</button>
+                <button data-l="th">ไทย</button>
+            </div>
+        </div>
+    </header>
+    
+    <main>
+        <!-- Hero Section -->
+        <section class="hero">
+            <h1 class="hero-title" id="heroTitle">Rise of RegginA</h1>
+            <p class="hero-subtitle" id="heroSubtitle">The Ultimate Guild TCG Experience</p>
+        </section>
+        
+        <!-- Stats Dashboard -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-icon">🎴</div>
+                <div class="stat-value" id="statCollection">0</div>
+                <div class="stat-label" id="labelCollection">Cards Owned</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">📦</div>
+                <div class="stat-value" id="statPulls">0</div>
+                <div class="stat-label" id="labelPulls">Total Pulls</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">💎</div>
+                <div class="stat-value" id="statGP">1,000</div>
+                <div class="stat-label" id="labelGP">Guild Points</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">🏆</div>
+                <div class="stat-value" id="statRank">#--</div>
+                <div class="stat-label" id="labelRank">Global Rank</div>
+            </div>
+        </div>
+        
+        <!-- Quick Actions -->
+        <div class="actions-grid">
+            <a href="/forge" class="action-card featured">
+                <div class="action-icon">🎰</div>
+                <div class="action-title" id="actionGacha">Open Packs</div>
+                <div class="action-desc" id="actionGachaDesc">Try your luck!</div>
+                <div class="action-badge" id="actionGachaBadge">0.01% MYTHIC</div>
+            </a>
+            <a href="/cards" class="action-card">
+                <div class="action-icon"><span data-nw-icon="cards" data-size="48"></span></div>
+                <div class="action-title" id="actionCards">Card Carousel</div>
+                <div class="action-desc" id="actionCardsDesc">Browse 108 cards</div>
+            </a>
+        </div>
+        
+        <!-- Featured Card - The Mythic -->
+        <div class="featured-card">
+            <img class="featured-img" src="/static/cards/01-reggina-mythic.jpg" alt="RegginA" onerror="this.src='/static/cards/01-reggina-mythic.jpg'">
+            <div class="featured-info">
+                <span class="featured-badge">0.01% DROP</span>
+                <h3 class="featured-name" id="featuredName">RegginA, The Eternal Flame</h3>
+                <p class="featured-desc" id="featuredDesc">
+                    The legendary Guild Master. Only 1 copy exists in the entire game. 
+                    Whoever pulls this card gains LIFETIME VIP STATUS and an exclusive physical card.
+                </p>
+                <div class="featured-stats">
+                    <div class="featured-stat">Supply: <span>1/1</span></div>
+                    <div class="featured-stat">Minted: <span>0</span></div>
+                    <div class="featured-stat">Status: <span id="featuredStatus">AVAILABLE</span></div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Launch Event Timer -->
+        <div class="launch-banner">
+            <div class="launch-title" id="launchTitle">Limited Time Event</div>
+            <div class="launch-event" id="launchEvent">🔥 Founder's Pack Sale 🔥</div>
+            <div class="launch-timer">
+                <div class="timer-block">
+                    <div class="timer-value" id="timerDays">07</div>
+                    <div class="timer-label" id="timerDaysLabel">Days</div>
+                </div>
+                <div class="timer-block">
+                    <div class="timer-value" id="timerHours">12</div>
+                    <div class="timer-label" id="timerHoursLabel">Hours</div>
+                </div>
+                <div class="timer-block">
+                    <div class="timer-value" id="timerMins">34</div>
+                    <div class="timer-label" id="timerMinsLabel">Mins</div>
+                </div>
+                <div class="timer-block">
+                    <div class="timer-value" id="timerSecs">56</div>
+                    <div class="timer-label" id="timerSecsLabel">Secs</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Reserved List Banner -->
+        <div class="reserved-banner" onclick="alert('Reserved List: These 10 cards will NEVER be reprinted. They are permanent luxury assets.')">
+            <div class="reserved-icon">🔒</div>
+            <div class="reserved-content">
+                <div class="reserved-title" id="reservedTitle">Reserved List</div>
+                <div class="reserved-desc" id="reservedDesc">These cards will NEVER be reprinted. Permanent luxury assets.</div>
+            </div>
+            <div class="reserved-count">10</div>
+        </div>
+        
+        <!-- Pity System Display -->
+        <div class="pity-display">
+            <div class="pity-header">
+                <span class="pity-title" id="pityTitle">🎯 Pity System</span>
+                <span class="pity-info" title="Guaranteed Epic at 30 pulls, Legendary at 90 pulls">ℹ️ How it works</span>
+            </div>
+            <div class="pity-bars">
+                <div class="pity-bar">
+                    <div class="pity-bar-label">
+                        <span id="pityEpicLabel">Epic Guarantee</span>
+                        <span id="pityEpicCount">0/30</span>
+                    </div>
+                    <div class="pity-bar-track">
+                        <div class="pity-bar-fill epic" id="pityEpicFill" style="width: 0%"></div>
+                    </div>
+                </div>
+                <div class="pity-bar">
+                    <div class="pity-bar-label">
+                        <span id="pityLegendaryLabel">Legendary Guarantee</span>
+                        <span id="pityLegendaryCount">0/90</span>
+                    </div>
+                    <div class="pity-bar-track">
+                        <div class="pity-bar-fill legendary" id="pityLegendaryFill" style="width: 0%"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- VIP Tiers -->
+        <div class="section-header">
+            <h2 class="section-title" id="vipSectionTitle">💎 VIP Tiers</h2>
+            <a href="#" class="section-link" id="vipSectionLink">View Benefits →</a>
+        </div>
+        <div class="vip-grid">
+            <div class="vip-tier bronze">
+                <div class="vip-tier-icon">🥉</div>
+                <div class="vip-tier-name">Bronze</div>
+                <div class="vip-tier-req" id="vipBronzeReq">10+ Pulls</div>
+                <div class="vip-tier-perk" id="vipBronzePerk">+5% Pull Rate</div>
+            </div>
+            <div class="vip-tier silver">
+                <div class="vip-tier-icon">🥈</div>
+                <div class="vip-tier-name">Silver</div>
+                <div class="vip-tier-req" id="vipSilverReq">50+ Pulls</div>
+                <div class="vip-tier-perk" id="vipSilverPerk">+10% Pull Rate</div>
+            </div>
+            <div class="vip-tier gold">
+                <div class="vip-tier-icon">🥇</div>
+                <div class="vip-tier-name">Gold</div>
+                <div class="vip-tier-req" id="vipGoldReq">200+ Pulls</div>
+                <div class="vip-tier-perk" id="vipGoldPerk">+15% + Exclusives</div>
+            </div>
+            <div class="vip-tier diamond">
+                <div class="vip-tier-icon">💎</div>
+                <div class="vip-tier-name">Diamond</div>
+                <div class="vip-tier-req" id="vipDiamondReq">Top 1%</div>
+                <div class="vip-tier-perk" id="vipDiamondPerk">Direct Access</div>
+            </div>
+        </div>
+        
+        <!-- Collection Progress -->
+        <div class="section-header">
+            <h2 class="section-title" id="collectionTitle">📊 Collection Progress</h2>
+            <a href="/cards" class="section-link" id="collectionLink">View All →</a>
+        </div>
+        <div class="collection-progress">
+            <div class="progress-header">
+                <span class="progress-title" id="progressTitle">Overall Completion</span>
+                <span class="progress-pct" id="progressPct">0%</span>
+            </div>
+            <div class="progress-bars">
+                <div class="progress-row">
+                    <span class="progress-label">Mythic</span>
+                    <div class="progress-track"><div class="progress-fill mythic" id="progressMythic" style="width: 0%"></div></div>
+                    <span class="progress-count" id="progressMythicCount">0/1</span>
+                </div>
+                <div class="progress-row">
+                    <span class="progress-label">Legendary</span>
+                    <div class="progress-track"><div class="progress-fill legendary" id="progressLegendary" style="width: 0%"></div></div>
+                    <span class="progress-count" id="progressLegendaryCount">0/5</span>
+                </div>
+                <div class="progress-row">
+                    <span class="progress-label">Epic</span>
+                    <div class="progress-track"><div class="progress-fill epic" id="progressEpic" style="width: 0%"></div></div>
+                    <span class="progress-count" id="progressEpicCount">0/12</span>
+                </div>
+                <div class="progress-row">
+                    <span class="progress-label">Rare</span>
+                    <div class="progress-track"><div class="progress-fill rare" id="progressRare" style="width: 0%"></div></div>
+                    <span class="progress-count" id="progressRareCount">0/20</span>
+                </div>
+                <div class="progress-row">
+                    <span class="progress-label">Uncommon</span>
+                    <div class="progress-track"><div class="progress-fill uncommon" id="progressUncommon" style="width: 0%"></div></div>
+                    <span class="progress-count" id="progressUncommonCount">0/30</span>
+                </div>
+                <div class="progress-row">
+                    <span class="progress-label">Common</span>
+                    <div class="progress-track"><div class="progress-fill common" id="progressCommon" style="width: 0%"></div></div>
+                    <span class="progress-count" id="progressCommonCount">0/40</span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Live Activity Feed -->
+        <div class="section-header">
+            <h2 class="section-title" id="activityTitle">🔥 Live Pulls</h2>
+        </div>
+        <div class="activity-feed">
+            <div class="activity-header">
+                <span class="activity-title" id="activityFeedTitle">Global Activity</span>
+                <span class="activity-live" id="activityLive">LIVE</span>
+            </div>
+            <div class="activity-list" id="activityList">
+                <!-- Generated by JS -->
+            </div>
+        </div>
+        
+        <!-- Trading Board Preview -->
+        <div class="section-header">
+            <h2 class="section-title" id="tradingTitle">🔄 Trading Board</h2>
+            <a href="#" class="section-link" id="tradingLink">Coming Soon</a>
+        </div>
+        <div class="trading-preview">
+            <div class="trading-header">
+                <span class="trading-title" id="tradingPreviewTitle">Hot Listings <span class="trading-badge">BETA</span></span>
+            </div>
+            <div class="trading-list" id="tradingList">
+                <!-- Generated by JS -->
+            </div>
+        </div>
+    </main>
+    
+    <!-- Bottom Navigation -->
+    <nav class="bottom-nav">
+        <a href="/" class="nav-item">
+            <span class="nav-icon" data-nw-icon="home" data-size="24"></span>
+            <span class="nav-label" id="navHome">Home</span>
+        </a>
+        <a href="/forge" class="nav-item">
+            <span class="nav-icon" data-nw-icon="gift" data-size="24"></span>
+            <span class="nav-label" id="navGacha">Gacha</span>
+        </a>
+        <a href="/cards" class="nav-item">
+            <span class="nav-icon" data-nw-icon="cards" data-size="24"></span>
+            <span class="nav-label" id="navCards">Cards</span>
+        </a>
+        <a href="/tcg" class="nav-item active">
+            <span class="nav-icon" data-nw-icon="trophy" data-size="24"></span>
+            <span class="nav-label" id="navTCG">TCG Hub</span>
+        </a>
+    </nav>
+
+<script>
+// ============================================================================
+// NUMBAHWAN TCG COMMAND CENTER
+// Blueprint-driven addictive TCG system with VIP tiers, pity system, reserved list
+// ============================================================================
+
+// i18n translations
+const i18n = {
+    en: {
+        heroTitle: 'Rise of RegginA',
+        heroSubtitle: 'The Ultimate Guild TCG Experience',
+        labelCollection: 'Cards Owned',
+        labelPulls: 'Total Pulls',
+        labelGP: 'Guild Points',
+        labelRank: 'Global Rank',
+        actionGacha: 'Open Packs',
+        actionGachaDesc: 'Try your luck!',
+        actionGachaBadge: '0.01% MYTHIC',
+        actionCards: 'Card Carousel',
+        actionCardsDesc: 'Browse 108 cards',
+        featuredName: 'RegginA, The Eternal Flame',
+        featuredDesc: 'The legendary Guild Master. Only 1 copy exists in the entire game. Whoever pulls this card gains LIFETIME VIP STATUS and an exclusive physical card.',
+        featuredStatus: 'AVAILABLE',
+        launchTitle: 'Limited Time Event',
+        launchEvent: '🔥 Founder\'s Pack Sale 🔥',
+        reservedTitle: 'Reserved List',
+        reservedDesc: 'These cards will NEVER be reprinted. Permanent luxury assets.',
+        pityTitle: '🎯 Pity System',
+        pityEpicLabel: 'Epic Guarantee',
+        pityLegendaryLabel: 'Legendary Guarantee',
+        vipSectionTitle: '💎 VIP Tiers',
+        vipSectionLink: 'View Benefits →',
+        vipBronzeReq: '10+ Pulls',
+        vipBronzePerk: '+5% Pull Rate',
+        vipSilverReq: '50+ Pulls',
+        vipSilverPerk: '+10% Pull Rate',
+        vipGoldReq: '200+ Pulls',
+        vipGoldPerk: '+15% + Exclusives',
+        vipDiamondReq: 'Top 1%',
+        vipDiamondPerk: 'Direct Access',
+        collectionTitle: '📊 Collection Progress',
+        collectionLink: 'View All →',
+        progressTitle: 'Overall Completion',
+        activityTitle: '🔥 Live Pulls',
+        activityFeedTitle: 'Global Activity',
+        activityLive: 'LIVE',
+        tradingTitle: '🔄 Trading Board',
+        tradingLink: 'Coming Soon',
+        tradingPreviewTitle: 'Hot Listings',
+        navHome: 'Home',
+        navGacha: 'Gacha',
+        navCards: 'Cards',
+        navTCG: 'TCG Hub',
+        timerDaysLabel: 'Days',
+        timerHoursLabel: 'Hours',
+        timerMinsLabel: 'Mins',
+        timerSecsLabel: 'Secs',
+        vipNewcomer: 'NEWCOMER',
+        vipBronze: 'BRONZE',
+        vipSilver: 'SILVER',
+        vipGold: 'GOLD',
+        vipDiamond: 'DIAMOND'
+    },
+    zh: {
+        heroTitle: '蕾吉娜崛起',
+        heroSubtitle: '终极公会TCG体验',
+        labelCollection: '拥有卡牌',
+        labelPulls: '总抽卡数',
+        labelGP: '公会点数',
+        labelRank: '全球排名',
+        actionGacha: '开启卡包',
+        actionGachaDesc: '试试运气！',
+        actionGachaBadge: '0.01% 神话',
+        actionCards: '卡牌展示',
+        actionCardsDesc: '浏览108张卡',
+        featuredName: '烈焰永恒·蕾吉娜',
+        featuredDesc: '传奇公会会长。全游戏仅存1张。获得此卡的玩家将获得终身VIP身份和专属实体卡。',
+        featuredStatus: '可获得',
+        launchTitle: '限时活动',
+        launchEvent: '🔥 创始者卡包特卖 🔥',
+        reservedTitle: '保留名单',
+        reservedDesc: '这些卡牌永不再版。永久奢侈资产。',
+        pityTitle: '🎯 保底系统',
+        pityEpicLabel: '史诗保底',
+        pityLegendaryLabel: '传说保底',
+        vipSectionTitle: '💎 VIP等级',
+        vipSectionLink: '查看福利 →',
+        vipBronzeReq: '10次以上',
+        vipBronzePerk: '+5% 掉率',
+        vipSilverReq: '50次以上',
+        vipSilverPerk: '+10% 掉率',
+        vipGoldReq: '200次以上',
+        vipGoldPerk: '+15% + 专属',
+        vipDiamondReq: '前1%',
+        vipDiamondPerk: '直接联系',
+        collectionTitle: '📊 收藏进度',
+        collectionLink: '查看全部 →',
+        progressTitle: '总体完成度',
+        activityTitle: '🔥 实时抽卡',
+        activityFeedTitle: '全球动态',
+        activityLive: '直播',
+        tradingTitle: '🔄 交易板',
+        tradingLink: '即将推出',
+        tradingPreviewTitle: '热门挂单',
+        navHome: '首页',
+        navGacha: '抽卡',
+        navCards: '卡牌',
+        navTCG: 'TCG中心',
+        timerDaysLabel: '天',
+        timerHoursLabel: '时',
+        timerMinsLabel: '分',
+        timerSecsLabel: '秒',
+        vipNewcomer: '新手',
+        vipBronze: '青铜',
+        vipSilver: '白银',
+        vipGold: '黄金',
+        vipDiamond: '钻石'
+    },
+    th: {
+        heroTitle: 'การผงาดของเรกจินา',
+        heroSubtitle: 'ประสบการณ์ TCG กิลด์สุดยอด',
+        labelCollection: 'การ์ดที่มี',
+        labelPulls: 'สุ่มทั้งหมด',
+        labelGP: 'คะแนนกิลด์',
+        labelRank: 'อันดับโลก',
+        actionGacha: 'เปิดแพ็ค',
+        actionGachaDesc: 'ลองดวง!',
+        actionGachaBadge: '0.01% ตำนาน',
+        actionCards: 'แกลเลอรี่การ์ด',
+        actionCardsDesc: 'ดู 108 การ์ด',
+        featuredName: 'เรกจินา ไฟนิรันดร์',
+        featuredDesc: 'หัวหน้ากิลด์ในตำนาน มีเพียง 1 ใบในเกม ผู้ที่ได้การ์ดนี้จะได้สถานะ VIP ตลอดชีพและการ์ดจริงพิเศษ',
+        featuredStatus: 'มีให้สุ่ม',
+        launchTitle: 'อีเวนท์จำกัดเวลา',
+        launchEvent: '🔥 ขายแพ็คผู้ก่อตั้ง 🔥',
+        reservedTitle: 'รายการสงวน',
+        reservedDesc: 'การ์ดเหล่านี้จะไม่พิมพ์ซ้ำ สินทรัพย์หรูหราถาวร',
+        pityTitle: '🎯 ระบบการันตี',
+        pityEpicLabel: 'การันตี Epic',
+        pityLegendaryLabel: 'การันตี Legendary',
+        vipSectionTitle: '💎 ระดับ VIP',
+        vipSectionLink: 'ดูสิทธิประโยชน์ →',
+        vipBronzeReq: '10+ ครั้ง',
+        vipBronzePerk: '+5% อัตราดรอป',
+        vipSilverReq: '50+ ครั้ง',
+        vipSilverPerk: '+10% อัตราดรอป',
+        vipGoldReq: '200+ ครั้ง',
+        vipGoldPerk: '+15% + พิเศษ',
+        vipDiamondReq: 'Top 1%',
+        vipDiamondPerk: 'ติดต่อตรง',
+        collectionTitle: '📊 ความคืบหน้าสะสม',
+        collectionLink: 'ดูทั้งหมด →',
+        progressTitle: 'ความสมบูรณ์โดยรวม',
+        activityTitle: '🔥 สุ่มสด',
+        activityFeedTitle: 'กิจกรรมโลก',
+        activityLive: 'สด',
+        tradingTitle: '🔄 กระดานเทรด',
+        tradingLink: 'เร็วๆ นี้',
+        tradingPreviewTitle: 'รายการฮอต',
+        navHome: 'หน้าแรก',
+        navGacha: 'กาชา',
+        navCards: 'การ์ด',
+        navTCG: 'TCG Hub',
+        timerDaysLabel: 'วัน',
+        timerHoursLabel: 'ชม.',
+        timerMinsLabel: 'นาที',
+        timerSecsLabel: 'วิ',
+        vipNewcomer: 'มือใหม่',
+        vipBronze: 'บรอนซ์',
+        vipSilver: 'ซิลเวอร์',
+        vipGold: 'โกลด์',
+        vipDiamond: 'ไดมอนด์'
+    }
+};
+
+// Sample card data for activity feed
+const sampleCards = [
+    { id: 1, name: { en: 'RegginA, The Eternal Flame', zh: '烈焰永恒·蕾吉娜', th: 'เรกจินา ไฟนิรันดร์' }, rarity: 'mythic', img: '01-reggina-mythic.jpg' },
+    { id: 2, name: { en: 'Reggino, Shadow of Command', zh: '暗影指挥·雷吉诺', th: 'เรกจิโน เงาแห่งคำสั่ง' }, rarity: 'legendary', img: '02-reggino-legendary.jpg' },
+    { id: 27, name: { en: 'Elder Dragon', zh: '上古巨龙', th: 'มังกรโบราณ' }, rarity: 'legendary', img: '27-elder-dragon.jpg' },
+    { id: 3, name: { en: 'Onca, Primal Hunter', zh: '原始猎手·奥卡', th: 'ออนก้า นักล่าดึกดำบรรพ์' }, rarity: 'epic', img: '03-onca-epic.jpg' },
+    { id: 6, name: { en: 'Thunder Strike', zh: '雷霆一击', th: 'สายฟ้าฟาด' }, rarity: 'epic', img: '06-thunder-strike.jpg' },
+    { id: 5, name: { en: 'Phoenix Rebirth', zh: '凤凰重生', th: 'ฟีนิกซ์คืนชีพ' }, rarity: 'rare', img: '05-phoenix-rebirth.jpg' },
+    { id: 18, name: { en: 'Shadow Blade', zh: '暗影之刃', th: 'ดาบเงา' }, rarity: 'rare', img: '18-shadow-blade.jpg' },
+    { id: 16, name: { en: 'Guild Slime', zh: '公会史莱姆', th: 'สไลม์กิลด์' }, rarity: 'common', img: '16-guild-slime.jpg' }
+];
+
+const usernames = ['DragonSlayer', 'GuildMaster99', 'NightHawk', 'PhoenixRise', 'ShadowWolf', 'StarLight', 'ThunderBolt', 'IceQueen', 'FireLord', 'WindRider', 'RegginA_Fan', 'CardCollector', 'LuckyPuller', 'RareFinder'];
+
+// State
+let lang = localStorage.getItem('nw_lang') || 'en';
+let state = JSON.parse(localStorage.getItem('nw_tcg_state')) || {
+    collection: [],
+    totalPulls: 0,
+    guildPoints: 1000,
+    pityCounter: 0
+};
+
+// Initialize
+function init() {
+    updateLanguage();
+    setupLanguageSwitcher();
+    loadState();
+    updateStats();
+    updateVIPBadge();
+    updatePityDisplay();
+    updateCollectionProgress();
+    generateActivityFeed();
+    generateTradingPreview();
+    startLaunchTimer();
+}
+
+function setupLanguageSwitcher() {
+    document.querySelectorAll('.lang button').forEach(btn => {
+        btn.addEventListener('click', () => {
+            document.querySelectorAll('.lang button').forEach(b => b.classList.remove('on'));
+            btn.classList.add('on');
+            lang = btn.dataset.l;
+            localStorage.setItem('nw_lang', lang);
+            updateLanguage();
+        });
+    });
+    // Set active language button
+    document.querySelectorAll('.lang button').forEach(btn => {
+        btn.classList.toggle('on', btn.dataset.l === lang);
+    });
+}
+
+function updateLanguage() {
+    const t = i18n[lang];
+    Object.keys(t).forEach(key => {
+        const el = document.getElementById(key);
+        if (el) el.textContent = t[key];
+    });
+}
+
+function loadState() {
+    const saved = localStorage.getItem('nw_gacha_state');
+    if (saved) {
+        const gachaState = JSON.parse(saved);
+        state.collection = gachaState.collection || [];
+        state.totalPulls = gachaState.totalPulls || 0;
+        state.pityCounter = gachaState.pityCounter || 0;
+    }
+}
+
+function updateStats() {
+    document.getElementById('statCollection').textContent = state.collection.length;
+    document.getElementById('statPulls').textContent = state.totalPulls;
+    document.getElementById('statGP').textContent = state.guildPoints.toLocaleString();
+    
+    // Calculate rank based on pulls
+    const rank = state.totalPulls > 0 ? Math.max(1, Math.floor(10000 / (state.totalPulls + 1))) : '--';
+    document.getElementById('statRank').textContent = rank === '--' ? '#--' : `#${rank}`;
+}
+
+function updateVIPBadge() {
+    const badge = document.getElementById('vipBadge');
+    const t = i18n[lang];
+    let tier = 'NEWCOMER';
+    let tierClass = '';
+    
+    if (state.totalPulls >= 200) {
+        tier = t.vipDiamond;
+        tierClass = 'diamond';
+    } else if (state.totalPulls >= 100) {
+        tier = t.vipGold;
+        tierClass = 'gold';
+    } else if (state.totalPulls >= 50) {
+        tier = t.vipSilver;
+        tierClass = 'silver';
+    } else if (state.totalPulls >= 10) {
+        tier = t.vipBronze;
+        tierClass = 'bronze';
+    } else {
+        tier = t.vipNewcomer;
+    }
+    
+    badge.textContent = tier;
+    badge.className = 'vip-badge ' + tierClass;
+}
+
+function updatePityDisplay() {
+    const epicPity = state.pityCounter % 30;
+    const legendaryPity = state.pityCounter % 90;
+    
+    document.getElementById('pityEpicCount').textContent = `${epicPity}/30`;
+    document.getElementById('pityLegendaryCount').textContent = `${legendaryPity}/90`;
+    
+    const epicFill = document.getElementById('pityEpicFill');
+    const legendaryFill = document.getElementById('pityLegendaryFill');
+    
+    epicFill.style.width = `${(epicPity / 30) * 100}%`;
+    legendaryFill.style.width = `${(legendaryPity / 90) * 100}%`;
+    
+    // Add "near" class when close to pity
+    epicFill.classList.toggle('near', epicPity >= 25);
+    legendaryFill.classList.toggle('near', legendaryPity >= 80);
+}
+
+function updateCollectionProgress() {
+    // Rarity distribution: 1 mythic, 5 legendary, 12 epic, 20 rare, 30 uncommon, 40 common = 108 total
+    const rarityTotals = { mythic: 1, legendary: 5, epic: 12, rare: 20, uncommon: 30, common: 40 };
+    const owned = { mythic: 0, legendary: 0, epic: 0, rare: 0, uncommon: 0, common: 0 };
+    
+    // Count owned cards by rarity (simplified - in real implementation, track actual cards)
+    // For demo, we'll calculate based on total pulls with weighted probability
+    const totalOwned = state.collection.length;
+    const simulated = {
+        mythic: Math.min(rarityTotals.mythic, Math.floor(totalOwned * 0.001)),
+        legendary: Math.min(rarityTotals.legendary, Math.floor(totalOwned * 0.02)),
+        epic: Math.min(rarityTotals.epic, Math.floor(totalOwned * 0.08)),
+        rare: Math.min(rarityTotals.rare, Math.floor(totalOwned * 0.15)),
+        uncommon: Math.min(rarityTotals.uncommon, Math.floor(totalOwned * 0.25)),
+        common: Math.min(rarityTotals.common, Math.floor(totalOwned * 0.5))
+    };
+    
+    Object.keys(rarityTotals).forEach(rarity => {
+        const fill = document.getElementById(`progress${rarity.charAt(0).toUpperCase() + rarity.slice(1)}`);
+        const count = document.getElementById(`progress${rarity.charAt(0).toUpperCase() + rarity.slice(1)}Count`);
+        const pct = (simulated[rarity] / rarityTotals[rarity]) * 100;
+        if (fill) fill.style.width = `${pct}%`;
+        if (count) count.textContent = `${simulated[rarity]}/${rarityTotals[rarity]}`;
+    });
+    
+    // Overall percentage
+    const totalPossible = 108;
+    const totalSimulated = Object.values(simulated).reduce((a, b) => a + b, 0);
+    document.getElementById('progressPct').textContent = `${Math.round((totalSimulated / totalPossible) * 100)}%`;
+}
+
+function generateActivityFeed() {
+    const list = document.getElementById('activityList');
+    list.innerHTML = '';
+    
+    // Generate 10 random activity items
+    for (let i = 0; i < 10; i++) {
+        const card = sampleCards[Math.floor(Math.random() * sampleCards.length)];
+        const user = usernames[Math.floor(Math.random() * usernames.length)];
+        const timeAgo = Math.floor(Math.random() * 60) + 1;
+        
+        const item = document.createElement('div');
+        item.className = 'activity-item';
+        item.innerHTML = `
+            <img class="activity-img" src="/static/cards/${card.img}" alt="${card.name[lang]}" onerror="this.src='/static/cards/01-reggina-mythic.jpg'">
+            <div class="activity-info">
+                <div class="activity-user">${user}</div>
+                <div class="activity-card">${card.name[lang]}</div>
+            </div>
+            <span class="activity-rarity ${card.rarity}">${card.rarity.toUpperCase()}</span>
+            <span class="activity-time">${timeAgo}m</span>
+        `;
+        list.appendChild(item);
+    }
+}
+
+function generateTradingPreview() {
+    const list = document.getElementById('tradingList');
+    list.innerHTML = '';
+    
+    const tradingCards = sampleCards.filter(c => c.rarity !== 'common').slice(0, 4);
+    
+    tradingCards.forEach(card => {
+        const user = usernames[Math.floor(Math.random() * usernames.length)];
+        const price = card.rarity === 'mythic' ? '∞' : 
+                      card.rarity === 'legendary' ? Math.floor(Math.random() * 5000) + 2000 :
+                      card.rarity === 'epic' ? Math.floor(Math.random() * 1000) + 500 :
+                      Math.floor(Math.random() * 300) + 100;
+        
+        const item = document.createElement('div');
+        item.className = 'trading-item';
+        item.innerHTML = `
+            <img class="trading-item-img" src="/static/cards/${card.img}" alt="${card.name[lang]}" onerror="this.src='/static/cards/01-reggina-mythic.jpg'">
+            <div class="trading-item-info">
+                <div class="trading-item-name">${card.name[lang]}</div>
+                <div class="trading-item-user">by ${user}</div>
+            </div>
+            <div class="trading-item-price">${price === '∞' ? '∞' : price.toLocaleString() + ' GP'}</div>
+        `;
+        list.appendChild(item);
+    });
+}
+
+function startLaunchTimer() {
+    // Set launch date 7 days from now
+    const launchDate = new Date();
+    launchDate.setDate(launchDate.getDate() + 7);
+    
+    function updateTimer() {
+        const now = new Date();
+        const diff = launchDate - now;
+        
+        if (diff <= 0) {
+            document.getElementById('timerDays').textContent = '00';
+            document.getElementById('timerHours').textContent = '00';
+            document.getElementById('timerMins').textContent = '00';
+            document.getElementById('timerSecs').textContent = '00';
+            return;
+        }
+        
+        const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+        const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+        const mins = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+        const secs = Math.floor((diff % (1000 * 60)) / 1000);
+        
+        document.getElementById('timerDays').textContent = String(days).padStart(2, '0');
+        document.getElementById('timerHours').textContent = String(hours).padStart(2, '0');
+        document.getElementById('timerMins').textContent = String(mins).padStart(2, '0');
+        document.getElementById('timerSecs').textContent = String(secs).padStart(2, '0');
+    }
+    
+    updateTimer();
+    setInterval(updateTimer, 1000);
+    
+    // Refresh activity feed periodically
+    setInterval(generateActivityFeed, 30000);
+}
+
+// Initialize on load
+document.addEventListener('DOMContentLoaded', init);
+</script>
+</body>
+</html>

@@ -1,302 +1,4 @@
-import { Hono } from 'hono'
-import { serveStatic } from 'hono/cloudflare-pages'
-
-// Import data from JSON files (Fallback when D1 not available)
-import rosterData from './data/roster.json'
-import photosData from './data/photos.json'
-import translationsData from './data/translations.json'
-import performanceData from './data/performance.json'
-
-// D1 Database binding type
-type Bindings = {
-  GUILD_DB: D1Database
-}
-
-const app = new Hono<{ Bindings: Bindings }>()
-
-// Serve static files with caching headers
-app.use('/static/*', serveStatic())
-
-// ============================================================================
-// API ROUTES - Data Layer (Scalability Pattern: Separate Data from Presentation)
-// ============================================================================
-
-// API: Get translations (for all pages to share)
-app.get('/api/i18n', (c) => {
-  c.header('Cache-Control', 'public, max-age=3600, stale-while-revalidate=86400')
-  return c.json(translationsData)
-})
-
-// API: Get roster data
-app.get('/api/roster', (c) => {
-  c.header('Cache-Control', 'public, max-age=300, stale-while-revalidate=600')
-  return c.json(rosterData)
-})
-
-// API: Get photos data
-app.get('/api/photos', (c) => {
-  c.header('Cache-Control', 'public, max-age=3600, stale-while-revalidate=86400')
-  return c.json(photosData)
-})
-
-// API: Get performance tracking data (snapshots, gains, commentary)
-app.get('/api/performance', (c) => {
-  c.header('Cache-Control', 'public, max-age=300, stale-while-revalidate=3600')
-  return c.json(performanceData)
-})
-
-// ============================================================================
-// D1 DATABASE API - Dynamic CRUD Operations
-// ============================================================================
-
-// GET /api/db/members - Get all members from D1
-app.get('/api/db/members', async (c) => {
-  try {
-    const db = c.env.GUILD_DB
-    if (!db) {
-      // Fallback to JSON if D1 not available (local dev without D1)
-      return c.json({ source: 'json', members: rosterData.members })
-    }
-    
-    const { results } = await db.prepare(
-      'SELECT * FROM members ORDER BY cp_value DESC'
-    ).all()
-    
-    return c.json({ source: 'd1', members: results })
-  } catch (e) {
-    // Fallback to JSON on any D1 error (common in local dev)
-    return c.json({ source: 'json', members: rosterData.members })
-  }
-})
-
-// GET /api/db/members/:name - Get single member
-app.get('/api/db/members/:name', async (c) => {
-  try {
-    const db = c.env?.GUILD_DB
-    const name = c.req.param('name')
-    
-    if (!db) {
-      const member = rosterData.members.find(m => m.name === name)
-      return member ? c.json(member) : c.json({ error: 'Not found' }, 404)
-    }
-    
-    const result = await db.prepare(
-      'SELECT * FROM members WHERE name = ?'
-    ).bind(name).first()
-    
-    return result ? c.json(result) : c.json({ error: 'Not found' }, 404)
-  } catch (e) {
-    return c.json({ error: String(e) }, 500)
-  }
-})
-
-// POST /api/db/members - Add new member
-app.post('/api/db/members', async (c) => {
-  try {
-    const db = c.env?.GUILD_DB
-    if (!db) return c.json({ error: 'Database not available' }, 503)
-    
-    const body = await c.req.json()
-    const { name, level, cp, cp_value, contribution, upgrade, role, avatar, note } = body
-    
-    if (!name) return c.json({ error: 'Name is required' }, 400)
-    
-    await db.prepare(`
-      INSERT INTO members (name, level, cp, cp_value, contribution, upgrade, role, avatar, note)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `).bind(name, level || 1, cp || '0', cp_value || 0, contribution || 0, upgrade || 0, role || 'Guild Member', avatar, note).run()
-    
-    return c.json({ success: true, message: `Member ${name} added` })
-  } catch (e) {
-    return c.json({ error: String(e) }, 500)
-  }
-})
-
-// PUT /api/db/members/:name - Update member
-app.put('/api/db/members/:name', async (c) => {
-  try {
-    const db = c.env?.GUILD_DB
-    if (!db) return c.json({ error: 'Database not available' }, 503)
-    
-    const name = c.req.param('name')
-    const body = await c.req.json()
-    
-    // Build dynamic update query
-    const updates: string[] = []
-    const values: any[] = []
-    
-    if (body.level !== undefined) { updates.push('level = ?'); values.push(body.level) }
-    if (body.cp !== undefined) { updates.push('cp = ?'); values.push(body.cp) }
-    if (body.cp_value !== undefined) { updates.push('cp_value = ?'); values.push(body.cp_value) }
-    if (body.contribution !== undefined) { updates.push('contribution = ?'); values.push(body.contribution) }
-    if (body.upgrade !== undefined) { updates.push('upgrade = ?'); values.push(body.upgrade) }
-    if (body.role !== undefined) { updates.push('role = ?'); values.push(body.role) }
-    if (body.online !== undefined) { updates.push('online = ?'); values.push(body.online ? 1 : 0) }
-    if (body.avatar !== undefined) { updates.push('avatar = ?'); values.push(body.avatar) }
-    if (body.note !== undefined) { updates.push('note = ?'); values.push(body.note) }
-    
-    if (updates.length === 0) return c.json({ error: 'No fields to update' }, 400)
-    
-    updates.push('updated_at = CURRENT_TIMESTAMP')
-    values.push(name)
-    
-    await db.prepare(`UPDATE members SET ${updates.join(', ')} WHERE name = ?`).bind(...values).run()
-    
-    return c.json({ success: true, message: `Member ${name} updated` })
-  } catch (e) {
-    return c.json({ error: String(e) }, 500)
-  }
-})
-
-// DELETE /api/db/members/:name - Remove member
-app.delete('/api/db/members/:name', async (c) => {
-  try {
-    const db = c.env?.GUILD_DB
-    if (!db) return c.json({ error: 'Database not available' }, 503)
-    
-    const name = c.req.param('name')
-    await db.prepare('DELETE FROM members WHERE name = ?').bind(name).run()
-    
-    return c.json({ success: true, message: `Member ${name} deleted` })
-  } catch (e) {
-    return c.json({ error: String(e) }, 500)
-  }
-})
-
-// GET /api/db/photos - Get all photos
-app.get('/api/db/photos', async (c) => {
-  try {
-    const db = c.env?.GUILD_DB
-    if (!db) {
-      return c.json({ source: 'json', photos: photosData.guildPhotos })
-    }
-    
-    const { results } = await db.prepare(
-      'SELECT * FROM photos ORDER BY id ASC'
-    ).all()
-    
-    // Transform to match frontend expected format
-    const photos = results?.map((p: any) => ({
-      id: p.id,
-      title: { en: p.title_en, zh: p.title_zh, th: p.title_th },
-      description: { en: p.description_en, zh: p.description_zh, th: p.description_th },
-      image: p.image
-    }))
-    
-    return c.json({ source: 'd1', photos })
-  } catch (e) {
-    return c.json({ source: 'json', photos: photosData.guildPhotos, error: String(e) })
-  }
-})
-
-// POST /api/db/photos - Add new photo
-app.post('/api/db/photos', async (c) => {
-  try {
-    const db = c.env?.GUILD_DB
-    if (!db) return c.json({ error: 'Database not available' }, 503)
-    
-    const body = await c.req.json()
-    const { title_en, title_zh, title_th, description_en, description_zh, description_th, image, uploaded_by } = body
-    
-    if (!image) return c.json({ error: 'Image path is required' }, 400)
-    
-    await db.prepare(`
-      INSERT INTO photos (title_en, title_zh, title_th, description_en, description_zh, description_th, image, uploaded_by)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-    `).bind(title_en, title_zh, title_th, description_en, description_zh, description_th, image, uploaded_by).run()
-    
-    return c.json({ success: true, message: 'Photo added' })
-  } catch (e) {
-    return c.json({ error: String(e) }, 500)
-  }
-})
-
-// DELETE /api/db/photos/:id - Remove photo
-app.delete('/api/db/photos/:id', async (c) => {
-  try {
-    const db = c.env?.GUILD_DB
-    if (!db) return c.json({ error: 'Database not available' }, 503)
-    
-    const id = c.req.param('id')
-    await db.prepare('DELETE FROM photos WHERE id = ?').bind(id).run()
-    
-    return c.json({ success: true, message: `Photo ${id} deleted` })
-  } catch (e) {
-    return c.json({ error: String(e) }, 500)
-  }
-})
-
-// GET /api/db/stats - Get guild stats
-app.get('/api/db/stats', async (c) => {
-  try {
-    const db = c.env?.GUILD_DB
-    if (!db) {
-      return c.json({ source: 'json', stats: rosterData.guildStats })
-    }
-    
-    const { results } = await db.prepare('SELECT * FROM guild_stats').all()
-    
-    // Transform to key-value object
-    const stats: Record<string, string> = {}
-    results?.forEach((r: any) => { stats[r.stat_key] = r.stat_value })
-    
-    return c.json({ source: 'd1', stats })
-  } catch (e) {
-    return c.json({ source: 'json', stats: rosterData.guildStats, error: String(e) })
-  }
-})
-
-// PUT /api/db/stats - Update guild stat
-app.put('/api/db/stats', async (c) => {
-  try {
-    const db = c.env?.GUILD_DB
-    if (!db) return c.json({ error: 'Database not available' }, 503)
-    
-    const body = await c.req.json()
-    const { key, value } = body
-    
-    if (!key || value === undefined) return c.json({ error: 'Key and value required' }, 400)
-    
-    await db.prepare(`
-      INSERT OR REPLACE INTO guild_stats (stat_key, stat_value, updated_at) 
-      VALUES (?, ?, CURRENT_TIMESTAMP)
-    `).bind(key, String(value)).run()
-    
-    return c.json({ success: true, message: `Stat ${key} updated` })
-  } catch (e) {
-    return c.json({ error: String(e) }, 500)
-  }
-})
-
-// ============================================================================
-// MEMBER ROSTER DATA - Last Updated: 2026-01-26
-// ============================================================================
-// Avatar naming convention: avatar-[username]-[description].jpg
-// All avatars stored in /public/static/ with meaningful names for easy debugging
-// ============================================================================
-
-// Use data from JSON files (Single Source of Truth)
-const previousCP: Record<string, number> = rosterData.previousCP
-const members = rosterData.members
-
-// Sort by CP for leaderboard
-const sortedMembers = [...members].sort((a, b) => b.cpValue - a.cpValue)
-const maxCP = sortedMembers[0].cpValue
-
-// Guild Fun photos data with actual images
-const guildFunPhotos = [
-  { id: 1, title: { en: "Henesys Market Day", zh: "乾坤西斯市集日", th: "วันตลาดเฮเนซิส" }, description: { en: "Shopping with the squad!", zh: "和夥伴們一起逛街！", th: "ช้อปปิ้งกับทีม!" }, image: "/static/guild-fun-1.jpg" },
-  { id: 2, title: { en: "Selfie Time!", zh: "自拍時間！", th: "เวลาเซลฟี่!" }, description: { en: "Best friends forever", zh: "永遠的好朋友", th: "เพื่อนที่ดีที่สุดตลอดไป" }, image: "/static/guild-fun-2.jpg" },
-  { id: 3, title: { en: "Sunset Chill", zh: "夕陽時光", th: "พักผ่อนยามเย็น" }, description: { en: "RegginA & friend on cloud nine", zh: "RegginA和朋友在雲端", th: "RegginA และเพื่อนบนเมฆ" }, image: "/static/guild-fun-3.jpg" },
-  { id: 4, title: { en: "Wings of Destiny", zh: "命運之翼", th: "ปีกแห่งโชคชะตา" }, description: { en: "Power couple goals", zh: "戰力夫妻目標", th: "เป้าหมายคู่รักสุดแกร่ง" }, image: "/static/guild-fun-4.jpg" },
-  { id: 5, title: { en: "First Time Together", zh: "第一次一起", th: "ครั้งแรกด้วยกัน" }, description: { en: "Where it all began", zh: "一切的開始", th: "จุดเริ่มต้นของทุกอย่าง" }, image: "/static/guild-fun-5.jpg" },
-  { id: 6, title: { en: "Boss Raid!", zh: "打王啦！", th: "บุกบอส!" }, description: { en: "Kerning City throwdown", zh: "乾坤城大戰", th: "ศึกเคอร์นิ่งซิตี้" }, image: "/static/guild-fun-6.jpg" },
-]
-
-// Translations now imported from src/data/translations.json via translationsData
-
-app.get('/', (c) => {
-  return c.html(`<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <!-- FIRST PAINT LOADER - renders before anything else, even before charset -->
@@ -340,6 +42,7 @@ app.get('/', (c) => {
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/static/nw-core.css">
+    <link rel="stylesheet" href="/static/nw-utilities.css">
     <script src="/static/nw-effects.js" defer></script>
     <script src="/static/bgm.js" defer></script>
     <script src="/static/click-juice.js" defer></script>
@@ -955,6 +658,96 @@ app.get('/', (c) => {
             object-fit: cover; /* Fill card, crop edges */
             object-position: center 30%; /* Show upper portion (characters/action) */
             pointer-events: none;
+        }
+        
+        /* ============================================
+           MEMBER AVATAR - STAR OF THE SHOW
+           Big, prominent, with glow effect
+        ============================================ */
+        .member-avatar-container {
+            position: absolute;
+            top: 16px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 120px;
+            height: 120px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .member-avatar-glow {
+            position: absolute;
+            inset: -8px;
+            border-radius: 50%;
+            background: conic-gradient(
+                from 0deg,
+                #ff6b00,
+                #ffd700,
+                #ff6b00,
+                #ffd700,
+                #ff6b00
+            );
+            animation: avatar-glow-spin 4s linear infinite;
+            opacity: 0.8;
+        }
+        
+        @keyframes avatar-glow-spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        
+        .member-avatar-img {
+            width: 110px;
+            height: 110px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 4px solid #0a0a0f;
+            position: relative;
+            z-index: 2;
+            box-shadow: 
+                0 0 20px rgba(255, 107, 0, 0.5),
+                0 0 40px rgba(255, 107, 0, 0.3);
+        }
+        
+        .member-avatar-fallback {
+            width: 110px;
+            height: 110px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #ff6b00, #ffd700);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3rem;
+            font-weight: bold;
+            color: #0a0a0f;
+            border: 4px solid #0a0a0f;
+            position: relative;
+            z-index: 2;
+        }
+        
+        .member-online-indicator {
+            position: absolute;
+            bottom: 8px;
+            right: 8px;
+            width: 20px;
+            height: 20px;
+            background: #22c55e;
+            border-radius: 50%;
+            border: 3px solid #0a0a0f;
+            z-index: 3;
+            box-shadow: 0 0 10px #22c55e;
+        }
+        
+        /* Card active state - even bigger avatar */
+        .deck-card[data-position="0"] .member-avatar-container {
+            transform: translateX(-50%) scale(1.1);
+            transition: transform 0.3s ease;
+        }
+        
+        .deck-card[data-position="0"] .member-avatar-glow {
+            opacity: 1;
+            animation-duration: 2s;
         }
         
         /* Card overlay gradient - subtle */
@@ -1633,7 +1426,22 @@ app.get('/', (c) => {
         <div class="container mx-auto px-4 py-3 flex items-center justify-between">
             <!-- Logo -->
             <a href="#hero" class="flex items-center gap-2">
-                <div id="nav-emblem">${generateEmblemSVG('emblem-n', 40)}</div>
+                <div id="nav-emblem">
+    <svg class="emblem-n" viewBox="0 0 100 100" width="40" height="40" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="nGrad40odp1b" x1="0%" y1="0%" x2="0%" y2="100%">
+          <stop offset="0%" stop-color="#ffb347"/>
+          <stop offset="30%" stop-color="#ff9500"/>
+          <stop offset="60%" stop-color="#e86500"/>
+          <stop offset="100%" stop-color="#8B4513"/>
+        </linearGradient>
+      </defs>
+      <!-- Thick blocky N: left bar + THICK diagonal + right bar -->
+      <rect x="10" y="8" width="24" height="84" rx="3" fill="url(#nGrad40odp1b)"/>
+      <rect x="66" y="8" width="24" height="84" rx="3" fill="url(#nGrad40odp1b)"/>
+      <polygon points="10,8 34,8 90,92 66,92" fill="url(#nGrad40odp1b)"/>
+    </svg>
+  </div>
                 <span class="pixel-font text-xs text-orange-400 hidden sm:inline">NumbahWan</span>
             </a>
             
@@ -1649,19 +1457,26 @@ app.get('/', (c) => {
             <div class="flex items-center gap-2">
                 <!-- Language Switcher -->
                 <div class="relative" id="lang-switcher">
-                    <button onclick="toggleLangMenu()" class="px-2 py-1 rounded-full text-xs flex items-center gap-1 hover:bg-orange-500/20 transition-all border border-orange-500/30">
-                        <span id="current-lang-flag">🇬🇧</span>
-                        <span id="current-lang-code" class="hidden sm:inline">EN</span>
+                    <button onclick="toggleLangMenu()" class="nw-lang-toggle" id="lang-toggle-btn">
+                        <span class="flag" id="current-lang-flag">🇬🇧</span>
+                        <span class="code" id="current-lang-code">EN</span>
+                        <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
                     </button>
-                    <div id="lang-menu" class="hidden absolute right-0 top-full mt-2 glass-card rounded-lg overflow-hidden min-w-[120px] z-50">
-                        <button onclick="setLanguage('en')" class="w-full px-4 py-2 text-left hover:bg-orange-500/20 flex items-center gap-2 text-sm">
-                            <span>🇬🇧</span> English
+                    <div id="lang-menu" class="nw-lang-dropdown">
+                        <button onclick="setLanguage('en')" class="nw-lang-item active" data-lang="en">
+                            <span class="flag">🇬🇧</span>
+                            <span class="lang-name">English</span>
+                            <svg class="check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 12l5 5L20 7"/></svg>
                         </button>
-                        <button onclick="setLanguage('zh')" class="w-full px-4 py-2 text-left hover:bg-orange-500/20 flex items-center gap-2 text-sm">
-                            <span>🇹🇼</span> 繁體中文
+                        <button onclick="setLanguage('zh')" class="nw-lang-item" data-lang="zh">
+                            <span class="flag">🇹🇼</span>
+                            <span class="lang-name">繁體中文</span>
+                            <svg class="check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 12l5 5L20 7"/></svg>
                         </button>
-                        <button onclick="setLanguage('th')" class="w-full px-4 py-2 text-left hover:bg-orange-500/20 flex items-center gap-2 text-sm">
-                            <span>🇹🇭</span> ไทย
+                        <button onclick="setLanguage('th')" class="nw-lang-item" data-lang="th">
+                            <span class="flag">🇹🇭</span>
+                            <span class="lang-name">ไทย</span>
+                            <svg class="check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 12l5 5L20 7"/></svg>
                         </button>
                     </div>
                 </div>
@@ -1700,14 +1515,42 @@ app.get('/', (c) => {
             <a href="/memes" class="dropdown-item" data-nw-transition>
                 <svg class="mb-1" width="28" height="28" viewBox="0 0 24 24"><rect fill="#ffd700" x="3" y="3" width="18" height="18" rx="3"/><circle fill="#0a0a0f" cx="8" cy="9" r="2"/><circle fill="#0a0a0f" cx="16" cy="9" r="2"/><path fill="#0a0a0f" d="M7 15Q12 20 17 15" stroke="#0a0a0f" stroke-width="2" fill="none"/></svg>
                 <span class="font-bold text-yellow-400 text-sm" data-i18n="memes">Memes</span>
-                <span class="text-xs text-gray-400">15 LOLs</span>
+                <span class="text-xs text-gray-400">50 LOLs</span>
+            </a>
+            
+            <!-- TCG Hub - Cards, Guide & Live Market -->
+            <a href="/tcg" class="dropdown-item highlight" data-nw-transition>
+                <svg class="mb-1" width="28" height="28" viewBox="0 0 24 24"><rect fill="#f59e0b" x="4" y="2" width="16" height="20" rx="2"/><rect fill="#1a1a2e" x="6" y="6" width="12" height="8" rx="1"/><circle fill="#ef4444" cx="8" cy="18" r="1.5"/><circle fill="#3b82f6" cx="16" cy="18" r="1.5"/><text x="12" y="12" fill="#ffd700" font-size="6" text-anchor="middle">★</text></svg>
+                <span class="font-bold text-yellow-400 text-sm">TCG Hub</span>
+                <span class="text-xs text-red-400">🔴 LIVE</span>
+            </a>
+            
+            <!-- Regina Ship - Featured -->
+            <a href="/regina" class="dropdown-item highlight" data-nw-transition>
+                <svg class="mb-1" width="28" height="28" viewBox="0 0 24 24"><path fill="#d4af37" d="M3 17L5 19H19L21 17L19 15H5L3 17Z"/><path fill="#8B4513" d="M4 15L5 13H19L20 15H4Z"/><path fill="#fff" d="M7 13V8L12 5L17 8V13H7Z"/><path fill="#d4af37" d="M12 5V2L14 4L12 5Z"/><circle fill="#87CEEB" cx="9" cy="10" r="1.5"/><circle fill="#87CEEB" cx="15" cy="10" r="1.5"/><path fill="#1e3a5f" d="M2 19H22L21 21H3L2 19Z"/></svg>
+                <span class="font-bold text-yellow-400 text-sm" data-i18n="regina">R.M.S. Regina</span>
+                <span class="text-xs text-yellow-300">🚢 Explore!</span>
+            </a>
+            
+            <!-- Wallet - Featured -->
+            <a href="/wallet" class="dropdown-item highlight" data-nw-transition>
+                <svg class="mb-1" width="28" height="28" viewBox="0 0 24 24"><rect fill="#ffd700" x="2" y="5" width="20" height="14" rx="3"/><rect fill="#1a1a2e" x="4" y="7" width="16" height="10" rx="2"/><rect fill="#00ff88" x="14" y="10" width="4" height="4" rx="1"/><circle fill="#00ff88" cx="16" cy="12" r="1"/></svg>
+                <span class="font-bold text-yellow-400 text-sm">Wallet</span>
+                <span class="text-xs text-green-400">💳 Your Vault</span>
             </a>
             
             <!-- Arcade -->
-            <a href="/arcade" class="dropdown-item highlight" data-nw-transition>
+            <a href="/arcade" class="dropdown-item" data-nw-transition>
                 <svg class="mb-1" width="28" height="28" viewBox="0 0 24 24"><rect fill="#9333ea" x="2" y="8" width="20" height="12" rx="2"/><circle fill="#22c55e" cx="7" cy="14" r="2"/><circle fill="#ef4444" cx="17" cy="12" r="1.5"/><circle fill="#3b82f6" cx="17" cy="16" r="1.5"/><rect fill="#ffd700" x="10" y="11" width="4" height="6" rx="1"/></svg>
                 <span class="font-bold text-purple-400 text-sm" data-i18n="arcade">Arcade</span>
                 <span class="text-xs text-green-400">🎮 Play!</span>
+            </a>
+            
+            <!-- Mythic Forge - Featured -->
+            <a href="/forge" class="dropdown-item highlight" data-nw-transition>
+                <svg class="mb-1" width="28" height="28" viewBox="0 0 24 24"><path fill="#ff6b00" d="M12 2C12 2 8 6 8 10C8 12 9.5 14 12 14C14.5 14 16 12 16 10C16 6 12 2 12 2Z"/><path fill="#ffd700" d="M12 6C12 6 10 8 10 10C10 11 10.7 12 12 12C13.3 12 14 11 14 10C14 8 12 6 12 6Z"/><rect fill="#8B4513" x="6" y="14" width="12" height="8" rx="2"/><rect fill="#1a1a2e" x="10" y="16" width="4" height="4" rx="1"/></svg>
+                <span class="font-bold text-orange-400 text-sm">Mythic Forge</span>
+                <span class="text-xs text-red-400">🔥 Gacha!</span>
             </a>
             
             <!-- Fortune -->
@@ -1757,7 +1600,22 @@ app.get('/', (c) => {
     <section id="hero" class="hero-banner" data-nw-particles="25">
         <div class="hero-content w-full max-w-4xl mx-auto">
             <div class="flex justify-center mb-6" id="hero-emblem">
-                ${generateEmblemSVG('emblem-n emblem-n-large', 100)}
+                
+    <svg class="emblem-n emblem-n-large" viewBox="0 0 100 100" width="100" height="100" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="nGrad100269e7" x1="0%" y1="0%" x2="0%" y2="100%">
+          <stop offset="0%" stop-color="#ffb347"/>
+          <stop offset="30%" stop-color="#ff9500"/>
+          <stop offset="60%" stop-color="#e86500"/>
+          <stop offset="100%" stop-color="#8B4513"/>
+        </linearGradient>
+      </defs>
+      <!-- Thick blocky N: left bar + THICK diagonal + right bar -->
+      <rect x="10" y="8" width="24" height="84" rx="3" fill="url(#nGrad100269e7)"/>
+      <rect x="66" y="8" width="24" height="84" rx="3" fill="url(#nGrad100269e7)"/>
+      <polygon points="10,8 34,8 90,92 66,92" fill="url(#nGrad100269e7)"/>
+    </svg>
+  
             </div>
             <h1 class="pixel-title mb-4 nw-text-glow" id="guild-name" data-nw-reveal="scale" style="display: block; width: 100%; text-align: center; margin-left: auto; margin-right: auto;">
                 NumbahWan
@@ -1773,10 +1631,10 @@ app.get('/', (c) => {
             
             <div class="flex flex-wrap justify-center gap-4 opacity-0" id="hero-buttons">
                 <button class="magnetic-btn nw-btn-shine" data-nw-magnetic data-nw-ripple onclick="document.getElementById('roster').scrollIntoView({behavior: 'smooth'})">
-                    ${iconSword()} <span data-i18n="meetFamily">Meet The Family</span>
+                    <svg class="inline nw-icon mr-2" width="20" height="20" aria-hidden="true"><use href="/static/icons/nw-icons.svg#sword"></use></svg> <span data-i18n="meetFamily">Meet The Family</span>
                 </button>
                 <button class="magnetic-btn nw-btn-shine" data-nw-magnetic data-nw-ripple style="background: transparent; border: 2px solid var(--primary);" onclick="document.getElementById('progress').scrollIntoView({behavior: 'smooth'})">
-                    ${iconTrophy()} <span data-i18n="ourJourney">Our Journey</span>
+                    <svg class="inline nw-icon mr-2" width="20" height="20" aria-hidden="true"><use href="/static/icons/nw-icons.svg#trophy"></use></svg> <span data-i18n="ourJourney">Our Journey</span>
                 </button>
             </div>
         </div>
@@ -1813,7 +1671,7 @@ app.get('/', (c) => {
             <div class="glass-card p-8 mt-12 reveal">
                 <div class="grid md:grid-cols-2 gap-8 items-center">
                     <div>
-                        <h3 class="text-2xl font-bold text-orange-400 mb-4">${iconStar()} <span data-i18n="guildMaster">Our Guild Master</span></h3>
+                        <h3 class="text-2xl font-bold text-orange-400 mb-4"><svg class="inline nw-icon mr-2" width="20" height="20" aria-hidden="true"><use href="/static/icons/nw-icons.svg#star"></use></svg> <span data-i18n="guildMaster">Our Guild Master</span></h3>
                         <div class="flex items-center gap-4 mb-4">
                             <svg class="nw-icon" width="48" height="48" style="color:#ffd700"><use href="/static/icons/nw-icons.svg#crown"></use></svg>
                             <div>
@@ -1886,7 +1744,7 @@ app.get('/', (c) => {
                         <img src="/static/guild-base.jpg" alt="NumbahWan Guild Base" class="gm-portrait w-full max-w-md rounded-lg" />
                     </div>
                     <div class="order-1 md:order-2">
-                        <h3 class="text-2xl font-bold text-orange-400 mb-4">${iconStar()} <span data-i18n="ourStory">Our Story</span></h3>
+                        <h3 class="text-2xl font-bold text-orange-400 mb-4"><svg class="inline nw-icon mr-2" width="20" height="20" aria-hidden="true"><use href="/static/icons/nw-icons.svg#star"></use></svg> <span data-i18n="ourStory">Our Story</span></h3>
                         <p class="text-gray-300 leading-relaxed" data-i18n="storyText1">
                             NumbahWan started with a simple dream - to become the #1 guild in MapleStory Idle RPG.
                         </p>
@@ -1906,66 +1764,378 @@ app.get('/', (c) => {
         
         <div class="container mx-auto max-w-7xl relative z-10">
             <h2 class="text-4xl font-bold text-center mb-4 neon-orange reveal">
-                ${iconUsers()} <span data-i18n="theFamily">The Family</span>
+                <svg class="inline nw-icon mr-2" width="24" height="24" aria-hidden="true"><use href="/static/icons/nw-icons.svg#users"></use></svg> <span data-i18n="theFamily">The Family</span>
             </h2>
             <p class="text-center text-orange-300 mb-8 reveal" data-i18n="rosterDesc">Meet our amazing guild members</p>
             
             <!-- Stacked Deck - Member Cards -->
             <div class="card-deck" id="member-deck">
-                ${members.map((member, index) => `
-                    <div class="deck-card" data-index="${index}" data-position="${index}">
+                
+                    <div class="deck-card" data-index="0" data-position="0">
                         <div class="card-overlay"></div>
-                        <div class="card-index">${index + 1}</div>
+                        <div class="card-index">1</div>
                         
-                        ${index === 0 ? '<div class="absolute top-3 right-3 text-2xl" style="animation: bounce 1s infinite">👑</div>' : ''}
+                        <div class="absolute top-3 right-3 text-2xl" style="animation: bounce 1s infinite">👑</div>
                         
-                        <!-- Member Avatar -->
-                        <div class="absolute top-8 left-1/2 -translate-x-1/2">
-                            ${member.avatar 
-                                ? `<img src="${member.avatar}" alt="${member.name}" class="w-20 h-20 rounded-full object-cover border-3 border-orange-500 shadow-lg shadow-orange-500/30" loading="lazy" />`
-                                : `<div class="w-20 h-20 rounded-full bg-gradient-to-br from-orange-400 to-orange-600 flex items-center justify-center text-3xl font-bold">
-                                    ${member.name.charAt(0).toUpperCase()}
-                                </div>`
-                            }
-                            ${member.online ? '<span class="absolute bottom-0 right-0 w-4 h-4 bg-green-500 rounded-full border-2 border-black"></span>' : ''}
+                        <!-- Member Avatar - STAR OF THE SHOW -->
+                        <div class="member-avatar-container">
+                            <div class="member-avatar-glow"></div>
+                            <img src="/static/avatar-reggina-zakum-gm.png" alt="RegginA" class="member-avatar-img" loading="lazy" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" />
+                                   <div class="member-avatar-fallback" style="display:none;">R</div>
+                            <span class="member-online-indicator"></span>
                         </div>
                         
                         <!-- Member Info -->
-                        <div class="card-content" style="padding-top: 90px;">
-                            <h3 class="card-title text-center text-lg mb-0">${member.name}</h3>
-                            <p class="text-center text-orange-300 text-sm mb-3">Lv. ${member.level}</p>
+                        <div class="card-content" style="padding-top: 140px;">
+                            <h3 class="card-title text-center text-lg mb-0">RegginA</h3>
+                            <p class="text-center text-orange-300 text-sm mb-3">Lv. 78</p>
                             
                             <div class="space-y-2 text-xs">
                                 <div class="flex justify-between px-2 py-1 bg-black/30 rounded">
                                     <span class="text-gray-400">CP</span>
-                                    <span class="text-orange-400 font-bold">${member.cp}</span>
+                                    <span class="text-orange-400 font-bold">3B 521M</span>
                                 </div>
                                 <div class="flex justify-between px-2 py-1">
                                     <span class="text-gray-400">Contrib</span>
-                                    <span class="text-orange-300">${member.contribution}</span>
+                                    <span class="text-orange-300">760</span>
                                 </div>
                             </div>
                             
                             <div class="mt-3 flex justify-center">
-                                <span class="px-3 py-1 rounded-full text-xs font-bold ${
-                                    member.role === 'Master' ? 'role-master' : 
-                                    member.role === 'Vice Master' ? 'role-vice' : 
-                                    member.role === '領導' ? 'role-leader' :
-                                    member.role === '小可愛' ? 'role-inactive' : 'role-member'
-                                }">
-                                    ${member.role}
+                                <span class="px-3 py-1 rounded-full text-xs font-bold role-master">
+                                    Master
                                 </span>
                             </div>
                         </div>
                     </div>
-                `).join('')}
+                
+                    <div class="deck-card" data-index="1" data-position="1">
+                        <div class="card-overlay"></div>
+                        <div class="card-index">2</div>
+                        
+                        
+                        
+                        <!-- Member Avatar - STAR OF THE SHOW -->
+                        <div class="member-avatar-container">
+                            <div class="member-avatar-glow"></div>
+                            <img src="/static/avatar-yuluner-sunny-cheerful.jpg" alt="Yuluner晴" class="member-avatar-img" loading="lazy" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" />
+                                   <div class="member-avatar-fallback" style="display:none;">Y</div>
+                            
+                        </div>
+                        
+                        <!-- Member Info -->
+                        <div class="card-content" style="padding-top: 140px;">
+                            <h3 class="card-title text-center text-lg mb-0">Yuluner晴</h3>
+                            <p class="text-center text-orange-300 text-sm mb-3">Lv. 76</p>
+                            
+                            <div class="space-y-2 text-xs">
+                                <div class="flex justify-between px-2 py-1 bg-black/30 rounded">
+                                    <span class="text-gray-400">CP</span>
+                                    <span class="text-orange-400 font-bold">2B 694M</span>
+                                </div>
+                                <div class="flex justify-between px-2 py-1">
+                                    <span class="text-gray-400">Contrib</span>
+                                    <span class="text-orange-300">230</span>
+                                </div>
+                            </div>
+                            
+                            <div class="mt-3 flex justify-center">
+                                <span class="px-3 py-1 rounded-full text-xs font-bold role-member">
+                                    Guild Member
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                
+                    <div class="deck-card" data-index="2" data-position="2">
+                        <div class="card-overlay"></div>
+                        <div class="card-index">3</div>
+                        
+                        
+                        
+                        <!-- Member Avatar - STAR OF THE SHOW -->
+                        <div class="member-avatar-container">
+                            <div class="member-avatar-glow"></div>
+                            <img src="/static/avatar-natehouoho-playful-adventurer.jpg" alt="Natehouoho" class="member-avatar-img" loading="lazy" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" />
+                                   <div class="member-avatar-fallback" style="display:none;">N</div>
+                            
+                        </div>
+                        
+                        <!-- Member Info -->
+                        <div class="card-content" style="padding-top: 140px;">
+                            <h3 class="card-title text-center text-lg mb-0">Natehouoho</h3>
+                            <p class="text-center text-orange-300 text-sm mb-3">Lv. 75</p>
+                            
+                            <div class="space-y-2 text-xs">
+                                <div class="flex justify-between px-2 py-1 bg-black/30 rounded">
+                                    <span class="text-gray-400">CP</span>
+                                    <span class="text-orange-400 font-bold">2B 29M</span>
+                                </div>
+                                <div class="flex justify-between px-2 py-1">
+                                    <span class="text-gray-400">Contrib</span>
+                                    <span class="text-orange-300">190</span>
+                                </div>
+                            </div>
+                            
+                            <div class="mt-3 flex justify-center">
+                                <span class="px-3 py-1 rounded-full text-xs font-bold role-member">
+                                    Guild Member
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                
+                    <div class="deck-card" data-index="3" data-position="3">
+                        <div class="card-overlay"></div>
+                        <div class="card-index">4</div>
+                        
+                        
+                        
+                        <!-- Member Avatar - STAR OF THE SHOW -->
+                        <div class="member-avatar-container">
+                            <div class="member-avatar-glow"></div>
+                            <img src="/static/avatar-reggino-vicemaster-pinkhair.jpg" alt="RegginO" class="member-avatar-img" loading="lazy" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" />
+                                   <div class="member-avatar-fallback" style="display:none;">R</div>
+                            
+                        </div>
+                        
+                        <!-- Member Info -->
+                        <div class="card-content" style="padding-top: 140px;">
+                            <h3 class="card-title text-center text-lg mb-0">RegginO</h3>
+                            <p class="text-center text-orange-300 text-sm mb-3">Lv. 74</p>
+                            
+                            <div class="space-y-2 text-xs">
+                                <div class="flex justify-between px-2 py-1 bg-black/30 rounded">
+                                    <span class="text-gray-400">CP</span>
+                                    <span class="text-orange-400 font-bold">1B 36M</span>
+                                </div>
+                                <div class="flex justify-between px-2 py-1">
+                                    <span class="text-gray-400">Contrib</span>
+                                    <span class="text-orange-300">560</span>
+                                </div>
+                            </div>
+                            
+                            <div class="mt-3 flex justify-center">
+                                <span class="px-3 py-1 rounded-full text-xs font-bold role-vice">
+                                    Vice Master
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                
+                    <div class="deck-card" data-index="4" data-position="4">
+                        <div class="card-overlay"></div>
+                        <div class="card-index">5</div>
+                        
+                        
+                        
+                        <!-- Member Avatar - STAR OF THE SHOW -->
+                        <div class="member-avatar-container">
+                            <div class="member-avatar-glow"></div>
+                            <img src="/static/avatar-qiniaohuijia-riding-bird.jpg" alt="騎鳥回家" class="member-avatar-img" loading="lazy" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" />
+                                   <div class="member-avatar-fallback" style="display:none;">騎</div>
+                            
+                        </div>
+                        
+                        <!-- Member Info -->
+                        <div class="card-content" style="padding-top: 140px;">
+                            <h3 class="card-title text-center text-lg mb-0">騎鳥回家</h3>
+                            <p class="text-center text-orange-300 text-sm mb-3">Lv. 71</p>
+                            
+                            <div class="space-y-2 text-xs">
+                                <div class="flex justify-between px-2 py-1 bg-black/30 rounded">
+                                    <span class="text-gray-400">CP</span>
+                                    <span class="text-orange-400 font-bold">700M 955K</span>
+                                </div>
+                                <div class="flex justify-between px-2 py-1">
+                                    <span class="text-gray-400">Contrib</span>
+                                    <span class="text-orange-300">560</span>
+                                </div>
+                            </div>
+                            
+                            <div class="mt-3 flex justify-center">
+                                <span class="px-3 py-1 rounded-full text-xs font-bold role-inactive">
+                                    小可愛
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                
+                    <div class="deck-card" data-index="5" data-position="5">
+                        <div class="card-overlay"></div>
+                        <div class="card-index">6</div>
+                        
+                        
+                        
+                        <!-- Member Avatar - STAR OF THE SHOW -->
+                        <div class="member-avatar-container">
+                            <div class="member-avatar-glow"></div>
+                            <img src="/static/avatar-wandaoshuizhu-sleepy-gamer.jpg" alt="紈蹈稀著" class="member-avatar-img" loading="lazy" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" />
+                                   <div class="member-avatar-fallback" style="display:none;">紈</div>
+                            
+                        </div>
+                        
+                        <!-- Member Info -->
+                        <div class="card-content" style="padding-top: 140px;">
+                            <h3 class="card-title text-center text-lg mb-0">紈蹈稀著</h3>
+                            <p class="text-center text-orange-300 text-sm mb-3">Lv. 72</p>
+                            
+                            <div class="space-y-2 text-xs">
+                                <div class="flex justify-between px-2 py-1 bg-black/30 rounded">
+                                    <span class="text-gray-400">CP</span>
+                                    <span class="text-orange-400 font-bold">562M 108K</span>
+                                </div>
+                                <div class="flex justify-between px-2 py-1">
+                                    <span class="text-gray-400">Contrib</span>
+                                    <span class="text-orange-300">0</span>
+                                </div>
+                            </div>
+                            
+                            <div class="mt-3 flex justify-center">
+                                <span class="px-3 py-1 rounded-full text-xs font-bold role-leader">
+                                    領導
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                
+                    <div class="deck-card" data-index="6" data-position="6">
+                        <div class="card-overlay"></div>
+                        <div class="card-index">7</div>
+                        
+                        
+                        
+                        <!-- Member Avatar - STAR OF THE SHOW -->
+                        <div class="member-avatar-container">
+                            <div class="member-avatar-glow"></div>
+                            <img src="/static/avatar-aguangyo-light-mage.jpg" alt="阿光Yo" class="member-avatar-img" loading="lazy" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" />
+                                   <div class="member-avatar-fallback" style="display:none;">阿</div>
+                            
+                        </div>
+                        
+                        <!-- Member Info -->
+                        <div class="card-content" style="padding-top: 140px;">
+                            <h3 class="card-title text-center text-lg mb-0">阿光Yo</h3>
+                            <p class="text-center text-orange-300 text-sm mb-3">Lv. 68</p>
+                            
+                            <div class="space-y-2 text-xs">
+                                <div class="flex justify-between px-2 py-1 bg-black/30 rounded">
+                                    <span class="text-gray-400">CP</span>
+                                    <span class="text-orange-400 font-bold">188M 981K</span>
+                                </div>
+                                <div class="flex justify-between px-2 py-1">
+                                    <span class="text-gray-400">Contrib</span>
+                                    <span class="text-orange-300">190</span>
+                                </div>
+                            </div>
+                            
+                            <div class="mt-3 flex justify-center">
+                                <span class="px-3 py-1 rounded-full text-xs font-bold role-member">
+                                    Guild Member
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                
+                    <div class="deck-card" data-index="7" data-position="7">
+                        <div class="card-overlay"></div>
+                        <div class="card-index">8</div>
+                        
+                        
+                        
+                        <!-- Member Avatar - STAR OF THE SHOW -->
+                        <div class="member-avatar-container">
+                            <div class="member-avatar-glow"></div>
+                            <img src="/static/avatar-manongxiaosun-programmer.jpg" alt="碼農小孫" class="member-avatar-img" loading="lazy" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" />
+                                   <div class="member-avatar-fallback" style="display:none;">碼</div>
+                            
+                        </div>
+                        
+                        <!-- Member Info -->
+                        <div class="card-content" style="padding-top: 140px;">
+                            <h3 class="card-title text-center text-lg mb-0">碼農小孫</h3>
+                            <p class="text-center text-orange-300 text-sm mb-3">Lv. 62</p>
+                            
+                            <div class="space-y-2 text-xs">
+                                <div class="flex justify-between px-2 py-1 bg-black/30 rounded">
+                                    <span class="text-gray-400">CP</span>
+                                    <span class="text-orange-400 font-bold">31M 4K</span>
+                                </div>
+                                <div class="flex justify-between px-2 py-1">
+                                    <span class="text-gray-400">Contrib</span>
+                                    <span class="text-orange-300">0</span>
+                                </div>
+                            </div>
+                            
+                            <div class="mt-3 flex justify-center">
+                                <span class="px-3 py-1 rounded-full text-xs font-bold role-member">
+                                    Guild Member
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                
+                    <div class="deck-card" data-index="8" data-position="8">
+                        <div class="card-overlay"></div>
+                        <div class="card-index">9</div>
+                        
+                        
+                        
+                        <!-- Member Avatar - STAR OF THE SHOW -->
+                        <div class="member-avatar-container">
+                            <div class="member-avatar-glow"></div>
+                            <img src="/static/avatar-taiquanhanyu-thaiboxer-jade.jpg" alt="泰拳寒玉" class="member-avatar-img" loading="lazy" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" />
+                                   <div class="member-avatar-fallback" style="display:none;">泰</div>
+                            
+                        </div>
+                        
+                        <!-- Member Info -->
+                        <div class="card-content" style="padding-top: 140px;">
+                            <h3 class="card-title text-center text-lg mb-0">泰拳寒玉</h3>
+                            <p class="text-center text-orange-300 text-sm mb-3">Lv. 52</p>
+                            
+                            <div class="space-y-2 text-xs">
+                                <div class="flex justify-between px-2 py-1 bg-black/30 rounded">
+                                    <span class="text-gray-400">CP</span>
+                                    <span class="text-orange-400 font-bold">15M 329K</span>
+                                </div>
+                                <div class="flex justify-between px-2 py-1">
+                                    <span class="text-gray-400">Contrib</span>
+                                    <span class="text-orange-300">0</span>
+                                </div>
+                            </div>
+                            
+                            <div class="mt-3 flex justify-center">
+                                <span class="px-3 py-1 rounded-full text-xs font-bold role-member">
+                                    Guild Member
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                
             </div>
             
             <!-- Navigation Dots -->
             <div class="deck-nav" id="member-deck-nav">
-                ${members.map((_, index) => `
-                    <div class="deck-dot ${index === 0 ? 'active' : ''}" data-index="${index}" onclick="goToMemberCard(${index})"></div>
-                `).join('')}
+                
+                    <div class="deck-dot active" data-index="0" onclick="goToMemberCard(0)"></div>
+                
+                    <div class="deck-dot " data-index="1" onclick="goToMemberCard(1)"></div>
+                
+                    <div class="deck-dot " data-index="2" onclick="goToMemberCard(2)"></div>
+                
+                    <div class="deck-dot " data-index="3" onclick="goToMemberCard(3)"></div>
+                
+                    <div class="deck-dot " data-index="4" onclick="goToMemberCard(4)"></div>
+                
+                    <div class="deck-dot " data-index="5" onclick="goToMemberCard(5)"></div>
+                
+                    <div class="deck-dot " data-index="6" onclick="goToMemberCard(6)"></div>
+                
+                    <div class="deck-dot " data-index="7" onclick="goToMemberCard(7)"></div>
+                
+                    <div class="deck-dot " data-index="8" onclick="goToMemberCard(8)"></div>
+                
             </div>
             <p class="swipe-hint">← Swipe or click cards →</p>
         </div>
@@ -1975,7 +2145,7 @@ app.get('/', (c) => {
     <section id="race" class="py-20 px-4">
         <div class="container mx-auto max-w-5xl">
             <h2 class="text-4xl font-bold text-center mb-4 neon-orange reveal">
-                ${iconRace()} <span data-i18n="cpLeaderboard">CP Race</span>
+                <svg class="inline nw-icon mr-2" width="24" height="24" aria-hidden="true"><use href="/static/icons/nw-icons.svg#flag"></use></svg> <span data-i18n="cpLeaderboard">CP Race</span>
             </h2>
             <p class="text-center text-orange-300 mb-8 reveal" data-i18n="leaderboardDesc">Who's the strongest?</p>
             
@@ -1984,17 +2154,17 @@ app.get('/', (c) => {
                 <div class="grid grid-cols-3 gap-3 text-center text-sm">
                     <div class="border-r border-gray-700">
                         <p class="text-gray-500 text-xs" data-i18n="weeklyMvp">Weekly MVP</p>
-                        <p class="font-bold text-yellow-400">${performanceData.weeklyHighlights.mvp}</p>
-                        <p class="text-green-400 text-xs">${performanceData.weeklyHighlights.mvpGain}</p>
+                        <p class="font-bold text-yellow-400">Natehouoho</p>
+                        <p class="text-green-400 text-xs">+832M (+69.5%)</p>
                     </div>
                     <div class="border-r border-gray-700">
                         <p class="text-gray-500 text-xs" data-i18n="guildGrowth">Guild Growth</p>
-                        <p class="font-bold text-orange-400">${performanceData.weeklyHighlights.totalGuildGain}</p>
-                        <p class="text-green-400 text-xs">${performanceData.weeklyHighlights.totalGuildGainPercent}</p>
+                        <p class="font-bold text-orange-400">+2.04B</p>
+                        <p class="text-green-400 text-xs">+23.4%</p>
                     </div>
                     <div>
                         <p class="text-gray-500 text-xs" data-i18n="slackerAward">Slacker Award</p>
-                        <p class="font-bold text-gray-400">${performanceData.weeklyHighlights.slacker}</p>
+                        <p class="font-bold text-gray-400">紈蹈稀著</p>
                         <p class="text-red-400 text-xs" data-i18n="noGains">+0% gains</p>
                     </div>
                 </div>
@@ -2003,55 +2173,211 @@ app.get('/', (c) => {
             <div class="glass-card p-6" data-nw-reveal="scale">
                 <!-- Race Header -->
                 <div class="flex justify-between items-center mb-4 pb-3 border-b border-gray-700 text-xs">
-                    <span class="text-gray-500"><span data-i18n="raceUpdate">Updated</span>: ${performanceData.lastUpdated}</span>
+                    <span class="text-gray-500"><span data-i18n="raceUpdate">Updated</span>: 2026-01-26</span>
                     <span class="text-gray-500"><span data-i18n="vsLast">vs last update</span></span>
                 </div>
                 
                 <div class="space-y-4">
-                    ${sortedMembers.map((member, index) => {
-                        const percentage = (member.cpValue / maxCP) * 100
-                        const medal = index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : `#${index + 1}`
-                        const prevCP = previousCP[member.name] || member.cpValue
-                        const cpGain = member.cpValue - prevCP
-                        const cpGainPercent = prevCP > 0 ? ((cpGain / prevCP) * 100).toFixed(1) : 0
-                        const gainDisplay = cpGain > 0 
-                          ? `<span class="text-green-400 text-xs font-bold">▲ +${cpGain >= 1000000000 ? (cpGain/1000000000).toFixed(1) + 'B' : cpGain >= 1000000 ? (cpGain/1000000).toFixed(0) + 'M' : (cpGain/1000).toFixed(0) + 'K'} (${cpGainPercent}%)</span>`
-                          : cpGain < 0
-                          ? `<span class="text-red-400 text-xs">▼ ${(cpGain/1000000).toFixed(0)}M</span>`
-                          : `<span class="text-gray-500 text-xs">— 0%</span>`
-                        return `
-                        <div class="cp-race-item relative" data-percentage="${percentage}">
+                    
+                        <div class="cp-race-item relative" data-percentage="100">
                             <div class="flex items-center justify-between mb-2">
                                 <div class="flex items-center gap-3">
-                                    <span class="text-2xl w-10 text-center">${medal}</span>
-                                    <img src="${member.avatar}" class="w-10 h-10 rounded-full border-2 ${member.online ? 'border-green-400' : 'border-gray-600'}" alt="${member.name}" onerror="this.src='/static/favicon.svg'">
+                                    <span class="text-2xl w-10 text-center">🥇</span>
+                                    <img src="/static/avatar-reggina-zakum-gm.png" class="w-10 h-10 rounded-full border-2 border-green-400" alt="RegginA" onerror="this.src='/static/favicon.svg'">
                                     <div class="flex flex-col">
-                                        <span class="font-bold">${member.name}</span>
-                                        <span class="text-orange-300 text-sm font-bold">Lv.${member.level}</span>
+                                        <span class="font-bold">RegginA</span>
+                                        <span class="text-orange-300 text-sm font-bold">Lv.78</span>
                                     </div>
                                 </div>
                                 <div class="flex flex-col items-end">
-                                    <span class="text-orange-400 font-mono font-bold">${member.cp}</span>
-                                    ${gainDisplay}
+                                    <span class="text-orange-400 font-mono font-bold">3B 521M</span>
+                                    <span class="text-green-400 text-xs font-bold">▲ +654M (22.8%)</span>
                                 </div>
                             </div>
                             <div class="bg-gray-800 rounded-full h-5 overflow-hidden relative">
                                 <div class="cp-bar" style="width: 0%"></div>
-                                <span class="absolute right-2 top-1/2 -translate-y-1/2 text-xs font-bold text-white/80">${percentage.toFixed(1)}%</span>
+                                <span class="absolute right-2 top-1/2 -translate-y-1/2 text-xs font-bold text-white/80">100.0%</span>
                             </div>
                         </div>
-                        `
-                    }).join('')}
+                        
+                        <div class="cp-race-item relative" data-percentage="76.51235444476">
+                            <div class="flex items-center justify-between mb-2">
+                                <div class="flex items-center gap-3">
+                                    <span class="text-2xl w-10 text-center">🥈</span>
+                                    <img src="/static/avatar-yuluner-sunny-cheerful.jpg" class="w-10 h-10 rounded-full border-2 border-gray-600" alt="Yuluner晴" onerror="this.src='/static/favicon.svg'">
+                                    <div class="flex flex-col">
+                                        <span class="font-bold">Yuluner晴</span>
+                                        <span class="text-orange-300 text-sm font-bold">Lv.76</span>
+                                    </div>
+                                </div>
+                                <div class="flex flex-col items-end">
+                                    <span class="text-orange-400 font-mono font-bold">2B 694M</span>
+                                    <span class="text-green-400 text-xs font-bold">▲ +366M (15.7%)</span>
+                                </div>
+                            </div>
+                            <div class="bg-gray-800 rounded-full h-5 overflow-hidden relative">
+                                <div class="cp-bar" style="width: 0%"></div>
+                                <span class="absolute right-2 top-1/2 -translate-y-1/2 text-xs font-bold text-white/80">76.5%</span>
+                            </div>
+                        </div>
+                        
+                        <div class="cp-race-item relative" data-percentage="57.62567452428288">
+                            <div class="flex items-center justify-between mb-2">
+                                <div class="flex items-center gap-3">
+                                    <span class="text-2xl w-10 text-center">🥉</span>
+                                    <img src="/static/avatar-natehouoho-playful-adventurer.jpg" class="w-10 h-10 rounded-full border-2 border-gray-600" alt="Natehouoho" onerror="this.src='/static/favicon.svg'">
+                                    <div class="flex flex-col">
+                                        <span class="font-bold">Natehouoho</span>
+                                        <span class="text-orange-300 text-sm font-bold">Lv.75</span>
+                                    </div>
+                                </div>
+                                <div class="flex flex-col items-end">
+                                    <span class="text-orange-400 font-mono font-bold">2B 29M</span>
+                                    <span class="text-green-400 text-xs font-bold">▲ +832M (69.5%)</span>
+                                </div>
+                            </div>
+                            <div class="bg-gray-800 rounded-full h-5 overflow-hidden relative">
+                                <div class="cp-bar" style="width: 0%"></div>
+                                <span class="absolute right-2 top-1/2 -translate-y-1/2 text-xs font-bold text-white/80">57.6%</span>
+                            </div>
+                        </div>
+                        
+                        <div class="cp-race-item relative" data-percentage="29.4234592445328">
+                            <div class="flex items-center justify-between mb-2">
+                                <div class="flex items-center gap-3">
+                                    <span class="text-2xl w-10 text-center">#4</span>
+                                    <img src="/static/avatar-reggino-vicemaster-pinkhair.jpg" class="w-10 h-10 rounded-full border-2 border-gray-600" alt="RegginO" onerror="this.src='/static/favicon.svg'">
+                                    <div class="flex flex-col">
+                                        <span class="font-bold">RegginO</span>
+                                        <span class="text-orange-300 text-sm font-bold">Lv.74</span>
+                                    </div>
+                                </div>
+                                <div class="flex flex-col items-end">
+                                    <span class="text-orange-400 font-mono font-bold">1B 36M</span>
+                                    <span class="text-green-400 text-xs font-bold">▲ +76M (7.9%)</span>
+                                </div>
+                            </div>
+                            <div class="bg-gray-800 rounded-full h-5 overflow-hidden relative">
+                                <div class="cp-bar" style="width: 0%"></div>
+                                <span class="absolute right-2 top-1/2 -translate-y-1/2 text-xs font-bold text-white/80">29.4%</span>
+                            </div>
+                        </div>
+                        
+                        <div class="cp-race-item relative" data-percentage="19.90783868219256">
+                            <div class="flex items-center justify-between mb-2">
+                                <div class="flex items-center gap-3">
+                                    <span class="text-2xl w-10 text-center">#5</span>
+                                    <img src="/static/avatar-qiniaohuijia-riding-bird.jpg" class="w-10 h-10 rounded-full border-2 border-gray-600" alt="騎鳥回家" onerror="this.src='/static/favicon.svg'">
+                                    <div class="flex flex-col">
+                                        <span class="font-bold">騎鳥回家</span>
+                                        <span class="text-orange-300 text-sm font-bold">Lv.71</span>
+                                    </div>
+                                </div>
+                                <div class="flex flex-col items-end">
+                                    <span class="text-orange-400 font-mono font-bold">700M 955K</span>
+                                    <span class="text-green-400 text-xs font-bold">▲ +107M (18.0%)</span>
+                                </div>
+                            </div>
+                            <div class="bg-gray-800 rounded-full h-5 overflow-hidden relative">
+                                <div class="cp-bar" style="width: 0%"></div>
+                                <span class="absolute right-2 top-1/2 -translate-y-1/2 text-xs font-bold text-white/80">19.9%</span>
+                            </div>
+                        </div>
+                        
+                        <div class="cp-race-item relative" data-percentage="15.964441919909117">
+                            <div class="flex items-center justify-between mb-2">
+                                <div class="flex items-center gap-3">
+                                    <span class="text-2xl w-10 text-center">#6</span>
+                                    <img src="/static/avatar-wandaoshuizhu-sleepy-gamer.jpg" class="w-10 h-10 rounded-full border-2 border-gray-600" alt="紈蹈稀著" onerror="this.src='/static/favicon.svg'">
+                                    <div class="flex flex-col">
+                                        <span class="font-bold">紈蹈稀著</span>
+                                        <span class="text-orange-300 text-sm font-bold">Lv.72</span>
+                                    </div>
+                                </div>
+                                <div class="flex flex-col items-end">
+                                    <span class="text-orange-400 font-mono font-bold">562M 108K</span>
+                                    <span class="text-gray-500 text-xs">— 0%</span>
+                                </div>
+                            </div>
+                            <div class="bg-gray-800 rounded-full h-5 overflow-hidden relative">
+                                <div class="cp-bar" style="width: 0%"></div>
+                                <span class="absolute right-2 top-1/2 -translate-y-1/2 text-xs font-bold text-white/80">16.0%</span>
+                            </div>
+                        </div>
+                        
+                        <div class="cp-race-item relative" data-percentage="5.36725362113036">
+                            <div class="flex items-center justify-between mb-2">
+                                <div class="flex items-center gap-3">
+                                    <span class="text-2xl w-10 text-center">#7</span>
+                                    <img src="/static/avatar-aguangyo-light-mage.jpg" class="w-10 h-10 rounded-full border-2 border-gray-600" alt="阿光Yo" onerror="this.src='/static/favicon.svg'">
+                                    <div class="flex flex-col">
+                                        <span class="font-bold">阿光Yo</span>
+                                        <span class="text-orange-300 text-sm font-bold">Lv.68</span>
+                                    </div>
+                                </div>
+                                <div class="flex flex-col items-end">
+                                    <span class="text-orange-400 font-mono font-bold">188M 981K</span>
+                                    <span class="text-green-400 text-xs font-bold">▲ +9M (4.8%)</span>
+                                </div>
+                            </div>
+                            <div class="bg-gray-800 rounded-full h-5 overflow-hidden relative">
+                                <div class="cp-bar" style="width: 0%"></div>
+                                <span class="absolute right-2 top-1/2 -translate-y-1/2 text-xs font-bold text-white/80">5.4%</span>
+                            </div>
+                        </div>
+                        
+                        <div class="cp-race-item relative" data-percentage="0.8805452996307868">
+                            <div class="flex items-center justify-between mb-2">
+                                <div class="flex items-center gap-3">
+                                    <span class="text-2xl w-10 text-center">#8</span>
+                                    <img src="/static/avatar-manongxiaosun-programmer.jpg" class="w-10 h-10 rounded-full border-2 border-gray-600" alt="碼農小孫" onerror="this.src='/static/favicon.svg'">
+                                    <div class="flex flex-col">
+                                        <span class="font-bold">碼農小孫</span>
+                                        <span class="text-orange-300 text-sm font-bold">Lv.62</span>
+                                    </div>
+                                </div>
+                                <div class="flex flex-col items-end">
+                                    <span class="text-orange-400 font-mono font-bold">31M 4K</span>
+                                    <span class="text-gray-500 text-xs">— 0%</span>
+                                </div>
+                            </div>
+                            <div class="bg-gray-800 rounded-full h-5 overflow-hidden relative">
+                                <div class="cp-bar" style="width: 0%"></div>
+                                <span class="absolute right-2 top-1/2 -translate-y-1/2 text-xs font-bold text-white/80">0.9%</span>
+                            </div>
+                        </div>
+                        
+                        <div class="cp-race-item relative" data-percentage="0.43535927293382565">
+                            <div class="flex items-center justify-between mb-2">
+                                <div class="flex items-center gap-3">
+                                    <span class="text-2xl w-10 text-center">#9</span>
+                                    <img src="/static/avatar-taiquanhanyu-thaiboxer-jade.jpg" class="w-10 h-10 rounded-full border-2 border-gray-600" alt="泰拳寒玉" onerror="this.src='/static/favicon.svg'">
+                                    <div class="flex flex-col">
+                                        <span class="font-bold">泰拳寒玉</span>
+                                        <span class="text-orange-300 text-sm font-bold">Lv.52</span>
+                                    </div>
+                                </div>
+                                <div class="flex flex-col items-end">
+                                    <span class="text-orange-400 font-mono font-bold">15M 329K</span>
+                                    <span class="text-gray-500 text-xs">— 0%</span>
+                                </div>
+                            </div>
+                            <div class="bg-gray-800 rounded-full h-5 overflow-hidden relative">
+                                <div class="cp-bar" style="width: 0%"></div>
+                                <span class="absolute right-2 top-1/2 -translate-y-1/2 text-xs font-bold text-white/80">0.4%</span>
+                            </div>
+                        </div>
+                        
                 </div>
                 
                 <!-- Race Summary -->
                 <div class="mt-6 pt-4 border-t border-gray-700 grid grid-cols-4 gap-2 text-center text-xs">
                     <div>
-                        <div class="text-green-400 font-bold">${performanceData.weeklyHighlights.totalGuildGain}</div>
+                        <div class="text-green-400 font-bold">+2.04B</div>
                         <div class="text-gray-500" data-i18n="totalGain">Total Gain</div>
                     </div>
                     <div>
-                        <div class="text-yellow-400 font-bold">${performanceData.weeklyHighlights.mostImproved}</div>
+                        <div class="text-yellow-400 font-bold">Natehouoho</div>
                         <div class="text-gray-500" data-i18n="biggestJump">Biggest Jump</div>
                     </div>
                     <div>
@@ -2059,7 +2385,7 @@ app.get('/', (c) => {
                         <div class="text-gray-500" data-i18n="stillFirst">Still #1</div>
                     </div>
                     <div>
-                        <div class="text-purple-400 font-bold">${(rosterData.guildStats.totalCP)}</div>
+                        <div class="text-purple-400 font-bold">11.0B</div>
                         <div class="text-gray-500" data-i18n="guildTotal">Guild Total</div>
                     </div>
                 </div>
@@ -2071,7 +2397,7 @@ app.get('/', (c) => {
     <section id="progress" class="py-20 px-4">
         <div class="container mx-auto max-w-4xl">
             <h2 class="text-4xl font-bold text-center mb-4 neon-orange reveal">
-                ${iconTarget()} <span data-i18n="roadToOne">Road to #1</span>
+                <svg class="inline nw-icon mr-2" width="24" height="24" aria-hidden="true"><use href="/static/icons/nw-icons.svg#target"></use></svg> <span data-i18n="roadToOne">Road to #1</span>
             </h2>
             <p class="text-center text-orange-300 mb-12 reveal" data-i18n="progressDesc">Our journey to becoming NumbahWan</p>
             
@@ -2080,7 +2406,7 @@ app.get('/', (c) => {
                     <!-- Guild Level Progress -->
                     <div>
                         <div class="flex justify-between items-center mb-2">
-                            <span class="font-bold">${iconLevel()} <span data-i18n="guildLevel">Guild Level</span></span>
+                            <span class="font-bold"><svg class="inline nw-icon mr-2" width="20" height="20" aria-hidden="true"><use href="/static/icons/nw-icons.svg#trophy"></use></svg> <span data-i18n="guildLevel">Guild Level</span></span>
                             <span class="text-orange-400">Level 15 / 50</span>
                         </div>
                         <div class="progress-container h-8">
@@ -2093,7 +2419,7 @@ app.get('/', (c) => {
                     <!-- Total Guild CP -->
                     <div>
                         <div class="flex justify-between items-center mb-2">
-                            <span class="font-bold">${iconPower()} <span data-i18n="totalCP">Total Guild CP</span></span>
+                            <span class="font-bold"><svg class="inline nw-icon " width="16" height="16" aria-hidden="true"><use href="/static/icons/nw-icons.svg#fire"></use></svg> <span data-i18n="totalCP">Total Guild CP</span></span>
                             <span class="text-orange-400">5.8B / 10B</span>
                         </div>
                         <div class="progress-container h-8">
@@ -2106,7 +2432,7 @@ app.get('/', (c) => {
                     <!-- Member Capacity -->
                     <div>
                         <div class="flex justify-between items-center mb-2">
-                            <span class="font-bold">${iconUsers()} <span data-i18n="members">Members</span></span>
+                            <span class="font-bold"><svg class="inline nw-icon mr-2" width="24" height="24" aria-hidden="true"><use href="/static/icons/nw-icons.svg#users"></use></svg> <span data-i18n="members">Members</span></span>
                             <span class="text-orange-400">12 / 30</span>
                         </div>
                         <div class="progress-container h-8">
@@ -2119,7 +2445,7 @@ app.get('/', (c) => {
                     <!-- Boss Raids Completed -->
                     <div>
                         <div class="flex justify-between items-center mb-2">
-                            <span class="font-bold">${iconBoss()} <span data-i18n="bossRaids">Boss Raids This Week</span></span>
+                            <span class="font-bold"><svg class="inline nw-icon mr-2" width="20" height="20" aria-hidden="true"><use href="/static/icons/nw-icons.svg#skull"></use></svg> <span data-i18n="bossRaids">Boss Raids This Week</span></span>
                             <span class="text-orange-400">24 / 35</span>
                         </div>
                         <div class="progress-container h-8">
@@ -2132,7 +2458,7 @@ app.get('/', (c) => {
                     <!-- Guild Ranking -->
                     <div>
                         <div class="flex justify-between items-center mb-2">
-                            <span class="font-bold">${iconTrophy()} <span data-i18n="serverRanking">Server Ranking</span></span>
+                            <span class="font-bold"><svg class="inline nw-icon mr-2" width="20" height="20" aria-hidden="true"><use href="/static/icons/nw-icons.svg#trophy"></use></svg> <span data-i18n="serverRanking">Server Ranking</span></span>
                             <span class="text-orange-400">#47 → #1</span>
                         </div>
                         <div class="progress-container h-8">
@@ -2145,7 +2471,7 @@ app.get('/', (c) => {
                 
                 <!-- Milestones -->
                 <div class="mt-12 pt-8 border-t border-orange-900/30">
-                    <h3 class="text-xl font-bold mb-6">${iconMilestone()} <span data-i18n="milestones">Milestones</span></h3>
+                    <h3 class="text-xl font-bold mb-6"><svg class="inline nw-icon mr-2" width="20" height="20" aria-hidden="true"><use href="/static/icons/nw-icons.svg#flag"></use></svg> <span data-i18n="milestones">Milestones</span></h3>
                     <div class="space-y-4">
                         <div class="flex items-center gap-4">
                             <svg class="nw-icon" width="28" height="28" style="color:#22c55e"><use href="/static/icons/nw-icons.svg#check-circle"></use></svg>
@@ -2188,37 +2514,97 @@ app.get('/', (c) => {
         
         <div class="container mx-auto max-w-6xl relative z-10">
             <h2 class="text-4xl font-bold text-center mb-4 neon-orange reveal">
-                ${iconCamera()} <span data-i18n="shenanigans">Guild Shenanigans</span>
+                <svg class="inline nw-icon mr-2" width="24" height="24" aria-hidden="true"><use href="/static/icons/nw-icons.svg#camera"></use></svg> <span data-i18n="shenanigans">Guild Shenanigans</span>
             </h2>
             <p class="text-center text-orange-300 mb-8 reveal" data-i18n="memories">Memories of our adventures together</p>
             
             <!-- Stacked Deck Carousel - Zero Jitter -->
             <div class="card-deck" id="photo-deck">
-                ${guildFunPhotos.map((photo, index) => `
-                    <div class="deck-card" data-index="${index}" data-position="${index}" data-image="${photo.image}" data-title="${photo.title.en}" data-desc="${photo.description.en}">
-                        <img src="${photo.image}" alt="${photo.title.en}" loading="lazy" class="card-image" />
+                
+                    <div class="deck-card" data-index="0" data-position="0" data-image="/static/guild-fun-1.jpg" data-title="Henesys Market Day" data-desc="Shopping with the squad!">
+                        <img src="/static/guild-fun-1.jpg" alt="Henesys Market Day" loading="lazy" class="card-image" />
                         <div class="card-overlay"></div>
-                        <div class="card-index">${index + 1}</div>
+                        <div class="card-index">1</div>
                         <div class="card-content">
-                            <h3 class="card-title" data-i18n-photo="${photo.id}" data-i18n-field="title">${photo.title.en}</h3>
-                            <p class="card-desc" data-i18n-photo="${photo.id}" data-i18n-field="description">${photo.description.en}</p>
+                            <h3 class="card-title" data-i18n-photo="1" data-i18n-field="title">Henesys Market Day</h3>
+                            <p class="card-desc" data-i18n-photo="1" data-i18n-field="description">Shopping with the squad!</p>
                         </div>
                     </div>
-                `).join('')}
+                
+                    <div class="deck-card" data-index="1" data-position="1" data-image="/static/guild-fun-2.jpg" data-title="Selfie Time!" data-desc="Best friends forever">
+                        <img src="/static/guild-fun-2.jpg" alt="Selfie Time!" loading="lazy" class="card-image" />
+                        <div class="card-overlay"></div>
+                        <div class="card-index">2</div>
+                        <div class="card-content">
+                            <h3 class="card-title" data-i18n-photo="2" data-i18n-field="title">Selfie Time!</h3>
+                            <p class="card-desc" data-i18n-photo="2" data-i18n-field="description">Best friends forever</p>
+                        </div>
+                    </div>
+                
+                    <div class="deck-card" data-index="2" data-position="2" data-image="/static/guild-fun-3.jpg" data-title="Sunset Chill" data-desc="RegginA & friend on cloud nine">
+                        <img src="/static/guild-fun-3.jpg" alt="Sunset Chill" loading="lazy" class="card-image" />
+                        <div class="card-overlay"></div>
+                        <div class="card-index">3</div>
+                        <div class="card-content">
+                            <h3 class="card-title" data-i18n-photo="3" data-i18n-field="title">Sunset Chill</h3>
+                            <p class="card-desc" data-i18n-photo="3" data-i18n-field="description">RegginA & friend on cloud nine</p>
+                        </div>
+                    </div>
+                
+                    <div class="deck-card" data-index="3" data-position="3" data-image="/static/guild-fun-4.jpg" data-title="Wings of Destiny" data-desc="Power couple goals">
+                        <img src="/static/guild-fun-4.jpg" alt="Wings of Destiny" loading="lazy" class="card-image" />
+                        <div class="card-overlay"></div>
+                        <div class="card-index">4</div>
+                        <div class="card-content">
+                            <h3 class="card-title" data-i18n-photo="4" data-i18n-field="title">Wings of Destiny</h3>
+                            <p class="card-desc" data-i18n-photo="4" data-i18n-field="description">Power couple goals</p>
+                        </div>
+                    </div>
+                
+                    <div class="deck-card" data-index="4" data-position="4" data-image="/static/guild-fun-5.jpg" data-title="First Time Together" data-desc="Where it all began">
+                        <img src="/static/guild-fun-5.jpg" alt="First Time Together" loading="lazy" class="card-image" />
+                        <div class="card-overlay"></div>
+                        <div class="card-index">5</div>
+                        <div class="card-content">
+                            <h3 class="card-title" data-i18n-photo="5" data-i18n-field="title">First Time Together</h3>
+                            <p class="card-desc" data-i18n-photo="5" data-i18n-field="description">Where it all began</p>
+                        </div>
+                    </div>
+                
+                    <div class="deck-card" data-index="5" data-position="5" data-image="/static/guild-fun-6.jpg" data-title="Boss Raid!" data-desc="Kerning City throwdown">
+                        <img src="/static/guild-fun-6.jpg" alt="Boss Raid!" loading="lazy" class="card-image" />
+                        <div class="card-overlay"></div>
+                        <div class="card-index">6</div>
+                        <div class="card-content">
+                            <h3 class="card-title" data-i18n-photo="6" data-i18n-field="title">Boss Raid!</h3>
+                            <p class="card-desc" data-i18n-photo="6" data-i18n-field="description">Kerning City throwdown</p>
+                        </div>
+                    </div>
+                
             </div>
             
             <!-- Navigation Dots -->
             <div class="deck-nav" id="photo-deck-nav">
-                ${guildFunPhotos.map((_, index) => `
-                    <div class="deck-dot ${index === 0 ? 'active' : ''}" data-index="${index}" onclick="goToPhotoCard(${index})"></div>
-                `).join('')}
+                
+                    <div class="deck-dot active" data-index="0" onclick="goToPhotoCard(0)"></div>
+                
+                    <div class="deck-dot " data-index="1" onclick="goToPhotoCard(1)"></div>
+                
+                    <div class="deck-dot " data-index="2" onclick="goToPhotoCard(2)"></div>
+                
+                    <div class="deck-dot " data-index="3" onclick="goToPhotoCard(3)"></div>
+                
+                    <div class="deck-dot " data-index="4" onclick="goToPhotoCard(4)"></div>
+                
+                    <div class="deck-dot " data-index="5" onclick="goToPhotoCard(5)"></div>
+                
             </div>
             <p class="swipe-hint">← Swipe or click cards →</p>
             
             <div class="text-center mt-12 reveal">
                 <p class="text-gray-400 mb-4" data-i18n="wantToAdd">Want to add your screenshots?</p>
                 <button class="magnetic-btn nw-btn-shine" data-nw-magnetic data-nw-confetti>
-                    ${iconUpload()} <span data-i18n="submitPhoto">Submit Photo</span>
+                    <svg class="inline nw-icon mr-2" width="20" height="20" aria-hidden="true"><use href="/static/icons/nw-icons.svg#upload"></use></svg> <span data-i18n="submitPhoto">Submit Photo</span>
                 </button>
             </div>
         </div>
@@ -2240,7 +2626,22 @@ app.get('/', (c) => {
     <footer class="py-12 px-4 border-t border-orange-900/30">
         <div class="container mx-auto max-w-4xl text-center">
             <div class="flex justify-center mb-6">
-                ${generateEmblemSVG('emblem-n')}
+                
+    <svg class="emblem-n" viewBox="0 0 100 100" width="60" height="60" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="nGrad60cy0rz" x1="0%" y1="0%" x2="0%" y2="100%">
+          <stop offset="0%" stop-color="#ffb347"/>
+          <stop offset="30%" stop-color="#ff9500"/>
+          <stop offset="60%" stop-color="#e86500"/>
+          <stop offset="100%" stop-color="#8B4513"/>
+        </linearGradient>
+      </defs>
+      <!-- Thick blocky N: left bar + THICK diagonal + right bar -->
+      <rect x="10" y="8" width="24" height="84" rx="3" fill="url(#nGrad60cy0rz)"/>
+      <rect x="66" y="8" width="24" height="84" rx="3" fill="url(#nGrad60cy0rz)"/>
+      <polygon points="10,8 34,8 90,92 66,92" fill="url(#nGrad60cy0rz)"/>
+    </svg>
+  
             </div>
             <p class="pixel-font text-orange-400 mb-2">NumbahWan Guild</p>
             <p class="text-gray-400 mb-6">"<span data-i18n="motto">We are not just a guild, but</span> <span data-i18n="family">FAMILY</span>"</p>
@@ -2264,7 +2665,7 @@ app.get('/', (c) => {
             if (!deck) return null;
             
             const cards = deck.querySelectorAll('.deck-card');
-            const dots = document.querySelectorAll(\`#\${dotsId} .deck-dot\`);
+            const dots = document.querySelectorAll(`#${dotsId} .deck-dot`);
             const bgText = document.getElementById(bgTextId);
             const totalCards = cards.length;
             let currentIndex = 0;
@@ -2358,9 +2759,9 @@ app.get('/', (c) => {
                     const s = from.s + (to.s - from.s) * frac;
                     const o = from.o + (to.o - from.o) * frac;
                     
-                    card.style.transform = \`translateX(\${x}px) translateZ(\${z}px) rotateY(\${ry}deg) scale(\${s})\`;
+                    card.style.transform = `translateX(${x}px) translateZ(${z}px) rotateY(${ry}deg) scale(${s})`;
                     card.style.opacity = o;
-                    card.style.filter = \`brightness(\${0.5 + o * 0.5})\`;
+                    card.style.filter = `brightness(${0.5 + o * 0.5})`;
                     
                     // SMOOTH GLOW - interpolate based on distance from center (0 = active)
                     // Glow intensity: 1 at center, 0 at position >= 1
@@ -2374,9 +2775,9 @@ app.get('/', (c) => {
                     const borderAlpha = 0.3 + (0.3 * glowIntensity);
                     
                     card.style.boxShadow = glowIntensity > 0.01 
-                        ? \`0 0 \${glowSize1}px rgba(255, 107, 0, \${glowAlpha1}), 0 0 \${glowSize2}px rgba(255, 140, 0, \${glowAlpha2}), 0 0 \${glowSize3}px rgba(255, 180, 0, \${glowAlpha3}), inset 0 0 \${15 * glowIntensity}px rgba(255, 107, 0, \${0.1 * glowIntensity})\`
+                        ? `0 0 ${glowSize1}px rgba(255, 107, 0, ${glowAlpha1}), 0 0 ${glowSize2}px rgba(255, 140, 0, ${glowAlpha2}), 0 0 ${glowSize3}px rgba(255, 180, 0, ${glowAlpha3}), inset 0 0 ${15 * glowIntensity}px rgba(255, 107, 0, ${0.1 * glowIntensity})`
                         : '0 8px 32px rgba(0, 0, 0, 0.4)';
-                    card.style.borderColor = \`rgba(255, 140, 0, \${borderAlpha})\`;
+                    card.style.borderColor = `rgba(255, 140, 0, ${borderAlpha})`;
                     
                     // Hide cards too far away
                     if (absPos > 3.5) {
@@ -2749,9 +3150,9 @@ app.get('/', (c) => {
                 leaf.classList.add('maple-leaf', 'type-' + type);
                 
                 // Maple leaf SVG path
-                leaf.innerHTML = \`
-                    <path fill="\${color}" d="M12 2C12 2 9 5 9 8C7 6 4 6 4 6C4 6 5 9 7 10C5 10 2 12 2 12C2 12 5 13 8 12C6 14 6 18 6 18C6 18 9 16 10 14C10 16 12 22 12 22C12 22 14 16 14 14C15 16 18 18 18 18C18 18 18 14 16 12C19 13 22 12 22 12C22 12 19 10 17 10C19 9 20 6 20 6C20 6 17 6 15 8C15 5 12 2 12 2Z"/>
-                \`;
+                leaf.innerHTML = `
+                    <path fill="${color}" d="M12 2C12 2 9 5 9 8C7 6 4 6 4 6C4 6 5 9 7 10C5 10 2 12 2 12C2 12 5 13 8 12C6 14 6 18 6 18C6 18 9 16 10 14C10 16 12 22 12 22C12 22 14 16 14 14C15 16 18 18 18 18C18 18 18 14 16 12C19 13 22 12 22 12C22 12 19 10 17 10C19 9 20 6 20 6C20 6 17 6 15 8C15 5 12 2 12 2Z"/>
+                `;
                 
                 // Random starting position
                 leaf.style.left = Math.random() * 100 + '%';
@@ -2863,7 +3264,7 @@ app.get('/', (c) => {
         const guildName = document.getElementById('guild-name');
         const letters = guildName.textContent.split('');
         guildName.innerHTML = letters.map(letter => 
-            \`<span class="inline-block">\${letter === ' ' ? '&nbsp;' : letter}</span>\`
+            `<span class="inline-block">${letter === ' ' ? '&nbsp;' : letter}</span>`
         ).join('');
         
         // Reveal animations on scroll
@@ -3007,7 +3408,7 @@ app.get('/', (c) => {
         });
         
         // ========== LANGUAGE SYSTEM (Single Source: /api/i18n) ==========
-        const translations = ${JSON.stringify(translationsData)};
+        const translations = {"en":{"joinUs":"Join Us","about":"About","roster":"Roster","cpRace":"CP Race","progress":"Progress","guildFun":"Guild Fun","tagline":"MapleStory Idle RPG Guild","motto":"We are not just a guild, but","family":"FAMILY","meetFamily":"Meet The Family","ourJourney":"Our Journey","aboutTitle":"About NumbahWan","familyMembers":"Family Members","highestLevel":"Highest Level","billionCP":"Billion+ CP","guildMaster":"Guild Master","gmDesc":"The legendary leader of NumbahWan, RegginA leads by example - always at the frontline protecting the family.","gmQuote":"We rise together, we fall together. That's the NumbahWan way.","ourStory":"Our Story","storyText1":"NumbahWan started with a simple dream - to become the #1 guild in MapleStory Idle RPG.","storyText2":"What makes us special isn't just our CP or rankings - it's our bond. Whether it's boss raids or just hanging out, we're always there for each other.","theFamily":"The Family","rosterDesc":"Meet our amazing guild members","cpLeaderboard":"CP Leaderboard","leaderboardDesc":"Who's the strongest?","roadToOne":"Road to #1","progressDesc":"Our journey to becoming NumbahWan","guildLevel":"Guild Level","totalCP":"Total Guild CP","members":"Members","bossRaids":"Boss Raids","serverRanking":"Server Ranking","milestones":"Milestones","shenanigans":"Shenanigans","memories":"Memories of our adventures together","submitPhoto":"Submit Photo","wantToAdd":"Want to add your screenshots?","server":"Server: TW","madeWith":"Made with ❤️ by the family.","gmPvp":"GM PvP","gmFashion":"GM Fashion","memes":"Memes","arcade":"Arcade","exclusiveMerch":"Merch","dailyFortune":"Fortune","contentRankDesc":"Guild Power Rankings","pvpRankDesc":"Battle Rankings","gallery":"Gallery","shop":"Shop","miniGames":"Mini Games","hpFarming":"Farming","hpBossing":"Bossing","hpPvp":"PvP","potionHeal":"+20% HP","membersDesc":"Our Guild Members","funDesc":"Fun Moments","progressDesc2":"Guild Progress","raidsDesc":"Weekly Battles","gmDesc2":"Our Leader","joinDesc":"Become Family","weeklyMvp":"Weekly MVP","guildGrowth":"Guild Growth","slackerAward":"Slacker Award","noGains":"+0% gains","totalGain":"Total Gain","biggestJump":"Biggest Jump","stillFirst":"Still #1","guildTotal":"Guild Total","raceUpdate":"Updated","vsLast":"vs last update"},"zh":{"joinUs":"加入我們","about":"關於","roster":"成員","cpRace":"戰力榜","progress":"進度","guildFun":"公會趣事","tagline":"楓之谷放置RPG公會","motto":"我們不只是公會，更是","family":"家人","meetFamily":"認識家人們","ourJourney":"我們的旅程","aboutTitle":"關於 NumbahWan","familyMembers":"家族成員","highestLevel":"最高等級","billionCP":"十億+戰力","guildMaster":"公會會長","gmDesc":"NumbahWan的傳奇領袖，RegginA以身作則 - 永遠站在最前線保護家人。","gmQuote":"我們一起崛起，一起承擔。這就是NumbahWan的精神。","ourStory":"我們的故事","storyText1":"NumbahWan從一個簡單的夢想開始 - 成為楓之谷放置RPG的第一公會。","storyText2":"讓我們特別的不只是戰力或排名 - 而是我們的羈絆。無論是打王還是閒聊，我們永遠在彼此身邊。","theFamily":"家族成員","rosterDesc":"認識我們優秀的公會成員","cpLeaderboard":"戰力排行榜","leaderboardDesc":"誰是最強的？","roadToOne":"邁向第一","progressDesc":"我們成為NumbahWan的旅程","guildLevel":"公會等級","totalCP":"公會總戰力","members":"成員數量","bossRaids":"打王","serverRanking":"伺服器排名","milestones":"里程碑","shenanigans":"公會趣事","memories":"我們一起冒險的回憶","submitPhoto":"上傳照片","wantToAdd":"想要分享你的截圖嗎？","server":"伺服器：台灣","madeWith":"家人們用 ❤️ 製作","gmPvp":"會長PvP","gmFashion":"會長時尚","memes":"迷因","arcade":"遊戲廳","exclusiveMerch":"限定商品","dailyFortune":"每日運勢","contentRankDesc":"公會戰力排名","pvpRankDesc":"戰鬥排名","gallery":"相簿","shop":"商店","miniGames":"小遊戲","hpFarming":"打怪中","hpBossing":"打王中","hpPvp":"PvP戰","potionHeal":"+20% 血量","membersDesc":"我們的成員","funDesc":"歡樂時刻","progressDesc2":"公會進度","raidsDesc":"每週戰鬥","gmDesc2":"我們的領袖","joinDesc":"成為家人","weeklyMvp":"本週MVP","guildGrowth":"公會成長","slackerAward":"擺爛獎","noGains":"+0% 成長","totalGain":"總成長","biggestJump":"最大進步","stillFirst":"穩坐第一","guildTotal":"公會總戰力","raceUpdate":"更新於","vsLast":"對比上次"},"th":{"joinUs":"เข้าร่วม","about":"เกี่ยวกับ","roster":"สมาชิก","cpRace":"อันดับ CP","progress":"ความคืบหน้า","guildFun":"กิลด์สนุกๆ","tagline":"กิลด์ MapleStory Idle RPG","motto":"เราไม่ได้เป็นแค่กิลด์ แต่เป็น","family":"ครอบครัว","meetFamily":"พบกับครอบครัว","ourJourney":"การเดินทางของเรา","aboutTitle":"เกี่ยวกับ NumbahWan","familyMembers":"สมาชิกครอบครัว","highestLevel":"เลเวลสูงสุด","billionCP":"พันล้าน+ CP","guildMaster":"หัวหน้ากิลด์","gmDesc":"ผู้นำในตำนานของ NumbahWan, RegginA เป็นแบบอย่าง - อยู่แนวหน้าปกป้องครอบครัวเสมอ","gmQuote":"เราขึ้นด้วยกัน เราลงด้วยกัน นี่คือวิถี NumbahWan","ourStory":"เรื่องราวของเรา","storyText1":"NumbahWan เริ่มต้นจากความฝันง่ายๆ - เป็นกิลด์อันดับ 1 ใน MapleStory Idle RPG","storyText2":"สิ่งที่ทำให้เราพิเศษไม่ใช่แค่ CP หรืออันดับ - แต่เป็นสายสัมพันธ์ของเรา ไม่ว่าจะบุกบอสหรือแค่แฮงเอาท์ เราอยู่ด้วยกันเสมอ","theFamily":"ครอบครัว","rosterDesc":"พบกับสมาชิกกิลด์สุดเจ๋งของเรา","cpLeaderboard":"อันดับ CP","leaderboardDesc":"ใครแข็งแกร่งที่สุด?","roadToOne":"สู่อันดับ 1","progressDesc":"การเดินทางสู่การเป็น NumbahWan","guildLevel":"เลเวลกิลด์","totalCP":"CP รวมกิลด์","members":"จำนวนสมาชิก","bossRaids":"บุกบอส","serverRanking":"อันดับเซิร์ฟเวอร์","milestones":"เหตุการณ์สำคัญ","shenanigans":"สนุกๆ","memories":"ความทรงจำการผจญภัยด้วยกัน","submitPhoto":"ส่งรูป","wantToAdd":"อยากเพิ่มภาพหน้าจอของคุณไหม?","server":"เซิร์ฟเวอร์: TW","madeWith":"สร้างด้วย ❤️ โดยครอบครัว","gmPvp":"GM PvP","gmFashion":"แฟชั่น GM","memes":"มีม","arcade":"อาร์เคด","exclusiveMerch":"สินค้า","dailyFortune":"ดวงประจำวัน","contentRankDesc":"อันดับพลังกิลด์","pvpRankDesc":"อันดับต่อสู้","gallery":"แกลเลอรี่","shop":"ร้านค้า","miniGames":"มินิเกม","hpFarming":"ฟาร์ม","hpBossing":"บุกบอส","hpPvp":"PvP","potionHeal":"+20% HP","membersDesc":"สมาชิกกิลด์","funDesc":"ช่วงเวลาสนุก","progressDesc2":"ความคืบหน้ากิลด์","raidsDesc":"ต่อสู้รายสัปดาห์","gmDesc2":"ผู้นำของเรา","joinDesc":"เป็นครอบครัว","weeklyMvp":"MVP ประจำสัปดาห์","guildGrowth":"การเติบโตกิลด์","slackerAward":"รางวัลขี้เกียจ","noGains":"+0% การเติบโต","totalGain":"รวมเพิ่ม","biggestJump":"กระโดดไกลสุด","stillFirst":"ยังเป็นที่ 1","guildTotal":"CP รวมกิลด์","raceUpdate":"อัปเดต","vsLast":"เทียบกับครั้งก่อน"},"photoTranslations":{"1":{"title":{"en":"Henesys Market Day","zh":"乾坤西斯市集日","th":"วันตลาดเฮเนซิส"},"description":{"en":"Shopping with the squad!","zh":"和夥伴們一起逛街！","th":"ช้อปปิ้งกับทีม!"}},"2":{"title":{"en":"Selfie Time!","zh":"自拍時間！","th":"เวลาเซลฟี่!"},"description":{"en":"Best friends forever","zh":"永遠的好朋友","th":"เพื่อนที่ดีที่สุดตลอดไป"}},"3":{"title":{"en":"Sunset Chill","zh":"夕陽時光","th":"พักผ่อนยามเย็น"},"description":{"en":"RegginA & friend on cloud nine","zh":"RegginA和朋友在雲端","th":"RegginA และเพื่อนบนเมฆ"}},"4":{"title":{"en":"Wings of Destiny","zh":"命運之翼","th":"ปีกแห่งโชคชะตา"},"description":{"en":"Power couple goals","zh":"戰力夫妻目標","th":"เป้าหมายคู่รักสุดแกร่ง"}},"5":{"title":{"en":"First Time Together","zh":"第一次一起","th":"ครั้งแรกด้วยกัน"},"description":{"en":"Where it all began","zh":"一切的開始","th":"จุดเริ่มต้นของทุกอย่าง"}},"6":{"title":{"en":"Boss Raid!","zh":"打王啦！","th":"บุกบอส!"},"description":{"en":"Kerning City throwdown","zh":"乾坤城大戰","th":"ศึกเคอร์นิ่งซิตี้"}}},"langFlags":{"en":"🇬🇧","zh":"🇹🇼","th":"🇹🇭"},"langCodes":{"en":"EN","zh":"中文","th":"ไทย"}};
         const photoTranslations = translations.photoTranslations;
         const langFlags = translations.langFlags;
         const langCodes = translations.langCodes;
@@ -3016,7 +3417,9 @@ app.get('/', (c) => {
         
         function toggleLangMenu() {
             const menu = document.getElementById('lang-menu');
-            menu.classList.toggle('hidden');
+            const btn = document.getElementById('lang-toggle-btn');
+            menu.classList.toggle('show');
+            btn.classList.toggle('open');
         }
         
         function setLanguage(lang) {
@@ -3026,6 +3429,11 @@ app.get('/', (c) => {
             // Update flag and code
             document.getElementById('current-lang-flag').textContent = langFlags[lang];
             document.getElementById('current-lang-code').textContent = langCodes[lang];
+            
+            // Update active state
+            document.querySelectorAll('.nw-lang-item').forEach(item => {
+                item.classList.toggle('active', item.dataset.lang === lang);
+            });
             
             // Update all translatable elements
             document.querySelectorAll('[data-i18n]').forEach(el => {
@@ -3045,7 +3453,8 @@ app.get('/', (c) => {
             });
             
             // Close menu
-            document.getElementById('lang-menu').classList.add('hidden');
+            document.getElementById('lang-menu').classList.remove('show');
+            document.getElementById('lang-toggle-btn').classList.remove('open');
             
             // Update HP bar language
             if (window.updateHPBarLang) window.updateHPBarLang();
@@ -3054,8 +3463,9 @@ app.get('/', (c) => {
         // Close language menu when clicking outside
         document.addEventListener('click', (e) => {
             const switcher = document.getElementById('lang-switcher');
-            if (!switcher.contains(e.target)) {
-                document.getElementById('lang-menu').classList.add('hidden');
+            if (switcher && !switcher.contains(e.target)) {
+                document.getElementById('lang-menu')?.classList.remove('show');
+                document.getElementById('lang-toggle-btn')?.classList.remove('open');
             }
             
             // Close nav dropdown when clicking outside
@@ -3276,175 +3686,4 @@ app.get('/', (c) => {
     </script>
 </body>
 </html>
-  `)
-})
-
-// Helper function to generate SVG N emblem - matches original exactly
-// Thick blocky N like the original pixelated emblem
-function generateEmblemSVG(className = 'emblem-n', size = 60) {
-  const gradId = 'nGrad' + size + Math.random().toString(36).substr(2, 5)
-  return `
-    <svg class="${className}" viewBox="0 0 100 100" width="${size}" height="${size}" xmlns="http://www.w3.org/2000/svg">
-      <defs>
-        <linearGradient id="${gradId}" x1="0%" y1="0%" x2="0%" y2="100%">
-          <stop offset="0%" stop-color="#ffb347"/>
-          <stop offset="30%" stop-color="#ff9500"/>
-          <stop offset="60%" stop-color="#e86500"/>
-          <stop offset="100%" stop-color="#8B4513"/>
-        </linearGradient>
-      </defs>
-      <!-- Thick blocky N: left bar + THICK diagonal + right bar -->
-      <rect x="10" y="8" width="24" height="84" rx="3" fill="url(#${gradId})"/>
-      <rect x="66" y="8" width="24" height="84" rx="3" fill="url(#${gradId})"/>
-      <polygon points="10,8 34,8 90,92 66,92" fill="url(#${gradId})"/>
-    </svg>
-  `
-}
-
-// Custom SVG Icons - Using NumbahWan Guild Icon Sprite
-// All icons now reference /static/icons/nw-icons.svg for consistent guild branding
-function nwIcon(name, size = 20, extraClass = 'mr-2') {
-  return `<svg class="inline nw-icon ${extraClass}" width="${size}" height="${size}" aria-hidden="true"><use href="/static/icons/nw-icons.svg#${name}"></use></svg>`
-}
-
-function iconSword() {
-  return nwIcon('sword', 20)
-}
-
-function iconTrophy() {
-  return nwIcon('trophy', 20)
-}
-
-function iconInfo() {
-  return nwIcon('star', 24)
-}
-
-function iconUsers() {
-  return nwIcon('users', 24)
-}
-
-function iconPower() {
-  return nwIcon('fire', 16, '')
-}
-
-function iconHeart() {
-  return nwIcon('heart', 16, '')
-}
-
-function iconUpgrade() {
-  return nwIcon('upvote', 16, '')
-}
-
-function iconStar() {
-  return nwIcon('star', 20)
-}
-
-function iconRace() {
-  return nwIcon('flag', 24)
-}
-
-function iconTarget() {
-  return nwIcon('target', 24)
-}
-
-function iconLevel() {
-  return nwIcon('trophy', 20)
-}
-
-function iconBoss() {
-  return nwIcon('skull', 20)
-}
-
-function iconMilestone() {
-  return nwIcon('flag', 20)
-}
-
-function iconCamera() {
-  return nwIcon('camera', 24)
-}
-
-function iconUpload() {
-  return nwIcon('upload', 20)
-}
-
-function iconCrown() {
-  return nwIcon('crown', 20)
-}
-
-function iconGaming() {
-  return nwIcon('gaming', 24)
-}
-
-function iconShield() {
-  return nwIcon('shield', 20)
-}
-
-function iconParty() {
-  return nwIcon('party', 20)
-}
-
-// API endpoint for member data
-app.get('/api/members', (c) => {
-  return c.json({ members, sortedMembers })
-})
-
-// Regina page route - serves the static HTML file
-app.get('/regina', async (c) => {
-  // For Cloudflare Pages, we need to serve static HTML differently
-  // The regina.html is in public/ and will be served via the static file serving
-  try {
-    // @ts-ignore - env is provided by Cloudflare Pages
-    const asset = await c.env?.ASSETS?.fetch(new Request('https://dummy/regina.html'))
-    if (asset) {
-      return new Response(asset.body, {
-        headers: { 'Content-Type': 'text/html; charset=utf-8' }
-      })
-    }
-  } catch (e) {
-    // Fallback for local development - serve inline redirect
-  }
   
-  // Fallback - redirect to static file
-  return c.redirect('/regina.html')
-})
-
-// PvP Arena page route
-app.get('/pvp', async (c) => {
-  try {
-    // @ts-ignore - env is provided by Cloudflare Pages
-    const asset = await c.env?.ASSETS?.fetch(new Request('https://dummy/pvp.html'))
-    if (asset) {
-      return new Response(asset.body, {
-        headers: { 'Content-Type': 'text/html; charset=utf-8' }
-      })
-    }
-  } catch (e) {
-    // Fallback for local development
-  }
-  return c.redirect('/pvp.html')
-})
-
-// ============================================================================
-// ROUTE FACTORY - DRY Pattern (Don't Repeat Yourself)
-// Add new pages by just adding to the array - no copy-paste needed!
-// ============================================================================
-const staticPages = ['fashion', 'merch', 'fortune', 'arcade', 'memes', 'apply', 'wallet', 'forge', 'tcg']
-
-staticPages.forEach(page => {
-  app.get(`/${page}`, async (c) => {
-    try {
-      // @ts-ignore - env is provided by Cloudflare Pages
-      const asset = await c.env?.ASSETS?.fetch(new Request(`https://dummy/${page}.html`))
-      if (asset) {
-        return new Response(asset.body, {
-          headers: { 'Content-Type': 'text/html; charset=utf-8' }
-        })
-      }
-    } catch (e) {
-      // Fallback for local development
-    }
-    return c.redirect(`/${page}.html`)
-  })
-})
-
-export default app

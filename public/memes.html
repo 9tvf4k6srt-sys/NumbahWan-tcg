@@ -1,964 +1,1019 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <!-- FIRST PAINT LOADER -->
     <style>*{margin:0;padding:0}html,body{background:#0a0a0f}#fp{position:fixed;inset:0;background:#0a0a0f;z-index:999999;display:flex;align-items:center;justify-content:center}#fp svg{width:80px;height:80px;animation:fpp 1.5s ease-in-out infinite}@keyframes fpp{0%,100%{transform:scale(1);filter:drop-shadow(0 0 15px #ff6b00)}50%{transform:scale(1.15);filter:drop-shadow(0 0 30px #ffd700)}}</style>
     <link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Meme Gallery | NumbahWan Guild</title>
-    <!-- FULL LOADING SCREEN -->
-    <style id="instant-loader-styles">#instant-loader{position:fixed;top:0;left:0;width:100%;height:100%;background:linear-gradient(135deg,#0a0a0f 0%,#1a1a2e 50%,#0a0a0f 100%);z-index:999999;display:flex;flex-direction:column;align-items:center;justify-content:center;transition:opacity .5s,visibility .5s}#instant-loader.hidden{opacity:0;visibility:hidden;pointer-events:none}.il-aurora{position:absolute;top:0;left:0;width:100%;height:100%;background:radial-gradient(ellipse at 20% 20%,rgba(255,107,0,.2) 0%,transparent 50%),radial-gradient(ellipse at 80% 80%,rgba(255,157,77,.15) 0%,transparent 50%);animation:ilAurora 8s ease-in-out infinite}@keyframes ilAurora{0%,100%{transform:scale(1)}50%{transform:scale(1.2)}}.il-emblem{width:120px;height:120px;animation:ilPulse 2s ease-in-out infinite;filter:drop-shadow(0 0 20px rgba(255,107,0,.8))}@keyframes ilPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.1)}}.il-ring{position:absolute;border:2px solid transparent;border-radius:50%;border-top-color:#ff6b00;border-right-color:#ffd700}.il-ring-1{width:150px;height:150px;animation:ilSpin 3s linear infinite}.il-ring-2{width:170px;height:170px;animation:ilSpin 4s linear infinite reverse;border-top-color:#ffd700;border-right-color:#ff6b00}@keyframes ilSpin{0%{transform:rotate(0)}100%{transform:rotate(360deg)}}.il-title{font-family:'Orbitron',Arial,sans-serif;font-size:clamp(1.2rem,4vw,2rem);font-weight:700;background:linear-gradient(180deg,#ffcc70 0%,#ff9500 30%,#ff6b00 60%,#cc4400 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-top:30px;animation:ilGlow 2s ease-in-out infinite}@keyframes ilGlow{0%,100%{filter:drop-shadow(0 0 10px rgba(255,107,0,.8))}50%{filter:drop-shadow(0 0 20px rgba(255,215,0,1))}}.il-dots{display:flex;gap:8px;margin-top:20px}.il-dot{width:10px;height:10px;background:#ff6b00;border-radius:50%;animation:ilBounce 1.4s ease-in-out infinite;box-shadow:0 0 10px #ff6b00}.il-dot:nth-child(2){animation-delay:.2s;background:#ffd700;box-shadow:0 0 10px #ffd700}.il-dot:nth-child(3){animation-delay:.4s}@keyframes ilBounce{0%,80%,100%{transform:scale(0)}40%{transform:scale(1)}}</style>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="/static/icons/icons.js" defer></script>
-    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+    <title>Meme Vault | NumbahWan Guild</title>
+    
+    <link rel="stylesheet" href="/static/nw-tokens.css">
+    <link rel="stylesheet" href="/static/nw-utilities.css">
+    <script src="/static/nw-icons-inline.js"></script>
     <style>
         :root {
             --primary: #ff6b00;
             --primary-light: #ff9d4d;
             --bg-dark: #0a0a0f;
+            --card-width: min(380px, 85vw);
+            --card-height: min(480px, 70vh);
         }
         
         * { margin: 0; padding: 0; box-sizing: border-box; }
+        html, body { 
+            overflow: hidden; 
+            height: 100%; 
+            touch-action: none;
+            overscroll-behavior: none;
+        }
         
         body {
-            font-family: 'Orbitron', sans-serif;
+            font-family: var(--nw-font-display), sans-serif;
             background: var(--bg-dark);
             color: #fff;
-            min-height: 100vh;
+            height: 100vh;
+            overflow: hidden;
         }
         
         .pixel-font { font-family: 'Press Start 2P', cursive; }
         
-        .glass-card {
-            background: rgba(255, 107, 0, 0.08);
-            backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 107, 0, 0.2);
-            border-radius: 16px;
+        /* ============================================
+           SMOOTH 3D CAROUSEL
+           ============================================ */
+        
+        .meme-universe {
+            position: fixed;
+            inset: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            perspective: 1200px;
+            overflow: hidden;
         }
         
-        .neon-orange {
-            text-shadow: 0 0 10px var(--primary), 0 0 20px var(--primary), 0 0 40px var(--primary);
+        /* Ambient glow */
+        .ambient-glow {
+            position: absolute;
+            width: 150%;
+            height: 150%;
+            background: radial-gradient(ellipse at center, rgba(255,107,0,0.15) 0%, transparent 60%);
+            animation: ambientPulse 4s ease-in-out infinite;
+            pointer-events: none;
         }
         
-        /* Meme card styles */
+        @keyframes ambientPulse {
+            0%, 100% { opacity: 0.5; transform: scale(1); }
+            50% { opacity: 0.8; transform: scale(1.1); }
+        }
+        
+        /* Carousel track */
+        .carousel-track {
+            position: relative;
+            width: var(--card-width);
+            height: var(--card-height);
+            transform-style: preserve-3d;
+        }
+        
+        /* Individual meme card - GPU accelerated */
         .meme-card {
-            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-            cursor: pointer;
+            position: absolute;
+            width: var(--card-width);
+            height: var(--card-height);
+            border-radius: 24px;
+            overflow: hidden;
+            cursor: grab;
+            transform-style: preserve-3d;
+            backface-visibility: hidden;
+            will-change: transform, opacity;
+            box-shadow: 0 25px 80px -20px rgba(0,0,0,0.8);
+            /* NO CSS transition - we animate with JS for smoothness */
         }
         
-        .meme-card:hover {
-            transform: translateY(-8px) scale(1.02);
-            box-shadow: 0 20px 40px rgba(255, 107, 0, 0.4);
-        }
+        .meme-card:active { cursor: grabbing; }
         
-        .meme-card:hover .meme-overlay {
-            opacity: 1;
-        }
-        
-        .meme-overlay {
+        .meme-card::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, rgba(255,107,0,0.3) 0%, transparent 50%);
             opacity: 0;
-            transition: opacity 0.3s ease;
+            pointer-events: none;
+            z-index: 5;
+            transition: opacity 0.3s;
         }
         
-        /* Upvote animation */
-        .upvote-btn:active {
-            animation: upvotePop 0.3s ease;
+        .meme-card.active::before { opacity: 1; }
+        
+        /* Card inner content */
+        .card-inner {
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(180deg, #1a1a2e 0%, #0a0a0f 100%);
+            border: 2px solid rgba(255,107,0,0.3);
+            border-radius: 24px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
         }
         
-        @keyframes upvotePop {
+        .meme-card.active .card-inner {
+            box-shadow: 0 0 60px rgba(255,107,0,0.3), inset 0 0 60px rgba(255,107,0,0.05);
+            border-color: rgba(255,107,0,0.6);
+        }
+        
+        .card-image-container {
+            flex: 1;
+            overflow: hidden;
+            position: relative;
+        }
+        
+        .card-image {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        /* Caption area */
+        .card-caption {
+            padding: 16px 20px;
+            background: linear-gradient(180deg, transparent, rgba(0,0,0,0.95));
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+        }
+        
+        .card-title {
+            font-size: 1.1rem;
+            font-weight: bold;
+            color: #ff6b00;
+            margin-bottom: 4px;
+            text-shadow: 0 2px 10px rgba(0,0,0,0.8);
+        }
+        
+        .card-text {
+            font-size: 0.85rem;
+            color: #ccc;
+            line-height: 1.4;
+        }
+        
+        /* Vote counter */
+        .vote-badge {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            background: rgba(0,0,0,0.7);
+            backdrop-filter: blur(10px);
+            padding: 8px 14px;
+            border-radius: 50px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-weight: bold;
+            font-size: 0.9rem;
+            color: #ff6b00;
+            border: 1px solid rgba(255,107,0,0.3);
+            transition: all 0.3s;
+            z-index: 10;
+        }
+        
+        .vote-badge:hover {
+            transform: scale(1.1);
+            background: rgba(255,107,0,0.3);
+        }
+        
+        .vote-badge.voted {
+            animation: votePop 0.5s ease;
+            background: rgba(255,107,0,0.4);
+        }
+        
+        @keyframes votePop {
             0% { transform: scale(1); }
             50% { transform: scale(1.3); }
             100% { transform: scale(1); }
         }
         
-        /* Floating emojis */
-        .floating-emoji {
+        /* Category badge */
+        .category-badge {
+            position: absolute;
+            top: 16px;
+            left: 16px;
+            background: rgba(0,0,0,0.7);
+            backdrop-filter: blur(10px);
+            padding: 6px 12px;
+            border-radius: 50px;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            border: 1px solid rgba(255,255,255,0.1);
+            z-index: 10;
+        }
+        
+        .category-badge.guild { color: #22c55e; border-color: rgba(34,197,94,0.3); }
+        .category-badge.raids { color: #ef4444; border-color: rgba(239,68,68,0.3); }
+        .category-badge.reggina { color: #a855f7; border-color: rgba(168,85,247,0.3); }
+        .category-badge.random { color: #fbbf24; border-color: rgba(251,191,36,0.3); }
+        
+        /* ============================================
+           NAVIGATION CONTROLS
+           ============================================ */
+        
+        .nav-container {
             position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            z-index: 200;
+        }
+        
+        .nav-btn {
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            background: rgba(255,107,0,0.2);
+            border: 2px solid rgba(255,107,0,0.5);
+            color: #ff6b00;
+            font-size: 1.5rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(10px);
+        }
+        
+        .nav-btn:hover {
+            background: rgba(255,107,0,0.4);
+            transform: scale(1.1);
+            box-shadow: 0 0 30px rgba(255,107,0,0.5);
+        }
+        
+        .nav-btn:active { transform: scale(0.95); }
+        
+        /* Progress dots */
+        .progress-track {
+            display: flex;
+            gap: 6px;
+            padding: 10px 20px;
+            background: rgba(0,0,0,0.5);
+            border-radius: 50px;
+            backdrop-filter: blur(10px);
+        }
+        
+        .progress-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: rgba(255,107,0,0.3);
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+        
+        .progress-dot.active {
+            background: #ff6b00;
+            box-shadow: 0 0 10px #ff6b00;
+            transform: scale(1.3);
+        }
+        
+        .progress-dot:hover { background: rgba(255,107,0,0.6); }
+        
+        /* Counter display */
+        .counter-display {
+            position: fixed;
+            top: 100px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 0.9rem;
+            color: rgba(255,107,0,0.7);
+            z-index: 200;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .counter-current {
             font-size: 2rem;
-            pointer-events: none;
-            animation: floatUp 3s ease-out forwards;
-            z-index: 100;
+            font-weight: bold;
+            color: #ff6b00;
+            text-shadow: 0 0 20px rgba(255,107,0,0.5);
         }
         
-        @keyframes floatUp {
-            0% { opacity: 1; transform: translateY(0) rotate(0deg); }
-            100% { opacity: 0; transform: translateY(-300px) rotate(360deg); }
+        /* ============================================
+           TOP NAVIGATION BAR
+           ============================================ */
+        
+        .top-nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            padding: 16px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 300;
+            background: linear-gradient(180deg, rgba(10,10,15,0.95), transparent);
         }
         
-        /* Category pills */
-        .category-pill {
-            transition: all 0.3s ease;
+        .nav-brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            text-decoration: none;
+            color: #ff6b00;
         }
         
-        .category-pill:hover, .category-pill.active {
-            background: var(--primary);
+        .nav-brand svg { width: 32px; height: 32px; }
+        .nav-brand span { font-family: 'Press Start 2P', cursive; font-size: 0.7rem; }
+        
+        .nav-actions { display: flex; gap: 12px; }
+        
+        .nav-icon-btn {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: rgba(255,107,0,0.15);
+            border: 1px solid rgba(255,107,0,0.3);
+            color: #ff6b00;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+        }
+        
+        .nav-icon-btn:hover {
+            background: rgba(255,107,0,0.3);
+            transform: scale(1.05);
+        }
+        
+        /* ============================================
+           CATEGORY FILTER PILLS
+           ============================================ */
+        
+        .filter-bar {
+            position: fixed;
+            top: 70px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 8px;
+            padding: 8px;
+            background: rgba(0,0,0,0.5);
+            border-radius: 50px;
+            backdrop-filter: blur(10px);
+            z-index: 250;
+        }
+        
+        .filter-pill {
+            padding: 8px 16px;
+            border-radius: 50px;
+            font-size: 0.75rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: none;
+            background: transparent;
+            color: #888;
+        }
+        
+        .filter-pill:hover { color: #ff6b00; }
+        
+        .filter-pill.active {
+            background: #ff6b00;
             color: #000;
-            box-shadow: 0 0 20px rgba(255, 107, 0, 0.5);
+            box-shadow: 0 0 20px rgba(255,107,0,0.5);
         }
         
-        /* Marquee */
-        .marquee {
-            overflow: hidden;
-            white-space: nowrap;
+        /* ============================================
+           SWIPE HINT
+           ============================================ */
+        
+        .swipe-hint {
+            position: fixed;
+            bottom: 110px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: rgba(255,107,0,0.6);
+            font-size: 0.8rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            animation: hintPulse 2s ease-in-out infinite;
+            z-index: 150;
+            transition: opacity 0.5s;
         }
         
-        .marquee-content {
-            display: inline-block;
-            animation: marquee 25s linear infinite;
+        .swipe-hint .arrow { animation: swipeArrow 1.5s ease-in-out infinite; }
+        .swipe-hint .arrow.left { animation-delay: 0.3s; }
+        
+        @keyframes swipeArrow {
+            0%, 100% { transform: translateX(0); opacity: 0.5; }
+            50% { transform: translateX(10px); opacity: 1; }
         }
         
-        @keyframes marquee {
-            0% { transform: translateX(0); }
-            100% { transform: translateX(-50%); }
+        @keyframes hintPulse {
+            0%, 100% { opacity: 0.6; }
+            50% { opacity: 1; }
+        }
+        
+        .hint-hidden { opacity: 0 !important; pointer-events: none; }
+        
+        /* ============================================
+           FLOATING REACTIONS
+           ============================================ */
+        
+        .reaction-burst {
+            position: fixed;
+            pointer-events: none;
+            z-index: 1000;
+            font-size: 2rem;
+            animation: reactionFloat 2s ease-out forwards;
+        }
+        
+        @keyframes reactionFloat {
+            0% { opacity: 1; transform: translateY(0) scale(1) rotate(0deg); }
+            100% { opacity: 0; transform: translateY(-200px) scale(1.5) rotate(20deg); }
+        }
+        
+        /* ============================================
+           MOMENTUM INDICATOR
+           ============================================ */
+        
+        .momentum-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: rgba(255,107,0,0.1);
+            z-index: 500;
+        }
+        
+        .momentum-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #ff6b00, #ffd700);
+            width: 0%;
+            box-shadow: 0 0 20px #ff6b00;
+            transition: width 0.05s linear;
+        }
+        
+        /* ============================================
+           RESPONSIVE
+           ============================================ */
+        
+        @media (max-width: 480px) {
+            :root {
+                --card-width: 90vw;
+                --card-height: 65vh;
+            }
+            
+            .filter-bar {
+                flex-wrap: wrap;
+                max-width: 90vw;
+                justify-content: center;
+            }
+            
+            .filter-pill { padding: 6px 12px; font-size: 0.65rem; }
+            .nav-btn { width: 48px; height: 48px; }
+            .progress-track { padding: 8px 12px; }
+            .progress-dot { width: 6px; height: 6px; }
         }
     </style>
-    <script src="/static/click-juice.js" defer></script>
 </head>
 <body>
+    <!-- Captivating Background -->
+    <div class="nw-bg-captivating">
+        <div class="bg-image"></div>
+        <div class="bg-gradient"></div>
+        <div class="bg-particles"></div>
+        <div class="bg-grid"></div>
+    </div>
+    <!-- Loading Screen -->
     <div id="fp"><svg viewBox="0 0 100 100"><defs><linearGradient id="ng" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#ffcc70"/><stop offset="50%" stop-color="#ff6b00"/><stop offset="100%" stop-color="#8B4513"/></linearGradient></defs><rect x="10" y="8" width="24" height="84" rx="3" fill="url(#ng)"/><rect x="66" y="8" width="24" height="84" rx="3" fill="url(#ng)"/><polygon points="10,8 34,8 90,92 66,92" fill="url(#ng)"/></svg></div>
-    <div id="instant-loader"><div class="il-aurora"></div><div style="position:relative;display:flex;flex-direction:column;align-items:center;z-index:10"><div style="position:relative;width:120px;height:120px"><div class="il-ring il-ring-1" style="position:absolute;top:-15px;left:-15px"></div><div class="il-ring il-ring-2" style="position:absolute;top:-25px;left:-25px"></div><svg class="il-emblem" viewBox="0 0 100 100"><defs><linearGradient id="ilGrad" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#ffcc70"/><stop offset="30%" stop-color="#ff9500"/><stop offset="60%" stop-color="#ff6b00"/><stop offset="100%" stop-color="#8B4513"/></linearGradient></defs><rect x="10" y="8" width="24" height="84" rx="3" fill="url(#ilGrad)"/><rect x="66" y="8" width="24" height="84" rx="3" fill="url(#ilGrad)"/><polygon points="10,8 34,8 90,92 66,92" fill="url(#ilGrad)"/></svg></div><div class="il-title">NumbahWan</div><div class="il-dots"><div class="il-dot"></div><div class="il-dot"></div><div class="il-dot"></div></div></div></div>
-    <script>var fp=document.getElementById('fp');if(fp)fp.style.display='none';(function(){var s=Date.now(),m=500;function h(){var e=Date.now()-s,r=Math.max(0,m-e);setTimeout(function(){var l=document.getElementById('instant-loader');if(l){l.classList.add('hidden');setTimeout(function(){l.remove();},500);}var f=document.getElementById('fp');if(f)f.remove();},r);}if(document.readyState==='complete'){h();}else{window.addEventListener('load',h);}})();</script>
-    <!-- Navigation -->
-    <nav class="fixed top-0 left-0 right-0 z-50 glass-card mx-4 mt-4 rounded-full">
-        <div class="container mx-auto px-4 py-3 flex items-center justify-between">
-            <a href="/" class="flex items-center gap-2">
-                <svg class="nw-icon" width="28" height="28"><use href="/static/icons/nw-icons.svg#gaming"></use></svg>
-                <span class="pixel-font text-xs text-orange-400">NumbahWan</span>
-            </a>
-            <div class="flex items-center gap-3">
-                <a href="/" class="text-sm hover:text-orange-400 transition-colors" data-i18n="home">Home</a>
-                
-                <!-- Language Switcher -->
-                <div class="relative" id="lang-switcher">
-                    <button onclick="toggleLangMenu()" class="px-3 py-1.5 rounded-full text-sm flex items-center gap-2 hover:bg-orange-500/20 transition-all border border-orange-500/30">
-                        <span id="current-lang-flag">🇬🇧</span>
-                        <span id="current-lang-code" class="hidden sm:inline">EN</span>
-                        <svg class="nw-icon opacity-50" width="12" height="12"><use href="/static/icons/nw-icons.svg#chevron-down"></use></svg>
-                    </button>
-                    <div id="lang-menu" class="hidden absolute right-0 top-full mt-2 glass-card rounded-lg overflow-hidden min-w-[140px] z-50 border border-orange-500/30">
-                        <button onclick="setLanguage('en')" class="w-full px-4 py-2.5 text-left hover:bg-orange-500/20 flex items-center gap-3 text-sm transition-colors">
-                            <span>🇬🇧</span> English
-                        </button>
-                        <button onclick="setLanguage('zh')" class="w-full px-4 py-2.5 text-left hover:bg-orange-500/20 flex items-center gap-3 text-sm transition-colors">
-                            <span>🇹🇼</span> 繁體中文
-                        </button>
-                        <button onclick="setLanguage('th')" class="w-full px-4 py-2.5 text-left hover:bg-orange-500/20 flex items-center gap-3 text-sm transition-colors">
-                            <span>🇹🇭</span> ไทย
-                        </button>
-                    </div>
-                </div>
-                
-                <a href="/apply" class="px-4 py-2 bg-orange-500 rounded-full text-sm font-bold hover:bg-orange-400 transition-colors" data-i18n="joinUs">Join Us</a>
-            </div>
+
+    <!-- Top Navigation -->
+    <nav class="top-nav">
+        <a href="/" class="nav-brand">
+            <svg viewBox="0 0 100 100"><defs><linearGradient id="nbg" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#ffcc70"/><stop offset="50%" stop-color="#ff6b00"/><stop offset="100%" stop-color="#8B4513"/></linearGradient></defs><rect x="10" y="8" width="24" height="84" rx="3" fill="url(#nbg)"/><rect x="66" y="8" width="24" height="84" rx="3" fill="url(#nbg)"/><polygon points="10,8 34,8 90,92 66,92" fill="url(#nbg)"/></svg>
+            <span>NumbahWan</span>
+        </a>
+        <div class="nav-actions">
+            <button class="nav-icon-btn" onclick="shuffleMemes()" title="Shuffle">🎲</button>
+            <a href="/" class="nav-icon-btn" title="Home">🏠</a>
         </div>
     </nav>
-
-    <!-- Hero Section -->
-    <section class="pt-32 pb-12 px-4">
-        <div class="container mx-auto max-w-6xl text-center">
-            <h1 class="text-5xl md:text-7xl font-bold mb-4 neon-orange pixel-font">
-                😂 <span data-i18n="pageTitle">MEME VAULT</span> 😂
-            </h1>
-            <p class="text-xl text-orange-300 mb-2" data-i18n="pageSubtitle">Where legends become laughs</p>
-            <p class="text-gray-400 text-sm" data-i18n="pageWarning">Warning: Side effects include snorting, wheezing, and waking up your neighbors</p>
-            
-            <!-- Scrolling meme marquee -->
-            <div class="marquee mt-8 py-3 glass-card rounded-full">
-                <div class="marquee-content text-xl" id="marquee-text"></div>
-            </div>
-        </div>
-    </section>
-
+    
     <!-- Category Filter -->
-    <section class="px-4 pb-8">
-        <div class="container mx-auto max-w-6xl">
-            <div class="flex flex-wrap justify-center gap-3">
-                <button class="category-pill active px-4 py-2 rounded-full glass-card text-sm font-bold flex items-center gap-2" onclick="filterMemes('all')">
-                    <svg class="nw-icon" width="18" height="18"><use href="/static/icons/nw-icons.svg#fire"></use></svg>
-                    <span data-i18n="catAll">All Memes</span>
-                </button>
-                <button class="category-pill px-4 py-2 rounded-full glass-card text-sm font-bold flex items-center gap-2" onclick="filterMemes('reggina')">
-                    <svg class="nw-icon" width="18" height="18"><use href="/static/icons/nw-icons.svg#crown"></use></svg>
-                    <span data-i18n="catReggina">RegginA Roasts</span>
-                </button>
-                <button class="category-pill px-4 py-2 rounded-full glass-card text-sm font-bold flex items-center gap-2" onclick="filterMemes('guild')">
-                    <svg class="nw-icon" width="18" height="18"><use href="/static/icons/nw-icons.svg#users"></use></svg>
-                    <span data-i18n="catGuild">Guild Life</span>
-                </button>
-                <button class="category-pill px-4 py-2 rounded-full glass-card text-sm font-bold flex items-center gap-2" onclick="filterMemes('raids')">
-                    <svg class="nw-icon" width="18" height="18"><use href="/static/icons/nw-icons.svg#swords"></use></svg>
-                    <span data-i18n="catRaids">Raid Fails</span>
-                </button>
-                <button class="category-pill px-4 py-2 rounded-full glass-card text-sm font-bold flex items-center gap-2" onclick="filterMemes('random')">
-                    <svg class="nw-icon" width="18" height="18"><use href="/static/icons/nw-icons.svg#dice"></use></svg>
-                    <span data-i18n="catRandom">Random Chaos</span>
-                </button>
-            </div>
-        </div>
-    </section>
-
-    <!-- Meme Gallery -->
-    <section class="px-4 pb-20">
-        <div class="container mx-auto max-w-7xl">
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="meme-grid">
-                <!-- Memes will be rendered by JavaScript -->
-            </div>
-        </div>
-    </section>
-
-    <!-- Submit Meme CTA -->
-    <section class="px-4 pb-20">
-        <div class="container mx-auto max-w-2xl">
-            <div class="glass-card p-8 text-center">
-                <h2 class="text-3xl font-bold mb-4 neon-orange" data-i18n="submitTitle">Got a spicy meme? 🌶️</h2>
-                <p class="text-gray-300 mb-6" data-i18n="submitDesc">Submit your guild memes and become a legend (or get roasted trying)</p>
-                <div class="flex flex-col sm:flex-row gap-4 justify-center">
-                    <button class="px-6 py-3 bg-orange-500 rounded-full font-bold hover:bg-orange-400 transition-colors flex items-center gap-2">
-                        <svg class="nw-icon" width="20" height="20"><use href="/static/icons/nw-icons.svg#upload"></use></svg>
-                        <span data-i18n="submitBtn">Submit Meme</span>
-                    </button>
-                    <button class="px-6 py-3 glass-card rounded-full font-bold hover:bg-orange-500/20 transition-colors flex items-center gap-2">
-                        <svg class="nw-icon" width="20" height="20"><use href="/static/icons/nw-icons.svg#document"></use></svg>
-                        <span data-i18n="guidelinesBtn">Meme Guidelines</span>
-                    </button>
-                </div>
-                <p class="text-xs text-gray-500 mt-4" data-i18n="submitDisclaimer">*RegginA's feelings may or may not be protected</p>
-            </div>
-        </div>
-    </section>
-
-    <!-- Footer -->
-    <footer class="py-8 px-4 border-t border-orange-900/30">
-        <div class="container mx-auto max-w-4xl text-center">
-            <p class="text-gray-400 text-sm" data-i18n="footerMade">Made with 😂 by NumbahWan Guild</p>
-            <p class="text-gray-600 text-xs mt-2" data-i18n="footerDisclaimer">No RegginAs were harmed in the making of these memes (just their ego)</p>
-        </div>
-    </footer>
-
-    <!-- Lightbox for Full Size Meme -->
-    <div id="meme-lightbox" class="fixed inset-0 z-[100] hidden bg-black/90 backdrop-blur-sm flex items-center justify-center p-4" onclick="closeLightbox(event)">
-        <button class="absolute top-4 right-4 text-white hover:text-orange-400 transition-colors" onclick="closeLightbox(event)">
-            <svg class="nw-icon" width="32" height="32"><use href="/static/icons/nw-icons.svg#close"></use></svg>
-        </button>
-        <div class="glass-card max-w-2xl w-full max-h-[90vh] overflow-auto p-8 rounded-2xl" onclick="event.stopPropagation()">
-            <div id="lightbox-content" class="text-center"></div>
-            <div class="mt-6 flex justify-center gap-4">
-                <button onclick="closeLightbox(event)" class="px-6 py-3 glass-card rounded-full font-bold hover:bg-orange-500/20 transition-colors flex items-center gap-2">
-                    <svg class="nw-icon" width="20" height="20"><use href="/static/icons/nw-icons.svg#close"></use></svg>
-                    Close
-                </button>
-            </div>
-        </div>
+    <div class="filter-bar">
+        <button class="filter-pill active" data-filter="all">🔥 All</button>
+        <button class="filter-pill" data-filter="guild">👥 Guild</button>
+        <button class="filter-pill" data-filter="raids">⚔️ Raids</button>
+        <button class="filter-pill" data-filter="reggina">👑 RegginA</button>
+        <button class="filter-pill" data-filter="random">🎪 Random</button>
+    </div>
+    
+    <!-- Counter Display -->
+    <div class="counter-display">
+        <span class="counter-current" id="counter-current">1</span>
+        <span>/ <span id="counter-total">50</span></span>
+    </div>
+    
+    <!-- Main Carousel Universe -->
+    <div class="meme-universe" id="meme-universe">
+        <div class="ambient-glow"></div>
+        <div class="carousel-track" id="carousel-track"></div>
+    </div>
+    
+    <!-- Swipe Hint -->
+    <div class="swipe-hint" id="swipe-hint">
+        <span class="arrow left">←</span>
+        <span>Swipe or drag</span>
+        <span class="arrow">→</span>
+    </div>
+    
+    <!-- Bottom Navigation -->
+    <div class="nav-container">
+        <button class="nav-btn" id="btn-prev" onclick="navigateTo(currentIndex - 1)">❮</button>
+        <div class="progress-track" id="progress-track"></div>
+        <button class="nav-btn" id="btn-next" onclick="navigateTo(currentIndex + 1)">❯</button>
+    </div>
+    
+    <!-- Momentum Bar -->
+    <div class="momentum-bar">
+        <div class="momentum-fill" id="momentum-fill"></div>
     </div>
 
     <script>
-        // ============================================================
-        // MEME DATA WITH TRILINGUAL SUPPORT
-        // ============================================================
+        // ============================================
+        // MEME DATA
+        // ============================================
         const memeData = [
-            // ============================================================
-            // IMAGE MEMES (Generated locally) - SHOW FIRST
-            // ============================================================
-            {
-                id: 10,
-                category: 'guild',
-                votes: 623,
-                comments: 95,
-                content: {
-                    en: { image: '/static/memes/meme-1-optional-raid.jpg', title: 'Optional Raid', caption: 'When GM says "optional" but shows up with attendance list' },
-                    zh: { image: '/static/memes/meme-1-optional-raid.jpg', title: '自願參加的活動', caption: '當會長說「自願參加」但拿著出席表出現時' },
-                    th: { image: '/static/memes/meme-1-optional-raid.jpg', title: 'เรดไม่บังคับ', caption: 'เมื่อ GM บอกว่า "ไม่บังคับ" แต่มาพร้อมรายชื่อเช็คชื่อ' }
-                }
-            },
-            {
-                id: 11,
-                category: 'raids',
-                votes: 589,
-                comments: 78,
-                content: {
-                    en: { image: '/static/memes/meme-2-one-quick-raid.jpg', title: 'One Quick Raid', caption: 'Famous last words...' },
-                    zh: { image: '/static/memes/meme-2-one-quick-raid.jpg', title: '快速打一場', caption: '最後的遺言...' },
-                    th: { image: '/static/memes/meme-2-one-quick-raid.jpg', title: 'แค่เรดเร็วๆ', caption: 'คำพูดสุดท้าย...' }
-                }
-            },
-            {
-                id: 12,
-                category: 'raids',
-                votes: 712,
-                comments: 124,
-                content: {
-                    en: { image: '/static/memes/meme-3-quick-dungeon.jpg', title: 'Quick Dungeon', caption: '47 wipes and counting...' },
-                    zh: { image: '/static/memes/meme-3-quick-dungeon.jpg', title: '快速副本', caption: '47次滅團，還在繼續...' },
-                    th: { image: '/static/memes/meme-3-quick-dungeon.jpg', title: 'ดันเจี้ยนเร็วๆ', caption: '47 ไวป์แล้ว นับต่อไป...' }
-                }
-            },
-            {
-                id: 13,
-                category: 'guild',
-                votes: 534,
-                comments: 67,
-                content: {
-                    en: { image: '/static/memes/meme-4-chat-timing.jpg', title: 'Chat Timing', caption: "Murphy's Law of Gaming" },
-                    zh: { image: '/static/memes/meme-4-chat-timing.jpg', title: '聊天時機', caption: '遊戲的墨菲定律' },
-                    th: { image: '/static/memes/meme-4-chat-timing.jpg', title: 'จังหวะแชท', caption: 'กฎของเมอร์ฟี่ในเกม' }
-                }
-            },
-            {
-                id: 14,
-                category: 'raids',
-                votes: 891,
-                comments: 156,
-                content: {
-                    en: { image: '/static/memes/meme-5-boss-fight.jpg', title: 'Boss Fight', caption: '3 potions and dreams vs 99M HP boss' },
-                    zh: { image: '/static/memes/meme-5-boss-fight.jpg', title: '打王', caption: '3瓶藥水和夢想 vs 9900萬血的王' },
-                    th: { image: '/static/memes/meme-5-boss-fight.jpg', title: 'สู้บอส', caption: '3 โพชั่นกับความฝัน vs บอส 99M HP' }
-                }
-            },
-            {
-                id: 15,
-                category: 'raids',
-                votes: 678,
-                comments: 89,
-                content: {
-                    en: { image: '/static/memes/meme-6-confidence.jpg', title: 'Confidence vs Reality', caption: '"I don\'t need a guide"' },
-                    zh: { image: '/static/memes/meme-6-confidence.jpg', title: '自信 vs 現實', caption: '「我不需要攻略」' },
-                    th: { image: '/static/memes/meme-6-confidence.jpg', title: 'มั่นใจ vs ความจริง', caption: '"ไม่ต้องดูไกด์หรอก"' }
-                }
-            },
-            // ============================================================
-            // MORE IMAGE MEMES (Converted from text)
-            // ============================================================
-            {
-                id: 1,
-                category: 'reggina',
-                votes: 420,
-                comments: 69,
-                content: {
-                    en: { image: '/static/memes/meme-7-beard.jpg', title: 'Nice Beard RegginA', caption: "That's... that's a Zakum tentacle on your chin" },
-                    zh: { image: '/static/memes/meme-7-beard.jpg', title: '好鬍子啊RegginA', caption: '那...那是你下巴上的乾坤觸手吧' },
-                    th: { image: '/static/memes/meme-7-beard.jpg', title: 'เคราสวยนะ RegginA', caption: 'นั่น...นั่นมันหนวด Zakum บนคางนายนี่' }
-                }
-            },
-            {
-                id: 2,
-                category: 'guild',
-                votes: 384,
-                comments: 42,
-                content: {
-                    en: { image: '/static/memes/meme-8-3am-chat.jpg', title: 'Guild Chat at 3AM', caption: 'Go to sleep! But boss raid... 🔪' },
-                    zh: { image: '/static/memes/meme-8-3am-chat.jpg', title: '凌晨3點的公會聊天', caption: '去睡覺！但是要打王... 🔪' },
-                    th: { image: '/static/memes/meme-8-3am-chat.jpg', title: 'แชทกิลด์ตอนตี 3', caption: 'ไปนอน! แต่ว่าเรดบอส... 🔪' }
-                }
-            },
-            {
-                id: 3,
-                category: 'raids',
-                votes: 512,
-                comments: 88,
-                content: {
-                    en: { image: '/static/memes/meme-9-elite-raid.jpg', title: 'Elite Raid Team', caption: 'Boss: Still at 99% HP 💀' },
-                    zh: { image: '/static/memes/meme-9-elite-raid.jpg', title: '精英打王隊', caption: 'Boss：血量還有 99% 💀' },
-                    th: { image: '/static/memes/meme-9-elite-raid.jpg', title: 'ทีมเรดอีลิท', caption: 'บอส: เลือดยังเหลือ 99% 💀' }
-                }
-            },
-            {
-                id: 4,
-                category: 'reggina',
-                votes: 666,
-                comments: 123,
-                content: {
-                    en: { image: '/static/memes/meme-10-evolution.jpg', title: 'Player Evolution', caption: 'Day 1: Normal → Day 365: Send help 🎪' },
-                    zh: { image: '/static/memes/meme-10-evolution.jpg', title: '玩家進化史', caption: '第1天：正常 → 第365天：救命 🎪' },
-                    th: { image: '/static/memes/meme-10-evolution.jpg', title: 'วิวัฒนาการผู้เล่น', caption: 'วันที่ 1: ปกติ → วันที่ 365: ช่วยด้วย 🎪' }
-                }
-            },
-            {
-                id: 5,
-                category: 'guild',
-                votes: 789,
-                comments: 156,
-                content: {
-                    en: { image: '/static/memes/meme-11-hierarchy.jpg', title: 'Guild Hierarchy', caption: 'Everyone thinks they\'re at the top 👑' },
-                    zh: { image: '/static/memes/meme-11-hierarchy.jpg', title: '公會階級', caption: '每個人都覺得自己在頂端 👑' },
-                    th: { image: '/static/memes/meme-11-hierarchy.jpg', title: 'ลำดับชั้นกิลด์', caption: 'ทุกคนคิดว่าตัวเองอยู่บนสุด 👑' }
-                }
-            },
-            {
-                id: 6,
-                category: 'random',
-                votes: 234,
-                comments: 31,
-                content: {
-                    en: { image: '/static/memes/meme-12-cp-flex.jpg', title: 'How We Flex CP', caption: 'What even is CP? 📊' },
-                    zh: { image: '/static/memes/meme-12-cp-flex.jpg', title: '我們怎麼炫耀戰力', caption: '戰力是什麼？📊' },
-                    th: { image: '/static/memes/meme-12-cp-flex.jpg', title: 'วิธีโชว์ CP', caption: 'CP คืออะไร? 📊' }
-                }
-            },
-            {
-                id: 7,
-                category: 'reggina',
-                votes: 888,
-                comments: 200,
-                content: {
-                    en: { image: '/static/memes/meme-13-gm-speech.jpg', title: 'GM Motivation Speech', caption: 'We rise together... *dies first* 👑💀' },
-                    zh: { image: '/static/memes/meme-13-gm-speech.jpg', title: '會長激勵演講', caption: '我們一起崛起... *先死* 👑💀' },
-                    th: { image: '/static/memes/meme-13-gm-speech.jpg', title: 'GM สุนทรพจน์', caption: 'เราขึ้นด้วยกัน... *ตายก่อน* 👑💀' }
-                }
-            },
-            {
-                id: 8,
-                category: 'random',
-                votes: 432,
-                comments: 56,
-                content: {
-                    en: { image: '/static/memes/meme-14-player-types.jpg', title: 'Player Types', caption: 'Which one are you? 🔥😴🤡👻' },
-                    zh: { image: '/static/memes/meme-14-player-types.jpg', title: '玩家類型', caption: '你是哪一種？🔥😴🤡👻' },
-                    th: { image: '/static/memes/meme-14-player-types.jpg', title: 'ประเภทผู้เล่น', caption: 'คุณเป็นแบบไหน? 🔥😴🤡👻' }
-                }
-            },
-            {
-                id: 9,
-                category: 'random',
-                votes: 345,
-                comments: 67,
-                content: {
-                    en: { image: '/static/memes/meme-15-random-chaos.jpg', title: 'Random Chaos', caption: 'Just another day in NumbahWan 🎪' },
-                    zh: { image: '/static/memes/meme-15-random-chaos.jpg', title: '隨機混亂', caption: 'NumbahWan 的日常 🎪' },
-                    th: { image: '/static/memes/meme-15-random-chaos.jpg', title: 'วุ่นวายแบบสุ่ม', caption: 'อีกวันใน NumbahWan 🎪' }
-                }
-            }
+            { id: 1, image: '/static/memes/meme-1-optional-raid.jpg', title: 'Optional Raid', caption: 'When GM says "optional" but shows up with attendance list', category: 'guild', votes: 623 },
+            { id: 2, image: '/static/memes/meme-2-one-quick-raid.jpg', title: 'One Quick Raid', caption: 'Famous last words...', category: 'raids', votes: 589 },
+            { id: 3, image: '/static/memes/meme-3-quick-dungeon.jpg', title: 'Quick Dungeon', caption: '47 wipes and counting...', category: 'raids', votes: 712 },
+            { id: 4, image: '/static/memes/meme-4-chat-timing.jpg', title: 'Chat Timing', caption: "Murphy's Law of Gaming", category: 'guild', votes: 534 },
+            { id: 5, image: '/static/memes/meme-5-boss-fight.jpg', title: 'Boss Fight', caption: '3 potions and dreams vs 99M HP boss', category: 'raids', votes: 891 },
+            { id: 6, image: '/static/memes/meme-6-confidence.jpg', title: 'Confidence vs Reality', caption: '"I don\'t need a guide"', category: 'raids', votes: 678 },
+            { id: 7, image: '/static/memes/meme-7-beard.jpg', title: 'Nice Beard RegginA', caption: "That's a Zakum tentacle on your chin", category: 'reggina', votes: 420 },
+            { id: 8, image: '/static/memes/meme-8-3am-chat.jpg', title: 'Guild Chat at 3AM', caption: 'Go to sleep! But boss raid... 🔪', category: 'guild', votes: 384 },
+            { id: 9, image: '/static/memes/meme-9-elite-raid.jpg', title: 'Elite Raid Team', caption: 'Boss: Still at 99% HP 💀', category: 'raids', votes: 512 },
+            { id: 10, image: '/static/memes/meme-10-evolution.jpg', title: 'Player Evolution', caption: 'Day 1: Normal → Day 365: Send help', category: 'reggina', votes: 666 },
+            { id: 11, image: '/static/memes/meme-11-hierarchy.jpg', title: 'Guild Hierarchy', caption: 'Everyone thinks they\'re at the top 👑', category: 'guild', votes: 789 },
+            { id: 12, image: '/static/memes/meme-12-cp-flex.jpg', title: 'How We Flex CP', caption: 'What even is CP? 📊', category: 'random', votes: 234 },
+            { id: 13, image: '/static/memes/meme-13-gm-speech.jpg', title: 'GM Motivation Speech', caption: 'We rise together... *dies first* 👑💀', category: 'reggina', votes: 888 },
+            { id: 14, image: '/static/memes/meme-14-player-types.jpg', title: 'Player Types', caption: 'Which one are you? 🔥😴🤡👻', category: 'random', votes: 432 },
+            { id: 15, image: '/static/memes/meme-15-random-chaos.jpg', title: 'Random Chaos', caption: 'Just another day in NumbahWan 🎪', category: 'random', votes: 345 },
+            { id: 16, image: '/static/memes/meme-16-3am-raid.jpg', title: '3AM Raid', caption: 'When you say "just one more raid" at 3AM', category: 'guild', votes: 847 },
+            { id: 17, image: '/static/memes/meme-17-checkin-missed.jpg', title: 'Check-in Missed', caption: 'Forgot guild check-in AGAIN', category: 'guild', votes: 723 },
+            { id: 18, image: '/static/memes/meme-18-healer-asleep.jpg', title: 'Healer Down', caption: 'The healer fell asleep mid-boss fight', category: 'raids', votes: 956 },
+            { id: 19, image: '/static/memes/meme-19-one-quick-quest.jpg', title: 'One Quick Quest', caption: '"Just one quick quest" - 6 hours later...', category: 'guild', votes: 634 },
+            { id: 20, image: '/static/memes/meme-20-guild-photo.jpg', title: 'Guild Photo Day', caption: 'Someone always ruins the photo', category: 'guild', votes: 812 },
+            { id: 21, image: '/static/memes/meme-21-afk-loot.jpg', title: 'AFK in Loot Room', caption: 'When you AFK in the loot room', category: 'random', votes: 567 },
+            { id: 22, image: '/static/memes/meme-22-guild-war-sleep.jpg', title: 'Guild War DPS', caption: 'Our top DPS during guild war', category: 'raids', votes: 789 },
+            { id: 23, image: '/static/memes/meme-23-guild-meeting.jpg', title: 'Guild Meeting', caption: 'Important guild announcement', category: 'guild', votes: 645 },
+            { id: 24, image: '/static/memes/meme-24-boss-1percent.jpg', title: 'Boss 1% HP', caption: 'When the support is AFK at boss 1% HP', category: 'raids', votes: 923 },
+            { id: 25, image: '/static/memes/meme-25-leaderboard.jpg', title: 'Participation Board', caption: 'Guild participation leaderboard', category: 'guild', votes: 534 },
+            { id: 26, image: '/static/memes/meme-26-wrong-day.jpg', title: 'Wrong Day', caption: '"What? The raid was TODAY?"', category: 'raids', votes: 678 },
+            { id: 27, image: '/static/memes/meme-27-procrastination.jpg', title: 'Tomorrow', caption: "I'll deal with it tomorrow", category: 'random', votes: 456 },
+            { id: 28, image: '/static/memes/meme-28-fastest-nap.jpg', title: 'Fastest Nap', caption: 'Online then immediately AFK', category: 'guild', votes: 745 },
+            { id: 29, image: '/static/memes/meme-29-chaotic-sleeper.jpg', title: 'Chaotic Sleeper', caption: 'How gamers sleep after "just 5 more minutes"', category: 'random', votes: 512 },
+            { id: 30, image: '/static/memes/meme-30-literally-carried.jpg', title: 'Literally Carried', caption: 'Carrying the team (literally)', category: 'raids', votes: 867 },
+            { id: 31, image: '/static/memes/meme-31-gm-beard.jpg', title: 'Nice Beard GM', caption: 'The GM beard is getting out of hand', category: 'reggina', votes: 934 },
+            { id: 32, image: '/static/memes/meme-32-gacha-luck.jpg', title: 'Gacha Luck', caption: 'When the vice master wins ANOTHER gacha', category: 'random', votes: 623 },
+            { id: 33, image: '/static/memes/meme-33-player-types.jpg', title: 'Guild Members', caption: 'Which guild member are you?', category: 'guild', votes: 756 },
+            { id: 34, image: '/static/memes/meme-34-noob-vs-boss.jpg', title: 'Noob vs Boss', caption: 'Level 10 vs Level 100 boss: "I got this"', category: 'raids', votes: 845 },
+            { id: 35, image: '/static/memes/meme-35-blame-game.jpg', title: 'Blame Game', caption: 'Guild chat after a wipe', category: 'raids', votes: 678 },
+            { id: 36, image: '/static/memes/meme-36-healer-life.jpg', title: 'Healer Life', caption: 'Life of a healer', category: 'raids', votes: 567 },
+            { id: 37, image: '/static/memes/meme-37-one-more-quest.jpg', title: 'Famous Last Words', caption: '"Just one more quest" - clock shows 5AM', category: 'guild', votes: 723 },
+            { id: 38, image: '/static/memes/meme-38-wallet-gacha.jpg', title: 'Wallet vs Gacha', caption: 'My wallet vs gacha banners', category: 'random', votes: 834 },
+            { id: 39, image: '/static/memes/meme-39-gm-dies-first.jpg', title: 'Lead by Example', caption: 'GM motivational speech then dies first', category: 'reggina', votes: 912 },
+            { id: 40, image: '/static/memes/meme-40-guild-drama.jpg', title: 'Guild Drama', caption: 'You don\'t want to know, kid', category: 'guild', votes: 645 },
+            { id: 41, image: '/static/memes/meme-41-legendary-loot.jpg', title: 'Legendary Drop', caption: 'When the legendary drops', category: 'raids', votes: 789 },
+            { id: 42, image: '/static/memes/meme-42-low-dps.jpg', title: 'Carrying My Weight', caption: 'DPS: 47. Everyone else: 1 million', category: 'raids', votes: 534 },
+            { id: 43, image: '/static/memes/meme-43-tank-appreciation.jpg', title: 'Tank Appreciation', caption: 'Tank appreciation post', category: 'raids', votes: 867 },
+            { id: 44, image: '/static/memes/meme-44-cutscene-vs-gameplay.jpg', title: 'Cutscene vs Gameplay', caption: 'My character in cutscenes vs gameplay', category: 'random', votes: 623 },
+            { id: 45, image: '/static/memes/meme-45-server-maintenance.jpg', title: 'Server Maintenance', caption: 'Server maintenance for 2 hours', category: 'guild', votes: 756 },
+            { id: 46, image: '/static/memes/meme-46-recruitment-vs-reality.jpg', title: 'Recruitment vs Reality', caption: 'Guild recruitment vs actual guild', category: 'guild', votes: 678 },
+            { id: 47, image: '/static/memes/meme-47-two-buttons.jpg', title: 'Every Night', caption: 'Sleep vs one more dungeon at 3AM', category: 'random', votes: 845 },
+            { id: 48, image: '/static/memes/meme-48-fake-disconnect.jpg', title: 'Strategic Disconnect', caption: '"My internet is lagging" - WiFi: Full bars', category: 'raids', votes: 567 },
+            { id: 49, image: '/static/memes/meme-49-room-event-week.jpg', title: 'Event Week', caption: 'Room during guild event week', category: 'guild', votes: 723 },
+            { id: 50, image: '/static/memes/meme-50-priorities.jpg', title: 'Priorities', caption: 'In-game cosmetics: Rich. Real life: Broke', category: 'random', votes: 634 }
         ];
-
-        // ============================================================
-        // PAGE TRANSLATIONS
-        // ============================================================
-        const pageTranslations = {
-            en: {
-                // Nav
-                home: "Home",
-                joinUs: "Join Us",
-                
-                // Hero
-                pageTitle: "MEME VAULT",
-                pageSubtitle: "Where legends become laughs",
-                pageWarning: "Warning: Side effects include snorting, wheezing, and waking up your neighbors",
-                
-                // Categories
-                catAll: "All Memes",
-                catReggina: "RegginA Roasts",
-                catGuild: "Guild Life",
-                catRaids: "Raid Fails",
-                catRandom: "Random Chaos",
-                
-                // CTA
-                submitTitle: "Got a spicy meme? 🌶️",
-                submitDesc: "Submit your guild memes and become a legend (or get roasted trying)",
-                submitBtn: "Submit Meme",
-                guidelinesBtn: "Meme Guidelines",
-                submitDisclaimer: "*RegginA's feelings may or may not be protected",
-                
-                // Footer
-                footerMade: "Made with 😂 by NumbahWan Guild",
-                footerDisclaimer: "No RegginAs were harmed in the making of these memes (just their ego)",
-                
-                // Marquee
-                marquee: [
-                    "🤣", "RegginA's beard is NOT a fashion choice", "😭",
-                    "When you forget to do Guild Check-in", "💀",
-                    "紈稀稀著 falling asleep mid-raid AGAIN", "🤡",
-                    "CP? More like Can't Play"
-                ],
-                
-                // Actions
-                viewFull: "View Full Size",
-                share: "Share"
-            },
-            zh: {
-                // Nav
-                home: "首頁",
-                joinUs: "加入我們",
-                
-                // Hero
-                pageTitle: "迷因金庫",
-                pageSubtitle: "傳奇變成笑話的地方",
-                pageWarning: "警告：副作用包括噴笑、喘氣和吵醒鄰居",
-                
-                // Categories
-                catAll: "全部迷因",
-                catReggina: "RegginA 被烤",
-                catGuild: "公會日常",
-                catRaids: "打王失敗",
-                catRandom: "隨機混亂",
-                
-                // CTA
-                submitTitle: "有辣迷因嗎？🌶️",
-                submitDesc: "提交你的公會迷因，成為傳奇（或被烤）",
-                submitBtn: "提交迷因",
-                guidelinesBtn: "迷因規則",
-                submitDisclaimer: "*RegginA 的感情可能受到保護，也可能沒有",
-                
-                // Footer
-                footerMade: "由 NumbahWan 公會用 😂 製作",
-                footerDisclaimer: "製作這些迷因時沒有 RegginA 受傷（只有他的自尊心）",
-                
-                // Marquee
-                marquee: [
-                    "🤣", "RegginA 的鬍子不是時尚選擇", "😭",
-                    "當你忘記公會簽到時", "💀",
-                    "紈稀稀著 又在打王時睡著了", "🤡",
-                    "戰力？不如說不會玩"
-                ],
-                
-                // Actions
-                viewFull: "查看大圖",
-                share: "分享"
-            },
-            th: {
-                // Nav
-                home: "หน้าแรก",
-                joinUs: "เข้าร่วม",
-                
-                // Hero
-                pageTitle: "คลังมีม",
-                pageSubtitle: "ที่ที่ตำนานกลายเป็นเรื่องตลก",
-                pageWarning: "คำเตือน: ผลข้างเคียงรวมถึงการหัวเราะจนสำลัก หายใจไม่ออก และปลุกเพื่อนบ้าน",
-                
-                // Categories
-                catAll: "มีมทั้งหมด",
-                catReggina: "ย่าง RegginA",
-                catGuild: "ชีวิตกิลด์",
-                catRaids: "เรดพัง",
-                catRandom: "วุ่นวายสุ่ม",
-                
-                // CTA
-                submitTitle: "มีมีมเผ็ดๆ ไหม? 🌶️",
-                submitDesc: "ส่งมีมกิลด์ของคุณและกลายเป็นตำนาน (หรือโดนย่าง)",
-                submitBtn: "ส่งมีม",
-                guidelinesBtn: "กฎมีม",
-                submitDisclaimer: "*ความรู้สึกของ RegginA อาจได้รับการปกป้องหรือไม่ก็ได้",
-                
-                // Footer
-                footerMade: "สร้างด้วย 😂 โดย NumbahWan Guild",
-                footerDisclaimer: "ไม่มี RegginA ได้รับบาดเจ็บในการทำมีมเหล่านี้ (แค่อีโก้เขา)",
-                
-                // Marquee
-                marquee: [
-                    "🤣", "เคราของ RegginA ไม่ใช่ตัวเลือกแฟชั่น", "😭",
-                    "เมื่อคุณลืมเช็คอินกิลด์", "💀",
-                    "紈稀稀著 หลับกลางเรดอีกแล้ว", "🤡",
-                    "CP? น่าจะเป็น Can't Play"
-                ],
-                
-                // Actions
-                viewFull: "ดูขนาดเต็ม",
-                share: "แชร์"
-            }
-        };
-
-        // ============================================================
-        // I18N FUNCTIONS
-        // ============================================================
-        const langMeta = {
-            en: { flag: "🇬🇧", code: "EN" },
-            zh: { flag: "🇹🇼", code: "中文" },
-            th: { flag: "🇹🇭", code: "ไทย" }
-        };
         
-        let currentLang = localStorage.getItem('lang') || 'en';
+        // ============================================
+        // SMOOTH CAROUSEL ENGINE
+        // ============================================
+        let currentIndex = 0;
+        let targetIndex = 0;
+        let displayIndex = 0; // Floating point for smooth animation
+        let filteredMemes = [...memeData];
+        let velocity = 0;
+        let isDragging = false;
+        let dragStartX = 0;
+        let dragCurrentX = 0;
+        let lastDragX = 0;
+        let lastDragTime = 0;
+        let animating = false;
+        let hasInteracted = false;
         
-        function setLanguage(lang) {
-            currentLang = lang;
-            localStorage.setItem('lang', lang);
+        const track = document.getElementById('carousel-track');
+        const progressTrack = document.getElementById('progress-track');
+        const counterCurrent = document.getElementById('counter-current');
+        const counterTotal = document.getElementById('counter-total');
+        const momentumFill = document.getElementById('momentum-fill');
+        const swipeHint = document.getElementById('swipe-hint');
+        const universe = document.getElementById('meme-universe');
+        
+        // ============================================
+        // CARD POSITION CALCULATOR - 3D TRANSFORMS
+        // ============================================
+        function getCardTransform(offset) {
+            // offset: -3 to +3 (floating point)
+            const absOffset = Math.abs(offset);
+            const sign = offset >= 0 ? 1 : -1;
             
-            // Update flag and code
-            document.getElementById('current-lang-flag').textContent = langMeta[lang].flag;
-            document.getElementById('current-lang-code').textContent = langMeta[lang].code;
+            // Smooth curves for each property
+            const x = sign * Math.pow(absOffset, 0.8) * 180; // Horizontal spread
+            const z = -Math.pow(absOffset, 1.5) * 80; // Depth
+            const rotateY = -sign * Math.min(absOffset * 15, 35); // Rotation
+            const scale = Math.max(0.5, 1 - absOffset * 0.15); // Scale
+            const opacity = Math.max(0, 1 - absOffset * 0.3); // Fade
             
-            // Update all data-i18n elements
-            document.querySelectorAll('[data-i18n]').forEach(el => {
-                const key = el.getAttribute('data-i18n');
-                if (pageTranslations[lang][key]) {
-                    el.textContent = pageTranslations[lang][key];
-                }
+            return {
+                transform: `translateX(${x}px) translateZ(${z}px) rotateY(${rotateY}deg) scale(${scale})`,
+                opacity: opacity,
+                zIndex: Math.round(100 - absOffset * 10)
+            };
+        }
+        
+        // ============================================
+        // RENDER CARDS (once)
+        // ============================================
+        function renderCards() {
+            track.innerHTML = '';
+            
+            filteredMemes.forEach((meme, index) => {
+                const card = document.createElement('div');
+                card.className = 'meme-card';
+                card.dataset.index = index;
+                card.innerHTML = `
+                    <div class="card-inner">
+                        <div class="card-image-container">
+                            <img class="card-image" src="${meme.image}" alt="${meme.title}" loading="lazy" />
+                            <span class="category-badge ${meme.category}">${meme.category}</span>
+                            <div class="vote-badge" onclick="vote(${index}, event)">
+                                <span>🔥</span>
+                                <span class="vote-count">${meme.votes}</span>
+                            </div>
+                            <div class="card-caption">
+                                <div class="card-title">${meme.title}</div>
+                                <div class="card-text">${meme.caption}</div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                track.appendChild(card);
             });
             
-            // Re-render memes with new language
-            renderMemes();
-            
-            // Update marquee
-            updateMarquee();
-            
-            // Close menu
-            document.getElementById('lang-menu').classList.add('hidden');
+            renderProgressDots();
+            updateCounter();
+            updateCardPositions();
         }
         
-        function toggleLangMenu() {
-            document.getElementById('lang-menu').classList.toggle('hidden');
+        // ============================================
+        // UPDATE CARD POSITIONS (called every frame during animation)
+        // ============================================
+        function updateCardPositions() {
+            const cards = track.querySelectorAll('.meme-card');
+            
+            cards.forEach((card, index) => {
+                const offset = index - displayIndex;
+                
+                // Only render cards within visible range
+                if (Math.abs(offset) > 4) {
+                    card.style.display = 'none';
+                    return;
+                }
+                
+                card.style.display = '';
+                const { transform, opacity, zIndex } = getCardTransform(offset);
+                
+                card.style.transform = transform;
+                card.style.opacity = opacity;
+                card.style.zIndex = zIndex;
+                
+                // Active state for center card
+                if (Math.abs(offset) < 0.5) {
+                    card.classList.add('active');
+                } else {
+                    card.classList.remove('active');
+                }
+            });
         }
         
-        // Close menu on outside click
-        document.addEventListener('click', (e) => {
-            const switcher = document.getElementById('lang-switcher');
-            if (!switcher.contains(e.target)) {
-                document.getElementById('lang-menu').classList.add('hidden');
+        // ============================================
+        // SMOOTH ANIMATION LOOP
+        // ============================================
+        function animate() {
+            if (!isDragging) {
+                // Spring physics toward target
+                const diff = targetIndex - displayIndex;
+                const spring = 0.15; // Spring strength
+                const damping = 0.75; // Velocity damping
+                
+                velocity += diff * spring;
+                velocity *= damping;
+                displayIndex += velocity;
+                
+                // Snap when close enough
+                if (Math.abs(diff) < 0.01 && Math.abs(velocity) < 0.01) {
+                    displayIndex = targetIndex;
+                    velocity = 0;
+                    currentIndex = targetIndex;
+                    updateCounter();
+                    updateActiveDot();
+                    animating = false;
+                }
             }
-        });
-
-        // ============================================================
-        // RENDER FUNCTIONS
-        // ============================================================
-        function updateMarquee() {
-            const marqueeItems = pageTranslations[currentLang].marquee;
-            const content = marqueeItems.map(item => `<span class="mx-4">${item}</span>`).join('');
-            document.getElementById('marquee-text').innerHTML = content + content; // Duplicate for seamless loop
-        }
-        
-        function renderMemes(filter = 'all') {
-            const grid = document.getElementById('meme-grid');
-            const t = pageTranslations[currentLang];
             
-            const filtered = filter === 'all' 
-                ? memeData 
-                : memeData.filter(m => m.category === filter);
+            updateCardPositions();
             
-            grid.innerHTML = filtered.map(meme => {
-                const content = meme.content[currentLang];
-                return `
-                    <div class="meme-card glass-card overflow-hidden" data-category="${meme.category}" data-meme-id="${meme.id}">
-                        <div class="relative">
-                            <div class="aspect-square bg-gradient-to-br from-orange-900/50 to-purple-900/50 flex items-center justify-center p-6">
-                                ${renderMemeContent(meme, content)}
-                            </div>
-                            <div class="meme-overlay absolute inset-0 bg-black/70 flex items-center justify-center">
-                                <button onclick="openLightbox(${meme.id})" class="px-6 py-3 bg-orange-500 rounded-full font-bold hover:bg-orange-400 flex items-center gap-2">
-                                    <svg class="nw-icon" width="20" height="20" style="fill:#000"><use href="/static/icons/nw-icons.svg#eye"></use></svg>
-                                    ${t.viewFull}
-                                </button>
-                            </div>
-                        </div>
-                        <div class="p-4 flex items-center justify-between">
-                            <div class="flex items-center gap-2">
-                                <button class="upvote-btn hover:scale-110 transition-transform text-orange-400" onclick="upvote(this, event)">
-                                    <svg class="nw-icon" width="24" height="24" style="fill:#ff6b00"><use href="/static/icons/nw-icons.svg#upvote"></use></svg>
-                                </button>
-                                <span class="text-orange-400 font-bold vote-count">${meme.votes}</span>
-                            </div>
-                            <div class="flex items-center gap-4 text-gray-400 text-sm">
-                                <span class="flex items-center gap-1"><svg class="nw-icon" width="16" height="16" style="fill:#9ca3af"><use href="/static/icons/nw-icons.svg#chat"></use></svg> ${meme.comments}</span>
-                                <button onclick="shareMeme(${meme.id})" class="flex items-center gap-1 hover:text-orange-400 transition-colors"><svg class="nw-icon" width="16" height="16" style="fill:currentColor"><use href="/static/icons/nw-icons.svg#share"></use></svg> ${t.share}</button>
-                            </div>
-                        </div>
-                    </div>
-                `;
-            }).join('');
-        }
-        
-        // Icon helper function - converts emoji to our custom SVG icons
-        // Color mapping for different icon types
-        const iconColors = {
-            'fire': '#ff6b00', 'crown': '#ffd700', 'skull': '#a855f7', 'sleep': '#a855f7',
-            'party': '#ff6b00', 'confetti': '#ff6b00', 'hero': '#3b82f6', 'camera': '#ec4899',
-            'runner': '#22c55e', 'baby': '#fbbf24', 'squid': '#a855f7', 'circus': '#ef4444',
-            'shrug': '#9ca3af', 'ghost': '#9ca3af', 'meme': '#fbbf24', 'swords': '#ef4444',
-            'sword': '#ef4444', 'heart': '#ec4899', 'nail': '#ec4899', 'music': '#8b5cf6',
-            'spicy': '#ef4444', 'x-circle': '#ef4444', 'check-circle': '#22c55e',
-            'trophy': '#ffd700', 'star': '#ffd700', 'chat': '#3b82f6', 'target': '#ef4444',
-            'thinking': '#fbbf24', 'question': '#9ca3af', 'clock': '#60a5fa', 'share': '#ff6b00',
-            'nail': '#ec4899', 'shrug': '#9ca3af', 'circus': '#a855f7', 'baby': '#fbbf24',
-            'squid': '#ec4899', 'beard': '#92400e', 'document': '#d4a574'
-        };
-        
-        function getIcon(emoji, size = 48, extraClass = '') {
-            const emojiMap = {
-                '🧔': 'beard', '🔥': 'fire', '👑': 'crown', '⚔️': 'swords', '💀': 'skull',
-                '😴': 'sleep', '💤': 'sleep', '🎉': 'party', '💬': 'chat', '📤': 'share',
-                '📸': 'camera', '🦸': 'hero', '🏃': 'runner', '😈': 'spicy', '🎵': 'music',
-                '👶': 'baby', '🦑': 'squid', '🎪': 'circus', '💅': 'nail', '🤷': 'shrug',
-                '👻': 'ghost', '🤡': 'meme', '⬆️': 'upvote', '🏆': 'trophy', '⭐': 'star',
-                '🎮': 'gaming', '🛡️': 'shield', '🎯': 'target', '❤️': 'heart', '⚙️': 'settings',
-                '🔒': 'lock', '📜': 'document', '🎲': 'dice', '⏰': 'clock', '🕐': 'clock',
-                '🕕': 'clock', '📊': 'question', '❓': 'question', '🙄': 'thinking',
-                '❌': 'x-circle', '✅': 'check-circle', '🔪': 'sword'
-            };
-            const iconName = emojiMap[emoji] || 'question';
-            const color = iconColors[iconName] || '#ff6b00';
-            return `<svg class="nw-icon ${extraClass}" width="${size}" height="${size}" style="color:${color};fill:${color}"><use href="/static/icons/nw-icons.svg#${iconName}"></use></svg>`;
-        }
-        
-        // Multi-emoji helper
-        function getMultiIcon(emojiStr, size = 48) {
-            if (!emojiStr) return '';
-            const emojis = emojiStr.match(/[\u{1F300}-\u{1F9FF}]|[\u{2600}-\u{26FF}]|[\u{2700}-\u{27BF}]|[\u{1F600}-\u{1F64F}]|[\u{1F680}-\u{1F6FF}]|[\u{1FA00}-\u{1FAFF}]/gu) || [];
-            return emojis.map(e => getIcon(e, size)).join(' ');
-        }
-
-        function renderMemeContent(meme, content) {
-            // Different rendering based on meme structure
-            if (content.emoji && content.title && content.subtitle) {
-                // Type 1: Simple emoji + title + subtitle
-                return `
-                    <div class="text-center">
-                        <div class="mb-4 flex justify-center">${getIcon(content.emoji, 64, 'text-orange-400')}</div>
-                        <p class="text-2xl font-bold text-white mb-2">${content.title}</p>
-                        <p class="text-lg text-orange-300">${content.subtitle}</p>
-                        ${content.caption ? `<p class="text-sm text-gray-400 mt-4 italic">${content.caption}</p>` : ''}
-                    </div>
-                `;
-            } else if (content.lines && content.title) {
-                // Type 2: Chat log style
-                return `
-                    <div class="text-center">
-                        <p class="text-lg text-gray-400 mb-2">${content.title}</p>
-                        <div class="text-left space-y-2 text-sm">
-                            ${content.lines.map(line => 
-                                line.name 
-                                    ? `<p><span class="${line.color}">${line.name}:</span> ${line.text.includes('🔪') ? line.text.replace('🔪', getIcon('🔪', 16)) : line.text}</p>`
-                                    : `<p class="${line.color}">${line.text}</p>`
-                            ).join('')}
-                        </div>
-                        <div class="mt-4 flex justify-center gap-2">${getMultiIcon(content.emoji, 40)}</div>
-                    </div>
-                `;
-            } else if (content.header && content.lines) {
-                // Type 3: Raid fail style
-                return `
-                    <div class="text-center">
-                        <p class="text-sm text-gray-400 mb-2">${content.header}</p>
-                        <div class="mb-4 flex justify-center gap-2">${getMultiIcon(content.emoji, 48)}</div>
-                        <div class="space-y-1 text-sm">
-                            ${content.lines.map(line => `
-                                <p class="${line.status === 'fail' ? 'text-red-400' : 'text-green-400'} flex items-center gap-1 justify-center">
-                                    ${line.status === 'fail' ? getIcon('❌', 16) : getIcon('✅', 16)} ${line.text}
-                                </p>
-                            `).join('')}
-                        </div>
-                    </div>
-                `;
-            } else if (content.stages) {
-                // Type 4: Evolution style
-                return `
-                    <div class="text-center">
-                        <p class="text-lg text-gray-300 mb-4">${content.title}</p>
-                        <div class="grid grid-cols-3 gap-2 text-center text-xs">
-                            ${content.stages.map(stage => `
-                                <div>
-                                    <div class="flex justify-center mb-1">${getIcon(stage.emoji, 36, stage.color)}</div>
-                                    <p class="text-gray-400">${stage.day}</p>
-                                    <p class="${stage.color}">${stage.status}</p>
-                                </div>
-                            `).join('')}
-                        </div>
-                        <p class="text-2xl mt-4">${content.caption}</p>
-                    </div>
-                `;
-            } else if (content.hierarchy) {
-                // Type 5: Hierarchy style
-                return `
-                    <div class="text-center">
-                        <p class="text-lg text-gray-300 mb-4">${content.title}</p>
-                        <div class="space-y-2">
-                            ${content.hierarchy.map((item, i) => `
-                                <div class="flex items-center justify-center gap-2">
-                                    ${getIcon(item.emoji, 28)}
-                                    <span>${item.role}</span>
-                                </div>
-                                ${i < content.hierarchy.length - 1 ? '<div class="text-gray-500">↓</div>' : ''}
-                            `).join('')}
-                        </div>
-                    </div>
-                `;
-            } else if (content.comparisons) {
-                // Type 6: Comparison style
-                return `
-                    <div class="text-center">
-                        <p class="text-lg text-gray-300 mb-4">${content.title}</p>
-                        <div class="space-y-3">
-                            ${content.comparisons.map(c => `
-                                <div class="flex items-center justify-between px-4">
-                                    <span>${c.label}</span>
-                                    <span class="${c.color}">${c.value}</span>
-                                </div>
-                            `).join('')}
-                        </div>
-                        <div class="mt-4 flex justify-center gap-2">${getMultiIcon(content.emoji, 40)}</div>
-                    </div>
-                `;
-            } else if (content.before && content.after) {
-                // Type 7: Before/After style
-                return `
-                    <div class="text-center">
-                        <p class="text-sm text-gray-400 mb-2">${content.before}</p>
-                        <div class="mb-4 flex justify-center">${getIcon(content.emoji1 || '⏰', 56, 'text-orange-400')}</div>
-                        <p class="text-lg text-white mb-2">${content.after}</p>
-                        <div class="mb-4 flex justify-center">${getIcon(content.emoji2 || '⏰', 56, 'text-red-400')}</div>
-                        <p class="text-orange-300">${content.result}</p>
-                        ${content.stats.map(s => `<p class="text-xs ${s.color} mt-1">${s.label} ${s.value}</p>`).join('')}
-                    </div>
-                `;
-            } else if (content.quote) {
-                // Type 8: Quote style
-                return `
-                    <div class="text-center">
-                        <p class="text-lg text-gray-300 mb-4">${content.title}</p>
-                        <div class="glass-card p-4 rounded-lg">
-                            <p class="text-xl italic text-orange-300">${content.quote}</p>
-                        </div>
-                        <div class="mt-4 text-sm text-gray-400">
-                            ${content.actions.map(a => `<p>${a}</p>`).join('')}
-                        </div>
-                        <div class="mt-4 flex justify-center gap-2">${getMultiIcon(content.emoji, 36)}</div>
-                    </div>
-                `;
-            } else if (content.types) {
-                // Type 9: Grid types
-                return `
-                    <div class="text-center">
-                        <p class="text-lg text-gray-300 mb-4">${content.title}</p>
-                        <div class="grid grid-cols-2 gap-3 text-sm">
-                            ${content.types.map(t => `
-                                <div class="glass-card p-2 rounded">
-                                    <div class="flex justify-center mb-1">${getIcon(t.emoji, 32, t.color)}</div>
-                                    <p class="${t.color}">${t.type}</p>
-                                    <p class="text-xs text-gray-500">${t.members}</p>
-                                </div>
-                            `).join('')}
-                        </div>
-                    </div>
-                `;
-            } else if (content.image) {
-                // Type 10: Image meme
-                return `
-                    <div class="text-center">
-                        <img src="${content.image}" alt="${content.title || 'Meme'}" 
-                             class="w-full h-auto rounded-lg max-h-[300px] object-contain mx-auto" 
-                             loading="lazy" />
-                        ${content.caption ? `<p class="text-sm text-gray-400 mt-3 italic">${content.caption}</p>` : ''}
-                    </div>
-                `;
+            // Update momentum bar
+            const momentum = Math.min(Math.abs(velocity) * 50, 100);
+            momentumFill.style.width = momentum + '%';
+            
+            if (animating || isDragging) {
+                requestAnimationFrame(animate);
             }
-            return '<div class="text-center text-gray-400">Meme loading...</div>';
-        }
-
-        // ============================================================
-        // INTERACTIONS
-        // ============================================================
-        function upvote(btn, event) {
-            event.stopPropagation();
-            const countSpan = btn.nextElementSibling;
-            let count = parseInt(countSpan.textContent);
-            count++;
-            countSpan.textContent = count;
-            
-            // Spawn floating icon
-            const icons = ['fire', 'meme', 'skull', 'crown', 'upvote', 'party'];
-            const iconName = icons[Math.floor(Math.random() * icons.length)];
-            const color = iconColors[iconName] || '#ff6b00';
-            const floater = document.createElement('div');
-            floater.className = 'floating-emoji';
-            floater.innerHTML = `<svg class="nw-icon" width="32" height="32" style="fill:${color}"><use href="/static/icons/nw-icons.svg#${iconName}"></use></svg>`;
-            floater.style.left = event.clientX + 'px';
-            floater.style.top = event.clientY + 'px';
-            document.body.appendChild(floater);
-            
-            setTimeout(() => floater.remove(), 3000);
         }
         
-        function filterMemes(category) {
-            const pills = document.querySelectorAll('.category-pill');
-            pills.forEach(pill => pill.classList.remove('active'));
-            event.target.closest('.category-pill').classList.add('active');
-            
-            renderMemes(category);
+        function startAnimation() {
+            if (!animating) {
+                animating = true;
+                requestAnimationFrame(animate);
+            }
         }
         
-        // ============================================================
-        // LIGHTBOX
-        // ============================================================
-        function openLightbox(memeId) {
-            const meme = memeData.find(m => m.id === memeId);
-            if (!meme) return;
-            
-            const content = meme.content[currentLang];
-            const lightbox = document.getElementById('meme-lightbox');
-            const lightboxContent = document.getElementById('lightbox-content');
-            
-            // Render larger version of meme content
-            lightboxContent.innerHTML = `
-                <div class="text-center py-4">
-                    ${renderMemeContent(meme, content)}
-                </div>
-                <div class="mt-6 pt-4 border-t border-orange-500/20 flex items-center justify-between">
-                    <div class="flex items-center gap-3">
-                        <button class="upvote-btn hover:scale-110 transition-transform flex items-center gap-2" onclick="upvoteLightbox(this, event, ${meme.id})">
-                            <svg class="nw-icon" width="28" height="28" style="fill:#ff6b00"><use href="/static/icons/nw-icons.svg#upvote"></use></svg>
-                            <span class="text-orange-400 font-bold text-xl lightbox-vote-count">${meme.votes}</span>
-                        </button>
-                    </div>
-                    <div class="flex items-center gap-4">
-                        <span class="flex items-center gap-2 text-gray-400">
-                            <svg class="nw-icon" width="20" height="20" style="fill:#9ca3af"><use href="/static/icons/nw-icons.svg#chat"></use></svg>
-                            <span>${meme.comments} comments</span>
-                        </span>
-                        <button onclick="shareMeme(${meme.id})" class="flex items-center gap-2 text-gray-400 hover:text-orange-400 transition-colors">
-                            <svg class="nw-icon" width="20" height="20" style="fill:currentColor"><use href="/static/icons/nw-icons.svg#share"></use></svg>
-                            Share
-                        </button>
-                    </div>
-                </div>
-            `;
-            
-            lightbox.classList.remove('hidden');
-            document.body.style.overflow = 'hidden';
+        // ============================================
+        // NAVIGATION
+        // ============================================
+        function navigateTo(index) {
+            hideHint();
+            index = Math.max(0, Math.min(filteredMemes.length - 1, index));
+            targetIndex = index;
+            startAnimation();
         }
         
-        function closeLightbox(event) {
-            if (event) event.stopPropagation();
-            document.getElementById('meme-lightbox').classList.add('hidden');
-            document.body.style.overflow = '';
+        function goTo(index) {
+            navigateTo(index);
         }
         
-        function upvoteLightbox(btn, event, memeId) {
-            event.stopPropagation();
-            const countSpan = btn.querySelector('.lightbox-vote-count');
-            let count = parseInt(countSpan.textContent);
-            count++;
-            countSpan.textContent = count;
-            
-            // Also update the card in the grid
-            const card = document.querySelector(`[data-meme-id="${memeId}"] .vote-count`);
-            if (card) card.textContent = count;
-            
-            // Update the data
-            const meme = memeData.find(m => m.id === memeId);
-            if (meme) meme.votes = count;
+        // ============================================
+        // DRAG/SWIPE HANDLING
+        // ============================================
+        function handleDragStart(e) {
+            isDragging = true;
+            dragStartX = e.type.includes('mouse') ? e.clientX : e.touches[0].clientX;
+            dragCurrentX = dragStartX;
+            lastDragX = dragStartX;
+            lastDragTime = performance.now();
+            velocity = 0;
+            startAnimation();
         }
         
-        function shareMeme(memeId) {
-            const url = `${window.location.origin}/memes#meme-${memeId}`;
-            if (navigator.share) {
-                navigator.share({
-                    title: 'NumbahWan Guild Meme',
-                    text: 'Check out this meme from NumbahWan Guild!',
-                    url: url
-                });
+        function handleDragMove(e) {
+            if (!isDragging) return;
+            hideHint();
+            
+            const x = e.type.includes('mouse') ? e.clientX : e.touches[0].clientX;
+            const now = performance.now();
+            const dt = now - lastDragTime;
+            
+            // Calculate velocity
+            if (dt > 0) {
+                velocity = (lastDragX - x) / dt * 0.5;
+            }
+            
+            lastDragX = x;
+            lastDragTime = now;
+            dragCurrentX = x;
+            
+            // Update display index based on drag
+            const dragDelta = (dragStartX - x) / 200; // Sensitivity
+            displayIndex = targetIndex + dragDelta;
+            
+            // Clamp with rubber band effect at edges
+            if (displayIndex < 0) {
+                displayIndex = displayIndex * 0.3;
+            } else if (displayIndex > filteredMemes.length - 1) {
+                const overflow = displayIndex - (filteredMemes.length - 1);
+                displayIndex = (filteredMemes.length - 1) + overflow * 0.3;
+            }
+        }
+        
+        function handleDragEnd() {
+            if (!isDragging) return;
+            isDragging = false;
+            
+            const dragDistance = dragStartX - dragCurrentX;
+            const threshold = 50;
+            
+            // Determine target based on velocity and distance
+            let newTarget = targetIndex;
+            
+            if (Math.abs(velocity) > 0.3) {
+                // High velocity - use momentum
+                const momentumCards = Math.round(velocity * 3);
+                newTarget = Math.round(displayIndex) + momentumCards;
+            } else if (Math.abs(dragDistance) > threshold) {
+                // Threshold crossed - move one card
+                newTarget = dragDistance > 0 ? targetIndex + 1 : targetIndex - 1;
             } else {
-                navigator.clipboard.writeText(url).then(() => {
-                    alert('Meme link copied to clipboard!');
-                });
+                // Snap back
+                newTarget = Math.round(displayIndex);
+            }
+            
+            // Clamp to valid range
+            targetIndex = Math.max(0, Math.min(filteredMemes.length - 1, newTarget));
+            
+            // Add some velocity for smooth finish
+            if (Math.abs(velocity) > 0.1) {
+                velocity *= 2;
             }
         }
         
-        // Close lightbox on Escape key
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape') closeLightbox();
+        // ============================================
+        // PROGRESS DOTS
+        // ============================================
+        function renderProgressDots() {
+            const maxDots = 15;
+            const totalMemes = filteredMemes.length;
+            const dotsToShow = Math.min(totalMemes, maxDots);
+            
+            progressTrack.innerHTML = '';
+            
+            for (let i = 0; i < dotsToShow; i++) {
+                const mappedIndex = Math.floor(i * (totalMemes - 1) / (dotsToShow - 1));
+                const dot = document.createElement('div');
+                dot.className = 'progress-dot';
+                dot.dataset.index = mappedIndex;
+                dot.onclick = () => navigateTo(mappedIndex);
+                progressTrack.appendChild(dot);
+            }
+            
+            updateActiveDot();
+        }
+        
+        function updateActiveDot() {
+            const dots = progressTrack.querySelectorAll('.progress-dot');
+            const totalMemes = filteredMemes.length;
+            const maxDots = dots.length;
+            
+            dots.forEach((dot, i) => {
+                const mappedIndex = parseInt(dot.dataset.index);
+                const range = totalMemes / maxDots;
+                
+                const isActive = currentIndex >= mappedIndex - range/2 && currentIndex < mappedIndex + range/2;
+                const isFirst = mappedIndex === 0 && currentIndex < range/2;
+                const isLast = mappedIndex === totalMemes - 1 && currentIndex >= totalMemes - range/2;
+                
+                dot.classList.toggle('active', isActive || isFirst || isLast);
+            });
+        }
+        
+        function updateCounter() {
+            counterCurrent.textContent = currentIndex + 1;
+            counterTotal.textContent = filteredMemes.length;
+        }
+        
+        // ============================================
+        // VOTING
+        // ============================================
+        function vote(index, event) {
+            event.stopPropagation();
+            
+            const meme = filteredMemes[index];
+            meme.votes++;
+            
+            const badge = event.currentTarget;
+            badge.classList.add('voted');
+            badge.querySelector('.vote-count').textContent = meme.votes;
+            
+            spawnReaction(event.clientX, event.clientY);
+            setTimeout(() => badge.classList.remove('voted'), 500);
+        }
+        
+        function spawnReaction(x, y) {
+            const reactions = ['🔥', '😂', '💀', '🤣', '👑', '⚔️', '💯'];
+            const reaction = document.createElement('div');
+            reaction.className = 'reaction-burst';
+            reaction.textContent = reactions[Math.floor(Math.random() * reactions.length)];
+            reaction.style.left = x + 'px';
+            reaction.style.top = y + 'px';
+            document.body.appendChild(reaction);
+            setTimeout(() => reaction.remove(), 2000);
+        }
+        
+        // ============================================
+        // FILTERING
+        // ============================================
+        document.querySelectorAll('.filter-pill').forEach(pill => {
+            pill.addEventListener('click', () => {
+                document.querySelectorAll('.filter-pill').forEach(p => p.classList.remove('active'));
+                pill.classList.add('active');
+                
+                const filter = pill.dataset.filter;
+                filteredMemes = filter === 'all' ? [...memeData] : memeData.filter(m => m.category === filter);
+                
+                currentIndex = 0;
+                targetIndex = 0;
+                displayIndex = 0;
+                velocity = 0;
+                renderCards();
+            });
         });
-
-        // ============================================================
+        
+        // ============================================
+        // SHUFFLE
+        // ============================================
+        function shuffleMemes() {
+            filteredMemes = filteredMemes.sort(() => Math.random() - 0.5);
+            currentIndex = 0;
+            targetIndex = 0;
+            displayIndex = 0;
+            velocity = 0;
+            renderCards();
+            
+            for (let i = 0; i < 5; i++) {
+                setTimeout(() => {
+                    spawnReaction(
+                        window.innerWidth / 2 + (Math.random() - 0.5) * 200,
+                        window.innerHeight / 2 + (Math.random() - 0.5) * 200
+                    );
+                }, i * 100);
+            }
+        }
+        
+        // ============================================
+        // KEYBOARD
+        // ============================================
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowLeft') navigateTo(currentIndex - 1);
+            if (e.key === 'ArrowRight') navigateTo(currentIndex + 1);
+            if (e.key === ' ') { e.preventDefault(); shuffleMemes(); }
+        });
+        
+        // ============================================
+        // HINT
+        // ============================================
+        function hideHint() {
+            if (!hasInteracted) {
+                hasInteracted = true;
+                swipeHint.classList.add('hint-hidden');
+            }
+        }
+        
+        // ============================================
+        // EVENT LISTENERS
+        // ============================================
+        universe.addEventListener('mousedown', handleDragStart);
+        universe.addEventListener('mousemove', handleDragMove);
+        universe.addEventListener('mouseup', handleDragEnd);
+        universe.addEventListener('mouseleave', handleDragEnd);
+        
+        universe.addEventListener('touchstart', handleDragStart, { passive: true });
+        universe.addEventListener('touchmove', handleDragMove, { passive: true });
+        universe.addEventListener('touchend', handleDragEnd);
+        
+        universe.addEventListener('contextmenu', e => e.preventDefault());
+        
+        // Mouse wheel support
+        universe.addEventListener('wheel', (e) => {
+            e.preventDefault();
+            hideHint();
+            const direction = e.deltaY > 0 ? 1 : -1;
+            navigateTo(currentIndex + direction);
+        }, { passive: false });
+        
+        // ============================================
         // INIT
-        // ============================================================
+        // ============================================
         document.addEventListener('DOMContentLoaded', () => {
-            setLanguage(currentLang);
+            const fp = document.getElementById('fp');
+            if (fp) setTimeout(() => fp.style.display = 'none', 300);
+            
+            renderCards();
+            
+            // Preload images
+            filteredMemes.forEach(meme => {
+                const img = new Image();
+                img.src = meme.image;
+            });
         });
     </script>
 </body>
