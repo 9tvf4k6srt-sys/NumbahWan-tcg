@@ -9,6 +9,7 @@
     <link rel="stylesheet" href="/static/nw-utilities.css">
     <link rel="stylesheet" href="/static/nw-tokens.css">
     <script src="/static/nw-wallet.js"></script>
+    <script src="/static/nw-cards.js"></script>
     <style>
         :root {
             --wood: #c97f3d;
@@ -4105,63 +4106,54 @@ function pulseCell(cell) {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
-// 🃏 CARD DATABASE - For collection display
+// 🃏 CENTRAL CARD DATABASE - Loaded from API for infinite scaling
+// Edit cards in /static/data/cards.json - changes sync across ALL pages
 // ═══════════════════════════════════════════════════════════════════════════
-const CARD_DB = [
-    // MYTHIC
-    { id: 1, name: 'RegginA, The Eternal Flame', rarity: 'mythic', img: '01-reggina-mythic.jpg' },
-    { id: 101, name: 'RegginA - Practicing Trainee', rarity: 'mythic', img: 'mythic-01-practicing-trainee.jpg' },
-    { id: 102, name: 'RegginA - Chain of the Undead', rarity: 'mythic', img: 'mythic-02-chain-undead.jpg' },
-    { id: 103, name: 'RegginA - Infernal Warlord', rarity: 'mythic', img: 'mythic-03-infernal-warlord.jpg' },
-    { id: 104, name: 'RegginA - Sky Sovereign', rarity: 'mythic', img: 'mythic-04-sky-sovereign.jpg' },
-    // LEGENDARY
-    { id: 2, name: 'Reggino, Shadow Commander', rarity: 'legendary', img: '02-reggino-legendary.jpg' },
-    { id: 49, name: 'RegginA Ascended', rarity: 'legendary', img: '49-reggina-ascended.jpg' },
-    { id: 27, name: 'Elder Dragon', rarity: 'legendary', img: '27-elder-dragon.jpg' },
-    { id: 201, name: 'Infernox - Lord of Embers', rarity: 'legendary', img: 'legendary/legendary-01-infernox.jpg' },
-    { id: 202, name: 'Baphoros - The Horned King', rarity: 'legendary', img: 'legendary/legendary-02-baphoros.jpg' },
-    { id: 203, name: 'Kundara - Emperor of Souls', rarity: 'legendary', img: 'legendary/legendary-03-kundara.jpg' },
-    { id: 204, name: 'Arachnis - Venom Queen', rarity: 'legendary', img: 'legendary/legendary-04-arachnis.jpg' },
-    { id: 205, name: 'Lunaris - Moon Knight', rarity: 'legendary', img: 'legendary/legendary-05-lunaris.jpg' },
-    { id: 206, name: 'Balroxx - Flame Tyrant', rarity: 'legendary', img: 'legendary/legendary-06-balroxx.jpg' },
-    { id: 207, name: 'Aurum - Golden Guardian', rarity: 'legendary', img: 'legendary/legendary-07-aurum.jpg' },
-    { id: 208, name: 'Malphis - Lord of Frost', rarity: 'legendary', img: 'legendary/legendary-08-malphis.jpg' },
-    // EPIC
-    { id: 3, name: 'Onca, Primal Hunter', rarity: 'epic', img: '03-onca-epic.jpg' },
-    { id: 4, name: 'Panthera, Shadow Mystic', rarity: 'epic', img: '04-panthera-epic.jpg' },
-    { id: 6, name: 'Thunder Strike', rarity: 'epic', img: '06-thunder-strike.jpg' },
-    { id: 19, name: 'Inferno Colossus', rarity: 'epic', img: '19-inferno-colossus.jpg' },
-    { id: 22, name: 'Divine Guardian', rarity: 'epic', img: '22-divine-guardian.jpg' },
-    { id: 301, name: 'Grimhelm - Dark Sentinel', rarity: 'epic', img: 'epic/epic-01-grimhelm.jpg' },
-    { id: 302, name: 'Grommak - Warchief', rarity: 'epic', img: 'epic/epic-02-grommak.jpg' },
-    { id: 303, name: 'Morticus - Bone Sage', rarity: 'epic', img: 'epic/epic-03-morticus.jpg' },
-    { id: 304, name: 'Zephyra - Storm Harpy', rarity: 'epic', img: 'epic/epic-04-zephyra.jpg' },
-    { id: 305, name: 'Terros - Stone Giant', rarity: 'epic', img: 'epic/epic-05-terros.jpg' },
-    { id: 306, name: 'Serena - Tide Serpent', rarity: 'epic', img: 'epic/epic-06-serena.jpg' },
-    { id: 307, name: 'Fenrok - Moon Howler', rarity: 'epic', img: 'epic/epic-07-fenrok.jpg' },
-    { id: 308, name: 'Pyrix - Ember Phoenix', rarity: 'epic', img: 'epic/epic-08-pyrix.jpg' },
-    // RARE
-    { id: 5, name: 'Phoenix Rebirth', rarity: 'rare', img: '05-phoenix-rebirth.jpg' },
-    { id: 8, name: 'Apocalypse Rain', rarity: 'rare', img: '08-apocalypse-rain.jpg' },
-    { id: 9, name: 'Time Warp', rarity: 'rare', img: '09-time-warp.jpg' },
-    { id: 11, name: 'Binding Light', rarity: 'rare', img: '11-binding-light.jpg' },
-    { id: 401, name: 'Vorn - Iron Knight', rarity: 'rare', img: 'rare/rare-01-vorn.jpg' },
-    { id: 402, name: 'Lyra - Star Mage', rarity: 'rare', img: 'rare/rare-02-lyra.jpg' },
-    { id: 403, name: 'Robin - Swift Archer', rarity: 'rare', img: 'rare/rare-03-robin.jpg' },
-    { id: 404, name: 'Sera - Battle Cleric', rarity: 'rare', img: 'rare/rare-04-sera.jpg' },
-    { id: 405, name: 'Gloop - Mystic Slime', rarity: 'rare', img: 'rare/rare-05-gloop.jpg' },
-    { id: 406, name: 'Snix - Shadow Goblin', rarity: 'rare', img: 'rare/rare-06-snix.jpg' },
-    { id: 407, name: 'Rattles - Bone Soldier', rarity: 'rare', img: 'rare/rare-07-rattles.jpg' },
-    { id: 408, name: 'Sporky - Forest Sprite', rarity: 'rare', img: 'rare/rare-08-sporky.jpg' },
-    // UNCOMMON
-    { id: 7, name: 'Minor Heal', rarity: 'uncommon', img: '07-minor-heal.jpg' },
-    { id: 12, name: 'Magic Shield', rarity: 'uncommon', img: '12-magic-shield.jpg' },
-    { id: 15, name: 'Mana Burst', rarity: 'uncommon', img: '15-mana-burst.jpg' },
-    // COMMON
-    { id: 16, name: 'Guild Slime', rarity: 'common', img: '16-guild-slime.jpg' },
-    { id: 17, name: 'Bone Archer', rarity: 'common', img: '17-bone-archer.jpg' },
-    { id: 20, name: 'Torch', rarity: 'common', img: '20-torch.jpg' }
-];
+let CARD_DB = [];
+let CARD_RARITIES = {};
+let cardsLoaded = false;
+
+// Load cards from central API
+async function loadCardDatabase() {
+    if (cardsLoaded) return CARD_DB;
+    
+    try {
+        const response = await fetch('/api/cards');
+        const data = await response.json();
+        
+        if (data.success) {
+            CARD_DB = data.cards;
+            CARD_RARITIES = data.rarities;
+            cardsLoaded = true;
+            console.log(`[WALLET] Loaded ${CARD_DB.length} cards from central database v${data.version}`);
+            
+            // Re-render collection after cards load
+            if (typeof renderCollection === 'function') {
+                renderCollection();
+            }
+        }
+    } catch (error) {
+        console.error('[WALLET] Failed to load cards:', error);
+        // Fallback to minimal cards for offline mode
+        CARD_DB = [
+            { id: 1, name: 'RegginA, The Eternal Flame', rarity: 'mythic', img: '01-reggina-mythic.jpg' },
+            { id: 2, name: 'Reggino, Shadow Commander', rarity: 'legendary', img: '02-reggino-legendary.jpg' },
+            { id: 3, name: 'Onca, Primal Hunter', rarity: 'epic', img: '03-onca-epic.jpg' },
+            { id: 16, name: 'Guild Slime', rarity: 'common', img: '16-guild-slime.jpg' }
+        ];
+        cardsLoaded = true;
+    }
+    
+    return CARD_DB;
+}
+
+// Helper to get card by ID (works before and after load)
+function getCardById(id) {
+    return CARD_DB.find(c => c.id === id) || null;
+}
+
+// Initialize card loading
+loadCardDatabase();
 
 let currentFilter = 'all';
 

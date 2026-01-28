@@ -698,6 +698,323 @@ app.post('/api/market/heartbeat', async (c) => {
 })
 
 // ============================================================================
+// CARD DATABASE API - Central Card System for Infinite Scaling
+// Single source of truth: /static/data/cards.json
+// All pages (Forge, Wallet, TCG, Market) use this API
+// ============================================================================
+
+// Import card database (loaded at build time)
+import cardDatabase from '../public/static/data/cards.json'
+
+// In-memory card state (initialized from JSON)
+let cardData = { ...cardDatabase }
+
+// GET /api/cards - Get all cards with optional filtering
+app.get('/api/cards', (c) => {
+  const rarity = c.req.query('rarity')
+  const set = c.req.query('set')
+  const search = c.req.query('q')
+  const limit = parseInt(c.req.query('limit') || '0')
+  const offset = parseInt(c.req.query('offset') || '0')
+  
+  let cards = [...cardData.cards]
+  
+  // Apply filters
+  if (rarity) {
+    cards = cards.filter(card => card.rarity === rarity)
+  }
+  if (set) {
+    cards = cards.filter(card => card.set === set)
+  }
+  if (search) {
+    const q = search.toLowerCase()
+    cards = cards.filter(card => 
+      card.name.toLowerCase().includes(q) ||
+      card.rarity.toLowerCase().includes(q) ||
+      (card.set && card.set.toLowerCase().includes(q))
+    )
+  }
+  
+  const total = cards.length
+  
+  // Apply pagination
+  if (limit > 0) {
+    cards = cards.slice(offset, offset + limit)
+  }
+  
+  c.header('Cache-Control', 'public, max-age=60, stale-while-revalidate=300')
+  return c.json({
+    success: true,
+    version: cardData.version,
+    total,
+    count: cards.length,
+    offset,
+    cards,
+    rarities: cardData.rarities
+  })
+})
+
+// GET /api/cards/stats - Get collection statistics (MUST be before :id route)
+app.get('/api/cards/stats', (c) => {
+  const stats = {
+    total: cardData.cards.length,
+    version: cardData.version,
+    lastUpdated: cardData.lastUpdated,
+    byRarity: {} as Record<string, { count: number; rate: number }>,
+    sets: {} as Record<string, number>,
+    reserved: cardData.cards.filter(c => c.reserved).length
+  }
+  
+  // Count by rarity
+  Object.keys(cardData.rarities).forEach(rarity => {
+    const count = cardData.cards.filter(c => c.rarity === rarity).length
+    stats.byRarity[rarity] = {
+      count,
+      rate: cardData.rarities[rarity].rate
+    }
+  })
+  
+  // Count by set
+  cardData.cards.forEach(card => {
+    const set = card.set || 'unknown'
+    stats.sets[set] = (stats.sets[set] || 0) + 1
+  })
+  
+  c.header('Cache-Control', 'public, max-age=300')
+  return c.json({ success: true, stats })
+})
+
+// GET /api/cards/rarity/:rarity - Get all cards of a rarity (MUST be before :id route)
+app.get('/api/cards/rarity/:rarity', (c) => {
+  const rarity = c.req.param('rarity')
+  const cards = cardData.cards.filter(card => card.rarity === rarity)
+  const rarityInfo = cardData.rarities[rarity]
+  
+  if (!rarityInfo) {
+    return c.json({ success: false, error: 'Invalid rarity' }, 400)
+  }
+  
+  c.header('Cache-Control', 'public, max-age=300')
+  return c.json({
+    success: true,
+    rarity,
+    rarityInfo,
+    count: cards.length,
+    cards
+  })
+})
+
+// GET /api/cards/:id - Get single card by ID (MUST be after specific routes)
+app.get('/api/cards/:id', (c) => {
+  const id = parseInt(c.req.param('id'))
+  const card = cardData.cards.find(card => card.id === id)
+  
+  if (!card) {
+    return c.json({ success: false, error: 'Card not found' }, 404)
+  }
+  
+  c.header('Cache-Control', 'public, max-age=300')
+  return c.json({
+    success: true,
+    card,
+    rarityInfo: cardData.rarities[card.rarity]
+  })
+})
+
+// POST /api/cards/pull - Gacha pull with pity system
+app.post('/api/cards/pull', async (c) => {
+  try {
+    const body = await c.req.json()
+    const { count = 1, pity = { mythic: 0, legendary: 0, epic: 0 } } = body
+    
+    const pulls = Math.min(Math.max(1, count), 10) // 1-10 pulls max
+    const results: Array<{ card: any; rarity: string }> = []
+    let currentPity = { ...pity }
+    
+    for (let i = 0; i < pulls; i++) {
+      const { card, rarity, newPity } = pullSingleCard(currentPity)
+      results.push({ card, rarity })
+      currentPity = newPity
+    }
+    
+    return c.json({
+      success: true,
+      results,
+      pity: currentPity
+    })
+  } catch (e) {
+    return c.json({ success: false, error: String(e) }, 500)
+  }
+})
+
+// Helper function for gacha pull
+function pullSingleCard(pity: { mythic: number; legendary: number; epic: number }) {
+  const rarities = cardData.rarities
+  let pulledRarity = 'common'
+  const roll = Math.random() * 100
+  
+  // Check hard pity
+  if (pity.mythic >= rarities.mythic.hardPity) {
+    pulledRarity = 'mythic'
+  } else if (pity.legendary >= rarities.legendary.hardPity) {
+    pulledRarity = 'legendary'
+  } else if (pity.epic >= rarities.epic.hardPity) {
+    pulledRarity = 'epic'
+  } else {
+    // Calculate rates with soft pity
+    let mythicRate = rarities.mythic.rate
+    let legendaryRate = rarities.legendary.rate
+    let epicRate = rarities.epic.rate
+    
+    if (pity.mythic >= rarities.mythic.softPity) {
+      mythicRate += (pity.mythic - rarities.mythic.softPity) * 0.5
+    }
+    if (pity.legendary >= rarities.legendary.softPity) {
+      legendaryRate += (pity.legendary - rarities.legendary.softPity) * 2
+    }
+    if (pity.epic >= rarities.epic.softPity) {
+      epicRate += (pity.epic - rarities.epic.softPity) * 3
+    }
+    
+    let cumulative = 0
+    if (roll < (cumulative += mythicRate)) pulledRarity = 'mythic'
+    else if (roll < (cumulative += legendaryRate)) pulledRarity = 'legendary'
+    else if (roll < (cumulative += epicRate)) pulledRarity = 'epic'
+    else if (roll < (cumulative += rarities.rare.rate)) pulledRarity = 'rare'
+    else if (roll < (cumulative += rarities.uncommon.rate)) pulledRarity = 'uncommon'
+    else pulledRarity = 'common'
+  }
+  
+  // Get random card of that rarity
+  const cardsOfRarity = cardData.cards.filter(c => c.rarity === pulledRarity)
+  const card = cardsOfRarity.length > 0 
+    ? cardsOfRarity[Math.floor(Math.random() * cardsOfRarity.length)]
+    : cardData.cards[Math.floor(Math.random() * cardData.cards.length)]
+  
+  // Update pity
+  const newPity = { ...pity }
+  if (pulledRarity === 'mythic') {
+    newPity.mythic = 0
+  } else {
+    newPity.mythic++
+  }
+  if (pulledRarity === 'legendary' || pulledRarity === 'mythic') {
+    newPity.legendary = 0
+  } else {
+    newPity.legendary++
+  }
+  if (['epic', 'legendary', 'mythic'].includes(pulledRarity)) {
+    newPity.epic = 0
+  } else {
+    newPity.epic++
+  }
+  
+  return { card: { ...card }, rarity: pulledRarity, newPity }
+}
+
+// ============================================================================
+// ADMIN CARD API - For card management (GM mode)
+// ============================================================================
+
+// POST /api/admin/cards - Add new card
+app.post('/api/admin/cards', async (c) => {
+  try {
+    const body = await c.req.json()
+    const { name, rarity, img, set, reserved, description, gmKey } = body
+    
+    // Simple GM key check (in production, use proper auth)
+    if (gmKey !== 'numbahwan-gm-2026') {
+      return c.json({ success: false, error: 'Unauthorized' }, 401)
+    }
+    
+    if (!name || !rarity || !img) {
+      return c.json({ success: false, error: 'name, rarity, and img required' }, 400)
+    }
+    
+    // Generate new ID (max + 1)
+    const maxId = Math.max(...cardData.cards.map(c => c.id))
+    const newCard = {
+      id: maxId + 1,
+      name,
+      rarity,
+      img,
+      set: set || 'custom',
+      reserved: reserved || false,
+      description: description || ''
+    }
+    
+    cardData.cards.push(newCard)
+    cardData.totalCards = cardData.cards.length
+    
+    return c.json({ success: true, card: newCard })
+  } catch (e) {
+    return c.json({ success: false, error: String(e) }, 500)
+  }
+})
+
+// PUT /api/admin/cards/:id - Update card
+app.put('/api/admin/cards/:id', async (c) => {
+  try {
+    const id = parseInt(c.req.param('id'))
+    const body = await c.req.json()
+    const { gmKey, ...updates } = body
+    
+    if (gmKey !== 'numbahwan-gm-2026') {
+      return c.json({ success: false, error: 'Unauthorized' }, 401)
+    }
+    
+    const cardIndex = cardData.cards.findIndex(c => c.id === id)
+    if (cardIndex === -1) {
+      return c.json({ success: false, error: 'Card not found' }, 404)
+    }
+    
+    // Update card properties
+    Object.assign(cardData.cards[cardIndex], updates)
+    
+    return c.json({ success: true, card: cardData.cards[cardIndex] })
+  } catch (e) {
+    return c.json({ success: false, error: String(e) }, 500)
+  }
+})
+
+// DELETE /api/admin/cards/:id - Delete card
+app.delete('/api/admin/cards/:id', async (c) => {
+  try {
+    const id = parseInt(c.req.param('id'))
+    const gmKey = c.req.query('gmKey')
+    
+    if (gmKey !== 'numbahwan-gm-2026') {
+      return c.json({ success: false, error: 'Unauthorized' }, 401)
+    }
+    
+    const cardIndex = cardData.cards.findIndex(c => c.id === id)
+    if (cardIndex === -1) {
+      return c.json({ success: false, error: 'Card not found' }, 404)
+    }
+    
+    const deletedCard = cardData.cards.splice(cardIndex, 1)[0]
+    cardData.totalCards = cardData.cards.length
+    
+    return c.json({ success: true, deleted: deletedCard })
+  } catch (e) {
+    return c.json({ success: false, error: String(e) }, 500)
+  }
+})
+
+// GET /api/admin/cards/export - Export current card database
+app.get('/api/admin/cards/export', (c) => {
+  const gmKey = c.req.query('gmKey')
+  
+  if (gmKey !== 'numbahwan-gm-2026') {
+    return c.json({ success: false, error: 'Unauthorized' }, 401)
+  }
+  
+  c.header('Content-Type', 'application/json')
+  c.header('Content-Disposition', 'attachment; filename="cards.json"')
+  return c.json(cardData)
+})
+
+// ============================================================================
 // ROUTE FACTORY - DRY Pattern (Don't Repeat Yourself)
 // Add new pages by just adding to the array - no copy-paste needed!
 // ============================================================================
