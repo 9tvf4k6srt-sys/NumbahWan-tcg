@@ -1,0 +1,787 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+    <title>NumbahWan TCG | Rise of RegginA</title>
+    <link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="/static/nw-tokens.css">
+    <link rel="stylesheet" href="/static/nw-utilities.css">
+    <script src="/static/nw-icons-inline.js"></script>
+    
+    <style>
+        :root { --card-w: min(320px, 75vw); --card-h: calc(var(--card-w) * 1.4); }
+        * { margin: 0; padding: 0; box-sizing: border-box; 
+            -webkit-user-select: none; -moz-user-select: none; -ms-user-select: none; user-select: none;
+            -webkit-touch-callout: none; -webkit-tap-highlight-color: transparent; }
+        html, body { overflow: hidden; height: 100%; touch-action: none; }
+        body { font-family: var(--nw-font-display), sans-serif; background: #0a0a0f; color: #fff; }
+        img { pointer-events: none; -webkit-user-drag: none; }
+        
+        .hdr { position: fixed; top: 0; left: 0; right: 0; z-index: 100; padding: 12px 16px;
+            background: linear-gradient(to bottom, rgba(10,10,15,0.95), transparent);
+            display: flex; justify-content: space-between; align-items: center; }
+        .logo { font-family: var(--nw-font-serif), serif; font-size: clamp(14px, 4vw, 20px); font-weight: 900;
+            background: linear-gradient(135deg, #ffd700, #ff6b00);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .lang { display: flex; gap: 6px; background: rgba(255,255,255,0.1); padding: 4px; border-radius: 16px; }
+        .lang button { padding: 5px 10px; border: none; background: transparent;
+            color: rgba(255,255,255,0.5); font-size: 16px; border-radius: 12px; cursor: pointer; }
+        .lang button.on { background: linear-gradient(135deg, #ff6b00, #ffd700); color: #000; font-weight: bold; }
+        
+        .carousel { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center;
+            perspective: 1500px; cursor: grab; overflow: hidden; }
+        .carousel:active { cursor: grabbing; }
+        
+        .glow { position: fixed; top: 50%; left: 50%; width: 400px; height: 500px;
+            transform: translate(-50%, -50%); pointer-events: none; filter: blur(60px);
+            opacity: 0; transition: opacity 0.6s; z-index: 0; border-radius: 50%; }
+        .glow.on { opacity: 1; }
+        .glow.mythic { background: radial-gradient(ellipse, rgba(255,215,0,0.7) 0%, rgba(255,107,0,0.4) 40%, transparent 70%); }
+        .glow.legendary { background: radial-gradient(ellipse, rgba(255,215,0,0.6) 0%, rgba(245,199,26,0.3) 40%, transparent 70%); }
+        .glow.epic { background: radial-gradient(ellipse, rgba(147,112,219,0.6) 0%, rgba(138,43,226,0.3) 40%, transparent 70%); }
+        .glow.rare { background: radial-gradient(ellipse, rgba(30,144,255,0.5) 0%, rgba(65,105,225,0.25) 40%, transparent 70%); }
+        .glow.common { background: radial-gradient(ellipse, rgba(150,150,150,0.4) 0%, rgba(100,100,100,0.2) 40%, transparent 70%); }
+        
+        .card { position: absolute; left: 50%; top: 50%; width: var(--card-w); height: var(--card-h);
+            margin-left: calc(var(--card-w) / -2); margin-top: calc(var(--card-h) / -2);
+            border-radius: 14px; overflow: hidden; cursor: pointer;
+            will-change: transform, opacity; backface-visibility: hidden;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.6); transition: box-shadow 0.3s; }
+        .card img { width: 100%; height: 100%; object-fit: cover; pointer-events: none; border-radius: 14px; }
+        .card .holo { position: absolute; inset: 0; border-radius: 14px;
+            background: linear-gradient(125deg, transparent, rgba(255,0,128,0.15) 25%, rgba(0,255,255,0.15) 50%, rgba(255,255,0,0.15) 75%, transparent);
+            mix-blend-mode: overlay; opacity: 0.6; pointer-events: none; }
+        .card .shine { position: absolute; inset: 0; border-radius: 14px;
+            background: linear-gradient(135deg, transparent 40%, rgba(255,255,255,0.3) 50%, transparent 60%);
+            background-size: 300% 300%; background-position: 100% 100%;
+            opacity: 0; pointer-events: none; }
+        .card.active .shine { opacity: 1; animation: shimmer 2s ease-in-out infinite; }
+        @keyframes shimmer { 0%, 100% { background-position: 100% 100%; } 50% { background-position: 0% 0%; } }
+        
+        .card.mythic.active { box-shadow: 0 0 80px rgba(255,215,0,0.8), 0 0 40px rgba(255,107,0,0.6), 0 8px 32px rgba(0,0,0,0.6); }
+        .card.legendary.active { box-shadow: 0 0 60px rgba(255,215,0,0.6), 0 0 30px rgba(245,199,26,0.4), 0 8px 32px rgba(0,0,0,0.6); }
+        .card.epic.active { box-shadow: 0 0 50px rgba(147,112,219,0.6), 0 0 25px rgba(138,43,226,0.4), 0 8px 32px rgba(0,0,0,0.6); }
+        .card.rare.active { box-shadow: 0 0 40px rgba(30,144,255,0.5), 0 0 20px rgba(65,105,225,0.3), 0 8px 32px rgba(0,0,0,0.6); }
+        .card.common.active { box-shadow: 0 0 30px rgba(150,150,150,0.4), 0 8px 32px rgba(0,0,0,0.6); }
+        
+        .ctr { position: fixed; top: 70px; right: 16px; font-size: 13px; color: rgba(255,255,255,0.5); z-index: 50; }
+        
+        .debug { position: fixed; top: 70px; left: 16px; font-size: 16px; font-family: monospace;
+            color: #0f0; z-index: 999; background: rgba(0,0,0,0.9); padding: 10px 14px; border-radius: 8px;
+            min-width: 200px; display: none; }
+        
+        .nav-wrap { position: fixed; bottom: 40px; left: 50%; transform: translateX(-50%);
+            display: flex; gap: 12px; z-index: 100; align-items: center; }
+        .nav-btn { width: 48px; height: 48px; border: 2px solid #ff6b00; border-radius: 50%;
+            background: rgba(0,0,0,0.9); color: #fff; font-size: 22px;
+            cursor: pointer; transition: all 0.15s; display: flex; align-items: center; justify-content: center; }
+        .nav-btn:hover { background: #ff6b00; color: #000; }
+        .nav-btn:active { transform: scale(0.9); background: #ff6b00; }
+        .nav-btn.view { width: auto; padding: 0 20px; border-radius: 24px; font-size: 16px; font-weight: bold;
+            background: linear-gradient(135deg, #ff6b00, #ffd700); color: #000; border: none; }
+        
+        .filters { position: fixed; bottom: 95px; left: 50%; transform: translateX(-50%);
+            display: flex; gap: 6px; flex-wrap: wrap; justify-content: center; z-index: 50; padding: 0 10px; max-width: 320px; }
+        .filters button { padding: 6px 12px; border: 1px solid rgba(255,255,255,0.2);
+            background: rgba(0,0,0,0.6); color: rgba(255,255,255,0.6);
+            font-size: 13px; border-radius: 16px; cursor: pointer; text-transform: uppercase; }
+        .filters button.on { background: rgba(255,107,0,0.4); border-color: #ff6b00; color: #fff; }
+        
+        .hint { position: fixed; bottom: 8px; left: 50%; transform: translateX(-50%);
+            font-size: 16px; color: rgba(255,255,255,0.3); text-align: center; z-index: 50; }
+        
+        .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.92); z-index: 200;
+            display: flex; align-items: center; justify-content: center;
+            opacity: 0; visibility: hidden; transition: all 0.3s; }
+        .modal.on { opacity: 1; visibility: visible; }
+        .modal-inner { display: flex; flex-direction: column; align-items: center; gap: 16px;
+            max-width: 90vw; padding: 16px; transform: scale(0.9) rotateY(-15deg);
+            transition: transform 0.4s cubic-bezier(0.34,1.56,0.64,1); }
+        .modal.on .modal-inner { transform: scale(1) rotateY(0); }
+        .modal-card-wrap { perspective: 1200px; width: min(340px, 80vw); height: calc(min(340px, 80vw) * 1.4); touch-action: none; }
+        .modal-card { width: 100%; height: 100%; position: relative; transform-style: preserve-3d;
+            border-radius: 18px; cursor: grab; transition: transform 0.1s ease-out; touch-action: none; }
+        .modal-card-face { position: absolute; width: 100%; height: 100%; backface-visibility: hidden;
+            border-radius: 18px; overflow: hidden; box-shadow: 0 20px 60px rgba(0,0,0,0.5); }
+        .modal-card-face img { width: 100%; height: 100%; object-fit: cover; }
+        .modal-card-back { transform: rotateY(180deg); background: linear-gradient(135deg, #1a1a2e, #0a0a0f);
+            display: flex; align-items: center; justify-content: center; }
+        .modal-card-back div { width: 85%; height: 85%; border: 2px solid rgba(255,107,0,0.4); border-radius: 12px;
+            display: flex; align-items: center; justify-content: center;
+            font-family: var(--nw-font-serif), serif; font-size: 18px; font-weight: 900;
+            background: linear-gradient(135deg, #ffd700, #ff6b00);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent; text-align: center; }
+        .modal-holo { position: absolute; inset: 0; border-radius: 18px; pointer-events: none;
+            opacity: 0.5; mix-blend-mode: overlay;
+            background: linear-gradient(var(--ha, 125deg), transparent, rgba(255,0,128,0.3) 25%, rgba(0,255,255,0.3) 50%, rgba(255,255,0,0.3) 75%, transparent); }
+        .info { background: rgba(15,15,25,0.95); border: 1px solid rgba(255,107,0,0.3);
+            border-radius: 12px; padding: 16px; width: min(340px, 80vw); }
+        .info h2 { font-family: var(--nw-font-serif), serif; font-size: clamp(16px, 4vw, 20px);
+            background: linear-gradient(135deg, #ffd700, #ff6b00);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 10px; }
+        .info-row { display: flex; justify-content: space-between; padding: 6px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.1); font-size: 15px; }
+        .info-row:last-child { border: none; }
+        .info-row span:first-child { color: rgba(255,255,255,0.5); }
+        .info-row span:last-child { color: #fff; font-weight: bold; }
+        .badge { display: inline-block; padding: 3px 10px; border-radius: 12px; font-size: 13px; font-weight: bold; text-transform: uppercase; }
+        .badge.mythic { background: linear-gradient(135deg, #ffd700, #ff6b00); color: #000; }
+        .badge.legendary { background: linear-gradient(135deg, #ffd700, #f5c71a); color: #000; }
+        .badge.epic { background: linear-gradient(135deg, #9370db, #8a2be2); color: #fff; }
+        .badge.rare { background: linear-gradient(135deg, #1e90ff, #4169e1); color: #fff; }
+        .badge.common { background: rgba(128,128,128,0.5); color: #fff; }
+        .desc { margin-top: 12px; padding: 12px; background: rgba(0,0,0,0.3);
+            border-radius: 8px; font-size: 15px; line-height: 1.5; color: rgba(255,255,255,0.8); }
+        .close { position: fixed; top: 16px; right: 16px; width: 44px; height: 44px;
+            border: none; background: rgba(255,255,255,0.1); color: #fff;
+            font-size: 22px; border-radius: 50%; cursor: pointer; z-index: 201; }
+        
+        @media (max-width: 500px) { :root { --card-w: min(180px, 60vw); } .filters { bottom: 100px; } }
+    </style>
+</head>
+<body>
+    <!-- Captivating Background -->
+    <div class="nw-bg-captivating">
+        <div class="bg-image"></div>
+        <div class="bg-gradient"></div>
+        <div class="bg-particles"></div>
+        <div class="bg-grid"></div>
+    </div>
+    <header class="hdr">
+        <a href="/" class="logo" style="text-decoration:none;"><i class="fas fa-images" style="margin-right:8px;"></i>NumbahWan TCG</a>
+        <div style="display:flex;align-items:center;gap:12px;">
+            <a href="/tcg" style="padding:6px 12px;background:rgba(255,107,0,0.3);border:1px solid #ff6b00;border-radius:12px;color:#fff;font-size:11px;text-decoration:none;"><i class="fas fa-trophy"></i> Hub</a>
+            <a href="/guide" id="guideLink" style="padding:6px 12px;background:rgba(59,130,246,0.3);border:1px solid #3b82f6;border-radius:12px;color:#fff;font-size:11px;text-decoration:none;"><i class="fas fa-book"></i> Guide</a>
+            <div class="lang">
+                <button class="on" data-l="en">EN</button>
+                <button data-l="zh">中文</button>
+                <button data-l="th">ไทย</button>
+            </div>
+        </div>
+    </header>
+    
+    <div class="ctr"><span id="cur">1</span> / <span id="tot">50</span></div>
+    <div class="debug" id="debug">vel: 0</div>
+    
+    <div class="glow" id="glow"></div>
+    <div class="carousel" id="carousel"></div>
+    
+    <div class="nav-wrap">
+        <button class="nav-btn" id="btnLeft">←</button>
+        <button class="nav-btn view" id="btnView"><span id="viewText">VIEW</span></button>
+        <button class="nav-btn" id="btnRight">→</button>
+    </div>
+    
+    <div class="filters">
+        <button class="on" data-f="all" id="fAll">ALL</button>
+        <button data-f="mythic" id="fMythic">MYTHIC</button>
+        <button data-f="legendary" id="fLegendary">LEGENDARY</button>
+        <button data-f="epic" id="fEpic">EPIC</button>
+        <button data-f="rare" id="fRare">RARE</button>
+        <button data-f="common" id="fCommon">COMMON</button>
+    </div>
+    
+    <div class="hint" id="hint">Swipe to browse • Tap VIEW for details</div>
+    
+    <div class="modal" id="modal">
+        <button class="close" id="close">×</button>
+        <div class="modal-inner">
+            <div class="modal-card-wrap">
+                <div class="modal-card" id="mc">
+                    <div class="modal-card-face"><img id="mimg" src=""><div class="modal-holo" id="mholo"></div></div>
+                    <div class="modal-card-face modal-card-back"><div>NumbahWan<br>TCG</div></div>
+                </div>
+            </div>
+            <div class="info">
+                <h2 id="mtitle">Card</h2>
+                <div class="info-row"><span id="ltType">Type</span><span id="mtype">Hero</span></div>
+                <div class="info-row"><span id="ltRarity">Rarity</span><span><span class="badge" id="mrarity">MYTHIC</span></span></div>
+                <div class="info-row"><span id="ltCost">Mana</span><span id="mcost">8</span></div>
+                <div class="info-row" id="srow"><span id="ltStats">Stats</span><span id="mstats">ATK 9</span></div>
+                <div class="desc" id="mdesc">Description</div>
+            </div>
+        </div>
+    </div>
+
+<script>
+const DATA = [
+    {id:1,name:"RegginA, The Eternal Flame",type:"hero",rarity:"mythic",cost:8,stats:"ATK 9 | DEF 7 | SPD 5",desc:"Guild Master. All allies gain +2 ATK and Burning Aura for 3 turns.",img:"01-reggina-mythic.jpg"},
+    {id:2,name:"Reggino, Shadow of Command",type:"hero",rarity:"legendary",cost:7,stats:"ATK 7 | DEF 6 | SPD 6",desc:"Vice Master. Draw 2 cards when played. Allies gain +1 SPD.",img:"02-reggino-legendary.jpg"},
+    {id:3,name:"Onca, Primal Hunter",type:"hero",rarity:"epic",cost:6,stats:"ATK 6 | DEF 4 | SPD 8",desc:"First Strike. Double damage to wounded enemies.",img:"03-onca-epic.jpg"},
+    {id:4,name:"Panthera, Shadow Mystic",type:"hero",rarity:"epic",cost:5,stats:"ATK 5 | DEF 5 | SPD 7",desc:"Spells cost 1 less. Stealth until attacking.",img:"04-panthera-epic.jpg"},
+    {id:5,name:"Phoenix Rebirth",type:"spell",rarity:"rare",cost:4,stats:"",desc:"Resurrect fallen ally with 50% HP.",img:"05-phoenix-rebirth.jpg"},
+    {id:6,name:"Thunder Strike",type:"spell",rarity:"epic",cost:5,stats:"",desc:"Deal 6 damage. Destroy if target has <3 HP.",img:"06-thunder-strike.jpg"},
+    {id:7,name:"Minor Heal",type:"spell",rarity:"common",cost:1,stats:"",desc:"Restore 3 HP to ally.",img:"07-minor-heal.jpg"},
+    {id:8,name:"Apocalypse Rain",type:"spell",rarity:"legendary",cost:8,stats:"",desc:"Deal 4 damage to ALL enemies.",img:"08-apocalypse-rain.jpg"},
+    {id:9,name:"Time Warp",type:"spell",rarity:"rare",cost:5,stats:"",desc:"Take an extra turn after this one.",img:"09-time-warp.jpg"},
+    {id:10,name:"Void Rift",type:"spell",rarity:"epic",cost:6,stats:"",desc:"Banish enemy for 2 turns.",img:"10-void-rift.jpg"},
+    {id:11,name:"Binding Light",type:"spell",rarity:"rare",cost:3,stats:"",desc:"Stun enemy for 1 turn. Draw 1.",img:"11-binding-light.jpg"},
+    {id:12,name:"Magic Shield",type:"spell",rarity:"common",cost:2,stats:"",desc:"Block next attack on ally.",img:"12-magic-shield.jpg"},
+    {id:13,name:"Frozen Wrath",type:"spell",rarity:"epic",cost:6,stats:"",desc:"Freeze all enemies for 1 turn.",img:"13-frozen-wrath.jpg"},
+    {id:14,name:"Summon Ally",type:"spell",rarity:"rare",cost:4,stats:"",desc:"Summon random minion from deck.",img:"14-summon-ally.jpg"},
+    {id:15,name:"Mana Burst",type:"spell",rarity:"common",cost:1,stats:"",desc:"Deal 2 damage.",img:"15-mana-burst.jpg"},
+    {id:16,name:"Guild Slime",type:"minion",rarity:"common",cost:1,stats:"ATK 1 | DEF 2",desc:"Spawn two Slimelings on death.",img:"16-guild-slime.jpg"},
+    {id:17,name:"Bone Archer",type:"minion",rarity:"common",cost:2,stats:"ATK 3 | DEF 1",desc:"Ranged. No counter-damage.",img:"17-bone-archer.jpg"},
+    {id:18,name:"Shadow Blade",type:"minion",rarity:"rare",cost:3,stats:"ATK 5 | DEF 2 | SPD 8",desc:"Stealth. +2 damage from stealth.",img:"18-shadow-blade.jpg"},
+    {id:19,name:"Inferno Colossus",type:"minion",rarity:"epic",cost:7,stats:"ATK 7 | DEF 6",desc:"Taunt. Adjacent allies +1 ATK.",img:"19-inferno-colossus.jpg"},
+    {id:20,name:"Goblin Tinkerer",type:"minion",rarity:"common",cost:2,stats:"ATK 2 | DEF 2",desc:"Give random ally +1/+1.",img:"20-goblin-tinkerer.jpg"},
+    {id:21,name:"Frost Weaver",type:"minion",rarity:"rare",cost:4,stats:"ATK 4 | DEF 3",desc:"Freeze attacked enemy.",img:"21-frost-weaver.jpg"},
+    {id:22,name:"Divine Guardian",type:"minion",rarity:"epic",cost:6,stats:"ATK 6 | DEF 7",desc:"Taunt. Divine Shield. Heal 2/turn.",img:"22-divine-guardian.jpg"},
+    {id:23,name:"Spore Sprite",type:"minion",rarity:"common",cost:1,stats:"ATK 1 | DEF 3",desc:"Deathrattle: Adjacent allies +1 DEF.",img:"23-spore-sprite.jpg"},
+    {id:24,name:"Hell Spawn",type:"minion",rarity:"rare",cost:4,stats:"ATK 4 | DEF 2",desc:"Flying. Deal 2 on summon.",img:"24-hell-spawn.jpg"},
+    {id:25,name:"Clockwork Sentinel",type:"minion",rarity:"rare",cost:5,stats:"ATK 5 | DEF 5",desc:"Taunt. Spell immune. Freeze immune.",img:"25-clockwork-sentinel.jpg"},
+    {id:26,name:"Pack Wolf",type:"minion",rarity:"common",cost:2,stats:"ATK 3 | DEF 2",desc:"+1 ATK per other beast.",img:"26-pack-wolf.jpg"},
+    {id:27,name:"Elder Dragon",type:"minion",rarity:"legendary",cost:9,stats:"ATK 9 | DEF 8",desc:"Flying. Deal 3 to all enemies.",img:"27-elder-dragon.jpg"},
+    {id:28,name:"Forest Keeper",type:"minion",rarity:"common",cost:3,stats:"ATK 2 | DEF 4",desc:"Taunt. Heal 1 to allies/turn.",img:"28-forest-keeper.jpg"},
+    {id:29,name:"Ash Phoenix",type:"minion",rarity:"epic",cost:5,stats:"ATK 5 | DEF 3",desc:"Flying. Rebirth once with 2 HP.",img:"29-ash-phoenix.jpg"},
+    {id:30,name:"Blood Count",type:"minion",rarity:"rare",cost:5,stats:"ATK 6 | DEF 3",desc:"Lifesteal. +1/+1 on enemy death.",img:"30-blood-count.jpg"},
+    {id:31,name:"Gem Titan",type:"minion",rarity:"rare",cost:5,stats:"ATK 4 | DEF 6",desc:"+1 ATK per spell cast.",img:"31-gem-titan.jpg"},
+    {id:32,name:"Flame Wisp",type:"minion",rarity:"common",cost:1,stats:"ATK 2 | DEF 1",desc:"Charge. Burns target.",img:"32-flame-wisp.jpg"},
+    {id:33,name:"Siege Beast",type:"minion",rarity:"epic",cost:7,stats:"ATK 6 | DEF 8",desc:"Double damage to minions.",img:"33-siege-beast.jpg"},
+    {id:34,name:"Zakum's Blade",type:"equipment",rarity:"epic",cost:5,stats:"+4 ATK",desc:"Burns enemies for 2 damage.",img:"34-zakum-blade.jpg"},
+    {id:35,name:"Lion's Aegis",type:"equipment",rarity:"rare",cost:4,stats:"+3 DEF",desc:"Block one 4+ damage attack/turn.",img:"35-lions-aegis.jpg"},
+    {id:36,name:"Iron Blade",type:"equipment",rarity:"common",cost:2,stats:"+2 ATK",desc:"Basic weapon.",img:"36-iron-blade.jpg"},
+    {id:37,name:"Dragonscale Armor",type:"equipment",rarity:"epic",cost:6,stats:"+4 DEF, +2 ATK",desc:"Fire immune. -1 all damage.",img:"37-dragonscale-armor.jpg"},
+    {id:38,name:"Crown of Command",type:"equipment",rarity:"legendary",cost:7,stats:"+2 ATK, +2 DEF",desc:"Allies +1 ATK. Draw extra card.",img:"38-crown-command.jpg"},
+    {id:39,name:"Leather Vest",type:"equipment",rarity:"common",cost:1,stats:"+1 DEF",desc:"Basic armor.",img:"39-leather-vest.jpg"},
+    {id:40,name:"Arcane Staff",type:"equipment",rarity:"epic",cost:5,stats:"+3 ATK",desc:"Spells +1 damage, -1 cost.",img:"40-arcane-staff.jpg"},
+    {id:41,name:"Guild War",type:"event",rarity:"rare",cost:4,stats:"",desc:"All minions +2 ATK. Both draw 2.",img:"41-guild-war.jpg"},
+    {id:42,name:"Jackpot!",type:"event",rarity:"rare",cost:3,stats:"",desc:"Draw 3, discard 1. +2 mana next turn.",img:"42-jackpot.jpg"},
+    {id:43,name:"Lucky Break",type:"event",rarity:"common",cost:1,stats:"",desc:"Flip coin: Heads draw 2, Tails draw 1.",img:"43-lucky-break.jpg"},
+    {id:44,name:"Raid Boss",type:"event",rarity:"epic",cost:6,stats:"",desc:"Summon 8/8 Boss. Defeat for 5 cards.",img:"44-raid-boss.jpg"},
+    {id:45,name:"Rest Camp",type:"event",rarity:"common",cost:2,stats:"",desc:"Heal all allies 2 HP.",img:"45-rest-camp.jpg"},
+    {id:46,name:"Grand Alliance",type:"event",rarity:"legendary",cost:7,stats:"",desc:"All allies +2/+2 for 3 turns.",img:"46-grand-alliance.jpg"},
+    {id:47,name:"NumbahWan Guild Hall",type:"location",rarity:"legendary",cost:5,stats:"",desc:"Minions cost 1 less. Heal 1/turn.",img:"47-guild-hall.jpg"},
+    {id:48,name:"Shadow Dungeon",type:"location",rarity:"rare",cost:3,stats:"",desc:"Draw +1 card/turn. Minions have Stealth.",img:"48-shadow-dungeon.jpg"},
+    {id:49,name:"RegginA Ascended",type:"hero",rarity:"legendary",cost:10,stats:"ATK 12 | DEF 10 | SPD 8",desc:"Divine form. All allies Divine Shield. Deal 5 to all.",img:"49-reggina-ascended.jpg"},
+    {id:50,name:"Reggino, Master Tactician",type:"hero",rarity:"legendary",cost:8,stats:"ATK 8 | DEF 8 | SPD 7",desc:"Draw 3. Spells cost 2 less this game.",img:"50-reggino-tactician.jpg"},
+    // ═══════════════════════════════════════════════════════════════════
+    // 🆕 NEW MYTHIC CARDS - RegginA Collection
+    // ═══════════════════════════════════════════════════════════════════
+    {id:101,name:"RegginA - Practicing Trainee",type:"hero",rarity:"mythic",cost:7,stats:"ATK 7 | DEF 5 | SPD 8",desc:"The beginning of a legend. Divine light guides the path.",img:"mythic-01-practicing-trainee.jpg"},
+    {id:102,name:"RegginA - Chain of the Undead",type:"hero",rarity:"mythic",cost:9,stats:"ATK 9 | DEF 6 | LIFESTEAL",desc:"Master of the undead legions. Death bows to her will.",img:"mythic-02-chain-undead.jpg"},
+    {id:103,name:"RegginA - Infernal Warlord",type:"hero",rarity:"mythic",cost:10,stats:"ATK 12 | DEF 8 | BURN",desc:"Ruler of the volcanic realm. Fire and fury incarnate.",img:"mythic-03-infernal-warlord.jpg"},
+    {id:104,name:"RegginA - Sky Sovereign",type:"hero",rarity:"mythic",cost:10,stats:"ATK 10 | DEF 10 | FLY",desc:"Supreme ruler of the heavens. None dare challenge her domain.",img:"mythic-04-sky-sovereign.jpg"},
+    // ═══════════════════════════════════════════════════════════════════
+    // 🆕 NEW LEGENDARY CARDS - Boss-Inspired (Diablo/MU/Ragnarok style)
+    // ═══════════════════════════════════════════════════════════════════
+    {id:201,name:"Infernox - Lord of Embers",type:"minion",rarity:"legendary",cost:9,stats:"ATK 10 | DEF 7 | BURN",desc:"Inspired by the Lord of Terror. Burns all enemies on summon.",img:"legendary/legendary-01-infernox.jpg"},
+    {id:202,name:"Baphoros - The Horned King",type:"minion",rarity:"legendary",cost:9,stats:"ATK 11 | DEF 8 | CURSE",desc:"Goat-demon lord. Curses enemies, reducing their ATK by 2.",img:"legendary/legendary-02-baphoros.jpg"},
+    {id:203,name:"Kundara - Emperor of Souls",type:"minion",rarity:"legendary",cost:10,stats:"ATK 9 | DEF 9 | DRAIN",desc:"Multi-armed death emperor. Drains HP from all enemies.",img:"legendary/legendary-03-kundara.jpg"},
+    {id:204,name:"Arachnis - Venom Queen",type:"minion",rarity:"legendary",cost:8,stats:"ATK 8 | DEF 6 | POISON",desc:"Spider-queen of poison. Poisons all enemies for 3 turns.",img:"legendary/legendary-04-arachnis.jpg"},
+    {id:205,name:"Lunaris - Moon Knight",type:"minion",rarity:"legendary",cost:9,stats:"ATK 9 | DEF 10 | SHIELD",desc:"Celestial knight. Grants Divine Shield to all allies.",img:"legendary/legendary-05-lunaris.jpg"},
+    {id:206,name:"Balroxx - Flame Tyrant",type:"minion",rarity:"legendary",cost:10,stats:"ATK 12 | DEF 6 | INFERNO",desc:"Winged demon of fire. Deals 6 damage to all enemies on death.",img:"legendary/legendary-06-balroxx.jpg"},
+    {id:207,name:"Aurum - Golden Guardian",type:"minion",rarity:"legendary",cost:8,stats:"ATK 7 | DEF 12 | GOLD+",desc:"Massive golden beetle. Generates 2 gold per turn.",img:"legendary/legendary-07-aurum.jpg"},
+    {id:208,name:"Malphis - Lord of Frost",type:"minion",rarity:"legendary",cost:9,stats:"ATK 10 | DEF 8 | FREEZE",desc:"Ice demon lord. Freezes all enemies for 1 turn on summon.",img:"legendary/legendary-08-malphis.jpg"},
+    // ═══════════════════════════════════════════════════════════════════
+    // 🆕 NEW EPIC CARDS - Elite Monsters
+    // ═══════════════════════════════════════════════════════════════════
+    {id:301,name:"Grimhelm - Dark Sentinel",type:"minion",rarity:"epic",cost:6,stats:"ATK 7 | DEF 7 | ARMOR",desc:"Cursed knight. Takes 2 less damage from all sources.",img:"epic/epic-01-grimhelm.jpg"},
+    {id:302,name:"Grommak - Warchief",type:"minion",rarity:"epic",cost:6,stats:"ATK 8 | DEF 5 | RAGE",desc:"Orc warlord. +2 ATK when damaged.",img:"epic/epic-02-grommak.jpg"},
+    {id:303,name:"Morticus - Bone Sage",type:"minion",rarity:"epic",cost:5,stats:"ATK 6 | DEF 4 | SUMMON",desc:"Lich master. Summons 2/2 Skeleton on spell cast.",img:"epic/epic-03-morticus.jpg"},
+    {id:304,name:"Zephyra - Storm Harpy",type:"minion",rarity:"epic",cost:5,stats:"ATK 5 | DEF 5 | WIND",desc:"Wind elemental. Flying. Pushes enemy back.",img:"epic/epic-04-zephyra.jpg"},
+    {id:305,name:"Terros - Stone Giant",type:"minion",rarity:"epic",cost:7,stats:"ATK 6 | DEF 9 | ROCK",desc:"Earth elemental. Taunt. Immune to spells.",img:"epic/epic-05-terros.jpg"},
+    {id:306,name:"Serena - Tide Serpent",type:"minion",rarity:"epic",cost:6,stats:"ATK 7 | DEF 6 | TIDAL",desc:"Sea serpent. Heals 2 HP to all allies each turn.",img:"epic/epic-06-serena.jpg"},
+    {id:307,name:"Fenrok - Moon Howler",type:"minion",rarity:"epic",cost:5,stats:"ATK 8 | DEF 4 | FERAL",desc:"Alpha werewolf. +1/+1 for each beast you control.",img:"epic/epic-07-fenrok.jpg"},
+    {id:308,name:"Pyrix - Ember Phoenix",type:"minion",rarity:"epic",cost:6,stats:"ATK 7 | DEF 5 | REBIRTH",desc:"Fire bird. Returns with 3 HP when killed.",img:"epic/epic-08-pyrix.jpg"},
+    // ═══════════════════════════════════════════════════════════════════
+    // 🆕 NEW RARE CARDS - Adventurers & Creatures
+    // ═══════════════════════════════════════════════════════════════════
+    {id:401,name:"Vorn - Iron Knight",type:"minion",rarity:"rare",cost:4,stats:"ATK 5 | DEF 6 | GUARD",desc:"Veteran knight. Taunt. +1 DEF per turn.",img:"rare/rare-01-vorn.jpg"},
+    {id:402,name:"Lyra - Star Mage",type:"minion",rarity:"rare",cost:4,stats:"ATK 6 | DEF 3 | MAGIC",desc:"Arcane caster. Spells deal +1 damage.",img:"rare/rare-02-lyra.jpg"},
+    {id:403,name:"Robin - Swift Archer",type:"minion",rarity:"rare",cost:3,stats:"ATK 5 | DEF 4 | SWIFT",desc:"Quick shot. Attacks twice when played.",img:"rare/rare-03-robin.jpg"},
+    {id:404,name:"Sera - Battle Cleric",type:"minion",rarity:"rare",cost:4,stats:"ATK 4 | DEF 5 | HEAL",desc:"Holy warrior. Heals 2 HP to ally on attack.",img:"rare/rare-04-sera.jpg"},
+    {id:405,name:"Gloop - Mystic Slime",type:"minion",rarity:"rare",cost:3,stats:"ATK 3 | DEF 6 | ABSORB",desc:"Magic slime. Gains +1/+1 when hit by spell.",img:"rare/rare-05-gloop.jpg"},
+    {id:406,name:"Snix - Shadow Goblin",type:"minion",rarity:"rare",cost:3,stats:"ATK 5 | DEF 3 | STEAL",desc:"Sneaky thief. Steals 1 gold on attack.",img:"rare/rare-06-snix.jpg"},
+    {id:407,name:"Rattles - Bone Soldier",type:"minion",rarity:"rare",cost:3,stats:"ATK 4 | DEF 4 | UNDEAD",desc:"Skeleton warrior. Revives once with 2 HP.",img:"rare/rare-07-rattles.jpg"},
+    {id:408,name:"Sporky - Forest Sprite",type:"minion",rarity:"rare",cost:2,stats:"ATK 3 | DEF 5 | NATURE",desc:"Nature spirit. Heals 1 HP to all allies on summon.",img:"rare/rare-08-sporky.jpg"}
+];
+
+const i18n = {
+    en: { type:'Type', rarity:'Rarity', cost:'Mana', stats:'Stats', hint:'Swipe to browse • Tap VIEW for details',
+          hero:'Hero', spell:'Spell', minion:'Minion', equipment:'Equipment', event:'Event', location:'Location',
+          mythic:'MYTHIC', legendary:'LEGENDARY', epic:'EPIC', rare:'RARE', common:'COMMON', all:'ALL', view:'VIEW', guide:'📖 Guide' },
+    zh: { type:'类型', rarity:'稀有度', cost:'法力', stats:'属性', hint:'滑动浏览 • 点击查看查看详情',
+          hero:'英雄', spell:'法术', minion:'随从', equipment:'装备', event:'事件', location:'地点',
+          mythic:'神话', legendary:'传说', epic:'史诗', rare:'稀有', common:'普通', all:'全部', view:'查看', guide:'📖 攻略' },
+    th: { type:'ประเภท', rarity:'ความหายาก', cost:'มานา', stats:'สถิติ', hint:'ปัดเพื่อเลือก • แตะดูรายละเอียด',
+          hero:'ฮีโร่', spell:'เวทมนตร์', minion:'มิเนียน', equipment:'อุปกรณ์', event:'เหตุการณ์', location:'สถานที่',
+          mythic:'ตำนาน', legendary:'ระดับตำนาน', epic:'มหากาพย์', rare:'หายาก', common:'ธรรมดา', all:'ทั้งหมด', view:'ดู', guide:'📖 คู่มือ' }
+};
+
+// Card name translations
+const cardNames = {
+    zh: {
+        1:"烈焰永恒·蕾吉娜", 2:"暗影指挥·雷吉诺", 3:"原始猎手·奥卡", 4:"暗影秘术师·潘瑟拉",
+        5:"凤凰重生", 6:"雷霆一击", 7:"轻微治愈", 8:"天启之雨", 9:"时间扭曲", 10:"虚空裂隙",
+        11:"束缚之光", 12:"魔法护盾", 13:"冰冻之怒", 14:"召唤盟友", 15:"法力爆发",
+        16:"公会史莱姆", 17:"骨弓手", 18:"暗影之刃", 19:"炼狱巨像", 20:"哥布林工匠",
+        21:"霜织者", 22:"神圣守护者", 23:"孢子精灵", 24:"地狱之子", 25:"发条哨兵",
+        26:"狼群", 27:"上古巨龙", 28:"森林守护者", 29:"灰烬凤凰", 30:"血族伯爵",
+        31:"宝石泰坦", 32:"火焰精灵", 33:"攻城巨兽", 34:"扎昆之刃", 35:"狮子神盾",
+        36:"铁剑", 37:"龙鳞铠甲", 38:"指挥王冠", 39:"皮革护甲", 40:"奥术法杖",
+        41:"公会战争", 42:"大奖！", 43:"幸运突破", 44:"团队首领", 45:"休息营地",
+        46:"大联盟", 47:"第一公会大厅", 48:"暗影地牢", 49:"蕾吉娜·升华", 50:"战术大师·雷吉诺"
+    },
+    th: {
+        1:"เรกจินา ไฟนิรันดร์", 2:"เรกจิโน เงาแห่งคำสั่ง", 3:"ออนก้า นักล่าดึกดำบรรพ์", 4:"แพนเทร่า จอมเวทเงา",
+        5:"ฟีนิกซ์คืนชีพ", 6:"สายฟ้าฟาด", 7:"รักษาเล็กน้อย", 8:"ฝนมหาวิบัติ", 9:"บิดเบือนเวลา", 10:"รอยแยกสุญญากาศ",
+        11:"แสงพันธนาการ", 12:"โล่เวทมนตร์", 13:"พิโรธน้ำแข็ง", 14:"เรียกพันธมิตร", 15:"มานาระเบิด",
+        16:"สไลม์กิลด์", 17:"นักธนูกระดูก", 18:"ดาบเงา", 19:"ยักษ์เพลิง", 20:"ช่างก็อบลิน",
+        21:"นักทอน้ำแข็ง", 22:"ผู้พิทักษ์ศักดิ์สิทธิ์", 23:"สปอร์สไปรท์", 24:"ลูกนรก", 25:"หุ่นยนต์ยาม",
+        26:"หมาป่าฝูง", 27:"มังกรโบราณ", 28:"ผู้รักษาป่า", 29:"ฟีนิกซ์เถ้า", 30:"เคานต์เลือด",
+        31:"ไททันอัญมณี", 32:"วิสป์เพลิง", 33:"สัตว์ล้อมเมือง", 34:"ดาบซาคุม", 35:"โล่สิงโต",
+        36:"ดาบเหล็ก", 37:"เกราะเกล็ดมังกร", 38:"มงกุฎบัญชาการ", 39:"เสื้อเกราะหนัง", 40:"คทาอาร์เคน",
+        41:"สงครามกิลด์", 42:"แจ็คพอต!", 43:"โชคดี", 44:"บอสเรด", 45:"ค่ายพักผ่อน",
+        46:"พันธมิตรใหญ่", 47:"ห้องโถงกิลด์นัมบาวัน", 48:"ดันเจี้ยนเงา", 49:"เรกจินา อัศเจริญ", 50:"เรกจิโน จอมยุทธวิธี"
+    }
+};
+
+// Card description translations
+const cardDescs = {
+    zh: {
+        1:"公会会长。所有盟友获得+2攻击力和燃烧光环，持续3回合。",
+        2:"副会长。出场时抽2张牌。盟友获得+1速度。",
+        3:"先制攻击。对受伤敌人造成双倍伤害。",
+        4:"法术消耗减少1点。攻击前保持潜行。",
+        5:"复活阵亡盟友，恢复50%生命值。",
+        6:"造成6点伤害。若目标生命值<3，直接消灭。",
+        7:"为盟友恢复3点生命值。",
+        8:"对所有敌人造成4点伤害。",
+        9:"此回合后额外获得一个回合。",
+        10:"放逐一个敌人2回合。",
+        11:"眩晕敌人1回合。抽1张牌。",
+        12:"格挡盟友所受的下一次攻击。",
+        13:"冻结所有敌人1回合。",
+        14:"从牌组中随机召唤一个随从。",
+        15:"造成2点伤害。",
+        16:"死亡时生成两个史莱姆幼崽。",
+        17:"远程攻击。不受反击伤害。",
+        18:"潜行。潜行时攻击+2伤害。",
+        19:"嘲讽。相邻盟友+1攻击力。",
+        20:"使随机盟友+1/+1。",
+        21:"冻结被攻击的敌人。",
+        22:"嘲讽。圣盾。每回合治疗2点。",
+        23:"亡语：相邻盟友+1防御力。",
+        24:"飞行。召唤时造成2点伤害。",
+        25:"嘲讽。法术免疫。冻结免疫。",
+        26:"每有一个其他野兽+1攻击力。",
+        27:"飞行。对所有敌人造成3点伤害。",
+        28:"嘲讽。每回合为盟友治疗1点。",
+        29:"飞行。重生一次，剩余2点生命值。",
+        30:"吸血。敌人死亡时+1/+1。",
+        31:"每施放一个法术+1攻击力。",
+        32:"冲锋。点燃目标。",
+        33:"对随从造成双倍伤害。",
+        34:"点燃敌人，造成2点伤害。",
+        35:"每回合格挡一次4+伤害的攻击。",
+        36:"基础武器。",
+        37:"火焰免疫。受到伤害-1。",
+        38:"盟友+1攻击力。额外抽一张牌。",
+        39:"基础护甲。",
+        40:"法术+1伤害，消耗-1。",
+        41:"所有随从+2攻击力。双方抽2张牌。",
+        42:"抽3张牌，弃1张。下回合+2法力值。",
+        43:"抛硬币：正面抽2张，反面抽1张。",
+        44:"召唤8/8首领。击败可得5张牌。",
+        45:"为所有盟友治疗2点生命值。",
+        46:"所有盟友+2/+2，持续3回合。",
+        47:"随从消耗减少1点。每回合治疗1点。",
+        48:"每回合额外抽1张牌。随从拥有潜行。",
+        49:"神圣形态。所有盟友获得圣盾。对所有敌人造成5点伤害。",
+        50:"抽3张牌。本局法术消耗减少2点。"
+    },
+    th: {
+        1:"หัวหน้ากิลด์ พันธมิตรทั้งหมดได้รับ +2 โจมตี และออร่าเผาผลาญ 3 เทิร์น",
+        2:"รองหัวหน้า จั่วการ์ด 2 ใบเมื่อลงสนาม พันธมิตรได้รับ +1 ความเร็ว",
+        3:"โจมตีก่อน สร้างความเสียหายสองเท่าต่อศัตรูที่บาดเจ็บ",
+        4:"เวทมนตร์ลดค่าใช้จ่าย 1 ซ่อนตัวจนกว่าจะโจมตี",
+        5:"ชุบชีวิตพันธมิตรที่ล้มด้วย HP 50%",
+        6:"สร้างความเสียหาย 6 ทำลายถ้าเป้าหมายมี HP <3",
+        7:"ฟื้นฟู HP 3 ให้พันธมิตร",
+        8:"สร้างความเสียหาย 4 ต่อศัตรูทั้งหมด",
+        9:"ได้รับเทิร์นเพิ่มหลังเทิร์นนี้",
+        10:"เนรเทศศัตรู 2 เทิร์น",
+        11:"ทำให้ศัตรูสตัน 1 เทิร์น จั่ว 1 ใบ",
+        12:"บล็อกการโจมตีถัดไปต่อพันธมิตร",
+        13:"แช่แข็งศัตรูทั้งหมด 1 เทิร์น",
+        14:"เรียกมินเนียนสุ่มจากสำรับ",
+        15:"สร้างความเสียหาย 2",
+        16:"เมื่อตาย สร้างสไลม์ลูก 2 ตัว",
+        17:"ระยะไกล ไม่โดนตอบโต้",
+        18:"ซ่อนตัว +2 ความเสียหายจากซ่อนตัว",
+        19:"ยั่วยุ พันธมิตรข้างๆ +1 โจมตี",
+        20:"ให้พันธมิตรสุ่ม +1/+1",
+        21:"แช่แข็งศัตรูที่ถูกโจมตี",
+        22:"ยั่วยุ โล่ศักดิ์สิทธิ์ รักษา 2/เทิร์น",
+        23:"เมื่อตาย: พันธมิตรข้างๆ +1 ป้องกัน",
+        24:"บิน สร้างความเสียหาย 2 เมื่อเรียก",
+        25:"ยั่วยุ ต้านเวท ต้านแช่แข็ง",
+        26:"+1 โจมตีต่อสัตว์ตัวอื่น",
+        27:"บิน สร้างความเสียหาย 3 ต่อศัตรูทั้งหมด",
+        28:"ยั่วยุ รักษาพันธมิตร 1/เทิร์น",
+        29:"บิน คืนชีพครั้งเดียวด้วย HP 2",
+        30:"ดูดเลือด +1/+1 เมื่อศัตรูตาย",
+        31:"+1 โจมตีต่อเวทที่ใช้",
+        32:"พุ่งชน เผาเป้าหมาย",
+        33:"ความเสียหายสองเท่าต่อมินเนียน",
+        34:"เผาศัตรู สร้างความเสียหาย 2",
+        35:"บล็อกการโจมตี 4+ ความเสียหาย/เทิร์น",
+        36:"อาวุธพื้นฐาน",
+        37:"ต้านไฟ ลดความเสียหาย 1",
+        38:"พันธมิตร +1 โจมตี จั่วการ์ดเพิ่ม",
+        39:"เกราะพื้นฐาน",
+        40:"เวท +1 ความเสียหาย ลดค่าใช้จ่าย 1",
+        41:"มินเนียนทั้งหมด +2 โจมตี ทั้งสองฝ่ายจั่ว 2",
+        42:"จั่ว 3 ทิ้ง 1 +2 มานาเทิร์นหน้า",
+        43:"โยนเหรียญ: หัวจั่ว 2 ก้อยจั่ว 1",
+        44:"เรียกบอส 8/8 เอาชนะได้ 5 การ์ด",
+        45:"รักษาพันธมิตรทั้งหมด 2 HP",
+        46:"พันธมิตรทั้งหมด +2/+2 เป็นเวลา 3 เทิร์น",
+        47:"มินเนียนลดค่า 1 รักษา 1/เทิร์น",
+        48:"จั่ว +1 การ์ด/เทิร์น มินเนียนมีซ่อนตัว",
+        49:"ร่างศักดิ์สิทธิ์ พันธมิตรทุกคนได้โล่ศักดิ์สิทธิ์ สร้างความเสียหาย 5 ต่อทั้งหมด",
+        50:"จั่ว 3 เวทลดค่า 2 ตลอดเกม"
+    }
+};
+
+// ========== STATE ==========
+let lang = 'en';
+let cards = [...DATA];
+let pos = 0;        // position in card-units  
+let vel = 0;        // velocity in cards-per-frame
+let dragging = false;
+let dragStartX = 0;
+let dragStartPos = 0;
+
+// Velocity tracking (simple and reliable)
+let lastX = 0;
+let lastTime = 0;
+let dragVelocity = 0;  // instantaneous velocity during drag
+
+const CARD_GAP = 85;
+const FRICTION = 0.85;    // Quick deceleration
+const SNAP_ZONE = 99;     // ALWAYS snapping (magnetic feel)
+const SNAP_PULL = 0.2;    // Gentle magnetic pull to nearest card
+
+const $ = s => document.querySelector(s);
+const $$ = s => document.querySelectorAll(s);
+const carousel = $('#carousel');
+const debug = $('#debug');
+
+function mod(n, m) { return ((n % m) + m) % m; }
+
+// ========== RENDER ==========
+let didDrag = false;
+let totalDragDist = 0;
+
+function render() {
+    carousel.innerHTML = '';
+    cards.forEach((c, i) => {
+        const el = document.createElement('div');
+        el.className = `card ${c.rarity}`;
+        el.innerHTML = `<img src="/static/cards/${c.img}" alt="${c.name}" loading="lazy"><div class="holo"></div><div class="shine"></div>`;
+        carousel.appendChild(el);
+    });
+    $('#tot').textContent = cards.length;
+}
+
+function draw() {
+    const n = cards.length;
+    const cardEls = $$('.card');
+    
+    cardEls.forEach((el, i) => {
+        let d = i - pos;
+        while (d > n/2) d -= n;
+        while (d < -n/2) d += n;
+        
+        const x = d * CARD_GAP;
+        const ad = Math.abs(d);
+        const z = -ad * 50;
+        const ry = d * -5;
+        const sc = Math.max(0.55, 1 - ad * 0.09);
+        const op = Math.max(0.15, 1 - ad * 0.13);
+        
+        el.style.transform = `translate3d(${x}px,0,${z}px) rotateY(${ry}deg) scale(${sc})`;
+        el.style.opacity = op;
+        el.style.zIndex = Math.round(50 - ad * 10);
+        el.classList.toggle('active', ad < 0.4);
+    });
+    
+    const idx = mod(Math.round(pos), n);
+    $('#cur').textContent = idx + 1;
+    
+    const card = cards[idx];
+    const glow = $('#glow');
+    if (card) {
+        glow.className = 'glow ' + card.rarity + (Math.abs(vel) < 0.05 ? ' on' : '');
+    }
+    
+    debug.innerHTML = `vel: <b>${vel.toFixed(3)}</b><br>pos: ${pos.toFixed(2)}`;
+}
+
+// ========== PHYSICS ==========
+function tick() {
+    try {
+        if (!dragging) {
+            // Apply velocity
+            pos += vel;
+            vel *= 0.9;  // Friction
+            
+            // Snap to nearest card
+            const target = Math.round(pos);
+            const diff = target - pos;
+            pos += diff * 0.3;  // Magnetic pull
+            
+            // Stop when close enough
+            if (Math.abs(diff) < 0.01 && Math.abs(vel) < 0.01) {
+                pos = target;
+                vel = 0;
+            }
+        }
+    } catch(e) {
+        console.error('Physics error:', e);
+    }
+    
+    draw();
+    requestAnimationFrame(tick);
+}
+
+// ========== INPUT ==========
+function getX(e) { return e.touches ? e.touches[0].clientX : e.clientX; }
+
+function onDown(e) {
+    dragging = true;
+    didDrag = false;
+    totalDragDist = 0;
+    const x = getX(e);
+    dragStartX = x;
+    dragStartPos = pos;
+    lastX = x;
+    lastTime = performance.now();
+    dragVelocity = 0;
+    vel = 0;  // INSTANT STOP - touch to stop momentum
+}
+
+function onMove(e) {
+    if (!dragging) return;
+    
+    const x = getX(e);
+    const now = performance.now();
+    
+    // Move position 1:1 with drag (swap direction if needed)
+    pos = dragStartPos - (x - dragStartX) / CARD_GAP;
+    
+    // Track total drag distance
+    totalDragDist += Math.abs(x - lastX);
+    if (totalDragDist > 15) {
+        didDrag = true;
+    }
+    
+    // Track velocity continuously during drag
+    const dt = now - lastTime;
+    if (dt > 5) {  // at least 5ms between samples
+        const dx = x - lastX;
+        const instantVel = dx / dt;  // pixels per ms
+        
+        // Smooth the velocity (30% old, 70% new)
+        dragVelocity = dragVelocity * 0.3 + instantVel * 0.7;
+        
+        lastX = x;
+        lastTime = now;
+    }
+}
+
+function onUp() {
+    if (!dragging) return;
+    dragging = false;
+    
+    // Simple: just continue at the same speed you were dragging
+    // dragVelocity is pixels/ms, convert to cards/frame
+    // At 60fps, 1 frame = 16.67ms
+    // So velocity in cards/frame = (pixels/ms * 16.67) / CARD_GAP
+    // Reduced by half for less sensitivity
+    vel = -(dragVelocity * 16.67 / CARD_GAP) * 0.5;
+    
+    // Clamp to reasonable max (1.5 cards per frame - easier to control)
+    const MAX_VEL = 1.5;
+    if (vel > MAX_VEL) vel = MAX_VEL;
+    if (vel < -MAX_VEL) vel = -MAX_VEL;
+}
+
+// ========== KEYBOARD - single card steps ==========
+document.addEventListener('keydown', e => {
+    if ($('#modal').classList.contains('on')) return;
+    
+    if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+        // Animate to previous card (no momentum, just smooth move)
+        animateToCard(Math.round(pos) - 1);
+        e.preventDefault();
+    }
+    if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
+        // Animate to next card
+        animateToCard(Math.round(pos) + 1);
+        e.preventDefault();
+    }
+    if (e.key === 'Escape') closeModal();
+});
+
+// Smooth animation to specific card (for arrow keys)
+let animating = false;
+function animateToCard(targetIdx) {
+    if (animating) return;
+    animating = true;
+    vel = 0; // kill any momentum
+    
+    const startPos = pos;
+    const startTime = performance.now();
+    const duration = 250; // ms
+    
+    function step(now) {
+        const t = Math.min(1, (now - startTime) / duration);
+        // Ease out cubic
+        const ease = 1 - Math.pow(1 - t, 3);
+        pos = startPos + (targetIdx - startPos) * ease;
+        
+        if (t < 1) {
+            requestAnimationFrame(step);
+        } else {
+            pos = targetIdx;
+            animating = false;
+        }
+    }
+    requestAnimationFrame(step);
+}
+
+// ========== WHEEL - adds momentum ==========
+carousel.addEventListener('wheel', e => {
+    e.preventDefault();
+    vel += e.deltaY * 0.015;  // stronger wheel response
+    const MAX_VEL = 8;
+    if (vel > MAX_VEL) vel = MAX_VEL;
+    if (vel < -MAX_VEL) vel = -MAX_VEL;
+}, { passive: false });
+
+// ========== SETUP ==========
+function setup() {
+    carousel.addEventListener('touchstart', onDown, { passive: true });
+    carousel.addEventListener('touchmove', onMove, { passive: true });
+    carousel.addEventListener('touchend', onUp);
+    carousel.addEventListener('touchcancel', onUp);
+    
+    carousel.addEventListener('mousedown', e => { e.preventDefault(); onDown(e); });
+    document.addEventListener('mousemove', onMove);
+    document.addEventListener('mouseup', onUp);
+    
+    $$('.filters button').forEach(btn => {
+        btn.onclick = () => {
+            $$('.filters button').forEach(b => b.classList.remove('on'));
+            btn.classList.add('on');
+            cards = btn.dataset.f === 'all' ? [...DATA] : DATA.filter(c => c.rarity === btn.dataset.f);
+            pos = 0; vel = 0;
+            render();
+        };
+    });
+    
+    $$('.lang button').forEach(btn => {
+        btn.onclick = () => {
+            $$('.lang button').forEach(b => b.classList.remove('on'));
+            btn.classList.add('on');
+            lang = btn.dataset.l;
+            updateUILanguage();
+        };
+    });
+    
+    $('#close').onclick = closeModal;
+    $('#modal').onclick = e => { if (e.target.id === 'modal') closeModal(); };
+    
+    // Navigation buttons
+    $('#btnLeft').onclick = () => animateToCard(Math.round(pos) - 1);
+    $('#btnRight').onclick = () => animateToCard(Math.round(pos) + 1);
+    $('#btnView').onclick = openCenteredCard;
+    
+    setupModal3D();
+}
+
+function openModal(i) {
+    const c = cards[i];
+    $('#mimg').src = `/static/cards/${c.img}`;
+    
+    // Get translated name or fallback to English
+    const name = (lang !== 'en' && cardNames[lang] && cardNames[lang][c.id]) ? cardNames[lang][c.id] : c.name;
+    $('#mtitle').textContent = name;
+    
+    // Translated type
+    $('#mtype').textContent = i18n[lang][c.type] || c.type;
+    
+    // Translated rarity badge
+    const rarityText = i18n[lang][c.rarity] || c.rarity.toUpperCase();
+    $('#mrarity').textContent = rarityText;
+    $('#mrarity').className = `badge ${c.rarity}`;
+    
+    $('#mcost').textContent = c.cost;
+    $('#mstats').textContent = c.stats || '-';
+    $('#srow').style.display = c.stats ? 'flex' : 'none';
+    
+    // Get translated description or fallback to English
+    const desc = (lang !== 'en' && cardDescs[lang] && cardDescs[lang][c.id]) ? cardDescs[lang][c.id] : c.desc;
+    $('#mdesc').textContent = desc;
+    
+    $('#modal').classList.add('on');
+}
+
+function closeModal() { $('#modal').classList.remove('on'); }
+
+// Simple tilt effect - no complex 3D that crashes
+function setupModal3D() {
+    const mc = $('#mc');
+    const wrap = $('.modal-card-wrap');
+    
+    // Mouse hover tilt only (simple, doesn't crash)
+    wrap.addEventListener('mousemove', e => {
+        const rect = wrap.getBoundingClientRect();
+        const x = (e.clientX - rect.left) / rect.width - 0.5;
+        const y = (e.clientY - rect.top) / rect.height - 0.5;
+        mc.style.transform = `rotateY(${x * 20}deg) rotateX(${-y * 20}deg)`;
+    });
+    wrap.addEventListener('mouseleave', () => {
+        mc.style.transform = '';
+    });
+}
+
+// Prevent context menu on long press
+document.addEventListener('contextmenu', e => e.preventDefault());
+
+// View button opens modal for centered card
+function openCenteredCard() {
+    const idx = mod(Math.round(pos), cards.length);
+    openModal(idx);
+}
+
+// Update all UI text based on current language
+function updateUILanguage() {
+    $('#hint').textContent = i18n[lang].hint;
+    $('#ltType').textContent = i18n[lang].type;
+    $('#ltRarity').textContent = i18n[lang].rarity;
+    $('#ltCost').textContent = i18n[lang].cost;
+    $('#ltStats').textContent = i18n[lang].stats;
+    $('#viewText').textContent = i18n[lang].view;
+    $('#guideLink').textContent = i18n[lang].guide;
+    
+    // Update filter buttons
+    $('#fAll').textContent = i18n[lang].all;
+    $('#fMythic').textContent = i18n[lang].mythic;
+    $('#fLegendary').textContent = i18n[lang].legendary;
+    $('#fEpic').textContent = i18n[lang].epic;
+    $('#fRare').textContent = i18n[lang].rare;
+    $('#fCommon').textContent = i18n[lang].common;
+}
+
+render();
+setup();
+tick();
+updateUILanguage();
+</script>
+</body>
+</html>
