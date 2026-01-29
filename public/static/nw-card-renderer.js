@@ -25,7 +25,7 @@ const NW_CARD_RENDERER = (function() {
     // CONFIGURATION
     // ============================================
     const CONFIG = {
-        baseImagePath: '/static/cards/',
+        baseImagePath: '/static/images/cards/',
         placeholderImage: 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 260 380"%3E%3Crect fill="%231a1a2e" width="260" height="380"/%3E%3Ctext fill="%23333" x="50%25" y="50%25" text-anchor="middle" dy=".3em" font-family="system-ui" font-size="14"%3ELoading...%3C/text%3E%3C/svg%3E',
         defaultSize: 'md', // sm, md, lg
         lazyLoad: false, // Disable lazy load to show images immediately

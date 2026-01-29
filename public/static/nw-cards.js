@@ -23,7 +23,7 @@ const NW_CARDS = (function() {
     const listeners = [];
     const CACHE_KEY = 'nw_cards_cache';
     const CACHE_VERSION_KEY = 'nw_cards_version';
-    const API_URL = '/static/data/cards.json';
+    const API_URL = '/static/data/cards-v2.json';
 
     // ═══════════════════════════════════════════════════════════════════════════
     // INITIALIZATION
