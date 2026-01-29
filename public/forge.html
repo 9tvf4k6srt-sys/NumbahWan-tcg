@@ -785,7 +785,7 @@
                         <div class="card-back-text">NUMBAHWAN</div>
                     </div>
                     <div class="card-face card-front">
-                        <img id="cardImg" src="" alt="">
+                        <img id="cardImg" src="" alt="" onerror="this.onerror=null;this.src='/static/images/cards/placeholder.png';">
                         <div class="card-holo" id="cardHolo"></div>
                         <div class="card-sparkle" id="cardSparkle"></div>
                     </div>
@@ -814,7 +814,7 @@
                 <span style="color:#ff00ff;font-weight:700;">0.5% BASE DROP RATE</span>
             </div>
             <div class="mythic-card-showcase">
-                <img id="mythicImg" src="/static/images/cards/01-reggina-mythic.jpg" alt="Mythic">
+                <img id="mythicImg" src="/static/images/cards/01-reggina-mythic.jpg" alt="Mythic" onerror="this.onerror=null;this.src='/static/images/cards/placeholder.png';">
             </div>
             <div class="mythic-prize">
                 <div class="mythic-prize-label">Ultimate Blessing</div>
@@ -1194,11 +1194,20 @@ const IMAGE_BASE = '/static/images/cards/thumbs/'; // WebP thumbnails
 const IMAGE_FULL = '/static/images/cards/'; // Full resolution
 
 // Convert image filename to WebP thumbnail URL
+// Fallback to full image if thumbnail doesn't exist
 function getCardThumbUrl(img) {
+    if (!img) return '/static/images/cards/placeholder.png';
     return IMAGE_BASE + img.replace(/\.(png|jpg|jpeg)$/i, '.webp');
 }
 function getCardFullUrl(img) {
+    if (!img) return '/static/images/cards/placeholder.png';
     return IMAGE_FULL + img;
+}
+
+// Handle image loading errors with fallback
+function handleImageError(imgEl, fallbackSrc) {
+    imgEl.onerror = null; // Prevent infinite loop
+    imgEl.src = fallbackSrc || '/static/images/cards/placeholder.png';
 }
 
 // Load cards from central NW_CARDS system
@@ -1284,6 +1293,7 @@ function getAdjustedRates(pityCounters) {
 }
 
 // State
+const TEST_MODE = false; // Set to true for infinite logs
 let lang = 'en';
 let selectedPulls = 1;
 let currentIndex = 0;
@@ -1488,7 +1498,11 @@ function updateUI() {
 function renderHistory() {
     const grid = document.getElementById('historyGrid');
     const cards = forgeState.recentCards.slice(-5).reverse();
-    grid.innerHTML = cards.map(c => `<div class="history-card ${c.rarity}"><img src="${getCardThumbUrl(c.img)}" alt=""></div>`).join('');
+    grid.innerHTML = cards.map(c => {
+        const thumbUrl = getCardThumbUrl(c.img);
+        const fullUrl = getCardFullUrl(c.img);
+        return `<div class="history-card ${c.rarity}"><img src="${thumbUrl}" alt="${c.name?.en || ''}" onerror="this.onerror=null;this.src='${fullUrl}'"></div>`;
+    }).join('');
     for (let i = cards.length; i < 5; i++) grid.innerHTML += '<div class="history-card empty-slot">?</div>';
 }
 
