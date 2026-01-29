@@ -54,6 +54,7 @@ app.get('/api/debug', (c) => {
     apis: {
       health: '/api/health',
       debug: '/api/debug',
+      cardFactory: '/api/card-factory',
       cards: {
         list: '/api/cards',
         stats: '/api/cards/stats',
@@ -69,6 +70,8 @@ app.get('/api/debug', (c) => {
       },
       admin: {
         addCard: 'POST /api/admin/cards',
+        batchAdd: 'POST /api/admin/cards/batch',
+        nextIds: '/api/admin/cards/next-ids?gmKey=numbahwan-gm-2026',
         updateCard: 'PUT /api/admin/cards/:id',
         deleteCard: 'DELETE /api/admin/cards/:id',
         exportCards: '/api/admin/cards/export?gmKey=numbahwan-gm-2026'
@@ -77,6 +80,8 @@ app.get('/api/debug', (c) => {
     
     dataFiles: {
       cards: '/static/data/cards.json',
+      cardTemplates: '/static/data/card-templates.json',
+      cardQueue: '/static/data/card-queue.json',
       config: '/static/data/config.json',
       navigation: '/static/data/navigation.json',
       pages: '/static/data/pages.json'
@@ -1113,6 +1118,166 @@ app.get('/api/admin/cards/export', (c) => {
   c.header('Content-Type', 'application/json')
   c.header('Content-Disposition', 'attachment; filename="cards.json"')
   return c.json(cardData)
+})
+
+// POST /api/admin/cards/batch - Add multiple cards at once
+app.post('/api/admin/cards/batch', async (c) => {
+  try {
+    const body = await c.req.json()
+    const { cards, gmKey } = body
+    
+    if (gmKey !== 'numbahwan-gm-2026') {
+      return c.json({ success: false, error: 'Unauthorized' }, 401)
+    }
+    
+    if (!Array.isArray(cards) || cards.length === 0) {
+      return c.json({ success: false, error: 'cards array required' }, 400)
+    }
+    
+    // ID ranges by rarity for auto-assignment
+    const idRanges: Record<string, number> = {
+      mythic: 106,
+      legendary: 209,
+      epic: 309,
+      rare: 409,
+      uncommon: 531,
+      common: 641
+    }
+    
+    // Find next available IDs
+    cardData.cards.forEach(card => {
+      const range = idRanges[card.rarity]
+      if (range && card.id >= range) {
+        idRanges[card.rarity] = Math.max(idRanges[card.rarity], card.id + 1)
+      }
+    })
+    
+    const addedCards: any[] = []
+    const errors: string[] = []
+    
+    for (const card of cards) {
+      if (!card.name || !card.rarity) {
+        errors.push(`Missing name or rarity for card: ${JSON.stringify(card)}`)
+        continue
+      }
+      
+      // Auto-assign ID if not provided
+      const id = card.id || idRanges[card.rarity]++
+      
+      // Auto-generate image filename if not provided
+      const slug = card.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '')
+      const img = card.img || `${card.rarity}-${id}-${slug}.jpg`
+      
+      const newCard = {
+        id,
+        name: card.name,
+        rarity: card.rarity,
+        img,
+        set: card.set || 'custom',
+        reserved: card.reserved || false,
+        description: card.description || ''
+      }
+      
+      cardData.cards.push(newCard)
+      addedCards.push(newCard)
+    }
+    
+    cardData.totalCards = cardData.cards.length
+    
+    return c.json({ 
+      success: true, 
+      added: addedCards.length,
+      cards: addedCards,
+      errors: errors.length > 0 ? errors : undefined,
+      total: cardData.totalCards
+    })
+  } catch (e) {
+    return c.json({ success: false, error: String(e) }, 500)
+  }
+})
+
+// GET /api/admin/cards/next-ids - Get next available IDs for each rarity
+app.get('/api/admin/cards/next-ids', (c) => {
+  const gmKey = c.req.query('gmKey')
+  
+  if (gmKey !== 'numbahwan-gm-2026') {
+    return c.json({ success: false, error: 'Unauthorized' }, 401)
+  }
+  
+  // Base ID ranges
+  const idRanges: Record<string, number> = {
+    mythic: 106,
+    legendary: 209,
+    epic: 309,
+    rare: 409,
+    uncommon: 531,
+    common: 641
+  }
+  
+  // Find next available IDs
+  cardData.cards.forEach(card => {
+    const range = idRanges[card.rarity]
+    if (range && card.id >= range) {
+      idRanges[card.rarity] = Math.max(idRanges[card.rarity], card.id + 1)
+    }
+  })
+  
+  return c.json({ 
+    success: true,
+    nextIds: idRanges,
+    counts: {
+      mythic: cardData.cards.filter(c => c.rarity === 'mythic').length,
+      legendary: cardData.cards.filter(c => c.rarity === 'legendary').length,
+      epic: cardData.cards.filter(c => c.rarity === 'epic').length,
+      rare: cardData.cards.filter(c => c.rarity === 'rare').length,
+      uncommon: cardData.cards.filter(c => c.rarity === 'uncommon').length,
+      common: cardData.cards.filter(c => c.rarity === 'common').length
+    }
+  })
+})
+
+// GET /api/card-factory - Card creation helper for AI
+app.get('/api/card-factory', (c) => {
+  return c.json({
+    description: 'Card Factory - Fast card creation system for AI',
+    version: '1.0.0',
+    
+    quickAdd: {
+      endpoint: 'POST /api/admin/cards/batch',
+      body: {
+        gmKey: 'numbahwan-gm-2026',
+        cards: [
+          { name: 'Card Name', rarity: 'epic', description: 'Optional desc' }
+        ]
+      },
+      note: 'ID and image filename auto-generated if not provided'
+    },
+    
+    imagePromptTemplates: {
+      mythic: 'Epic fantasy TCG art, legendary mythic creature, dramatic golden aura, divine power, ultra detailed, dark purple bg with golden particles',
+      legendary: 'Fantasy TCG art, powerful boss creature, dramatic pose, glowing effects, dark gradient with energy effects',
+      epic: 'Fantasy card art, elite warrior, dynamic action pose, magical effects, purple gradient',
+      rare: 'Fantasy game card, skilled adventurer, subtle magical effects, blue gradient',
+      uncommon: 'Fantasy game art, common soldier, clean style, green gradient',
+      common: 'Simple fantasy art, basic creature, gray gradient'
+    },
+    
+    imageNaming: '{rarity}-{id}-{slug}.jpg',
+    imagePath: '/public/static/cards/',
+    
+    nextIds: (() => {
+      const ranges: Record<string, number> = { mythic: 106, legendary: 209, epic: 309, rare: 409, uncommon: 531, common: 641 }
+      cardData.cards.forEach(c => { if (c.id >= ranges[c.rarity]) ranges[c.rarity] = c.id + 1 })
+      return ranges
+    })(),
+    
+    workflow: [
+      '1. Generate image with prompt template (model: nano-banana-pro, aspect: 3:4)',
+      '2. Save image to /public/static/cards/{rarity}-{id}-{slug}.jpg',
+      '3. POST to /api/admin/cards/batch with card data',
+      '4. npm run build && pm2 restart numbahwan-guild'
+    ]
+  })
 })
 
 // ============================================================================
