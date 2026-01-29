@@ -1193,21 +1193,55 @@ let CARDS = [];
 const IMAGE_BASE = '/static/images/cards/thumbs/'; // WebP thumbnails
 const IMAGE_FULL = '/static/images/cards/'; // Full resolution
 
-// Convert image filename to WebP thumbnail URL
-// Fallback to full image if thumbnail doesn't exist
+// Convert image filename to WebP thumbnail URL (20-40KB, FAST)
 function getCardThumbUrl(img) {
     if (!img) return '/static/images/cards/placeholder.png';
     return IMAGE_BASE + img.replace(/\.(png|jpg|jpeg)$/i, '.webp');
 }
+
+// Full resolution URL (1-2MB, SLOW - avoid for reveal)
 function getCardFullUrl(img) {
     if (!img) return '/static/images/cards/placeholder.png';
     return IMAGE_FULL + img;
 }
 
-// Handle image loading errors with fallback
-function handleImageError(imgEl, fallbackSrc) {
-    imgEl.onerror = null; // Prevent infinite loop
-    imgEl.src = fallbackSrc || '/static/images/cards/placeholder.png';
+// 🚀 PRELOAD CACHE - Store preloaded images for instant reveal
+const preloadedImages = new Map();
+let preloadQueue = [];
+let isPreloading = false;
+
+// Preload a single image and cache it
+function preloadImage(url) {
+    return new Promise((resolve) => {
+        if (preloadedImages.has(url)) {
+            resolve(preloadedImages.get(url));
+            return;
+        }
+        const img = new Image();
+        img.onload = () => {
+            preloadedImages.set(url, img);
+            resolve(img);
+        };
+        img.onerror = () => resolve(null);
+        img.src = url;
+    });
+}
+
+// Preload cards that will be revealed (call before reveal starts)
+async function preloadRevealCards(cards) {
+    const urls = cards.map(c => getCardThumbUrl(c.img));
+    // Preload all thumbnails in parallel (fast, ~20-40KB each)
+    await Promise.all(urls.map(url => preloadImage(url)));
+}
+
+// Background preload common cards when page loads
+async function preloadCommonCards() {
+    if (CARDS.length === 0) return;
+    // Preload common/uncommon cards first (most likely to pull)
+    const commonCards = CARDS.filter(c => ['common', 'uncommon', 'rare'].includes(c.rarity));
+    for (const card of commonCards.slice(0, 30)) { // First 30
+        await preloadImage(getCardThumbUrl(card.img));
+    }
 }
 
 // Load cards from central NW_CARDS system
@@ -1622,7 +1656,7 @@ function getCard(rarity) {
 }
 
 // Pull
-function executePull() {
+async function executePull() {
     initAudio();
     let actual = selectedPulls;
     if (selectedPulls === 5) actual = 6;
@@ -1679,6 +1713,21 @@ function executePull() {
     
     saveState();
     updateUI();
+    
+    // 🚀 PRELOAD ALL REVEAL IMAGES BEFORE SHOWING (instant reveals!)
+    // Show quick loading feedback
+    const pullBtn = document.querySelector('.pull-btn');
+    if (pullBtn) {
+        pullBtn.disabled = true;
+        pullBtn.textContent = '✨ Loading...';
+    }
+    
+    await preloadRevealCards(cardsToReveal);
+    
+    if (pullBtn) {
+        pullBtn.disabled = false;
+        pullBtn.textContent = '🔥 PULL';
+    }
     
     currentIndex = 0;
     showReveal();
@@ -1746,8 +1795,18 @@ function revealCard() {
     // Update counter
     document.getElementById('revealCounter').textContent = `${currentIndex + 1} / ${cardsToReveal.length}`;
     
-    // Preload image (use full resolution for reveal)
-    document.getElementById('cardImg').src = getCardFullUrl(card.img);
+    // 🚀 Use THUMBNAIL for fast reveal (20-40KB vs 1-2MB full)
+    // Thumbnails are pre-compressed WebP - instant loading!
+    const thumbUrl = getCardThumbUrl(card.img);
+    const cardImgEl = document.getElementById('cardImg');
+    
+    // Check if already preloaded
+    if (preloadedImages.has(thumbUrl)) {
+        cardImgEl.src = thumbUrl; // Instant!
+    } else {
+        // Fallback: load thumbnail (still fast)
+        cardImgEl.src = thumbUrl;
+    }
     document.getElementById('cardName').textContent = card.name[lang] || card.name.en;
     document.getElementById('cardStats').textContent = card.stats;
     
@@ -2046,7 +2105,8 @@ function closeReveal() {
 // Mythic Celebration
 function showMythicCelebration(card) {
     const modal = document.getElementById('mythicModal');
-    document.getElementById('mythicImg').src = getCardFullUrl(card.img);
+    // Use thumbnail for fast load (already preloaded!)
+    document.getElementById('mythicImg').src = getCardThumbUrl(card.img);
     document.getElementById('mythicPrize').textContent = card.prize || 'Physical Card + Lifetime VIP';
     
     const container = document.getElementById('mythicRaysContainer');
@@ -2093,11 +2153,19 @@ function showToast(msg) {
     setTimeout(() => t.classList.remove('show'), 3000);
 }
 
-// Init - Load cards first, then state
+// Init - Load cards first, then state, then preload common images
 (async function() {
     await loadGachaCards();
     loadState();
     console.log(`Forge ready with ${CARDS.length} pullable cards`);
+    
+    // 🚀 Background preload common cards for instant reveals
+    // Runs after page is interactive - won't block UI
+    setTimeout(() => {
+        preloadCommonCards().then(() => {
+            console.log(`Preloaded ${preloadedImages.size} card thumbnails`);
+        });
+    }, 1000);
 })();
 
 // 🔥 Generate floating embers
