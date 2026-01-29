@@ -1239,8 +1239,8 @@ app.get('/api/admin/cards/next-ids', (c) => {
 // GET /api/card-factory - Card creation helper for AI
 app.get('/api/card-factory', (c) => {
   return c.json({
-    description: 'Card Factory - Fast card creation system for AI',
-    version: '1.0.0',
+    description: 'Card Factory v2 - Full bleed, likeness-capturing card art',
+    version: '2.0.0',
     
     quickAdd: {
       endpoint: 'POST /api/admin/cards/batch',
@@ -1253,13 +1253,38 @@ app.get('/api/card-factory', (c) => {
       note: 'ID and image filename auto-generated if not provided'
     },
     
-    imagePromptTemplates: {
-      mythic: 'Epic fantasy TCG art, legendary mythic creature, dramatic golden aura, divine power, ultra detailed, dark purple bg with golden particles',
-      legendary: 'Fantasy TCG art, powerful boss creature, dramatic pose, glowing effects, dark gradient with energy effects',
-      epic: 'Fantasy card art, elite warrior, dynamic action pose, magical effects, purple gradient',
-      rare: 'Fantasy game card, skilled adventurer, subtle magical effects, blue gradient',
-      uncommon: 'Fantasy game art, common soldier, clean style, green gradient',
-      common: 'Simple fantasy art, basic creature, gray gradient'
+    imageSettings: {
+      model: 'nano-banana-pro',
+      aspectRatio: '3:4',
+      size: '768x1024',
+      fullBleed: true
+    },
+    
+    promptStructure: {
+      template: '[SUBJECT with exact likeness details], [RARITY STYLE], full bleed trading card artwork, edge-to-edge composition, no borders, no card frame, [BACKGROUND], dramatic lighting, ultra detailed, professional TCG illustration',
+      likenessCapture: [
+        'Exact facial features (eyes, nose, mouth, skin tone)',
+        'Exact hair (style, color, length)',
+        'Exact outfit (all clothing, colors, patterns)',
+        'Exact accessories (weapons, jewelry, armor)',
+        'Distinguishing marks (scars, tattoos, glasses, beard)'
+      ],
+      alwaysInclude: ['full bleed', 'edge-to-edge', 'no borders', 'no card frame'],
+      neverInclude: ['card border', 'card frame', 'text overlay', 'white borders']
+    },
+    
+    rarityPrompts: {
+      mythic: '[SUBJECT exact likeness], legendary mythic hero radiating divine power, golden aura and holy light, full bleed TCG artwork edge-to-edge, no borders no frame, epic cosmic purple void with golden swirling energy, dramatic divine backlighting, masterpiece ultra detailed 4k',
+      legendary: '[SUBJECT exact likeness], powerful legendary warrior with intense elemental aura, full bleed TCG artwork edge-to-edge, no borders no frame, dark gradient with [ELEMENT] energy effects filling frame, dramatic side lighting, professional TCG art 4k',
+      epic: '[SUBJECT exact likeness], elite champion in dynamic action with magical energy, full bleed TCG artwork edge-to-edge, no borders no frame, purple gradient with magical particles to all edges, dramatic action lighting, detailed TCG art',
+      rare: '[SUBJECT exact likeness], skilled adventurer confident pose with subtle magic, full bleed TCG artwork edge-to-edge, no borders no frame, blue gradient with particles filling frame, balanced lighting',
+      uncommon: '[SUBJECT exact likeness], capable warrior ready stance, full bleed TCG artwork edge-to-edge, no borders no frame, green gradient filling entire frame, clean lighting',
+      common: '[SUBJECT exact likeness], basic character, full bleed TCG artwork edge-to-edge, no borders no frame, gray gradient background, standard lighting'
+    },
+    
+    exampleWithReference: {
+      scenario: 'User provides image of character with white beard, sunglasses, brown armor, golden hammer',
+      prompt: 'Character with white beard, cool pixel sunglasses, brown leather armor with golden trim and buckles, wielding large golden glowing hammer with yellow energy aura, stocky heroic build, legendary mythic hero radiating divine power, golden aura and holy light, full bleed trading card artwork edge-to-edge, no borders no card frame, epic cosmic purple void background with golden swirling energy and particles, dramatic divine backlighting with golden rim light, masterpiece TCG illustration ultra detailed 4k'
     },
     
     imageNaming: '{rarity}-{id}-{slug}.jpg',
@@ -1272,10 +1297,12 @@ app.get('/api/card-factory', (c) => {
     })(),
     
     workflow: [
-      '1. Generate image with prompt template (model: nano-banana-pro, aspect: 3:4)',
-      '2. Save image to /public/static/cards/{rarity}-{id}-{slug}.jpg',
-      '3. POST to /api/admin/cards/batch with card data',
-      '4. npm run build && pm2 restart numbahwan-guild'
+      '1. If reference image: Analyze and extract ALL likeness details',
+      '2. Build prompt: [likeness details] + [rarity prompt] + full bleed instructions',
+      '3. Generate image (nano-banana-pro, 3:4 aspect)',
+      '4. Save to /public/static/cards/{rarity}-{id}-{slug}.jpg',
+      '5. POST to /api/admin/cards/batch',
+      '6. npm run build && pm2 restart numbahwan-guild'
     ]
   })
 })
