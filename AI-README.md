@@ -67,12 +67,58 @@ curl http://localhost:3000/api/debug
 | `/static/data/navigation.json` | Menu items | `mainNav[]`, `footerNav[]` |
 | `/static/data/pages.json` | Page metadata | `pages[]` with titles, descriptions |
 
-### Example: Add a new card
+### 🏭 CARD FACTORY - Ultra Fast Card Creation
+
+**Add cards in seconds with auto ID and filename generation!**
+
+#### Method 1: Batch API (FASTEST - No Image)
+```bash
+curl -X POST "http://localhost:3000/api/admin/cards/batch" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "gmKey": "numbahwan-gm-2026",
+    "cards": [
+      {"name": "Dragon Lord", "rarity": "legendary", "description": "Fire dragon"},
+      {"name": "Storm Mage", "rarity": "epic"},
+      {"name": "Iron Knight", "rarity": "rare"}
+    ]
+  }'
+# IDs and filenames auto-generated!
+```
+
+#### Method 2: Edit JSON (Simple)
 ```json
 // Edit /public/static/data/cards.json, add to "cards" array:
 { "id": 999, "name": "New Card", "rarity": "epic", "img": "new-card.jpg", "set": "custom" }
 ```
 Then: `npm run build && pm2 restart numbahwan-guild`
+
+#### Method 3: With Image Generation
+```
+1. Generate image using template from /api/card-factory
+2. Save to /public/static/cards/{rarity}-{id}-{slug}.jpg
+3. Add card via batch API or JSON
+4. npm run build && pm2 restart numbahwan-guild
+```
+
+#### Image Prompt Templates (for AI)
+| Rarity | Prompt Style |
+|--------|--------------|
+| mythic | Epic fantasy TCG art, legendary mythic creature, dramatic golden aura, divine power, ultra detailed |
+| legendary | Fantasy TCG art, powerful boss creature, dramatic pose, glowing effects |
+| epic | Fantasy card art, elite warrior, dynamic action pose, magical effects |
+| rare | Fantasy game card, skilled adventurer, subtle magical effects |
+
+#### Get Next Available IDs
+```bash
+curl "http://localhost:3000/api/admin/cards/next-ids?gmKey=numbahwan-gm-2026"
+```
+
+#### Full Card Factory Docs
+```bash
+curl "http://localhost:3000/api/card-factory"
+# Or read: /home/user/webapp/CARD-FACTORY.md
+```
 
 ### Example: Change site name
 ```json
@@ -101,10 +147,13 @@ Then: `npm run build && pm2 restart numbahwan-guild`
 ### Admin (GM Key: `numbahwan-gm-2026`)
 | Endpoint | Description |
 |----------|-------------|
-| `POST /api/admin/cards` | Add card |
+| `POST /api/admin/cards` | Add single card |
+| `POST /api/admin/cards/batch` | **⚡ Add multiple cards at once** |
+| `GET /api/admin/cards/next-ids` | Get next available IDs per rarity |
 | `PUT /api/admin/cards/:id` | Update card |
 | `DELETE /api/admin/cards/:id` | Delete card |
 | `GET /api/admin/cards/export` | Export database |
+| `GET /api/card-factory` | **🏭 Card creation helper for AI** |
 
 ### Market
 | Endpoint | Description |
@@ -231,7 +280,23 @@ Toggle is in the header of each page (flag icon).
 
 ---
 
-**Last Updated**: 2026-01-28
-**Version**: 2.0.0 (Infinite Scaling)
+## 🤖 AI Quick Reference
+
+When user says → AI does:
+
+| User Request | AI Action |
+|--------------|-----------|
+| "Add card X" | Use batch API, rebuild |
+| "Add card X with image" | Generate image (nano-banana-pro, 3:4), save to /public/static/cards/, batch API, rebuild |
+| "Add 10 new cards" | Batch API with all 10, rebuild once |
+| "What's the next ID?" | `curl /api/admin/cards/next-ids?gmKey=numbahwan-gm-2026` |
+| "Show card stats" | `curl /api/cards/stats` |
+| "Debug the system" | `curl /api/debug` |
+| "Restore from backup" | Download tar, extract, npm install, build, pm2 start |
+
+---
+
+**Last Updated**: 2026-01-29
+**Version**: 2.1.0 (Card Factory)
 **Total Pages**: 15
-**Total Cards**: 126
+**Total Cards**: 127
