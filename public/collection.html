@@ -1,0 +1,1126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+    <title>NumbahWan TCG | Collection & Achievements</title>
+    <link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --gold: #ffd700; --orange: #ff6b00; --purple: #a855f7; --blue: #3b82f6;
+            --green: #22c55e; --red: #ef4444; --dark: #0a0a0f; --mythic: #ff00ff;
+            --cyan: #00ffff; --log: #c97f3d;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            font-family: 'Inter', system-ui, sans-serif; 
+            background: var(--dark); 
+            color: #fff;
+            min-height: 100vh;
+        }
+        
+        .bg {
+            position: fixed; inset: 0; z-index: -1;
+            background: 
+                radial-gradient(ellipse at top, rgba(255,107,0,0.1) 0%, transparent 50%),
+                radial-gradient(ellipse at bottom right, rgba(168,85,247,0.08) 0%, transparent 40%),
+                var(--dark);
+        }
+        
+        /* Header */
+        header {
+            position: sticky; top: 0; z-index: 100;
+            padding: 12px 16px;
+            background: rgba(10,10,15,0.98);
+            display: flex; justify-content: space-between; align-items: center;
+            backdrop-filter: blur(10px);
+            border-bottom: 2px solid rgba(255,107,0,0.3);
+        }
+        .logo {
+            font-family: 'Orbitron', sans-serif; font-size: 16px; font-weight: 800;
+            color: var(--gold); text-decoration: none;
+            text-shadow: 0 0 20px rgba(255,215,0,0.5);
+        }
+        .nav-links { display: flex; gap: 8px; align-items: center; }
+        .nav-link {
+            padding: 8px 14px; background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.15); border-radius: 8px;
+            color: #fff; font-size: 13px; text-decoration: none; font-weight: 600;
+        }
+        .nav-link:hover { background: rgba(255,107,0,0.2); border-color: var(--orange); }
+        
+        .lang-toggle { display: flex; gap: 4px; background: rgba(0,0,0,0.4); padding: 3px; border-radius: 8px; }
+        .lang-btn { padding: 6px 10px; border: none; background: transparent;
+            color: rgba(255,255,255,0.5); font-size: 12px; border-radius: 6px; cursor: pointer; font-weight: 600; }
+        .lang-btn.active { background: linear-gradient(135deg, var(--orange), var(--gold)); color: #fff; }
+        
+        /* Main */
+        main {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        /* Tabs */
+        .tabs {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+        }
+        .tab-btn {
+            padding: 14px 28px;
+            background: rgba(255,255,255,0.05);
+            border: 2px solid rgba(255,255,255,0.2);
+            border-radius: 12px;
+            color: #fff;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 14px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .tab-btn:hover { border-color: var(--gold); }
+        .tab-btn.active {
+            background: linear-gradient(135deg, rgba(255,107,0,0.2), rgba(255,215,0,0.1));
+            border-color: var(--gold);
+            color: var(--gold);
+        }
+        
+        /* Collection Stats */
+        .collection-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+        .stat-card {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 16px;
+            padding: 20px;
+            text-align: center;
+        }
+        .stat-card .stat-value {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 36px;
+            font-weight: 900;
+            color: var(--gold);
+            text-shadow: 0 0 20px rgba(255,215,0,0.3);
+        }
+        .stat-card .stat-label {
+            font-size: 12px;
+            color: rgba(255,255,255,0.6);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-top: 8px;
+        }
+        .stat-card.mythic { border-color: var(--mythic); }
+        .stat-card.mythic .stat-value { color: var(--mythic); text-shadow: 0 0 20px rgba(255,0,255,0.4); }
+        .stat-card.legendary { border-color: var(--gold); }
+        .stat-card.epic { border-color: var(--purple); }
+        .stat-card.epic .stat-value { color: var(--purple); }
+        
+        /* Progress Bar */
+        .progress-section {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 24px;
+        }
+        .progress-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+        .progress-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--gold);
+        }
+        .progress-pct {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 24px;
+            font-weight: 900;
+            color: var(--gold);
+        }
+        .progress-bar {
+            height: 24px;
+            background: rgba(0,0,0,0.5);
+            border-radius: 12px;
+            overflow: hidden;
+            border: 2px solid rgba(255,255,255,0.2);
+        }
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--orange), var(--gold));
+            border-radius: 10px;
+            transition: width 0.5s ease-out;
+            position: relative;
+        }
+        .progress-fill::after {
+            content: '';
+            position: absolute; inset: 0;
+            background: linear-gradient(180deg, rgba(255,255,255,0.3) 0%, transparent 50%);
+        }
+        .progress-breakdown {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 12px;
+            font-size: 12px;
+            color: rgba(255,255,255,0.5);
+        }
+        
+        /* Rarity Breakdown */
+        .rarity-breakdown {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 12px;
+            margin-top: 16px;
+        }
+        .rarity-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px;
+            background: rgba(0,0,0,0.3);
+            border-radius: 10px;
+        }
+        .rarity-icon {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+        .rarity-icon.mythic { background: var(--mythic); box-shadow: 0 0 10px var(--mythic); }
+        .rarity-icon.legendary { background: var(--gold); }
+        .rarity-icon.epic { background: var(--purple); }
+        .rarity-icon.rare { background: var(--blue); }
+        .rarity-icon.uncommon { background: var(--green); }
+        .rarity-icon.common { background: #9ca3af; }
+        .rarity-name { font-size: 12px; color: rgba(255,255,255,0.7); flex: 1; }
+        .rarity-count { font-family: 'Orbitron', sans-serif; font-size: 14px; font-weight: 700; }
+        
+        /* Filter Bar */
+        .filter-bar {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-bottom: 16px;
+        }
+        .filter-btn {
+            padding: 8px 16px;
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 20px;
+            background: transparent;
+            color: rgba(255,255,255,0.7);
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .filter-btn:hover { border-color: var(--gold); }
+        .filter-btn.active { background: var(--orange); border-color: var(--orange); color: #fff; }
+        .filter-btn.owned { background: var(--green); border-color: var(--green); color: #fff; }
+        .filter-btn.missing { background: var(--red); border-color: var(--red); color: #fff; }
+        
+        /* Card Grid */
+        .card-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+            gap: 16px;
+        }
+        
+        .collection-card {
+            aspect-ratio: 5/7;
+            border-radius: 12px;
+            overflow: hidden;
+            position: relative;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: 3px solid transparent;
+        }
+        .collection-card:hover {
+            transform: scale(1.05);
+            z-index: 10;
+        }
+        .collection-card img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .collection-card.owned {
+            border-color: var(--gold);
+        }
+        .collection-card.not-owned {
+            filter: grayscale(1) brightness(0.4);
+            border-color: rgba(255,255,255,0.1);
+        }
+        .collection-card.not-owned:hover {
+            filter: grayscale(0.5) brightness(0.6);
+        }
+        .collection-card .rarity-border {
+            position: absolute;
+            inset: 0;
+            border-radius: 12px;
+            pointer-events: none;
+        }
+        .collection-card.mythic.owned .rarity-border { box-shadow: inset 0 0 20px var(--mythic); }
+        .collection-card.legendary.owned .rarity-border { box-shadow: inset 0 0 15px var(--gold); }
+        .collection-card.epic.owned .rarity-border { box-shadow: inset 0 0 12px var(--purple); }
+        
+        .card-info-overlay {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            padding: 8px;
+            background: linear-gradient(transparent, rgba(0,0,0,0.9));
+        }
+        .card-name {
+            font-size: 10px;
+            font-weight: 600;
+            line-height: 1.2;
+            text-shadow: 0 1px 2px #000;
+        }
+        .owned-badge {
+            position: absolute;
+            top: 6px;
+            right: 6px;
+            width: 24px;
+            height: 24px;
+            background: var(--green);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: 700;
+            border: 2px solid #fff;
+        }
+        .wishlist-btn {
+            position: absolute;
+            top: 6px;
+            left: 6px;
+            width: 28px;
+            height: 28px;
+            background: rgba(0,0,0,0.6);
+            border: none;
+            border-radius: 50%;
+            color: rgba(255,255,255,0.5);
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .wishlist-btn:hover { color: var(--red); }
+        .wishlist-btn.active { color: var(--red); background: rgba(239,68,68,0.3); }
+        
+        /* Tab Content */
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        
+        /* Achievements Section */
+        .achievements-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 16px;
+        }
+        
+        .achievement-card {
+            background: rgba(255,255,255,0.05);
+            border: 2px solid rgba(255,255,255,0.1);
+            border-radius: 16px;
+            padding: 20px;
+            display: flex;
+            gap: 16px;
+            align-items: center;
+            transition: all 0.3s;
+        }
+        .achievement-card:hover {
+            border-color: rgba(255,215,0,0.3);
+            background: rgba(255,255,255,0.08);
+        }
+        .achievement-card.completed {
+            border-color: var(--gold);
+            background: linear-gradient(135deg, rgba(255,215,0,0.1), rgba(255,107,0,0.05));
+        }
+        .achievement-card.locked {
+            opacity: 0.5;
+        }
+        
+        .achievement-icon {
+            width: 64px;
+            height: 64px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, rgba(255,107,0,0.3), rgba(255,215,0,0.2));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+            flex-shrink: 0;
+        }
+        .achievement-card.completed .achievement-icon {
+            background: linear-gradient(135deg, var(--gold), var(--orange));
+        }
+        
+        .achievement-info { flex: 1; }
+        .achievement-name {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--gold);
+            margin-bottom: 4px;
+        }
+        .achievement-desc {
+            font-size: 12px;
+            color: rgba(255,255,255,0.6);
+            margin-bottom: 8px;
+            line-height: 1.4;
+        }
+        .achievement-progress {
+            height: 6px;
+            background: rgba(0,0,0,0.5);
+            border-radius: 3px;
+            overflow: hidden;
+        }
+        .achievement-progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--orange), var(--gold));
+            border-radius: 3px;
+        }
+        .achievement-progress-text {
+            font-size: 10px;
+            color: rgba(255,255,255,0.5);
+            margin-top: 4px;
+        }
+        
+        .achievement-reward {
+            text-align: right;
+        }
+        .reward-label {
+            font-size: 10px;
+            color: rgba(255,255,255,0.4);
+            text-transform: uppercase;
+        }
+        .reward-value {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--gold);
+        }
+        
+        /* Pull History Section */
+        .history-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+            gap: 12px;
+        }
+        .history-card {
+            aspect-ratio: 5/7;
+            border-radius: 10px;
+            overflow: hidden;
+            border: 2px solid transparent;
+            position: relative;
+        }
+        .history-card img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .history-card.mythic { border-color: var(--mythic); box-shadow: 0 0 15px rgba(255,0,255,0.4); }
+        .history-card.legendary { border-color: var(--gold); box-shadow: 0 0 10px rgba(255,215,0,0.3); }
+        .history-card.epic { border-color: var(--purple); }
+        .history-card.rare { border-color: var(--blue); }
+        .history-card .history-time {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            padding: 4px;
+            background: rgba(0,0,0,0.8);
+            font-size: 9px;
+            text-align: center;
+            color: rgba(255,255,255,0.6);
+        }
+        
+        .history-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+        .history-stat {
+            background: rgba(255,255,255,0.05);
+            border-radius: 12px;
+            padding: 16px;
+            text-align: center;
+        }
+        .history-stat-value {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 24px;
+            font-weight: 800;
+            color: var(--gold);
+        }
+        .history-stat-label {
+            font-size: 11px;
+            color: rgba(255,255,255,0.5);
+            margin-top: 4px;
+        }
+        
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: rgba(255,255,255,0.4);
+        }
+        .empty-state-icon {
+            font-size: 64px;
+            margin-bottom: 16px;
+        }
+        .empty-state-text {
+            font-size: 16px;
+            margin-bottom: 8px;
+        }
+        .empty-state-hint {
+            font-size: 12px;
+        }
+        
+        /* Toast */
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 12px 24px;
+            background: rgba(34,197,94,0.95);
+            color: #fff;
+            border-radius: 12px;
+            font-weight: 600;
+            z-index: 1000;
+            opacity: 0;
+            transition: opacity 0.3s, transform 0.3s;
+            pointer-events: none;
+        }
+        .toast.show { opacity: 1; transform: translateX(-50%) translateY(-10px); }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            .card-grid {
+                grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
+            }
+            .achievements-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="bg"></div>
+    
+    <header>
+        <a href="/" class="logo">🔥 NumbahWan TCG</a>
+        <nav class="nav-links">
+            <a href="/cards" class="nav-link" data-i18n="navCards">Cards</a>
+            <a href="/forge" class="nav-link" data-i18n="navGacha">Gacha</a>
+            <a href="/battle" class="nav-link" data-i18n="navBattle">Battle</a>
+            <div class="lang-toggle">
+                <button class="lang-btn active" data-lang="en">EN</button>
+                <button class="lang-btn" data-lang="zh">中文</button>
+                <button class="lang-btn" data-lang="th">ไทย</button>
+            </div>
+        </nav>
+    </header>
+    
+    <main>
+        <!-- Tabs -->
+        <div class="tabs">
+            <button class="tab-btn active" data-tab="collection" data-i18n="tabCollection">📦 Collection</button>
+            <button class="tab-btn" data-tab="achievements" data-i18n="tabAchievements">🏆 Achievements</button>
+            <button class="tab-btn" data-tab="history" data-i18n="tabHistory">📜 Pull History</button>
+        </div>
+        
+        <!-- Collection Tab -->
+        <div class="tab-content active" id="collectionTab">
+            <!-- Collection Stats -->
+            <div class="collection-stats">
+                <div class="stat-card">
+                    <div class="stat-value" id="totalOwned">0</div>
+                    <div class="stat-label" data-i18n="cardsOwned">Cards Owned</div>
+                </div>
+                <div class="stat-card mythic">
+                    <div class="stat-value" id="mythicsOwned">0</div>
+                    <div class="stat-label" data-i18n="mythicsOwned">Mythics</div>
+                </div>
+                <div class="stat-card legendary">
+                    <div class="stat-value" id="legendariesOwned">0</div>
+                    <div class="stat-label" data-i18n="legendariesOwned">Legendaries</div>
+                </div>
+                <div class="stat-card epic">
+                    <div class="stat-value" id="epicsOwned">0</div>
+                    <div class="stat-label" data-i18n="epicsOwned">Epics</div>
+                </div>
+            </div>
+            
+            <!-- Progress -->
+            <div class="progress-section">
+                <div class="progress-header">
+                    <div class="progress-title" data-i18n="collectionProgress">📊 Collection Progress</div>
+                    <div class="progress-pct" id="progressPct">0%</div>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill" style="width: 0%"></div>
+                </div>
+                <div class="progress-breakdown">
+                    <span><span id="ownedCount">0</span>/<span id="totalCount">108</span> <span data-i18n="cards">cards</span></span>
+                    <span><span id="uniqueCount">0</span> <span data-i18n="unique">unique</span></span>
+                </div>
+                
+                <div class="rarity-breakdown">
+                    <div class="rarity-item">
+                        <div class="rarity-icon mythic"></div>
+                        <span class="rarity-name" data-i18n="mythic">Mythic</span>
+                        <span class="rarity-count"><span id="mythicCount">0</span>/2</span>
+                    </div>
+                    <div class="rarity-item">
+                        <div class="rarity-icon legendary"></div>
+                        <span class="rarity-name" data-i18n="legendary">Legendary</span>
+                        <span class="rarity-count"><span id="legendaryCount">0</span>/10</span>
+                    </div>
+                    <div class="rarity-item">
+                        <div class="rarity-icon epic"></div>
+                        <span class="rarity-name" data-i18n="epic">Epic</span>
+                        <span class="rarity-count"><span id="epicCount">0</span>/18</span>
+                    </div>
+                    <div class="rarity-item">
+                        <div class="rarity-icon rare"></div>
+                        <span class="rarity-name" data-i18n="rare">Rare</span>
+                        <span class="rarity-count"><span id="rareCount">0</span>/19</span>
+                    </div>
+                    <div class="rarity-item">
+                        <div class="rarity-icon uncommon"></div>
+                        <span class="rarity-name" data-i18n="uncommon">Uncommon</span>
+                        <span class="rarity-count"><span id="uncommonCount">0</span>/23</span>
+                    </div>
+                    <div class="rarity-item">
+                        <div class="rarity-icon common"></div>
+                        <span class="rarity-name" data-i18n="common">Common</span>
+                        <span class="rarity-count"><span id="commonCount">0</span>/36</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Filters -->
+            <div class="filter-bar">
+                <button class="filter-btn active" data-filter="all" data-i18n="filterAll">All</button>
+                <button class="filter-btn owned" data-filter="owned" data-i18n="filterOwned">✓ Owned</button>
+                <button class="filter-btn missing" data-filter="missing" data-i18n="filterMissing">✗ Missing</button>
+                <button class="filter-btn" data-filter="wishlist" data-i18n="filterWishlist">❤️ Wishlist</button>
+                <span style="border-left: 1px solid rgba(255,255,255,0.2); margin: 0 8px;"></span>
+                <button class="filter-btn" data-rarity="mythic">Mythic</button>
+                <button class="filter-btn" data-rarity="legendary">Legendary</button>
+                <button class="filter-btn" data-rarity="epic">Epic</button>
+                <button class="filter-btn" data-rarity="rare">Rare</button>
+                <button class="filter-btn" data-rarity="uncommon">Uncommon</button>
+                <button class="filter-btn" data-rarity="common">Common</button>
+            </div>
+            
+            <!-- Card Grid -->
+            <div class="card-grid" id="cardGrid"></div>
+        </div>
+        
+        <!-- Achievements Tab -->
+        <div class="tab-content" id="achievementsTab">
+            <div class="collection-stats" style="margin-bottom: 24px;">
+                <div class="stat-card">
+                    <div class="stat-value" id="achievementsCompleted">0</div>
+                    <div class="stat-label" data-i18n="achievementsCompleted">Completed</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="achievementsTotal">25</div>
+                    <div class="stat-label" data-i18n="achievementsTotal">Total</div>
+                </div>
+                <div class="stat-card legendary">
+                    <div class="stat-value" id="totalRewards">0</div>
+                    <div class="stat-label" data-i18n="logsEarned">🪵 Logs Earned</div>
+                </div>
+            </div>
+            
+            <div class="achievements-grid" id="achievementsGrid"></div>
+        </div>
+        
+        <!-- Pull History Tab -->
+        <div class="tab-content" id="historyTab">
+            <div class="history-stats">
+                <div class="history-stat">
+                    <div class="history-stat-value" id="historyTotalPulls">0</div>
+                    <div class="history-stat-label" data-i18n="totalPulls">Total Pulls</div>
+                </div>
+                <div class="history-stat">
+                    <div class="history-stat-value" id="historyMythics">0</div>
+                    <div class="history-stat-label" data-i18n="mythicsPulled">Mythics Pulled</div>
+                </div>
+                <div class="history-stat">
+                    <div class="history-stat-value" id="historyLegendaries">0</div>
+                    <div class="history-stat-label" data-i18n="legendariesPulled">Legendaries Pulled</div>
+                </div>
+                <div class="history-stat">
+                    <div class="history-stat-value" id="historyLuck">0%</div>
+                    <div class="history-stat-label" data-i18n="luckRating">Luck Rating</div>
+                </div>
+            </div>
+            
+            <h3 style="margin-bottom: 16px; color: var(--gold); font-family: 'Orbitron';" data-i18n="recentPulls">📜 Recent Pulls</h3>
+            <div class="history-grid" id="historyGrid"></div>
+            <div class="empty-state" id="historyEmpty" style="display: none;">
+                <div class="empty-state-icon">🎰</div>
+                <div class="empty-state-text" data-i18n="noPulls">No pulls yet!</div>
+                <div class="empty-state-hint" data-i18n="visitForge">Visit the Forge to start pulling</div>
+            </div>
+        </div>
+    </main>
+    
+    <div class="toast" id="toast"></div>
+    
+    <script>
+    // ═══════════════════════════════════════════════════════════════════════════
+    // 🏆 NumbahWan TCG - Collection & Achievements Tracker
+    // ═══════════════════════════════════════════════════════════════════════════
+    
+    // Translations
+    const i18n = {
+        en: {
+            tabCollection: '📦 Collection', tabAchievements: '🏆 Achievements', tabHistory: '📜 Pull History',
+            cardsOwned: 'Cards Owned', mythicsOwned: 'Mythics', legendariesOwned: 'Legendaries', epicsOwned: 'Epics',
+            collectionProgress: '📊 Collection Progress', cards: 'cards', unique: 'unique',
+            mythic: 'Mythic', legendary: 'Legendary', epic: 'Epic', rare: 'Rare', uncommon: 'Uncommon', common: 'Common',
+            filterAll: 'All', filterOwned: '✓ Owned', filterMissing: '✗ Missing', filterWishlist: '❤️ Wishlist',
+            achievementsCompleted: 'Completed', achievementsTotal: 'Total', logsEarned: '🪵 Logs Earned',
+            totalPulls: 'Total Pulls', mythicsPulled: 'Mythics Pulled', legendariesPulled: 'Legendaries Pulled', luckRating: 'Luck Rating',
+            recentPulls: '📜 Recent Pulls', noPulls: 'No pulls yet!', visitForge: 'Visit the Forge to start pulling',
+            addedWishlist: 'Added to wishlist', removedWishlist: 'Removed from wishlist',
+            navCards: 'Cards', navGacha: 'Gacha', navBattle: 'Battle'
+        },
+        zh: {
+            tabCollection: '📦 收藏', tabAchievements: '🏆 成就', tabHistory: '📜 抽卡记录',
+            cardsOwned: '已拥有卡牌', mythicsOwned: '神话', legendariesOwned: '传说', epicsOwned: '史诗',
+            collectionProgress: '📊 收藏进度', cards: '卡牌', unique: '唯一',
+            mythic: '神话', legendary: '传说', epic: '史诗', rare: '稀有', uncommon: '罕见', common: '普通',
+            filterAll: '全部', filterOwned: '✓ 已拥有', filterMissing: '✗ 缺少', filterWishlist: '❤️ 心愿单',
+            achievementsCompleted: '已完成', achievementsTotal: '总计', logsEarned: '🪵 获得原木',
+            totalPulls: '总抽数', mythicsPulled: '神话抽中', legendariesPulled: '传说抽中', luckRating: '运气指数',
+            recentPulls: '📜 最近抽卡', noPulls: '还没有抽过卡！', visitForge: '去锻造室开始抽卡',
+            addedWishlist: '已加入心愿单', removedWishlist: '已从心愿单移除',
+            navCards: '卡牌', navGacha: '抽卡', navBattle: '战斗'
+        },
+        th: {
+            tabCollection: '📦 คอลเลกชัน', tabAchievements: '🏆 ความสำเร็จ', tabHistory: '📜 ประวัติการสุ่ม',
+            cardsOwned: 'การ์ดที่มี', mythicsOwned: 'ตำนาน', legendariesOwned: 'เลเจนด์', epicsOwned: 'อีพิค',
+            collectionProgress: '📊 ความคืบหน้าคอลเลกชัน', cards: 'การ์ด', unique: 'ไม่ซ้ำ',
+            mythic: 'ตำนาน', legendary: 'เลเจนด์', epic: 'อีพิค', rare: 'แรร์', uncommon: 'อันคอมมอน', common: 'คอมมอน',
+            filterAll: 'ทั้งหมด', filterOwned: '✓ มี', filterMissing: '✗ ไม่มี', filterWishlist: '❤️ ต้องการ',
+            achievementsCompleted: 'สำเร็จ', achievementsTotal: 'ทั้งหมด', logsEarned: '🪵 ท่อนไม้',
+            totalPulls: 'สุ่มทั้งหมด', mythicsPulled: 'ได้ตำนาน', legendariesPulled: 'ได้เลเจนด์', luckRating: 'ดวง',
+            recentPulls: '📜 สุ่มล่าสุด', noPulls: 'ยังไม่ได้สุ่ม!', visitForge: 'ไปที่โรงตีเพื่อเริ่มสุ่ม',
+            addedWishlist: 'เพิ่มในรายการอยากได้', removedWishlist: 'ลบจากรายการอยากได้',
+            navCards: 'การ์ด', navGacha: 'กาชา', navBattle: 'ต่อสู้'
+        }
+    };
+    
+    let currentLang = localStorage.getItem('nw_lang') || 'en';
+    function t(key) { return i18n[currentLang]?.[key] || i18n.en[key] || key; }
+    
+    // Achievements Definition
+    const ACHIEVEMENTS = [
+        // Collection achievements
+        { id: 'first_card', icon: '🎴', name: 'First Card', desc: 'Obtain your first card', target: 1, type: 'cards_owned', reward: 100 },
+        { id: 'collector_10', icon: '📦', name: 'Collector', desc: 'Own 10 unique cards', target: 10, type: 'cards_owned', reward: 200 },
+        { id: 'collector_50', icon: '📦', name: 'Hoarder', desc: 'Own 50 unique cards', target: 50, type: 'cards_owned', reward: 500 },
+        { id: 'collector_100', icon: '👑', name: 'Master Collector', desc: 'Own 100 unique cards', target: 100, type: 'cards_owned', reward: 2000 },
+        { id: 'complete_collection', icon: '🏆', name: 'Complete Collection', desc: 'Own all 108 cards', target: 108, type: 'cards_owned', reward: 10000 },
+        
+        // Rarity achievements
+        { id: 'first_mythic', icon: '💎', name: 'Mythic Touch', desc: 'Obtain a Mythic card', target: 1, type: 'mythics_owned', reward: 1000 },
+        { id: 'mythic_master', icon: '💎', name: 'Mythic Master', desc: 'Own all 2 Mythic cards', target: 2, type: 'mythics_owned', reward: 5000 },
+        { id: 'legendary_collector', icon: '⭐', name: 'Legendary Collector', desc: 'Own 5 Legendary cards', target: 5, type: 'legendaries_owned', reward: 1000 },
+        { id: 'legendary_master', icon: '⭐', name: 'Legendary Master', desc: 'Own all 10 Legendary cards', target: 10, type: 'legendaries_owned', reward: 3000 },
+        { id: 'epic_collector', icon: '💜', name: 'Epic Collector', desc: 'Own 10 Epic cards', target: 10, type: 'epics_owned', reward: 500 },
+        
+        // Pull achievements
+        { id: 'first_pull', icon: '🎰', name: 'First Pull', desc: 'Perform your first pull', target: 1, type: 'total_pulls', reward: 50 },
+        { id: 'pull_100', icon: '🎰', name: 'Gambler', desc: 'Perform 100 pulls', target: 100, type: 'total_pulls', reward: 500 },
+        { id: 'pull_500', icon: '🎰', name: 'High Roller', desc: 'Perform 500 pulls', target: 500, type: 'total_pulls', reward: 2000 },
+        { id: 'pull_1000', icon: '🎰', name: 'Whale', desc: 'Perform 1000 pulls', target: 1000, type: 'total_pulls', reward: 5000 },
+        
+        // Luck achievements
+        { id: 'lucky_streak', icon: '🍀', name: 'Lucky', desc: 'Pull a Legendary within 20 pulls', target: 1, type: 'early_legendary', reward: 200 },
+        { id: 'mythic_luck', icon: '🌟', name: 'Blessed', desc: 'Pull a Mythic without pity', target: 1, type: 'early_mythic', reward: 2000 },
+        
+        // Battle achievements
+        { id: 'first_battle', icon: '⚔️', name: 'First Blood', desc: 'Win your first battle', target: 1, type: 'battles_won', reward: 100 },
+        { id: 'battle_10', icon: '⚔️', name: 'Warrior', desc: 'Win 10 battles', target: 10, type: 'battles_won', reward: 500 },
+        { id: 'battle_50', icon: '⚔️', name: 'Champion', desc: 'Win 50 battles', target: 50, type: 'battles_won', reward: 2000 },
+        
+        // Deck achievements
+        { id: 'first_deck', icon: '🃏', name: 'Deckbuilder', desc: 'Save your first deck', target: 1, type: 'decks_saved', reward: 100 },
+        { id: 'deck_5', icon: '🃏', name: 'Strategist', desc: 'Save 5 different decks', target: 5, type: 'decks_saved', reward: 300 },
+        
+        // Special achievements
+        { id: 'daily_visitor', icon: '📅', name: 'Daily Visitor', desc: 'Visit 7 days in a row', target: 7, type: 'daily_streak', reward: 500 },
+        { id: 'full_board', icon: '🎮', name: 'Full Board', desc: 'Have 5 cards on board in battle', target: 1, type: 'full_board', reward: 200 },
+        { id: 'crit_king', icon: '💥', name: 'Crit King', desc: 'Land 10 critical hits', target: 10, type: 'crits_landed', reward: 300 },
+        { id: 'dodge_master', icon: '🌀', name: 'Dodge Master', desc: 'Dodge 10 attacks', target: 10, type: 'dodges', reward: 300 }
+    ];
+    
+    // State
+    let allCards = [];
+    let collection = {}; // { cardId: count }
+    let wishlist = []; // [cardId, ...]
+    let pullHistory = []; // [{ card, timestamp }, ...]
+    let achievementProgress = {};
+    let currentFilter = 'all';
+    let currentRarity = null;
+    
+    // Utility
+    function $(id) { return document.getElementById(id); }
+    function showToast(msg) {
+        const toast = $('toast');
+        toast.textContent = msg;
+        toast.className = 'toast show';
+        setTimeout(() => toast.className = 'toast', 2500);
+    }
+    
+    // Load data
+    async function loadCards() {
+        try {
+            const res = await fetch('/static/data/cards-v2.json?v=' + Date.now());
+            const data = await res.json();
+            allCards = data.cards || [];
+            
+            // Load saved data
+            collection = JSON.parse(localStorage.getItem('nw_collection') || '{}');
+            wishlist = JSON.parse(localStorage.getItem('nw_wishlist') || '[]');
+            pullHistory = JSON.parse(localStorage.getItem('nw_pull_history') || '[]');
+            achievementProgress = JSON.parse(localStorage.getItem('nw_achievements') || '{}');
+            
+            // If collection is empty, simulate some cards for demo
+            if (Object.keys(collection).length === 0) {
+                // Add some random cards for demo
+                const demoCards = allCards.filter(c => c.rarity === 'common' || c.rarity === 'uncommon').slice(0, 20);
+                demoCards.forEach(c => collection[c.id] = 1);
+                saveCollection();
+            }
+            
+            renderCollection();
+            renderAchievements();
+            renderHistory();
+            updateStats();
+        } catch (e) {
+            console.error('Failed to load cards:', e);
+        }
+    }
+    
+    // Save functions
+    function saveCollection() {
+        localStorage.setItem('nw_collection', JSON.stringify(collection));
+    }
+    function saveWishlist() {
+        localStorage.setItem('nw_wishlist', JSON.stringify(wishlist));
+    }
+    function saveAchievements() {
+        localStorage.setItem('nw_achievements', JSON.stringify(achievementProgress));
+    }
+    
+    // Get thumbnail URL
+    function getThumbUrl(img) {
+        if (!img) return '/static/images/cards/thumbs/placeholder.webp';
+        return '/static/images/cards/thumbs/' + img.replace(/\.(png|jpg|jpeg)$/i, '.webp');
+    }
+    
+    // Update stats
+    function updateStats() {
+        const owned = Object.keys(collection).length;
+        const total = allCards.length;
+        const pct = Math.round((owned / total) * 100);
+        
+        $('totalOwned').textContent = owned;
+        $('progressPct').textContent = pct + '%';
+        $('progressFill').style.width = pct + '%';
+        $('ownedCount').textContent = owned;
+        $('totalCount').textContent = total;
+        $('uniqueCount').textContent = owned;
+        
+        // Rarity counts
+        const rarityCounts = { mythic: 0, legendary: 0, epic: 0, rare: 0, uncommon: 0, common: 0 };
+        const rarityTotals = { mythic: 2, legendary: 10, epic: 18, rare: 19, uncommon: 23, common: 36 };
+        
+        Object.keys(collection).forEach(cardId => {
+            const card = allCards.find(c => c.id == cardId);
+            if (card) rarityCounts[card.rarity]++;
+        });
+        
+        $('mythicsOwned').textContent = rarityCounts.mythic;
+        $('legendariesOwned').textContent = rarityCounts.legendary;
+        $('epicsOwned').textContent = rarityCounts.epic;
+        
+        ['mythic', 'legendary', 'epic', 'rare', 'uncommon', 'common'].forEach(r => {
+            const el = $(r + 'Count');
+            if (el) el.textContent = rarityCounts[r];
+        });
+    }
+    
+    // Render collection
+    function renderCollection() {
+        const grid = $('cardGrid');
+        let filtered = allCards;
+        
+        // Apply filters
+        if (currentFilter === 'owned') {
+            filtered = filtered.filter(c => collection[c.id]);
+        } else if (currentFilter === 'missing') {
+            filtered = filtered.filter(c => !collection[c.id]);
+        } else if (currentFilter === 'wishlist') {
+            filtered = filtered.filter(c => wishlist.includes(c.id));
+        }
+        
+        if (currentRarity) {
+            filtered = filtered.filter(c => c.rarity === currentRarity);
+        }
+        
+        // Sort by rarity then name
+        const rarityOrder = { mythic: 0, legendary: 1, epic: 2, rare: 3, uncommon: 4, common: 5 };
+        filtered.sort((a, b) => rarityOrder[a.rarity] - rarityOrder[b.rarity] || a.name.localeCompare(b.name));
+        
+        grid.innerHTML = filtered.map(card => {
+            const owned = collection[card.id];
+            const inWishlist = wishlist.includes(card.id);
+            
+            return `
+                <div class="collection-card ${card.rarity} ${owned ? 'owned' : 'not-owned'}">
+                    <img src="${getThumbUrl(card.img)}" 
+                         onerror="this.src='/static/images/cards/${card.img}'" 
+                         alt="${card.name}" loading="lazy">
+                    <div class="rarity-border"></div>
+                    <div class="card-info-overlay">
+                        <div class="card-name">${card.name}</div>
+                    </div>
+                    ${owned ? `<div class="owned-badge">✓</div>` : ''}
+                    <button class="wishlist-btn ${inWishlist ? 'active' : ''}" 
+                            onclick="toggleWishlist(${card.id}, event)">♥</button>
+                </div>
+            `;
+        }).join('');
+    }
+    
+    // Toggle wishlist
+    function toggleWishlist(cardId, event) {
+        event.stopPropagation();
+        const idx = wishlist.indexOf(cardId);
+        if (idx >= 0) {
+            wishlist.splice(idx, 1);
+            showToast(t('removedWishlist'));
+        } else {
+            wishlist.push(cardId);
+            showToast(t('addedWishlist'));
+        }
+        saveWishlist();
+        renderCollection();
+    }
+    
+    // Render achievements
+    function renderAchievements() {
+        const grid = $('achievementsGrid');
+        let completed = 0;
+        let totalRewards = 0;
+        
+        grid.innerHTML = ACHIEVEMENTS.map(ach => {
+            const progress = getAchievementProgress(ach);
+            const isComplete = progress >= ach.target;
+            if (isComplete) {
+                completed++;
+                totalRewards += ach.reward;
+            }
+            const pct = Math.min(100, Math.round((progress / ach.target) * 100));
+            
+            return `
+                <div class="achievement-card ${isComplete ? 'completed' : progress > 0 ? '' : 'locked'}">
+                    <div class="achievement-icon">${ach.icon}</div>
+                    <div class="achievement-info">
+                        <div class="achievement-name">${ach.name}</div>
+                        <div class="achievement-desc">${ach.desc}</div>
+                        <div class="achievement-progress">
+                            <div class="achievement-progress-fill" style="width: ${pct}%"></div>
+                        </div>
+                        <div class="achievement-progress-text">${progress}/${ach.target}</div>
+                    </div>
+                    <div class="achievement-reward">
+                        <div class="reward-label">Reward</div>
+                        <div class="reward-value">${ach.reward} 🪵</div>
+                    </div>
+                </div>
+            `;
+        }).join('');
+        
+        $('achievementsCompleted').textContent = completed;
+        $('totalRewards').textContent = totalRewards;
+    }
+    
+    // Get achievement progress
+    function getAchievementProgress(ach) {
+        switch (ach.type) {
+            case 'cards_owned':
+                return Object.keys(collection).length;
+            case 'mythics_owned':
+                return Object.keys(collection).filter(id => allCards.find(c => c.id == id)?.rarity === 'mythic').length;
+            case 'legendaries_owned':
+                return Object.keys(collection).filter(id => allCards.find(c => c.id == id)?.rarity === 'legendary').length;
+            case 'epics_owned':
+                return Object.keys(collection).filter(id => allCards.find(c => c.id == id)?.rarity === 'epic').length;
+            case 'total_pulls':
+                return pullHistory.length;
+            case 'battles_won':
+                return parseInt(localStorage.getItem('nw_battles_won') || '0');
+            case 'decks_saved':
+                return JSON.parse(localStorage.getItem('nw_decks') || '[]').length;
+            default:
+                return achievementProgress[ach.id] || 0;
+        }
+    }
+    
+    // Render pull history
+    function renderHistory() {
+        const grid = $('historyGrid');
+        const empty = $('historyEmpty');
+        
+        if (pullHistory.length === 0) {
+            grid.style.display = 'none';
+            empty.style.display = 'block';
+        } else {
+            grid.style.display = 'grid';
+            empty.style.display = 'none';
+            
+            // Show last 50 pulls
+            const recentPulls = pullHistory.slice(-50).reverse();
+            grid.innerHTML = recentPulls.map(pull => {
+                const card = allCards.find(c => c.id === pull.cardId) || { name: 'Unknown', rarity: 'common', img: 'placeholder.png' };
+                const time = new Date(pull.timestamp);
+                const timeStr = time.toLocaleDateString() + ' ' + time.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                
+                return `
+                    <div class="history-card ${card.rarity}">
+                        <img src="${getThumbUrl(card.img)}" 
+                             onerror="this.src='/static/images/cards/${card.img}'" 
+                             alt="${card.name}" loading="lazy">
+                        <div class="history-time">${timeStr}</div>
+                    </div>
+                `;
+            }).join('');
+        }
+        
+        // Stats
+        $('historyTotalPulls').textContent = pullHistory.length;
+        
+        const mythicCount = pullHistory.filter(p => {
+            const card = allCards.find(c => c.id === p.cardId);
+            return card?.rarity === 'mythic';
+        }).length;
+        
+        const legendaryCount = pullHistory.filter(p => {
+            const card = allCards.find(c => c.id === p.cardId);
+            return card?.rarity === 'legendary';
+        }).length;
+        
+        $('historyMythics').textContent = mythicCount;
+        $('historyLegendaries').textContent = legendaryCount;
+        
+        // Luck rating (compared to expected)
+        if (pullHistory.length > 0) {
+            const expectedMythic = pullHistory.length * 0.0001;
+            const expectedLegendary = pullHistory.length * 0.01;
+            const luckScore = ((mythicCount / (expectedMythic || 0.01)) * 0.5 + (legendaryCount / (expectedLegendary || 0.1)) * 0.5) * 100;
+            $('historyLuck').textContent = Math.min(999, Math.round(luckScore)) + '%';
+        }
+    }
+    
+    // Tab switching
+    function switchTab(tabId) {
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.classList.toggle('active', btn.dataset.tab === tabId);
+        });
+        document.querySelectorAll('.tab-content').forEach(content => {
+            content.classList.toggle('active', content.id === tabId + 'Tab');
+        });
+    }
+    
+    // Language update
+    function updateLanguage(lang) {
+        currentLang = lang;
+        localStorage.setItem('nw_lang', lang);
+        
+        document.querySelectorAll('.lang-btn').forEach(btn => {
+            btn.classList.toggle('active', btn.dataset.lang === lang);
+        });
+        
+        document.querySelectorAll('[data-i18n]').forEach(el => {
+            const key = el.dataset.i18n;
+            if (i18n[lang]?.[key]) el.textContent = i18n[lang][key];
+        });
+    }
+    
+    // Initialize
+    document.addEventListener('DOMContentLoaded', async () => {
+        await loadCards();
+        
+        // Tab buttons
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.addEventListener('click', () => switchTab(btn.dataset.tab));
+        });
+        
+        // Filter buttons
+        document.querySelectorAll('.filter-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                if (btn.dataset.filter) {
+                    currentFilter = btn.dataset.filter;
+                    currentRarity = null;
+                    document.querySelectorAll('.filter-btn[data-filter]').forEach(b => b.classList.remove('active', 'owned', 'missing'));
+                    btn.classList.add('active');
+                    if (btn.dataset.filter === 'owned') btn.classList.add('owned');
+                    if (btn.dataset.filter === 'missing') btn.classList.add('missing');
+                    document.querySelectorAll('.filter-btn[data-rarity]').forEach(b => b.classList.remove('active'));
+                } else if (btn.dataset.rarity) {
+                    currentRarity = currentRarity === btn.dataset.rarity ? null : btn.dataset.rarity;
+                    document.querySelectorAll('.filter-btn[data-rarity]').forEach(b => b.classList.toggle('active', b.dataset.rarity === currentRarity));
+                }
+                renderCollection();
+            });
+        });
+        
+        // Language toggle
+        document.querySelectorAll('.lang-btn').forEach(btn => {
+            btn.addEventListener('click', () => updateLanguage(btn.dataset.lang));
+        });
+        
+        updateLanguage(currentLang);
+    });
+    
+    // Export for use by forge.html
+    window.NW_COLLECTION = {
+        addCard: (cardId) => {
+            collection[cardId] = (collection[cardId] || 0) + 1;
+            saveCollection();
+        },
+        addPull: (cardId) => {
+            pullHistory.push({ cardId, timestamp: Date.now() });
+            localStorage.setItem('nw_pull_history', JSON.stringify(pullHistory));
+        }
+    };
+    </script>
+</body>
+</html>
