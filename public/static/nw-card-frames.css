@@ -1,54 +1,62 @@
 /*
- * NumbahWan Card Frame System v1.0
- * Pure CSS card frames - ZERO image generation credits
- * Unique designs for each rarity tier
+ * NumbahWan Card Frame System v2.0
+ * Premium Fantasy TCG Frames - Unique Designs
+ * Inspired by ornate fantasy + modern TCG aesthetics
  * 
- * Usage: <div class="nw-card" data-rarity="mythic">
- *          <img class="nw-card-art" src="...">
- *          <div class="nw-card-info">
- *            <div class="nw-card-name">Card Name</div>
- *            <div class="nw-card-stats">ATK 10 | DEF 8</div>
- *          </div>
- *          <div class="nw-card-rarity">MYTHIC</div>
- *        </div>
+ * FEATURES:
+ * - Ornate corner decorations
+ * - Metallic gradient borders
+ * - Embossed name banners
+ * - Gem-style stat displays
+ * - Animated glows and particles
  */
 
 /* ============================================
-   CSS VARIABLES - Card Frame Colors
+   CSS VARIABLES - Premium Color Palette
    ============================================ */
 :root {
-  /* Frame Colors by Rarity */
-  --card-common-primary: #6b7280;
-  --card-common-secondary: #4b5563;
-  --card-common-glow: rgba(107, 114, 128, 0.3);
+  /* Mythic - Divine Gold & Cosmic Purple */
+  --mythic-gold: #ffd700;
+  --mythic-orange: #ff6b00;
+  --mythic-purple: #8b5cf6;
+  --mythic-glow: rgba(255, 215, 0, 0.6);
   
-  --card-uncommon-primary: #22c55e;
-  --card-uncommon-secondary: #16a34a;
-  --card-uncommon-glow: rgba(34, 197, 94, 0.4);
+  /* Legendary - Royal Gold & Amber */
+  --legendary-gold: #f59e0b;
+  --legendary-amber: #d97706;
+  --legendary-cream: #fef3c7;
+  --legendary-glow: rgba(245, 158, 11, 0.5);
   
-  --card-rare-primary: #3b82f6;
-  --card-rare-secondary: #2563eb;
-  --card-rare-glow: rgba(59, 130, 246, 0.5);
+  /* Epic - Arcane Purple & Violet */
+  --epic-purple: #a855f7;
+  --epic-violet: #7c3aed;
+  --epic-pink: #c084fc;
+  --epic-glow: rgba(168, 85, 247, 0.5);
   
-  --card-epic-primary: #a855f7;
-  --card-epic-secondary: #9333ea;
-  --card-epic-glow: rgba(168, 85, 247, 0.5);
+  /* Rare - Crystal Blue & Cyan */
+  --rare-blue: #3b82f6;
+  --rare-cyan: #06b6d4;
+  --rare-ice: #e0f2fe;
+  --rare-glow: rgba(59, 130, 246, 0.5);
   
-  --card-legendary-primary: #ffd700;
-  --card-legendary-secondary: #f59e0b;
-  --card-legendary-glow: rgba(255, 215, 0, 0.6);
+  /* Uncommon - Forest Green & Emerald */
+  --uncommon-green: #22c55e;
+  --uncommon-emerald: #059669;
+  --uncommon-leaf: #d1fae5;
+  --uncommon-glow: rgba(34, 197, 94, 0.4);
   
-  --card-mythic-primary: #ff6b00;
-  --card-mythic-secondary: #dc2626;
-  --card-mythic-tertiary: #ffd700;
-  --card-mythic-glow: rgba(255, 107, 0, 0.7);
+  /* Common - Steel Grey & Silver */
+  --common-steel: #6b7280;
+  --common-silver: #9ca3af;
+  --common-iron: #4b5563;
+  --common-glow: rgba(107, 114, 128, 0.3);
   
   /* Card Dimensions */
-  --card-width: 240px;
-  --card-height: 336px;
-  --card-radius: 12px;
-  --card-border-width: 3px;
-  --card-inner-padding: 8px;
+  --card-width: 260px;
+  --card-height: 380px;
+  --card-radius: 16px;
+  --frame-thickness: 12px;
+  --inner-radius: 10px;
 }
 
 /* ============================================
@@ -59,19 +67,33 @@
   width: var(--card-width);
   height: var(--card-height);
   border-radius: var(--card-radius);
-  overflow: hidden;
-  background: #1a1a2e;
+  overflow: visible;
   cursor: pointer;
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
-  /* Prevent layout shift */
+  transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), 
+              box-shadow 0.3s ease;
   flex-shrink: 0;
+  /* Base dark background */
+  background: #0a0a12;
 }
 
 .nw-card:hover {
-  transform: translateY(-8px) scale(1.02);
+  transform: translateY(-12px) scale(1.03);
+  z-index: 10;
 }
 
-/* Card Art - Full Bleed */
+/* Inner card container */
+.nw-card-inner {
+  position: absolute;
+  top: var(--frame-thickness);
+  left: var(--frame-thickness);
+  right: var(--frame-thickness);
+  bottom: var(--frame-thickness);
+  border-radius: var(--inner-radius);
+  overflow: hidden;
+  z-index: 1;
+}
+
+/* Card Art - Full area */
 .nw-card-art {
   position: absolute;
   top: 0;
@@ -82,7 +104,11 @@
   z-index: 1;
 }
 
-/* Card Frame Overlay */
+/* ============================================
+   ORNATE FRAME STRUCTURE
+   ============================================ */
+
+/* Main frame border */
 .nw-card::before {
   content: '';
   position: absolute;
@@ -90,490 +116,713 @@
   left: 0;
   right: 0;
   bottom: 0;
+  border-radius: var(--card-radius);
   z-index: 2;
   pointer-events: none;
-  border-radius: var(--card-radius);
 }
 
-/* Card Info Bar (Bottom) */
-.nw-card-info {
+/* Frame overlay pattern */
+.nw-card::after {
+  content: '';
   position: absolute;
-  bottom: 0;
+  top: 0;
   left: 0;
   right: 0;
-  padding: 12px;
-  background: linear-gradient(transparent, rgba(0,0,0,0.9));
+  bottom: 0;
+  border-radius: var(--card-radius);
   z-index: 3;
+  pointer-events: none;
+}
+
+/* ============================================
+   NAME BANNER - Embossed Scroll Style
+   ============================================ */
+.nw-card-banner {
+  position: absolute;
+  bottom: 70px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 90%;
+  padding: 10px 15px 8px;
+  text-align: center;
+  z-index: 10;
+  /* Banner shape */
+  clip-path: polygon(5% 0%, 95% 0%, 100% 50%, 95% 100%, 5% 100%, 0% 50%);
 }
 
 .nw-card-name {
-  font-family: 'Orbitron', system-ui, sans-serif;
-  font-size: 14px;
+  font-family: 'Orbitron', 'Cinzel', serif;
+  font-size: 15px;
   font-weight: 700;
-  color: white;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  margin: 0;
   text-shadow: 0 2px 4px rgba(0,0,0,0.8);
-  margin-bottom: 4px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
 }
 
-.nw-card-stats {
+.nw-card-title {
   font-family: system-ui, sans-serif;
-  font-size: 11px;
-  font-weight: 600;
+  font-size: 10px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  opacity: 0.8;
+  margin-top: 2px;
+}
+
+/* ============================================
+   STAT GEMS - Corner Positioned
+   ============================================ */
+.nw-card-stats-container {
+  position: absolute;
+  bottom: 20px;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: space-between;
+  padding: 0 15px;
+  z-index: 10;
+}
+
+.nw-card-stat {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Orbitron', system-ui, sans-serif;
+  font-weight: 700;
+  position: relative;
+}
+
+.nw-card-stat-value {
+  font-size: 16px;
+  line-height: 1;
+}
+
+.nw-card-stat-label {
+  font-size: 8px;
+  text-transform: uppercase;
   letter-spacing: 0.5px;
   opacity: 0.9;
 }
 
-/* Rarity Badge */
+/* ATK Gem - Red/Orange */
+.nw-card-stat.atk {
+  background: linear-gradient(135deg, #dc2626 0%, #f97316 50%, #dc2626 100%);
+  border: 2px solid #fbbf24;
+  box-shadow: 0 0 15px rgba(220, 38, 38, 0.6), inset 0 2px 4px rgba(255,255,255,0.3);
+  color: white;
+}
+
+/* DEF Gem - Green/Emerald */
+.nw-card-stat.def {
+  background: linear-gradient(135deg, #059669 0%, #22c55e 50%, #059669 100%);
+  border: 2px solid #86efac;
+  box-shadow: 0 0 15px rgba(34, 197, 94, 0.6), inset 0 2px 4px rgba(255,255,255,0.3);
+  color: white;
+}
+
+/* Cost Gem - Blue/Cyan (top right) */
+.nw-card-cost {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  width: 45px;
+  height: 45px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #2563eb 0%, #06b6d4 50%, #2563eb 100%);
+  border: 3px solid #7dd3fc;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Orbitron', system-ui, sans-serif;
+  font-size: 18px;
+  font-weight: 800;
+  color: white;
+  box-shadow: 0 0 20px rgba(37, 99, 235, 0.7), inset 0 2px 4px rgba(255,255,255,0.4);
+  z-index: 15;
+}
+
+/* ============================================
+   RARITY BADGE - Bottom Center
+   ============================================ */
 .nw-card-rarity {
   position: absolute;
-  top: 8px;
-  right: 8px;
-  padding: 4px 10px;
+  bottom: -5px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 4px 20px;
   font-family: 'Orbitron', system-ui, sans-serif;
   font-size: 9px;
   font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 1px;
-  border-radius: 4px;
-  z-index: 4;
+  letter-spacing: 2px;
+  border-radius: 0 0 8px 8px;
+  z-index: 15;
 }
 
 /* ============================================
-   COMMON FRAME - Simple Iron Border
+   CORNER ORNAMENTS
+   ============================================ */
+.nw-card-corner {
+  position: absolute;
+  width: 40px;
+  height: 40px;
+  z-index: 5;
+  pointer-events: none;
+}
+
+.nw-card-corner.top-left { top: 0; left: 0; }
+.nw-card-corner.top-right { top: 0; right: 0; transform: scaleX(-1); }
+.nw-card-corner.bottom-left { bottom: 0; left: 0; transform: scaleY(-1); }
+.nw-card-corner.bottom-right { bottom: 0; right: 0; transform: scale(-1); }
+
+/* ============================================
+   COMMON FRAME - Weathered Iron
    ============================================ */
 .nw-card[data-rarity="common"]::before {
-  border: var(--card-border-width) solid var(--card-common-primary);
-  box-shadow: inset 0 0 20px rgba(0,0,0,0.5);
+  background: linear-gradient(180deg, 
+    #3f3f46 0%, #52525b 20%, #3f3f46 40%, 
+    #27272a 60%, #3f3f46 80%, #52525b 100%);
+  border: 3px solid #71717a;
+  box-shadow: inset 0 0 30px rgba(0,0,0,0.8);
+}
+
+.nw-card[data-rarity="common"]::after {
+  border: 1px solid rgba(161, 161, 170, 0.3);
+  border-radius: calc(var(--card-radius) - 3px);
+  top: 3px; left: 3px; right: 3px; bottom: 3px;
 }
 
 .nw-card[data-rarity="common"]:hover {
-  box-shadow: 0 10px 30px var(--card-common-glow);
+  box-shadow: 0 20px 40px rgba(0,0,0,0.4), 0 0 30px var(--common-glow);
 }
 
-.nw-card[data-rarity="common"] .nw-card-stats {
-  color: var(--card-common-primary);
+.nw-card[data-rarity="common"] .nw-card-banner {
+  background: linear-gradient(180deg, #3f3f46, #27272a);
+  border: 2px solid #52525b;
 }
 
+.nw-card[data-rarity="common"] .nw-card-name { color: #e4e4e7; }
 .nw-card[data-rarity="common"] .nw-card-rarity {
-  background: var(--card-common-primary);
-  color: white;
+  background: linear-gradient(180deg, #52525b, #3f3f46);
+  color: #a1a1aa;
+  border: 1px solid #71717a;
 }
 
 /* ============================================
-   UNCOMMON FRAME - Nature/Forest Border
+   UNCOMMON FRAME - Forest Vines & Nature
    ============================================ */
 .nw-card[data-rarity="uncommon"]::before {
-  border: var(--card-border-width) solid var(--card-uncommon-primary);
-  box-shadow: 
-    inset 0 0 20px rgba(0,0,0,0.5),
-    inset 0 0 40px var(--card-uncommon-glow);
+  background: linear-gradient(180deg,
+    #064e3b 0%, #065f46 15%, #047857 30%,
+    #059669 50%, #047857 70%, #065f46 85%, #064e3b 100%);
+  border: 3px solid #34d399;
+  box-shadow: inset 0 0 40px rgba(0,0,0,0.6),
+              0 0 20px var(--uncommon-glow);
+}
+
+.nw-card[data-rarity="uncommon"]::after {
+  background: 
+    radial-gradient(ellipse at 20% 10%, rgba(52, 211, 153, 0.3) 0%, transparent 40%),
+    radial-gradient(ellipse at 80% 10%, rgba(52, 211, 153, 0.3) 0%, transparent 40%);
+  border: 1px solid rgba(110, 231, 183, 0.4);
+  border-radius: calc(var(--card-radius) - 3px);
+  top: 3px; left: 3px; right: 3px; bottom: 3px;
 }
 
 .nw-card[data-rarity="uncommon"]:hover {
-  box-shadow: 
-    0 10px 30px var(--card-uncommon-glow),
-    0 0 20px var(--card-uncommon-glow);
+  box-shadow: 0 20px 50px rgba(0,0,0,0.5), 
+              0 0 40px var(--uncommon-glow),
+              0 0 60px rgba(34, 197, 94, 0.3);
 }
 
-.nw-card[data-rarity="uncommon"] .nw-card-stats {
-  color: var(--card-uncommon-primary);
+.nw-card[data-rarity="uncommon"] .nw-card-banner {
+  background: linear-gradient(180deg, #065f46, #064e3b);
+  border: 2px solid #34d399;
 }
 
+.nw-card[data-rarity="uncommon"] .nw-card-name { color: #a7f3d0; }
 .nw-card[data-rarity="uncommon"] .nw-card-rarity {
-  background: linear-gradient(135deg, var(--card-uncommon-primary), var(--card-uncommon-secondary));
-  color: white;
+  background: linear-gradient(180deg, #059669, #047857);
+  color: #d1fae5;
+  border: 1px solid #34d399;
 }
 
-/* Leaf corner accents */
-.nw-card[data-rarity="uncommon"]::after {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 40px;
-  background: linear-gradient(180deg, var(--card-uncommon-glow), transparent);
-  z-index: 2;
-  pointer-events: none;
-  border-radius: var(--card-radius) var(--card-radius) 0 0;
+/* Vine decorations */
+.nw-card[data-rarity="uncommon"] .nw-card-corner::before {
+  content: '❧';
+  font-size: 24px;
+  color: #34d399;
+  text-shadow: 0 0 10px rgba(52, 211, 153, 0.8);
 }
 
 /* ============================================
-   RARE FRAME - Crystal/Ice Border
+   RARE FRAME - Crystal Ice & Sapphire
    ============================================ */
 .nw-card[data-rarity="rare"]::before {
-  border: var(--card-border-width) solid var(--card-rare-primary);
-  box-shadow: 
-    inset 0 0 30px var(--card-rare-glow),
-    0 0 15px var(--card-rare-glow);
+  background: linear-gradient(180deg,
+    #1e3a5f 0%, #1e40af 20%, #2563eb 40%,
+    #3b82f6 50%, #2563eb 60%, #1e40af 80%, #1e3a5f 100%);
+  border: 3px solid #60a5fa;
+  box-shadow: inset 0 0 50px rgba(0,0,0,0.5),
+              0 0 25px var(--rare-glow);
+}
+
+.nw-card[data-rarity="rare"]::after {
+  background: 
+    linear-gradient(135deg, 
+      rgba(147, 197, 253, 0.3) 0%, 
+      transparent 50%,
+      rgba(147, 197, 253, 0.2) 100%);
+  border: 1px solid rgba(147, 197, 253, 0.5);
+  border-radius: calc(var(--card-radius) - 3px);
+  top: 3px; left: 3px; right: 3px; bottom: 3px;
+  animation: rare-crystal-shine 4s ease-in-out infinite;
+}
+
+@keyframes rare-crystal-shine {
+  0%, 100% { opacity: 0.6; }
+  50% { opacity: 1; }
 }
 
 .nw-card[data-rarity="rare"]:hover {
-  box-shadow: 
-    0 10px 40px var(--card-rare-glow),
-    0 0 30px var(--card-rare-glow);
+  box-shadow: 0 20px 60px rgba(0,0,0,0.5),
+              0 0 50px var(--rare-glow),
+              0 0 80px rgba(59, 130, 246, 0.4);
 }
 
-.nw-card[data-rarity="rare"] .nw-card-stats {
-  color: var(--card-rare-primary);
+.nw-card[data-rarity="rare"] .nw-card-banner {
+  background: linear-gradient(180deg, #1e40af, #1e3a5f);
+  border: 2px solid #60a5fa;
+  box-shadow: 0 0 15px rgba(96, 165, 250, 0.4);
 }
 
+.nw-card[data-rarity="rare"] .nw-card-name { color: #bfdbfe; }
 .nw-card[data-rarity="rare"] .nw-card-rarity {
-  background: linear-gradient(135deg, var(--card-rare-primary), var(--card-rare-secondary));
-  color: white;
-  box-shadow: 0 0 10px var(--card-rare-glow);
+  background: linear-gradient(180deg, #3b82f6, #2563eb);
+  color: #e0f2fe;
+  border: 1px solid #60a5fa;
+  box-shadow: 0 0 10px var(--rare-glow);
 }
 
-/* Crystal shimmer effect */
-.nw-card[data-rarity="rare"]::after {
-  content: '';
-  position: absolute;
-  top: -50%;
-  left: -50%;
-  width: 200%;
-  height: 200%;
-  background: linear-gradient(
-    45deg,
-    transparent 40%,
-    rgba(59, 130, 246, 0.1) 45%,
-    rgba(59, 130, 246, 0.2) 50%,
-    rgba(59, 130, 246, 0.1) 55%,
-    transparent 60%
-  );
-  z-index: 2;
-  pointer-events: none;
-  animation: rare-shimmer 3s ease-in-out infinite;
-}
-
-@keyframes rare-shimmer {
-  0% { transform: translateX(-100%) rotate(45deg); }
-  100% { transform: translateX(100%) rotate(45deg); }
+/* Crystal corner gems */
+.nw-card[data-rarity="rare"] .nw-card-corner::before {
+  content: '◆';
+  font-size: 20px;
+  color: #60a5fa;
+  text-shadow: 0 0 15px rgba(96, 165, 250, 0.9);
 }
 
 /* ============================================
-   EPIC FRAME - Magical Arcane Border
+   EPIC FRAME - Arcane Magic & Void
    ============================================ */
 .nw-card[data-rarity="epic"]::before {
-  border: 4px solid transparent;
-  background: linear-gradient(#1a1a2e, #1a1a2e) padding-box,
-              linear-gradient(135deg, var(--card-epic-primary), var(--card-epic-secondary), #6366f1, var(--card-epic-primary)) border-box;
-  box-shadow: 
-    inset 0 0 40px var(--card-epic-glow),
-    0 0 20px var(--card-epic-glow);
+  background: linear-gradient(180deg,
+    #3b0764 0%, #581c87 15%, #7c3aed 30%,
+    #8b5cf6 50%, #7c3aed 70%, #581c87 85%, #3b0764 100%);
+  border: 3px solid #a78bfa;
+  box-shadow: inset 0 0 60px rgba(0,0,0,0.5),
+              0 0 30px var(--epic-glow);
+}
+
+.nw-card[data-rarity="epic"]::after {
+  background: 
+    radial-gradient(circle at 50% 0%, rgba(192, 132, 252, 0.4) 0%, transparent 50%),
+    radial-gradient(circle at 20% 80%, rgba(139, 92, 246, 0.3) 0%, transparent 40%),
+    radial-gradient(circle at 80% 80%, rgba(139, 92, 246, 0.3) 0%, transparent 40%);
+  border: 1px solid rgba(192, 132, 252, 0.5);
+  border-radius: calc(var(--card-radius) - 3px);
+  top: 3px; left: 3px; right: 3px; bottom: 3px;
+  animation: epic-arcane-pulse 3s ease-in-out infinite;
+}
+
+@keyframes epic-arcane-pulse {
+  0%, 100% { 
+    opacity: 0.7;
+    filter: hue-rotate(0deg);
+  }
+  50% { 
+    opacity: 1;
+    filter: hue-rotate(15deg);
+  }
 }
 
 .nw-card[data-rarity="epic"]:hover {
-  box-shadow: 
-    0 15px 50px var(--card-epic-glow),
-    0 0 40px var(--card-epic-glow);
+  box-shadow: 0 25px 70px rgba(0,0,0,0.5),
+              0 0 60px var(--epic-glow),
+              0 0 100px rgba(139, 92, 246, 0.4);
 }
 
-.nw-card[data-rarity="epic"] .nw-card-stats {
-  color: var(--card-epic-primary);
+.nw-card[data-rarity="epic"] .nw-card-banner {
+  background: linear-gradient(180deg, #581c87, #3b0764);
+  border: 2px solid #a78bfa;
+  box-shadow: 0 0 20px rgba(167, 139, 250, 0.5);
 }
 
+.nw-card[data-rarity="epic"] .nw-card-name { color: #e9d5ff; }
 .nw-card[data-rarity="epic"] .nw-card-rarity {
-  background: linear-gradient(135deg, var(--card-epic-primary), var(--card-epic-secondary));
-  color: white;
-  box-shadow: 0 0 15px var(--card-epic-glow);
+  background: linear-gradient(180deg, #8b5cf6, #7c3aed);
+  color: #f3e8ff;
+  border: 1px solid #a78bfa;
+  box-shadow: 0 0 15px var(--epic-glow);
 }
 
-/* Magic particle corners */
-.nw-card[data-rarity="epic"]::after {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: 
-    radial-gradient(circle at 10% 10%, var(--card-epic-glow) 0%, transparent 20%),
-    radial-gradient(circle at 90% 10%, var(--card-epic-glow) 0%, transparent 20%),
-    radial-gradient(circle at 10% 90%, var(--card-epic-glow) 0%, transparent 20%),
-    radial-gradient(circle at 90% 90%, var(--card-epic-glow) 0%, transparent 20%);
-  z-index: 2;
-  pointer-events: none;
-  border-radius: var(--card-radius);
-  animation: epic-corners 2s ease-in-out infinite alternate;
+/* Arcane rune corners */
+.nw-card[data-rarity="epic"] .nw-card-corner::before {
+  content: '✧';
+  font-size: 22px;
+  color: #c084fc;
+  text-shadow: 0 0 15px rgba(192, 132, 252, 0.9);
+  animation: epic-corner-glow 2s ease-in-out infinite alternate;
 }
 
-@keyframes epic-corners {
-  0% { opacity: 0.5; }
-  100% { opacity: 1; }
+@keyframes epic-corner-glow {
+  0% { text-shadow: 0 0 10px rgba(192, 132, 252, 0.6); }
+  100% { text-shadow: 0 0 25px rgba(192, 132, 252, 1), 0 0 40px rgba(139, 92, 246, 0.6); }
 }
 
 /* ============================================
-   LEGENDARY FRAME - Royal Gold Border
+   LEGENDARY FRAME - Royal Gold & Ancient
    ============================================ */
 .nw-card[data-rarity="legendary"]::before {
-  border: 4px solid transparent;
-  background: linear-gradient(#1a1a2e, #1a1a2e) padding-box,
-              linear-gradient(135deg, #ffd700, #ff8c00, #ffd700, #ffec8b, #ffd700) border-box;
-  box-shadow: 
-    inset 0 0 50px rgba(255, 215, 0, 0.3),
-    0 0 30px var(--card-legendary-glow);
+  background: linear-gradient(180deg,
+    #451a03 0%, #78350f 10%, #92400e 20%,
+    #b45309 35%, #d97706 50%, #b45309 65%,
+    #92400e 80%, #78350f 90%, #451a03 100%);
+  border: 4px solid #fbbf24;
+  box-shadow: inset 0 0 70px rgba(0,0,0,0.4),
+              0 0 35px var(--legendary-glow),
+              inset 0 0 30px rgba(251, 191, 36, 0.2);
+}
+
+.nw-card[data-rarity="legendary"]::after {
+  background: 
+    linear-gradient(180deg, 
+      rgba(253, 224, 71, 0.3) 0%,
+      transparent 20%,
+      transparent 80%,
+      rgba(253, 224, 71, 0.3) 100%),
+    radial-gradient(ellipse at 50% 0%, rgba(251, 191, 36, 0.4) 0%, transparent 60%);
+  border: 2px solid rgba(253, 224, 71, 0.6);
+  border-radius: calc(var(--card-radius) - 4px);
+  top: 4px; left: 4px; right: 4px; bottom: 4px;
+  animation: legendary-gold-shimmer 3s linear infinite;
+}
+
+@keyframes legendary-gold-shimmer {
+  0% { 
+    background-position: -200% 0;
+    filter: brightness(1);
+  }
+  50% { filter: brightness(1.2); }
+  100% { 
+    background-position: 200% 0;
+    filter: brightness(1);
+  }
 }
 
 .nw-card[data-rarity="legendary"]:hover {
-  box-shadow: 
-    0 20px 60px var(--card-legendary-glow),
-    0 0 50px var(--card-legendary-glow);
+  box-shadow: 0 30px 80px rgba(0,0,0,0.5),
+              0 0 70px var(--legendary-glow),
+              0 0 120px rgba(251, 191, 36, 0.5);
 }
 
-.nw-card[data-rarity="legendary"] .nw-card-name {
-  background: linear-gradient(90deg, #ffd700, #fff, #ffd700);
+.nw-card[data-rarity="legendary"] .nw-card-banner {
+  background: linear-gradient(180deg, 
+    #92400e 0%, #78350f 50%, #451a03 100%);
+  border: 3px solid #fbbf24;
+  box-shadow: 0 0 25px rgba(251, 191, 36, 0.6),
+              inset 0 1px 0 rgba(253, 224, 71, 0.4);
+}
+
+.nw-card[data-rarity="legendary"] .nw-card-name { 
+  color: #fef3c7;
+  background: linear-gradient(90deg, #fef3c7, #fde68a, #fef3c7);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
+  animation: legendary-text-shine 2s ease-in-out infinite;
 }
 
-.nw-card[data-rarity="legendary"] .nw-card-stats {
-  color: var(--card-legendary-primary);
+@keyframes legendary-text-shine {
+  0%, 100% { filter: brightness(1); }
+  50% { filter: brightness(1.3); }
 }
 
 .nw-card[data-rarity="legendary"] .nw-card-rarity {
-  background: linear-gradient(135deg, #ffd700, #ff8c00);
-  color: #1a1a2e;
+  background: linear-gradient(180deg, #fbbf24, #d97706);
+  color: #451a03;
   font-weight: 800;
-  box-shadow: 0 0 20px var(--card-legendary-glow);
+  border: 2px solid #fde68a;
+  box-shadow: 0 0 20px var(--legendary-glow);
 }
 
-/* Golden crown top accent */
-.nw-card[data-rarity="legendary"]::after {
-  content: '♔';
+/* Crown ornament top center */
+.nw-card[data-rarity="legendary"]::before {
+  position: relative;
+}
+
+.nw-card[data-rarity="legendary"] .nw-card-crown {
   position: absolute;
-  top: 6px;
+  top: -15px;
   left: 50%;
   transform: translateX(-50%);
-  font-size: 20px;
-  color: #ffd700;
-  text-shadow: 0 0 10px #ffd700, 0 0 20px #ff8c00;
-  z-index: 5;
-  animation: legendary-crown 2s ease-in-out infinite;
+  font-size: 28px;
+  z-index: 20;
+  color: #fbbf24;
+  text-shadow: 0 0 20px #fbbf24, 0 0 40px #d97706;
+  animation: legendary-crown-float 3s ease-in-out infinite;
 }
 
-@keyframes legendary-crown {
-  0%, 100% { 
-    text-shadow: 0 0 10px #ffd700, 0 0 20px #ff8c00;
-    transform: translateX(-50%) scale(1);
-  }
-  50% { 
-    text-shadow: 0 0 20px #ffd700, 0 0 40px #ff8c00, 0 0 60px #ffd700;
-    transform: translateX(-50%) scale(1.1);
-  }
+@keyframes legendary-crown-float {
+  0%, 100% { transform: translateX(-50%) translateY(0); }
+  50% { transform: translateX(-50%) translateY(-5px); }
+}
+
+/* Gold filigree corners */
+.nw-card[data-rarity="legendary"] .nw-card-corner::before {
+  content: '❖';
+  font-size: 24px;
+  color: #fbbf24;
+  text-shadow: 0 0 15px rgba(251, 191, 36, 0.9);
 }
 
 /* ============================================
-   MYTHIC FRAME - Divine Flame Border
+   MYTHIC FRAME - Divine Flames & Cosmic Power
    ============================================ */
 .nw-card[data-rarity="mythic"] {
-  --mythic-gradient: linear-gradient(135deg, 
-    #ff6b00, #ff0000, #ff6b00, #ffd700, #ff6b00, #ff0000);
+  --mythic-gradient: linear-gradient(135deg,
+    #ff6b00, #dc2626, #ff6b00, #fbbf24, #ff6b00);
 }
 
 .nw-card[data-rarity="mythic"]::before {
+  background: linear-gradient(180deg,
+    #1c0a00 0%, #3b0d0d 10%, #6b1010 20%,
+    #991b1b 30%, #b91c1c 40%, #dc2626 50%,
+    #b91c1c 60%, #991b1b 70%, #6b1010 80%,
+    #3b0d0d 90%, #1c0a00 100%);
   border: 5px solid transparent;
-  background: linear-gradient(#0a0a0f, #0a0a0f) padding-box,
-              var(--mythic-gradient) border-box;
-  background-size: 300% 300%;
+  background-clip: padding-box;
   box-shadow: 
-    inset 0 0 60px rgba(255, 107, 0, 0.4),
-    0 0 40px var(--card-mythic-glow),
-    0 0 80px rgba(255, 0, 0, 0.3);
-  animation: mythic-border 3s ease infinite;
+    inset 0 0 80px rgba(0,0,0,0.4),
+    0 0 50px var(--mythic-glow),
+    0 0 100px rgba(255, 107, 0, 0.4);
 }
 
-@keyframes mythic-border {
-  0% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
-  100% { background-position: 0% 50%; }
+/* Animated gradient border */
+.nw-card[data-rarity="mythic"] {
+  background: 
+    linear-gradient(#1c0a00, #1c0a00) padding-box,
+    linear-gradient(var(--mythic-angle, 0deg), 
+      #ff6b00, #fbbf24, #ff6b00, #dc2626, #ff6b00, #fbbf24) border-box;
+  border: 5px solid transparent;
+  animation: mythic-border-rotate 4s linear infinite;
+}
+
+@property --mythic-angle {
+  syntax: '<angle>';
+  initial-value: 0deg;
+  inherits: false;
+}
+
+@keyframes mythic-border-rotate {
+  to { --mythic-angle: 360deg; }
+}
+
+/* Fallback for browsers without @property support */
+@supports not (background: linear-gradient(var(--mythic-angle, 0deg), red, blue)) {
+  .nw-card[data-rarity="mythic"] {
+    border: 5px solid #ff6b00;
+    animation: mythic-border-pulse 2s ease-in-out infinite;
+  }
+  
+  @keyframes mythic-border-pulse {
+    0%, 100% { border-color: #ff6b00; box-shadow: 0 0 40px rgba(255, 107, 0, 0.6); }
+    33% { border-color: #fbbf24; box-shadow: 0 0 40px rgba(251, 191, 36, 0.6); }
+    66% { border-color: #dc2626; box-shadow: 0 0 40px rgba(220, 38, 38, 0.6); }
+  }
+}
+
+.nw-card[data-rarity="mythic"]::after {
+  background: 
+    radial-gradient(circle at 50% 0%, rgba(255, 107, 0, 0.5) 0%, transparent 50%),
+    radial-gradient(circle at 20% 50%, rgba(251, 191, 36, 0.4) 0%, transparent 40%),
+    radial-gradient(circle at 80% 50%, rgba(251, 191, 36, 0.4) 0%, transparent 40%),
+    radial-gradient(circle at 50% 100%, rgba(220, 38, 38, 0.5) 0%, transparent 50%);
+  border-radius: calc(var(--card-radius) - 5px);
+  top: 5px; left: 5px; right: 5px; bottom: 5px;
+  animation: mythic-flames-dance 2s ease-in-out infinite alternate;
+}
+
+@keyframes mythic-flames-dance {
+  0% { 
+    opacity: 0.7;
+    filter: blur(0px);
+  }
+  100% { 
+    opacity: 1;
+    filter: blur(1px);
+  }
 }
 
 .nw-card[data-rarity="mythic"]:hover {
   box-shadow: 
-    0 25px 80px var(--card-mythic-glow),
-    0 0 60px var(--card-mythic-glow),
-    0 0 100px rgba(255, 0, 0, 0.4);
-  transform: translateY(-12px) scale(1.05);
+    0 30px 100px rgba(0,0,0,0.5),
+    0 0 80px var(--mythic-glow),
+    0 0 150px rgba(255, 107, 0, 0.5),
+    0 0 200px rgba(220, 38, 38, 0.3);
+  transform: translateY(-15px) scale(1.05);
 }
 
-.nw-card[data-rarity="mythic"] .nw-card-name {
-  background: linear-gradient(90deg, #ff6b00, #ffd700, #ff6b00, #fff, #ff6b00);
+.nw-card[data-rarity="mythic"] .nw-card-banner {
+  background: linear-gradient(180deg, 
+    #991b1b 0%, #7f1d1d 50%, #450a0a 100%);
+  border: 3px solid #fbbf24;
+  box-shadow: 
+    0 0 30px rgba(255, 107, 0, 0.7),
+    0 0 60px rgba(251, 191, 36, 0.4),
+    inset 0 1px 0 rgba(253, 224, 71, 0.5);
+}
+
+.nw-card[data-rarity="mythic"] .nw-card-name { 
+  color: white;
+  background: linear-gradient(90deg, 
+    #fbbf24, #ff6b00, #fbbf24, #fff, #fbbf24, #ff6b00);
   background-size: 200% auto;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
-  animation: mythic-text 2s linear infinite;
+  animation: mythic-text-flow 3s linear infinite;
 }
 
-@keyframes mythic-text {
+@keyframes mythic-text-flow {
   0% { background-position: 0% center; }
   100% { background-position: 200% center; }
 }
 
-.nw-card[data-rarity="mythic"] .nw-card-stats {
-  color: #ffd700;
-  text-shadow: 0 0 10px rgba(255, 107, 0, 0.8);
-}
-
 .nw-card[data-rarity="mythic"] .nw-card-rarity {
-  background: linear-gradient(135deg, #ff6b00, #ff0000, #ffd700);
-  background-size: 200% 200%;
+  background: linear-gradient(180deg, #ff6b00, #dc2626, #fbbf24);
+  background-size: 100% 300%;
   color: white;
   font-weight: 800;
-  box-shadow: 0 0 25px var(--card-mythic-glow);
-  animation: mythic-badge 2s ease infinite;
+  border: 2px solid #fbbf24;
+  box-shadow: 0 0 30px var(--mythic-glow);
+  animation: mythic-badge-shift 3s ease infinite;
 }
 
-@keyframes mythic-badge {
-  0%, 100% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
+@keyframes mythic-badge-shift {
+  0%, 100% { background-position: 0% 0%; }
+  50% { background-position: 0% 100%; }
 }
 
-/* Divine flame particles */
-.nw-card[data-rarity="mythic"]::after {
-  content: '';
+/* Divine symbol */
+.nw-card[data-rarity="mythic"] .nw-card-divine {
   position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: 
-    radial-gradient(circle at 20% 20%, rgba(255, 107, 0, 0.6) 0%, transparent 30%),
-    radial-gradient(circle at 80% 20%, rgba(255, 215, 0, 0.6) 0%, transparent 30%),
-    radial-gradient(circle at 20% 80%, rgba(255, 0, 0, 0.5) 0%, transparent 30%),
-    radial-gradient(circle at 80% 80%, rgba(255, 107, 0, 0.6) 0%, transparent 30%),
-    radial-gradient(circle at 50% 10%, rgba(255, 215, 0, 0.8) 0%, transparent 25%);
-  z-index: 2;
-  pointer-events: none;
-  border-radius: var(--card-radius);
-  animation: mythic-flames 1.5s ease-in-out infinite alternate;
+  top: -20px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 32px;
+  z-index: 20;
+  color: #fbbf24;
+  text-shadow: 
+    0 0 20px #ff6b00, 
+    0 0 40px #fbbf24,
+    0 0 60px #ff6b00;
+  animation: mythic-divine-pulse 2s ease-in-out infinite;
 }
 
-@keyframes mythic-flames {
-  0% { 
-    opacity: 0.6;
-    filter: blur(2px);
+@keyframes mythic-divine-pulse {
+  0%, 100% { 
+    transform: translateX(-50%) scale(1);
+    text-shadow: 0 0 20px #ff6b00, 0 0 40px #fbbf24;
   }
-  100% { 
-    opacity: 1;
-    filter: blur(0px);
+  50% { 
+    transform: translateX(-50%) scale(1.2);
+    text-shadow: 0 0 30px #ff6b00, 0 0 60px #fbbf24, 0 0 90px #ff6b00;
   }
+}
+
+/* Flame particle corners */
+.nw-card[data-rarity="mythic"] .nw-card-corner::before {
+  content: '🔥';
+  font-size: 20px;
+  animation: mythic-corner-flame 1s ease-in-out infinite alternate;
+}
+
+@keyframes mythic-corner-flame {
+  0% { transform: scale(1) rotate(-5deg); opacity: 0.8; }
+  100% { transform: scale(1.2) rotate(5deg); opacity: 1; }
 }
 
 /* ============================================
    CARD SIZE VARIANTS
    ============================================ */
 .nw-card.nw-card-sm {
-  --card-width: 160px;
-  --card-height: 224px;
-  --card-radius: 8px;
-  --card-border-width: 2px;
+  --card-width: 180px;
+  --card-height: 260px;
+  --card-radius: 12px;
+  --frame-thickness: 8px;
 }
 
-.nw-card.nw-card-sm .nw-card-name { font-size: 11px; }
-.nw-card.nw-card-sm .nw-card-stats { font-size: 9px; }
-.nw-card.nw-card-sm .nw-card-rarity { font-size: 7px; padding: 2px 6px; }
+.nw-card.nw-card-sm .nw-card-name { font-size: 11px; letter-spacing: 1px; }
+.nw-card.nw-card-sm .nw-card-banner { bottom: 50px; padding: 6px 10px; }
+.nw-card.nw-card-sm .nw-card-stat { width: 36px; height: 36px; }
+.nw-card.nw-card-sm .nw-card-stat-value { font-size: 12px; }
+.nw-card.nw-card-sm .nw-card-stat-label { font-size: 6px; }
+.nw-card.nw-card-sm .nw-card-rarity { font-size: 7px; padding: 3px 12px; }
+.nw-card.nw-card-sm .nw-card-cost { width: 32px; height: 32px; font-size: 14px; }
+.nw-card.nw-card-sm .nw-card-stats-container { bottom: 12px; padding: 0 10px; }
 
 .nw-card.nw-card-lg {
-  --card-width: 320px;
-  --card-height: 448px;
-  --card-radius: 16px;
-  --card-border-width: 4px;
-}
-
-.nw-card.nw-card-lg .nw-card-name { font-size: 18px; }
-.nw-card.nw-card-lg .nw-card-stats { font-size: 14px; }
-.nw-card.nw-card-lg .nw-card-rarity { font-size: 11px; padding: 6px 14px; }
-
-.nw-card.nw-card-xl {
-  --card-width: 400px;
-  --card-height: 560px;
+  --card-width: 340px;
+  --card-height: 500px;
   --card-radius: 20px;
-  --card-border-width: 5px;
+  --frame-thickness: 16px;
 }
+
+.nw-card.nw-card-lg .nw-card-name { font-size: 20px; letter-spacing: 2px; }
+.nw-card.nw-card-lg .nw-card-banner { bottom: 100px; padding: 14px 20px; }
+.nw-card.nw-card-lg .nw-card-stat { width: 65px; height: 65px; }
+.nw-card.nw-card-lg .nw-card-stat-value { font-size: 22px; }
+.nw-card.nw-card-lg .nw-card-stat-label { font-size: 10px; }
+.nw-card.nw-card-lg .nw-card-rarity { font-size: 11px; padding: 6px 25px; }
+.nw-card.nw-card-lg .nw-card-cost { width: 58px; height: 58px; font-size: 24px; }
+.nw-card.nw-card-lg .nw-card-stats-container { bottom: 30px; padding: 0 20px; }
 
 /* ============================================
-   CARD GRID LAYOUTS
+   ABILITY TAG
    ============================================ */
-.nw-card-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(var(--card-width), 1fr));
-  gap: 20px;
-  justify-items: center;
-}
-
-.nw-card-row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 16px;
-  justify-content: center;
-}
-
-/* ============================================
-   CARD FLIP ANIMATION (for reveals)
-   ============================================ */
-.nw-card-flip-container {
-  perspective: 1000px;
-  width: var(--card-width);
-  height: var(--card-height);
-}
-
-.nw-card-flipper {
-  position: relative;
-  width: 100%;
-  height: 100%;
-  transition: transform 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-  transform-style: preserve-3d;
-}
-
-.nw-card-flip-container.flipped .nw-card-flipper {
-  transform: rotateY(180deg);
-}
-
-.nw-card-front,
-.nw-card-back {
+.nw-card-ability {
   position: absolute;
-  width: 100%;
-  height: 100%;
-  backface-visibility: hidden;
-  border-radius: var(--card-radius);
-}
-
-.nw-card-back {
-  background: linear-gradient(135deg, #1a1a2e 0%, #2d1b4e 50%, #1a1a2e 100%);
-  border: 3px solid #3b3b5c;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.nw-card-back::before {
-  content: 'N';
-  font-family: 'Orbitron', sans-serif;
-  font-size: 80px;
-  font-weight: 900;
-  background: linear-gradient(135deg, #ff6b00, #ffd700);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
-
-.nw-card-front {
-  transform: rotateY(180deg);
+  bottom: 130px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 4px 12px;
+  background: rgba(0, 0, 0, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 4px;
+  font-family: system-ui, sans-serif;
+  font-size: 9px;
+  font-weight: 600;
+  color: #e5e5e5;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  z-index: 10;
+  white-space: nowrap;
 }
 
 /* ============================================
-   UTILITY: Disable animations (accessibility)
+   REDUCED MOTION
    ============================================ */
 @media (prefers-reduced-motion: reduce) {
   .nw-card,
   .nw-card::before,
   .nw-card::after,
-  .nw-card-flipper {
+  .nw-card * {
     animation: none !important;
     transition: none !important;
   }
