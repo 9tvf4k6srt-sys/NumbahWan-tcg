@@ -355,7 +355,8 @@
         
         /* The Card - Larger and More Impactful */
         .reveal-card { width: min(320px, 80vw); height: calc(min(320px, 80vw) * 1.4);
-            position: relative; transform-style: preserve-3d; cursor: pointer; }
+            position: relative; transform-style: preserve-3d; cursor: pointer;
+            /* Glow container - glow follows card */ }
         
         .card-inner { position: absolute; inset: 0; transform-style: preserve-3d;
             transition: transform 1s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
@@ -396,35 +397,52 @@
             }
         }
         
-        /* Card Front */
-        .card-front { transform: rotateY(180deg); background: #111; overflow: hidden; }
-        .card-front img { width: 100%; height: 100%; object-fit: cover; }
+        /* Card Front - Clean, no extra backgrounds */
+        .card-front { transform: rotateY(180deg); background: transparent; overflow: hidden; }
+        .card-front img { width: 100%; height: 100%; object-fit: cover; border-radius: 12px; }
         /* Ensure nested card elements don't overflow */
-        .card-front .nw-card { overflow: hidden; }
-        .card-front .nw-card::before, .card-front .nw-card::after { border-radius: 16px; }
+        .card-front .nw-card { overflow: hidden; border-radius: 12px; }
+        .card-front .nw-card::before, .card-front .nw-card::after { display: none !important; }
+        /* Clean render container */
+        .card-render-container { width: 100%; height: 100%; overflow: hidden; border-radius: 12px; background: transparent; }
+        .card-render-container .nw-card { width: 100% !important; height: 100% !important; }
+        .card-render-container .nw-card-inner { border-radius: 12px; overflow: hidden; }
         
-        /* Rarity Border Glow */
-        .card-border-glow { position: absolute; inset: -3px; border-radius: 19px; opacity: 0;
-            pointer-events: none; z-index: -1; }
-        .card-border-glow.mythic { background: linear-gradient(135deg, var(--mythic), var(--cyan), var(--mythic), #ffff00);
-            background-size: 400% 400%; animation: borderGlow 2s linear infinite; }
-        .card-border-glow.legendary { background: linear-gradient(135deg, var(--gold), var(--orange), var(--gold));
-            background-size: 300% 300%; animation: borderGlow 3s linear infinite; }
-        @keyframes borderGlow { 0% { background-position: 0% 50%; } 100% { background-position: 400% 50%; } }
-        .card-border-glow.active { opacity: 1; }
+        /* Rarity Border Glow - Now INSIDE the card structure */
+        .card-border-glow { display: none; /* Moved to integrated glow system */ }
         
-        /* Card Aura Glow */
-        .card-glow { position: absolute; inset: -30px; border-radius: 40px; opacity: 0;
-            transition: opacity 0.5s; pointer-events: none; filter: blur(20px); }
-        .card-glow.mythic { background: radial-gradient(ellipse, rgba(255,0,255,0.7), rgba(0,255,255,0.4), transparent 70%);
-            animation: mythicGlow 2s ease-in-out infinite; }
-        .card-glow.legendary { background: radial-gradient(ellipse, rgba(255,215,0,0.6), rgba(255,107,0,0.4), transparent 70%);
-            animation: legendaryGlow 2s ease-in-out infinite; }
-        .card-glow.epic { background: radial-gradient(ellipse, rgba(168,85,247,0.5), transparent 70%); }
-        .card-glow.rare { background: radial-gradient(ellipse, rgba(59,130,246,0.4), transparent 70%); }
-        @keyframes mythicGlow { 0%, 100% { transform: scale(1); opacity: 0.8; } 50% { transform: scale(1.15); opacity: 1; } }
-        @keyframes legendaryGlow { 0%, 100% { transform: scale(1); opacity: 0.7; } 50% { transform: scale(1.1); opacity: 0.9; } }
-        .card-glow.active { opacity: 1; }
+        /* Card Aura Glow - Integrated with card, follows card perfectly */
+        .reveal-card::before {
+            content: ''; position: absolute; inset: -15px; border-radius: 24px;
+            opacity: 0; pointer-events: none; filter: blur(25px); z-index: -1;
+            transition: opacity 0.5s ease, transform 0.5s ease;
+        }
+        .reveal-card.glow-mythic::before {
+            background: radial-gradient(ellipse at center, rgba(255,0,255,0.8) 0%, rgba(0,255,255,0.5) 40%, transparent 70%);
+            animation: cardGlowPulse 2s ease-in-out infinite; opacity: 1;
+        }
+        .reveal-card.glow-legendary::before {
+            background: radial-gradient(ellipse at center, rgba(255,215,0,0.7) 0%, rgba(255,107,0,0.5) 40%, transparent 70%);
+            animation: cardGlowPulse 2.5s ease-in-out infinite; opacity: 1;
+        }
+        .reveal-card.glow-epic::before {
+            background: radial-gradient(ellipse at center, rgba(168,85,247,0.6) 0%, transparent 60%);
+            animation: cardGlowPulse 3s ease-in-out infinite; opacity: 1;
+        }
+        .reveal-card.glow-rare::before {
+            background: radial-gradient(ellipse at center, rgba(59,130,246,0.5) 0%, transparent 60%);
+            opacity: 1;
+        }
+        .reveal-card.glow-uncommon::before {
+            background: radial-gradient(ellipse at center, rgba(34,197,94,0.4) 0%, transparent 60%);
+            opacity: 1;
+        }
+        @keyframes cardGlowPulse {
+            0%, 100% { transform: scale(1); filter: blur(25px); }
+            50% { transform: scale(1.08); filter: blur(30px); }
+        }
+        /* Legacy support - hide old glow elements */
+        .card-glow { display: none; }
         
         /* Holographic Overlay - Premium Effect */
         .card-holo { position: absolute; inset: 0; pointer-events: none; opacity: 0; mix-blend-mode: overlay;
@@ -493,19 +511,17 @@
             100% { opacity: 0; } 
         }
         
-        /* Screen Shake - Dynamic intensity */
-        .shake { animation: shakeAnim 0.5s cubic-bezier(0.36, 0.07, 0.19, 0.97); }
-        @keyframes shakeAnim {
-            0%, 100% { transform: translate(0, 0) rotate(0deg); }
-            10% { transform: translate(calc(var(--shake-intensity, 8px) * -1), calc(var(--shake-intensity, 8px) * -0.8)) rotate(-0.5deg); }
-            20% { transform: translate(var(--shake-intensity, 8px), var(--shake-intensity, 8px)) rotate(0.5deg); }
-            30% { transform: translate(calc(var(--shake-intensity, 8px) * -0.8), var(--shake-intensity, 8px)) rotate(-0.3deg); }
-            40% { transform: translate(var(--shake-intensity, 8px), calc(var(--shake-intensity, 8px) * -0.6)) rotate(0.3deg); }
-            50% { transform: translate(calc(var(--shake-intensity, 8px) * -0.5), calc(var(--shake-intensity, 8px) * -0.5)) rotate(-0.2deg); }
-            60% { transform: translate(calc(var(--shake-intensity, 8px) * 0.4), calc(var(--shake-intensity, 8px) * 0.4)) rotate(0.1deg); }
-            70% { transform: translate(calc(var(--shake-intensity, 8px) * -0.3), calc(var(--shake-intensity, 8px) * 0.3)) rotate(0deg); }
-            80% { transform: translate(calc(var(--shake-intensity, 8px) * 0.2), calc(var(--shake-intensity, 8px) * -0.2)) rotate(0deg); }
-            90% { transform: translate(calc(var(--shake-intensity, 8px) * -0.1), calc(var(--shake-intensity, 8px) * 0.1)) rotate(0deg); }
+        /* Screen Shake - SMOOTH with natural decay */
+        .shake { animation: shakeSmooth var(--shake-duration, 0.5s) ease-out; }
+        @keyframes shakeSmooth {
+            0% { transform: translate(0, 0); }
+            15% { transform: translate(calc(var(--shake-intensity, 8px) * -0.8), calc(var(--shake-intensity, 8px) * 0.3)); }
+            30% { transform: translate(calc(var(--shake-intensity, 8px) * 0.6), calc(var(--shake-intensity, 8px) * -0.2)); }
+            45% { transform: translate(calc(var(--shake-intensity, 8px) * -0.4), calc(var(--shake-intensity, 8px) * 0.15)); }
+            60% { transform: translate(calc(var(--shake-intensity, 8px) * 0.25), calc(var(--shake-intensity, 8px) * -0.1)); }
+            75% { transform: translate(calc(var(--shake-intensity, 8px) * -0.12), calc(var(--shake-intensity, 8px) * 0.05)); }
+            90% { transform: translate(calc(var(--shake-intensity, 8px) * 0.05), 0); }
+            100% { transform: translate(0, 0); }
         }
         
         /* 🌟 Sparkle Rain Effect */
@@ -803,8 +819,7 @@
         <div class="reveal-counter" id="revealCounter">1 / 1</div>
         
         <div class="card-stage" id="cardStage">
-            <div class="card-glow" id="cardGlow"></div>
-            <div class="card-border-glow" id="cardBorderGlow"></div>
+            <!-- Glow is now integrated via ::before pseudo-element on .reveal-card -->
             <div class="reveal-card" id="revealCard">
                 <div class="card-inner" id="cardInner">
                     <div class="card-face card-back">
@@ -1833,11 +1848,11 @@ function showReveal() {
     document.getElementById('rarityBadge').classList.remove('show');
     document.getElementById('cardInfo').classList.remove('show');
     document.getElementById('revealContinue').classList.remove('show');
-    document.getElementById('cardGlow').className = 'card-glow';
-    document.getElementById('cardBorderGlow').className = 'card-border-glow';
+    // Clear integrated glow classes
+    const revealCardEl = document.getElementById('revealCard');
+    revealCardEl.classList.remove('glow-mythic', 'glow-legendary', 'glow-epic', 'glow-rare', 'glow-uncommon', 'card-entrance');
     document.getElementById('cardHolo').classList.remove('active');
     document.getElementById('cardSparkle').classList.remove('active');
-    document.getElementById('revealCard').classList.remove('card-entrance');
     
     revealCard();
 }
@@ -1854,8 +1869,8 @@ function revealCard() {
     document.getElementById('rarityBadge').classList.remove('show');
     document.getElementById('cardInfo').classList.remove('show');
     document.getElementById('revealContinue').classList.remove('show');
-    document.getElementById('cardGlow').className = 'card-glow';
-    document.getElementById('cardBorderGlow').className = 'card-border-glow';
+    // Clear integrated glow classes
+    revealCard.classList.remove('glow-mythic', 'glow-legendary', 'glow-epic', 'glow-rare', 'glow-uncommon');
     document.getElementById('cardHolo').classList.remove('active');
     document.getElementById('cardSparkle').classList.remove('active');
     document.getElementById('revealRays').classList.remove('active');
@@ -2001,15 +2016,12 @@ function showRarityEffects(card) {
         NW_JUICE.gacha.reveal(revealCard, rarity);
     }
     
-    // Activate glow
-    const glow = document.getElementById('cardGlow');
-    glow.className = 'card-glow ' + rarity + ' active';
-    
-    // Activate border glow for legendary+
-    if (['legendary', 'mythic'].includes(rarity)) {
-        const borderGlow = document.getElementById('cardBorderGlow');
-        borderGlow.className = 'card-border-glow ' + rarity + ' active';
-    }
+    // Activate glow - NOW integrated with card element (follows card perfectly)
+    const revealCardEl = document.getElementById('revealCard');
+    // Remove any previous glow classes
+    revealCardEl.classList.remove('glow-mythic', 'glow-legendary', 'glow-epic', 'glow-rare', 'glow-uncommon');
+    // Add new glow class
+    revealCardEl.classList.add('glow-' + rarity);
     
     // Activate holo for epic+
     if (['epic', 'legendary', 'mythic'].includes(rarity)) {
@@ -2172,7 +2184,10 @@ function screenFlash(color, delay = 0, intensity = 0.6) {
 
 function screenShake(intensity = 8, duration = 500) {
     const stage = document.getElementById('cardStage');
-    stage.style.setProperty('--shake-intensity', intensity + 'px');
+    // Reduce intensity for smoother feel (original values were too aggressive)
+    const smoothIntensity = Math.min(intensity * 0.6, 12);
+    stage.style.setProperty('--shake-intensity', smoothIntensity + 'px');
+    stage.style.setProperty('--shake-duration', duration + 'ms');
     stage.classList.add('shake');
     setTimeout(() => stage.classList.remove('shake'), duration);
 }
