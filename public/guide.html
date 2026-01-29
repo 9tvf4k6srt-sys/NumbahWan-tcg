@@ -3,1048 +3,1257 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NumbahWan TCG | Game Guide</title>
+    <title>NumbahWan TCG | Complete Game Guide</title>
     <link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
     <link rel="stylesheet" href="/static/nw-tokens.css">
     <link rel="stylesheet" href="/static/nw-utilities.css">
     <style>
-        :root { --gold: var(--nw-gold-500); --orange: var(--nw-ember-500); --dark: var(--nw-dark-950); --card-bg: rgba(20,20,30,0.95); }
+        :root { 
+            --gold: #ffd700; --orange: #ff6b00; --dark: #0a0a0f; --card-bg: rgba(20,20,30,0.95); 
+            --mythic: #ff6b00; --legendary: #fbbf24; --epic: #a855f7; --rare: #3b82f6; 
+            --uncommon: #22c55e; --common: #71717a;
+            --red: #ef4444; --green: #22c55e; --blue: #3b82f6; --purple: #a855f7;
+        }
         * { margin: 0; padding: 0; box-sizing: border-box; }
         html { scroll-behavior: smooth; }
-        body { font-family: var(--nw-font-display); background: var(--dark); color: #fff; min-height: 100vh;
-            position: relative; overflow-x: hidden; }
+        body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--dark); color: #fff; line-height: 1.6; }
         
-        /* Captivating Background Layers */
-        .bg-layer { position: fixed; top: 0; left: 0; right: 0; bottom: 0; pointer-events: none; z-index: -1; }
-        .bg-image { position: absolute; inset: 0;
-            background: url('/static/hero-banner.jpg') center center / cover no-repeat;
-            opacity: 0.15; filter: blur(2px); }
-        .bg-gradient { position: absolute; inset: 0;
-            background: linear-gradient(180deg, 
-                rgba(10,10,20,0.95) 0%,
-                rgba(10,10,20,0.7) 20%,
-                rgba(20,15,30,0.8) 50%,
-                rgba(10,10,20,0.9) 80%,
-                rgba(10,10,20,1) 100%); }
-        .bg-particles { position: absolute; inset: 0; overflow: hidden; }
-        .bg-particles::before, .bg-particles::after {
-            content: ''; position: absolute; width: 300px; height: 300px; border-radius: 50%;
-            filter: blur(80px); opacity: 0.3; animation: float-particles 15s ease-in-out infinite; }
-        .bg-particles::before { background: var(--orange); top: 10%; left: -100px; }
-        .bg-particles::after { background: var(--gold); bottom: 20%; right: -100px; animation-delay: -7s; }
-        @keyframes float-particles {
-            0%, 100% { transform: translate(0, 0) scale(1); }
-            25% { transform: translate(50px, 30px) scale(1.1); }
-            50% { transform: translate(20px, -20px) scale(0.9); }
-            75% { transform: translate(-30px, 40px) scale(1.05); }
-        }
-        
-        /* Subtle grid overlay */
-        .bg-grid { position: absolute; inset: 0;
-            background-image: linear-gradient(rgba(255,107,0,0.03) 1px, transparent 1px),
-                              linear-gradient(90deg, rgba(255,107,0,0.03) 1px, transparent 1px);
-            background-size: 50px 50px; }
+        /* Background */
+        .bg { position: fixed; inset: 0; z-index: -1; 
+            background: radial-gradient(ellipse at top, rgba(255,107,0,0.15) 0%, transparent 50%),
+                        radial-gradient(ellipse at 80% 20%, rgba(168,85,247,0.1) 0%, transparent 40%),
+                        radial-gradient(ellipse at bottom, rgba(255,215,0,0.05) 0%, transparent 50%),
+                        var(--dark); }
         
         /* Header */
-        .hdr { position: fixed; top: 0; left: 0; right: 0; z-index: 100; padding: 12px 16px;
-            background: linear-gradient(to bottom, rgba(10,10,15,0.98), rgba(10,10,15,0.9));
-            display: flex; justify-content: space-between; align-items: center; backdrop-filter: blur(10px); }
-        .logo { font-family: var(--nw-font-serif); font-size: clamp(14px, 4vw, 20px); font-weight: 900;
-            background: linear-gradient(135deg, var(--gold), var(--orange));
-            -webkit-background-clip: text; -webkit-text-fill-color: transparent; text-decoration: none; }
-        .lang { display: flex; gap: 6px; background: rgba(255,255,255,0.1); padding: 4px; border-radius: 16px; }
-        .lang button { padding: 5px 10px; border: none; background: transparent;
-            color: rgba(255,255,255,0.5); font-size: 11px; border-radius: 12px; cursor: pointer; transition: all 0.2s; }
-        .lang button.on { background: linear-gradient(135deg, var(--orange), var(--gold)); color: #000; font-weight: bold; }
+        header { position: sticky; top: 0; z-index: 100; background: rgba(10,10,15,0.98); 
+                 border-bottom: 1px solid rgba(255,107,0,0.3); backdrop-filter: blur(10px); }
+        .header-inner { max-width: 1200px; margin: 0 auto; padding: 12px 20px; display: flex; justify-content: space-between; align-items: center; }
+        .logo { font-size: 20px; font-weight: 900; background: linear-gradient(135deg, var(--gold), var(--orange));
+                -webkit-background-clip: text; -webkit-text-fill-color: transparent; text-decoration: none; }
+        .nav-links { display: flex; gap: 20px; }
+        .nav-links a { color: rgba(255,255,255,0.7); text-decoration: none; font-size: 14px; transition: color 0.2s; }
+        .nav-links a:hover { color: var(--gold); }
         
-        /* Navigation Tabs */
-        .nav-tabs { position: fixed; top: 56px; left: 0; right: 0; z-index: 99;
-            background: rgba(10,10,15,0.95); border-bottom: 1px solid rgba(255,255,255,0.1);
-            display: flex; overflow-x: auto; padding: 0 16px; backdrop-filter: blur(10px); }
-        .nav-tabs::-webkit-scrollbar { display: none; }
-        .nav-tab { padding: 12px 16px; color: rgba(255,255,255,0.5); font-size: 11px; text-transform: uppercase;
-            border: none; background: transparent; cursor: pointer; white-space: nowrap; transition: all 0.2s;
-            border-bottom: 2px solid transparent; }
-        .nav-tab:hover { color: rgba(255,255,255,0.8); }
-        .nav-tab.active { color: var(--gold); border-bottom-color: var(--orange); }
+        /* Table of Contents */
+        .toc { position: fixed; left: 20px; top: 100px; width: 200px; background: var(--card-bg); 
+               border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 16px; z-index: 50; }
+        .toc-title { font-weight: 700; color: var(--gold); margin-bottom: 12px; font-size: 14px; }
+        .toc a { display: block; color: rgba(255,255,255,0.6); text-decoration: none; font-size: 12px; 
+                 padding: 4px 0; transition: color 0.2s; border-left: 2px solid transparent; padding-left: 10px; }
+        .toc a:hover, .toc a.active { color: var(--gold); border-left-color: var(--orange); }
+        @media (max-width: 1400px) { .toc { display: none; } }
+        
+        /* Hero */
+        .hero { text-align: center; padding: 80px 20px 60px; position: relative; overflow: hidden; }
+        .hero::before { content: ''; position: absolute; inset: 0; 
+            background: linear-gradient(180deg, rgba(255,107,0,0.15) 0%, transparent 60%); z-index: 0; }
+        .hero-content { position: relative; z-index: 1; }
+        .hero h1 { font-size: clamp(40px, 8vw, 72px); font-weight: 900; margin-bottom: 16px;
+                   background: linear-gradient(135deg, var(--gold), var(--orange), #ff4444);
+                   -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+                   text-shadow: 0 0 60px rgba(255,107,0,0.3); }
+        .hero-tagline { font-size: 20px; color: rgba(255,255,255,0.8); max-width: 600px; margin: 0 auto 32px; 
+                        font-style: italic; }
+        .hero-stats { display: flex; justify-content: center; gap: 40px; flex-wrap: wrap; margin-top: 40px; }
+        .hero-stat { text-align: center; padding: 20px; background: var(--card-bg); border-radius: 16px; 
+                     border: 1px solid rgba(255,255,255,0.1); min-width: 120px; }
+        .hero-stat-value { font-size: 42px; font-weight: 900; background: linear-gradient(135deg, var(--gold), var(--orange));
+                           -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .hero-stat-label { font-size: 12px; color: rgba(255,255,255,0.5); text-transform: uppercase; letter-spacing: 1px; }
         
         /* Main Content */
-        .main { padding-top: 110px; padding-bottom: 40px; }
-        .section { padding: 40px 16px; max-width: 1200px; margin: 0 auto; display: none; }
-        .section.active { display: block; }
+        main { max-width: 1000px; margin: 0 auto; padding: 40px 20px; }
         
-        /* Section Headers */
-        .section-title { font-family: var(--nw-font-serif); font-size: clamp(24px, 5vw, 36px); font-weight: 900;
-            background: linear-gradient(135deg, var(--gold), var(--orange));
-            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-            margin-bottom: 24px; text-align: center; }
-        .section-subtitle { color: rgba(255,255,255,0.6); text-align: center; margin-bottom: 32px; font-size: 14px; }
+        /* Sections */
+        section { margin-bottom: 80px; scroll-margin-top: 80px; }
+        .section-title { font-size: 32px; font-weight: 800; margin-bottom: 32px; padding-bottom: 16px;
+                         border-bottom: 3px solid var(--orange); display: flex; align-items: center; gap: 16px; }
+        .section-title span { font-size: 40px; }
         
-        /* Card Display */
-        .card-showcase { display: flex; flex-wrap: wrap; gap: 16px; justify-content: center; margin: 24px 0; }
-        .card-img { width: 120px; height: 160px; border-radius: 12px; object-fit: cover;
-            box-shadow: 0 8px 24px rgba(0,0,0,0.5); transition: transform 0.3s, box-shadow 0.3s; cursor: pointer; }
-        .card-img:hover { transform: scale(1.1) translateY(-8px); box-shadow: 0 16px 40px rgba(255,107,0,0.3); }
-        .card-img.large { width: 160px; height: 213px; }
-        .card-img.xlarge { width: 200px; height: 267px; }
+        /* Info Cards */
+        .info-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 24px; }
+        .info-card { background: var(--card-bg); border: 1px solid rgba(255,255,255,0.1); border-radius: 16px; 
+                     padding: 28px; transition: all 0.3s ease; }
+        .info-card:hover { transform: translateY(-6px); border-color: rgba(255,107,0,0.5); 
+                          box-shadow: 0 20px 40px rgba(0,0,0,0.3), 0 0 30px rgba(255,107,0,0.1); }
+        .info-card h3 { font-size: 20px; color: var(--gold); margin-bottom: 16px; display: flex; align-items: center; gap: 10px; }
+        .info-card p { color: rgba(255,255,255,0.8); font-size: 15px; }
+        .info-card ul { color: rgba(255,255,255,0.8); font-size: 14px; padding-left: 20px; margin-top: 12px; }
+        .info-card li { margin: 8px 0; }
         
-        /* Info Boxes */
-        .info-box { background: var(--card-bg); border: 1px solid rgba(255,107,0,0.3);
-            border-radius: 16px; padding: 24px; margin: 16px 0; }
-        .info-box h3 { font-family: var(--nw-font-serif); font-size: 18px; color: var(--gold); margin-bottom: 12px; }
-        .info-box p { color: rgba(255,255,255,0.8); line-height: 1.7; font-size: 14px; }
-        .info-box ul { color: rgba(255,255,255,0.8); line-height: 1.8; font-size: 14px; padding-left: 20px; }
-        .info-box li { margin: 8px 0; }
+        /* Stat Display */
+        .stat-display { display: flex; gap: 16px; flex-wrap: wrap; margin: 20px 0; }
+        .stat-item { background: linear-gradient(135deg, rgba(255,107,0,0.1), rgba(255,215,0,0.05));
+                     border: 1px solid rgba(255,107,0,0.3); border-radius: 12px; padding: 16px 24px;
+                     text-align: center; min-width: 100px; }
+        .stat-icon { font-size: 28px; margin-bottom: 8px; }
+        .stat-name { font-weight: 700; color: var(--gold); font-size: 14px; }
+        .stat-desc { font-size: 11px; color: rgba(255,255,255,0.5); margin-top: 4px; }
         
-        /* Stat Icons */
-        .stat { display: inline-flex; align-items: center; gap: 4px; padding: 4px 10px;
-            background: rgba(255,255,255,0.1); border-radius: 8px; font-size: 12px; margin: 2px; }
-        .stat.atk { background: rgba(255,68,68,0.2); color: #ff6b6b; }
-        .stat.def { background: rgba(68,68,255,0.2); color: #6b9fff; }
-        .stat.spd { background: rgba(68,255,68,0.2); color: #6bff6b; }
-        .stat.mana { background: rgba(138,43,226,0.2); color: #ba68ff; }
+        /* Keywords */
+        .keyword { display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px; border-radius: 20px; 
+                   font-size: 13px; font-weight: 700; margin: 4px; text-transform: uppercase; }
+        .keyword-icon { font-size: 16px; }
+        .keyword.carry { background: linear-gradient(135deg, #ef4444, #dc2626); color: #fff; }
+        .keyword.whale { background: linear-gradient(135deg, #ffd700, #f59e0b); color: #000; }
+        .keyword.grinder { background: linear-gradient(135deg, #22c55e, #16a34a); color: #fff; }
+        .keyword.toxic { background: linear-gradient(135deg, #84cc16, #65a30d); color: #000; }
+        .keyword.rng { background: linear-gradient(135deg, #ec4899, #db2777); color: #fff; }
+        .keyword.clutch { background: linear-gradient(135deg, #f97316, #ea580c); color: #fff; }
+        .keyword.taunt { background: linear-gradient(135deg, #3b82f6, #2563eb); color: #fff; }
+        .keyword.stealth { background: linear-gradient(135deg, #6b7280, #4b5563); color: #fff; }
+        .keyword.simp { background: linear-gradient(135deg, #ec4899, #be185d); color: #fff; }
+        .keyword.afk { background: linear-gradient(135deg, #94a3b8, #64748b); color: #fff; }
+        .keyword.ragequit { background: linear-gradient(135deg, #dc2626, #991b1b); color: #fff; }
+        .keyword.leech { background: linear-gradient(135deg, #7f1d1d, #450a0a); color: #fff; }
+        .keyword.hype { background: linear-gradient(135deg, #f59e0b, #d97706); color: #000; }
+        .keyword.buff { background: linear-gradient(135deg, #10b981, #059669); color: #fff; }
+        .keyword.comeback { background: linear-gradient(135deg, #22c55e, #15803d); color: #fff; }
+        .keyword.tilt { background: linear-gradient(135deg, #ef4444, #b91c1c); color: #fff; }
+        .keyword.rush { background: linear-gradient(135deg, #eab308, #ca8a04); color: #000; }
         
-        /* Rarity Badges */
-        .rarity { display: inline-block; padding: 4px 12px; border-radius: 12px; font-size: 10px;
-            font-weight: bold; text-transform: uppercase; }
-        .rarity.mythic { background: linear-gradient(135deg, var(--gold), var(--orange)); color: #000; }
-        .rarity.legendary { background: linear-gradient(135deg, #ffd700, #f5c71a); color: #000; }
-        .rarity.epic { background: linear-gradient(135deg, #9370db, #8a2be2); color: #fff; }
-        .rarity.rare { background: linear-gradient(135deg, #1e90ff, #4169e1); color: #fff; }
-        .rarity.common { background: rgba(128,128,128,0.5); color: #fff; }
+        /* Rarity Colors */
+        .rarity-mythic { color: var(--mythic); text-shadow: 0 0 15px rgba(255,107,0,0.6); font-weight: 700; }
+        .rarity-legendary { color: var(--legendary); font-weight: 700; }
+        .rarity-epic { color: var(--epic); font-weight: 700; }
+        .rarity-rare { color: var(--rare); font-weight: 700; }
+        .rarity-uncommon { color: var(--uncommon); }
+        .rarity-common { color: var(--common); }
         
-        /* Type Icons */
-        .type-icon { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px;
-            background: rgba(255,255,255,0.1); border-radius: 20px; font-size: 12px; margin: 4px; }
-        .type-icon.hero { border: 1px solid #ffd700; color: #ffd700; }
-        .type-icon.spell { border: 1px solid #8a2be2; color: #ba68ff; }
-        .type-icon.minion { border: 1px solid #4169e1; color: #6b9fff; }
-        .type-icon.equipment { border: 1px solid #32cd32; color: #6bff6b; }
-        .type-icon.event { border: 1px solid #ff6b00; color: #ff9f43; }
-        .type-icon.location { border: 1px solid #00ced1; color: #48dbfb; }
+        /* Tables */
+        .table-wrap { overflow-x: auto; margin: 24px 0; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1); }
+        table { width: 100%; border-collapse: collapse; min-width: 500px; }
+        th, td { padding: 16px 20px; text-align: left; }
+        th { background: rgba(255,107,0,0.15); color: var(--gold); font-weight: 700; font-size: 14px; 
+             text-transform: uppercase; letter-spacing: 0.5px; }
+        td { border-bottom: 1px solid rgba(255,255,255,0.05); }
+        tr:hover td { background: rgba(255,255,255,0.03); }
         
-        /* Combo Display */
-        .combo-card { background: var(--card-bg); border: 1px solid rgba(255,107,0,0.3);
-            border-radius: 16px; padding: 24px; margin: 20px 0; }
-        .combo-header { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; flex-wrap: wrap; }
-        .combo-title { font-family: var(--nw-font-serif); font-size: 18px; color: var(--gold); }
-        .combo-rating { display: flex; gap: 2px; }
-        .combo-rating .star { color: var(--gold); font-size: 14px; }
-        .combo-rating .star.empty { color: rgba(255,255,255,0.2); }
-        .combo-cards { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; justify-content: center;
-            padding: 20px; background: rgba(0,0,0,0.3); border-radius: 12px; margin: 16px 0; }
-        .combo-plus { font-size: 24px; color: var(--orange); font-weight: bold; }
-        .combo-arrow { font-size: 24px; color: var(--gold); }
-        .combo-result { text-align: center; padding: 12px; background: rgba(255,215,0,0.1);
-            border: 1px dashed rgba(255,215,0,0.3); border-radius: 8px; }
-        .combo-result h4 { color: var(--gold); font-size: 14px; margin-bottom: 4px; }
-        .combo-result p { color: rgba(255,255,255,0.7); font-size: 12px; }
-        .combo-explanation { color: rgba(255,255,255,0.8); line-height: 1.7; font-size: 14px; margin-top: 16px; }
+        /* Turn Phases */
+        .phase-timeline { position: relative; padding-left: 30px; }
+        .phase-timeline::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 4px;
+                                  background: linear-gradient(180deg, var(--orange), var(--gold), var(--purple)); border-radius: 2px; }
+        .phase-item { position: relative; background: var(--card-bg); border: 1px solid rgba(255,255,255,0.1);
+                      padding: 24px; margin: 20px 0; border-radius: 16px; margin-left: 20px; }
+        .phase-item::before { content: ''; position: absolute; left: -28px; top: 50%; transform: translateY(-50%);
+                              width: 16px; height: 16px; background: var(--orange); border-radius: 50%;
+                              border: 3px solid var(--dark); }
+        .phase-icon { position: absolute; left: -36px; top: 50%; transform: translateY(-50%); font-size: 28px; }
+        .phase-name { font-size: 20px; font-weight: 700; color: var(--gold); margin-bottom: 8px; }
+        .phase-actions { color: rgba(255,255,255,0.8); font-size: 14px; }
+        .phase-actions li { margin: 6px 0; }
         
-        /* Tier List */
-        .tier-row { display: flex; gap: 12px; margin: 12px 0; align-items: stretch; }
-        .tier-label { width: 60px; min-width: 60px; display: flex; align-items: center; justify-content: center;
-            font-family: var(--nw-font-serif); font-size: 24px; font-weight: 900; border-radius: 12px; }
-        .tier-label.s { background: linear-gradient(135deg, #ff6b6b, #ee5a5a); color: #fff; }
-        .tier-label.a { background: linear-gradient(135deg, #ffd700, #f5c71a); color: #000; }
-        .tier-label.b { background: linear-gradient(135deg, #9370db, #8a2be2); color: #fff; }
-        .tier-label.c { background: linear-gradient(135deg, #1e90ff, #4169e1); color: #fff; }
-        .tier-cards { flex: 1; display: flex; flex-wrap: wrap; gap: 8px; padding: 12px;
-            background: rgba(255,255,255,0.05); border-radius: 12px; align-items: center; }
-        .tier-card { width: 60px; height: 80px; border-radius: 8px; object-fit: cover;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.3); transition: transform 0.2s; cursor: pointer; }
-        .tier-card:hover { transform: scale(1.15); z-index: 10; position: relative; }
+        /* Rank Badges */
+        .rank-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 16px; margin: 32px 0; }
+        .rank-badge { padding: 20px; border-radius: 16px; text-align: center; border: 2px solid rgba(255,255,255,0.1); 
+                      background: var(--card-bg); transition: all 0.3s ease; }
+        .rank-badge:hover { transform: scale(1.05); }
+        .rank-badge.bronze { border-color: #cd7f32; background: linear-gradient(135deg, rgba(205,127,50,0.1), transparent); }
+        .rank-badge.silver { border-color: #c0c0c0; background: linear-gradient(135deg, rgba(192,192,192,0.1), transparent); }
+        .rank-badge.gold { border-color: #ffd700; background: linear-gradient(135deg, rgba(255,215,0,0.1), transparent); }
+        .rank-badge.platinum { border-color: #e5e4e2; background: linear-gradient(135deg, rgba(229,228,226,0.1), transparent); }
+        .rank-badge.diamond { border-color: #b9f2ff; background: linear-gradient(135deg, rgba(185,242,255,0.1), transparent); }
+        .rank-badge.master { border-color: #9966cc; background: linear-gradient(135deg, rgba(153,102,204,0.1), transparent); }
+        .rank-badge.guildmaster { border-color: #ff6b00; box-shadow: 0 0 30px rgba(255,107,0,0.3);
+                                  background: linear-gradient(135deg, rgba(255,107,0,0.2), transparent); }
+        .rank-badge.reggina { border-color: #ffd700; box-shadow: 0 0 40px rgba(255,215,0,0.4);
+                              background: linear-gradient(135deg, rgba(255,107,0,0.2), rgba(255,215,0,0.2)); }
+        .rank-icon { font-size: 40px; }
+        .rank-name { font-weight: 700; margin-top: 8px; font-size: 16px; }
+        .rank-mmr { font-size: 12px; color: rgba(255,255,255,0.5); margin-top: 4px; }
         
-        /* Infographic Grid */
-        .info-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; margin: 24px 0; }
-        .info-item { background: var(--card-bg); border: 1px solid rgba(255,255,255,0.1);
-            border-radius: 16px; padding: 20px; text-align: center; transition: all 0.3s; }
-        .info-item:hover { border-color: rgba(255,107,0,0.5); transform: translateY(-4px); }
-        .info-item .icon { font-size: 40px; margin-bottom: 12px; }
-        .info-item h4 { font-family: var(--nw-font-serif); color: var(--gold); margin-bottom: 8px; }
-        .info-item p { color: rgba(255,255,255,0.7); font-size: 13px; line-height: 1.6; }
+        /* Combo Cards */
+        .combo-showcase { background: linear-gradient(135deg, rgba(255,107,0,0.1), rgba(168,85,247,0.05));
+                          border: 2px solid rgba(255,107,0,0.3); border-radius: 20px; padding: 32px; margin: 24px 0; }
+        .combo-name { font-size: 22px; font-weight: 800; color: var(--gold); margin-bottom: 16px;
+                      display: flex; align-items: center; gap: 12px; }
+        .combo-cards { display: flex; align-items: center; gap: 12px; margin: 20px 0; flex-wrap: wrap; }
+        .combo-card-chip { padding: 10px 18px; border-radius: 12px; font-size: 14px; font-weight: 600; }
+        .combo-card-chip.mythic { background: linear-gradient(135deg, var(--mythic), #dc2626); }
+        .combo-card-chip.legendary { background: linear-gradient(135deg, var(--legendary), #d97706); color: #000; }
+        .combo-card-chip.epic { background: linear-gradient(135deg, var(--epic), #7c3aed); }
+        .combo-card-chip.rare { background: var(--rare); }
+        .combo-plus { color: var(--gold); font-weight: 700; font-size: 24px; }
+        .combo-result { color: rgba(255,255,255,0.9); font-size: 15px; margin-top: 16px; padding: 20px;
+                        background: rgba(0,0,0,0.4); border-radius: 12px; line-height: 1.7; }
+        .combo-result strong { color: var(--gold); }
         
-        /* Phase Timeline */
-        .timeline { position: relative; padding: 20px 0; }
-        .timeline::before { content: ''; position: absolute; left: 50%; top: 0; bottom: 0; width: 2px;
-            background: linear-gradient(to bottom, var(--orange), var(--gold)); transform: translateX(-50%); }
-        .timeline-item { display: flex; align-items: center; margin: 24px 0; position: relative; }
-        .timeline-item:nth-child(odd) { flex-direction: row-reverse; }
-        .timeline-content { width: 45%; padding: 16px; background: var(--card-bg);
-            border: 1px solid rgba(255,107,0,0.3); border-radius: 12px; }
-        .timeline-content h4 { font-family: var(--nw-font-serif); color: var(--gold); margin-bottom: 8px; font-size: 16px; }
-        .timeline-content p { color: rgba(255,255,255,0.7); font-size: 13px; line-height: 1.6; }
-        .timeline-dot { width: 20px; height: 20px; background: var(--orange); border-radius: 50%;
-            position: absolute; left: 50%; transform: translateX(-50%); border: 3px solid var(--dark); }
+        /* Tip Boxes */
+        .tip-box { border-radius: 16px; padding: 24px; margin: 24px 0; }
+        .tip-box.pro { background: linear-gradient(135deg, rgba(34,197,94,0.15), rgba(34,197,94,0.05));
+                       border: 1px solid rgba(34,197,94,0.4); }
+        .tip-box.warning { background: linear-gradient(135deg, rgba(239,68,68,0.15), rgba(239,68,68,0.05));
+                           border: 1px solid rgba(239,68,68,0.4); }
+        .tip-box.info { background: linear-gradient(135deg, rgba(59,130,246,0.15), rgba(59,130,246,0.05));
+                        border: 1px solid rgba(59,130,246,0.4); }
+        .tip-box.clip { background: linear-gradient(135deg, rgba(168,85,247,0.15), rgba(236,72,153,0.05));
+                        border: 1px solid rgba(168,85,247,0.4); }
+        .tip-title { font-weight: 700; font-size: 16px; margin-bottom: 12px; display: flex; align-items: center; gap: 10px; }
+        .tip-box.pro .tip-title { color: #22c55e; }
+        .tip-box.warning .tip-title { color: #ef4444; }
+        .tip-box.info .tip-title { color: #3b82f6; }
+        .tip-box.clip .tip-title { color: #a855f7; }
+        .tip-box p, .tip-box ul { color: rgba(255,255,255,0.85); font-size: 14px; }
+        .tip-box ul { padding-left: 20px; margin-top: 8px; }
+        .tip-box li { margin: 6px 0; }
         
-        /* Back to Cards */
-        .back-link { position: fixed; bottom: 20px; right: 20px; padding: 12px 20px;
-            background: linear-gradient(135deg, var(--orange), var(--gold)); color: #000;
-            text-decoration: none; border-radius: 24px; font-weight: bold; font-size: 12px;
-            box-shadow: 0 4px 20px rgba(255,107,0,0.4); transition: transform 0.2s; z-index: 50; }
-        .back-link:hover { transform: scale(1.05); }
+        /* Deck Archetypes */
+        .archetype-card { background: var(--card-bg); border: 1px solid rgba(255,255,255,0.1); border-radius: 16px;
+                          padding: 28px; margin: 20px 0; }
+        .archetype-name { font-size: 22px; font-weight: 800; margin-bottom: 8px; }
+        .archetype-name.aggro { color: #ef4444; }
+        .archetype-name.control { color: #3b82f6; }
+        .archetype-name.combo { color: #a855f7; }
+        .archetype-name.midrange { color: #22c55e; }
+        .archetype-name.meme { color: #ec4899; }
+        .archetype-desc { color: rgba(255,255,255,0.7); font-size: 14px; margin-bottom: 16px; font-style: italic; }
+        .archetype-details { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; }
+        .archetype-detail { background: rgba(0,0,0,0.3); border-radius: 8px; padding: 12px; }
+        .archetype-detail-title { font-weight: 700; color: var(--gold); font-size: 13px; margin-bottom: 6px; }
+        .archetype-detail-text { font-size: 13px; color: rgba(255,255,255,0.7); }
+        
+        /* Gacha Display */
+        .gacha-rates { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 16px; margin: 24px 0; }
+        .gacha-rate { text-align: center; padding: 20px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1); }
+        .gacha-rate.mythic { background: linear-gradient(135deg, rgba(255,107,0,0.2), transparent); 
+                             border-color: var(--mythic); }
+        .gacha-rate.legendary { background: linear-gradient(135deg, rgba(251,191,36,0.15), transparent);
+                                border-color: var(--legendary); }
+        .gacha-rate-percent { font-size: 28px; font-weight: 900; }
+        .gacha-rate.mythic .gacha-rate-percent { color: var(--mythic); }
+        .gacha-rate.legendary .gacha-rate-percent { color: var(--legendary); }
+        .gacha-rate.epic .gacha-rate-percent { color: var(--epic); }
+        .gacha-rate.rare .gacha-rate-percent { color: var(--rare); }
+        .gacha-rate.uncommon .gacha-rate-percent { color: var(--uncommon); }
+        .gacha-rate.common .gacha-rate-percent { color: var(--common); }
+        .gacha-rate-label { font-size: 12px; color: rgba(255,255,255,0.6); margin-top: 4px; }
+        .gacha-rate-odds { font-size: 11px; color: rgba(255,255,255,0.4); margin-top: 2px; }
+        
+        /* Lore Section */
+        .lore-box { background: linear-gradient(135deg, rgba(255,107,0,0.05), rgba(168,85,247,0.05));
+                    border: 1px solid rgba(255,255,255,0.1); border-radius: 20px; padding: 40px; 
+                    max-width: 800px; margin: 0 auto; }
+        .lore-box p { font-size: 17px; line-height: 2; font-style: italic; color: rgba(255,255,255,0.85); }
+        .lore-highlight { color: var(--gold); font-weight: 700; font-style: normal; }
+        
+        /* Footer */
+        footer { text-align: center; padding: 60px 20px; border-top: 1px solid rgba(255,255,255,0.1);
+                 background: linear-gradient(180deg, transparent, rgba(255,107,0,0.03)); }
+        footer p { color: rgba(255,255,255,0.5); font-size: 14px; }
+        footer a { color: var(--gold); text-decoration: none; transition: color 0.2s; }
+        footer a:hover { color: var(--orange); }
+        .footer-links { display: flex; justify-content: center; gap: 24px; margin-top: 16px; flex-wrap: wrap; }
         
         /* Responsive */
         @media (max-width: 768px) {
-            .timeline::before { left: 20px; }
-            .timeline-item { flex-direction: column !important; align-items: flex-start; padding-left: 50px; }
-            .timeline-content { width: 100%; }
-            .timeline-dot { left: 20px; }
-            .tier-row { flex-direction: column; }
-            .tier-label { width: 100%; padding: 8px; }
+            .header-inner { flex-direction: column; gap: 12px; }
+            .hero-stats { gap: 16px; }
+            .hero-stat { min-width: 100px; padding: 16px; }
+            .rank-grid { grid-template-columns: repeat(2, 1fr); }
+            .phase-timeline { padding-left: 20px; }
+            .phase-icon { left: -28px; font-size: 20px; }
+            section { margin-bottom: 60px; }
         }
         
-        /* Tooltip */
-        .tooltip { position: relative; }
-        .tooltip:hover::after { content: attr(data-tip); position: absolute; bottom: 100%; left: 50%;
-            transform: translateX(-50%); padding: 8px 12px; background: rgba(0,0,0,0.9);
-            color: #fff; font-size: 11px; border-radius: 8px; white-space: nowrap; z-index: 100; }
-        
-        /* NW Icon System */
-        .nw-icon { display: inline-block; vertical-align: middle; }
-        .info-item .icon { margin-bottom: 12px; color: var(--gold); }
+        /* Animations */
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.7; } }
+        .pulse { animation: pulse 2s ease-in-out infinite; }
     </style>
-    <script src="/static/nw-icons-inline.js"></script>
 </head>
 <body>
-    <!-- Captivating Background Layers -->
-    <div class="bg-layer">
-        <div class="bg-image"></div>
-        <div class="bg-gradient"></div>
-        <div class="bg-particles"></div>
-        <div class="bg-grid"></div>
-    </div>
+    <div class="bg"></div>
     
-    <header class="hdr">
-        <a href="/" class="logo">NumbahWan TCG</a>
-        <div class="lang">
-            <button class="on" data-l="en">EN</button>
-            <button data-l="zh">中文</button>
-            <button data-l="th">ไทย</button>
+    <!-- Table of Contents -->
+    <nav class="toc">
+        <div class="toc-title">📖 CONTENTS</div>
+        <a href="#objective">How to Win</a>
+        <a href="#card-types">Card Types</a>
+        <a href="#stats">Card Stats</a>
+        <a href="#turns">Turn Structure</a>
+        <a href="#keywords">Keywords</a>
+        <a href="#rarity">Rarity System</a>
+        <a href="#combos">Killer Combos</a>
+        <a href="#deckbuilding">Deck Building</a>
+        <a href="#archetypes">Archetypes</a>
+        <a href="#ranked">Ranked System</a>
+        <a href="#gacha">Gacha Rates</a>
+        <a href="#content">For Creators</a>
+        <a href="#lore">The Story</a>
+    </nav>
+    
+    <header>
+        <div class="header-inner">
+            <a href="/" class="logo">🔥 NumbahWan TCG</a>
+            <nav class="nav-links">
+                <a href="/cards">Cards</a>
+                <a href="/forge">Gacha</a>
+                <a href="/">Home</a>
+            </nav>
         </div>
     </header>
     
-    <nav class="nav-tabs">
-        <button class="nav-tab active" data-section="basics" id="tabBasics">BASICS</button>
-        <button class="nav-tab" data-section="types" id="tabTypes">CARD TYPES</button>
-        <button class="nav-tab" data-section="rarity" id="tabRarity">RARITY</button>
-        <button class="nav-tab" data-section="combos" id="tabCombos">COMBOS</button>
-        <button class="nav-tab" data-section="strategy" id="tabStrategy">STRATEGY</button>
-        <button class="nav-tab" data-section="tierlist" id="tabTierlist">TIER LIST</button>
-    </nav>
+    <div class="hero">
+        <div class="hero-content">
+            <h1>⚔️ GUILD WARS</h1>
+            <p class="hero-tagline">"We are not just a guild, but FAMILY... that fights!"</p>
+            <p style="color: rgba(255,255,255,0.6); max-width: 700px; margin: 0 auto;">
+                The complete guide to mastering NumbahWan TCG - where guild drama becomes legendary battles, 
+                RNG decides destinies, and your clips will break the internet.
+            </p>
+            <div class="hero-stats">
+                <div class="hero-stat">
+                    <div class="hero-stat-value">108</div>
+                    <div class="hero-stat-label">Unique Cards</div>
+                </div>
+                <div class="hero-stat">
+                    <div class="hero-stat-value">20+</div>
+                    <div class="hero-stat-label">Keywords</div>
+                </div>
+                <div class="hero-stat">
+                    <div class="hero-stat-value">8</div>
+                    <div class="hero-stat-label">Ranks</div>
+                </div>
+                <div class="hero-stat">
+                    <div class="hero-stat-value">0.01%</div>
+                    <div class="hero-stat-label">Mythic Rate</div>
+                </div>
+            </div>
+        </div>
+    </div>
     
-    <main class="main">
-        <!-- BASICS SECTION -->
-        <section class="section active" id="basics">
-            <h1 class="section-title" id="basicsTitle">How to Play</h1>
-            <p class="section-subtitle" id="basicsSubtitle">Master the fundamentals of NumbahWan TCG</p>
+    <main>
+        <!-- OBJECTIVE -->
+        <section id="objective">
+            <h2 class="section-title"><span>🎯</span> How to Win</h2>
+            <div class="info-grid">
+                <div class="info-card">
+                    <h3>🏰 Guild HP</h3>
+                    <p>Each player starts with <strong style="color: var(--gold);">30 Guild HP</strong>. 
+                    Reduce your opponent to 0 to claim victory!</p>
+                    <p style="margin-top: 12px; font-size: 13px; color: rgba(255,255,255,0.6);">
+                        Alternative win: Opponent can't draw (deck out)
+                    </p>
+                </div>
+                <div class="info-card">
+                    <h3>💎 Energy System</h3>
+                    <p>Start with <strong style="color: var(--gold);">1 Energy</strong>, gain +1 each turn (max 10). 
+                    Energy fully refills every turn!</p>
+                    <p style="margin-top: 12px; font-size: 13px; color: rgba(255,255,255,0.6);">
+                        Spend wisely - but don't hoard!
+                    </p>
+                </div>
+                <div class="info-card">
+                    <h3>🃏 Deck Building</h3>
+                    <p>Build a deck of <strong style="color: var(--gold);">20-30 cards</strong>. 
+                    Balance members, moments, and gear for victory!</p>
+                    <p style="margin-top: 12px; font-size: 13px; color: rgba(255,255,255,0.6);">
+                        Sweet spot: 25 cards
+                    </p>
+                </div>
+                <div class="info-card">
+                    <h3>🏆 Strategy</h3>
+                    <p>Play cards strategically, manage your board, and outplay your opponent with 
+                    <strong style="color: var(--gold);">skill + luck</strong>!</p>
+                    <p style="margin-top: 12px; font-size: 13px; color: rgba(255,255,255,0.6);">
+                        Sometimes the heart of the cards wins
+                    </p>
+                </div>
+            </div>
+        </section>
+        
+        <!-- CARD TYPES -->
+        <section id="card-types">
+            <h2 class="section-title"><span>🃏</span> Card Types</h2>
+            <div class="info-grid">
+                <div class="info-card">
+                    <h3>👤 Members</h3>
+                    <p>Guild members that fight on the board. They have ATK, HP, and can attack each turn after being played.</p>
+                    <ul>
+                        <li>Can attack enemy members or Guild HP</li>
+                        <li>Stay on board until destroyed (HP = 0)</li>
+                        <li>Max <strong>5 members</strong> on your board</li>
+                        <li>Have <strong>summoning sickness</strong> (can't attack turn played)</li>
+                    </ul>
+                </div>
+                <div class="info-card">
+                    <h3>⚡ Moments</h3>
+                    <p>Instant effects that trigger immediately and go to discard. The bread and butter of reactions!</p>
+                    <ul>
+                        <li>Damage, healing, buffs, debuffs</li>
+                        <li>Can be played anytime during your turn</li>
+                        <li>Some have <strong>counter</strong> effects!</li>
+                        <li>No HP - one-time use only</li>
+                    </ul>
+                </div>
+                <div class="info-card">
+                    <h3>⚔️ Gear</h3>
+                    <p>Equipment that attaches to members, boosting their stats permanently.</p>
+                    <ul>
+                        <li>Attach to any friendly member</li>
+                        <li>Destroyed when member dies</li>
+                        <li>Up to <strong>2 gear per member</strong></li>
+                        <li><span class="rarity-mythic">The Sacred Log</span> is game-changing!</li>
+                    </ul>
+                </div>
+                <div class="info-card">
+                    <h3>🌀 Vibes</h3>
+                    <p>Persistent effects that last 2-4 turns. Set the mood of the battlefield!</p>
+                    <ul>
+                        <li>Affect the entire board</li>
+                        <li>Can <strong>stack</strong> with other vibes</li>
+                        <li>Up to 3 vibes active at once</li>
+                        <li>"Tilt" is hilariously chaotic</li>
+                    </ul>
+                </div>
+                <div class="info-card">
+                    <h3>📍 Spots</h3>
+                    <p>Locations that affect the entire board. Control the battlefield!</p>
+                    <ul>
+                        <li>Only <strong>1 spot</strong> can be active</li>
+                        <li>Playing a new spot destroys the old one</li>
+                        <li>Affects both players equally</li>
+                        <li>AFK Spot = passive income</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+        
+        <!-- STATS -->
+        <section id="stats">
+            <h2 class="section-title"><span>📊</span> Card Stats</h2>
+            
+            <div class="stat-display">
+                <div class="stat-item">
+                    <div class="stat-icon">⚔️</div>
+                    <div class="stat-name">ATK</div>
+                    <div class="stat-desc">Damage dealt</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-icon">❤️</div>
+                    <div class="stat-name">HP</div>
+                    <div class="stat-desc">Health points</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-icon">💎</div>
+                    <div class="stat-name">COST</div>
+                    <div class="stat-desc">Energy needed</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-icon">💨</div>
+                    <div class="stat-name">SPD</div>
+                    <div class="stat-desc">Attack order</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-icon">💥</div>
+                    <div class="stat-name">CRIT</div>
+                    <div class="stat-desc">Double damage %</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-icon">🌀</div>
+                    <div class="stat-name">DODGE</div>
+                    <div class="stat-desc">Avoid attack %</div>
+                </div>
+            </div>
+            
+            <div class="table-wrap">
+                <table>
+                    <tr>
+                        <th>Stat</th>
+                        <th>Description</th>
+                        <th>Pro Tip</th>
+                    </tr>
+                    <tr>
+                        <td><strong style="color: #ef4444;">ATK ⚔️</strong></td>
+                        <td>Damage dealt when attacking enemies or Guild HP</td>
+                        <td>Stack ATK on CARRY cards for scaling damage</td>
+                    </tr>
+                    <tr>
+                        <td><strong style="color: #22c55e;">HP ❤️</strong></td>
+                        <td>Health points - card is destroyed at 0</td>
+                        <td>High HP + TOXIC = painful for attackers</td>
+                    </tr>
+                    <tr>
+                        <td><strong style="color: #3b82f6;">COST 💎</strong></td>
+                        <td>Energy required to play the card</td>
+                        <td>Balance your curve - don't go all expensive</td>
+                    </tr>
+                    <tr>
+                        <td><strong style="color: #fbbf24;">SPD 💨</strong></td>
+                        <td>Attack order priority (higher = faster)</td>
+                        <td>High SPD + RUSH = first strike advantage</td>
+                    </tr>
+                    <tr>
+                        <td><strong style="color: #f97316;">CRIT 💥</strong></td>
+                        <td>% chance to deal DOUBLE damage (max 50%)</td>
+                        <td>Crits bypass TAUNT and ignore 50% armor</td>
+                    </tr>
+                    <tr>
+                        <td><strong style="color: #8b5cf6;">DODGE 🌀</strong></td>
+                        <td>% chance to completely avoid an attack (max 40%)</td>
+                        <td>Clutch dodges at 1 HP = clip material</td>
+                    </tr>
+                </table>
+            </div>
+            
+            <div class="tip-box info">
+                <div class="tip-title">💡 Pro Tip</div>
+                <p>CRIT and DODGE add exciting RNG moments! A clutch dodge or surprise crit can completely turn a game around. 
+                These mechanics are designed for those <strong>YouTube highlight reels</strong>!</p>
+            </div>
+        </section>
+        
+        <!-- TURN STRUCTURE -->
+        <section id="turns">
+            <h2 class="section-title"><span>🔄</span> Turn Structure</h2>
+            <p style="color: rgba(255,255,255,0.7); margin-bottom: 32px;">Each turn follows these phases in order:</p>
+            
+            <div class="phase-timeline">
+                <div class="phase-item">
+                    <span class="phase-icon">🌅</span>
+                    <div class="phase-name">1. START PHASE</div>
+                    <ul class="phase-actions">
+                        <li>Start-of-turn effects trigger</li>
+                        <li>Vibe durations tick down</li>
+                        <li>GRINDER cards gain +1/+1</li>
+                    </ul>
+                </div>
+                <div class="phase-item">
+                    <span class="phase-icon">🎴</span>
+                    <div class="phase-name">2. DRAW PHASE</div>
+                    <ul class="phase-actions">
+                        <li>Draw 1 card from your deck</li>
+                        <li><strong>Going second on turn 1? Draw 2 cards!</strong></li>
+                        <li>Empty deck = 1 FATIGUE damage (increases each turn)</li>
+                    </ul>
+                </div>
+                <div class="phase-item">
+                    <span class="phase-icon">💎</span>
+                    <div class="phase-name">3. ENERGY PHASE</div>
+                    <ul class="phase-actions">
+                        <li>Gain +1 max energy (up to 10)</li>
+                        <li>Refill ALL your energy to max</li>
+                    </ul>
+                </div>
+                <div class="phase-item">
+                    <span class="phase-icon">🎮</span>
+                    <div class="phase-name">4. MAIN PHASE</div>
+                    <ul class="phase-actions">
+                        <li>Play cards from hand (spend energy)</li>
+                        <li>Use member abilities</li>
+                        <li>Attach gear to members</li>
+                        <li><strong>No limit on actions!</strong></li>
+                    </ul>
+                </div>
+                <div class="phase-item">
+                    <span class="phase-icon">⚔️</span>
+                    <div class="phase-name">5. COMBAT PHASE</div>
+                    <ul class="phase-actions">
+                        <li>Choose which members attack</li>
+                        <li>Select targets (enemy members or Guild HP)</li>
+                        <li><strong>Attacks resolve in SPD order</strong></li>
+                        <li>TAUNT must be attacked first</li>
+                        <li>CRIT and DODGE rolls happen here!</li>
+                    </ul>
+                </div>
+                <div class="phase-item">
+                    <span class="phase-icon">🌙</span>
+                    <div class="phase-name">6. END PHASE</div>
+                    <ul class="phase-actions">
+                        <li>End-of-turn effects trigger</li>
+                        <li>AFK cards regenerate HP</li>
+                        <li>Discard down to 10 cards</li>
+                        <li>Pass turn to opponent</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+        
+        <!-- KEYWORDS -->
+        <section id="keywords">
+            <h2 class="section-title"><span>🏷️</span> Keywords & Abilities</h2>
+            
+            <h3 style="color: var(--gold); margin: 32px 0 20px; font-size: 22px;">⚔️ Offensive Keywords</h3>
+            <div class="table-wrap">
+                <table>
+                    <tr><th>Keyword</th><th>Effect</th><th>Strategy</th></tr>
+                    <tr>
+                        <td><span class="keyword carry"><span class="keyword-icon">🏆</span> CARRY</span></td>
+                        <td>Gains <strong>+1 ATK permanently</strong> for each kill</td>
+                        <td>Protect your carry - they scale infinitely!</td>
+                    </tr>
+                    <tr>
+                        <td><span class="keyword clutch"><span class="keyword-icon">🔥</span> CLUTCH</span></td>
+                        <td>Gains <strong>+5 ATK</strong> when Guild HP below 10</td>
+                        <td>Comeback mechanic - stay calm when behind!</td>
+                    </tr>
+                    <tr>
+                        <td><span class="keyword ragequit"><span class="keyword-icon">💢</span> RAGEQUIT</span></td>
+                        <td>When destroyed, deals ATK to <strong>ALL enemies</strong></td>
+                        <td>Suicide bomber strategy - go out with a bang!</td>
+                    </tr>
+                    <tr>
+                        <td><span class="keyword leech"><span class="keyword-icon">🩸</span> LEECH</span></td>
+                        <td>Heals your <strong>Guild HP</strong> equal to damage dealt</td>
+                        <td>Sustain for days - great in control decks</td>
+                    </tr>
+                    <tr>
+                        <td><span class="keyword rush"><span class="keyword-icon">⚡</span> RUSH</span></td>
+                        <td>Can attack the turn it's played</td>
+                        <td>Immediate impact - great for aggro</td>
+                    </tr>
+                </table>
+            </div>
+            
+            <h3 style="color: var(--gold); margin: 32px 0 20px; font-size: 22px;">🛡️ Defensive Keywords</h3>
+            <div class="table-wrap">
+                <table>
+                    <tr><th>Keyword</th><th>Effect</th><th>Strategy</th></tr>
+                    <tr>
+                        <td><span class="keyword taunt"><span class="keyword-icon">🛡️</span> TAUNT</span></td>
+                        <td>Enemies <strong>MUST</strong> attack this card first</td>
+                        <td>Protect your carries and key cards!</td>
+                    </tr>
+                    <tr>
+                        <td><span class="keyword stealth"><span class="keyword-icon">👻</span> STEALTH</span></td>
+                        <td>Can't be targeted until it attacks</td>
+                        <td>Set up combos safely - build CARRY stacks</td>
+                    </tr>
+                    <tr>
+                        <td><span class="keyword toxic"><span class="keyword-icon">☠️</span> TOXIC</span></td>
+                        <td>Deals <strong>2 damage back</strong> to any attacker</td>
+                        <td>Punish aggression - discourages attacks</td>
+                    </tr>
+                    <tr>
+                        <td><span class="keyword comeback"><span class="keyword-icon">♻️</span> COMEBACK</span></td>
+                        <td>Returns to hand when destroyed (once per game)</td>
+                        <td>Value city - 2-for-1 guaranteed</td>
+                    </tr>
+                </table>
+            </div>
+            
+            <h3 style="color: var(--gold); margin: 32px 0 20px; font-size: 22px;">💪 Utility Keywords</h3>
+            <div class="table-wrap">
+                <table>
+                    <tr><th>Keyword</th><th>Effect</th><th>Strategy</th></tr>
+                    <tr>
+                        <td><span class="keyword whale"><span class="keyword-icon">🐋</span> WHALE</span></td>
+                        <td>Pay <strong>3 extra energy</strong> to DOUBLE all stats</td>
+                        <td>Credit card go brrr - massive power spike!</td>
+                    </tr>
+                    <tr>
+                        <td><span class="keyword grinder"><span class="keyword-icon">⏰</span> GRINDER</span></td>
+                        <td>Gains <strong>+1/+1</strong> at start of each turn</td>
+                        <td>Slow and steady - protect them early!</td>
+                    </tr>
+                    <tr>
+                        <td><span class="keyword afk"><span class="keyword-icon">😴</span> AFK</span></td>
+                        <td>Can't attack, but <strong>regenerates 3 HP</strong> per turn</td>
+                        <td>Unkillable wall - frustrate aggro decks</td>
+                    </tr>
+                    <tr>
+                        <td><span class="keyword simp"><span class="keyword-icon">💕</span> SIMP</span></td>
+                        <td>Sacrifice to <strong>fully heal + give +3/+3</strong> to ally</td>
+                        <td>Ultimate sacrifice - buff your carry!</td>
+                    </tr>
+                    <tr>
+                        <td><span class="keyword hype"><span class="keyword-icon">📣</span> HYPE</span></td>
+                        <td>Adjacent allies have <strong>+2 ATK</strong></td>
+                        <td>Position matters - stack your board!</td>
+                    </tr>
+                    <tr>
+                        <td><span class="keyword buff"><span class="keyword-icon">💪</span> BUFF</span></td>
+                        <td>Give target ally <strong>+2/+2 permanently</strong></td>
+                        <td>Stack on key threats - simple but effective</td>
+                    </tr>
+                </table>
+            </div>
+            
+            <h3 style="color: var(--gold); margin: 32px 0 20px; font-size: 22px;">🎰 Chaotic Keywords (Content Gold!)</h3>
+            <div class="table-wrap">
+                <table>
+                    <tr><th>Keyword</th><th>Effect</th><th>Strategy</th></tr>
+                    <tr>
+                        <td><span class="keyword rng"><span class="keyword-icon">🎰</span> RNG</span></td>
+                        <td>Effect is <strong>randomly determined</strong></td>
+                        <td>Embrace the chaos - great for clips!</td>
+                    </tr>
+                    <tr>
+                        <td><span class="keyword tilt"><span class="keyword-icon">😤</span> TILT</span></td>
+                        <td><strong>50% chance</strong> to attack the WRONG target</td>
+                        <td>High risk, high tilt - meme potential!</td>
+                    </tr>
+                </table>
+            </div>
+            
+            <div class="tip-box clip">
+                <div class="tip-title">🎬 Content Creator Moment</div>
+                <p>The RNG keywords are <strong>designed for clips</strong>. Server Crash 50/50s, clutch dodges, crit chains - 
+                these are the moments that make viewers scream. Build meme decks for maximum content!</p>
+            </div>
+        </section>
+        
+        <!-- RARITY -->
+        <section id="rarity">
+            <h2 class="section-title"><span>✨</span> Rarity System</h2>
+            
+            <div class="table-wrap">
+                <table>
+                    <tr>
+                        <th>Rarity</th>
+                        <th>Count</th>
+                        <th>ATK</th>
+                        <th>HP</th>
+                        <th>Cost</th>
+                        <th>Abilities</th>
+                        <th>Deck Limit</th>
+                    </tr>
+                    <tr>
+                        <td><span class="rarity-mythic">⭐ MYTHIC</span></td>
+                        <td>2</td>
+                        <td>8-12</td>
+                        <td>10-15</td>
+                        <td>8-10</td>
+                        <td>2 + Special</td>
+                        <td>1 copy</td>
+                    </tr>
+                    <tr>
+                        <td><span class="rarity-legendary">👑 LEGENDARY</span></td>
+                        <td>10</td>
+                        <td>6-9</td>
+                        <td>7-12</td>
+                        <td>6-8</td>
+                        <td>2</td>
+                        <td>1 copy</td>
+                    </tr>
+                    <tr>
+                        <td><span class="rarity-epic">💎 EPIC</span></td>
+                        <td>18</td>
+                        <td>5-7</td>
+                        <td>5-9</td>
+                        <td>4-6</td>
+                        <td>1</td>
+                        <td>2 copies</td>
+                    </tr>
+                    <tr>
+                        <td><span class="rarity-rare">💙 RARE</span></td>
+                        <td>19</td>
+                        <td>3-5</td>
+                        <td>4-7</td>
+                        <td>3-5</td>
+                        <td>1</td>
+                        <td>2 copies</td>
+                    </tr>
+                    <tr>
+                        <td><span class="rarity-uncommon">💚 UNCOMMON</span></td>
+                        <td>23</td>
+                        <td>2-4</td>
+                        <td>3-5</td>
+                        <td>2-3</td>
+                        <td>0-1</td>
+                        <td>3 copies</td>
+                    </tr>
+                    <tr>
+                        <td><span class="rarity-common">⚪ COMMON</span></td>
+                        <td>36</td>
+                        <td>1-3</td>
+                        <td>2-4</td>
+                        <td>1-2</td>
+                        <td>0</td>
+                        <td>3 copies</td>
+                    </tr>
+                </table>
+            </div>
+            
+            <div class="tip-box warning">
+                <div class="tip-title">⚠️ The Two Mythics</div>
+                <p>There are only <strong>2 Mythic cards</strong> in the entire game:</p>
+                <ul>
+                    <li><span class="rarity-mythic">RegginA, The Eternal Flame</span> - The guild founder. CARRY + CLUTCH + deals 3 damage to all enemies on play!</li>
+                    <li><span class="rarity-mythic">The Sacred Log</span> - Legendary artifact. All allies gain +2/+2 permanently!</li>
+                </ul>
+                <p style="margin-top: 12px;">Build your deck around them if you're lucky enough to pull one!</p>
+            </div>
+        </section>
+        
+        <!-- COMBOS -->
+        <section id="combos">
+            <h2 class="section-title"><span>🔥</span> Killer Combos</h2>
+            <p style="color: rgba(255,255,255,0.7); margin-bottom: 32px;">Master these combos to dominate your opponents:</p>
+            
+            <div class="combo-showcase">
+                <div class="combo-name">💀 "THE EXTINCTION EVENT"</div>
+                <div class="combo-cards">
+                    <span class="combo-card-chip mythic">RegginA, Eternal Flame</span>
+                    <span class="combo-plus">+</span>
+                    <span class="combo-card-chip mythic">The Sacred Log</span>
+                </div>
+                <div class="combo-result">
+                    <strong>The Dream:</strong> Play Sacred Log first (+2/+2 to all allies). Then drop RegginA for 3 damage board clear.
+                    With CARRY and CLUTCH, RegginA becomes an <strong>11+ ATK</strong> monster that heals your guild with LEECH.
+                    <br><br>
+                    <strong>Reality:</strong> 0.01% + 0.01% = You probably won't see this. But when you do... CLIP IT!
+                </div>
+            </div>
+            
+            <div class="combo-showcase">
+                <div class="combo-name">🎰 "THE 50/50 GAMBLE"</div>
+                <div class="combo-cards">
+                    <span class="combo-card-chip rare">Server Crash</span>
+                    <span class="combo-plus">when losing</span>
+                </div>
+                <div class="combo-result">
+                    <strong>The Play:</strong> When you're behind with no way out, slam Server Crash.
+                    <br><br>
+                    <strong>50% chance</strong> to destroy ALL enemies = you win.
+                    <br><strong>50% chance</strong> to destroy ALL your allies = you lose harder.
+                    <br><br>
+                    The salt from winning with this is <span class="rarity-legendary">LEGENDARY</span>.
+                </div>
+            </div>
+            
+            <div class="combo-showcase">
+                <div class="combo-name">💰 "WHALE WALLET"</div>
+                <div class="combo-cards">
+                    <span class="combo-card-chip epic">Whaleford, The Unlimited Budget</span>
+                    <span class="combo-plus">+ 8 Energy</span>
+                </div>
+                <div class="combo-result">
+                    <strong>The Math:</strong> Whaleford costs 5. WHALE ability costs +3. Total: 8 energy.
+                    <br><br>
+                    A <strong>6/8 becomes 12/16</strong>. That's a late-game monster that 2-shots face and survives most removal.
+                    Credit card energy go brrrrr!
+                </div>
+            </div>
+            
+            <div class="combo-showcase">
+                <div class="combo-name">😭 "THE ULTIMATE SIMP"</div>
+                <div class="combo-cards">
+                    <span class="combo-card-chip epic">Mochi, The Devoted Simp</span>
+                    <span class="combo-plus">→</span>
+                    <span class="combo-card-chip legendary">Chadwick, The Absolute Carry</span>
+                </div>
+                <div class="combo-result">
+                    <strong>Peak Devotion:</strong> Mochi uses SIMP to sacrifice itself, <strong>fully healing</strong> Chadwick AND giving him <strong>+3/+3</strong>.
+                    <br><br>
+                    Combined with Chadwick's CARRY, he becomes an unkillable machine. Chadwick now has everything - 
+                    stats, healing, and a devoted simp who died for him. Peak romance.
+                </div>
+            </div>
+            
+            <div class="combo-showcase">
+                <div class="combo-name">👻 "GHOST ARMY"</div>
+                <div class="combo-cards">
+                    <span class="combo-card-chip epic">404, Ghost Member</span>
+                    <span class="combo-plus">+</span>
+                    <span class="combo-card-chip epic">Snipe, The Kill Stealer</span>
+                    <span class="combo-plus">+</span>
+                    <span class="combo-card-chip legendary">Reggino, Shadow Commander</span>
+                </div>
+                <div class="combo-result">
+                    <strong>Invisible War:</strong> All three have STEALTH. Your opponent can't target ANY of them.
+                    <br><br>
+                    Build up CARRY stacks in peace. Stack buffs. Wait for the perfect moment.
+                    Then reveal your ghost army and delete their entire board. <strong>They never saw it coming.</strong>
+                </div>
+            </div>
+        </section>
+        
+        <!-- DECK BUILDING -->
+        <section id="deckbuilding">
+            <h2 class="section-title"><span>🃏</span> Deck Building</h2>
             
             <div class="info-grid">
-                <div class="info-item">
-                    <div class="icon"><span data-nw-icon="target" data-size="40"></span></div>
-                    <h4 id="goalTitle">Goal</h4>
-                    <p id="goalText">Reduce your opponent's HP from 30 to 0 using Heroes, Minions, Spells, and strategic plays.</p>
+                <div class="info-card">
+                    <h3>📏 Deck Rules</h3>
+                    <ul>
+                        <li><strong>Minimum:</strong> 20 cards</li>
+                        <li><strong>Maximum:</strong> 30 cards</li>
+                        <li><strong>Sweet Spot:</strong> 25 cards</li>
+                        <li>Mythic/Legendary: 1 copy max</li>
+                        <li>Epic/Rare: 2 copies max</li>
+                        <li>Uncommon/Common: 3 copies max</li>
+                    </ul>
                 </div>
-                <div class="info-item">
-                    <div class="icon"><span data-nw-icon="scroll" data-size="40"></span></div>
-                    <h4 id="deckTitle">Deck</h4>
-                    <p id="deckText">Build a deck of 30 cards. Max 2 copies of any card (1 for Mythic/Legendary).</p>
+                <div class="info-card">
+                    <h3>⚖️ Recommended Ratios</h3>
+                    <ul>
+                        <li><strong>Members:</strong> 12-16 cards (60%)</li>
+                        <li><strong>Moments:</strong> 4-8 cards (25%)</li>
+                        <li><strong>Gear:</strong> 2-4 cards (10%)</li>
+                        <li><strong>Vibes/Spots:</strong> 2-4 cards (5%)</li>
+                    </ul>
                 </div>
-                <div class="info-item">
-                    <div class="icon"><span data-nw-icon="diamond" data-size="40"></span></div>
-                    <h4 id="manaTitle">Mana</h4>
-                    <p id="manaText">Start with 1 Mana, gain +1 each turn (max 10). Spend Mana to play cards.</p>
-                </div>
-                <div class="info-item">
-                    <div class="icon"><span data-nw-icon="swords" data-size="40"></span></div>
-                    <h4 id="combatTitle">Combat</h4>
-                    <p id="combatText">Minions attack enemies. ATK deals damage, DEF absorbs it. SPD determines attack order.</p>
-                </div>
-            </div>
-            
-            <div class="info-box">
-                <h3 id="turnPhaseTitle">Turn Phases</h3>
-                <div class="timeline">
-                    <div class="timeline-item">
-                        <div class="timeline-content">
-                            <h4 id="phase1Title">1. Draw Phase</h4>
-                            <p id="phase1Text">Draw 1 card from your deck. First player skips draw on turn 1.</p>
-                        </div>
-                        <div class="timeline-dot"></div>
-                    </div>
-                    <div class="timeline-item">
-                        <div class="timeline-content">
-                            <h4 id="phase2Title">2. Mana Phase</h4>
-                            <p id="phase2Text">Gain +1 max Mana (up to 10). All Mana refreshes.</p>
-                        </div>
-                        <div class="timeline-dot"></div>
-                    </div>
-                    <div class="timeline-item">
-                        <div class="timeline-content">
-                            <h4 id="phase3Title">3. Main Phase</h4>
-                            <p id="phase3Text">Play cards, use abilities, equip items. No limit on actions if you have Mana.</p>
-                        </div>
-                        <div class="timeline-dot"></div>
-                    </div>
-                    <div class="timeline-item">
-                        <div class="timeline-content">
-                            <h4 id="phase4Title">4. Battle Phase</h4>
-                            <p id="phase4Text">Command minions to attack. Minions can't attack the turn they're summoned (unless Charge).</p>
-                        </div>
-                        <div class="timeline-dot"></div>
-                    </div>
-                    <div class="timeline-item">
-                        <div class="timeline-content">
-                            <h4 id="phase5Title">5. End Phase</h4>
-                            <p id="phase5Text">Trigger end-of-turn effects. Pass to opponent.</p>
-                        </div>
-                        <div class="timeline-dot"></div>
-                    </div>
+                <div class="info-card">
+                    <h3>📈 Energy Curve</h3>
+                    <ul>
+                        <li><strong>1-2 cost:</strong> 6-8 cards (early game)</li>
+                        <li><strong>3-4 cost:</strong> 8-10 cards (midgame core)</li>
+                        <li><strong>5-6 cost:</strong> 4-6 cards (power plays)</li>
+                        <li><strong>7+ cost:</strong> 2-4 cards (finishers)</li>
+                    </ul>
                 </div>
             </div>
             
-            <div class="info-box">
-                <h3 id="keywordsTitle">Keywords</h3>
-                <ul id="keywordsList">
-                    <li><strong>Taunt</strong> - Enemies must attack this minion first</li>
-                    <li><strong>Charge</strong> - Can attack immediately when summoned</li>
-                    <li><strong>Stealth</strong> - Cannot be targeted until it attacks</li>
-                    <li><strong>Divine Shield</strong> - Blocks the first damage taken</li>
-                    <li><strong>Flying</strong> - Can only be blocked by other Flying minions</li>
-                    <li><strong>Lifesteal</strong> - Heals your hero for damage dealt</li>
-                    <li><strong>First Strike</strong> - Deals damage before the enemy can retaliate</li>
-                    <li><strong>Deathrattle</strong> - Effect triggers when the minion dies</li>
+            <div class="tip-box pro">
+                <div class="tip-title">✅ Deck Building Tips</div>
+                <ul>
+                    <li>Include a good <strong>energy curve</strong> - don't go all expensive cards!</li>
+                    <li>Have at least <strong>one TAUNT</strong> to protect key cards</li>
+                    <li>Include <strong>2-3 removal moments</strong> for emergencies</li>
+                    <li>Don't go all-in on RNG cards unless you're making content 😏</li>
+                    <li>Test your deck against aggro, control, and combo matchups</li>
                 </ul>
             </div>
         </section>
         
-        <!-- CARD TYPES SECTION -->
-        <section class="section" id="types">
-            <h1 class="section-title" id="typesTitle">Card Types</h1>
-            <p class="section-subtitle" id="typesSubtitle">Learn the 6 card types and how to use them</p>
+        <!-- ARCHETYPES -->
+        <section id="archetypes">
+            <h2 class="section-title"><span>🎭</span> Deck Archetypes</h2>
             
-            <div class="info-box">
-                <h3><span class="type-icon hero"><span data-nw-icon="crown" data-size="16"></span> <span id="heroLabel">HERO</span></span></h3>
-                <p id="heroDesc">Heroes are powerful unique characters. Only 1 Hero can be on the field at a time. They have high stats and game-changing abilities. Heroes stay until destroyed.</p>
-                <div class="card-showcase">
-                    <img src="/static/images/cards/01-reggina-mythic.jpg" class="card-img large" alt="RegginA">
-                    <img src="/static/images/cards/02-reggino-legendary.jpg" class="card-img large" alt="Reggino">
-                    <img src="/static/images/cards/03-onca-epic.jpg" class="card-img large" alt="Onca">
+            <div class="archetype-card">
+                <div class="archetype-name aggro">🔥 AGGRO</div>
+                <div class="archetype-desc">"Go face. Questions later."</div>
+                <div class="archetype-details">
+                    <div class="archetype-detail">
+                        <div class="archetype-detail-title">Gameplan</div>
+                        <div class="archetype-detail-text">Fast, cheap cards to rush opponent down. Win by turn 6-8.</div>
+                    </div>
+                    <div class="archetype-detail">
+                        <div class="archetype-detail-title">Key Cards</div>
+                        <div class="archetype-detail-text">RUSH, CARRY, CLUTCH cards, cheap members</div>
+                    </div>
+                    <div class="archetype-detail">
+                        <div class="archetype-detail-title">Weakness</div>
+                        <div class="archetype-detail-text">Runs out of steam. Weak to TAUNT walls.</div>
+                    </div>
                 </div>
             </div>
             
-            <div class="info-box">
-                <h3><span class="type-icon spell"><span data-nw-icon="sparkles" data-size="16"></span> <span id="spellLabel">SPELL</span></span></h3>
-                <p id="spellDesc">Spells are one-time effects that resolve immediately. They can deal damage, heal allies, draw cards, or create powerful effects. After use, they go to the discard pile.</p>
-                <div class="card-showcase">
-                    <img src="/static/images/cards/08-apocalypse-rain.jpg" class="card-img large" alt="Apocalypse Rain">
-                    <img src="/static/images/cards/09-time-warp.jpg" class="card-img large" alt="Time Warp">
-                    <img src="/static/images/cards/06-thunder-strike.jpg" class="card-img large" alt="Thunder Strike">
+            <div class="archetype-card">
+                <div class="archetype-name control">🛡️ CONTROL</div>
+                <div class="archetype-desc">"Sit back, relax, watch them rage."</div>
+                <div class="archetype-details">
+                    <div class="archetype-detail">
+                        <div class="archetype-detail-title">Gameplan</div>
+                        <div class="archetype-detail-text">Removal and healing to outlast. Win in the late game.</div>
+                    </div>
+                    <div class="archetype-detail">
+                        <div class="archetype-detail-title">Key Cards</div>
+                        <div class="archetype-detail-text">TAUNT, AFK, LEECH, removal moments</div>
+                    </div>
+                    <div class="archetype-detail">
+                        <div class="archetype-detail-title">Weakness</div>
+                        <div class="archetype-detail-text">Slow start. Loses to combo OTK decks.</div>
+                    </div>
                 </div>
             </div>
             
-            <div class="info-box">
-                <h3><span class="type-icon minion"><span data-nw-icon="swords" data-size="16"></span> <span id="minionLabel">MINION</span></span></h3>
-                <p id="minionDesc">Minions are creatures that fight for you. They have ATK (damage), DEF (health), and sometimes SPD (attack order). You can have up to 7 minions on the field.</p>
-                <div class="card-showcase">
-                    <img src="/static/images/cards/27-elder-dragon.jpg" class="card-img large" alt="Elder Dragon">
-                    <img src="/static/images/cards/19-inferno-colossus.jpg" class="card-img large" alt="Inferno Colossus">
-                    <img src="/static/images/cards/22-divine-guardian.jpg" class="card-img large" alt="Divine Guardian">
+            <div class="archetype-card">
+                <div class="archetype-name combo">💜 COMBO</div>
+                <div class="archetype-desc">"Just need to draw the right cards..."</div>
+                <div class="archetype-details">
+                    <div class="archetype-detail">
+                        <div class="archetype-detail-title">Gameplan</div>
+                        <div class="archetype-detail-text">Draw your combo pieces. Execute devastating finisher.</div>
+                    </div>
+                    <div class="archetype-detail">
+                        <div class="archetype-detail-title">Key Cards</div>
+                        <div class="archetype-detail-text">RegginA + Sacred Log, SIMP chains, draw cards</div>
+                    </div>
+                    <div class="archetype-detail">
+                        <div class="archetype-detail-title">Weakness</div>
+                        <div class="archetype-detail-text">Inconsistent. Dies to aggro before combo.</div>
+                    </div>
                 </div>
             </div>
             
-            <div class="info-box">
-                <h3><span class="type-icon equipment"><span data-nw-icon="shield" data-size="16"></span> <span id="equipLabel">EQUIPMENT</span></span></h3>
-                <p id="equipDesc">Equipment cards attach to your Hero, giving permanent stat boosts and special abilities. Only 1 weapon and 1 armor can be equipped at a time.</p>
-                <div class="card-showcase">
-                    <img src="/static/images/cards/34-zakum-blade.jpg" class="card-img large" alt="Zakum's Blade">
-                    <img src="/static/images/cards/37-dragonscale-armor.jpg" class="card-img large" alt="Dragonscale Armor">
-                    <img src="/static/images/cards/38-crown-command.jpg" class="card-img large" alt="Crown of Command">
+            <div class="archetype-card">
+                <div class="archetype-name midrange">💚 MIDRANGE</div>
+                <div class="archetype-desc">"Best card each turn. Simple."</div>
+                <div class="archetype-details">
+                    <div class="archetype-detail">
+                        <div class="archetype-detail-title">Gameplan</div>
+                        <div class="archetype-detail-text">Balanced approach with solid cards at every cost.</div>
+                    </div>
+                    <div class="archetype-detail">
+                        <div class="archetype-detail-title">Key Cards</div>
+                        <div class="archetype-detail-text">GRINDER, WHALE, efficient stat cards</div>
+                    </div>
+                    <div class="archetype-detail">
+                        <div class="archetype-detail-title">Weakness</div>
+                        <div class="archetype-detail-text">Master of none. Can be out-specialized.</div>
+                    </div>
                 </div>
             </div>
             
-            <div class="info-box">
-                <h3><span class="type-icon event"><span data-nw-icon="party" data-size="16"></span> <span id="eventLabel">EVENT</span></span></h3>
-                <p id="eventDesc">Events create temporary game-wide effects that affect both players. They can shift the battle in dramatic ways and create exciting turning points.</p>
-                <div class="card-showcase">
-                    <img src="/static/images/cards/41-guild-war.jpg" class="card-img large" alt="Guild War">
-                    <img src="/static/images/cards/44-raid-boss.jpg" class="card-img large" alt="Raid Boss">
-                    <img src="/static/images/cards/46-grand-alliance.jpg" class="card-img large" alt="Grand Alliance">
-                </div>
-            </div>
-            
-            <div class="info-box">
-                <h3><span class="type-icon location"><span data-nw-icon="home" data-size="16"></span> <span id="locLabel">LOCATION</span></span></h3>
-                <p id="locDesc">Locations are persistent field effects that benefit you each turn. Only 1 Location can be active. Playing a new Location replaces the old one.</p>
-                <div class="card-showcase">
-                    <img src="/static/images/cards/47-guild-hall.jpg" class="card-img large" alt="Guild Hall">
-                    <img src="/static/images/cards/48-shadow-dungeon.jpg" class="card-img large" alt="Shadow Dungeon">
+            <div class="archetype-card">
+                <div class="archetype-name meme">💖 MEME DECK</div>
+                <div class="archetype-desc">"I'm not here to win. I'm here to make clips."</div>
+                <div class="archetype-details">
+                    <div class="archetype-detail">
+                        <div class="archetype-detail-title">Gameplan</div>
+                        <div class="archetype-detail-text">Maximum RNG. Win or lose spectacularly.</div>
+                    </div>
+                    <div class="archetype-detail">
+                        <div class="archetype-detail-title">Key Cards</div>
+                        <div class="archetype-detail-text">Server Crash, Gacha Victim, Ninja Loot, all RNG</div>
+                    </div>
+                    <div class="archetype-detail">
+                        <div class="archetype-detail-title">Weakness</div>
+                        <div class="archetype-detail-text">Everything. But the content is worth it.</div>
+                    </div>
                 </div>
             </div>
         </section>
         
-        <!-- RARITY SECTION -->
-        <section class="section" id="rarity">
-            <h1 class="section-title" id="rarityTitle">Card Rarity</h1>
-            <p class="section-subtitle" id="raritySubtitle">Understanding card rarity and deck building limits</p>
+        <!-- RANKED -->
+        <section id="ranked">
+            <h2 class="section-title"><span>🏆</span> Ranked System</h2>
+            <p style="text-align: center; color: rgba(255,255,255,0.7); margin-bottom: 32px;">
+                Climb the ladder, prove your worth, reach the legendary <span class="rarity-mythic">RegginA</span> rank!
+            </p>
+            
+            <div class="rank-grid">
+                <div class="rank-badge bronze">
+                    <div class="rank-icon">🥉</div>
+                    <div class="rank-name">Bronze</div>
+                    <div class="rank-mmr">0 - 999 MMR</div>
+                </div>
+                <div class="rank-badge silver">
+                    <div class="rank-icon">🥈</div>
+                    <div class="rank-name">Silver</div>
+                    <div class="rank-mmr">1000 - 1999</div>
+                </div>
+                <div class="rank-badge gold">
+                    <div class="rank-icon">🥇</div>
+                    <div class="rank-name">Gold</div>
+                    <div class="rank-mmr">2000 - 2999</div>
+                </div>
+                <div class="rank-badge platinum">
+                    <div class="rank-icon">💎</div>
+                    <div class="rank-name">Platinum</div>
+                    <div class="rank-mmr">3000 - 3999</div>
+                </div>
+                <div class="rank-badge diamond">
+                    <div class="rank-icon">💠</div>
+                    <div class="rank-name">Diamond</div>
+                    <div class="rank-mmr">4000 - 4999</div>
+                </div>
+                <div class="rank-badge master">
+                    <div class="rank-icon">👑</div>
+                    <div class="rank-name">Master</div>
+                    <div class="rank-mmr">5000 - 5999</div>
+                </div>
+                <div class="rank-badge guildmaster">
+                    <div class="rank-icon">🔥</div>
+                    <div class="rank-name">GuildMaster</div>
+                    <div class="rank-mmr">6000 - 9999</div>
+                </div>
+                <div class="rank-badge reggina">
+                    <div class="rank-icon">⭐</div>
+                    <div class="rank-name">RegginA</div>
+                    <div class="rank-mmr">Top 100 Only</div>
+                </div>
+            </div>
+            
+            <div class="info-grid" style="margin-top: 40px;">
+                <div class="info-card">
+                    <h3>📈 MMR Gains</h3>
+                    <ul>
+                        <li><strong>Win:</strong> +25 to +40 MMR</li>
+                        <li><strong>Loss:</strong> -15 to -25 MMR</li>
+                        <li><strong>Win streak:</strong> +5 per consecutive win</li>
+                        <li><strong>Floor protection:</strong> Can't drop ranks</li>
+                    </ul>
+                </div>
+                <div class="info-card">
+                    <h3>🎁 Season Rewards</h3>
+                    <ul>
+                        <li>Exclusive <strong>card backs</strong> per rank</li>
+                        <li>Profile <strong>borders</strong> and titles</li>
+                        <li><strong>Gacha currency</strong> based on final rank</li>
+                        <li>Top 100 get unique <strong>"RegginA" frame</strong></li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+        
+        <!-- GACHA -->
+        <section id="gacha">
+            <h2 class="section-title"><span>🎰</span> Gacha Rates</h2>
+            
+            <div class="gacha-rates">
+                <div class="gacha-rate mythic">
+                    <div class="gacha-rate-percent">0.01%</div>
+                    <div class="gacha-rate-label">MYTHIC</div>
+                    <div class="gacha-rate-odds">1 in 10,000</div>
+                </div>
+                <div class="gacha-rate legendary">
+                    <div class="gacha-rate-percent">1%</div>
+                    <div class="gacha-rate-label">LEGENDARY</div>
+                    <div class="gacha-rate-odds">1 in 100</div>
+                </div>
+                <div class="gacha-rate">
+                    <div class="gacha-rate-percent" style="color: var(--epic);">8%</div>
+                    <div class="gacha-rate-label">EPIC</div>
+                    <div class="gacha-rate-odds">1 in 12.5</div>
+                </div>
+                <div class="gacha-rate">
+                    <div class="gacha-rate-percent" style="color: var(--rare);">20%</div>
+                    <div class="gacha-rate-label">RARE</div>
+                    <div class="gacha-rate-odds">1 in 5</div>
+                </div>
+                <div class="gacha-rate">
+                    <div class="gacha-rate-percent" style="color: var(--uncommon);">35%</div>
+                    <div class="gacha-rate-label">UNCOMMON</div>
+                    <div class="gacha-rate-odds">~1 in 3</div>
+                </div>
+                <div class="gacha-rate">
+                    <div class="gacha-rate-percent" style="color: var(--common);">35.99%</div>
+                    <div class="gacha-rate-label">COMMON</div>
+                    <div class="gacha-rate-odds">~1 in 3</div>
+                </div>
+            </div>
+            
+            <div class="tip-box warning">
+                <div class="tip-title">⚠️ Pity System</div>
+                <p>We're not <em>that</em> cruel. Pity guarantees rare drops after a certain number of pulls:</p>
+                <ul>
+                    <li><span class="rarity-mythic">MYTHIC</span> - Soft pity at 150, <strong>HARD pity at 200</strong> (guaranteed!)</li>
+                    <li><span class="rarity-legendary">LEGENDARY</span> - Soft pity at 50, hard pity at 80</li>
+                </ul>
+                <p style="margin-top: 12px;">Soft pity gradually increases your rates. Hard pity = 100% guaranteed.</p>
+            </div>
+            
+            <div class="tip-box clip">
+                <div class="tip-title">🎬 Clip That!</div>
+                <p>Pulling a Mythic on stream with <strong>0.01% odds</strong>? That's a clip that will live forever.
+                The gacha is designed to create legendary moments. May RNG bless your pulls!</p>
+            </div>
+        </section>
+        
+        <!-- CONTENT CREATOR -->
+        <section id="content">
+            <h2 class="section-title"><span>🎬</span> For Content Creators</h2>
+            <p style="color: rgba(255,255,255,0.7); margin-bottom: 32px;">
+                This game is <strong>DESIGNED</strong> for clips. Here's what makes great content:
+            </p>
             
             <div class="info-grid">
-                <div class="info-item" style="border-color: rgba(255,215,0,0.5);">
-                    <span class="rarity mythic">MYTHIC</span>
-                    <h4 style="margin-top: 12px;" id="mythicTitle">Legendary Power</h4>
-                    <p id="mythicText">The rarest cards. Game-defining abilities. Limit: 1 copy per deck. Only 2 Mythic cards exist.</p>
-                    <div class="card-showcase" style="margin-top: 16px;">
-                        <img src="/static/images/cards/01-reggina-mythic.jpg" class="card-img" alt="RegginA Mythic">
-                    </div>
+                <div class="info-card">
+                    <h3>🎰 High-Stakes RNG</h3>
+                    <ul>
+                        <li>Server Crash 50/50 for the win</li>
+                        <li>5x crit chain for exact lethal</li>
+                        <li>Clutch dodges at 1 HP</li>
+                        <li>Pulling Mythic on stream (0.01%!)</li>
+                        <li>Gacha Victim summoning a Mythic</li>
+                    </ul>
                 </div>
-                
-                <div class="info-item" style="border-color: rgba(245,199,26,0.5);">
-                    <span class="rarity legendary">LEGENDARY</span>
-                    <h4 style="margin-top: 12px;" id="legendaryTitle">Powerful & Unique</h4>
-                    <p id="legendaryText">Very powerful cards with unique effects. Limit: 1 copy per deck. 8 Legendary cards exist.</p>
-                    <div class="card-showcase" style="margin-top: 16px;">
-                        <img src="/static/images/cards/02-reggino-legendary.jpg" class="card-img" alt="Reggino">
-                        <img src="/static/images/cards/27-elder-dragon.jpg" class="card-img" alt="Elder Dragon">
-                    </div>
+                <div class="info-card">
+                    <h3>😂 Meme Moments</h3>
+                    <ul>
+                        <li>TILT making you hit your own cards</li>
+                        <li>AFK Luna winning by doing nothing</li>
+                        <li>SIMP cards dying for their queen</li>
+                        <li>Ragequit dealing lethal damage</li>
+                        <li>Drawing all commons in a row</li>
+                    </ul>
                 </div>
-                
-                <div class="info-item" style="border-color: rgba(138,43,226,0.5);">
-                    <span class="rarity epic">EPIC</span>
-                    <h4 style="margin-top: 12px;" id="epicTitle">Strong Effects</h4>
-                    <p id="epicText">Strong cards with impactful abilities. Limit: 2 copies per deck. 13 Epic cards exist.</p>
-                    <div class="card-showcase" style="margin-top: 16px;">
-                        <img src="/static/images/cards/03-onca-epic.jpg" class="card-img" alt="Onca">
-                        <img src="/static/images/cards/06-thunder-strike.jpg" class="card-img" alt="Thunder Strike">
-                    </div>
+                <div class="info-card">
+                    <h3>🧠 Big Brain Plays</h3>
+                    <ul>
+                        <li>Reading opponent's next play</li>
+                        <li>Ninja Loot stealing win condition</li>
+                        <li>Perfect combo execution</li>
+                        <li>Calculated WHALE timing</li>
+                        <li>Predicting RNG outcomes</li>
+                    </ul>
                 </div>
-                
-                <div class="info-item" style="border-color: rgba(65,105,225,0.5);">
-                    <span class="rarity rare">RARE</span>
-                    <h4 style="margin-top: 12px;" id="rareTitle">Solid Choices</h4>
-                    <p id="rareText">Reliable cards with good value. Limit: 2 copies per deck. 14 Rare cards exist.</p>
-                    <div class="card-showcase" style="margin-top: 16px;">
-                        <img src="/static/images/cards/05-phoenix-rebirth.jpg" class="card-img" alt="Phoenix Rebirth">
-                        <img src="/static/images/cards/18-shadow-blade.jpg" class="card-img" alt="Shadow Blade">
-                    </div>
+                <div class="info-card">
+                    <h3>🧂 Salt Mining</h3>
+                    <ul>
+                        <li>Last card topdeck lethal</li>
+                        <li>Comeback from 1 HP</li>
+                        <li>Enemy's RNG failing spectacularly</li>
+                        <li>Winning with all-common deck</li>
+                        <li>Opponent disconnects from tilt</li>
+                    </ul>
                 </div>
-                
-                <div class="info-item" style="border-color: rgba(128,128,128,0.5);">
-                    <span class="rarity common">COMMON</span>
-                    <h4 style="margin-top: 12px;" id="commonTitle">Core Cards</h4>
-                    <p id="commonText">Basic but essential cards. Limit: 2 copies per deck. 13 Common cards exist. Great for filling your deck.</p>
-                    <div class="card-showcase" style="margin-top: 16px;">
-                        <img src="/static/images/cards/07-minor-heal.jpg" class="card-img" alt="Minor Heal">
-                        <img src="/static/images/cards/16-guild-slime.jpg" class="card-img" alt="Guild Slime">
-                    </div>
-                </div>
+            </div>
+            
+            <div class="tip-box clip">
+                <div class="tip-title">📹 Tournament Features</div>
+                <ul>
+                    <li><strong>Best-of-3 format</strong> for competitive matches</li>
+                    <li><strong>Ban system</strong> - ban 3 cards before match</li>
+                    <li><strong>Sideboard</strong> - 5 cards to swap between games</li>
+                    <li><strong>Spectator mode</strong> - both hands visible for casters</li>
+                    <li><strong>Replay system</strong> - save and share epic games</li>
+                </ul>
             </div>
         </section>
         
-        <!-- COMBOS SECTION -->
-        <section class="section" id="combos">
-            <h1 class="section-title" id="combosTitle">Powerful Combos</h1>
-            <p class="section-subtitle" id="combosSubtitle">Devastating card combinations to dominate your opponents</p>
+        <!-- LORE -->
+        <section id="lore">
+            <h2 class="section-title"><span>📖</span> The Guild Story</h2>
             
-            <!-- Combo 1: RegginA + Grand Alliance -->
-            <div class="combo-card">
-                <div class="combo-header">
-                    <span class="combo-title" id="combo1Name">The Divine Army</span>
-                    <div class="combo-rating">
-                        <span class="star">★</span><span class="star">★</span><span class="star">★</span><span class="star">★</span><span class="star">★</span>
-                    </div>
-                    <span class="rarity mythic">MYTHIC COMBO</span>
-                </div>
-                <div class="combo-cards">
-                    <img src="/static/images/cards/01-reggina-mythic.jpg" class="card-img" alt="RegginA">
-                    <span class="combo-plus">+</span>
-                    <img src="/static/images/cards/46-grand-alliance.jpg" class="card-img" alt="Grand Alliance">
-                    <span class="combo-arrow">→</span>
-                    <div class="combo-result">
-                        <h4 id="combo1Result">+4 ATK, +2 DEF for 3 turns!</h4>
-                        <p id="combo1Stats">All allies become unstoppable</p>
-                    </div>
-                </div>
-                <p class="combo-explanation" id="combo1Explain">
-                    <strong>How it works:</strong> RegginA gives all allies +2 ATK and Burning Aura. Grand Alliance adds +2/+2 for 3 turns. Combined, your entire board gets +4 ATK and +2 DEF with burn damage. Play this when you have 3+ minions for maximum devastation.
+            <div class="lore-box">
+                <p>
+                    In the realm of MapleStory Idle, there exists a guild unlike any other.
+                    <span class="lore-highlight">NumbahWan</span> — where legends are forged, drama unfolds, 
+                    and family bonds are tested in the fires of competition.
                 </p>
-            </div>
-            
-            <!-- Combo 2: Inferno Colossus + Divine Guardian -->
-            <div class="combo-card">
-                <div class="combo-header">
-                    <span class="combo-title" id="combo2Name">The Immortal Wall</span>
-                    <div class="combo-rating">
-                        <span class="star">★</span><span class="star">★</span><span class="star">★</span><span class="star">★</span><span class="star empty">☆</span>
-                    </div>
-                    <span class="rarity epic">EPIC COMBO</span>
-                </div>
-                <div class="combo-cards">
-                    <img src="/static/images/cards/19-inferno-colossus.jpg" class="card-img" alt="Inferno Colossus">
-                    <span class="combo-plus">+</span>
-                    <img src="/static/images/cards/22-divine-guardian.jpg" class="card-img" alt="Divine Guardian">
-                    <span class="combo-arrow">→</span>
-                    <div class="combo-result">
-                        <h4 id="combo2Result">Unkillable Double Taunt</h4>
-                        <p id="combo2Stats">13 DEF total, heals every turn</p>
-                    </div>
-                </div>
-                <p class="combo-explanation" id="combo2Explain">
-                    <strong>How it works:</strong> Both have Taunt, forcing enemies to attack them. Inferno Colossus (7/6) buffs adjacent allies +1 ATK. Divine Guardian (6/7) has Divine Shield and heals 2 HP/turn. Position them adjacent for a wall that heals and buffs.
+                <p style="margin-top: 24px;">
+                    Led by the eternal flame herself, <span class="rarity-mythic">RegginA</span>, 
+                    the guild has seen it all: the grinders who never sleep, the whales who fund the war chest, 
+                    the lurkers who appear only for raids, and the AFK members who somehow still get loot.
                 </p>
-            </div>
-            
-            <!-- Combo 3: Time Warp + Raid Boss -->
-            <div class="combo-card">
-                <div class="combo-header">
-                    <span class="combo-title" id="combo3Name">Double Turn Devastation</span>
-                    <div class="combo-rating">
-                        <span class="star">★</span><span class="star">★</span><span class="star">★</span><span class="star">★</span><span class="star">★</span>
-                    </div>
-                    <span class="rarity legendary">LEGENDARY COMBO</span>
-                </div>
-                <div class="combo-cards">
-                    <img src="/static/images/cards/09-time-warp.jpg" class="card-img" alt="Time Warp">
-                    <span class="combo-plus">+</span>
-                    <img src="/static/images/cards/44-raid-boss.jpg" class="card-img" alt="Raid Boss">
-                    <span class="combo-arrow">→</span>
-                    <div class="combo-result">
-                        <h4 id="combo3Result">Summon 8/8, Attack Twice!</h4>
-                        <p id="combo3Stats">16 damage potential</p>
-                    </div>
-                </div>
-                <p class="combo-explanation" id="combo3Explain">
-                    <strong>How it works:</strong> Play Time Warp (5 mana) for an extra turn. Use Raid Boss (6 mana) to summon an 8/8 Boss. Next turn (your extra turn), the Boss can attack immediately for 8 damage. If you defeat the Boss yourself, draw 5 cards!
+                <p style="margin-top: 24px;">
+                    Now, their stories become cards. Their drama becomes mechanics. 
+                    Their bonds become... well, sometimes broken when Server Crash hits wrong.
                 </p>
-            </div>
-            
-            <!-- Combo 4: Shadow Dungeon + Shadow Blade -->
-            <div class="combo-card">
-                <div class="combo-header">
-                    <span class="combo-title" id="combo4Name">Assassin's Paradise</span>
-                    <div class="combo-rating">
-                        <span class="star">★</span><span class="star">★</span><span class="star">★</span><span class="star">★</span><span class="star empty">☆</span>
-                    </div>
-                    <span class="rarity rare">RARE COMBO</span>
-                </div>
-                <div class="combo-cards">
-                    <img src="/static/images/cards/48-shadow-dungeon.jpg" class="card-img" alt="Shadow Dungeon">
-                    <span class="combo-plus">+</span>
-                    <img src="/static/images/cards/18-shadow-blade.jpg" class="card-img" alt="Shadow Blade">
-                    <span class="combo-arrow">→</span>
-                    <div class="combo-result">
-                        <h4 id="combo4Result">Permanent Stealth Assassin</h4>
-                        <p id="combo4Stats">7 damage from stealth every attack</p>
-                    </div>
-                </div>
-                <p class="combo-explanation" id="combo4Explain">
-                    <strong>How it works:</strong> Shadow Dungeon gives all minions Stealth and +1 card draw per turn. Shadow Blade has Stealth and deals +2 damage from stealth. With the Location active, Shadow Blade becomes untargetable and hits for 7 damage each turn.
+                <p style="margin-top: 24px;">
+                    Welcome to <span class="lore-highlight">NumbahWan TCG: Guild Wars</span>.
                 </p>
-            </div>
-            
-            <!-- Combo 5: Elder Dragon + Apocalypse Rain -->
-            <div class="combo-card">
-                <div class="combo-header">
-                    <span class="combo-title" id="combo5Name">Dragon's Apocalypse</span>
-                    <div class="combo-rating">
-                        <span class="star">★</span><span class="star">★</span><span class="star">★</span><span class="star">★</span><span class="star">★</span>
-                    </div>
-                    <span class="rarity legendary">LEGENDARY COMBO</span>
-                </div>
-                <div class="combo-cards">
-                    <img src="/static/images/cards/27-elder-dragon.jpg" class="card-img" alt="Elder Dragon">
-                    <span class="combo-plus">+</span>
-                    <img src="/static/images/cards/08-apocalypse-rain.jpg" class="card-img" alt="Apocalypse Rain">
-                    <span class="combo-arrow">→</span>
-                    <div class="combo-result">
-                        <h4 id="combo5Result">7 Damage Board Clear!</h4>
-                        <p id="combo5Stats">Wipe enemy board completely</p>
-                    </div>
-                </div>
-                <p class="combo-explanation" id="combo5Explain">
-                    <strong>How it works:</strong> Elder Dragon deals 3 damage to all enemies when summoned. Follow up with Apocalypse Rain for 4 more damage to all enemies. Total: 7 damage AoE that clears almost any board while leaving your 9/8 Dragon standing.
+                <p style="margin-top: 24px; text-align: center; font-size: 20px;">
+                    <strong><em>"We are not just a guild, but FAMILY... that fights!"</em></strong>
                 </p>
-            </div>
-        </section>
-        
-        <!-- STRATEGY SECTION -->
-        <section class="section" id="strategy">
-            <h1 class="section-title" id="strategyTitle">Strategy Guide</h1>
-            <p class="section-subtitle" id="strategySubtitle">Pro tips to improve your gameplay</p>
-            
-            <div class="info-box">
-                <h3 id="strat1Title"><span data-nw-icon="target" data-size="20"></span> Mana Curve Basics</h3>
-                <p id="strat1Text">A good deck has cards at every mana cost. Aim for:</p>
-                <ul id="strat1List">
-                    <li><strong>1-2 Mana:</strong> 8-10 cards (early game presence)</li>
-                    <li><strong>3-4 Mana:</strong> 8-10 cards (mid game power)</li>
-                    <li><strong>5-6 Mana:</strong> 6-8 cards (late game threats)</li>
-                    <li><strong>7+ Mana:</strong> 2-4 cards (finishers only)</li>
-                </ul>
-            </div>
-            
-            <div class="info-box">
-                <h3 id="strat2Title"><span data-nw-icon="swords" data-size="20"></span> Board Control</h3>
-                <p id="strat2Text">Control the board before going face (attacking hero). Key principles:</p>
-                <ul id="strat2List">
-                    <li>Trade minions efficiently - use small minions to weaken big threats</li>
-                    <li>Save removal spells for high-value targets</li>
-                    <li>Position minions carefully - adjacent effects matter!</li>
-                    <li>Don't overcommit - save resources for board clears</li>
-                </ul>
-            </div>
-            
-            <div class="info-box">
-                <h3 id="strat3Title"><span data-nw-icon="scroll" data-size="20"></span> Card Advantage</h3>
-                <p id="strat3Text">The player with more cards usually wins. How to gain advantage:</p>
-                <ul id="strat3List">
-                    <li>Use 1 card to destroy 2+ enemy cards (value trades)</li>
-                    <li>Include card draw in your deck (Shadow Dungeon, Jackpot!)</li>
-                    <li>Don't waste cards on low-value plays</li>
-                    <li>Heroes like Reggino provide card draw on play</li>
-                </ul>
-            </div>
-            
-            <div class="info-box">
-                <h3 id="strat4Title"><span data-nw-icon="sparkles" data-size="20"></span> Top 5 Beginner Mistakes</h3>
-                <ul id="strat4List">
-                    <li><strong>1. Playing on curve blindly</strong> - Sometimes holding cards is better</li>
-                    <li><strong>2. Ignoring enemy Taunt</strong> - You MUST attack Taunt first</li>
-                    <li><strong>3. Forgetting SPD</strong> - Higher SPD attacks first in combat</li>
-                    <li><strong>4. Wasting removal on small minions</strong> - Save Thunder Strike for big threats</li>
-                    <li><strong>5. No win condition</strong> - Every deck needs a way to close games</li>
-                </ul>
-            </div>
-            
-            <div class="info-box">
-                <h3 id="strat5Title"><span data-nw-icon="trophy" data-size="20"></span> Deck Archetypes</h3>
-                <div class="info-grid" style="margin-top: 16px;">
-                    <div class="info-item">
-                        <div class="icon"><span data-nw-icon="fire" data-size="40"></span></div>
-                        <h4 id="archetype1">Aggro</h4>
-                        <p id="archetype1Desc">Fast, cheap minions. Win by turn 6-7. Use Charge minions and burn spells.</p>
-                    </div>
-                    <div class="info-item">
-                        <div class="icon"><span data-nw-icon="shield" data-size="40"></span></div>
-                        <h4 id="archetype2">Control</h4>
-                        <p id="archetype2Desc">Survive early, win late. Heavy removal, board clears, big finishers.</p>
-                    </div>
-                    <div class="info-item">
-                        <div class="icon"><span data-nw-icon="diamond" data-size="40"></span></div>
-                        <h4 id="archetype3">Midrange</h4>
-                        <p id="archetype3Desc">Balanced approach. Strong minions at every cost. Flexible gameplay.</p>
-                    </div>
-                    <div class="info-item">
-                        <div class="icon"><span data-nw-icon="sparkles" data-size="40"></span></div>
-                        <h4 id="archetype4">Combo</h4>
-                        <p id="archetype4Desc">Assemble specific cards for huge turns. Time Warp + burst damage.</p>
-                    </div>
-                </div>
-            </div>
-        </section>
-        
-        <!-- TIER LIST SECTION -->
-        <section class="section" id="tierlist">
-            <h1 class="section-title" id="tierTitle">Card Tier List</h1>
-            <p class="section-subtitle" id="tierSubtitle">Best cards ranked for competitive play</p>
-            
-            <div class="tier-row">
-                <div class="tier-label s">S</div>
-                <div class="tier-cards">
-                    <img src="/static/images/cards/01-reggina-mythic.jpg" class="tier-card tooltip" data-tip="RegginA - Best Hero" alt="RegginA">
-                    <img src="/static/images/cards/49-reggina-ascended.jpg" class="tier-card tooltip" data-tip="RegginA Ascended" alt="RegginA Ascended">
-                    <img src="/static/images/cards/27-elder-dragon.jpg" class="tier-card tooltip" data-tip="Elder Dragon - Best Finisher" alt="Elder Dragon">
-                    <img src="/static/images/cards/09-time-warp.jpg" class="tier-card tooltip" data-tip="Time Warp - Extra Turn!" alt="Time Warp">
-                    <img src="/static/images/cards/46-grand-alliance.jpg" class="tier-card tooltip" data-tip="Grand Alliance - Win More" alt="Grand Alliance">
-                </div>
-            </div>
-            
-            <div class="tier-row">
-                <div class="tier-label a">A</div>
-                <div class="tier-cards">
-                    <img src="/static/images/cards/02-reggino-legendary.jpg" class="tier-card tooltip" data-tip="Reggino - Card Draw" alt="Reggino">
-                    <img src="/static/images/cards/50-reggino-tactician.jpg" class="tier-card tooltip" data-tip="Reggino Tactician" alt="Reggino Tactician">
-                    <img src="/static/images/cards/08-apocalypse-rain.jpg" class="tier-card tooltip" data-tip="Apocalypse Rain - Board Clear" alt="Apocalypse Rain">
-                    <img src="/static/images/cards/38-crown-command.jpg" class="tier-card tooltip" data-tip="Crown of Command" alt="Crown of Command">
-                    <img src="/static/images/cards/22-divine-guardian.jpg" class="tier-card tooltip" data-tip="Divine Guardian - Tank" alt="Divine Guardian">
-                    <img src="/static/images/cards/47-guild-hall.jpg" class="tier-card tooltip" data-tip="Guild Hall - Value Location" alt="Guild Hall">
-                </div>
-            </div>
-            
-            <div class="tier-row">
-                <div class="tier-label b">B</div>
-                <div class="tier-cards">
-                    <img src="/static/images/cards/03-onca-epic.jpg" class="tier-card tooltip" data-tip="Onca - Aggressive Hero" alt="Onca">
-                    <img src="/static/images/cards/04-panthera-epic.jpg" class="tier-card tooltip" data-tip="Panthera - Spell Synergy" alt="Panthera">
-                    <img src="/static/images/cards/06-thunder-strike.jpg" class="tier-card tooltip" data-tip="Thunder Strike - Removal" alt="Thunder Strike">
-                    <img src="/static/images/cards/19-inferno-colossus.jpg" class="tier-card tooltip" data-tip="Inferno Colossus - Taunt" alt="Inferno Colossus">
-                    <img src="/static/images/cards/34-zakum-blade.jpg" class="tier-card tooltip" data-tip="Zakum's Blade - Burn" alt="Zakum Blade">
-                    <img src="/static/images/cards/37-dragonscale-armor.jpg" class="tier-card tooltip" data-tip="Dragonscale - Defense" alt="Dragonscale">
-                    <img src="/static/images/cards/44-raid-boss.jpg" class="tier-card tooltip" data-tip="Raid Boss - High Risk" alt="Raid Boss">
-                </div>
-            </div>
-            
-            <div class="tier-row">
-                <div class="tier-label c">C</div>
-                <div class="tier-cards">
-                    <img src="/static/images/cards/05-phoenix-rebirth.jpg" class="tier-card tooltip" data-tip="Phoenix Rebirth - Resurrect" alt="Phoenix Rebirth">
-                    <img src="/static/images/cards/18-shadow-blade.jpg" class="tier-card tooltip" data-tip="Shadow Blade - Stealth" alt="Shadow Blade">
-                    <img src="/static/images/cards/21-frost-weaver.jpg" class="tier-card tooltip" data-tip="Frost Weaver - Control" alt="Frost Weaver">
-                    <img src="/static/images/cards/29-ash-phoenix.jpg" class="tier-card tooltip" data-tip="Ash Phoenix - Rebirth" alt="Ash Phoenix">
-                    <img src="/static/images/cards/30-blood-count.jpg" class="tier-card tooltip" data-tip="Blood Count - Lifesteal" alt="Blood Count">
-                    <img src="/static/images/cards/41-guild-war.jpg" class="tier-card tooltip" data-tip="Guild War - Risky" alt="Guild War">
-                    <img src="/static/images/cards/48-shadow-dungeon.jpg" class="tier-card tooltip" data-tip="Shadow Dungeon - Draw" alt="Shadow Dungeon">
-                </div>
-            </div>
-            
-            <div class="info-box" style="margin-top: 32px;">
-                <h3 id="tierExplainTitle">Tier Explanations</h3>
-                <ul id="tierExplainList">
-                    <li><strong class="text-red-400">S Tier:</strong> Auto-include in any deck. Game-winning cards that shape the meta.</li>
-                    <li><strong class="text-yellow-400">A Tier:</strong> Excellent cards. Strong in most situations, high value.</li>
-                    <li><strong class="text-purple-400">B Tier:</strong> Good cards. Solid picks that fit specific strategies.</li>
-                    <li><strong class="text-blue-400">C Tier:</strong> Situational. Useful in the right deck or matchup.</li>
-                </ul>
             </div>
         </section>
     </main>
     
-    <a href="/cards" class="back-link" id="backLink">← View Cards</a>
-
-<script>
-// ========== i18n ==========
-const i18n = {
-    en: {
-        // Tabs
-        basics: 'BASICS', types: 'CARD TYPES', rarity: 'RARITY', combos: 'COMBOS', strategy: 'STRATEGY', tierlist: 'TIER LIST',
-        // Basics
-        basicsTitle: 'How to Play', basicsSubtitle: 'Master the fundamentals of NumbahWan TCG',
-        goalTitle: 'Goal', goalText: "Reduce your opponent's HP from 30 to 0 using Heroes, Minions, Spells, and strategic plays.",
-        deckTitle: 'Deck', deckText: 'Build a deck of 30 cards. Max 2 copies of any card (1 for Mythic/Legendary).',
-        manaTitle: 'Mana', manaText: 'Start with 1 Mana, gain +1 each turn (max 10). Spend Mana to play cards.',
-        combatTitle: 'Combat', combatText: 'Minions attack enemies. ATK deals damage, DEF absorbs it. SPD determines attack order.',
-        turnPhaseTitle: 'Turn Phases',
-        phase1Title: '1. Draw Phase', phase1Text: 'Draw 1 card from your deck. First player skips draw on turn 1.',
-        phase2Title: '2. Mana Phase', phase2Text: 'Gain +1 max Mana (up to 10). All Mana refreshes.',
-        phase3Title: '3. Main Phase', phase3Text: 'Play cards, use abilities, equip items. No limit on actions if you have Mana.',
-        phase4Title: '4. Battle Phase', phase4Text: "Minions can attack. They can't attack the turn they're summoned (unless Charge).",
-        phase5Title: '5. End Phase', phase5Text: 'Trigger end-of-turn effects. Pass to opponent.',
-        keywordsTitle: 'Keywords',
-        keywordsList: '<li><strong>Taunt</strong> - Enemies must attack this minion first</li><li><strong>Charge</strong> - Can attack immediately when summoned</li><li><strong>Stealth</strong> - Cannot be targeted until it attacks</li><li><strong>Divine Shield</strong> - Blocks the first damage taken</li><li><strong>Flying</strong> - Can only be blocked by other Flying minions</li><li><strong>Lifesteal</strong> - Heals your hero for damage dealt</li><li><strong>First Strike</strong> - Deals damage before the enemy can retaliate</li><li><strong>Deathrattle</strong> - Effect triggers when the minion dies</li>',
-        // Types
-        typesTitle: 'Card Types', typesSubtitle: 'Learn the 6 card types and how to use them',
-        heroLabel: 'HERO', heroDesc: 'Heroes are powerful unique characters. Only 1 Hero can be on the field at a time. They have high stats and game-changing abilities.',
-        spellLabel: 'SPELL', spellDesc: 'Spells are one-time effects that resolve immediately. They can deal damage, heal, draw cards, or create powerful effects.',
-        minionLabel: 'MINION', minionDesc: 'Minions are creatures that fight for you. They have ATK, DEF, and sometimes SPD. You can have up to 7 minions on the field.',
-        equipLabel: 'EQUIPMENT', equipDesc: 'Equipment cards attach to your Hero, giving permanent stat boosts. Only 1 weapon and 1 armor at a time.',
-        eventLabel: 'EVENT', eventDesc: 'Events create temporary game-wide effects that affect both players. Dramatic turning points.',
-        locLabel: 'LOCATION', locDesc: 'Locations are persistent field effects. Only 1 Location can be active at a time.',
-        // Rarity
-        rarityTitle: 'Card Rarity', raritySubtitle: 'Understanding card rarity and deck building limits',
-        mythicTitle: 'Legendary Power', mythicText: 'The rarest cards. Game-defining abilities. Limit: 1 copy per deck.',
-        legendaryTitle: 'Powerful & Unique', legendaryText: 'Very powerful cards with unique effects. Limit: 1 copy per deck.',
-        epicTitle: 'Strong Effects', epicText: 'Strong cards with impactful abilities. Limit: 2 copies per deck.',
-        rareTitle: 'Solid Choices', rareText: 'Reliable cards with good value. Limit: 2 copies per deck.',
-        commonTitle: 'Core Cards', commonText: 'Basic but essential cards. Limit: 2 copies per deck.',
-        // Combos
-        combosTitle: 'Powerful Combos', combosSubtitle: 'Devastating card combinations to dominate',
-        combo1Name: 'The Divine Army', combo1Result: '+4 ATK, +2 DEF for 3 turns!', combo1Stats: 'All allies become unstoppable',
-        combo1Explain: '<strong>How it works:</strong> RegginA gives all allies +2 ATK and Burning Aura. Grand Alliance adds +2/+2 for 3 turns. Combined, your entire board gets massive buffs with burn damage.',
-        combo2Name: 'The Immortal Wall', combo2Result: 'Unkillable Double Taunt', combo2Stats: '13 DEF total, heals every turn',
-        combo2Explain: '<strong>How it works:</strong> Both have Taunt, forcing enemies to attack them. Divine Guardian has Divine Shield and heals. Position them adjacent for a wall that heals and buffs.',
-        combo3Name: 'Double Turn Devastation', combo3Result: 'Summon 8/8, Attack Twice!', combo3Stats: '16 damage potential',
-        combo3Explain: '<strong>How it works:</strong> Play Time Warp for an extra turn. Use Raid Boss to summon an 8/8. Next turn, the Boss attacks for 8 damage immediately.',
-        combo4Name: "Assassin's Paradise", combo4Result: 'Permanent Stealth Assassin', combo4Stats: '7 damage from stealth every attack',
-        combo4Explain: '<strong>How it works:</strong> Shadow Dungeon gives all minions Stealth. Shadow Blade deals +2 from stealth. Combined: untargetable 7 damage every turn.',
-        combo5Name: "Dragon's Apocalypse", combo5Result: '7 Damage Board Clear!', combo5Stats: 'Wipe enemy board completely',
-        combo5Explain: '<strong>How it works:</strong> Elder Dragon deals 3 to all enemies on summon. Follow with Apocalypse Rain for 4 more. Total: 7 AoE damage.',
-        // Strategy
-        strategyTitle: 'Strategy Guide', strategySubtitle: 'Pro tips to improve your gameplay',
-        strat1Title: '● Mana Curve Basics', strat1Text: 'A good deck has cards at every mana cost:',
-        strat1List: '<li><strong>1-2 Mana:</strong> 8-10 cards (early game)</li><li><strong>3-4 Mana:</strong> 8-10 cards (mid game)</li><li><strong>5-6 Mana:</strong> 6-8 cards (late game)</li><li><strong>7+ Mana:</strong> 2-4 cards (finishers)</li>',
-        strat2Title: '◆ Board Control', strat2Text: 'Control the board before going face:',
-        strat2List: '<li>Trade minions efficiently</li><li>Save removal for high-value targets</li><li>Position minions carefully</li><li>Don\'t overcommit to board clears</li>',
-        strat3Title: '◇ Card Advantage', strat3Text: 'The player with more cards usually wins:',
-        strat3List: '<li>Use 1 card to destroy 2+ enemy cards</li><li>Include card draw in your deck</li><li>Don\'t waste cards on low-value plays</li><li>Heroes like Reggino provide card draw</li>',
-        strat4Title: '★ Top 5 Beginner Mistakes',
-        strat4List: '<li><strong>1. Playing on curve blindly</strong> - Sometimes holding is better</li><li><strong>2. Ignoring Taunt</strong> - You MUST attack Taunt first</li><li><strong>3. Forgetting SPD</strong> - Higher SPD attacks first</li><li><strong>4. Wasting removal</strong> - Save for big threats</li><li><strong>5. No win condition</strong> - Every deck needs a finisher</li>',
-        strat5Title: '▲ Deck Archetypes',
-        archetype1: 'Aggro', archetype1Desc: 'Fast, cheap minions. Win by turn 6-7.',
-        archetype2: 'Control', archetype2Desc: 'Survive early, win late with big threats.',
-        archetype3: 'Midrange', archetype3Desc: 'Balanced. Strong minions at every cost.',
-        archetype4: 'Combo', archetype4Desc: 'Assemble specific cards for huge turns.',
-        // Tier List
-        tierTitle: 'Card Tier List', tierSubtitle: 'Best cards ranked for competitive play',
-        tierExplainTitle: 'Tier Explanations',
-        tierExplainList: '<li><strong class="text-red-400">S Tier:</strong> Auto-include. Game-winning cards.</li><li><strong class="text-yellow-400">A Tier:</strong> Excellent. Strong in most situations.</li><li><strong class="text-purple-400">B Tier:</strong> Good. Fit specific strategies.</li><li><strong class="text-blue-400">C Tier:</strong> Situational. Useful in the right matchup.</li>',
-        backLink: '← View Cards'
-    },
-    zh: {
-        basics: '基础', types: '卡牌类型', rarity: '稀有度', combos: '组合技', strategy: '战术', tierlist: '强度榜',
-        basicsTitle: '游戏玩法', basicsSubtitle: '掌握NumbahWan TCG的基础知识',
-        goalTitle: '目标', goalText: '使用英雄、随从、法术和战略将对手的生命值从30降至0。',
-        deckTitle: '卡组', deckText: '构建30张卡的卡组。每张卡最多2份（神话/传说卡限1份）。',
-        manaTitle: '法力', manaText: '初始1法力，每回合+1（上限10）。消耗法力使用卡牌。',
-        combatTitle: '战斗', combatText: '随从攻击敌人。攻击力造成伤害，防御力吸收伤害。速度决定攻击顺序。',
-        turnPhaseTitle: '回合阶段',
-        phase1Title: '1. 抽牌阶段', phase1Text: '从牌库抽1张牌。先手玩家第一回合跳过抽牌。',
-        phase2Title: '2. 法力阶段', phase2Text: '最大法力+1（上限10）。所有法力恢复。',
-        phase3Title: '3. 主要阶段', phase3Text: '打出卡牌、使用技能、装备物品。只要有法力就可以行动。',
-        phase4Title: '4. 战斗阶段', phase4Text: '随从可以攻击。刚召唤的随从不能攻击（除非有冲锋）。',
-        phase5Title: '5. 结束阶段', phase5Text: '触发回合结束效果。传给对手。',
-        keywordsTitle: '关键词',
-        keywordsList: '<li><strong>嘲讽</strong> - 敌人必须先攻击此随从</li><li><strong>冲锋</strong> - 召唤后可立即攻击</li><li><strong>潜行</strong> - 攻击前无法被选为目标</li><li><strong>圣盾</strong> - 抵挡首次伤害</li><li><strong>飞行</strong> - 只能被其他飞行随从阻挡</li><li><strong>吸血</strong> - 造成伤害时治疗你的英雄</li><li><strong>先制攻击</strong> - 在敌人反击前造成伤害</li><li><strong>亡语</strong> - 死亡时触发效果</li>',
-        typesTitle: '卡牌类型', typesSubtitle: '了解6种卡牌类型及其用法',
-        heroLabel: '英雄', heroDesc: '英雄是强大的独特角色。场上只能有1个英雄。他们拥有高属性和改变游戏的能力。',
-        spellLabel: '法术', spellDesc: '法术是立即生效的一次性效果。可以造成伤害、治疗、抽牌或创造强大效果。',
-        minionLabel: '随从', minionDesc: '随从是为你战斗的生物。他们有攻击力、防御力，有时还有速度。场上最多7个随从。',
-        equipLabel: '装备', equipDesc: '装备卡附着在你的英雄上，提供永久属性加成。同时只能装备1把武器和1件护甲。',
-        eventLabel: '事件', eventDesc: '事件创造影响双方的临时全场效果。戏剧性的转折点。',
-        locLabel: '地点', locDesc: '地点是持续的场地效果。同时只能激活1个地点。',
-        rarityTitle: '卡牌稀有度', raritySubtitle: '了解卡牌稀有度和构筑限制',
-        mythicTitle: '传奇力量', mythicText: '最稀有的卡牌。定义游戏的能力。每副牌限1张。',
-        legendaryTitle: '强大独特', legendaryText: '非常强大的独特效果。每副牌限1张。',
-        epicTitle: '强力效果', epicText: '具有重大影响的强力卡牌。每副牌限2张。',
-        rareTitle: '可靠选择', rareText: '价值良好的可靠卡牌。每副牌限2张。',
-        commonTitle: '核心卡牌', commonText: '基础但必要的卡牌。每副牌限2张。',
-        combosTitle: '强力组合', combosSubtitle: '制霸对手的毁灭性卡牌组合',
-        combo1Name: '神圣军团', combo1Result: '+4攻击，+2防御，持续3回合！', combo1Stats: '所有盟友势不可挡',
-        combo1Explain: '<strong>原理：</strong>蕾吉娜使所有盟友+2攻击和燃烧光环。大联盟3回合内+2/+2。组合后，全场获得大量增益和燃烧伤害。',
-        combo2Name: '不朽之墙', combo2Result: '无敌双嘲讽', combo2Stats: '共13防御，每回合治疗',
-        combo2Explain: '<strong>原理：</strong>两者都有嘲讽，迫使敌人攻击他们。神圣守护者有圣盾和治疗。相邻放置形成治疗增益之墙。',
-        combo3Name: '双回合毁灭', combo3Result: '召唤8/8，攻击两次！', combo3Stats: '16点伤害潜力',
-        combo3Explain: '<strong>原理：</strong>使用时间扭曲获得额外回合。用团队首领召唤8/8。下回合，首领立即攻击造成8点伤害。',
-        combo4Name: '刺客乐园', combo4Result: '永久潜行刺客', combo4Stats: '每次攻击潜行7点伤害',
-        combo4Explain: '<strong>原理：</strong>暗影地牢使所有随从潜行。暗影之刃潜行时+2伤害。组合：无法选中的每回合7点伤害。',
-        combo5Name: '巨龙天启', combo5Result: '7点伤害清场！', combo5Stats: '完全清除敌方场面',
-        combo5Explain: '<strong>原理：</strong>上古巨龙召唤时对所有敌人造成3点伤害。接着使用天启之雨再造成4点。总计：7点范围伤害。',
-        strategyTitle: '战术指南', strategySubtitle: '提升你游戏水平的专业技巧',
-        strat1Title: '● 法力曲线基础', strat1Text: '好的卡组在每个法力消耗都有卡牌：',
-        strat1List: '<li><strong>1-2法力：</strong>8-10张（前期）</li><li><strong>3-4法力：</strong>8-10张（中期）</li><li><strong>5-6法力：</strong>6-8张（后期）</li><li><strong>7+法力：</strong>2-4张（终结者）</li>',
-        strat2Title: '◆ 场面控制', strat2Text: '打脸前先控制场面：',
-        strat2List: '<li>高效交换随从</li><li>为高价值目标保留解牌</li><li>仔细放置随从位置</li><li>不要过度投入应对清场</li>',
-        strat3Title: '◇ 卡牌优势', strat3Text: '手牌多的玩家通常获胜：',
-        strat3List: '<li>用1张牌消灭2+张敌方牌</li><li>卡组中包含抽牌</li><li>不要在低价值出牌上浪费卡牌</li><li>雷吉诺等英雄提供抽牌</li>',
-        strat4Title: '★ 新手五大错误',
-        strat4List: '<li><strong>1. 盲目按曲线出牌</strong> - 有时留牌更好</li><li><strong>2. 忽视嘲讽</strong> - 必须先攻击嘲讽</li><li><strong>3. 忘记速度</strong> - 高速度先攻击</li><li><strong>4. 浪费解牌</strong> - 留给大威胁</li><li><strong>5. 没有终结手段</strong> - 每副牌需要终结者</li>',
-        strat5Title: '▲ 卡组类型',
-        archetype1: '快攻', archetype1Desc: '快速便宜的随从。6-7回合获胜。',
-        archetype2: '控制', archetype2Desc: '前期存活，后期大威胁获胜。',
-        archetype3: '中速', archetype3Desc: '平衡。每个费用都有强随从。',
-        archetype4: '组合', archetype4Desc: '组装特定卡牌进行爆发回合。',
-        tierTitle: '卡牌强度榜', tierSubtitle: '竞技最佳卡牌排名',
-        tierExplainTitle: '等级说明',
-        tierExplainList: '<li><strong class="text-red-400">S级：</strong>必带。改变游戏的卡牌。</li><li><strong class="text-yellow-400">A级：</strong>优秀。大多数情况下很强。</li><li><strong class="text-purple-400">B级：</strong>良好。适合特定策略。</li><li><strong class="text-blue-400">C级：</strong>情境。在正确对局中有用。</li>',
-        backLink: '← 查看卡牌'
-    },
-    th: {
-        basics: 'พื้นฐาน', types: 'ประเภทการ์ด', rarity: 'ความหายาก', combos: 'คอมโบ', strategy: 'กลยุทธ์', tierlist: 'อันดับ',
-        basicsTitle: 'วิธีเล่น', basicsSubtitle: 'เรียนรู้พื้นฐาน NumbahWan TCG',
-        goalTitle: 'เป้าหมาย', goalText: 'ลด HP ของคู่ต่อสู้จาก 30 เหลือ 0 โดยใช้ฮีโร่ มินเนียน เวท และกลยุทธ์',
-        deckTitle: 'สำรับ', deckText: 'สร้างสำรับ 30 ใบ สูงสุด 2 ใบต่อการ์ด (1 สำหรับตำนาน)',
-        manaTitle: 'มานา', manaText: 'เริ่มต้น 1 มานา +1 ต่อเทิร์น (สูงสุด 10) ใช้มานาเล่นการ์ด',
-        combatTitle: 'การต่อสู้', combatText: 'มินเนียนโจมตีศัตรู ATK สร้างความเสียหาย DEF รับความเสียหาย SPD กำหนดลำดับ',
-        turnPhaseTitle: 'เฟสเทิร์น',
-        phase1Title: '1. จั่วการ์ด', phase1Text: 'จั่ว 1 ใบ ผู้เล่นคนแรกข้ามจั่วเทิร์น 1',
-        phase2Title: '2. มานา', phase2Text: 'มานาสูงสุด +1 (สูงสุด 10) มานาทั้งหมดฟื้นฟู',
-        phase3Title: '3. เฟสหลัก', phase3Text: 'เล่นการ์ด ใช้ความสามารถ สวมอุปกรณ์ ไม่จำกัดถ้ามีมานา',
-        phase4Title: '4. ต่อสู้', phase4Text: 'มินเนียนโจมตีได้ เรียกออกมาแล้วโจมตีไม่ได้ (ยกเว้นพุ่งชน)',
-        phase5Title: '5. จบเทิร์น', phase5Text: 'เปิดใช้เอฟเฟกต์จบเทิร์น ส่งต่อคู่ต่อสู้',
-        keywordsTitle: 'คีย์เวิร์ด',
-        keywordsList: '<li><strong>ยั่วยุ</strong> - ศัตรูต้องโจมตีมินเนียนนี้ก่อน</li><li><strong>พุ่งชน</strong> - โจมตีได้ทันทีเมื่อเรียก</li><li><strong>ซ่อนตัว</strong> - ไม่สามารถเป็นเป้าหมายจนกว่าจะโจมตี</li><li><strong>โล่ศักดิ์สิทธิ์</strong> - บล็อกความเสียหายแรก</li><li><strong>บิน</strong> - บล็อกได้โดยมินเนียนบินเท่านั้น</li><li><strong>ดูดเลือด</strong> - รักษาฮีโร่เท่ากับความเสียหาย</li><li><strong>โจมตีก่อน</strong> - สร้างความเสียหายก่อนศัตรูตอบโต้</li><li><strong>เมื่อตาย</strong> - เอฟเฟกต์ทำงานเมื่อมินเนียนตาย</li>',
-        typesTitle: 'ประเภทการ์ด', typesSubtitle: 'เรียนรู้ 6 ประเภทและวิธีใช้',
-        heroLabel: 'ฮีโร่', heroDesc: 'ฮีโร่คือตัวละครที่ทรงพลัง มีได้ 1 ฮีโร่บนสนาม มีสถิติสูงและความสามารถเปลี่ยนเกม',
-        spellLabel: 'เวท', spellDesc: 'เวทคือเอฟเฟกต์ครั้งเดียว สร้างความเสียหาย รักษา จั่วการ์ด หรือเอฟเฟกต์ทรงพลัง',
-        minionLabel: 'มินเนียน', minionDesc: 'มินเนียนคือสัตว์ที่สู้เพื่อคุณ มี ATK DEF และ SPD มีได้สูงสุด 7 ตัวบนสนาม',
-        equipLabel: 'อุปกรณ์', equipDesc: 'อุปกรณ์ติดกับฮีโร่ ให้สถิติถาวร มีได้ 1 อาวุธและ 1 เกราะ',
-        eventLabel: 'เหตุการณ์', eventDesc: 'เหตุการณ์สร้างเอฟเฟกต์ชั่วคราวทั้งสนาม ส่งผลทั้งสองฝ่าย',
-        locLabel: 'สถานที่', locDesc: 'สถานที่คือเอฟเฟกต์สนามถาวร มีได้ 1 สถานที่',
-        rarityTitle: 'ความหายาก', raritySubtitle: 'เข้าใจความหายากและข้อจำกัดสำรับ',
-        mythicTitle: 'พลังตำนาน', mythicText: 'การ์ดหายากที่สุด ความสามารถเปลี่ยนเกม จำกัด 1 ใบต่อสำรับ',
-        legendaryTitle: 'ทรงพลังและเฉพาะ', legendaryText: 'การ์ดทรงพลังมาก เอฟเฟกต์เฉพาะ จำกัด 1 ใบต่อสำรับ',
-        epicTitle: 'เอฟเฟกต์แรง', epicText: 'การ์ดแรงมีผลกระทบ จำกัด 2 ใบต่อสำรับ',
-        rareTitle: 'ตัวเลือกดี', rareText: 'การ์ดเชื่อถือได้คุ้มค่า จำกัด 2 ใบต่อสำรับ',
-        commonTitle: 'การ์ดหลัก', commonText: 'พื้นฐานแต่จำเป็น จำกัด 2 ใบต่อสำรับ',
-        combosTitle: 'คอมโบทรงพลัง', combosSubtitle: 'การผสมการ์ดทำลายล้างเพื่อครองคู่ต่อสู้',
-        combo1Name: 'กองทัพศักดิ์สิทธิ์', combo1Result: '+4 ATK, +2 DEF 3 เทิร์น!', combo1Stats: 'พันธมิตรทั้งหมดหยุดไม่ได้',
-        combo1Explain: '<strong>วิธีทำ:</strong> เรกจินาให้พันธมิตร +2 ATK และออร่าเผา Grand Alliance เพิ่ม +2/+2 3 เทิร์น รวมกันได้บัฟมหาศาลกับเผาไหม้',
-        combo2Name: 'กำแพงอมตะ', combo2Result: 'ยั่วยุคู่ฆ่าไม่ได้', combo2Stats: 'รวม 13 DEF รักษาทุกเทิร์น',
-        combo2Explain: '<strong>วิธีทำ:</strong> ทั้งคู่มียั่วยุ บังคับศัตรูโจมตี Divine Guardian มีโล่ศักดิ์สิทธิ์และรักษา วางข้างกันเป็นกำแพงรักษาและบัฟ',
-        combo3Name: 'ทำลายล้างสองเทิร์น', combo3Result: 'เรียก 8/8 โจมตีสองครั้ง!', combo3Stats: 'ศักยภาพ 16 ความเสียหาย',
-        combo3Explain: '<strong>วิธีทำ:</strong> ใช้ Time Warp ได้เทิร์นเพิ่ม ใช้ Raid Boss เรียก 8/8 เทิร์นถัดไป Boss โจมตี 8 ความเสียหายทันที',
-        combo4Name: 'สวรรค์นักฆ่า', combo4Result: 'นักฆ่าซ่อนตัวถาวร', combo4Stats: '7 ความเสียหายจากซ่อนตัวทุกโจมตี',
-        combo4Explain: '<strong>วิธีทำ:</strong> Shadow Dungeon ให้มินเนียนทั้งหมดซ่อนตัว Shadow Blade +2 จากซ่อนตัว รวม: ไม่สามารถเป็นเป้าหมาย 7 ความเสียหายทุกเทิร์น',
-        combo5Name: 'วันสิ้นโลกมังกร', combo5Result: '7 ความเสียหายล้างสนาม!', combo5Stats: 'ล้างสนามศัตรูทั้งหมด',
-        combo5Explain: '<strong>วิธีทำ:</strong> Elder Dragon สร้าง 3 ความเสียหายทุกศัตรูเมื่อเรียก ตามด้วย Apocalypse Rain อีก 4 รวม: 7 AoE',
-        strategyTitle: 'คู่มือกลยุทธ์', strategySubtitle: 'เคล็ดลับโปรเพื่อพัฒนาการเล่น',
-        strat1Title: '● พื้นฐานมานาเคิร์ฟ', strat1Text: 'สำรับดีมีการ์ดทุกค่ามานา:',
-        strat1List: '<li><strong>1-2 มานา:</strong> 8-10 ใบ (ช่วงต้น)</li><li><strong>3-4 มานา:</strong> 8-10 ใบ (ช่วงกลาง)</li><li><strong>5-6 มานา:</strong> 6-8 ใบ (ช่วงปลาย)</li><li><strong>7+ มานา:</strong> 2-4 ใบ (ตัวจบ)</li>',
-        strat2Title: '◆ ควบคุมสนาม', strat2Text: 'ควบคุมสนามก่อนตีหน้า:',
-        strat2List: '<li>แลกมินเนียนอย่างมีประสิทธิภาพ</li><li>เก็บการ์ดกำจัดสำหรับเป้าหมายสำคัญ</li><li>วางตำแหน่งมินเนียนอย่างระวัง</li><li>อย่าใช้ทรัพยากรมากเกินไปกับล้างสนาม</li>',
-        strat3Title: '◇ ความได้เปรียบการ์ด', strat3Text: 'ผู้เล่นที่มีการ์ดมากกว่ามักชนะ:',
-        strat3List: '<li>ใช้ 1 ใบทำลาย 2+ ใบศัตรู</li><li>ใส่การ์ดจั่วในสำรับ</li><li>อย่าเสียการ์ดกับการเล่นคุ้มค่าต่ำ</li><li>ฮีโร่อย่าง Reggino ให้จั่วการ์ด</li>',
-        strat4Title: '★ 5 ข้อผิดพลาดมือใหม่',
-        strat4List: '<li><strong>1. เล่นตามเคิร์ฟแบบสุ่มสี่สุ่มห้า</strong> - บางทีเก็บไว้ดีกว่า</li><li><strong>2. เพิกเฉยยั่วยุ</strong> - ต้องโจมตียั่วยุก่อน</li><li><strong>3. ลืม SPD</strong> - SPD สูงโจมตีก่อน</li><li><strong>4. เสียการ์ดกำจัด</strong> - เก็บสำหรับภัยคุกคามใหญ่</li><li><strong>5. ไม่มีตัวจบ</strong> - ทุกสำรับต้องมีตัวจบ</li>',
-        strat5Title: '▲ อาร์คีไทป์สำรับ',
-        archetype1: 'แอกโกร', archetype1Desc: 'มินเนียนเร็วถูก ชนะเทิร์น 6-7',
-        archetype2: 'คอนโทรล', archetype2Desc: 'รอดช่วงต้น ชนะช่วงปลายกับภัยใหญ่',
-        archetype3: 'มิดเรนจ์', archetype3Desc: 'สมดุล มินเนียนแรงทุกค่า',
-        archetype4: 'คอมโบ', archetype4Desc: 'รวมการ์ดเฉพาะสำหรับเทิร์นระเบิด',
-        tierTitle: 'อันดับการ์ด', tierSubtitle: 'การ์ดดีที่สุดจัดอันดับสำหรับแข่งขัน',
-        tierExplainTitle: 'คำอธิบายอันดับ',
-        tierExplainList: '<li><strong class="text-red-400">S:</strong> ต้องใส่ การ์ดเปลี่ยนเกม</li><li><strong class="text-yellow-400">A:</strong> ยอดเยี่ยม แรงในสถานการณ์ส่วนใหญ่</li><li><strong class="text-purple-400">B:</strong> ดี เหมาะกลยุทธ์เฉพาะ</li><li><strong class="text-blue-400">C:</strong> สถานการณ์ มีประโยชน์ในแมตช์ที่ใช่</li>',
-        backLink: '← ดูการ์ด'
-    }
-};
-
-let lang = 'en';
-
-// ========== TAB NAVIGATION ==========
-const tabs = document.querySelectorAll('.nav-tab');
-const sections = document.querySelectorAll('.section');
-
-tabs.forEach(tab => {
-    tab.addEventListener('click', () => {
-        tabs.forEach(t => t.classList.remove('active'));
-        sections.forEach(s => s.classList.remove('active'));
+    <footer>
+        <p>Made with ❤️ and 🧂 by NumbahWan Guild</p>
+        <div class="footer-links">
+            <a href="/cards">View All 108 Cards</a>
+            <a href="/forge">Try Your Luck (Gacha)</a>
+            <a href="/">Back to Home</a>
+        </div>
+        <p style="margin-top: 24px; font-size: 12px; color: rgba(255,255,255,0.3);">
+            v3.3 • 108 Cards • 0.01% Mythic Rate • Good Luck!
+        </p>
+    </footer>
+    
+    <script>
+        // Active TOC highlighting
+        const sections = document.querySelectorAll('section[id]');
+        const tocLinks = document.querySelectorAll('.toc a');
         
-        tab.classList.add('active');
-        document.getElementById(tab.dataset.section).classList.add('active');
-    });
-});
-
-// ========== LANGUAGE TOGGLE ==========
-document.querySelectorAll('.lang button').forEach(btn => {
-    btn.addEventListener('click', () => {
-        document.querySelectorAll('.lang button').forEach(b => b.classList.remove('on'));
-        btn.classList.add('on');
-        lang = btn.dataset.l;
-        updateLanguage();
-    });
-});
-
-function updateLanguage() {
-    const t = i18n[lang];
-    
-    // Tabs
-    document.getElementById('tabBasics').textContent = t.basics;
-    document.getElementById('tabTypes').textContent = t.types;
-    document.getElementById('tabRarity').textContent = t.rarity;
-    document.getElementById('tabCombos').textContent = t.combos;
-    document.getElementById('tabStrategy').textContent = t.strategy;
-    document.getElementById('tabTierlist').textContent = t.tierlist;
-    
-    // Basics
-    document.getElementById('basicsTitle').textContent = t.basicsTitle;
-    document.getElementById('basicsSubtitle').textContent = t.basicsSubtitle;
-    document.getElementById('goalTitle').textContent = t.goalTitle;
-    document.getElementById('goalText').textContent = t.goalText;
-    document.getElementById('deckTitle').textContent = t.deckTitle;
-    document.getElementById('deckText').textContent = t.deckText;
-    document.getElementById('manaTitle').textContent = t.manaTitle;
-    document.getElementById('manaText').textContent = t.manaText;
-    document.getElementById('combatTitle').textContent = t.combatTitle;
-    document.getElementById('combatText').textContent = t.combatText;
-    document.getElementById('turnPhaseTitle').textContent = t.turnPhaseTitle;
-    document.getElementById('phase1Title').textContent = t.phase1Title;
-    document.getElementById('phase1Text').textContent = t.phase1Text;
-    document.getElementById('phase2Title').textContent = t.phase2Title;
-    document.getElementById('phase2Text').textContent = t.phase2Text;
-    document.getElementById('phase3Title').textContent = t.phase3Title;
-    document.getElementById('phase3Text').textContent = t.phase3Text;
-    document.getElementById('phase4Title').textContent = t.phase4Title;
-    document.getElementById('phase4Text').textContent = t.phase4Text;
-    document.getElementById('phase5Title').textContent = t.phase5Title;
-    document.getElementById('phase5Text').textContent = t.phase5Text;
-    document.getElementById('keywordsTitle').textContent = t.keywordsTitle;
-    document.getElementById('keywordsList').innerHTML = t.keywordsList;
-    
-    // Types
-    document.getElementById('typesTitle').textContent = t.typesTitle;
-    document.getElementById('typesSubtitle').textContent = t.typesSubtitle;
-    document.getElementById('heroLabel').textContent = t.heroLabel;
-    document.getElementById('heroDesc').textContent = t.heroDesc;
-    document.getElementById('spellLabel').textContent = t.spellLabel;
-    document.getElementById('spellDesc').textContent = t.spellDesc;
-    document.getElementById('minionLabel').textContent = t.minionLabel;
-    document.getElementById('minionDesc').textContent = t.minionDesc;
-    document.getElementById('equipLabel').textContent = t.equipLabel;
-    document.getElementById('equipDesc').textContent = t.equipDesc;
-    document.getElementById('eventLabel').textContent = t.eventLabel;
-    document.getElementById('eventDesc').textContent = t.eventDesc;
-    document.getElementById('locLabel').textContent = t.locLabel;
-    document.getElementById('locDesc').textContent = t.locDesc;
-    
-    // Rarity
-    document.getElementById('rarityTitle').textContent = t.rarityTitle;
-    document.getElementById('raritySubtitle').textContent = t.raritySubtitle;
-    document.getElementById('mythicTitle').textContent = t.mythicTitle;
-    document.getElementById('mythicText').textContent = t.mythicText;
-    document.getElementById('legendaryTitle').textContent = t.legendaryTitle;
-    document.getElementById('legendaryText').textContent = t.legendaryText;
-    document.getElementById('epicTitle').textContent = t.epicTitle;
-    document.getElementById('epicText').textContent = t.epicText;
-    document.getElementById('rareTitle').textContent = t.rareTitle;
-    document.getElementById('rareText').textContent = t.rareText;
-    document.getElementById('commonTitle').textContent = t.commonTitle;
-    document.getElementById('commonText').textContent = t.commonText;
-    
-    // Combos
-    document.getElementById('combosTitle').textContent = t.combosTitle;
-    document.getElementById('combosSubtitle').textContent = t.combosSubtitle;
-    document.getElementById('combo1Name').textContent = t.combo1Name;
-    document.getElementById('combo1Result').textContent = t.combo1Result;
-    document.getElementById('combo1Stats').textContent = t.combo1Stats;
-    document.getElementById('combo1Explain').innerHTML = t.combo1Explain;
-    document.getElementById('combo2Name').textContent = t.combo2Name;
-    document.getElementById('combo2Result').textContent = t.combo2Result;
-    document.getElementById('combo2Stats').textContent = t.combo2Stats;
-    document.getElementById('combo2Explain').innerHTML = t.combo2Explain;
-    document.getElementById('combo3Name').textContent = t.combo3Name;
-    document.getElementById('combo3Result').textContent = t.combo3Result;
-    document.getElementById('combo3Stats').textContent = t.combo3Stats;
-    document.getElementById('combo3Explain').innerHTML = t.combo3Explain;
-    document.getElementById('combo4Name').textContent = t.combo4Name;
-    document.getElementById('combo4Result').textContent = t.combo4Result;
-    document.getElementById('combo4Stats').textContent = t.combo4Stats;
-    document.getElementById('combo4Explain').innerHTML = t.combo4Explain;
-    document.getElementById('combo5Name').textContent = t.combo5Name;
-    document.getElementById('combo5Result').textContent = t.combo5Result;
-    document.getElementById('combo5Stats').textContent = t.combo5Stats;
-    document.getElementById('combo5Explain').innerHTML = t.combo5Explain;
-    
-    // Strategy
-    document.getElementById('strategyTitle').textContent = t.strategyTitle;
-    document.getElementById('strategySubtitle').textContent = t.strategySubtitle;
-    document.getElementById('strat1Title').textContent = t.strat1Title;
-    document.getElementById('strat1Text').textContent = t.strat1Text;
-    document.getElementById('strat1List').innerHTML = t.strat1List;
-    document.getElementById('strat2Title').textContent = t.strat2Title;
-    document.getElementById('strat2Text').textContent = t.strat2Text;
-    document.getElementById('strat2List').innerHTML = t.strat2List;
-    document.getElementById('strat3Title').textContent = t.strat3Title;
-    document.getElementById('strat3Text').textContent = t.strat3Text;
-    document.getElementById('strat3List').innerHTML = t.strat3List;
-    document.getElementById('strat4Title').textContent = t.strat4Title;
-    document.getElementById('strat4List').innerHTML = t.strat4List;
-    document.getElementById('strat5Title').textContent = t.strat5Title;
-    document.getElementById('archetype1').textContent = t.archetype1;
-    document.getElementById('archetype1Desc').textContent = t.archetype1Desc;
-    document.getElementById('archetype2').textContent = t.archetype2;
-    document.getElementById('archetype2Desc').textContent = t.archetype2Desc;
-    document.getElementById('archetype3').textContent = t.archetype3;
-    document.getElementById('archetype3Desc').textContent = t.archetype3Desc;
-    document.getElementById('archetype4').textContent = t.archetype4;
-    document.getElementById('archetype4Desc').textContent = t.archetype4Desc;
-    
-    // Tier List
-    document.getElementById('tierTitle').textContent = t.tierTitle;
-    document.getElementById('tierSubtitle').textContent = t.tierSubtitle;
-    document.getElementById('tierExplainTitle').textContent = t.tierExplainTitle;
-    document.getElementById('tierExplainList').innerHTML = t.tierExplainList;
-    
-    // Back link
-    document.getElementById('backLink').textContent = t.backLink;
-}
-</script>
+        function updateTOC() {
+            let current = '';
+            sections.forEach(section => {
+                const rect = section.getBoundingClientRect();
+                if (rect.top < 200) current = section.id;
+            });
+            tocLinks.forEach(link => {
+                link.classList.toggle('active', link.getAttribute('href') === '#' + current);
+            });
+        }
+        
+        window.addEventListener('scroll', updateTOC);
+        updateTOC();
+    </script>
 </body>
 </html>
