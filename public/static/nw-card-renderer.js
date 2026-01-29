@@ -26,54 +26,43 @@ const NW_CARD_RENDERER = (function() {
     // ============================================
     const CONFIG = {
         baseImagePath: '/static/cards/',
-        placeholderImage: '/static/cards/placeholder.jpg',
+        placeholderImage: 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 260 380"%3E%3Crect fill="%231a1a2e" width="260" height="380"/%3E%3Ctext fill="%23333" x="50%25" y="50%25" text-anchor="middle" dy=".3em" font-family="system-ui" font-size="14"%3ELoading...%3C/text%3E%3C/svg%3E',
         defaultSize: 'md', // sm, md, lg
-        lazyLoad: true,
+        lazyLoad: false, // Disable lazy load to show images immediately
         animateOnHover: true,
         showStats: true,
         showRarityBadge: true
     };
     
-    // Rarity display names and icons
+    // Rarity display names and colors (icons handled by CSS)
     const RARITY_INFO = {
         mythic: { 
             name: 'MYTHIC', 
-            icon: '🔥', 
-            divine: '⚜️',
             color: '#ff6b00',
             gradient: 'linear-gradient(135deg, #ff6b00, #fbbf24, #ff6b00)'
         },
         legendary: { 
             name: 'LEGENDARY', 
-            icon: '⭐', 
-            crown: '👑',
             color: '#fbbf24',
             gradient: 'linear-gradient(135deg, #fbbf24, #d97706)'
         },
         epic: { 
             name: 'EPIC', 
-            icon: '💜', 
-            rune: '✧',
             color: '#a855f7',
             gradient: 'linear-gradient(135deg, #a855f7, #7c3aed)'
         },
         rare: { 
             name: 'RARE', 
-            icon: '💎', 
-            gem: '◆',
             color: '#3b82f6',
             gradient: 'linear-gradient(135deg, #3b82f6, #2563eb)'
         },
         uncommon: { 
             name: 'UNCOMMON', 
-            icon: '💚', 
-            vine: '❧',
             color: '#22c55e',
             gradient: 'linear-gradient(135deg, #22c55e, #059669)'
         },
         common: { 
             name: 'COMMON', 
-            icon: '⚪', 
             color: '#6b7280',
             gradient: 'linear-gradient(135deg, #6b7280, #4b5563)'
         }
@@ -202,48 +191,26 @@ const NW_CARD_RENDERER = (function() {
         cardEl.dataset.cardId = card.id || '';
         cardEl.dataset.cardName = card.name || '';
         
-        // Add corner ornaments for special rarities
-        const corners = ['top-left', 'top-right', 'bottom-left', 'bottom-right'];
-        corners.forEach(pos => {
-            const corner = document.createElement('div');
-            corner.className = `nw-card-corner ${pos}`;
-            cardEl.appendChild(corner);
-        });
+        // Corners removed - CSS handles frame decoration now
         
         // Inner container
         const inner = document.createElement('div');
         inner.className = 'nw-card-inner';
         
-        // Card art image
+        // Card art image - load immediately
         const img = document.createElement('img');
         img.className = 'nw-card-art';
         img.alt = card.name || 'Card';
-        if (opts.lazyLoad) {
-            img.loading = 'lazy';
-            img.src = CONFIG.placeholderImage;
-            img.dataset.src = getImageUrl(card);
-            // Use IntersectionObserver for lazy loading
-            observeImage(img);
-        } else {
-            img.src = getImageUrl(card);
-        }
-        img.onerror = () => { img.src = CONFIG.placeholderImage; };
+        img.src = getImageUrl(card);
+        img.onerror = () => { 
+            img.style.background = 'linear-gradient(135deg, #1a1a2e 0%, #16213e 100%)';
+            img.alt = 'Image not found';
+        };
         inner.appendChild(img);
         
         cardEl.appendChild(inner);
         
-        // Add divine/crown symbol for mythic/legendary
-        if (rarity === 'mythic' && rarityInfo.divine) {
-            const divine = document.createElement('div');
-            divine.className = 'nw-card-divine';
-            divine.textContent = rarityInfo.divine;
-            cardEl.appendChild(divine);
-        } else if (rarity === 'legendary' && rarityInfo.crown) {
-            const crown = document.createElement('div');
-            crown.className = 'nw-card-crown';
-            crown.textContent = rarityInfo.crown;
-            cardEl.appendChild(crown);
-        }
+        // Crown/Divine symbols removed - CSS handles rarity decoration now
         
         // Cost gem (top right)
         if (stats && (stats.cost !== undefined || stats.cost !== null)) {
