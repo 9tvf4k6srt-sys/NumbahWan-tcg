@@ -12,6 +12,7 @@
     <script src="/static/nw-wallet.js"></script>
     <script src="/static/nw-cards.js"></script>
     <script src="/static/nw-card-renderer.js"></script>
+    <script src="/static/nw-game-juice.js"></script>
     <link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     
@@ -1959,6 +1960,11 @@ function revealCard() {
     if (['epic', 'legendary', 'mythic'].includes(card.rarity)) {
         revealCard.classList.add('rarity-tease');
         revealCard.style.setProperty('--tease-color', hintColor);
+        
+        // 🎮 NW_JUICE anticipation with escalating haptics
+        if (typeof NW_JUICE !== 'undefined') {
+            NW_JUICE.gacha.anticipate(revealCard, delay);
+        }
     }
     
     setTimeout(() => {
@@ -1968,6 +1974,11 @@ function revealCard() {
         
         playSound('flip');
         cardInner.classList.add('flipped');
+        
+        // 🎮 Haptic feedback on flip
+        if (typeof NW_JUICE !== 'undefined') {
+            NW_JUICE.haptic.medium();
+        }
         
         // Impact sound for legendary+ (delayed for dramatic effect)
         if (['legendary', 'mythic'].includes(card.rarity)) {
@@ -1983,6 +1994,12 @@ function revealCard() {
 
 function showRarityEffects(card) {
     const rarity = card.rarity;
+    const revealCard = document.getElementById('revealCard');
+    
+    // 🎮 Use NW_JUICE for optimized effects
+    if (typeof NW_JUICE !== 'undefined') {
+        NW_JUICE.gacha.reveal(revealCard, rarity);
+    }
     
     // Activate glow
     const glow = document.getElementById('cardGlow');
