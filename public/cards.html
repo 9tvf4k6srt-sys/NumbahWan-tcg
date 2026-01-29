@@ -42,6 +42,7 @@
         .glow.legendary { background: radial-gradient(ellipse, rgba(255,215,0,0.6) 0%, rgba(245,199,26,0.3) 40%, transparent 70%); }
         .glow.epic { background: radial-gradient(ellipse, rgba(147,112,219,0.6) 0%, rgba(138,43,226,0.3) 40%, transparent 70%); }
         .glow.rare { background: radial-gradient(ellipse, rgba(30,144,255,0.5) 0%, rgba(65,105,225,0.25) 40%, transparent 70%); }
+        .glow.uncommon { background: radial-gradient(ellipse, rgba(34,197,94,0.5) 0%, rgba(22,163,74,0.25) 40%, transparent 70%); }
         .glow.common { background: radial-gradient(ellipse, rgba(150,150,150,0.4) 0%, rgba(100,100,100,0.2) 40%, transparent 70%); }
         
         .card { position: absolute; left: 50%; top: 50%; width: var(--card-w); height: var(--card-h);
@@ -64,6 +65,7 @@
         .card.legendary.active { box-shadow: 0 0 60px rgba(255,215,0,0.6), 0 0 30px rgba(245,199,26,0.4), 0 8px 32px rgba(0,0,0,0.6); }
         .card.epic.active { box-shadow: 0 0 50px rgba(147,112,219,0.6), 0 0 25px rgba(138,43,226,0.4), 0 8px 32px rgba(0,0,0,0.6); }
         .card.rare.active { box-shadow: 0 0 40px rgba(30,144,255,0.5), 0 0 20px rgba(65,105,225,0.3), 0 8px 32px rgba(0,0,0,0.6); }
+        .card.uncommon.active { box-shadow: 0 0 35px rgba(34,197,94,0.5), 0 0 18px rgba(22,163,74,0.3), 0 8px 32px rgba(0,0,0,0.6); }
         .card.common.active { box-shadow: 0 0 30px rgba(150,150,150,0.4), 0 8px 32px rgba(0,0,0,0.6); }
         
         .ctr { position: fixed; top: 70px; right: 16px; font-size: 13px; color: rgba(255,255,255,0.5); z-index: 50; }
@@ -131,6 +133,7 @@
         .badge.legendary { background: linear-gradient(135deg, #ffd700, #f5c71a); color: #000; }
         .badge.epic { background: linear-gradient(135deg, #9370db, #8a2be2); color: #fff; }
         .badge.rare { background: linear-gradient(135deg, #1e90ff, #4169e1); color: #fff; }
+        .badge.uncommon { background: linear-gradient(135deg, #22c55e, #16a34a); color: #fff; }
         .badge.common { background: rgba(128,128,128,0.5); color: #fff; }
         .desc { margin-top: 12px; padding: 12px; background: rgba(0,0,0,0.3);
             border-radius: 8px; font-size: 15px; line-height: 1.5; color: rgba(255,255,255,0.8); }
@@ -180,6 +183,7 @@
         <button data-f="legendary" id="fLegendary">LEGENDARY</button>
         <button data-f="epic" id="fEpic">EPIC</button>
         <button data-f="rare" id="fRare">RARE</button>
+        <button data-f="uncommon" id="fUncommon">UNCOMMON</button>
         <button data-f="common" id="fCommon">COMMON</button>
     </div>
     
@@ -206,109 +210,64 @@
     </div>
 
 <script>
-const DATA = [
-    {id:1,name:"RegginA, The Eternal Flame",type:"hero",rarity:"mythic",cost:8,stats:"ATK 9 | DEF 7 | SPD 5",desc:"Guild Master. All allies gain +2 ATK and Burning Aura for 3 turns.",img:"01-reggina-mythic.jpg"},
-    {id:2,name:"Reggino, Shadow of Command",type:"hero",rarity:"legendary",cost:7,stats:"ATK 7 | DEF 6 | SPD 6",desc:"Vice Master. Draw 2 cards when played. Allies gain +1 SPD.",img:"02-reggino-legendary.jpg"},
-    {id:3,name:"Onca, Primal Hunter",type:"hero",rarity:"epic",cost:6,stats:"ATK 6 | DEF 4 | SPD 8",desc:"First Strike. Double damage to wounded enemies.",img:"03-onca-epic.jpg"},
-    {id:4,name:"Panthera, Shadow Mystic",type:"hero",rarity:"epic",cost:5,stats:"ATK 5 | DEF 5 | SPD 7",desc:"Spells cost 1 less. Stealth until attacking.",img:"04-panthera-epic.jpg"},
-    {id:5,name:"Phoenix Rebirth",type:"spell",rarity:"rare",cost:4,stats:"",desc:"Resurrect fallen ally with 50% HP.",img:"05-phoenix-rebirth.jpg"},
-    {id:6,name:"Thunder Strike",type:"spell",rarity:"epic",cost:5,stats:"",desc:"Deal 6 damage. Destroy if target has <3 HP.",img:"06-thunder-strike.jpg"},
-    {id:7,name:"Minor Heal",type:"spell",rarity:"common",cost:1,stats:"",desc:"Restore 3 HP to ally.",img:"07-minor-heal.jpg"},
-    {id:8,name:"Apocalypse Rain",type:"spell",rarity:"legendary",cost:8,stats:"",desc:"Deal 4 damage to ALL enemies.",img:"08-apocalypse-rain.jpg"},
-    {id:9,name:"Time Warp",type:"spell",rarity:"rare",cost:5,stats:"",desc:"Take an extra turn after this one.",img:"09-time-warp.jpg"},
-    {id:10,name:"Void Rift",type:"spell",rarity:"epic",cost:6,stats:"",desc:"Banish enemy for 2 turns.",img:"10-void-rift.jpg"},
-    {id:11,name:"Binding Light",type:"spell",rarity:"rare",cost:3,stats:"",desc:"Stun enemy for 1 turn. Draw 1.",img:"11-binding-light.jpg"},
-    {id:12,name:"Magic Shield",type:"spell",rarity:"common",cost:2,stats:"",desc:"Block next attack on ally.",img:"12-magic-shield.jpg"},
-    {id:13,name:"Frozen Wrath",type:"spell",rarity:"epic",cost:6,stats:"",desc:"Freeze all enemies for 1 turn.",img:"13-frozen-wrath.jpg"},
-    {id:14,name:"Summon Ally",type:"spell",rarity:"rare",cost:4,stats:"",desc:"Summon random minion from deck.",img:"14-summon-ally.jpg"},
-    {id:15,name:"Mana Burst",type:"spell",rarity:"common",cost:1,stats:"",desc:"Deal 2 damage.",img:"15-mana-burst.jpg"},
-    {id:16,name:"Guild Slime",type:"minion",rarity:"common",cost:1,stats:"ATK 1 | DEF 2",desc:"Spawn two Slimelings on death.",img:"16-guild-slime.jpg"},
-    {id:17,name:"Bone Archer",type:"minion",rarity:"common",cost:2,stats:"ATK 3 | DEF 1",desc:"Ranged. No counter-damage.",img:"17-bone-archer.jpg"},
-    {id:18,name:"Shadow Blade",type:"minion",rarity:"rare",cost:3,stats:"ATK 5 | DEF 2 | SPD 8",desc:"Stealth. +2 damage from stealth.",img:"18-shadow-blade.jpg"},
-    {id:19,name:"Inferno Colossus",type:"minion",rarity:"epic",cost:7,stats:"ATK 7 | DEF 6",desc:"Taunt. Adjacent allies +1 ATK.",img:"19-inferno-colossus.jpg"},
-    {id:20,name:"Goblin Tinkerer",type:"minion",rarity:"common",cost:2,stats:"ATK 2 | DEF 2",desc:"Give random ally +1/+1.",img:"20-goblin-tinkerer.jpg"},
-    {id:21,name:"Frost Weaver",type:"minion",rarity:"rare",cost:4,stats:"ATK 4 | DEF 3",desc:"Freeze attacked enemy.",img:"21-frost-weaver.jpg"},
-    {id:22,name:"Divine Guardian",type:"minion",rarity:"epic",cost:6,stats:"ATK 6 | DEF 7",desc:"Taunt. Divine Shield. Heal 2/turn.",img:"22-divine-guardian.jpg"},
-    {id:23,name:"Spore Sprite",type:"minion",rarity:"common",cost:1,stats:"ATK 1 | DEF 3",desc:"Deathrattle: Adjacent allies +1 DEF.",img:"23-spore-sprite.jpg"},
-    {id:24,name:"Hell Spawn",type:"minion",rarity:"rare",cost:4,stats:"ATK 4 | DEF 2",desc:"Flying. Deal 2 on summon.",img:"24-hell-spawn.jpg"},
-    {id:25,name:"Clockwork Sentinel",type:"minion",rarity:"rare",cost:5,stats:"ATK 5 | DEF 5",desc:"Taunt. Spell immune. Freeze immune.",img:"25-clockwork-sentinel.jpg"},
-    {id:26,name:"Pack Wolf",type:"minion",rarity:"common",cost:2,stats:"ATK 3 | DEF 2",desc:"+1 ATK per other beast.",img:"26-pack-wolf.jpg"},
-    {id:27,name:"Elder Dragon",type:"minion",rarity:"legendary",cost:9,stats:"ATK 9 | DEF 8",desc:"Flying. Deal 3 to all enemies.",img:"27-elder-dragon.jpg"},
-    {id:28,name:"Forest Keeper",type:"minion",rarity:"common",cost:3,stats:"ATK 2 | DEF 4",desc:"Taunt. Heal 1 to allies/turn.",img:"28-forest-keeper.jpg"},
-    {id:29,name:"Ash Phoenix",type:"minion",rarity:"epic",cost:5,stats:"ATK 5 | DEF 3",desc:"Flying. Rebirth once with 2 HP.",img:"29-ash-phoenix.jpg"},
-    {id:30,name:"Blood Count",type:"minion",rarity:"rare",cost:5,stats:"ATK 6 | DEF 3",desc:"Lifesteal. +1/+1 on enemy death.",img:"30-blood-count.jpg"},
-    {id:31,name:"Gem Titan",type:"minion",rarity:"rare",cost:5,stats:"ATK 4 | DEF 6",desc:"+1 ATK per spell cast.",img:"31-gem-titan.jpg"},
-    {id:32,name:"Flame Wisp",type:"minion",rarity:"common",cost:1,stats:"ATK 2 | DEF 1",desc:"Charge. Burns target.",img:"32-flame-wisp.jpg"},
-    {id:33,name:"Siege Beast",type:"minion",rarity:"epic",cost:7,stats:"ATK 6 | DEF 8",desc:"Double damage to minions.",img:"33-siege-beast.jpg"},
-    {id:34,name:"Zakum's Blade",type:"equipment",rarity:"epic",cost:5,stats:"+4 ATK",desc:"Burns enemies for 2 damage.",img:"34-zakum-blade.jpg"},
-    {id:35,name:"Lion's Aegis",type:"equipment",rarity:"rare",cost:4,stats:"+3 DEF",desc:"Block one 4+ damage attack/turn.",img:"35-lions-aegis.jpg"},
-    {id:36,name:"Iron Blade",type:"equipment",rarity:"common",cost:2,stats:"+2 ATK",desc:"Basic weapon.",img:"36-iron-blade.jpg"},
-    {id:37,name:"Dragonscale Armor",type:"equipment",rarity:"epic",cost:6,stats:"+4 DEF, +2 ATK",desc:"Fire immune. -1 all damage.",img:"37-dragonscale-armor.jpg"},
-    {id:38,name:"Crown of Command",type:"equipment",rarity:"legendary",cost:7,stats:"+2 ATK, +2 DEF",desc:"Allies +1 ATK. Draw extra card.",img:"38-crown-command.jpg"},
-    {id:39,name:"Leather Vest",type:"equipment",rarity:"common",cost:1,stats:"+1 DEF",desc:"Basic armor.",img:"39-leather-vest.jpg"},
-    {id:40,name:"Arcane Staff",type:"equipment",rarity:"epic",cost:5,stats:"+3 ATK",desc:"Spells +1 damage, -1 cost.",img:"40-arcane-staff.jpg"},
-    {id:41,name:"Guild War",type:"event",rarity:"rare",cost:4,stats:"",desc:"All minions +2 ATK. Both draw 2.",img:"41-guild-war.jpg"},
-    {id:42,name:"Jackpot!",type:"event",rarity:"rare",cost:3,stats:"",desc:"Draw 3, discard 1. +2 mana next turn.",img:"42-jackpot.jpg"},
-    {id:43,name:"Lucky Break",type:"event",rarity:"common",cost:1,stats:"",desc:"Flip coin: Heads draw 2, Tails draw 1.",img:"43-lucky-break.jpg"},
-    {id:44,name:"Raid Boss",type:"event",rarity:"epic",cost:6,stats:"",desc:"Summon 8/8 Boss. Defeat for 5 cards.",img:"44-raid-boss.jpg"},
-    {id:45,name:"Rest Camp",type:"event",rarity:"common",cost:2,stats:"",desc:"Heal all allies 2 HP.",img:"45-rest-camp.jpg"},
-    {id:46,name:"Grand Alliance",type:"event",rarity:"legendary",cost:7,stats:"",desc:"All allies +2/+2 for 3 turns.",img:"46-grand-alliance.jpg"},
-    {id:47,name:"NumbahWan Guild Hall",type:"location",rarity:"legendary",cost:5,stats:"",desc:"Minions cost 1 less. Heal 1/turn.",img:"47-guild-hall.jpg"},
-    {id:48,name:"Shadow Dungeon",type:"location",rarity:"rare",cost:3,stats:"",desc:"Draw +1 card/turn. Minions have Stealth.",img:"48-shadow-dungeon.jpg"},
-    {id:49,name:"RegginA Ascended",type:"hero",rarity:"legendary",cost:10,stats:"ATK 12 | DEF 10 | SPD 8",desc:"Divine form. All allies Divine Shield. Deal 5 to all.",img:"49-reggina-ascended.jpg"},
-    {id:50,name:"Reggino, Master Tactician",type:"hero",rarity:"legendary",cost:8,stats:"ATK 8 | DEF 8 | SPD 7",desc:"Draw 3. Spells cost 2 less this game.",img:"50-reggino-tactician.jpg"},
-    // ═══════════════════════════════════════════════════════════════════
-    // 🆕 NEW MYTHIC CARDS - RegginA Collection
-    // ═══════════════════════════════════════════════════════════════════
-    {id:101,name:"RegginA - Practicing Trainee",type:"hero",rarity:"mythic",cost:7,stats:"ATK 7 | DEF 5 | SPD 8",desc:"The beginning of a legend. Divine light guides the path.",img:"mythic-01-practicing-trainee.jpg"},
-    {id:102,name:"RegginA - Chain of the Undead",type:"hero",rarity:"mythic",cost:9,stats:"ATK 9 | DEF 6 | LIFESTEAL",desc:"Master of the undead legions. Death bows to her will.",img:"mythic-02-chain-undead.jpg"},
-    {id:103,name:"RegginA - Infernal Warlord",type:"hero",rarity:"mythic",cost:10,stats:"ATK 12 | DEF 8 | BURN",desc:"Ruler of the volcanic realm. Fire and fury incarnate.",img:"mythic-03-infernal-warlord.jpg"},
-    {id:104,name:"RegginA - Sky Sovereign",type:"hero",rarity:"mythic",cost:10,stats:"ATK 10 | DEF 10 | FLY",desc:"Supreme ruler of the heavens. None dare challenge her domain.",img:"mythic-04-sky-sovereign.jpg"},
-    // ═══════════════════════════════════════════════════════════════════
-    // 🆕 NEW LEGENDARY CARDS - Boss-Inspired (Diablo/MU/Ragnarok style)
-    // ═══════════════════════════════════════════════════════════════════
-    {id:201,name:"Infernox - Lord of Embers",type:"minion",rarity:"legendary",cost:9,stats:"ATK 10 | DEF 7 | BURN",desc:"Inspired by the Lord of Terror. Burns all enemies on summon.",img:"legendary/legendary-01-infernox.jpg"},
-    {id:202,name:"Baphoros - The Horned King",type:"minion",rarity:"legendary",cost:9,stats:"ATK 11 | DEF 8 | CURSE",desc:"Goat-demon lord. Curses enemies, reducing their ATK by 2.",img:"legendary/legendary-02-baphoros.jpg"},
-    {id:203,name:"Kundara - Emperor of Souls",type:"minion",rarity:"legendary",cost:10,stats:"ATK 9 | DEF 9 | DRAIN",desc:"Multi-armed death emperor. Drains HP from all enemies.",img:"legendary/legendary-03-kundara.jpg"},
-    {id:204,name:"Arachnis - Venom Queen",type:"minion",rarity:"legendary",cost:8,stats:"ATK 8 | DEF 6 | POISON",desc:"Spider-queen of poison. Poisons all enemies for 3 turns.",img:"legendary/legendary-04-arachnis.jpg"},
-    {id:205,name:"Lunaris - Moon Knight",type:"minion",rarity:"legendary",cost:9,stats:"ATK 9 | DEF 10 | SHIELD",desc:"Celestial knight. Grants Divine Shield to all allies.",img:"legendary/legendary-05-lunaris.jpg"},
-    {id:206,name:"Balroxx - Flame Tyrant",type:"minion",rarity:"legendary",cost:10,stats:"ATK 12 | DEF 6 | INFERNO",desc:"Winged demon of fire. Deals 6 damage to all enemies on death.",img:"legendary/legendary-06-balroxx.jpg"},
-    {id:207,name:"Aurum - Golden Guardian",type:"minion",rarity:"legendary",cost:8,stats:"ATK 7 | DEF 12 | GOLD+",desc:"Massive golden beetle. Generates 2 gold per turn.",img:"legendary/legendary-07-aurum.jpg"},
-    {id:208,name:"Malphis - Lord of Frost",type:"minion",rarity:"legendary",cost:9,stats:"ATK 10 | DEF 8 | FREEZE",desc:"Ice demon lord. Freezes all enemies for 1 turn on summon.",img:"legendary/legendary-08-malphis.jpg"},
-    // ═══════════════════════════════════════════════════════════════════
-    // 🆕 NEW EPIC CARDS - Elite Monsters
-    // ═══════════════════════════════════════════════════════════════════
-    {id:301,name:"Grimhelm - Dark Sentinel",type:"minion",rarity:"epic",cost:6,stats:"ATK 7 | DEF 7 | ARMOR",desc:"Cursed knight. Takes 2 less damage from all sources.",img:"epic/epic-01-grimhelm.jpg"},
-    {id:302,name:"Grommak - Warchief",type:"minion",rarity:"epic",cost:6,stats:"ATK 8 | DEF 5 | RAGE",desc:"Orc warlord. +2 ATK when damaged.",img:"epic/epic-02-grommak.jpg"},
-    {id:303,name:"Morticus - Bone Sage",type:"minion",rarity:"epic",cost:5,stats:"ATK 6 | DEF 4 | SUMMON",desc:"Lich master. Summons 2/2 Skeleton on spell cast.",img:"epic/epic-03-morticus.jpg"},
-    {id:304,name:"Zephyra - Storm Harpy",type:"minion",rarity:"epic",cost:5,stats:"ATK 5 | DEF 5 | WIND",desc:"Wind elemental. Flying. Pushes enemy back.",img:"epic/epic-04-zephyra.jpg"},
-    {id:305,name:"Terros - Stone Giant",type:"minion",rarity:"epic",cost:7,stats:"ATK 6 | DEF 9 | ROCK",desc:"Earth elemental. Taunt. Immune to spells.",img:"epic/epic-05-terros.jpg"},
-    {id:306,name:"Serena - Tide Serpent",type:"minion",rarity:"epic",cost:6,stats:"ATK 7 | DEF 6 | TIDAL",desc:"Sea serpent. Heals 2 HP to all allies each turn.",img:"epic/epic-06-serena.jpg"},
-    {id:307,name:"Fenrok - Moon Howler",type:"minion",rarity:"epic",cost:5,stats:"ATK 8 | DEF 4 | FERAL",desc:"Alpha werewolf. +1/+1 for each beast you control.",img:"epic/epic-07-fenrok.jpg"},
-    {id:308,name:"Pyrix - Ember Phoenix",type:"minion",rarity:"epic",cost:6,stats:"ATK 7 | DEF 5 | REBIRTH",desc:"Fire bird. Returns with 3 HP when killed.",img:"epic/epic-08-pyrix.jpg"},
-    // ═══════════════════════════════════════════════════════════════════
-    // 🆕 NEW RARE CARDS - Adventurers & Creatures
-    // ═══════════════════════════════════════════════════════════════════
-    {id:401,name:"Vorn - Iron Knight",type:"minion",rarity:"rare",cost:4,stats:"ATK 5 | DEF 6 | GUARD",desc:"Veteran knight. Taunt. +1 DEF per turn.",img:"rare/rare-01-vorn.jpg"},
-    {id:402,name:"Lyra - Star Mage",type:"minion",rarity:"rare",cost:4,stats:"ATK 6 | DEF 3 | MAGIC",desc:"Arcane caster. Spells deal +1 damage.",img:"rare/rare-02-lyra.jpg"},
-    {id:403,name:"Robin - Swift Archer",type:"minion",rarity:"rare",cost:3,stats:"ATK 5 | DEF 4 | SWIFT",desc:"Quick shot. Attacks twice when played.",img:"rare/rare-03-robin.jpg"},
-    {id:404,name:"Sera - Battle Cleric",type:"minion",rarity:"rare",cost:4,stats:"ATK 4 | DEF 5 | HEAL",desc:"Holy warrior. Heals 2 HP to ally on attack.",img:"rare/rare-04-sera.jpg"},
-    {id:405,name:"Gloop - Mystic Slime",type:"minion",rarity:"rare",cost:3,stats:"ATK 3 | DEF 6 | ABSORB",desc:"Magic slime. Gains +1/+1 when hit by spell.",img:"rare/rare-05-gloop.jpg"},
-    {id:406,name:"Snix - Shadow Goblin",type:"minion",rarity:"rare",cost:3,stats:"ATK 5 | DEF 3 | STEAL",desc:"Sneaky thief. Steals 1 gold on attack.",img:"rare/rare-06-snix.jpg"},
-    {id:407,name:"Rattles - Bone Soldier",type:"minion",rarity:"rare",cost:3,stats:"ATK 4 | DEF 4 | UNDEAD",desc:"Skeleton warrior. Revives once with 2 HP.",img:"rare/rare-07-rattles.jpg"},
-    {id:408,name:"Sporky - Forest Sprite",type:"minion",rarity:"rare",cost:2,stats:"ATK 3 | DEF 5 | NATURE",desc:"Nature spirit. Heals 1 HP to all allies on summon.",img:"rare/rare-08-sporky.jpg"}
-];
+// ===========================================================================
+// DYNAMIC CARD DATA - Loads from cards-v2.json (108 official cards)
+// ===========================================================================
+let DATA = []; // Will be populated from cards-v2.json
+const IMAGE_BASE_PATH = '/static/images/cards/'; // Correct image path
+
+// Load cards from JSON
+async function loadCardsData() {
+    try {
+        const response = await fetch('/static/data/cards-v2.json?v=' + Date.now());
+        const data = await response.json();
+        DATA = data.cards.map(c => ({
+            id: c.id,
+            name: c.name,
+            type: c.category || 'member',
+            rarity: c.rarity,
+            cost: getRarityCost(c.rarity),
+            stats: getRarityStats(c.rarity, c.role),
+            desc: c.description,
+            img: c.img,
+            role: c.role,
+            category: c.category
+        }));
+        console.log(`Loaded ${DATA.length} cards from cards-v2.json`);
+        return DATA;
+    } catch (error) {
+        console.error('Failed to load cards:', error);
+        return [];
+    }
+}
+
+// Generate stats based on rarity
+function getRarityCost(rarity) {
+    const costs = { mythic: 10, legendary: 8, epic: 6, rare: 4, uncommon: 3, common: 2 };
+    return costs[rarity] || 3;
+}
+function getRarityStats(rarity, role) {
+    const baseStats = {
+        mythic: 'ATK 12 | DEF 10 | SPECIAL',
+        legendary: 'ATK 9 | DEF 8',
+        epic: 'ATK 7 | DEF 6',
+        rare: 'ATK 5 | DEF 5',
+        uncommon: 'ATK 4 | DEF 4',
+        common: 'ATK 3 | DEF 3'
+    };
+    return baseStats[rarity] || 'ATK 3 | DEF 3';
+}
 
 const i18n = {
     en: { type:'Type', rarity:'Rarity', cost:'Mana', stats:'Stats', hint:'Swipe to browse • Tap VIEW for details',
-          hero:'Hero', spell:'Spell', minion:'Minion', equipment:'Equipment', event:'Event', location:'Location',
-          mythic:'MYTHIC', legendary:'LEGENDARY', epic:'EPIC', rare:'RARE', common:'COMMON', all:'ALL', view:'VIEW', guide:'📖 Guide' },
+          member:'Member', moment:'Moment', gear:'Gear', vibe:'Vibe', spot:'Spot',
+          mythic:'MYTHIC', legendary:'LEGENDARY', epic:'EPIC', rare:'RARE', uncommon:'UNCOMMON', common:'COMMON', all:'ALL', view:'VIEW', guide:'📖 Guide' },
     zh: { type:'类型', rarity:'稀有度', cost:'法力', stats:'属性', hint:'滑动浏览 • 点击查看查看详情',
-          hero:'英雄', spell:'法术', minion:'随从', equipment:'装备', event:'事件', location:'地点',
-          mythic:'神话', legendary:'传说', epic:'史诗', rare:'稀有', common:'普通', all:'全部', view:'查看', guide:'📖 攻略' },
+          member:'成员', moment:'时刻', gear:'装备', vibe:'氛围', spot:'地点',
+          mythic:'神话', legendary:'传说', epic:'史诗', rare:'稀有', uncommon:'罕见', common:'普通', all:'全部', view:'查看', guide:'📖 攻略' },
     th: { type:'ประเภท', rarity:'ความหายาก', cost:'มานา', stats:'สถิติ', hint:'ปัดเพื่อเลือก • แตะดูรายละเอียด',
-          hero:'ฮีโร่', spell:'เวทมนตร์', minion:'มิเนียน', equipment:'อุปกรณ์', event:'เหตุการณ์', location:'สถานที่',
-          mythic:'ตำนาน', legendary:'ระดับตำนาน', epic:'มหากาพย์', rare:'หายาก', common:'ธรรมดา', all:'ทั้งหมด', view:'ดู', guide:'📖 คู่มือ' }
+          member:'สมาชิก', moment:'ช่วงเวลา', gear:'อุปกรณ์', vibe:'บรรยากาศ', spot:'สถานที่',
+          mythic:'ตำนาน', legendary:'ระดับตำนาน', epic:'มหากาพย์', rare:'หายาก', uncommon:'ไม่ธรรมดา', common:'ธรรมดา', all:'ทั้งหมด', view:'ดู', guide:'📖 คู่มือ' }
 };
 
 // Card name translations
@@ -482,7 +441,7 @@ function render() {
     cards.forEach((c, i) => {
         const el = document.createElement('div');
         el.className = `card ${c.rarity}`;
-        el.innerHTML = `<img src="/static/cards/${c.img}" alt="${c.name}" loading="lazy"><div class="holo"></div><div class="shine"></div>`;
+        el.innerHTML = `<img src="${IMAGE_BASE_PATH}${c.img}" alt="${c.name}" loading="lazy"><div class="holo"></div><div class="shine"></div>`;
         carousel.appendChild(el);
     });
     $('#tot').textContent = cards.length;
@@ -707,7 +666,7 @@ function setup() {
 
 function openModal(i) {
     const c = cards[i];
-    $('#mimg').src = `/static/cards/${c.img}`;
+    $('#mimg').src = `${IMAGE_BASE_PATH}${c.img}`;
     
     // Get translated name or fallback to English
     const name = (lang !== 'en' && cardNames[lang] && cardNames[lang][c.id]) ? cardNames[lang][c.id] : c.name;
@@ -776,13 +735,18 @@ function updateUILanguage() {
     $('#fLegendary').textContent = i18n[lang].legendary;
     $('#fEpic').textContent = i18n[lang].epic;
     $('#fRare').textContent = i18n[lang].rare;
+    $('#fUncommon').textContent = i18n[lang].uncommon;
     $('#fCommon').textContent = i18n[lang].common;
 }
 
-render();
-setup();
-tick();
-updateUILanguage();
+// Initialize after loading card data
+loadCardsData().then(() => {
+    cards = [...DATA];
+    render();
+    setup();
+    tick();
+    updateUILanguage();
+});
 </script>
 </body>
 </html>
