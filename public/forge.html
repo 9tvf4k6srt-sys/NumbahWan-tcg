@@ -353,27 +353,33 @@
         /* Card Container */
         .card-stage { position: relative; z-index: 10; perspective: 2000px; }
         
-        /* The Card - Larger and More Impactful */
-        .reveal-card { width: min(320px, 80vw); height: calc(min(320px, 80vw) * 1.4);
-            position: relative; transform-style: preserve-3d; cursor: pointer;
-            /* Glow container - glow follows card */ }
+        /* The Card - Clean and Simple */
+        .reveal-card { 
+            width: min(320px, 80vw); 
+            height: calc(min(320px, 80vw) * 1.4);
+            position: relative; 
+            transform-style: preserve-3d; 
+            cursor: pointer;
+            border-radius: 16px;
+        }
         
-        .card-inner { position: absolute; inset: 0; transform-style: preserve-3d;
-            transition: transform 1s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        .card-inner { 
+            position: absolute; 
+            inset: 0; 
+            transform-style: preserve-3d;
+            transition: transform 1s cubic-bezier(0.175, 0.885, 0.32, 1.275); 
+        }
         .card-inner.flipped { transform: rotateY(180deg); }
         
-        /* SINGLE SOLID CARD - no visible layers during flip */
+        /* Both card faces - IDENTICAL structure */
         .card-face { 
-            position: absolute; inset: 0; 
+            position: absolute; 
+            inset: 0; 
             backface-visibility: hidden; 
             -webkit-backface-visibility: hidden;
             border-radius: 16px;
             overflow: hidden; 
-            box-shadow: 0 30px 60px rgba(0,0,0,0.5); 
-            isolation: isolate;
-            /* Prevent edge bleed during 3D transform */
-            transform: translateZ(0);
-            outline: 1px solid transparent; /* Hides sub-pixel gaps */
+            box-shadow: 0 20px 40px rgba(0,0,0,0.4); 
         }
         
         /* Card Back - Rich Design */
@@ -408,101 +414,69 @@
             }
         }
         
-        /* Card Front - SOLID SINGLE LAYER appearance */
+        /* Card Front - Just shows the image, nothing else */
         .card-front { 
-            transform: rotateY(180deg) translateZ(1px); /* Slight Z offset prevents z-fighting */
-            background: #000; /* Solid black base - no transparency gaps */
-            overflow: hidden; 
-            border-radius: 16px; 
+            transform: rotateY(180deg);
         }
         
-        /* Full-bleed render container */
+        /* Simple image container */
         .card-render-container { 
             position: absolute;
-            inset: 0; /* Fill entire card face */
+            inset: 0;
             overflow: hidden; 
             border-radius: 16px; 
-            background: #000; /* Solid base */
         }
         
-        /* NW Card takes full space, no frame gaps */
-        .card-render-container .nw-card { 
-            position: absolute !important;
-            inset: 0 !important;
-            width: 100% !important; 
-            height: 100% !important; 
-            border-radius: 16px !important;
-            background: #000 !important; /* Solid, no gaps */
-            --card-radius: 16px !important;
-            --frame-thickness: 0px !important; /* NO FRAME GAP */
-        }
-        
-        /* Inner fills completely */
-        .card-render-container .nw-card-inner { 
-            position: absolute !important;
-            inset: 0 !important; /* Full bleed */
-            border-radius: 16px !important; 
-            overflow: hidden;
-            background: #000 !important;
-        }
-        
-        /* Art fills completely */
-        .card-render-container .nw-card-art,
-        .card-render-container .nw-card-art img { 
-            position: absolute !important;
-            inset: 0 !important;
-            width: 100% !important;
-            height: 100% !important;
-            border-radius: 16px !important; 
+        /* The actual card image - FULL BLEED */
+        .card-render-container img,
+        #cardImg {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
             object-fit: cover;
+            border-radius: 16px;
         }
         
-        /* Hide ALL decorative elements that create layer gaps */
-        .card-render-container .nw-card::before,
-        .card-render-container .nw-card::after,
-        .card-render-container .nw-card-frame,
-        .card-render-container .nw-card-name-banner,
-        .card-render-container .nw-card-stats,
-        .card-render-container .nw-card-cost,
-        .card-render-container .nw-card-rarity-badge { 
-            display: none !important; 
+        /* Hide NW_CARD_RENDERER elements - we just want the image */
+        .card-render-container .nw-card {
+            display: none !important;
         }
         
-        /* Rarity Border Glow - Now INSIDE the card structure */
-        .card-border-glow { display: none; /* Moved to integrated glow system */ }
+        /* Hide legacy glow elements */
+        .card-border-glow, .card-glow { display: none; }
         
-        /* Card Aura Glow - Integrated with card, follows card perfectly */
-        .reveal-card::before {
-            content: ''; position: absolute; inset: -15px; border-radius: 24px;
-            opacity: 0; pointer-events: none; filter: blur(25px); z-index: -1;
-            transition: opacity 0.5s ease, transform 0.5s ease;
+        /* GLOW - Uses box-shadow on card-front (same shape, same radius) */
+        .card-front.glow-mythic {
+            box-shadow: 
+                0 0 30px 10px rgba(255,0,255,0.6),
+                0 0 60px 20px rgba(0,255,255,0.4),
+                0 0 100px 40px rgba(255,0,255,0.2);
+            animation: glowPulse 2s ease-in-out infinite;
         }
-        .reveal-card.glow-mythic::before {
-            background: radial-gradient(ellipse at center, rgba(255,0,255,0.8) 0%, rgba(0,255,255,0.5) 40%, transparent 70%);
-            animation: cardGlowPulse 2s ease-in-out infinite; opacity: 1;
+        .card-front.glow-legendary {
+            box-shadow: 
+                0 0 25px 8px rgba(255,215,0,0.6),
+                0 0 50px 15px rgba(255,107,0,0.4),
+                0 0 80px 30px rgba(255,215,0,0.2);
+            animation: glowPulse 2.5s ease-in-out infinite;
         }
-        .reveal-card.glow-legendary::before {
-            background: radial-gradient(ellipse at center, rgba(255,215,0,0.7) 0%, rgba(255,107,0,0.5) 40%, transparent 70%);
-            animation: cardGlowPulse 2.5s ease-in-out infinite; opacity: 1;
+        .card-front.glow-epic {
+            box-shadow: 
+                0 0 20px 6px rgba(168,85,247,0.5),
+                0 0 40px 12px rgba(168,85,247,0.3);
+            animation: glowPulse 3s ease-in-out infinite;
         }
-        .reveal-card.glow-epic::before {
-            background: radial-gradient(ellipse at center, rgba(168,85,247,0.6) 0%, transparent 60%);
-            animation: cardGlowPulse 3s ease-in-out infinite; opacity: 1;
+        .card-front.glow-rare {
+            box-shadow: 0 0 15px 5px rgba(59,130,246,0.4);
         }
-        .reveal-card.glow-rare::before {
-            background: radial-gradient(ellipse at center, rgba(59,130,246,0.5) 0%, transparent 60%);
-            opacity: 1;
+        .card-front.glow-uncommon {
+            box-shadow: 0 0 12px 4px rgba(34,197,94,0.3);
         }
-        .reveal-card.glow-uncommon::before {
-            background: radial-gradient(ellipse at center, rgba(34,197,94,0.4) 0%, transparent 60%);
-            opacity: 1;
+        @keyframes glowPulse {
+            0%, 100% { filter: brightness(1); }
+            50% { filter: brightness(1.1); }
         }
-        @keyframes cardGlowPulse {
-            0%, 100% { transform: scale(1); filter: blur(25px); }
-            50% { transform: scale(1.08); filter: blur(30px); }
-        }
-        /* Legacy support - hide old glow elements */
-        .card-glow { display: none; }
         
         /* Holographic Overlay - Premium Effect */
         .card-holo { position: absolute; inset: 0; pointer-events: none; opacity: 0; mix-blend-mode: overlay;
@@ -1908,9 +1882,9 @@ function showReveal() {
     document.getElementById('rarityBadge').classList.remove('show');
     document.getElementById('cardInfo').classList.remove('show');
     document.getElementById('revealContinue').classList.remove('show');
-    // Clear integrated glow classes
-    const revealCardEl = document.getElementById('revealCard');
-    revealCardEl.classList.remove('glow-mythic', 'glow-legendary', 'glow-epic', 'glow-rare', 'glow-uncommon', 'card-entrance');
+    // Clear glow classes from card-front
+    document.getElementById('cardFront').classList.remove('glow-mythic', 'glow-legendary', 'glow-epic', 'glow-rare', 'glow-uncommon');
+    document.getElementById('revealCard').classList.remove('card-entrance');
     document.getElementById('cardHolo').classList.remove('active');
     document.getElementById('cardSparkle').classList.remove('active');
     
@@ -1929,8 +1903,8 @@ function revealCard() {
     document.getElementById('rarityBadge').classList.remove('show');
     document.getElementById('cardInfo').classList.remove('show');
     document.getElementById('revealContinue').classList.remove('show');
-    // Clear integrated glow classes
-    revealCard.classList.remove('glow-mythic', 'glow-legendary', 'glow-epic', 'glow-rare', 'glow-uncommon');
+    // Clear glow classes from card-front
+    document.getElementById('cardFront').classList.remove('glow-mythic', 'glow-legendary', 'glow-epic', 'glow-rare', 'glow-uncommon');
     document.getElementById('cardHolo').classList.remove('active');
     document.getElementById('cardSparkle').classList.remove('active');
     document.getElementById('revealRays').classList.remove('active');
@@ -1938,38 +1912,10 @@ function revealCard() {
     // Update counter
     document.getElementById('revealCounter').textContent = `${currentIndex + 1} / ${cardsToReveal.length}`;
     
-    // 🎴 RENDER CARD WITH FRAME AND STATS using NW_CARD_RENDERER
-    const cardContainer = document.getElementById('cardRenderContainer');
+    // 🎴 SIMPLE CARD IMAGE - Clean, no frames or overlays
     const thumbUrl = getCardThumbUrl(card.img);
-    
-    // Build card data for renderer
-    const cardData = {
-        id: card.id,
-        name: card.name[lang] || card.name.en,
-        rarity: card.rarity,
-        img: thumbUrl, // Use preloaded thumbnail
-        gameStats: card.gameStats,
-        abilities: card.abilities,
-        category: card.category
-    };
-    
-    // Render framed card with stats
-    if (typeof NW_CARD_RENDERER !== 'undefined') {
-        cardContainer.innerHTML = '';
-        const renderedCard = NW_CARD_RENDERER.render(cardData, { 
-            size: 'lg',
-            showStats: true,
-            showRarityBadge: false // We have our own badge
-        });
-        cardContainer.appendChild(renderedCard);
-    } else {
-        // Fallback to simple image
-        const cardImgEl = document.getElementById('cardImg') || document.createElement('img');
-        cardImgEl.id = 'cardImg';
-        cardImgEl.src = thumbUrl;
-        cardContainer.innerHTML = '';
-        cardContainer.appendChild(cardImgEl);
-    }
+    const cardImg = document.getElementById('cardImg');
+    cardImg.src = thumbUrl;
     
     // Update info panel
     document.getElementById('cardName').textContent = card.name[lang] || card.name.en;
@@ -2076,12 +2022,12 @@ function showRarityEffects(card) {
         NW_JUICE.gacha.reveal(revealCard, rarity);
     }
     
-    // Activate glow - NOW integrated with card element (follows card perfectly)
-    const revealCardEl = document.getElementById('revealCard');
+    // Activate glow - Applied to card-front (box-shadow matches card shape perfectly)
+    const cardFront = document.getElementById('cardFront');
     // Remove any previous glow classes
-    revealCardEl.classList.remove('glow-mythic', 'glow-legendary', 'glow-epic', 'glow-rare', 'glow-uncommon');
+    cardFront.classList.remove('glow-mythic', 'glow-legendary', 'glow-epic', 'glow-rare', 'glow-uncommon');
     // Add new glow class
-    revealCardEl.classList.add('glow-' + rarity);
+    cardFront.classList.add('glow-' + rarity);
     
     // Activate holo for epic+
     if (['epic', 'legendary', 'mythic'].includes(rarity)) {
