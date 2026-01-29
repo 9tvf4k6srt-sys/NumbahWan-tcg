@@ -362,8 +362,19 @@
             transition: transform 1s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
         .card-inner.flipped { transform: rotateY(180deg); }
         
-        .card-face { position: absolute; inset: 0; backface-visibility: hidden; border-radius: 16px;
-            overflow: hidden; box-shadow: 0 30px 60px rgba(0,0,0,0.5); isolation: isolate; }
+        /* SINGLE SOLID CARD - no visible layers during flip */
+        .card-face { 
+            position: absolute; inset: 0; 
+            backface-visibility: hidden; 
+            -webkit-backface-visibility: hidden;
+            border-radius: 16px;
+            overflow: hidden; 
+            box-shadow: 0 30px 60px rgba(0,0,0,0.5); 
+            isolation: isolate;
+            /* Prevent edge bleed during 3D transform */
+            transform: translateZ(0);
+            outline: 1px solid transparent; /* Hides sub-pixel gaps */
+        }
         
         /* Card Back - Rich Design */
         .card-back { background: linear-gradient(135deg, #2d1f0f, #1a1208);
@@ -397,46 +408,64 @@
             }
         }
         
-        /* Card Front - Clean, no extra backgrounds, UNIFIED RADIUS */
-        .card-front { transform: rotateY(180deg); background: transparent; overflow: hidden; border-radius: 16px; }
-        .card-front img { width: 100%; height: 100%; object-fit: cover; border-radius: 16px; }
-        /* Ensure nested card elements clip properly - ALL USE 16px */
-        .card-front .nw-card { overflow: hidden; border-radius: 16px !important; }
-        .card-front .nw-card::before, .card-front .nw-card::after { display: none !important; }
-        /* Clean render container - UNIFIED RADIUS */
-        .card-render-container { 
-            width: 100%; height: 100%; 
+        /* Card Front - SOLID SINGLE LAYER appearance */
+        .card-front { 
+            transform: rotateY(180deg) translateZ(1px); /* Slight Z offset prevents z-fighting */
+            background: #000; /* Solid black base - no transparency gaps */
             overflow: hidden; 
             border-radius: 16px; 
-            background: transparent;
-            isolation: isolate; /* Creates stacking context to clip all children */
         }
+        
+        /* Full-bleed render container */
+        .card-render-container { 
+            position: absolute;
+            inset: 0; /* Fill entire card face */
+            overflow: hidden; 
+            border-radius: 16px; 
+            background: #000; /* Solid base */
+        }
+        
+        /* NW Card takes full space, no frame gaps */
         .card-render-container .nw-card { 
+            position: absolute !important;
+            inset: 0 !important;
             width: 100% !important; 
             height: 100% !important; 
             border-radius: 16px !important;
+            background: #000 !important; /* Solid, no gaps */
             --card-radius: 16px !important;
-            --inner-radius: 16px !important;
+            --frame-thickness: 0px !important; /* NO FRAME GAP */
         }
+        
+        /* Inner fills completely */
         .card-render-container .nw-card-inner { 
-            /* FULL BLEED - no frame inset for reveal */
-            top: 0 !important;
-            left: 0 !important;
-            right: 0 !important;
-            bottom: 0 !important;
-            border-radius: 16px !important; 
-            overflow: hidden; 
-        }
-        .card-render-container .nw-card-art { 
+            position: absolute !important;
+            inset: 0 !important; /* Full bleed */
             border-radius: 16px !important; 
             overflow: hidden;
+            background: #000 !important;
         }
+        
+        /* Art fills completely */
+        .card-render-container .nw-card-art,
         .card-render-container .nw-card-art img { 
+            position: absolute !important;
+            inset: 0 !important;
+            width: 100% !important;
+            height: 100% !important;
             border-radius: 16px !important; 
+            object-fit: cover;
         }
-        /* Hide the frame background completely */
-        .card-render-container .nw-card { 
-            background: transparent !important;
+        
+        /* Hide ALL decorative elements that create layer gaps */
+        .card-render-container .nw-card::before,
+        .card-render-container .nw-card::after,
+        .card-render-container .nw-card-frame,
+        .card-render-container .nw-card-name-banner,
+        .card-render-container .nw-card-stats,
+        .card-render-container .nw-card-cost,
+        .card-render-container .nw-card-rarity-badge { 
+            display: none !important; 
         }
         
         /* Rarity Border Glow - Now INSIDE the card structure */
