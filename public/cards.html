@@ -214,7 +214,17 @@
 // DYNAMIC CARD DATA - Loads from cards-v2.json (108 official cards)
 // ===========================================================================
 let DATA = []; // Will be populated from cards-v2.json
-const IMAGE_BASE_PATH = '/static/images/cards/'; // Correct image path
+const IMAGE_BASE_PATH = '/static/images/cards/thumbs/'; // Compressed WebP thumbnails (2.6MB vs 141MB)
+const IMAGE_FULL_PATH = '/static/images/cards/'; // Full resolution for modal
+
+// Convert image filename to WebP thumbnail
+function getThumbUrl(img) {
+    return IMAGE_BASE_PATH + img.replace(/\.(png|jpg|jpeg)$/i, '.webp');
+}
+// Get full resolution image URL
+function getFullUrl(img) {
+    return IMAGE_FULL_PATH + img;
+}
 
 // Load cards from JSON
 async function loadCardsData() {
@@ -441,7 +451,7 @@ function render() {
     cards.forEach((c, i) => {
         const el = document.createElement('div');
         el.className = `card ${c.rarity}`;
-        el.innerHTML = `<img src="${IMAGE_BASE_PATH}${c.img}" alt="${c.name}" loading="lazy"><div class="holo"></div><div class="shine"></div>`;
+        el.innerHTML = `<img src="${getThumbUrl(c.img)}" alt="${c.name}" loading="lazy"><div class="holo"></div><div class="shine"></div>`;
         carousel.appendChild(el);
     });
     $('#tot').textContent = cards.length;
@@ -666,7 +676,7 @@ function setup() {
 
 function openModal(i) {
     const c = cards[i];
-    $('#mimg').src = `${IMAGE_BASE_PATH}${c.img}`;
+    $('#mimg').src = getFullUrl(c.img); // Full resolution for modal view
     
     // Get translated name or fallback to English
     const name = (lang !== 'en' && cardNames[lang] && cardNames[lang][c.id]) ? cardNames[lang][c.id] : c.name;
