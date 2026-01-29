@@ -175,13 +175,17 @@ const NW_CARD_RENDERER = (function() {
         const rarity = (card.rarity || 'common').toLowerCase();
         const rarityInfo = RARITY_INFO[rarity] || RARITY_INFO.common;
         
-        // Parse or generate stats
-        let stats = card.stats;
+        // Parse or generate stats - prioritize gameStats from cards-v2.json
+        let stats = card.gameStats || card.stats;
         if (typeof stats === 'string') {
             stats = parseStatString(stats);
         }
         if (!stats && opts.showStats) {
             stats = generateStats(card.id || 0, rarity);
+        }
+        // Normalize: convert hp to def if needed (gameStats uses hp, renderer uses hp)
+        if (stats && stats.hp !== undefined && stats.def === undefined) {
+            stats.def = stats.hp; // Use HP as DEF display
         }
         
         // Create card container

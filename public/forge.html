@@ -7,9 +7,11 @@
     <link rel="stylesheet" href="/static/nw-tokens.css">
     <link rel="stylesheet" href="/static/nw-utilities.css">
     <link rel="stylesheet" href="/static/nw-card-reveal.css">
+    <link rel="stylesheet" href="/static/nw-card-frames.css">
     <script src="/static/nw-icons-inline.js"></script>
     <script src="/static/nw-wallet.js"></script>
     <script src="/static/nw-cards.js"></script>
+    <script src="/static/nw-card-renderer.js"></script>
     <link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     
@@ -295,6 +297,16 @@
         .history-card img { width: 100%; height: 100%; object-fit: cover; }
         .empty-slot { display: flex; align-items: center; justify-content: center;
             font-size: 20px; color: rgba(255,255,255,0.1); }
+        
+        /* History card with rendered frame */
+        .history-card .nw-card { width: 100%; height: 100%; }
+        .history-card .nw-card-sm { transform: scale(0.8); transform-origin: center; }
+        
+        /* ===== CARD RENDER CONTAINER IN REVEAL ===== */
+        .card-render-container { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; }
+        .card-render-container .nw-card { width: 100%; height: 100%; max-width: 280px; max-height: 400px; }
+        .card-render-container .nw-card-lg { transform: none; }
+        .card-render-container img#cardImg { width: 100%; height: 100%; object-fit: cover; }
         
         /* ===== ULTRA PREMIUM CARD REVEAL SYSTEM ===== */
         .reveal-overlay { position: fixed; inset: 0; background: #000; z-index: 1000;
@@ -784,8 +796,11 @@
                         <div class="card-back-pattern">🔥</div>
                         <div class="card-back-text">NUMBAHWAN</div>
                     </div>
-                    <div class="card-face card-front">
-                        <img id="cardImg" src="" alt="" onerror="this.onerror=null;this.src='/static/images/cards/placeholder.png';">
+                    <div class="card-face card-front" id="cardFront">
+                        <!-- Rendered card with frame goes here -->
+                        <div class="card-render-container" id="cardRenderContainer">
+                            <img id="cardImg" src="" alt="" onerror="this.onerror=null;this.src='/static/images/cards/placeholder.png';">
+                        </div>
                         <div class="card-holo" id="cardHolo"></div>
                         <div class="card-sparkle" id="cardSparkle"></div>
                     </div>
@@ -1256,7 +1271,11 @@ async function loadGachaCards() {
             img: c.img,
             desc: c.description,
             role: c.role,
-            category: c.category
+            category: c.category,
+            // Include full gameStats for card rendering
+            gameStats: c.gameStats || null,
+            abilities: c.abilities || [],
+            special: c.special || null
         }));
         console.log(`Gacha loaded ${CARDS.length} cards from NW_CARDS`);
         return CARDS;
@@ -1532,12 +1551,46 @@ function updateUI() {
 function renderHistory() {
     const grid = document.getElementById('historyGrid');
     const cards = forgeState.recentCards.slice(-5).reverse();
-    grid.innerHTML = cards.map(c => {
+    grid.innerHTML = '';
+    
+    cards.forEach(c => {
         const thumbUrl = getCardThumbUrl(c.img);
-        const fullUrl = getCardFullUrl(c.img);
-        return `<div class="history-card ${c.rarity}"><img src="${thumbUrl}" alt="${c.name?.en || ''}" onerror="this.onerror=null;this.src='${fullUrl}'"></div>`;
-    }).join('');
-    for (let i = cards.length; i < 5; i++) grid.innerHTML += '<div class="history-card empty-slot">?</div>';
+        const wrapper = document.createElement('div');
+        wrapper.className = `history-card ${c.rarity}`;
+        
+        // Use card renderer if available for mini framed cards
+        if (typeof NW_CARD_RENDERER !== 'undefined') {
+            const cardData = {
+                id: c.id,
+                name: c.name[lang] || c.name?.en || c.name,
+                rarity: c.rarity,
+                img: thumbUrl,
+                gameStats: c.gameStats
+            };
+            const renderedCard = NW_CARD_RENDERER.render(cardData, { 
+                size: 'sm',
+                showStats: false, // Too small for stats
+                showRarityBadge: false
+            });
+            wrapper.appendChild(renderedCard);
+        } else {
+            // Fallback to simple image
+            const img = document.createElement('img');
+            img.src = thumbUrl;
+            img.alt = c.name?.en || '';
+            img.onerror = () => { img.src = getCardFullUrl(c.img); };
+            wrapper.appendChild(img);
+        }
+        grid.appendChild(wrapper);
+    });
+    
+    // Fill remaining slots with empty placeholders
+    for (let i = cards.length; i < 5; i++) {
+        const emptySlot = document.createElement('div');
+        emptySlot.className = 'history-card empty-slot';
+        emptySlot.textContent = '?';
+        grid.appendChild(emptySlot);
+    }
 }
 
 function selectPull(el) {
@@ -1795,20 +1848,48 @@ function revealCard() {
     // Update counter
     document.getElementById('revealCounter').textContent = `${currentIndex + 1} / ${cardsToReveal.length}`;
     
-    // 🚀 Use THUMBNAIL for fast reveal (20-40KB vs 1-2MB full)
-    // Thumbnails are pre-compressed WebP - instant loading!
+    // 🎴 RENDER CARD WITH FRAME AND STATS using NW_CARD_RENDERER
+    const cardContainer = document.getElementById('cardRenderContainer');
     const thumbUrl = getCardThumbUrl(card.img);
-    const cardImgEl = document.getElementById('cardImg');
     
-    // Check if already preloaded
-    if (preloadedImages.has(thumbUrl)) {
-        cardImgEl.src = thumbUrl; // Instant!
+    // Build card data for renderer
+    const cardData = {
+        id: card.id,
+        name: card.name[lang] || card.name.en,
+        rarity: card.rarity,
+        img: thumbUrl, // Use preloaded thumbnail
+        gameStats: card.gameStats,
+        abilities: card.abilities,
+        category: card.category
+    };
+    
+    // Render framed card with stats
+    if (typeof NW_CARD_RENDERER !== 'undefined') {
+        cardContainer.innerHTML = '';
+        const renderedCard = NW_CARD_RENDERER.render(cardData, { 
+            size: 'lg',
+            showStats: true,
+            showRarityBadge: false // We have our own badge
+        });
+        cardContainer.appendChild(renderedCard);
     } else {
-        // Fallback: load thumbnail (still fast)
+        // Fallback to simple image
+        const cardImgEl = document.getElementById('cardImg') || document.createElement('img');
+        cardImgEl.id = 'cardImg';
         cardImgEl.src = thumbUrl;
+        cardContainer.innerHTML = '';
+        cardContainer.appendChild(cardImgEl);
     }
+    
+    // Update info panel
     document.getElementById('cardName').textContent = card.name[lang] || card.name.en;
-    document.getElementById('cardStats').textContent = card.stats;
+    
+    // Format stats string from gameStats
+    const stats = card.gameStats;
+    const statsText = stats 
+        ? `⚔️ ${stats.atk} | ❤️ ${stats.hp} | 💎 ${stats.cost}`
+        : '';
+    document.getElementById('cardStats').textContent = statsText;
     
     // Set rarity badge
     const badge = document.getElementById('rarityBadge');
