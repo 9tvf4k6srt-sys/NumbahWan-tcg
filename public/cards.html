@@ -114,33 +114,7 @@
             border: 2px solid #71717a;
         }
         
-        /* Card name badge at bottom - only visible on active card */
-        .card-name-badge {
-            position: absolute; bottom: 12px; left: 12px; right: 12px;
-            padding: 8px 12px; z-index: 10;
-            background: rgba(0,0,0,0.9); border-radius: 10px;
-            font-family: var(--nw-font-display), sans-serif;
-            font-size: 12px; font-weight: 700; text-align: center;
-            color: #fff; text-transform: uppercase; letter-spacing: 1px;
-            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-            backdrop-filter: blur(8px);
-            opacity: 0; transform: translateY(10px);
-            transition: opacity 0.3s, transform 0.3s;
-        }
-        .card.active .card-name-badge { opacity: 1; transform: translateY(0); }
-        
-        .card.mythic .card-name-badge { 
-            background: linear-gradient(135deg, rgba(255,107,0,0.95), rgba(220,38,38,0.95));
-            border: 2px solid #fbbf24; color: #fff;
-        }
-        .card.legendary .card-name-badge { 
-            background: linear-gradient(135deg, rgba(251,191,36,0.95), rgba(217,119,6,0.95));
-            color: #1c1917; border: 2px solid #fde68a;
-        }
-        .card.epic .card-name-badge { border: 2px solid #a855f7; }
-        .card.rare .card-name-badge { border: 2px solid #3b82f6; }
-        .card.uncommon .card-name-badge { border: 2px solid #22c55e; }
-        .card.common .card-name-badge { border: 2px solid #71717a; }
+        /* Card name is now shown in the BIG NAME BANNER above the carousel */
         
         /* Rarity indicator gem - only visible on active card */
         .card-rarity-gem {
@@ -218,6 +192,47 @@
         /* Note: name badge and rarity gem visibility already handled above */
         
         .ctr { position: fixed; top: 70px; right: 16px; font-size: 13px; color: rgba(255,255,255,0.5); z-index: 50; }
+        
+        /* BIG NAME BANNER - Shows current card name prominently */
+        .name-banner {
+            position: fixed; top: 100px; left: 50%; transform: translateX(-50%);
+            text-align: center; z-index: 80;
+            padding: 12px 24px;
+            background: rgba(0,0,0,0.8);
+            border-radius: 16px;
+            backdrop-filter: blur(10px);
+            border: 2px solid rgba(255,255,255,0.1);
+            min-width: 280px; max-width: 90vw;
+        }
+        .name-banner-rarity {
+            font-family: var(--nw-font-display), sans-serif;
+            font-size: 11px; font-weight: 700;
+            letter-spacing: 3px; text-transform: uppercase;
+            margin-bottom: 4px;
+            padding: 2px 12px; border-radius: 8px;
+            display: inline-block;
+        }
+        .name-banner-rarity.mythic { background: linear-gradient(135deg, #ff6b00, #dc2626); color: #fff; }
+        .name-banner-rarity.legendary { background: linear-gradient(135deg, #fbbf24, #d97706); color: #1c1917; }
+        .name-banner-rarity.epic { background: linear-gradient(135deg, #a855f7, #7c3aed); color: #fff; }
+        .name-banner-rarity.rare { background: linear-gradient(135deg, #3b82f6, #2563eb); color: #fff; }
+        .name-banner-rarity.uncommon { background: linear-gradient(135deg, #22c55e, #059669); color: #fff; }
+        .name-banner-rarity.common { background: linear-gradient(135deg, #71717a, #52525b); color: #fff; }
+        
+        .name-banner-name {
+            font-family: var(--nw-font-display), sans-serif;
+            font-size: clamp(16px, 4vw, 22px); font-weight: 800;
+            color: #fff; text-transform: uppercase;
+            letter-spacing: 1px;
+            text-shadow: 0 2px 10px rgba(0,0,0,0.5);
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        }
+        .name-banner.mythic { border-color: #ff6b00; box-shadow: 0 0 30px rgba(255,107,0,0.4); }
+        .name-banner.legendary { border-color: #fbbf24; box-shadow: 0 0 25px rgba(251,191,36,0.3); }
+        .name-banner.epic { border-color: #a855f7; box-shadow: 0 0 20px rgba(168,85,247,0.3); }
+        .name-banner.rare { border-color: #3b82f6; box-shadow: 0 0 15px rgba(59,130,246,0.3); }
+        .name-banner.uncommon { border-color: #22c55e; }
+        .name-banner.common { border-color: #71717a; }
         
         .debug { position: fixed; top: 70px; left: 16px; font-size: 16px; font-family: monospace;
             color: #0f0; z-index: 999; background: rgba(0,0,0,0.9); padding: 10px 14px; border-radius: 8px;
@@ -316,6 +331,12 @@
     
     <div class="ctr"><span id="cur">1</span> / <span id="tot">50</span></div>
     <div class="debug" id="debug">vel: 0</div>
+    
+    <!-- BIG NAME BANNER - Shows current card name while scrolling -->
+    <div class="name-banner" id="nameBanner">
+        <div class="name-banner-rarity" id="nameBannerRarity">MYTHIC</div>
+        <div class="name-banner-name" id="nameBannerName">RegginA, The Eternal Flame</div>
+    </div>
     
     <div class="glow" id="glow"></div>
     <div class="carousel" id="carousel"></div>
@@ -600,12 +621,11 @@ function render() {
     cards.forEach((c, i) => {
         const el = document.createElement('div');
         el.className = `card ${c.rarity}`;
-        // Build card with frame, image, name badge, and rarity gem
+        // Build card with frame, image, and rarity gem (name shown in big banner above)
         el.innerHTML = `
-            <img class="card-art" src="${getThumbUrl(c.img)}" alt="${c.name}" loading="lazy">
+            <img class="card-art" src="${getThumbUrl(c.img)}" alt="${c.name}" loading="lazy" onerror="this.style.display='none'">
             <div class="card-frame"></div>
             <div class="card-rarity-gem"><i class="gem-icon"></i></div>
-            <div class="card-name-badge">${c.name}</div>
             <div class="holo"></div>
             <div class="shine"></div>
         `;
@@ -643,6 +663,21 @@ function draw() {
     const glow = $('#glow');
     if (card) {
         glow.className = 'glow ' + card.rarity + (Math.abs(vel) < 0.05 ? ' on' : '');
+        
+        // Update the BIG NAME BANNER
+        const banner = $('#nameBanner');
+        const bannerRarity = $('#nameBannerRarity');
+        const bannerName = $('#nameBannerName');
+        
+        // Get translated name or fallback to English
+        const displayName = (lang !== 'en' && cardNames[lang] && cardNames[lang][card.id]) 
+            ? cardNames[lang][card.id] 
+            : card.name;
+        
+        bannerName.textContent = displayName;
+        bannerRarity.textContent = i18n[lang][card.rarity] || card.rarity.toUpperCase();
+        bannerRarity.className = 'name-banner-rarity ' + card.rarity;
+        banner.className = 'name-banner ' + card.rarity;
     }
     
     debug.innerHTML = `vel: <b>${vel.toFixed(3)}</b><br>pos: ${pos.toFixed(2)}`;
