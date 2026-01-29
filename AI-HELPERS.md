@@ -1,21 +1,88 @@
-# 🤖 NumbahWan Auto-Helper System
+# 🤖 NumbahWan Auto-Helper & Debugger System
 
-> Automatically creates and manages helper scripts based on detected pain points
+> Automatically creates helpers, debugs issues, and optimizes your project
 
 ## Quick Start
 
 ```bash
-# Detect issues
-./scripts/auto-helper.sh detect
+# Full project analysis
+npm run debug
 
-# Fix all issues automatically
-./scripts/auto-helper.sh fix all
+# Auto-fix all issues
+npm run debug:fix
 
-# Quick rebuild
-./scripts/auto-helper.sh quick rebuild
+# Optimize everything
+npm run debug:optimize
+
+# Generate health report
+npm run debug:report
 ```
 
-## Commands
+## 🔧 Auto-Debugger (NEW!)
+
+The **NW-Debugger** is an intelligent system that analyzes and optimizes your entire project.
+
+### Analysis Categories
+
+| Category | What It Checks |
+|----------|----------------|
+| **Structure** | Directory layout, orphan files, required folders |
+| **Data** | JSON validity, duplicate data, consolidation opportunities |
+| **Assets** | Image count, thumbnails, large files, optimization |
+| **Code** | Debug statements, hardcoded values, TODO/FIXME, patterns |
+| **Performance** | Bundle size, lazy loading, render-blocking resources |
+| **Security** | Exposed secrets, .gitignore, sensitive files |
+
+### Commands
+
+```bash
+# Full analysis (all categories)
+./scripts/nw-debugger.sh analyze
+
+# Auto-fix all detected issues
+./scripts/nw-debugger.sh fix
+
+# Optimize images, code, and data
+./scripts/nw-debugger.sh optimize
+
+# Generate markdown health report
+./scripts/nw-debugger.sh report
+
+# Individual checks
+./scripts/nw-debugger.sh structure
+./scripts/nw-debugger.sh data
+./scripts/nw-debugger.sh assets
+./scripts/nw-debugger.sh code
+./scripts/nw-debugger.sh perf
+./scripts/nw-debugger.sh security
+```
+
+### NPM Shortcuts
+
+```bash
+npm run debug           # Full analysis
+npm run debug:fix       # Auto-fix all
+npm run debug:optimize  # Optimize everything
+npm run debug:report    # Health report
+npm run debug:security  # Security check
+npm run debug:perf      # Performance check
+```
+
+### What Auto-Fix Does
+
+1. **Thumbnails** - Generates missing WebP thumbnails
+2. **Image Paths** - Updates old `/static/cards/` → `/static/images/cards/`
+3. **Git Config** - Ensures `.gitignore` has required entries
+4. **JSON Validation** - Validates all JSON files
+5. **Rebuild** - Runs `npm run build` to compile changes
+
+---
+
+## 🛠️ Auto-Helper System
+
+The original helper system for recording and reusing solutions.
+
+### Commands
 
 | Command | Description |
 |---------|-------------|
@@ -26,12 +93,23 @@
 | `pain "desc"` | Record a pain point for future automation |
 | `quick <cmd>` | Quick commands (rebuild, thumb, verify, stats, port) |
 
-## Saved Helpers
+### NPM Shortcuts
+
+```bash
+npm run helper          # Show help
+npm run helper:detect   # Scan for issues
+npm run helper:fix      # Fix all issues
+npm run helper:rebuild  # Quick rebuild
+```
+
+---
+
+## 📋 Saved Helpers
 
 ### 1. Thumbnail Generator
 - **Problem**: Manual ImageMagick commands needed for each new card image
 - **Solution**: Auto-generate WebP thumbnails from PNG/JPG
-- **Usage**: `./scripts/card-manager.sh thumbs`
+- **Usage**: `./scripts/card-manager.sh thumbs` or `npm run cards:thumbs`
 
 ### 2. Card Data Sync
 - **Problem**: Card data was hardcoded in multiple files
@@ -41,56 +119,76 @@
 ### 3. Image Path Resolver
 - **Problem**: Image paths scattered across multiple folders
 - **Solution**: Consolidated to `/static/images/cards/` + `/thumbs/`
-- **Paths**:
-  - Full resolution: `/static/images/cards/`
-  - Thumbnails: `/static/images/cards/thumbs/`
 
-## Auto-Detection Checks
+---
 
-The system automatically checks for:
-
-1. ✅ **Missing thumbnails** - Compares full images vs WebP thumbnails
-2. ✅ **Old image paths** - Finds `/static/cards/` references that should be `/static/images/cards/`
-3. ✅ **Hardcoded card data** - Detects `const CARDS = [` in HTML files
-4. ✅ **cards-v2.json validity** - Ensures master data file exists and is valid
-
-## Recording Pain Points
-
-When you encounter a recurring problem:
-
-```bash
-./scripts/auto-helper.sh pain "Description of the problem"
-```
-
-This records the issue in `helpers.json` for future automation.
-
-## Files
-
-| File | Purpose |
-|------|---------|
-| `scripts/auto-helper.sh` | Main helper automation script |
-| `scripts/helpers.json` | Stored helpers and pain points |
-| `scripts/card-manager.sh` | Card-specific operations |
-| `scripts/generated/` | Auto-generated helper scripts |
-
-## Integration with Development
+## 🔄 Recommended Workflow
 
 ### Before Starting Work
 ```bash
-./scripts/auto-helper.sh detect
+npm run debug          # Check project health
+```
+
+### After Making Changes
+```bash
+npm run debug:fix      # Fix any issues
+npm run build          # Rebuild
+pm2 restart numbahwan-guild
 ```
 
 ### After Adding New Cards
 ```bash
-./scripts/auto-helper.sh fix thumbnails
-./scripts/auto-helper.sh quick rebuild
+npm run cards:thumbs   # Generate thumbnails
+npm run debug:fix      # Ensure everything is correct
 ```
 
 ### When Something Breaks
 ```bash
-./scripts/auto-helper.sh fix all
+npm run debug          # Diagnose the issue
+npm run debug:fix      # Auto-fix
+npm run debug:report   # Get detailed report
+```
+
+### Recording Problems for Future
+```bash
+./scripts/auto-helper.sh pain "Description of recurring problem"
 ```
 
 ---
 
-*This system learns from our mistakes and automates the fixes!*
+## 📁 Files
+
+| File | Purpose |
+|------|---------|
+| `scripts/nw-debugger.sh` | Main debugger/optimizer |
+| `scripts/auto-helper.sh` | Helper automation script |
+| `scripts/helpers.json` | Stored helpers and pain points |
+| `scripts/optimizations.json` | Optimization rules and history |
+| `scripts/card-manager.sh` | Card-specific operations |
+| `scripts/reports/` | Generated health reports |
+
+---
+
+## 📊 Health Report Example
+
+```
+# NumbahWan Project Health Report
+Generated: 2026-01-29 11:30:00
+
+## Summary
+
+| Category | Issues | Status |
+|----------|--------|--------|
+| Structure | 0 | ✅ |
+| Data | 0 | ✅ |
+| Assets | 0 | ✅ |
+| Code | 0 | ✅ |
+| Performance | 2 | ⚠️ |
+| Security | 0 | ✅ |
+
+**Total Issues: 2**
+```
+
+---
+
+*This system learns from mistakes and automates the fixes!*
