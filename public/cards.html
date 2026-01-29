@@ -46,112 +46,123 @@
         .glow.uncommon { background: radial-gradient(ellipse, rgba(34,197,94,0.5) 0%, rgba(22,163,74,0.25) 40%, transparent 70%); }
         .glow.common { background: radial-gradient(ellipse, rgba(150,150,150,0.4) 0%, rgba(100,100,100,0.2) 40%, transparent 70%); }
         
-        /* Card carousel positioning - uses nw-card-frames.css for frame styling */
+        /* Card carousel positioning */
         .card { position: absolute; left: 50%; top: 50%; width: var(--card-w); height: var(--card-h);
             margin-left: calc(var(--card-w) / -2); margin-top: calc(var(--card-h) / -2);
-            will-change: transform, opacity; backface-visibility: hidden; }
-        .card .card-art { width: 100%; height: 100%; object-fit: cover; pointer-events: none; }
+            will-change: transform, opacity; backface-visibility: hidden;
+            border-radius: 16px; overflow: hidden; }
+        .card .card-art { width: 100%; height: 100%; object-fit: cover; pointer-events: none;
+            border-radius: 12px; display: block; }
         
-        /* Card frame wrapper - contains the frame overlay */
+        /* Card frame - simple border approach with rounded corners */
         .card-frame {
             position: absolute; inset: 0; pointer-events: none; z-index: 5;
-            border-radius: 14px; overflow: hidden;
+            border-radius: 16px;
         }
         
-        /* Rarity-specific frame borders */
+        /* Mythic frame - fiery orange/gold */
         .card.mythic .card-frame {
-            border: 4px solid transparent;
-            background: linear-gradient(#0a0a0f, #0a0a0f) padding-box,
-                        linear-gradient(135deg, #ff6b00, #ffd700, #ff6b00, #dc2626, #ff6b00) border-box;
-            box-shadow: inset 0 0 20px rgba(255,107,0,0.5), 0 0 30px rgba(255,107,0,0.4);
+            border: 5px solid #ff6b00;
+            box-shadow: inset 0 0 20px rgba(255,107,0,0.6), 0 0 25px rgba(255,107,0,0.5);
             animation: mythic-frame-pulse 2s ease-in-out infinite;
         }
+        .card.mythic .card-frame::before {
+            content: ''; position: absolute; inset: -5px; border-radius: 18px;
+            background: linear-gradient(135deg, #ff6b00, #ffd700, #ff6b00, #dc2626);
+            z-index: -1; animation: mythic-rotate 3s linear infinite;
+        }
         @keyframes mythic-frame-pulse {
-            0%, 100% { box-shadow: inset 0 0 20px rgba(255,107,0,0.5), 0 0 30px rgba(255,107,0,0.4); }
-            50% { box-shadow: inset 0 0 30px rgba(255,107,0,0.7), 0 0 50px rgba(255,107,0,0.6); }
+            0%, 100% { box-shadow: inset 0 0 20px rgba(255,107,0,0.6), 0 0 25px rgba(255,107,0,0.5); }
+            50% { box-shadow: inset 0 0 30px rgba(255,107,0,0.8), 0 0 40px rgba(255,107,0,0.7); }
+        }
+        @keyframes mythic-rotate {
+            0% { filter: hue-rotate(0deg); }
+            100% { filter: hue-rotate(30deg); }
         }
         
+        /* Legendary frame - royal gold */
         .card.legendary .card-frame {
-            border: 4px solid transparent;
-            background: linear-gradient(#0a0a0f, #0a0a0f) padding-box,
-                        linear-gradient(135deg, #fbbf24, #d97706, #fbbf24) border-box;
-            box-shadow: inset 0 0 15px rgba(251,191,36,0.4), 0 0 25px rgba(251,191,36,0.3);
-            animation: legendary-frame-shine 3s linear infinite;
+            border: 4px solid #fbbf24;
+            box-shadow: inset 0 0 15px rgba(251,191,36,0.5), 0 0 20px rgba(251,191,36,0.4);
+            animation: legendary-shimmer 3s ease-in-out infinite;
         }
-        @keyframes legendary-frame-shine {
-            0% { filter: brightness(1); }
-            50% { filter: brightness(1.2); }
-            100% { filter: brightness(1); }
+        @keyframes legendary-shimmer {
+            0%, 100% { border-color: #fbbf24; }
+            50% { border-color: #fde68a; }
         }
         
+        /* Epic frame - arcane purple */
         .card.epic .card-frame {
-            border: 3px solid transparent;
-            background: linear-gradient(#0a0a0f, #0a0a0f) padding-box,
-                        linear-gradient(135deg, #a855f7, #7c3aed, #a855f7) border-box;
-            box-shadow: inset 0 0 12px rgba(168,85,247,0.4), 0 0 20px rgba(168,85,247,0.3);
+            border: 4px solid #a855f7;
+            box-shadow: inset 0 0 12px rgba(168,85,247,0.5), 0 0 15px rgba(168,85,247,0.4);
         }
         
+        /* Rare frame - crystal blue */
         .card.rare .card-frame {
-            border: 3px solid transparent;
-            background: linear-gradient(#0a0a0f, #0a0a0f) padding-box,
-                        linear-gradient(135deg, #3b82f6, #2563eb, #3b82f6) border-box;
-            box-shadow: inset 0 0 10px rgba(59,130,246,0.3), 0 0 15px rgba(59,130,246,0.2);
+            border: 3px solid #3b82f6;
+            box-shadow: inset 0 0 10px rgba(59,130,246,0.4), 0 0 12px rgba(59,130,246,0.3);
         }
         
+        /* Uncommon frame - forest green */
         .card.uncommon .card-frame {
-            border: 2px solid transparent;
-            background: linear-gradient(#0a0a0f, #0a0a0f) padding-box,
-                        linear-gradient(135deg, #22c55e, #059669, #22c55e) border-box;
-            box-shadow: inset 0 0 8px rgba(34,197,94,0.3);
+            border: 3px solid #22c55e;
+            box-shadow: inset 0 0 8px rgba(34,197,94,0.4);
         }
         
+        /* Common frame - steel grey */
         .card.common .card-frame {
-            border: 2px solid transparent;
-            background: linear-gradient(#0a0a0f, #0a0a0f) padding-box,
-                        linear-gradient(135deg, #71717a, #52525b, #71717a) border-box;
+            border: 2px solid #71717a;
         }
         
-        /* Card name badge at bottom */
+        /* Card name badge at bottom - only visible on active card */
         .card-name-badge {
-            position: absolute; bottom: 8px; left: 8px; right: 8px;
-            padding: 6px 10px; z-index: 10;
-            background: rgba(0,0,0,0.85); border-radius: 8px;
+            position: absolute; bottom: 12px; left: 12px; right: 12px;
+            padding: 8px 12px; z-index: 10;
+            background: rgba(0,0,0,0.9); border-radius: 10px;
             font-family: var(--nw-font-display), sans-serif;
-            font-size: 11px; font-weight: 700; text-align: center;
-            color: #fff; text-transform: uppercase; letter-spacing: 0.5px;
+            font-size: 12px; font-weight: 700; text-align: center;
+            color: #fff; text-transform: uppercase; letter-spacing: 1px;
             white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-            backdrop-filter: blur(4px);
+            backdrop-filter: blur(8px);
+            opacity: 0; transform: translateY(10px);
+            transition: opacity 0.3s, transform 0.3s;
         }
+        .card.active .card-name-badge { opacity: 1; transform: translateY(0); }
+        
         .card.mythic .card-name-badge { 
-            background: linear-gradient(135deg, rgba(255,107,0,0.9), rgba(220,38,38,0.9));
-            border: 1px solid #fbbf24;
+            background: linear-gradient(135deg, rgba(255,107,0,0.95), rgba(220,38,38,0.95));
+            border: 2px solid #fbbf24; color: #fff;
         }
         .card.legendary .card-name-badge { 
-            background: linear-gradient(135deg, rgba(251,191,36,0.9), rgba(217,119,6,0.9));
-            color: #1c1917; border: 1px solid #fde68a;
+            background: linear-gradient(135deg, rgba(251,191,36,0.95), rgba(217,119,6,0.95));
+            color: #1c1917; border: 2px solid #fde68a;
         }
-        .card.epic .card-name-badge { border: 1px solid rgba(168,85,247,0.5); }
-        .card.rare .card-name-badge { border: 1px solid rgba(59,130,246,0.5); }
-        .card.uncommon .card-name-badge { border: 1px solid rgba(34,197,94,0.4); }
-        .card.common .card-name-badge { border: 1px solid rgba(113,113,122,0.3); }
+        .card.epic .card-name-badge { border: 2px solid #a855f7; }
+        .card.rare .card-name-badge { border: 2px solid #3b82f6; }
+        .card.uncommon .card-name-badge { border: 2px solid #22c55e; }
+        .card.common .card-name-badge { border: 2px solid #71717a; }
         
-        /* Rarity indicator gem */
+        /* Rarity indicator gem - only visible on active card */
         .card-rarity-gem {
-            position: absolute; top: 8px; right: 8px; z-index: 10;
-            width: 28px; height: 28px; border-radius: 50%;
+            position: absolute; top: 10px; right: 10px; z-index: 10;
+            width: 32px; height: 32px; border-radius: 50%;
             display: flex; align-items: center; justify-content: center;
-            font-size: 12px; font-weight: 900;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.5);
+            font-size: 14px; font-weight: 900;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.6);
+            opacity: 0; transform: scale(0.5);
+            transition: opacity 0.3s, transform 0.3s;
         }
+        .card.active .card-rarity-gem { opacity: 1; transform: scale(1); }
+        
         .card.mythic .card-rarity-gem { 
             background: linear-gradient(135deg, #ff6b00, #dc2626); 
             border: 2px solid #fbbf24; color: #fff;
-            animation: gem-pulse 1.5s ease-in-out infinite;
         }
         @keyframes gem-pulse {
-            0%, 100% { transform: scale(1); box-shadow: 0 2px 8px rgba(0,0,0,0.5), 0 0 10px rgba(255,107,0,0.5); }
-            50% { transform: scale(1.1); box-shadow: 0 2px 12px rgba(0,0,0,0.5), 0 0 20px rgba(255,107,0,0.7); }
+            0%, 100% { box-shadow: 0 3px 10px rgba(0,0,0,0.6), 0 0 15px rgba(255,107,0,0.6); }
+            50% { box-shadow: 0 3px 15px rgba(0,0,0,0.6), 0 0 25px rgba(255,107,0,0.8); }
         }
+        .card.active.mythic .card-rarity-gem { animation: gem-pulse 1.5s ease-in-out infinite; }
         .card.legendary .card-rarity-gem { 
             background: linear-gradient(135deg, #fbbf24, #d97706); 
             border: 2px solid #fde68a; color: #1c1917;
@@ -204,9 +215,7 @@
         .card.uncommon.active { box-shadow: 0 0 35px rgba(34,197,94,0.5), 0 0 18px rgba(22,163,74,0.3), 0 8px 32px rgba(0,0,0,0.6); }
         .card.common.active { box-shadow: 0 0 30px rgba(150,150,150,0.4), 0 8px 32px rgba(0,0,0,0.6); }
         
-        /* Hide name badge when not active for cleaner look */
-        .card .card-name-badge { opacity: 0; transform: translateY(5px); transition: all 0.3s ease; }
-        .card.active .card-name-badge { opacity: 1; transform: translateY(0); }
+        /* Note: name badge and rarity gem visibility already handled above */
         
         .ctr { position: fixed; top: 70px; right: 16px; font-size: 13px; color: rgba(255,255,255,0.5); z-index: 50; }
         
