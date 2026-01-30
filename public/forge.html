@@ -15,6 +15,7 @@
     <script src="/static/helpers/nw-audio.js"></script>
     <script src="/static/helpers/nw-state.js"></script>
     <script src="/static/helpers/nw-guild.js"></script>
+    <script src="/static/helpers/nw-forge.js"></script>
     <!-- Game Components -->
     <script src="/static/nw-icons-inline.js"></script>
     <script src="/static/nw-wallet.js"></script>
@@ -3410,6 +3411,11 @@ function createPackParticles(rarity) {
 }
 
 function getRarityColor(rarity) {
+    // 🎮 Use NW_GUILD if available
+    if (typeof NW_GUILD !== 'undefined') {
+        return NW_GUILD.getRarityColor(rarity);
+    }
+    // Fallback
     const colors = {
         mythic: '#ff00ff',
         legendary: '#ffd700',
@@ -4009,10 +4015,34 @@ function showToast(msg, rarity = null) {
 (async function() {
     await loadGachaCards();
     loadState();
+    
+    // 🎮 Initialize NW_FORGE with card pool
+    if (typeof NW_FORGE !== 'undefined') {
+        NW_FORGE.setCards(CARDS);
+        await NW_FORGE.init();
+        
+        // Subscribe to forge events
+        NW_FORGE.on('mythic', (card) => {
+            console.log('🎉 MYTHIC PULLED!', card);
+            // Could trigger global announcements here
+        });
+        
+        NW_FORGE.on('legendary', (card) => {
+            console.log('⭐ LEGENDARY!', card);
+        });
+        
+        console.log(`[Forge] NW_FORGE initialized`);
+    }
+    
+    // 🎮 Initialize NW_STATE for persistence
+    if (typeof NW_STATE !== 'undefined') {
+        NW_STATE.configure({ persist: true, debug: false });
+        console.log(`[Forge] NW_STATE persistence enabled`);
+    }
+    
     console.log(`Forge ready with ${CARDS.length} pullable cards`);
     
     // 🚀 Background preload common cards for instant reveals
-    // Runs after page is interactive - won't block UI
     setTimeout(() => {
         preloadCommonCards().then(() => {
             console.log(`Preloaded ${preloadedImages.size} card thumbnails`);
