@@ -275,7 +275,7 @@ const NW_CARDS = (function() {
     // COLLECTION HELPERS
     // ═══════════════════════════════════════════════════════════════════════════
     function getCardImageUrl(card) {
-        if (!card) return '/static/cards/placeholder.jpg';
+        if (!card) return '/static/images/cards/placeholder.webp';
         return `/static/cards/${card.img}`;
     }
 
