@@ -2220,17 +2220,29 @@
     // ═══════════════════════════════════════════════════════════════════
     
     async function init() {
-        // Load cards
-        if (typeof NW_CARDS !== 'undefined') {
-            CARDS = NW_CARDS.getAllCards().filter(c => c.gameStats);
-        } else {
-            // Fallback - load from API
+        // Load cards - wait for NW_CARDS to init, or load directly
+        try {
+            // Wait for NW_CARDS to initialize
+            if (typeof NW_CARDS !== 'undefined') {
+                await NW_CARDS.init(); // This waits for JSON to load
+                CARDS = NW_CARDS.getAll().filter(c => c.gameStats);
+            }
+            
+            // If no cards from NW_CARDS, load directly from JSON
+            if (!CARDS.length) {
+                const res = await fetch('/static/data/cards-v2.json');
+                const data = await res.json();
+                CARDS = data.filter(c => c.gameStats);
+            }
+        } catch (e) {
+            console.error('Failed to load cards:', e);
+            // Last resort fallback
             try {
                 const res = await fetch('/static/data/cards-v2.json');
                 const data = await res.json();
                 CARDS = data.filter(c => c.gameStats);
-            } catch (e) {
-                console.error('Failed to load cards:', e);
+            } catch (e2) {
+                console.error('All card loading failed:', e2);
             }
         }
         
