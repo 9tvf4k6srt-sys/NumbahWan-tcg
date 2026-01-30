@@ -56,10 +56,10 @@
         }
         
         /* ═══════════════════════════════════════════════════════════════════
-           ROTATE DEVICE PROMPT - Shows when in portrait on mobile
+           ROTATE DEVICE PROMPT - Controlled by JavaScript for reliability
            ═══════════════════════════════════════════════════════════════════ */
         .rotate-prompt {
-            display: none;
+            display: none; /* Controlled by JS */
             position: fixed;
             inset: 0;
             background: linear-gradient(135deg, #0a0a1a 0%, #1a0a2e 100%);
@@ -70,6 +70,9 @@
             text-align: center;
             padding: 30px;
         }
+        .rotate-prompt.show {
+            display: flex !important;
+        }
         .rotate-icon {
             font-size: 80px;
             margin-bottom: 20px;
@@ -77,7 +80,7 @@
         }
         @keyframes rotatePhone {
             0%, 100% { transform: rotate(0deg); }
-            25% { transform: rotate(-30deg); }
+            25% { transform: rotate(-20deg); }
             75% { transform: rotate(90deg); }
         }
         .rotate-title {
@@ -91,13 +94,29 @@
             font-size: 16px;
             color: rgba(255,255,255,0.7);
             max-width: 280px;
+            line-height: 1.5;
+        }
+        .rotate-skip {
+            margin-top: 30px;
+            padding: 12px 24px;
+            background: rgba(255,255,255,0.1);
+            border: 2px solid rgba(255,255,255,0.3);
+            border-radius: 8px;
+            color: rgba(255,255,255,0.7);
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .rotate-skip:hover, .rotate-skip:active {
+            background: rgba(255,255,255,0.2);
+            border-color: var(--gold);
+            color: #fff;
         }
         
-        /* Show rotate prompt on mobile portrait */
-        @media screen and (max-width: 768px) and (orientation: portrait) {
-            .rotate-prompt { display: flex; }
-            .arena-container { display: none !important; }
-            .start-overlay { display: none !important; }
+        /* When rotate prompt is shown, hide game */
+        body.show-rotate .arena-container,
+        body.show-rotate .start-overlay {
+            display: none !important;
         }
         
         /* ═══════════════════════════════════════════════════════════════════
@@ -2188,7 +2207,8 @@
     <div class="rotate-prompt" id="rotatePrompt">
         <div class="rotate-icon">📱</div>
         <div class="rotate-title">ROTATE YOUR DEVICE</div>
-        <div class="rotate-text">Turn your phone sideways for the best battle experience!</div>
+        <div class="rotate-text">Turn your phone sideways (landscape) for the best battle experience with more room for cards!</div>
+        <button class="rotate-skip" id="rotateSkip">Continue in Portrait Anyway →</button>
     </div>
     
     <!-- EPIC START SCREEN -->
@@ -2392,6 +2412,90 @@
     </div>
 
 <script>
+// ═══════════════════════════════════════════════════════════════════════════
+// ORIENTATION CHECK - Runs immediately before game loads
+// ═══════════════════════════════════════════════════════════════════════════
+(function() {
+    'use strict';
+    
+    let userSkippedRotate = false;
+    
+    function isMobileDevice() {
+        return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) 
+            || (window.innerWidth <= 768);
+    }
+    
+    function isPortrait() {
+        // Multiple detection methods for reliability
+        if (window.screen && window.screen.orientation) {
+            return window.screen.orientation.type.includes('portrait');
+        }
+        if (window.orientation !== undefined) {
+            return window.orientation === 0 || window.orientation === 180;
+        }
+        return window.innerHeight > window.innerWidth;
+    }
+    
+    function checkOrientation() {
+        if (userSkippedRotate) return; // User chose to continue in portrait
+        
+        const rotatePrompt = document.getElementById('rotatePrompt');
+        if (!rotatePrompt) return;
+        
+        const shouldShowPrompt = isMobileDevice() && isPortrait();
+        
+        if (shouldShowPrompt) {
+            rotatePrompt.classList.add('show');
+            document.body.classList.add('show-rotate');
+        } else {
+            rotatePrompt.classList.remove('show');
+            document.body.classList.remove('show-rotate');
+        }
+    }
+    
+    // Check on load
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', () => {
+            checkOrientation();
+            
+            // Skip button
+            const skipBtn = document.getElementById('rotateSkip');
+            if (skipBtn) {
+                skipBtn.addEventListener('click', () => {
+                    userSkippedRotate = true;
+                    document.getElementById('rotatePrompt').classList.remove('show');
+                    document.body.classList.remove('show-rotate');
+                });
+            }
+        });
+    } else {
+        checkOrientation();
+        const skipBtn = document.getElementById('rotateSkip');
+        if (skipBtn) {
+            skipBtn.addEventListener('click', () => {
+                userSkippedRotate = true;
+                document.getElementById('rotatePrompt').classList.remove('show');
+                document.body.classList.remove('show-rotate');
+            });
+        }
+    }
+    
+    // Listen for orientation changes - multiple event types for compatibility
+    window.addEventListener('resize', checkOrientation);
+    window.addEventListener('orientationchange', () => {
+        // Delay check to let the browser update dimensions
+        setTimeout(checkOrientation, 100);
+        setTimeout(checkOrientation, 300);
+    });
+    
+    // Screen orientation API (most reliable when available)
+    if (window.screen && window.screen.orientation) {
+        window.screen.orientation.addEventListener('change', () => {
+            setTimeout(checkOrientation, 100);
+        });
+    }
+})();
+
 // ═══════════════════════════════════════════════════════════════════════════
 // NUMBAHWAN TCG - BATTLE ARENA v2.0
 // Marvel Snap-Inspired Premium Battle Experience
