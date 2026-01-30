@@ -927,6 +927,155 @@
         }
         @keyframes impactExpand {
             0% { transform: translate(-50%, -50%) scale(0.5); opacity: 1; }
+        
+        /* ═══════════════════════════════════════════════════════════════════
+           DRAG AND DROP SYSTEM
+           ═══════════════════════════════════════════════════════════════════ */
+        
+        /* Dragging card ghost */
+        .drag-ghost {
+            position: fixed;
+            pointer-events: none;
+            z-index: 15000;
+            width: var(--hand-card-width);
+            height: var(--hand-card-height);
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 
+                0 20px 60px rgba(0,0,0,0.8),
+                0 0 40px rgba(255,215,0,0.5);
+            transform: rotate(-5deg) scale(1.15);
+            transition: transform 0.1s ease-out;
+        }
+        .drag-ghost img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .drag-ghost .drag-cost {
+            position: absolute;
+            top: -8px;
+            left: -8px;
+            width: 32px;
+            height: 32px;
+            background: linear-gradient(135deg, var(--cyan), var(--blue));
+            border: 3px solid #fff;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 14px;
+            font-weight: 900;
+            color: #fff;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+        }
+        
+        /* Card being dragged in hand */
+        .hand-card.dragging {
+            opacity: 0.3;
+            transform: scale(0.9) !important;
+        }
+        
+        /* Slot hover states during drag */
+        .board-slot.drag-hover {
+            background: rgba(255,215,0,0.3) !important;
+            border: 3px dashed var(--gold) !important;
+            box-shadow: 
+                0 0 30px rgba(255,215,0,0.5),
+                inset 0 0 20px rgba(255,215,0,0.2);
+            animation: slotPulse 0.5s ease-in-out infinite;
+        }
+        @keyframes slotPulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+        
+        .board-slot.drag-invalid {
+            background: rgba(239,68,68,0.2) !important;
+            border: 3px dashed var(--red) !important;
+        }
+        
+        /* Preview card in slot */
+        .slot-preview {
+            position: absolute;
+            inset: 4px;
+            border-radius: 8px;
+            overflow: hidden;
+            opacity: 0.7;
+            animation: previewFade 0.3s ease-out;
+        }
+        @keyframes previewFade {
+            from { opacity: 0; transform: scale(0.8); }
+            to { opacity: 0.7; transform: scale(1); }
+        }
+        .slot-preview img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            filter: brightness(1.2);
+        }
+        
+        /* Snap animation when card is placed */
+        .board-card.snapping {
+            animation: cardSnap 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+        @keyframes cardSnap {
+            0% { 
+                transform: scale(1.3) translateY(-30px) rotate(-5deg);
+                opacity: 0.8;
+            }
+            50% { 
+                transform: scale(1.1) translateY(5px) rotate(2deg);
+            }
+            100% { 
+                transform: scale(1) translateY(0) rotate(0deg);
+                opacity: 1;
+            }
+        }
+        
+        /* Return animation when dropped in invalid area */
+        .hand-card.returning {
+            animation: cardReturn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+        @keyframes cardReturn {
+            0% { 
+                transform: scale(0.8) rotate(-10deg);
+                opacity: 0.5;
+            }
+            50% {
+                transform: scale(1.1) rotate(3deg);
+            }
+            100% { 
+                transform: scale(1) rotate(0deg);
+                opacity: 1;
+            }
+        }
+        
+        /* Drag trail particles */
+        .drag-particle {
+            position: fixed;
+            pointer-events: none;
+            z-index: 14999;
+            width: 8px;
+            height: 8px;
+            background: var(--gold);
+            border-radius: 50%;
+            animation: dragParticleFade 0.5s ease-out forwards;
+        }
+        @keyframes dragParticleFade {
+            0% { transform: scale(1); opacity: 0.8; }
+            100% { transform: scale(0); opacity: 0; }
+        }
+        
+        /* Mobile: larger touch targets during drag */
+        @media (max-width: 768px) {
+            .drag-ghost {
+                transform: rotate(-3deg) scale(1.2);
+            }
+            .board-slot.drag-hover {
+                transform: scale(1.1);
+            }
             100% { transform: translate(-50%, -50%) scale(3); opacity: 0; }
         }
         
@@ -2462,16 +2611,54 @@
                 <div class="cost-badge">${card.gameStats.cost}</div>
             `;
             
-            // Mobile: tap shows modal. Desktop: click selects, hover shows tooltip
-            cardEl.onclick = (e) => {
-                if (isMobileOrTablet()) {
+            // Drag and drop for playing cards
+            const startDrag = (e) => {
+                if (canPlay && !DragDrop.isDragging) {
+                    DragDrop.start(cardEl, card, idx, e);
+                }
+            };
+            
+            // Mouse drag
+            cardEl.onmousedown = (e) => {
+                if (e.button === 0) startDrag(e); // Left click only
+            };
+            
+            // Touch drag (with delay to distinguish from tap)
+            let touchTimer = null;
+            let touchMoved = false;
+            
+            cardEl.ontouchstart = (e) => {
+                touchMoved = false;
+                touchTimer = setTimeout(() => {
+                    if (!touchMoved && canPlay) {
+                        startDrag(e);
+                    }
+                }, 150); // Short delay to start drag
+            };
+            
+            cardEl.ontouchmove = () => {
+                touchMoved = true;
+                if (touchTimer) clearTimeout(touchTimer);
+            };
+            
+            cardEl.ontouchend = (e) => {
+                if (touchTimer) clearTimeout(touchTimer);
+                // If it was a quick tap (not drag), show modal
+                if (!touchMoved && !DragDrop.isDragging) {
                     e.preventDefault();
                     showCardDetailModal(card, idx, 'hand');
-                } else {
+                }
+            };
+            
+            // Desktop: click fallback for selection, hover for tooltip
+            cardEl.onclick = (e) => {
+                if (!DragDrop.isDragging && !isMobileOrTablet()) {
                     selectHandCard(idx);
                 }
             };
-            cardEl.onmouseenter = (e) => showTooltip(card, e);
+            cardEl.onmouseenter = (e) => {
+                if (!DragDrop.isDragging) showTooltip(card, e);
+            };
             cardEl.onmouseleave = hideTooltip;
             
             container.appendChild(cardEl);
@@ -3311,6 +3498,257 @@
             log.removeChild(log.lastChild);
         }
     }
+    
+    // ═══════════════════════════════════════════════════════════════════
+    // DRAG AND DROP SYSTEM
+    // ═══════════════════════════════════════════════════════════════════
+    
+    const DragDrop = {
+        isDragging: false,
+        dragCard: null,
+        dragCardIndex: null,
+        dragGhost: null,
+        dragStartPos: { x: 0, y: 0 },
+        currentPos: { x: 0, y: 0 },
+        hoveredSlot: null,
+        particleInterval: null,
+        
+        // Start dragging a card
+        start(cardEl, card, index, e) {
+            if (!gameState.isPlayerTurn || gameState.isAnimating) return;
+            if (card.gameStats.cost > gameState.energy) return;
+            
+            this.isDragging = true;
+            this.dragCard = card;
+            this.dragCardIndex = index;
+            
+            // Get position from touch or mouse
+            const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+            const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+            this.dragStartPos = { x: clientX, y: clientY };
+            this.currentPos = { x: clientX, y: clientY };
+            
+            // Mark original card as dragging
+            cardEl.classList.add('dragging');
+            
+            // Create ghost element
+            this.createGhost(card, clientX, clientY);
+            
+            // Start particle trail
+            this.startParticleTrail();
+            
+            // Play sound
+            try { Audio.play('select'); } catch(e) {}
+            
+            // Add global listeners
+            document.addEventListener('mousemove', this.moveHandler);
+            document.addEventListener('mouseup', this.endHandler);
+            document.addEventListener('touchmove', this.moveHandler, { passive: false });
+            document.addEventListener('touchend', this.endHandler);
+            document.addEventListener('touchcancel', this.endHandler);
+            
+            // Prevent default touch behavior
+            e.preventDefault();
+        },
+        
+        // Create the floating ghost card
+        createGhost(card, x, y) {
+            this.dragGhost = document.createElement('div');
+            this.dragGhost.className = 'drag-ghost ' + (card.rarity || '');
+            
+            const imgFile = card.img?.replace(/\.(png|jpg)$/i, '.webp') || 'placeholder.webp';
+            this.dragGhost.innerHTML = `
+                <img src="/static/images/cards/thumbs/${imgFile}" 
+                     onerror="this.src='/static/images/cards/${card.img}'" 
+                     alt="${card.name}">
+                <div class="drag-cost">${card.gameStats.cost}</div>
+            `;
+            
+            document.body.appendChild(this.dragGhost);
+            this.updateGhostPosition(x, y);
+        },
+        
+        // Update ghost position
+        updateGhostPosition(x, y) {
+            if (!this.dragGhost) return;
+            const offsetX = -50; // Offset so card is slightly offset from finger
+            const offsetY = -80;
+            this.dragGhost.style.left = (x + offsetX) + 'px';
+            this.dragGhost.style.top = (y + offsetY) + 'px';
+        },
+        
+        // Particle trail effect
+        startParticleTrail() {
+            this.particleInterval = setInterval(() => {
+                if (!this.isDragging) return;
+                this.spawnParticle(this.currentPos.x, this.currentPos.y);
+            }, 50);
+        },
+        
+        spawnParticle(x, y) {
+            const p = document.createElement('div');
+            p.className = 'drag-particle';
+            p.style.left = (x + (Math.random() - 0.5) * 30) + 'px';
+            p.style.top = (y + (Math.random() - 0.5) * 30) + 'px';
+            p.style.background = this.dragCard?.rarity === 'mythic' ? 'var(--mythic)' :
+                                 this.dragCard?.rarity === 'legendary' ? 'var(--gold)' :
+                                 this.dragCard?.rarity === 'epic' ? 'var(--purple)' : 'var(--gold)';
+            document.body.appendChild(p);
+            setTimeout(() => p.remove(), 500);
+        },
+        
+        // Handle move
+        moveHandler: function(e) {
+            DragDrop.move(e);
+        },
+        
+        move(e) {
+            if (!this.isDragging) return;
+            e.preventDefault();
+            
+            const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+            const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+            this.currentPos = { x: clientX, y: clientY };
+            
+            // Update ghost position
+            this.updateGhostPosition(clientX, clientY);
+            
+            // Check slot hover
+            this.checkSlotHover(clientX, clientY);
+        },
+        
+        // Check if hovering over a valid slot
+        checkSlotHover(x, y) {
+            // Clear previous hover states
+            document.querySelectorAll('.board-slot').forEach(slot => {
+                slot.classList.remove('drag-hover', 'drag-invalid');
+                const preview = slot.querySelector('.slot-preview');
+                if (preview) preview.remove();
+            });
+            this.hoveredSlot = null;
+            
+            // Find slot under cursor
+            const playerBoard = document.getElementById('playerBoard');
+            const slots = playerBoard.querySelectorAll('.board-slot');
+            
+            slots.forEach((slot, idx) => {
+                const rect = slot.getBoundingClientRect();
+                if (x >= rect.left && x <= rect.right && y >= rect.top && y <= rect.bottom) {
+                    const isOccupied = gameState.playerBoard[idx] !== null;
+                    
+                    if (isOccupied) {
+                        slot.classList.add('drag-invalid');
+                    } else {
+                        slot.classList.add('drag-hover');
+                        this.hoveredSlot = { slot, idx };
+                        
+                        // Add preview
+                        this.addSlotPreview(slot);
+                    }
+                }
+            });
+        },
+        
+        // Add preview card in slot
+        addSlotPreview(slot) {
+            if (!this.dragCard) return;
+            
+            const preview = document.createElement('div');
+            preview.className = 'slot-preview';
+            const imgFile = this.dragCard.img?.replace(/\.(png|jpg)$/i, '.webp') || 'placeholder.webp';
+            preview.innerHTML = `<img src="/static/images/cards/thumbs/${imgFile}" alt="">`;
+            slot.appendChild(preview);
+        },
+        
+        // Handle end of drag
+        endHandler: function(e) {
+            DragDrop.end(e);
+        },
+        
+        async end(e) {
+            if (!this.isDragging) return;
+            
+            // Stop particle trail
+            if (this.particleInterval) {
+                clearInterval(this.particleInterval);
+                this.particleInterval = null;
+            }
+            
+            // Remove listeners
+            document.removeEventListener('mousemove', this.moveHandler);
+            document.removeEventListener('mouseup', this.endHandler);
+            document.removeEventListener('touchmove', this.moveHandler);
+            document.removeEventListener('touchend', this.endHandler);
+            document.removeEventListener('touchcancel', this.endHandler);
+            
+            // Clear hover states
+            document.querySelectorAll('.board-slot').forEach(slot => {
+                slot.classList.remove('drag-hover', 'drag-invalid');
+                const preview = slot.querySelector('.slot-preview');
+                if (preview) preview.remove();
+            });
+            
+            // Get the card element
+            const cardEl = document.querySelector(`.hand-card[data-idx="${this.dragCardIndex}"]`);
+            
+            // Check if dropped on valid slot
+            if (this.hoveredSlot && this.dragCard && this.dragCardIndex !== null) {
+                // Valid drop - play card!
+                this.removeGhost();
+                
+                // Set selected card and play to slot
+                gameState.selectedCard = this.dragCardIndex;
+                await playCardToSlot(this.hoveredSlot.idx);
+                
+                // Add snap animation to the new card
+                setTimeout(() => {
+                    const newCard = this.hoveredSlot.slot.querySelector('.board-card');
+                    if (newCard) {
+                        newCard.classList.add('snapping');
+                        setTimeout(() => newCard.classList.remove('snapping'), 400);
+                    }
+                }, 50);
+                
+            } else {
+                // Invalid drop - return card
+                if (cardEl) {
+                    cardEl.classList.remove('dragging');
+                    cardEl.classList.add('returning');
+                    setTimeout(() => cardEl.classList.remove('returning'), 400);
+                }
+                
+                // Animate ghost back
+                if (this.dragGhost) {
+                    const startRect = cardEl?.getBoundingClientRect();
+                    if (startRect) {
+                        this.dragGhost.style.transition = 'all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
+                        this.dragGhost.style.left = startRect.left + 'px';
+                        this.dragGhost.style.top = startRect.top + 'px';
+                        this.dragGhost.style.transform = 'scale(0.8) rotate(0deg)';
+                        this.dragGhost.style.opacity = '0';
+                        setTimeout(() => this.removeGhost(), 300);
+                    } else {
+                        this.removeGhost();
+                    }
+                }
+                
+                try { Audio.play('select'); } catch(e) {}
+            }
+            
+            // Reset state
+            this.isDragging = false;
+            this.dragCard = null;
+            this.dragCardIndex = null;
+            this.hoveredSlot = null;
+        },
+        
+        removeGhost() {
+            if (this.dragGhost) {
+                this.dragGhost.remove();
+                this.dragGhost = null;
+            }
+        }
+    };
     
     // ═══════════════════════════════════════════════════════════════════
     // UTILITIES
