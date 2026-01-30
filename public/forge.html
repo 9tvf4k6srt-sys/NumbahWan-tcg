@@ -678,15 +678,14 @@
         
         .pack-scene {
             perspective: 1200px;
-            perspective-origin: 50% 60%;
+            perspective-origin: 50% 50%;
             width: 100%;
             height: 100%;
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: flex-end;
+            justify-content: center;
             padding: 20px;
-            padding-bottom: 120px;
         }
         
         .pack-container {
@@ -694,7 +693,6 @@
             align-items: center;
             justify-content: center;
             transform-style: preserve-3d;
-            min-height: auto;
         }
         
         /* 3D Pack Box - LEGACY */
@@ -3139,21 +3137,31 @@ async function tearOpenPack(packEl, cards, isBox) {
     // TEAR SOUND + HAPTIC
     PremiumAudio.play('impact');
     haptic('impact');
-    screenShake(10, 400);
+    screenShake(8, 300);
     
     if (isBox) {
-        // Box opening animation - lid flips up and back
+        // === BOX OPENING - Lid pops off realistically ===
         packEl.classList.add('opening');
         const lid = packEl.querySelector('.pack-box-lid');
-        if (lid) {
-            lid.style.transition = 'transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1)';
-            lid.style.transform = 'rotateX(-150deg) translateY(-30px)';
-        }
         
-        await sleep(300);
-        PremiumAudio.play('flip');
+        if (lid) {
+            // Phase 1: Lid pops up with bounce
+            lid.style.transition = 'all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)';
+            lid.style.transform = 'translateZ(50px) rotateX(-30deg) translateY(-20px)';
+            
+            await sleep(150);
+            PremiumAudio.play('flip');
+            
+            // Phase 2: Lid flies off and spins away
+            lid.style.transition = 'all 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+            const flyDir = Math.random() > 0.5 ? 1 : -1;
+            lid.style.transform = `translateX(${flyDir * 200}px) translateY(-150px) translateZ(100px) rotateX(-90deg) rotateZ(${flyDir * 30}deg) scale(0.6)`;
+            lid.style.opacity = '0';
+            
+            await sleep(200);
+        }
     } else {
-        // Bag tearing animation - seal flies off to the side!
+        // === BAG TEARING - Seal rips off from the bag ===
         packEl.classList.add('tearing');
         const seal = packEl.querySelector('.pack-bag-seal');
         
@@ -3161,16 +3169,25 @@ async function tearOpenPack(packEl, cards, isBox) {
             // Direction from swipe (or random if tapped)
             const dir = swipeState.direction || (Math.random() > 0.5 ? 1 : -1);
             
-            // Seal tears off and falls to the side with spin
-            seal.style.transition = 'all 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
-            seal.style.transform = `translateX(${dir * 350}px) translateY(150px) rotate(${dir * 45}deg) scale(0.5)`;
-            seal.style.opacity = '0';
+            // Phase 1: Seal starts to rip - stretches and distorts
+            seal.style.transition = 'all 0.15s ease-out';
+            seal.style.transform = `translateX(${dir * 30}px) rotate(${dir * 8}deg) scaleX(1.1)`;
+            seal.style.borderBottom = '3px solid transparent';
             
-            // Play tear sound
+            await sleep(100);
             PremiumAudio.play('flip');
+            
+            // Phase 2: Seal tears completely off with realistic physics
+            seal.style.transition = 'all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+            seal.style.transform = `translateX(${dir * 250}px) translateY(80px) rotate(${dir * 60}deg) scale(0.4)`;
+            seal.style.opacity = '0';
+            seal.style.filter = 'blur(2px)';
+            
+            // Create small tear particles
+            createTearParticles(packEl, dir);
         }
         
-        // Tear effect particles
+        // Tear effect
         const tearEffect = document.getElementById('tearEffect');
         tearEffect.classList.add('active', 'tearing');
     }
@@ -3202,23 +3219,72 @@ async function tearOpenPack(packEl, cards, isBox) {
     
     await sleep(400);
     
-    // Cleanup - reset seal for next time
+    // Cleanup - reset seal and lid for next time
     const seal = packEl.querySelector('.pack-bag-seal');
     if (seal) {
         seal.style.transition = '';
         seal.style.transform = '';
         seal.style.opacity = '';
+        seal.style.filter = '';
+        seal.style.borderBottom = '';
     }
     const lid = packEl.querySelector('.pack-box-lid');
     if (lid) {
         lid.style.transition = '';
         lid.style.transform = '';
+        lid.style.opacity = '';
     }
     packEl.classList.remove('opening', 'tearing', 'glow-mythic', 'glow-legendary', 'glow-epic');
     
     if (packOpeningResolve) {
         packOpeningResolve();
         packOpeningResolve = null;
+    }
+}
+
+// Create small tear particles when seal rips
+function createTearParticles(packEl, direction) {
+    const rect = packEl.getBoundingClientRect();
+    const sealBottom = rect.top + 50; // Where seal meets body
+    const centerX = rect.left + rect.width / 2;
+    
+    // Create 8-12 small paper-like particles
+    const particleCount = 8 + Math.floor(Math.random() * 5);
+    
+    for (let i = 0; i < particleCount; i++) {
+        const particle = document.createElement('div');
+        const size = 4 + Math.random() * 8;
+        const startX = centerX + (Math.random() - 0.5) * rect.width * 0.8;
+        
+        particle.style.cssText = `
+            position: fixed;
+            left: ${startX}px;
+            top: ${sealBottom}px;
+            width: ${size}px;
+            height: ${size * 0.6}px;
+            background: linear-gradient(135deg, #ffd700, #ff8c00);
+            border-radius: 1px;
+            z-index: 10001;
+            pointer-events: none;
+            opacity: 1;
+        `;
+        document.body.appendChild(particle);
+        
+        // Animate particle flying off
+        const flyX = direction * (50 + Math.random() * 100);
+        const flyY = 30 + Math.random() * 80;
+        const rotation = (Math.random() - 0.5) * 360;
+        const duration = 0.4 + Math.random() * 0.3;
+        
+        particle.style.transition = `all ${duration}s cubic-bezier(0.25, 0.46, 0.45, 0.94)`;
+        
+        requestAnimationFrame(() => {
+            particle.style.transform = `translate(${flyX}px, ${flyY}px) rotate(${rotation}deg) scale(0.3)`;
+            particle.style.opacity = '0';
+        });
+        
+        // Remove after animation
+        setTimeout(() => particle.remove(), duration * 1000 + 100);
     }
 }
 
