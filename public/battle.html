@@ -2224,6 +2224,15 @@
     <script src="/static/nw-card-renderer.js"></script>
     <script src="/static/nw-game-juice.js"></script>
     <script src="/static/nw-3d-engine.js"></script>
+    
+    <!-- NW Helper Library -->
+    <script src="/static/helpers/nw-core.js"></script>
+    <script src="/static/helpers/nw-ui.js"></script>
+    <script src="/static/helpers/nw-anim.js"></script>
+    <script src="/static/helpers/nw-audio.js"></script>
+    <script src="/static/helpers/nw-state.js"></script>
+    <script src="/static/helpers/nw-guild.js"></script>
+    <script src="/static/helpers/nw-battle.js"></script>
 </head>
 <body>
     <!-- ROTATE DEVICE PROMPT - Hidden, game works in both orientations -->
@@ -2448,6 +2457,61 @@
 
 (function() {
     'use strict';
+    
+    // ═══════════════════════════════════════════════════════════════════
+    // NW HELPER INTEGRATION - Use helpers when available
+    // ═══════════════════════════════════════════════════════════════════
+    
+    // Audio mapping for NW_AUDIO integration
+    const NW_AUDIO_MAP = {
+        cardSlam: 'slam',
+        attack: 'attack',
+        hit: 'attack',
+        crit: 'crit',
+        death: 'death',
+        select: 'select',
+        turnEnd: 'turnEnd',
+        victory: 'victory',
+        defeat: 'defeat',
+        countdown: 'tick',
+        fight: 'fightStart',
+        energy: 'energy',
+        draw: 'draw'
+    };
+    
+    // Play sound using NW_AUDIO if available, fallback to inline Audio
+    function playSound(type) {
+        // Try NW_AUDIO first
+        if (typeof NW_AUDIO !== 'undefined' && NW_AUDIO.play) {
+            const mappedType = NW_AUDIO_MAP[type] || type;
+            NW_AUDIO.play(mappedType);
+            return;
+        }
+        // Fallback to inline Audio
+        if (typeof Audio !== 'undefined' && Audio.play) {
+            Audio.play(type);
+        }
+    }
+    
+    // Show toast using NW_UI if available
+    function showToast(message, type = 'info') {
+        if (typeof NW_UI !== 'undefined' && NW_UI.toast) {
+            NW_UI.toast(message, { type });
+            return;
+        }
+        // Fallback to console
+        console.log(`[${type.toUpperCase()}]`, message);
+    }
+    
+    // Animate using NW_ANIM if available
+    function animateElement(el, animation, options = {}) {
+        if (typeof NW_ANIM !== 'undefined' && NW_ANIM[animation]) {
+            return NW_ANIM[animation](el, options);
+        }
+        // Fallback - just add class
+        el.classList.add(animation);
+        setTimeout(() => el.classList.remove(animation), options.duration || 500);
+    }
     
     // ═══════════════════════════════════════════════════════════════════
     // CONFIGURATION
@@ -3968,8 +4032,15 @@
                 startBtn.disabled = true;
                 startBtn.textContent = '⏳ GET READY...';
                 
-                // Initialize audio (may fail on some browsers, that's ok)
-                try { Audio.init(); } catch(e) { console.log('Audio init skipped'); }
+                // Initialize audio - prefer NW_AUDIO, fallback to inline Audio
+                try {
+                    if (typeof NW_AUDIO !== 'undefined' && NW_AUDIO.loadAll) {
+                        await NW_AUDIO.loadAll();
+                        console.log('[AUDIO] NW_AUDIO initialized');
+                    } else {
+                        Audio.init();
+                    }
+                } catch(e) { console.log('Audio init skipped:', e); }
                 
                 // Countdown with proper timing (animation is 0.8s)
                 const countdown = document.getElementById('startCountdown');
@@ -4115,6 +4186,13 @@
     // Debug helper - shows errors on screen for mobile debugging
     function showError(msg) {
         console.error(msg);
+        
+        // Try NW_UI toast first for cleaner UX
+        if (typeof NW_UI !== 'undefined' && NW_UI.error) {
+            NW_UI.error(msg.substring(0, 100)); // Truncate for toast
+        }
+        
+        // Also show debug div for detailed errors
         let errorDiv = document.getElementById('debugError');
         if (!errorDiv) {
             errorDiv = document.createElement('div');
