@@ -2221,33 +2221,98 @@ let CARDS = [];
 const IMAGE_BASE = '/static/images/cards/thumbs/'; // WebP thumbnails
 const IMAGE_FULL = '/static/images/cards/'; // Full resolution
 
-// DEV MODE: Generate sample cards when NW_CARDS not available
+// DEV MODE: Generate sample cards using ACTUAL card images from the server
 function generateSampleCards() {
-    console.log('[FORGE] Generating sample cards...');
-    const rarities = ['common', 'uncommon', 'rare', 'epic', 'legendary', 'mythic'];
+    console.log('[FORGE] Generating sample cards with real images...');
+    
+    // Use actual existing images from the server
+    const cardImages = {
+        mythic: [
+            '01-reggina-mythic.webp',
+            'harlay-dog-of-war-mythic.webp',
+            '01-reggina-mythic.webp',  // Repeat for variety
+            'harlay-dog-of-war-mythic.webp'
+        ],
+        legendary: [
+            '02-reggino-legendary.webp',
+            'legendary-404.webp',
+            'legendary-afk-luna.webp',
+            'legendary-bigbrain.webp',
+            'legendary-burnout.webp',
+            'legendary-capslock.webp',
+            '02-reggino-legendary.webp',
+            'legendary-404.webp'
+        ],
+        epic: [
+            'epic-onca.webp',
+            'epic-panthera.webp',
+            'epic-fenneko.webp',
+            'epic-glimmer.webp',
+            'epic-grimhelm.webp',
+            'epic-hype.webp',
+            'epic-mumbles.webp',
+            'epic-snipe.webp',
+            'epic-zephyra.webp',
+            'epic-chonk.webp',
+            'epic-drama-bomb.webp',
+            'epic-rage-quit.webp'
+        ],
+        rare: [
+            '27-elder-dragon.webp',
+            'common-limited-banner.webp',
+            'common-guild-chat.webp',
+            'common-loot-pile.webp'
+        ],
+        uncommon: [
+            'common-daily-login.webp',
+            'common-free-summon.webp',
+            'common-notification.webp',
+            'common-spawn-point.webp'
+        ],
+        common: [
+            'common-1star-review.webp',
+            'common-afk-spot.webp',
+            'common-auto-battle.webp',
+            'common-charging-cable.webp',
+            'common-connection-lost.webp',
+            'common-cracked-phone.webp',
+            'common-expired-coupon.webp',
+            'common-loading-tip.webp',
+            'common-maintenance-comp.webp',
+            'common-newbie-zone.webp',
+            'common-salt-shaker.webp',
+            'common-skip-button.webp',
+            'common-the-void.webp',
+            'common-tiny-crown.webp',
+            'common-unread-messages.webp',
+            'common-wifi-1bar.webp'
+        ]
+    };
+    
     const names = {
-        mythic: ['RegginA Mythic', 'Dragon Lord', 'Phoenix King', 'Void Emperor'],
-        legendary: ['Reggino', 'Shadow Knight', 'Storm Mage', 'Iron Titan'],
-        epic: ['Onça', 'Panthera', 'Fire Wizard', 'Ice Queen'],
-        rare: ['Forest Ranger', 'Dark Archer', 'Holy Priest', 'Battle Mage'],
-        uncommon: ['Guard', 'Scout', 'Healer', 'Warrior'],
-        common: ['Soldier', 'Villager', 'Peasant', 'Recruit']
+        mythic: ['RegginA', 'Harlay', 'Phoenix', 'Void Emperor'],
+        legendary: ['Reggino', '404 Error', 'AFK Luna', 'Big Brain', 'Burnout', 'Capslock', 'Shadow', 'Titan'],
+        epic: ['Onça', 'Panthera', 'Fenneko', 'Glimmer', 'Grimhelm', 'Hype', 'Mumbles', 'Snipe', 'Zephyra', 'Chonk', 'Drama Bomb', 'Rage Quit'],
+        rare: ['Elder Dragon', 'Limited Banner', 'Guild Chat', 'Loot Pile'],
+        uncommon: ['Daily Login', 'Free Summon', 'Notification', 'Spawn Point'],
+        common: ['1-Star Review', 'AFK Spot', 'Auto Battle', 'Charging Cable', 'Connection Lost', 'Cracked Phone', 'Expired Coupon', 'Loading Tip', 'Maintenance', 'Newbie Zone', 'Salt Shaker', 'Skip Button', 'The Void', 'Tiny Crown', 'Unread Msgs', 'Wifi 1-Bar']
     };
     
     const cards = [];
     let id = 1;
     
-    // Generate cards for each rarity
-    rarities.forEach(rarity => {
-        const count = rarity === 'mythic' ? 4 : rarity === 'legendary' ? 8 : rarity === 'epic' ? 12 : 20;
+    // Generate cards for each rarity using actual images
+    ['mythic', 'legendary', 'epic', 'rare', 'uncommon', 'common'].forEach(rarity => {
+        const images = cardImages[rarity];
+        const nameList = names[rarity];
+        const count = images.length;
+        
         for (let i = 0; i < count; i++) {
-            const nameList = names[rarity];
-            const name = nameList[i % nameList.length] + (i >= nameList.length ? ` ${Math.floor(i/nameList.length)+1}` : '');
             cards.push({
                 id: id++,
-                name: { en: name, zh: name, th: name },
+                name: { en: nameList[i] || `${rarity} Card ${i+1}`, zh: nameList[i], th: nameList[i] },
                 rarity: rarity,
-                img: `placeholder-${rarity}.png`, // Will use placeholder
+                img: images[i],  // Use actual image filename
                 desc: `A ${rarity} card`,
                 role: 'fighter',
                 category: 'character',
@@ -2258,18 +2323,23 @@ function generateSampleCards() {
         }
     });
     
+    console.log('[FORGE] Generated', cards.length, 'cards with real images');
     return cards;
 }
 
 // Convert image filename to WebP thumbnail URL (20-40KB, FAST)
 function getCardThumbUrl(img) {
     if (!img) return '/static/images/cards/placeholder.webp';
+    // If already .webp, use as-is. Otherwise convert extension
+    if (img.endsWith('.webp')) return IMAGE_BASE + img;
     return IMAGE_BASE + img.replace(/\.(png|jpg|jpeg)$/i, '.webp');
 }
 
 // Full resolution URL - NOW ALSO WEBP (50-100KB instead of 1-2MB!)
 function getCardFullUrl(img) {
     if (!img) return '/static/images/cards/placeholder.webp';
+    // If already .webp, use as-is. Otherwise convert extension
+    if (img.endsWith('.webp')) return IMAGE_FULL + img;
     return IMAGE_FULL + img.replace(/\.(png|jpg|jpeg)$/i, '.webp');
 }
 
@@ -3490,6 +3560,7 @@ function resetPackVisual(packEl, isBox) {
 }
 
 async function tearOpenPack(packEl, cards, isBox) {
+    console.log('[FORGE] 🎴 tearOpenPack START - isBox:', isBox, 'cards:', cards.length);
     const instruction = document.getElementById('packInstruction');
     instruction.classList.add('hidden');
     
@@ -3598,15 +3669,20 @@ async function tearOpenPack(packEl, cards, isBox) {
     }
     
     // Create burst particles
+    console.log('[FORGE] 🎴 Creating burst particles...');
     createPackParticles(highestRarityInPack);
     
     // Cards fly out preview
+    console.log('[FORGE] 🎴 Waiting 400ms before flying cards...');
     await sleep(400);
+    console.log('[FORGE] 🎴 Showing cards flying...');
     await showCardsFlying(packEl, cards);
     
     // Transition to reveal
+    console.log('[FORGE] 🎴 Waiting 600ms before reveal...');
     await sleep(600);
     
+    console.log('[FORGE] 🎴 Removing pack overlay, showing reveal...');
     document.getElementById('packOverlay').classList.remove('show');
     document.getElementById('tearEffect').classList.remove('active', 'tearing');
     
