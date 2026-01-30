@@ -267,124 +267,93 @@ const NW_JUICE = (function() {
     }
 
     // ═══════════════════════════════════════════════════════════════════
-    // SOUND MANAGER - Lazy loading with audio pooling
+    // SOUND MANAGER - Premium MP3 Sound Effects
     // ═══════════════════════════════════════════════════════════════════
     const soundManager = {
         sounds: {},
-        pools: {},
         muted: false,
-        volume: 0.5,
+        volume: 0.6,
+        initialized: false,
 
-        // Sound definitions - Base64 embedded for critical sounds, URL for others
-        definitions: {
-            // UI sounds (tiny embedded)
-            click: { type: 'tone', freq: 800, duration: 0.05 },
-            hover: { type: 'tone', freq: 600, duration: 0.03 },
+        // Premium sound file mappings
+        files: {
+            // UI sounds
+            click: '/static/audio/ui-select.mp3',
+            hover: '/static/audio/ui-select.mp3',
+            select: '/static/audio/ui-select.mp3',
             
             // Card sounds
-            draw: { type: 'tone', freq: [400, 600], duration: 0.1 },
-            play: { type: 'tone', freq: [200, 150], duration: 0.15 },
-            attack: { type: 'noise', duration: 0.1 },
-            hit: { type: 'tone', freq: [300, 100], duration: 0.1 },
-            death: { type: 'noise', duration: 0.3, filter: 'lowpass' },
+            draw: '/static/audio/ui-select.mp3',
+            play: '/static/audio/card-slam.mp3',
+            cardSlam: '/static/audio/card-slam.mp3',
+            attack: '/static/audio/attack-slash.mp3',
+            hit: '/static/audio/attack-slash.mp3',
+            death: '/static/audio/card-death.mp3',
+            crit: '/static/audio/critical-hit.mp3',
             
-            // Gacha sounds
-            anticipation: { type: 'tone', freq: [200, 400, 600], duration: 0.5 },
-            flip: { type: 'tone', freq: [500, 800], duration: 0.1 },
-            reveal_common: { type: 'tone', freq: 400, duration: 0.2 },
-            reveal_rare: { type: 'tone', freq: [400, 600], duration: 0.3 },
-            reveal_epic: { type: 'tone', freq: [400, 600, 800], duration: 0.4 },
-            reveal_legendary: { type: 'tone', freq: [400, 600, 800, 1000], duration: 0.5 },
-            reveal_mythic: { type: 'tone', freq: [400, 600, 800, 1000, 1200], duration: 0.6 },
+            // Battle sounds
+            victory: '/static/audio/victory.mp3',
+            defeat: '/static/audio/defeat.mp3',
+            turnEnd: '/static/audio/turn-end.mp3',
+            countdown: '/static/audio/countdown-tick.mp3',
+            fight: '/static/audio/fight-start.mp3',
+            energy: '/static/audio/energy-gain.mp3',
+            
+            // Gacha sounds (mapped to existing)
+            anticipation: '/static/audio/countdown-tick.mp3',
+            flip: '/static/audio/ui-select.mp3',
+            reveal_common: '/static/audio/ui-select.mp3',
+            reveal_rare: '/static/audio/turn-end.mp3',
+            reveal_epic: '/static/audio/energy-gain.mp3',
+            reveal_legendary: '/static/audio/victory.mp3',
+            reveal_mythic: '/static/audio/victory.mp3',
             
             // Impact sounds
-            impact_light: { type: 'tone', freq: [300, 200], duration: 0.08 },
-            impact_heavy: { type: 'noise', duration: 0.15, filter: 'lowpass' },
-            crit: { type: 'tone', freq: [800, 1200, 800], duration: 0.2 }
+            impact_light: '/static/audio/attack-slash.mp3',
+            impact_heavy: '/static/audio/critical-hit.mp3'
         },
 
-        // Web Audio context (lazy init)
-        _ctx: null,
-        get ctx() {
-            if (!this._ctx) {
-                this._ctx = new (window.AudioContext || window.webkitAudioContext)();
-            }
-            return this._ctx;
+        // Initialize and preload all sounds
+        init() {
+            if (this.initialized) return;
+            
+            Object.entries(this.files).forEach(([name, path]) => {
+                const audio = new Audio(path);
+                audio.preload = 'auto';
+                audio.volume = this.volume;
+                this.sounds[name] = audio;
+            });
+            
+            this.initialized = true;
+            console.log('[NW_JUICE] Premium sounds loaded');
         },
 
-        // Generate sound using Web Audio API (no file loading!)
+        // Play a sound effect
         play(name, volume = 1) {
             if (this.muted) return;
+            if (!this.initialized) this.init();
             
-            const def = this.definitions[name];
-            if (!def) return;
+            const sound = this.sounds[name];
+            if (!sound) {
+                console.warn('[NW_JUICE] Sound not found:', name);
+                return;
+            }
 
             try {
-                const ctx = this.ctx;
-                if (ctx.state === 'suspended') ctx.resume();
-                
-                const gainNode = ctx.createGain();
-                gainNode.gain.value = this.volume * volume;
-                gainNode.connect(ctx.destination);
-
-                if (def.type === 'tone') {
-                    this._playTone(ctx, gainNode, def);
-                } else if (def.type === 'noise') {
-                    this._playNoise(ctx, gainNode, def);
-                }
+                // Clone to allow overlapping
+                const clone = sound.cloneNode();
+                clone.volume = this.volume * volume;
+                clone.play().catch(() => {});
             } catch (e) {
-                // Audio not supported, fail silently
+                sound.currentTime = 0;
+                sound.play().catch(() => {});
             }
         },
 
-        _playTone(ctx, gainNode, def) {
-            const freqs = Array.isArray(def.freq) ? def.freq : [def.freq];
-            const duration = def.duration;
-            const now = ctx.currentTime;
-
-            freqs.forEach((freq, i) => {
-                const osc = ctx.createOscillator();
-                osc.type = 'sine';
-                osc.frequency.value = freq;
-                
-                const env = ctx.createGain();
-                env.gain.setValueAtTime(0.3 / freqs.length, now);
-                env.gain.exponentialRampToValueAtTime(0.01, now + duration);
-                
-                osc.connect(env);
-                env.connect(gainNode);
-                
-                osc.start(now + (i * 0.02));
-                osc.stop(now + duration + (i * 0.02));
-            });
+        setVolume(v) { 
+            this.volume = Math.max(0, Math.min(1, v));
+            Object.values(this.sounds).forEach(s => s.volume = this.volume);
         },
-
-        _playNoise(ctx, gainNode, def) {
-            const bufferSize = ctx.sampleRate * def.duration;
-            const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
-            const data = buffer.getChannelData(0);
-            
-            for (let i = 0; i < bufferSize; i++) {
-                data[i] = Math.random() * 2 - 1;
-            }
-            
-            const source = ctx.createBufferSource();
-            source.buffer = buffer;
-            
-            if (def.filter === 'lowpass') {
-                const filter = ctx.createBiquadFilter();
-                filter.type = 'lowpass';
-                filter.frequency.value = 800;
-                source.connect(filter);
-                filter.connect(gainNode);
-            } else {
-                source.connect(gainNode);
-            }
-            
-            source.start();
-        },
-
-        setVolume(v) { this.volume = Math.max(0, Math.min(1, v)); },
         mute() { this.muted = true; },
         unmute() { this.muted = false; },
         toggle() { this.muted = !this.muted; return !this.muted; }

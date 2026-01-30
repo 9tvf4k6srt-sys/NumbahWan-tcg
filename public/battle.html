@@ -2502,173 +2502,74 @@
     let CARDS = [];
     
     // ═══════════════════════════════════════════════════════════════════
-    // AUDIO SYSTEM - Web Audio API
+    // AUDIO SYSTEM - Premium Sound Effects (MP3 files)
     // ═══════════════════════════════════════════════════════════════════
     const Audio = {
-        ctx: null,
+        sounds: {},
+        volume: 0.7,
+        muted: false,
         
+        // Sound file mapping
+        files: {
+            cardSlam: '/static/audio/card-slam.mp3',
+            attack: '/static/audio/attack-slash.mp3',
+            hit: '/static/audio/attack-slash.mp3',
+            crit: '/static/audio/critical-hit.mp3',
+            death: '/static/audio/card-death.mp3',
+            select: '/static/audio/ui-select.mp3',
+            turnEnd: '/static/audio/turn-end.mp3',
+            victory: '/static/audio/victory.mp3',
+            defeat: '/static/audio/defeat.mp3',
+            countdown: '/static/audio/countdown-tick.mp3',
+            fight: '/static/audio/fight-start.mp3',
+            energy: '/static/audio/energy-gain.mp3'
+        },
+        
+        // Preload all sounds
         init() {
-            this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+            Object.entries(this.files).forEach(([name, path]) => {
+                const audio = new window.Audio(path);
+                audio.preload = 'auto';
+                audio.volume = this.volume;
+                this.sounds[name] = audio;
+            });
+            console.log('[AUDIO] Premium sounds loaded:', Object.keys(this.sounds).join(', '));
         },
         
-        // Play a procedural sound
+        // Play a sound effect
         play(type) {
-            if (!this.ctx) this.init();
-            if (this.ctx.state === 'suspended') this.ctx.resume();
+            if (this.muted) return;
             
-            const now = this.ctx.currentTime;
-            const osc = this.ctx.createOscillator();
-            const gain = this.ctx.createGain();
+            const sound = this.sounds[type];
+            if (!sound) {
+                console.warn('[AUDIO] Sound not found:', type);
+                return;
+            }
             
-            osc.connect(gain);
-            gain.connect(this.ctx.destination);
-            
-            switch(type) {
-                case 'cardSlam':
-                    // Deep thump + whoosh
-                    osc.frequency.setValueAtTime(150, now);
-                    osc.frequency.exponentialRampToValueAtTime(40, now + 0.15);
-                    gain.gain.setValueAtTime(0.6, now);
-                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
-                    osc.type = 'sine';
-                    osc.start(now);
-                    osc.stop(now + 0.3);
-                    // Add noise burst
-                    this.playNoise(0.2, 0.1);
-                    break;
-                    
-                case 'attack':
-                    // Whoosh + hit
-                    osc.frequency.setValueAtTime(800, now);
-                    osc.frequency.exponentialRampToValueAtTime(200, now + 0.2);
-                    gain.gain.setValueAtTime(0.3, now);
-                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
-                    osc.type = 'sawtooth';
-                    osc.start(now);
-                    osc.stop(now + 0.3);
-                    break;
-                    
-                case 'hit':
-                    // Impact
-                    osc.frequency.setValueAtTime(200, now);
-                    osc.frequency.exponentialRampToValueAtTime(50, now + 0.1);
-                    gain.gain.setValueAtTime(0.5, now);
-                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.15);
-                    osc.type = 'square';
-                    osc.start(now);
-                    osc.stop(now + 0.15);
-                    this.playNoise(0.3, 0.08);
-                    break;
-                    
-                case 'crit':
-                    // Big impact + ring
-                    this.play('hit');
-                    setTimeout(() => {
-                        const osc2 = this.ctx.createOscillator();
-                        const gain2 = this.ctx.createGain();
-                        osc2.connect(gain2);
-                        gain2.connect(this.ctx.destination);
-                        osc2.frequency.setValueAtTime(880, this.ctx.currentTime);
-                        osc2.frequency.exponentialRampToValueAtTime(440, this.ctx.currentTime + 0.3);
-                        gain2.gain.setValueAtTime(0.2, this.ctx.currentTime);
-                        gain2.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.4);
-                        osc2.type = 'sine';
-                        osc2.start();
-                        osc2.stop(this.ctx.currentTime + 0.4);
-                    }, 50);
-                    break;
-                    
-                case 'death':
-                    // Descending tone + crumble
-                    osc.frequency.setValueAtTime(400, now);
-                    osc.frequency.exponentialRampToValueAtTime(60, now + 0.5);
-                    gain.gain.setValueAtTime(0.4, now);
-                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.6);
-                    osc.type = 'sawtooth';
-                    osc.start(now);
-                    osc.stop(now + 0.6);
-                    this.playNoise(0.2, 0.3);
-                    break;
-                    
-                case 'select':
-                    // Click
-                    osc.frequency.setValueAtTime(600, now);
-                    osc.frequency.setValueAtTime(800, now + 0.03);
-                    gain.gain.setValueAtTime(0.15, now);
-                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.08);
-                    osc.type = 'sine';
-                    osc.start(now);
-                    osc.stop(now + 0.08);
-                    break;
-                    
-                case 'turnEnd':
-                    // Ascending chime
-                    [440, 550, 660].forEach((freq, i) => {
-                        const o = this.ctx.createOscillator();
-                        const g = this.ctx.createGain();
-                        o.connect(g);
-                        g.connect(this.ctx.destination);
-                        o.frequency.value = freq;
-                        g.gain.setValueAtTime(0.15, now + i * 0.1);
-                        g.gain.exponentialRampToValueAtTime(0.01, now + i * 0.1 + 0.2);
-                        o.type = 'sine';
-                        o.start(now + i * 0.1);
-                        o.stop(now + i * 0.1 + 0.2);
-                    });
-                    break;
-                    
-                case 'victory':
-                    // Triumphant fanfare
-                    [523, 659, 784, 1047].forEach((freq, i) => {
-                        setTimeout(() => {
-                            const o = this.ctx.createOscillator();
-                            const g = this.ctx.createGain();
-                            o.connect(g);
-                            g.connect(this.ctx.destination);
-                            o.frequency.value = freq;
-                            g.gain.setValueAtTime(0.2, this.ctx.currentTime);
-                            g.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.5);
-                            o.type = 'sine';
-                            o.start();
-                            o.stop(this.ctx.currentTime + 0.5);
-                        }, i * 150);
-                    });
-                    break;
-                    
-                case 'defeat':
-                    // Sad descending
-                    [400, 350, 300, 200].forEach((freq, i) => {
-                        setTimeout(() => {
-                            const o = this.ctx.createOscillator();
-                            const g = this.ctx.createGain();
-                            o.connect(g);
-                            g.connect(this.ctx.destination);
-                            o.frequency.value = freq;
-                            g.gain.setValueAtTime(0.15, this.ctx.currentTime);
-                            g.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.4);
-                            o.type = 'sine';
-                            o.start();
-                            o.stop(this.ctx.currentTime + 0.4);
-                        }, i * 200);
-                    });
-                    break;
+            try {
+                // Clone audio to allow overlapping plays
+                const clone = sound.cloneNode();
+                clone.volume = this.volume;
+                clone.play().catch(() => {}); // Ignore autoplay errors
+            } catch (e) {
+                // Fallback: reset and replay original
+                sound.currentTime = 0;
+                sound.play().catch(() => {});
             }
         },
         
-        playNoise(volume, duration) {
-            const bufferSize = this.ctx.sampleRate * duration;
-            const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
-            const data = buffer.getChannelData(0);
-            for (let i = 0; i < bufferSize; i++) {
-                data[i] = (Math.random() * 2 - 1) * Math.pow(1 - i/bufferSize, 2);
-            }
-            const noise = this.ctx.createBufferSource();
-            const gain = this.ctx.createGain();
-            noise.buffer = buffer;
-            noise.connect(gain);
-            gain.connect(this.ctx.destination);
-            gain.gain.value = volume;
-            noise.start();
+        // Set volume (0-1)
+        setVolume(v) {
+            this.volume = Math.max(0, Math.min(1, v));
+            Object.values(this.sounds).forEach(s => s.volume = this.volume);
+        },
+        
+        // Mute/unmute
+        mute() { this.muted = true; },
+        unmute() { this.muted = false; },
+        toggle() { 
+            this.muted = !this.muted; 
+            return !this.muted;
         }
     };
     
@@ -4250,6 +4151,9 @@
             
             // Initialize mobile card detail modal
             initCardDetailModal();
+            
+            // Initialize premium audio system
+            Audio.init();
             
             // AUTO-START: Skip the start screen and go directly to game
             // This ensures cards are visible immediately for testing
