@@ -3904,10 +3904,20 @@ function sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
 }
 
-// Pull
+// Pull - SIMPLIFIED FOR MOBILE
 async function executePull() {
+    // Show immediate feedback
+    showToast('🎴 Opening pack...');
+    console.log('[FORGE] 🎴 executePull CALLED!');
+    
     try {
-        console.log('[FORGE] 🎴 executePull START - DEV_MODE:', DEV_MODE, 'selectedPulls:', selectedPulls);
+        console.log('[FORGE] 🎴 executePull START - DEV_MODE:', DEV_MODE, 'selectedPulls:', selectedPulls, 'CARDS:', CARDS.length);
+        
+        // Make sure we have cards
+        if (CARDS.length === 0) {
+            console.log('[FORGE] ⚠️ No cards! Generating...');
+            CARDS = generateSampleCards();
+        }
         
         // DEV MODE: Skip wallet checks entirely
         if (!DEV_MODE) {
@@ -3979,23 +3989,31 @@ async function executePull() {
         pullBtn.textContent = '✨ Loading...';
     }
     
+    console.log('[FORGE] 🎴 Preloading card images...');
     await preloadRevealCards(cardsToReveal);
+    console.log('[FORGE] 🎴 Preload complete!');
     
     if (pullBtn) {
         pullBtn.disabled = false;
         pullBtn.textContent = '🔥 PULL';
     }
     
-    // ===== 3D PACK OPENING ANIMATION =====
-    console.log('[FORGE] 🎴 Starting pack opening animation...');
-    await showPackOpening(cardsToReveal);
+    // ===== SKIP PACK ANIMATION FOR NOW - GO STRAIGHT TO REVEAL =====
+    // This bypasses the pack opening to test if reveal works
+    console.log('[FORGE] 🎴 SKIPPING pack animation, going to reveal...');
+    
+    // Hide any pack overlay that might be showing
+    const packOverlay = document.getElementById('packOverlay');
+    if (packOverlay) packOverlay.classList.remove('show');
     
     currentIndex = 0;
+    console.log('[FORGE] 🎴 Calling showReveal with', cardsToReveal.length, 'cards');
     showReveal();
     console.log('[FORGE] 🎴 executePull COMPLETE!');
     } catch (error) {
         console.error('[FORGE] ❌ executePull ERROR:', error);
-        showToast('Error! Check console for details.');
+        console.error('[FORGE] ❌ Error details:', error.message, error.stack);
+        showToast('Error: ' + error.message);
     }
 }
 
@@ -4026,60 +4044,115 @@ async function announcePull(cardId, rarity, cardName) {
 
 // ===== ULTRA PREMIUM REVEAL SYSTEM =====
 function showReveal() {
-    document.getElementById('revealOverlay').classList.add('show');
-    document.getElementById('cardInner').classList.remove('flipped');
-    document.getElementById('rarityBadge').classList.remove('show');
-    document.getElementById('cardInfo').classList.remove('show');
-    document.getElementById('revealContinue').classList.remove('show');
-    // Clear glow classes from card-front
-    document.getElementById('cardFront').classList.remove('glow-mythic', 'glow-legendary', 'glow-epic', 'glow-rare', 'glow-uncommon');
-    document.getElementById('revealCard').classList.remove('card-entrance');
-    document.getElementById('cardHolo').classList.remove('active');
-    document.getElementById('cardSparkle').classList.remove('active');
-    
-    revealCard();
+    try {
+        console.log('[FORGE] 🎴 showReveal called, cardsToReveal:', cardsToReveal.length);
+        
+        const overlay = document.getElementById('revealOverlay');
+        console.log('[FORGE] 🎴 revealOverlay found:', !!overlay);
+        
+        if (!overlay) {
+            console.error('[FORGE] ❌ revealOverlay not found!');
+            showToast('Error: Reveal overlay missing');
+            return;
+        }
+        
+        overlay.classList.add('show');
+        console.log('[FORGE] 🎴 Overlay shown');
+        
+        // Safe element access
+        const cardInner = document.getElementById('cardInner');
+        const rarityBadge = document.getElementById('rarityBadge');
+        const cardInfo = document.getElementById('cardInfo');
+        const revealContinue = document.getElementById('revealContinue');
+        const cardFront = document.getElementById('cardFront');
+        const revealCardEl = document.getElementById('revealCard');
+        const cardHolo = document.getElementById('cardHolo');
+        const cardSparkle = document.getElementById('cardSparkle');
+        
+        if (cardInner) cardInner.classList.remove('flipped');
+        if (rarityBadge) rarityBadge.classList.remove('show');
+        if (cardInfo) cardInfo.classList.remove('show');
+        if (revealContinue) revealContinue.classList.remove('show');
+        if (cardFront) cardFront.classList.remove('glow-mythic', 'glow-legendary', 'glow-epic', 'glow-rare', 'glow-uncommon');
+        if (revealCardEl) revealCardEl.classList.remove('card-entrance');
+        if (cardHolo) cardHolo.classList.remove('active');
+        if (cardSparkle) cardSparkle.classList.remove('active');
+        
+        console.log('[FORGE] 🎴 Calling revealCard()');
+        revealCard();
+    } catch (err) {
+        console.error('[FORGE] ❌ showReveal ERROR:', err);
+        showToast('Reveal error: ' + err.message);
+    }
 }
 
 function revealCard() {
-    if (currentIndex >= cardsToReveal.length) { closeReveal(); return; }
-    
-    const card = cardsToReveal[currentIndex];
-    
-    // Reset state
-    const cardInner = document.getElementById('cardInner');
-    const revealCardEl = document.getElementById('revealCard'); // Renamed to avoid conflict with function name
-    cardInner.classList.remove('flipped');
-    document.getElementById('rarityBadge').classList.remove('show');
-    document.getElementById('cardInfo').classList.remove('show');
-    document.getElementById('revealContinue').classList.remove('show');
-    // Clear glow classes from card-front
-    document.getElementById('cardFront').classList.remove('glow-mythic', 'glow-legendary', 'glow-epic', 'glow-rare', 'glow-uncommon');
-    document.getElementById('cardHolo').classList.remove('active');
-    document.getElementById('cardSparkle').classList.remove('active');
-    document.getElementById('revealRays').classList.remove('active');
-    
-    // Update counter
-    document.getElementById('revealCounter').textContent = `${currentIndex + 1} / ${cardsToReveal.length}`;
-    
-    // 🎴 SIMPLE CARD IMAGE - Clean, no frames or overlays
-    const thumbUrl = getCardThumbUrl(card.img);
-    const cardImg = document.getElementById('cardImg');
-    cardImg.src = thumbUrl;
-    
-    // Update info panel
-    document.getElementById('cardName').textContent = card.name[lang] || card.name.en;
-    
-    // Format stats string from gameStats
-    const stats = card.gameStats;
-    const statsText = stats 
-        ? `⚔️ ${stats.atk} | ❤️ ${stats.hp} | 💎 ${stats.cost}`
-        : '';
-    document.getElementById('cardStats').textContent = statsText;
-    
-    // Set rarity badge
-    const badge = document.getElementById('rarityBadge');
-    badge.textContent = card.rarity.toUpperCase();
-    badge.className = 'rarity-badge ' + card.rarity;
+    try {
+        console.log('[FORGE] 🎴 revealCard called, currentIndex:', currentIndex, 'total:', cardsToReveal.length);
+        
+        if (currentIndex >= cardsToReveal.length) { 
+            console.log('[FORGE] 🎴 All cards revealed, closing');
+            closeReveal(); 
+            return; 
+        }
+        
+        const card = cardsToReveal[currentIndex];
+        console.log('[FORGE] 🎴 Revealing card:', card.name.en, card.rarity, 'img:', card.img);
+        
+        // Reset state - with null checks
+        const cardInner = document.getElementById('cardInner');
+        const revealCardEl = document.getElementById('revealCard');
+        const rarityBadge = document.getElementById('rarityBadge');
+        const cardInfo = document.getElementById('cardInfo');
+        const revealContinue = document.getElementById('revealContinue');
+        const cardFront = document.getElementById('cardFront');
+        const cardHolo = document.getElementById('cardHolo');
+        const cardSparkle = document.getElementById('cardSparkle');
+        const revealRays = document.getElementById('revealRays');
+        const revealCounter = document.getElementById('revealCounter');
+        const cardImg = document.getElementById('cardImg');
+        const cardName = document.getElementById('cardName');
+        const cardStats = document.getElementById('cardStats');
+        
+        if (cardInner) cardInner.classList.remove('flipped');
+        if (rarityBadge) rarityBadge.classList.remove('show');
+        if (cardInfo) cardInfo.classList.remove('show');
+        if (revealContinue) revealContinue.classList.remove('show');
+        if (cardFront) cardFront.classList.remove('glow-mythic', 'glow-legendary', 'glow-epic', 'glow-rare', 'glow-uncommon');
+        if (cardHolo) cardHolo.classList.remove('active');
+        if (cardSparkle) cardSparkle.classList.remove('active');
+        if (revealRays) revealRays.classList.remove('active');
+        
+        // Update counter
+        if (revealCounter) revealCounter.textContent = `${currentIndex + 1} / ${cardsToReveal.length}`;
+        
+        // 🎴 SIMPLE CARD IMAGE - Clean, no frames or overlays
+        const thumbUrl = getCardThumbUrl(card.img);
+        console.log('[FORGE] 🎴 Card image URL:', thumbUrl);
+        
+        if (cardImg) {
+            cardImg.src = thumbUrl;
+            cardImg.onerror = () => {
+                console.error('[FORGE] ❌ Image failed to load:', thumbUrl);
+                cardImg.src = '/static/images/cards/placeholder.webp';
+            };
+        }
+        
+        // Update info panel
+        if (cardName) cardName.textContent = card.name[lang] || card.name.en || 'Unknown Card';
+        
+        // Format stats string from gameStats
+        const stats = card.gameStats;
+        const statsText = stats 
+            ? `⚔️ ${stats.atk} | ❤️ ${stats.hp} | 💎 ${stats.cost}`
+            : '';
+        if (cardStats) cardStats.textContent = statsText;
+        
+        // Set rarity badge
+        if (rarityBadge) {
+            rarityBadge.textContent = card.rarity.toUpperCase();
+            rarityBadge.className = 'rarity-badge ' + card.rarity;
+        }
     
     // Card entrance animation - CSS-first approach with NW_ANIM enhancement
     // IMPORTANT: Always use CSS classes to ensure proper sizing
@@ -4208,6 +4281,11 @@ function revealCard() {
             showRarityEffects(card);
         }, 400);
     }, delay);
+    
+    } catch (err) {
+        console.error('[FORGE] ❌ revealCard ERROR:', err);
+        showToast('Card reveal error: ' + err.message);
+    }
 }
 
 function showRarityEffects(card) {
