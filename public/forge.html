@@ -2762,25 +2762,18 @@ const PACK_CONFIG = {
     }
 };
 
-// Create pack - SIMPLE FULL BLEED IMAGE
-// Pack size = Card reveal size = EXACT MATCH
+// Create pack - ULTRA SIMPLE - JUST THE IMAGE
 function createPackBag(cardCount, highestRarity) {
-    console.log('[FORGE] Creating full-bleed pack for', cardCount, 'cards, rarity:', highestRarity);
+    console.log('[FORGE] Creating pack for', cardCount, 'cards');
     
     const packEl = document.createElement('div');
     packEl.dataset.cardCount = cardCount;
     packEl.classList.add('pack-bag');
     
-    // Calculate rarity glow
-    let glowColor = 'rgba(255,107,0,0.6)';
-    if (highestRarity === 'mythic') glowColor = 'rgba(255,0,255,0.8)';
-    else if (highestRarity === 'legendary') glowColor = 'rgba(255,215,0,0.8)';
-    else if (highestRarity === 'epic') glowColor = 'rgba(168,85,247,0.8)';
-    
-    // Select pack image based on card count
+    // Select pack image
     const packImage = PACK_CONFIG.getImage(cardCount);
     
-    // SIMPLE PACK - Just an image, same size as card reveal
+    // MINIMAL STYLING - just size, NO backgrounds
     packEl.style.cssText = `
         position: relative;
         width: ${PACK_CONFIG.WIDTH};
@@ -2788,62 +2781,45 @@ function createPackBag(cardCount, highestRarity) {
         cursor: grab;
         touch-action: none;
         user-select: none;
+        background: transparent;
     `;
     
-    // Pack image - simple IMG tag
+    // Pack image ONLY
     const packImg = document.createElement('img');
-    packImg.className = 'pack-image';
     packImg.src = packImage;
-    packImg.alt = 'Card Pack';
+    packImg.alt = 'Pack';
     packImg.style.cssText = `
         width: 100%;
         height: 100%;
         object-fit: contain;
-        filter: drop-shadow(0 10px 30px rgba(0,0,0,0.8)) drop-shadow(0 0 30px ${glowColor});
     `;
-    packImg.onerror = () => console.error('[FORGE] Pack image failed:', packImage);
+    packImg.onerror = () => {
+        console.error('[FORGE] Image failed:', packImage);
+        // Show error state
+        packEl.style.background = 'red';
+        packEl.innerHTML = '<div style="color:white;text-align:center;padding-top:40%">IMAGE FAILED</div>';
+    };
     
-    // SIMPLE card count - just text, no orange bar
-    const countLabel = document.createElement('div');
-    countLabel.className = 'pack-count';
-    countLabel.style.cssText = `
+    // Simple count text overlay
+    const label = document.createElement('div');
+    label.style.cssText = `
         position: absolute;
-        bottom: 15%;
-        left: 50%;
-        transform: translateX(-50%);
+        bottom: 10%;
+        width: 100%;
+        text-align: center;
+        color: white;
         font-family: Orbitron, sans-serif;
-        font-size: ${cardCount >= 10 ? '28px' : '24px'};
-        font-weight: 900;
-        color: #fff;
-        text-shadow: 0 0 10px ${glowColor}, 0 0 20px ${glowColor}, 0 2px 4px rgba(0,0,0,0.8);
-        z-index: 10;
-    `;
-    // Simple text: "1 CARD" or "5 CARDS" or "10 CARDS"
-    countLabel.textContent = cardCount === 1 ? '1 CARD' : `${cardCount} CARDS`;
-    
-    // Swipe instruction - simple text below
-    const swipeHint = document.createElement('div');
-    swipeHint.className = 'pack-swipe-hint';
-    swipeHint.style.cssText = `
-        position: absolute;
-        bottom: 5%;
-        left: 50%;
-        transform: translateX(-50%);
-        color: rgba(255,215,0,0.9);
-        font-family: Orbitron, sans-serif;
-        font-size: 12px;
+        font-size: 20px;
         font-weight: bold;
-        z-index: 10;
-        white-space: nowrap;
-        text-shadow: 0 2px 4px rgba(0,0,0,0.8);
+        text-shadow: 0 2px 8px black, 0 0 20px black;
+        pointer-events: none;
     `;
-    swipeHint.textContent = '← SWIPE →';
+    label.textContent = cardCount === 1 ? '1 CARD' : `${cardCount} CARDS`;
     
     packEl.appendChild(packImg);
-    packEl.appendChild(countLabel);
-    packEl.appendChild(swipeHint);
+    packEl.appendChild(label);
     
-    console.log('[FORGE] Pack created:', packImage, cardCount, 'cards');
+    console.log('[FORGE] Pack created with image:', packImage);
     
     return packEl;
 }
