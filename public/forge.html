@@ -1822,26 +1822,42 @@ let reverbNode = null;
 
 function initAudio() {
     if (!audioCtx) {
-        audioCtx = new AudioCtx();
-        
-        // Master dynamics compressor for polish
-        const comp = audioCtx.createDynamicsCompressor();
-        comp.threshold.value = -20; comp.knee.value = 40; comp.ratio.value = 8;
-        comp.attack.value = 0.002; comp.release.value = 0.15;
-        
-        // Master gain for volume control
-        masterGain = audioCtx.createGain();
-        masterGain.gain.value = 0.7;
-        
-        // Create reverb for spaciousness
-        reverbNode = createReverb(audioCtx, 1.5, 2);
-        
-        // Chain: Source -> Compressor -> Reverb Mix -> Master -> Destination
-        comp.connect(masterGain);
-        masterGain.connect(audioCtx.destination);
-        
-        audioCtx.master = comp;
-        audioCtx.masterGain = masterGain;
+        try {
+            audioCtx = new AudioCtx();
+            
+            // Resume audio context (required for iOS)
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+            
+            // Master dynamics compressor for polish
+            const comp = audioCtx.createDynamicsCompressor();
+            comp.threshold.value = -20; comp.knee.value = 40; comp.ratio.value = 8;
+            comp.attack.value = 0.002; comp.release.value = 0.15;
+            
+            // Master gain for volume control
+            masterGain = audioCtx.createGain();
+            masterGain.gain.value = 0.7;
+            
+            // Create reverb for spaciousness
+            reverbNode = createReverb(audioCtx, 1.5, 2);
+            
+            // Chain: Source -> Compressor -> Reverb Mix -> Master -> Destination
+            comp.connect(masterGain);
+            masterGain.connect(audioCtx.destination);
+            
+            audioCtx.master = comp;
+            audioCtx.masterGain = masterGain;
+            
+            console.log('[FORGE] 🔊 Audio context created, state:', audioCtx.state);
+        } catch (e) {
+            console.error('[FORGE] ❌ Audio init error:', e);
+        }
+    } else if (audioCtx.state === 'suspended') {
+        // Resume if suspended
+        audioCtx.resume().then(() => {
+            console.log('[FORGE] 🔊 Audio resumed');
+        });
     }
 }
 
@@ -1998,14 +2014,26 @@ document.addEventListener('touchstart', initForgeAudio, { once: true });
 // Uses MP3 files when available, falls back to synth
 // ═══════════════════════════════════════════════════════════════════════════
 function playSound(type) {
+    console.log('[FORGE] 🔊 playSound:', type, 'audioCtx:', !!audioCtx);
+    
+    // Always trigger haptic
+    haptic(type);
+    
     // Try premium MP3 audio first (way better!)
     if (PremiumAudio.initialized && PremiumAudio.buffers[type]) {
         PremiumAudio.play(type);
-        haptic(type);
         return;
     }
     
-    // Fallback to synth audio
+    // Fallback to synth audio - init if needed
+    if (!audioCtx) {
+        try {
+            initAudio();
+        } catch (e) {
+            console.log('[FORGE] ⚠️ Audio init failed:', e);
+            return;
+        }
+    }
     if (!audioCtx) return;
     const now = audioCtx.currentTime;
     const dest = audioCtx.master || audioCtx.destination;
@@ -3941,9 +3969,12 @@ async function executePull() {
             CARDS = generateSampleCards();
         }
         
+        // ALWAYS init audio on first pull (required for mobile)
+        initAudio();
+        console.log('[FORGE] 🔊 Audio initialized');
+        
         // DEV MODE: Skip wallet checks entirely
         if (!DEV_MODE) {
-            initAudio();
             if (!spendLogs(selectedPulls)) {
                 showToast('Not enough Logs! Go to Arcade to earn more!');
                 return;
@@ -4305,10 +4336,11 @@ function revealCard() {
             setTimeout(() => playSound('impact'), 250);
         }
         
-        // After flip, show effects
+        // After flip, show effects - REDUCED delay for mobile
         setTimeout(() => {
+            console.log('[FORGE] 🎴 Showing rarity effects for:', card.rarity);
             showRarityEffects(card);
-        }, 400);
+        }, 200);
     }, delay);
     
     } catch (err) {
