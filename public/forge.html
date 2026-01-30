@@ -2760,25 +2760,14 @@ function createPackBag(cardCount, highestRarity) {
     
     // Calculate rarity glow
     let glowColor = 'rgba(255,107,0,0.6)';
-    let glowSize = '30px';
-    if (highestRarity === 'mythic') {
-        glowColor = 'rgba(255,0,255,0.8)';
-        glowSize = '50px';
-    } else if (highestRarity === 'legendary') {
-        glowColor = 'rgba(255,215,0,0.8)';
-        glowSize = '40px';
-    } else if (highestRarity === 'epic') {
-        glowColor = 'rgba(168,85,247,0.8)';
-        glowSize = '35px';
-    }
+    if (highestRarity === 'mythic') glowColor = 'rgba(255,0,255,0.8)';
+    else if (highestRarity === 'legendary') glowColor = 'rgba(255,215,0,0.8)';
+    else if (highestRarity === 'epic') glowColor = 'rgba(168,85,247,0.8)';
     
     // Select pack image based on card count
     const packImage = PACK_CONFIG.getImage(cardCount);
     
-    // ========================================
-    // ========================================
     // SIMPLE PACK - Just an image, same size as card reveal
-    // ========================================
     packEl.style.cssText = `
         position: relative;
         width: ${PACK_CONFIG.WIDTH};
@@ -2786,76 +2775,62 @@ function createPackBag(cardCount, highestRarity) {
         cursor: grab;
         touch-action: none;
         user-select: none;
-        display: flex;
-        align-items: center;
-        justify-content: center;
     `;
     
-    // Pack image - simple IMG tag with ABSOLUTE positioning
+    // Pack image - simple IMG tag
     const packImg = document.createElement('img');
     packImg.className = 'pack-image';
     packImg.src = packImage;
     packImg.alt = 'Card Pack';
     packImg.style.cssText = `
-        position: absolute;
-        inset: 0;
         width: 100%;
         height: 100%;
         object-fit: contain;
-        filter: drop-shadow(0 10px 30px rgba(0,0,0,0.8)) 
-                drop-shadow(0 0 ${glowSize} ${glowColor});
-        z-index: 1;
+        filter: drop-shadow(0 10px 30px rgba(0,0,0,0.8)) drop-shadow(0 0 30px ${glowColor});
     `;
-    // Debug: log if image fails to load
-    packImg.onerror = () => console.error('[FORGE] Pack image failed to load:', packImage);
-    packImg.onload = () => console.log('[FORGE] Pack image loaded successfully:', packImage);
+    packImg.onerror = () => console.error('[FORGE] Pack image failed:', packImage);
     
-    // Card count badge - positioned ABOVE the image
-    const badge = document.createElement('div');
-    badge.className = 'pack-badge';
-    badge.style.cssText = `
+    // SIMPLE card count - just text, no orange bar
+    const countLabel = document.createElement('div');
+    countLabel.className = 'pack-count';
+    countLabel.style.cssText = `
         position: absolute;
-        top: 20px;
-        left: 20px;
-        background: linear-gradient(135deg, #ff6b00, #ffd700);
-        color: #000;
-        font-weight: 900;
-        font-size: 16px;
-        padding: 8px 14px;
-        border-radius: 20px;
+        bottom: 15%;
+        left: 50%;
+        transform: translateX(-50%);
         font-family: Orbitron, sans-serif;
-        box-shadow: 0 4px 15px rgba(255,107,0,0.8);
-        border: 2px solid rgba(255,255,255,0.5);
+        font-size: ${cardCount >= 10 ? '28px' : '24px'};
+        font-weight: 900;
+        color: #fff;
+        text-shadow: 0 0 10px ${glowColor}, 0 0 20px ${glowColor}, 0 2px 4px rgba(0,0,0,0.8);
         z-index: 10;
     `;
-    badge.textContent = '×' + cardCount;
+    // Simple text: "1 CARD" or "5 CARDS" or "10 CARDS"
+    countLabel.textContent = cardCount === 1 ? '1 CARD' : `${cardCount} CARDS`;
     
-    // Swipe instruction - positioned BELOW the pack
+    // Swipe instruction - simple text below
     const swipeHint = document.createElement('div');
     swipeHint.className = 'pack-swipe-hint';
     swipeHint.style.cssText = `
         position: absolute;
-        bottom: -50px;
+        bottom: 5%;
         left: 50%;
         transform: translateX(-50%);
-        background: rgba(0,0,0,0.9);
-        color: #ffd700;
+        color: rgba(255,215,0,0.9);
         font-family: Orbitron, sans-serif;
-        font-size: 14px;
+        font-size: 12px;
         font-weight: bold;
-        padding: 12px 24px;
-        border-radius: 25px;
-        border: 2px solid rgba(255,215,0,0.6);
         z-index: 10;
         white-space: nowrap;
+        text-shadow: 0 2px 4px rgba(0,0,0,0.8);
     `;
-    swipeHint.innerHTML = '👈 SWIPE TO OPEN 👉';
+    swipeHint.textContent = '← SWIPE →';
     
     packEl.appendChild(packImg);
-    packEl.appendChild(badge);
+    packEl.appendChild(countLabel);
     packEl.appendChild(swipeHint);
     
-    console.log('[FORGE] Full-bleed pack created:', packImage);
+    console.log('[FORGE] Pack created:', packImage, cardCount, 'cards');
     
     return packEl;
 }
@@ -3292,35 +3267,32 @@ async function tearOpenPack(packEl, cards, isBox) {
             await sleep(200);
         }
     } else {
-        // === BAG TEARING - Seal rips off from the bag ===
-        packEl.classList.add('tearing');
-        const seal = packEl.querySelector('.pack-bag-seal');
+        // === BAG TEARING - Pack rips open with visual effect ===
+        const dir = swipeState.direction || (Math.random() > 0.5 ? 1 : -1);
         
-        if (seal) {
-            // Direction from swipe (or random if tapped)
-            const dir = swipeState.direction || (Math.random() > 0.5 ? 1 : -1);
-            
-            // Phase 1: Seal starts to rip - stretches and distorts
-            seal.style.transition = 'all 0.15s ease-out';
-            seal.style.transform = `translateX(${dir * 30}px) rotate(${dir * 8}deg) scaleX(1.1)`;
-            seal.style.borderBottom = '3px solid transparent';
-            
-            await sleep(100);
-            PremiumAudio.play('flip');
-            
-            // Phase 2: Seal tears completely off with realistic physics
-            seal.style.transition = 'all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
-            seal.style.transform = `translateX(${dir * 250}px) translateY(80px) rotate(${dir * 60}deg) scale(0.4)`;
-            seal.style.opacity = '0';
-            seal.style.filter = 'blur(2px)';
-            
-            // Create small tear particles
-            createTearParticles(packEl, dir);
+        // Play tear sound
+        PremiumAudio.play('flip');
+        
+        // Add tearing class for CSS animation
+        packEl.classList.add('tearing');
+        
+        // Also animate via JS for more control
+        const packImg = packEl.querySelector('.pack-image');
+        if (packImg) {
+            packImg.style.transition = 'all 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+            packImg.style.transform = `translateY(-50px) rotateX(30deg) rotateZ(${dir * 5}deg) scale(0.8)`;
+            packImg.style.opacity = '0.3';
+            packImg.style.filter = 'brightness(1.5) blur(2px)';
         }
         
-        // Tear effect
+        // Create tear particles
+        createTearParticles(packEl, dir);
+        
+        // Tear effect SVG
         const tearEffect = document.getElementById('tearEffect');
         tearEffect.classList.add('active', 'tearing');
+        
+        await sleep(200);
     }
     
     // Rarity glow
