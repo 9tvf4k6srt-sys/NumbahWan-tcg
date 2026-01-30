@@ -9,19 +9,21 @@
     <link rel="stylesheet" href="/static/nw-card-reveal.css">
     <link rel="stylesheet" href="/static/nw-card-frames.css">
     <!-- Essential Utilities (168 lines vs 4700+ old helpers) -->
-    <script src="/static/nw-essentials.js"></script>
-    <!-- Game-specific helpers (still needed) -->
-    <script src="/static/helpers/nw-core.js"></script>
-    <script src="/static/helpers/nw-state.js"></script>
-    <script src="/static/helpers/nw-guild.js"></script>
-    <script src="/static/helpers/nw-forge.js"></script>
-    <!-- Game Components -->
-    <script src="/static/nw-icons-inline.js"></script>
-    <script src="/static/nw-wallet.js"></script>
-    <script src="/static/nw-cards.js"></script>
-    <script src="/static/nw-card-renderer.js"></script>
-    <script src="/static/nw-game-juice.js"></script>
-    <script src="/static/nw-3d-engine.js"></script>
+    <!-- ============================================
+         SCRIPTS DISABLED FOR DEBUGGING
+         The wallet/helpers were blocking the page
+         ============================================ -->
+    <!-- <script src="/static/nw-essentials.js"></script> -->
+    <!-- <script src="/static/helpers/nw-core.js"></script> -->
+    <!-- <script src="/static/helpers/nw-state.js"></script> -->
+    <!-- <script src="/static/helpers/nw-guild.js"></script> -->
+    <!-- <script src="/static/helpers/nw-forge.js"></script> -->
+    <!-- <script src="/static/nw-icons-inline.js"></script> -->
+    <!-- <script src="/static/nw-wallet.js"></script> -->
+    <!-- <script src="/static/nw-cards.js"></script> -->
+    <!-- <script src="/static/nw-card-renderer.js"></script> -->
+    <!-- <script src="/static/nw-game-juice.js"></script> -->
+    <!-- <script src="/static/nw-3d-engine.js"></script> -->
     <link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     
@@ -1742,6 +1744,44 @@
 // MYTHIC FORGE - ULTRA PREMIUM CARD PULL EXPERIENCE
 // Inspired by South Park: Phone Destroyer with NumbahWan Twist
 // =====================================================================
+
+// ═══════════════════════════════════════════════════════════════════════════
+// 🔧 STUB FUNCTIONS - Replace missing external dependencies
+// ═══════════════════════════════════════════════════════════════════════════
+if (typeof NW_CORE === 'undefined') {
+    window.NW_CORE = { throttle: (fn) => fn };
+    console.log('[FORGE] NW_CORE stubbed');
+}
+if (typeof NW_WALLET === 'undefined') {
+    window.NW_WALLET = { 
+        spend: () => true, 
+        earn: () => {}, 
+        recordPull: () => {},
+        addToCollection: () => {},
+        updateForge: () => {},
+        getGuestId: () => 'DEV-MODE',
+        isGMMode: () => true,
+        getForgeState: () => ({ pityCounter: 0, totalPulls: 0 }),
+        getCollection: () => []
+    };
+    console.log('[FORGE] NW_WALLET stubbed');
+}
+if (typeof NW_GUILD === 'undefined') {
+    window.NW_GUILD = { getRarityColor: (r) => ({ mythic:'#ff00ff', legendary:'#ffd700', epic:'#a855f7', rare:'#3b82f6', uncommon:'#22c55e', common:'#888' }[r] || '#888') };
+    console.log('[FORGE] NW_GUILD stubbed');
+}
+if (typeof PremiumAudio === 'undefined') {
+    window.PremiumAudio = { play: () => {}, init: () => {} };
+    console.log('[FORGE] PremiumAudio stubbed');
+}
+if (typeof NW_ANIM === 'undefined') {
+    window.NW_ANIM = { spring: () => {}, animate: () => {}, countTo: () => {} };
+    console.log('[FORGE] NW_ANIM stubbed');
+}
+if (typeof NW_JUICE === 'undefined') {
+    window.NW_JUICE = { gacha: { anticipate: () => {} } };
+    console.log('[FORGE] NW_JUICE stubbed');
+}
 
 // ═══════════════════════════════════════════════════════════════════════════
 // 🎵 PREMIUM GACHA AUDIO ENGINE - Casino-Grade Sound Design
@@ -3705,16 +3745,23 @@ function sleep(ms) {
 
 // Pull
 async function executePull() {
-    console.log('[FORGE] executePull called! selectedPulls:', selectedPulls);
-    initAudio();
-    let actual = selectedPulls;
-    if (selectedPulls === 5) actual = 6;
-    if (selectedPulls === 10) actual = 12;
-    
-    if (!spendLogs(selectedPulls)) {
-        showToast('Not enough Logs! Go to Arcade to earn more!');
-        return;
-    }
+    try {
+        console.log('[FORGE] 🎴 executePull START - DEV_MODE:', DEV_MODE, 'selectedPulls:', selectedPulls);
+        
+        // DEV MODE: Skip wallet checks entirely
+        if (!DEV_MODE) {
+            initAudio();
+            if (!spendLogs(selectedPulls)) {
+                showToast('Not enough Logs! Go to Arcade to earn more!');
+                return;
+            }
+        }
+        
+        let actual = selectedPulls;
+        if (selectedPulls === 5) actual = 6;
+        if (selectedPulls === 10) actual = 12;
+        
+        console.log('[FORGE] 🎴 Pulling', actual, 'cards...');
     
     cardsToReveal = [];
     let gotMythic = false, gotLegendary = false, gotEpic = false;
@@ -3779,10 +3826,16 @@ async function executePull() {
     }
     
     // ===== 3D PACK OPENING ANIMATION =====
+    console.log('[FORGE] 🎴 Starting pack opening animation...');
     await showPackOpening(cardsToReveal);
     
     currentIndex = 0;
     showReveal();
+    console.log('[FORGE] 🎴 executePull COMPLETE!');
+    } catch (error) {
+        console.error('[FORGE] ❌ executePull ERROR:', error);
+        showToast('Error! Check console for details.');
+    }
 }
 
 // ===== GLOBAL PULL ANNOUNCEMENT =====

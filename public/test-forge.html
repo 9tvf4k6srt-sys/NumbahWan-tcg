@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Forge - Minimal</title>
+    <style>
+        body { background: #1a1a2e; color: white; font-family: sans-serif; padding: 20px; text-align: center; }
+        .pack { width: 200px; height: 280px; margin: 20px auto; cursor: pointer; transition: transform 0.2s; }
+        .pack:hover { transform: scale(1.05); }
+        .pack img { width: 100%; height: 100%; object-fit: contain; }
+        .status { padding: 20px; font-size: 24px; color: #ffd700; }
+        .btn { background: linear-gradient(135deg, #a855f7, #ff00ff); border: none; color: white; 
+               padding: 15px 40px; font-size: 18px; border-radius: 10px; cursor: pointer; margin: 10px; }
+        .btn:hover { transform: scale(1.05); }
+        .log { background: #000; padding: 10px; margin: 20px auto; max-width: 600px; 
+               font-family: monospace; font-size: 12px; text-align: left; max-height: 200px; overflow-y: auto; }
+        .result { font-size: 32px; margin: 20px; }
+    </style>
+</head>
+<body>
+    <h1>🧪 Minimal Forge Test</h1>
+    <p>No external scripts - just pure JavaScript</p>
+    
+    <div class="status" id="status">Tap the pack!</div>
+    
+    <div class="pack" id="pack">
+        <img src="/static/images/packs/pack-single.png" alt="Pack">
+    </div>
+    
+    <div class="result" id="result"></div>
+    
+    <div>
+        <button class="btn" onclick="testPull()">🎴 PULL</button>
+        <button class="btn" onclick="location.reload()">🔄 RESET</button>
+    </div>
+    
+    <div class="log" id="log"></div>
+    
+    <script>
+        const log = (msg) => {
+            console.log(msg);
+            document.getElementById('log').innerHTML += new Date().toLocaleTimeString() + ' - ' + msg + '<br>';
+            document.getElementById('log').scrollTop = 99999;
+        };
+        
+        log('✅ Page loaded!');
+        log('✅ Script running!');
+        
+        // Test if pack image loads
+        const packImg = document.querySelector('.pack img');
+        packImg.onload = () => log('✅ Pack image loaded!');
+        packImg.onerror = () => log('❌ Pack image FAILED to load!');
+        
+        // Make pack clickable
+        document.getElementById('pack').onclick = testPull;
+        
+        function testPull() {
+            log('🎴 Pull triggered!');
+            document.getElementById('status').textContent = '✨ PULLING...';
+            
+            // Simulate gacha
+            const rarities = [
+                { name: 'COMMON', color: '#888', weight: 50 },
+                { name: 'UNCOMMON', color: '#22c55e', weight: 25 },
+                { name: 'RARE', color: '#3b82f6', weight: 15 },
+                { name: 'EPIC', color: '#a855f7', weight: 7 },
+                { name: 'LEGENDARY', color: '#ffd700', weight: 2.5 },
+                { name: 'MYTHIC', color: '#ff00ff', weight: 0.5 }
+            ];
+            
+            const roll = Math.random() * 100;
+            let cumulative = 0;
+            let result = rarities[0];
+            
+            for (const r of rarities) {
+                cumulative += r.weight;
+                if (roll < cumulative) {
+                    result = r;
+                    break;
+                }
+            }
+            
+            log('🎲 Rolled: ' + roll.toFixed(2) + ' -> ' + result.name);
+            
+            // Animate
+            const pack = document.getElementById('pack');
+            pack.style.transform = 'scale(1.1) rotate(5deg)';
+            
+            setTimeout(() => {
+                pack.style.transform = 'scale(0.8) rotate(-5deg)';
+                pack.style.opacity = '0.5';
+            }, 200);
+            
+            setTimeout(() => {
+                document.getElementById('status').textContent = '🎉 YOU GOT:';
+                document.getElementById('result').innerHTML = 
+                    '<span style="color:' + result.color + '; text-shadow: 0 0 20px ' + result.color + ';">' + 
+                    result.name + '</span>';
+                pack.style.transform = '';
+                pack.style.opacity = '1';
+                log('✅ Pull complete: ' + result.name);
+            }, 500);
+        }
+        
+        log('✅ Ready to pull!');
+    </script>
+</body>
+</html>
