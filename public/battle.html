@@ -1100,15 +1100,18 @@
             width: var(--hand-card-width) !important;
             height: var(--hand-card-height) !important;
             margin: 0 !important;
-            transform: scale(1.15) rotate(-3deg) !important;
+            /* Use transform-origin top-left so left/top positioning works correctly */
+            transform-origin: center center !important;
+            transform: scale(1.1) rotate(-2deg) !important;
             box-shadow: 
-                0 30px 60px rgba(0,0,0,0.8),
-                0 0 50px rgba(255,215,0,0.5) !important;
-            transition: transform 0.1s, box-shadow 0.1s !important;
+                0 25px 50px rgba(0,0,0,0.8),
+                0 0 40px rgba(255,215,0,0.5) !important;
+            /* No transition during drag for instant response */
+            transition: none !important;
         }
-        .hand-card.is-dragging.mythic { box-shadow: 0 30px 60px rgba(0,0,0,0.8), 0 0 60px var(--mythic) !important; }
-        .hand-card.is-dragging.legendary { box-shadow: 0 30px 60px rgba(0,0,0,0.8), 0 0 60px var(--gold) !important; }
-        .hand-card.is-dragging.epic { box-shadow: 0 30px 60px rgba(0,0,0,0.8), 0 0 60px var(--purple) !important; }
+        .hand-card.is-dragging.mythic { box-shadow: 0 25px 50px rgba(0,0,0,0.8), 0 0 50px var(--mythic) !important; }
+        .hand-card.is-dragging.legendary { box-shadow: 0 25px 50px rgba(0,0,0,0.8), 0 0 50px var(--gold) !important; }
+        .hand-card.is-dragging.epic { box-shadow: 0 25px 50px rgba(0,0,0,0.8), 0 0 50px var(--purple) !important; }
         
         /* Placeholder where card was picked up */
         .hand-card-placeholder {
@@ -3761,11 +3764,17 @@
             document.addEventListener('touchcancel', this.endHandler);
         },
         
-        // Update card position to follow finger
+        // Update card position to follow finger (centered under touch point)
         updateCardPosition(x, y) {
             if (!this.dragCardEl) return;
-            this.dragCardEl.style.left = (x - this.offsetX) + 'px';
-            this.dragCardEl.style.top = (y - this.offsetY) + 'px';
+            // Get actual card dimensions
+            const cardWidth = this.dragCardEl.offsetWidth || 100;
+            const cardHeight = this.dragCardEl.offsetHeight || 140;
+            // Center the card on the touch point, slightly above finger so you can see it
+            const offsetX = cardWidth / 2;
+            const offsetY = cardHeight / 2 + 20; // 20px above finger
+            this.dragCardEl.style.left = (x - offsetX) + 'px';
+            this.dragCardEl.style.top = (y - offsetY) + 'px';
         },
         
         // Handle movement
