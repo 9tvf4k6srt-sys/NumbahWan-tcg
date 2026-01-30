@@ -501,24 +501,81 @@ const NW_WALLET = {
         return true;
     },
     
-    // ===== COLLECTION & FORGE =====
-    addToCollection(cardId) {
+    // ===== COLLECTION & CARD PROGRESSION =====
+    // Collection format: { cardId: { count: N, level: L, xp: X } }
+    
+    addToCollection(cardId, rarity = 'common') {
         if (!this.wallet) return false;
         
-        if (!this.wallet.collection.includes(cardId)) {
-            this.wallet.collection.push(cardId);
-            this.log('COLLECTION_ADD', { cardId });
-            this.saveWallet();
+        // Migrate old array format if needed
+        if (Array.isArray(this.wallet.collection)) {
+            const oldCollection = this.wallet.collection;
+            this.wallet.collection = {};
+            oldCollection.forEach(id => {
+                this.wallet.collection[id] = { count: 1, level: 1, xp: 0 };
+            });
         }
-        return true;
+        
+        // XP per duplicate based on rarity
+        const XP_TABLE = { common: 10, uncommon: 20, rare: 50, epic: 100, legendary: 250, mythic: 500 };
+        const xpGain = XP_TABLE[rarity] || 10;
+        
+        if (!this.wallet.collection[cardId]) {
+            // First time getting this card
+            this.wallet.collection[cardId] = { count: 1, level: 1, xp: 0 };
+            this.log('COLLECTION_ADD', { cardId, first: true });
+        } else {
+            // Duplicate! Add XP and increase count
+            const card = this.wallet.collection[cardId];
+            card.count++;
+            card.xp += xpGain;
+            
+            // Level up system: 100 XP per level
+            const XP_PER_LEVEL = 100;
+            const newLevel = Math.floor(card.xp / XP_PER_LEVEL) + 1;
+            const leveledUp = newLevel > card.level;
+            card.level = Math.min(newLevel, 10); // Max level 10
+            
+            this.log('COLLECTION_DUPLICATE', { cardId, count: card.count, xp: card.xp, level: card.level, leveledUp });
+        }
+        
+        this.saveWallet();
+        return this.wallet.collection[cardId];
     },
     
     hasCard(cardId) {
-        return this.wallet?.collection.includes(cardId) || false;
+        if (Array.isArray(this.wallet?.collection)) {
+            return this.wallet.collection.includes(cardId);
+        }
+        return !!this.wallet?.collection?.[cardId];
+    },
+    
+    getCardData(cardId) {
+        if (!this.wallet?.collection) return null;
+        if (Array.isArray(this.wallet.collection)) {
+            return this.wallet.collection.includes(cardId) ? { count: 1, level: 1, xp: 0 } : null;
+        }
+        return this.wallet.collection[cardId] || null;
     },
     
     getCollection() {
-        return this.wallet?.collection || [];
+        if (!this.wallet?.collection) return [];
+        // Return array of card IDs for backwards compatibility
+        if (Array.isArray(this.wallet.collection)) {
+            return this.wallet.collection;
+        }
+        return Object.keys(this.wallet.collection).map(Number);
+    },
+    
+    getFullCollection() {
+        // Return full collection with levels and XP
+        if (!this.wallet?.collection) return {};
+        if (Array.isArray(this.wallet.collection)) {
+            const obj = {};
+            this.wallet.collection.forEach(id => { obj[id] = { count: 1, level: 1, xp: 0 }; });
+            return obj;
+        }
+        return this.wallet.collection;
     },
     
     updateForge(pityCounter, totalPulls) {

@@ -522,6 +522,8 @@
         }
     </style>
     <link rel="stylesheet" href="/static/nw-card-frames.css">
+    <script src="/static/nw-essentials.js"></script>
+    <script src="/static/nw-wallet.js"></script>
     <script src="/static/nw-cards.js"></script>
     <script src="/static/nw-card-renderer.js"></script>
     <script src="/static/nw-game-juice.js"></script>
@@ -808,8 +810,18 @@
             const data = await res.json();
             allCards = data.cards || [];
             
-            // Load saved data
-            collection = JSON.parse(localStorage.getItem('nw_collection') || '{}');
+            // Load saved data from wallet
+            if (typeof NW_WALLET !== 'undefined') {
+                await NW_WALLET.init();
+                const walletCollection = NW_WALLET.getCollection() || [];
+                // Convert array [id, id, id] to {id: count} format
+                walletCollection.forEach(id => {
+                    collection[id] = (collection[id] || 0) + 1;
+                });
+            } else {
+                // Fallback to localStorage
+                collection = JSON.parse(localStorage.getItem('nw_collection') || '{}');
+            }
             wishlist = JSON.parse(localStorage.getItem('nw_wishlist') || '[]');
             pullHistory = JSON.parse(localStorage.getItem('nw_pull_history') || '[]');
             achievementProgress = JSON.parse(localStorage.getItem('nw_achievements') || '{}');
@@ -834,6 +846,12 @@
     // Save functions
     function saveCollection() {
         localStorage.setItem('nw_collection', JSON.stringify(collection));
+        // Also sync to wallet
+        if (typeof NW_WALLET !== 'undefined') {
+            Object.keys(collection).forEach(id => {
+                NW_WALLET.addToCollection(parseInt(id));
+            });
+        }
     }
     function saveWishlist() {
         localStorage.setItem('nw_wishlist', JSON.stringify(wishlist));

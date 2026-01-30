@@ -2220,18 +2220,12 @@
         }
     </style>
     <link rel="stylesheet" href="/static/nw-card-frames.css">
+    <script src="/static/nw-essentials.js"></script>
+    <script src="/static/nw-wallet.js"></script>
     <script src="/static/nw-cards.js"></script>
     <script src="/static/nw-card-renderer.js"></script>
     <script src="/static/nw-game-juice.js"></script>
     <script src="/static/nw-3d-engine.js"></script>
-    
-    <!-- NW Helper Library -->
-    <script src="/static/helpers/nw-core.js"></script>
-    <script src="/static/helpers/nw-ui.js"></script>
-    <script src="/static/helpers/nw-anim.js"></script>
-    <script src="/static/helpers/nw-audio.js"></script>
-    <script src="/static/helpers/nw-state.js"></script>
-    <script src="/static/helpers/nw-guild.js"></script>
     <script src="/static/helpers/nw-battle.js"></script>
 </head>
 <body>
@@ -3653,6 +3647,7 @@
         // Draw card
         if (gameState.playerDeck.length > 0 && gameState.playerHand.length < CONFIG.MAX_HAND) {
             gameState.playerHand.push(gameState.playerDeck.pop());
+            Audio.play('draw');
         }
         
         addLog(`--- TURN ${gameState.turn} ---`, '');
@@ -3974,7 +3969,7 @@
         updateAttackButton();
     }
     
-    function createDeck() {
+    function createDeck(usePlayerDeck = false) {
         console.log('[createDeck] CARDS available:', CARDS.length);
         if (!CARDS.length) {
             console.error('[createDeck] No cards available!');
@@ -3983,7 +3978,36 @@
         
         const deck = [];
         
-        // Simply pick 15 random cards that have gameStats
+        // Try to load player's saved deck
+        if (usePlayerDeck) {
+            const savedDecks = JSON.parse(localStorage.getItem('nw_decks') || '[]');
+            if (savedDecks.length > 0) {
+                const lastDeck = savedDecks[savedDecks.length - 1]; // Use most recent deck
+                console.log('[createDeck] Loading saved deck:', lastDeck.name);
+                
+                lastDeck.cards.forEach(c => {
+                    const card = CARDS.find(ac => ac.id === c.id);
+                    if (card && card.gameStats) {
+                        for (let i = 0; i < c.count; i++) {
+                            deck.push({...card});
+                        }
+                    }
+                });
+                
+                if (deck.length >= 10) {
+                    // Shuffle the deck
+                    for (let i = deck.length - 1; i > 0; i--) {
+                        const j = Math.floor(Math.random() * (i + 1));
+                        [deck[i], deck[j]] = [deck[j], deck[i]];
+                    }
+                    console.log('[createDeck] Using saved deck with', deck.length, 'cards');
+                    return deck;
+                }
+                console.log('[createDeck] Saved deck too small, using random deck');
+            }
+        }
+        
+        // Fallback: pick 15 random cards that have gameStats
         const validCards = CARDS.filter(c => c.gameStats);
         console.log('[createDeck] Valid cards with gameStats:', validCards.length);
         
@@ -4003,7 +4027,7 @@
             [deck[i], deck[j]] = [deck[j], deck[i]];
         }
         
-        console.log('[createDeck] Created deck with', deck.length, 'cards');
+        console.log('[createDeck] Created random deck with', deck.length, 'cards');
         return deck;
     }
     
@@ -4239,9 +4263,9 @@
                 return;
             }
             
-            // Create decks
-            gameState.playerDeck = createDeck();
-            gameState.enemyDeck = createDeck();
+            // Create decks - player uses saved deck, enemy uses random
+            gameState.playerDeck = createDeck(true);  // true = try to use saved deck
+            gameState.enemyDeck = createDeck(false);  // false = random deck
             
             console.log(`[Battle Arena] Created deck with ${gameState.playerDeck.length} cards`);
             
