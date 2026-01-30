@@ -991,8 +991,8 @@
             transition: transform 0.3s ease;
             /* PERFECT CENTERING */
             margin: 0 auto;
-            border-radius: var(--card-radius, 16px);
-            overflow: hidden;
+            /* NO overflow hidden - let the transparent image show */
+            background: transparent !important;
         }
         
         /* Thick pack for 10+ pulls - visual edge depth */
@@ -1042,8 +1042,11 @@
         .pack-stack-card:nth-child(even) { transform: rotate(3deg); }
         .pack-bag:active { cursor: grabbing; transform: scale(0.98); }
         
-        /* Bag top seal - tearable part */
+        /* Bag top seal - DISABLED - we now use full-bleed images */
         .pack-bag-seal {
+            display: none !important; /* Hide old seal - images have built-in torn top */
+        }
+        .pack-bag-seal-OLD {
             position: relative;
             width: 100%;
             height: 70px;
@@ -1144,36 +1147,46 @@
             50% { opacity: 0.7; transform: translateX(-50%) scale(1.05); }
         }
         
-        /* Pack opening animation - pack rips/tears open */
+        /* Pack opening animation - realistic tear/rip effect */
         .pack-bag.tearing {
-            animation: packTearOpen 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+            animation: packTearOpen 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
         }
         @keyframes packTearOpen {
             0% { 
-                transform: rotateX(5deg) scale(1);
+                transform: scale(1) rotateZ(0);
+                clip-path: inset(0 0 0 0);
                 opacity: 1;
-                filter: brightness(1);
             }
-            30% {
-                transform: rotateX(10deg) scale(1.05);
-                filter: brightness(1.2);
+            20% {
+                transform: scale(1.02) rotateZ(-1deg);
+                clip-path: inset(0 0 0 0);
+            }
+            40% {
+                transform: scale(1.05) rotateZ(1deg);
+                clip-path: inset(5% 0 0 0); /* Start tearing from top */
             }
             60% {
-                transform: rotateX(20deg) scale(0.95) translateY(-20px);
-                opacity: 0.8;
-                filter: brightness(1.5);
+                transform: scale(1.02) rotateZ(-2deg) translateY(-30px);
+                clip-path: inset(30% 0 0 0); /* Tear progresses */
+                opacity: 0.9;
+            }
+            80% {
+                transform: scale(0.9) rotateZ(5deg) translateY(-80px);
+                clip-path: inset(60% 0 0 0);
+                opacity: 0.5;
             }
             100% { 
-                transform: rotateX(40deg) scale(0.5) translateY(-100px);
+                transform: scale(0.6) rotateZ(10deg) translateY(-150px);
+                clip-path: inset(100% 0 0 0); /* Fully torn away */
                 opacity: 0;
-                filter: brightness(2);
             }
         }
         
         /* Hide swipe hint when tearing */
         .pack-bag.tearing .pack-swipe-hint {
             opacity: 0;
-            transition: opacity 0.2s;
+            transform: translateX(-50%) translateY(20px);
+            transition: all 0.3s ease;
         }
         
         /* Shake animation for pack */
@@ -2778,48 +2791,54 @@ function createPackBag(cardCount, highestRarity) {
         justify-content: center;
     `;
     
-    // Pack image - simple IMG tag
+    // Pack image - simple IMG tag with ABSOLUTE positioning
     const packImg = document.createElement('img');
     packImg.className = 'pack-image';
     packImg.src = packImage;
     packImg.alt = 'Card Pack';
     packImg.style.cssText = `
+        position: absolute;
+        inset: 0;
         width: 100%;
         height: 100%;
         object-fit: contain;
         filter: drop-shadow(0 10px 30px rgba(0,0,0,0.8)) 
                 drop-shadow(0 0 ${glowSize} ${glowColor});
+        z-index: 1;
     `;
+    // Debug: log if image fails to load
+    packImg.onerror = () => console.error('[FORGE] Pack image failed to load:', packImage);
+    packImg.onload = () => console.log('[FORGE] Pack image loaded successfully:', packImage);
     
-    // Card count badge
+    // Card count badge - positioned ABOVE the image
     const badge = document.createElement('div');
     badge.className = 'pack-badge';
     badge.style.cssText = `
         position: absolute;
         top: 20px;
-        right: 20px;
+        left: 20px;
         background: linear-gradient(135deg, #ff6b00, #ffd700);
         color: #000;
         font-weight: 900;
-        font-size: 18px;
-        padding: 10px 18px;
-        border-radius: 25px;
+        font-size: 16px;
+        padding: 8px 14px;
+        border-radius: 20px;
         font-family: Orbitron, sans-serif;
         box-shadow: 0 4px 15px rgba(255,107,0,0.8);
         border: 2px solid rgba(255,255,255,0.5);
-        z-index: 5;
+        z-index: 10;
     `;
     badge.textContent = '×' + cardCount;
     
-    // Swipe instruction
+    // Swipe instruction - positioned BELOW the pack
     const swipeHint = document.createElement('div');
     swipeHint.className = 'pack-swipe-hint';
     swipeHint.style.cssText = `
         position: absolute;
-        bottom: 30px;
+        bottom: -50px;
         left: 50%;
         transform: translateX(-50%);
-        background: rgba(0,0,0,0.8);
+        background: rgba(0,0,0,0.9);
         color: #ffd700;
         font-family: Orbitron, sans-serif;
         font-size: 14px;
@@ -2827,7 +2846,7 @@ function createPackBag(cardCount, highestRarity) {
         padding: 12px 24px;
         border-radius: 25px;
         border: 2px solid rgba(255,215,0,0.6);
-        z-index: 5;
+        z-index: 10;
         white-space: nowrap;
     `;
     swipeHint.innerHTML = '👈 SWIPE TO OPEN 👉';
