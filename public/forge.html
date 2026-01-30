@@ -205,43 +205,21 @@
         .pack-area { position: relative; height: 360px; display: flex; align-items: center; justify-content: center;
             margin-bottom: 10px; perspective: 1500px; padding-bottom: 30px; }
         
-        /* The Pack - Ultra Premium Design */
+        /* The Pack - NEW IMAGE-BASED DESIGN */
         .pack { width: 200px; height: 280px; position: relative; cursor: pointer;
             transform-style: preserve-3d; transition: transform 0.4s cubic-bezier(0.4,0,0.2,1);
             filter: drop-shadow(0 20px 40px rgba(0,0,0,0.6)); }
         .pack:hover:not(.opening) { transform: scale(1.05) rotateY(5deg); }
         .pack.opening { pointer-events: none; }
         
-        .pack-body { position: absolute; inset: 0; border-radius: 16px; overflow: hidden;
-            background: linear-gradient(165deg, #3d2817 0%, #1a0f08 50%, #3d2817 100%);
-            border: 4px solid transparent;
-            box-shadow: inset 0 2px 0 rgba(255,255,255,0.1), inset 0 -2px 0 rgba(0,0,0,0.3); }
-        .pack-body::before { content: ''; position: absolute; inset: -4px; border-radius: 18px; padding: 4px;
-            background: linear-gradient(135deg, var(--gold), var(--log), var(--gold));
-            background-size: 300% 300%; animation: borderShift 4s linear infinite;
-            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-            -webkit-mask-composite: xor; mask-composite: exclude; }
-        @keyframes borderShift { 0% { background-position: 0% 50%; } 100% { background-position: 300% 50%; } }
-        
-        .pack-art { position: absolute; inset: 20px; display: flex; flex-direction: column;
-            align-items: center; justify-content: center; text-align: center; }
-        .pack-icon { font-size: 60px; margin-bottom: 12px; filter: drop-shadow(0 0 20px rgba(255,215,0,0.6)); }
-        .pack-title { font-family: 'Orbitron', sans-serif; font-size: 18px; font-weight: 900;
-            color: var(--gold); text-shadow: 0 0 20px rgba(255,215,0,0.5); letter-spacing: 3px; }
-        .pack-sub { font-size: 12px; color: rgba(255,255,255,0.5); margin-top: 4px; letter-spacing: 4px; font-weight: 600; }
-        
-        .pack-shine { position: absolute; inset: 0; border-radius: 16px; overflow: hidden; pointer-events: none; }
-        .pack-shine::before { content: ''; position: absolute; top: -100%; left: -100%; width: 300%; height: 300%;
-            background: linear-gradient(45deg, transparent 40%, rgba(255,255,255,0.15) 50%, transparent 60%);
-            animation: packShine 4s ease-in-out infinite; }
-        @keyframes packShine { 0%, 100% { transform: translateX(-50%) translateY(-50%); }
-            50% { transform: translateX(50%) translateY(50%); } }
+        /* Main pack image */
+        .pack-main-img { width: 100%; height: 100%; object-fit: contain; }
         
         .pack-badge { position: absolute; bottom: 15px; left: 50%; transform: translateX(-50%);
             padding: 8px 20px; border-radius: 20px; font-family: 'Orbitron', sans-serif;
             font-size: 11px; font-weight: 700; letter-spacing: 2px;
-            background: linear-gradient(135deg, var(--orange), var(--gold)); color: #000;
-            box-shadow: 0 4px 15px rgba(255,107,0,0.4); }
+            background: linear-gradient(135deg, var(--purple), var(--mythic)); color: #fff;
+            box-shadow: 0 4px 15px rgba(168,85,247,0.4); text-shadow: 0 1px 2px rgba(0,0,0,0.5); }
         
         .tap-hint { position: absolute; bottom: 0; left: 50%; transform: translateX(-50%);
             font-size: 12px; color: rgba(255,255,255,0.4); animation: tapPulse 2s ease-in-out infinite; font-weight: 600;
@@ -1578,18 +1556,11 @@
             </div>
         </div>
         
-        <!-- Pack Area -->
+        <!-- Pack Area - NEW PACK IMAGE -->
         <div class="pack-area">
             <div class="pack" id="pack" onclick="executePull()">
-                <div class="pack-body">
-                    <div class="pack-art">
-                        <div class="pack-icon">🔥</div>
-                        <div class="pack-title">FORGE</div>
-                        <div class="pack-sub">SUMMON</div>
-                    </div>
-                    <div class="pack-badge" id="packBadge">1 CARD</div>
-                    <div class="pack-shine"></div>
-                </div>
+                <img src="/static/images/packs/pack-single.png" alt="Card Pack" class="pack-main-img" id="packMainImg">
+                <div class="pack-badge" id="packBadge">1 CARD</div>
             </div>
             <div class="tap-hint">TAP TO SUMMON</div>
         </div>
@@ -2372,12 +2343,55 @@ let forgeState = {
 };
 let walletReady = false;
 
+// =====================================================
+// 🔧 DEV MODE - BYPASS WALLET FOR TESTING
+// =====================================================
+const DEV_MODE = true; // Set to false for production
+
+if (DEV_MODE) {
+    walletReady = true;
+    console.log('[FORGE] DEV MODE: Wallet bypassed, infinite pulls enabled');
+}
+
+// DEV MODE UI - runs when page is ready
+function setupDevModeUI() {
+    if (!DEV_MODE) return;
+    
+    const guestIdEl = document.getElementById('guestId');
+    if (guestIdEl) guestIdEl.textContent = '🔧 DEV';
+    
+    const logsEl = document.getElementById('logBalance');
+    if (logsEl) logsEl.textContent = '∞';
+    
+    // Show dev badge
+    const testBadge = document.getElementById('testBadge');
+    if (testBadge) {
+        testBadge.style.display = 'inline-flex';
+        testBadge.innerHTML = '🔧 DEV MODE';
+        testBadge.style.background = 'linear-gradient(135deg, rgba(0,255,0,0.3), rgba(0,200,0,0.2))';
+        testBadge.style.border = '1px solid #0f0';
+        testBadge.style.color = '#0f0';
+    }
+    
+    console.log('[FORGE] DEV MODE UI updated');
+}
+
+// Call on multiple events to ensure it runs
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', setupDevModeUI);
+} else {
+    setupDevModeUI();
+}
+window.addEventListener('load', setupDevModeUI);
+// =====================================================
+
 // GM MODE: Uses wallet-based GM system for infinite resources
 // Activate GM mode: visit /wallet and enter code "numbahwan-gm-2026"
 // Or add your Guest ID to GM_WHITELIST in nw-wallet.js
 
 // Wait for wallet to be ready
 window.addEventListener('nw-wallet-ready', (e) => {
+    if (DEV_MODE) return; // Skip if dev mode
     walletReady = true;
     console.log('[FORGE] Wallet ready:', NW_WALLET.getGuestId());
     
@@ -2461,9 +2475,12 @@ function getLogs() {
 }
 
 function spendLogs(n, purpose = 'FORGE_PULL') {
-    if (!walletReady) return false;
-    // GM mode is handled in NW_WALLET.spend() - always succeeds for GMs
-    return NW_WALLET.spend('wood', n, purpose);
+    // DEV MODE: Always succeed - infinite logs for testing
+    return true;
+    
+    // Production code (commented out for testing):
+    // if (!walletReady) return false;
+    // return NW_WALLET.spend('wood', n, purpose);
 }
 
 function addLogs(n, source = 'MYTHIC_BONUS') {
@@ -2619,6 +2636,19 @@ function selectPull(el) {
     document.querySelectorAll('.pull-option').forEach(o => o.classList.remove('active'));
     el.classList.add('active');
     selectedPulls = parseInt(el.dataset.pulls);
+    
+    // Update pack image based on selection
+    const packImg = document.getElementById('packMainImg');
+    if (packImg) {
+        if (selectedPulls >= 10) {
+            packImg.src = '/static/images/packs/pack-mega10.png';
+        } else if (selectedPulls >= 5) {
+            packImg.src = '/static/images/packs/pack-multi5.png';
+        } else {
+            packImg.src = '/static/images/packs/pack-single.png';
+        }
+    }
+    
     updateUI();
 }
 
@@ -3675,6 +3705,7 @@ function sleep(ms) {
 
 // Pull
 async function executePull() {
+    console.log('[FORGE] executePull called! selectedPulls:', selectedPulls);
     initAudio();
     let actual = selectedPulls;
     if (selectedPulls === 5) actual = 6;
