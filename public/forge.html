@@ -369,26 +369,18 @@
         /* Particle Container */
         .reveal-particles { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
         
-        /* Card Container - MUST have size for children to inherit */
+        /* Card Container */
         .card-stage { 
             position: relative; 
             z-index: 10; 
             perspective: 2000px;
-            /* CRITICAL: Card stage must have explicit size */
-            width: 65vw;
-            height: calc(65vw * 1.4);
-            display: flex;
-            align-items: center;
-            justify-content: center;
         }
         
-        /* The Card - SAME SIZE AS PACK - FILLS PARENT */
+        /* The Card - SAME SIZE AS PACK */
         .reveal-card { 
-            /* FILL the card-stage parent completely */
-            width: 100% !important;
-            height: 100% !important;
-            max-width: none !important;
-            max-height: none !important;
+            /* Use same sizing as pack-bag for consistency */
+            width: min(320px, 65vw);
+            height: calc(min(320px, 65vw) * 1.4);
             position: relative; 
             transform-style: preserve-3d; 
             cursor: pointer;
@@ -665,27 +657,26 @@
             .pull-option { min-width: 80px; padding: 10px 12px; }
         }
         
-        /* === PACK AND CARD SAME SIZE - 65% OF SCREEN === */
-        /* Pack size */
+        /* === UNIFIED SIZING SYSTEM === 
+         * RULE: Pack and Card use the SAME base calculation
+         * This ensures they always match regardless of screen size
+         */
+        :root {
+            --card-base-size: min(320px, 65vw);
+            --card-width: var(--card-base-size);
+            --card-height: calc(var(--card-base-size) * 1.4);
+        }
+        
+        /* Pack uses the unified size */
         .pack-bag { 
-            width: 65vw !important;
-            height: calc(65vw * 1.4) !important;
-            max-width: none !important;
-            max-height: none !important;
+            width: var(--card-width) !important;
+            height: var(--card-height) !important;
         }
         
-        /* Card SAME SIZE as pack - FILLS PARENT */
+        /* Card uses the SAME unified size */
         .reveal-card { 
-            width: 100% !important;
-            height: 100% !important;
-            max-width: none !important;
-            max-height: none !important;
-        }
-        
-        /* Card stage also needs the size */
-        .card-stage {
-            width: 65vw !important;
-            height: calc(65vw * 1.4) !important;
+            width: var(--card-width) !important;
+            height: var(--card-height) !important;
         }
         
         /* ===== 3D PACK OPENING ===== */
@@ -972,14 +963,12 @@
             box-shadow: 0 0 15px #ffd700, inset 0 0 10px rgba(255,255,255,0.3);
         }
         
-        /* Pack Bag - SAME SIZE as card, ~65% of screen */
+        /* Pack Bag - Uses CSS variable for unified sizing */
         .pack-bag {
             position: relative;
-            /* Pack is SAME SIZE as card */
-            width: 65vw;
-            height: calc(65vw * 1.4);
-            max-width: none;
-            max-height: none;
+            /* Uses the same CSS variable as reveal-card */
+            width: var(--card-width, min(320px, 65vw));
+            height: var(--card-height, calc(min(320px, 65vw) * 1.4));
             cursor: grab;
             touch-action: none;
             user-select: none;
