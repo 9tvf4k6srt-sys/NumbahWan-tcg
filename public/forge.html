@@ -373,43 +373,38 @@
             transform-style: preserve-3d; 
             cursor: pointer;
             border-radius: 16px;
-            /* FORCED VISIBLE for mobile debugging */
-            transform: scale(1) translateY(0) !important;
-            opacity: 1 !important;
-            visibility: visible !important;
+            /* Default visible - animations can override */
+            transform: scale(1) translateY(0);
+            opacity: 1;
+            visibility: visible;
             background: #222; /* Fallback background */
+            /* ALLOW ANIMATIONS */
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
         }
         
-        /* DISABLED entrance animations for debugging */
+        /* Entrance animation */
         .reveal-card.card-entrance-start {
-            /* transform: scale(0.3) translateY(100px); */
-            /* opacity: 0; */
-            transform: scale(1) translateY(0) !important;
-            opacity: 1 !important;
+            transform: scale(0.5) translateY(50px);
+            opacity: 0.5;
         }
         .reveal-card.card-entrance-end {
-            transform: scale(1) translateY(0) !important;
-            opacity: 1 !important;
+            transform: scale(1) translateY(0);
+            opacity: 1;
+            transition: transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.3s ease;
         }
         
         .card-inner { 
             position: absolute; 
             inset: 0; 
-            /* DISABLED flip for debugging */
-            /* transform-style: preserve-3d; */
-            /* transition: transform 1s cubic-bezier(0.175, 0.885, 0.32, 1.275); */
         }
         .card-inner.flipped { 
-            /* transform: rotateY(180deg); */
+            /* Flip disabled - show front directly */
         }
         
         /* Both card faces - IDENTICAL structure - FULL SIZE */
         .card-face { 
             position: absolute; 
             inset: 0; 
-            /* DISABLED backface-visibility for debugging */
-            /* backface-visibility: hidden; */
-            /* -webkit-backface-visibility: hidden; */
             border-radius: 20px;
             overflow: hidden; 
             box-shadow: 0 25px 50px rgba(0,0,0,0.5); 
@@ -554,12 +549,15 @@
             to { transform: translateX(-50%) translateY(0); opacity: 1; } }
         .reveal-continue:hover { background: rgba(255,255,255,0.1); border-color: var(--gold); }
         
-        /* Screen Flash - Improved */
+        /* Screen Flash - Improved - HIGH Z-INDEX to show over reveal */
         .screen-flash { position: fixed; inset: 0; background: #fff; opacity: 0;
-            pointer-events: none; z-index: 100; transition: opacity 0.1s; }
-        .screen-flash.flash { animation: flashAnim 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
+            pointer-events: none; z-index: 9999; display: none; }
+        .screen-flash.flash { 
+            display: block;
+            animation: flashAnim 0.3s ease-out; 
+        }
         @keyframes flashAnim { 
-            0% { opacity: var(--flash-opacity, 0.6); } 
+            0% { opacity: 0.7; } 
             100% { opacity: 0; } 
         }
         
@@ -1939,14 +1937,7 @@ function haptic(pattern) {
     navigator.vibrate(patterns[pattern] || [20]);
 }
 
-// 📱 SCREEN SHAKE for epic moments
-function screenShake(intensity = 1, duration = 300) {
-    const main = document.querySelector('main');
-    if (!main) return;
-    main.style.animation = `shake ${duration}ms ease-in-out`;
-    main.style.setProperty('--shake-intensity', intensity + 'px');
-    setTimeout(() => main.style.animation = '', duration);
-}
+// 📱 SCREEN SHAKE for epic moments - defined later in the file
 
 // ═══════════════════════════════════════════════════════════════════════════
 // 🔊 AUDIO SYSTEM - Using NW_AUDIO helper for better performance
@@ -2034,7 +2025,16 @@ function playSound(type) {
             return;
         }
     }
-    if (!audioCtx) return;
+    if (!audioCtx) {
+        console.log('[FORGE] ⚠️ No audio context available');
+        return;
+    }
+    
+    // Resume if suspended (iOS requirement)
+    if (audioCtx.state === 'suspended') {
+        audioCtx.resume();
+    }
+    
     const now = audioCtx.currentTime;
     const dest = audioCtx.master || audioCtx.destination;
     
@@ -4517,26 +4517,40 @@ function createParticles(color, count) {
 }
 
 function screenFlash(color, delay = 0, intensity = 0.6) {
+    console.log('[FORGE] ⚡ screenFlash:', color);
     setTimeout(() => {
         const f = document.getElementById('screenFlash');
+        if (!f) return;
         f.style.background = color;
         f.style.opacity = intensity;
+        f.style.display = 'block';
         f.classList.add('flash');
+        
         setTimeout(() => {
             f.classList.remove('flash');
-            f.style.opacity = '';
-        }, 400);
+            f.style.opacity = '0';
+            setTimeout(() => f.style.display = 'none', 100);
+        }, 300);
     }, delay);
 }
 
 function screenShake(intensity = 8, duration = 500) {
+    console.log('[FORGE] 📳 screenShake:', intensity, duration);
+    // Shake the entire overlay for maximum impact
+    const overlay = document.getElementById('revealOverlay');
     const stage = document.getElementById('cardStage');
-    // Reduce intensity for smoother feel (original values were too aggressive)
-    const smoothIntensity = Math.min(intensity * 0.6, 12);
-    stage.style.setProperty('--shake-intensity', smoothIntensity + 'px');
-    stage.style.setProperty('--shake-duration', duration + 'ms');
-    stage.classList.add('shake');
-    setTimeout(() => stage.classList.remove('shake'), duration);
+    const target = overlay || stage || document.body;
+    
+    const smoothIntensity = Math.min(intensity * 0.8, 15);
+    target.style.setProperty('--shake-intensity', smoothIntensity + 'px');
+    target.style.animation = `shake ${duration}ms ease-in-out`;
+    
+    // Also trigger haptic
+    haptic('shake');
+    
+    setTimeout(() => {
+        target.style.animation = '';
+    }, duration);
 }
 
 // 🌟 Sparkle rain effect for high rarity reveals
