@@ -857,6 +857,364 @@
             0%, 100% { transform: translateX(0) rotateZ(0); }
             25% { transform: translateX(-3px) rotateZ(-1deg); }
             75% { transform: translateX(3px) rotateZ(1deg); }
+        
+        /* ═══════════════════════════════════════════════════════════════════
+           🎰 SWIPE-TO-TEAR PACK SYSTEM
+           ═══════════════════════════════════════════════════════════════════ */
+        
+        /* Swipe instruction styling */
+        .pack-instruction {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+        }
+        .swipe-text {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 16px;
+            color: #ffd700;
+            text-shadow: 0 0 20px rgba(255, 215, 0, 0.8);
+            animation: swipeTextPulse 1.5s infinite;
+        }
+        .swipe-arrow {
+            font-size: 32px;
+            color: #ffd700;
+            animation: swipeArrowBounce 1s infinite;
+        }
+        @keyframes swipeTextPulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.6; }
+        }
+        @keyframes swipeArrowBounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+        
+        /* Swipe progress bar */
+        .swipe-progress {
+            position: absolute;
+            bottom: 80px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 200px;
+            height: 8px;
+            background: rgba(0, 0, 0, 0.5);
+            border-radius: 4px;
+            overflow: hidden;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        .swipe-progress.active {
+            opacity: 1;
+        }
+        .swipe-progress-fill {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, #ff6b00, #ffd700);
+            border-radius: 4px;
+            transition: width 0.05s linear;
+            box-shadow: 0 0 10px #ffd700;
+        }
+        
+        /* Pack Bag (1-5 pulls) */
+        .pack-bag {
+            position: relative;
+            width: 220px;
+            height: 280px;
+            cursor: grab;
+            touch-action: none;
+            user-select: none;
+        }
+        .pack-bag:active { cursor: grabbing; }
+        
+        .pack-bag-body {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(145deg, #2d1050 0%, #1a0a30 50%, #2d1050 100%);
+            border: 4px solid;
+            border-image: linear-gradient(135deg, #ffd700, #ff6b00, #ffd700) 1;
+            border-radius: 0 0 20px 20px;
+            overflow: hidden;
+            box-shadow: 
+                0 10px 40px rgba(0, 0, 0, 0.5),
+                0 0 60px rgba(255, 107, 0, 0.3),
+                inset 0 0 40px rgba(255, 215, 0, 0.1);
+        }
+        
+        /* Bag top seal - tearable part */
+        .pack-bag-seal {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 60px;
+            background: linear-gradient(180deg, #ffd700, #ff6b00);
+            border-radius: 8px 8px 0 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 14px;
+            font-weight: bold;
+            color: #1a0a30;
+            letter-spacing: 2px;
+            transform-origin: bottom center;
+            transition: transform 0.3s ease;
+            z-index: 5;
+        }
+        .pack-bag-seal::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 10px;
+            right: 10px;
+            height: 2px;
+            background: repeating-linear-gradient(90deg, #1a0a30 0, #1a0a30 8px, transparent 8px, transparent 12px);
+            opacity: 0.3;
+        }
+        
+        /* Bag art */
+        .pack-bag-art {
+            position: absolute;
+            top: 70px;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .pack-bag-icon {
+            font-size: 64px;
+            filter: drop-shadow(0 0 30px rgba(255, 107, 0, 0.8));
+            animation: bagIconPulse 2s infinite;
+        }
+        @keyframes bagIconPulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+        .pack-bag-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 20px;
+            background: linear-gradient(135deg, #ffd700, #ff6b00);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-top: 10px;
+            font-weight: bold;
+        }
+        .pack-bag-count {
+            position: absolute;
+            top: 80px;
+            right: 15px;
+            background: linear-gradient(135deg, #ff6b00, #ffd700);
+            color: #000;
+            font-weight: bold;
+            font-size: 14px;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-family: 'Orbitron', sans-serif;
+        }
+        
+        /* Tear effect on bag */
+        .pack-bag.tearing .pack-bag-seal {
+            transform: rotateX(-80deg) translateY(-20px);
+        }
+        .pack-bag.tearing .pack-bag-body {
+            animation: bagTear 0.5s ease-out forwards;
+        }
+        @keyframes bagTear {
+            0% { clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%); }
+            100% { clip-path: polygon(0 15%, 100% 20%, 100% 100%, 0 100%); }
+        }
+        
+        /* Pack Box (10 pulls) */
+        .pack-box {
+            position: relative;
+            width: 260px;
+            height: 180px;
+            transform-style: preserve-3d;
+            perspective: 1000px;
+            cursor: grab;
+            touch-action: none;
+            user-select: none;
+        }
+        .pack-box:active { cursor: grabbing; }
+        
+        .pack-box-body {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            transform-style: preserve-3d;
+            transition: transform 0.4s ease;
+        }
+        
+        .pack-box-face {
+            position: absolute;
+            backface-visibility: hidden;
+        }
+        
+        .pack-box-front {
+            width: 260px;
+            height: 180px;
+            background: linear-gradient(145deg, #1a0a30 0%, #2d1050 50%, #1a0a30 100%);
+            border: 4px solid;
+            border-image: linear-gradient(135deg, #ffd700, #ff6b00, #ffd700) 1;
+            border-radius: 12px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 
+                0 10px 40px rgba(0, 0, 0, 0.5),
+                0 0 60px rgba(255, 107, 0, 0.3),
+                inset 0 0 40px rgba(255, 215, 0, 0.1);
+        }
+        
+        /* Box lid */
+        .pack-box-lid {
+            position: absolute;
+            top: -80px;
+            left: -4px;
+            width: 268px;
+            height: 90px;
+            background: linear-gradient(180deg, #ffd700, #ff6b00);
+            border-radius: 12px 12px 0 0;
+            transform-origin: bottom center;
+            transition: transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 16px;
+            font-weight: bold;
+            color: #1a0a30;
+            letter-spacing: 2px;
+            box-shadow: 0 -5px 20px rgba(255, 215, 0, 0.3);
+        }
+        .pack-box-lid::after {
+            content: '↑ SWIPE UP ↑';
+            position: absolute;
+            bottom: 10px;
+            font-size: 12px;
+            animation: lidArrow 1s infinite;
+        }
+        @keyframes lidArrow {
+            0%, 100% { transform: translateY(0); opacity: 1; }
+            50% { transform: translateY(-5px); opacity: 0.6; }
+        }
+        
+        .pack-box.opening .pack-box-lid {
+            transform: rotateX(-120deg);
+        }
+        
+        .pack-box-icon {
+            font-size: 48px;
+            filter: drop-shadow(0 0 20px rgba(255, 107, 0, 0.8));
+        }
+        .pack-box-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 16px;
+            background: linear-gradient(135deg, #ffd700, #ff6b00);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-top: 5px;
+        }
+        .pack-box-count {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: linear-gradient(135deg, #ff6b00, #ffd700);
+            color: #000;
+            font-weight: bold;
+            font-size: 14px;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-family: 'Orbitron', sans-serif;
+        }
+        
+        /* Cards inside box (after opening) */
+        .pack-box-cards {
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 160px;
+            height: 120px;
+            opacity: 0;
+            transition: opacity 0.3s, transform 0.3s;
+        }
+        .pack-box.opening .pack-box-cards {
+            opacity: 1;
+            transform: translateX(-50%) translateY(-30px);
+        }
+        .pack-box-card-stack {
+            position: absolute;
+            width: 80px;
+            height: 112px;
+            background: linear-gradient(135deg, #2d1050, #1a0a30);
+            border: 2px solid #ffd700;
+            border-radius: 8px;
+            left: 50%;
+            top: 50%;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.5);
+        }
+        .pack-box-card-stack:nth-child(1) { transform: translate(-50%, -50%) rotate(-10deg); }
+        .pack-box-card-stack:nth-child(2) { transform: translate(-50%, -50%) rotate(-5deg); }
+        .pack-box-card-stack:nth-child(3) { transform: translate(-50%, -50%) rotate(0deg); }
+        .pack-box-card-stack:nth-child(4) { transform: translate(-50%, -50%) rotate(5deg); }
+        .pack-box-card-stack:nth-child(5) { transform: translate(-50%, -50%) rotate(10deg); }
+        
+        /* Tear effect SVG */
+        .tear-effect {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 100;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        .tear-effect.active {
+            opacity: 1;
+        }
+        .tear-path {
+            stroke-dasharray: 1000;
+            stroke-dashoffset: 1000;
+            filter: url(#tearFilter);
+        }
+        .tear-effect.tearing .tear-path {
+            animation: tearDraw 0.5s ease-out forwards;
+        }
+        @keyframes tearDraw {
+            to { stroke-dashoffset: 0; }
+        }
+        
+        /* Rarity glow on swipe pack */
+        .pack-bag.glow-mythic, .pack-box.glow-mythic {
+            animation: mythicGlow 0.5s infinite alternate;
+        }
+        .pack-bag.glow-legendary, .pack-box.glow-legendary {
+            animation: legendaryGlow 0.5s infinite alternate;
+        }
+        .pack-bag.glow-epic, .pack-box.glow-epic {
+            animation: epicGlow 0.5s infinite alternate;
+        }
+        @keyframes mythicGlow {
+            from { box-shadow: 0 0 30px #ff00ff, 0 0 60px #00ffff; }
+            to { box-shadow: 0 0 60px #ff00ff, 0 0 120px #00ffff; }
+        }
+        @keyframes legendaryGlow {
+            from { box-shadow: 0 0 30px #ffd700, 0 0 60px #ff6b00; }
+            to { box-shadow: 0 0 60px #ffd700, 0 0 120px #ff6b00; }
+        }
+        @keyframes epicGlow {
+            from { box-shadow: 0 0 30px #a855f7; }
+            to { box-shadow: 0 0 60px #a855f7; }
         }
         
         @keyframes particleFly {
@@ -1117,17 +1475,32 @@
         </div>
     </main>
     
-    <!-- 3D PACK OPENING STAGE -->
+    <!-- 🎰 SWIPE-TO-TEAR PACK OPENING STAGE -->
     <div class="pack-overlay" id="packOverlay">
         <div class="pack-scene nw-3d-scene">
             <div class="pack-container" id="packContainer">
-                <!-- 3D Pack will be inserted here -->
+                <!-- Swipe pack will be inserted here -->
             </div>
             <div class="pack-instruction" id="packInstruction">
-                <span class="tap-text">🔥 TAP TO OPEN 🔥</span>
+                <span class="swipe-text">👆 SWIPE UP TO TEAR OPEN 👆</span>
+                <div class="swipe-arrow">↑</div>
+            </div>
+            <!-- Swipe progress indicator -->
+            <div class="swipe-progress" id="swipeProgress">
+                <div class="swipe-progress-fill" id="swipeProgressFill"></div>
             </div>
         </div>
         <div class="pack-particles" id="packParticles"></div>
+        <!-- Tear effect overlay -->
+        <svg class="tear-effect" id="tearEffect" viewBox="0 0 300 400" preserveAspectRatio="none">
+            <defs>
+                <filter id="tearFilter" x="-50%" y="-50%" width="200%" height="200%">
+                    <feTurbulence type="fractalNoise" baseFrequency="0.04" numOctaves="5" result="noise"/>
+                    <feDisplacementMap in="SourceGraphic" in2="noise" scale="20" xChannelSelector="R" yChannelSelector="G"/>
+                </filter>
+            </defs>
+            <path class="tear-path" id="tearPath" d="" fill="none" stroke="#ffd700" stroke-width="4"/>
+        </svg>
     </div>
     
     <!-- ULTRA PREMIUM CARD REVEAL -->
@@ -2145,29 +2518,70 @@ function getCard(rarity) {
 }
 
 // ═══════════════════════════════════════════════════════════════════
-// 3D PACK OPENING ANIMATION
+// 🎰 SWIPE-TO-TEAR PACK OPENING SYSTEM
+// Maximum anticipation and satisfaction!
 // ═══════════════════════════════════════════════════════════════════
 let packOpeningResolve = null;
 let highestRarityInPack = 'common';
+let swipeState = {
+    active: false,
+    startY: 0,
+    currentY: 0,
+    threshold: 150, // Pixels needed to tear
+    progress: 0
+};
 
-function createPack3D(cardCount, highestRarity) {
+// Create bag pack for 1-5 pulls (swipe to tear)
+function createPackBag(cardCount, highestRarity) {
     const packEl = document.createElement('div');
-    packEl.className = 'pack-3d';
+    packEl.className = 'pack-bag';
+    packEl.dataset.cardCount = cardCount;
     packEl.innerHTML = `
-        <div class="pack-face pack-front">
-            <div class="pack-count">×${cardCount}</div>
-            <div class="pack-logo">🔥</div>
-            <div class="pack-title">MYTHIC FORGE</div>
-            <div class="pack-subtitle">BOOSTER PACK</div>
+        <div class="pack-bag-seal">✦ SEALED ✦</div>
+        <div class="pack-bag-body">
+            <div class="pack-bag-art">
+                <div class="pack-bag-icon">🔥</div>
+                <div class="pack-bag-title">MYTHIC FORGE</div>
+            </div>
+            <div class="pack-bag-count">×${cardCount}</div>
         </div>
-        <div class="pack-face pack-back"></div>
-        <div class="pack-face pack-side pack-side-left"></div>
-        <div class="pack-face pack-side pack-side-right"></div>
-        <div class="pack-face pack-side pack-side-top"></div>
-        <div class="pack-face pack-side pack-side-bottom"></div>
-        <div class="pack-flap"></div>
     `;
     return packEl;
+}
+
+// Create box pack for 10 pulls (swipe up to open lid, then swipe cards)
+function createPackBox(cardCount, highestRarity) {
+    const packEl = document.createElement('div');
+    packEl.className = 'pack-box';
+    packEl.dataset.cardCount = cardCount;
+    packEl.innerHTML = `
+        <div class="pack-box-lid">PREMIUM BOX</div>
+        <div class="pack-box-body">
+            <div class="pack-box-face pack-box-front">
+                <div class="pack-box-icon">📦</div>
+                <div class="pack-box-title">MEGA SUMMON</div>
+                <div class="pack-box-count">×${cardCount}</div>
+            </div>
+            <div class="pack-box-cards">
+                <div class="pack-box-card-stack"></div>
+                <div class="pack-box-card-stack"></div>
+                <div class="pack-box-card-stack"></div>
+                <div class="pack-box-card-stack"></div>
+                <div class="pack-box-card-stack"></div>
+            </div>
+        </div>
+    `;
+    return packEl;
+}
+
+// Legacy function for backwards compatibility
+function createPack3D(cardCount, highestRarity) {
+    // Use bag for 1-6 cards, box for 10+
+    if (cardCount <= 6) {
+        return createPackBag(cardCount, highestRarity);
+    } else {
+        return createPackBox(cardCount, highestRarity);
+    }
 }
 
 async function showPackOpening(cards) {
@@ -2184,10 +2598,19 @@ async function showPackOpening(cards) {
         const overlay = document.getElementById('packOverlay');
         const container = document.getElementById('packContainer');
         const instruction = document.getElementById('packInstruction');
+        const progressBar = document.getElementById('swipeProgress');
         
         // Clear previous pack
         container.innerHTML = '';
         instruction.classList.remove('hidden');
+        
+        // Update instruction text based on pack type
+        const swipeText = instruction.querySelector('.swipe-text');
+        if (cards.length > 6) {
+            swipeText.textContent = '👆 SWIPE UP TO OPEN BOX 👆';
+        } else {
+            swipeText.textContent = '👆 SWIPE UP TO TEAR OPEN 👆';
+        }
         
         // Create and add new pack
         const pack = createPack3D(cards.length, highestRarityInPack);
@@ -2196,69 +2619,217 @@ async function showPackOpening(cards) {
         // Show overlay
         overlay.classList.add('show');
         
-        // Add click handler
-        pack.onclick = () => openPack3D(pack, cards);
+        // Play anticipation sound on show
+        PremiumAudio.play('anticipation');
+        
+        // Setup swipe handlers
+        setupSwipeHandlers(pack, cards, progressBar);
     });
 }
 
-async function openPack3D(packEl, cards) {
-    packEl.onclick = null; // Prevent double clicks
-    document.getElementById('packInstruction').classList.add('hidden');
+// Setup swipe-to-tear handlers
+function setupSwipeHandlers(packEl, cards, progressBar) {
+    const isBox = packEl.classList.contains('pack-box');
+    let opened = false;
     
-    // ===== PHASE 1: Anticipation Shake =====
-    packEl.classList.add('shaking');
+    // Reset swipe state
+    swipeState = {
+        active: false,
+        startY: 0,
+        currentY: 0,
+        threshold: isBox ? 100 : 150,
+        progress: 0
+    };
     
-    // Light shake
-    if (typeof NW_JUICE !== 'undefined') {
-        NW_JUICE.haptic.light();
-    }
-    await sleep(300);
-    
-    // ===== PHASE 2: Rarity Hint Glow =====
-    if (['mythic', 'legendary', 'epic'].includes(highestRarityInPack)) {
-        packEl.classList.add(`glow-${highestRarityInPack}`);
+    const handleStart = (e) => {
+        if (opened) return;
+        e.preventDefault();
+        const touch = e.touches ? e.touches[0] : e;
+        swipeState.active = true;
+        swipeState.startY = touch.clientY;
+        progressBar.classList.add('active');
         
-        if (typeof NW_JUICE !== 'undefined') {
-            NW_JUICE.haptic.medium();
-            if (highestRarityInPack === 'mythic') {
-                NW_JUICE.sound.play('anticipation');
+        // Start subtle shake
+        packEl.classList.add('shaking');
+        haptic('tap');
+    };
+    
+    const handleMove = (e) => {
+        if (!swipeState.active || opened) return;
+        e.preventDefault();
+        const touch = e.touches ? e.touches[0] : e;
+        swipeState.currentY = touch.clientY;
+        
+        // Calculate upward swipe distance
+        const deltaY = swipeState.startY - swipeState.currentY;
+        swipeState.progress = Math.max(0, Math.min(1, deltaY / swipeState.threshold));
+        
+        // Update progress bar
+        const progressFill = document.getElementById('swipeProgressFill');
+        progressFill.style.width = (swipeState.progress * 100) + '%';
+        
+        // Visual feedback during swipe
+        if (isBox) {
+            // Rotate lid based on progress
+            const lid = packEl.querySelector('.pack-box-lid');
+            if (lid) {
+                lid.style.transform = `rotateX(${-swipeState.progress * 120}deg)`;
+            }
+        } else {
+            // Rotate seal based on progress
+            const seal = packEl.querySelector('.pack-bag-seal');
+            if (seal) {
+                seal.style.transform = `rotateX(${-swipeState.progress * 80}deg) translateY(${-swipeState.progress * 20}px)`;
             }
         }
-    }
+        
+        // Intensify shake as progress increases
+        if (swipeState.progress > 0.3) {
+            packEl.style.transform = `translateX(${(Math.random() - 0.5) * swipeState.progress * 10}px)`;
+        }
+        
+        // Haptic at milestones
+        if (swipeState.progress > 0.5 && swipeState.progress < 0.55) {
+            haptic('flip');
+        }
+        if (swipeState.progress > 0.8 && swipeState.progress < 0.85) {
+            haptic('impact');
+        }
+        
+        // Add rarity glow hint when close to opening
+        if (swipeState.progress > 0.7) {
+            if (['mythic', 'legendary', 'epic'].includes(highestRarityInPack)) {
+                packEl.classList.add('glow-' + highestRarityInPack);
+            }
+        }
+    };
     
-    // Intensify shake
-    await sleep(400);
-    packEl.classList.remove('shaking');
-    
-    // Final shake buildup
-    for (let i = 0; i < 3; i++) {
-        packEl.classList.add('shaking');
-        await sleep(80 - i * 20);
+    const handleEnd = (e) => {
+        if (!swipeState.active || opened) return;
+        e.preventDefault();
+        swipeState.active = false;
         packEl.classList.remove('shaking');
-        await sleep(40);
+        progressBar.classList.remove('active');
+        packEl.style.transform = '';
+        
+        // If progress reached threshold, TEAR OPEN!
+        if (swipeState.progress >= 0.95) {
+            opened = true;
+            tearOpenPack(packEl, cards, isBox);
+        } else {
+            // Snap back
+            resetPackVisual(packEl, isBox);
+            document.getElementById('swipeProgressFill').style.width = '0%';
+            packEl.classList.remove('glow-mythic', 'glow-legendary', 'glow-epic');
+        }
+    };
+    
+    // Touch events
+    packEl.addEventListener('touchstart', handleStart, { passive: false });
+    packEl.addEventListener('touchmove', handleMove, { passive: false });
+    packEl.addEventListener('touchend', handleEnd, { passive: false });
+    
+    // Mouse events (for desktop testing)
+    packEl.addEventListener('mousedown', handleStart);
+    document.addEventListener('mousemove', handleMove);
+    document.addEventListener('mouseup', handleEnd);
+    
+    // Also allow tap/click to open (accessibility)
+    packEl.addEventListener('click', () => {
+        if (!opened && swipeState.progress < 0.5) {
+            // Quick tap animation then open
+            opened = true;
+            packEl.classList.add('shaking');
+            setTimeout(() => tearOpenPack(packEl, cards, isBox), 500);
+        }
+    });
+}
+
+function resetPackVisual(packEl, isBox) {
+    if (isBox) {
+        const lid = packEl.querySelector('.pack-box-lid');
+        if (lid) lid.style.transform = '';
+    } else {
+        const seal = packEl.querySelector('.pack-bag-seal');
+        if (seal) seal.style.transform = '';
+    }
+}
+
+async function tearOpenPack(packEl, cards, isBox) {
+    const instruction = document.getElementById('packInstruction');
+    instruction.classList.add('hidden');
+    
+    // TEAR SOUND + HAPTIC
+    PremiumAudio.play('impact');
+    haptic('impact');
+    screenShake(10, 400);
+    
+    if (isBox) {
+        // Box opening animation
+        packEl.classList.add('opening');
+        
+        // Lid flies off
+        await sleep(300);
+        
+        // Show cards inside
+        PremiumAudio.play('flip');
+    } else {
+        // Bag tearing animation  
+        packEl.classList.add('tearing');
+        
+        // Tear effect
+        const tearEffect = document.getElementById('tearEffect');
+        tearEffect.classList.add('active', 'tearing');
+        
+        // Draw tear path
+        const tearPath = document.getElementById('tearPath');
+        tearPath.setAttribute('d', 'M 50 60 Q 150 40 250 70');
     }
     
-    // ===== PHASE 3: OPEN! =====
-    packEl.classList.add('opening');
-    
-    if (typeof NW_JUICE !== 'undefined') {
-        NW_JUICE.haptic.heavy();
-        NW_JUICE.screen.shake('heavy');
+    // Rarity glow
+    if (['mythic', 'legendary', 'epic'].includes(highestRarityInPack)) {
+        packEl.classList.add('glow-' + highestRarityInPack);
+        if (highestRarityInPack === 'mythic') {
+            screenFlash('#ff00ff');
+            haptic('mythic');
+        } else if (highestRarityInPack === 'legendary') {
+            screenFlash('#ffd700');
+            haptic('legendary');
+        }
     }
     
     // Create burst particles
     createPackParticles(highestRarityInPack);
     
-    // ===== PHASE 4: Cards fly out (preview) =====
-    await sleep(300);
+    // Cards fly out preview
+    await sleep(400);
+    await showCardsFlying(packEl, cards);
     
-    // Fly cards preview (mini cards)
-    const container = document.getElementById('packContainer');
+    // Transition to reveal
+    await sleep(600);
+    
+    document.getElementById('packOverlay').classList.remove('show');
+    document.getElementById('tearEffect').classList.remove('active', 'tearing');
+    
+    await sleep(400);
+    
+    // Cleanup
+    packEl.classList.remove('opening', 'tearing', 'glow-mythic', 'glow-legendary', 'glow-epic');
+    
+    if (packOpeningResolve) {
+        packOpeningResolve();
+        packOpeningResolve = null;
+    }
+}
+
+async function showCardsFlying(packEl, cards) {
     const rect = packEl.getBoundingClientRect();
     const centerX = rect.left + rect.width / 2;
     const centerY = rect.top + rect.height / 2;
     
-    cards.forEach((card, i) => {
+    for (let i = 0; i < Math.min(cards.length, 6); i++) {
+        const card = cards[i];
+        
         setTimeout(() => {
             const cardEl = document.createElement('div');
             cardEl.className = 'flying-card';
@@ -2268,7 +2839,7 @@ async function openPack3D(packEl, cards) {
                 top: ${centerY}px;
                 width: 80px;
                 height: 112px;
-                background: url('${getCardThumbUrl(card.img)}') center/cover;
+                background: url('${getCardThumbUrl(card.img)}') center/cover, linear-gradient(135deg, #2d1050, #1a0a30);
                 border-radius: 6px;
                 box-shadow: 0 8px 30px rgba(0,0,0,0.5), 0 0 20px ${getRarityColor(card.rarity)};
                 z-index: ${10000 + i};
@@ -2278,9 +2849,10 @@ async function openPack3D(packEl, cards) {
             `;
             document.body.appendChild(cardEl);
             
-            // Animate out
+            PremiumAudio.play('flip');
+            
             requestAnimationFrame(() => {
-                const angle = (i / cards.length) * Math.PI * 0.6 - Math.PI * 0.3;
+                const angle = (i / Math.min(cards.length, 6)) * Math.PI * 0.6 - Math.PI * 0.3;
                 const distance = 120 + i * 15;
                 const targetX = Math.sin(angle) * distance;
                 const targetY = -80 - i * 10;
@@ -2289,28 +2861,12 @@ async function openPack3D(packEl, cards) {
                 cardEl.style.opacity = '1';
             });
             
-            // Remove after delay
             setTimeout(() => cardEl.remove(), 600);
-        }, i * 60);
-    });
-    
-    // ===== PHASE 5: Close and transition to reveal =====
-    await sleep(800);
-    
-    // Fade out overlay
-    document.getElementById('packOverlay').classList.remove('show');
-    
-    await sleep(400);
-    
-    // Cleanup
-    packEl.classList.remove('opening', `glow-${highestRarityInPack}`);
-    
-    // Resolve promise to continue to card reveal
-    if (packOpeningResolve) {
-        packOpeningResolve();
-        packOpeningResolve = null;
+        }, i * 80);
     }
 }
+
+// Old openPack3D removed - replaced by swipe-to-tear system above
 
 function createPackParticles(rarity) {
     const colors = {
