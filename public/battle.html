@@ -1090,37 +1090,432 @@
         }
         
         /* ═══════════════════════════════════════════════════════════════════
-           RESPONSIVE
+           RESPONSIVE - MOBILE FIRST, BIGGER CARDS!
            ═══════════════════════════════════════════════════════════════════ */
+        
+        /* ═══════════════════════════════════════════════════════════════════
+           MOBILE-FIRST RESPONSIVE - MARVEL SNAP STYLE BIG CARDS!
+           Key insight: Cards must be TOUCH-FRIENDLY and VISIBLE
+           ═══════════════════════════════════════════════════════════════════ */
+        
+        /* Tablet - larger cards, comfortable touch targets */
         @media (max-width: 768px) {
             :root {
-                --board-card-width: 70px;
-                --board-card-height: 98px;
-                --hand-card-width: 90px;
-                --hand-card-height: 126px;
+                /* Board: 5 cards with 8px gaps = (100vw - 60px) / 5 ≈ 60-70px minimum */
+                /* Use clamp to ensure minimum 70px */
+                --board-card-width: clamp(70px, calc((100vw - 56px) / 5), 100px);
+                --board-card-height: calc(var(--board-card-width) * 1.4);
+                /* Hand cards: bigger for easy selection */
+                --hand-card-width: 100px;
+                --hand-card-height: 140px;
             }
-            .hp-value { font-size: 22px; }
+            
+            .hp-value { font-size: 24px; }
             .vs-divider { font-size: 28px; }
-            .damage-number { font-size: 36px; }
-            .damage-number.crit { font-size: 48px; }
+            .damage-number { font-size: 44px; }
+            .damage-number.crit { font-size: 56px; }
             .battle-log { display: none; }
-            .stat-box { font-size: 12px; padding: 2px 4px; }
+            .stat-box { font-size: 13px; padding: 3px 6px; }
+            .board-row { gap: 8px; padding: 10px; }
         }
         
+        /* Mobile - MAXIMIZE CARD SIZE FOR TOUCH */
         @media (max-width: 480px) {
             :root {
-                --board-card-width: 56px;
-                --board-card-height: 78px;
-                --hand-card-width: 70px;
-                --hand-card-height: 98px;
+                /* Board cards: fill width with 4px gaps, minimum 64px */
+                --board-card-width: clamp(64px, calc((100vw - 40px) / 5), 80px);
+                --board-card-height: calc(var(--board-card-width) * 1.4);
+                /* Hand cards: MUCH BIGGER for selection - fill 3-4 cards width */
+                --hand-card-width: clamp(90px, calc((100vw - 48px) / 3.5), 110px);
+                --hand-card-height: calc(var(--hand-card-width) * 1.4);
             }
-            .top-bar { padding: 0 10px; height: 45px; }
-            .logo { font-size: 14px; }
-            .hp-section { padding: 8px 12px; }
-            .hp-value { font-size: 18px; }
+            
+            /* Compact header */
+            .top-bar { 
+                padding: 0 8px; 
+                height: 44px; 
+            }
+            .logo { font-size: 13px; }
+            .back-btn { padding: 8px 12px; font-size: 12px; }
+            
+            /* HP section - more compact but readable */
+            .hp-section { 
+                padding: 8px 12px; 
+                gap: 12px;
+            }
+            .hp-container { max-width: 42%; }
+            .hp-name { font-size: 11px; letter-spacing: 1px; }
+            .hp-value { font-size: 22px; }
+            .hp-bar { height: 16px; border-radius: 8px; }
             .vs-divider { font-size: 22px; }
+            
+            /* Energy bar - crystal layout */
+            .energy-bar { 
+                padding: 6px 12px;
+                gap: 8px;
+            }
+            .energy-label { font-size: 12px; }
             .energy-crystal { width: 24px; height: 24px; }
-            .action-btn { padding: 10px 20px; font-size: 12px; }
+            .turn-indicator { font-size: 11px; padding: 6px 12px; }
+            
+            /* Battle board - maximize card visibility */
+            .battle-board { 
+                padding: 8px 6px; 
+                gap: 6px;
+                /* Slight vertical compression to fit more cards visually */
+            }
+            .board-row { 
+                gap: 4px; 
+                padding: 8px 4px;
+                min-height: calc(var(--board-card-height) + 20px);
+            }
+            .board-divider { height: 3px; margin: 4px 0; }
+            
+            /* Board card stats - MUST BE READABLE */
+            .board-card-stats { 
+                padding: 4px;
+                background: linear-gradient(to top, rgba(0,0,0,0.9) 0%, transparent 100%);
+            }
+            .stat-box { 
+                font-size: 12px; 
+                padding: 3px 5px;
+                gap: 2px;
+                border-radius: 4px;
+            }
+            .stat-icon { font-size: 11px; }
+            .ability-badge { 
+                font-size: 8px; 
+                padding: 2px 5px;
+                top: -6px;
+            }
+            
+            /* Hand section - HORIZONTAL SCROLL with BIG cards */
+            .hand-section { 
+                padding: 10px 8px 16px;
+            }
+            .hand-header { margin-bottom: 8px; }
+            .hand-label { font-size: 12px; }
+            .hand-count { font-size: 12px; }
+            .hand-cards { 
+                gap: 10px;
+                min-height: calc(var(--hand-card-height) + 25px);
+                justify-content: flex-start;
+                padding: 10px 6px;
+                overflow-x: auto;
+                overflow-y: visible;
+                scroll-snap-type: x mandatory;
+                -webkit-overflow-scrolling: touch;
+            }
+            .hand-card {
+                scroll-snap-align: center;
+                flex-shrink: 0;
+            }
+            .hand-card:hover,
+            .hand-card:active {
+                transform: translateY(-20px) scale(1.1);
+            }
+            .hand-card.selected {
+                transform: translateY(-25px) scale(1.15);
+                box-shadow: 0 15px 40px rgba(255,215,0,0.5);
+            }
+            .cost-badge {
+                width: 30px;
+                height: 30px;
+                font-size: 15px;
+                top: -8px;
+                left: -8px;
+            }
+            .hand-card-stats { 
+                padding: 5px;
+                background: linear-gradient(to top, rgba(0,0,0,0.9) 0%, transparent 100%);
+            }
+            .hand-stat { font-size: 12px; }
+            
+            /* Action bar - big touch targets */
+            .action-bar { 
+                padding: 10px 12px;
+                gap: 12px;
+            }
+            .action-btn { 
+                padding: 14px 20px; 
+                font-size: 13px;
+                flex: 1;
+                min-height: 48px; /* Touch-friendly minimum */
+            }
+            
+            /* Damage numbers - VERY VISIBLE */
+            .damage-number { 
+                font-size: 40px; 
+                text-shadow: 0 0 20px currentColor, 0 4px 10px rgba(0,0,0,0.8);
+            }
+            .damage-number.crit { 
+                font-size: 52px; 
+            }
+            
+            /* Empty slots - visible tap target */
+            .empty-slot {
+                font-size: 28px;
+                opacity: 0.5;
+            }
+            .empty-slot.player-slot {
+                opacity: 0.8;
+                border: 2px dashed rgba(255,215,0,0.5);
+            }
+        }
+        
+        /* Very small phones - still readable! */
+        @media (max-width: 360px) {
+            :root {
+                --board-card-width: clamp(58px, calc((100vw - 32px) / 5), 70px);
+                --board-card-height: calc(var(--board-card-width) * 1.4);
+                --hand-card-width: clamp(80px, calc((100vw - 40px) / 3.5), 95px);
+                --hand-card-height: calc(var(--hand-card-width) * 1.4);
+            }
+            .hp-value { font-size: 20px; }
+            .vs-divider { font-size: 20px; }
+            .cost-badge { width: 26px; height: 26px; font-size: 13px; }
+            .stat-box { font-size: 11px; }
+            .hand-stat { font-size: 11px; }
+            .action-btn { font-size: 12px; padding: 12px 16px; }
+        }
+        
+        /* Landscape mode on mobile - horizontal layout */
+        @media (max-width: 768px) and (orientation: landscape) {
+            :root {
+                --board-card-width: clamp(50px, calc((100vw - 80px) / 5), 70px);
+                --board-card-height: calc(var(--board-card-width) * 1.4);
+                --hand-card-width: clamp(70px, 12vh, 90px);
+                --hand-card-height: calc(var(--hand-card-width) * 1.4);
+            }
+            
+            .top-bar { height: 36px; }
+            .hp-section { padding: 4px 12px; }
+            .energy-bar { padding: 4px 12px; }
+            .battle-board { padding: 4px 8px; gap: 4px; }
+            .board-row { padding: 4px; min-height: auto; }
+            .hand-section { padding: 6px 8px 10px; }
+            .action-bar { padding: 6px 12px; }
+        }
+        
+        /* ═══════════════════════════════════════════════════════════════════
+           MOBILE CARD DETAIL MODAL (replaces tooltip on mobile)
+           ═══════════════════════════════════════════════════════════════════ */
+        /* ═══════════════════════════════════════════════════════════════════
+           MOBILE CARD DETAIL MODAL - Full screen overlay on tap
+           ═══════════════════════════════════════════════════════════════════ */
+        .card-detail-modal {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.95);
+            z-index: 10001;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        .card-detail-modal.show {
+            display: flex;
+            opacity: 1;
+        }
+        .card-detail-content {
+            background: linear-gradient(135deg, #1a1a2e 0%, #0f1525 50%, #1a1a2e 100%);
+            border: 3px solid var(--gold);
+            border-radius: 24px;
+            padding: 24px;
+            max-width: 340px;
+            width: 95%;
+            text-align: center;
+            position: relative;
+            box-shadow: 
+                0 0 60px rgba(255, 215, 0, 0.3),
+                0 0 100px rgba(255, 215, 0, 0.1),
+                inset 0 1px 0 rgba(255,255,255,0.1);
+            transform: scale(0.9) translateY(20px);
+            transition: transform 0.3s ease;
+            animation: modalSlideIn 0.3s ease forwards;
+        }
+        @keyframes modalSlideIn {
+            to {
+                transform: scale(1) translateY(0);
+            }
+        }
+        .card-detail-close {
+            position: absolute;
+            top: -12px;
+            right: -12px;
+            width: 44px;
+            height: 44px;
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+            border: 3px solid #fff;
+            border-radius: 50%;
+            color: #fff;
+            font-size: 24px;
+            font-weight: bold;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 15px rgba(239, 68, 68, 0.5);
+            transition: transform 0.2s, box-shadow 0.2s;
+            z-index: 1;
+        }
+        .card-detail-close:hover {
+            transform: scale(1.1);
+            box-shadow: 0 6px 20px rgba(239, 68, 68, 0.7);
+        }
+        .card-detail-close:active {
+            transform: scale(0.95);
+        }
+        
+        .card-detail-image {
+            width: 160px;
+            height: 224px;
+            margin: 0 auto 20px;
+            border-radius: 16px;
+            overflow: hidden;
+            border: 4px solid var(--gold);
+            box-shadow: 
+                0 15px 40px rgba(0, 0, 0, 0.6),
+                0 0 30px rgba(255, 215, 0, 0.2);
+            position: relative;
+        }
+        .card-detail-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        /* Rarity glow ring */
+        .card-detail-image.mythic { border-color: var(--mythic); box-shadow: 0 0 40px var(--mythic); }
+        .card-detail-image.legendary { border-color: var(--gold); box-shadow: 0 0 40px var(--gold); }
+        .card-detail-image.epic { border-color: var(--purple); box-shadow: 0 0 40px var(--purple); }
+        .card-detail-image.rare { border-color: var(--blue); box-shadow: 0 0 40px var(--blue); }
+        
+        .card-detail-name {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--gold);
+            margin-bottom: 8px;
+            text-shadow: 0 2px 10px rgba(255, 215, 0, 0.3);
+        }
+        .card-detail-rarity {
+            font-size: 14px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            margin-bottom: 20px;
+            padding: 6px 16px;
+            border-radius: 20px;
+            display: inline-block;
+        }
+        .card-detail-rarity.mythic { background: rgba(255,0,128,0.2); color: var(--mythic); border: 1px solid var(--mythic); }
+        .card-detail-rarity.legendary { background: rgba(255,215,0,0.2); color: var(--gold); border: 1px solid var(--gold); }
+        .card-detail-rarity.epic { background: rgba(168,85,247,0.2); color: var(--purple); border: 1px solid var(--purple); }
+        .card-detail-rarity.rare { background: rgba(59,130,246,0.2); color: var(--blue); border: 1px solid var(--blue); }
+        .card-detail-rarity.uncommon { background: rgba(34,197,94,0.2); color: var(--green); border: 1px solid var(--green); }
+        .card-detail-rarity.common { background: rgba(255,255,255,0.1); color: #ccc; border: 1px solid #666; }
+        
+        .card-detail-stats {
+            display: flex;
+            justify-content: center;
+            gap: 32px;
+            margin-bottom: 20px;
+            padding: 16px;
+            background: rgba(0,0,0,0.3);
+            border-radius: 16px;
+        }
+        .card-detail-stat {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .card-detail-stat-icon {
+            font-size: 28px;
+            margin-bottom: 6px;
+        }
+        .card-detail-stat-value {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 32px;
+            font-weight: 900;
+        }
+        .card-detail-stat-value.atk { color: var(--red); }
+        .card-detail-stat-value.hp { color: var(--green); }
+        .card-detail-stat-value.cost { color: var(--cyan); }
+        .card-detail-stat-label {
+            font-size: 11px;
+            color: rgba(255,255,255,0.6);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .card-detail-abilities {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        .card-detail-ability {
+            padding: 8px 16px;
+            background: rgba(168, 85, 247, 0.2);
+            border: 2px solid var(--purple);
+            border-radius: 10px;
+            font-size: 13px;
+            font-weight: 600;
+            color: #fff;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        /* Action buttons in modal */
+        .card-detail-actions {
+            display: flex;
+            gap: 12px;
+            margin-top: 16px;
+        }
+        .card-detail-action-btn {
+            flex: 1;
+            padding: 14px 20px;
+            border-radius: 12px;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 14px;
+            font-weight: 700;
+            text-transform: uppercase;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: none;
+        }
+        .card-detail-action-btn.select {
+            background: linear-gradient(135deg, var(--gold), var(--orange));
+            color: #000;
+        }
+        .card-detail-action-btn.select:disabled {
+            background: #444;
+            color: #888;
+            cursor: not-allowed;
+        }
+        .card-detail-action-btn.cancel {
+            background: rgba(255,255,255,0.1);
+            color: #fff;
+            border: 2px solid rgba(255,255,255,0.3);
+        }
+        .card-detail-action-btn:active:not(:disabled) {
+            transform: scale(0.95);
+        }
+        
+        /* Tap hint */
+        .card-detail-hint {
+            margin-top: 16px;
+            font-size: 12px;
+            color: rgba(255,255,255,0.5);
+        }
+        
+        /* Hide tooltip on mobile/tablet, show modal instead */
+        @media (max-width: 768px) {
+            .card-tooltip { display: none !important; }
         }
     </style>
     <link rel="stylesheet" href="/static/nw-card-frames.css">
@@ -1217,7 +1612,7 @@
     <!-- Screen Flash -->
     <div class="screen-flash" id="screenFlash"></div>
     
-    <!-- Card Tooltip -->
+    <!-- Card Tooltip (desktop only) -->
     <div class="card-tooltip" id="cardTooltip">
         <div class="tooltip-name" id="tooltipName">Card Name</div>
         <div class="tooltip-rarity" id="tooltipRarity">LEGENDARY</div>
@@ -1227,6 +1622,47 @@
             <span class="tooltip-stat" style="color: var(--cyan)">💎 <span id="tooltipCost">3</span></span>
         </div>
         <div class="tooltip-abilities" id="tooltipAbilities"></div>
+    </div>
+    
+    <!-- Mobile Card Detail Modal -->
+    <div class="card-detail-modal" id="cardDetailModal">
+        <div class="card-detail-content">
+            <button class="card-detail-close" id="cardDetailClose">✕</button>
+            
+            <div class="card-detail-image" id="cardDetailImage">
+                <img id="cardDetailImg" src="" alt="">
+            </div>
+            
+            <div class="card-detail-name" id="cardDetailName">Card Name</div>
+            <div class="card-detail-rarity" id="cardDetailRarity">LEGENDARY</div>
+            
+            <div class="card-detail-stats">
+                <div class="card-detail-stat">
+                    <span class="card-detail-stat-icon">⚔️</span>
+                    <span class="card-detail-stat-value atk" id="cardDetailAtk">5</span>
+                    <span class="card-detail-stat-label">Attack</span>
+                </div>
+                <div class="card-detail-stat">
+                    <span class="card-detail-stat-icon">❤️</span>
+                    <span class="card-detail-stat-value hp" id="cardDetailHp">5</span>
+                    <span class="card-detail-stat-label">Health</span>
+                </div>
+                <div class="card-detail-stat">
+                    <span class="card-detail-stat-icon">💎</span>
+                    <span class="card-detail-stat-value cost" id="cardDetailCost">3</span>
+                    <span class="card-detail-stat-label">Cost</span>
+                </div>
+            </div>
+            
+            <div class="card-detail-abilities" id="cardDetailAbilities"></div>
+            
+            <div class="card-detail-actions" id="cardDetailActions">
+                <button class="card-detail-action-btn select" id="cardDetailSelect">SELECT CARD</button>
+                <button class="card-detail-action-btn cancel" id="cardDetailCancel">CLOSE</button>
+            </div>
+            
+            <div class="card-detail-hint">Tap outside or close button to dismiss</div>
+        </div>
     </div>
     
     <!-- Game Over Overlay -->
@@ -1607,7 +2043,15 @@
                 <div class="cost-badge">${card.gameStats.cost}</div>
             `;
             
-            cardEl.onclick = () => selectHandCard(idx);
+            // Mobile: tap shows modal. Desktop: click selects, hover shows tooltip
+            cardEl.onclick = (e) => {
+                if (isMobileOrTablet()) {
+                    e.preventDefault();
+                    showCardDetailModal(card, idx, 'hand');
+                } else {
+                    selectHandCard(idx);
+                }
+            };
             cardEl.onmouseenter = (e) => showTooltip(card, e);
             cardEl.onmouseleave = hideTooltip;
             
@@ -1659,20 +2103,48 @@
             cardEl.onmouseenter = (e) => showTooltip(card, e);
             cardEl.onmouseleave = hideTooltip;
             
+            // Mobile: tap on card shows detail modal
+            // Desktop: clicking enemy card attacks, hovering shows tooltip
             if (isEnemy) {
-                slot.onclick = () => attackTarget(idx);
+                slot.onclick = (e) => {
+                    if (isMobileOrTablet()) {
+                        e.preventDefault();
+                        showCardDetailModal(card, idx, 'board-enemy');
+                    } else {
+                        attackTarget(idx);
+                    }
+                };
+            } else {
+                // Player board card - show details on mobile
+                cardEl.onclick = (e) => {
+                    if (isMobileOrTablet()) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        showCardDetailModal(card, idx, 'board-player');
+                    }
+                };
             }
         } else {
             slot.innerHTML = '';
+            // Empty slots - play card to slot (for player board only)
             slot.onclick = isEnemy ? null : () => playCardToSlot(idx);
         }
     }
     
     // ═══════════════════════════════════════════════════════════════════
-    // TOOLTIP
+    // TOOLTIP (Desktop) & CARD DETAIL MODAL (Mobile)
     // ═══════════════════════════════════════════════════════════════════
     
+    // Detect mobile/tablet
+    const isMobileOrTablet = () => window.innerWidth <= 768 || 'ontouchstart' in window;
+    
+    // Current card being shown in modal (for action buttons)
+    let modalCard = null;
+    let modalCardIndex = null;
+    let modalCardSource = null; // 'hand' or 'board'
+    
     function showTooltip(card, event) {
+        // On mobile, tooltips are hidden via CSS - this won't show
         const tooltip = document.getElementById('cardTooltip');
         
         document.getElementById('tooltipName').textContent = card.name;
@@ -1709,6 +2181,149 @@
     
     function hideTooltip() {
         document.getElementById('cardTooltip').classList.remove('show');
+    }
+    
+    // ═══════════════════════════════════════════════════════════════════
+    // MOBILE CARD DETAIL MODAL
+    // ═══════════════════════════════════════════════════════════════════
+    
+    function showCardDetailModal(card, index, source) {
+        modalCard = card;
+        modalCardIndex = index;
+        modalCardSource = source;
+        
+        const modal = document.getElementById('cardDetailModal');
+        const imgContainer = document.getElementById('cardDetailImage');
+        const img = document.getElementById('cardDetailImg');
+        const nameEl = document.getElementById('cardDetailName');
+        const rarityEl = document.getElementById('cardDetailRarity');
+        const atkEl = document.getElementById('cardDetailAtk');
+        const hpEl = document.getElementById('cardDetailHp');
+        const costEl = document.getElementById('cardDetailCost');
+        const abilitiesEl = document.getElementById('cardDetailAbilities');
+        const actionsEl = document.getElementById('cardDetailActions');
+        const selectBtn = document.getElementById('cardDetailSelect');
+        
+        // Set card image
+        const imgFile = card.img?.replace(/\\.(png|jpg)$/i, '.webp') || 'placeholder.webp';
+        img.src = `/static/images/cards/${imgFile}`;
+        img.onerror = () => { img.src = '/static/images/cards/placeholder.webp'; };
+        img.alt = card.name;
+        
+        // Set rarity glow on image container
+        imgContainer.className = 'card-detail-image ' + (card.rarity || 'common');
+        
+        // Set card info
+        nameEl.textContent = card.name;
+        rarityEl.textContent = (card.rarity || 'common').toUpperCase();
+        rarityEl.className = 'card-detail-rarity ' + (card.rarity || 'common');
+        
+        // Set stats (use current values if on board, otherwise base stats)
+        atkEl.textContent = card.currentAtk ?? card.gameStats?.atk ?? '?';
+        hpEl.textContent = card.currentHp ?? card.gameStats?.hp ?? '?';
+        costEl.textContent = card.gameStats?.cost ?? '?';
+        
+        // Set abilities
+        if (card.abilities?.length) {
+            abilitiesEl.innerHTML = card.abilities.map(a => 
+                `<span class="card-detail-ability">${a}</span>`
+            ).join('');
+        } else {
+            abilitiesEl.innerHTML = '<span style="opacity: 0.5; font-style: italic;">No special abilities</span>';
+        }
+        
+        // Configure action buttons based on source
+        if (source === 'hand') {
+            actionsEl.style.display = 'flex';
+            const canPlay = card.gameStats?.cost <= gameState.energy && gameState.isPlayerTurn && !gameState.isAnimating;
+            selectBtn.disabled = !canPlay;
+            selectBtn.textContent = canPlay ? '✨ SELECT TO PLAY' : 
+                (card.gameStats?.cost > gameState.energy ? '💎 NOT ENOUGH ENERGY' : '⏳ NOT YOUR TURN');
+        } else if (source === 'board-player') {
+            actionsEl.style.display = 'flex';
+            const canAttack = card.canAttackThisTurn && !card.hasAttacked && gameState.isPlayerTurn && !gameState.isAnimating;
+            selectBtn.disabled = !canAttack;
+            selectBtn.textContent = canAttack ? '⚔️ READY TO ATTACK' : 
+                (card.hasAttacked ? '😴 ALREADY ATTACKED' : '⏳ CANNOT ATTACK YET');
+        } else {
+            // Enemy board card - just viewing
+            actionsEl.style.display = 'none';
+        }
+        
+        // Show modal with animation
+        modal.classList.add('show');
+        Audio.play('select');
+        
+        // Prevent body scroll
+        document.body.style.overflow = 'hidden';
+    }
+    
+    function hideCardDetailModal() {
+        const modal = document.getElementById('cardDetailModal');
+        modal.classList.remove('show');
+        modalCard = null;
+        modalCardIndex = null;
+        modalCardSource = null;
+        
+        // Restore body scroll
+        document.body.style.overflow = '';
+    }
+    
+    // Modal event listeners
+    function initCardDetailModal() {
+        const modal = document.getElementById('cardDetailModal');
+        const closeBtn = document.getElementById('cardDetailClose');
+        const cancelBtn = document.getElementById('cardDetailCancel');
+        const selectBtn = document.getElementById('cardDetailSelect');
+        
+        // Close on X button
+        closeBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            hideCardDetailModal();
+        });
+        
+        // Close on cancel button
+        cancelBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            hideCardDetailModal();
+        });
+        
+        // Close on backdrop click
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                hideCardDetailModal();
+            }
+        });
+        
+        // Select/action button
+        selectBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            if (modalCardSource === 'hand' && modalCardIndex !== null) {
+                // Select this card in hand
+                selectHandCard(modalCardIndex);
+                hideCardDetailModal();
+            }
+            // Board cards don't have a select action from modal
+        });
+        
+        // Close on Escape key
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && modal.classList.contains('show')) {
+                hideCardDetailModal();
+            }
+        });
+    }
+    
+    // Handle card tap/click - shows modal on mobile, normal behavior on desktop
+    function handleCardInteraction(card, index, source, event) {
+        if (isMobileOrTablet()) {
+            event.preventDefault();
+            event.stopPropagation();
+            showCardDetailModal(card, index, source);
+        } else if (source === 'hand') {
+            selectHandCard(index);
+        }
+        // Board cards on desktop: handled by their own click handlers
     }
     
     // ═══════════════════════════════════════════════════════════════════
@@ -2284,6 +2899,9 @@
         document.body.addEventListener('click', () => {
             Audio.init();
         }, { once: true });
+        
+        // Initialize mobile card detail modal
+        initCardDetailModal();
         
         addLog('Battle Arena initialized!', 'ability');
         addLog(`Your deck: ${gameState.playerDeck.length + gameState.playerHand.length} cards`, '');
