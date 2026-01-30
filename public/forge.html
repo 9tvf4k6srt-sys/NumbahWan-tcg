@@ -377,16 +377,18 @@
             perspective: 2000px;
         }
         
-        /* The Card - EXACT SAME SIZE AS PACK BODY (art area) */
-        /* Pack body = card size. Seal is extra on top. */
+        /* The Card - EXACT SAME SIZE AS PACK */
+        /* MUST match PACK_CONFIG in JavaScript exactly */
         .reveal-card { 
-            /* MUST match CARD_WIDTH and CARD_HEIGHT in createPackBag() */
+            /* CRITICAL: These values MUST match PACK_CONFIG.WIDTH/HEIGHT */
             width: min(320px, 65vw) !important;
             height: calc(min(320px, 65vw) * 1.4) !important;
             position: relative; 
             transform-style: preserve-3d; 
             cursor: pointer;
             border-radius: 16px;
+            /* Debug outline - remove after testing */
+            /* outline: 2px solid lime; */
         }
         
         .card-inner { 
@@ -660,23 +662,22 @@
         }
         
         /* === UNIFIED SIZING SYSTEM === 
-         * RULE: Card reveal size = Pack BODY size (not total pack)
-         * Pack total = card + seal. When seal tears off, card fits exactly.
+         * RULE: Pack = Card = SAME SIZE (full bleed)
+         * No separate seal - pack image includes torn top look
          */
         :root {
             --card-width: min(320px, 65vw);
             --card-height: calc(var(--card-width) * 1.4);
-            --seal-height: 50px;
-            --pack-height: calc(var(--card-height) + var(--seal-height));
+            --card-radius: 16px;
         }
         
-        /* Pack total height includes seal */
+        /* Pack = Card size exactly */
         .pack-bag { 
             width: var(--card-width) !important;
-            height: var(--pack-height) !important;
+            height: var(--card-height) !important;
         }
         
-        /* Card reveal = card size (matches pack body, not total pack) */
+        /* Card reveal = same as pack */
         .reveal-card { 
             width: var(--card-width) !important;
             height: var(--card-height) !important;
@@ -966,46 +967,42 @@
             box-shadow: 0 0 15px #ffd700, inset 0 0 10px rgba(255,255,255,0.3);
         }
         
-        /* Pack Bag - Uses CSS variable for unified sizing */
+        /* Pack Bag - FULL BLEED, same size as card */
         .pack-bag {
             position: relative;
-            /* Uses the same CSS variable as reveal-card */
+            /* SAME SIZE AS REVEAL CARD - this is critical */
             width: var(--card-width, min(320px, 65vw));
             height: var(--card-height, calc(min(320px, 65vw) * 1.4));
             cursor: grab;
             touch-action: none;
             user-select: none;
-            display: flex;
-            flex-direction: column;
             transform: scale(1);
-            transition: transform 0.2s ease;
+            transition: transform 0.3s ease;
             /* PERFECT CENTERING */
             margin: 0 auto;
+            border-radius: var(--card-radius, 16px);
+            overflow: hidden;
         }
         
-        /* THICK PACK for 10+ pulls - Same bag but THICKER with 3D depth */
-        .pack-bag.pack-thick {
-            /* Add 3D thickness effect */
-            transform-style: preserve-3d;
-        }
+        /* Thick pack for 10+ pulls - visual edge depth */
         .pack-bag.pack-thick::before {
             content: '';
             position: absolute;
-            top: 70px; /* Below seal */
-            left: -8px;
-            width: 8px;
-            height: calc(100% - 70px - 24px);
+            top: 10%;
+            left: -6px;
+            width: 6px;
+            height: 80%;
             background: linear-gradient(to right, #1a0820, #2d1050);
             border-left: 2px solid #8B5A2B;
-            border-radius: 0 0 0 8px;
-            transform: skewY(-2deg);
+            border-radius: 4px 0 0 4px;
+            z-index: -1;
         }
         .pack-bag.pack-thick::after {
             content: '';
             position: absolute;
-            top: 70px;
-            right: -8px;
-            width: 8px;
+            top: 10%;
+            right: -6px;
+            width: 6px;
             height: calc(100% - 70px - 24px);
             background: linear-gradient(to left, #1a0820, #2d1050);
             border-right: 2px solid #8B5A2B;
@@ -1130,36 +1127,42 @@
             border: 2px solid #fff3;
         }
         
-        /* Tear effect on bag - Seal rips off realistically */
-        .pack-bag.tearing .pack-bag-seal {
-            animation: sealTearOff 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+        /* Swipe hint pulse animation */
+        @keyframes swipeHintPulse {
+            0%, 100% { opacity: 1; transform: translateX(-50%) scale(1); }
+            50% { opacity: 0.7; transform: translateX(-50%) scale(1.05); }
         }
-        @keyframes sealTearOff {
+        
+        /* Pack opening animation - pack rips/tears open */
+        .pack-bag.tearing {
+            animation: packTearOpen 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+        }
+        @keyframes packTearOpen {
             0% { 
-                transform: translateY(0) rotateX(0) scale(1);
+                transform: rotateX(5deg) scale(1);
                 opacity: 1;
+                filter: brightness(1);
             }
             30% {
-                transform: translateY(-10px) rotateX(-30deg) scale(1.02);
-                opacity: 1;
+                transform: rotateX(10deg) scale(1.05);
+                filter: brightness(1.2);
             }
             60% {
-                transform: translateY(-40px) rotateX(-60deg) translateX(20px) scale(0.95);
+                transform: rotateX(20deg) scale(0.95) translateY(-20px);
                 opacity: 0.8;
+                filter: brightness(1.5);
             }
             100% { 
-                transform: translateY(-100px) rotateX(-90deg) translateX(60px) scale(0.7);
+                transform: rotateX(40deg) scale(0.5) translateY(-100px);
                 opacity: 0;
+                filter: brightness(2);
             }
         }
         
-        /* Pack body stays intact, just reveals */
-        .pack-bag.tearing .pack-bag-body {
-            animation: packBodyReveal 0.4s ease-out forwards;
-        }
-        @keyframes packBodyReveal {
-            0% { transform: translateZ(8px); }
-            100% { transform: translateZ(0); }
+        /* Hide swipe hint when tearing */
+        .pack-bag.tearing .pack-swipe-hint {
+            opacity: 0;
+            transition: opacity 0.2s;
         }
         
         /* Shake animation for pack */
@@ -2705,9 +2708,27 @@ let swipeState = {
     progress: 0
 };
 
-// Create bag pack for 1-5 pulls (swipe sideways to tear) - 3D PACK STYLE
+// ========================================
+// UNIFIED PACK SIZING - CRITICAL FOR SIZE MATCHING
+// Pack = Card Size exactly. Full bleed image, no extra chrome.
+// ========================================
+const PACK_CONFIG = {
+    // MUST match .reveal-card CSS exactly
+    WIDTH: 'min(320px, 65vw)',
+    get HEIGHT() { return `calc(${this.WIDTH} * 1.4)`; },
+    BORDER_RADIUS: '16px',
+    // Pack images by card count
+    getImage(cardCount) {
+        if (cardCount >= 10) return '/static/images/packs/pack-mega10.png';
+        if (cardCount >= 5) return '/static/images/packs/pack-multi5.png';
+        return '/static/images/packs/pack-single.png';
+    }
+};
+
+// Create pack - SIMPLE FULL BLEED IMAGE
+// Pack size = Card reveal size = EXACT MATCH
 function createPackBag(cardCount, highestRarity) {
-    console.log('[FORGE] Creating 3D pack bag for', cardCount, 'cards, rarity:', highestRarity);
+    console.log('[FORGE] Creating full-bleed pack for', cardCount, 'cards, rarity:', highestRarity);
     
     const packEl = document.createElement('div');
     packEl.dataset.cardCount = cardCount;
@@ -2727,164 +2748,106 @@ function createPackBag(cardCount, highestRarity) {
         glowSize = '35px';
     }
     
-    // ========================================
-    // SIZING: Pack body (art) = Card reveal size
-    // Seal is EXTRA on top, tears off to reveal card-sized area
-    // ========================================
-    const CARD_WIDTH = 'min(320px, 65vw)';
-    const CARD_HEIGHT = `calc(${CARD_WIDTH} * 1.4)`;
-    const SEAL_HEIGHT = '50px';
+    // Select pack image based on card count
+    const packImage = PACK_CONFIG.getImage(cardCount);
     
-    // Pack container = card size + seal on top
+    // ========================================
+    // FULL BLEED PACK - EXACT SAME SIZE AS CARD REVEAL
+    // No separate seal - the image itself has the torn top look
+    // ========================================
     packEl.style.cssText = `
         position: relative;
-        width: ${CARD_WIDTH};
-        height: calc(${CARD_HEIGHT} + ${SEAL_HEIGHT});
+        width: ${PACK_CONFIG.WIDTH};
+        height: ${PACK_CONFIG.HEIGHT};
         cursor: grab;
         touch-action: none;
         user-select: none;
         transform-style: preserve-3d;
-        transform: rotateX(5deg);
+        transform: rotateX(5deg) scale(1);
         transition: transform 0.3s ease;
+        border-radius: ${PACK_CONFIG.BORDER_RADIUS};
+        overflow: hidden;
     `;
     
-    // === SEAL (Top tearable part) - Fixed height, tears off ===
-    const seal = document.createElement('div');
-    seal.className = 'pack-bag-seal';
-    seal.style.cssText = `
+    // Main pack image - FULL BLEED
+    const packImg = document.createElement('div');
+    packImg.className = 'pack-image';
+    packImg.style.cssText = `
         position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: ${SEAL_HEIGHT};
-        background: linear-gradient(180deg, #ffd700 0%, #ff8c00 50%, #cc6600 100%);
-        border-radius: 16px 16px 0 0;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        font-family: Orbitron, sans-serif;
-        font-size: clamp(12px, 2.5vw, 16px);
-        font-weight: bold;
-        color: #1a0a30;
-        letter-spacing: 2px;
-        transform-origin: center bottom;
-        transition: transform 0.3s ease, opacity 0.3s ease;
-        z-index: 10;
-        border: 3px solid #ffcc00;
-        border-bottom: 2px dashed #8B4513;
-        box-shadow: 0 4px 15px rgba(255,215,0,0.5), inset 0 2px 5px rgba(255,255,255,0.3);
-    `;
-    
-    // Show card count in seal for 10+ packs
-    const packLabel = cardCount >= 10 ? `🔥 ${cardCount} CARDS 🔥` : '✦ SEALED ✦';
-    seal.innerHTML = `
-        <span style="text-shadow: 0 1px 2px rgba(0,0,0,0.3);">${packLabel}</span>
-        <span style="font-size:clamp(8px, 1.8vw, 11px);opacity:0.8;margin-top:2px;letter-spacing:1px;">👈 SWIPE 👉</span>
-    `;
-    
-    // === PACK BODY - EXACTLY card size (this is what matters!) ===
-    const body = document.createElement('div');
-    body.className = 'pack-bag-body';
-    body.style.cssText = `
-        position: absolute;
-        top: ${SEAL_HEIGHT};
-        left: 0;
-        width: 100%;
-        height: ${CARD_HEIGHT};
-        transform-style: preserve-3d;
-        border-radius: 0 0 16px 16px;
-    `;
-    
-    // Front face with art
-    const front = document.createElement('div');
-    front.style.cssText = `
-        position: absolute;
-        width: 100%;
-        height: 100%;
-        background: url(/static/images/packs/pack-bag-art.png) center/cover no-repeat;
-        border: 3px solid #ffd700;
-        border-top: none;
-        border-radius: 0 0 12px 12px;
+        inset: 0;
+        background: url(${packImage}) center/cover no-repeat;
+        border-radius: ${PACK_CONFIG.BORDER_RADIUS};
         box-shadow: 
             0 20px 40px rgba(0,0,0,0.7),
             0 0 ${glowSize} ${glowColor},
             inset 0 0 30px rgba(255,215,0,0.1);
-        overflow: hidden;
-        transform: translateZ(8px);
+        border: 3px solid #ffd700;
     `;
     
     // Glossy overlay for 3D effect
     const gloss = document.createElement('div');
+    gloss.className = 'pack-gloss';
     gloss.style.cssText = `
         position: absolute;
         inset: 0;
-        background: linear-gradient(135deg, rgba(255,255,255,0.15) 0%, transparent 50%, rgba(0,0,0,0.2) 100%);
-        border-radius: 0 0 12px 12px;
+        background: linear-gradient(135deg, 
+            rgba(255,255,255,0.2) 0%, 
+            transparent 40%, 
+            transparent 60%, 
+            rgba(0,0,0,0.2) 100%);
+        border-radius: ${PACK_CONFIG.BORDER_RADIUS};
         pointer-events: none;
-    `;
-    front.appendChild(gloss);
-    
-    // Right edge (3D depth)
-    const rightEdge = document.createElement('div');
-    rightEdge.style.cssText = `
-        position: absolute;
-        top: 0;
-        right: -8px;
-        width: 8px;
-        height: 100%;
-        background: linear-gradient(90deg, #2d1050 0%, #1a0a30 100%);
-        border: 2px solid #cc9900;
-        border-left: none;
-        border-radius: 0 8px 8px 0;
-        transform: rotateY(90deg);
-        transform-origin: left center;
-    `;
-    
-    // Bottom edge (3D depth)
-    const bottomEdge = document.createElement('div');
-    bottomEdge.style.cssText = `
-        position: absolute;
-        bottom: -8px;
-        left: 0;
-        width: 100%;
-        height: 8px;
-        background: linear-gradient(180deg, #1a0a30 0%, #0d0515 100%);
-        border: 2px solid #cc9900;
-        border-top: none;
-        border-radius: 0 0 8px 8px;
-        transform: rotateX(-90deg);
-        transform-origin: top center;
+        z-index: 2;
     `;
     
     // Card count badge
     const badge = document.createElement('div');
+    badge.className = 'pack-badge';
     badge.style.cssText = `
         position: absolute;
-        top: 10px;
-        right: 10px;
+        top: 12px;
+        right: 12px;
         background: linear-gradient(135deg, #ff6b00, #ffd700);
         color: #000;
         font-weight: 900;
         font-size: 16px;
-        padding: 6px 12px;
-        border-radius: 15px;
+        padding: 8px 14px;
+        border-radius: 20px;
         font-family: Orbitron, sans-serif;
         box-shadow: 0 4px 15px rgba(255,107,0,0.8);
         border: 2px solid rgba(255,255,255,0.5);
         z-index: 5;
-        transform: translateZ(12px);
     `;
     badge.textContent = '×' + cardCount;
     
-    body.appendChild(front);
-    body.appendChild(rightEdge);
-    body.appendChild(bottomEdge);
-    body.appendChild(badge);
-    packEl.appendChild(seal);
-    packEl.appendChild(body);
+    // Swipe instruction overlay
+    const swipeHint = document.createElement('div');
+    swipeHint.className = 'pack-swipe-hint';
+    swipeHint.style.cssText = `
+        position: absolute;
+        bottom: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: rgba(0,0,0,0.7);
+        color: #ffd700;
+        font-family: Orbitron, sans-serif;
+        font-size: clamp(10px, 2.5vw, 14px);
+        font-weight: bold;
+        padding: 8px 20px;
+        border-radius: 20px;
+        border: 2px solid rgba(255,215,0,0.5);
+        z-index: 5;
+        white-space: nowrap;
+        animation: swipeHintPulse 1.5s ease-in-out infinite;
+    `;
+    swipeHint.innerHTML = '👈 SWIPE TO OPEN 👉';
     
-    console.log('[FORGE] 3D Pack bag created');
+    packEl.appendChild(packImg);
+    packEl.appendChild(gloss);
+    packEl.appendChild(badge);
+    packEl.appendChild(swipeHint);
+    
+    console.log('[FORGE] Full-bleed pack created:', packImage);
     
     return packEl;
 }
