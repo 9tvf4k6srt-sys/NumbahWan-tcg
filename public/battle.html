@@ -2203,13 +2203,8 @@
     <script src="/static/nw-3d-engine.js"></script>
 </head>
 <body>
-    <!-- ROTATE DEVICE PROMPT (Portrait Mobile) -->
-    <div class="rotate-prompt" id="rotatePrompt">
-        <div class="rotate-icon">📱</div>
-        <div class="rotate-title">ROTATE YOUR DEVICE</div>
-        <div class="rotate-text">Turn your phone sideways (landscape) for the best battle experience with more room for cards!</div>
-        <button class="rotate-skip" id="rotateSkip">Continue in Portrait Anyway →</button>
-    </div>
+    <!-- ROTATE DEVICE PROMPT - Hidden, game works in both orientations -->
+    <div class="rotate-prompt" id="rotatePrompt" style="display:none !important;"></div>
     
     <!-- EPIC START SCREEN -->
     <div class="start-overlay" id="startOverlay">
@@ -2413,87 +2408,14 @@
 
 <script>
 // ═══════════════════════════════════════════════════════════════════════════
-// ORIENTATION CHECK - Runs immediately before game loads
+// ORIENTATION CHECK - DISABLED FOR NOW (was blocking game on some devices)
+// Game works in both portrait and landscape - landscape recommended
 // ═══════════════════════════════════════════════════════════════════════════
 (function() {
     'use strict';
-    
-    let userSkippedRotate = false;
-    
-    function isMobileDevice() {
-        return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) 
-            || (window.innerWidth <= 768);
-    }
-    
-    function isPortrait() {
-        // Multiple detection methods for reliability
-        if (window.screen && window.screen.orientation) {
-            return window.screen.orientation.type.includes('portrait');
-        }
-        if (window.orientation !== undefined) {
-            return window.orientation === 0 || window.orientation === 180;
-        }
-        return window.innerHeight > window.innerWidth;
-    }
-    
-    function checkOrientation() {
-        if (userSkippedRotate) return; // User chose to continue in portrait
-        
-        const rotatePrompt = document.getElementById('rotatePrompt');
-        if (!rotatePrompt) return;
-        
-        const shouldShowPrompt = isMobileDevice() && isPortrait();
-        
-        if (shouldShowPrompt) {
-            rotatePrompt.classList.add('show');
-            document.body.classList.add('show-rotate');
-        } else {
-            rotatePrompt.classList.remove('show');
-            document.body.classList.remove('show-rotate');
-        }
-    }
-    
-    // Check on load
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', () => {
-            checkOrientation();
-            
-            // Skip button
-            const skipBtn = document.getElementById('rotateSkip');
-            if (skipBtn) {
-                skipBtn.addEventListener('click', () => {
-                    userSkippedRotate = true;
-                    document.getElementById('rotatePrompt').classList.remove('show');
-                    document.body.classList.remove('show-rotate');
-                });
-            }
-        });
-    } else {
-        checkOrientation();
-        const skipBtn = document.getElementById('rotateSkip');
-        if (skipBtn) {
-            skipBtn.addEventListener('click', () => {
-                userSkippedRotate = true;
-                document.getElementById('rotatePrompt').classList.remove('show');
-                document.body.classList.remove('show-rotate');
-            });
-        }
-    }
-    
-    // Listen for orientation changes - multiple event types for compatibility
-    window.addEventListener('resize', checkOrientation);
-    window.addEventListener('orientationchange', () => {
-        // Delay check to let the browser update dimensions
-        setTimeout(checkOrientation, 100);
-        setTimeout(checkOrientation, 300);
-    });
-    
-    // Screen orientation API (most reliable when available)
-    if (window.screen && window.screen.orientation) {
-        window.screen.orientation.addEventListener('change', () => {
-            setTimeout(checkOrientation, 100);
-        });
-    }
+    // Orientation check disabled - let users play in any orientation
+    // The game layout adapts to both portrait and landscape
+    console.log('[Battle Arena] Orientation check disabled - works in both modes');
 })();
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -2855,11 +2777,12 @@
             cardEl.dataset.idx = idx;
             
             // Simple flat card - just image + stats overlay + cost badge
+            // Use placeholder as default since many card images don't exist yet
             const imgFile = card.img || 'placeholder.webp';
             cardEl.innerHTML = `
                 <img class="hand-card-art" 
-                     src="/static/images/cards/thumbs/${imgFile.replace(/\.(png|jpg)$/i, '.webp')}" 
-                     onerror="this.src='/static/images/cards/${imgFile}'"
+                     src="/static/images/cards/thumbs/${imgFile}" 
+                     onerror="this.onerror=null; this.src='/static/images/cards/placeholder.webp';"
                      alt="${card.name}"
                      draggable="false">
                 <div class="hand-card-stats">
@@ -2959,8 +2882,8 @@
             slot.innerHTML = `
                 <div class="board-card ${card.rarity}" data-instance="${card.instanceId}">
                     <div class="board-card-inner">
-                        <img class="board-card-art" src="/static/images/cards/thumbs/${card.img?.replace(/\.(png|jpg)$/i, '.webp')}" 
-                             onerror="this.src='/static/images/cards/${card.img}'" alt="${card.name}">
+                        <img class="board-card-art" src="/static/images/cards/thumbs/${card.img || 'placeholder.webp'}" 
+                             onerror="this.onerror=null; this.src='/static/images/cards/placeholder.webp';" alt="${card.name}">
                         <div class="board-card-stats">
                             <div class="stat-box stat-atk">
                                 <span class="stat-icon">⚔️</span>
