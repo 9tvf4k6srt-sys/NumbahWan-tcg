@@ -8,6 +8,14 @@
     <link rel="stylesheet" href="/static/nw-utilities.css">
     <link rel="stylesheet" href="/static/nw-card-reveal.css">
     <link rel="stylesheet" href="/static/nw-card-frames.css">
+    <!-- Core Helpers -->
+    <script src="/static/helpers/nw-core.js"></script>
+    <script src="/static/helpers/nw-ui.js"></script>
+    <script src="/static/helpers/nw-anim.js"></script>
+    <script src="/static/helpers/nw-audio.js"></script>
+    <script src="/static/helpers/nw-state.js"></script>
+    <script src="/static/helpers/nw-guild.js"></script>
+    <!-- Game Components -->
     <script src="/static/nw-icons-inline.js"></script>
     <script src="/static/nw-wallet.js"></script>
     <script src="/static/nw-cards.js"></script>
@@ -1734,78 +1742,65 @@ function screenShake(intensity = 1, duration = 300) {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
-// 🔊 PREMIUM MP3 AUDIO SYSTEM - Real sound files for maximum satisfaction!
+// 🔊 AUDIO SYSTEM - Using NW_AUDIO helper for better performance
 // ═══════════════════════════════════════════════════════════════════════════
-const PremiumAudio = {
-    ctx: null,
-    buffers: {},
-    volume: 0.85,
-    muted: false,
-    initialized: false,
-    
-    // Premium audio files
-    files: {
-        anticipation: '/static/audio/gacha-anticipation.mp3',
-        flip: '/static/audio/gacha-flip.mp3',
-        common: '/static/audio/gacha-common.mp3',
-        uncommon: '/static/audio/gacha-common.mp3',
-        rare: '/static/audio/gacha-rare.mp3',
-        epic: '/static/audio/gacha-epic.mp3',
-        legendary: '/static/audio/gacha-legendary.mp3',
-        mythic: '/static/audio/gacha-mythic.mp3',
-        impact: '/static/audio/card-slam-heavy.mp3',
-        select: '/static/audio/ui-select.mp3'
-    },
-    
-    async init() {
-        if (this.initialized) return;
-        try {
-            this.ctx = new (window.AudioContext || window.webkitAudioContext)();
-            
-            // Load all sounds in parallel
-            const loads = Object.entries(this.files).map(async ([name, path]) => {
-                try {
-                    const response = await fetch(path);
-                    const arrayBuffer = await response.arrayBuffer();
-                    this.buffers[name] = await this.ctx.decodeAudioData(arrayBuffer);
-                } catch (e) {
-                    console.warn('[Audio] Failed to load:', name);
-                }
-            });
-            await Promise.all(loads);
-            this.initialized = true;
-            console.log('[Forge Audio] Loaded premium sounds:', Object.keys(this.buffers).join(', '));
-        } catch (e) {
-            console.warn('[Audio] Web Audio not supported');
-        }
-    },
-    
-    play(name, vol = 1) {
-        if (this.muted || !this.ctx || !this.buffers[name]) return;
-        
-        try {
-            if (this.ctx.state === 'suspended') this.ctx.resume();
-            
-            const source = this.ctx.createBufferSource();
-            const gain = this.ctx.createGain();
-            
-            source.buffer = this.buffers[name];
-            gain.gain.value = this.volume * vol;
-            
-            source.connect(gain);
-            gain.connect(this.ctx.destination);
-            source.start(0);
-        } catch (e) {}
-    }
+
+// Load all forge audio files through NW_AUDIO helper
+const forgeAudioFiles = {
+    anticipation: '/static/audio/gacha-anticipation.mp3',
+    flip: '/static/audio/gacha-flip.mp3',
+    common: '/static/audio/gacha-common.mp3',
+    uncommon: '/static/audio/gacha-common.mp3',
+    rare: '/static/audio/gacha-rare.mp3',
+    epic: '/static/audio/gacha-epic.mp3',
+    legendary: '/static/audio/gacha-legendary.mp3',
+    mythic: '/static/audio/gacha-mythic.mp3',
+    impact: '/static/audio/card-slam-heavy.mp3',
+    select: '/static/audio/ui-select.mp3',
+    // Battle sounds
+    attack: '/static/audio/attack-slash.mp3',
+    death: '/static/audio/card-death.mp3',
+    draw: '/static/audio/card-draw.mp3',
+    slam: '/static/audio/card-slam.mp3',
+    tick: '/static/audio/countdown-tick.mp3',
+    crit: '/static/audio/critical-hit.mp3',
+    defeat: '/static/audio/defeat.mp3',
+    energy: '/static/audio/energy-gain.mp3',
+    fightStart: '/static/audio/fight-start.mp3',
+    turnEnd: '/static/audio/turn-end.mp3',
+    victory: '/static/audio/victory.mp3'
 };
 
-// Initialize premium audio on first interaction
-document.addEventListener('click', () => {
-    if (!PremiumAudio.initialized) PremiumAudio.init();
-}, { once: true });
-document.addEventListener('touchstart', () => {
-    if (!PremiumAudio.initialized) PremiumAudio.init();
-}, { once: true });
+// Initialize audio when NW_AUDIO is ready
+let audioLoaded = false;
+async function initForgeAudio() {
+    if (audioLoaded || typeof NW_AUDIO === 'undefined') return;
+    try {
+        await NW_AUDIO.loadAll(forgeAudioFiles);
+        audioLoaded = true;
+        console.log('[Forge Audio] ✅ Loaded all sounds via NW_AUDIO');
+    } catch (e) {
+        console.warn('[Forge Audio] Failed to load:', e);
+    }
+}
+
+// Legacy wrapper for PremiumAudio compatibility
+const PremiumAudio = {
+    initialized: true,
+    init: () => initForgeAudio(),
+    play: (name, vol = 1) => {
+        if (typeof NW_AUDIO !== 'undefined') {
+            NW_AUDIO.play(name, { volume: vol });
+        }
+    },
+    buffers: new Proxy({}, {
+        get: () => true // Always return truthy so checks pass
+    })
+};
+
+// Initialize on first interaction
+document.addEventListener('click', initForgeAudio, { once: true });
+document.addEventListener('touchstart', initForgeAudio, { once: true });
 
 // ═══════════════════════════════════════════════════════════════════════════
 // 🎰 PREMIUM SOUND LIBRARY - Each rarity has unique audio identity
