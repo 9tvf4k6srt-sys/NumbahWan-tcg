@@ -13,6 +13,7 @@
     <script src="/static/nw-cards.js"></script>
     <script src="/static/nw-card-renderer.js"></script>
     <script src="/static/nw-game-juice.js"></script>
+    <script src="/static/nw-3d-engine.js"></script>
     <link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     
@@ -655,6 +656,281 @@
             .pull-option { min-width: 80px; padding: 10px 12px; }
             .reveal-card { width: min(280px, 75vw); height: calc(min(280px, 75vw) * 1.4); }
         }
+        
+        /* ===== 3D PACK OPENING ===== */
+        .pack-overlay {
+            position: fixed;
+            inset: 0;
+            background: radial-gradient(ellipse at center, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.98) 100%);
+            z-index: 9999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.4s ease;
+        }
+        .pack-overlay.show {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        
+        .pack-scene {
+            perspective: 1200px;
+            perspective-origin: 50% 40%;
+        }
+        
+        .pack-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transform-style: preserve-3d;
+        }
+        
+        /* 3D Pack Box */
+        .pack-3d {
+            width: 220px;
+            height: 300px;
+            position: relative;
+            transform-style: preserve-3d;
+            cursor: pointer;
+            transition: transform 0.3s ease;
+        }
+        .pack-3d:hover { transform: scale(1.02); }
+        
+        .pack-face {
+            position: absolute;
+            backface-visibility: hidden;
+            overflow: hidden;
+        }
+        
+        /* Front face - main pack design */
+        .pack-front {
+            width: 220px;
+            height: 300px;
+            background: linear-gradient(145deg, #1a0a30 0%, #2d1050 30%, #1a0a30 100%);
+            border: 4px solid;
+            border-image: linear-gradient(135deg, #ffd700, #ff6b00, #ffd700) 1;
+            border-radius: 16px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 
+                0 0 40px rgba(255, 107, 0, 0.4),
+                0 0 80px rgba(255, 215, 0, 0.2),
+                inset 0 0 60px rgba(255, 215, 0, 0.1);
+        }
+        .pack-front::before {
+            content: '';
+            position: absolute;
+            inset: 8px;
+            border: 2px solid rgba(255, 215, 0, 0.3);
+            border-radius: 10px;
+            pointer-events: none;
+        }
+        
+        .pack-logo {
+            font-size: 48px;
+            margin-bottom: 10px;
+            filter: drop-shadow(0 0 20px rgba(255, 107, 0, 0.8));
+            animation: packLogoPulse 2s infinite;
+        }
+        @keyframes packLogoPulse {
+            0%, 100% { transform: scale(1); filter: drop-shadow(0 0 20px rgba(255, 107, 0, 0.8)); }
+            50% { transform: scale(1.1); filter: drop-shadow(0 0 30px rgba(255, 215, 0, 1)); }
+        }
+        
+        .pack-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 18px;
+            font-weight: bold;
+            background: linear-gradient(135deg, #ffd700, #ff6b00);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 2px 10px rgba(255, 107, 0, 0.5);
+            letter-spacing: 2px;
+        }
+        
+        .pack-subtitle {
+            font-size: 12px;
+            color: rgba(255, 215, 0, 0.7);
+            margin-top: 5px;
+            letter-spacing: 1px;
+        }
+        
+        .pack-count {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: linear-gradient(135deg, #ff6b00, #ffd700);
+            color: #000;
+            font-weight: bold;
+            font-size: 14px;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-family: 'Orbitron', sans-serif;
+        }
+        
+        /* Back face */
+        .pack-back {
+            width: 220px;
+            height: 300px;
+            transform: rotateY(180deg);
+            background: linear-gradient(145deg, #1a0a30 0%, #0d051a 100%);
+            border: 4px solid #3d2060;
+            border-radius: 16px;
+        }
+        
+        /* Side faces for 3D depth */
+        .pack-side {
+            background: linear-gradient(to bottom, #ffd700, #8B5A2B, #ffd700);
+        }
+        .pack-side-left {
+            width: 30px;
+            height: 300px;
+            left: -30px;
+            top: 0;
+            transform: rotateY(-90deg);
+            transform-origin: right center;
+        }
+        .pack-side-right {
+            width: 30px;
+            height: 300px;
+            right: -30px;
+            top: 0;
+            transform: rotateY(90deg);
+            transform-origin: left center;
+        }
+        .pack-side-top {
+            width: 220px;
+            height: 30px;
+            top: -30px;
+            left: 0;
+            transform: rotateX(90deg);
+            transform-origin: bottom center;
+        }
+        .pack-side-bottom {
+            width: 220px;
+            height: 30px;
+            bottom: -30px;
+            left: 0;
+            transform: rotateX(-90deg);
+            transform-origin: top center;
+        }
+        
+        /* Top flap that opens */
+        .pack-flap {
+            position: absolute;
+            width: 220px;
+            height: 60px;
+            top: -30px;
+            left: 0;
+            background: linear-gradient(to bottom, #ffd700, #ff6b00);
+            border-radius: 12px 12px 0 0;
+            transform-origin: bottom center;
+            transform-style: preserve-3d;
+            transition: transform 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            z-index: 10;
+        }
+        .pack-flap::after {
+            content: '👆 PULL';
+            position: absolute;
+            bottom: 8px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-family: 'Orbitron', sans-serif;
+            font-size: 12px;
+            color: #1a0a30;
+            font-weight: bold;
+        }
+        .pack-3d.opening .pack-flap {
+            transform: rotateX(-150deg);
+        }
+        
+        /* Pack shake animation */
+        .pack-3d.shaking {
+            animation: packShake 0.1s infinite;
+        }
+        @keyframes packShake {
+            0%, 100% { transform: translateX(0) rotateZ(0); }
+            25% { transform: translateX(-3px) rotateZ(-1deg); }
+            75% { transform: translateX(3px) rotateZ(1deg); }
+        }
+        
+        @keyframes particleFly {
+            0% { 
+                transform: translate(-50%, -50%) scale(1); 
+                opacity: 1; 
+            }
+            100% { 
+                transform: translate(calc(-50% + var(--fly-x)), calc(-50% + var(--fly-y))) scale(0.3); 
+                opacity: 0; 
+            }
+        }
+        
+        /* Glow effects by rarity */
+        .pack-3d.glow-mythic .pack-front {
+            box-shadow: 
+                0 0 60px rgba(255, 0, 255, 0.6),
+                0 0 100px rgba(0, 255, 255, 0.4),
+                inset 0 0 40px rgba(255, 0, 255, 0.3);
+        }
+        .pack-3d.glow-legendary .pack-front {
+            box-shadow: 
+                0 0 60px rgba(255, 215, 0, 0.7),
+                0 0 100px rgba(255, 107, 0, 0.5),
+                inset 0 0 40px rgba(255, 215, 0, 0.3);
+        }
+        .pack-3d.glow-epic .pack-front {
+            box-shadow: 
+                0 0 50px rgba(168, 85, 247, 0.6),
+                inset 0 0 30px rgba(168, 85, 247, 0.3);
+        }
+        
+        /* Cards flying out */
+        .pack-cards-out {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform-style: preserve-3d;
+        }
+        .flying-card {
+            position: absolute;
+            width: 100px;
+            height: 140px;
+            background-size: cover;
+            background-position: center;
+            border-radius: 8px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.6);
+            opacity: 0;
+        }
+        
+        /* Instruction */
+        .pack-instruction {
+            margin-top: 40px;
+            text-align: center;
+        }
+        .tap-text {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 20px;
+            color: #ffd700;
+            text-shadow: 0 0 20px rgba(255, 215, 0, 0.6);
+            animation: tapPulse 1.5s infinite;
+        }
+        @keyframes tapPulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.7; transform: scale(0.95); }
+        }
+        .pack-instruction.hidden { display: none; }
+        
+        .pack-particles {
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            overflow: hidden;
+        }
     </style>
 </head>
 <body>
@@ -840,6 +1116,19 @@
             </div>
         </div>
     </main>
+    
+    <!-- 3D PACK OPENING STAGE -->
+    <div class="pack-overlay" id="packOverlay">
+        <div class="pack-scene nw-3d-scene">
+            <div class="pack-container" id="packContainer">
+                <!-- 3D Pack will be inserted here -->
+            </div>
+            <div class="pack-instruction" id="packInstruction">
+                <span class="tap-text">🔥 TAP TO OPEN 🔥</span>
+            </div>
+        </div>
+        <div class="pack-particles" id="packParticles"></div>
+    </div>
     
     <!-- ULTRA PREMIUM CARD REVEAL -->
     <div class="reveal-overlay" id="revealOverlay">
@@ -1772,6 +2061,232 @@ function getCard(rarity) {
     return pool[Math.floor(Math.random() * pool.length)] || CARDS[0];
 }
 
+// ═══════════════════════════════════════════════════════════════════
+// 3D PACK OPENING ANIMATION
+// ═══════════════════════════════════════════════════════════════════
+let packOpeningResolve = null;
+let highestRarityInPack = 'common';
+
+function createPack3D(cardCount, highestRarity) {
+    const packEl = document.createElement('div');
+    packEl.className = 'pack-3d';
+    packEl.innerHTML = `
+        <div class="pack-face pack-front">
+            <div class="pack-count">×${cardCount}</div>
+            <div class="pack-logo">🔥</div>
+            <div class="pack-title">MYTHIC FORGE</div>
+            <div class="pack-subtitle">BOOSTER PACK</div>
+        </div>
+        <div class="pack-face pack-back"></div>
+        <div class="pack-face pack-side pack-side-left"></div>
+        <div class="pack-face pack-side pack-side-right"></div>
+        <div class="pack-face pack-side pack-side-top"></div>
+        <div class="pack-face pack-side pack-side-bottom"></div>
+        <div class="pack-flap"></div>
+    `;
+    return packEl;
+}
+
+async function showPackOpening(cards) {
+    return new Promise((resolve) => {
+        packOpeningResolve = resolve;
+        
+        // Determine highest rarity for glow effect
+        const rarityOrder = ['common', 'uncommon', 'rare', 'epic', 'legendary', 'mythic'];
+        highestRarityInPack = cards.reduce((highest, card) => {
+            return rarityOrder.indexOf(card.rarity) > rarityOrder.indexOf(highest) 
+                ? card.rarity : highest;
+        }, 'common');
+        
+        const overlay = document.getElementById('packOverlay');
+        const container = document.getElementById('packContainer');
+        const instruction = document.getElementById('packInstruction');
+        
+        // Clear previous pack
+        container.innerHTML = '';
+        instruction.classList.remove('hidden');
+        
+        // Create and add new pack
+        const pack = createPack3D(cards.length, highestRarityInPack);
+        container.appendChild(pack);
+        
+        // Show overlay
+        overlay.classList.add('show');
+        
+        // Add click handler
+        pack.onclick = () => openPack3D(pack, cards);
+    });
+}
+
+async function openPack3D(packEl, cards) {
+    packEl.onclick = null; // Prevent double clicks
+    document.getElementById('packInstruction').classList.add('hidden');
+    
+    // ===== PHASE 1: Anticipation Shake =====
+    packEl.classList.add('shaking');
+    
+    // Light shake
+    if (typeof NW_JUICE !== 'undefined') {
+        NW_JUICE.haptic.light();
+    }
+    await sleep(300);
+    
+    // ===== PHASE 2: Rarity Hint Glow =====
+    if (['mythic', 'legendary', 'epic'].includes(highestRarityInPack)) {
+        packEl.classList.add(`glow-${highestRarityInPack}`);
+        
+        if (typeof NW_JUICE !== 'undefined') {
+            NW_JUICE.haptic.medium();
+            if (highestRarityInPack === 'mythic') {
+                NW_JUICE.sound.play('anticipation');
+            }
+        }
+    }
+    
+    // Intensify shake
+    await sleep(400);
+    packEl.classList.remove('shaking');
+    
+    // Final shake buildup
+    for (let i = 0; i < 3; i++) {
+        packEl.classList.add('shaking');
+        await sleep(80 - i * 20);
+        packEl.classList.remove('shaking');
+        await sleep(40);
+    }
+    
+    // ===== PHASE 3: OPEN! =====
+    packEl.classList.add('opening');
+    
+    if (typeof NW_JUICE !== 'undefined') {
+        NW_JUICE.haptic.heavy();
+        NW_JUICE.screen.shake('heavy');
+    }
+    
+    // Create burst particles
+    createPackParticles(highestRarityInPack);
+    
+    // ===== PHASE 4: Cards fly out (preview) =====
+    await sleep(300);
+    
+    // Fly cards preview (mini cards)
+    const container = document.getElementById('packContainer');
+    const rect = packEl.getBoundingClientRect();
+    const centerX = rect.left + rect.width / 2;
+    const centerY = rect.top + rect.height / 2;
+    
+    cards.forEach((card, i) => {
+        setTimeout(() => {
+            const cardEl = document.createElement('div');
+            cardEl.className = 'flying-card';
+            cardEl.style.cssText = `
+                position: fixed;
+                left: ${centerX}px;
+                top: ${centerY}px;
+                width: 80px;
+                height: 112px;
+                background: url('${getCardThumbUrl(card.img)}') center/cover;
+                border-radius: 6px;
+                box-shadow: 0 8px 30px rgba(0,0,0,0.5), 0 0 20px ${getRarityColor(card.rarity)};
+                z-index: ${10000 + i};
+                transform: translate(-50%, -50%) scale(0) rotateY(180deg);
+                opacity: 0;
+                transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            `;
+            document.body.appendChild(cardEl);
+            
+            // Animate out
+            requestAnimationFrame(() => {
+                const angle = (i / cards.length) * Math.PI * 0.6 - Math.PI * 0.3;
+                const distance = 120 + i * 15;
+                const targetX = Math.sin(angle) * distance;
+                const targetY = -80 - i * 10;
+                
+                cardEl.style.transform = `translate(calc(-50% + ${targetX}px), calc(-50% + ${targetY}px)) scale(1) rotateY(0)`;
+                cardEl.style.opacity = '1';
+            });
+            
+            // Remove after delay
+            setTimeout(() => cardEl.remove(), 600);
+        }, i * 60);
+    });
+    
+    // ===== PHASE 5: Close and transition to reveal =====
+    await sleep(800);
+    
+    // Fade out overlay
+    document.getElementById('packOverlay').classList.remove('show');
+    
+    await sleep(400);
+    
+    // Cleanup
+    packEl.classList.remove('opening', `glow-${highestRarityInPack}`);
+    
+    // Resolve promise to continue to card reveal
+    if (packOpeningResolve) {
+        packOpeningResolve();
+        packOpeningResolve = null;
+    }
+}
+
+function createPackParticles(rarity) {
+    const colors = {
+        mythic: ['#ff00ff', '#00ffff', '#ffff00', '#ffffff'],
+        legendary: ['#ffd700', '#ff6b00', '#ffff00'],
+        epic: ['#a855f7', '#c084fc', '#e879f9'],
+        rare: ['#3b82f6', '#60a5fa'],
+        uncommon: ['#22c55e'],
+        common: ['#9ca3af']
+    };
+    
+    const particleColors = colors[rarity] || colors.common;
+    const particleCount = rarity === 'mythic' ? 50 : rarity === 'legendary' ? 35 : 20;
+    const container = document.getElementById('packParticles');
+    
+    for (let i = 0; i < particleCount; i++) {
+        const p = document.createElement('div');
+        const color = particleColors[Math.floor(Math.random() * particleColors.length)];
+        const size = 4 + Math.random() * 8;
+        const angle = Math.random() * Math.PI * 2;
+        const distance = 100 + Math.random() * 200;
+        const duration = 600 + Math.random() * 400;
+        
+        p.style.cssText = `
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            width: ${size}px;
+            height: ${size}px;
+            background: ${color};
+            border-radius: 50%;
+            box-shadow: 0 0 ${size * 2}px ${color};
+            transform: translate(-50%, -50%);
+            animation: particleFly ${duration}ms ease-out forwards;
+            --fly-x: ${Math.cos(angle) * distance}px;
+            --fly-y: ${Math.sin(angle) * distance}px;
+        `;
+        container.appendChild(p);
+        
+        setTimeout(() => p.remove(), duration);
+    }
+}
+
+function getRarityColor(rarity) {
+    const colors = {
+        mythic: '#ff00ff',
+        legendary: '#ffd700',
+        epic: '#a855f7',
+        rare: '#3b82f6',
+        uncommon: '#22c55e',
+        common: '#71717a'
+    };
+    return colors[rarity] || colors.common;
+}
+
+function sleep(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
+
 // Pull
 async function executePull() {
     initAudio();
@@ -1845,6 +2360,9 @@ async function executePull() {
         pullBtn.disabled = false;
         pullBtn.textContent = '🔥 PULL';
     }
+    
+    // ===== 3D PACK OPENING ANIMATION =====
+    await showPackOpening(cardsToReveal);
     
     currentIndex = 0;
     showReveal();

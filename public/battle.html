@@ -632,6 +632,7 @@
     <script src="/static/nw-cards.js"></script>
     <script src="/static/nw-card-renderer.js"></script>
     <script src="/static/nw-game-juice.js"></script>
+    <script src="/static/nw-3d-engine.js"></script>
 </head>
 <body>
     <div class="arena-bg"></div>
@@ -1006,6 +1007,14 @@
         }).join('');
         
         document.getElementById('handCount').textContent = `${gameState.playerHand.length}/${MAX_HAND}`;
+        
+        // Enable tilt effects on hand cards
+        const handCards = handEl.querySelectorAll('.hand-card');
+        handCards.forEach(cardEl => {
+            if (typeof NW_3D !== 'undefined') {
+                NW_3D.card.enableTilt(cardEl, 12);
+            }
+        });
     }
     
     // Render boards
@@ -1032,6 +1041,12 @@
                     `;
                     slot.classList.add('has-card');
                     slot.onclick = isEnemy ? () => attackTarget(idx) : null;
+                    
+                    // Enable 3D tilt effect on board cards
+                    const boardCard = slot.querySelector('.board-card');
+                    if (boardCard && typeof NW_3D !== 'undefined') {
+                        NW_3D.card.enableTilt(boardCard, 10);
+                    }
                 } else {
                     slot.innerHTML = isEnemy ? '?' : '+';
                     slot.classList.remove('has-card');
@@ -1076,6 +1091,18 @@
         
         renderHand();
         renderBoards();
+        
+        // Enhanced summon animation with NW_3D
+        setTimeout(() => {
+            const boardEl = document.getElementById('playerBoard');
+            const cardEl = boardEl.querySelector(`[data-slot="${slotIdx}"] .board-card`);
+            if (cardEl && typeof NW_3D !== 'undefined') {
+                NW_3D.card.summon(cardEl);
+            }
+            if (typeof NW_JUICE !== 'undefined') {
+                NW_JUICE.haptic.medium();
+            }
+        }, 50);
         updateEnergy();
         updateAttackButton();
     }
@@ -1169,11 +1196,19 @@
             isCrit = true;
         }
         
-        // Animation
+        // Animation - Enhanced with NW_3D and NW_JUICE
         const attackerBoard = isEnemyAttacker ? document.getElementById('enemyBoard') : document.getElementById('playerBoard');
+        const defenderBoard = isEnemyAttacker ? document.getElementById('playerBoard') : document.getElementById('enemyBoard');
         const attackerCard = attackerBoard.querySelector(`[data-slot="${attackerSlot}"] .board-card`);
-        if (attackerCard) attackerCard.classList.add('attacking');
-        setTimeout(() => attackerCard?.classList.remove('attacking'), 500);
+        const defenderCard = defenderBoard.querySelector(`[data-slot="${defenderSlot}"] .board-card`);
+        
+        // Use NW_3D for attack animation if available
+        if (typeof NW_3D !== 'undefined' && attackerCard && defenderCard) {
+            NW_3D.battle.attack(attackerCard, defenderCard, damage, isCrit);
+        } else {
+            if (attackerCard) attackerCard.classList.add('attacking');
+            setTimeout(() => attackerCard?.classList.remove('attacking'), 500);
+        }
         
         if (defender) {
             // Check DODGE
@@ -1247,6 +1282,14 @@
     function handleDeath(card, slot, isOnEnemyBoard) {
         playSound('death');
         addLog(`${card.name} ${t('dies')}!`, 'damage');
+        
+        // Enhanced death animation with NW_3D
+        const boardEl = isOnEnemyBoard ? document.getElementById('enemyBoard') : document.getElementById('playerBoard');
+        const cardEl = boardEl.querySelector(`[data-slot="${slot}"] .board-card`);
+        if (cardEl && typeof NW_3D !== 'undefined') {
+            // Use NW_3D death animation without waiting (continues in background)
+            NW_3D.battle.death(cardEl).catch(() => {});
+        }
         
         const board = isOnEnemyBoard ? gameState.enemyBoard : gameState.playerBoard;
         
