@@ -25,25 +25,123 @@
             --dark: #0a0a0f;
             --mythic: #ff00ff;
             
-            /* Card sizes - MUCH BIGGER */
+            /* Card sizes - responsive */
             --card-width: 140px;
             --card-height: 196px;
-            --hand-card-width: 120px;
-            --hand-card-height: 168px;
-            --board-card-width: 100px;
-            --board-card-height: 140px;
+            --hand-card-width: 100px;
+            --hand-card-height: 140px;
+            --board-card-width: 80px;
+            --board-card-height: 112px;
         }
         
-        * { margin: 0; padding: 0; box-sizing: border-box; }
+        * { 
+            margin: 0; 
+            padding: 0; 
+            box-sizing: border-box;
+            /* Smooth everything */
+            -webkit-tap-highlight-color: transparent;
+        }
         html, body { 
             height: 100%; 
             overflow: hidden;
             touch-action: manipulation;
+            /* Force hardware acceleration */
+            -webkit-transform: translateZ(0);
+            transform: translateZ(0);
         }
         body { 
             font-family: 'Inter', system-ui, sans-serif; 
             background: #000;
             color: #fff;
+        }
+        
+        /* ═══════════════════════════════════════════════════════════════════
+           ROTATE DEVICE PROMPT - Shows when in portrait on mobile
+           ═══════════════════════════════════════════════════════════════════ */
+        .rotate-prompt {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: linear-gradient(135deg, #0a0a1a 0%, #1a0a2e 100%);
+            z-index: 99999;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 30px;
+        }
+        .rotate-icon {
+            font-size: 80px;
+            margin-bottom: 20px;
+            animation: rotatePhone 2s ease-in-out infinite;
+        }
+        @keyframes rotatePhone {
+            0%, 100% { transform: rotate(0deg); }
+            25% { transform: rotate(-30deg); }
+            75% { transform: rotate(90deg); }
+        }
+        .rotate-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--gold);
+            margin-bottom: 10px;
+        }
+        .rotate-text {
+            font-size: 16px;
+            color: rgba(255,255,255,0.7);
+            max-width: 280px;
+        }
+        
+        /* Show rotate prompt on mobile portrait */
+        @media screen and (max-width: 768px) and (orientation: portrait) {
+            .rotate-prompt { display: flex; }
+            .arena-container { display: none !important; }
+            .start-overlay { display: none !important; }
+        }
+        
+        /* ═══════════════════════════════════════════════════════════════════
+           LANDSCAPE MODE OPTIMIZATIONS
+           ═══════════════════════════════════════════════════════════════════ */
+        @media screen and (max-width: 900px) and (orientation: landscape) {
+            :root {
+                --hand-card-width: 70px;
+                --hand-card-height: 98px;
+                --board-card-width: 60px;
+                --board-card-height: 84px;
+            }
+            
+            .top-bar { height: 36px; padding: 0 10px; }
+            .arena-logo { font-size: 14px; }
+            
+            .hp-section { 
+                padding: 4px 10px; 
+                flex-direction: row;
+                gap: 20px;
+            }
+            .hp-display { flex-direction: row; gap: 8px; }
+            .hp-label { font-size: 10px; }
+            .hp-bar-container { width: 100px; height: 16px; }
+            .hp-text { font-size: 10px; }
+            
+            .main-battle-area { padding: 4px; gap: 4px; }
+            
+            .board-section { padding: 4px 8px; }
+            .board-slots { gap: 6px; }
+            
+            .hand-section { padding: 6px 10px; }
+            .hand-cards { gap: 6px; min-height: calc(var(--hand-card-height) + 10px); }
+            
+            .action-bar { padding: 4px 10px; gap: 8px; }
+            .action-btn { padding: 8px 16px; font-size: 12px; }
+            
+            .energy-display { padding: 4px 10px; }
+            .energy-orbs { gap: 3px; }
+            .energy-orb { width: 16px; height: 16px; }
+            
+            .turn-indicator { padding: 4px 12px; font-size: 11px; }
+            
+            .battle-log { display: none; }
         }
         
         /* ═══════════════════════════════════════════════════════════════════
@@ -426,20 +524,25 @@
         
         /* ═══════════════════════════════════════════════════════════════════
            BOARD CARDS - BIG AND BOLD
+           Buttery smooth with GPU acceleration
            ═══════════════════════════════════════════════════════════════════ */
         .board-card {
             width: 100%;
             height: 100%;
-            border-radius: 10px;
+            border-radius: 8px;
             overflow: visible;
             position: relative;
-            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: transform 0.15s cubic-bezier(0.25, 0.46, 0.45, 0.94);
             transform-style: preserve-3d;
             cursor: pointer;
+            will-change: transform;
+            -webkit-transform: translateZ(0);
+            transform: translateZ(0);
+            backface-visibility: hidden;
         }
         
         .board-card:hover {
-            transform: translateY(-8px) scale(1.05);
+            transform: translateY(-6px) scale(1.04) translateZ(0);
             z-index: 10;
         }
         
@@ -646,36 +749,45 @@
         
         /* ═══════════════════════════════════════════════════════════════════
            HAND CARDS - CLEAN SINGLE CARD DESIGN
+           Buttery smooth interactions with hardware acceleration
            ═══════════════════════════════════════════════════════════════════ */
         .hand-card {
             flex-shrink: 0;
             width: var(--hand-card-width);
             height: var(--hand-card-height);
-            border-radius: 12px;
+            border-radius: 10px;
             overflow: hidden;
             position: relative;
             cursor: grab;
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            /* Buttery smooth transitions with GPU */
+            transition: transform 0.15s cubic-bezier(0.25, 0.46, 0.45, 0.94), 
+                        box-shadow 0.15s ease,
+                        border-color 0.15s ease;
             transform-origin: bottom center;
+            will-change: transform;
             /* Clean single card look */
-            border: 3px solid rgba(255,255,255,0.4);
-            box-shadow: 0 8px 25px rgba(0,0,0,0.5);
+            border: 2px solid rgba(255,255,255,0.3);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.5);
             background: #1a1a2e;
             -webkit-user-select: none;
             user-select: none;
-            touch-action: none; /* Important for mobile drag */
+            touch-action: none;
+            /* GPU acceleration */
+            -webkit-transform: translateZ(0);
+            transform: translateZ(0);
+            backface-visibility: hidden;
         }
         
         .hand-card:hover {
-            transform: translateY(-25px) scale(1.1);
+            transform: translateY(-20px) scale(1.08) translateZ(0);
             z-index: 100;
             border-color: var(--gold);
-            box-shadow: 0 15px 40px rgba(0,0,0,0.6), 0 0 20px rgba(255,215,0,0.3);
+            box-shadow: 0 12px 35px rgba(0,0,0,0.6), 0 0 15px rgba(255,215,0,0.25);
         }
         
         .hand-card:active {
             cursor: grabbing;
-            transform: translateY(-30px) scale(1.15);
+            transform: translateY(-25px) scale(1.12) translateZ(0);
         }
         
         .hand-card.selected {
@@ -2023,31 +2135,45 @@
         /* Hide tooltip on mobile/tablet, show modal instead */
         @media (max-width: 768px) {
             .card-tooltip { display: none !important; }
-            
-            .start-btn {
-                padding: 20px 40px;
-                font-size: 22px;
+        }
+        
+        /* LANDSCAPE START SCREEN */
+        @media screen and (max-width: 900px) and (orientation: landscape) {
+            .start-overlay {
+                flex-direction: row;
+                padding: 10px;
             }
-            .start-vs {
-                font-size: 36px;
+            .start-vs-container {
+                flex-direction: row;
+                margin-bottom: 0;
+                gap: 20px;
+                align-items: center;
             }
             .start-guild {
-                min-width: 240px;
-                padding: 16px 20px;
+                min-width: 180px;
+                padding: 12px 16px;
             }
             .guild-avatar {
-                width: 48px;
-                height: 48px;
-                font-size: 24px;
+                width: 40px;
+                height: 40px;
+                font-size: 20px;
             }
             .guild-name {
-                font-size: 16px;
+                font-size: 14px;
+            }
+            .start-vs {
+                font-size: 32px;
+            }
+            .start-btn {
+                padding: 14px 28px;
+                font-size: 18px;
+                margin-top: 10px;
             }
             .start-countdown {
-                font-size: 80px;
+                font-size: 70px;
             }
             .fight-text {
-                font-size: 60px;
+                font-size: 50px;
             }
         }
     </style>
@@ -2058,6 +2184,13 @@
     <script src="/static/nw-3d-engine.js"></script>
 </head>
 <body>
+    <!-- ROTATE DEVICE PROMPT (Portrait Mobile) -->
+    <div class="rotate-prompt" id="rotatePrompt">
+        <div class="rotate-icon">📱</div>
+        <div class="rotate-title">ROTATE YOUR DEVICE</div>
+        <div class="rotate-text">Turn your phone sideways for the best battle experience!</div>
+    </div>
+    
     <!-- EPIC START SCREEN -->
     <div class="start-overlay" id="startOverlay">
         <div class="start-bg-effects">
@@ -3979,65 +4112,89 @@
     // INITIALIZATION
     // ═══════════════════════════════════════════════════════════════════
     
+    // Debug helper - shows errors on screen for mobile debugging
+    function showError(msg) {
+        console.error(msg);
+        let errorDiv = document.getElementById('debugError');
+        if (!errorDiv) {
+            errorDiv = document.createElement('div');
+            errorDiv.id = 'debugError';
+            errorDiv.style.cssText = 'position:fixed;top:10px;left:10px;right:10px;background:red;color:white;padding:10px;z-index:99999;font-size:12px;border-radius:8px;max-height:200px;overflow:auto;';
+            document.body.appendChild(errorDiv);
+        }
+        errorDiv.innerHTML += msg + '<br>';
+    }
+    
     async function init() {
-        // Load cards - wait for NW_CARDS to init, or load directly
         try {
-            if (typeof NW_CARDS !== 'undefined') {
-                await NW_CARDS.init();
-                CARDS = NW_CARDS.getAll().filter(c => c.gameStats);
+            console.log('[Battle Arena] Init starting...');
+            
+            // Load cards - wait for NW_CARDS to init, or load directly
+            try {
+                if (typeof NW_CARDS !== 'undefined') {
+                    await NW_CARDS.init();
+                    CARDS = NW_CARDS.getAll().filter(c => c.gameStats);
+                }
+                
+                if (!CARDS.length) {
+                    const res = await fetch('/static/data/cards-v2.json');
+                    const data = await res.json();
+                    const cardArray = data.cards || data;
+                    CARDS = cardArray.filter(c => c.gameStats);
+                }
+            } catch (e) {
+                console.error('Failed to load cards:', e);
+                try {
+                    const res = await fetch('/static/data/cards-v2.json');
+                    const data = await res.json();
+                    const cardArray = data.cards || data;
+                    CARDS = cardArray.filter(c => c.gameStats);
+                } catch (e2) {
+                    showError('Card loading failed: ' + e2.message);
+                }
             }
             
-            if (!CARDS.length) {
-                const res = await fetch('/static/data/cards-v2.json');
-                const data = await res.json();
-                const cardArray = data.cards || data;
-                CARDS = cardArray.filter(c => c.gameStats);
+            console.log(`[Battle Arena] Loaded ${CARDS.length} cards`);
+            
+            if (CARDS.length === 0) {
+                showError('No cards loaded! Check network.');
+                return;
             }
-        } catch (e) {
-            console.error('Failed to load cards:', e);
-            try {
-                const res = await fetch('/static/data/cards-v2.json');
-                const data = await res.json();
-                const cardArray = data.cards || data;
-                CARDS = cardArray.filter(c => c.gameStats);
-            } catch (e2) {
-                console.error('All card loading failed:', e2);
+            
+            // Create decks
+            gameState.playerDeck = createDeck();
+            gameState.enemyDeck = createDeck();
+            
+            console.log(`[Battle Arena] Created deck with ${gameState.playerDeck.length} cards`);
+            
+            // Draw starting hands
+            for (let i = 0; i < CONFIG.STARTING_HAND; i++) {
+                if (gameState.playerDeck.length > 0) {
+                    gameState.playerHand.push(gameState.playerDeck.pop());
+                }
+                if (gameState.enemyDeck.length > 0) {
+                    gameState.enemyHand.push(gameState.enemyDeck.pop());
+                }
             }
-        }
-        
-        console.log(`[Battle Arena] Loaded ${CARDS.length} cards`);
-        
-        // Create decks
-        gameState.playerDeck = createDeck();
-        gameState.enemyDeck = createDeck();
-        
-        console.log(`[Battle Arena] Created deck with ${gameState.playerDeck.length} cards`);
-        
-        // Draw starting hands
-        for (let i = 0; i < CONFIG.STARTING_HAND; i++) {
-            if (gameState.playerDeck.length > 0) {
-                gameState.playerHand.push(gameState.playerDeck.pop());
+            
+            console.log(`[Battle Arena] Drew ${gameState.playerHand.length} cards to hand`);
+            
+            // Initialize mobile card detail modal
+            initCardDetailModal();
+            
+            // Check for skip param (for testing): ?skip=1
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.get('skip') === '1') {
+                console.log('[Battle Arena] Skipping start screen');
+                document.getElementById('startOverlay').classList.add('hidden');
+                startGame();
+            } else {
+                // Show start screen
+                initStartScreen();
+                console.log('[Battle Arena v2.0] Ready - waiting for START!');
             }
-            if (gameState.enemyDeck.length > 0) {
-                gameState.enemyHand.push(gameState.enemyDeck.pop());
-            }
-        }
-        
-        console.log(`[Battle Arena] Drew ${gameState.playerHand.length} cards to hand`);
-        
-        // Initialize mobile card detail modal
-        initCardDetailModal();
-        
-        // Check for skip param (for testing): ?skip=1
-        const urlParams = new URLSearchParams(window.location.search);
-        if (urlParams.get('skip') === '1') {
-            console.log('[Battle Arena] Skipping start screen');
-            document.getElementById('startOverlay').classList.add('hidden');
-            startGame();
-        } else {
-            // Show start screen
-            initStartScreen();
-            console.log('[Battle Arena v2.0] Ready - waiting for START!');
+        } catch (error) {
+            showError('Init failed: ' + error.message + ' at ' + error.stack);
         }
     }
     
