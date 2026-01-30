@@ -3812,24 +3812,56 @@
         
         // Start button click
         startBtn.onclick = async () => {
-            startBtn.disabled = true;
-            startBtn.textContent = '⏳ GET READY...';
-            
-            // Initialize audio
-            Audio.init();
-            
-            // Play epic countdown
-            await playCountdown();
-            
-            // Fade out start screen
-            overlay.classList.add('fade-out');
-            
-            // Wait for fade, then hide and start game
-            await sleep(800);
-            overlay.classList.add('hidden');
-            
-            // Start the actual game
-            startGame();
+            try {
+                startBtn.disabled = true;
+                startBtn.textContent = '⏳ GET READY...';
+                
+                // Initialize audio (may fail on some browsers, that's ok)
+                try { Audio.init(); } catch(e) { console.log('Audio init skipped'); }
+                
+                // Quick countdown - simplified for reliability
+                const countdown = document.getElementById('startCountdown');
+                const fightText = document.getElementById('fightText');
+                
+                // 3
+                countdown.textContent = '3';
+                countdown.classList.add('show');
+                await sleep(600);
+                countdown.classList.remove('show');
+                await sleep(100);
+                
+                // 2
+                countdown.textContent = '2';
+                countdown.classList.add('show');
+                await sleep(600);
+                countdown.classList.remove('show');
+                await sleep(100);
+                
+                // 1
+                countdown.textContent = '1';
+                countdown.classList.add('show');
+                await sleep(600);
+                countdown.classList.remove('show');
+                await sleep(100);
+                
+                // FIGHT!
+                fightText.classList.add('show');
+                await sleep(800);
+                
+                // Fade out start screen
+                overlay.classList.add('fade-out');
+                await sleep(600);
+                overlay.classList.add('hidden');
+                
+                // Start the actual game
+                startGame();
+                
+            } catch (error) {
+                console.error('Start error:', error);
+                // Failsafe - just start the game
+                overlay.classList.add('hidden');
+                startGame();
+            }
         };
     }
     
@@ -3883,8 +3915,14 @@
     }
     
     function startGame() {
+        console.log('[Battle Arena] Starting game...');
+        console.log('[Battle Arena] Player hand:', gameState.playerHand.length, 'cards');
+        console.log('[Battle Arena] Player deck:', gameState.playerDeck.length, 'cards');
+        
         // Setup UI
-        Effects.createParticles();
+        try { Effects.createParticles(); } catch(e) { console.log('Particles error:', e); }
+        
+        console.log('[Battle Arena] Rendering...');
         renderAll();
         
         // Event listeners
@@ -3901,7 +3939,7 @@
         addLog('⚔️ BATTLE START!', 'ability');
         addLog(`Your deck: ${gameState.playerDeck.length + gameState.playerHand.length} cards`, '');
         
-        console.log('[Battle Arena v2.0] Game started!');
+        console.log('[Battle Arena v2.0] Game started! Hand has', gameState.playerHand.length, 'cards');
     }
     
     // ═══════════════════════════════════════════════════════════════════
@@ -3936,9 +3974,11 @@
         
         console.log(`[Battle Arena] Loaded ${CARDS.length} cards`);
         
-        // Create decks (but don't start game yet)
+        // Create decks
         gameState.playerDeck = createDeck();
         gameState.enemyDeck = createDeck();
+        
+        console.log(`[Battle Arena] Created deck with ${gameState.playerDeck.length} cards`);
         
         // Draw starting hands
         for (let i = 0; i < CONFIG.STARTING_HAND; i++) {
@@ -3950,13 +3990,22 @@
             }
         }
         
+        console.log(`[Battle Arena] Drew ${gameState.playerHand.length} cards to hand`);
+        
         // Initialize mobile card detail modal
         initCardDetailModal();
         
-        // Show start screen instead of starting game immediately
-        initStartScreen();
-        
-        console.log('[Battle Arena v2.0] Ready - waiting for START!');
+        // Check for skip param (for testing): ?skip=1
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('skip') === '1') {
+            console.log('[Battle Arena] Skipping start screen');
+            document.getElementById('startOverlay').classList.add('hidden');
+            startGame();
+        } else {
+            // Show start screen
+            initStartScreen();
+            console.log('[Battle Arena v2.0] Ready - waiting for START!');
+        }
     }
     
     // Start
