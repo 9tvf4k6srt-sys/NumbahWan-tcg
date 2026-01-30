@@ -3708,50 +3708,34 @@
     const DragDrop = {
         isDragging: false,
         dragCard: null,        // Card data
-        dragCardEl: null,      // The actual card DOM element
         dragCardIndex: null,
-        placeholder: null,     // Placeholder where card was
-        startRect: null,       // Original position
+        dragGhost: null,       // The floating card that follows finger
         currentPos: { x: 0, y: 0 },
-        offsetX: 0,            // Offset from touch point to card center
-        offsetY: 0,
         hoveredSlot: null,
         
-        // Start dragging
+        // Start dragging - create a ghost that sticks to finger
         start(cardEl, card, index, e) {
             if (!gameState.isPlayerTurn || gameState.isAnimating) return;
             if (card.gameStats.cost > gameState.energy) return;
             
             e.preventDefault();
             
+            // Get touch position FIRST
+            const touch = e.touches ? e.touches[0] : e;
+            const x = touch.clientX;
+            const y = touch.clientY;
+            
             this.isDragging = true;
             this.dragCard = card;
-            this.dragCardEl = cardEl;
             this.dragCardIndex = index;
+            this.currentPos = { x, y };
             
-            // Get touch/mouse position
-            const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-            const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+            // Hide the original card
+            cardEl.style.opacity = '0.3';
+            cardEl.style.transform = 'scale(0.9)';
             
-            // Store original position BEFORE moving card
-            this.startRect = cardEl.getBoundingClientRect();
-            
-            // Calculate offset so card centers under finger
-            this.offsetX = this.startRect.width / 2;
-            this.offsetY = this.startRect.height / 2;
-            this.currentPos = { x: clientX, y: clientY };
-            
-            // Create placeholder in hand where card was
-            this.placeholder = document.createElement('div');
-            this.placeholder.className = 'hand-card-placeholder';
-            cardEl.parentNode.insertBefore(this.placeholder, cardEl);
-            
-            // IMPORTANT: Move card to body so it's not clipped by hand container
-            document.body.appendChild(cardEl);
-            
-            // Apply dragging styles and position
-            cardEl.classList.add('is-dragging');
-            this.updateCardPosition(clientX, clientY);
+            // Create ghost card that will follow finger
+            this.createGhost(card, x, y);
             
             // Sound
             try { Audio.play('select'); } catch(err) {}
@@ -3764,17 +3748,66 @@
             document.addEventListener('touchcancel', this.endHandler);
         },
         
-        // Update card position to follow finger (centered under touch point)
-        updateCardPosition(x, y) {
-            if (!this.dragCardEl) return;
-            // Get actual card dimensions
-            const cardWidth = this.dragCardEl.offsetWidth || 100;
-            const cardHeight = this.dragCardEl.offsetHeight || 140;
-            // Center the card on the touch point, slightly above finger so you can see it
-            const offsetX = cardWidth / 2;
-            const offsetY = cardHeight / 2 + 20; // 20px above finger
-            this.dragCardEl.style.left = (x - offsetX) + 'px';
-            this.dragCardEl.style.top = (y - offsetY) + 'px';
+        // Create floating ghost card
+        createGhost(card, x, y) {
+            const ghost = document.createElement('div');
+            ghost.id = 'dragGhost';
+            ghost.style.cssText = `
+                position: fixed;
+                z-index: 99999;
+                width: 100px;
+                height: 140px;
+                border-radius: 10px;
+                overflow: hidden;
+                pointer-events: none;
+                border: 3px solid #ffd700;
+                box-shadow: 0 20px 50px rgba(0,0,0,0.8), 0 0 30px rgba(255,215,0,0.6);
+                transform: scale(1.1) rotate(-3deg);
+                background: #1a1a2e;
+            `;
+            
+            // Add card image
+            const img = document.createElement('img');
+            img.src = '/static/images/cards/thumbs/' + (card.img || 'placeholder.webp');
+            img.onerror = () => { img.src = '/static/images/cards/placeholder.webp'; };
+            img.style.cssText = 'width:100%; height:100%; object-fit:cover;';
+            ghost.appendChild(img);
+            
+            // Add cost badge
+            const cost = document.createElement('div');
+            cost.textContent = card.gameStats.cost;
+            cost.style.cssText = `
+                position: absolute;
+                top: -8px;
+                left: -8px;
+                width: 28px;
+                height: 28px;
+                background: linear-gradient(135deg, #00ffff, #3b82f6);
+                border: 2px solid white;
+                border-radius: 50%;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-family: 'Orbitron', sans-serif;
+                font-size: 14px;
+                font-weight: bold;
+                color: white;
+            `;
+            ghost.appendChild(cost);
+            
+            document.body.appendChild(ghost);
+            this.dragGhost = ghost;
+            
+            // Position immediately at finger
+            this.updateGhostPosition(x, y);
+        },
+        
+        // Update ghost position - DIRECTLY at finger
+        updateGhostPosition(x, y) {
+            if (!this.dragGhost) return;
+            // Center horizontally, position above finger vertically
+            this.dragGhost.style.left = (x - 50) + 'px';  // 50 = half of 100px width
+            this.dragGhost.style.top = (y - 90) + 'px';   // Above finger so you can see it
         },
         
         // Handle movement
@@ -3786,15 +3819,16 @@
             if (!this.isDragging) return;
             e.preventDefault();
             
-            const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-            const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-            this.currentPos = { x: clientX, y: clientY };
+            const touch = e.touches ? e.touches[0] : e;
+            const x = touch.clientX;
+            const y = touch.clientY;
+            this.currentPos = { x, y };
             
-            // Move the card
-            this.updateCardPosition(clientX, clientY);
+            // Move ghost to follow finger
+            this.updateGhostPosition(x, y);
             
             // Check which slot we're hovering
-            this.checkSlotHover(clientX, clientY);
+            this.checkSlotHover(x, y);
         },
         
         // Check slot hover
@@ -3880,13 +3914,14 @@
             // Find target slot
             let targetSlot = this.hoveredSlot || this.findClosestSlot();
             
+            // Remove ghost
+            if (this.dragGhost) {
+                this.dragGhost.remove();
+                this.dragGhost = null;
+            }
+            
             if (targetSlot && this.dragCard && this.dragCardIndex !== null) {
                 // SUCCESS - play card to slot!
-                // Remove placeholder and dragged card element
-                if (this.placeholder) this.placeholder.remove();
-                if (this.dragCardEl) this.dragCardEl.remove();
-                
-                // Play the card (this will re-render hand and board)
                 gameState.selectedCard = this.dragCardIndex;
                 await playCardToSlot(targetSlot.idx);
                 
@@ -3900,28 +3935,15 @@
                 }, 50);
                 
             } else {
-                // CANCELLED - return card to hand by re-rendering
-                // Remove the dragged card from body (it was moved there)
-                if (this.dragCardEl) {
-                    this.dragCardEl.remove();
-                }
-                if (this.placeholder) {
-                    this.placeholder.remove();
-                }
-                
-                // Re-render hand to restore the card
+                // CANCELLED - just re-render hand
                 renderHand();
-                
                 try { Audio.play('select'); } catch(err) {}
             }
             
             // Reset state
             this.isDragging = false;
             this.dragCard = null;
-            this.dragCardEl = null;
             this.dragCardIndex = null;
-            this.placeholder = null;
-            this.startRect = null;
             this.hoveredSlot = null;
         }
     };
