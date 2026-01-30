@@ -2572,7 +2572,7 @@ let swipeState = {
     progress: 0
 };
 
-// Create bag pack for 1-5 pulls (swipe to tear)
+// Create bag pack for 1-5 pulls (swipe sideways to tear)
 function createPackBag(cardCount, highestRarity) {
     console.log('[FORGE] Creating pack bag for', cardCount, 'cards, rarity:', highestRarity);
     
@@ -2589,41 +2589,44 @@ function createPackBag(cardCount, highestRarity) {
         rarityGlow = ', 0 0 30px #a855f7, 0 0 60px #7c3aed';
     }
     
-    // Main container - LARGE SIZE with explicit dimensions
-    packEl.style.cssText = 'position:relative;width:300px;height:420px;cursor:grab;touch-action:none;user-select:none;display:flex;flex-direction:column;';
+    // Main container - centered for easy mobile reach
+    packEl.style.cssText = 'position:relative;width:280px;height:380px;cursor:grab;touch-action:none;user-select:none;display:flex;flex-direction:column;margin:0 auto;';
     packEl.classList.add('pack-bag');
     
-    // Create seal element
+    // Create seal element - the tearable top
     const seal = document.createElement('div');
     seal.className = 'pack-bag-seal';
-    seal.style.cssText = 'width:100%;height:80px;min-height:80px;flex-shrink:0;background:linear-gradient(180deg, #ffd700 0%, #ff8c00 50%, #ff6b00 100%);border-radius:16px 16px 0 0;display:flex;flex-direction:column;align-items:center;justify-content:center;font-family:Orbitron,sans-serif;font-size:22px;font-weight:bold;color:#1a0a30;letter-spacing:3px;transform-origin:bottom center;transition:transform 0.3s ease;z-index:5;box-shadow:0 4px 25px rgba(255,215,0,0.9);border:4px solid #ffcc00;border-bottom:3px dashed #8B4513;position:relative;';
-    seal.innerHTML = '<span>✦ SEALED ✦</span><span style="position:absolute;bottom:8px;font-size:12px;opacity:0.7;letter-spacing:2px;color:#5a3800;">✂ TEAR HERE ✂</span>';
+    seal.style.cssText = 'width:100%;height:70px;min-height:70px;flex-shrink:0;background:linear-gradient(180deg, #ffd700 0%, #ff8c00 50%, #ff6b00 100%);border-radius:16px 16px 0 0;display:flex;flex-direction:column;align-items:center;justify-content:center;font-family:Orbitron,sans-serif;font-size:20px;font-weight:bold;color:#1a0a30;letter-spacing:3px;transform-origin:center center;transition:transform 0.2s ease, opacity 0.2s ease;z-index:5;box-shadow:0 4px 25px rgba(255,215,0,0.9);border:4px solid #ffcc00;border-bottom:3px dashed #8B4513;position:relative;';
+    seal.innerHTML = '<span>✦ SEALED ✦</span><span style="position:absolute;bottom:6px;font-size:11px;opacity:0.7;letter-spacing:2px;color:#5a3800;">👈 SWIPE TO TEAR 👉</span>';
     
-    // Create body element
+    // Create body element with fantasy art background
     const body = document.createElement('div');
     body.className = 'pack-bag-body';
-    body.style.cssText = 'flex:1;width:100%;min-height:330px;background:linear-gradient(145deg, #4a2080 0%, #2d1050 30%, #1a0a30 60%, #0d0515 100%);border:4px solid #ffd700;border-top:none;border-radius:0 0 24px 24px;position:relative;overflow:hidden;box-shadow:0 25px 60px rgba(0,0,0,0.8), 0 0 100px rgba(255,107,0,0.5), inset 0 0 100px rgba(255,215,0,0.15)' + rarityGlow + ';';
+    body.style.cssText = 'flex:1;width:100%;min-height:300px;background:url(/static/images/packs/pack-bag-art.png) center/cover no-repeat, linear-gradient(145deg, #4a2080 0%, #2d1050 30%, #1a0a30 60%, #0d0515 100%);border:4px solid #ffd700;border-top:none;border-radius:0 0 24px 24px;position:relative;overflow:hidden;box-shadow:0 25px 60px rgba(0,0,0,0.8), 0 0 100px rgba(255,107,0,0.5), inset 0 0 100px rgba(255,215,0,0.15)' + rarityGlow + ';';
     
-    // Inner content
+    // Overlay for text readability
+    const overlay = document.createElement('div');
+    overlay.style.cssText = 'position:absolute;inset:0;background:linear-gradient(180deg, rgba(0,0,0,0.3) 0%, rgba(0,0,0,0.6) 100%);';
+    
+    // Inner content - text over art
     const inner = document.createElement('div');
-    inner.style.cssText = 'position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px;';
+    inner.style.cssText = 'position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;padding:25px;';
     inner.innerHTML = `
-        <div style="font-size:120px;filter:drop-shadow(0 0 50px rgba(255,107,0,1));animation:bagIconPulse 2s infinite;">🔥</div>
-        <div style="font-family:Orbitron,sans-serif;font-size:28px;background:linear-gradient(135deg, #ffd700, #ff6b00);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-top:10px;font-weight:900;letter-spacing:3px;">MYTHIC FORGE</div>
-        <div style="font-size:16px;color:#ffd700;opacity:0.9;margin-top:12px;font-family:Orbitron,sans-serif;">👈 SWIPE TO TEAR 👉</div>
+        <div style="font-family:Orbitron,sans-serif;font-size:24px;background:linear-gradient(135deg, #ffd700, #ff6b00);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;font-weight:900;letter-spacing:3px;text-shadow:0 2px 10px rgba(0,0,0,0.8);">MYTHIC FORGE</div>
     `;
     
     // Card count badge
     const badge = document.createElement('div');
-    badge.style.cssText = 'position:absolute;top:20px;right:20px;background:linear-gradient(135deg, #ff6b00, #ffd700);color:#000;font-weight:900;font-size:24px;padding:12px 22px;border-radius:30px;font-family:Orbitron,sans-serif;box-shadow:0 8px 30px rgba(255,107,0,0.8);border:3px solid rgba(255,255,255,0.4);';
+    badge.style.cssText = 'position:absolute;top:15px;right:15px;background:linear-gradient(135deg, #ff6b00, #ffd700);color:#000;font-weight:900;font-size:22px;padding:10px 18px;border-radius:25px;font-family:Orbitron,sans-serif;box-shadow:0 6px 25px rgba(255,107,0,0.8);border:3px solid rgba(255,255,255,0.4);z-index:2;';
     badge.textContent = '×' + cardCount;
     
+    body.appendChild(overlay);
     body.appendChild(inner);
     body.appendChild(badge);
     packEl.appendChild(seal);
     packEl.appendChild(body);
     
-    console.log('[FORGE] Pack bag created:', packEl.offsetWidth, 'x', packEl.offsetHeight);
+    console.log('[FORGE] Pack bag created');
     
     return packEl;
 }
@@ -2646,30 +2649,35 @@ function createPackBox(cardCount, highestRarity) {
         rarityGlow = ', 0 0 30px #a855f7';
     }
     
-    // Main container - larger box style
-    packEl.style.cssText = 'position:relative;width:320px;height:280px;cursor:grab;touch-action:none;user-select:none;padding-top:90px;';
+    // Main container - centered for easy mobile reach
+    packEl.style.cssText = 'position:relative;width:300px;height:220px;cursor:grab;touch-action:none;user-select:none;margin:0 auto;';
     
     // Create lid element
     const lid = document.createElement('div');
     lid.className = 'pack-box-lid';
-    lid.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:90px;background:linear-gradient(180deg, #ffd700 0%, #ff8c00 50%, #ff6b00 100%);border-radius:16px 16px 0 0;display:flex;flex-direction:column;align-items:center;justify-content:center;font-family:Orbitron,sans-serif;font-size:20px;font-weight:bold;color:#1a0a30;letter-spacing:2px;transform-origin:bottom center;transition:transform 0.4s ease;z-index:5;box-shadow:0 -5px 30px rgba(255,215,0,0.6);border:4px solid #ffcc00;';
-    lid.innerHTML = '<span>📦 PREMIUM BOX</span><span style="font-size:12px;opacity:0.7;margin-top:5px;">↑ SWIPE UP TO OPEN ↑</span>';
+    lid.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:70px;background:linear-gradient(180deg, #ffd700 0%, #ff8c00 50%, #ff6b00 100%);border-radius:16px 16px 0 0;display:flex;flex-direction:column;align-items:center;justify-content:center;font-family:Orbitron,sans-serif;font-size:18px;font-weight:bold;color:#1a0a30;letter-spacing:2px;transform-origin:bottom center;transition:transform 0.4s ease;z-index:5;box-shadow:0 -5px 30px rgba(255,215,0,0.6);border:4px solid #ffcc00;';
+    lid.innerHTML = '<span>📦 MEGA BOX</span><span style="font-size:11px;opacity:0.7;margin-top:4px;">↑ SWIPE UP TO OPEN ↑</span>';
     
-    // Create body element
+    // Create body element with fantasy art background
     const body = document.createElement('div');
     body.className = 'pack-box-body';
-    body.style.cssText = 'width:100%;height:100%;background:linear-gradient(145deg, #4a2080 0%, #2d1050 30%, #1a0a30 60%, #0d0515 100%);border:4px solid #ffd700;border-top:none;border-radius:0 0 20px 20px;position:relative;overflow:hidden;box-shadow:0 25px 60px rgba(0,0,0,0.8), 0 0 80px rgba(255,107,0,0.4), inset 0 0 80px rgba(255,215,0,0.15)' + rarityGlow + ';';
+    body.style.cssText = 'position:absolute;top:70px;left:0;width:100%;height:150px;background:url(/static/images/packs/pack-box-art.png) center/cover no-repeat, linear-gradient(145deg, #4a2080 0%, #2d1050 30%, #1a0a30 60%, #0d0515 100%);border:4px solid #ffd700;border-top:none;border-radius:0 0 20px 20px;overflow:hidden;box-shadow:0 25px 60px rgba(0,0,0,0.8), 0 0 80px rgba(255,107,0,0.4), inset 0 0 80px rgba(255,215,0,0.15)' + rarityGlow + ';';
+    
+    // Overlay for text readability
+    const overlay = document.createElement('div');
+    overlay.style.cssText = 'position:absolute;inset:0;background:linear-gradient(180deg, rgba(0,0,0,0.2) 0%, rgba(0,0,0,0.5) 100%);';
     
     // Inner content
     const inner = document.createElement('div');
     inner.style.cssText = 'position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;';
-    inner.innerHTML = '<div style="font-size:80px;filter:drop-shadow(0 0 40px rgba(255,107,0,0.9));animation:bagIconPulse 2s infinite;">🔥</div><div style="font-family:Orbitron,sans-serif;font-size:26px;background:linear-gradient(135deg, #ffd700, #ff6b00);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-top:10px;font-weight:900;letter-spacing:2px;">MEGA SUMMON</div><div style="font-size:14px;color:#ffd700;opacity:0.8;margin-top:8px;font-family:Orbitron,sans-serif;">🎁 ' + cardCount + ' CARDS INSIDE</div>';
+    inner.innerHTML = '<div style="font-family:Orbitron,sans-serif;font-size:22px;background:linear-gradient(135deg, #ffd700, #ff6b00);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;font-weight:900;letter-spacing:2px;text-shadow:0 2px 10px rgba(0,0,0,0.8);">MEGA SUMMON</div><div style="font-size:13px;color:#ffd700;opacity:0.9;margin-top:6px;font-family:Orbitron,sans-serif;">🎁 ' + cardCount + ' CARDS INSIDE</div>';
     
     // Card count badge
     const badge = document.createElement('div');
-    badge.style.cssText = 'position:absolute;top:15px;right:15px;background:linear-gradient(135deg, #ff6b00, #ffd700);color:#000;font-weight:900;font-size:22px;padding:10px 20px;border-radius:25px;font-family:Orbitron,sans-serif;box-shadow:0 6px 25px rgba(255,107,0,0.7);border:2px solid rgba(255,255,255,0.3);';
+    badge.style.cssText = 'position:absolute;top:10px;right:10px;background:linear-gradient(135deg, #ff6b00, #ffd700);color:#000;font-weight:900;font-size:18px;padding:8px 16px;border-radius:20px;font-family:Orbitron,sans-serif;box-shadow:0 6px 25px rgba(255,107,0,0.7);border:2px solid rgba(255,255,255,0.3);z-index:2;';
     badge.textContent = '×' + cardCount;
     
+    body.appendChild(overlay);
     body.appendChild(inner);
     body.appendChild(badge);
     packEl.appendChild(lid);
