@@ -1762,9 +1762,11 @@ if (typeof NW_WALLET === 'undefined') {
         getGuestId: () => 'DEV-MODE',
         isGMMode: () => true,
         getForgeState: () => ({ pityCounter: 0, totalPulls: 0 }),
-        getCollection: () => []
+        getCollection: () => [],
+        getBalance: () => 999999,  // DEV MODE: infinite currency
+        getWalletInfo: () => ({ guestId: 'DEV-MODE', balance: { wood: 999999 } })
     };
-    console.log('[FORGE] NW_WALLET stubbed');
+    console.log('[FORGE] NW_WALLET stubbed with getBalance');
 }
 if (typeof NW_GUILD === 'undefined') {
     window.NW_GUILD = { getRarityColor: (r) => ({ mythic:'#ff00ff', legendary:'#ffd700', epic:'#a855f7', rare:'#3b82f6', uncommon:'#22c55e', common:'#888' }[r] || '#888') };
@@ -1775,7 +1777,12 @@ if (typeof PremiumAudio === 'undefined') {
     console.log('[FORGE] PremiumAudio stubbed');
 }
 if (typeof NW_ANIM === 'undefined') {
-    window.NW_ANIM = { spring: () => {}, animate: () => {}, countTo: () => {} };
+    window.NW_ANIM = { 
+        spring: () => {}, 
+        animate: () => {}, 
+        countTo: (el, val) => { if (el) el.textContent = val; },
+        cssAnimate: () => {}
+    };
     console.log('[FORGE] NW_ANIM stubbed');
 }
 if (typeof NW_JUICE === 'undefined') {
@@ -1946,8 +1953,8 @@ async function initForgeAudio() {
     }
 }
 
-// Legacy wrapper for PremiumAudio compatibility
-const PremiumAudio = {
+// Legacy wrapper for PremiumAudio compatibility - extend the stub
+window.PremiumAudio = {
     initialized: true,
     init: () => initForgeAudio(),
     play: (name, vol = 1) => {
@@ -2214,6 +2221,46 @@ let CARDS = [];
 const IMAGE_BASE = '/static/images/cards/thumbs/'; // WebP thumbnails
 const IMAGE_FULL = '/static/images/cards/'; // Full resolution
 
+// DEV MODE: Generate sample cards when NW_CARDS not available
+function generateSampleCards() {
+    console.log('[FORGE] Generating sample cards...');
+    const rarities = ['common', 'uncommon', 'rare', 'epic', 'legendary', 'mythic'];
+    const names = {
+        mythic: ['RegginA Mythic', 'Dragon Lord', 'Phoenix King', 'Void Emperor'],
+        legendary: ['Reggino', 'Shadow Knight', 'Storm Mage', 'Iron Titan'],
+        epic: ['Onça', 'Panthera', 'Fire Wizard', 'Ice Queen'],
+        rare: ['Forest Ranger', 'Dark Archer', 'Holy Priest', 'Battle Mage'],
+        uncommon: ['Guard', 'Scout', 'Healer', 'Warrior'],
+        common: ['Soldier', 'Villager', 'Peasant', 'Recruit']
+    };
+    
+    const cards = [];
+    let id = 1;
+    
+    // Generate cards for each rarity
+    rarities.forEach(rarity => {
+        const count = rarity === 'mythic' ? 4 : rarity === 'legendary' ? 8 : rarity === 'epic' ? 12 : 20;
+        for (let i = 0; i < count; i++) {
+            const nameList = names[rarity];
+            const name = nameList[i % nameList.length] + (i >= nameList.length ? ` ${Math.floor(i/nameList.length)+1}` : '');
+            cards.push({
+                id: id++,
+                name: { en: name, zh: name, th: name },
+                rarity: rarity,
+                img: `placeholder-${rarity}.png`, // Will use placeholder
+                desc: `A ${rarity} card`,
+                role: 'fighter',
+                category: 'character',
+                gameStats: { atk: 10 + id, hp: 20 + id, cost: Math.ceil(id/10) },
+                abilities: [],
+                special: null
+            });
+        }
+    });
+    
+    return cards;
+}
+
 // Convert image filename to WebP thumbnail URL (20-40KB, FAST)
 function getCardThumbUrl(img) {
     if (!img) return '/static/images/cards/placeholder.webp';
@@ -2268,6 +2315,14 @@ async function preloadCommonCards() {
 // Load cards from central NW_CARDS system
 async function loadGachaCards() {
     try {
+        // DEV MODE: Use sample cards if NW_CARDS not available
+        if (typeof NW_CARDS === 'undefined' || !NW_CARDS.init) {
+            console.log('[FORGE] DEV MODE: Using sample cards');
+            CARDS = generateSampleCards();
+            console.log(`[FORGE] Loaded ${CARDS.length} sample cards`);
+            return CARDS;
+        }
+        
         await NW_CARDS.init();
         const allCards = NW_CARDS.getAll();
         CARDS = allCards.map(c => ({
@@ -2287,6 +2342,9 @@ async function loadGachaCards() {
         return CARDS;
     } catch (err) {
         console.error('Failed to load cards for gacha:', err);
+        // Fallback to sample cards
+        CARDS = generateSampleCards();
+        console.log(`[FORGE] Fallback: Loaded ${CARDS.length} sample cards`);
         return [];
     }
 }
@@ -2391,6 +2449,14 @@ const DEV_MODE = true; // Set to false for production
 if (DEV_MODE) {
     walletReady = true;
     console.log('[FORGE] DEV MODE: Wallet bypassed, infinite pulls enabled');
+    // Pre-populate CARDS immediately for DEV MODE
+    setTimeout(() => {
+        if (CARDS.length === 0) {
+            console.log('[FORGE] DEV MODE: Pre-loading sample cards');
+            CARDS = generateSampleCards();
+            console.log('[FORGE] DEV MODE: Loaded', CARDS.length, 'sample cards');
+        }
+    }, 100);
 }
 
 // DEV MODE UI - runs when page is ready
@@ -2509,6 +2575,8 @@ function showGMStatus() {
 
 // Wallet-based currency operations (GM mode handled by wallet)
 function getLogs() { 
+    // DEV MODE: Always return infinite
+    if (DEV_MODE) return 999999;
     if (!walletReady) return 0;
     // GM mode is handled in NW_WALLET.getBalance() - returns 999999 for GMs
     return NW_WALLET.getBalance('wood') || 0; 
@@ -2614,14 +2682,21 @@ function updateUI() {
     const mythicRateEl = document.getElementById('mythicRate');
     if (mythicRateEl) mythicRateEl.textContent = (rates.mythic * 100).toFixed(2) + '%';
     
-    document.getElementById('totalPulls').textContent = forgeState.totalPulls;
+    const totalPullsEl = document.getElementById('totalPulls');
+    if (totalPullsEl) totalPullsEl.textContent = forgeState.totalPulls;
     
     document.querySelectorAll('.pull-option').forEach(o => {
-        o.classList.toggle('disabled', getLogs() < parseInt(o.dataset.pulls));
+        // DEV MODE: Never disable options
+        if (DEV_MODE) {
+            o.classList.remove('disabled');
+        } else {
+            o.classList.toggle('disabled', getLogs() < parseInt(o.dataset.pulls));
+        }
     });
     
     const badges = { 1: '1 CARD', 5: '6 CARDS', 10: '12 CARDS' };
-    document.getElementById('packBadge').textContent = badges[selectedPulls];
+    const packBadgeEl = document.getElementById('packBadge');
+    if (packBadgeEl) packBadgeEl.textContent = badges[selectedPulls];
     
     renderHistory();
 }
@@ -2795,8 +2870,18 @@ function updatePityCounters(rarity) {
 }
 
 function getCard(rarity) {
+    console.log('[FORGE] getCard called, CARDS.length:', CARDS.length, 'rarity:', rarity);
+    if (CARDS.length === 0) {
+        console.error('[FORGE] ❌ CARDS array is empty! Generating sample cards...');
+        CARDS = generateSampleCards();
+    }
     const pool = CARDS.filter(c => c.rarity === rarity);
-    return pool[Math.floor(Math.random() * pool.length)] || CARDS[0];
+    console.log('[FORGE] Pool size for', rarity, ':', pool.length);
+    if (pool.length === 0) {
+        console.warn('[FORGE] No cards for rarity', rarity, ', using first card');
+        return CARDS[0];
+    }
+    return pool[Math.floor(Math.random() * pool.length)];
 }
 
 // ═══════════════════════════════════════════════════════════════════
@@ -4355,34 +4440,43 @@ function showToast(msg, rarity = null) {
 
 // Init - Load cards first, then state, then preload common images
 (async function() {
-    await loadGachaCards();
-    loadState();
-    
-    // 🎮 Initialize NW_FORGE with card pool
-    if (typeof NW_FORGE !== 'undefined') {
-        NW_FORGE.setCards(CARDS);
-        await NW_FORGE.init();
+    try {
+        console.log('[FORGE] 🚀 Initializing...');
         
-        // Subscribe to forge events
-        NW_FORGE.on('mythic', (card) => {
-            console.log('🎉 MYTHIC PULLED!', card);
-            // Could trigger global announcements here
-        });
+        await loadGachaCards();
+        console.log('[FORGE] ✅ Cards loaded:', CARDS.length);
         
-        NW_FORGE.on('legendary', (card) => {
-            console.log('⭐ LEGENDARY!', card);
-        });
+        loadState();
+        console.log('[FORGE] ✅ State loaded');
         
-        console.log(`[Forge] NW_FORGE initialized`);
+        // DEV MODE: Setup UI immediately
+        if (DEV_MODE) {
+            setupDevModeUI();
+            updateUI();
+            console.log('[FORGE] ✅ DEV MODE UI ready');
+        }
+        
+        // 🎮 Initialize NW_FORGE with card pool (skip if undefined)
+        if (typeof NW_FORGE !== 'undefined' && NW_FORGE.setCards) {
+            NW_FORGE.setCards(CARDS);
+            await NW_FORGE.init();
+            NW_FORGE.on('mythic', (card) => console.log('🎉 MYTHIC PULLED!', card));
+            NW_FORGE.on('legendary', (card) => console.log('⭐ LEGENDARY!', card));
+            console.log('[FORGE] ✅ NW_FORGE initialized');
+        }
+        
+        // 🎮 Initialize NW_STATE for persistence (skip if undefined)
+        if (typeof NW_STATE !== 'undefined' && NW_STATE.configure) {
+            NW_STATE.configure({ persist: true, debug: false });
+            console.log('[FORGE] ✅ NW_STATE persistence enabled');
+        }
+        
+        console.log('[FORGE] 🎮 READY with', CARDS.length, 'pullable cards');
+    } catch (err) {
+        console.error('[FORGE] ❌ Init error:', err);
+        // Still try to set up DEV MODE UI
+        if (DEV_MODE) setupDevModeUI();
     }
-    
-    // 🎮 Initialize NW_STATE for persistence
-    if (typeof NW_STATE !== 'undefined') {
-        NW_STATE.configure({ persist: true, debug: false });
-        console.log(`[Forge] NW_STATE persistence enabled`);
-    }
-    
-    console.log(`Forge ready with ${CARDS.length} pullable cards`);
     
     // 🚀 Background preload common cards for instant reveals
     setTimeout(() => {
@@ -4414,7 +4508,10 @@ if (TEST_MODE) {
 }
 
 setInterval(() => {
-    if (parseInt(document.getElementById('logBalance').textContent) !== getLogs()) updateUI();
+    // DEV MODE: Skip balance sync - always infinite
+    if (DEV_MODE) return;
+    const current = parseInt(document.getElementById('logBalance').textContent);
+    if (!isNaN(current) && current !== getLogs()) updateUI();
 }, 1000);
 </script>
 </body>
