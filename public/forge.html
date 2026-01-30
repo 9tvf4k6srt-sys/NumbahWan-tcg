@@ -382,11 +382,25 @@
             /* BIG - 80% of viewport width */
             width: 80vw !important;
             height: calc(80vw * 1.4) !important;
-            max-height: 70vh; /* Don't overflow screen */
+            max-height: 75vh; /* Don't overflow screen */
             position: relative; 
             transform-style: preserve-3d; 
             cursor: pointer;
             border-radius: 16px;
+            /* Default state - FULL SIZE */
+            transform: scale(1) translateY(0);
+            opacity: 1;
+        }
+        
+        /* Card entrance animation via CSS class */
+        .reveal-card.card-entrance-start {
+            transform: scale(0.3) translateY(100px);
+            opacity: 0;
+        }
+        .reveal-card.card-entrance-end {
+            transform: scale(1) translateY(0);
+            opacity: 1;
+            transition: transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.2s ease;
         }
         
         .card-inner { 
@@ -3634,7 +3648,7 @@ function revealCard() {
     
     // Reset state
     const cardInner = document.getElementById('cardInner');
-    const revealCard = document.getElementById('revealCard');
+    const revealCardEl = document.getElementById('revealCard'); // Renamed to avoid conflict with function name
     cardInner.classList.remove('flipped');
     document.getElementById('rarityBadge').classList.remove('show');
     document.getElementById('cardInfo').classList.remove('show');
@@ -3668,29 +3682,45 @@ function revealCard() {
     badge.textContent = card.rarity.toUpperCase();
     badge.className = 'rarity-badge ' + card.rarity;
     
-    // Card entrance animation - use NW_ANIM spring physics if available
-    if (typeof NW_ANIM !== 'undefined') {
-        // Spring bounce entrance - feels premium!
-        revealCard.style.transform = 'scale(0.3) translateY(100px)';
-        revealCard.style.opacity = '0';
-        
-        requestAnimationFrame(() => {
-            NW_ANIM.animate(revealCard, {
+    // Card entrance animation - CSS-first approach with NW_ANIM enhancement
+    // IMPORTANT: Always use CSS classes to ensure proper sizing
+    revealCardEl.classList.remove('card-entrance-end');
+    revealCardEl.classList.add('card-entrance-start');
+    
+    // Force reflow
+    void revealCardEl.offsetWidth;
+    
+    // Start animation
+    requestAnimationFrame(() => {
+        if (typeof NW_ANIM !== 'undefined') {
+            // Use NW_ANIM spring physics for premium feel
+            NW_ANIM.animate(revealCardEl, {
                 opacity: '1'
             }, { duration: 200, easing: 'easeOutQuad' });
             
-            NW_ANIM.spring(revealCard, 'transform', 'scale(1) translateY(0)', {
+            NW_ANIM.spring(revealCardEl, 'transform', 'scale(1) translateY(0)', {
                 stiffness: 180,
                 damping: 12,
                 mass: 1
+            }).then(() => {
+                // Ensure final state
+                revealCardEl.classList.remove('card-entrance-start');
+                revealCardEl.style.transform = 'scale(1) translateY(0)';
+                revealCardEl.style.opacity = '1';
             });
-        });
-    } else {
-        // Fallback CSS animation
-        revealCard.classList.remove('card-entrance');
-        void revealCard.offsetWidth;
-        revealCard.classList.add('card-entrance');
-    }
+        } else {
+            // Pure CSS fallback - always works
+            revealCardEl.classList.remove('card-entrance-start');
+            revealCardEl.classList.add('card-entrance-end');
+        }
+        
+        // SAFETY NET: Ensure card reaches full size after 600ms no matter what
+        setTimeout(() => {
+            revealCardEl.classList.remove('card-entrance-start');
+            revealCardEl.style.transform = 'scale(1) translateY(0)';
+            revealCardEl.style.opacity = '1';
+        }, 600);
+    });
     
     // Create rays based on rarity
     createRays(card.rarity);
@@ -3734,18 +3764,18 @@ function revealCard() {
     
     // Add pulsing glow during anticipation for high rarity
     if (['epic', 'legendary', 'mythic'].includes(card.rarity)) {
-        revealCard.classList.add('rarity-tease');
-        revealCard.style.setProperty('--tease-color', hintColor);
+        revealCardEl.classList.add('rarity-tease');
+        revealCardEl.style.setProperty('--tease-color', hintColor);
         
         // 🎮 NW_JUICE anticipation with escalating haptics
         if (typeof NW_JUICE !== 'undefined') {
-            NW_JUICE.gacha.anticipate(revealCard, delay);
+            NW_JUICE.gacha.anticipate(revealCardEl, delay);
         }
     }
     
     setTimeout(() => {
         // Remove tease effect
-        revealCard.classList.remove('rarity-tease');
+        revealCardEl.classList.remove('rarity-tease');
         if (cardBack) cardBack.style.boxShadow = '';
         
         playSound('flip');
@@ -3753,11 +3783,11 @@ function revealCard() {
         
         // \ud83c\udfae NW_ANIM bounce effect on flip for high rarity
         if (typeof NW_ANIM !== 'undefined' && ['epic', 'legendary', 'mythic'].includes(card.rarity)) {
-            NW_ANIM.spring(revealCard, 'transform', 'scale(1.05)', {
+            NW_ANIM.spring(revealCardEl, 'transform', 'scale(1.05)', {
                 stiffness: 300,
                 damping: 8
             }).then(() => {
-                NW_ANIM.spring(revealCard, 'transform', 'scale(1)', {
+                NW_ANIM.spring(revealCardEl, 'transform', 'scale(1)', {
                     stiffness: 200,
                     damping: 15
                 });
