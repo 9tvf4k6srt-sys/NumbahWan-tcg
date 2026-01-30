@@ -3730,20 +3730,23 @@
             const clientX = e.touches ? e.touches[0].clientX : e.clientX;
             const clientY = e.touches ? e.touches[0].clientY : e.clientY;
             
-            // Store original position
+            // Store original position BEFORE moving card
             this.startRect = cardEl.getBoundingClientRect();
             
-            // Calculate offset so card centers on touch
+            // Calculate offset so card centers under finger
             this.offsetX = this.startRect.width / 2;
             this.offsetY = this.startRect.height / 2;
             this.currentPos = { x: clientX, y: clientY };
             
-            // Create placeholder in hand
+            // Create placeholder in hand where card was
             this.placeholder = document.createElement('div');
             this.placeholder.className = 'hand-card-placeholder';
             cardEl.parentNode.insertBefore(this.placeholder, cardEl);
             
-            // Make the card follow the finger
+            // IMPORTANT: Move card to body so it's not clipped by hand container
+            document.body.appendChild(cardEl);
+            
+            // Apply dragging styles and position
             cardEl.classList.add('is-dragging');
             this.updateCardPosition(clientX, clientY);
             
@@ -3870,21 +3873,15 @@
             
             if (targetSlot && this.dragCard && this.dragCardIndex !== null) {
                 // SUCCESS - play card to slot!
-                // Remove placeholder
+                // Remove placeholder and dragged card element
                 if (this.placeholder) this.placeholder.remove();
+                if (this.dragCardEl) this.dragCardEl.remove();
                 
-                // Reset card styling before playing (it will be re-rendered)
-                if (this.dragCardEl) {
-                    this.dragCardEl.classList.remove('is-dragging');
-                    this.dragCardEl.style.left = '';
-                    this.dragCardEl.style.top = '';
-                }
-                
-                // Play the card
+                // Play the card (this will re-render hand and board)
                 gameState.selectedCard = this.dragCardIndex;
                 await playCardToSlot(targetSlot.idx);
                 
-                // Snap animation
+                // Snap animation on the new board card
                 setTimeout(() => {
                     const newCard = targetSlot.slot.querySelector('.board-card');
                     if (newCard) {
@@ -3894,26 +3891,17 @@
                 }, 50);
                 
             } else {
-                // CANCELLED - return card to hand
+                // CANCELLED - return card to hand by re-rendering
+                // Remove the dragged card from body (it was moved there)
                 if (this.dragCardEl) {
-                    // Animate back to original position
-                    this.dragCardEl.style.transition = 'all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
-                    this.dragCardEl.style.left = this.startRect.left + 'px';
-                    this.dragCardEl.style.top = this.startRect.top + 'px';
-                    this.dragCardEl.style.transform = '';
-                    
-                    setTimeout(() => {
-                        if (this.dragCardEl) {
-                            this.dragCardEl.classList.remove('is-dragging');
-                            this.dragCardEl.style.left = '';
-                            this.dragCardEl.style.top = '';
-                            this.dragCardEl.style.transition = '';
-                        }
-                        if (this.placeholder) this.placeholder.remove();
-                    }, 300);
-                } else {
-                    if (this.placeholder) this.placeholder.remove();
+                    this.dragCardEl.remove();
                 }
+                if (this.placeholder) {
+                    this.placeholder.remove();
+                }
+                
+                // Re-render hand to restore the card
+                renderHand();
                 
                 try { Audio.play('select'); } catch(err) {}
             }
