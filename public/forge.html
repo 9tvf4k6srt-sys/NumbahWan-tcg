@@ -8,22 +8,22 @@
     <link rel="stylesheet" href="/static/nw-utilities.css">
     <link rel="stylesheet" href="/static/nw-card-reveal.css">
     <link rel="stylesheet" href="/static/nw-card-frames.css">
-    <!-- Essential Utilities (168 lines vs 4700+ old helpers) -->
-    <!-- ============================================
-         SCRIPTS DISABLED FOR DEBUGGING
-         The wallet/helpers were blocking the page
-         ============================================ -->
-    <!-- <script src="/static/nw-essentials.js"></script> -->
-    <!-- <script src="/static/helpers/nw-core.js"></script> -->
-    <!-- <script src="/static/helpers/nw-state.js"></script> -->
-    <!-- <script src="/static/helpers/nw-guild.js"></script> -->
-    <!-- <script src="/static/helpers/nw-forge.js"></script> -->
-    <!-- <script src="/static/nw-icons-inline.js"></script> -->
-    <!-- <script src="/static/nw-wallet.js"></script> -->
-    <!-- <script src="/static/nw-cards.js"></script> -->
-    <!-- <script src="/static/nw-card-renderer.js"></script> -->
-    <!-- <script src="/static/nw-game-juice.js"></script> -->
-    <!-- <script src="/static/nw-3d-engine.js"></script> -->
+    <!-- Essential Libraries - RE-ENABLED for Premium Audio & Game Juice -->
+    <script src="/static/nw-essentials.js"></script>
+    <script src="/static/nw-game-juice.js"></script>
+    <!-- Optional: Cards and Rendering (enable if needed)
+    <script src="/static/nw-cards.js"></script>
+    <script src="/static/nw-card-renderer.js"></script>
+    -->
+    <!-- Disabled: These were causing blocking issues
+    <script src="/static/helpers/nw-core.js"></script>
+    <script src="/static/helpers/nw-state.js"></script>
+    <script src="/static/helpers/nw-guild.js"></script>
+    <script src="/static/helpers/nw-forge.js"></script>
+    <script src="/static/nw-icons-inline.js"></script>
+    <script src="/static/nw-wallet.js"></script>
+    <script src="/static/nw-3d-engine.js"></script>
+    -->
     <link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     
@@ -1982,18 +1982,15 @@ async function initForgeAudio() {
     }
 }
 
-// Legacy wrapper for PremiumAudio compatibility - extend the stub
+// Legacy wrapper for PremiumAudio - use synth sounds directly since NW_AUDIO not available
 window.PremiumAudio = {
-    initialized: true,
-    init: () => initForgeAudio(),
+    initialized: false, // Set to false to force synth fallback
+    init: () => initAudio(), // Use local audio init
     play: (name, vol = 1) => {
-        if (typeof NW_AUDIO !== 'undefined') {
-            NW_AUDIO.play(name, { volume: vol });
-        }
+        // NW_AUDIO not available in standalone mode - use synth
+        console.log('[PremiumAudio] play:', name, '(synth fallback)');
     },
-    buffers: new Proxy({}, {
-        get: () => true // Always return truthy so checks pass
-    })
+    buffers: {} // Empty - so checks fail and synth is used
 };
 
 // Initialize on first interaction
@@ -2010,11 +2007,8 @@ function playSound(type) {
     // Always trigger haptic
     haptic(type);
     
-    // Try premium MP3 audio first (way better!)
-    if (PremiumAudio.initialized && PremiumAudio.buffers[type]) {
-        PremiumAudio.play(type);
-        return;
-    }
+    // Skip MP3 - go directly to synth since NW_AUDIO not available
+    // (PremiumAudio is stubbed to force synth fallback)
     
     // Fallback to synth audio - init if needed
     if (!audioCtx) {
@@ -3421,7 +3415,9 @@ async function showPackOpening(cards) {
         console.log('[FORGE] Overlay shown');
         
         // Play anticipation sound on show
-        if (typeof PremiumAudio !== 'undefined' && PremiumAudio.initialized) {
+        if (typeof NW_JUICE !== 'undefined') {
+            NW_JUICE.sound.play('anticipation');
+        } else if (typeof PremiumAudio !== 'undefined') {
             PremiumAudio.play('anticipation');
         }
         
@@ -3614,10 +3610,16 @@ async function tearOpenPack(packEl, cards, isBox) {
     const instruction = document.getElementById('packInstruction');
     instruction.classList.add('hidden');
     
-    // TEAR SOUND + HAPTIC
-    PremiumAudio.play('impact');
-    haptic('impact');
-    screenShake(8, 300);
+    // TEAR SOUND + HAPTIC - Use NW_JUICE if available
+    if (typeof NW_JUICE !== 'undefined') {
+        NW_JUICE.sound.play('impact_heavy');
+        NW_JUICE.screen.shake('medium');
+        NW_JUICE.haptic.heavy();
+    } else {
+        PremiumAudio.play('impact');
+        haptic('impact');
+        screenShake(8, 300);
+    }
     
     if (isBox) {
         // === BOX OPENING - Lid pops off realistically ===
@@ -3630,7 +3632,8 @@ async function tearOpenPack(packEl, cards, isBox) {
             lid.style.transform = 'translateZ(50px) rotateX(-30deg) translateY(-20px)';
             
             await sleep(150);
-            PremiumAudio.play('flip');
+            if (typeof NW_JUICE !== 'undefined') NW_JUICE.sound.play('flip');
+            else PremiumAudio.play('flip');
             
             // Phase 2: Lid flies off and spins away
             lid.style.transition = 'all 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
@@ -3656,7 +3659,8 @@ async function tearOpenPack(packEl, cards, isBox) {
         await sleep(150);
         
         // === PHASE 2: THE FLASH (hides the split) ===
-        PremiumAudio.play('flip');
+        if (typeof NW_JUICE !== 'undefined') NW_JUICE.sound.play('flip');
+        else PremiumAudio.play('flip');
         
         // Trigger flash and energy line
         if (tearFlash) {
@@ -3862,7 +3866,8 @@ async function showCardsFlying(packEl, cards) {
             `;
             document.body.appendChild(cardEl);
             
-            PremiumAudio.play('flip');
+            if (typeof NW_JUICE !== 'undefined') NW_JUICE.sound.play('flip');
+            else PremiumAudio.play('flip');
             
             // \ud83c\udfae Use NW_ANIM spring physics for buttery card flying
             const angle = (i / Math.min(cards.length, 6)) * Math.PI * 0.6 - Math.PI * 0.3;
@@ -4261,8 +4266,12 @@ function revealCard() {
         createSparkles();
     }
     
-    // Play anticipation sound
-    playSound('anticipation');
+    // Play anticipation sound - prefer NW_JUICE
+    if (typeof NW_JUICE !== 'undefined') {
+        NW_JUICE.sound.play('anticipation', 0.5);
+    } else {
+        playSound('anticipation');
+    }
     
     // 🎰 RARITY HINT SYSTEM - Build suspense with color tease!
     const rarityColors = {
@@ -4309,7 +4318,9 @@ function revealCard() {
         revealCardEl.classList.remove('rarity-tease');
         if (cardBack) cardBack.style.boxShadow = '';
         
-        playSound('flip');
+        // Play flip sound - prefer NW_JUICE
+        if (typeof NW_JUICE !== 'undefined') NW_JUICE.sound.play('flip');
+        else playSound('flip');
         // DISABLED flip since card front is already visible
         // cardInner.classList.add('flipped');
         
@@ -4333,7 +4344,10 @@ function revealCard() {
         
         // Impact sound for legendary+ (delayed for dramatic effect)
         if (['legendary', 'mythic'].includes(card.rarity)) {
-            setTimeout(() => playSound('impact'), 250);
+            setTimeout(() => {
+                if (typeof NW_JUICE !== 'undefined') NW_JUICE.sound.play('impact_heavy');
+                else playSound('impact');
+            }, 250);
         }
         
         // After flip, show effects - REDUCED delay for mobile
@@ -4384,66 +4398,46 @@ function showRarityEffects(card) {
     const energyRing = document.getElementById('energyRing');
     
     // ═══════════════════════════════════════════════════════════════════
-    // 🎰 RARITY-SPECIFIC AUDIO-VISUAL EXPERIENCE
-    // Each tier has unique sound + visual combo for maximum satisfaction
+    // 🎰 NW_JUICE PREMIUM EFFECTS - Full game juice experience!
     // ═══════════════════════════════════════════════════════════════════
-    if (rarity === 'mythic') {
-        // \ud83d\udc8e MAXIMUM HYPE - Unforgettable moment
-        playSound('mythic');
-        screenFlash('#ff00ff');
-        screenFlash('#00ffff', 100);
-        screenFlash('#ffffff', 200);
-        screenShake(15, 600);
-        createParticles('#ff00ff', 200);
-        createParticles('#00ffff', 150);
-        createParticles('#ffff00', 100);
-        createParticles('#ffffff', 80);
-        energyRing.classList.add('pulse');
-        setTimeout(() => energyRing.classList.remove('pulse'), 1200);
-        // Continuous sparkle rain
-        startSparkleRain('#ff00ff', 3000);
-        setTimeout(() => showMythicCelebration(card), 2500);
-        // \ud83c\udf89 Premium toast notification
-        showToast(`\ud83d\udc8e MYTHIC! ${card.name[lang] || card.name.en}`, 'mythic');
-    } else if (rarity === 'legendary') {
-        // \u2b50 LEGENDARY HYPE - Golden triumph
-        playSound('legendary');
-        screenFlash('#ffd700');
-        screenFlash('#ff6b00', 150);
-        screenShake(10, 400);
-        createParticles('#ffd700', 150);
-        createParticles('#ff6b00', 80);
-        createParticles('#ffffff', 40);
-        energyRing.classList.add('pulse');
-        setTimeout(() => energyRing.classList.remove('pulse'), 800);
-        startSparkleRain('#ffd700', 1500);
-        // \ud83c\udf1f Premium toast
-        showToast(`\u2b50 LEGENDARY! ${card.name[lang] || card.name.en}`, 'legendary');
-    } else if (rarity === 'epic') {
-        // \ud83d\udc9c EPIC - Purple power
-        playSound('epic');
-        screenFlash('#a855f7', 0, 0.3);
-        screenShake(5, 200);
-        createParticles('#a855f7', 100);
-        createParticles('#7c3aed', 50);
-        startSparkleRain('#a855f7', 800);
-        showToast(`\ud83d\udc9c EPIC! ${card.name[lang] || card.name.en}`, 'epic');
-    } else if (rarity === 'rare') {
-        // \ud83d\udc99 RARE - Blue satisfaction
-        playSound('rare');
-        createParticles('#3b82f6', 70);
-        createParticles('#60a5fa', 30);
-        screenFlash('#3b82f6', 0, 0.2);
-    } else if (rarity === 'uncommon') {
-        // \ud83d\udc9a UNCOMMON - Green glow
-        playSound('uncommon');
-        createParticles('#22c55e', 40);
-        createParticles('#4ade80', 20);
+    if (typeof NW_JUICE !== 'undefined') {
+        // Use the premium NW_JUICE system for all effects
+        const revealCardEl = document.getElementById('revealCard');
+        console.log('[FORGE] 🎮 NW_JUICE.gacha.reveal:', rarity);
+        NW_JUICE.gacha.reveal(revealCardEl, rarity);
+        
+        // Extra effects for high rarities
+        if (rarity === 'mythic') {
+            energyRing.classList.add('pulse');
+            setTimeout(() => energyRing.classList.remove('pulse'), 1200);
+            startSparkleRain('#ff00ff', 3000);
+            setTimeout(() => showMythicCelebration(card), 2500);
+            showToast(`💎 MYTHIC! ${card.name[lang] || card.name.en}`, 'mythic');
+        } else if (rarity === 'legendary') {
+            energyRing.classList.add('pulse');
+            setTimeout(() => energyRing.classList.remove('pulse'), 800);
+            startSparkleRain('#ffd700', 1500);
+            showToast(`⭐ LEGENDARY! ${card.name[lang] || card.name.en}`, 'legendary');
+        } else if (rarity === 'epic') {
+            startSparkleRain('#a855f7', 800);
+            showToast(`💜 EPIC! ${card.name[lang] || card.name.en}`, 'epic');
+        }
     } else {
-        // ⚪ COMMON - Still satisfying!
-        playSound('common');
-        createParticles('#9ca3af', 25);
-        createParticles('#d1d5db', 15);
+        // Fallback to local functions if NW_JUICE not loaded
+        console.warn('[FORGE] NW_JUICE not available, using fallback');
+        playSound(rarity);
+        if (['mythic', 'legendary', 'epic'].includes(rarity)) {
+            const colors = { mythic: '#ff00ff', legendary: '#ffd700', epic: '#a855f7' };
+            screenFlash(colors[rarity]);
+            screenShake(rarity === 'mythic' ? 15 : rarity === 'legendary' ? 10 : 5, 400);
+            createParticles(colors[rarity], 100);
+            energyRing.classList.add('pulse');
+            setTimeout(() => energyRing.classList.remove('pulse'), 800);
+            if (rarity === 'mythic') setTimeout(() => showMythicCelebration(card), 2500);
+            showToast(`${rarity.toUpperCase()}! ${card.name[lang] || card.name.en}`, rarity);
+        } else {
+            createParticles(rarity === 'rare' ? '#3b82f6' : rarity === 'uncommon' ? '#22c55e' : '#9ca3af', 40);
+        }
     }
     
     // Show continue button
