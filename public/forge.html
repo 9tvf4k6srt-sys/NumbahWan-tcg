@@ -1523,7 +1523,7 @@
                 <!-- Swipe pack will be inserted here -->
             </div>
             <div class="pack-instruction" id="packInstruction">
-                <span class="swipe-text">👆 SWIPE UP TO TEAR OPEN 👆</span>
+                <span class="swipe-text">👈 SWIPE SIDEWAYS TO TEAR 👉</span>
                 <div class="swipe-arrow">↑</div>
             </div>
             <!-- Swipe progress indicator -->
@@ -2610,7 +2610,7 @@ function createPackBag(cardCount, highestRarity) {
     inner.innerHTML = `
         <div style="font-size:120px;filter:drop-shadow(0 0 50px rgba(255,107,0,1));animation:bagIconPulse 2s infinite;">🔥</div>
         <div style="font-family:Orbitron,sans-serif;font-size:28px;background:linear-gradient(135deg, #ffd700, #ff6b00);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-top:10px;font-weight:900;letter-spacing:3px;">MYTHIC FORGE</div>
-        <div style="font-size:14px;color:#ffd700;opacity:0.8;margin-top:8px;font-family:Orbitron,sans-serif;">👆 SWIPE UP TO OPEN</div>
+        <div style="font-size:16px;color:#ffd700;opacity:0.9;margin-top:12px;font-family:Orbitron,sans-serif;">👈 SWIPE TO TEAR 👉</div>
     `;
     
     // Card count badge
@@ -2719,7 +2719,7 @@ async function showPackOpening(cards) {
         if (cards.length > 6) {
             swipeText.textContent = '👆 SWIPE UP TO OPEN BOX 👆';
         } else {
-            swipeText.textContent = '👆 SWIPE UP TO TEAR OPEN 👆';
+            swipeText.textContent = '👈 SWIPE SIDEWAYS TO TEAR 👉';
         }
         
         // Create and add new pack
@@ -2743,17 +2743,22 @@ async function showPackOpening(cards) {
 }
 
 // Setup swipe-to-tear handlers
+// BAG: Swipe LEFT or RIGHT to tear seal sideways
+// BOX: Swipe UP to open lid
 function setupSwipeHandlers(packEl, cards, progressBar) {
     const isBox = packEl.classList.contains('pack-box');
     let opened = false;
     
-    // Reset swipe state
+    // Reset swipe state - track both X and Y for different gestures
     swipeState = {
         active: false,
+        startX: 0,
         startY: 0,
+        currentX: 0,
         currentY: 0,
-        threshold: isBox ? 100 : 150,
-        progress: 0
+        threshold: isBox ? 100 : 120, // Sideways needs less distance
+        progress: 0,
+        direction: 0 // -1 = left, 1 = right
     };
     
     const handleStart = (e) => {
@@ -2761,7 +2766,9 @@ function setupSwipeHandlers(packEl, cards, progressBar) {
         e.preventDefault();
         const touch = e.touches ? e.touches[0] : e;
         swipeState.active = true;
+        swipeState.startX = touch.clientX;
         swipeState.startY = touch.clientY;
+        swipeState.direction = 0;
         progressBar.classList.add('active');
         
         // Start subtle shake
@@ -2773,11 +2780,21 @@ function setupSwipeHandlers(packEl, cards, progressBar) {
         if (!swipeState.active || opened) return;
         e.preventDefault();
         const touch = e.touches ? e.touches[0] : e;
+        swipeState.currentX = touch.clientX;
         swipeState.currentY = touch.clientY;
         
-        // Calculate upward swipe distance
-        const deltaY = swipeState.startY - swipeState.currentY;
-        swipeState.progress = Math.max(0, Math.min(1, deltaY / swipeState.threshold));
+        let delta;
+        if (isBox) {
+            // Box: Swipe UP to open lid
+            delta = swipeState.startY - swipeState.currentY;
+        } else {
+            // Bag: Swipe LEFT or RIGHT to tear (use absolute X distance)
+            const deltaX = swipeState.currentX - swipeState.startX;
+            delta = Math.abs(deltaX);
+            swipeState.direction = deltaX > 0 ? 1 : -1; // Track direction
+        }
+        
+        swipeState.progress = Math.max(0, Math.min(1, delta / swipeState.threshold));
         
         // Update progress bar
         const progressFill = document.getElementById('swipeProgressFill');
@@ -2785,22 +2802,28 @@ function setupSwipeHandlers(packEl, cards, progressBar) {
         
         // Visual feedback during swipe
         if (isBox) {
-            // Rotate lid based on progress
+            // Rotate lid based on progress (upward swipe)
             const lid = packEl.querySelector('.pack-box-lid');
             if (lid) {
                 lid.style.transform = `rotateX(${-swipeState.progress * 120}deg)`;
             }
         } else {
-            // Rotate seal based on progress
+            // Bag: Seal slides sideways and rotates as it tears
             const seal = packEl.querySelector('.pack-bag-seal');
             if (seal) {
-                seal.style.transform = `rotateX(${-swipeState.progress * 80}deg) translateY(${-swipeState.progress * 20}px)`;
+                const slideX = swipeState.progress * 80 * swipeState.direction;
+                const rotate = swipeState.progress * 25 * swipeState.direction;
+                const scaleY = 1 - (swipeState.progress * 0.3);
+                seal.style.transform = `translateX(${slideX}px) rotate(${rotate}deg) scaleY(${scaleY})`;
+                seal.style.opacity = 1 - (swipeState.progress * 0.5);
             }
         }
         
         // Intensify shake as progress increases
         if (swipeState.progress > 0.3) {
-            packEl.style.transform = `translateX(${(Math.random() - 0.5) * swipeState.progress * 10}px)`;
+            const shakeX = (Math.random() - 0.5) * swipeState.progress * 8;
+            const shakeY = (Math.random() - 0.5) * swipeState.progress * 4;
+            packEl.style.transform = `translate(${shakeX}px, ${shakeY}px)`;
         }
         
         // Haptic at milestones
@@ -2828,7 +2851,7 @@ function setupSwipeHandlers(packEl, cards, progressBar) {
         packEl.style.transform = '';
         
         // If progress reached threshold, TEAR OPEN!
-        if (swipeState.progress >= 0.95) {
+        if (swipeState.progress >= 0.9) {
             opened = true;
             tearOpenPack(packEl, cards, isBox);
         } else {
@@ -2855,6 +2878,7 @@ function setupSwipeHandlers(packEl, cards, progressBar) {
             // Quick tap animation then open
             opened = true;
             packEl.classList.add('shaking');
+            swipeState.direction = Math.random() > 0.5 ? 1 : -1; // Random direction for tap
             setTimeout(() => tearOpenPack(packEl, cards, isBox), 500);
         }
     });
@@ -2880,25 +2904,37 @@ async function tearOpenPack(packEl, cards, isBox) {
     screenShake(10, 400);
     
     if (isBox) {
-        // Box opening animation
+        // Box opening animation - lid flips up and back
         packEl.classList.add('opening');
+        const lid = packEl.querySelector('.pack-box-lid');
+        if (lid) {
+            lid.style.transition = 'transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1)';
+            lid.style.transform = 'rotateX(-150deg) translateY(-30px)';
+        }
         
-        // Lid flies off
         await sleep(300);
-        
-        // Show cards inside
         PremiumAudio.play('flip');
     } else {
-        // Bag tearing animation  
+        // Bag tearing animation - seal flies off to the side!
         packEl.classList.add('tearing');
+        const seal = packEl.querySelector('.pack-bag-seal');
         
-        // Tear effect
+        if (seal) {
+            // Direction from swipe (or random if tapped)
+            const dir = swipeState.direction || (Math.random() > 0.5 ? 1 : -1);
+            
+            // Seal tears off and falls to the side with spin
+            seal.style.transition = 'all 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+            seal.style.transform = `translateX(${dir * 350}px) translateY(150px) rotate(${dir * 45}deg) scale(0.5)`;
+            seal.style.opacity = '0';
+            
+            // Play tear sound
+            PremiumAudio.play('flip');
+        }
+        
+        // Tear effect particles
         const tearEffect = document.getElementById('tearEffect');
         tearEffect.classList.add('active', 'tearing');
-        
-        // Draw tear path
-        const tearPath = document.getElementById('tearPath');
-        tearPath.setAttribute('d', 'M 50 60 Q 150 40 250 70');
     }
     
     // Rarity glow
@@ -2928,7 +2964,18 @@ async function tearOpenPack(packEl, cards, isBox) {
     
     await sleep(400);
     
-    // Cleanup
+    // Cleanup - reset seal for next time
+    const seal = packEl.querySelector('.pack-bag-seal');
+    if (seal) {
+        seal.style.transition = '';
+        seal.style.transform = '';
+        seal.style.opacity = '';
+    }
+    const lid = packEl.querySelector('.pack-box-lid');
+    if (lid) {
+        lid.style.transition = '';
+        lid.style.transform = '';
+    }
     packEl.classList.remove('opening', 'tearing', 'glow-mythic', 'glow-legendary', 'glow-epic');
     
     if (packOpeningResolve) {
