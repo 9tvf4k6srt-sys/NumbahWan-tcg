@@ -2760,18 +2760,24 @@ const PACK_CONFIG = {
     }
 };
 
-// Create pack - ULTRA SIMPLE - JUST THE IMAGE
+// ═══════════════════════════════════════════════════════════════════
+// 🎴 FLASH MASK TEAR SYSTEM - Based on South Park: Phone Destroyer
+// The "tear" is actually:
+// 1. One image split into TOP/BOTTOM using clip-path
+// 2. A bright flash hides the transition
+// 3. Both halves fly apart with rotation
+// ═══════════════════════════════════════════════════════════════════
+
 function createPackBag(cardCount, highestRarity) {
-    console.log('[FORGE] Creating pack for', cardCount, 'cards');
+    console.log('[FORGE] Creating tearable pack for', cardCount, 'cards');
     
     const packEl = document.createElement('div');
     packEl.dataset.cardCount = cardCount;
     packEl.classList.add('pack-bag');
     
-    // Select pack image
     const packImage = PACK_CONFIG.getImage(cardCount);
     
-    // MINIMAL STYLING - just size, NO backgrounds
+    // Container - same size as reveal card
     packEl.style.cssText = `
         position: relative;
         width: ${PACK_CONFIG.WIDTH};
@@ -2782,24 +2788,81 @@ function createPackBag(cardCount, highestRarity) {
         background: transparent;
     `;
     
-    // Pack image ONLY
-    const packImg = document.createElement('img');
-    packImg.src = packImage;
-    packImg.alt = 'Pack';
-    packImg.style.cssText = `
-        width: 100%;
-        height: 100%;
-        object-fit: contain;
+    // === TOP HALF (will fly up) ===
+    const topHalf = document.createElement('div');
+    topHalf.className = 'pack-half pack-top';
+    topHalf.style.cssText = `
+        position: absolute;
+        top: 0; left: 0;
+        width: 100%; height: 100%;
+        background: url('${packImage}') center/contain no-repeat;
+        background-position: top center;
+        clip-path: inset(0 0 50% 0);
+        transition: transform 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94), opacity 0.5s;
+        transform-origin: bottom center;
     `;
-    packImg.onerror = () => {
-        console.error('[FORGE] Image failed:', packImage);
-        // Show error state
-        packEl.style.background = 'red';
-        packEl.innerHTML = '<div style="color:white;text-align:center;padding-top:40%">IMAGE FAILED</div>';
-    };
     
-    // Simple count text overlay
+    // === BOTTOM HALF (will fly down) ===
+    const bottomHalf = document.createElement('div');
+    bottomHalf.className = 'pack-half pack-bottom';
+    bottomHalf.style.cssText = `
+        position: absolute;
+        top: 0; left: 0;
+        width: 100%; height: 100%;
+        background: url('${packImage}') center/contain no-repeat;
+        background-position: bottom center;
+        clip-path: inset(50% 0 0 0);
+        transition: transform 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94), opacity 0.5s;
+        transform-origin: top center;
+    `;
+    
+    // === TEAR FLASH (hides the split moment) ===
+    const tearFlash = document.createElement('div');
+    tearFlash.className = 'pack-tear-flash';
+    tearFlash.style.cssText = `
+        position: absolute;
+        top: 45%; left: -20%;
+        width: 140%; height: 10%;
+        background: linear-gradient(90deg, 
+            transparent 0%, 
+            rgba(255,255,255,0.9) 20%,
+            rgba(255,220,180,1) 50%,
+            rgba(255,255,255,0.9) 80%,
+            transparent 100%);
+        opacity: 0;
+        transform: scaleY(0);
+        transition: opacity 0.15s, transform 0.15s;
+        pointer-events: none;
+        z-index: 10;
+        filter: blur(8px);
+    `;
+    
+    // === ENERGY LINE (the "rip" visual) ===
+    const energyLine = document.createElement('div');
+    energyLine.className = 'pack-energy-line';
+    energyLine.style.cssText = `
+        position: absolute;
+        top: 48%; left: 0;
+        width: 100%; height: 4%;
+        background: linear-gradient(90deg,
+            transparent 0%,
+            #ff69b4 15%,
+            #fff 30%,
+            #ffff00 50%,
+            #fff 70%,
+            #ff69b4 85%,
+            transparent 100%);
+        opacity: 0;
+        transform: scaleX(0);
+        transition: transform 0.2s ease-out, opacity 0.3s;
+        pointer-events: none;
+        z-index: 11;
+        box-shadow: 0 0 30px #ff69b4, 0 0 60px #ffff00;
+    `;
+    
+    // === CARD COUNT LABEL ===
     const label = document.createElement('div');
+    label.className = 'pack-count-label';
     label.style.cssText = `
         position: absolute;
         bottom: 10%;
@@ -2811,13 +2874,37 @@ function createPackBag(cardCount, highestRarity) {
         font-weight: bold;
         text-shadow: 0 2px 8px black, 0 0 20px black;
         pointer-events: none;
+        z-index: 5;
     `;
     label.textContent = cardCount === 1 ? '1 CARD' : `${cardCount} CARDS`;
     
-    packEl.appendChild(packImg);
-    packEl.appendChild(label);
+    // === SWIPE HINT ===
+    const hint = document.createElement('div');
+    hint.className = 'pack-swipe-hint';
+    hint.style.cssText = `
+        position: absolute;
+        bottom: 5%;
+        width: 100%;
+        text-align: center;
+        color: rgba(255,215,0,0.9);
+        font-family: Orbitron, sans-serif;
+        font-size: 14px;
+        font-weight: bold;
+        text-shadow: 0 2px 8px black;
+        pointer-events: none;
+        z-index: 5;
+        animation: swipeHintPulse 1.5s infinite;
+    `;
+    hint.textContent = '← SWIPE →';
     
-    console.log('[FORGE] Pack created with image:', packImage);
+    packEl.appendChild(topHalf);
+    packEl.appendChild(bottomHalf);
+    packEl.appendChild(tearFlash);
+    packEl.appendChild(energyLine);
+    packEl.appendChild(label);
+    packEl.appendChild(hint);
+    
+    console.log('[FORGE] Tearable pack created:', packImage);
     
     return packEl;
 }
@@ -3107,13 +3194,27 @@ function setupSwipeHandlers(packEl, cards, progressBar) {
                 lid.style.transform = `rotateX(${-swipeState.progress * 120}deg)`;
             }
         } else {
-            const seal = packEl.querySelector('.pack-bag-seal');
-            if (seal) {
-                const slideX = swipeState.progress * 80 * swipeState.direction;
-                const rotate = swipeState.progress * 25 * swipeState.direction;
-                const scaleY = 1 - (swipeState.progress * 0.3);
-                seal.style.transform = `translateX(${slideX}px) rotate(${rotate}deg) scaleY(${scaleY})`;
-                seal.style.opacity = 1 - (swipeState.progress * 0.5);
+            // Flash Mask system: show energy line building up
+            const energyLine = packEl.querySelector('.pack-energy-line');
+            const topHalf = packEl.querySelector('.pack-top');
+            const bottomHalf = packEl.querySelector('.pack-bottom');
+            
+            // Subtle squash effect during swipe
+            const squash = 1 + swipeState.progress * 0.05;
+            packEl.style.transform = `scaleY(${squash}) scaleX(${2 - squash})`;
+            
+            // Energy line grows with progress
+            if (energyLine && swipeState.progress > 0.5) {
+                const lineProgress = (swipeState.progress - 0.5) * 2; // 0-1 in last half
+                energyLine.style.opacity = lineProgress * 0.7;
+                energyLine.style.transform = `scaleX(${lineProgress})`;
+            }
+            
+            // Halves start to separate slightly at high progress
+            if (swipeState.progress > 0.7) {
+                const sep = (swipeState.progress - 0.7) * 20;
+                if (topHalf) topHalf.style.transform = `translateY(${-sep}px)`;
+                if (bottomHalf) bottomHalf.style.transform = `translateY(${sep}px)`;
             }
         }
         
@@ -3214,12 +3315,22 @@ function setupSwipeHandlers(packEl, cards, progressBar) {
 }
 
 function resetPackVisual(packEl, isBox) {
+    packEl.style.transform = '';
     if (isBox) {
         const lid = packEl.querySelector('.pack-box-lid');
         if (lid) lid.style.transform = '';
     } else {
-        const seal = packEl.querySelector('.pack-bag-seal');
-        if (seal) seal.style.transform = '';
+        // Reset Flash Mask elements
+        const topHalf = packEl.querySelector('.pack-top');
+        const bottomHalf = packEl.querySelector('.pack-bottom');
+        const energyLine = packEl.querySelector('.pack-energy-line');
+        
+        if (topHalf) topHalf.style.transform = '';
+        if (bottomHalf) bottomHalf.style.transform = '';
+        if (energyLine) {
+            energyLine.style.opacity = '0';
+            energyLine.style.transform = 'scaleX(0)';
+        }
     }
 }
 
@@ -3254,32 +3365,69 @@ async function tearOpenPack(packEl, cards, isBox) {
             await sleep(200);
         }
     } else {
-        // === BAG TEARING - Pack rips open with visual effect ===
+        // === FLASH MASK TEAR - South Park: Phone Destroyer style ===
         const dir = swipeState.direction || (Math.random() > 0.5 ? 1 : -1);
         
-        // Play tear sound
+        // Get the halves
+        const topHalf = packEl.querySelector('.pack-top');
+        const bottomHalf = packEl.querySelector('.pack-bottom');
+        const tearFlash = packEl.querySelector('.pack-tear-flash');
+        const energyLine = packEl.querySelector('.pack-energy-line');
+        
+        // === PHASE 1: SQUASH & ANTICIPATION (150ms) ===
+        packEl.style.transition = 'transform 0.15s ease-out';
+        packEl.style.transform = 'scaleY(1.08) scaleX(0.96)';
+        await sleep(150);
+        
+        // === PHASE 2: THE FLASH (hides the split) ===
         PremiumAudio.play('flip');
         
-        // Add tearing class for CSS animation
-        packEl.classList.add('tearing');
-        
-        // Also animate via JS for more control
-        const packImg = packEl.querySelector('.pack-image');
-        if (packImg) {
-            packImg.style.transition = 'all 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
-            packImg.style.transform = `translateY(-50px) rotateX(30deg) rotateZ(${dir * 5}deg) scale(0.8)`;
-            packImg.style.opacity = '0.3';
-            packImg.style.filter = 'brightness(1.5) blur(2px)';
+        // Trigger flash and energy line
+        if (tearFlash) {
+            tearFlash.style.opacity = '1';
+            tearFlash.style.transform = 'scaleY(3)';
+        }
+        if (energyLine) {
+            energyLine.style.opacity = '1';
+            energyLine.style.transform = 'scaleX(1.2)';
         }
         
-        // Create tear particles
+        // Screen flash
+        screenFlash('#fff', 0.6);
+        haptic('impact');
+        
+        await sleep(80);
+        
+        // === PHASE 3: THE SPLIT (halves fly apart) ===
+        packEl.style.transform = '';
+        
+        if (topHalf) {
+            topHalf.style.transform = `translateY(-120%) rotate(${-dir * 12}deg) scale(0.7)`;
+            topHalf.style.opacity = '0';
+        }
+        if (bottomHalf) {
+            bottomHalf.style.transform = `translateY(120%) rotate(${dir * 12}deg) scale(0.7)`;
+            bottomHalf.style.opacity = '0';
+        }
+        
+        // Fade the flash
+        if (tearFlash) {
+            tearFlash.style.transition = 'opacity 0.3s';
+            tearFlash.style.opacity = '0';
+        }
+        if (energyLine) {
+            energyLine.style.transition = 'opacity 0.3s';
+            energyLine.style.opacity = '0';
+        }
+        
+        // Create bokeh particles from center
         createTearParticles(packEl, dir);
         
-        // Tear effect SVG
-        const tearEffect = document.getElementById('tearEffect');
-        tearEffect.classList.add('active', 'tearing');
+        // Hide the count label
+        const countLabel = packEl.querySelector('.pack-count-label');
+        if (countLabel) countLabel.style.opacity = '0';
         
-        await sleep(200);
+        await sleep(300);
     }
     
     // Rarity glow
@@ -3309,21 +3457,38 @@ async function tearOpenPack(packEl, cards, isBox) {
     
     await sleep(400);
     
-    // Cleanup - reset seal and lid for next time
-    const seal = packEl.querySelector('.pack-bag-seal');
-    if (seal) {
-        seal.style.transition = '';
-        seal.style.transform = '';
-        seal.style.opacity = '';
-        seal.style.filter = '';
-        seal.style.borderBottom = '';
-    }
+    // Cleanup - reset all elements for next time
+    const topHalf = packEl.querySelector('.pack-top');
+    const bottomHalf = packEl.querySelector('.pack-bottom');
+    const tearFlash = packEl.querySelector('.pack-tear-flash');
+    const energyLine = packEl.querySelector('.pack-energy-line');
+    const countLabel = packEl.querySelector('.pack-count-label');
     const lid = packEl.querySelector('.pack-box-lid');
+    
+    [topHalf, bottomHalf].forEach(el => {
+        if (el) {
+            el.style.transition = '';
+            el.style.transform = '';
+            el.style.opacity = '';
+        }
+    });
+    if (tearFlash) {
+        tearFlash.style.transition = '';
+        tearFlash.style.transform = 'scaleY(0)';
+        tearFlash.style.opacity = '0';
+    }
+    if (energyLine) {
+        energyLine.style.transition = '';
+        energyLine.style.transform = 'scaleX(0)';
+        energyLine.style.opacity = '0';
+    }
+    if (countLabel) countLabel.style.opacity = '';
     if (lid) {
         lid.style.transition = '';
         lid.style.transform = '';
         lid.style.opacity = '';
     }
+    packEl.style.transform = '';
     packEl.classList.remove('opening', 'tearing', 'glow-mythic', 'glow-legendary', 'glow-epic');
     
     if (packOpeningResolve) {
@@ -3332,48 +3497,59 @@ async function tearOpenPack(packEl, cards, isBox) {
     }
 }
 
-// Create small tear particles when seal rips
+// Create bokeh particles when pack tears (South Park style)
 function createTearParticles(packEl, direction) {
     const rect = packEl.getBoundingClientRect();
-    const sealBottom = rect.top + 50; // Where seal meets body
+    const centerY = rect.top + rect.height * 0.5; // Center tear line
     const centerX = rect.left + rect.width / 2;
     
-    // Create 8-12 small paper-like particles
-    const particleCount = 8 + Math.floor(Math.random() * 5);
+    // Mix of white bokeh + colored sparks
+    const particleCount = 15 + Math.floor(Math.random() * 10);
     
     for (let i = 0; i < particleCount; i++) {
         const particle = document.createElement('div');
-        const size = 4 + Math.random() * 8;
-        const startX = centerX + (Math.random() - 0.5) * rect.width * 0.8;
+        const isBokeh = Math.random() > 0.4;
+        const size = isBokeh ? (8 + Math.random() * 16) : (3 + Math.random() * 6);
+        
+        // Start along the tear line
+        const startX = centerX + (Math.random() - 0.5) * rect.width;
+        const startY = centerY + (Math.random() - 0.5) * 30;
+        
+        // Colors: white bokeh or pink/yellow sparks
+        const colors = isBokeh 
+            ? ['rgba(255,255,255,0.9)', 'rgba(255,240,200,0.8)', 'rgba(255,200,255,0.7)']
+            : ['#ff69b4', '#ffff00', '#fff', '#ff00ff'];
+        const color = colors[Math.floor(Math.random() * colors.length)];
         
         particle.style.cssText = `
             position: fixed;
             left: ${startX}px;
-            top: ${sealBottom}px;
+            top: ${startY}px;
             width: ${size}px;
-            height: ${size * 0.6}px;
-            background: linear-gradient(135deg, #ffd700, #ff8c00);
-            border-radius: 1px;
+            height: ${size}px;
+            background: ${color};
+            border-radius: 50%;
             z-index: 10001;
             pointer-events: none;
             opacity: 1;
+            ${isBokeh ? `box-shadow: 0 0 ${size}px ${color};` : ''}
         `;
         document.body.appendChild(particle);
         
-        // Animate particle flying off
-        const flyX = direction * (50 + Math.random() * 100);
-        const flyY = 30 + Math.random() * 80;
-        const rotation = (Math.random() - 0.5) * 360;
-        const duration = 0.4 + Math.random() * 0.3;
+        // Fly outward from center
+        const angle = (Math.random() - 0.5) * Math.PI; // -90 to +90 degrees
+        const distance = 80 + Math.random() * 150;
+        const flyX = Math.cos(angle) * distance;
+        const flyY = Math.sin(angle) * distance - 50; // Bias upward
+        const duration = 0.5 + Math.random() * 0.4;
         
         particle.style.transition = `all ${duration}s cubic-bezier(0.25, 0.46, 0.45, 0.94)`;
         
         requestAnimationFrame(() => {
-            particle.style.transform = `translate(${flyX}px, ${flyY}px) rotate(${rotation}deg) scale(0.3)`;
+            particle.style.transform = `translate(${flyX}px, ${flyY}px) scale(${isBokeh ? 0.3 : 0})`;
             particle.style.opacity = '0';
         });
         
-        // Remove after animation
         setTimeout(() => particle.remove(), duration * 1000 + 100);
     }
 }
