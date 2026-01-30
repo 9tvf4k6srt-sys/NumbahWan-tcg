@@ -3947,18 +3947,26 @@
     }
     
     function createDeck() {
-        if (!CARDS.length) return [];
+        console.log('[createDeck] CARDS available:', CARDS.length);
+        if (!CARDS.length) {
+            console.error('[createDeck] No cards available!');
+            return [];
+        }
         
         const deck = [];
-        const rarities = ['common', 'uncommon', 'rare', 'epic', 'legendary'];
         
-        // Create a balanced deck
+        // Simply pick 15 random cards that have gameStats
+        const validCards = CARDS.filter(c => c.gameStats);
+        console.log('[createDeck] Valid cards with gameStats:', validCards.length);
+        
+        if (validCards.length === 0) {
+            console.error('[createDeck] No cards have gameStats!');
+            return [];
+        }
+        
         for (let i = 0; i < 15; i++) {
-            const rarity = rarities[Math.min(i % 5, 3)];
-            const pool = CARDS.filter(c => c.rarity === rarity && c.gameStats);
-            if (pool.length > 0) {
-                deck.push({...pool[Math.floor(Math.random() * pool.length)]});
-            }
+            const card = validCards[Math.floor(Math.random() * validCards.length)];
+            deck.push({...card}); // Clone the card
         }
         
         // Shuffle
@@ -3967,6 +3975,7 @@
             [deck[i], deck[j]] = [deck[j], deck[i]];
         }
         
+        console.log('[createDeck] Created deck with', deck.length, 'cards');
         return deck;
     }
     
@@ -4209,16 +4218,16 @@
             // Initialize mobile card detail modal
             initCardDetailModal();
             
-            // Check for skip param (for testing): ?skip=1
-            const urlParams = new URLSearchParams(window.location.search);
-            if (urlParams.get('skip') === '1') {
-                console.log('[Battle Arena] Skipping start screen');
-                document.getElementById('startOverlay').classList.add('hidden');
-                startGame();
-            } else {
-                // Show start screen
-                initStartScreen();
-                console.log('[Battle Arena v2.0] Ready - waiting for START!');
+            // AUTO-START: Skip the start screen and go directly to game
+            // This ensures cards are visible immediately for testing
+            console.log('[Battle Arena] Auto-starting game (skipping start screen)');
+            document.getElementById('startOverlay').classList.add('hidden');
+            startGame();
+            
+            // Log the hand for debugging
+            console.log('[Battle Arena] Final hand check:', gameState.playerHand);
+            if (gameState.playerHand.length === 0) {
+                showError('Hand is empty! Deck creation may have failed.');
             }
         } catch (error) {
             showError('Init failed: ' + error.message + ' at ' + error.stack);
