@@ -1513,6 +1513,61 @@
             color: rgba(255,255,255,0.5);
         }
         
+        /* Slot selection in modal */
+        .card-detail-slots {
+            margin-top: 16px;
+        }
+        .slot-selection-label {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--gold);
+            margin-bottom: 12px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+        .slot-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 16px;
+            flex-wrap: wrap;
+        }
+        .slot-btn {
+            width: 52px;
+            height: 52px;
+            border-radius: 12px;
+            border: 3px solid var(--gold);
+            background: linear-gradient(135deg, rgba(255,215,0,0.2), rgba(255,165,0,0.1));
+            color: var(--gold);
+            font-family: 'Orbitron', sans-serif;
+            font-size: 18px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .slot-btn:hover {
+            background: linear-gradient(135deg, rgba(255,215,0,0.4), rgba(255,165,0,0.3));
+            transform: scale(1.1);
+            box-shadow: 0 0 20px rgba(255,215,0,0.5);
+        }
+        .slot-btn:active {
+            transform: scale(0.95);
+        }
+        .slot-btn.occupied {
+            border-color: #444;
+            background: rgba(0,0,0,0.3);
+            color: #666;
+            cursor: not-allowed;
+        }
+        .slot-btn.occupied:hover {
+            transform: none;
+            box-shadow: none;
+        }
+        
         /* Hide tooltip on mobile/tablet, show modal instead */
         @media (max-width: 768px) {
             .card-tooltip { display: none !important; }
@@ -1656,12 +1711,20 @@
             
             <div class="card-detail-abilities" id="cardDetailAbilities"></div>
             
+            <!-- Initial actions -->
             <div class="card-detail-actions" id="cardDetailActions">
                 <button class="card-detail-action-btn select" id="cardDetailSelect">SELECT CARD</button>
                 <button class="card-detail-action-btn cancel" id="cardDetailCancel">CLOSE</button>
             </div>
             
-            <div class="card-detail-hint">Tap outside or close button to dismiss</div>
+            <!-- Slot selection (shown after SELECT) -->
+            <div class="card-detail-slots" id="cardDetailSlots" style="display: none;">
+                <div class="slot-selection-label">TAP A SLOT TO PLAY:</div>
+                <div class="slot-buttons" id="slotButtons"></div>
+                <button class="card-detail-action-btn cancel" id="cardDetailBack">← BACK</button>
+            </div>
+            
+            <div class="card-detail-hint" id="cardDetailHint">Tap outside or close button to dismiss</div>
         </div>
     </div>
     
@@ -2265,6 +2328,14 @@
         modalCardIndex = null;
         modalCardSource = null;
         
+        // Reset to actions view (hide slot selection)
+        const actionsEl = document.getElementById('cardDetailActions');
+        const slotsEl = document.getElementById('cardDetailSlots');
+        const hintEl = document.getElementById('cardDetailHint');
+        if (actionsEl) actionsEl.style.display = 'flex';
+        if (slotsEl) slotsEl.style.display = 'none';
+        if (hintEl) hintEl.textContent = 'Tap outside or close button to dismiss';
+        
         // Restore body scroll
         document.body.style.overflow = '';
     }
@@ -2275,6 +2346,11 @@
         const closeBtn = document.getElementById('cardDetailClose');
         const cancelBtn = document.getElementById('cardDetailCancel');
         const selectBtn = document.getElementById('cardDetailSelect');
+        const backBtn = document.getElementById('cardDetailBack');
+        const actionsEl = document.getElementById('cardDetailActions');
+        const slotsEl = document.getElementById('cardDetailSlots');
+        const slotButtonsEl = document.getElementById('slotButtons');
+        const hintEl = document.getElementById('cardDetailHint');
         
         // Close on X button
         closeBtn.addEventListener('click', (e) => {
@@ -2295,15 +2371,19 @@
             }
         });
         
-        // Select/action button
+        // SELECT button - show slot selection
         selectBtn.addEventListener('click', (e) => {
             e.stopPropagation();
             if (modalCardSource === 'hand' && modalCardIndex !== null) {
-                // Select this card in hand
-                selectHandCard(modalCardIndex);
-                hideCardDetailModal();
+                // Show slot selection instead of closing
+                showSlotSelection();
             }
-            // Board cards don't have a select action from modal
+        });
+        
+        // BACK button - return to card actions
+        backBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            hideSlotSelection();
         });
         
         // Close on Escape key
@@ -2312,6 +2392,71 @@
                 hideCardDetailModal();
             }
         });
+    }
+    
+    // Show slot selection buttons
+    function showSlotSelection() {
+        const actionsEl = document.getElementById('cardDetailActions');
+        const slotsEl = document.getElementById('cardDetailSlots');
+        const slotButtonsEl = document.getElementById('slotButtons');
+        const hintEl = document.getElementById('cardDetailHint');
+        
+        // Generate slot buttons
+        slotButtonsEl.innerHTML = '';
+        for (let i = 0; i < CONFIG.MAX_BOARD; i++) {
+            const isOccupied = gameState.playerBoard[i] !== null;
+            const btn = document.createElement('button');
+            btn.className = `slot-btn ${isOccupied ? 'occupied' : ''}`;
+            btn.textContent = isOccupied ? '✗' : (i + 1);
+            btn.disabled = isOccupied;
+            
+            if (!isOccupied) {
+                btn.onclick = (e) => {
+                    e.stopPropagation();
+                    playCardToSlotFromModal(i);
+                };
+            }
+            
+            slotButtonsEl.appendChild(btn);
+        }
+        
+        // Switch views
+        actionsEl.style.display = 'none';
+        slotsEl.style.display = 'block';
+        hintEl.textContent = 'Tap an open slot to play the card';
+        
+        Audio.play('select');
+    }
+    
+    // Hide slot selection, show actions
+    function hideSlotSelection() {
+        const actionsEl = document.getElementById('cardDetailActions');
+        const slotsEl = document.getElementById('cardDetailSlots');
+        const hintEl = document.getElementById('cardDetailHint');
+        
+        actionsEl.style.display = 'flex';
+        slotsEl.style.display = 'none';
+        hintEl.textContent = 'Tap outside or close button to dismiss';
+    }
+    
+    // Play card directly from modal
+    async function playCardToSlotFromModal(slotIdx) {
+        if (modalCardIndex === null || gameState.playerBoard[slotIdx] || gameState.isAnimating) return;
+        
+        const card = gameState.playerHand[modalCardIndex];
+        if (!card || card.gameStats.cost > gameState.energy) return;
+        
+        // Close modal first
+        hideCardDetailModal();
+        
+        // Small delay for visual feedback
+        await new Promise(r => setTimeout(r, 100));
+        
+        // Select the card
+        gameState.selectedCard = modalCardIndex;
+        
+        // Play to slot
+        await playCardToSlot(slotIdx);
     }
     
     // Handle card tap/click - shows modal on mobile, normal behavior on desktop
