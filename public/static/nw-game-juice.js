@@ -284,9 +284,9 @@ const NW_JUICE = (function() {
             select: '/static/audio/ui-select.mp3',
             
             // Card sounds
-            draw: '/static/audio/ui-select.mp3',
-            play: '/static/audio/card-slam.mp3',
-            cardSlam: '/static/audio/card-slam.mp3',
+            draw: '/static/audio/card-draw.mp3',
+            play: '/static/audio/card-slam-heavy.mp3',
+            cardSlam: '/static/audio/card-slam-heavy.mp3',
             attack: '/static/audio/attack-slash.mp3',
             hit: '/static/audio/attack-slash.mp3',
             death: '/static/audio/card-death.mp3',
@@ -300,14 +300,15 @@ const NW_JUICE = (function() {
             fight: '/static/audio/fight-start.mp3',
             energy: '/static/audio/energy-gain.mp3',
             
-            // Gacha sounds
-            anticipation: '/static/audio/countdown-tick.mp3',
-            flip: '/static/audio/ui-select.mp3',
-            reveal_common: '/static/audio/ui-select.mp3',
-            reveal_rare: '/static/audio/turn-end.mp3',
-            reveal_epic: '/static/audio/energy-gain.mp3',
-            reveal_legendary: '/static/audio/victory.mp3',
-            reveal_mythic: '/static/audio/victory.mp3',
+            // Gacha sounds - ADDICTIVE pull sounds!
+            anticipation: '/static/audio/gacha-anticipation.mp3',
+            flip: '/static/audio/gacha-flip.mp3',
+            reveal_common: '/static/audio/gacha-common.mp3',
+            reveal_uncommon: '/static/audio/gacha-common.mp3',
+            reveal_rare: '/static/audio/gacha-rare.mp3',
+            reveal_epic: '/static/audio/gacha-epic.mp3',
+            reveal_legendary: '/static/audio/gacha-legendary.mp3',
+            reveal_mythic: '/static/audio/gacha-mythic.mp3',
             
             // Impact sounds
             impact_light: '/static/audio/attack-slash.mp3',

@@ -2510,9 +2510,10 @@
         volume: 0.8,
         muted: false,
         
-        // Sound file mapping
+        // Sound file mapping - Premium audio assets
         files: {
-            cardSlam: '/static/audio/card-slam.mp3',
+            // Battle core sounds
+            cardSlam: '/static/audio/card-slam-heavy.mp3',
             attack: '/static/audio/attack-slash.mp3',
             hit: '/static/audio/attack-slash.mp3',
             crit: '/static/audio/critical-hit.mp3',
@@ -2523,7 +2524,17 @@
             defeat: '/static/audio/defeat.mp3',
             countdown: '/static/audio/countdown-tick.mp3',
             fight: '/static/audio/fight-start.mp3',
-            energy: '/static/audio/energy-gain.mp3'
+            energy: '/static/audio/energy-gain.mp3',
+            draw: '/static/audio/card-draw.mp3',
+            
+            // Gacha pull sounds (addictive!)
+            gachaAnticipation: '/static/audio/gacha-anticipation.mp3',
+            gachaFlip: '/static/audio/gacha-flip.mp3',
+            gachaCommon: '/static/audio/gacha-common.mp3',
+            gachaRare: '/static/audio/gacha-rare.mp3',
+            gachaEpic: '/static/audio/gacha-epic.mp3',
+            gachaLegendary: '/static/audio/gacha-legendary.mp3',
+            gachaMythic: '/static/audio/gacha-mythic.mp3'
         },
         
         // Initialize Web Audio context and preload all buffers
@@ -4171,14 +4182,24 @@
             // Initialize mobile card detail modal
             initCardDetailModal();
             
-            // Initialize premium audio system
-            Audio.init();
+            // Initialize premium audio system - MUST await to ensure sounds are loaded!
+            await Audio.init();
+            console.log('[Battle Arena] Audio system ready');
             
-            // AUTO-START: Skip the start screen and go directly to game
-            // This ensures cards are visible immediately for testing
-            console.log('[Battle Arena] Auto-starting game (skipping start screen)');
-            document.getElementById('startOverlay').classList.add('hidden');
-            startGame();
+            // Check URL params for skip mode
+            const urlParams = new URLSearchParams(window.location.search);
+            const skipStart = urlParams.get('skip') === '1';
+            
+            // Check skip mode - if skip=1, auto-start; otherwise show countdown
+            if (skipStart) {
+                console.log('[Battle Arena] Skip mode - auto-starting game');
+                document.getElementById('startOverlay').classList.add('hidden');
+                startGame();
+            } else {
+                // Show start overlay and wait for user to click
+                console.log('[Battle Arena] Showing start screen');
+                setupStartButton();
+            }
             
             // Log the hand for debugging
             console.log('[Battle Arena] Final hand check:', gameState.playerHand);
