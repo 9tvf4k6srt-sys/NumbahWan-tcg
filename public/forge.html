@@ -363,18 +363,17 @@
         /* Card Container */
         .card-stage { position: relative; z-index: 10; perspective: 2000px; }
         
-        /* The Card - SAME SIZE AS PACK for realism */
+        /* The Card - HUGE, FILLS THE SCREEN like the green box */
         .reveal-card { 
-            /* MATCH PACK SIZE: Pack bag is 320x450, card should be same */
-            width: min(320px, 85vw); 
-            height: min(450px, calc(85vw * 1.4));
+            /* USE VIEWPORT UNITS - fills ~70% of screen height */
+            width: 65vh;
+            height: calc(65vh * 1.4);
+            max-width: 90vw;
+            max-height: 75vh;
             position: relative; 
             transform-style: preserve-3d; 
             cursor: pointer;
             border-radius: 20px;
-            /* NEVER smaller than this - must feel substantial */
-            min-width: 280px;
-            min-height: 390px;
         }
         
         .card-inner { 
@@ -663,45 +662,18 @@
             font-weight: 600; font-size: 14px; }
         .toast.show { transform: translateX(-50%) translateY(0); }
         
-        /* Responsive - CARD SAME SIZE AS PACK for realism */
+        /* Responsive - USE VIEWPORT HEIGHT for proper sizing */
         @media (max-width: 480px) {
             .pull-options { flex-wrap: wrap; gap: 8px; }
             .pull-option { min-width: 80px; padding: 10px 12px; }
-            /* Card reveal = Pack size = SAME for realistic feel */
-            .reveal-card, .pack-bag { 
-                width: 85vw !important; 
-                height: calc(85vw * 1.4) !important;
-                min-width: 280px !important;
-                min-height: 390px !important;
-            }
-            .pack-box {
-                width: 85vw !important;
-                min-width: 280px !important;
-            }
         }
-        @media (max-width: 400px) {
-            .reveal-card, .pack-bag { 
-                width: 88vw !important; 
-                height: calc(88vw * 1.4) !important;
-                min-width: 260px !important;
-                min-height: 360px !important;
-            }
-            .pack-box {
-                width: 88vw !important;
-                min-width: 260px !important;
-            }
-        }
-        @media (max-width: 360px) {
-            .reveal-card, .pack-bag { 
-                width: 90vw !important; 
-                height: calc(90vw * 1.4) !important;
-                min-width: 240px !important;
-                min-height: 336px !important;
-            }
-            .pack-box {
-                width: 90vw !important;
-                min-width: 240px !important;
-            }
+        
+        /* Card and Pack - FILL THE SCREEN properly */
+        .reveal-card, .pack-bag, .pack-bag-thick { 
+            width: 60vh !important;
+            height: calc(60vh * 1.4) !important;
+            max-width: 85vw !important;
+            max-height: 70vh !important;
         }
         
         /* ===== 3D PACK OPENING ===== */
@@ -988,11 +960,14 @@
             box-shadow: 0 0 15px #ffd700, inset 0 0 10px rgba(255,255,255,0.3);
         }
         
-        /* Pack Bag (1-5 pulls) - SWIPE TO TEAR - BIG & CENTERED */
+        /* Pack Bag (ALL pulls) - SWIPE TO TEAR - HUGE & CENTERED */
         .pack-bag {
             position: relative;
-            width: min(320px, 85vw);
-            height: min(450px, calc(85vw * 1.4));
+            /* USE VIEWPORT HEIGHT for proper sizing */
+            width: 55vh;
+            height: calc(55vh * 1.4);
+            max-width: 85vw;
+            max-height: 70vh;
             cursor: grab;
             touch-action: none;
             user-select: none;
@@ -1002,9 +977,57 @@
             transition: transform 0.2s ease;
             /* PERFECT CENTERING */
             margin: 0 auto;
-            min-width: 280px;
-            min-height: 390px;
         }
+        
+        /* THICK PACK for 10+ pulls - Same bag but THICKER with 3D depth */
+        .pack-bag.pack-thick {
+            /* Add 3D thickness effect */
+            transform-style: preserve-3d;
+        }
+        .pack-bag.pack-thick::before {
+            content: '';
+            position: absolute;
+            top: 70px; /* Below seal */
+            left: -8px;
+            width: 8px;
+            height: calc(100% - 70px - 24px);
+            background: linear-gradient(to right, #1a0820, #2d1050);
+            border-left: 2px solid #8B5A2B;
+            border-radius: 0 0 0 8px;
+            transform: skewY(-2deg);
+        }
+        .pack-bag.pack-thick::after {
+            content: '';
+            position: absolute;
+            top: 70px;
+            right: -8px;
+            width: 8px;
+            height: calc(100% - 70px - 24px);
+            background: linear-gradient(to left, #1a0820, #2d1050);
+            border-right: 2px solid #8B5A2B;
+            border-radius: 0 0 8px 0;
+            transform: skewY(2deg);
+        }
+        
+        /* Visual card stack inside thick pack */
+        .pack-stack-indicator {
+            position: absolute;
+            bottom: 15px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 2px;
+        }
+        .pack-stack-card {
+            width: 30px;
+            height: 42px;
+            background: linear-gradient(135deg, #3d2060, #1a0a30);
+            border: 1px solid #ffd700;
+            border-radius: 4px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.5);
+        }
+        .pack-stack-card:nth-child(odd) { transform: rotate(-3deg); }
+        .pack-stack-card:nth-child(even) { transform: rotate(3deg); }
         .pack-bag:active { cursor: grabbing; transform: scale(0.98); }
         
         /* Bag top seal - tearable part */
@@ -2682,11 +2705,9 @@ function createPackBag(cardCount, highestRarity) {
         glowSize = '35px';
     }
     
-    // 3D Pack Container - positioned for easy thumb reach
+    // 3D Pack Container - HUGE, uses viewport units from CSS class
     packEl.style.cssText = `
         position: relative;
-        width: 200px;
-        height: 280px;
         cursor: grab;
         touch-action: none;
         user-select: none;
@@ -2695,7 +2716,7 @@ function createPackBag(cardCount, highestRarity) {
         transition: transform 0.3s ease;
     `;
     
-    // === SEAL (Top tearable part) ===
+    // === SEAL (Top tearable part) - Uses % for responsive sizing ===
     const seal = document.createElement('div');
     seal.className = 'pack-bag-seal';
     seal.style.cssText = `
@@ -2703,15 +2724,16 @@ function createPackBag(cardCount, highestRarity) {
         top: 0;
         left: 0;
         width: 100%;
-        height: 50px;
+        height: 15%;
+        min-height: 50px;
         background: linear-gradient(180deg, #ffd700 0%, #ff8c00 50%, #cc6600 100%);
-        border-radius: 12px 12px 0 0;
+        border-radius: 16px 16px 0 0;
         display: flex;
         flex-direction: column;
         align-items: center;
         justify-content: center;
         font-family: Orbitron, sans-serif;
-        font-size: 14px;
+        font-size: clamp(14px, 3vw, 18px);
         font-weight: bold;
         color: #1a0a30;
         letter-spacing: 2px;
@@ -2722,22 +2744,25 @@ function createPackBag(cardCount, highestRarity) {
         border-bottom: 2px dashed #8B4513;
         box-shadow: 0 -2px 10px rgba(255,215,0,0.5), inset 0 2px 5px rgba(255,255,255,0.3);
     `;
+    
+    // Show card count in seal for 10+ packs
+    const packLabel = cardCount >= 10 ? `🔥 ${cardCount} CARDS 🔥` : '✦ SEALED ✦';
     seal.innerHTML = `
-        <span style="text-shadow: 0 1px 2px rgba(0,0,0,0.3);">✦ SEALED ✦</span>
-        <span style="font-size:9px;opacity:0.8;margin-top:2px;letter-spacing:1px;">👈 SWIPE 👉</span>
+        <span style="text-shadow: 0 1px 2px rgba(0,0,0,0.3);">${packLabel}</span>
+        <span style="font-size:clamp(9px, 2vw, 12px);opacity:0.8;margin-top:2px;letter-spacing:1px;">👈 SWIPE 👉</span>
     `;
     
-    // === 3D PACK BODY ===
+    // === 3D PACK BODY - Uses % for responsive sizing ===
     const body = document.createElement('div');
     body.className = 'pack-bag-body';
     body.style.cssText = `
         position: absolute;
-        top: 48px;
+        top: 15%;
         left: 0;
         width: 100%;
-        height: 232px;
+        height: 85%;
         transform-style: preserve-3d;
-        border-radius: 0 0 12px 12px;
+        border-radius: 0 0 16px 16px;
     `;
     
     // Front face with art
@@ -3004,14 +3029,27 @@ function createPackBox(cardCount, highestRarity) {
     return packEl;
 }
 
-// Legacy function for backwards compatibility
+// Create pack - ALWAYS use bag style, just thicker for more cards
 function createPack3D(cardCount, highestRarity) {
-    // Use bag for 1-6 cards, box for 10+
-    if (cardCount <= 6) {
-        return createPackBag(cardCount, highestRarity);
-    } else {
-        return createPackBox(cardCount, highestRarity);
+    // Always use bag - add 'pack-thick' class for 10+ cards for realistic thickness
+    const pack = createPackBag(cardCount, highestRarity);
+    
+    if (cardCount >= 10) {
+        pack.classList.add('pack-thick');
+        
+        // Add visual card stack indicator for thick packs
+        const stackIndicator = document.createElement('div');
+        stackIndicator.className = 'pack-stack-indicator';
+        // Show 5-6 mini cards stacked
+        for (let i = 0; i < Math.min(6, Math.ceil(cardCount / 2)); i++) {
+            const miniCard = document.createElement('div');
+            miniCard.className = 'pack-stack-card';
+            stackIndicator.appendChild(miniCard);
+        }
+        pack.querySelector('.pack-bag-body')?.appendChild(stackIndicator);
     }
+    
+    return pack;
 }
 
 async function showPackOpening(cards) {
