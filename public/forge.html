@@ -4020,11 +4020,17 @@ async function executePull() {
         pullBtn.textContent = '🔥 PULL';
     }
     
-    // ===== SKIP PACK ANIMATION FOR NOW - GO STRAIGHT TO REVEAL =====
-    // This bypasses the pack opening to test if reveal works
-    console.log('[FORGE] 🎴 SKIPPING pack animation, going to reveal...');
+    // ===== PACK OPENING ANIMATION - RE-ENABLED =====
+    console.log('[FORGE] 🎴 Starting pack opening animation...');
+    try {
+        await showPackOpening(cardsToReveal);
+        console.log('[FORGE] 🎴 Pack animation complete!');
+    } catch (err) {
+        console.error('[FORGE] ❌ Pack animation error:', err);
+        // Continue to reveal even if pack animation fails
+    }
     
-    // Hide any pack overlay that might be showing
+    // Make sure pack overlay is hidden before reveal
     const packOverlay = document.getElementById('packOverlay');
     if (packOverlay) packOverlay.classList.remove('show');
     
@@ -4245,16 +4251,16 @@ function revealCard() {
     }
     
     // Dramatic delay based on rarity - build suspense!
-    // Higher rarity = longer anticipation = more dopamine
+    // REDUCED for mobile testing - show effects faster
     const delayMap = { 
-        common: 500,     // Quick reveal - don't bore them
-        uncommon: 600,   
-        rare: 800,       // Building excitement
-        epic: 1000,      // Getting hyped
-        legendary: 1300, // MAXIMUM SUSPENSE
-        mythic: 1600     // ULTIMATE ANTICIPATION
+        common: 200,     // Quick reveal
+        uncommon: 250,   
+        rare: 300,       
+        epic: 400,       
+        legendary: 500,  
+        mythic: 600      
     };
-    const delay = delayMap[card.rarity] || 700;
+    const delay = delayMap[card.rarity] || 300;
     
     // Add pulsing glow during anticipation for high rarity
     if (['epic', 'legendary', 'mythic'].includes(card.rarity)) {
@@ -4273,7 +4279,8 @@ function revealCard() {
         if (cardBack) cardBack.style.boxShadow = '';
         
         playSound('flip');
-        cardInner.classList.add('flipped');
+        // DISABLED flip since card front is already visible
+        // cardInner.classList.add('flipped');
         
         // \ud83c\udfae NW_ANIM bounce effect on flip for high rarity
         if (typeof NW_ANIM !== 'undefined' && ['epic', 'legendary', 'mythic'].includes(card.rarity)) {
