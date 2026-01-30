@@ -2502,11 +2502,12 @@
     let CARDS = [];
     
     // ═══════════════════════════════════════════════════════════════════
-    // AUDIO SYSTEM - Premium Sound Effects (MP3 files)
+    // AUDIO SYSTEM - Web Audio API for INSTANT playback (zero latency)
     // ═══════════════════════════════════════════════════════════════════
     const Audio = {
-        sounds: {},
-        volume: 0.7,
+        ctx: null,
+        buffers: {},
+        volume: 0.8,
         muted: false,
         
         // Sound file mapping
@@ -2525,43 +2526,61 @@
             energy: '/static/audio/energy-gain.mp3'
         },
         
-        // Preload all sounds
-        init() {
-            Object.entries(this.files).forEach(([name, path]) => {
-                const audio = new window.Audio(path);
-                audio.preload = 'auto';
-                audio.volume = this.volume;
-                this.sounds[name] = audio;
-            });
-            console.log('[AUDIO] Premium sounds loaded:', Object.keys(this.sounds).join(', '));
+        // Initialize Web Audio context and preload all buffers
+        async init() {
+            try {
+                this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+                
+                // Load all sounds in parallel
+                const loadPromises = Object.entries(this.files).map(async ([name, path]) => {
+                    try {
+                        const response = await fetch(path);
+                        const arrayBuffer = await response.arrayBuffer();
+                        const audioBuffer = await this.ctx.decodeAudioData(arrayBuffer);
+                        this.buffers[name] = audioBuffer;
+                    } catch (e) {
+                        console.warn('[AUDIO] Failed to load:', name);
+                    }
+                });
+                
+                await Promise.all(loadPromises);
+                console.log('[AUDIO] Loaded:', Object.keys(this.buffers).join(', '));
+            } catch (e) {
+                console.warn('[AUDIO] Web Audio not supported');
+            }
         },
         
-        // Play a sound effect
+        // Play sound INSTANTLY using pre-decoded buffer
         play(type) {
-            if (this.muted) return;
+            if (this.muted || !this.ctx) return;
             
-            const sound = this.sounds[type];
-            if (!sound) {
-                console.warn('[AUDIO] Sound not found:', type);
-                return;
-            }
+            const buffer = this.buffers[type];
+            if (!buffer) return;
             
             try {
-                // Clone audio to allow overlapping plays
-                const clone = sound.cloneNode();
-                clone.volume = this.volume;
-                clone.play().catch(() => {}); // Ignore autoplay errors
+                // Resume context if suspended (required for mobile)
+                if (this.ctx.state === 'suspended') this.ctx.resume();
+                
+                // Create source and gain nodes
+                const source = this.ctx.createBufferSource();
+                const gainNode = this.ctx.createGain();
+                
+                source.buffer = buffer;
+                gainNode.gain.value = this.volume;
+                
+                source.connect(gainNode);
+                gainNode.connect(this.ctx.destination);
+                
+                // Play IMMEDIATELY - no delay!
+                source.start(0);
             } catch (e) {
-                // Fallback: reset and replay original
-                sound.currentTime = 0;
-                sound.play().catch(() => {});
+                // Fail silently
             }
         },
         
         // Set volume (0-1)
         setVolume(v) {
             this.volume = Math.max(0, Math.min(1, v));
-            Object.values(this.sounds).forEach(s => s.volume = this.volume);
         },
         
         // Mute/unmute

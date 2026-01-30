@@ -267,12 +267,13 @@ const NW_JUICE = (function() {
     }
 
     // ═══════════════════════════════════════════════════════════════════
-    // SOUND MANAGER - Premium MP3 Sound Effects
+    // SOUND MANAGER - Web Audio API for INSTANT playback
     // ═══════════════════════════════════════════════════════════════════
     const soundManager = {
-        sounds: {},
+        ctx: null,
+        buffers: {},
         muted: false,
-        volume: 0.6,
+        volume: 0.7,
         initialized: false,
 
         // Premium sound file mappings
@@ -299,7 +300,7 @@ const NW_JUICE = (function() {
             fight: '/static/audio/fight-start.mp3',
             energy: '/static/audio/energy-gain.mp3',
             
-            // Gacha sounds (mapped to existing)
+            // Gacha sounds
             anticipation: '/static/audio/countdown-tick.mp3',
             flip: '/static/audio/ui-select.mp3',
             reveal_common: '/static/audio/ui-select.mp3',
@@ -313,47 +314,61 @@ const NW_JUICE = (function() {
             impact_heavy: '/static/audio/critical-hit.mp3'
         },
 
-        // Initialize and preload all sounds
-        init() {
+        // Initialize Web Audio and preload buffers
+        async init() {
             if (this.initialized) return;
             
-            Object.entries(this.files).forEach(([name, path]) => {
-                const audio = new Audio(path);
-                audio.preload = 'auto';
-                audio.volume = this.volume;
-                this.sounds[name] = audio;
-            });
-            
-            this.initialized = true;
-            console.log('[NW_JUICE] Premium sounds loaded');
+            try {
+                this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+                
+                // Load unique files only
+                const uniqueFiles = [...new Set(Object.values(this.files))];
+                const fileBuffers = {};
+                
+                await Promise.all(uniqueFiles.map(async (path) => {
+                    try {
+                        const response = await fetch(path);
+                        const arrayBuffer = await response.arrayBuffer();
+                        fileBuffers[path] = await this.ctx.decodeAudioData(arrayBuffer);
+                    } catch (e) {}
+                }));
+                
+                // Map names to buffers
+                Object.entries(this.files).forEach(([name, path]) => {
+                    if (fileBuffers[path]) this.buffers[name] = fileBuffers[path];
+                });
+                
+                this.initialized = true;
+                console.log('[NW_JUICE] Audio buffers ready');
+            } catch (e) {
+                console.warn('[NW_JUICE] Web Audio not supported');
+            }
         },
 
-        // Play a sound effect
+        // Play sound INSTANTLY
         play(name, volume = 1) {
-            if (this.muted) return;
-            if (!this.initialized) this.init();
+            if (this.muted || !this.ctx) return;
+            if (!this.initialized) { this.init(); return; }
             
-            const sound = this.sounds[name];
-            if (!sound) {
-                console.warn('[NW_JUICE] Sound not found:', name);
-                return;
-            }
+            const buffer = this.buffers[name];
+            if (!buffer) return;
 
             try {
-                // Clone to allow overlapping
-                const clone = sound.cloneNode();
-                clone.volume = this.volume * volume;
-                clone.play().catch(() => {});
-            } catch (e) {
-                sound.currentTime = 0;
-                sound.play().catch(() => {});
-            }
+                if (this.ctx.state === 'suspended') this.ctx.resume();
+                
+                const source = this.ctx.createBufferSource();
+                const gain = this.ctx.createGain();
+                
+                source.buffer = buffer;
+                gain.gain.value = this.volume * volume;
+                
+                source.connect(gain);
+                gain.connect(this.ctx.destination);
+                source.start(0);
+            } catch (e) {}
         },
 
-        setVolume(v) { 
-            this.volume = Math.max(0, Math.min(1, v));
-            Object.values(this.sounds).forEach(s => s.volume = this.volume);
-        },
+        setVolume(v) { this.volume = Math.max(0, Math.min(1, v)); },
         mute() { this.muted = true; },
         unmute() { this.muted = false; },
         toggle() { this.muted = !this.muted; return !this.muted; }
