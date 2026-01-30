@@ -348,14 +348,29 @@ const NW_JUICE = (function() {
 
         // Play sound INSTANTLY
         play(name, volume = 1) {
-            if (this.muted || !this.ctx) return;
-            if (!this.initialized) { this.init(); return; }
+            if (this.muted) return;
             
+            // Auto-init on first play
+            if (!this.ctx || !this.initialized) {
+                this.init().then(() => {
+                    this._playBuffer(name, volume);
+                });
+                return;
+            }
+            
+            this._playBuffer(name, volume);
+        },
+        
+        // Internal: Actually play the buffer
+        _playBuffer(name, volume = 1) {
             const buffer = this.buffers[name];
-            if (!buffer) return;
+            if (!buffer || !this.ctx) return;
 
             try {
-                if (this.ctx.state === 'suspended') this.ctx.resume();
+                // iOS requires resume during user gesture
+                if (this.ctx.state === 'suspended') {
+                    this.ctx.resume();
+                }
                 
                 const source = this.ctx.createBufferSource();
                 const gain = this.ctx.createGain();
@@ -366,7 +381,9 @@ const NW_JUICE = (function() {
                 source.connect(gain);
                 gain.connect(this.ctx.destination);
                 source.start(0);
-            } catch (e) {}
+            } catch (e) {
+                console.warn('[NW_JUICE] Sound play error:', e);
+            }
         },
 
         setVolume(v) { this.volume = Math.max(0, Math.min(1, v)); },
@@ -739,6 +756,12 @@ const NW_JUICE = (function() {
         injectStyles();
         console.log('[NW_JUICE] Game Juice System v1.0 loaded');
     }
+    
+    // 🍎 iOS Audio Unlock - Initialize audio on first user interaction
+    function unlockAudio() {
+        console.log('[NW_JUICE] 🔊 Unlocking audio (user interaction)...');
+        soundManager.init();
+    }
 
     // Auto-init on DOM ready
     if (document.readyState === 'loading') {
@@ -746,6 +769,10 @@ const NW_JUICE = (function() {
     } else {
         init();
     }
+    
+    // Listen for first user interaction to unlock audio (iOS requirement)
+    document.addEventListener('touchstart', unlockAudio, { once: true });
+    document.addEventListener('click', unlockAudio, { once: true });
 
     // ═══════════════════════════════════════════════════════════════════
     // PUBLIC API

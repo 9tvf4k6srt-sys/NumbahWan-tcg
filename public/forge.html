@@ -1993,9 +1993,41 @@ window.PremiumAudio = {
     buffers: {} // Empty - so checks fail and synth is used
 };
 
-// Initialize on first interaction
-document.addEventListener('click', initForgeAudio, { once: true });
-document.addEventListener('touchstart', initForgeAudio, { once: true });
+// ═══════════════════════════════════════════════════════════════════════════
+// 🍎 iOS AUDIO UNLOCK - Must happen during user gesture!
+// ═══════════════════════════════════════════════════════════════════════════
+function unlockAudioForIOS() {
+    console.log('[FORGE] 🔊 Unlocking audio for iOS...');
+    
+    // 1. Initialize NW_JUICE sound system (loads MP3 buffers)
+    if (typeof NW_JUICE !== 'undefined' && NW_JUICE.sound) {
+        NW_JUICE.sound.init().then(() => {
+            console.log('[FORGE] ✅ NW_JUICE audio initialized');
+            // Resume context if suspended
+            if (NW_JUICE.sound.ctx && NW_JUICE.sound.ctx.state === 'suspended') {
+                NW_JUICE.sound.ctx.resume().then(() => {
+                    console.log('[FORGE] ✅ NW_JUICE AudioContext resumed');
+                });
+            }
+        });
+    }
+    
+    // 2. Also init local audio as fallback
+    initForgeAudio();
+    initAudio();
+    
+    // 3. Play a silent sound to fully unlock iOS audio
+    if (audioCtx && audioCtx.state === 'suspended') {
+        audioCtx.resume().then(() => {
+            console.log('[FORGE] ✅ Local AudioContext resumed');
+        });
+    }
+}
+
+// Initialize on first interaction - CRITICAL for iOS
+document.addEventListener('click', unlockAudioForIOS, { once: true });
+document.addEventListener('touchstart', unlockAudioForIOS, { once: true });
+document.addEventListener('touchend', unlockAudioForIOS, { once: true });
 
 // ═══════════════════════════════════════════════════════════════════════════
 // 🎰 PREMIUM SOUND LIBRARY - Each rarity has unique audio identity
