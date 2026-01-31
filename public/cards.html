@@ -184,54 +184,77 @@
         .card.uncommon .gem-icon::before { content: '●'; }
         .card.common .gem-icon::before { content: '○'; }
         
-        /* Season Selector - ABOVE NAME BANNER */
+        /* Season Selector - Scrollable for 10 seasons */
         .season-selector {
             position: fixed;
             top: 52px;
-            left: 50%;
-            transform: translateX(-50%);
-            display: flex;
-            gap: 4px;
+            left: 0;
+            right: 0;
             z-index: 120;
-            background: rgba(10,10,15,0.95);
-            padding: 4px;
-            border-radius: 16px;
-            border: 1px solid rgba(255,107,0,0.3);
-            touch-action: manipulation;
+            display: flex;
+            justify-content: center;
+            padding: 0 10px;
+            touch-action: pan-x;
             pointer-events: auto;
         }
+        .season-scroll {
+            display: flex;
+            gap: 6px;
+            padding: 6px 10px;
+            background: rgba(10,10,15,0.95);
+            border-radius: 20px;
+            border: 1px solid rgba(255,107,0,0.3);
+            overflow-x: auto;
+            overflow-y: hidden;
+            max-width: 95vw;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+            scroll-behavior: smooth;
+            touch-action: pan-x;
+        }
+        .season-scroll::-webkit-scrollbar { display: none; }
         .season-btn {
             display: flex;
             flex-direction: column;
             align-items: center;
-            padding: 4px 12px;
+            padding: 6px 10px;
             background: transparent;
             border: 2px solid transparent;
             border-radius: 12px;
             color: rgba(255,255,255,0.5);
             cursor: pointer;
             transition: all 0.2s;
-            min-width: 60px;
+            min-width: 52px;
+            flex-shrink: 0;
             touch-action: manipulation;
             pointer-events: auto;
         }
-        .season-btn:hover:not(.disabled) {
+        .season-btn:hover:not(.coming-soon):not(.active) {
             color: #fff;
             border-color: rgba(255,107,0,0.3);
+            background: rgba(255,107,0,0.1);
         }
         .season-btn.active {
-            background: linear-gradient(135deg, rgba(255,107,0,0.3), rgba(255,215,0,0.2));
+            background: linear-gradient(135deg, rgba(255,107,0,0.4), rgba(255,215,0,0.2));
             border-color: #ff6b00;
             color: #fff;
+            box-shadow: 0 0 15px rgba(255,107,0,0.3);
         }
-        .season-btn.disabled {
-            opacity: 0.4;
-            cursor: not-allowed;
+        .season-btn.coming-soon {
+            opacity: 0.5;
+            border-style: dashed;
+            border-color: rgba(255,255,255,0.2);
         }
-        .season-icon { font-size: 16px; margin-bottom: 1px; }
-        .season-name { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
+        .season-btn.coming-soon:hover {
+            opacity: 0.7;
+            border-color: rgba(255,255,255,0.4);
+        }
+        .season-btn.coming-soon .season-icon { filter: grayscale(50%); }
+        .season-icon { font-size: 18px; margin-bottom: 2px; }
+        .season-num { font-size: 8px; font-weight: 800; opacity: 0.6; }
+        .season-name { font-size: 8px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.3px; white-space: nowrap; }
         
-        /* Coming Soon overlay */
+        /* Coming Soon overlay - Dynamic per season */
         .coming-soon-overlay {
             position: fixed;
             inset: 0;
@@ -242,6 +265,24 @@
             justify-content: center;
             background: rgba(10,10,15,0.95);
             backdrop-filter: blur(20px);
+            padding: 20px;
+            text-align: center;
+        }
+        .coming-soon-overlay.show { display: flex; }
+        .cs-season-num { font-size: 12px; color: rgba(255,255,255,0.4); letter-spacing: 3px; margin-bottom: 10px; }
+        .cs-icon { font-size: 80px; margin-bottom: 15px; animation: cs-float 3s ease-in-out infinite; }
+        @keyframes cs-float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+        .cs-title { font-family: var(--nw-font-display); font-size: 28px; font-weight: 900; margin-bottom: 5px; }
+        .cs-subtitle { font-size: 14px; color: rgba(255,255,255,0.6); margin-bottom: 20px; }
+        .cs-teaser { font-size: 16px; font-style: italic; color: rgba(255,255,255,0.5); margin-bottom: 25px; }
+        .cs-mythics { display: flex; flex-direction: column; gap: 8px; margin-bottom: 20px; }
+        .cs-mythic { display: flex; align-items: center; gap: 8px; background: rgba(255,107,0,0.15); padding: 8px 16px; border-radius: 10px; border: 1px solid rgba(255,107,0,0.3); }
+        .cs-mythic-icon { font-size: 20px; }
+        .cs-mythic-name { font-size: 13px; color: #ffd700; font-weight: 600; }
+        .cs-mechanics { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; margin-bottom: 20px; }
+        .cs-mechanic { background: rgba(255,255,255,0.1); padding: 4px 10px; border-radius: 12px; font-size: 11px; color: rgba(255,255,255,0.7); }
+        .cs-release { font-size: 12px; color: rgba(255,255,255,0.4); }
+        .cs-lore { max-width: 400px; font-size: 13px; line-height: 1.6; color: rgba(255,255,255,0.6); margin-top: 15px; padding: 15px; background: rgba(0,0,0,0.3); border-radius: 10px; border-left: 3px solid;
         }
         .coming-soon-overlay.show { display: flex; }
         .coming-soon-icon { font-size: 80px; margin-bottom: 20px; animation: soon-pulse 2s ease-in-out infinite; }
@@ -422,20 +463,11 @@
         <div class="bg-grid"></div>
     </div>
     
-    <!-- SEASON SELECTOR -->
+    <!-- SEASON SELECTOR - 10 Seasons -->
     <div class="season-selector" id="seasonSelector">
-        <button class="season-btn active" data-season="1">
-            <span class="season-icon">🔥</span>
-            <span class="season-name">Origins</span>
-        </button>
-        <button class="season-btn" data-season="2">
-            <span class="season-icon">🐕</span>
-            <span class="season-name">Hounds</span>
-        </button>
-        <button class="season-btn disabled" data-season="3">
-            <span class="season-icon">🤖</span>
-            <span class="season-name">Soon</span>
-        </button>
+        <div class="season-scroll" id="seasonScroll">
+            <!-- Generated dynamically from seasons.json -->
+        </div>
     </div>
     
     <div class="ctr"><span id="cur">1</span> / <span id="tot">50</span></div>
@@ -468,17 +500,21 @@
     
     <div class="hint" id="hint">Swipe to browse • Tap VIEW for details</div>
     
-    <!-- Coming Soon Overlay for Season 3+ -->
+    <!-- Coming Soon Overlay - Dynamic per season -->
     <div class="coming-soon-overlay" id="comingSoonOverlay">
-        <div class="coming-soon-icon">🤖</div>
-        <div class="coming-soon-title">Cyber Siege</div>
-        <div class="coming-soon-subtitle">Season 3 • Coming Soon</div>
-        <div class="coming-soon-features">
-            <div><span>⚡</span> 108 New Cyber-Themed Cards</div>
-            <div><span>🔧</span> Digital Corruption Mechanic</div>
-            <div><span>🛡️</span> Firewall & Hack Abilities</div>
-            <div><span>👾</span> AI Boss: MegaByte</div>
+        <div class="cs-season-num" id="csSeasonNum">SEASON 3</div>
+        <div class="cs-icon" id="csIcon">🤖</div>
+        <div class="cs-title" id="csTitle">Cyber Siege</div>
+        <div class="cs-subtitle" id="csSubtitle">The Digital Uprising</div>
+        <div class="cs-teaser" id="csTeaser">"Jack in. Fight back."</div>
+        <div class="cs-mythics" id="csMythics">
+            <!-- Generated dynamically -->
         </div>
+        <div class="cs-mechanics" id="csMechanics">
+            <!-- Generated dynamically -->
+        </div>
+        <div class="cs-release" id="csRelease">Coming March 2026</div>
+        <div class="cs-lore" id="csLore"></div>
     </div>
     
     <div class="modal" id="modal">
@@ -503,22 +539,23 @@
 
 <script>
 // ===========================================================================
-// MULTI-SEASON CARD DATA SYSTEM
+// 10-SEASON CARD DATA SYSTEM
 // ===========================================================================
 let DATA = []; // Current season's cards
 let currentSeason = 1;
+let SEASONS_DATA = null; // Loaded from seasons.json
+
+// Season file mapping (dynamically built from seasons.json)
 const SEASON_FILES = {
-    1: '/static/data/cards-v2.json',    // Season 1: Origins
-    2: '/static/data/cards-s2.json'     // Season 2: Hounds of War
+    1: '/static/data/cards-v2.json',
+    2: '/static/data/cards-s2.json'
+    // Seasons 3-10 will show Coming Soon overlay
 };
-const SEASON_IMAGE_PATHS = {
-    1: '/static/images/cards/',
-    2: '/static/images/cards/'  // Same folder, S2 uses s2/ prefix in filename
-};
+
 const IMAGE_BASE_PATH = '/static/images/cards/thumbs/';
 const IMAGE_FULL_PATH = '/static/images/cards/';
 
-// Placeholder images by rarity for Season 2 (until real art is added)
+// Placeholder images by rarity (for seasons without real art)
 const PLACEHOLDER_BY_RARITY = {
     mythic: '01-reggina-mythic.webp',
     legendary: '02-harlay-legendary.webp',
@@ -527,6 +564,126 @@ const PLACEHOLDER_BY_RARITY = {
     uncommon: '40-casual-member-uncommon.webp',
     common: '60-server-lag-common.webp'
 };
+
+// Load seasons metadata
+async function loadSeasonsData() {
+    try {
+        const res = await fetch('/static/data/seasons.json?v=' + Date.now());
+        SEASONS_DATA = await res.json();
+        console.log(`[Seasons] Loaded ${SEASONS_DATA.seasons.length} seasons`);
+        buildSeasonSelector();
+        return SEASONS_DATA;
+    } catch (e) {
+        console.error('Failed to load seasons:', e);
+        return null;
+    }
+}
+
+// Build the season selector UI
+function buildSeasonSelector() {
+    const scroll = document.getElementById('seasonScroll');
+    if (!scroll || !SEASONS_DATA) return;
+    
+    scroll.innerHTML = SEASONS_DATA.seasons.map(s => {
+        const isActive = s.status === 'live';
+        const isCurrent = s.id === currentSeason;
+        const classes = ['season-btn'];
+        if (isCurrent) classes.push('active');
+        if (!isActive) classes.push('coming-soon');
+        
+        return `
+            <button class="${classes.join(' ')}" data-season="${s.id}" style="--season-color: ${s.color}">
+                <span class="season-num">S${s.id}</span>
+                <span class="season-icon">${s.icon}</span>
+                <span class="season-name">${s.name.length > 7 ? s.name.substring(0,6) + '…' : s.name}</span>
+            </button>
+        `;
+    }).join('');
+    
+    // Bind click events
+    scroll.querySelectorAll('.season-btn').forEach(btn => {
+        btn.addEventListener('touchstart', (e) => { e.stopPropagation(); }, { passive: true });
+        btn.addEventListener('touchend', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            const season = parseInt(btn.dataset.season);
+            switchSeason(season);
+        }, { capture: true });
+        btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const season = parseInt(btn.dataset.season);
+            switchSeason(season);
+        });
+    });
+    
+    // Scroll to active season
+    setTimeout(() => {
+        const activeBtn = scroll.querySelector('.season-btn.active');
+        if (activeBtn) activeBtn.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+    }, 100);
+}
+
+// Show Coming Soon overlay for a season
+function showComingSoon(seasonId) {
+    const season = SEASONS_DATA?.seasons.find(s => s.id === seasonId);
+    if (!season) return;
+    
+    const overlay = document.getElementById('comingSoonOverlay');
+    document.getElementById('csSeasonNum').textContent = `SEASON ${season.id}`;
+    document.getElementById('csIcon').textContent = season.icon;
+    document.getElementById('csTitle').textContent = season.name;
+    document.getElementById('csTitle').style.background = season.bgGradient;
+    document.getElementById('csTitle').style.webkitBackgroundClip = 'text';
+    document.getElementById('csTitle').style.webkitTextFillColor = 'transparent';
+    document.getElementById('csSubtitle').textContent = season.subtitle;
+    document.getElementById('csTeaser').textContent = season.teaser ? `"${season.teaser}"` : '';
+    
+    // Mythics
+    const mythicsEl = document.getElementById('csMythics');
+    mythicsEl.innerHTML = (season.mythics || []).map(m => `
+        <div class="cs-mythic">
+            <span class="cs-mythic-icon">✦</span>
+            <span class="cs-mythic-name">${m}</span>
+        </div>
+    `).join('');
+    
+    // Mechanics
+    const mechEl = document.getElementById('csMechanics');
+    mechEl.innerHTML = (season.mechanics || []).map(m => `
+        <span class="cs-mechanic">${m}</span>
+    `).join('');
+    
+    // Release date
+    const release = new Date(season.releaseDate);
+    const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    document.getElementById('csRelease').textContent = `Coming ${months[release.getMonth()]} ${release.getFullYear()}`;
+    
+    // Lore
+    const loreEl = document.getElementById('csLore');
+    loreEl.textContent = season.lore || '';
+    loreEl.style.borderColor = season.color;
+    
+    overlay.classList.add('show');
+    
+    // Hide carousel elements
+    document.getElementById('carousel').style.display = 'none';
+    document.getElementById('nameBanner').style.display = 'none';
+    document.querySelector('.filters').style.display = 'none';
+    document.querySelector('.nav-wrap').style.display = 'none';
+    document.getElementById('hint').style.display = 'none';
+    document.querySelector('.ctr').style.display = 'none';
+}
+
+// Hide Coming Soon overlay
+function hideComingSoon() {
+    document.getElementById('comingSoonOverlay').classList.remove('show');
+    document.getElementById('carousel').style.display = '';
+    document.getElementById('nameBanner').style.display = '';
+    document.querySelector('.filters').style.display = '';
+    document.querySelector('.nav-wrap').style.display = '';
+    document.getElementById('hint').style.display = '';
+    document.querySelector('.ctr').style.display = '';
+}
 
 // Convert image filename to WebP thumbnail
 function getThumbUrl(img, rarity = 'common') {
@@ -589,41 +746,31 @@ function formatStats(stats) {
 
 // Switch to a different season
 async function switchSeason(season) {
-    const comingSoon = document.getElementById('comingSoonOverlay');
-    const carousel = document.getElementById('carousel');
-    const nameBanner = document.getElementById('nameBanner');
-    const filters = document.querySelector('.filters');
-    const navWrap = document.querySelector('.nav-wrap');
-    const hint = document.getElementById('hint');
-    const ctr = document.querySelector('.ctr');
+    // Update button states first
+    document.querySelectorAll('.season-btn').forEach(btn => {
+        btn.classList.toggle('active', parseInt(btn.dataset.season) === season);
+    });
     
-    // Handle Coming Soon (Season 3+)
-    if (!SEASON_FILES[season]) {
-        // Show Coming Soon overlay
-        comingSoon.classList.add('show');
-        carousel.style.display = 'none';
-        nameBanner.style.display = 'none';
-        filters.style.display = 'none';
-        navWrap.style.display = 'none';
-        hint.style.display = 'none';
-        ctr.style.display = 'none';
-        
-        // Update button state
-        document.querySelectorAll('.season-btn').forEach(btn => {
-            btn.classList.toggle('active', parseInt(btn.dataset.season) === season);
-        });
-        console.log(`Season ${season} coming soon!`);
+    // Scroll to active button
+    const activeBtn = document.querySelector(`.season-btn[data-season="${season}"]`);
+    if (activeBtn) {
+        activeBtn.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+    }
+    
+    // Check if season has card data (is live)
+    const seasonData = SEASONS_DATA?.seasons.find(s => s.id === season);
+    const isLive = seasonData?.status === 'live' && SEASON_FILES[season];
+    
+    // Handle Coming Soon seasons
+    if (!isLive) {
+        showComingSoon(season);
+        currentSeason = season;
+        console.log(`[Season ${season}] Coming Soon - ${seasonData?.name}`);
         return;
     }
     
     // Hide Coming Soon if shown
-    comingSoon.classList.remove('show');
-    carousel.style.display = '';
-    nameBanner.style.display = '';
-    filters.style.display = '';
-    navWrap.style.display = '';
-    hint.style.display = '';
-    ctr.style.display = '';
+    hideComingSoon();
     
     if (season === currentSeason) return;
     
@@ -672,13 +819,30 @@ function getRarityStats(rarity, role) {
 const i18n = {
     en: { type:'Type', rarity:'Rarity', cost:'Mana', stats:'Stats', hint:'Swipe to browse • Tap VIEW for details',
           member:'Member', moment:'Moment', gear:'Gear', vibe:'Vibe', spot:'Spot',
-          mythic:'MYTHIC', legendary:'LEGENDARY', epic:'EPIC', rare:'RARE', uncommon:'UNCOMMON', common:'COMMON', all:'ALL', view:'VIEW', guide:'📖 Guide' },
+          mythic:'MYTHIC', legendary:'LEGENDARY', epic:'EPIC', rare:'RARE', uncommon:'UNCOMMON', common:'COMMON', 
+          all:'ALL', view:'VIEW', guide:'📖 Guide', comingSoon:'COMING SOON', cards:'cards', release:'Release' },
     zh: { type:'类型', rarity:'稀有度', cost:'法力', stats:'属性', hint:'滑动浏览 • 点击查看查看详情',
           member:'成员', moment:'时刻', gear:'装备', vibe:'氛围', spot:'地点',
-          mythic:'神话', legendary:'传说', epic:'史诗', rare:'稀有', uncommon:'罕见', common:'普通', all:'全部', view:'查看', guide:'📖 攻略' },
+          mythic:'神话', legendary:'传说', epic:'史诗', rare:'稀有', uncommon:'罕见', common:'普通', 
+          all:'全部', view:'查看', guide:'📖 攻略', comingSoon:'即将推出', cards:'张卡牌', release:'发布日期' },
     th: { type:'ประเภท', rarity:'ความหายาก', cost:'มานา', stats:'สถิติ', hint:'ปัดเพื่อเลือก • แตะดูรายละเอียด',
           member:'สมาชิก', moment:'ช่วงเวลา', gear:'อุปกรณ์', vibe:'บรรยากาศ', spot:'สถานที่',
-          mythic:'ตำนาน', legendary:'ระดับตำนาน', epic:'มหากาพย์', rare:'หายาก', uncommon:'ไม่ธรรมดา', common:'ธรรมดา', all:'ทั้งหมด', view:'ดู', guide:'📖 คู่มือ' }
+          mythic:'ตำนาน', legendary:'ระดับตำนาน', epic:'มหากาพย์', rare:'หายาก', uncommon:'ไม่ธรรมดา', common:'ธรรมดา', 
+          all:'ทั้งหมด', view:'ดู', guide:'📖 คู่มือ', comingSoon:'เร็วๆ นี้', cards:'การ์ด', release:'วันวางจำหน่าย' }
+};
+
+// Season data with full i18n support (10 Seasons)
+const SEASONS_DATA = {
+    1: { icon:'🔥', name:{en:'Origins',zh:'起源',th:'ต้นกำเนิด'}, subtitle:{en:'The Birth of NumbahWan',zh:'NumbahWan的诞生',th:'กำเนิดของ NumbahWan'}, color:'#ff6b00', active:true },
+    2: { icon:'🐕', name:{en:'Hounds',zh:'猎犬',th:'หมาล่า'}, subtitle:{en:"Harlay's Pack Rises",zh:'哈雷的狗群崛起',th:'ฝูงสุนัขของฮาร์เลย์'}, color:'#8b4513', active:true },
+    3: { icon:'🤖', name:{en:'Cyber',zh:'赛博',th:'ไซเบอร์'}, subtitle:{en:'The Digital Uprising',zh:'数字起义',th:'การลุกฮือดิจิทัล'}, color:'#00ffff', teaser:{en:'Jack in. Fight back.',zh:'接入。反击。',th:'เข้าสู่ระบบ ต่อสู้กลับ'}, mythics:['MegaByte','RegginA.EXE'], mechanics:['HACK','FIREWALL','OVERCLOCK'] },
+    4: { icon:'🌑', name:{en:'Shadows',zh:'暗影',th:'เงามืด'}, subtitle:{en:"The Lurker's Domain",zh:'潜伏者的领域',th:'อาณาจักรของผู้ซุ่ม'}, color:'#4a0080', teaser:{en:'What lurks in the shadows?',zh:'暗影中潜伏着什么？',th:'มีอะไรซ่อนในเงามืด?'}, mythics:['Lurker Supreme','Void Emperor'], mechanics:['LURK','SHADOW','VOID'] },
+    5: { icon:'🏆', name:{en:'Champions',zh:'冠军',th:'แชมป์'}, subtitle:{en:'The Grand Arena',zh:'大竞技场',th:'สนามใหญ่'}, color:'#ffd700', teaser:{en:'Glory awaits the worthy.',zh:'荣耀等待着强者。',th:'เกียรติยศรอคอยผู้คู่ควร'}, mythics:['World Champion RegginA','The Final Boss'], mechanics:['COMBO','TOURNAMENT','MVP'] },
+    6: { icon:'🐋', name:{en:'Whale Wars',zh:'鲸鱼战争',th:'สงครามวาฬ'}, subtitle:{en:'Money Talks',zh:'金钱至上',th:'เงินคือพลัง'}, color:'#00d4aa', teaser:{en:'How much is victory worth?',zh:'胜利值多少钱？',th:'ชัยชนะมีค่าเท่าไหร่?'}, mythics:['Mega Whale Supreme','Golden RegginA'], mechanics:['PREMIUM','WHALE','P2W'] },
+    7: { icon:'💢', name:{en:'Rage Quit',zh:'愤怒退出',th:'โกรธออก'}, subtitle:{en:'The Toxic Uprising',zh:'毒性起义',th:'การลุกฮือพิษ'}, color:'#ff0040', teaser:{en:"They're back. And angry.",zh:'他们回来了。而且很愤怒。',th:'พวกเขากลับมา และโกรธมาก'}, mythics:['Rage Incarnate','The Uninstaller'], mechanics:['RAGE','TILT','GRIEF'] },
+    8: { icon:'⭐', name:{en:'Reborn',zh:'重生',th:'เกิดใหม่'}, subtitle:{en:'Heroes Return',zh:'英雄归来',th:'ฮีโร่กลับมา'}, color:'#ff69b4', teaser:{en:'Remember the legends.',zh:'记住传奇。',th:'จดจำตำนาน'}, mythics:['RegginA Ascended','Harlay Eternal'], mechanics:['LEGACY','ASCEND','NOSTALGIA'] },
+    9: { icon:'🌌', name:{en:'Multiverse',zh:'多元宇宙',th:'มัลติเวิร์ส'}, subtitle:{en:'Infinite Possibilities',zh:'无限可能',th:'ความเป็นไปได้ไม่สิ้นสุด'}, color:'#9400d3', teaser:{en:'Infinite guilds. One destiny.',zh:'无限公会。一个命运。',th:'กิลด์ไม่สิ้นสุด หนึ่งชะตา'}, mythics:['Multiverse RegginA','Reality Breaker'], mechanics:['PORTAL','ALTERNATE','PARADOX'] },
+    10:{ icon:'🌅', name:{en:'Final Dawn',zh:'最终黎明',th:'รุ่งอรุณสุดท้าย'}, subtitle:{en:'The Last Stand',zh:'最后的抵抗',th:'การยืนหยัดครั้งสุดท้าย'}, color:'#ff4500', teaser:{en:'This is not the end.',zh:'这不是结局。',th:'นี่ไม่ใช่จุดจบ'}, mythics:['RegginA Immortal','God of Server'], mechanics:['FINAL','ETERNAL','APOCALYPSE'] }
 };
 
 // Card name translations (mapped to actual card IDs from cards-v2.json)
@@ -1224,47 +1388,25 @@ function updateUILanguage() {
     draw();
 }
 
-// Season button click handlers - iOS compatible
-let seasonTouchHandled = false;
-document.querySelectorAll('.season-btn').forEach(btn => {
-    // Touch start - mark that we're handling a season button touch
-    btn.addEventListener('touchstart', (e) => {
-        e.stopPropagation();
-        seasonTouchHandled = true;
-    }, { passive: true });
+// Initialize - Load seasons first, then cards
+async function init() {
+    // Load seasons metadata
+    await loadSeasonsData();
     
-    // Touch end - trigger the season switch
-    btn.addEventListener('touchend', (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        e.stopImmediatePropagation();
-        if (!seasonTouchHandled) return;
-        seasonTouchHandled = false;
-        
-        const season = parseInt(btn.dataset.season);
-        console.log(`[Season] Touch season ${season}`);
-        if (btn.classList.contains('disabled')) return;
-        switchSeason(season);
-    }, { capture: true });
-    
-    // Click fallback for desktop
-    btn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        const season = parseInt(btn.dataset.season);
-        console.log(`[Season] Click season ${season}`);
-        if (btn.classList.contains('disabled')) return;
-        switchSeason(season);
-    });
-});
-
-// Initialize after loading card data
-loadCardsData(1).then(() => {
+    // Load Season 1 cards
+    await loadCardsData(1);
     cards = [...DATA];
+    
+    // Render and setup
     render();
     setup();
     tick();
     updateUILanguage();
-});
+    
+    console.log('[Init] Ready! 10 seasons loaded');
+}
+
+init();
 </script>
 </body>
 </html>
