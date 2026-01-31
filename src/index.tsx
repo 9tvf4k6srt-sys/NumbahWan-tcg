@@ -32,7 +32,7 @@ app.get('/api/health', (c) => {
 
 // Debug endpoint - comprehensive system diagnostics
 app.get('/api/debug', (c) => {
-  const staticPages = ['fashion', 'merch', 'fortune', 'arcade', 'memes', 'apply', 'wallet', 'forge', 'tcg', 'market', 'cards', 'guide', 'pvp', 'regina', 'zakum']
+  const staticPages = ['fashion', 'merch', 'fortune', 'arcade', 'memes', 'apply', 'wallet', 'forge', 'tcg', 'market', 'cards', 'guide', 'pvp', 'regina', 'zakum', 'tournament']
   
   return c.json({
     status: 'ok',
@@ -1311,7 +1311,7 @@ app.get('/api/card-factory', (c) => {
 // ROUTE FACTORY - DRY Pattern (Don't Repeat Yourself)
 // Add new pages by just adding to the array - no copy-paste needed!
 // ============================================================================
-const staticPages = ['fashion', 'merch', 'fortune', 'arcade', 'memes', 'apply', 'wallet', 'forge', 'tcg', 'market', 'cards', 'guide', 'card-frames-demo', 'test-render', 'battle', 'battle-v2', 'collection', 'deckbuilder', 'test-forge', 'test-pull', 'zakum']
+const staticPages = ['fashion', 'merch', 'fortune', 'arcade', 'memes', 'apply', 'wallet', 'forge', 'tcg', 'market', 'cards', 'guide', 'card-frames-demo', 'test-render', 'battle', 'battle-v2', 'collection', 'deckbuilder', 'test-forge', 'test-pull', 'zakum', 'tournament']
 
 staticPages.forEach(page => {
   app.get(`/${page}`, async (c) => {
