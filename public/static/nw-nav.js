@@ -596,37 +596,42 @@ const NW_NAV = {
             font-weight: 600;
         }
 
-        /* Toggle Button */
+        /* Toggle Button - Positioned to avoid blocking page content */
         .nw-nav-toggle {
             position: fixed;
-            top: 12px;
-            left: 12px;
-            width: 46px;
-            height: 46px;
-            border: 2px solid rgba(255,107,0,0.4);
-            background: rgba(10,10,18,0.95);
+            top: 16px;
+            left: 16px;
+            width: 44px;
+            height: 44px;
+            border: 2px solid rgba(255,107,0,0.5);
+            background: linear-gradient(135deg, rgba(10,10,18,0.95), rgba(20,20,32,0.95));
             border-radius: 12px;
             z-index: 1000;
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
-            transition: all 0.2s;
-            backdrop-filter: blur(8px);
-            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            backdrop-filter: blur(12px);
+            box-shadow: 0 4px 20px rgba(0,0,0,0.4), 0 0 0 1px rgba(255,107,0,0.1) inset;
         }
         .nw-nav-toggle:hover {
-            background: rgba(255,107,0,0.15);
+            background: linear-gradient(135deg, rgba(255,107,0,0.2), rgba(255,107,0,0.1));
             border-color: #ff6b00;
-            transform: scale(1.05);
+            transform: scale(1.08);
+            box-shadow: 0 6px 25px rgba(255,107,0,0.3), 0 0 0 1px rgba(255,107,0,0.3) inset;
         }
         .nw-nav-toggle:active {
             transform: scale(0.95);
         }
         .nw-nav-toggle-icon {
-            font-size: 22px;
+            font-size: 20px;
             color: #ff6b00;
-            text-shadow: 0 0 10px rgba(255,107,0,0.5);
+            text-shadow: 0 0 12px rgba(255,107,0,0.6);
+            transition: transform 0.2s;
+        }
+        .nw-nav-toggle:hover .nw-nav-toggle-icon {
+            transform: rotate(90deg);
         }
 
         /* Breadcrumb */
@@ -658,11 +663,15 @@ const NW_NAV = {
             font-weight: 700;
         }
 
-        /* Hide old language toggles when nav is present */
+        /* Hide old navigation elements when universal nav is present */
         #lang-switcher,
         .lang-switcher,
         .language-toggle,
-        [class*="lang-toggle"]:not(.nw-lang-btn) {
+        [class*="lang-toggle"]:not(.nw-lang-btn),
+        .hamburger-btn,
+        .hamburger-icon,
+        #nav-dropdown,
+        nav.fixed.glass-card {
             display: none !important;
         }
 
