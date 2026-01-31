@@ -1,0 +1,786 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zakum Lore | NumbahWan TCG</title>
+    <link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="/static/nw-tokens.css">
+    <link rel="stylesheet" href="/static/nw-utilities.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="/static/nw-nav.js"></script>
+    <style>
+        :root {
+            --zakum-bronze: #8B6914;
+            --zakum-brown: #5D4E37;
+            --zakum-fire: #FF6B00;
+            --zakum-lava: #DC2626;
+        }
+        
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: var(--nw-font-display), 'Segoe UI', sans-serif;
+            background: linear-gradient(180deg, #0a0a0f 0%, #1a0a05 50%, #0a0a0f 100%);
+            color: #fff;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+        
+        /* Lava particles background */
+        .lava-bg {
+            position: fixed;
+            inset: 0;
+            background: 
+                radial-gradient(ellipse at 50% 100%, rgba(255,107,0,0.15) 0%, transparent 50%),
+                radial-gradient(ellipse at 20% 80%, rgba(220,38,38,0.1) 0%, transparent 40%),
+                radial-gradient(ellipse at 80% 90%, rgba(139,105,20,0.1) 0%, transparent 40%);
+            pointer-events: none;
+            z-index: 0;
+        }
+        
+        .content {
+            position: relative;
+            z-index: 1;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 80px 20px 40px;
+        }
+        
+        /* Hero Section */
+        .hero {
+            text-align: center;
+            padding: 60px 20px;
+            position: relative;
+        }
+        
+        .hero-title {
+            font-family: var(--nw-font-serif), serif;
+            font-size: clamp(2.5rem, 8vw, 4.5rem);
+            font-weight: 900;
+            background: linear-gradient(135deg, #FFD700, #FF6B00, #8B6914);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 0 60px rgba(255,107,0,0.5);
+            margin-bottom: 1rem;
+            letter-spacing: 0.05em;
+        }
+        
+        .hero-subtitle {
+            font-size: clamp(1rem, 3vw, 1.5rem);
+            color: rgba(255,255,255,0.7);
+            margin-bottom: 2rem;
+        }
+        
+        .hero-image {
+            max-width: 400px;
+            width: 100%;
+            border-radius: 20px;
+            box-shadow: 0 0 60px rgba(255,107,0,0.4), 0 20px 60px rgba(0,0,0,0.5);
+            margin: 2rem auto;
+            border: 3px solid var(--zakum-bronze);
+        }
+        
+        /* Section Styles */
+        .section {
+            margin: 60px 0;
+            padding: 40px;
+            background: rgba(20,15,10,0.8);
+            border-radius: 20px;
+            border: 1px solid rgba(139,105,20,0.3);
+            backdrop-filter: blur(10px);
+        }
+        
+        .section-title {
+            font-family: var(--nw-font-serif), serif;
+            font-size: clamp(1.5rem, 4vw, 2.5rem);
+            font-weight: 800;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .section-title .icon {
+            font-size: 1.5em;
+        }
+        
+        .section-title.origins { color: #FF6B00; }
+        .section-title.zaqqum { color: #DC2626; }
+        .section-title.maya { color: #22C55E; }
+        .section-title.maplestory { color: #FFD700; }
+        .section-title.reggina { color: #F472B6; }
+        
+        .section-text {
+            font-size: 1.1rem;
+            line-height: 1.8;
+            color: rgba(255,255,255,0.85);
+            margin-bottom: 1.5rem;
+        }
+        
+        .section-image {
+            width: 100%;
+            max-width: 600px;
+            border-radius: 16px;
+            margin: 1.5rem auto;
+            display: block;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+            border: 2px solid rgba(139,105,20,0.4);
+        }
+        
+        .section-image.wide {
+            max-width: 100%;
+        }
+        
+        /* Equipment Gallery */
+        .equipment-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 30px;
+            margin-top: 2rem;
+        }
+        
+        .equip-card {
+            background: linear-gradient(145deg, rgba(139,105,20,0.2), rgba(30,20,10,0.8));
+            border-radius: 16px;
+            padding: 25px;
+            text-align: center;
+            border: 2px solid rgba(139,105,20,0.4);
+            transition: all 0.3s ease;
+        }
+        
+        .equip-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(255,107,0,0.3);
+            border-color: var(--zakum-fire);
+        }
+        
+        .equip-card img {
+            width: 180px;
+            height: 180px;
+            object-fit: cover;
+            border-radius: 12px;
+            margin-bottom: 15px;
+            border: 2px solid var(--zakum-bronze);
+        }
+        
+        .equip-card h3 {
+            font-size: 1.3rem;
+            color: #FFD700;
+            margin-bottom: 10px;
+        }
+        
+        .equip-card p {
+            font-size: 0.95rem;
+            color: rgba(255,255,255,0.7);
+        }
+        
+        /* Quote Box */
+        .quote-box {
+            background: linear-gradient(135deg, rgba(255,107,0,0.1), rgba(139,105,20,0.1));
+            border-left: 4px solid var(--zakum-fire);
+            padding: 25px 30px;
+            margin: 2rem 0;
+            border-radius: 0 12px 12px 0;
+            font-style: italic;
+            font-size: 1.2rem;
+            color: rgba(255,255,255,0.9);
+        }
+        
+        .quote-source {
+            display: block;
+            margin-top: 10px;
+            font-style: normal;
+            font-size: 0.9rem;
+            color: var(--zakum-fire);
+        }
+        
+        /* Mythology Comparison */
+        .myth-compare {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            margin-top: 2rem;
+        }
+        
+        .myth-card {
+            background: rgba(20,15,10,0.9);
+            border-radius: 16px;
+            overflow: hidden;
+            border: 1px solid rgba(139,105,20,0.3);
+        }
+        
+        .myth-card img {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+        }
+        
+        .myth-card-content {
+            padding: 20px;
+        }
+        
+        .myth-card h3 {
+            font-size: 1.3rem;
+            margin-bottom: 10px;
+        }
+        
+        .myth-card.islamic h3 { color: #DC2626; }
+        .myth-card.mayan h3 { color: #22C55E; }
+        
+        .myth-card p {
+            font-size: 0.95rem;
+            color: rgba(255,255,255,0.7);
+            line-height: 1.6;
+        }
+        
+        /* Timeline */
+        .timeline {
+            position: relative;
+            padding-left: 40px;
+            margin: 2rem 0;
+        }
+        
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 15px;
+            top: 0;
+            bottom: 0;
+            width: 3px;
+            background: linear-gradient(to bottom, var(--zakum-fire), var(--zakum-bronze), var(--zakum-fire));
+        }
+        
+        .timeline-item {
+            position: relative;
+            margin-bottom: 30px;
+            padding-left: 20px;
+        }
+        
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: -32px;
+            top: 5px;
+            width: 16px;
+            height: 16px;
+            background: var(--zakum-fire);
+            border-radius: 50%;
+            border: 3px solid var(--zakum-bronze);
+        }
+        
+        .timeline-date {
+            font-size: 0.9rem;
+            color: var(--zakum-fire);
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+        
+        .timeline-text {
+            color: rgba(255,255,255,0.85);
+            line-height: 1.6;
+        }
+        
+        /* Stats Box */
+        .stats-box {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 20px;
+            margin: 2rem 0;
+        }
+        
+        .stat-item {
+            text-align: center;
+            padding: 20px;
+            background: rgba(139,105,20,0.15);
+            border-radius: 12px;
+            border: 1px solid rgba(139,105,20,0.3);
+        }
+        
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 900;
+            color: #FFD700;
+        }
+        
+        .stat-label {
+            font-size: 0.9rem;
+            color: rgba(255,255,255,0.6);
+            margin-top: 5px;
+        }
+        
+        /* Back link */
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: rgba(255,255,255,0.7);
+            text-decoration: none;
+            font-size: 1rem;
+            padding: 10px 20px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 30px;
+            margin-bottom: 2rem;
+            transition: all 0.3s ease;
+        }
+        
+        .back-link:hover {
+            background: rgba(255,107,0,0.2);
+            color: #fff;
+        }
+        
+        /* Language Toggle */
+        .lang-toggle {
+            position: fixed;
+            top: 15px;
+            right: 15px;
+            z-index: 200;
+            display: flex;
+            gap: 5px;
+            background: rgba(0,0,0,0.5);
+            padding: 5px;
+            border-radius: 20px;
+        }
+        
+        .lang-btn {
+            padding: 6px 12px;
+            border: none;
+            background: transparent;
+            color: rgba(255,255,255,0.5);
+            font-size: 14px;
+            border-radius: 15px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .lang-btn.active {
+            background: linear-gradient(135deg, #ff6b00, #ffd700);
+            color: #000;
+            font-weight: bold;
+        }
+        
+        /* Mobile adjustments */
+        @media (max-width: 768px) {
+            .content { padding: 70px 15px 30px; }
+            .section { padding: 25px 20px; }
+            .hero { padding: 40px 15px; }
+            .equipment-grid { grid-template-columns: 1fr; }
+            .timeline { padding-left: 30px; }
+            .nw-nav-toggle { top: 10px; left: 10px; }
+        }
+    </style>
+</head>
+<body data-page-id="zakum">
+    <div class="lava-bg"></div>
+    
+    <!-- Language Toggle -->
+    <div class="lang-toggle">
+        <button class="lang-btn active" data-lang="en">EN</button>
+        <button class="lang-btn" data-lang="zh">中文</button>
+        <button class="lang-btn" data-lang="th">ไทย</button>
+    </div>
+    
+    <div class="content">
+        <a href="/regina" class="back-link">
+            <span>←</span>
+            <span data-i18n="backToLore">Back to Lore</span>
+        </a>
+        
+        <!-- Hero Section -->
+        <section class="hero">
+            <h1 class="hero-title" data-i18n="heroTitle">ZAKUM</h1>
+            <p class="hero-subtitle" data-i18n="heroSubtitle">The Ancient Terror of El Nath — Origins, Mythology & RegginA's Legacy</p>
+            <img src="https://www.genspark.ai/api/files/s/b8lvgZkF?cache_control=3600" alt="Zakum Boss" class="hero-image">
+        </section>
+        
+        <!-- MapleStory Lore -->
+        <section class="section">
+            <h2 class="section-title maplestory">
+                <span class="icon">🍁</span>
+                <span data-i18n="msLoreTitle">The Legend of Zakum</span>
+            </h2>
+            
+            <p class="section-text" data-i18n="msLore1">
+                Deep within the frozen peaks of El Nath lies a tale as old as Maple World itself. Zakum was once a peaceful spirit, sealed within a sacred tree in the deepest chambers of the Dead Mine. For centuries, it slumbered in harmony with the earth, until greed awakened something terrible.
+            </p>
+            
+            <img src="https://www.genspark.ai/api/files/s/EpwqwYhX?cache_control=3600" alt="El Nath Mine Entrance" class="section-image wide">
+            
+            <p class="section-text" data-i18n="msLore2">
+                A mining town discovered the tree and began extracting the magical ores surrounding it. As their greed grew, so did the corruption within Zakum. The once-gentle spirit absorbed their avarice, growing smarter, darker, and infinitely more powerful.
+            </p>
+            
+            <img src="https://www.genspark.ai/api/files/s/Dn3PL8Ab?cache_control=3600" alt="Miners Discovering Spirit" class="section-image wide">
+            
+            <div class="quote-box">
+                <span data-i18n="msQuote">"The spirit was corrupted by greed. It grew smarter, and finally became capable of controlling the town's populace. It forced them to build an enormous statue in tribute to it."</span>
+                <span class="quote-source">— MapleStory Archives</span>
+            </div>
+            
+            <p class="section-text" data-i18n="msLore3">
+                Under Zakum's dark influence, the miners were compelled to construct a massive stone idol — a monument to their new master. Eight arms, a fearsome visage, and an aura of pure malevolence. When the statue was complete, Zakum possessed it, subjugated all the humans, and eventually killed everyone in the town. To this day, the corrupted spirit waits in the lava-filled depths for adventurers brave enough to challenge its might.
+            </p>
+            
+            <div class="stats-box">
+                <div class="stat-item">
+                    <div class="stat-value">8</div>
+                    <div class="stat-label" data-i18n="statArms">Deadly Arms</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value">2004</div>
+                    <div class="stat-label" data-i18n="statYear">Year Introduced</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value">3</div>
+                    <div class="stat-label" data-i18n="statModes">Difficulty Modes</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value">#1</div>
+                    <div class="stat-label" data-i18n="statRank">Iconic Boss</div>
+                </div>
+            </div>
+        </section>
+        
+        <!-- Mythological Origins -->
+        <section class="section">
+            <h2 class="section-title origins">
+                <span class="icon">📜</span>
+                <span data-i18n="mythTitle">Ancient Inspirations</span>
+            </h2>
+            
+            <p class="section-text" data-i18n="mythIntro">
+                Zakum's design draws from two powerful mythological traditions, blending Islamic eschatology with Mesoamerican death rituals to create one of gaming's most memorable boss monsters.
+            </p>
+            
+            <div class="myth-compare">
+                <div class="myth-card islamic">
+                    <img src="https://www.genspark.ai/api/files/s/dAvxUcgd?cache_control=3600" alt="Zaqqum Tree">
+                    <div class="myth-card-content">
+                        <h3 data-i18n="zaqqumTitle">Zaqqum — The Cursed Tree</h3>
+                        <p data-i18n="zaqqumText">
+                            In Islamic tradition, the Zaqqum is a cursed tree rooted in the center of Hell (Jahannam). The Quran describes it as producing fruits "like the heads of devils" that burn the stomachs of the damned. The name "Zakum" is directly derived from this terrifying tree — a spirit of punishment given form.
+                        </p>
+                    </div>
+                </div>
+                
+                <div class="myth-card mayan">
+                    <img src="https://www.genspark.ai/api/files/s/O3Yb60yN?cache_control=3600" alt="Mayan Jade Mask">
+                    <div class="myth-card-content">
+                        <h3 data-i18n="mayaTitle">Mayan Death Masks</h3>
+                        <p data-i18n="mayaText">
+                            Zakum's multi-armed idol form echoes the jade funerary masks of Mesoamerican kings. The famous Mask of Pakal, discovered in 1952, was crafted to honor the dead and guide them to the afterlife. Zakum's mask-like face and ritualistic statue design pay homage to these ancient burial traditions.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <!-- The Zaqqum Connection -->
+        <section class="section">
+            <h2 class="section-title zaqqum">
+                <span class="icon">🔥</span>
+                <span data-i18n="zaqqumSectionTitle">The Zaqqum Connection</span>
+            </h2>
+            
+            <p class="section-text" data-i18n="zaqqumLore1">
+                The Quran mentions Zaqqum in multiple verses (17:60, 37:62-68, 44:43, 56:52), describing it as "the tree that springs out of the bottom of Hell-fire" with "shoots like the heads of devils."
+            </p>
+            
+            <div class="quote-box">
+                <span data-i18n="quranQuote">"Is that [Paradise] a better accommodation or the tree of Zaqqum? Indeed, We have made it a torment for the wrongdoers. It is a tree issuing from the bottom of the Hellfire, its emerging fruit as if it were heads of the devils."</span>
+                <span class="quote-source">— Quran 37:62-65</span>
+            </div>
+            
+            <p class="section-text" data-i18n="zaqqumLore2">
+                This connection is no coincidence. MapleStory's designers drew directly from this imagery — a corrupted tree spirit that brings punishment to the greedy. The lava-filled lair, the burning attacks, and the tortured souls of the miners all echo the Zaqqum's role as an instrument of divine retribution.
+            </p>
+            
+            <div class="timeline">
+                <div class="timeline-item">
+                    <div class="timeline-date" data-i18n="tlAncient">Ancient Times</div>
+                    <div class="timeline-text" data-i18n="tlAncientText">Peaceful tree spirit exists in harmony within El Nath mines</div>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-date" data-i18n="tlDiscovery">The Discovery</div>
+                    <div class="timeline-text" data-i18n="tlDiscoveryText">Miners find the sacred tree and begin extracting surrounding ores</div>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-date" data-i18n="tlCorruption">The Corruption</div>
+                    <div class="timeline-text" data-i18n="tlCorruptionText">Human greed poisons the spirit, awakening dark powers</div>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-date" data-i18n="tlStatue">The Statue</div>
+                    <div class="timeline-text" data-i18n="tlStatueText">Enslaved miners construct the eight-armed idol</div>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-date" data-i18n="tlPossession">The Possession</div>
+                    <div class="timeline-text" data-i18n="tlPossessionText">Zakum possesses the statue and destroys all who created it</div>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-date" data-i18n="tlPresent">Present Day</div>
+                    <div class="timeline-text" data-i18n="tlPresentText">Adventurers challenge Zakum for legendary equipment rewards</div>
+                </div>
+            </div>
+        </section>
+        
+        <!-- Zakum Equipment -->
+        <section class="section">
+            <h2 class="section-title maplestory">
+                <span class="icon">⚔️</span>
+                <span data-i18n="equipTitle">Zakum Equipment Set</span>
+            </h2>
+            
+            <p class="section-text" data-i18n="equipIntro">
+                Defeating Zakum rewards warriors with legendary equipment imbued with the ancient spirit's power. The Zakum Helmet and Zakum Arms Cape are among the most iconic items in MapleStory history.
+            </p>
+            
+            <div class="equipment-grid">
+                <div class="equip-card">
+                    <img src="https://www.genspark.ai/api/files/s/TOIb4QTV?cache_control=3600" alt="Zakum Helmet">
+                    <h3 data-i18n="helmName">Zakum Helmet</h3>
+                    <p data-i18n="helmDesc">The iconic face of Zakum, worn as a symbol of victory over the ancient terror. Grants immense power to those who earn it.</p>
+                </div>
+                
+                <div class="equip-card">
+                    <img src="https://www.genspark.ai/api/files/s/jK6ReqCL?cache_control=3600" alt="Zakum Cape">
+                    <h3 data-i18n="capeName">Zakum Arms Cape</h3>
+                    <p data-i18n="capeDesc">A cape bearing the eight arms of Zakum. Its wearer carries the power of the corrupted spirit on their back.</p>
+                </div>
+            </div>
+            
+            <!-- In-game reference -->
+            <p class="section-text" style="text-align: center; margin-top: 2rem; font-size: 0.9rem; color: rgba(255,255,255,0.5);" data-i18n="gameRef">
+                Original in-game equipment designs from MapleStory
+            </p>
+            <div style="display: flex; justify-content: center; gap: 20px; flex-wrap: wrap; margin-top: 1rem;">
+                <img src="https://www.genspark.ai/api/files/s/IjbGBopg" alt="Zakum Helmet In-Game" style="max-height: 300px; border-radius: 12px; border: 2px solid var(--zakum-bronze);">
+                <img src="https://www.genspark.ai/api/files/s/fWfp1qi1" alt="Zakum Cape In-Game" style="max-height: 300px; border-radius: 12px; border: 2px solid var(--zakum-bronze);">
+            </div>
+        </section>
+        
+        <!-- RegginA's Legacy -->
+        <section class="section">
+            <h2 class="section-title reggina">
+                <span class="icon">👑</span>
+                <span data-i18n="regginaTitle">RegginA's Zakum Legacy</span>
+            </h2>
+            
+            <img src="https://www.genspark.ai/api/files/s/Zg2ZIJOW?cache_control=3600" alt="RegginA in Zakum Set" class="section-image">
+            
+            <p class="section-text" data-i18n="regginaLore1">
+                In the NumbahWan guild, RegginA wears the complete Zakum set as a badge of honor. As guild leader, she has defeated Zakum countless times, mastering every phase of the legendary battle.
+            </p>
+            
+            <p class="section-text" data-i18n="regginaLore2">
+                The Zakum Helmet and Arms Cape represent more than just powerful equipment — they symbolize RegginA's dedication, her mastery over the game's challenges, and her role as the eternal flame of NumbahWan. When newer guild members see her wearing the full set, they know they're looking at a true legend.
+            </p>
+            
+            <div class="quote-box">
+                <span data-i18n="regginaQuote">"Every arm I severed, every phase I survived — this helmet tells that story. It's not just equipment. It's proof that even ancient evils can be conquered."</span>
+                <span class="quote-source">— RegginA, Guild Leader of NumbahWan</span>
+            </div>
+        </section>
+        
+        <!-- Connection to TCG -->
+        <section class="section">
+            <h2 class="section-title origins">
+                <span class="icon">🎴</span>
+                <span data-i18n="tcgTitle">Zakum in NumbahWan TCG</span>
+            </h2>
+            
+            <p class="section-text" data-i18n="tcgText">
+                In the NumbahWan Trading Card Game, the Zakum equipment appears in Season 1: Origins. Cards featuring RegginA in her iconic Zakum set are among the most sought-after collectibles, representing the pinnacle of guild achievement.
+            </p>
+            
+            <div style="text-align: center; margin-top: 2rem;">
+                <a href="/cards" class="back-link" style="display: inline-flex;">
+                    <span>🎴</span>
+                    <span data-i18n="viewCards">View Card Collection</span>
+                </a>
+            </div>
+        </section>
+    </div>
+    
+    <script>
+        // i18n translations
+        const i18n = {
+            en: {
+                backToLore: "Back to Lore",
+                heroTitle: "ZAKUM",
+                heroSubtitle: "The Ancient Terror of El Nath — Origins, Mythology & RegginA's Legacy",
+                msLoreTitle: "The Legend of Zakum",
+                msLore1: "Deep within the frozen peaks of El Nath lies a tale as old as Maple World itself. Zakum was once a peaceful spirit, sealed within a sacred tree in the deepest chambers of the Dead Mine. For centuries, it slumbered in harmony with the earth, until greed awakened something terrible.",
+                msLore2: "A mining town discovered the tree and began extracting the magical ores surrounding it. As their greed grew, so did the corruption within Zakum. The once-gentle spirit absorbed their avarice, growing smarter, darker, and infinitely more powerful.",
+                msQuote: "\"The spirit was corrupted by greed. It grew smarter, and finally became capable of controlling the town's populace. It forced them to build an enormous statue in tribute to it.\"",
+                msLore3: "Under Zakum's dark influence, the miners were compelled to construct a massive stone idol — a monument to their new master. Eight arms, a fearsome visage, and an aura of pure malevolence. When the statue was complete, Zakum possessed it, subjugated all the humans, and eventually killed everyone in the town. To this day, the corrupted spirit waits in the lava-filled depths for adventurers brave enough to challenge its might.",
+                statArms: "Deadly Arms",
+                statYear: "Year Introduced",
+                statModes: "Difficulty Modes",
+                statRank: "Iconic Boss",
+                mythTitle: "Ancient Inspirations",
+                mythIntro: "Zakum's design draws from two powerful mythological traditions, blending Islamic eschatology with Mesoamerican death rituals to create one of gaming's most memorable boss monsters.",
+                zaqqumTitle: "Zaqqum — The Cursed Tree",
+                zaqqumText: "In Islamic tradition, the Zaqqum is a cursed tree rooted in the center of Hell (Jahannam). The Quran describes it as producing fruits \"like the heads of devils\" that burn the stomachs of the damned. The name \"Zakum\" is directly derived from this terrifying tree — a spirit of punishment given form.",
+                mayaTitle: "Mayan Death Masks",
+                mayaText: "Zakum's multi-armed idol form echoes the jade funerary masks of Mesoamerican kings. The famous Mask of Pakal, discovered in 1952, was crafted to honor the dead and guide them to the afterlife. Zakum's mask-like face and ritualistic statue design pay homage to these ancient burial traditions.",
+                zaqqumSectionTitle: "The Zaqqum Connection",
+                zaqqumLore1: "The Quran mentions Zaqqum in multiple verses (17:60, 37:62-68, 44:43, 56:52), describing it as \"the tree that springs out of the bottom of Hell-fire\" with \"shoots like the heads of devils.\"",
+                quranQuote: "\"Is that [Paradise] a better accommodation or the tree of Zaqqum? Indeed, We have made it a torment for the wrongdoers. It is a tree issuing from the bottom of the Hellfire, its emerging fruit as if it were heads of the devils.\"",
+                zaqqumLore2: "This connection is no coincidence. MapleStory's designers drew directly from this imagery — a corrupted tree spirit that brings punishment to the greedy. The lava-filled lair, the burning attacks, and the tortured souls of the miners all echo the Zaqqum's role as an instrument of divine retribution.",
+                tlAncient: "Ancient Times",
+                tlAncientText: "Peaceful tree spirit exists in harmony within El Nath mines",
+                tlDiscovery: "The Discovery",
+                tlDiscoveryText: "Miners find the sacred tree and begin extracting surrounding ores",
+                tlCorruption: "The Corruption",
+                tlCorruptionText: "Human greed poisons the spirit, awakening dark powers",
+                tlStatue: "The Statue",
+                tlStatueText: "Enslaved miners construct the eight-armed idol",
+                tlPossession: "The Possession",
+                tlPossessionText: "Zakum possesses the statue and destroys all who created it",
+                tlPresent: "Present Day",
+                tlPresentText: "Adventurers challenge Zakum for legendary equipment rewards",
+                equipTitle: "Zakum Equipment Set",
+                equipIntro: "Defeating Zakum rewards warriors with legendary equipment imbued with the ancient spirit's power. The Zakum Helmet and Zakum Arms Cape are among the most iconic items in MapleStory history.",
+                helmName: "Zakum Helmet",
+                helmDesc: "The iconic face of Zakum, worn as a symbol of victory over the ancient terror. Grants immense power to those who earn it.",
+                capeName: "Zakum Arms Cape",
+                capeDesc: "A cape bearing the eight arms of Zakum. Its wearer carries the power of the corrupted spirit on their back.",
+                gameRef: "Original in-game equipment designs from MapleStory",
+                regginaTitle: "RegginA's Zakum Legacy",
+                regginaLore1: "In the NumbahWan guild, RegginA wears the complete Zakum set as a badge of honor. As guild leader, she has defeated Zakum countless times, mastering every phase of the legendary battle.",
+                regginaLore2: "The Zakum Helmet and Arms Cape represent more than just powerful equipment — they symbolize RegginA's dedication, her mastery over the game's challenges, and her role as the eternal flame of NumbahWan. When newer guild members see her wearing the full set, they know they're looking at a true legend.",
+                regginaQuote: "\"Every arm I severed, every phase I survived — this helmet tells that story. It's not just equipment. It's proof that even ancient evils can be conquered.\"",
+                tcgTitle: "Zakum in NumbahWan TCG",
+                tcgText: "In the NumbahWan Trading Card Game, the Zakum equipment appears in Season 1: Origins. Cards featuring RegginA in her iconic Zakum set are among the most sought-after collectibles, representing the pinnacle of guild achievement.",
+                viewCards: "View Card Collection"
+            },
+            zh: {
+                backToLore: "返回传说",
+                heroTitle: "扎昆",
+                heroSubtitle: "艾尔纳斯的远古恐怖 — 起源、神话与RegginA的传承",
+                msLoreTitle: "扎昆的传说",
+                msLore1: "在艾尔纳斯冰封的山峰深处，流传着一个与枫之谷一样古老的传说。扎昆曾是一个和平的精灵，被封印在死亡矿山最深处的一棵神圣之树中。数百年来，它与大地和谐共处，直到贪婪唤醒了可怕的力量。",
+                msLore2: "一个采矿小镇发现了这棵树，开始开采周围的魔法矿石。随着他们的贪婪增长，扎昆内心的腐化也在加深。这个曾经温和的精灵吸收了他们的贪欲，变得更聪明、更黑暗、更加强大。",
+                msQuote: "\"精灵被贪婪所腐蚀。它变得更加聪明，最终能够控制镇上的居民。它强迫他们建造一座巨大的雕像来朝拜它。\"",
+                msLore3: "在扎昆的黑暗影响下，矿工们被迫建造了一座巨大的石像——一座献给新主人的纪念碑。八条手臂，狰狞的面容，散发着纯粹邪恶的气息。当雕像完成时，扎昆附身其中，奴役了所有人类，最终杀死了镇上的每一个人。时至今日，这个被腐化的精灵仍在充满岩浆的深渊中等待，等待勇敢的冒险者来挑战它的力量。",
+                statArms: "致命手臂",
+                statYear: "首次登场年份",
+                statModes: "难度模式",
+                statRank: "标志性Boss",
+                mythTitle: "远古灵感来源",
+                mythIntro: "扎昆的设计融合了两种强大的神话传统，将伊斯兰末世论与中美洲死亡仪式相结合，创造了游戏史上最令人难忘的Boss怪物之一。",
+                zaqqumTitle: "扎古姆 — 被诅咒之树",
+                zaqqumText: "在伊斯兰传统中，扎古姆是一棵根植于地狱中心的被诅咒之树。古兰经描述它结出\"像魔鬼头颅\"一样的果实，会灼烧受罚者的胃。\"扎昆\"这个名字直接来源于这棵可怕的树——一个惩罚之灵的化身。",
+                mayaTitle: "玛雅死亡面具",
+                mayaText: "扎昆的多臂神像形态呼应了中美洲国王的翡翠葬礼面具。1952年发现的帕卡尔面具是为纪念死者并引导他们进入来世而制作的。扎昆面具般的脸和仪式化的雕像设计是对这些古老葬礼传统的致敬。",
+                zaqqumSectionTitle: "扎古姆的联系",
+                zaqqumLore1: "古兰经在多处经文中提到扎古姆(17:60, 37:62-68, 44:43, 56:52)，描述它是\"从地狱底部生长出来的树\"，有着\"像魔鬼头颅一样的枝芽\"。",
+                quranQuote: "\"那（乐园）是更好的款待呢，还是扎古姆树？我确已以它作为不义者的惩罚。它是从火狱底部长出的树，它的果实仿佛魔鬼的头颅。\"",
+                zaqqumLore2: "这种联系并非巧合。枫之谷的设计师直接借鉴了这一意象——一个被腐化的树灵，给贪婪者带来惩罚。充满岩浆的巢穴、燃烧的攻击和矿工们被折磨的灵魂，都呼应了扎古姆作为神圣惩罚工具的角色。",
+                tlAncient: "远古时代",
+                tlAncientText: "和平的树灵与艾尔纳斯矿山和谐共存",
+                tlDiscovery: "发现",
+                tlDiscoveryText: "矿工发现神圣之树，开始开采周围的矿石",
+                tlCorruption: "腐化",
+                tlCorruptionText: "人类的贪婪毒害了精灵，唤醒了黑暗力量",
+                tlStatue: "雕像",
+                tlStatueText: "被奴役的矿工建造了八臂神像",
+                tlPossession: "附身",
+                tlPossessionText: "扎昆附身雕像，毁灭了所有创造它的人",
+                tlPresent: "现今",
+                tlPresentText: "冒险者挑战扎昆以获取传奇装备奖励",
+                equipTitle: "扎昆装备套装",
+                equipIntro: "击败扎昆将奖励战士们蕴含古老精灵力量的传奇装备。扎昆头盔和扎昆之臂披风是枫之谷历史上最具标志性的物品之一。",
+                helmName: "扎昆头盔",
+                helmDesc: "扎昆的标志性面容，作为战胜远古恐怖的胜利象征佩戴。赐予获得者巨大的力量。",
+                capeName: "扎昆之臂披风",
+                capeDesc: "一件带有扎昆八条手臂的披风。穿戴者背负着被腐化精灵的力量。",
+                gameRef: "来自枫之谷的原版游戏内装备设计",
+                regginaTitle: "RegginA的扎昆传承",
+                regginaLore1: "在NumbahWan公会中，RegginA佩戴完整的扎昆套装作为荣誉徽章。作为公会会长，她已经无数次击败扎昆，精通这场传奇战斗的每一个阶段。",
+                regginaLore2: "扎昆头盔和之臂披风不仅仅是强力装备——它们象征着RegginA的奉献精神、她对游戏挑战的精通，以及她作为NumbahWan永恒之焰的角色。当新成员看到她穿戴全套装备时，他们就知道自己正在看着一个真正的传奇。",
+                regginaQuote: "\"我斩断的每一条手臂，我挺过的每一个阶段——这顶头盔诉说着那些故事。这不仅仅是装备。这是即使是远古邪恶也能被征服的证明。\"",
+                tcgTitle: "NumbahWan TCG中的扎昆",
+                tcgText: "在NumbahWan集换式卡牌游戏中，扎昆装备出现在第一赛季：起源中。展示RegginA穿戴标志性扎昆套装的卡牌是最受追捧的收藏品之一，代表着公会成就的巅峰。",
+                viewCards: "查看卡牌收藏"
+            },
+            th: {
+                backToLore: "กลับไปยังตำนาน",
+                heroTitle: "ซาคุม",
+                heroSubtitle: "ความน่าสะพรึงกลัวโบราณแห่ง El Nath — ต้นกำเนิด ตำนาน และมรดกของ RegginA",
+                msLoreTitle: "ตำนานของซาคุม",
+                msLore1: "ลึกเข้าไปในยอดเขาน้ำแข็งของ El Nath มีเรื่องเล่าที่เก่าแก่พอๆ กับ Maple World เอง ซาคุมเคยเป็นวิญญาณที่สงบสุข ถูกผนึกอยู่ภายในต้นไม้ศักดิ์สิทธิ์ในห้องลึกที่สุดของ Dead Mine เป็นเวลาหลายศตวรรษมันหลับใหลอย่างกลมกลืนกับโลก จนกระทั่งความโลภปลุกบางสิ่งที่น่ากลัวขึ้นมา",
+                msLore2: "เมืองเหมืองแร่แห่งหนึ่งค้นพบต้นไม้และเริ่มขุดแร่เวทมนตร์รอบๆ มัน เมื่อความโลภของพวกเขาเพิ่มขึ้น ความเสื่อมทรามภายในซาคุมก็เพิ่มขึ้นเช่นกัน วิญญาณที่เคยอ่อนโยนดูดซับความละโมบของพวกเขา เติบโตฉลาดขึ้น มืดมนขึ้น และทรงพลังอย่างไม่มีที่สิ้นสุด",
+                msQuote: "\"วิญญาณถูกทำให้เสื่อมทรามด้วยความโลภ มันฉลาดขึ้น และในที่สุดก็สามารถควบคุมประชากรในเมืองได้ มันบังคับให้พวกเขาสร้างรูปปั้นขนาดใหญ่เพื่อบูชามัน\"",
+                msLore3: "ภายใต้อิทธิพลมืดของซาคุม คนงานเหมืองถูกบังคับให้สร้างรูปปั้นหินขนาดใหญ่ — อนุสาวรีย์แด่เจ้านายคนใหม่ของพวกเขา แปดแขน ใบหน้าน่าเกรงขาม และออร่าแห่งความชั่วร้ายบริสุทธิ์ เมื่อรูปปั้นเสร็จสมบูรณ์ ซาคุมก็เข้าสิงมัน กดขี่มนุษย์ทั้งหมด และในที่สุดก็ฆ่าทุกคนในเมือง จนถึงทุกวันนี้ วิญญาณที่เสื่อมทรามยังรออยู่ในความลึกที่เต็มไปด้วยลาวาเพื่อรอนักผจญภัยที่กล้าหาญพอที่จะท้าทายพลังของมัน",
+                statArms: "แขนมรณะ",
+                statYear: "ปีที่เปิดตัว",
+                statModes: "โหมดความยาก",
+                statRank: "บอสในตำนาน",
+                mythTitle: "แรงบันดาลใจจากยุคโบราณ",
+                mythIntro: "การออกแบบซาคุมมาจากประเพณีตำนานสองแบบที่ทรงพลัง ผสมผสานวิทยาการสุดท้ายของอิสลามกับพิธีกรรมแห่งความตายของเมโสอเมริกา สร้างมอนสเตอร์บอสที่น่าจดจำที่สุดตัวหนึ่งในวงการเกม",
+                zaqqumTitle: "ซัคกูม — ต้นไม้ที่ถูกสาป",
+                zaqqumText: "ในประเพณีอิสลาม ซัคกูมเป็นต้นไม้ที่ถูกสาปหยั่งรากอยู่กลางนรก (ญะฮันนัม) อัลกุรอานอธิบายว่ามันออกผล \"เหมือนหัวของปีศาจ\" ที่เผาท้องของผู้ถูกลงโทษ ชื่อ \"ซาคุม\" มาจากต้นไม้ที่น่ากลัวนี้โดยตรง — วิญญาณแห่งการลงโทษที่ได้รับรูปร่าง",
+                mayaTitle: "หน้ากากแห่งความตายของมายา",
+                mayaText: "รูปร่างรูปปั้นหลายแขนของซาคุมสะท้อนหน้ากากหยกงานศพของกษัตริย์เมโสอเมริกัน หน้ากากของปาคาลที่โด่งดังซึ่งค้นพบในปี 1952 ถูกสร้างขึ้นเพื่อเป็นเกียรติแก่ผู้ตายและนำทางพวกเขาสู่ชีวิตหลังความตาย ใบหน้าคล้ายหน้ากากของซาคุมและการออกแบบรูปปั้นแบบพิธีกรรมเป็นการแสดงความเคารพต่อประเพณีฝังศพโบราณเหล่านี้",
+                zaqqumSectionTitle: "ความเชื่อมโยงกับซัคกูม",
+                zaqqumLore1: "อัลกุรอานกล่าวถึงซัคกูมในหลายโองการ (17:60, 37:62-68, 44:43, 56:52) อธิบายว่าเป็น \"ต้นไม้ที่งอกขึ้นจากก้นไฟนรก\" มี \"กิ่งเหมือนหัวของปีศาจ\"",
+                quranQuote: "\"นั่น [สวรรค์] เป็นที่พำนักที่ดีกว่าหรือต้นซัคกูม? แท้จริงเราได้ทำให้มันเป็นการทรมานสำหรับผู้กระทำผิด มันเป็นต้นไม้ที่งอกจากก้นไฟนรก ผลของมันเหมือนหัวของปีศาจ\"",
+                zaqqumLore2: "ความเชื่อมโยงนี้ไม่ใช่เรื่องบังเอิญ นักออกแบบของ MapleStory ดึงภาพนี้มาโดยตรง — วิญญาณต้นไม้ที่เสื่อมทรามที่นำการลงโทษมาสู่ผู้โลภ ถ้ำที่เต็มไปด้วยลาวา การโจมตีที่ลุกไหม้ และวิญญาณที่ถูกทรมานของคนงานเหมืองล้วนสะท้อนบทบาทของซัคกูมในฐานะเครื่องมือแห่งการลงโทษจากพระเจ้า",
+                tlAncient: "ยุคโบราณ",
+                tlAncientText: "วิญญาณต้นไม้ที่สงบสุขดำรงอยู่อย่างกลมกลืนภายในเหมือง El Nath",
+                tlDiscovery: "การค้นพบ",
+                tlDiscoveryText: "คนงานเหมืองพบต้นไม้ศักดิ์สิทธิ์และเริ่มขุดแร่รอบๆ",
+                tlCorruption: "การเสื่อมทราม",
+                tlCorruptionText: "ความโลภของมนุษย์วางยาพิษวิญญาณ ปลุกพลังมืด",
+                tlStatue: "รูปปั้น",
+                tlStatueText: "คนงานเหมืองที่เป็นทาสสร้างรูปปั้นแปดแขน",
+                tlPossession: "การเข้าสิง",
+                tlPossessionText: "ซาคุมเข้าสิงรูปปั้นและทำลายทุกคนที่สร้างมัน",
+                tlPresent: "ปัจจุบัน",
+                tlPresentText: "นักผจญภัยท้าทายซาคุมเพื่อรับรางวัลอุปกรณ์ในตำนาน",
+                equipTitle: "ชุดอุปกรณ์ซาคุม",
+                equipIntro: "การเอาชนะซาคุมจะให้รางวัลนักรบด้วยอุปกรณ์ในตำนานที่เต็มไปด้วยพลังของวิญญาณโบราณ หมวกซาคุมและผ้าคลุมแขนซาคุมเป็นหนึ่งในไอเทมที่เป็นสัญลักษณ์มากที่สุดในประวัติศาสตร์ MapleStory",
+                helmName: "หมวกซาคุม",
+                helmDesc: "ใบหน้าอันเป็นสัญลักษณ์ของซาคุม สวมใส่เป็นสัญลักษณ์แห่งชัยชนะเหนือความน่ากลัวโบราณ มอบพลังมหาศาลแก่ผู้ที่ได้รับมัน",
+                capeName: "ผ้าคลุมแขนซาคุม",
+                capeDesc: "ผ้าคลุมที่มีแขนทั้งแปดของซาคุม ผู้สวมใส่แบกพลังของวิญญาณที่เสื่อมทรามไว้บนหลัง",
+                gameRef: "การออกแบบอุปกรณ์ในเกมต้นฉบับจาก MapleStory",
+                regginaTitle: "มรดกซาคุมของ RegginA",
+                regginaLore1: "ในกิลด์ NumbahWan RegginA สวมชุดซาคุมครบชุดเป็นเครื่องหมายเกียรติยศ ในฐานะหัวหน้ากิลด์ เธอเอาชนะซาคุมมานับครั้งไม่ถ้วน เชี่ยวชาญทุกเฟสของการต่อสู้ในตำนาน",
+                regginaLore2: "หมวกซาคุมและผ้าคลุมแขนไม่ใช่แค่อุปกรณ์ที่ทรงพลัง — พวกมันเป็นสัญลักษณ์ของความทุ่มเทของ RegginA ความเชี่ยวชาญของเธอต่อความท้าทายของเกม และบทบาทของเธอในฐานะเปลวไฟนิรันดร์ของ NumbahWan เมื่อสมาชิกใหม่เห็นเธอสวมชุดเต็ม พวกเขารู้ว่ากำลังมองดูตำนานที่แท้จริง",
+                regginaQuote: "\"ทุกแขนที่ฉันตัด ทุกเฟสที่ฉันรอด — หมวกนี้เล่าเรื่องราวนั้น มันไม่ใช่แค่อุปกรณ์ มันเป็นหลักฐานว่าแม้แต่ความชั่วร้ายโบราณก็สามารถถูกพิชิตได้\"",
+                tcgTitle: "ซาคุมใน NumbahWan TCG",
+                tcgText: "ในเกมการ์ดสะสม NumbahWan อุปกรณ์ซาคุมปรากฏในซีซั่น 1: Origins การ์ดที่แสดง RegginA ในชุดซาคุมอันเป็นสัญลักษณ์เป็นหนึ่งในของสะสมที่เป็นที่ต้องการมากที่สุด เป็นตัวแทนของจุดสูงสุดของความสำเร็จของกิลด์",
+                viewCards: "ดูคอลเลกชันการ์ด"
+            }
+        };
+        
+        let currentLang = 'en';
+        
+        function updateLanguage(lang) {
+            currentLang = lang;
+            const texts = i18n[lang];
+            
+            document.querySelectorAll('[data-i18n]').forEach(el => {
+                const key = el.dataset.i18n;
+                if (texts[key]) {
+                    el.textContent = texts[key];
+                }
+            });
+            
+            // Update active button
+            document.querySelectorAll('.lang-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.lang === lang);
+            });
+        }
+        
+        // Language toggle
+        document.querySelectorAll('.lang-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                updateLanguage(btn.dataset.lang);
+            });
+        });
+    </script>
+</body>
+</html>

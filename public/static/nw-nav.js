@@ -32,6 +32,7 @@ const NW_NAV = {
             pages: [
                 { id: 'index', name: { en: 'Hub', zh: '中心', th: 'ฮับ' }, icon: '🏠', href: '/', desc: 'Guild home' },
                 { id: 'regina', name: { en: 'RegginA', zh: 'RegginA', th: 'RegginA' }, icon: '👑', href: '/regina', desc: 'Guild master' },
+                { id: 'zakum', name: { en: 'Zakum Lore', zh: '扎昆传说', th: 'ตำนานซาคุม' }, icon: '🗿', href: '/zakum', desc: 'Ancient mythology' },
                 { id: 'guide', name: { en: 'Guide', zh: '攻略', th: 'คู่มือ' }, icon: '📖', href: '/guide', desc: 'How to play' },
                 { id: 'market', name: { en: 'Market', zh: '市场', th: 'ตลาด' }, icon: '🛒', href: '/market', desc: 'Trade & shop' }
             ]
