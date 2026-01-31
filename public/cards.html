@@ -584,6 +584,9 @@ function buildSeasonSelector() {
     const scroll = document.getElementById('seasonScroll');
     if (!scroll || !SEASONS_DATA) return;
     
+    // Get local i18n season data for names
+    const localSeasons = SEASON_I18N;
+    
     scroll.innerHTML = SEASONS_DATA.seasons.map(s => {
         const isActive = s.status === 'live';
         const isCurrent = s.id === currentSeason;
@@ -591,11 +594,16 @@ function buildSeasonSelector() {
         if (isCurrent) classes.push('active');
         if (!isActive) classes.push('coming-soon');
         
+        // Get localized name from local i18n data
+        const localData = localSeasons[s.id];
+        const name = localData?.name?.[lang] || s.name;
+        const displayName = name.length > 8 ? name.substring(0,7) + '…' : name;
+        
         return `
             <button class="${classes.join(' ')}" data-season="${s.id}" style="--season-color: ${s.color}">
                 <span class="season-num">S${s.id}</span>
-                <span class="season-icon">${s.icon}</span>
-                <span class="season-name">${s.name.length > 7 ? s.name.substring(0,6) + '…' : s.name}</span>
+                <span class="season-icon">${localData?.icon || s.icon}</span>
+                <span class="season-name" data-season-id="${s.id}">${displayName}</span>
             </button>
         `;
     }).join('');
@@ -628,35 +636,54 @@ function showComingSoon(seasonId) {
     const season = SEASONS_DATA?.seasons.find(s => s.id === seasonId);
     if (!season) return;
     
+    // Get local i18n data for this season
+    const localData = SEASON_I18N[seasonId];
+    
     const overlay = document.getElementById('comingSoonOverlay');
-    document.getElementById('csSeasonNum').textContent = `SEASON ${season.id}`;
-    document.getElementById('csIcon').textContent = season.icon;
-    document.getElementById('csTitle').textContent = season.name;
+    // Localized "SEASON X" label
+    const seasonLabel = lang === 'zh' ? `第 ${season.id} 赛季` : (lang === 'th' ? `ซีซั่น ${season.id}` : `SEASON ${season.id}`);
+    document.getElementById('csSeasonNum').textContent = seasonLabel;
+    document.getElementById('csIcon').textContent = localData?.icon || season.icon;
+    
+    // Localized name and subtitle
+    const name = localData?.name?.[lang] || season.name;
+    const subtitle = localData?.subtitle?.[lang] || season.subtitle;
+    const teaser = localData?.teaser?.[lang] || season.teaser;
+    
+    document.getElementById('csTitle').textContent = name;
     document.getElementById('csTitle').style.background = season.bgGradient;
     document.getElementById('csTitle').style.webkitBackgroundClip = 'text';
     document.getElementById('csTitle').style.webkitTextFillColor = 'transparent';
-    document.getElementById('csSubtitle').textContent = season.subtitle;
-    document.getElementById('csTeaser').textContent = season.teaser ? `"${season.teaser}"` : '';
+    document.getElementById('csSubtitle').textContent = subtitle;
+    document.getElementById('csTeaser').textContent = teaser ? `"${teaser}"` : '';
     
-    // Mythics
+    // Mythics - use local i18n data if available, otherwise fallback to JSON
+    const mythics = localData?.mythics || season.mythics || [];
     const mythicsEl = document.getElementById('csMythics');
-    mythicsEl.innerHTML = (season.mythics || []).map(m => `
+    mythicsEl.innerHTML = mythics.map(m => `
         <div class="cs-mythic">
             <span class="cs-mythic-icon">✦</span>
             <span class="cs-mythic-name">${m}</span>
         </div>
     `).join('');
     
-    // Mechanics
+    // Mechanics - use local i18n data if available
+    const mechanics = localData?.mechanics || season.mechanics || [];
     const mechEl = document.getElementById('csMechanics');
-    mechEl.innerHTML = (season.mechanics || []).map(m => `
+    mechEl.innerHTML = mechanics.map(m => `
         <span class="cs-mechanic">${m}</span>
     `).join('');
     
-    // Release date
+    // Release date with i18n
     const release = new Date(season.releaseDate);
-    const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-    document.getElementById('csRelease').textContent = `Coming ${months[release.getMonth()]} ${release.getFullYear()}`;
+    const monthsI18n = {
+        en: ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'],
+        zh: ['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'],
+        th: ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.']
+    };
+    const months = monthsI18n[lang] || monthsI18n.en;
+    const comingText = lang === 'zh' ? '发布于' : (lang === 'th' ? 'เปิดตัว' : 'Coming');
+    document.getElementById('csRelease').textContent = `${comingText} ${months[release.getMonth()]} ${release.getFullYear()}`;
     
     // Lore
     const loreEl = document.getElementById('csLore');
@@ -831,16 +858,16 @@ const i18n = {
           all:'ทั้งหมด', view:'ดู', guide:'📖 คู่มือ', comingSoon:'เร็วๆ นี้', cards:'การ์ด', release:'วันวางจำหน่าย' }
 };
 
-// Season data with full i18n support (10 Seasons)
-const SEASONS_DATA = {
+// Season i18n data with translations for all 10 seasons (separate from loaded SEASONS_DATA)
+const SEASON_I18N = {
     1: { icon:'🔥', name:{en:'Origins',zh:'起源',th:'ต้นกำเนิด'}, subtitle:{en:'The Birth of NumbahWan',zh:'NumbahWan的诞生',th:'กำเนิดของ NumbahWan'}, color:'#ff6b00', active:true },
     2: { icon:'🐕', name:{en:'Hounds',zh:'猎犬',th:'หมาล่า'}, subtitle:{en:"Harlay's Pack Rises",zh:'哈雷的狗群崛起',th:'ฝูงสุนัขของฮาร์เลย์'}, color:'#8b4513', active:true },
-    3: { icon:'🤖', name:{en:'Cyber',zh:'赛博',th:'ไซเบอร์'}, subtitle:{en:'The Digital Uprising',zh:'数字起义',th:'การลุกฮือดิจิทัล'}, color:'#00ffff', teaser:{en:'Jack in. Fight back.',zh:'接入。反击。',th:'เข้าสู่ระบบ ต่อสู้กลับ'}, mythics:['MegaByte','RegginA.EXE'], mechanics:['HACK','FIREWALL','OVERCLOCK'] },
-    4: { icon:'🌑', name:{en:'Shadows',zh:'暗影',th:'เงามืด'}, subtitle:{en:"The Lurker's Domain",zh:'潜伏者的领域',th:'อาณาจักรของผู้ซุ่ม'}, color:'#4a0080', teaser:{en:'What lurks in the shadows?',zh:'暗影中潜伏着什么？',th:'มีอะไรซ่อนในเงามืด?'}, mythics:['Lurker Supreme','Void Emperor'], mechanics:['LURK','SHADOW','VOID'] },
-    5: { icon:'🏆', name:{en:'Champions',zh:'冠军',th:'แชมป์'}, subtitle:{en:'The Grand Arena',zh:'大竞技场',th:'สนามใหญ่'}, color:'#ffd700', teaser:{en:'Glory awaits the worthy.',zh:'荣耀等待着强者。',th:'เกียรติยศรอคอยผู้คู่ควร'}, mythics:['World Champion RegginA','The Final Boss'], mechanics:['COMBO','TOURNAMENT','MVP'] },
+    3: { icon:'🤖', name:{en:'Cyber Siege',zh:'赛博围城',th:'ไซเบอร์ซีจ'}, subtitle:{en:'The Digital Uprising',zh:'数字起义',th:'การลุกฮือดิจิทัล'}, color:'#00ffff', teaser:{en:'Jack in. Fight back.',zh:'接入。反击。',th:'เข้าสู่ระบบ ต่อสู้กลับ'}, mythics:['MegaByte','RegginA.EXE'], mechanics:['HACK','FIREWALL','OVERCLOCK'] },
+    4: { icon:'🌑', name:{en:'Shadows',zh:'暗影领域',th:'อาณาจักรเงา'}, subtitle:{en:"The Lurker's Domain",zh:'潜伏者的领域',th:'อาณาจักรของผู้ซุ่ม'}, color:'#4a0080', teaser:{en:'What lurks in the shadows?',zh:'暗影中潜伏着什么？',th:'มีอะไรซ่อนในเงามืด?'}, mythics:['Lurker Supreme','Void Emperor'], mechanics:['LURK','SHADOW','VOID'] },
+    5: { icon:'🏆', name:{en:'Champions',zh:'冠军之战',th:'แชมเปี้ยนส์'}, subtitle:{en:'The Grand Arena',zh:'大竞技场',th:'สนามใหญ่'}, color:'#ffd700', teaser:{en:'Glory awaits the worthy.',zh:'荣耀等待着强者。',th:'เกียรติยศรอคอยผู้คู่ควร'}, mythics:['World Champion RegginA','The Final Boss'], mechanics:['COMBO','TOURNAMENT','MVP'] },
     6: { icon:'🐋', name:{en:'Whale Wars',zh:'鲸鱼战争',th:'สงครามวาฬ'}, subtitle:{en:'Money Talks',zh:'金钱至上',th:'เงินคือพลัง'}, color:'#00d4aa', teaser:{en:'How much is victory worth?',zh:'胜利值多少钱？',th:'ชัยชนะมีค่าเท่าไหร่?'}, mythics:['Mega Whale Supreme','Golden RegginA'], mechanics:['PREMIUM','WHALE','P2W'] },
-    7: { icon:'💢', name:{en:'Rage Quit',zh:'愤怒退出',th:'โกรธออก'}, subtitle:{en:'The Toxic Uprising',zh:'毒性起义',th:'การลุกฮือพิษ'}, color:'#ff0040', teaser:{en:"They're back. And angry.",zh:'他们回来了。而且很愤怒。',th:'พวกเขากลับมา และโกรธมาก'}, mythics:['Rage Incarnate','The Uninstaller'], mechanics:['RAGE','TILT','GRIEF'] },
-    8: { icon:'⭐', name:{en:'Reborn',zh:'重生',th:'เกิดใหม่'}, subtitle:{en:'Heroes Return',zh:'英雄归来',th:'ฮีโร่กลับมา'}, color:'#ff69b4', teaser:{en:'Remember the legends.',zh:'记住传奇。',th:'จดจำตำนาน'}, mythics:['RegginA Ascended','Harlay Eternal'], mechanics:['LEGACY','ASCEND','NOSTALGIA'] },
+    7: { icon:'💢', name:{en:'Rage Quit',zh:'愤怒退出',th:'เลิกเล่น'}, subtitle:{en:'The Toxic Uprising',zh:'毒性起义',th:'การลุกฮือพิษ'}, color:'#ff0040', teaser:{en:"They're back. And angry.",zh:'他们回来了。而且很愤怒。',th:'พวกเขากลับมา และโกรธมาก'}, mythics:['Rage Incarnate','The Uninstaller'], mechanics:['RAGE','TILT','GRIEF'] },
+    8: { icon:'⭐', name:{en:'Reborn',zh:'传奇重生',th:'เกิดใหม่'}, subtitle:{en:'Heroes Return',zh:'英雄归来',th:'ฮีโร่กลับมา'}, color:'#ff69b4', teaser:{en:'Remember the legends.',zh:'记住传奇。',th:'จดจำตำนาน'}, mythics:['RegginA Ascended','Harlay Eternal'], mechanics:['LEGACY','ASCEND','NOSTALGIA'] },
     9: { icon:'🌌', name:{en:'Multiverse',zh:'多元宇宙',th:'มัลติเวิร์ส'}, subtitle:{en:'Infinite Possibilities',zh:'无限可能',th:'ความเป็นไปได้ไม่สิ้นสุด'}, color:'#9400d3', teaser:{en:'Infinite guilds. One destiny.',zh:'无限公会。一个命运。',th:'กิลด์ไม่สิ้นสุด หนึ่งชะตา'}, mythics:['Multiverse RegginA','Reality Breaker'], mechanics:['PORTAL','ALTERNATE','PARADOX'] },
     10:{ icon:'🌅', name:{en:'Final Dawn',zh:'最终黎明',th:'รุ่งอรุณสุดท้าย'}, subtitle:{en:'The Last Stand',zh:'最后的抵抗',th:'การยืนหยัดครั้งสุดท้าย'}, color:'#ff4500', teaser:{en:'This is not the end.',zh:'这不是结局。',th:'นี่ไม่ใช่จุดจบ'}, mythics:['RegginA Immortal','God of Server'], mechanics:['FINAL','ETERNAL','APOCALYPSE'] }
 };
@@ -1383,6 +1410,21 @@ function updateUILanguage() {
     $('#fRare').textContent = i18n[lang].rare;
     $('#fUncommon').textContent = i18n[lang].uncommon;
     $('#fCommon').textContent = i18n[lang].common;
+    
+    // Update season selector with localized names
+    document.querySelectorAll('.season-name[data-season-id]').forEach(el => {
+        const sid = parseInt(el.dataset.seasonId);
+        const localData = SEASON_I18N[sid];
+        if (localData) {
+            const name = localData.name?.[lang] || localData.name?.en || '';
+            el.textContent = name.length > 8 ? name.substring(0,7) + '…' : name;
+        }
+    });
+    
+    // Update Coming Soon overlay if visible
+    if (document.getElementById('comingSoonOverlay')?.classList.contains('show')) {
+        showComingSoon(currentSeason);
+    }
     
     // Update the name banner with current card's translated name
     draw();
