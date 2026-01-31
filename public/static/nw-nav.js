@@ -146,9 +146,43 @@ const NW_NAV = {
             const style = document.createElement('style');
             style.id = 'nw-nav-styles';
             style.textContent = `
-                .nw-nav-toggle {
+                /* Ensure existing page headers don't overlap with nav buttons */
+                .hdr, [class*="fixed"][class*="top-0"] {
+                    padding-left: 120px !important;
+                }
+                /* Back button - top left corner */
+                .nw-back-btn {
                     position: fixed;
                     top: 12px;
+                    left: 12px;
+                    z-index: 9997;
+                    width: 44px;
+                    height: 44px;
+                    border: none;
+                    border-radius: 10px;
+                    background: rgba(20, 20, 30, 0.9);
+                    color: white;
+                    font-size: 22px;
+                    cursor: pointer;
+                    box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+                    transition: all 0.3s ease;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    border: 1px solid rgba(255,107,0,0.3);
+                }
+                .nw-back-btn:hover {
+                    transform: scale(1.05);
+                    background: rgba(255,107,0,0.2);
+                    border-color: #ff6b00;
+                }
+                .nw-back-btn.hidden {
+                    display: none;
+                }
+                /* Menu toggle - below back button */
+                .nw-nav-toggle {
+                    position: fixed;
+                    top: 64px;
                     left: 12px;
                     z-index: 9998;
                     width: 44px;
@@ -168,6 +202,10 @@ const NW_NAV = {
                 .nw-nav-toggle:hover {
                     transform: scale(1.05);
                     box-shadow: 0 6px 20px rgba(255,107,0,0.5);
+                }
+                /* When on home page, move menu up since no back button */
+                .nw-nav-toggle.home-page {
+                    top: 12px;
                 }
                 .nw-nav-overlay {
                     position: fixed;
@@ -312,11 +350,26 @@ const NW_NAV = {
             document.head.appendChild(style);
         }
 
+        // Add back button (not shown on home page)
+        if (!document.getElementById('nwBackBtn')) {
+            const backBtn = document.createElement('button');
+            backBtn.id = 'nwBackBtn';
+            backBtn.className = 'nw-back-btn';
+            const isHome = this.currentPage === 'index' || window.location.pathname === '/' || window.location.pathname === '/index.html';
+            if (isHome) backBtn.classList.add('hidden');
+            backBtn.innerHTML = '←';
+            backBtn.setAttribute('aria-label', 'Go back');
+            backBtn.addEventListener('click', () => this.goBack());
+            document.body.appendChild(backBtn);
+        }
+
         // Add toggle button
         if (!document.getElementById('nwNavToggle')) {
             const toggle = document.createElement('button');
             toggle.id = 'nwNavToggle';
             toggle.className = 'nw-nav-toggle';
+            const isHome = this.currentPage === 'index' || window.location.pathname === '/' || window.location.pathname === '/index.html';
+            if (isHome) toggle.classList.add('home-page');
             toggle.innerHTML = '☰';
             toggle.setAttribute('aria-label', 'Open navigation menu');
             document.body.appendChild(toggle);
@@ -383,6 +436,43 @@ const NW_NAV = {
         if (container) {
             container.innerHTML = this.generateNavHTML();
             this.bindEvents();
+        }
+    },
+
+    // Smart back navigation
+    goBack() {
+        // If there's browser history, use it
+        if (window.history.length > 1 && document.referrer.includes(window.location.host)) {
+            window.history.back();
+        } else {
+            // Otherwise go to sensible parent page based on current page
+            const parentMap = {
+                // Play section -> Home
+                'battle': '/',
+                'pvp': '/',
+                'arcade': '/',
+                // Cards section -> Cards gallery or Home
+                'forge': '/cards',
+                'cards': '/',
+                'collection': '/cards',
+                'deckbuilder': '/cards',
+                // Shop section -> Home
+                'market': '/',
+                'merch': '/',
+                'wallet': '/',
+                // Guild section -> Home
+                'tournament': '/',
+                'regina': '/',
+                'fashion': '/',
+                'memes': '/',
+                // Info section -> Home
+                'guide': '/',
+                'zakum': '/',
+                'fortune': '/',
+                'apply': '/'
+            };
+            const dest = parentMap[this.currentPage] || '/';
+            window.location.href = dest;
         }
     }
 };
