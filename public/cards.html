@@ -164,6 +164,55 @@
         .card.uncommon .gem-icon::before { content: '●'; }
         .card.common .gem-icon::before { content: '○'; }
         
+        /* Season Selector */
+        .season-selector {
+            position: fixed;
+            top: 60px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 8px;
+            z-index: 100;
+            background: rgba(10,10,15,0.9);
+            padding: 6px;
+            border-radius: 20px;
+            border: 1px solid rgba(255,107,0,0.3);
+        }
+        .season-btn {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 8px 16px;
+            background: transparent;
+            border: 2px solid transparent;
+            border-radius: 14px;
+            color: rgba(255,255,255,0.5);
+            cursor: pointer;
+            transition: all 0.2s;
+            min-width: 70px;
+        }
+        .season-btn:hover:not(.disabled) {
+            color: #fff;
+            border-color: rgba(255,107,0,0.3);
+        }
+        .season-btn.active {
+            background: linear-gradient(135deg, rgba(255,107,0,0.3), rgba(255,215,0,0.2));
+            border-color: #ff6b00;
+            color: #fff;
+        }
+        .season-btn.disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+        .season-icon { font-size: 20px; margin-bottom: 2px; }
+        .season-name { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
+        
+        /* Season 2 specific - Dog theme */
+        .season-btn[data-season="2"].active {
+            background: linear-gradient(135deg, rgba(139,69,19,0.4), rgba(255,215,0,0.2));
+            border-color: #8b4513;
+        }
+        
         /* Holo effect for active cards */
         .card .holo { position: absolute; inset: 0; border-radius: 14px;
             background: linear-gradient(125deg, transparent, rgba(255,0,128,0.15) 25%, rgba(0,255,255,0.15) 50%, rgba(255,255,0,0.15) 75%, transparent);
@@ -327,6 +376,22 @@
         </div>
     </header>
     
+    <!-- SEASON SELECTOR -->
+    <div class="season-selector" id="seasonSelector">
+        <button class="season-btn active" data-season="1">
+            <span class="season-icon">🔥</span>
+            <span class="season-name">Origins</span>
+        </button>
+        <button class="season-btn" data-season="2">
+            <span class="season-icon">🐕</span>
+            <span class="season-name">Hounds</span>
+        </button>
+        <button class="season-btn disabled" data-season="3">
+            <span class="season-icon">🤖</span>
+            <span class="season-name">Soon</span>
+        </button>
+    </div>
+    
     <div class="ctr"><span id="cur">1</span> / <span id="tot">50</span></div>
     <div class="debug" id="debug">vel: 0</div>
     
@@ -379,44 +444,87 @@
 
 <script>
 // ===========================================================================
-// DYNAMIC CARD DATA - Loads from cards-v2.json (108 official cards)
+// MULTI-SEASON CARD DATA SYSTEM
 // ===========================================================================
-let DATA = []; // Will be populated from cards-v2.json
-const IMAGE_BASE_PATH = '/static/images/cards/thumbs/'; // Compressed WebP thumbnails (2.6MB vs 141MB)
-const IMAGE_FULL_PATH = '/static/images/cards/'; // Full resolution for modal
+let DATA = []; // Current season's cards
+let currentSeason = 1;
+const SEASON_FILES = {
+    1: '/static/data/cards-v2.json',    // Season 1: Origins
+    2: '/static/data/cards-s2.json'     // Season 2: Hounds of War
+};
+const SEASON_IMAGE_PATHS = {
+    1: '/static/images/cards/',
+    2: '/static/images/cards/'  // Same folder, S2 uses s2/ prefix in filename
+};
+const IMAGE_BASE_PATH = '/static/images/cards/thumbs/';
+const IMAGE_FULL_PATH = '/static/images/cards/';
 
 // Convert image filename to WebP thumbnail
 function getThumbUrl(img) {
-    return IMAGE_BASE_PATH + img.replace(/\.(png|jpg|jpeg)$/i, '.webp');
+    if (!img) return IMAGE_BASE_PATH + 'placeholder.webp';
+    // Handle s2/ prefix for Season 2
+    const baseName = img.replace(/^s2\//, '');
+    return IMAGE_BASE_PATH + baseName.replace(/\.(png|jpg|jpeg)$/i, '.webp');
 }
 // Get full resolution image URL
 function getFullUrl(img) {
+    if (!img) return IMAGE_FULL_PATH + 'placeholder.webp';
     return IMAGE_FULL_PATH + img;
 }
 
-// Load cards from JSON
-async function loadCardsData() {
+// Load cards from JSON for specific season
+async function loadCardsData(season = 1) {
     try {
-        const response = await fetch('/static/data/cards-v2.json?v=' + Date.now());
+        const file = SEASON_FILES[season] || SEASON_FILES[1];
+        const response = await fetch(file + '?v=' + Date.now());
         const data = await response.json();
         DATA = data.cards.map(c => ({
             id: c.id,
             name: c.name,
             type: c.category || 'member',
             rarity: c.rarity,
-            cost: getRarityCost(c.rarity),
-            stats: getRarityStats(c.rarity, c.role),
+            cost: c.gameStats?.cost || getRarityCost(c.rarity),
+            stats: formatStats(c.gameStats) || getRarityStats(c.rarity, c.role),
             desc: c.description,
             img: c.img,
             role: c.role,
-            category: c.category
+            category: c.category,
+            abilities: c.abilities || [],
+            special: c.special,
+            season: season
         }));
-        console.log(`Loaded ${DATA.length} cards from cards-v2.json`);
+        console.log(`[Season ${season}] Loaded ${DATA.length} cards from ${file}`);
         return DATA;
     } catch (error) {
         console.error('Failed to load cards:', error);
         return [];
     }
+}
+
+// Format game stats for display
+function formatStats(stats) {
+    if (!stats) return null;
+    return `ATK ${stats.atk || 0} | HP ${stats.hp || 0} | SPD ${stats.spd || 0}`;
+}
+
+// Switch to a different season
+async function switchSeason(season) {
+    if (season === currentSeason || !SEASON_FILES[season]) return;
+    
+    // Update UI
+    document.querySelectorAll('.season-btn').forEach(btn => {
+        btn.classList.toggle('active', parseInt(btn.dataset.season) === season);
+    });
+    
+    currentSeason = season;
+    await loadCardsData(season);
+    filter = 'all';
+    document.querySelectorAll('.filters button').forEach(b => b.classList.toggle('on', b.dataset.f === 'all'));
+    buildPool();
+    idx = 0;
+    render();
+    updateNameBanner();
+    console.log(`Switched to Season ${season}`);
 }
 
 // Generate stats based on rarity
@@ -974,8 +1082,17 @@ function updateUILanguage() {
     draw();
 }
 
+// Season button click handlers
+document.querySelectorAll('.season-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+        const season = parseInt(btn.dataset.season);
+        if (btn.classList.contains('disabled')) return;
+        switchSeason(season);
+    });
+});
+
 // Initialize after loading card data
-loadCardsData().then(() => {
+loadCardsData(1).then(() => {
     cards = [...DATA];
     render();
     setup();

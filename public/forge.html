@@ -147,6 +147,35 @@
         /* Main Content */
         main { padding: 125px 16px 40px; max-width: 500px; margin: 0 auto; }
         
+        /* 🎴 SET SELECTOR */
+        .set-selector { display: flex; gap: 10px; margin-bottom: 16px; }
+        .set-btn {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 12px 8px;
+            background: rgba(255,255,255,0.03);
+            border: 2px solid rgba(255,255,255,0.1);
+            border-radius: 12px;
+            color: rgba(255,255,255,0.5);
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .set-btn:hover { border-color: rgba(255,107,0,0.5); color: #fff; }
+        .set-btn.active {
+            background: linear-gradient(135deg, rgba(255,107,0,0.15), rgba(255,215,0,0.1));
+            border-color: var(--gold);
+            color: #fff;
+        }
+        .set-btn[data-set="2"].active {
+            background: linear-gradient(135deg, rgba(139,69,19,0.2), rgba(255,215,0,0.1));
+            border-color: #8b4513;
+        }
+        .set-icon { font-size: 24px; margin-bottom: 4px; }
+        .set-name { font-size: 11px; font-weight: 700; text-transform: uppercase; }
+        .set-cards { font-size: 10px; color: rgba(255,255,255,0.4); }
+        
         /* 🎰 MULTI-TIER PITY SYSTEM - Addictive Design */
         .pity-section { background: linear-gradient(135deg, rgba(255,0,255,0.06), rgba(0,255,255,0.03));
             border: 2px solid rgba(255,0,255,0.25); border-radius: 16px; padding: 12px; margin-bottom: 20px; }
@@ -1518,6 +1547,20 @@
     </div>
     
     <main>
+        <!-- 🎴 SEASON SELECTOR -->
+        <div class="set-selector">
+            <button class="set-btn active" data-set="1" onclick="switchForgeSet(1)">
+                <span class="set-icon">🔥</span>
+                <span class="set-name">Season 1: Origins</span>
+                <span class="set-cards">110 Cards</span>
+            </button>
+            <button class="set-btn" data-set="2" onclick="switchForgeSet(2)">
+                <span class="set-icon">🐕</span>
+                <span class="set-name">Season 2: Hounds</span>
+                <span class="set-cards">108 Cards</span>
+            </button>
+        </div>
+        
         <!-- 🎰 MULTI-TIER PITY SYSTEM -->
         <div class="pity-section">
             <!-- MYTHIC PITY (200 hard, 150 soft) -->
@@ -2462,10 +2505,58 @@ async function preloadCommonCards() {
     }
 }
 
-// Load cards from central NW_CARDS system
-async function loadGachaCards() {
+// Current set/season
+let currentSet = 1;
+const SET_FILES = {
+    1: '/static/data/cards-v2.json',
+    2: '/static/data/cards-s2.json'
+};
+
+// Switch forge set
+async function switchForgeSet(setId) {
+    if (setId === currentSet) return;
+    
+    currentSet = setId;
+    
+    // Update UI
+    document.querySelectorAll('.set-btn').forEach(btn => {
+        btn.classList.toggle('active', parseInt(btn.dataset.set) === setId);
+    });
+    
+    // Reload cards from new set
+    await loadGachaCards(setId);
+    
+    // Show toast
+    const setNames = { 1: 'Origins', 2: 'Hounds of War' };
+    showToast(`🎴 Switched to ${setNames[setId]}!`, 'info');
+    
+    console.log(`[FORGE] Switched to Set ${setId}: ${CARDS.length} cards`);
+}
+
+// Load cards from central NW_CARDS system or specific set file
+async function loadGachaCards(setId = 1) {
     try {
-        // DEV MODE: Use sample cards if NW_CARDS not available
+        // For set 2+, load directly from JSON file
+        if (setId >= 2) {
+            const response = await fetch(SET_FILES[setId] + '?v=' + Date.now());
+            const data = await response.json();
+            CARDS = data.cards.map(c => ({
+                id: c.id,
+                name: c.name,
+                rarity: c.rarity,
+                img: c.img,
+                desc: c.description,
+                role: c.role,
+                category: c.category,
+                gameStats: c.gameStats || null,
+                abilities: c.abilities || [],
+                special: c.special || null
+            }));
+            console.log(`[FORGE] Loaded ${CARDS.length} cards from Set ${setId}`);
+            return CARDS;
+        }
+        
+        // Set 1: Use NW_CARDS if available
         if (typeof NW_CARDS === 'undefined' || !NW_CARDS.init) {
             console.log('[FORGE] DEV MODE: Using sample cards');
             CARDS = generateSampleCards();
