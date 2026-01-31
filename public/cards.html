@@ -33,8 +33,11 @@
         .lang button.on { background: linear-gradient(135deg, #ff6b00, #ffd700); color: #000; font-weight: bold; }
         
         .carousel { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center;
-            perspective: 1500px; cursor: grab; overflow: hidden; }
+            perspective: 1500px; cursor: grab; overflow: hidden; z-index: 10; }
         .carousel:active { cursor: grabbing; }
+        
+        /* Ensure header/season selector can receive clicks */
+        .hdr, .season-selector { pointer-events: auto !important; }
         
         .glow { position: fixed; top: 50%; left: 50%; width: 400px; height: 500px;
             transform: translate(-50%, -50%); pointer-events: none; filter: blur(60px);
@@ -113,6 +116,23 @@
         
         /* Card name is now shown in the BIG NAME BANNER above the carousel */
         
+        /* Placeholder badge for Season 2 cards without art */
+        .placeholder-badge {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0,0,0,0.8);
+            color: #ffd700;
+            font-size: 10px;
+            font-weight: 700;
+            padding: 4px 8px;
+            border-radius: 8px;
+            white-space: nowrap;
+            z-index: 10;
+            border: 1px solid rgba(255,215,0,0.3);
+        }
+        
         /* Rarity indicator gem - only visible on active card */
         .card-rarity-gem {
             position: absolute; top: 10px; right: 10px; z-index: 10;
@@ -164,32 +184,36 @@
         .card.uncommon .gem-icon::before { content: '●'; }
         .card.common .gem-icon::before { content: '○'; }
         
-        /* Season Selector */
+        /* Season Selector - ABOVE NAME BANNER */
         .season-selector {
             position: fixed;
-            top: 60px;
+            top: 52px;
             left: 50%;
             transform: translateX(-50%);
             display: flex;
-            gap: 8px;
-            z-index: 100;
-            background: rgba(10,10,15,0.9);
-            padding: 6px;
-            border-radius: 20px;
+            gap: 4px;
+            z-index: 120;
+            background: rgba(10,10,15,0.95);
+            padding: 4px;
+            border-radius: 16px;
             border: 1px solid rgba(255,107,0,0.3);
+            touch-action: manipulation;
+            pointer-events: auto;
         }
         .season-btn {
             display: flex;
             flex-direction: column;
             align-items: center;
-            padding: 8px 16px;
+            padding: 4px 12px;
             background: transparent;
             border: 2px solid transparent;
-            border-radius: 14px;
+            border-radius: 12px;
             color: rgba(255,255,255,0.5);
             cursor: pointer;
             transition: all 0.2s;
-            min-width: 70px;
+            min-width: 60px;
+            touch-action: manipulation;
+            pointer-events: auto;
         }
         .season-btn:hover:not(.disabled) {
             color: #fff;
@@ -204,8 +228,35 @@
             opacity: 0.4;
             cursor: not-allowed;
         }
-        .season-icon { font-size: 20px; margin-bottom: 2px; }
-        .season-name { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
+        .season-icon { font-size: 16px; margin-bottom: 1px; }
+        .season-name { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
+        
+        /* Coming Soon overlay */
+        .coming-soon-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 90;
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: rgba(10,10,15,0.95);
+            backdrop-filter: blur(20px);
+        }
+        .coming-soon-overlay.show { display: flex; }
+        .coming-soon-icon { font-size: 80px; margin-bottom: 20px; animation: soon-pulse 2s ease-in-out infinite; }
+        .coming-soon-title { font-family: var(--nw-font-display); font-size: 32px; font-weight: 900; 
+            background: linear-gradient(135deg, #00ffff, #ff00ff);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            margin-bottom: 10px; text-transform: uppercase; letter-spacing: 3px; }
+        .coming-soon-subtitle { color: rgba(255,255,255,0.6); font-size: 16px; margin-bottom: 30px; }
+        .coming-soon-features { display: flex; flex-direction: column; gap: 12px; text-align: left; }
+        .coming-soon-features div { display: flex; align-items: center; gap: 10px; color: rgba(255,255,255,0.8); font-size: 14px; }
+        .coming-soon-features span { font-size: 20px; }
+        @keyframes soon-pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
         
         /* Season 2 specific - Dog theme */
         .season-btn[data-season="2"].active {
@@ -241,21 +292,21 @@
         
         /* BIG NAME BANNER - Shows current card name prominently */
         .name-banner {
-            position: fixed; top: 100px; left: 50%; transform: translateX(-50%);
+            position: fixed; top: 105px; left: 50%; transform: translateX(-50%);
             text-align: center; z-index: 80;
-            padding: 12px 24px;
-            background: rgba(0,0,0,0.8);
-            border-radius: 16px;
+            padding: 8px 20px;
+            background: rgba(0,0,0,0.9);
+            border-radius: 12px;
             backdrop-filter: blur(10px);
             border: 2px solid rgba(255,255,255,0.1);
-            min-width: 280px; max-width: 90vw;
+            min-width: 250px; max-width: 85vw;
         }
         .name-banner-rarity {
             font-family: var(--nw-font-display), sans-serif;
-            font-size: 11px; font-weight: 700;
-            letter-spacing: 3px; text-transform: uppercase;
-            margin-bottom: 4px;
-            padding: 2px 12px; border-radius: 8px;
+            font-size: 10px; font-weight: 700;
+            letter-spacing: 2px; text-transform: uppercase;
+            margin-bottom: 2px;
+            padding: 2px 10px; border-radius: 6px;
             display: inline-block;
         }
         .name-banner-rarity.mythic { background: linear-gradient(135deg, #ff6b00, #dc2626); color: #fff; }
@@ -267,11 +318,12 @@
         
         .name-banner-name {
             font-family: var(--nw-font-display), sans-serif;
-            font-size: clamp(16px, 4vw, 22px); font-weight: 800;
+            font-size: clamp(14px, 3.5vw, 18px); font-weight: 800;
             color: #fff; text-transform: uppercase;
-            letter-spacing: 1px;
+            letter-spacing: 0.5px;
             text-shadow: 0 2px 10px rgba(0,0,0,0.5);
             white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+            max-width: 80vw;
         }
         .name-banner.mythic { border-color: #ff6b00; box-shadow: 0 0 30px rgba(255,107,0,0.4); }
         .name-banner.legendary { border-color: #fbbf24; box-shadow: 0 0 25px rgba(251,191,36,0.3); }
@@ -352,10 +404,16 @@
             font-size: 22px; border-radius: 50%; cursor: pointer; z-index: 201; }
         
         @media (max-width: 500px) { :root { --card-w: min(180px, 60vw); } .filters { bottom: 100px; } }
+        /* Adjust for unified nav */
+        .nw-nav-toggle { top: 10px; left: 10px; }
+        .season-selector { top: 58px; }
+        .name-banner { top: 110px; }
+        .ctr { top: 62px; }
     </style>
     <script src="/static/nw-game-juice.js"></script>
+    <script src="/static/nw-nav.js"></script>
 </head>
-<body>
+<body data-page-id="cards">
     <!-- Captivating Background -->
     <div class="nw-bg-captivating">
         <div class="bg-image"></div>
@@ -363,18 +421,6 @@
         <div class="bg-particles"></div>
         <div class="bg-grid"></div>
     </div>
-    <header class="hdr">
-        <a href="/" class="logo" style="text-decoration:none;"><i class="fas fa-images" style="margin-right:8px;"></i>NumbahWan TCG</a>
-        <div style="display:flex;align-items:center;gap:12px;">
-            <a href="/tcg" style="padding:6px 12px;background:rgba(255,107,0,0.3);border:1px solid #ff6b00;border-radius:12px;color:#fff;font-size:11px;text-decoration:none;"><i class="fas fa-trophy"></i> Hub</a>
-            <a href="/guide" id="guideLink" style="padding:6px 12px;background:rgba(59,130,246,0.3);border:1px solid #3b82f6;border-radius:12px;color:#fff;font-size:11px;text-decoration:none;"><i class="fas fa-book"></i> Guide</a>
-            <div class="lang">
-                <button class="on" data-l="en">EN</button>
-                <button data-l="zh">中文</button>
-                <button data-l="th">ไทย</button>
-            </div>
-        </div>
-    </header>
     
     <!-- SEASON SELECTOR -->
     <div class="season-selector" id="seasonSelector">
@@ -422,6 +468,19 @@
     
     <div class="hint" id="hint">Swipe to browse • Tap VIEW for details</div>
     
+    <!-- Coming Soon Overlay for Season 3+ -->
+    <div class="coming-soon-overlay" id="comingSoonOverlay">
+        <div class="coming-soon-icon">🤖</div>
+        <div class="coming-soon-title">Cyber Siege</div>
+        <div class="coming-soon-subtitle">Season 3 • Coming Soon</div>
+        <div class="coming-soon-features">
+            <div><span>⚡</span> 108 New Cyber-Themed Cards</div>
+            <div><span>🔧</span> Digital Corruption Mechanic</div>
+            <div><span>🛡️</span> Firewall & Hack Abilities</div>
+            <div><span>👾</span> AI Boss: MegaByte</div>
+        </div>
+    </div>
+    
     <div class="modal" id="modal">
         <button class="close" id="close">×</button>
         <div class="modal-inner">
@@ -459,16 +518,37 @@ const SEASON_IMAGE_PATHS = {
 const IMAGE_BASE_PATH = '/static/images/cards/thumbs/';
 const IMAGE_FULL_PATH = '/static/images/cards/';
 
+// Placeholder images by rarity for Season 2 (until real art is added)
+const PLACEHOLDER_BY_RARITY = {
+    mythic: '01-reggina-mythic.webp',
+    legendary: '02-harlay-legendary.webp',
+    epic: '09-late-night-grind-epic.webp',
+    rare: '20-guild-tryouts-rare.webp',
+    uncommon: '40-casual-member-uncommon.webp',
+    common: '60-server-lag-common.webp'
+};
+
 // Convert image filename to WebP thumbnail
-function getThumbUrl(img) {
+function getThumbUrl(img, rarity = 'common') {
     if (!img) return IMAGE_BASE_PATH + 'placeholder.webp';
-    // Handle s2/ prefix for Season 2
-    const baseName = img.replace(/^s2\//, '');
-    return IMAGE_BASE_PATH + baseName.replace(/\.(png|jpg|jpeg)$/i, '.webp');
+    
+    // Check if it's a Season 2 image (s2/ prefix) - use placeholder until real art exists
+    if (img.startsWith('s2/')) {
+        // Use a rarity-appropriate placeholder from Season 1
+        return IMAGE_BASE_PATH + (PLACEHOLDER_BY_RARITY[rarity] || PLACEHOLDER_BY_RARITY.common);
+    }
+    
+    return IMAGE_BASE_PATH + img.replace(/\.(png|jpg|jpeg)$/i, '.webp');
 }
 // Get full resolution image URL
-function getFullUrl(img) {
+function getFullUrl(img, rarity = 'common') {
     if (!img) return IMAGE_FULL_PATH + 'placeholder.webp';
+    
+    // Check if it's a Season 2 image - use placeholder
+    if (img.startsWith('s2/')) {
+        return IMAGE_FULL_PATH + (PLACEHOLDER_BY_RARITY[rarity] || PLACEHOLDER_BY_RARITY.common);
+    }
+    
     return IMAGE_FULL_PATH + img;
 }
 
@@ -509,22 +589,67 @@ function formatStats(stats) {
 
 // Switch to a different season
 async function switchSeason(season) {
-    if (season === currentSeason || !SEASON_FILES[season]) return;
+    const comingSoon = document.getElementById('comingSoonOverlay');
+    const carousel = document.getElementById('carousel');
+    const nameBanner = document.getElementById('nameBanner');
+    const filters = document.querySelector('.filters');
+    const navWrap = document.querySelector('.nav-wrap');
+    const hint = document.getElementById('hint');
+    const ctr = document.querySelector('.ctr');
     
-    // Update UI
+    // Handle Coming Soon (Season 3+)
+    if (!SEASON_FILES[season]) {
+        // Show Coming Soon overlay
+        comingSoon.classList.add('show');
+        carousel.style.display = 'none';
+        nameBanner.style.display = 'none';
+        filters.style.display = 'none';
+        navWrap.style.display = 'none';
+        hint.style.display = 'none';
+        ctr.style.display = 'none';
+        
+        // Update button state
+        document.querySelectorAll('.season-btn').forEach(btn => {
+            btn.classList.toggle('active', parseInt(btn.dataset.season) === season);
+        });
+        console.log(`Season ${season} coming soon!`);
+        return;
+    }
+    
+    // Hide Coming Soon if shown
+    comingSoon.classList.remove('show');
+    carousel.style.display = '';
+    nameBanner.style.display = '';
+    filters.style.display = '';
+    navWrap.style.display = '';
+    hint.style.display = '';
+    ctr.style.display = '';
+    
+    if (season === currentSeason) return;
+    
+    // Update UI - show loading state
     document.querySelectorAll('.season-btn').forEach(btn => {
         btn.classList.toggle('active', parseInt(btn.dataset.season) === season);
     });
     
     currentSeason = season;
+    
+    // Load new season data
     await loadCardsData(season);
+    
+    // Reset filter to 'all' and update cards array from new DATA
     filter = 'all';
     document.querySelectorAll('.filters button').forEach(b => b.classList.toggle('on', b.dataset.f === 'all'));
-    buildPool();
-    idx = 0;
+    
+    // CRITICAL: Update the cards array from newly loaded DATA
+    cards = [...DATA];
+    
+    // Reset position and re-render carousel with new cards
+    pos = 0;
+    vel = 0;
     render();
     updateNameBanner();
-    console.log(`Switched to Season ${season}`);
+    console.log(`[Season ${season}] Switched! Now showing ${cards.length} cards`);
 }
 
 // Generate stats based on rarity
@@ -759,17 +884,24 @@ function render() {
     cards.forEach((c, i) => {
         const el = document.createElement('div');
         el.className = `card ${c.rarity}`;
+        const isPlaceholder = c.img && c.img.startsWith('s2/');
         // Build card with frame, image, and rarity gem (name shown in big banner above)
+        // Pass rarity for Season 2 placeholder images
         el.innerHTML = `
-            <img class="card-art" src="${getThumbUrl(c.img)}" alt="${c.name}" loading="lazy" onerror="this.style.display='none'">
+            <img class="card-art" src="${getThumbUrl(c.img, c.rarity)}" alt="${c.name}" loading="lazy" onerror="this.style.display='none'">
             <div class="card-frame"></div>
             <div class="card-rarity-gem"><i class="gem-icon"></i></div>
             <div class="holo"></div>
             <div class="shine"></div>
+            ${isPlaceholder ? '<div class="placeholder-badge">🎨 ART COMING</div>' : ''}
         `;
+        // Store card data for easy access
+        el.dataset.cardId = c.id;
+        el.dataset.season = c.season || 1;
         carousel.appendChild(el);
     });
     $('#tot').textContent = cards.length;
+    console.log(`[Render] Rendered ${cards.length} cards for Season ${currentSeason}`);
 }
 
 function draw() {
@@ -852,6 +984,16 @@ function tick() {
 function getX(e) { return e.touches ? e.touches[0].clientX : e.clientX; }
 
 function onDown(e) {
+    // Don't capture if touching UI elements (season selector, header, filters, nav)
+    const target = e.target;
+    if (target.closest('.season-selector') || 
+        target.closest('.hdr') || 
+        target.closest('.filters') ||
+        target.closest('.nav-wrap') ||
+        target.closest('.coming-soon-overlay')) {
+        return; // Let the UI element handle it
+    }
+    
     dragging = true;
     didDrag = false;
     totalDragDist = 0;
@@ -1006,7 +1148,7 @@ function setup() {
 
 function openModal(i) {
     const c = cards[i];
-    $('#mimg').src = getFullUrl(c.img); // Full resolution for modal view
+    $('#mimg').src = getFullUrl(c.img, c.rarity); // Full resolution for modal view (with rarity for S2 placeholders)
     
     // Get translated name or fallback to English
     const name = (lang !== 'en' && cardNames[lang] && cardNames[lang][c.id]) ? cardNames[lang][c.id] : c.name;
@@ -1082,10 +1224,34 @@ function updateUILanguage() {
     draw();
 }
 
-// Season button click handlers
+// Season button click handlers - iOS compatible
+let seasonTouchHandled = false;
 document.querySelectorAll('.season-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
+    // Touch start - mark that we're handling a season button touch
+    btn.addEventListener('touchstart', (e) => {
+        e.stopPropagation();
+        seasonTouchHandled = true;
+    }, { passive: true });
+    
+    // Touch end - trigger the season switch
+    btn.addEventListener('touchend', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        e.stopImmediatePropagation();
+        if (!seasonTouchHandled) return;
+        seasonTouchHandled = false;
+        
         const season = parseInt(btn.dataset.season);
+        console.log(`[Season] Touch season ${season}`);
+        if (btn.classList.contains('disabled')) return;
+        switchSeason(season);
+    }, { capture: true });
+    
+    // Click fallback for desktop
+    btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const season = parseInt(btn.dataset.season);
+        console.log(`[Season] Click season ${season}`);
         if (btn.classList.contains('disabled')) return;
         switchSeason(season);
     });
