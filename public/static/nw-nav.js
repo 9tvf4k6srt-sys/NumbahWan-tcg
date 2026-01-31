@@ -1,11 +1,11 @@
 /**
- * NumbahWan TCG - Unified Navigation System v2.0
- * Smart space management with collapsible sections
- * Organized by user journey: Play → Collect → Trade → Community → Info
+ * NumbahWan TCG - Unified Navigation System v2.1
+ * Single source of truth for navigation across all pages
+ * Integrates with nw-i18n.js for consistent language switching
  */
 
 const NW_NAV = {
-    // Reorganized page categories - Smart grouping for easy navigation
+    // Navigation structure - Smart grouping by user journey
     sections: {
         play: {
             name: { en: 'Play', zh: '游戏', th: 'เล่น' },
@@ -64,18 +64,45 @@ const NW_NAV = {
         }
     },
 
+    // Language configuration - single source of truth
+    languages: {
+        en: { code: 'EN', flag: '🇬🇧', name: 'English' },
+        zh: { code: '中文', flag: '🇹🇼', name: '繁體中文' },
+        th: { code: 'ไทย', flag: '🇹🇭', name: 'ภาษาไทย' }
+    },
+
+    // State
     currentPage: null,
     currentLang: 'en',
     isOpen: false,
     collapsedSections: {},
 
+    // Get current language from localStorage (check both keys for compatibility)
+    getStoredLang() {
+        return localStorage.getItem('lang') || localStorage.getItem('nw_lang') || 'en';
+    },
+
+    // Set language in all storage keys for compatibility
+    setStoredLang(lang) {
+        localStorage.setItem('lang', lang);
+        localStorage.setItem('nw_lang', lang);
+    },
+
     // Initialize navigation
     init(pageId) {
         this.currentPage = pageId;
-        this.currentLang = localStorage.getItem('nw_lang') || 'en';
+        this.currentLang = this.getStoredLang();
         this.collapsedSections = JSON.parse(localStorage.getItem('nw_nav_collapsed') || '{}');
         this.injectNav();
         this.bindEvents();
+        
+        // Listen for language changes from other sources
+        window.addEventListener('nw-lang-change', (e) => {
+            if (e.detail?.lang && e.detail.lang !== this.currentLang) {
+                this.currentLang = e.detail.lang;
+                this.refresh();
+            }
+        });
     },
 
     // Get localized text
@@ -91,9 +118,39 @@ const NW_NAV = {
         this.refresh();
     },
 
+    // Change language - integrates with nw-i18n.js
+    changeLang(lang) {
+        if (!['en', 'zh', 'th'].includes(lang)) return;
+        
+        this.currentLang = lang;
+        this.setStoredLang(lang);
+        
+        // Update nav UI
+        this.refresh();
+        
+        // Trigger nw-i18n.js if available
+        if (window.NWi18n?.setLanguage) {
+            window.NWi18n.setLanguage(lang);
+        } else if (window.setLanguage) {
+            window.setLanguage(lang);
+        }
+        
+        // Update any page-specific language handlers
+        if (typeof updateUILanguage === 'function') {
+            updateUILanguage();
+        }
+        
+        // Dispatch custom event for other components
+        window.dispatchEvent(new CustomEvent('nw-lang-change', { detail: { lang } }));
+        
+        // Update HTML lang attribute
+        document.documentElement.lang = lang === 'zh' ? 'zh-TW' : lang;
+    },
+
     // Generate navigation HTML
     generateNavHTML() {
         const sectionEntries = Object.entries(this.sections);
+        const langEntries = Object.entries(this.languages);
         
         return `
         <div class="nw-nav-overlay" id="nwNavOverlay"></div>
@@ -142,11 +199,13 @@ const NW_NAV = {
             
             <div class="nw-nav-footer">
                 <div class="nw-nav-lang">
-                    <button class="nw-lang-btn ${this.currentLang === 'en' ? 'active' : ''}" data-lang="en">EN</button>
-                    <button class="nw-lang-btn ${this.currentLang === 'zh' ? 'active' : ''}" data-lang="zh">中文</button>
-                    <button class="nw-lang-btn ${this.currentLang === 'th' ? 'active' : ''}" data-lang="th">ไทย</button>
+                    ${langEntries.map(([code, info]) => `
+                        <button class="nw-lang-btn ${this.currentLang === code ? 'active' : ''}" data-lang="${code}" title="${info.name}">
+                            <span class="nw-lang-flag">${info.flag}</span>
+                            <span class="nw-lang-code">${info.code}</span>
+                        </button>
+                    `).join('')}
                 </div>
-                <div class="nw-nav-version">v2.0</div>
             </div>
         </nav>
         
@@ -177,6 +236,9 @@ const NW_NAV = {
 
     // Inject navigation into page
     injectNav() {
+        // Remove any existing nav container
+        document.getElementById('nw-nav-container')?.remove();
+        
         // Add CSS
         if (!document.getElementById('nw-nav-styles')) {
             const style = document.createElement('style');
@@ -213,16 +275,7 @@ const NW_NAV = {
         // Language buttons
         document.querySelectorAll('.nw-lang-btn').forEach(btn => {
             btn.addEventListener('click', () => {
-                this.currentLang = btn.dataset.lang;
-                localStorage.setItem('nw_lang', this.currentLang);
-                this.refresh();
-                // Trigger page-specific language update if exists
-                if (typeof updateUILanguage === 'function') {
-                    updateUILanguage();
-                }
-                if (typeof window.NW_I18N !== 'undefined') {
-                    window.NW_I18N.setLang(this.currentLang);
-                }
+                this.changeLang(btn.dataset.lang);
             });
         });
 
@@ -268,7 +321,7 @@ const NW_NAV = {
     // CSS Styles
     getStyles() {
         return `
-        /* NW Nav v2.0 - Smart Space Management */
+        /* NW Nav v2.1 - Unified Navigation */
         .nw-nav-overlay {
             position: fixed;
             inset: 0;
@@ -348,7 +401,7 @@ const NW_NAV = {
             color: #ff6b00;
         }
 
-        /* Sections Container - Scrollable */
+        /* Sections Container */
         .nw-nav-sections {
             flex: 1;
             overflow-y: auto;
@@ -498,7 +551,7 @@ const NW_NAV = {
             50% { opacity: 0.8; transform: scale(1.05); }
         }
 
-        /* Footer */
+        /* Footer with Language Toggle */
         .nw-nav-footer {
             padding: 12px 16px;
             border-top: 1px solid rgba(255,255,255,0.08);
@@ -511,13 +564,16 @@ const NW_NAV = {
         }
         .nw-lang-btn {
             flex: 1;
-            padding: 8px 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            padding: 10px 8px;
             border: 1px solid rgba(255,255,255,0.15);
             background: rgba(255,255,255,0.03);
-            color: rgba(255,255,255,0.5);
+            color: rgba(255,255,255,0.6);
             border-radius: 8px;
-            font-size: 11px;
-            font-weight: 600;
+            font-size: 12px;
             cursor: pointer;
             transition: all 0.2s;
         }
@@ -533,11 +589,11 @@ const NW_NAV = {
             font-weight: 800;
             box-shadow: 0 2px 8px rgba(255,107,0,0.3);
         }
-        .nw-nav-version {
-            text-align: center;
-            font-size: 9px;
-            color: rgba(255,255,255,0.2);
-            margin-top: 8px;
+        .nw-lang-flag {
+            font-size: 14px;
+        }
+        .nw-lang-code {
+            font-weight: 600;
         }
 
         /* Toggle Button */
@@ -602,7 +658,15 @@ const NW_NAV = {
             font-weight: 700;
         }
 
-        /* Mobile Responsive */
+        /* Hide old language toggles when nav is present */
+        #lang-switcher,
+        .lang-switcher,
+        .language-toggle,
+        [class*="lang-toggle"]:not(.nw-lang-btn) {
+            display: none !important;
+        }
+
+        /* Mobile */
         @media (max-width: 480px) {
             .nw-nav {
                 width: 100%;
