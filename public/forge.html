@@ -4237,19 +4237,19 @@ async function executePull() {
         pullBtn.textContent = '🔥 PULL';
     }
     
-    // ===== PACK OPENING ANIMATION - RE-ENABLED =====
+    // ===== PACK OPENING ANIMATION =====
+    // showPackOpening returns a Promise that resolves AFTER user swipes to open
+    // tearOpenPack handles hiding the overlay after animations complete
     console.log('[FORGE] 🎴 Starting pack opening animation...');
     try {
         await showPackOpening(cardsToReveal);
         console.log('[FORGE] 🎴 Pack animation complete!');
     } catch (err) {
         console.error('[FORGE] ❌ Pack animation error:', err);
-        // Continue to reveal even if pack animation fails
+        // Fallback: hide overlay if animation fails
+        const packOverlay = document.getElementById('packOverlay');
+        if (packOverlay) packOverlay.classList.remove('show');
     }
-    
-    // Make sure pack overlay is hidden before reveal
-    const packOverlay = document.getElementById('packOverlay');
-    if (packOverlay) packOverlay.classList.remove('show');
     
     currentIndex = 0;
     console.log('[FORGE] 🎴 Calling showReveal with', cardsToReveal.length, 'cards');
