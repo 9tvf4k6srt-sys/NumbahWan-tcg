@@ -53,7 +53,8 @@ const NW_NAV = {
                 { id: 'pvp', name: { en: 'PVP Diary', zh: 'PVP日記', th: 'ไดอารี่ PVP' }, icon: 'swords', href: '/pvp' },
                 { id: 'regina', name: { en: 'RegginA', zh: 'RegginA', th: 'RegginA' }, icon: 'crown', href: '/regina' },
                 { id: 'fashion', name: { en: 'Fashion', zh: '時裝', th: 'แฟชั่น' }, icon: 'dress', href: '/fashion' },
-                { id: 'memes', name: { en: 'Memes', zh: '迷因', th: 'มีม' }, icon: 'meme', href: '/memes' }
+                { id: 'memes', name: { en: 'Memes', zh: '迷因', th: 'มีม' }, icon: 'meme', href: '/memes' },
+                { id: 'academy', name: { en: 'Academy', zh: '學院', th: 'สถาบัน' }, icon: 'scroll', href: '/academy', isNew: true }
             ]
         },
         more: {
