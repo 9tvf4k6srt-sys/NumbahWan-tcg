@@ -350,11 +350,11 @@
         btn.id = 'nw-back-top';
         btn.innerHTML = '↑';
         btn.style.cssText = `
-          position:fixed;bottom:20px;left:50%;transform:translateX(-50%);width:44px;height:44px;
-          background:var(--nw-primary,#ff6b00);color:#fff;border:none;
-          border-radius:50%;font-size:20px;cursor:pointer;opacity:0;
-          visibility:hidden;transition:all 0.3s ease;z-index:9998;
-          box-shadow:0 4px 15px rgba(255,107,0,0.4);
+          position:fixed;bottom:80px;right:16px;width:40px;height:40px;
+          background:rgba(255,107,0,0.8);color:#fff;border:none;
+          border-radius:50%;font-size:18px;cursor:pointer;opacity:0;
+          visibility:hidden;transition:all 0.3s ease;z-index:399;
+          box-shadow:0 2px 10px rgba(255,107,0,0.3);
         `;
         document.body.appendChild(btn);
         
@@ -363,10 +363,10 @@
         });
         
         btn.addEventListener('mouseenter', () => {
-          btn.style.transform = 'translateX(-50%) scale(1.1)';
+          btn.style.transform = 'scale(1.1)';
         });
         btn.addEventListener('mouseleave', () => {
-          btn.style.transform = 'translateX(-50%) scale(1)';
+          btn.style.transform = 'scale(1)';
         });
         
         const toggle = () => {
