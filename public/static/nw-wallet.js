@@ -744,7 +744,7 @@ console.log('%c  NW_WALLET.addToGMWhitelist() - Show your Guest ID for permanent
             '<div class="nw-item"><img src="/static/icons/gold.svg" class="nw-ico"><span class="nw-val gold" id="nwfGold">0</span></div>' +
             '<div class="nw-item"><img src="/static/icons/iron.svg" class="nw-ico"><span class="nw-val iron" id="nwfIron">0</span></div>' +
             '<div class="nw-item"><img src="/static/icons/black-jade.svg" class="nw-ico"><span class="nw-val stone" id="nwfStone">0</span></div>' +
-            '<div class="nw-item"><img src="/static/icons/sacred-log.svg" class="nw-ico"><span class="nw-val wood" id="nwfWood">0</span></div>';
+            '<div class="nw-item"><img src="/static/icons/sacred-log-64.webp" class="nw-ico"><span class="nw-val wood" id="nwfWood">0</span></div>';
         document.body.appendChild(bar);
         document.body.classList.add('nw-bottom-bar-active');
         
