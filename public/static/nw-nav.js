@@ -1,72 +1,79 @@
 /**
- * NumbahWan TCG - Unified Navigation System v3.0
- * Simplified navigation - fewer pages, clearer structure
+ * NumbahWan TCG - Unified Navigation System v4.0
+ * Uses ONLY custom NW icons - NO EMOJIS!
  */
 
 const NW_NAV = {
-    // Simplified navigation - only pages that exist
+    // Icon helper - generates SVG icon HTML
+    iconSvg(iconId, size = 18) {
+        return `<svg class="nw-nav-icon" width="${size}" height="${size}" viewBox="0 0 24 24" fill="currentColor">
+            <use href="/static/icons/nw-icons.svg#${iconId}"></use>
+        </svg>`;
+    },
+
+    // Navigation structure with custom icon IDs
     sections: {
         play: {
             name: { en: 'Play', zh: '遊戲', th: 'เล่น' },
-            icon: '⚔️',
+            icon: 'swords',      // ⚔️ → crossed swords
             color: '#ff4444',
             pages: [
-                { id: 'battle', name: { en: 'Battle', zh: '戰鬥', th: 'ต่อสู้' }, icon: '⚔️', href: '/battle' },
-                { id: 'pvp', name: { en: 'Arena', zh: '競技場', th: 'สนาม' }, icon: '🏟️', href: '/pvp' },
-                { id: 'arcade', name: { en: 'Arcade', zh: '街機', th: 'อาร์เคด' }, icon: '🕹️', href: '/arcade' }
+                { id: 'battle', name: { en: 'Battle', zh: '戰鬥', th: 'ต่อสู้' }, icon: 'swords', href: '/battle' },
+                { id: 'pvp', name: { en: 'Arena', zh: '競技場', th: 'สนาม' }, icon: 'trophy', href: '/pvp' },
+                { id: 'arcade', name: { en: 'Arcade', zh: '街機', th: 'อาร์เคด' }, icon: 'gaming', href: '/arcade' }
             ]
         },
         collect: {
             name: { en: 'Cards', zh: '卡牌', th: 'การ์ด' },
-            icon: '🎴',
+            icon: 'cards-stack',  // 🎴 → card stack
             color: '#ff6b00',
             pages: [
-                { id: 'forge', name: { en: 'Open Packs', zh: '開卡包', th: 'เปิดแพ็ค' }, icon: '🔥', href: '/forge' },
-                { id: 'cards', name: { en: 'All Cards', zh: '全部卡牌', th: 'การ์ดทั้งหมด' }, icon: '🎴', href: '/cards' },
-                { id: 'collection', name: { en: 'My Cards', zh: '我的卡牌', th: 'การ์ดของฉัน' }, icon: '💼', href: '/collection' },
-                { id: 'deckbuilder', name: { en: 'Decks', zh: '卡組', th: 'เด็ค' }, icon: '🃏', href: '/deckbuilder' }
+                { id: 'forge', name: { en: 'Open Packs', zh: '開卡包', th: 'เปิดแพ็ค' }, icon: 'fire', href: '/forge' },
+                { id: 'cards', name: { en: 'All Cards', zh: '全部卡牌', th: 'การ์ดทั้งหมด' }, icon: 'cards-stack', href: '/cards' },
+                { id: 'collection', name: { en: 'My Cards', zh: '我的卡牌', th: 'การ์ดของฉัน' }, icon: 'inventory', href: '/collection' },
+                { id: 'deckbuilder', name: { en: 'Decks', zh: '卡組', th: 'เด็ค' }, icon: 'clipboard', href: '/deckbuilder' }
             ]
         },
         shop: {
             name: { en: 'Shop', zh: '商店', th: 'ร้านค้า' },
-            icon: '🛒',
+            icon: 'shopping-bag', // 🛒 → shopping bag
             color: '#44bb44',
             pages: [
-                { id: 'market', name: { en: 'Market', zh: '市場', th: 'ตลาด' }, icon: '🛒', href: '/market' },
-                { id: 'merch', name: { en: 'Merch', zh: '周邊', th: 'สินค้า' }, icon: '🛍️', href: '/merch' },
-                { id: 'wallet', name: { en: 'Wallet', zh: '錢包', th: 'กระเป๋า' }, icon: '💰', href: '/wallet' }
+                { id: 'market', name: { en: 'Market', zh: '市場', th: 'ตลาด' }, icon: 'trade', href: '/market' },
+                { id: 'merch', name: { en: 'Merch', zh: '周邊', th: 'สินค้า' }, icon: 'shopping-bag', href: '/merch' },
+                { id: 'wallet', name: { en: 'Wallet', zh: '錢包', th: 'กระเป๋า' }, icon: 'wallet', href: '/wallet' }
             ]
         },
         guild: {
             name: { en: 'Guild', zh: '公會', th: 'กิลด์' },
-            icon: '🏰',
+            icon: 'shield',       // 🏰 → guild shield
             color: '#ffd700',
             pages: [
-                { id: 'index', name: { en: 'Home', zh: '首頁', th: 'หน้าหลัก' }, icon: '🏠', href: '/' },
-                { id: 'tournament', name: { en: 'Tournament', zh: '錦標賽', th: 'ทัวร์นาเมนต์' }, icon: '🏆', href: '/tournament', isNew: true },
-                { id: 'regina', name: { en: 'RegginA', zh: 'RegginA', th: 'RegginA' }, icon: '👑', href: '/regina' },
-                { id: 'fashion', name: { en: 'Fashion', zh: '時裝', th: 'แฟชั่น' }, icon: '👗', href: '/fashion' },
-                { id: 'memes', name: { en: 'Memes', zh: '迷因', th: 'มีม' }, icon: '😂', href: '/memes' }
+                { id: 'index', name: { en: 'Home', zh: '首頁', th: 'หน้าหลัก' }, icon: 'home', href: '/' },
+                { id: 'tournament', name: { en: 'Tournament', zh: '錦標賽', th: 'ทัวร์นาเมนต์' }, icon: 'trophy', href: '/tournament', isNew: true },
+                { id: 'regina', name: { en: 'RegginA', zh: 'RegginA', th: 'RegginA' }, icon: 'crown', href: '/regina' },
+                { id: 'fashion', name: { en: 'Fashion', zh: '時裝', th: 'แฟชั่น' }, icon: 'dress', href: '/fashion' },
+                { id: 'memes', name: { en: 'Memes', zh: '迷因', th: 'มีม' }, icon: 'meme', href: '/memes' }
             ]
         },
         more: {
             name: { en: 'More', zh: '更多', th: 'เพิ่มเติม' },
-            icon: '📖',
+            icon: 'scroll',       // 📖 → scroll/guide
             color: '#8888ff',
             pages: [
-                { id: 'guide', name: { en: 'Guide', zh: '攻略', th: 'คู่มือ' }, icon: '📖', href: '/guide' },
-                { id: 'zakum', name: { en: 'Zakum Lore', zh: '扎昆傳說', th: 'ตำนานซาคุม' }, icon: '🗿', href: '/zakum' },
-                { id: 'fortune', name: { en: 'Fortune', zh: '占卜', th: 'ดวง' }, icon: '🔮', href: '/fortune' },
-                { id: 'apply', name: { en: 'Join Us', zh: '加入', th: 'สมัคร' }, icon: '📝', href: '/apply' }
+                { id: 'guide', name: { en: 'Guide', zh: '攻略', th: 'คู่มือ' }, icon: 'scroll', href: '/guide' },
+                { id: 'zakum', name: { en: 'Zakum Lore', zh: '扎昆傳說', th: 'ตำนานซาคุม' }, icon: 'skull', href: '/zakum' },
+                { id: 'fortune', name: { en: 'Fortune', zh: '占卜', th: 'ดวง' }, icon: 'crystal-ball', href: '/fortune' },
+                { id: 'apply', name: { en: 'Join Us', zh: '加入', th: 'สมัคร' }, icon: 'form', href: '/apply' }
             ]
         }
     },
 
-    // Languages
+    // Languages with custom flag icons
     languages: {
-        en: { code: 'EN', flag: '🇬🇧' },
-        zh: { code: '中文', flag: '🇹🇼' },
-        th: { code: 'ไทย', flag: '🇹🇭' }
+        en: { code: 'EN', icon: 'globe' },
+        zh: { code: '中文', icon: 'globe' },
+        th: { code: 'ไทย', icon: 'globe' }
     },
 
     // State
@@ -100,28 +107,34 @@ const NW_NAV = {
             const pagesHTML = section.pages.map(page => {
                 const isActive = page.id === this.currentPage;
                 const newBadge = page.isNew ? '<span class="nw-new-badge">NEW</span>' : '';
+                // Use SVG icon instead of emoji
+                const iconHtml = this.iconSvg(page.icon, 18);
                 return `
                     <a href="${page.href}" class="nw-nav-link ${isActive ? 'active' : ''}">
-                        <span class="nw-nav-icon">${page.icon}</span>
+                        ${iconHtml}
                         <span class="nw-nav-text">${this.t(page.name)}</span>
                         ${newBadge}
                     </a>
                 `;
             }).join('');
 
+            // Section header with SVG icon
+            const sectionIconHtml = this.iconSvg(section.icon, 16);
             return `
                 <div class="nw-nav-section">
                     <div class="nw-nav-section-header" style="color: ${section.color}">
-                        <span>${section.icon} ${this.t(section.name)}</span>
+                        ${sectionIconHtml}
+                        <span>${this.t(section.name)}</span>
                     </div>
                     <div class="nw-nav-pages">${pagesHTML}</div>
                 </div>
             `;
         }).join('');
 
+        // Language buttons with globe icon
         const langButtons = Object.entries(this.languages).map(([code, lang]) => `
             <button class="nw-lang-btn ${code === this.currentLang ? 'active' : ''}" data-lang="${code}">
-                ${lang.flag} ${lang.code}
+                ${lang.code}
             </button>
         `).join('');
 
@@ -129,11 +142,12 @@ const NW_NAV = {
             <div id="nwNavOverlay" class="nw-nav-overlay"></div>
             <nav id="nwNavPanel" class="nw-nav-panel">
                 <div class="nw-nav-header">
-                    <div class="nw-nav-title">☰ Menu</div>
-                    <button id="nwNavClose" class="nw-nav-close">✕</button>
+                    <div class="nw-nav-title">${this.iconSvg('menu', 20)} Menu</div>
+                    <button id="nwNavClose" class="nw-nav-close">${this.iconSvg('close', 18)}</button>
                 </div>
                 <div class="nw-nav-sections">${sectionsHTML}</div>
                 <div class="nw-nav-lang">
+                    ${this.iconSvg('globe', 16)}
                     ${langButtons}
                 </div>
             </nav>
@@ -291,6 +305,13 @@ const NW_NAV = {
                     text-transform: uppercase;
                     padding: 8px 12px;
                     letter-spacing: 1px;
+                    display: flex;
+                    align-items: center;
+                    gap: 8px;
+                }
+                .nw-nav-section-header .nw-nav-icon {
+                    width: 16px;
+                    height: 16px;
                 }
                 .nw-nav-pages {
                     display: flex;
@@ -318,9 +339,23 @@ const NW_NAV = {
                     font-weight: bold;
                 }
                 .nw-nav-icon {
-                    font-size: 16px;
-                    width: 24px;
-                    text-align: center;
+                    width: 18px;
+                    height: 18px;
+                    flex-shrink: 0;
+                }
+                .nw-nav-title {
+                    display: flex;
+                    align-items: center;
+                    gap: 8px;
+                }
+                .nw-nav-title .nw-nav-icon {
+                    width: 20px;
+                    height: 20px;
+                }
+                .nw-nav-close {
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
                 }
                 .nw-new-badge {
                     font-size: 9px;
@@ -333,10 +368,16 @@ const NW_NAV = {
                 }
                 .nw-nav-lang {
                     display: flex;
-                    gap: 4px;
+                    gap: 6px;
                     padding: 12px;
                     border-top: 1px solid rgba(255,107,0,0.2);
                     justify-content: center;
+                    align-items: center;
+                }
+                .nw-nav-lang .nw-nav-icon {
+                    width: 16px;
+                    height: 16px;
+                    color: #888;
                 }
                 .nw-lang-btn {
                     flex: 1;
@@ -370,20 +411,20 @@ const NW_NAV = {
             btnContainer.id = 'nwNavButtons';
             btnContainer.className = 'nw-nav-buttons';
             
-            // Back button (hidden on home)
+            // Back button with SVG icon (hidden on home)
             const backBtn = document.createElement('button');
             backBtn.id = 'nwBackBtn';
             backBtn.className = 'nw-back-btn';
             if (isHome) backBtn.classList.add('hidden');
-            backBtn.innerHTML = '←';
+            backBtn.innerHTML = this.iconSvg('arrow-left', 20);
             backBtn.setAttribute('aria-label', 'Go back');
             backBtn.addEventListener('click', () => this.goBack());
             
-            // Menu toggle button
+            // Menu toggle button with SVG icon
             const toggle = document.createElement('button');
             toggle.id = 'nwNavToggle';
             toggle.className = 'nw-nav-toggle';
-            toggle.innerHTML = '☰';
+            toggle.innerHTML = this.iconSvg('menu', 20);
             toggle.setAttribute('aria-label', 'Open navigation menu');
             
             btnContainer.appendChild(backBtn);
