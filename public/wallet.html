@@ -9,6 +9,7 @@
     <link rel="stylesheet" href="/static/nw-utilities.css">
     <link rel="stylesheet" href="/static/nw-tokens.css">
     <script src="/static/nw-wallet.js"></script>
+    <script src="/static/js/nw-progression.js"></script>
     <script src="/static/nw-cards.js"></script>
     <script src="/static/nw-components.js"></script>
     <style>
@@ -632,6 +633,10 @@
         @keyframes sacredAura {
             0%, 100% { opacity: 0.5; transform: scale(1); }
             50% { opacity: 0.8; transform: scale(1.02); }
+        }
+        @keyframes sacredFomoPulse {
+            0%, 100% { opacity: 1; text-shadow: 0 0 10px rgba(255,0,255,0.5); }
+            50% { opacity: 0.7; text-shadow: 0 0 20px rgba(255,0,255,0.8); }
         }
         @keyframes sacredFireBar {
             0% { background-position: 0% 50%; }
@@ -3378,7 +3383,9 @@
                     <div class="currency-name">Sacred Logs</div>
                     <div class="currency-value wood" id="bal-wood">0</div>
                     <div class="mythic-label"><svg class="nw-icon" width="12" height="12"><use href="/static/icons/nw-icons.svg#fire"></use></svg> MYTHIC FORGE ESSENCE <svg class="nw-icon" width="12" height="12"><use href="/static/icons/nw-icons.svg#fire"></use></svg></div>
-                    <div class="sacred-subtitle">Exchange 50 Black Jade → 1 Sacred Log</div>
+                    <div class="sacred-subtitle">50 Black Jade → 1 Sacred Log</div>
+                    <div class="sacred-fomo" id="sacredLogFomo" style="margin-top:8px;font-size:9px;color:#ff00ff;text-transform:uppercase;letter-spacing:1px;animation:sacredFomoPulse 2s ease-in-out infinite;">🔥 ONLY CURRENCY FOR MYTHIC PULLS 🔥</div>
+                    <div class="sacred-progress" id="sacredLogProgress" style="margin-top:6px;font-size:10px;color:rgba(255,255,255,0.5);"></div>
                 </div>
             </div>
         </div>
@@ -4958,6 +4965,9 @@ function updateWalletUI() {
     animateValue('bal-stone', info.currencies.stone || 0);
     animateValue('bal-wood', info.currencies.wood || 0);
     
+    // Update Sacred Log "Almost There" progress
+    updateSacredLogProgress(info.currencies.stone || 0, info.currencies.wood || 0);
+    
     // Stats
     const stats = info.stats;
     document.getElementById('stat-games').textContent = stats.gamesPlayed || 0;
@@ -5066,6 +5076,55 @@ function formatNum(n) {
     if (n >= 1000000) return (n/1000000).toFixed(1) + 'M';
     if (n >= 1000) return (n/1000).toFixed(1) + 'K';
     return n.toLocaleString();
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// SACRED LOG "ALMOST THERE" PROGRESS TRACKER
+// Creates urgency and FOMO to encourage exchange/purchase
+// ═══════════════════════════════════════════════════════════════════
+function updateSacredLogProgress(stoneBalance, woodBalance) {
+    const progressEl = document.getElementById('sacredLogProgress');
+    const fomoEl = document.getElementById('sacredLogFomo');
+    if (!progressEl) return;
+    
+    const EXCHANGE_RATE = 50; // 50 Black Jade = 1 Sacred Log
+    const progressToNextLog = stoneBalance % EXCHANGE_RATE;
+    const logsAchievable = Math.floor(stoneBalance / EXCHANGE_RATE);
+    const progressPercent = (progressToNextLog / EXCHANGE_RATE) * 100;
+    const remaining = EXCHANGE_RATE - progressToNextLog;
+    
+    // Generate "almost there" message
+    let message = '';
+    let fomoMessage = '🔥 ONLY CURRENCY FOR MYTHIC PULLS 🔥';
+    
+    if (logsAchievable >= 1) {
+        message = `✨ You can exchange ${logsAchievable} Log${logsAchievable > 1 ? 's' : ''} NOW!`;
+        fomoMessage = '⚡ EXCHANGE AVAILABLE - PULL A MYTHIC! ⚡';
+        if (fomoEl) {
+            fomoEl.style.color = '#22c55e'; // Green for action
+            fomoEl.style.animation = 'sacredFomoPulse 0.5s ease-in-out infinite';
+        }
+    } else if (progressPercent >= 80) {
+        message = `🔥 SO CLOSE! Only ${remaining} more Jade for a Sacred Log!`;
+        fomoMessage = '🔥 ALMOST THERE! GET MORE JADE NOW! 🔥';
+    } else if (progressPercent >= 50) {
+        message = `💪 Halfway! ${remaining} more Jade to go`;
+        fomoMessage = '💎 HALFWAY TO A MYTHIC PULL! 💎';
+    } else if (progressPercent >= 25) {
+        message = `📈 ${progressToNextLog}/${EXCHANGE_RATE} Jade toward next Log`;
+    } else if (stoneBalance > 0) {
+        message = `${progressToNextLog}/${EXCHANGE_RATE} Jade collected`;
+    } else {
+        message = 'Earn Black Jade to forge Sacred Logs!';
+    }
+    
+    // Add total logs owned context
+    if (woodBalance > 0) {
+        message += ` • You have ${woodBalance} Log${woodBalance > 1 ? 's' : ''}`;
+    }
+    
+    progressEl.textContent = message;
+    if (fomoEl) fomoEl.textContent = fomoMessage;
 }
 
 function exportWallet() {

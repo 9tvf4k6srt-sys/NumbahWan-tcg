@@ -13,6 +13,7 @@
     <script src="/static/nw-icons-inline.js"></script>
     <script src="/static/nw-game-systems.js"></script>
     <script src="/static/nw-wallet.js"></script>
+    <script src="/static/js/nw-progression.js"></script>
     <script src="/static/nw-components.js"></script>
     <style>
         :root {
@@ -1429,24 +1430,39 @@
 
 // Currency metadata
 const CURRENCY_DATA = {
-    diamond: { icon: '💎', name: 'Diamond', tier: 0 },
-    gold: { icon: '🪙', name: 'Gold', tier: 1 },
-    iron: { icon: '⚙️', name: 'Iron', tier: 2 },
-    stone: { icon: '🪨', name: 'Stone', tier: 3 },
-    wood: { icon: '🪵', name: 'Logs', tier: 4 }
+    diamond: { icon: '💎', name: 'Diamond', tier: 0, color: '#00bfff', rarity: 'common' },
+    gold: { icon: '🪙', name: 'Gold', tier: 1, color: '#ffd700', rarity: 'uncommon' },
+    iron: { icon: '⚙️', name: 'Iron', tier: 2, color: '#b0c4de', rarity: 'rare' },
+    stone: { icon: '🪨', name: 'Black Jade', tier: 3, color: '#00ff88', rarity: 'epic' },
+    wood: { icon: '🪵', name: 'Sacred Log', tier: 4, color: '#ff00ff', rarity: 'mythic' }
 };
 
-// Exchange rates: amount of FROM needed for 1 TO (upgrading)
+// ═══════════════════════════════════════════════════════════════
+// IMPROVED EXCHANGE RATES - "Almost There" Progression Design
+// Lower upgrade rates = faster progress = more dopamine hits
+// Sacred Log remains special with intentional bottleneck
+// ═══════════════════════════════════════════════════════════════
 const EXCHANGE_RATES = {
-    'diamond->gold': 100,
-    'gold->iron': 50,
-    'iron->stone': 25,
-    'stone->wood': 50,  // Balanced: 50 Jade = 1 Log
-    // Downgrade multipliers (get this many back per 1)
-    'gold->diamond': 80,
-    'iron->gold': 35,
-    'stone->iron': 15,
-    'wood->stone': 50
+    // UPGRADE PATH (easier progression - feels achievable!)
+    'diamond->gold': 10,      // Was 100 - Now 10:1 feels quick
+    'gold->iron': 5,          // Was 50 - Now 5:1 smooth progress  
+    'iron->stone': 5,         // Was 25 - Now 5:1 consistent ladder
+    'stone->wood': 50,        // SACRED LOG BOTTLENECK - keeps it SPECIAL
+    
+    // DOWNGRADE PATH (20% value loss - encourages forward progress)
+    'gold->diamond': 8,       // Get 8 per 1 (20% loss)
+    'iron->gold': 4,          // Get 4 per 1 (20% loss)
+    'stone->iron': 4,         // Get 4 per 1 (20% loss)
+    'wood->stone': 40         // Get 40 per 1 (20% loss) - DON'T WASTE LOGS!
+};
+
+// "Almost There" milestone thresholds for engagement messages
+const MILESTONES = {
+    diamond: [100, 500, 1000, 5000],
+    gold: [50, 100, 500, 1000],
+    iron: [25, 50, 100, 500],
+    stone: [10, 25, 50, 100],  // Black Jade milestones
+    wood: [1, 5, 10, 25, 50]   // Sacred Log - every one is precious!
 };
 
 // Wait for wallet to be ready
