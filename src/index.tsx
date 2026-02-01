@@ -531,6 +531,35 @@ app.get('/api/members', (c) => {
 app.get('/', serveStatic({ path: './index.html' }))
 app.get('/index.html', serveStatic({ path: './index.html' }))
 
+// AI-friendly files - serve with correct content types
+app.get('/llms.txt', async (c) => {
+  try {
+    // @ts-ignore
+    const asset = await c.env?.ASSETS?.fetch(new Request('https://dummy/llms.txt'))
+    if (asset) {
+      return new Response(asset.body, {
+        headers: { 'Content-Type': 'text/plain; charset=utf-8' }
+      })
+    }
+  } catch (e) {}
+  return c.redirect('/llms.txt')
+})
+
+app.get('/robots.txt', async (c) => {
+  const robotsTxt = `User-agent: *
+Allow: /
+
+# AI Assistants Welcome!
+# See /llms.txt for AI-specific guidance
+# See /.well-known/ai-plugin.json for structured metadata
+
+Sitemap: https://numbahwan.pages.dev/sitemap.xml
+`
+  return new Response(robotsTxt, {
+    headers: { 'Content-Type': 'text/plain; charset=utf-8' }
+  })
+})
+
 // Regina page route - serves the static HTML file
 app.get('/regina', async (c) => {
   // For Cloudflare Pages, we need to serve static HTML differently
