@@ -146,11 +146,11 @@ const NW_NAV = {
             const style = document.createElement('style');
             style.id = 'nw-nav-styles';
             style.textContent = `
-                /* Nav button container - horizontal row at top-left */
+                /* Nav button container - horizontal row at top-RIGHT to avoid blocking headers */
                 .nw-nav-buttons {
                     position: fixed;
                     top: 10px;
-                    left: 10px;
+                    right: 10px;
                     z-index: 9998;
                     display: flex;
                     gap: 6px;

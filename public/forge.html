@@ -1832,11 +1832,16 @@ if (typeof NW_CORE === 'undefined') {
     window.NW_CORE = { throttle: (fn) => fn };
     console.log('[FORGE] NW_CORE stubbed');
 }
+// Early variable declarations (needed before updateUI calls)
+var lastLogBalance = null;
+var walletReady = false;
+
 // NW_WALLET is now loaded from nw-wallet.js
 // Initialize it when ready
 if (typeof NW_WALLET !== 'undefined') {
     NW_WALLET.init().then(() => {
         console.log('[FORGE] NW_WALLET initialized, GM:', NW_WALLET.isGM);
+        walletReady = true;
         updateUI();
     });
 } else {
@@ -2687,7 +2692,7 @@ let forgeState = {
         currentStreak: 0  // Pulls since last epic+
     }
 };
-let walletReady = false;
+// walletReady declared at top of script
 
 // =====================================================
 // 🔧 GM MODE - Uses wallet GM system for testing
@@ -2890,7 +2895,6 @@ function saveState() {
 }
 
 // UI - Multi-Tier Pity Display
-let lastLogBalance = null;
 function updateUI() {
     const currentLogs = getLogs();
     const logEl = document.getElementById('logBalance');
