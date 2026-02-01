@@ -2757,7 +2757,24 @@ if (document.readyState === 'loading') {
 } else {
     setupModeUI();
 }
-window.addEventListener('load', setupDevModeUI);
+
+// Listen for GM mode changes (user activates/deactivates via console)
+window.addEventListener('nw-gm-activated', () => {
+    console.log('[FORGE] GM mode activated - updating UI');
+    setupModeUI();
+    updateUI();
+});
+window.addEventListener('nw-gm-deactivated', () => {
+    console.log('[FORGE] GM mode deactivated - updating UI');
+    setupModeUI();
+    updateUI();
+});
+// DEV MODE only
+function setupDevModeUI() {
+    // Dev mode UI setup - only runs when DEV_MODE = true
+    if (!DEV_MODE) return;
+    console.log('[FORGE] Dev mode UI initialized');
+}
 // =====================================================
 
 // GM MODE: Uses wallet-based GM system for infinite resources
