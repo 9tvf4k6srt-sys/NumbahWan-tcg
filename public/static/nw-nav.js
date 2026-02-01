@@ -19,7 +19,6 @@ const NW_NAV = {
             color: '#ff4444',
             pages: [
                 { id: 'battle', name: { en: 'Battle', zh: '戰鬥', th: 'ต่อสู้' }, icon: 'swords', href: '/battle' },
-                { id: 'pvp', name: { en: 'Arena', zh: '競技場', th: 'สนาม' }, icon: 'trophy', href: '/pvp' },
                 { id: 'arcade', name: { en: 'Arcade', zh: '街機', th: 'อาร์เคด' }, icon: 'gaming', href: '/arcade' }
             ]
         },
@@ -51,6 +50,7 @@ const NW_NAV = {
             pages: [
                 { id: 'index', name: { en: 'Home', zh: '首頁', th: 'หน้าหลัก' }, icon: 'home', href: '/' },
                 { id: 'tournament', name: { en: 'Tournament', zh: '錦標賽', th: 'ทัวร์นาเมนต์' }, icon: 'trophy', href: '/tournament', isNew: true },
+                { id: 'pvp', name: { en: 'PVP Diary', zh: 'PVP日記', th: 'ไดอารี่ PVP' }, icon: 'swords', href: '/pvp' },
                 { id: 'regina', name: { en: 'RegginA', zh: 'RegginA', th: 'RegginA' }, icon: 'crown', href: '/regina' },
                 { id: 'fashion', name: { en: 'Fashion', zh: '時裝', th: 'แฟชั่น' }, icon: 'dress', href: '/fashion' },
                 { id: 'memes', name: { en: 'Memes', zh: '迷因', th: 'มีม' }, icon: 'meme', href: '/memes' }
