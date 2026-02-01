@@ -95,9 +95,20 @@ const NW_UX = {
     // FLOATING ACTION BAR (FAB)
     // =========================================
     initFAB() {
-        // Don't show FAB on certain pages
-        const hideFabOn = ['battle', 'forge'];
-        if (hideFabOn.includes(this.currentPage)) return;
+        // Don't show FAB on certain pages (immersive content pages)
+        const hideFabOn = ['battle', 'forge', 'museum', 'vault', 'research', 'historical-society'];
+        // Also hide on subpages (exhibit-XXX, b3-decontamination, etc.)
+        const path = location.pathname.toLowerCase();
+        
+        // Check if current page matches any hidden page
+        const shouldHide = hideFabOn.some(page => this.currentPage.startsWith(page)) ||
+            path.includes('/museum') || 
+            path.includes('/vault') || 
+            path.includes('/research') ||
+            path.includes('/exhibit') ||
+            path.includes('/historical-society');
+        
+        if (shouldHide) return;
 
         const fab = document.createElement('div');
         fab.id = 'nw-fab';
@@ -130,14 +141,19 @@ const NW_UX = {
                            (action.href === '/' + this.currentPage);
             const pulseClass = action.pulse ? 'nw-fab-pulse' : '';
             
+            // Use inline icon if available, fallback to sprite
+            const iconHtml = (typeof NWIconsInline !== 'undefined' && NWIconsInline.icons[action.icon])
+                ? NWIconsInline.render(action.icon, { size: 22, class: 'nw-fab-icon' })
+                : `<svg class="nw-fab-icon" width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
+                        <use href="/static/icons/nw-icons.svg#${action.icon}"></use>
+                   </svg>`;
+            
             return `
                 <a href="${action.href}" 
                    class="nw-fab-item ${isActive ? 'active' : ''} ${pulseClass}"
                    style="--fab-color: ${action.color}"
                    data-tooltip="${action.label}">
-                    <svg class="nw-fab-icon" width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
-                        <use href="/static/icons/nw-icons.svg#${action.icon}"></use>
-                    </svg>
+                    ${iconHtml}
                     <span class="nw-fab-label">${action.label}</span>
                 </a>
             `;

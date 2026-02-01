@@ -101,6 +101,15 @@ const NWIconsInline = {
     plus: '<path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M12 5V19M5 12H19"/>',
     minus: '<path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M5 12H19"/>',
     
+    // Wallet & Shopping (for FAB)
+    wallet: '<rect fill="#22c55e" x="2" y="6" width="20" height="14" rx="2"/><path fill="#16a34a" d="M2 10H22V14H2V10Z"/><circle fill="#ffd700" cx="17" cy="12" r="2"/><path fill="none" stroke="#fff" stroke-width="1" d="M5 9H10M5 15H8" opacity="0.5"/>',
+    'cards-stack': '<rect fill="#3b82f6" x="1" y="6" width="14" height="16" rx="2" transform="rotate(-5 8 14)"/><rect fill="#ffd700" x="5" y="4" width="14" height="16" rx="2" transform="rotate(0 12 12)"/><rect fill="#ff6b00" x="9" y="2" width="14" height="16" rx="2" transform="rotate(5 16 10)"/><path fill="#fff" d="M14 6L16 10L18 6L20 10L18 14L16 10L14 14L12 10L14 6Z" opacity="0.6"/>',
+    inventory: '<rect fill="currentColor" x="3" y="3" width="18" height="18" rx="2"/><path fill="#fff" d="M7 7H11V11H7V7ZM13 7H17V11H13V7ZM7 13H11V17H7V13ZM13 13H17V17H13V13Z" opacity="0.3"/><circle fill="#ff6b00" cx="9" cy="9" r="1.5"/><circle fill="#ffd700" cx="15" cy="9" r="1.5"/><circle fill="#22c55e" cx="9" cy="15" r="1.5"/><circle fill="#3b82f6" cx="15" cy="15" r="1.5"/>',
+    'shopping-bag': '<path fill="currentColor" d="M6 6L4 9V20C4 21 5 22 6 22H18C19 22 20 21 20 20V9L18 6H6Z"/><path fill="none" stroke="#fff" stroke-width="2" d="M9 10V6C9 4 10 2 12 2C14 2 15 4 15 6V10" opacity="0.5"/>',
+    trade: '<path fill="#22c55e" d="M4 8L8 4V7H16V11H8V14L4 10V8Z"/><path fill="#ff6b00" d="M20 16L16 20V17H8V13H16V10L20 14V16Z"/>',
+    clipboard: '<rect fill="currentColor" x="5" y="3" width="14" height="18" rx="2"/><rect fill="#fff" x="8" y="1" width="8" height="4" rx="1"/><path fill="none" stroke="#fff" stroke-width="1.5" d="M8 10H16M8 14H14M8 18H12" opacity="0.5"/>',
+    'crystal-ball': '<circle fill="#a855f7" cx="12" cy="11" r="8"/><ellipse fill="#6b21a8" cx="12" cy="20" rx="6" ry="2"/><circle fill="#fff" cx="9" cy="8" r="2" opacity="0.4"/><path fill="#c084fc" d="M8 14C10 16 14 16 16 14" opacity="0.5"/>',
+    
     // Chat
     chat: '<path fill="currentColor" d="M4 4H20C21 4 22 5 22 6V16C22 17 21 18 20 18H8L4 22V18H4C3 18 2 17 2 16V6C2 5 3 4 4 4Z"/>',
     
