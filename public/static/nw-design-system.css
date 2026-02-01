@@ -1,0 +1,544 @@
+/**
+ * NumbahWan Design System v1.0
+ * ============================
+ * Single source of truth for ALL UI positioning, spacing, and z-index values.
+ * 
+ * RULES FOR AI:
+ * 1. NEVER use arbitrary z-index values - use CSS variables below
+ * 2. NEVER position elements in the SAFE ZONES (see diagram)
+ * 3. ALWAYS use standard spacing units (--nw-space-*)
+ * 4. ALWAYS include this file BEFORE page-specific styles
+ */
+
+:root {
+  /* =====================================================
+   * Z-INDEX SCALE (Use ONLY these values!)
+   * ===================================================== */
+  --nw-z-base: 1;           /* Default content */
+  --nw-z-dropdown: 100;     /* Dropdowns, tooltips */
+  --nw-z-sticky: 200;       /* Sticky headers */
+  --nw-z-fixed: 300;        /* Fixed elements (page headers) */
+  --nw-z-nav: 500;          /* Navigation buttons (back/menu) */
+  --nw-z-drawer: 600;       /* Side drawers, panels */
+  --nw-z-modal: 700;        /* Modals, dialogs */
+  --nw-z-overlay: 800;      /* Full-screen overlays */
+  --nw-z-toast: 900;        /* Toast notifications */
+  --nw-z-loader: 1000;      /* Loading screens */
+
+  /* =====================================================
+   * SPACING SCALE (8px base unit)
+   * ===================================================== */
+  --nw-space-0: 0;
+  --nw-space-1: 4px;
+  --nw-space-2: 8px;
+  --nw-space-3: 12px;
+  --nw-space-4: 16px;
+  --nw-space-5: 20px;
+  --nw-space-6: 24px;
+  --nw-space-8: 32px;
+  --nw-space-10: 40px;
+  --nw-space-12: 48px;
+  --nw-space-16: 64px;
+
+  /* =====================================================
+   * SAFE ZONES - Reserved areas for UI elements
+   * ===================================================== 
+   * 
+   *  ┌────────────────────────────────────────────────┐
+   *  │ [RESERVED: 60px]              [NAV: 80px]     │ ← Top 60px
+   *  │  Page header area              Back + Menu    │
+   *  ├────────────────────────────────────────────────┤
+   *  │                                                │
+   *  │              SAFE CONTENT AREA                 │
+   *  │         (Start content at 70px from top)       │
+   *  │                                                │
+   *  │                                                │
+   *  │                                                │
+   *  ├────────────────────────────────────────────────┤
+   *  │ [RESERVED: 80px bottom - for floating actions] │
+   *  └────────────────────────────────────────────────┘
+   */
+  
+  /* Nav button position (top-right) */
+  --nw-nav-top: 10px;
+  --nw-nav-right: 10px;
+  --nw-nav-button-size: 36px;
+  --nw-nav-gap: 6px;
+  
+  /* Page header safe zone */
+  --nw-header-height: 60px;
+  
+  /* Content start (below header + breathing room) */
+  --nw-content-top: 70px;
+  
+  /* Bottom safe zone for floating buttons */
+  --nw-bottom-safe: 80px;
+
+  /* =====================================================
+   * COLORS
+   * ===================================================== */
+  --nw-bg-primary: #0a0a0a;
+  --nw-bg-secondary: #141414;
+  --nw-bg-card: rgba(20, 20, 20, 0.9);
+  --nw-bg-overlay: rgba(0, 0, 0, 0.85);
+  
+  --nw-text-primary: #ffffff;
+  --nw-text-secondary: rgba(255, 255, 255, 0.7);
+  --nw-text-muted: rgba(255, 255, 255, 0.5);
+  
+  --nw-accent-primary: #ff6b00;
+  --nw-accent-secondary: #ffd700;
+  --nw-accent-gradient: linear-gradient(135deg, #ff6b00, #ffd700);
+  
+  /* Rarity colors */
+  --nw-mythic: #ff00ff;
+  --nw-legendary: #ffd700;
+  --nw-epic: #a855f7;
+  --nw-rare: #3b82f6;
+  --nw-uncommon: #22c55e;
+  --nw-common: #9ca3af;
+
+  /* =====================================================
+   * TYPOGRAPHY
+   * ===================================================== */
+  --nw-font-display: 'Press Start 2P', monospace;
+  --nw-font-body: system-ui, -apple-system, sans-serif;
+  
+  --nw-text-xs: 10px;
+  --nw-text-sm: 12px;
+  --nw-text-base: 14px;
+  --nw-text-lg: 16px;
+  --nw-text-xl: 20px;
+  --nw-text-2xl: 24px;
+  --nw-text-3xl: 32px;
+
+  /* =====================================================
+   * BORDERS & RADIUS
+   * ===================================================== */
+  --nw-radius-sm: 4px;
+  --nw-radius-md: 8px;
+  --nw-radius-lg: 12px;
+  --nw-radius-xl: 16px;
+  --nw-radius-full: 9999px;
+  
+  --nw-border-subtle: 1px solid rgba(255, 255, 255, 0.1);
+  --nw-border-accent: 1px solid var(--nw-accent-primary);
+
+  /* =====================================================
+   * SHADOWS
+   * ===================================================== */
+  --nw-shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.3);
+  --nw-shadow-md: 0 4px 12px rgba(0, 0, 0, 0.4);
+  --nw-shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.5);
+  --nw-shadow-glow: 0 0 20px rgba(255, 107, 0, 0.3);
+
+  /* =====================================================
+   * TRANSITIONS
+   * ===================================================== */
+  --nw-transition-fast: 0.15s ease;
+  --nw-transition-normal: 0.25s ease;
+  --nw-transition-slow: 0.4s ease;
+}
+
+/* =====================================================
+ * BASE RESET & DEFAULTS
+ * ===================================================== */
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-tap-highlight-color: transparent;
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  background: var(--nw-bg-primary);
+  color: var(--nw-text-primary);
+  font-family: var(--nw-font-body);
+  font-size: var(--nw-text-base);
+  line-height: 1.5;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* =====================================================
+ * LAYOUT CONTAINERS
+ * ===================================================== */
+
+/* Main page container - respects safe zones */
+.nw-page {
+  min-height: 100vh;
+  padding-top: var(--nw-content-top);
+  padding-bottom: var(--nw-bottom-safe);
+  padding-left: var(--nw-space-4);
+  padding-right: var(--nw-space-4);
+}
+
+/* For pages with NO header (content starts at top) */
+.nw-page--no-header {
+  padding-top: var(--nw-space-4);
+}
+
+/* For pages with floating bottom bar */
+.nw-page--has-bottom-bar {
+  padding-bottom: calc(var(--nw-bottom-safe) + 60px);
+}
+
+/* Content wrapper - max width centered */
+.nw-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+.nw-container--sm { max-width: 640px; }
+.nw-container--md { max-width: 768px; }
+.nw-container--lg { max-width: 1024px; }
+.nw-container--xl { max-width: 1280px; }
+.nw-container--full { max-width: 100%; }
+
+/* =====================================================
+ * PAGE HEADER (Fixed at top, LEFT side)
+ * ===================================================== */
+.nw-page-header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 80px; /* Leave space for nav buttons */
+  height: var(--nw-header-height);
+  z-index: var(--nw-z-fixed);
+  display: flex;
+  align-items: center;
+  padding: 0 var(--nw-space-4);
+  background: linear-gradient(180deg, rgba(0,0,0,0.9) 0%, transparent 100%);
+  pointer-events: none;
+}
+
+.nw-page-header > * {
+  pointer-events: auto;
+}
+
+.nw-page-title {
+  font-family: var(--nw-font-display);
+  font-size: var(--nw-text-lg);
+  color: var(--nw-text-primary);
+  margin: 0;
+  text-shadow: 0 2px 8px rgba(0,0,0,0.8);
+}
+
+.nw-page-subtitle {
+  font-size: var(--nw-text-sm);
+  color: var(--nw-text-secondary);
+  margin-left: var(--nw-space-3);
+}
+
+/* =====================================================
+ * NAVIGATION BUTTONS (Top-right, ALWAYS)
+ * ===================================================== */
+.nw-nav-buttons {
+  position: fixed;
+  top: var(--nw-nav-top);
+  right: var(--nw-nav-right);
+  z-index: var(--nw-z-nav);
+  display: flex;
+  flex-direction: row;
+  gap: var(--nw-nav-gap);
+}
+
+.nw-nav-btn {
+  width: var(--nw-nav-button-size);
+  height: var(--nw-nav-button-size);
+  border-radius: var(--nw-radius-md);
+  border: var(--nw-border-subtle);
+  background: rgba(0, 0, 0, 0.7);
+  color: var(--nw-text-primary);
+  font-size: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: var(--nw-transition-fast);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.nw-nav-btn:hover {
+  background: rgba(255, 107, 0, 0.2);
+  border-color: var(--nw-accent-primary);
+  transform: scale(1.05);
+}
+
+.nw-nav-btn:active {
+  transform: scale(0.95);
+}
+
+.nw-nav-btn--primary {
+  background: var(--nw-accent-gradient);
+  border: none;
+}
+
+.nw-nav-btn.hidden {
+  display: none;
+}
+
+/* =====================================================
+ * FLOATING ACTION BUTTON (Bottom-right)
+ * ===================================================== */
+.nw-fab {
+  position: fixed;
+  bottom: var(--nw-space-6);
+  right: var(--nw-space-4);
+  z-index: var(--nw-z-fixed);
+  width: 56px;
+  height: 56px;
+  border-radius: var(--nw-radius-full);
+  background: var(--nw-accent-gradient);
+  color: white;
+  font-size: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  border: none;
+  box-shadow: var(--nw-shadow-lg), var(--nw-shadow-glow);
+  transition: var(--nw-transition-normal);
+}
+
+.nw-fab:hover {
+  transform: scale(1.1);
+}
+
+.nw-fab:active {
+  transform: scale(0.95);
+}
+
+/* =====================================================
+ * CARDS & PANELS
+ * ===================================================== */
+.nw-card {
+  background: var(--nw-bg-card);
+  border: var(--nw-border-subtle);
+  border-radius: var(--nw-radius-lg);
+  padding: var(--nw-space-4);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+.nw-card--glow {
+  box-shadow: var(--nw-shadow-glow);
+  border-color: var(--nw-accent-primary);
+}
+
+/* =====================================================
+ * BUTTONS
+ * ===================================================== */
+.nw-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--nw-space-2);
+  padding: var(--nw-space-3) var(--nw-space-5);
+  font-family: var(--nw-font-body);
+  font-size: var(--nw-text-base);
+  font-weight: 600;
+  border-radius: var(--nw-radius-md);
+  border: none;
+  cursor: pointer;
+  transition: var(--nw-transition-fast);
+  text-decoration: none;
+}
+
+.nw-btn--primary {
+  background: var(--nw-accent-gradient);
+  color: white;
+}
+
+.nw-btn--secondary {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--nw-text-primary);
+  border: var(--nw-border-subtle);
+}
+
+.nw-btn--ghost {
+  background: transparent;
+  color: var(--nw-text-secondary);
+}
+
+.nw-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--nw-shadow-md);
+}
+
+.nw-btn:active {
+  transform: translateY(0);
+}
+
+.nw-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* Size variants */
+.nw-btn--sm {
+  padding: var(--nw-space-2) var(--nw-space-3);
+  font-size: var(--nw-text-sm);
+}
+
+.nw-btn--lg {
+  padding: var(--nw-space-4) var(--nw-space-6);
+  font-size: var(--nw-text-lg);
+}
+
+/* =====================================================
+ * MODALS & OVERLAYS
+ * ===================================================== */
+.nw-overlay {
+  position: fixed;
+  inset: 0;
+  background: var(--nw-bg-overlay);
+  z-index: var(--nw-z-overlay);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  visibility: hidden;
+  transition: var(--nw-transition-normal);
+}
+
+.nw-overlay.show {
+  opacity: 1;
+  visibility: visible;
+}
+
+.nw-modal {
+  background: var(--nw-bg-secondary);
+  border: var(--nw-border-subtle);
+  border-radius: var(--nw-radius-xl);
+  padding: var(--nw-space-6);
+  max-width: 90vw;
+  max-height: 90vh;
+  overflow: auto;
+  z-index: var(--nw-z-modal);
+  transform: scale(0.9);
+  transition: var(--nw-transition-normal);
+}
+
+.nw-overlay.show .nw-modal {
+  transform: scale(1);
+}
+
+/* =====================================================
+ * TOAST NOTIFICATIONS
+ * ===================================================== */
+.nw-toast-container {
+  position: fixed;
+  top: calc(var(--nw-header-height) + var(--nw-space-4));
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: var(--nw-z-toast);
+  display: flex;
+  flex-direction: column;
+  gap: var(--nw-space-2);
+  pointer-events: none;
+}
+
+.nw-toast {
+  background: var(--nw-bg-card);
+  border: var(--nw-border-subtle);
+  border-radius: var(--nw-radius-md);
+  padding: var(--nw-space-3) var(--nw-space-4);
+  font-size: var(--nw-text-sm);
+  box-shadow: var(--nw-shadow-lg);
+  pointer-events: auto;
+  animation: nw-toast-in 0.3s ease;
+}
+
+@keyframes nw-toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* =====================================================
+ * LOADING SCREEN
+ * ===================================================== */
+.nw-loader {
+  position: fixed;
+  inset: 0;
+  background: var(--nw-bg-primary);
+  z-index: var(--nw-z-loader);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--nw-space-4);
+}
+
+.nw-loader__spinner {
+  width: 48px;
+  height: 48px;
+  border: 3px solid rgba(255, 255, 255, 0.1);
+  border-top-color: var(--nw-accent-primary);
+  border-radius: 50%;
+  animation: nw-spin 0.8s linear infinite;
+}
+
+@keyframes nw-spin {
+  to { transform: rotate(360deg); }
+}
+
+/* =====================================================
+ * UTILITY CLASSES
+ * ===================================================== */
+
+/* Text */
+.nw-text-center { text-align: center; }
+.nw-text-left { text-align: left; }
+.nw-text-right { text-align: right; }
+.nw-text-muted { color: var(--nw-text-muted); }
+.nw-text-accent { color: var(--nw-accent-primary); }
+
+/* Flexbox */
+.nw-flex { display: flex; }
+.nw-flex-col { flex-direction: column; }
+.nw-flex-center { align-items: center; justify-content: center; }
+.nw-flex-between { justify-content: space-between; }
+.nw-gap-1 { gap: var(--nw-space-1); }
+.nw-gap-2 { gap: var(--nw-space-2); }
+.nw-gap-3 { gap: var(--nw-space-3); }
+.nw-gap-4 { gap: var(--nw-space-4); }
+
+/* Spacing */
+.nw-mt-2 { margin-top: var(--nw-space-2); }
+.nw-mt-4 { margin-top: var(--nw-space-4); }
+.nw-mb-2 { margin-bottom: var(--nw-space-2); }
+.nw-mb-4 { margin-bottom: var(--nw-space-4); }
+.nw-p-2 { padding: var(--nw-space-2); }
+.nw-p-4 { padding: var(--nw-space-4); }
+
+/* Visibility */
+.nw-hidden { display: none !important; }
+.nw-invisible { visibility: hidden; }
+
+/* =====================================================
+ * RARITY CLASSES
+ * ===================================================== */
+.nw-rarity-mythic { color: var(--nw-mythic); }
+.nw-rarity-legendary { color: var(--nw-legendary); }
+.nw-rarity-epic { color: var(--nw-epic); }
+.nw-rarity-rare { color: var(--nw-rare); }
+.nw-rarity-uncommon { color: var(--nw-uncommon); }
+.nw-rarity-common { color: var(--nw-common); }
+
+.nw-glow-mythic { box-shadow: 0 0 20px var(--nw-mythic); }
+.nw-glow-legendary { box-shadow: 0 0 20px var(--nw-legendary); }
+.nw-glow-epic { box-shadow: 0 0 20px var(--nw-epic); }

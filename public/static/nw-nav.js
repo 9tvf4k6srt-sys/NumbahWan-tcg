@@ -141,58 +141,69 @@ const NW_NAV = {
     },
 
     injectNav() {
-        // Add styles
+        // Add styles using design system variables
         if (!document.getElementById('nw-nav-styles')) {
             const style = document.createElement('style');
             style.id = 'nw-nav-styles';
             style.textContent = `
-                /* Nav button container - horizontal row at top-RIGHT to avoid blocking headers */
+                /* =====================================================
+                 * NAV STYLES - Using Design System Variables
+                 * z-index scale: nav=500, drawer=600, overlay=800
+                 * ===================================================== */
+                
+                /* Nav button container - TOP-RIGHT (ALWAYS!) */
                 .nw-nav-buttons {
                     position: fixed;
-                    top: 10px;
-                    right: 10px;
-                    z-index: 9998;
+                    top: var(--nw-nav-top, 10px);
+                    right: var(--nw-nav-right, 10px);
+                    z-index: var(--nw-z-nav, 500);
                     display: flex;
-                    gap: 6px;
+                    gap: var(--nw-nav-gap, 6px);
                     align-items: center;
                 }
-                /* Back button - compact */
+                
+                /* Back button */
                 .nw-back-btn {
-                    width: 36px;
-                    height: 36px;
-                    border: none;
-                    border-radius: 8px;
+                    width: var(--nw-nav-button-size, 36px);
+                    height: var(--nw-nav-button-size, 36px);
+                    border: 1px solid rgba(255,107,0,0.3);
+                    border-radius: var(--nw-radius-md, 8px);
                     background: rgba(20, 20, 30, 0.85);
+                    backdrop-filter: blur(8px);
+                    -webkit-backdrop-filter: blur(8px);
                     color: white;
                     font-size: 18px;
                     cursor: pointer;
-                    box-shadow: 0 2px 10px rgba(0,0,0,0.4);
-                    transition: all 0.2s ease;
+                    box-shadow: var(--nw-shadow-md, 0 4px 12px rgba(0,0,0,0.4));
+                    transition: var(--nw-transition-fast, 0.15s ease);
                     display: flex;
                     align-items: center;
                     justify-content: center;
-                    border: 1px solid rgba(255,107,0,0.3);
                 }
                 .nw-back-btn:hover {
                     transform: scale(1.08);
                     background: rgba(255,107,0,0.3);
-                    border-color: #ff6b00;
+                    border-color: var(--nw-accent-primary, #ff6b00);
+                }
+                .nw-back-btn:active {
+                    transform: scale(0.95);
                 }
                 .nw-back-btn.hidden {
                     display: none;
                 }
-                /* Menu toggle - compact, next to back */
+                
+                /* Menu toggle button */
                 .nw-nav-toggle {
-                    width: 36px;
-                    height: 36px;
+                    width: var(--nw-nav-button-size, 36px);
+                    height: var(--nw-nav-button-size, 36px);
                     border: none;
-                    border-radius: 8px;
-                    background: linear-gradient(135deg, #ff6b00, #ff9500);
+                    border-radius: var(--nw-radius-md, 8px);
+                    background: var(--nw-accent-gradient, linear-gradient(135deg, #ff6b00, #ff9500));
                     color: white;
                     font-size: 16px;
                     cursor: pointer;
                     box-shadow: 0 2px 10px rgba(255,107,0,0.4);
-                    transition: all 0.2s ease;
+                    transition: var(--nw-transition-fast, 0.15s ease);
                     display: flex;
                     align-items: center;
                     justify-content: center;
@@ -201,19 +212,26 @@ const NW_NAV = {
                     transform: scale(1.08);
                     box-shadow: 0 4px 15px rgba(255,107,0,0.5);
                 }
+                .nw-nav-toggle:active {
+                    transform: scale(0.95);
+                }
+                
+                /* Overlay behind drawer */
                 .nw-nav-overlay {
                     position: fixed;
                     inset: 0;
-                    background: rgba(0,0,0,0.6);
-                    z-index: 9998;
+                    background: var(--nw-bg-overlay, rgba(0,0,0,0.6));
+                    z-index: var(--nw-z-drawer, 600);
                     opacity: 0;
                     visibility: hidden;
-                    transition: all 0.3s ease;
+                    transition: var(--nw-transition-normal, 0.25s ease);
                 }
                 .nw-nav-overlay.open {
                     opacity: 1;
                     visibility: visible;
                 }
+                
+                /* Nav drawer panel */
                 .nw-nav-panel {
                     position: fixed;
                     top: 0;
@@ -222,7 +240,7 @@ const NW_NAV = {
                     max-width: 85vw;
                     height: 100vh;
                     background: linear-gradient(180deg, #1a1a2e 0%, #0f0f1a 100%);
-                    z-index: 9999;
+                    z-index: calc(var(--nw-z-drawer, 600) + 1);
                     transform: translateX(-100%);
                     transition: transform 0.3s ease;
                     display: flex;
