@@ -127,33 +127,38 @@
                 position: fixed;
                 bottom: 24px;
                 right: 24px;
-                width: 60px;
-                height: 60px;
-                border-radius: 50%;
-                background: linear-gradient(135deg, #ff6b00 0%, #ff9500 100%);
-                border: none;
+                width: 52px;
+                height: 52px;
+                border-radius: 14px;
+                background: linear-gradient(145deg, #1a1a2e 0%, #0f0f1a 100%);
+                border: 1px solid rgba(255, 107, 0, 0.25);
                 cursor: pointer;
-                box-shadow: 0 4px 20px rgba(255, 107, 0, 0.4);
+                box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.03);
                 z-index: 99999;
                 display: flex;
                 align-items: center;
                 justify-content: center;
-                font-size: 28px;
-                transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-                animation: nw-guide-pulse 2s infinite;
+                transition: all 0.2s ease;
+                overflow: hidden;
             }
             #nw-guide-toggle:hover {
-                transform: scale(1.1);
-                box-shadow: 0 6px 28px rgba(255, 107, 0, 0.5);
+                transform: translateY(-2px);
+                border-color: rgba(255, 107, 0, 0.5);
+                box-shadow: 0 6px 28px rgba(0, 0, 0, 0.5), 0 0 20px rgba(255, 107, 0, 0.1);
             }
             #nw-guide-toggle.open {
-                animation: none;
-                transform: rotate(45deg);
+                border-color: rgba(255, 107, 0, 0.6);
+                background: linear-gradient(145deg, #1f1f35 0%, #12121f 100%);
             }
-            @keyframes nw-guide-pulse {
-                0%, 100% { box-shadow: 0 4px 20px rgba(255, 107, 0, 0.4); }
-                50% { box-shadow: 0 4px 30px rgba(255, 107, 0, 0.6); }
+            #nw-guide-toggle svg {
+                width: 24px;
+                height: 24px;
+                transition: all 0.2s ease;
             }
+            #nw-guide-toggle:hover svg { transform: scale(1.08); }
+            #nw-guide-toggle.open svg.nw-icon-chat { display: none; }
+            #nw-guide-toggle.open svg.nw-icon-close { display: block; }
+            #nw-guide-toggle svg.nw-icon-close { display: none; }
 
             #nw-guide-chat {
                 position: fixed;
@@ -347,16 +352,35 @@
         // Toggle button
         const toggle = document.createElement('button');
         toggle.id = 'nw-guide-toggle';
-        toggle.innerHTML = '🧙';
+        toggle.innerHTML = `
+            <svg class="nw-icon-chat" viewBox="0 0 24 24" fill="none">
+                <path d="M12 2C6.48 2 2 6.03 2 11c0 2.39 1.02 4.56 2.67 6.13L3 21l4.38-1.82C8.83 19.7 10.38 20 12 20c5.52 0 10-4.03 10-9s-4.48-9-10-9z" fill="url(#cg)"/>
+                <circle cx="8" cy="11" r="1.25" fill="#fff"/>
+                <circle cx="12" cy="11" r="1.25" fill="#fff"/>
+                <circle cx="16" cy="11" r="1.25" fill="#fff"/>
+                <defs><linearGradient id="cg" x1="2" y1="2" x2="22" y2="21"><stop stop-color="#ff6b00"/><stop offset="1" stop-color="#ff9500"/></linearGradient></defs>
+            </svg>
+            <svg class="nw-icon-close" viewBox="0 0 24 24" fill="none">
+                <path d="M18 6L6 18M6 6l12 12" stroke="#ff6b00" stroke-width="2.5" stroke-linecap="round"/>
+            </svg>
+        `;
         toggle.setAttribute('aria-label', 'Open AI Guide');
-        toggle.title = 'Need help? Ask me!';
+        toggle.title = 'Need help? Click to chat!';
 
         // Chat window
         const chat = document.createElement('div');
         chat.id = 'nw-guide-chat';
         chat.innerHTML = `
             <div class="nw-guide-header">
-                <div class="nw-guide-avatar">🧙</div>
+                <div class="nw-guide-avatar">
+                    <svg viewBox="0 0 24 24" fill="none" width="22" height="22">
+                        <circle cx="12" cy="12" r="10" fill="url(#ag)"/>
+                        <circle cx="8" cy="11" r="1" fill="#fff"/>
+                        <circle cx="12" cy="11" r="1" fill="#fff"/>
+                        <circle cx="16" cy="11" r="1" fill="#fff"/>
+                        <defs><linearGradient id="ag" x1="2" y1="2" x2="22" y2="22"><stop stop-color="#ff6b00"/><stop offset="1" stop-color="#ff9500"/></linearGradient></defs>
+                    </svg>
+                </div>
                 <div class="nw-guide-info">
                     <h3>NumbahWan Guide</h3>
                     <span>● Online - Here to help!</span>
@@ -560,7 +584,7 @@
             isOpen = !isOpen;
             chat.classList.toggle('open', isOpen);
             toggle.classList.toggle('open', isOpen);
-            toggle.innerHTML = isOpen ? '✕' : '🧙';
+            // SVG icons toggle via CSS
             
             if (isOpen && document.getElementById('nw-guide-messages').children.length === 0) {
                 // First open - show greeting
@@ -609,7 +633,7 @@
                 isOpen = false;
                 chat.classList.remove('open');
                 toggle.classList.remove('open');
-                toggle.innerHTML = '🧙';
+                // SVG icons toggle via CSS
             }
         });
 

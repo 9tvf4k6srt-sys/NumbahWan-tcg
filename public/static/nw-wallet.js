@@ -156,18 +156,19 @@ const NW_WALLET = {
             createdAt: now,
             lastActivity: now,
             
-            // Currencies
+            // Currencies - Balanced for addictive progression
+            // Diamond is PREMIUM - hard to get, valuable!
             currencies: {
-                diamond: 500,  // Starting bonus
-                gold: 100,
-                iron: 50,
-                stone: 25,
-                wood: 0        // Logs - must be earned!
+                diamond: 50,   // Small taste - try 3-5 arcade games max
+                gold: 25,      // Reduced - must earn from arcade
+                iron: 10,      // Reduced - must exchange
+                stone: 5,      // Reduced - must exchange  
+                wood: 0        // Sacred Logs - MUST BE EARNED through the grind!
             },
             
             // Stats
             stats: {
-                totalEarned: { diamond: 500, gold: 100, iron: 50, stone: 25, wood: 0 },
+                totalEarned: { diamond: 50, gold: 25, iron: 10, stone: 5, wood: 0 },
                 totalSpent: { diamond: 0, gold: 0, iron: 0, stone: 0, wood: 0 },
                 gamesPlayed: 0,
                 gamesWon: 0,
