@@ -32,7 +32,7 @@ app.get('/api/health', (c) => {
 
 // Debug endpoint - comprehensive system diagnostics
 app.get('/api/debug', (c) => {
-  const staticPages = ['fashion', 'merch', 'fortune', 'arcade', 'memes', 'apply', 'wallet', 'forge', 'tcg', 'market', 'cards', 'guide', 'pvp', 'regina', 'zakum', 'tournament', 'academy', 'vault', 'museum']
+  const staticPages = ['fashion', 'merch', 'fortune', 'arcade', 'memes', 'apply', 'wallet', 'forge', 'tcg', 'market', 'cards', 'guide', 'pvp', 'regina', 'zakum', 'tournament', 'academy', 'vault', 'museum', 'research', 'historical-society']
   
   return c.json({
     status: 'ok',
@@ -1311,7 +1311,7 @@ app.get('/api/card-factory', (c) => {
 // ROUTE FACTORY - DRY Pattern (Don't Repeat Yourself)
 // Add new pages by just adding to the array - no copy-paste needed!
 // ============================================================================
-const staticPages = ['fashion', 'merch', 'fortune', 'arcade', 'memes', 'apply', 'wallet', 'forge', 'tcg', 'market', 'cards', 'guide', 'battle', 'collection', 'deckbuilder', 'zakum', 'tournament', 'academy', 'vault', 'museum']
+const staticPages = ['fashion', 'merch', 'fortune', 'arcade', 'memes', 'apply', 'wallet', 'forge', 'tcg', 'market', 'cards', 'guide', 'battle', 'collection', 'deckbuilder', 'zakum', 'tournament', 'academy', 'vault', 'museum', 'research', 'historical-society']
 
 staticPages.forEach(page => {
   app.get(`/${page}`, async (c) => {
@@ -1367,6 +1367,26 @@ vaultFloors.forEach(floor => {
       // Fallback for local development
     }
     return c.redirect(`/vault/${floor}.html`)
+  })
+})
+
+// Research paper pages - academic rabbit hole
+const researchPapers = ['work-gloves-economic-impact', 'zakum-helmet-spectral-analysis', 'reggina-misprint-forensic-examination', 'vault-security-analysis', 'nx-fashion-revolution', 'transparent-set-psychology']
+
+researchPapers.forEach(paper => {
+  app.get(`/research/${paper}`, async (c) => {
+    try {
+      // @ts-ignore - env is provided by Cloudflare Pages
+      const asset = await c.env?.ASSETS?.fetch(new Request(`https://dummy/research/${paper}.html`))
+      if (asset) {
+        return new Response(asset.body, {
+          headers: { 'Content-Type': 'text/html; charset=utf-8' }
+        })
+      }
+    } catch (e) {
+      // Fallback for local development
+    }
+    return c.redirect(`/research/${paper}.html`)
   })
 })
 

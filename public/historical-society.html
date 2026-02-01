@@ -1,0 +1,691 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NumbahWan Historical Society | Archive of Guild Heritage</title>
+    <link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Crimson+Text:ital,wght@0,400;0,600;1,400&family=Inter:wght@400;500;600&family=Special+Elite&display=swap" rel="stylesheet">
+    <script src="/static/nw-nav.js" defer></script>
+    <script src="/static/nw-ux.js" defer></script>
+    <style>
+        :root {
+            --gold: #d4af37;
+            --dark: #0a0a0c;
+            --parchment: #f5f0e5;
+            --ink: #2c1810;
+            --seal: #8b0000;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html { scroll-behavior: smooth; }
+        body { 
+            font-family: 'Inter', sans-serif; 
+            background: var(--dark); 
+            color: #fff;
+        }
+        .font-display { font-family: 'Cinzel', serif; }
+        .font-academic { font-family: 'Crimson Text', serif; }
+        .font-typewriter { font-family: 'Special Elite', monospace; }
+        
+        .hero {
+            min-height: 50vh;
+            background: linear-gradient(180deg, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0.9) 100%),
+                        radial-gradient(ellipse at 30% 20%, rgba(139,0,0,0.2) 0%, transparent 50%),
+                        radial-gradient(ellipse at 70% 80%, rgba(212,175,55,0.1) 0%, transparent 50%);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding: 4rem 2rem;
+        }
+        
+        .society-seal {
+            width: 120px;
+            height: 120px;
+            background: radial-gradient(circle, var(--seal) 0%, #4a0000 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 2rem;
+            box-shadow: 0 0 30px rgba(139,0,0,0.5);
+            border: 3px solid var(--gold);
+        }
+        .society-seal span {
+            font-family: 'Cinzel', serif;
+            font-size: 3rem;
+            color: var(--gold);
+        }
+        
+        .minutes-card {
+            background: var(--parchment);
+            color: var(--ink);
+            border-radius: 4px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+            margin: 1.5rem 0;
+            overflow: hidden;
+        }
+        .minutes-header {
+            background: linear-gradient(135deg, #2c1810, #1a0f0a);
+            color: var(--gold);
+            padding: 1rem 1.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .minutes-date {
+            font-family: 'Cinzel', serif;
+            font-weight: 600;
+        }
+        .minutes-classification {
+            font-size: 0.7rem;
+            padding: 0.25rem 0.75rem;
+            background: rgba(212,175,55,0.2);
+            border: 1px solid var(--gold);
+            border-radius: 3px;
+        }
+        .minutes-body {
+            padding: 1.5rem;
+            font-family: 'Crimson Text', serif;
+            line-height: 1.8;
+        }
+        .minutes-body h4 {
+            font-family: 'Cinzel', serif;
+            color: var(--seal);
+            margin: 1.5rem 0 0.75rem;
+            font-size: 1.1rem;
+        }
+        .minutes-body h4:first-child { margin-top: 0; }
+        .minutes-body ul {
+            margin-left: 1.5rem;
+            margin-bottom: 1rem;
+        }
+        .minutes-body li { margin-bottom: 0.5rem; }
+        .attendee-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 1rem 0;
+        }
+        .attendee {
+            background: #e8e0d0;
+            padding: 0.25rem 0.75rem;
+            border-radius: 3px;
+            font-size: 0.85rem;
+        }
+        .attendee.redacted {
+            background: #1a1a1a;
+            color: #1a1a1a;
+        }
+        .action-item {
+            background: #fef9f3;
+            border-left: 3px solid var(--seal);
+            padding: 0.75rem 1rem;
+            margin: 1rem 0;
+            font-style: italic;
+        }
+        .cross-reference {
+            color: var(--seal);
+            text-decoration: underline;
+            cursor: pointer;
+        }
+        .cross-reference:hover {
+            color: var(--gold);
+        }
+        
+        .archive-section {
+            background: rgba(255,255,255,0.02);
+            padding: 3rem 0;
+        }
+        
+        .rabbit-hole {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
+            margin-top: 2rem;
+        }
+        .rabbit-card {
+            background: rgba(212,175,55,0.1);
+            border: 1px solid rgba(212,175,55,0.3);
+            border-radius: 8px;
+            padding: 1.5rem;
+            transition: all 0.3s ease;
+        }
+        .rabbit-card:hover {
+            background: rgba(212,175,55,0.2);
+            transform: translateY(-3px);
+        }
+        .rabbit-card h4 {
+            font-family: 'Cinzel', serif;
+            color: var(--gold);
+            margin-bottom: 0.5rem;
+        }
+        .rabbit-card p {
+            font-size: 0.9rem;
+            color: #888;
+            margin-bottom: 1rem;
+        }
+        .rabbit-links {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+        .rabbit-links a {
+            color: #ccc;
+            text-decoration: none;
+            font-size: 0.85rem;
+            padding: 0.25rem 0;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            transition: color 0.2s ease;
+        }
+        .rabbit-links a:hover {
+            color: var(--gold);
+        }
+        .rabbit-links a::before {
+            content: '→ ';
+            color: var(--gold);
+        }
+        
+        .timeline-vertical {
+            position: relative;
+            padding-left: 3rem;
+            margin: 2rem 0;
+        }
+        .timeline-vertical::before {
+            content: '';
+            position: absolute;
+            left: 0.5rem;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: linear-gradient(to bottom, var(--gold), var(--seal), var(--gold));
+        }
+        .timeline-event {
+            position: relative;
+            margin-bottom: 2rem;
+            padding: 1rem;
+            background: rgba(255,255,255,0.05);
+            border-radius: 8px;
+        }
+        .timeline-event::before {
+            content: '';
+            position: absolute;
+            left: -2.5rem;
+            top: 1.25rem;
+            width: 12px;
+            height: 12px;
+            background: var(--gold);
+            border-radius: 50%;
+            box-shadow: 0 0 10px rgba(212,175,55,0.5);
+        }
+        .timeline-event h5 {
+            color: var(--gold);
+            font-family: 'Cinzel', serif;
+            margin-bottom: 0.5rem;
+        }
+        .timeline-event p {
+            font-size: 0.9rem;
+            color: #aaa;
+        }
+    </style>
+</head>
+<body data-page-id="historical-society">
+    <div id="nw-nav"></div>
+    
+    <!-- Hero -->
+    <section class="hero">
+        <div class="society-seal">
+            <span>ℍ</span>
+        </div>
+        <div class="inline-block bg-red-900/30 border border-red-500/50 text-red-400 text-xs font-bold px-4 py-2 rounded-full mb-6">
+            <span data-i18n="badge.society">📜 EST. 2024 • PRESERVING GUILD HERITAGE</span>
+        </div>
+        <h1 class="font-display text-4xl md:text-6xl text-white mb-4">
+            <span class="text-transparent bg-clip-text bg-gradient-to-r from-yellow-200 via-yellow-400 to-yellow-200" data-i18n="society.title">NumbahWan Historical Society</span>
+        </h1>
+        <p class="text-xl text-gray-400 max-w-2xl mb-8" data-i18n="society.subtitle">
+            "Documenting the extraordinary in service of eternity"
+        </p>
+        <div class="flex gap-4 flex-wrap justify-center text-sm">
+            <div class="bg-white/10 px-4 py-2 rounded-full">
+                <span class="text-yellow-400 font-bold">23</span>
+                <span class="text-gray-400" data-i18n="stat.members">Active Members</span>
+            </div>
+            <div class="bg-white/10 px-4 py-2 rounded-full">
+                <span class="text-yellow-400 font-bold">847</span>
+                <span class="text-gray-400" data-i18n="stat.documents">Documents Archived</span>
+            </div>
+            <div class="bg-white/10 px-4 py-2 rounded-full">
+                <span class="text-yellow-400 font-bold">47</span>
+                <span class="text-gray-400" data-i18n="stat.meetings">Meetings Held</span>
+            </div>
+        </div>
+    </section>
+    
+    <!-- About -->
+    <section class="py-16 border-b border-white/10">
+        <div class="max-w-4xl mx-auto px-6">
+            <h2 class="font-display text-3xl text-yellow-400 mb-6 text-center" data-i18n="about.title">About the Society</h2>
+            <p class="text-gray-300 text-center text-lg mb-8 font-academic" data-i18n="about.desc">
+                The NumbahWan Historical Society was established in 2024 to preserve, document, and study 
+                the rich heritage of the NumbahWan Guild. Our mission encompasses the management of the 
+                <a href="/museum" class="cross-reference">Fashion Museum</a>, oversight of the 
+                <a href="/vault" class="cross-reference">Guild Vault</a> archives, and publication of 
+                <a href="/research" class="cross-reference">scholarly research</a> on digital artifact preservation.
+            </p>
+            <div class="grid md:grid-cols-3 gap-6 text-center">
+                <div class="bg-white/5 p-6 rounded-lg">
+                    <div class="text-3xl mb-3">🏛️</div>
+                    <h4 class="font-display text-yellow-400 mb-2" data-i18n="mission.museum">Museum Division</h4>
+                    <p class="text-sm text-gray-400" data-i18n="mission.museum.desc">Curates and preserves the 10 priceless artifacts in the Fashion Museum collection</p>
+                </div>
+                <div class="bg-white/5 p-6 rounded-lg">
+                    <div class="text-3xl mb-3">📚</div>
+                    <h4 class="font-display text-yellow-400 mb-2" data-i18n="mission.research">Research Division</h4>
+                    <p class="text-sm text-gray-400" data-i18n="mission.research.desc">Publishes peer-reviewed scholarship on guild history and digital archaeology</p>
+                </div>
+                <div class="bg-white/5 p-6 rounded-lg">
+                    <div class="text-3xl mb-3">🔐</div>
+                    <h4 class="font-display text-yellow-400 mb-2" data-i18n="mission.archives">Archives Division</h4>
+                    <p class="text-sm text-gray-400" data-i18n="mission.archives.desc">Maintains vault documentation and classified historical records</p>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <!-- Meeting Minutes -->
+    <section class="py-16">
+        <div class="max-w-4xl mx-auto px-6">
+            <h2 class="font-display text-3xl text-yellow-400 mb-2 text-center" data-i18n="minutes.title">Meeting Minutes</h2>
+            <p class="text-gray-500 text-center mb-8" data-i18n="minutes.subtitle">Selected proceedings from Historical Society meetings</p>
+            
+            <!-- Meeting 1 -->
+            <div class="minutes-card">
+                <div class="minutes-header">
+                    <span class="minutes-date">Meeting #47 — January 15, 2026</span>
+                    <span class="minutes-classification">DECLASSIFIED</span>
+                </div>
+                <div class="minutes-body">
+                    <h4>Attendees</h4>
+                    <div class="attendee-list">
+                        <span class="attendee">Dr. Goldweaver (Chair)</span>
+                        <span class="attendee">Prof. PixelCouture</span>
+                        <span class="attendee">NightShade</span>
+                        <span class="attendee">The Seventh Founder</span>
+                        <span class="attendee">Curator Morrison</span>
+                        <span class="attendee redacted">████████</span>
+                    </div>
+                    
+                    <h4>Agenda Item 1: Museum Exhibit 010 Conservation Report</h4>
+                    <p>
+                        Curator Morrison presented the quarterly conservation report for the 
+                        <a href="/museum/exhibit-010" class="cross-reference">Transparent Set (Exhibit 010)</a>. 
+                        Humidity levels remain stable at 45%. Discussion ensued regarding the philosophical 
+                        challenge of conserving an item that is, by design, invisible.
+                    </p>
+                    <div class="action-item">
+                        ACTION: Commission research paper on "Conservation Challenges of Invisible Artifacts" — 
+                        assigned to Prof. PixelCouture.
+                    </div>
+                    
+                    <h4>Agenda Item 2: Vault Security Annual Review</h4>
+                    <p>
+                        NightShade presented findings from the 
+                        <a href="/research/vault-security-analysis" class="cross-reference">847 Ways to Fail security analysis</a>. 
+                        Key discussion points:
+                    </p>
+                    <ul>
+                        <li>The cat problem remains unresolved (see <a href="/vault/b7-hall-of-failures" class="cross-reference">B7 Hall of Failed Intruders</a>)</li>
+                        <li>Incident #712 ("The Seventh") raised concerns about Soul Signature spoofing</li>
+                        <li>GUARDIAN AI's false positive rate improved from 15.2% to 12.4%</li>
+                    </ul>
+                    <div class="action-item">
+                        ACTION: Implement cucumber-based cat deterrent system — pending Ethics Committee review.
+                    </div>
+                    
+                    <h4>Agenda Item 3: RegginA Tear Pattern Investigation Update</h4>
+                    <p>
+                        The Seventh Founder provided brief comments on the ongoing 
+                        <a href="/research/reggina-misprint-forensic-examination" class="cross-reference">forensic examination</a> 
+                        of Artifact #001's tear pattern. Comments consisted entirely of: "Some questions are not 
+                        meant to be answered." Meeting attendees noted this was unhelpful.
+                    </p>
+                    
+                    <h4>Next Meeting</h4>
+                    <p>February 15, 2026 — Agenda to include: Zakum Helmet color degradation analysis, 
+                    <a href="/vault/b12-antechamber" class="cross-reference">B12 Antechamber</a> access protocols, 
+                    and annual budget review.</p>
+                </div>
+            </div>
+            
+            <!-- Meeting 2 -->
+            <div class="minutes-card">
+                <div class="minutes-header">
+                    <span class="minutes-date">Meeting #42 — August 3, 2025</span>
+                    <span class="minutes-classification">DECLASSIFIED</span>
+                </div>
+                <div class="minutes-body">
+                    <h4>Attendees</h4>
+                    <div class="attendee-list">
+                        <span class="attendee">Dr. Goldweaver (Chair)</span>
+                        <span class="attendee">Dr. PixelForensics</span>
+                        <span class="attendee">Prof. ScrollMaster</span>
+                        <span class="attendee">NightShade</span>
+                        <span class="attendee">Security (The Cat)</span>
+                    </div>
+                    
+                    <h4>Agenda Item 1: Work Gloves Economic Impact Paper Review</h4>
+                    <p>
+                        Final review of Dr. Goldweaver and Prof. ScrollMaster's paper on 
+                        <a href="/research/work-gloves-economic-impact" class="cross-reference">7-Slot Work Gloves economics</a>. 
+                        Paper approved for publication with minor revisions. Discussion on conflict of interest 
+                        disclosure—Dr. Goldweaver confirmed ownership of three pairs valued at 180M mesos.
+                    </p>
+                    
+                    <h4>Agenda Item 2: Zakum Helmet Spectral Analysis Funding</h4>
+                    <p>
+                        Dr. PixelForensics requested additional funding for 
+                        <a href="/research/zakum-helmet-spectral-analysis" class="cross-reference">spectral analysis equipment</a>. 
+                        Approved unanimously after presentation demonstrating that current equipment cannot 
+                        distinguish between #FFD700 and #FFD701.
+                    </p>
+                    <div class="action-item">
+                        ACTION: Allocate 50M mesos for chromatic analysis hardware upgrade.
+                    </div>
+                    
+                    <h4>Agenda Item 3: Security (The Cat) Formal Appointment</h4>
+                    <p>
+                        Following extensive debate, Security (The Cat) was formally appointed as Honorary 
+                        Security Consultant. Badge access granted to floors B1-B7. Salary approved at 
+                        "unlimited treats." NightShade abstained from vote citing "this is ridiculous."
+                    </p>
+                    
+                    <h4>Agenda Item 4: Pink Adventurer Cape Authentication</h4>
+                    <p>
+                        Curator Morrison reported successful authentication of 
+                        <a href="/museum/exhibit-002" class="cross-reference">Exhibit 002 (Pink Adventurer Cape)</a> 
+                        using fiber analysis techniques described in recent forensics literature. Cape confirmed 
+                        as genuine 2006 production run, one of an estimated 847 remaining worldwide.
+                    </p>
+                </div>
+            </div>
+            
+            <!-- Meeting 3 - Recovery Discussion -->
+            <div class="minutes-card">
+                <div class="minutes-header">
+                    <span class="minutes-date">Meeting #12 — November 7, 2024</span>
+                    <span class="minutes-classification">PARTIALLY REDACTED</span>
+                </div>
+                <div class="minutes-body">
+                    <h4>Attendees</h4>
+                    <div class="attendee-list">
+                        <span class="attendee">The Guild Master</span>
+                        <span class="attendee">All Seven Founders</span>
+                        <span class="attendee">NightShade</span>
+                        <span class="attendee redacted">████████</span>
+                        <span class="attendee redacted">████████</span>
+                    </div>
+                    
+                    <h4>Agenda Item 1: Artifact #001 Recovery — 15th Anniversary Discussion</h4>
+                    <p>
+                        This meeting marked the 15th anniversary of the recovery of Artifact #001 
+                        (the <a href="/research/reggina-misprint-forensic-examination" class="cross-reference">RegginA Misprint</a>). 
+                        The Seventh Founder provided a first-hand account of the recovery operation, 
+                        including details that remain classified per Vault Protocol 7-C.
+                    </p>
+                    <p>
+                        Key revelations (declassified portions only):
+                    </p>
+                    <ul>
+                        <li>The card was recovered from ████████████████ on November 7, 2009</li>
+                        <li>Extraction team consisted of ██ members, codenames: Shadow, ████, and ████</li>
+                        <li>The tear occurred during egress when ████████████████████████</li>
+                        <li>Arrival at current vault location: November 8, 2009, 03:33 AM</li>
+                    </ul>
+                    <div class="action-item">
+                        ACTION: Maintain current classification level on recovery details — unanimous.
+                    </div>
+                    
+                    <h4>Agenda Item 2: The 23.7° Question</h4>
+                    <p>
+                        Discussion of the tear's geometric properties and whether deliberate intervention 
+                        should be acknowledged. The Seventh Founder's only comment: "The card exists. 
+                        We exist. Everything else is speculation."
+                    </p>
+                    <p>
+                        Vote on commissioning formal forensic examination: 5 in favor, 1 opposed 
+                        (The Seventh Founder), 1 abstention.
+                    </p>
+                    
+                    <h4>Closed Session</h4>
+                    <p style="color: #888; font-style: italic;">
+                        The remainder of this meeting was conducted in closed session. Minutes sealed 
+                        per Founding Council directive. Access requires Vault Clearance Level 9.
+                    </p>
+                </div>
+            </div>
+            
+            <!-- Meeting 4 - Fashion Revolution -->
+            <div class="minutes-card">
+                <div class="minutes-header">
+                    <span class="minutes-date">Meeting #7 — June 21, 2024</span>
+                    <span class="minutes-classification">DECLASSIFIED</span>
+                </div>
+                <div class="minutes-body">
+                    <h4>Attendees</h4>
+                    <div class="attendee-list">
+                        <span class="attendee">Dr. Goldweaver (Chair)</span>
+                        <span class="attendee">Prof. PixelCouture</span>
+                        <span class="attendee">Dr. StyleMaster</span>
+                        <span class="attendee">Curator Morrison</span>
+                    </div>
+                    
+                    <h4>Agenda Item 1: NX Fashion Revolution Research Proposal</h4>
+                    <p>
+                        Dr. StyleMaster and Prof. PixelCouture presented a proposal for comprehensive 
+                        research on the <a href="/research/nx-fashion-revolution" class="cross-reference">2003-2010 fashion revolution</a>. 
+                        Scope includes:
+                    </p>
+                    <ul>
+                        <li>Cash Shop introduction and monetization analysis</li>
+                        <li>Henehoe culture documentation</li>
+                        <li>Fashion guild emergence (including NumbahWan founding narrative)</li>
+                        <li>Transparent Set paradox case study</li>
+                    </ul>
+                    <p>Approved with 24-month timeline and 200M mesos research budget.</p>
+                    
+                    <h4>Agenda Item 2: Museum Collection Scope</h4>
+                    <p>
+                        Discussion of which items should be included in the permanent 
+                        <a href="/museum" class="cross-reference">Fashion Museum</a> collection. 
+                        Final selection of 10 exhibits approved:
+                    </p>
+                    <ul>
+                        <li><a href="/museum/exhibit-001" class="cross-reference">001: Zakum Helmet</a> — Boss drop era representation</li>
+                        <li><a href="/museum/exhibit-002" class="cross-reference">002: Pink Adventurer Cape</a> — Early Cash Shop era</li>
+                        <li><a href="/museum/exhibit-003" class="cross-reference">003: Sauna Robe</a> — Limited edition scarcity model</li>
+                        <li><a href="/museum/exhibit-004" class="cross-reference">004: Spectrum Goggles</a> — Pre-fashion cosmetics</li>
+                        <li><a href="/museum/exhibit-005" class="cross-reference">005: 7-Slot Work Gloves</a> — Functional perfection</li>
+                        <li><a href="/museum/exhibit-006" class="cross-reference">006: Maple Bandana</a> — Event exclusives</li>
+                        <li><a href="/museum/exhibit-007" class="cross-reference">007: Tree Branch Nose</a> — Novelty items</li>
+                        <li><a href="/museum/exhibit-008" class="cross-reference">008: Facestompers</a> — Combat fashion fusion</li>
+                        <li><a href="/museum/exhibit-009" class="cross-reference">009: Red Whip</a> — Fashion weapons</li>
+                        <li><a href="/museum/exhibit-010" class="cross-reference">010: Transparent Set</a> — Ultimate fashion expression</li>
+                    </ul>
+                    <div class="action-item">
+                        ACTION: Begin exhibit page development — assigned to Curator Morrison.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <!-- Rabbit Hole Links -->
+    <section class="archive-section py-16">
+        <div class="max-w-6xl mx-auto px-6">
+            <h2 class="font-display text-3xl text-yellow-400 mb-2 text-center" data-i18n="rabbit.title">The Rabbit Hole</h2>
+            <p class="text-gray-500 text-center mb-8" data-i18n="rabbit.subtitle">Cross-references and connected archives — follow at your own risk</p>
+            
+            <div class="rabbit-hole">
+                <div class="rabbit-card">
+                    <h4>🏛️ Fashion Museum</h4>
+                    <p>10 priceless artifacts documenting virtual fashion history</p>
+                    <div class="rabbit-links">
+                        <a href="/museum">Museum Entrance Hall</a>
+                        <a href="/museum/exhibit-001">Exhibit 001: Zakum Helmet</a>
+                        <a href="/museum/exhibit-005">Exhibit 005: 7-Slot Work Gloves</a>
+                        <a href="/museum/exhibit-010">Exhibit 010: Transparent Set</a>
+                    </div>
+                </div>
+                
+                <div class="rabbit-card">
+                    <h4>🔐 The Vault</h4>
+                    <p>13 floors of security protecting one sacred artifact</p>
+                    <div class="rabbit-links">
+                        <a href="/vault">Vault Overview</a>
+                        <a href="/vault/b3-decontamination">B3: Decontamination Chamber</a>
+                        <a href="/vault/b7-hall-of-failures">B7: Hall of Failed Intruders</a>
+                        <a href="/vault/b12-antechamber">B12: The Antechamber</a>
+                    </div>
+                </div>
+                
+                <div class="rabbit-card">
+                    <h4>📚 Research Archives</h4>
+                    <p>Peer-reviewed scholarship on digital heritage</p>
+                    <div class="rabbit-links">
+                        <a href="/research">Research Archives Index</a>
+                        <a href="/research/work-gloves-economic-impact">7-Slot Work Gloves Economics</a>
+                        <a href="/research/zakum-helmet-spectral-analysis">Zakum Helmet Spectral Analysis</a>
+                        <a href="/research/reggina-misprint-forensic-examination">RegginA Tear Pattern [CLASSIFIED]</a>
+                    </div>
+                </div>
+                
+                <div class="rabbit-card">
+                    <h4>🔒 Classified Materials</h4>
+                    <p>Restricted access — clearance required</p>
+                    <div class="rabbit-links">
+                        <a href="/research/vault-security-analysis">847 Ways to Fail [RESTRICTED]</a>
+                        <a href="/vault/b12-antechamber">Seven Founders Protocol</a>
+                        <a href="/research/reggina-misprint-forensic-examination">Hypothesis C [LEVEL 9 ONLY]</a>
+                        <a href="#" onclick="alert('ACCESS DENIED: Clearance Level 9 Required'); return false;">Recovery Operation Details</a>
+                    </div>
+                </div>
+                
+                <div class="rabbit-card">
+                    <h4>👤 Key Figures</h4>
+                    <p>The scholars and guardians of guild heritage</p>
+                    <div class="rabbit-links">
+                        <a href="/research/work-gloves-economic-impact">Dr. Goldweaver (Economics)</a>
+                        <a href="/research/nx-fashion-revolution">Prof. PixelCouture (Fashion Studies)</a>
+                        <a href="/research/vault-security-analysis">NightShade (Security)</a>
+                        <a href="/research/reggina-misprint-forensic-examination">The Seventh Founder (?????)</a>
+                    </div>
+                </div>
+                
+                <div class="rabbit-card">
+                    <h4>🐱 Security (The Cat)</h4>
+                    <p>Honorary Security Consultant, B1-B7 access</p>
+                    <div class="rabbit-links">
+                        <a href="/research/vault-security-analysis">Incident #417 Documentation</a>
+                        <a href="/vault/b7-hall-of-failures">B7 Patrol Route</a>
+                        <a href="#" onclick="alert('Security is currently napping on server rack 7.'); return false;">Current Location</a>
+                        <a href="#" onclick="alert('Treat inventory: 847 remaining'); return false;">Treat Status</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <!-- Timeline -->
+    <section class="py-16 border-t border-white/10">
+        <div class="max-w-4xl mx-auto px-6">
+            <h2 class="font-display text-3xl text-yellow-400 mb-8 text-center" data-i18n="timeline.title">Historical Timeline</h2>
+            
+            <div class="timeline-vertical">
+                <div class="timeline-event">
+                    <h5>2003-2004: The Pre-Fashion Era</h5>
+                    <p>MapleStory launches. Equipment serves purely functional purposes. The Zakum Helmet becomes the first "status symbol" item.</p>
+                </div>
+                <div class="timeline-event">
+                    <h5>2005: The Cash Shop Revolution</h5>
+                    <p>NX currency introduced. Fashion and function separate forever. The era of virtual couture begins.</p>
+                </div>
+                <div class="timeline-event">
+                    <h5>2006-2008: The Golden Age</h5>
+                    <p>Henehoe culture emerges. Fashion guilds form. NumbahWan is founded by seven players who recognize the historical significance of disappearing items.</p>
+                </div>
+                <div class="timeline-event">
+                    <h5>November 7, 2009: The Recovery</h5>
+                    <p>Artifact #001 (RegginA Misprint) is recovered from [REDACTED]. The 23.7° tear occurs during extraction. The card arrives at the vault at 03:33 AM.</p>
+                </div>
+                <div class="timeline-event">
+                    <h5>2019: Vault Hardening</h5>
+                    <p>The NumbahWan Vault undergoes major security enhancement. 13-floor architecture finalized. GUARDIAN AI comes online.</p>
+                </div>
+                <div class="timeline-event">
+                    <h5>2024: Historical Society Founded</h5>
+                    <p>The NumbahWan Historical Society is established to formalize preservation efforts. Fashion Museum opens. Research Archives begin publication.</p>
+                </div>
+                <div class="timeline-event">
+                    <h5>September 2024: Security (The Cat)</h5>
+                    <p>An orange tabby breaches vault security to floor B7. Rather than memory-wipe, the cat is appointed Honorary Security Consultant.</p>
+                </div>
+                <div class="timeline-event">
+                    <h5>2026: The Present</h5>
+                    <p>847 intrusion attempts, 0 successes. 10 museum exhibits, 47 research papers. The guild's heritage is preserved for eternity.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <!-- Call to Action -->
+    <section class="py-16 bg-gradient-to-b from-transparent via-red-900/10 to-transparent">
+        <div class="max-w-4xl mx-auto px-6 text-center">
+            <h2 class="font-display text-3xl text-yellow-400 mb-6" data-i18n="cta.title">Continue Your Journey</h2>
+            <p class="text-gray-400 mb-8" data-i18n="cta.desc">
+                The rabbit hole goes deeper. Choose your path.
+            </p>
+            <div class="flex gap-4 justify-center flex-wrap">
+                <a href="/museum" class="bg-yellow-500/20 border border-yellow-500/50 text-yellow-400 px-6 py-3 rounded-full hover:bg-yellow-500/30 transition-colors">
+                    🏛️ Fashion Museum
+                </a>
+                <a href="/vault" class="bg-orange-500/20 border border-orange-500/50 text-orange-400 px-6 py-3 rounded-full hover:bg-orange-500/30 transition-colors">
+                    🔐 The Vault
+                </a>
+                <a href="/research" class="bg-purple-500/20 border border-purple-500/50 text-purple-400 px-6 py-3 rounded-full hover:bg-purple-500/30 transition-colors">
+                    📚 Research Archives
+                </a>
+            </div>
+        </div>
+    </section>
+    
+    <!-- Footer -->
+    <footer class="py-12 border-t border-white/10">
+        <div class="max-w-6xl mx-auto px-6 text-center">
+            <p class="font-display text-yellow-400 mb-2">NumbahWan Historical Society</p>
+            <p class="text-sm text-gray-500">"Documenting the extraordinary in service of eternity"</p>
+            <p class="text-xs text-gray-600 mt-4">
+                Est. 2024 • 23 Members • 847 Documents • 47 Meetings
+            </p>
+            <div class="mt-6 flex justify-center gap-4 text-xs text-gray-500">
+                <a href="/museum" class="hover:text-yellow-400 transition-colors">Museum</a>
+                <span>•</span>
+                <a href="/vault" class="hover:text-yellow-400 transition-colors">Vault</a>
+                <span>•</span>
+                <a href="/research" class="hover:text-yellow-400 transition-colors">Research</a>
+                <span>•</span>
+                <a href="/apply" class="hover:text-yellow-400 transition-colors">Join the Society</a>
+            </div>
+        </div>
+    </footer>
+    
+    <script>
+        // Initialize navigation
+        if (typeof NW_NAV !== 'undefined') {
+            NW_NAV.init('historical-society');
+        }
+    </script>
+</body>
+</html>

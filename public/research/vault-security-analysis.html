@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>847 Ways to Fail: Vault Intrusion Analysis | NumbahWan Research [RESTRICTED]</title>
+    <link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Crimson+Text:ital,wght@0,400;0,600;1,400&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        :root { --paper: #f9f6f0; --ink: #1a1a1a; --accent: #ff6600; --security: #dc2626; }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            font-family: 'Crimson Text', serif; 
+            background: #1a1a1a;
+            color: var(--ink);
+            line-height: 1.8;
+        }
+        .paper {
+            max-width: 800px;
+            margin: 2rem auto;
+            background: var(--paper);
+            padding: 4rem;
+            box-shadow: 0 10px 60px rgba(0,0,0,0.4);
+        }
+        h1 { font-size: 1.8rem; line-height: 1.3; margin-bottom: 1rem; }
+        h2 { font-size: 1.3rem; margin: 2rem 0 1rem; border-bottom: 1px solid #ccc; padding-bottom: 0.5rem; }
+        h3 { font-size: 1.1rem; margin: 1.5rem 0 0.75rem; }
+        p { margin-bottom: 1rem; text-align: justify; text-indent: 2rem; }
+        p.no-indent { text-indent: 0; }
+        .authors { font-style: italic; color: #666; margin-bottom: 2rem; }
+        .abstract { background: #f0ebe0; padding: 1.5rem; margin: 2rem 0; border-left: 4px solid var(--accent); }
+        .abstract p { text-indent: 0; }
+        .figure { text-align: center; margin: 2rem 0; padding: 1rem; background: #f5f0e5; }
+        .figure-caption { font-size: 0.9rem; font-style: italic; color: #666; margin-top: 0.5rem; }
+        table { width: 100%; border-collapse: collapse; margin: 1.5rem 0; font-size: 0.95rem; }
+        th, td { border: 1px solid #ccc; padding: 0.75rem; text-align: left; }
+        th { background: #f0ebe0; }
+        .footnote { font-size: 0.85rem; color: #666; border-top: 1px solid #ccc; margin-top: 3rem; padding-top: 1rem; }
+        .citation { font-size: 0.9rem; margin-left: 2rem; text-indent: -2rem; margin-bottom: 0.5rem; }
+        blockquote { margin: 1.5rem 2rem; padding-left: 1rem; border-left: 3px solid var(--accent); font-style: italic; }
+        .nav-back { 
+            position: fixed; top: 20px; left: 20px; 
+            background: #1a1a1a; color: #fff; 
+            padding: 0.5rem 1rem; border-radius: 5px;
+            text-decoration: none; font-family: 'Inter', sans-serif;
+            font-size: 0.85rem;
+        }
+        .reading-time {
+            background: var(--accent); color: white;
+            padding: 0.25rem 0.75rem; border-radius: 3px;
+            font-size: 0.8rem; font-family: 'Inter', sans-serif;
+            display: inline-block; margin-bottom: 1rem;
+        }
+        .stat-box {
+            background: linear-gradient(135deg, #1a1a1a, #2d2d2d);
+            color: white;
+            padding: 1.5rem;
+            border-radius: 8px;
+            margin: 1.5rem 0;
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1rem;
+            text-align: center;
+        }
+        .stat-item h4 {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 2rem;
+            color: var(--accent);
+        }
+        .stat-item p {
+            font-size: 0.75rem;
+            color: #888;
+            text-indent: 0;
+            margin: 0;
+        }
+        .incident-card {
+            background: #fef9f3;
+            border: 1px solid #e8d4bc;
+            padding: 1rem;
+            margin: 1rem 0;
+            border-radius: 4px;
+        }
+        .incident-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.5rem;
+        }
+        .incident-id {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.8rem;
+            background: #333;
+            color: var(--accent);
+            padding: 0.2rem 0.5rem;
+            border-radius: 3px;
+        }
+        .incident-status {
+            font-size: 0.8rem;
+            padding: 0.2rem 0.5rem;
+            border-radius: 3px;
+        }
+        .status-neutralized { background: #dcfce7; color: #166534; }
+        .status-memory-wiped { background: #fef3c7; color: #92400e; }
+        .status-adopted { background: #dbeafe; color: #1e40af; }
+        code {
+            font-family: 'JetBrains Mono', monospace;
+            background: #f0f0f0;
+            padding: 0.1rem 0.3rem;
+            border-radius: 3px;
+            font-size: 0.9rem;
+        }
+        @media (max-width: 900px) {
+            .paper { margin: 1rem; padding: 2rem; }
+            .stat-box { grid-template-columns: repeat(2, 1fr); }
+        }
+    </style>
+</head>
+<body>
+    <a href="/research" class="nav-back">← Back to Archives</a>
+    
+    <article class="paper">
+        <span class="reading-time">📖 20 min read • 🔒 RESTRICTED ACCESS</span>
+        
+        <h1>847 Ways to Fail: A Statistical Analysis of NumbahWan Vault Intrusion Attempts (2024-2026)</h1>
+        
+        <p class="authors no-indent">
+            NightShade, Chief Security Officer<sup>1</sup><br>
+            <small>
+                <sup>1</sup>Security Division, NumbahWan Guild Vault Operations<br>
+                <em>Internal Security Review, Annual Report 2026</em>
+            </small>
+        </p>
+        
+        <div class="stat-box">
+            <div class="stat-item">
+                <h4>847</h4>
+                <p>TOTAL ATTEMPTS</p>
+            </div>
+            <div class="stat-item">
+                <h4>0</h4>
+                <p>SUCCESSFUL BREACHES</p>
+            </div>
+            <div class="stat-item">
+                <h4>100%</h4>
+                <p>NEUTRALIZATION RATE</p>
+            </div>
+            <div class="stat-item">
+                <h4>3</h4>
+                <p>CATS ADOPTED</p>
+            </div>
+        </div>
+        
+        <div class="abstract">
+            <strong>Executive Summary</strong>
+            <p>
+                This annual security review catalogues all 847 documented intrusion attempts against 
+                the NumbahWan Vault between January 2024 and December 2026. We analyze failure points 
+                by floor level, intruder classification, and methodology employed. Key findings: 73% of 
+                attempts terminated at B5 (Soul Signature Authentication), 24% at B10 (Crimson Maze laser 
+                grid), and 3% were cats who somehow reached B7 before triggering motion sensors. 
+                Recommendations for security enhancements are provided, though we note with satisfaction 
+                that current systems maintain a perfect 100% prevention rate.
+            </p>
+        </div>
+        
+        <h2>1. Introduction</h2>
+        
+        <p>
+            The NumbahWan Vault, extending 195 meters beneath Parry Hotter Academy's West Wing, houses 
+            artifacts of incalculable value. Since the vault's hardened operations began in 2019, 
+            security protocols have evolved from "adequate" to what external auditors describe as 
+            "pathologically excessive." This report documents and analyzes all recorded intrusion 
+            attempts during the 2024-2026 reporting period.
+        </p>
+        
+        <p>
+            We emphasize at the outset: zero successful breaches occurred during this period. This 
+            perfect record continues an unbroken streak dating to the vault's establishment. While 
+            some may view this report as unnecessary—why analyze failures when success is assured?—we 
+            maintain that understanding threat patterns enables proactive security enhancement.
+        </p>
+        
+        <h2>2. Intrusion Attempt Classification</h2>
+        
+        <h3>2.1 Intruder Categories</h3>
+        
+        <p>
+            All 847 intrusion attempts were classified into one of five categories based on intruder 
+            profile and apparent motivation:
+        </p>
+        
+        <table>
+            <tr>
+                <th>Category</th>
+                <th>Count</th>
+                <th>%</th>
+                <th>Typical Profile</th>
+            </tr>
+            <tr>
+                <td>Curious Explorers</td>
+                <td>412</td>
+                <td>48.6%</td>
+                <td>New guild applicants who "wanted to see if it was real"</td>
+            </tr>
+            <tr>
+                <td>Competitive Guild Agents</td>
+                <td>287</td>
+                <td>33.9%</td>
+                <td>Operatives from rival guilds seeking intelligence</td>
+            </tr>
+            <tr>
+                <td>Professional Thieves</td>
+                <td>89</td>
+                <td>10.5%</td>
+                <td>Skilled individuals with sophisticated equipment</td>
+            </tr>
+            <tr>
+                <td>Delusional Claimants</td>
+                <td>34</td>
+                <td>4.0%</td>
+                <td>Individuals claiming to be "the true Guild Master"</td>
+            </tr>
+            <tr>
+                <td>Cats</td>
+                <td>25</td>
+                <td>3.0%</td>
+                <td>Literal cats. We're as confused as you are.</td>
+            </tr>
+        </table>
+        
+        <h3>2.2 The Cat Problem</h3>
+        
+        <p>
+            The 25 feline intrusions merit special discussion. Analysis indicates that cats enter the 
+            vault access corridors through ventilation systems designed with 15cm×15cm clearances—
+            sufficient for air circulation but, evidently, also sufficient for determined cats. Three 
+            of these cats have since been adopted by vault personnel and now serve as unofficial 
+            "security consultants" (their primary duty appears to be sleeping on warm server equipment).
+        </p>
+        
+        <blockquote>
+            "The cat reached B7. B7. We have seventeen separate authentication checkpoints and a 
+            cat just... walked through. We've since added infrared motion sensors calibrated for 
+            quadrupedal movement patterns. The cat's name is now 'Security' and he has his own badge."
+            <br><em>— Vault Operations Log, Incident #417, September 2024</em>
+        </blockquote>
+        
+        <h2>3. Failure Point Distribution</h2>
+        
+        <h3>3.1 By Floor Level</h3>
+        
+        <div class="figure">
+            <p style="font-family: 'JetBrains Mono', monospace; font-size: 0.8rem;">
+                [FIGURE 1: Intrusion Termination by Floor]<br><br>
+                Floor | Depth  | Attempts Terminated | Primary Cause<br>
+                ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━<br>
+                B1    | -15m   | 47  (5.5%)         | Blast door (gave up)<br>
+                B3    | -45m   | 89  (10.5%)        | Decontamination (claustrophobia)<br>
+                B5    | -75m   | 619 (73.1%)        | Soul Signature Authentication<br>
+                B7    | -105m  | 23  (2.7%)         | Hall of Failed Intruders (psychological)<br>
+                B8    | -120m  | 12  (1.4%)         | GUARDIAN AI detection<br>
+                B10   | -150m  | 54  (6.4%)         | Crimson Maze laser grid<br>
+                B12   | -180m  | 3   (0.4%)         | Antechamber Seven Founders Protocol<br>
+                B13   | -195m  | 0   (0.0%)         | The Omega Door (never reached)<br>
+            </p>
+            <p class="figure-caption">Figure 1: The B5 Soul Signature Authentication system accounts for nearly three-quarters of all terminations.</p>
+        </div>
+        
+        <p>
+            The dominance of B5 as the primary failure point validates our investment in biometric 
+            authentication technology. The Soul Signature system—which analyzes 847 unique biomarkers 
+            including heartbeat variability, perspiration composition, and what can only be described 
+            as "existential vibration frequency"—has proven impenetrable to all known spoofing techniques.
+        </p>
+        
+        <h3>3.2 Notable Incidents</h3>
+        
+        <div class="incident-card">
+            <div class="incident-header">
+                <span class="incident-id">INCIDENT #023 - "The Twins"</span>
+                <span class="incident-status status-memory-wiped">MEMORY WIPED</span>
+            </div>
+            <p class="no-indent" style="font-size: 0.9rem;">
+                <strong>Date:</strong> 2024-03-15 | <strong>Floor Reached:</strong> B5 | <strong>Category:</strong> Professional Thieves<br>
+                <strong>Summary:</strong> Identical twins from rival guild attempted soul signature bypass by 
+                presenting simultaneously, hoping to confuse biometric sensors. System correctly identified 
+                two distinct signatures and triggered lockdown. Twins apprehended and subjected to Standard 
+                Memory Erasure Protocol (SMEP). They now believe they spent that weekend at a spa retreat.
+            </p>
+        </div>
+        
+        <div class="incident-card">
+            <div class="incident-header">
+                <span class="incident-id">INCIDENT #156 - "The Ventriloquist"</span>
+                <span class="incident-status status-neutralized">NEUTRALIZED</span>
+            </div>
+            <p class="no-indent" style="font-size: 0.9rem;">
+                <strong>Date:</strong> 2024-07-22 | <strong>Floor Reached:</strong> B10 | <strong>Category:</strong> Professional Thief<br>
+                <strong>Summary:</strong> Subject displayed remarkable skills, bypassing B5 through unknown means 
+                (under investigation). Reached B10 Crimson Maze and attempted to navigate using memorized 
+                patterns from stolen maintenance logs. Logs were decoys. Subject was "ventriloquized" by 
+                laser grid for 2.3 seconds before tranquilization. Sustained minor burns to ego.
+            </p>
+        </div>
+        
+        <div class="incident-card">
+            <div class="incident-header">
+                <span class="incident-id">INCIDENT #417 - "Security (The Cat)"</span>
+                <span class="incident-status status-adopted">ADOPTED</span>
+            </div>
+            <p class="no-indent" style="font-size: 0.9rem;">
+                <strong>Date:</strong> 2024-09-03 | <strong>Floor Reached:</strong> B7 | <strong>Category:</strong> Cat<br>
+                <strong>Summary:</strong> Orange tabby cat, approximately 3 years old, entered via HVAC System 
+                Vent 23-C. Bypassed B1 (door was open for maintenance), B3 (too small to trigger sensors), 
+                B5 (no soul signature on file—interesting), and reached B7 Hall of Failed Intruders where 
+                it began grooming itself in front of Specimen #412's portrait. Now employed as Security 
+                Consultant. Salary: unlimited treats.
+            </p>
+        </div>
+        
+        <div class="incident-card">
+            <div class="incident-header">
+                <span class="incident-id">INCIDENT #712 - "The Seventh"</span>
+                <span class="incident-status status-neutralized">NEUTRALIZED</span>
+            </div>
+            <p class="no-indent" style="font-size: 0.9rem;">
+                <strong>Date:</strong> 2025-11-07 | <strong>Floor Reached:</strong> B12 | <strong>Category:</strong> Delusional Claimant<br>
+                <strong>Summary:</strong> Subject claimed to be "the lost Seventh Founder, returned from exile." 
+                Remarkably, subject passed B5 Soul Signature with 94.7% confidence match—highest false positive 
+                ever recorded. Reached B12 Antechamber where actual Seventh Founder was coincidentally present 
+                for scheduled meditation. Awkward confrontation ensued. Subject's claim was disproven by DNA 
+                analysis, historical document review, and Seventh Founder personally stating "I have never 
+                seen this person in my life." Subject now believes they are a financial analyst in Singapore.
+            </p>
+        </div>
+        
+        <h2>4. Security System Performance</h2>
+        
+        <h3>4.1 Detection Rate by System</h3>
+        
+        <table>
+            <tr>
+                <th>System</th>
+                <th>Floor</th>
+                <th>Detection Rate</th>
+                <th>False Positive Rate</th>
+            </tr>
+            <tr>
+                <td>Blast Door Pressure Sensors</td>
+                <td>B1</td>
+                <td>100%</td>
+                <td>0.3% (wind pressure)</td>
+            </tr>
+            <tr>
+                <td>Decontamination Biometrics</td>
+                <td>B3</td>
+                <td>100%</td>
+                <td>2.1% (anxious authorized users)</td>
+            </tr>
+            <tr>
+                <td>Soul Signature Authentication</td>
+                <td>B5</td>
+                <td>99.88%</td>
+                <td>0.01% (Incident #712)</td>
+            </tr>
+            <tr>
+                <td>GUARDIAN AI Surveillance</td>
+                <td>B8</td>
+                <td>100%</td>
+                <td>12.4% (cats, bugs, dust particles)</td>
+            </tr>
+            <tr>
+                <td>Crimson Maze Laser Grid</td>
+                <td>B10</td>
+                <td>100%</td>
+                <td>0.0%</td>
+            </tr>
+            <tr>
+                <td>Seven Founders Protocol</td>
+                <td>B12</td>
+                <td>100%</td>
+                <td>N/A (no automated component)</td>
+            </tr>
+        </table>
+        
+        <h3>4.2 GUARDIAN AI Performance Metrics</h3>
+        
+        <p>
+            The GUARDIAN AI system, operational since 2023, processes 2.3 petabytes of surveillance data 
+            per second across 847 active camera feeds. During the reporting period, GUARDIAN correctly 
+            identified all human intrusion attempts within an average of 0.3 seconds of first visibility. 
+            The system's only weakness—a 12.4% false positive rate—stems from its inability to distinguish 
+            between genuine threats and: cats, large insects, floating dust illuminated by maintenance 
+            lighting, and one memorable instance of a balloon that escaped from a birthday party three 
+            floors above.
+        </p>
+        
+        <blockquote>
+            "GUARDIAN flagged Threat Level 3 for a spider. A small spider. I spent four hours on lockdown 
+            while armed response teams searched for an 'eight-legged hostile.' The spider was ultimately 
+            neutralized with a napkin. I've since adjusted sensitivity thresholds."
+            <br><em>— GUARDIAN Operations Log, 2025-06-14</em>
+        </blockquote>
+        
+        <h2>5. Intruder Outcome Analysis</h2>
+        
+        <h3>5.1 Post-Apprehension Protocols</h3>
+        
+        <p>
+            All apprehended intruders undergo assessment to determine appropriate outcome. The guild 
+            maintains three standard protocols:
+        </p>
+        
+        <table>
+            <tr>
+                <th>Protocol</th>
+                <th>Application</th>
+                <th>Count (2024-2026)</th>
+            </tr>
+            <tr>
+                <td>Standard Memory Erasure (SMEP)</td>
+                <td>Non-hostile intruders, first offense</td>
+                <td>723 (85.4%)</td>
+            </tr>
+            <tr>
+                <td>Enhanced Interrogation + SMEP</td>
+                <td>Suspected guild agents, repeat offenders</td>
+                <td>96 (11.3%)</td>
+            </tr>
+            <tr>
+                <td>Permanent Banishment</td>
+                <td>Hostile actors, documented threats</td>
+                <td>28 (3.3%)</td>
+            </tr>
+        </table>
+        
+        <p>
+            Memory Erasure protocols target only vault-related memories; subjects retain full cognitive 
+            function and personal memories. Post-SMEP monitoring indicates 94% of subjects experience 
+            mild confusion ("I feel like I forgot something important") that dissipates within 72 hours.
+        </p>
+        
+        <h3>5.2 Recidivism Rate</h3>
+        
+        <p>
+            Of the 723 subjects who underwent SMEP, 12 (1.7%) subsequently attempted repeat intrusion. 
+            This remarkably low recidivism rate validates SMEP efficacy, though it raises philosophical 
+            questions about free will that the Security Division declines to engage with.
+        </p>
+        
+        <h2>6. Recommendations</h2>
+        
+        <h3>6.1 Proposed Enhancements</h3>
+        
+        <p class="no-indent">
+            <strong>Recommendation 1:</strong> Install cat-specific deterrents in HVAC access points. 
+            Proposed solutions include ultrasonic emitters (rejected—cruel to cats), smaller vents 
+            (rejected—fire code violations), and strategically placed cucumber vegetables (under testing).
+        </p>
+        
+        <p class="no-indent">
+            <strong>Recommendation 2:</strong> Investigate B5 bypass method used in Incident #156. 
+            Current hypothesis: insider assistance. All personnel with B5 access have undergone 
+            enhanced loyalty verification. Two resignations resulted.
+        </p>
+        
+        <p class="no-indent">
+            <strong>Recommendation 3:</strong> Adjust GUARDIAN AI sensitivity to reduce false positives 
+            while maintaining detection capability. Proposed: machine learning training set expansion 
+            to include 10,000+ images of cats, spiders, and party balloons.
+        </p>
+        
+        <h2>7. Conclusion</h2>
+        
+        <p>
+            The NumbahWan Vault security apparatus continues to perform at exceptional levels. With 847 
+            intrusion attempts and zero successful breaches, we maintain our perfect record. The diversity 
+            of threat actors—from professional thieves to confused cats—demonstrates both the vault's 
+            reputation and its universal impermeability.
+        </p>
+        
+        <p>
+            We close with a reminder to all personnel: security is not merely a system, but a culture. 
+            The vault's contents—particularly Artifact #001—represent the guild's heritage, identity, 
+            and sacred trust. Every attempted breach, no matter how amateur, reinforces our resolve.
+        </p>
+        
+        <p>
+            And to any readers contemplating intrusion: we have a wall of 847 failure cases. We have 
+            laser grids that reconfigure faster than you can move. We have an AI that processes more 
+            data per second than your brain processes in a year. We have a cat named Security who 
+            has more vault access than you ever will.
+        </p>
+        
+        <p>
+            Choose wisely.
+        </p>
+        
+        <h2>References</h2>
+        
+        <p class="citation">
+            GUARDIAN Operations Division. (2025). Artificial Intelligence Surveillance Protocols, Version 4.7. Internal documentation.
+        </p>
+        <p class="citation">
+            NumbahWan Guild Charter. (2019). Security Protocols and Ethical Guidelines for Vault Operations. Founding Council Publication.
+        </p>
+        <p class="citation">
+            NightShade. (2024). "Why Cats Keep Getting In: An Analysis of HVAC Security Vulnerabilities." Internal Security Memo, Q3 2024.
+        </p>
+        <p class="citation">
+            Standards for Memory Modification in Non-Hostile Contexts. (2022). NumbahWan Ethics Committee, Advisory Opinion 2022-007.
+        </p>
+        
+        <div class="footnote">
+            <p class="no-indent"><strong>Acknowledgments:</strong> The Security Division thanks GUARDIAN AI for tireless vigilance, the Vault Maintenance team for never leaving doors open (except that one time), and Security the Cat for quality assurance testing.</p>
+            <p class="no-indent" style="margin-top: 1rem;"><strong>Conflict of Interest:</strong> NightShade's employment depends on the vault not being breached, which some might argue creates bias toward reporting zero successful breaches. We assure readers that there have, genuinely, been zero successful breaches.</p>
+            <p class="no-indent" style="margin-top: 1rem;"><strong>Related Materials:</strong> <a href="/vault/b7-hall-of-failures" style="color: var(--accent);">Vault B7: Hall of Failed Intruders</a> | <a href="/vault/b3-decontamination" style="color: var(--accent);">Vault B3: Decontamination Chamber</a> | <a href="/historical-society" style="color: var(--accent);">Historical Society Meeting Minutes</a></p>
+        </div>
+    </article>
+</body>
+</html>
