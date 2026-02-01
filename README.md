@@ -35,6 +35,8 @@ http://localhost:3000
 - **Wallet** - Currency & inventory management
 - **Market** - Card trading between players
 - **Trilingual** - EN / 中文 / ไทย
+- **Academy** - Parry Hotter School of Coding Wizardry
+- **Guild Vault** - B13 underground vault with legendary misprint card
 
 ## Tech Stack
 
