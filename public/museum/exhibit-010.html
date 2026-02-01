@@ -1,0 +1,606 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Exhibit 010: The Transparent Set | NumbahWan Fashion Museum</title>
+    <link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --gold: #ffd700;
+            --diamond: #b9f2ff;
+            --dark: #0a0a0f;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html { scroll-behavior: smooth; }
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--dark);
+            color: #fff;
+            min-height: 100vh;
+        }
+        .font-museum { font-family: 'Cinzel', serif; }
+        
+        .artifact-case {
+            background: linear-gradient(145deg, rgba(20,20,30,0.9), rgba(10,10,20,0.95));
+            border: 2px solid rgba(185,242,255,0.3);
+            box-shadow: 
+                0 0 100px rgba(185,242,255,0.15),
+                inset 0 0 100px rgba(185,242,255,0.05);
+            position: relative;
+        }
+        .artifact-case::before {
+            content: '';
+            position: absolute;
+            inset: -2px;
+            background: linear-gradient(45deg, transparent, rgba(185,242,255,0.3), transparent, rgba(255,215,0,0.3), transparent);
+            z-index: -1;
+            animation: rotate-gradient 4s linear infinite;
+        }
+        @keyframes rotate-gradient {
+            from { filter: hue-rotate(0deg); }
+            to { filter: hue-rotate(360deg); }
+        }
+        
+        .rarity-mythic {
+            background: linear-gradient(135deg, #dc2626, #ffd700, #dc2626);
+            background-size: 200% 100%;
+            animation: mythic-shift 2s ease-in-out infinite;
+            text-shadow: 0 0 20px rgba(255,215,0,0.8);
+        }
+        @keyframes mythic-shift {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+        
+        .whale-badge {
+            background: linear-gradient(135deg, #ffd700, #b9f2ff, #ffd700);
+            color: #000;
+            animation: whale-glow 3s ease-in-out infinite;
+        }
+        @keyframes whale-glow {
+            0%, 100% { box-shadow: 0 0 20px rgba(255,215,0,0.5), 0 0 40px rgba(185,242,255,0.3); }
+            50% { box-shadow: 0 0 40px rgba(255,215,0,0.8), 0 0 60px rgba(185,242,255,0.5); }
+        }
+        
+        .document-paper {
+            background: linear-gradient(135deg, #f5f5dc 0%, #e8e4c9 50%, #d4c896 100%);
+            color: #2a2a2a;
+            font-family: 'Times New Roman', serif;
+        }
+        
+        .nav-button {
+            background: linear-gradient(135deg, rgba(185,242,255,0.2), rgba(255,215,0,0.2));
+            border: 1px solid rgba(185,242,255,0.4);
+            transition: all 0.3s ease;
+        }
+        .nav-button:hover {
+            background: linear-gradient(135deg, rgba(185,242,255,0.4), rgba(255,215,0,0.4));
+            transform: translateY(-2px);
+        }
+        
+        .scroll-reveal {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: all 0.8s ease;
+        }
+        .scroll-reveal.revealed {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        
+        .reading-progress {
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 3px;
+            background: linear-gradient(90deg, #b9f2ff, #ffd700, #b9f2ff);
+            z-index: 9999;
+        }
+        
+        .transparent-effect {
+            background: linear-gradient(135deg, 
+                rgba(185,242,255,0.1) 0%, 
+                rgba(255,255,255,0.05) 25%,
+                rgba(185,242,255,0.1) 50%,
+                rgba(255,255,255,0.05) 75%,
+                rgba(185,242,255,0.1) 100%);
+            border: 1px dashed rgba(185,242,255,0.5);
+        }
+        
+        .price-tag {
+            background: linear-gradient(135deg, #ffd700, #ffed4a);
+            color: #000;
+            font-weight: bold;
+        }
+        
+        .finale-section {
+            background: radial-gradient(ellipse at center, rgba(185,242,255,0.1) 0%, transparent 70%);
+        }
+        
+        .confetti {
+            position: fixed;
+            pointer-events: none;
+            z-index: 9998;
+        }
+        
+        .museum-complete {
+            background: linear-gradient(135deg, rgba(255,215,0,0.2), rgba(185,242,255,0.2));
+            border: 2px solid rgba(255,215,0,0.5);
+            animation: complete-glow 2s ease-in-out infinite;
+        }
+        @keyframes complete-glow {
+            0%, 100% { box-shadow: 0 0 30px rgba(255,215,0,0.3); }
+            50% { box-shadow: 0 0 50px rgba(255,215,0,0.5), 0 0 80px rgba(185,242,255,0.3); }
+        }
+    </style>
+</head>
+<body>
+    <div class="reading-progress" id="readingProgress"></div>
+    
+    <div id="nw-nav"></div>
+    
+    <!-- Breadcrumb -->
+    <div class="bg-black/50 border-b border-cyan-400/20">
+        <div class="max-w-6xl mx-auto px-6 py-3">
+            <div class="flex items-center gap-2 text-sm text-gray-400">
+                <a href="/museum" class="hover:text-cyan-400 transition-colors" data-i18n="nav.museum">Museum</a>
+                <span>/</span>
+                <a href="/museum/exhibit-009" class="hover:text-cyan-400 transition-colors" data-i18n="exhibit.009">Exhibit 009</a>
+                <span>/</span>
+                <span class="text-cyan-400 font-bold" data-i18n="exhibit.010">★ FINAL EXHIBIT ★</span>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Hero Section -->
+    <section class="relative py-24 overflow-hidden finale-section">
+        <div class="absolute inset-0 bg-gradient-to-b from-cyan-900/20 via-transparent to-transparent"></div>
+        <div class="max-w-6xl mx-auto px-6 relative z-10">
+            <div class="text-center mb-8">
+                <div class="inline-block whale-badge text-xs font-bold px-6 py-3 rounded-full mb-6">
+                    <span data-i18n="badge.whale">🐋 ULTIMATE WHALE FLEX 🐋</span>
+                </div>
+                <p class="text-cyan-400 font-museum tracking-widest mb-2" data-i18n="exhibit.number.010">★ FINAL EXHIBIT ★</p>
+                <h1 class="font-museum text-5xl md:text-7xl text-white mb-4">
+                    <span class="text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 via-white to-yellow-300" data-i18n="exhibit.010.title">THE TRANSPARENT SET</span>
+                </h1>
+                <p class="text-xl text-gray-400 max-w-2xl mx-auto" data-i18n="exhibit.010.subtitle">Complete Invisible Gear — The Ultimate Display of Wealth</p>
+            </div>
+            
+            <div class="flex justify-center gap-4 flex-wrap text-sm">
+                <span class="rarity-mythic px-4 py-2 rounded-full font-bold" data-i18n="rarity.mythic">MYTHIC</span>
+                <span class="bg-white/10 px-4 py-2 rounded-full" data-i18n="type.fullset">Full Equipment Set</span>
+                <span class="bg-white/10 px-4 py-2 rounded-full" data-i18n="origin.cashshop">NX Cash Shop • Premium</span>
+            </div>
+        </div>
+    </section>
+    
+    <!-- Main Display -->
+    <section class="py-16">
+        <div class="max-w-5xl mx-auto px-6">
+            <div class="artifact-case rounded-3xl p-8 md:p-12">
+                <div class="grid md:grid-cols-2 gap-12 items-center">
+                    <div class="relative">
+                        <img src="/static/images/museum/transparent-set.webp" 
+                             alt="Transparent Set" 
+                             class="w-full rounded-2xl shadow-2xl"
+                             loading="lazy">
+                        <div class="absolute -bottom-4 -right-4 bg-black/80 backdrop-blur px-4 py-2 rounded-lg border border-cyan-400/30">
+                            <span class="text-xs text-cyan-400" data-i18n="photo.whale">Peak Whale Achievement</span>
+                        </div>
+                    </div>
+                    <div>
+                        <h2 class="font-museum text-3xl text-cyan-400 mb-6" data-i18n="section.overview">Artifact Overview</h2>
+                        <div class="space-y-4 text-gray-300 leading-relaxed">
+                            <p data-i18n="exhibit.010.overview.p1">
+                                The Transparent Set represents the absolute pinnacle of MapleStory fashion 
+                                philosophy: paying premium prices to make your equipment... invisible. It's 
+                                the ultimate flex, the final boss of fashion, the whale's victory lap.
+                            </p>
+                            <p data-i18n="exhibit.010.overview.p2">
+                                Each piece—hat, overall, gloves, shoes, cape, and weapon—costs separate NX. 
+                                A complete Transparent Set could cost more than some premium games. And what 
+                                do you get? The privilege of looking like you're wearing nothing at all.
+                            </p>
+                        </div>
+                        
+                        <div class="grid grid-cols-2 gap-4 mt-8">
+                            <div class="bg-black/30 rounded-xl p-4 text-center">
+                                <p class="text-2xl font-bold text-cyan-400">6</p>
+                                <p class="text-xs text-gray-500" data-i18n="stat.pieces">Equipment Pieces</p>
+                            </div>
+                            <div class="bg-black/30 rounded-xl p-4 text-center">
+                                <p class="text-2xl font-bold text-yellow-400">23,400</p>
+                                <p class="text-xs text-gray-500" data-i18n="stat.totalcost">Total NX Cost</p>
+                            </div>
+                            <div class="bg-black/30 rounded-xl p-4 text-center">
+                                <p class="text-2xl font-bold text-green-400">0%</p>
+                                <p class="text-xs text-gray-500" data-i18n="stat.visibility">Visibility</p>
+                            </div>
+                            <div class="bg-black/30 rounded-xl p-4 text-center">
+                                <p class="text-2xl font-bold text-purple-400">100%</p>
+                                <p class="text-xs text-gray-500" data-i18n="stat.flex">Flex Factor</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <!-- The Complete Set -->
+    <section class="py-16 bg-gradient-to-b from-transparent via-cyan-900/10 to-transparent scroll-reveal">
+        <div class="max-w-4xl mx-auto px-6">
+            <h2 class="font-museum text-3xl text-center text-cyan-400 mb-12" data-i18n="section.components">Set Components</h2>
+            
+            <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
+                <div class="transparent-effect rounded-xl p-6 text-center">
+                    <div class="text-3xl mb-2">🎩</div>
+                    <h4 class="text-white font-bold" data-i18n="piece.hat">Transparent Hat</h4>
+                    <div class="price-tag mt-2 px-3 py-1 rounded-full text-xs inline-block">3,900 NX</div>
+                </div>
+                
+                <div class="transparent-effect rounded-xl p-6 text-center">
+                    <div class="text-3xl mb-2">👔</div>
+                    <h4 class="text-white font-bold" data-i18n="piece.overall">Transparent Overall</h4>
+                    <div class="price-tag mt-2 px-3 py-1 rounded-full text-xs inline-block">4,900 NX</div>
+                </div>
+                
+                <div class="transparent-effect rounded-xl p-6 text-center">
+                    <div class="text-3xl mb-2">🧤</div>
+                    <h4 class="text-white font-bold" data-i18n="piece.gloves">Transparent Gloves</h4>
+                    <div class="price-tag mt-2 px-3 py-1 rounded-full text-xs inline-block">2,900 NX</div>
+                </div>
+                
+                <div class="transparent-effect rounded-xl p-6 text-center">
+                    <div class="text-3xl mb-2">👟</div>
+                    <h4 class="text-white font-bold" data-i18n="piece.shoes">Transparent Shoes</h4>
+                    <div class="price-tag mt-2 px-3 py-1 rounded-full text-xs inline-block">2,900 NX</div>
+                </div>
+                
+                <div class="transparent-effect rounded-xl p-6 text-center">
+                    <div class="text-3xl mb-2">🦸</div>
+                    <h4 class="text-white font-bold" data-i18n="piece.cape">Transparent Cape</h4>
+                    <div class="price-tag mt-2 px-3 py-1 rounded-full text-xs inline-block">3,900 NX</div>
+                </div>
+                
+                <div class="transparent-effect rounded-xl p-6 text-center">
+                    <div class="text-3xl mb-2">⚔️</div>
+                    <h4 class="text-white font-bold" data-i18n="piece.weapon">Transparent Weapon</h4>
+                    <div class="price-tag mt-2 px-3 py-1 rounded-full text-xs inline-block">4,900 NX</div>
+                </div>
+            </div>
+            
+            <div class="mt-8 text-center">
+                <div class="inline-block bg-gradient-to-r from-yellow-500/20 via-cyan-500/20 to-yellow-500/20 rounded-2xl px-8 py-4 border border-yellow-500/30">
+                    <p class="text-sm text-gray-400" data-i18n="total.label">Complete Set Total:</p>
+                    <p class="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-cyan-400">23,400 NX</p>
+                    <p class="text-xs text-gray-500 mt-1" data-i18n="total.usd">(~$23.40 USD)</p>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <!-- The Philosophy -->
+    <section class="py-16 scroll-reveal">
+        <div class="max-w-4xl mx-auto px-6">
+            <h2 class="font-museum text-3xl text-center text-cyan-400 mb-12" data-i18n="section.philosophy">The Philosophy of Invisibility</h2>
+            
+            <div class="document-paper rounded-2xl p-8 md:p-12">
+                <div class="flex items-center gap-4 mb-6 pb-4 border-b-2 border-amber-800/30">
+                    <div class="w-16 h-16 bg-cyan-800/20 rounded-full flex items-center justify-center">
+                        <span class="text-2xl">🧘</span>
+                    </div>
+                    <div>
+                        <h3 class="text-xl font-bold text-amber-900" data-i18n="document.title.010">On the Absence of Presence</h3>
+                        <p class="text-sm text-amber-700" data-i18n="document.source.010">NumbahWan Philosophy Department</p>
+                    </div>
+                </div>
+                
+                <div class="prose prose-amber max-w-none text-amber-900">
+                    <p class="mb-4" data-i18n="exhibit.010.philosophy.p1">
+                        The Transparent Set poses an existential question: <em>What is the value of nothing?</em>
+                    </p>
+                    <p class="mb-4" data-i18n="exhibit.010.philosophy.p2">
+                        In a world where fashion is about showing off, the Transparent Set inverts the paradigm. 
+                        It says: "I have spent enough money to NOT show you anything." It's post-fashion. 
+                        It's meta-fashion. It's fashion philosophy taken to its logical extreme.
+                    </p>
+                    <p class="mb-4" data-i18n="exhibit.010.philosophy.p3">
+                        Only those who truly understand MapleStory fashion culture can appreciate the flex. 
+                        To the uninitiated, you look naked. To the enlightened, you look like a god.
+                    </p>
+                    <p class="italic text-amber-800" data-i18n="exhibit.010.philosophy.p4">
+                        "The greatest fashion statement is no fashion statement at all—but only after 
+                        you've paid premium prices for the privilege of that statement."
+                    </p>
+                    <p class="text-right text-sm text-amber-600 mt-2" data-i18n="exhibit.010.quote.source">— Fashion Philosophy, Volume XII</p>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <!-- Whale Culture -->
+    <section class="py-16 bg-gradient-to-b from-transparent via-cyan-900/10 to-transparent scroll-reveal">
+        <div class="max-w-4xl mx-auto px-6">
+            <h2 class="font-museum text-3xl text-center text-cyan-400 mb-12" data-i18n="section.whale">Whale Culture Significance</h2>
+            
+            <div class="grid md:grid-cols-2 gap-8">
+                <div class="bg-white/5 rounded-2xl p-6 border border-cyan-500/20">
+                    <div class="text-4xl mb-4">🐋</div>
+                    <h3 class="text-xl text-white mb-4" data-i18n="whale.010.status.title">Ultimate Status Symbol</h3>
+                    <p class="text-gray-400" data-i18n="whale.010.status.desc">
+                        Owning a complete Transparent Set was the final achievement in MapleStory fashion. 
+                        It meant you had conquered every other fashion goal and transcended to a higher plane 
+                        of existence where visibility itself was optional.
+                    </p>
+                </div>
+                
+                <div class="bg-white/5 rounded-2xl p-6 border border-cyan-500/20">
+                    <div class="text-4xl mb-4">👀</div>
+                    <h3 class="text-xl text-white mb-4" data-i18n="whale.010.knowledge.title">In-Crowd Recognition</h3>
+                    <p class="text-gray-400" data-i18n="whale.010.knowledge.desc">
+                        Spotting a Transparent Set wearer required knowledge. Newbies would ask "why are you 
+                        naked?" Veterans would nod in respect. It was a secret handshake visible only to 
+                        the initiated.
+                    </p>
+                </div>
+                
+                <div class="bg-white/5 rounded-2xl p-6 border border-cyan-500/20">
+                    <div class="text-4xl mb-4">🎭</div>
+                    <h3 class="text-xl text-white mb-4" data-i18n="whale.010.irony.title">The Irony Layer</h3>
+                    <p class="text-gray-400" data-i18n="whale.010.irony.desc">
+                        Some whales wore Transparent Sets ironically—showing off their ugly base equipment 
+                        while proving they could afford to hide it. The meta-commentary was its own form 
+                        of artistic expression.
+                    </p>
+                </div>
+                
+                <div class="bg-white/5 rounded-2xl p-6 border border-cyan-500/20">
+                    <div class="text-4xl mb-4">💎</div>
+                    <h3 class="text-xl text-white mb-4" data-i18n="whale.010.combo.title">Combination Plays</h3>
+                    <p class="text-gray-400" data-i18n="whale.010.combo.desc">
+                        Advanced players mixed Transparent pieces with visible ones—Transparent everything 
+                        except one statement piece. This created unique silhouettes that said "I could be 
+                        invisible, but I'm choosing to show you just this."
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <!-- The Absurdity -->
+    <section class="py-16 scroll-reveal">
+        <div class="max-w-4xl mx-auto px-6">
+            <div class="bg-gradient-to-r from-cyan-900/30 to-yellow-900/30 rounded-2xl p-8 border border-cyan-500/30 text-center">
+                <div class="text-5xl mb-6">🤔</div>
+                <h3 class="font-museum text-2xl text-cyan-400 mb-6" data-i18n="absurdity.title">The Beautiful Absurdity</h3>
+                <p class="text-xl text-gray-300 mb-4" data-i18n="exhibit.010.absurdity.p1">
+                    Let's be clear about what's happening here:
+                </p>
+                <div class="bg-black/30 rounded-xl p-6 mb-6">
+                    <p class="text-lg text-white" data-i18n="exhibit.010.absurdity.p2">
+                        People paid <span class="text-yellow-400 font-bold">real money</span> 
+                        to make their <span class="text-cyan-400 font-bold">virtual clothes</span> 
+                        appear <span class="text-purple-400 font-bold">invisible</span> 
+                        in a <span class="text-green-400 font-bold">2D side-scrolling game</span> 
+                        about <span class="text-orange-400 font-bold">fighting mushrooms</span>.
+                    </p>
+                </div>
+                <p class="text-gray-400" data-i18n="exhibit.010.absurdity.p3">
+                    And it was glorious. This is why we love games.
+                </p>
+            </div>
+        </div>
+    </section>
+    
+    <!-- Conservation -->
+    <section class="py-16 bg-gradient-to-b from-transparent via-cyan-900/10 to-transparent scroll-reveal">
+        <div class="max-w-4xl mx-auto px-6">
+            <h2 class="font-museum text-3xl text-center text-cyan-400 mb-8" data-i18n="section.conservation">Conservation Report</h2>
+            
+            <div class="bg-gradient-to-br from-green-900/20 to-emerald-900/20 rounded-2xl p-8 border border-green-500/20">
+                <div class="flex items-center gap-3 mb-6">
+                    <span class="text-2xl">✨</span>
+                    <span class="text-green-400 font-mono" data-i18n="conservation.status.complete">STATUS: COMPLETE SET PRESERVED</span>
+                </div>
+                
+                <div class="grid md:grid-cols-2 gap-6">
+                    <div>
+                        <h4 class="text-white font-bold mb-2" data-i18n="conservation.inventory">Set Inventory</h4>
+                        <ul class="text-gray-400 space-y-2 text-sm">
+                            <li data-i18n="conservation.010.i1">✓ Transparent Hat (Permanent)</li>
+                            <li data-i18n="conservation.010.i2">✓ Transparent Overall (Permanent)</li>
+                            <li data-i18n="conservation.010.i3">✓ Transparent Gloves (Permanent)</li>
+                            <li data-i18n="conservation.010.i4">✓ Transparent Shoes (Permanent)</li>
+                            <li data-i18n="conservation.010.i5">✓ Transparent Cape (Permanent)</li>
+                            <li data-i18n="conservation.010.i6">✓ Transparent Weapon (Permanent)</li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h4 class="text-white font-bold mb-2" data-i18n="conservation.provenance">Collection History</h4>
+                        <ul class="text-gray-400 space-y-2 text-sm">
+                            <li data-i18n="conservation.010.p1">✓ Assembled over 2008-2010</li>
+                            <li data-i18n="conservation.010.p2">✓ Original owner: InvisibleWhale</li>
+                            <li data-i18n="conservation.010.p3">✓ All pieces converted to permanent</li>
+                            <li data-i18n="conservation.010.p4">✓ NumbahWan collection: 2022</li>
+                            <li data-i18n="conservation.010.p5">✓ Certified complete set</li>
+                            <li data-i18n="conservation.010.p6">✓ Display verified: maximum invisibility</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <!-- Museum Complete -->
+    <section class="py-20 scroll-reveal">
+        <div class="max-w-4xl mx-auto px-6">
+            <div class="museum-complete rounded-3xl p-12 text-center">
+                <div class="text-6xl mb-6">🏛️</div>
+                <h2 class="font-museum text-4xl text-yellow-400 mb-6" data-i18n="complete.title">Museum Tour Complete</h2>
+                <p class="text-xl text-gray-300 mb-8" data-i18n="complete.message">
+                    You have witnessed 10 of MapleStory's most iconic fashion items. Each piece tells 
+                    a story of nostalgia, creativity, and the beautiful absurdity of virtual fashion.
+                </p>
+                
+                <div class="grid grid-cols-5 md:grid-cols-10 gap-2 mb-8">
+                    <a href="/museum/exhibit-001" class="bg-white/10 rounded-lg p-2 text-center hover:bg-white/20 transition-colors" title="Zakum Helmet">
+                        <span class="text-xl">💀</span>
+                    </a>
+                    <a href="/museum/exhibit-002" class="bg-white/10 rounded-lg p-2 text-center hover:bg-white/20 transition-colors" title="Pink Adventurer Cape">
+                        <span class="text-xl">🦸</span>
+                    </a>
+                    <a href="/museum/exhibit-003" class="bg-white/10 rounded-lg p-2 text-center hover:bg-white/20 transition-colors" title="Sauna Robe">
+                        <span class="text-xl">🛁</span>
+                    </a>
+                    <a href="/museum/exhibit-004" class="bg-white/10 rounded-lg p-2 text-center hover:bg-white/20 transition-colors" title="Spectrum Goggles">
+                        <span class="text-xl">🌈</span>
+                    </a>
+                    <a href="/museum/exhibit-005" class="bg-white/10 rounded-lg p-2 text-center hover:bg-white/20 transition-colors" title="7-Slot Work Gloves">
+                        <span class="text-xl">🧤</span>
+                    </a>
+                    <a href="/museum/exhibit-006" class="bg-white/10 rounded-lg p-2 text-center hover:bg-white/20 transition-colors" title="Maple Bandana">
+                        <span class="text-xl">🎂</span>
+                    </a>
+                    <a href="/museum/exhibit-007" class="bg-white/10 rounded-lg p-2 text-center hover:bg-white/20 transition-colors" title="Tree Branch Nose">
+                        <span class="text-xl">🌳</span>
+                    </a>
+                    <a href="/museum/exhibit-008" class="bg-white/10 rounded-lg p-2 text-center hover:bg-white/20 transition-colors" title="Facestompers">
+                        <span class="text-xl">👢</span>
+                    </a>
+                    <a href="/museum/exhibit-009" class="bg-white/10 rounded-lg p-2 text-center hover:bg-white/20 transition-colors" title="Red Whip">
+                        <span class="text-xl">💎</span>
+                    </a>
+                    <a href="/museum/exhibit-010" class="bg-cyan-500/30 rounded-lg p-2 text-center ring-2 ring-cyan-400" title="Transparent Set">
+                        <span class="text-xl">✨</span>
+                    </a>
+                </div>
+                
+                <div class="flex flex-col md:flex-row gap-4 justify-center">
+                    <a href="/museum" class="nav-button rounded-xl px-8 py-4 text-lg" data-i18n="complete.restart">
+                        🔄 Start Tour Again
+                    </a>
+                    <a href="/vault" class="bg-gradient-to-r from-yellow-500/30 to-orange-500/30 border border-yellow-500/50 rounded-xl px-8 py-4 text-lg hover:from-yellow-500/50 hover:to-orange-500/50 transition-colors" data-i18n="complete.vault">
+                        🔐 Visit The Vault
+                    </a>
+                </div>
+                
+                <p class="text-sm text-gray-500 mt-8" data-i18n="complete.teaser">
+                    The museum preserves our fashion history. But the Vault... the Vault holds something 
+                    far more precious. Are you ready to descend?
+                </p>
+            </div>
+        </div>
+    </section>
+    
+    <!-- Navigation -->
+    <section class="py-16">
+        <div class="max-w-4xl mx-auto px-6">
+            <div class="flex flex-col md:flex-row gap-4 justify-between">
+                <a href="/museum/exhibit-009" class="nav-button rounded-xl p-6 flex items-center gap-4 flex-1">
+                    <span class="text-3xl">←</span>
+                    <div>
+                        <p class="text-xs text-gray-400" data-i18n="nav.previous">PREVIOUS EXHIBIT</p>
+                        <p class="text-lg text-white" data-i18n="exhibit.009.short">009: Red Whip</p>
+                    </div>
+                </a>
+                
+                <a href="/vault" class="bg-gradient-to-r from-yellow-900/30 to-red-900/30 border border-yellow-500/30 rounded-xl p-6 flex items-center gap-4 flex-1 justify-end text-right hover:from-yellow-900/50 hover:to-red-900/50 transition-colors">
+                    <div>
+                        <p class="text-xs text-yellow-400" data-i18n="nav.continue">CONTINUE YOUR JOURNEY</p>
+                        <p class="text-lg text-white" data-i18n="nav.vault">Enter The Vault →</p>
+                    </div>
+                    <span class="text-3xl">🔐</span>
+                </a>
+            </div>
+            
+            <div class="text-center mt-8">
+                <a href="/museum" class="text-cyan-400 hover:text-cyan-300 transition-colors" data-i18n="nav.back.museum">
+                    ← Return to Museum Entrance
+                </a>
+            </div>
+        </div>
+    </section>
+    
+    <!-- Footer -->
+    <footer class="py-12 border-t border-white/10">
+        <div class="max-w-6xl mx-auto px-6 text-center">
+            <p class="font-museum text-cyan-400 mb-2">NumbahWan Fashion Museum</p>
+            <p class="text-sm text-gray-500" data-i18n="footer.exhibit">★ Exhibit 010 of 10 — The Transparent Set ★</p>
+            <p class="text-xs text-gray-600 mt-4" data-i18n="footer.disclaimer">
+                This museum is a fan project. MapleStory and related assets are property of Nexon.
+            </p>
+            <p class="text-xs text-yellow-600/50 mt-2" data-i18n="footer.secret">
+                Thank you for visiting. The journey continues in The Vault...
+            </p>
+        </div>
+    </footer>
+    
+    <script src="/static/nw-nav.js"></script>
+    <script src="/static/nw-ux.js"></script>
+    <script>
+        if (typeof NW_NAV !== 'undefined') NW_NAV.init('museum');
+        
+        window.addEventListener('scroll', () => {
+            const winScroll = document.body.scrollTop || document.documentElement.scrollTop;
+            const height = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+            document.getElementById('readingProgress').style.width = (winScroll / height) * 100 + '%';
+        });
+        
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) entry.target.classList.add('revealed');
+            });
+        }, { threshold: 0.1 });
+        
+        document.querySelectorAll('.scroll-reveal').forEach(el => observer.observe(el));
+        
+        // Celebration confetti on reaching the end
+        const completeSection = document.querySelector('.museum-complete');
+        const confettiObserver = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    createConfetti();
+                    confettiObserver.disconnect();
+                }
+            });
+        }, { threshold: 0.5 });
+        
+        if (completeSection) confettiObserver.observe(completeSection);
+        
+        function createConfetti() {
+            const colors = ['#ffd700', '#b9f2ff', '#ff6b6b', '#4ecdc4', '#a855f7'];
+            for (let i = 0; i < 50; i++) {
+                setTimeout(() => {
+                    const confetti = document.createElement('div');
+                    confetti.className = 'confetti';
+                    confetti.style.cssText = `
+                        left: ${Math.random() * 100}vw;
+                        top: -10px;
+                        width: 10px;
+                        height: 10px;
+                        background: ${colors[Math.floor(Math.random() * colors.length)]};
+                        position: fixed;
+                        border-radius: ${Math.random() > 0.5 ? '50%' : '0'};
+                        animation: confetti-fall ${2 + Math.random() * 2}s linear forwards;
+                    `;
+                    document.body.appendChild(confetti);
+                    setTimeout(() => confetti.remove(), 4000);
+                }, i * 50);
+            }
+        }
+    </script>
+    <style>
+        @keyframes confetti-fall {
+            to {
+                transform: translateY(100vh) rotate(720deg);
+                opacity: 0;
+            }
+        }
+    </style>
+</body>
+</html>

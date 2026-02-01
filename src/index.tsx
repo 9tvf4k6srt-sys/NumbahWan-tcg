@@ -1330,4 +1330,44 @@ staticPages.forEach(page => {
   })
 })
 
+// Museum exhibit pages - deep lore rabbit hole
+const museumExhibits = ['exhibit-001', 'exhibit-002', 'exhibit-003', 'exhibit-004', 'exhibit-005', 'exhibit-006', 'exhibit-007', 'exhibit-008', 'exhibit-009', 'exhibit-010']
+
+museumExhibits.forEach(exhibit => {
+  app.get(`/museum/${exhibit}`, async (c) => {
+    try {
+      // @ts-ignore - env is provided by Cloudflare Pages
+      const asset = await c.env?.ASSETS?.fetch(new Request(`https://dummy/museum/${exhibit}.html`))
+      if (asset) {
+        return new Response(asset.body, {
+          headers: { 'Content-Type': 'text/html; charset=utf-8' }
+        })
+      }
+    } catch (e) {
+      // Fallback for local development
+    }
+    return c.redirect(`/museum/${exhibit}.html`)
+  })
+})
+
+// Vault floor pages - expanded security floors rabbit hole
+const vaultFloors = ['b3-decontamination', 'b7-hall-of-failures', 'b12-antechamber']
+
+vaultFloors.forEach(floor => {
+  app.get(`/vault/${floor}`, async (c) => {
+    try {
+      // @ts-ignore - env is provided by Cloudflare Pages
+      const asset = await c.env?.ASSETS?.fetch(new Request(`https://dummy/vault/${floor}.html`))
+      if (asset) {
+        return new Response(asset.body, {
+          headers: { 'Content-Type': 'text/html; charset=utf-8' }
+        })
+      }
+    } catch (e) {
+      // Fallback for local development
+    }
+    return c.redirect(`/vault/${floor}.html`)
+  })
+})
+
 export default app

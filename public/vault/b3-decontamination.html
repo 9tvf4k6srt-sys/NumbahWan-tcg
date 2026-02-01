@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>B3 - Decontamination Chamber | Guild Vault</title>
+    <link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --gold: #ffd700;
+            --orange: #ff6b00;
+            --dark: #050508;
+            --cyan: #22d3ee;
+            --green: #22c55e;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html { scroll-behavior: smooth; }
+        body { 
+            font-family: 'Inter', sans-serif; 
+            background: var(--dark); 
+            color: #fff;
+            min-height: 100vh;
+        }
+        .font-vault { font-family: 'Cinzel', serif; }
+        
+        .reading-progress {
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--cyan), var(--green));
+            z-index: 9999;
+        }
+        
+        .chamber-glow {
+            animation: pulse-glow 2s ease-in-out infinite;
+        }
+        @keyframes pulse-glow {
+            0%, 100% { box-shadow: 0 0 30px rgba(34,211,238,0.3); }
+            50% { box-shadow: 0 0 60px rgba(34,211,238,0.5); }
+        }
+        
+        .scan-line {
+            position: absolute;
+            width: 100%;
+            height: 2px;
+            background: var(--cyan);
+            animation: scan 3s ease-in-out infinite;
+            box-shadow: 0 0 20px var(--cyan);
+        }
+        @keyframes scan {
+            0% { top: 0; opacity: 0; }
+            50% { opacity: 1; }
+            100% { top: 100%; opacity: 0; }
+        }
+        
+        .document-paper {
+            background: linear-gradient(135deg, #f5f5dc 0%, #e8e4c9 50%, #d4c896 100%);
+            color: #2a2a2a;
+            font-family: 'Times New Roman', serif;
+        }
+        
+        .nav-button {
+            background: linear-gradient(135deg, rgba(34,211,238,0.2), rgba(34,197,94,0.2));
+            border: 1px solid rgba(34,211,238,0.4);
+            transition: all 0.3s ease;
+        }
+        .nav-button:hover {
+            background: linear-gradient(135deg, rgba(34,211,238,0.4), rgba(34,197,94,0.4));
+            transform: translateY(-2px);
+        }
+        
+        .scroll-reveal {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: all 0.8s ease;
+        }
+        .scroll-reveal.revealed {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        
+        .specimen-jar {
+            background: linear-gradient(135deg, rgba(34,211,238,0.1), rgba(0,0,0,0.5));
+            border: 1px solid rgba(34,211,238,0.3);
+            animation: float 4s ease-in-out infinite;
+        }
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+        
+        .protocol-list li {
+            position: relative;
+            padding-left: 2rem;
+        }
+        .protocol-list li::before {
+            content: '✓';
+            position: absolute;
+            left: 0;
+            color: var(--green);
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="reading-progress" id="readingProgress"></div>
+    
+    <div id="nw-nav"></div>
+    
+    <!-- Breadcrumb -->
+    <div class="bg-black/50 border-b border-cyan-500/30">
+        <div class="max-w-6xl mx-auto px-6 py-3">
+            <div class="flex items-center gap-2 text-sm text-gray-400">
+                <a href="/vault" class="hover:text-cyan-400 transition-colors" data-i18n="nav.vault">The Vault</a>
+                <span>/</span>
+                <a href="/vault" class="hover:text-cyan-400 transition-colors">B1 - Entrance</a>
+                <span>/</span>
+                <span class="text-cyan-400">B3 - Decontamination</span>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Hero -->
+    <section class="relative py-24 overflow-hidden">
+        <div class="absolute inset-0 bg-gradient-to-b from-cyan-900/20 via-transparent to-transparent"></div>
+        <div class="scan-line"></div>
+        
+        <div class="max-w-4xl mx-auto px-6 text-center relative z-10">
+            <div class="inline-block bg-cyan-500/20 border border-cyan-500/50 text-cyan-400 text-xs font-bold px-4 py-2 rounded-full mb-6">
+                <span data-i18n="badge.sterile">🧪 STERILE ENVIRONMENT REQUIRED</span>
+            </div>
+            <p class="text-cyan-400 font-vault tracking-widest mb-2" data-i18n="floor.b3">FLOOR B3</p>
+            <h1 class="font-vault text-5xl md:text-6xl text-white mb-4">
+                <span class="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-green-400" data-i18n="b3.title">DECONTAMINATION CHAMBER</span>
+            </h1>
+            <p class="text-xl text-gray-400 max-w-2xl mx-auto" data-i18n="b3.subtitle">Depth: -45 meters • Biological Threat Neutralization</p>
+        </div>
+    </section>
+    
+    <!-- Main Content -->
+    <section class="py-16">
+        <div class="max-w-5xl mx-auto px-6">
+            <div class="chamber-glow bg-gradient-to-br from-cyan-900/20 to-green-900/20 rounded-3xl p-8 md:p-12 border border-cyan-500/30">
+                <div class="grid md:grid-cols-2 gap-12 items-center">
+                    <div class="relative">
+                        <div class="aspect-square bg-black/50 rounded-2xl border border-cyan-500/30 flex items-center justify-center overflow-hidden">
+                            <div class="text-center p-8">
+                                <div class="text-8xl mb-4">🧪</div>
+                                <p class="text-cyan-400 font-mono text-sm" data-i18n="b3.chamber.label">CHAMBER ACTIVE</p>
+                                <p class="text-green-400 text-xs mt-2">CONTAMINATION: 0.000%</p>
+                            </div>
+                            <div class="scan-line" style="animation-delay: 0.5s;"></div>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <h2 class="font-vault text-3xl text-cyan-400 mb-6" data-i18n="section.purpose">Chamber Purpose</h2>
+                        <div class="space-y-4 text-gray-300 leading-relaxed">
+                            <p data-i18n="b3.purpose.p1">
+                                Before descending further into the vault, all personnel must undergo complete biological 
+                                decontamination. This isn't paranoia—it's necessity. The artifacts stored below are 
+                                so valuable that even microscopic contamination could be catastrophic.
+                            </p>
+                            <p data-i18n="b3.purpose.p2">
+                                The chamber uses a proprietary tri-phase purification system: UV sterilization, 
+                                electrostatic particle removal, and what the engineers call "aggressive molecular scrubbing." 
+                                The process takes exactly 4 minutes and 37 seconds.
+                            </p>
+                        </div>
+                        
+                        <div class="grid grid-cols-2 gap-4 mt-8">
+                            <div class="bg-black/30 rounded-xl p-4 text-center">
+                                <p class="text-2xl font-bold text-cyan-400">4:37</p>
+                                <p class="text-xs text-gray-500" data-i18n="stat.duration">Cycle Duration</p>
+                            </div>
+                            <div class="bg-black/30 rounded-xl p-4 text-center">
+                                <p class="text-2xl font-bold text-green-400">99.9997%</p>
+                                <p class="text-xs text-gray-500" data-i18n="stat.effectiveness">Effectiveness</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <!-- The Protocol -->
+    <section class="py-16 bg-gradient-to-b from-transparent via-cyan-900/10 to-transparent scroll-reveal">
+        <div class="max-w-4xl mx-auto px-6">
+            <h2 class="font-vault text-3xl text-center text-cyan-400 mb-12" data-i18n="section.protocol">The Decontamination Protocol</h2>
+            
+            <div class="document-paper rounded-2xl p-8 md:p-12">
+                <div class="flex items-center gap-4 mb-6 pb-4 border-b-2 border-amber-800/30">
+                    <div class="w-16 h-16 bg-cyan-800/20 rounded-full flex items-center justify-center">
+                        <span class="text-2xl">📋</span>
+                    </div>
+                    <div>
+                        <h3 class="text-xl font-bold text-amber-900" data-i18n="document.title.b3">Standard Operating Procedure</h3>
+                        <p class="text-sm text-amber-700" data-i18n="document.ref">Reference: NW-VAULT-SOP-003</p>
+                    </div>
+                </div>
+                
+                <div class="prose prose-amber max-w-none text-amber-900">
+                    <ol class="list-decimal pl-6 space-y-4">
+                        <li data-i18n="b3.protocol.1">
+                            <strong>Personal Effects Deposit:</strong> All items must be placed in the antimicrobial 
+                            storage units. This includes clothing, accessories, electronic devices, and any organic materials.
+                        </li>
+                        <li data-i18n="b3.protocol.2">
+                            <strong>Suit Up:</strong> Don the provided sterile chamber suit. The suit is single-use and 
+                            will be incinerated after your visit. Cost: 847 NX equivalent per suit.
+                        </li>
+                        <li data-i18n="b3.protocol.3">
+                            <strong>Phase 1 - UV Bath:</strong> Stand in the central column while ultraviolet arrays 
+                            eliminate surface contaminants. Keep eyes closed. Duration: 90 seconds.
+                        </li>
+                        <li data-i18n="b3.protocol.4">
+                            <strong>Phase 2 - Particle Removal:</strong> Electrostatic fields strip away microscopic 
+                            debris. You may feel a slight tingling sensation. This is normal. Duration: 120 seconds.
+                        </li>
+                        <li data-i18n="b3.protocol.5">
+                            <strong>Phase 3 - Molecular Scrub:</strong> A proprietary mist neutralizes remaining biological 
+                            agents. Breathe normally. The mist is harmless (we think). Duration: 67 seconds.
+                        </li>
+                        <li data-i18n="b3.protocol.6">
+                            <strong>Clearance:</strong> Green light indicates successful decontamination. Proceed to 
+                            elevator B4. Red light indicates failure—restart protocol.
+                        </li>
+                    </ol>
+                    
+                    <p class="mt-6 italic text-amber-700" data-i18n="b3.protocol.note">
+                        Note: Average failure rate is 2.3%. Common causes include residual cologne, artificial food 
+                        additives, and "that weird thing nobody talks about from 2019."
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <!-- The Failed Specimens -->
+    <section class="py-16 scroll-reveal">
+        <div class="max-w-4xl mx-auto px-6">
+            <h2 class="font-vault text-3xl text-center text-cyan-400 mb-8" data-i18n="section.specimens">The Failed Specimens</h2>
+            <p class="text-center text-gray-400 mb-12 max-w-2xl mx-auto" data-i18n="b3.specimens.intro">
+                Along the chamber walls, suspended in preservation fluid, are examples of contaminants 
+                that were successfully intercepted. Each represents a potential catastrophe prevented.
+            </p>
+            
+            <div class="grid md:grid-cols-3 gap-6">
+                <div class="specimen-jar rounded-xl p-6 text-center" style="animation-delay: 0s;">
+                    <div class="text-5xl mb-4">🦠</div>
+                    <h3 class="text-white font-bold mb-2" data-i18n="specimen.1.title">Specimen #47</h3>
+                    <p class="text-cyan-400 text-sm mb-2" data-i18n="specimen.1.type">Unidentified Microorganism</p>
+                    <p class="text-gray-500 text-xs" data-i18n="specimen.1.desc">
+                        Found on a visitor's shoelace, 2022. Lab analysis inconclusive. Possibly not from Earth.
+                    </p>
+                </div>
+                
+                <div class="specimen-jar rounded-xl p-6 text-center" style="animation-delay: 0.3s;">
+                    <div class="text-5xl mb-4">🍕</div>
+                    <h3 class="text-white font-bold mb-2" data-i18n="specimen.2.title">Specimen #112</h3>
+                    <p class="text-cyan-400 text-sm mb-2" data-i18n="specimen.2.type">Residual Pizza Grease</p>
+                    <p class="text-gray-500 text-xs" data-i18n="specimen.2.desc">
+                        Survived initial UV bath. Required triple-phase processing. The member was banned for 3 months.
+                    </p>
+                </div>
+                
+                <div class="specimen-jar rounded-xl p-6 text-center" style="animation-delay: 0.6s;">
+                    <div class="text-5xl mb-4">✨</div>
+                    <h3 class="text-white font-bold mb-2" data-i18n="specimen.3.title">Specimen #203</h3>
+                    <p class="text-cyan-400 text-sm mb-2" data-i18n="specimen.3.type">Craft Glitter</p>
+                    <p class="text-gray-500 text-xs" data-i18n="specimen.3.desc">
+                        The most dangerous substance known to preservation science. One particle nearly shut down B7.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <!-- Historical Incident -->
+    <section class="py-16 bg-gradient-to-b from-transparent via-red-900/10 to-transparent scroll-reveal">
+        <div class="max-w-4xl mx-auto px-6">
+            <h2 class="font-vault text-3xl text-center text-red-400 mb-8" data-i18n="section.incident">The 2023 Incident</h2>
+            
+            <div class="bg-red-900/20 rounded-2xl p-8 border border-red-500/30">
+                <div class="flex items-center gap-3 mb-6">
+                    <span class="text-2xl">⚠️</span>
+                    <span class="text-red-400 font-mono" data-i18n="incident.label">DECLASSIFIED: INCIDENT REPORT #B3-2023-07</span>
+                </div>
+                
+                <div class="text-gray-300 space-y-4">
+                    <p data-i18n="b3.incident.p1">
+                        On March 17, 2023, a senior guild member bypassed Phase 2 of the decontamination protocol, 
+                        claiming "time constraints." Within 12 hours, a microscopic dust particle from their 
+                        keyboard had traveled through the ventilation system to floor B11.
+                    </p>
+                    <p data-i18n="b3.incident.p2">
+                        The particle—measuring 0.003mm—landed on the edge of a display case containing a 
+                        first-edition guild charter. Automated systems detected the contamination at 3:47 AM 
+                        and initiated emergency lockdown.
+                    </p>
+                    <p data-i18n="b3.incident.p3">
+                        The charter required 847 hours of restoration work. The member in question now 
+                        voluntarily undergoes quadruple decontamination. Every. Single. Time.
+                    </p>
+                </div>
+                
+                <div class="mt-6 pt-6 border-t border-red-500/30">
+                    <p class="text-sm text-red-400" data-i18n="incident.lesson">
+                        Lesson: The protocol exists for a reason. Don't be that person.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <!-- Navigation -->
+    <section class="py-16">
+        <div class="max-w-4xl mx-auto px-6">
+            <div class="flex flex-col md:flex-row gap-4 justify-between">
+                <a href="/vault" class="nav-button rounded-xl p-6 flex items-center gap-4 flex-1">
+                    <span class="text-3xl">↑</span>
+                    <div>
+                        <p class="text-xs text-gray-400" data-i18n="nav.previous">ASCEND TO</p>
+                        <p class="text-lg text-white">B1 - Entrance Gate</p>
+                    </div>
+                </a>
+                
+                <a href="/vault/b7-hall-of-failures" class="nav-button rounded-xl p-6 flex items-center gap-4 flex-1 justify-end text-right">
+                    <div>
+                        <p class="text-xs text-gray-400" data-i18n="nav.next">DESCEND TO</p>
+                        <p class="text-lg text-white">B7 - Hall of Failed Intruders</p>
+                    </div>
+                    <span class="text-3xl">↓</span>
+                </a>
+            </div>
+            
+            <div class="text-center mt-8">
+                <a href="/vault" class="text-cyan-400 hover:text-cyan-300 transition-colors" data-i18n="nav.back.vault">
+                    ← Return to Vault Overview
+                </a>
+            </div>
+        </div>
+    </section>
+    
+    <!-- Footer -->
+    <footer class="py-12 border-t border-white/10">
+        <div class="max-w-6xl mx-auto px-6 text-center">
+            <p class="font-vault text-cyan-400 mb-2">The Guild Vault</p>
+            <p class="text-sm text-gray-500">Floor B3 — Decontamination Chamber</p>
+            <p class="text-xs text-gray-600 mt-4">
+                Current contamination level: 0.000% • Last cycle: 3 minutes ago
+            </p>
+        </div>
+    </footer>
+    
+    <script src="/static/nw-nav.js"></script>
+    <script src="/static/nw-ux.js"></script>
+    <script>
+        if (typeof NW_NAV !== 'undefined') NW_NAV.init('vault');
+        
+        window.addEventListener('scroll', () => {
+            const winScroll = document.body.scrollTop || document.documentElement.scrollTop;
+            const height = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+            document.getElementById('readingProgress').style.width = (winScroll / height) * 100 + '%';
+        });
+        
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) entry.target.classList.add('revealed');
+            });
+        }, { threshold: 0.1 });
+        
+        document.querySelectorAll('.scroll-reveal').forEach(el => observer.observe(el));
+    </script>
+</body>
+</html>
