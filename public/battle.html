@@ -3984,45 +3984,56 @@
         
         // Try to load player's saved deck
         if (usePlayerDeck) {
-            const savedDecks = JSON.parse(localStorage.getItem('nw_decks') || '[]');
-            if (savedDecks.length > 0) {
-                const lastDeck = savedDecks[savedDecks.length - 1]; // Use most recent deck
-                console.log('[createDeck] Loading saved deck:', lastDeck.name);
-                
-                lastDeck.cards.forEach(c => {
-                    const card = CARDS.find(ac => ac.id === c.id);
-                    if (card && card.gameStats) {
-                        for (let i = 0; i < c.count; i++) {
-                            deck.push({...card});
+            try {
+                const savedDecks = JSON.parse(localStorage.getItem('nw_decks') || '[]');
+                if (savedDecks.length > 0) {
+                    const lastDeck = savedDecks[savedDecks.length - 1];
+                    console.log('[createDeck] Loading saved deck:', lastDeck.name);
+                    
+                    lastDeck.cards.forEach(c => {
+                        const card = CARDS.find(ac => ac.id === c.id);
+                        if (card && card.gameStats) {
+                            for (let i = 0; i < c.count; i++) {
+                                deck.push({...card});
+                            }
                         }
+                    });
+                    
+                    if (deck.length >= 10) {
+                        for (let i = deck.length - 1; i > 0; i--) {
+                            const j = Math.floor(Math.random() * (i + 1));
+                            [deck[i], deck[j]] = [deck[j], deck[i]];
+                        }
+                        console.log('[createDeck] Using saved deck with', deck.length, 'cards');
+                        return deck;
                     }
-                });
-                
-                if (deck.length >= 10) {
-                    // Shuffle the deck
-                    for (let i = deck.length - 1; i > 0; i--) {
-                        const j = Math.floor(Math.random() * (i + 1));
-                        [deck[i], deck[j]] = [deck[j], deck[i]];
-                    }
-                    console.log('[createDeck] Using saved deck with', deck.length, 'cards');
-                    return deck;
+                    console.log('[createDeck] Saved deck too small, using random deck');
                 }
-                console.log('[createDeck] Saved deck too small, using random deck');
+            } catch (e) {
+                console.warn('[createDeck] Error loading saved deck:', e);
             }
         }
         
-        // Fallback: pick 15 random cards that have gameStats
-        const validCards = CARDS.filter(c => c.gameStats);
+        // Fallback: pick 15 random cards - CARDS already filtered for gameStats
+        // But let's be extra safe and handle cards without gameStats
+        const validCards = CARDS.filter(c => c && c.gameStats && c.gameStats.cost !== undefined);
         console.log('[createDeck] Valid cards with gameStats:', validCards.length);
         
         if (validCards.length === 0) {
-            console.error('[createDeck] No cards have gameStats!');
-            return [];
+            console.error('[createDeck] No valid cards! Using all cards as fallback');
+            // Ultimate fallback: use cards even without full gameStats, add defaults
+            CARDS.slice(0, 15).forEach(c => {
+                deck.push({
+                    ...c,
+                    gameStats: c.gameStats || { atk: 3, hp: 5, cost: 2, spd: 3, crit: 5, dodge: 5 }
+                });
+            });
+            return deck;
         }
         
         for (let i = 0; i < 15; i++) {
             const card = validCards[Math.floor(Math.random() * validCards.length)];
-            deck.push({...card}); // Clone the card
+            deck.push({...card});
         }
         
         // Shuffle
@@ -4261,6 +4272,7 @@
             }
             
             console.log(`[Battle Arena] Loaded ${CARDS.length} cards`);
+            console.log('[Battle Arena] Sample card:', CARDS[0]);
             
             if (CARDS.length === 0) {
                 showError('No cards loaded! Check network.');
@@ -4271,7 +4283,22 @@
             gameState.playerDeck = createDeck(true);  // true = try to use saved deck
             gameState.enemyDeck = createDeck(false);  // false = random deck
             
-            console.log(`[Battle Arena] Created deck with ${gameState.playerDeck.length} cards`);
+            console.log(`[Battle Arena] Player deck: ${gameState.playerDeck.length} cards`);
+            console.log(`[Battle Arena] Enemy deck: ${gameState.enemyDeck.length} cards`);
+            
+            // FAILSAFE: If deck creation failed, create emergency deck
+            if (gameState.playerDeck.length === 0) {
+                console.warn('[Battle Arena] Deck empty! Creating emergency deck...');
+                for (let i = 0; i < 15 && i < CARDS.length; i++) {
+                    gameState.playerDeck.push({...CARDS[i]});
+                }
+                console.log(`[Battle Arena] Emergency deck: ${gameState.playerDeck.length} cards`);
+            }
+            if (gameState.enemyDeck.length === 0) {
+                for (let i = 0; i < 15 && i < CARDS.length; i++) {
+                    gameState.enemyDeck.push({...CARDS[i]});
+                }
+            }
             
             // Draw starting hands
             for (let i = 0; i < CONFIG.STARTING_HAND; i++) {
@@ -4284,6 +4311,7 @@
             }
             
             console.log(`[Battle Arena] Drew ${gameState.playerHand.length} cards to hand`);
+            console.log('[Battle Arena] Hand contents:', gameState.playerHand.map(c => c.name));
             
             // Initialize mobile card detail modal
             initCardDetailModal();
