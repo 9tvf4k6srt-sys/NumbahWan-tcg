@@ -1,0 +1,1091 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Guild Vault | NumbahWan TCG</title>
+    <link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="/static/nw-nav.js" defer></script>
+    <script src="/static/nw-ux.js" defer></script>
+    <style>
+        :root {
+            --gold: #ffd700;
+            --orange: #ff6b00;
+            --crimson: #dc2626;
+            --dark: #050508;
+            --steel: #374151;
+            --vault-glow: rgba(255, 107, 0, 0.3);
+        }
+        
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html { scroll-behavior: smooth; }
+        body { 
+            font-family: 'Inter', sans-serif; 
+            background: var(--dark); 
+            color: #fff;
+            overflow-x: hidden;
+        }
+        
+        .font-vault { font-family: 'Cinzel', serif; }
+        
+        /* Hero */
+        .hero {
+            min-height: 100vh;
+            background: linear-gradient(180deg, rgba(5,5,8,0.4) 0%, rgba(5,5,8,0.95) 100%),
+                        url('/static/images/vault/vault-door-b13.png') center/cover;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding: 2rem;
+            position: relative;
+        }
+        
+        .hero::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(ellipse at 50% 70%, rgba(255,107,0,0.15) 0%, transparent 60%);
+            pointer-events: none;
+        }
+        
+        .classified-stamp {
+            background: var(--crimson);
+            color: white;
+            padding: 0.5rem 2rem;
+            font-size: 0.75rem;
+            font-weight: 900;
+            letter-spacing: 4px;
+            transform: rotate(-3deg);
+            border: 2px solid rgba(255,255,255,0.3);
+            margin-bottom: 2rem;
+        }
+        
+        .hero h1 {
+            font-size: clamp(2.5rem, 8vw, 5rem);
+            background: linear-gradient(180deg, #fff 0%, var(--gold) 50%, var(--orange) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 0 80px rgba(255,215,0,0.4);
+            margin-bottom: 1rem;
+            line-height: 1.1;
+        }
+        
+        .hero-subtitle {
+            font-size: 1.1rem;
+            color: rgba(255,255,255,0.7);
+            max-width: 600px;
+            margin-bottom: 2rem;
+            line-height: 1.8;
+        }
+        
+        .depth-indicator {
+            position: fixed;
+            right: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            z-index: 100;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        
+        .depth-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.2);
+            border: 2px solid rgba(255,255,255,0.3);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+        
+        .depth-dot:hover, .depth-dot.active {
+            background: var(--orange);
+            border-color: var(--gold);
+            box-shadow: 0 0 15px var(--vault-glow);
+        }
+        
+        .depth-dot::after {
+            content: attr(data-level);
+            position: absolute;
+            right: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 10px;
+            color: rgba(255,255,255,0.5);
+            white-space: nowrap;
+            opacity: 0;
+            transition: opacity 0.2s ease;
+        }
+        
+        .depth-dot:hover::after {
+            opacity: 1;
+        }
+        
+        /* Floor sections */
+        .floor-section {
+            min-height: 100vh;
+            padding: 4rem 1.5rem;
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+        
+        .floor-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 4rem;
+            align-items: center;
+        }
+        
+        .floor-content.reverse { direction: rtl; }
+        .floor-content.reverse > * { direction: ltr; }
+        
+        .floor-image {
+            position: relative;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 25px 80px rgba(0,0,0,0.6), 0 0 40px var(--vault-glow);
+        }
+        
+        .floor-image img {
+            width: 100%;
+            height: auto;
+            display: block;
+            transition: transform 0.5s ease;
+        }
+        
+        .floor-image:hover img {
+            transform: scale(1.05);
+        }
+        
+        .floor-image::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border: 1px solid rgba(255,215,0,0.2);
+            border-radius: 20px;
+            pointer-events: none;
+        }
+        
+        .floor-badge {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(0,0,0,0.8);
+            border: 1px solid var(--orange);
+            padding: 0.5rem 1rem;
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: var(--orange);
+            border-radius: 8px;
+            backdrop-filter: blur(4px);
+        }
+        
+        .floor-info h2 {
+            font-size: 2rem;
+            margin-bottom: 1rem;
+            color: var(--gold);
+        }
+        
+        .floor-info h3 {
+            font-size: 1.1rem;
+            color: var(--orange);
+            margin-bottom: 1.5rem;
+            font-weight: 600;
+        }
+        
+        .floor-info p {
+            color: rgba(255,255,255,0.8);
+            line-height: 1.8;
+            margin-bottom: 1rem;
+        }
+        
+        .floor-info .specs {
+            margin-top: 2rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid rgba(255,255,255,0.1);
+        }
+        
+        .spec-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.5rem 0;
+            font-size: 0.9rem;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+        
+        .spec-item .label { color: rgba(255,255,255,0.5); }
+        .spec-item .value { color: var(--gold); font-weight: 600; }
+        
+        /* Final vault section */
+        .treasure-section {
+            min-height: 100vh;
+            background: radial-gradient(ellipse at 50% 50%, rgba(255,215,0,0.05) 0%, transparent 50%),
+                        linear-gradient(180deg, var(--dark) 0%, #0a0a10 100%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 4rem 1.5rem;
+            text-align: center;
+        }
+        
+        .treasure-gallery {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            max-width: 1000px;
+            margin: 3rem auto;
+        }
+        
+        .treasure-card {
+            background: linear-gradient(145deg, rgba(255,255,255,0.03), rgba(255,255,255,0.01));
+            border: 1px solid rgba(255,215,0,0.2);
+            border-radius: 20px;
+            overflow: hidden;
+            transition: all 0.4s ease;
+        }
+        
+        .treasure-card:hover {
+            transform: translateY(-10px);
+            border-color: var(--gold);
+            box-shadow: 0 20px 60px rgba(255,215,0,0.15);
+        }
+        
+        .treasure-card img {
+            width: 100%;
+            aspect-ratio: 4/3;
+            object-fit: cover;
+        }
+        
+        .treasure-card-info {
+            padding: 1.5rem;
+        }
+        
+        .treasure-card-info h4 {
+            color: var(--gold);
+            margin-bottom: 0.5rem;
+        }
+        
+        .treasure-card-info p {
+            font-size: 0.9rem;
+            color: rgba(255,255,255,0.6);
+            line-height: 1.6;
+        }
+        
+        /* The Card reveal */
+        .card-reveal {
+            max-width: 500px;
+            margin: 4rem auto;
+            perspective: 1000px;
+        }
+        
+        .card-showcase {
+            position: relative;
+            padding: 3rem;
+            background: radial-gradient(ellipse at 50% 50%, rgba(255,215,0,0.1) 0%, transparent 70%);
+            border-radius: 30px;
+            border: 2px solid rgba(255,215,0,0.3);
+        }
+        
+        .card-showcase img {
+            width: 100%;
+            max-width: 350px;
+            border-radius: 15px;
+            box-shadow: 0 30px 80px rgba(0,0,0,0.5), 0 0 60px rgba(255,215,0,0.2);
+            animation: cardFloat 4s ease-in-out infinite;
+        }
+        
+        @keyframes cardFloat {
+            0%, 100% { transform: translateY(0) rotateY(0deg); }
+            50% { transform: translateY(-15px) rotateY(5deg); }
+        }
+        
+        .card-plaque {
+            margin-top: 2rem;
+            padding: 1.5rem 2rem;
+            background: linear-gradient(135deg, #1a1a2e, #0f0f1a);
+            border: 1px solid var(--gold);
+            border-radius: 10px;
+        }
+        
+        .card-plaque h3 {
+            color: var(--gold);
+            font-size: 1.25rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .card-plaque p {
+            color: rgba(255,255,255,0.7);
+            font-size: 0.9rem;
+            line-height: 1.6;
+        }
+        
+        /* Stats section */
+        .vault-stats {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 2rem;
+            max-width: 1000px;
+            margin: 4rem auto;
+            text-align: center;
+        }
+        
+        .stat-box h3 {
+            font-size: 2.5rem;
+            color: var(--gold);
+            margin-bottom: 0.5rem;
+        }
+        
+        .stat-box p {
+            color: rgba(255,255,255,0.5);
+            font-size: 0.85rem;
+        }
+        
+        /* Warning section */
+        .warning-section {
+            background: linear-gradient(135deg, rgba(220,38,38,0.1), rgba(220,38,38,0.05));
+            border-top: 2px solid var(--crimson);
+            border-bottom: 2px solid var(--crimson);
+            padding: 3rem 1.5rem;
+            text-align: center;
+        }
+        
+        .warning-section h3 {
+            color: var(--crimson);
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+        }
+        
+        .warning-section p {
+            color: rgba(255,255,255,0.7);
+            max-width: 700px;
+            margin: 0 auto;
+            line-height: 1.8;
+        }
+        
+        /* CTA */
+        .cta-section {
+            padding: 5rem 1.5rem;
+            text-align: center;
+            background: linear-gradient(180deg, #0a0a10 0%, var(--dark) 100%);
+        }
+        
+        .btn-vault {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 1rem 2.5rem;
+            background: linear-gradient(135deg, var(--orange), var(--gold));
+            color: #000;
+            font-weight: 700;
+            font-size: 1rem;
+            border-radius: 50px;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 30px rgba(255,107,0,0.4);
+        }
+        
+        .btn-vault:hover {
+            transform: translateY(-3px) scale(1.05);
+            box-shadow: 0 8px 40px rgba(255,215,0,0.5);
+        }
+        
+        /* Footer */
+        footer {
+            background: #030305;
+            padding: 2rem;
+            text-align: center;
+            border-top: 1px solid rgba(255,107,0,0.2);
+        }
+        
+        footer p {
+            color: rgba(255,255,255,0.4);
+            font-size: 0.85rem;
+        }
+        
+        /* Responsive */
+        @media (max-width: 900px) {
+            .floor-content {
+                grid-template-columns: 1fr;
+                gap: 2rem;
+            }
+            .floor-content.reverse { direction: ltr; }
+            .depth-indicator { display: none; }
+            .vault-stats { grid-template-columns: repeat(2, 1fr); }
+        }
+        
+        /* Lightbox */
+        .lightbox {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.95);
+            z-index: 10000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            padding: 2rem;
+            cursor: pointer;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+        
+        .lightbox.active {
+            opacity: 1;
+            visibility: visible;
+        }
+        
+        .lightbox img {
+            max-width: 90%;
+            max-height: 80%;
+            border-radius: 15px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+        }
+        
+        .lightbox-caption {
+            margin-top: 1rem;
+            color: var(--gold);
+            font-size: 1.1rem;
+        }
+    </style>
+</head>
+<body data-page-id="vault">
+    
+    <!-- Depth Indicator -->
+    <div class="depth-indicator" id="depthNav">
+        <div class="depth-dot" data-level="Surface" data-target="hero"></div>
+        <div class="depth-dot" data-level="B1 - Entry" data-target="b1"></div>
+        <div class="depth-dot" data-level="B5 - Security" data-target="b5"></div>
+        <div class="depth-dot" data-level="B8 - Control" data-target="b8"></div>
+        <div class="depth-dot" data-level="B10 - Laser Grid" data-target="b10"></div>
+        <div class="depth-dot" data-level="B13 - THE VAULT" data-target="b13"></div>
+        <div class="depth-dot" data-level="The Treasure" data-target="treasure"></div>
+    </div>
+    
+    <!-- Hero Section -->
+    <section class="hero" id="hero">
+        <div class="classified-stamp" data-i18n="classified">⚠️ CLASSIFIED LEVEL 13 ⚠️</div>
+        <h1 class="font-vault" data-i18n="vaultTitle">THE GUILD VAULT</h1>
+        <p class="hero-subtitle" data-i18n="vaultSubtitle">
+            Beneath the Parry Hotter School of Coding Wizardry lies the most secure facility ever constructed by the NumbahWan Guild. 
+            Descend 13 floors into the earth to discover what we protect with our lives.
+        </p>
+        <div style="display: flex; gap: 1rem; flex-wrap: wrap; justify-content: center;">
+            <a href="#b1" class="btn-vault">🔽 <span data-i18n="beginDescent">Begin Descent</span></a>
+        </div>
+    </section>
+    
+    <!-- B1: Entrance -->
+    <section class="floor-section" id="b1" style="background: linear-gradient(180deg, #0a0a0f 0%, #0f0f18 100%);">
+        <div class="floor-content">
+            <div class="floor-image" data-lightbox>
+                <span class="floor-badge">B1</span>
+                <img src="/static/images/vault/entrance-b1.png" alt="Vault Entrance B1">
+            </div>
+            <div class="floor-info">
+                <h2 class="font-vault" data-i18n="b1Title">The Entrance Gate</h2>
+                <h3 data-i18n="b1Subtitle">Primary Access Point • Depth: -15 meters</h3>
+                <p data-i18n="b1Desc1">
+                    The journey begins beneath the academy's west wing, accessible only through a concealed elevator in the 
+                    Headmaster's private study. The entrance features a 12-ton blast door forged from a classified titanium alloy 
+                    developed by guild engineers.
+                </p>
+                <p data-i18n="b1Desc2">
+                    The NumbahWan emblem—cast in 24-karat gold—serves as both insignia and biometric scanner. 
+                    Only those whose DNA has been registered in the Guild Codex may proceed.
+                </p>
+                <div class="specs">
+                    <div class="spec-item">
+                        <span class="label" data-i18n="doorWeight">Door Weight</span>
+                        <span class="value">12,000 kg</span>
+                    </div>
+                    <div class="spec-item">
+                        <span class="label" data-i18n="thickness">Wall Thickness</span>
+                        <span class="value">2.4 meters</span>
+                    </div>
+                    <div class="spec-item">
+                        <span class="label" data-i18n="clearance">Clearance Required</span>
+                        <span class="value" data-i18n="level3">Level 3+</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <!-- B5: Security Checkpoint -->
+    <section class="floor-section" id="b5" style="background: linear-gradient(180deg, #0f0f18 0%, #12121e 100%);">
+        <div class="floor-content reverse">
+            <div class="floor-image" data-lightbox>
+                <span class="floor-badge">B5</span>
+                <img src="/static/images/vault/checkpoint-b5.png" alt="Security Checkpoint B5">
+            </div>
+            <div class="floor-info">
+                <h2 class="font-vault" data-i18n="b5Title">Security Checkpoint Alpha</h2>
+                <h3 data-i18n="b5Subtitle">Biometric Verification • Depth: -75 meters</h3>
+                <p data-i18n="b5Desc1">
+                    At B5, visitors must pass through the most rigorous identity verification system ever devised. 
+                    The checkpoint utilizes retinal scanning, voice pattern recognition, and proprietary "soul signature" 
+                    technology that detects the unique magical aura of each guild member.
+                </p>
+                <p data-i18n="b5Desc2">
+                    Armed sentinels from the Guardian Division maintain 24/7 surveillance. The bulletproof glass booth 
+                    can withstand a direct RPG hit, and the entire floor can be flooded with knockout gas in 0.3 seconds.
+                </p>
+                <div class="specs">
+                    <div class="spec-item">
+                        <span class="label" data-i18n="scanTypes">Scan Types</span>
+                        <span class="value">7</span>
+                    </div>
+                    <div class="spec-item">
+                        <span class="label" data-i18n="guardsOnDuty">Guards on Duty</span>
+                        <span class="value">12</span>
+                    </div>
+                    <div class="spec-item">
+                        <span class="label" data-i18n="responseTime">Lockdown Time</span>
+                        <span class="value">0.3 sec</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <!-- B8: Control Room -->
+    <section class="floor-section" id="b8" style="background: linear-gradient(180deg, #12121e 0%, #151525 100%);">
+        <div class="floor-content">
+            <div class="floor-image" data-lightbox>
+                <span class="floor-badge">B8</span>
+                <img src="/static/images/vault/control-room-b8.png" alt="Control Room B8">
+            </div>
+            <div class="floor-info">
+                <h2 class="font-vault" data-i18n="b8Title">Central Nerve Center</h2>
+                <h3 data-i18n="b8Subtitle">Surveillance Command • Depth: -120 meters</h3>
+                <p data-i18n="b8Desc1">
+                    The heart of vault security. Over 847 cameras monitor every millimeter of the facility in real-time, 
+                    feeding into quantum-encrypted holographic displays. The AI system "GUARDIAN" processes 
+                    2.3 petabytes of data per second, detecting anomalies before they become threats.
+                </p>
+                <p data-i18n="b8Desc2">
+                    No blind spots exist. The system tracks heat signatures, heartbeats, and even thought patterns 
+                    through experimental psychic dampening fields. Twelve elite operators work in rotating 6-hour shifts, 
+                    never leaving more than 2 stations unmanned.
+                </p>
+                <div class="specs">
+                    <div class="spec-item">
+                        <span class="label" data-i18n="cameras">Active Cameras</span>
+                        <span class="value">847</span>
+                    </div>
+                    <div class="spec-item">
+                        <span class="label" data-i18n="dataProcessing">Data/Second</span>
+                        <span class="value">2.3 PB</span>
+                    </div>
+                    <div class="spec-item">
+                        <span class="label" data-i18n="aiSystem">AI System</span>
+                        <span class="value">GUARDIAN v7.2</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <!-- B10: Laser Grid -->
+    <section class="floor-section" id="b10" style="background: linear-gradient(180deg, #151525 0%, #18182a 100%);">
+        <div class="floor-content reverse">
+            <div class="floor-image" data-lightbox>
+                <span class="floor-badge">B10</span>
+                <img src="/static/images/vault/laser-grid-b10.png" alt="Laser Grid B10">
+            </div>
+            <div class="floor-info">
+                <h2 class="font-vault" data-i18n="b10Title">The Crimson Maze</h2>
+                <h3 data-i18n="b10Subtitle">Active Defense Grid • Depth: -150 meters</h3>
+                <p data-i18n="b10Desc1">
+                    They call it "The Red Wedding." A labyrinth of 3,400 high-intensity laser beams crisscross this 
+                    corridor in ever-shifting patterns. The grid reconfigures every 0.8 seconds based on 
+                    quantum-random algorithms—impossible to memorize, impossible to predict.
+                </p>
+                <p data-i18n="b10Desc2">
+                    Authorized personnel must wear specialized chronosync suits that phase-shift the wearer 
+                    0.001 seconds out of temporal alignment. Even then, one wrong step triggers instant 
+                    vaporization. The floor itself is pressure-sensitive to within 0.1 grams.
+                </p>
+                <div class="specs">
+                    <div class="spec-item">
+                        <span class="label" data-i18n="laserBeams">Laser Beams</span>
+                        <span class="value">3,400</span>
+                    </div>
+                    <div class="spec-item">
+                        <span class="label" data-i18n="reconfigRate">Reconfig Rate</span>
+                        <span class="value">0.8 sec</span>
+                    </div>
+                    <div class="spec-item">
+                        <span class="label" data-i18n="breachAttempts">Breach Attempts</span>
+                        <span class="value" data-i18n="zero">0 survived</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <!-- B13: The Vault Door -->
+    <section class="floor-section" id="b13" style="background: linear-gradient(180deg, #18182a 0%, #1a1a30 100%);">
+        <div class="floor-content">
+            <div class="floor-image" data-lightbox>
+                <span class="floor-badge" style="background: var(--gold); color: #000;">B13 - FINAL</span>
+                <img src="/static/images/vault/vault-door-b13.png" alt="The Vault Door B13">
+            </div>
+            <div class="floor-info">
+                <h2 class="font-vault" data-i18n="b13Title">The Omega Door</h2>
+                <h3 data-i18n="b13Subtitle">Final Barrier • Depth: -195 meters</h3>
+                <p data-i18n="b13Desc1">
+                    The legendary Omega Door. Three meters in diameter, weighing 47 tons, forged from a 
+                    meteorite that fell in the guild's founding year. The golden NumbahWan emblem at its center 
+                    is not merely decorative—it's a dimensional anchor that prevents any form of teleportation or 
+                    phase-shifting within a 500-meter radius.
+                </p>
+                <p data-i18n="b13Desc2">
+                    Opening requires simultaneous biometric confirmation from seven Founding Members, 
+                    a 256-digit rotating cipher, and the physical presence of the Guild Master. 
+                    The door has been opened exactly 3 times in guild history.
+                </p>
+                <div class="specs">
+                    <div class="spec-item">
+                        <span class="label" data-i18n="doorMaterial">Material</span>
+                        <span class="value" data-i18n="meteorite">Celestial Meteorite</span>
+                    </div>
+                    <div class="spec-item">
+                        <span class="label" data-i18n="weightSpec">Weight</span>
+                        <span class="value">47,000 kg</span>
+                    </div>
+                    <div class="spec-item">
+                        <span class="label" data-i18n="timesOpened">Times Opened</span>
+                        <span class="value">3</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <!-- The Treasure -->
+    <section class="treasure-section" id="treasure">
+        <div class="classified-stamp" style="margin-bottom: 2rem;" data-i18n="topSecret">🔒 TOP SECRET - EYES ONLY 🔒</div>
+        <h2 class="font-vault" style="font-size: clamp(2rem, 5vw, 3.5rem); margin-bottom: 1rem;" data-i18n="treasureTitle">
+            What Lies Within
+        </h2>
+        <p style="color: rgba(255,255,255,0.7); max-width: 700px; margin-bottom: 3rem; line-height: 1.8;" data-i18n="treasureDesc">
+            Beyond the Omega Door lies a chamber of absolute emptiness. Black marble floors polished to mirror perfection. 
+            A single beam of light from an unknown source. And in the center... a pedestal bearing only one item.
+        </p>
+        
+        <div class="treasure-gallery">
+            <div class="treasure-card" data-lightbox>
+                <img src="/static/images/vault/vault-interior.png" alt="Vault Interior">
+                <div class="treasure-card-info">
+                    <h4 data-i18n="chamberTitle">The Inner Sanctum</h4>
+                    <p data-i18n="chamberDesc">A 40x40 meter chamber of perfect silence. Temperature maintained at exactly 18.5°C. Humidity at 45%. No dust has ever been detected.</p>
+                </div>
+            </div>
+            <div class="treasure-card" data-lightbox>
+                <img src="/static/images/vault/treasure-box.png" alt="The Box">
+                <div class="treasure-card-info">
+                    <h4 data-i18n="boxTitle">The Vessel</h4>
+                    <p data-i18n="boxDesc">Carved from 400-year-old ironwood. Lined with silk from the last imperial dynasty. The box itself is worth more than most countries' GDP.</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- The Card Reveal -->
+        <div class="card-reveal">
+            <h3 class="font-vault" style="font-size: 1.5rem; color: var(--gold); margin-bottom: 2rem;" data-i18n="theCardTitle">
+                The One Card
+            </h3>
+            <div class="card-showcase" data-lightbox>
+                <img src="/static/images/vault/misprinted-card.png" alt="The Misprinted RegginA Card">
+            </div>
+            <div class="card-plaque">
+                <h3 data-i18n="cardName">RegginA, The Eternal Flame — MISPRINT #001</h3>
+                <p data-i18n="cardLore">
+                    The very first card ever printed for NumbahWan TCG. A production error caused a diagonal tear and 
+                    color shift during the original print run. Rather than destroy it, the Guild Master declared it 
+                    "a beautiful imperfection" and sealed it away as the most valuable card in existence.
+                </p>
+                <p style="margin-top: 1rem; color: var(--gold); font-size: 0.8rem;" data-i18n="cardValue">
+                    Estimated Value: PRICELESS • Insurance: Uninsurable • Replicas: 0
+                </p>
+            </div>
+        </div>
+        
+        <!-- Vault Stats -->
+        <div class="vault-stats">
+            <div class="stat-box">
+                <h3 class="font-vault">195m</h3>
+                <p data-i18n="statDepth">Total Depth</p>
+            </div>
+            <div class="stat-box">
+                <h3 class="font-vault">13</h3>
+                <p data-i18n="statFloors">Security Floors</p>
+            </div>
+            <div class="stat-box">
+                <h3 class="font-vault">0</h3>
+                <p data-i18n="statBreaches">Successful Breaches</p>
+            </div>
+            <div class="stat-box">
+                <h3 class="font-vault">1</h3>
+                <p data-i18n="statTreasure">Sacred Artifact</p>
+            </div>
+        </div>
+    </section>
+    
+    <!-- Warning -->
+    <section class="warning-section">
+        <h3 data-i18n="warningTitle">⚠️ SECURITY NOTICE ⚠️</h3>
+        <p data-i18n="warningText">
+            Any unauthorized attempt to access, photograph, or discuss the contents of the Guild Vault is punishable 
+            under NumbahWan Guild Law Section 13, Article 7. Violators will be subjected to immediate memory erasure 
+            and permanent banishment from all guild territories. You have been warned.
+        </p>
+    </section>
+    
+    <!-- CTA -->
+    <section class="cta-section">
+        <h2 class="font-vault" style="font-size: 2rem; margin-bottom: 1rem; color: var(--gold);" data-i18n="ctaTitle">
+            Want Your Own Legendary Cards?
+        </h2>
+        <p style="color: rgba(255,255,255,0.7); margin-bottom: 2rem; max-width: 500px; margin-left: auto; margin-right: auto;" data-i18n="ctaDesc">
+            You may never see the original misprint, but you can collect your own NumbahWan TCG cards. 
+            Who knows? Maybe your pull will become the next vault-worthy treasure.
+        </p>
+        <a href="/forge" class="btn-vault">🔥 <span data-i18n="openPacks">Open Card Packs</span></a>
+    </section>
+    
+    <!-- Footer -->
+    <footer>
+        <p data-i18n="footerText">The Guild Vault • Beneath Parry Hotter Academy • Est. 2024</p>
+        <p style="margin-top: 0.5rem;"><a href="/" style="color: var(--orange);" data-i18n="backToGuild">← Back to NumbahWan Guild</a></p>
+    </footer>
+    
+    <!-- Lightbox -->
+    <div class="lightbox" id="lightbox">
+        <img src="" alt="">
+        <p class="lightbox-caption"></p>
+        <p style="color: rgba(255,255,255,0.5); margin-top: 0.5rem; font-size: 0.85rem;">Click anywhere to close</p>
+    </div>
+    
+    <script>
+        // ========== VAULT PAGE I18N ==========
+        const VAULT_I18N = {
+            en: {
+                classified: "⚠️ CLASSIFIED LEVEL 13 ⚠️",
+                vaultTitle: "THE GUILD VAULT",
+                vaultSubtitle: "Beneath the Parry Hotter School of Coding Wizardry lies the most secure facility ever constructed by the NumbahWan Guild. Descend 13 floors into the earth to discover what we protect with our lives.",
+                beginDescent: "Begin Descent",
+                
+                b1Title: "The Entrance Gate",
+                b1Subtitle: "Primary Access Point • Depth: -15 meters",
+                b1Desc1: "The journey begins beneath the academy's west wing, accessible only through a concealed elevator in the Headmaster's private study. The entrance features a 12-ton blast door forged from a classified titanium alloy developed by guild engineers.",
+                b1Desc2: "The NumbahWan emblem—cast in 24-karat gold—serves as both insignia and biometric scanner. Only those whose DNA has been registered in the Guild Codex may proceed.",
+                doorWeight: "Door Weight",
+                thickness: "Wall Thickness",
+                clearance: "Clearance Required",
+                level3: "Level 3+",
+                
+                b5Title: "Security Checkpoint Alpha",
+                b5Subtitle: "Biometric Verification • Depth: -75 meters",
+                b5Desc1: "At B5, visitors must pass through the most rigorous identity verification system ever devised. The checkpoint utilizes retinal scanning, voice pattern recognition, and proprietary \"soul signature\" technology that detects the unique magical aura of each guild member.",
+                b5Desc2: "Armed sentinels from the Guardian Division maintain 24/7 surveillance. The bulletproof glass booth can withstand a direct RPG hit, and the entire floor can be flooded with knockout gas in 0.3 seconds.",
+                scanTypes: "Scan Types",
+                guardsOnDuty: "Guards on Duty",
+                responseTime: "Lockdown Time",
+                
+                b8Title: "Central Nerve Center",
+                b8Subtitle: "Surveillance Command • Depth: -120 meters",
+                b8Desc1: "The heart of vault security. Over 847 cameras monitor every millimeter of the facility in real-time, feeding into quantum-encrypted holographic displays. The AI system \"GUARDIAN\" processes 2.3 petabytes of data per second, detecting anomalies before they become threats.",
+                b8Desc2: "No blind spots exist. The system tracks heat signatures, heartbeats, and even thought patterns through experimental psychic dampening fields. Twelve elite operators work in rotating 6-hour shifts, never leaving more than 2 stations unmanned.",
+                cameras: "Active Cameras",
+                dataProcessing: "Data/Second",
+                aiSystem: "AI System",
+                
+                b10Title: "The Crimson Maze",
+                b10Subtitle: "Active Defense Grid • Depth: -150 meters",
+                b10Desc1: "They call it \"The Red Wedding.\" A labyrinth of 3,400 high-intensity laser beams crisscross this corridor in ever-shifting patterns. The grid reconfigures every 0.8 seconds based on quantum-random algorithms—impossible to memorize, impossible to predict.",
+                b10Desc2: "Authorized personnel must wear specialized chronosync suits that phase-shift the wearer 0.001 seconds out of temporal alignment. Even then, one wrong step triggers instant vaporization. The floor itself is pressure-sensitive to within 0.1 grams.",
+                laserBeams: "Laser Beams",
+                reconfigRate: "Reconfig Rate",
+                breachAttempts: "Breach Attempts",
+                zero: "0 survived",
+                
+                b13Title: "The Omega Door",
+                b13Subtitle: "Final Barrier • Depth: -195 meters",
+                b13Desc1: "The legendary Omega Door. Three meters in diameter, weighing 47 tons, forged from a meteorite that fell in the guild's founding year. The golden NumbahWan emblem at its center is not merely decorative—it's a dimensional anchor that prevents any form of teleportation or phase-shifting within a 500-meter radius.",
+                b13Desc2: "Opening requires simultaneous biometric confirmation from seven Founding Members, a 256-digit rotating cipher, and the physical presence of the Guild Master. The door has been opened exactly 3 times in guild history.",
+                doorMaterial: "Material",
+                meteorite: "Celestial Meteorite",
+                weightSpec: "Weight",
+                timesOpened: "Times Opened",
+                
+                topSecret: "🔒 TOP SECRET - EYES ONLY 🔒",
+                treasureTitle: "What Lies Within",
+                treasureDesc: "Beyond the Omega Door lies a chamber of absolute emptiness. Black marble floors polished to mirror perfection. A single beam of light from an unknown source. And in the center... a pedestal bearing only one item.",
+                chamberTitle: "The Inner Sanctum",
+                chamberDesc: "A 40x40 meter chamber of perfect silence. Temperature maintained at exactly 18.5°C. Humidity at 45%. No dust has ever been detected.",
+                boxTitle: "The Vessel",
+                boxDesc: "Carved from 400-year-old ironwood. Lined with silk from the last imperial dynasty. The box itself is worth more than most countries' GDP.",
+                theCardTitle: "The One Card",
+                cardName: "RegginA, The Eternal Flame — MISPRINT #001",
+                cardLore: "The very first card ever printed for NumbahWan TCG. A production error caused a diagonal tear and color shift during the original print run. Rather than destroy it, the Guild Master declared it \"a beautiful imperfection\" and sealed it away as the most valuable card in existence.",
+                cardValue: "Estimated Value: PRICELESS • Insurance: Uninsurable • Replicas: 0",
+                
+                statDepth: "Total Depth",
+                statFloors: "Security Floors",
+                statBreaches: "Successful Breaches",
+                statTreasure: "Sacred Artifact",
+                
+                warningTitle: "⚠️ SECURITY NOTICE ⚠️",
+                warningText: "Any unauthorized attempt to access, photograph, or discuss the contents of the Guild Vault is punishable under NumbahWan Guild Law Section 13, Article 7. Violators will be subjected to immediate memory erasure and permanent banishment from all guild territories. You have been warned.",
+                
+                ctaTitle: "Want Your Own Legendary Cards?",
+                ctaDesc: "You may never see the original misprint, but you can collect your own NumbahWan TCG cards. Who knows? Maybe your pull will become the next vault-worthy treasure.",
+                openPacks: "Open Card Packs",
+                footerText: "The Guild Vault • Beneath Parry Hotter Academy • Est. 2024",
+                backToGuild: "← Back to NumbahWan Guild"
+            },
+            zh: {
+                classified: "⚠️ 機密等級 13 ⚠️",
+                vaultTitle: "公會金庫",
+                vaultSubtitle: "在派瑞波特程式巫術學院的地底，坐落著NumbahWan公會建造的最安全設施。深入地下13層，發現我們用生命守護的寶藏。",
+                beginDescent: "開始下降",
+                
+                b1Title: "入口大門",
+                b1Subtitle: "主要進入點 • 深度：-15公尺",
+                b1Desc1: "旅程始於學院西翼地下，只能通過校長私人書房中的隱藏電梯進入。入口配備一扇12噸重的防爆門，由公會工程師開發的機密鈦合金鍛造而成。",
+                b1Desc2: "NumbahWan徽章以24K黃金鑄造，既是標誌也是生物識別掃描器。只有DNA已在公會法典中登記的人才能通過。",
+                doorWeight: "門重量",
+                thickness: "牆壁厚度",
+                clearance: "所需許可",
+                level3: "3級以上",
+                
+                b5Title: "安全檢查站Alpha",
+                b5Subtitle: "生物識別驗證 • 深度：-75公尺",
+                b5Desc1: "在B5層，訪客必須通過有史以來最嚴格的身份驗證系統。檢查站使用視網膜掃描、聲紋識別和專有的「靈魂簽名」技術，可偵測每位公會成員獨特的魔法氣場。",
+                b5Desc2: "守護者部門的武裝哨兵24/7全天候監視。防彈玻璃亭能承受RPG直接命中，整層樓可在0.3秒內充滿迷昏氣體。",
+                scanTypes: "掃描類型",
+                guardsOnDuty: "值班守衛",
+                responseTime: "封鎖時間",
+                
+                b8Title: "中央神經中樞",
+                b8Subtitle: "監控指揮中心 • 深度：-120公尺",
+                b8Desc1: "金庫安全的核心。超過847個攝像頭即時監控設施的每一毫米，數據傳輸至量子加密的全息顯示器。AI系統「GUARDIAN」每秒處理2.3 PB數據，在威脅形成前就能偵測異常。",
+                b8Desc2: "不存在監控死角。系統通過實驗性的心靈抑制場追蹤熱信號、心跳甚至思維模式。十二名精英操作員輪班6小時，確保不超過2個工作站無人值守。",
+                cameras: "活躍攝像頭",
+                dataProcessing: "數據/秒",
+                aiSystem: "AI系統",
+                
+                b10Title: "猩紅迷宮",
+                b10Subtitle: "主動防禦網格 • 深度：-150公尺",
+                b10Desc1: "他們稱之為「血色婚禮」。3,400束高強度激光以不斷變化的模式交錯穿越這條走廊。網格每0.8秒基於量子隨機算法重新配置——無法記憶，無法預測。",
+                b10Desc2: "授權人員必須穿戴特製的時間同步服，使穿戴者在時間上偏移0.001秒。即便如此，一步走錯就會瞬間蒸發。地板本身對0.1克以內的壓力都很敏感。",
+                laserBeams: "激光束",
+                reconfigRate: "重配頻率",
+                breachAttempts: "突破嘗試",
+                zero: "0人存活",
+                
+                b13Title: "歐米茄之門",
+                b13Subtitle: "最終屏障 • 深度：-195公尺",
+                b13Desc1: "傳說中的歐米茄之門。直徑三公尺，重達47噸，由公會創立年份墜落的隕石鍛造。中央的金色NumbahWan徽章不僅是裝飾——它是維度錨，可阻止500公尺半徑內任何形式的傳送或相位轉移。",
+                b13Desc2: "開啟需要七位創始成員同時進行生物識別確認、256位輪換密碼以及公會會長親自到場。這扇門在公會歷史上僅開啟過3次。",
+                doorMaterial: "材料",
+                meteorite: "天外隕石",
+                weightSpec: "重量",
+                timesOpened: "開啟次數",
+                
+                topSecret: "🔒 最高機密 - 僅限本人 🔒",
+                treasureTitle: "內部藏有什麼",
+                treasureDesc: "歐米茄之門後是一個絕對空曠的房間。黑色大理石地板拋光如鏡。一束來源不明的光線。在中央...一個底座上只放著一件物品。",
+                chamberTitle: "內部聖殿",
+                chamberDesc: "40x40公尺的絕對寂靜空間。溫度恆定在18.5°C。濕度45%。從未偵測到任何灰塵。",
+                boxTitle: "容器",
+                boxDesc: "由400年樹齡的鐵木雕刻而成。內襯最後一個帝國王朝的絲綢。這個盒子本身的價值超過大多數國家的GDP。",
+                theCardTitle: "唯一的卡片",
+                cardName: "RegginA，永恆之焰 — 錯版 #001",
+                cardLore: "NumbahWan TCG印刷的第一張卡片。在最初的印刷中，生產錯誤導致對角線撕裂和色偏。公會會長並沒有銷毀它，而是宣布它是「美麗的不完美」，並將其封存為現存最珍貴的卡片。",
+                cardValue: "估計價值：無價 • 保險：無法投保 • 複製品：0",
+                
+                statDepth: "總深度",
+                statFloors: "安全樓層",
+                statBreaches: "成功突破",
+                statTreasure: "神聖文物",
+                
+                warningTitle: "⚠️ 安全警告 ⚠️",
+                warningText: "任何未經授權的訪問、拍攝或討論公會金庫內容的嘗試，都將受到NumbahWan公會法第13條第7款的懲處。違規者將被立即消除記憶並永久驅逐出所有公會領土。你已被警告。",
+                
+                ctaTitle: "想擁有自己的傳說卡片？",
+                ctaDesc: "你可能永遠看不到原版錯版卡，但你可以收集自己的NumbahWan TCG卡片。誰知道呢？也許你抽到的卡會成為下一個值得保存在金庫的寶藏。",
+                openPacks: "開啟卡包",
+                footerText: "公會金庫 • 派瑞波特學院地下 • 創立於2024",
+                backToGuild: "← 返回NumbahWan公會"
+            },
+            th: {
+                classified: "⚠️ ระดับความลับ 13 ⚠️",
+                vaultTitle: "ห้องนิรภัยกิลด์",
+                vaultSubtitle: "ใต้โรงเรียนเวทมนตร์การเขียนโค้ด Parry Hotter คือสิ่งอำนวยความปลอดภัยที่สุดที่ NumbahWan Guild เคยสร้าง ลงไป 13 ชั้นใต้ดินเพื่อค้นพบสิ่งที่เราปกป้องด้วยชีวิต",
+                beginDescent: "เริ่มลงไป",
+                
+                b1Title: "ประตูทางเข้า",
+                b1Subtitle: "จุดเข้าหลัก • ความลึก: -15 เมตร",
+                b1Desc1: "การเดินทางเริ่มต้นใต้ปีกตะวันตกของโรงเรียน เข้าถึงได้เฉพาะผ่านลิฟต์ลับในห้องทำงานส่วนตัวของอาจารย์ใหญ่ ทางเข้ามีประตูกันระเบิดน้ำหนัก 12 ตัน หลอมจากโลหะผสมไททาเนียมลับเฉพาะที่พัฒนาโดยวิศวกรกิลด์",
+                b1Desc2: "ตราสัญลักษณ์ NumbahWan หล่อจากทองคำ 24 กะรัต ทำหน้าที่เป็นทั้งเครื่องหมายและเครื่องสแกนไบโอเมตริก เฉพาะผู้ที่ DNA ได้ลงทะเบียนใน Guild Codex เท่านั้นที่สามารถผ่านได้",
+                doorWeight: "น้ำหนักประตู",
+                thickness: "ความหนาผนัง",
+                clearance: "ระดับที่ต้องการ",
+                level3: "ระดับ 3+",
+                
+                b5Title: "จุดตรวจความปลอดภัย Alpha",
+                b5Subtitle: "การยืนยันไบโอเมตริก • ความลึก: -75 เมตร",
+                b5Desc1: "ที่ B5 ผู้เยี่ยมชมต้องผ่านระบบยืนยันตัวตนที่เข้มงวดที่สุดเท่าที่เคยมีมา จุดตรวจใช้การสแกนเรตินา การจดจำรูปแบบเสียง และเทคโนโลยี \"ลายเซ็นวิญญาณ\" ที่ตรวจจับออร่าเวทมนตร์ที่เป็นเอกลักษณ์ของสมาชิกกิลด์แต่ละคน",
+                b5Desc2: "ทหารยามติดอาวุธจากกองพิทักษ์เฝ้าระวัง 24/7 บูธกระจกกันกระสุนทนทานต่อการโจมตี RPG โดยตรง และทั้งชั้นสามารถเติมแก๊สสลบได้ใน 0.3 วินาที",
+                scanTypes: "ประเภทการสแกน",
+                guardsOnDuty: "ยามประจำการ",
+                responseTime: "เวลาล็อกดาวน์",
+                
+                b8Title: "ศูนย์ประสาทกลาง",
+                b8Subtitle: "ศูนย์บัญชาการเฝ้าระวัง • ความลึก: -120 เมตร",
+                b8Desc1: "หัวใจของความปลอดภัยห้องนิรภัย กล้อง 847 ตัวเฝ้าดูทุกมิลลิเมตรของสถานที่แบบเรียลไทม์ ส่งข้อมูลไปยังจอโฮโลแกรมเข้ารหัสควอนตัม ระบบ AI \"GUARDIAN\" ประมวลผล 2.3 เพตะไบต์ต่อวินาที ตรวจจับความผิดปกติก่อนที่จะกลายเป็นภัยคุกคาม",
+                b8Desc2: "ไม่มีจุดบอด ระบบติดตามลายเซ็นความร้อน การเต้นของหัวใจ และแม้แต่รูปแบบความคิดผ่านสนามหน่วงจิตทดลอง ผู้ปฏิบัติการชั้นยอด 12 คนทำงานเป็นกะ 6 ชั่วโมง ไม่เคยปล่อยให้สถานีมากกว่า 2 แห่งไม่มีคนดูแล",
+                cameras: "กล้องที่ใช้งาน",
+                dataProcessing: "ข้อมูล/วินาที",
+                aiSystem: "ระบบ AI",
+                
+                b10Title: "เขาวงกตสีแดง",
+                b10Subtitle: "กริดป้องกันแอคทีฟ • ความลึก: -150 เมตร",
+                b10Desc1: "พวกเขาเรียกมันว่า \"งานแต่งแดง\" เขาวงกตของลำแสงเลเซอร์ความเข้มสูง 3,400 ลำตัดผ่านทางเดินนี้ในรูปแบบที่เปลี่ยนแปลงตลอดเวลา กริดกำหนดค่าใหม่ทุก 0.8 วินาทีตามอัลกอริทึมสุ่มควอนตัม—เป็นไปไม่ได้ที่จะจำ เป็นไปไม่ได้ที่จะทำนาย",
+                b10Desc2: "บุคลากรที่ได้รับอนุญาตต้องสวมชุดซิงค์เวลาพิเศษที่เลื่อนผู้สวมใส่ออกจากการจัดตำแหน่งเวลา 0.001 วินาที แม้กระนั้น ก้าวผิดหนึ่งก้าวจะถูกระเหยทันที พื้นเองไวต่อแรงกดภายใน 0.1 กรัม",
+                laserBeams: "ลำแสงเลเซอร์",
+                reconfigRate: "อัตราการกำหนดค่าใหม่",
+                breachAttempts: "ความพยายามบุกรุก",
+                zero: "0 รอดชีวิต",
+                
+                b13Title: "ประตูโอเมก้า",
+                b13Subtitle: "ด่านสุดท้าย • ความลึก: -195 เมตร",
+                b13Desc1: "ประตูโอเมก้าในตำนาน เส้นผ่านศูนย์กลางสามเมตร น้ำหนัก 47 ตัน หลอมจากอุกกาบาตที่ตกในปีก่อตั้งกิลด์ ตราสัญลักษณ์ NumbahWan สีทองตรงกลางไม่ใช่แค่ตกแต่ง—มันคือจุดยึดมิติที่ป้องกันการเทเลพอร์ตหรือการเลื่อนเฟสทุกรูปแบบในรัศมี 500 เมตร",
+                b13Desc2: "การเปิดต้องการการยืนยันไบโอเมตริกพร้อมกันจากสมาชิกผู้ก่อตั้งเจ็ดคน รหัสหมุน 256 หลัก และการปรากฏตัวของหัวหน้ากิลด์ ประตูถูกเปิดเพียง 3 ครั้งในประวัติศาสตร์กิลด์",
+                doorMaterial: "วัสดุ",
+                meteorite: "อุกกาบาตจากสวรรค์",
+                weightSpec: "น้ำหนัก",
+                timesOpened: "จำนวนครั้งที่เปิด",
+                
+                topSecret: "🔒 ความลับสุดยอด - สำหรับตาเท่านั้น 🔒",
+                treasureTitle: "สิ่งที่ซ่อนอยู่ข้างใน",
+                treasureDesc: "เหนือประตูโอเมก้าคือห้องที่ว่างเปล่าสมบูรณ์ พื้นหินอ่อนสีดำขัดจนเหมือนกระจก แสงลำเดียวจากแหล่งที่ไม่รู้ที่มา และตรงกลาง... แท่นวางสิ่งของเพียงชิ้นเดียว",
+                chamberTitle: "ห้องศักดิ์สิทธิ์ชั้นใน",
+                chamberDesc: "ห้องขนาด 40x40 เมตรที่เงียบสนิท อุณหภูมิรักษาที่ 18.5°C ความชื้น 45% ไม่เคยตรวจพบฝุ่นเลย",
+                boxTitle: "ภาชนะ",
+                boxDesc: "แกะสลักจากไม้เหล็กอายุ 400 ปี บุด้วยผ้าไหมจากราชวงศ์สุดท้าย กล่องเองมีค่ามากกว่า GDP ของประเทศส่วนใหญ่",
+                theCardTitle: "การ์ดหนึ่งเดียว",
+                cardName: "RegginA, เปลวไฟนิรันดร์ — พิมพ์ผิด #001",
+                cardLore: "การ์ดใบแรกที่พิมพ์สำหรับ NumbahWan TCG ข้อผิดพลาดในการผลิตทำให้เกิดรอยฉีกแนวทแยงและสีเพี้ยนในการพิมพ์ครั้งแรก แทนที่จะทำลายมัน หัวหน้ากิลด์ประกาศว่ามันคือ \"ความไม่สมบูรณ์แบบที่สวยงาม\" และปิดผนึกไว้เป็นการ์ดที่มีค่าที่สุดที่มีอยู่",
+                cardValue: "มูลค่าประเมิน: ประเมินค่าไม่ได้ • ประกัน: ไม่สามารถทำประกัน • สำเนา: 0",
+                
+                statDepth: "ความลึกรวม",
+                statFloors: "ชั้นความปลอดภัย",
+                statBreaches: "การบุกรุกสำเร็จ",
+                statTreasure: "สิ่งประดิษฐ์ศักดิ์สิทธิ์",
+                
+                warningTitle: "⚠️ ประกาศความปลอดภัย ⚠️",
+                warningText: "ความพยายามเข้าถึง ถ่ายรูป หรือพูดคุยเกี่ยวกับเนื้อหาของห้องนิรภัยกิลด์โดยไม่ได้รับอนุญาต จะถูกลงโทษตามกฎหมายกิลด์ NumbahWan มาตรา 13 ข้อ 7 ผู้ละเมิดจะถูกลบความทรงจำทันทีและถูกเนรเทศถาวรจากดินแดนกิลด์ทั้งหมด คุณได้รับคำเตือนแล้ว",
+                
+                ctaTitle: "อยากมีการ์ดตำนานของตัวเอง?",
+                ctaDesc: "คุณอาจไม่มีวันได้เห็นการ์ดพิมพ์ผิดต้นฉบับ แต่คุณสามารถสะสมการ์ด NumbahWan TCG ของคุณเอง ใครจะรู้? บางทีการ์ดที่คุณสุ่มได้อาจกลายเป็นสมบัติที่คู่ควรกับห้องนิรภัยต่อไป",
+                openPacks: "เปิดแพ็คการ์ด",
+                footerText: "ห้องนิรภัยกิลด์ • ใต้โรงเรียน Parry Hotter • ก่อตั้ง 2024",
+                backToGuild: "← กลับสู่กิลด์ NumbahWan"
+            }
+        };
+        
+        function getVaultLang() {
+            return localStorage.getItem('lang') || localStorage.getItem('nw_lang') || 'en';
+        }
+        
+        function updateVaultI18n() {
+            const lang = getVaultLang();
+            const t = VAULT_I18N[lang] || VAULT_I18N.en;
+            
+            document.querySelectorAll('[data-i18n]').forEach(el => {
+                const key = el.getAttribute('data-i18n');
+                if (t[key]) el.textContent = t[key];
+            });
+        }
+        
+        window.addEventListener('nw-lang-change', updateVaultI18n);
+        
+        document.addEventListener('DOMContentLoaded', () => {
+            // i18n
+            updateVaultI18n();
+            
+            // Depth indicator
+            const dots = document.querySelectorAll('.depth-dot');
+            const sections = ['hero', 'b1', 'b5', 'b8', 'b10', 'b13', 'treasure'];
+            
+            dots.forEach((dot, i) => {
+                dot.addEventListener('click', () => {
+                    document.getElementById(sections[i])?.scrollIntoView({ behavior: 'smooth' });
+                });
+            });
+            
+            // Update active dot on scroll
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        const idx = sections.indexOf(entry.target.id);
+                        dots.forEach((d, i) => d.classList.toggle('active', i === idx));
+                    }
+                });
+            }, { threshold: 0.5 });
+            
+            sections.forEach(id => {
+                const el = document.getElementById(id);
+                if (el) observer.observe(el);
+            });
+            
+            // Lightbox
+            const lightbox = document.getElementById('lightbox');
+            document.querySelectorAll('[data-lightbox]').forEach(el => {
+                el.style.cursor = 'pointer';
+                el.addEventListener('click', () => {
+                    const img = el.querySelector('img') || el;
+                    const caption = el.querySelector('h4')?.textContent || el.querySelector('.floor-badge')?.textContent || '';
+                    lightbox.querySelector('img').src = img.src;
+                    lightbox.querySelector('.lightbox-caption').textContent = caption;
+                    lightbox.classList.add('active');
+                });
+            });
+            
+            lightbox.addEventListener('click', () => lightbox.classList.remove('active'));
+            
+            // Scroll reveal
+            const revealObserver = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.style.opacity = '1';
+                        entry.target.style.transform = 'translateY(0)';
+                    }
+                });
+            }, { threshold: 0.1 });
+            
+            document.querySelectorAll('.floor-content, .treasure-card, .card-reveal, .vault-stats').forEach(el => {
+                el.style.opacity = '0';
+                el.style.transform = 'translateY(40px)';
+                el.style.transition = 'all 0.8s ease';
+                revealObserver.observe(el);
+            });
+        });
+    </script>
+</body>
+</html>
