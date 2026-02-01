@@ -309,6 +309,17 @@ const NW_CARD_RENDERER = (function() {
             cardEl.addEventListener('click', () => opts.onClick(card, cardEl));
         }
         
+        // Apply premium effects (holo + shine) for Legendary/Mythic
+        // Deferred to allow DOM attachment first
+        if (rarity === 'legendary' || rarity === 'mythic') {
+            requestAnimationFrame(() => {
+                if (window.NW_FX) {
+                    window.NW_FX.holo.apply(cardEl, { rarity });
+                    window.NW_FX.shine.add(cardEl);
+                }
+            });
+        }
+        
         return cardEl;
     }
     
