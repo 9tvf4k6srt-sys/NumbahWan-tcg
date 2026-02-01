@@ -10,6 +10,7 @@
     <link rel="stylesheet" href="/static/nw-card-frames.css">
     <!-- Essential Libraries -->
     <script src="/static/nw-essentials.js"></script>
+    <script src="/static/nw-components.js"></script>
     <script src="/static/nw-game-juice.js"></script>
     <script src="/static/nw-cards.js"></script>
     <script src="/static/nw-wallet.js"></script>
@@ -23,6 +24,19 @@
             --green: #22c55e; --red: #ef4444; --dark: #0a0a0f; --mythic: #ff00ff;
             --cyan: #00ffff; --log: #c97f3d;
         }
+        
+        /* Custom NW Icon Styling */
+        .nw-icon { display: inline-block; vertical-align: middle; fill: currentColor; }
+        .nw-icon.nw-spin { animation: nwSpin 1s linear infinite; }
+        @keyframes nwSpin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        
+        /* Rarity Glow Effects for Icons */
+        .mythic-glow { filter: drop-shadow(0 0 6px #ff00ff) drop-shadow(0 0 12px rgba(255,0,255,0.5)); }
+        .legendary-glow { filter: drop-shadow(0 0 4px #ffd700) drop-shadow(0 0 8px rgba(255,215,0,0.5)); }
+        .epic-glow { filter: drop-shadow(0 0 4px #a855f7) drop-shadow(0 0 8px rgba(168,85,247,0.5)); }
+        .rare-glow { filter: drop-shadow(0 0 3px #3b82f6); }
+        .uncommon-glow { filter: drop-shadow(0 0 2px #22c55e); }
+        .common-glow { opacity: 0.8; }
         * { margin: 0; padding: 0; box-sizing: border-box;
             -webkit-user-select: none; user-select: none;
             -webkit-tap-highlight-color: transparent; }
@@ -208,8 +222,8 @@
         .pity-soft-marker { position: absolute; top: -3px; bottom: -3px; width: 2px; 
             background: rgba(255,255,255,0.8); border-radius: 1px;
             box-shadow: 0 0 6px rgba(255,255,255,0.5); z-index: 2; }
-        .pity-soft-marker::after { content: '⚡'; position: absolute; top: -14px; left: 50%; 
-            transform: translateX(-50%); font-size: 8px; }
+        .pity-soft-marker::after { content: ''; position: absolute; top: -14px; left: 50%; width: 8px; height: 8px;
+            transform: translateX(-50%); background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%23ffd700"><path d="M13 3L4 14h7l-2 7 9-11h-7l2-7z"/></svg>') center/contain no-repeat; }
         
         /* Pity Glow when close */
         .pity-row.close .pity-track { animation: pityPulse 1s infinite; }
@@ -902,7 +916,7 @@
             z-index: 10;
         }
         .pack-flap::after {
-            content: '👆 PULL';
+            content: 'TAP';  /* Custom icon handled separately */
             position: absolute;
             bottom: 8px;
             left: 50%;
@@ -1554,12 +1568,12 @@
         <!-- 🎴 SEASON SELECTOR -->
         <div class="set-selector">
             <button class="set-btn active" data-set="1" onclick="switchForgeSet(1)">
-                <span class="set-icon">🔥</span>
+                <span class="set-icon"><svg class="nw-icon" width="18" height="18"><use href="/static/icons/nw-icons.svg#fire"></use></svg></span>
                 <span class="set-name">Season 1: Origins</span>
                 <span class="set-cards">110 Cards</span>
             </button>
             <button class="set-btn" data-set="2" onclick="switchForgeSet(2)">
-                <span class="set-icon">🐕</span>
+                <span class="set-icon"><svg class="nw-icon" width="18" height="18"><use href="/static/icons/nw-icons.svg#dragon"></use></svg></span>
                 <span class="set-name">Season 2: Hounds</span>
                 <span class="set-cards">108 Cards</span>
             </button>
@@ -1570,7 +1584,7 @@
             <!-- MYTHIC PITY (200 hard, 150 soft) -->
             <div class="pity-row mythic-pity">
                 <div class="pity-header">
-                    <span class="pity-icon">💎</span>
+                    <span class="pity-icon"><svg class="nw-icon mythic-glow" width="20" height="20"><use href="/static/icons/nw-icons.svg#diamond"></use></svg></span>
                     <span class="pity-title mythic">MYTHIC</span>
                     <span class="pity-rate">0.01%</span>
                     <span class="pity-count"><span id="pityMythic">0</span>/200</span>
@@ -1584,7 +1598,7 @@
             <!-- LEGENDARY PITY (80 hard, 50 soft) -->
             <div class="pity-row legendary-pity">
                 <div class="pity-header">
-                    <span class="pity-icon">⭐</span>
+                    <span class="pity-icon"><svg class="nw-icon legendary-glow" width="20" height="20"><use href="/static/icons/nw-icons.svg#star"></use></svg></span>
                     <span class="pity-title legendary">LEGENDARY</span>
                     <span class="pity-rate">1%</span>
                     <span class="pity-count"><span id="pityLegendary">0</span>/80</span>
@@ -1598,7 +1612,7 @@
             <!-- EPIC PITY (25 hard, 15 soft) -->
             <div class="pity-row epic-pity">
                 <div class="pity-header">
-                    <span class="pity-icon">💜</span>
+                    <span class="pity-icon"><svg class="nw-icon epic-glow" width="20" height="20"><use href="/static/icons/nw-icons.svg#crystal-ball"></use></svg></span>
                     <span class="pity-title epic">EPIC</span>
                     <span class="pity-rate">8%</span>
                     <span class="pity-count"><span id="pityEpic">0</span>/25</span>
@@ -1610,26 +1624,26 @@
             </div>
             
             <div class="pity-info">
-                🔥 <strong>Soft Pity</strong>: Rates ↑ as you approach guarantee | 
-                ⚡ <strong>Hard Pity</strong>: 100% guaranteed drop!
+                <svg class="nw-icon" width="14" height="14" style="vertical-align: middle;"><use href="/static/icons/nw-icons.svg#fire"></use></svg> <strong>Soft Pity</strong>: Rates ↑ as you approach guarantee | 
+                <svg class="nw-icon" width="14" height="14" style="vertical-align: middle;"><use href="/static/icons/nw-icons.svg#sparkles"></use></svg> <strong>Hard Pity</strong>: 100% guaranteed drop!
             </div>
             
             <!-- Collection Progress -->
             <div class="collection-progress" style="margin-top: 16px; display: flex; justify-content: center; gap: 24px; flex-wrap: wrap;">
                 <div class="coll-stat" style="text-align: center;">
-                    <span style="font-size: 24px;">📚</span>
+                    <span style="font-size: 24px;"><svg class="nw-icon" width="24" height="24"><use href="/static/icons/nw-icons.svg#collection"></use></svg></span>
                     <span id="collectionCount" style="font-size: 18px; font-weight: 700; color: #ffd700;">0</span>
                     <span style="color: rgba(255,255,255,0.5);">/</span>
                     <span id="totalCards" style="color: rgba(255,255,255,0.5);">108</span>
                     <span style="font-size: 11px; color: rgba(255,255,255,0.4); display: block;">Cards Owned</span>
                 </div>
                 <div class="coll-stat" style="text-align: center;">
-                    <span style="font-size: 24px;">🎰</span>
+                    <span style="font-size: 24px;"><svg class="nw-icon" width="24" height="24"><use href="/static/icons/nw-icons.svg#dice"></use></svg></span>
                     <span id="totalPulls" style="font-size: 18px; font-weight: 700; color: #ff6b00;">0</span>
                     <span style="font-size: 11px; color: rgba(255,255,255,0.4); display: block;">Total Pulls</span>
                 </div>
                 <a href="/collection" style="text-align: center; text-decoration: none; padding: 8px 16px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,215,0,0.3); border-radius: 8px; transition: all 0.3s;">
-                    <span style="font-size: 18px;">👀</span>
+                    <span style="font-size: 18px;"><svg class="nw-icon" width="18" height="18"><use href="/static/icons/nw-icons.svg#eye"></use></svg></span>
                     <span style="font-size: 12px; color: #ffd700; display: block;">View All</span>
                 </a>
             </div>
@@ -1665,45 +1679,45 @@
         <!-- Rates - Addictive Display -->
         <div class="rates-section">
             <div class="rates-header" onclick="toggleRates()">
-                <span>🎰 DROP RATES</span>
+                <span><svg class="nw-icon" width="16" height="16" style="vertical-align: middle;"><use href="/static/icons/nw-icons.svg#dice"></use></svg> DROP RATES</span>
                 <span id="ratesToggle">▼</span>
             </div>
             <div class="rates-grid" id="ratesGrid" style="display: none;">
                 <div class="rate-item mythic">
-                    <div class="rate-name">💎 Mythic</div>
+                    <div class="rate-name"><svg class="nw-icon mythic-glow" width="14" height="14"><use href="/static/icons/nw-icons.svg#diamond"></use></svg> Mythic</div>
                     <div class="rate-pct" id="mythicRate">0.01%</div>
                     <div class="rate-note">1 in 10,000</div>
                 </div>
                 <div class="rate-item legendary">
-                    <div class="rate-name">⭐ Legendary</div>
+                    <div class="rate-name"><svg class="nw-icon legendary-glow" width="14" height="14"><use href="/static/icons/nw-icons.svg#star"></use></svg> Legendary</div>
                     <div class="rate-pct">1%</div>
                     <div class="rate-note">1 in 100</div>
                 </div>
                 <div class="rate-item epic">
-                    <div class="rate-name">💜 Epic</div>
+                    <div class="rate-name"><svg class="nw-icon epic-glow" width="14" height="14"><use href="/static/icons/nw-icons.svg#crystal-ball"></use></svg> Epic</div>
                     <div class="rate-pct">8%</div>
                     <div class="rate-note">1 in 12.5</div>
                 </div>
                 <div class="rate-item rare">
-                    <div class="rate-name">💙 Rare</div>
+                    <div class="rate-name"><svg class="nw-icon rare-glow" width="14" height="14"><use href="/static/icons/nw-icons.svg#shield"></use></svg> Rare</div>
                     <div class="rate-pct">20%</div>
                     <div class="rate-note">1 in 5</div>
                 </div>
                 <div class="rate-item uncommon">
-                    <div class="rate-name">💚 Uncommon</div>
+                    <div class="rate-name"><svg class="nw-icon uncommon-glow" width="14" height="14"><use href="/static/icons/nw-icons.svg#scroll"></use></svg> Uncommon</div>
                     <div class="rate-pct">35%</div>
                 </div>
                 <div class="rate-item common">
-                    <div class="rate-name">⚪ Common</div>
+                    <div class="rate-name"><svg class="nw-icon common-glow" width="14" height="14"><use href="/static/icons/nw-icons.svg#egg"></use></svg> Common</div>
                     <div class="rate-pct">35.99%</div>
                 </div>
             </div>
             <div class="rates-pity-info" id="ratesGrid" style="display: none;">
                 <div class="pity-guarantee">
                     <strong>PITY SYSTEM</strong><br>
-                    💎 Mythic: Soft @150 → Hard @200<br>
-                    ⭐ Legendary: Soft @50 → Hard @80<br>
-                    💜 Epic: Soft @15 → Hard @25
+                    <svg class="nw-icon mythic-glow" width="12" height="12"><use href="/static/icons/nw-icons.svg#diamond"></use></svg> Mythic: Soft @150 → Hard @200<br>
+                    <svg class="nw-icon legendary-glow" width="12" height="12"><use href="/static/icons/nw-icons.svg#star"></use></svg> Legendary: Soft @50 → Hard @80<br>
+                    <svg class="nw-icon epic-glow" width="12" height="12"><use href="/static/icons/nw-icons.svg#crystal-ball"></use></svg> Epic: Soft @15 → Hard @25
                 </div>
             </div>
         </div>
@@ -1731,7 +1745,7 @@
                 <!-- Swipe pack will be inserted here -->
             </div>
             <div class="pack-instruction" id="packInstruction">
-                <span class="swipe-text">👈 SWIPE SIDEWAYS TO TEAR 👉</span>
+                <span class="swipe-text"><svg class="nw-icon" width="16" height="16"><use href="/static/icons/nw-icons.svg#arrow-left"></use></svg> SWIPE SIDEWAYS TO TEAR <svg class="nw-icon" width="16" height="16"><use href="/static/icons/nw-icons.svg#arrow-right"></use></svg></span>
                 <div class="swipe-arrow">↑</div>
             </div>
             <!-- Swipe progress indicator -->
@@ -1768,7 +1782,7 @@
             <div class="reveal-card" id="revealCard">
                 <div class="card-inner" id="cardInner">
                     <div class="card-face card-back">
-                        <div class="card-back-pattern">🔥</div>
+                        <div class="card-back-pattern"><svg width="32" height="32" viewBox="0 0 24 24" fill="#ff6b00"><path d="M12 2c-4 4-6 8-6 11 0 3.31 2.69 6 6 6s6-2.69 6-6c0-3-2-7-6-11zm0 15c-2.21 0-4-1.79-4-4 0-2 1.5-4.5 4-7 2.5 2.5 4 5 4 7 0 2.21-1.79 4-4 4z"/></svg></div>
                         <div class="card-back-text">NUMBAHWAN</div>
                     </div>
                     <div class="card-face card-front" id="cardFront">
@@ -2540,7 +2554,7 @@ async function switchForgeSet(setId) {
     
     // Show toast
     const setNames = { 1: 'Origins', 2: 'Hounds of War' };
-    showToast(`🎴 Switched to ${setNames[setId]}!`, 'info');
+    showToast(`Switched to ${setNames[setId]}!`, 'info');
     
     console.log(`[FORGE] Switched to Set ${setId}: ${CARDS.length} cards`);
 }
@@ -2730,7 +2744,7 @@ function setupModeUI() {
     
     const guestIdEl = document.getElementById('guestId');
     if (guestIdEl) {
-        guestIdEl.textContent = isGM ? '👑 GM' : (NW_WALLET?.getGuestId()?.slice(0,10) || 'Guest');
+        guestIdEl.innerHTML = isGM ? '<svg class="nw-icon" width="14" height="14" style="vertical-align:middle;"><use href="/static/icons/nw-icons.svg#crown"></use></svg> GM' : (NW_WALLET?.getGuestId()?.slice(0,10) || 'Guest');
     }
     
     const logsEl = document.getElementById('logBalance');
@@ -2742,7 +2756,7 @@ function setupModeUI() {
     const testBadge = document.getElementById('testBadge');
     if (testBadge && isGM) {
         testBadge.style.display = 'inline-flex';
-        testBadge.innerHTML = '👑 GM MODE';
+        testBadge.innerHTML = '<svg class="nw-icon" width="14" height="14" style="vertical-align:middle;"><use href="/static/icons/nw-icons.svg#crown"></use></svg> GM MODE';
         testBadge.style.background = 'linear-gradient(135deg, rgba(255,215,0,0.3), rgba(255,107,0,0.2))';
         testBadge.style.border = '1px solid #ffd700';
         testBadge.style.color = '#ffd700';
@@ -2812,7 +2826,7 @@ function showGMStatus() {
         const testBadge = document.querySelector('.test-badge');
         if (testBadge) {
             testBadge.style.display = 'flex';
-            testBadge.innerHTML = '👑 GM MODE';
+            testBadge.innerHTML = '<svg class="nw-icon" width="14" height="14" style="vertical-align:middle;"><use href="/static/icons/nw-icons.svg#crown"></use></svg> GM MODE';
             testBadge.style.background = 'linear-gradient(135deg, rgba(255,215,0,0.3), rgba(255,107,0,0.2))';
             testBadge.style.borderColor = '#ffd700';
             testBadge.style.color = '#ffd700';
@@ -2824,7 +2838,7 @@ function showGMStatus() {
         if (guestBar && !document.getElementById('forgeGmBadge')) {
             const gmBadge = document.createElement('div');
             gmBadge.id = 'forgeGmBadge';
-            gmBadge.innerHTML = '👑 INFINITE';
+            gmBadge.innerHTML = '<svg class="nw-icon" width="14" height="14" style="vertical-align:middle;"><use href="/static/icons/nw-icons.svg#crown"></use></svg> INFINITE';
             gmBadge.style.cssText = `
                 background: linear-gradient(135deg, rgba(255,215,0,0.3), rgba(255,107,0,0.2));
                 border: 2px solid #ffd700;
@@ -2854,7 +2868,7 @@ function showGMStatus() {
             document.head.appendChild(style);
         }
         
-        console.log('%c[FORGE] 👑 GM MODE ACTIVE - Infinite Logs for testing!', 
+        console.log('%c[FORGE] GM MODE ACTIVE - Infinite Logs for testing!', 
             'background: linear-gradient(90deg, #ffd700, #ff6b00); color: black; font-weight: bold; padding: 8px;');
     }
 }
@@ -3426,7 +3440,7 @@ function createPackBox(cardCount, highestRarity) {
         transform: translateZ(10px);
     `;
     lid.innerHTML = `
-        <span style="text-shadow: 0 1px 2px rgba(0,0,0,0.3);">📦 MEGA BOX</span>
+        <span style="text-shadow: 0 1px 2px rgba(0,0,0,0.3);"><svg class="nw-icon" width="14" height="14" style="vertical-align:middle;"><use href="/static/icons/nw-icons.svg#gift"></use></svg> MEGA BOX</span>
         <span style="font-size:9px;opacity:0.8;margin-top:2px;">↑ SWIPE UP ↑</span>
     `;
     
@@ -3585,9 +3599,9 @@ async function showPackOpening(cards) {
         // Update instruction text based on pack type
         const swipeText = instruction.querySelector('.swipe-text');
         if (cards.length > 6) {
-            swipeText.textContent = '👆 SWIPE UP TO OPEN BOX 👆';
+            swipeText.innerHTML = '<svg class="nw-icon" width="14" height="14"><use href="/static/icons/nw-icons.svg#arrow-up"></use></svg> SWIPE UP TO OPEN <svg class="nw-icon" width="14" height="14"><use href="/static/icons/nw-icons.svg#arrow-up"></use></svg>';
         } else {
-            swipeText.textContent = '👈 SWIPE SIDEWAYS TO TEAR 👉';
+            swipeText.innerHTML = '<svg class="nw-icon" width="14" height="14"><use href="/static/icons/nw-icons.svg#arrow-left"></use></svg> SWIPE TO TEAR <svg class="nw-icon" width="14" height="14"><use href="/static/icons/nw-icons.svg#arrow-right"></use></svg>';
         }
         
         // Create and add new pack
@@ -4147,7 +4161,7 @@ function sleep(ms) {
 // Pull - SIMPLIFIED FOR MOBILE
 async function executePull() {
     // Show immediate feedback
-    showToast('🎴 Opening pack...');
+    showToast('Opening pack...');
     console.log('[FORGE] 🎴 executePull CALLED!');
     
     try {
@@ -4242,7 +4256,7 @@ async function executePull() {
     const pullBtn = document.querySelector('.pull-btn');
     if (pullBtn) {
         pullBtn.disabled = true;
-        pullBtn.textContent = '✨ Loading...';
+        pullBtn.innerHTML = '<svg class="nw-icon nw-spin" width="16" height="16"><use href="/static/icons/nw-icons.svg#sparkles"></use></svg> Loading...';
     }
     
     console.log('[FORGE] 🎴 Preloading card images...');
@@ -4251,7 +4265,7 @@ async function executePull() {
     
     if (pullBtn) {
         pullBtn.disabled = false;
-        pullBtn.textContent = '🔥 PULL';
+        pullBtn.innerHTML = '<svg class="nw-icon" width="16" height="16"><use href="/static/icons/nw-icons.svg#fire"></use></svg> PULL';
     }
     
     // ===== PACK OPENING ANIMATION =====

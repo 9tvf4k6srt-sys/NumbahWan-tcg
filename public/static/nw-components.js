@@ -691,7 +691,184 @@ const NW = (function() {
     };
 })();
 
+    // =========================================================================
+    // EMOJI REPLACEMENT SYSTEM
+    // Auto-converts emojis to custom SVG icons
+    // =========================================================================
+    const EMOJI_TO_ICON = {
+        // Gaming/Combat
+        '⚔️': 'swords',
+        '🗡️': 'sword',
+        '🛡️': 'shield',
+        '🔥': 'fire',
+        '💀': 'skull',
+        '☠️': 'skull',
+        '⚡': 'energy',
+        '💥': 'fire',
+        
+        // Cards
+        '🎴': 'cards-stack',
+        '🃏': 'card',
+        '📦': 'pack',
+        '🎁': 'gift',
+        
+        // Currency/Items
+        '💰': 'coins',
+        '💵': 'coins',
+        '💎': 'diamond',
+        '🪵': 'scroll',
+        '📜': 'scroll',
+        '🧪': 'potion',
+        
+        // Status
+        '❤️': 'hp',
+        '💙': 'mp',
+        '⭐': 'star',
+        '🌟': 'star',
+        '✨': 'sparkles',
+        '💫': 'sparkles',
+        
+        // Achievements
+        '👑': 'crown',
+        '🏆': 'trophy',
+        '🏅': 'achievement',
+        '🎖️': 'achievement',
+        
+        // Navigation
+        '🏠': 'home',
+        '←': 'arrow-left',
+        '→': 'arrow-right',
+        '↑': 'arrow-up',
+        '↓': 'arrow-down',
+        '☰': 'menu',
+        '✕': 'close',
+        '✖': 'close',
+        '❌': 'x-circle',
+        '✅': 'check-circle',
+        '✓': 'check',
+        
+        // Status indicators
+        '⚠️': 'warning',
+        '❗': 'warning',
+        '❓': 'question',
+        'ℹ️': 'info',
+        '🔔': 'notification',
+        
+        // Actions
+        '🎲': 'dice',
+        '🎯': 'target',
+        '🔮': 'crystal-ball',
+        '🔍': 'search',
+        '⚙️': 'settings',
+        '🔧': 'settings',
+        
+        // Social
+        '👤': 'user',
+        '👥': 'users',
+        '💬': 'chat',
+        '❤️': 'heart',
+        '🤝': 'trade',
+        
+        // Places
+        '🏰': 'shield',
+        '🏟️': 'trophy',
+        '🛒': 'shopping-bag',
+        '🛍️': 'shopping-bag',
+        '🏪': 'shopping-bag',
+        
+        // Entertainment
+        '🎮': 'gaming',
+        '🕹️': 'gaming',
+        '🎉': 'celebration',
+        '🎊': 'confetti',
+        '🥳': 'party',
+        
+        // Content
+        '📖': 'scroll',
+        '📝': 'form',
+        '📋': 'clipboard',
+        '📊': 'chart',
+        '👗': 'dress',
+        '😂': 'meme',
+        '🗿': 'skull',
+        
+        // Misc
+        '🔒': 'lock',
+        '🔓': 'unlock',
+        '👁️': 'eye',
+        '🚀': 'rocket',
+        '💪': 'sword',
+        '🐉': 'dragon'
+    };
+
+    /**
+     * Replace emojis with SVG icons in text
+     * @param {string} text - Text containing emojis
+     * @param {object} options - { size, color }
+     * @returns {string} - Text with emojis replaced by SVG icons
+     */
+    function replaceEmojis(text, options = {}) {
+        const { size = 16, color = 'currentColor' } = options;
+        let result = text;
+        
+        for (const [emoji, iconId] of Object.entries(EMOJI_TO_ICON)) {
+            if (result.includes(emoji)) {
+                const iconHtml = iconHTML(iconId, { size, color, className: 'nw-emoji-icon' });
+                result = result.split(emoji).join(iconHtml);
+            }
+        }
+        
+        return result;
+    }
+
+    /**
+     * Replace emojis in all elements with [data-nw-icons] attribute
+     */
+    function replaceAllEmojis() {
+        document.querySelectorAll('[data-nw-icons]').forEach(el => {
+            el.innerHTML = replaceEmojis(el.innerHTML);
+        });
+    }
+
+    // Auto-run on DOM ready if data-nw-auto-icons is set on body
+    if (document.body?.hasAttribute('data-nw-auto-icons')) {
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', replaceAllEmojis);
+        } else {
+            replaceAllEmojis();
+        }
+    }
+
+    // =========================================================================
+    // EXPORT
+    // =========================================================================
+    return {
+        // Icons
+        icon,
+        iconHTML,
+        ICONS: ICON_MAP,
+        EMOJI_MAP: EMOJI_TO_ICON,
+        
+        // Emoji replacement
+        replaceEmojis,
+        replaceAllEmojis,
+        
+        // Components
+        toast,
+        modal,
+        confirm,
+        loader,
+        currency,
+        currencyHTML,
+        rarityBadge,
+        progressBar,
+        
+        // Version
+        version: '1.1.0'
+    };
+})();
+
 // Also expose as window.NW for global access
 window.NW = NW;
 
-console.log('[NW] Components v1.0 loaded -', Object.keys(NW.ICONS).length, 'icon mappings');
+console.log('[NW] Components v1.1 loaded -', Object.keys(NW.ICONS).length, 'icon mappings,', Object.keys(NW.EMOJI_MAP).length, 'emoji replacements');
