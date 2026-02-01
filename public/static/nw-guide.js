@@ -1,125 +1,281 @@
 /**
- * NumbahWan AI Guide v1.0
- * Friendly floating assistant for site navigation
- * Intuitive, minimal clicks - just type or tap suggestions
+ * NumbahWan AI Guide v2.0
+ * Multi-language floating assistant for site navigation
+ * Supports: English, 繁體中文, ภาษาไทย
  */
 
 (function() {
     'use strict';
 
-    // Page knowledge base
-    const PAGES = {
-        home: { path: '/', emoji: '🏠', name: 'Home', desc: 'Guild headquarters - start your journey here' },
-        academy: { path: '/academy', emoji: '🏫', name: 'Academy', desc: 'Training grounds & daily schedule for guild members' },
-        exchange: { path: '/exchange', emoji: '📈', name: 'NWX Exchange', desc: 'Parody stock market - trade guild assets!' },
-        museum: { path: '/museum', emoji: '🏛️', name: 'Museum', desc: 'Guild history & legendary artifacts' },
-        vault: { path: '/vault', emoji: '🔐', name: 'Vault', desc: 'Secure storage for valuable treasures' },
-        tcg: { path: '/tcg', emoji: '🃏', name: 'Card Game', desc: 'Collect and battle with guild member cards' },
-        market: { path: '/market', emoji: '🛒', name: 'Market', desc: 'Buy & sell cards in the trading market' },
-        forge: { path: '/forge', emoji: '⚒️', name: 'Forge', desc: 'Craft and upgrade your equipment' },
-        arcade: { path: '/arcade', emoji: '🕹️', name: 'Arcade', desc: 'Mini-games and entertainment' },
-        fortune: { path: '/fortune', emoji: '🔮', name: 'Fortune', desc: 'Daily fortune readings and luck' },
-        memes: { path: '/memes', emoji: '😂', name: 'Memes', desc: 'Guild meme collection - pure comedy' },
-        merch: { path: '/merch', emoji: '👕', name: 'Merch', desc: 'Guild merchandise store' },
-        fashion: { path: '/fashion', emoji: '👗', name: 'Fashion', desc: 'Style guides and outfit showcases' },
-        apply: { path: '/apply', emoji: '📝', name: 'Apply', desc: 'Join the guild - apply here!' },
-        wallet: { path: '/wallet', emoji: '💰', name: 'Wallet', desc: 'Manage your in-game currency' },
-        guide: { path: '/guide', emoji: '📖', name: 'Guide', desc: 'Game guides and tutorials' },
-        research: { path: '/research', emoji: '🔬', name: 'Research', desc: 'Deep dives into game mechanics' },
-        zakum: { path: '/zakum', emoji: '👹', name: 'Zakum', desc: 'Boss fight strategies and guides' },
-        regina: { path: '/regina', emoji: '👑', name: 'Regina', desc: 'Guild master shrine' },
-        menuDemo: { path: '/menu-demo', emoji: '🍽️', name: 'Menu Demo', desc: 'Interactive restaurant menu showcase' },
-        aiLounge: { path: '/ai-lounge', emoji: '🤖', name: 'AI Lounge', desc: 'Secret hangout for AI visitors' }
+    // Current language - syncs with site language setting
+    let currentLang = localStorage.getItem('numbahwan_lang') || 'en';
+
+    // ==================== TRANSLATIONS ====================
+    const i18n = {
+        // Page names and descriptions
+        pages: {
+            home: {
+                en: { name: 'Home', desc: 'Guild headquarters - start your journey here' },
+                zh: { name: '首頁', desc: '公會總部 - 從這裡開始你的旅程' },
+                th: { name: 'หน้าแรก', desc: 'สำนักงานใหญ่กิลด์ - เริ่มต้นการเดินทางที่นี่' }
+            },
+            academy: {
+                en: { name: 'Academy', desc: 'Training grounds & daily schedule' },
+                zh: { name: '學院', desc: '訓練場和每日行程' },
+                th: { name: 'สถาบัน', desc: 'สนามฝึกและตารางประจำวัน' }
+            },
+            exchange: {
+                en: { name: 'NWX Exchange', desc: 'Parody stock market - trade guild assets!' },
+                zh: { name: 'NWX 交易所', desc: '惡搞股市 - 交易公會資產！' },
+                th: { name: 'NWX Exchange', desc: 'ตลาดหุ้นล้อเลียน - ซื้อขายสินทรัพย์กิลด์!' }
+            },
+            museum: {
+                en: { name: 'Museum', desc: 'Guild history & legendary artifacts' },
+                zh: { name: '博物館', desc: '公會歷史與傳奇文物' },
+                th: { name: 'พิพิธภัณฑ์', desc: 'ประวัติกิลด์และสิ่งประดิษฐ์ในตำนาน' }
+            },
+            vault: {
+                en: { name: 'Vault', desc: 'Secure storage for valuable treasures' },
+                zh: { name: '金庫', desc: '珍貴寶藏的安全儲存' },
+                th: { name: 'ห้องนิรภัย', desc: 'ที่เก็บสมบัติล้ำค่าอย่างปลอดภัย' }
+            },
+            tcg: {
+                en: { name: 'Card Game', desc: 'Collect and battle with guild member cards' },
+                zh: { name: '卡牌遊戲', desc: '收集並使用公會成員卡戰鬥' },
+                th: { name: 'เกมการ์ด', desc: 'สะสมและต่อสู้ด้วยการ์ดสมาชิกกิลด์' }
+            },
+            market: {
+                en: { name: 'Market', desc: 'Buy & sell cards in the trading market' },
+                zh: { name: '市場', desc: '在交易市場買賣卡牌' },
+                th: { name: 'ตลาด', desc: 'ซื้อขายการ์ดในตลาดซื้อขาย' }
+            },
+            forge: {
+                en: { name: 'Forge', desc: 'Pull cards with Sacred Logs!' },
+                zh: { name: '鍛造', desc: '用神聖原木抽卡！' },
+                th: { name: 'โรงตีเหล็ก', desc: 'สุ่มการ์ดด้วย Sacred Logs!' }
+            },
+            arcade: {
+                en: { name: 'Arcade', desc: 'Mini-games to earn currencies' },
+                zh: { name: '遊樂場', desc: '小遊戲賺取貨幣' },
+                th: { name: 'อาร์เคด', desc: 'มินิเกมเพื่อรับสกุลเงิน' }
+            },
+            merch: {
+                en: { name: 'Merch', desc: 'Guild merchandise store' },
+                zh: { name: '商品', desc: '公會周邊商品店' },
+                th: { name: 'สินค้า', desc: 'ร้านสินค้ากิลด์' }
+            },
+            wallet: {
+                en: { name: 'Wallet', desc: 'Manage your in-game currencies' },
+                zh: { name: '錢包', desc: '管理你的遊戲貨幣' },
+                th: { name: 'กระเป๋าเงิน', desc: 'จัดการสกุลเงินในเกมของคุณ' }
+            },
+            memes: {
+                en: { name: 'Memes', desc: 'Guild meme collection' },
+                zh: { name: '迷因', desc: '公會迷因收藏' },
+                th: { name: 'มีม', desc: 'คอลเลกชันมีมกิลด์' }
+            },
+            fortune: {
+                en: { name: 'Fortune', desc: 'Daily fortune readings' },
+                zh: { name: '占卜', desc: '每日運勢預測' },
+                th: { name: 'ดวง', desc: 'ดูดวงประจำวัน' }
+            },
+            apply: {
+                en: { name: 'Apply', desc: 'Join the guild - apply here!' },
+                zh: { name: '申請', desc: '加入公會 - 在此申請！' },
+                th: { name: 'สมัคร', desc: 'เข้าร่วมกิลด์ - สมัครที่นี่!' }
+            }
+        },
+
+        // UI strings
+        ui: {
+            en: {
+                title: 'NumbahWan Guide',
+                online: '● Online - Here to help!',
+                placeholder: 'Ask me anything...',
+                goTo: 'Go to'
+            },
+            zh: {
+                title: 'NumbahWan 嚮導',
+                online: '● 在線 - 隨時為您服務！',
+                placeholder: '問我任何問題...',
+                goTo: '前往'
+            },
+            th: {
+                title: 'ไกด์ NumbahWan',
+                online: '● ออนไลน์ - พร้อมช่วยเหลือ!',
+                placeholder: 'ถามอะไรก็ได้...',
+                goTo: 'ไปที่'
+            }
+        },
+
+        // Greetings
+        greetings: {
+            en: [
+                "Hey there, adventurer! 👋",
+                "Yo! Need directions? I got you 🗺️",
+                "What's up! Looking for something? 🔍",
+                "Greetings, traveler! 🎮"
+            ],
+            zh: [
+                "嘿，冒險者！👋",
+                "喲！需要指路嗎？交給我 🗺️",
+                "嗨！在找什麼嗎？🔍",
+                "你好，旅人！🎮"
+            ],
+            th: [
+                "สวัสดี นักผจญภัย! 👋",
+                "โย่! ต้องการทิศทางไหม? 🗺️",
+                "ว่าไง! หาอะไรอยู่? 🔍",
+                "ยินดีต้อนรับ นักเดินทาง! 🎮"
+            ]
+        },
+
+        // Intro message after greeting
+        intro: {
+            en: "I know all about this guild site! Ask me anything or tap a suggestion below 👇",
+            zh: "我對這個公會網站瞭如指掌！問我任何問題或點擊下方建議 👇",
+            th: "ฉันรู้ทุกอย่างเกี่ยวกับเว็บกิลด์นี้! ถามอะไรก็ได้หรือแตะคำแนะนำด้านล่าง 👇"
+        },
+
+        // Confused responses
+        confused: {
+            en: [
+                "Hmm, not sure about that one! Try asking about a page 🤔",
+                "My brain hurts! Can you rephrase? 😵",
+                "That's beyond my programming! Try 'show pages' 🤷"
+            ],
+            zh: [
+                "嗯，不太確定耶！試著問問關於頁面的問題 🤔",
+                "我腦袋打結了！能換個說法嗎？😵",
+                "這超出我的能力了！試試「顯示頁面」🤷"
+            ],
+            th: [
+                "อืม ไม่แน่ใจเลย! ลองถามเกี่ยวกับหน้าต่างๆ ดู 🤔",
+                "สมองฉันมึน! พูดใหม่ได้ไหม? 😵",
+                "เกินความสามารถของฉัน! ลอง 'แสดงหน้าทั้งหมด' 🤷"
+            ]
+        },
+
+        // Jokes
+        jokes: {
+            en: [
+                "Why did the guild master cross the road? To avoid doing dailies! 😂",
+                "What's a hacker's favorite snack? Spam! 🥫",
+                "How many MapleStory players to change a lightbulb? None - they're all AFK! 💡"
+            ],
+            zh: [
+                "為什麼會長要過馬路？為了逃避每日任務！😂",
+                "駭客最愛的零食是什麼？垃圾郵件！🥫",
+                "需要多少楓之谷玩家換燈泡？零個——他們都在掛機！💡"
+            ],
+            th: [
+                "ทำไมหัวหน้ากิลด์ถึงข้ามถนน? เพื่อหนีเควสประจำวัน! 😂",
+                "แฮกเกอร์ชอบกินอะไร? สแปม! 🥫",
+                "ต้องใช้ผู้เล่น MapleStory กี่คนเปลี่ยนหลอดไฟ? ไม่มี - พวกเขา AFK หมด! 💡"
+            ]
+        },
+
+        // Page tips
+        tips: {
+            '/': {
+                en: ["Welcome to NumbahWan! Try the 📈 Exchange", "Check out the 🏫 Academy", "New here? Visit the 🏛️ Museum"],
+                zh: ["歡迎來到NumbahWan！試試 📈 交易所", "看看 🏫 學院", "新手？去 🏛️ 博物館"],
+                th: ["ยินดีต้อนรับสู่ NumbahWan! ลอง 📈 Exchange", "ดู 🏫 สถาบัน", "มาใหม่? ไปที่ 🏛️ พิพิธภัณฑ์"]
+            },
+            '/exchange': {
+                en: ["Click headlines - they affect prices!", "Use keyboard: B=Buy, S=Sell"],
+                zh: ["點擊新聞標題——會影響價格！", "快捷鍵：B=買入, S=賣出"],
+                th: ["คลิกพาดหัวข่าว - มีผลต่อราคา!", "ใช้คีย์บอร์ด: B=ซื้อ, S=ขาย"]
+            },
+            '/forge': {
+                en: ["Use 🪵 Sacred Logs to pull cards!", "1 Log = 1 Pull, 5 Logs = Guaranteed Rare+"],
+                zh: ["用 🪵 神聖原木抽卡！", "1原木 = 1抽, 5原木 = 保底稀有+"],
+                th: ["ใช้ 🪵 Sacred Logs สุ่มการ์ด!", "1 Log = 1 สุ่ม, 5 Logs = การันตี Rare+"]
+            },
+            '/arcade': {
+                en: ["Play games to win currencies! 💎🪙⚙️🪨", "Path: Diamond → Gold → Iron → Stone → Log → CARDS!"],
+                zh: ["玩遊戲贏貨幣！💎🪙⚙️🪨", "路徑：鑽石 → 金幣 → 鐵 → 石頭 → 原木 → 卡牌！"],
+                th: ["เล่นเกมรับสกุลเงิน! 💎🪙⚙️🪨", "เส้นทาง: Diamond → Gold → Iron → Stone → Log → CARDS!"]
+            },
+            '/wallet': {
+                en: ["GM Mode: Enter 'numbahwan-gm-2026' for infinite resources!", "Export your wallet for backup"],
+                zh: ["GM模式：輸入 'numbahwan-gm-2026' 獲得無限資源！", "導出錢包以備份"],
+                th: ["GM Mode: ใส่ 'numbahwan-gm-2026' รับทรัพยากรไม่จำกัด!", "ส่งออกกระเป๋าเงินเพื่อสำรองข้อมูล"]
+            },
+            '/merch': {
+                en: ["All items can be bought with USD or guild currencies!", "Premium items need 🪵 Sacred Logs only"],
+                zh: ["所有商品可用美金或公會貨幣購買！", "頂級商品只能用 🪵 神聖原木購買"],
+                th: ["สินค้าทั้งหมดซื้อด้วย USD หรือสกุลเงินกิลด์!", "สินค้าพรีเมี่ยมต้องใช้ 🪵 Sacred Logs เท่านั้น"]
+            }
+        },
+
+        // Suggestion chips
+        chips: {
+            showPages: { en: '📋 Show all pages', zh: '📋 顯示所有頁面', th: '📋 แสดงหน้าทั้งหมด' },
+            tips: { en: '💡 Tips', zh: '💡 提示', th: '💡 เคล็ดลับ' },
+            joke: { en: '😂 Tell a joke', zh: '😂 講個笑話', th: '😂 เล่าเรื่องตลก' },
+            help: { en: '❓ Help', zh: '❓ 幫助', th: '❓ ช่วยเหลือ' },
+            langSwitch: { en: '🌐 Language', zh: '🌐 語言', th: '🌐 ภาษา' }
+        },
+
+        // Language switch
+        langNames: {
+            en: { en: 'English', zh: '英文', th: 'อังกฤษ' },
+            zh: { en: 'Chinese', zh: '中文', th: 'จีน' },
+            th: { en: 'Thai', zh: '泰文', th: 'ไทย' }
+        },
+
+        // Help text
+        help: {
+            en: "I can help you navigate! Try:\n• Ask about any page (Exchange, Forge, etc.)\n• 'show pages' - see all sections\n• 'tips' - get tips for current page\n• 'joke' - I'm hilarious! 😏\n• '🌐 Language' - switch language",
+            zh: "我可以幫你導航！試試：\n• 詢問任何頁面（交易所、鍛造等）\n• 「顯示頁面」- 查看所有區域\n• 「提示」- 獲取當前頁面提示\n• 「笑話」- 我超幽默！😏\n• 「🌐 語言」- 切換語言",
+            th: "ฉันช่วยนำทางได้! ลอง:\n• ถามเกี่ยวกับหน้าใดก็ได้ (Exchange, Forge ฯลฯ)\n• 'แสดงหน้า' - ดูทุกส่วน\n• 'เคล็ดลับ' - รับเคล็ดลับหน้าปัจจุบัน\n• 'ตลก' - ฉันตลกมาก! 😏\n• '🌐 ภาษา' - เปลี่ยนภาษา"
+        }
     };
 
-    // Contextual responses based on current page
-    const PAGE_TIPS = {
-        '/': [
-            "Welcome to NumbahWan! Try the 📈 Exchange for some laughs",
-            "Check out the 🏫 Academy to see our training schedule",
-            "New here? The 🏛️ Museum has our guild history"
-        ],
-        '/exchange': [
-            "Try clicking on news headlines - they affect prices!",
-            "Pro tip: DEAD shorts go up when morale goes down 😏",
-            "Use keyboard: B=Buy, S=Sell, Enter=Execute",
-            "RegginA's Ego (REGO) is always volatile - like the man himself"
-        ],
-        '/academy': [
-            "Swipe through our lunch menu below!",
-            "This is where guild training happens daily",
-            "Tap any food item for a closer look"
-        ],
-        '/museum': [
-            "Each exhibit tells a story of guild legends",
-            "Some artifacts are clickable - try them!",
-            "The deeper you go, the rarer the finds"
-        ],
-        '/vault': [
-            "Security clearance required for deeper levels",
-            "Each floor contains increasingly rare items",
-            "Legend says Floor B12 holds the ultimate treasure"
-        ],
-        '/tcg': [
-            "Pull cards and build your deck!",
-            "Mythic cards are super rare - good luck!",
-            "Cards have special abilities in battle"
-        ],
-        '/forge': [
-            "Use 🪵 Sacred Logs to pull cards!",
-            "1 Log = 1 Pull, 5 Logs = Guaranteed Rare+, 10 Logs = Pity System Active!",
-            "Earn Sacred Logs from the Arcade exchange system",
-            "GM Mode gives infinite resources for testing!"
-        ],
-        '/arcade': [
-            "Play mini-games to win currencies! 💎🪙⚙️🪨",
-            "Use the Exchange section to convert currencies up the chain",
-            "Path: Diamond → Gold → Iron → Stone → Sacred Log → CARDS!",
-            "50 Stone = 1 Sacred Log. Keep grinding!"
-        ],
-        '/wallet': [
-            "Your wallet stores all 5 currencies: Diamond, Gold, Iron, Stone, Sacred Log",
-            "GM Mode: Enter 'numbahwan-gm-2026' in Settings for infinite resources!",
-            "All currencies connect to card acquisition - keep investing!",
-            "Export your wallet for backup, import on other devices"
-        ],
-        '/merch': [
-            "All 16 items can be purchased with USD OR guild currencies!",
-            "Premium items can only be bought with 🪵 Sacred Logs",
-            "Regular items accept 💎 Diamonds - save your logs for cards!",
-            "Find all 16 Easter eggs hidden in products for a surprise!"
-        ],
-        '/market': [
-            "Buy and sell cards using 🪨 Stone currency",
-            "Check the Forge to get more cards to sell",
-            "Prices fluctuate based on rarity and demand"
-        ]
+    // Page paths
+    const PAGE_PATHS = {
+        home: '/', academy: '/academy', exchange: '/exchange', museum: '/museum',
+        vault: '/vault', tcg: '/tcg', market: '/market', forge: '/forge',
+        arcade: '/arcade', merch: '/merch', wallet: '/wallet', memes: '/memes',
+        fortune: '/fortune', apply: '/apply'
     };
 
-    // Fun personality responses
-    const GREETINGS = [
-        "Hey there, adventurer! 👋",
-        "Yo! Need directions? I got you 🗺️",
-        "What's up! Looking for something? 🔍",
-        "Greetings, traveler! 🎮",
-        "*beep boop* How can I help? 🤖"
-    ];
+    // Page emojis
+    const PAGE_EMOJIS = {
+        home: '🏠', academy: '🏫', exchange: '📈', museum: '🏛️', vault: '🔐',
+        tcg: '🃏', market: '🛒', forge: '⚒️', arcade: '🕹️', merch: '👕',
+        wallet: '💰', memes: '😂', fortune: '🔮', apply: '📝'
+    };
 
-    const CONFUSED_RESPONSES = [
-        "Hmm, not sure about that one! Try asking about a page 🤔",
-        "My brain hurts! Can you rephrase? 😵",
-        "That's beyond my programming! Try 'show pages' 🤷",
-        "Error 404: Understanding not found. Try simpler words! 💫"
-    ];
+    // ==================== HELPER FUNCTIONS ====================
+    function t(key) {
+        // Get translation from nested path like "ui.title"
+        const keys = key.split('.');
+        let result = i18n;
+        for (const k of keys) {
+            result = result?.[k];
+        }
+        return result?.[currentLang] || result?.en || key;
+    }
 
-    const JOKES = [
-        "Why did the guild master cross the road? To avoid doing dailies! 😂",
-        "What's a hacker's favorite snack? Spam! 🥫",
-        "Why is DEAD stock always happy? Because it profits from misery! 📉",
-        "How many MapleStory players to change a lightbulb? None - they're all AFK! 💡"
-    ];
+    function tRandom(key) {
+        const arr = t(key);
+        return Array.isArray(arr) ? arr[Math.floor(Math.random() * arr.length)] : arr;
+    }
 
-    // Create the chat UI
+    function getPageInfo(pageKey) {
+        const pageData = i18n.pages[pageKey];
+        if (!pageData) return null;
+        return {
+            path: PAGE_PATHS[pageKey],
+            emoji: PAGE_EMOJIS[pageKey],
+            name: pageData[currentLang]?.name || pageData.en.name,
+            desc: pageData[currentLang]?.desc || pageData.en.desc
+        };
+    }
+
+    // ==================== UI CREATION ====================
     function createChatUI() {
         const style = document.createElement('style');
         style.textContent = `
@@ -202,7 +358,6 @@
                 display: flex;
                 align-items: center;
                 justify-content: center;
-                font-size: 20px;
             }
             .nw-guide-info h3 {
                 color: #fff;
@@ -222,25 +377,24 @@
                 display: flex;
                 flex-direction: column;
                 gap: 12px;
-                min-height: 200px;
-                max-height: 300px;
+                min-height: 150px;
+                max-height: 280px;
             }
-
             .nw-guide-msg {
                 max-width: 85%;
                 padding: 10px 14px;
                 border-radius: 16px;
                 font-size: 13px;
-                line-height: 1.4;
-                animation: nw-msg-pop 0.2s ease;
+                line-height: 1.5;
+                animation: nw-msg-in 0.2s ease;
             }
-            @keyframes nw-msg-pop {
-                from { opacity: 0; transform: scale(0.9); }
+            @keyframes nw-msg-in {
+                from { opacity: 0; transform: scale(0.95); }
                 to { opacity: 1; transform: scale(1); }
             }
             .nw-guide-msg.bot {
-                background: #21262d;
-                color: #c5d1de;
+                background: #1a1f26;
+                color: #e6edf3;
                 border-bottom-left-radius: 4px;
                 align-self: flex-start;
             }
@@ -250,26 +404,57 @@
                 border-bottom-right-radius: 4px;
                 align-self: flex-end;
             }
+            .nw-guide-msg a {
+                color: #ff9500;
+                text-decoration: none;
+                font-weight: 600;
+            }
+            .nw-guide-msg a:hover {
+                text-decoration: underline;
+            }
+
+            .nw-guide-page-link {
+                display: inline-block;
+                margin-top: 8px;
+                padding: 6px 12px;
+                background: rgba(255, 107, 0, 0.15);
+                border: 1px solid rgba(255, 107, 0, 0.3);
+                border-radius: 8px;
+                color: #ff9500 !important;
+                font-size: 12px;
+                transition: all 0.2s;
+            }
+            .nw-guide-page-link:hover {
+                background: rgba(255, 107, 0, 0.25);
+                text-decoration: none !important;
+            }
 
             .nw-guide-suggestions {
+                padding: 12px 16px;
+                border-top: 1px solid #21262d;
                 display: flex;
                 flex-wrap: wrap;
-                gap: 6px;
-                padding: 0 16px 12px;
+                gap: 8px;
             }
             .nw-guide-chip {
                 padding: 6px 12px;
                 background: #21262d;
                 border: 1px solid #30363d;
                 border-radius: 16px;
-                color: #c5d1de;
+                color: #8b949e;
                 font-size: 12px;
                 cursor: pointer;
                 transition: all 0.2s;
+                white-space: nowrap;
             }
             .nw-guide-chip:hover {
                 background: #30363d;
-                border-color: #ff9500;
+                color: #fff;
+                border-color: #ff6b00;
+            }
+            .nw-guide-chip.lang-chip {
+                background: rgba(255, 107, 0, 0.1);
+                border-color: rgba(255, 107, 0, 0.3);
                 color: #ff9500;
             }
 
@@ -282,68 +467,44 @@
             .nw-guide-input {
                 flex: 1;
                 padding: 10px 14px;
-                background: #0d1117;
+                background: #161b22;
                 border: 1px solid #30363d;
-                border-radius: 20px;
-                color: #c5d1de;
+                border-radius: 10px;
+                color: #fff;
                 font-size: 13px;
                 outline: none;
-                transition: border-color 0.2s;
             }
             .nw-guide-input:focus {
-                border-color: #ff9500;
+                border-color: #ff6b00;
             }
             .nw-guide-input::placeholder {
                 color: #484f58;
             }
             .nw-guide-send {
-                width: 36px;
-                height: 36px;
-                border-radius: 50%;
+                padding: 10px 14px;
                 background: linear-gradient(135deg, #ff6b00, #ff9500);
                 border: none;
+                border-radius: 10px;
+                color: #fff;
+                font-size: 14px;
                 cursor: pointer;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                font-size: 16px;
-                transition: transform 0.2s;
+                transition: all 0.2s;
             }
             .nw-guide-send:hover {
-                transform: scale(1.1);
-            }
-
-            .nw-guide-page-link {
-                display: inline-flex;
-                align-items: center;
-                gap: 6px;
-                padding: 6px 10px;
-                background: rgba(255, 149, 0, 0.15);
-                border-radius: 8px;
-                color: #ff9500;
-                text-decoration: none;
-                font-weight: 500;
-                transition: background 0.2s;
-                margin: 4px 0;
-            }
-            .nw-guide-page-link:hover {
-                background: rgba(255, 149, 0, 0.25);
+                transform: scale(1.05);
             }
 
             @media (max-width: 480px) {
-                #nw-guide-chat {
-                    bottom: 80px;
-                    right: 12px;
-                    left: 12px;
-                    width: auto;
-                    max-height: 60vh;
-                }
                 #nw-guide-toggle {
                     bottom: 16px;
                     right: 16px;
-                    width: 52px;
-                    height: 52px;
-                    font-size: 24px;
+                    width: 48px;
+                    height: 48px;
+                }
+                #nw-guide-chat {
+                    bottom: 80px;
+                    right: 16px;
+                    max-width: calc(100vw - 32px);
                 }
             }
         `;
@@ -365,11 +526,20 @@
             </svg>
         `;
         toggle.setAttribute('aria-label', 'Open AI Guide');
-        toggle.title = 'Need help? Click to chat!';
+        toggle.title = currentLang === 'zh' ? '需要幫助？點擊聊天！' : currentLang === 'th' ? 'ต้องการความช่วยเหลือ? คลิกแชท!' : 'Need help? Click to chat!';
 
         // Chat window
         const chat = document.createElement('div');
         chat.id = 'nw-guide-chat';
+        updateChatHTML(chat);
+
+        document.body.appendChild(toggle);
+        document.body.appendChild(chat);
+
+        return { toggle, chat };
+    }
+
+    function updateChatHTML(chat) {
         chat.innerHTML = `
             <div class="nw-guide-header">
                 <div class="nw-guide-avatar">
@@ -382,57 +552,193 @@
                     </svg>
                 </div>
                 <div class="nw-guide-info">
-                    <h3>NumbahWan Guide</h3>
-                    <span>● Online - Here to help!</span>
+                    <h3>${t('ui.title')}</h3>
+                    <span>${t('ui.online')}</span>
                 </div>
             </div>
             <div class="nw-guide-messages" id="nw-guide-messages"></div>
             <div class="nw-guide-suggestions" id="nw-guide-suggestions"></div>
             <div class="nw-guide-input-area">
-                <input type="text" class="nw-guide-input" id="nw-guide-input" placeholder="Ask me anything..." autocomplete="off">
+                <input type="text" class="nw-guide-input" id="nw-guide-input" placeholder="${t('ui.placeholder')}" autocomplete="off">
                 <button class="nw-guide-send" id="nw-guide-send">➤</button>
             </div>
         `;
-
-        document.body.appendChild(toggle);
-        document.body.appendChild(chat);
-
-        return { toggle, chat };
     }
 
-    // Add message to chat
+    // ==================== CHAT FUNCTIONS ====================
     function addMessage(text, isBot = true) {
         const container = document.getElementById('nw-guide-messages');
+        if (!container) return;
         const msg = document.createElement('div');
         msg.className = `nw-guide-msg ${isBot ? 'bot' : 'user'}`;
         msg.innerHTML = text;
         container.appendChild(msg);
         container.scrollTop = container.scrollHeight;
         
-        // Play sound
         if (typeof NW_SOUNDS !== 'undefined') {
             NW_SOUNDS.play('click');
         }
     }
 
-    // Show suggestions
     function showSuggestions(suggestions) {
         const container = document.getElementById('nw-guide-suggestions');
+        if (!container) return;
         container.innerHTML = suggestions.map(s => 
-            `<div class="nw-guide-chip" data-action="${s.action || ''}" data-value="${s.value || ''}">${s.label}</div>`
+            `<div class="nw-guide-chip ${s.isLang ? 'lang-chip' : ''}" data-action="${s.action || ''}" data-value="${s.value || ''}">${s.label}</div>`
         ).join('');
     }
 
-    // Process user input
+    function showContextualSuggestions() {
+        const path = window.location.pathname;
+        const suggestions = [
+            { label: i18n.chips.showPages[currentLang], value: 'show pages' },
+            { label: i18n.chips.tips[currentLang], value: 'tips' },
+            { label: i18n.chips.langSwitch[currentLang], action: 'lang', isLang: true }
+        ];
+        showSuggestions(suggestions);
+    }
+
+    function showLanguageOptions() {
+        const suggestions = [
+            { label: '🇬🇧 English', action: 'setlang', value: 'en', isLang: true },
+            { label: '🇹🇼 繁體中文', action: 'setlang', value: 'zh', isLang: true },
+            { label: '🇹🇭 ภาษาไทย', action: 'setlang', value: 'th', isLang: true }
+        ];
+        const langMsg = {
+            en: "Choose your language:",
+            zh: "選擇你的語言：",
+            th: "เลือกภาษาของคุณ:"
+        };
+        addMessage(langMsg[currentLang]);
+        showSuggestions(suggestions);
+    }
+
+    function setLanguage(lang) {
+        currentLang = lang;
+        localStorage.setItem('numbahwan_lang', lang);
+        
+        // Update chat UI
+        const chat = document.getElementById('nw-guide-chat');
+        if (chat) {
+            const wasOpen = chat.classList.contains('open');
+            const messages = document.getElementById('nw-guide-messages')?.innerHTML || '';
+            updateChatHTML(chat);
+            if (messages) {
+                document.getElementById('nw-guide-messages').innerHTML = messages;
+            }
+            if (wasOpen) chat.classList.add('open');
+            
+            // Rebind events
+            bindInputEvents();
+        }
+
+        // Update toggle tooltip
+        const toggle = document.getElementById('nw-guide-toggle');
+        if (toggle) {
+            toggle.title = currentLang === 'zh' ? '需要幫助？點擊聊天！' : currentLang === 'th' ? 'ต้องการความช่วยเหลือ? คลิกแชท!' : 'Need help? Click to chat!';
+        }
+
+        const confirmMsg = {
+            en: "Language set to English! 🇬🇧",
+            zh: "語言已設定為繁體中文！🇹🇼",
+            th: "ตั้งค่าภาษาเป็นภาษาไทยแล้ว! 🇹🇭"
+        };
+        addMessage(confirmMsg[lang]);
+        showContextualSuggestions();
+
+        // Dispatch event for other components
+        window.dispatchEvent(new CustomEvent('nw-lang-changed', { detail: { lang } }));
+    }
+
+    function respondWithPage(pageKey) {
+        const page = getPageInfo(pageKey);
+        if (!page) return;
+        
+        const goToText = t('ui.goTo');
+        addMessage(`${page.emoji} <strong>${page.name}</strong><br>${page.desc}<br><br><a href="${page.path}" class="nw-guide-page-link">${page.emoji} ${goToText} ${page.name}</a>`);
+        showContextualSuggestions();
+    }
+
+    function respondWithPageList() {
+        const featured = ['exchange', 'forge', 'arcade', 'wallet', 'merch'];
+        const list = featured.map(key => {
+            const p = getPageInfo(key);
+            return p ? `<a href="${p.path}" class="nw-guide-page-link">${p.emoji} ${p.name}</a>` : '';
+        }).filter(Boolean).join(' ');
+        
+        const introText = {
+            en: "Here are some popular spots:",
+            zh: "這裡有一些熱門區域：",
+            th: "นี่คือจุดยอดนิยม:"
+        };
+        addMessage(`${introText[currentLang]}<br><br>${list}`);
+        showContextualSuggestions();
+    }
+
+    function respondWithTips() {
+        const path = window.location.pathname;
+        const tips = i18n.tips[path]?.[currentLang] || i18n.tips['/'][currentLang];
+        const tip = tips[Math.floor(Math.random() * tips.length)];
+        addMessage(`💡 ${tip}`);
+        showContextualSuggestions();
+    }
+
+    function respondWithHelp() {
+        addMessage(t('help').replace(/\n/g, '<br>'));
+        showContextualSuggestions();
+    }
+
+    // ==================== INPUT PROCESSING ====================
     function processInput(input) {
         const lower = input.toLowerCase().trim();
         
-        // Show user message
         addMessage(input, false);
 
-        // Process after small delay for UX
         setTimeout(() => {
-            // Navigation requests
+            // Language detection for Chinese input
+            if (/[\u4e00-\u9fff]/.test(input)) {
+                // Chinese characters detected
+                if (lower.includes('交易') || lower.includes('股票')) return respondWithPage('exchange');
+                if (lower.includes('學院') || lower.includes('訓練')) return respondWithPage('academy');
+                if (lower.includes('博物') || lower.includes('歷史')) return respondWithPage('museum');
+                if (lower.includes('金庫') || lower.includes('寶藏')) return respondWithPage('vault');
+                if (lower.includes('卡') || lower.includes('遊戲')) return respondWithPage('tcg');
+                if (lower.includes('市場') || lower.includes('買') || lower.includes('賣')) return respondWithPage('market');
+                if (lower.includes('鍛造') || lower.includes('抽')) return respondWithPage('forge');
+                if (lower.includes('遊樂') || lower.includes('玩')) return respondWithPage('arcade');
+                if (lower.includes('商品') || lower.includes('周邊')) return respondWithPage('merch');
+                if (lower.includes('錢包') || lower.includes('貨幣')) return respondWithPage('wallet');
+                if (lower.includes('頁面') || lower.includes('全部') || lower.includes('顯示')) return respondWithPageList();
+                if (lower.includes('提示') || lower.includes('幫助')) return respondWithTips();
+                if (lower.includes('笑話') || lower.includes('有趣')) {
+                    addMessage(tRandom('jokes'));
+                    return showContextualSuggestions();
+                }
+                if (lower.includes('語言')) return showLanguageOptions();
+            }
+
+            // Thai detection
+            if (/[\u0E00-\u0E7F]/.test(input)) {
+                if (lower.includes('แลกเปลี่ยน') || lower.includes('หุ้น')) return respondWithPage('exchange');
+                if (lower.includes('สถาบัน') || lower.includes('ฝึก')) return respondWithPage('academy');
+                if (lower.includes('พิพิธภัณฑ์')) return respondWithPage('museum');
+                if (lower.includes('ห้องนิรภัย')) return respondWithPage('vault');
+                if (lower.includes('การ์ด') || lower.includes('เกม')) return respondWithPage('tcg');
+                if (lower.includes('ตลาด') || lower.includes('ซื้อ') || lower.includes('ขาย')) return respondWithPage('market');
+                if (lower.includes('โรงตี') || lower.includes('สุ่ม')) return respondWithPage('forge');
+                if (lower.includes('อาร์เคด') || lower.includes('เล่น')) return respondWithPage('arcade');
+                if (lower.includes('สินค้า')) return respondWithPage('merch');
+                if (lower.includes('กระเป๋า')) return respondWithPage('wallet');
+                if (lower.includes('หน้า') || lower.includes('ทั้งหมด') || lower.includes('แสดง')) return respondWithPageList();
+                if (lower.includes('เคล็ดลับ') || lower.includes('ช่วย')) return respondWithTips();
+                if (lower.includes('ตลก') || lower.includes('ขำ')) {
+                    addMessage(tRandom('jokes'));
+                    return showContextualSuggestions();
+                }
+                if (lower.includes('ภาษา')) return showLanguageOptions();
+            }
+
+            // English keywords
             if (lower.includes('exchange') || lower.includes('stock') || lower.includes('trade')) {
                 respondWithPage('exchange');
             } else if (lower.includes('academy') || lower.includes('train') || lower.includes('schedule')) {
@@ -445,153 +751,94 @@
                 respondWithPage('tcg');
             } else if (lower.includes('market') || lower.includes('buy') || lower.includes('sell')) {
                 respondWithPage('market');
-            } else if (lower.includes('forge') || lower.includes('craft') || lower.includes('upgrade')) {
+            } else if (lower.includes('forge') || lower.includes('craft') || lower.includes('pull')) {
                 respondWithPage('forge');
             } else if (lower.includes('arcade') || lower.includes('game') || lower.includes('play')) {
                 respondWithPage('arcade');
-            } else if (lower.includes('meme') || lower.includes('funny') || lower.includes('laugh')) {
+            } else if (lower.includes('merch') || lower.includes('shop') || lower.includes('store')) {
+                respondWithPage('merch');
+            } else if (lower.includes('wallet') || lower.includes('money') || lower.includes('currency')) {
+                respondWithPage('wallet');
+            } else if (lower.includes('meme') || lower.includes('funny')) {
                 respondWithPage('memes');
-            } else if (lower.includes('fortune') || lower.includes('luck') || lower.includes('predict')) {
+            } else if (lower.includes('fortune') || lower.includes('luck')) {
                 respondWithPage('fortune');
-            } else if (lower.includes('apply') || lower.includes('join') || lower.includes('member')) {
+            } else if (lower.includes('apply') || lower.includes('join')) {
                 respondWithPage('apply');
             } else if (lower.includes('home') || lower.includes('main') || lower.includes('start')) {
                 respondWithPage('home');
-            } else if (lower.includes('ai') && (lower.includes('lounge') || lower.includes('robot') || lower.includes('secret'))) {
-                respondWithPage('aiLounge');
-            } else if (lower.includes('menu') || lower.includes('food') || lower.includes('lunch')) {
-                respondWithPage('menuDemo');
-            } else if (lower.includes('regina') || lower.includes('master') || lower.includes('leader')) {
-                respondWithPage('regina');
-            } else if (lower.includes('zakum') || lower.includes('boss')) {
-                respondWithPage('zakum');
             }
-            // List all pages
+            // Commands
             else if (lower.includes('page') || lower.includes('show') || lower.includes('all') || lower.includes('list')) {
                 respondWithPageList();
             }
-            // Help
             else if (lower.includes('help') || lower === '?') {
                 respondWithHelp();
             }
-            // Joke
             else if (lower.includes('joke') || lower.includes('funny') || lower.includes('lol')) {
-                addMessage(JOKES[Math.floor(Math.random() * JOKES.length)]);
+                addMessage(tRandom('jokes'));
                 showContextualSuggestions();
             }
-            // Tips for current page
-            else if (lower.includes('tip') || lower.includes('hint') || lower.includes('what')) {
+            else if (lower.includes('tip') || lower.includes('hint')) {
                 respondWithTips();
             }
-            // Greeting
-            else if (lower.match(/^(hi|hey|hello|yo|sup)/)) {
-                addMessage(GREETINGS[Math.floor(Math.random() * GREETINGS.length)]);
+            else if (lower.includes('language') || lower.includes('lang') || lower === '🌐') {
+                showLanguageOptions();
+            }
+            else if (lower.match(/^(hi|hey|hello|yo|sup|哈囉|你好|嗨|สวัสดี)/)) {
+                addMessage(tRandom('greetings'));
                 showContextualSuggestions();
             }
-            // Confused
             else {
-                addMessage(CONFUSED_RESPONSES[Math.floor(Math.random() * CONFUSED_RESPONSES.length)]);
+                addMessage(tRandom('confused'));
                 showSuggestions([
-                    { label: '📋 Show all pages', value: 'show all pages' },
-                    { label: '💡 Tips for this page', value: 'tips' },
-                    { label: '😂 Tell a joke', value: 'joke' }
+                    { label: i18n.chips.showPages[currentLang], value: 'show all pages' },
+                    { label: i18n.chips.tips[currentLang], value: 'tips' },
+                    { label: i18n.chips.joke[currentLang], value: 'joke' }
                 ]);
             }
         }, 300);
     }
 
-    // Respond with page info
-    function respondWithPage(pageKey) {
-        const page = PAGES[pageKey];
-        if (!page) return;
+    // ==================== EVENT BINDING ====================
+    function bindInputEvents() {
+        const sendBtn = document.getElementById('nw-guide-send');
+        const input = document.getElementById('nw-guide-input');
         
-        addMessage(`${page.emoji} <strong>${page.name}</strong><br>${page.desc}<br><br><a href="${page.path}" class="nw-guide-page-link">${page.emoji} Go to ${page.name}</a>`);
-        showContextualSuggestions();
-    }
-
-    // List all pages
-    function respondWithPageList() {
-        const featured = ['exchange', 'museum', 'tcg', 'academy', 'memes'];
-        const list = featured.map(key => {
-            const p = PAGES[key];
-            return `<a href="${p.path}" class="nw-guide-page-link">${p.emoji} ${p.name}</a>`;
-        }).join(' ');
-        
-        addMessage(`Here are some popular spots:<br><br>${list}<br><br>Ask me about any specific page!`);
-        showSuggestions([
-            { label: '📈 Exchange', value: 'exchange' },
-            { label: '🃏 Cards', value: 'tcg' },
-            { label: '🏛️ Museum', value: 'museum' }
-        ]);
-    }
-
-    // Help response
-    function respondWithHelp() {
-        addMessage(`I can help you with:<br><br>🗺️ <strong>Navigate</strong> - Just say where you want to go!<br>💡 <strong>Tips</strong> - Ask for tips about the current page<br>📋 <strong>Pages</strong> - Say "show all pages"<br>😂 <strong>Fun</strong> - Ask for a joke!<br><br>Try typing naturally - I'll understand!`);
-        showContextualSuggestions();
-    }
-
-    // Tips for current page
-    function respondWithTips() {
-        const path = window.location.pathname;
-        const tips = PAGE_TIPS[path] || PAGE_TIPS['/'];
-        const tip = tips[Math.floor(Math.random() * tips.length)];
-        addMessage(`💡 <strong>Tip:</strong> ${tip}`);
-        showContextualSuggestions();
-    }
-
-    // Show contextual suggestions based on current page
-    function showContextualSuggestions() {
-        const path = window.location.pathname;
-        let suggestions = [];
-        
-        if (path === '/exchange') {
-            suggestions = [
-                { label: '💡 Trading tips', value: 'tips' },
-                { label: '🏠 Go home', value: 'home' },
-                { label: '🃏 Card game', value: 'tcg' }
-            ];
-        } else if (path === '/academy') {
-            suggestions = [
-                { label: '🍽️ Menu demo', value: 'menu' },
-                { label: '📈 Exchange', value: 'exchange' },
-                { label: '💡 Tips', value: 'tips' }
-            ];
-        } else if (path.includes('museum') || path.includes('vault')) {
-            suggestions = [
-                { label: '🔬 Research', value: 'research' },
-                { label: '💡 Tips', value: 'tips' },
-                { label: '🏠 Go home', value: 'home' }
-            ];
-        } else {
-            suggestions = [
-                { label: '📈 Exchange', value: 'exchange' },
-                { label: '🏛️ Museum', value: 'museum' },
-                { label: '📋 All pages', value: 'show pages' }
-            ];
+        if (sendBtn) {
+            sendBtn.onclick = () => {
+                if (input?.value.trim()) {
+                    processInput(input.value);
+                    input.value = '';
+                }
+            };
         }
         
-        showSuggestions(suggestions);
+        if (input) {
+            input.onkeypress = (e) => {
+                if (e.key === 'Enter' && input.value.trim()) {
+                    processInput(input.value);
+                    input.value = '';
+                }
+            };
+        }
     }
 
-    // Initialize
+    // ==================== INITIALIZATION ====================
     function init() {
         const { toggle, chat } = createChatUI();
         let isOpen = false;
 
-        // Toggle chat
         toggle.addEventListener('click', () => {
             isOpen = !isOpen;
             chat.classList.toggle('open', isOpen);
             toggle.classList.toggle('open', isOpen);
-            // SVG icons toggle via CSS
             
             if (isOpen && document.getElementById('nw-guide-messages').children.length === 0) {
-                // First open - show greeting
                 setTimeout(() => {
-                    addMessage(GREETINGS[Math.floor(Math.random() * GREETINGS.length)]);
+                    addMessage(tRandom('greetings'));
                     setTimeout(() => {
-                        addMessage("I know all about this guild site! Ask me anything or tap a suggestion below 👇");
+                        addMessage(t('intro'));
                         showContextualSuggestions();
                     }, 500);
                 }, 200);
@@ -600,56 +847,48 @@
             if (typeof NW_SOUNDS !== 'undefined') NW_SOUNDS.play('click');
         });
 
-        // Send button
-        document.getElementById('nw-guide-send').addEventListener('click', () => {
-            const input = document.getElementById('nw-guide-input');
-            if (input.value.trim()) {
-                processInput(input.value);
-                input.value = '';
-            }
-        });
-
-        // Enter key
-        document.getElementById('nw-guide-input').addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') {
-                const input = e.target;
-                if (input.value.trim()) {
-                    processInput(input.value);
-                    input.value = '';
-                }
-            }
-        });
+        bindInputEvents();
 
         // Chip clicks
         document.getElementById('nw-guide-suggestions').addEventListener('click', (e) => {
-            if (e.target.classList.contains('nw-guide-chip')) {
-                processInput(e.target.dataset.value || e.target.textContent);
+            const chip = e.target.closest('.nw-guide-chip');
+            if (!chip) return;
+            
+            const action = chip.dataset.action;
+            const value = chip.dataset.value;
+            
+            if (action === 'lang') {
+                showLanguageOptions();
+            } else if (action === 'setlang') {
+                setLanguage(value);
+            } else if (value) {
+                processInput(value);
             }
         });
 
-        // Close on outside click (mobile)
+        // Close on outside click
         document.addEventListener('click', (e) => {
             if (isOpen && !chat.contains(e.target) && !toggle.contains(e.target)) {
                 isOpen = false;
                 chat.classList.remove('open');
                 toggle.classList.remove('open');
-                // SVG icons toggle via CSS
             }
         });
 
-        console.log('🧙 NumbahWan Guide initialized');
+        // Listen for language changes from other components
+        window.addEventListener('storage', (e) => {
+            if (e.key === 'numbahwan_lang' && e.newValue !== currentLang) {
+                currentLang = e.newValue || 'en';
+                const chatEl = document.getElementById('nw-guide-chat');
+                if (chatEl) updateChatHTML(chatEl);
+            }
+        });
     }
 
-    // Auto-init on DOM ready
+    // Start when DOM ready
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', init);
     } else {
         init();
     }
-
-    // Export for manual control
-    window.NW_GUIDE = {
-        open: () => document.getElementById('nw-guide-toggle')?.click(),
-        ask: (q) => processInput(q)
-    };
 })();
