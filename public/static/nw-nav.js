@@ -55,7 +55,8 @@ const NW_NAV = {
                 { id: 'fashion', name: { en: 'Fashion', zh: '時裝', th: 'แฟชั่น' }, icon: 'dress', href: '/fashion' },
                 { id: 'memes', name: { en: 'Memes', zh: '迷因', th: 'มีม' }, icon: 'meme', href: '/memes' },
                 { id: 'academy', name: { en: 'Academy', zh: '學院', th: 'สถาบัน' }, icon: 'scroll', href: '/academy', isNew: true },
-                { id: 'vault', name: { en: 'Vault', zh: '金庫', th: 'ห้องนิรภัย' }, icon: 'lock', href: '/vault', isNew: true }
+                { id: 'vault', name: { en: 'Vault', zh: '金庫', th: 'ห้องนิรภัย' }, icon: 'lock', href: '/vault', isNew: true },
+                { id: 'museum', name: { en: 'Museum', zh: '博物館', th: 'พิพิธภัณฑ์' }, icon: 'crown', href: '/museum', isNew: true }
             ]
         },
         more: {

@@ -1,0 +1,880 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fashion Museum | NumbahWan TCG</title>
+    <link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="/static/nw-nav.js" defer></script>
+    <script src="/static/nw-ux.js" defer></script>
+    <style>
+        :root {
+            --gold: #ffd700;
+            --orange: #ff6b00;
+            --purple: #8b5cf6;
+            --dark: #0a0a0f;
+            --museum-glow: rgba(139, 92, 246, 0.3);
+        }
+        
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html { scroll-behavior: smooth; }
+        body { 
+            font-family: 'Inter', sans-serif; 
+            background: var(--dark); 
+            color: #fff;
+            overflow-x: hidden;
+        }
+        
+        .font-museum { font-family: 'Cinzel', serif; }
+        
+        /* Hero */
+        .hero {
+            min-height: 100vh;
+            background: 
+                radial-gradient(ellipse at 50% 30%, rgba(139,92,246,0.15) 0%, transparent 50%),
+                radial-gradient(ellipse at 20% 70%, rgba(255,215,0,0.1) 0%, transparent 40%),
+                radial-gradient(ellipse at 80% 60%, rgba(255,107,0,0.1) 0%, transparent 40%),
+                linear-gradient(180deg, #0a0a0f 0%, #121218 100%);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding: 2rem;
+            position: relative;
+        }
+        
+        .hero::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.02'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+            pointer-events: none;
+        }
+        
+        .museum-badge {
+            background: linear-gradient(135deg, var(--purple) 0%, #6366f1 100%);
+            color: white;
+            padding: 0.5rem 2rem;
+            font-size: 0.75rem;
+            font-weight: 700;
+            letter-spacing: 4px;
+            border-radius: 2px;
+            margin-bottom: 2rem;
+            box-shadow: 0 0 30px rgba(139,92,246,0.4);
+        }
+        
+        .hero h1 {
+            font-size: clamp(2rem, 6vw, 4rem);
+            background: linear-gradient(180deg, #fff 0%, var(--gold) 50%, var(--orange) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 0 80px rgba(255,215,0,0.3);
+            margin-bottom: 1rem;
+            line-height: 1.1;
+        }
+        
+        .hero-subtitle {
+            font-size: 1rem;
+            color: rgba(255,255,255,0.7);
+            max-width: 650px;
+            margin-bottom: 2rem;
+            line-height: 1.8;
+        }
+        
+        .pixel-accent {
+            display: inline-block;
+            background: linear-gradient(135deg, var(--purple), var(--orange));
+            padding: 2px 8px;
+            font-family: 'Courier New', monospace;
+            font-weight: bold;
+            image-rendering: pixelated;
+        }
+        
+        /* Gallery Grid */
+        .gallery-section {
+            padding: 4rem 1.5rem;
+            background: linear-gradient(180deg, #121218 0%, var(--dark) 100%);
+        }
+        
+        .gallery-header {
+            text-align: center;
+            margin-bottom: 4rem;
+        }
+        
+        .gallery-header h2 {
+            font-size: 2rem;
+            color: var(--gold);
+            margin-bottom: 0.5rem;
+        }
+        
+        .gallery-header p {
+            color: rgba(255,255,255,0.6);
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        
+        .gallery-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        /* Museum Display Case */
+        .display-case {
+            position: relative;
+            background: linear-gradient(145deg, #1a1a24 0%, #0d0d12 100%);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 4px;
+            overflow: hidden;
+            transition: all 0.4s ease;
+            cursor: pointer;
+        }
+        
+        .display-case:hover {
+            transform: translateY(-8px);
+            border-color: rgba(139,92,246,0.5);
+            box-shadow: 
+                0 20px 60px rgba(0,0,0,0.4),
+                0 0 40px rgba(139,92,246,0.2),
+                inset 0 0 60px rgba(139,92,246,0.05);
+        }
+        
+        .case-number {
+            position: absolute;
+            top: 12px;
+            left: 12px;
+            background: rgba(0,0,0,0.6);
+            color: var(--gold);
+            font-family: 'Cinzel', serif;
+            font-size: 0.7rem;
+            font-weight: 700;
+            padding: 4px 10px;
+            letter-spacing: 2px;
+            z-index: 10;
+        }
+        
+        .rarity-badge {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            font-size: 0.65rem;
+            font-weight: 700;
+            padding: 4px 10px;
+            border-radius: 2px;
+            letter-spacing: 1px;
+            z-index: 10;
+        }
+        
+        .rarity-mythic { background: linear-gradient(135deg, #ff6b00, #ffd700); color: #000; }
+        .rarity-legendary { background: linear-gradient(135deg, #8b5cf6, #ec4899); color: #fff; }
+        .rarity-epic { background: linear-gradient(135deg, #6366f1, #3b82f6); color: #fff; }
+        
+        .case-image {
+            width: 100%;
+            aspect-ratio: 4/3;
+            object-fit: cover;
+            transition: transform 0.6s ease;
+        }
+        
+        .display-case:hover .case-image {
+            transform: scale(1.05);
+        }
+        
+        .case-info {
+            padding: 1.5rem;
+            background: linear-gradient(180deg, transparent 0%, rgba(0,0,0,0.8) 100%);
+            position: relative;
+        }
+        
+        .case-info::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 1.5rem;
+            right: 1.5rem;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(255,215,0,0.3), transparent);
+        }
+        
+        .item-name {
+            font-family: 'Cinzel', serif;
+            font-size: 1.1rem;
+            color: #fff;
+            margin-bottom: 0.25rem;
+        }
+        
+        .item-origin {
+            font-size: 0.75rem;
+            color: var(--gold);
+            margin-bottom: 0.75rem;
+            letter-spacing: 1px;
+        }
+        
+        .item-desc {
+            font-size: 0.85rem;
+            color: rgba(255,255,255,0.7);
+            line-height: 1.6;
+            margin-bottom: 1rem;
+        }
+        
+        .item-stats {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+        
+        .stat {
+            background: rgba(255,255,255,0.05);
+            padding: 0.4rem 0.8rem;
+            border-radius: 2px;
+            font-size: 0.7rem;
+        }
+        
+        .stat-label {
+            color: rgba(255,255,255,0.5);
+            margin-right: 0.25rem;
+        }
+        
+        .stat-value {
+            color: var(--gold);
+            font-weight: 600;
+        }
+        
+        /* Featured Section */
+        .featured-section {
+            padding: 6rem 1.5rem;
+            background: 
+                radial-gradient(ellipse at 50% 0%, rgba(139,92,246,0.1) 0%, transparent 50%),
+                var(--dark);
+        }
+        
+        .featured-content {
+            max-width: 1000px;
+            margin: 0 auto;
+            text-align: center;
+        }
+        
+        .featured-badge {
+            display: inline-block;
+            background: linear-gradient(135deg, #ff6b00, #ffd700);
+            color: #000;
+            font-size: 0.7rem;
+            font-weight: 900;
+            padding: 0.5rem 1.5rem;
+            letter-spacing: 3px;
+            margin-bottom: 2rem;
+        }
+        
+        .featured-title {
+            font-size: clamp(1.5rem, 4vw, 2.5rem);
+            color: #fff;
+            margin-bottom: 1rem;
+        }
+        
+        .featured-desc {
+            color: rgba(255,255,255,0.7);
+            max-width: 700px;
+            margin: 0 auto 3rem;
+            line-height: 1.8;
+        }
+        
+        /* CTA */
+        .cta-section {
+            padding: 4rem 1.5rem;
+            background: linear-gradient(180deg, var(--dark) 0%, #0a0a0f 100%);
+            text-align: center;
+        }
+        
+        .cta-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: linear-gradient(135deg, var(--orange) 0%, var(--gold) 100%);
+            color: #000;
+            font-weight: 700;
+            padding: 1rem 2rem;
+            border-radius: 4px;
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+        
+        .cta-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 40px rgba(255,107,0,0.4);
+        }
+        
+        /* Footer */
+        .museum-footer {
+            padding: 2rem;
+            text-align: center;
+            background: #050508;
+            border-top: 1px solid rgba(255,255,255,0.05);
+        }
+        
+        .museum-footer p {
+            color: rgba(255,255,255,0.4);
+            font-size: 0.85rem;
+        }
+        
+        /* Lightbox */
+        .lightbox {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.95);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            padding: 2rem;
+        }
+        
+        .lightbox.active { display: flex; }
+        
+        .lightbox-content {
+            max-width: 900px;
+            width: 100%;
+        }
+        
+        .lightbox img {
+            width: 100%;
+            border-radius: 4px;
+            box-shadow: 0 20px 80px rgba(0,0,0,0.8);
+        }
+        
+        .lightbox-close {
+            position: absolute;
+            top: 2rem;
+            right: 2rem;
+            background: none;
+            border: none;
+            color: #fff;
+            font-size: 2rem;
+            cursor: pointer;
+            opacity: 0.6;
+            transition: opacity 0.2s;
+        }
+        
+        .lightbox-close:hover { opacity: 1; }
+        
+        .lightbox-info {
+            text-align: center;
+            margin-top: 1.5rem;
+        }
+        
+        .lightbox-info h3 {
+            font-family: 'Cinzel', serif;
+            font-size: 1.5rem;
+            color: var(--gold);
+            margin-bottom: 0.5rem;
+        }
+        
+        .lightbox-info p {
+            color: rgba(255,255,255,0.7);
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            .gallery-grid { grid-template-columns: 1fr; }
+            .hero h1 { font-size: 2rem; }
+            .item-stats { flex-direction: column; gap: 0.5rem; }
+        }
+    </style>
+</head>
+<body>
+    <!-- Hero -->
+    <section class="hero">
+        <div class="museum-badge" data-i18n="museumBadge">FASHION MUSEUM</div>
+        <h1 class="font-museum" data-i18n="museumTitle">The NumbahWan<br>Fashion Vault</h1>
+        <p class="hero-subtitle" data-i18n="museumSubtitle">
+            Behold the most coveted pixelated treasures from MapleStory history. Each item preserved in museum-grade glass cases with climate control, UV protection, and 24K gold plaques. More secure than the Vatican, more prestigious than the Louvre.
+        </p>
+        <a href="#gallery" class="cta-btn" data-i18n="viewCollection">View Collection ↓</a>
+    </section>
+    
+    <!-- Gallery -->
+    <section id="gallery" class="gallery-section">
+        <div class="gallery-header">
+            <h2 class="font-museum" data-i18n="galleryTitle">The Permanent Collection</h2>
+            <p data-i18n="galleryDesc">10 legendary items from MapleStory's golden era. Click any display case for detailed examination.</p>
+        </div>
+        
+        <div class="gallery-grid">
+            <!-- Item 1: Zakum Helmet -->
+            <article class="display-case" onclick="openLightbox(0)">
+                <div class="case-number">EXHIBIT 001</div>
+                <div class="rarity-badge rarity-mythic" data-i18n="rarityMythic">MYTHIC</div>
+                <img src="/static/images/museum/zakum-helmet.webp" alt="Zakum Helmet" class="case-image" loading="lazy">
+                <div class="case-info">
+                    <h3 class="item-name" data-i18n="item1Name">Zakum Helmet</h3>
+                    <div class="item-origin" data-i18n="item1Origin">BOSS DROP • CIRCA 2005</div>
+                    <p class="item-desc" data-i18n="item1Desc">The ultimate status symbol. Dropped only from Zakum, this helmet defined an entire generation of Maplers. Its golden pixelated glory represents countless hours of party coordination and epic battles.</p>
+                    <div class="item-stats">
+                        <div class="stat"><span class="stat-label" data-i18n="dropRate">Drop Rate:</span><span class="stat-value">0.01%</span></div>
+                        <div class="stat"><span class="stat-label" data-i18n="era">Era:</span><span class="stat-value">Big Bang</span></div>
+                    </div>
+                </div>
+            </article>
+            
+            <!-- Item 2: Pink Adventurer Cape -->
+            <article class="display-case" onclick="openLightbox(1)">
+                <div class="case-number">EXHIBIT 002</div>
+                <div class="rarity-badge rarity-legendary" data-i18n="rarityLegendary">LEGENDARY</div>
+                <img src="/static/images/museum/pink-adventurer-cape.webp" alt="Pink Adventurer Cape" class="case-image" loading="lazy">
+                <div class="case-info">
+                    <h3 class="item-name" data-i18n="item2Name">Pink Adventurer Cape</h3>
+                    <div class="item-origin" data-i18n="item2Origin">CASH SHOP CLASSIC • 2004</div>
+                    <p class="item-desc" data-i18n="item2Desc">The cape that launched a thousand fashionistas. This vibrant pink cape became the universal symbol of style in early MapleStory, worn by veterans and newbies alike.</p>
+                    <div class="item-stats">
+                        <div class="stat"><span class="stat-label" data-i18n="popularity">Popularity:</span><span class="stat-value">★★★★★</span></div>
+                        <div class="stat"><span class="stat-label" data-i18n="era">Era:</span><span class="stat-value">Beta</span></div>
+                    </div>
+                </div>
+            </article>
+            
+            <!-- Item 3: Sauna Robe -->
+            <article class="display-case" onclick="openLightbox(2)">
+                <div class="case-number">EXHIBIT 003</div>
+                <div class="rarity-badge rarity-legendary" data-i18n="rarityLegendary">LEGENDARY</div>
+                <img src="/static/images/museum/sauna-robe.webp" alt="Sauna Robe" class="case-image" loading="lazy">
+                <div class="case-info">
+                    <h3 class="item-name" data-i18n="item3Name">Sauna Robe / Bathrobe</h3>
+                    <div class="item-origin" data-i18n="item3Origin">NPC CRAFT • 2003</div>
+                    <p class="item-desc" data-i18n="item3Desc">The iconic white bathrobe that every low-level character aspired to craft. A rite of passage in early Maple, representing the transition from noob to seasoned player.</p>
+                    <div class="item-stats">
+                        <div class="stat"><span class="stat-label" data-i18n="craftLevel">Craft Level:</span><span class="stat-value">Lv. 20</span></div>
+                        <div class="stat"><span class="stat-label" data-i18n="materials">Materials:</span><span class="stat-value">10 Leather</span></div>
+                    </div>
+                </div>
+            </article>
+            
+            <!-- Item 4: Spectrum Goggles -->
+            <article class="display-case" onclick="openLightbox(3)">
+                <div class="case-number">EXHIBIT 004</div>
+                <div class="rarity-badge rarity-mythic" data-i18n="rarityMythic">MYTHIC</div>
+                <img src="/static/images/museum/spectrum-goggles.webp" alt="Spectrum Goggles" class="case-image" loading="lazy">
+                <div class="case-info">
+                    <h3 class="item-name" data-i18n="item4Name">Spectrum Goggles</h3>
+                    <div class="item-origin" data-i18n="item4Origin">RARE DROP • LIMITED</div>
+                    <p class="item-desc" data-i18n="item4Desc">These rainbow-tinted goggles were among the rarest face accessories in the game. Their chromatic shimmer made every wearer stand out in the crowded streets of Henesys.</p>
+                    <div class="item-stats">
+                        <div class="stat"><span class="stat-label" data-i18n="rarity">Rarity:</span><span class="stat-value">Ultra Rare</span></div>
+                        <div class="stat"><span class="stat-label" data-i18n="slot">Slot:</span><span class="stat-value">Face</span></div>
+                    </div>
+                </div>
+            </article>
+            
+            <!-- Item 5: Work Gloves -->
+            <article class="display-case" onclick="openLightbox(4)">
+                <div class="case-number">EXHIBIT 005</div>
+                <div class="rarity-badge rarity-legendary" data-i18n="rarityLegendary">LEGENDARY</div>
+                <img src="/static/images/museum/work-gloves.webp" alt="Work Gloves" class="case-image" loading="lazy">
+                <div class="case-info">
+                    <h3 class="item-name" data-i18n="item5Name">7-Slot Work Gloves</h3>
+                    <div class="item-origin" data-i18n="item5Origin">SCROLLING LEGEND • 2005</div>
+                    <p class="item-desc" data-i18n="item5Desc">The holy grail of scrolling. Finding a clean pair with 7 upgrade slots was every merchant's dream. Perfectly scrolled Work Gloves sold for billions of mesos.</p>
+                    <div class="item-stats">
+                        <div class="stat"><span class="stat-label" data-i18n="slots">Slots:</span><span class="stat-value">7/7</span></div>
+                        <div class="stat"><span class="stat-label" data-i18n="scrollSuccess">Scroll Success:</span><span class="stat-value">10%</span></div>
+                    </div>
+                </div>
+            </article>
+            
+            <!-- Item 6: Maple Bandana -->
+            <article class="display-case" onclick="openLightbox(5)">
+                <div class="case-number">EXHIBIT 006</div>
+                <div class="rarity-badge rarity-epic" data-i18n="rarityEpic">EPIC</div>
+                <img src="/static/images/museum/maple-bandana.webp" alt="Maple Bandana" class="case-image" loading="lazy">
+                <div class="case-info">
+                    <h3 class="item-name" data-i18n="item6Name">Maple Bandana</h3>
+                    <div class="item-origin" data-i18n="item6Origin">ANNIVERSARY EVENT • 2003</div>
+                    <p class="item-desc" data-i18n="item6Desc">The original anniversary headwear. This red bandana with the maple leaf emblem was given to players during MapleStory's first birthday celebration. A true collector's piece.</p>
+                    <div class="item-stats">
+                        <div class="stat"><span class="stat-label" data-i18n="event">Event:</span><span class="stat-value">1st Anniversary</span></div>
+                        <div class="stat"><span class="stat-label" data-i18n="tradeable">Tradeable:</span><span class="stat-value">No</span></div>
+                    </div>
+                </div>
+            </article>
+            
+            <!-- Item 7: Tree Branch Nose -->
+            <article class="display-case" onclick="openLightbox(6)">
+                <div class="case-number">EXHIBIT 007</div>
+                <div class="rarity-badge rarity-epic" data-i18n="rarityEpic">EPIC</div>
+                <img src="/static/images/museum/tree-branch-nose.webp" alt="Tree Branch Nose" class="case-image" loading="lazy">
+                <div class="case-info">
+                    <h3 class="item-name" data-i18n="item7Name">Tree Branch Nose</h3>
+                    <div class="item-origin" data-i18n="item7Origin">MONSTER DROP • CLASSIC</div>
+                    <p class="item-desc" data-i18n="item7Desc">The quirkiest face accessory in MapleStory history. This wooden branch nose gave characters a comical, Pinocchio-like appearance that became an ironic fashion statement.</p>
+                    <div class="item-stats">
+                        <div class="stat"><span class="stat-label" data-i18n="dropFrom">Drops From:</span><span class="stat-value">Stumpy</span></div>
+                        <div class="stat"><span class="stat-label" data-i18n="slot">Slot:</span><span class="stat-value">Face</span></div>
+                    </div>
+                </div>
+            </article>
+            
+            <!-- Item 8: Facestompers -->
+            <article class="display-case" onclick="openLightbox(7)">
+                <div class="case-number">EXHIBIT 008</div>
+                <div class="rarity-badge rarity-mythic" data-i18n="rarityMythic">MYTHIC</div>
+                <img src="/static/images/museum/facestompers.webp" alt="Facestompers" class="case-image" loading="lazy">
+                <div class="case-info">
+                    <h3 class="item-name" data-i18n="item8Name">Facestompers</h3>
+                    <div class="item-origin" data-i18n="item8Origin">BOSS DROP • RARE</div>
+                    <p class="item-desc" data-i18n="item8Desc">These aggressive-looking boots were the footwear of choice for serious warriors. Their chunky pixel design and gold trim made them instantly recognizable across all servers.</p>
+                    <div class="item-stats">
+                        <div class="stat"><span class="stat-label" data-i18n="defense">Defense:</span><span class="stat-value">+15</span></div>
+                        <div class="stat"><span class="stat-label" data-i18n="speed">Speed:</span><span class="stat-value">+5</span></div>
+                    </div>
+                </div>
+            </article>
+            
+            <!-- Item 9: Red Whip -->
+            <article class="display-case" onclick="openLightbox(8)">
+                <div class="case-number">EXHIBIT 009</div>
+                <div class="rarity-badge rarity-legendary" data-i18n="rarityLegendary">LEGENDARY</div>
+                <img src="/static/images/museum/red-whip.webp" alt="Red Whip" class="case-image" loading="lazy">
+                <div class="case-info">
+                    <h3 class="item-name" data-i18n="item9Name">Red Whip</h3>
+                    <div class="item-origin" data-i18n="item9Origin">NX CASH SHOP • LIMITED</div>
+                    <p class="item-desc" data-i18n="item9Desc">A fashion weapon that made a statement. This crimson whip was purely cosmetic but became a status symbol for players who wanted their characters to look powerful and stylish.</p>
+                    <div class="item-stats">
+                        <div class="stat"><span class="stat-label" data-i18n="type">Type:</span><span class="stat-value">Cash Weapon</span></div>
+                        <div class="stat"><span class="stat-label" data-i18n="price">Price:</span><span class="stat-value">3,600 NX</span></div>
+                    </div>
+                </div>
+            </article>
+            
+            <!-- Item 10: Transparent Set -->
+            <article class="display-case" onclick="openLightbox(9)">
+                <div class="case-number">EXHIBIT 010</div>
+                <div class="rarity-badge rarity-mythic" data-i18n="rarityMythic">MYTHIC</div>
+                <img src="/static/images/museum/transparent-set.webp" alt="Transparent Equipment Set" class="case-image" loading="lazy">
+                <div class="case-info">
+                    <h3 class="item-name" data-i18n="item10Name">Transparent Equipment Set</h3>
+                    <div class="item-origin" data-i18n="item10Origin">CASH SHOP • WHALE EXCLUSIVE</div>
+                    <p class="item-desc" data-i18n="item10Desc">The ultimate flex. A complete set of permanent transparent equipment (hat, overall, gloves, cape, shoes) that hides all gear for a clean avatar look. Total cost: Your entire wallet.</p>
+                    <div class="item-stats">
+                        <div class="stat"><span class="stat-label" data-i18n="pieces">Pieces:</span><span class="stat-value">5/5</span></div>
+                        <div class="stat"><span class="stat-label" data-i18n="totalCost">Total Cost:</span><span class="stat-value">$200+</span></div>
+                    </div>
+                </div>
+            </article>
+        </div>
+    </section>
+    
+    <!-- Featured -->
+    <section class="featured-section">
+        <div class="featured-content">
+            <div class="featured-badge" data-i18n="curatorNote">CURATOR'S NOTE</div>
+            <h2 class="font-museum featured-title" data-i18n="featuredTitle">The Pixel Art Preservation Initiative</h2>
+            <p class="featured-desc" data-i18n="featuredDesc">
+                Each item in this collection has been digitally preserved using museum-grade archival techniques. Our climate-controlled display cases maintain optimal temperature (18.5°C) and humidity (45%) to prevent pixel degradation. UV-filtering glass ensures these treasures will remain vibrant for generations to come.
+            </p>
+        </div>
+    </section>
+    
+    <!-- CTA -->
+    <section class="cta-section">
+        <h2 class="font-museum" style="font-size: 1.8rem; margin-bottom: 1rem;" data-i18n="ctaTitle">Start Your Own Collection</h2>
+        <p style="color: rgba(255,255,255,0.6); margin-bottom: 2rem; max-width: 500px; margin-left: auto; margin-right: auto;" data-i18n="ctaDesc">
+            You may never own the originals, but NumbahWan TCG lets you collect digital treasures of your own.
+        </p>
+        <a href="/forge" class="cta-btn" data-i18n="openPacks">Open Card Packs →</a>
+    </section>
+    
+    <!-- Footer -->
+    <footer class="museum-footer">
+        <p data-i18n="footerText">NumbahWan Fashion Museum • Est. 2024 • Preserving Pixel Heritage</p>
+    </footer>
+    
+    <!-- Lightbox -->
+    <div class="lightbox" id="lightbox">
+        <button class="lightbox-close" onclick="closeLightbox()">×</button>
+        <div class="lightbox-content">
+            <img id="lightbox-img" src="" alt="">
+            <div class="lightbox-info">
+                <h3 id="lightbox-title"></h3>
+                <p id="lightbox-desc"></p>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Museum items data
+        const items = [
+            { img: '/static/images/museum/zakum-helmet.webp', name: 'Zakum Helmet', desc: 'The legendary boss drop helmet that defined MapleStory.' },
+            { img: '/static/images/museum/pink-adventurer-cape.webp', name: 'Pink Adventurer Cape', desc: 'The iconic pink cape that started FashionStory.' },
+            { img: '/static/images/museum/sauna-robe.webp', name: 'Sauna Robe', desc: 'The classic bathrobe every noob worked to craft.' },
+            { img: '/static/images/museum/spectrum-goggles.webp', name: 'Spectrum Goggles', desc: 'Rainbow-tinted goggles of legendary rarity.' },
+            { img: '/static/images/museum/work-gloves.webp', name: '7-Slot Work Gloves', desc: 'The holy grail of scrolling and merchanting.' },
+            { img: '/static/images/museum/maple-bandana.webp', name: 'Maple Bandana', desc: 'Anniversary event headwear from 2003.' },
+            { img: '/static/images/museum/tree-branch-nose.webp', name: 'Tree Branch Nose', desc: 'The quirkiest face accessory in Maple history.' },
+            { img: '/static/images/museum/facestompers.webp', name: 'Facestompers', desc: 'Aggressive warrior boots with gold trim.' },
+            { img: '/static/images/museum/red-whip.webp', name: 'Red Whip', desc: 'A fashion weapon that made a statement.' },
+            { img: '/static/images/museum/transparent-set.webp', name: 'Transparent Set', desc: 'The ultimate whale flex - complete invisible gear.' }
+        ];
+        
+        function openLightbox(index) {
+            const item = items[index];
+            document.getElementById('lightbox-img').src = item.img;
+            document.getElementById('lightbox-title').textContent = item.name;
+            document.getElementById('lightbox-desc').textContent = item.desc;
+            document.getElementById('lightbox').classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+        
+        function closeLightbox() {
+            document.getElementById('lightbox').classList.remove('active');
+            document.body.style.overflow = '';
+        }
+        
+        // Close on escape key
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') closeLightbox();
+        });
+        
+        // Close on background click
+        document.getElementById('lightbox').addEventListener('click', (e) => {
+            if (e.target === document.getElementById('lightbox')) closeLightbox();
+        });
+        
+        // i18n
+        const MUSEUM_I18N = {
+            en: {
+                museumBadge: "FASHION MUSEUM",
+                museumTitle: "The NumbahWan<br>Fashion Vault",
+                museumSubtitle: "Behold the most coveted pixelated treasures from MapleStory history. Each item preserved in museum-grade glass cases with climate control, UV protection, and 24K gold plaques. More secure than the Vatican, more prestigious than the Louvre.",
+                viewCollection: "View Collection ↓",
+                galleryTitle: "The Permanent Collection",
+                galleryDesc: "10 legendary items from MapleStory's golden era. Click any display case for detailed examination.",
+                rarityMythic: "MYTHIC",
+                rarityLegendary: "LEGENDARY",
+                rarityEpic: "EPIC",
+                item1Name: "Zakum Helmet",
+                item1Origin: "BOSS DROP • CIRCA 2005",
+                item1Desc: "The ultimate status symbol. Dropped only from Zakum, this helmet defined an entire generation of Maplers. Its golden pixelated glory represents countless hours of party coordination and epic battles.",
+                item2Name: "Pink Adventurer Cape",
+                item2Origin: "CASH SHOP CLASSIC • 2004",
+                item2Desc: "The cape that launched a thousand fashionistas. This vibrant pink cape became the universal symbol of style in early MapleStory, worn by veterans and newbies alike.",
+                item3Name: "Sauna Robe / Bathrobe",
+                item3Origin: "NPC CRAFT • 2003",
+                item3Desc: "The iconic white bathrobe that every low-level character aspired to craft. A rite of passage in early Maple, representing the transition from noob to seasoned player.",
+                item4Name: "Spectrum Goggles",
+                item4Origin: "RARE DROP • LIMITED",
+                item4Desc: "These rainbow-tinted goggles were among the rarest face accessories in the game. Their chromatic shimmer made every wearer stand out in the crowded streets of Henesys.",
+                item5Name: "7-Slot Work Gloves",
+                item5Origin: "SCROLLING LEGEND • 2005",
+                item5Desc: "The holy grail of scrolling. Finding a clean pair with 7 upgrade slots was every merchant's dream. Perfectly scrolled Work Gloves sold for billions of mesos.",
+                item6Name: "Maple Bandana",
+                item6Origin: "ANNIVERSARY EVENT • 2003",
+                item6Desc: "The original anniversary headwear. This red bandana with the maple leaf emblem was given to players during MapleStory's first birthday celebration. A true collector's piece.",
+                item7Name: "Tree Branch Nose",
+                item7Origin: "MONSTER DROP • CLASSIC",
+                item7Desc: "The quirkiest face accessory in MapleStory history. This wooden branch nose gave characters a comical, Pinocchio-like appearance that became an ironic fashion statement.",
+                item8Name: "Facestompers",
+                item8Origin: "BOSS DROP • RARE",
+                item8Desc: "These aggressive-looking boots were the footwear of choice for serious warriors. Their chunky pixel design and gold trim made them instantly recognizable across all servers.",
+                item9Name: "Red Whip",
+                item9Origin: "NX CASH SHOP • LIMITED",
+                item9Desc: "A fashion weapon that made a statement. This crimson whip was purely cosmetic but became a status symbol for players who wanted their characters to look powerful and stylish.",
+                item10Name: "Transparent Equipment Set",
+                item10Origin: "CASH SHOP • WHALE EXCLUSIVE",
+                item10Desc: "The ultimate flex. A complete set of permanent transparent equipment (hat, overall, gloves, cape, shoes) that hides all gear for a clean avatar look. Total cost: Your entire wallet.",
+                dropRate: "Drop Rate:",
+                era: "Era:",
+                popularity: "Popularity:",
+                craftLevel: "Craft Level:",
+                materials: "Materials:",
+                rarity: "Rarity:",
+                slot: "Slot:",
+                slots: "Slots:",
+                scrollSuccess: "Scroll Success:",
+                event: "Event:",
+                tradeable: "Tradeable:",
+                dropFrom: "Drops From:",
+                defense: "Defense:",
+                speed: "Speed:",
+                type: "Type:",
+                price: "Price:",
+                pieces: "Pieces:",
+                totalCost: "Total Cost:",
+                curatorNote: "CURATOR'S NOTE",
+                featuredTitle: "The Pixel Art Preservation Initiative",
+                featuredDesc: "Each item in this collection has been digitally preserved using museum-grade archival techniques. Our climate-controlled display cases maintain optimal temperature (18.5°C) and humidity (45%) to prevent pixel degradation. UV-filtering glass ensures these treasures will remain vibrant for generations to come.",
+                ctaTitle: "Start Your Own Collection",
+                ctaDesc: "You may never own the originals, but NumbahWan TCG lets you collect digital treasures of your own.",
+                openPacks: "Open Card Packs →",
+                footerText: "NumbahWan Fashion Museum • Est. 2024 • Preserving Pixel Heritage"
+            },
+            zh: {
+                museumBadge: "時裝博物館",
+                museumTitle: "NumbahWan<br>時裝金庫",
+                museumSubtitle: "欣賞楓之谷歷史上最令人嚮往的像素寶藏。每件物品都保存在博物館級玻璃展示櫃中，配備氣候控制、紫外線防護和24K金銘牌。比梵蒂岡更安全，比羅浮宮更尊貴。",
+                viewCollection: "查看收藏 ↓",
+                galleryTitle: "永久收藏",
+                galleryDesc: "來自楓之谷黃金時代的10件傳奇物品。點擊任何展示櫃進行詳細檢視。",
+                rarityMythic: "神話",
+                rarityLegendary: "傳說",
+                rarityEpic: "史詩",
+                item1Name: "乎妲帽",
+                item1Origin: "頭目掉落 • 約2005年",
+                item1Desc: "終極身份象徵。只有乎妲會掉落，這頂頭盔定義了整整一代的楓谷玩家。金色的像素光輝代表著無數小時的組隊協調和史詩戰鬥。",
+                item2Name: "粉紅冒險披風",
+                item2Origin: "商城經典 • 2004年",
+                item2Desc: "開啟千人時尚的披風。這件鮮艷的粉紅披風成為早期楓之谷的通用時尚符號，老手新手都愛穿。",
+                item3Name: "浴袍 / 三溫暖袍",
+                item3Origin: "NPC製作 • 2003年",
+                item3Desc: "每個低等角色都渴望製作的經典白色浴袍。是早期楓之谷的成年禮，代表從新手到老手的蛻變。",
+                item4Name: "光譜護目鏡",
+                item4Origin: "稀有掉落 • 限定",
+                item4Desc: "這副彩虹色護目鏡是遊戲中最稀有的臉部配飾之一。它的色彩光澤讓每位佩戴者在擁擠的弓箭手村街道上脫穎而出。",
+                item5Name: "7孔工作手套",
+                item5Origin: "卷軸傳奇 • 2005年",
+                item5Desc: "卷軸的聖杯。找到一副乾淨的7升級孔手套是每個商人的夢想。完美衝卷的工作手套售價高達數十億楓幣。",
+                item6Name: "楓葉頭巾",
+                item6Origin: "週年活動 • 2003年",
+                item6Desc: "原版週年頭飾。這條帶有楓葉徽章的紅色頭巾是楓之谷一週年慶典期間送給玩家的。真正的收藏品。",
+                item7Name: "樹枝鼻子",
+                item7Origin: "怪物掉落 • 經典",
+                item7Desc: "楓之谷歷史上最古怪的臉部配飾。這個木製樹枝鼻子讓角色有種滑稽的木偶奇遇記外觀，成為諷刺的時尚宣言。",
+                item8Name: "踐踏者",
+                item8Origin: "頭目掉落 • 稀有",
+                item8Desc: "這雙外型凶狠的靴子是認真戰士的首選鞋履。粗獷的像素設計和金色飾邊讓它們在所有伺服器上都能被立即認出。",
+                item9Name: "紅色鞭子",
+                item9Origin: "NX商城 • 限定",
+                item9Desc: "一件表達態度的時裝武器。這把深紅色鞭子純粹是裝飾品，但成為想讓角色看起來強大又時尚的玩家的身份象徵。",
+                item10Name: "透明裝備套組",
+                item10Origin: "商城 • 課長專屬",
+                item10Desc: "終極炫耀。一整套永久透明裝備（帽子、衣服、手套、披風、鞋子）可以隱藏所有裝備，呈現乾淨的虛擬形象。總花費：你整個錢包。",
+                dropRate: "掉落率：",
+                era: "時代：",
+                popularity: "人氣：",
+                craftLevel: "製作等級：",
+                materials: "材料：",
+                rarity: "稀有度：",
+                slot: "部位：",
+                slots: "孔位：",
+                scrollSuccess: "卷軸成功率：",
+                event: "活動：",
+                tradeable: "可交易：",
+                dropFrom: "掉落來源：",
+                defense: "防禦：",
+                speed: "速度：",
+                type: "類型：",
+                price: "價格：",
+                pieces: "件數：",
+                totalCost: "總花費：",
+                curatorNote: "策展人筆記",
+                featuredTitle: "像素藝術保存計畫",
+                featuredDesc: "本收藏中的每件物品都使用博物館級檔案技術進行數位保存。我們的氣候控制展示櫃保持最佳溫度（18.5°C）和濕度（45%）以防止像素退化。紫外線過濾玻璃確保這些寶藏在未來世代中保持鮮艷。",
+                ctaTitle: "開始你的收藏",
+                ctaDesc: "你可能永遠無法擁有原版，但NumbahWan TCG讓你收集屬於自己的數位寶藏。",
+                openPacks: "開啟卡包 →",
+                footerText: "NumbahWan時裝博物館 • 創立於2024 • 守護像素遺產"
+            },
+            th: {
+                museumBadge: "พิพิธภัณฑ์แฟชั่น",
+                museumTitle: "NumbahWan<br>ห้องนิรภัยแฟชั่น",
+                museumSubtitle: "ชมสมบัติพิกเซลที่เป็นที่ต้องการมากที่สุดจากประวัติศาสตร์ MapleStory ทุกชิ้นถูกเก็บรักษาในตู้กระจกระดับพิพิธภัณฑ์พร้อมระบบควบคุมอากาศ การป้องกัน UV และป้ายทองคำ 24K ปลอดภัยกว่าวาติกัน มีเกียรติกว่าลูฟวร์",
+                viewCollection: "ดูคอลเลกชัน ↓",
+                galleryTitle: "คอลเลกชันถาวร",
+                galleryDesc: "10 ไอเทมในตำนานจากยุคทองของ MapleStory คลิกตู้จัดแสดงใดก็ได้เพื่อตรวจสอบรายละเอียด",
+                rarityMythic: "ตำนาน",
+                rarityLegendary: "ในตำนาน",
+                rarityEpic: "มหากาพย์",
+                item1Name: "หมวก Zakum",
+                item1Origin: "ดรอปจากบอส • ประมาณ 2005",
+                item1Desc: "สัญลักษณ์สถานะสูงสุด ดรอปเฉพาะจาก Zakum เท่านั้น หมวกนี้กำหนดนิยามของ Maplers ทั้งรุ่น ความรุ่งโรจน์ของพิกเซลสีทองแทนชั่วโมงนับไม่ถ้วนของการประสานปาร์ตี้และการต่อสู้มหากาพย์",
+                item2Name: "ผ้าคลุมนักผจญภัยสีชมพู",
+                item2Origin: "คลาสสิค CASH SHOP • 2004",
+                item2Desc: "ผ้าคลุมที่เปิดตัวแฟชั่นนิสต้านับพัน ผ้าคลุมสีชมพูสดใสนี้กลายเป็นสัญลักษณ์สไตล์สากลใน MapleStory ยุคแรก ทั้งมือเก่าและมือใหม่ต่างสวมใส่",
+                item3Name: "เสื้อคลุมอาบน้ำ / ชุดซาวน่า",
+                item3Origin: "คราฟต์ NPC • 2003",
+                item3Desc: "เสื้อคลุมอาบน้ำสีขาวในตำนานที่ตัวละครเลเวลต่ำทุกตัวใฝ่ฝันที่จะคราฟต์ เป็นพิธีกรรมผ่านด่านใน Maple ยุคแรก แทนการเปลี่ยนจากมือใหม่เป็นผู้เล่นช่ำชอง",
+                item4Name: "แว่นตาสเปกตรัม",
+                item4Origin: "ดรอปหายาก • จำกัด",
+                item4Desc: "แว่นตาสีรุ้งเหล่านี้เป็นหนึ่งในอุปกรณ์หน้าที่หายากที่สุดในเกม ความเปล่งประกายของสีทำให้ผู้สวมใส่ทุกคนโดดเด่นในถนนที่พลุกพล่านของ Henesys",
+                item5Name: "ถุงมืองาน 7 ช่อง",
+                item5Origin: "ตำนานม้วน • 2005",
+                item5Desc: "จอกศักดิ์สิทธิ์ของการม้วน การหาคู่ที่สะอาดพร้อมช่องอัปเกรด 7 ช่องเป็นความฝันของพ่อค้าทุกคน ถุงมืองานที่ม้วนสมบูรณ์แบบขายได้หลายพันล้านเมโส",
+                item6Name: "ผ้าโพกหัวเมเปิล",
+                item6Origin: "อีเวนต์ครบรอบ • 2003",
+                item6Desc: "หมวกครบรอบต้นฉบับ ผ้าโพกหัวสีแดงพร้อมตราใบเมเปิลนี้มอบให้ผู้เล่นระหว่างงานเฉลิมฉลองวันเกิดปีแรกของ MapleStory ชิ้นสะสมแท้จริง",
+                item7Name: "จมูกกิ่งไม้",
+                item7Origin: "ดรอปมอนสเตอร์ • คลาสสิค",
+                item7Desc: "อุปกรณ์หน้าแปลกประหลาดที่สุดในประวัติศาสตร์ MapleStory จมูกกิ่งไม้นี้ทำให้ตัวละครมีรูปลักษณ์ตลกแบบ Pinocchio ที่กลายเป็นแถลงการณ์แฟชั่นประชด",
+                item8Name: "รองเท้าเหยียบหน้า",
+                item8Origin: "ดรอปจากบอส • หายาก",
+                item8Desc: "รองเท้าบู๊ตที่ดูดุดันเหล่านี้เป็นรองเท้าที่นักรบจริงจังเลือกใช้ ดีไซน์พิกเซลหนาและขอบทองทำให้จดจำได้ทันทีในทุกเซิร์ฟเวอร์",
+                item9Name: "แส้แดง",
+                item9Origin: "NX CASH SHOP • จำกัด",
+                item9Desc: "อาวุธแฟชั่นที่แสดงออก แส้สีแดงเข้มนี้เป็นเครื่องประดับล้วนๆ แต่กลายเป็นสัญลักษณ์สถานะสำหรับผู้เล่นที่ต้องการให้ตัวละครดูทรงพลังและมีสไตล์",
+                item10Name: "ชุดอุปกรณ์โปร่งใส",
+                item10Origin: "CASH SHOP • เฉพาะวาฬ",
+                item10Desc: "การโชว์สุดยอด ชุดอุปกรณ์โปร่งใสถาวรครบชุด (หมวก, ชุด, ถุงมือ, ผ้าคลุม, รองเท้า) ที่ซ่อนอุปกรณ์ทั้งหมดเพื่อรูปลักษณ์อวาตาร์ที่สะอาด ต้นทุนรวม: กระเป๋าเงินทั้งหมดของคุณ",
+                dropRate: "อัตราดรอป:",
+                era: "ยุค:",
+                popularity: "ความนิยม:",
+                craftLevel: "เลเวลคราฟต์:",
+                materials: "วัสดุ:",
+                rarity: "ความหายาก:",
+                slot: "ช่อง:",
+                slots: "ช่อง:",
+                scrollSuccess: "ความสำเร็จม้วน:",
+                event: "อีเวนต์:",
+                tradeable: "ซื้อขายได้:",
+                dropFrom: "ดรอปจาก:",
+                defense: "ป้องกัน:",
+                speed: "ความเร็ว:",
+                type: "ประเภท:",
+                price: "ราคา:",
+                pieces: "ชิ้น:",
+                totalCost: "ต้นทุนรวม:",
+                curatorNote: "บันทึกภัณฑารักษ์",
+                featuredTitle: "โครงการอนุรักษ์ศิลปะพิกเซล",
+                featuredDesc: "แต่ละชิ้นในคอลเลกชันนี้ได้รับการอนุรักษ์แบบดิจิทัลโดยใช้เทคนิคจดหมายเหตุระดับพิพิธภัณฑ์ ตู้จัดแสดงควบคุมอากาศของเรารักษาอุณหภูมิที่เหมาะสม (18.5°C) และความชื้น (45%) เพื่อป้องกันความเสื่อมของพิกเซล กระจกกรอง UV ทำให้สมบัติเหล่านี้ยังคงสดใสสำหรับคนรุ่นต่อไป",
+                ctaTitle: "เริ่มคอลเลกชันของคุณ",
+                ctaDesc: "คุณอาจไม่มีวันเป็นเจ้าของต้นฉบับ แต่ NumbahWan TCG ให้คุณสะสมสมบัติดิจิทัลของคุณเอง",
+                openPacks: "เปิดแพ็คการ์ด →",
+                footerText: "พิพิธภัณฑ์แฟชั่น NumbahWan • ก่อตั้ง 2024 • อนุรักษ์มรดกพิกเซล"
+            }
+        };
+        
+        function applyI18n(lang) {
+            const strings = MUSEUM_I18N[lang] || MUSEUM_I18N.en;
+            document.querySelectorAll('[data-i18n]').forEach(el => {
+                const key = el.getAttribute('data-i18n');
+                if (strings[key]) {
+                    if (el.tagName === 'INPUT') {
+                        el.placeholder = strings[key];
+                    } else {
+                        el.innerHTML = strings[key];
+                    }
+                }
+            });
+        }
+        
+        // Listen for language changes
+        window.addEventListener('nw-lang-change', (e) => {
+            applyI18n(e.detail.lang);
+        });
+        
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            const lang = localStorage.getItem('lang') || localStorage.getItem('nw_lang') || 'en';
+            applyI18n(lang);
+            
+            // Init nav
+            if (typeof NW_NAV !== 'undefined') {
+                NW_NAV.init('museum');
+            }
+        });
+    </script>
+</body>
+</html>
