@@ -7,6 +7,7 @@
     <link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
     <script src="/static/nw-wallet.js"></script>
+    <script src="/static/nw-economy.js"></script>
     <script src="/static/nw-sounds.js" defer></script>
     <script src="/static/nw-guide.js" defer></script>
     <style>
@@ -23,11 +24,6 @@
             --iron: #94a3b8;
             --stone: #00ff88;
             --wood: #c97f3d;
-            --mythic: #ff00ff;
-            --legendary: #ffd700;
-            --epic: #a855f7;
-            --rare: #3b82f6;
-            --common: #6b7280;
         }
         
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -40,11 +36,9 @@
             padding-bottom: 100px;
         }
         
-        /* Hide the floating bar on wallet page */
         .nw-bottom-bar { display: none !important; }
         body.nw-bottom-bar-active { padding-bottom: 100px !important; }
         
-        /* Header */
         .header {
             position: sticky;
             top: 0;
@@ -61,16 +55,9 @@
             justify-content: space-between;
             align-items: center;
         }
-        .header h1 {
-            font-size: 18px;
-            font-weight: 700;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
+        .header h1 { font-size: 18px; font-weight: 700; }
         .back-btn {
-            width: 36px;
-            height: 36px;
+            width: 36px; height: 36px;
             background: var(--card);
             border: 1px solid var(--border);
             border-radius: 10px;
@@ -79,10 +66,7 @@
             align-items: center;
             justify-content: center;
             text-decoration: none;
-            transition: all 0.2s;
         }
-        .back-btn:hover { background: var(--card-hover); }
-        
         .guest-id {
             font-family: 'JetBrains Mono', monospace;
             font-size: 11px;
@@ -103,231 +87,230 @@
             padding: 20px;
         }
         
-        /* Balance Card */
-        .balance-card {
-            background: linear-gradient(135deg, #1a1a25 0%, #12121a 100%);
-            border: 1px solid var(--border);
-            border-radius: 20px;
-            padding: 20px;
+        /* Currency Cards */
+        .currency-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
             margin-bottom: 20px;
         }
-        .balance-header {
+        .currency-card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 16px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .currency-card:hover {
+            border-color: var(--primary);
+            transform: translateY(-2px);
+        }
+        .currency-card.expanded {
+            border-color: var(--primary);
+        }
+        .currency-card.diamond { border-left: 3px solid var(--diamond); }
+        .currency-card.gold { border-left: 3px solid var(--gold); }
+        .currency-card.iron { border-left: 3px solid var(--iron); }
+        .currency-card.stone { border-left: 3px solid var(--stone); }
+        .currency-card.wood { 
+            border-left: 3px solid var(--wood);
+            background: linear-gradient(135deg, rgba(201, 127, 61, 0.1), var(--card));
+        }
+        
+        .currency-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .currency-icon {
+            width: 44px; height: 44px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            background: rgba(255,255,255,0.05);
+        }
+        .currency-info { flex: 1; }
+        .currency-name {
+            font-size: 14px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .currency-tier {
+            font-size: 9px;
+            padding: 2px 6px;
+            border-radius: 4px;
+            background: rgba(255,255,255,0.1);
+            text-transform: uppercase;
+        }
+        .currency-tier.premium { background: rgba(0,255,255,0.2); color: var(--diamond); }
+        .currency-tier.legendary { background: rgba(201,127,61,0.3); color: var(--wood); }
+        .currency-desc {
+            font-size: 11px;
+            color: var(--text-dim);
+            margin-top: 2px;
+        }
+        .currency-balance {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 20px;
+            font-weight: 700;
+            text-align: right;
+        }
+        .currency-balance.diamond { color: var(--diamond); }
+        .currency-balance.gold { color: var(--gold); }
+        .currency-balance.iron { color: var(--iron); }
+        .currency-balance.stone { color: var(--stone); }
+        .currency-balance.wood { color: var(--wood); }
+        
+        /* Expanded Details */
+        .currency-details {
+            display: none;
+            margin-top: 16px;
+            padding-top: 16px;
+            border-top: 1px solid var(--border);
+        }
+        .currency-card.expanded .currency-details {
+            display: block;
+            animation: slideDown 0.2s ease;
+        }
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .detail-section {
+            margin-bottom: 14px;
+        }
+        .detail-title {
+            font-size: 10px;
+            color: var(--text-dim);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 8px;
+        }
+        .detail-list {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        .detail-item {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 16px;
+            font-size: 12px;
+            padding: 8px 10px;
+            background: rgba(0,0,0,0.3);
+            border-radius: 8px;
         }
-        .balance-label {
+        .detail-item .action { color: var(--text); }
+        .detail-item .cost {
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 600;
+        }
+        .detail-item .note {
+            font-size: 10px;
+            color: var(--text-dim);
+            margin-left: 4px;
+        }
+        
+        .earn-tag {
+            display: inline-block;
+            font-size: 10px;
+            padding: 4px 8px;
+            background: rgba(34, 197, 94, 0.2);
+            color: #22c55e;
+            border-radius: 6px;
+            margin: 2px;
+        }
+        
+        /* Quick Actions */
+        .section-title {
             font-size: 12px;
             color: var(--text-dim);
             text-transform: uppercase;
             letter-spacing: 1px;
+            margin: 24px 0 12px;
         }
-        .gm-badge {
-            background: linear-gradient(135deg, #ffd700, #ff6b00);
-            color: #000;
-            padding: 4px 10px;
-            border-radius: 12px;
-            font-size: 11px;
-            font-weight: 700;
-            display: none;
-        }
-        .gm-badge.active { display: inline-block; }
         
-        .balance-grid {
+        .quick-grid {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
             gap: 12px;
         }
-        .balance-item {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            padding: 12px;
-            background: rgba(0,0,0,0.3);
-            border-radius: 12px;
-            border: 1px solid var(--border);
-        }
-        .balance-item.wood {
-            grid-column: 1 / -1;
-            background: linear-gradient(135deg, rgba(201, 127, 61, 0.15), rgba(0,0,0,0.3));
-            border-color: rgba(201, 127, 61, 0.3);
-        }
-        .balance-icon {
-            width: 36px;
-            height: 36px;
-            border-radius: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        .balance-icon img {
-            width: 24px;
-            height: 24px;
-            object-fit: contain;
-        }
-        .balance-info { flex: 1; }
-        .balance-name { font-size: 12px; color: var(--text-dim); }
-        .balance-amount {
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 18px;
-            font-weight: 600;
-        }
-        .balance-amount.diamond { color: var(--diamond); }
-        .balance-amount.gold { color: var(--gold); }
-        .balance-amount.iron { color: var(--iron); }
-        .balance-amount.stone { color: var(--stone); }
-        .balance-amount.wood { color: var(--wood); }
-        
-        /* Stats Row */
-        .stats-row {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 12px;
-            margin-bottom: 20px;
-        }
-        .stat-card {
-            background: var(--card);
-            border: 1px solid var(--border);
-            border-radius: 12px;
-            padding: 14px;
-            text-align: center;
-        }
-        .stat-value {
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 22px;
-            font-weight: 700;
-            color: var(--primary);
-        }
-        .stat-label {
-            font-size: 10px;
-            color: var(--text-dim);
-            text-transform: uppercase;
-            margin-top: 4px;
-        }
-        
-        /* Tab Navigation */
-        .tabs {
-            display: flex;
-            gap: 8px;
-            margin-bottom: 20px;
-            padding: 4px;
-            background: var(--card);
-            border-radius: 14px;
-        }
-        .tab {
-            flex: 1;
-            padding: 12px;
-            background: transparent;
-            border: none;
-            border-radius: 10px;
-            color: var(--text-dim);
-            font-size: 13px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-        .tab.active {
-            background: var(--primary);
-            color: white;
-        }
-        .tab:not(.active):hover {
-            color: var(--text);
-            background: var(--card-hover);
-        }
-        
-        /* Panel */
-        .panel { display: none; }
-        .panel.active {
-            display: block;
-            animation: fadeIn 0.2s ease;
-        }
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        
-        /* Transactions Panel */
-        .tx-list {
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-        }
-        .tx-item {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            padding: 14px;
-            background: var(--card);
-            border: 1px solid var(--border);
-            border-radius: 12px;
-        }
-        .tx-icon {
-            width: 40px;
-            height: 40px;
-            border-radius: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 18px;
-            background: rgba(255,255,255,0.05);
-        }
-        .tx-info { flex: 1; min-width: 0; }
-        .tx-title {
-            font-size: 13px;
-            font-weight: 600;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-        .tx-time {
-            font-size: 11px;
-            color: var(--text-dim);
-        }
-        .tx-amount {
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 13px;
-            font-weight: 600;
-            text-align: right;
-        }
-        .tx-amount.positive { color: #22c55e; }
-        .tx-amount.negative { color: #ef4444; }
-        
-        .empty-state {
-            text-align: center;
-            padding: 40px 20px;
-            color: var(--text-dim);
-        }
-        .empty-state-icon { font-size: 48px; margin-bottom: 12px; opacity: 0.5; }
-        
-        /* Quick Actions */
-        .quick-actions {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 12px;
-            margin-top: 24px;
-        }
-        .quick-btn {
-            padding: 16px 12px;
+        .quick-card {
             background: var(--card);
             border: 1px solid var(--border);
             border-radius: 14px;
-            color: var(--text);
+            padding: 16px;
+            text-align: center;
             text-decoration: none;
-            text-align: center;
+            color: var(--text);
             transition: all 0.2s;
         }
-        .quick-btn:hover {
-            background: var(--card-hover);
+        .quick-card:hover {
             border-color: var(--primary);
             transform: translateY(-2px);
         }
-        .quick-btn-icon { font-size: 24px; margin-bottom: 8px; }
-        .quick-btn-label { font-size: 12px; font-weight: 600; }
+        .quick-icon { font-size: 28px; margin-bottom: 8px; }
+        .quick-label { font-size: 13px; font-weight: 600; }
+        .quick-sub { font-size: 10px; color: var(--text-dim); margin-top: 4px; }
+        
+        /* Daily Rewards Preview */
+        .daily-preview {
+            background: linear-gradient(135deg, var(--card), rgba(255,107,0,0.1));
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 16px;
+            margin-top: 20px;
+        }
+        .daily-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+        .daily-title {
+            font-size: 14px;
+            font-weight: 600;
+        }
+        .daily-streak {
+            font-size: 12px;
+            color: var(--primary);
+            font-weight: 600;
+        }
+        .daily-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 6px;
+        }
+        .daily-day {
+            text-align: center;
+            padding: 8px 4px;
+            background: rgba(0,0,0,0.3);
+            border-radius: 8px;
+            font-size: 10px;
+        }
+        .daily-day.claimed {
+            background: rgba(34, 197, 94, 0.2);
+            border: 1px solid #22c55e;
+        }
+        .daily-day.current {
+            background: rgba(255, 107, 0, 0.2);
+            border: 1px solid var(--primary);
+        }
+        .daily-day .day-num { font-weight: 600; margin-bottom: 4px; }
+        .daily-day .day-reward { font-size: 14px; }
+        .daily-day.day7 {
+            background: linear-gradient(135deg, rgba(201,127,61,0.3), rgba(0,0,0,0.3));
+        }
         
         /* GM Section */
         .gm-section {
-            margin-top: 24px;
+            margin-top: 20px;
             padding: 16px;
             background: var(--card);
             border: 1px dashed var(--border);
@@ -342,14 +325,8 @@
             font-size: 12px;
             color: var(--text-dim);
             margin-bottom: 12px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
         }
-        .gm-input-row {
-            display: flex;
-            gap: 8px;
-        }
+        .gm-input-row { display: flex; gap: 8px; }
         .gm-input {
             flex: 1;
             padding: 10px 12px;
@@ -360,7 +337,6 @@
             font-family: 'JetBrains Mono', monospace;
             font-size: 12px;
         }
-        .gm-input:focus { outline: none; border-color: var(--primary); }
         .gm-btn {
             padding: 10px 16px;
             background: linear-gradient(135deg, #ffd700, #ff6b00);
@@ -370,22 +346,13 @@
             font-weight: 700;
             font-size: 12px;
             cursor: pointer;
-            transition: transform 0.2s;
         }
-        .gm-btn:hover { transform: scale(1.05); }
         .gm-btn.deactivate {
             background: var(--card-hover);
             color: var(--text-dim);
         }
-        .gm-status {
-            margin-top: 12px;
-            font-size: 11px;
-            color: var(--text-dim);
-        }
-        .gm-status.success { color: #22c55e; }
-        .gm-status.error { color: #ef4444; }
         
-        /* Footer nav */
+        /* Footer */
         .footer-nav {
             position: fixed;
             bottom: 0;
@@ -411,15 +378,12 @@
             color: var(--text-dim);
             text-decoration: none;
             font-size: 10px;
-            transition: color 0.2s;
         }
         .footer-item.active { color: var(--primary); }
-        .footer-item:hover { color: var(--text); }
         .footer-icon { font-size: 20px; }
     </style>
 </head>
 <body>
-    <!-- Header -->
     <header class="header">
         <div class="header-inner">
             <a href="/" class="back-btn">←</a>
@@ -429,350 +393,187 @@
     </header>
     
     <div class="container">
-        <!-- Balance Card -->
-        <div class="balance-card">
-            <div class="balance-header">
-                <div class="balance-label">Your Balance</div>
-                <div class="gm-badge" id="gmBadge">👑 GM MODE</div>
-            </div>
-            <div class="balance-grid">
-                <div class="balance-item">
-                    <div class="balance-icon">
-                        <img src="/static/icons/diamond.svg" alt="Diamond">
-                    </div>
-                    <div class="balance-info">
-                        <div class="balance-name">Diamond</div>
-                        <div class="balance-amount diamond" id="balDiamond">0</div>
-                    </div>
-                </div>
-                <div class="balance-item">
-                    <div class="balance-icon">
-                        <img src="/static/icons/gold.svg" alt="Gold">
-                    </div>
-                    <div class="balance-info">
-                        <div class="balance-name">Gold</div>
-                        <div class="balance-amount gold" id="balGold">0</div>
-                    </div>
-                </div>
-                <div class="balance-item">
-                    <div class="balance-icon">
-                        <img src="/static/icons/iron.svg" alt="Iron">
-                    </div>
-                    <div class="balance-info">
-                        <div class="balance-name">Iron</div>
-                        <div class="balance-amount iron" id="balIron">0</div>
-                    </div>
-                </div>
-                <div class="balance-item">
-                    <div class="balance-icon">
-                        <img src="/static/icons/black-jade.svg" alt="Stone">
-                    </div>
-                    <div class="balance-info">
-                        <div class="balance-name">Stone</div>
-                        <div class="balance-amount stone" id="balStone">0</div>
-                    </div>
-                </div>
-                <div class="balance-item wood">
-                    <div class="balance-icon">
-                        <img src="/static/icons/sacred-log-64.webp" alt="Sacred Log">
-                    </div>
-                    <div class="balance-info">
-                        <div class="balance-name">Sacred Log</div>
-                        <div class="balance-amount wood" id="balWood">0</div>
-                    </div>
-                </div>
-            </div>
-        </div>
+        <!-- Currency Cards -->
+        <div class="currency-grid" id="currencyGrid"></div>
         
-        <!-- Stats Row -->
-        <div class="stats-row">
-            <div class="stat-card">
-                <div class="stat-value" id="statPulls">0</div>
-                <div class="stat-label">Pulls</div>
+        <!-- Daily Rewards -->
+        <div class="daily-preview">
+            <div class="daily-header">
+                <div class="daily-title">📅 Daily Rewards</div>
+                <div class="daily-streak" id="dailyStreak">Day 1</div>
             </div>
-            <div class="stat-card">
-                <div class="stat-value" id="statCards">0</div>
-                <div class="stat-label">Cards</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-value" id="statMythics">0</div>
-                <div class="stat-label">Mythics</div>
-            </div>
-        </div>
-        
-        <!-- Tabs -->
-        <div class="tabs">
-            <button class="tab active" data-tab="history">📜 History</button>
-            <button class="tab" data-tab="settings">⚙️ Settings</button>
-        </div>
-        
-        <!-- History Panel -->
-        <div class="panel active" id="historyPanel">
-            <div class="tx-list" id="txList">
-                <div class="empty-state">
-                    <div class="empty-state-icon">📜</div>
-                    <div>Loading transactions...</div>
-                </div>
-            </div>
-        </div>
-        
-        <!-- Settings Panel -->
-        <div class="panel" id="settingsPanel">
-            <!-- GM Section -->
-            <div class="gm-section" id="gmSection">
-                <div class="gm-title">
-                    👑 Game Master Mode
-                </div>
-                <div class="gm-input-row" id="gmActivateRow">
-                    <input type="password" class="gm-input" id="gmCode" placeholder="Enter GM code...">
-                    <button class="gm-btn" onclick="activateGM()">Activate</button>
-                </div>
-                <div class="gm-input-row" id="gmDeactivateRow" style="display: none;">
-                    <button class="gm-btn deactivate" onclick="deactivateGM()" style="width: 100%;">Deactivate GM Mode</button>
-                </div>
-                <div class="gm-status" id="gmStatus"></div>
-            </div>
-            
-            <!-- Export/Import -->
-            <div class="gm-section" style="margin-top: 16px;">
-                <div class="gm-title">💾 Backup & Restore</div>
-                <div class="gm-input-row">
-                    <button class="gm-btn deactivate" onclick="exportWallet()" style="flex: 1;">Export</button>
-                    <button class="gm-btn deactivate" onclick="promptImport()" style="flex: 1;">Import</button>
-                </div>
-            </div>
+            <div class="daily-grid" id="dailyGrid"></div>
         </div>
         
         <!-- Quick Actions -->
-        <div class="quick-actions">
-            <a href="/forge" class="quick-btn">
-                <div class="quick-btn-icon">🔮</div>
-                <div class="quick-btn-label">Forge</div>
+        <div class="section-title">Quick Actions</div>
+        <div class="quick-grid">
+            <a href="/forge" class="quick-card">
+                <div class="quick-icon">🔮</div>
+                <div class="quick-label">Forge</div>
+                <div class="quick-sub">Pull cards</div>
             </a>
-            <a href="/market" class="quick-btn">
-                <div class="quick-btn-icon">🛒</div>
-                <div class="quick-btn-label">Market</div>
+            <a href="/merch" class="quick-card">
+                <div class="quick-icon">👕</div>
+                <div class="quick-label">Merch</div>
+                <div class="quick-sub">Spend currency</div>
             </a>
-            <a href="/tcg" class="quick-btn">
-                <div class="quick-btn-icon">🃏</div>
-                <div class="quick-btn-label">Cards</div>
+            <a href="/market" class="quick-card">
+                <div class="quick-icon">🛒</div>
+                <div class="quick-label">Market</div>
+                <div class="quick-sub">Trade cards</div>
             </a>
+            <a href="/tcg" class="quick-card">
+                <div class="quick-icon">🃏</div>
+                <div class="quick-label">Collection</div>
+                <div class="quick-sub">View cards</div>
+            </a>
+        </div>
+        
+        <!-- GM Section -->
+        <div class="gm-section" id="gmSection">
+            <div class="gm-title">👑 Game Master Mode</div>
+            <div class="gm-input-row" id="gmActivateRow">
+                <input type="password" class="gm-input" id="gmCode" placeholder="Enter GM code...">
+                <button class="gm-btn" onclick="activateGM()">Activate</button>
+            </div>
+            <div class="gm-input-row" id="gmDeactivateRow" style="display: none;">
+                <button class="gm-btn deactivate" onclick="deactivateGM()" style="width: 100%;">Deactivate GM Mode</button>
+            </div>
         </div>
     </div>
     
-    <!-- Footer Navigation -->
     <nav class="footer-nav">
         <div class="footer-inner">
-            <a href="/" class="footer-item">
-                <span class="footer-icon">🏠</span>
-                Home
-            </a>
-            <a href="/forge" class="footer-item">
-                <span class="footer-icon">🔮</span>
-                Forge
-            </a>
-            <a href="/wallet" class="footer-item active">
-                <span class="footer-icon">💰</span>
-                Wallet
-            </a>
-            <a href="/market" class="footer-item">
-                <span class="footer-icon">🛒</span>
-                Market
-            </a>
+            <a href="/" class="footer-item"><span class="footer-icon">🏠</span>Home</a>
+            <a href="/forge" class="footer-item"><span class="footer-icon">🔮</span>Forge</a>
+            <a href="/wallet" class="footer-item active"><span class="footer-icon">💰</span>Wallet</a>
+            <a href="/merch" class="footer-item"><span class="footer-icon">👕</span>Merch</a>
         </div>
     </nav>
 
     <script>
-    // Format number with K/M suffix
     function formatNum(n) {
         if (n >= 1000000) return (n/1000000).toFixed(1) + 'M';
         if (n >= 1000) return (n/1000).toFixed(1) + 'K';
         return n.toLocaleString();
     }
     
-    // Format time ago
-    function timeAgo(timestamp) {
-        const seconds = Math.floor((Date.now() - timestamp) / 1000);
-        if (seconds < 60) return 'Just now';
-        if (seconds < 3600) return Math.floor(seconds / 60) + 'm ago';
-        if (seconds < 86400) return Math.floor(seconds / 3600) + 'h ago';
-        return Math.floor(seconds / 86400) + 'd ago';
-    }
-    
-    // Update UI with wallet data
-    function updateUI() {
-        if (!NW_WALLET.initialized) return;
-        
-        const info = NW_WALLET.getWalletInfo();
+    function renderCurrencies() {
+        const grid = document.getElementById('currencyGrid');
+        const balances = NW_WALLET.getAllBalances();
         const isGM = NW_WALLET.isGMMode();
         
-        // Guest ID
-        const guestEl = document.getElementById('guestId');
-        if (isGM) {
-            guestEl.textContent = '👑 GM';
-            guestEl.classList.add('gm');
-        } else {
-            guestEl.textContent = info.guestId || 'Guest';
-            guestEl.classList.remove('gm');
-        }
+        const order = ['diamond', 'gold', 'iron', 'stone', 'wood'];
         
-        // GM Badge
-        document.getElementById('gmBadge').classList.toggle('active', isGM);
-        
-        // Balances
-        const bal = info.currencies || {};
-        document.getElementById('balDiamond').textContent = formatNum(bal.diamond || 0);
-        document.getElementById('balGold').textContent = formatNum(bal.gold || 0);
-        document.getElementById('balIron').textContent = formatNum(bal.iron || 0);
-        document.getElementById('balStone').textContent = formatNum(bal.stone || 0);
-        document.getElementById('balWood').textContent = formatNum(bal.wood || 0);
-        
-        // Stats
-        const stats = info.stats || {};
-        document.getElementById('statPulls').textContent = stats.pullsMade || 0;
-        document.getElementById('statCards').textContent = NW_WALLET.getCollection().length;
-        document.getElementById('statMythics').textContent = stats.mythicsPulled || 0;
-        
-        // GM Section
-        const gmSection = document.getElementById('gmSection');
-        document.getElementById('gmActivateRow').style.display = isGM ? 'none' : 'flex';
-        document.getElementById('gmDeactivateRow').style.display = isGM ? 'flex' : 'none';
-        gmSection.classList.toggle('active', isGM);
-    }
-    
-    // Render transaction history
-    function renderHistory() {
-        const logs = NW_WALLET.getLogs(30);
-        const list = document.getElementById('txList');
-        
-        if (!logs || logs.length === 0) {
-            list.innerHTML = `
-                <div class="empty-state">
-                    <div class="empty-state-icon">📜</div>
-                    <div>No transactions yet</div>
+        grid.innerHTML = order.map(id => {
+            const c = NW_ECONOMY.currencies[id];
+            const bal = balances[id] || 0;
+            
+            const usesHtml = c.uses.map(u => `
+                <div class="detail-item">
+                    <span class="action">${u.action}</span>
+                    <span class="cost">${u.cost}${u.note ? `<span class="note">${u.note}</span>` : ''}</span>
                 </div>
-            `;
-            return;
-        }
-        
-        // Map action types to display
-        const actionMap = {
-            'EARN': { icon: '💰', title: 'Earned' },
-            'SPEND': { icon: '🛒', title: 'Spent' },
-            'CARD_PULL': { icon: '🎴', title: 'Card Pull' },
-            'COLLECTION_ADD': { icon: '✨', title: 'New Card!' },
-            'COLLECTION_DUPLICATE': { icon: '📈', title: 'Duplicate' },
-            'EXCHANGE': { icon: '🔄', title: 'Exchange' },
-            'SESSION_START': { icon: '👋', title: 'Session' },
-            'GM_MODE_ACTIVATED': { icon: '👑', title: 'GM Activated' },
-            'GM_MODE_ACTIVATED_MANUAL': { icon: '👑', title: 'GM Activated' },
-            'GM_MODE_DEACTIVATED': { icon: '🔒', title: 'GM Deactivated' }
-        };
-        
-        list.innerHTML = logs.slice(0, 20).map(log => {
-            const action = actionMap[log.action] || { icon: '📝', title: log.action };
-            const details = log.details || {};
+            `).join('');
             
-            let amountText = '';
-            if (details.amount && details.currency) {
-                const sign = log.action === 'SPEND' ? '-' : '+';
-                amountText = `<div class="tx-amount ${log.action === 'SPEND' ? 'negative' : 'positive'}">${sign}${details.amount} ${details.currency}</div>`;
-            }
-            
-            let subtitle = '';
-            if (details.source) subtitle = details.source;
-            else if (details.purpose) subtitle = details.purpose;
-            else if (details.rarity) subtitle = details.rarity.toUpperCase();
-            else if (details.cardId) subtitle = 'Card #' + details.cardId;
+            const earnHtml = c.howToEarn.map(e => `<span class="earn-tag">${e}</span>`).join('');
             
             return `
-                <div class="tx-item">
-                    <div class="tx-icon">${action.icon}</div>
-                    <div class="tx-info">
-                        <div class="tx-title">${action.title}${subtitle ? ': ' + subtitle : ''}</div>
-                        <div class="tx-time">${timeAgo(log.timestamp)}</div>
+                <div class="currency-card ${id}" onclick="toggleCurrency(this)">
+                    <div class="currency-header">
+                        <div class="currency-icon">${c.icon}</div>
+                        <div class="currency-info">
+                            <div class="currency-name">
+                                ${c.name}
+                                <span class="currency-tier ${c.tier}">${c.tier}</span>
+                            </div>
+                            <div class="currency-desc">${c.description}</div>
+                        </div>
+                        <div class="currency-balance ${id}">${isGM ? '∞' : formatNum(bal)}</div>
                     </div>
-                    ${amountText}
+                    <div class="currency-details">
+                        <div class="detail-section">
+                            <div class="detail-title">💰 What You Can Buy</div>
+                            <div class="detail-list">${usesHtml}</div>
+                        </div>
+                        <div class="detail-section">
+                            <div class="detail-title">⭐ How To Earn</div>
+                            <div style="display: flex; flex-wrap: wrap; gap: 4px;">${earnHtml}</div>
+                        </div>
+                    </div>
                 </div>
             `;
         }).join('');
     }
     
-    // Tab switching
-    document.querySelectorAll('.tab').forEach(tab => {
-        tab.addEventListener('click', () => {
-            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-            document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
-            tab.classList.add('active');
-            document.getElementById(tab.dataset.tab + 'Panel').classList.add('active');
-            if (typeof NW_SOUNDS !== 'undefined') NW_SOUNDS.play('click');
-        });
-    });
+    function toggleCurrency(el) {
+        el.classList.toggle('expanded');
+        if (typeof NW_SOUNDS !== 'undefined') NW_SOUNDS.play('click');
+    }
     
-    // GM Functions
-    function activateGM() {
-        const code = document.getElementById('gmCode').value;
-        const statusEl = document.getElementById('gmStatus');
+    function renderDailyRewards() {
+        const grid = document.getElementById('dailyGrid');
+        const streak = parseInt(localStorage.getItem('nw_daily_streak') || '1');
         
-        if (NW_WALLET.activateGM(code)) {
-            statusEl.textContent = '✓ GM Mode activated! Infinite resources enabled.';
-            statusEl.className = 'gm-status success';
-            updateUI();
-            if (typeof NW_SOUNDS !== 'undefined') NW_SOUNDS.play('legendary');
+        document.getElementById('dailyStreak').textContent = `Day ${streak}/7`;
+        
+        const rewards = NW_ECONOMY.dailyRewards;
+        const icons = ['🪨', '🪨', '⚙️', '💎', '💎', '💎', '🪵'];
+        
+        grid.innerHTML = [1,2,3,4,5,6,7].map(day => {
+            const isClaimed = day < streak;
+            const isCurrent = day === streak;
+            const isDay7 = day === 7;
+            
+            return `
+                <div class="daily-day ${isClaimed ? 'claimed' : ''} ${isCurrent ? 'current' : ''} ${isDay7 ? 'day7' : ''}">
+                    <div class="day-num">${day}</div>
+                    <div class="day-reward">${icons[day-1]}</div>
+                </div>
+            `;
+        }).join('');
+    }
+    
+    function updateUI() {
+        const isGM = NW_WALLET.isGMMode();
+        const guestEl = document.getElementById('guestId');
+        
+        if (isGM) {
+            guestEl.textContent = '👑 GM';
+            guestEl.classList.add('gm');
         } else {
-            statusEl.textContent = '✗ Invalid code';
-            statusEl.className = 'gm-status error';
+            guestEl.textContent = NW_WALLET.getGuestId() || 'Guest';
+            guestEl.classList.remove('gm');
         }
         
+        const gmSection = document.getElementById('gmSection');
+        document.getElementById('gmActivateRow').style.display = isGM ? 'none' : 'flex';
+        document.getElementById('gmDeactivateRow').style.display = isGM ? 'flex' : 'none';
+        gmSection.classList.toggle('active', isGM);
+        
+        renderCurrencies();
+    }
+    
+    function activateGM() {
+        const code = document.getElementById('gmCode').value;
+        if (NW_WALLET.activateGM(code)) {
+            updateUI();
+            if (typeof NW_SOUNDS !== 'undefined') NW_SOUNDS.play('legendary');
+        }
         document.getElementById('gmCode').value = '';
     }
     
     function deactivateGM() {
         NW_WALLET.deactivateGM();
-        document.getElementById('gmStatus').textContent = 'GM Mode deactivated';
-        document.getElementById('gmStatus').className = 'gm-status';
         updateUI();
     }
     
-    // Export/Import
-    function exportWallet() {
-        const data = NW_WALLET.exportWallet();
-        if (data) {
-            navigator.clipboard.writeText(data).then(() => {
-                alert('Wallet data copied to clipboard!');
-            }).catch(() => {
-                prompt('Copy this backup code:', data);
-            });
-        }
-    }
-    
-    function promptImport() {
-        const data = prompt('Paste your backup code:');
-        if (data) {
-            const result = NW_WALLET.importWallet(data);
-            if (result.success) {
-                alert('Wallet restored successfully!');
-                location.reload();
-            } else {
-                alert('Import failed: ' + result.error);
-            }
-        }
-    }
-    
-    // Init
     window.addEventListener('nw-wallet-ready', () => {
         updateUI();
-        renderHistory();
-        
-        // Refresh every 2 seconds
-        setInterval(() => {
-            updateUI();
-        }, 2000);
+        renderDailyRewards();
+        setInterval(updateUI, 2000);
     });
-    
-    // Also handle GM events
-    window.addEventListener('nw-gm-activated', updateUI);
-    window.addEventListener('nw-gm-deactivated', updateUI);
     </script>
 </body>
 </html>

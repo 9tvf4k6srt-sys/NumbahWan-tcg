@@ -64,6 +64,35 @@
             "Pull cards and build your deck!",
             "Mythic cards are super rare - good luck!",
             "Cards have special abilities in battle"
+        ],
+        '/forge': [
+            "Use 🪵 Sacred Logs to pull cards!",
+            "1 Log = 1 Pull, 5 Logs = Guaranteed Rare+, 10 Logs = Pity System Active!",
+            "Earn Sacred Logs from the Arcade exchange system",
+            "GM Mode gives infinite resources for testing!"
+        ],
+        '/arcade': [
+            "Play mini-games to win currencies! 💎🪙⚙️🪨",
+            "Use the Exchange section to convert currencies up the chain",
+            "Path: Diamond → Gold → Iron → Stone → Sacred Log → CARDS!",
+            "50 Stone = 1 Sacred Log. Keep grinding!"
+        ],
+        '/wallet': [
+            "Your wallet stores all 5 currencies: Diamond, Gold, Iron, Stone, Sacred Log",
+            "GM Mode: Enter 'numbahwan-gm-2026' in Settings for infinite resources!",
+            "All currencies connect to card acquisition - keep investing!",
+            "Export your wallet for backup, import on other devices"
+        ],
+        '/merch': [
+            "All 16 items can be purchased with USD OR guild currencies!",
+            "Premium items can only be bought with 🪵 Sacred Logs",
+            "Regular items accept 💎 Diamonds - save your logs for cards!",
+            "Find all 16 Easter eggs hidden in products for a surprise!"
+        ],
+        '/market': [
+            "Buy and sell cards using 🪨 Stone currency",
+            "Check the Forge to get more cards to sell",
+            "Prices fluctuate based on rarity and demand"
         ]
     };
 
