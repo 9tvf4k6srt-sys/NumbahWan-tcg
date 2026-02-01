@@ -2705,6 +2705,7 @@ setTimeout(async () => {
     if (typeof NW_WALLET !== 'undefined') {
         await NW_WALLET.init();
         walletReady = true;
+        console.log('[FORGE] Wallet initialized, isGM:', NW_WALLET.isGM);
     }
     
     // Load cards
@@ -2713,6 +2714,8 @@ setTimeout(async () => {
         console.log('[FORGE] Loaded', CARDS.length, 'cards');
     }
     
+    // Update UI AFTER wallet is initialized (important for GM mode)
+    setupModeUI();
     updateUI();
 }, 100);
 
@@ -2848,8 +2851,12 @@ function getLogs() {
 }
 
 function spendLogs(n, purpose = 'FORGE_PULL') {
+    // GM mode - always allow
+    if (isGMMode()) {
+        console.log('[FORGE] GM Mode - free pull!');
+        return true;
+    }
     if (!walletReady || typeof NW_WALLET === 'undefined') return false;
-    // GM mode is handled in NW_WALLET.spend() - always succeeds for GMs
     return NW_WALLET.spend('wood', n, purpose);
 }
 
