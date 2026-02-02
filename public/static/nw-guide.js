@@ -109,7 +109,18 @@
         for (const k of keys) {
             result = result?.[k];
         }
-        return result?.[currentLang] || result?.en || key;
+        // Handle both structures: ui.title.en and ui.en.title
+        if (result?.[currentLang]) {
+            return result[currentLang];
+        }
+        // If result is an object with language keys inside (like ui.en.title)
+        if (keys.length === 2 && guideI18n[keys[0]]?.[currentLang]?.[keys[1]]) {
+            return guideI18n[keys[0]][currentLang][keys[1]];
+        }
+        if (keys.length === 2 && guideI18n[keys[0]]?.en?.[keys[1]]) {
+            return guideI18n[keys[0]].en[keys[1]];
+        }
+        return result?.en || key;
     }
 
     function tRandom(key) {
