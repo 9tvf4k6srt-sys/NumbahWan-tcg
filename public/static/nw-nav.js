@@ -106,11 +106,20 @@ const NW_NAV = {
         localStorage.setItem('nw_lang', lang);
     },
 
+    initialized: false,
+    
     init(pageId) {
+        if (this.initialized) {
+            console.log('[NW_NAV] Already initialized, skipping');
+            return;
+        }
+        console.log('[NW_NAV] Initializing for page:', pageId);
         this.currentPage = pageId;
         this.currentLang = this.getStoredLang();
         this.injectNav();
         this.bindEvents();
+        this.initialized = true;
+        console.log('[NW_NAV] Ready!');
     },
 
     t(obj) {
@@ -550,10 +559,16 @@ const NW_NAV = {
     }
 };
 
-// Auto-initialize
+// Auto-initialize - Only if not already initialized by page
 document.addEventListener('DOMContentLoaded', () => {
-    const pageId = document.body.dataset.pageId || document.body.dataset.nwPage || 'index';
-    NW_NAV.init(pageId);
+    // Small delay to let page-specific init run first
+    setTimeout(() => {
+        if (!NW_NAV.initialized) {
+            const pageId = document.body.dataset.pageId || document.body.dataset.nwPage || 'index';
+            console.log('[NW_NAV] Auto-initializing for page:', pageId);
+            NW_NAV.init(pageId);
+        }
+    }, 50);
 });
 
 // Export for module usage
