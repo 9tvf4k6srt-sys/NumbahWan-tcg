@@ -64,6 +64,7 @@ const NW_NAV = {
             icon: 'crown',       // 🏛️ → government section
             color: '#ffd700',
             pages: [
+                { id: 'invest', name: { en: '🔥 Invest in NWG', zh: '🔥 投資 NWG', th: '🔥 ลงทุน NWG' }, icon: 'chart', href: '/invest', isNew: true, isHot: true },
                 { id: 'citizenship', name: { en: 'Citizen ID', zh: '公民身份', th: 'บัตรประชาชน' }, icon: 'shield', href: '/citizenship', isNew: true },
                 { id: 'court', name: { en: 'Supreme Court', zh: '最高法院', th: 'ศาลสูงสุด' }, icon: 'scroll', href: '/court', isNew: true },
                 { id: 'treasury', name: { en: 'Treasury', zh: '財政部', th: 'กระทรวงการคลัง' }, icon: 'coins', href: '/treasury', isNew: true },
