@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Real Estate | NumbahWan Property Market</title>
+    <link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="/static/nw-tokens.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="/static/nw-icons-inline.js"></script>
+    <style>
+        :root {
+            --re-dark: #0a0808;
+            --re-card: #141010;
+            --re-border: #2a2020;
+            --re-gold: #ffd700;
+            --re-bronze: #cd7f32;
+            --re-green: #22c55e;
+            --re-blue: #4a90d9;
+        }
+        
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            background: var(--re-dark);
+            min-height: 100vh;
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            color: #fff;
+        }
+        
+        .re-header {
+            background: linear-gradient(180deg, rgba(255,215,0,0.1) 0%, transparent 100%);
+            border-bottom: 1px solid var(--re-border);
+            padding: 1rem 2rem;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            backdrop-filter: blur(10px);
+        }
+        
+        .header-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+        
+        .re-brand {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        
+        .re-logo {
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg, var(--re-gold) 0%, var(--re-bronze) 100%);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+        }
+        
+        .re-title {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: var(--re-gold);
+        }
+        
+        .re-subtitle { font-size: 0.8rem; color: #888; }
+        
+        .header-actions { display: flex; gap: 1rem; align-items: center; }
+        
+        .btn-list {
+            background: linear-gradient(135deg, var(--re-gold) 0%, var(--re-bronze) 100%);
+            color: #000;
+            padding: 0.75rem 1.25rem;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: all 0.3s;
+        }
+        
+        .btn-list:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(255,215,0,0.3);
+        }
+        
+        .lang-toggle {
+            display: flex;
+            gap: 0.25rem;
+            background: var(--re-card);
+            padding: 0.25rem;
+            border-radius: 8px;
+            border: 1px solid var(--re-border);
+        }
+        
+        .lang-btn {
+            padding: 0.5rem 0.75rem;
+            border: none;
+            background: transparent;
+            color: #888;
+            cursor: pointer;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            transition: all 0.3s;
+        }
+        
+        .lang-btn.active { background: var(--re-gold); color: #000; }
+        
+        /* Hero */
+        .hero-section {
+            background: linear-gradient(135deg, rgba(255,215,0,0.15) 0%, rgba(205,127,50,0.1) 100%);
+            padding: 4rem 2rem;
+            text-align: center;
+            border-bottom: 1px solid var(--re-border);
+        }
+        
+        .hero-title {
+            font-size: 2.5rem;
+            font-weight: 800;
+            margin-bottom: 1rem;
+            background: linear-gradient(135deg, #fff 0%, var(--re-gold) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .hero-desc {
+            color: #aaa;
+            max-width: 600px;
+            margin: 0 auto 2rem;
+        }
+        
+        .district-nav {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+        
+        .district-btn {
+            background: var(--re-card);
+            border: 1px solid var(--re-border);
+            border-radius: 12px;
+            padding: 1rem 1.5rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-align: center;
+        }
+        
+        .district-btn:hover, .district-btn.active {
+            border-color: var(--re-gold);
+            background: rgba(255,215,0,0.1);
+        }
+        
+        .district-icon { font-size: 1.5rem; margin-bottom: 0.25rem; }
+        .district-name { font-weight: 600; font-size: 0.9rem; }
+        .district-count { color: #888; font-size: 0.75rem; }
+        
+        /* Main */
+        .main-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+        
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+        
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        /* Property Grid */
+        .properties-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 3rem;
+        }
+        
+        .property-card {
+            background: var(--re-card);
+            border: 1px solid var(--re-border);
+            border-radius: 16px;
+            overflow: hidden;
+            transition: all 0.3s;
+        }
+        
+        .property-card:hover {
+            transform: translateY(-5px);
+            border-color: var(--re-gold);
+            box-shadow: 0 15px 40px rgba(255,215,0,0.15);
+        }
+        
+        .property-image {
+            height: 180px;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 4rem;
+        }
+        
+        .property-image.type-shop { background: linear-gradient(135deg, rgba(255,215,0,0.3) 0%, rgba(205,127,50,0.2) 100%); }
+        .property-image.type-plot { background: linear-gradient(135deg, rgba(34,197,94,0.3) 0%, rgba(22,163,74,0.2) 100%); }
+        .property-image.type-guild { background: linear-gradient(135deg, rgba(74,144,217,0.3) 0%, rgba(59,130,246,0.2) 100%); }
+        .property-image.type-premium { background: linear-gradient(135deg, rgba(157,78,221,0.3) 0%, rgba(139,92,246,0.2) 100%); }
+        
+        .property-badges {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            display: flex;
+            gap: 0.5rem;
+        }
+        
+        .badge {
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.65rem;
+            font-weight: 700;
+        }
+        
+        .badge-premium { background: var(--re-gold); color: #000; }
+        .badge-new { background: var(--re-green); color: #000; }
+        .badge-hot { background: #ef4444; color: #fff; }
+        
+        .property-type {
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            background: rgba(0,0,0,0.7);
+            padding: 0.35rem 0.75rem;
+            border-radius: 6px;
+            font-size: 0.75rem;
+        }
+        
+        .property-info { padding: 1.25rem; }
+        
+        .property-name {
+            font-weight: 700;
+            font-size: 1.1rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .property-location {
+            color: #888;
+            font-size: 0.85rem;
+            margin-bottom: 0.75rem;
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+        }
+        
+        .property-features {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+        
+        .feature {
+            display: flex;
+            align-items: center;
+            gap: 0.35rem;
+            font-size: 0.85rem;
+            color: #aaa;
+        }
+        
+        .property-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-top: 1rem;
+            border-top: 1px solid var(--re-border);
+        }
+        
+        .property-price {
+            font-weight: 800;
+            font-size: 1.25rem;
+            color: var(--re-gold);
+        }
+        
+        .price-label {
+            font-size: 0.75rem;
+            color: #888;
+        }
+        
+        .btn-view {
+            background: var(--re-gold);
+            color: #000;
+            padding: 0.6rem 1.25rem;
+            border-radius: 8px;
+            border: none;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .btn-view:hover { transform: scale(1.05); }
+        
+        /* CTA */
+        .list-cta {
+            background: linear-gradient(135deg, rgba(255,215,0,0.15) 0%, rgba(205,127,50,0.1) 100%);
+            border: 1px solid rgba(255,215,0,0.3);
+            border-radius: 16px;
+            padding: 3rem 2rem;
+            text-align: center;
+        }
+        
+        .cta-icon { font-size: 4rem; margin-bottom: 1rem; }
+        .cta-title { font-size: 1.75rem; font-weight: 700; margin-bottom: 0.75rem; }
+        .cta-desc { color: #aaa; max-width: 600px; margin: 0 auto 2rem; }
+        
+        .btn-list-property {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: linear-gradient(135deg, var(--re-gold) 0%, var(--re-bronze) 100%);
+            color: #000;
+            padding: 1rem 2rem;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 700;
+            font-size: 1.1rem;
+            transition: all 0.3s;
+        }
+        
+        .btn-list-property:hover {
+            transform: scale(1.05);
+            box-shadow: 0 10px 30px rgba(255,215,0,0.4);
+        }
+        
+        /* Back button */
+        .back-btn {
+            position: fixed;
+            top: 1rem;
+            left: 1rem;
+            width: 44px;
+            height: 44px;
+            background: var(--re-card);
+            border: 1px solid var(--re-border);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            text-decoration: none;
+            z-index: 200;
+            transition: all 0.3s;
+        }
+        
+        .back-btn:hover { border-color: var(--re-gold); color: var(--re-gold); }
+        
+        .lang-en, .lang-zh, .lang-th { display: none; }
+        body.en .lang-en { display: inline; }
+        body.zh .lang-zh { display: inline; }
+        body.th .lang-th { display: inline; }
+        
+        @media (max-width: 768px) {
+            .hero-title { font-size: 1.75rem; }
+            .properties-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body class="en">
+    <a href="/business" class="back-btn">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M19 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H19v-2z"/></svg>
+    </a>
+
+    <header class="re-header">
+        <div class="header-content">
+            <div class="re-brand">
+                <div class="re-logo">🏠</div>
+                <div>
+                    <div class="re-title"><span class="lang-en">Real Estate</span><span class="lang-zh">房地產</span><span class="lang-th">อสังหาริมทรัพย์</span></div>
+                    <div class="re-subtitle"><span class="lang-en">NumbahWan Property Market</span><span class="lang-zh">NumbahWan 房產市場</span><span class="lang-th">ตลาดอสังหาริมทรัพย์ NumbahWan</span></div>
+                </div>
+            </div>
+            <div class="header-actions">
+                <a href="/my-business" class="btn-list">📋 <span class="lang-en">List Property</span><span class="lang-zh">刊登房產</span><span class="lang-th">ลงประกาศ</span></a>
+                <div class="lang-toggle">
+                    <button class="lang-btn active" data-lang="en">EN</button>
+                    <button class="lang-btn" data-lang="zh">中文</button>
+                    <button class="lang-btn" data-lang="th">ไทย</button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <section class="hero-section">
+        <h1 class="hero-title"><span class="lang-en">Virtual Property Marketplace</span><span class="lang-zh">虛擬房產市場</span><span class="lang-th">ตลาดอสังหาริมทรัพย์เสมือน</span></h1>
+        <p class="hero-desc"><span class="lang-en">Buy, sell, or rent prime virtual locations in the NumbahWan metaverse. Shop spaces, guild halls, and exclusive plots.</span><span class="lang-zh">在 NumbahWan 元宇宙中買賣或租賃黃金虛擬地點。商店空間、公會大廳和獨家地塊。</span><span class="lang-th">ซื้อ ขาย หรือเช่าทำเลเสมือนชั้นนำใน NumbahWan metaverse พื้นที่ร้านค้า ห้องประชุมกิลด์ และที่ดินพิเศษ</span></p>
+        <div class="district-nav">
+            <div class="district-btn active">
+                <div class="district-icon">🌆</div>
+                <div class="district-name"><span class="lang-en">All Districts</span><span class="lang-zh">所有區域</span><span class="lang-th">ทุกเขต</span></div>
+                <div class="district-count">24 listings</div>
+            </div>
+            <div class="district-btn">
+                <div class="district-icon">🏪</div>
+                <div class="district-name"><span class="lang-en">Market Square</span><span class="lang-zh">市場廣場</span><span class="lang-th">ตลาดกลาง</span></div>
+                <div class="district-count">8 listings</div>
+            </div>
+            <div class="district-btn">
+                <div class="district-icon">🏰</div>
+                <div class="district-name"><span class="lang-en">Guild Quarter</span><span class="lang-zh">公會區</span><span class="lang-th">ย่านกิลด์</span></div>
+                <div class="district-count">5 listings</div>
+            </div>
+            <div class="district-btn">
+                <div class="district-icon">🌳</div>
+                <div class="district-name"><span class="lang-en">Green Zone</span><span class="lang-zh">綠色區域</span><span class="lang-th">เขตสีเขียว</span></div>
+                <div class="district-count">6 listings</div>
+            </div>
+            <div class="district-btn">
+                <div class="district-icon">👑</div>
+                <div class="district-name"><span class="lang-en">Premium Row</span><span class="lang-zh">高級區</span><span class="lang-th">โซนพรีเมียม</span></div>
+                <div class="district-count">5 listings</div>
+            </div>
+        </div>
+    </section>
+
+    <main class="main-content">
+        <div class="section-header">
+            <h2 class="section-title">🏠 <span class="lang-en">Available Properties</span><span class="lang-zh">可用房產</span><span class="lang-th">อสังหาริมทรัพย์ที่มี</span></h2>
+        </div>
+        
+        <div class="properties-grid">
+            <div class="property-card">
+                <div class="property-image type-shop">🏪
+                    <div class="property-badges"><span class="badge badge-premium">PREMIUM</span></div>
+                    <div class="property-type">Shop Space</div>
+                </div>
+                <div class="property-info">
+                    <div class="property-name"><span class="lang-en">Prime Market Storefront</span><span class="lang-zh">黃金市場店面</span><span class="lang-th">หน้าร้านตลาดชั้นนำ</span></div>
+                    <div class="property-location">📍 Market Square, Slot A1</div>
+                    <div class="property-features">
+                        <div class="feature">📐 200 sqft</div>
+                        <div class="feature">🚪 Street-facing</div>
+                        <div class="feature">⭐ High traffic</div>
+                    </div>
+                    <div class="property-footer">
+                        <div>
+                            <div class="property-price">₲ 5,000</div>
+                            <div class="price-label">/ month rent</div>
+                        </div>
+                        <button class="btn-view"><span class="lang-en">View</span><span class="lang-zh">查看</span><span class="lang-th">ดู</span></button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="property-card">
+                <div class="property-image type-guild">🏰
+                    <div class="property-badges"><span class="badge badge-hot">HOT</span></div>
+                    <div class="property-type">Guild Hall</div>
+                </div>
+                <div class="property-info">
+                    <div class="property-name"><span class="lang-en">Grand Guild Hall</span><span class="lang-zh">宏偉公會大廳</span><span class="lang-th">ห้องประชุมกิลด์แกรนด์</span></div>
+                    <div class="property-location">📍 Guild Quarter, Block G3</div>
+                    <div class="property-features">
+                        <div class="feature">📐 500 sqft</div>
+                        <div class="feature">👥 50 capacity</div>
+                        <div class="feature">🎭 Event space</div>
+                    </div>
+                    <div class="property-footer">
+                        <div>
+                            <div class="property-price">₲ 25,000</div>
+                            <div class="price-label">buy now</div>
+                        </div>
+                        <button class="btn-view"><span class="lang-en">View</span><span class="lang-zh">查看</span><span class="lang-th">ดู</span></button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="property-card">
+                <div class="property-image type-plot">🌳
+                    <div class="property-badges"><span class="badge badge-new">NEW</span></div>
+                    <div class="property-type">Land Plot</div>
+                </div>
+                <div class="property-info">
+                    <div class="property-name"><span class="lang-en">Green Zone Development Plot</span><span class="lang-zh">綠區開發地塊</span><span class="lang-th">ที่ดินพัฒนาเขตสีเขียว</span></div>
+                    <div class="property-location">📍 Green Zone, Sector E</div>
+                    <div class="property-features">
+                        <div class="feature">📐 1000 sqft</div>
+                        <div class="feature">🏗️ Build anything</div>
+                        <div class="feature">🌿 Peaceful</div>
+                    </div>
+                    <div class="property-footer">
+                        <div>
+                            <div class="property-price">₲ 15,000</div>
+                            <div class="price-label">buy now</div>
+                        </div>
+                        <button class="btn-view"><span class="lang-en">View</span><span class="lang-zh">查看</span><span class="lang-th">ดู</span></button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="property-card">
+                <div class="property-image type-premium">👑
+                    <div class="property-badges"><span class="badge badge-premium">EXCLUSIVE</span></div>
+                    <div class="property-type">Penthouse</div>
+                </div>
+                <div class="property-info">
+                    <div class="property-name"><span class="lang-en">Premium Row Penthouse</span><span class="lang-zh">高級區頂層公寓</span><span class="lang-th">เพนท์เฮาส์พรีเมียม</span></div>
+                    <div class="property-location">📍 Premium Row, Tower 1</div>
+                    <div class="property-features">
+                        <div class="feature">📐 800 sqft</div>
+                        <div class="feature">🌇 City view</div>
+                        <div class="feature">🎖️ VIP status</div>
+                    </div>
+                    <div class="property-footer">
+                        <div>
+                            <div class="property-price">₲ 50,000</div>
+                            <div class="price-label">buy now</div>
+                        </div>
+                        <button class="btn-view"><span class="lang-en">View</span><span class="lang-zh">查看</span><span class="lang-th">ดู</span></button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="list-cta">
+            <div class="cta-icon">🏗️</div>
+            <h2 class="cta-title"><span class="lang-en">List Your Property</span><span class="lang-zh">刊登您的房產</span><span class="lang-th">ลงประกาศอสังหาริมทรัพย์ของคุณ</span></h2>
+            <p class="cta-desc"><span class="lang-en">Own a shop, plot, or space? List it on the marketplace and earn passive NWG income from rent or sales.</span><span class="lang-zh">擁有商店、地塊或空間？在市場上刊登並從租金或銷售中賺取被動 NWG 收入。</span><span class="lang-th">มีร้านค้า ที่ดิน หรือพื้นที่? ลงประกาศในตลาดและรับรายได้ NWG จากค่าเช่าหรือการขาย</span></p>
+            <a href="/my-business" class="btn-list-property">📋 <span class="lang-en">List Property Now</span><span class="lang-zh">立即刊登房產</span><span class="lang-th">ลงประกาศเลย</span></a>
+        </div>
+    </main>
+
+    <script src="/static/nw-nav.js"></script>
+    <script>
+        document.querySelectorAll('.lang-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const lang = btn.dataset.lang;
+                document.body.className = lang;
+                document.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                localStorage.setItem('nw_lang', lang);
+            });
+        });
+        const savedLang = localStorage.getItem('nw_lang') || 'en';
+        document.body.className = savedLang;
+        document.querySelectorAll('.lang-btn').forEach(btn => btn.classList.toggle('active', btn.dataset.lang === savedLang));
+        
+        document.querySelectorAll('.district-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.district-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+            });
+        });
+    </script>
+</body>
+</html>

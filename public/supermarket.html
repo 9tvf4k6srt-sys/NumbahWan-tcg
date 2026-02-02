@@ -1,0 +1,1478 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Supermarket | NumbahWan Groceries</title>
+    <link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="/static/nw-tokens.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="/static/nw-icons-inline.js"></script>
+    <style>
+        :root {
+            --market-dark: #0a0f0a;
+            --market-card: #121c12;
+            --market-border: #1e3a1e;
+            --market-green: #00d26a;
+            --market-light-green: #4ade80;
+            --market-gold: #ffd700;
+            --market-orange: #ff8c00;
+            --market-red: #ef4444;
+        }
+        
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            background: var(--market-dark);
+            min-height: 100vh;
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            color: #fff;
+        }
+        
+        /* Header */
+        .market-header {
+            background: linear-gradient(180deg, rgba(0,210,106,0.15) 0%, transparent 100%);
+            border-bottom: 1px solid var(--market-border);
+            padding: 1rem 2rem;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            backdrop-filter: blur(10px);
+        }
+        
+        .header-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+        
+        .market-brand {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        
+        .market-logo {
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg, var(--market-green) 0%, #059669 100%);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+        }
+        
+        .market-title {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: var(--market-green);
+        }
+        
+        .market-subtitle {
+            font-size: 0.8rem;
+            color: #888;
+        }
+        
+        .search-bar {
+            flex: 1;
+            max-width: 500px;
+            display: flex;
+            gap: 0.5rem;
+        }
+        
+        .search-input {
+            flex: 1;
+            background: var(--market-card);
+            border: 1px solid var(--market-border);
+            border-radius: 8px;
+            padding: 0.75rem 1rem;
+            color: #fff;
+            font-size: 0.95rem;
+        }
+        
+        .search-input:focus {
+            outline: none;
+            border-color: var(--market-green);
+        }
+        
+        .search-btn {
+            background: var(--market-green);
+            border: none;
+            border-radius: 8px;
+            padding: 0.75rem 1.25rem;
+            color: #000;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .search-btn:hover {
+            background: var(--market-light-green);
+        }
+        
+        .header-actions {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+        
+        .cart-btn {
+            position: relative;
+            background: var(--market-card);
+            border: 1px solid var(--market-border);
+            border-radius: 8px;
+            padding: 0.75rem 1rem;
+            color: #fff;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: all 0.3s;
+        }
+        
+        .cart-btn:hover {
+            border-color: var(--market-green);
+        }
+        
+        .cart-count {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            background: var(--market-red);
+            color: #fff;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            font-size: 0.7rem;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .lang-toggle {
+            display: flex;
+            gap: 0.25rem;
+            background: var(--market-card);
+            padding: 0.25rem;
+            border-radius: 8px;
+            border: 1px solid var(--market-border);
+        }
+        
+        .lang-btn {
+            padding: 0.5rem 0.75rem;
+            border: none;
+            background: transparent;
+            color: #888;
+            cursor: pointer;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            transition: all 0.3s;
+        }
+        
+        .lang-btn.active {
+            background: var(--market-green);
+            color: #000;
+        }
+        
+        /* Main Layout */
+        .main-layout {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+            display: grid;
+            grid-template-columns: 250px 1fr;
+            gap: 2rem;
+        }
+        
+        @media (max-width: 900px) {
+            .main-layout {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        /* Sidebar */
+        .sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+        
+        .sidebar-card {
+            background: var(--market-card);
+            border: 1px solid var(--market-border);
+            border-radius: 12px;
+            padding: 1.25rem;
+        }
+        
+        .sidebar-title {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--market-green);
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .category-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+        
+        .category-item {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            color: #ccc;
+        }
+        
+        .category-item:hover, .category-item.active {
+            background: rgba(0,210,106,0.1);
+            color: var(--market-green);
+        }
+        
+        .category-icon {
+            font-size: 1.25rem;
+        }
+        
+        .category-name {
+            flex: 1;
+        }
+        
+        .category-count {
+            font-size: 0.8rem;
+            color: #666;
+        }
+        
+        /* Featured Vendor */
+        .vendor-spotlight {
+            padding: 1.5rem;
+            background: linear-gradient(135deg, rgba(0,210,106,0.15) 0%, rgba(0,100,50,0.1) 100%);
+        }
+        
+        .vendor-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25rem;
+            background: var(--market-gold);
+            color: #000;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.7rem;
+            font-weight: 700;
+            margin-bottom: 0.75rem;
+        }
+        
+        .vendor-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            margin-bottom: 0.25rem;
+        }
+        
+        .vendor-desc {
+            color: #888;
+            font-size: 0.85rem;
+            margin-bottom: 1rem;
+        }
+        
+        .vendor-stats {
+            display: flex;
+            gap: 1rem;
+        }
+        
+        .vendor-stat {
+            text-align: center;
+        }
+        
+        .vendor-stat-value {
+            font-weight: 700;
+            color: var(--market-green);
+        }
+        
+        .vendor-stat-label {
+            font-size: 0.7rem;
+            color: #888;
+        }
+        
+        /* Products Grid */
+        .products-section {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+        
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+        
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .filter-tabs {
+            display: flex;
+            gap: 0.5rem;
+        }
+        
+        .filter-tab {
+            background: var(--market-card);
+            border: 1px solid var(--market-border);
+            border-radius: 20px;
+            padding: 0.5rem 1rem;
+            color: #888;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .filter-tab:hover, .filter-tab.active {
+            border-color: var(--market-green);
+            color: var(--market-green);
+        }
+        
+        .products-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 1.25rem;
+        }
+        
+        .product-card {
+            background: var(--market-card);
+            border: 1px solid var(--market-border);
+            border-radius: 12px;
+            overflow: hidden;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+        
+        .product-card:hover {
+            transform: translateY(-3px);
+            border-color: var(--market-green);
+            box-shadow: 0 10px 30px rgba(0,210,106,0.15);
+        }
+        
+        .product-image {
+            height: 140px;
+            background: linear-gradient(135deg, rgba(0,210,106,0.2) 0%, rgba(0,100,50,0.1) 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3.5rem;
+            position: relative;
+        }
+        
+        .product-tag {
+            position: absolute;
+            top: 8px;
+            left: 8px;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.65rem;
+            font-weight: 700;
+        }
+        
+        .tag-sale {
+            background: var(--market-red);
+            color: #fff;
+        }
+        
+        .tag-new {
+            background: var(--market-green);
+            color: #000;
+        }
+        
+        .tag-organic {
+            background: #15803d;
+            color: #fff;
+        }
+        
+        .product-info {
+            padding: 1rem;
+        }
+        
+        .product-name {
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+            font-size: 0.95rem;
+        }
+        
+        .product-vendor {
+            color: #888;
+            font-size: 0.8rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .product-price {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 0.75rem;
+        }
+        
+        .price-current {
+            font-weight: 700;
+            color: var(--market-green);
+            font-size: 1.1rem;
+        }
+        
+        .price-original {
+            color: #666;
+            text-decoration: line-through;
+            font-size: 0.85rem;
+        }
+        
+        .product-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+        
+        .btn-add-cart {
+            flex: 1;
+            background: var(--market-green);
+            border: none;
+            border-radius: 6px;
+            padding: 0.6rem;
+            color: #000;
+            font-weight: 600;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .btn-add-cart:hover {
+            background: var(--market-light-green);
+        }
+        
+        .btn-wishlist {
+            background: transparent;
+            border: 1px solid var(--market-border);
+            border-radius: 6px;
+            padding: 0.6rem 0.75rem;
+            color: #888;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .btn-wishlist:hover {
+            border-color: var(--market-red);
+            color: var(--market-red);
+        }
+        
+        /* Deals Banner */
+        .deals-banner {
+            background: linear-gradient(135deg, rgba(255,140,0,0.2) 0%, rgba(255,69,0,0.1) 100%);
+            border: 1px solid rgba(255,140,0,0.3);
+            border-radius: 16px;
+            padding: 2rem;
+            display: grid;
+            grid-template-columns: 1fr auto;
+            gap: 2rem;
+            align-items: center;
+        }
+        
+        @media (max-width: 768px) {
+            .deals-banner {
+                grid-template-columns: 1fr;
+                text-align: center;
+            }
+        }
+        
+        .deals-content h3 {
+            font-size: 1.75rem;
+            font-weight: 800;
+            color: var(--market-orange);
+            margin-bottom: 0.5rem;
+        }
+        
+        .deals-content p {
+            color: #ccc;
+            margin-bottom: 1rem;
+        }
+        
+        .deals-timer {
+            display: flex;
+            gap: 1rem;
+        }
+        
+        .timer-unit {
+            text-align: center;
+        }
+        
+        .timer-value {
+            background: rgba(0,0,0,0.3);
+            padding: 0.5rem 0.75rem;
+            border-radius: 6px;
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: var(--market-orange);
+        }
+        
+        .timer-label {
+            font-size: 0.7rem;
+            color: #888;
+            margin-top: 0.25rem;
+        }
+        
+        .deals-action {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+        
+        .btn-shop-deals {
+            background: var(--market-orange);
+            color: #000;
+            padding: 1rem 2rem;
+            border-radius: 8px;
+            font-weight: 700;
+            text-decoration: none;
+            text-align: center;
+            transition: all 0.3s;
+        }
+        
+        .btn-shop-deals:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 20px rgba(255,140,0,0.4);
+        }
+        
+        /* Vendor Cards */
+        .vendors-section {
+            margin-top: 2rem;
+        }
+        
+        .vendors-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 1.25rem;
+        }
+        
+        .vendor-card {
+            background: var(--market-card);
+            border: 1px solid var(--market-border);
+            border-radius: 12px;
+            overflow: hidden;
+            transition: all 0.3s;
+        }
+        
+        .vendor-card:hover {
+            border-color: var(--market-green);
+        }
+        
+        .vendor-banner {
+            height: 80px;
+            background: linear-gradient(135deg, rgba(0,210,106,0.3) 0%, rgba(0,100,50,0.2) 100%);
+            position: relative;
+        }
+        
+        .vendor-avatar {
+            position: absolute;
+            bottom: -25px;
+            left: 1rem;
+            width: 50px;
+            height: 50px;
+            background: var(--market-green);
+            border: 3px solid var(--market-card);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+        }
+        
+        .vendor-verified {
+            position: absolute;
+            bottom: -10px;
+            left: 45px;
+            background: var(--market-gold);
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.6rem;
+        }
+        
+        .vendor-info {
+            padding: 2rem 1rem 1rem;
+        }
+        
+        .vendor-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 0.5rem;
+        }
+        
+        .vendor-title {
+            font-weight: 700;
+        }
+        
+        .vendor-rating {
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+            color: var(--market-gold);
+            font-size: 0.85rem;
+        }
+        
+        .vendor-category {
+            color: #888;
+            font-size: 0.85rem;
+            margin-bottom: 0.75rem;
+        }
+        
+        .vendor-meta {
+            display: flex;
+            gap: 1rem;
+            padding-top: 0.75rem;
+            border-top: 1px solid var(--market-border);
+        }
+        
+        .meta-item {
+            font-size: 0.8rem;
+            color: #888;
+        }
+        
+        .meta-item span {
+            color: var(--market-green);
+            font-weight: 600;
+        }
+        
+        /* Back button */
+        .back-btn {
+            position: fixed;
+            top: 1rem;
+            left: 1rem;
+            width: 44px;
+            height: 44px;
+            background: var(--market-card);
+            border: 1px solid var(--market-border);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            text-decoration: none;
+            z-index: 200;
+            transition: all 0.3s;
+        }
+        
+        .back-btn:hover {
+            border-color: var(--market-green);
+            color: var(--market-green);
+        }
+        
+        /* Multi-language */
+        .lang-en, .lang-zh, .lang-th { display: none; }
+        body.en .lang-en { display: inline; }
+        body.zh .lang-zh { display: inline; }
+        body.th .lang-th { display: inline; }
+        
+        /* Cart Modal */
+        .cart-modal {
+            position: fixed;
+            top: 0;
+            right: -400px;
+            width: 400px;
+            max-width: 100%;
+            height: 100vh;
+            background: var(--market-card);
+            border-left: 1px solid var(--market-border);
+            z-index: 1000;
+            transition: right 0.3s;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .cart-modal.open {
+            right: 0;
+        }
+        
+        .cart-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid var(--market-border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .cart-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+        }
+        
+        .cart-close {
+            background: none;
+            border: none;
+            color: #888;
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+        
+        .cart-items {
+            flex: 1;
+            overflow-y: auto;
+            padding: 1rem;
+        }
+        
+        .cart-item {
+            display: flex;
+            gap: 1rem;
+            padding: 1rem;
+            background: rgba(0,0,0,0.2);
+            border-radius: 8px;
+            margin-bottom: 0.75rem;
+        }
+        
+        .cart-item-image {
+            width: 60px;
+            height: 60px;
+            background: rgba(0,210,106,0.2);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+        }
+        
+        .cart-item-info {
+            flex: 1;
+        }
+        
+        .cart-item-name {
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+        }
+        
+        .cart-item-price {
+            color: var(--market-green);
+            font-weight: 700;
+        }
+        
+        .cart-item-qty {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-top: 0.5rem;
+        }
+        
+        .qty-btn {
+            width: 24px;
+            height: 24px;
+            border: 1px solid var(--market-border);
+            background: transparent;
+            color: #fff;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        
+        .cart-footer {
+            padding: 1.5rem;
+            border-top: 1px solid var(--market-border);
+        }
+        
+        .cart-total {
+            display: flex;
+            justify-content: space-between;
+            font-size: 1.25rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+        }
+        
+        .cart-total span:last-child {
+            color: var(--market-green);
+        }
+        
+        .btn-checkout {
+            width: 100%;
+            background: var(--market-green);
+            border: none;
+            border-radius: 8px;
+            padding: 1rem;
+            color: #000;
+            font-weight: 700;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .btn-checkout:hover {
+            background: var(--market-light-green);
+        }
+        
+        .cart-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 999;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s;
+        }
+        
+        .cart-overlay.open {
+            opacity: 1;
+            visibility: visible;
+        }
+        
+        /* Sell CTA */
+        .sell-cta {
+            background: linear-gradient(135deg, rgba(255,215,0,0.15) 0%, rgba(184,134,11,0.1) 100%);
+            border: 1px solid rgba(255,215,0,0.3);
+            border-radius: 12px;
+            padding: 1.5rem;
+            text-align: center;
+            margin-top: 2rem;
+        }
+        
+        .sell-cta h3 {
+            color: var(--market-gold);
+            margin-bottom: 0.5rem;
+        }
+        
+        .sell-cta p {
+            color: #888;
+            font-size: 0.9rem;
+            margin-bottom: 1rem;
+        }
+        
+        .btn-become-vendor {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: var(--market-gold);
+            color: #000;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 700;
+            transition: all 0.3s;
+        }
+        
+        .btn-become-vendor:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 20px rgba(255,215,0,0.3);
+        }
+    </style>
+</head>
+<body class="en">
+    <a href="/business" class="back-btn">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M19 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H19v-2z"/></svg>
+    </a>
+
+    <header class="market-header">
+        <div class="header-content">
+            <div class="market-brand">
+                <div class="market-logo">🛒</div>
+                <div>
+                    <div class="market-title">
+                        <span class="lang-en">NumbahWan Supermarket</span>
+                        <span class="lang-zh">NumbahWan 超級市場</span>
+                        <span class="lang-th">ซูเปอร์มาร์เก็ต NumbahWan</span>
+                    </div>
+                    <div class="market-subtitle">
+                        <span class="lang-en">Fresh from guild members</span>
+                        <span class="lang-zh">公會成員新鮮直送</span>
+                        <span class="lang-th">สดใหม่จากสมาชิกกิลด์</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="search-bar">
+                <input type="text" class="search-input" placeholder="Search products...">
+                <button class="search-btn">🔍</button>
+            </div>
+            
+            <div class="header-actions">
+                <button class="cart-btn" id="openCart">
+                    🛒 <span class="lang-en">Cart</span><span class="lang-zh">購物車</span><span class="lang-th">ตะกร้า</span>
+                    <span class="cart-count" id="cartCount">3</span>
+                </button>
+                <div class="lang-toggle">
+                    <button class="lang-btn active" data-lang="en">EN</button>
+                    <button class="lang-btn" data-lang="zh">中文</button>
+                    <button class="lang-btn" data-lang="th">ไทย</button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="main-layout">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-card">
+                <div class="sidebar-title">
+                    📂 <span class="lang-en">Categories</span><span class="lang-zh">分類</span><span class="lang-th">หมวดหมู่</span>
+                </div>
+                <div class="category-list">
+                    <div class="category-item active">
+                        <span class="category-icon">🍎</span>
+                        <span class="category-name lang-en">Fresh Produce</span>
+                        <span class="category-name lang-zh">新鮮蔬果</span>
+                        <span class="category-name lang-th">ผักผลไม้สด</span>
+                        <span class="category-count">124</span>
+                    </div>
+                    <div class="category-item">
+                        <span class="category-icon">🥩</span>
+                        <span class="category-name lang-en">Meat & Seafood</span>
+                        <span class="category-name lang-zh">肉類海鮮</span>
+                        <span class="category-name lang-th">เนื้อและอาหารทะเล</span>
+                        <span class="category-count">89</span>
+                    </div>
+                    <div class="category-item">
+                        <span class="category-icon">🥛</span>
+                        <span class="category-name lang-en">Dairy & Eggs</span>
+                        <span class="category-name lang-zh">乳製品蛋類</span>
+                        <span class="category-name lang-th">นมและไข่</span>
+                        <span class="category-count">56</span>
+                    </div>
+                    <div class="category-item">
+                        <span class="category-icon">🍞</span>
+                        <span class="category-name lang-en">Bakery</span>
+                        <span class="category-name lang-zh">烘焙食品</span>
+                        <span class="category-name lang-th">เบเกอรี่</span>
+                        <span class="category-count">45</span>
+                    </div>
+                    <div class="category-item">
+                        <span class="category-icon">🥫</span>
+                        <span class="category-name lang-en">Pantry</span>
+                        <span class="category-name lang-zh">食品儲藏</span>
+                        <span class="category-name lang-th">อาหารแห้ง</span>
+                        <span class="category-count">78</span>
+                    </div>
+                    <div class="category-item">
+                        <span class="category-icon">🧃</span>
+                        <span class="category-name lang-en">Beverages</span>
+                        <span class="category-name lang-zh">飲料</span>
+                        <span class="category-name lang-th">เครื่องดื่ม</span>
+                        <span class="category-count">67</span>
+                    </div>
+                    <div class="category-item">
+                        <span class="category-icon">🧹</span>
+                        <span class="category-name lang-en">Household</span>
+                        <span class="category-name lang-zh">家居用品</span>
+                        <span class="category-name lang-th">ของใช้ในบ้าน</span>
+                        <span class="category-count">34</span>
+                    </div>
+                    <div class="category-item">
+                        <span class="category-icon">🐾</span>
+                        <span class="category-name lang-en">Pet Supplies</span>
+                        <span class="category-name lang-zh">寵物用品</span>
+                        <span class="category-name lang-th">อุปกรณ์สัตว์เลี้ยง</span>
+                        <span class="category-count">28</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="sidebar-card vendor-spotlight">
+                <div class="vendor-badge">⭐ <span class="lang-en">TOP VENDOR</span><span class="lang-zh">頂級賣家</span><span class="lang-th">ผู้ขายยอดนิยม</span></div>
+                <div class="vendor-name">RegginA's Farm</div>
+                <div class="vendor-desc">
+                    <span class="lang-en">Organic vegetables, farm-fresh eggs, homemade preserves</span>
+                    <span class="lang-zh">有機蔬菜、農場新鮮雞蛋、自製醃製品</span>
+                    <span class="lang-th">ผักออร์แกนิก ไข่สดจากฟาร์ม ของหมักทำเอง</span>
+                </div>
+                <div class="vendor-stats">
+                    <div class="vendor-stat">
+                        <div class="vendor-stat-value">4.9</div>
+                        <div class="vendor-stat-label">★ Rating</div>
+                    </div>
+                    <div class="vendor-stat">
+                        <div class="vendor-stat-value">847</div>
+                        <div class="vendor-stat-label">Sales</div>
+                    </div>
+                    <div class="vendor-stat">
+                        <div class="vendor-stat-value">100%</div>
+                        <div class="vendor-stat-label">Positive</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="sell-cta">
+                <h3>🏪 <span class="lang-en">Sell Your Products</span><span class="lang-zh">銷售您的產品</span><span class="lang-th">ขายสินค้าของคุณ</span></h3>
+                <p>
+                    <span class="lang-en">Join 12 vendors earning NWG daily. Zero fees!</span>
+                    <span class="lang-zh">加入 12 位每天賺取 NWG 的賣家。零費用！</span>
+                    <span class="lang-th">เข้าร่วมกับผู้ขาย 12 รายที่รับ NWG ทุกวัน ไม่มีค่าธรรมเนียม!</span>
+                </p>
+                <a href="/my-business" class="btn-become-vendor">
+                    🚀 <span class="lang-en">Start Selling</span><span class="lang-zh">開始銷售</span><span class="lang-th">เริ่มขาย</span>
+                </a>
+            </div>
+        </aside>
+        
+        <!-- Products -->
+        <main class="products-section">
+            <!-- Deals Banner -->
+            <div class="deals-banner">
+                <div class="deals-content">
+                    <h3>🔥 <span class="lang-en">Flash Sale - 50% OFF</span><span class="lang-zh">閃購特賣 - 5折優惠</span><span class="lang-th">Flash Sale ลด 50%</span></h3>
+                    <p>
+                        <span class="lang-en">Premium organic produce from guild farms. Limited time only!</span>
+                        <span class="lang-zh">公會農場的頂級有機農產品。限時特賣！</span>
+                        <span class="lang-th">ผลิตภัณฑ์ออร์แกนิกพรีเมี่ยมจากฟาร์มกิลด์ เวลาจำกัด!</span>
+                    </p>
+                    <div class="deals-timer">
+                        <div class="timer-unit">
+                            <div class="timer-value" id="hours">05</div>
+                            <div class="timer-label">HRS</div>
+                        </div>
+                        <div class="timer-unit">
+                            <div class="timer-value" id="minutes">47</div>
+                            <div class="timer-label">MIN</div>
+                        </div>
+                        <div class="timer-unit">
+                            <div class="timer-value" id="seconds">23</div>
+                            <div class="timer-label">SEC</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="deals-action">
+                    <a href="#flash-sale" class="btn-shop-deals">
+                        <span class="lang-en">Shop Flash Sale →</span>
+                        <span class="lang-zh">搶購閃購 →</span>
+                        <span class="lang-th">ช้อป Flash Sale →</span>
+                    </a>
+                </div>
+            </div>
+            
+            <!-- Products Grid -->
+            <section>
+                <div class="section-header">
+                    <h2 class="section-title">
+                        🍎 <span class="lang-en">Fresh Produce</span><span class="lang-zh">新鮮蔬果</span><span class="lang-th">ผักผลไม้สด</span>
+                    </h2>
+                    <div class="filter-tabs">
+                        <button class="filter-tab active" data-filter="all"><span class="lang-en">All</span><span class="lang-zh">全部</span><span class="lang-th">ทั้งหมด</span></button>
+                        <button class="filter-tab" data-filter="organic"><span class="lang-en">Organic</span><span class="lang-zh">有機</span><span class="lang-th">ออร์แกนิก</span></button>
+                        <button class="filter-tab" data-filter="local"><span class="lang-en">Local</span><span class="lang-zh">本地</span><span class="lang-th">ท้องถิ่น</span></button>
+                        <button class="filter-tab" data-filter="sale"><span class="lang-en">On Sale</span><span class="lang-zh">特價</span><span class="lang-th">ลดราคา</span></button>
+                    </div>
+                </div>
+                
+                <div class="products-grid">
+                    <!-- Product 1 -->
+                    <div class="product-card">
+                        <div class="product-image">
+                            🍎
+                            <span class="product-tag tag-organic">ORGANIC</span>
+                        </div>
+                        <div class="product-info">
+                            <div class="product-name">
+                                <span class="lang-en">Fresh Red Apples</span>
+                                <span class="lang-zh">新鮮紅蘋果</span>
+                                <span class="lang-th">แอปเปิ้ลแดงสด</span>
+                            </div>
+                            <div class="product-vendor">by RegginA's Farm</div>
+                            <div class="product-price">
+                                <span class="price-current">₲ 25</span>
+                                <span class="price-original">₲ 35</span>
+                            </div>
+                            <div class="product-actions">
+                                <button class="btn-add-cart"><span class="lang-en">Add to Cart</span><span class="lang-zh">加入購物車</span><span class="lang-th">เพิ่มในตะกร้า</span></button>
+                                <button class="btn-wishlist">♡</button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Product 2 -->
+                    <div class="product-card">
+                        <div class="product-image">
+                            🥬
+                            <span class="product-tag tag-new">NEW</span>
+                        </div>
+                        <div class="product-info">
+                            <div class="product-name">
+                                <span class="lang-en">Fresh Lettuce Bundle</span>
+                                <span class="lang-zh">新鮮生菜包</span>
+                                <span class="lang-th">ผักกาดสด</span>
+                            </div>
+                            <div class="product-vendor">by Yuluner's Garden</div>
+                            <div class="product-price">
+                                <span class="price-current">₲ 15</span>
+                            </div>
+                            <div class="product-actions">
+                                <button class="btn-add-cart"><span class="lang-en">Add to Cart</span><span class="lang-zh">加入購物車</span><span class="lang-th">เพิ่มในตะกร้า</span></button>
+                                <button class="btn-wishlist">♡</button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Product 3 -->
+                    <div class="product-card">
+                        <div class="product-image">
+                            🍊
+                            <span class="product-tag tag-sale">-30%</span>
+                        </div>
+                        <div class="product-info">
+                            <div class="product-name">
+                                <span class="lang-en">Juicy Oranges (6pc)</span>
+                                <span class="lang-zh">多汁橙子 (6入)</span>
+                                <span class="lang-th">ส้มฉ่ำ (6ลูก)</span>
+                            </div>
+                            <div class="product-vendor">by 阿光's Citrus</div>
+                            <div class="product-price">
+                                <span class="price-current">₲ 42</span>
+                                <span class="price-original">₲ 60</span>
+                            </div>
+                            <div class="product-actions">
+                                <button class="btn-add-cart"><span class="lang-en">Add to Cart</span><span class="lang-zh">加入購物車</span><span class="lang-th">เพิ่มในตะกร้า</span></button>
+                                <button class="btn-wishlist">♡</button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Product 4 -->
+                    <div class="product-card">
+                        <div class="product-image">
+                            🥕
+                            <span class="product-tag tag-organic">ORGANIC</span>
+                        </div>
+                        <div class="product-info">
+                            <div class="product-name">
+                                <span class="lang-en">Organic Carrots (1kg)</span>
+                                <span class="lang-zh">有機紅蘿蔔 (1公斤)</span>
+                                <span class="lang-th">แครอทออร์แกนิก (1กก.)</span>
+                            </div>
+                            <div class="product-vendor">by RegginA's Farm</div>
+                            <div class="product-price">
+                                <span class="price-current">₲ 18</span>
+                            </div>
+                            <div class="product-actions">
+                                <button class="btn-add-cart"><span class="lang-en">Add to Cart</span><span class="lang-zh">加入購物車</span><span class="lang-th">เพิ่มในตะกร้า</span></button>
+                                <button class="btn-wishlist">♡</button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Product 5 -->
+                    <div class="product-card">
+                        <div class="product-image">
+                            🍇
+                        </div>
+                        <div class="product-info">
+                            <div class="product-name">
+                                <span class="lang-en">Premium Grapes</span>
+                                <span class="lang-zh">優質葡萄</span>
+                                <span class="lang-th">องุ่นพรีเมี่ยม</span>
+                            </div>
+                            <div class="product-vendor">by 泰拳寒玉</div>
+                            <div class="product-price">
+                                <span class="price-current">₲ 55</span>
+                            </div>
+                            <div class="product-actions">
+                                <button class="btn-add-cart"><span class="lang-en">Add to Cart</span><span class="lang-zh">加入購物車</span><span class="lang-th">เพิ่มในตะกร้า</span></button>
+                                <button class="btn-wishlist">♡</button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Product 6 -->
+                    <div class="product-card">
+                        <div class="product-image">
+                            🥦
+                            <span class="product-tag tag-organic">ORGANIC</span>
+                        </div>
+                        <div class="product-info">
+                            <div class="product-name">
+                                <span class="lang-en">Fresh Broccoli</span>
+                                <span class="lang-zh">新鮮花椰菜</span>
+                                <span class="lang-th">บร็อคโคลี่สด</span>
+                            </div>
+                            <div class="product-vendor">by Natehouoho</div>
+                            <div class="product-price">
+                                <span class="price-current">₲ 22</span>
+                            </div>
+                            <div class="product-actions">
+                                <button class="btn-add-cart"><span class="lang-en">Add to Cart</span><span class="lang-zh">加入購物車</span><span class="lang-th">เพิ่มในตะกร้า</span></button>
+                                <button class="btn-wishlist">♡</button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Product 7 -->
+                    <div class="product-card">
+                        <div class="product-image">
+                            🍌
+                            <span class="product-tag tag-sale">-20%</span>
+                        </div>
+                        <div class="product-info">
+                            <div class="product-name">
+                                <span class="lang-en">Ripe Bananas (bunch)</span>
+                                <span class="lang-zh">成熟香蕉 (一串)</span>
+                                <span class="lang-th">กล้วยสุก (หวี)</span>
+                            </div>
+                            <div class="product-vendor">by 騎鳥回家</div>
+                            <div class="product-price">
+                                <span class="price-current">₲ 12</span>
+                                <span class="price-original">₲ 15</span>
+                            </div>
+                            <div class="product-actions">
+                                <button class="btn-add-cart"><span class="lang-en">Add to Cart</span><span class="lang-zh">加入購物車</span><span class="lang-th">เพิ่มในตะกร้า</span></button>
+                                <button class="btn-wishlist">♡</button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Product 8 -->
+                    <div class="product-card">
+                        <div class="product-image">
+                            🍅
+                            <span class="product-tag tag-new">NEW</span>
+                        </div>
+                        <div class="product-info">
+                            <div class="product-name">
+                                <span class="lang-en">Cherry Tomatoes</span>
+                                <span class="lang-zh">小番茄</span>
+                                <span class="lang-th">มะเขือเทศเชอร์รี่</span>
+                            </div>
+                            <div class="product-vendor">by RegginO's Plot</div>
+                            <div class="product-price">
+                                <span class="price-current">₲ 28</span>
+                            </div>
+                            <div class="product-actions">
+                                <button class="btn-add-cart"><span class="lang-en">Add to Cart</span><span class="lang-zh">加入購物車</span><span class="lang-th">เพิ่มในตะกร้า</span></button>
+                                <button class="btn-wishlist">♡</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- Vendors Section -->
+            <section class="vendors-section">
+                <div class="section-header">
+                    <h2 class="section-title">
+                        🏪 <span class="lang-en">Shop by Vendor</span><span class="lang-zh">按賣家購物</span><span class="lang-th">ช้อปตามผู้ขาย</span>
+                    </h2>
+                </div>
+                
+                <div class="vendors-grid">
+                    <div class="vendor-card">
+                        <div class="vendor-banner"></div>
+                        <div class="vendor-avatar">🌱</div>
+                        <div class="vendor-verified">✓</div>
+                        <div class="vendor-info">
+                            <div class="vendor-header">
+                                <div class="vendor-title">RegginA's Farm</div>
+                                <div class="vendor-rating">⭐ 4.9</div>
+                            </div>
+                            <div class="vendor-category">
+                                <span class="lang-en">Organic Produce • Farm Fresh</span>
+                                <span class="lang-zh">有機農產品 • 農場新鮮</span>
+                                <span class="lang-th">ผักออร์แกนิก • สดจากฟาร์ม</span>
+                            </div>
+                            <div class="vendor-meta">
+                                <div class="meta-item"><span>58</span> products</div>
+                                <div class="meta-item"><span>847</span> sales</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="vendor-card">
+                        <div class="vendor-banner" style="background: linear-gradient(135deg, rgba(255,140,0,0.3) 0%, rgba(255,69,0,0.2) 100%);"></div>
+                        <div class="vendor-avatar" style="background: #ff8c00;">🥖</div>
+                        <div class="vendor-verified">✓</div>
+                        <div class="vendor-info">
+                            <div class="vendor-header">
+                                <div class="vendor-title">Yuluner's Bakery</div>
+                                <div class="vendor-rating">⭐ 4.8</div>
+                            </div>
+                            <div class="vendor-category">
+                                <span class="lang-en">Artisan Bread • Pastries</span>
+                                <span class="lang-zh">手工麵包 • 糕點</span>
+                                <span class="lang-th">ขนมปังหัตถกรรม • ขนมอบ</span>
+                            </div>
+                            <div class="vendor-meta">
+                                <div class="meta-item"><span>34</span> products</div>
+                                <div class="meta-item"><span>562</span> sales</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="vendor-card">
+                        <div class="vendor-banner" style="background: linear-gradient(135deg, rgba(74,144,217,0.3) 0%, rgba(59,130,246,0.2) 100%);"></div>
+                        <div class="vendor-avatar" style="background: #4a90d9;">🐟</div>
+                        <div class="vendor-info">
+                            <div class="vendor-header">
+                                <div class="vendor-title">騎鳥回家 Seafood</div>
+                                <div class="vendor-rating">⭐ 4.7</div>
+                            </div>
+                            <div class="vendor-category">
+                                <span class="lang-en">Fresh Seafood • Daily Catch</span>
+                                <span class="lang-zh">新鮮海鮮 • 每日漁獲</span>
+                                <span class="lang-th">อาหารทะเลสด • จับประจำวัน</span>
+                            </div>
+                            <div class="vendor-meta">
+                                <div class="meta-item"><span>42</span> products</div>
+                                <div class="meta-item"><span>389</span> sales</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="vendor-card">
+                        <div class="vendor-banner" style="background: linear-gradient(135deg, rgba(157,78,221,0.3) 0%, rgba(139,92,246,0.2) 100%);"></div>
+                        <div class="vendor-avatar" style="background: #9d4edd;">🧁</div>
+                        <div class="vendor-info">
+                            <div class="vendor-header">
+                                <div class="vendor-title">泰拳寒玉 Sweets</div>
+                                <div class="vendor-rating">⭐ 4.9</div>
+                            </div>
+                            <div class="vendor-category">
+                                <span class="lang-en">Desserts • Thai Sweets</span>
+                                <span class="lang-zh">甜點 • 泰式甜點</span>
+                                <span class="lang-th">ของหวาน • ขนมไทย</span>
+                            </div>
+                            <div class="vendor-meta">
+                                <div class="meta-item"><span>28</span> products</div>
+                                <div class="meta-item"><span>456</span> sales</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Cart Modal -->
+    <div class="cart-overlay" id="cartOverlay"></div>
+    <div class="cart-modal" id="cartModal">
+        <div class="cart-header">
+            <div class="cart-title">🛒 <span class="lang-en">Your Cart</span><span class="lang-zh">您的購物車</span><span class="lang-th">ตะกร้าของคุณ</span></div>
+            <button class="cart-close" id="closeCart">×</button>
+        </div>
+        <div class="cart-items">
+            <div class="cart-item">
+                <div class="cart-item-image">🍎</div>
+                <div class="cart-item-info">
+                    <div class="cart-item-name">Fresh Red Apples</div>
+                    <div class="cart-item-price">₲ 25</div>
+                    <div class="cart-item-qty">
+                        <button class="qty-btn">-</button>
+                        <span>2</span>
+                        <button class="qty-btn">+</button>
+                    </div>
+                </div>
+            </div>
+            <div class="cart-item">
+                <div class="cart-item-image">🥬</div>
+                <div class="cart-item-info">
+                    <div class="cart-item-name">Fresh Lettuce Bundle</div>
+                    <div class="cart-item-price">₲ 15</div>
+                    <div class="cart-item-qty">
+                        <button class="qty-btn">-</button>
+                        <span>1</span>
+                        <button class="qty-btn">+</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="cart-footer">
+            <div class="cart-total">
+                <span><span class="lang-en">Total</span><span class="lang-zh">總計</span><span class="lang-th">รวม</span>:</span>
+                <span>₲ 65</span>
+            </div>
+            <button class="btn-checkout">
+                <span class="lang-en">Checkout with NWG</span>
+                <span class="lang-zh">使用 NWG 結帳</span>
+                <span class="lang-th">ชำระด้วย NWG</span>
+            </button>
+        </div>
+    </div>
+
+    <script src="/static/nw-nav.js"></script>
+    <script>
+        // Language toggle
+        document.querySelectorAll('.lang-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const lang = btn.dataset.lang;
+                document.body.className = lang;
+                document.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                localStorage.setItem('nw_lang', lang);
+            });
+        });
+        
+        // Load saved language
+        const savedLang = localStorage.getItem('nw_lang') || 'en';
+        document.body.className = savedLang;
+        document.querySelectorAll('.lang-btn').forEach(btn => {
+            btn.classList.toggle('active', btn.dataset.lang === savedLang);
+        });
+        
+        // Cart modal
+        const cartModal = document.getElementById('cartModal');
+        const cartOverlay = document.getElementById('cartOverlay');
+        document.getElementById('openCart').addEventListener('click', () => {
+            cartModal.classList.add('open');
+            cartOverlay.classList.add('open');
+        });
+        document.getElementById('closeCart').addEventListener('click', () => {
+            cartModal.classList.remove('open');
+            cartOverlay.classList.remove('open');
+        });
+        cartOverlay.addEventListener('click', () => {
+            cartModal.classList.remove('open');
+            cartOverlay.classList.remove('open');
+        });
+        
+        // Category filter
+        document.querySelectorAll('.category-item').forEach(item => {
+            item.addEventListener('click', () => {
+                document.querySelectorAll('.category-item').forEach(i => i.classList.remove('active'));
+                item.classList.add('active');
+            });
+        });
+        
+        // Filter tabs
+        document.querySelectorAll('.filter-tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+            });
+        });
+        
+        // Countdown timer
+        function updateTimer() {
+            const now = new Date();
+            const midnight = new Date();
+            midnight.setHours(24, 0, 0, 0);
+            const diff = midnight - now;
+            
+            const hours = Math.floor(diff / (1000 * 60 * 60));
+            const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+            
+            document.getElementById('hours').textContent = String(hours).padStart(2, '0');
+            document.getElementById('minutes').textContent = String(minutes).padStart(2, '0');
+            document.getElementById('seconds').textContent = String(seconds).padStart(2, '0');
+        }
+        
+        setInterval(updateTimer, 1000);
+        updateTimer();
+    </script>
+</body>
+</html>

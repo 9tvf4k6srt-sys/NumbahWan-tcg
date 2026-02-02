@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Job Board | NumbahWan Careers</title>
+    <link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="/static/nw-tokens.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="/static/nw-icons-inline.js"></script>
+    <style>
+        :root {
+            --job-dark: #080a0f;
+            --job-card: #101318;
+            --job-border: #1e252e;
+            --job-cyan: #00bfff;
+            --job-green: #22c55e;
+            --job-gold: #ffd700;
+            --job-purple: #9d4edd;
+        }
+        
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            background: var(--job-dark);
+            min-height: 100vh;
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            color: #fff;
+        }
+        
+        .job-header {
+            background: linear-gradient(180deg, rgba(0,191,255,0.1) 0%, transparent 100%);
+            border-bottom: 1px solid var(--job-border);
+            padding: 1rem 2rem;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            backdrop-filter: blur(10px);
+        }
+        
+        .header-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+        
+        .job-brand { display: flex; align-items: center; gap: 1rem; }
+        
+        .job-logo {
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg, var(--job-cyan) 0%, #0077b6 100%);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+        }
+        
+        .job-title { font-size: 1.5rem; font-weight: bold; color: var(--job-cyan); }
+        .job-subtitle { font-size: 0.8rem; color: #888; }
+        
+        .header-actions { display: flex; gap: 1rem; align-items: center; }
+        
+        .btn-post-job {
+            background: linear-gradient(135deg, var(--job-cyan) 0%, #0077b6 100%);
+            color: #fff;
+            padding: 0.75rem 1.25rem;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: all 0.3s;
+        }
+        
+        .btn-post-job:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(0,191,255,0.4);
+        }
+        
+        .lang-toggle {
+            display: flex;
+            gap: 0.25rem;
+            background: var(--job-card);
+            padding: 0.25rem;
+            border-radius: 8px;
+            border: 1px solid var(--job-border);
+        }
+        
+        .lang-btn {
+            padding: 0.5rem 0.75rem;
+            border: none;
+            background: transparent;
+            color: #888;
+            cursor: pointer;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            transition: all 0.3s;
+        }
+        
+        .lang-btn.active { background: var(--job-cyan); color: #000; }
+        
+        /* Hero */
+        .hero-section {
+            background: linear-gradient(135deg, rgba(0,191,255,0.15) 0%, rgba(0,119,182,0.1) 100%);
+            padding: 3rem 2rem;
+            text-align: center;
+            border-bottom: 1px solid var(--job-border);
+        }
+        
+        .hero-title {
+            font-size: 2.5rem;
+            font-weight: 800;
+            margin-bottom: 1rem;
+            background: linear-gradient(135deg, #fff 0%, var(--job-cyan) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .hero-desc { color: #aaa; max-width: 600px; margin: 0 auto 2rem; }
+        
+        .stats-row {
+            display: flex;
+            justify-content: center;
+            gap: 3rem;
+            flex-wrap: wrap;
+        }
+        
+        .stat-value { font-size: 2rem; font-weight: 800; color: var(--job-cyan); }
+        .stat-label { font-size: 0.85rem; color: #888; }
+        
+        /* Main */
+        .main-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+        
+        /* Filter Bar */
+        .filter-bar {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            margin-bottom: 2rem;
+        }
+        
+        .filter-chip {
+            background: var(--job-card);
+            border: 1px solid var(--job-border);
+            border-radius: 20px;
+            padding: 0.5rem 1rem;
+            color: #ccc;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .filter-chip:hover, .filter-chip.active {
+            border-color: var(--job-cyan);
+            color: var(--job-cyan);
+            background: rgba(0,191,255,0.1);
+        }
+        
+        /* Job Listings */
+        .jobs-list { display: flex; flex-direction: column; gap: 1rem; margin-bottom: 3rem; }
+        
+        .job-card {
+            background: var(--job-card);
+            border: 1px solid var(--job-border);
+            border-radius: 16px;
+            padding: 1.5rem;
+            display: flex;
+            gap: 1.5rem;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+        
+        .job-card:hover {
+            border-color: var(--job-cyan);
+            box-shadow: 0 10px 30px rgba(0,191,255,0.1);
+        }
+        
+        .job-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.75rem;
+            flex-shrink: 0;
+        }
+        
+        .job-icon.type-guild { background: linear-gradient(135deg, rgba(0,191,255,0.3) 0%, rgba(0,119,182,0.2) 100%); }
+        .job-icon.type-shop { background: linear-gradient(135deg, rgba(34,197,94,0.3) 0%, rgba(22,163,74,0.2) 100%); }
+        .job-icon.type-event { background: linear-gradient(135deg, rgba(157,78,221,0.3) 0%, rgba(139,92,246,0.2) 100%); }
+        .job-icon.type-tech { background: linear-gradient(135deg, rgba(255,215,0,0.3) 0%, rgba(184,134,11,0.2) 100%); }
+        
+        .job-content { flex: 1; }
+        
+        .job-header-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 0.5rem;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+        
+        .job-name { font-weight: 700; font-size: 1.15rem; }
+        
+        .job-badges { display: flex; gap: 0.5rem; }
+        
+        .badge {
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.65rem;
+            font-weight: 700;
+        }
+        
+        .badge-urgent { background: #ef4444; color: #fff; }
+        .badge-featured { background: var(--job-gold); color: #000; }
+        .badge-new { background: var(--job-green); color: #000; }
+        
+        .job-employer {
+            color: #888;
+            font-size: 0.9rem;
+            margin-bottom: 0.75rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .job-desc {
+            color: #aaa;
+            font-size: 0.9rem;
+            margin-bottom: 1rem;
+            line-height: 1.5;
+        }
+        
+        .job-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+        
+        .tag {
+            background: rgba(255,255,255,0.05);
+            padding: 0.35rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            color: #888;
+        }
+        
+        .job-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-top: 1rem;
+            border-top: 1px solid var(--job-border);
+        }
+        
+        .job-pay {
+            font-weight: 700;
+            color: var(--job-green);
+            font-size: 1.1rem;
+        }
+        
+        .job-meta {
+            display: flex;
+            gap: 1rem;
+            font-size: 0.85rem;
+            color: #888;
+        }
+        
+        .btn-apply {
+            background: var(--job-cyan);
+            color: #000;
+            padding: 0.6rem 1.25rem;
+            border-radius: 8px;
+            border: none;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .btn-apply:hover { transform: scale(1.05); }
+        
+        /* Post Job CTA */
+        .post-cta {
+            background: linear-gradient(135deg, rgba(0,191,255,0.15) 0%, rgba(0,119,182,0.1) 100%);
+            border: 1px solid rgba(0,191,255,0.3);
+            border-radius: 16px;
+            padding: 3rem 2rem;
+            text-align: center;
+        }
+        
+        .cta-icon { font-size: 4rem; margin-bottom: 1rem; }
+        .cta-title { font-size: 1.75rem; font-weight: 700; margin-bottom: 0.75rem; }
+        .cta-desc { color: #aaa; max-width: 600px; margin: 0 auto 2rem; }
+        
+        .btn-post-cta {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: var(--job-cyan);
+            color: #000;
+            padding: 1rem 2rem;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 700;
+            font-size: 1.1rem;
+            transition: all 0.3s;
+        }
+        
+        .btn-post-cta:hover {
+            transform: scale(1.05);
+            box-shadow: 0 10px 30px rgba(0,191,255,0.4);
+        }
+        
+        .back-btn {
+            position: fixed;
+            top: 1rem;
+            left: 1rem;
+            width: 44px;
+            height: 44px;
+            background: var(--job-card);
+            border: 1px solid var(--job-border);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            text-decoration: none;
+            z-index: 200;
+            transition: all 0.3s;
+        }
+        
+        .back-btn:hover { border-color: var(--job-cyan); color: var(--job-cyan); }
+        
+        .lang-en, .lang-zh, .lang-th { display: none; }
+        body.en .lang-en { display: inline; }
+        body.zh .lang-zh { display: inline; }
+        body.th .lang-th { display: inline; }
+        
+        @media (max-width: 768px) {
+            .hero-title { font-size: 1.75rem; }
+            .job-card { flex-direction: column; }
+            .stats-row { gap: 1.5rem; }
+        }
+    </style>
+</head>
+<body class="en">
+    <a href="/business" class="back-btn">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M19 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H19v-2z"/></svg>
+    </a>
+
+    <header class="job-header">
+        <div class="header-content">
+            <div class="job-brand">
+                <div class="job-logo">💼</div>
+                <div>
+                    <div class="job-title"><span class="lang-en">Job Board</span><span class="lang-zh">工作板</span><span class="lang-th">บอร์ดงาน</span></div>
+                    <div class="job-subtitle"><span class="lang-en">NumbahWan Guild Careers</span><span class="lang-zh">NumbahWan 公會職業</span><span class="lang-th">อาชีพกิลด์ NumbahWan</span></div>
+                </div>
+            </div>
+            <div class="header-actions">
+                <a href="/my-business" class="btn-post-job">📝 <span class="lang-en">Post a Job</span><span class="lang-zh">發布職位</span><span class="lang-th">โพสต์งาน</span></a>
+                <div class="lang-toggle">
+                    <button class="lang-btn active" data-lang="en">EN</button>
+                    <button class="lang-btn" data-lang="zh">中文</button>
+                    <button class="lang-btn" data-lang="th">ไทย</button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <section class="hero-section">
+        <h1 class="hero-title"><span class="lang-en">Find Work. Hire Talent. Earn NWG.</span><span class="lang-zh">找工作。僱人才。賺 NWG。</span><span class="lang-th">หางาน จ้างคนเก่ง รับ NWG</span></h1>
+        <p class="hero-desc"><span class="lang-en">Browse guild jobs or post your own gigs. All payments in NWG. Trusted community, verified members only.</span><span class="lang-zh">瀏覽公會工作或發布您自己的零工。所有付款使用 NWG。值得信賴的社區，僅限經過驗證的成員。</span><span class="lang-th">ดูงานกิลด์หรือโพสต์งานของคุณเอง จ่ายทั้งหมดด้วย NWG ชุมชนที่เชื่อถือได้ เฉพาะสมาชิกที่ยืนยันแล้ว</span></p>
+        <div class="stats-row">
+            <div><div class="stat-value">18</div><div class="stat-label"><span class="lang-en">Open Positions</span><span class="lang-zh">空缺職位</span><span class="lang-th">ตำแหน่งว่าง</span></div></div>
+            <div><div class="stat-value">₲ 50+</div><div class="stat-label"><span class="lang-en">Avg Hourly Pay</span><span class="lang-zh">平均時薪</span><span class="lang-th">ค่าจ้างเฉลี่ย/ชม.</span></div></div>
+            <div><div class="stat-value">24h</div><div class="stat-label"><span class="lang-en">Quick Hire</span><span class="lang-zh">快速僱用</span><span class="lang-th">จ้างเร็ว</span></div></div>
+        </div>
+    </section>
+
+    <main class="main-content">
+        <div class="filter-bar">
+            <button class="filter-chip active">📊 <span class="lang-en">All Jobs</span><span class="lang-zh">全部工作</span><span class="lang-th">ทุกงาน</span></button>
+            <button class="filter-chip">🏰 <span class="lang-en">Guild Roles</span><span class="lang-zh">公會角色</span><span class="lang-th">บทบาทกิลด์</span></button>
+            <button class="filter-chip">🏪 <span class="lang-en">Shop Help</span><span class="lang-zh">商店幫助</span><span class="lang-th">ช่วยร้าน</span></button>
+            <button class="filter-chip">🎮 <span class="lang-en">Gaming</span><span class="lang-zh">遊戲</span><span class="lang-th">เกม</span></button>
+            <button class="filter-chip">💻 <span class="lang-en">Tech</span><span class="lang-zh">技術</span><span class="lang-th">เทค</span></button>
+            <button class="filter-chip">🎨 <span class="lang-en">Creative</span><span class="lang-zh">創意</span><span class="lang-th">สร้างสรรค์</span></button>
+        </div>
+        
+        <div class="jobs-list">
+            <div class="job-card">
+                <div class="job-icon type-guild">🏰</div>
+                <div class="job-content">
+                    <div class="job-header-row">
+                        <div class="job-name"><span class="lang-en">Guild Event Coordinator</span><span class="lang-zh">公會活動協調員</span><span class="lang-th">ผู้ประสานงานกิจกรรมกิลด์</span></div>
+                        <div class="job-badges"><span class="badge badge-featured">FEATURED</span><span class="badge badge-urgent">URGENT</span></div>
+                    </div>
+                    <div class="job-employer">🏢 NumbahWan Guild Official</div>
+                    <div class="job-desc"><span class="lang-en">Help organize weekly guild events, boss runs, and community activities. Requires good communication and scheduling skills.</span><span class="lang-zh">幫助組織每週公會活動、BOSS 副本和社區活動。需要良好的溝通和安排能力。</span><span class="lang-th">ช่วยจัดกิจกรรมกิลด์รายสัปดาห์ บอสรัน และกิจกรรมชุมชน ต้องมีทักษะการสื่อสารและการจัดตาราง</span></div>
+                    <div class="job-tags"><span class="tag">Part-time</span><span class="tag">Remote</span><span class="tag">Flexible Hours</span><span class="tag">Leadership</span></div>
+                    <div class="job-footer">
+                        <div class="job-pay">₲ 100 / event</div>
+                        <div class="job-meta"><span>📅 Posted 2h ago</span><span>👥 5 applicants</span></div>
+                        <button class="btn-apply"><span class="lang-en">Apply</span><span class="lang-zh">申請</span><span class="lang-th">สมัคร</span></button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="job-card">
+                <div class="job-icon type-shop">🏪</div>
+                <div class="job-content">
+                    <div class="job-header-row">
+                        <div class="job-name"><span class="lang-en">Supermarket Stock Manager</span><span class="lang-zh">超市庫存經理</span><span class="lang-th">ผู้จัดการสต็อกซูเปอร์มาร์เก็ต</span></div>
+                        <div class="job-badges"><span class="badge badge-new">NEW</span></div>
+                    </div>
+                    <div class="job-employer">🏢 RegginA's Farm</div>
+                    <div class="job-desc"><span class="lang-en">Manage inventory, update product listings, handle customer inquiries. Perfect for organized individuals.</span><span class="lang-zh">管理庫存、更新產品列表、處理客戶諮詢。適合有組織能力的人。</span><span class="lang-th">จัดการสินค้าคงคลัง อัปเดตรายการสินค้า ตอบคำถามลูกค้า เหมาะสำหรับคนที่มีระเบียบ</span></div>
+                    <div class="job-tags"><span class="tag">Part-time</span><span class="tag">Daily Tasks</span><span class="tag">Inventory</span></div>
+                    <div class="job-footer">
+                        <div class="job-pay">₲ 50 / day</div>
+                        <div class="job-meta"><span>📅 Posted 1d ago</span><span>👥 3 applicants</span></div>
+                        <button class="btn-apply"><span class="lang-en">Apply</span><span class="lang-zh">申請</span><span class="lang-th">สมัคร</span></button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="job-card">
+                <div class="job-icon type-tech">💻</div>
+                <div class="job-content">
+                    <div class="job-header-row">
+                        <div class="job-name"><span class="lang-en">Discord Bot Developer</span><span class="lang-zh">Discord 機器人開發者</span><span class="lang-th">นักพัฒนา Discord Bot</span></div>
+                    </div>
+                    <div class="job-employer">🏢 Yuluner Tech Services</div>
+                    <div class="job-desc"><span class="lang-en">Build custom Discord bots for guild management, mini-games, and automation. Experience with Node.js required.</span><span class="lang-zh">為公會管理、迷你遊戲和自動化構建自定義 Discord 機器人。需要 Node.js 經驗。</span><span class="lang-th">สร้าง Discord Bot สำหรับจัดการกิลด์ มินิเกม และอัตโนมัติ ต้องมีประสบการณ์ Node.js</span></div>
+                    <div class="job-tags"><span class="tag">Freelance</span><span class="tag">Node.js</span><span class="tag">Discord API</span><span class="tag">Project-based</span></div>
+                    <div class="job-footer">
+                        <div class="job-pay">₲ 300-800 / project</div>
+                        <div class="job-meta"><span>📅 Posted 3d ago</span><span>👥 8 applicants</span></div>
+                        <button class="btn-apply"><span class="lang-en">Apply</span><span class="lang-zh">申請</span><span class="lang-th">สมัคร</span></button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="job-card">
+                <div class="job-icon type-event">🎮</div>
+                <div class="job-content">
+                    <div class="job-header-row">
+                        <div class="job-name"><span class="lang-en">Boss Run Carry Service</span><span class="lang-zh">BOSS 副本帶路服務</span><span class="lang-th">บริการพาบอสรัน</span></div>
+                    </div>
+                    <div class="job-employer">🏢 阿光's Gaming Services</div>
+                    <div class="job-desc"><span class="lang-en">Help newer guild members complete difficult boss content. Must have maxed character and boss experience.</span><span class="lang-zh">幫助較新的公會成員完成困難的 BOSS 內容。必須有滿級角色和 BOSS 經驗。</span><span class="lang-th">ช่วยสมาชิกใหม่ผ่านบอสยาก ต้องมีตัวละครเต็มเลเวลและประสบการณ์บอส</span></div>
+                    <div class="job-tags"><span class="tag">Gig</span><span class="tag">Gaming</span><span class="tag">High Level Required</span><span class="tag">Per Run</span></div>
+                    <div class="job-footer">
+                        <div class="job-pay">₲ 25-100 / run</div>
+                        <div class="job-meta"><span>📅 Posted 5d ago</span><span>👥 12 applicants</span></div>
+                        <button class="btn-apply"><span class="lang-en">Apply</span><span class="lang-zh">申請</span><span class="lang-th">สมัคร</span></button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="post-cta">
+            <div class="cta-icon">📋</div>
+            <h2 class="cta-title"><span class="lang-en">Hiring? Post a Job</span><span class="lang-zh">招聘中？發布職位</span><span class="lang-th">รับสมัครงาน? โพสต์งาน</span></h2>
+            <p class="cta-desc"><span class="lang-en">Reach verified guild members instantly. Free to post, pay only when you hire. All payments in NWG.</span><span class="lang-zh">立即聯繫經過驗證的公會成員。免費發布，僅在僱用時付款。所有付款使用 NWG。</span><span class="lang-th">เข้าถึงสมาชิกที่ยืนยันแล้วทันที โพสต์ฟรี จ่ายเมื่อจ้างเท่านั้น จ่ายทั้งหมดด้วย NWG</span></p>
+            <a href="/my-business" class="btn-post-cta">📝 <span class="lang-en">Post a Job Free</span><span class="lang-zh">免費發布職位</span><span class="lang-th">โพสต์งานฟรี</span></a>
+        </div>
+    </main>
+
+    <script src="/static/nw-nav.js"></script>
+    <script>
+        document.querySelectorAll('.lang-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const lang = btn.dataset.lang;
+                document.body.className = lang;
+                document.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                localStorage.setItem('nw_lang', lang);
+            });
+        });
+        const savedLang = localStorage.getItem('nw_lang') || 'en';
+        document.body.className = savedLang;
+        document.querySelectorAll('.lang-btn').forEach(btn => btn.classList.toggle('active', btn.dataset.lang === savedLang));
+        
+        document.querySelectorAll('.filter-chip').forEach(chip => {
+            chip.addEventListener('click', () => {
+                document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+                chip.classList.add('active');
+            });
+        });
+    </script>
+</body>
+</html>

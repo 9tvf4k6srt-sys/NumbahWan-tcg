@@ -43,6 +43,18 @@ const NW_NAV = {
                 { id: 'wallet', name: { en: 'Wallet', zh: '錢包', th: 'กระเป๋า' }, icon: 'wallet', href: '/wallet' }
             ]
         },
+        commerce: {
+            name: { en: 'Commerce', zh: '商業', th: 'การพาณิชย์' },
+            icon: 'coins',
+            color: '#00d26a',
+            pages: [
+                { id: 'business', name: { en: 'Business Hub', zh: '商業中心', th: 'ศูนย์ธุรกิจ' }, icon: 'coins', href: '/business', isNew: true, isHot: true },
+                { id: 'supermarket', name: { en: 'Supermarket', zh: '超市', th: 'ซูเปอร์มาร์เก็ต' }, icon: 'shopping-bag', href: '/supermarket', isNew: true },
+                { id: 'restaurant', name: { en: 'Restaurant', zh: '餐廳', th: 'ร้านอาหาร' }, icon: 'fire', href: '/restaurant', isNew: true },
+                { id: 'services', name: { en: 'Services', zh: '服務', th: 'บริการ' }, icon: 'scroll', href: '/services', isNew: true },
+                { id: 'my-business', name: { en: 'My Shop', zh: '我的店鋪', th: 'ร้านของฉัน' }, icon: 'inventory', href: '/my-business', isNew: true }
+            ]
+        },
         guild: {
             name: { en: 'Guild', zh: '公會', th: 'กิลด์' },
             icon: 'shield',       // 🏰 → guild shield

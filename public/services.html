@@ -1,0 +1,1232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NumbahWan Services | Guild Member Services Directory</title>
+    <link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="/static/nw-tokens.css">
+    <script src="/static/nw-icons-inline.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        :root {
+            --service-blue: #4a90d9;
+            --service-purple: #9d4edd;
+            --service-green: #00d26a;
+            --service-orange: #ff6b35;
+            --service-yellow: #ffd700;
+            --service-dark: #0a0a14;
+            --service-card: #12121e;
+            --service-border: #2a2a4e;
+        }
+        
+        * { box-sizing: border-box; }
+        
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--service-dark);
+            color: #ffffff;
+            margin: 0;
+            min-height: 100vh;
+        }
+        
+        /* Header */
+        .service-header {
+            background: linear-gradient(135deg, #0a0a1e 0%, #1a1a3e 100%);
+            border-bottom: 2px solid var(--service-blue);
+            padding: 1rem 2rem;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        
+        .header-content {
+            max-width: 1600px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+        
+        .logo-section {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        
+        .service-logo {
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg, var(--service-blue), var(--service-purple));
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+        }
+        
+        .service-title h1 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin: 0;
+            background: linear-gradient(135deg, var(--service-blue), var(--service-purple));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .service-title p {
+            font-size: 0.75rem;
+            color: #8b8bbb;
+            margin: 0;
+        }
+        
+        /* Search */
+        .search-section {
+            flex: 1;
+            max-width: 500px;
+            min-width: 250px;
+        }
+        
+        .search-bar {
+            display: flex;
+            background: var(--service-card);
+            border: 1px solid var(--service-border);
+            border-radius: 25px;
+            overflow: hidden;
+        }
+        
+        .search-bar input {
+            flex: 1;
+            padding: 0.75rem 1.25rem;
+            border: none;
+            background: transparent;
+            color: white;
+            font-size: 0.9rem;
+        }
+        
+        .search-bar input::placeholder { color: #6b6b8b; }
+        
+        .search-bar button {
+            padding: 0.75rem 1.5rem;
+            background: var(--service-blue);
+            border: none;
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        
+        /* Header Right */
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+        }
+        
+        .wallet-display {
+            background: linear-gradient(135deg, #1a1a2e 0%, #0f0f1e 100%);
+            border: 1px solid #ffd700;
+            border-radius: 12px;
+            padding: 0.5rem 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .wallet-balance {
+            font-weight: 700;
+            color: #ffd700;
+        }
+        
+        .lang-toggle {
+            display: flex;
+            gap: 0.5rem;
+        }
+        
+        .lang-btn {
+            padding: 0.4rem 0.8rem;
+            border-radius: 6px;
+            border: 1px solid var(--service-border);
+            background: transparent;
+            color: #8b8bbb;
+            cursor: pointer;
+            font-size: 0.75rem;
+        }
+        
+        .lang-btn.active {
+            background: var(--service-blue);
+            color: white;
+            border-color: var(--service-blue);
+        }
+        
+        /* Main Content */
+        .main-content {
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+        
+        /* Back Button */
+        .back-nav {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .back-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            background: var(--service-card);
+            border: 1px solid var(--service-border);
+            border-radius: 8px;
+            color: #8b8bbb;
+            text-decoration: none;
+            font-size: 0.85rem;
+            transition: all 0.2s;
+        }
+        
+        .back-btn:hover {
+            border-color: var(--service-blue);
+            color: var(--service-blue);
+        }
+        
+        /* Category Filters */
+        .category-filters {
+            display: flex;
+            gap: 0.75rem;
+            overflow-x: auto;
+            padding-bottom: 1rem;
+            margin-bottom: 2rem;
+        }
+        
+        .category-btn {
+            flex-shrink: 0;
+            background: var(--service-card);
+            border: 1px solid var(--service-border);
+            border-radius: 25px;
+            padding: 0.75rem 1.5rem;
+            color: #8b8bbb;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+        
+        .category-btn:hover {
+            border-color: var(--service-blue);
+        }
+        
+        .category-btn.active {
+            background: linear-gradient(135deg, var(--service-blue), var(--service-purple));
+            border-color: transparent;
+            color: white;
+        }
+        
+        /* Featured Provider */
+        .featured-provider {
+            background: linear-gradient(135deg, #1a1a3e 0%, #0f0f2e 100%);
+            border: 1px solid var(--service-purple);
+            border-radius: 16px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            display: grid;
+            grid-template-columns: auto 1fr auto;
+            gap: 1.5rem;
+            align-items: center;
+        }
+        
+        @media (max-width: 768px) {
+            .featured-provider {
+                grid-template-columns: 1fr;
+                text-align: center;
+            }
+        }
+        
+        .provider-avatar {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--service-blue), var(--service-purple));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+        }
+        
+        .provider-info h3 {
+            margin: 0 0 0.25rem 0;
+            background: linear-gradient(135deg, var(--service-blue), var(--service-purple));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .provider-info p {
+            margin: 0;
+            color: #8b8bbb;
+            font-size: 0.9rem;
+        }
+        
+        .provider-stats {
+            display: flex;
+            gap: 2rem;
+        }
+        
+        .provider-stat {
+            text-align: center;
+        }
+        
+        .provider-stat-value {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--service-blue);
+        }
+        
+        .provider-stat-label {
+            font-size: 0.7rem;
+            color: #8b8bbb;
+        }
+        
+        /* Services Grid */
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+        
+        .section-header h2 {
+            font-size: 1.5rem;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+        
+        .services-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 3rem;
+        }
+        
+        /* Service Card */
+        .service-card {
+            background: var(--service-card);
+            border: 1px solid var(--service-border);
+            border-radius: 16px;
+            overflow: hidden;
+            transition: all 0.3s;
+        }
+        
+        .service-card:hover {
+            transform: translateY(-5px);
+            border-color: var(--service-blue);
+            box-shadow: 0 10px 30px rgba(74, 144, 217, 0.2);
+        }
+        
+        .service-image {
+            height: 120px;
+            background: linear-gradient(135deg, #1a1a3e 0%, #0f0f2e 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+        
+        .service-image .emoji {
+            font-size: 3rem;
+        }
+        
+        .service-badges {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            display: flex;
+            gap: 0.5rem;
+        }
+        
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.65rem;
+            font-weight: 600;
+        }
+        
+        .badge-verified { background: var(--service-green); color: #0a0a0a; }
+        .badge-popular { background: var(--service-orange); color: white; }
+        .badge-new { background: var(--service-purple); color: white; }
+        .badge-premium { background: var(--service-yellow); color: #0a0a0a; }
+        
+        .service-category {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(0, 0, 0, 0.6);
+            padding: 0.25rem 0.5rem;
+            border-radius: 6px;
+            font-size: 0.65rem;
+            color: #8b8bbb;
+        }
+        
+        .service-info {
+            padding: 1rem;
+        }
+        
+        .service-header-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.5rem;
+        }
+        
+        .service-name {
+            font-weight: 700;
+            font-size: 1rem;
+            margin: 0;
+        }
+        
+        .service-rating {
+            background: var(--service-yellow);
+            color: #0a0a0a;
+            padding: 0.2rem 0.5rem;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+        }
+        
+        .service-provider {
+            color: #8b8bbb;
+            font-size: 0.75rem;
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+        }
+        
+        .service-provider .verified {
+            color: var(--service-green);
+        }
+        
+        .service-desc {
+            color: #9b9bbb;
+            font-size: 0.8rem;
+            margin-bottom: 0.75rem;
+            line-height: 1.4;
+        }
+        
+        .service-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .service-price {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--service-blue);
+        }
+        
+        .service-price .starting {
+            font-size: 0.7rem;
+            color: #8b8bbb;
+            font-weight: normal;
+        }
+        
+        .book-btn {
+            background: linear-gradient(135deg, var(--service-blue), var(--service-purple));
+            border: none;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 0.85rem;
+            transition: all 0.2s;
+        }
+        
+        .book-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 15px rgba(74, 144, 217, 0.3);
+        }
+        
+        /* Booking Modal */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 200;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+        }
+        
+        .modal-overlay.open {
+            display: flex;
+        }
+        
+        .modal {
+            background: var(--service-card);
+            border: 1px solid var(--service-border);
+            border-radius: 16px;
+            max-width: 500px;
+            width: 100%;
+            max-height: 90vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .modal-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid var(--service-border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .modal-header h2 {
+            margin: 0;
+            font-size: 1.25rem;
+        }
+        
+        .modal-close {
+            background: none;
+            border: none;
+            color: #8b8bbb;
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+        
+        .modal-body {
+            padding: 1.5rem;
+            overflow-y: auto;
+            flex: 1;
+        }
+        
+        .booking-form {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+        
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+        
+        .form-group label {
+            font-size: 0.85rem;
+            color: #8b8bbb;
+        }
+        
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            padding: 0.75rem;
+            border: 1px solid var(--service-border);
+            border-radius: 8px;
+            background: var(--service-dark);
+            color: white;
+            font-size: 0.9rem;
+        }
+        
+        .form-group textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+        
+        .booking-summary {
+            background: var(--service-dark);
+            border-radius: 12px;
+            padding: 1rem;
+            margin-top: 1rem;
+        }
+        
+        .summary-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.5rem;
+            color: #8b8bbb;
+        }
+        
+        .summary-row.total {
+            color: white;
+            font-weight: 700;
+            font-size: 1.1rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid var(--service-border);
+        }
+        
+        .summary-row.total .value {
+            color: var(--service-blue);
+        }
+        
+        .confirm-btn {
+            width: 100%;
+            padding: 1rem;
+            background: linear-gradient(135deg, var(--service-blue), var(--service-purple));
+            border: none;
+            border-radius: 12px;
+            color: white;
+            font-weight: 700;
+            font-size: 1rem;
+            cursor: pointer;
+            margin-top: 1rem;
+            transition: all 0.2s;
+        }
+        
+        .confirm-btn:hover {
+            transform: scale(1.02);
+            box-shadow: 0 5px 20px rgba(74, 144, 217, 0.4);
+        }
+        
+        /* Stats Section */
+        .stats-section {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+        
+        .stat-card {
+            background: var(--service-card);
+            border: 1px solid var(--service-border);
+            border-radius: 12px;
+            padding: 1.5rem;
+            text-align: center;
+        }
+        
+        .stat-card-value {
+            font-size: 2rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--service-blue), var(--service-purple));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .stat-card-label {
+            color: #8b8bbb;
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="service-header">
+        <div class="header-content">
+            <div class="logo-section">
+                <div class="service-logo">🛠️</div>
+                <div class="service-title">
+                    <h1>SERVICES DIRECTORY</h1>
+                    <p data-i18n="tagline">Professional Services by Guild Members</p>
+                </div>
+            </div>
+            
+            <div class="search-section">
+                <div class="search-bar">
+                    <input type="text" id="searchInput" data-i18n-placeholder="search" placeholder="Search services...">
+                    <button onclick="searchServices()">🔍</button>
+                </div>
+            </div>
+            
+            <div class="header-right">
+                <div class="wallet-display">
+                    <span>₲</span>
+                    <span class="wallet-balance" id="walletBalance">0</span>
+                </div>
+                
+                <div class="lang-toggle">
+                    <button class="lang-btn active" onclick="setLanguage('en')">EN</button>
+                    <button class="lang-btn" onclick="setLanguage('zh')">中文</button>
+                    <button class="lang-btn" onclick="setLanguage('th')">ไทย</button>
+                </div>
+            </div>
+        </div>
+    </header>
+    
+    <!-- Main Content -->
+    <main class="main-content">
+        <div class="back-nav">
+            <a href="/business" class="back-btn">← <span data-i18n="back">Back to Hub</span></a>
+        </div>
+        
+        <!-- Stats -->
+        <div class="stats-section">
+            <div class="stat-card">
+                <div class="stat-card-value">150+</div>
+                <div class="stat-card-label" data-i18n="services_available">Services Available</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-card-value">45</div>
+                <div class="stat-card-label" data-i18n="verified_providers">Verified Providers</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-card-value">4.8★</div>
+                <div class="stat-card-label" data-i18n="avg_rating">Average Rating</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-card-value">2.5K</div>
+                <div class="stat-card-label" data-i18n="bookings_completed">Bookings Completed</div>
+            </div>
+        </div>
+        
+        <!-- Featured Provider -->
+        <div class="featured-provider">
+            <div class="provider-avatar">👨‍💻</div>
+            <div class="provider-info">
+                <h3 data-i18n="top_provider">Top Service Provider</h3>
+                <p data-i18n="provider_desc">碼農小孫 - Full Stack Developer & Tech Consultant</p>
+            </div>
+            <div class="provider-stats">
+                <div class="provider-stat">
+                    <div class="provider-stat-value">★ 5.0</div>
+                    <div class="provider-stat-label" data-i18n="rating">Rating</div>
+                </div>
+                <div class="provider-stat">
+                    <div class="provider-stat-value">234</div>
+                    <div class="provider-stat-label" data-i18n="jobs_completed">Jobs Done</div>
+                </div>
+                <div class="provider-stat">
+                    <div class="provider-stat-value">100%</div>
+                    <div class="provider-stat-label" data-i18n="satisfaction">Satisfaction</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Category Filters -->
+        <div class="category-filters">
+            <button class="category-btn active" data-category="all">
+                🎯 <span data-i18n="all">All Services</span>
+            </button>
+            <button class="category-btn" data-category="tech">
+                💻 <span data-i18n="tech">Tech & IT</span>
+            </button>
+            <button class="category-btn" data-category="creative">
+                🎨 <span data-i18n="creative">Creative</span>
+            </button>
+            <button class="category-btn" data-category="education">
+                📚 <span data-i18n="education">Education</span>
+            </button>
+            <button class="category-btn" data-category="gaming">
+                🎮 <span data-i18n="gaming">Gaming</span>
+            </button>
+            <button class="category-btn" data-category="business">
+                💼 <span data-i18n="business">Business</span>
+            </button>
+            <button class="category-btn" data-category="lifestyle">
+                🌟 <span data-i18n="lifestyle">Lifestyle</span>
+            </button>
+            <button class="category-btn" data-category="translation">
+                🌐 <span data-i18n="translation">Translation</span>
+            </button>
+        </div>
+        
+        <!-- Services Grid -->
+        <section>
+            <div class="section-header">
+                <h2>⭐ <span data-i18n="available_services">Available Services</span></h2>
+            </div>
+            <div class="services-grid" id="servicesGrid">
+                <!-- Services loaded via JS -->
+            </div>
+        </section>
+    </main>
+    
+    <!-- Booking Modal -->
+    <div class="modal-overlay" id="bookingModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h2 id="modalServiceName">Book Service</h2>
+                <button class="modal-close" onclick="closeBookingModal()">×</button>
+            </div>
+            <div class="modal-body">
+                <form class="booking-form" id="bookingForm">
+                    <div class="form-group">
+                        <label data-i18n="your_name">Your Name</label>
+                        <input type="text" id="bookingName" required>
+                    </div>
+                    <div class="form-group">
+                        <label data-i18n="contact">Contact (Discord/Email)</label>
+                        <input type="text" id="bookingContact" required>
+                    </div>
+                    <div class="form-group">
+                        <label data-i18n="preferred_date">Preferred Date</label>
+                        <input type="date" id="bookingDate" required>
+                    </div>
+                    <div class="form-group">
+                        <label data-i18n="details">Details/Requirements</label>
+                        <textarea id="bookingDetails" data-i18n-placeholder="describe_needs" placeholder="Describe what you need..."></textarea>
+                    </div>
+                    
+                    <div class="booking-summary">
+                        <div class="summary-row">
+                            <span data-i18n="service">Service</span>
+                            <span id="summaryService">-</span>
+                        </div>
+                        <div class="summary-row">
+                            <span data-i18n="provider">Provider</span>
+                            <span id="summaryProvider">-</span>
+                        </div>
+                        <div class="summary-row">
+                            <span data-i18n="service_fee">Service Fee</span>
+                            <span id="summaryFee">-</span>
+                        </div>
+                        <div class="summary-row total">
+                            <span data-i18n="total">Total</span>
+                            <span class="value">₲ <span id="summaryTotal">0</span></span>
+                        </div>
+                    </div>
+                    
+                    <button type="submit" class="confirm-btn" data-i18n="confirm_booking">
+                        Confirm Booking with NWG
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <script src="/static/nw-nav.js"></script>
+    <script>
+        // Sample Services Data
+        const SERVICES = [
+            // Tech & IT
+            { id: 1, name: 'Website Development', nameZh: '网站开发', nameTh: 'พัฒนาเว็บไซต์', category: 'tech', price: 500, emoji: '💻', badge: 'verified', provider: '碼農小孫', providerVerified: true, rating: 5.0, reviews: 89, desc: 'Custom website development with modern frameworks' },
+            { id: 2, name: 'App Development', nameZh: '应用开发', nameTh: 'พัฒนาแอป', category: 'tech', price: 800, emoji: '📱', badge: 'premium', provider: '碼農小孫', providerVerified: true, rating: 5.0, reviews: 67, desc: 'iOS and Android app development' },
+            { id: 3, name: 'Server Setup', nameZh: '服务器配置', nameTh: 'ติดตั้งเซิร์ฟเวอร์', category: 'tech', price: 200, emoji: '🖥️', badge: 'popular', provider: 'Natehouoho', providerVerified: true, rating: 4.8, reviews: 123, desc: 'VPS, cloud server configuration and maintenance' },
+            { id: 4, name: 'Bot Development', nameZh: '机器人开发', nameTh: 'พัฒนาบอท', category: 'tech', price: 150, emoji: '🤖', provider: 'RegginO', providerVerified: true, rating: 4.7, reviews: 56, desc: 'Discord bots, automation scripts, trading bots' },
+            { id: 5, name: 'Tech Consulting', nameZh: '技术咨询', nameTh: 'ที่ปรึกษาเทค', category: 'tech', price: 100, emoji: '💡', badge: 'new', provider: '碼農小孫', providerVerified: true, rating: 5.0, reviews: 34, desc: '1-on-1 tech consulting and architecture review' },
+            
+            // Creative
+            { id: 6, name: 'Logo Design', nameZh: 'Logo设计', nameTh: 'ออกแบบโลโก้', category: 'creative', price: 80, emoji: '🎨', badge: 'popular', provider: 'RegginA', providerVerified: true, rating: 4.9, reviews: 156, desc: 'Professional logo and brand identity design' },
+            { id: 7, name: 'Character Art', nameZh: '角色美术', nameTh: 'วาดตัวละคร', category: 'creative', price: 120, emoji: '👤', badge: 'verified', provider: 'RegginA', providerVerified: true, rating: 4.9, reviews: 234, desc: 'Custom character design and illustration' },
+            { id: 8, name: 'Video Editing', nameZh: '视频剪辑', nameTh: 'ตัดต่อวิดีโอ', category: 'creative', price: 100, emoji: '🎬', provider: 'Yuluner', providerVerified: true, rating: 4.8, reviews: 89, desc: 'Professional video editing and motion graphics' },
+            { id: 9, name: 'Music Production', nameZh: '音乐制作', nameTh: 'ผลิตเพลง', category: 'creative', price: 200, emoji: '🎵', badge: 'premium', provider: '阿光Yo', providerVerified: true, rating: 4.7, reviews: 45, desc: 'Custom music, sound effects, and audio editing' },
+            { id: 10, name: 'Stream Overlay', nameZh: '直播界面', nameTh: 'โอเวอร์เลย์สตรีม', category: 'creative', price: 60, emoji: '📺', badge: 'new', provider: 'RegginO', providerVerified: true, rating: 4.6, reviews: 78, desc: 'Custom Twitch/YouTube stream overlays and alerts' },
+            
+            // Education
+            { id: 11, name: 'MapleStory Coaching', nameZh: '冒险岛教学', nameTh: 'สอนเมเปิ้ลสตอรี่', category: 'education', price: 50, emoji: '🍁', badge: 'popular', provider: 'RegginA', providerVerified: true, rating: 5.0, reviews: 312, desc: 'Boss mechanics, builds, funding guides' },
+            { id: 12, name: 'Programming Tutoring', nameZh: '编程教学', nameTh: 'สอนเขียนโปรแกรม', category: 'education', price: 80, emoji: '📖', badge: 'verified', provider: '碼農小孫', providerVerified: true, rating: 5.0, reviews: 167, desc: 'Learn Python, JavaScript, or any programming language' },
+            { id: 13, name: 'Chinese Lessons', nameZh: '中文教学', nameTh: 'สอนภาษาจีน', category: 'education', price: 40, emoji: '🇨🇳', provider: '騎鳥回家', providerVerified: true, rating: 4.8, reviews: 98, desc: 'Conversational Mandarin for gamers' },
+            { id: 14, name: 'Thai Lessons', nameZh: '泰语教学', nameTh: 'สอนภาษาไทย', category: 'education', price: 40, emoji: '🇹🇭', provider: '泰拳寒玉', providerVerified: false, rating: 4.7, reviews: 67, desc: 'Learn Thai language basics' },
+            { id: 15, name: 'Trading Guide', nameZh: '交易指南', nameTh: 'สอนเทรด', category: 'education', price: 100, emoji: '📈', badge: 'premium', provider: 'Yuluner', providerVerified: true, rating: 4.6, reviews: 89, desc: 'MapleStory meso making and trading strategies' },
+            
+            // Gaming
+            { id: 16, name: 'Boss Carry Service', nameZh: '带Boss服务', nameTh: 'พาบอส', category: 'gaming', price: 30, emoji: '⚔️', badge: 'popular', provider: 'RegginA', providerVerified: true, rating: 5.0, reviews: 456, desc: 'Carry through any boss in MapleStory' },
+            { id: 17, name: 'Account Recovery', nameZh: '账号恢复', nameTh: 'กู้คืนบัญชี', category: 'gaming', price: 25, emoji: '🔑', provider: 'Natehouoho', providerVerified: true, rating: 4.8, reviews: 123, desc: 'Help recovering lost or locked accounts' },
+            { id: 18, name: 'Guild Event Planning', nameZh: '公会活动策划', nameTh: 'จัดอีเว้นท์กิลด์', category: 'gaming', price: 50, emoji: '🎉', badge: 'new', provider: 'Yuluner', providerVerified: true, rating: 4.9, reviews: 45, desc: 'Plan and organize guild events' },
+            { id: 19, name: 'Quest Completion', nameZh: '任务完成', nameTh: 'ทำเควส', category: 'gaming', price: 20, emoji: '📜', provider: '紈蹈稀著', providerVerified: true, rating: 4.7, reviews: 234, desc: 'Complete tedious quests for you' },
+            { id: 20, name: 'Item Hunting', nameZh: '物品收集', nameTh: 'หาไอเท็ม', category: 'gaming', price: 35, emoji: '🎁', provider: 'RegginO', providerVerified: true, rating: 4.6, reviews: 167, desc: 'Farm specific items or drops' },
+            
+            // Business
+            { id: 21, name: 'Business Consulting', nameZh: '商业咨询', nameTh: 'ที่ปรึกษาธุรกิจ', category: 'business', price: 150, emoji: '💼', badge: 'premium', provider: 'RegginA', providerVerified: true, rating: 4.9, reviews: 78, desc: 'Guild business strategy and growth consulting' },
+            { id: 22, name: 'Social Media Management', nameZh: '社交媒体管理', nameTh: 'จัดการโซเชียลมีเดีย', category: 'business', price: 100, emoji: '📱', provider: '阿光Yo', providerVerified: true, rating: 4.7, reviews: 56, desc: 'Manage your social media presence' },
+            { id: 23, name: 'Content Writing', nameZh: '内容写作', nameTh: 'เขียนคอนเทนต์', category: 'business', price: 50, emoji: '✍️', badge: 'new', provider: '騎鳥回家', providerVerified: true, rating: 4.8, reviews: 89, desc: 'Blog posts, articles, game guides' },
+            { id: 24, name: 'Virtual Assistant', nameZh: '虚拟助理', nameTh: 'ผู้ช่วยเสมือน', category: 'business', price: 30, emoji: '👩‍💻', provider: '紈蹈稀著', providerVerified: true, rating: 4.6, reviews: 45, desc: 'Administrative tasks and scheduling' },
+            
+            // Lifestyle
+            { id: 25, name: 'Fitness Coaching', nameZh: '健身教练', nameTh: 'โค้ชฟิตเนส', category: 'lifestyle', price: 60, emoji: '💪', badge: 'new', provider: '泰拳寒玉', providerVerified: false, rating: 4.8, reviews: 34, desc: 'Personal training and workout plans' },
+            { id: 26, name: 'Meal Planning', nameZh: '膳食计划', nameTh: 'วางแผนมื้ออาหาร', category: 'lifestyle', price: 40, emoji: '🥗', provider: '阿光Yo', providerVerified: true, rating: 4.7, reviews: 56, desc: 'Healthy meal plans for gamers' },
+            { id: 27, name: 'Life Coaching', nameZh: '生活教练', nameTh: 'โค้ชชีวิต', category: 'lifestyle', price: 80, emoji: '🌟', badge: 'popular', provider: 'Yuluner', providerVerified: true, rating: 4.9, reviews: 67, desc: 'Work-life-game balance coaching' },
+            
+            // Translation
+            { id: 28, name: 'EN ↔ CN Translation', nameZh: '英中翻译', nameTh: 'แปลอังกฤษ-จีน', category: 'translation', price: 30, emoji: '🌐', badge: 'verified', provider: '碼農小孫', providerVerified: true, rating: 5.0, reviews: 189, desc: 'Professional English-Chinese translation' },
+            { id: 29, name: 'EN ↔ TH Translation', nameZh: '英泰翻译', nameTh: 'แปลอังกฤษ-ไทย', category: 'translation', price: 30, emoji: '🌐', badge: 'verified', provider: '泰拳寒玉', providerVerified: false, rating: 4.8, reviews: 123, desc: 'Professional English-Thai translation' },
+            { id: 30, name: 'Game Localization', nameZh: '游戏本地化', nameTh: 'แปลเกม', category: 'translation', price: 100, emoji: '🎮', badge: 'premium', provider: '騎鳥回家', providerVerified: true, rating: 4.9, reviews: 78, desc: 'Localize games and gaming content' }
+        ];
+        
+        // Translations
+        const TRANSLATIONS = {
+            en: {
+                tagline: 'Professional Services by Guild Members',
+                search: 'Search services...',
+                back: 'Back to Hub',
+                services_available: 'Services Available',
+                verified_providers: 'Verified Providers',
+                avg_rating: 'Average Rating',
+                bookings_completed: 'Bookings Completed',
+                top_provider: 'Top Service Provider',
+                provider_desc: '碼農小孫 - Full Stack Developer & Tech Consultant',
+                rating: 'Rating',
+                jobs_completed: 'Jobs Done',
+                satisfaction: 'Satisfaction',
+                all: 'All Services',
+                tech: 'Tech & IT',
+                creative: 'Creative',
+                education: 'Education',
+                gaming: 'Gaming',
+                business: 'Business',
+                lifestyle: 'Lifestyle',
+                translation: 'Translation',
+                available_services: 'Available Services',
+                book: 'Book',
+                starting_from: 'From',
+                your_name: 'Your Name',
+                contact: 'Contact (Discord/Email)',
+                preferred_date: 'Preferred Date',
+                details: 'Details/Requirements',
+                describe_needs: 'Describe what you need...',
+                service: 'Service',
+                provider: 'Provider',
+                service_fee: 'Service Fee',
+                total: 'Total',
+                confirm_booking: 'Confirm Booking with NWG',
+                booking_success: 'Booking confirmed!',
+                booking_fail: 'Insufficient NWG balance',
+                reviews: 'reviews'
+            },
+            zh: {
+                tagline: '公会成员的专业服务',
+                search: '搜索服务...',
+                back: '返回中心',
+                services_available: '可用服务',
+                verified_providers: '认证服务商',
+                avg_rating: '平均评分',
+                bookings_completed: '已完成预约',
+                top_provider: '顶级服务商',
+                provider_desc: '碼農小孫 - 全栈开发者 & 技术顾问',
+                rating: '评分',
+                jobs_completed: '完成工作',
+                satisfaction: '满意度',
+                all: '全部服务',
+                tech: '技术 & IT',
+                creative: '创意',
+                education: '教育',
+                gaming: '游戏',
+                business: '商业',
+                lifestyle: '生活方式',
+                translation: '翻译',
+                available_services: '可用服务',
+                book: '预约',
+                starting_from: '起价',
+                your_name: '您的名字',
+                contact: '联系方式 (Discord/邮箱)',
+                preferred_date: '首选日期',
+                details: '详情/需求',
+                describe_needs: '描述您的需求...',
+                service: '服务',
+                provider: '服务商',
+                service_fee: '服务费',
+                total: '总计',
+                confirm_booking: '使用NWG确认预约',
+                booking_success: '预约已确认！',
+                booking_fail: 'NWG余额不足',
+                reviews: '评价'
+            },
+            th: {
+                tagline: 'บริการมืออาชีพจากสมาชิกกิลด์',
+                search: 'ค้นหาบริการ...',
+                back: 'กลับไปยังฮับ',
+                services_available: 'บริการที่มี',
+                verified_providers: 'ผู้ให้บริการยืนยัน',
+                avg_rating: 'คะแนนเฉลี่ย',
+                bookings_completed: 'การจองที่เสร็จสิ้น',
+                top_provider: 'ผู้ให้บริการยอดเยี่ยม',
+                provider_desc: '碼農小孫 - นักพัฒนาฟูลสแตค & ที่ปรึกษาเทค',
+                rating: 'คะแนน',
+                jobs_completed: 'งานเสร็จ',
+                satisfaction: 'ความพึงพอใจ',
+                all: 'บริการทั้งหมด',
+                tech: 'เทค & ไอที',
+                creative: 'สร้างสรรค์',
+                education: 'การศึกษา',
+                gaming: 'เกมมิ่ง',
+                business: 'ธุรกิจ',
+                lifestyle: 'ไลฟ์สไตล์',
+                translation: 'การแปล',
+                available_services: 'บริการที่มี',
+                book: 'จอง',
+                starting_from: 'เริ่มต้น',
+                your_name: 'ชื่อของคุณ',
+                contact: 'ติดต่อ (Discord/อีเมล)',
+                preferred_date: 'วันที่ต้องการ',
+                details: 'รายละเอียด/ความต้องการ',
+                describe_needs: 'อธิบายสิ่งที่คุณต้องการ...',
+                service: 'บริการ',
+                provider: 'ผู้ให้บริการ',
+                service_fee: 'ค่าบริการ',
+                total: 'รวม',
+                confirm_booking: 'ยืนยันการจองด้วย NWG',
+                booking_success: 'ยืนยันการจองแล้ว!',
+                booking_fail: 'ยอดคงเหลือ NWG ไม่เพียงพอ',
+                reviews: 'รีวิว'
+            }
+        };
+        
+        // State
+        let currentLang = 'en';
+        let currentCategory = 'all';
+        let currentService = null;
+        
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            loadWallet();
+            renderServices();
+            setupEventListeners();
+            
+            const savedLang = localStorage.getItem('nw_lang');
+            if (savedLang) setLanguage(savedLang);
+            
+            if (typeof NW_NAV !== 'undefined') {
+                NW_NAV.init();
+            }
+        });
+        
+        // Load wallet
+        async function loadWallet() {
+            try {
+                let deviceUUID = localStorage.getItem('nw_device_uuid');
+                if (!deviceUUID) {
+                    const walletState = localStorage.getItem('nw_wallet_v2');
+                    if (walletState) {
+                        const parsed = JSON.parse(walletState);
+                        deviceUUID = parsed.guestId;
+                    }
+                }
+                
+                if (deviceUUID) {
+                    const response = await fetch(`/api/wallet/${deviceUUID}`);
+                    if (response.ok) {
+                        const data = await response.json();
+                        document.getElementById('walletBalance').textContent = 
+                            (data.wallet?.balance_nwg || 0).toLocaleString();
+                    }
+                }
+                
+                const localWallet = localStorage.getItem('nw_wallet_v2');
+                if (localWallet && !deviceUUID) {
+                    const parsed = JSON.parse(localWallet);
+                    document.getElementById('walletBalance').textContent = 
+                        (parsed.currencies?.['nwg'] || 0).toLocaleString();
+                }
+            } catch (e) {
+                console.log('Wallet load error:', e);
+            }
+        }
+        
+        // Render services
+        function renderServices() {
+            const grid = document.getElementById('servicesGrid');
+            let filtered = [...SERVICES];
+            
+            if (currentCategory !== 'all') {
+                filtered = filtered.filter(s => s.category === currentCategory);
+            }
+            
+            const searchQuery = document.getElementById('searchInput')?.value.toLowerCase();
+            if (searchQuery) {
+                filtered = filtered.filter(s => 
+                    s.name.toLowerCase().includes(searchQuery) ||
+                    s.nameZh.includes(searchQuery) ||
+                    s.nameTh.includes(searchQuery) ||
+                    s.provider.toLowerCase().includes(searchQuery) ||
+                    s.desc.toLowerCase().includes(searchQuery)
+                );
+            }
+            
+            grid.innerHTML = filtered.map(service => {
+                const name = currentLang === 'zh' ? service.nameZh : 
+                             currentLang === 'th' ? service.nameTh : service.name;
+                
+                return `
+                    <div class="service-card">
+                        <div class="service-image">
+                            <span class="emoji">${service.emoji}</span>
+                            <div class="service-badges">
+                                ${service.badge ? `<span class="badge badge-${service.badge}">${service.badge.toUpperCase()}</span>` : ''}
+                            </div>
+                            <div class="service-category">${service.category.toUpperCase()}</div>
+                        </div>
+                        <div class="service-info">
+                            <div class="service-header-row">
+                                <h3 class="service-name">${name}</h3>
+                                <div class="service-rating">★ ${service.rating}</div>
+                            </div>
+                            <div class="service-provider">
+                                ${service.providerVerified ? '<span class="verified">✓</span>' : ''}
+                                ${service.provider} · ${service.reviews} ${TRANSLATIONS[currentLang].reviews}
+                            </div>
+                            <p class="service-desc">${service.desc}</p>
+                            <div class="service-footer">
+                                <span class="service-price">
+                                    <span class="starting">${TRANSLATIONS[currentLang].starting_from}</span>
+                                    ₲${service.price}
+                                </span>
+                                <button class="book-btn" onclick="openBooking(${service.id})">
+                                    ${TRANSLATIONS[currentLang].book}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+        
+        // Setup event listeners
+        function setupEventListeners() {
+            document.querySelectorAll('.category-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    document.querySelectorAll('.category-btn').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    currentCategory = btn.dataset.category;
+                    renderServices();
+                });
+            });
+            
+            document.getElementById('searchInput')?.addEventListener('input', renderServices);
+            
+            document.getElementById('bookingForm').addEventListener('submit', (e) => {
+                e.preventDefault();
+                confirmBooking();
+            });
+        }
+        
+        // Open booking modal
+        function openBooking(serviceId) {
+            currentService = SERVICES.find(s => s.id === serviceId);
+            if (!currentService) return;
+            
+            const name = currentLang === 'zh' ? currentService.nameZh : 
+                         currentLang === 'th' ? currentService.nameTh : currentService.name;
+            
+            document.getElementById('modalServiceName').textContent = `${currentService.emoji} ${name}`;
+            document.getElementById('summaryService').textContent = name;
+            document.getElementById('summaryProvider').textContent = currentService.provider;
+            document.getElementById('summaryFee').textContent = `₲${currentService.price}`;
+            document.getElementById('summaryTotal').textContent = currentService.price;
+            
+            document.getElementById('bookingModal').classList.add('open');
+        }
+        
+        // Close booking modal
+        function closeBookingModal() {
+            document.getElementById('bookingModal').classList.remove('open');
+            currentService = null;
+        }
+        
+        // Confirm booking
+        async function confirmBooking() {
+            if (!currentService) return;
+            
+            const total = currentService.price;
+            
+            try {
+                let deviceUUID = localStorage.getItem('nw_device_uuid');
+                if (!deviceUUID) {
+                    const walletState = localStorage.getItem('nw_wallet_v2');
+                    if (walletState) {
+                        const parsed = JSON.parse(walletState);
+                        deviceUUID = parsed.guestId;
+                    }
+                }
+                
+                if (deviceUUID) {
+                    const response = await fetch('/api/wallet/transaction', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            deviceUUID,
+                            type: 'purchase',
+                            currency: 'nwg',
+                            amount: -total,
+                            description: `Service booking: ${currentService.name}`,
+                            metadata: {
+                                store: 'services',
+                                serviceId: currentService.id,
+                                serviceName: currentService.name,
+                                provider: currentService.provider,
+                                bookingDate: document.getElementById('bookingDate').value
+                            }
+                        })
+                    });
+                    
+                    const result = await response.json();
+                    
+                    if (result.success) {
+                        alert(TRANSLATIONS[currentLang].booking_success + `\n\nTotal: ₲${total.toLocaleString()}\nNew Balance: ₲${result.newBalance.toLocaleString()}`);
+                        closeBookingModal();
+                        loadWallet();
+                        return;
+                    } else {
+                        alert(TRANSLATIONS[currentLang].booking_fail + `\n\n${result.error || 'Transaction failed'}`);
+                        return;
+                    }
+                }
+            } catch (e) {
+                console.log('API booking failed:', e);
+            }
+            
+            // Fallback: local wallet
+            const localWallet = localStorage.getItem('nw_wallet_v2');
+            if (localWallet) {
+                const parsed = JSON.parse(localWallet);
+                const balance = parsed.currencies?.['nwg'] || 0;
+                
+                if (balance >= total) {
+                    parsed.currencies['nwg'] = balance - total;
+                    localStorage.setItem('nw_wallet_v2', JSON.stringify(parsed));
+                    
+                    alert(TRANSLATIONS[currentLang].booking_success + `\n\nTotal: ₲${total.toLocaleString()}`);
+                    closeBookingModal();
+                    loadWallet();
+                } else {
+                    alert(TRANSLATIONS[currentLang].booking_fail);
+                }
+            } else {
+                alert('Please create a wallet first at /citizenship');
+            }
+        }
+        
+        // Search services
+        function searchServices() {
+            renderServices();
+        }
+        
+        // Set language
+        function setLanguage(lang) {
+            currentLang = lang;
+            localStorage.setItem('nw_lang', lang);
+            
+            document.querySelectorAll('.lang-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.textContent.includes(lang === 'en' ? 'EN' : lang === 'zh' ? '中文' : 'ไทย'));
+            });
+            
+            document.querySelectorAll('[data-i18n]').forEach(el => {
+                const key = el.dataset.i18n;
+                if (TRANSLATIONS[lang][key]) {
+                    el.textContent = TRANSLATIONS[lang][key];
+                }
+            });
+            
+            document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+                const key = el.dataset.i18nPlaceholder;
+                if (TRANSLATIONS[lang][key]) {
+                    el.placeholder = TRANSLATIONS[lang][key];
+                }
+            });
+            
+            renderServices();
+        }
+        
+        // Close modal on outside click
+        document.getElementById('bookingModal').addEventListener('click', (e) => {
+            if (e.target.id === 'bookingModal') {
+                closeBookingModal();
+            }
+        });
+    </script>
+</body>
+</html>
