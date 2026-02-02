@@ -1091,8 +1091,103 @@
         </div>
     </main>
     
+    <script src="/static/helpers/nw-identity.js"></script>
     <script src="/static/nw-nav.js"></script>
     <script>
+        // ========================================
+        // REAL DEVICE IDENTITY SYSTEM
+        // ========================================
+        let currentIdentity = null;
+        let verificationInProgress = false;
+        
+        // Initialize identity system on page load
+        async function initIdentitySystem() {
+            console.log('[CITIZENSHIP] Initializing identity system...');
+            
+            // Show loading state
+            updateBiometricStatus('all', 'scanning');
+            
+            // Initialize the identity system
+            currentIdentity = await NW_IDENTITY.init();
+            
+            // Update UI with real device fingerprint
+            if (currentIdentity) {
+                document.getElementById('uuidDisplay').textContent = currentIdentity.deviceUUID;
+                updateTrustScoreDisplay(currentIdentity.trustScore);
+                updateBiometricStatuses(currentIdentity);
+                updateStatsFromIdentity(currentIdentity);
+                
+                // Check if this is a known citizen
+                checkCitizenStatus(currentIdentity.deviceUUID);
+            }
+        }
+        
+        function updateTrustScoreDisplay(score) {
+            const avgTimeEl = document.querySelector('.stat-value');
+            if (avgTimeEl && avgTimeEl.textContent.includes('0.3s')) {
+                // Update the verification time stat
+                const timeMs = currentIdentity?.collectionTime || 300;
+                avgTimeEl.textContent = (timeMs / 1000).toFixed(2) + 's';
+            }
+        }
+        
+        function updateBiometricStatus(type, status) {
+            const statusMap = {
+                'scanning': { text: 'SCANNING...', class: 'bio-pending' },
+                'verified': { text: '✓ VERIFIED', class: 'bio-verified' },
+                'failed': { text: '✗ FAILED', class: 'bio-pending' }
+            };
+            
+            const biometricItems = document.querySelectorAll('.biometric-item');
+            biometricItems.forEach(item => {
+                if (type === 'all' || item.querySelector('.biometric-name')?.textContent.toLowerCase().includes(type)) {
+                    const statusEl = item.querySelector('.biometric-status');
+                    if (statusEl) {
+                        statusEl.textContent = statusMap[status].text;
+                        statusEl.className = 'biometric-status ' + statusMap[status].class;
+                    }
+                }
+            });
+        }
+        
+        function updateBiometricStatuses(identity) {
+            // Update each biometric based on actual collection
+            setTimeout(() => {
+                updateBiometricStatus('fingerprint', identity.signals.canvasSupported ? 'verified' : 'failed');
+            }, 500);
+            setTimeout(() => {
+                updateBiometricStatus('iris', identity.signals.webglSupported ? 'verified' : 'failed');
+            }, 1000);
+            setTimeout(() => {
+                updateBiometricStatus('voice', identity.signals.audioSupported ? 'verified' : 'failed');
+            }, 1500);
+            setTimeout(() => {
+                updateBiometricStatus('dna', identity.trustScore > 50 ? 'verified' : 'failed');
+            }, 2000);
+        }
+        
+        function updateStatsFromIdentity(identity) {
+            // Update accuracy rate based on trust score
+            const accuracyEl = document.querySelectorAll('.stat-value')[3];
+            if (accuracyEl) {
+                accuracyEl.textContent = identity.trustScore.toFixed(1) + '%';
+            }
+        }
+        
+        function checkCitizenStatus(deviceUUID) {
+            // Check if device matches a known citizen
+            const matchedCitizen = citizens.find(c => {
+                // In a real system, you'd compare stored device hashes
+                // For demo, we'll show the visitor as a "new device"
+                return false;
+            });
+            
+            if (!matchedCitizen) {
+                // Show registration prompt or guest status
+                console.log('[CITIZENSHIP] New device detected - registration required');
+            }
+        }
+        
         // Citizen database
         const citizens = [
             { uuid: 'NW-C001-A7F3-8B2E-9D4C', name: 'RegginA', rank: 'Guild Master', level: 78, clearance: 5, joined: '2024-01-15', avatar: '/static/avatar-reggina-zakum-gm.webp' },
@@ -1130,16 +1225,159 @@
         const savedLang = localStorage.getItem('nw_lang') || 'en';
         setLanguage(savedLang);
         
-        // Fingerprint scanner
-        function scanFingerprint() {
-            const scanner = document.querySelector('.fingerprint-scanner');
-            scanner.style.borderColor = 'var(--id-green)';
-            scanner.innerHTML = '<div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: var(--id-green); font-size: 1.5rem;">✓ VERIFIED</div>';
+        // REAL Fingerprint scanner with full verification
+        async function scanFingerprint() {
+            if (verificationInProgress) return;
+            verificationInProgress = true;
             
+            const scanner = document.querySelector('.fingerprint-scanner');
+            
+            // Stage 1: Scanning
+            scanner.style.borderColor = 'var(--id-blue)';
+            scanner.innerHTML = `
+                <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center;">
+                    <div style="color: var(--id-blue); font-size: 1rem; margin-bottom: 0.5rem;">SCANNING...</div>
+                    <div style="font-size: 0.7rem; color: #888;">Collecting 50+ signals</div>
+                </div>
+            `;
+            
+            // Perform real verification
+            const result = await NW_IDENTITY.verify();
+            
+            await new Promise(r => setTimeout(r, 1000));
+            
+            // Stage 2: Analyzing
+            scanner.innerHTML = `
+                <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center;">
+                    <div style="color: var(--id-purple); font-size: 1rem; margin-bottom: 0.5rem;">ANALYZING...</div>
+                    <div style="font-size: 0.7rem; color: #888;">Anti-spoof check</div>
+                </div>
+            `;
+            scanner.style.borderColor = 'var(--id-purple)';
+            
+            await new Promise(r => setTimeout(r, 800));
+            
+            // Stage 3: Result
+            const isVerified = result.trustScore >= 50 && !result.spoofCheck?.isSuspicious;
+            
+            if (isVerified) {
+                scanner.style.borderColor = 'var(--id-green)';
+                scanner.innerHTML = `
+                    <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center;">
+                        <div style="color: var(--id-green); font-size: 2rem;">✓</div>
+                        <div style="color: var(--id-green); font-size: 0.9rem; margin-top: 0.5rem;">VERIFIED</div>
+                        <div style="font-size: 0.65rem; color: #888; margin-top: 0.25rem;">Trust: ${result.trustScore}%</div>
+                    </div>
+                `;
+                
+                // Add to recent verifications
+                addVerification('You', 'Device Fingerprint', true, result.trustScore);
+            } else {
+                scanner.style.borderColor = 'var(--id-red)';
+                scanner.innerHTML = `
+                    <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center;">
+                        <div style="color: var(--id-red); font-size: 2rem;">✗</div>
+                        <div style="color: var(--id-red); font-size: 0.9rem; margin-top: 0.5rem;">SUSPICIOUS</div>
+                        <div style="font-size: 0.65rem; color: #888; margin-top: 0.25rem;">Trust: ${result.trustScore}%</div>
+                    </div>
+                `;
+                
+                addVerification('Unknown', 'Device Fingerprint', false, result.trustScore);
+            }
+            
+            // Show detailed result modal
+            showVerificationDetails(result);
+            
+            // Reset after delay
             setTimeout(() => {
                 scanner.style.borderColor = 'var(--id-border)';
                 scanner.innerHTML = '<div class="fingerprint-icon">👆</div>';
-            }, 2000);
+                verificationInProgress = false;
+            }, 5000);
+        }
+        
+        function addVerification(name, method, success, trustScore) {
+            recentVerifications.unshift({
+                name,
+                method,
+                time: 'Just now',
+                success,
+                trustScore
+            });
+            if (recentVerifications.length > 10) recentVerifications.pop();
+            renderVerifications();
+        }
+        
+        function showVerificationDetails(result) {
+            // Create modal with detailed fingerprint info
+            const modal = document.createElement('div');
+            modal.id = 'verificationModal';
+            modal.style.cssText = `
+                position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+                background: rgba(0,0,0,0.9); z-index: 10000;
+                display: flex; align-items: center; justify-content: center;
+                padding: 1rem;
+            `;
+            
+            const spoofFlags = result.spoofCheck?.flags || [];
+            const flagsHtml = spoofFlags.length > 0 
+                ? spoofFlags.map(f => `<span style="background: rgba(255,71,87,0.2); color: var(--id-red); padding: 0.2rem 0.5rem; border-radius: 4px; font-size: 0.7rem; margin: 0.1rem;">${f}</span>`).join(' ')
+                : '<span style="color: var(--id-green);">None detected</span>';
+            
+            modal.innerHTML = `
+                <div style="background: var(--id-card); border: 2px solid ${result.trustScore >= 50 ? 'var(--id-green)' : 'var(--id-red)'}; border-radius: 16px; max-width: 500px; width: 100%; max-height: 80vh; overflow-y: auto;">
+                    <div style="background: ${result.trustScore >= 50 ? 'rgba(0,210,106,0.2)' : 'rgba(255,71,87,0.2)'}; padding: 1.5rem; text-align: center; border-bottom: 1px solid var(--id-border);">
+                        <div style="font-size: 3rem;">${result.trustScore >= 50 ? '✓' : '⚠️'}</div>
+                        <div style="font-size: 1.5rem; font-weight: bold; color: ${result.trustScore >= 50 ? 'var(--id-green)' : 'var(--id-red)'};">
+                            ${result.trustScore >= 50 ? 'IDENTITY VERIFIED' : 'VERIFICATION FAILED'}
+                        </div>
+                    </div>
+                    <div style="padding: 1.5rem;">
+                        <div style="margin-bottom: 1rem;">
+                            <div style="color: #888; font-size: 0.8rem; margin-bottom: 0.25rem;">YOUR DEVICE UUID</div>
+                            <div style="font-family: monospace; color: var(--id-blue); font-size: 0.9rem; background: rgba(0,0,0,0.3); padding: 0.5rem; border-radius: 4px;">${result.deviceUUID}</div>
+                        </div>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
+                            <div style="background: rgba(0,0,0,0.3); padding: 1rem; border-radius: 8px; text-align: center;">
+                                <div style="font-size: 1.5rem; font-weight: bold; color: ${result.trustScore >= 70 ? 'var(--id-green)' : result.trustScore >= 50 ? 'var(--id-gold)' : 'var(--id-red)'};">${result.trustScore}%</div>
+                                <div style="font-size: 0.8rem; color: #888;">Trust Score</div>
+                            </div>
+                            <div style="background: rgba(0,0,0,0.3); padding: 1rem; border-radius: 8px; text-align: center;">
+                                <div style="font-size: 1.5rem; font-weight: bold; color: var(--id-gold);">${result.visitCount || 1}</div>
+                                <div style="font-size: 0.8rem; color: #888;">Visit Count</div>
+                            </div>
+                        </div>
+                        <div style="margin-bottom: 1rem;">
+                            <div style="color: #888; font-size: 0.8rem; margin-bottom: 0.5rem;">SIGNALS COLLECTED</div>
+                            <div style="display: flex; flex-wrap: wrap; gap: 0.5rem;">
+                                <span style="background: rgba(0,210,106,0.2); color: var(--id-green); padding: 0.3rem 0.6rem; border-radius: 4px; font-size: 0.75rem;">📊 ${currentIdentity?.signals?.hardwareSignals || 50}+ Hardware</span>
+                                <span style="background: ${currentIdentity?.signals?.canvasSupported ? 'rgba(0,210,106,0.2)' : 'rgba(255,71,87,0.2)'}; color: ${currentIdentity?.signals?.canvasSupported ? 'var(--id-green)' : 'var(--id-red)'}; padding: 0.3rem 0.6rem; border-radius: 4px; font-size: 0.75rem;">🎨 Canvas</span>
+                                <span style="background: ${currentIdentity?.signals?.webglSupported ? 'rgba(0,210,106,0.2)' : 'rgba(255,71,87,0.2)'}; color: ${currentIdentity?.signals?.webglSupported ? 'var(--id-green)' : 'var(--id-red)'}; padding: 0.3rem 0.6rem; border-radius: 4px; font-size: 0.75rem;">🎮 WebGL</span>
+                                <span style="background: ${currentIdentity?.signals?.audioSupported ? 'rgba(0,210,106,0.2)' : 'rgba(255,71,87,0.2)'}; color: ${currentIdentity?.signals?.audioSupported ? 'var(--id-green)' : 'var(--id-red)'}; padding: 0.3rem 0.6rem; border-radius: 4px; font-size: 0.75rem;">🔊 Audio</span>
+                                <span style="background: rgba(157,78,221,0.2); color: var(--id-purple); padding: 0.3rem 0.6rem; border-radius: 4px; font-size: 0.75rem;">🖱️ Behavior</span>
+                            </div>
+                        </div>
+                        <div style="margin-bottom: 1rem;">
+                            <div style="color: #888; font-size: 0.8rem; margin-bottom: 0.5rem;">ANTI-SPOOF FLAGS</div>
+                            <div style="display: flex; flex-wrap: wrap; gap: 0.25rem;">${flagsHtml}</div>
+                        </div>
+                        ${result.firstSeen ? `
+                        <div style="margin-bottom: 1rem;">
+                            <div style="color: #888; font-size: 0.8rem;">First seen: ${result.firstSeen}</div>
+                        </div>
+                        ` : ''}
+                        <button onclick="document.getElementById('verificationModal').remove()" 
+                            style="width: 100%; padding: 1rem; background: var(--id-gold); color: #000; border: none; border-radius: 8px; font-weight: bold; cursor: pointer;">
+                            CLOSE
+                        </button>
+                    </div>
+                </div>
+            `;
+            
+            document.body.appendChild(modal);
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) modal.remove();
+            });
         }
         
         // Render recent verifications
@@ -1217,6 +1455,11 @@
         if (typeof NW_NAV !== 'undefined') {
             NW_NAV.init();
         }
+        
+        // Initialize identity system after page loads
+        window.addEventListener('load', () => {
+            setTimeout(initIdentitySystem, 500);
+        });
     </script>
 </body>
 </html>
