@@ -1,9 +1,14 @@
 /**
- * NumbahWan Sound System v1.0
- * Global audio manager for the site
+ * NumbahWan Sound System v2.0
+ * High-performance audio using Web Audio API
+ * Falls back to HTML5 Audio for compatibility
  */
 
 const NW_SOUNDS = {
+    // Web Audio API context (for instant playback)
+    audioContext: null,
+    audioBuffers: {},  // Decoded audio buffers for Web Audio
+    
     // Sound library mapping
     sounds: {
         // UI
@@ -62,28 +67,79 @@ const NW_SOUNDS = {
             } catch (e) {}
         }
         
-        // Preload ALL common UI sounds immediately for instant playback
-        this.preload(['click', 'select', 'buy', 'sell', 'trade', 'profit', 'loss', 'draw', 'slam', 'flip']);
+        // Initialize Web Audio API for instant playback
+        this.initWebAudio();
         
-        console.log('🔊 NW Sound System initialized');
+        // Preload ALL common sounds with Web Audio (decoded buffers = instant)
+        const prioritySounds = [
+            'click', 'select',           // UI
+            'buy', 'sell', 'trade',      // Trading
+            'profit', 'loss',            // Rewards (was lagging!)
+            'draw', 'slam', 'flip',      // Cards
+            'legendary', 'epic', 'rare', // Gacha reveals
+            'victory', 'defeat'          // Game end
+        ];
+        
+        this.preloadWebAudio(prioritySounds);
+        this.preload(prioritySounds); // HTML5 fallback
+        
+        console.log('🔊 NW Sound System v2.0 initialized (Web Audio API)');
         return this;
     },
     
-    // Preload sounds - actually load the audio data
+    // Initialize Web Audio API
+    initWebAudio() {
+        try {
+            const AudioContext = window.AudioContext || window.webkitAudioContext;
+            if (AudioContext) {
+                this.audioContext = new AudioContext();
+                
+                // Resume on user interaction (required for iOS/Chrome)
+                const resume = () => {
+                    if (this.audioContext.state === 'suspended') {
+                        this.audioContext.resume();
+                    }
+                };
+                document.addEventListener('click', resume, { once: true });
+                document.addEventListener('touchstart', resume, { once: true });
+            }
+        } catch (e) {
+            console.warn('Web Audio API not available:', e);
+        }
+    },
+    
+    // Preload sounds using Web Audio API (decoded = instant playback)
+    async preloadWebAudio(keys) {
+        if (!this.audioContext) return;
+        
+        for (const key of keys) {
+            if (this.sounds[key] && !this.audioBuffers[key]) {
+                try {
+                    const response = await fetch(this.sounds[key]);
+                    const arrayBuffer = await response.arrayBuffer();
+                    const audioBuffer = await this.audioContext.decodeAudioData(arrayBuffer);
+                    this.audioBuffers[key] = audioBuffer;
+                } catch (e) {
+                    // Silent fail - will use HTML5 fallback
+                }
+            }
+        }
+    },
+    
+    // Preload HTML5 fallback
     preload(keys) {
         keys.forEach(key => {
             if (this.sounds[key] && !this.cache[key]) {
                 const audio = new Audio();
                 audio.preload = 'auto';
                 audio.src = this.sounds[key];
-                // Force browser to actually load the audio
                 audio.load();
                 this.cache[key] = audio;
             }
         });
     },
     
-    // Play a sound - optimized for instant playback
+    // Play a sound - Web Audio for instant, HTML5 fallback
     play(key, options = {}) {
         if (!this.enabled) return;
         
@@ -93,19 +149,49 @@ const NW_SOUNDS = {
             return;
         }
         
+        // Try Web Audio first (instant playback)
+        if (this.audioContext && this.audioBuffers[key]) {
+            try {
+                if (this.audioContext.state === 'suspended') {
+                    this.audioContext.resume();
+                }
+                
+                const source = this.audioContext.createBufferSource();
+                const gainNode = this.audioContext.createGain();
+                
+                source.buffer = this.audioBuffers[key];
+                source.playbackRate.value = options.rate ?? 1;
+                gainNode.gain.value = (options.volume ?? 1) * this.volume;
+                
+                source.connect(gainNode);
+                gainNode.connect(this.audioContext.destination);
+                source.start(0);
+                
+                return source;
+            } catch (e) {
+                // Fall through to HTML5
+            }
+        }
+        
+        // HTML5 Audio fallback
         try {
-            // Check if we have a cached and ready audio
             let audio = this.cache[key];
             
             if (audio && audio.readyState >= 2) {
-                // Audio is loaded - clone it for overlapping playback
-                const clone = audio.cloneNode();
-                clone.volume = (options.volume ?? 1) * this.volume;
-                clone.playbackRate = options.rate ?? 1;
-                clone.play().catch(() => {});
-                return clone;
+                if (audio.paused || audio.ended) {
+                    audio.currentTime = 0;
+                    audio.volume = (options.volume ?? 1) * this.volume;
+                    audio.playbackRate = options.rate ?? 1;
+                    audio.play().catch(() => {});
+                    return audio;
+                } else {
+                    const clone = audio.cloneNode();
+                    clone.volume = (options.volume ?? 1) * this.volume;
+                    clone.playbackRate = options.rate ?? 1;
+                    clone.play().catch(() => {});
+                    return clone;
+                }
             } else {
-                // Not cached or not ready - create new and cache
                 audio = new Audio(src);
                 audio.volume = (options.volume ?? 1) * this.volume;
                 audio.playbackRate = options.rate ?? 1;
