@@ -495,6 +495,54 @@
             border: 1px dashed var(--border);
             border-radius: 14px;
         }
+        
+        /* Privacy Toggle Styles */
+        .privacy-toggle {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 12px;
+            background: rgba(0,0,0,0.2);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .privacy-toggle:hover {
+            background: rgba(255,255,255,0.05);
+        }
+        .privacy-toggle input {
+            display: none;
+        }
+        .toggle-slider {
+            position: relative;
+            width: 44px;
+            height: 24px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 12px;
+            transition: background 0.2s;
+            flex-shrink: 0;
+        }
+        .toggle-slider::after {
+            content: '';
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            width: 20px;
+            height: 20px;
+            background: #fff;
+            border-radius: 50%;
+            transition: transform 0.2s;
+        }
+        .privacy-toggle input:checked + .toggle-slider {
+            background: #00d26a;
+        }
+        .privacy-toggle input:checked + .toggle-slider::after {
+            transform: translateX(20px);
+        }
+        .toggle-label {
+            font-size: 13px;
+            color: rgba(255,255,255,0.8);
+        }
         .gm-section.active {
             border-color: var(--gold);
             border-style: solid;
@@ -680,6 +728,64 @@
             </div>
             
             <div id="transferStatus" style="margin-top: 12px; padding: 8px; border-radius: 4px; display: none;"></div>
+        </div>
+        
+        <!-- Privacy Settings Section (NEW in v2.0) -->
+        <div class="gm-section" id="privacySection" style="margin-top: 16px;">
+            <div class="gm-title">🔒 Privacy Settings</div>
+            <p style="color: rgba(255,255,255,0.6); font-size: 12px; margin-bottom: 12px;">
+                Control what others can see on your public profile.
+            </p>
+            
+            <div id="privacyToggles" style="display: flex; flex-direction: column; gap: 8px;">
+                <label class="privacy-toggle">
+                    <input type="checkbox" id="toggleCollection" onchange="togglePrivacy('showCollection', this.checked)">
+                    <span class="toggle-slider"></span>
+                    <span class="toggle-label">📚 Show Card Collection</span>
+                </label>
+                <label class="privacy-toggle">
+                    <input type="checkbox" id="toggleStats" onchange="togglePrivacy('showStats', this.checked)">
+                    <span class="toggle-slider"></span>
+                    <span class="toggle-label">📊 Show Game Stats</span>
+                </label>
+                <label class="privacy-toggle">
+                    <input type="checkbox" id="toggleAchievements" onchange="togglePrivacy('showAchievements', this.checked)">
+                    <span class="toggle-slider"></span>
+                    <span class="toggle-label">🏆 Show Achievements</span>
+                </label>
+                <label class="privacy-toggle">
+                    <input type="checkbox" id="toggleBalance" onchange="togglePrivacy('showBalance', this.checked)">
+                    <span class="toggle-slider"></span>
+                    <span class="toggle-label">💰 Show Currency Balance</span>
+                </label>
+                <label class="privacy-toggle">
+                    <input type="checkbox" id="toggleBusiness" onchange="togglePrivacy('showBusiness', this.checked)">
+                    <span class="toggle-slider"></span>
+                    <span class="toggle-label">🏪 Show Business Info</span>
+                </label>
+            </div>
+        </div>
+        
+        <!-- Profile Settings Section -->
+        <div class="gm-section" id="profileSection" style="margin-top: 16px;">
+            <div class="gm-title">👤 Profile Settings</div>
+            <div style="display: flex; flex-direction: column; gap: 12px;">
+                <div>
+                    <label style="color: rgba(255,255,255,0.7); font-size: 12px; display: block; margin-bottom: 4px;">Display Name</label>
+                    <div style="display: flex; gap: 8px;">
+                        <input type="text" id="displayNameInput" maxlength="20" placeholder="Enter display name..." style="flex: 1; padding: 10px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.2); border-radius: 6px; color: #fff; font-size: 14px;">
+                        <button onclick="saveDisplayName()" style="padding: 10px 16px; background: #ffd700; border: none; border-radius: 6px; color: #000; font-weight: 600; cursor: pointer;">Save</button>
+                    </div>
+                </div>
+                <div style="padding: 12px; background: rgba(255,215,0,0.1); border-radius: 8px; border: 1px solid rgba(255,215,0,0.2);">
+                    <div style="color: #ffd700; font-size: 12px; font-weight: 600; margin-bottom: 4px;">YOUR ID</div>
+                    <div id="userIdDisplay" style="font-family: monospace; font-size: 14px; color: #fff;">Loading...</div>
+                    <div style="color: rgba(255,255,255,0.5); font-size: 10px; margin-top: 4px;">
+                        Citizenship: <span id="citizenTier" style="color: #ffd700;">-</span> • 
+                        Trust: <span id="trustScore">-</span>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
     
@@ -914,7 +1020,8 @@
     
     // ===== ACCOUNT TRANSFER FUNCTIONS =====
     function generateTransferCode() {
-        const result = NW_WALLET.generateTransferCode();
+        // Try NW_USER v2 first, fall back to NW_WALLET
+        const result = NW_USER.initialized ? NW_USER.generateTransferCode() : NW_WALLET.generateTransferCode();
         if (!result) {
             showTransferStatus('error', 'Failed to generate transfer code');
             return;
@@ -950,10 +1057,15 @@
         
         showTransferStatus('info', '⏳ Processing transfer...');
         
-        const result = await NW_WALLET.importFromTransferCode(code);
+        // Try NW_USER v2 first (handles both new and legacy formats)
+        const result = NW_USER.initialized 
+            ? await NW_USER.importFromTransferCode(code)
+            : await NW_WALLET.importFromTransferCode(code);
         
         if (result.success) {
-            showTransferStatus('success', '✅ ' + result.message);
+            const stats = result.stats || {};
+            const msg = `✅ Account transferred! ${stats.cards || 0} cards, ${Object.values(stats.currencies || {}).reduce((a,b)=>a+b,0)} total currency`;
+            showTransferStatus('success', msg);
             if (typeof NW_SOUNDS !== 'undefined') NW_SOUNDS.play('legendary');
             
             // Reload page after 2 seconds to show new data
@@ -978,12 +1090,55 @@
                                           type === 'error' ? '#ff4757' : '#4a90d9');
     }
     
+    // ===== PRIVACY SETTINGS =====
+    function loadPrivacySettings() {
+        if (!NW_USER.initialized) return;
+        
+        const visibility = NW_USER.profile.visibility;
+        document.getElementById('toggleCollection').checked = visibility.showCollection;
+        document.getElementById('toggleStats').checked = visibility.showStats;
+        document.getElementById('toggleAchievements').checked = visibility.showAchievements;
+        document.getElementById('toggleBalance').checked = visibility.showBalance;
+        document.getElementById('toggleBusiness').checked = visibility.showBusiness;
+    }
+    
+    function togglePrivacy(key, value) {
+        if (NW_USER.profile.setVisibility(key, value)) {
+            if (typeof NW_SOUNDS !== 'undefined') NW_SOUNDS.play('select');
+            console.log('[Privacy] ' + key + ' set to ' + value);
+        }
+    }
+    
+    // ===== PROFILE SETTINGS =====
+    function loadProfileSettings() {
+        if (!NW_USER.initialized) return;
+        
+        document.getElementById('displayNameInput').value = NW_USER.profile.displayName || '';
+        document.getElementById('userIdDisplay').textContent = NW_USER.id || 'Unknown';
+        document.getElementById('citizenTier').textContent = NW_USER.identity.tier?.toUpperCase() || 'GUEST';
+        document.getElementById('trustScore').textContent = NW_USER.identity.trustScore + '/100';
+    }
+    
+    function saveDisplayName() {
+        const name = document.getElementById('displayNameInput').value.trim();
+        if (!name) return;
+        
+        if (NW_USER.profile.setDisplayName(name)) {
+            if (typeof NW_SOUNDS !== 'undefined') NW_SOUNDS.play('profit');
+            alert('✅ Display name saved!');
+        } else {
+            alert('❌ Name must be 1-20 characters');
+        }
+    }
+    
     // Initialize with NW_USER (unified system)
     async function initWallet() {
         await NW_USER.init();
         updateUI();
         renderDailyRewards();
         renderAchievements();
+        loadPrivacySettings();
+        loadProfileSettings();
         setInterval(updateUI, 2000);
     }
     
