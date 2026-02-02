@@ -30,7 +30,9 @@ http://localhost:3000
 
 - **Gacha System** - Pack opening with multi-tier pity
 - **110+ Cards** - 6 rarities across multiple seasons
-- **Battle System** - AI card battles
+- **Card Upgrade System** - Star levels (1-5★), duplicates increase stats
+- **Card Burning** - Convert duplicates to Sacred Logs currency
+- **Battle System** - AI card battles with star-boosted stats
 - **Deck Builder** - Custom deck construction
 - **Wallet** - Currency & inventory management
 - **Market** - Card trading between players
