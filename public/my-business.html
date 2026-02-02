@@ -163,6 +163,62 @@
             top: 100px;
         }
         
+        /* Collapsible Shop Profile */
+        .sidebar-toggle {
+            display: none;
+            width: 100%;
+            background: transparent;
+            border: none;
+            color: #fff;
+            padding: 0.5rem;
+            cursor: pointer;
+            font-size: 0.8rem;
+            color: var(--biz-gold);
+            margin-top: 0.5rem;
+        }
+        
+        .sidebar-toggle:hover {
+            text-decoration: underline;
+        }
+        
+        .sidebar-toggle .toggle-icon {
+            transition: transform 0.3s ease;
+            display: inline-block;
+        }
+        
+        .sidebar.collapsed .sidebar-toggle .toggle-icon {
+            transform: rotate(180deg);
+        }
+        
+        @media (max-width: 1024px) {
+            .sidebar-toggle {
+                display: block;
+            }
+            
+            /* FULLY collapse sidebar - hide everything except toggle */
+            .sidebar.collapsed .business-profile,
+            .sidebar.collapsed .nav-menu {
+                display: none;
+            }
+            
+            .sidebar.collapsed {
+                padding: 0.5rem 0.75rem;
+                position: fixed;
+                bottom: 80px;
+                left: 1rem;
+                right: 1rem;
+                top: auto;
+                border-radius: 30px;
+                z-index: 200;
+                text-align: center;
+            }
+            
+            .sidebar.collapsed .sidebar-toggle {
+                margin: 0;
+                padding: 0.25rem 0.5rem;
+            }
+        }
+        
         /* REMOVED: Back button - using NW_NAV unified navigation instead */
         
         /* Mobile optimizations */
@@ -729,13 +785,18 @@
     <!-- Main Layout -->
     <div class="main-layout">
         <!-- Sidebar -->
-        <aside class="sidebar">
+        <aside class="sidebar" id="sidebar">
             <div class="business-profile" id="businessProfile">
                 <div class="business-avatar" id="businessAvatar">🏪</div>
                 <h3 class="business-name" id="businessName">My Shop</h3>
                 <p class="business-type" id="businessType">General Store</p>
                 <span class="business-status status-active" id="businessStatus">ACTIVE</span>
+                <p class="owner-id" id="ownerId" style="font-size: 0.65rem; color: #666; margin-top: 0.5rem; font-family: monospace;">ID: ---</p>
             </div>
+            
+            <button class="sidebar-toggle" onclick="toggleSidebar()">
+                <span class="toggle-icon">▲</span> Hide Shop Info
+            </button>
             
             <ul class="nav-menu">
                 <li><a href="#dashboard" class="active" onclick="showSection('dashboard')"><span class="nav-icon">📊</span> <span data-i18n="dashboard">Dashboard</span></a></li>
@@ -1237,6 +1298,7 @@
             loadWallet();
             loadBusinessData();
             setupEventListeners();
+            restoreSidebarState();
             
             const savedLang = localStorage.getItem('nw_lang');
             if (savedLang) setLanguage(savedLang);
@@ -1283,9 +1345,21 @@
             }
         }
         
-        // Load business data
+        // Load business data (linked to Guest ID)
         function loadBusinessData() {
-            const savedBusiness = localStorage.getItem('nw_my_business');
+            const key = getBusinessStorageKey();
+            let savedBusiness = localStorage.getItem(key);
+            
+            // Try legacy key if user-specific not found
+            if (!savedBusiness && key !== 'nw_my_business') {
+                savedBusiness = localStorage.getItem('nw_my_business');
+                // Migrate to new key if found
+                if (savedBusiness) {
+                    localStorage.setItem(key, savedBusiness);
+                    console.log('[Business] Migrated data to user-specific key:', key);
+                }
+            }
+            
             if (savedBusiness) {
                 businessData = JSON.parse(savedBusiness);
                 products = businessData.products || [];
@@ -1293,6 +1367,9 @@
                 updateBusinessProfile();
                 updateDashboard();
                 document.getElementById('setupNotice').style.display = 'none';
+                
+                const guestId = getGuestId();
+                console.log('[Business] Loaded for user:', guestId || 'anonymous');
             } else {
                 document.getElementById('setupNotice').style.display = 'block';
             }
@@ -1301,15 +1378,51 @@
             renderOrders();
         }
         
-        // Save business data
+        // Get current user's Guest ID (for data binding)
+        function getGuestId() {
+            // Check for device UUID first
+            let deviceUUID = localStorage.getItem('nw_device_uuid');
+            if (deviceUUID) return deviceUUID;
+            
+            // Fallback to wallet guest ID
+            const walletState = localStorage.getItem('nw_wallet_v2');
+            if (walletState) {
+                try {
+                    const parsed = JSON.parse(walletState);
+                    return parsed.guestId || null;
+                } catch (e) {}
+            }
+            return null;
+        }
+        
+        // Get storage key for this user's business
+        function getBusinessStorageKey() {
+            const guestId = getGuestId();
+            if (guestId) {
+                return `nw_business_${guestId}`;
+            }
+            return 'nw_my_business'; // Fallback for legacy
+        }
+        
+        // Save business data (linked to Guest ID)
         function saveBusinessData() {
+            const guestId = getGuestId();
             const data = {
                 ...businessData,
                 products,
                 orders,
+                ownerId: guestId, // Link to owner
                 updatedAt: new Date().toISOString()
             };
-            localStorage.setItem('nw_my_business', JSON.stringify(data));
+            
+            // Save to user-specific key
+            const key = getBusinessStorageKey();
+            localStorage.setItem(key, JSON.stringify(data));
+            
+            // Also maintain legacy key for migration
+            if (key !== 'nw_my_business') {
+                localStorage.setItem('nw_my_business', JSON.stringify(data));
+            }
         }
         
         // Update business profile
@@ -1318,6 +1431,14 @@
             document.getElementById('businessAvatar').textContent = businessData.emoji || '🏪';
             document.getElementById('businessName').textContent = businessData.name || 'My Shop';
             document.getElementById('businessType').textContent = businessData.type || 'General Store';
+            
+            // Show owner ID (truncated)
+            const guestId = getGuestId();
+            if (guestId) {
+                const shortId = guestId.length > 16 ? guestId.substring(0, 16) + '...' : guestId;
+                document.getElementById('ownerId').textContent = '🔗 ' + shortId;
+                document.getElementById('ownerId').title = 'Owner ID: ' + guestId;
+            }
         }
         
         // Update dashboard
@@ -1483,6 +1604,32 @@
                 e.preventDefault();
                 saveSettings();
             });
+        }
+        
+        // Toggle sidebar collapse
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const toggleBtn = sidebar.querySelector('.sidebar-toggle');
+            sidebar.classList.toggle('collapsed');
+            
+            const isCollapsed = sidebar.classList.contains('collapsed');
+            toggleBtn.innerHTML = isCollapsed 
+                ? '<span class="toggle-icon">▼</span> Show Shop Info'
+                : '<span class="toggle-icon">▲</span> Hide Shop Info';
+            
+            // Remember preference
+            localStorage.setItem('nw_sidebar_collapsed', isCollapsed);
+        }
+        
+        // Restore sidebar state on load
+        function restoreSidebarState() {
+            const isCollapsed = localStorage.getItem('nw_sidebar_collapsed') === 'true';
+            if (isCollapsed && window.innerWidth <= 1024) {
+                const sidebar = document.getElementById('sidebar');
+                sidebar.classList.add('collapsed');
+                const toggleBtn = sidebar.querySelector('.sidebar-toggle');
+                toggleBtn.innerHTML = '<span class="toggle-icon">▼</span> Show Shop Info';
+            }
         }
         
         // Show section

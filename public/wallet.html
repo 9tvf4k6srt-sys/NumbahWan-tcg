@@ -7,6 +7,7 @@
     <link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
     <script src="/static/nw-wallet.js"></script>
+    <script src="/static/nw-user.js"></script>
     <script src="/static/nw-economy.js"></script>
     <script src="/static/nw-sounds.js" defer></script>
     <script src="/static/nw-guide.js" defer></script>
@@ -560,8 +561,9 @@
         .footer-item.active { color: var(--primary); }
         .footer-icon { font-size: 20px; }
     </style>
+    <script src="/static/nw-nav.js"></script>
 </head>
-<body>
+<body data-page-id="wallet">
     <header class="header">
         <div class="header-inner">
             <a href="/" class="back-btn">←</a>
@@ -835,14 +837,14 @@
     }
     
     function updateUI() {
-        const isGM = NW_WALLET.isGMMode();
+        const isGM = NW_USER.isGM;
         const guestEl = document.getElementById('guestId');
         
         if (isGM) {
             guestEl.textContent = '👑 GM';
             guestEl.classList.add('gm');
         } else {
-            guestEl.textContent = NW_WALLET.getGuestId() || 'Guest';
+            guestEl.textContent = NW_USER.id || 'Guest';
             guestEl.classList.remove('gm');
         }
         
@@ -856,7 +858,7 @@
     
     function activateGM() {
         const code = document.getElementById('gmCode').value;
-        if (NW_WALLET.activateGM(code)) {
+        if (NW_USER.activateGM(code)) {
             updateUI();
             if (typeof NW_SOUNDS !== 'undefined') NW_SOUNDS.play('legendary');
         }
@@ -864,16 +866,24 @@
     }
     
     function deactivateGM() {
-        NW_WALLET.deactivateGM();
+        NW_USER.deactivateGM();
         updateUI();
     }
     
-    window.addEventListener('nw-wallet-ready', () => {
+    // Initialize with NW_USER (unified system)
+    async function initWallet() {
+        await NW_USER.init();
         updateUI();
         renderDailyRewards();
         renderAchievements();
         setInterval(updateUI, 2000);
-    });
+    }
+    
+    window.addEventListener('nw-wallet-ready', initWallet);
+    // Fallback if wallet ready already fired
+    if (typeof NW_WALLET !== 'undefined' && NW_WALLET.initialized) {
+        initWallet();
+    }
     
     // Listen for achievement unlocks
     window.addEventListener('nw-achievement-unlocked', (e) => {
