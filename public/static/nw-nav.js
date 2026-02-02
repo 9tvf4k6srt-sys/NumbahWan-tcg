@@ -59,6 +59,17 @@ const NW_NAV = {
                 { id: 'museum', name: { en: 'Museum', zh: '博物館', th: 'พิพิธภัณฑ์' }, icon: 'crown', href: '/museum', isNew: true }
             ]
         },
+        absurd: {
+            name: { en: 'Absurd', zh: '荒誕', th: 'ไร้สาระ' },
+            icon: 'skull',       // 🤪 → absurd section
+            color: '#ff66ff',
+            pages: [
+                { id: 'court', name: { en: 'Court', zh: '法院', th: 'ศาล' }, icon: 'scroll', href: '/court', isNew: true },
+                { id: 'therapy', name: { en: 'Therapy', zh: '療程', th: 'บำบัด' }, icon: 'crystal-ball', href: '/therapy', isNew: true },
+                { id: 'hr', name: { en: 'HR Dept', zh: '人資部', th: 'ฝ่ายบุคคล' }, icon: 'form', href: '/hr', isNew: true },
+                { id: 'conspiracy', name: { en: 'Conspiracy', zh: '陰謀', th: 'สมคบคิด' }, icon: 'skull', href: '/conspiracy', isNew: true }
+            ]
+        },
         more: {
             name: { en: 'More', zh: '更多', th: 'เพิ่มเติม' },
             icon: 'scroll',       // 📖 → scroll/guide
@@ -67,7 +78,9 @@ const NW_NAV = {
                 { id: 'guide', name: { en: 'Guide', zh: '攻略', th: 'คู่มือ' }, icon: 'scroll', href: '/guide' },
                 { id: 'zakum', name: { en: 'Zakum Lore', zh: '扎昆傳說', th: 'ตำนานซาคุม' }, icon: 'skull', href: '/zakum' },
                 { id: 'fortune', name: { en: 'Fortune', zh: '占卜', th: 'ดวง' }, icon: 'crystal-ball', href: '/fortune' },
-                { id: 'apply', name: { en: 'Join Us', zh: '加入', th: 'สมัคร' }, icon: 'form', href: '/apply' }
+                { id: 'apply', name: { en: 'Join Us', zh: '加入', th: 'สมัคร' }, icon: 'form', href: '/apply' },
+                { id: 'updates', name: { en: 'Updates', zh: '更新', th: 'อัปเดต' }, icon: 'scroll', href: '/updates', isNew: true },
+                { id: 'about', name: { en: 'About', zh: '關於', th: 'เกี่ยวกับ' }, icon: 'shield', href: '/about' }
             ]
         }
     },

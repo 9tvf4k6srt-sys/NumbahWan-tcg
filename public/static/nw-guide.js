@@ -1,6 +1,7 @@
 /**
- * NumbahWan AI Guide v2.0
+ * NumbahWan AI Guide v3.0
  * Multi-language floating assistant for site navigation
+ * NOW AUTO-READS FROM NW_CONFIG - Single Source of Truth!
  * Supports: English, 繁體中文, ภาษาไทย
  */
 
@@ -10,295 +11,101 @@
     // Current language - syncs with site language setting
     let currentLang = localStorage.getItem('numbahwan_lang') || 'en';
 
-    // ==================== TRANSLATIONS ====================
-    const i18n = {
-        // Page names and descriptions
-        pages: {
-            home: {
-                en: { name: 'Home', desc: 'Guild headquarters - start your journey here' },
-                zh: { name: '首頁', desc: '公會總部 - 從這裡開始你的旅程' },
-                th: { name: 'หน้าแรก', desc: 'สำนักงานใหญ่กิลด์ - เริ่มต้นการเดินทางที่นี่' }
-            },
-            academy: {
-                en: { name: 'Academy', desc: 'Training grounds & daily schedule' },
-                zh: { name: '學院', desc: '訓練場和每日行程' },
-                th: { name: 'สถาบัน', desc: 'สนามฝึกและตารางประจำวัน' }
-            },
-            exchange: {
-                en: { name: 'NWX Exchange', desc: 'Parody stock market - trade guild assets!' },
-                zh: { name: 'NWX 交易所', desc: '惡搞股市 - 交易公會資產！' },
-                th: { name: 'NWX Exchange', desc: 'ตลาดหุ้นล้อเลียน - ซื้อขายสินทรัพย์กิลด์!' }
-            },
-            museum: {
-                en: { name: 'Museum', desc: 'Guild history & legendary artifacts' },
-                zh: { name: '博物館', desc: '公會歷史與傳奇文物' },
-                th: { name: 'พิพิธภัณฑ์', desc: 'ประวัติกิลด์และสิ่งประดิษฐ์ในตำนาน' }
-            },
-            vault: {
-                en: { name: 'Vault', desc: 'Secure storage for valuable treasures' },
-                zh: { name: '金庫', desc: '珍貴寶藏的安全儲存' },
-                th: { name: 'ห้องนิรภัย', desc: 'ที่เก็บสมบัติล้ำค่าอย่างปลอดภัย' }
-            },
-            tcg: {
-                en: { name: 'Card Game', desc: 'Collect and battle with guild member cards' },
-                zh: { name: '卡牌遊戲', desc: '收集並使用公會成員卡戰鬥' },
-                th: { name: 'เกมการ์ด', desc: 'สะสมและต่อสู้ด้วยการ์ดสมาชิกกิลด์' }
-            },
-            market: {
-                en: { name: 'Market', desc: 'Buy & sell cards in the trading market' },
-                zh: { name: '市場', desc: '在交易市場買賣卡牌' },
-                th: { name: 'ตลาด', desc: 'ซื้อขายการ์ดในตลาดซื้อขาย' }
-            },
-            forge: {
-                en: { name: 'Forge', desc: 'Pull cards with Sacred Logs!' },
-                zh: { name: '鍛造', desc: '用神聖原木抽卡！' },
-                th: { name: 'โรงตีเหล็ก', desc: 'สุ่มการ์ดด้วย Sacred Logs!' }
-            },
-            arcade: {
-                en: { name: 'Arcade', desc: 'Mini-games to earn currencies' },
-                zh: { name: '遊樂場', desc: '小遊戲賺取貨幣' },
-                th: { name: 'อาร์เคด', desc: 'มินิเกมเพื่อรับสกุลเงิน' }
-            },
-            merch: {
-                en: { name: 'Merch', desc: 'Guild merchandise store' },
-                zh: { name: '商品', desc: '公會周邊商品店' },
-                th: { name: 'สินค้า', desc: 'ร้านสินค้ากิลด์' }
-            },
-            wallet: {
-                en: { name: 'Wallet', desc: 'Manage your in-game currencies' },
-                zh: { name: '錢包', desc: '管理你的遊戲貨幣' },
-                th: { name: 'กระเป๋าเงิน', desc: 'จัดการสกุลเงินในเกมของคุณ' }
-            },
-            memes: {
-                en: { name: 'Memes', desc: 'Guild meme collection' },
-                zh: { name: '迷因', desc: '公會迷因收藏' },
-                th: { name: 'มีม', desc: 'คอลเลกชันมีมกิลด์' }
-            },
-            fortune: {
-                en: { name: 'Fortune', desc: 'Daily fortune readings' },
-                zh: { name: '占卜', desc: '每日運勢預測' },
-                th: { name: 'ดวง', desc: 'ดูดวงประจำวัน' }
-            },
-            apply: {
-                en: { name: 'Apply', desc: 'Join the guild - apply here!' },
-                zh: { name: '申請', desc: '加入公會 - 在此申請！' },
-                th: { name: 'สมัคร', desc: 'เข้าร่วมกิลด์ - สมัครที่นี่!' }
-            },
-            // === NEW ABSURDIST PAGES ===
-            court: {
-                en: { name: 'Supreme Court', desc: 'File complaints, deliver verdicts, appeal rulings!' },
-                zh: { name: '最高法院', desc: '提交訴狀、宣判、上訴！' },
-                th: { name: 'ศาลสูงสุด', desc: 'ยื่นคำร้อง ตัดสิน อุทธรณ์!' }
-            },
-            therapy: {
-                en: { name: 'Guild Therapy', desc: 'AI therapist for your gaming trauma' },
-                zh: { name: '公會療程', desc: 'AI治療師幫助你的遊戲創傷' },
-                th: { name: 'การบำบัดกิลด์', desc: 'นักบำบัด AI สำหรับบาดแผลทางเกม' }
-            },
-            hr: {
-                en: { name: 'HR Department', desc: 'Apply for absurd positions (100% rejection rate!)' },
-                zh: { name: '人力資源部', desc: '申請荒謬職位（100%被拒！）' },
-                th: { name: 'ฝ่ายบุคคล', desc: 'สมัครตำแหน่งไร้สาระ (อัตราปฏิเสธ 100%!)' }
-            },
-            conspiracy: {
-                en: { name: 'Conspiracy Board', desc: 'Pin evidence, connect the dots, uncover guild secrets' },
-                zh: { name: '陰謀論板', desc: '釘上證據、連接線索、揭露公會秘密' },
-                th: { name: 'บอร์ดสมคบคิด', desc: 'ปักหลักฐาน เชื่อมจุด เปิดโปงความลับกิลด์' }
-            }
-        },
-
-        // UI strings
+    // ==================== UI TRANSLATIONS (Guide-specific) ====================
+    const guideI18n = {
         ui: {
             en: {
                 title: 'NumbahWan Guide',
                 online: '● Online - Here to help!',
                 placeholder: 'Ask me anything...',
-                goTo: 'Go to'
+                goTo: 'Go to',
+                newBadge: 'NEW!'
             },
             zh: {
                 title: 'NumbahWan 嚮導',
                 online: '● 在線 - 隨時為您服務！',
                 placeholder: '問我任何問題...',
-                goTo: '前往'
+                goTo: '前往',
+                newBadge: '新功能！'
             },
             th: {
                 title: 'ไกด์ NumbahWan',
                 online: '● ออนไลน์ - พร้อมช่วยเหลือ!',
                 placeholder: 'ถามอะไรก็ได้...',
-                goTo: 'ไปที่'
+                goTo: 'ไปที่',
+                newBadge: 'ใหม่!'
             }
         },
-
-        // Greetings
         greetings: {
-            en: [
-                "Hey there, adventurer! 👋",
-                "Yo! Need directions? I got you 🗺️",
-                "What's up! Looking for something? 🔍",
-                "Greetings, traveler! 🎮"
-            ],
-            zh: [
-                "嘿，冒險者！👋",
-                "喲！需要指路嗎？交給我 🗺️",
-                "嗨！在找什麼嗎？🔍",
-                "你好，旅人！🎮"
-            ],
-            th: [
-                "สวัสดี นักผจญภัย! 👋",
-                "โย่! ต้องการทิศทางไหม? 🗺️",
-                "ว่าไง! หาอะไรอยู่? 🔍",
-                "ยินดีต้อนรับ นักเดินทาง! 🎮"
-            ]
+            en: ["Hey there, adventurer! 👋", "Yo! Need directions? I got you 🗺️", "What's up! Looking for something? 🔍", "Greetings, traveler! 🎮"],
+            zh: ["嘿，冒險者！👋", "喲！需要指路嗎？交給我 🗺️", "嗨！在找什麼嗎？🔍", "你好，旅人！🎮"],
+            th: ["สวัสดี นักผจญภัย! 👋", "โย่! ต้องการทิศทางไหม? 🗺️", "ว่าไง! หาอะไรอยู่? 🔍", "ยินดีต้อนรับ นักเดินทาง! 🎮"]
         },
-
-        // Intro message after greeting
         intro: {
             en: "I know all about this guild site! Ask me anything or tap a suggestion below 👇",
             zh: "我對這個公會網站瞭如指掌！問我任何問題或點擊下方建議 👇",
             th: "ฉันรู้ทุกอย่างเกี่ยวกับเว็บกิลด์นี้! ถามอะไรก็ได้หรือแตะคำแนะนำด้านล่าง 👇"
         },
-
-        // Confused responses
         confused: {
-            en: [
-                "Hmm, not sure about that one! Try asking about a page 🤔",
-                "My brain hurts! Can you rephrase? 😵",
-                "That's beyond my programming! Try 'show pages' 🤷"
-            ],
-            zh: [
-                "嗯，不太確定耶！試著問問關於頁面的問題 🤔",
-                "我腦袋打結了！能換個說法嗎？😵",
-                "這超出我的能力了！試試「顯示頁面」🤷"
-            ],
-            th: [
-                "อืม ไม่แน่ใจเลย! ลองถามเกี่ยวกับหน้าต่างๆ ดู 🤔",
-                "สมองฉันมึน! พูดใหม่ได้ไหม? 😵",
-                "เกินความสามารถของฉัน! ลอง 'แสดงหน้าทั้งหมด' 🤷"
-            ]
+            en: ["Hmm, not sure about that one! Try asking about a page 🤔", "My brain hurts! Can you rephrase? 😵", "That's beyond my programming! Try 'show pages' 🤷"],
+            zh: ["嗯，不太確定耶！試著問問關於頁面的問題 🤔", "我腦袋打結了！能換個說法嗎？😵", "這超出我的能力了！試試「顯示頁面」🤷"],
+            th: ["อืม ไม่แน่ใจเลย! ลองถามเกี่ยวกับหน้าต่างๆ ดู 🤔", "สมองฉันมึน! พูดใหม่ได้ไหม? 😵", "เกินความสามารถของฉัน! ลอง 'แสดงหน้าทั้งหมด' 🤷"]
         },
-
-        // Jokes
         jokes: {
             en: [
                 "Why did the guild master cross the road? To avoid doing dailies! 😂",
                 "What's a hacker's favorite snack? Spam! 🥫",
-                "How many MapleStory players to change a lightbulb? None - they're all AFK! 💡"
+                "How many MapleStory players to change a lightbulb? None - they're all AFK! 💡",
+                "Why did HR reject the banana? It didn't have enough appeal! 🍌",
+                "What did the therapist say to the gacha player? 'Let's talk about your pull issues.' 🎰"
             ],
             zh: [
                 "為什麼會長要過馬路？為了逃避每日任務！😂",
                 "駭客最愛的零食是什麼？垃圾郵件！🥫",
-                "需要多少楓之谷玩家換燈泡？零個——他們都在掛機！💡"
+                "需要多少楓之谷玩家換燈泡？零個——他們都在掛機！💡",
+                "為什麼人資拒絕香蕉？它不夠有吸引力！🍌",
+                "治療師對抽卡玩家說什麼？「讓我們談談你的抽卡問題。」🎰"
             ],
             th: [
                 "ทำไมหัวหน้ากิลด์ถึงข้ามถนน? เพื่อหนีเควสประจำวัน! 😂",
                 "แฮกเกอร์ชอบกินอะไร? สแปม! 🥫",
-                "ต้องใช้ผู้เล่น MapleStory กี่คนเปลี่ยนหลอดไฟ? ไม่มี - พวกเขา AFK หมด! 💡"
+                "ต้องใช้ผู้เล่น MapleStory กี่คนเปลี่ยนหลอดไฟ? ไม่มี - พวกเขา AFK หมด! 💡",
+                "ทำไม HR ถึงปฏิเสธกล้วย? มันไม่มีเสน่ห์พอ! 🍌",
+                "นักบำบัดพูดอะไรกับผู้เล่นกาชา? 'มาคุยเรื่องปัญหาการสุ่มของคุณ' 🎰"
             ]
         },
-
-        // Page tips
-        tips: {
-            '/': {
-                en: ["Welcome to NumbahWan! Try the 📈 Exchange", "Check out the 🏫 Academy", "New here? Visit the 🏛️ Museum"],
-                zh: ["歡迎來到NumbahWan！試試 📈 交易所", "看看 🏫 學院", "新手？去 🏛️ 博物館"],
-                th: ["ยินดีต้อนรับสู่ NumbahWan! ลอง 📈 Exchange", "ดู 🏫 สถาบัน", "มาใหม่? ไปที่ 🏛️ พิพิธภัณฑ์"]
-            },
-            '/exchange': {
-                en: ["Click headlines - they affect prices!", "Use keyboard: B=Buy, S=Sell"],
-                zh: ["點擊新聞標題——會影響價格！", "快捷鍵：B=買入, S=賣出"],
-                th: ["คลิกพาดหัวข่าว - มีผลต่อราคา!", "ใช้คีย์บอร์ด: B=ซื้อ, S=ขาย"]
-            },
-            '/forge': {
-                en: ["Use 🪵 Sacred Logs to pull cards!", "1 Log = 1 Pull, 5 Logs = Guaranteed Rare+"],
-                zh: ["用 🪵 神聖原木抽卡！", "1原木 = 1抽, 5原木 = 保底稀有+"],
-                th: ["ใช้ 🪵 Sacred Logs สุ่มการ์ด!", "1 Log = 1 สุ่ม, 5 Logs = การันตี Rare+"]
-            },
-            '/arcade': {
-                en: ["Play games to win currencies! 💎🪙⚙️🪨", "Path: Diamond → Gold → Iron → Stone → Log → CARDS!"],
-                zh: ["玩遊戲贏貨幣！💎🪙⚙️🪨", "路徑：鑽石 → 金幣 → 鐵 → 石頭 → 原木 → 卡牌！"],
-                th: ["เล่นเกมรับสกุลเงิน! 💎🪙⚙️🪨", "เส้นทาง: Diamond → Gold → Iron → Stone → Log → CARDS!"]
-            },
-            '/wallet': {
-                en: ["GM Mode: Enter 'numbahwan-gm-2026' for infinite resources!", "Export your wallet for backup"],
-                zh: ["GM模式：輸入 'numbahwan-gm-2026' 獲得無限資源！", "導出錢包以備份"],
-                th: ["GM Mode: ใส่ 'numbahwan-gm-2026' รับทรัพยากรไม่จำกัด!", "ส่งออกกระเป๋าเงินเพื่อสำรองข้อมูล"]
-            },
-            '/merch': {
-                en: ["All items can be bought with USD or guild currencies!", "Premium items need 🪵 Sacred Logs only"],
-                zh: ["所有商品可用美金或公會貨幣購買！", "頂級商品只能用 🪵 神聖原木購買"],
-                th: ["สินค้าทั้งหมดซื้อด้วย USD หรือสกุลเงินกิลด์!", "สินค้าพรีเมี่ยมต้องใช้ 🪵 Sacred Logs เท่านั้น"]
-            },
-            // === NEW ABSURDIST PAGE TIPS ===
-            '/court': {
-                en: ["File complaints for 5💎, win cases to earn 25🪙!", "Appeal costs 10💎 with only 3% success rate 😈", "10 crime categories including Fashion Crime & Excessive Simping!"],
-                zh: ["提交訴狀5💎，勝訴獲得25🪙！", "上訴需10💎，只有3%成功率 😈", "10種罪名包括時尚犯罪和過度舔狗！"],
-                th: ["ยื่นคำร้อง 5💎 ชนะคดีได้ 25🪙!", "อุทธรณ์ 10💎 สำเร็จแค่ 3% 😈", "10 หมวดหมู่อาชญากรรมรวมถึง Fashion Crime!"]
-            },
-            '/therapy': {
-                en: ["Complete a session to earn 3💎!", "Get diagnosed with Gacha Pull Depression 🎰", "Dr. NumbahWan is always listening (not really)"],
-                zh: ["完成療程獲得3💎！", "被診斷為抽卡憂鬱症 🎰", "NumbahWan醫生隨時傾聽（才怪）"],
-                th: ["ทำเซสชันเสร็จรับ 3💎!", "วินิจฉัยว่าเป็น Gacha Pull Depression 🎰", "Dr. NumbahWan ฟังอยู่เสมอ (ไม่จริง)"]
-            },
-            '/hr': {
-                en: ["Apply for Chief Banana Officer! 🍌", "All applications rejected (100% rate!)", "Application costs 5💎, consolation prize: 10🪙"],
-                zh: ["申請首席香蕉官！🍌", "所有申請都被拒絕（100%！）", "申請費5💎，安慰獎：10🪙"],
-                th: ["สมัคร Chief Banana Officer! 🍌", "ทุกใบสมัครถูกปฏิเสธ (100%!)", "สมัครงาน 5💎 รางวัลปลอบใจ: 10🪙"]
-            },
-            '/conspiracy': {
-                en: ["Drag evidence cards to connect the dots!", "Submit theories for 2💎, truth seekers earn 15🪙", "Investigate The Banana Patch conspiracy 🍌"],
-                zh: ["拖動證據卡片連接線索！", "提交理論2💎，揭密者獲得15🪙", "調查香蕉園陰謀 🍌"],
-                th: ["ลากการ์ดหลักฐานเชื่อมจุด!", "ส่งทฤษฎี 2💎 นักแสวงหาความจริงได้ 15🪙", "สืบสวน The Banana Patch conspiracy 🍌"]
-            }
-        },
-
-        // Suggestion chips
         chips: {
             showPages: { en: '📋 Show all pages', zh: '📋 顯示所有頁面', th: '📋 แสดงหน้าทั้งหมด' },
             tips: { en: '💡 Tips', zh: '💡 提示', th: '💡 เคล็ดลับ' },
             joke: { en: '😂 Tell a joke', zh: '😂 講個笑話', th: '😂 เล่าเรื่องตลก' },
             help: { en: '❓ Help', zh: '❓ 幫助', th: '❓ ช่วยเหลือ' },
-            langSwitch: { en: '🌐 Language', zh: '🌐 語言', th: '🌐 ภาษา' }
+            langSwitch: { en: '🌐 Language', zh: '🌐 語言', th: '🌐 ภาษา' },
+            newFeatures: { en: '🆕 New Features', zh: '🆕 新功能', th: '🆕 ฟีเจอร์ใหม่' }
         },
-
-        // Language switch
         langNames: {
             en: { en: 'English', zh: '英文', th: 'อังกฤษ' },
             zh: { en: 'Chinese', zh: '中文', th: 'จีน' },
             th: { en: 'Thai', zh: '泰文', th: 'ไทย' }
         },
-
-        // Help text
         help: {
-            en: "I can help you navigate! Try:\n• Ask about any page (Exchange, Forge, etc.)\n• 'show pages' - see all sections\n• 'tips' - get tips for current page\n• 'joke' - I'm hilarious! 😏\n• '🌐 Language' - switch language",
-            zh: "我可以幫你導航！試試：\n• 詢問任何頁面（交易所、鍛造等）\n• 「顯示頁面」- 查看所有區域\n• 「提示」- 獲取當前頁面提示\n• 「笑話」- 我超幽默！😏\n• 「🌐 語言」- 切換語言",
-            th: "ฉันช่วยนำทางได้! ลอง:\n• ถามเกี่ยวกับหน้าใดก็ได้ (Exchange, Forge ฯลฯ)\n• 'แสดงหน้า' - ดูทุกส่วน\n• 'เคล็ดลับ' - รับเคล็ดลับหน้าปัจจุบัน\n• 'ตลก' - ฉันตลกมาก! 😏\n• '🌐 ภาษา' - เปลี่ยนภาษา"
+            en: "I can help you navigate! Try:\n• Ask about any page (Exchange, Court, Therapy, etc.)\n• 'show pages' - see all sections\n• 'new features' - see latest updates\n• 'tips' - get tips for current page\n• 'joke' - I'm hilarious! 😏\n• '🌐 Language' - switch language",
+            zh: "我可以幫你導航！試試：\n• 詢問任何頁面（交易所、法院、療程等）\n• 「顯示頁面」- 查看所有區域\n• 「新功能」- 查看最新更新\n• 「提示」- 獲取當前頁面提示\n• 「笑話」- 我超幽默！😏\n• 「🌐 語言」- 切換語言",
+            th: "ฉันช่วยนำทางได้! ลอง:\n• ถามเกี่ยวกับหน้าใดก็ได้ (Exchange, Court, Therapy ฯลฯ)\n• 'แสดงหน้า' - ดูทุกส่วน\n• 'ฟีเจอร์ใหม่' - ดูอัปเดตล่าสุด\n• 'เคล็ดลับ' - รับเคล็ดลับหน้าปัจจุบัน\n• 'ตลก' - ฉันตลกมาก! 😏\n• '🌐 ภาษา' - เปลี่ยนภาษา"
+        },
+        // Fallback page tips (when NW_CONFIG not available)
+        fallbackTips: {
+            '/': {
+                en: ["Welcome to NumbahWan! Try the 📈 Exchange", "Check out the 🏫 Academy", "New here? Visit the 🏛️ Museum"],
+                zh: ["歡迎來到NumbahWan！試試 📈 交易所", "看看 🏫 學院", "新手？去 🏛️ 博物館"],
+                th: ["ยินดีต้อนรับสู่ NumbahWan! ลอง 📈 Exchange", "ดู 🏫 สถาบัน", "มาใหม่? ไปที่ 🏛️ พิพิธภัณฑ์"]
+            }
         }
-    };
-
-    // Page paths
-    const PAGE_PATHS = {
-        home: '/', academy: '/academy', exchange: '/exchange', museum: '/museum',
-        vault: '/vault', tcg: '/tcg', market: '/market', forge: '/forge',
-        arcade: '/arcade', merch: '/merch', wallet: '/wallet', memes: '/memes',
-        fortune: '/fortune', apply: '/apply',
-        // New absurdist pages
-        court: '/court', therapy: '/therapy', hr: '/hr', conspiracy: '/conspiracy'
-    };
-
-    // Page emojis
-    const PAGE_EMOJIS = {
-        home: '🏠', academy: '🏫', exchange: '📈', museum: '🏛️', vault: '🔐',
-        tcg: '🃏', market: '🛒', forge: '⚒️', arcade: '🕹️', merch: '👕',
-        wallet: '💰', memes: '😂', fortune: '🔮', apply: '📝',
-        // New absurdist pages
-        court: '⚖️', therapy: '🛋️', hr: '👔', conspiracy: '📌'
     };
 
     // ==================== HELPER FUNCTIONS ====================
     function t(key) {
-        // Get translation from nested path like "ui.title"
         const keys = key.split('.');
-        let result = i18n;
+        let result = guideI18n;
         for (const k of keys) {
             result = result?.[k];
         }
@@ -310,15 +117,60 @@
         return Array.isArray(arr) ? arr[Math.floor(Math.random() * arr.length)] : arr;
     }
 
+    // Get page info from NW_CONFIG (with fallback)
     function getPageInfo(pageKey) {
-        const pageData = i18n.pages[pageKey];
-        if (!pageData) return null;
-        return {
-            path: PAGE_PATHS[pageKey],
-            emoji: PAGE_EMOJIS[pageKey],
-            name: pageData[currentLang]?.name || pageData.en.name,
-            desc: pageData[currentLang]?.desc || pageData.en.desc
-        };
+        // Try NW_CONFIG first (Single Source of Truth)
+        if (window.NW_CONFIG) {
+            const page = NW_CONFIG.getPage(pageKey);
+            if (page) return page;
+        }
+        return null;
+    }
+
+    // Get all pages from NW_CONFIG
+    function getAllPages(category = null) {
+        if (window.NW_CONFIG) {
+            return NW_CONFIG.getAllPages(category);
+        }
+        return [];
+    }
+
+    // Get tips for current page
+    function getPageTips(path) {
+        // Try NW_CONFIG first
+        if (window.NW_CONFIG) {
+            const pages = Object.values(NW_CONFIG.pages);
+            const page = pages.find(p => p.path === path);
+            if (page?.tips) {
+                const tips = NW_CONFIG.t(page.tips, currentLang);
+                if (Array.isArray(tips) && tips.length > 0) return tips;
+            }
+        }
+        // Fallback
+        return guideI18n.fallbackTips[path]?.[currentLang] || guideI18n.fallbackTips['/'][currentLang];
+    }
+
+    // Match user input to a page
+    function findPageByInput(input) {
+        if (!window.NW_CONFIG) return null;
+        
+        const lower = input.toLowerCase();
+        
+        for (const [key, page] of Object.entries(NW_CONFIG.pages)) {
+            // Check keywords
+            const keywords = page.keywords?.[currentLang] || page.keywords?.en || [];
+            for (const kw of keywords) {
+                if (lower.includes(kw.toLowerCase())) {
+                    return key;
+                }
+            }
+            // Check name
+            const name = NW_CONFIG.t(page.name, currentLang);
+            if (lower.includes(name.toLowerCase())) {
+                return key;
+            }
+        }
+        return null;
     }
 
     // ==================== UI CREATION ====================
@@ -361,14 +213,30 @@
             #nw-guide-toggle.open svg.nw-icon-chat { display: none; }
             #nw-guide-toggle.open svg.nw-icon-close { display: block; }
             #nw-guide-toggle svg.nw-icon-close { display: none; }
+            .nw-guide-new-badge {
+                position: absolute;
+                top: -4px;
+                right: -4px;
+                background: linear-gradient(135deg, #ef4444, #dc2626);
+                color: white;
+                font-size: 9px;
+                padding: 2px 5px;
+                border-radius: 8px;
+                font-weight: 700;
+                animation: nw-pulse 2s infinite;
+            }
+            @keyframes nw-pulse {
+                0%, 100% { transform: scale(1); }
+                50% { transform: scale(1.1); }
+            }
 
             #nw-guide-chat {
                 position: fixed;
                 bottom: 100px;
                 right: 24px;
-                width: 360px;
+                width: 380px;
                 max-width: calc(100vw - 48px);
-                max-height: 500px;
+                max-height: 520px;
                 background: #0d1117;
                 border: 1px solid #21262d;
                 border-radius: 16px;
@@ -414,6 +282,14 @@
             .nw-guide-info span {
                 color: #00ff88;
                 font-size: 11px;
+            }
+            .nw-guide-version {
+                margin-left: auto;
+                font-size: 10px;
+                color: #6e7681;
+                background: rgba(255,255,255,0.05);
+                padding: 2px 8px;
+                border-radius: 10px;
             }
 
             .nw-guide-messages {
@@ -474,6 +350,15 @@
                 background: rgba(255, 107, 0, 0.25);
                 text-decoration: none !important;
             }
+            .nw-guide-page-link.new::after {
+                content: 'NEW';
+                margin-left: 6px;
+                background: #ef4444;
+                color: white;
+                font-size: 9px;
+                padding: 1px 4px;
+                border-radius: 4px;
+            }
 
             .nw-guide-suggestions {
                 padding: 12px 16px;
@@ -502,6 +387,11 @@
                 background: rgba(255, 107, 0, 0.1);
                 border-color: rgba(255, 107, 0, 0.3);
                 color: #ff9500;
+            }
+            .nw-guide-chip.new-chip {
+                background: rgba(0, 255, 136, 0.1);
+                border-color: rgba(0, 255, 136, 0.3);
+                color: #00ff88;
             }
 
             .nw-guide-input-area {
@@ -570,9 +460,9 @@
             <svg class="nw-icon-close" viewBox="0 0 24 24" fill="none">
                 <path d="M18 6L6 18M6 6l12 12" stroke="#ff6b00" stroke-width="2.5" stroke-linecap="round"/>
             </svg>
+            <span class="nw-guide-new-badge">${t('ui.newBadge')}</span>
         `;
         toggle.setAttribute('aria-label', 'Open AI Guide');
-        toggle.title = currentLang === 'zh' ? '需要幫助？點擊聊天！' : currentLang === 'th' ? 'ต้องการความช่วยเหลือ? คลิกแชท!' : 'Need help? Click to chat!';
 
         // Chat window
         const chat = document.createElement('div');
@@ -586,6 +476,7 @@
     }
 
     function updateChatHTML(chat) {
+        const version = window.NW_CONFIG?.version || '3.0.0';
         chat.innerHTML = `
             <div class="nw-guide-header">
                 <div class="nw-guide-avatar">
@@ -601,6 +492,7 @@
                     <h3>${t('ui.title')}</h3>
                     <span>${t('ui.online')}</span>
                 </div>
+                <span class="nw-guide-version">v${version}</span>
             </div>
             <div class="nw-guide-messages" id="nw-guide-messages"></div>
             <div class="nw-guide-suggestions" id="nw-guide-suggestions"></div>
@@ -630,16 +522,16 @@
         const container = document.getElementById('nw-guide-suggestions');
         if (!container) return;
         container.innerHTML = suggestions.map(s => 
-            `<div class="nw-guide-chip ${s.isLang ? 'lang-chip' : ''}" data-action="${s.action || ''}" data-value="${s.value || ''}">${s.label}</div>`
+            `<div class="nw-guide-chip ${s.isLang ? 'lang-chip' : ''} ${s.isNew ? 'new-chip' : ''}" data-action="${s.action || ''}" data-value="${s.value || ''}">${s.label}</div>`
         ).join('');
     }
 
     function showContextualSuggestions() {
-        const path = window.location.pathname;
         const suggestions = [
-            { label: i18n.chips.showPages[currentLang], value: 'show pages' },
-            { label: i18n.chips.tips[currentLang], value: 'tips' },
-            { label: i18n.chips.langSwitch[currentLang], action: 'lang', isLang: true }
+            { label: guideI18n.chips.showPages[currentLang], value: 'show pages' },
+            { label: guideI18n.chips.newFeatures[currentLang], value: 'new features', isNew: true },
+            { label: guideI18n.chips.tips[currentLang], value: 'tips' },
+            { label: guideI18n.chips.langSwitch[currentLang], action: 'lang', isLang: true }
         ];
         showSuggestions(suggestions);
     }
@@ -663,7 +555,6 @@
         currentLang = lang;
         localStorage.setItem('numbahwan_lang', lang);
         
-        // Update chat UI
         const chat = document.getElementById('nw-guide-chat');
         if (chat) {
             const wasOpen = chat.classList.contains('open');
@@ -673,15 +564,7 @@
                 document.getElementById('nw-guide-messages').innerHTML = messages;
             }
             if (wasOpen) chat.classList.add('open');
-            
-            // Rebind events
             bindInputEvents();
-        }
-
-        // Update toggle tooltip
-        const toggle = document.getElementById('nw-guide-toggle');
-        if (toggle) {
-            toggle.title = currentLang === 'zh' ? '需要幫助？點擊聊天！' : currentLang === 'th' ? 'ต้องการความช่วยเหลือ? คลิกแชท!' : 'Need help? Click to chat!';
         }
 
         const confirmMsg = {
@@ -692,38 +575,92 @@
         addMessage(confirmMsg[lang]);
         showContextualSuggestions();
 
-        // Dispatch event for other components
         window.dispatchEvent(new CustomEvent('nw-lang-changed', { detail: { lang } }));
     }
 
     function respondWithPage(pageKey) {
         const page = getPageInfo(pageKey);
-        if (!page) return;
+        if (!page) {
+            addMessage(tRandom('confused'));
+            return;
+        }
         
         const goToText = t('ui.goTo');
-        addMessage(`${page.emoji} <strong>${page.name}</strong><br>${page.desc}<br><br><a href="${page.path}" class="nw-guide-page-link">${page.emoji} ${goToText} ${page.name}</a>`);
+        const isNew = page.category === 'absurdist';
+        const newClass = isNew ? ' new' : '';
+        
+        addMessage(`${page.emoji} <strong>${page.name}</strong><br>${page.desc}<br><br><a href="${page.path}" class="nw-guide-page-link${newClass}">${page.emoji} ${goToText} ${page.name}</a>`);
         showContextualSuggestions();
     }
 
     function respondWithPageList() {
-        const featured = ['exchange', 'forge', 'arcade', 'wallet', 'court', 'therapy', 'hr', 'conspiracy'];
-        const list = featured.map(key => {
-            const p = getPageInfo(key);
-            return p ? `<a href="${p.path}" class="nw-guide-page-link">${p.emoji} ${p.name}</a>` : '';
-        }).filter(Boolean).join(' ');
+        const allPages = getAllPages();
+        if (allPages.length === 0) {
+            addMessage("Loading pages... try again in a moment!");
+            return;
+        }
+        
+        // Group by category
+        const categories = {
+            core: { emoji: '🏠', name: { en: 'Core', zh: '核心', th: 'หลัก' } },
+            economy: { emoji: '💰', name: { en: 'Economy', zh: '經濟', th: 'เศรษฐกิจ' } },
+            game: { emoji: '🎮', name: { en: 'Games', zh: '遊戲', th: 'เกม' } },
+            fun: { emoji: '🎉', name: { en: 'Fun', zh: '趣味', th: 'สนุก' } },
+            absurdist: { emoji: '🤪', name: { en: 'NEW! Absurdist', zh: '新！荒誕', th: 'ใหม่! ไร้สาระ' } },
+            meta: { emoji: '📋', name: { en: 'Info', zh: '資訊', th: 'ข้อมูล' } }
+        };
+        
+        // Featured pages
+        const featured = ['exchange', 'forge', 'arcade', 'court', 'therapy', 'hr', 'conspiracy'];
+        const list = featured
+            .map(key => {
+                const p = getPageInfo(key);
+                if (!p) return '';
+                const isNew = p.category === 'absurdist';
+                return `<a href="${p.path}" class="nw-guide-page-link${isNew ? ' new' : ''}">${p.emoji} ${p.name}</a>`;
+            })
+            .filter(Boolean)
+            .join(' ');
         
         const introText = {
-            en: "Here are some popular spots:",
-            zh: "這裡有一些熱門區域：",
-            th: "นี่คือจุดยอดนิยม:"
+            en: "Here are the featured spots:",
+            zh: "這裡是精選區域：",
+            th: "นี่คือจุดแนะนำ:"
         };
-        addMessage(`${introText[currentLang]}<br><br>${list}`);
+        addMessage(`${introText[currentLang]}<br><br>${list}<br><br><a href="/updates" class="nw-guide-page-link">📋 ${currentLang === 'zh' ? '完整更新日誌' : currentLang === 'th' ? 'บันทึกแพทช์ทั้งหมด' : 'Full Patch Notes'}</a>`);
+        showContextualSuggestions();
+    }
+
+    function respondWithNewFeatures() {
+        if (!window.NW_CONFIG) {
+            addMessage("Loading... try again!");
+            return;
+        }
+        
+        const patch = NW_CONFIG.getLatestPatch();
+        const title = NW_CONFIG.t(patch.title, currentLang);
+        const newItems = patch.changes.filter(c => c.category === 'new');
+        
+        let msg = `🆕 <strong>${title}</strong> (v${patch.version})<br><br>`;
+        
+        newItems.forEach(item => {
+            const itemTitle = NW_CONFIG.t(item.title, currentLang);
+            msg += `${item.icon} <strong>${itemTitle}</strong>`;
+            if (item.path) {
+                msg += ` <a href="${item.path}" class="nw-guide-page-link new">${item.path}</a>`;
+            }
+            msg += `<br>`;
+        });
+        
+        msg += `<br><a href="/updates" class="nw-guide-page-link">📋 ${currentLang === 'zh' ? '完整更新日誌' : currentLang === 'th' ? 'บันทึกแพทช์ทั้งหมด' : 'Full Patch Notes'}</a>`;
+        
+        addMessage(msg);
         showContextualSuggestions();
     }
 
     function respondWithTips() {
         const path = window.location.pathname;
-        const tips = i18n.tips[path]?.[currentLang] || i18n.tips['/'][currentLang];
+        const tips = getPageTips(path);
         const tip = tips[Math.floor(Math.random() * tips.length)];
         addMessage(`💡 ${tip}`);
         showContextualSuggestions();
@@ -741,114 +678,40 @@
         addMessage(input, false);
 
         setTimeout(() => {
-            // Language detection for Chinese input
-            if (/[\u4e00-\u9fff]/.test(input)) {
-                // Chinese characters detected
-                if (lower.includes('交易') || lower.includes('股票')) return respondWithPage('exchange');
-                if (lower.includes('學院') || lower.includes('訓練')) return respondWithPage('academy');
-                if (lower.includes('博物') || lower.includes('歷史')) return respondWithPage('museum');
-                if (lower.includes('金庫') || lower.includes('寶藏')) return respondWithPage('vault');
-                if (lower.includes('卡') || lower.includes('遊戲')) return respondWithPage('tcg');
-                if (lower.includes('市場') || lower.includes('買') || lower.includes('賣')) return respondWithPage('market');
-                if (lower.includes('鍛造') || lower.includes('抽')) return respondWithPage('forge');
-                if (lower.includes('遊樂') || lower.includes('玩')) return respondWithPage('arcade');
-                if (lower.includes('商品') || lower.includes('周邊')) return respondWithPage('merch');
-                if (lower.includes('錢包') || lower.includes('貨幣')) return respondWithPage('wallet');
-                if (lower.includes('頁面') || lower.includes('全部') || lower.includes('顯示')) return respondWithPageList();
-                if (lower.includes('提示') || lower.includes('幫助')) return respondWithTips();
-                if (lower.includes('笑話') || lower.includes('有趣')) {
-                    addMessage(tRandom('jokes'));
-                    return showContextualSuggestions();
-                }
-                if (lower.includes('語言')) return showLanguageOptions();
-                // New absurdist pages - Chinese keywords
-                if (lower.includes('法院') || lower.includes('訴') || lower.includes('告') || lower.includes('判')) return respondWithPage('court');
-                if (lower.includes('療') || lower.includes('心理') || lower.includes('治療')) return respondWithPage('therapy');
-                if (lower.includes('人力') || lower.includes('工作') || lower.includes('職位')) return respondWithPage('hr');
-                if (lower.includes('陰謀') || lower.includes('秘密') || lower.includes('理論')) return respondWithPage('conspiracy');
+            // Try to match a page from NW_CONFIG
+            const pageKey = findPageByInput(input);
+            if (pageKey) {
+                respondWithPage(pageKey);
+                return;
             }
-
-            // Thai detection
-            if (/[\u0E00-\u0E7F]/.test(input)) {
-                if (lower.includes('แลกเปลี่ยน') || lower.includes('หุ้น')) return respondWithPage('exchange');
-                if (lower.includes('สถาบัน') || lower.includes('ฝึก')) return respondWithPage('academy');
-                if (lower.includes('พิพิธภัณฑ์')) return respondWithPage('museum');
-                if (lower.includes('ห้องนิรภัย')) return respondWithPage('vault');
-                if (lower.includes('การ์ด') || lower.includes('เกม')) return respondWithPage('tcg');
-                if (lower.includes('ตลาด') || lower.includes('ซื้อ') || lower.includes('ขาย')) return respondWithPage('market');
-                if (lower.includes('โรงตี') || lower.includes('สุ่ม')) return respondWithPage('forge');
-                if (lower.includes('อาร์เคด') || lower.includes('เล่น')) return respondWithPage('arcade');
-                if (lower.includes('สินค้า')) return respondWithPage('merch');
-                if (lower.includes('กระเป๋า')) return respondWithPage('wallet');
-                if (lower.includes('หน้า') || lower.includes('ทั้งหมด') || lower.includes('แสดง')) return respondWithPageList();
-                if (lower.includes('เคล็ดลับ') || lower.includes('ช่วย')) return respondWithTips();
-                if (lower.includes('ตลก') || lower.includes('ขำ')) {
-                    addMessage(tRandom('jokes'));
-                    return showContextualSuggestions();
-                }
-                if (lower.includes('ภาษา')) return showLanguageOptions();
-                // New absurdist pages - Thai keywords
-                if (lower.includes('ศาล') || lower.includes('ฟ้อง') || lower.includes('ตัดสิน')) return respondWithPage('court');
-                if (lower.includes('บำบัด') || lower.includes('จิต') || lower.includes('ปรึกษา')) return respondWithPage('therapy');
-                if (lower.includes('บุคคล') || lower.includes('งาน') || lower.includes('สมัคร')) return respondWithPage('hr');
-                if (lower.includes('สมคบ') || lower.includes('ความลับ') || lower.includes('ทฤษฎี')) return respondWithPage('conspiracy');
-            }
-
-            // English keywords
-            if (lower.includes('exchange') || lower.includes('stock') || lower.includes('trade')) {
-                respondWithPage('exchange');
-            } else if (lower.includes('academy') || lower.includes('train') || lower.includes('schedule')) {
-                respondWithPage('academy');
-            } else if (lower.includes('museum') || lower.includes('history') || lower.includes('artifact')) {
-                respondWithPage('museum');
-            } else if (lower.includes('vault') || lower.includes('treasure') || lower.includes('secure')) {
-                respondWithPage('vault');
-            } else if (lower.includes('card') || lower.includes('tcg') || lower.includes('battle')) {
-                respondWithPage('tcg');
-            } else if (lower.includes('market') || lower.includes('buy') || lower.includes('sell')) {
-                respondWithPage('market');
-            } else if (lower.includes('forge') || lower.includes('craft') || lower.includes('pull')) {
-                respondWithPage('forge');
-            } else if (lower.includes('arcade') || lower.includes('game') || lower.includes('play')) {
-                respondWithPage('arcade');
-            } else if (lower.includes('merch') || lower.includes('shop') || lower.includes('store')) {
-                respondWithPage('merch');
-            } else if (lower.includes('wallet') || lower.includes('money') || lower.includes('currency')) {
-                respondWithPage('wallet');
-            } else if (lower.includes('meme') || lower.includes('funny')) {
-                respondWithPage('memes');
-            } else if (lower.includes('fortune') || lower.includes('luck')) {
-                respondWithPage('fortune');
-            } else if (lower.includes('apply') || lower.includes('join')) {
-                respondWithPage('apply');
-            } else if (lower.includes('home') || lower.includes('main') || lower.includes('start')) {
-                respondWithPage('home');
-            }
-            // New absurdist pages - English keywords
-            else if (lower.includes('court') || lower.includes('sue') || lower.includes('complaint') || lower.includes('verdict') || lower.includes('judge')) {
-                respondWithPage('court');
-            } else if (lower.includes('therapy') || lower.includes('therapist') || lower.includes('mental') || lower.includes('counsel')) {
-                respondWithPage('therapy');
-            } else if (lower.includes('hr') || lower.includes('job') || lower.includes('hire') || lower.includes('position') || lower.includes('banana officer')) {
-                respondWithPage('hr');
-            } else if (lower.includes('conspiracy') || lower.includes('theory') || lower.includes('secret') || lower.includes('illuminati') || lower.includes('evidence')) {
-                respondWithPage('conspiracy');
-            }
+            
             // Commands
-            else if (lower.includes('page') || lower.includes('show') || lower.includes('all') || lower.includes('list')) {
+            if (lower.includes('page') || lower.includes('show') || lower.includes('all') || lower.includes('list') ||
+                lower.includes('頁面') || lower.includes('全部') || lower.includes('顯示') ||
+                lower.includes('หน้า') || lower.includes('ทั้งหมด') || lower.includes('แสดง')) {
                 respondWithPageList();
             }
-            else if (lower.includes('help') || lower === '?') {
+            else if (lower.includes('new') || lower.includes('update') || lower.includes('patch') || lower.includes('feature') ||
+                     lower.includes('新') || lower.includes('更新') ||
+                     lower.includes('ใหม่') || lower.includes('อัปเดต')) {
+                respondWithNewFeatures();
+            }
+            else if (lower.includes('help') || lower === '?' ||
+                     lower.includes('幫助') || lower.includes('ช่วย')) {
                 respondWithHelp();
             }
-            else if (lower.includes('joke') || lower.includes('funny') || lower.includes('lol')) {
+            else if (lower.includes('joke') || lower.includes('funny') || lower.includes('lol') ||
+                     lower.includes('笑話') || lower.includes('有趣') ||
+                     lower.includes('ตลก') || lower.includes('ขำ')) {
                 addMessage(tRandom('jokes'));
                 showContextualSuggestions();
             }
-            else if (lower.includes('tip') || lower.includes('hint')) {
+            else if (lower.includes('tip') || lower.includes('hint') ||
+                     lower.includes('提示') || lower.includes('เคล็ดลับ')) {
                 respondWithTips();
             }
-            else if (lower.includes('language') || lower.includes('lang') || lower === '🌐') {
+            else if (lower.includes('language') || lower.includes('lang') || lower === '🌐' ||
+                     lower.includes('語言') || lower.includes('ภาษา')) {
                 showLanguageOptions();
             }
             else if (lower.match(/^(hi|hey|hello|yo|sup|哈囉|你好|嗨|สวัสดี)/)) {
@@ -858,9 +721,9 @@
             else {
                 addMessage(tRandom('confused'));
                 showSuggestions([
-                    { label: i18n.chips.showPages[currentLang], value: 'show all pages' },
-                    { label: i18n.chips.tips[currentLang], value: 'tips' },
-                    { label: i18n.chips.joke[currentLang], value: 'joke' }
+                    { label: guideI18n.chips.showPages[currentLang], value: 'show all pages' },
+                    { label: guideI18n.chips.newFeatures[currentLang], value: 'new features', isNew: true },
+                    { label: guideI18n.chips.joke[currentLang], value: 'joke' }
                 ]);
             }
         }, 300);
@@ -949,6 +812,11 @@
                 if (chatEl) updateChatHTML(chatEl);
             }
         });
+
+        // Listen for config updates
+        window.addEventListener('nw-config-update', () => {
+            console.log('[NW_GUIDE] Config updated, refreshing data...');
+        });
     }
 
     // Start when DOM ready
@@ -957,4 +825,7 @@
     } else {
         init();
     }
+
+    console.log('%c[NW_GUIDE] v3.0 - Now reading from NW_CONFIG!', 
+        'background: #1a1a2e; color: #ff6b00; font-size: 12px; padding: 4px 8px; border-radius: 4px;');
 })();

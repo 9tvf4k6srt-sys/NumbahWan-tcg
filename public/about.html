@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>About Us | NumbahWan Guild</title>
+    <link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="/static/nw-config.js"></script>
+    <script src="/static/nw-wallet.js"></script>
+    <script src="/static/nw-sounds.js"></script>
+    <script src="/static/nw-guide.js"></script>
+    <style>
+        :root {
+            --bg-dark: #0a0a0f;
+            --bg-card: #12121a;
+            --gold: #d4af37;
+            --cyan: #00ffff;
+            --green: #00ff88;
+            --purple: #9333ea;
+            --text: #f5f5dc;
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg-dark);
+            color: var(--text);
+            min-height: 100vh;
+        }
+        .font-cinzel { font-family: 'Cinzel', serif; }
+        
+        /* Hero Section */
+        .hero {
+            background: linear-gradient(135deg, rgba(147, 51, 234, 0.2), rgba(212, 175, 55, 0.1));
+            position: relative;
+            overflow: hidden;
+        }
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: url('/static/hero-banner.webp') center/cover;
+            opacity: 0.1;
+        }
+        
+        /* Team Cards */
+        .team-card {
+            background: var(--bg-card);
+            border: 1px solid rgba(212, 175, 55, 0.2);
+            border-radius: 20px;
+            overflow: hidden;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+        }
+        .team-card:hover {
+            border-color: rgba(212, 175, 55, 0.6);
+            transform: translateY(-8px) scale(1.02);
+            box-shadow: 0 25px 50px rgba(212, 175, 55, 0.15);
+        }
+        .team-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 120px;
+            background: linear-gradient(135deg, rgba(147, 51, 234, 0.3), rgba(212, 175, 55, 0.2));
+        }
+        .team-avatar {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            border: 4px solid var(--gold);
+            object-fit: cover;
+            position: relative;
+            z-index: 1;
+            background: var(--bg-dark);
+        }
+        .team-avatar-placeholder {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            border: 4px solid var(--gold);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 48px;
+            background: linear-gradient(135deg, var(--bg-card), #1a1a2e);
+            position: relative;
+            z-index: 1;
+        }
+        .role-badge {
+            background: linear-gradient(135deg, var(--gold), #ffd700);
+            color: #000;
+            padding: 4px 16px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        .title-badge {
+            background: rgba(147, 51, 234, 0.2);
+            color: #c084fc;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 11px;
+        }
+        
+        /* Lore Section */
+        .lore-card {
+            background: linear-gradient(135deg, rgba(212, 175, 55, 0.05), rgba(147, 51, 234, 0.05));
+            border: 1px solid rgba(212, 175, 55, 0.2);
+            border-radius: 16px;
+            position: relative;
+            overflow: hidden;
+        }
+        .lore-card::before {
+            content: '';
+            position: absolute;
+            top: -50%; left: -50%;
+            width: 200%; height: 200%;
+            background: radial-gradient(circle, rgba(212, 175, 55, 0.1) 0%, transparent 70%);
+            animation: rotate 20s linear infinite;
+        }
+        @keyframes rotate {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        
+        /* Sacred Items */
+        .sacred-item {
+            background: var(--bg-card);
+            border: 1px solid rgba(147, 51, 234, 0.3);
+            border-radius: 16px;
+            padding: 24px;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+        .sacred-item:hover {
+            border-color: var(--purple);
+            transform: translateY(-4px);
+            box-shadow: 0 10px 40px rgba(147, 51, 234, 0.2);
+        }
+        .sacred-emoji {
+            font-size: 48px;
+            display: block;
+            margin-bottom: 12px;
+            animation: float 3s ease-in-out infinite;
+        }
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+        
+        /* Quote */
+        .quote {
+            font-style: italic;
+            color: #a0a0a0;
+            position: relative;
+            padding-left: 20px;
+        }
+        .quote::before {
+            content: '"';
+            position: absolute;
+            left: 0;
+            top: -5px;
+            font-size: 32px;
+            color: var(--gold);
+            font-style: normal;
+        }
+        
+        /* Fun Facts */
+        .fun-fact {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 12px;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 8px;
+            font-size: 13px;
+            color: #d0d0d0;
+        }
+        .fun-fact::before {
+            content: '🍌';
+        }
+        
+        /* Lang Buttons */
+        .lang-btn {
+            padding: 8px 16px;
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            background: transparent;
+            color: var(--text);
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .lang-btn:hover { border-color: var(--gold); }
+        .lang-btn.active {
+            background: linear-gradient(135deg, var(--gold), #ffd700);
+            color: #000;
+            border-color: var(--gold);
+        }
+
+        /* Stats */
+        .stat-card {
+            background: linear-gradient(135deg, rgba(0, 255, 136, 0.1), rgba(0, 255, 255, 0.05));
+            border: 1px solid rgba(0, 255, 136, 0.2);
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+        }
+        .stat-number {
+            font-size: 36px;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--green), var(--cyan));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-in { animation: fadeInUp 0.6s ease forwards; }
+    </style>
+</head>
+<body>
+    <!-- Hero Section -->
+    <section class="hero py-20 px-4 text-center relative">
+        <div class="max-w-4xl mx-auto relative z-10">
+            <a href="/" class="inline-block mb-6 text-sm text-gray-400 hover:text-white transition-colors">
+                ← <span data-i18n="backHome">Back to Guild Hall</span>
+            </a>
+            
+            <h1 class="font-cinzel text-5xl md:text-6xl font-bold mb-6">
+                <span class="text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 via-amber-500 to-yellow-600">
+                    👥 <span data-i18n="heroTitle">About NumbahWan</span>
+                </span>
+            </h1>
+            
+            <p class="text-xl text-gray-300 mb-8 max-w-2xl mx-auto" data-i18n="heroSubtitle">
+                The most legendary guild in MapleStory history (according to us)
+            </p>
+            
+            <!-- Language Switcher -->
+            <div class="flex justify-center gap-2">
+                <button class="lang-btn active" data-lang="en">🇬🇧 EN</button>
+                <button class="lang-btn" data-lang="zh">🇹🇼 中文</button>
+                <button class="lang-btn" data-lang="th">🇹🇭 ไทย</button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Guild Stats -->
+    <section class="max-w-6xl mx-auto px-4 py-12 -mt-8 relative z-20">
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div class="stat-card animate-in" style="animation-delay: 0.1s">
+                <div class="stat-number">2023</div>
+                <div class="text-gray-400 text-sm" data-i18n="statFounded">Year Founded</div>
+            </div>
+            <div class="stat-card animate-in" style="animation-delay: 0.2s">
+                <div class="stat-number">50+</div>
+                <div class="text-gray-400 text-sm" data-i18n="statMembers">Active Members</div>
+            </div>
+            <div class="stat-card animate-in" style="animation-delay: 0.3s">
+                <div class="stat-number">∞</div>
+                <div class="text-gray-400 text-sm" data-i18n="statBananas">Bananas Consumed</div>
+            </div>
+            <div class="stat-card animate-in" style="animation-delay: 0.4s">
+                <div class="stat-number">#1</div>
+                <div class="text-gray-400 text-sm" data-i18n="statRank">Self-Proclaimed Rank</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Lore Section -->
+    <section class="max-w-4xl mx-auto px-4 py-12">
+        <h2 class="font-cinzel text-3xl font-bold text-center mb-8 text-gold" style="color: var(--gold);">
+            📜 <span data-i18n="loreTitle">The Origin Story</span>
+        </h2>
+        
+        <div class="lore-card p-8 relative">
+            <div class="relative z-10">
+                <p class="text-lg leading-relaxed text-gray-300" id="loreText">
+                    <!-- Populated by JS -->
+                </p>
+                
+                <div class="mt-8 p-4 bg-black/30 rounded-lg text-center">
+                    <p class="text-2xl font-cinzel text-gold" style="color: var(--gold);" id="mottoText">
+                        <!-- Populated by JS -->
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Sacred Items -->
+    <section class="max-w-4xl mx-auto px-4 py-12">
+        <h2 class="font-cinzel text-3xl font-bold text-center mb-8" style="color: var(--purple);">
+            ✨ <span data-i18n="sacredTitle">Sacred Artifacts</span>
+        </h2>
+        
+        <div class="grid md:grid-cols-2 gap-6" id="sacredItems">
+            <!-- Populated by JS -->
+        </div>
+    </section>
+
+    <!-- Team Section -->
+    <section class="max-w-6xl mx-auto px-4 py-12">
+        <h2 class="font-cinzel text-3xl font-bold text-center mb-12" style="color: var(--cyan);">
+            👥 <span data-i18n="teamTitle">Meet The Team</span>
+        </h2>
+        
+        <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8" id="teamGrid">
+            <!-- Populated by JS -->
+        </div>
+    </section>
+
+    <!-- New Pages Section -->
+    <section class="max-w-6xl mx-auto px-4 py-12">
+        <h2 class="font-cinzel text-3xl font-bold text-center mb-4 text-green-400">
+            🆕 <span data-i18n="newPagesTitle">New Departments</span>
+        </h2>
+        <p class="text-center text-gray-400 mb-8" data-i18n="newPagesSubtitle">Explore our latest absurdist additions</p>
+        
+        <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-6" id="newPagesGrid">
+            <!-- Populated by JS -->
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="max-w-4xl mx-auto px-4 py-12 border-t border-gray-800 text-center text-gray-500">
+        <p data-i18n="footerText">Data powered by NW_CONFIG - The Single Source of Truth™</p>
+        <p class="mt-2 text-sm">NumbahWan Guild © 2026 | <a href="/updates" class="text-cyan-400 hover:underline" data-i18n="patchNotes">Patch Notes</a></p>
+    </footer>
+
+    <script>
+        // ═══════════════════════════════════════════════════════════════
+        // TRANSLATIONS
+        // ═══════════════════════════════════════════════════════════════
+        const pageI18n = {
+            en: {
+                backHome: 'Back to Guild Hall',
+                heroTitle: 'About NumbahWan',
+                heroSubtitle: 'The most legendary guild in MapleStory history (according to us)',
+                statFounded: 'Year Founded',
+                statMembers: 'Active Members',
+                statBananas: 'Bananas Consumed',
+                statRank: 'Self-Proclaimed Rank',
+                loreTitle: 'The Origin Story',
+                sacredTitle: 'Sacred Artifacts',
+                teamTitle: 'Meet The Team',
+                newPagesTitle: 'New Departments',
+                newPagesSubtitle: 'Explore our latest absurdist additions',
+                footerText: 'Data powered by NW_CONFIG - The Single Source of Truth™',
+                patchNotes: 'Patch Notes',
+                funFacts: 'Fun Facts',
+                visitPage: 'Visit Page'
+            },
+            zh: {
+                backHome: '返回公會大廳',
+                heroTitle: '關於 NumbahWan',
+                heroSubtitle: '楓之谷史上最傳奇的公會（自認為）',
+                statFounded: '成立年份',
+                statMembers: '活躍成員',
+                statBananas: '香蕉消耗量',
+                statRank: '自封排名',
+                loreTitle: '起源故事',
+                sacredTitle: '神聖文物',
+                teamTitle: '認識團隊',
+                newPagesTitle: '新部門',
+                newPagesSubtitle: '探索我們最新的荒誕內容',
+                footerText: '數據由 NW_CONFIG 提供 - 唯一事實來源™',
+                patchNotes: '更新日誌',
+                funFacts: '趣事',
+                visitPage: '訪問頁面'
+            },
+            th: {
+                backHome: 'กลับไปห้องโถงกิลด์',
+                heroTitle: 'เกี่ยวกับ NumbahWan',
+                heroSubtitle: 'กิลด์ในตำนานที่สุดในประวัติศาสตร์ MapleStory (ตามที่เราคิด)',
+                statFounded: 'ปีที่ก่อตั้ง',
+                statMembers: 'สมาชิกที่ใช้งาน',
+                statBananas: 'กล้วยที่บริโภค',
+                statRank: 'อันดับที่ประกาศตัวเอง',
+                loreTitle: 'เรื่องราวต้นกำเนิด',
+                sacredTitle: 'สิ่งประดิษฐ์ศักดิ์สิทธิ์',
+                teamTitle: 'พบทีม',
+                newPagesTitle: 'แผนกใหม่',
+                newPagesSubtitle: 'สำรวจเนื้อหาไร้สาระล่าสุดของเรา',
+                footerText: 'ข้อมูลโดย NW_CONFIG - แหล่งความจริงเดียว™',
+                patchNotes: 'บันทึกแพทช์',
+                funFacts: 'ข้อเท็จจริงสนุก',
+                visitPage: 'เยี่ยมชมหน้า'
+            }
+        };
+
+        let currentLang = localStorage.getItem('numbahwan_lang') || 'en';
+
+        // ═══════════════════════════════════════════════════════════════
+        // LANGUAGE SYSTEM
+        // ═══════════════════════════════════════════════════════════════
+        function setLanguage(lang) {
+            currentLang = lang;
+            localStorage.setItem('numbahwan_lang', lang);
+            
+            document.querySelectorAll('.lang-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.lang === lang);
+            });
+            
+            document.querySelectorAll('[data-i18n]').forEach(el => {
+                const key = el.dataset.i18n;
+                if (pageI18n[lang]?.[key]) {
+                    el.textContent = pageI18n[lang][key];
+                }
+            });
+            
+            renderContent();
+            window.dispatchEvent(new CustomEvent('nw-lang-changed', { detail: { lang } }));
+        }
+
+        // ═══════════════════════════════════════════════════════════════
+        // RENDER CONTENT FROM CONFIG
+        // ═══════════════════════════════════════════════════════════════
+        function renderContent() {
+            if (!window.NW_CONFIG) {
+                setTimeout(renderContent, 100);
+                return;
+            }
+
+            const t = (obj) => NW_CONFIG.t(obj, currentLang);
+
+            // Lore
+            document.getElementById('loreText').textContent = t(NW_CONFIG.lore.origin);
+            document.getElementById('mottoText').textContent = `"${t(NW_CONFIG.lore.motto)}"`;
+
+            // Sacred Items
+            document.getElementById('sacredItems').innerHTML = NW_CONFIG.lore.sacredItems.map(item => `
+                <div class="sacred-item">
+                    <span class="sacred-emoji">${item.emoji}</span>
+                    <h3 class="font-cinzel text-xl font-bold text-white mb-2">${t(item.name)}</h3>
+                    <p class="text-gray-400 text-sm">${t(item.desc)}</p>
+                </div>
+            `).join('');
+
+            // Team
+            document.getElementById('teamGrid').innerHTML = NW_CONFIG.team.map((member, i) => {
+                const funFacts = member.funFacts ? t(member.funFacts) : null;
+                return `
+                    <div class="team-card animate-in" style="animation-delay: ${i * 0.1}s">
+                        <div class="p-6 pt-16 text-center">
+                            ${member.avatar ? 
+                                `<img src="${member.avatar}" alt="${member.name}" class="team-avatar mx-auto mb-4" onerror="this.outerHTML='<div class=\\'team-avatar-placeholder mx-auto mb-4\\'>👤</div>'">` :
+                                `<div class="team-avatar-placeholder mx-auto mb-4">👤</div>`
+                            }
+                            <h3 class="font-cinzel text-xl font-bold text-white mb-2">${member.name}</h3>
+                            <span class="role-badge">${t(member.role)}</span>
+                            ${member.title ? `<div class="title-badge mt-2 inline-block">${t(member.title)}</div>` : ''}
+                            ${member.quote ? `<p class="quote mt-4 text-sm">${t(member.quote)}</p>` : ''}
+                            ${funFacts ? `
+                                <div class="mt-4 space-y-2 text-left">
+                                    <div class="text-xs text-gray-500 uppercase">${pageI18n[currentLang].funFacts}</div>
+                                    ${funFacts.map(fact => `<div class="fun-fact">${fact}</div>`).join('')}
+                                </div>
+                            ` : ''}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            // New Pages (Absurdist category)
+            const absurdistPages = NW_CONFIG.getAllPages('absurdist');
+            document.getElementById('newPagesGrid').innerHTML = absurdistPages.map((page, i) => `
+                <a href="${page.path}" class="block group">
+                    <div class="bg-gradient-to-br from-purple-900/30 to-cyan-900/30 border border-purple-500/30 rounded-xl p-6 text-center transition-all duration-300 group-hover:border-purple-400 group-hover:scale-105 group-hover:shadow-lg group-hover:shadow-purple-500/20 animate-in" style="animation-delay: ${i * 0.1}s">
+                        <div class="text-4xl mb-3">${page.emoji}</div>
+                        <h3 class="font-cinzel text-lg font-bold text-white mb-2">${page.name}</h3>
+                        <p class="text-gray-400 text-sm mb-4">${page.desc}</p>
+                        <span class="text-cyan-400 text-sm group-hover:underline">${pageI18n[currentLang].visitPage} →</span>
+                    </div>
+                </a>
+            `).join('');
+        }
+
+        // ═══════════════════════════════════════════════════════════════
+        // INIT
+        // ═══════════════════════════════════════════════════════════════
+        document.addEventListener('DOMContentLoaded', () => {
+            if (window.NW_WALLET) NW_WALLET.init();
+            
+            setLanguage(currentLang);
+            
+            document.querySelectorAll('.lang-btn').forEach(btn => {
+                btn.addEventListener('click', () => setLanguage(btn.dataset.lang));
+            });
+            
+            window.addEventListener('nw-config-update', renderContent);
+        });
+    </script>
+</body>
+</html>
