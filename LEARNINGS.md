@@ -296,6 +296,78 @@ See `SHORTHAND.md` for quick commands:
 **Command**: `sed -i 's/💎/◆/g; s/🪙/●/g;' file.js`
 **Lesson**: For large-scale text replacements, sed is faster than manual edits
 
+### 2026-02-02: Sacred Log Icon Redesign
+**Issue**: Old sacred log icon (webp) didn't match the reference photo (glowing runes on dark wood)
+**Solution**: Created new SVG with animated golden runes, cosmic aura, and sparkle effects
+**Features**: 
+- Dark wood gradient (#4D2E0B)
+- Glowing golden runes with pulse animation
+- Cosmic aura with radial gradient
+- Golden sparkles floating effect
+- Tree ring detail on end caps
+**Files Changed**: sacred-log.svg, arcade.html, forge.html, nw-wallet.js, nw-economy.js
+**Cleanup**: Deleted old webp/png variants (64/128/256 sizes)
+**Lesson**: SVG icons > raster images for scalability and animation
+
+### 2026-02-02: Floating UI Element Collision
+**Issue**: AI Guide chat FAB on bottom-right was blocking currency bar
+**Solution**: Moved FAB to bottom-LEFT side (left: 24px, bottom: 50px)
+**Files**: nw-guide.js
+**Lesson**: Plan z-index and positioning for all fixed elements early
+**Pattern**: 
+```
+Bottom area layout:
+- Currency bar: bottom: 0, z-index: 9998, full width
+- Chat FAB: bottom: 50px, LEFT side, z-index: 99999
+- Chat panel: bottom: 120px, LEFT side
+```
+
+### 2026-02-02: GM Mode ID Display
+**Issue**: Wallet showed "👑 GM" but hid actual user ID when in GM mode
+**Root Cause**: updateUI() replaced ID entirely with GM badge
+**Solution**: Show both badge AND ID: `👑 GM • NW-XXXXXXXXXXXX`
+**Files**: wallet.html
+**Pattern**:
+```javascript
+// ✅ GOOD - Show both status and identity
+guestEl.innerHTML = '👑 <span style="color:#ffd700">GM</span> • ' + userId;
+
+// ❌ BAD - Hide identity when showing status
+guestEl.textContent = '👑 GM';
+```
+**Lesson**: Never hide identifying information when showing status badges
+
+### 2026-02-02: Profile Section GM Awareness
+**Issue**: Profile settings showed "Loading..." for ID even after GM activation
+**Solution**: loadProfileSettings() now checks isGM and updates all fields accordingly
+**Fields updated in GM mode**:
+- User ID: Shows "👑 GM: NW-XXXX"
+- Citizenship: Shows "GM" instead of "GUEST"
+- Trust Score: Shows "∞" instead of "50/100"
+**Lesson**: All UI update functions must be aware of GM mode state
+
+---
+
+## UI Position Standards
+
+### Fixed Element Positioning
+```
+z-index scale:
+- Background effects: 0-10
+- Page content: 10-100
+- Sticky headers: 100-200
+- Dropdowns/tooltips: 200-500
+- Modals: 500-700
+- Currency bar: 9998
+- Chat FAB: 99999
+- Critical alerts: 100000
+
+Bottom positioning:
+- Currency bar: bottom: 0 (full width)
+- Chat FAB: bottom: 50px, left: 24px
+- Toast: bottom: 100px, centered
+```
+
 ---
 
 *Update this file after every significant change!*
