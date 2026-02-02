@@ -1,15 +1,51 @@
 /**
- * NumbahWan TCG - Unified Navigation System v5.0
+ * NumbahWan TCG - Unified Navigation System v5.1
  * Collapsible sections, less clutter, more chaos
  * Uses ONLY custom NW icons - NO EMOJIS!
+ * 
+ * FIXES in v5.1:
+ * - Fixed language toggle freeze (event listener duplication)
+ * - Fixed icon rendering (inline SVG paths)
+ * - Fixed event dispatch (window vs document)
  */
 
 const NW_NAV = {
-    // Icon helper
+    // Inline icon paths for reliable rendering
+    icons: {
+        home: '<path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>',
+        fire: '<path d="M12 2C9 6 9 9 9 9c0 2 1.5 3 3 3s3-1 3-3c0-3-3-7-3-7zm0 20c-5 0-8-4-8-8 0-4 2-7 4-9 0 3 2 5 4 5s4-2 4-5c2 2 4 5 4 9 0 4-3 8-8 8z"/>',
+        swords: '<path d="M6 2l-2 2 6 6-4 4 2 2 4-4 6 6 2-2-6-6 4-4-2-2-4 4-6-6zm12 0l2 2-8 8 2 2 8-8 2 2V2h-6z"/>',
+        wallet: '<path d="M3 5a2 2 0 012-2h14a2 2 0 012 2v14a2 2 0 01-2 2H5a2 2 0 01-2-2V5zm16 7a2 2 0 100-4h-2v4h2z"/>',
+        trade: '<path d="M8 7h12l-4-4m0 8h-12l4 4m8-12v8m-8 4v-8"/>',
+        'cards-stack': '<path d="M4 6h12v12H4zM8 2h12v12"/>',
+        inventory: '<path d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>',
+        clipboard: '<path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>',
+        gaming: '<path d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1-9l-4 4m0-4v4"/>',
+        'shopping-bag': '<path d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/>',
+        chart: '<path d="M3 3v18h18M9 17V9m4 8v-5m4 5V6"/>',
+        coins: '<circle cx="9" cy="9" r="5"/><path d="M15 9a6 6 0 11-6 6"/>',
+        shield: '<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>',
+        trophy: '<path d="M6 9H4a2 2 0 01-2-2V5h4m12 4h2a2 2 0 002-2V5h-4M12 17v4m-4 0h8M8 3h8v7a4 4 0 01-8 0V3z"/>',
+        anchor: '<path d="M12 8a2 2 0 100-4 2 2 0 000 4zm0 0v12m-5-4c0 2.5 2.2 4 5 4s5-1.5 5-4M5 12H3m18 0h-2"/>',
+        dress: '<path d="M12 2v2m0 4v2m-2-6h4m-6 4h8l2 12H6l2-12z"/>',
+        meme: '<circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2M9 9h.01M15 9h.01"/>',
+        crown: '<path d="M2 8l4 4 4-6 4 6 4-4v10H2V8z"/>',
+        eye: '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>',
+        skull: '<circle cx="12" cy="10" r="8"/><path d="M8 16v4h2v-2h4v2h2v-4M9 10h.01M15 10h.01M10 13h4"/>',
+        'crystal-ball': '<circle cx="12" cy="10" r="7"/><path d="M8 18h8l-1 3H9l-1-3z"/>',
+        form: '<path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.6a1 1 0 01.7.3l5.4 5.4a1 1 0 01.3.7V19a2 2 0 01-2 2z"/>',
+        scroll: '<path d="M7 21h10a2 2 0 002-2V9.4a1 1 0 00-.3-.7l-5.4-5.4a1 1 0 00-.7-.3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/>',
+        lock: '<rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/>',
+        menu: '<path d="M4 6h16M4 12h16M4 18h16"/>',
+        close: '<path d="M6 18L18 6M6 6l12 12"/>',
+        'arrow-right': '<path d="M9 18l6-6-6-6"/>',
+        globe: '<circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15 15 0 010 20 15 15 0 010-20z"/>'
+    },
+    
+    // Icon helper - inline SVG for reliable rendering
     iconSvg(iconId, size = 18) {
-        return `<svg class="nw-nav-icon" width="${size}" height="${size}" viewBox="0 0 24 24" fill="currentColor">
-            <use href="/static/icons/nw-icons.svg#${iconId}"></use>
-        </svg>`;
+        const path = this.icons[iconId] || this.icons.star;
+        return `<svg class="nw-nav-icon" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${path}</svg>`;
     },
 
     // Streamlined navigation - grouped by user intent
@@ -18,7 +54,7 @@ const NW_NAV = {
             name: { en: 'Core', zh: '核心', th: 'หลัก' },
             icon: 'fire',
             color: '#ff6b00',
-            collapsed: false, // Always visible
+            collapsed: false,
             pages: [
                 { id: 'index', name: { en: 'Home', zh: '首頁', th: 'หน้าหลัก' }, icon: 'home', href: '/' },
                 { id: 'forge', name: { en: 'Open Packs', zh: '開卡包', th: 'เปิดแพ็ค' }, icon: 'fire', href: '/forge' },
@@ -80,7 +116,7 @@ const NW_NAV = {
             icon: 'crown',
             color: '#9d4edd',
             collapsed: true,
-            desc: { en: '(Yes, we have a government)', zh: '(是的，我們有政府)', th: '(ใช่ เรามีรัฐบาล)' },
+            desc: { en: '(Yes, we have one)', zh: '(是的)', th: '(ใช่ มี)' },
             pages: [
                 { id: 'citizenship', name: { en: 'Immigration', zh: '移民局', th: 'ตรวจคนเข้าเมือง' }, icon: 'shield', href: '/citizenship' },
                 { id: 'invest', name: { en: 'NWG Securities', zh: 'NWG證券', th: 'หลักทรัพย์ NWG' }, icon: 'chart', href: '/invest', isHot: true },
@@ -94,7 +130,7 @@ const NW_NAV = {
             icon: 'skull',
             color: '#ff66ff',
             collapsed: true,
-            desc: { en: '(Enter at own risk)', zh: '(後果自負)', th: '(เข้าเสี่ยงเอง)' },
+            desc: { en: '(Enter at own risk)', zh: '(後果自負)', th: '(เสี่ยงเอง)' },
             pages: [
                 { id: 'therapy', name: { en: 'Guild Therapy', zh: '公會治療', th: 'บำบัดกิลด์' }, icon: 'crystal-ball', href: '/therapy' },
                 { id: 'hr', name: { en: 'HR Department', zh: '人資部', th: 'ฝ่ายบุคคล' }, icon: 'form', href: '/hr' },
@@ -119,12 +155,10 @@ const NW_NAV = {
         }
     },
 
-    // Easter eggs - triggered by Konami code or click patterns
+    // Easter eggs - triggered by Konami code
     easterEggs: {
         konamiCode: [],
         konamiSequence: ['ArrowUp', 'ArrowUp', 'ArrowDown', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'ArrowLeft', 'ArrowRight', 'b', 'a'],
-        clickCount: 0,
-        lastClickTime: 0,
         
         init() {
             document.addEventListener('keydown', (e) => this.checkKonami(e.key));
@@ -134,23 +168,22 @@ const NW_NAV = {
             this.konamiCode.push(key);
             if (this.konamiCode.length > 10) this.konamiCode.shift();
             if (this.konamiCode.join(',') === this.konamiSequence.join(',')) {
-                this.triggerSecret('konami');
+                this.triggerSecret();
             }
         },
         
-        triggerSecret(type) {
+        triggerSecret() {
             const messages = [
                 '🎮 KONAMI CODE ACTIVATED! +9999 Sacred Logs... just kidding.',
                 '👀 You found a secret! Your reward: knowing this exists.',
                 '🔮 The ancient prophecy speaks of one who would find this...',
                 '💀 Zakum whispers: "Nice try, mortal."',
-                '🎰 You won the secret lottery! Prize: nothing!',
-                '🦆 A wild rubber duck appears! It does nothing.',
+                '🦆 A wild rubber duck appears! It does nothing.'
             ];
             const msg = messages[Math.floor(Math.random() * messages.length)];
             if (typeof NW_SOUNDS !== 'undefined') NW_SOUNDS.play('legendary');
             alert(msg);
-            console.log('%c🎮 SECRET FOUND: ' + type, 'color: #ff00ff; font-size: 20px;');
+            this.konamiCode = [];
         }
     },
 
@@ -165,6 +198,7 @@ const NW_NAV = {
     isOpen: false,
     collapsedSections: {},
     initialized: false,
+    _boundEvents: false,
 
     getStoredLang() {
         return localStorage.getItem('lang') || localStorage.getItem('nw_lang') || 'en';
@@ -196,7 +230,7 @@ const NW_NAV = {
         this.bindEvents();
         this.easterEggs.init();
         this.initialized = true;
-        console.log('[NW_NAV] v5.0 Ready - Collapsible sections enabled');
+        console.log('[NW_NAV] v5.1 Ready - Fixed icons & language toggle');
     },
 
     t(obj) {
@@ -209,8 +243,6 @@ const NW_NAV = {
             const isCollapsible = section.collapsed !== false;
             const isCollapsed = isCollapsible && (this.collapsedSections[key] ?? section.collapsed);
             const hasActivePage = section.pages.some(p => p.id === this.currentPage);
-            
-            // Auto-expand section with active page
             const showCollapsed = isCollapsible && isCollapsed && !hasActivePage;
             
             const pagesHTML = section.pages.map(page => {
@@ -248,7 +280,6 @@ const NW_NAV = {
             <button class="nw-lang-btn ${code === this.currentLang ? 'active' : ''}" data-lang="${code}">${lang.code}</button>
         `).join('');
 
-        // Quick access bar at top
         const quickAccess = `
             <div class="nw-quick-access">
                 <a href="/forge" class="nw-quick-btn" title="Open Packs">${this.iconSvg('fire', 20)}</a>
@@ -271,7 +302,7 @@ const NW_NAV = {
                     ${sectionsHTML}
                 </div>
                 <div class="nw-nav-footer">
-                    <div class="nw-nav-version">v5.0 • Made with chaos</div>
+                    <div class="nw-nav-version">v5.1 • Made with chaos</div>
                 </div>
             </nav>
             <button id="nwNavToggle" class="nw-nav-toggle">${this.iconSvg('menu', 22)}</button>
@@ -280,14 +311,19 @@ const NW_NAV = {
     },
 
     injectNav() {
-        // Remove existing nav
-        document.querySelectorAll('#nwNavPanel, #nwNavOverlay, #nwNavToggle, #nwNavHome').forEach(el => el.remove());
+        // Remove existing nav completely
+        document.querySelectorAll('#nwNavContainer, #nwNavPanel, #nwNavOverlay, #nwNavToggle, #nwNavHome').forEach(el => el.remove());
         
         const container = document.createElement('div');
         container.id = 'nwNavContainer';
         container.innerHTML = this.generateNavHTML();
         document.body.appendChild(container);
         this.injectStyles();
+        
+        // Re-bind events after re-injection (for language change)
+        if (this._boundEvents) {
+            this._bindCoreEvents();
+        }
     },
 
     injectStyles() {
@@ -296,7 +332,7 @@ const NW_NAV = {
         const style = document.createElement('style');
         style.id = 'nwNavStyles';
         style.textContent = `
-            /* NW Nav v5.0 - Collapsible Chaos Edition */
+            /* NW Nav v5.1 - Fixed Chaos Edition */
             .nw-nav-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 9998; opacity: 0; visibility: hidden; transition: all 0.3s; backdrop-filter: blur(4px); }
             .nw-nav-overlay.open { opacity: 1; visibility: visible; }
             
@@ -308,7 +344,6 @@ const NW_NAV = {
             .nw-nav-close { background: none; border: none; color: #888; cursor: pointer; padding: 8px; border-radius: 8px; transition: all 0.2s; }
             .nw-nav-close:hover { color: #fff; background: rgba(255,255,255,0.1); }
             
-            /* Quick Access Bar */
             .nw-quick-access { display: flex; justify-content: space-around; padding: 12px 16px; border-bottom: 1px solid rgba(255,255,255,0.1); background: rgba(255,107,0,0.05); }
             .nw-quick-btn { width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; background: rgba(255,255,255,0.05); border-radius: 12px; color: #ffd700; transition: all 0.2s; }
             .nw-quick-btn:hover { background: rgba(255,215,0,0.2); transform: scale(1.1); }
@@ -338,7 +373,7 @@ const NW_NAV = {
             .nw-nav-link:hover { background: rgba(255,255,255,0.08); color: #fff; transform: translateX(4px); }
             .nw-nav-link.active { background: rgba(255,215,0,0.15); color: #ffd700; border-left: 3px solid #ffd700; }
             
-            .nw-nav-icon { flex-shrink: 0; opacity: 0.8; }
+            .nw-nav-icon { flex-shrink: 0; opacity: 0.9; }
             .nw-nav-text { flex: 1; }
             
             .nw-new-badge, .nw-hot-badge { font-size: 9px; padding: 2px 5px; border-radius: 4px; font-weight: 600; }
@@ -349,13 +384,11 @@ const NW_NAV = {
             .nw-nav-footer { padding: 12px; border-top: 1px solid rgba(255,255,255,0.1); text-align: center; }
             .nw-nav-version { font-size: 10px; color: rgba(255,255,255,0.3); }
             
-            /* Toggle & Home buttons */
-            .nw-nav-toggle, .nw-nav-home { position: fixed; top: 12px; z-index: 9997; width: 44px; height: 44px; border-radius: 12px; border: 1px solid rgba(255,215,0,0.3); background: rgba(12,12,20,0.95); color: #ffd700; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s; backdrop-filter: blur(8px); }
-            .nw-nav-toggle { right: 12px; }
-            .nw-nav-home { right: 64px; }
-            .nw-nav-toggle:hover, .nw-nav-home:hover { background: rgba(255,215,0,0.2); transform: scale(1.05); }
+            .nw-nav-toggle, .nw-nav-home { position: fixed; z-index: 9997; width: 48px; height: 48px; border: none; border-radius: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
+            .nw-nav-toggle { top: 12px; right: 12px; background: linear-gradient(135deg, rgba(255,107,0,0.9), rgba(255,165,0,0.9)); color: #fff; box-shadow: 0 4px 15px rgba(255,107,0,0.4); }
+            .nw-nav-home { top: 12px; right: 68px; background: rgba(0,0,0,0.7); color: #ffd700; border: 1px solid rgba(255,215,0,0.3); text-decoration: none; }
+            .nw-nav-toggle:hover, .nw-nav-home:hover { transform: scale(1.05); }
             
-            /* Mobile adjustments */
             @media (max-width: 480px) {
                 .nw-nav-panel { width: 100vw; max-width: 100vw; right: -100vw; }
                 .nw-nav-toggle, .nw-nav-home { top: 8px; width: 40px; height: 40px; }
@@ -367,10 +400,20 @@ const NW_NAV = {
     },
 
     bindEvents() {
+        if (this._boundEvents) return; // Prevent duplicate binding
+        this._boundEvents = true;
+        this._bindCoreEvents();
+
+        // Close on escape (only bind once)
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && this.isOpen) this.close();
+        });
+    },
+    
+    _bindCoreEvents() {
         const toggle = document.getElementById('nwNavToggle');
         const close = document.getElementById('nwNavClose');
         const overlay = document.getElementById('nwNavOverlay');
-        const panel = document.getElementById('nwNavPanel');
 
         toggle?.addEventListener('click', () => this.open());
         close?.addEventListener('click', () => this.close());
@@ -378,7 +421,8 @@ const NW_NAV = {
 
         // Section collapse toggle
         document.querySelectorAll('.nw-nav-section-header.collapsible').forEach(header => {
-            header.addEventListener('click', () => {
+            header.addEventListener('click', (e) => {
+                e.stopPropagation();
                 const section = header.dataset.section;
                 const sectionEl = header.closest('.nw-nav-section');
                 const pages = sectionEl.querySelector('.nw-nav-pages');
@@ -394,22 +438,27 @@ const NW_NAV = {
             });
         });
 
-        // Language buttons
+        // Language buttons - FIXED: no re-binding, uses event delegation approach
         document.querySelectorAll('.nw-lang-btn').forEach(btn => {
-            btn.addEventListener('click', () => {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
                 const lang = btn.dataset.lang;
+                if (lang === this.currentLang) return; // No change needed
+                
                 this.currentLang = lang;
                 this.setStoredLang(lang);
+                
+                // Re-inject nav with new language (events re-bound via _bindCoreEvents)
                 this.injectNav();
-                this.bindEvents();
-                document.dispatchEvent(new CustomEvent('nw-lang-change', { detail: { lang } }));
+                
+                // Dispatch to BOTH document and window for compatibility
+                const event = new CustomEvent('nw-lang-change', { detail: { lang } });
+                document.dispatchEvent(event);
+                window.dispatchEvent(event);
+                
                 if (typeof NW_SOUNDS !== 'undefined') NW_SOUNDS.play('click');
+                console.log('[NW_NAV] Language changed to:', lang);
             });
-        });
-
-        // Close on escape
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape' && this.isOpen) this.close();
         });
     },
 
@@ -429,10 +478,14 @@ const NW_NAV = {
     },
 
     setLang(lang) {
+        if (lang === this.currentLang) return;
         this.currentLang = lang;
         this.setStoredLang(lang);
         this.injectNav();
-        this.bindEvents();
+        
+        const event = new CustomEvent('nw-lang-change', { detail: { lang } });
+        document.dispatchEvent(event);
+        window.dispatchEvent(event);
     }
 };
 
@@ -444,3 +497,5 @@ if (typeof window !== 'undefined') {
         NW_NAV.init(pageId);
     });
 }
+
+console.log('[NW_NAV] v5.1 Module loaded');
