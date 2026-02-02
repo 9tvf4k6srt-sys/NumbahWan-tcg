@@ -308,6 +308,184 @@
             background: linear-gradient(135deg, rgba(201,127,61,0.3), rgba(0,0,0,0.3));
         }
         
+        /* Claim Button */
+        .claim-btn {
+            width: 100%;
+            padding: 14px;
+            margin-top: 14px;
+            background: linear-gradient(135deg, #22c55e, #16a34a);
+            border: none;
+            border-radius: 12px;
+            color: #fff;
+            font-size: 14px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+            animation: claimPulse 2s infinite;
+        }
+        .claim-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 20px rgba(34, 197, 94, 0.4);
+        }
+        .claim-btn:disabled {
+            background: var(--card-hover);
+            color: var(--text-dim);
+            cursor: not-allowed;
+            animation: none;
+        }
+        @keyframes claimPulse {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.4); }
+            50% { box-shadow: 0 0 0 10px rgba(34, 197, 94, 0); }
+        }
+        
+        .next-reward-timer {
+            text-align: center;
+            margin-top: 12px;
+            font-size: 12px;
+            color: var(--text-dim);
+        }
+        .next-reward-timer span {
+            font-family: 'JetBrains Mono', monospace;
+            color: var(--primary);
+            font-weight: 600;
+        }
+        
+        /* Achievements */
+        .achievements-preview {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 16px;
+        }
+        .achievement-progress {
+            margin-bottom: 14px;
+        }
+        .progress-text {
+            font-size: 12px;
+            color: var(--text-dim);
+            margin-bottom: 6px;
+            display: block;
+        }
+        .progress-bar-bg {
+            height: 8px;
+            background: rgba(0,0,0,0.3);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        .progress-bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary), #ffd700);
+            border-radius: 4px;
+            transition: width 0.5s ease;
+        }
+        .achievement-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+            gap: 8px;
+        }
+        .achievement-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 12px 8px;
+            background: rgba(0,0,0,0.3);
+            border-radius: 10px;
+            border: 1px solid transparent;
+            transition: all 0.2s;
+        }
+        .achievement-item.unlocked {
+            border-color: var(--gold);
+            background: rgba(255, 215, 0, 0.1);
+        }
+        .achievement-item.locked {
+            opacity: 0.5;
+        }
+        .achievement-icon {
+            font-size: 24px;
+            margin-bottom: 6px;
+        }
+        .achievement-name {
+            font-size: 10px;
+            font-weight: 600;
+            text-align: center;
+            color: var(--text);
+        }
+        .achievement-item.locked .achievement-icon {
+            filter: grayscale(1);
+        }
+        
+        /* Reward popup */
+        .reward-popup {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.9);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s;
+        }
+        .reward-popup.show {
+            opacity: 1;
+            visibility: visible;
+        }
+        .reward-content {
+            background: var(--card);
+            border: 2px solid var(--primary);
+            border-radius: 20px;
+            padding: 30px;
+            text-align: center;
+            max-width: 320px;
+            transform: scale(0.8);
+            transition: transform 0.3s;
+        }
+        .reward-popup.show .reward-content {
+            transform: scale(1);
+        }
+        .reward-title {
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+        .reward-label {
+            color: var(--primary);
+            font-size: 14px;
+            margin-bottom: 20px;
+        }
+        .reward-items {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+        .reward-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 14px;
+            background: rgba(0,0,0,0.3);
+            border-radius: 10px;
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 600;
+        }
+        .reward-item.wood { color: var(--wood); background: rgba(201, 127, 61, 0.2); }
+        .reward-item.diamond { color: var(--diamond); }
+        .reward-item.gold { color: var(--gold); }
+        .reward-item.iron { color: var(--iron); }
+        .reward-item.stone { color: var(--stone); }
+        .reward-close {
+            padding: 12px 30px;
+            background: var(--primary);
+            border: none;
+            border-radius: 10px;
+            color: #fff;
+            font-weight: 700;
+            cursor: pointer;
+        }
+        
         /* GM Section */
         .gm-section {
             margin-top: 20px;
@@ -396,13 +574,31 @@
         <!-- Currency Cards -->
         <div class="currency-grid" id="currencyGrid"></div>
         
-        <!-- Daily Rewards -->
-        <div class="daily-preview">
+        <!-- Daily Rewards - THE HOOK! -->
+        <div class="daily-preview" id="dailyRewardsSection">
             <div class="daily-header">
                 <div class="daily-title">📅 Daily Rewards</div>
-                <div class="daily-streak" id="dailyStreak">Day 1</div>
+                <div class="daily-streak" id="dailyStreak">Day 1/7</div>
             </div>
             <div class="daily-grid" id="dailyGrid"></div>
+            <button class="claim-btn" id="claimBtn" onclick="claimDailyReward()">
+                🎁 Claim Today's Reward!
+            </button>
+            <div class="next-reward-timer" id="nextRewardTimer" style="display: none;">
+                Next reward in: <span id="timerDisplay">--:--:--</span>
+            </div>
+        </div>
+        
+        <!-- Achievements Section -->
+        <div class="section-title">🏆 Achievements</div>
+        <div class="achievements-preview" id="achievementsPreview">
+            <div class="achievement-progress">
+                <span class="progress-text" id="achievementText">0/0 Unlocked</span>
+                <div class="progress-bar-bg">
+                    <div class="progress-bar-fill" id="achievementBar" style="width: 0%"></div>
+                </div>
+            </div>
+            <div class="achievement-grid" id="achievementGrid"></div>
         </div>
         
         <!-- Quick Actions -->
@@ -514,16 +710,20 @@
     
     function renderDailyRewards() {
         const grid = document.getElementById('dailyGrid');
-        const streak = parseInt(localStorage.getItem('nw_daily_streak') || '1');
+        const dailyState = NW_WALLET.getDailyLoginState();
+        const canClaim = NW_WALLET.canClaimDailyReward();
+        const streak = dailyState.currentStreak;
+        const nextDay = (streak % 7) + 1;
         
-        document.getElementById('dailyStreak').textContent = `Day ${streak}/7`;
+        document.getElementById('dailyStreak').textContent = `Day ${streak}/7 • ${dailyState.totalDaysLoggedIn} total`;
         
-        const rewards = NW_ECONOMY.dailyRewards;
+        // Main reward icons per day
         const icons = ['🪨', '🪨', '⚙️', '💎', '💎', '💎', '🪵'];
         
-        grid.innerHTML = [1,2,3,4,5,6,7].map(day => {
-            const isClaimed = day < streak;
-            const isCurrent = day === streak;
+        grid.innerHTML = NW_WALLET.DAILY_REWARDS.map((dayData, idx) => {
+            const day = idx + 1;
+            const isClaimed = day <= streak;
+            const isCurrent = day === nextDay && canClaim;
             const isDay7 = day === 7;
             
             return `
@@ -533,6 +733,105 @@
                 </div>
             `;
         }).join('');
+        
+        // Update claim button state
+        const claimBtn = document.getElementById('claimBtn');
+        const timerDiv = document.getElementById('nextRewardTimer');
+        
+        if (canClaim) {
+            claimBtn.style.display = 'block';
+            claimBtn.disabled = false;
+            claimBtn.textContent = `🎁 Claim Day ${nextDay} Reward!`;
+            timerDiv.style.display = 'none';
+        } else {
+            claimBtn.style.display = 'none';
+            timerDiv.style.display = 'block';
+            startTimer();
+        }
+    }
+    
+    function startTimer() {
+        function updateTimer() {
+            const time = NW_WALLET.getTimeUntilNextDaily();
+            const display = document.getElementById('timerDisplay');
+            if (display) {
+                display.textContent = `${String(time.hours).padStart(2,'0')}:${String(time.minutes).padStart(2,'0')}:${String(time.seconds).padStart(2,'0')}`;
+            }
+        }
+        updateTimer();
+        setInterval(updateTimer, 1000);
+    }
+    
+    function claimDailyReward() {
+        const result = NW_WALLET.claimDailyReward();
+        
+        if (result.success) {
+            if (typeof NW_SOUNDS !== 'undefined') {
+                NW_SOUNDS.play(result.isDay7 ? 'legendary' : 'profit');
+            }
+            showRewardPopup(result);
+            renderDailyRewards();
+            renderCurrencies();
+            renderAchievements();
+        }
+    }
+    
+    function showRewardPopup(result) {
+        // Create popup HTML
+        const popup = document.createElement('div');
+        popup.className = 'reward-popup';
+        popup.id = 'rewardPopup';
+        
+        const rewardItems = Object.entries(result.rewards).map(([currency, amount]) => {
+            const icons = { diamond: '💎', gold: '🪙', iron: '⚙️', stone: '🪨', wood: '🪵' };
+            return `<div class="reward-item ${currency}">${icons[currency]} +${amount}</div>`;
+        }).join('');
+        
+        popup.innerHTML = `
+            <div class="reward-content">
+                <div class="reward-title">${result.label}</div>
+                <div class="reward-label">Day ${result.day} Complete!</div>
+                <div class="reward-items">${rewardItems}</div>
+                ${result.isDay7 ? '<div style="color: var(--wood); font-weight: bold; margin-bottom: 12px;">🪵 You earned a Sacred Log!</div>' : ''}
+                <button class="reward-close" onclick="closeRewardPopup()">Awesome!</button>
+            </div>
+        `;
+        
+        document.body.appendChild(popup);
+        setTimeout(() => popup.classList.add('show'), 10);
+    }
+    
+    function closeRewardPopup() {
+        const popup = document.getElementById('rewardPopup');
+        if (popup) {
+            popup.classList.remove('show');
+            setTimeout(() => popup.remove(), 300);
+        }
+    }
+    
+    function renderAchievements() {
+        const achievements = NW_WALLET.getAllAchievements();
+        const progress = NW_WALLET.getAchievementProgress();
+        
+        document.getElementById('achievementText').textContent = `${progress.unlocked}/${progress.total} Unlocked (${progress.percentage}%)`;
+        document.getElementById('achievementBar').style.width = `${progress.percentage}%`;
+        
+        // Show recent/important achievements (max 6)
+        const displayAchievements = achievements
+            .filter(a => !a.hidden)
+            .sort((a, b) => {
+                if (a.unlocked && !b.unlocked) return -1;
+                if (!a.unlocked && b.unlocked) return 1;
+                return 0;
+            })
+            .slice(0, 6);
+        
+        document.getElementById('achievementGrid').innerHTML = displayAchievements.map(ach => `
+            <div class="achievement-item ${ach.unlocked ? 'unlocked' : 'locked'}" title="${ach.desc}">
+                <div class="achievement-icon">${ach.icon}</div>
+                <div class="achievement-name">${ach.name}</div>
+            </div>
+        `).join('');
     }
     
     function updateUI() {
@@ -572,7 +871,17 @@
     window.addEventListener('nw-wallet-ready', () => {
         updateUI();
         renderDailyRewards();
+        renderAchievements();
         setInterval(updateUI, 2000);
+    });
+    
+    // Listen for achievement unlocks
+    window.addEventListener('nw-achievement-unlocked', (e) => {
+        const { achievement, rewards } = e.detail;
+        console.log('🏆 Achievement unlocked:', achievement.name);
+        renderAchievements();
+        renderCurrencies();
+        if (typeof NW_SOUNDS !== 'undefined') NW_SOUNDS.play('profit');
     });
     </script>
 </body>

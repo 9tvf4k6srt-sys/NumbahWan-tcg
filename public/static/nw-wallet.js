@@ -592,6 +592,332 @@ const NW_WALLET = {
         return this.wallet?.forge || { pityCounter: 0, totalPulls: 0, lastPull: null };
     },
     
+    // ===== DAILY LOGIN REWARD SYSTEM =====
+    // Creates addictive progression: login → earn → spend → want more → login again
+    
+    DAILY_REWARDS_KEY: 'nw_daily_login',
+    
+    // Escalating rewards - each day better than the last!
+    DAILY_REWARDS: [
+        // Day 1-3: Taste the currencies
+        { day: 1, rewards: { stone: 10, gold: 5 }, label: '🌱 Welcome Back!' },
+        { day: 2, rewards: { stone: 15, gold: 8, iron: 2 }, label: '📈 Growing!' },
+        { day: 3, rewards: { stone: 20, gold: 12, iron: 5, diamond: 1 }, label: '✨ Shining!' },
+        // Day 4-6: Building momentum
+        { day: 4, rewards: { stone: 30, gold: 20, iron: 8, diamond: 3 }, label: '🔥 On Fire!' },
+        { day: 5, rewards: { stone: 40, gold: 30, iron: 12, diamond: 5 }, label: '⚡ Unstoppable!' },
+        { day: 6, rewards: { stone: 50, gold: 40, iron: 15, diamond: 8 }, label: '💫 Almost There!' },
+        // Day 7: THE BIG REWARD - Sacred Log!
+        { day: 7, rewards: { stone: 100, gold: 75, iron: 25, diamond: 15, wood: 1 }, label: '🪵 SACRED LOG!' }
+    ],
+    
+    // Get daily login state
+    getDailyLoginState() {
+        try {
+            const data = localStorage.getItem(this.DAILY_REWARDS_KEY);
+            if (!data) return this.createDailyLoginState();
+            
+            const state = JSON.parse(data);
+            // Check if streak is broken
+            const lastClaimDate = new Date(state.lastClaimDate);
+            const today = new Date();
+            const daysDiff = Math.floor((today.setHours(0,0,0,0) - lastClaimDate.setHours(0,0,0,0)) / (1000*60*60*24));
+            
+            // Streak broken if more than 1 day passed
+            if (daysDiff > 1 && state.lastClaimDate) {
+                state.currentStreak = 0;
+                state.streakBroken = true;
+                this.saveDailyLoginState(state);
+            }
+            
+            return state;
+        } catch (e) {
+            return this.createDailyLoginState();
+        }
+    },
+    
+    createDailyLoginState() {
+        const state = {
+            currentStreak: 0,
+            longestStreak: 0,
+            totalDaysLoggedIn: 0,
+            lastClaimDate: null,
+            todayClaimed: false,
+            weeklyResets: 0,
+            firstLoginDate: Date.now(),
+            streakBroken: false
+        };
+        this.saveDailyLoginState(state);
+        return state;
+    },
+    
+    saveDailyLoginState(state) {
+        localStorage.setItem(this.DAILY_REWARDS_KEY, JSON.stringify(state));
+    },
+    
+    // Check if today's reward can be claimed
+    canClaimDailyReward() {
+        const state = this.getDailyLoginState();
+        if (!state.lastClaimDate) return true; // First time!
+        
+        const lastClaim = new Date(state.lastClaimDate);
+        const today = new Date();
+        
+        // Reset hours to compare dates only
+        lastClaim.setHours(0, 0, 0, 0);
+        today.setHours(0, 0, 0, 0);
+        
+        return today > lastClaim;
+    },
+    
+    // Claim daily reward - THE DOPAMINE HIT!
+    claimDailyReward() {
+        if (!this.wallet || !this.canClaimDailyReward()) {
+            return { success: false, reason: 'already_claimed' };
+        }
+        
+        const state = this.getDailyLoginState();
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        
+        // Check if continuing streak or broken
+        let newStreak = 1;
+        if (state.lastClaimDate) {
+            const lastClaim = new Date(state.lastClaimDate);
+            lastClaim.setHours(0, 0, 0, 0);
+            const daysDiff = Math.floor((today - lastClaim) / (1000*60*60*24));
+            
+            if (daysDiff === 1) {
+                // Consecutive day! Continue streak
+                newStreak = (state.currentStreak % 7) + 1;
+            } else {
+                // Streak broken, start over
+                newStreak = 1;
+                state.weeklyResets++;
+            }
+        }
+        
+        // Get today's reward based on streak day
+        const rewardData = this.DAILY_REWARDS[newStreak - 1];
+        const rewards = rewardData.rewards;
+        
+        // Give the rewards!
+        const earnedRewards = {};
+        for (const [currency, amount] of Object.entries(rewards)) {
+            this.earn(currency, amount, `DAILY_LOGIN_DAY_${newStreak}`);
+            earnedRewards[currency] = amount;
+        }
+        
+        // Update state
+        state.currentStreak = newStreak;
+        state.totalDaysLoggedIn++;
+        state.lastClaimDate = Date.now();
+        state.todayClaimed = true;
+        state.streakBroken = false;
+        if (newStreak > state.longestStreak) {
+            state.longestStreak = newStreak;
+        }
+        
+        this.saveDailyLoginState(state);
+        
+        // Log the claim
+        this.log('DAILY_REWARD_CLAIMED', {
+            day: newStreak,
+            rewards: earnedRewards,
+            totalDays: state.totalDaysLoggedIn,
+            longestStreak: state.longestStreak
+        });
+        
+        // Dispatch event for UI updates
+        window.dispatchEvent(new CustomEvent('nw-daily-claimed', {
+            detail: {
+                day: newStreak,
+                rewards: earnedRewards,
+                label: rewardData.label,
+                nextDay: newStreak === 7 ? 1 : newStreak + 1,
+                isDay7: newStreak === 7
+            }
+        }));
+        
+        return {
+            success: true,
+            day: newStreak,
+            rewards: earnedRewards,
+            label: rewardData.label,
+            totalDays: state.totalDaysLoggedIn,
+            isDay7: newStreak === 7,
+            sacredLogEarned: newStreak === 7
+        };
+    },
+    
+    // Get time until next daily reward
+    getTimeUntilNextDaily() {
+        const now = new Date();
+        const tomorrow = new Date(now);
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        tomorrow.setHours(0, 0, 0, 0);
+        
+        const diff = tomorrow - now;
+        const hours = Math.floor(diff / (1000 * 60 * 60));
+        const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+        const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+        
+        return { hours, minutes, seconds, total: diff };
+    },
+    
+    // ===== ACHIEVEMENT SYSTEM =====
+    // Achievements drive engagement and give meaningful rewards
+    
+    ACHIEVEMENTS_KEY: 'nw_achievements',
+    
+    ACHIEVEMENTS: {
+        // Login Achievements
+        first_login: { id: 'first_login', name: 'Welcome!', desc: 'Log in for the first time', icon: '🎉', reward: { diamond: 10 }, category: 'login' },
+        streak_3: { id: 'streak_3', name: 'Dedicated', desc: 'Reach a 3-day login streak', icon: '🔥', reward: { diamond: 15, gold: 25 }, category: 'login' },
+        streak_7: { id: 'streak_7', name: 'Committed', desc: 'Complete a 7-day streak', icon: '🌟', reward: { diamond: 50, wood: 1 }, category: 'login' },
+        streak_30: { id: 'streak_30', name: 'Legend', desc: 'Log in 30 total days', icon: '👑', reward: { diamond: 100, wood: 3 }, category: 'login' },
+        
+        // Collection Achievements
+        first_card: { id: 'first_card', name: 'Collector', desc: 'Get your first card', icon: '🃏', reward: { gold: 50 }, category: 'collection' },
+        cards_10: { id: 'cards_10', name: 'Card Hoarder', desc: 'Collect 10 unique cards', icon: '📦', reward: { diamond: 20, iron: 30 }, category: 'collection' },
+        cards_50: { id: 'cards_50', name: 'Deck Master', desc: 'Collect 50 unique cards', icon: '🎴', reward: { diamond: 75, wood: 1 }, category: 'collection' },
+        first_mythic: { id: 'first_mythic', name: 'Mythic Hunter', desc: 'Pull your first Mythic', icon: '💎', reward: { wood: 2, diamond: 100 }, category: 'collection' },
+        first_legendary: { id: 'first_legendary', name: 'Lucky Star', desc: 'Pull your first Legendary', icon: '⭐', reward: { diamond: 50 }, category: 'collection' },
+        
+        // Spending Achievements
+        first_pull: { id: 'first_pull', name: 'First Pull', desc: 'Make your first forge pull', icon: '🔮', reward: { stone: 25 }, category: 'spending' },
+        pulls_10: { id: 'pulls_10', name: 'Fortune Seeker', desc: 'Make 10 forge pulls', icon: '🎰', reward: { diamond: 15 }, category: 'spending' },
+        pulls_50: { id: 'pulls_50', name: 'High Roller', desc: 'Make 50 forge pulls', icon: '🎲', reward: { diamond: 50, wood: 1 }, category: 'spending' },
+        first_purchase: { id: 'first_purchase', name: 'Supporter', desc: 'Make your first merch purchase', icon: '🛒', reward: { diamond: 25 }, category: 'spending' },
+        
+        // Exchange Achievements
+        first_exchange: { id: 'first_exchange', name: 'Trader', desc: 'Complete your first exchange', icon: '💱', reward: { gold: 20 }, category: 'economy' },
+        exchanges_10: { id: 'exchanges_10', name: 'Money Moves', desc: 'Complete 10 exchanges', icon: '📊', reward: { diamond: 20 }, category: 'economy' },
+        rich_diamond: { id: 'rich_diamond', name: 'Diamond Hands', desc: 'Own 500+ diamonds at once', icon: '💎', reward: { wood: 1 }, category: 'economy' },
+        rich_wood: { id: 'rich_wood', name: 'Lumberjack', desc: 'Own 5+ Sacred Logs at once', icon: '🪵', reward: { diamond: 100 }, category: 'economy' },
+        
+        // Gaming Achievements
+        first_game: { id: 'first_game', name: 'Gamer', desc: 'Play your first arcade game', icon: '🎮', reward: { gold: 25 }, category: 'gaming' },
+        games_10: { id: 'games_10', name: 'Arcade Regular', desc: 'Play 10 arcade games', icon: '👾', reward: { diamond: 15 }, category: 'gaming' },
+        games_won_10: { id: 'games_won_10', name: 'Winner', desc: 'Win 10 arcade games', icon: '🏆', reward: { diamond: 30, iron: 20 }, category: 'gaming' },
+        
+        // Special Achievements
+        easter_egg: { id: 'easter_egg', name: 'Explorer', desc: 'Find a hidden Easter egg', icon: '🥚', reward: { diamond: 50 }, category: 'special' },
+        gm_mode: { id: 'gm_mode', name: 'Power User', desc: 'Activate GM mode', icon: '👑', reward: {}, category: 'special', hidden: true }
+    },
+    
+    getAchievementState() {
+        try {
+            return JSON.parse(localStorage.getItem(this.ACHIEVEMENTS_KEY) || '{}');
+        } catch (e) {
+            return {};
+        }
+    },
+    
+    saveAchievementState(state) {
+        localStorage.setItem(this.ACHIEVEMENTS_KEY, JSON.stringify(state));
+    },
+    
+    // Unlock an achievement
+    unlockAchievement(achievementId) {
+        const achievement = this.ACHIEVEMENTS[achievementId];
+        if (!achievement) return null;
+        
+        const state = this.getAchievementState();
+        if (state[achievementId]) return null; // Already unlocked
+        
+        // Mark as unlocked
+        state[achievementId] = {
+            unlockedAt: Date.now(),
+            claimed: false
+        };
+        this.saveAchievementState(state);
+        
+        // Give rewards automatically
+        const rewards = achievement.reward || {};
+        for (const [currency, amount] of Object.entries(rewards)) {
+            if (amount > 0) {
+                this.earn(currency, amount, `ACHIEVEMENT:${achievementId}`);
+            }
+        }
+        state[achievementId].claimed = true;
+        this.saveAchievementState(state);
+        
+        this.log('ACHIEVEMENT_UNLOCKED', { id: achievementId, name: achievement.name, rewards });
+        
+        // Dispatch event for UI
+        window.dispatchEvent(new CustomEvent('nw-achievement-unlocked', {
+            detail: { achievement, rewards }
+        }));
+        
+        return { achievement, rewards };
+    },
+    
+    // Check achievement progress and auto-unlock
+    checkAchievements() {
+        if (!this.wallet) return;
+        
+        const state = this.getAchievementState();
+        const dailyState = this.getDailyLoginState();
+        const stats = this.wallet.stats || {};
+        const collection = this.getCollection();
+        const balances = this.wallet.currencies || {};
+        
+        // Login achievements
+        if (!state.first_login) this.unlockAchievement('first_login');
+        if (dailyState.currentStreak >= 3 && !state.streak_3) this.unlockAchievement('streak_3');
+        if (dailyState.currentStreak >= 7 && !state.streak_7) this.unlockAchievement('streak_7');
+        if (dailyState.totalDaysLoggedIn >= 30 && !state.streak_30) this.unlockAchievement('streak_30');
+        
+        // Collection achievements
+        if (collection.length >= 1 && !state.first_card) this.unlockAchievement('first_card');
+        if (collection.length >= 10 && !state.cards_10) this.unlockAchievement('cards_10');
+        if (collection.length >= 50 && !state.cards_50) this.unlockAchievement('cards_50');
+        if (stats.mythicsPulled >= 1 && !state.first_mythic) this.unlockAchievement('first_mythic');
+        if (stats.legendariesPulled >= 1 && !state.first_legendary) this.unlockAchievement('first_legendary');
+        
+        // Spending achievements
+        if (stats.pullsMade >= 1 && !state.first_pull) this.unlockAchievement('first_pull');
+        if (stats.pullsMade >= 10 && !state.pulls_10) this.unlockAchievement('pulls_10');
+        if (stats.pullsMade >= 50 && !state.pulls_50) this.unlockAchievement('pulls_50');
+        if (stats.purchasesMade >= 1 && !state.first_purchase) this.unlockAchievement('first_purchase');
+        
+        // Exchange achievements
+        if (stats.exchangesMade >= 1 && !state.first_exchange) this.unlockAchievement('first_exchange');
+        if (stats.exchangesMade >= 10 && !state.exchanges_10) this.unlockAchievement('exchanges_10');
+        
+        // Economy achievements
+        if (balances.diamond >= 500 && !state.rich_diamond) this.unlockAchievement('rich_diamond');
+        if (balances.wood >= 5 && !state.rich_wood) this.unlockAchievement('rich_wood');
+        
+        // Gaming achievements
+        if (stats.gamesPlayed >= 1 && !state.first_game) this.unlockAchievement('first_game');
+        if (stats.gamesPlayed >= 10 && !state.games_10) this.unlockAchievement('games_10');
+        if (stats.gamesWon >= 10 && !state.games_won_10) this.unlockAchievement('games_won_10');
+        
+        // GM mode achievement
+        if (this.isGM && !state.gm_mode) this.unlockAchievement('gm_mode');
+    },
+    
+    // Get all achievements with their status
+    getAllAchievements() {
+        const state = this.getAchievementState();
+        return Object.values(this.ACHIEVEMENTS).map(ach => ({
+            ...ach,
+            unlocked: !!state[ach.id],
+            unlockedAt: state[ach.id]?.unlockedAt,
+            claimed: state[ach.id]?.claimed
+        }));
+    },
+    
+    // Get unlocked achievements count
+    getAchievementProgress() {
+        const state = this.getAchievementState();
+        const total = Object.keys(this.ACHIEVEMENTS).length;
+        const unlocked = Object.keys(state).length;
+        return { unlocked, total, percentage: Math.round((unlocked / total) * 100) };
+    },
+    
     // ===== STATS =====
     recordGame(won, currency = null, amount = 0) {
         if (!this.wallet) return;
@@ -601,6 +927,9 @@ const NW_WALLET = {
         
         this.log('GAME_RESULT', { won, currency, amount });
         this.saveWallet();
+        
+        // Check gaming achievements
+        this.checkAchievements();
     },
     
     recordPull(rarity) {
@@ -709,11 +1038,26 @@ document.addEventListener('DOMContentLoaded', () => {
             console.log('%c╚════════════════════════════════════════════╝', 'color: #ffd700;');
         }
         
+        // Check achievements on every load
+        setTimeout(() => NW_WALLET.checkAchievements(), 500);
+        
+        // Show daily login prompt if available
+        if (NW_WALLET.canClaimDailyReward()) {
+            const dailyState = NW_WALLET.getDailyLoginState();
+            const nextDay = (dailyState.currentStreak % 7) + 1;
+            console.log('%c🎁 Daily Reward Available! Day ' + nextDay + '/7', 
+                'color: #00ff88; font-weight: bold; font-size: 14px;');
+            console.log('%c   Claim at /wallet or call: NW_WALLET.claimDailyReward()', 'color: #888;');
+        }
+        
         // Dispatch event for other scripts
         window.dispatchEvent(new CustomEvent('nw-wallet-ready', { 
             detail: { 
                 wallet, 
-                isGM: NW_WALLET.isGM 
+                isGM: NW_WALLET.isGM,
+                canClaimDaily: NW_WALLET.canClaimDailyReward(),
+                dailyState: NW_WALLET.getDailyLoginState(),
+                achievementProgress: NW_WALLET.getAchievementProgress()
             } 
         }));
     });
