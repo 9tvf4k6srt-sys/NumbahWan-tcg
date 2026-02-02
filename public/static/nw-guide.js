@@ -102,6 +102,31 @@
         }
     };
 
+    // ==================== FALLBACK PAGE DATA ====================
+    // Used when NW_CONFIG is not loaded
+    const fallbackPages = {
+        home: { path: '/', emoji: '🏠', name: { en: 'Home', zh: '首頁', th: 'หน้าแรก' }, desc: { en: 'Guild headquarters', zh: '公會總部', th: 'สำนักงานใหญ่กิลด์' }, category: 'core' },
+        forge: { path: '/forge', emoji: '🎰', name: { en: 'Card Forge', zh: '卡牌鍛造', th: 'โรงหลอมการ์ด' }, desc: { en: 'Open packs and collect cards', zh: '開包收集卡牌', th: 'เปิดแพ็คสะสมการ์ด' }, category: 'core' },
+        battle: { path: '/battle', emoji: '⚔️', name: { en: 'Battle', zh: '戰鬥', th: 'ต่อสู้' }, desc: { en: 'Card battles and PvP', zh: '卡牌對戰', th: 'การต่อสู้การ์ด' }, category: 'game' },
+        collection: { path: '/collection', emoji: '📚', name: { en: 'Collection', zh: '收藏', th: 'คอลเลกชัน' }, desc: { en: 'View your cards and achievements', zh: '查看卡牌和成就', th: 'ดูการ์ดและความสำเร็จ' }, category: 'core' },
+        wallet: { path: '/wallet', emoji: '👛', name: { en: 'Wallet', zh: '錢包', th: 'กระเป๋าเงิน' }, desc: { en: 'Manage currencies and account', zh: '管理貨幣和帳戶', th: 'จัดการสกุลเงินและบัญชี' }, category: 'core' },
+        market: { path: '/market', emoji: '🏪', name: { en: 'Card Market', zh: '卡牌市場', th: 'ตลาดการ์ด' }, desc: { en: 'Trade cards with others', zh: '與他人交易卡牌', th: 'ซื้อขายการ์ดกับผู้อื่น' }, category: 'economy' },
+        arcade: { path: '/arcade', emoji: '🕹️', name: { en: 'Arcade', zh: '遊戲廳', th: 'อาร์เคด' }, desc: { en: 'Mini-games to earn currency', zh: '小遊戲賺取貨幣', th: 'มินิเกมหาเงิน' }, category: 'game' },
+        exchange: { path: '/exchange', emoji: '📈', name: { en: 'Exchange', zh: '交易所', th: 'ตลาดแลกเปลี่ยน' }, desc: { en: 'Trade currencies', zh: '交易貨幣', th: 'แลกเปลี่ยนสกุลเงิน' }, category: 'economy' },
+        merch: { path: '/merch', emoji: '🛍️', name: { en: 'Merch Shop', zh: '周邊商店', th: 'ร้านค้า' }, desc: { en: 'Guild merchandise', zh: '公會周邊', th: 'สินค้ากิลด์' }, category: 'economy' },
+        court: { path: '/court', emoji: '⚖️', name: { en: 'Guild Court', zh: '公會法院', th: 'ศาลกิลด์' }, desc: { en: 'Sue your guildmates!', zh: '告你的隊友！', th: 'ฟ้องเพื่อนกิลด์!' }, category: 'absurdist' },
+        therapy: { path: '/therapy', emoji: '🛋️', name: { en: 'Guild Therapy', zh: '公會療程', th: 'การบำบัดกิลด์' }, desc: { en: 'AI therapist for gaming trauma', zh: 'AI治療師處理遊戲創傷', th: 'นักบำบัด AI สำหรับบาดแผลเกม' }, category: 'absurdist' },
+        hr: { path: '/hr', emoji: '📋', name: { en: 'HR Department', zh: '人事部', th: 'ฝ่ายบุคคล' }, desc: { en: 'Apply for guild jobs', zh: '申請公會職位', th: 'สมัครงานกิลด์' }, category: 'absurdist' },
+        conspiracy: { path: '/conspiracy', emoji: '👁️', name: { en: 'Conspiracy Board', zh: '陰謀板', th: 'บอร์ดสมคบคิด' }, desc: { en: 'Connect the dots...', zh: '連接線索...', th: 'เชื่อมจุด...' }, category: 'absurdist' },
+        academy: { path: '/academy', emoji: '🏫', name: { en: 'Academy', zh: '學院', th: 'สถาบัน' }, desc: { en: 'Learn coding wizardry', zh: '學習程式魔法', th: 'เรียนเวทมนตร์โค้ด' }, category: 'meta' },
+        museum: { path: '/museum', emoji: '🏛️', name: { en: 'Museum', zh: '博物館', th: 'พิพิธภัณฑ์' }, desc: { en: 'Guild history and artifacts', zh: '公會歷史和文物', th: 'ประวัติและสิ่งประดิษฐ์กิลด์' }, category: 'meta' },
+        vault: { path: '/vault', emoji: '🔒', name: { en: 'Archive Vault', zh: '檔案庫', th: 'ห้องนิรภัย' }, desc: { en: 'Secret archives', zh: '秘密檔案', th: 'เอกสารลับ' }, category: 'meta' },
+        about: { path: '/about', emoji: '📜', name: { en: 'About', zh: '關於', th: 'เกี่ยวกับ' }, desc: { en: 'About NumbahWan', zh: '關於NumbahWan', th: 'เกี่ยวกับ NumbahWan' }, category: 'meta' },
+        fortune: { path: '/fortune', emoji: '🔮', name: { en: 'Fortune Teller', zh: '算命師', th: 'หมอดู' }, desc: { en: 'Daily fortunes', zh: '每日運勢', th: 'ดวงรายวัน' }, category: 'fun' },
+        deckbuilder: { path: '/deckbuilder', emoji: '🃏', name: { en: 'Deck Builder', zh: '牌組構築', th: 'สร้างสำรับ' }, desc: { en: 'Build your decks', zh: '構築你的牌組', th: 'สร้างสำรับของคุณ' }, category: 'game' },
+        updates: { path: '/updates', emoji: '📋', name: { en: 'Patch Notes', zh: '更新日誌', th: 'บันทึกแพทช์' }, desc: { en: 'Latest updates', zh: '最新更新', th: 'อัปเดตล่าสุด' }, category: 'meta' }
+    };
+
     // ==================== HELPER FUNCTIONS ====================
     function t(key) {
         const keys = key.split('.');
@@ -131,19 +156,38 @@
     // Get page info from NW_CONFIG (with fallback)
     function getPageInfo(pageKey) {
         // Try NW_CONFIG first (Single Source of Truth)
-        if (window.NW_CONFIG) {
+        if (window.NW_CONFIG?.getPage) {
             const page = NW_CONFIG.getPage(pageKey);
             if (page) return page;
+        }
+        // Fallback to built-in data
+        const fb = fallbackPages[pageKey];
+        if (fb) {
+            return {
+                ...fb,
+                name: fb.name[currentLang] || fb.name.en,
+                desc: fb.desc[currentLang] || fb.desc.en
+            };
         }
         return null;
     }
 
     // Get all pages from NW_CONFIG
     function getAllPages(category = null) {
-        if (window.NW_CONFIG) {
+        if (window.NW_CONFIG?.getAllPages) {
             return NW_CONFIG.getAllPages(category);
         }
-        return [];
+        // Fallback to built-in data
+        const pages = Object.entries(fallbackPages).map(([key, page]) => ({
+            key,
+            ...page,
+            name: page.name[currentLang] || page.name.en,
+            desc: page.desc[currentLang] || page.desc.en
+        }));
+        if (category) {
+            return pages.filter(p => p.category === category);
+        }
+        return pages;
     }
 
     // Get tips for current page
@@ -163,21 +207,24 @@
 
     // Match user input to a page
     function findPageByInput(input) {
-        if (!window.NW_CONFIG) return null;
-        
         const lower = input.toLowerCase();
         
-        for (const [key, page] of Object.entries(NW_CONFIG.pages)) {
-            // Check keywords
-            const keywords = page.keywords?.[currentLang] || page.keywords?.en || [];
-            for (const kw of keywords) {
-                if (lower.includes(kw.toLowerCase())) {
-                    return key;
+        // Try NW_CONFIG first
+        if (window.NW_CONFIG?.pages) {
+            for (const [key, page] of Object.entries(NW_CONFIG.pages)) {
+                const keywords = page.keywords?.[currentLang] || page.keywords?.en || [];
+                for (const kw of keywords) {
+                    if (lower.includes(kw.toLowerCase())) return key;
                 }
+                const name = NW_CONFIG.t ? NW_CONFIG.t(page.name, currentLang) : (page.name[currentLang] || page.name.en);
+                if (lower.includes(name.toLowerCase())) return key;
             }
-            // Check name
-            const name = NW_CONFIG.t(page.name, currentLang);
-            if (lower.includes(name.toLowerCase())) {
+        }
+        
+        // Fallback to built-in pages
+        for (const [key, page] of Object.entries(fallbackPages)) {
+            const name = page.name[currentLang] || page.name.en;
+            if (lower.includes(name.toLowerCase()) || lower.includes(key.toLowerCase())) {
                 return key;
             }
         }
@@ -643,29 +690,30 @@
     }
 
     function respondWithNewFeatures() {
-        if (!window.NW_CONFIG) {
-            addMessage("Loading... try again!");
-            return;
+        // Try NW_CONFIG first
+        if (window.NW_CONFIG?.getLatestPatch) {
+            const patch = NW_CONFIG.getLatestPatch();
+            const title = NW_CONFIG.t(patch.title, currentLang);
+            const newItems = patch.changes.filter(c => c.category === 'new');
+            
+            let msg = `🆕 <strong>${title}</strong> (v${patch.version})<br><br>`;
+            newItems.forEach(item => {
+                const itemTitle = NW_CONFIG.t(item.title, currentLang);
+                msg += `${item.icon} <strong>${itemTitle}</strong>`;
+                if (item.path) msg += ` <a href="${item.path}" class="nw-guide-page-link new">${item.path}</a>`;
+                msg += `<br>`;
+            });
+            msg += `<br><a href="/updates" class="nw-guide-page-link">📋 ${currentLang === 'zh' ? '完整更新日誌' : currentLang === 'th' ? 'บันทึกแพทช์ทั้งหมด' : 'Full Patch Notes'}</a>`;
+            addMessage(msg);
+        } else {
+            // Fallback: show absurdist pages as "new features"
+            const newFeatures = {
+                en: '🆕 <strong>Latest Features</strong><br><br>⚖️ <strong>Guild Court</strong> - Sue your guildmates! <a href="/court" class="nw-guide-page-link new">/court</a><br>🛋️ <strong>Guild Therapy</strong> - AI therapist <a href="/therapy" class="nw-guide-page-link new">/therapy</a><br>📋 <strong>HR Department</strong> - Apply for jobs <a href="/hr" class="nw-guide-page-link new">/hr</a><br>👁️ <strong>Conspiracy Board</strong> - Connect the dots <a href="/conspiracy" class="nw-guide-page-link new">/conspiracy</a><br>⭐ <strong>Card Upgrades</strong> - Star levels & burn system <a href="/collection" class="nw-guide-page-link new">/collection</a>',
+                zh: '🆕 <strong>最新功能</strong><br><br>⚖️ <strong>公會法院</strong> - 告你的隊友！ <a href="/court" class="nw-guide-page-link new">/court</a><br>🛋️ <strong>公會療程</strong> - AI治療師 <a href="/therapy" class="nw-guide-page-link new">/therapy</a><br>📋 <strong>人事部</strong> - 申請職位 <a href="/hr" class="nw-guide-page-link new">/hr</a><br>👁️ <strong>陰謀板</strong> - 連接線索 <a href="/conspiracy" class="nw-guide-page-link new">/conspiracy</a><br>⭐ <strong>卡牌升級</strong> - 星級和燃燒系統 <a href="/collection" class="nw-guide-page-link new">/collection</a>',
+                th: '🆕 <strong>ฟีเจอร์ใหม่</strong><br><br>⚖️ <strong>ศาลกิลด์</strong> - ฟ้องเพื่อนกิลด์! <a href="/court" class="nw-guide-page-link new">/court</a><br>🛋️ <strong>การบำบัดกิลด์</strong> - นักบำบัด AI <a href="/therapy" class="nw-guide-page-link new">/therapy</a><br>📋 <strong>ฝ่ายบุคคล</strong> - สมัครงาน <a href="/hr" class="nw-guide-page-link new">/hr</a><br>👁️ <strong>บอร์ดสมคบคิด</strong> - เชื่อมจุด <a href="/conspiracy" class="nw-guide-page-link new">/conspiracy</a><br>⭐ <strong>อัปเกรดการ์ด</strong> - ระบบดาวและเบิร์น <a href="/collection" class="nw-guide-page-link new">/collection</a>'
+            };
+            addMessage(newFeatures[currentLang] || newFeatures.en);
         }
-        
-        const patch = NW_CONFIG.getLatestPatch();
-        const title = NW_CONFIG.t(patch.title, currentLang);
-        const newItems = patch.changes.filter(c => c.category === 'new');
-        
-        let msg = `🆕 <strong>${title}</strong> (v${patch.version})<br><br>`;
-        
-        newItems.forEach(item => {
-            const itemTitle = NW_CONFIG.t(item.title, currentLang);
-            msg += `${item.icon} <strong>${itemTitle}</strong>`;
-            if (item.path) {
-                msg += ` <a href="${item.path}" class="nw-guide-page-link new">${item.path}</a>`;
-            }
-            msg += `<br>`;
-        });
-        
-        msg += `<br><a href="/updates" class="nw-guide-page-link">📋 ${currentLang === 'zh' ? '完整更新日誌' : currentLang === 'th' ? 'บันทึกแพทช์ทั้งหมด' : 'Full Patch Notes'}</a>`;
-        
-        addMessage(msg);
         showContextualSuggestions();
     }
 
