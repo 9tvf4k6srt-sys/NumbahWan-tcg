@@ -1878,7 +1878,7 @@ app.post('/api/wallet/sync', async (c) => {
 // ROUTE FACTORY - DRY Pattern (Don't Repeat Yourself)
 // Add new pages by just adding to the array - no copy-paste needed!
 // ============================================================================
-const staticPages = ['fashion', 'merch', 'fortune', 'arcade', 'memes', 'apply', 'wallet', 'forge', 'tcg', 'market', 'cards', 'guide', 'battle', 'collection', 'deckbuilder', 'zakum', 'tournament', 'academy', 'vault', 'museum', 'research', 'historical-society', 'menu-demo', 'exchange', 'ai-lounge', 'court', 'therapy', 'hr', 'conspiracy', 'updates', 'about', 'treasury', 'intelligence', 'citizenship', 'invest', 'business', 'supermarket', 'restaurant', 'services', 'my-business']
+const staticPages = ['fashion', 'merch', 'fortune', 'arcade', 'memes', 'apply', 'wallet', 'forge', 'tcg', 'market', 'cards', 'guide', 'battle', 'collection', 'deckbuilder', 'zakum', 'tournament', 'academy', 'vault', 'museum', 'research', 'historical-society', 'menu-demo', 'exchange', 'ai-lounge', 'court', 'therapy', 'hr', 'conspiracy', 'updates', 'about', 'treasury', 'intelligence', 'citizenship', 'invest', 'business', 'supermarket', 'restaurants', 'services', 'crafts', 'realestate', 'jobs', 'my-business']
 
 staticPages.forEach(page => {
   app.get(`/${page}`, async (c) => {
