@@ -83,6 +83,27 @@
                 en: { name: 'Apply', desc: 'Join the guild - apply here!' },
                 zh: { name: '申請', desc: '加入公會 - 在此申請！' },
                 th: { name: 'สมัคร', desc: 'เข้าร่วมกิลด์ - สมัครที่นี่!' }
+            },
+            // === NEW ABSURDIST PAGES ===
+            court: {
+                en: { name: 'Supreme Court', desc: 'File complaints, deliver verdicts, appeal rulings!' },
+                zh: { name: '最高法院', desc: '提交訴狀、宣判、上訴！' },
+                th: { name: 'ศาลสูงสุด', desc: 'ยื่นคำร้อง ตัดสิน อุทธรณ์!' }
+            },
+            therapy: {
+                en: { name: 'Guild Therapy', desc: 'AI therapist for your gaming trauma' },
+                zh: { name: '公會療程', desc: 'AI治療師幫助你的遊戲創傷' },
+                th: { name: 'การบำบัดกิลด์', desc: 'นักบำบัด AI สำหรับบาดแผลทางเกม' }
+            },
+            hr: {
+                en: { name: 'HR Department', desc: 'Apply for absurd positions (100% rejection rate!)' },
+                zh: { name: '人力資源部', desc: '申請荒謬職位（100%被拒！）' },
+                th: { name: 'ฝ่ายบุคคล', desc: 'สมัครตำแหน่งไร้สาระ (อัตราปฏิเสธ 100%!)' }
+            },
+            conspiracy: {
+                en: { name: 'Conspiracy Board', desc: 'Pin evidence, connect the dots, uncover guild secrets' },
+                zh: { name: '陰謀論板', desc: '釘上證據、連接線索、揭露公會秘密' },
+                th: { name: 'บอร์ดสมคบคิด', desc: 'ปักหลักฐาน เชื่อมจุด เปิดโปงความลับกิลด์' }
             }
         },
 
@@ -206,6 +227,27 @@
                 en: ["All items can be bought with USD or guild currencies!", "Premium items need 🪵 Sacred Logs only"],
                 zh: ["所有商品可用美金或公會貨幣購買！", "頂級商品只能用 🪵 神聖原木購買"],
                 th: ["สินค้าทั้งหมดซื้อด้วย USD หรือสกุลเงินกิลด์!", "สินค้าพรีเมี่ยมต้องใช้ 🪵 Sacred Logs เท่านั้น"]
+            },
+            // === NEW ABSURDIST PAGE TIPS ===
+            '/court': {
+                en: ["File complaints for 5💎, win cases to earn 25🪙!", "Appeal costs 10💎 with only 3% success rate 😈", "10 crime categories including Fashion Crime & Excessive Simping!"],
+                zh: ["提交訴狀5💎，勝訴獲得25🪙！", "上訴需10💎，只有3%成功率 😈", "10種罪名包括時尚犯罪和過度舔狗！"],
+                th: ["ยื่นคำร้อง 5💎 ชนะคดีได้ 25🪙!", "อุทธรณ์ 10💎 สำเร็จแค่ 3% 😈", "10 หมวดหมู่อาชญากรรมรวมถึง Fashion Crime!"]
+            },
+            '/therapy': {
+                en: ["Complete a session to earn 3💎!", "Get diagnosed with Gacha Pull Depression 🎰", "Dr. NumbahWan is always listening (not really)"],
+                zh: ["完成療程獲得3💎！", "被診斷為抽卡憂鬱症 🎰", "NumbahWan醫生隨時傾聽（才怪）"],
+                th: ["ทำเซสชันเสร็จรับ 3💎!", "วินิจฉัยว่าเป็น Gacha Pull Depression 🎰", "Dr. NumbahWan ฟังอยู่เสมอ (ไม่จริง)"]
+            },
+            '/hr': {
+                en: ["Apply for Chief Banana Officer! 🍌", "All applications rejected (100% rate!)", "Application costs 5💎, consolation prize: 10🪙"],
+                zh: ["申請首席香蕉官！🍌", "所有申請都被拒絕（100%！）", "申請費5💎，安慰獎：10🪙"],
+                th: ["สมัคร Chief Banana Officer! 🍌", "ทุกใบสมัครถูกปฏิเสธ (100%!)", "สมัครงาน 5💎 รางวัลปลอบใจ: 10🪙"]
+            },
+            '/conspiracy': {
+                en: ["Drag evidence cards to connect the dots!", "Submit theories for 2💎, truth seekers earn 15🪙", "Investigate The Banana Patch conspiracy 🍌"],
+                zh: ["拖動證據卡片連接線索！", "提交理論2💎，揭密者獲得15🪙", "調查香蕉園陰謀 🍌"],
+                th: ["ลากการ์ดหลักฐานเชื่อมจุด!", "ส่งทฤษฎี 2💎 นักแสวงหาความจริงได้ 15🪙", "สืบสวน The Banana Patch conspiracy 🍌"]
             }
         },
 
@@ -238,14 +280,18 @@
         home: '/', academy: '/academy', exchange: '/exchange', museum: '/museum',
         vault: '/vault', tcg: '/tcg', market: '/market', forge: '/forge',
         arcade: '/arcade', merch: '/merch', wallet: '/wallet', memes: '/memes',
-        fortune: '/fortune', apply: '/apply'
+        fortune: '/fortune', apply: '/apply',
+        // New absurdist pages
+        court: '/court', therapy: '/therapy', hr: '/hr', conspiracy: '/conspiracy'
     };
 
     // Page emojis
     const PAGE_EMOJIS = {
         home: '🏠', academy: '🏫', exchange: '📈', museum: '🏛️', vault: '🔐',
         tcg: '🃏', market: '🛒', forge: '⚒️', arcade: '🕹️', merch: '👕',
-        wallet: '💰', memes: '😂', fortune: '🔮', apply: '📝'
+        wallet: '💰', memes: '😂', fortune: '🔮', apply: '📝',
+        // New absurdist pages
+        court: '⚖️', therapy: '🛋️', hr: '👔', conspiracy: '📌'
     };
 
     // ==================== HELPER FUNCTIONS ====================
@@ -660,7 +706,7 @@
     }
 
     function respondWithPageList() {
-        const featured = ['exchange', 'forge', 'arcade', 'wallet', 'merch'];
+        const featured = ['exchange', 'forge', 'arcade', 'wallet', 'court', 'therapy', 'hr', 'conspiracy'];
         const list = featured.map(key => {
             const p = getPageInfo(key);
             return p ? `<a href="${p.path}" class="nw-guide-page-link">${p.emoji} ${p.name}</a>` : '';
@@ -715,6 +761,11 @@
                     return showContextualSuggestions();
                 }
                 if (lower.includes('語言')) return showLanguageOptions();
+                // New absurdist pages - Chinese keywords
+                if (lower.includes('法院') || lower.includes('訴') || lower.includes('告') || lower.includes('判')) return respondWithPage('court');
+                if (lower.includes('療') || lower.includes('心理') || lower.includes('治療')) return respondWithPage('therapy');
+                if (lower.includes('人力') || lower.includes('工作') || lower.includes('職位')) return respondWithPage('hr');
+                if (lower.includes('陰謀') || lower.includes('秘密') || lower.includes('理論')) return respondWithPage('conspiracy');
             }
 
             // Thai detection
@@ -736,6 +787,11 @@
                     return showContextualSuggestions();
                 }
                 if (lower.includes('ภาษา')) return showLanguageOptions();
+                // New absurdist pages - Thai keywords
+                if (lower.includes('ศาล') || lower.includes('ฟ้อง') || lower.includes('ตัดสิน')) return respondWithPage('court');
+                if (lower.includes('บำบัด') || lower.includes('จิต') || lower.includes('ปรึกษา')) return respondWithPage('therapy');
+                if (lower.includes('บุคคล') || lower.includes('งาน') || lower.includes('สมัคร')) return respondWithPage('hr');
+                if (lower.includes('สมคบ') || lower.includes('ความลับ') || lower.includes('ทฤษฎี')) return respondWithPage('conspiracy');
             }
 
             // English keywords
@@ -767,6 +823,16 @@
                 respondWithPage('apply');
             } else if (lower.includes('home') || lower.includes('main') || lower.includes('start')) {
                 respondWithPage('home');
+            }
+            // New absurdist pages - English keywords
+            else if (lower.includes('court') || lower.includes('sue') || lower.includes('complaint') || lower.includes('verdict') || lower.includes('judge')) {
+                respondWithPage('court');
+            } else if (lower.includes('therapy') || lower.includes('therapist') || lower.includes('mental') || lower.includes('counsel')) {
+                respondWithPage('therapy');
+            } else if (lower.includes('hr') || lower.includes('job') || lower.includes('hire') || lower.includes('position') || lower.includes('banana officer')) {
+                respondWithPage('hr');
+            } else if (lower.includes('conspiracy') || lower.includes('theory') || lower.includes('secret') || lower.includes('illuminati') || lower.includes('evidence')) {
+                respondWithPage('conspiracy');
             }
             // Commands
             else if (lower.includes('page') || lower.includes('show') || lower.includes('all') || lower.includes('list')) {
