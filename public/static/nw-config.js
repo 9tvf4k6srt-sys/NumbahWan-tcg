@@ -13,7 +13,7 @@ const NW_CONFIG = {
     // ═══════════════════════════════════════════════════════════════
     // VERSION & META
     // ═══════════════════════════════════════════════════════════════
-    version: '2.1.0',
+    version: '2.1.1',
     lastUpdate: '2026-02-02',
     environment: 'production',
     
@@ -21,6 +21,70 @@ const NW_CONFIG = {
     // PATCH HISTORY - Auto-feeds to /updates page
     // ═══════════════════════════════════════════════════════════════
     patches: [
+        {
+            version: '2.1.1',
+            date: '2026-02-02',
+            title: { 
+                en: 'Card Upgrade System', 
+                zh: '卡片升級系統', 
+                th: 'ระบบอัพเกรดการ์ด' 
+            },
+            type: 'minor',
+            changes: [
+                {
+                    category: 'new',
+                    title: { en: 'Star Upgrades (1★-5★)', zh: '星級升級 (1★-5★)', th: 'อัพเกรดดาว (1★-5★)' },
+                    desc: { 
+                        en: 'Use duplicate cards to upgrade star level. Higher stars = better stats (+15%/30%/50%/75%)',
+                        zh: '使用重複卡片升級星級。星級越高 = 屬性越強 (+15%/30%/50%/75%)',
+                        th: 'ใช้การ์ดซ้ำเพื่ออัพเกรดระดับดาว ดาวสูงขึ้น = สถานะดีขึ้น (+15%/30%/50%/75%)'
+                    },
+                    icon: '⭐',
+                    path: '/collection'
+                },
+                {
+                    category: 'new',
+                    title: { en: 'Card Burning', zh: '卡片燃燒', th: 'เผาการ์ด' },
+                    desc: { 
+                        en: 'Burn unwanted cards for Sacred Logs. Higher rarity & stars = more logs!',
+                        zh: '燃燒不需要的卡片換取神聖原木。稀有度和星級越高 = 原木越多！',
+                        th: 'เผาการ์ดที่ไม่ต้องการเพื่อรับ Sacred Logs ความหายากและดาวสูงขึ้น = ท่อนไม้มากขึ้น!'
+                    },
+                    icon: '🔥',
+                    path: '/collection'
+                },
+                {
+                    category: 'feature',
+                    title: { en: 'Architecture Overhaul', zh: '架構大改', th: 'ปรับปรุงสถาปัตยกรรม' },
+                    desc: { 
+                        en: 'New boot loader, unified storage system, centralized error handling',
+                        zh: '新引導加載器、統一存儲系統、集中錯誤處理',
+                        th: 'บูตโหลดเดอร์ใหม่ ระบบจัดเก็บรวม การจัดการข้อผิดพลาดส่วนกลาง'
+                    },
+                    icon: '🏗️'
+                },
+                {
+                    category: 'fix',
+                    title: { en: 'Guide Translation Fix', zh: '指南翻譯修復', th: 'แก้ไขการแปลไกด์' },
+                    desc: { 
+                        en: 'Fixed AI Guide showing "ui.title" instead of translated text',
+                        zh: '修復AI指南顯示 "ui.title" 而不是翻譯文字',
+                        th: 'แก้ไข AI Guide แสดง "ui.title" แทนข้อความแปล'
+                    },
+                    icon: '🔧'
+                },
+                {
+                    category: 'fix',
+                    title: { en: 'Daily Claim Feedback', zh: '每日領取反饋', th: 'ฟีดแบ็กรับรายวัน' },
+                    desc: { 
+                        en: 'Added toast notifications and disabled state for already claimed rewards',
+                        zh: '添加了吐司通知和已領取獎勵的禁用狀態',
+                        th: 'เพิ่มการแจ้งเตือนและสถานะปิดสำหรับรางวัลที่รับแล้ว'
+                    },
+                    icon: '✅'
+                }
+            ]
+        },
         {
             version: '2.1.0',
             date: '2026-02-02',
