@@ -8,8 +8,8 @@
 (function() {
     'use strict';
 
-    // Current language - syncs with site language setting
-    let currentLang = localStorage.getItem('numbahwan_lang') || 'en';
+    // Current language - syncs with site language setting (check multiple keys for compatibility)
+    let currentLang = localStorage.getItem('lang') || localStorage.getItem('nw_lang') || localStorage.getItem('numbahwan_lang') || 'en';
 
     // ==================== UI TRANSLATIONS (Guide-specific) ====================
     const guideI18n = {
@@ -193,7 +193,7 @@
                 align-items: center;
                 justify-content: center;
                 transition: all 0.2s ease;
-                overflow: hidden;
+                overflow: visible;
             }
             #nw-guide-toggle:hover {
                 transform: translateY(-2px);
@@ -825,7 +825,26 @@
     } else {
         init();
     }
+    
+    // Listen for language changes from NW_NAV
+    window.addEventListener('nw-lang-change', (e) => {
+        const newLang = e.detail?.lang;
+        if (newLang && newLang !== currentLang) {
+            currentLang = newLang;
+            // Update the badge text
+            const badge = document.querySelector('.nw-guide-new-badge');
+            if (badge) {
+                badge.textContent = t('ui.newBadge');
+            }
+            // Update chat if open
+            const chat = document.getElementById('nw-guide-chat');
+            if (chat) {
+                updateChatHTML(chat);
+            }
+            console.log('[NW_GUIDE] Language updated to:', newLang);
+        }
+    });
 
-    console.log('%c[NW_GUIDE] v3.0 - Now reading from NW_CONFIG!', 
+    console.log('%c[NW_GUIDE] v3.1 - Fixed badge display & language sync!', 
         'background: #1a1a2e; color: #ff6b00; font-size: 12px; padding: 4px 8px; border-radius: 4px;');
 })();
