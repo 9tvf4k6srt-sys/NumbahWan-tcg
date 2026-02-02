@@ -147,7 +147,7 @@ const NW_ECONOMY = {
             name: 'Sacred Log',
             icon: '⧫',
             color: '#c97f3d',
-            iconPath: '/static/icons/sacred-log-64.webp',
+            iconPath: '/static/icons/sacred-log.svg',
             tier: 'legendary',
             description: 'Ultra rare - the mark of a true collector',
             howToEarn: [

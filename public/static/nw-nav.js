@@ -359,7 +359,7 @@ const NW_NAV = {
             .nw-nav-scroll::-webkit-scrollbar-thumb { background: rgba(255,215,0,0.3); border-radius: 2px; }
             
             .nw-nav-section { margin: 4px 8px; }
-            .nw-nav-section-header { display: flex; align-items: center; gap: 8px; padding: 10px 12px; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; border-radius: 8px; transition: all 0.2s; }
+            .nw-nav-section-header { display: flex; align-items: center; gap: 8px; padding: 12px 14px; font-size: 14px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; border-radius: 8px; transition: all 0.2s; }
             .nw-nav-section-header.collapsible { cursor: pointer; }
             .nw-nav-section-header.collapsible:hover { background: rgba(255,255,255,0.05); }
             
@@ -369,7 +369,7 @@ const NW_NAV = {
             .nw-nav-chevron.open { transform: rotate(90deg); }
             
             .nw-nav-pages { padding: 4px 0 4px 8px; }
-            .nw-nav-link { display: flex; align-items: center; gap: 10px; padding: 10px 12px; color: rgba(255,255,255,0.7); text-decoration: none; border-radius: 8px; transition: all 0.2s; font-size: 13px; }
+            .nw-nav-link { display: flex; align-items: center; gap: 10px; padding: 12px 14px; color: rgba(255,255,255,0.7); text-decoration: none; border-radius: 8px; transition: all 0.2s; font-size: 15px; font-weight: 500; }
             .nw-nav-link:hover { background: rgba(255,255,255,0.08); color: #fff; transform: translateX(4px); }
             .nw-nav-link.active { background: rgba(255,215,0,0.15); color: #ffd700; border-left: 3px solid #ffd700; }
             

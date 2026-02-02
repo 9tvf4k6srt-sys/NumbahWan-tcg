@@ -1157,12 +1157,21 @@
     
     // ===== PROFILE SETTINGS =====
     function loadProfileSettings() {
-        if (!NW_USER.initialized) return;
+        // Wait for NW_USER to initialize
+        if (!NW_USER.initialized && !NW_WALLET.initialized) {
+            setTimeout(loadProfileSettings, 200);
+            return;
+        }
         
-        document.getElementById('displayNameInput').value = NW_USER.profile.displayName || '';
-        document.getElementById('userIdDisplay').textContent = NW_USER.id || 'Unknown';
-        document.getElementById('citizenTier').textContent = NW_USER.identity.tier?.toUpperCase() || 'GUEST';
-        document.getElementById('trustScore').textContent = NW_USER.identity.trustScore + '/100';
+        // Get user ID from NW_USER or NW_WALLET
+        const userId = NW_USER.id || NW_WALLET.getGuestId() || 'Unknown';
+        const tier = NW_USER.identity?.citizenshipTier?.toUpperCase() || 'GUEST';
+        const trust = NW_USER.identity?.trustScore || 50;
+        
+        document.getElementById('displayNameInput').value = NW_USER.profile?.displayName || '';
+        document.getElementById('userIdDisplay').textContent = userId;
+        document.getElementById('citizenTier').textContent = tier;
+        document.getElementById('trustScore').textContent = trust + '/100';
     }
     
     function saveDisplayName() {
