@@ -579,7 +579,16 @@ const NW_NAV = {
                 'guide': '/',
                 'zakum': '/',
                 'fortune': '/',
-                'apply': '/'
+                'apply': '/',
+                // Commerce/Business section -> Business Hub
+                'business': '/',
+                'supermarket': '/business',
+                'restaurants': '/business',
+                'services': '/business',
+                'crafts': '/business',
+                'realestate': '/business',
+                'jobs': '/business',
+                'my-business': '/business'
             };
             const dest = parentMap[this.currentPage] || '/';
             window.location.href = dest;

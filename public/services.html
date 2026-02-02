@@ -20,14 +20,26 @@
             --service-border: #2a2a4e;
         }
         
-        * { box-sizing: border-box; }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        
+        html {
+            scroll-behavior: smooth;
+            scrollbar-gutter: stable;
+        }
         
         body {
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
             background: var(--service-dark);
             color: #ffffff;
-            margin: 0;
             min-height: 100vh;
+            overflow-x: hidden;
+            overflow-y: auto;
+        }
+        
+        /* Focus states for accessibility */
+        a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visible {
+            outline: 2px solid var(--service-blue);
+            outline-offset: 2px;
         }
         
         /* Header */
@@ -167,30 +179,21 @@
             padding: 2rem;
         }
         
-        /* Back Button */
-        .back-nav {
-            display: flex;
-            gap: 1rem;
-            margin-bottom: 1.5rem;
+        /* REMOVED: Back button - using NW_NAV unified navigation instead */
+        
+        /* Mobile optimizations */
+        @media (max-width: 768px) {
+            .service-header { padding: 0.75rem 1rem; padding-top: 50px; }
+            .header-content { gap: 0.75rem; }
+            .search-section { order: 3; flex-basis: 100%; }
+            .services-grid { grid-template-columns: 1fr; }
         }
         
-        .back-btn {
-            display: inline-flex;
-            align-items: center;
-            gap: 0.5rem;
-            padding: 0.5rem 1rem;
-            background: var(--service-card);
-            border: 1px solid var(--service-border);
-            border-radius: 8px;
-            color: #8b8bbb;
-            text-decoration: none;
-            font-size: 0.85rem;
-            transition: all 0.2s;
-        }
-        
-        .back-btn:hover {
-            border-color: var(--service-blue);
-            color: var(--service-blue);
+        @media (max-width: 480px) {
+            .main-content { padding: 1rem; }
+            .stats-section { grid-template-columns: repeat(2, 1fr); gap: 0.75rem; }
+            .stat-card { padding: 1rem; }
+            .stat-card-value { font-size: 1.5rem; }
         }
         
         /* Category Filters */
@@ -624,7 +627,7 @@
         }
     </style>
 </head>
-<body>
+<body data-page-id="services">
     <!-- Header -->
     <header class="service-header">
         <div class="header-content">
@@ -660,10 +663,6 @@
     
     <!-- Main Content -->
     <main class="main-content">
-        <div class="back-nav">
-            <a href="/business" class="back-btn">← <span data-i18n="back">Back to Hub</span></a>
-        </div>
-        
         <!-- Stats -->
         <div class="stats-section">
             <div class="stat-card">
@@ -981,8 +980,13 @@
             if (savedLang) setLanguage(savedLang);
             
             if (typeof NW_NAV !== 'undefined') {
-                NW_NAV.init();
+                NW_NAV.init('services');
             }
+            
+            // Listen for NW_NAV language changes
+            window.addEventListener('nw-lang-change', (e) => {
+                setLanguage(e.detail.lang);
+            });
         });
         
         // Load wallet

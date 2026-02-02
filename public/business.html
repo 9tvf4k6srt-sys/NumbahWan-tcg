@@ -516,41 +516,45 @@
         body.zh .lang-zh { display: inline; }
         body.th .lang-th { display: inline; }
         
-        /* Back button */
-        .back-btn {
-            position: fixed;
-            top: 1rem;
-            left: 1rem;
-            width: 44px;
-            height: 44px;
-            background: var(--hub-card);
-            border: 1px solid var(--hub-border);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: #fff;
-            text-decoration: none;
-            z-index: 100;
-            transition: all 0.3s;
+        /* REMOVED: Back button - using NW_NAV unified navigation instead */
+        /* Scroll behavior improvements */
+        html {
+            scroll-behavior: smooth;
         }
         
-        .back-btn:hover {
-            border-color: var(--hub-gold);
-            color: var(--hub-gold);
+        /* Ensure body allows scrolling */
+        body {
+            overflow-x: hidden;
+            overflow-y: auto;
         }
         
         @media (max-width: 768px) {
             .hero-title { font-size: 1.75rem; }
             .hero-stats { gap: 1.5rem; }
             .category-grid { grid-template-columns: 1fr; }
+            .hub-header { padding: 1rem; padding-top: 60px; }
+        }
+        
+        /* Mobile-friendly touch targets */
+        @media (max-width: 480px) {
+            .category-card { padding: 1.5rem; }
+            .hero-banner { padding: 2rem 1.5rem; }
+            .main-content { padding: 1rem; }
+        }
+        
+        /* Focus states for accessibility */
+        a:focus-visible, button:focus-visible {
+            outline: 2px solid var(--hub-gold);
+            outline-offset: 2px;
+        }
+        
+        /* Prevent content jumping when scrollbar appears */
+        html {
+            scrollbar-gutter: stable;
         }
     </style>
 </head>
-<body class="en">
-    <a href="/" class="back-btn">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M19 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H19v-2z"/></svg>
-    </a>
+<body class="en" data-page-id="business">
 
     <header class="hub-header">
         <div class="header-content">
@@ -1065,9 +1069,11 @@
 
     <script src="/static/nw-nav.js"></script>
     <script>
-        // Language handling
+        // Language handling - sync with NW_NAV
         function setLanguage(lang) {
+            // Keep data-page-id attribute intact
             document.body.className = lang;
+            document.body.dataset.pageId = 'business';
             document.querySelectorAll('.lang-btn').forEach(btn => {
                 btn.classList.toggle('active', btn.dataset.lang === lang);
             });
@@ -1078,13 +1084,29 @@
             btn.addEventListener('click', () => setLanguage(btn.dataset.lang));
         });
         
+        // Listen for NW_NAV language changes
+        window.addEventListener('nw-lang-change', (e) => {
+            setLanguage(e.detail.lang);
+        });
+        
         const savedLang = localStorage.getItem('nw_lang') || 'en';
         setLanguage(savedLang);
         
-        // Initialize navigation
+        // Initialize navigation with page ID
         if (typeof NW_NAV !== 'undefined') {
-            NW_NAV.init();
+            NW_NAV.init('business');
         }
+        
+        // Smooth scroll polyfill for older browsers
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({ behavior: 'smooth' });
+                }
+            });
+        });
     </script>
 </body>
 </html>
