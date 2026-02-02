@@ -202,8 +202,45 @@ const NW_WALLET = {
     },
     
     // ===== GUEST ID GENERATION =====
+    // Now uses NW_IDENTITY for unified, ultra-secure device fingerprinting
     async generateGuestId() {
-        // Combine multiple fingerprinting techniques
+        // Check if NW_IDENTITY is available (7-layer anti-spoof system)
+        if (typeof NW_IDENTITY !== 'undefined') {
+            try {
+                console.log('[NW_WALLET] Using NW_IDENTITY for secure fingerprinting...');
+                
+                // Get or initialize identity
+                let identity = NW_IDENTITY.fingerprint;
+                if (!identity) {
+                    identity = await NW_IDENTITY.collectFingerprint();
+                }
+                
+                if (identity && identity.deviceUUID) {
+                    // Store identity reference for later verification
+                    this.identityData = {
+                        deviceUUID: identity.deviceUUID,
+                        trustScore: identity.trustScore,
+                        signals: identity.signals,
+                        spoofCheck: identity.spoofCheck
+                    };
+                    
+                    console.log('[NW_WALLET] Identity linked:', identity.deviceUUID, 'Trust:', identity.trustScore + '%');
+                    
+                    // Return the unified device UUID
+                    return identity.deviceUUID;
+                }
+            } catch (e) {
+                console.warn('[NW_WALLET] NW_IDENTITY failed, falling back to legacy:', e);
+            }
+        }
+        
+        // Legacy fallback (if NW_IDENTITY not loaded)
+        console.log('[NW_WALLET] Using legacy fingerprinting (NW_IDENTITY not available)');
+        return await this.generateLegacyGuestId();
+    },
+    
+    // Legacy fingerprinting (kept for backwards compatibility)
+    async generateLegacyGuestId() {
         const components = [];
         
         // 1. Canvas fingerprint
@@ -265,8 +302,23 @@ const NW_WALLET = {
         const fingerprint = components.join('|||');
         const hash = await this.sha256(fingerprint);
         
-        // Create readable guest ID
+        // Create readable guest ID (legacy format)
         return 'NW-' + hash.substring(0, 12).toUpperCase();
+    },
+    
+    // Get identity trust score (for security checks)
+    getTrustScore() {
+        return this.identityData?.trustScore || 0;
+    },
+    
+    // Check if identity is verified (trust score > 50%)
+    isIdentityVerified() {
+        return this.getTrustScore() >= 50;
+    },
+    
+    // Get full identity data
+    getIdentityData() {
+        return this.identityData || null;
     },
     
     // ===== CRYPTOGRAPHIC FUNCTIONS =====
