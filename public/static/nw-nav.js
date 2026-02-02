@@ -59,12 +59,22 @@ const NW_NAV = {
                 { id: 'museum', name: { en: 'Museum', zh: '博物館', th: 'พิพิธภัณฑ์' }, icon: 'crown', href: '/museum', isNew: true }
             ]
         },
+        government: {
+            name: { en: 'Government', zh: '政府', th: 'รัฐบาล' },
+            icon: 'crown',       // 🏛️ → government section
+            color: '#ffd700',
+            pages: [
+                { id: 'citizenship', name: { en: 'Citizen ID', zh: '公民身份', th: 'บัตรประชาชน' }, icon: 'shield', href: '/citizenship', isNew: true },
+                { id: 'court', name: { en: 'Supreme Court', zh: '最高法院', th: 'ศาลสูงสุด' }, icon: 'scroll', href: '/court', isNew: true },
+                { id: 'treasury', name: { en: 'Treasury', zh: '財政部', th: 'กระทรวงการคลัง' }, icon: 'coins', href: '/treasury', isNew: true },
+                { id: 'intelligence', name: { en: 'Intelligence', zh: '情報局', th: 'สำนักข่าวกรอง' }, icon: 'eye', href: '/intelligence', isNew: true }
+            ]
+        },
         absurd: {
             name: { en: 'Absurd', zh: '荒誕', th: 'ไร้สาระ' },
             icon: 'skull',       // 🤪 → absurd section
             color: '#ff66ff',
             pages: [
-                { id: 'court', name: { en: 'Court', zh: '法院', th: 'ศาล' }, icon: 'scroll', href: '/court', isNew: true },
                 { id: 'therapy', name: { en: 'Therapy', zh: '療程', th: 'บำบัด' }, icon: 'crystal-ball', href: '/therapy', isNew: true },
                 { id: 'hr', name: { en: 'HR Dept', zh: '人資部', th: 'ฝ่ายบุคคล' }, icon: 'form', href: '/hr', isNew: true },
                 { id: 'conspiracy', name: { en: 'Conspiracy', zh: '陰謀', th: 'สมคบคิด' }, icon: 'skull', href: '/conspiracy', isNew: true }
@@ -547,6 +557,11 @@ const NW_NAV = {
                 'regina': '/',
                 'fashion': '/',
                 'memes': '/',
+                // Government section -> Home
+                'citizenship': '/',
+                'court': '/',
+                'treasury': '/',
+                'intelligence': '/',
                 // Info section -> Home
                 'guide': '/',
                 'zakum': '/',

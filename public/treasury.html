@@ -1,0 +1,912 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>National Treasury | NumbahWan Economic Dashboard</title>
+    <link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="/static/nw-tokens.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="/static/nw-icons-inline.js"></script>
+    <style>
+        :root {
+            --treasury-gold: #ffd700;
+            --treasury-green: #00d26a;
+            --treasury-red: #ff4757;
+            --treasury-dark: #0d1117;
+            --treasury-card: #161b22;
+            --treasury-border: #30363d;
+        }
+        
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            background: var(--treasury-dark);
+            min-height: 100vh;
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            color: #fff;
+        }
+        
+        .treasury-header {
+            background: linear-gradient(180deg, rgba(255,215,0,0.1) 0%, transparent 100%);
+            border-bottom: 1px solid var(--treasury-border);
+            padding: 1.5rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+        
+        .treasury-logo {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        
+        .treasury-emblem {
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg, var(--treasury-gold) 0%, #b8860b 100%);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .treasury-title {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: var(--treasury-gold);
+        }
+        
+        .treasury-subtitle {
+            font-size: 0.85rem;
+            color: #888;
+        }
+        
+        .market-status {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            background: var(--treasury-card);
+            padding: 0.75rem 1.5rem;
+            border-radius: 25px;
+            border: 1px solid var(--treasury-border);
+        }
+        
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            background: var(--treasury-green);
+            border-radius: 50%;
+            animation: pulse 2s ease-in-out infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        
+        .main-content {
+            padding: 2rem;
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+        
+        /* Summary Cards */
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+        
+        .summary-card {
+            background: var(--treasury-card);
+            border: 1px solid var(--treasury-border);
+            border-radius: 12px;
+            padding: 1.5rem;
+            transition: all 0.3s;
+        }
+        
+        .summary-card:hover {
+            border-color: var(--treasury-gold);
+            transform: translateY(-2px);
+        }
+        
+        .summary-label {
+            color: #888;
+            font-size: 0.85rem;
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .summary-value {
+            font-size: 2rem;
+            font-weight: bold;
+            margin-bottom: 0.25rem;
+        }
+        
+        .summary-change {
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+        }
+        
+        .change-positive { color: var(--treasury-green); }
+        .change-negative { color: var(--treasury-red); }
+        
+        /* Charts Section */
+        .charts-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        
+        @media (max-width: 1024px) {
+            .charts-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .chart-card {
+            background: var(--treasury-card);
+            border: 1px solid var(--treasury-border);
+            border-radius: 12px;
+            padding: 1.5rem;
+        }
+        
+        .chart-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+        
+        .chart-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--treasury-gold);
+        }
+        
+        .chart-tabs {
+            display: flex;
+            gap: 0.5rem;
+        }
+        
+        .chart-tab {
+            padding: 0.4rem 0.8rem;
+            background: transparent;
+            border: 1px solid var(--treasury-border);
+            border-radius: 6px;
+            color: #888;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .chart-tab.active {
+            background: var(--treasury-gold);
+            color: #000;
+            border-color: var(--treasury-gold);
+        }
+        
+        .chart-container {
+            height: 300px;
+            position: relative;
+        }
+        
+        /* Trade Ticker */
+        .ticker-section {
+            background: var(--treasury-card);
+            border: 1px solid var(--treasury-border);
+            border-radius: 12px;
+            padding: 1rem 1.5rem;
+            margin-bottom: 2rem;
+            overflow: hidden;
+        }
+        
+        .ticker-wrapper {
+            display: flex;
+            animation: ticker 30s linear infinite;
+        }
+        
+        @keyframes ticker {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-50%); }
+        }
+        
+        .ticker-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0 2rem;
+            white-space: nowrap;
+        }
+        
+        .ticker-symbol {
+            font-weight: bold;
+            color: var(--treasury-gold);
+        }
+        
+        /* Trade History */
+        .trade-section {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+        }
+        
+        @media (max-width: 768px) {
+            .trade-section {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .trade-card {
+            background: var(--treasury-card);
+            border: 1px solid var(--treasury-border);
+            border-radius: 12px;
+            overflow: hidden;
+        }
+        
+        .trade-header {
+            background: rgba(255,215,0,0.1);
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid var(--treasury-border);
+            font-weight: 600;
+            color: var(--treasury-gold);
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+        
+        .trade-list {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        
+        .trade-item {
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid var(--treasury-border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.3s;
+        }
+        
+        .trade-item:hover {
+            background: rgba(255,255,255,0.02);
+        }
+        
+        .trade-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+        
+        .trade-pair {
+            font-weight: 600;
+        }
+        
+        .trade-time {
+            font-size: 0.8rem;
+            color: #888;
+        }
+        
+        .trade-amount {
+            text-align: right;
+        }
+        
+        .trade-value {
+            font-weight: 600;
+        }
+        
+        .trade-type {
+            font-size: 0.75rem;
+            padding: 0.2rem 0.5rem;
+            border-radius: 4px;
+            margin-top: 0.25rem;
+            display: inline-block;
+        }
+        
+        .type-buy { background: rgba(0,210,106,0.2); color: var(--treasury-green); }
+        .type-sell { background: rgba(255,71,87,0.2); color: var(--treasury-red); }
+        
+        /* Leaderboard */
+        .leaderboard-item {
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid var(--treasury-border);
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        
+        .leaderboard-rank {
+            width: 30px;
+            height: 30px;
+            background: var(--treasury-gold);
+            color: #000;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 0.9rem;
+        }
+        
+        .leaderboard-rank.silver { background: #c0c0c0; }
+        .leaderboard-rank.bronze { background: #cd7f32; }
+        .leaderboard-rank.normal { background: var(--treasury-border); color: #fff; }
+        
+        .leaderboard-info {
+            flex: 1;
+        }
+        
+        .leaderboard-name {
+            font-weight: 600;
+        }
+        
+        .leaderboard-detail {
+            font-size: 0.8rem;
+            color: #888;
+        }
+        
+        .leaderboard-value {
+            font-weight: bold;
+            color: var(--treasury-gold);
+        }
+        
+        /* Forecast */
+        .forecast-card {
+            background: linear-gradient(135deg, rgba(255,215,0,0.1) 0%, rgba(0,210,106,0.1) 100%);
+            border: 1px solid var(--treasury-gold);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        
+        .forecast-header {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-bottom: 1rem;
+        }
+        
+        .forecast-title {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: var(--treasury-gold);
+        }
+        
+        .forecast-badge {
+            background: var(--treasury-gold);
+            color: #000;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: bold;
+        }
+        
+        .forecast-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+        }
+        
+        .forecast-item {
+            background: rgba(0,0,0,0.3);
+            border-radius: 8px;
+            padding: 1rem;
+            text-align: center;
+        }
+        
+        .forecast-label {
+            font-size: 0.85rem;
+            color: #888;
+            margin-bottom: 0.5rem;
+        }
+        
+        .forecast-value {
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+        
+        .forecast-trend {
+            font-size: 0.85rem;
+            margin-top: 0.25rem;
+        }
+        
+        /* Language */
+        .lang-en, .lang-zh, .lang-th { display: none; }
+        body.en .lang-en { display: inline; }
+        body.zh .lang-zh { display: inline; }
+        body.th .lang-th { display: inline; }
+        
+        .lang-toggle {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 100;
+            display: flex;
+            gap: 0.5rem;
+            background: rgba(0,0,0,0.8);
+            padding: 0.5rem;
+            border-radius: 25px;
+            border: 1px solid var(--treasury-border);
+        }
+        
+        .lang-btn {
+            padding: 0.4rem 0.8rem;
+            border-radius: 15px;
+            border: none;
+            cursor: pointer;
+            font-size: 0.8rem;
+            background: transparent;
+            color: #888;
+            transition: all 0.3s;
+        }
+        
+        .lang-btn.active {
+            background: var(--treasury-gold);
+            color: #000;
+        }
+        
+        .back-btn {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 100;
+            background: rgba(0,0,0,0.8);
+            border: 1px solid var(--treasury-border);
+            color: var(--treasury-gold);
+            padding: 0.6rem 1.2rem;
+            border-radius: 25px;
+            text-decoration: none;
+            font-size: 0.9rem;
+            transition: all 0.3s;
+        }
+        
+        .back-btn:hover {
+            background: var(--treasury-gold);
+            color: #000;
+        }
+        
+        /* Scrollbar */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: var(--treasury-dark); }
+        ::-webkit-scrollbar-thumb { background: var(--treasury-border); border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--treasury-gold); }
+    </style>
+</head>
+<body class="en" data-page-id="treasury">
+    <a href="/" class="back-btn">← <span class="lang-en">Back</span><span class="lang-zh">返回</span><span class="lang-th">กลับ</span></a>
+    
+    <div class="lang-toggle">
+        <button class="lang-btn active" data-lang="en">EN</button>
+        <button class="lang-btn" data-lang="zh">中文</button>
+        <button class="lang-btn" data-lang="th">ไทย</button>
+    </div>
+    
+    <header class="treasury-header">
+        <div class="treasury-logo">
+            <div class="treasury-emblem">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="#000">
+                    <use href="/static/icons/nw-icons.svg#coins"></use>
+                </svg>
+            </div>
+            <div>
+                <div class="treasury-title">
+                    <span class="lang-en">NATIONAL TREASURY</span>
+                    <span class="lang-zh">國家財政部</span>
+                    <span class="lang-th">กระทรวงการคลัง</span>
+                </div>
+                <div class="treasury-subtitle">
+                    <span class="lang-en">NumbahWan Economic Dashboard</span>
+                    <span class="lang-zh">NumbahWan 經濟儀表板</span>
+                    <span class="lang-th">แดชบอร์ดเศรษฐกิจ NumbahWan</span>
+                </div>
+            </div>
+        </div>
+        <div class="market-status">
+            <div class="status-dot"></div>
+            <span class="lang-en">Markets Open</span>
+            <span class="lang-zh">市場開放</span>
+            <span class="lang-th">ตลาดเปิด</span>
+            <span style="color: #888; margin-left: 0.5rem;" id="currentTime">00:00:00</span>
+        </div>
+    </header>
+    
+    <main class="main-content">
+        <!-- Summary Cards -->
+        <div class="summary-grid">
+            <div class="summary-card">
+                <div class="summary-label">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="#888"><use href="/static/icons/nw-icons.svg#bag"></use></svg>
+                    <span class="lang-en">Guild Treasury</span>
+                    <span class="lang-zh">公會金庫</span>
+                    <span class="lang-th">คลังกิลด์</span>
+                </div>
+                <div class="summary-value" style="color: var(--treasury-gold);">₲ 847,293,521</div>
+                <div class="summary-change change-positive">▲ +12.4% <span class="lang-en">this week</span><span class="lang-zh">本週</span><span class="lang-th">สัปดาห์นี้</span></div>
+            </div>
+            <div class="summary-card">
+                <div class="summary-label">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="#888"><use href="/static/icons/nw-icons.svg#trade"></use></svg>
+                    <span class="lang-en">24h Trade Volume</span>
+                    <span class="lang-zh">24小時交易量</span>
+                    <span class="lang-th">ปริมาณซื้อขาย 24 ชม.</span>
+                </div>
+                <div class="summary-value">₲ 23,847,291</div>
+                <div class="summary-change change-positive">▲ +8.7%</div>
+            </div>
+            <div class="summary-card">
+                <div class="summary-label">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="#888"><use href="/static/icons/nw-icons.svg#users"></use></svg>
+                    <span class="lang-en">Active Traders</span>
+                    <span class="lang-zh">活躍交易者</span>
+                    <span class="lang-th">นักเทรดที่ใช้งาน</span>
+                </div>
+                <div class="summary-value">127</div>
+                <div class="summary-change change-positive">▲ +15</div>
+            </div>
+            <div class="summary-card">
+                <div class="summary-label">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="#888"><use href="/static/icons/nw-icons.svg#chart"></use></svg>
+                    <span class="lang-en">GDP Per Capita</span>
+                    <span class="lang-zh">人均GDP</span>
+                    <span class="lang-th">GDP ต่อหัว</span>
+                </div>
+                <div class="summary-value">₲ 6,677,902</div>
+                <div class="summary-change change-negative">▼ -2.1%</div>
+            </div>
+            <div class="summary-card">
+                <div class="summary-label">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="#888"><use href="/static/icons/nw-icons.svg#fire"></use></svg>
+                    <span class="lang-en">Inflation Rate</span>
+                    <span class="lang-zh">通貨膨脹率</span>
+                    <span class="lang-th">อัตราเงินเฟ้อ</span>
+                </div>
+                <div class="summary-value">3.2%</div>
+                <div class="summary-change change-negative">▲ +0.3%</div>
+            </div>
+            <div class="summary-card">
+                <div class="summary-label">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="#888"><use href="/static/icons/nw-icons.svg#energy"></use></svg>
+                    <span class="lang-en">Trade Balance</span>
+                    <span class="lang-zh">貿易餘額</span>
+                    <span class="lang-th">ดุลการค้า</span>
+                </div>
+                <div class="summary-value" style="color: var(--treasury-green);">+₲ 1.2M</div>
+                <div class="summary-change change-positive">
+                    <span class="lang-en">Surplus</span>
+                    <span class="lang-zh">順差</span>
+                    <span class="lang-th">เกินดุล</span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- AI Forecast -->
+        <div class="forecast-card">
+            <div class="forecast-header">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="var(--treasury-gold)"><use href="/static/icons/nw-icons.svg#brain"></use></svg>
+                <span class="forecast-title">
+                    <span class="lang-en">AI Economic Forecast</span>
+                    <span class="lang-zh">AI經濟預測</span>
+                    <span class="lang-th">การพยากรณ์เศรษฐกิจ AI</span>
+                </span>
+                <span class="forecast-badge">
+                    <span class="lang-en">UPDATED LIVE</span>
+                    <span class="lang-zh">即時更新</span>
+                    <span class="lang-th">อัปเดตสด</span>
+                </span>
+            </div>
+            <div class="forecast-grid">
+                <div class="forecast-item">
+                    <div class="forecast-label">
+                        <span class="lang-en">7-Day Treasury</span>
+                        <span class="lang-zh">7日金庫</span>
+                        <span class="lang-th">คลัง 7 วัน</span>
+                    </div>
+                    <div class="forecast-value" style="color: var(--treasury-green);">₲ 892M</div>
+                    <div class="forecast-trend change-positive">▲ +5.3% predicted</div>
+                </div>
+                <div class="forecast-item">
+                    <div class="forecast-label">
+                        <span class="lang-en">Item Inflation</span>
+                        <span class="lang-zh">物品通脹</span>
+                        <span class="lang-th">เงินเฟ้อไอเทม</span>
+                    </div>
+                    <div class="forecast-value" style="color: var(--treasury-red);">+4.1%</div>
+                    <div class="forecast-trend change-negative">▲ Rising trend</div>
+                </div>
+                <div class="forecast-item">
+                    <div class="forecast-label">
+                        <span class="lang-en">Market Sentiment</span>
+                        <span class="lang-zh">市場情緒</span>
+                        <span class="lang-th">ความเชื่อมั่นตลาด</span>
+                    </div>
+                    <div class="forecast-value" style="color: var(--treasury-gold);">BULLISH</div>
+                    <div class="forecast-trend">87% confidence</div>
+                </div>
+                <div class="forecast-item">
+                    <div class="forecast-label">
+                        <span class="lang-en">Risk Level</span>
+                        <span class="lang-zh">風險等級</span>
+                        <span class="lang-th">ระดับความเสี่ยง</span>
+                    </div>
+                    <div class="forecast-value" style="color: var(--treasury-green);">LOW</div>
+                    <div class="forecast-trend">Stable economy</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Ticker -->
+        <div class="ticker-section">
+            <div class="ticker-wrapper" id="ticker">
+                <!-- Populated by JS -->
+            </div>
+        </div>
+        
+        <!-- Charts -->
+        <div class="charts-grid">
+            <div class="chart-card">
+                <div class="chart-header">
+                    <span class="chart-title">
+                        <span class="lang-en">Treasury Value Over Time</span>
+                        <span class="lang-zh">金庫價值走勢</span>
+                        <span class="lang-th">มูลค่าคลังตามเวลา</span>
+                    </span>
+                    <div class="chart-tabs">
+                        <button class="chart-tab active" data-period="1D">1D</button>
+                        <button class="chart-tab" data-period="1W">1W</button>
+                        <button class="chart-tab" data-period="1M">1M</button>
+                        <button class="chart-tab" data-period="ALL">ALL</button>
+                    </div>
+                </div>
+                <div class="chart-container">
+                    <canvas id="treasuryChart"></canvas>
+                </div>
+            </div>
+            <div class="chart-card">
+                <div class="chart-header">
+                    <span class="chart-title">
+                        <span class="lang-en">Wealth Distribution</span>
+                        <span class="lang-zh">財富分配</span>
+                        <span class="lang-th">การกระจายความมั่งคั่ง</span>
+                    </span>
+                </div>
+                <div class="chart-container">
+                    <canvas id="distributionChart"></canvas>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Trade Section -->
+        <div class="trade-section">
+            <div class="trade-card">
+                <div class="trade-header">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><use href="/static/icons/nw-icons.svg#trade"></use></svg>
+                    <span class="lang-en">Recent Trades</span>
+                    <span class="lang-zh">最近交易</span>
+                    <span class="lang-th">การซื้อขายล่าสุด</span>
+                </div>
+                <div class="trade-list" id="tradeList">
+                    <!-- Populated by JS -->
+                </div>
+            </div>
+            <div class="trade-card">
+                <div class="trade-header">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><use href="/static/icons/nw-icons.svg#trophy"></use></svg>
+                    <span class="lang-en">Top Traders</span>
+                    <span class="lang-zh">頂級交易者</span>
+                    <span class="lang-th">นักเทรดอันดับสูงสุด</span>
+                </div>
+                <div class="trade-list" id="leaderboard">
+                    <!-- Populated by JS -->
+                </div>
+            </div>
+        </div>
+    </main>
+    
+    <script src="/static/nw-nav.js"></script>
+    <script>
+        // Language handling
+        function setLanguage(lang) {
+            document.body.className = lang;
+            document.querySelectorAll('.lang-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.lang === lang);
+            });
+            localStorage.setItem('nw_lang', lang);
+        }
+        
+        document.querySelectorAll('.lang-btn').forEach(btn => {
+            btn.addEventListener('click', () => setLanguage(btn.dataset.lang));
+        });
+        
+        const savedLang = localStorage.getItem('nw_lang') || 'en';
+        setLanguage(savedLang);
+        
+        // Update time
+        function updateTime() {
+            const now = new Date();
+            document.getElementById('currentTime').textContent = now.toLocaleTimeString();
+        }
+        setInterval(updateTime, 1000);
+        updateTime();
+        
+        // Sample data
+        const tickerItems = [
+            { symbol: 'ZKM/GOLD', price: '2,847', change: '+5.2%', positive: true },
+            { symbol: 'HELM/GOLD', price: '12,340', change: '-1.8%', positive: false },
+            { symbol: 'SCROLL/GOLD', price: '847', change: '+12.4%', positive: true },
+            { symbol: 'POT/GOLD', price: '23', change: '+0.5%', positive: true },
+            { symbol: 'CAPE/GOLD', price: '5,621', change: '-3.2%', positive: false },
+            { symbol: 'RING/GOLD', price: '8,934', change: '+7.8%', positive: true },
+            { symbol: 'EARRING/GOLD', price: '4,521', change: '+2.1%', positive: true },
+            { symbol: 'PENDANT/GOLD', price: '15,847', change: '-0.9%', positive: false },
+        ];
+        
+        const trades = [
+            { pair: 'Zakum Helm', time: '2 min ago', amount: '₲ 12,340', type: 'buy', trader: 'Yuluner' },
+            { pair: 'Maple Cape', time: '5 min ago', amount: '₲ 5,621', type: 'sell', trader: 'RegginO' },
+            { pair: 'Power Scroll', time: '8 min ago', amount: '₲ 847', type: 'buy', trader: 'Natehouoho' },
+            { pair: 'Dark Ring', time: '12 min ago', amount: '₲ 8,934', type: 'buy', trader: '阿光Yo' },
+            { pair: 'HP Potion x1000', time: '15 min ago', amount: '₲ 23,000', type: 'sell', trader: '騎鳥回家' },
+            { pair: 'Maple Earring', time: '18 min ago', amount: '₲ 4,521', type: 'buy', trader: '泰拳寒玉' },
+            { pair: 'Pendant', time: '22 min ago', amount: '₲ 15,847', type: 'sell', trader: '紈蹈稀著' },
+            { pair: 'Chaos Scroll', time: '25 min ago', amount: '₲ 25,000', type: 'buy', trader: '碼農小孫' },
+        ];
+        
+        const leaderboard = [
+            { rank: 1, name: 'RegginA', detail: 'Guild Master', value: '₲ 523M' },
+            { rank: 2, name: 'Yuluner', detail: 'Trade Master', value: '₲ 287M' },
+            { rank: 3, name: 'RegginO', detail: 'Deputy Master', value: '₲ 198M' },
+            { rank: 4, name: 'Natehouoho', detail: 'Senior Member', value: '₲ 145M' },
+            { rank: 5, name: '騎鳥回家', detail: 'Member', value: '₲ 98M' },
+            { rank: 6, name: '阿光Yo', detail: 'Member', value: '₲ 87M' },
+            { rank: 7, name: '泰拳寒玉', detail: 'Member', value: '₲ 65M' },
+            { rank: 8, name: '紈蹈稀著', detail: 'Member', value: '₲ 42M' },
+        ];
+        
+        // Render ticker
+        function renderTicker() {
+            const container = document.getElementById('ticker');
+            const items = [...tickerItems, ...tickerItems]; // Duplicate for seamless loop
+            container.innerHTML = items.map(t => `
+                <div class="ticker-item">
+                    <span class="ticker-symbol">${t.symbol}</span>
+                    <span>${t.price}</span>
+                    <span class="${t.positive ? 'change-positive' : 'change-negative'}">${t.change}</span>
+                </div>
+            `).join('');
+        }
+        
+        // Render trades
+        function renderTrades() {
+            const container = document.getElementById('tradeList');
+            container.innerHTML = trades.map(t => `
+                <div class="trade-item">
+                    <div class="trade-info">
+                        <div class="trade-pair">${t.pair}</div>
+                        <div class="trade-time">${t.trader} • ${t.time}</div>
+                    </div>
+                    <div class="trade-amount">
+                        <div class="trade-value">${t.amount}</div>
+                        <span class="trade-type type-${t.type}">${t.type.toUpperCase()}</span>
+                    </div>
+                </div>
+            `).join('');
+        }
+        
+        // Render leaderboard
+        function renderLeaderboard() {
+            const container = document.getElementById('leaderboard');
+            container.innerHTML = leaderboard.map(l => `
+                <div class="leaderboard-item">
+                    <div class="leaderboard-rank ${l.rank === 1 ? '' : l.rank === 2 ? 'silver' : l.rank === 3 ? 'bronze' : 'normal'}">${l.rank}</div>
+                    <div class="leaderboard-info">
+                        <div class="leaderboard-name">${l.name}</div>
+                        <div class="leaderboard-detail">${l.detail}</div>
+                    </div>
+                    <div class="leaderboard-value">${l.value}</div>
+                </div>
+            `).join('');
+        }
+        
+        // Charts
+        function initCharts() {
+            // Treasury Chart
+            const treasuryCtx = document.getElementById('treasuryChart').getContext('2d');
+            const gradient = treasuryCtx.createLinearGradient(0, 0, 0, 300);
+            gradient.addColorStop(0, 'rgba(255, 215, 0, 0.3)');
+            gradient.addColorStop(1, 'rgba(255, 215, 0, 0)');
+            
+            new Chart(treasuryCtx, {
+                type: 'line',
+                data: {
+                    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+                    datasets: [{
+                        label: 'Treasury Value',
+                        data: [450, 520, 480, 590, 620, 580, 690, 720, 780, 810, 830, 847],
+                        borderColor: '#ffd700',
+                        backgroundColor: gradient,
+                        fill: true,
+                        tension: 0.4,
+                        pointRadius: 4,
+                        pointBackgroundColor: '#ffd700'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    scales: {
+                        x: {
+                            grid: { color: 'rgba(255,255,255,0.1)' },
+                            ticks: { color: '#888' }
+                        },
+                        y: {
+                            grid: { color: 'rgba(255,255,255,0.1)' },
+                            ticks: { 
+                                color: '#888',
+                                callback: v => '₲ ' + v + 'M'
+                            }
+                        }
+                    }
+                }
+            });
+            
+            // Distribution Chart
+            const distCtx = document.getElementById('distributionChart').getContext('2d');
+            new Chart(distCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Top 1%', 'Top 10%', 'Middle 40%', 'Bottom 50%'],
+                    datasets: [{
+                        data: [35, 30, 25, 10],
+                        backgroundColor: ['#ffd700', '#00d26a', '#3b82f6', '#6b7280'],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: { color: '#888', padding: 15 }
+                        }
+                    }
+                }
+            });
+        }
+        
+        // Initialize
+        renderTicker();
+        renderTrades();
+        renderLeaderboard();
+        initCharts();
+        
+        // Chart tabs
+        document.querySelectorAll('.chart-tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                document.querySelectorAll('.chart-tab').forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+            });
+        });
+        
+        // Initialize navigation
+        if (typeof NW_NAV !== 'undefined') {
+            NW_NAV.init();
+        }
+    </script>
+</body>
+</html>

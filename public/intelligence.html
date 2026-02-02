@@ -1,0 +1,879 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Intelligence Agency | NumbahWan Surveillance & Analytics</title>
+    <link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="/static/nw-tokens.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="/static/nw-icons-inline.js"></script>
+    <style>
+        :root {
+            --intel-dark: #0a0e14;
+            --intel-card: #111827;
+            --intel-border: #1f2937;
+            --intel-cyan: #00ffff;
+            --intel-green: #00ff88;
+            --intel-red: #ff4444;
+            --intel-yellow: #ffcc00;
+            --intel-purple: #9d4edd;
+        }
+        
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            background: var(--intel-dark);
+            min-height: 100vh;
+            font-family: 'Courier New', monospace;
+            color: #fff;
+            overflow-x: hidden;
+        }
+        
+        /* Scanlines effect */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: repeating-linear-gradient(
+                0deg,
+                rgba(0, 255, 255, 0.03) 0px,
+                rgba(0, 255, 255, 0.03) 1px,
+                transparent 1px,
+                transparent 2px
+            );
+            pointer-events: none;
+            z-index: 1000;
+        }
+        
+        .intel-header {
+            background: linear-gradient(180deg, rgba(0,255,255,0.1) 0%, transparent 100%);
+            border-bottom: 2px solid var(--intel-cyan);
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+        
+        .intel-logo {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        
+        .intel-emblem {
+            width: 60px;
+            height: 60px;
+            border: 2px solid var(--intel-cyan);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            animation: pulse-border 2s ease-in-out infinite;
+        }
+        
+        @keyframes pulse-border {
+            0%, 100% { box-shadow: 0 0 10px var(--intel-cyan); }
+            50% { box-shadow: 0 0 30px var(--intel-cyan); }
+        }
+        
+        .intel-title {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: var(--intel-cyan);
+            letter-spacing: 0.2em;
+            text-shadow: 0 0 10px var(--intel-cyan);
+        }
+        
+        .intel-subtitle {
+            font-size: 0.8rem;
+            color: #888;
+            letter-spacing: 0.1em;
+        }
+        
+        .classification-badge {
+            background: var(--intel-red);
+            color: #fff;
+            padding: 0.5rem 1.5rem;
+            font-weight: bold;
+            letter-spacing: 0.2em;
+            animation: blink 2s ease-in-out infinite;
+        }
+        
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+        
+        .main-content {
+            padding: 2rem;
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+        
+        /* Alert Banner */
+        .alert-banner {
+            background: linear-gradient(90deg, var(--intel-red), #880000);
+            padding: 0.75rem 1.5rem;
+            text-align: center;
+            font-weight: bold;
+            letter-spacing: 0.1em;
+            animation: alert-pulse 1s ease-in-out infinite;
+        }
+        
+        @keyframes alert-pulse {
+            0%, 100% { background: linear-gradient(90deg, var(--intel-red), #880000); }
+            50% { background: linear-gradient(90deg, #cc0000, #550000); }
+        }
+        
+        /* Threat Level */
+        .threat-section {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 0.5rem;
+            margin-bottom: 2rem;
+        }
+        
+        @media (max-width: 768px) {
+            .threat-section { grid-template-columns: repeat(3, 1fr); }
+        }
+        
+        .threat-level {
+            padding: 1rem;
+            text-align: center;
+            border: 2px solid transparent;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+        
+        .threat-level.defcon-1 { background: rgba(255,0,0,0.2); border-color: #ff0000; }
+        .threat-level.defcon-2 { background: rgba(255,100,0,0.2); border-color: #ff6400; }
+        .threat-level.defcon-3 { background: rgba(255,204,0,0.2); border-color: #ffcc00; }
+        .threat-level.defcon-4 { background: rgba(0,255,136,0.2); border-color: #00ff88; }
+        .threat-level.defcon-5 { background: rgba(0,136,255,0.2); border-color: #0088ff; }
+        
+        .threat-level.active {
+            transform: scale(1.05);
+            box-shadow: 0 0 20px currentColor;
+        }
+        
+        .threat-name {
+            font-size: 1.2rem;
+            font-weight: bold;
+            margin-bottom: 0.25rem;
+        }
+        
+        .threat-desc {
+            font-size: 0.7rem;
+            color: #888;
+        }
+        
+        /* Intel Grid */
+        .intel-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        
+        .intel-card {
+            background: var(--intel-card);
+            border: 1px solid var(--intel-border);
+            border-radius: 0;
+            overflow: hidden;
+        }
+        
+        .intel-card-header {
+            background: rgba(0,255,255,0.1);
+            border-bottom: 1px solid var(--intel-cyan);
+            padding: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            font-weight: bold;
+            color: var(--intel-cyan);
+            letter-spacing: 0.1em;
+        }
+        
+        .intel-card-body {
+            padding: 1rem;
+        }
+        
+        /* Activity Monitor */
+        .activity-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 2px;
+        }
+        
+        .activity-cell {
+            aspect-ratio: 1;
+            border-radius: 2px;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+        
+        .activity-cell:hover {
+            transform: scale(1.2);
+            z-index: 10;
+        }
+        
+        .activity-0 { background: rgba(0,255,136,0.1); }
+        .activity-1 { background: rgba(0,255,136,0.3); }
+        .activity-2 { background: rgba(0,255,136,0.5); }
+        .activity-3 { background: rgba(0,255,136,0.7); }
+        .activity-4 { background: var(--intel-green); }
+        
+        /* Member Surveillance */
+        .member-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        
+        .member-row {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 0.75rem;
+            background: rgba(0,0,0,0.3);
+            border-left: 3px solid var(--intel-cyan);
+            transition: all 0.3s;
+        }
+        
+        .member-row:hover {
+            background: rgba(0,255,255,0.1);
+        }
+        
+        .member-status {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+        }
+        
+        .status-online { background: var(--intel-green); box-shadow: 0 0 10px var(--intel-green); }
+        .status-idle { background: var(--intel-yellow); }
+        .status-offline { background: #666; }
+        
+        .member-info {
+            flex: 1;
+        }
+        
+        .member-name {
+            font-weight: bold;
+        }
+        
+        .member-activity {
+            font-size: 0.8rem;
+            color: #888;
+        }
+        
+        .member-risk {
+            padding: 0.25rem 0.75rem;
+            font-size: 0.75rem;
+            font-weight: bold;
+        }
+        
+        .risk-low { background: rgba(0,255,136,0.2); color: var(--intel-green); }
+        .risk-medium { background: rgba(255,204,0,0.2); color: var(--intel-yellow); }
+        .risk-high { background: rgba(255,68,68,0.2); color: var(--intel-red); }
+        
+        /* Briefing Report */
+        .briefing-box {
+            background: rgba(0,0,0,0.5);
+            border: 1px solid var(--intel-cyan);
+            padding: 1.5rem;
+            font-family: 'Courier New', monospace;
+        }
+        
+        .briefing-header {
+            color: var(--intel-cyan);
+            font-weight: bold;
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px dashed var(--intel-cyan);
+        }
+        
+        .briefing-line {
+            margin-bottom: 0.5rem;
+            line-height: 1.6;
+        }
+        
+        .briefing-highlight {
+            color: var(--intel-green);
+        }
+        
+        .briefing-warning {
+            color: var(--intel-yellow);
+        }
+        
+        .briefing-alert {
+            color: var(--intel-red);
+        }
+        
+        /* Predictions */
+        .prediction-card {
+            background: rgba(157,78,221,0.1);
+            border: 1px solid var(--intel-purple);
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+        
+        .prediction-title {
+            color: var(--intel-purple);
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+        }
+        
+        .prediction-confidence {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-top: 0.5rem;
+        }
+        
+        .confidence-bar {
+            flex: 1;
+            height: 6px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 3px;
+            overflow: hidden;
+        }
+        
+        .confidence-fill {
+            height: 100%;
+            background: var(--intel-purple);
+            transition: width 0.5s;
+        }
+        
+        /* Chart container */
+        .chart-container {
+            height: 200px;
+            position: relative;
+        }
+        
+        /* Heatmap */
+        .heatmap-grid {
+            display: grid;
+            grid-template-columns: repeat(24, 1fr);
+            gap: 1px;
+        }
+        
+        .heatmap-cell {
+            aspect-ratio: 1;
+            transition: all 0.3s;
+        }
+        
+        .heatmap-label {
+            font-size: 0.6rem;
+            color: #666;
+            text-align: center;
+            padding: 0.25rem;
+        }
+        
+        /* Language */
+        .lang-en, .lang-zh, .lang-th { display: none; }
+        body.en .lang-en { display: inline; }
+        body.zh .lang-zh { display: inline; }
+        body.th .lang-th { display: inline; }
+        
+        .lang-toggle {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 100;
+            display: flex;
+            gap: 0.5rem;
+            background: rgba(0,0,0,0.9);
+            padding: 0.5rem;
+            border: 1px solid var(--intel-cyan);
+        }
+        
+        .lang-btn {
+            padding: 0.4rem 0.8rem;
+            border: 1px solid var(--intel-border);
+            cursor: pointer;
+            font-size: 0.8rem;
+            background: transparent;
+            color: #888;
+            font-family: 'Courier New', monospace;
+            transition: all 0.3s;
+        }
+        
+        .lang-btn.active {
+            background: var(--intel-cyan);
+            color: #000;
+            border-color: var(--intel-cyan);
+        }
+        
+        .back-btn {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 100;
+            background: rgba(0,0,0,0.9);
+            border: 1px solid var(--intel-cyan);
+            color: var(--intel-cyan);
+            padding: 0.6rem 1.2rem;
+            text-decoration: none;
+            font-size: 0.9rem;
+            font-family: 'Courier New', monospace;
+            transition: all 0.3s;
+        }
+        
+        .back-btn:hover {
+            background: var(--intel-cyan);
+            color: #000;
+        }
+        
+        /* Terminal typing effect */
+        .typing-text {
+            overflow: hidden;
+            white-space: nowrap;
+            animation: typing 3s steps(40, end);
+        }
+        
+        @keyframes typing {
+            from { width: 0; }
+            to { width: 100%; }
+        }
+        
+        /* Scrollbar */
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-track { background: var(--intel-dark); }
+        ::-webkit-scrollbar-thumb { background: var(--intel-cyan); }
+    </style>
+</head>
+<body class="en" data-page-id="intelligence">
+    <a href="/" class="back-btn">← <span class="lang-en">EXIT</span><span class="lang-zh">退出</span><span class="lang-th">ออก</span></a>
+    
+    <div class="lang-toggle">
+        <button class="lang-btn active" data-lang="en">EN</button>
+        <button class="lang-btn" data-lang="zh">中文</button>
+        <button class="lang-btn" data-lang="th">ไทย</button>
+    </div>
+    
+    <div class="alert-banner" id="alertBanner">
+        ⚠️ <span class="lang-en">LIVE INTELLIGENCE FEED - AUTHORIZED PERSONNEL ONLY</span>
+        <span class="lang-zh">即時情報源 - 僅限授權人員</span>
+        <span class="lang-th">ฟีดข่าวกรองสด - เฉพาะผู้ได้รับอนุญาต</span> ⚠️
+    </div>
+    
+    <header class="intel-header">
+        <div class="intel-logo">
+            <div class="intel-emblem">
+                <svg width="30" height="30" viewBox="0 0 24 24" fill="var(--intel-cyan)">
+                    <use href="/static/icons/nw-icons.svg#eye"></use>
+                </svg>
+            </div>
+            <div>
+                <div class="intel-title">
+                    <span class="lang-en">N.I.A.</span>
+                    <span class="lang-zh">N.I.A.</span>
+                    <span class="lang-th">N.I.A.</span>
+                </div>
+                <div class="intel-subtitle">
+                    <span class="lang-en">NUMBAHWAN INTELLIGENCE AGENCY</span>
+                    <span class="lang-zh">NUMBAHWAN 情報局</span>
+                    <span class="lang-th">สำนักข่าวกรอง NUMBAHWAN</span>
+                </div>
+            </div>
+        </div>
+        <div class="classification-badge">
+            <span class="lang-en">TOP SECRET // GUILD EYES ONLY</span>
+            <span class="lang-zh">最高機密 // 僅限公會</span>
+            <span class="lang-th">ลับที่สุด // เฉพาะกิลด์</span>
+        </div>
+    </header>
+    
+    <main class="main-content">
+        <!-- Threat Level -->
+        <div class="threat-section">
+            <div class="threat-level defcon-1" data-level="1">
+                <div class="threat-name" style="color: #ff0000;">DEFCON 1</div>
+                <div class="threat-desc">
+                    <span class="lang-en">MAXIMUM ALERT</span>
+                    <span class="lang-zh">最高警戒</span>
+                    <span class="lang-th">เตือนภัยสูงสุด</span>
+                </div>
+            </div>
+            <div class="threat-level defcon-2" data-level="2">
+                <div class="threat-name" style="color: #ff6400;">DEFCON 2</div>
+                <div class="threat-desc">
+                    <span class="lang-en">HIGH ALERT</span>
+                    <span class="lang-zh">高度警戒</span>
+                    <span class="lang-th">เตือนภัยสูง</span>
+                </div>
+            </div>
+            <div class="threat-level defcon-3" data-level="3">
+                <div class="threat-name" style="color: #ffcc00;">DEFCON 3</div>
+                <div class="threat-desc">
+                    <span class="lang-en">ELEVATED</span>
+                    <span class="lang-zh">提升警戒</span>
+                    <span class="lang-th">ยกระดับ</span>
+                </div>
+            </div>
+            <div class="threat-level defcon-4 active" data-level="4">
+                <div class="threat-name" style="color: #00ff88;">DEFCON 4</div>
+                <div class="threat-desc">
+                    <span class="lang-en">NORMAL OPS</span>
+                    <span class="lang-zh">正常運作</span>
+                    <span class="lang-th">ปกติ</span>
+                </div>
+            </div>
+            <div class="threat-level defcon-5" data-level="5">
+                <div class="threat-name" style="color: #0088ff;">DEFCON 5</div>
+                <div class="threat-desc">
+                    <span class="lang-en">PEACETIME</span>
+                    <span class="lang-zh">和平時期</span>
+                    <span class="lang-th">สงบสุข</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="intel-grid">
+            <!-- Weekly Briefing -->
+            <div class="intel-card">
+                <div class="intel-card-header">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><use href="/static/icons/nw-icons.svg#document"></use></svg>
+                    <span class="lang-en">WEEKLY INTELLIGENCE BRIEFING</span>
+                    <span class="lang-zh">每週情報簡報</span>
+                    <span class="lang-th">รายงานข่าวกรองประจำสัปดาห์</span>
+                </div>
+                <div class="intel-card-body">
+                    <div class="briefing-box">
+                        <div class="briefing-header">
+                            [BRIEFING #2026-W05] - <span id="briefingDate">2026-02-02</span>
+                        </div>
+                        <div class="briefing-line">
+                            <span class="lang-en">▸ Guild activity: <span class="briefing-highlight">UP 12%</span> from last week</span>
+                            <span class="lang-zh">▸ 公會活動: 較上週<span class="briefing-highlight">上升 12%</span></span>
+                            <span class="lang-th">▸ กิจกรรมกิลด์: <span class="briefing-highlight">เพิ่ม 12%</span> จากสัปดาห์ที่แล้ว</span>
+                        </div>
+                        <div class="briefing-line">
+                            <span class="lang-en">▸ Active members: <span class="briefing-highlight">9/12</span> participated in raids</span>
+                            <span class="lang-zh">▸ 活躍成員: <span class="briefing-highlight">9/12</span> 參與副本</span>
+                            <span class="lang-th">▸ สมาชิกที่ใช้งาน: <span class="briefing-highlight">9/12</span> เข้าร่วมเรด</span>
+                        </div>
+                        <div class="briefing-line">
+                            <span class="lang-en">▸ Flight risk detected: <span class="briefing-warning">紈蹈稀著</span> (inactive 7 days)</span>
+                            <span class="lang-zh">▸ 流失風險: <span class="briefing-warning">紈蹈稀著</span> (已不活躍7天)</span>
+                            <span class="lang-th">▸ เสี่ยงออก: <span class="briefing-warning">紈蹈稀著</span> (ไม่ใช้งาน 7 วัน)</span>
+                        </div>
+                        <div class="briefing-line">
+                            <span class="lang-en">▸ CP growth leader: <span class="briefing-highlight">Yuluner</span> (+523M this week)</span>
+                            <span class="lang-zh">▸ 戰力成長榜首: <span class="briefing-highlight">Yuluner</span> (本週+523M)</span>
+                            <span class="lang-th">▸ ผู้นำการเติบโต CP: <span class="briefing-highlight">Yuluner</span> (+523M สัปดาห์นี้)</span>
+                        </div>
+                        <div class="briefing-line">
+                            <span class="lang-en">▸ Threat assessment: <span class="briefing-alert">Enemy guild scouting detected</span></span>
+                            <span class="lang-zh">▸ 威脅評估: <span class="briefing-alert">偵測到敵對公會偵察</span></span>
+                            <span class="lang-th">▸ การประเมินภัยคุกคาม: <span class="briefing-alert">ตรวจพบกิลด์ศัตรูสอดแนม</span></span>
+                        </div>
+                        <div class="briefing-line">
+                            <span class="lang-en">▸ Morale index: <span class="briefing-highlight">87/100</span> (EXCELLENT)</span>
+                            <span class="lang-zh">▸ 士氣指數: <span class="briefing-highlight">87/100</span> (優秀)</span>
+                            <span class="lang-th">▸ ดัชนีขวัญกำลังใจ: <span class="briefing-highlight">87/100</span> (ยอดเยี่ยม)</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Member Surveillance -->
+            <div class="intel-card">
+                <div class="intel-card-header">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><use href="/static/icons/nw-icons.svg#users"></use></svg>
+                    <span class="lang-en">MEMBER SURVEILLANCE</span>
+                    <span class="lang-zh">成員監控</span>
+                    <span class="lang-th">การเฝ้าระวังสมาชิก</span>
+                </div>
+                <div class="intel-card-body">
+                    <div class="member-grid" id="memberGrid">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+            </div>
+            
+            <!-- AI Predictions -->
+            <div class="intel-card">
+                <div class="intel-card-header">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><use href="/static/icons/nw-icons.svg#brain"></use></svg>
+                    <span class="lang-en">AI PREDICTIVE ANALYSIS</span>
+                    <span class="lang-zh">AI預測分析</span>
+                    <span class="lang-th">การวิเคราะห์เชิงพยากรณ์ AI</span>
+                </div>
+                <div class="intel-card-body">
+                    <div class="prediction-card">
+                        <div class="prediction-title">
+                            <span class="lang-en">📈 Guild Rank Projection</span>
+                            <span class="lang-zh">📈 公會排名預測</span>
+                            <span class="lang-th">📈 การคาดการณ์อันดับกิลด์</span>
+                        </div>
+                        <p style="color: #888; font-size: 0.9rem;">
+                            <span class="lang-en">Predicted to reach #1 server ranking within 14 days</span>
+                            <span class="lang-zh">預計14天內達到伺服器排名第一</span>
+                            <span class="lang-th">คาดว่าจะถึงอันดับ 1 ภายใน 14 วัน</span>
+                        </p>
+                        <div class="prediction-confidence">
+                            <span style="font-size: 0.8rem; color: var(--intel-purple);">94%</span>
+                            <div class="confidence-bar"><div class="confidence-fill" style="width: 94%;"></div></div>
+                        </div>
+                    </div>
+                    <div class="prediction-card">
+                        <div class="prediction-title">
+                            <span class="lang-en">⚠️ Member Retention Risk</span>
+                            <span class="lang-zh">⚠️ 成員留存風險</span>
+                            <span class="lang-th">⚠️ ความเสี่ยงการรักษาสมาชิก</span>
+                        </div>
+                        <p style="color: #888; font-size: 0.9rem;">
+                            <span class="lang-en">2 members showing disengagement patterns</span>
+                            <span class="lang-zh">2名成員顯示脫離模式</span>
+                            <span class="lang-th">2 สมาชิกแสดงรูปแบบการถอนตัว</span>
+                        </p>
+                        <div class="prediction-confidence">
+                            <span style="font-size: 0.8rem; color: var(--intel-yellow);">73%</span>
+                            <div class="confidence-bar"><div class="confidence-fill" style="width: 73%; background: var(--intel-yellow);"></div></div>
+                        </div>
+                    </div>
+                    <div class="prediction-card">
+                        <div class="prediction-title">
+                            <span class="lang-en">🎯 Optimal Raid Times</span>
+                            <span class="lang-zh">🎯 最佳副本時間</span>
+                            <span class="lang-th">🎯 เวลาเรดที่เหมาะสม</span>
+                        </div>
+                        <p style="color: #888; font-size: 0.9rem;">
+                            <span class="lang-en">Peak participation: 20:00-22:00 UTC+8</span>
+                            <span class="lang-zh">參與高峰: 20:00-22:00 UTC+8</span>
+                            <span class="lang-th">ช่วงที่มีส่วนร่วมสูงสุด: 20:00-22:00 UTC+8</span>
+                        </p>
+                        <div class="prediction-confidence">
+                            <span style="font-size: 0.8rem; color: var(--intel-green);">98%</span>
+                            <div class="confidence-bar"><div class="confidence-fill" style="width: 98%; background: var(--intel-green);"></div></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Activity Heatmap -->
+            <div class="intel-card">
+                <div class="intel-card-header">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><use href="/static/icons/nw-icons.svg#chart"></use></svg>
+                    <span class="lang-en">ACTIVITY HEATMAP (7 DAYS)</span>
+                    <span class="lang-zh">活動熱力圖 (7天)</span>
+                    <span class="lang-th">ฮีทแมปกิจกรรม (7 วัน)</span>
+                </div>
+                <div class="intel-card-body">
+                    <div class="activity-grid" id="activityGrid">
+                        <!-- Populated by JS -->
+                    </div>
+                    <div style="display: flex; justify-content: space-between; margin-top: 1rem; font-size: 0.75rem; color: #666;">
+                        <span>
+                            <span class="lang-en">Less</span>
+                            <span class="lang-zh">少</span>
+                            <span class="lang-th">น้อย</span>
+                        </span>
+                        <div style="display: flex; gap: 2px;">
+                            <div style="width: 12px; height: 12px; background: rgba(0,255,136,0.1);"></div>
+                            <div style="width: 12px; height: 12px; background: rgba(0,255,136,0.3);"></div>
+                            <div style="width: 12px; height: 12px; background: rgba(0,255,136,0.5);"></div>
+                            <div style="width: 12px; height: 12px; background: rgba(0,255,136,0.7);"></div>
+                            <div style="width: 12px; height: 12px; background: var(--intel-green);"></div>
+                        </div>
+                        <span>
+                            <span class="lang-en">More</span>
+                            <span class="lang-zh">多</span>
+                            <span class="lang-th">มาก</span>
+                        </span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Sentiment Analysis -->
+            <div class="intel-card">
+                <div class="intel-card-header">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><use href="/static/icons/nw-icons.svg#chat"></use></svg>
+                    <span class="lang-en">VIBE FORECAST</span>
+                    <span class="lang-zh">氛圍預報</span>
+                    <span class="lang-th">การพยากรณ์บรรยากาศ</span>
+                </div>
+                <div class="intel-card-body">
+                    <div class="chart-container">
+                        <canvas id="sentimentChart"></canvas>
+                    </div>
+                    <div style="text-align: center; margin-top: 1rem;">
+                        <div style="font-size: 2rem;">☀️</div>
+                        <div style="color: var(--intel-green); font-weight: bold;">
+                            <span class="lang-en">SUNNY - Great vibes ahead!</span>
+                            <span class="lang-zh">晴朗 - 好氛圍即將到來！</span>
+                            <span class="lang-th">แดดจ้า - บรรยากาศดีรออยู่!</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Hourly Activity -->
+            <div class="intel-card">
+                <div class="intel-card-header">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><use href="/static/icons/nw-icons.svg#clock"></use></svg>
+                    <span class="lang-en">24H ACTIVITY PATTERN</span>
+                    <span class="lang-zh">24小時活動模式</span>
+                    <span class="lang-th">รูปแบบกิจกรรม 24 ชม.</span>
+                </div>
+                <div class="intel-card-body">
+                    <div class="heatmap-grid" id="hourlyHeatmap">
+                        <!-- Populated by JS -->
+                    </div>
+                    <div style="display: flex; justify-content: space-between; margin-top: 0.5rem; font-size: 0.6rem; color: #666;">
+                        <span>00:00</span>
+                        <span>06:00</span>
+                        <span>12:00</span>
+                        <span>18:00</span>
+                        <span>23:00</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+    
+    <script src="/static/nw-nav.js"></script>
+    <script>
+        // Language handling
+        function setLanguage(lang) {
+            document.body.className = lang;
+            document.querySelectorAll('.lang-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.lang === lang);
+            });
+            localStorage.setItem('nw_lang', lang);
+        }
+        
+        document.querySelectorAll('.lang-btn').forEach(btn => {
+            btn.addEventListener('click', () => setLanguage(btn.dataset.lang));
+        });
+        
+        const savedLang = localStorage.getItem('nw_lang') || 'en';
+        setLanguage(savedLang);
+        
+        // Set briefing date
+        document.getElementById('briefingDate').textContent = new Date().toISOString().split('T')[0];
+        
+        // Member data
+        const members = [
+            { name: 'RegginA', status: 'online', activity: 'Leading Boss Raid', risk: 'low', lastSeen: 'Now' },
+            { name: 'Yuluner', status: 'online', activity: 'Trading in Market', risk: 'low', lastSeen: 'Now' },
+            { name: 'RegginO', status: 'online', activity: 'Guild Base', risk: 'low', lastSeen: 'Now' },
+            { name: 'Natehouoho', status: 'online', activity: 'Dungeon Farming', risk: 'low', lastSeen: 'Now' },
+            { name: '騎鳥回家', status: 'idle', activity: 'AFK', risk: 'low', lastSeen: '15m ago' },
+            { name: '阿光Yo', status: 'idle', activity: 'Last: PvP Arena', risk: 'medium', lastSeen: '2h ago' },
+            { name: '泰拳寒玉', status: 'offline', activity: 'Last: Daily Quest', risk: 'low', lastSeen: '8h ago' },
+            { name: '紈蹈稀著', status: 'offline', activity: 'Last: Login', risk: 'high', lastSeen: '7 days ago' },
+            { name: '碼農小孫', status: 'offline', activity: 'Last: Boss Raid', risk: 'medium', lastSeen: '3 days ago' },
+        ];
+        
+        // Render members
+        function renderMembers() {
+            const container = document.getElementById('memberGrid');
+            container.innerHTML = members.map(m => `
+                <div class="member-row">
+                    <div class="member-status status-${m.status}"></div>
+                    <div class="member-info">
+                        <div class="member-name">${m.name}</div>
+                        <div class="member-activity">${m.activity} • ${m.lastSeen}</div>
+                    </div>
+                    <div class="member-risk risk-${m.risk}">${m.risk.toUpperCase()}</div>
+                </div>
+            `).join('');
+        }
+        
+        // Activity grid
+        function renderActivityGrid() {
+            const container = document.getElementById('activityGrid');
+            let html = '';
+            for (let i = 0; i < 49; i++) { // 7 days x 7 rows
+                const level = Math.floor(Math.random() * 5);
+                html += `<div class="activity-cell activity-${level}" title="Activity Level: ${level}"></div>`;
+            }
+            container.innerHTML = html;
+        }
+        
+        // Hourly heatmap
+        function renderHourlyHeatmap() {
+            const container = document.getElementById('hourlyHeatmap');
+            const activityPattern = [
+                0.1, 0.05, 0.02, 0.02, 0.05, 0.1, 0.2, 0.3, // 00-07
+                0.4, 0.5, 0.6, 0.65, 0.7, 0.6, 0.5, 0.4, // 08-15
+                0.5, 0.6, 0.7, 0.9, 1.0, 0.95, 0.8, 0.5  // 16-23
+            ];
+            
+            container.innerHTML = activityPattern.map((v, i) => {
+                const opacity = v;
+                return `<div class="heatmap-cell" style="background: rgba(0,255,255,${opacity});" title="${i}:00 - ${Math.round(v * 100)}% activity"></div>`;
+            }).join('');
+        }
+        
+        // Sentiment chart
+        function initSentimentChart() {
+            const ctx = document.getElementById('sentimentChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+                    datasets: [{
+                        label: 'Guild Mood',
+                        data: [72, 68, 75, 82, 78, 88, 87],
+                        borderColor: '#00ffff',
+                        backgroundColor: 'rgba(0,255,255,0.1)',
+                        fill: true,
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    scales: {
+                        x: {
+                            grid: { color: 'rgba(255,255,255,0.1)' },
+                            ticks: { color: '#888', font: { family: 'Courier New' } }
+                        },
+                        y: {
+                            min: 0,
+                            max: 100,
+                            grid: { color: 'rgba(255,255,255,0.1)' },
+                            ticks: { color: '#888', font: { family: 'Courier New' } }
+                        }
+                    }
+                }
+            });
+        }
+        
+        // Threat level clicks
+        document.querySelectorAll('.threat-level').forEach(level => {
+            level.addEventListener('click', () => {
+                document.querySelectorAll('.threat-level').forEach(l => l.classList.remove('active'));
+                level.classList.add('active');
+            });
+        });
+        
+        // Initialize
+        renderMembers();
+        renderActivityGrid();
+        renderHourlyHeatmap();
+        initSentimentChart();
+        
+        // Initialize navigation
+        if (typeof NW_NAV !== 'undefined') {
+            NW_NAV.init();
+        }
+    </script>
+</body>
+</html>

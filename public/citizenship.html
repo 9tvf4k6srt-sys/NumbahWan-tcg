@@ -1,0 +1,1222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Citizen Identity System | NumbahWan National ID</title>
+    <link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="/static/nw-tokens.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="/static/nw-icons-inline.js"></script>
+    <style>
+        :root {
+            --id-dark: #0f0f23;
+            --id-card: #1a1a3e;
+            --id-border: #2a2a5e;
+            --id-gold: #ffd700;
+            --id-silver: #c0c0c0;
+            --id-blue: #4a90d9;
+            --id-green: #00d26a;
+            --id-red: #ff4757;
+            --id-purple: #9d4edd;
+            --hologram: linear-gradient(135deg, 
+                rgba(255,0,150,0.3) 0%, 
+                rgba(0,255,255,0.3) 25%,
+                rgba(255,255,0,0.3) 50%,
+                rgba(0,255,150,0.3) 75%,
+                rgba(255,0,255,0.3) 100%);
+        }
+        
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            background: var(--id-dark);
+            min-height: 100vh;
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            color: #fff;
+        }
+        
+        .id-header {
+            background: linear-gradient(180deg, rgba(255,215,0,0.1) 0%, transparent 100%);
+            border-bottom: 2px solid var(--id-gold);
+            padding: 1.5rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+        
+        .id-logo {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        
+        .id-emblem {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, var(--id-gold) 0%, #8b6914 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 0 20px rgba(255,215,0,0.3);
+        }
+        
+        .id-title {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: var(--id-gold);
+            letter-spacing: 0.05em;
+        }
+        
+        .id-subtitle {
+            font-size: 0.85rem;
+            color: #888;
+        }
+        
+        .main-content {
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        /* ID Card */
+        .id-card-container {
+            perspective: 1000px;
+            margin-bottom: 2rem;
+        }
+        
+        .id-card {
+            width: 100%;
+            max-width: 500px;
+            margin: 0 auto;
+            aspect-ratio: 1.586;
+            position: relative;
+            transform-style: preserve-3d;
+            transition: transform 0.8s;
+            cursor: pointer;
+        }
+        
+        .id-card:hover {
+            transform: rotateY(10deg) rotateX(5deg);
+        }
+        
+        .id-card-front, .id-card-back {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            border-radius: 16px;
+            overflow: hidden;
+        }
+        
+        .id-card-front {
+            background: linear-gradient(135deg, var(--id-card) 0%, #0a0a1e 100%);
+            border: 2px solid var(--id-gold);
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        /* Hologram overlay */
+        .id-card-front::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: var(--hologram);
+            opacity: 0.1;
+            animation: hologram-shift 5s ease-in-out infinite;
+            pointer-events: none;
+        }
+        
+        @keyframes hologram-shift {
+            0%, 100% { transform: translateX(-100%); }
+            50% { transform: translateX(100%); }
+        }
+        
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 1rem;
+        }
+        
+        .card-nation {
+            font-size: 0.7rem;
+            color: var(--id-gold);
+            letter-spacing: 0.2em;
+            font-weight: bold;
+        }
+        
+        .card-type {
+            font-size: 0.6rem;
+            color: #888;
+            text-align: right;
+        }
+        
+        .card-chip {
+            width: 45px;
+            height: 35px;
+            background: linear-gradient(135deg, #d4af37 0%, #8b6914 50%, #d4af37 100%);
+            border-radius: 6px;
+            position: relative;
+            margin-bottom: 1rem;
+        }
+        
+        .card-chip::after {
+            content: '';
+            position: absolute;
+            top: 8px;
+            left: 8px;
+            right: 8px;
+            bottom: 8px;
+            background: repeating-linear-gradient(
+                90deg,
+                transparent 0px,
+                transparent 3px,
+                rgba(0,0,0,0.3) 3px,
+                rgba(0,0,0,0.3) 4px
+            );
+        }
+        
+        .card-body {
+            display: flex;
+            gap: 1rem;
+            flex: 1;
+        }
+        
+        .card-photo {
+            width: 100px;
+            height: 120px;
+            background: var(--id-border);
+            border: 2px solid var(--id-gold);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3rem;
+            overflow: hidden;
+        }
+        
+        .card-photo img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .card-info {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+        
+        .info-row {
+            display: flex;
+            gap: 0.5rem;
+        }
+        
+        .info-label {
+            font-size: 0.6rem;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+        }
+        
+        .info-value {
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+        
+        .citizen-name {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: var(--id-gold);
+        }
+        
+        .card-footer {
+            margin-top: auto;
+            padding-top: 0.75rem;
+            border-top: 1px solid var(--id-border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .uuid-display {
+            font-family: 'Courier New', monospace;
+            font-size: 0.7rem;
+            color: var(--id-blue);
+            letter-spacing: 0.05em;
+        }
+        
+        .qr-placeholder {
+            width: 50px;
+            height: 50px;
+            background: #fff;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        /* Verification status */
+        .verification-badge {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: bold;
+        }
+        
+        .verified { background: rgba(0,210,106,0.2); color: var(--id-green); }
+        .pending { background: rgba(255,204,0,0.2); color: #ffcc00; }
+        .expired { background: rgba(255,71,87,0.2); color: var(--id-red); }
+        
+        /* Biometrics Section */
+        .section-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 1.5rem;
+        }
+        
+        .section-card {
+            background: var(--id-card);
+            border: 1px solid var(--id-border);
+            border-radius: 16px;
+            overflow: hidden;
+        }
+        
+        .section-header {
+            background: linear-gradient(90deg, rgba(255,215,0,0.2) 0%, transparent 100%);
+            border-bottom: 1px solid var(--id-border);
+            padding: 1rem 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            font-weight: bold;
+            color: var(--id-gold);
+        }
+        
+        .section-body {
+            padding: 1.5rem;
+        }
+        
+        /* Biometric displays */
+        .biometric-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1rem;
+        }
+        
+        .biometric-item {
+            background: rgba(0,0,0,0.3);
+            border: 1px solid var(--id-border);
+            border-radius: 12px;
+            padding: 1rem;
+            text-align: center;
+            transition: all 0.3s;
+        }
+        
+        .biometric-item:hover {
+            border-color: var(--id-gold);
+            transform: translateY(-2px);
+        }
+        
+        .biometric-icon {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .biometric-name {
+            font-size: 0.85rem;
+            color: #888;
+            margin-bottom: 0.5rem;
+        }
+        
+        .biometric-status {
+            font-size: 0.75rem;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            display: inline-block;
+        }
+        
+        .bio-verified { background: rgba(0,210,106,0.2); color: var(--id-green); }
+        .bio-pending { background: rgba(255,204,0,0.2); color: #ffcc00; }
+        
+        /* Fingerprint scanner */
+        .fingerprint-scanner {
+            width: 150px;
+            height: 180px;
+            margin: 0 auto;
+            background: radial-gradient(circle, var(--id-card) 0%, var(--id-dark) 100%);
+            border: 3px solid var(--id-border);
+            border-radius: 12px;
+            position: relative;
+            cursor: pointer;
+            overflow: hidden;
+        }
+        
+        .fingerprint-scanner::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: var(--id-green);
+            animation: scan 2s ease-in-out infinite;
+        }
+        
+        @keyframes scan {
+            0%, 100% { top: 0; opacity: 1; }
+            50% { top: calc(100% - 4px); opacity: 0.5; }
+        }
+        
+        .fingerprint-icon {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 4rem;
+            opacity: 0.3;
+        }
+        
+        /* Passport stamps */
+        .passport-section {
+            background: linear-gradient(135deg, #1a1a3e 0%, #0f0f23 100%);
+        }
+        
+        .stamps-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            justify-content: center;
+        }
+        
+        .passport-stamp {
+            width: 100px;
+            height: 100px;
+            border: 3px solid;
+            border-radius: 50%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            transform: rotate(-10deg);
+            opacity: 0.8;
+            transition: all 0.3s;
+        }
+        
+        .passport-stamp:nth-child(even) {
+            transform: rotate(8deg);
+        }
+        
+        .passport-stamp:hover {
+            transform: rotate(0deg) scale(1.1);
+            opacity: 1;
+        }
+        
+        .stamp-1 { border-color: #ff6b6b; color: #ff6b6b; }
+        .stamp-2 { border-color: #4ecdc4; color: #4ecdc4; }
+        .stamp-3 { border-color: #ffe66d; color: #ffe66d; }
+        .stamp-4 { border-color: #95e1d3; color: #95e1d3; }
+        .stamp-5 { border-color: #dda0dd; color: #dda0dd; }
+        
+        .stamp-location {
+            font-size: 0.7rem;
+            font-weight: bold;
+            text-align: center;
+        }
+        
+        .stamp-date {
+            font-size: 0.55rem;
+            opacity: 0.7;
+        }
+        
+        /* Visa system */
+        .visa-card {
+            background: linear-gradient(135deg, rgba(157,78,221,0.2) 0%, rgba(74,144,217,0.2) 100%);
+            border: 1px solid var(--id-purple);
+            border-radius: 12px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+        
+        .visa-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+        
+        .visa-type {
+            font-weight: bold;
+            color: var(--id-purple);
+        }
+        
+        .visa-status {
+            padding: 0.2rem 0.6rem;
+            border-radius: 10px;
+            font-size: 0.7rem;
+            font-weight: bold;
+        }
+        
+        .visa-active { background: rgba(0,210,106,0.3); color: var(--id-green); }
+        .visa-expired { background: rgba(255,71,87,0.3); color: var(--id-red); }
+        
+        .visa-details {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 0.5rem;
+            font-size: 0.8rem;
+        }
+        
+        .visa-label {
+            color: #888;
+        }
+        
+        /* Security clearance */
+        .clearance-levels {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+        
+        .clearance-item {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 0.75rem 1rem;
+            background: rgba(0,0,0,0.3);
+            border-radius: 8px;
+            border-left: 4px solid transparent;
+        }
+        
+        .clearance-item.active {
+            border-left-color: var(--id-gold);
+            background: rgba(255,215,0,0.1);
+        }
+        
+        .clearance-level {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+        
+        .level-5 { background: linear-gradient(135deg, #ffd700 0%, #ff6b00 100%); color: #000; }
+        .level-4 { background: var(--id-purple); }
+        .level-3 { background: var(--id-blue); }
+        .level-2 { background: var(--id-green); }
+        .level-1 { background: #666; }
+        
+        .clearance-info {
+            flex: 1;
+        }
+        
+        .clearance-name {
+            font-weight: 600;
+        }
+        
+        .clearance-desc {
+            font-size: 0.8rem;
+            color: #888;
+        }
+        
+        /* Registration form */
+        .form-group {
+            margin-bottom: 1rem;
+        }
+        
+        .form-label {
+            display: block;
+            font-size: 0.85rem;
+            color: var(--id-gold);
+            margin-bottom: 0.5rem;
+        }
+        
+        .form-input {
+            width: 100%;
+            background: rgba(0,0,0,0.3);
+            border: 1px solid var(--id-border);
+            border-radius: 8px;
+            padding: 0.75rem 1rem;
+            color: #fff;
+            font-size: 1rem;
+            transition: all 0.3s;
+        }
+        
+        .form-input:focus {
+            outline: none;
+            border-color: var(--id-gold);
+        }
+        
+        .btn-primary {
+            background: linear-gradient(90deg, var(--id-gold) 0%, #b8860b 100%);
+            color: #000;
+            border: none;
+            padding: 1rem 2rem;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            width: 100%;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(255,215,0,0.3);
+        }
+        
+        /* Language */
+        .lang-en, .lang-zh, .lang-th { display: none; }
+        body.en .lang-en { display: inline; }
+        body.zh .lang-zh { display: inline; }
+        body.th .lang-th { display: inline; }
+        
+        .lang-toggle {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 100;
+            display: flex;
+            gap: 0.5rem;
+            background: rgba(0,0,0,0.9);
+            padding: 0.5rem;
+            border-radius: 25px;
+            border: 1px solid var(--id-gold);
+        }
+        
+        .lang-btn {
+            padding: 0.4rem 0.8rem;
+            border-radius: 15px;
+            border: none;
+            cursor: pointer;
+            font-size: 0.8rem;
+            background: transparent;
+            color: #888;
+            transition: all 0.3s;
+        }
+        
+        .lang-btn.active {
+            background: var(--id-gold);
+            color: #000;
+        }
+        
+        .back-btn {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 100;
+            background: rgba(0,0,0,0.9);
+            border: 1px solid var(--id-gold);
+            color: var(--id-gold);
+            padding: 0.6rem 1.2rem;
+            border-radius: 25px;
+            text-decoration: none;
+            font-size: 0.9rem;
+            transition: all 0.3s;
+        }
+        
+        .back-btn:hover {
+            background: var(--id-gold);
+            color: #000;
+        }
+        
+        /* Stats */
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+        
+        .stat-item {
+            background: var(--id-card);
+            border: 1px solid var(--id-border);
+            border-radius: 12px;
+            padding: 1.25rem;
+            text-align: center;
+        }
+        
+        .stat-value {
+            font-size: 1.75rem;
+            font-weight: bold;
+            color: var(--id-gold);
+        }
+        
+        .stat-label {
+            font-size: 0.8rem;
+            color: #888;
+            margin-top: 0.25rem;
+        }
+        
+        @media (max-width: 768px) {
+            .card-body { flex-direction: column; align-items: center; }
+            .card-photo { width: 80px; height: 100px; }
+            .biometric-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body class="en" data-page-id="citizenship">
+    <a href="/" class="back-btn">← <span class="lang-en">Back</span><span class="lang-zh">返回</span><span class="lang-th">กลับ</span></a>
+    
+    <div class="lang-toggle">
+        <button class="lang-btn active" data-lang="en">EN</button>
+        <button class="lang-btn" data-lang="zh">中文</button>
+        <button class="lang-btn" data-lang="th">ไทย</button>
+    </div>
+    
+    <header class="id-header">
+        <div class="id-logo">
+            <div class="id-emblem">
+                <svg width="30" height="30" viewBox="0 0 24 24" fill="#000">
+                    <use href="/static/icons/nw-icons.svg#shield"></use>
+                </svg>
+            </div>
+            <div>
+                <div class="id-title">
+                    <span class="lang-en">CITIZEN IDENTITY SYSTEM</span>
+                    <span class="lang-zh">公民身份系統</span>
+                    <span class="lang-th">ระบบบัตรประชาชน</span>
+                </div>
+                <div class="id-subtitle">
+                    <span class="lang-en">NumbahWan National Registration Authority</span>
+                    <span class="lang-zh">NumbahWan 國家註冊局</span>
+                    <span class="lang-th">สำนักงานทะเบียน NumbahWan</span>
+                </div>
+            </div>
+        </div>
+        <div class="verification-badge verified">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><use href="/static/icons/nw-icons.svg#check-circle"></use></svg>
+            <span class="lang-en">System Online</span>
+            <span class="lang-zh">系統在線</span>
+            <span class="lang-th">ระบบออนไลน์</span>
+        </div>
+    </header>
+    
+    <main class="main-content">
+        <!-- Stats Row -->
+        <div class="stats-row">
+            <div class="stat-item">
+                <div class="stat-value">12</div>
+                <div class="stat-label">
+                    <span class="lang-en">Registered Citizens</span>
+                    <span class="lang-zh">註冊公民</span>
+                    <span class="lang-th">พลเมืองที่ลงทะเบียน</span>
+                </div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value">100%</div>
+                <div class="stat-label">
+                    <span class="lang-en">Biometric Coverage</span>
+                    <span class="lang-zh">生物識別覆蓋率</span>
+                    <span class="lang-th">ครอบคลุมไบโอเมตริก</span>
+                </div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value">0.3s</div>
+                <div class="stat-label">
+                    <span class="lang-en">Avg Verification Time</span>
+                    <span class="lang-zh">平均驗證時間</span>
+                    <span class="lang-th">เวลาตรวจสอบเฉลี่ย</span>
+                </div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value">99.99%</div>
+                <div class="stat-label">
+                    <span class="lang-en">Accuracy Rate</span>
+                    <span class="lang-zh">準確率</span>
+                    <span class="lang-th">อัตราความแม่นยำ</span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- National ID Card -->
+        <div class="id-card-container">
+            <div class="id-card" id="idCard">
+                <div class="id-card-front">
+                    <div class="card-header">
+                        <div>
+                            <div class="card-nation">REPUBLIC OF NUMBAHWAN</div>
+                            <div style="font-size: 0.8rem; color: #888;">
+                                <span class="lang-en">National Identity Card</span>
+                                <span class="lang-zh">國民身份證</span>
+                                <span class="lang-th">บัตรประชาชน</span>
+                            </div>
+                        </div>
+                        <div class="card-type">
+                            <span class="lang-en">CITIZEN</span>
+                            <span class="lang-zh">公民</span>
+                            <span class="lang-th">พลเมือง</span>
+                            <br>CLASS: GOLD
+                        </div>
+                    </div>
+                    
+                    <div class="card-chip"></div>
+                    
+                    <div class="card-body">
+                        <div class="card-photo" id="cardPhoto">
+                            <img src="/static/avatar-reggina-zakum-gm.webp" alt="Citizen Photo" onerror="this.style.display='none'; this.parentElement.innerHTML='👤';">
+                        </div>
+                        <div class="card-info">
+                            <div class="citizen-name" id="citizenName">RegginA</div>
+                            <div class="info-row">
+                                <div>
+                                    <div class="info-label">
+                                        <span class="lang-en">RANK</span>
+                                        <span class="lang-zh">職位</span>
+                                        <span class="lang-th">ตำแหน่ง</span>
+                                    </div>
+                                    <div class="info-value">Guild Master</div>
+                                </div>
+                                <div>
+                                    <div class="info-label">
+                                        <span class="lang-en">LEVEL</span>
+                                        <span class="lang-zh">等級</span>
+                                        <span class="lang-th">เลเวล</span>
+                                    </div>
+                                    <div class="info-value">78</div>
+                                </div>
+                            </div>
+                            <div>
+                                <div class="info-label">
+                                    <span class="lang-en">JOINED</span>
+                                    <span class="lang-zh">加入日期</span>
+                                    <span class="lang-th">เข้าร่วม</span>
+                                </div>
+                                <div class="info-value">2024-01-15</div>
+                            </div>
+                            <div>
+                                <div class="info-label">
+                                    <span class="lang-en">CLEARANCE</span>
+                                    <span class="lang-zh">許可等級</span>
+                                    <span class="lang-th">ระดับอนุญาต</span>
+                                </div>
+                                <div class="info-value" style="color: var(--id-gold);">LEVEL 5 - SUPREME</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="card-footer">
+                        <div>
+                            <div class="info-label">UUID</div>
+                            <div class="uuid-display" id="uuidDisplay">NW-C001-A7F3-8B2E-9D4C</div>
+                        </div>
+                        <div class="qr-placeholder" id="qrCode">
+                            <svg width="40" height="40" viewBox="0 0 24 24" fill="#000">
+                                <rect x="2" y="2" width="6" height="6" /><rect x="10" y="2" width="2" height="2" />
+                                <rect x="14" y="2" width="2" height="2" /><rect x="16" y="2" width="6" height="6" />
+                                <rect x="2" y="10" width="2" height="2" /><rect x="6" y="10" width="2" height="2" />
+                                <rect x="10" y="10" width="4" height="4" /><rect x="16" y="10" width="2" height="2" />
+                                <rect x="20" y="10" width="2" height="2" /><rect x="2" y="16" width="6" height="6" />
+                                <rect x="10" y="16" width="2" height="2" /><rect x="14" y="18" width="2" height="2" />
+                                <rect x="18" y="16" width="4" height="2" /><rect x="16" y="20" width="6" height="2" />
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="section-grid">
+            <!-- Biometrics -->
+            <div class="section-card">
+                <div class="section-header">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><use href="/static/icons/nw-icons.svg#eye"></use></svg>
+                    <span class="lang-en">BIOMETRIC DATA</span>
+                    <span class="lang-zh">生物識別數據</span>
+                    <span class="lang-th">ข้อมูลไบโอเมตริก</span>
+                </div>
+                <div class="section-body">
+                    <div class="fingerprint-scanner" onclick="scanFingerprint()">
+                        <div class="fingerprint-icon">👆</div>
+                    </div>
+                    <p style="text-align: center; color: #888; font-size: 0.85rem; margin: 1rem 0;">
+                        <span class="lang-en">Tap to verify identity</span>
+                        <span class="lang-zh">點擊驗證身份</span>
+                        <span class="lang-th">แตะเพื่อยืนยันตัวตน</span>
+                    </p>
+                    <div class="biometric-grid">
+                        <div class="biometric-item">
+                            <div class="biometric-icon">👆</div>
+                            <div class="biometric-name">
+                                <span class="lang-en">Fingerprint</span>
+                                <span class="lang-zh">指紋</span>
+                                <span class="lang-th">ลายนิ้วมือ</span>
+                            </div>
+                            <div class="biometric-status bio-verified">✓ VERIFIED</div>
+                        </div>
+                        <div class="biometric-item">
+                            <div class="biometric-icon">👁️</div>
+                            <div class="biometric-name">
+                                <span class="lang-en">Iris Scan</span>
+                                <span class="lang-zh">虹膜掃描</span>
+                                <span class="lang-th">สแกนม่านตา</span>
+                            </div>
+                            <div class="biometric-status bio-verified">✓ VERIFIED</div>
+                        </div>
+                        <div class="biometric-item">
+                            <div class="biometric-icon">🗣️</div>
+                            <div class="biometric-name">
+                                <span class="lang-en">Voice Print</span>
+                                <span class="lang-zh">聲紋</span>
+                                <span class="lang-th">ลายเสียง</span>
+                            </div>
+                            <div class="biometric-status bio-verified">✓ VERIFIED</div>
+                        </div>
+                        <div class="biometric-item">
+                            <div class="biometric-icon">🧬</div>
+                            <div class="biometric-name">
+                                <span class="lang-en">Avatar DNA</span>
+                                <span class="lang-zh">角色DNA</span>
+                                <span class="lang-th">DNA อวาตาร์</span>
+                            </div>
+                            <div class="biometric-status bio-verified">✓ VERIFIED</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Passport Stamps -->
+            <div class="section-card passport-section">
+                <div class="section-header">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><use href="/static/icons/nw-icons.svg#document"></use></svg>
+                    <span class="lang-en">DIGITAL PASSPORT</span>
+                    <span class="lang-zh">數位護照</span>
+                    <span class="lang-th">หนังสือเดินทางดิจิทัล</span>
+                </div>
+                <div class="section-body">
+                    <p style="color: #888; margin-bottom: 1rem; text-align: center; font-size: 0.85rem;">
+                        <span class="lang-en">Travel History - Places Visited</span>
+                        <span class="lang-zh">旅行記錄 - 已訪問地點</span>
+                        <span class="lang-th">ประวัติการเดินทาง - สถานที่เยี่ยมชม</span>
+                    </p>
+                    <div class="stamps-grid">
+                        <div class="passport-stamp stamp-1">
+                            <div class="stamp-location">ZAKUM<br>SHRINE</div>
+                            <div class="stamp-date">2026-01-15</div>
+                        </div>
+                        <div class="passport-stamp stamp-2">
+                            <div class="stamp-location">KERNING<br>CITY</div>
+                            <div class="stamp-date">2026-01-20</div>
+                        </div>
+                        <div class="passport-stamp stamp-3">
+                            <div class="stamp-location">HENESYS<br>MARKET</div>
+                            <div class="stamp-date">2026-01-25</div>
+                        </div>
+                        <div class="passport-stamp stamp-4">
+                            <div class="stamp-location">REGINA<br>SHIP</div>
+                            <div class="stamp-date">2026-01-30</div>
+                        </div>
+                        <div class="passport-stamp stamp-5">
+                            <div class="stamp-location">GUILD<br>BASE</div>
+                            <div class="stamp-date">2026-02-01</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Visa System -->
+            <div class="section-card">
+                <div class="section-header">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><use href="/static/icons/nw-icons.svg#flag"></use></svg>
+                    <span class="lang-en">VISA & PERMITS</span>
+                    <span class="lang-zh">簽證與許可</span>
+                    <span class="lang-th">วีซ่าและใบอนุญาต</span>
+                </div>
+                <div class="section-body">
+                    <div class="visa-card">
+                        <div class="visa-header">
+                            <div class="visa-type">🏰 GUILD ACCESS VISA</div>
+                            <div class="visa-status visa-active">ACTIVE</div>
+                        </div>
+                        <div class="visa-details">
+                            <div><span class="visa-label">Type:</span> Permanent Resident</div>
+                            <div><span class="visa-label">Issued:</span> 2024-01-15</div>
+                            <div><span class="visa-label">Expires:</span> NEVER</div>
+                            <div><span class="visa-label">Entries:</span> Unlimited</div>
+                        </div>
+                    </div>
+                    <div class="visa-card">
+                        <div class="visa-header">
+                            <div class="visa-type">⚔️ BOSS RAID PERMIT</div>
+                            <div class="visa-status visa-active">ACTIVE</div>
+                        </div>
+                        <div class="visa-details">
+                            <div><span class="visa-label">Level:</span> All Bosses</div>
+                            <div><span class="visa-label">Valid:</span> Weekly</div>
+                            <div><span class="visa-label">Raids Left:</span> 5/7</div>
+                            <div><span class="visa-label">Priority:</span> HIGH</div>
+                        </div>
+                    </div>
+                    <div class="visa-card">
+                        <div class="visa-header">
+                            <div class="visa-type">🎰 CASINO LICENSE</div>
+                            <div class="visa-status visa-active">ACTIVE</div>
+                        </div>
+                        <div class="visa-details">
+                            <div><span class="visa-label">Type:</span> VIP Member</div>
+                            <div><span class="visa-label">Credit:</span> ₲ 1,000,000</div>
+                            <div><span class="visa-label">Tables:</span> All Access</div>
+                            <div><span class="visa-label">Comps:</span> Enabled</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Security Clearance -->
+            <div class="section-card">
+                <div class="section-header">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><use href="/static/icons/nw-icons.svg#lock"></use></svg>
+                    <span class="lang-en">SECURITY CLEARANCE</span>
+                    <span class="lang-zh">安全許可等級</span>
+                    <span class="lang-th">ระดับการอนุญาตความปลอดภัย</span>
+                </div>
+                <div class="section-body">
+                    <div class="clearance-levels">
+                        <div class="clearance-item active">
+                            <div class="clearance-level level-5">5</div>
+                            <div class="clearance-info">
+                                <div class="clearance-name" style="color: var(--id-gold);">SUPREME</div>
+                                <div class="clearance-desc">
+                                    <span class="lang-en">Full system access, nuclear codes</span>
+                                    <span class="lang-zh">完整系統存取，核密碼</span>
+                                    <span class="lang-th">เข้าถึงระบบเต็มรูปแบบ รหัสนิวเคลียร์</span>
+                                </div>
+                            </div>
+                            <div class="verification-badge verified" style="font-size: 0.7rem;">CURRENT</div>
+                        </div>
+                        <div class="clearance-item">
+                            <div class="clearance-level level-4">4</div>
+                            <div class="clearance-info">
+                                <div class="clearance-name">TOP SECRET</div>
+                                <div class="clearance-desc">
+                                    <span class="lang-en">Intelligence briefings, treasury</span>
+                                    <span class="lang-zh">情報簡報，金庫</span>
+                                    <span class="lang-th">รายงานข่าวกรอง คลัง</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="clearance-item">
+                            <div class="clearance-level level-3">3</div>
+                            <div class="clearance-info">
+                                <div class="clearance-name">SECRET</div>
+                                <div class="clearance-desc">
+                                    <span class="lang-en">Officer areas, raid planning</span>
+                                    <span class="lang-zh">幹部區域，副本規劃</span>
+                                    <span class="lang-th">พื้นที่เจ้าหน้าที่ การวางแผนเรด</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="clearance-item">
+                            <div class="clearance-level level-2">2</div>
+                            <div class="clearance-info">
+                                <div class="clearance-name">CONFIDENTIAL</div>
+                                <div class="clearance-desc">
+                                    <span class="lang-en">Member areas, guild chat</span>
+                                    <span class="lang-zh">成員區域，公會聊天</span>
+                                    <span class="lang-th">พื้นที่สมาชิก แชทกิลด์</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="clearance-item">
+                            <div class="clearance-level level-1">1</div>
+                            <div class="clearance-info">
+                                <div class="clearance-name">PUBLIC</div>
+                                <div class="clearance-desc">
+                                    <span class="lang-en">Guest access only</span>
+                                    <span class="lang-zh">僅訪客存取</span>
+                                    <span class="lang-th">เฉพาะแขกเข้าถึง</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Citizen Registration -->
+            <div class="section-card">
+                <div class="section-header">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><use href="/static/icons/nw-icons.svg#form"></use></svg>
+                    <span class="lang-en">CITIZEN LOOKUP</span>
+                    <span class="lang-zh">公民查詢</span>
+                    <span class="lang-th">ค้นหาพลเมือง</span>
+                </div>
+                <div class="section-body">
+                    <form id="lookupForm">
+                        <div class="form-group">
+                            <label class="form-label">
+                                <span class="lang-en">Search by Name or UUID</span>
+                                <span class="lang-zh">按名稱或UUID搜尋</span>
+                                <span class="lang-th">ค้นหาด้วยชื่อหรือ UUID</span>
+                            </label>
+                            <input type="text" class="form-input" id="searchQuery" placeholder="e.g., RegginA or NW-C001-...">
+                        </div>
+                        <button type="submit" class="btn-primary">
+                            <span class="lang-en">🔍 Search Citizen Database</span>
+                            <span class="lang-zh">🔍 搜尋公民數據庫</span>
+                            <span class="lang-th">🔍 ค้นหาฐานข้อมูลพลเมือง</span>
+                        </button>
+                    </form>
+                    <div id="searchResults" style="margin-top: 1rem;"></div>
+                </div>
+            </div>
+            
+            <!-- Recent Verifications -->
+            <div class="section-card">
+                <div class="section-header">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><use href="/static/icons/nw-icons.svg#clock"></use></svg>
+                    <span class="lang-en">RECENT VERIFICATIONS</span>
+                    <span class="lang-zh">最近驗證</span>
+                    <span class="lang-th">การยืนยันล่าสุด</span>
+                </div>
+                <div class="section-body">
+                    <div id="recentVerifications">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+    
+    <script src="/static/nw-nav.js"></script>
+    <script>
+        // Citizen database
+        const citizens = [
+            { uuid: 'NW-C001-A7F3-8B2E-9D4C', name: 'RegginA', rank: 'Guild Master', level: 78, clearance: 5, joined: '2024-01-15', avatar: '/static/avatar-reggina-zakum-gm.webp' },
+            { uuid: 'NW-C002-B8G4-9C3F-0E5D', name: 'Yuluner', rank: 'Officer', level: 76, clearance: 4, joined: '2024-01-20', avatar: '/static/avatar-yuluner-sunny-cheerful.webp' },
+            { uuid: 'NW-C003-C9H5-0D4G-1F6E', name: 'RegginO', rank: 'Deputy Master', level: 74, clearance: 4, joined: '2024-01-25', avatar: '' },
+            { uuid: 'NW-C004-D0I6-1E5H-2G7F', name: 'Natehouoho', rank: 'Officer', level: 75, clearance: 4, joined: '2024-02-01', avatar: '/static/avatar-natehouoho-playful-adventurer.webp' },
+            { uuid: 'NW-C005-E1J7-2F6I-3H8G', name: '騎鳥回家', rank: 'Member', level: 71, clearance: 2, joined: '2024-02-15', avatar: '/static/avatar-qiniaohuijia-riding-bird.webp' },
+            { uuid: 'NW-C006-F2K8-3G7J-4I9H', name: '紈蹈稀著', rank: 'Member', level: 72, clearance: 2, joined: '2024-03-01', avatar: '' },
+            { uuid: 'NW-C007-G3L9-4H8K-5J0I', name: '阿光Yo', rank: 'Member', level: 68, clearance: 2, joined: '2024-03-15', avatar: '/static/avatar-aguangyo-light-mage.webp' },
+            { uuid: 'NW-C008-H4M0-5I9L-6K1J', name: '泰拳寒玉', rank: 'Member', level: 52, clearance: 2, joined: '2024-04-01', avatar: '/static/avatar-taiquanhanyu-thaiboxer-jade.webp' },
+            { uuid: 'NW-C009-I5N1-6J0M-7L2K', name: '碼農小孫', rank: 'Member', level: 62, clearance: 2, joined: '2024-04-15', avatar: '' },
+        ];
+        
+        const recentVerifications = [
+            { name: 'RegginA', method: 'Fingerprint', time: '2 min ago', success: true },
+            { name: 'Yuluner', method: 'Iris Scan', time: '5 min ago', success: true },
+            { name: 'Natehouoho', method: 'Voice Print', time: '12 min ago', success: true },
+            { name: '騎鳥回家', method: 'UUID Check', time: '18 min ago', success: true },
+            { name: 'Unknown', method: 'Fingerprint', time: '25 min ago', success: false },
+        ];
+        
+        // Language handling
+        function setLanguage(lang) {
+            document.body.className = lang;
+            document.querySelectorAll('.lang-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.lang === lang);
+            });
+            localStorage.setItem('nw_lang', lang);
+        }
+        
+        document.querySelectorAll('.lang-btn').forEach(btn => {
+            btn.addEventListener('click', () => setLanguage(btn.dataset.lang));
+        });
+        
+        const savedLang = localStorage.getItem('nw_lang') || 'en';
+        setLanguage(savedLang);
+        
+        // Fingerprint scanner
+        function scanFingerprint() {
+            const scanner = document.querySelector('.fingerprint-scanner');
+            scanner.style.borderColor = 'var(--id-green)';
+            scanner.innerHTML = '<div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: var(--id-green); font-size: 1.5rem;">✓ VERIFIED</div>';
+            
+            setTimeout(() => {
+                scanner.style.borderColor = 'var(--id-border)';
+                scanner.innerHTML = '<div class="fingerprint-icon">👆</div>';
+            }, 2000);
+        }
+        
+        // Render recent verifications
+        function renderVerifications() {
+            const container = document.getElementById('recentVerifications');
+            container.innerHTML = recentVerifications.map(v => `
+                <div style="display: flex; align-items: center; gap: 1rem; padding: 0.75rem; background: rgba(0,0,0,0.3); border-radius: 8px; margin-bottom: 0.5rem; border-left: 3px solid ${v.success ? 'var(--id-green)' : 'var(--id-red)'};">
+                    <div style="font-size: 1.5rem;">${v.success ? '✓' : '✗'}</div>
+                    <div style="flex: 1;">
+                        <div style="font-weight: 600;">${v.name}</div>
+                        <div style="font-size: 0.8rem; color: #888;">${v.method} • ${v.time}</div>
+                    </div>
+                    <div class="verification-badge ${v.success ? 'verified' : 'expired'}" style="font-size: 0.7rem;">
+                        ${v.success ? 'SUCCESS' : 'FAILED'}
+                    </div>
+                </div>
+            `).join('');
+        }
+        
+        // Search functionality
+        document.getElementById('lookupForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const query = document.getElementById('searchQuery').value.toLowerCase();
+            const results = citizens.filter(c => 
+                c.name.toLowerCase().includes(query) || 
+                c.uuid.toLowerCase().includes(query)
+            );
+            
+            const container = document.getElementById('searchResults');
+            if (results.length === 0) {
+                container.innerHTML = '<p style="color: var(--id-red); text-align: center;">No citizens found</p>';
+            } else {
+                container.innerHTML = results.map(c => `
+                    <div style="background: rgba(0,0,0,0.3); border: 1px solid var(--id-border); border-radius: 8px; padding: 1rem; margin-bottom: 0.5rem; cursor: pointer;" onclick="loadCitizen('${c.uuid}')">
+                        <div style="display: flex; align-items: center; gap: 1rem;">
+                            <div style="width: 40px; height: 40px; background: var(--id-border); border-radius: 50%; display: flex; align-items: center; justify-content: center; overflow: hidden;">
+                                ${c.avatar ? `<img src="${c.avatar}" style="width: 100%; height: 100%; object-fit: cover;">` : '👤'}
+                            </div>
+                            <div style="flex: 1;">
+                                <div style="font-weight: bold; color: var(--id-gold);">${c.name}</div>
+                                <div style="font-size: 0.75rem; color: #888;">${c.uuid}</div>
+                            </div>
+                            <div style="text-align: right;">
+                                <div style="font-size: 0.85rem;">${c.rank}</div>
+                                <div style="font-size: 0.75rem; color: #888;">Lv.${c.level}</div>
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+            }
+        });
+        
+        // Load citizen data
+        function loadCitizen(uuid) {
+            const citizen = citizens.find(c => c.uuid === uuid);
+            if (citizen) {
+                document.getElementById('citizenName').textContent = citizen.name;
+                document.getElementById('uuidDisplay').textContent = citizen.uuid;
+                const photo = document.getElementById('cardPhoto');
+                if (citizen.avatar) {
+                    photo.innerHTML = `<img src="${citizen.avatar}" alt="${citizen.name}">`;
+                } else {
+                    photo.innerHTML = '👤';
+                }
+                
+                // Scroll to card
+                document.getElementById('idCard').scrollIntoView({ behavior: 'smooth' });
+            }
+        }
+        
+        // Initialize
+        renderVerifications();
+        
+        // Initialize navigation
+        if (typeof NW_NAV !== 'undefined') {
+            NW_NAV.init();
+        }
+    </script>
+</body>
+</html>
