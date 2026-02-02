@@ -882,8 +882,11 @@
         
         document.getElementById('dailyStreak').textContent = `Day ${streak}/7 • ${dailyState.totalDaysLoggedIn} total`;
         
-        // Main reward icons per day
-        const icons = ['🪨', '🪨', '⚙️', '💎', '💎', '💎', '🪵'];
+        // Main reward icons per day - use NW_CURRENCY if available
+        const iconTypes = ['stone', 'stone', 'iron', 'diamond', 'diamond', 'diamond', 'wood'];
+        const getIcon = (type) => typeof NW_CURRENCY !== 'undefined' 
+            ? NW_CURRENCY.icon(type, { size: 24 }) 
+            : type[0].toUpperCase();
         
         grid.innerHTML = NW_WALLET.DAILY_REWARDS.map((dayData, idx) => {
             const day = idx + 1;
@@ -894,7 +897,7 @@
             return `
                 <div class="daily-day ${isClaimed ? 'claimed' : ''} ${isCurrent ? 'current' : ''} ${isDay7 ? 'day7' : ''}">
                     <div class="day-num">${day}</div>
-                    <div class="day-reward">${icons[day-1]}</div>
+                    <div class="day-reward">${getIcon(iconTypes[day-1])}</div>
                 </div>
             `;
         }).join('');
@@ -969,16 +972,23 @@
         popup.id = 'rewardPopup';
         
         const rewardItems = Object.entries(result.rewards).map(([currency, amount]) => {
-            const icons = { diamond: '💎', gold: '🪙', iron: '⚙️', stone: '🪨', wood: '🪵' };
-            return `<div class="reward-item ${currency}">${icons[currency]} +${amount}</div>`;
+            // Use NW_CURRENCY for premium icons
+            const icon = typeof NW_CURRENCY !== 'undefined' 
+                ? NW_CURRENCY.icon(currency, { size: 20 })
+                : currency[0].toUpperCase();
+            return `<div class="reward-item ${currency}">${icon} +${amount}</div>`;
         }).join('');
+        
+        const sacredLogIcon = typeof NW_CURRENCY !== 'undefined' 
+            ? NW_CURRENCY.icon('wood', { size: 24 })
+            : '⧫';
         
         popup.innerHTML = `
             <div class="reward-content">
                 <div class="reward-title">${result.label}</div>
                 <div class="reward-label">Day ${result.day} Complete!</div>
                 <div class="reward-items">${rewardItems}</div>
-                ${result.isDay7 ? '<div style="color: var(--wood); font-weight: bold; margin-bottom: 12px;">🪵 You earned a Sacred Log!</div>' : ''}
+                ${result.isDay7 ? `<div style="color: var(--wood); font-weight: bold; margin-bottom: 12px;">${sacredLogIcon} You earned a Sacred Log!</div>` : ''}
                 <button class="reward-close" onclick="closeRewardPopup()">Awesome!</button>
             </div>
         `;

@@ -609,7 +609,7 @@
             const canPlay = card.gameStats?.cost <= gameState.energy && gameState.isPlayerTurn && !gameState.isAnimating;
             selectBtn.disabled = !canPlay;
             selectBtn.textContent = canPlay ? '✨ SELECT TO PLAY' : 
-                (card.gameStats?.cost > gameState.energy ? '💎 NOT ENOUGH ENERGY' : '⏳ NOT YOUR TURN');
+                (card.gameStats?.cost > gameState.energy ? '◆ NOT ENOUGH ENERGY' : '⏳ NOT YOUR TURN');
         } else if (source === 'board-player') {
             actionsEl.style.display = 'flex';
             const canAttack = card.canAttackThisTurn && !card.hasAttacked && gameState.isPlayerTurn && !gameState.isAnimating;

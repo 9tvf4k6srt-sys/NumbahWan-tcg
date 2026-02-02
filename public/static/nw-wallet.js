@@ -660,7 +660,7 @@ const NW_WALLET = {
         { day: 5, rewards: { stone: 40, gold: 30, iron: 12, diamond: 5 }, label: '⚡ Unstoppable!' },
         { day: 6, rewards: { stone: 50, gold: 40, iron: 15, diamond: 8 }, label: '💫 Almost There!' },
         // Day 7: THE BIG REWARD - Sacred Log!
-        { day: 7, rewards: { stone: 100, gold: 75, iron: 25, diamond: 15, wood: 1 }, label: '🪵 SACRED LOG!' }
+        { day: 7, rewards: { stone: 100, gold: 75, iron: 25, diamond: 15, wood: 1 }, label: 'SACRED LOG!', icon: 'wood' }
     ],
     
     // Get daily login state
@@ -833,7 +833,7 @@ const NW_WALLET = {
         first_card: { id: 'first_card', name: 'Collector', desc: 'Get your first card', icon: '🃏', reward: { gold: 50 }, category: 'collection' },
         cards_10: { id: 'cards_10', name: 'Card Hoarder', desc: 'Collect 10 unique cards', icon: '📦', reward: { diamond: 20, iron: 30 }, category: 'collection' },
         cards_50: { id: 'cards_50', name: 'Deck Master', desc: 'Collect 50 unique cards', icon: '🎴', reward: { diamond: 75, wood: 1 }, category: 'collection' },
-        first_mythic: { id: 'first_mythic', name: 'Mythic Hunter', desc: 'Pull your first Mythic', icon: '💎', reward: { wood: 2, diamond: 100 }, category: 'collection' },
+        first_mythic: { id: 'first_mythic', name: 'Mythic Hunter', desc: 'Pull your first Mythic', icon: 'diamond', reward: { wood: 2, diamond: 100 }, category: 'collection' },
         first_legendary: { id: 'first_legendary', name: 'Lucky Star', desc: 'Pull your first Legendary', icon: '⭐', reward: { diamond: 50 }, category: 'collection' },
         
         // Spending Achievements
@@ -845,8 +845,8 @@ const NW_WALLET = {
         // Exchange Achievements
         first_exchange: { id: 'first_exchange', name: 'Trader', desc: 'Complete your first exchange', icon: '💱', reward: { gold: 20 }, category: 'economy' },
         exchanges_10: { id: 'exchanges_10', name: 'Money Moves', desc: 'Complete 10 exchanges', icon: '📊', reward: { diamond: 20 }, category: 'economy' },
-        rich_diamond: { id: 'rich_diamond', name: 'Diamond Hands', desc: 'Own 500+ diamonds at once', icon: '💎', reward: { wood: 1 }, category: 'economy' },
-        rich_wood: { id: 'rich_wood', name: 'Lumberjack', desc: 'Own 5+ Sacred Logs at once', icon: '🪵', reward: { diamond: 100 }, category: 'economy' },
+        rich_diamond: { id: 'rich_diamond', name: 'Diamond Hands', desc: 'Own 500+ diamonds at once', icon: 'diamond', reward: { wood: 1 }, category: 'economy' },
+        rich_wood: { id: 'rich_wood', name: 'Lumberjack', desc: 'Own 5+ Sacred Logs at once', icon: 'wood', reward: { diamond: 100 }, category: 'economy' },
         
         // Gaming Achievements
         first_game: { id: 'first_game', name: 'Gamer', desc: 'Play your first arcade game', icon: '🎮', reward: { gold: 25 }, category: 'gaming' },

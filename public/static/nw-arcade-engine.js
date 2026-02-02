@@ -5,11 +5,11 @@
 
 // Currency metadata
 const CURRENCY_DATA = {
-    diamond: { icon: '💎', name: 'Diamond', tier: 0, color: '#00bfff', rarity: 'common' },
-    gold: { icon: '🪙', name: 'Gold', tier: 1, color: '#ffd700', rarity: 'uncommon' },
-    iron: { icon: '⚙️', name: 'Iron', tier: 2, color: '#b0c4de', rarity: 'rare' },
-    stone: { icon: '🪨', name: 'Black Jade', tier: 3, color: '#00ff88', rarity: 'epic' },
-    wood: { icon: '🪵', name: 'Sacred Log', tier: 4, color: '#ff00ff', rarity: 'mythic' }
+    diamond: { icon: '◆', name: 'Diamond', tier: 0, color: '#00d4ff', rarity: 'common' },
+    gold: { icon: '●', name: 'Gold', tier: 1, color: '#ffd700', rarity: 'uncommon' },
+    iron: { icon: '⬡', name: 'Iron', tier: 2, color: '#94a3b8', rarity: 'rare' },
+    stone: { icon: '▣', name: 'Black Jade', tier: 3, color: '#00ff88', rarity: 'epic' },
+    wood: { icon: '⧫', name: 'Sacred Log', tier: 4, color: '#c97f3d', rarity: 'mythic' }
 };
 
 // ═══════════════════════════════════════════════════════════════
@@ -182,7 +182,7 @@ function openGame(game) {
     const games = {
         slots: { title: '🎰 GOLDEN REELS', cost: 10, render: renderSlots },
         scratch: { title: '🎫 FORTUNE SCRATCHER', cost: 15, render: renderScratch },
-        coinflip: { title: '🪙 FATE\'S COIN', cost: 20, render: renderCoinflip },
+        coinflip: { title: '● FATE\'S COIN', cost: 20, render: renderCoinflip },
         guess: { title: '🔮 ORACLE\'S GAMBIT', cost: 25, render: renderGuess },
         dice: { title: '🎲 DRAGON\'S DICE', cost: 30, render: renderDice },
         treasure: { title: '🏛️ ANCIENT VAULT', cost: 50, render: renderTreasure }
@@ -190,7 +190,12 @@ function openGame(game) {
     
     const g = games[game];
     title.textContent = g.title;
-    cost.textContent = 'Cost: 💎 ' + g.cost + ' Diamonds';
+    // Use NW_CURRENCY for premium icon display
+    if (typeof NW_CURRENCY !== 'undefined') {
+        cost.innerHTML = 'Cost: ' + NW_CURRENCY.format('diamond', g.cost);
+    } else {
+        cost.textContent = 'Cost: ' + g.cost + ' Diamonds';
+    }
     content.innerHTML = g.render();
     
     modal.classList.add('active');
@@ -205,7 +210,7 @@ function closeGame() {
 }
 
 // ==================== SLOTS ====================
-const SLOT_SYMBOLS = ['🍒', '🍋', '🍊', '🍇', '⭐', '💎', '7️⃣', '🪵'];
+const SLOT_SYMBOLS = ['🍒', '🍋', '🍊', '🍇', '⭐', '◆', '7️⃣', '⧫'];
 let slotsSpinning = false;
 
 function renderSlots() {
@@ -266,8 +271,8 @@ function spinSlots() {
         
         if (results[0] === results[1] && results[1] === results[2]) {
             // Jackpot!
-            if (results[0] === '🪵') { win = 5; currency = 'wood'; }
-            else if (results[0] === '💎') { win = 100; currency = 'diamond'; }
+            if (results[0] === '⧫') { win = 5; currency = 'wood'; }
+            else if (results[0] === '◆') { win = 100; currency = 'diamond'; }
             else if (results[0] === '7️⃣') { win = 200; currency = 'gold'; }
             else { win = 50; currency = 'gold'; }
         } else if (results[0] === results[1] || results[1] === results[2]) {
@@ -276,7 +281,7 @@ function spinSlots() {
         
         if (win > 0) {
             earn(currency, win);
-            const icon = currency === 'wood' ? '🪵' : currency === 'diamond' ? '💎' : '🪙';
+            const icon = currency === 'wood' ? '⧫' : currency === 'diamond' ? '◆' : '●';
             document.getElementById('slotsResult').innerHTML = `
                 <div class="result-display win">
                     <div class="result-text win">🎉 WINNER!</div>
@@ -303,11 +308,11 @@ let scratchPrize = null;
 function renderScratch() {
     // Determine prize
     const roll = Math.random();
-    if (roll < 0.01) { scratchPrize = { icon: '🪵', amount: 3, type: 'wood' }; }
-    else if (roll < 0.05) { scratchPrize = { icon: '🪙', amount: 50, type: 'gold' }; }
-    else if (roll < 0.20) { scratchPrize = { icon: '🪙', amount: 25, type: 'gold' }; }
-    else if (roll < 0.50) { scratchPrize = { icon: '⚙️', amount: 20, type: 'iron' }; }
-    else { scratchPrize = { icon: '🪨', amount: 15, type: 'stone' }; }
+    if (roll < 0.01) { scratchPrize = { icon: '⧫', amount: 3, type: 'wood' }; }
+    else if (roll < 0.05) { scratchPrize = { icon: '●', amount: 50, type: 'gold' }; }
+    else if (roll < 0.20) { scratchPrize = { icon: '●', amount: 25, type: 'gold' }; }
+    else if (roll < 0.50) { scratchPrize = { icon: '⬡', amount: 20, type: 'iron' }; }
+    else { scratchPrize = { icon: '▣', amount: 15, type: 'stone' }; }
     
     return `
         <div class="scratch-container">
@@ -319,7 +324,7 @@ function renderScratch() {
                 <canvas class="scratch-canvas" id="scratchCanvas" width="260" height="180"></canvas>
             </div>
             <p class="scratch-hint">Scratch to reveal your prize!</p>
-            <button class="play-btn" id="scratchBtn" onclick="buyScratch()" style="margin-top:16px;">BUY CARD (💎 15)</button>
+            <button class="play-btn" id="scratchBtn" onclick="buyScratch()" style="margin-top:16px;">BUY CARD (◆ 15)</button>
         </div>
         <div id="scratchResult"></div>
     `;
@@ -412,7 +417,7 @@ function renderCoinflip() {
                 <button class="choice-btn" id="choiceHeads" onclick="chooseCoin('heads')">👑 HEADS</button>
                 <button class="choice-btn" id="choiceTails" onclick="chooseCoin('tails')">🦅 TAILS</button>
             </div>
-            <button class="play-btn" id="flipBtn" onclick="flipCoin()" disabled>FLIP COIN (💎 20)</button>
+            <button class="play-btn" id="flipBtn" onclick="flipCoin()" disabled>FLIP COIN (◆ 20)</button>
         </div>
         <div id="coinResult"></div>
     `;
@@ -446,7 +451,7 @@ function flipCoin() {
             document.getElementById('coinResult').innerHTML = `
                 <div class="result-display win">
                     <div class="result-text win">🎉 CORRECT!</div>
-                    <div class="result-amount">+40 🪙 Gold</div>
+                    <div class="result-amount">+40 ● Gold</div>
                 </div>
             `;
             toast('Won 40 gold!', 'success');
@@ -481,7 +486,7 @@ function renderGuess() {
                     <button class="guess-num" id="guess${n}" onclick="selectGuess(${n})">${n}</button>
                 `).join('')}
             </div>
-            <button class="play-btn" id="guessBtn" onclick="makeGuess()" disabled>REVEAL (💎 25)</button>
+            <button class="play-btn" id="guessBtn" onclick="makeGuess()" disabled>REVEAL (◆ 25)</button>
         </div>
         <div id="guessResult"></div>
     `;
@@ -519,7 +524,7 @@ function makeGuess() {
                 document.getElementById('guessResult').innerHTML = `
                     <div class="result-display win">
                         <div class="result-text win">🎯 PERFECT!</div>
-                        <div class="result-amount">+250 🪙 Gold (10x!)</div>
+                        <div class="result-amount">+250 ● Gold (10x!)</div>
                     </div>
                 `;
                 toast('JACKPOT! Won 250 gold!', 'success');
@@ -559,7 +564,7 @@ function renderDice() {
                     <div class="dice dealer" id="dealerDice">?</div>
                 </div>
             </div>
-            <button class="play-btn" onclick="rollDice()">ROLL DICE (💎 30)</button>
+            <button class="play-btn" onclick="rollDice()">ROLL DICE (◆ 30)</button>
         </div>
         <div id="diceResult"></div>
     `;
@@ -596,7 +601,7 @@ function rollDice() {
                 document.getElementById('diceResult').innerHTML = `
                     <div class="result-display win">
                         <div class="result-text win">🎉 YOU WIN!</div>
-                        <div class="result-amount">+${prize} 🪙 Gold</div>
+                        <div class="result-amount">+${prize} ● Gold</div>
                     </div>
                 `;
                 toast(`Won ${prize} gold!`, 'success');
@@ -622,7 +627,7 @@ function renderTreasure() {
                 <div class="treasure-box" id="chest2" onclick="openChest(2)">📦</div>
                 <div class="treasure-box" id="chest3" onclick="openChest(3)">📦</div>
             </div>
-            <button class="play-btn" id="treasureBtn" onclick="buyTreasure()">PAY TO PLAY (💎 50)</button>
+            <button class="play-btn" id="treasureBtn" onclick="buyTreasure()">PAY TO PLAY (◆ 50)</button>
         </div>
         <div id="treasureResult"></div>
     `;
@@ -640,17 +645,17 @@ function buyTreasure() {
     // Generate prizes
     treasureWinner = Math.floor(Math.random() * 3) + 1;
     const prizes = [
-        { icon: '🪨', amount: 30, type: 'stone' },
-        { icon: '⚙️', amount: 40, type: 'iron' },
-        { icon: '🪙', amount: 75, type: 'gold' }
+        { icon: '▣', amount: 30, type: 'stone' },
+        { icon: '⬡', amount: 40, type: 'iron' },
+        { icon: '●', amount: 75, type: 'gold' }
     ];
     
     // Shuffle and assign winner
     treasurePrizes = prizes.sort(() => Math.random() - 0.5);
     // Make winner chest have gold or better
     const goodPrize = Math.random() < 0.1 
-        ? { icon: '🪵', amount: 5, type: 'wood' }
-        : { icon: '🪙', amount: 100, type: 'gold' };
+        ? { icon: '⧫', amount: 5, type: 'wood' }
+        : { icon: '●', amount: 100, type: 'gold' };
     treasurePrizes[treasureWinner - 1] = goodPrize;
 }
 
@@ -725,11 +730,16 @@ function openExchange(from, to) {
         ? `Trade ${fromData.name} for ${toData.name} (${rate}:1 rate)`
         : `Convert ${fromData.name} to ${toData.name} (1:${rate} rate)`;
     
-    document.getElementById('exFromIcon').textContent = fromData.icon;
+    // Use NW_CURRENCY for premium icons
+    if (typeof NW_CURRENCY !== 'undefined') {
+        document.getElementById('exFromIcon').innerHTML = NW_CURRENCY.icon(from, { size: 32 });
+        document.getElementById('exToIcon').innerHTML = NW_CURRENCY.icon(to, { size: 32 });
+    } else {
+        document.getElementById('exFromIcon').textContent = fromData.icon;
+        document.getElementById('exToIcon').textContent = toData.icon;
+    }
     document.getElementById('exFromName').textContent = fromData.name;
     document.getElementById('exFromBal').textContent = formatNum(currentBalance);
-    
-    document.getElementById('exToIcon').textContent = toData.icon;
     document.getElementById('exToName').textContent = toData.name;
     
     document.getElementById('exAmount').value = isUpgrade ? rate : 1;

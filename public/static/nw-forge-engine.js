@@ -450,7 +450,7 @@ function playSound(type) {
         },
         
         // ═══════════════════════════════════════════════════════════════════
-        // MYTHIC REVEAL - MAXIMUM HYPE! 🌟💎✨
+        // MYTHIC REVEAL - MAXIMUM HYPE! 🌟◆✨
         // ═══════════════════════════════════════════════════════════════════
         mythic: () => {
             // LEGENDARY ASCENSION - Multi-layered orchestral hit
@@ -2587,7 +2587,7 @@ function revealCard() {
         // Format stats string from gameStats
         const stats = card.gameStats;
         const statsText = stats 
-            ? `⚔️ ${stats.atk} | ❤️ ${stats.hp} | 💎 ${stats.cost}`
+            ? `⚔️ ${stats.atk} | ❤️ ${stats.hp} | ◆ ${stats.cost}`
             : '';
         if (cardStats) cardStats.textContent = statsText;
         
@@ -2791,7 +2791,7 @@ function showRarityEffects(card) {
             setTimeout(() => energyRing.classList.remove('pulse'), 1200);
             startSparkleRain('#ff00ff', 3000);
             setTimeout(() => showMythicCelebration(card), 2500);
-            showToast(`💎 MYTHIC! ${card.name[lang] || card.name.en}`, 'mythic');
+            showToast(`◆ MYTHIC! ${card.name[lang] || card.name.en}`, 'mythic');
             // NW_FX Premium celebration!
             if (window.NW_FX) {
                 NW_FX.celebrate.epicPull('mythic');
@@ -3077,7 +3077,7 @@ function showToast(msg, rarity = null) {
     // Use NW_UI toast if available (much better!)
     if (typeof NW_UI !== 'undefined') {
         const rarityColors = {
-            mythic: { bg: 'linear-gradient(135deg, #ff00ff, #8b00ff)', icon: '💎' },
+            mythic: { bg: 'linear-gradient(135deg, #ff00ff, #8b00ff)', icon: '◆' },
             legendary: { bg: 'linear-gradient(135deg, #ffd700, #ff6b00)', icon: '⭐' },
             epic: { bg: 'linear-gradient(135deg, #a855f7, #7c3aed)', icon: '💜' },
             rare: { bg: 'linear-gradient(135deg, #3b82f6, #1d4ed8)', icon: '💙' },

@@ -328,9 +328,9 @@ const NW_CONFIG = {
             desc: { en: 'File complaints, deliver verdicts', zh: '提交訴狀、宣判', th: 'ยื่นคำร้อง ตัดสิน' },
             keywords: { en: ['court', 'sue', 'complaint', 'verdict', 'judge'], zh: ['法院', '訴', '告', '判'], th: ['ศาล', 'ฟ้อง', 'ตัดสิน'] },
             tips: {
-                en: ['File complaints for 5💎, win to earn 25🪙!', 'Appeal costs 10💎 with 3% success rate 😈'],
-                zh: ['提交訴狀5💎，勝訴獲25🪙！', '上訴需10💎，只有3%成功率 😈'],
-                th: ['ยื่นคำร้อง 5💎 ชนะได้ 25🪙!', 'อุทธรณ์ 10💎 สำเร็จแค่ 3% 😈']
+                en: ['File complaints for 5◆, win to earn 25●!', 'Appeal costs 10◆ with 3% success rate 😈'],
+                zh: ['提交訴狀5◆，勝訴獲25●！', '上訴需10◆，只有3%成功率 😈'],
+                th: ['ยื่นคำร้อง 5◆ ชนะได้ 25●!', 'อุทธรณ์ 10◆ สำเร็จแค่ 3% 😈']
             }
         },
         therapy: { path: '/therapy', emoji: '🛋️', category: 'absurdist',
@@ -338,9 +338,9 @@ const NW_CONFIG = {
             desc: { en: 'AI therapist for gaming trauma', zh: 'AI治療師幫助遊戲創傷', th: 'นักบำบัด AI สำหรับบาดแผลเกม' },
             keywords: { en: ['therapy', 'therapist', 'mental', 'counsel'], zh: ['療', '心理', '治療'], th: ['บำบัด', 'จิต', 'ปรึกษา'] },
             tips: {
-                en: ['Complete session to earn 3💎!', 'Get diagnosed with Gacha Pull Depression 🎰'],
-                zh: ['完成療程獲3💎！', '被診斷為抽卡憂鬱症 🎰'],
-                th: ['ทำเซสชันเสร็จรับ 3💎!', 'วินิจฉัยว่าเป็น Gacha Pull Depression 🎰']
+                en: ['Complete session to earn 3◆!', 'Get diagnosed with Gacha Pull Depression 🎰'],
+                zh: ['完成療程獲3◆！', '被診斷為抽卡憂鬱症 🎰'],
+                th: ['ทำเซสชันเสร็จรับ 3◆!', 'วินิจฉัยว่าเป็น Gacha Pull Depression 🎰']
             }
         },
         hr: { path: '/hr', emoji: '👔', category: 'absurdist',
@@ -348,9 +348,9 @@ const NW_CONFIG = {
             desc: { en: 'Absurd positions, 100% rejection', zh: '荒謬職位，100%被拒', th: 'ตำแหน่งไร้สาระ ปฏิเสธ 100%' },
             keywords: { en: ['hr', 'job', 'hire', 'position', 'banana officer'], zh: ['人力', '工作', '職位'], th: ['บุคคล', 'งาน', 'สมัคร'] },
             tips: {
-                en: ['Apply for Chief Banana Officer! 🍌', 'Application 5💎, consolation: 10🪙'],
-                zh: ['申請首席香蕉官！🍌', '申請費5💎，安慰獎：10🪙'],
-                th: ['สมัคร Chief Banana Officer! 🍌', 'สมัคร 5💎 ปลอบใจ: 10🪙']
+                en: ['Apply for Chief Banana Officer! 🍌', 'Application 5◆, consolation: 10●'],
+                zh: ['申請首席香蕉官！🍌', '申請費5◆，安慰獎：10●'],
+                th: ['สมัคร Chief Banana Officer! 🍌', 'สมัคร 5◆ ปลอบใจ: 10●']
             }
         },
         conspiracy: { path: '/conspiracy', emoji: '📌', category: 'absurdist',
@@ -358,9 +358,9 @@ const NW_CONFIG = {
             desc: { en: 'Connect dots, uncover secrets', zh: '連接線索、揭露秘密', th: 'เชื่อมจุด เปิดโปงความลับ' },
             keywords: { en: ['conspiracy', 'theory', 'secret', 'illuminati', 'evidence'], zh: ['陰謀', '秘密', '理論'], th: ['สมคบ', 'ความลับ', 'ทฤษฎี'] },
             tips: {
-                en: ['Drag evidence to connect dots!', 'Submit theories 2💎, truth seekers earn 15🪙'],
-                zh: ['拖動證據連接線索！', '提交理論2💎，揭密者獲15🪙'],
-                th: ['ลากหลักฐานเชื่อมจุด!', 'ส่งทฤษฎี 2💎 นักแสวงหาความจริงได้ 15🪙']
+                en: ['Drag evidence to connect dots!', 'Submit theories 2◆, truth seekers earn 15●'],
+                zh: ['拖動證據連接線索！', '提交理論2◆，揭密者獲15●'],
+                th: ['ลากหลักฐานเชื่อมจุด!', 'ส่งทฤษฎี 2◆ นักแสวงหาความจริงได้ 15●']
             }
         },
         updates: { path: '/updates', emoji: '📋', category: 'meta',
@@ -565,7 +565,7 @@ const NW_CONFIG = {
                     zh: '一塊神秘的木頭，賦予召喚傳說卡牌的力量。來源不明，但隱約有香蕉味。',
                     th: 'ไม้ลึกลับที่ให้พลังเรียกการ์ดตำนาน ไม่ทราบที่มา แต่มีกลิ่นกล้วยจางๆ'
                 },
-                emoji: '🪵'
+                emoji: '⧫'
             },
             {
                 name: { en: 'The Golden Banana', zh: '黃金香蕉', th: 'กล้วยทอง' },

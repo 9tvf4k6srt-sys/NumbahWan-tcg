@@ -277,6 +277,25 @@ See `SHORTHAND.md` for quick commands:
 **Files**: nw-guide.js
 **Lesson**: Test i18n thoroughly with console.log
 
+### 2026-02-02: Currency Icon Unification
+**Issue**: Currency emojis (💎🪙⚙️🪨🪵) render inconsistently across devices
+**Solution**: Global replacement with Unicode symbols: ◆ ● ⬡ ▣ ⧫
+**Pattern**: 
+- Diamond: ◆ (U+25C6) - #00d4ff
+- Gold: ● (U+25CF) - #ffd700  
+- Iron: ⬡ (U+2B21) - #94a3b8
+- Stone: ▣ (U+25A3) - #00ff88
+- Wood: ⧫ (U+29EB) - #c97f3d
+**Files Changed**: 20+ HTML files, 8+ JS modules
+**Best Practice**: Always use NW_CURRENCY.format() for currency display
+**Lesson**: Establish icon standards EARLY - retrofitting is painful
+
+### 2026-02-02: Batch File Editing
+**Issue**: Editing currency icons one-by-one was slow
+**Solution**: Used sed for batch replacement across files
+**Command**: `sed -i 's/💎/◆/g; s/🪙/●/g;' file.js`
+**Lesson**: For large-scale text replacements, sed is faster than manual edits
+
 ---
 
 *Update this file after every significant change!*

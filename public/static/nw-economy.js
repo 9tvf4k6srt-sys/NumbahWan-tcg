@@ -15,12 +15,12 @@ const NW_ECONOMY = {
     // ═══════════════════════════════════════════════════════════════
     
     currencies: {
-        // 💎 DIAMOND - Premium Currency (Cyan)
+        // ◆ DIAMOND - Premium Currency (Cyan)
         // The "whale" currency - fastest path to everything
         diamond: {
             id: 'diamond',
             name: 'Diamond',
-            icon: '💎',
+            icon: '◆',
             color: '#00ffff',
             iconPath: '/static/icons/diamond.svg',
             tier: 'premium',
@@ -46,12 +46,12 @@ const NW_ECONOMY = {
             rarity: 'rare'
         },
         
-        // 🪙 GOLD - Standard Currency (Gold)
+        // ● GOLD - Standard Currency (Gold)
         // The "grinder" currency - earned through play
         gold: {
             id: 'gold',
             name: 'Gold',
-            icon: '🪙',
+            icon: '●',
             color: '#ffd700',
             iconPath: '/static/icons/gold.svg',
             tier: 'standard',
@@ -78,12 +78,12 @@ const NW_ECONOMY = {
             rarity: 'common'
         },
         
-        // ⚙️ IRON - Crafting Currency (Silver)
+        // ⬡ IRON - Crafting Currency (Silver)
         // The "crafter" currency - for upgrading and forging
         iron: {
             id: 'iron',
             name: 'Iron',
-            icon: '⚙️',
+            icon: '⬡',
             color: '#94a3b8',
             iconPath: '/static/icons/iron.svg',
             tier: 'crafting',
@@ -109,12 +109,12 @@ const NW_ECONOMY = {
             rarity: 'uncommon'
         },
         
-        // 🪨 STONE - Foundation Currency (Green)  
+        // ▣ STONE - Foundation Currency (Green)  
         // The "builder" currency - bulk resource
         stone: {
             id: 'stone',
             name: 'Stone',
-            icon: '🪨',
+            icon: '▣',
             color: '#00ff88',
             iconPath: '/static/icons/black-jade.svg',
             tier: 'foundation',
@@ -140,12 +140,12 @@ const NW_ECONOMY = {
             rarity: 'common'
         },
         
-        // 🪵 SACRED LOG - Ultra Rare Currency (Brown)
+        // ⧫ SACRED LOG - Ultra Rare Currency (Brown)
         // The "elite" currency - only for true collectors
         wood: {
             id: 'wood',
             name: 'Sacred Log',
-            icon: '🪵',
+            icon: '⧫',
             color: '#c97f3d',
             iconPath: '/static/icons/sacred-log-64.webp',
             tier: 'legendary',
@@ -274,11 +274,15 @@ const NW_ECONOMY = {
         return this.currencies[id] || null;
     },
     
-    // Format currency amount with icon
+    // Format currency amount with icon - uses NW_CURRENCY if available
     formatAmount(currencyId, amount) {
+        if (typeof NW_CURRENCY !== 'undefined') {
+            return NW_CURRENCY.format(currencyId, amount);
+        }
+        // Fallback
         const currency = this.currencies[currencyId];
         if (!currency) return amount;
-        return `${currency.icon} ${amount.toLocaleString()}`;
+        return `${amount.toLocaleString()}`;
     },
     
     // Get all currencies as array
@@ -302,18 +306,22 @@ const NW_ECONOMY = {
         if (!pricing) return null;
         
         const prices = [];
+        const fmt = (type, amt) => typeof NW_CURRENCY !== 'undefined' 
+            ? NW_CURRENCY.format(type, amt) 
+            : `${amt}`;
+        
         if (pricing.usd > 0) prices.push(`$${pricing.usd}`);
-        if (pricing.wood) prices.push(`🪵 ${pricing.wood}`);
-        if (pricing.diamond) prices.push(`💎 ${pricing.diamond}`);
-        if (pricing.gold) prices.push(`🪙 ${pricing.gold}`);
-        if (pricing.iron) prices.push(`⚙️ ${pricing.iron}`);
-        if (pricing.stone) prices.push(`🪨 ${pricing.stone}`);
+        if (pricing.wood) prices.push(fmt('wood', pricing.wood));
+        if (pricing.diamond) prices.push(fmt('diamond', pricing.diamond));
+        if (pricing.gold) prices.push(fmt('gold', pricing.gold));
+        if (pricing.iron) prices.push(fmt('iron', pricing.iron));
+        if (pricing.stone) prices.push(fmt('stone', pricing.stone));
         
         return {
             name: pricing.name,
             prices: prices,
-            primary: pricing.wood ? `🪵 ${pricing.wood}` : 
-                     pricing.diamond ? `💎 ${pricing.diamond}` : 
+            primary: pricing.wood ? fmt('wood', pricing.wood) : 
+                     pricing.diamond ? fmt('diamond', pricing.diamond) : 
                      `$${pricing.usd}`
         };
     },

@@ -715,8 +715,8 @@ const NW = (function() {
         // Currency/Items
         '💰': 'coins',
         '💵': 'coins',
-        '💎': 'diamond',
-        '🪵': 'scroll',
+        '◆': 'diamond',
+        '⧫': 'scroll',
         '📜': 'scroll',
         '🧪': 'potion',
         
@@ -759,7 +759,7 @@ const NW = (function() {
         '🎯': 'target',
         '🔮': 'crystal-ball',
         '🔍': 'search',
-        '⚙️': 'settings',
+        '⬡': 'settings',
         '🔧': 'settings',
         
         // Social

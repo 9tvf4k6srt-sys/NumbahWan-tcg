@@ -184,12 +184,12 @@ const NWIconsInline = {
    * Emoji to icon mapping
    */
   emojiMap: {
-    '🔥': 'fire', '💎': 'diamond', '⭐': 'star', '🌟': 'star', '✨': 'sparkles',
+    '🔥': 'fire', '◆': 'diamond', '⭐': 'star', '🌟': 'star', '✨': 'sparkles',
     '👑': 'crown', '🏆': 'trophy', '⚔️': 'swords', '🗡️': 'sword', '🛡️': 'shield',
     '🎯': 'target', '🎮': 'gaming', '🎲': 'dice', '💀': 'skull', '👻': 'ghost',
     '❤️': 'heart', '💖': 'heart', '🧡': 'heart', '💛': 'heart',
     '🔔': 'bell', '⏰': 'clock', '🕐': 'clock', '👁️': 'eye', '👀': 'eye',
-    '🔒': 'lock', '🔓': 'unlock', '⚙️': 'settings', '🔧': 'settings',
+    '🔒': 'lock', '🔓': 'unlock', '⬡': 'settings', '🔧': 'settings',
     '🎁': 'gift', '🎉': 'party', '🎊': 'confetti', '🥳': 'party',
     '📜': 'scroll', '📄': 'document', '📋': 'document', '🃏': 'scroll',
     '🏠': 'home', '🏡': 'home', '🚀': 'rocket', '✈️': 'rocket',
