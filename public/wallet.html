@@ -1033,13 +1033,20 @@
     function updateUI() {
         const isGM = NW_USER.isGM;
         const guestEl = document.getElementById('guestId');
+        const userId = NW_USER.id || NW_WALLET?.getGuestId?.() || 'Unknown';
         
         if (isGM) {
-            guestEl.textContent = '👑 GM';
+            guestEl.innerHTML = '👑 <span style="color:#ffd700">GM</span> • ' + userId;
             guestEl.classList.add('gm');
         } else {
-            guestEl.textContent = NW_USER.id || 'Guest';
+            guestEl.textContent = userId;
             guestEl.classList.remove('gm');
+        }
+        
+        // Also update profile section ID display
+        const userIdDisplay = document.getElementById('userIdDisplay');
+        if (userIdDisplay) {
+            userIdDisplay.textContent = isGM ? '👑 GM: ' + userId : userId;
         }
         
         const gmSection = document.getElementById('gmSection');
@@ -1164,14 +1171,15 @@
         }
         
         // Get user ID from NW_USER or NW_WALLET
-        const userId = NW_USER.id || NW_WALLET.getGuestId() || 'Unknown';
-        const tier = NW_USER.identity?.citizenshipTier?.toUpperCase() || 'GUEST';
+        const userId = NW_USER.id || NW_WALLET?.getGuestId?.() || 'Unknown';
+        const isGM = NW_USER.isGM;
+        const tier = isGM ? 'GM' : (NW_USER.identity?.citizenshipTier?.toUpperCase() || 'GUEST');
         const trust = NW_USER.identity?.trustScore || 50;
         
         document.getElementById('displayNameInput').value = NW_USER.profile?.displayName || '';
-        document.getElementById('userIdDisplay').textContent = userId;
+        document.getElementById('userIdDisplay').textContent = isGM ? '👑 GM: ' + userId : userId;
         document.getElementById('citizenTier').textContent = tier;
-        document.getElementById('trustScore').textContent = trust + '/100';
+        document.getElementById('trustScore').textContent = isGM ? '∞' : (trust + '/100');
     }
     
     function saveDisplayName() {

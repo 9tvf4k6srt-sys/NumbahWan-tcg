@@ -237,8 +237,8 @@
         style.textContent = `
             #nw-guide-toggle {
                 position: fixed;
-                bottom: 24px;
-                right: 24px;
+                bottom: 50px;
+                left: 24px;
                 width: 52px;
                 height: 52px;
                 border-radius: 14px;
@@ -274,7 +274,7 @@
             .nw-guide-new-badge {
                 position: absolute;
                 top: -4px;
-                right: -4px;
+                left: -4px;
                 background: linear-gradient(135deg, #ef4444, #dc2626);
                 color: white;
                 font-size: 9px;
@@ -290,8 +290,8 @@
 
             #nw-guide-chat {
                 position: fixed;
-                bottom: 100px;
-                right: 24px;
+                bottom: 120px;
+                left: 24px;
                 width: 380px;
                 max-width: calc(100vw - 48px);
                 max-height: 520px;
@@ -490,14 +490,14 @@
 
             @media (max-width: 480px) {
                 #nw-guide-toggle {
-                    bottom: 16px;
-                    right: 16px;
+                    bottom: 50px;
+                    left: 16px;
                     width: 48px;
                     height: 48px;
                 }
                 #nw-guide-chat {
-                    bottom: 80px;
-                    right: 16px;
+                    bottom: 110px;
+                    left: 16px;
                     max-width: calc(100vw - 32px);
                 }
             }
