@@ -1,0 +1,786 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Conspiracy Board | NumbahWan</title>
+    <link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Courier+Prime:wght@400;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <script src="/static/nw-wallet.js"></script>
+    <script src="/static/nw-sounds.js" defer></script>
+    <script src="/static/nw-guide.js" defer></script>
+    <style>
+        :root {
+            --bg: #1a1408;
+            --cork: #c4a574;
+            --pin-red: #dc2626;
+            --pin-yellow: #eab308;
+            --pin-blue: #2563eb;
+            --pin-green: #16a34a;
+            --string-red: #ef4444;
+            --paper: #f5f5dc;
+            --text: #1a1a1a;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg);
+            color: white;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+        .font-typewriter { font-family: 'Courier Prime', monospace; }
+        
+        /* Cork board background */
+        .board-container {
+            position: relative;
+            min-height: calc(100vh - 120px);
+            background: linear-gradient(135deg, #c4a574 0%, #a08050 50%, #c4a574 100%);
+            margin: 20px;
+            border-radius: 8px;
+            box-shadow: 
+                inset 0 0 30px rgba(0,0,0,0.3),
+                0 10px 30px rgba(0,0,0,0.5);
+            overflow: hidden;
+        }
+        .board-container::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: url("data:image/svg+xml,%3Csvg viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4'/%3E%3C/filter%3E%3Crect width='100' height='100' filter='url(%23n)' opacity='0.3'/%3E%3C/svg%3E");
+            opacity: 0.5;
+            pointer-events: none;
+        }
+        
+        /* Header */
+        .conspiracy-header {
+            background: linear-gradient(180deg, rgba(0,0,0,0.8) 0%, transparent 100%);
+            padding: 20px;
+            text-align: center;
+            position: relative;
+            z-index: 10;
+        }
+        .conspiracy-title {
+            font-family: 'Courier Prime', monospace;
+            font-size: clamp(1.5rem, 4vw, 2.5rem);
+            color: #ef4444;
+            text-shadow: 2px 2px 0 #000;
+            letter-spacing: 2px;
+        }
+        .conspiracy-subtitle {
+            font-size: 0.85rem;
+            color: rgba(255,255,255,0.6);
+            font-style: italic;
+        }
+        
+        /* Evidence cards */
+        .evidence-card {
+            position: absolute;
+            width: 200px;
+            background: var(--paper);
+            color: var(--text);
+            padding: 16px;
+            border-radius: 2px;
+            box-shadow: 3px 3px 10px rgba(0,0,0,0.3);
+            cursor: grab;
+            transition: transform 0.1s, box-shadow 0.1s;
+            z-index: 5;
+        }
+        .evidence-card:hover {
+            transform: scale(1.02) rotate(-1deg);
+            box-shadow: 5px 5px 15px rgba(0,0,0,0.4);
+        }
+        .evidence-card.dragging {
+            cursor: grabbing;
+            transform: scale(1.05) rotate(-2deg);
+            box-shadow: 8px 8px 20px rgba(0,0,0,0.5);
+            z-index: 100;
+        }
+        .evidence-card::before {
+            content: '';
+            position: absolute;
+            top: -8px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 20px;
+            height: 20px;
+            background: var(--pin-red);
+            border-radius: 50%;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+        .evidence-card.yellow::before { background: var(--pin-yellow); }
+        .evidence-card.blue::before { background: var(--pin-blue); }
+        .evidence-card.green::before { background: var(--pin-green); }
+        
+        .evidence-title {
+            font-family: 'Courier Prime', monospace;
+            font-weight: 700;
+            font-size: 0.9rem;
+            margin-bottom: 8px;
+            color: #991b1b;
+        }
+        .evidence-content {
+            font-size: 0.8rem;
+            line-height: 1.4;
+        }
+        .evidence-source {
+            font-size: 0.65rem;
+            color: #666;
+            margin-top: 8px;
+            font-style: italic;
+        }
+        
+        /* Photo evidence */
+        .photo-evidence {
+            width: 150px;
+            padding: 8px;
+            background: white;
+            box-shadow: 3px 3px 10px rgba(0,0,0,0.3);
+        }
+        .photo-evidence img {
+            width: 100%;
+            height: 100px;
+            object-fit: cover;
+            filter: sepia(30%) contrast(1.1);
+        }
+        .photo-evidence .photo-caption {
+            font-family: 'Courier Prime', monospace;
+            font-size: 0.7rem;
+            text-align: center;
+            margin-top: 6px;
+            color: var(--text);
+        }
+        
+        /* String connections */
+        .string-connection {
+            position: absolute;
+            height: 2px;
+            background: var(--string-red);
+            transform-origin: left center;
+            z-index: 2;
+            pointer-events: none;
+        }
+        .string-connection.yellow { background: #eab308; }
+        .string-connection.blue { background: #3b82f6; }
+        
+        /* Central mystery */
+        .central-mystery {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 280px;
+            background: #1a1a1a;
+            color: white;
+            padding: 24px;
+            border: 4px solid var(--string-red);
+            text-align: center;
+            z-index: 10;
+        }
+        .central-mystery h2 {
+            font-family: 'Courier Prime', monospace;
+            font-size: 1.3rem;
+            color: #ef4444;
+            margin-bottom: 12px;
+        }
+        .central-mystery p {
+            font-size: 0.85rem;
+            opacity: 0.8;
+        }
+        
+        /* Add theory button */
+        .add-theory-btn {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            padding: 14px 24px;
+            background: #ef4444;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            z-index: 100;
+            box-shadow: 0 4px 12px rgba(239,68,68,0.4);
+            transition: all 0.2s;
+        }
+        .add-theory-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(239,68,68,0.5);
+        }
+        
+        /* Modal */
+        .modal {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.8);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            padding: 20px;
+        }
+        .modal.active { display: flex; }
+        .modal-content {
+            background: var(--paper);
+            color: var(--text);
+            border-radius: 8px;
+            max-width: 500px;
+            width: 100%;
+            padding: 30px;
+        }
+        .modal-title {
+            font-family: 'Courier Prime', monospace;
+            font-size: 1.3rem;
+            margin-bottom: 20px;
+            color: #991b1b;
+        }
+        .form-group { margin-bottom: 16px; }
+        .form-label {
+            display: block;
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-bottom: 6px;
+        }
+        .form-input, .form-textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ccc;
+            border-radius: 4px;
+            font-family: 'Courier Prime', monospace;
+            font-size: 14px;
+        }
+        .form-textarea { min-height: 100px; resize: vertical; }
+        .btn-submit {
+            width: 100%;
+            padding: 14px;
+            background: #ef4444;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        .btn-submit:hover { background: #dc2626; }
+        
+        /* Lang switcher */
+        .lang-switch {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            gap: 8px;
+            z-index: 100;
+        }
+        .lang-btn {
+            padding: 8px 12px;
+            background: rgba(0,0,0,0.7);
+            border: 1px solid #444;
+            border-radius: 6px;
+            color: white;
+            cursor: pointer;
+            font-size: 0.85rem;
+        }
+        .lang-btn.active { border-color: #ef4444; color: #ef4444; }
+        
+        /* Stats */
+        .stats-bar {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            background: rgba(0,0,0,0.8);
+            border: 1px solid #333;
+            border-radius: 8px;
+            padding: 12px 16px;
+            z-index: 100;
+            display: flex;
+            gap: 20px;
+        }
+        .stat-item { text-align: center; }
+        .stat-value { font-size: 1.2rem; font-weight: 700; color: #ef4444; }
+        .stat-label { font-size: 0.65rem; color: rgba(255,255,255,0.5); text-transform: uppercase; }
+        
+        /* Warning tape */
+        .warning-tape {
+            position: absolute;
+            bottom: -10px;
+            left: -20px;
+            right: -20px;
+            height: 30px;
+            background: repeating-linear-gradient(
+                45deg,
+                #eab308,
+                #eab308 10px,
+                #1a1a1a 10px,
+                #1a1a1a 20px
+            );
+            transform: rotate(-2deg);
+            z-index: 20;
+        }
+        
+        /* Handwritten notes */
+        .handwritten {
+            font-family: 'Courier Prime', monospace;
+            background: #ffffa5;
+            padding: 10px;
+            transform: rotate(-3deg);
+            box-shadow: 2px 2px 5px rgba(0,0,0,0.2);
+        }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            .evidence-card { width: 160px; font-size: 0.8rem; }
+            .central-mystery { width: 220px; }
+            .board-container { margin: 10px; min-height: calc(100vh - 80px); }
+        }
+    </style>
+</head>
+<body>
+    <!-- Language Switcher -->
+    <div class="lang-switch">
+        <button class="lang-btn active" onclick="setLang('en')">EN</button>
+        <button class="lang-btn" onclick="setLang('zh')">中文</button>
+        <button class="lang-btn" onclick="setLang('th')">ไทย</button>
+    </div>
+
+    <!-- Header -->
+    <header class="conspiracy-header">
+        <h1 class="conspiracy-title" data-i18n="title">⚠️ THEY DON'T WANT YOU TO KNOW ⚠️</h1>
+        <p class="conspiracy-subtitle" data-i18n="subtitle">The truth about the Sacred Log Shortage of 2024</p>
+        <a href="/" style="color: rgba(255,255,255,0.6); font-size: 0.8rem; text-decoration: none;">← <span data-i18n="backHome">Back to Guild</span></a>
+    </header>
+
+    <!-- Cork Board -->
+    <div class="board-container" id="board">
+        <!-- Central Mystery -->
+        <div class="central-mystery">
+            <h2 data-i18n="centralQuestion">WHO CONTROLS THE LOGS?</h2>
+            <p data-i18n="centralDesc">Everything connects back to this. Follow the strings.</p>
+        </div>
+        
+        <!-- Evidence cards will be added by JS -->
+        <div class="warning-tape"></div>
+    </div>
+
+    <!-- Stats -->
+    <div class="stats-bar">
+        <div class="stat-item">
+            <div class="stat-value" id="theoriesCount">0</div>
+            <div class="stat-label" data-i18n="theories">Theories</div>
+        </div>
+        <div class="stat-item">
+            <div class="stat-value" id="connectionsCount">0</div>
+            <div class="stat-label" data-i18n="connections">Connections</div>
+        </div>
+    </div>
+
+    <!-- Add Theory Button -->
+    <button class="add-theory-btn" onclick="showModal()">
+        📌 <span data-i18n="addTheory">Add Theory</span>
+    </button>
+
+    <!-- Add Theory Modal -->
+    <div class="modal" id="theoryModal">
+        <div class="modal-content">
+            <h3 class="modal-title">📌 <span data-i18n="submitTheory">Submit Your Theory</span></h3>
+            <div class="form-group">
+                <label class="form-label" data-i18n="theoryTitle">Theory Title</label>
+                <input type="text" class="form-input" id="theoryTitle" data-i18n-placeholder="titlePlaceholder">
+            </div>
+            <div class="form-group">
+                <label class="form-label" data-i18n="theoryContent">Evidence / Details</label>
+                <textarea class="form-textarea" id="theoryContent" data-i18n-placeholder="contentPlaceholder"></textarea>
+            </div>
+            <div class="form-group">
+                <label class="form-label" data-i18n="theorySource">Source</label>
+                <input type="text" class="form-input" id="theorySource" data-i18n-placeholder="sourcePlaceholder">
+            </div>
+            <div style="display: flex; gap: 12px;">
+                <button class="btn-submit" onclick="submitTheory()" style="flex: 1;">
+                    <span data-i18n="pinToBoard">Pin to Board</span>
+                </button>
+                <button class="btn-submit" onclick="closeModal()" style="flex: 0.3; background: #666;">✕</button>
+            </div>
+            <p style="font-size: 0.75rem; color: #666; text-align: center; margin-top: 10px;" data-i18n="theoryFee">
+                Theory submission: 💎2 (to fund our investigation)
+            </p>
+        </div>
+    </div>
+
+    <script>
+    // ==================== I18N ====================
+    const translations = {
+        en: {
+            title: "⚠️ THEY DON'T WANT YOU TO KNOW ⚠️",
+            subtitle: "The truth about the Sacred Log Shortage of 2024",
+            backHome: "Back to Guild",
+            centralQuestion: "WHO CONTROLS THE LOGS?",
+            centralDesc: "Everything connects back to this. Follow the strings.",
+            theories: "Theories",
+            connections: "Connections",
+            addTheory: "Add Theory",
+            submitTheory: "Submit Your Theory",
+            theoryTitle: "Theory Title",
+            titlePlaceholder: "e.g., 'RegginA is secretly three kids in a trenchcoat'",
+            theoryContent: "Evidence / Details",
+            contentPlaceholder: "What do you KNOW? What have you SEEN?",
+            theorySource: "Source",
+            sourcePlaceholder: "e.g., 'My cousin's friend who works at Nexon'",
+            pinToBoard: "Pin to Board",
+            theoryFee: "Theory submission: 💎2 (to fund our investigation)",
+            // Pre-made evidence
+            ev1Title: "THE BANANA PATCH",
+            ev1Content: "RegginA's avatar has a suspicious banana-shaped patch on their left sleeve. Coincidence? The guild was founded the same year banana prices peaked. CONNECTED.",
+            ev1Source: "Pattern analysis by Anonymous",
+            ev2Title: "SACRED LOG SHORTAGE",
+            ev2Content: "Logs disappeared exactly 72 hours after the last full moon. The number 72 appears in ancient Maplestory prophecies. Wake up.",
+            ev2Source: "Recovered server logs (redacted)",
+            ev3Title: "THE 3AM INCIDENT",
+            ev3Content: "Three guild members reported seeing the same NPC walking backwards at exactly 3:00 AM server time. All three were silenced shortly after.",
+            ev3Source: "Witness testimony (anonymized)",
+            ev4Title: "GACHA RATES",
+            ev4Content: "0.5% mythic rate? More like 0.5% TRUTH rate. The real rates are controlled by a shadow council of whales. I've seen the spreadsheets.",
+            ev4Source: "Leaked internal documents",
+            ev5Title: "THE NUMBER 7",
+            ev5Content: "7 days to claim daily rewards. 7 currencies in the economy. 7 letters in 'RegginA'. 7 - 1 = 6. 666? THE NUMBERS ARE SPEAKING.",
+            ev5Source: "Mathematical analysis",
+            ev6Title: "MISSING MEMBERS",
+            ev6Content: "23 members have left the guild in the past month. 23 = 2+3 = 5. Five is the number of logs needed for a mythic pull. They're being silenced.",
+            ev6Source: "Guild roster analysis",
+            ev7Title: "SERVER MAINTENANCE",
+            ev7Content: "Every maintenance happens on a Tuesday. TUESDAY contains 7 letters. What are they hiding? What are they INSTALLING?",
+            ev7Source: "Calendar correlation study",
+            ev8Title: "THE FERRY ROUTE",
+            ev8Content: "The ferry to Victoria Island takes exactly the same time as boiling an egg. The egg represents HIDDEN KNOWLEDGE. They're mocking us.",
+            ev8Source: "Travel time documentation",
+            addedMsg: "Theory added to the board! The truth seekers thank you.",
+        },
+        zh: {
+            title: "⚠️ 他們不想讓你知道 ⚠️",
+            subtitle: "2024年神聖原木短缺的真相",
+            backHome: "返回公會",
+            centralQuestion: "誰控制著原木？",
+            centralDesc: "一切都與此有關。跟著線索走。",
+            theories: "理論",
+            connections: "連接",
+            addTheory: "添加理論",
+            submitTheory: "提交您的理論",
+            theoryTitle: "理論標題",
+            titlePlaceholder: "例如：'RegginA 其實是三個小孩穿著風衣'",
+            theoryContent: "證據/細節",
+            contentPlaceholder: "你知道什麼？你看到了什麼？",
+            theorySource: "來源",
+            sourcePlaceholder: "例如：'我表哥的朋友在 Nexon 工作'",
+            pinToBoard: "釘到板上",
+            theoryFee: "理論提交費：💎2（用於資助我們的調查）",
+            ev1Title: "香蕉補丁",
+            ev1Content: "RegginA的頭像左袖上有一個可疑的香蕉形狀補丁。巧合？公會成立的那年正好是香蕉價格巔峰。有關聯。",
+            ev1Source: "匿名者的模式分析",
+            ev2Title: "神聖原木短缺",
+            ev2Content: "原木在最後一次滿月後正好72小時消失。數字72出現在古老的楓之谷預言中。醒醒吧。",
+            ev2Source: "恢復的伺服器日誌（已刪節）",
+            ev3Title: "凌晨3點事件",
+            ev3Content: "三名公會成員報告在伺服器時間凌晨3:00看到同一個NPC倒著走。三人不久後都沉默了。",
+            ev3Source: "證人證詞（匿名）",
+            ev4Title: "抽卡機率",
+            ev4Content: "0.5%神話機率？更像是0.5%真相率。真正的機率由鯨魚影子議會控制。我見過那些表格。",
+            ev4Source: "洩露的內部文件",
+            ev5Title: "數字7",
+            ev5Content: "7天領取每日獎勵。7種貨幣。RegginA有7個字母。7-1=6。666？數字在說話。",
+            ev5Source: "數學分析",
+            ev6Title: "失蹤成員",
+            ev6Content: "過去一個月有23名成員離開公會。23=2+3=5。五是神話抽卡所需的原木數。他們被滅口了。",
+            ev6Source: "公會名冊分析",
+            ev7Title: "伺服器維護",
+            ev7Content: "每次維護都在星期二。他們在隱藏什麼？他們在安裝什麼？",
+            ev7Source: "日曆關聯研究",
+            ev8Title: "渡輪路線",
+            ev8Content: "到維多利亞島的渡輪時間正好和煮雞蛋一樣。雞蛋代表隱藏的知識。他們在嘲笑我們。",
+            ev8Source: "旅行時間文檔",
+            addedMsg: "理論已添加到板上！真相追尋者感謝您。",
+        },
+        th: {
+            title: "⚠️ พวกเขาไม่อยากให้คุณรู้ ⚠️",
+            subtitle: "ความจริงเกี่ยวกับการขาดแคลนไม้ศักดิ์สิทธิ์ปี 2024",
+            backHome: "กลับสู่กิลด์",
+            centralQuestion: "ใครควบคุมไม้?",
+            centralDesc: "ทุกอย่างเชื่อมโยงกลับมาที่นี่ ตามเส้นไป",
+            theories: "ทฤษฎี",
+            connections: "การเชื่อมต่อ",
+            addTheory: "เพิ่มทฤษฎี",
+            submitTheory: "ส่งทฤษฎีของคุณ",
+            theoryTitle: "หัวข้อทฤษฎี",
+            titlePlaceholder: "เช่น 'RegginA จริงๆ แล้วเป็นเด็ก 3 คนในเสื้อโค้ท'",
+            theoryContent: "หลักฐาน / รายละเอียด",
+            contentPlaceholder: "คุณรู้อะไร? คุณเห็นอะไร?",
+            theorySource: "แหล่งที่มา",
+            sourcePlaceholder: "เช่น 'เพื่อนของลูกพี่ลูกน้องฉันที่ทำงานที่ Nexon'",
+            pinToBoard: "ปักลงบอร์ด",
+            theoryFee: "ค่าส่งทฤษฎี: 💎2 (เพื่อสนับสนุนการสืบสวน)",
+            ev1Title: "แผ่นปะกล้วย",
+            ev1Content: "อวาตาร์ของ RegginA มีแผ่นปะรูปกล้วยที่น่าสงสัยบนแขนซ้าย บังเอิญ? กิลด์ก่อตั้งในปีเดียวกับที่ราคากล้วยพุ่งสูงสุด เชื่อมโยงกัน",
+            ev1Source: "การวิเคราะห์รูปแบบโดยนิรนาม",
+            ev2Title: "การขาดแคลนไม้ศักดิ์สิทธิ์",
+            ev2Content: "ไม้หายไปหลังจากคืนเดือนเพ็ญครั้งสุดท้าย 72 ชั่วโมงพอดี ตัวเลข 72 ปรากฏในคำทำนายโบราณของเมเปิ้ลสตอรี่ ตื่นได้แล้ว",
+            ev2Source: "บันทึกเซิร์ฟเวอร์ที่กู้คืน (ถูกลบบางส่วน)",
+            ev3Title: "เหตุการณ์ตี 3",
+            ev3Content: "สมาชิกกิลด์ 3 คนรายงานว่าเห็น NPC ตัวเดียวกันเดินถอยหลังเวลาตี 3 ตามเวลาเซิร์ฟเวอร์ ทั้งสามคนถูกปิดปากหลังจากนั้นไม่นาน",
+            ev3Source: "คำให้การพยาน (ไม่เปิดเผยตัวตน)",
+            ev4Title: "อัตราการกาชา",
+            ev4Content: "อัตรามิธิค 0.5%? น่าจะเป็นอัตราความจริง 0.5% มากกว่า อัตราจริงถูกควบคุมโดยสภาลับของวาฬ ฉันเห็นสเปรดชีตแล้ว",
+            ev4Source: "เอกสารภายในที่รั่วไหล",
+            ev5Title: "ตัวเลข 7",
+            ev5Content: "7 วันในการรับรางวัลรายวัน 7 สกุลเงินในระบบเศรษฐกิจ RegginA มี 7 ตัวอักษร 7-1=6 666? ตัวเลขกำลังพูด",
+            ev5Source: "การวิเคราะห์ทางคณิตศาสตร์",
+            ev6Title: "สมาชิกที่หายไป",
+            ev6Content: "สมาชิก 23 คนออกจากกิลด์ในเดือนที่ผ่านมา 23=2+3=5 ห้าคือจำนวนไม้ที่ต้องใช้สำหรับการสุ่มมิธิค พวกเขาถูกปิดปาก",
+            ev6Source: "การวิเคราะห์บัญชีรายชื่อกิลด์",
+            ev7Title: "การบำรุงรักษาเซิร์ฟเวอร์",
+            ev7Content: "ทุกการบำรุงรักษาเกิดขึ้นในวันอังคาร พวกเขาซ่อนอะไร? พวกเขากำลังติดตั้งอะไร?",
+            ev7Source: "การศึกษาความสัมพันธ์ปฏิทิน",
+            ev8Title: "เส้นทางเรือเฟอร์รี่",
+            ev8Content: "เรือเฟอร์รี่ไปเกาะวิคตอเรียใช้เวลาเท่ากับการต้มไข่พอดี ไข่แทนความรู้ที่ซ่อนอยู่ พวกเขากำลังเยาะเย้ยเรา",
+            ev8Source: "เอกสารเวลาเดินทาง",
+            addedMsg: "เพิ่มทฤษฎีลงบอร์ดแล้ว! ผู้แสวงหาความจริงขอบคุณคุณ",
+        }
+    };
+
+    let currentLang = localStorage.getItem('numbahwan_lang') || 'en';
+
+    function t(key) {
+        return translations[currentLang]?.[key] || translations.en[key] || key;
+    }
+
+    function setLang(lang) {
+        currentLang = lang;
+        localStorage.setItem('numbahwan_lang', lang);
+        document.querySelectorAll('.lang-btn').forEach(btn => {
+            btn.classList.toggle('active', btn.textContent.includes(lang === 'en' ? 'EN' : lang === 'zh' ? '中' : 'ไ'));
+        });
+        applyTranslations();
+        renderBoard();
+    }
+
+    function applyTranslations() {
+        document.querySelectorAll('[data-i18n]').forEach(el => {
+            el.textContent = t(el.dataset.i18n);
+        });
+        document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+            el.placeholder = t(el.dataset.i18nPlaceholder);
+        });
+    }
+
+    // ==================== BOARD DATA ====================
+    const BOARD_KEY = 'nw_conspiracy_data';
+    
+    const DEFAULT_EVIDENCE = [
+        { id: 1, title: 'ev1Title', content: 'ev1Content', source: 'ev1Source', pin: 'red', x: 50, y: 100 },
+        { id: 2, title: 'ev2Title', content: 'ev2Content', source: 'ev2Source', pin: 'yellow', x: 300, y: 80 },
+        { id: 3, title: 'ev3Title', content: 'ev3Content', source: 'ev3Source', pin: 'blue', x: 550, y: 120 },
+        { id: 4, title: 'ev4Title', content: 'ev4Content', source: 'ev4Source', pin: 'red', x: 30, y: 320 },
+        { id: 5, title: 'ev5Title', content: 'ev5Content', source: 'ev5Source', pin: 'green', x: 550, y: 350 },
+        { id: 6, title: 'ev6Title', content: 'ev6Content', source: 'ev6Source', pin: 'yellow', x: 280, y: 420 },
+        { id: 7, title: 'ev7Title', content: 'ev7Content', source: 'ev7Source', pin: 'blue', x: 50, y: 500 },
+        { id: 8, title: 'ev8Title', content: 'ev8Content', source: 'ev8Source', pin: 'red', x: 550, y: 520 },
+    ];
+
+    function getBoardData() {
+        const data = JSON.parse(localStorage.getItem(BOARD_KEY) || 'null');
+        if (!data) {
+            return { evidence: DEFAULT_EVIDENCE, userTheories: [], connections: 12 };
+        }
+        return data;
+    }
+
+    function saveBoardData(data) {
+        localStorage.setItem(BOARD_KEY, JSON.stringify(data));
+        updateStats();
+    }
+
+    function updateStats() {
+        const data = getBoardData();
+        document.getElementById('theoriesCount').textContent = data.evidence.length + data.userTheories.length;
+        document.getElementById('connectionsCount').textContent = data.connections;
+    }
+
+    // ==================== RENDER ====================
+    function renderBoard() {
+        const board = document.getElementById('board');
+        const data = getBoardData();
+        
+        // Remove old cards (keep central mystery and warning tape)
+        board.querySelectorAll('.evidence-card').forEach(el => el.remove());
+        
+        // Add default evidence
+        data.evidence.forEach(ev => {
+            const card = createEvidenceCard(ev, true);
+            board.appendChild(card);
+        });
+        
+        // Add user theories
+        data.userTheories.forEach(ev => {
+            const card = createEvidenceCard(ev, false);
+            board.appendChild(card);
+        });
+        
+        updateStats();
+    }
+
+    function createEvidenceCard(ev, isTranslated) {
+        const card = document.createElement('div');
+        card.className = `evidence-card ${ev.pin || ''}`;
+        card.style.left = ev.x + 'px';
+        card.style.top = ev.y + 'px';
+        card.innerHTML = `
+            <div class="evidence-title">${isTranslated ? t(ev.title) : ev.title}</div>
+            <div class="evidence-content">${isTranslated ? t(ev.content) : ev.content}</div>
+            <div class="evidence-source">— ${isTranslated ? t(ev.source) : ev.source}</div>
+        `;
+        
+        // Make draggable
+        makeDraggable(card, ev);
+        
+        return card;
+    }
+
+    // ==================== DRAG ====================
+    function makeDraggable(element, data) {
+        let isDragging = false;
+        let startX, startY, startLeft, startTop;
+        
+        element.addEventListener('mousedown', (e) => {
+            isDragging = true;
+            element.classList.add('dragging');
+            startX = e.clientX;
+            startY = e.clientY;
+            startLeft = element.offsetLeft;
+            startTop = element.offsetTop;
+        });
+        
+        document.addEventListener('mousemove', (e) => {
+            if (!isDragging) return;
+            const dx = e.clientX - startX;
+            const dy = e.clientY - startY;
+            element.style.left = (startLeft + dx) + 'px';
+            element.style.top = (startTop + dy) + 'px';
+        });
+        
+        document.addEventListener('mouseup', () => {
+            if (isDragging) {
+                isDragging = false;
+                element.classList.remove('dragging');
+                
+                // Save position
+                data.x = element.offsetLeft;
+                data.y = element.offsetTop;
+                
+                const boardData = getBoardData();
+                const ev = boardData.evidence.find(e => e.id === data.id) || boardData.userTheories.find(e => e.id === data.id);
+                if (ev) {
+                    ev.x = data.x;
+                    ev.y = data.y;
+                    saveBoardData(boardData);
+                }
+            }
+        });
+        
+        // Touch support
+        element.addEventListener('touchstart', (e) => {
+            isDragging = true;
+            element.classList.add('dragging');
+            const touch = e.touches[0];
+            startX = touch.clientX;
+            startY = touch.clientY;
+            startLeft = element.offsetLeft;
+            startTop = element.offsetTop;
+        });
+        
+        document.addEventListener('touchmove', (e) => {
+            if (!isDragging) return;
+            const touch = e.touches[0];
+            const dx = touch.clientX - startX;
+            const dy = touch.clientY - startY;
+            element.style.left = (startLeft + dx) + 'px';
+            element.style.top = (startTop + dy) + 'px';
+        });
+        
+        document.addEventListener('touchend', () => {
+            if (isDragging) {
+                isDragging = false;
+                element.classList.remove('dragging');
+                data.x = element.offsetLeft;
+                data.y = element.offsetTop;
+            }
+        });
+    }
+
+    // ==================== MODAL ====================
+    function showModal() {
+        document.getElementById('theoryModal').classList.add('active');
+        if (typeof NW_SOUNDS !== 'undefined') NW_SOUNDS.play('click');
+    }
+
+    function closeModal() {
+        document.getElementById('theoryModal').classList.remove('active');
+    }
+
+    function submitTheory() {
+        const title = document.getElementById('theoryTitle').value.trim();
+        const content = document.getElementById('theoryContent').value.trim();
+        const source = document.getElementById('theorySource').value.trim() || 'Anonymous Insider';
+
+        if (!title || !content) {
+            alert('Please fill in the title and content!');
+            return;
+        }
+
+        // Check fee
+        if (typeof NW_WALLET !== 'undefined' && !NW_WALLET.isGMMode()) {
+            if (!NW_WALLET.spend('diamond', 2, 'CONSPIRACY_THEORY')) {
+                alert('Insufficient investigation funds! Need 💎2');
+                return;
+            }
+        }
+
+        const boardData = getBoardData();
+        const pins = ['red', 'yellow', 'blue', 'green'];
+        
+        const newTheory = {
+            id: Date.now(),
+            title: title.toUpperCase(),
+            content,
+            source,
+            pin: pins[Math.floor(Math.random() * pins.length)],
+            x: 50 + Math.random() * 400,
+            y: 100 + Math.random() * 400
+        };
+
+        boardData.userTheories.push(newTheory);
+        boardData.connections += Math.floor(Math.random() * 3) + 1;
+        saveBoardData(boardData);
+
+        // Clear form
+        document.getElementById('theoryTitle').value = '';
+        document.getElementById('theoryContent').value = '';
+        document.getElementById('theorySource').value = '';
+
+        closeModal();
+        renderBoard();
+        
+        alert(t('addedMsg'));
+        
+        // Reward
+        if (typeof NW_WALLET !== 'undefined') {
+            NW_WALLET.earn('gold', 15, 'TRUTH_SEEKING');
+        }
+    }
+
+    // ==================== INIT ====================
+    document.addEventListener('DOMContentLoaded', () => {
+        applyTranslations();
+        renderBoard();
+    });
+    </script>
+</body>
+</html>

@@ -1,0 +1,787 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Guild Therapy | NumbahWan</title>
+    <link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <script src="/static/nw-wallet.js"></script>
+    <script src="/static/nw-sounds.js" defer></script>
+    <script src="/static/nw-guide.js" defer></script>
+    <style>
+        :root {
+            --bg: #0f1419;
+            --card: #1a2332;
+            --calming: #4a7c59;
+            --soft-purple: #8b7bb8;
+            --warm: #c9a227;
+            --text: #e8e6e3;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+        }
+        .font-therapy { font-family: 'Cormorant Garamond', serif; }
+        
+        /* Calming gradient background */
+        .therapy-bg {
+            position: fixed;
+            inset: 0;
+            background: radial-gradient(ellipse at top, #1a2f40 0%, #0f1419 50%);
+            z-index: -1;
+        }
+        .floating-orb {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(40px);
+            opacity: 0.3;
+            animation: float 8s ease-in-out infinite;
+        }
+        @keyframes float {
+            0%, 100% { transform: translateY(0) scale(1); }
+            50% { transform: translateY(-20px) scale(1.1); }
+        }
+        
+        /* Header */
+        .therapy-header {
+            background: linear-gradient(180deg, rgba(74,124,89,0.2) 0%, transparent 100%);
+            padding: 40px 20px;
+            text-align: center;
+            border-bottom: 1px solid rgba(74,124,89,0.3);
+        }
+        .therapy-title {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: clamp(2rem, 5vw, 3rem);
+            color: var(--calming);
+            margin-bottom: 10px;
+        }
+        .therapy-subtitle {
+            color: rgba(232,230,227,0.6);
+            font-size: 0.95rem;
+        }
+        
+        .container { max-width: 800px; margin: 0 auto; padding: 20px; }
+        
+        /* Chat area */
+        .chat-container {
+            background: var(--card);
+            border: 1px solid rgba(74,124,89,0.3);
+            border-radius: 20px;
+            margin: 20px 0;
+            overflow: hidden;
+        }
+        .chat-header {
+            padding: 16px 20px;
+            background: rgba(74,124,89,0.15);
+            border-bottom: 1px solid rgba(74,124,89,0.2);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .therapist-avatar {
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg, var(--calming), var(--soft-purple));
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+        }
+        .therapist-info h3 {
+            color: var(--calming);
+            font-weight: 600;
+        }
+        .therapist-info p {
+            font-size: 0.8rem;
+            color: rgba(232,230,227,0.5);
+        }
+        
+        .chat-messages {
+            height: 400px;
+            overflow-y: auto;
+            padding: 20px;
+        }
+        .message {
+            max-width: 80%;
+            margin-bottom: 16px;
+            animation: slideIn 0.3s ease;
+        }
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .message.therapist {
+            margin-right: auto;
+        }
+        .message.user {
+            margin-left: auto;
+        }
+        .message-bubble {
+            padding: 14px 18px;
+            border-radius: 18px;
+            line-height: 1.5;
+        }
+        .therapist .message-bubble {
+            background: rgba(74,124,89,0.2);
+            border: 1px solid rgba(74,124,89,0.3);
+            border-bottom-left-radius: 4px;
+        }
+        .user .message-bubble {
+            background: rgba(139,123,184,0.2);
+            border: 1px solid rgba(139,123,184,0.3);
+            border-bottom-right-radius: 4px;
+        }
+        
+        .chat-input {
+            padding: 16px 20px;
+            background: rgba(0,0,0,0.2);
+            border-top: 1px solid rgba(74,124,89,0.2);
+            display: flex;
+            gap: 12px;
+        }
+        .chat-input input {
+            flex: 1;
+            padding: 14px 18px;
+            background: rgba(0,0,0,0.3);
+            border: 1px solid rgba(74,124,89,0.3);
+            border-radius: 25px;
+            color: var(--text);
+            font-size: 14px;
+        }
+        .chat-input input:focus {
+            outline: none;
+            border-color: var(--calming);
+        }
+        .chat-input button {
+            padding: 14px 24px;
+            background: linear-gradient(135deg, var(--calming), #3d6b4a);
+            border: none;
+            border-radius: 25px;
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .chat-input button:hover { transform: translateY(-2px); }
+        
+        /* Quick prompts */
+        .quick-prompts {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            padding: 16px 20px;
+            border-top: 1px solid rgba(74,124,89,0.15);
+        }
+        .quick-prompt {
+            padding: 8px 14px;
+            background: rgba(74,124,89,0.1);
+            border: 1px solid rgba(74,124,89,0.2);
+            border-radius: 20px;
+            font-size: 0.8rem;
+            color: rgba(232,230,227,0.7);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .quick-prompt:hover {
+            background: rgba(74,124,89,0.2);
+            border-color: var(--calming);
+            color: var(--text);
+        }
+        
+        /* Diagnosis card */
+        .diagnosis-card {
+            background: var(--card);
+            border: 1px solid rgba(201,162,39,0.3);
+            border-radius: 16px;
+            padding: 24px;
+            margin: 20px 0;
+        }
+        .diagnosis-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 16px;
+            color: var(--warm);
+        }
+        .diagnosis-header h3 { font-family: 'Cormorant Garamond', serif; font-size: 1.4rem; }
+        .diagnosis-content {
+            background: rgba(0,0,0,0.2);
+            border-radius: 12px;
+            padding: 16px;
+        }
+        .diagnosis-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+        .diagnosis-item:last-child { border-bottom: none; }
+        .diagnosis-label { color: rgba(232,230,227,0.6); }
+        .diagnosis-value { font-weight: 600; color: var(--warm); }
+        
+        /* Lang switcher */
+        .lang-switch {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            gap: 8px;
+            z-index: 100;
+        }
+        .lang-btn {
+            padding: 8px 12px;
+            background: var(--card);
+            border: 1px solid #444;
+            border-radius: 6px;
+            color: var(--text);
+            cursor: pointer;
+            font-size: 0.85rem;
+        }
+        .lang-btn.active { border-color: var(--calming); color: var(--calming); }
+        
+        /* Session stats */
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+        .stat-box {
+            background: var(--card);
+            border: 1px solid rgba(74,124,89,0.2);
+            border-radius: 12px;
+            padding: 16px;
+            text-align: center;
+        }
+        .stat-box .value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--calming);
+        }
+        .stat-box .label {
+            font-size: 0.75rem;
+            color: rgba(232,230,227,0.5);
+        }
+    </style>
+</head>
+<body>
+    <div class="therapy-bg">
+        <div class="floating-orb" style="width:200px;height:200px;background:var(--calming);top:10%;left:20%;animation-delay:0s;"></div>
+        <div class="floating-orb" style="width:150px;height:150px;background:var(--soft-purple);top:60%;right:15%;animation-delay:2s;"></div>
+        <div class="floating-orb" style="width:100px;height:100px;background:var(--warm);bottom:20%;left:30%;animation-delay:4s;"></div>
+    </div>
+    
+    <!-- Language Switcher -->
+    <div class="lang-switch">
+        <button class="lang-btn active" onclick="setLang('en')">EN</button>
+        <button class="lang-btn" onclick="setLang('zh')">中文</button>
+        <button class="lang-btn" onclick="setLang('th')">ไทย</button>
+    </div>
+
+    <!-- Header -->
+    <header class="therapy-header">
+        <div style="font-size: 2.5rem; margin-bottom: 10px;">🧘</div>
+        <h1 class="therapy-title" data-i18n="therapyTitle">Guild Therapy Center</h1>
+        <p class="therapy-subtitle" data-i18n="therapySubtitle">A safe space to process your gaming trauma</p>
+        <a href="/" style="color: var(--calming); font-size: 0.85rem; text-decoration: none; display: inline-block; margin-top: 10px;">
+            ← <span data-i18n="backHome">Back to Guild</span>
+        </a>
+    </header>
+
+    <div class="container">
+        <!-- Session Stats -->
+        <div class="stats-row">
+            <div class="stat-box">
+                <div class="value" id="sessionsCount">0</div>
+                <div class="label" data-i18n="totalSessions">Total Sessions</div>
+            </div>
+            <div class="stat-box">
+                <div class="value" id="traumasProcessed">0</div>
+                <div class="label" data-i18n="traumasProcessed">Traumas Processed</div>
+            </div>
+            <div class="stat-box">
+                <div class="value" id="healingLevel">Lv.1</div>
+                <div class="label" data-i18n="healingLevel">Healing Level</div>
+            </div>
+        </div>
+
+        <!-- Chat Container -->
+        <div class="chat-container">
+            <div class="chat-header">
+                <div class="therapist-avatar">🧠</div>
+                <div class="therapist-info">
+                    <h3>Dr. NumbahWan</h3>
+                    <p data-i18n="therapistTitle">Certified Guild Trauma Specialist</p>
+                </div>
+            </div>
+            
+            <div class="chat-messages" id="chatMessages">
+                <!-- Messages will be added here -->
+            </div>
+            
+            <div class="quick-prompts" id="quickPrompts">
+                <!-- Quick prompts added by JS -->
+            </div>
+            
+            <div class="chat-input">
+                <input type="text" id="userInput" data-i18n-placeholder="shareFeeling" placeholder="Share what's troubling you...">
+                <button onclick="sendMessage()" data-i18n="send">Send</button>
+            </div>
+        </div>
+
+        <!-- Diagnosis Card -->
+        <div class="diagnosis-card" id="diagnosisCard" style="display: none;">
+            <div class="diagnosis-header">
+                <span>📋</span>
+                <h3 data-i18n="yourDiagnosis">Your Official Diagnosis</h3>
+            </div>
+            <div class="diagnosis-content" id="diagnosisContent">
+                <!-- Diagnosis will be added here -->
+            </div>
+            <div style="text-align: center; margin-top: 16px;">
+                <span style="font-size: 0.8rem; color: rgba(232,230,227,0.4);" data-i18n="diagnosisNote">
+                    * This diagnosis is 100% made up and legally useless
+                </span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    // ==================== I18N ====================
+    const translations = {
+        en: {
+            therapyTitle: "Guild Therapy Center",
+            therapySubtitle: "A safe space to process your gaming trauma",
+            backHome: "Back to Guild",
+            totalSessions: "Total Sessions",
+            traumasProcessed: "Traumas Processed",
+            healingLevel: "Healing Level",
+            therapistTitle: "Certified Guild Trauma Specialist",
+            shareFeeling: "Share what's troubling you...",
+            send: "Send",
+            yourDiagnosis: "Your Official Diagnosis",
+            diagnosisNote: "* This diagnosis is 100% made up and legally useless",
+            // Quick prompts
+            promptPull: "I spent all my diamonds and got nothing",
+            promptKs: "Someone keeps kill stealing my mobs",
+            promptGhost: "My party ghosted me mid-raid",
+            promptCarry: "Nobody wants to carry me",
+            promptFashion: "People mock my outfit",
+            promptGuild: "My old guild kicked me",
+            promptMythic: "I've never pulled a mythic",
+            promptDrop: "That rare drop went to a newbie",
+            // Therapist responses
+            greeting: "Welcome to Guild Therapy. I'm Dr. NumbahWan, and I'm here to help you process your gaming-related emotional disturbances. Take a deep breath. You are in a safe, judgement-free zone. Now, what brings you here today?",
+            // Diagnoses
+            diagCondition: "Condition",
+            diagSeverity: "Severity",
+            diagTreatment: "Recommended Treatment",
+            diagPrognosis: "Prognosis",
+            // Conditions
+            condPullDepression: "Gacha Pull Depression",
+            condKsRage: "Kill-Steal Induced Rage Disorder",
+            condGhostAnxiety: "Party Abandonment Anxiety",
+            condCarryDependency: "Carry Dependency Syndrome",
+            condFashionTrauma: "Fashion-Related Self-Esteem Issues",
+            condGuildPTSD: "Guild Rejection PTSD",
+            condMythicEnvy: "Chronic Mythic Envy",
+            condLootGrief: "Acute Loot Distribution Grief",
+            condGeneral: "General Gaming-Related Distress",
+            // Severity
+            sevMild: "Mild (but valid)",
+            sevModerate: "Moderate (concerning)",
+            sevSevere: "Severe (touch grass immediately)",
+            sevCritical: "Critical (uninstall for your health)",
+            // Treatments
+            treatPull: "15 minutes of touching grass daily, followed by acceptance meditation",
+            treatKs: "Channel changing exercises and controlled breathing during grind sessions",
+            treatGhost: "Building self-worth independent of party completion rates",
+            treatCarry: "Gradual exposure therapy to solo content",
+            treatFashion: "Affirmations: 'My pixels are valid' repeated 10x daily",
+            treatGuild: "Journaling about what you learned (nothing) from the experience",
+            treatMythic: "Reframing: You are the real mythic card all along",
+            treatLoot: "Accepting the chaos of RNG as a metaphor for life",
+            treatGeneral: "Log off and drink water",
+            // Prognosis
+            progGood: "Full recovery expected within 2-3 rage quits",
+            progFair: "May require multiple sessions and uninstalling the game",
+            progPoor: "Consider switching to a single-player game",
+            progTerminal: "Gaming may not be for you. Have you tried knitting?",
+            // Reward
+            rewardMsg: "Session complete! You've earned 💎3 for emotional labor.",
+        },
+        zh: {
+            therapyTitle: "公會心理治療中心",
+            therapySubtitle: "一個處理遊戲創傷的安全空間",
+            backHome: "返回公會",
+            totalSessions: "總療程數",
+            traumasProcessed: "已處理創傷",
+            healingLevel: "療癒等級",
+            therapistTitle: "認證公會創傷專家",
+            shareFeeling: "分享你的煩惱...",
+            send: "發送",
+            yourDiagnosis: "您的正式診斷",
+            diagnosisNote: "* 此診斷100%瞎編，無任何法律效力",
+            promptPull: "我花光了所有鑽石卻什麼都沒抽到",
+            promptKs: "有人一直搶我的怪",
+            promptGhost: "我的隊伍在副本中途消失了",
+            promptCarry: "沒人想帶我",
+            promptFashion: "大家嘲笑我的穿著",
+            promptGuild: "我的舊公會把我踢了",
+            promptMythic: "我從來沒抽到過神話卡",
+            promptDrop: "那個稀有掉落給了新手",
+            greeting: "歡迎來到公會心理治療中心。我是NumbahWan博士，我在這裡幫助你處理與遊戲相關的情緒困擾。深呼吸。這裡是一個安全、不批判的空間。現在，是什麼讓你來到這裡？",
+            diagCondition: "病症",
+            diagSeverity: "嚴重程度",
+            diagTreatment: "建議治療",
+            diagPrognosis: "預後",
+            condPullDepression: "抽卡憂鬱症",
+            condKsRage: "搶怪誘發狂躁症",
+            condGhostAnxiety: "隊伍消失焦慮症",
+            condCarryDependency: "帶路依賴症候群",
+            condFashionTrauma: "時尚相關自尊問題",
+            condGuildPTSD: "被踢會創傷後壓力症候群",
+            condMythicEnvy: "慢性神話卡嫉妒症",
+            condLootGrief: "急性掉寶分配悲傷",
+            condGeneral: "一般遊戲相關困擾",
+            sevMild: "輕微（但有效）",
+            sevModerate: "中等（令人擔憂）",
+            sevSevere: "嚴重（請立即摸草）",
+            sevCritical: "危急（為了健康請卸載）",
+            treatPull: "每天摸15分鐘草，然後進行接受冥想",
+            treatKs: "換頻練習和打怪時的控制呼吸",
+            treatGhost: "建立不依賴通關率的自我價值",
+            treatCarry: "逐漸接觸單人內容的曝露療法",
+            treatFashion: "肯定句：「我的像素是有價值的」每天重複10次",
+            treatGuild: "寫日記記錄你從這次經歷中學到了什麼（什麼都沒有）",
+            treatMythic: "重新定義：你自己才是真正的神話卡",
+            treatLoot: "接受RNG的混亂作為人生的隱喻",
+            treatGeneral: "登出並喝水",
+            progGood: "預計2-3次暴怒離開後完全康復",
+            progFair: "可能需要多次療程並卸載遊戲",
+            progPoor: "考慮改玩單人遊戲",
+            progTerminal: "遊戲可能不適合你。你試過織毛衣嗎？",
+            rewardMsg: "療程結束！您因情緒勞動獲得💎3。",
+        },
+        th: {
+            therapyTitle: "ศูนย์บำบัดกิลด์",
+            therapySubtitle: "พื้นที่ปลอดภัยสำหรับจัดการกับความเจ็บปวดจากเกม",
+            backHome: "กลับสู่กิลด์",
+            totalSessions: "เซสชันทั้งหมด",
+            traumasProcessed: "ความเจ็บปวดที่ผ่านพ้น",
+            healingLevel: "ระดับการรักษา",
+            therapistTitle: "ผู้เชี่ยวชาญด้านความเจ็บปวดจากกิลด์",
+            shareFeeling: "แบ่งปันสิ่งที่รบกวนจิตใจคุณ...",
+            send: "ส่ง",
+            yourDiagnosis: "การวินิจฉัยอย่างเป็นทางการของคุณ",
+            diagnosisNote: "* การวินิจฉัยนี้แต่งขึ้น 100% และไม่มีผลทางกฎหมาย",
+            promptPull: "ฉันใช้เพชรหมดแต่ไม่ได้อะไรเลย",
+            promptKs: "มีคนมาแย่งมอนฉันตลอด",
+            promptGhost: "ปาร์ตี้หายไปกลางเรด",
+            promptCarry: "ไม่มีใครอยากพาฉันไป",
+            promptFashion: "คนล้อชุดของฉัน",
+            promptGuild: "กิลด์เก่าเตะฉันออก",
+            promptMythic: "ฉันไม่เคยสุ่มได้มิธิค",
+            promptDrop: "ของหายากไปตกกับมือใหม่",
+            greeting: "ยินดีต้อนรับสู่ศูนย์บำบัดกิลด์ ฉันคือ Dr. NumbahWan และฉันอยู่ที่นี่เพื่อช่วยคุณจัดการกับความรบกวนทางอารมณ์ที่เกี่ยวข้องกับเกม หายใจลึกๆ คุณอยู่ในโซนปลอดภัย ไม่มีการตัดสิน ตอนนี้ อะไรพาคุณมาที่นี่?",
+            diagCondition: "อาการ",
+            diagSeverity: "ความรุนแรง",
+            diagTreatment: "การรักษาที่แนะนำ",
+            diagPrognosis: "การพยากรณ์โรค",
+            condPullDepression: "โรคซึมเศร้าจากการสุ่มการ์ด",
+            condKsRage: "โรคโกรธจากการถูกแย่งมอน",
+            condGhostAnxiety: "โรควิตกกังวลจากปาร์ตี้หาย",
+            condCarryDependency: "โรคพึ่งพาคนพา",
+            condFashionTrauma: "ปัญหาความมั่นใจในตัวเองจากแฟชั่น",
+            condGuildPTSD: "PTSD จากการถูกเตะออกจากกิลด์",
+            condMythicEnvy: "โรคอิจฉามิธิคเรื้อรัง",
+            condLootGrief: "ความเศร้าเฉียบพลันจากการแจกของ",
+            condGeneral: "ความทุกข์ทั่วไปจากเกม",
+            sevMild: "เบา (แต่ถูกต้อง)",
+            sevModerate: "ปานกลาง (น่าเป็นห่วง)",
+            sevSevere: "รุนแรง (ออกไปสัมผัสหญ้าทันที)",
+            sevCritical: "วิกฤต (ลบเกมเพื่อสุขภาพของคุณ)",
+            treatPull: "สัมผัสหญ้า 15 นาทีต่อวัน ตามด้วยการทำสมาธิยอมรับ",
+            treatKs: "การฝึกเปลี่ยนช่องและการหายใจควบคุมระหว่างเก็บเลเวล",
+            treatGhost: "สร้างคุณค่าในตัวเองโดยไม่ขึ้นกับอัตราการผ่านด่าน",
+            treatCarry: "การบำบัดแบบค่อยๆ สัมผัสคอนเทนต์เดี่ยว",
+            treatFashion: "คำยืนยัน: 'พิกเซลของฉันมีค่า' พูดซ้ำ 10 ครั้งต่อวัน",
+            treatGuild: "เขียนบันทึกว่าคุณเรียนรู้อะไร (ไม่มีอะไร) จากประสบการณ์นี้",
+            treatMythic: "การมองใหม่: คุณเป็นการ์ดมิธิคตัวจริงมาตลอด",
+            treatLoot: "ยอมรับความโกลาหลของ RNG เป็นการเปรียบเทียบของชีวิต",
+            treatGeneral: "ล็อกเอาท์และดื่มน้ำ",
+            progGood: "คาดว่าจะหายดีภายใน 2-3 ครั้งที่ออกเกมด้วยความโกรธ",
+            progFair: "อาจต้องหลายเซสชันและลบเกม",
+            progPoor: "พิจารณาเปลี่ยนไปเล่นเกมคนเดียว",
+            progTerminal: "เกมอาจไม่เหมาะกับคุณ คุณลองถักไหมพรมไหม?",
+            rewardMsg: "เซสชันเสร็จสิ้น! คุณได้รับ 💎3 สำหรับแรงงานทางอารมณ์",
+        }
+    };
+
+    let currentLang = localStorage.getItem('numbahwan_lang') || 'en';
+    let messageCount = 0;
+
+    function t(key) {
+        return translations[currentLang]?.[key] || translations.en[key] || key;
+    }
+
+    function setLang(lang) {
+        currentLang = lang;
+        localStorage.setItem('numbahwan_lang', lang);
+        document.querySelectorAll('.lang-btn').forEach(btn => {
+            btn.classList.toggle('active', btn.textContent.includes(lang === 'en' ? 'EN' : lang === 'zh' ? '中' : 'ไ'));
+        });
+        applyTranslations();
+        renderQuickPrompts();
+    }
+
+    function applyTranslations() {
+        document.querySelectorAll('[data-i18n]').forEach(el => {
+            el.textContent = t(el.dataset.i18n);
+        });
+        document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+            el.placeholder = t(el.dataset.i18nPlaceholder);
+        });
+    }
+
+    // ==================== THERAPY DATA ====================
+    const THERAPY_KEY = 'nw_therapy_data';
+    
+    function getTherapyData() {
+        return JSON.parse(localStorage.getItem(THERAPY_KEY) || '{"sessions":0,"traumas":0,"level":1}');
+    }
+    
+    function saveTherapyData(data) {
+        localStorage.setItem(THERAPY_KEY, JSON.stringify(data));
+        updateStats();
+    }
+
+    function updateStats() {
+        const data = getTherapyData();
+        document.getElementById('sessionsCount').textContent = data.sessions;
+        document.getElementById('traumasProcessed').textContent = data.traumas;
+        document.getElementById('healingLevel').textContent = 'Lv.' + data.level;
+    }
+
+    // ==================== QUICK PROMPTS ====================
+    const PROMPT_KEYS = ['promptPull', 'promptKs', 'promptGhost', 'promptCarry', 'promptFashion', 'promptGuild', 'promptMythic', 'promptDrop'];
+
+    function renderQuickPrompts() {
+        const container = document.getElementById('quickPrompts');
+        container.innerHTML = PROMPT_KEYS.map(key => `
+            <div class="quick-prompt" onclick="usePrompt('${key}')">${t(key)}</div>
+        `).join('');
+    }
+
+    function usePrompt(key) {
+        document.getElementById('userInput').value = t(key);
+        sendMessage();
+    }
+
+    // ==================== CHAT ====================
+    function addMessage(text, isUser = false) {
+        const container = document.getElementById('chatMessages');
+        const div = document.createElement('div');
+        div.className = `message ${isUser ? 'user' : 'therapist'}`;
+        div.innerHTML = `<div class="message-bubble">${text}</div>`;
+        container.appendChild(div);
+        container.scrollTop = container.scrollHeight;
+    }
+
+    function sendMessage() {
+        const input = document.getElementById('userInput');
+        const text = input.value.trim();
+        if (!text) return;
+
+        addMessage(text, true);
+        input.value = '';
+        messageCount++;
+
+        if (typeof NW_SOUNDS !== 'undefined') NW_SOUNDS.play('click');
+
+        // Therapist response after delay
+        setTimeout(() => {
+            const response = generateResponse(text.toLowerCase());
+            addMessage(response);
+            
+            // After 3 messages, show diagnosis
+            if (messageCount >= 3 && !document.getElementById('diagnosisCard').style.display !== 'block') {
+                setTimeout(() => showDiagnosis(text.toLowerCase()), 1500);
+            }
+        }, 1000 + Math.random() * 1000);
+    }
+
+    function generateResponse(input) {
+        const responses = {
+            pull: [
+                "Ah yes, the classic gacha wound. The odds were never in your favor. But I want you to know - the diamonds you lost? They were never really yours. They belonged to the void.",
+                "I hear you. Every pull is a little death, a small hope extinguished. Have you tried... not pulling? I'm told it helps, but my other patients call it 'boring.'",
+                "The gacha system is designed to create exactly these feelings. You are not weak - you are simply human, trapped in an algorithm's embrace."
+            ],
+            ks: [
+                "Kill stealing activates our primal territorial instincts. That mob was YOURS. Your pixels. Your experience points. The violation you feel is deeply valid.",
+                "Have you considered that the kill-stealer is also suffering? Perhaps they too are in pain, seeking validation through your mobs. ...Actually, no. They're probably just a jerk.",
+                "Let's practice together: 'The mob I was grinding does not define my worth.' ...Difficult, isn't it? Because it does feel like it defines your worth."
+            ],
+            ghost: [
+                "Being abandoned mid-raid triggers our deepest fears of rejection. The party that ghosted you? They carry their own demons. Probably disconnection issues. Or cowardice.",
+                "The silence when your party leaves... it echoes, doesn't it? That empty dungeon. Those unfinished bosses. Let yourself grieve what could have been.",
+                "Party abandonment creates trust issues that can last multiple gaming sessions. We'll work through this together. At our pace. Unless you ghost ME."
+            ],
+            carry: [
+                "The desire to be carried is not weakness - it is a recognition that some content is poorly balanced. You are not underleveled. The game is overleveled.",
+                "Self-sufficiency in gaming is a myth perpetuated by people with too much free time. There is no shame in seeking assistance.",
+                "When they refuse to carry you, what they're really saying is 'I am insecure about my own abilities.' Project that energy back at them."
+            ],
+            fashion: [
+                "Fashion criticism cuts deep because our avatars ARE us, digitally. When they mock your outfit, they mock your soul. This is serious.",
+                "The meta of 'looking cool' is subjective. Your invisible cape? AVANT-GARDE. Your mismatched armor? EXPERIMENTAL. They simply don't understand art.",
+                "Let's work on an affirmation: 'My pixels are beautiful. My clashing colors are a statement. My default skin is ironic.'"
+            ],
+            guild: [
+                "Guild rejection mirrors our real-world fears of not belonging. But consider: that guild wasn't your family. It was a group chat with raid schedules.",
+                "Being kicked from a guild is the universe's way of saying 'you deserve better.' Or their way of saying they needed your spot. Either way, their loss.",
+                "The relationships you built in that guild? Still real, even if the /g channel is now silent. Unless they kicked you for being annoying. Were you annoying?"
+            ],
+            mythic: [
+                "Never pulling a mythic is a unique form of suffering. You've watched others celebrate while you receive your 47th common. This is grief.",
+                "What if I told you that mythic cards can't love you back? That the dopamine hit from pulling one lasts mere seconds? Would that help? ...No? I thought not.",
+                "Your worth is not determined by card rarity. You are already legendary. The game just hasn't labeled you correctly yet."
+            ],
+            drop: [
+                "Watching a rare drop go to a newbie is like watching your crush date someone who just started playing last week. The universe is chaotic and unfair.",
+                "RNG doesn't care about effort, dedication, or how many hours you've invested. RNG is a cold, unfeeling god. We must make peace with this.",
+                "The newbie who got your drop? They'll probably vendor it. Let that sink in. Actually, don't. That will make it worse."
+            ]
+        };
+
+        // Match keywords to response category
+        const keywords = {
+            pull: ['pull', 'gacha', 'diamond', 'summon', 'draw', 'nothing', 'roll', '抽', '鑽石', 'สุ่ม', 'เพชร'],
+            ks: ['steal', 'ks', 'mob', 'kill', '搶', '怪', 'แย่ง', 'มอน'],
+            ghost: ['ghost', 'leave', 'abandon', 'party', 'raid', '消失', '隊', 'ปาร์ตี้', 'หาย'],
+            carry: ['carry', 'help', 'solo', 'hard', '帶', '難', 'พา', 'ยาก'],
+            fashion: ['fashion', 'outfit', 'look', 'ugly', 'mock', '裝', '穿', 'ชุด', 'แต่ง'],
+            guild: ['guild', 'kick', 'ban', 'reject', '公會', '踢', 'กิลด์', 'เตะ'],
+            mythic: ['mythic', 'never', 'legendary', 'rare', '神話', '傳說', 'มิธิค', 'ไม่เคย'],
+            drop: ['drop', 'loot', 'newbie', 'noob', '掉', '新手', 'ของ', 'มือใหม่']
+        };
+
+        for (const [category, words] of Object.entries(keywords)) {
+            if (words.some(w => input.includes(w))) {
+                const categoryResponses = responses[category];
+                return categoryResponses[Math.floor(Math.random() * categoryResponses.length)];
+            }
+        }
+
+        // Default responses
+        const defaults = [
+            "I sense deep pain in your words. Tell me more about how that made you feel. Use gaming terms if that helps.",
+            "That sounds incredibly frustrating. Remember: you are valid. Your feelings are valid. Your rage-quit was valid.",
+            "Mm-hmm. And when this happened, did you feel like uninstalling? It's okay to admit it. This is a safe space.",
+            "I'm writing this down in your file. Not that I have a file. Or credentials. But metaphorically, I'm documenting your pain.",
+            "Have you tried turning off your emotions and turning them back on? ...That was a joke. Please process your feelings naturally."
+        ];
+        return defaults[Math.floor(Math.random() * defaults.length)];
+    }
+
+    // ==================== DIAGNOSIS ====================
+    function showDiagnosis(input) {
+        const card = document.getElementById('diagnosisCard');
+        const content = document.getElementById('diagnosisContent');
+        
+        // Determine diagnosis based on keywords
+        const diagnosis = getDiagnosis(input);
+        
+        content.innerHTML = `
+            <div class="diagnosis-item">
+                <span class="diagnosis-label">${t('diagCondition')}</span>
+                <span class="diagnosis-value">${t(diagnosis.condition)}</span>
+            </div>
+            <div class="diagnosis-item">
+                <span class="diagnosis-label">${t('diagSeverity')}</span>
+                <span class="diagnosis-value">${t(diagnosis.severity)}</span>
+            </div>
+            <div class="diagnosis-item">
+                <span class="diagnosis-label">${t('diagTreatment')}</span>
+                <span class="diagnosis-value" style="max-width: 300px; text-align: right;">${t(diagnosis.treatment)}</span>
+            </div>
+            <div class="diagnosis-item">
+                <span class="diagnosis-label">${t('diagPrognosis')}</span>
+                <span class="diagnosis-value">${t(diagnosis.prognosis)}</span>
+            </div>
+        `;
+        
+        card.style.display = 'block';
+        card.scrollIntoView({ behavior: 'smooth' });
+        
+        // Update stats and reward
+        const data = getTherapyData();
+        data.sessions++;
+        data.traumas++;
+        if (data.traumas >= data.level * 5) {
+            data.level++;
+        }
+        saveTherapyData(data);
+        
+        // Reward
+        if (typeof NW_WALLET !== 'undefined') {
+            NW_WALLET.earn('diamond', 3, 'THERAPY_SESSION');
+            setTimeout(() => alert(t('rewardMsg')), 500);
+        }
+    }
+
+    function getDiagnosis(input) {
+        const conditions = [
+            { keys: ['pull', 'gacha', 'diamond', '抽', 'สุ่ม'], cond: 'condPullDepression', treat: 'treatPull' },
+            { keys: ['steal', 'ks', 'mob', '搶', 'แย่ง'], cond: 'condKsRage', treat: 'treatKs' },
+            { keys: ['ghost', 'leave', 'party', '消失', 'หาย'], cond: 'condGhostAnxiety', treat: 'treatGhost' },
+            { keys: ['carry', 'help', '帶', 'พา'], cond: 'condCarryDependency', treat: 'treatCarry' },
+            { keys: ['fashion', 'outfit', 'ugly', '裝', 'ชุด'], cond: 'condFashionTrauma', treat: 'treatFashion' },
+            { keys: ['guild', 'kick', '公會', 'กิลด์'], cond: 'condGuildPTSD', treat: 'treatGuild' },
+            { keys: ['mythic', 'never', '神話', 'มิธิค'], cond: 'condMythicEnvy', treat: 'treatMythic' },
+            { keys: ['drop', 'loot', 'newbie', '掉', 'ของ'], cond: 'condLootGrief', treat: 'treatLoot' }
+        ];
+
+        for (const c of conditions) {
+            if (c.keys.some(k => input.includes(k))) {
+                return {
+                    condition: c.cond,
+                    severity: ['sevMild', 'sevModerate', 'sevSevere', 'sevCritical'][Math.floor(Math.random() * 4)],
+                    treatment: c.treat,
+                    prognosis: ['progGood', 'progFair', 'progPoor', 'progTerminal'][Math.floor(Math.random() * 4)]
+                };
+            }
+        }
+
+        return {
+            condition: 'condGeneral',
+            severity: 'sevModerate',
+            treatment: 'treatGeneral',
+            prognosis: 'progFair'
+        };
+    }
+
+    // ==================== INIT ====================
+    document.addEventListener('DOMContentLoaded', () => {
+        applyTranslations();
+        renderQuickPrompts();
+        updateStats();
+        
+        // Initial greeting
+        setTimeout(() => addMessage(t('greeting')), 500);
+        
+        // Enter key to send
+        document.getElementById('userInput').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') sendMessage();
+        });
+    });
+    </script>
+</body>
+</html>

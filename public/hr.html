@@ -1,0 +1,835 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Guild HR Department | NumbahWan</title>
+    <link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="/static/nw-wallet.js"></script>
+    <script src="/static/nw-sounds.js" defer></script>
+    <script src="/static/nw-guide.js" defer></script>
+    <style>
+        :root {
+            --bg: #f5f5f0;
+            --card: #ffffff;
+            --accent: #2d5a27;
+            --accent-light: #e8f0e6;
+            --border: #d4d4d0;
+            --text: #1a1a1a;
+            --text-muted: #666;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+        }
+        
+        /* Corporate office aesthetic */
+        .hr-header {
+            background: linear-gradient(135deg, #2d5a27 0%, #1e3d1a 100%);
+            padding: 30px 20px;
+            color: white;
+        }
+        .hr-logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            justify-content: center;
+            margin-bottom: 10px;
+        }
+        .hr-logo-icon {
+            width: 50px;
+            height: 50px;
+            background: white;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+        }
+        .hr-title { font-size: 1.5rem; font-weight: 700; }
+        .hr-subtitle { font-size: 0.85rem; opacity: 0.8; text-align: center; }
+        
+        .container { max-width: 800px; margin: 0 auto; padding: 20px; }
+        
+        /* Job listing cards */
+        .jobs-grid {
+            display: grid;
+            gap: 16px;
+            margin: 20px 0;
+        }
+        .job-card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 20px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .job-card:hover {
+            border-color: var(--accent);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            transform: translateY(-2px);
+        }
+        .job-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 10px;
+        }
+        .job-title-area h3 {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--text);
+        }
+        .job-dept {
+            font-size: 0.8rem;
+            color: var(--accent);
+            font-weight: 500;
+        }
+        .job-badge {
+            padding: 4px 10px;
+            background: var(--accent-light);
+            color: var(--accent);
+            font-size: 0.7rem;
+            font-weight: 600;
+            border-radius: 20px;
+        }
+        .job-badge.urgent { background: #fef3c7; color: #b45309; }
+        .job-badge.new { background: #dbeafe; color: #1d4ed8; }
+        .job-desc {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            line-height: 1.5;
+        }
+        .job-requirements {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-top: 12px;
+        }
+        .job-req {
+            padding: 4px 8px;
+            background: #f5f5f0;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+            border-radius: 4px;
+        }
+        
+        /* Application form */
+        .form-container {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 24px;
+            margin: 20px 0;
+        }
+        .form-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .form-group { margin-bottom: 16px; }
+        .form-label {
+            display: block;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-bottom: 6px;
+            font-weight: 500;
+        }
+        .form-input, .form-select, .form-textarea {
+            width: 100%;
+            padding: 12px;
+            background: #f9f9f9;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text);
+            font-size: 14px;
+        }
+        .form-input:focus, .form-textarea:focus, .form-select:focus {
+            outline: none;
+            border-color: var(--accent);
+            background: white;
+        }
+        .form-textarea { min-height: 100px; resize: vertical; }
+        
+        /* Absurd questions */
+        .absurd-question {
+            background: #fefce8;
+            border: 1px solid #fef08a;
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 16px;
+        }
+        .absurd-label {
+            font-weight: 600;
+            color: #854d0e;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        /* Skill slider */
+        .skill-slider {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .skill-slider input[type="range"] {
+            flex: 1;
+            accent-color: var(--accent);
+        }
+        .skill-value {
+            min-width: 40px;
+            text-align: center;
+            font-weight: 600;
+            color: var(--accent);
+        }
+        
+        /* Submit button */
+        .btn-submit {
+            width: 100%;
+            padding: 14px;
+            background: var(--accent);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn-submit:hover {
+            background: #244a20;
+            transform: translateY(-2px);
+        }
+        
+        /* Rejection letter modal */
+        .modal {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.5);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            padding: 20px;
+        }
+        .modal.active { display: flex; }
+        .modal-content {
+            background: white;
+            border-radius: 16px;
+            max-width: 500px;
+            width: 100%;
+            padding: 30px;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        .letter-header {
+            text-align: center;
+            border-bottom: 2px solid var(--border);
+            padding-bottom: 20px;
+            margin-bottom: 20px;
+        }
+        .letter-logo {
+            font-size: 2rem;
+            margin-bottom: 10px;
+        }
+        .letter-date {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+        .letter-body {
+            line-height: 1.8;
+            color: var(--text);
+        }
+        .letter-signature {
+            margin-top: 30px;
+            text-align: right;
+            font-style: italic;
+            color: var(--text-muted);
+        }
+        
+        /* Lang switcher */
+        .lang-switch {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            gap: 8px;
+            z-index: 100;
+        }
+        .lang-btn {
+            padding: 8px 12px;
+            background: white;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            color: var(--text);
+            cursor: pointer;
+            font-size: 0.85rem;
+        }
+        .lang-btn.active { border-color: var(--accent); color: var(--accent); background: var(--accent-light); }
+        
+        /* Stats bar */
+        .stats-bar {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 16px;
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 20px;
+        }
+        .stat-item { text-align: center; }
+        .stat-value { font-size: 1.3rem; font-weight: 700; color: var(--accent); }
+        .stat-label { font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase; }
+    </style>
+</head>
+<body>
+    <!-- Language Switcher -->
+    <div class="lang-switch">
+        <button class="lang-btn active" onclick="setLang('en')">EN</button>
+        <button class="lang-btn" onclick="setLang('zh')">中文</button>
+        <button class="lang-btn" onclick="setLang('th')">ไทย</button>
+    </div>
+
+    <!-- Header -->
+    <header class="hr-header">
+        <div class="hr-logo">
+            <div class="hr-logo-icon">🏢</div>
+            <div>
+                <div class="hr-title" data-i18n="hrTitle">NumbahWan HR Department</div>
+            </div>
+        </div>
+        <p class="hr-subtitle" data-i18n="hrSubtitle">Building Tomorrow's Guild, One Rejection at a Time™</p>
+        <div style="text-align: center; margin-top: 10px;">
+            <a href="/" style="color: rgba(255,255,255,0.8); font-size: 0.85rem; text-decoration: none;">← <span data-i18n="backHome">Back to Guild</span></a>
+        </div>
+    </header>
+
+    <div class="container">
+        <!-- Stats -->
+        <div class="stats-bar">
+            <div class="stat-item">
+                <div class="stat-value" id="openPositions">12</div>
+                <div class="stat-label" data-i18n="openPositions">Open Positions</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value" id="totalApps">847</div>
+                <div class="stat-label" data-i18n="applications">Applications</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value" id="acceptRate">0.1%</div>
+                <div class="stat-label" data-i18n="acceptRate">Accept Rate</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value" id="yourApps">0</div>
+                <div class="stat-label" data-i18n="yourApps">Your Apps</div>
+            </div>
+        </div>
+
+        <!-- Job Listings -->
+        <h2 style="font-size: 1.1rem; font-weight: 600; margin-bottom: 12px;" data-i18n="openRoles">Open Positions</h2>
+        <div class="jobs-grid" id="jobsGrid">
+            <!-- Jobs added by JS -->
+        </div>
+
+        <!-- Application Form (hidden by default) -->
+        <div class="form-container" id="applicationForm" style="display: none;">
+            <div class="form-title">
+                <span>📝</span>
+                <span data-i18n="applyFor">Apply for:</span>
+                <span id="applyingFor" style="color: var(--accent);"></span>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" data-i18n="yourName">Your Name</label>
+                <input type="text" class="form-input" id="applicantName" data-i18n-placeholder="enterIGN">
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" data-i18n="currentRole">Current Role in Guild</label>
+                <select class="form-select" id="currentRole">
+                    <option value="none" data-i18n="roleNone">Unemployed Adventurer</option>
+                    <option value="member" data-i18n="roleMember">Regular Member</option>
+                    <option value="veteran" data-i18n="roleVeteran">Veteran (I've seen things)</option>
+                    <option value="officer" data-i18n="roleOfficer">Junior Officer (unpaid)</option>
+                </select>
+            </div>
+
+            <!-- Absurd Questions -->
+            <div class="absurd-question">
+                <label class="absurd-label">⚠️ <span data-i18n="q1Label">Critical Assessment</span></label>
+                <p class="form-label" style="margin-top: 8px;" data-i18n="q1">Rate your keyboard smashing skills (1-10)</p>
+                <div class="skill-slider">
+                    <input type="range" id="keyboardSmash" min="1" max="10" value="5">
+                    <span class="skill-value" id="keyboardSmashValue">5</span>
+                </div>
+            </div>
+
+            <div class="absurd-question">
+                <label class="absurd-label">🔬 <span data-i18n="q2Label">Personality Test</span></label>
+                <p class="form-label" style="margin-top: 8px;" data-i18n="q2">How many times have you blamed lag for your mistakes this week?</p>
+                <input type="number" class="form-input" id="lagBlames" min="0" max="999" value="0">
+            </div>
+
+            <div class="absurd-question">
+                <label class="absurd-label">💭 <span data-i18n="q3Label">Essay Question</span></label>
+                <p class="form-label" style="margin-top: 8px;" data-i18n="q3">In 50 words or less, explain why you deserve this unpaid position</p>
+                <textarea class="form-textarea" id="essay" data-i18n-placeholder="essayPlaceholder"></textarea>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" data-i18n="q4">Can you work overtime? (Note: All time is overtime here)</label>
+                <select class="form-select" id="overtime">
+                    <option value="yes" data-i18n="overtimeYes">Yes, sleep is for the weak</option>
+                    <option value="maybe" data-i18n="overtimeMaybe">Define "overtime"</option>
+                    <option value="no" data-i18n="overtimeNo">I have a life outside this game</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" data-i18n="q5">Are you willing to take a pay cut? (Current pay: 0)</label>
+                <select class="form-select" id="paycut">
+                    <option value="yes">Yes, I'll pay YOU to work here</option>
+                    <option value="no">No, I demand my 0 mesos</option>
+                </select>
+            </div>
+
+            <div style="display: flex; gap: 12px; margin-top: 20px;">
+                <button class="btn-submit" onclick="submitApplication()" style="flex: 1;">
+                    📤 <span data-i18n="submitApp">Submit Application</span>
+                </button>
+                <button class="btn-submit" onclick="cancelApplication()" style="flex: 0.3; background: #666;">
+                    ✕
+                </button>
+            </div>
+            <p style="font-size: 0.75rem; color: var(--text-muted); text-align: center; margin-top: 10px;" data-i18n="appFee">
+                Application fee: 💎5 (non-refundable, obviously)
+            </p>
+        </div>
+    </div>
+
+    <!-- Rejection Letter Modal -->
+    <div class="modal" id="rejectionModal">
+        <div class="modal-content">
+            <div class="letter-header">
+                <div class="letter-logo">🏢</div>
+                <h3 style="font-weight: 600;">NumbahWan Human Resources</h3>
+                <p class="letter-date" id="letterDate"></p>
+            </div>
+            <div class="letter-body" id="letterBody">
+                <!-- Content added by JS -->
+            </div>
+            <div class="letter-signature">
+                <p>Best regards,</p>
+                <p style="font-weight: 600; color: var(--text);">The HR Bot</p>
+                <p style="font-size: 0.8rem;">"We appreciate your interest"</p>
+            </div>
+            <button class="btn-submit" onclick="closeModal()" style="margin-top: 20px;">
+                <span data-i18n="understood">I Understand (I Don't)</span>
+            </button>
+        </div>
+    </div>
+
+    <script>
+    // ==================== I18N ====================
+    const translations = {
+        en: {
+            hrTitle: "NumbahWan HR Department",
+            hrSubtitle: "Building Tomorrow's Guild, One Rejection at a Time™",
+            backHome: "Back to Guild",
+            openPositions: "Open Positions",
+            applications: "Applications",
+            acceptRate: "Accept Rate",
+            yourApps: "Your Apps",
+            openRoles: "Open Positions",
+            applyFor: "Apply for:",
+            yourName: "Your Name",
+            enterIGN: "Enter your IGN...",
+            currentRole: "Current Role in Guild",
+            roleNone: "Unemployed Adventurer",
+            roleMember: "Regular Member",
+            roleVeteran: "Veteran (I've seen things)",
+            roleOfficer: "Junior Officer (unpaid)",
+            q1Label: "Critical Assessment",
+            q1: "Rate your keyboard smashing skills (1-10)",
+            q2Label: "Personality Test",
+            q2: "How many times have you blamed lag for your mistakes this week?",
+            q3Label: "Essay Question",
+            q3: "In 50 words or less, explain why you deserve this unpaid position",
+            essayPlaceholder: "I am passionate about doing free work because...",
+            q4: "Can you work overtime? (Note: All time is overtime here)",
+            overtimeYes: "Yes, sleep is for the weak",
+            overtimeMaybe: "Define 'overtime'",
+            overtimeNo: "I have a life outside this game",
+            q5: "Are you willing to take a pay cut? (Current pay: 0)",
+            submitApp: "Submit Application",
+            appFee: "Application fee: 💎5 (non-refundable, obviously)",
+            understood: "I Understand (I Don't)",
+            // Jobs
+            jobChiefBanana: "Chief Banana Officer",
+            jobChiefBananaDesc: "Oversee all banana-related guild operations. Must have at least 3 years experience in tropical fruit management.",
+            jobVPStanding: "VP of Standing Around",
+            jobVPStandingDesc: "Expert at looking busy while doing nothing. Leadership experience in town-center AFKing required.",
+            jobDirectorVibes: "Director of Vibes",
+            jobDirectorVibesDesc: "Responsible for maintaining guild atmosphere. Must radiate positive energy at all times.",
+            jobSeniorMushroom: "Senior Mushroom Analyst",
+            jobSeniorMushroomDesc: "Analyze mushroom drop rates and optimize grinding routes. PhD in Mushroomology preferred.",
+            jobHeadComplaint: "Head of Complaints (Receiving)",
+            jobHeadComplaintDesc: "Listen to member complaints and nod sympathetically. Thick skin required.",
+            jobChiefMeme: "Chief Meme Officer",
+            jobChiefMemeDesc: "Curate and distribute dank memes. Must stay current with meme trends.",
+            jobAssistantGM: "Assistant to the Guild Master",
+            jobAssistantGMDesc: "Not Assistant Guild Master. Assistant TO the Guild Master. Very different.",
+            jobIntern: "Unpaid Intern (Permanent)",
+            jobInternDesc: "Entry-level position with unlimited growth potential (but no actual growth).",
+            // Departments
+            deptExec: "Executive Team",
+            deptOps: "Operations",
+            deptCulture: "Culture",
+            deptResearch: "Research",
+            deptSupport: "Member Support",
+            deptMedia: "Media",
+            deptAdmin: "Administration",
+            deptEntry: "Entry Level",
+            // Badges
+            badgeNew: "NEW",
+            badgeUrgent: "URGENT",
+            badgeRemote: "Remote",
+            // Rejection reasons
+            rejectBlink: "you blinked too much during the interview (we were watching through your webcam)",
+            rejectVibes: "your vibes were off. Way off. Like, concerning levels of off",
+            rejectOverqualified: "you're overqualified. We only hire underqualified candidates to maintain our brand",
+            rejectName: "we didn't like how you typed your name. The font felt aggressive",
+            rejectKeyboard: "your keyboard smashing skills scored too high. We fear you",
+            rejectEssay: "your essay contained the word 'the' which shows a lack of creativity",
+            rejectLag: "your lag blame count was suspiciously low. What are you hiding?",
+            rejectEnergy: "we sensed through the application form that you have main character energy. We already have a main character",
+            rejectPlanets: "Mercury is in retrograde and our HR astrologer advised against all hiring",
+            rejectCat: "our office cat didn't respond when we showed your application. That's a no from Mr. Whiskers",
+        },
+        zh: {
+            hrTitle: "一號公會人力資源部",
+            hrSubtitle: "一次拒絕一個，建設明日公會™",
+            backHome: "返回公會",
+            openPositions: "開放職位",
+            applications: "申請數",
+            acceptRate: "錄取率",
+            yourApps: "您的申請",
+            openRoles: "開放職位",
+            applyFor: "申請職位：",
+            yourName: "您的名字",
+            enterIGN: "輸入您的遊戲名稱...",
+            currentRole: "目前公會角色",
+            roleNone: "失業冒險者",
+            roleMember: "普通成員",
+            roleVeteran: "老手（我見過世面）",
+            roleOfficer: "初級幹部（無薪）",
+            q1Label: "關鍵評估",
+            q1: "評價您的鍵盤敲打技能（1-10）",
+            q2Label: "人格測試",
+            q2: "這週您把失誤怪罪於延遲幾次？",
+            q3Label: "申論題",
+            q3: "用50字以內說明為何您值得這個無薪職位",
+            essayPlaceholder: "我熱衷於做免費工作因為...",
+            q4: "您能加班嗎？（注意：這裡所有時間都是加班）",
+            overtimeYes: "可以，睡眠是弱者的行為",
+            overtimeMaybe: "定義「加班」",
+            overtimeNo: "我遊戲外還有生活",
+            q5: "您願意降薪嗎？（目前薪資：0）",
+            submitApp: "提交申請",
+            appFee: "申請費：💎5（當然不退）",
+            understood: "我理解（其實不理解）",
+            jobChiefBanana: "首席香蕉官",
+            jobChiefBananaDesc: "監督所有與香蕉相關的公會運營。需至少3年熱帶水果管理經驗。",
+            jobVPStanding: "站著副總裁",
+            jobVPStandingDesc: "擅長看起來很忙但什麼都沒做。需有城鎮中心掛機領導經驗。",
+            jobDirectorVibes: "氛圍總監",
+            jobDirectorVibesDesc: "負責維護公會氣氛。必須隨時散發正能量。",
+            jobSeniorMushroom: "資深蘑菇分析師",
+            jobSeniorMushroomDesc: "分析蘑菇掉落率並優化打怪路線。蘑菇學博士優先。",
+            jobHeadComplaint: "投訴主管（接收）",
+            jobHeadComplaintDesc: "聆聽成員投訴並同情地點頭。需要厚臉皮。",
+            jobChiefMeme: "首席迷因官",
+            jobChiefMemeDesc: "策劃和分發優質迷因。必須跟上迷因趨勢。",
+            jobAssistantGM: "會長助理",
+            jobAssistantGMDesc: "不是副會長。是會長的助理。非常不同。",
+            jobIntern: "無薪實習生（永久）",
+            jobInternDesc: "入門級職位，有無限成長潛力（但沒有實際成長）。",
+            deptExec: "執行團隊",
+            deptOps: "營運",
+            deptCulture: "文化",
+            deptResearch: "研究",
+            deptSupport: "成員支援",
+            deptMedia: "媒體",
+            deptAdmin: "行政",
+            deptEntry: "入門級",
+            badgeNew: "新",
+            badgeUrgent: "急徵",
+            badgeRemote: "遠端",
+            rejectBlink: "面試時您眨眼太多（我們通過您的攝像頭在看）",
+            rejectVibes: "您的氛圍不對。非常不對。令人擔憂的程度",
+            rejectOverqualified: "您資歷過高。我們只招不合格的候選人以維護我們的品牌",
+            rejectName: "我們不喜歡您輸入名字的方式。字體感覺很有攻擊性",
+            rejectKeyboard: "您的鍵盤敲打技能分數太高。我們怕您",
+            rejectEssay: "您的申論包含「的」這個字，顯示缺乏創意",
+            rejectLag: "您的延遲怪罪次數可疑地低。您在隱藏什麼？",
+            rejectEnergy: "我們從申請表中感應到您有主角能量。我們已經有主角了",
+            rejectPlanets: "水星逆行，我們的HR占星師建議不要招聘",
+            rejectCat: "我們的辦公室貓看到您的申請沒有反應。喵先生說不行",
+        },
+        th: {
+            hrTitle: "แผนก HR กิลด์ NumbahWan",
+            hrSubtitle: "สร้างกิลด์แห่งอนาคต ทีละการปฏิเสธ™",
+            backHome: "กลับสู่กิลด์",
+            openPositions: "ตำแหน่งว่าง",
+            applications: "ใบสมัคร",
+            acceptRate: "อัตรารับ",
+            yourApps: "ใบสมัครของคุณ",
+            openRoles: "ตำแหน่งว่าง",
+            applyFor: "สมัครตำแหน่ง:",
+            yourName: "ชื่อของคุณ",
+            enterIGN: "ใส่ชื่อในเกม...",
+            currentRole: "บทบาทปัจจุบันในกิลด์",
+            roleNone: "นักผจญภัยตกงาน",
+            roleMember: "สมาชิกทั่วไป",
+            roleVeteran: "รุ่นเก๋า (ฉันเห็นมาเยอะ)",
+            roleOfficer: "เจ้าหน้าที่ระดับล่าง (ไม่ได้เงิน)",
+            q1Label: "การประเมินที่สำคัญ",
+            q1: "ให้คะแนนทักษะการทุบคีย์บอร์ดของคุณ (1-10)",
+            q2Label: "แบบทดสอบบุคลิกภาพ",
+            q2: "สัปดาห์นี้คุณโทษแล็กกี่ครั้งสำหรับความผิดพลาดของคุณ?",
+            q3Label: "คำถามเรียงความ",
+            q3: "อธิบายใน 50 คำหรือน้อยกว่าว่าทำไมคุณสมควรได้ตำแหน่งที่ไม่มีเงินเดือนนี้",
+            essayPlaceholder: "ฉันหลงใหลในการทำงานฟรีเพราะ...",
+            q4: "คุณทำงานล่วงเวลาได้ไหม? (หมายเหตุ: ทุกเวลาคือล่วงเวลาที่นี่)",
+            overtimeYes: "ได้ การนอนสำหรับคนอ่อนแอ",
+            overtimeMaybe: "นิยาม 'ล่วงเวลา'",
+            overtimeNo: "ฉันมีชีวิตนอกเกมนี้",
+            q5: "คุณยินดีที่จะลดเงินเดือนไหม? (เงินเดือนปัจจุบัน: 0)",
+            submitApp: "ส่งใบสมัคร",
+            appFee: "ค่าสมัคร: 💎5 (ไม่คืนเงินแน่นอน)",
+            understood: "ฉันเข้าใจ (ไม่เข้าใจจริงๆ)",
+            jobChiefBanana: "ประธานเจ้าหน้าที่กล้วย",
+            jobChiefBananaDesc: "ดูแลการดำเนินงานที่เกี่ยวข้องกับกล้วยทั้งหมด ต้องมีประสบการณ์อย่างน้อย 3 ปีในการจัดการผลไม้เขตร้อน",
+            jobVPStanding: "รองประธานการยืน",
+            jobVPStandingDesc: "เชี่ยวชาญในการดูยุ่งแต่ไม่ทำอะไร ต้องมีประสบการณ์ผู้นำใน AFK กลางเมือง",
+            jobDirectorVibes: "ผู้อำนวยการบรรยากาศ",
+            jobDirectorVibesDesc: "รับผิดชอบรักษาบรรยากาศกิลด์ ต้องแผ่พลังบวกตลอดเวลา",
+            jobSeniorMushroom: "นักวิเคราะห์เห็ดอาวุโส",
+            jobSeniorMushroomDesc: "วิเคราะห์อัตราดรอปเห็ดและปรับเส้นทางการเก็บเลเวล ปริญญาเอกด้านเห็ดวิทยาเป็นที่ต้องการ",
+            jobHeadComplaint: "หัวหน้าฝ่ายรับเรื่องร้องเรียน",
+            jobHeadComplaintDesc: "ฟังเรื่องร้องเรียนของสมาชิกและพยักหน้าเห็นใจ ต้องหน้าหนา",
+            jobChiefMeme: "ประธานเจ้าหน้าที่มีม",
+            jobChiefMemeDesc: "คัดสรรและแจกจ่ายมีมคุณภาพ ต้องตามกระแสมีมทัน",
+            jobAssistantGM: "ผู้ช่วยหัวหน้ากิลด์",
+            jobAssistantGMDesc: "ไม่ใช่รองหัวหน้ากิลด์ ผู้ช่วยของหัวหน้ากิลด์ แตกต่างกันมาก",
+            jobIntern: "ฝึกงานไม่มีเงินเดือน (ถาวร)",
+            jobInternDesc: "ตำแหน่งระดับเริ่มต้นที่มีศักยภาพเติบโตไม่จำกัด (แต่ไม่มีการเติบโตจริง)",
+            deptExec: "ทีมบริหาร",
+            deptOps: "ปฏิบัติการ",
+            deptCulture: "วัฒนธรรม",
+            deptResearch: "วิจัย",
+            deptSupport: "สนับสนุนสมาชิก",
+            deptMedia: "สื่อ",
+            deptAdmin: "ธุรการ",
+            deptEntry: "ระดับเริ่มต้น",
+            badgeNew: "ใหม่",
+            badgeUrgent: "ด่วน",
+            badgeRemote: "ทำงานระยะไกล",
+            rejectBlink: "คุณกระพริบตามากเกินไปในการสัมภาษณ์ (เราดูผ่านเว็บแคมของคุณ)",
+            rejectVibes: "บรรยากาศของคุณไม่ใช่ ไม่ใช่มาก ระดับน่าเป็นห่วง",
+            rejectOverqualified: "คุณมีคุณสมบัติเกินไป เรารับเฉพาะผู้สมัครที่ไม่มีคุณสมบัติเพื่อรักษาแบรนด์ของเรา",
+            rejectName: "เราไม่ชอบวิธีที่คุณพิมพ์ชื่อ ฟอนต์ดูก้าวร้าว",
+            rejectKeyboard: "ทักษะการทุบคีย์บอร์ดของคุณคะแนนสูงเกินไป เรากลัวคุณ",
+            rejectEssay: "เรียงความของคุณมีคำว่า 'ที่' ซึ่งแสดงถึงการขาดความคิดสร้างสรรค์",
+            rejectLag: "จำนวนการโทษแล็กของคุณต่ำอย่างน่าสงสัย คุณซ่อนอะไรอยู่?",
+            rejectEnergy: "เราสัมผัสได้จากแบบฟอร์มใบสมัครว่าคุณมีพลังตัวเอก เรามีตัวเอกแล้ว",
+            rejectPlanets: "ดาวพุธถอยหลังและนักโหราศาสตร์ HR ของเราแนะนำไม่ให้รับคน",
+            rejectCat: "แมวในออฟฟิศของเราไม่ตอบสนองเมื่อเราแสดงใบสมัครของคุณ นั่นคือไม่จากคุณวิสเกอร์",
+        }
+    };
+
+    let currentLang = localStorage.getItem('numbahwan_lang') || 'en';
+    let currentJob = null;
+
+    function t(key) {
+        return translations[currentLang]?.[key] || translations.en[key] || key;
+    }
+
+    function setLang(lang) {
+        currentLang = lang;
+        localStorage.setItem('numbahwan_lang', lang);
+        document.querySelectorAll('.lang-btn').forEach(btn => {
+            btn.classList.toggle('active', btn.textContent.includes(lang === 'en' ? 'EN' : lang === 'zh' ? '中' : 'ไ'));
+        });
+        applyTranslations();
+        renderJobs();
+    }
+
+    function applyTranslations() {
+        document.querySelectorAll('[data-i18n]').forEach(el => {
+            el.textContent = t(el.dataset.i18n);
+        });
+        document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+            el.placeholder = t(el.dataset.i18nPlaceholder);
+        });
+    }
+
+    // ==================== JOBS DATA ====================
+    const JOBS = [
+        { id: 'banana', title: 'jobChiefBanana', desc: 'jobChiefBananaDesc', dept: 'deptExec', badge: 'badgeUrgent', reqs: ['Banana', '3yr exp', 'Yellow'] },
+        { id: 'standing', title: 'jobVPStanding', desc: 'jobVPStandingDesc', dept: 'deptOps', badge: 'badgeNew', reqs: ['AFK Pro', 'Leadership'] },
+        { id: 'vibes', title: 'jobDirectorVibes', desc: 'jobDirectorVibesDesc', dept: 'deptCulture', badge: null, reqs: ['Good Vibes', 'Positive'] },
+        { id: 'mushroom', title: 'jobSeniorMushroom', desc: 'jobSeniorMushroomDesc', dept: 'deptResearch', badge: 'badgeRemote', reqs: ['PhD', 'Data'] },
+        { id: 'complaint', title: 'jobHeadComplaint', desc: 'jobHeadComplaintDesc', dept: 'deptSupport', badge: 'badgeUrgent', reqs: ['Patience', 'Nodding'] },
+        { id: 'meme', title: 'jobChiefMeme', desc: 'jobChiefMemeDesc', dept: 'deptMedia', badge: 'badgeNew', reqs: ['Dank', 'Current'] },
+        { id: 'assistant', title: 'jobAssistantGM', desc: 'jobAssistantGMDesc', dept: 'deptAdmin', badge: null, reqs: ['Humble', 'Obedient'] },
+        { id: 'intern', title: 'jobIntern', desc: 'jobInternDesc', dept: 'deptEntry', badge: null, reqs: ['Desperate', 'Eager'] }
+    ];
+
+    // ==================== HR DATA ====================
+    const HR_KEY = 'nw_hr_data';
+
+    function getHRData() {
+        return JSON.parse(localStorage.getItem(HR_KEY) || '{"applications":0,"rejections":[]}');
+    }
+
+    function saveHRData(data) {
+        localStorage.setItem(HR_KEY, JSON.stringify(data));
+        updateStats();
+    }
+
+    function updateStats() {
+        const data = getHRData();
+        document.getElementById('yourApps').textContent = data.applications;
+    }
+
+    // ==================== RENDER ====================
+    function renderJobs() {
+        const grid = document.getElementById('jobsGrid');
+        grid.innerHTML = JOBS.map(job => {
+            const badgeClass = job.badge === 'badgeUrgent' ? 'urgent' : job.badge === 'badgeNew' ? 'new' : '';
+            return `
+                <div class="job-card" onclick="applyToJob('${job.id}')">
+                    <div class="job-header">
+                        <div class="job-title-area">
+                            <h3>${t(job.title)}</h3>
+                            <div class="job-dept">${t(job.dept)}</div>
+                        </div>
+                        ${job.badge ? `<span class="job-badge ${badgeClass}">${t(job.badge)}</span>` : ''}
+                    </div>
+                    <p class="job-desc">${t(job.desc)}</p>
+                    <div class="job-requirements">
+                        ${job.reqs.map(r => `<span class="job-req">${r}</span>`).join('')}
+                    </div>
+                </div>
+            `;
+        }).join('');
+    }
+
+    // ==================== APPLICATION ====================
+    function applyToJob(jobId) {
+        currentJob = JOBS.find(j => j.id === jobId);
+        if (!currentJob) return;
+
+        document.getElementById('applyingFor').textContent = t(currentJob.title);
+        document.getElementById('applicationForm').style.display = 'block';
+        document.getElementById('applicationForm').scrollIntoView({ behavior: 'smooth' });
+        
+        if (typeof NW_SOUNDS !== 'undefined') NW_SOUNDS.play('click');
+    }
+
+    function cancelApplication() {
+        document.getElementById('applicationForm').style.display = 'none';
+        currentJob = null;
+    }
+
+    function submitApplication() {
+        const name = document.getElementById('applicantName').value.trim();
+        const essay = document.getElementById('essay').value.trim();
+
+        if (!name) {
+            alert('Please enter your name!');
+            return;
+        }
+
+        // Check fee
+        if (typeof NW_WALLET !== 'undefined' && !NW_WALLET.isGMMode()) {
+            if (!NW_WALLET.spend('diamond', 5, 'HR_APPLICATION_FEE')) {
+                alert('Insufficient application fee! Need 💎5');
+                return;
+            }
+        }
+
+        // Update stats
+        const data = getHRData();
+        data.applications++;
+        saveHRData(data);
+
+        // Generate rejection letter
+        showRejectionLetter(name);
+    }
+
+    function showRejectionLetter(name) {
+        const reasons = [
+            'rejectBlink', 'rejectVibes', 'rejectOverqualified', 'rejectName',
+            'rejectKeyboard', 'rejectEssay', 'rejectLag', 'rejectEnergy',
+            'rejectPlanets', 'rejectCat'
+        ];
+        const reason = reasons[Math.floor(Math.random() * reasons.length)];
+
+        document.getElementById('letterDate').textContent = new Date().toLocaleDateString();
+        document.getElementById('letterBody').innerHTML = `
+            <p>Dear <strong>${name}</strong>,</p>
+            <p>Thank you for your interest in the position of <strong>${t(currentJob.title)}</strong>.</p>
+            <p>After careful consideration (approximately 0.3 seconds), we regret to inform you that your application has been <strong style="color: red;">REJECTED</strong>.</p>
+            <p><strong>Reason:</strong> ${t(reason)}</p>
+            <p>We encourage you to reapply in the future, though the result will likely be the same.</p>
+            <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: 20px;">
+                This rejection letter has been automatically generated. No humans were involved in this decision, 
+                which somehow doesn't make it better.
+            </p>
+        `;
+
+        document.getElementById('rejectionModal').classList.add('active');
+        document.getElementById('applicationForm').style.display = 'none';
+        
+        // Reward for entertainment value
+        if (typeof NW_WALLET !== 'undefined') {
+            NW_WALLET.earn('gold', 10, 'HR_REJECTION_CONSOLATION');
+        }
+        
+        if (typeof NW_SOUNDS !== 'undefined') NW_SOUNDS.play('lose');
+    }
+
+    function closeModal() {
+        document.getElementById('rejectionModal').classList.remove('active');
+        currentJob = null;
+    }
+
+    // ==================== INIT ====================
+    document.addEventListener('DOMContentLoaded', () => {
+        applyTranslations();
+        renderJobs();
+        updateStats();
+
+        // Slider live update
+        const slider = document.getElementById('keyboardSmash');
+        const sliderValue = document.getElementById('keyboardSmashValue');
+        slider.addEventListener('input', () => {
+            sliderValue.textContent = slider.value;
+        });
+    });
+    </script>
+</body>
+</html>

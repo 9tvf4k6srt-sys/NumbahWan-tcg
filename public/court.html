@@ -1,0 +1,1052 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Guild Supreme Court | NumbahWan</title>
+    <link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="/static/nw-wallet.js"></script>
+    <script src="/static/nw-sounds.js" defer></script>
+    <script src="/static/nw-guide.js" defer></script>
+    <style>
+        :root {
+            --bg: #0a0a0f;
+            --card: #12121a;
+            --gold: #d4af37;
+            --red: #8b0000;
+            --text: #f5f5dc;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+        }
+        .font-court { font-family: 'Cinzel', serif; }
+        
+        /* Wood texture header */
+        .court-header {
+            background: linear-gradient(180deg, #3d2314 0%, #2a1810 100%);
+            border-bottom: 4px solid var(--gold);
+            padding: 30px 20px;
+            text-align: center;
+            position: relative;
+        }
+        .court-header::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: url("data:image/svg+xml,%3Csvg viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4'/%3E%3C/filter%3E%3Crect width='100' height='100' filter='url(%23n)' opacity='0.1'/%3E%3C/svg%3E");
+            opacity: 0.3;
+        }
+        .court-title {
+            font-family: 'Cinzel', serif;
+            font-size: clamp(1.8rem, 5vw, 3rem);
+            color: var(--gold);
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+            position: relative;
+        }
+        .court-subtitle {
+            color: rgba(212, 175, 55, 0.7);
+            font-size: 0.9rem;
+            margin-top: 8px;
+        }
+        
+        /* Gavel animation */
+        .gavel {
+            font-size: 3rem;
+            display: inline-block;
+            cursor: pointer;
+            transition: transform 0.1s;
+        }
+        .gavel:active { transform: rotate(-30deg); }
+        .gavel.strike { animation: gavelStrike 0.3s ease; }
+        @keyframes gavelStrike {
+            0%, 100% { transform: rotate(0deg); }
+            50% { transform: rotate(-45deg); }
+        }
+        
+        .container { max-width: 800px; margin: 0 auto; padding: 20px; }
+        
+        /* Tabs */
+        .tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        .tab {
+            padding: 12px 20px;
+            background: var(--card);
+            border: 2px solid transparent;
+            border-radius: 8px;
+            color: var(--text);
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .tab:hover { border-color: var(--gold); }
+        .tab.active {
+            background: linear-gradient(135deg, #3d2314, #2a1810);
+            border-color: var(--gold);
+            color: var(--gold);
+        }
+        
+        /* Sections */
+        .section { display: none; }
+        .section.active { display: block; animation: fadeIn 0.3s; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        
+        /* Form styles */
+        .form-card {
+            background: var(--card);
+            border: 1px solid #333;
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 20px;
+        }
+        .form-title {
+            font-family: 'Cinzel', serif;
+            font-size: 1.3rem;
+            color: var(--gold);
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .form-group { margin-bottom: 16px; }
+        .form-label {
+            display: block;
+            font-size: 0.85rem;
+            color: rgba(245,245,220,0.7);
+            margin-bottom: 6px;
+        }
+        .form-input, .form-select, .form-textarea {
+            width: 100%;
+            padding: 12px;
+            background: rgba(0,0,0,0.3);
+            border: 1px solid #444;
+            border-radius: 8px;
+            color: var(--text);
+            font-size: 14px;
+        }
+        .form-input:focus, .form-textarea:focus {
+            outline: none;
+            border-color: var(--gold);
+        }
+        .form-textarea { min-height: 120px; resize: vertical; }
+        
+        .btn {
+            padding: 14px 28px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, var(--gold), #b8962e);
+            color: #1a1a1a;
+        }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 4px 20px rgba(212,175,55,0.3); }
+        .btn-danger {
+            background: linear-gradient(135deg, #8b0000, #5c0000);
+            color: #fff;
+        }
+        
+        /* Case card */
+        .case-card {
+            background: var(--card);
+            border: 1px solid #333;
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 12px;
+            transition: all 0.2s;
+        }
+        .case-card:hover { border-color: var(--gold); }
+        .case-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 10px;
+        }
+        .case-id {
+            font-family: 'Cinzel', serif;
+            color: var(--gold);
+            font-weight: 600;
+        }
+        .case-status {
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+        .status-pending { background: rgba(255,193,7,0.2); color: #ffc107; }
+        .status-judging { background: rgba(0,123,255,0.2); color: #007bff; }
+        .status-verdict { background: rgba(40,167,69,0.2); color: #28a745; }
+        .status-appealed { background: rgba(220,53,69,0.2); color: #dc3545; }
+        
+        .case-title { font-weight: 600; margin-bottom: 6px; }
+        .case-meta { font-size: 0.8rem; color: rgba(245,245,220,0.5); }
+        
+        /* Verdict document */
+        .verdict-doc {
+            background: #f5f5dc;
+            color: #1a1a1a;
+            padding: 30px;
+            border-radius: 4px;
+            font-family: 'Times New Roman', serif;
+            position: relative;
+            margin: 20px 0;
+        }
+        .verdict-doc::before {
+            content: '';
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            width: 80px;
+            height: 80px;
+            background: radial-gradient(circle, rgba(139,0,0,0.3), transparent);
+            border-radius: 50%;
+        }
+        .verdict-header {
+            text-align: center;
+            border-bottom: 2px solid #8b0000;
+            padding-bottom: 15px;
+            margin-bottom: 20px;
+        }
+        .verdict-seal {
+            font-size: 2rem;
+            margin-bottom: 10px;
+        }
+        .verdict-court-name {
+            font-family: 'Cinzel', serif;
+            font-size: 1.2rem;
+            color: #8b0000;
+            letter-spacing: 2px;
+        }
+        .verdict-body { line-height: 1.8; }
+        .verdict-ruling {
+            background: rgba(139,0,0,0.1);
+            padding: 15px;
+            margin: 15px 0;
+            border-left: 4px solid #8b0000;
+        }
+        .verdict-signature {
+            text-align: right;
+            margin-top: 30px;
+            font-style: italic;
+        }
+        
+        /* Crime selector */
+        .crime-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            gap: 10px;
+            margin: 15px 0;
+        }
+        .crime-option {
+            padding: 12px;
+            background: rgba(0,0,0,0.3);
+            border: 2px solid #333;
+            border-radius: 10px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .crime-option:hover { border-color: var(--gold); }
+        .crime-option.selected {
+            border-color: var(--gold);
+            background: rgba(212,175,55,0.1);
+        }
+        .crime-icon { font-size: 1.5rem; margin-bottom: 6px; }
+        .crime-name { font-size: 0.8rem; }
+        
+        /* Stats */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+        .stat-card {
+            background: var(--card);
+            border: 1px solid #333;
+            border-radius: 12px;
+            padding: 16px;
+            text-align: center;
+        }
+        .stat-value {
+            font-family: 'Cinzel', serif;
+            font-size: 1.8rem;
+            color: var(--gold);
+        }
+        .stat-label { font-size: 0.75rem; color: rgba(245,245,220,0.5); }
+        
+        /* Lang switcher */
+        .lang-switch {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            gap: 8px;
+            z-index: 100;
+        }
+        .lang-btn {
+            padding: 8px 12px;
+            background: var(--card);
+            border: 1px solid #444;
+            border-radius: 6px;
+            color: var(--text);
+            cursor: pointer;
+            font-size: 0.85rem;
+        }
+        .lang-btn.active { border-color: var(--gold); color: var(--gold); }
+        
+        /* Mobile */
+        @media (max-width: 600px) {
+            .stats-grid { grid-template-columns: repeat(2, 1fr); }
+            .crime-grid { grid-template-columns: repeat(2, 1fr); }
+        }
+    </style>
+</head>
+<body>
+    <!-- Language Switcher -->
+    <div class="lang-switch">
+        <button class="lang-btn active" onclick="setLang('en')">EN</button>
+        <button class="lang-btn" onclick="setLang('zh')">中文</button>
+        <button class="lang-btn" onclick="setLang('th')">ไทย</button>
+    </div>
+
+    <!-- Header -->
+    <header class="court-header">
+        <div class="gavel" id="gavel" onclick="strikeGavel()">🔨</div>
+        <h1 class="court-title" data-i18n="courtTitle">NumbahWan Supreme Court</h1>
+        <p class="court-subtitle" data-i18n="courtSubtitle">Justice for the Greatest Nation That Doesn't Exist Yet™</p>
+        <a href="/" style="color: var(--gold); font-size: 0.85rem; text-decoration: none;">← <span data-i18n="backHome">Back to Guild</span></a>
+    </header>
+
+    <div class="container">
+        <!-- Stats -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-value" id="totalCases">847</div>
+                <div class="stat-label" data-i18n="totalCases">Total Cases</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="convictionRate">94.7%</div>
+                <div class="stat-label" data-i18n="convictionRate">Conviction Rate</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="appealsWon">3</div>
+                <div class="stat-label" data-i18n="appealsWon">Appeals Won</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="pendingCases">12</div>
+                <div class="stat-label" data-i18n="pendingJudgment">Pending</div>
+            </div>
+        </div>
+
+        <!-- Tabs -->
+        <div class="tabs">
+            <button class="tab active" onclick="showTab('file')" data-i18n="fileSuit">📜 File Suit</button>
+            <button class="tab" onclick="showTab('cases')" data-i18n="myCases">📁 My Cases</button>
+            <button class="tab" onclick="showTab('laws')" data-i18n="guildLaws">⚖️ Guild Laws</button>
+            <button class="tab" onclick="showTab('hall')" data-i18n="hallOfShame">🏛️ Hall of Shame</button>
+        </div>
+
+        <!-- File Suit Section -->
+        <div class="section active" id="section-file">
+            <div class="form-card">
+                <div class="form-title">📜 <span data-i18n="fileComplaint">File Official Complaint (訴狀)</span></div>
+                
+                <div class="form-group">
+                    <label class="form-label" data-i18n="plaintiffName">Your Name (原告)</label>
+                    <input type="text" class="form-input" id="plaintiffName" data-i18n-placeholder="enterName">
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label" data-i18n="defendantName">Defendant Name (被告)</label>
+                    <input type="text" class="form-input" id="defendantName" data-i18n-placeholder="whoWrongedYou">
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label" data-i18n="selectCrime">Select Crime (罪名)</label>
+                    <div class="crime-grid" id="crimeGrid"></div>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label" data-i18n="complaintDetails">Complaint Details (訴狀內容)</label>
+                    <textarea class="form-textarea" id="complaintDetails" data-i18n-placeholder="describeInjustice"></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label" data-i18n="evidenceUpload">Upload Evidence (Optional)</label>
+                    <input type="file" class="form-input" id="evidenceUpload" accept="image/*,.pdf,.txt">
+                    <small style="color: rgba(245,245,220,0.5); font-size: 0.75rem;" data-i18n="evidenceNote">* Screenshots of chat logs, witness accounts, vibes</small>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label" data-i18n="emailForVerdict">Email for Verdict (審判書寄送)</label>
+                    <input type="email" class="form-input" id="verdictEmail" placeholder="justice@example.com">
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label" data-i18n="desiredPunishment">Desired Punishment (求刑)</label>
+                    <select class="form-select" id="desiredPunishment">
+                        <option value="light" data-i18n="punishLight">Light - Public Apology</option>
+                        <option value="medium" data-i18n="punishMedium">Medium - 100 Hours Mushroom Picking</option>
+                        <option value="heavy" data-i18n="punishHeavy">Heavy - Wear Noob Gear for 1 Week</option>
+                        <option value="extreme" data-i18n="punishExtreme">Extreme - Exile to Beginner Island</option>
+                        <option value="death" data-i18n="punishDeath">Capital - Account Deletion (jk we can't do that)</option>
+                    </select>
+                </div>
+                
+                <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+                    <button class="btn btn-primary" onclick="submitComplaint()">
+                        ⚖️ <span data-i18n="submitComplaint">Submit Complaint</span>
+                    </button>
+                    <span style="color: rgba(245,245,220,0.5); font-size: 0.85rem; align-self: center;">
+                        <span data-i18n="filingFee">Filing Fee:</span> 💎5
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <!-- My Cases Section -->
+        <div class="section" id="section-cases">
+            <div class="form-card">
+                <div class="form-title">📁 <span data-i18n="yourCases">Your Cases</span></div>
+                <div id="casesList"></div>
+            </div>
+        </div>
+
+        <!-- Guild Laws Section -->
+        <div class="section" id="section-laws">
+            <div class="form-card">
+                <div class="form-title">⚖️ <span data-i18n="guildConstitution">Guild Constitution</span></div>
+                <div id="lawsList" style="line-height: 1.8;"></div>
+            </div>
+        </div>
+
+        <!-- Hall of Shame Section -->
+        <div class="section" id="section-hall">
+            <div class="form-card">
+                <div class="form-title">🏛️ <span data-i18n="hallOfShameTitle">Hall of Shame</span></div>
+                <p style="color: rgba(245,245,220,0.6); margin-bottom: 20px;" data-i18n="hallDesc">The most heinous criminals in guild history</p>
+                <div id="shameList"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Verdict Modal -->
+    <div id="verdictModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.9); z-index:1000; overflow-y:auto; padding:20px;">
+        <div style="max-width:600px; margin:40px auto;">
+            <div class="verdict-doc" id="verdictDocument"></div>
+            <div style="text-align:center; margin-top:20px;">
+                <button class="btn btn-primary" onclick="closeVerdict()" style="margin-right:10px;">
+                    ✓ <span data-i18n="acceptVerdict">Accept Verdict</span>
+                </button>
+                <button class="btn btn-danger" onclick="fileAppeal()">
+                    📝 <span data-i18n="fileAppeal">File Appeal (上訴)</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    // ==================== I18N ====================
+    const translations = {
+        en: {
+            courtTitle: "NumbahWan Supreme Court",
+            courtSubtitle: "Justice for the Greatest Nation That Doesn't Exist Yet™",
+            backHome: "Back to Guild",
+            totalCases: "Total Cases",
+            convictionRate: "Conviction Rate",
+            appealsWon: "Appeals Won",
+            pendingJudgment: "Pending",
+            fileSuit: "📜 File Suit",
+            myCases: "📁 My Cases",
+            guildLaws: "⚖️ Guild Laws",
+            hallOfShame: "🏛️ Hall of Shame",
+            fileComplaint: "File Official Complaint (訴狀)",
+            plaintiffName: "Your Name (Plaintiff)",
+            defendantName: "Defendant Name",
+            enterName: "Enter your IGN...",
+            whoWrongedYou: "Who wronged you?",
+            selectCrime: "Select Crime",
+            complaintDetails: "Complaint Details",
+            describeInjustice: "Describe the injustice in vivid detail. The judge appreciates drama.",
+            evidenceUpload: "Upload Evidence (Optional)",
+            evidenceNote: "* Screenshots, chat logs, witness accounts, bad vibes",
+            emailForVerdict: "Email for Verdict Delivery",
+            desiredPunishment: "Desired Punishment",
+            punishLight: "Light - Public Apology",
+            punishMedium: "Medium - 100 Hours Mushroom Picking",
+            punishHeavy: "Heavy - Wear Noob Gear for 1 Week",
+            punishExtreme: "Extreme - Exile to Beginner Island",
+            punishDeath: "Capital - Account Deletion (jk we can't do that)",
+            submitComplaint: "Submit Complaint",
+            filingFee: "Filing Fee:",
+            yourCases: "Your Cases",
+            guildConstitution: "Guild Constitution",
+            hallOfShameTitle: "Hall of Shame",
+            hallDesc: "The most heinous criminals in guild history",
+            acceptVerdict: "Accept Verdict",
+            fileAppeal: "File Appeal",
+            // Crimes
+            crimeAfk: "AFK During Raid",
+            crimeKs: "Kill Stealing",
+            crimeLoot: "Loot Ninja",
+            crimeGhost: "Ghosting Party",
+            crimeCarry: "Refusing to Carry",
+            crimeFlame: "Toxic Chat",
+            crimeFashion: "Fashion Crime",
+            crimeSimp: "Excessive Simping",
+            crimeNoob: "Acting Like Noob",
+            crimeBetray: "Guild Betrayal",
+            // Case statuses
+            statusPending: "Pending Review",
+            statusJudging: "Under Judgment",
+            statusVerdict: "Verdict Issued",
+            statusAppealed: "Appeal Filed",
+            // Verdict
+            verdictTitle: "OFFICIAL VERDICT",
+            verdictCourtName: "NUMBAHWAN SUPREME COURT",
+            verdictCaseNo: "Case No.",
+            verdictPlaintiff: "Plaintiff",
+            verdictDefendant: "Defendant",
+            verdictCharge: "Charge",
+            verdictFindings: "FINDINGS OF THE COURT",
+            verdictRuling: "RULING",
+            verdictSentence: "SENTENCE",
+            verdictNote: "This verdict is final unless appealed within 24 hours. Appeals cost 💎10 and have a 3% success rate.",
+            verdictJudge: "The Honorable Judge RegginA",
+            // Appeal
+            appealFiled: "Appeal filed! The Supreme Court will review your case... eventually.",
+            appealDenied: "APPEAL DENIED. The court has spoken. Also, we kept your 💎10.",
+            // Laws
+            law1: "Article I: All members must respect the grind.",
+            law2: "Article II: No kill stealing. Ever. We will find you.",
+            law3: "Article III: AFK during boss raids is punishable by public shaming.",
+            law4: "Article IV: Fashion crimes are real crimes.",
+            law5: "Article V: The Guild Master's word is law (but can be appealed for 💎10).",
+            law6: "Article VI: Ghosting your party results in mandatory mushroom picking duty.",
+            law7: "Article VII: Excessive simping will be mocked, but tolerated.",
+            law8: "Article VIII: All disputes shall be settled in this court (or rock-paper-scissors).",
+            law9: "Article IX: The sacred logs must be respected at all times.",
+            law10: "Article X: Have fun or face exile.",
+            // Success messages
+            complaintFiled: "⚖️ Complaint Filed! Case #{caseId}",
+            verdictSent: "Verdict will be delivered to your email within 24-48 hours (or whenever the judge wakes up).",
+            noCases: "No cases yet. Living a crime-free life? Boring.",
+        },
+        zh: {
+            courtTitle: "一號公會最高法院",
+            courtSubtitle: "為尚未存在的最偉大國家伸張正義™",
+            backHome: "返回公會",
+            totalCases: "總案件數",
+            convictionRate: "定罪率",
+            appealsWon: "上訴成功",
+            pendingJudgment: "審理中",
+            fileSuit: "📜 提起訴訟",
+            myCases: "📁 我的案件",
+            guildLaws: "⚖️ 公會法典",
+            hallOfShame: "🏛️ 恥辱堂",
+            fileComplaint: "提交正式訴狀",
+            plaintiffName: "您的名字（原告）",
+            defendantName: "被告名字",
+            enterName: "輸入您的遊戲名稱...",
+            whoWrongedYou: "誰冤枉了你？",
+            selectCrime: "選擇罪名",
+            complaintDetails: "訴狀內容",
+            describeInjustice: "請詳細描述這不公平的遭遇，法官喜歡戲劇性的陳述。",
+            evidenceUpload: "上傳證據（選填）",
+            evidenceNote: "* 截圖、聊天記錄、證人陳述、不好的感覺都可以",
+            emailForVerdict: "審判書寄送信箱",
+            desiredPunishment: "求刑",
+            punishLight: "輕判 - 公開道歉",
+            punishMedium: "中等 - 撿100小時蘑菇",
+            punishHeavy: "重判 - 穿新手裝一週",
+            punishExtreme: "極刑 - 流放新手島",
+            punishDeath: "死刑 - 刪除帳號（開玩笑的我們做不到）",
+            submitComplaint: "提交訴狀",
+            filingFee: "訴訟費：",
+            yourCases: "您的案件",
+            guildConstitution: "公會憲法",
+            hallOfShameTitle: "恥辱殿堂",
+            hallDesc: "公會歷史上最惡名昭彰的罪犯",
+            acceptVerdict: "接受判決",
+            fileAppeal: "提起上訴",
+            crimeAfk: "副本掛機",
+            crimeKs: "搶怪",
+            crimeLoot: "搶裝忍者",
+            crimeGhost: "放隊友鴿子",
+            crimeCarry: "拒絕帶人",
+            crimeFlame: "嘴砲噴人",
+            crimeFashion: "時尚犯罪",
+            crimeSimp: "過度舔狗",
+            crimeNoob: "裝萌新",
+            crimeBetray: "背叛公會",
+            statusPending: "等待審理",
+            statusJudging: "審理中",
+            statusVerdict: "已判決",
+            statusAppealed: "已上訴",
+            verdictTitle: "正式判決書",
+            verdictCourtName: "一號公會最高法院",
+            verdictCaseNo: "案件編號",
+            verdictPlaintiff: "原告",
+            verdictDefendant: "被告",
+            verdictCharge: "罪名",
+            verdictFindings: "法院認定事實",
+            verdictRuling: "判決主文",
+            verdictSentence: "宣告刑",
+            verdictNote: "本判決除非在24小時內提出上訴，否則為終局判決。上訴費💎10，成功率3%。",
+            verdictJudge: "審判長 RegginA 大人",
+            appealFiled: "上訴已提交！最高法院會審理您的案件...有空的話。",
+            appealDenied: "上訴駁回。法院已經裁定。另外，我們留下了你的💎10。",
+            law1: "第一條：所有成員必須尊重刷副本的精神。",
+            law2: "第二條：禁止搶怪。永遠禁止。我們會找到你的。",
+            law3: "第三條：打王時掛機將被公開處刑。",
+            law4: "第四條：時尚犯罪是真正的罪行。",
+            law5: "第五條：會長的話就是法律（但可以花💎10上訴）。",
+            law6: "第六條：放隊友鴿子者強制撿蘑菇勞動。",
+            law7: "第七條：過度舔狗會被嘲笑，但可以容忍。",
+            law8: "第八條：所有爭議由本法院裁決（或剪刀石頭布）。",
+            law9: "第九條：神聖原木必須得到尊重。",
+            law10: "第十條：要開心，否則流放。",
+            complaintFiled: "⚖️ 訴狀已提交！案件編號 #{caseId}",
+            verdictSent: "判決書將在24-48小時內寄到您的信箱（或等法官睡醒）。",
+            noCases: "還沒有案件。過著無罪的生活？真無聊。",
+        },
+        th: {
+            courtTitle: "ศาลสูงสุดกิลด์ NumbahWan",
+            courtSubtitle: "ความยุติธรรมสำหรับประเทศที่ยิ่งใหญ่ที่สุดที่ยังไม่มีอยู่™",
+            backHome: "กลับสู่กิลด์",
+            totalCases: "คดีทั้งหมด",
+            convictionRate: "อัตราตัดสิน",
+            appealsWon: "อุทธรณ์สำเร็จ",
+            pendingJudgment: "รอพิจารณา",
+            fileSuit: "📜 ฟ้องร้อง",
+            myCases: "📁 คดีของฉัน",
+            guildLaws: "⚖️ กฎหมายกิลด์",
+            hallOfShame: "🏛️ หอแห่งความอับอาย",
+            fileComplaint: "ยื่นคำฟ้องอย่างเป็นทางการ",
+            plaintiffName: "ชื่อของคุณ (โจทก์)",
+            defendantName: "ชื่อจำเลย",
+            enterName: "ใส่ชื่อในเกม...",
+            whoWrongedYou: "ใครทำผิดต่อคุณ?",
+            selectCrime: "เลือกข้อหา",
+            complaintDetails: "รายละเอียดคำฟ้อง",
+            describeInjustice: "อธิบายความอยุติธรรมอย่างละเอียด ผู้พิพากษาชอบดราม่า",
+            evidenceUpload: "อัปโหลดหลักฐาน (ไม่บังคับ)",
+            evidenceNote: "* สกรีนช็อต แชทล็อก พยาน ความรู้สึกไม่ดี",
+            emailForVerdict: "อีเมลสำหรับส่งคำตัดสิน",
+            desiredPunishment: "การลงโทษที่ต้องการ",
+            punishLight: "เบา - ขอโทษต่อสาธารณะ",
+            punishMedium: "ปานกลาง - เก็บเห็ด 100 ชั่วโมง",
+            punishHeavy: "หนัก - ใส่ชุดมือใหม่ 1 สัปดาห์",
+            punishExtreme: "รุนแรง - เนรเทศไปเกาะเริ่มต้น",
+            punishDeath: "ประหาร - ลบบัญชี (ล้อเล่น ทำไม่ได้)",
+            submitComplaint: "ยื่นคำฟ้อง",
+            filingFee: "ค่าธรรมเนียม:",
+            yourCases: "คดีของคุณ",
+            guildConstitution: "รัฐธรรมนูญกิลด์",
+            hallOfShameTitle: "หอแห่งความอับอาย",
+            hallDesc: "อาชญากรที่น่ารังเกียจที่สุดในประวัติศาสตร์กิลด์",
+            acceptVerdict: "ยอมรับคำตัดสิน",
+            fileAppeal: "ยื่นอุทธรณ์",
+            crimeAfk: "AFK ตอนเรด",
+            crimeKs: "แย่งมอน",
+            crimeLoot: "แย่งของ",
+            crimeGhost: "หายไปจากปาร์ตี้",
+            crimeCarry: "ไม่ยอมพาไป",
+            crimeFlame: "แชทเป็นพิษ",
+            crimeFashion: "แต่งตัวผิด",
+            crimeSimp: "หลงรักเกินไป",
+            crimeNoob: "แกล้งเป็นมือใหม่",
+            crimeBetray: "ทรยศกิลด์",
+            statusPending: "รอพิจารณา",
+            statusJudging: "กำลังพิจารณา",
+            statusVerdict: "ตัดสินแล้ว",
+            statusAppealed: "ยื่นอุทธรณ์แล้ว",
+            verdictTitle: "คำพิพากษาอย่างเป็นทางการ",
+            verdictCourtName: "ศาลสูงสุดกิลด์ NUMBAHWAN",
+            verdictCaseNo: "คดีหมายเลข",
+            verdictPlaintiff: "โจทก์",
+            verdictDefendant: "จำเลย",
+            verdictCharge: "ข้อหา",
+            verdictFindings: "ข้อเท็จจริงที่ศาลรับฟัง",
+            verdictRuling: "คำพิพากษา",
+            verdictSentence: "โทษ",
+            verdictNote: "คำพิพากษานี้ถือเป็นที่สุด เว้นแต่จะอุทธรณ์ภายใน 24 ชั่วโมง ค่าอุทธรณ์ 💎10 อัตราสำเร็จ 3%",
+            verdictJudge: "ผู้พิพากษา RegginA ผู้ทรงเกียรติ",
+            appealFiled: "ยื่นอุทธรณ์แล้ว! ศาลสูงสุดจะพิจารณาคดีของคุณ...สักวัน",
+            appealDenied: "อุทธรณ์ถูกยกฟ้อง ศาลได้ตัดสินแล้ว และเราเก็บ 💎10 ของคุณไว้",
+            law1: "มาตรา 1: สมาชิกทุกคนต้องเคารพการเก็บเลเวล",
+            law2: "มาตรา 2: ห้ามแย่งมอน ห้ามเด็ดขาด เราจะหาคุณเจอ",
+            law3: "มาตรา 3: AFK ตอนตีบอสจะถูกประจาน",
+            law4: "มาตรา 4: แต่งตัวผิดคืออาชญากรรมจริง",
+            law5: "มาตรา 5: คำพูดของหัวหน้ากิลด์คือกฎหมาย (แต่อุทธรณ์ได้ 💎10)",
+            law6: "มาตรา 6: หายไปจากปาร์ตี้ต้องไปเก็บเห็ด",
+            law7: "มาตรา 7: หลงรักเกินไปจะถูกล้อ แต่ยอมรับได้",
+            law8: "มาตรา 8: ข้อพิพาททั้งหมดตัดสินที่ศาลนี้ (หรือเป่ายิ้งฉุบ)",
+            law9: "มาตรา 9: ต้องเคารพไม้ศักดิ์สิทธิ์ตลอดเวลา",
+            law10: "มาตรา 10: สนุกหรือถูกเนรเทศ",
+            complaintFiled: "⚖️ ยื่นคำฟ้องแล้ว! คดีหมายเลข #{caseId}",
+            verdictSent: "คำตัดสินจะถูกส่งไปยังอีเมลของคุณภายใน 24-48 ชั่วโมง (หรือเมื่อผู้พิพากษาตื่น)",
+            noCases: "ยังไม่มีคดี ใช้ชีวิตไม่มีความผิด? น่าเบื่อ",
+        }
+    };
+
+    let currentLang = localStorage.getItem('numbahwan_lang') || 'en';
+
+    function t(key) {
+        return translations[currentLang]?.[key] || translations.en[key] || key;
+    }
+
+    function setLang(lang) {
+        currentLang = lang;
+        localStorage.setItem('numbahwan_lang', lang);
+        document.querySelectorAll('.lang-btn').forEach(btn => {
+            btn.classList.toggle('active', btn.textContent.includes(lang === 'en' ? 'EN' : lang === 'zh' ? '中' : 'ไ'));
+        });
+        applyTranslations();
+        renderCrimes();
+        renderLaws();
+        renderCases();
+        renderShameList();
+    }
+
+    function applyTranslations() {
+        document.querySelectorAll('[data-i18n]').forEach(el => {
+            el.textContent = t(el.dataset.i18n);
+        });
+        document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+            el.placeholder = t(el.dataset.i18nPlaceholder);
+        });
+    }
+
+    // ==================== CRIMES ====================
+    const CRIMES = [
+        { id: 'afk', icon: '😴', key: 'crimeAfk' },
+        { id: 'ks', icon: '⚔️', key: 'crimeKs' },
+        { id: 'loot', icon: '💰', key: 'crimeLoot' },
+        { id: 'ghost', icon: '👻', key: 'crimeGhost' },
+        { id: 'carry', icon: '🙅', key: 'crimeCarry' },
+        { id: 'flame', icon: '🔥', key: 'crimeFlame' },
+        { id: 'fashion', icon: '👗', key: 'crimeFashion' },
+        { id: 'simp', icon: '💕', key: 'crimeSimp' },
+        { id: 'noob', icon: '🐣', key: 'crimeNoob' },
+        { id: 'betray', icon: '🗡️', key: 'crimeBetray' },
+    ];
+
+    let selectedCrime = null;
+
+    function renderCrimes() {
+        const grid = document.getElementById('crimeGrid');
+        grid.innerHTML = CRIMES.map(c => `
+            <div class="crime-option ${selectedCrime === c.id ? 'selected' : ''}" onclick="selectCrime('${c.id}')">
+                <div class="crime-icon">${c.icon}</div>
+                <div class="crime-name">${t(c.key)}</div>
+            </div>
+        `).join('');
+    }
+
+    function selectCrime(id) {
+        selectedCrime = id;
+        renderCrimes();
+        if (typeof NW_SOUNDS !== 'undefined') NW_SOUNDS.play('click');
+    }
+
+    // ==================== TABS ====================
+    function showTab(tab) {
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+        event.target.classList.add('active');
+        document.getElementById(`section-${tab}`).classList.add('active');
+        if (typeof NW_SOUNDS !== 'undefined') NW_SOUNDS.play('click');
+    }
+
+    // ==================== CASES ====================
+    const CASES_KEY = 'nw_court_cases';
+
+    function getCases() {
+        return JSON.parse(localStorage.getItem(CASES_KEY) || '[]');
+    }
+
+    function saveCases(cases) {
+        localStorage.setItem(CASES_KEY, JSON.stringify(cases));
+    }
+
+    function submitComplaint() {
+        const plaintiff = document.getElementById('plaintiffName').value.trim();
+        const defendant = document.getElementById('defendantName').value.trim();
+        const details = document.getElementById('complaintDetails').value.trim();
+        const email = document.getElementById('verdictEmail').value.trim();
+        const punishment = document.getElementById('desiredPunishment').value;
+
+        if (!plaintiff || !defendant || !selectedCrime || !details) {
+            alert(currentLang === 'zh' ? '請填寫所有必填欄位！' : currentLang === 'th' ? 'กรุณากรอกข้อมูลให้ครบ!' : 'Please fill all required fields!');
+            return;
+        }
+
+        // Check filing fee
+        if (typeof NW_WALLET !== 'undefined' && !NW_WALLET.isGMMode()) {
+            if (!NW_WALLET.spend('diamond', 5, 'COURT_FILING_FEE')) {
+                alert(currentLang === 'zh' ? '訴訟費不足！需要💎5' : currentLang === 'th' ? 'ค่าธรรมเนียมไม่พอ! ต้องการ 💎5' : 'Insufficient filing fee! Need 💎5');
+                return;
+            }
+        }
+
+        const caseId = 'NW-' + Date.now().toString(36).toUpperCase();
+        const newCase = {
+            id: caseId,
+            plaintiff,
+            defendant,
+            crime: selectedCrime,
+            details,
+            email,
+            punishment,
+            status: 'pending',
+            filedAt: Date.now(),
+            verdict: null
+        };
+
+        const cases = getCases();
+        cases.unshift(newCase);
+        saveCases(cases);
+
+        // Generate verdict after "deliberation" (3 seconds)
+        setTimeout(() => generateVerdict(caseId), 3000);
+
+        strikeGavel();
+        alert(t('complaintFiled').replace('{caseId}', caseId) + '\n\n' + t('verdictSent'));
+
+        // Clear form
+        document.getElementById('plaintiffName').value = '';
+        document.getElementById('defendantName').value = '';
+        document.getElementById('complaintDetails').value = '';
+        selectedCrime = null;
+        renderCrimes();
+        renderCases();
+    }
+
+    function generateVerdict(caseId) {
+        const cases = getCases();
+        const caseData = cases.find(c => c.id === caseId);
+        if (!caseData) return;
+
+        const guilty = Math.random() > 0.15; // 85% conviction rate lol
+        const crime = CRIMES.find(c => c.id === caseData.crime);
+        
+        const sentences = {
+            light: [
+                'Public apology in guild chat',
+                'Must say "sorry" 100 times',
+                'Forced to compliment the plaintiff 10 times'
+            ],
+            medium: [
+                '100 hours of mushroom picking duty',
+                'Carry 50 newbies through dungeons',
+                'Farm 1000 potions for the guild'
+            ],
+            heavy: [
+                'Wear beginner gear for 1 week',
+                'Change IGN to "I Am A Criminal" for 3 days',
+                'Banned from boss raids for 2 weeks'
+            ],
+            extreme: [
+                'Exile to Beginner Island for 1 month',
+                'Guild rank demoted to "Disgrace"',
+                'Must donate 100 Sacred Logs (good luck)'
+            ],
+            death: [
+                'Eternal mockery in Hall of Shame',
+                'Profile picture changed to a potato',
+                'The court sentences you to... nothing. We can\'t actually do anything lmao'
+            ]
+        };
+
+        const findings = [
+            `The court finds overwhelming evidence of ${t(crime.key)}.`,
+            `Witness testimony confirms the defendant's suspicious behavior.`,
+            `The defendant's excuse of "lag" has been rejected.`,
+            `Chat logs reveal a pattern of questionable conduct.`,
+            `The court notes the defendant did not even show up. Typical.`
+        ];
+
+        caseData.status = 'verdict';
+        caseData.verdict = {
+            guilty,
+            finding: findings[Math.floor(Math.random() * findings.length)],
+            sentence: guilty ? sentences[caseData.punishment][Math.floor(Math.random() * sentences[caseData.punishment].length)] : 'ACQUITTED - But we\'re watching you.',
+            judgedAt: Date.now()
+        };
+
+        saveCases(cases);
+        renderCases();
+
+        // Award plaintiff if guilty verdict
+        if (guilty && typeof NW_WALLET !== 'undefined') {
+            NW_WALLET.earn('gold', 25, 'COURT_VICTORY');
+        }
+    }
+
+    function renderCases() {
+        const cases = getCases();
+        const list = document.getElementById('casesList');
+
+        if (cases.length === 0) {
+            list.innerHTML = `<p style="color: rgba(245,245,220,0.5); text-align: center; padding: 40px;">${t('noCases')}</p>`;
+            return;
+        }
+
+        list.innerHTML = cases.slice(0, 10).map(c => {
+            const crime = CRIMES.find(cr => cr.id === c.crime);
+            const statusClass = c.status === 'pending' ? 'status-pending' : 
+                               c.status === 'judging' ? 'status-judging' :
+                               c.status === 'appealed' ? 'status-appealed' : 'status-verdict';
+            const statusText = t('status' + c.status.charAt(0).toUpperCase() + c.status.slice(1));
+
+            return `
+                <div class="case-card" onclick="viewCase('${c.id}')">
+                    <div class="case-header">
+                        <span class="case-id">${c.id}</span>
+                        <span class="case-status ${statusClass}">${statusText}</span>
+                    </div>
+                    <div class="case-title">${crime?.icon || '⚖️'} ${c.plaintiff} vs ${c.defendant}</div>
+                    <div class="case-meta">${t(crime?.key || 'unknown')} • ${new Date(c.filedAt).toLocaleDateString()}</div>
+                </div>
+            `;
+        }).join('');
+    }
+
+    function viewCase(caseId) {
+        const cases = getCases();
+        const caseData = cases.find(c => c.id === caseId);
+        if (!caseData || !caseData.verdict) return;
+
+        const crime = CRIMES.find(c => c.id === caseData.crime);
+        const doc = document.getElementById('verdictDocument');
+
+        doc.innerHTML = `
+            <div class="verdict-header">
+                <div class="verdict-seal">⚖️</div>
+                <div class="verdict-court-name">${t('verdictCourtName')}</div>
+                <div style="font-size: 0.9rem; margin-top: 5px;">${t('verdictTitle')}</div>
+            </div>
+            <div class="verdict-body">
+                <p><strong>${t('verdictCaseNo')}:</strong> ${caseData.id}</p>
+                <p><strong>${t('verdictPlaintiff')}:</strong> ${caseData.plaintiff}</p>
+                <p><strong>${t('verdictDefendant')}:</strong> ${caseData.defendant}</p>
+                <p><strong>${t('verdictCharge')}:</strong> ${t(crime?.key || 'unknown')}</p>
+                
+                <h4 style="margin-top: 20px; color: #8b0000;">${t('verdictFindings')}</h4>
+                <p>${caseData.verdict.finding}</p>
+                
+                <div class="verdict-ruling">
+                    <h4 style="color: #8b0000; margin-bottom: 10px;">${t('verdictRuling')}</h4>
+                    <p style="font-size: 1.1rem; font-weight: bold;">
+                        ${caseData.verdict.guilty ? '🔨 GUILTY' : '✓ NOT GUILTY'}
+                    </p>
+                </div>
+                
+                <h4 style="color: #8b0000;">${t('verdictSentence')}</h4>
+                <p>${caseData.verdict.sentence}</p>
+                
+                <p style="font-size: 0.8rem; color: #666; margin-top: 20px; font-style: italic;">
+                    ${t('verdictNote')}
+                </p>
+            </div>
+            <div class="verdict-signature">
+                <p>🖋️ ${t('verdictJudge')}</p>
+                <p style="font-size: 0.8rem;">${new Date(caseData.verdict.judgedAt).toLocaleString()}</p>
+            </div>
+        `;
+
+        document.getElementById('verdictModal').style.display = 'block';
+        strikeGavel();
+    }
+
+    function closeVerdict() {
+        document.getElementById('verdictModal').style.display = 'none';
+    }
+
+    function fileAppeal() {
+        if (typeof NW_WALLET !== 'undefined' && !NW_WALLET.isGMMode()) {
+            if (!NW_WALLET.spend('diamond', 10, 'COURT_APPEAL_FEE')) {
+                alert(currentLang === 'zh' ? '上訴費不足！需要💎10' : currentLang === 'th' ? 'ค่าอุทธรณ์ไม่พอ! ต้องการ 💎10' : 'Insufficient appeal fee! Need 💎10');
+                return;
+            }
+        }
+
+        // 3% success rate lol
+        const success = Math.random() < 0.03;
+        
+        if (success) {
+            alert('🎉 ' + (currentLang === 'zh' ? '奇蹟發生！上訴成功！' : currentLang === 'th' ? 'ปาฏิหาริย์! อุทธรณ์สำเร็จ!' : 'A MIRACLE! Appeal successful!'));
+            if (typeof NW_WALLET !== 'undefined') {
+                NW_WALLET.earn('diamond', 50, 'APPEAL_WON');
+                NW_WALLET.earn('wood', 1, 'APPEAL_WON_BONUS');
+            }
+        } else {
+            alert(t('appealDenied'));
+        }
+
+        closeVerdict();
+    }
+
+    // ==================== LAWS ====================
+    function renderLaws() {
+        const list = document.getElementById('lawsList');
+        list.innerHTML = Array.from({length: 10}, (_, i) => `
+            <p style="margin-bottom: 12px; padding: 12px; background: rgba(0,0,0,0.2); border-radius: 8px; border-left: 3px solid var(--gold);">
+                ${t('law' + (i + 1))}
+            </p>
+        `).join('');
+    }
+
+    // ==================== HALL OF SHAME ====================
+    const SHAME_LIST = [
+        { name: 'xXDarkLordXx', crime: 'AFK during Zakum for 47 minutes', sentence: 'Eternal mushroom duty', date: '2024-01-15' },
+        { name: 'LootGoblin420', crime: 'Ninja-looted 3 legendary items', sentence: 'IGN changed to "ThiefBoi"', date: '2024-02-20' },
+        { name: 'ProGamer9999', crime: 'Called everyone "noobs" despite being level 12', sentence: 'Forced to wear pink bunny suit', date: '2024-03-08' },
+        { name: 'GhostDude', crime: 'Ghosted 27 parties in one week', sentence: 'Can only solo content forever', date: '2024-04-01' },
+        { name: 'FashionDisaster', crime: 'Combined stripes with polka dots', sentence: 'Fashion consultation mandatory', date: '2024-05-12' },
+    ];
+
+    function renderShameList() {
+        const list = document.getElementById('shameList');
+        list.innerHTML = SHAME_LIST.map(s => `
+            <div class="case-card" style="border-left: 3px solid #8b0000;">
+                <div class="case-title">🔴 ${s.name}</div>
+                <div style="color: rgba(245,245,220,0.7); font-size: 0.9rem; margin: 8px 0;">
+                    <strong>${currentLang === 'zh' ? '罪行' : currentLang === 'th' ? 'ความผิด' : 'Crime'}:</strong> ${s.crime}
+                </div>
+                <div style="color: #8b0000; font-size: 0.85rem;">
+                    <strong>${currentLang === 'zh' ? '判決' : currentLang === 'th' ? 'โทษ' : 'Sentence'}:</strong> ${s.sentence}
+                </div>
+                <div class="case-meta">${s.date}</div>
+            </div>
+        `).join('');
+    }
+
+    // ==================== GAVEL ====================
+    function strikeGavel() {
+        const gavel = document.getElementById('gavel');
+        gavel.classList.add('strike');
+        if (typeof NW_SOUNDS !== 'undefined') NW_SOUNDS.play('click');
+        setTimeout(() => gavel.classList.remove('strike'), 300);
+    }
+
+    // ==================== INIT ====================
+    document.addEventListener('DOMContentLoaded', () => {
+        setLang(currentLang);
+    });
+    </script>
+</body>
+</html>
