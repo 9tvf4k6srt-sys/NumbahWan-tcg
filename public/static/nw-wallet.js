@@ -1073,6 +1073,150 @@ const NW_WALLET = {
         } catch (e) {
             return { success: false, error: 'Invalid export data' };
         }
+    },
+    
+    // ===== ACCOUNT TRANSFER SYSTEM =====
+    // Generate a transfer code (valid for 24 hours)
+    generateTransferCode() {
+        if (!this.wallet) return null;
+        
+        const transferData = {
+            wallet: { ...this.wallet },
+            transferId: 'TXF-' + this.generateUUID().substring(0, 8).toUpperCase(),
+            createdAt: Date.now(),
+            expiresAt: Date.now() + (24 * 60 * 60 * 1000), // 24 hours
+            sourceDevice: navigator.userAgent.substring(0, 50),
+            version: 2
+        };
+        
+        // Sign with simple checksum for integrity
+        const dataStr = JSON.stringify(transferData.wallet);
+        transferData.checksum = this.simpleHash(dataStr);
+        
+        this.log('TRANSFER_CODE_GENERATED', { transferId: transferData.transferId });
+        
+        // Encode with compression marker
+        const encoded = 'NWTX2:' + btoa(unescape(encodeURIComponent(JSON.stringify(transferData))));
+        return {
+            code: encoded,
+            transferId: transferData.transferId,
+            expiresAt: new Date(transferData.expiresAt).toISOString(),
+            guestId: this.wallet.guestId
+        };
+    },
+    
+    // Import wallet from transfer code (ALLOWS different device)
+    async importFromTransferCode(code) {
+        try {
+            // Validate format
+            if (!code.startsWith('NWTX2:')) {
+                return { success: false, error: 'Invalid transfer code format' };
+            }
+            
+            // Decode
+            const encoded = code.substring(6);
+            const transferData = JSON.parse(decodeURIComponent(escape(atob(encoded))));
+            
+            // Check expiry
+            if (Date.now() > transferData.expiresAt) {
+                return { success: false, error: 'Transfer code expired. Generate a new one.' };
+            }
+            
+            // Verify checksum
+            const dataStr = JSON.stringify(transferData.wallet);
+            if (transferData.checksum !== this.simpleHash(dataStr)) {
+                return { success: false, error: 'Transfer code corrupted or tampered' };
+            }
+            
+            // Verify wallet data structure
+            if (!this.verifyWallet(transferData.wallet)) {
+                return { success: false, error: 'Invalid wallet data in transfer' };
+            }
+            
+            // Store old wallet info for logging
+            const oldGuestId = this.wallet?.guestId;
+            const newGuestId = transferData.wallet.guestId;
+            
+            // ===== PERFORM TRANSFER =====
+            // 1. Back up current wallet (if exists)
+            if (this.wallet) {
+                localStorage.setItem(STORAGE.WALLET_KEY + '_backup_' + Date.now(), 
+                    JSON.stringify(this.wallet));
+            }
+            
+            // 2. Import the transferred wallet
+            this.wallet = transferData.wallet;
+            this.wallet.lastActivity = Date.now();
+            this.wallet.transferHistory = this.wallet.transferHistory || [];
+            this.wallet.transferHistory.push({
+                transferId: transferData.transferId,
+                fromDevice: transferData.sourceDevice,
+                toDevice: navigator.userAgent.substring(0, 50),
+                transferredAt: Date.now()
+            });
+            
+            // 3. Update localStorage with new guest ID as key
+            localStorage.setItem('nw_device_uuid', newGuestId);
+            this.saveWallet();
+            
+            // 4. Log the transfer
+            this.log('ACCOUNT_TRANSFERRED', {
+                transferId: transferData.transferId,
+                fromGuestId: oldGuestId,
+                toGuestId: newGuestId
+            });
+            
+            console.log('%c✅ ACCOUNT TRANSFERRED SUCCESSFULLY!', 'color: #00ff00; font-size: 16px;');
+            console.log('%c   Your ID: ' + newGuestId, 'color: #00ffff;');
+            console.log('%c   All currency, cards, and progress restored!', 'color: #ffd700;');
+            
+            return { 
+                success: true, 
+                guestId: newGuestId,
+                message: 'Account transferred! Refresh the page to see your data.'
+            };
+            
+        } catch (e) {
+            console.error('[NW_WALLET] Transfer import error:', e);
+            return { success: false, error: 'Failed to process transfer code: ' + e.message };
+        }
+    },
+    
+    // Simple hash for checksum (not cryptographic, just integrity)
+    simpleHash(str) {
+        let hash = 0;
+        for (let i = 0; i < str.length; i++) {
+            const char = str.charCodeAt(i);
+            hash = ((hash << 5) - hash) + char;
+            hash = hash & hash;
+        }
+        return 'H' + Math.abs(hash).toString(36).toUpperCase();
+    },
+    
+    // Get transaction log
+    getTransactionLog() {
+        try {
+            const log = localStorage.getItem(STORAGE.LOG_KEY);
+            return log ? JSON.parse(log) : [];
+        } catch (e) {
+            return [];
+        }
+    },
+    
+    // Get pull history
+    getPullHistory() {
+        const log = this.getTransactionLog();
+        return log.filter(entry => entry.action === 'CARD_PULL');
+    },
+    
+    // Get currency transaction history
+    getCurrencyHistory(currency = null) {
+        const log = this.getTransactionLog();
+        return log.filter(entry => {
+            if (entry.action !== 'CURRENCY_SPENT' && entry.action !== 'CURRENCY_EARNED') return false;
+            if (currency && entry.data?.currency !== currency) return false;
+            return true;
+        });
     }
 };
 

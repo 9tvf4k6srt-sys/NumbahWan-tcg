@@ -639,6 +639,48 @@
                 <button class="gm-btn deactivate" onclick="deactivateGM()" style="width: 100%;">Deactivate GM Mode</button>
             </div>
         </div>
+        
+        <!-- Account Transfer Section -->
+        <div class="gm-section" id="transferSection" style="margin-top: 16px;">
+            <div class="gm-title">📱 Account Transfer</div>
+            <p style="color: rgba(255,255,255,0.6); font-size: 12px; margin-bottom: 12px;">
+                Move your account to a new device. Transfer codes are valid for 24 hours.
+            </p>
+            
+            <!-- Generate Transfer Code -->
+            <div style="margin-bottom: 16px;">
+                <button class="gm-btn" onclick="generateTransferCode()" style="width: 100%; background: linear-gradient(135deg, #00d26a, #00a854);">
+                    📤 Generate Transfer Code
+                </button>
+            </div>
+            
+            <!-- Transfer Code Display -->
+            <div id="transferCodeDisplay" style="display: none; margin-bottom: 16px;">
+                <div style="background: rgba(0,210,106,0.1); border: 1px solid #00d26a; border-radius: 8px; padding: 12px;">
+                    <div style="color: #00d26a; font-size: 11px; margin-bottom: 4px;">YOUR TRANSFER CODE:</div>
+                    <textarea id="transferCodeText" readonly style="width: 100%; height: 80px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.2); border-radius: 4px; color: #fff; font-family: monospace; font-size: 10px; padding: 8px; resize: none;"></textarea>
+                    <div style="display: flex; gap: 8px; margin-top: 8px;">
+                        <button onclick="copyTransferCode()" style="flex: 1; padding: 8px; background: #00d26a; border: none; border-radius: 4px; color: #000; font-weight: 600; cursor: pointer;">📋 Copy Code</button>
+                    </div>
+                    <div style="color: rgba(255,255,255,0.5); font-size: 10px; margin-top: 8px;">
+                        ⏰ Expires: <span id="transferExpiry">-</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Import Transfer Code -->
+            <div>
+                <div style="color: rgba(255,255,255,0.7); font-size: 12px; margin-bottom: 8px;">
+                    📥 Import from another device:
+                </div>
+                <textarea id="importCodeInput" placeholder="Paste transfer code here..." style="width: 100%; height: 60px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.2); border-radius: 4px; color: #fff; font-family: monospace; font-size: 10px; padding: 8px; resize: none; margin-bottom: 8px;"></textarea>
+                <button class="gm-btn" onclick="importTransferCode()" style="width: 100%; background: linear-gradient(135deg, #4a90d9, #357abd);">
+                    📥 Import Account
+                </button>
+            </div>
+            
+            <div id="transferStatus" style="margin-top: 12px; padding: 8px; border-radius: 4px; display: none;"></div>
+        </div>
     </div>
     
     <nav class="footer-nav">
@@ -868,6 +910,72 @@
     function deactivateGM() {
         NW_USER.deactivateGM();
         updateUI();
+    }
+    
+    // ===== ACCOUNT TRANSFER FUNCTIONS =====
+    function generateTransferCode() {
+        const result = NW_WALLET.generateTransferCode();
+        if (!result) {
+            showTransferStatus('error', 'Failed to generate transfer code');
+            return;
+        }
+        
+        document.getElementById('transferCodeText').value = result.code;
+        document.getElementById('transferExpiry').textContent = new Date(result.expiresAt).toLocaleString();
+        document.getElementById('transferCodeDisplay').style.display = 'block';
+        showTransferStatus('success', '✅ Transfer code generated! Valid for 24 hours.');
+        
+        if (typeof NW_SOUNDS !== 'undefined') NW_SOUNDS.play('click');
+    }
+    
+    function copyTransferCode() {
+        const code = document.getElementById('transferCodeText').value;
+        navigator.clipboard.writeText(code).then(() => {
+            showTransferStatus('success', '📋 Code copied to clipboard!');
+            if (typeof NW_SOUNDS !== 'undefined') NW_SOUNDS.play('click');
+        }).catch(() => {
+            // Fallback for older browsers
+            document.getElementById('transferCodeText').select();
+            document.execCommand('copy');
+            showTransferStatus('success', '📋 Code copied!');
+        });
+    }
+    
+    async function importTransferCode() {
+        const code = document.getElementById('importCodeInput').value.trim();
+        if (!code) {
+            showTransferStatus('error', '⚠️ Please paste a transfer code first');
+            return;
+        }
+        
+        showTransferStatus('info', '⏳ Processing transfer...');
+        
+        const result = await NW_WALLET.importFromTransferCode(code);
+        
+        if (result.success) {
+            showTransferStatus('success', '✅ ' + result.message);
+            if (typeof NW_SOUNDS !== 'undefined') NW_SOUNDS.play('legendary');
+            
+            // Reload page after 2 seconds to show new data
+            setTimeout(() => {
+                window.location.reload();
+            }, 2000);
+        } else {
+            showTransferStatus('error', '❌ ' + result.error);
+        }
+    }
+    
+    function showTransferStatus(type, message) {
+        const el = document.getElementById('transferStatus');
+        el.style.display = 'block';
+        el.textContent = message;
+        el.style.background = type === 'success' ? 'rgba(0,210,106,0.2)' : 
+                              type === 'error' ? 'rgba(255,71,87,0.2)' : 
+                              'rgba(74,144,217,0.2)';
+        el.style.color = type === 'success' ? '#00d26a' : 
+                         type === 'error' ? '#ff4757' : '#4a90d9';
+        el.style.border = '1px solid ' + (type === 'success' ? '#00d26a' : 
+                                          type === 'error' ? '#ff4757' : '#4a90d9');
     }
     
     // Initialize with NW_USER (unified system)
