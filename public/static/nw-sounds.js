@@ -62,26 +62,28 @@ const NW_SOUNDS = {
             } catch (e) {}
         }
         
-        // Preload common sounds
-        this.preload(['click', 'select', 'buy', 'sell']);
+        // Preload ALL common UI sounds immediately for instant playback
+        this.preload(['click', 'select', 'buy', 'sell', 'trade', 'profit', 'loss', 'draw', 'slam', 'flip']);
         
         console.log('🔊 NW Sound System initialized');
         return this;
     },
     
-    // Preload sounds
+    // Preload sounds - actually load the audio data
     preload(keys) {
         keys.forEach(key => {
             if (this.sounds[key] && !this.cache[key]) {
                 const audio = new Audio();
-                audio.src = this.sounds[key];
                 audio.preload = 'auto';
+                audio.src = this.sounds[key];
+                // Force browser to actually load the audio
+                audio.load();
                 this.cache[key] = audio;
             }
         });
     },
     
-    // Play a sound
+    // Play a sound - optimized for instant playback
     play(key, options = {}) {
         if (!this.enabled) return;
         
@@ -92,27 +94,25 @@ const NW_SOUNDS = {
         }
         
         try {
-            // Use cached or create new
+            // Check if we have a cached and ready audio
             let audio = this.cache[key];
-            if (!audio || !audio.paused === false) {
-                audio = new Audio(src);
-                this.cache[key] = audio;
+            
+            if (audio && audio.readyState >= 2) {
+                // Audio is loaded - clone it for overlapping playback
+                const clone = audio.cloneNode();
+                clone.volume = (options.volume ?? 1) * this.volume;
+                clone.playbackRate = options.rate ?? 1;
+                clone.play().catch(() => {});
+                return clone;
             } else {
-                // Clone for overlapping sounds
-                audio = audio.cloneNode();
+                // Not cached or not ready - create new and cache
+                audio = new Audio(src);
+                audio.volume = (options.volume ?? 1) * this.volume;
+                audio.playbackRate = options.rate ?? 1;
+                this.cache[key] = audio;
+                audio.play().catch(() => {});
+                return audio;
             }
-            
-            audio.volume = (options.volume ?? 1) * this.volume;
-            audio.playbackRate = options.rate ?? 1;
-            
-            const playPromise = audio.play();
-            if (playPromise) {
-                playPromise.catch(e => {
-                    // Autoplay blocked - ignore silently
-                });
-            }
-            
-            return audio;
         } catch (e) {
             console.warn('Sound play failed:', e);
         }
