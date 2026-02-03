@@ -1,0 +1,1201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wyckoff Method Academy | NumbahWan Guild</title>
+    <meta name="description" content="Learn the Wyckoff Method - Master accumulation, distribution, markup and markdown phases. Educational tool for technical analysis.">
+    <link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;900&family=Inter:wght@400;500;600;700&family=Noto+Sans+TC:wght@400;500;700&family=Noto+Sans+Thai:wght@400;500;700&display=swap" rel="stylesheet">
+    <script src="/static/nw-nav.js" defer></script>
+    <script src="/static/nw-icons-inline.js"></script>
+    <style>
+        :root {
+            --gold: #ffd700;
+            --orange: #ff6b00;
+            --purple: #7c3aed;
+            --dark: #0a0a0f;
+            --green: #22c55e;
+            --red: #ef4444;
+            --blue: #3b82f6;
+            --cyan: #06b6d4;
+        }
+        
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html { scroll-behavior: smooth; }
+        body { 
+            font-family: 'Inter', sans-serif; 
+            background: var(--dark); 
+            color: #fff;
+            overflow-x: hidden;
+            min-height: 100vh;
+        }
+        
+        body[data-lang="zh"] { font-family: 'Noto Sans TC', 'Inter', sans-serif; }
+        body[data-lang="th"] { font-family: 'Noto Sans Thai', 'Inter', sans-serif; }
+        
+        .font-cinzel { font-family: 'Cinzel', serif; }
+        
+        /* Header */
+        .page-header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 100;
+            background: rgba(10,10,15,0.95);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(255,215,0,0.2);
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .logo {
+            font-family: 'Cinzel', serif;
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--gold);
+            text-decoration: none;
+        }
+        
+        .lang-switcher {
+            display: flex;
+            gap: 0.5rem;
+        }
+        
+        .lang-btn {
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            border: 1px solid rgba(255,255,255,0.2);
+            background: transparent;
+            color: rgba(255,255,255,0.7);
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .lang-btn.active {
+            background: var(--gold);
+            color: #000;
+            border-color: var(--gold);
+        }
+        
+        .lang-btn:hover:not(.active) {
+            border-color: var(--gold);
+            color: var(--gold);
+        }
+        
+        /* Main Content */
+        main {
+            padding-top: 80px;
+            max-width: 1400px;
+            margin: 0 auto;
+            padding-left: 1rem;
+            padding-right: 1rem;
+        }
+        
+        /* Hero */
+        .hero {
+            text-align: center;
+            padding: 4rem 1rem;
+            background: linear-gradient(180deg, rgba(255,215,0,0.05) 0%, transparent 100%);
+            border-radius: 24px;
+            margin-bottom: 3rem;
+        }
+        
+        .hero h1 {
+            font-size: clamp(2rem, 5vw, 3.5rem);
+            font-weight: 700;
+            background: linear-gradient(180deg, #fff 0%, var(--gold) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 1rem;
+        }
+        
+        .hero-subtitle {
+            font-size: 1.1rem;
+            color: rgba(255,255,255,0.7);
+            max-width: 700px;
+            margin: 0 auto 2rem;
+        }
+        
+        /* Disclaimer Banner */
+        .disclaimer-banner {
+            background: linear-gradient(135deg, rgba(239,68,68,0.1), rgba(239,68,68,0.05));
+            border: 1px solid rgba(239,68,68,0.3);
+            border-radius: 12px;
+            padding: 1rem 1.5rem;
+            margin-bottom: 3rem;
+            display: flex;
+            align-items: flex-start;
+            gap: 1rem;
+        }
+        
+        .disclaimer-icon {
+            font-size: 1.5rem;
+            flex-shrink: 0;
+        }
+        
+        .disclaimer-text {
+            font-size: 0.9rem;
+            color: rgba(255,255,255,0.8);
+            line-height: 1.6;
+        }
+        
+        /* Tabs */
+        .tabs {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        
+        .tab-btn {
+            padding: 0.75rem 1.5rem;
+            border-radius: 12px;
+            border: 1px solid rgba(255,255,255,0.2);
+            background: rgba(255,255,255,0.05);
+            color: rgba(255,255,255,0.7);
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .tab-btn.active {
+            background: var(--gold);
+            color: #000;
+            border-color: var(--gold);
+        }
+        
+        .tab-btn:hover:not(.active) {
+            border-color: var(--gold);
+            color: var(--gold);
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        /* Section Cards */
+        .section-card {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 16px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+        
+        .section-card h2 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--gold);
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+        
+        .section-card h3 {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #fff;
+            margin: 1.5rem 0 0.75rem;
+        }
+        
+        .section-card p {
+            color: rgba(255,255,255,0.8);
+            line-height: 1.7;
+            margin-bottom: 1rem;
+        }
+        
+        /* Price Cycle Visualization */
+        .cycle-visual {
+            background: rgba(0,0,0,0.3);
+            border-radius: 16px;
+            padding: 2rem;
+            margin: 2rem 0;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .cycle-diagram {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+            padding: 2rem 0;
+        }
+        
+        .cycle-phase {
+            text-align: center;
+            padding: 1.5rem;
+            border-radius: 16px;
+            min-width: 150px;
+            cursor: pointer;
+            transition: all 0.3s;
+            position: relative;
+        }
+        
+        .cycle-phase:hover {
+            transform: translateY(-5px);
+        }
+        
+        .cycle-phase.accumulation {
+            background: linear-gradient(135deg, rgba(34,197,94,0.2), rgba(34,197,94,0.1));
+            border: 2px solid var(--green);
+        }
+        
+        .cycle-phase.markup {
+            background: linear-gradient(135deg, rgba(59,130,246,0.2), rgba(59,130,246,0.1));
+            border: 2px solid var(--blue);
+        }
+        
+        .cycle-phase.distribution {
+            background: linear-gradient(135deg, rgba(239,68,68,0.2), rgba(239,68,68,0.1));
+            border: 2px solid var(--red);
+        }
+        
+        .cycle-phase.markdown {
+            background: linear-gradient(135deg, rgba(124,58,237,0.2), rgba(124,58,237,0.1));
+            border: 2px solid var(--purple);
+        }
+        
+        .cycle-phase .phase-icon {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .cycle-phase .phase-name {
+            font-weight: 700;
+            font-size: 1rem;
+            margin-bottom: 0.25rem;
+        }
+        
+        .cycle-phase .phase-desc {
+            font-size: 0.8rem;
+            color: rgba(255,255,255,0.6);
+        }
+        
+        .cycle-arrow {
+            font-size: 2rem;
+            color: rgba(255,255,255,0.3);
+        }
+        
+        /* Phase Detail */
+        .phase-detail {
+            display: none;
+            background: rgba(0,0,0,0.4);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-top: 1.5rem;
+            border-left: 4px solid var(--gold);
+        }
+        
+        .phase-detail.active {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .phase-detail h4 {
+            font-size: 1.1rem;
+            font-weight: 700;
+            margin-bottom: 0.75rem;
+            color: var(--gold);
+        }
+        
+        .phase-detail ul {
+            list-style: none;
+            padding: 0;
+        }
+        
+        .phase-detail li {
+            padding: 0.5rem 0;
+            padding-left: 1.5rem;
+            position: relative;
+            color: rgba(255,255,255,0.8);
+        }
+        
+        .phase-detail li::before {
+            content: '→';
+            position: absolute;
+            left: 0;
+            color: var(--gold);
+        }
+        
+        /* Schematic Events Table */
+        .events-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1rem;
+            margin: 1.5rem 0;
+        }
+        
+        .event-card {
+            background: rgba(255,255,255,0.05);
+            border-radius: 12px;
+            padding: 1rem;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        
+        .event-card .event-abbr {
+            font-weight: 700;
+            color: var(--cyan);
+            font-size: 0.9rem;
+            margin-bottom: 0.25rem;
+        }
+        
+        .event-card .event-name {
+            font-weight: 600;
+            color: #fff;
+            margin-bottom: 0.5rem;
+        }
+        
+        .event-card .event-desc {
+            font-size: 0.85rem;
+            color: rgba(255,255,255,0.7);
+            line-height: 1.5;
+        }
+        
+        /* Three Laws */
+        .laws-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin: 2rem 0;
+        }
+        
+        .law-card {
+            background: linear-gradient(135deg, rgba(255,215,0,0.1), rgba(255,107,0,0.05));
+            border: 1px solid rgba(255,215,0,0.3);
+            border-radius: 16px;
+            padding: 1.5rem;
+            text-align: center;
+        }
+        
+        .law-card .law-number {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: var(--gold);
+            color: #000;
+            font-weight: 900;
+            font-size: 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1rem;
+        }
+        
+        .law-card h3 {
+            color: var(--gold);
+            margin-bottom: 0.75rem;
+        }
+        
+        .law-card p {
+            font-size: 0.9rem;
+            color: rgba(255,255,255,0.8);
+        }
+        
+        /* Interactive Schematic */
+        .schematic-container {
+            background: rgba(0,0,0,0.4);
+            border-radius: 16px;
+            padding: 2rem;
+            margin: 2rem 0;
+            overflow-x: auto;
+        }
+        
+        .schematic-svg {
+            width: 100%;
+            min-width: 600px;
+            height: 400px;
+        }
+        
+        /* Footer Disclaimer */
+        .footer-disclaimer {
+            background: rgba(239,68,68,0.05);
+            border-top: 1px solid rgba(239,68,68,0.2);
+            padding: 2rem;
+            margin-top: 4rem;
+            text-align: center;
+        }
+        
+        .footer-disclaimer h4 {
+            color: var(--red);
+            margin-bottom: 1rem;
+            font-size: 1.1rem;
+        }
+        
+        .footer-disclaimer p {
+            color: rgba(255,255,255,0.7);
+            font-size: 0.85rem;
+            max-width: 800px;
+            margin: 0 auto;
+            line-height: 1.7;
+        }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            .page-header {
+                padding: 0.75rem 1rem;
+            }
+            
+            .hero {
+                padding: 3rem 1rem;
+            }
+            
+            .cycle-arrow {
+                display: none;
+            }
+            
+            .cycle-diagram {
+                flex-direction: column;
+            }
+            
+            .section-card {
+                padding: 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body data-lang="en">
+    <!-- Header -->
+    <header class="page-header">
+        <a href="/" class="logo">NWG</a>
+        <div class="lang-switcher">
+            <button class="lang-btn active" data-lang="en">EN</button>
+            <button class="lang-btn" data-lang="zh">繁中</button>
+            <button class="lang-btn" data-lang="th">ไทย</button>
+        </div>
+    </header>
+    
+    <main>
+        <!-- Hero -->
+        <section class="hero">
+            <h1 data-i18n="hero.title">Wyckoff Method Academy</h1>
+            <p class="hero-subtitle" data-i18n="hero.subtitle">
+                Master the art of reading market structure through accumulation, distribution, markup and markdown phases. Learn to think like the "Composite Man".
+            </p>
+        </section>
+        
+        <!-- Disclaimer Banner -->
+        <div class="disclaimer-banner">
+            <span class="disclaimer-icon">⚠️</span>
+            <p class="disclaimer-text" data-i18n="disclaimer.main">
+                <strong>Educational Purpose Only:</strong> This content is for educational purposes only and does not constitute financial advice. The Wyckoff Method is a framework for market analysis, not a prediction tool. Past patterns do not guarantee future results. Always consult a licensed financial advisor before making investment decisions.
+            </p>
+        </div>
+        
+        <!-- Tabs -->
+        <div class="tabs">
+            <button class="tab-btn active" data-tab="overview" data-i18n="tabs.overview">Overview</button>
+            <button class="tab-btn" data-tab="accumulation" data-i18n="tabs.accumulation">Accumulation</button>
+            <button class="tab-btn" data-tab="distribution" data-i18n="tabs.distribution">Distribution</button>
+            <button class="tab-btn" data-tab="laws" data-i18n="tabs.laws">Three Laws</button>
+            <button class="tab-btn" data-tab="tests" data-i18n="tabs.tests">9 Tests</button>
+        </div>
+        
+        <!-- Tab: Overview -->
+        <div id="tab-overview" class="tab-content active">
+            <div class="section-card">
+                <h2>📊 <span data-i18n="overview.title">The Wyckoff Price Cycle</span></h2>
+                <p data-i18n="overview.intro">
+                    Richard D. Wyckoff (1873-1934) developed a method to understand market movements by analyzing the actions of large institutional operators, which he called the "Composite Man". The market moves in recurring cycles consisting of four distinct phases.
+                </p>
+                
+                <div class="cycle-visual">
+                    <div class="cycle-diagram">
+                        <div class="cycle-phase accumulation" data-phase="accumulation">
+                            <div class="phase-icon">📦</div>
+                            <div class="phase-name" data-i18n="cycle.accumulation.name">Accumulation</div>
+                            <div class="phase-desc" data-i18n="cycle.accumulation.desc">Smart money buys</div>
+                        </div>
+                        <span class="cycle-arrow">→</span>
+                        <div class="cycle-phase markup" data-phase="markup">
+                            <div class="phase-icon">📈</div>
+                            <div class="phase-name" data-i18n="cycle.markup.name">Markup</div>
+                            <div class="phase-desc" data-i18n="cycle.markup.desc">Price rises</div>
+                        </div>
+                        <span class="cycle-arrow">→</span>
+                        <div class="cycle-phase distribution" data-phase="distribution">
+                            <div class="phase-icon">📤</div>
+                            <div class="phase-name" data-i18n="cycle.distribution.name">Distribution</div>
+                            <div class="phase-desc" data-i18n="cycle.distribution.desc">Smart money sells</div>
+                        </div>
+                        <span class="cycle-arrow">→</span>
+                        <div class="cycle-phase markdown" data-phase="markdown">
+                            <div class="phase-icon">📉</div>
+                            <div class="phase-name" data-i18n="cycle.markdown.name">Markdown</div>
+                            <div class="phase-desc" data-i18n="cycle.markdown.desc">Price falls</div>
+                        </div>
+                    </div>
+                    
+                    <!-- Phase Details -->
+                    <div id="detail-accumulation" class="phase-detail">
+                        <h4 data-i18n="detail.accumulation.title">Accumulation Phase</h4>
+                        <ul>
+                            <li data-i18n="detail.accumulation.p1">Large institutions quietly buy shares at low prices</li>
+                            <li data-i18n="detail.accumulation.p2">Occurs after a prolonged downtrend (markdown)</li>
+                            <li data-i18n="detail.accumulation.p3">Price moves sideways within a trading range</li>
+                            <li data-i18n="detail.accumulation.p4">Supply is gradually absorbed by demand</li>
+                            <li data-i18n="detail.accumulation.p5">Ends with a "Spring" or successful test of support</li>
+                        </ul>
+                    </div>
+                    
+                    <div id="detail-markup" class="phase-detail">
+                        <h4 data-i18n="detail.markup.title">Markup Phase</h4>
+                        <ul>
+                            <li data-i18n="detail.markup.p1">Price breaks out above the trading range</li>
+                            <li data-i18n="detail.markup.p2">Demand exceeds supply consistently</li>
+                            <li data-i18n="detail.markup.p3">Higher highs and higher lows form an uptrend</li>
+                            <li data-i18n="detail.markup.p4">Public interest and volume increase</li>
+                            <li data-i18n="detail.markup.p5">Re-accumulation zones may form (stepping stones)</li>
+                        </ul>
+                    </div>
+                    
+                    <div id="detail-distribution" class="phase-detail">
+                        <h4 data-i18n="detail.distribution.title">Distribution Phase</h4>
+                        <ul>
+                            <li data-i18n="detail.distribution.p1">Large institutions sell shares to the public at high prices</li>
+                            <li data-i18n="detail.distribution.p2">Occurs after a prolonged uptrend (markup)</li>
+                            <li data-i18n="detail.distribution.p3">Price moves sideways within a trading range</li>
+                            <li data-i18n="detail.distribution.p4">Supply gradually overwhelms demand</li>
+                            <li data-i18n="detail.distribution.p5">Ends with an "Upthrust" or failed test of resistance</li>
+                        </ul>
+                    </div>
+                    
+                    <div id="detail-markdown" class="phase-detail">
+                        <h4 data-i18n="detail.markdown.title">Markdown Phase</h4>
+                        <ul>
+                            <li data-i18n="detail.markdown.p1">Price breaks down below the trading range</li>
+                            <li data-i18n="detail.markdown.p2">Supply exceeds demand consistently</li>
+                            <li data-i18n="detail.markdown.p3">Lower highs and lower lows form a downtrend</li>
+                            <li data-i18n="detail.markdown.p4">Panic selling may occur at climax</li>
+                            <li data-i18n="detail.markdown.p5">Re-distribution zones may form (stepping stones down)</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <h3 data-i18n="overview.composite.title">🎭 The Composite Man</h3>
+                <p data-i18n="overview.composite.desc">
+                    Wyckoff advised traders to imagine all market fluctuations as the result of one operator - the "Composite Man" - who manipulates markets for his benefit. Understanding his strategies allows traders to align their positions with smart money rather than against it. The Composite Man carefully plans, executes, and concludes campaigns to accumulate or distribute shares.
+                </p>
+            </div>
+        </div>
+        
+        <!-- Tab: Accumulation -->
+        <div id="tab-accumulation" class="tab-content">
+            <div class="section-card">
+                <h2>📦 <span data-i18n="accumulation.title">Accumulation Schematic</span></h2>
+                <p data-i18n="accumulation.intro">
+                    Accumulation occurs when large operators buy shares at low prices before marking up. The schematic consists of five phases (A-E) with specific events that signal the progression of accumulation.
+                </p>
+                
+                <!-- SVG Schematic -->
+                <div class="schematic-container">
+                    <svg class="schematic-svg" viewBox="0 0 800 350">
+                        <!-- Background grid -->
+                        <defs>
+                            <pattern id="grid" width="50" height="50" patternUnits="userSpaceOnUse">
+                                <path d="M 50 0 L 0 0 0 50" fill="none" stroke="rgba(255,255,255,0.05)" stroke-width="1"/>
+                            </pattern>
+                        </defs>
+                        <rect width="800" height="350" fill="url(#grid)"/>
+                        
+                        <!-- Support/Resistance Lines -->
+                        <line x1="50" y1="100" x2="750" y2="100" stroke="rgba(239,68,68,0.5)" stroke-dasharray="5,5" stroke-width="1"/>
+                        <line x1="50" y1="250" x2="750" y2="250" stroke="rgba(34,197,94,0.5)" stroke-dasharray="5,5" stroke-width="1"/>
+                        <text x="760" y="105" fill="rgba(239,68,68,0.7)" font-size="12">Resistance</text>
+                        <text x="760" y="255" fill="rgba(34,197,94,0.7)" font-size="12">Support</text>
+                        
+                        <!-- Price Path -->
+                        <path d="M 50 50 
+                                 L 80 120 
+                                 L 100 280 
+                                 L 130 150 
+                                 L 180 260 
+                                 L 220 170 
+                                 L 280 240 
+                                 L 320 180 
+                                 L 380 220 
+                                 L 420 160 
+                                 L 480 200 
+                                 L 500 290 
+                                 L 530 200 
+                                 L 580 170 
+                                 L 620 200 
+                                 L 660 150 
+                                 L 700 120 
+                                 L 750 80" 
+                              fill="none" 
+                              stroke="var(--gold)" 
+                              stroke-width="3"
+                              stroke-linecap="round"
+                              stroke-linejoin="round"/>
+                        
+                        <!-- Event Labels -->
+                        <g font-size="11" font-weight="600">
+                            <!-- PS -->
+                            <circle cx="80" cy="120" r="6" fill="var(--cyan)"/>
+                            <text x="80" y="145" fill="var(--cyan)" text-anchor="middle">PS</text>
+                            
+                            <!-- SC -->
+                            <circle cx="100" cy="280" r="8" fill="var(--green)"/>
+                            <text x="100" y="305" fill="var(--green)" text-anchor="middle">SC</text>
+                            
+                            <!-- AR -->
+                            <circle cx="130" cy="150" r="6" fill="var(--blue)"/>
+                            <text x="130" y="135" fill="var(--blue)" text-anchor="middle">AR</text>
+                            
+                            <!-- ST -->
+                            <circle cx="180" cy="260" r="6" fill="var(--purple)"/>
+                            <text x="180" y="285" fill="var(--purple)" text-anchor="middle">ST</text>
+                            
+                            <!-- Spring -->
+                            <circle cx="500" cy="290" r="8" fill="var(--green)"/>
+                            <text x="500" y="315" fill="var(--green)" text-anchor="middle">Spring</text>
+                            
+                            <!-- Test -->
+                            <circle cx="530" cy="200" r="6" fill="var(--cyan)"/>
+                            <text x="530" y="225" fill="var(--cyan)" text-anchor="middle">Test</text>
+                            
+                            <!-- SOS -->
+                            <circle cx="620" cy="200" r="6" fill="var(--blue)"/>
+                            <text x="620" y="185" fill="var(--blue)" text-anchor="middle">SOS</text>
+                            
+                            <!-- LPS -->
+                            <circle cx="660" cy="150" r="6" fill="var(--purple)"/>
+                            <text x="660" y="175" fill="var(--purple)" text-anchor="middle">LPS</text>
+                        </g>
+                        
+                        <!-- Phase Labels -->
+                        <g font-size="14" font-weight="700" fill="rgba(255,255,255,0.5)">
+                            <text x="90" y="330">Phase A</text>
+                            <text x="250" y="330">Phase B</text>
+                            <text x="480" y="330">Phase C</text>
+                            <text x="600" y="330">Phase D</text>
+                            <text x="720" y="330">E</text>
+                        </g>
+                        
+                        <!-- Phase Dividers -->
+                        <line x1="200" y1="300" x2="200" y2="340" stroke="rgba(255,255,255,0.2)" stroke-width="1"/>
+                        <line x1="450" y1="300" x2="450" y2="340" stroke="rgba(255,255,255,0.2)" stroke-width="1"/>
+                        <line x1="560" y1="300" x2="560" y2="340" stroke="rgba(255,255,255,0.2)" stroke-width="1"/>
+                        <line x1="680" y1="300" x2="680" y2="340" stroke="rgba(255,255,255,0.2)" stroke-width="1"/>
+                    </svg>
+                </div>
+                
+                <h3 data-i18n="accumulation.events.title">Key Events in Accumulation</h3>
+                <div class="events-grid">
+                    <div class="event-card">
+                        <div class="event-abbr">PS</div>
+                        <div class="event-name" data-i18n="events.ps.name">Preliminary Support</div>
+                        <div class="event-desc" data-i18n="events.ps.desc">Substantial buying begins after a prolonged down-move. Volume increases, signaling the down-move may be ending.</div>
+                    </div>
+                    <div class="event-card">
+                        <div class="event-abbr">SC</div>
+                        <div class="event-name" data-i18n="events.sc.name">Selling Climax</div>
+                        <div class="event-desc" data-i18n="events.sc.desc">Panicky selling by the public is absorbed by large interests. Wide spread and heavy volume mark a potential bottom.</div>
+                    </div>
+                    <div class="event-card">
+                        <div class="event-abbr">AR</div>
+                        <div class="event-name" data-i18n="events.ar.name">Automatic Rally</div>
+                        <div class="event-desc" data-i18n="events.ar.desc">After intense selling pressure diminishes, buying and short-covering push prices up. Sets the upper boundary of the trading range.</div>
+                    </div>
+                    <div class="event-card">
+                        <div class="event-abbr">ST</div>
+                        <div class="event-name" data-i18n="events.st.name">Secondary Test</div>
+                        <div class="event-desc" data-i18n="events.st.desc">Price revisits the SC area to test supply/demand balance. Decreased volume and narrower spread confirm the bottom.</div>
+                    </div>
+                    <div class="event-card">
+                        <div class="event-abbr">Spring</div>
+                        <div class="event-name" data-i18n="events.spring.name">Spring / Shakeout</div>
+                        <div class="event-desc" data-i18n="events.spring.desc">Price drops below support to trigger stop-losses and trap bears, then quickly reverses back into the range. A bear trap.</div>
+                    </div>
+                    <div class="event-card">
+                        <div class="event-abbr">Test</div>
+                        <div class="event-name" data-i18n="events.test.name">Test</div>
+                        <div class="event-desc" data-i18n="events.test.desc">After a spring, a successful test makes a higher low on lower volume, indicating supply has been exhausted.</div>
+                    </div>
+                    <div class="event-card">
+                        <div class="event-abbr">SOS</div>
+                        <div class="event-name" data-i18n="events.sos.name">Sign of Strength</div>
+                        <div class="event-desc" data-i18n="events.sos.desc">Price advances on increasing spread and volume, confirming demand is now dominant. Often follows a spring.</div>
+                    </div>
+                    <div class="event-card">
+                        <div class="event-abbr">LPS</div>
+                        <div class="event-name" data-i18n="events.lps.name">Last Point of Support</div>
+                        <div class="event-desc" data-i18n="events.lps.desc">A pullback on diminished spread and volume after a SOS. Ideal entry point for long positions before markup begins.</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Tab: Distribution -->
+        <div id="tab-distribution" class="tab-content">
+            <div class="section-card">
+                <h2>📤 <span data-i18n="distribution.title">Distribution Schematic</span></h2>
+                <p data-i18n="distribution.intro">
+                    Distribution occurs when large operators sell shares to the public at high prices before marking down. It mirrors accumulation but with opposite intent - transferring shares from strong hands to weak hands.
+                </p>
+                
+                <!-- SVG Schematic -->
+                <div class="schematic-container">
+                    <svg class="schematic-svg" viewBox="0 0 800 350">
+                        <!-- Background grid -->
+                        <rect width="800" height="350" fill="url(#grid)"/>
+                        
+                        <!-- Support/Resistance Lines -->
+                        <line x1="50" y1="100" x2="750" y2="100" stroke="rgba(239,68,68,0.5)" stroke-dasharray="5,5" stroke-width="1"/>
+                        <line x1="50" y1="250" x2="750" y2="250" stroke="rgba(34,197,94,0.5)" stroke-dasharray="5,5" stroke-width="1"/>
+                        <text x="760" y="105" fill="rgba(239,68,68,0.7)" font-size="12">Resistance</text>
+                        <text x="760" y="255" fill="rgba(34,197,94,0.7)" font-size="12">Support</text>
+                        
+                        <!-- Price Path (Distribution) -->
+                        <path d="M 50 300 
+                                 L 80 180 
+                                 L 100 70 
+                                 L 130 200 
+                                 L 180 90 
+                                 L 220 180 
+                                 L 280 110 
+                                 L 320 170 
+                                 L 380 130 
+                                 L 420 190 
+                                 L 480 150 
+                                 L 500 60 
+                                 L 530 150 
+                                 L 580 180 
+                                 L 620 150 
+                                 L 660 200 
+                                 L 700 230 
+                                 L 750 280" 
+                              fill="none" 
+                              stroke="var(--red)" 
+                              stroke-width="3"
+                              stroke-linecap="round"
+                              stroke-linejoin="round"/>
+                        
+                        <!-- Event Labels -->
+                        <g font-size="11" font-weight="600">
+                            <!-- PSY -->
+                            <circle cx="80" cy="180" r="6" fill="var(--cyan)"/>
+                            <text x="80" y="205" fill="var(--cyan)" text-anchor="middle">PSY</text>
+                            
+                            <!-- BC -->
+                            <circle cx="100" cy="70" r="8" fill="var(--red)"/>
+                            <text x="100" y="55" fill="var(--red)" text-anchor="middle">BC</text>
+                            
+                            <!-- AR -->
+                            <circle cx="130" cy="200" r="6" fill="var(--blue)"/>
+                            <text x="130" y="225" fill="var(--blue)" text-anchor="middle">AR</text>
+                            
+                            <!-- ST -->
+                            <circle cx="180" cy="90" r="6" fill="var(--purple)"/>
+                            <text x="180" y="75" fill="var(--purple)" text-anchor="middle">ST</text>
+                            
+                            <!-- UTAD -->
+                            <circle cx="500" cy="60" r="8" fill="var(--red)"/>
+                            <text x="500" y="45" fill="var(--red)" text-anchor="middle">UTAD</text>
+                            
+                            <!-- SOW -->
+                            <circle cx="580" cy="180" r="6" fill="var(--cyan)"/>
+                            <text x="580" y="205" fill="var(--cyan)" text-anchor="middle">SOW</text>
+                            
+                            <!-- LPSY -->
+                            <circle cx="620" cy="150" r="6" fill="var(--purple)"/>
+                            <text x="620" y="135" fill="var(--purple)" text-anchor="middle">LPSY</text>
+                        </g>
+                        
+                        <!-- Phase Labels -->
+                        <g font-size="14" font-weight="700" fill="rgba(255,255,255,0.5)">
+                            <text x="90" y="330">Phase A</text>
+                            <text x="250" y="330">Phase B</text>
+                            <text x="480" y="330">Phase C</text>
+                            <text x="600" y="330">Phase D</text>
+                            <text x="720" y="330">E</text>
+                        </g>
+                        
+                        <!-- Phase Dividers -->
+                        <line x1="200" y1="300" x2="200" y2="340" stroke="rgba(255,255,255,0.2)" stroke-width="1"/>
+                        <line x1="450" y1="300" x2="450" y2="340" stroke="rgba(255,255,255,0.2)" stroke-width="1"/>
+                        <line x1="560" y1="300" x2="560" y2="340" stroke="rgba(255,255,255,0.2)" stroke-width="1"/>
+                        <line x1="680" y1="300" x2="680" y2="340" stroke="rgba(255,255,255,0.2)" stroke-width="1"/>
+                    </svg>
+                </div>
+                
+                <h3 data-i18n="distribution.events.title">Key Events in Distribution</h3>
+                <div class="events-grid">
+                    <div class="event-card">
+                        <div class="event-abbr">PSY</div>
+                        <div class="event-name" data-i18n="events.psy.name">Preliminary Supply</div>
+                        <div class="event-desc" data-i18n="events.psy.desc">Large interests begin selling after a prolonged up-move. Volume expands and spread widens, signaling potential trend change.</div>
+                    </div>
+                    <div class="event-card">
+                        <div class="event-abbr">BC</div>
+                        <div class="event-name" data-i18n="events.bc.name">Buying Climax</div>
+                        <div class="event-desc" data-i18n="events.bc.desc">Heavy public buying is met by institutional selling. Often coincides with good news. Marks potential top.</div>
+                    </div>
+                    <div class="event-card">
+                        <div class="event-abbr">AR</div>
+                        <div class="event-name" data-i18n="events.ar2.name">Automatic Reaction</div>
+                        <div class="event-desc" data-i18n="events.ar2.desc">After buying diminishes, heavy supply causes prices to fall. Sets the lower boundary of the distribution range.</div>
+                    </div>
+                    <div class="event-card">
+                        <div class="event-abbr">ST</div>
+                        <div class="event-name" data-i18n="events.st2.name">Secondary Test</div>
+                        <div class="event-desc" data-i18n="events.st2.desc">Price revisits the BC area. Decreased volume and narrower spread confirm resistance and supply dominance.</div>
+                    </div>
+                    <div class="event-card">
+                        <div class="event-abbr">UTAD</div>
+                        <div class="event-name" data-i18n="events.utad.name">Upthrust After Distribution</div>
+                        <div class="event-desc" data-i18n="events.utad.desc">Price breaks above resistance to trap bulls, then quickly reverses. A bull trap that signals the end of distribution.</div>
+                    </div>
+                    <div class="event-card">
+                        <div class="event-abbr">SOW</div>
+                        <div class="event-name" data-i18n="events.sow.name">Sign of Weakness</div>
+                        <div class="event-desc" data-i18n="events.sow.desc">Price drops to or below the trading range support on increased spread and volume. Confirms supply dominance.</div>
+                    </div>
+                    <div class="event-card">
+                        <div class="event-abbr">LPSY</div>
+                        <div class="event-name" data-i18n="events.lpsy.name">Last Point of Supply</div>
+                        <div class="event-desc" data-i18n="events.lpsy.desc">A weak rally on narrow spread after SOW. Ideal entry point for short positions before markdown begins.</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Tab: Three Laws -->
+        <div id="tab-laws" class="tab-content">
+            <div class="section-card">
+                <h2>⚖️ <span data-i18n="laws.title">Wyckoff's Three Laws</span></h2>
+                <p data-i18n="laws.intro">
+                    These fundamental laws form the foundation of Wyckoff analysis. They explain how and why markets move, and help traders anticipate future price direction.
+                </p>
+                
+                <div class="laws-grid">
+                    <div class="law-card">
+                        <div class="law-number">1</div>
+                        <h3 data-i18n="laws.supply.title">Supply and Demand</h3>
+                        <p data-i18n="laws.supply.desc">
+                            When demand exceeds supply, prices rise. When supply exceeds demand, prices fall. By analyzing price and volume together, traders can assess the balance between supply and demand.
+                        </p>
+                    </div>
+                    <div class="law-card">
+                        <div class="law-number">2</div>
+                        <h3 data-i18n="laws.cause.title">Cause and Effect</h3>
+                        <p data-i18n="laws.cause.desc">
+                            The horizontal count within a trading range (Cause) determines the potential price movement (Effect). A larger accumulation base suggests a larger subsequent markup.
+                        </p>
+                    </div>
+                    <div class="law-card">
+                        <div class="law-number">3</div>
+                        <h3 data-i18n="laws.effort.title">Effort vs Result</h3>
+                        <p data-i18n="laws.effort.desc">
+                            Volume (Effort) should confirm price movement (Result). Divergences between effort and result warn of potential trend changes. High volume with little price progress suggests resistance.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Tab: Nine Tests -->
+        <div id="tab-tests" class="tab-content">
+            <div class="section-card">
+                <h2>✅ <span data-i18n="tests.title">Nine Buying/Selling Tests</span></h2>
+                <p data-i18n="tests.intro">
+                    These tests help determine when a trading range is ending and a new trend is beginning. They define the line of least resistance in the market.
+                </p>
+                
+                <h3 style="color: var(--green);" data-i18n="tests.buying.title">Nine Buying Tests (Accumulation)</h3>
+                <div class="events-grid">
+                    <div class="event-card">
+                        <div class="event-abbr">1</div>
+                        <div class="event-desc" data-i18n="tests.buying.1">Downside price objective accomplished</div>
+                    </div>
+                    <div class="event-card">
+                        <div class="event-abbr">2</div>
+                        <div class="event-desc" data-i18n="tests.buying.2">Preliminary Support, Selling Climax, Secondary Test present</div>
+                    </div>
+                    <div class="event-card">
+                        <div class="event-abbr">3</div>
+                        <div class="event-desc" data-i18n="tests.buying.3">Activity bullish (volume up on rallies, down on reactions)</div>
+                    </div>
+                    <div class="event-card">
+                        <div class="event-abbr">4</div>
+                        <div class="event-desc" data-i18n="tests.buying.4">Downward stride/trend line broken</div>
+                    </div>
+                    <div class="event-card">
+                        <div class="event-abbr">5</div>
+                        <div class="event-desc" data-i18n="tests.buying.5">Higher lows forming</div>
+                    </div>
+                    <div class="event-card">
+                        <div class="event-abbr">6</div>
+                        <div class="event-desc" data-i18n="tests.buying.6">Higher highs forming</div>
+                    </div>
+                    <div class="event-card">
+                        <div class="event-abbr">7</div>
+                        <div class="event-desc" data-i18n="tests.buying.7">Stock stronger than the market</div>
+                    </div>
+                    <div class="event-card">
+                        <div class="event-abbr">8</div>
+                        <div class="event-desc" data-i18n="tests.buying.8">Base forming (horizontal price line)</div>
+                    </div>
+                    <div class="event-card">
+                        <div class="event-abbr">9</div>
+                        <div class="event-desc" data-i18n="tests.buying.9">Reward/risk ratio at least 3:1</div>
+                    </div>
+                </div>
+                
+                <h3 style="color: var(--red); margin-top: 2rem;" data-i18n="tests.selling.title">Nine Selling Tests (Distribution)</h3>
+                <div class="events-grid">
+                    <div class="event-card">
+                        <div class="event-abbr">1</div>
+                        <div class="event-desc" data-i18n="tests.selling.1">Upside objective accomplished</div>
+                    </div>
+                    <div class="event-card">
+                        <div class="event-abbr">2</div>
+                        <div class="event-desc" data-i18n="tests.selling.2">Activity bearish (volume down on rallies, up on reactions)</div>
+                    </div>
+                    <div class="event-card">
+                        <div class="event-abbr">3</div>
+                        <div class="event-desc" data-i18n="tests.selling.3">Preliminary Supply, Buying Climax present</div>
+                    </div>
+                    <div class="event-card">
+                        <div class="event-abbr">4</div>
+                        <div class="event-desc" data-i18n="tests.selling.4">Stock weaker than the market</div>
+                    </div>
+                    <div class="event-card">
+                        <div class="event-abbr">5</div>
+                        <div class="event-desc" data-i18n="tests.selling.5">Upward stride/trend line broken</div>
+                    </div>
+                    <div class="event-card">
+                        <div class="event-abbr">6</div>
+                        <div class="event-desc" data-i18n="tests.selling.6">Lower highs forming</div>
+                    </div>
+                    <div class="event-card">
+                        <div class="event-abbr">7</div>
+                        <div class="event-desc" data-i18n="tests.selling.7">Lower lows forming</div>
+                    </div>
+                    <div class="event-card">
+                        <div class="event-abbr">8</div>
+                        <div class="event-desc" data-i18n="tests.selling.8">Crown forming (lateral movement)</div>
+                    </div>
+                    <div class="event-card">
+                        <div class="event-abbr">9</div>
+                        <div class="event-desc" data-i18n="tests.selling.9">Reward/risk ratio at least 3:1</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Footer Disclaimer -->
+        <footer class="footer-disclaimer">
+            <h4 data-i18n="footer.title">⚠️ Important Disclaimer</h4>
+            <p data-i18n="footer.text">
+                This educational content is provided by NumbahWan Guild for informational purposes only. The Wyckoff Method is a historical framework for understanding market structure and does not guarantee trading success. Markets are inherently unpredictable and past patterns do not guarantee future results. Never invest money you cannot afford to lose. This is not financial advice. Always conduct your own research and consult with a licensed financial advisor before making any investment decisions.
+            </p>
+        </footer>
+    </main>
+    
+    <script>
+    // i18n translations
+    const translations = {
+        en: {
+            'hero.title': 'Wyckoff Method Academy',
+            'hero.subtitle': 'Master the art of reading market structure through accumulation, distribution, markup and markdown phases. Learn to think like the "Composite Man".',
+            'disclaimer.main': '<strong>Educational Purpose Only:</strong> This content is for educational purposes only and does not constitute financial advice. The Wyckoff Method is a framework for market analysis, not a prediction tool. Past patterns do not guarantee future results. Always consult a licensed financial advisor before making investment decisions.',
+            'tabs.overview': 'Overview',
+            'tabs.accumulation': 'Accumulation',
+            'tabs.distribution': 'Distribution',
+            'tabs.laws': 'Three Laws',
+            'tabs.tests': '9 Tests',
+            'overview.title': 'The Wyckoff Price Cycle',
+            'overview.intro': 'Richard D. Wyckoff (1873-1934) developed a method to understand market movements by analyzing the actions of large institutional operators, which he called the "Composite Man". The market moves in recurring cycles consisting of four distinct phases.',
+            'cycle.accumulation.name': 'Accumulation',
+            'cycle.accumulation.desc': 'Smart money buys',
+            'cycle.markup.name': 'Markup',
+            'cycle.markup.desc': 'Price rises',
+            'cycle.distribution.name': 'Distribution',
+            'cycle.distribution.desc': 'Smart money sells',
+            'cycle.markdown.name': 'Markdown',
+            'cycle.markdown.desc': 'Price falls',
+            'detail.accumulation.title': 'Accumulation Phase',
+            'detail.accumulation.p1': 'Large institutions quietly buy shares at low prices',
+            'detail.accumulation.p2': 'Occurs after a prolonged downtrend (markdown)',
+            'detail.accumulation.p3': 'Price moves sideways within a trading range',
+            'detail.accumulation.p4': 'Supply is gradually absorbed by demand',
+            'detail.accumulation.p5': 'Ends with a "Spring" or successful test of support',
+            'detail.markup.title': 'Markup Phase',
+            'detail.markup.p1': 'Price breaks out above the trading range',
+            'detail.markup.p2': 'Demand exceeds supply consistently',
+            'detail.markup.p3': 'Higher highs and higher lows form an uptrend',
+            'detail.markup.p4': 'Public interest and volume increase',
+            'detail.markup.p5': 'Re-accumulation zones may form (stepping stones)',
+            'detail.distribution.title': 'Distribution Phase',
+            'detail.distribution.p1': 'Large institutions sell shares to the public at high prices',
+            'detail.distribution.p2': 'Occurs after a prolonged uptrend (markup)',
+            'detail.distribution.p3': 'Price moves sideways within a trading range',
+            'detail.distribution.p4': 'Supply gradually overwhelms demand',
+            'detail.distribution.p5': 'Ends with an "Upthrust" or failed test of resistance',
+            'detail.markdown.title': 'Markdown Phase',
+            'detail.markdown.p1': 'Price breaks down below the trading range',
+            'detail.markdown.p2': 'Supply exceeds demand consistently',
+            'detail.markdown.p3': 'Lower highs and lower lows form a downtrend',
+            'detail.markdown.p4': 'Panic selling may occur at climax',
+            'detail.markdown.p5': 'Re-distribution zones may form (stepping stones down)',
+            'overview.composite.title': '🎭 The Composite Man',
+            'overview.composite.desc': 'Wyckoff advised traders to imagine all market fluctuations as the result of one operator - the "Composite Man" - who manipulates markets for his benefit. Understanding his strategies allows traders to align their positions with smart money rather than against it.',
+            'footer.title': '⚠️ Important Disclaimer',
+            'footer.text': 'This educational content is provided by NumbahWan Guild for informational purposes only. The Wyckoff Method is a historical framework for understanding market structure and does not guarantee trading success. Markets are inherently unpredictable and past patterns do not guarantee future results. Never invest money you cannot afford to lose. This is not financial advice. Always conduct your own research and consult with a licensed financial advisor before making any investment decisions.'
+        },
+        zh: {
+            'hero.title': '威科夫方法學院',
+            'hero.subtitle': '掌握透過累積、派發、上漲和下跌四個階段來解讀市場結構的藝術。學習像「複合人」一樣思考。',
+            'disclaimer.main': '<strong>僅供教育目的：</strong>本內容僅供教育目的，不構成投資建議。威科夫方法是市場分析的框架，而非預測工具。過去的模式不能保證未來的結果。在做出投資決策前，請務必諮詢持牌金融顧問。',
+            'tabs.overview': '概覽',
+            'tabs.accumulation': '累積',
+            'tabs.distribution': '派發',
+            'tabs.laws': '三大法則',
+            'tabs.tests': '九項測試',
+            'overview.title': '威科夫價格週期',
+            'overview.intro': '理查德·威科夫（1873-1934）開發了一種方法，通過分析大型機構操作者（他稱之為「複合人」）的行為來理解市場走勢。市場以四個不同階段的循環方式運行。',
+            'cycle.accumulation.name': '累積',
+            'cycle.accumulation.desc': '聰明資金買入',
+            'cycle.markup.name': '上漲',
+            'cycle.markup.desc': '價格上升',
+            'cycle.distribution.name': '派發',
+            'cycle.distribution.desc': '聰明資金賣出',
+            'cycle.markdown.name': '下跌',
+            'cycle.markdown.desc': '價格下降',
+            'detail.accumulation.title': '累積階段',
+            'detail.accumulation.p1': '大型機構悄悄以低價買入股票',
+            'detail.accumulation.p2': '發生在長期下跌趨勢（下跌階段）之後',
+            'detail.accumulation.p3': '價格在交易區間內橫盤整理',
+            'detail.accumulation.p4': '供應逐漸被需求吸收',
+            'detail.accumulation.p5': '以「彈簧」或成功的支撐測試結束',
+            'detail.markup.title': '上漲階段',
+            'detail.markup.p1': '價格突破交易區間上方',
+            'detail.markup.p2': '需求持續超過供應',
+            'detail.markup.p3': '更高的高點和更高的低點形成上升趨勢',
+            'detail.markup.p4': '公眾興趣和成交量增加',
+            'detail.markup.p5': '可能形成再累積區（墊腳石）',
+            'detail.distribution.title': '派發階段',
+            'detail.distribution.p1': '大型機構以高價向公眾賣出股票',
+            'detail.distribution.p2': '發生在長期上漲趨勢（上漲階段）之後',
+            'detail.distribution.p3': '價格在交易區間內橫盤整理',
+            'detail.distribution.p4': '供應逐漸壓過需求',
+            'detail.distribution.p5': '以「上沖」或失敗的阻力測試結束',
+            'detail.markdown.title': '下跌階段',
+            'detail.markdown.p1': '價格跌破交易區間下方',
+            'detail.markdown.p2': '供應持續超過需求',
+            'detail.markdown.p3': '更低的高點和更低的低點形成下降趨勢',
+            'detail.markdown.p4': '高潮時可能出現恐慌性拋售',
+            'detail.markdown.p5': '可能形成再派發區（向下的墊腳石）',
+            'overview.composite.title': '🎭 複合人',
+            'overview.composite.desc': '威科夫建議交易者將所有市場波動想像成一個操作者——「複合人」——為自己利益操縱市場的結果。理解他的策略可以讓交易者與聰明資金站在同一邊，而不是對立面。',
+            'footer.title': '⚠️ 重要免責聲明',
+            'footer.text': '本教育內容由NumbahWan公會僅供參考目的提供。威科夫方法是理解市場結構的歷史框架，不保證交易成功。市場本質上是不可預測的，過去的模式不能保證未來的結果。永遠不要投資你無法承受損失的資金。這不是財務建議。在做出任何投資決策之前，請務必進行自己的研究並諮詢持牌財務顧問。'
+        },
+        th: {
+            'hero.title': 'สถาบันวิธีไวคอฟฟ์',
+            'hero.subtitle': 'เชี่ยวชาญศิลปะการอ่านโครงสร้างตลาดผ่านช่วงสะสม, กระจาย, ขาขึ้น และขาลง เรียนรู้การคิดเหมือน "Composite Man"',
+            'disclaimer.main': '<strong>เพื่อการศึกษาเท่านั้น:</strong> เนื้อหานี้มีวัตถุประสงค์เพื่อการศึกษาเท่านั้น ไม่ถือเป็นคำแนะนำทางการเงิน วิธีไวคอฟฟ์เป็นกรอบการวิเคราะห์ตลาด ไม่ใช่เครื่องมือทำนาย รูปแบบในอดีตไม่รับประกันผลลัพธ์ในอนาคต โปรดปรึกษาที่ปรึกษาทางการเงินที่มีใบอนุญาตก่อนตัดสินใจลงทุน',
+            'tabs.overview': 'ภาพรวม',
+            'tabs.accumulation': 'ช่วงสะสม',
+            'tabs.distribution': 'ช่วงกระจาย',
+            'tabs.laws': 'กฎ 3 ข้อ',
+            'tabs.tests': '9 การทดสอบ',
+            'overview.title': 'วงจรราคาไวคอฟฟ์',
+            'overview.intro': 'Richard D. Wyckoff (1873-1934) พัฒนาวิธีการทำความเข้าใจการเคลื่อนไหวของตลาดโดยวิเคราะห์การกระทำของนักลงทุนสถาบันขนาดใหญ่ ซึ่งเขาเรียกว่า "Composite Man" ตลาดเคลื่อนไหวเป็นวงจรซ้ำๆ ประกอบด้วย 4 ช่วงที่แตกต่างกัน',
+            'cycle.accumulation.name': 'สะสม',
+            'cycle.accumulation.desc': 'เงินฉลาดซื้อ',
+            'cycle.markup.name': 'ขาขึ้น',
+            'cycle.markup.desc': 'ราคาขึ้น',
+            'cycle.distribution.name': 'กระจาย',
+            'cycle.distribution.desc': 'เงินฉลาดขาย',
+            'cycle.markdown.name': 'ขาลง',
+            'cycle.markdown.desc': 'ราคาลง',
+            'footer.title': '⚠️ ข้อจำกัดความรับผิดชอบที่สำคัญ',
+            'footer.text': 'เนื้อหาการศึกษานี้จัดทำโดย NumbahWan Guild เพื่อวัตถุประสงค์ในการให้ข้อมูลเท่านั้น วิธีไวคอฟฟ์เป็นกรอบประวัติศาสตร์สำหรับทำความเข้าใจโครงสร้างตลาด และไม่รับประกันความสำเร็จในการซื้อขาย ตลาดมีความไม่แน่นอนโดยธรรมชาติ และรูปแบบในอดีตไม่รับประกันผลลัพธ์ในอนาคต อย่าลงทุนเงินที่คุณไม่สามารถรับความเสียหายได้ นี่ไม่ใช่คำแนะนำทางการเงิน'
+        }
+    };
+    
+    // Initialize
+    document.addEventListener('DOMContentLoaded', () => {
+        // Tab switching
+        const tabBtns = document.querySelectorAll('.tab-btn');
+        const tabContents = document.querySelectorAll('.tab-content');
+        
+        tabBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                const tabId = btn.dataset.tab;
+                
+                tabBtns.forEach(b => b.classList.remove('active'));
+                tabContents.forEach(c => c.classList.remove('active'));
+                
+                btn.classList.add('active');
+                document.getElementById(`tab-${tabId}`).classList.add('active');
+            });
+        });
+        
+        // Phase click to show details
+        const phases = document.querySelectorAll('.cycle-phase');
+        const details = document.querySelectorAll('.phase-detail');
+        
+        phases.forEach(phase => {
+            phase.addEventListener('click', () => {
+                const phaseId = phase.dataset.phase;
+                
+                details.forEach(d => d.classList.remove('active'));
+                document.getElementById(`detail-${phaseId}`).classList.add('active');
+            });
+        });
+        
+        // Language switching
+        const langBtns = document.querySelectorAll('.lang-btn');
+        
+        langBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                const lang = btn.dataset.lang;
+                
+                langBtns.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                
+                document.body.dataset.lang = lang;
+                applyTranslations(lang);
+            });
+        });
+        
+        function applyTranslations(lang) {
+            const t = translations[lang] || translations.en;
+            
+            document.querySelectorAll('[data-i18n]').forEach(el => {
+                const key = el.dataset.i18n;
+                if (t[key]) {
+                    if (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA') {
+                        el.placeholder = t[key];
+                    } else {
+                        el.innerHTML = t[key];
+                    }
+                }
+            });
+        }
+    });
+    </script>
+</body>
+</html>
