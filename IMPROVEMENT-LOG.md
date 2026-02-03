@@ -167,6 +167,37 @@ rm -f file-old.svg file-64.webp file-128.webp file-256.webp file-256.png
 
 ---
 
+## DOM Update + Event Rebinding Pattern
+
+**Problem**: When innerHTML replaces DOM elements, event handlers are lost.
+
+```javascript
+// ❌ BAD - Events lost after HTML update
+function onLanguageChange(lang) {
+    updateHTML(container);  // Replaces DOM, events gone!
+}
+
+// ✅ GOOD - Always rebind after DOM replacement
+function onLanguageChange(lang) {
+    updateHTML(container);
+    bindEvents();  // Re-attach handlers to new elements
+}
+```
+
+**Real example from nw-guide.js:**
+```javascript
+window.addEventListener('nw-lang-change', (e) => {
+    currentLang = e.detail.lang;
+    const chat = document.getElementById('nw-guide-chat');
+    if (chat) {
+        updateChatHTML(chat);      // Replaces input/button elements
+        bindInputEvents();          // Re-bind onclick/onkeypress
+    }
+});
+```
+
+---
+
 ## Module Init Check Pattern
 
 ```javascript
