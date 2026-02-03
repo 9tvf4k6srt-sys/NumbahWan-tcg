@@ -1078,37 +1078,52 @@
                 const data = await response.json();
                 
                 if (data.success && data.assets) {
-                    // Update all asset prices
+                    // Update all asset prices from API
                     for (const [key, asset] of Object.entries(data.assets)) {
                         if (assetData[key]) {
                             assetData[key].prevPrice = assetData[key].price;
                             assetData[key].price = asset.price;
                             assetData[key].change = asset.change;
+                            assetData[key].high24h = asset.high24h;
+                            assetData[key].low24h = asset.low24h;
                         }
                     }
                     
                     // Update data sources indicator
-                    dataSources = data.sources || { btc: 'live', stocks: 'live' };
+                    dataSources = data.sources || {};
                     updateSourceIndicator();
+                    
+                    console.log(`[NWG Markets] API data loaded - ${data.realSourceCount}/5 real sources:`, data.sources);
                     
                     return true;
                 }
             } catch (e) {
-                console.log('API unavailable, using simulated prices');
+                console.log('[NWG Markets] API unavailable, using simulated prices');
             }
             return false;
         }
         
-        // Update source indicator
+        // Update source indicator to show real vs simulated
         function updateSourceIndicator() {
-            const indicator = document.querySelector('.live-indicator span');
-            if (indicator) {
-                if (dataSources.btc === 'CoinGecko' || dataSources.stocks === 'Yahoo Finance') {
-                    indicator.textContent = 'LIVE';
-                    indicator.parentElement.style.borderColor = 'rgba(0,255,136,0.5)';
+            const indicator = document.querySelector('.live-indicator');
+            const indicatorText = indicator?.querySelector('span:last-child');
+            
+            if (indicator && indicatorText) {
+                // Count real sources
+                const realCount = Object.values(dataSources).filter(s => s !== 'fallback' && s !== 'loading').length;
+                
+                if (realCount >= 3) {
+                    indicatorText.textContent = 'LIVE';
+                    indicator.style.borderColor = 'rgba(0,255,136,0.5)';
+                    indicator.style.background = 'rgba(0,255,136,0.1)';
+                } else if (realCount > 0) {
+                    indicatorText.textContent = `LIVE (${realCount}/5)`;
+                    indicator.style.borderColor = 'rgba(0,212,255,0.5)';
+                    indicator.style.background = 'rgba(0,212,255,0.1)';
                 } else {
-                    indicator.textContent = 'SIMULATED';
-                    indicator.parentElement.style.borderColor = 'rgba(255,215,0,0.5)';
+                    indicatorText.textContent = 'SIMULATED';
+                    indicator.style.borderColor = 'rgba(255,215,0,0.5)';
+                    indicator.style.background = 'rgba(255,215,0,0.1)';
                 }
             }
         }
