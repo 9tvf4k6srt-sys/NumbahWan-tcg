@@ -1,0 +1,475 @@
+/**
+ * NWG UNIFIED CARD FRAME SYSTEM v2.0
+ * ================================================
+ * Standard Trading Card Design - Pokemon/MTG Inspired
+ * 
+ * SPECIFICATIONS:
+ * - Print: 2.5" × 3.5" (63.5mm × 88.9mm) @ 300 DPI = 750 × 1050 px
+ * - Screen: 250px × 350px (scaled down for preview)
+ * - Aspect Ratio: 5:7 (standard poker card)
+ * 
+ * LAYOUT ZONES (Top to Bottom):
+ * 1. Header: Logo + Rarity badge (fixed 28px)
+ * 2. Art Frame: Card artwork (60% of card height)
+ * 3. Name Bar: Card name in dedicated space (fixed 32px)
+ * 4. Info Zone: NWG value, set info, number (fixed 28px)
+ * 
+ * KEY FIX: Name is NEVER overlapped - dedicated fixed zone
+ */
+
+/* ═══════════════════════════════════════════════════════════════════
+   CSS VARIABLES - RARITY COLORS
+   ═══════════════════════════════════════════════════════════════════ */
+
+:root {
+  --nwg-gold: #d4af37;
+  --nwg-dark: #0d0d1a;
+  --nwg-card-bg: #1a1a2e;
+  
+  /* Rarity Colors - Consistent across all pages */
+  --nwg-mythic: #ff4444;
+  --nwg-mythic-glow: rgba(255, 68, 68, 0.4);
+  --nwg-legendary: #ffaa00;
+  --nwg-legendary-glow: rgba(255, 170, 0, 0.4);
+  --nwg-epic: #aa55ff;
+  --nwg-epic-glow: rgba(170, 85, 255, 0.4);
+  --nwg-rare: #5588ff;
+  --nwg-rare-glow: rgba(85, 136, 255, 0.4);
+  --nwg-uncommon: #44cc55;
+  --nwg-uncommon-glow: rgba(68, 204, 85, 0.4);
+  --nwg-common: #888888;
+  --nwg-common-glow: rgba(136, 136, 136, 0.2);
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   UNIFIED CARD CONTAINER
+   ═══════════════════════════════════════════════════════════════════ */
+
+.nwg-card {
+  /* Standard card ratio 5:7 */
+  width: 250px;
+  height: 350px;
+  border-radius: 12px;
+  position: relative;
+  overflow: hidden;
+  background: var(--nwg-dark);
+  box-shadow: 
+    0 4px 20px rgba(0, 0, 0, 0.5),
+    inset 0 0 0 3px var(--nwg-gold);
+  
+  /* Flexbox for perfect zone stacking */
+  display: flex;
+  flex-direction: column;
+  
+  /* Smooth transitions */
+  transition: transform 0.3s, box-shadow 0.3s;
+}
+
+.nwg-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 
+    0 8px 30px rgba(0, 0, 0, 0.6),
+    inset 0 0 0 3px var(--nwg-gold);
+}
+
+/* Rarity Border Colors */
+.nwg-card.mythic { box-shadow: 0 4px 20px var(--nwg-mythic-glow), inset 0 0 0 3px var(--nwg-mythic); }
+.nwg-card.legendary { box-shadow: 0 4px 20px var(--nwg-legendary-glow), inset 0 0 0 3px var(--nwg-legendary); }
+.nwg-card.epic { box-shadow: 0 4px 20px var(--nwg-epic-glow), inset 0 0 0 3px var(--nwg-epic); }
+.nwg-card.rare { box-shadow: 0 4px 20px var(--nwg-rare-glow), inset 0 0 0 3px var(--nwg-rare); }
+.nwg-card.uncommon { box-shadow: 0 4px 20px var(--nwg-uncommon-glow), inset 0 0 0 3px var(--nwg-uncommon); }
+.nwg-card.common { box-shadow: 0 4px 20px var(--nwg-common-glow), inset 0 0 0 3px var(--nwg-common); }
+
+.nwg-card.mythic:hover { box-shadow: 0 8px 40px var(--nwg-mythic-glow), inset 0 0 0 3px var(--nwg-mythic); }
+.nwg-card.legendary:hover { box-shadow: 0 8px 40px var(--nwg-legendary-glow), inset 0 0 0 3px var(--nwg-legendary); }
+.nwg-card.epic:hover { box-shadow: 0 8px 40px var(--nwg-epic-glow), inset 0 0 0 3px var(--nwg-epic); }
+.nwg-card.rare:hover { box-shadow: 0 8px 40px var(--nwg-rare-glow), inset 0 0 0 3px var(--nwg-rare); }
+.nwg-card.uncommon:hover { box-shadow: 0 8px 40px var(--nwg-uncommon-glow), inset 0 0 0 3px var(--nwg-uncommon); }
+
+/* ═══════════════════════════════════════════════════════════════════
+   ZONE 1: HEADER (Logo + Rarity) - Fixed 28px
+   ═══════════════════════════════════════════════════════════════════ */
+
+.nwg-card__header {
+  flex: 0 0 28px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 4px 10px;
+  background: linear-gradient(180deg, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0.3) 100%);
+  border-bottom: 1px solid rgba(212, 175, 55, 0.2);
+}
+
+.nwg-card__logo {
+  font-family: 'Cinzel', Georgia, serif;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--nwg-gold);
+  letter-spacing: 2px;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+}
+
+.nwg-card__rarity {
+  font-family: 'Inter', -apple-system, sans-serif;
+  font-size: 8px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 2px 8px;
+  border-radius: 10px;
+  background: var(--nwg-common);
+  color: #fff;
+}
+
+.nwg-card__rarity.mythic { background: var(--nwg-mythic); }
+.nwg-card__rarity.legendary { background: var(--nwg-legendary); color: #000; }
+.nwg-card__rarity.epic { background: var(--nwg-epic); }
+.nwg-card__rarity.rare { background: var(--nwg-rare); }
+.nwg-card__rarity.uncommon { background: var(--nwg-uncommon); color: #000; }
+.nwg-card__rarity.common { background: var(--nwg-common); }
+
+/* ═══════════════════════════════════════════════════════════════════
+   ZONE 2: ART FRAME - Flexible (fills remaining space)
+   ═══════════════════════════════════════════════════════════════════ */
+
+.nwg-card__art-frame {
+  flex: 1 1 auto;
+  margin: 6px;
+  border-radius: 6px;
+  overflow: hidden;
+  background: #000;
+  border: 2px solid rgba(212, 175, 55, 0.3);
+  position: relative;
+}
+
+/* Rarity border on art frame */
+.nwg-card.mythic .nwg-card__art-frame { border-color: rgba(255, 68, 68, 0.5); }
+.nwg-card.legendary .nwg-card__art-frame { border-color: rgba(255, 170, 0, 0.5); }
+.nwg-card.epic .nwg-card__art-frame { border-color: rgba(170, 85, 255, 0.5); }
+.nwg-card.rare .nwg-card__art-frame { border-color: rgba(85, 136, 255, 0.5); }
+.nwg-card.uncommon .nwg-card__art-frame { border-color: rgba(68, 204, 85, 0.5); }
+
+.nwg-card__art {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center top; /* Focus on faces/heads */
+  display: block;
+}
+
+/* Loading state */
+.nwg-card__art-frame.loading {
+  background: linear-gradient(45deg, #1a1a2e 25%, #2a2a4e 50%, #1a1a2e 75%);
+  background-size: 200% 200%;
+  animation: shimmer 1.5s infinite;
+}
+
+@keyframes shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   ZONE 3: NAME BAR - Fixed 40px (NEVER OVERLAPPED)
+   ═══════════════════════════════════════════════════════════════════ */
+
+.nwg-card__name-bar {
+  flex: 0 0 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 10px;
+  background: linear-gradient(180deg, 
+    rgba(212, 175, 55, 0.15) 0%, 
+    rgba(212, 175, 55, 0.05) 100%
+  );
+  border-top: 1px solid rgba(212, 175, 55, 0.3);
+  border-bottom: 1px solid rgba(212, 175, 55, 0.2);
+}
+
+.nwg-card__name {
+  font-family: 'Cinzel', Georgia, serif;
+  font-size: 12px;
+  font-weight: 700;
+  color: #fff;
+  text-align: center;
+  text-shadow: 0 1px 3px rgba(0,0,0,0.8);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+  line-height: 1.2;
+}
+
+/* Long names - smaller font */
+.nwg-card__name.long-name {
+  font-size: 10px;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   ZONE 4: INFO BAR - Fixed 32px
+   ═══════════════════════════════════════════════════════════════════ */
+
+.nwg-card__info-bar {
+  flex: 0 0 32px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 10px;
+  background: rgba(0, 0, 0, 0.6);
+  border-top: 1px solid rgba(212, 175, 55, 0.2);
+}
+
+.nwg-card__value {
+  font-family: 'Cinzel', Georgia, serif;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--nwg-gold);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.nwg-card__value-icon {
+  font-size: 10px;
+}
+
+.nwg-card__meta {
+  text-align: right;
+  font-family: 'Inter', -apple-system, sans-serif;
+  font-size: 7px;
+  color: rgba(255, 255, 255, 0.5);
+  line-height: 1.3;
+}
+
+.nwg-card__set {
+  display: block;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.nwg-card__number {
+  display: block;
+  color: rgba(255, 255, 255, 0.4);
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   CARD BACK
+   ═══════════════════════════════════════════════════════════════════ */
+
+.nwg-card-back {
+  width: 250px;
+  height: 350px;
+  border-radius: 12px;
+  background: linear-gradient(145deg, var(--nwg-card-bg), var(--nwg-dark));
+  box-shadow: 
+    0 4px 20px rgba(0, 0, 0, 0.5),
+    inset 0 0 0 3px var(--nwg-gold);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 20px;
+}
+
+.nwg-card-back__logo {
+  font-family: 'Cinzel', Georgia, serif;
+  font-size: 32px;
+  font-weight: 900;
+  color: var(--nwg-gold);
+  text-shadow: 0 0 30px rgba(212, 175, 55, 0.5);
+  margin-bottom: 8px;
+}
+
+.nwg-card-back__tagline {
+  font-family: 'Inter', -apple-system, sans-serif;
+  font-size: 8px;
+  color: rgba(255, 255, 255, 0.5);
+  text-transform: uppercase;
+  letter-spacing: 4px;
+  margin-bottom: 20px;
+}
+
+.nwg-card-back__qr {
+  width: 80px;
+  height: 80px;
+  background: #fff;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 15px;
+}
+
+.nwg-card-back__qr span {
+  font-family: 'Inter', -apple-system, sans-serif;
+  font-size: 9px;
+  font-weight: 600;
+  color: #333;
+}
+
+.nwg-card-back__info {
+  font-family: 'Inter', -apple-system, sans-serif;
+  font-size: 7px;
+  color: rgba(255, 255, 255, 0.4);
+  max-width: 160px;
+  line-height: 1.5;
+}
+
+.nwg-card-back__footer {
+  position: absolute;
+  bottom: 8px;
+  font-family: 'Inter', -apple-system, sans-serif;
+  font-size: 6px;
+  color: rgba(255, 255, 255, 0.25);
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   RESPONSIVE SIZES
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* Small card (for grids, collections) */
+.nwg-card.nwg-card--sm {
+  width: 150px;
+  height: 210px;
+}
+
+.nwg-card--sm .nwg-card__header { flex: 0 0 20px; padding: 2px 6px; }
+.nwg-card--sm .nwg-card__logo { font-size: 8px; }
+.nwg-card--sm .nwg-card__rarity { font-size: 6px; padding: 1px 5px; }
+.nwg-card--sm .nwg-card__art-frame { margin: 4px; }
+.nwg-card--sm .nwg-card__name-bar { flex: 0 0 28px; }
+.nwg-card--sm .nwg-card__name { font-size: 9px; }
+.nwg-card--sm .nwg-card__info-bar { flex: 0 0 22px; padding: 0 6px; }
+.nwg-card--sm .nwg-card__value { font-size: 8px; }
+.nwg-card--sm .nwg-card__meta { font-size: 6px; }
+
+/* Large card (for details, print preview) */
+.nwg-card.nwg-card--lg {
+  width: 375px;
+  height: 525px;
+}
+
+.nwg-card--lg .nwg-card__header { flex: 0 0 42px; padding: 6px 15px; }
+.nwg-card--lg .nwg-card__logo { font-size: 16px; }
+.nwg-card--lg .nwg-card__rarity { font-size: 10px; padding: 3px 12px; }
+.nwg-card--lg .nwg-card__art-frame { margin: 9px; border-width: 3px; }
+.nwg-card--lg .nwg-card__name-bar { flex: 0 0 60px; }
+.nwg-card--lg .nwg-card__name { font-size: 18px; }
+.nwg-card--lg .nwg-card__info-bar { flex: 0 0 48px; padding: 0 15px; }
+.nwg-card--lg .nwg-card__value { font-size: 16px; }
+.nwg-card--lg .nwg-card__meta { font-size: 10px; }
+
+/* Print size (actual 300 DPI dimensions scaled to screen) */
+.nwg-card.nwg-card--print {
+  width: 250px;  /* 750px at 300DPI = 2.5in */
+  height: 350px; /* 1050px at 300DPI = 3.5in */
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   SPECIAL EFFECTS (Mythic shimmer, etc.)
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* Mythic holographic effect */
+.nwg-card.mythic::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(
+    135deg,
+    transparent 20%,
+    rgba(255, 68, 68, 0.1) 40%,
+    rgba(255, 200, 100, 0.1) 60%,
+    transparent 80%
+  );
+  pointer-events: none;
+  z-index: 10;
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.nwg-card.mythic:hover::before {
+  opacity: 1;
+  animation: holoShift 3s infinite linear;
+}
+
+@keyframes holoShift {
+  0% { background-position: 0% 0%; }
+  100% { background-position: 200% 200%; }
+}
+
+/* Selected state */
+.nwg-card.selected {
+  transform: translateY(-8px) scale(1.02);
+}
+
+.nwg-card.selected::after {
+  content: '✓';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 40px;
+  height: 40px;
+  background: var(--nwg-gold);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  color: #000;
+  z-index: 20;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   UTILITY CLASSES
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* Hide value if not needed */
+.nwg-card--no-value .nwg-card__value { display: none; }
+.nwg-card--no-value .nwg-card__meta { text-align: center; width: 100%; }
+
+/* Compact mode (battle arena) */
+.nwg-card--compact .nwg-card__info-bar { display: none; }
+.nwg-card--compact .nwg-card__name-bar { flex: 0 0 32px; }
+
+/* Grid layout helper */
+.nwg-card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 16px;
+  justify-items: center;
+}
+
+/* Flip animation */
+.nwg-card-flip {
+  perspective: 1000px;
+}
+
+.nwg-card-flip__inner {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transition: transform 0.6s;
+  transform-style: preserve-3d;
+}
+
+.nwg-card-flip:hover .nwg-card-flip__inner {
+  transform: rotateY(180deg);
+}
+
+.nwg-card-flip__front,
+.nwg-card-flip__back {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  backface-visibility: hidden;
+}
+
+.nwg-card-flip__back {
+  transform: rotateY(180deg);
+}
