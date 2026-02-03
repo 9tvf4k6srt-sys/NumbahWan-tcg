@@ -1,29 +1,74 @@
 /**
- * NumbahWan Currency System v1.0
- * SINGLE SOURCE OF TRUTH for all currency display
+ * NumbahWan Currency System v2.0
+ * 3-TIER ECONOMY: NWG (premium) → Gold (earned) → Sacred Log (prestige)
  * 
+ * SINGLE SOURCE OF TRUTH for all currency display
  * Premium, consistent icons across all pages
- * Digital-native design for permanence and trust
+ * 
+ * Exchange Rates (ONE WAY ONLY - no reverse):
+ * ┌─────────────────────────────────────────┐
+ * │  $1 USD = 100 NWG                       │
+ * │  1 NWG  = 10 Gold                       │
+ * │  Sacred Log = CANNOT BE PURCHASED       │
+ * └─────────────────────────────────────────┘
  */
 
 const NW_CURRENCY = {
     // ═══════════════════════════════════════════════════════════════
-    // CURRENCY DEFINITIONS
+    // SYSTEM INFO
+    // ═══════════════════════════════════════════════════════════════
+    version: '2.0',
+    
+    // Exchange rates (one-way conversions only)
+    exchangeRates: {
+        usdToNwg: 100,     // $1 = 100 NWG
+        nwgToGold: 10,     // 1 NWG = 10 Gold
+        // NO reverse exchanges - value flows DOWN only
+        // Sacred Log cannot be bought/sold
+    },
+
+    // ═══════════════════════════════════════════════════════════════
+    // CURRENCY DEFINITIONS (3-Tier System)
     // ═══════════════════════════════════════════════════════════════
     types: {
-        diamond: {
-            id: 'diamond',
-            name: { en: 'Diamonds', zh: '鑽石', th: 'เพชร' },
+        nwg: {
+            id: 'nwg',
+            name: { 
+                en: 'NWG', 
+                zh: 'NWG幣', 
+                th: 'NWG' 
+            },
+            fullName: {
+                en: 'NumbahWan Gold',
+                zh: 'NumbahWan 黃金幣',
+                th: 'NumbahWan โกลด์'
+            },
             symbol: '◆',
             color: '#00d4ff',
             gradient: 'linear-gradient(135deg, #00d4ff 0%, #0099cc 50%, #00d4ff 100%)',
             glow: '0 0 10px rgba(0, 212, 255, 0.5)',
             tier: 1, // Premium
+            description: {
+                en: 'Premium currency - Direct USD value',
+                zh: '優質貨幣 - 直接美元價值',
+                th: 'สกุลเงินพรีเมียม - มูลค่า USD โดยตรง'
+            },
+            howToGet: {
+                en: ['Purchase with USD ($1 = 100 NWG)', 'Daily login bonus', 'Event rewards', 'Referral bonus'],
+                zh: ['用美元購買 ($1 = 100 NWG)', '每日登入獎勵', '活動獎勵', '推薦獎金'],
+                th: ['ซื้อด้วย USD ($1 = 100 NWG)', 'โบนัสเข้าสู่ระบบรายวัน', 'รางวัลกิจกรรม', 'โบนัสแนะนำ']
+            },
+            uses: {
+                en: ['Direct card pulls', 'Premium items', 'Convert to Gold (10x)', 'Exclusive features'],
+                zh: ['直接抽卡', '優質物品', '兌換金幣 (10倍)', '專屬功能'],
+                th: ['ดึงการ์ดโดยตรง', 'ไอเทมพรีเมียม', 'แปลงเป็นทอง (10 เท่า)', 'ฟีเจอร์พิเศษ']
+            },
             icon: `<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M12 2L2 9L12 22L22 9L12 2Z" fill="url(#diamond-grad)" stroke="#fff" stroke-width="0.5"/>
+                <path d="M12 2L2 9L12 22L22 9L12 2Z" fill="url(#nwg-grad)" stroke="#fff" stroke-width="0.5"/>
                 <path d="M2 9H22M12 2L7 9L12 22L17 9L12 2" stroke="rgba(255,255,255,0.6)" stroke-width="0.5"/>
+                <text x="12" y="14" text-anchor="middle" fill="#fff" font-size="5" font-weight="bold">NWG</text>
                 <defs>
-                    <linearGradient id="diamond-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <linearGradient id="nwg-grad" x1="0%" y1="0%" x2="100%" y2="100%">
                         <stop offset="0%" style="stop-color:#4df0ff"/>
                         <stop offset="50%" style="stop-color:#00d4ff"/>
                         <stop offset="100%" style="stop-color:#0099cc"/>
@@ -33,12 +78,36 @@ const NW_CURRENCY = {
         },
         gold: {
             id: 'gold',
-            name: { en: 'Gold', zh: '金幣', th: 'ทอง' },
+            name: { 
+                en: 'Gold', 
+                zh: '金幣', 
+                th: 'ทอง' 
+            },
+            fullName: {
+                en: 'Gold Coins',
+                zh: '金幣',
+                th: 'เหรียญทอง'
+            },
             symbol: '●',
             color: '#ffd700',
             gradient: 'linear-gradient(135deg, #ffd700 0%, #ffaa00 50%, #ffd700 100%)',
             glow: '0 0 10px rgba(255, 215, 0, 0.5)',
-            tier: 2,
+            tier: 2, // Standard (earned)
+            description: {
+                en: 'Earned through gameplay - Your dedication rewarded',
+                zh: '透過遊戲賺取 - 您的努力得到回報',
+                th: 'ได้รับจากการเล่น - รางวัลจากความทุ่มเท'
+            },
+            howToGet: {
+                en: ['Win arcade games', 'Daily quests', 'Card battles', 'Convert from NWG (1:10)'],
+                zh: ['贏得街機遊戲', '每日任務', '卡牌對戰', '從NWG兌換 (1:10)'],
+                th: ['ชนะเกมอาร์เคด', 'เควสรายวัน', 'ต่อสู้การ์ด', 'แปลงจาก NWG (1:10)']
+            },
+            uses: {
+                en: ['Standard pulls', 'Card upgrades', 'Merch purchases', 'Basic features'],
+                zh: ['普通抽卡', '卡牌升級', '商品購買', '基本功能'],
+                th: ['ดึงมาตรฐาน', 'อัพเกรดการ์ด', 'ซื้อสินค้า', 'ฟีเจอร์พื้นฐาน']
+            },
             icon: `<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <circle cx="12" cy="12" r="10" fill="url(#gold-grad)" stroke="#b8860b" stroke-width="1"/>
                 <circle cx="12" cy="12" r="7" stroke="rgba(255,255,255,0.4)" stroke-width="0.5" fill="none"/>
@@ -52,76 +121,110 @@ const NW_CURRENCY = {
                 </defs>
             </svg>`
         },
-        iron: {
-            id: 'iron',
-            name: { en: 'Iron', zh: '鐵', th: 'เหล็ก' },
-            symbol: '⬡',
-            color: '#a8a8a8',
-            gradient: 'linear-gradient(135deg, #d4d4d4 0%, #a8a8a8 50%, #808080 100%)',
-            glow: '0 0 8px rgba(168, 168, 168, 0.4)',
-            tier: 3,
-            icon: `<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M12 2L21 7V17L12 22L3 17V7L12 2Z" fill="url(#iron-grad)" stroke="#666" stroke-width="0.5"/>
-                <path d="M12 2V22M3 7L21 17M21 7L3 17" stroke="rgba(255,255,255,0.3)" stroke-width="0.3"/>
-                <defs>
-                    <linearGradient id="iron-grad" x1="0%" y1="0%" x2="100%" y2="100%">
-                        <stop offset="0%" style="stop-color:#e0e0e0"/>
-                        <stop offset="50%" style="stop-color:#a8a8a8"/>
-                        <stop offset="100%" style="stop-color:#707070"/>
-                    </linearGradient>
-                </defs>
-            </svg>`
-        },
-        stone: {
-            id: 'stone',
-            name: { en: 'Stone', zh: '石頭', th: 'หิน' },
-            symbol: '▣',
-            color: '#8b7355',
-            gradient: 'linear-gradient(135deg, #a08060 0%, #8b7355 50%, #6b5344 100%)',
-            glow: '0 0 6px rgba(139, 115, 85, 0.3)',
-            tier: 4,
-            icon: `<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <rect x="4" y="4" width="16" height="16" rx="3" fill="url(#stone-grad)" stroke="#5a4a3a" stroke-width="0.5"/>
-                <path d="M7 10L12 7L17 10L12 13L7 10Z" fill="rgba(255,255,255,0.2)"/>
-                <path d="M7 14L12 11L17 14" stroke="rgba(0,0,0,0.2)" stroke-width="0.5"/>
-                <defs>
-                    <linearGradient id="stone-grad" x1="0%" y1="0%" x2="100%" y2="100%">
-                        <stop offset="0%" style="stop-color:#b09070"/>
-                        <stop offset="50%" style="stop-color:#8b7355"/>
-                        <stop offset="100%" style="stop-color:#6b5344"/>
-                    </linearGradient>
-                </defs>
-            </svg>`
-        },
         wood: {
             id: 'wood',
-            name: { en: 'Sacred Logs', zh: '神聖原木', th: 'ท่อนไม้ศักดิ์สิทธิ์' },
+            name: { 
+                en: 'Sacred Log', 
+                zh: '神聖原木', 
+                th: 'ท่อนไม้ศักดิ์สิทธิ์' 
+            },
+            fullName: {
+                en: 'Sacred Log',
+                zh: '神聖原木',
+                th: 'ท่อนไม้ศักดิ์สิทธิ์'
+            },
             symbol: '⧫',
             color: '#00ff88',
             gradient: 'linear-gradient(135deg, #00ff88 0%, #00cc6a 50%, #009950 100%)',
             glow: '0 0 15px rgba(0, 255, 136, 0.6)',
-            tier: 0, // Ultra Premium
+            tier: 0, // Ultra Prestige (CANNOT BE BOUGHT)
+            description: {
+                en: 'Prestige currency - Proof of mastery',
+                zh: '威望貨幣 - 精通的證明',
+                th: 'สกุลเงินเกียรติยศ - หลักฐานแห่งความเชี่ยวชาญ'
+            },
+            howToGet: {
+                en: ['Pull a Mythic card', '7-day login streak', 'Top 10 leaderboard', 'Complete card sets'],
+                zh: ['抽到神話卡', '連續登入7天', '排行榜前10名', '完成卡組收集'],
+                th: ['ดึงการ์ด Mythic', 'เข้าสู่ระบบ 7 วันติด', 'ติด Top 10', 'สะสมครบชุด']
+            },
+            uses: {
+                en: ['Guaranteed Mythic pull', 'Legendary selector', 'Exclusive merch', 'Profile titles'],
+                zh: ['保證神話抽卡', '傳奇選擇器', '專屬商品', '個人稱號'],
+                th: ['ดึง Mythic แน่นอน', 'เลือก Legendary', 'สินค้าพิเศษ', 'ตำแหน่งโปรไฟล์']
+            },
+            special: {
+                en: '⚠️ CANNOT BE PURCHASED - Must be EARNED!',
+                zh: '⚠️ 無法購買 - 必須靠實力獲得！',
+                th: '⚠️ ซื้อไม่ได้ - ต้องได้รับจากความสามารถ!'
+            },
             icon: `<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <rect x="6" y="3" width="12" height="18" rx="2" fill="url(#wood-grad)" stroke="#006633" stroke-width="0.5"/>
-                <ellipse cx="12" cy="6" rx="4" ry="2" fill="url(#wood-top)"/>
-                <path d="M8 8C8 8 9 10 12 10C15 10 16 8 16 8" stroke="rgba(0,0,0,0.3)" stroke-width="0.5"/>
-                <path d="M8 12C8 12 9 14 12 14C15 14 16 12 16 12" stroke="rgba(0,0,0,0.2)" stroke-width="0.5"/>
-                <path d="M8 16C8 16 9 18 12 18C15 18 16 16 16 16" stroke="rgba(0,0,0,0.1)" stroke-width="0.5"/>
-                <!-- Glow effect -->
-                <rect x="6" y="3" width="12" height="18" rx="2" fill="none" stroke="#00ff88" stroke-width="1" opacity="0.5"/>
                 <defs>
-                    <linearGradient id="wood-grad" x1="0%" y1="0%" x2="100%" y2="100%">
-                        <stop offset="0%" style="stop-color:#33ff99"/>
-                        <stop offset="50%" style="stop-color:#00ff88"/>
-                        <stop offset="100%" style="stop-color:#00cc6a"/>
+                    <linearGradient id="sacred-wood-body" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" style="stop-color:#2d1810"/>
+                        <stop offset="50%" style="stop-color:#1a0f0a"/>
+                        <stop offset="100%" style="stop-color:#0d0805"/>
                     </linearGradient>
-                    <linearGradient id="wood-top" x1="0%" y1="0%" x2="0%" y2="100%">
-                        <stop offset="0%" style="stop-color:#66ffaa"/>
-                        <stop offset="100%" style="stop-color:#00dd77"/>
+                    <linearGradient id="sacred-rune-glow" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" style="stop-color:#ffd700"/>
+                        <stop offset="50%" style="stop-color:#ff9500"/>
+                        <stop offset="100%" style="stop-color:#ffd700"/>
                     </linearGradient>
+                    <filter id="sacred-glow">
+                        <feGaussianBlur stdDeviation="0.5" result="coloredBlur"/>
+                        <feMerge><feMergeNode in="coloredBlur"/><feMergeNode in="SourceGraphic"/></feMerge>
+                    </filter>
                 </defs>
+                <!-- Dark wood body -->
+                <rect x="6" y="2" width="12" height="20" rx="3" fill="url(#sacred-wood-body)" stroke="#3d2817" stroke-width="0.5"/>
+                <!-- Wood rings -->
+                <ellipse cx="12" cy="5" rx="4" ry="1.5" fill="none" stroke="#3d2817" stroke-width="0.3" opacity="0.5"/>
+                <!-- Glowing runes -->
+                <g filter="url(#sacred-glow)" fill="url(#sacred-rune-glow)">
+                    <path d="M12 6L10 8L12 10L14 8Z" opacity="0.9"/>
+                    <path d="M10 11L9 13L10 15L11 13Z" opacity="0.8"/>
+                    <path d="M14 11L13 13L14 15L15 13Z" opacity="0.8"/>
+                    <path d="M12 16L10.5 18L12 20L13.5 18Z" opacity="0.9"/>
+                </g>
+                <!-- Cosmic particles -->
+                <circle cx="8" cy="7" r="0.5" fill="#ffd700" opacity="0.7">
+                    <animate attributeName="opacity" values="0.7;0.3;0.7" dur="2s" repeatCount="indefinite"/>
+                </circle>
+                <circle cx="16" cy="12" r="0.4" fill="#ff9500" opacity="0.6">
+                    <animate attributeName="opacity" values="0.6;0.2;0.6" dur="1.5s" repeatCount="indefinite"/>
+                </circle>
+                <circle cx="9" cy="18" r="0.3" fill="#ffd700" opacity="0.5">
+                    <animate attributeName="opacity" values="0.5;0.1;0.5" dur="2.5s" repeatCount="indefinite"/>
+                </circle>
             </svg>`
-        }
+        },
+        
+        // LEGACY ALIASES (for backward compatibility)
+        // These map to the new currencies
+        diamond: null, // Will be set to reference 'nwg' below
+        iron: null,    // DEPRECATED - removed
+        stone: null    // DEPRECATED - removed
+    },
+
+    // ═══════════════════════════════════════════════════════════════
+    // INITIALIZATION
+    // ═══════════════════════════════════════════════════════════════
+    
+    _initialized: false,
+    
+    init() {
+        if (this._initialized) return;
+        
+        // Set up legacy aliases
+        this.types.diamond = this.types.nwg;
+        
+        this.injectStyles();
+        this._initialized = true;
+        
+        console.log('%c[NW_CURRENCY] v2.0 - 3-Tier Economy System', 
+            'background: linear-gradient(90deg, #00d4ff, #ffd700, #00ff88); color: #000; font-size: 12px; padding: 4px 8px; border-radius: 4px; font-weight: bold;');
+        console.log('%c◆ NWG (Premium) → ● Gold (Earned) → ⧫ Sacred Log (Prestige)', 
+            'color: #888; font-size: 11px;');
     },
 
     // ═══════════════════════════════════════════════════════════════
@@ -130,10 +233,13 @@ const NW_CURRENCY = {
 
     /**
      * Get currency icon HTML
-     * @param {string} type - Currency type (diamond, gold, iron, stone, wood)
+     * @param {string} type - Currency type (nwg, gold, wood) or legacy (diamond)
      * @param {object} options - { size: 16, animate: false, showGlow: true }
      */
     icon(type, options = {}) {
+        // Handle legacy 'diamond' -> 'nwg'
+        if (type === 'diamond') type = 'nwg';
+        
         const currency = this.types[type];
         if (!currency) return '';
         
@@ -154,6 +260,9 @@ const NW_CURRENCY = {
      * @param {object} options - { size: 16, compact: false, animate: false, showName: false }
      */
     format(type, amount, options = {}) {
+        // Handle legacy 'diamond' -> 'nwg'
+        if (type === 'diamond') type = 'nwg';
+        
         const currency = this.types[type];
         if (!currency) return amount.toString();
         
@@ -180,11 +289,10 @@ const NW_CURRENCY = {
 
     /**
      * Create a currency badge (larger, for headers/displays)
-     * @param {string} type - Currency type
-     * @param {number} amount - Amount
-     * @param {object} options - { size: 'sm'|'md'|'lg', style: 'default'|'minimal'|'fancy' }
      */
     badge(type, amount, options = {}) {
+        if (type === 'diamond') type = 'nwg';
+        
         const currency = this.types[type];
         if (!currency) return '';
         
@@ -208,14 +316,17 @@ const NW_CURRENCY = {
     },
 
     /**
-     * Create a full wallet display
-     * @param {object} balances - { diamond: 100, gold: 50, ... }
-     * @param {object} options - { layout: 'horizontal'|'vertical'|'grid', showZero: false }
+     * Create a full wallet display (3 currencies only)
      */
     wallet(balances, options = {}) {
         const layout = options.layout || 'horizontal';
         const showZero = options.showZero || false;
-        const order = ['wood', 'diamond', 'gold', 'iron', 'stone']; // By tier
+        const order = ['wood', 'nwg', 'gold']; // By tier
+        
+        // Handle legacy 'diamond' key
+        if (balances.diamond && !balances.nwg) {
+            balances.nwg = balances.diamond;
+        }
         
         const items = order
             .filter(type => showZero || (balances[type] && balances[type] > 0))
@@ -233,13 +344,17 @@ const NW_CURRENCY = {
 
     /**
      * Create a cost display (for purchases)
-     * @param {object} costs - { diamond: 10, gold: 5 }
-     * @param {object} options - { canAfford: true }
      */
     cost(costs, options = {}) {
+        // Handle legacy 'diamond' key
+        if (costs.diamond) {
+            costs.nwg = costs.diamond;
+            delete costs.diamond;
+        }
+        
         const canAfford = options.canAfford !== false;
         const items = Object.entries(costs)
-            .filter(([_, amount]) => amount > 0)
+            .filter(([type, amount]) => amount > 0 && this.types[type])
             .map(([type, amount]) => this.format(type, amount, { size: 16 }))
             .join(' + ');
         
@@ -252,11 +367,16 @@ const NW_CURRENCY = {
 
     /**
      * Create a reward display (earned amounts with +)
-     * @param {object} rewards - { diamond: 10, gold: 5 }
      */
     reward(rewards, options = {}) {
+        // Handle legacy 'diamond' key
+        if (rewards.diamond) {
+            rewards.nwg = rewards.diamond;
+            delete rewards.diamond;
+        }
+        
         const items = Object.entries(rewards)
-            .filter(([_, amount]) => amount > 0)
+            .filter(([type, amount]) => amount > 0 && this.types[type])
             .map(([type, amount]) => {
                 const currency = this.types[type];
                 return `<span style="color: ${currency?.color || '#00ff88'}">+${this.format(type, amount, { size: 16 })}</span>`;
@@ -267,12 +387,55 @@ const NW_CURRENCY = {
     },
 
     // ═══════════════════════════════════════════════════════════════
+    // EXCHANGE CALCULATOR
+    // ═══════════════════════════════════════════════════════════════
+    
+    /**
+     * Calculate exchange rate (one-way only)
+     */
+    calculateExchange(from, to, amount) {
+        if (from === 'diamond') from = 'nwg';
+        
+        // Only allowed conversions:
+        // USD -> NWG
+        // NWG -> Gold
+        
+        if (from === 'usd' && to === 'nwg') {
+            return amount * this.exchangeRates.usdToNwg;
+        }
+        if (from === 'nwg' && to === 'gold') {
+            return amount * this.exchangeRates.nwgToGold;
+        }
+        
+        // Sacred Log cannot be exchanged
+        if (from === 'wood' || to === 'wood') {
+            return null; // Not allowed
+        }
+        
+        // Reverse exchanges not allowed
+        return null;
+    },
+    
+    /**
+     * Get USD value of currency
+     */
+    getUsdValue(type, amount) {
+        if (type === 'diamond') type = 'nwg';
+        
+        if (type === 'nwg') {
+            return amount / this.exchangeRates.usdToNwg;
+        }
+        if (type === 'gold') {
+            return amount / (this.exchangeRates.usdToNwg * this.exchangeRates.nwgToGold);
+        }
+        // Sacred Log is priceless
+        return null;
+    },
+
+    // ═══════════════════════════════════════════════════════════════
     // CSS INJECTION
     // ═══════════════════════════════════════════════════════════════
 
-    /**
-     * Inject required CSS (call once on page load)
-     */
     injectStyles() {
         if (document.getElementById('nw-currency-styles')) return;
         
@@ -347,6 +510,11 @@ const NW_CURRENCY = {
                 animation: nw-currency-glow 3s ease-in-out infinite;
             }
             
+            /* NWG shimmer effect */
+            [data-currency="nwg"] .nw-currency-icon {
+                animation: nw-currency-glow 2s ease-in-out infinite;
+            }
+            
             /* Wallet display */
             .nw-wallet-display {
                 font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
@@ -371,36 +539,38 @@ const NW_CURRENCY = {
         return localStorage.getItem('numbahwan_lang') || 'en';
     },
 
-    /**
-     * Get currency info
-     */
     getInfo(type) {
+        if (type === 'diamond') type = 'nwg';
         const currency = this.types[type];
         if (!currency) return null;
         const lang = this._getLang();
         return {
             ...currency,
-            displayName: currency.name[lang] || currency.name.en
+            displayName: currency.name[lang] || currency.name.en,
+            displayDescription: currency.description[lang] || currency.description.en
         };
     },
 
-    /**
-     * Get all currency types
-     */
     getAll() {
-        return Object.keys(this.types);
+        return ['nwg', 'gold', 'wood']; // Only valid currencies
     },
 
-    /**
-     * Convert emoji to premium icon (migration helper)
-     */
+    // Migration helper - convert old currency references
+    migrateLegacy(text) {
+        return text
+            .replace(/diamond/gi, 'nwg')
+            .replace(/iron/gi, 'gold')  // Iron was removed, gold is closest
+            .replace(/stone/gi, 'gold'); // Stone was removed, gold is closest
+    },
+
     replaceEmoji(text) {
         const emojiMap = {
-            '💎': this.icon('diamond', { size: 16 }),
+            '💎': this.icon('nwg', { size: 16 }),
+            '◆': this.icon('nwg', { size: 16 }),
             '🪙': this.icon('gold', { size: 16 }),
-            '⚙️': this.icon('iron', { size: 16 }),
-            '🪨': this.icon('stone', { size: 16 }),
-            '🪵': this.icon('wood', { size: 16 })
+            '●': this.icon('gold', { size: 16 }),
+            '🪵': this.icon('wood', { size: 16 }),
+            '⧫': this.icon('wood', { size: 16 })
         };
         
         let result = text;
@@ -408,15 +578,6 @@ const NW_CURRENCY = {
             result = result.replace(new RegExp(emoji, 'g'), icon);
         }
         return result;
-    },
-
-    /**
-     * Initialize - inject styles and replace emojis on page
-     */
-    init() {
-        this.injectStyles();
-        console.log('%c[NW_CURRENCY] v1.0 loaded - Premium currency display system', 
-            'background: #1a1a2e; color: #00d4ff; font-size: 12px; padding: 4px 8px; border-radius: 4px;');
     }
 };
 

@@ -156,20 +156,18 @@ const NW_WALLET = {
             createdAt: now,
             lastActivity: now,
             
-            // Currencies - Balanced for addictive progression
-            // Diamond is PREMIUM - hard to get, valuable!
+            // Currencies - 3-Tier System (v2.0)
+            // NWG (premium) → Gold (earned) → Sacred Log (prestige)
             currencies: {
-                diamond: 50,   // Small taste - try 3-5 arcade games max
-                gold: 25,      // Reduced - must earn from arcade
-                iron: 10,      // Reduced - must exchange
-                stone: 5,      // Reduced - must exchange  
-                wood: 0        // Sacred Logs - MUST BE EARNED through the grind!
+                nwg: 50,       // Starting NWG - try a few pulls
+                gold: 100,     // Starting Gold - play some games
+                wood: 0        // Sacred Logs - MUST BE EARNED!
             },
             
             // Stats
             stats: {
-                totalEarned: { diamond: 50, gold: 25, iron: 10, stone: 5, wood: 0 },
-                totalSpent: { diamond: 0, gold: 0, iron: 0, stone: 0, wood: 0 },
+                totalEarned: { nwg: 50, gold: 100, wood: 0 },
+                totalSpent: { nwg: 0, gold: 0, wood: 0 },
                 gamesPlayed: 0,
                 gamesWon: 0,
                 pullsMade: 0,
@@ -481,18 +479,23 @@ const NW_WALLET = {
     getAllBalances() {
         if (!this.wallet) return {};
         
-        // GM mode: infinite resources
+        // GM mode: infinite resources (3-tier system)
         if (this.isGM) {
             return {
-                diamond: this.GM_INFINITE_AMOUNT,
+                nwg: this.GM_INFINITE_AMOUNT,
+                diamond: this.GM_INFINITE_AMOUNT,  // Legacy alias
                 gold: this.GM_INFINITE_AMOUNT,
-                iron: this.GM_INFINITE_AMOUNT,
-                stone: this.GM_INFINITE_AMOUNT,
                 wood: this.GM_INFINITE_AMOUNT
             };
         }
         
-        return { ...this.wallet.currencies };
+        // Return balances with backward compatibility
+        const balances = { ...this.wallet.currencies };
+        // Add legacy 'diamond' alias for 'nwg'
+        if (balances.nwg !== undefined) {
+            balances.diamond = balances.nwg;
+        }
+        return balances;
     },
     
     earn(currency, amount, source = 'UNKNOWN') {

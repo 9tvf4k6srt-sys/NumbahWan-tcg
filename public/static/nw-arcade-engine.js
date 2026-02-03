@@ -3,41 +3,36 @@
 // Uses NW_WALLET for secure, persistent storage
 // =====================================================
 
-// Currency metadata
+// Currency metadata - 3-Tier System v2.0
+// NWG (premium) → Gold (earned) → Sacred Log (prestige)
 const CURRENCY_DATA = {
-    diamond: { icon: '◆', name: 'Diamond', tier: 0, color: '#00d4ff', rarity: 'common' },
-    gold: { icon: '●', name: 'Gold', tier: 1, color: '#ffd700', rarity: 'uncommon' },
-    iron: { icon: '⬡', name: 'Iron', tier: 2, color: '#94a3b8', rarity: 'rare' },
-    stone: { icon: '▣', name: 'Black Jade', tier: 3, color: '#00ff88', rarity: 'epic' },
-    wood: { icon: '⧫', name: 'Sacred Log', tier: 4, color: '#c97f3d', rarity: 'mythic' }
+    nwg: { icon: '◆', name: 'NWG', tier: 1, color: '#00d4ff', rarity: 'premium' },
+    diamond: { icon: '◆', name: 'NWG', tier: 1, color: '#00d4ff', rarity: 'premium' }, // Legacy alias
+    gold: { icon: '●', name: 'Gold', tier: 2, color: '#ffd700', rarity: 'common' },
+    wood: { icon: '⧫', name: 'Sacred Log', tier: 0, color: '#00ff88', rarity: 'mythic' }
 };
 
 // ═══════════════════════════════════════════════════════════════
-// IMPROVED EXCHANGE RATES - "Almost There" Progression Design
-// Lower upgrade rates = faster progress = more dopamine hits
-// Sacred Log remains special with intentional bottleneck
+// 3-TIER EXCHANGE RATES v2.0
+// ONE-WAY conversions only (value flows DOWN, never UP)
+// $1 USD = 100 NWG | 1 NWG = 10 Gold | Sacred Log = EARNED ONLY
 // ═══════════════════════════════════════════════════════════════
 const EXCHANGE_RATES = {
-    // UPGRADE PATH (easier progression - feels achievable!)
-    'diamond->gold': 10,      // Was 100 - Now 10:1 feels quick
-    'gold->iron': 5,          // Was 50 - Now 5:1 smooth progress  
-    'iron->stone': 5,         // Was 25 - Now 5:1 consistent ladder
-    'stone->wood': 50,        // SACRED LOG BOTTLENECK - keeps it SPECIAL
+    // ONE-WAY CONVERSION (NWG → Gold only)
+    'nwg->gold': 10,          // 1 NWG = 10 Gold (matches economy)
+    'diamond->gold': 10,      // Legacy alias
     
-    // DOWNGRADE PATH (20% value loss - encourages forward progress)
-    'gold->diamond': 8,       // Get 8 per 1 (20% loss)
-    'iron->gold': 4,          // Get 4 per 1 (20% loss)
-    'stone->iron': 4,         // Get 4 per 1 (20% loss)
-    'wood->stone': 40         // Get 40 per 1 (20% loss) - DON'T WASTE LOGS!
+    // Sacred Log CANNOT be exchanged - must be EARNED!
+    // 'wood->*': NOT ALLOWED
+    // '*->wood': NOT ALLOWED
 };
 
 // "Almost There" milestone thresholds for engagement messages
 const MILESTONES = {
-    diamond: [100, 500, 1000, 5000],
-    gold: [50, 100, 500, 1000],
-    iron: [25, 50, 100, 500],
-    stone: [10, 25, 50, 100],  // Black Jade milestones
-    wood: [1, 5, 10, 25, 50]   // Sacred Log - every one is precious!
+    nwg: [100, 500, 1000, 5000],
+    diamond: [100, 500, 1000, 5000],  // Legacy alias
+    gold: [100, 500, 1000, 5000, 10000],
+    wood: [1, 3, 5, 10, 25]   // Sacred Log - every one is precious!
 };
 
 // Wait for wallet to be ready
@@ -112,20 +107,29 @@ function updateUI() {
     
     const balances = NW_WALLET.getAllBalances();
     
-    // Wallet bar
-    document.getElementById('diamonds').textContent = formatNum(balances.diamond || 0);
-    document.getElementById('gold').textContent = formatNum(balances.gold || 0);
-    document.getElementById('iron').textContent = formatNum(balances.iron || 0);
-    document.getElementById('stone').textContent = formatNum(balances.stone || 0);
-    document.getElementById('wood').textContent = formatNum(balances.wood || 0);
-    document.getElementById('log-balance').textContent = formatNum(balances.wood || 0);
+    // Wallet bar - 3-Tier System (NWG, Gold, Sacred Log)
+    const nwgDisplay = document.getElementById('diamonds') || document.getElementById('nwg');
+    if (nwgDisplay) nwgDisplay.textContent = formatNum(balances.nwg || balances.diamond || 0);
     
-    // Exchange section
-    document.getElementById('ex-diamond').textContent = formatNum(balances.diamond || 0);
-    document.getElementById('ex-gold').textContent = formatNum(balances.gold || 0);
-    document.getElementById('ex-iron').textContent = formatNum(balances.iron || 0);
-    document.getElementById('ex-stone').textContent = formatNum(balances.stone || 0);
-    document.getElementById('ex-wood').textContent = formatNum(balances.wood || 0);
+    const goldDisplay = document.getElementById('gold');
+    if (goldDisplay) goldDisplay.textContent = formatNum(balances.gold || 0);
+    
+    const woodDisplay = document.getElementById('wood') || document.getElementById('log-balance');
+    if (woodDisplay) woodDisplay.textContent = formatNum(balances.wood || 0);
+    
+    // Legacy displays (for backward compatibility)
+    const logBalance = document.getElementById('log-balance');
+    if (logBalance) logBalance.textContent = formatNum(balances.wood || 0);
+    
+    // Exchange section (3-tier only)
+    const exNwg = document.getElementById('ex-diamond') || document.getElementById('ex-nwg');
+    if (exNwg) exNwg.textContent = formatNum(balances.nwg || balances.diamond || 0);
+    
+    const exGold = document.getElementById('ex-gold');
+    if (exGold) exGold.textContent = formatNum(balances.gold || 0);
+    
+    const exWood = document.getElementById('ex-wood');
+    if (exWood) exWood.textContent = formatNum(balances.wood || 0);
     
     // Update progression bar
     updateProgression();
