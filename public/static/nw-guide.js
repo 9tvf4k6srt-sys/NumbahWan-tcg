@@ -868,7 +868,10 @@
             if (e.key === 'numbahwan_lang' && e.newValue !== currentLang) {
                 currentLang = e.newValue || 'en';
                 const chatEl = document.getElementById('nw-guide-chat');
-                if (chatEl) updateChatHTML(chatEl);
+                if (chatEl) {
+                    updateChatHTML(chatEl);
+                    bindInputEvents(); // Re-bind after HTML update
+                }
             }
         });
 
@@ -899,11 +902,12 @@
             const chat = document.getElementById('nw-guide-chat');
             if (chat) {
                 updateChatHTML(chat);
+                bindInputEvents(); // Re-bind after HTML update
             }
             console.log('[NW_GUIDE] Language updated to:', newLang);
         }
     });
 
-    console.log('%c[NW_GUIDE] v3.1 - Fixed badge display & language sync!', 
+    console.log('%c[NW_GUIDE] v3.2 - Fixed input binding after language change!', 
         'background: #1a1a2e; color: #ff6b00; font-size: 12px; padding: 4px 8px; border-radius: 4px;');
 })();
