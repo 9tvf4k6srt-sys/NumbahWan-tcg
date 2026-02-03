@@ -1324,25 +1324,68 @@
             }
         }
         
-        // Language handling
+        // Language handling - iOS Safari compatible
         function setLanguage(lang) {
-            document.body.className = lang;
+            console.log('[NWG Markets] Setting language to:', lang);
+            
+            // Remove all language classes first
+            document.body.classList.remove('en', 'zh', 'th');
+            // Add the selected language class
+            document.body.classList.add(lang);
+            
+            // Update button states
             document.querySelectorAll('.lang-btn').forEach(btn => {
                 btn.classList.toggle('active', btn.dataset.lang === lang);
             });
-            localStorage.setItem('numbahwan_lang', lang);
+            
+            // Persist to localStorage
+            try {
+                localStorage.setItem('numbahwan_lang', lang);
+                console.log('[NWG Markets] Language saved to localStorage:', lang);
+            } catch (e) {
+                console.warn('[NWG Markets] localStorage not available:', e);
+            }
+            
+            // Dispatch event for other components
+            window.dispatchEvent(new CustomEvent('nw-language-change', { detail: { lang } }));
         }
         
         function bindLanguageButtons() {
+            console.log('[NWG Markets] Binding language buttons...');
+            
             document.querySelectorAll('.lang-btn').forEach(btn => {
-                const handler = (e) => {
+                // Remove any existing listeners by cloning
+                const newBtn = btn.cloneNode(true);
+                btn.parentNode.replaceChild(newBtn, btn);
+                
+                // Use a flag to prevent double-firing on iOS
+                let isTouching = false;
+                
+                newBtn.addEventListener('touchstart', (e) => {
+                    isTouching = true;
+                    console.log('[NWG Markets] Touch start on:', newBtn.dataset.lang);
+                }, { passive: true });
+                
+                newBtn.addEventListener('touchend', (e) => {
                     e.preventDefault();
-                    e.stopPropagation();
-                    setLanguage(btn.dataset.lang);
-                };
-                btn.addEventListener('click', handler);
-                btn.addEventListener('touchend', handler);
+                    if (isTouching) {
+                        console.log('[NWG Markets] Touch end - changing language to:', newBtn.dataset.lang);
+                        setLanguage(newBtn.dataset.lang);
+                        isTouching = false;
+                    }
+                }, { passive: false });
+                
+                newBtn.addEventListener('click', (e) => {
+                    // Only handle click if not from touch (desktop)
+                    if (!isTouching) {
+                        console.log('[NWG Markets] Click - changing language to:', newBtn.dataset.lang);
+                        setLanguage(newBtn.dataset.lang);
+                    }
+                    isTouching = false;
+                });
             });
+            
+            console.log('[NWG Markets] Language buttons bound successfully');
         }
         
         // Timeframe buttons
@@ -1358,8 +1401,21 @@
         
         // Initialize
         document.addEventListener('DOMContentLoaded', async () => {
+            console.log('[NWG Markets] Page loaded, initializing...');
+            
+            // Bind language buttons first
             bindLanguageButtons();
-            const savedLang = localStorage.getItem('numbahwan_lang') || 'en';
+            
+            // Get saved language with fallback
+            let savedLang = 'en';
+            try {
+                savedLang = localStorage.getItem('numbahwan_lang') || 'en';
+                console.log('[NWG Markets] Loaded saved language:', savedLang);
+            } catch (e) {
+                console.warn('[NWG Markets] Could not read localStorage:', e);
+            }
+            
+            // Set initial language
             setLanguage(savedLang);
             
             initChart();
