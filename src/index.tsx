@@ -154,7 +154,9 @@ app.get('/api/debug', (c) => {
         fearGreed: '/api/game/fear-greed',
         whaleTracker: '/api/game/whale-tracker',
         aiAnalyst: '/api/game/ai-analyst',
-        portfolioCard: 'POST /api/game/portfolio-card'
+        aiChat: 'POST /api/game/ai-chat',
+        portfolioCard: 'POST /api/game/portfolio-card',
+        dashboard: '/api/game/dashboard'
       },
       
       cards: {
