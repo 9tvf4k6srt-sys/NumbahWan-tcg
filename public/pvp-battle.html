@@ -668,9 +668,12 @@
         const basePath = '/static/images/cards/';
         const img = card.img || card.image || '';
         if (img) {
-            return basePath + img.replace(/\.(png|jpg|jpeg)$/i, '.webp');
+            const webpImg = img.replace(/\.(png|jpg|jpeg)$/i, '.webp');
+            // Add cache buster to force reload
+            const fullPath = basePath + webpImg + '?v=3';
+            return fullPath;
         }
-        return basePath + 'common-daily-login.webp';
+        return basePath + 'common-daily-login.webp?v=3';
     }
     
     // ═══════════════════════════════════════════════════════════════════════════
@@ -688,8 +691,9 @@
             <div class="card-img-container">
                 <div class="card-placeholder">🎴</div>
                 <img class="card-img" src="${imgPath}" alt="${card.name}"
-                     onload="this.previousElementSibling.style.display='none'"
-                     onerror="this.style.display='none'">
+                     onload="this.previousElementSibling.style.display='none'; this.style.opacity='1';"
+                     onerror="console.error('[IMG FAIL]', this.src); this.style.display='none';"
+                     style="opacity: 0; transition: opacity 0.3s;">
             </div>
             <div class="card-info">
                 <div class="card-name">${card.name}</div>

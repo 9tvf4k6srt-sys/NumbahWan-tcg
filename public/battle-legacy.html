@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>NumbahWan TCG | BATTLE ARENA</title>
+    <link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/battle.css">
+    <script src="/static/nw-essentials.js"></script>
+    <script src="/static/nw-components.js"></script>
+    <script src="/static/nw-wallet.js"></script>
+    <script src="/static/nw-cards.js"></script>
+    <script src="/static/nw-card-renderer.js"></script>
+    <script src="/static/nw-game-juice.js"></script>
+    <script src="/static/nw-3d-engine.js"></script>
+    <script src="/static/helpers/nw-battle.js"></script>
+    <script src="/static/nw-premium-fx.js"></script>
+    <script src="/static/nw-nav.js"></script>
+    <script src="/static/nw-sounds.js" defer></script>
+    <script src="/static/nw-guide.js" defer></script>
+</head>
+<body data-page-id="battle">
+    <!-- ROTATE DEVICE PROMPT - Hidden, game works in both orientations -->
+    <div class="rotate-prompt" id="rotatePrompt" style="display:none !important;"></div>
+    
+    <!-- EPIC START SCREEN -->
+    <div class="start-overlay" id="startOverlay">
+        <div class="start-bg-effects">
+            <div class="start-rays"></div>
+            <div class="start-particles" id="startParticles"></div>
+        </div>
+        
+        <div class="start-vs-container">
+            <div class="start-guild player">
+                <div class="guild-avatar">🔥</div>
+                <div class="guild-info">
+                    <div class="guild-name">YOUR GUILD</div>
+                    <div class="guild-subtitle">Ready for Battle</div>
+                </div>
+            </div>
+            
+            <div class="start-vs">VS</div>
+            
+            <div class="start-guild enemy">
+                <div class="guild-avatar">🤖</div>
+                <div class="guild-info">
+                    <div class="guild-name">AI OPPONENT</div>
+                    <div class="guild-subtitle">Level 1 Bot</div>
+                </div>
+            </div>
+        </div>
+        
+        <button class="start-btn" id="startBtn">⚔️ START BATTLE</button>
+        
+        <div class="start-countdown" id="startCountdown">3</div>
+        <div class="fight-text" id="fightText">FIGHT!</div>
+    </div>
+
+    <div class="arena-container" id="arenaContainer">
+        <!-- Background particles -->
+        <div class="arena-particles" id="arenaParticles"></div>
+        
+        <!-- Top Bar -->
+        <div class="top-bar">
+            <a href="/" class="logo">🔥 NumbahWan TCG</a>
+            <a href="/cards" class="back-btn">← Back to Cards</a>
+        </div>
+        
+        <!-- HP Section -->
+        <div class="hp-section">
+            <div class="hp-container player">
+                <div class="hp-header">
+                    <span class="hp-name player">YOUR GUILD</span>
+                    <span class="hp-value" id="playerHpValue">30</span>
+                </div>
+                <div class="hp-bar" id="playerHpBar">
+                    <div class="hp-fill" id="playerHpFill" style="width: 100%"></div>
+                </div>
+            </div>
+            
+            <div class="vs-divider">VS</div>
+            
+            <div class="hp-container enemy">
+                <div class="hp-header">
+                    <span class="hp-name enemy">AI GUILD</span>
+                    <span class="hp-value" id="enemyHpValue">30</span>
+                </div>
+                <div class="hp-bar" id="enemyHpBar">
+                    <div class="hp-fill" id="enemyHpFill" style="width: 100%"></div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Energy Bar -->
+        <div class="energy-bar">
+            <span class="energy-label">ENERGY</span>
+            <div class="energy-crystals" id="energyCrystals"></div>
+            <div class="turn-indicator your-turn" id="turnIndicator">YOUR TURN</div>
+        </div>
+        
+        <!-- Battle Board -->
+        <div class="battle-board">
+            <!-- Enemy Board -->
+            <div class="board-row enemy" id="enemyBoard">
+                <div class="board-slot enemy" data-slot="0"></div>
+                <div class="board-slot enemy" data-slot="1"></div>
+                <div class="board-slot enemy" data-slot="2"></div>
+                <div class="board-slot enemy" data-slot="3"></div>
+                <div class="board-slot enemy" data-slot="4"></div>
+            </div>
+            
+            <div class="board-divider"></div>
+            
+            <!-- Player Board -->
+            <div class="board-row player" id="playerBoard">
+                <div class="board-slot player" data-slot="0"></div>
+                <div class="board-slot player" data-slot="1"></div>
+                <div class="board-slot player" data-slot="2"></div>
+                <div class="board-slot player" data-slot="3"></div>
+                <div class="board-slot player" data-slot="4"></div>
+            </div>
+        </div>
+        
+        <!-- Hand Section -->
+        <div class="hand-section">
+            <div class="hand-header">
+                <span class="hand-label">YOUR HAND</span>
+                <span class="hand-count" id="handCount">0/7</span>
+            </div>
+            <div class="hand-cards" id="playerHand"></div>
+        </div>
+        
+        <!-- Action Bar -->
+        <div class="action-bar">
+            <button class="action-btn attack" id="attackBtn" disabled>⚔️ ATTACK</button>
+            <button class="action-btn end-turn" id="endTurnBtn">END TURN →</button>
+        </div>
+    </div>
+    
+    <!-- Battle Log -->
+    <div class="battle-log" id="battleLog"></div>
+    
+    <!-- Screen Flash -->
+    <div class="screen-flash" id="screenFlash"></div>
+    
+    <!-- Card Tooltip (desktop only) -->
+    <div class="card-tooltip" id="cardTooltip">
+        <div class="tooltip-name" id="tooltipName">Card Name</div>
+        <div class="tooltip-rarity" id="tooltipRarity">LEGENDARY</div>
+        <div class="tooltip-stats">
+            <span class="tooltip-stat" style="color: var(--red)">⚔️ <span id="tooltipAtk">5</span></span>
+            <span class="tooltip-stat" style="color: var(--green)">❤️ <span id="tooltipHp">5</span></span>
+            <span class="tooltip-stat" style="color: var(--cyan)">◆ <span id="tooltipCost">3</span></span>
+        </div>
+        <div class="tooltip-abilities" id="tooltipAbilities"></div>
+    </div>
+    
+    <!-- Mobile Card Detail Modal -->
+    <div class="card-detail-modal" id="cardDetailModal">
+        <div class="card-detail-content">
+            <button class="card-detail-close" id="cardDetailClose">✕</button>
+            
+            <!-- Compact header (shown in slot selection mode) -->
+            <div class="compact-header">
+                <div class="card-detail-image" id="cardDetailImageCompact">
+                    <img id="cardDetailImgCompact" src="" alt="">
+                </div>
+                <div class="compact-info">
+                    <div class="card-name" id="cardDetailNameCompact">Card Name</div>
+                    <div class="card-stats">⚔️ <span id="compactAtk">5</span> | ❤️ <span id="compactHp">5</span> | ◆ <span id="compactCost">3</span></div>
+                </div>
+            </div>
+            
+            <!-- Full card view (hidden in compact mode) -->
+            <div class="card-detail-image" id="cardDetailImage">
+                <img id="cardDetailImg" src="" alt="">
+            </div>
+            
+            <div class="card-detail-name" id="cardDetailName">Card Name</div>
+            <div class="card-detail-rarity" id="cardDetailRarity">LEGENDARY</div>
+            
+            <div class="card-detail-stats">
+                <div class="card-detail-stat">
+                    <span class="card-detail-stat-icon">⚔️</span>
+                    <span class="card-detail-stat-value atk" id="cardDetailAtk">5</span>
+                    <span class="card-detail-stat-label">Attack</span>
+                </div>
+                <div class="card-detail-stat">
+                    <span class="card-detail-stat-icon">❤️</span>
+                    <span class="card-detail-stat-value hp" id="cardDetailHp">5</span>
+                    <span class="card-detail-stat-label">Health</span>
+                </div>
+                <div class="card-detail-stat">
+                    <span class="card-detail-stat-icon">◆</span>
+                    <span class="card-detail-stat-value cost" id="cardDetailCost">3</span>
+                    <span class="card-detail-stat-label">Cost</span>
+                </div>
+            </div>
+            
+            <div class="card-detail-abilities" id="cardDetailAbilities"></div>
+            
+            <!-- Initial actions -->
+            <div class="card-detail-actions" id="cardDetailActions">
+                <button class="card-detail-action-btn select" id="cardDetailSelect">SELECT CARD</button>
+                <button class="card-detail-action-btn cancel" id="cardDetailCancel">CLOSE</button>
+            </div>
+            
+            <!-- Slot selection (shown after SELECT) -->
+            <div class="card-detail-slots" id="cardDetailSlots" style="display: none;">
+                <div class="slot-selection-label">TAP A SLOT TO PLAY:</div>
+                <div class="slot-buttons" id="slotButtons"></div>
+                <button class="card-detail-action-btn cancel" id="cardDetailBack">← BACK</button>
+            </div>
+            
+            <div class="card-detail-hint" id="cardDetailHint">Tap outside or close button to dismiss</div>
+        </div>
+    </div>
+    
+    <!-- Game Over Overlay -->
+    <div class="game-over-overlay" id="gameOverOverlay">
+        <div class="game-over-text" id="gameOverText">VICTORY</div>
+        <div class="game-over-stats" id="gameOverStats"></div>
+        <button class="game-over-btn" onclick="location.reload()">PLAY AGAIN</button>
+    </div>
+
+    <script src="/static/nw-battle-engine.js"></script>
+</body>
+</html>
