@@ -483,9 +483,15 @@
                 font-size: 14px;
                 cursor: pointer;
                 transition: all 0.2s;
+                touch-action: manipulation;
+                -webkit-tap-highlight-color: transparent;
+                user-select: none;
+                min-width: 44px;
+                min-height: 44px;
             }
-            .nw-guide-send:hover {
+            .nw-guide-send:hover, .nw-guide-send:active {
                 transform: scale(1.05);
+                background: linear-gradient(135deg, #ff8533, #ffaa33);
             }
 
             @media (max-width: 480px) {
@@ -793,23 +799,64 @@
         const sendBtn = document.getElementById('nw-guide-send');
         const input = document.getElementById('nw-guide-input');
         
-        if (sendBtn) {
-            sendBtn.onclick = () => {
-                if (input?.value.trim()) {
-                    processInput(input.value);
-                    input.value = '';
-                }
-            };
+        if (!sendBtn || !input) {
+            console.warn('[NW_GUIDE] Could not find send button or input');
+            return;
         }
         
-        if (input) {
-            input.onkeypress = (e) => {
-                if (e.key === 'Enter' && input.value.trim()) {
-                    processInput(input.value);
-                    input.value = '';
-                }
-            };
+        // Remove old listeners by cloning
+        const newSendBtn = sendBtn.cloneNode(true);
+        sendBtn.parentNode.replaceChild(newSendBtn, sendBtn);
+        
+        const newInput = input.cloneNode(true);
+        input.parentNode.replaceChild(newInput, input);
+        
+        // Send function
+        function sendMessage() {
+            const inputEl = document.getElementById('nw-guide-input');
+            const msg = inputEl?.value?.trim();
+            if (msg) {
+                console.log('[NW_GUIDE] Sending:', msg);
+                processInput(msg);
+                inputEl.value = '';
+            }
         }
+        
+        // Bind to fresh elements
+        const freshBtn = document.getElementById('nw-guide-send');
+        const freshInput = document.getElementById('nw-guide-input');
+        
+        if (freshBtn) {
+            // Use both click and touchend for mobile compatibility
+            freshBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                sendMessage();
+            });
+            freshBtn.addEventListener('touchend', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                sendMessage();
+            });
+        }
+        
+        if (freshInput) {
+            freshInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    sendMessage();
+                }
+            });
+            // Also handle keydown for mobile keyboards
+            freshInput.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter' || e.keyCode === 13) {
+                    e.preventDefault();
+                    sendMessage();
+                }
+            });
+        }
+        
+        console.log('[NW_GUIDE] Events bound successfully');
     }
 
     // ==================== INITIALIZATION ====================
@@ -908,6 +955,6 @@
         }
     });
 
-    console.log('%c[NW_GUIDE] v3.2 - Fixed input binding after language change!', 
+    console.log('%c[NW_GUIDE] v3.3 - Fixed mobile touch events for send button!', 
         'background: #1a1a2e; color: #ff6b00; font-size: 12px; padding: 4px 8px; border-radius: 4px;');
 })();
