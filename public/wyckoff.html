@@ -37,56 +37,8 @@
         
         .font-cinzel { font-family: 'Cinzel', serif; }
         
-        /* Header */
-        .page-header {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            z-index: 100;
-            background: rgba(10,10,15,0.95);
-            backdrop-filter: blur(10px);
-            border-bottom: 1px solid rgba(255,215,0,0.2);
-            padding: 1rem 2rem;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        
-        .logo {
-            font-family: 'Cinzel', serif;
-            font-size: 1.25rem;
-            font-weight: 700;
-            color: var(--gold);
-            text-decoration: none;
-        }
-        
-        .lang-switcher {
-            display: flex;
-            gap: 0.5rem;
-        }
-        
-        .lang-btn {
-            padding: 0.5rem 1rem;
-            border-radius: 8px;
-            border: 1px solid rgba(255,255,255,0.2);
-            background: transparent;
-            color: rgba(255,255,255,0.7);
-            font-size: 0.85rem;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-        
-        .lang-btn.active {
-            background: var(--gold);
-            color: #000;
-            border-color: var(--gold);
-        }
-        
-        .lang-btn:hover:not(.active) {
-            border-color: var(--gold);
-            color: var(--gold);
-        }
+        /* Header - using unified nw-nav */
+        /* No custom header needed - nw-nav.js handles it */
         
         /* Main Content */
         main {
@@ -472,16 +424,8 @@
         }
     </style>
 </head>
-<body data-lang="en">
-    <!-- Header -->
-    <header class="page-header">
-        <a href="/" class="logo">NWG</a>
-        <div class="lang-switcher">
-            <button class="lang-btn active" data-lang="en">EN</button>
-            <button class="lang-btn" data-lang="zh">繁中</button>
-            <button class="lang-btn" data-lang="th">ไทย</button>
-        </div>
-    </header>
+<body data-page-id="wyckoff">
+    <!-- Navigation handled by nw-nav.js -->
     
     <main>
         <!-- Hero -->
@@ -1166,20 +1110,17 @@
             });
         });
         
-        // Language switching
-        const langBtns = document.querySelectorAll('.lang-btn');
-        
-        langBtns.forEach(btn => {
-            btn.addEventListener('click', () => {
-                const lang = btn.dataset.lang;
-                
-                langBtns.forEach(b => b.classList.remove('active'));
-                btn.classList.add('active');
-                
-                document.body.dataset.lang = lang;
-                applyTranslations(lang);
-            });
+        // Listen to unified language change from nw-nav
+        window.addEventListener('nw-lang-change', (e) => {
+            const lang = e.detail?.lang || 'en';
+            document.body.dataset.lang = lang;
+            applyTranslations(lang);
         });
+        
+        // Apply initial language from localStorage
+        const storedLang = localStorage.getItem('lang') || localStorage.getItem('nw_lang') || 'en';
+        document.body.dataset.lang = storedLang;
+        applyTranslations(storedLang);
         
         function applyTranslations(lang) {
             const t = translations[lang] || translations.en;
