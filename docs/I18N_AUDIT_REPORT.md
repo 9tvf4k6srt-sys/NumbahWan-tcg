@@ -1,0 +1,182 @@
+# NWG i18n Audit Report
+Generated: 2026-02-03T11:50:17.291Z
+
+## Summary
+- Total pages: 56
+- With i18n: 0 (0%)
+- Without i18n: 28
+- Partial i18n: 28
+
+## Pages WITHOUT i18n
+- [ ] ai-lounge.html
+  - Hardcoded strings found: 🤖 AI Lounge, 🎮 Ready to Explore?, 🏛️ Exchange, 🖼️ Museum, 🔐 Vault
+- [ ] arcade.html
+  - Hardcoded strings found: 🔥 MYTHIC FORGE, 💱 CURRENCY EXCHANGE, 🎮 PREMIUM GAMES, GOLDEN REELS, FORTUNE SCRATCHER
+- [ ] battle.html
+  - Hardcoded strings found: Easy 1.3x, Med 2x, Hard 3.5x, Boss 8x, SELECT 3+ CARDS TO BATTLE
+- [ ] business.html
+  - Hardcoded strings found: ไทย
+- [ ] buy.html
+  - Hardcoded strings found: ไทย, Terms of Service, Privacy Policy, 服務條款, 隱私政策
+- [ ] card-bridge.html
+  - Hardcoded strings found: 🔥 NumbahWan, ⚔️ Battle, 📦 Cards, 📊 Markets
+- [ ] cards.html
+  - Hardcoded strings found: Card, ALL, MYTHIC, LEGENDARY, EPIC
+- [ ] citizenship.html
+  - Hardcoded strings found: ไทย, CLOSE, e.g., RegginA or NW-C001-...
+- [ ] court.html
+  - Hardcoded strings found: JUSTICE-9000, ไทย, Accept Ruling, File Appeal, Your character name
+- [ ] crafts.html
+  - Hardcoded strings found: ไทย
+- [ ] exchange.html
+  - Hardcoded strings found: 15M, ALL, BUY, SELL, MAX
+- [ ] forge.html
+  - Hardcoded strings found: TAP TO CONTINUE, CLAIM BLESSING, MYTHIC FORGE, 🏪 Market, 💳 Wallet
+- [ ] fortune.html
+  - Hardcoded strings found: ✦ Daily Tarot ✦, Your Three-Card Spread, Past 14 Days, ✦ Draw Your Cards ✦, 📋 Copy Reading
+- [ ] intelligence.html
+  - Hardcoded strings found: ไทย, Activity Level: ${level}, ${i}:00 - ${Math.round(v * 100)}% activity
+- [ ] invest.html
+  - Hardcoded strings found: ไทย
+- [ ] jobs.html
+  - Hardcoded strings found: ไทย
+- [ ] market.html
+  - Hardcoded strings found: 🏪 FREE MARKET, All, Mythic, Legendary, Epic
+- [ ] markets.html
+  - Hardcoded strings found: ไทย, 24H
+- [ ] memes.html
+  - Hardcoded strings found: 🔥 All, 👥 Guild, ⚔️ Raids, 👑 RegginA, 🎪 Random
+- [ ] pvp-battle.html
+  - Hardcoded strings found: SELECT 3+ CARDS, CANCEL, PLAY AGAIN, 🤖 vs AI, 🃏 Cards
+- [ ] realestate.html
+  - Hardcoded strings found: ไทย
+- [ ] regina.html
+  - Hardcoded strings found: REGINA, Captain RegginA, ไทย, NumbahWan Guild, NumbahWan公會
+- [ ] restaurants.html
+  - Hardcoded strings found: ไทย, Search dishes or restaurants...
+- [ ] supermarket.html
+  - Hardcoded strings found: ไทย, Search products...
+- [ ] tcg.html
+  - Hardcoded strings found: Rise of RegginA, ◆ VIP Tiers, 📊 Collection Progress, 🔥 Live Pulls, 🔄 Trading Board
+- [ ] tournament.html
+  - Hardcoded strings found: World Championship, The Emotion of Battle, Tournament Memories, Gear Up Like a Pro, Season 1 & 2: SOLD OUT
+- [ ] treasury.html
+  - Hardcoded strings found: ไทย, ALL
+- [ ] wallet.html
+  - Hardcoded strings found: 💰 Wallet, 🎁 Claim Today's Reward!, Activate, Deactivate GM Mode, 📤 Generate Transfer Code
+
+## Pages with PARTIAL i18n
+- [ ] about.html
+  - Has script: ✗
+  - Has data-i18n: ✓
+  - Has initI18n: ✗
+- [ ] academy.html
+  - Has script: ✗
+  - Has data-i18n: ✓
+  - Has initI18n: ✗
+- [ ] apply.html
+  - Has script: ✗
+  - Has data-i18n: ✓
+  - Has initI18n: ✗
+- [ ] basement.html
+  - Has script: ✗
+  - Has data-i18n: ✓
+  - Has initI18n: ✗
+- [ ] breakroom.html
+  - Has script: ✗
+  - Has data-i18n: ✓
+  - Has initI18n: ✗
+- [ ] cafeteria.html
+  - Has script: ✗
+  - Has data-i18n: ✓
+  - Has initI18n: ✗
+- [ ] collection.html
+  - Has script: ✗
+  - Has data-i18n: ✓
+  - Has initI18n: ✗
+- [ ] conspiracy.html
+  - Has script: ✗
+  - Has data-i18n: ✓
+  - Has initI18n: ✗
+- [ ] deckbuilder.html
+  - Has script: ✗
+  - Has data-i18n: ✓
+  - Has initI18n: ✗
+- [ ] fashion.html
+  - Has script: ✗
+  - Has data-i18n: ✓
+  - Has initI18n: ✗
+- [ ] guide.html
+  - Has script: ✗
+  - Has data-i18n: ✓
+  - Has initI18n: ✗
+- [ ] historical-society.html
+  - Has script: ✗
+  - Has data-i18n: ✓
+  - Has initI18n: ✗
+- [ ] hr.html
+  - Has script: ✗
+  - Has data-i18n: ✓
+  - Has initI18n: ✗
+- [ ] index.html
+  - Has script: ✓
+  - Has data-i18n: ✓
+  - Has initI18n: ✗
+- [ ] lost-found.html
+  - Has script: ✗
+  - Has data-i18n: ✓
+  - Has initI18n: ✗
+- [ ] maintenance.html
+  - Has script: ✗
+  - Has data-i18n: ✓
+  - Has initI18n: ✗
+- [ ] merch.html
+  - Has script: ✗
+  - Has data-i18n: ✓
+  - Has initI18n: ✗
+- [ ] museum.html
+  - Has script: ✗
+  - Has data-i18n: ✓
+  - Has initI18n: ✗
+- [ ] my-business.html
+  - Has script: ✗
+  - Has data-i18n: ✓
+  - Has initI18n: ✗
+- [ ] parking.html
+  - Has script: ✗
+  - Has data-i18n: ✓
+  - Has initI18n: ✗
+- [ ] pvp.html
+  - Has script: ✗
+  - Has data-i18n: ✓
+  - Has initI18n: ✗
+- [ ] research.html
+  - Has script: ✗
+  - Has data-i18n: ✓
+  - Has initI18n: ✗
+- [ ] restaurant.html
+  - Has script: ✗
+  - Has data-i18n: ✓
+  - Has initI18n: ✗
+- [ ] services.html
+  - Has script: ✗
+  - Has data-i18n: ✓
+  - Has initI18n: ✗
+- [ ] therapy.html
+  - Has script: ✗
+  - Has data-i18n: ✓
+  - Has initI18n: ✗
+- [ ] updates.html
+  - Has script: ✗
+  - Has data-i18n: ✓
+  - Has initI18n: ✗
+- [ ] vault.html
+  - Has script: ✗
+  - Has data-i18n: ✓
+  - Has initI18n: ✗
+- [ ] zakum.html
+  - Has script: ✗
+  - Has data-i18n: ✓
+  - Has initI18n: ✗
+
+## Pages with FULL i18n
