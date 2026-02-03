@@ -1047,6 +1047,7 @@
         </footer>
     </div>
     
+    <script src="/static/nw-logger.js"></script>
     <script src="/static/nw-nav.js"></script>
     <script>
         // =====================================================
@@ -1074,8 +1075,10 @@
         // Fetch live market prices from our API
         async function fetchLiveMarketPrices() {
             try {
+                NW_LOGGER.perf.start('API Fetch');
                 const response = await fetch('/api/market-prices');
                 const data = await response.json();
+                NW_LOGGER.perf.end('API Fetch');
                 
                 if (data.success && data.assets) {
                     // Update all asset prices from API
@@ -1093,12 +1096,16 @@
                     dataSources = data.sources || {};
                     updateSourceIndicator();
                     
-                    console.log(`[NWG Markets] API data loaded - ${data.realSourceCount}/5 real sources:`, data.sources);
+                    NW_LOGGER.api('/api/market-prices', 'success', {
+                        live: `${data.realSourceCount}/5`,
+                        btc: data.assets.btc.price,
+                        market: data.marketStatus
+                    });
                     
                     return true;
                 }
             } catch (e) {
-                console.log('[NWG Markets] API unavailable, using simulated prices');
+                NW_LOGGER.api('/api/market-prices', 'error', e.message);
             }
             return false;
         }
@@ -1350,7 +1357,7 @@
         
         // Language handling - iOS Safari compatible
         function setLanguage(lang) {
-            console.log('[NWG Markets] Setting language to:', lang);
+            NW_LOGGER.debug('Setting language', lang);
             
             // Remove all language classes first
             document.body.classList.remove('en', 'zh', 'th');
@@ -1365,17 +1372,19 @@
             // Persist to localStorage
             try {
                 localStorage.setItem('numbahwan_lang', lang);
-                console.log('[NWG Markets] Language saved to localStorage:', lang);
             } catch (e) {
-                console.warn('[NWG Markets] localStorage not available:', e);
+                NW_LOGGER.warn('localStorage not available', e);
             }
             
             // Dispatch event for other components
             window.dispatchEvent(new CustomEvent('nw-language-change', { detail: { lang } }));
+            
+            // Track language change event
+            NW_LOGGER.event('Settings', 'Language', lang);
         }
         
         function bindLanguageButtons() {
-            console.log('[NWG Markets] Binding language buttons...');
+            NW_LOGGER.debug('Binding language buttons');
             
             document.querySelectorAll('.lang-btn').forEach(btn => {
                 // Remove any existing listeners by cloning
@@ -1387,13 +1396,11 @@
                 
                 newBtn.addEventListener('touchstart', (e) => {
                     isTouching = true;
-                    console.log('[NWG Markets] Touch start on:', newBtn.dataset.lang);
                 }, { passive: true });
                 
                 newBtn.addEventListener('touchend', (e) => {
                     e.preventDefault();
                     if (isTouching) {
-                        console.log('[NWG Markets] Touch end - changing language to:', newBtn.dataset.lang);
                         setLanguage(newBtn.dataset.lang);
                         isTouching = false;
                     }
@@ -1402,14 +1409,13 @@
                 newBtn.addEventListener('click', (e) => {
                     // Only handle click if not from touch (desktop)
                     if (!isTouching) {
-                        console.log('[NWG Markets] Click - changing language to:', newBtn.dataset.lang);
                         setLanguage(newBtn.dataset.lang);
                     }
                     isTouching = false;
                 });
             });
             
-            console.log('[NWG Markets] Language buttons bound successfully');
+            NW_LOGGER.debug('Language buttons ready');
         }
         
         // Timeframe buttons
@@ -1425,7 +1431,7 @@
         
         // Initialize
         document.addEventListener('DOMContentLoaded', async () => {
-            console.log('[NWG Markets] Page loaded, initializing...');
+            NW_LOGGER.perf.start('Page Init');
             
             // Bind language buttons first
             bindLanguageButtons();
@@ -1434,9 +1440,8 @@
             let savedLang = 'en';
             try {
                 savedLang = localStorage.getItem('numbahwan_lang') || 'en';
-                console.log('[NWG Markets] Loaded saved language:', savedLang);
             } catch (e) {
-                console.warn('[NWG Markets] Could not read localStorage:', e);
+                NW_LOGGER.warn('localStorage read failed', e);
             }
             
             // Set initial language
@@ -1446,29 +1451,33 @@
             
             // Initial UI update
             updateUI();
-            console.log('[NWG Markets] Initial UI rendered');
+            NW_LOGGER.perf.end('Page Init');
+            NW_LOGGER.success('Markets page ready');
             
             // Try to fetch real prices from our API
             fetchLiveMarketPrices().then(success => {
                 if (success) {
-                    console.log('[NWG Markets] Live API data loaded');
                     updateUI();
                 }
             });
             
             // LIVE TICKER - Always simulate small movements every 2 seconds for visual feedback
+            let tickCount = 0;
             setInterval(() => {
                 simulateMarket();
                 updateUI();
                 addToHistory();
-                console.log('[NWG Markets] Tick - price updated');
+                tickCount++;
+                // Only log every 30 ticks (1 minute) to reduce noise
+                if (tickCount % 30 === 0) {
+                    NW_LOGGER.debug(`Ticker running (${tickCount} ticks)`);
+                }
             }, 2000);
             
             // Fetch real prices from API every 30 seconds (merges with simulation)
             setInterval(async () => {
                 const success = await fetchLiveMarketPrices();
                 if (success) {
-                    console.log('[NWG Markets] API prices refreshed');
                     updateUI();
                 }
             }, 30000);
@@ -1481,11 +1490,11 @@
                     if (btcData.bitcoin) {
                         assetData.btc.price = btcData.bitcoin.usd;
                         assetData.btc.change = btcData.bitcoin.usd_24h_change || assetData.btc.change;
-                        console.log('[NWG Markets] BTC price from CoinGecko:', btcData.bitcoin.usd);
+                        NW_LOGGER.api('CoinGecko BTC', 'success', { price: btcData.bitcoin.usd });
                         updateUI();
                     }
                 } catch (e) {
-                    console.log('[NWG Markets] CoinGecko fetch failed');
+                    NW_LOGGER.api('CoinGecko BTC', 'error');
                 }
             }, 60000);
             

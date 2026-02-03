@@ -7,9 +7,25 @@ import photosData from './data/photos.json'
 import translationsData from './data/translations.json'
 import performanceData from './data/performance.json'
 
-// D1 Database binding type
+// Import Market Automation Service
+import MarketService, { 
+  fetchMarketData, 
+  storePricePoint, 
+  getPriceHistory,
+  checkAlerts,
+  createAlert,
+  storeDailyStats,
+  calculatePortfolioValue,
+  getMarketStatus,
+  NWG_WEIGHTS,
+  NWG_TOTAL_SUPPLY,
+  NWG_BASE_MULTIPLIER 
+} from './services/market-automation'
+
+// D1 Database and KV bindings
 type Bindings = {
   GUILD_DB: D1Database
+  MARKET_CACHE: KVNamespace
 }
 
 const app = new Hono<{ Bindings: Bindings }>()
@@ -55,6 +71,20 @@ app.get('/api/debug', (c) => {
       health: '/api/health',
       debug: '/api/debug',
       cardFactory: '/api/card-factory',
+      
+      // NWG Market Automation APIs (NEW)
+      marketAutomation: {
+        prices: '/api/market-prices',
+        history: '/api/market-prices/history?timeframe=24h',
+        status: '/api/market-status',
+        formula: '/api/nwg/formula',
+        pitch: '/api/nwg/pitch',
+        portfolioSim: '/api/portfolio/simulate?usd=1000&period=1y',
+        portfolioCalc: 'POST /api/portfolio/calculate',
+        alertCreate: 'POST /api/alerts/create',
+        alertCheck: '/api/alerts/check'
+      },
+      
       cards: {
         list: '/api/cards',
         stats: '/api/cards/stats',
@@ -1875,148 +1905,46 @@ app.post('/api/wallet/sync', async (c) => {
 });
 
 // ============================================================================
-// LIVE MARKET PRICES API - Real-time data for NWG Portfolio
-// Data Sources: Coinbase (BTC, Gold), CoinGecko (BTC backup)
-// Stocks use realistic simulated prices with market-hours awareness
+// LIVE MARKET PRICES API v2 - Automated NWG Portfolio System
+// 
+// Features:
+// - Multi-source price aggregation (Coinbase, CoinGecko)
+// - KV-based caching for instant responses
+// - Automatic price history storage
+// - Portfolio value calculations
+// - Market status awareness (NYSE hours)
+// - Alert triggers for significant price movements
+//
+// NWG Formula: Silver(25%) + Gold(20%) + BTC(20%) + PLTR(20%) + AVGO(15%)
 // ============================================================================
 
-// GET /api/market-prices - Get live prices for all portfolio assets
+// GET /api/market-prices - Get live prices with KV caching
 app.get('/api/market-prices', async (c) => {
   try {
-    // Track data sources
-    const sources: any = {
-      btc: 'fallback',
-      pltr: 'simulated', 
-      avgo: 'simulated',
-      gold: 'fallback',
-      silver: 'simulated'
-    };
+    const cache = c.env?.MARKET_CACHE;
+    const data = await fetchMarketData(cache);
     
-    // Realistic base prices (updated Feb 2026)
-    const prices: any = {
-      silver: { price: 32.15, change: 0.85, high24h: 32.80, low24h: 31.50 },
-      gold: { price: 2875.00, change: 0.65, high24h: 2895.00, low24h: 2855.00 },
-      btc: { price: 78500, change: 2.50, high24h: 80200, low24h: 76800 },
-      pltr: { price: 78.50, change: 1.25, high24h: 79.80, low24h: 77.20 },
-      avgo: { price: 225.30, change: 0.95, high24h: 228.50, low24h: 222.10 }
-    };
-    
-    // Fetch live prices from Coinbase (no rate limits, very reliable)
-    const [coinbaseRates, coinGeckoBTC] = await Promise.allSettled([
-      // Coinbase exchange rates - gives us BTC and PAXG (gold)
-      fetch('https://api.coinbase.com/v2/exchange-rates?currency=USD')
-        .then(r => r.ok ? r.json() : null)
-        .catch(() => null),
-      
-      // CoinGecko for BTC with 24h change (backup + change data)
-      fetch('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd&include_24hr_change=true')
-        .then(r => r.ok ? r.json() : null)
-        .catch(() => null)
-    ]);
-    
-    // Update from Coinbase (most reliable, no rate limits)
-    if (coinbaseRates.status === 'fulfilled' && coinbaseRates.value?.data?.rates) {
-      const rates = coinbaseRates.value.data.rates;
-      
-      // BTC price (1 USD = X BTC, so BTC price = 1/X)
-      if (rates.BTC) {
-        prices.btc.price = Math.round(1 / parseFloat(rates.BTC));
-        sources.btc = 'Coinbase';
-      }
-      
-      // Gold via PAXG (Pax Gold - 1:1 backed by gold)
-      if (rates.PAXG) {
-        prices.gold.price = Math.round(1 / parseFloat(rates.PAXG) * 100) / 100;
-        sources.gold = 'Coinbase (PAXG)';
-      }
+    // Auto-store price history (non-blocking)
+    if (cache) {
+      storePricePoint(cache, data).catch(() => {});
+      storeDailyStats(cache, data).catch(() => {});
     }
-    
-    // Get 24h change from CoinGecko (they have better change data)
-    if (coinGeckoBTC.status === 'fulfilled' && coinGeckoBTC.value?.bitcoin) {
-      const btc = coinGeckoBTC.value.bitcoin;
-      if (btc.usd_24h_change) {
-        prices.btc.change = Math.round(btc.usd_24h_change * 100) / 100;
-      }
-      // Use CoinGecko price as fallback if Coinbase failed
-      if (sources.btc === 'fallback' && btc.usd) {
-        prices.btc.price = Math.round(btc.usd);
-        sources.btc = 'CoinGecko';
-      }
-    }
-    
-    // Calculate high/low based on change
-    prices.btc.high24h = Math.round(prices.btc.price * (1 + Math.abs(prices.btc.change) / 100));
-    prices.btc.low24h = Math.round(prices.btc.price * (1 - Math.abs(prices.btc.change) / 100));
-    prices.gold.high24h = Math.round(prices.gold.price * 1.01 * 100) / 100;
-    prices.gold.low24h = Math.round(prices.gold.price * 0.99 * 100) / 100;
-    
-    // Silver estimated from gold ratio (historical ratio ~85:1)
-    prices.silver.price = Math.round(prices.gold.price / 85 * 100) / 100;
-    prices.silver.change = prices.gold.change * 1.2; // Silver more volatile
-    prices.silver.high24h = Math.round(prices.silver.price * 1.015 * 100) / 100;
-    prices.silver.low24h = Math.round(prices.silver.price * 0.985 * 100) / 100;
-    sources.silver = 'Calculated (Gold/85)';
-    
-    // Stocks: Use realistic simulation based on market hours
-    const now = new Date();
-    const hour = now.getUTCHours();
-    const isMarketHours = hour >= 14 && hour < 21; // NYSE 9:30-4:00 EST = 14:30-21:00 UTC
-    const dayOfWeek = now.getUTCDay();
-    const isWeekday = dayOfWeek >= 1 && dayOfWeek <= 5;
-    
-    // Add small random movement to stocks (more during market hours)
-    const stockVolatility = (isMarketHours && isWeekday) ? 0.002 : 0.0005;
-    
-    prices.pltr.price = Math.round((78.50 + (Math.random() - 0.5) * 78.50 * stockVolatility * 10) * 100) / 100;
-    prices.pltr.change = Math.round((1.25 + (Math.random() - 0.5) * 2) * 100) / 100;
-    prices.pltr.high24h = Math.round(prices.pltr.price * 1.02 * 100) / 100;
-    prices.pltr.low24h = Math.round(prices.pltr.price * 0.98 * 100) / 100;
-    
-    prices.avgo.price = Math.round((225.30 + (Math.random() - 0.5) * 225.30 * stockVolatility * 10) * 100) / 100;
-    prices.avgo.change = Math.round((0.95 + (Math.random() - 0.5) * 1.5) * 100) / 100;
-    prices.avgo.high24h = Math.round(prices.avgo.price * 1.015 * 100) / 100;
-    prices.avgo.low24h = Math.round(prices.avgo.price * 0.985 * 100) / 100;
-    
-    // Calculate NWG price from portfolio
-    const weights = { silver: 0.25, gold: 0.20, btc: 0.20, pltr: 0.20, avgo: 0.15 };
-    const BASE_MULTIPLIER = 0.00001;
-    
-    let nwgPrice = 0;
-    for (const [asset, weight] of Object.entries(weights)) {
-      nwgPrice += prices[asset].price * weight;
-    }
-    nwgPrice *= BASE_MULTIPLIER;
-    
-    // Calculate NWG 24h change (weighted average of changes)
-    let weightedChange = 0;
-    for (const [asset, weight] of Object.entries(weights)) {
-      weightedChange += prices[asset].change * weight;
-    }
-    weightedChange = Math.round(weightedChange * 100) / 100;
-    
-    // Count real sources
-    const realSources = Object.values(sources).filter(s => !s.includes('fallback') && !s.includes('simulated')).length;
     
     c.header('Cache-Control', 'public, max-age=5, stale-while-revalidate=15');
     
     return c.json({
       success: true,
-      timestamp: Date.now(),
-      live: realSources > 0,
-      realSourceCount: realSources,
-      marketStatus: (isMarketHours && isWeekday) ? 'OPEN' : 'CLOSED',
+      timestamp: data.timestamp,
+      live: data.realSourceCount > 0,
+      realSourceCount: data.realSourceCount,
+      marketStatus: data.marketStatus,
       nwg: {
-        price: nwgPrice,
-        change24h: weightedChange,
-        high24h: nwgPrice * (1 + Math.abs(weightedChange) / 100),
-        low24h: nwgPrice * (1 - Math.abs(weightedChange) / 100),
-        marketCap: Math.round(nwgPrice * 1000000000),
-        totalSupply: 1000000000,
+        ...data.nwg,
         formula: 'NWG = (Silver × 25%) + (Gold × 20%) + (BTC × 20%) + (PLTR × 20%) + (AVGO × 15%)'
       },
-      assets: prices,
-      weights,
-      sources
+      assets: data.assets,
+      weights: NWG_WEIGHTS,
+      sources: data.sources
     });
   } catch (e) {
     console.error('Market prices error:', e);
@@ -2024,46 +1952,35 @@ app.get('/api/market-prices', async (c) => {
   }
 });
 
-// GET /api/market-prices/history - Get historical price data for charts
+// GET /api/market-prices/history - Get historical price data with KV storage
 app.get('/api/market-prices/history', async (c) => {
   try {
-    const timeframe = c.req.query('timeframe') || '7d';
+    const timeframe = (c.req.query('timeframe') || '7d') as '1h' | '24h' | '7d' | '1m';
+    const cache = c.env?.MARKET_CACHE;
     
-    // Generate simulated historical data (in production, use a database)
-    const basePrice = 0.01;
-    const points: Array<{ timestamp: number; price: number }> = [];
-    
-    let duration = 7 * 24 * 60; // 7 days in minutes
-    let interval = 60; // 1 hour
-    
-    switch (timeframe) {
-      case '1h':
-        duration = 60;
-        interval = 1;
-        break;
-      case '24h':
-        duration = 24 * 60;
-        interval = 5;
-        break;
-      case '7d':
-        duration = 7 * 24 * 60;
-        interval = 60;
-        break;
-      case '1m':
-        duration = 30 * 24 * 60;
-        interval = 240;
-        break;
-    }
-    
-    const now = Date.now();
-    let price = basePrice * 0.95; // Start slightly lower
-    
-    for (let i = duration; i >= 0; i -= interval) {
-      const timestamp = now - i * 60 * 1000;
-      // Random walk with upward trend
-      const change = (Math.random() - 0.45) * 0.0002;
-      price = Math.max(0.005, price * (1 + change));
-      points.push({ timestamp, price });
+    let points;
+    if (cache) {
+      points = await getPriceHistory(cache, timeframe);
+    } else {
+      // Fallback to generated history
+      const config = {
+        '1h': { duration: 60, interval: 1 },
+        '24h': { duration: 24 * 60, interval: 5 },
+        '7d': { duration: 7 * 24 * 60, interval: 60 },
+        '1m': { duration: 30 * 24 * 60, interval: 240 }
+      };
+      
+      const { duration, interval } = config[timeframe] || config['7d'];
+      points = [];
+      const now = Date.now();
+      let price = 0.01 * 0.95;
+      
+      for (let i = duration; i >= 0; i -= interval) {
+        const timestamp = now - i * 60 * 1000;
+        const change = (Math.random() - 0.45) * 0.0002;
+        price = Math.max(0.005, price * (1 + change));
+        points.push({ timestamp, price });
+      }
     }
     
     c.header('Cache-Control', 'public, max-age=60, stale-while-revalidate=300');
@@ -2073,6 +1990,260 @@ app.get('/api/market-prices/history', async (c) => {
       timeframe,
       points,
       count: points.length
+    });
+  } catch (e) {
+    return c.json({ success: false, error: String(e) }, 500);
+  }
+});
+
+// GET /api/market-status - Get detailed market status info
+app.get('/api/market-status', (c) => {
+  const { status, nextChange } = getMarketStatus();
+  
+  return c.json({
+    success: true,
+    status,
+    isOpen: status === 'OPEN',
+    isPreMarket: status === 'PRE_MARKET',
+    isAfterHours: status === 'AFTER_HOURS',
+    nextChange: {
+      ms: nextChange,
+      minutes: Math.round(nextChange / 60000),
+      hours: Math.round(nextChange / 3600000 * 10) / 10
+    },
+    schedule: {
+      preMarket: '9:00-14:30 UTC (4:00-9:30 AM EST)',
+      market: '14:30-21:00 UTC (9:30 AM-4:00 PM EST)',
+      afterHours: '21:00-01:00 UTC (4:00-8:00 PM EST)',
+      timezone: 'Prices follow NYSE trading hours'
+    }
+  });
+});
+
+// POST /api/portfolio/calculate - Calculate portfolio value
+app.post('/api/portfolio/calculate', async (c) => {
+  try {
+    const body = await c.req.json();
+    const { nwgAmount, purchasePrice = 0.01 } = body;
+    
+    if (!nwgAmount || nwgAmount <= 0) {
+      return c.json({ success: false, error: 'Invalid NWG amount' }, 400);
+    }
+    
+    const cache = c.env?.MARKET_CACHE;
+    const marketData = await fetchMarketData(cache);
+    const portfolio = calculatePortfolioValue(nwgAmount, marketData, purchasePrice);
+    
+    return c.json({
+      success: true,
+      portfolio,
+      marketData: {
+        nwgPrice: marketData.nwg.price,
+        change24h: marketData.nwg.change24h,
+        marketStatus: marketData.marketStatus
+      }
+    });
+  } catch (e) {
+    return c.json({ success: false, error: String(e) }, 500);
+  }
+});
+
+// GET /api/portfolio/simulate - Simulate investment returns
+app.get('/api/portfolio/simulate', async (c) => {
+  try {
+    const usdAmount = parseFloat(c.req.query('usd') || '100');
+    const period = c.req.query('period') || '1y'; // 1m, 3m, 6m, 1y, 5y
+    
+    const cache = c.env?.MARKET_CACHE;
+    const marketData = await fetchMarketData(cache);
+    const nwgAmount = usdAmount / marketData.nwg.price;
+    
+    // Historical performance projections based on asset mix
+    const returns: Record<string, { low: number; mid: number; high: number }> = {
+      '1m': { low: -5, mid: 3, high: 12 },
+      '3m': { low: -10, mid: 8, high: 25 },
+      '6m': { low: -15, mid: 15, high: 45 },
+      '1y': { low: -20, mid: 35, high: 100 },
+      '5y': { low: 20, mid: 150, high: 500 }
+    };
+    
+    const projections = returns[period] || returns['1y'];
+    
+    return c.json({
+      success: true,
+      investment: {
+        usd: usdAmount,
+        nwg: Math.round(nwgAmount),
+        currentPrice: marketData.nwg.price
+      },
+      projections: {
+        period,
+        conservative: {
+          return: projections.low,
+          value: usdAmount * (1 + projections.low / 100)
+        },
+        moderate: {
+          return: projections.mid,
+          value: usdAmount * (1 + projections.mid / 100)
+        },
+        optimistic: {
+          return: projections.high,
+          value: usdAmount * (1 + projections.high / 100)
+        }
+      },
+      disclaimer: 'Past performance does not guarantee future results. These are hypothetical projections based on historical asset performance.'
+    });
+  } catch (e) {
+    return c.json({ success: false, error: String(e) }, 500);
+  }
+});
+
+// POST /api/alerts/create - Create price alert
+app.post('/api/alerts/create', async (c) => {
+  try {
+    const cache = c.env?.MARKET_CACHE;
+    if (!cache) {
+      return c.json({ success: false, error: 'Alerts require KV storage' }, 400);
+    }
+    
+    const body = await c.req.json();
+    const { asset, condition, threshold } = body;
+    
+    if (!asset || !condition || threshold === undefined) {
+      return c.json({ success: false, error: 'Missing required fields: asset, condition, threshold' }, 400);
+    }
+    
+    const validAssets = ['nwg', 'btc', 'gold', 'silver', 'pltr', 'avgo'];
+    const validConditions = ['above', 'below', 'change_pct'];
+    
+    if (!validAssets.includes(asset)) {
+      return c.json({ success: false, error: `Invalid asset. Valid: ${validAssets.join(', ')}` }, 400);
+    }
+    
+    if (!validConditions.includes(condition)) {
+      return c.json({ success: false, error: `Invalid condition. Valid: ${validConditions.join(', ')}` }, 400);
+    }
+    
+    const alert = await createAlert(cache, { asset, condition, threshold });
+    
+    return c.json({
+      success: true,
+      alert,
+      message: `Alert created: ${asset.toUpperCase()} ${condition} ${threshold}`
+    });
+  } catch (e) {
+    return c.json({ success: false, error: String(e) }, 500);
+  }
+});
+
+// GET /api/alerts/check - Check for triggered alerts
+app.get('/api/alerts/check', async (c) => {
+  try {
+    const cache = c.env?.MARKET_CACHE;
+    if (!cache) {
+      return c.json({ success: false, error: 'Alerts require KV storage' }, 400);
+    }
+    
+    const marketData = await fetchMarketData(cache);
+    const triggered = await checkAlerts(cache, marketData);
+    
+    return c.json({
+      success: true,
+      triggered,
+      count: triggered.length,
+      currentPrices: {
+        nwg: marketData.nwg.price,
+        btc: marketData.assets.btc.price,
+        gold: marketData.assets.gold.price,
+        silver: marketData.assets.silver.price,
+        pltr: marketData.assets.pltr.price,
+        avgo: marketData.assets.avgo.price
+      }
+    });
+  } catch (e) {
+    return c.json({ success: false, error: String(e) }, 500);
+  }
+});
+
+// GET /api/nwg/formula - Get detailed NWG formula breakdown
+app.get('/api/nwg/formula', async (c) => {
+  try {
+    const cache = c.env?.MARKET_CACHE;
+    const data = await fetchMarketData(cache);
+    
+    // Calculate each component's contribution
+    const breakdown = Object.entries(NWG_WEIGHTS).map(([asset, weight]) => {
+      const price = data.assets[asset].price;
+      const contribution = price * weight * NWG_BASE_MULTIPLIER;
+      return {
+        asset: asset.toUpperCase(),
+        weight: `${weight * 100}%`,
+        price,
+        contribution,
+        pctOfTotal: (contribution / data.nwg.price * 100).toFixed(2) + '%'
+      };
+    });
+    
+    return c.json({
+      success: true,
+      formula: {
+        expression: 'NWG = (Silver × 25%) + (Gold × 20%) + (BTC × 20%) + (PLTR × 20%) + (AVGO × 15%)',
+        multiplier: NWG_BASE_MULTIPLIER,
+        totalSupply: NWG_TOTAL_SUPPLY,
+        calculation: `(${breakdown.map(b => `${b.asset}×${b.weight}`).join(' + ')}) × ${NWG_BASE_MULTIPLIER}`
+      },
+      breakdown,
+      result: {
+        nwgPrice: data.nwg.price,
+        marketCap: data.nwg.marketCap,
+        change24h: data.nwg.change24h
+      },
+      philosophy: {
+        silver: '25% - Industrial & monetary metal, inflation hedge',
+        gold: '20% - Ultimate safe haven, central bank reserves', 
+        btc: '20% - Digital gold, institutional adoption growing',
+        pltr: '20% - AI/defense leader, government contracts',
+        avgo: '15% - Semiconductor powerhouse, AI infrastructure'
+      }
+    });
+  } catch (e) {
+    return c.json({ success: false, error: String(e) }, 500);
+  }
+});
+
+// GET /api/nwg/pitch - Get the NWG investment pitch
+app.get('/api/nwg/pitch', async (c) => {
+  try {
+    const cache = c.env?.MARKET_CACHE;
+    const data = await fetchMarketData(cache);
+    
+    return c.json({
+      success: true,
+      headline: 'One Currency. Five Explosive Assets. Zero Guesswork.',
+      tagline: 'NWG: The Ultimate Portfolio in a Single Token',
+      
+      keyPoints: [
+        '🪙 Fixed Supply: 1,000,000,000 NWG - Never minted again',
+        '💰 $1 = 100 NWG - Simple, transparent pricing',
+        '📈 5-Asset Backing: Silver, Gold, BTC, Palantir, Broadcom',
+        '🤖 AI + Crypto + Precious Metals in one investment',
+        '🌍 Real-time price tracking via Coinbase & CoinGecko'
+      ],
+      
+      assets: {
+        silver: { weight: '25%', theme: 'Industrial Revolution + Inflation Hedge', highlight: '+146% in 2025' },
+        gold: { weight: '20%', theme: 'Central Bank Demand + Safe Haven', highlight: '+64% in 2025' },
+        btc: { weight: '20%', theme: 'Institutional Adoption + Digital Gold', highlight: 'ATH $126K' },
+        pltr: { weight: '20%', theme: 'AI Enterprise + Government Contracts', highlight: '+150% in 2025' },
+        avgo: { weight: '15%', theme: 'AI Infrastructure + Semiconductor', highlight: '+49% in 2025' }
+      },
+      
+      currentPrice: data.nwg.price,
+      marketCap: data.nwg.marketCap,
+      
+      callToAction: 'Own the future. Start with NWG today.',
+      
+      disclaimer: 'NWG is a conceptual portfolio token. Past asset performance does not guarantee future results.'
     });
   } catch (e) {
     return c.json({ success: false, error: String(e) }, 500);
