@@ -119,7 +119,8 @@ const NW_NAV = {
             desc: { en: '(Yes, we have one)', zh: '(是的)', th: '(ใช่ มี)' },
             pages: [
                 { id: 'citizenship', name: { en: 'Immigration', zh: '移民局', th: 'ตรวจคนเข้าเมือง' }, icon: 'shield', href: '/citizenship' },
-                { id: 'invest', name: { en: 'NWG Securities', zh: 'NWG證券', th: 'หลักทรัพย์ NWG' }, icon: 'chart', href: '/invest', isHot: true },
+                { id: 'invest', name: { en: 'NWG Securities', zh: 'NWG證券', th: 'หลักทรัพย์ NWG' }, icon: 'chart', href: '/invest' },
+                { id: 'buy', name: { en: 'Buy NWG', zh: '購買 NWG', th: 'ซื้อ NWG' }, icon: 'coins', href: '/buy', isHot: true },
                 { id: 'markets', name: { en: 'Live Markets', zh: '實時市場', th: 'ตลาดสด' }, icon: 'chart', href: '/markets', isNew: true },
                 { id: 'treasury', name: { en: 'Treasury', zh: '財政部', th: 'กระทรวงการคลัง' }, icon: 'coins', href: '/treasury' },
                 { id: 'court', name: { en: 'Supreme Court', zh: '最高法院', th: 'ศาลฎีกา' }, icon: 'scroll', href: '/court' },

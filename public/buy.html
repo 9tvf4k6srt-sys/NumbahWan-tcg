@@ -1,0 +1,1190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Buy NWG | Official NumbahWan Gold Purchase</title>
+    <link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://js.stripe.com/v3/"></script>
+    <style>
+        :root {
+            --nwg-cyan: #00d4ff;
+            --nwg-gold: #ffd700;
+            --nwg-green: #00ff88;
+            --bg-dark: #0a0e14;
+            --bg-card: #0d1117;
+            --border: #21262d;
+            --text-dim: #8b949e;
+        }
+        
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        html, body {
+            font-family: 'Inter', system-ui, sans-serif;
+            background: var(--bg-dark);
+            color: #fff;
+            min-height: 100vh;
+            overflow-x: hidden;
+            -webkit-overflow-scrolling: touch;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 1rem;
+        }
+        
+        /* Header */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 0;
+            border-bottom: 1px solid var(--border);
+            margin-bottom: 2rem;
+        }
+        
+        .back-btn {
+            width: 44px;
+            height: 44px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            text-decoration: none;
+            transition: all 0.3s;
+        }
+        
+        .back-btn:hover {
+            border-color: var(--nwg-cyan);
+            color: var(--nwg-cyan);
+        }
+        
+        .page-title {
+            font-size: 1.5rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--nwg-cyan), var(--nwg-gold));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        /* Live Rate Banner */
+        .rate-banner {
+            background: linear-gradient(135deg, rgba(0,212,255,0.1), rgba(255,215,0,0.1));
+            border: 1px solid var(--nwg-cyan);
+            border-radius: 16px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+        
+        .rate-info {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        
+        .rate-icon {
+            width: 48px;
+            height: 48px;
+            background: linear-gradient(135deg, var(--nwg-cyan), var(--nwg-gold));
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+        }
+        
+        .rate-text h3 {
+            font-size: 1.25rem;
+            font-weight: 700;
+        }
+        
+        .rate-text p {
+            color: var(--text-dim);
+            font-size: 0.9rem;
+        }
+        
+        .rate-value {
+            text-align: right;
+        }
+        
+        .rate-price {
+            font-size: 2rem;
+            font-weight: 800;
+            color: var(--nwg-gold);
+        }
+        
+        .rate-change {
+            color: var(--nwg-green);
+            font-size: 0.9rem;
+        }
+        
+        /* Section Title */
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        /* Package Grid */
+        .packages-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 3rem;
+        }
+        
+        .package-card {
+            background: var(--bg-card);
+            border: 2px solid var(--border);
+            border-radius: 20px;
+            padding: 2rem;
+            position: relative;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .package-card:hover {
+            border-color: var(--nwg-cyan);
+            transform: translateY(-4px);
+        }
+        
+        .package-card.selected {
+            border-color: var(--nwg-gold);
+            box-shadow: 0 0 30px rgba(255,215,0,0.2);
+        }
+        
+        .package-card.popular {
+            border-color: var(--nwg-gold);
+        }
+        
+        .package-badge {
+            position: absolute;
+            top: -12px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: linear-gradient(135deg, var(--nwg-gold), #b8860b);
+            color: #000;
+            padding: 6px 16px;
+            border-radius: 50px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+        
+        .package-header {
+            text-align: center;
+            margin-bottom: 1.5rem;
+        }
+        
+        .package-name {
+            font-size: 1.25rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+        
+        .package-nwg {
+            font-size: 3rem;
+            font-weight: 800;
+            color: var(--nwg-cyan);
+            line-height: 1;
+        }
+        
+        .package-nwg span {
+            font-size: 1.5rem;
+            color: var(--text-dim);
+        }
+        
+        .package-price {
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 1px solid var(--border);
+        }
+        
+        .package-usd {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--nwg-gold);
+        }
+        
+        .package-rate {
+            color: var(--text-dim);
+            font-size: 0.85rem;
+            margin-top: 0.25rem;
+        }
+        
+        .package-bonus {
+            margin-top: 1rem;
+            padding: 0.75rem;
+            background: rgba(0,255,136,0.1);
+            border: 1px solid rgba(0,255,136,0.3);
+            border-radius: 8px;
+            text-align: center;
+            color: var(--nwg-green);
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+        
+        .package-features {
+            margin-top: 1.5rem;
+            list-style: none;
+        }
+        
+        .package-features li {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 0;
+            font-size: 0.9rem;
+            color: var(--text-dim);
+        }
+        
+        .package-features li::before {
+            content: '✓';
+            color: var(--nwg-green);
+            font-weight: bold;
+        }
+        
+        /* Custom Amount */
+        .custom-section {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+        
+        .custom-input-group {
+            display: flex;
+            gap: 1rem;
+            align-items: flex-end;
+            flex-wrap: wrap;
+        }
+        
+        .input-wrapper {
+            flex: 1;
+            min-width: 200px;
+        }
+        
+        .input-label {
+            display: block;
+            font-size: 0.85rem;
+            color: var(--text-dim);
+            margin-bottom: 0.5rem;
+        }
+        
+        .input-field {
+            width: 100%;
+            padding: 1rem;
+            background: var(--bg-dark);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            color: #fff;
+            font-size: 1.25rem;
+            font-weight: 600;
+        }
+        
+        .input-field:focus {
+            outline: none;
+            border-color: var(--nwg-cyan);
+        }
+        
+        .conversion-display {
+            padding: 1rem 1.5rem;
+            background: rgba(0,212,255,0.1);
+            border: 1px solid var(--nwg-cyan);
+            border-radius: 12px;
+            text-align: center;
+        }
+        
+        .conversion-label {
+            font-size: 0.75rem;
+            color: var(--text-dim);
+            margin-bottom: 0.25rem;
+        }
+        
+        .conversion-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--nwg-cyan);
+        }
+        
+        /* Checkout Button */
+        .checkout-section {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+        
+        .checkout-summary {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1.5rem;
+            border-bottom: 1px solid var(--border);
+        }
+        
+        .summary-item {
+            text-align: center;
+        }
+        
+        .summary-label {
+            font-size: 0.85rem;
+            color: var(--text-dim);
+            margin-bottom: 0.25rem;
+        }
+        
+        .summary-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+        
+        .summary-value.usd { color: var(--nwg-gold); }
+        .summary-value.nwg { color: var(--nwg-cyan); }
+        
+        .checkout-btn {
+            width: 100%;
+            padding: 1.25rem;
+            background: linear-gradient(135deg, var(--nwg-gold), #b8860b);
+            border: none;
+            border-radius: 12px;
+            color: #000;
+            font-size: 1.25rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+        
+        .checkout-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(255,215,0,0.3);
+        }
+        
+        .checkout-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .checkout-btn.loading {
+            pointer-events: none;
+        }
+        
+        .checkout-btn.loading::after {
+            content: '';
+            width: 20px;
+            height: 20px;
+            border: 2px solid transparent;
+            border-top-color: #000;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        /* Trust Badges */
+        .trust-section {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+        
+        .trust-badge {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 1rem;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+        }
+        
+        .trust-icon {
+            font-size: 1.5rem;
+        }
+        
+        .trust-text {
+            font-size: 0.85rem;
+            color: var(--text-dim);
+        }
+        
+        .trust-text strong {
+            display: block;
+            color: #fff;
+            font-weight: 600;
+        }
+        
+        /* FAQ */
+        .faq-section {
+            margin-bottom: 2rem;
+        }
+        
+        .faq-item {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            margin-bottom: 0.75rem;
+            overflow: hidden;
+        }
+        
+        .faq-question {
+            width: 100%;
+            padding: 1rem 1.5rem;
+            background: none;
+            border: none;
+            color: #fff;
+            font-size: 1rem;
+            font-weight: 600;
+            text-align: left;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .faq-question::after {
+            content: '+';
+            font-size: 1.5rem;
+            color: var(--nwg-cyan);
+        }
+        
+        .faq-item.open .faq-question::after {
+            content: '−';
+        }
+        
+        .faq-answer {
+            padding: 0 1.5rem;
+            max-height: 0;
+            overflow: hidden;
+            transition: all 0.3s ease;
+            color: var(--text-dim);
+            line-height: 1.6;
+        }
+        
+        .faq-item.open .faq-answer {
+            padding: 0 1.5rem 1rem;
+            max-height: 200px;
+        }
+        
+        /* Footer */
+        .footer {
+            text-align: center;
+            padding: 2rem;
+            color: var(--text-dim);
+            font-size: 0.85rem;
+            border-top: 1px solid var(--border);
+        }
+        
+        .footer a {
+            color: var(--nwg-cyan);
+            text-decoration: none;
+        }
+        
+        /* Language Toggle */
+        .lang-toggle {
+            display: flex;
+            gap: 0.5rem;
+        }
+        
+        .lang-btn {
+            padding: 8px 12px;
+            border: 1px solid var(--border);
+            background: var(--bg-card);
+            border-radius: 6px;
+            color: var(--text-dim);
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            min-width: 44px;
+            min-height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .lang-btn.active {
+            background: var(--nwg-cyan);
+            border-color: var(--nwg-cyan);
+            color: #000;
+        }
+        
+        /* Multi-language */
+        .lang-en, .lang-zh, .lang-th { display: none; }
+        body.en .lang-en { display: inline; }
+        body.zh .lang-zh { display: inline; }
+        body.th .lang-th { display: inline; }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            .rate-banner {
+                flex-direction: column;
+                text-align: center;
+            }
+            
+            .rate-value {
+                text-align: center;
+            }
+            
+            .packages-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .custom-input-group {
+                flex-direction: column;
+            }
+            
+            .checkout-summary {
+                flex-direction: column;
+                gap: 1rem;
+            }
+        }
+    </style>
+</head>
+<body class="en">
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <div style="display: flex; align-items: center; gap: 1rem;">
+                <a href="/wallet" class="back-btn">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M19 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H19v-2z"/></svg>
+                </a>
+                <h1 class="page-title">
+                    <span class="lang-en">Buy NWG</span>
+                    <span class="lang-zh">購買 NWG</span>
+                    <span class="lang-th">ซื้อ NWG</span>
+                </h1>
+            </div>
+            <div class="lang-toggle">
+                <button class="lang-btn active" data-lang="en">EN</button>
+                <button class="lang-btn" data-lang="zh">中文</button>
+                <button class="lang-btn" data-lang="th">ไทย</button>
+            </div>
+        </header>
+        
+        <!-- Live Rate Banner -->
+        <div class="rate-banner">
+            <div class="rate-info">
+                <div class="rate-icon">◆</div>
+                <div class="rate-text">
+                    <h3>
+                        <span class="lang-en">Current NWG Rate</span>
+                        <span class="lang-zh">當前 NWG 匯率</span>
+                        <span class="lang-th">อัตรา NWG ปัจจุบัน</span>
+                    </h3>
+                    <p>
+                        <span class="lang-en">Backed by Gold, Bitcoin, NVIDIA & S&P 500</span>
+                        <span class="lang-zh">由黃金、比特幣、NVIDIA 和標普500支持</span>
+                        <span class="lang-th">หนุนด้วยทองคำ บิตคอยน์ NVIDIA และ S&P 500</span>
+                    </p>
+                </div>
+            </div>
+            <div class="rate-value">
+                <div class="rate-price">$1 = 100 NWG</div>
+                <div class="rate-change">
+                    <span class="lang-en">🔒 Fixed rate guarantee</span>
+                    <span class="lang-zh">🔒 固定匯率保證</span>
+                    <span class="lang-th">🔒 รับประกันอัตราคงที่</span>
+                </div>
+                <a href="/markets" style="display: inline-block; margin-top: 0.5rem; color: var(--nwg-cyan); font-size: 0.85rem; text-decoration: none;">
+                    <span class="lang-en">📈 View Live Price →</span>
+                    <span class="lang-zh">📈 查看實時價格 →</span>
+                    <span class="lang-th">📈 ดูราคาสด →</span>
+                </a>
+            </div>
+        </div>
+        
+        <!-- Packages -->
+        <h2 class="section-title">
+            💎 
+            <span class="lang-en">Choose Your Package</span>
+            <span class="lang-zh">選擇您的套餐</span>
+            <span class="lang-th">เลือกแพ็คเกจของคุณ</span>
+        </h2>
+        
+        <div class="packages-grid">
+            <!-- Starter -->
+            <div class="package-card" data-package="starter" data-usd="5" data-nwg="500">
+                <div class="package-header">
+                    <div class="package-name">
+                        <span class="lang-en">Starter</span>
+                        <span class="lang-zh">入門</span>
+                        <span class="lang-th">เริ่มต้น</span>
+                    </div>
+                    <div class="package-nwg">500 <span>NWG</span></div>
+                </div>
+                <div class="package-price">
+                    <div class="package-usd">$5</div>
+                    <div class="package-rate">$0.01 / NWG</div>
+                </div>
+                <ul class="package-features">
+                    <li>
+                        <span class="lang-en">5 card pulls</span>
+                        <span class="lang-zh">5次抽卡</span>
+                        <span class="lang-th">ดึงการ์ด 5 ครั้ง</span>
+                    </li>
+                    <li>
+                        <span class="lang-en">Try the game</span>
+                        <span class="lang-zh">試玩遊戲</span>
+                        <span class="lang-th">ทดลองเล่น</span>
+                    </li>
+                </ul>
+            </div>
+            
+            <!-- Popular -->
+            <div class="package-card popular" data-package="popular" data-usd="20" data-nwg="2200">
+                <div class="package-badge">
+                    <span class="lang-en">MOST POPULAR</span>
+                    <span class="lang-zh">最受歡迎</span>
+                    <span class="lang-th">ยอดนิยม</span>
+                </div>
+                <div class="package-header">
+                    <div class="package-name">
+                        <span class="lang-en">Popular</span>
+                        <span class="lang-zh">熱門</span>
+                        <span class="lang-th">ยอดนิยม</span>
+                    </div>
+                    <div class="package-nwg">2,200 <span>NWG</span></div>
+                </div>
+                <div class="package-price">
+                    <div class="package-usd">$20</div>
+                    <div class="package-rate">$0.009 / NWG</div>
+                </div>
+                <div class="package-bonus">
+                    +10% 
+                    <span class="lang-en">BONUS</span>
+                    <span class="lang-zh">獎勵</span>
+                    <span class="lang-th">โบนัส</span>
+                    (200 NWG)
+                </div>
+                <ul class="package-features">
+                    <li>
+                        <span class="lang-en">22 card pulls</span>
+                        <span class="lang-zh">22次抽卡</span>
+                        <span class="lang-th">ดึงการ์ด 22 ครั้ง</span>
+                    </li>
+                    <li>
+                        <span class="lang-en">Best value</span>
+                        <span class="lang-zh">最佳價值</span>
+                        <span class="lang-th">คุ้มค่าที่สุด</span>
+                    </li>
+                </ul>
+            </div>
+            
+            <!-- Pro -->
+            <div class="package-card" data-package="pro" data-usd="50" data-nwg="5750">
+                <div class="package-header">
+                    <div class="package-name">
+                        <span class="lang-en">Pro</span>
+                        <span class="lang-zh">專業</span>
+                        <span class="lang-th">โปร</span>
+                    </div>
+                    <div class="package-nwg">5,750 <span>NWG</span></div>
+                </div>
+                <div class="package-price">
+                    <div class="package-usd">$50</div>
+                    <div class="package-rate">$0.0087 / NWG</div>
+                </div>
+                <div class="package-bonus">
+                    +15% 
+                    <span class="lang-en">BONUS</span>
+                    <span class="lang-zh">獎勵</span>
+                    <span class="lang-th">โบนัส</span>
+                    (750 NWG)
+                </div>
+                <ul class="package-features">
+                    <li>
+                        <span class="lang-en">57 card pulls</span>
+                        <span class="lang-zh">57次抽卡</span>
+                        <span class="lang-th">ดึงการ์ด 57 ครั้ง</span>
+                    </li>
+                    <li>
+                        <span class="lang-en">Serious collector</span>
+                        <span class="lang-zh">認真收藏家</span>
+                        <span class="lang-th">นักสะสมจริงจัง</span>
+                    </li>
+                </ul>
+            </div>
+            
+            <!-- Whale -->
+            <div class="package-card" data-package="whale" data-usd="100" data-nwg="12000">
+                <div class="package-header">
+                    <div class="package-name">
+                        <span class="lang-en">Whale</span>
+                        <span class="lang-zh">巨鯨</span>
+                        <span class="lang-th">วาฬ</span>
+                    </div>
+                    <div class="package-nwg">12,000 <span>NWG</span></div>
+                </div>
+                <div class="package-price">
+                    <div class="package-usd">$100</div>
+                    <div class="package-rate">$0.0083 / NWG</div>
+                </div>
+                <div class="package-bonus">
+                    +20% 
+                    <span class="lang-en">BONUS</span>
+                    <span class="lang-zh">獎勵</span>
+                    <span class="lang-th">โบนัส</span>
+                    (2,000 NWG)
+                </div>
+                <ul class="package-features">
+                    <li>
+                        <span class="lang-en">120 card pulls</span>
+                        <span class="lang-zh">120次抽卡</span>
+                        <span class="lang-th">ดึงการ์ด 120 ครั้ง</span>
+                    </li>
+                    <li>
+                        <span class="lang-en">VIP status</span>
+                        <span class="lang-zh">VIP 狀態</span>
+                        <span class="lang-th">สถานะ VIP</span>
+                    </li>
+                    <li>
+                        <span class="lang-en">Priority support</span>
+                        <span class="lang-zh">優先支援</span>
+                        <span class="lang-th">สนับสนุนลำดับแรก</span>
+                    </li>
+                </ul>
+            </div>
+        </div>
+        
+        <!-- Custom Amount -->
+        <div class="custom-section">
+            <h3 class="section-title">
+                🎯 
+                <span class="lang-en">Custom Amount</span>
+                <span class="lang-zh">自訂金額</span>
+                <span class="lang-th">จำนวนที่กำหนดเอง</span>
+            </h3>
+            <div class="custom-input-group">
+                <div class="input-wrapper">
+                    <label class="input-label">
+                        <span class="lang-en">Enter USD Amount</span>
+                        <span class="lang-zh">輸入美元金額</span>
+                        <span class="lang-th">ใส่จำนวน USD</span>
+                    </label>
+                    <input type="number" class="input-field" id="customUsd" min="1" max="10000" placeholder="10" value="">
+                </div>
+                <div class="conversion-display">
+                    <div class="conversion-label">
+                        <span class="lang-en">You'll receive</span>
+                        <span class="lang-zh">您將獲得</span>
+                        <span class="lang-th">คุณจะได้รับ</span>
+                    </div>
+                    <div class="conversion-value" id="customNwg">0 NWG</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Checkout -->
+        <div class="checkout-section">
+            <div class="checkout-summary">
+                <div class="summary-item">
+                    <div class="summary-label">
+                        <span class="lang-en">You Pay</span>
+                        <span class="lang-zh">您支付</span>
+                        <span class="lang-th">คุณจ่าย</span>
+                    </div>
+                    <div class="summary-value usd" id="checkoutUsd">$0</div>
+                </div>
+                <div style="font-size: 2rem; color: var(--text-dim);">→</div>
+                <div class="summary-item">
+                    <div class="summary-label">
+                        <span class="lang-en">You Get</span>
+                        <span class="lang-zh">您獲得</span>
+                        <span class="lang-th">คุณได้รับ</span>
+                    </div>
+                    <div class="summary-value nwg" id="checkoutNwg">0 NWG</div>
+                </div>
+            </div>
+            
+            <button class="checkout-btn" id="checkoutBtn" disabled>
+                <span class="lang-en">🔒 Secure Checkout with Stripe</span>
+                <span class="lang-zh">🔒 使用 Stripe 安全結帳</span>
+                <span class="lang-th">🔒 ชำระเงินปลอดภัยกับ Stripe</span>
+            </button>
+            
+            <p style="text-align: center; margin-top: 1rem; font-size: 0.85rem; color: var(--text-dim);">
+                <span class="lang-en">Powered by Stripe. Your payment info is never stored on our servers.</span>
+                <span class="lang-zh">由 Stripe 提供支持。您的付款信息永不存儲在我們的伺服器上。</span>
+                <span class="lang-th">ขับเคลื่อนโดย Stripe ข้อมูลการชำระเงินของคุณไม่เคยถูกเก็บบนเซิร์ฟเวอร์ของเรา</span>
+            </p>
+        </div>
+        
+        <!-- Trust Badges -->
+        <div class="trust-section">
+            <div class="trust-badge">
+                <div class="trust-icon">🔒</div>
+                <div class="trust-text">
+                    <strong>SSL Encrypted</strong>
+                    <span class="lang-en">256-bit security</span>
+                    <span class="lang-zh">256位加密安全</span>
+                    <span class="lang-th">ความปลอดภัย 256 บิต</span>
+                </div>
+            </div>
+            <div class="trust-badge">
+                <div class="trust-icon">💳</div>
+                <div class="trust-text">
+                    <strong>Stripe Payments</strong>
+                    <span class="lang-en">Trusted worldwide</span>
+                    <span class="lang-zh">全球信賴</span>
+                    <span class="lang-th">เชื่อถือได้ทั่วโลก</span>
+                </div>
+            </div>
+            <div class="trust-badge">
+                <div class="trust-icon">⚡</div>
+                <div class="trust-text">
+                    <strong>
+                        <span class="lang-en">Instant Delivery</span>
+                        <span class="lang-zh">即時發送</span>
+                        <span class="lang-th">ส่งทันที</span>
+                    </strong>
+                    <span class="lang-en">NWG credited immediately</span>
+                    <span class="lang-zh">NWG 立即入帳</span>
+                    <span class="lang-th">NWG เครดิตทันที</span>
+                </div>
+            </div>
+            <div class="trust-badge">
+                <div class="trust-icon">🛡️</div>
+                <div class="trust-text">
+                    <strong>
+                        <span class="lang-en">Money-Back Guarantee</span>
+                        <span class="lang-zh">退款保證</span>
+                        <span class="lang-th">รับประกันคืนเงิน</span>
+                    </strong>
+                    <span class="lang-en">Within 24 hours</span>
+                    <span class="lang-zh">24小時內</span>
+                    <span class="lang-th">ภายใน 24 ชั่วโมง</span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- FAQ -->
+        <div class="faq-section">
+            <h3 class="section-title">
+                ❓ 
+                <span class="lang-en">Frequently Asked Questions</span>
+                <span class="lang-zh">常見問題</span>
+                <span class="lang-th">คำถามที่พบบ่อย</span>
+            </h3>
+            
+            <div class="faq-item">
+                <button class="faq-question">
+                    <span class="lang-en">What can I do with NWG?</span>
+                    <span class="lang-zh">我可以用 NWG 做什麼？</span>
+                    <span class="lang-th">ฉันสามารถทำอะไรกับ NWG ได้บ้าง?</span>
+                </button>
+                <div class="faq-answer">
+                    <span class="lang-en">NWG is our premium currency. Use it to pull cards, buy exclusive merch, unlock features, and trade with other players. NWG also represents your stake in the NumbahWan economy.</span>
+                    <span class="lang-zh">NWG 是我們的高級貨幣。用它來抽卡、購買專屬商品、解鎖功能，以及與其他玩家交易。NWG 也代表您在 NumbahWan 經濟中的份額。</span>
+                    <span class="lang-th">NWG เป็นสกุลเงินพรีเมียมของเรา ใช้ดึงการ์ด ซื้อสินค้าพิเศษ ปลดล็อคฟีเจอร์ และซื้อขายกับผู้เล่นคนอื่น NWG ยังแสดงถึงส่วนแบ่งของคุณในเศรษฐกิจ NumbahWan</span>
+                </div>
+            </div>
+            
+            <div class="faq-item">
+                <button class="faq-question">
+                    <span class="lang-en">Is my payment secure?</span>
+                    <span class="lang-zh">我的付款安全嗎？</span>
+                    <span class="lang-th">การชำระเงินของฉันปลอดภัยไหม?</span>
+                </button>
+                <div class="faq-answer">
+                    <span class="lang-en">Yes! We use Stripe, the same payment processor trusted by Amazon, Google, and millions of businesses worldwide. Your card details never touch our servers.</span>
+                    <span class="lang-zh">是的！我們使用 Stripe，與 Amazon、Google 以及全球數百萬企業信賴的相同支付處理器。您的卡片詳情永遠不會觸及我們的伺服器。</span>
+                    <span class="lang-th">ใช่! เราใช้ Stripe ผู้ประมวลผลการชำระเงินที่ Amazon Google และธุรกิจหลายล้านแห่งทั่วโลกไว้วางใจ รายละเอียดบัตรของคุณไม่เคยผ่านเซิร์ฟเวอร์ของเรา</span>
+                </div>
+            </div>
+            
+            <div class="faq-item">
+                <button class="faq-question">
+                    <span class="lang-en">When do I receive my NWG?</span>
+                    <span class="lang-zh">我什麼時候收到 NWG？</span>
+                    <span class="lang-th">ฉันจะได้รับ NWG เมื่อไหร่?</span>
+                </button>
+                <div class="faq-answer">
+                    <span class="lang-en">Instantly! As soon as your payment is confirmed, NWG will be credited to your wallet automatically. No waiting, no delays.</span>
+                    <span class="lang-zh">立即！一旦您的付款確認，NWG 將自動存入您的錢包。無需等待，無延遲。</span>
+                    <span class="lang-th">ทันที! ทันทีที่การชำระเงินของคุณได้รับการยืนยัน NWG จะถูกเครดิตเข้ากระเป๋าของคุณโดยอัตโนมัติ ไม่ต้องรอ ไม่มีความล่าช้า</span>
+                </div>
+            </div>
+            
+            <div class="faq-item">
+                <button class="faq-question">
+                    <span class="lang-en">Can I get a refund?</span>
+                    <span class="lang-zh">我可以退款嗎？</span>
+                    <span class="lang-th">ฉันขอคืนเงินได้ไหม?</span>
+                </button>
+                <div class="faq-answer">
+                    <span class="lang-en">Yes, within 24 hours of purchase if you haven't spent any NWG. Contact support@numbahwan.com with your transaction ID.</span>
+                    <span class="lang-zh">是的，如果您尚未使用任何 NWG，可在購買後24小時內退款。請使用您的交易 ID 聯繫 support@numbahwan.com。</span>
+                    <span class="lang-th">ได้ ภายใน 24 ชั่วโมงหลังซื้อถ้าคุณยังไม่ได้ใช้ NWG ใดๆ ติดต่อ support@numbahwan.com พร้อม ID ธุรกรรมของคุณ</span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Footer -->
+        <footer class="footer">
+            <p>
+                <span class="lang-en">By purchasing, you agree to our <a href="/terms">Terms of Service</a> and <a href="/privacy">Privacy Policy</a>.</span>
+                <span class="lang-zh">購買即表示您同意我們的<a href="/terms">服務條款</a>和<a href="/privacy">隱私政策</a>。</span>
+                <span class="lang-th">การซื้อแสดงว่าคุณยอมรับ<a href="/terms">ข้อกำหนดการใช้บริการ</a>และ<a href="/privacy">นโยบายความเป็นส่วนตัว</a>ของเรา</span>
+            </p>
+            <p style="margin-top: 0.5rem;">
+                © 2026 NumbahWan Guild. 
+                <span class="lang-en">All rights reserved.</span>
+                <span class="lang-zh">保留所有權利。</span>
+                <span class="lang-th">สงวนลิขสิทธิ์</span>
+            </p>
+        </footer>
+    </div>
+    
+    <script src="/static/nw-nav.js"></script>
+    <script>
+        // =====================================================
+        // NWG PURCHASE SYSTEM
+        // =====================================================
+        
+        // Stripe will be initialized with your publishable key
+        let stripe = null;
+        const STRIPE_PUBLISHABLE_KEY = 'pk_test_placeholder'; // Replace with real key
+        
+        // Selected package state
+        let selectedPackage = null;
+        let customAmount = 0;
+        
+        // Package definitions
+        const PACKAGES = {
+            starter: { usd: 5, nwg: 500, bonus: 0 },
+            popular: { usd: 20, nwg: 2200, bonus: 200 },
+            pro: { usd: 50, nwg: 5750, bonus: 750 },
+            whale: { usd: 100, nwg: 12000, bonus: 2000 }
+        };
+        
+        // Base rate: $1 = 100 NWG
+        const BASE_RATE = 100;
+        
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            // Initialize Stripe (when key is set)
+            if (STRIPE_PUBLISHABLE_KEY && !STRIPE_PUBLISHABLE_KEY.includes('placeholder')) {
+                stripe = Stripe(STRIPE_PUBLISHABLE_KEY);
+            }
+            
+            // Package selection
+            document.querySelectorAll('.package-card').forEach(card => {
+                card.addEventListener('click', () => selectPackage(card));
+                card.addEventListener('touchend', (e) => {
+                    e.preventDefault();
+                    selectPackage(card);
+                });
+            });
+            
+            // Custom amount input
+            const customInput = document.getElementById('customUsd');
+            customInput.addEventListener('input', handleCustomInput);
+            customInput.addEventListener('change', handleCustomInput);
+            
+            // Checkout button
+            document.getElementById('checkoutBtn').addEventListener('click', handleCheckout);
+            
+            // FAQ toggles
+            document.querySelectorAll('.faq-question').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    btn.parentElement.classList.toggle('open');
+                });
+            });
+            
+            // Language
+            bindLanguageButtons();
+            const savedLang = localStorage.getItem('numbahwan_lang') || 'en';
+            setLanguage(savedLang);
+            
+            // Navigation
+            if (typeof NW_NAV !== 'undefined') {
+                NW_NAV.init();
+            }
+        });
+        
+        function selectPackage(card) {
+            // Deselect all
+            document.querySelectorAll('.package-card').forEach(c => c.classList.remove('selected'));
+            
+            // Select this one
+            card.classList.add('selected');
+            
+            // Clear custom input
+            document.getElementById('customUsd').value = '';
+            document.getElementById('customNwg').textContent = '0 NWG';
+            
+            // Get package data
+            const packageName = card.dataset.package;
+            const pkg = PACKAGES[packageName];
+            
+            selectedPackage = {
+                name: packageName,
+                usd: pkg.usd,
+                nwg: pkg.nwg
+            };
+            
+            updateCheckoutSummary();
+        }
+        
+        function handleCustomInput(e) {
+            const value = parseFloat(e.target.value) || 0;
+            
+            // Deselect packages
+            document.querySelectorAll('.package-card').forEach(c => c.classList.remove('selected'));
+            
+            if (value > 0) {
+                // Calculate NWG with potential bonus for larger amounts
+                let bonus = 0;
+                if (value >= 100) bonus = 0.20;
+                else if (value >= 50) bonus = 0.15;
+                else if (value >= 20) bonus = 0.10;
+                
+                const baseNwg = Math.floor(value * BASE_RATE);
+                const bonusNwg = Math.floor(baseNwg * bonus);
+                const totalNwg = baseNwg + bonusNwg;
+                
+                document.getElementById('customNwg').textContent = totalNwg.toLocaleString() + ' NWG';
+                
+                selectedPackage = {
+                    name: 'custom',
+                    usd: value,
+                    nwg: totalNwg
+                };
+                
+                customAmount = value;
+            } else {
+                document.getElementById('customNwg').textContent = '0 NWG';
+                selectedPackage = null;
+            }
+            
+            updateCheckoutSummary();
+        }
+        
+        function updateCheckoutSummary() {
+            const usdEl = document.getElementById('checkoutUsd');
+            const nwgEl = document.getElementById('checkoutNwg');
+            const btn = document.getElementById('checkoutBtn');
+            
+            if (selectedPackage && selectedPackage.usd > 0) {
+                usdEl.textContent = '$' + selectedPackage.usd.toFixed(2);
+                nwgEl.textContent = selectedPackage.nwg.toLocaleString() + ' NWG';
+                btn.disabled = false;
+            } else {
+                usdEl.textContent = '$0';
+                nwgEl.textContent = '0 NWG';
+                btn.disabled = true;
+            }
+        }
+        
+        async function handleCheckout() {
+            if (!selectedPackage) return;
+            
+            const btn = document.getElementById('checkoutBtn');
+            btn.classList.add('loading');
+            btn.disabled = true;
+            
+            try {
+                // Call our API to create a Stripe checkout session
+                const response = await fetch('/api/purchase/create-checkout', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        package: selectedPackage.name,
+                        usd: selectedPackage.usd,
+                        nwg: selectedPackage.nwg,
+                        // Get wallet ID for crediting
+                        walletId: getWalletId()
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success && data.checkoutUrl) {
+                    // Redirect to Stripe Checkout
+                    window.location.href = data.checkoutUrl;
+                } else if (data.demo) {
+                    // Demo mode - simulate success
+                    alert('🎉 Demo Mode: In production, this would redirect to Stripe checkout.\n\nYou selected: $' + selectedPackage.usd + ' for ' + selectedPackage.nwg + ' NWG');
+                    
+                    // Credit wallet in demo mode
+                    if (typeof NW_WALLET !== 'undefined') {
+                        NW_WALLET.earn('nwg', selectedPackage.nwg, 'PURCHASE_DEMO');
+                        alert('✅ Demo: ' + selectedPackage.nwg + ' NWG credited to your wallet!');
+                        window.location.href = '/wallet';
+                    }
+                } else {
+                    throw new Error(data.error || 'Failed to create checkout session');
+                }
+            } catch (error) {
+                console.error('Checkout error:', error);
+                alert('Error: ' + error.message);
+            } finally {
+                btn.classList.remove('loading');
+                btn.disabled = false;
+            }
+        }
+        
+        function getWalletId() {
+            // Try to get wallet ID from NW_WALLET or localStorage
+            if (typeof NW_WALLET !== 'undefined' && NW_WALLET.wallet) {
+                return NW_WALLET.wallet.walletId;
+            }
+            
+            // Fallback: check localStorage
+            try {
+                const walletData = localStorage.getItem('nw_wallet_v2');
+                if (walletData) {
+                    const wallet = JSON.parse(walletData);
+                    return wallet.walletId;
+                }
+            } catch (e) {}
+            
+            return null;
+        }
+        
+        // Language handling
+        function setLanguage(lang) {
+            document.body.className = lang;
+            document.querySelectorAll('.lang-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.lang === lang);
+            });
+            localStorage.setItem('numbahwan_lang', lang);
+        }
+        
+        function bindLanguageButtons() {
+            document.querySelectorAll('.lang-btn').forEach(btn => {
+                const handleLang = (e) => {
+                    e.preventDefault();
+                    setLanguage(btn.dataset.lang);
+                };
+                btn.addEventListener('click', handleLang);
+                btn.addEventListener('touchend', handleLang);
+            });
+        }
+    </script>
+    <script src="/static/nw-wallet.js"></script>
+</body>
+</html>
