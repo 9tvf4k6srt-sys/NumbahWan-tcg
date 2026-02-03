@@ -322,6 +322,10 @@ const NW_NAV = {
         // Remove existing nav completely
         document.querySelectorAll('#nwNavContainer, #nwNavPanel, #nwNavOverlay, #nwNavToggle, #nwNavHome').forEach(el => el.remove());
         
+        // CRITICAL: Reset body overflow when reinecting nav (fixes iOS scroll lock after lang change)
+        document.body.style.overflow = '';
+        this.isOpen = false;
+        
         const container = document.createElement('div');
         container.id = 'nwNavContainer';
         container.innerHTML = this.generateNavHTML();
