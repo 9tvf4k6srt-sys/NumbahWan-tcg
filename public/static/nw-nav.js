@@ -112,11 +112,11 @@ const NW_NAV = {
             ]
         },
         government: {
-            name: { en: 'Government', zh: '政府機關', th: 'รัฐบาล' },
+            name: { en: 'The Trilateral Council', zh: '三邊委員會', th: 'สภาไตรภาคี' },
             icon: 'crown',
             color: '#9d4edd',
             collapsed: true,
-            desc: { en: '(Yes, we have one)', zh: '(是的)', th: '(ใช่ มี)' },
+            desc: { en: '(We see everything)', zh: '(我們看到一切)', th: '(เราเห็นทุกอย่าง)' },
             pages: [
                 { id: 'citizenship', name: { en: 'Immigration', zh: '移民局', th: 'ตรวจคนเข้าเมือง' }, icon: 'shield', href: '/citizenship' },
                 { id: 'invest', name: { en: 'NWG Securities', zh: 'NWG證券', th: 'หลักทรัพย์ NWG' }, icon: 'chart', href: '/invest' },
