@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
     <title>NumbahWan TCG | Rise of RegginA</title>
     <link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/static/nw-tokens.css">
     <link rel="stylesheet" href="/static/nw-utilities.css">
     <link rel="stylesheet" href="/static/nw-card-frames.css">
@@ -304,56 +305,45 @@
         }
         @keyframes dawn-rise { 0%,100% { opacity: 0.6; transform: translateX(-50%) scaleY(1); } 50% { opacity: 1; transform: translateX(-50%) scaleY(1.2); } }
         
-        /* Rarity indicator gem - only visible on active card */
-        .card-rarity-gem {
-            position: absolute; top: 10px; right: 10px; z-index: 10;
-            width: 32px; height: 32px; border-radius: 50%;
-            display: flex; align-items: center; justify-content: center;
-            font-size: 14px; font-weight: 900;
-            box-shadow: 0 3px 10px rgba(0,0,0,0.6);
-            opacity: 0; transform: scale(0.5);
-            transition: opacity 0.3s, transform 0.3s;
-        }
-        .card.active .card-rarity-gem { opacity: 1; transform: scale(1); }
+        /* REMOVED: Rarity gem - no longer needed without game mechanics */
+        .card-rarity-gem { display: none !important; }
         
-        .card.mythic .card-rarity-gem { 
-            background: linear-gradient(135deg, #ff6b00, #dc2626); 
-            border: 2px solid #fbbf24; color: #fff;
+        /* Card name bar - matches print template unified style */
+        .card-name-bar {
+            position: absolute;
+            bottom: 5px;
+            left: 5px;
+            right: 5px;
+            background: linear-gradient(180deg, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0.9) 100%);
+            border-radius: 0 0 10px 10px;
+            padding: 8px 10px;
+            z-index: 10;
+            border-top: 1px solid rgba(212, 175, 55, 0.3);
         }
-        @keyframes gem-pulse {
-            0%, 100% { box-shadow: 0 3px 10px rgba(0,0,0,0.6), 0 0 15px rgba(255,107,0,0.6); }
-            50% { box-shadow: 0 3px 15px rgba(0,0,0,0.6), 0 0 25px rgba(255,107,0,0.8); }
+        .card-name-text {
+            font-family: 'Cinzel', Georgia, serif;
+            font-size: 11px;
+            font-weight: 700;
+            color: #fff;
+            text-align: center;
+            text-shadow: 0 1px 3px rgba(0,0,0,0.8);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
-        .card.active.mythic .card-rarity-gem { animation: gem-pulse 1.5s ease-in-out infinite; }
-        .card.legendary .card-rarity-gem { 
-            background: linear-gradient(135deg, #fbbf24, #d97706); 
-            border: 2px solid #fde68a; color: #1c1917;
+        .card-name-bar .card-rarity-label {
+            font-size: 8px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            text-align: center;
+            margin-top: 2px;
         }
-        .card.epic .card-rarity-gem { 
-            background: linear-gradient(135deg, #a855f7, #7c3aed); 
-            border: 2px solid #c084fc; color: #fff;
-        }
-        .card.rare .card-rarity-gem { 
-            background: linear-gradient(135deg, #3b82f6, #2563eb); 
-            border: 2px solid #60a5fa; color: #fff;
-        }
-        .card.uncommon .card-rarity-gem { 
-            background: linear-gradient(135deg, #22c55e, #059669); 
-            border: 2px solid #4ade80; color: #fff;
-        }
-        .card.common .card-rarity-gem { 
-            background: linear-gradient(135deg, #71717a, #52525b); 
-            border: 2px solid #a1a1aa; color: #fff;
-        }
-        
-        /* Rarity gem icons */
-        .gem-icon { font-style: normal; }
-        .card.mythic .gem-icon::before { content: '✦'; }
-        .card.legendary .gem-icon::before { content: '♔'; }
-        .card.epic .gem-icon::before { content: '◆'; }
-        .card.rare .gem-icon::before { content: '★'; }
-        .card.uncommon .gem-icon::before { content: '●'; }
-        .card.common .gem-icon::before { content: '○'; }
+        .card.mythic .card-rarity-label { color: #ff6b00; }
+        .card.legendary .card-rarity-label { color: #fbbf24; }
+        .card.epic .card-rarity-label { color: #a855f7; }
+        .card.rare .card-rarity-label { color: #3b82f6; }
+        .card.uncommon .card-rarity-label { color: #22c55e; }
+        .card.common .card-rarity-label { color: #9ca3af; }
         
         /* Season Selector - Scrollable for 10 seasons */
         .season-selector {
@@ -1489,17 +1479,23 @@ function render() {
                     <div class="cs-name">${displayName}</div>
                 </div>
                 <div class="card-frame"></div>
-                <div class="card-rarity-gem"><i class="gem-icon"></i></div>
+                <div class="card-name-bar">
+                    <div class="card-name-text">${displayName}</div>
+                    <div class="card-rarity-label">${c.rarity}</div>
+                </div>
             `;
         } else {
-            // Real art (or S2 placeholder with badge)
+            // Real art with name bar (unified style matching print template)
+            const displayName = c.name.length > 22 ? c.name.substring(0, 20) + '…' : c.name;
             cardContent = `
                 <img class="card-art" src="${getThumbUrl(c.img, c.rarity)}" alt="${c.name}" loading="lazy" onerror="this.onerror=null; this.src='/static/images/cards/thumbs/placeholder.webp';">
                 <div class="card-frame"></div>
-                <div class="card-rarity-gem"><i class="gem-icon"></i></div>
+                <div class="card-name-bar">
+                    <div class="card-name-text">${displayName}</div>
+                    <div class="card-rarity-label">${c.rarity}</div>
+                </div>
                 <div class="holo"></div>
                 <div class="shine"></div>
-                ${(!hasRealArt && !isSeasonPreview) ? '<div class="placeholder-badge">🎨 ART COMING</div>' : ''}
             `;
         }
         
