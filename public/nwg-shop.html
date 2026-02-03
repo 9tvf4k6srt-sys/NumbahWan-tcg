@@ -1,0 +1,618 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>NWG Shop | Spend Your NWG</title>
+    <link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --gold: #ffd700;
+            --purple: #a855f7;
+            --blue: #3b82f6;
+            --green: #22c55e;
+            --red: #ef4444;
+            --orange: #f59e0b;
+        }
+        
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        
+        body {
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(135deg, #0a0a14 0%, #1a1a2e 50%, #0d0d1a 100%);
+            min-height: 100vh;
+            font-family: 'Inter', sans-serif;
+            color: #fff;
+        }
+        
+        /* Header */
+        .header {
+            background: rgba(0, 0, 0, 0.5);
+            padding: 16px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid var(--gold);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            backdrop-filter: blur(10px);
+        }
+        
+        .header-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: var(--gold);
+        }
+        
+        .header-balance {
+            font-size: 1rem;
+            color: var(--gold);
+            font-weight: 600;
+        }
+        
+        /* Category Tabs */
+        .category-tabs {
+            display: flex;
+            gap: 8px;
+            padding: 16px;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+        
+        .category-tab {
+            padding: 10px 20px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 2px solid transparent;
+            border-radius: 25px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: all 0.2s;
+        }
+        
+        .category-tab:hover {
+            background: rgba(255, 215, 0, 0.1);
+        }
+        
+        .category-tab.active {
+            background: linear-gradient(135deg, var(--gold), var(--orange));
+            color: #000;
+            border-color: var(--gold);
+        }
+        
+        /* Shop Grid */
+        .shop-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 16px;
+            padding: 16px;
+        }
+        
+        @media (min-width: 640px) {
+            .shop-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+        
+        @media (min-width: 1024px) {
+            .shop-grid {
+                grid-template-columns: repeat(4, 1fr);
+                max-width: 1200px;
+                margin: 0 auto;
+            }
+        }
+        
+        /* Shop Item */
+        .shop-item {
+            background: rgba(30, 30, 50, 0.8);
+            border-radius: 16px;
+            overflow: hidden;
+            border: 2px solid rgba(255, 215, 0, 0.2);
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .shop-item:hover {
+            transform: translateY(-4px);
+            border-color: var(--gold);
+            box-shadow: 0 10px 30px rgba(255, 215, 0, 0.2);
+        }
+        
+        .shop-item.sold-out {
+            opacity: 0.5;
+            pointer-events: none;
+        }
+        
+        .item-image {
+            width: 100%;
+            aspect-ratio: 1;
+            background: linear-gradient(135deg, #1a1a2e, #2d1b4e);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3rem;
+            position: relative;
+        }
+        
+        .item-badge {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            padding: 4px 8px;
+            border-radius: 10px;
+            font-size: 0.65rem;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+        
+        .item-badge.limited {
+            background: var(--red);
+        }
+        
+        .item-badge.new {
+            background: var(--green);
+        }
+        
+        .item-badge.hot {
+            background: var(--orange);
+        }
+        
+        .item-info {
+            padding: 12px;
+        }
+        
+        .item-name {
+            font-weight: 600;
+            font-size: 0.9rem;
+            margin-bottom: 4px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        
+        .item-desc {
+            font-size: 0.7rem;
+            color: rgba(255, 255, 255, 0.6);
+            margin-bottom: 8px;
+            line-height: 1.4;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+        
+        .item-price {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .price-nwg {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1rem;
+            font-weight: 700;
+            color: var(--gold);
+        }
+        
+        .buy-btn {
+            padding: 6px 12px;
+            background: var(--gold);
+            color: #000;
+            border: none;
+            border-radius: 8px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .buy-btn:hover {
+            background: #fff;
+            transform: scale(1.05);
+        }
+        
+        .buy-btn:disabled {
+            background: #444;
+            color: #888;
+            cursor: not-allowed;
+        }
+        
+        /* Section Title */
+        .section-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1rem;
+            color: var(--gold);
+            padding: 20px 16px 10px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+        
+        /* Purchase Modal */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.9);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            padding: 20px;
+        }
+        
+        .modal-overlay.show {
+            display: flex;
+        }
+        
+        .modal-content {
+            background: rgba(30, 30, 50, 0.98);
+            border-radius: 20px;
+            padding: 24px;
+            max-width: 400px;
+            width: 100%;
+            border: 2px solid var(--gold);
+            text-align: center;
+        }
+        
+        .modal-icon {
+            font-size: 4rem;
+            margin-bottom: 16px;
+        }
+        
+        .modal-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.3rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+        
+        .modal-desc {
+            font-size: 0.9rem;
+            color: rgba(255, 255, 255, 0.7);
+            margin-bottom: 20px;
+        }
+        
+        .modal-price {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--gold);
+            margin-bottom: 20px;
+        }
+        
+        .modal-buttons {
+            display: flex;
+            gap: 12px;
+        }
+        
+        .modal-btn {
+            flex: 1;
+            padding: 14px;
+            border: none;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .modal-btn.confirm {
+            background: var(--gold);
+            color: #000;
+        }
+        
+        .modal-btn.cancel {
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+        }
+        
+        /* Toast */
+        .toast {
+            position: fixed;
+            bottom: 100px;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background: var(--green);
+            color: #fff;
+            padding: 12px 24px;
+            border-radius: 25px;
+            font-weight: 600;
+            opacity: 0;
+            transition: all 0.3s ease;
+            z-index: 2000;
+        }
+        
+        .toast.show {
+            transform: translateX(-50%) translateY(0);
+            opacity: 1;
+        }
+        
+        .toast.error {
+            background: var(--red);
+        }
+        
+        /* Footer Spacer */
+        .footer-spacer {
+            height: 100px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="header-title">🛒 NWG SHOP</div>
+        <div class="header-balance">💰 <span id="balance">0</span> NWG</div>
+    </header>
+    
+    <!-- Category Tabs -->
+    <div class="category-tabs">
+        <button class="category-tab active" onclick="filterCategory('all')">🏪 All</button>
+        <button class="category-tab" onclick="filterCategory('boosts')">⚡ Boosts</button>
+        <button class="category-tab" onclick="filterCategory('cosmetics')">✨ Cosmetics</button>
+        <button class="category-tab" onclick="filterCategory('packs')">📦 Packs</button>
+        <button class="category-tab" onclick="filterCategory('special')">🎁 Special</button>
+    </div>
+    
+    <!-- Shop Items -->
+    <div class="section-title">⚡ Boosts & Power-Ups</div>
+    <div class="shop-grid" id="boostsGrid"></div>
+    
+    <div class="section-title">✨ Cosmetics & Titles</div>
+    <div class="shop-grid" id="cosmeticsGrid"></div>
+    
+    <div class="section-title">📦 Card Packs</div>
+    <div class="shop-grid" id="packsGrid"></div>
+    
+    <div class="section-title">🎁 Special Items</div>
+    <div class="shop-grid" id="specialGrid"></div>
+    
+    <div class="footer-spacer"></div>
+    
+    <!-- Purchase Modal -->
+    <div class="modal-overlay" id="purchaseModal">
+        <div class="modal-content">
+            <div class="modal-icon" id="modalIcon">🎁</div>
+            <div class="modal-title" id="modalTitle">Item Name</div>
+            <div class="modal-desc" id="modalDesc">Description</div>
+            <div class="modal-price" id="modalPrice">💰 1,000 NWG</div>
+            <div class="modal-buttons">
+                <button class="modal-btn cancel" onclick="closeModal()">Cancel</button>
+                <button class="modal-btn confirm" onclick="confirmPurchase()">Buy Now</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Toast -->
+    <div class="toast" id="toast">Purchase successful!</div>
+    
+    <script>
+        // ═══════════════════════════════════════════════════════════════════
+        // NWG SHOP - Spend your hard-earned NWG!
+        // ═══════════════════════════════════════════════════════════════════
+        
+        const SHOP_ITEMS = {
+            boosts: [
+                { id: 'luck_boost_1h', icon: '🍀', name: 'Lucky Charm (1hr)', desc: '+10% luck in battles for 1 hour', price: 500, badge: 'hot' },
+                { id: 'luck_boost_24h', icon: '🌟', name: 'Lucky Star (24hr)', desc: '+15% luck in battles for 24 hours', price: 2000, badge: null },
+                { id: 'xp_boost_1h', icon: '📈', name: 'XP Surge (1hr)', desc: '2x experience for 1 hour', price: 750, badge: 'new' },
+                { id: 'streak_shield', icon: '🛡️', name: 'Streak Shield', desc: 'Protect your win streak once', price: 1000, badge: null },
+                { id: 'pity_reset', icon: '🔄', name: 'Pity Reset', desc: 'Reset pity counter to maximize next pulls', price: 5000, badge: 'limited' },
+                { id: 'double_rewards', icon: '💎', name: 'Double Daily', desc: '2x daily login rewards today', price: 1500, badge: null },
+            ],
+            cosmetics: [
+                { id: 'title_whale', icon: '🐋', name: 'Title: Whale', desc: 'Show your support with the Whale title', price: 10000, badge: null },
+                { id: 'title_og', icon: '👑', name: 'Title: OG Member', desc: 'For true believers since day 1', price: 25000, badge: 'limited' },
+                { id: 'title_lucky', icon: '🍀', name: 'Title: Lucky One', desc: 'Win 100 battles to unlock... or buy it', price: 15000, badge: null },
+                { id: 'border_gold', icon: '🖼️', name: 'Gold Card Border', desc: 'Fancy gold border on all your cards', price: 20000, badge: 'new' },
+                { id: 'border_animated', icon: '✨', name: 'Animated Border', desc: 'Sparkling animated card borders', price: 50000, badge: 'limited' },
+                { id: 'emote_pack', icon: '😎', name: 'Premium Emotes', desc: '10 exclusive emotes for chat', price: 5000, badge: null },
+            ],
+            packs: [
+                { id: 'pack_standard', icon: '📦', name: 'Standard Pack', desc: '5 random cards, 1 rare+ guaranteed', price: 1000, badge: null },
+                { id: 'pack_premium', icon: '💫', name: 'Premium Pack', desc: '8 cards, 2 rare+ guaranteed', price: 3000, badge: 'hot' },
+                { id: 'pack_legendary', icon: '🔥', name: 'Legendary Pack', desc: '5 cards, 1 legendary guaranteed!', price: 15000, badge: 'limited' },
+                { id: 'pack_mythic', icon: '🌈', name: 'Mythic Chance Pack', desc: '3 cards with 5% mythic chance each', price: 25000, badge: 'limited' },
+            ],
+            special: [
+                { id: 'name_change', icon: '📝', name: 'Name Change', desc: 'Change your display name once', price: 5000, badge: null },
+                { id: 'guild_shoutout', icon: '📢', name: 'Guild Shoutout', desc: 'Your message in guild announcements', price: 10000, badge: null },
+                { id: 'mystery_box', icon: '❓', name: 'Mystery Box', desc: 'Could be amazing... or not', price: 2500, badge: 'hot' },
+                { id: 'donation', icon: '❤️', name: 'Guild Donation', desc: 'Support NumbahWan development', price: 1000, badge: null },
+                { id: 'physical_discount', icon: '🎴', name: 'Physical Card Coupon', desc: '10% off your next physical card order', price: 50000, badge: 'limited' },
+                { id: 'vip_1month', icon: '⭐', name: 'VIP Status (1 Month)', desc: 'VIP badge, 2x daily rewards, exclusive chat', price: 100000, badge: 'limited' },
+            ]
+        };
+        
+        let balance = 0;
+        let selectedItem = null;
+        let currentCategory = 'all';
+        
+        // Load balance from localStorage (simulated wallet)
+        function loadBalance() {
+            try {
+                const wallet = JSON.parse(localStorage.getItem('nw_wallet') || '{}');
+                balance = wallet.balance || 1000;
+            } catch (e) {
+                balance = 1000;
+            }
+            document.getElementById('balance').textContent = balance.toLocaleString();
+        }
+        
+        function saveBalance() {
+            try {
+                const wallet = JSON.parse(localStorage.getItem('nw_wallet') || '{}');
+                wallet.balance = balance;
+                localStorage.setItem('nw_wallet', JSON.stringify(wallet));
+            } catch (e) {}
+        }
+        
+        function renderItem(item) {
+            const canAfford = balance >= item.price;
+            return `
+                <div class="shop-item ${!canAfford ? '' : ''}" onclick="openPurchase('${item.id}')">
+                    <div class="item-image">
+                        ${item.icon}
+                        ${item.badge ? `<span class="item-badge ${item.badge}">${item.badge}</span>` : ''}
+                    </div>
+                    <div class="item-info">
+                        <div class="item-name">${item.name}</div>
+                        <div class="item-desc">${item.desc}</div>
+                        <div class="item-price">
+                            <span class="price-nwg">${item.price.toLocaleString()}</span>
+                            <button class="buy-btn" ${!canAfford ? 'disabled' : ''}>
+                                ${canAfford ? 'Buy' : 'Need More'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+        
+        function renderShop() {
+            const grids = {
+                boosts: document.getElementById('boostsGrid'),
+                cosmetics: document.getElementById('cosmeticsGrid'),
+                packs: document.getElementById('packsGrid'),
+                special: document.getElementById('specialGrid')
+            };
+            
+            for (const [category, grid] of Object.entries(grids)) {
+                const items = SHOP_ITEMS[category];
+                const shouldShow = currentCategory === 'all' || currentCategory === category;
+                
+                grid.style.display = shouldShow ? 'grid' : 'none';
+                grid.previousElementSibling.style.display = shouldShow ? 'block' : 'none';
+                
+                if (shouldShow) {
+                    grid.innerHTML = items.map(renderItem).join('');
+                }
+            }
+        }
+        
+        function filterCategory(category) {
+            currentCategory = category;
+            
+            // Update tab styles
+            document.querySelectorAll('.category-tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            renderShop();
+        }
+        
+        function findItem(itemId) {
+            for (const items of Object.values(SHOP_ITEMS)) {
+                const found = items.find(i => i.id === itemId);
+                if (found) return found;
+            }
+            return null;
+        }
+        
+        function openPurchase(itemId) {
+            const item = findItem(itemId);
+            if (!item) return;
+            
+            selectedItem = item;
+            
+            document.getElementById('modalIcon').textContent = item.icon;
+            document.getElementById('modalTitle').textContent = item.name;
+            document.getElementById('modalDesc').textContent = item.desc;
+            document.getElementById('modalPrice').textContent = `💰 ${item.price.toLocaleString()} NWG`;
+            
+            const confirmBtn = document.querySelector('.modal-btn.confirm');
+            if (balance >= item.price) {
+                confirmBtn.disabled = false;
+                confirmBtn.textContent = 'Buy Now';
+            } else {
+                confirmBtn.disabled = true;
+                confirmBtn.textContent = `Need ${(item.price - balance).toLocaleString()} more`;
+            }
+            
+            document.getElementById('purchaseModal').classList.add('show');
+        }
+        
+        function closeModal() {
+            document.getElementById('purchaseModal').classList.remove('show');
+            selectedItem = null;
+        }
+        
+        function confirmPurchase() {
+            if (!selectedItem || balance < selectedItem.price) return;
+            
+            // Deduct balance
+            balance -= selectedItem.price;
+            saveBalance();
+            document.getElementById('balance').textContent = balance.toLocaleString();
+            
+            // Close modal
+            closeModal();
+            
+            // Show toast
+            showToast(`✅ Purchased ${selectedItem.name}!`);
+            
+            // Log purchase (would go to server in production)
+            console.log('[NWG Shop] Purchased:', selectedItem.id, 'for', selectedItem.price, 'NWG');
+            
+            // Apply effect based on item type
+            applyPurchaseEffect(selectedItem);
+            
+            // Re-render to update affordability
+            renderShop();
+        }
+        
+        function applyPurchaseEffect(item) {
+            // Store purchased items
+            try {
+                const purchases = JSON.parse(localStorage.getItem('nwg_purchases') || '[]');
+                purchases.push({
+                    id: item.id,
+                    name: item.name,
+                    price: item.price,
+                    timestamp: Date.now()
+                });
+                localStorage.setItem('nwg_purchases', JSON.stringify(purchases));
+            } catch (e) {}
+            
+            // Special handling for certain items
+            switch (item.id) {
+                case 'mystery_box':
+                    // Random reward!
+                    const rewards = [500, 1000, 2500, 5000, 10000];
+                    const reward = rewards[Math.floor(Math.random() * rewards.length)];
+                    setTimeout(() => {
+                        balance += reward;
+                        saveBalance();
+                        document.getElementById('balance').textContent = balance.toLocaleString();
+                        showToast(`🎁 Mystery Box: You got ${reward.toLocaleString()} NWG!`);
+                        renderShop();
+                    }, 1000);
+                    break;
+                    
+                case 'donation':
+                    showToast('❤️ Thank you for supporting NumbahWan!');
+                    break;
+            }
+        }
+        
+        function showToast(message, isError = false) {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.className = `toast show ${isError ? 'error' : ''}`;
+            
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+        
+        // Initialize
+        loadBalance();
+        renderShop();
+    </script>
+</body>
+</html>
