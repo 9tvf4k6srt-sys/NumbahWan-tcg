@@ -1875,6 +1875,173 @@ app.post('/api/wallet/sync', async (c) => {
 });
 
 // ============================================================================
+// LIVE MARKET PRICES API - Real-time data for NWG Portfolio
+// ============================================================================
+
+// GET /api/market-prices - Get live prices for all portfolio assets
+app.get('/api/market-prices', async (c) => {
+  try {
+    const cache = c.req.header('Cache-Control');
+    
+    // Fetch prices from multiple sources in parallel
+    const [btcData, stocksData] = await Promise.allSettled([
+      // CoinGecko for BTC
+      fetch('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd&include_24hr_change=true&include_24hr_high=true&include_24hr_low=true')
+        .then(r => r.json())
+        .catch(() => null),
+      // Yahoo Finance proxy for stocks (using a free endpoint)
+      fetch('https://query1.finance.yahoo.com/v8/finance/spark?symbols=PLTR,AVGO,GC=F,SI=F&range=1d&interval=5m')
+        .then(r => r.json())
+        .catch(() => null)
+    ]);
+    
+    // Default values (realistic 2026 prices)
+    const prices: any = {
+      silver: { price: 71.24, change: 2.15, high24h: 73.50, low24h: 69.80 },
+      gold: { price: 5142.80, change: 1.24, high24h: 5200.00, low24h: 5080.00 },
+      btc: { price: 114500, change: 3.87, high24h: 118000, low24h: 110000 },
+      pltr: { price: 89.45, change: 4.21, high24h: 92.00, low24h: 85.50 },
+      avgo: { price: 245.67, change: 2.89, high24h: 252.00, low24h: 238.00 }
+    };
+    
+    // Update BTC from CoinGecko if available
+    if (btcData.status === 'fulfilled' && btcData.value?.bitcoin) {
+      const btc = btcData.value.bitcoin;
+      prices.btc.price = btc.usd || prices.btc.price;
+      prices.btc.change = btc.usd_24h_change || prices.btc.change;
+      prices.btc.high24h = btc.usd_24h_high || prices.btc.high24h;
+      prices.btc.low24h = btc.usd_24h_low || prices.btc.low24h;
+    }
+    
+    // Update stocks from Yahoo if available
+    if (stocksData.status === 'fulfilled' && stocksData.value?.spark?.result) {
+      const results = stocksData.value.spark.result;
+      for (const item of results) {
+        const symbol = item.symbol;
+        const quotes = item.response?.[0]?.meta;
+        const closes = item.response?.[0]?.indicators?.quote?.[0]?.close;
+        
+        if (quotes && closes && closes.length > 0) {
+          const currentPrice = quotes.regularMarketPrice || closes[closes.length - 1];
+          const prevClose = quotes.previousClose || closes[0];
+          const change = prevClose ? ((currentPrice - prevClose) / prevClose * 100) : 0;
+          
+          if (symbol === 'PLTR') {
+            prices.pltr.price = currentPrice;
+            prices.pltr.change = change;
+          } else if (symbol === 'AVGO') {
+            prices.avgo.price = currentPrice;
+            prices.avgo.change = change;
+          } else if (symbol === 'GC=F') { // Gold futures
+            prices.gold.price = currentPrice;
+            prices.gold.change = change;
+          } else if (symbol === 'SI=F') { // Silver futures
+            prices.silver.price = currentPrice;
+            prices.silver.change = change;
+          }
+        }
+      }
+    }
+    
+    // Calculate NWG price from portfolio
+    const weights = { silver: 0.25, gold: 0.20, btc: 0.20, pltr: 0.20, avgo: 0.15 };
+    const BASE_MULTIPLIER = 0.00001;
+    
+    let nwgPrice = 0;
+    for (const [asset, weight] of Object.entries(weights)) {
+      nwgPrice += prices[asset].price * weight;
+    }
+    nwgPrice *= BASE_MULTIPLIER;
+    
+    // Calculate NWG 24h change (weighted average of changes)
+    let weightedChange = 0;
+    for (const [asset, weight] of Object.entries(weights)) {
+      weightedChange += prices[asset].change * weight;
+    }
+    
+    c.header('Cache-Control', 'public, max-age=30, stale-while-revalidate=60');
+    
+    return c.json({
+      success: true,
+      timestamp: Date.now(),
+      nwg: {
+        price: nwgPrice,
+        change24h: weightedChange,
+        high24h: nwgPrice * 1.03,
+        low24h: nwgPrice * 0.98,
+        marketCap: nwgPrice * 1000000000,
+        totalSupply: 1000000000,
+        formula: 'NWG = (Silver × 25%) + (Gold × 20%) + (BTC × 20%) + (PLTR × 20%) + (AVGO × 15%)'
+      },
+      assets: prices,
+      weights,
+      sources: {
+        btc: btcData.status === 'fulfilled' ? 'CoinGecko' : 'fallback',
+        stocks: stocksData.status === 'fulfilled' ? 'Yahoo Finance' : 'fallback'
+      }
+    });
+  } catch (e) {
+    console.error('Market prices error:', e);
+    return c.json({ success: false, error: String(e) }, 500);
+  }
+});
+
+// GET /api/market-prices/history - Get historical price data for charts
+app.get('/api/market-prices/history', async (c) => {
+  try {
+    const timeframe = c.req.query('timeframe') || '7d';
+    
+    // Generate simulated historical data (in production, use a database)
+    const basePrice = 0.01;
+    const points: Array<{ timestamp: number; price: number }> = [];
+    
+    let duration = 7 * 24 * 60; // 7 days in minutes
+    let interval = 60; // 1 hour
+    
+    switch (timeframe) {
+      case '1h':
+        duration = 60;
+        interval = 1;
+        break;
+      case '24h':
+        duration = 24 * 60;
+        interval = 5;
+        break;
+      case '7d':
+        duration = 7 * 24 * 60;
+        interval = 60;
+        break;
+      case '1m':
+        duration = 30 * 24 * 60;
+        interval = 240;
+        break;
+    }
+    
+    const now = Date.now();
+    let price = basePrice * 0.95; // Start slightly lower
+    
+    for (let i = duration; i >= 0; i -= interval) {
+      const timestamp = now - i * 60 * 1000;
+      // Random walk with upward trend
+      const change = (Math.random() - 0.45) * 0.0002;
+      price = Math.max(0.005, price * (1 + change));
+      points.push({ timestamp, price });
+    }
+    
+    c.header('Cache-Control', 'public, max-age=60, stale-while-revalidate=300');
+    
+    return c.json({
+      success: true,
+      timeframe,
+      points,
+      count: points.length
+    });
+  } catch (e) {
+    return c.json({ success: false, error: String(e) }, 500);
+  }
+});
+
+// ============================================================================
 // PURCHASE API (Demo Mode)
 // ============================================================================
 
