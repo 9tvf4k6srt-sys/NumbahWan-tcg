@@ -1195,16 +1195,25 @@
             contribEl.textContent = `+$${contrib.toFixed(5)}`;
         }
         
-        // Simulate price movement (fallback when API unavailable)
+        // Simulate realistic price movements - always runs for live ticker effect
         function simulateMarket() {
             for (const [key, asset] of Object.entries(assetData)) {
-                // Random walk with slight upward bias
-                const movement = (Math.random() - 0.48) * 0.002;
+                // Different volatility for different assets
+                let volatility = 0.001; // Base volatility
+                if (key === 'btc') volatility = 0.003; // BTC more volatile
+                if (key === 'pltr') volatility = 0.002; // Tech stocks volatile
+                if (key === 'avgo') volatility = 0.0015;
+                if (key === 'silver') volatility = 0.0012;
+                if (key === 'gold') volatility = 0.0008; // Gold less volatile
+                
+                // Random walk with slight upward bias (bull market simulation)
+                const movement = (Math.random() - 0.47) * volatility;
                 asset.price = asset.price * (1 + movement);
                 
-                // Update change percentage with small drift
-                asset.change = asset.change + (Math.random() - 0.5) * 0.1;
-                asset.change = Math.max(-10, Math.min(10, asset.change));
+                // Update change percentage - drift towards base change
+                const drift = (Math.random() - 0.5) * 0.05;
+                asset.change = asset.change + drift;
+                asset.change = Math.max(-15, Math.min(15, asset.change));
             }
         }
         
@@ -1418,38 +1427,52 @@
             // Set initial language
             setLanguage(savedLang);
             
-            initChart();
+            await initChart();
             
-            // Try to fetch real prices first
-            const hasLiveData = await fetchLiveMarketPrices();
+            // Initial UI update
             updateUI();
+            console.log('[NWG Markets] Initial UI rendered');
             
-            // Fetch live prices every 30 seconds
-            setInterval(async () => {
-                const success = await fetchLiveMarketPrices();
-                if (!success) {
-                    // Fallback to simulation if API fails
-                    simulateMarket();
+            // Try to fetch real prices from our API
+            fetchLiveMarketPrices().then(success => {
+                if (success) {
+                    console.log('[NWG Markets] Live API data loaded');
+                    updateUI();
                 }
+            });
+            
+            // LIVE TICKER - Always simulate small movements every 2 seconds for visual feedback
+            setInterval(() => {
+                simulateMarket();
                 updateUI();
                 addToHistory();
-            }, 5000);
+                console.log('[NWG Markets] Tick - price updated');
+            }, 2000);
             
-            // Also fetch from external sources directly (backup)
+            // Fetch real prices from API every 30 seconds (merges with simulation)
+            setInterval(async () => {
+                const success = await fetchLiveMarketPrices();
+                if (success) {
+                    console.log('[NWG Markets] API prices refreshed');
+                    updateUI();
+                }
+            }, 30000);
+            
+            // Direct CoinGecko fetch for BTC every 60 seconds (backup/verification)
             setInterval(async () => {
                 try {
-                    // Direct CoinGecko fetch for BTC (backup)
                     const btcResponse = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd&include_24hr_change=true');
                     const btcData = await btcResponse.json();
                     if (btcData.bitcoin) {
                         assetData.btc.price = btcData.bitcoin.usd;
                         assetData.btc.change = btcData.bitcoin.usd_24h_change || assetData.btc.change;
+                        console.log('[NWG Markets] BTC price from CoinGecko:', btcData.bitcoin.usd);
                         updateUI();
                     }
                 } catch (e) {
-                    console.log('Direct CoinGecko fetch failed, using API data');
+                    console.log('[NWG Markets] CoinGecko fetch failed');
                 }
-            }, 60000); // Every 60 seconds
+            }, 60000);
             
             // Initialize navigation
             if (typeof NW_NAV !== 'undefined') {
