@@ -152,13 +152,27 @@ const NW_NAV = {
             color: '#888',
             collapsed: true,
             pages: [
-                { id: 'guide', name: { en: 'Guide', zh: '攻略', th: 'คู่มือ' }, icon: 'scroll', href: '/guide' },
+                { id: 'guide', name: { en: 'Game Guide', zh: '遊戲攻略', th: 'คู่มือเกม' }, icon: 'scroll', href: '/guide' },
                 { id: 'academy', name: { en: 'Academy', zh: '學院', th: 'สถาบัน' }, icon: 'scroll', href: '/academy' },
+                { id: 'wyckoff', name: { en: 'Wyckoff Method', zh: '威科夫方法', th: 'วิธีไวคอฟฟ์' }, icon: 'chart', href: '/wyckoff', isNew: true },
                 { id: 'vault', name: { en: 'Archive Vault', zh: '檔案庫', th: 'คลังเก็บ' }, icon: 'lock', href: '/vault' },
                 { id: 'museum', name: { en: 'Museum', zh: '博物館', th: 'พิพิธภัณฑ์' }, icon: 'crown', href: '/museum' },
+                { id: 'historical-society', name: { en: 'Historical Society', zh: '歷史學會', th: 'สมาคมประวัติศาสตร์' }, icon: 'scroll', href: '/historical-society' },
+                { id: 'research', name: { en: 'Research Archives', zh: '研究檔案', th: 'คลังงานวิจัย' }, icon: 'scroll', href: '/research' },
                 { id: 'fortune', name: { en: 'Fortune', zh: '占卜', th: 'ดูดวง' }, icon: 'crystal-ball', href: '/fortune' },
+                { id: 'updates', name: { en: 'Patch Notes', zh: '更新日誌', th: 'บันทึกแพทช์' }, icon: 'clipboard', href: '/updates' },
                 { id: 'apply', name: { en: 'Join Guild', zh: '加入公會', th: 'สมัครกิลด์' }, icon: 'form', href: '/apply' },
                 { id: 'about', name: { en: 'About', zh: '關於', th: 'เกี่ยวกับ' }, icon: 'shield', href: '/about' }
+            ]
+        },
+        sisters: {
+            name: { en: 'Sister Guilds', zh: '姐妹公會', th: 'กิลด์พี่น้อง' },
+            icon: 'anchor',
+            color: '#7ab87a',
+            collapsed: true,
+            desc: { en: '(Allied guilds)', zh: '(同盟公會)', th: '(กิลด์พันธมิตร)' },
+            pages: [
+                { id: 'matchalatte', name: { en: 'MatchaLatte', zh: '抹茶拿鐵', th: 'มัทฉะลาเต้' }, icon: 'trophy', href: '/matchalatte', isNew: true, external: false }
             ]
         }
     },
