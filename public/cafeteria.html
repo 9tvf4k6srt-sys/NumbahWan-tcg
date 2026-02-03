@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Guild Cafeteria | NumbahWan</title>
+    <link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <script src="/static/nw-nav.js" defer></script>
+    <script src="/static/nw-sounds.js" defer></script>
+    <script src="/static/nw-guide.js" defer></script>
+    <style>
+        :root { --neon-orange: #ff6b00; --neon-purple: #a855f7; --dark: #0a0a0f; }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Inter', sans-serif; background: var(--dark); color: #fff; min-height: 100vh; }
+        .font-fun { font-family: 'Fredoka', sans-serif; }
+        .hero { min-height: 60vh; background: linear-gradient(to bottom, rgba(0,0,0,0.3), rgba(10,10,15,0.95)), url('/static/images/absurdist/cafeteria.webp') center/cover; display: flex; align-items: center; justify-content: center; text-align: center; padding: 2rem; }
+        .neon-text { text-shadow: 0 0 10px var(--neon-orange), 0 0 40px var(--neon-orange); }
+        .menu-card { background: linear-gradient(145deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02)); border: 1px solid rgba(255,107,0,0.3); border-radius: 16px; padding: 1.5rem; transition: all 0.3s; }
+        .menu-card:hover { transform: translateY(-4px); border-color: var(--neon-orange); box-shadow: 0 10px 40px rgba(255,107,0,0.2); }
+        .price { color: #ffd700; font-weight: 700; }
+        .tag { font-size: 0.7rem; padding: 2px 8px; border-radius: 20px; }
+        .tag-new { background: #22c55e; color: #000; }
+        .tag-hot { background: #ef4444; color: #fff; }
+        .tag-whale { background: linear-gradient(90deg, #ffd700, #ff6b00); color: #000; }
+        .review { background: rgba(255,255,255,0.03); border-left: 3px solid var(--neon-purple); padding: 1rem; margin: 1rem 0; border-radius: 0 8px 8px 0; }
+        .stars { color: #ffd700; }
+        @keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-10px)} }
+        .float { animation: float 3s ease-in-out infinite; }
+    </style>
+</head>
+<body>
+    <section class="hero">
+        <div>
+            <div class="text-6xl mb-4 float">🍜</div>
+            <h1 class="font-fun text-5xl md:text-7xl neon-text mb-4" data-i18n="title">GUILD CAFETERIA</h1>
+            <p class="text-xl text-gray-300 max-w-xl mx-auto" data-i18n="subtitle">Where the food is questionable but the vibes are immaculate</p>
+        </div>
+    </section>
+
+    <main class="max-w-6xl mx-auto px-4 py-12">
+        <!-- Chef Section -->
+        <div class="text-center mb-12">
+            <div class="inline-block bg-gradient-to-r from-orange-500/20 to-purple-500/20 border border-orange-500/30 rounded-2xl p-6">
+                <div class="text-4xl mb-2">🐹</div>
+                <h2 class="font-fun text-2xl text-orange-400" data-i18n="chef">Head Chef: Sir Nibbles III</h2>
+                <p class="text-gray-400 text-sm" data-i18n="chefTitle">"I may be small, but my flavor profiles are MASSIVE"</p>
+            </div>
+        </div>
+
+        <!-- Menu Grid -->
+        <h2 class="font-fun text-3xl text-center mb-8 text-orange-400">📋 <span data-i18n="menuTitle">TODAY'S MENU</span></h2>
+        <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-16" id="menuGrid"></div>
+
+        <!-- Reviews Section -->
+        <h2 class="font-fun text-3xl text-center mb-8 text-purple-400">⭐ <span data-i18n="reviewsTitle">CUSTOMER REVIEWS</span></h2>
+        <div class="max-w-3xl mx-auto" id="reviewsSection"></div>
+
+        <!-- Kitchen Rules -->
+        <div class="mt-16 bg-red-500/10 border border-red-500/30 rounded-2xl p-6 max-w-2xl mx-auto">
+            <h3 class="font-fun text-xl text-red-400 mb-4 text-center">⚠️ <span data-i18n="rulesTitle">KITCHEN RULES</span></h3>
+            <ul class="space-y-2 text-gray-300 text-sm" id="rulesList"></ul>
+        </div>
+    </main>
+
+    <script>
+    const i18n = {
+        en: {
+            title: "GUILD CAFETERIA",
+            subtitle: "Where the food is questionable but the vibes are immaculate",
+            chef: "Head Chef: Sir Nibbles III",
+            chefTitle: '"I may be small, but my flavor profiles are MASSIVE"',
+            menuTitle: "TODAY'S MENU",
+            reviewsTitle: "CUSTOMER REVIEWS",
+            rulesTitle: "KITCHEN RULES",
+            menu: [
+                { name: "AFK Ramen", desc: "Serves itself while you're away. May or may not still be there when you return.", price: "15◆", tags: ["hot"], emoji: "🍜" },
+                { name: "Whale Tears Soup", desc: "Harvested from credit card declines. Surprisingly salty.", price: "999◆", tags: ["whale"], emoji: "🥣" },
+                { name: "Lag Spike Smoothie", desc: "Warning: May freeze mid-sip for 3-5 business days.", price: "8◆", tags: ["new"], emoji: "🥤" },
+                { name: "Gacha Surprise Bowl", desc: "0.01% chance of actual food. 99.99% chance of disappointment.", price: "50◆", tags: ["hot"], emoji: "🎲" },
+                { name: "Maintenance Bread", desc: "Available every Tuesday. Or Wednesday. We'll let you know.", price: "FREE*", tags: [], emoji: "🍞" },
+                { name: "Rage Quit Hot Wings", desc: "So spicy you'll uninstall. Twice.", price: "25◆", tags: ["hot"], emoji: "🍗" },
+                { name: "P2W Platter", desc: "Same as regular food but costs 10x more. Tastes like victory.", price: "500◆", tags: ["whale"], emoji: "🍱" },
+                { name: "Connection Lost Cookies", desc: "Now you see them, now you don't.", price: "5◆", tags: ["new"], emoji: "🍪" },
+                { name: "Patch Notes Pasta", desc: "Recipe changes without warning. Previous taste not guaranteed.", price: "12◆", tags: [], emoji: "🍝" }
+            ],
+            reviews: [
+                { user: "xX_ProGamer_Xx", stars: 5, text: "Ordered the AFK Ramen 3 days ago. Still waiting. 5 stars for the suspense.", avatar: "😎" },
+                { user: "WhaleMommy2024", stars: 4, text: "The Whale Tears Soup reminded me of my bank account. Emotional damage.", avatar: "🐋" },
+                { user: "F2P_AndProud", stars: 1, text: "I asked for water. They charged me 50 diamonds. Water.", avatar: "😤" },
+                { user: "TouchGrass", stars: 5, text: "Best food I've had without leaving my chair in 72 hours.", avatar: "🌱" },
+                { user: "ServerHamster", stars: 5, text: "I work here. The wheel pays well. The cheese is mid.", avatar: "🐹" }
+            ],
+            rules: [
+                "🚫 No flash photography - it scares the hamster",
+                "💳 We accept: Diamonds, Gold, Souls, Firstborn children",
+                "⏰ Kitchen closes when the hamster gets tired",
+                "🎰 Complaining about gacha rates adds 10◆ to your bill",
+                "📱 Free WiFi password: 'git_gud_lol'",
+                "🚪 Emergency exits lead back to the gacha machine"
+            ]
+        },
+        zh: {
+            title: "公會食堂",
+            subtitle: "食物品質存疑，但氛圍一流",
+            chef: "主廚：乃寶三世爵士",
+            chefTitle: '"我可能很小，但我的風味是巨大的"',
+            menuTitle: "今日菜單",
+            reviewsTitle: "顧客評價",
+            rulesTitle: "廚房規則",
+            menu: [
+                { name: "掛機拉麵", desc: "自動供餐。回來時可能還在，也可能不在。", price: "15◆", tags: ["hot"], emoji: "🍜" },
+                { name: "課金淚湯", desc: "從信用卡拒絕中提取。出奇地鹹。", price: "999◆", tags: ["whale"], emoji: "🥣" },
+                { name: "延遲奶昔", desc: "警告：可能在喝到一半時卡住3-5個工作天。", price: "8◆", tags: ["new"], emoji: "🥤" },
+                { name: "抽卡驚喜碗", desc: "0.01%機率有真正的食物。99.99%機率是失望。", price: "50◆", tags: ["hot"], emoji: "🎲" },
+                { name: "維護麵包", desc: "每週二供應。或週三。我們會通知你的。", price: "免費*", tags: [], emoji: "🍞" },
+                { name: "怒退辣雞翅", desc: "辣到你會卸載遊戲。兩次。", price: "25◆", tags: ["hot"], emoji: "🍗" },
+                { name: "課長套餐", desc: "跟普通食物一樣但貴10倍。嚐起來像勝利。", price: "500◆", tags: ["whale"], emoji: "🍱" },
+                { name: "斷線餅乾", desc: "現在看到了，現在沒了。", price: "5◆", tags: ["new"], emoji: "🍪" },
+                { name: "更新公告義大利麵", desc: "配方隨時變更。不保證之前的味道。", price: "12◆", tags: [], emoji: "🍝" }
+            ],
+            reviews: [
+                { user: "xX_職業玩家_Xx", stars: 5, text: "三天前點了掛機拉麵。還在等。懸念感給5星。", avatar: "😎" },
+                { user: "課金媽咪2024", stars: 4, text: "課金淚湯讓我想起我的銀行帳戶。情緒傷害。", avatar: "🐋" },
+                { user: "免費玩家_驕傲", stars: 1, text: "我要了水。他們收我50鑽。水耶。", avatar: "😤" },
+                { user: "摸草去", stars: 5, text: "72小時沒離開椅子吃過最好的食物。", avatar: "🌱" },
+                { user: "伺服器倉鼠", stars: 5, text: "我在這工作。轉輪薪水不錯。起司普普。", avatar: "🐹" }
+            ],
+            rules: [
+                "🚫 禁止閃光燈 - 會嚇到倉鼠",
+                "💳 接受：鑽石、金幣、靈魂、長子",
+                "⏰ 倉鼠累了廚房就關門",
+                "🎰 抱怨抽卡機率帳單加10◆",
+                "📱 免費WiFi密碼：'git_gud_lol'",
+                "🚪 緊急出口通往抽卡機"
+            ]
+        },
+        th: {
+            title: "โรงอาหารกิลด์",
+            subtitle: "อาหารน่าสงสัย แต่บรรยากาศเลิศ",
+            chef: "หัวหน้าเชฟ: เซอร์นิบเบิ้ลส์ที่ 3",
+            chefTitle: '"ข้าอาจตัวเล็ก แต่รสชาติข้ายิ่งใหญ่"',
+            menuTitle: "เมนูวันนี้",
+            reviewsTitle: "รีวิวลูกค้า",
+            rulesTitle: "กฎห้องครัว",
+            menu: [
+                { name: "ราเมน AFK", desc: "เสิร์ฟเองตอนคุณไม่อยู่ อาจยังอยู่ตอนกลับมา หรือไม่ก็ไม่", price: "15◆", tags: ["hot"], emoji: "🍜" },
+                { name: "ซุปน้ำตาเวล", desc: "เก็บจากบัตรเครดิตถูกปฏิเสธ เค็มอย่างน่าประหลาดใจ", price: "999◆", tags: ["whale"], emoji: "🥣" },
+                { name: "สมูทตี้แลค", desc: "คำเตือน: อาจค้างกลางจิบ 3-5 วันทำการ", price: "8◆", tags: ["new"], emoji: "🥤" },
+                { name: "ชามเซอร์ไพรส์กาชา", desc: "โอกาส 0.01% ได้อาหารจริง 99.99% ได้ความผิดหวัง", price: "50◆", tags: ["hot"], emoji: "🎲" },
+                { name: "ขนมปังซ่อมบำรุง", desc: "มีทุกวันอังคาร หรือพุธ เดี๋ยวแจ้งให้ทราบ", price: "ฟรี*", tags: [], emoji: "🍞" },
+                { name: "ปีกไก่โกรธออก", desc: "เผ็ดจนต้องถอนการติดตั้ง สองครั้ง", price: "25◆", tags: ["hot"], emoji: "🍗" },
+                { name: "จาน P2W", desc: "เหมือนอาหารปกติแต่แพงกว่า 10 เท่า รสชาติแห่งชัยชนะ", price: "500◆", tags: ["whale"], emoji: "🍱" },
+                { name: "คุกกี้หลุดการเชื่อมต่อ", desc: "เห็นแล้ว ไม่เห็นแล้ว", price: "5◆", tags: ["new"], emoji: "🍪" },
+                { name: "พาสต้าแพทช์โน้ต", desc: "สูตรเปลี่ยนโดยไม่แจ้ง ไม่รับประกันรสชาติเดิม", price: "12◆", tags: [], emoji: "🍝" }
+            ],
+            reviews: [
+                { user: "xX_โปรเกมเมอร์_Xx", stars: 5, text: "สั่งราเมน AFK 3 วันก่อน ยังรออยู่ ให้ 5 ดาวสำหรับความระทึก", avatar: "😎" },
+                { user: "แม่เวล2024", stars: 4, text: "ซุปน้ำตาเวลทำให้นึกถึงบัญชีธนาคาร ดาเมจทางอารมณ์", avatar: "🐋" },
+                { user: "F2P_และภูมิใจ", stars: 1, text: "ขอน้ำเปล่า โดนชาร์จ 50 เพชร น้ำเปล่านะ", avatar: "😤" },
+                { user: "ไปสัมผัสหญ้า", stars: 5, text: "อาหารที่ดีที่สุดที่กินโดยไม่ลุกจากเก้าอี้ 72 ชั่วโมง", avatar: "🌱" },
+                { user: "หนูแฮมเซิร์ฟเวอร์", stars: 5, text: "ทำงานที่นี่ วงล้อจ่ายดี ชีสพอใช้ได้", avatar: "🐹" }
+            ],
+            rules: [
+                "🚫 ห้ามแฟลช - หนูแฮมตกใจ",
+                "💳 รับ: เพชร, ทอง, วิญญาณ, ลูกคนโต",
+                "⏰ ครัวปิดเมื่อหนูแฮมเหนื่อย",
+                "🎰 บ่นเรื่องเรทกาชา บิลเพิ่ม 10◆",
+                "📱 รหัส WiFi ฟรี: 'git_gud_lol'",
+                "🚪 ทางออกฉุกเฉินนำไปสู่เครื่องกาชา"
+            ]
+        }
+    };
+
+    let currentLang = localStorage.getItem('numbahwan_lang') || 'en';
+    
+    function t(key) { return i18n[currentLang]?.[key] || i18n.en[key]; }
+    
+    function render() {
+        document.querySelectorAll('[data-i18n]').forEach(el => {
+            const key = el.dataset.i18n;
+            if (t(key)) el.textContent = t(key);
+        });
+        
+        const tagLabels = { new: currentLang === 'zh' ? '新' : currentLang === 'th' ? 'ใหม่' : 'NEW', hot: currentLang === 'zh' ? '熱' : currentLang === 'th' ? 'ฮอต' : 'HOT', whale: currentLang === 'zh' ? '課長' : currentLang === 'th' ? 'เวล' : 'WHALE' };
+        
+        document.getElementById('menuGrid').innerHTML = t('menu').map(item => `
+            <div class="menu-card">
+                <div class="flex justify-between items-start mb-2">
+                    <span class="text-3xl">${item.emoji}</span>
+                    <div class="flex gap-1">${item.tags.map(tag => `<span class="tag tag-${tag}">${tagLabels[tag]}</span>`).join('')}</div>
+                </div>
+                <h3 class="font-fun text-xl text-orange-400 mb-2">${item.name}</h3>
+                <p class="text-gray-400 text-sm mb-3">${item.desc}</p>
+                <div class="price text-lg">${item.price}</div>
+            </div>
+        `).join('');
+        
+        document.getElementById('reviewsSection').innerHTML = t('reviews').map(r => `
+            <div class="review">
+                <div class="flex items-center gap-3 mb-2">
+                    <span class="text-2xl">${r.avatar}</span>
+                    <div>
+                        <div class="font-semibold">${r.user}</div>
+                        <div class="stars">${'★'.repeat(r.stars)}${'☆'.repeat(5-r.stars)}</div>
+                    </div>
+                </div>
+                <p class="text-gray-300 italic">"${r.text}"</p>
+            </div>
+        `).join('');
+        
+        document.getElementById('rulesList').innerHTML = t('rules').map(r => `<li>${r}</li>`).join('');
+    }
+    
+    render();
+    window.addEventListener('nw-lang-change', (e) => { currentLang = e.detail?.lang || 'en'; render(); });
+    </script>
+</body>
+</html>

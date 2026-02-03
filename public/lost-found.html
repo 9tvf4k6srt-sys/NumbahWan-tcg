@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lost & Found | NumbahWan</title>
+    <link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Creepster&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <script src="/static/nw-nav.js" defer></script>
+    <script src="/static/nw-sounds.js" defer></script>
+    <script src="/static/nw-guide.js" defer></script>
+    <style>
+        :root { --dusty: #8b7355; --cobweb: rgba(255,255,255,0.1); --glow: #ffd700; }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Inter', sans-serif; background: #0d0d12; color: #fff; min-height: 100vh; }
+        .font-spooky { font-family: 'Creepster', cursive; }
+        .hero { min-height: 60vh; background: linear-gradient(to bottom, rgba(0,0,0,0.4), rgba(13,13,18,0.98)), url('/static/images/absurdist/lost-found.webp') center/cover; display: flex; align-items: center; justify-content: center; text-align: center; padding: 2rem; }
+        .item-card { background: linear-gradient(145deg, rgba(139,115,85,0.1), rgba(0,0,0,0.3)); border: 1px solid rgba(139,115,85,0.3); border-radius: 12px; padding: 1.5rem; position: relative; overflow: hidden; transition: all 0.3s; }
+        .item-card:hover { transform: scale(1.02); border-color: var(--glow); box-shadow: 0 0 30px rgba(255,215,0,0.2); }
+        .item-card::before { content: ''; position: absolute; top: -50%; right: -50%; width: 100%; height: 100%; background: radial-gradient(circle, rgba(255,215,0,0.1) 0%, transparent 70%); opacity: 0; transition: opacity 0.3s; }
+        .item-card:hover::before { opacity: 1; }
+        .dust { position: absolute; width: 4px; height: 4px; background: rgba(255,215,0,0.6); border-radius: 50%; animation: float-dust 8s infinite; }
+        @keyframes float-dust { 0%,100%{transform:translateY(0) rotate(0deg);opacity:0.6} 50%{transform:translateY(-100px) rotate(180deg);opacity:0.2} }
+        .years-badge { position: absolute; top: 10px; right: 10px; background: rgba(139,115,85,0.8); padding: 4px 10px; border-radius: 20px; font-size: 0.7rem; }
+        .claim-btn { background: linear-gradient(90deg, #8b7355, #a08060); border: none; padding: 8px 20px; border-radius: 8px; cursor: pointer; transition: all 0.3s; }
+        .claim-btn:hover { transform: scale(1.05); box-shadow: 0 4px 15px rgba(139,115,85,0.4); }
+        .claim-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    </style>
+</head>
+<body>
+    <div class="dust" style="left:10%;top:20%;animation-delay:0s"></div>
+    <div class="dust" style="left:30%;top:40%;animation-delay:2s"></div>
+    <div class="dust" style="left:60%;top:30%;animation-delay:4s"></div>
+    <div class="dust" style="left:80%;top:50%;animation-delay:1s"></div>
+    <div class="dust" style="left:50%;top:70%;animation-delay:3s"></div>
+
+    <section class="hero">
+        <div>
+            <div class="text-6xl mb-4">📦</div>
+            <h1 class="font-spooky text-5xl md:text-7xl text-amber-200 mb-4" style="text-shadow: 0 0 20px rgba(255,215,0,0.5);" data-i18n="title">LOST & FOUND</h1>
+            <p class="text-xl text-gray-400 max-w-xl mx-auto" data-i18n="subtitle">Items here since The Great Disconnect of 2019</p>
+        </div>
+    </section>
+
+    <main class="max-w-6xl mx-auto px-4 py-12">
+        <div class="text-center mb-12 p-6 bg-amber-900/20 border border-amber-700/30 rounded-xl">
+            <p class="text-amber-200" data-i18n="notice">⚠️ All items must be claimed within 999 years or they become guild property</p>
+        </div>
+
+        <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6" id="itemsGrid"></div>
+
+        <!-- Claim Form -->
+        <div class="mt-16 max-w-xl mx-auto bg-gradient-to-b from-amber-900/20 to-transparent border border-amber-700/30 rounded-2xl p-8">
+            <h2 class="font-spooky text-3xl text-amber-200 text-center mb-6" data-i18n="claimTitle">📋 CLAIM FORM</h2>
+            <div class="space-y-4">
+                <input type="text" placeholder="" data-placeholder="claimName" class="w-full bg-black/30 border border-amber-700/30 rounded-lg p-3 text-white placeholder-gray-500">
+                <input type="text" placeholder="" data-placeholder="claimItem" class="w-full bg-black/30 border border-amber-700/30 rounded-lg p-3 text-white placeholder-gray-500">
+                <textarea placeholder="" data-placeholder="claimProof" rows="3" class="w-full bg-black/30 border border-amber-700/30 rounded-lg p-3 text-white placeholder-gray-500"></textarea>
+                <button class="claim-btn w-full text-white font-semibold" onclick="submitClaim()" data-i18n="claimBtn">Submit Claim (Processing time: 3-5 business centuries)</button>
+            </div>
+        </div>
+    </main>
+
+    <script>
+    const i18n = {
+        en: {
+            title: "LOST & FOUND",
+            subtitle: "Items here since The Great Disconnect of 2019",
+            notice: "⚠️ All items must be claimed within 999 years or they become guild property",
+            claimTitle: "📋 CLAIM FORM",
+            claimName: "Your IGN (we'll probably misspell it)",
+            claimItem: "Item you're claiming (good luck)",
+            claimProof: "Proof of ownership (screenshots from 2019 acceptable)",
+            claimBtn: "Submit Claim (Processing time: 3-5 business centuries)",
+            items: [
+                { name: "Someone's Dignity", desc: "Lost after their 500th failed gacha pull. Still glowing faintly.", years: "5 years", emoji: "✨", status: "unclaimed" },
+                { name: "47 Missing Socks", desc: "We don't know how they got here. Neither do you.", years: "∞", emoji: "🧦", status: "cursed" },
+                { name: "The Will to Grind", desc: "Last seen fleeing toward 'touching grass'. Presumed dead.", years: "3 years", emoji: "💀", status: "unclaimed" },
+                { name: "A Player's Sleep Schedule", desc: "Completely shattered. Some assembly required.", years: "7 years", emoji: "😴", status: "beyond repair" },
+                { name: "Guild Leader's Patience", desc: "Ran out during the Great Drama of 2021. Empty container.", years: "4 years", emoji: "📦", status: "empty" },
+                { name: "Someone's Social Life", desc: "Mint condition - never used.", years: "10 years", emoji: "🎭", status: "unclaimed" },
+                { name: "Login Streak (847 days)", desc: "Broken by a single maintenance. Owner still crying.", years: "2 years", emoji: "📅", status: "shattered" },
+                { name: "Participation Trophy", desc: "Awarded to everyone. Claimed by no one.", years: "Forever", emoji: "🏆", status: "unwanted" },
+                { name: "A Functioning Work-Life Balance", desc: "Mythic rarity. Possibly doesn't exist.", years: "???", emoji: "⚖️", status: "legendary" },
+                { name: "The Other Earphone", desc: "You know the one. Left or right, we're not sure.", years: "Since birth", emoji: "🎧", status: "eternal mystery" },
+                { name: "That One Good Build Guide", desc: "Written by someone who quit. Links all broken.", years: "6 years", emoji: "📖", status: "corrupted" },
+                { name: "Hope for Fair RNG", desc: "Small, fragile, and naive. Handle with delusion.", years: "Day 1", emoji: "🌟", status: "foolish" }
+            ]
+        },
+        zh: {
+            title: "失物招領",
+            subtitle: "自2019年大斷線以來的物品",
+            notice: "⚠️ 所有物品必須在999年內認領，否則成為公會財產",
+            claimTitle: "📋 認領表格",
+            claimName: "你的遊戲名（我們可能會拼錯）",
+            claimItem: "要認領的物品（祝好運）",
+            claimProof: "所有權證明（2019年的截圖可接受）",
+            claimBtn: "提交申請（處理時間：3-5個商業世紀）",
+            items: [
+                { name: "某人的尊嚴", desc: "在第500次抽卡失敗後遺失。仍微微發光。", years: "5年", emoji: "✨", status: "無人認領" },
+                { name: "47隻失蹤的襪子", desc: "我們不知道它們怎麼來的。你也不知道。", years: "∞", emoji: "🧦", status: "被詛咒" },
+                { name: "刷副本的意志", desc: "最後被看到逃向「摸草」。推定死亡。", years: "3年", emoji: "💀", status: "無人認領" },
+                { name: "玩家的睡眠時間表", desc: "完全粉碎。需要重新組裝。", years: "7年", emoji: "😴", status: "無法修復" },
+                { name: "會長的耐心", desc: "在2021年大戲期間耗盡。空容器。", years: "4年", emoji: "📦", status: "已清空" },
+                { name: "某人的社交生活", desc: "全新狀態 - 從未使用。", years: "10年", emoji: "🎭", status: "無人認領" },
+                { name: "登入連續847天", desc: "被一次維護打斷。主人仍在哭泣。", years: "2年", emoji: "📅", status: "已破碎" },
+                { name: "參與獎盃", desc: "頒給所有人。無人認領。", years: "永遠", emoji: "🏆", status: "無人要" },
+                { name: "正常的工作生活平衡", desc: "神話稀有度。可能不存在。", years: "???", emoji: "⚖️", status: "傳說" },
+                { name: "另一邊耳機", desc: "你知道是哪個。左邊還是右邊，不確定。", years: "出生以來", emoji: "🎧", status: "永恆之謎" },
+                { name: "那個好用的攻略", desc: "由退坑的人寫的。連結全壞。", years: "6年", emoji: "📖", status: "已損壞" },
+                { name: "對公平RNG的希望", desc: "小小的、脆弱的、天真的。小心妄想。", years: "第一天", emoji: "🌟", status: "傻傻的" }
+            ]
+        },
+        th: {
+            title: "ของหายได้คืน",
+            subtitle: "ของที่อยู่ที่นี่ตั้งแต่การตัดการเชื่อมต่อครั้งใหญ่ปี 2019",
+            notice: "⚠️ ของทั้งหมดต้องมารับภายใน 999 ปี ไม่งั้นจะกลายเป็นสมบัติกิลด์",
+            claimTitle: "📋 แบบฟอร์มรับของ",
+            claimName: "ชื่อในเกม (เราอาจสะกดผิด)",
+            claimItem: "ของที่จะรับ (โชคดี)",
+            claimProof: "หลักฐานความเป็นเจ้าของ (สกรีนช็อตปี 2019 รับได้)",
+            claimBtn: "ส่งคำขอ (เวลาดำเนินการ: 3-5 ศตวรรษทำการ)",
+            items: [
+                { name: "ศักดิ์ศรีของใครบางคน", desc: "หายหลังจากกาชาพลาดครั้งที่ 500 ยังเรืองแสงจางๆ", years: "5 ปี", emoji: "✨", status: "ไม่มีผู้รับ" },
+                { name: "ถุงเท้าหาย 47 ข้าง", desc: "เราไม่รู้ว่ามันมาได้ยังไง คุณก็ไม่รู้", years: "∞", emoji: "🧦", status: "ถูกสาป" },
+                { name: "ความตั้งใจในการเกรนด์", desc: "เห็นครั้งสุดท้ายกำลังหนีไป 'สัมผัสหญ้า' สันนิษฐานว่าตาย", years: "3 ปี", emoji: "💀", status: "ไม่มีผู้รับ" },
+                { name: "ตารางนอนของผู้เล่น", desc: "แตกละเอียด ต้องประกอบใหม่", years: "7 ปี", emoji: "😴", status: "ซ่อมไม่ได้" },
+                { name: "ความอดทนของหัวหน้ากิลด์", desc: "หมดตอนดราม่าใหญ่ปี 2021 กล่องเปล่า", years: "4 ปี", emoji: "📦", status: "ว่างเปล่า" },
+                { name: "ชีวิตสังคมของใครบางคน", desc: "สภาพใหม่เอี่ยม - ไม่เคยใช้", years: "10 ปี", emoji: "🎭", status: "ไม่มีผู้รับ" },
+                { name: "สตรีคล็อกอิน (847 วัน)", desc: "พังเพราะซ่อมบำรุงครั้งเดียว เจ้าของยังร้องไห้", years: "2 ปี", emoji: "📅", status: "แตก" },
+                { name: "ถ้วยรางวัลการมีส่วนร่วม", desc: "มอบให้ทุกคน ไม่มีใครรับ", years: "ตลอดกาล", emoji: "🏆", status: "ไม่มีใครต้องการ" },
+                { name: "ความสมดุลชีวิตการทำงาน", desc: "ระดับหายาก Mythic อาจไม่มีอยู่จริง", years: "???", emoji: "⚖️", status: "ตำนาน" },
+                { name: "หูฟังอีกข้าง", desc: "คุณรู้ว่าอันไหน ซ้ายหรือขวา ไม่แน่ใจ", years: "ตั้งแต่เกิด", emoji: "🎧", status: "ปริศนานิรันดร์" },
+                { name: "ไกด์บิ้วที่ดี", desc: "เขียนโดยคนที่เลิกเล่นแล้ว ลิงก์พังหมด", years: "6 ปี", emoji: "📖", status: "เสียหาย" },
+                { name: "ความหวังใน RNG ที่ยุติธรรม", desc: "เล็ก เปราะบาง และไร้เดียงสา จับด้วยความลวง", years: "วันแรก", emoji: "🌟", status: "โง่" }
+            ]
+        }
+    };
+
+    let currentLang = localStorage.getItem('numbahwan_lang') || 'en';
+    function t(key) { return i18n[currentLang]?.[key] || i18n.en[key]; }
+
+    function render() {
+        document.querySelectorAll('[data-i18n]').forEach(el => { const key = el.dataset.i18n; if (t(key)) el.textContent = t(key); });
+        document.querySelectorAll('[data-placeholder]').forEach(el => { const key = el.dataset.placeholder; if (t(key)) el.placeholder = t(key); });
+        
+        document.getElementById('itemsGrid').innerHTML = t('items').map(item => `
+            <div class="item-card">
+                <div class="years-badge">${item.years}</div>
+                <div class="text-4xl mb-3">${item.emoji}</div>
+                <h3 class="text-xl font-semibold text-amber-200 mb-2">${item.name}</h3>
+                <p class="text-gray-400 text-sm mb-3">${item.desc}</p>
+                <div class="text-xs text-amber-600 uppercase tracking-wider">Status: ${item.status}</div>
+            </div>
+        `).join('');
+    }
+
+    function submitClaim() {
+        alert(currentLang === 'zh' ? '您的申請已提交到虛空。\n預計回覆時間：從不。' : currentLang === 'th' ? 'คำขอของคุณถูกส่งไปยังความว่างเปล่า\nเวลาตอบกลับโดยประมาณ: ไม่มีวัน' : 'Your claim has been submitted to the void.\nEstimated response time: Never.');
+    }
+
+    render();
+    window.addEventListener('nw-lang-change', (e) => { currentLang = e.detail?.lang || 'en'; render(); });
+    </script>
+</body>
+</html>

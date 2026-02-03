@@ -135,6 +135,12 @@ const NW_NAV = {
                 { id: 'therapy', name: { en: 'Guild Therapy', zh: '公會治療', th: 'บำบัดกิลด์' }, icon: 'crystal-ball', href: '/therapy' },
                 { id: 'hr', name: { en: 'HR Department', zh: '人資部', th: 'ฝ่ายบุคคล' }, icon: 'form', href: '/hr' },
                 { id: 'conspiracy', name: { en: 'Conspiracy Board', zh: '陰謀論板', th: 'บอร์ดสมคบคิด' }, icon: 'eye', href: '/conspiracy' },
+                { id: 'cafeteria', name: { en: 'Cafeteria', zh: '食堂', th: 'โรงอาหาร' }, icon: 'fire', href: '/cafeteria', isNew: true },
+                { id: 'lost-found', name: { en: 'Lost & Found', zh: '失物招領', th: 'ของหาย' }, icon: 'inventory', href: '/lost-found', isNew: true },
+                { id: 'parking', name: { en: 'Parking Lot', zh: '停車場', th: 'ที่จอดรถ' }, icon: 'anchor', href: '/parking', isNew: true },
+                { id: 'maintenance', name: { en: 'Maintenance', zh: '維護室', th: 'ห้องซ่อม' }, icon: 'scroll', href: '/maintenance', isNew: true },
+                { id: 'breakroom', name: { en: 'Break Room', zh: '休息室', th: 'ห้องพัก' }, icon: 'meme', href: '/breakroom', isNew: true },
+                { id: 'basement', name: { en: 'Basement', zh: '地下室', th: 'ห้องใต้ดิน' }, icon: 'skull', href: '/basement', isNew: true },
                 { id: 'zakum', name: { en: 'Zakum Lore', zh: '扎昆傳說', th: 'ตำนานซาคุม' }, icon: 'skull', href: '/zakum' }
             ]
         },
