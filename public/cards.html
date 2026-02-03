@@ -322,14 +322,16 @@
         }
         .card-name-text {
             font-family: 'Cinzel', Georgia, serif;
-            font-size: 11px;
+            font-size: 10px;
             font-weight: 700;
             color: #fff;
             text-align: center;
             text-shadow: 0 1px 3px rgba(0,0,0,0.8);
-            white-space: nowrap;
+            white-space: normal; /* Allow wrapping */
+            word-wrap: break-word;
+            line-height: 1.2;
+            max-height: 2.4em; /* Max 2 lines */
             overflow: hidden;
-            text-overflow: ellipsis;
         }
         .card-name-bar .card-rarity-label {
             font-size: 8px;
@@ -1471,27 +1473,27 @@ function render() {
         if (showAnimatedPlaceholder) {
             // Animated "Coming Soon" placeholder for non-first cards in S3-S10
             const icon = SEASON_ICONS[season] || '🎴';
-            const displayName = c.name.length > 20 ? c.name.substring(0, 18) + '…' : c.name;
+            // Show FULL name - no truncation
             cardContent = `
                 <div class="coming-soon-card s${season}">
                     <div class="cs-icon">${icon}</div>
                     <div class="cs-text">Coming Soon</div>
-                    <div class="cs-name">${displayName}</div>
+                    <div class="cs-name">${c.name}</div>
                 </div>
                 <div class="card-frame"></div>
                 <div class="card-name-bar">
-                    <div class="card-name-text">${displayName}</div>
+                    <div class="card-name-text">${c.name}</div>
                     <div class="card-rarity-label">${c.rarity}</div>
                 </div>
             `;
         } else {
             // Real art with name bar (unified style matching print template)
-            const displayName = c.name.length > 22 ? c.name.substring(0, 20) + '…' : c.name;
+            // Show FULL name - no truncation, CSS handles wrapping
             cardContent = `
                 <img class="card-art" src="${getThumbUrl(c.img, c.rarity)}" alt="${c.name}" loading="lazy" onerror="this.onerror=null; this.src='/static/images/cards/thumbs/placeholder.webp';">
                 <div class="card-frame"></div>
                 <div class="card-name-bar">
-                    <div class="card-name-text">${displayName}</div>
+                    <div class="card-name-text">${c.name}</div>
                     <div class="card-rarity-label">${c.rarity}</div>
                 </div>
                 <div class="holo"></div>
