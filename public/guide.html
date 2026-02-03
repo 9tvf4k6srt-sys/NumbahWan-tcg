@@ -3,25 +3,26 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NumbahWan TCG | Complete Game Guide</title>
+    <title>How to Play | NumbahWan TCG</title>
     <link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
-    <link rel="stylesheet" href="/static/nw-tokens.css">
-    <link rel="stylesheet" href="/static/nw-utilities.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="/static/nw-nav.js" defer></script>
+    <script src="/static/nw-sounds.js" defer></script>
+    <script src="/static/nw-guide.js" defer></script>
     <style>
-        :root { 
-            --gold: #ffd700; --orange: #ff6b00; --dark: #0a0a0f; --card-bg: rgba(20,20,30,0.95); 
-            --mythic: #ff6b00; --legendary: #fbbf24; --epic: #a855f7; --rare: #3b82f6; 
-            --uncommon: #22c55e; --common: #71717a;
-            --red: #ef4444; --green: #22c55e; --blue: #3b82f6; --purple: #a855f7;
+        :root {
+            --gold: #ffd700; --orange: #ff6b00; --dark: #0a0a0f;
+            --mythic: #ef4444; --legendary: #fbbf24; --epic: #a855f7;
+            --rare: #3b82f6; --uncommon: #22c55e; --common: #71717a;
+            --green: #22c55e; --red: #ef4444;
         }
         * { margin: 0; padding: 0; box-sizing: border-box; }
         html { scroll-behavior: smooth; }
-        body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--dark); color: #fff; line-height: 1.6; }
+        body { font-family: 'Inter', system-ui, sans-serif; background: var(--dark); color: #fff; line-height: 1.6; }
         
-        /* Background */
         .bg { position: fixed; inset: 0; z-index: -1; 
             background: radial-gradient(ellipse at top, rgba(255,107,0,0.15) 0%, transparent 50%),
-                        radial-gradient(ellipse at 80% 20%, rgba(168,85,247,0.1) 0%, transparent 40%),
                         radial-gradient(ellipse at bottom, rgba(255,215,0,0.05) 0%, transparent 50%),
                         var(--dark); }
         
@@ -29,261 +30,125 @@
         header { position: sticky; top: 0; z-index: 100; background: rgba(10,10,15,0.98); 
                  border-bottom: 1px solid rgba(255,107,0,0.3); backdrop-filter: blur(10px); }
         .header-inner { max-width: 1200px; margin: 0 auto; padding: 12px 20px; display: flex; justify-content: space-between; align-items: center; }
-        .logo { font-size: 20px; font-weight: 900; background: linear-gradient(135deg, var(--gold), var(--orange));
+        .logo { font-family: 'Orbitron', sans-serif; font-size: 20px; font-weight: 900; 
+                background: linear-gradient(135deg, var(--gold), var(--orange));
                 -webkit-background-clip: text; -webkit-text-fill-color: transparent; text-decoration: none; }
         .nav-links { display: flex; gap: 20px; align-items: center; }
-        .nav-links a { color: rgba(255,255,255,0.7); text-decoration: none; font-size: 14px; transition: color 0.2s; }
+        .nav-links a { color: rgba(255,255,255,0.7); text-decoration: none; font-size: 14px; }
         .nav-links a:hover { color: var(--gold); }
-        
-        /* Language Toggle */
         .lang-toggle { display: flex; gap: 4px; background: rgba(255,255,255,0.1); border-radius: 20px; padding: 4px; }
         .lang-btn { padding: 6px 12px; border-radius: 16px; border: none; background: transparent; color: rgba(255,255,255,0.6);
                     cursor: pointer; font-size: 12px; font-weight: 600; transition: all 0.2s; }
         .lang-btn.active { background: var(--orange); color: #fff; }
         .lang-btn:hover:not(.active) { background: rgba(255,255,255,0.1); }
         
-        /* Hero with Background Image */
-        .hero { position: relative; text-align: center; padding: 100px 20px 80px; overflow: hidden; min-height: 500px;
-                display: flex; flex-direction: column; justify-content: center; align-items: center; }
-        .hero-bg { position: absolute; inset: 0; z-index: 0; }
-        .hero-bg img { width: 100%; height: 100%; object-fit: cover; opacity: 0.4; }
-        .hero-bg::after { content: ''; position: absolute; inset: 0; 
-            background: linear-gradient(180deg, rgba(10,10,15,0.3) 0%, rgba(10,10,15,0.7) 50%, rgba(10,10,15,0.95) 100%); }
-        .hero-content { position: relative; z-index: 1; }
-        .hero h1 { font-size: clamp(40px, 8vw, 72px); font-weight: 900; margin-bottom: 16px;
-                   background: linear-gradient(135deg, var(--gold), var(--orange), #ff4444);
-                   -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-                   text-shadow: 0 0 60px rgba(255,107,0,0.3); }
-        .hero-tagline { font-size: 20px; color: rgba(255,255,255,0.9); max-width: 600px; margin: 0 auto 32px; 
-                        font-style: italic; text-shadow: 0 2px 10px rgba(0,0,0,0.5); }
-        .hero-desc { color: rgba(255,255,255,0.7); max-width: 700px; margin: 0 auto; text-shadow: 0 2px 10px rgba(0,0,0,0.5); }
-        .hero-stats { display: flex; justify-content: center; gap: 24px; flex-wrap: wrap; margin-top: 40px; }
-        .hero-stat { text-align: center; padding: 20px; background: rgba(10,10,15,0.8); border-radius: 16px; 
-                     border: 1px solid rgba(255,255,255,0.15); min-width: 110px; backdrop-filter: blur(10px); }
-        .hero-stat-value { font-size: 36px; font-weight: 900; background: linear-gradient(135deg, var(--gold), var(--orange));
-                           -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-        .hero-stat-label { font-size: 11px; color: rgba(255,255,255,0.6); text-transform: uppercase; letter-spacing: 1px; }
+        /* Hero */
+        .hero { text-align: center; padding: 80px 20px 60px; }
+        .hero h1 { font-family: 'Orbitron', sans-serif; font-size: clamp(32px, 6vw, 56px); font-weight: 900;
+                   background: linear-gradient(135deg, var(--gold), var(--orange));
+                   -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 16px; }
+        .hero-sub { font-size: 18px; color: rgba(255,255,255,0.7); max-width: 600px; margin: 0 auto; }
         
-        /* Table of Contents */
-        .toc { position: fixed; left: 20px; top: 100px; width: 200px; background: var(--card-bg); 
-               border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 16px; z-index: 50; }
-        .toc-title { font-weight: 700; color: var(--gold); margin-bottom: 12px; font-size: 14px; }
-        .toc a { display: block; color: rgba(255,255,255,0.6); text-decoration: none; font-size: 12px; 
-                 padding: 4px 0; transition: color 0.2s; border-left: 2px solid transparent; padding-left: 10px; }
-        .toc a:hover, .toc a.active { color: var(--gold); border-left-color: var(--orange); }
-        @media (max-width: 1400px) { .toc { display: none; } }
+        /* Main */
+        main { max-width: 900px; margin: 0 auto; padding: 40px 20px; }
         
-        /* Main Content */
-        main { max-width: 1000px; margin: 0 auto; padding: 40px 20px; }
+        /* Steps Section */
+        .steps { display: flex; flex-direction: column; gap: 32px; margin-bottom: 60px; }
+        .step { display: grid; grid-template-columns: 80px 1fr; gap: 24px; align-items: start;
+                background: rgba(20,20,30,0.9); border: 1px solid rgba(255,255,255,0.1);
+                border-radius: 20px; padding: 32px; transition: all 0.3s; }
+        .step:hover { transform: translateY(-4px); border-color: rgba(255,107,0,0.4);
+                      box-shadow: 0 20px 40px rgba(0,0,0,0.3); }
+        .step-num { font-family: 'Orbitron', sans-serif; font-size: 48px; font-weight: 900;
+                    background: linear-gradient(135deg, var(--gold), var(--orange));
+                    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+                    line-height: 1; }
+        .step-content h3 { font-size: 24px; color: var(--gold); margin-bottom: 12px; display: flex; align-items: center; gap: 12px; }
+        .step-content p { color: rgba(255,255,255,0.8); font-size: 16px; }
+        .step-content ul { margin-top: 12px; padding-left: 20px; color: rgba(255,255,255,0.7); }
+        .step-content li { margin: 8px 0; }
         
-        /* Sections */
-        section { margin-bottom: 80px; scroll-margin-top: 80px; }
-        .section-title { font-size: 32px; font-weight: 800; margin-bottom: 32px; padding-bottom: 16px;
-                         border-bottom: 3px solid var(--orange); display: flex; align-items: center; gap: 16px; }
-        .section-title span { font-size: 40px; }
+        /* Section */
+        section { margin-bottom: 60px; }
+        .section-title { font-family: 'Orbitron', sans-serif; font-size: 28px; font-weight: 800; margin-bottom: 24px;
+                         padding-bottom: 12px; border-bottom: 3px solid var(--orange);
+                         display: flex; align-items: center; gap: 12px; }
         
-        /* Info Cards */
-        .info-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 24px; }
-        .info-card { background: var(--card-bg); border: 1px solid rgba(255,255,255,0.1); border-radius: 16px; 
-                     padding: 28px; transition: all 0.3s ease; }
-        .info-card:hover { transform: translateY(-6px); border-color: rgba(255,107,0,0.5); 
-                          box-shadow: 0 20px 40px rgba(0,0,0,0.3), 0 0 30px rgba(255,107,0,0.1); }
-        .info-card h3 { font-size: 20px; color: var(--gold); margin-bottom: 16px; display: flex; align-items: center; gap: 10px; }
-        .info-card p { color: rgba(255,255,255,0.8); font-size: 15px; }
-        .info-card ul { color: rgba(255,255,255,0.8); font-size: 14px; padding-left: 20px; margin-top: 12px; }
-        .info-card li { margin: 8px 0; }
+        /* Info Grid */
+        .info-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 20px; }
+        .info-card { background: rgba(20,20,30,0.9); border: 1px solid rgba(255,255,255,0.1);
+                     border-radius: 16px; padding: 24px; transition: all 0.3s; }
+        .info-card:hover { transform: translateY(-4px); border-color: rgba(255,107,0,0.4); }
+        .info-card h4 { font-size: 18px; color: var(--gold); margin-bottom: 12px; display: flex; align-items: center; gap: 10px; }
+        .info-card p { color: rgba(255,255,255,0.75); font-size: 14px; }
         
-        /* Stat Display */
-        .stat-display { display: flex; gap: 16px; flex-wrap: wrap; margin: 20px 0; }
-        .stat-item { background: linear-gradient(135deg, rgba(255,107,0,0.1), rgba(255,215,0,0.05));
-                     border: 1px solid rgba(255,107,0,0.3); border-radius: 12px; padding: 16px 24px;
-                     text-align: center; min-width: 100px; }
-        .stat-icon { font-size: 28px; margin-bottom: 8px; }
-        .stat-name { font-weight: 700; color: var(--gold); font-size: 14px; }
-        .stat-desc { font-size: 11px; color: rgba(255,255,255,0.5); margin-top: 4px; }
+        /* Rarity Display */
+        .rarity-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 12px; margin: 24px 0; }
+        .rarity-item { text-align: center; padding: 16px; border-radius: 12px; border: 2px solid; }
+        .rarity-item.mythic { border-color: var(--mythic); background: linear-gradient(135deg, rgba(239,68,68,0.15), transparent); }
+        .rarity-item.legendary { border-color: var(--legendary); background: linear-gradient(135deg, rgba(251,191,36,0.15), transparent); }
+        .rarity-item.epic { border-color: var(--epic); background: linear-gradient(135deg, rgba(168,85,247,0.15), transparent); }
+        .rarity-item.rare { border-color: var(--rare); background: linear-gradient(135deg, rgba(59,130,246,0.15), transparent); }
+        .rarity-item.uncommon { border-color: var(--uncommon); background: linear-gradient(135deg, rgba(34,197,94,0.15), transparent); }
+        .rarity-item.common { border-color: var(--common); background: linear-gradient(135deg, rgba(113,113,122,0.15), transparent); }
+        .rarity-icon { font-size: 32px; margin-bottom: 8px; }
+        .rarity-name { font-weight: 700; font-size: 14px; }
+        .rarity-item.mythic .rarity-name { color: var(--mythic); }
+        .rarity-item.legendary .rarity-name { color: var(--legendary); }
+        .rarity-item.epic .rarity-name { color: var(--epic); }
+        .rarity-item.rare .rarity-name { color: var(--rare); }
+        .rarity-item.uncommon .rarity-name { color: var(--uncommon); }
+        .rarity-item.common .rarity-name { color: var(--common); }
+        .rarity-luck { font-size: 11px; color: rgba(255,255,255,0.5); margin-top: 4px; }
         
-        /* Keywords */
-        .keyword { display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px; border-radius: 20px; 
-                   font-size: 13px; font-weight: 700; margin: 4px; text-transform: uppercase; }
-        .keyword-icon { font-size: 16px; }
-        .keyword.carry { background: linear-gradient(135deg, #ef4444, #dc2626); color: #fff; }
-        .keyword.whale { background: linear-gradient(135deg, #ffd700, #f59e0b); color: #000; }
-        .keyword.grinder { background: linear-gradient(135deg, #22c55e, #16a34a); color: #fff; }
-        .keyword.toxic { background: linear-gradient(135deg, #84cc16, #65a30d); color: #000; }
-        .keyword.rng { background: linear-gradient(135deg, #ec4899, #db2777); color: #fff; }
-        .keyword.clutch { background: linear-gradient(135deg, #f97316, #ea580c); color: #fff; }
-        .keyword.taunt { background: linear-gradient(135deg, #3b82f6, #2563eb); color: #fff; }
-        .keyword.stealth { background: linear-gradient(135deg, #6b7280, #4b5563); color: #fff; }
-        .keyword.simp { background: linear-gradient(135deg, #ec4899, #be185d); color: #fff; }
-        .keyword.afk { background: linear-gradient(135deg, #94a3b8, #64748b); color: #fff; }
-        .keyword.ragequit { background: linear-gradient(135deg, #dc2626, #991b1b); color: #fff; }
-        .keyword.leech { background: linear-gradient(135deg, #7f1d1d, #450a0a); color: #fff; }
-        .keyword.hype { background: linear-gradient(135deg, #f59e0b, #d97706); color: #000; }
-        .keyword.buff { background: linear-gradient(135deg, #10b981, #059669); color: #fff; }
-        .keyword.comeback { background: linear-gradient(135deg, #22c55e, #15803d); color: #fff; }
-        .keyword.tilt { background: linear-gradient(135deg, #ef4444, #b91c1c); color: #fff; }
-        .keyword.rush { background: linear-gradient(135deg, #eab308, #ca8a04); color: #000; }
-        
-        /* Rarity Colors */
-        .rarity-mythic { color: var(--mythic); text-shadow: 0 0 15px rgba(255,107,0,0.6); font-weight: 700; }
-        .rarity-legendary { color: var(--legendary); font-weight: 700; }
-        .rarity-epic { color: var(--epic); font-weight: 700; }
-        .rarity-rare { color: var(--rare); font-weight: 700; }
-        .rarity-uncommon { color: var(--uncommon); }
-        .rarity-common { color: var(--common); }
-        
-        /* Tables */
-        .table-wrap { overflow-x: auto; margin: 24px 0; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1); }
-        table { width: 100%; border-collapse: collapse; min-width: 500px; }
-        th, td { padding: 16px 20px; text-align: left; }
-        th { background: rgba(255,107,0,0.15); color: var(--gold); font-weight: 700; font-size: 14px; 
-             text-transform: uppercase; letter-spacing: 0.5px; }
-        td { border-bottom: 1px solid rgba(255,255,255,0.05); }
-        tr:hover td { background: rgba(255,255,255,0.03); }
-        
-        /* Turn Phases */
-        .phase-timeline { position: relative; padding-left: 30px; }
-        .phase-timeline::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 4px;
-                                  background: linear-gradient(180deg, var(--orange), var(--gold), var(--purple)); border-radius: 2px; }
-        .phase-item { position: relative; background: var(--card-bg); border: 1px solid rgba(255,255,255,0.1);
-                      padding: 24px; margin: 20px 0; border-radius: 16px; margin-left: 20px; }
-        .phase-item::before { content: ''; position: absolute; left: -28px; top: 50%; transform: translateY(-50%);
-                              width: 16px; height: 16px; background: var(--orange); border-radius: 50%;
-                              border: 3px solid var(--dark); }
-        .phase-icon { position: absolute; left: -36px; top: 50%; transform: translateY(-50%); font-size: 28px; }
-        .phase-name { font-size: 20px; font-weight: 700; color: var(--gold); margin-bottom: 8px; }
-        .phase-actions { color: rgba(255,255,255,0.8); font-size: 14px; }
-        .phase-actions li { margin: 6px 0; }
-        
-        /* Rank Badges */
-        .rank-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 16px; margin: 32px 0; }
-        .rank-badge { padding: 20px; border-radius: 16px; text-align: center; border: 2px solid rgba(255,255,255,0.1); 
-                      background: var(--card-bg); transition: all 0.3s ease; }
-        .rank-badge:hover { transform: scale(1.05); }
-        .rank-badge.bronze { border-color: #cd7f32; background: linear-gradient(135deg, rgba(205,127,50,0.1), transparent); }
-        .rank-badge.silver { border-color: #c0c0c0; background: linear-gradient(135deg, rgba(192,192,192,0.1), transparent); }
-        .rank-badge.gold { border-color: #ffd700; background: linear-gradient(135deg, rgba(255,215,0,0.1), transparent); }
-        .rank-badge.platinum { border-color: #e5e4e2; background: linear-gradient(135deg, rgba(229,228,226,0.1), transparent); }
-        .rank-badge.diamond { border-color: #b9f2ff; background: linear-gradient(135deg, rgba(185,242,255,0.1), transparent); }
-        .rank-badge.master { border-color: #9966cc; background: linear-gradient(135deg, rgba(153,102,204,0.1), transparent); }
-        .rank-badge.guildmaster { border-color: #ff6b00; box-shadow: 0 0 30px rgba(255,107,0,0.3);
-                                  background: linear-gradient(135deg, rgba(255,107,0,0.2), transparent); }
-        .rank-badge.reggina { border-color: #ffd700; box-shadow: 0 0 40px rgba(255,215,0,0.4);
-                              background: linear-gradient(135deg, rgba(255,107,0,0.2), rgba(255,215,0,0.2)); }
-        .rank-icon { font-size: 40px; }
-        .rank-name { font-weight: 700; margin-top: 8px; font-size: 16px; }
-        .rank-mmr { font-size: 12px; color: rgba(255,255,255,0.5); margin-top: 4px; }
-        
-        /* Combo Cards */
-        .combo-showcase { background: linear-gradient(135deg, rgba(255,107,0,0.1), rgba(168,85,247,0.05));
-                          border: 2px solid rgba(255,107,0,0.3); border-radius: 20px; padding: 32px; margin: 24px 0; }
-        .combo-name { font-size: 22px; font-weight: 800; color: var(--gold); margin-bottom: 16px;
-                      display: flex; align-items: center; gap: 12px; }
-        .combo-cards { display: flex; align-items: center; gap: 12px; margin: 20px 0; flex-wrap: wrap; }
-        .combo-card-chip { padding: 10px 18px; border-radius: 12px; font-size: 14px; font-weight: 600; }
-        .combo-card-chip.mythic { background: linear-gradient(135deg, var(--mythic), #dc2626); }
-        .combo-card-chip.legendary { background: linear-gradient(135deg, var(--legendary), #d97706); color: #000; }
-        .combo-card-chip.epic { background: linear-gradient(135deg, var(--epic), #7c3aed); }
-        .combo-card-chip.rare { background: var(--rare); }
-        .combo-plus { color: var(--gold); font-weight: 700; font-size: 24px; }
-        .combo-result { color: rgba(255,255,255,0.9); font-size: 15px; margin-top: 16px; padding: 20px;
-                        background: rgba(0,0,0,0.4); border-radius: 12px; line-height: 1.7; }
-        .combo-result strong { color: var(--gold); }
-        
-        /* Tip Boxes */
+        /* Tip Box */
         .tip-box { border-radius: 16px; padding: 24px; margin: 24px 0; }
         .tip-box.pro { background: linear-gradient(135deg, rgba(34,197,94,0.15), rgba(34,197,94,0.05));
                        border: 1px solid rgba(34,197,94,0.4); }
         .tip-box.warning { background: linear-gradient(135deg, rgba(239,68,68,0.15), rgba(239,68,68,0.05));
                            border: 1px solid rgba(239,68,68,0.4); }
-        .tip-box.info { background: linear-gradient(135deg, rgba(59,130,246,0.15), rgba(59,130,246,0.05));
-                        border: 1px solid rgba(59,130,246,0.4); }
-        .tip-box.clip { background: linear-gradient(135deg, rgba(168,85,247,0.15), rgba(236,72,153,0.05));
-                        border: 1px solid rgba(168,85,247,0.4); }
         .tip-title { font-weight: 700; font-size: 16px; margin-bottom: 12px; display: flex; align-items: center; gap: 10px; }
-        .tip-box.pro .tip-title { color: #22c55e; }
-        .tip-box.warning .tip-title { color: #ef4444; }
-        .tip-box.info .tip-title { color: #3b82f6; }
-        .tip-box.clip .tip-title { color: #a855f7; }
-        .tip-box p, .tip-box ul { color: rgba(255,255,255,0.85); font-size: 14px; }
-        .tip-box ul { padding-left: 20px; margin-top: 8px; }
-        .tip-box li { margin: 6px 0; }
+        .tip-box.pro .tip-title { color: var(--green); }
+        .tip-box.warning .tip-title { color: var(--red); }
+        .tip-box p { color: rgba(255,255,255,0.85); font-size: 14px; }
+        .tip-box ul { color: rgba(255,255,255,0.85); padding-left: 20px; margin-top: 8px; }
+        .tip-box li { margin: 6px 0; font-size: 14px; }
         
-        /* Gacha Display */
-        .gacha-rates { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 16px; margin: 24px 0; }
-        .gacha-rate { text-align: center; padding: 20px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1); }
-        .gacha-rate.mythic { background: linear-gradient(135deg, rgba(255,107,0,0.2), transparent); 
-                             border-color: var(--mythic); }
-        .gacha-rate.legendary { background: linear-gradient(135deg, rgba(251,191,36,0.15), transparent);
-                                border-color: var(--legendary); }
-        .gacha-rate-percent { font-size: 28px; font-weight: 900; }
-        .gacha-rate.mythic .gacha-rate-percent { color: var(--mythic); }
-        .gacha-rate.legendary .gacha-rate-percent { color: var(--legendary); }
-        .gacha-rate.epic .gacha-rate-percent { color: var(--epic); }
-        .gacha-rate.rare .gacha-rate-percent { color: var(--rare); }
-        .gacha-rate.uncommon .gacha-rate-percent { color: var(--uncommon); }
-        .gacha-rate.common .gacha-rate-percent { color: var(--common); }
-        .gacha-rate-label { font-size: 12px; color: rgba(255,255,255,0.6); margin-top: 4px; }
-        .gacha-rate-odds { font-size: 11px; color: rgba(255,255,255,0.4); margin-top: 2px; }
-        
-        /* Lore Section */
-        .lore-box { background: linear-gradient(135deg, rgba(255,107,0,0.05), rgba(168,85,247,0.05));
-                    border: 1px solid rgba(255,255,255,0.1); border-radius: 20px; padding: 40px; 
-                    max-width: 800px; margin: 0 auto; }
-        .lore-box p { font-size: 17px; line-height: 2; font-style: italic; color: rgba(255,255,255,0.85); }
-        .lore-highlight { color: var(--gold); font-weight: 700; font-style: normal; }
+        /* CTA */
+        .cta { text-align: center; padding: 60px 20px; background: linear-gradient(135deg, rgba(255,107,0,0.1), rgba(255,215,0,0.05));
+               border-radius: 24px; margin-top: 40px; }
+        .cta h2 { font-family: 'Orbitron', sans-serif; font-size: 28px; color: var(--gold); margin-bottom: 16px; }
+        .cta p { color: rgba(255,255,255,0.7); margin-bottom: 24px; }
+        .cta-btn { display: inline-flex; align-items: center; gap: 10px; padding: 16px 32px;
+                   background: linear-gradient(135deg, var(--orange), #ff4444);
+                   border: none; border-radius: 12px; font-size: 18px; font-weight: 700;
+                   color: #fff; text-decoration: none; cursor: pointer;
+                   transition: all 0.3s; box-shadow: 0 8px 24px rgba(255,107,0,0.3); }
+        .cta-btn:hover { transform: translateY(-2px); box-shadow: 0 12px 32px rgba(255,107,0,0.4); }
         
         /* Footer */
-        footer { text-align: center; padding: 60px 20px; border-top: 1px solid rgba(255,255,255,0.1);
-                 background: linear-gradient(180deg, transparent, rgba(255,107,0,0.03)); }
+        footer { text-align: center; padding: 40px 20px; border-top: 1px solid rgba(255,255,255,0.1); margin-top: 60px; }
         footer p { color: rgba(255,255,255,0.5); font-size: 14px; }
-        footer a { color: var(--gold); text-decoration: none; transition: color 0.2s; }
-        footer a:hover { color: var(--orange); }
-        .footer-links { display: flex; justify-content: center; gap: 24px; margin-top: 16px; flex-wrap: wrap; }
+        footer a { color: var(--gold); text-decoration: none; }
         
         /* Responsive */
-        @media (max-width: 768px) {
+        @media (max-width: 640px) {
+            .step { grid-template-columns: 1fr; gap: 16px; padding: 24px; }
+            .step-num { font-size: 36px; }
             .header-inner { flex-direction: column; gap: 12px; }
-            .hero { min-height: 400px; padding: 60px 20px; }
-            .hero-stats { gap: 12px; }
-            .hero-stat { min-width: 90px; padding: 14px; }
-            .hero-stat-value { font-size: 28px; }
-            .rank-grid { grid-template-columns: repeat(2, 1fr); }
-            .phase-timeline { padding-left: 20px; }
-            .phase-icon { left: -28px; font-size: 20px; }
-            section { margin-bottom: 60px; }
         }
     </style>
-    <script src="/static/nw-nav.js" defer></script>
 </head>
 <body data-page-id="guide">
     <div class="bg"></div>
     
-    <!-- Table of Contents -->
-    <nav class="toc">
-        <div class="toc-title" data-i18n="tocTitle">📖 CONTENTS</div>
-        <a href="#objective" data-i18n="tocObjective">How to Win</a>
-        <a href="#card-types" data-i18n="tocCardTypes">Card Types</a>
-        <a href="#stats" data-i18n="tocStats">Card Stats</a>
-        <a href="#turns" data-i18n="tocTurns">Turn Structure</a>
-        <a href="#keywords" data-i18n="tocKeywords">Keywords</a>
-        <a href="#rarity" data-i18n="tocRarity">Rarity System</a>
-        <a href="#combos" data-i18n="tocCombos">Killer Combos</a>
-        <a href="#deckbuilding" data-i18n="tocDeckbuilding">Deck Building</a>
-        <a href="#ranked" data-i18n="tocRanked">Ranked System</a>
-        <a href="#currency" data-i18n="tocCurrency">Currency System</a>
-        <a href="#gacha" data-i18n="tocGacha">Gacha Rates</a>
-        <a href="#content" data-i18n="tocContent">For Creators</a>
-        <a href="#lore" data-i18n="tocLore">The Story</a>
-    </nav>
-    
     <header>
         <div class="header-inner">
-            <a href="/" class="logo">🔥 NumbahWan TCG</a>
+            <a href="/" class="logo" data-i18n="logoText">🔥 NumbahWan TCG</a>
             <nav class="nav-links">
                 <a href="/cards" data-i18n="navCards">Cards</a>
-                <a href="/forge" data-i18n="navGacha">Gacha</a>
-                <a href="/" data-i18n="navHome">Home</a>
+                <a href="/forge" data-i18n="navForge">Forge</a>
+                <a href="/battle" data-i18n="navBattle">Battle</a>
                 <div class="lang-toggle">
                     <button class="lang-btn active" data-lang="en">EN</button>
                     <button class="lang-btn" data-lang="zh">中文</button>
@@ -293,677 +158,286 @@
         </div>
     </header>
     
-    <div class="hero">
-        <div class="hero-bg">
-            <img src="/static/guild-fun-2.webp" alt="Guild Battle">
-        </div>
-        <div class="hero-content">
-            <h1>⚔️ <span data-i18n="heroTitle">GUILD WARS</span></h1>
-            <p class="hero-tagline" data-i18n="heroTagline">"We are not just a guild, but FAMILY... that fights!"</p>
-            <p class="hero-desc" data-i18n="heroDesc">The complete guide to mastering NumbahWan TCG - where guild drama becomes legendary battles, RNG decides destinies, and your clips will break the internet.</p>
-            <div class="hero-stats">
-                <div class="hero-stat">
-                    <div class="hero-stat-value">108</div>
-                    <div class="hero-stat-label" data-i18n="statCards">Unique Cards</div>
-                </div>
-                <div class="hero-stat">
-                    <div class="hero-stat-value">20+</div>
-                    <div class="hero-stat-label" data-i18n="statKeywords">Keywords</div>
-                </div>
-                <div class="hero-stat">
-                    <div class="hero-stat-value">8</div>
-                    <div class="hero-stat-label" data-i18n="statRanks">Ranks</div>
-                </div>
-                <div class="hero-stat">
-                    <div class="hero-stat-value">0.01%</div>
-                    <div class="hero-stat-label" data-i18n="statMythicRate">Mythic Rate</div>
-                </div>
-            </div>
-        </div>
-    </div>
+    <section class="hero">
+        <h1 data-i18n="heroTitle">How to Play</h1>
+        <p class="hero-sub" data-i18n="heroSubtitle">NumbahWan TCG is a luck-based card battle game. Collect cards, pick your team, and let fate decide!</p>
+    </section>
     
     <main>
-        <!-- OBJECTIVE -->
-        <section id="objective">
-            <h2 class="section-title"><span>🎯</span> <span data-i18n="secObjective">How to Win</span></h2>
+        <!-- 3 Simple Steps -->
+        <div class="steps">
+            <div class="step">
+                <div class="step-num">1</div>
+                <div class="step-content">
+                    <h3>🎴 <span data-i18n="step1Title">Collect Cards</span></h3>
+                    <p data-i18n="step1Desc">Open packs at the Forge to get cards. Each card has a rarity from Common to Mythic.</p>
+                    <ul>
+                        <li data-i18n="step1Point1">Use 🪵 Wood to open packs</li>
+                        <li data-i18n="step1Point2">Higher rarity = Higher luck bonus</li>
+                        <li data-i18n="step1Point3">Duplicate cards can be upgraded (star level)</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="step">
+                <div class="step-num">2</div>
+                <div class="step-content">
+                    <h3>⚔️ <span data-i18n="step2Title">Pick 3 Cards</span></h3>
+                    <p data-i18n="step2Desc">In Battle Arena, select exactly 3 cards from your collection. Your cards' combined stats determine your Luck score.</p>
+                    <ul>
+                        <li data-i18n="step2Point1">Tap cards to select (max 3)</li>
+                        <li data-i18n="step2Point2">Choose difficulty (higher = bigger rewards)</li>
+                        <li data-i18n="step2Point3">Place your bet in 💎 NWG tokens</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="step">
+                <div class="step-num">3</div>
+                <div class="step-content">
+                    <h3>🎰 <span data-i18n="step3Title">Battle & Win</span></h3>
+                    <p data-i18n="step3Desc">Press BATTLE and let the RNG gods decide! Your luck score affects your win chance.</p>
+                    <ul>
+                        <li data-i18n="step3Point1">Win → Get rewards based on difficulty</li>
+                        <li data-i18n="step3Point2">Lose → Try again with encouragement</li>
+                        <li data-i18n="step3Point3">Streaks build up your luck meter!</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Card Rarity & Luck -->
+        <section>
+            <h2 class="section-title">✨ <span data-i18n="rarityTitle">Card Rarity & Luck Bonus</span></h2>
+            <p style="color: rgba(255,255,255,0.7); margin-bottom: 20px;" data-i18n="rarityDesc">Higher rarity cards give more luck in battle. Collect rare cards to maximize your chances!</p>
+            
+            <div class="rarity-grid">
+                <div class="rarity-item mythic">
+                    <div class="rarity-icon">🔥</div>
+                    <div class="rarity-name" data-i18n="rarityMythic">Mythic</div>
+                    <div class="rarity-luck">+50% Luck</div>
+                </div>
+                <div class="rarity-item legendary">
+                    <div class="rarity-icon">⭐</div>
+                    <div class="rarity-name" data-i18n="rarityLegendary">Legendary</div>
+                    <div class="rarity-luck">+35% Luck</div>
+                </div>
+                <div class="rarity-item epic">
+                    <div class="rarity-icon">💎</div>
+                    <div class="rarity-name" data-i18n="rarityEpic">Epic</div>
+                    <div class="rarity-luck">+25% Luck</div>
+                </div>
+                <div class="rarity-item rare">
+                    <div class="rarity-icon">💙</div>
+                    <div class="rarity-name" data-i18n="rarityRare">Rare</div>
+                    <div class="rarity-luck">+15% Luck</div>
+                </div>
+                <div class="rarity-item uncommon">
+                    <div class="rarity-icon">💚</div>
+                    <div class="rarity-name" data-i18n="rarityUncommon">Uncommon</div>
+                    <div class="rarity-luck">+5% Luck</div>
+                </div>
+                <div class="rarity-item common">
+                    <div class="rarity-icon">⚪</div>
+                    <div class="rarity-name" data-i18n="rarityCommon">Common</div>
+                    <div class="rarity-luck">+0% Luck</div>
+                </div>
+            </div>
+        </section>
+        
+        <!-- Tips Section -->
+        <section>
+            <h2 class="section-title">💡 <span data-i18n="tipsTitle">Pro Tips</span></h2>
+            
             <div class="info-grid">
                 <div class="info-card">
-                    <h3>🏰 <span data-i18n="guildHpTitle">Guild HP</span></h3>
-                    <p data-i18n="guildHpDesc">Each player starts with <strong style="color: var(--gold);">30 Guild HP</strong>. Reduce your opponent to 0 to claim victory!</p>
+                    <h4>🎯 <span data-i18n="tip1Title">Start Easy</span></h4>
+                    <p data-i18n="tip1Desc">Begin with Easy difficulty to build up NWG tokens before trying harder battles.</p>
                 </div>
                 <div class="info-card">
-                    <h3>◆ <span data-i18n="energyTitle">Energy System</span></h3>
-                    <p data-i18n="energyDesc">Start with <strong style="color: var(--gold);">1 Energy</strong>, gain +1 each turn (max 10). Energy fully refills every turn!</p>
+                    <h4>⬆️ <span data-i18n="tip2Title">Upgrade Cards</span></h4>
+                    <p data-i18n="tip2Desc">Duplicate cards can be upgraded to higher star levels, increasing their luck bonus.</p>
                 </div>
                 <div class="info-card">
-                    <h3>🃏 <span data-i18n="deckTitle">Deck Building</span></h3>
-                    <p data-i18n="deckDesc">Build a deck of <strong style="color: var(--gold);">20-30 cards</strong>. Balance members, moments, and gear for victory!</p>
+                    <h4>🪵 <span data-i18n="tip3Title">Daily Wood</span></h4>
+                    <p data-i18n="tip3Desc">Collect daily rewards and complete tasks to earn Wood for more pack openings.</p>
                 </div>
                 <div class="info-card">
-                    <h3>🏆 <span data-i18n="strategyTitle">Strategy</span></h3>
-                    <p data-i18n="strategyDesc">Play cards strategically, manage your board, and outplay your opponent with skill + luck!</p>
+                    <h4>🔥 <span data-i18n="tip4Title">Hunt Mythics</span></h4>
+                    <p data-i18n="tip4Desc">Mythic cards (RegginA, Sacred Log) give massive luck bonuses. Keep pulling!</p>
                 </div>
-            </div>
-        </section>
-        
-        <!-- CARD TYPES -->
-        <section id="card-types">
-            <h2 class="section-title"><span>🃏</span> <span data-i18n="secCardTypes">Card Types</span></h2>
-            <div class="info-grid">
-                <div class="info-card">
-                    <h3>👤 <span data-i18n="typeMember">Members</span></h3>
-                    <p data-i18n="typeMemberDesc">Guild members that fight on the board. They have ATK, HP, and can attack each turn after being played.</p>
-                </div>
-                <div class="info-card">
-                    <h3>⚡ <span data-i18n="typeMoment">Moments</span></h3>
-                    <p data-i18n="typeMomentDesc">Instant effects that trigger immediately and go to discard. The bread and butter of reactions!</p>
-                </div>
-                <div class="info-card">
-                    <h3>⚔️ <span data-i18n="typeGear">Gear</span></h3>
-                    <p data-i18n="typeGearDesc">Equipment that attaches to members, boosting their stats permanently.</p>
-                </div>
-                <div class="info-card">
-                    <h3>🌀 <span data-i18n="typeVibe">Vibes</span></h3>
-                    <p data-i18n="typeVibeDesc">Persistent effects that last 2-4 turns. Set the mood of the battlefield!</p>
-                </div>
-            </div>
-        </section>
-        
-        <!-- STATS -->
-        <section id="stats">
-            <h2 class="section-title"><span>📊</span> <span data-i18n="secStats">Card Stats</span></h2>
-            <div class="stat-display">
-                <div class="stat-item"><div class="stat-icon">⚔️</div><div class="stat-name">ATK</div><div class="stat-desc" data-i18n="statAtk">Damage dealt</div></div>
-                <div class="stat-item"><div class="stat-icon">❤️</div><div class="stat-name">HP</div><div class="stat-desc" data-i18n="statHp">Health points</div></div>
-                <div class="stat-item"><div class="stat-icon">◆</div><div class="stat-name">COST</div><div class="stat-desc" data-i18n="statCost">Energy needed</div></div>
-                <div class="stat-item"><div class="stat-icon">💨</div><div class="stat-name">SPD</div><div class="stat-desc" data-i18n="statSpd">Attack order</div></div>
-                <div class="stat-item"><div class="stat-icon">💥</div><div class="stat-name">CRIT</div><div class="stat-desc" data-i18n="statCrit">Double damage %</div></div>
-                <div class="stat-item"><div class="stat-icon">🌀</div><div class="stat-name">DODGE</div><div class="stat-desc" data-i18n="statDodge">Avoid attack %</div></div>
-            </div>
-            <div class="tip-box info">
-                <div class="tip-title">💡 <span data-i18n="proTip">Pro Tip</span></div>
-                <p data-i18n="statsTip">CRIT and DODGE add exciting RNG moments! A clutch dodge or surprise crit can completely turn a game around - perfect for YouTube highlight reels!</p>
-            </div>
-        </section>
-        
-        <!-- TURN STRUCTURE -->
-        <section id="turns">
-            <h2 class="section-title"><span>🔄</span> <span data-i18n="secTurns">Turn Structure</span></h2>
-            <div class="phase-timeline">
-                <div class="phase-item"><span class="phase-icon">🌅</span><div class="phase-name" data-i18n="phaseStart">1. START PHASE</div><p class="phase-actions" data-i18n="phaseStartDesc">Start-of-turn effects trigger. GRINDER cards gain +1/+1.</p></div>
-                <div class="phase-item"><span class="phase-icon">🎴</span><div class="phase-name" data-i18n="phaseDraw">2. DRAW PHASE</div><p class="phase-actions" data-i18n="phaseDrawDesc">Draw 1 card. Going second on turn 1? Draw 2!</p></div>
-                <div class="phase-item"><span class="phase-icon">◆</span><div class="phase-name" data-i18n="phaseEnergy">3. ENERGY PHASE</div><p class="phase-actions" data-i18n="phaseEnergyDesc">Gain +1 max energy (up to 10). Refill all energy.</p></div>
-                <div class="phase-item"><span class="phase-icon">🎮</span><div class="phase-name" data-i18n="phaseMain">4. MAIN PHASE</div><p class="phase-actions" data-i18n="phaseMainDesc">Play cards, use abilities, attach gear. No limit!</p></div>
-                <div class="phase-item"><span class="phase-icon">⚔️</span><div class="phase-name" data-i18n="phaseCombat">5. COMBAT PHASE</div><p class="phase-actions" data-i18n="phaseCombatDesc">Attack in SPD order. TAUNT must be attacked first. CRIT/DODGE rolls here!</p></div>
-                <div class="phase-item"><span class="phase-icon">🌙</span><div class="phase-name" data-i18n="phaseEnd">6. END PHASE</div><p class="phase-actions" data-i18n="phaseEndDesc">End-of-turn effects. AFK cards heal. Discard to 10.</p></div>
-            </div>
-        </section>
-        
-        <!-- KEYWORDS -->
-        <section id="keywords">
-            <h2 class="section-title"><span>🏷️</span> <span data-i18n="secKeywords">Keywords & Abilities</span></h2>
-            
-            <h3 style="color: var(--gold); margin: 32px 0 20px; font-size: 22px;">⚔️ <span data-i18n="kwOffensive">Offensive Keywords</span></h3>
-            <div class="table-wrap">
-                <table>
-                    <tr><th data-i18n="kwName">Keyword</th><th data-i18n="kwEffect">Effect</th></tr>
-                    <tr><td><span class="keyword carry">🏆 CARRY</span></td><td data-i18n="kwCarry">Gains +1 ATK permanently for each kill</td></tr>
-                    <tr><td><span class="keyword clutch">🔥 CLUTCH</span></td><td data-i18n="kwClutch">Gains +5 ATK when Guild HP below 10</td></tr>
-                    <tr><td><span class="keyword ragequit">💢 RAGEQUIT</span></td><td data-i18n="kwRagequit">When destroyed, deals ATK to ALL enemies</td></tr>
-                    <tr><td><span class="keyword leech">🩸 LEECH</span></td><td data-i18n="kwLeech">Heals your Guild HP equal to damage dealt</td></tr>
-                    <tr><td><span class="keyword rush">⚡ RUSH</span></td><td data-i18n="kwRush">Can attack the turn it's played</td></tr>
-                </table>
             </div>
             
-            <h3 style="color: var(--gold); margin: 32px 0 20px; font-size: 22px;">🛡️ <span data-i18n="kwDefensive">Defensive Keywords</span></h3>
-            <div class="table-wrap">
-                <table>
-                    <tr><th data-i18n="kwName">Keyword</th><th data-i18n="kwEffect">Effect</th></tr>
-                    <tr><td><span class="keyword taunt">🛡️ TAUNT</span></td><td data-i18n="kwTaunt">Enemies MUST attack this card first</td></tr>
-                    <tr><td><span class="keyword stealth">👻 STEALTH</span></td><td data-i18n="kwStealth">Can't be targeted until it attacks</td></tr>
-                    <tr><td><span class="keyword toxic">☠️ TOXIC</span></td><td data-i18n="kwToxic">Deals 2 damage back to any attacker</td></tr>
-                    <tr><td><span class="keyword comeback">♻️ COMEBACK</span></td><td data-i18n="kwComeback">Returns to hand when destroyed (once)</td></tr>
-                </table>
+            <div class="tip-box pro">
+                <div class="tip-title">✅ <span data-i18n="proTipTitle">Luck Stacking Strategy</span></div>
+                <p data-i18n="proTipDesc">Combine 3 high-rarity cards for maximum luck. A team of Legendary + Legendary + Epic gives ~95% luck!</p>
             </div>
             
-            <h3 style="color: var(--gold); margin: 32px 0 20px; font-size: 22px;">💪 <span data-i18n="kwUtility">Utility Keywords</span></h3>
-            <div class="table-wrap">
-                <table>
-                    <tr><th data-i18n="kwName">Keyword</th><th data-i18n="kwEffect">Effect</th></tr>
-                    <tr><td><span class="keyword whale">🐋 WHALE</span></td><td data-i18n="kwWhale">Pay 3 extra energy to DOUBLE all stats</td></tr>
-                    <tr><td><span class="keyword grinder">⏰ GRINDER</span></td><td data-i18n="kwGrinder">Gains +1/+1 at start of each turn</td></tr>
-                    <tr><td><span class="keyword afk">😴 AFK</span></td><td data-i18n="kwAfk">Can't attack, regenerates 3 HP per turn</td></tr>
-                    <tr><td><span class="keyword simp">💕 SIMP</span></td><td data-i18n="kwSimp">Sacrifice to fully heal + give +3/+3 to ally</td></tr>
-                    <tr><td><span class="keyword hype">📣 HYPE</span></td><td data-i18n="kwHype">Adjacent allies have +2 ATK</td></tr>
-                </table>
-            </div>
-            
-            <h3 style="color: var(--gold); margin: 32px 0 20px; font-size: 22px;">🎰 <span data-i18n="kwChaotic">Chaotic Keywords</span></h3>
-            <div class="table-wrap">
-                <table>
-                    <tr><th data-i18n="kwName">Keyword</th><th data-i18n="kwEffect">Effect</th></tr>
-                    <tr><td><span class="keyword rng">🎰 RNG</span></td><td data-i18n="kwRng">Effect is randomly determined</td></tr>
-                    <tr><td><span class="keyword tilt">😤 TILT</span></td><td data-i18n="kwTilt">50% chance to attack the WRONG target</td></tr>
-                </table>
-            </div>
-        </section>
-        
-        <!-- RARITY -->
-        <section id="rarity">
-            <h2 class="section-title"><span>✨</span> <span data-i18n="secRarity">Rarity System</span></h2>
-            <div class="table-wrap">
-                <table>
-                    <tr><th data-i18n="rarityName">Rarity</th><th data-i18n="rarityCount">Count</th><th>ATK</th><th>HP</th><th data-i18n="rarityCost">Cost</th><th data-i18n="rarityDeckLimit">Deck Limit</th></tr>
-                    <tr><td><span class="rarity-mythic">⭐ MYTHIC</span></td><td>2</td><td>8-12</td><td>10-15</td><td>8-10</td><td>1</td></tr>
-                    <tr><td><span class="rarity-legendary">👑 LEGENDARY</span></td><td>10</td><td>6-9</td><td>7-12</td><td>6-8</td><td>1</td></tr>
-                    <tr><td><span class="rarity-epic">◆ EPIC</span></td><td>18</td><td>5-7</td><td>5-9</td><td>4-6</td><td>2</td></tr>
-                    <tr><td><span class="rarity-rare">💙 RARE</span></td><td>19</td><td>3-5</td><td>4-7</td><td>3-5</td><td>2</td></tr>
-                    <tr><td><span class="rarity-uncommon">💚 UNCOMMON</span></td><td>23</td><td>2-4</td><td>3-5</td><td>2-3</td><td>3</td></tr>
-                    <tr><td><span class="rarity-common">⚪ COMMON</span></td><td>36</td><td>1-3</td><td>2-4</td><td>1-2</td><td>3</td></tr>
-                </table>
-            </div>
             <div class="tip-box warning">
-                <div class="tip-title">⚠️ <span data-i18n="mythicAlert">The Two Mythics</span></div>
-                <p data-i18n="mythicAlertDesc">Only 2 Mythic cards exist: <span class="rarity-mythic">RegginA, The Eternal Flame</span> (CARRY + CLUTCH + 3 damage to all enemies) and <span class="rarity-mythic">The Sacred Log</span> (All allies +2/+2). Build your deck around them!</p>
+                <div class="tip-title">⚠️ <span data-i18n="warningTitle">Don't Overbet</span></div>
+                <p data-i18n="warningDesc">Even with high luck, you can still lose. Never bet more than you can afford to lose. This is gambling mechanics!</p>
             </div>
         </section>
         
-        <!-- COMBOS -->
-        <section id="combos">
-            <h2 class="section-title"><span>🔥</span> <span data-i18n="secCombos">Killer Combos</span></h2>
-            
-            <div class="combo-showcase">
-                <div class="combo-name">💀 <span data-i18n="comboExtinction">"THE EXTINCTION EVENT"</span></div>
-                <div class="combo-cards">
-                    <span class="combo-card-chip mythic" data-i18n="cardReggina">RegginA, Eternal Flame</span>
-                    <span class="combo-plus">+</span>
-                    <span class="combo-card-chip mythic" data-i18n="cardSacredLog">The Sacred Log</span>
-                </div>
-                <div class="combo-result" data-i18n="comboExtinctionDesc">Play Sacred Log first (+2/+2 to all). Then RegginA for 3 damage board clear. With CARRY and CLUTCH, she becomes an 11+ ATK monster!</div>
-            </div>
-            
-            <div class="combo-showcase">
-                <div class="combo-name">🎰 <span data-i18n="combo5050">"THE 50/50 GAMBLE"</span></div>
-                <div class="combo-cards">
-                    <span class="combo-card-chip rare" data-i18n="cardServerCrash">Server Crash</span>
-                    <span class="combo-plus" data-i18n="comboWhenLosing">when losing</span>
-                </div>
-                <div class="combo-result" data-i18n="combo5050Desc">50% destroy ALL enemies = you win. 50% destroy ALL allies = you lose harder. The salt from winning is LEGENDARY!</div>
-            </div>
-            
-            <div class="combo-showcase">
-                <div class="combo-name">😭 <span data-i18n="comboSimp">"THE ULTIMATE SIMP"</span></div>
-                <div class="combo-cards">
-                    <span class="combo-card-chip epic" data-i18n="cardMochi">Mochi, Devoted Simp</span>
-                    <span class="combo-plus">→</span>
-                    <span class="combo-card-chip legendary" data-i18n="cardChadwick">Chadwick, The Carry</span>
-                </div>
-                <div class="combo-result" data-i18n="comboSimpDesc">Mochi sacrifices to fully heal Chadwick AND give +3/+3. Combined with CARRY, he becomes unkillable. Peak romance!</div>
-            </div>
-        </section>
-        
-        <!-- DECK BUILDING -->
-        <section id="deckbuilding">
-            <h2 class="section-title"><span>🃏</span> <span data-i18n="secDeckbuilding">Deck Building</span></h2>
-            <div class="info-grid">
-                <div class="info-card">
-                    <h3>📏 <span data-i18n="deckRules">Deck Rules</span></h3>
-                    <ul>
-                        <li data-i18n="deckMin">Minimum: 20 cards</li>
-                        <li data-i18n="deckMax">Maximum: 30 cards</li>
-                        <li data-i18n="deckSweet">Sweet Spot: 25 cards</li>
-                    </ul>
-                </div>
-                <div class="info-card">
-                    <h3>⚖️ <span data-i18n="deckRatios">Recommended Ratios</span></h3>
-                    <ul>
-                        <li data-i18n="ratioMembers">Members: 12-16 cards (60%)</li>
-                        <li data-i18n="ratioMoments">Moments: 4-8 cards (25%)</li>
-                        <li data-i18n="ratioGear">Gear: 2-4 cards (10%)</li>
-                    </ul>
-                </div>
-            </div>
-        </section>
-        
-        <!-- RANKED -->
-        <section id="ranked">
-            <h2 class="section-title"><span>🏆</span> <span data-i18n="secRanked">Ranked System</span></h2>
-            <p style="text-align: center; color: rgba(255,255,255,0.7); margin-bottom: 32px;" data-i18n="rankedDesc">Climb the ladder, prove your worth, reach the legendary RegginA rank!</p>
-            <div class="rank-grid">
-                <div class="rank-badge bronze"><div class="rank-icon">🥉</div><div class="rank-name" data-i18n="rankBronze">Bronze</div><div class="rank-mmr">0 - 999</div></div>
-                <div class="rank-badge silver"><div class="rank-icon">🥈</div><div class="rank-name" data-i18n="rankSilver">Silver</div><div class="rank-mmr">1000 - 1999</div></div>
-                <div class="rank-badge gold"><div class="rank-icon">🥇</div><div class="rank-name" data-i18n="rankGold">Gold</div><div class="rank-mmr">2000 - 2999</div></div>
-                <div class="rank-badge platinum"><div class="rank-icon">◆</div><div class="rank-name" data-i18n="rankPlatinum">Platinum</div><div class="rank-mmr">3000 - 3999</div></div>
-                <div class="rank-badge diamond"><div class="rank-icon">💠</div><div class="rank-name" data-i18n="rankDiamond">Diamond</div><div class="rank-mmr">4000 - 4999</div></div>
-                <div class="rank-badge master"><div class="rank-icon">👑</div><div class="rank-name" data-i18n="rankMaster">Master</div><div class="rank-mmr">5000 - 5999</div></div>
-                <div class="rank-badge guildmaster"><div class="rank-icon">🔥</div><div class="rank-name" data-i18n="rankGuildmaster">GuildMaster</div><div class="rank-mmr">6000 - 9999</div></div>
-                <div class="rank-badge reggina"><div class="rank-icon">⭐</div><div class="rank-name">RegginA</div><div class="rank-mmr" data-i18n="rankTop100">Top 100 Only</div></div>
-            </div>
-        </section>
-        
-        <!-- CURRENCY SYSTEM -->
-        <section id="currency">
-            <h2 class="section-title"><span>💰</span> Currency & Progression</h2>
-            
-            <p style="color: rgba(255,255,255,0.7); margin-bottom: 24px;">NumbahWan TCG features a 5-tier currency system designed for smooth progression. Every currency has value - no wastage!</p>
+        <!-- Currency Section -->
+        <section>
+            <h2 class="section-title">💰 <span data-i18n="currencyTitle">Currency Guide</span></h2>
             
             <div class="info-grid">
                 <div class="info-card">
-                    <h3 style="color: #00bfff;">◆ Diamond</h3>
-                    <p><strong>Tier 0 - Starting Currency</strong></p>
-                    <ul>
-                        <li>Starting balance: 500</li>
-                        <li>Earned from: Arcade games</li>
-                        <li>Exchange: 10 Diamond → 1 Gold</li>
-                    </ul>
+                    <h4>🪵 <span data-i18n="woodTitle">Wood</span></h4>
+                    <p data-i18n="woodDesc">Main currency for opening card packs at the Forge. Earn from daily login, tasks, and achievements.</p>
                 </div>
                 <div class="info-card">
-                    <h3 style="color: #ffd700;">● Gold</h3>
-                    <p><strong>Tier 1 - Common Currency</strong></p>
-                    <ul>
-                        <li>Starting balance: 100</li>
-                        <li>Earned from: Game wins</li>
-                        <li>Exchange: 5 Gold → 1 Iron</li>
-                    </ul>
+                    <h4>💎 <span data-i18n="nwgTitle">NWG</span></h4>
+                    <p data-i18n="nwgDesc">Battle currency. Bet NWG to win more NWG. Start with free tokens when you join!</p>
                 </div>
                 <div class="info-card">
-                    <h3 style="color: #b0c4de;">⬡ Iron</h3>
-                    <p><strong>Tier 2 - Intermediate</strong></p>
-                    <ul>
-                        <li>Starting balance: 50</li>
-                        <li>Earned from: High scores</li>
-                        <li>Exchange: 5 Iron → 1 Black Jade</li>
-                    </ul>
+                    <h4>🪙 <span data-i18n="goldTitle">Gold</span></h4>
+                    <p data-i18n="goldDesc">Premium currency for special packs and exclusive items. Rare and valuable!</p>
                 </div>
                 <div class="info-card">
-                    <h3 style="color: #00ff88;">▣ Black Jade (Premium)</h3>
-                    <p><strong>Tier 3 - Premium Currency</strong></p>
-                    <ul>
-                        <li>Starting balance: 25</li>
-                        <li>Can purchase with real money</li>
-                        <li>Exchange: <strong style="color:#ff00ff;">50 Jade → 1 Sacred Log</strong></li>
-                    </ul>
-                </div>
-            </div>
-            
-            <div class="combo-showcase" style="margin-top: 32px; background: linear-gradient(135deg, rgba(255,0,255,0.15), rgba(139,69,19,0.1)); border-color: rgba(255,0,255,0.5);">
-                <div class="combo-name" style="color: #ff00ff;">⧫ SACRED LOG - The Ultimate Currency</div>
-                <p style="color: rgba(255,255,255,0.9); font-size: 16px; margin-bottom: 16px;">The most coveted currency in NumbahWan. <strong style="color:#ff00ff;">1 Sacred Log = 1 Mythic Forge Pull!</strong></p>
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px;">
-                    <div style="background: rgba(0,0,0,0.4); padding: 16px; border-radius: 12px; border: 1px solid rgba(255,0,255,0.3);">
-                        <div style="font-size: 24px; margin-bottom: 8px;">🔥</div>
-                        <div style="font-weight: 700; color: #ffd700; margin-bottom: 4px;">Only Pull Currency</div>
-                        <div style="font-size: 13px; color: rgba(255,255,255,0.7);">Can't buy pulls directly - must have Sacred Logs</div>
-                    </div>
-                    <div style="background: rgba(0,0,0,0.4); padding: 16px; border-radius: 12px; border: 1px solid rgba(255,0,255,0.3);">
-                        <div style="font-size: 24px; margin-bottom: 8px;">◆</div>
-                        <div style="font-weight: 700; color: #ffd700; margin-bottom: 4px;">0.01% Mythic Chance</div>
-                        <div style="font-size: 13px; color: rgba(255,255,255,0.7);">Every pull could be a game-changer</div>
-                    </div>
-                    <div style="background: rgba(0,0,0,0.4); padding: 16px; border-radius: 12px; border: 1px solid rgba(255,0,255,0.3);">
-                        <div style="font-size: 24px; margin-bottom: 8px;">📈</div>
-                        <div style="font-weight: 700; color: #ffd700; margin-bottom: 4px;">Pity Progress</div>
-                        <div style="font-size: 13px; color: rgba(255,255,255,0.7);">Each pull builds toward guaranteed rares</div>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="tip-box pro" style="margin-top: 24px;">
-                <div class="tip-title">💡 Pro Tip: Buy Early!</div>
-                <p>Early Black Jade purchases get <strong>bonus percentage</strong> - the earlier you buy, the more value you get long-term. Your progression is saved forever!</p>
-            </div>
-        </section>
-        
-        <!-- GACHA -->
-        <section id="gacha">
-            <h2 class="section-title"><span>🎰</span> <span data-i18n="secGacha">Gacha Rates</span></h2>
-            <div class="gacha-rates">
-                <div class="gacha-rate mythic"><div class="gacha-rate-percent">0.01%</div><div class="gacha-rate-label">MYTHIC</div><div class="gacha-rate-odds" data-i18n="odds10000">1 in 10,000</div></div>
-                <div class="gacha-rate legendary"><div class="gacha-rate-percent">1%</div><div class="gacha-rate-label">LEGENDARY</div><div class="gacha-rate-odds" data-i18n="odds100">1 in 100</div></div>
-                <div class="gacha-rate"><div class="gacha-rate-percent" style="color: var(--epic);">8%</div><div class="gacha-rate-label">EPIC</div><div class="gacha-rate-odds" data-i18n="odds12">1 in 12.5</div></div>
-                <div class="gacha-rate"><div class="gacha-rate-percent" style="color: var(--rare);">20%</div><div class="gacha-rate-label">RARE</div><div class="gacha-rate-odds" data-i18n="odds5">1 in 5</div></div>
-                <div class="gacha-rate"><div class="gacha-rate-percent" style="color: var(--uncommon);">35%</div><div class="gacha-rate-label">UNCOMMON</div><div class="gacha-rate-odds" data-i18n="odds3">~1 in 3</div></div>
-                <div class="gacha-rate"><div class="gacha-rate-percent" style="color: var(--common);">35.99%</div><div class="gacha-rate-label">COMMON</div><div class="gacha-rate-odds" data-i18n="odds3">~1 in 3</div></div>
-            </div>
-            <div class="tip-box warning">
-                <div class="tip-title">⚠️ <span data-i18n="pityTitle">Pity System</span></div>
-                <p data-i18n="pityDesc">MYTHIC: Hard pity at 200 pulls (guaranteed!). LEGENDARY: Hard pity at 80 pulls. EPIC: Hard pity at 25 pulls.</p>
-            </div>
-        </section>
-        
-        <!-- CONTENT CREATOR -->
-        <section id="content">
-            <h2 class="section-title"><span>🎬</span> <span data-i18n="secContent">For Content Creators</span></h2>
-            <p style="color: rgba(255,255,255,0.7); margin-bottom: 32px;" data-i18n="contentDesc">This game is DESIGNED for clips. Here's what makes great content:</p>
-            <div class="info-grid">
-                <div class="info-card">
-                    <h3>🎰 <span data-i18n="contentRng">High-Stakes RNG</span></h3>
-                    <ul>
-                        <li data-i18n="clip5050">Server Crash 50/50 for the win</li>
-                        <li data-i18n="clipCrit">5x crit chain for exact lethal</li>
-                        <li data-i18n="clipDodge">Clutch dodges at 1 HP</li>
-                        <li data-i18n="clipMythic">Pulling Mythic on stream (0.01%!)</li>
-                    </ul>
-                </div>
-                <div class="info-card">
-                    <h3>😂 <span data-i18n="contentMeme">Meme Moments</span></h3>
-                    <ul>
-                        <li data-i18n="memeTilt">TILT hitting your own cards</li>
-                        <li data-i18n="memeAfk">AFK Luna winning by doing nothing</li>
-                        <li data-i18n="memeSimp">SIMP cards dying for their queen</li>
-                        <li data-i18n="memeRagequit">Ragequit dealing lethal damage</li>
-                    </ul>
+                    <h4>📜 <span data-i18n="logsTitle">Sacred Logs</span></h4>
+                    <p data-i18n="logsDesc">Earned by burning duplicate cards. Use for card upgrades and special purchases.</p>
                 </div>
             </div>
         </section>
         
-        <!-- LORE -->
-        <section id="lore">
-            <h2 class="section-title"><span>📖</span> <span data-i18n="secLore">The Guild Story</span></h2>
-            <div class="lore-box">
-                <p data-i18n="loreText">In the realm of MapleStory Idle, there exists a guild unlike any other. <span class="lore-highlight">NumbahWan</span> — where legends are forged, drama unfolds, and family bonds are tested in the fires of competition. Led by the eternal flame herself, <span class="rarity-mythic">RegginA</span>, the guild has seen it all: the grinders who never sleep, the whales who fund the war chest, the lurkers who appear only for raids, and the AFK members who somehow still get loot. Welcome to <span class="lore-highlight">NumbahWan TCG: Guild Wars</span>.</p>
-                <p style="margin-top: 24px; text-align: center; font-size: 20px;"><strong><em data-i18n="loreTagline">"We are not just a guild, but FAMILY... that fights!"</em></strong></p>
-            </div>
-        </section>
+        <!-- CTA -->
+        <div class="cta">
+            <h2 data-i18n="ctaTitle">Ready to Battle?</h2>
+            <p data-i18n="ctaDesc">Start collecting cards and test your luck in the arena!</p>
+            <a href="/battle" class="cta-btn">
+                <span>⚔️</span>
+                <span data-i18n="ctaButton">Enter Battle Arena</span>
+            </a>
+        </div>
     </main>
     
     <footer>
-        <p data-i18n="footerMade">Made with ❤️ and 🧂 by NumbahWan Guild</p>
-        <div class="footer-links">
-            <a href="/cards" data-i18n="footerCards">View All 108 Cards</a>
-            <a href="/forge" data-i18n="footerGacha">Try Your Luck (Gacha)</a>
-            <a href="/" data-i18n="footerHome">Back to Home</a>
-        </div>
-        <p style="margin-top: 24px; font-size: 12px; color: rgba(255,255,255,0.3);">v3.4 • 108 Cards • 0.01% Mythic Rate</p>
+        <p>© 2026 NumbahWan TCG • <a href="/about" data-i18n="footerAbout">About</a> • <a href="/" data-i18n="footerHome">Home</a></p>
     </footer>
     
     <script>
-    // Complete translation system
-    const i18n = {
-        en: {
-            // Navigation
-            navCards: 'Cards', navGacha: 'Gacha', navHome: 'Home',
-            // TOC
-            tocTitle: '📖 CONTENTS', tocObjective: 'How to Win', tocCardTypes: 'Card Types', tocStats: 'Card Stats',
-            tocTurns: 'Turn Structure', tocKeywords: 'Keywords', tocRarity: 'Rarity System', tocCombos: 'Killer Combos',
-            tocDeckbuilding: 'Deck Building', tocRanked: 'Ranked System', tocGacha: 'Gacha Rates', tocContent: 'For Creators', tocLore: 'The Story',
-            // Hero
-            heroTitle: 'GUILD WARS', heroTagline: '"We are not just a guild, but FAMILY... that fights!"',
-            heroDesc: 'The complete guide to mastering NumbahWan TCG - where guild drama becomes legendary battles, RNG decides destinies, and your clips will break the internet.',
-            statCards: 'Unique Cards', statKeywords: 'Keywords', statRanks: 'Ranks', statMythicRate: 'Mythic Rate',
-            // Sections
-            secObjective: 'How to Win', secCardTypes: 'Card Types', secStats: 'Card Stats', secTurns: 'Turn Structure',
-            secKeywords: 'Keywords & Abilities', secRarity: 'Rarity System', secCombos: 'Killer Combos',
-            secDeckbuilding: 'Deck Building', secRanked: 'Ranked System', secGacha: 'Gacha Rates',
-            secContent: 'For Content Creators', secLore: 'The Guild Story',
-            // Objective
-            guildHpTitle: 'Guild HP', guildHpDesc: 'Each player starts with <strong style="color: var(--gold);">30 Guild HP</strong>. Reduce your opponent to 0 to claim victory!',
-            energyTitle: 'Energy System', energyDesc: 'Start with <strong style="color: var(--gold);">1 Energy</strong>, gain +1 each turn (max 10). Energy fully refills every turn!',
-            deckTitle: 'Deck Building', deckDesc: 'Build a deck of <strong style="color: var(--gold);">20-30 cards</strong>. Balance members, moments, and gear for victory!',
-            strategyTitle: 'Strategy', strategyDesc: 'Play cards strategically, manage your board, and outplay your opponent with skill + luck!',
-            // Card Types
-            typeMember: 'Members', typeMemberDesc: 'Guild members that fight on the board. They have ATK, HP, and can attack each turn after being played.',
-            typeMoment: 'Moments', typeMomentDesc: 'Instant effects that trigger immediately and go to discard. The bread and butter of reactions!',
-            typeGear: 'Gear', typeGearDesc: 'Equipment that attaches to members, boosting their stats permanently.',
-            typeVibe: 'Vibes', typeVibeDesc: 'Persistent effects that last 2-4 turns. Set the mood of the battlefield!',
-            // Stats
-            statAtk: 'Damage dealt', statHp: 'Health points', statCost: 'Energy needed', statSpd: 'Attack order', statCrit: 'Double damage %', statDodge: 'Avoid attack %',
-            proTip: 'Pro Tip', statsTip: 'CRIT and DODGE add exciting RNG moments! A clutch dodge or surprise crit can completely turn a game around - perfect for YouTube highlight reels!',
-            // Phases
-            phaseStart: '1. START PHASE', phaseStartDesc: 'Start-of-turn effects trigger. GRINDER cards gain +1/+1.',
-            phaseDraw: '2. DRAW PHASE', phaseDrawDesc: 'Draw 1 card. Going second on turn 1? Draw 2!',
-            phaseEnergy: '3. ENERGY PHASE', phaseEnergyDesc: 'Gain +1 max energy (up to 10). Refill all energy.',
-            phaseMain: '4. MAIN PHASE', phaseMainDesc: 'Play cards, use abilities, attach gear. No limit!',
-            phaseCombat: '5. COMBAT PHASE', phaseCombatDesc: 'Attack in SPD order. TAUNT must be attacked first. CRIT/DODGE rolls here!',
-            phaseEnd: '6. END PHASE', phaseEndDesc: 'End-of-turn effects. AFK cards heal. Discard to 10.',
-            // Keywords
-            kwOffensive: 'Offensive Keywords', kwDefensive: 'Defensive Keywords', kwUtility: 'Utility Keywords', kwChaotic: 'Chaotic Keywords',
-            kwName: 'Keyword', kwEffect: 'Effect',
-            kwCarry: 'Gains +1 ATK permanently for each kill', kwClutch: 'Gains +5 ATK when Guild HP below 10',
-            kwRagequit: 'When destroyed, deals ATK to ALL enemies', kwLeech: 'Heals your Guild HP equal to damage dealt',
-            kwRush: 'Can attack the turn it\'s played', kwTaunt: 'Enemies MUST attack this card first',
-            kwStealth: 'Can\'t be targeted until it attacks', kwToxic: 'Deals 2 damage back to any attacker',
-            kwComeback: 'Returns to hand when destroyed (once)', kwWhale: 'Pay 3 extra energy to DOUBLE all stats',
-            kwGrinder: 'Gains +1/+1 at start of each turn', kwAfk: 'Can\'t attack, regenerates 3 HP per turn',
-            kwSimp: 'Sacrifice to fully heal + give +3/+3 to ally', kwHype: 'Adjacent allies have +2 ATK',
-            kwRng: 'Effect is randomly determined', kwTilt: '50% chance to attack the WRONG target',
-            // Rarity
-            rarityName: 'Rarity', rarityCount: 'Count', rarityCost: 'Cost', rarityDeckLimit: 'Deck Limit',
-            mythicAlert: 'The Two Mythics', mythicAlertDesc: 'Only 2 Mythic cards exist: <span class="rarity-mythic">RegginA, The Eternal Flame</span> (CARRY + CLUTCH + 3 damage to all enemies) and <span class="rarity-mythic">The Sacred Log</span> (All allies +2/+2). Build your deck around them!',
-            // Combos
-            comboExtinction: '"THE EXTINCTION EVENT"', comboExtinctionDesc: 'Play Sacred Log first (+2/+2 to all). Then RegginA for 3 damage board clear. With CARRY and CLUTCH, she becomes an 11+ ATK monster!',
-            combo5050: '"THE 50/50 GAMBLE"', comboWhenLosing: 'when losing', combo5050Desc: '50% destroy ALL enemies = you win. 50% destroy ALL allies = you lose harder. The salt from winning is LEGENDARY!',
-            comboSimp: '"THE ULTIMATE SIMP"', comboSimpDesc: 'Mochi sacrifices to fully heal Chadwick AND give +3/+3. Combined with CARRY, he becomes unkillable. Peak romance!',
-            cardReggina: 'RegginA, Eternal Flame', cardSacredLog: 'The Sacred Log', cardServerCrash: 'Server Crash', cardMochi: 'Mochi, Devoted Simp', cardChadwick: 'Chadwick, The Carry',
-            // Deck Building
-            deckRules: 'Deck Rules', deckRatios: 'Recommended Ratios',
-            deckMin: 'Minimum: 20 cards', deckMax: 'Maximum: 30 cards', deckSweet: 'Sweet Spot: 25 cards',
-            ratioMembers: 'Members: 12-16 cards (60%)', ratioMoments: 'Moments: 4-8 cards (25%)', ratioGear: 'Gear: 2-4 cards (10%)',
-            // Ranked
-            rankedDesc: 'Climb the ladder, prove your worth, reach the legendary RegginA rank!',
-            rankBronze: 'Bronze', rankSilver: 'Silver', rankGold: 'Gold', rankPlatinum: 'Platinum',
-            rankDiamond: 'Diamond', rankMaster: 'Master', rankGuildmaster: 'GuildMaster', rankTop100: 'Top 100 Only',
-            // Gacha
-            odds10000: '1 in 10,000', odds100: '1 in 100', odds12: '1 in 12.5', odds5: '1 in 5', odds3: '~1 in 3',
-            pityTitle: 'Pity System', pityDesc: 'MYTHIC: Hard pity at 200 pulls (guaranteed!). LEGENDARY: Hard pity at 80 pulls.',
-            // Content
-            contentDesc: 'This game is DESIGNED for clips. Here\'s what makes great content:',
-            contentRng: 'High-Stakes RNG', contentMeme: 'Meme Moments',
-            clip5050: 'Server Crash 50/50 for the win', clipCrit: '5x crit chain for exact lethal', clipDodge: 'Clutch dodges at 1 HP', clipMythic: 'Pulling Mythic on stream (0.01%!)',
-            memeTilt: 'TILT hitting your own cards', memeAfk: 'AFK Luna winning by doing nothing', memeSimp: 'SIMP cards dying for their queen', memeRagequit: 'Ragequit dealing lethal damage',
-            // Lore
-            loreText: 'In the realm of MapleStory Idle, there exists a guild unlike any other. <span class="lore-highlight">NumbahWan</span> — where legends are forged, drama unfolds, and family bonds are tested in the fires of competition. Led by the eternal flame herself, <span class="rarity-mythic">RegginA</span>, the guild has seen it all: the grinders who never sleep, the whales who fund the war chest, the lurkers who appear only for raids, and the AFK members who somehow still get loot. Welcome to <span class="lore-highlight">NumbahWan TCG: Guild Wars</span>.',
-            loreTagline: '"We are not just a guild, but FAMILY... that fights!"',
-            // Footer
-            footerMade: 'Made with ❤️ and 🧂 by NumbahWan Guild', footerCards: 'View All 108 Cards', footerGacha: 'Try Your Luck (Gacha)', footerHome: 'Back to Home'
-        },
-        zh: {
-            // Navigation
-            navCards: '卡牌', navGacha: '抽卡', navHome: '首页',
-            // TOC
-            tocTitle: '📖 目录', tocObjective: '如何获胜', tocCardTypes: '卡牌类型', tocStats: '卡牌属性',
-            tocTurns: '回合结构', tocKeywords: '关键词', tocRarity: '稀有度系统', tocCombos: '连招组合',
-            tocDeckbuilding: '构筑卡组', tocRanked: '排位系统', tocGacha: '抽卡概率', tocContent: '内容创作', tocLore: '公会故事',
-            // Hero
-            heroTitle: '公会大战', heroTagline: '"我们不只是公会，而是一起战斗的家人！"',
-            heroDesc: 'NumbahWan TCG 完全攻略 - 公会狗血变传奇对决，RNG决定命运，你的精彩片段将刷爆网络。',
-            statCards: '独特卡牌', statKeywords: '关键词', statRanks: '段位', statMythicRate: '神话概率',
-            // Sections
-            secObjective: '如何获胜', secCardTypes: '卡牌类型', secStats: '卡牌属性', secTurns: '回合结构',
-            secKeywords: '关键词与技能', secRarity: '稀有度系统', secCombos: '连招组合',
-            secDeckbuilding: '构筑卡组', secRanked: '排位系统', secGacha: '抽卡概率',
-            secContent: '内容创作者指南', secLore: '公会故事',
-            // Objective
-            guildHpTitle: '公会血量', guildHpDesc: '每位玩家初始拥有 <strong style="color: var(--gold);">30 公会血量</strong>。将对手血量降为0即可获胜！',
-            energyTitle: '能量系统', energyDesc: '初始 <strong style="color: var(--gold);">1 能量</strong>，每回合+1（最多10）。能量每回合完全恢复！',
-            deckTitle: '卡组构筑', deckDesc: '构建 <strong style="color: var(--gold);">20-30张</strong> 卡组。平衡成员、时刻和装备取得胜利！',
-            strategyTitle: '策略', strategyDesc: '策略性出牌，管理场面，用技术和运气战胜对手！',
-            // Card Types
-            typeMember: '成员', typeMemberDesc: '在场上战斗的公会成员。拥有攻击、血量，可以每回合攻击。',
-            typeMoment: '时刻', typeMomentDesc: '立即触发并进入弃牌堆的即时效果。反应卡的精髓！',
-            typeGear: '装备', typeGearDesc: '附着在成员身上，永久提升属性的装备。',
-            typeVibe: '氛围', typeVibeDesc: '持续2-4回合的持久效果。掌控战场气氛！',
-            // Stats
-            statAtk: '造成伤害', statHp: '生命值', statCost: '所需能量', statSpd: '攻击顺序', statCrit: '双倍伤害%', statDodge: '闪避攻击%',
-            proTip: '进阶技巧', statsTip: '暴击和闪避增添刺激的RNG时刻！关键时刻的闪避或意外暴击能完全逆转局势 - 绝佳的直播素材！',
-            // Phases
-            phaseStart: '1. 开始阶段', phaseStartDesc: '回合开始效果触发。肝帝卡获得+1/+1。',
-            phaseDraw: '2. 抽牌阶段', phaseDrawDesc: '抽1张牌。后手第一回合抽2张！',
-            phaseEnergy: '3. 能量阶段', phaseEnergyDesc: '最大能量+1（上限10）。恢复所有能量。',
-            phaseMain: '4. 主要阶段', phaseMainDesc: '出牌、使用技能、装备道具。无限制！',
-            phaseCombat: '5. 战斗阶段', phaseCombatDesc: '按速度顺序攻击。嘲讽必须优先被攻击。暴击/闪避判定！',
-            phaseEnd: '6. 结束阶段', phaseEndDesc: '回合结束效果。挂机卡恢复血量。弃至10张。',
-            // Keywords
-            kwOffensive: '进攻型关键词', kwDefensive: '防御型关键词', kwUtility: '功能型关键词', kwChaotic: '混乱型关键词',
-            kwName: '关键词', kwEffect: '效果',
-            kwCarry: '每次击杀永久+1攻击', kwClutch: '公会血量低于10时+5攻击',
-            kwRagequit: '被消灭时对所有敌人造成攻击伤害', kwLeech: '造成伤害等量恢复公会血量',
-            kwRush: '可以在出场回合攻击', kwTaunt: '敌人必须优先攻击此卡',
-            kwStealth: '攻击前无法被选中', kwToxic: '对攻击者反弹2点伤害',
-            kwComeback: '被消灭时返回手牌（每场一次）', kwWhale: '额外支付3能量双倍所有属性',
-            kwGrinder: '每回合开始+1/+1', kwAfk: '无法攻击，每回合恢复3血量',
-            kwSimp: '牺牲自己完全治疗并给予目标+3/+3', kwHype: '相邻友方+2攻击',
-            kwRng: '效果随机决定', kwTilt: '50%概率攻击错误目标',
-            // Rarity
-            rarityName: '稀有度', rarityCount: '数量', rarityCost: '费用', rarityDeckLimit: '卡组限制',
-            mythicAlert: '两张神话卡', mythicAlertDesc: '只有2张神话卡：<span class="rarity-mythic">蕾吉娜·永恒之焰</span>（携带+绝境+对所有敌人造成3伤害）和<span class="rarity-mythic">神圣之木</span>（所有友方+2/+2）。围绕它们构建卡组！',
-            // Combos
-            comboExtinction: '"灭绝事件"', comboExtinctionDesc: '先出神圣之木（全体+2/+2）。再出蕾吉娜清场3伤害。配合携带和绝境，她变成11+攻击怪物！',
-            combo5050: '"五五开赌博"', comboWhenLosing: '劣势时', combo5050Desc: '50%消灭所有敌人=你赢。50%消灭所有友方=输更惨。赢了产生的盐是传说级的！',
-            comboSimp: '"终极舔狗"', comboSimpDesc: '麻吉牺牲自己完全治疗查德威克并给予+3/+3。配合携带，他变得无法击杀。恋爱巅峰！',
-            cardReggina: '蕾吉娜·永恒之焰', cardSacredLog: '神圣之木', cardServerCrash: '服务器崩溃', cardMochi: '麻吉·专业舔狗', cardChadwick: '查德威克·绝对C位',
-            // Deck Building
-            deckRules: '卡组规则', deckRatios: '推荐比例',
-            deckMin: '最少：20张', deckMax: '最多：30张', deckSweet: '最佳：25张',
-            ratioMembers: '成员：12-16张（60%）', ratioMoments: '时刻：4-8张（25%）', ratioGear: '装备：2-4张（10%）',
-            // Ranked
-            rankedDesc: '攀登天梯，证明实力，达到传说中的蕾吉娜段位！',
-            rankBronze: '青铜', rankSilver: '白银', rankGold: '黄金', rankPlatinum: '铂金',
-            rankDiamond: '钻石', rankMaster: '大师', rankGuildmaster: '公会长', rankTop100: '仅限前100',
-            // Gacha
-            odds10000: '万分之一', odds100: '百分之一', odds12: '12.5分之一', odds5: '五分之一', odds3: '约三分之一',
-            pityTitle: '保底系统', pityDesc: '神话：200抽硬保底（必出！）。传说：80抽硬保底。',
-            // Content
-            contentDesc: '这游戏专为精彩片段设计。以下是优质内容来源：',
-            contentRng: '高风险RNG', contentMeme: '整活时刻',
-            clip5050: '服务器崩溃五五开决胜', clipCrit: '5连暴击精准斩杀', clipDodge: '1血极限闪避', clipMythic: '直播抽到神话（0.01%！）',
-            memeTilt: '倾斜打到自己人', memeAfk: '挂机露娜躺赢', memeSimp: '舔狗卡为女神献身', memeRagequit: '退游造成致命伤害',
-            // Lore
-            loreText: '在冒险岛闲置的世界里，存在着一个与众不同的公会。<span class="lore-highlight">NumbahWan</span> — 在这里传奇诞生，狗血上演，家庭纽带在竞争的烈火中接受考验。在永恒之焰<span class="rarity-mythic">蕾吉娜</span>的领导下，公会经历了一切：永不休息的肝帝、资助战争基金的大佬、只在副本出现的潜水员，以及不知怎么还能拿装备的挂机玩家。欢迎来到<span class="lore-highlight">NumbahWan TCG: 公会大战</span>。',
-            loreTagline: '"我们不只是公会，而是一起战斗的家人！"',
-            // Footer
-            footerMade: '由 NumbahWan 公会用 ❤️ 和 🧂 制作', footerCards: '查看全部108张卡牌', footerGacha: '试试手气（抽卡）', footerHome: '返回首页'
-        },
-        th: {
-            // Navigation
-            navCards: 'การ์ด', navGacha: 'กาชา', navHome: 'หน้าแรก',
-            // TOC
-            tocTitle: '📖 สารบัญ', tocObjective: 'วิธีชนะ', tocCardTypes: 'ประเภทการ์ด', tocStats: 'สถิติการ์ด',
-            tocTurns: 'โครงสร้างเทิร์น', tocKeywords: 'คีย์เวิร์ด', tocRarity: 'ระบบความหายาก', tocCombos: 'คอมโบเด็ด',
-            tocDeckbuilding: 'สร้างเด็ค', tocRanked: 'ระบบแรงค์', tocGacha: 'อัตราดรอป', tocContent: 'สำหรับ YouTuber', tocLore: 'เรื่องราว',
-            // Hero
-            heroTitle: 'สงครามกิลด์', heroTagline: '"เราไม่ใช่แค่กิลด์ แต่เป็นครอบครัว... ที่ต่อสู้กัน!"',
-            heroDesc: 'คู่มือฉบับสมบูรณ์ NumbahWan TCG - ดราม่ากิลด์กลายเป็นศึกในตำนาน RNG ตัดสินชะตา และคลิปของคุณจะแตกอินเทอร์เน็ต',
-            statCards: 'การ์ดทั้งหมด', statKeywords: 'คีย์เวิร์ด', statRanks: 'แรงค์', statMythicRate: 'อัตรา Mythic',
-            // Sections
-            secObjective: 'วิธีชนะ', secCardTypes: 'ประเภทการ์ด', secStats: 'สถิติการ์ด', secTurns: 'โครงสร้างเทิร์น',
-            secKeywords: 'คีย์เวิร์ดและความสามารถ', secRarity: 'ระบบความหายาก', secCombos: 'คอมโบเด็ด',
-            secDeckbuilding: 'สร้างเด็ค', secRanked: 'ระบบแรงค์', secGacha: 'อัตราดรอป',
-            secContent: 'สำหรับคอนเทนต์ครีเอเตอร์', secLore: 'เรื่องราวของกิลด์',
-            // Objective
-            guildHpTitle: 'HP กิลด์', guildHpDesc: 'ผู้เล่นแต่ละคนเริ่มต้นด้วย <strong style="color: var(--gold);">30 HP กิลด์</strong> ลดคู่ต่อสู้เหลือ 0 เพื่อชนะ!',
-            energyTitle: 'ระบบพลังงาน', energyDesc: 'เริ่มต้นด้วย <strong style="color: var(--gold);">1 พลังงาน</strong> ได้ +1 ทุกเทิร์น (สูงสุด 10) พลังงานเติมเต็มทุกเทิร์น!',
-            deckTitle: 'สร้างเด็ค', deckDesc: 'สร้างเด็ค <strong style="color: var(--gold);">20-30 ใบ</strong> สมดุลสมาชิก โมเมนต์ และอุปกรณ์!',
-            strategyTitle: 'กลยุทธ์', strategyDesc: 'เล่นการ์ดอย่างมีกลยุทธ์ จัดการสนาม เอาชนะคู่ต่อสู้ด้วยทักษะ + โชค!',
-            // Card Types
-            typeMember: 'สมาชิก', typeMemberDesc: 'สมาชิกกิลด์ที่ต่อสู้บนสนาม มี ATK, HP และโจมตีได้ทุกเทิร์น',
-            typeMoment: 'โมเมนต์', typeMomentDesc: 'เอฟเฟกต์ทันทีที่เปิดใช้งานแล้วทิ้ง หัวใจของการตอบโต้!',
-            typeGear: 'อุปกรณ์', typeGearDesc: 'อุปกรณ์ที่ติดกับสมาชิก เพิ่มสถิติถาวร',
-            typeVibe: 'ไวบ์', typeVibeDesc: 'เอฟเฟกต์ต่อเนื่อง 2-4 เทิร์น กำหนดบรรยากาศสนามรบ!',
-            // Stats
-            statAtk: 'ความเสียหาย', statHp: 'พลังชีวิต', statCost: 'พลังงานที่ต้องการ', statSpd: 'ลำดับโจมตี', statCrit: 'ดาเมจสองเท่า%', statDodge: 'หลบโจมตี%',
-            proTip: 'เคล็ดลับโปร', statsTip: 'CRIT และ DODGE เพิ่มช่วงเวลา RNG ที่ตื่นเต้น! การหลบหลุดหรือคริทเซอร์ไพรส์สามารถพลิกเกมได้ - สมบูรณ์แบบสำหรับไฮไลท์ YouTube!',
-            // Phases
-            phaseStart: '1. เฟสเริ่มต้น', phaseStartDesc: 'เอฟเฟกต์เริ่มเทิร์นทำงาน การ์ด GRINDER ได้ +1/+1',
-            phaseDraw: '2. เฟสจั่ว', phaseDrawDesc: 'จั่ว 1 ใบ เล่นหลังเทิร์น 1? จั่ว 2!',
-            phaseEnergy: '3. เฟสพลังงาน', phaseEnergyDesc: 'พลังงานสูงสุด +1 (ถึง 10) เติมพลังงานทั้งหมด',
-            phaseMain: '4. เฟสหลัก', phaseMainDesc: 'เล่นการ์ด ใช้ความสามารถ ติดอุปกรณ์ ไม่จำกัด!',
-            phaseCombat: '5. เฟสต่อสู้', phaseCombatDesc: 'โจมตีตามลำดับ SPD ต้องโจมตี TAUNT ก่อน ทอย CRIT/DODGE ที่นี่!',
-            phaseEnd: '6. เฟสจบ', phaseEndDesc: 'เอฟเฟกต์จบเทิร์น การ์ด AFK ฮีล ทิ้งเหลือ 10',
-            // Keywords
-            kwOffensive: 'คีย์เวิร์ดบุก', kwDefensive: 'คีย์เวิร์ดรับ', kwUtility: 'คีย์เวิร์ดยูทิลิตี้', kwChaotic: 'คีย์เวิร์ดวุ่นวาย',
-            kwName: 'คีย์เวิร์ด', kwEffect: 'เอฟเฟกต์',
-            kwCarry: 'ได้ +1 ATK ถาวรต่อการสังหาร', kwClutch: 'ได้ +5 ATK เมื่อ HP กิลด์ต่ำกว่า 10',
-            kwRagequit: 'เมื่อถูกทำลาย สร้างความเสียหาย ATK ให้ศัตรูทั้งหมด', kwLeech: 'ฮีล HP กิลด์เท่ากับความเสียหายที่สร้าง',
-            kwRush: 'โจมตีได้ในเทิร์นที่เล่น', kwTaunt: 'ศัตรูต้องโจมตีการ์ดนี้ก่อน',
-            kwStealth: 'ไม่สามารถเป็นเป้าได้จนกว่าจะโจมตี', kwToxic: 'สร้าง 2 ดาเมจกลับให้ผู้โจมตี',
-            kwComeback: 'กลับมือเมื่อถูกทำลาย (ครั้งเดียว)', kwWhale: 'จ่าย 3 พลังงานเพิ่มเพื่อดับเบิ้ลสถิติทั้งหมด',
-            kwGrinder: 'ได้ +1/+1 ตอนเริ่มเทิร์น', kwAfk: 'โจมตีไม่ได้ ฟื้นฟู 3 HP ต่อเทิร์น',
-            kwSimp: 'สละตัวเองเพื่อฮีลเต็มและให้ +3/+3 แก่พันธมิตร', kwHype: 'พันธมิตรข้างๆ มี +2 ATK',
-            kwRng: 'เอฟเฟกต์สุ่ม', kwTilt: '50% โอกาสโจมตีเป้าผิด',
-            // Rarity
-            rarityName: 'ความหายาก', rarityCount: 'จำนวน', rarityCost: 'ค่าใช้จ่าย', rarityDeckLimit: 'จำกัดเด็ค',
-            mythicAlert: 'สอง Mythic', mythicAlertDesc: 'มีเพียง 2 การ์ด Mythic: <span class="rarity-mythic">RegginA เปลวไฟนิรันดร์</span> (CARRY + CLUTCH + 3 ดาเมจให้ศัตรูทั้งหมด) และ <span class="rarity-mythic">ท่อนไม้ศักดิ์สิทธิ์</span> (พันธมิตรทั้งหมด +2/+2) สร้างเด็ครอบพวกมัน!',
-            // Combos
-            comboExtinction: '"เหตุการณ์สูญพันธุ์"', comboExtinctionDesc: 'เล่นท่อนไม้ศักดิ์สิทธิ์ก่อน (+2/+2 ทั้งหมด) แล้ว RegginA เคลียร์สนาม 3 ดาเมจ ด้วย CARRY และ CLUTCH เธอกลายเป็นมอนสเตอร์ 11+ ATK!',
-            combo5050: '"การพนัน 50/50"', comboWhenLosing: 'ตอนแพ้', combo5050Desc: '50% ทำลายศัตรูทั้งหมด = คุณชนะ 50% ทำลายพันธมิตรทั้งหมด = แพ้หนักกว่า เกลือจากการชนะเป็นตำนาน!',
-            comboSimp: '"ซิมป์สุดยอด"', comboSimpDesc: 'โมจิสละตัวเองเพื่อฮีล Chadwick เต็มและให้ +3/+3 รวมกับ CARRY เขากลายเป็นอมตะ รักสุดๆ!',
-            cardReggina: 'RegginA เปลวไฟนิรันดร์', cardSacredLog: 'ท่อนไม้ศักดิ์สิทธิ์', cardServerCrash: 'เซิร์ฟเวอร์ล่ม', cardMochi: 'โมจิ ซิมป์ผู้ภักดี', cardChadwick: 'Chadwick แครี่',
-            // Deck Building
-            deckRules: 'กฎเด็ค', deckRatios: 'อัตราส่วนแนะนำ',
-            deckMin: 'ขั้นต่ำ: 20 ใบ', deckMax: 'สูงสุด: 30 ใบ', deckSweet: 'จุดหวาน: 25 ใบ',
-            ratioMembers: 'สมาชิก: 12-16 ใบ (60%)', ratioMoments: 'โมเมนต์: 4-8 ใบ (25%)', ratioGear: 'อุปกรณ์: 2-4 ใบ (10%)',
-            // Ranked
-            rankedDesc: 'ปีนแรงค์ พิสูจน์ตัวเอง ไปให้ถึงแรงค์ RegginA ในตำนาน!',
-            rankBronze: 'บรอนซ์', rankSilver: 'ซิลเวอร์', rankGold: 'โกลด์', rankPlatinum: 'แพลทินัม',
-            rankDiamond: 'ไดมอนด์', rankMaster: 'มาสเตอร์', rankGuildmaster: 'กิลด์มาสเตอร์', rankTop100: 'เฉพาะ Top 100',
-            // Gacha
-            odds10000: '1 ใน 10,000', odds100: '1 ใน 100', odds12: '1 ใน 12.5', odds5: '1 ใน 5', odds3: '~1 ใน 3',
-            pityTitle: 'ระบบ Pity', pityDesc: 'MYTHIC: Pity แข็งที่ 200 ครั้ง (การันตี!) LEGENDARY: Pity แข็งที่ 80 ครั้ง',
-            // Content
-            contentDesc: 'เกมนี้ออกแบบมาเพื่อคลิป นี่คือสิ่งที่ทำให้คอนเทนต์ดี:',
-            contentRng: 'RNG เดิมพันสูง', contentMeme: 'ช่วงเวลามีม',
-            clip5050: 'เซิร์ฟเวอร์ล่ม 50/50 เพื่อชัยชนะ', clipCrit: '5 คริทติดต่อกันสังหาร', clipDodge: 'หลบ clutch ที่ 1 HP', clipMythic: 'ได้ Mythic บนสตรีม (0.01%!)',
-            memeTilt: 'TILT โจมตีการ์ดตัวเอง', memeAfk: 'AFK Luna ชนะโดยไม่ทำอะไร', memeSimp: 'การ์ด SIMP ตายเพื่อราชินี', memeRagequit: 'Ragequit สร้างดาเมจสังหาร',
-            // Lore
-            loreText: 'ในอาณาจักร MapleStory Idle มีกิลด์ที่ไม่เหมือนใคร <span class="lore-highlight">NumbahWan</span> — ที่ซึ่งตำนานถูกหล่อหลอม ดราม่าเกิดขึ้น และสายสัมพันธ์ครอบครัวถูกทดสอบในไฟแห่งการแข่งขัน นำโดยเปลวไฟนิรันดร์ <span class="rarity-mythic">RegginA</span> กิลด์ได้เห็นทุกอย่าง: คนบ้าเลเวลที่ไม่เคยหลับ วาฬที่สนับสนุนคลังสงคราม คนดำน้ำที่โผล่เฉพาะเรด และสมาชิก AFK ที่ยังได้ลูท ยินดีต้อนรับสู่ <span class="lore-highlight">NumbahWan TCG: สงครามกิลด์</span>',
-            loreTagline: '"เราไม่ใช่แค่กิลด์ แต่เป็นครอบครัว... ที่ต่อสู้กัน!"',
-            // Footer
-            footerMade: 'สร้างด้วย ❤️ และ 🧂 โดย NumbahWan Guild', footerCards: 'ดูการ์ดทั้ง 108 ใบ', footerGacha: 'ลองดวง (กาชา)', footerHome: 'กลับหน้าแรก'
-        }
-    };
-
-    let currentLang = localStorage.getItem('nw_lang') || 'en';
-
-    function updateLanguage(lang) {
-        currentLang = lang;
-        localStorage.setItem('nw_lang', lang);
-        
-        // Update lang buttons
-        document.querySelectorAll('.lang-btn').forEach(btn => {
-            btn.classList.toggle('active', btn.dataset.lang === lang);
-        });
-        
-        // Update all translatable elements
-        document.querySelectorAll('[data-i18n]').forEach(el => {
-            const key = el.dataset.i18n;
-            if (i18n[lang] && i18n[lang][key]) {
-                el.innerHTML = i18n[lang][key];
+        // Simple i18n system
+        const i18n = {
+            en: {
+                logoText: '🔥 NumbahWan TCG',
+                navCards: 'Cards', navForge: 'Forge', navBattle: 'Battle',
+                heroTitle: 'How to Play',
+                heroSubtitle: 'NumbahWan TCG is a luck-based card battle game. Collect cards, pick your team, and let fate decide!',
+                step1Title: 'Collect Cards', step1Desc: 'Open packs at the Forge to get cards. Each card has a rarity from Common to Mythic.',
+                step1Point1: 'Use 🪵 Wood to open packs', step1Point2: 'Higher rarity = Higher luck bonus', step1Point3: 'Duplicate cards can be upgraded (star level)',
+                step2Title: 'Pick 3 Cards', step2Desc: 'In Battle Arena, select exactly 3 cards from your collection. Your cards\' combined stats determine your Luck score.',
+                step2Point1: 'Tap cards to select (max 3)', step2Point2: 'Choose difficulty (higher = bigger rewards)', step2Point3: 'Place your bet in 💎 NWG tokens',
+                step3Title: 'Battle & Win', step3Desc: 'Press BATTLE and let the RNG gods decide! Your luck score affects your win chance.',
+                step3Point1: 'Win → Get rewards based on difficulty', step3Point2: 'Lose → Try again with encouragement', step3Point3: 'Streaks build up your luck meter!',
+                rarityTitle: 'Card Rarity & Luck Bonus', rarityDesc: 'Higher rarity cards give more luck in battle. Collect rare cards to maximize your chances!',
+                rarityMythic: 'Mythic', rarityLegendary: 'Legendary', rarityEpic: 'Epic', rarityRare: 'Rare', rarityUncommon: 'Uncommon', rarityCommon: 'Common',
+                tipsTitle: 'Pro Tips',
+                tip1Title: 'Start Easy', tip1Desc: 'Begin with Easy difficulty to build up NWG tokens before trying harder battles.',
+                tip2Title: 'Upgrade Cards', tip2Desc: 'Duplicate cards can be upgraded to higher star levels, increasing their luck bonus.',
+                tip3Title: 'Daily Wood', tip3Desc: 'Collect daily rewards and complete tasks to earn Wood for more pack openings.',
+                tip4Title: 'Hunt Mythics', tip4Desc: 'Mythic cards (RegginA, Sacred Log) give massive luck bonuses. Keep pulling!',
+                proTipTitle: 'Luck Stacking Strategy', proTipDesc: 'Combine 3 high-rarity cards for maximum luck. A team of Legendary + Legendary + Epic gives ~95% luck!',
+                warningTitle: 'Don\'t Overbet', warningDesc: 'Even with high luck, you can still lose. Never bet more than you can afford to lose. This is gambling mechanics!',
+                currencyTitle: 'Currency Guide',
+                woodTitle: 'Wood', woodDesc: 'Main currency for opening card packs at the Forge. Earn from daily login, tasks, and achievements.',
+                nwgTitle: 'NWG', nwgDesc: 'Battle currency. Bet NWG to win more NWG. Start with free tokens when you join!',
+                goldTitle: 'Gold', goldDesc: 'Premium currency for special packs and exclusive items. Rare and valuable!',
+                logsTitle: 'Sacred Logs', logsDesc: 'Earned by burning duplicate cards. Use for card upgrades and special purchases.',
+                ctaTitle: 'Ready to Battle?', ctaDesc: 'Start collecting cards and test your luck in the arena!', ctaButton: 'Enter Battle Arena',
+                footerAbout: 'About', footerHome: 'Home'
+            },
+            zh: {
+                logoText: '🔥 NumbahWan TCG',
+                navCards: '卡牌', navForge: '鍛造', navBattle: '戰鬥',
+                heroTitle: '遊戲教學',
+                heroSubtitle: 'NumbahWan TCG 是一款運氣對戰卡牌遊戲。收集卡牌、組建隊伍，讓命運來決定！',
+                step1Title: '收集卡牌', step1Desc: '在鍛造爐開包獲得卡牌。每張卡牌的稀有度從普通到神話不等。',
+                step1Point1: '使用 🪵 木材開包', step1Point2: '稀有度越高 = 運氣加成越高', step1Point3: '重複卡牌可以升級（星級）',
+                step2Title: '選擇3張卡', step2Desc: '在戰鬥競技場，從你的收藏中選擇3張卡牌。卡牌的綜合數值決定你的運氣值。',
+                step2Point1: '點擊卡牌選擇（最多3張）', step2Point2: '選擇難度（越高 = 獎勵越大）', step2Point3: '用 💎 NWG 代幣下注',
+                step3Title: '戰鬥獲勝', step3Desc: '按下戰鬥按鈕，讓RNG之神來決定！你的運氣值影響勝率。',
+                step3Point1: '獲勝 → 根據難度獲得獎勵', step3Point2: '失敗 → 獲得鼓勵再試一次', step3Point3: '連勝可以累積運氣計量！',
+                rarityTitle: '卡牌稀有度與運氣加成', rarityDesc: '稀有度越高的卡牌在戰鬥中提供更多運氣。收集稀有卡牌來最大化你的勝率！',
+                rarityMythic: '神話', rarityLegendary: '傳說', rarityEpic: '史詩', rarityRare: '稀有', rarityUncommon: '優秀', rarityCommon: '普通',
+                tipsTitle: '專業技巧',
+                tip1Title: '從簡單開始', tip1Desc: '從簡單難度開始累積NWG代幣，然後再嘗試更難的戰鬥。',
+                tip2Title: '升級卡牌', tip2Desc: '重複的卡牌可以升級到更高星級，增加運氣加成。',
+                tip3Title: '每日木材', tip3Desc: '收集每日獎勵和完成任務來獲得更多木材開包。',
+                tip4Title: '追求神話', tip4Desc: '神話卡牌（RegginA、聖木）提供巨大運氣加成。繼續抽！',
+                proTipTitle: '運氣疊加策略', proTipDesc: '組合3張高稀有度卡牌獲得最大運氣。傳說+傳說+史詩的組合可達約95%運氣！',
+                warningTitle: '不要過度下注', warningDesc: '即使運氣很高，你仍可能輸。永遠不要賭超過你能承受的損失。這是賭博機制！',
+                currencyTitle: '貨幣指南',
+                woodTitle: '木材', woodDesc: '在鍛造爐開卡包的主要貨幣。通過每日登錄、任務和成就獲得。',
+                nwgTitle: 'NWG', nwgDesc: '戰鬥貨幣。用NWG下注贏取更多NWG。加入時可獲得免費代幣！',
+                goldTitle: '金幣', goldDesc: '用於特殊卡包和獨家物品的高級貨幣。稀有而珍貴！',
+                logsTitle: '聖木', logsDesc: '通過燃燒重複卡牌獲得。用於卡牌升級和特殊購買。',
+                ctaTitle: '準備好戰鬥了嗎？', ctaDesc: '開始收集卡牌，在競技場測試你的運氣！', ctaButton: '進入戰鬥競技場',
+                footerAbout: '關於', footerHome: '首頁'
+            },
+            th: {
+                logoText: '🔥 NumbahWan TCG',
+                navCards: 'การ์ด', navForge: 'หลอม', navBattle: 'ต่อสู้',
+                heroTitle: 'วิธีเล่น',
+                heroSubtitle: 'NumbahWan TCG เป็นเกมการ์ดต่อสู้แบบดวง สะสมการ์ด เลือกทีม และปล่อยให้โชคชะตาตัดสิน!',
+                step1Title: 'สะสมการ์ด', step1Desc: 'เปิดแพ็คที่ Forge เพื่อรับการ์ด การ์ดแต่ละใบมีความหายากตั้งแต่ Common ถึง Mythic',
+                step1Point1: 'ใช้ 🪵 ไม้เปิดแพ็ค', step1Point2: 'หายากยิ่งขึ้น = โบนัสโชคมากขึ้น', step1Point3: 'การ์ดซ้ำสามารถอัพเกรด (ระดับดาว)',
+                step2Title: 'เลือก 3 การ์ด', step2Desc: 'ในสนามประลอง เลือกการ์ด 3 ใบจากคอลเลกชันของคุณ สเตตัสรวมของการ์ดจะกำหนดคะแนนโชค',
+                step2Point1: 'แตะการ์ดเพื่อเลือก (สูงสุด 3)', step2Point2: 'เลือกระดับความยาก (สูงขึ้น = รางวัลมากขึ้น)', step2Point3: 'วางเดิมพันด้วย 💎 NWG โทเค็น',
+                step3Title: 'ต่อสู้และชนะ', step3Desc: 'กด BATTLE และปล่อยให้ RNG ตัดสิน! คะแนนโชคมีผลต่อโอกาสชนะ',
+                step3Point1: 'ชนะ → รับรางวัลตามระดับความยาก', step3Point2: 'แพ้ → ลองใหม่พร้อมกำลังใจ', step3Point3: 'สายชนะเพิ่มมิเตอร์โชค!',
+                rarityTitle: 'ความหายากและโบนัสโชค', rarityDesc: 'การ์ดที่หายากกว่าให้โชคมากขึ้นในการต่อสู้ สะสมการ์ดหายากเพื่อเพิ่มโอกาส!',
+                rarityMythic: 'Mythic', rarityLegendary: 'Legendary', rarityEpic: 'Epic', rarityRare: 'Rare', rarityUncommon: 'Uncommon', rarityCommon: 'Common',
+                tipsTitle: 'เคล็ดลับ',
+                tip1Title: 'เริ่มง่ายๆ', tip1Desc: 'เริ่มจากระดับง่ายเพื่อสะสม NWG ก่อนลองระดับยากขึ้น',
+                tip2Title: 'อัพเกรดการ์ด', tip2Desc: 'การ์ดซ้ำสามารถอัพเกรดเป็นระดับดาวสูงขึ้น เพิ่มโบนัสโชค',
+                tip3Title: 'ไม้รายวัน', tip3Desc: 'เก็บรางวัลรายวันและทำภารกิจเพื่อรับไม้เปิดแพ็ค',
+                tip4Title: 'ล่า Mythic', tip4Desc: 'การ์ด Mythic (RegginA, Sacred Log) ให้โบนัสโชคมหาศาล สุ่มต่อไป!',
+                proTipTitle: 'กลยุทธ์เพิ่มโชค', proTipDesc: 'รวม 3 การ์ดหายากสูงเพื่อโชคสูงสุด ทีม Legendary + Legendary + Epic ให้โชค ~95%!',
+                warningTitle: 'อย่าเดิมพันเกิน', warningDesc: 'แม้โชคสูง คุณยังแพ้ได้ อย่าเดิมพันเกินที่คุณรับได้ นี่คือกลไกพนัน!',
+                currencyTitle: 'คู่มือสกุลเงิน',
+                woodTitle: 'ไม้', woodDesc: 'สกุลเงินหลักสำหรับเปิดแพ็คการ์ดที่ Forge ได้จากล็อกอินรายวัน ภารกิจ และความสำเร็จ',
+                nwgTitle: 'NWG', nwgDesc: 'สกุลเงินต่อสู้ เดิมพัน NWG เพื่อชนะ NWG เพิ่ม เริ่มด้วยโทเค็นฟรีเมื่อเข้าร่วม!',
+                goldTitle: 'ทอง', goldDesc: 'สกุลเงินพรีเมียมสำหรับแพ็คพิเศษและไอเทมพิเศษ หายากและมีค่า!',
+                logsTitle: 'Sacred Logs', logsDesc: 'ได้จากการเผาการ์ดซ้ำ ใช้สำหรับอัพเกรดการ์ดและซื้อพิเศษ',
+                ctaTitle: 'พร้อมต่อสู้หรือยัง?', ctaDesc: 'เริ่มสะสมการ์ดและทดสอบโชคในสนาม!', ctaButton: 'เข้าสนามประลอง',
+                footerAbout: 'เกี่ยวกับ', footerHome: 'หน้าหลัก'
             }
-        });
+        };
         
-        // Update HTML lang attribute
-        document.documentElement.lang = lang === 'zh' ? 'zh-CN' : lang === 'th' ? 'th' : 'en';
-    }
-
-    // Initialize
-    document.addEventListener('DOMContentLoaded', () => {
-        // Set up language toggle
-        document.querySelectorAll('.lang-btn').forEach(btn => {
-            btn.addEventListener('click', () => updateLanguage(btn.dataset.lang));
-        });
+        let currentLang = localStorage.getItem('numbahwan_lang') || 'en';
         
-        // Apply saved language
-        updateLanguage(currentLang);
-        
-        // Active TOC highlighting
-        const sections = document.querySelectorAll('section[id]');
-        const tocLinks = document.querySelectorAll('.toc a');
-        
-        function updateTOC() {
-            let current = '';
-            sections.forEach(section => {
-                const rect = section.getBoundingClientRect();
-                if (rect.top < 200) current = section.id;
+        function setLanguage(lang) {
+            currentLang = lang;
+            localStorage.setItem('numbahwan_lang', lang);
+            
+            // Update language buttons
+            document.querySelectorAll('.lang-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.lang === lang);
             });
-            tocLinks.forEach(link => {
-                link.classList.toggle('active', link.getAttribute('href') === '#' + current);
+            
+            // Translate elements
+            document.querySelectorAll('[data-i18n]').forEach(el => {
+                const key = el.getAttribute('data-i18n');
+                if (i18n[lang] && i18n[lang][key]) {
+                    el.textContent = i18n[lang][key];
+                }
             });
+            
+            // Dispatch event for other components
+            window.dispatchEvent(new CustomEvent('nw-lang-changed', { detail: { lang } }));
         }
         
-        window.addEventListener('scroll', updateTOC);
-        updateTOC();
-    });
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            setLanguage(currentLang);
+            
+            document.querySelectorAll('.lang-btn').forEach(btn => {
+                btn.addEventListener('click', () => setLanguage(btn.dataset.lang));
+            });
+        });
     </script>
 </body>
 </html>

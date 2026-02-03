@@ -152,7 +152,7 @@ const NW_NAV = {
             color: '#888',
             collapsed: true,
             pages: [
-                { id: 'guide', name: { en: 'Game Guide', zh: '遊戲攻略', th: 'คู่มือเกม' }, icon: 'scroll', href: '/guide' },
+                { id: 'guide', name: { en: 'How to Play', zh: '遊戲教學', th: 'วิธีเล่น' }, icon: 'scroll', href: '/guide' },
                 { id: 'academy', name: { en: 'Academy', zh: '學院', th: 'สถาบัน' }, icon: 'scroll', href: '/academy' },
                 { id: 'wyckoff', name: { en: 'Wyckoff Method', zh: '威科夫方法', th: 'วิธีไวคอฟฟ์' }, icon: 'chart', href: '/wyckoff', isNew: true },
                 { id: 'vault', name: { en: 'Archive Vault', zh: '檔案庫', th: 'คลังเก็บ' }, icon: 'lock', href: '/vault' },
