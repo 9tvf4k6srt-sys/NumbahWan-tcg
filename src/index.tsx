@@ -83,6 +83,8 @@ import CardBridge, {
   STAKING_BOOSTS
 } from './services/card-nwg-bridge'
 
+import pvpMatchmaking from './services/pvp-matchmaking'
+
 // D1 Database and KV bindings
 type Bindings = {
   GUILD_DB: D1Database
@@ -177,6 +179,16 @@ app.get('/api/debug', (c) => {
         aiAnalyst: '/api/game/ai-analyst',
         aiChat: 'POST /api/game/ai-chat',
         portfolioCard: 'POST /api/game/portfolio-card'
+      },
+      
+      // ⚔️ PvP Matchmaking (Real Player vs Player)
+      pvp: {
+        info: '/api/pvp/info',
+        queue: '/api/pvp/queue',
+        join: 'POST /api/pvp/join',
+        status: '/api/pvp/status/:odenom',
+        match: '/api/pvp/match/:matchId',
+        leave: 'POST /api/pvp/leave'
       },
       
       // 🃏💰 Card-NWG Bridge (Physical Cards ↔ Digital Currency)
@@ -3187,6 +3199,13 @@ app.get('/api/game/dashboard', async (c) => {
 });
 
 // ============================================================================
+// ⚔️ PVP MATCHMAKING API - Real Player vs Player Battles
+// ============================================================================
+
+// Mount the PvP matchmaking router
+app.route('/api/pvp', pvpMatchmaking)
+
+// ============================================================================
 // 🃏💰 CARD-NWG BRIDGE API - Physical Cards ↔ Digital Currency
 // ============================================================================
 
@@ -3689,7 +3708,7 @@ app.get('/api/purchase/verify', async (c) => {
 // ROUTE FACTORY - DRY Pattern (Don't Repeat Yourself)
 // Add new pages by just adding to the array - no copy-paste needed!
 // ============================================================================
-const staticPages = ['fashion', 'merch', 'fortune', 'arcade', 'memes', 'apply', 'wallet', 'forge', 'tcg', 'market', 'cards', 'guide', 'battle', 'battle-2026', 'battle-unified', 'card-bridge', 'collection', 'deckbuilder', 'zakum', 'tournament', 'academy', 'vault', 'museum', 'research', 'historical-society', 'menu-demo', 'exchange', 'ai-lounge', 'court', 'therapy', 'hr', 'conspiracy', 'updates', 'about', 'treasury', 'intelligence', 'citizenship', 'invest', 'markets', 'buy', 'business', 'supermarket', 'restaurants', 'services', 'crafts', 'realestate', 'jobs', 'my-business', 'cafeteria', 'lost-found', 'parking', 'maintenance', 'breakroom', 'basement']
+const staticPages = ['fashion', 'merch', 'fortune', 'arcade', 'memes', 'apply', 'wallet', 'forge', 'tcg', 'market', 'cards', 'guide', 'battle', 'battle-2026', 'battle-unified', 'pvp-battle', 'card-bridge', 'collection', 'deckbuilder', 'zakum', 'tournament', 'academy', 'vault', 'museum', 'research', 'historical-society', 'menu-demo', 'exchange', 'ai-lounge', 'court', 'therapy', 'hr', 'conspiracy', 'updates', 'about', 'treasury', 'intelligence', 'citizenship', 'invest', 'markets', 'buy', 'business', 'supermarket', 'restaurants', 'services', 'crafts', 'realestate', 'jobs', 'my-business', 'cafeteria', 'lost-found', 'parking', 'maintenance', 'breakroom', 'basement']
 
 staticPages.forEach(page => {
   app.get(`/${page}`, async (c) => {
