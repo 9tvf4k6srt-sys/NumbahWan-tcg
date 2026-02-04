@@ -1,15 +1,28 @@
 /**
- * NumbahWan Currency System v2.0
+ * NumbahWan Currency System v3.0
+ * THE WORLD'S MOST COVETED DIGITAL CURRENCY
+ * 
  * 3-TIER ECONOMY: NWG (premium) → Gold (earned) → Sacred Log (prestige)
  * 
  * SINGLE SOURCE OF TRUTH for all currency display
  * Premium, consistent icons across all pages
  * 
- * Exchange Rates (ONE WAY ONLY - no reverse):
+ * ═══════════════════════════════════════════════════════════════════════════
+ * WHY NWG BEATS BITCOIN:
+ * ┌────────────────────────────────────────────────────────────────────────┐
+ * │ • DEFLATIONARY: 1% burned on every transaction                        │
+ * │ • STAKEABLE: Up to 40% APY for locking NWG                            │
+ * │ • REAL VALUE: 10% of merch revenue backs NWG                          │
+ * │ • TIER BENEFITS: Status + access increase with holdings               │
+ * │ • EARN NOT JUST BUY: Gameplay rewards, not just purchases             │
+ * └────────────────────────────────────────────────────────────────────────┘
+ * 
+ * Exchange Rates (ONE WAY ONLY - deflationary):
  * ┌─────────────────────────────────────────┐
- * │  $1 USD = 100 NWG                       │
- * │  1 NWG  = 10 Gold                       │
- * │  Sacred Log = CANNOT BE PURCHASED       │
+ * │  $1 USD = 100 NWG (anchor)              │
+ * │  1 NWG  = 10 Gold (one-way)             │
+ * │  1% BURN on every transaction           │
+ * │  Sacred Log = NEVER purchasable         │
  * └─────────────────────────────────────────┘
  */
 
@@ -17,12 +30,14 @@ const NW_CURRENCY = {
     // ═══════════════════════════════════════════════════════════════
     // SYSTEM INFO
     // ═══════════════════════════════════════════════════════════════
-    version: '2.0',
+    version: '3.0',
     
-    // Exchange rates (one-way conversions only)
+    // Exchange rates (one-way conversions only + BURN)
     exchangeRates: {
-        usdToNwg: 100,     // $1 = 100 NWG
-        nwgToGold: 10,     // 1 NWG = 10 Gold
+        usdToNwg: 100,          // $1 = 100 NWG
+        nwgToGold: 10,          // 1 NWG = 10 Gold
+        transactionBurn: 0.01,  // 1% burned on spend
+        exchangeBurn: 0.02,     // 2% burned on exchange
         // NO reverse exchanges - value flows DOWN only
         // Sacred Log cannot be bought/sold
     },
@@ -49,19 +64,24 @@ const NW_CURRENCY = {
             glow: '0 0 10px rgba(0, 212, 255, 0.5)',
             tier: 1, // Premium
             description: {
-                en: 'Premium currency - Direct USD value',
-                zh: '優質貨幣 - 直接美元價值',
-                th: 'สกุลเงินพรีเมียม - มูลค่า USD โดยตรง'
+                en: 'Deflationary, stakeable, revenue-backed. Beats Bitcoin.',
+                zh: '通縮、可質押、收益支撐。超越比特幣。',
+                th: 'เงินฝืด สเตคได้ มีรายได้หนุน ดีกว่า Bitcoin'
             },
             howToGet: {
-                en: ['Purchase with USD ($1 = 100 NWG)', 'Daily login bonus', 'Event rewards', 'Referral bonus'],
-                zh: ['用美元購買 ($1 = 100 NWG)', '每日登入獎勵', '活動獎勵', '推薦獎金'],
-                th: ['ซื้อด้วย USD ($1 = 100 NWG)', 'โบนัสเข้าสู่ระบบรายวัน', 'รางวัลกิจกรรม', 'โบนัสแนะนำ']
+                en: ['Purchase ($1 = 100 NWG)', 'Stake rewards (40% APY)', 'Daily login bonus', 'Achievements', 'Referrals (+100 each)'],
+                zh: ['購買 ($1 = 100 NWG)', '質押獎勵 (40% APY)', '每日登入獎勵', '成就獎勵', '推薦 (+100 每位)'],
+                th: ['ซื้อ ($1 = 100 NWG)', 'รางวัลสเตค (40% APY)', 'โบนัสเข้าสู่ระบบ', 'ความสำเร็จ', 'แนะนำ (+100 คน)']
             },
             uses: {
-                en: ['Direct card pulls', 'Premium items', 'Convert to Gold (10x)', 'Exclusive features'],
-                zh: ['直接抽卡', '優質物品', '兌換金幣 (10倍)', '專屬功能'],
-                th: ['ดึงการ์ดโดยตรง', 'ไอเทมพรีเมียม', 'แปลงเป็นทอง (10 เท่า)', 'ฟีเจอร์พิเศษ']
+                en: ['Card pulls', 'Stake for APY', 'Convert to Gold (10x)', 'Premium merch', 'Tier benefits'],
+                zh: ['抽卡', '質押賺息', '兌換金幣 (10x)', '高級周邊', '等級福利'],
+                th: ['ดึงการ์ด', 'สเตครับ APY', 'แปลงเป็นทอง (10x)', 'สินค้าพรีเมียม', 'สิทธิ์ตามระดับ']
+            },
+            investmentThesis: {
+                en: '1% burned per transaction • Up to 40% APY staking • 10% merch revenue backing • Tier benefits',
+                zh: '每筆交易燃燒 1% • 最高 40% APY 質押 • 10% 商品收益支撐 • 等級福利',
+                th: 'เผา 1% ต่อธุรกรรม • สเตคสูงสุด 40% APY • รายได้สินค้าหนุน 10% • สิทธิ์ตามระดับ'
             },
             icon: `<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <path d="M12 2L2 9L12 22L22 9L12 2Z" fill="url(#nwg-grad)" stroke="#fff" stroke-width="0.5"/>
@@ -221,10 +241,12 @@ const NW_CURRENCY = {
         this.injectStyles();
         this._initialized = true;
         
-        console.log('%c[NW_CURRENCY] v2.0 - 3-Tier Economy System', 
+        console.log('%c[NW_CURRENCY] v3.0 - World\'s Most Coveted Digital Currency', 
             'background: linear-gradient(90deg, #00d4ff, #ffd700, #00ff88); color: #000; font-size: 12px; padding: 4px 8px; border-radius: 4px; font-weight: bold;');
-        console.log('%c◆ NWG (Premium) → ● Gold (Earned) → ⧫ Sacred Log (Prestige)', 
+        console.log('%c◆ NWG (Deflationary + Stakeable) → ● Gold (Earned) → ⧫ Sacred Log (Prestige)', 
             'color: #888; font-size: 11px;');
+        console.log('%c🔥 1% BURN per transaction | 📈 Up to 40% APY | 💎 Tier benefits', 
+            'color: #00d4ff; font-size: 10px;');
     },
 
     // ═══════════════════════════════════════════════════════════════
