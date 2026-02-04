@@ -1,0 +1,1294 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>D&D Rulebook | NumbahWan Tabletop</title>
+    <link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Inter:wght@300;400;500;600;700&family=Cinzel:wght@400;700;900&family=MedievalSharp&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="/static/nw-utilities.css" rel="stylesheet">
+    <link href="/static/nw-tokens.css" rel="stylesheet">
+    <script src="/static/nw-nav.js"></script>
+    <script src="/static/nw-currency.js"></script>
+    <script src="/static/nw-wallet.js"></script>
+    <style>
+        :root {
+            --nw-gold: #ffd700;
+            --nw-purple: #a855f7;
+            --nw-amber: #f59e0b;
+            --nw-red: #dc2626;
+            --nw-green: #22c55e;
+            --nw-cyan: #06b6d4;
+            --nw-dark: #0a0a0a;
+            --parchment: #f4e4bc;
+            --ink: #2d1810;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #1a0f0f 0%, #2d1810 50%, #1a0f0f 100%);
+            color: #e5e5e5;
+            min-height: 100vh;
+        }
+        
+        /* Hero Section */
+        .hero {
+            position: relative;
+            height: 50vh;
+            min-height: 400px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+        
+        .hero-bg {
+            position: absolute;
+            inset: 0;
+            background: url('/static/tabletop/rulebook-hero.webp') center/cover no-repeat;
+        }
+        
+        .hero-overlay {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(180deg, rgba(26,15,15,0.3) 0%, rgba(26,15,15,0.7) 60%, rgba(26,15,15,1) 100%);
+        }
+        
+        .hero-content {
+            position: relative;
+            z-index: 10;
+            text-align: center;
+            padding: 2rem;
+        }
+        
+        .hero-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            background: rgba(245,158,11,0.2);
+            border: 1px solid rgba(245,158,11,0.4);
+            border-radius: 2rem;
+            font-size: 0.75rem;
+            color: var(--nw-amber);
+            margin-bottom: 1rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+        }
+        
+        .hero-title {
+            font-family: 'Cinzel', serif;
+            font-size: clamp(2rem, 6vw, 4rem);
+            font-weight: 900;
+            background: linear-gradient(135deg, var(--nw-gold), var(--nw-amber));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 0 60px rgba(245,158,11,0.5);
+            margin-bottom: 0.5rem;
+        }
+        
+        .hero-subtitle {
+            font-size: 1.125rem;
+            color: rgba(255,255,255,0.7);
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        
+        /* Main Content */
+        .content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 3rem 1.5rem;
+        }
+        
+        /* Weekly Progress System */
+        .weekly-progress {
+            background: linear-gradient(135deg, rgba(34,197,94,0.15), rgba(6,182,212,0.1));
+            border: 2px solid rgba(34,197,94,0.3);
+            border-radius: 1.5rem;
+            padding: 2rem;
+            margin-bottom: 3rem;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .weekly-progress::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -10%;
+            width: 300px;
+            height: 300px;
+            background: radial-gradient(circle, rgba(34,197,94,0.2) 0%, transparent 70%);
+            pointer-events: none;
+        }
+        
+        .progress-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+        
+        .progress-title {
+            font-family: 'Cinzel', serif;
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--nw-green);
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+        
+        .progress-streak {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            background: rgba(245,158,11,0.2);
+            border-radius: 2rem;
+            font-size: 0.875rem;
+            color: var(--nw-amber);
+        }
+        
+        .week-days {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 0.75rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .day-card {
+            background: rgba(0,0,0,0.3);
+            border: 2px solid rgba(255,255,255,0.1);
+            border-radius: 1rem;
+            padding: 1rem;
+            text-align: center;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+        
+        .day-card:hover {
+            border-color: var(--nw-amber);
+            transform: translateY(-3px);
+        }
+        
+        .day-card.completed {
+            border-color: var(--nw-green);
+            background: rgba(34,197,94,0.15);
+        }
+        
+        .day-card.today {
+            border-color: var(--nw-amber);
+            background: rgba(245,158,11,0.15);
+            animation: todayPulse 2s infinite;
+        }
+        
+        @keyframes todayPulse {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(245,158,11,0.4); }
+            50% { box-shadow: 0 0 20px 5px rgba(245,158,11,0.2); }
+        }
+        
+        .day-name {
+            font-size: 0.6875rem;
+            text-transform: uppercase;
+            color: rgba(255,255,255,0.5);
+            margin-bottom: 0.5rem;
+        }
+        
+        .day-icon {
+            font-size: 1.5rem;
+            margin-bottom: 0.25rem;
+        }
+        
+        .day-card.completed .day-icon { color: var(--nw-green); }
+        .day-card.today .day-icon { color: var(--nw-amber); }
+        .day-card:not(.completed):not(.today) .day-icon { color: rgba(255,255,255,0.3); }
+        
+        .day-xp {
+            font-size: 0.6875rem;
+            color: rgba(255,255,255,0.6);
+        }
+        
+        .progress-actions {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+        
+        .progress-btn {
+            flex: 1;
+            min-width: 200px;
+            padding: 1rem 1.5rem;
+            border: none;
+            border-radius: 0.75rem;
+            font-weight: 700;
+            font-size: 0.9375rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            transition: all 0.3s;
+        }
+        
+        .progress-btn.primary {
+            background: linear-gradient(135deg, var(--nw-green), #16a34a);
+            color: #000;
+        }
+        
+        .progress-btn.secondary {
+            background: rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.2);
+            color: #fff;
+        }
+        
+        .progress-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+        
+        /* Table of Contents */
+        .toc {
+            background: rgba(0,0,0,0.3);
+            border: 1px solid rgba(245,158,11,0.2);
+            border-radius: 1rem;
+            padding: 2rem;
+            margin-bottom: 3rem;
+        }
+        
+        .toc-title {
+            font-family: 'Cinzel', serif;
+            font-size: 1.25rem;
+            color: var(--nw-gold);
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .toc-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+        }
+        
+        .toc-item {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem 1rem;
+            background: rgba(255,255,255,0.03);
+            border-radius: 0.5rem;
+            color: rgba(255,255,255,0.8);
+            text-decoration: none;
+            transition: all 0.2s;
+        }
+        
+        .toc-item:hover {
+            background: rgba(245,158,11,0.1);
+            color: var(--nw-amber);
+            transform: translateX(5px);
+        }
+        
+        .toc-num {
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(245,158,11,0.2);
+            border-radius: 50%;
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: var(--nw-amber);
+        }
+        
+        /* Rule Sections */
+        .rule-section {
+            margin-bottom: 4rem;
+            scroll-margin-top: 100px;
+        }
+        
+        .section-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid rgba(245,158,11,0.2);
+        }
+        
+        .section-num {
+            width: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, var(--nw-amber), #d97706);
+            border-radius: 0.75rem;
+            font-family: 'Cinzel', serif;
+            font-size: 1.5rem;
+            font-weight: 900;
+            color: #000;
+        }
+        
+        .section-title {
+            font-family: 'Cinzel', serif;
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: var(--nw-gold);
+        }
+        
+        .section-content {
+            padding-left: 1rem;
+            border-left: 3px solid rgba(245,158,11,0.2);
+        }
+        
+        .rule-card {
+            background: rgba(0,0,0,0.3);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 1rem;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .rule-card h4 {
+            font-family: 'Cinzel', serif;
+            font-size: 1.125rem;
+            color: var(--nw-amber);
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .rule-card p, .rule-card li {
+            color: rgba(255,255,255,0.8);
+            line-height: 1.7;
+            margin-bottom: 0.75rem;
+        }
+        
+        .rule-card ul {
+            list-style: none;
+            padding-left: 1rem;
+        }
+        
+        .rule-card li::before {
+            content: '⚔️';
+            margin-right: 0.5rem;
+        }
+        
+        /* Conversion Tables */
+        .conversion-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1.5rem 0;
+            background: rgba(0,0,0,0.3);
+            border-radius: 0.75rem;
+            overflow: hidden;
+        }
+        
+        .conversion-table th {
+            background: rgba(245,158,11,0.2);
+            padding: 1rem;
+            text-align: left;
+            font-family: 'Cinzel', serif;
+            color: var(--nw-amber);
+            font-weight: 700;
+        }
+        
+        .conversion-table td {
+            padding: 0.875rem 1rem;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            color: rgba(255,255,255,0.8);
+        }
+        
+        .conversion-table tr:hover td {
+            background: rgba(245,158,11,0.05);
+        }
+        
+        .rarity-badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 1rem;
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+        
+        .rarity-common { background: rgba(156,163,175,0.3); color: #9ca3af; }
+        .rarity-uncommon { background: rgba(34,197,94,0.3); color: #22c55e; }
+        .rarity-rare { background: rgba(59,130,246,0.3); color: #3b82f6; }
+        .rarity-epic { background: rgba(168,85,247,0.3); color: #a855f7; }
+        .rarity-legendary { background: rgba(245,158,11,0.3); color: #f59e0b; }
+        .rarity-mythic { background: rgba(239,68,68,0.3); color: #ef4444; }
+        
+        /* Fun Tips */
+        .fun-tip {
+            background: linear-gradient(135deg, rgba(168,85,247,0.15), rgba(236,72,153,0.1));
+            border: 1px solid rgba(168,85,247,0.3);
+            border-radius: 1rem;
+            padding: 1.5rem;
+            margin: 1.5rem 0;
+            position: relative;
+        }
+        
+        .fun-tip::before {
+            content: '💡';
+            position: absolute;
+            top: -12px;
+            left: 20px;
+            background: var(--nw-purple);
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.5rem;
+            font-size: 1rem;
+        }
+        
+        .fun-tip-title {
+            font-weight: 700;
+            color: var(--nw-purple);
+            margin-bottom: 0.5rem;
+        }
+        
+        .fun-tip p {
+            color: rgba(255,255,255,0.8);
+            font-size: 0.9375rem;
+        }
+        
+        /* Dice Roll Demo */
+        .dice-demo {
+            background: rgba(0,0,0,0.4);
+            border-radius: 1rem;
+            padding: 2rem;
+            text-align: center;
+            margin: 2rem 0;
+        }
+        
+        .dice-display {
+            font-size: 5rem;
+            margin-bottom: 1rem;
+            animation: diceFloat 3s ease-in-out infinite;
+        }
+        
+        @keyframes diceFloat {
+            0%, 100% { transform: translateY(0) rotate(0deg); }
+            50% { transform: translateY(-10px) rotate(10deg); }
+        }
+        
+        .dice-result {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 3rem;
+            font-weight: 900;
+            color: var(--nw-gold);
+            margin-bottom: 0.5rem;
+        }
+        
+        .dice-btn {
+            padding: 1rem 2rem;
+            background: linear-gradient(135deg, var(--nw-amber), #d97706);
+            border: none;
+            border-radius: 0.75rem;
+            color: #000;
+            font-weight: 700;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .dice-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 10px 30px rgba(245,158,11,0.3);
+        }
+        
+        /* Weekly Challenges */
+        .weekly-challenges {
+            background: linear-gradient(135deg, rgba(245,158,11,0.1), rgba(220,38,38,0.05));
+            border: 1px solid rgba(245,158,11,0.3);
+            border-radius: 1rem;
+            padding: 2rem;
+            margin: 2rem 0;
+        }
+        
+        .challenge-title {
+            font-family: 'Cinzel', serif;
+            font-size: 1.25rem;
+            color: var(--nw-amber);
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .challenge-list {
+            display: grid;
+            gap: 1rem;
+        }
+        
+        .challenge-item {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1rem;
+            background: rgba(0,0,0,0.3);
+            border-radius: 0.75rem;
+            transition: all 0.2s;
+        }
+        
+        .challenge-item:hover {
+            transform: translateX(5px);
+        }
+        
+        .challenge-icon {
+            width: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(245,158,11,0.2);
+            border-radius: 0.75rem;
+            font-size: 1.5rem;
+        }
+        
+        .challenge-info {
+            flex: 1;
+        }
+        
+        .challenge-name {
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+        }
+        
+        .challenge-desc {
+            font-size: 0.8125rem;
+            color: rgba(255,255,255,0.6);
+        }
+        
+        .challenge-reward {
+            padding: 0.5rem 1rem;
+            background: rgba(34,197,94,0.2);
+            border-radius: 0.5rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: var(--nw-green);
+        }
+        
+        /* Footer CTA */
+        .footer-cta {
+            text-align: center;
+            padding: 3rem;
+            background: linear-gradient(135deg, rgba(245,158,11,0.1), rgba(168,85,247,0.1));
+            border-radius: 1.5rem;
+            margin-top: 3rem;
+        }
+        
+        .footer-cta h3 {
+            font-family: 'Cinzel', serif;
+            font-size: 1.75rem;
+            color: var(--nw-gold);
+            margin-bottom: 1rem;
+        }
+        
+        .footer-cta p {
+            color: rgba(255,255,255,0.7);
+            margin-bottom: 1.5rem;
+        }
+        
+        .cta-buttons {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        
+        .cta-btn {
+            padding: 1rem 2rem;
+            border-radius: 0.75rem;
+            font-weight: 700;
+            text-decoration: none;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .cta-btn.primary {
+            background: linear-gradient(135deg, var(--nw-amber), #d97706);
+            color: #000;
+        }
+        
+        .cta-btn.secondary {
+            background: rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.2);
+            color: #fff;
+        }
+        
+        .cta-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+        
+        @media (max-width: 768px) {
+            .week-days { grid-template-columns: repeat(4, 1fr); }
+            .progress-actions { flex-direction: column; }
+            .section-header { flex-direction: column; text-align: center; }
+        }
+    </style>
+</head>
+<body data-page-id="dnd-rulebook">
+    <!-- Hero -->
+    <section class="hero">
+        <div class="hero-bg"></div>
+        <div class="hero-overlay"></div>
+        <div class="hero-content">
+            <div class="hero-badge"><i class="fas fa-book-open"></i> Official Rulebook v1.0</div>
+            <h1 class="hero-title">The Sacred Tome</h1>
+            <p class="hero-subtitle">Transform your NWG cards into epic tabletop adventures. Simple rules, maximum fun.</p>
+        </div>
+    </section>
+    
+    <main class="content">
+        <!-- Weekly Progress System -->
+        <section class="weekly-progress">
+            <div class="progress-header">
+                <h2 class="progress-title">
+                    <i class="fas fa-fire"></i> Weekly Adventure Progress
+                </h2>
+                <div class="progress-streak">
+                    <i class="fas fa-bolt"></i>
+                    <span id="streakCount">0</span> Week Streak
+                </div>
+            </div>
+            
+            <div class="week-days">
+                <div class="day-card" data-day="0">
+                    <div class="day-name">Mon</div>
+                    <div class="day-icon"><i class="fas fa-circle"></i></div>
+                    <div class="day-xp">+50 XP</div>
+                </div>
+                <div class="day-card" data-day="1">
+                    <div class="day-name">Tue</div>
+                    <div class="day-icon"><i class="fas fa-circle"></i></div>
+                    <div class="day-xp">+50 XP</div>
+                </div>
+                <div class="day-card" data-day="2">
+                    <div class="day-name">Wed</div>
+                    <div class="day-icon"><i class="fas fa-circle"></i></div>
+                    <div class="day-xp">+50 XP</div>
+                </div>
+                <div class="day-card" data-day="3">
+                    <div class="day-name">Thu</div>
+                    <div class="day-icon"><i class="fas fa-circle"></i></div>
+                    <div class="day-xp">+50 XP</div>
+                </div>
+                <div class="day-card" data-day="4">
+                    <div class="day-name">Fri</div>
+                    <div class="day-icon"><i class="fas fa-circle"></i></div>
+                    <div class="day-xp">+50 XP</div>
+                </div>
+                <div class="day-card" data-day="5">
+                    <div class="day-name">Sat</div>
+                    <div class="day-icon"><i class="fas fa-star"></i></div>
+                    <div class="day-xp">+100 XP</div>
+                </div>
+                <div class="day-card" data-day="6">
+                    <div class="day-name">Sun</div>
+                    <div class="day-icon"><i class="fas fa-crown"></i></div>
+                    <div class="day-xp">+150 XP</div>
+                </div>
+            </div>
+            
+            <div class="progress-actions">
+                <button class="progress-btn primary" onclick="logSession()">
+                    <i class="fas fa-dice-d20"></i> Log Today's Session
+                </button>
+                <button class="progress-btn secondary" onclick="showQRCode()">
+                    <i class="fas fa-qrcode"></i> Meetup QR Code
+                </button>
+                <button class="progress-btn secondary" onclick="viewLeaderboard()">
+                    <i class="fas fa-trophy"></i> Leaderboard
+                </button>
+            </div>
+            
+            <p style="text-align: center; margin-top: 1rem; font-size: 0.8125rem; color: rgba(255,255,255,0.5);">
+                <i class="fas fa-info-circle"></i> Complete 5+ days to earn bonus Sacred Logs! Weekend sessions = 2x XP
+            </p>
+        </section>
+        
+        <!-- Weekly Challenges -->
+        <section class="weekly-challenges">
+            <h3 class="challenge-title"><i class="fas fa-scroll"></i> This Week's Quests</h3>
+            <div class="challenge-list">
+                <div class="challenge-item">
+                    <div class="challenge-icon">🎲</div>
+                    <div class="challenge-info">
+                        <div class="challenge-name">Roll Initiative</div>
+                        <div class="challenge-desc">Play at least one session this week (IRL or app)</div>
+                    </div>
+                    <div class="challenge-reward">+100 NWG</div>
+                </div>
+                <div class="challenge-item">
+                    <div class="challenge-icon">👥</div>
+                    <div class="challenge-info">
+                        <div class="challenge-name">Party Assembly</div>
+                        <div class="challenge-desc">Play with 3+ guild members</div>
+                    </div>
+                    <div class="challenge-reward">+1 Sacred Log</div>
+                </div>
+                <div class="challenge-item">
+                    <div class="challenge-icon">⚔️</div>
+                    <div class="challenge-info">
+                        <div class="challenge-name">Boss Slayer</div>
+                        <div class="challenge-desc">Defeat a Legendary-tier enemy</div>
+                    </div>
+                    <div class="challenge-reward">+200 NWG</div>
+                </div>
+                <div class="challenge-item">
+                    <div class="challenge-icon">📸</div>
+                    <div class="challenge-info">
+                        <div class="challenge-name">Memory Keeper</div>
+                        <div class="challenge-desc">Share a photo of your IRL session</div>
+                    </div>
+                    <div class="challenge-reward">+50 Gold</div>
+                </div>
+            </div>
+        </section>
+        
+        <!-- Table of Contents -->
+        <nav class="toc">
+            <h3 class="toc-title"><i class="fas fa-list"></i> Table of Contents</h3>
+            <div class="toc-grid">
+                <a href="#core-philosophy" class="toc-item"><span class="toc-num">1</span> Core Philosophy</a>
+                <a href="#card-conversion" class="toc-item"><span class="toc-num">2</span> Card Conversion</a>
+                <a href="#combat" class="toc-item"><span class="toc-num">3</span> Combat Rules</a>
+                <a href="#abilities" class="toc-item"><span class="toc-num">4</span> Abilities & Spells</a>
+                <a href="#progression" class="toc-item"><span class="toc-num">5</span> Level Up System</a>
+                <a href="#roles" class="toc-item"><span class="toc-num">6</span> Guild Role Bonuses</a>
+                <a href="#items" class="toc-item"><span class="toc-num">7</span> Items & Loot</a>
+                <a href="#dm-guide" class="toc-item"><span class="toc-num">8</span> DM Quick Guide</a>
+            </div>
+        </nav>
+        
+        <!-- Section 1: Core Philosophy -->
+        <section class="rule-section" id="core-philosophy">
+            <div class="section-header">
+                <div class="section-num">1</div>
+                <h2 class="section-title">Core Philosophy</h2>
+            </div>
+            <div class="section-content">
+                <div class="rule-card">
+                    <h4><i class="fas fa-heart"></i> The Golden Rule</h4>
+                    <p><strong>Fun First, Rules Second.</strong> If a rule gets in the way of an awesome moment, ignore it. The DM's word is final, but the DM's job is to make everyone have a blast.</p>
+                </div>
+                
+                <div class="rule-card">
+                    <h4><i class="fas fa-dice-d20"></i> The d20 System</h4>
+                    <p>Everything uses a single d20 die:</p>
+                    <ul>
+                        <li><strong>Roll d20 + Modifier</strong> vs Target Number</li>
+                        <li><strong>10 = Easy</strong> (jumping a small gap)</li>
+                        <li><strong>15 = Medium</strong> (picking a basic lock)</li>
+                        <li><strong>20 = Hard</strong> (convincing a guard to let you pass)</li>
+                        <li><strong>25+ = Legendary</strong> (only possible with high stats)</li>
+                    </ul>
+                </div>
+                
+                <div class="fun-tip">
+                    <div class="fun-tip-title">Pro Tip: The Rule of Cool</div>
+                    <p>If a player describes something awesome, give them advantage (roll 2d20, take higher). Creativity should be rewarded!</p>
+                </div>
+                
+                <div class="dice-demo">
+                    <div class="dice-display">🎲</div>
+                    <div class="dice-result" id="diceResult">?</div>
+                    <p style="color: rgba(255,255,255,0.6); margin-bottom: 1rem;">Click to roll a d20!</p>
+                    <button class="dice-btn" onclick="rollDice()">
+                        <i class="fas fa-dice-d20"></i> Roll d20
+                    </button>
+                </div>
+            </div>
+        </section>
+        
+        <!-- Section 2: Card Conversion -->
+        <section class="rule-section" id="card-conversion">
+            <div class="section-header">
+                <div class="section-num">2</div>
+                <h2 class="section-title">Card → Character Conversion</h2>
+            </div>
+            <div class="section-content">
+                <div class="rule-card">
+                    <h4><i class="fas fa-exchange-alt"></i> The Conversion Formula</h4>
+                    <p>Your NWG card stats translate directly to D&D ability scores:</p>
+                    <table class="conversion-table">
+                        <tr>
+                            <th>Card Stat</th>
+                            <th>D&D Ability</th>
+                            <th>Formula</th>
+                            <th>Example (80 ATK)</th>
+                        </tr>
+                        <tr>
+                            <td>ATK (Attack)</td>
+                            <td>Strength (STR)</td>
+                            <td>ATK ÷ 5</td>
+                            <td>16 STR (+3 modifier)</td>
+                        </tr>
+                        <tr>
+                            <td>DEF (Defense)</td>
+                            <td>Constitution (CON)</td>
+                            <td>DEF ÷ 5</td>
+                            <td>16 CON (+3 modifier)</td>
+                        </tr>
+                        <tr>
+                            <td>SPD (Speed)</td>
+                            <td>Dexterity (DEX)</td>
+                            <td>SPD ÷ 5</td>
+                            <td>16 DEX (+3 modifier)</td>
+                        </tr>
+                        <tr>
+                            <td>Special Ability</td>
+                            <td>INT/WIS/CHA</td>
+                            <td>DM assigns based on ability type</td>
+                            <td>Varies</td>
+                        </tr>
+                    </table>
+                </div>
+                
+                <div class="rule-card">
+                    <h4><i class="fas fa-star"></i> Rarity = Level & HP</h4>
+                    <p>Your card's rarity determines your character's level and hit points:</p>
+                    <table class="conversion-table">
+                        <tr>
+                            <th>Rarity</th>
+                            <th>Level</th>
+                            <th>Hit Points</th>
+                            <th>Spell Slots</th>
+                        </tr>
+                        <tr>
+                            <td><span class="rarity-badge rarity-common">Common</span></td>
+                            <td>3</td>
+                            <td>25 HP</td>
+                            <td>2</td>
+                        </tr>
+                        <tr>
+                            <td><span class="rarity-badge rarity-uncommon">Uncommon</span></td>
+                            <td>5</td>
+                            <td>40 HP</td>
+                            <td>3</td>
+                        </tr>
+                        <tr>
+                            <td><span class="rarity-badge rarity-rare">Rare</span></td>
+                            <td>7</td>
+                            <td>55 HP</td>
+                            <td>4</td>
+                        </tr>
+                        <tr>
+                            <td><span class="rarity-badge rarity-epic">Epic</span></td>
+                            <td>9</td>
+                            <td>75 HP</td>
+                            <td>5</td>
+                        </tr>
+                        <tr>
+                            <td><span class="rarity-badge rarity-legendary">Legendary</span></td>
+                            <td>12</td>
+                            <td>100 HP</td>
+                            <td>6</td>
+                        </tr>
+                        <tr>
+                            <td><span class="rarity-badge rarity-mythic">Mythic</span></td>
+                            <td>15</td>
+                            <td>130 HP</td>
+                            <td>8</td>
+                        </tr>
+                    </table>
+                </div>
+                
+                <div class="fun-tip">
+                    <div class="fun-tip-title">Quick Start</div>
+                    <p>Don't have your cards memorized? Just pick a rarity and assign: STR 14, DEX 12, CON 14, INT 10, WIS 12, CHA 10 as baseline. Adjust +2/-2 based on card type!</p>
+                </div>
+            </div>
+        </section>
+        
+        <!-- Section 3: Combat -->
+        <section class="rule-section" id="combat">
+            <div class="section-header">
+                <div class="section-num">3</div>
+                <h2 class="section-title">Combat Rules</h2>
+            </div>
+            <div class="section-content">
+                <div class="rule-card">
+                    <h4><i class="fas fa-bolt"></i> Initiative (Who Goes First)</h4>
+                    <p>At the start of combat:</p>
+                    <ul>
+                        <li>Everyone rolls d20 + DEX modifier</li>
+                        <li>Highest goes first, then descending order</li>
+                        <li>Ties? Higher DEX wins. Still tied? Roll off!</li>
+                    </ul>
+                </div>
+                
+                <div class="rule-card">
+                    <h4><i class="fas fa-hand-fist"></i> Your Turn (3 Actions)</h4>
+                    <p>On your turn, you can do:</p>
+                    <ul>
+                        <li><strong>Move</strong> - Up to 30 feet (6 squares)</li>
+                        <li><strong>Action</strong> - Attack, Cast Spell, Use Item, Help ally</li>
+                        <li><strong>Bonus Action</strong> - Quick ability, second attack (if you have it)</li>
+                    </ul>
+                </div>
+                
+                <div class="rule-card">
+                    <h4><i class="fas fa-crosshairs"></i> Attacking</h4>
+                    <p>To attack an enemy:</p>
+                    <ul>
+                        <li>Roll d20 + STR (melee) or DEX (ranged)</li>
+                        <li>If you beat their AC (Armor Class), you hit!</li>
+                        <li><strong>Damage:</strong> Roll weapon die + STR/DEX modifier</li>
+                        <li><strong>Natural 20:</strong> CRITICAL HIT! Double damage dice!</li>
+                        <li><strong>Natural 1:</strong> Critical miss. Something funny happens.</li>
+                    </ul>
+                </div>
+                
+                <div class="rule-card">
+                    <h4><i class="fas fa-shield-halved"></i> Defense (Armor Class)</h4>
+                    <p>Your AC = 10 + DEX modifier + armor bonus</p>
+                    <ul>
+                        <li><strong>No Armor:</strong> +0</li>
+                        <li><strong>Light Armor:</strong> +2</li>
+                        <li><strong>Medium Armor:</strong> +4</li>
+                        <li><strong>Heavy Armor:</strong> +6</li>
+                        <li><strong>Shield:</strong> +2 extra</li>
+                    </ul>
+                </div>
+                
+                <div class="fun-tip">
+                    <div class="fun-tip-title">Speed Up Combat</div>
+                    <p>Roll attack and damage at the same time! "I swing my sword... 17 to hit, 8 damage if it lands!"</p>
+                </div>
+            </div>
+        </section>
+        
+        <!-- Section 4: Abilities -->
+        <section class="rule-section" id="abilities">
+            <div class="section-header">
+                <div class="section-num">4</div>
+                <h2 class="section-title">Abilities & Spells</h2>
+            </div>
+            <div class="section-content">
+                <div class="rule-card">
+                    <h4><i class="fas fa-wand-sparkles"></i> Card Abilities = Spells</h4>
+                    <p>Your NWG card's special ability becomes a usable spell:</p>
+                    <ul>
+                        <li>Use once per battle (short rest recharges)</li>
+                        <li>DM interprets the effect based on ability name</li>
+                        <li>More powerful = requires higher rarity</li>
+                    </ul>
+                </div>
+                
+                <div class="rule-card">
+                    <h4><i class="fas fa-list"></i> Common Ability Translations</h4>
+                    <table class="conversion-table">
+                        <tr>
+                            <th>Card Ability</th>
+                            <th>D&D Effect</th>
+                        </tr>
+                        <tr>
+                            <td>"Guild Buff"</td>
+                            <td>All allies get +2 to rolls for 1 round</td>
+                        </tr>
+                        <tr>
+                            <td>"Critical Strike"</td>
+                            <td>Next attack is automatically a crit</td>
+                        </tr>
+                        <tr>
+                            <td>"Healing Touch"</td>
+                            <td>Heal ally for 2d8 + your level HP</td>
+                        </tr>
+                        <tr>
+                            <td>"Taunt"</td>
+                            <td>Enemy must attack you for 1 round</td>
+                        </tr>
+                        <tr>
+                            <td>"Stealth Mode"</td>
+                            <td>Become invisible for 1 round</td>
+                        </tr>
+                        <tr>
+                            <td>"AoE Blast"</td>
+                            <td>Deal 3d6 damage to all enemies in 20ft</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        </section>
+        
+        <!-- Section 5: Progression -->
+        <section class="rule-section" id="progression">
+            <div class="section-header">
+                <div class="section-num">5</div>
+                <h2 class="section-title">Level Up System</h2>
+            </div>
+            <div class="section-content">
+                <div class="rule-card">
+                    <h4><i class="fas fa-arrow-up"></i> Sacred Log XP</h4>
+                    <p>Characters level up by earning Sacred Logs (in-game XP):</p>
+                    <ul>
+                        <li><strong>10 Sacred Logs</strong> = Level Up!</li>
+                        <li>+1 to any ability score</li>
+                        <li>+10 HP</li>
+                        <li>+1 Spell Slot</li>
+                        <li>Unlock new ability at levels 5, 10, 15</li>
+                    </ul>
+                </div>
+                
+                <div class="rule-card">
+                    <h4><i class="fas fa-coins"></i> Earning Sacred Logs</h4>
+                    <table class="conversion-table">
+                        <tr>
+                            <th>Action</th>
+                            <th>Sacred Logs</th>
+                        </tr>
+                        <tr><td>Complete a session</td><td>+1</td></tr>
+                        <tr><td>Defeat a boss</td><td>+2</td></tr>
+                        <tr><td>Complete a quest</td><td>+1</td></tr>
+                        <tr><td>Epic roleplay moment</td><td>+1</td></tr>
+                        <tr><td>Save a party member</td><td>+1</td></tr>
+                        <tr><td>Weekly streak bonus</td><td>+3</td></tr>
+                    </table>
+                </div>
+                
+                <div class="fun-tip">
+                    <div class="fun-tip-title">Sync with Digital</div>
+                    <p>Sacred Logs earned in tabletop can be synced to your NWG wallet! Just log your session in the app to claim.</p>
+                </div>
+            </div>
+        </section>
+        
+        <!-- Section 6: Guild Role Bonuses -->
+        <section class="rule-section" id="roles">
+            <div class="section-header">
+                <div class="section-num">6</div>
+                <h2 class="section-title">Guild Role Bonuses</h2>
+            </div>
+            <div class="section-content">
+                <div class="rule-card">
+                    <h4><i class="fas fa-users"></i> Your Guild Role = Class Feature</h4>
+                    <p>Your NWG guild role grants a unique passive ability:</p>
+                    <table class="conversion-table">
+                        <tr>
+                            <th>Guild Role</th>
+                            <th>Passive Bonus</th>
+                        </tr>
+                        <tr><td style="color: #ff6b00;">Grinder</td><td>+2 Sacred Logs from quests</td></tr>
+                        <tr><td style="color: #ffd700;">Whale</td><td>Start with 500 extra gold</td></tr>
+                        <tr><td style="color: #6b21a8;">Lurker</td><td>Advantage on stealth rolls</td></tr>
+                        <tr><td style="color: #ec4899;">Simp</td><td>+2 to Charisma checks</td></tr>
+                        <tr><td style="color: #22c55e;">Troll</td><td>Once per session, cause chaos (DM's choice)</td></tr>
+                        <tr><td style="color: #3b82f6;">Carry</td><td>Deal +2 damage on all attacks</td></tr>
+                        <tr><td style="color: #92400e;">Leech</td><td>Heal 5 HP when ally defeats enemy</td></tr>
+                        <tr><td style="color: #f5f5f4;">Guild Parent</td><td>Allies within 10ft get +1 to saves</td></tr>
+                        <tr><td style="color: #dc2626;">Rage Quitter</td><td>When below 25% HP, +4 to all attacks</td></tr>
+                        <tr><td style="color: #94a3b8;">AFK King</td><td>Auto-stabilize at 0 HP</td></tr>
+                        <tr><td style="color: #06b6d4;">Theory Crafter</td><td>Advantage on INT checks</td></tr>
+                        <tr><td style="color: #d946ef;">Fashion Main</td><td>+2 AC when wearing stylish gear</td></tr>
+                    </table>
+                </div>
+            </div>
+        </section>
+        
+        <!-- Section 7: Items -->
+        <section class="rule-section" id="items">
+            <div class="section-header">
+                <div class="section-num">7</div>
+                <h2 class="section-title">Items & Loot</h2>
+            </div>
+            <div class="section-content">
+                <div class="rule-card">
+                    <h4><i class="fas fa-treasure-chest"></i> Loot Tables</h4>
+                    <p>When you defeat enemies, the DM rolls for loot:</p>
+                    <table class="conversion-table">
+                        <tr>
+                            <th>d20 Roll</th>
+                            <th>Loot</th>
+                        </tr>
+                        <tr><td>1-5</td><td>Nothing (already looted)</td></tr>
+                        <tr><td>6-10</td><td>10-50 Gold</td></tr>
+                        <tr><td>11-15</td><td>Healing Potion (2d8 HP)</td></tr>
+                        <tr><td>16-18</td><td>Uncommon Item</td></tr>
+                        <tr><td>19</td><td>Rare Item</td></tr>
+                        <tr><td>20</td><td>Epic Item + 1 Sacred Log!</td></tr>
+                    </table>
+                </div>
+                
+                <div class="rule-card">
+                    <h4><i class="fas fa-flask"></i> Common Items</h4>
+                    <ul>
+                        <li><strong>Healing Potion:</strong> Restore 2d8 HP</li>
+                        <li><strong>Greater Healing:</strong> Restore 4d8 HP</li>
+                        <li><strong>Mana Potion:</strong> Regain 1 spell slot</li>
+                        <li><strong>Scroll of Fireball:</strong> One-time 8d6 fire damage</li>
+                        <li><strong>Amulet of Protection:</strong> +1 AC</li>
+                        <li><strong>Ring of Luck:</strong> Reroll one d20 per session</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+        
+        <!-- Section 8: DM Guide -->
+        <section class="rule-section" id="dm-guide">
+            <div class="section-header">
+                <div class="section-num">8</div>
+                <h2 class="section-title">DM Quick Guide</h2>
+            </div>
+            <div class="section-content">
+                <div class="rule-card">
+                    <h4><i class="fas fa-hat-wizard"></i> Being a Good DM</h4>
+                    <ul>
+                        <li><strong>Say "Yes, and..."</strong> - Build on player ideas</li>
+                        <li><strong>Keep it Moving</strong> - If rules slow you down, make a ruling and move on</li>
+                        <li><strong>Everyone Gets Spotlight</strong> - Rotate focus between players</li>
+                        <li><strong>Describe with Senses</strong> - What do they see, hear, smell?</li>
+                        <li><strong>Let Them Fail Forward</strong> - Failed rolls should create new opportunities</li>
+                    </ul>
+                </div>
+                
+                <div class="rule-card">
+                    <h4><i class="fas fa-dragon"></i> Building Encounters</h4>
+                    <p>Match enemy difficulty to party level:</p>
+                    <ul>
+                        <li><strong>Easy:</strong> Enemy HP = Party average HP × 0.5</li>
+                        <li><strong>Medium:</strong> Enemy HP = Party average HP × 1</li>
+                        <li><strong>Hard:</strong> Enemy HP = Party average HP × 1.5</li>
+                        <li><strong>Boss:</strong> Enemy HP = Total party HP combined</li>
+                    </ul>
+                </div>
+                
+                <div class="fun-tip">
+                    <div class="fun-tip-title">First Time DM?</div>
+                    <p>Use the Zakum's Return campaign - it's designed for new DMs with pre-built encounters, dialogue options, and maps!</p>
+                </div>
+            </div>
+        </section>
+        
+        <!-- Footer CTA -->
+        <section class="footer-cta">
+            <h3>Ready to Roll?</h3>
+            <p>Grab your cards, gather your friends, and let the adventure begin!</p>
+            <div class="cta-buttons">
+                <a href="/tabletop/character-sheets" class="cta-btn primary">
+                    <i class="fas fa-scroll"></i> Get Character Sheets
+                </a>
+                <a href="/tabletop/campaigns" class="cta-btn secondary">
+                    <i class="fas fa-map"></i> Start a Campaign
+                </a>
+                <a href="/tabletop/dm-tools" class="cta-btn secondary">
+                    <i class="fas fa-wand-sparkles"></i> DM Tools
+                </a>
+            </div>
+        </section>
+    </main>
+    
+    <script>
+        // Dice Roll
+        function rollDice() {
+            const result = Math.floor(Math.random() * 20) + 1;
+            const display = document.getElementById('diceResult');
+            const diceEl = document.querySelector('.dice-display');
+            
+            diceEl.style.animation = 'none';
+            diceEl.offsetHeight; // Trigger reflow
+            diceEl.style.animation = 'diceFloat 0.5s ease-in-out';
+            
+            display.textContent = '...';
+            setTimeout(() => {
+                display.textContent = result;
+                if (result === 20) {
+                    display.innerHTML = result + ' <span style="color: #22c55e; font-size: 1rem;">CRITICAL!</span>';
+                } else if (result === 1) {
+                    display.innerHTML = result + ' <span style="color: #ef4444; font-size: 1rem;">FUMBLE!</span>';
+                }
+            }, 300);
+        }
+        
+        // Weekly Progress
+        const today = new Date().getDay();
+        const mondayIndex = today === 0 ? 6 : today - 1;
+        
+        document.querySelectorAll('.day-card').forEach((card, index) => {
+            if (index === mondayIndex) {
+                card.classList.add('today');
+            }
+        });
+        
+        // Load progress from localStorage
+        function loadProgress() {
+            const progress = JSON.parse(localStorage.getItem('nwg_tabletop_progress') || '{}');
+            const streak = parseInt(localStorage.getItem('nwg_tabletop_streak') || '0');
+            
+            document.getElementById('streakCount').textContent = streak;
+            
+            Object.keys(progress).forEach(day => {
+                const card = document.querySelector(`.day-card[data-day="${day}"]`);
+                if (card && progress[day]) {
+                    card.classList.add('completed');
+                    card.querySelector('.day-icon i').className = 'fas fa-check-circle';
+                }
+            });
+        }
+        
+        function logSession() {
+            const progress = JSON.parse(localStorage.getItem('nwg_tabletop_progress') || '{}');
+            const dayIndex = new Date().getDay() === 0 ? 6 : new Date().getDay() - 1;
+            
+            if (progress[dayIndex]) {
+                alert('✅ You already logged today\'s session!');
+                return;
+            }
+            
+            progress[dayIndex] = true;
+            localStorage.setItem('nwg_tabletop_progress', JSON.stringify(progress));
+            
+            // Update streak
+            const completedDays = Object.values(progress).filter(v => v).length;
+            if (completedDays >= 5) {
+                let streak = parseInt(localStorage.getItem('nwg_tabletop_streak') || '0');
+                streak++;
+                localStorage.setItem('nwg_tabletop_streak', streak.toString());
+            }
+            
+            // Update UI
+            const card = document.querySelector(`.day-card[data-day="${dayIndex}"]`);
+            card.classList.add('completed');
+            card.querySelector('.day-icon i').className = 'fas fa-check-circle';
+            
+            // Give rewards
+            const isWeekend = dayIndex >= 5;
+            const xp = isWeekend ? (dayIndex === 6 ? 150 : 100) : 50;
+            
+            alert(`🎉 Session Logged!\n\n+${xp} XP earned!\n${isWeekend ? '🌟 Weekend Bonus!' : ''}\n\nKeep the streak going!`);
+            
+            // Sync with NWG wallet if available
+            if (typeof NW_WALLET !== 'undefined') {
+                NW_WALLET.earn('gold', xp, 'TABLETOP:daily_session');
+            }
+        }
+        
+        function showQRCode() {
+            alert('📱 QR Code Feature Coming Soon!\n\nScan a friend\'s code when meeting IRL to verify your session and earn bonus XP!');
+        }
+        
+        function viewLeaderboard() {
+            window.location.href = '/tabletop/leaderboard';
+        }
+        
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            loadProgress();
+            if (typeof NW_WALLET !== 'undefined') NW_WALLET.init();
+            if (typeof NW_NAV !== 'undefined') NW_NAV.init('dnd-rulebook');
+        });
+    </script>
+</body>
+</html>
