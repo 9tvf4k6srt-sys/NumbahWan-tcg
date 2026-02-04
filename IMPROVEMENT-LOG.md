@@ -223,4 +223,100 @@ waitForModule('NW_USER', () => {
 
 ---
 
+---
+
+## Session: Feb 4, 2025 - Icon System & UI Cleanup
+
+### Premium Icon System v2.0
+
+**Key changes:**
+- Deleted old sprite file: `/static/icons/nw-icons.svg` and `/static/icons/icons.js`
+- All icons now use `NWIconsInline` (inline SVG system in `nw-icons-inline.js`)
+- 85 premium icons with gradients, glows, and NW brand colors
+
+**Icon usage pattern:**
+```html
+<!-- Use data-nw-icon attribute -->
+<span data-nw-icon="crown" style="width:24px;height:24px;display:inline-flex"></span>
+
+<!-- Or via JavaScript -->
+NWIconsInline.render('fire', { size: 32 })
+```
+
+### GM-Exclusive Crown Policy
+
+**Crown icon is GM-ONLY.** Reserved for:
+- RegginA (Grandmaster) profile/achievements
+- GM mode indicators
+- The Trilateral Council (government section)
+- GM-related news/announcements
+
+**Replacements made:**
+| Original | New | Context |
+|----------|-----|---------|
+| 👑 Master Collector | 🏆 | collection.html |
+| 👑 OG Member | ⭐ | nwg-shop.html |
+| 👑 Mythic Owner | ✨ | profile-card.html |
+| 👑 District icon | 🏛️ | realestate.html |
+| 👑 Premium property | 💎 | realestate.html |
+
+### Batch Cleanup Script
+
+**Remove redundant UI elements (back buttons, language toggles):**
+```python
+import os, re
+
+# Patterns for cleanup
+back_btn = re.compile(r'<a[^>]*class="[^"]*back-btn[^"]*"[^>]*>.*?</a>\s*\n?', re.DOTALL)
+lang_toggle = re.compile(r'<div[^>]*class="[^"]*lang-toggle[^"]*"[^>]*>.*?</div>\s*\n?', re.DOTALL)
+back_css = re.compile(r'\.back-btn\s*\{[^}]+\}\s*\n?')
+
+for f in glob.glob('public/*.html'):
+    content = open(f).read()
+    content = back_btn.sub('', content)
+    content = lang_toggle.sub('', content)
+    content = back_css.sub('', content)
+    open(f, 'w').write(content)
+```
+
+### Icon Migration Script
+
+**Convert SVG sprite references to inline icon system:**
+```python
+import re
+
+sprite_pattern = re.compile(
+    r'<svg([^>]*?)>\s*<use\s+href="/static/icons/nw-icons\.svg#([^"]+)"[^>]*>\s*</use>\s*</svg>',
+    re.DOTALL
+)
+
+def convert(match):
+    attrs, icon = match.group(1), match.group(2)
+    size = re.search(r'width="(\d+)"', attrs)
+    size = size.group(1) if size else '24'
+    return f'<span class="nw-icon" style="width:{size}px;height:{size}px;display:inline-flex" data-nw-icon="{icon}"></span>'
+
+content = sprite_pattern.sub(convert, content)
+```
+
+### Files Cleaned Today
+
+- **28 HTML files**: Removed back buttons (37) and language toggles (52)
+- **10 HTML files**: Converted 124 SVG sprite refs to inline icons
+- **Deleted old icons**: `stone.svg`, `wood.svg`, `iron.svg`, `diamond.svg`, `gold.svg`, `black-jade.svg`, `nw-icons.svg`, `icons.js`
+- **Kept**: `sacred-log.svg`, favicons, app icons, `logo-original.png`
+
+### Currency Icon System
+
+Currency icons are separate from general icons. Use `NW_CURRENCY` module:
+```javascript
+// Correct
+NW_CURRENCY.icon('nwg', { size: 24 })
+NW_CURRENCY.format('gold', 1000)
+
+// Icons: NWG (hexagonal crystal), Gold (coin), Sacred Log (wood with rune)
+```
+
+---
+
 *Only add entries that save 5+ minutes on reuse*

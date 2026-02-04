@@ -18,11 +18,10 @@ const NW = (function() {
     'use strict';
 
     // =========================================================================
-    // ICON SYSTEM - Custom SVG icons only, NO emojis
+    // ICON SYSTEM - Uses NWIconsInline for all icons (Premium v2.0)
     // =========================================================================
-    const ICON_PATH = '/static/icons/nw-icons.svg';
     
-    // Icon mapping: semantic name -> icon ID in nw-icons.svg
+    // Icon mapping: semantic name -> NWIconsInline icon name
     const ICON_MAP = {
         // Navigation
         home: 'home',
@@ -40,27 +39,27 @@ const NW = (function() {
         defend: 'shield',
         
         // Status
-        success: 'check-circle',
-        error: 'x-circle',
+        success: 'check',
+        error: 'close',
         warning: 'warning',
         info: 'info',
         
         // Gaming
         fire: 'fire',
-        crown: 'crown',
+        crown: 'crown',      // GM-EXCLUSIVE: Only for Grandmaster content
         trophy: 'trophy',
         star: 'star',
         skull: 'skull',
         
         // Cards
-        cards: 'document',
-        deck: 'clipboard',
+        cards: 'cards',
+        deck: 'deck',
         pack: 'gift',
-        collection: 'bookmark',
+        collection: 'collection',
         
-        // Currency
-        gold: 'diamond',
-        gems: 'crystal-ball',
+        // Currency (use NW_CURRENCY for proper icons)
+        gold: 'coins',
+        gems: 'crystal',
         logs: 'scroll',
         
         // Social
@@ -71,14 +70,14 @@ const NW = (function() {
         share: 'share',
         
         // Shop
-        shop: 'shopping-bag',
-        cart: 'shopping-bag',
+        shop: 'shop',
+        cart: 'cart',
         market: 'chart',
         
         // Guild
         guild: 'shield',
         party: 'party',
-        celebration: 'celebration',
+        celebration: 'confetti',
         
         // Misc
         settings: 'settings',
@@ -97,48 +96,50 @@ const NW = (function() {
         
         // Rarity
         mythic: 'dragon',
-        legendary: 'crown',
-        epic: 'fire',
+        legendary: 'fire',       // Changed from crown - crown is GM-only
+        epic: 'star-filled',
         rare: 'star',
         uncommon: 'shield',
         common: 'circle'
     };
 
     /**
-     * Create an SVG icon element
+     * Create an SVG icon element using NWIconsInline
      * @param {string} name - Icon name (from ICON_MAP or direct ID)
      * @param {object} options - { size, color, class }
-     * @returns {SVGElement}
+     * @returns {HTMLElement}
      */
     function icon(name, options = {}) {
         const { size = 24, color = 'currentColor', className = '' } = options;
         const iconId = ICON_MAP[name] || name;
         
-        const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-        svg.setAttribute('width', size);
-        svg.setAttribute('height', size);
-        svg.setAttribute('viewBox', '0 0 24 24');
-        svg.setAttribute('fill', color);
-        svg.setAttribute('class', `nw-icon ${className}`.trim());
-        svg.style.flexShrink = '0';
+        // Use NWIconsInline if available
+        if (typeof NWIconsInline !== 'undefined') {
+            return NWIconsInline.render(iconId, { size, color, className });
+        }
         
-        const use = document.createElementNS('http://www.w3.org/2000/svg', 'use');
-        use.setAttributeNS('http://www.w3.org/1999/xlink', 'xlink:href', `${ICON_PATH}#${iconId}`);
-        use.setAttribute('href', `${ICON_PATH}#${iconId}`);
-        
-        svg.appendChild(use);
-        return svg;
+        // Fallback: create placeholder
+        const span = document.createElement('span');
+        span.className = `nw-icon ${className}`.trim();
+        span.style.cssText = `display:inline-flex;width:${size}px;height:${size}px;`;
+        span.setAttribute('data-nw-icon', iconId);
+        return span;
     }
 
     /**
-     * Get icon as HTML string
+     * Get icon as HTML string using NWIconsInline
      */
     function iconHTML(name, options = {}) {
         const { size = 24, color = 'currentColor', className = '' } = options;
         const iconId = ICON_MAP[name] || name;
-        return `<svg class="nw-icon ${className}" width="${size}" height="${size}" viewBox="0 0 24 24" fill="${color}">
-            <use href="${ICON_PATH}#${iconId}"></use>
-        </svg>`;
+        
+        // Use NWIconsInline if available
+        if (typeof NWIconsInline !== 'undefined' && NWIconsInline.icons && NWIconsInline.icons[iconId]) {
+            return `<span class="nw-icon ${className}" style="display:inline-flex;width:${size}px;height:${size}px;color:${color}" data-nw-icon="${iconId}"></span>`;
+        }
+        
+        // Fallback
+        return `<span class="nw-icon ${className}" style="display:inline-flex;width:${size}px;height:${size}px;" data-nw-icon="${iconId}"></span>`;
     }
 
     // =========================================================================

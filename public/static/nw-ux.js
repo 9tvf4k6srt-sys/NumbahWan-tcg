@@ -141,12 +141,8 @@ const NW_UX = {
                            (action.href === '/' + this.currentPage);
             const pulseClass = action.pulse ? 'nw-fab-pulse' : '';
             
-            // Use inline icon if available, fallback to sprite
-            const iconHtml = (typeof NWIconsInline !== 'undefined' && NWIconsInline.icons[action.icon])
-                ? NWIconsInline.render(action.icon, { size: 22, class: 'nw-fab-icon' })
-                : `<svg class="nw-fab-icon" width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
-                        <use href="/static/icons/nw-icons.svg#${action.icon}"></use>
-                   </svg>`;
+            // Use inline icons system
+            const iconHtml = `<span class="nw-fab-icon" style="width:22px;height:22px;display:inline-flex" data-nw-icon="${action.icon}"></span>`;
             
             return `
                 <a href="${action.href}" 
@@ -236,9 +232,7 @@ const NW_UX = {
                 
                 <div class="nw-onboarding-content" id="onboardingContent">
                     <div class="nw-onboarding-icon">
-                        <svg width="64" height="64" viewBox="0 0 24 24" fill="currentColor">
-                            <use href="/static/icons/nw-icons.svg#${step.icon}"></use>
-                        </svg>
+                        <span style="width:64px;height:64px;display:inline-flex" data-nw-icon="${step.icon}"></span>
                     </div>
                     <h2 class="nw-onboarding-title">${t(step.title)}</h2>
                     <p class="nw-onboarding-desc">${t(step.desc)}</p>
@@ -298,9 +292,7 @@ const NW_UX = {
 
             content.innerHTML = `
                 <div class="nw-onboarding-icon">
-                    <svg width="64" height="64" viewBox="0 0 24 24" fill="currentColor">
-                        <use href="/static/icons/nw-icons.svg#${step.icon}"></use>
-                    </svg>
+                    <span style="width:64px;height:64px;display:inline-flex" data-nw-icon="${step.icon}"></span>
                 </div>
                 <h2 class="nw-onboarding-title">${t(step.title)}</h2>
                 <p class="nw-onboarding-desc">${t(step.desc)}</p>
@@ -415,16 +407,12 @@ const NW_UX = {
         breadcrumb.className = 'nw-breadcrumb';
         breadcrumb.innerHTML = `
             <a href="/" class="nw-breadcrumb-item">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
-                    <use href="/static/icons/nw-icons.svg#home"></use>
-                </svg>
+                <span style="width:14px;height:14px;display:inline-flex" data-nw-icon="home"></span>
                 <span>Home</span>
             </a>
             <span class="nw-breadcrumb-sep">›</span>
             <span class="nw-breadcrumb-item current">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
-                    <use href="/static/icons/nw-icons.svg#${pageInfo.icon}"></use>
-                </svg>
+                <span style="width:14px;height:14px;display:inline-flex" data-nw-icon="${pageInfo.icon}"></span>
                 <span>${pageInfo.title}</span>
             </span>
         `;

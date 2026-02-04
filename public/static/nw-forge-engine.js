@@ -905,7 +905,7 @@ function setupModeUI() {
     
     const guestIdEl = document.getElementById('guestId');
     if (guestIdEl) {
-        guestIdEl.innerHTML = isGM ? '<svg class="nw-icon" width="14" height="14" style="vertical-align:middle;"><use href="/static/icons/nw-icons.svg#crown"></use></svg> GM' : (NW_WALLET?.getGuestId()?.slice(0,10) || 'Guest');
+        guestIdEl.innerHTML = isGM ? '<span class="nw-icon" style="width:14px;height:14px;display:inline-flex;vertical-align:middle;" data-nw-icon="crown"></span> GM' : (NW_WALLET?.getGuestId()?.slice(0,10) || 'Guest');
     }
     
     const logsEl = document.getElementById('logBalance');
@@ -917,7 +917,7 @@ function setupModeUI() {
     const testBadge = document.getElementById('testBadge');
     if (testBadge && isGM) {
         testBadge.style.display = 'inline-flex';
-        testBadge.innerHTML = '<svg class="nw-icon" width="14" height="14" style="vertical-align:middle;"><use href="/static/icons/nw-icons.svg#crown"></use></svg> GM MODE';
+        testBadge.innerHTML = '<span class="nw-icon" style="width:14px;height:14px;display:inline-flex;vertical-align:middle;" data-nw-icon="crown"></span> GM MODE';
         testBadge.style.background = 'linear-gradient(135deg, rgba(255,215,0,0.3), rgba(255,107,0,0.2))';
         testBadge.style.border = '1px solid #ffd700';
         testBadge.style.color = '#ffd700';
@@ -987,7 +987,7 @@ function showGMStatus() {
         const testBadge = document.querySelector('.test-badge');
         if (testBadge) {
             testBadge.style.display = 'flex';
-            testBadge.innerHTML = '<svg class="nw-icon" width="14" height="14" style="vertical-align:middle;"><use href="/static/icons/nw-icons.svg#crown"></use></svg> GM MODE';
+            testBadge.innerHTML = '<span class="nw-icon" style="width:14px;height:14px;display:inline-flex;vertical-align:middle;" data-nw-icon="crown"></span> GM MODE';
             testBadge.style.background = 'linear-gradient(135deg, rgba(255,215,0,0.3), rgba(255,107,0,0.2))';
             testBadge.style.borderColor = '#ffd700';
             testBadge.style.color = '#ffd700';
@@ -999,7 +999,7 @@ function showGMStatus() {
         if (guestBar && !document.getElementById('forgeGmBadge')) {
             const gmBadge = document.createElement('div');
             gmBadge.id = 'forgeGmBadge';
-            gmBadge.innerHTML = '<svg class="nw-icon" width="14" height="14" style="vertical-align:middle;"><use href="/static/icons/nw-icons.svg#crown"></use></svg> INFINITE';
+            gmBadge.innerHTML = '<span class="nw-icon" style="width:14px;height:14px;display:inline-flex;vertical-align:middle;" data-nw-icon="crown"></span> INFINITE';
             gmBadge.style.cssText = `
                 background: linear-gradient(135deg, rgba(255,215,0,0.3), rgba(255,107,0,0.2));
                 border: 2px solid #ffd700;
@@ -1601,7 +1601,7 @@ function createPackBox(cardCount, highestRarity) {
         transform: translateZ(10px);
     `;
     lid.innerHTML = `
-        <span style="text-shadow: 0 1px 2px rgba(0,0,0,0.3);"><svg class="nw-icon" width="14" height="14" style="vertical-align:middle;"><use href="/static/icons/nw-icons.svg#gift"></use></svg> MEGA BOX</span>
+        <span style="text-shadow: 0 1px 2px rgba(0,0,0,0.3);"><span class="nw-icon" style="width:14px;height:14px;display:inline-flex;vertical-align:middle;" data-nw-icon="gift"></span> MEGA BOX</span>
         <span style="font-size:9px;opacity:0.8;margin-top:2px;">↑ SWIPE UP ↑</span>
     `;
     
@@ -1760,9 +1760,9 @@ async function showPackOpening(cards) {
         // Update instruction text based on pack type
         const swipeText = instruction.querySelector('.swipe-text');
         if (cards.length > 6) {
-            swipeText.innerHTML = '<svg class="nw-icon" width="14" height="14"><use href="/static/icons/nw-icons.svg#arrow-up"></use></svg> SWIPE UP TO OPEN <svg class="nw-icon" width="14" height="14"><use href="/static/icons/nw-icons.svg#arrow-up"></use></svg>';
+            swipeText.innerHTML = '<span class="nw-icon" style="width:14px;height:14px;display:inline-flex" data-nw-icon="arrow-up"></span> SWIPE UP TO OPEN <span class="nw-icon" style="width:14px;height:14px;display:inline-flex" data-nw-icon="arrow-up"></span>';
         } else {
-            swipeText.innerHTML = '<svg class="nw-icon" width="14" height="14"><use href="/static/icons/nw-icons.svg#arrow-left"></use></svg> SWIPE TO TEAR <svg class="nw-icon" width="14" height="14"><use href="/static/icons/nw-icons.svg#arrow-right"></use></svg>';
+            swipeText.innerHTML = '<span class="nw-icon" style="width:14px;height:14px;display:inline-flex" data-nw-icon="arrow-left"></span> SWIPE TO TEAR <span class="nw-icon" style="width:14px;height:14px;display:inline-flex" data-nw-icon="arrow-right"></span>';
         }
         
         // Create and add new pack
@@ -2417,7 +2417,7 @@ async function executePull() {
     const pullBtn = document.querySelector('.pull-btn');
     if (pullBtn) {
         pullBtn.disabled = true;
-        pullBtn.innerHTML = '<svg class="nw-icon nw-spin" width="16" height="16"><use href="/static/icons/nw-icons.svg#sparkles"></use></svg> Loading...';
+        pullBtn.innerHTML = '<span class="nw-icon nw-spin" style="width:16px;height:16px;display:inline-flex" data-nw-icon="sparkles"></span> Loading...';
     }
     
     console.log('[FORGE] 🎴 Preloading card images...');
@@ -2426,7 +2426,7 @@ async function executePull() {
     
     if (pullBtn) {
         pullBtn.disabled = false;
-        pullBtn.innerHTML = '<svg class="nw-icon" width="16" height="16"><use href="/static/icons/nw-icons.svg#fire"></use></svg> PULL';
+        pullBtn.innerHTML = '<span class="nw-icon" style="width:16px;height:16px;display:inline-flex" data-nw-icon="fire"></span> PULL';
     }
     
     // ===== PACK OPENING ANIMATION =====
