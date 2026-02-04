@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Whale Wars | NumbahWan Lore</title>
+    <link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Inter:wght@300;400;500;600;700&family=Crimson+Text:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="/static/nw-utilities.css" rel="stylesheet">
+    <link href="/static/nw-tokens.css" rel="stylesheet">
+    <script src="/static/nw-currency.js"></script>
+    <script src="/static/nw-wallet.js"></script>
+    <style>
+        :root { --nw-gold: #ffd700; --nw-dark-gold: #b8860b; --nw-dark: #0a0a0a; --nw-whale: #2563eb; }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Inter', sans-serif; background: var(--nw-dark); color: #e5e5e5; line-height: 1.7; overflow-x: hidden; }
+        
+        .hero { position: relative; height: 100vh; min-height: 700px; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+        .hero-bg { position: absolute; inset: -100px; background: radial-gradient(ellipse at 50% 70%, rgba(255,215,0,0.3) 0%, transparent 50%), linear-gradient(180deg, transparent 0%, var(--nw-dark) 100%), url('/static/lore/whale-wars-hero.webp'); background-size: cover; background-position: center; animation: heroFloat 20s ease-in-out infinite; }
+        @keyframes heroFloat { 0%, 100% { transform: scale(1.05); } 50% { transform: scale(1.1) translateY(-10px); } }
+        .hero-particles { position: absolute; inset: 0; }
+        .coin { position: absolute; font-size: 1.5rem; animation: coinFall linear infinite; opacity: 0.8; }
+        @keyframes coinFall { 0% { transform: translateY(-100vh) rotate(0deg); opacity: 0; } 10% { opacity: 0.8; } 90% { opacity: 0.8; } 100% { transform: translateY(100vh) rotate(720deg); opacity: 0; } }
+        .hero-content { position: relative; z-index: 10; text-align: center; padding: 2rem; max-width: 900px; }
+        .hero-badge { display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.5rem 1.5rem; background: linear-gradient(90deg, var(--nw-dark-gold), var(--nw-gold)); border-radius: 999px; font-size: 0.75rem; font-weight: 700; letter-spacing: 0.2em; text-transform: uppercase; margin-bottom: 2rem; color: #000; }
+        .hero-title { font-family: 'Orbitron', sans-serif; font-size: clamp(2.5rem, 10vw, 5rem); font-weight: 900; line-height: 1; margin-bottom: 1rem; background: linear-gradient(135deg, #fff 0%, var(--nw-gold) 50%, #fff 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; animation: goldShimmer 3s linear infinite; background-size: 200% auto; }
+        @keyframes goldShimmer { 0% { background-position: 0% center; } 100% { background-position: 200% center; } }
+        .hero-subtitle { font-family: 'Crimson Text', serif; font-size: clamp(1.25rem, 3vw, 2rem); font-style: italic; color: rgba(255,255,255,0.7); margin-bottom: 3rem; }
+        .hero-scroll { position: absolute; bottom: 3rem; left: 50%; transform: translateX(-50%); color: rgba(255,255,255,0.5); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.2em; animation: bounce 2s infinite; }
+        @keyframes bounce { 0%, 100% { transform: translateX(-50%) translateY(0); } 50% { transform: translateX(-50%) translateY(10px); } }
+        
+        .lore-nav { position: fixed; top: 0; left: 0; right: 0; height: 60px; background: rgba(10,10,10,0.95); backdrop-filter: blur(20px); border-bottom: 1px solid rgba(255,215,0,0.2); display: flex; align-items: center; justify-content: space-between; padding: 0 1.5rem; z-index: 1000; transform: translateY(-100%); transition: transform 0.3s ease; }
+        .lore-nav.visible { transform: translateY(0); }
+        .nav-back { display: flex; align-items: center; gap: 0.5rem; color: white; text-decoration: none; font-size: 0.875rem; padding: 0.5rem 1rem; background: rgba(255,255,255,0.1); border-radius: 0.5rem; transition: all 0.3s; }
+        .nav-back:hover { background: rgba(255,215,0,0.2); }
+        .nav-title { font-family: 'Orbitron', sans-serif; font-weight: 700; color: var(--nw-gold); }
+        .nav-progress { width: 100px; height: 4px; background: rgba(255,255,255,0.1); border-radius: 2px; overflow: hidden; }
+        .nav-progress-bar { height: 100%; background: linear-gradient(90deg, var(--nw-dark-gold), var(--nw-gold)); width: 0%; transition: width 0.1s linear; }
+        
+        .content-section { max-width: 800px; margin: 0 auto; padding: 6rem 2rem; opacity: 0; transform: translateY(40px); transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1); }
+        .content-section.visible { opacity: 1; transform: translateY(0); }
+        .section-label { display: inline-block; padding: 0.375rem 1rem; background: rgba(255,215,0,0.2); border: 1px solid rgba(255,215,0,0.3); border-radius: 0.25rem; font-size: 0.625rem; font-weight: 700; letter-spacing: 0.15em; text-transform: uppercase; color: var(--nw-gold); margin-bottom: 1rem; }
+        .section-title { font-family: 'Orbitron', sans-serif; font-size: clamp(1.75rem, 5vw, 2.5rem); font-weight: 800; line-height: 1.2; margin-bottom: 1.5rem; background: linear-gradient(135deg, #fff, var(--nw-gold)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .section-text { font-size: 1.125rem; line-height: 1.9; color: rgba(255,255,255,0.8); }
+        .section-text p { margin-bottom: 1.5rem; }
+        .section-text strong { color: var(--nw-gold); font-weight: 600; }
+        
+        .whale-tier { display: flex; align-items: center; gap: 1.5rem; padding: 1.5rem; margin: 1rem 0; background: linear-gradient(135deg, rgba(255,215,0,0.1), rgba(255,215,0,0.05)); border: 1px solid rgba(255,215,0,0.2); border-radius: 1rem; transition: all 0.3s; }
+        .whale-tier:hover { transform: translateX(10px); border-color: rgba(255,215,0,0.5); }
+        .whale-icon { font-size: 2.5rem; }
+        .whale-info h4 { font-family: 'Orbitron', sans-serif; font-weight: 700; margin-bottom: 0.25rem; }
+        .whale-info p { font-size: 0.875rem; color: rgba(255,255,255,0.6); margin: 0; }
+        .whale-info .spend { color: var(--nw-gold); font-weight: 600; }
+        
+        .lore-quote { position: relative; padding: 3rem; margin: 4rem 0; background: linear-gradient(135deg, rgba(255,215,0,0.1), rgba(37,99,235,0.1)); border-left: 4px solid var(--nw-gold); border-radius: 0 1rem 1rem 0; }
+        .lore-quote::before { content: '"'; position: absolute; top: 1rem; left: 1.5rem; font-family: 'Crimson Text', serif; font-size: 6rem; line-height: 1; color: rgba(255,215,0,0.2); }
+        .lore-quote blockquote { font-family: 'Crimson Text', serif; font-size: 1.5rem; font-style: italic; line-height: 1.6; color: rgba(255,255,255,0.9); margin: 0; }
+        .lore-quote cite { display: block; margin-top: 1.5rem; font-family: 'Inter', sans-serif; font-size: 0.875rem; font-style: normal; color: var(--nw-gold); }
+        
+        .secret-box { position: relative; margin: 3rem 0; padding: 2rem; background: rgba(255,215,0,0.1); border: 1px dashed rgba(255,215,0,0.3); border-radius: 1rem; cursor: pointer; overflow: hidden; transition: all 0.3s; }
+        .secret-box::before { content: ''; position: absolute; inset: 0; background: linear-gradient(135deg, rgba(10,10,10,0.95), rgba(10,10,10,0.9)); transition: opacity 0.5s; z-index: 1; }
+        .secret-box.revealed::before { opacity: 0; pointer-events: none; }
+        .secret-prompt { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.5rem; z-index: 2; transition: opacity 0.5s; }
+        .secret-box.revealed .secret-prompt { opacity: 0; pointer-events: none; }
+        .secret-prompt i { font-size: 2rem; color: var(--nw-gold); }
+        .secret-prompt span { font-size: 0.875rem; color: rgba(255,255,255,0.6); }
+        .secret-content { position: relative; z-index: 0; }
+        .secret-badge { display: inline-flex; align-items: center; gap: 0.375rem; padding: 0.25rem 0.75rem; background: linear-gradient(90deg, var(--nw-dark-gold), var(--nw-gold)); border-radius: 0.25rem; font-size: 0.625rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: #000; margin-bottom: 1rem; }
+        
+        .war-timeline { position: relative; padding-left: 2rem; margin: 3rem 0; }
+        .war-timeline::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 2px; background: linear-gradient(180deg, var(--nw-gold), var(--nw-whale), var(--nw-gold)); }
+        .war-event { position: relative; padding: 1.5rem; margin-bottom: 2rem; background: rgba(255,255,255,0.05); border-radius: 0 1rem 1rem 0; }
+        .war-event::before { content: ''; position: absolute; left: -2rem; top: 50%; transform: translate(-50%, -50%); width: 12px; height: 12px; background: var(--nw-gold); border-radius: 50%; box-shadow: 0 0 20px rgba(255,215,0,0.5); }
+        .war-event h4 { font-family: 'Orbitron', sans-serif; font-weight: 700; margin-bottom: 0.5rem; color: var(--nw-gold); }
+        .war-event p { font-size: 0.9rem; color: rgba(255,255,255,0.7); margin: 0; }
+        
+        .battle-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1.5rem; margin: 3rem 0; }
+        .stat-card { padding: 1.5rem; background: linear-gradient(135deg, rgba(255,215,0,0.1), rgba(37,99,235,0.1)); border: 1px solid rgba(255,215,0,0.2); border-radius: 1rem; text-align: center; }
+        .stat-value { font-family: 'Orbitron', sans-serif; font-size: 2rem; font-weight: 900; color: var(--nw-gold); display: block; }
+        .stat-label { font-size: 0.75rem; color: rgba(255,255,255,0.6); text-transform: uppercase; letter-spacing: 0.1em; }
+        
+        .next-chapter { margin: 6rem auto; max-width: 600px; text-align: center; padding: 3rem; background: linear-gradient(135deg, rgba(255,215,0,0.2), rgba(37,99,235,0.1)); border: 1px solid rgba(255,215,0,0.3); border-radius: 1.5rem; }
+        .next-chapter h3 { font-family: 'Orbitron', sans-serif; font-size: 1.5rem; margin-bottom: 1rem; }
+        .next-chapter p { color: rgba(255,255,255,0.6); margin-bottom: 2rem; }
+        .next-chapter-btn { display: inline-flex; align-items: center; gap: 0.75rem; padding: 1rem 2rem; background: linear-gradient(90deg, var(--nw-dark-gold), var(--nw-gold)); border: none; border-radius: 0.75rem; color: #000; font-weight: 600; font-size: 1rem; text-decoration: none; transition: all 0.3s; }
+        .next-chapter-btn:hover { transform: translateY(-4px); box-shadow: 0 10px 30px rgba(255,215,0,0.4); }
+        
+        .secrets-counter { position: fixed; bottom: 2rem; left: 2rem; display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem 1.25rem; background: rgba(10,10,10,0.9); backdrop-filter: blur(10px); border: 1px solid rgba(255,215,0,0.3); border-radius: 2rem; font-size: 0.875rem; z-index: 100; transform: translateX(-200%); transition: transform 0.3s; }
+        .secrets-counter.visible { transform: translateX(0); }
+        .secrets-counter i { color: var(--nw-gold); }
+        .secrets-counter .count { font-family: 'Orbitron', sans-serif; font-weight: 700; color: var(--nw-gold); }
+        
+        @media (max-width: 768px) {
+            .content-section { padding: 4rem 1.5rem; }
+            .whale-tier { flex-direction: column; text-align: center; }
+            .secrets-counter { left: 1rem; right: 1rem; bottom: 1rem; justify-content: center; }
+        }
+    </style>
+</head>
+<body>
+    <nav class="lore-nav" id="lore-nav">
+        <a href="/lore" class="nav-back"><i class="fas fa-arrow-left"></i><span>All Lore</span></a>
+        <span class="nav-title">Whale Wars</span>
+        <div class="nav-progress"><div class="nav-progress-bar" id="progress-bar"></div></div>
+    </nav>
+    
+    <section class="hero">
+        <div class="hero-bg"></div>
+        <div class="hero-particles" id="coin-rain"></div>
+        <div class="hero-content">
+            <span class="hero-badge"><i class="fas fa-crown"></i> Deep Dive #003</span>
+            <h1 class="hero-title">The Whale Wars</h1>
+            <p class="hero-subtitle">When money meets ego, servers crash and legends are born.</p>
+        </div>
+        <div class="hero-scroll">Scroll to discover ↓</div>
+    </section>
+    
+    <section class="content-section" data-chapter="1">
+        <span class="section-label">Chapter 1</span>
+        <h2 class="section-title">Anatomy of a Whale</h2>
+        <div class="section-text">
+            <p>In the ocean of mobile gaming, <strong>whales</strong> are the apex predators—players who spend thousands, sometimes tens of thousands, to dominate the leaderboards.</p>
+            <p>NumbahWan has always had a complicated relationship with whales. We love them. We fear them. We are them.</p>
+        </div>
+        
+        <div class="whale-tier">
+            <span class="whale-icon">🐟</span>
+            <div class="whale-info">
+                <h4>Minnow</h4>
+                <p><span class="spend">$10-50/month</span> • Battle pass buyers, occasional packs</p>
+            </div>
+        </div>
+        <div class="whale-tier">
+            <span class="whale-icon">🐬</span>
+            <div class="whale-info">
+                <h4>Dolphin</h4>
+                <p><span class="spend">$50-200/month</span> • Regular spenders, most monthly deals</p>
+            </div>
+        </div>
+        <div class="whale-tier">
+            <span class="whale-icon">🐋</span>
+            <div class="whale-info">
+                <h4>Whale</h4>
+                <p><span class="spend">$200-1000/month</span> • Serious collectors, competitive players</p>
+            </div>
+        </div>
+        <div class="whale-tier">
+            <span class="whale-icon">🌊</span>
+            <div class="whale-info">
+                <h4>Kraken</h4>
+                <p><span class="spend">$1000+/month</span> • The legends. The myths. The credit card destroyers.</p>
+            </div>
+        </div>
+    </section>
+    
+    <section class="content-section" data-chapter="2">
+        <div class="secret-box" data-secret="whale-origin">
+            <div class="secret-prompt"><i class="fas fa-lock"></i><span>Click to reveal secret...</span></div>
+            <div class="secret-content">
+                <span class="secret-badge"><i class="fas fa-key"></i> Secret #1 of 5</span>
+                <h3 style="font-family: 'Orbitron', sans-serif; margin-bottom: 1rem;">NumbahWan's First Whale</h3>
+                <p style="color: rgba(255,255,255,0.8);">The guild's first kraken-level spender was actually... RegginO.</p>
+                <p style="color: rgba(255,255,255,0.8); margin-top: 1rem;">In the guild's first month, she dropped $3,000 to gear up the entire founding team. When asked why, she simply said: "Someone had to."</p>
+                <p style="color: var(--nw-gold); margin-top: 1rem; font-weight: 600;">+5 NWG for discovering this secret!</p>
+            </div>
+        </div>
+    </section>
+    
+    <section class="content-section" data-chapter="3">
+        <span class="section-label">Chapter 2</span>
+        <h2 class="section-title">The Great War of Server 38</h2>
+        <div class="section-text">
+            <p>Every server has a defining moment. For TW Server 38, it was <strong>The Whale War</strong>—a three-week spending spree that cost the top guilds an estimated $47,000 combined.</p>
+            <p>It started with a simple flex. It ended with players taking second mortgages.</p>
+        </div>
+        
+        <div class="war-timeline">
+            <div class="war-event">
+                <h4>Day 1 - The Challenge</h4>
+                <p>GuildX's leader posts a screenshot: 15B Combat Power. Caption: "Come at me, NumbahWan."</p>
+            </div>
+            <div class="war-event">
+                <h4>Day 3 - The Response</h4>
+                <p>RegginA hits 18B CP overnight. No words. Just a single emoji: 🎯</p>
+            </div>
+            <div class="war-event">
+                <h4>Day 8 - Escalation</h4>
+                <p>GuildX recruits three new whales from other servers. Total guild spending: $12,000 in one weekend.</p>
+            </div>
+            <div class="war-event">
+                <h4>Day 14 - The Alliance</h4>
+                <p>NumbahWan forms "The Whale Pact" with two other guilds. Combined firepower: 95B CP.</p>
+            </div>
+            <div class="war-event">
+                <h4>Day 21 - Victory</h4>
+                <p>GuildX's leader goes silent. Three members quit gaming entirely. NumbahWan holds Server 38.</p>
+            </div>
+        </div>
+    </section>
+    
+    <section class="content-section" data-chapter="4">
+        <div class="secret-box" data-secret="whale-spending">
+            <div class="secret-prompt"><i class="fas fa-lock"></i><span>Click to reveal secret...</span></div>
+            <div class="secret-content">
+                <span class="secret-badge"><i class="fas fa-key"></i> Secret #2 of 5</span>
+                <h3 style="font-family: 'Orbitron', sans-serif; margin-bottom: 1rem;">The Real Numbers</h3>
+                <p style="color: rgba(255,255,255,0.8);">Total NumbahWan spending during The Whale War: <strong>$23,847</strong></p>
+                <p style="color: rgba(255,255,255,0.8); margin-top: 0.5rem;">Natehouoho alone: $8,200</p>
+                <p style="color: rgba(255,255,255,0.8); margin-top: 0.5rem;">RegginA: $6,500</p>
+                <p style="color: rgba(255,255,255,0.8); margin-top: 0.5rem;">RegginO: $4,300</p>
+                <p style="color: rgba(255,255,255,0.8); margin-top: 0.5rem;">Yuluner晴: $3,100</p>
+                <p style="color: rgba(255,255,255,0.8); margin-top: 0.5rem;">Others: $1,747</p>
+                <p style="color: var(--nw-gold); margin-top: 1rem; font-weight: 600;">+5 NWG for discovering this secret!</p>
+            </div>
+        </div>
+    </section>
+    
+    <section class="content-section" data-chapter="5">
+        <span class="section-label">Chapter 3</span>
+        <h2 class="section-title">The Aftermath</h2>
+        <div class="section-text">
+            <p>Wars like this change people. Some discovered spending limits they didn't know they had. Others found community bonds that transcended pixels.</p>
+        </div>
+        
+        <div class="battle-stats">
+            <div class="stat-card">
+                <span class="stat-value">$47K</span>
+                <span class="stat-label">Total Spent (Both Sides)</span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-value">21</span>
+                <span class="stat-label">Days of War</span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-value">7</span>
+                <span class="stat-label">Players Quit</span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-value">∞</span>
+                <span class="stat-label">Memes Generated</span>
+            </div>
+        </div>
+        
+        <div class="lore-quote">
+            <blockquote>"We didn't win because we spent the most. We won because we spent together. Every whale, dolphin, and minnow contributed what they could. That's not a guild. That's a family."</blockquote>
+            <cite>— RegginA, post-war reflection</cite>
+        </div>
+    </section>
+    
+    <section class="content-section" data-chapter="6">
+        <div class="secret-box" data-secret="whale-philosophy">
+            <div class="secret-prompt"><i class="fas fa-lock"></i><span>Click to reveal secret...</span></div>
+            <div class="secret-content">
+                <span class="secret-badge"><i class="fas fa-key"></i> Secret #3 of 5</span>
+                <h3 style="font-family: 'Orbitron', sans-serif; margin-bottom: 1rem;">The Whale Code</h3>
+                <p style="color: rgba(255,255,255,0.8);">After The Whale War, NumbahWan established "The Whale Code":</p>
+                <ul style="color: rgba(255,255,255,0.8); margin-top: 1rem; padding-left: 1.5rem;">
+                    <li>Never mock F2P players</li>
+                    <li>Never peer pressure spending</li>
+                    <li>Whales carry so others can play free</li>
+                    <li>What you spend is your business</li>
+                    <li>The guild always comes first</li>
+                </ul>
+                <p style="color: var(--nw-gold); margin-top: 1rem; font-weight: 600;">+5 NWG for discovering this secret!</p>
+            </div>
+        </div>
+    </section>
+    
+    <section class="content-section" data-chapter="7">
+        <span class="section-label">Chapter 4</span>
+        <h2 class="section-title">Whale Psychology</h2>
+        <div class="section-text">
+            <p>Why do whales spend? The reasons are as varied as the players themselves.</p>
+            <p><strong>Competition:</strong> Some want to be #1 at any cost.</p>
+            <p><strong>Collection:</strong> Some need every rare item, every limited banner.</p>
+            <p><strong>Community:</strong> Some spend to help their guild succeed.</p>
+            <p><strong>Escape:</strong> Some find in pixels what they can't find elsewhere.</p>
+            <p>NumbahWan doesn't judge. We just ask one thing: <em>can you afford it?</em></p>
+        </div>
+    </section>
+    
+    <section class="content-section" data-chapter="8">
+        <div class="secret-box" data-secret="whale-regret">
+            <div class="secret-prompt"><i class="fas fa-lock"></i><span>Click to reveal secret...</span></div>
+            <div class="secret-content">
+                <span class="secret-badge"><i class="fas fa-key"></i> Secret #4 of 5</span>
+                <h3 style="font-family: 'Orbitron', sans-serif; margin-bottom: 1rem;">The Regret Fund</h3>
+                <p style="color: rgba(255,255,255,0.8);">NumbahWan has an unofficial "Regret Fund."</p>
+                <p style="color: rgba(255,255,255,0.8); margin-top: 1rem;">If any member overspends and faces real-life consequences, other members quietly help out. It's never talked about publicly. The affected member never knows who contributed.</p>
+                <p style="color: rgba(255,255,255,0.8); margin-top: 1rem;">Total distributed to date: $2,400 across 3 members.</p>
+                <p style="color: var(--nw-gold); margin-top: 1rem; font-weight: 600;">+5 NWG for discovering this secret!</p>
+            </div>
+        </div>
+    </section>
+    
+    <section class="content-section" data-chapter="9">
+        <span class="section-label">Epilogue</span>
+        <h2 class="section-title">The True Currency</h2>
+        <div class="section-text">
+            <p>In the end, The Whale Wars taught NumbahWan something important: <strong>money can buy power, but not loyalty.</strong></p>
+            <p>GuildX had more whales. They had bigger budgets. But when the pressure hit, their members scattered. NumbahWan's stayed.</p>
+            <p>That's the difference between a guild that spends together and a guild that just... spends.</p>
+        </div>
+        
+        <div class="secret-box" data-secret="whale-future">
+            <div class="secret-prompt"><i class="fas fa-lock"></i><span>Click to reveal the final secret...</span></div>
+            <div class="secret-content">
+                <span class="secret-badge"><i class="fas fa-key"></i> Secret #5 of 5</span>
+                <h3 style="font-family: 'Orbitron', sans-serif; margin-bottom: 1rem;">The Next War</h3>
+                <p style="color: rgba(255,255,255,0.8);">Rumors say GuildX is reforming on Server 41.</p>
+                <p style="color: rgba(255,255,255,0.8); margin-top: 1rem;">They've recruited two of the biggest whales in the game's history. Their war chest is estimated at $100,000.</p>
+                <p style="color: rgba(255,255,255,0.8); margin-top: 1rem;">NumbahWan's response? "Let them come."</p>
+                <p style="color: var(--nw-gold); margin-top: 1.5rem; font-weight: 600;">+10 NWG + 1 Sacred Log for discovering all secrets!</p>
+            </div>
+        </div>
+    </section>
+    
+    <section class="content-section">
+        <div class="next-chapter">
+            <h3>The Saga Continues...</h3>
+            <p>The Whale Wars are just one chapter in NumbahWan's history. Dive deeper into the mythology.</p>
+            <a href="/lore" class="next-chapter-btn"><i class="fas fa-book-open"></i> Explore More Lore</a>
+        </div>
+    </section>
+    
+    <div class="secrets-counter" id="secrets-counter">
+        <i class="fas fa-key"></i>
+        <span>Secrets: <span class="count" id="secret-count">0</span>/5</span>
+    </div>
+    
+    <script>
+        // Coin rain effect
+        const coinRain = document.getElementById('coin-rain');
+        const coins = ['💰', '💎', '🪙', '💵'];
+        for (let i = 0; i < 20; i++) {
+            const coin = document.createElement('span');
+            coin.className = 'coin';
+            coin.textContent = coins[Math.floor(Math.random() * coins.length)];
+            coin.style.left = `${Math.random() * 100}%`;
+            coin.style.animationDuration = `${3 + Math.random() * 4}s`;
+            coin.style.animationDelay = `${Math.random() * 5}s`;
+            coinRain.appendChild(coin);
+        }
+        
+        let secretsFound = 0;
+        const revealedSecrets = new Set();
+        
+        const nav = document.getElementById('lore-nav');
+        const progressBar = document.getElementById('progress-bar');
+        
+        window.addEventListener('scroll', () => {
+            const scrollY = window.scrollY;
+            const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+            progressBar.style.width = `${(scrollY / docHeight) * 100}%`;
+            nav.classList.toggle('visible', scrollY > 100);
+        }, { passive: true });
+        
+        const sections = document.querySelectorAll('.content-section');
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => { if (entry.isIntersecting) entry.target.classList.add('visible'); });
+        }, { threshold: 0.1, rootMargin: '-50px' });
+        sections.forEach(section => observer.observe(section));
+        
+        document.querySelectorAll('.secret-box').forEach(box => {
+            box.addEventListener('click', () => {
+                if (box.classList.contains('revealed')) return;
+                const secretId = box.dataset.secret;
+                if (revealedSecrets.has(secretId)) return;
+                box.classList.add('revealed');
+                revealedSecrets.add(secretId);
+                secretsFound++;
+                document.getElementById('secret-count').textContent = secretsFound;
+                document.getElementById('secrets-counter').classList.add('visible');
+                const isLast = secretsFound === 5;
+                if (typeof NW_WALLET !== 'undefined') {
+                    NW_WALLET.earn('nwg', isLast ? 10 : 5, 'LORE_SECRET');
+                    if (isLast) NW_WALLET.earn('wood', 1, 'ALL_SECRETS_FOUND');
+                }
+                showToast(isLast ? '🎉 All Secrets Found!' : '🔓 Secret Revealed!', isLast ? '+10 NWG & +1 Sacred Log' : '+5 NWG');
+            });
+        });
+        
+        function showToast(title, message) {
+            const toast = document.createElement('div');
+            toast.style.cssText = 'position:fixed;top:80px;right:2rem;background:linear-gradient(135deg,#b8860b,#ffd700);padding:1rem 1.5rem;border-radius:0.75rem;z-index:1001;animation:toastIn 0.3s ease;max-width:300px;color:#000;';
+            toast.innerHTML = `<strong style="display:block;margin-bottom:0.25rem;">${title}</strong><span style="font-size:0.875rem;opacity:0.9;">${message}</span>`;
+            document.body.appendChild(toast);
+            setTimeout(() => { toast.style.animation = 'toastOut 0.3s ease forwards'; setTimeout(() => toast.remove(), 300); }, 3000);
+        }
+        
+        document.addEventListener('DOMContentLoaded', () => { if (typeof NW_WALLET !== 'undefined') NW_WALLET.init(); });
+    </script>
+    <style>
+        @keyframes toastIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+        @keyframes toastOut { from { transform: translateX(0); opacity: 1; } to { transform: translateX(100%); opacity: 0; } }
+    </style>
+</body>
+</html>

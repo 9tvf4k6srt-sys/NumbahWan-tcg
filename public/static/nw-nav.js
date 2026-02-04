@@ -156,7 +156,21 @@ const NW_NAV = {
             desc: { en: '(Endless rabbit holes)', zh: '(無盡的兔子洞)', th: '(หลุมกระต่ายไม่สิ้นสุด)' },
             pages: [
                 { id: 'lore', name: { en: 'Lore Archives', zh: '傳說檔案', th: 'คลังตำนาน' }, icon: 'scroll', href: '/lore', isHot: true },
-                { id: 'reggina-origin', name: { en: 'RegginA Origin', zh: 'RegginA起源', th: 'กำเนิด RegginA' }, icon: 'fire', href: '/lore/reggina-origin.html', isNew: true }
+                { id: 'reggina-origin', name: { en: 'RegginA Origin', zh: 'RegginA起源', th: 'กำเนิด RegginA' }, icon: 'fire', href: '/lore/reggina-origin.html', isNew: true },
+                { id: 'sacred-log', name: { en: 'Sacred Log', zh: '聖木', th: 'ท่อนไม้ศักดิ์สิทธิ์' }, icon: 'scroll', href: '/lore/sacred-log.html', isNew: true },
+                { id: 'whale-wars', name: { en: 'Whale Wars', zh: '鯨魚大戰', th: 'สงครามวาฬ' }, icon: 'coins', href: '/lore/whale-wars.html', isNew: true },
+                { id: 'afk-incident', name: { en: 'AFK Incident', zh: 'AFK事件', th: 'เหตุการณ์ AFK' }, icon: 'meme', href: '/lore/afk-incident.html', isNew: true },
+                { id: 'conspiracy-board', name: { en: 'Conspiracy Board', zh: '陰謀板', th: 'บอร์ดสมคบคิด' }, icon: 'eye', href: '/lore/conspiracy-board.html', isNew: true }
+            ]
+        },
+        efficiency: {
+            name: { en: 'Build Lab', zh: '建設實驗室', th: 'ห้องแล็บสร้าง' },
+            icon: 'chart',
+            color: '#22c55e',
+            collapsed: true,
+            desc: { en: '(Efficiency Obsessed)', zh: '(效率至上)', th: '(หมกมุ่นประสิทธิภาพ)' },
+            pages: [
+                { id: 'efficiency', name: { en: 'Efficiency Dashboard', zh: '效率儀表板', th: 'แดชบอร์ดประสิทธิภาพ' }, icon: 'chart', href: '/efficiency', isNew: true }
             ]
         },
         resources: {

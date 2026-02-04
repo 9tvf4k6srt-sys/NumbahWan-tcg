@@ -96,6 +96,18 @@ const app = new Hono<{ Bindings: Bindings }>()
 // Serve static files with caching headers
 app.use('/static/*', serveStatic())
 
+// Serve HTML from subdirectories (lore, museum, vault, research)
+app.use('/lore/*', serveStatic())
+app.use('/museum/*', serveStatic())
+app.use('/vault/*', serveStatic())
+app.use('/research/*', serveStatic())
+
+// Serve root-level pages that bypass the worker routing
+app.get('/efficiency', serveStatic({ path: './efficiency.html' }))
+app.get('/efficiency.html', serveStatic({ path: './efficiency.html' }))
+app.get('/lore', serveStatic({ path: './lore.html' }))
+app.get('/lore.html', serveStatic({ path: './lore.html' }))
+
 // ============================================================================
 // API ROUTES - Data Layer (Scalability Pattern: Separate Data from Presentation)
 // ============================================================================
