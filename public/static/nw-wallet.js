@@ -1296,20 +1296,77 @@ console.log('%c  NW_WALLET.addToGMWhitelist() - Show your Guest ID for permanent
 // HARD RULE #7: NWG → Gold → Sacred Log ONLY
 // =====================================================
 (function() {
-    // Inject CSS - 3-tier slim bottom bar
+    // Pages that have their own currency display - hide bottom bar
+    var PAGES_WITH_OWN_DISPLAY = ['forge', 'wallet', 'arcade', 'battle'];
+    
+    function shouldShowBottomBar() {
+        var pageId = document.body.getAttribute('data-page-id') || '';
+        return !PAGES_WITH_OWN_DISPLAY.includes(pageId.toLowerCase());
+    }
+    
+    // Inject CSS - 3-tier slim bottom bar with premium icons
     var style = document.createElement('style');
-    style.textContent = '.nw-bottom-bar{position:fixed;bottom:0;left:0;right:0;z-index:9998;font-family:Orbitron,Inter,sans-serif;background:linear-gradient(180deg,rgba(15,15,25,0.98),rgba(10,10,18,0.99));border-top:1px solid rgba(255,215,0,0.3);padding:6px 0;display:flex;justify-content:center;align-items:center;gap:20px;box-shadow:0 -2px 15px rgba(0,0,0,0.4)}.nw-bottom-bar .nw-item{display:flex;align-items:center;gap:4px}.nw-bottom-bar .nw-ico{width:16px;height:16px;object-fit:contain}.nw-bottom-bar .nw-val{font-size:13px;font-weight:700}.nw-bottom-bar .nw-val.nwg{color:#00d4ff}.nw-bottom-bar .nw-val.gold{color:#ffd700}.nw-bottom-bar .nw-val.wood{color:#00ff88}.nw-bottom-bar-active{padding-bottom:36px}';
+    style.textContent = `
+        .nw-bottom-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            z-index: 9998;
+            font-family: Orbitron, Inter, sans-serif;
+            background: linear-gradient(180deg, rgba(15,15,25,0.98), rgba(10,10,18,0.99));
+            border-top: 1px solid rgba(255,215,0,0.3);
+            padding: 8px 16px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 24px;
+            box-shadow: 0 -2px 15px rgba(0,0,0,0.4);
+            -webkit-backdrop-filter: blur(10px);
+            backdrop-filter: blur(10px);
+        }
+        .nw-bottom-bar .nw-item {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+        .nw-bottom-bar .nw-ico {
+            width: 20px;
+            height: 20px;
+            object-fit: contain;
+            flex-shrink: 0;
+        }
+        .nw-bottom-bar .nw-val {
+            font-size: 14px;
+            font-weight: 700;
+            line-height: 1;
+        }
+        .nw-bottom-bar .nw-val.nwg { color: #00d4ff; }
+        .nw-bottom-bar .nw-val.gold { color: #ffd700; }
+        .nw-bottom-bar .nw-val.wood { color: #22c55e; }
+        .nw-bottom-bar-active { padding-bottom: 44px; }
+        .nw-bottom-bar.hidden { display: none !important; }
+    `;
     document.head.appendChild(style);
     
-    // Create widget HTML - 3-tier currencies only
+    // Create widget HTML - 3-tier currencies with premium PNG icons
     function createWidget() {
+        // Check if this page should show bottom bar
+        if (!shouldShowBottomBar()) {
+            console.log('[NW_WALLET] Bottom bar hidden - page has own currency display');
+            return;
+        }
+        
         var bar = document.createElement('div');
         bar.className = 'nw-bottom-bar';
         bar.id = 'nwBottomBar';
         // 3-Tier System: NWG (premium) → Gold (earned) → Sacred Log (prestige)
-        bar.innerHTML = '<div class="nw-item"><span style="font-size:14px">◆</span><span class="nw-val nwg" id="nwfNwg">0</span></div>' +
-            '<div class="nw-item"><span style="font-size:14px">●</span><span class="nw-val gold" id="nwfGold">0</span></div>' +
-            '<div class="nw-item"><span style="font-size:14px">⧫</span><span class="nw-val wood" id="nwfWood">0</span></div>';
+        // Using premium PNG icons instead of text symbols
+        bar.innerHTML = 
+            '<div class="nw-item"><img class="nw-ico" src="/static/icons/nwg.png" alt="NWG"><span class="nw-val nwg" id="nwfNwg">0</span></div>' +
+            '<div class="nw-item"><img class="nw-ico" src="/static/icons/gold.png" alt="Gold"><span class="nw-val gold" id="nwfGold">0</span></div>' +
+            '<div class="nw-item"><img class="nw-ico" src="/static/icons/sacred-log.png" alt="Logs"><span class="nw-val wood" id="nwfWood">0</span></div>';
         document.body.appendChild(bar);
         document.body.classList.add('nw-bottom-bar-active');
         
