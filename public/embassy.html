@@ -7,6 +7,7 @@
     <link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="/static/nw-wallet.js"></script>
     <script src="/static/nw-nav.js" defer></script>
     <script src="/static/nw-sounds.js" defer></script>
     <style>
@@ -173,6 +174,13 @@
     </section>
     
     <main>
+        <!-- Citizen Status Banner -->
+        <div id="citizenBanner" style="background: rgba(255,215,0,0.1); border: 1px solid rgba(255,215,0,0.3); border-radius: 16px; padding: 20px; margin-bottom: 32px; text-align: center;">
+            <div id="citizenStatus" style="font-size: 16px;">
+                <span style="color: rgba(255,255,255,0.5);">Checking citizenship...</span>
+            </div>
+        </div>
+        
         <!-- Allied Guilds -->
         <h2 class="section-title">🤝 <span data-i18n="sectionAllies">Allied Guilds</span></h2>
         
@@ -319,6 +327,19 @@
         </div>
     </div>
     
+    <!-- No Citizen Modal -->
+    <div class="modal-overlay" id="noCitizenModal">
+        <div class="modal" style="border-color: #ef4444;">
+            <h2 data-i18n="noCitizenTitle">🛂 Citizenship Required</h2>
+            <div style="font-size: 64px; margin: 20px 0;">🚫</div>
+            <p data-i18n="noCitizenMsg">You need to be a NumbahWan citizen to claim Embassy rewards. Visit the Wallet page to get your citizen ID first!</p>
+            <div style="display: flex; gap: 12px;">
+                <button class="btn btn-secondary" onclick="closeNoCitizenModal()" style="flex: 1;">Cancel</button>
+                <a href="/wallet" class="btn btn-primary" style="flex: 1; background: linear-gradient(135deg, #22c55e, #16a34a);" data-i18n="goToWallet">Get Citizenship</a>
+            </div>
+        </div>
+    </div>
+    
     <!-- Toast -->
     <div class="toast" id="toast"></div>
     
@@ -364,47 +385,88 @@
             return { canClaim: false, nextClaim: `${hours}h ${mins}m` };
         }
         
-        // Update UI based on claim status
+        // Check if user is a citizen (has wallet initialized)
+        function getCitizenId() {
+            if (typeof NW_WALLET !== 'undefined' && NW_WALLET.wallet) {
+                return NW_WALLET.getGuestId();
+            }
+            return null;
+        }
+        
+        function isCitizen() {
+            return getCitizenId() !== null;
+        }
+        
+        // Update UI based on claim status AND citizen status
         function updateClaimButtons() {
+            const citizenId = getCitizenId();
+            const citizenStatusEl = document.getElementById('citizenStatus');
+            
+            // Update citizen status display
+            if (citizenStatusEl) {
+                if (citizenId) {
+                    citizenStatusEl.innerHTML = `<span style="color: var(--green);">✓ ${i18n[currentLang]?.citizenVerified || 'Citizen Verified'}</span><br><small style="color: rgba(255,255,255,0.5);">${citizenId}</small>`;
+                } else {
+                    citizenStatusEl.innerHTML = `<span style="color: var(--gold);">⚠️ ${i18n[currentLang]?.notCitizen || 'Not a Citizen'}</span><br><a href="/wallet" style="color: var(--gold); font-size: 13px;">${i18n[currentLang]?.getCitizenship || 'Get Citizenship →'}</a>`;
+                }
+            }
+            
             Object.keys(PARTNERS).forEach(partnerId => {
                 const status = getClaimStatus(partnerId);
                 const btn = document.getElementById(`btn-${partnerId}`);
                 const timer = document.getElementById(`${partnerId}-timer`);
                 
                 if (btn) {
-                    btn.disabled = !status.canClaim;
-                    btn.textContent = status.canClaim ? 
-                        (i18n[currentLang]?.claimReward || 'Claim Reward') : 
-                        (i18n[currentLang]?.claimed || 'Claimed');
+                    // Must be citizen AND not already claimed
+                    const canClaim = citizenId && status.canClaim;
+                    btn.disabled = !canClaim;
+                    
+                    if (!citizenId) {
+                        btn.textContent = i18n[currentLang]?.needCitizen || 'Need Citizenship';
+                    } else if (!status.canClaim) {
+                        btn.textContent = i18n[currentLang]?.claimed || 'Claimed';
+                    } else {
+                        btn.textContent = i18n[currentLang]?.claimReward || 'Claim Reward';
+                    }
                 }
                 
                 if (timer) {
-                    timer.textContent = status.canClaim ? 
-                        (i18n[currentLang]?.now || 'Now!') : 
-                        status.nextClaim;
+                    if (!citizenId) {
+                        timer.textContent = i18n[currentLang]?.registerFirst || 'Register first';
+                    } else {
+                        timer.textContent = status.canClaim ? 
+                            (i18n[currentLang]?.now || 'Now!') : 
+                            status.nextClaim;
+                    }
                 }
             });
         }
         
         // Claim visit reward
         async function claimVisit(partnerId) {
+            // MUST be a citizen first
+            const citizenId = getCitizenId();
+            if (!citizenId) {
+                showNoCitizenModal();
+                return;
+            }
+            
             const status = getClaimStatus(partnerId);
             if (!status.canClaim) {
-                showToast('Already claimed! Come back later.', true);
+                showToast(i18n[currentLang]?.alreadyClaimed || 'Already claimed! Come back later.', true);
                 return;
             }
             
             const partner = PARTNERS[partnerId];
             if (!partner) return;
             
-            // Record claim
+            // Record claim with citizen ID for tracking
             localStorage.setItem(`nw_embassy_claim_${partnerId}`, Date.now().toString());
+            localStorage.setItem(`nw_embassy_claim_${partnerId}_by`, citizenId);
             
-            // Add to wallet if available
-            if (typeof NW_WALLET !== 'undefined') {
-                NW_WALLET.add('nwg', partner.rewards.nwg);
-                NW_WALLET.add('wood', partner.rewards.wood);
-            }
+            // Add to wallet - this is required since we verified citizenship
+            NW_WALLET.add('nwg', partner.rewards.nwg);
+            NW_WALLET.add('wood', partner.rewards.wood);
             
             // Show modal
             document.getElementById('modalNwg').textContent = '+' + partner.rewards.nwg;
@@ -437,6 +499,18 @@
             showToast('Registration coming soon! Check the docs for now.');
         }
         
+        // Show modal explaining why non-citizens can't claim
+        function showNoCitizenModal() {
+            document.getElementById('noCitizenModal').classList.add('active');
+            if (typeof NW_SOUNDS !== 'undefined') {
+                NW_SOUNDS.play('error');
+            }
+        }
+        
+        function closeNoCitizenModal() {
+            document.getElementById('noCitizenModal').classList.remove('active');
+        }
+        
         // i18n
         const i18n = {
             en: {
@@ -458,7 +532,11 @@
                 step2: 'Claim Daily Reward', step2Desc: 'Once per day, claim NWG + Wood from each partner',
                 step3: 'Level Up', step3Desc: 'More visits = higher tier = bigger rewards!',
                 modalTitle: '🎉 Reward Claimed!', modalMessage: 'Welcome from MatchaLatte! Come back tomorrow for more.',
-                modalClose: 'Awesome!', footerAbout: 'About', footerHome: 'Home'
+                modalClose: 'Awesome!', footerAbout: 'About', footerHome: 'Home',
+                citizenVerified: 'Citizen Verified', notCitizen: 'Not a Citizen', getCitizenship: 'Get Citizenship →',
+                needCitizen: 'Need Citizenship', registerFirst: 'Register first', alreadyClaimed: 'Already claimed! Come back later.',
+                noCitizenTitle: '🛂 Citizenship Required', noCitizenMsg: 'You need to be a NumbahWan citizen to claim Embassy rewards. Visit the Wallet page to get your citizen ID first!',
+                goToWallet: 'Get Citizenship'
             },
             zh: {
                 heroTitle: 'NumbahWan 大使館', heroSub: '訪問盟友公會，賺取獎勵。一個聯盟，多個世界。',
@@ -479,7 +557,11 @@
                 step2: '領取每日獎勵', step2Desc: '每天一次，從每個合作夥伴領取 NWG + 木材',
                 step3: '升級', step3Desc: '更多訪問 = 更高等級 = 更大獎勵！',
                 modalTitle: '🎉 獎勵已領取！', modalMessage: '歡迎來自 MatchaLatte！明天再來獲得更多。',
-                modalClose: '太棒了！', footerAbout: '關於', footerHome: '首頁'
+                modalClose: '太棒了！', footerAbout: '關於', footerHome: '首頁',
+                citizenVerified: '公民已驗證', notCitizen: '非公民', getCitizenship: '取得公民身份 →',
+                needCitizen: '需要公民身份', registerFirst: '請先註冊', alreadyClaimed: '已領取！請稍後再來。',
+                noCitizenTitle: '🛂 需要公民身份', noCitizenMsg: '您需要成為 NumbahWan 公民才能領取大使館獎勵。請先前往錢包頁面取得您的公民 ID！',
+                goToWallet: '取得公民身份'
             },
             th: {
                 heroTitle: 'สถานทูต NumbahWan', heroSub: 'เยี่ยมชมกิลด์พันธมิตร รับรางวัล พันธมิตรเดียว หลายโลก',
@@ -500,7 +582,11 @@
                 step2: 'รับรางวัลรายวัน', step2Desc: 'วันละครั้ง รับ NWG + ไม้จากพาร์ทเนอร์แต่ละราย',
                 step3: 'เลเวลอัพ', step3Desc: 'เยี่ยมชมมากขึ้น = ระดับสูงขึ้น = รางวัลมากขึ้น!',
                 modalTitle: '🎉 รับรางวัลแล้ว!', modalMessage: 'ยินดีต้อนรับจาก MatchaLatte! กลับมาพรุ่งนี้เพื่อรับเพิ่ม',
-                modalClose: 'เยี่ยม!', footerAbout: 'เกี่ยวกับ', footerHome: 'หน้าหลัก'
+                modalClose: 'เยี่ยม!', footerAbout: 'เกี่ยวกับ', footerHome: 'หน้าหลัก',
+                citizenVerified: 'ยืนยันพลเมืองแล้ว', notCitizen: 'ไม่ใช่พลเมือง', getCitizenship: 'รับสัญชาติ →',
+                needCitizen: 'ต้องการสัญชาติ', registerFirst: 'ลงทะเบียนก่อน', alreadyClaimed: 'รับแล้ว! กลับมาใหม่ทีหลัง',
+                noCitizenTitle: '🛂 ต้องมีสัญชาติ', noCitizenMsg: 'คุณต้องเป็นพลเมือง NumbahWan เพื่อรับรางวัลสถานทูต ไปที่หน้า Wallet เพื่อรับ ID พลเมืองก่อน!',
+                goToWallet: 'รับสัญชาติ'
             }
         };
         
@@ -517,9 +603,24 @@
             updateClaimButtons();
         }
         
-        // Init
+        // Init - wait for wallet to be ready
         document.addEventListener('DOMContentLoaded', () => {
             applyTranslations(currentLang);
+            
+            // Initialize wallet if available
+            if (typeof NW_WALLET !== 'undefined') {
+                NW_WALLET.init().then(() => {
+                    updateClaimButtons();
+                }).catch(() => {
+                    updateClaimButtons();
+                });
+            } else {
+                updateClaimButtons();
+            }
+        });
+        
+        // Listen for wallet ready event
+        window.addEventListener('nw-wallet-ready', () => {
             updateClaimButtons();
         });
         
@@ -530,6 +631,10 @@
         // Close modal on overlay click
         document.getElementById('claimModal').addEventListener('click', (e) => {
             if (e.target.id === 'claimModal') closeModal();
+        });
+        
+        document.getElementById('noCitizenModal').addEventListener('click', (e) => {
+            if (e.target.id === 'noCitizenModal') closeNoCitizenModal();
         });
     </script>
 </body>

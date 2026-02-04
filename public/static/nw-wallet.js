@@ -1249,6 +1249,27 @@ document.addEventListener('DOMContentLoaded', () => {
             console.log('%c   Claim at /wallet or call: NW_WALLET.claimDailyReward()', 'color: #888;');
         }
         
+        // Process pending embassy rewards (claimed from partner sites)
+        const pendingRewards = JSON.parse(localStorage.getItem('nw_embassy_pending') || '[]');
+        if (pendingRewards.length > 0) {
+            console.log('%c🏛️ Processing Embassy Rewards...', 'color: #ffd700; font-weight: bold;');
+            let totalNwg = 0, totalWood = 0;
+            pendingRewards.forEach(reward => {
+                NW_WALLET.addCurrency('nwg', reward.rewards.nwg || 0, `Embassy: ${reward.partnerName}`);
+                NW_WALLET.addCurrency('wood', reward.rewards.wood || 0, `Embassy: ${reward.partnerName}`);
+                totalNwg += reward.rewards.nwg || 0;
+                totalWood += reward.rewards.wood || 0;
+                console.log(`  ✓ ${reward.partnerName}: +${reward.rewards.nwg} NWG, +${reward.rewards.wood} Wood`);
+            });
+            localStorage.removeItem('nw_embassy_pending');
+            console.log(`%c🎉 Total Embassy Rewards: +${totalNwg} NWG, +${totalWood} Wood`, 'color: #00ff88;');
+            
+            // Dispatch embassy reward event for UI notifications
+            window.dispatchEvent(new CustomEvent('nw-embassy-rewards-processed', {
+                detail: { nwg: totalNwg, wood: totalWood, count: pendingRewards.length }
+            }));
+        }
+        
         // Dispatch event for other scripts
         window.dispatchEvent(new CustomEvent('nw-wallet-ready', { 
             detail: { 
