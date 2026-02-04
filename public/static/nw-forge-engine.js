@@ -2257,6 +2257,36 @@ async function showCardsFlying(packEl, cards) {
 // Old openPack3D removed - replaced by swipe-to-tear system above
 
 function createPackParticles(rarity) {
+    // Use NW_PARTICLES premium burst effect if available
+    if (typeof NW_PARTICLES !== 'undefined') {
+        const colors = {
+            mythic: ['#ff00ff', '#00ffff', '#ffff00', '#ffffff', '#ff6b00'],
+            legendary: ['#ffd700', '#ff6b00', '#ffff00', '#ffffff'],
+            epic: ['#a855f7', '#c084fc', '#e879f9', '#00d4ff'],
+            rare: ['#3b82f6', '#60a5fa', '#00d4ff'],
+            uncommon: ['#22c55e', '#00ff88'],
+            common: ['#9ca3af', '#ffffff']
+        };
+        
+        const count = rarity === 'mythic' ? 80 : rarity === 'legendary' ? 60 : rarity === 'epic' ? 40 : 25;
+        const x = window.innerWidth / 2;
+        const y = window.innerHeight / 2;
+        
+        NW_PARTICLES.burst(x, y, { 
+            count, 
+            colors: colors[rarity] || colors.common 
+        });
+        
+        // Extra gold rain for legendary+
+        if (rarity === 'mythic' || rarity === 'legendary') {
+            setTimeout(() => {
+                NW_PARTICLES.goldRain(document.body, 2000);
+            }, 300);
+        }
+        return;
+    }
+    
+    // Fallback to old particle system
     const colors = {
         mythic: ['#ff00ff', '#00ffff', '#ffff00', '#ffffff'],
         legendary: ['#ffd700', '#ff6b00', '#ffff00'],
@@ -2269,6 +2299,7 @@ function createPackParticles(rarity) {
     const particleColors = colors[rarity] || colors.common;
     const particleCount = rarity === 'mythic' ? 50 : rarity === 'legendary' ? 35 : 20;
     const container = document.getElementById('packParticles');
+    if (!container) return;
     
     for (let i = 0; i < particleCount; i++) {
         const p = document.createElement('div');
