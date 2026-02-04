@@ -287,6 +287,61 @@ const NWIconsInline = {
       <path fill="#ffffff" d="M16 2L10 10H22L16 2Z" opacity="0.5"/>
       <path fill="#c084fc" d="M16 12L16 30L8 10L16 12Z" opacity="0.3"/>
     `,
+    coins: `
+      <circle fill="url(#nw-gold)" cx="12" cy="20" r="9" filter="url(#nw-glow-sm)"/>
+      <circle fill="url(#nw-gold)" cx="20" cy="12" r="9"/>
+      <circle fill="#ffffff" cx="20" cy="12" r="4" opacity="0.3"/>
+      <text fill="#b8860b" x="20" y="15" font-size="8" font-weight="bold" text-anchor="middle">$</text>
+      <text fill="#b8860b" x="12" y="23" font-size="8" font-weight="bold" text-anchor="middle">$</text>
+    `,
+    energy: `
+      <path fill="url(#nw-gold)" d="M18 2L6 18H14L12 30L26 14H18L20 2H18Z" filter="url(#nw-glow-md)"/>
+      <path fill="#ffffff" d="M17 4L8 16H14L13 24L22 15H17L18 4Z" opacity="0.4"/>
+    `,
+    dragon: `
+      <path fill="url(#nw-red)" d="M16 2C12 2 8 6 8 10C8 14 10 16 10 18C6 18 4 22 6 26C8 30 14 30 16 28C18 30 24 30 26 26C28 22 26 18 22 18C22 16 24 14 24 10C24 6 20 2 16 2Z" filter="url(#nw-glow-md)"/>
+      <circle fill="url(#nw-gold)" cx="12" cy="10" r="2"/>
+      <circle fill="url(#nw-gold)" cx="20" cy="10" r="2"/>
+      <circle fill="#0a0a0f" cx="12" cy="10" r="1"/>
+      <circle fill="#0a0a0f" cx="20" cy="10" r="1"/>
+      <path fill="url(#nw-orange)" d="M14 16L16 20L18 16L16 14Z"/>
+    `,
+    flag: `
+      <rect fill="url(#nw-cyan)" x="6" y="4" width="20" height="14" filter="url(#nw-glow-sm)"/>
+      <path fill="url(#nw-orange)" d="M6 4L16 11L6 18V4Z"/>
+      <rect fill="#888" x="4" y="4" width="2" height="26" rx="1"/>
+      <circle fill="url(#nw-gold)" cx="5" cy="4" r="2"/>
+    `,
+    'arrow-up': `
+      <circle fill="url(#nw-green)" cx="16" cy="16" r="13" filter="url(#nw-glow-sm)"/>
+      <path fill="#ffffff" d="M16 8L8 18H12V24H20V18H24L16 8Z"/>
+    `,
+    bag: `
+      <path fill="url(#nw-orange)" d="M6 12H26L24 28H8L6 12Z" filter="url(#nw-glow-sm)"/>
+      <path fill="none" stroke="url(#nw-gold)" stroke-width="3" d="M10 12C10 6 12 4 16 4C20 4 22 6 22 12"/>
+      <circle fill="url(#nw-gold)" cx="16" cy="18" r="3"/>
+    `,
+    camera: `
+      <rect fill="url(#nw-purple)" x="2" y="8" width="28" height="20" rx="3" filter="url(#nw-glow-sm)"/>
+      <circle fill="url(#nw-cyan)" cx="16" cy="18" r="7"/>
+      <circle fill="#0a0a0f" cx="16" cy="18" r="4"/>
+      <circle fill="url(#nw-cyan)" cx="16" cy="18" r="2"/>
+      <rect fill="url(#nw-gold)" x="10" y="4" width="12" height="4" rx="1"/>
+    `,
+    chart: `
+      <rect fill="url(#nw-green)" x="4" y="18" width="5" height="10" rx="1" filter="url(#nw-glow-sm)"/>
+      <rect fill="url(#nw-cyan)" x="11" y="12" width="5" height="16" rx="1"/>
+      <rect fill="url(#nw-orange)" x="18" y="6" width="5" height="22" rx="1"/>
+      <rect fill="url(#nw-gold)" x="25" y="2" width="5" height="26" rx="1"/>
+    `,
+    collection: `
+      <rect fill="url(#nw-blue)" x="2" y="4" width="12" height="12" rx="2" filter="url(#nw-glow-sm)"/>
+      <rect fill="url(#nw-orange)" x="18" y="4" width="12" height="12" rx="2"/>
+      <rect fill="url(#nw-green)" x="2" y="20" width="12" height="12" rx="2"/>
+      <rect fill="url(#nw-purple)" x="18" y="20" width="12" height="12" rx="2"/>
+      <circle fill="#ffffff" cx="8" cy="10" r="2" opacity="0.5"/>
+      <circle fill="#ffffff" cx="24" cy="10" r="2" opacity="0.5"/>
+    `,
 
     // ═══════════════════════════════════════════════════════════════
     // UI ACTIONS
