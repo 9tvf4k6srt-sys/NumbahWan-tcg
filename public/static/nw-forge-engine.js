@@ -632,9 +632,7 @@ function generateSampleCards() {
                 desc: `A ${rarity} card`,
                 role: 'fighter',
                 category: 'character',
-                gameStats: { atk: 10 + id, hp: 20 + id, cost: Math.ceil(id/10) },
-                abilities: [],
-                special: null
+                flavorStats: { power: 10 + id, endurance: 20 + id }
             });
         }
     });
@@ -741,9 +739,7 @@ async function loadGachaCards(setId = 1) {
                 desc: c.description,
                 role: c.role,
                 category: c.category,
-                gameStats: c.gameStats || null,
-                abilities: c.abilities || [],
-                special: c.special || null
+                flavorStats: c.flavorStats || c.gameStats || null
             }));
             console.log(`[FORGE] Loaded ${CARDS.length} cards from Set ${setId}`);
             return CARDS;
@@ -767,12 +763,10 @@ async function loadGachaCards(setId = 1) {
             desc: c.description,
             role: c.role,
             category: c.category,
-            // Include full gameStats for card rendering
-            gameStats: c.gameStats || null,
-            abilities: c.abilities || [],
-            special: c.special || null
+            // Simplified card model - flavorStats only (display)
+            flavorStats: c.flavorStats || c.gameStats || null
         }));
-        console.log(`Gacha loaded ${CARDS.length} cards from NW_CARDS`);
+        console.log(`[FORGE] Loaded ${CARDS.length} cards from NW_CARDS`);
         return CARDS;
     } catch (err) {
         console.error('Failed to load cards for gacha:', err);
@@ -1198,7 +1192,7 @@ function renderHistory() {
                 name: c.name[lang] || c.name?.en || c.name,
                 rarity: c.rarity,
                 img: thumbUrl,
-                gameStats: c.gameStats
+                flavorStats: c.flavorStats
             };
             const renderedCard = NW_CARD_RENDERER.render(cardData, { 
                 size: 'sm',
@@ -2584,10 +2578,10 @@ function revealCard() {
         // Update info panel
         if (cardName) cardName.textContent = card.name[lang] || card.name.en || 'Unknown Card';
         
-        // Format stats string from gameStats
-        const stats = card.gameStats;
+        // Format stats string from flavorStats (display only)
+        const stats = card.flavorStats || card.gameStats;
         const statsText = stats 
-            ? `⚔️ ${stats.atk} | ❤️ ${stats.hp} | ◆ ${stats.cost}`
+            ? `⚡ ${stats.power || stats.atk || '?'} | 💪 ${stats.endurance || stats.hp || '?'}`
             : '';
         if (cardStats) cardStats.textContent = statsText;
         
