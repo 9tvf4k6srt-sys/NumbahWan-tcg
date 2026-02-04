@@ -1646,23 +1646,25 @@
             currentLang = lang;
             localStorage.setItem('numbahwan_lang', lang);
             
-            // Update flag and code
-            document.getElementById('current-lang-flag').textContent = langMeta[lang].flag;
-            document.getElementById('current-lang-code').textContent = langMeta[lang].code;
+            // Update flag and code (if custom lang switcher exists)
+            const flagEl = document.getElementById('current-lang-flag');
+            const codeEl = document.getElementById('current-lang-code');
+            if (flagEl) flagEl.textContent = langMeta[lang].flag;
+            if (codeEl) codeEl.textContent = langMeta[lang].code;
             
             // Update active state
             document.querySelectorAll('.nw-lang-item').forEach(item => {
                 item.classList.toggle('active', item.dataset.lang === lang);
             });
             
-            // Close menu
-            document.getElementById('lang-menu').classList.remove('show');
-            document.getElementById('lang-toggle-btn').classList.remove('open');
+            // Close menu (if exists)
+            document.getElementById('lang-menu')?.classList.remove('show');
+            document.getElementById('lang-toggle-btn')?.classList.remove('open');
             
             // Update static UI elements
             document.querySelectorAll('[data-i18n]').forEach(el => {
                 const key = el.dataset.i18n;
-                if (uiTranslations[lang][key]) {
+                if (uiTranslations[lang] && uiTranslations[lang][key]) {
                     if (key === 'footerNote') {
                         el.innerHTML = uiTranslations[lang][key];
                     } else {
