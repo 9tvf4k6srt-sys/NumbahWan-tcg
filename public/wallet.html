@@ -6,6 +6,7 @@
     <title>Wallet | NumbahWan</title>
     <link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+    <script src="/static/nw-icons-inline.js"></script>
     <script src="/static/nw-currency.js"></script>
     <script src="/static/nw-wallet.js"></script>
     <script src="/static/nw-user.js"></script>
@@ -804,36 +805,54 @@
         return n.toLocaleString();
     }
     
+    function getTierName(tier) {
+        const tierNames = {
+            0: 'PRESTIGE',
+            1: 'PREMIUM',
+            2: 'STANDARD',
+            'premium': 'PREMIUM',
+            'standard': 'STANDARD',
+            'prestige': 'PRESTIGE'
+        };
+        return tierNames[tier] || tier?.toString?.().toUpperCase() || 'STANDARD';
+    }
+    
     function renderCurrencies() {
         const grid = document.getElementById('currencyGrid');
         const balances = NW_WALLET.getAllBalances();
         const isGM = NW_WALLET.isGMMode();
+        const lang = localStorage.getItem('nw_language') || 'en';
         
         const order = ['nwg', 'gold', 'wood'];  // 3-Tier Currency System Only
         
         grid.innerHTML = order.map(id => {
-            const c = NW_ECONOMY.currencies[id];
+            // Use NW_CURRENCY.types for full data, fallback to NW_ECONOMY
+            const c = typeof NW_CURRENCY !== 'undefined' && NW_CURRENCY.types ? NW_CURRENCY.types[id] : NW_ECONOMY.currencies[id];
+            if (!c) return ''; // Skip if currency not found
             const bal = balances[id] || 0;
             
-            const usesHtml = c.uses.map(u => `
+            // Get localized uses array, with fallback
+            const usesArr = c.uses ? (c.uses[lang] || c.uses['en'] || []) : [];
+            const usesHtml = usesArr.map(u => `
                 <div class="detail-item">
-                    <span class="action">${u.action}</span>
-                    <span class="cost">${u.cost}${u.note ? `<span class="note">${u.note}</span>` : ''}</span>
+                    <span class="action">✓ ${u}</span>
                 </div>
             `).join('');
             
-            const earnHtml = c.howToEarn.map(e => `<span class="earn-tag">${e}</span>`).join('');
+            // Get localized howToGet array, with fallback
+            const earnArr = c.howToGet ? (c.howToGet[lang] || c.howToGet['en'] || []) : [];
+            const earnHtml = earnArr.map(e => `<span class="earn-tag">${e}</span>`).join('');
             
             return `
                 <div class="currency-card ${id}" onclick="toggleCurrency(this)">
                     <div class="currency-header">
-                        <div class="currency-icon">${c.icon}</div>
+                        <div class="currency-icon" style="width: 40px; height: 40px;">${typeof c.icon === 'string' && c.icon.startsWith('<svg') ? c.icon : (typeof NW_CURRENCY !== 'undefined' ? NW_CURRENCY.icon(id, { size: 40 }) : c.icon)}</div>
                         <div class="currency-info">
                             <div class="currency-name">
-                                ${c.name}
-                                <span class="currency-tier ${c.tier}">${c.tier}</span>
+                                ${typeof c.name === 'object' ? (c.name[lang] || c.name['en'] || id.toUpperCase()) : c.name}
+                                <span class="currency-tier tier-${c.tier}">${getTierName(c.tier)}</span>
                             </div>
-                            <div class="currency-desc">${c.description}</div>
+                            <div class="currency-desc">${typeof c.description === 'object' ? (c.description[lang] || c.description['en'] || '') : c.description}</div>
                         </div>
                         <div class="currency-balance ${id}">${isGM ? '∞' : formatNum(bal)}</div>
                     </div>
@@ -1180,20 +1199,36 @@
     
     // Initialize with NW_USER (unified system)
     async function initWallet() {
-        await NW_USER.init();
-        updateUI();
-        renderDailyRewards();
-        renderAchievements();
-        loadPrivacySettings();
-        loadProfileSettings();
-        setInterval(updateUI, 2000);
+        try {
+            // Initialize NW_USER first
+            if (typeof NW_USER !== 'undefined') {
+                await NW_USER.init();
+            }
+            // Then initialize NW_WALLET if not already
+            if (typeof NW_WALLET !== 'undefined' && !NW_WALLET.initialized) {
+                NW_WALLET.init();
+            }
+            updateUI();
+            renderDailyRewards();
+            renderAchievements();
+            loadPrivacySettings();
+            loadProfileSettings();
+            setInterval(updateUI, 2000);
+        } catch (err) {
+            console.error('[WALLET] Init error:', err);
+            // Still try to show something
+            updateUI();
+        }
     }
     
+    // Run on DOM ready
+    document.addEventListener('DOMContentLoaded', () => {
+        // Give scripts time to load
+        setTimeout(initWallet, 100);
+    });
+    
+    // Also listen for wallet-ready as backup
     window.addEventListener('nw-wallet-ready', initWallet);
-    // Fallback if wallet ready already fired
-    if (typeof NW_WALLET !== 'undefined' && NW_WALLET.initialized) {
-        initWallet();
-    }
     
     // Listen for achievement unlocks
     window.addEventListener('nw-achievement-unlocked', (e) => {

@@ -344,4 +344,61 @@ NW_CURRENCY.format('gold', 1000)
 
 ---
 
+## Feb 4 Session 2 - Wallet & Data Structure Fixes
+
+### Critical Learning: Know Your Data Structures
+
+**Problem**: Wallet crashed with "Cannot read properties of undefined (reading 'map')"
+
+**Root Cause**: Code used wrong property names:
+```javascript
+// ❌ WRONG - NW_ECONOMY.currencies doesn't have uses/howToGet
+const c = NW_ECONOMY.currencies[id];
+c.uses.map(...)  // CRASH! uses doesn't exist here
+
+// ✅ CORRECT - NW_CURRENCY.types has the full data
+const c = NW_CURRENCY.types[id];
+c.uses[lang].map(...)  // Works! uses is an object with lang keys
+```
+
+**Data Structure Reference**:
+```javascript
+// NW_ECONOMY.currencies[id] = { id, name, icon, color, tier, description, valueUSD }
+// NW_CURRENCY.types[id] = { id, name: {en,zh,th}, uses: {en,zh,th}, howToGet: {en,zh,th}, icon: <svg> }
+```
+
+### Localized Object Pattern
+
+Many NW systems use localized objects:
+```javascript
+// Check structure before accessing
+const lang = localStorage.getItem('nw_language') || 'en';
+const name = typeof c.name === 'object' ? (c.name[lang] || c.name['en']) : c.name;
+const desc = typeof c.description === 'object' ? (c.description[lang] || c.description['en']) : c.description;
+const uses = c.uses ? (c.uses[lang] || c.uses['en'] || []) : [];
+```
+
+### Before Deleting ANY Icon File
+
+**ALWAYS run this first:**
+```bash
+grep -rn "FILENAME.svg" public/ --include="*.html" --include="*.js" --include="*.css"
+```
+
+**Key files that reference icons:**
+- `nw-economy.js` - iconPath for each currency
+- `nw-currency.js` - inline SVG icons
+- `forge.html`, `arcade.html` - cost icons
+- `wallet.html` - currency displays
+
+### Currency SVG Files (Current)
+```
+public/static/icons/
+├── gold.svg      (2.2KB) - Premium coin with crown
+├── nwg.svg       (1.5KB) - Cyan hexagonal crystal with N
+└── sacred-log.svg (3.2KB) - Wood cylinder with green glowing rune
+```
+
+---
+
 *Only add entries that save 5+ minutes on reuse*
