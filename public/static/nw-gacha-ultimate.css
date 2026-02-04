@@ -1,0 +1,469 @@
+/**
+ * ═══════════════════════════════════════════════════════════════════════════
+ * NW GACHA ULTIMATE - Premium Animation Styles
+ * ═══════════════════════════════════════════════════════════════════════════
+ */
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   OVERLAY
+   ═══════════════════════════════════════════════════════════════════════════ */
+.nw-gacha-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 99999;
+    background: radial-gradient(ellipse at center, 
+        rgba(20, 10, 40, 0.95) 0%, 
+        rgba(5, 2, 15, 0.98) 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.4s, visibility 0.4s;
+}
+
+.nw-gacha-overlay.active {
+    opacity: 1;
+    visibility: visible;
+}
+
+.nw-gacha-container {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   SKIP BUTTON
+   ═══════════════════════════════════════════════════════════════════════════ */
+.nw-skip-btn {
+    position: absolute;
+    bottom: 30px;
+    right: 30px;
+    padding: 12px 24px;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: rgba(255, 255, 255, 0.6);
+    font-family: 'Orbitron', sans-serif;
+    font-size: 14px;
+    font-weight: bold;
+    border-radius: 8px;
+    cursor: pointer;
+    opacity: 0;
+    transform: translateY(20px);
+    transition: all 0.3s;
+    z-index: 100;
+}
+
+.nw-skip-btn.visible {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.nw-skip-btn:hover {
+    background: rgba(255, 255, 255, 0.2);
+    color: #fff;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   SUMMON CIRCLE
+   ═══════════════════════════════════════════════════════════════════════════ */
+.nw-summon-circle {
+    position: relative;
+    width: min(350px, 85vw);
+    height: min(350px, 85vw);
+    cursor: pointer;
+    transition: transform 0.3s, opacity 0.5s;
+}
+
+.nw-summon-circle.hidden {
+    opacity: 0;
+    transform: scale(0.5);
+}
+
+/* Circle layers */
+.nw-circle-outer,
+.nw-circle-middle,
+.nw-circle-inner {
+    position: absolute;
+    border-radius: 50%;
+    border: 3px solid;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+.nw-circle-outer {
+    width: 100%;
+    height: 100%;
+    border-color: rgba(255, 107, 0, 0.3);
+    animation: rotateCircle 20s linear infinite;
+}
+
+.nw-circle-middle {
+    width: 80%;
+    height: 80%;
+    border-color: rgba(0, 212, 255, 0.4);
+    animation: rotateCircle 15s linear infinite reverse;
+}
+
+.nw-circle-inner {
+    width: 60%;
+    height: 60%;
+    border-color: rgba(255, 215, 0, 0.5);
+    animation: rotateCircle 10s linear infinite;
+}
+
+/* Runes around the circle */
+.nw-circle-runes {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    top: 0;
+    left: 0;
+}
+
+.nw-rune {
+    position: absolute;
+    font-size: 24px;
+    color: rgba(255, 215, 0, 0.6);
+    text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+    top: 50%;
+    left: 50%;
+    transform-origin: 0 0;
+    transform: rotate(calc(var(--index) * 30deg)) translateY(-170px);
+    animation: runeGlow 2s ease-in-out infinite;
+    animation-delay: calc(var(--index) * 0.15s);
+}
+
+/* Center text */
+.nw-summon-text {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+    z-index: 10;
+}
+
+.nw-tap-text {
+    display: block;
+    font-family: 'Orbitron', sans-serif;
+    font-size: 18px;
+    font-weight: bold;
+    color: #ffd700;
+    text-shadow: 0 0 20px rgba(255, 215, 0, 0.8);
+    animation: pulseText 1.5s ease-in-out infinite;
+}
+
+.nw-card-count {
+    display: block;
+    font-family: 'Orbitron', sans-serif;
+    font-size: 14px;
+    color: rgba(255, 255, 255, 0.7);
+    margin-top: 8px;
+}
+
+/* Circle states */
+.nw-summon-circle.waiting {
+    animation: circleBreathing 2s ease-in-out infinite;
+}
+
+.nw-summon-circle.activating {
+    animation: circleActivate 0.8s ease-out forwards;
+}
+
+.nw-summon-circle.activating .nw-tap-text {
+    animation: none;
+    opacity: 0;
+}
+
+.nw-summon-circle.active .nw-circle-outer,
+.nw-summon-circle.active .nw-circle-middle,
+.nw-summon-circle.active .nw-circle-inner {
+    border-color: #00d4ff;
+    box-shadow: 0 0 30px rgba(0, 212, 255, 0.5);
+}
+
+.nw-summon-circle.active .nw-rune {
+    color: #00d4ff;
+    text-shadow: 0 0 15px #00d4ff;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   ENERGY ORBS
+   ═══════════════════════════════════════════════════════════════════════════ */
+.nw-energy-orb {
+    position: absolute;
+    width: 20px;
+    height: 20px;
+    background: radial-gradient(circle, #fff 0%, #00d4ff 50%, transparent 100%);
+    border-radius: 50%;
+    box-shadow: 0 0 20px #00d4ff, 0 0 40px rgba(0, 212, 255, 0.5);
+    z-index: 50;
+    opacity: 0;
+    animation: orbAppear 0.3s ease-out forwards;
+    animation-delay: var(--delay);
+}
+
+.nw-energy-orb.gathering {
+    transition: all 1s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    transition-delay: var(--delay);
+    left: 50% !important;
+    top: 50% !important;
+    transform: translate(-50%, -50%);
+}
+
+.nw-energy-orb.merged {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(3);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   RESULT ORB
+   ═══════════════════════════════════════════════════════════════════════════ */
+.nw-result-orb {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    z-index: 60;
+}
+
+.nw-result-orb.pulsing {
+    animation: orbPulse 0.5s ease-in-out infinite;
+}
+
+.nw-result-orb.revealing {
+    animation: orbReveal 0.6s ease-out forwards;
+}
+
+.nw-result-orb.exploding {
+    animation: orbExplode 0.4s ease-out forwards;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   EXPLOSION PARTICLES
+   ═══════════════════════════════════════════════════════════════════════════ */
+.nw-explosion-particle {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: var(--size);
+    height: var(--size);
+    background: var(--color);
+    border-radius: 50%;
+    box-shadow: 0 0 10px var(--color);
+    animation: particleExplode 1s ease-out forwards;
+    animation-delay: var(--delay);
+    z-index: 70;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   CARD PREVIEW
+   ═══════════════════════════════════════════════════════════════════════════ */
+.nw-card-preview {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    padding: 20px;
+}
+
+.nw-preview-card {
+    width: 80px;
+    height: 112px;
+    border-radius: 8px;
+    overflow: hidden;
+    border: 3px solid var(--rarity-color);
+    box-shadow: 0 0 20px var(--rarity-color);
+    opacity: 0;
+    transform: translateY(100px) scale(0.5) rotateZ(calc(var(--index) * 10deg - 20deg));
+    transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.nw-preview-card.visible {
+    opacity: 1;
+    transform: translateY(0) scale(1) rotateZ(calc(var(--index) * 3deg - 6deg));
+}
+
+.nw-preview-card img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.nw-more-cards {
+    background: rgba(255, 255, 255, 0.1);
+    padding: 10px 20px;
+    border-radius: 20px;
+    font-family: 'Orbitron', sans-serif;
+    font-size: 14px;
+    color: #ffd700;
+    border: 1px solid rgba(255, 215, 0, 0.3);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   KEYFRAME ANIMATIONS
+   ═══════════════════════════════════════════════════════════════════════════ */
+@keyframes rotateCircle {
+    from { transform: translate(-50%, -50%) rotate(0deg); }
+    to { transform: translate(-50%, -50%) rotate(360deg); }
+}
+
+@keyframes runeGlow {
+    0%, 100% { opacity: 0.4; }
+    50% { opacity: 1; }
+}
+
+@keyframes pulseText {
+    0%, 100% { 
+        opacity: 0.8; 
+        transform: scale(1); 
+    }
+    50% { 
+        opacity: 1; 
+        transform: scale(1.1); 
+    }
+}
+
+@keyframes circleBreathing {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+}
+
+@keyframes circleActivate {
+    0% { transform: scale(1); }
+    30% { transform: scale(1.2); }
+    100% { 
+        transform: scale(0.8); 
+        opacity: 0.5;
+    }
+}
+
+@keyframes orbAppear {
+    0% { 
+        opacity: 0; 
+        transform: scale(0);
+    }
+    100% { 
+        opacity: 1; 
+        transform: scale(1);
+    }
+}
+
+@keyframes orbPulse {
+    0%, 100% { 
+        transform: translate(-50%, -50%) scale(1); 
+    }
+    50% { 
+        transform: translate(-50%, -50%) scale(1.3); 
+    }
+}
+
+@keyframes orbReveal {
+    0% { 
+        transform: translate(-50%, -50%) scale(1); 
+    }
+    50% { 
+        transform: translate(-50%, -50%) scale(1.8); 
+    }
+    100% { 
+        transform: translate(-50%, -50%) scale(1.5); 
+    }
+}
+
+@keyframes orbExplode {
+    0% { 
+        transform: translate(-50%, -50%) scale(1.5); 
+        opacity: 1;
+    }
+    100% { 
+        transform: translate(-50%, -50%) scale(4); 
+        opacity: 0;
+    }
+}
+
+@keyframes particleExplode {
+    0% {
+        transform: translate(-50%, -50%) scale(1);
+        opacity: 1;
+    }
+    100% {
+        transform: 
+            translate(
+                calc(-50% + cos(var(--angle)) * var(--distance)),
+                calc(-50% + sin(var(--angle)) * var(--distance))
+            )
+            scale(0);
+        opacity: 0;
+    }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   RESPONSIVE
+   ═══════════════════════════════════════════════════════════════════════════ */
+@media (max-width: 480px) {
+    .nw-summon-circle {
+        width: min(300px, 90vw);
+        height: min(300px, 90vw);
+    }
+    
+    .nw-tap-text {
+        font-size: 16px;
+    }
+    
+    .nw-rune {
+        font-size: 20px;
+        transform: rotate(calc(var(--index) * 30deg)) translateY(-140px);
+    }
+    
+    .nw-preview-card {
+        width: 60px;
+        height: 84px;
+    }
+    
+    .nw-skip-btn {
+        bottom: 20px;
+        right: 20px;
+        padding: 10px 18px;
+        font-size: 12px;
+    }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   RARITY-SPECIFIC EFFECTS
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* Mythic rainbow border animation */
+.nw-preview-card[style*="--rarity-color: #ff00ff"] {
+    animation: mythicBorder 2s linear infinite;
+}
+
+@keyframes mythicBorder {
+    0% { border-color: #ff0000; box-shadow: 0 0 20px #ff0000; }
+    17% { border-color: #ff7f00; box-shadow: 0 0 20px #ff7f00; }
+    33% { border-color: #ffff00; box-shadow: 0 0 20px #ffff00; }
+    50% { border-color: #00ff00; box-shadow: 0 0 20px #00ff00; }
+    67% { border-color: #0000ff; box-shadow: 0 0 20px #0000ff; }
+    83% { border-color: #9400d3; box-shadow: 0 0 20px #9400d3; }
+    100% { border-color: #ff0000; box-shadow: 0 0 20px #ff0000; }
+}
+
+/* Legendary golden glow */
+.nw-preview-card[style*="--rarity-color: #ffd700"] {
+    animation: legendaryGlow 1.5s ease-in-out infinite;
+}
+
+@keyframes legendaryGlow {
+    0%, 100% { box-shadow: 0 0 20px #ffd700, 0 0 40px rgba(255, 215, 0, 0.3); }
+    50% { box-shadow: 0 0 40px #ffd700, 0 0 80px rgba(255, 215, 0, 0.5); }
+}

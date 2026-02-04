@@ -2461,11 +2461,18 @@ async function executePull() {
     }
     
     // ===== PACK OPENING ANIMATION =====
-    // showPackOpening returns a Promise that resolves AFTER user swipes to open
-    // tearOpenPack handles hiding the overlay after animations complete
+    // Use NW_GACHA Ultimate system if available, fallback to old system
     console.log('[FORGE] 🎴 Starting pack opening animation...');
     try {
-        await showPackOpening(cardsToReveal);
+        if (typeof NW_GACHA !== 'undefined') {
+            // NEW: Ultimate Gacha System with addiction-by-design psychology
+            console.log('[FORGE] 🎰 Using NW_GACHA Ultimate system');
+            await NW_GACHA.pull(cardsToReveal);
+        } else {
+            // FALLBACK: Old swipe-to-tear system
+            console.log('[FORGE] 📦 Using legacy pack opening');
+            await showPackOpening(cardsToReveal);
+        }
         console.log('[FORGE] 🎴 Pack animation complete!');
     } catch (err) {
         console.error('[FORGE] ❌ Pack animation error:', err);
