@@ -19,14 +19,32 @@
  */
 
 const NW_GACHA = {
-    version: '1.0.0',
+    version: '1.1.0',
+    
+    // Sound paths - dedicated gacha sound effects
+    SOUNDS: {
+        summonAmbient: '/static/sounds/gacha/summon-ambient.mp3',
+        summonActivate: '/static/sounds/gacha/summon-activate.mp3',
+        orbsGather: '/static/sounds/gacha/orbs-gather.mp3',
+        suspenseBuild: '/static/sounds/gacha/suspense-build.mp3',
+        revealCommon: '/static/sounds/gacha/reveal-common.mp3',
+        revealRare: '/static/sounds/gacha/reveal-rare.mp3',
+        revealEpic: '/static/sounds/gacha/reveal-epic.mp3',
+        revealLegendary: '/static/sounds/gacha/reveal-legendary.mp3',
+        revealMythic: '/static/sounds/gacha/reveal-mythic.mp3',
+        cardFlip: '/static/sounds/gacha/card-flip.mp3'
+    },
+    
+    // Audio cache for instant playback
+    audioCache: {},
+    audioContext: null,
     
     // Rarity configurations
     RARITIES: {
         common: {
             color: '#9ca3af',
             glow: 'rgba(156,163,175,0.5)',
-            sound: 'whoosh',
+            sound: 'revealCommon',
             delay: 800, // Fast, boring
             particles: 5,
             screenEffect: null,
@@ -35,7 +53,7 @@ const NW_GACHA = {
         uncommon: {
             color: '#22c55e',
             glow: 'rgba(34,197,94,0.6)',
-            sound: 'whoosh',
+            sound: 'revealCommon', // Same as common
             delay: 1000,
             particles: 8,
             screenEffect: null,
@@ -44,7 +62,7 @@ const NW_GACHA = {
         rare: {
             color: '#3b82f6',
             glow: 'rgba(59,130,246,0.7)',
-            sound: 'shimmer',
+            sound: 'revealRare',
             delay: 1500,
             particles: 12,
             screenEffect: null,
@@ -53,7 +71,7 @@ const NW_GACHA = {
         epic: {
             color: '#a855f7',
             glow: 'rgba(168,85,247,0.8)',
-            sound: 'epic_reveal',
+            sound: 'revealEpic',
             delay: 2500, // Longer wait = more tension
             particles: 20,
             screenEffect: 'pulse_purple',
@@ -62,7 +80,7 @@ const NW_GACHA = {
         legendary: {
             color: '#ffd700',
             glow: 'rgba(255,215,0,0.9)',
-            sound: 'legendary_fanfare',
+            sound: 'revealLegendary',
             delay: 3500, // Maximum suspense
             particles: 35,
             screenEffect: 'golden_flash',
@@ -71,7 +89,7 @@ const NW_GACHA = {
         mythic: {
             color: '#ff00ff',
             glow: 'rgba(255,0,255,1)',
-            sound: 'mythic_explosion',
+            sound: 'revealMythic',
             delay: 4500, // Heart-pounding wait
             particles: 50,
             screenEffect: 'rainbow_burst',
@@ -83,6 +101,8 @@ const NW_GACHA = {
     isAnimating: false,
     skipEnabled: false,
     currentResolve: null,
+    currentAmbientSound: null,
+    currentSuspenseSound: null,
     
     /**
      * Main entry point - Show the gacha pull experience
@@ -90,6 +110,12 @@ const NW_GACHA = {
     async pull(cards) {
         if (this.isAnimating) return;
         this.isAnimating = true;
+        this.skipEnabled = false; // Reset skip state
+        
+        // Preload sounds on first pull
+        if (Object.keys(this.audioCache).length === 0) {
+            await this.preloadSounds();
+        }
         
         // Determine highest rarity
         const rarityOrder = ['common', 'uncommon', 'rare', 'epic', 'legendary', 'mythic'];
@@ -165,7 +191,7 @@ const NW_GACHA = {
         container.appendChild(circle);
         
         // Play ambient sound
-        this._playSound('summon_ambient');
+        this.currentAmbientSound = this._playSound('summonAmbient', { loop: true, volume: 0.5 });
         
         // Wait for tap
         await new Promise(resolve => {
@@ -175,7 +201,8 @@ const NW_GACHA = {
                 
                 // Activation animation
                 circle.classList.add('activating');
-                this._playSound('summon_activate');
+                this._stopSound(this.currentAmbientSound);
+                this._playSound('summonActivate');
                 this._haptic('impact');
                 
                 setTimeout(resolve, 800);
@@ -232,7 +259,7 @@ const NW_GACHA = {
         }
         
         // Play gathering sound
-        this._playSound('orbs_gather');
+        this._playSound('orbsGather');
         
         // Animate orbs to center
         await this._sleep(200);
@@ -274,7 +301,7 @@ const NW_GACHA = {
         resultOrb.classList.add('pulsing');
         
         // Play suspense sound
-        this._playSound('suspense_build');
+        this.currentSuspenseSound = this._playSound('suspenseBuild', { volume: 0.7 });
         
         // VARIABLE DELAY - The psychology trick
         // Higher rarity = longer wait = more dopamine
@@ -312,7 +339,9 @@ const NW_GACHA = {
         resultOrb.style.background = `radial-gradient(circle, ${config.color} 0%, ${config.glow} 100%)`;
         resultOrb.style.boxShadow = `0 0 50px ${config.color}, 0 0 100px ${config.glow}`;
         
-        this._playSound(config.sound);
+        // Stop suspense sound and play rarity reveal
+        this._stopSound(this.currentSuspenseSound);
+        this._playSound(config.sound, { volume: 1.0 });
         this._haptic('impact');
         
         // Screen effect based on rarity
@@ -399,6 +428,7 @@ const NW_GACHA = {
             
             await this._sleep(150);
             cardEl.classList.add('visible');
+            this._playSound('cardFlip', { volume: 0.6 });
             this._haptic('tap');
         }
         
@@ -445,8 +475,76 @@ const NW_GACHA = {
         return new Promise(r => setTimeout(r, ms));
     },
     
-    _playSound(name) {
+    /**
+     * Initialize audio context (required for web audio)
+     */
+    _initAudio() {
+        if (!this.audioContext) {
+            try {
+                this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            } catch (e) {
+                console.log('[NW_GACHA] Web Audio not available');
+            }
+        }
+        // Resume context if suspended (autoplay policy)
+        if (this.audioContext && this.audioContext.state === 'suspended') {
+            this.audioContext.resume();
+        }
+    },
+    
+    /**
+     * Preload all gacha sounds for instant playback
+     */
+    async preloadSounds() {
+        console.log('[NW_GACHA] Preloading sounds...');
+        const promises = Object.entries(this.SOUNDS).map(async ([key, path]) => {
+            try {
+                const audio = new Audio(path);
+                audio.preload = 'auto';
+                await new Promise((resolve, reject) => {
+                    audio.oncanplaythrough = resolve;
+                    audio.onerror = reject;
+                    setTimeout(resolve, 3000); // Timeout fallback
+                });
+                this.audioCache[key] = audio;
+                console.log('[NW_GACHA] Loaded:', key);
+            } catch (e) {
+                console.log('[NW_GACHA] Failed to load:', key);
+            }
+        });
+        await Promise.all(promises);
+        console.log('[NW_GACHA] Sound preload complete');
+    },
+    
+    /**
+     * Play a gacha sound effect
+     */
+    _playSound(name, options = {}) {
+        this._initAudio();
+        
+        const { loop = false, volume = 1.0 } = options;
+        
         try {
+            // Check if we have this sound in our SOUNDS map
+            if (this.SOUNDS[name]) {
+                // Use cached audio or create new
+                let audio;
+                if (this.audioCache[name]) {
+                    // Clone for overlapping plays
+                    audio = this.audioCache[name].cloneNode();
+                } else {
+                    audio = new Audio(this.SOUNDS[name]);
+                }
+                
+                audio.volume = volume;
+                audio.loop = loop;
+                audio.play().catch(e => console.log('[NW_GACHA] Audio blocked:', e.message));
+                
+                console.log('[NW_GACHA] Playing:', name);
+                return audio;
+            }
+            
+            // Fallback to existing sound systems
             if (typeof NW_JUICE !== 'undefined') {
                 NW_JUICE.sound.play(name);
             } else if (typeof PremiumAudio !== 'undefined') {
@@ -455,7 +553,20 @@ const NW_GACHA = {
                 NW_SOUNDS.play(name);
             }
         } catch (e) {
-            console.log('[NW_GACHA] Sound not available:', name);
+            console.log('[NW_GACHA] Sound error:', name, e.message);
+        }
+        return null;
+    },
+    
+    /**
+     * Stop a playing sound
+     */
+    _stopSound(audio) {
+        if (audio) {
+            try {
+                audio.pause();
+                audio.currentTime = 0;
+            } catch (e) {}
         }
     },
     
