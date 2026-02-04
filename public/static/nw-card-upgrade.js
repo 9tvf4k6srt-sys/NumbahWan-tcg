@@ -1,19 +1,24 @@
 /**
- * NumbahWan Card Upgrade System v1.0
+ * NumbahWan Card Upgrade System v2.0
  * ==================================
- * Duplicate cards → Star upgrades → Better stats
- * Burn cards → Get currency back
+ * UNIFIED WITH NW_ECONOMY - Cards ARE locked NWG
  * 
- * SIMPLE SYSTEM:
- * - 1★ = Base card (first pull)
- * - 2★ = Need 1 dupe (2 total)
- * - 3★ = Need 2 more dupes (4 total)
- * - 4★ = Need 4 more dupes (8 total)
- * - 5★ = Need 8 more dupes (16 total) = MAX
+ * Duplicate cards → Star upgrades → Better stats + Higher NWG value
+ * Burn cards → Get NWG + Sacred Logs back (with appreciation)
+ * 
+ * STAR SYSTEM:
+ * - 1★ = Base card (first pull) = Base NWG value
+ * - 2★ = Need 1 dupe (2 total) = +25% NWG value
+ * - 3★ = Need 2 more dupes (4 total) = +50% NWG value  
+ * - 4★ = Need 4 more dupes (8 total) = +100% NWG value
+ * - 5★ = Need 8 more dupes (16 total) = +200% NWG value (MAX)
+ * 
+ * INVESTMENT THESIS:
+ * Cards lock NWG + earn passive NWG + can be burned for NWG profit
  */
 
 const NW_UPGRADE = {
-    VERSION: '1.0.0',
+    VERSION: '2.0.0',
     
     // Storage key
     STORAGE_KEY: 'nw_card_upgrades',
@@ -36,14 +41,26 @@ const NW_UPGRADE = {
         5: 1.75   // +75%
     },
     
-    // Burn values (Sacred Logs) by rarity
+    // Sacred Log rewards from burning (prestige)
+    SACRED_LOG_VALUES: {
+        common:    { 1: 0,   2: 0,   3: 0,   4: 1,   5: 2  },
+        uncommon:  { 1: 0,   2: 0,   3: 1,   4: 2,   5: 3  },
+        rare:      { 1: 0,   2: 1,   3: 2,   4: 3,   5: 5  },
+        epic:      { 1: 1,   2: 2,   3: 3,   4: 5,   5: 10 },
+        legendary: { 1: 2,   2: 4,   3: 6,   4: 10,  5: 20 },
+        mythic:    { 1: 5,   2: 10,  3: 15,  4: 25,  5: 50 }
+    },
+    
+    // NWG value uses NW_ECONOMY.cardValues (single source of truth)
+    // This provides backward compatibility for existing code
     BURN_VALUES: {
-        common:    { 1: 1,   2: 2,   3: 3,   4: 5,   5: 10  },
-        uncommon:  { 1: 2,   2: 3,   3: 5,   4: 8,   5: 15  },
-        rare:      { 1: 5,   2: 8,   3: 12,  4: 20,  5: 40  },
-        epic:      { 1: 15,  2: 25,  3: 40,  4: 60,  5: 120 },
-        legendary: { 1: 50,  2: 80,  3: 130, 4: 200, 5: 400 },
-        mythic:    { 1: 200, 2: 350, 3: 550, 4: 850, 5: 1500 }
+        // Legacy - redirects to SACRED_LOG_VALUES
+        common:    { 1: 0,   2: 0,   3: 0,   4: 1,   5: 2  },
+        uncommon:  { 1: 0,   2: 0,   3: 1,   4: 2,   5: 3  },
+        rare:      { 1: 0,   2: 1,   3: 2,   4: 3,   5: 5  },
+        epic:      { 1: 1,   2: 2,   3: 3,   4: 5,   5: 10 },
+        legendary: { 1: 2,   2: 4,   3: 6,   4: 10,  5: 20 },
+        mythic:    { 1: 5,   2: 10,  3: 15,  4: 25,  5: 50 }
     },
     
     // In-memory upgrade data
@@ -52,7 +69,8 @@ const NW_UPGRADE = {
     // ===== INITIALIZATION =====
     init() {
         this._data = this._load();
-        console.log('[NW_UPGRADE] v1.0 Initialized -', Object.keys(this._data.cards).length, 'upgraded cards tracked');
+        console.log('[NW_UPGRADE] v2.0 Initialized -', Object.keys(this._data.cards).length, 'upgraded cards tracked');
+        console.log('[NW_UPGRADE] Cards = Locked NWG | Burn = NWG + Sacred Logs');
         return this;
     },
     
@@ -224,9 +242,10 @@ const NW_UPGRADE = {
         // Warning if burning would reduce stars
         const willReduceStars = newStarLevel < status.stars;
         
-        // Calculate logs earned based on current star level
-        const burnValue = this.BURN_VALUES[rarity]?.[status.stars] || 1;
-        const logsEarned = burnValue * quantity;
+        // Calculate rewards (NWG + Sacred Logs)
+        const burnPreview = this.getBurnPreview(cardId, rarity, quantity, 0);
+        const nwgEarned = burnPreview.nwg;
+        const logsEarned = burnPreview.sacredLogs;
         
         // Remove cards from collection - primary: NW_WALLET
         const numericId = parseInt(cardId.replace(/\D/g, ''), 10) || cardId;
@@ -241,8 +260,9 @@ const NW_UPGRADE = {
                 }
                 NW_WALLET.saveWallet();
             }
-            // Add logs to wallet
-            NW_WALLET.earn('wood', logsEarned, 'CARD_BURN');
+            // Add NWG + Sacred Logs to wallet
+            if (nwgEarned > 0) NW_WALLET.earn('nwg', nwgEarned, 'CARD_BURN');
+            if (logsEarned > 0) NW_WALLET.earn('wood', logsEarned, 'CARD_BURN');
         } else if (typeof NW_USER !== 'undefined' && NW_USER.initialized) {
             // Fallback to NW_USER
             for (let i = 0; i < quantity; i++) {
@@ -252,38 +272,123 @@ const NW_UPGRADE = {
                 }
             }
             NW_USER._save();
-            NW_USER.wallet.earn('wood', logsEarned, 'CARD_BURN');
+            if (nwgEarned > 0) NW_USER.wallet.earn('nwg', nwgEarned, 'CARD_BURN');
+            if (logsEarned > 0) NW_USER.wallet.earn('wood', logsEarned, 'CARD_BURN');
         }
         
         // Update tracking
         this._data.totalBurned += quantity;
         this._data.totalLogsEarned += logsEarned;
+        if (!this._data.totalNWGEarned) this._data.totalNWGEarned = 0;
+        this._data.totalNWGEarned += nwgEarned;
         this._save();
         
         // Dispatch event
         window.dispatchEvent(new CustomEvent('nw-card-burned', {
-            detail: { cardId, quantity, logsEarned, rarity, newStarLevel }
+            detail: { cardId, quantity, nwgEarned, logsEarned, rarity, newStarLevel }
         }));
         
-        console.log(`[NW_UPGRADE] Burned ${quantity}x ${cardId} (${rarity}) for ${logsEarned} Logs`);
+        console.log(`[NW_UPGRADE] Burned ${quantity}x ${cardId} (${rarity}) for ${nwgEarned} NWG + ${logsEarned} Sacred Logs`);
         
         return {
             success: true,
+            nwgEarned,
             logsEarned,
             quantity,
             newStarLevel,
             starsReduced: willReduceStars,
-            message: `Burned ${quantity} card(s) for ${logsEarned} Sacred Logs!`
+            message: `Burned ${quantity} card(s) for ◆${nwgEarned} NWG${logsEarned > 0 ? ` + ⧫${logsEarned} Sacred Logs` : ''}!`
         };
     },
     
     /**
-     * Get burn value preview without burning
+     * Get NWG value of a card (uses NW_ECONOMY if available)
+     * @param {string} rarity 
+     * @param {number} stars 
+     * @param {number} daysHeld - Days the card has been held
+     * @returns {number} NWG value
+     */
+    getCardNWGValue(rarity, stars = 1, daysHeld = 0) {
+        // Use NW_ECONOMY if available (single source of truth)
+        if (typeof NW_ECONOMY !== 'undefined' && NW_ECONOMY.cardValues) {
+            return NW_ECONOMY.cardValues.calculateCardValue(rarity, stars, 0, daysHeld);
+        }
+        
+        // Fallback values if NW_ECONOMY not loaded
+        const baseValues = {
+            common: 10, uncommon: 25, rare: 75,
+            epic: 200, legendary: 500, mythic: 1500
+        };
+        const starMult = { 1: 1, 2: 1.25, 3: 1.5, 4: 2, 5: 3 };
+        
+        return Math.floor((baseValues[rarity] || 10) * (starMult[stars] || 1));
+    },
+    
+    /**
+     * Get full burn preview (NWG + Sacred Logs)
+     * @param {string} cardId 
+     * @param {string} rarity 
+     * @param {number} quantity 
+     * @param {number} daysHeld
+     * @returns {object} { nwg, sacredLogs, total }
+     */
+    getBurnPreview(cardId, rarity, quantity = 1, daysHeld = 0) {
+        const status = this.getCardStatus(cardId);
+        const stars = Math.max(1, status.stars);
+        
+        // NWG from card value + 10% burn premium
+        const cardValue = this.getCardNWGValue(rarity, stars, daysHeld);
+        const burnPremium = Math.floor(cardValue * 0.10);
+        const nwgPerCard = cardValue + burnPremium;
+        
+        // Sacred Logs
+        const logsPerCard = this.SACRED_LOG_VALUES[rarity]?.[stars] || 0;
+        
+        return {
+            nwg: nwgPerCard * quantity,
+            sacredLogs: logsPerCard * quantity,
+            nwgPerCard,
+            logsPerCard,
+            cardValue,
+            burnPremium,
+            quantity
+        };
+    },
+    
+    /**
+     * Get burn value preview without burning (legacy - returns sacred logs only)
      */
     getBurnValue(cardId, rarity, quantity = 1) {
         const status = this.getCardStatus(cardId);
-        const burnValue = this.BURN_VALUES[rarity]?.[Math.max(1, status.stars)] || 1;
+        const burnValue = this.SACRED_LOG_VALUES[rarity]?.[Math.max(1, status.stars)] || 0;
         return burnValue * quantity;
+    },
+    
+    /**
+     * Get daily NWG yield from card staking
+     */
+    getCardDailyYield(rarity, stars = 1) {
+        if (typeof NW_ECONOMY !== 'undefined' && NW_ECONOMY.cardStaking) {
+            return NW_ECONOMY.cardStaking.calculateDailyYield(rarity, stars);
+        }
+        
+        // Fallback
+        const yields = { common: 0.1, uncommon: 0.25, rare: 0.5, epic: 1, legendary: 2.5, mythic: 5 };
+        const starMult = { 1: 1, 2: 1.2, 3: 1.5, 4: 2, 5: 3 };
+        return (yields[rarity] || 0.1) * (starMult[stars] || 1);
+    },
+    
+    /**
+     * Get APY equivalent for card staking
+     */
+    getCardAPY(rarity, stars = 1) {
+        if (typeof NW_ECONOMY !== 'undefined' && NW_ECONOMY.cardStaking) {
+            return NW_ECONOMY.cardStaking.calculateAPY(rarity, stars);
+        }
+        
+        const dailyYield = this.getCardDailyYield(rarity, stars);
+        const cardValue = this.getCardNWGValue(rarity, stars);
+        return ((dailyYield * 365 / cardValue) * 100).toFixed(1) + '%';
     },
     
     /**
