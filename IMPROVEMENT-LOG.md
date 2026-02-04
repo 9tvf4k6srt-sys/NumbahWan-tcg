@@ -225,6 +225,31 @@ waitForModule('NW_USER', () => {
 
 ---
 
+## LESSON LEARNED: Icon Deletion Checklist
+
+**CRITICAL: When deleting icon files, ALWAYS check these references first:**
+
+```bash
+# 1. Find ALL references to the icon files
+grep -rn "ICON_NAME.svg" public/ --include="*.html" --include="*.js" --include="*.css"
+
+# 2. Check these specific files that often reference icons:
+#    - nw-economy.js (iconPath property)
+#    - nw-currency.js (icon references)
+#    - HTML files with <img src="/static/icons/...">
+#    - CSS files with background-image URLs
+
+# 3. NEVER delete without creating replacement or updating references
+```
+
+**Files that commonly reference icons:**
+- `nw-economy.js` - has `iconPath` for each currency
+- `nw-currency.js` - has inline SVG icons
+- `forge.html`, `arcade.html` - cost icons
+- `wallet.html` - balance display icons
+
+---
+
 ## Session: Feb 4, 2025 - Icon System & UI Cleanup
 
 ### Premium Icon System v2.0
