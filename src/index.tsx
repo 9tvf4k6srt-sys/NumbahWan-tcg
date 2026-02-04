@@ -107,6 +107,9 @@ app.get('/efficiency', serveStatic({ path: './efficiency.html' }))
 app.get('/efficiency.html', serveStatic({ path: './efficiency.html' }))
 app.get('/lore', serveStatic({ path: './lore.html' }))
 app.get('/lore.html', serveStatic({ path: './lore.html' }))
+app.get('/tabletop', serveStatic({ path: './tabletop.html' }))
+app.get('/tabletop.html', serveStatic({ path: './tabletop.html' }))
+app.use('/tabletop/*', serveStatic())
 
 // ============================================================================
 // API ROUTES - Data Layer (Scalability Pattern: Separate Data from Presentation)

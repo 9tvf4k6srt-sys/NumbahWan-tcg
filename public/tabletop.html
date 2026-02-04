@@ -1,0 +1,924 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tabletop Realm | NumbahWan D&D</title>
+    <link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Inter:wght@300;400;500;600;700&family=Cinzel:wght@400;700;900&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="/static/nw-utilities.css" rel="stylesheet">
+    <link href="/static/nw-tokens.css" rel="stylesheet">
+    <script src="/static/nw-nav.js"></script>
+    <script src="/static/nw-currency.js"></script>
+    <script src="/static/nw-wallet.js"></script>
+    <style>
+        :root {
+            --nw-gold: #ffd700;
+            --nw-purple: #a855f7;
+            --nw-amber: #f59e0b;
+            --nw-red: #dc2626;
+            --nw-green: #22c55e;
+            --nw-dark: #0a0a0a;
+            --parchment: #f4e4bc;
+            --ink: #2d1810;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #1a0f0f 0%, #2d1810 50%, #1a0f0f 100%);
+            color: #e5e5e5;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+        
+        /* Parchment texture overlay */
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%' height='100%' filter='url(%23noise)'/%3E%3C/svg%3E");
+            opacity: 0.03;
+            pointer-events: none;
+            z-index: -1;
+        }
+        
+        /* Hero Section */
+        .hero {
+            position: relative;
+            min-height: 80vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+            overflow: hidden;
+        }
+        
+        .hero-bg {
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(ellipse at center, rgba(245,158,11,0.2) 0%, transparent 60%),
+                        radial-gradient(ellipse at top left, rgba(168,85,247,0.15) 0%, transparent 50%),
+                        radial-gradient(ellipse at bottom right, rgba(220,38,38,0.1) 0%, transparent 50%);
+        }
+        
+        /* Floating dice animation */
+        .floating-dice {
+            position: absolute;
+            font-size: 4rem;
+            color: rgba(245,158,11,0.2);
+            animation: floatDice 8s infinite ease-in-out;
+        }
+        .floating-dice:nth-child(2) { animation-delay: -2s; left: 10%; top: 20%; }
+        .floating-dice:nth-child(3) { animation-delay: -4s; right: 15%; top: 30%; }
+        .floating-dice:nth-child(4) { animation-delay: -6s; left: 20%; bottom: 20%; }
+        .floating-dice:nth-child(5) { animation-delay: -1s; right: 10%; bottom: 30%; }
+        
+        @keyframes floatDice {
+            0%, 100% { transform: translateY(0) rotate(0deg); opacity: 0.2; }
+            50% { transform: translateY(-30px) rotate(180deg); opacity: 0.4; }
+        }
+        
+        .hero-content {
+            position: relative;
+            z-index: 10;
+            text-align: center;
+            max-width: 900px;
+        }
+        
+        .hero-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            background: linear-gradient(135deg, rgba(245,158,11,0.2), rgba(168,85,247,0.2));
+            border: 1px solid rgba(245,158,11,0.3);
+            border-radius: 2rem;
+            font-size: 0.875rem;
+            color: var(--nw-amber);
+            margin-bottom: 1.5rem;
+            animation: pulse 2s infinite;
+        }
+        
+        .hero-title {
+            font-family: 'Cinzel', serif;
+            font-size: clamp(2.5rem, 8vw, 5rem);
+            font-weight: 900;
+            line-height: 1.1;
+            margin-bottom: 1rem;
+            background: linear-gradient(135deg, var(--nw-gold) 0%, var(--nw-amber) 50%, var(--nw-gold) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 0 60px rgba(245,158,11,0.5);
+        }
+        
+        .hero-subtitle {
+            font-size: 1.25rem;
+            color: rgba(255,255,255,0.7);
+            max-width: 600px;
+            margin: 0 auto 2rem;
+            line-height: 1.6;
+        }
+        
+        .hero-cta {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        
+        .cta-btn {
+            padding: 1rem 2rem;
+            border-radius: 0.75rem;
+            font-weight: 700;
+            font-size: 1rem;
+            text-decoration: none;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .cta-primary {
+            background: linear-gradient(135deg, var(--nw-amber), #d97706);
+            color: #000;
+            border: none;
+        }
+        
+        .cta-secondary {
+            background: transparent;
+            border: 2px solid var(--nw-amber);
+            color: var(--nw-amber);
+        }
+        
+        .cta-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 40px rgba(245,158,11,0.3);
+        }
+        
+        /* Core Concept */
+        .concept-section {
+            padding: 4rem 2rem;
+            background: linear-gradient(180deg, transparent 0%, rgba(245,158,11,0.05) 50%, transparent 100%);
+        }
+        
+        .concept-grid {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+        }
+        
+        .concept-card {
+            background: linear-gradient(135deg, rgba(45,24,16,0.8), rgba(26,15,15,0.9));
+            border: 1px solid rgba(245,158,11,0.2);
+            border-radius: 1rem;
+            padding: 2rem;
+            transition: all 0.3s;
+        }
+        
+        .concept-card:hover {
+            transform: translateY(-5px);
+            border-color: var(--nw-amber);
+            box-shadow: 0 20px 60px rgba(245,158,11,0.15);
+        }
+        
+        .concept-icon {
+            width: 60px;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, rgba(245,158,11,0.2), rgba(168,85,247,0.2));
+            border-radius: 1rem;
+            font-size: 1.5rem;
+            color: var(--nw-amber);
+            margin-bottom: 1rem;
+        }
+        
+        .concept-title {
+            font-family: 'Cinzel', serif;
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--nw-gold);
+            margin-bottom: 0.75rem;
+        }
+        
+        .concept-desc {
+            color: rgba(255,255,255,0.7);
+            font-size: 0.9375rem;
+            line-height: 1.6;
+        }
+        
+        /* Card to D&D Conversion */
+        .conversion-section {
+            padding: 4rem 2rem;
+            background: rgba(0,0,0,0.3);
+        }
+        
+        .section-header {
+            text-align: center;
+            max-width: 800px;
+            margin: 0 auto 3rem;
+        }
+        
+        .section-title {
+            font-family: 'Cinzel', serif;
+            font-size: 2rem;
+            font-weight: 900;
+            color: var(--nw-gold);
+            margin-bottom: 1rem;
+        }
+        
+        .section-subtitle {
+            color: rgba(255,255,255,0.6);
+            font-size: 1rem;
+        }
+        
+        .conversion-demo {
+            max-width: 1000px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 1fr auto 1fr;
+            gap: 2rem;
+            align-items: center;
+        }
+        
+        @media (max-width: 768px) {
+            .conversion-demo {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+            }
+        }
+        
+        .card-preview {
+            background: linear-gradient(135deg, rgba(107,33,168,0.3), rgba(168,85,247,0.2));
+            border: 2px solid rgba(168,85,247,0.4);
+            border-radius: 1rem;
+            padding: 1.5rem;
+            text-align: center;
+        }
+        
+        .card-rarity {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--nw-purple);
+            margin-bottom: 0.5rem;
+        }
+        
+        .card-name {
+            font-family: 'Cinzel', serif;
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #fff;
+            margin-bottom: 0.5rem;
+        }
+        
+        .card-stats {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+        
+        .card-stat {
+            padding: 0.5rem 1rem;
+            background: rgba(0,0,0,0.3);
+            border-radius: 0.5rem;
+            font-size: 0.875rem;
+        }
+        
+        .conversion-arrow {
+            font-size: 2rem;
+            color: var(--nw-amber);
+            animation: arrowPulse 2s infinite;
+        }
+        
+        @keyframes arrowPulse {
+            0%, 100% { transform: scale(1); opacity: 0.5; }
+            50% { transform: scale(1.2); opacity: 1; }
+        }
+        
+        .dnd-sheet {
+            background: linear-gradient(135deg, var(--parchment), #e8d4a8);
+            border: 3px solid #8b4513;
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            color: var(--ink);
+            font-family: 'Cinzel', serif;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .dnd-sheet::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: url("data:image/svg+xml,%3Csvg viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='paper'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.04' numOctaves='5'/%3E%3C/filter%3E%3Crect width='100%' height='100%' filter='url(%23paper)'/%3E%3C/svg%3E");
+            opacity: 0.1;
+            pointer-events: none;
+        }
+        
+        .dnd-header {
+            font-size: 1.25rem;
+            font-weight: 900;
+            text-align: center;
+            border-bottom: 2px solid var(--ink);
+            padding-bottom: 0.5rem;
+            margin-bottom: 1rem;
+        }
+        
+        .dnd-stat-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.5rem;
+            font-size: 0.875rem;
+        }
+        
+        .dnd-stat-label {
+            font-weight: 700;
+        }
+        
+        .dnd-abilities {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 0.5rem;
+            margin-top: 1rem;
+            text-align: center;
+        }
+        
+        .dnd-ability {
+            background: rgba(139,69,19,0.1);
+            padding: 0.5rem;
+            border-radius: 0.25rem;
+        }
+        
+        .dnd-ability-name {
+            font-size: 0.625rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        
+        .dnd-ability-score {
+            font-size: 1.25rem;
+            font-weight: 900;
+        }
+        
+        /* Quick Start Rules */
+        .rules-section {
+            padding: 4rem 2rem;
+        }
+        
+        .rules-grid {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
+        }
+        
+        .rule-card {
+            background: linear-gradient(135deg, rgba(45,24,16,0.6), rgba(26,15,15,0.8));
+            border: 1px solid rgba(245,158,11,0.15);
+            border-radius: 0.75rem;
+            padding: 1.5rem;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .rule-number {
+            position: absolute;
+            top: -10px;
+            right: 10px;
+            font-family: 'Cinzel', serif;
+            font-size: 4rem;
+            font-weight: 900;
+            color: rgba(245,158,11,0.1);
+            line-height: 1;
+        }
+        
+        .rule-title {
+            font-family: 'Cinzel', serif;
+            font-size: 1.125rem;
+            font-weight: 700;
+            color: var(--nw-amber);
+            margin-bottom: 0.75rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .rule-desc {
+            color: rgba(255,255,255,0.7);
+            font-size: 0.875rem;
+            line-height: 1.6;
+        }
+        
+        /* Features Grid */
+        .features-section {
+            padding: 4rem 2rem;
+            background: linear-gradient(180deg, rgba(245,158,11,0.03) 0%, transparent 100%);
+        }
+        
+        .features-grid {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 2rem;
+        }
+        
+        .feature-card {
+            background: linear-gradient(135deg, rgba(45,24,16,0.9), rgba(26,15,15,0.95));
+            border: 1px solid rgba(245,158,11,0.2);
+            border-radius: 1rem;
+            overflow: hidden;
+            transition: all 0.3s;
+        }
+        
+        .feature-card:hover {
+            transform: translateY(-5px);
+            border-color: var(--nw-amber);
+        }
+        
+        .feature-header {
+            padding: 1.5rem;
+            background: linear-gradient(135deg, rgba(245,158,11,0.15), rgba(168,85,247,0.1));
+            border-bottom: 1px solid rgba(245,158,11,0.2);
+        }
+        
+        .feature-icon {
+            font-size: 2rem;
+            color: var(--nw-amber);
+            margin-bottom: 0.5rem;
+        }
+        
+        .feature-title {
+            font-family: 'Cinzel', serif;
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--nw-gold);
+        }
+        
+        .feature-badge {
+            display: inline-block;
+            padding: 0.25rem 0.5rem;
+            background: var(--nw-amber);
+            color: #000;
+            font-size: 0.625rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            border-radius: 0.25rem;
+            margin-left: 0.5rem;
+        }
+        
+        .feature-body {
+            padding: 1.5rem;
+        }
+        
+        .feature-list {
+            list-style: none;
+        }
+        
+        .feature-list li {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.75rem;
+            padding: 0.75rem 0;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            font-size: 0.9375rem;
+            color: rgba(255,255,255,0.8);
+        }
+        
+        .feature-list li:last-child {
+            border-bottom: none;
+        }
+        
+        .feature-list i {
+            color: var(--nw-amber);
+            margin-top: 0.25rem;
+        }
+        
+        .feature-cta {
+            display: block;
+            text-align: center;
+            padding: 1rem;
+            background: linear-gradient(135deg, var(--nw-amber), #d97706);
+            color: #000;
+            font-weight: 700;
+            text-decoration: none;
+            margin: 1rem;
+            border-radius: 0.5rem;
+            transition: all 0.3s;
+        }
+        
+        .feature-cta:hover {
+            transform: scale(1.02);
+            box-shadow: 0 5px 20px rgba(245,158,11,0.3);
+        }
+        
+        /* Coming Soon Banner */
+        .coming-soon-section {
+            padding: 4rem 2rem;
+            text-align: center;
+        }
+        
+        .coming-soon-card {
+            max-width: 600px;
+            margin: 0 auto;
+            background: linear-gradient(135deg, rgba(168,85,247,0.2), rgba(245,158,11,0.1));
+            border: 2px dashed rgba(168,85,247,0.4);
+            border-radius: 1rem;
+            padding: 3rem 2rem;
+        }
+        
+        .coming-soon-icon {
+            font-size: 4rem;
+            color: var(--nw-purple);
+            margin-bottom: 1rem;
+            animation: floatDice 3s infinite ease-in-out;
+        }
+        
+        .coming-soon-title {
+            font-family: 'Cinzel', serif;
+            font-size: 1.5rem;
+            font-weight: 900;
+            color: var(--nw-purple);
+            margin-bottom: 1rem;
+        }
+        
+        .coming-soon-desc {
+            color: rgba(255,255,255,0.7);
+            margin-bottom: 1.5rem;
+        }
+        
+        .countdown {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+        }
+        
+        .countdown-item {
+            text-align: center;
+        }
+        
+        .countdown-value {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 2rem;
+            font-weight: 900;
+            color: var(--nw-amber);
+        }
+        
+        .countdown-label {
+            font-size: 0.625rem;
+            text-transform: uppercase;
+            color: rgba(255,255,255,0.5);
+        }
+        
+        /* Footer */
+        .tabletop-footer {
+            padding: 3rem 2rem;
+            text-align: center;
+            border-top: 1px solid rgba(245,158,11,0.2);
+        }
+        
+        .footer-links {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-bottom: 1.5rem;
+        }
+        
+        .footer-link {
+            color: rgba(255,255,255,0.6);
+            text-decoration: none;
+            font-size: 0.875rem;
+            transition: color 0.2s;
+        }
+        
+        .footer-link:hover {
+            color: var(--nw-amber);
+        }
+        
+        .footer-credits {
+            font-size: 0.75rem;
+            color: rgba(255,255,255,0.4);
+        }
+    </style>
+</head>
+<body data-page-id="tabletop-hub">
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="hero-bg"></div>
+        <i class="fas fa-dice-d20 floating-dice"></i>
+        <i class="fas fa-dice-d6 floating-dice"></i>
+        <i class="fas fa-dragon floating-dice"></i>
+        <i class="fas fa-hat-wizard floating-dice"></i>
+        <i class="fas fa-scroll floating-dice"></i>
+        
+        <div class="hero-content">
+            <div class="hero-badge">
+                <i class="fas fa-dice-d20"></i>
+                <span>IRL Adventures Await</span>
+            </div>
+            <h1 class="hero-title">Tabletop Realm</h1>
+            <p class="hero-subtitle">Transform your NumbahWan cards into epic real-life D&D adventures. No digital screens required—just friends, dice, and imagination.</p>
+            <div class="hero-cta">
+                <a href="/tabletop/rulebook" class="cta-btn cta-primary">
+                    <i class="fas fa-book"></i> Read the Rulebook
+                </a>
+                <a href="/tabletop/converter" class="cta-btn cta-secondary">
+                    <i class="fas fa-exchange-alt"></i> Convert Cards
+                </a>
+            </div>
+        </div>
+    </section>
+    
+    <!-- Core Concept -->
+    <section class="concept-section">
+        <div class="concept-grid">
+            <div class="concept-card">
+                <div class="concept-icon"><i class="fas fa-cards"></i></div>
+                <h3 class="concept-title">Your Cards, Your Heroes</h3>
+                <p class="concept-desc">Every NWG card translates into a unique D&D character sheet. Rarity determines class tier, stats convert to ability scores, and special abilities become spell slots.</p>
+            </div>
+            <div class="concept-card">
+                <div class="concept-icon"><i class="fas fa-dice-d20"></i></div>
+                <h3 class="concept-title">Simple d20 System</h3>
+                <p class="concept-desc">Roll a d20, add your modifier, beat the target. That's it. We stripped away complexity so you can focus on having fun with friends.</p>
+            </div>
+            <div class="concept-card">
+                <div class="concept-icon"><i class="fas fa-users"></i></div>
+                <h3 class="concept-title">Guild Night Ready</h3>
+                <p class="concept-desc">Designed for 3-6 players. One DM uses NWG campaign guides, others play their converted cards. Sessions last 2-4 hours—perfect for weekend adventures.</p>
+            </div>
+            <div class="concept-card">
+                <div class="concept-icon"><i class="fas fa-print"></i></div>
+                <h3 class="concept-title">Print & Play</h3>
+                <p class="concept-desc">Download character sheets, campaign maps, and token cutouts. Everything you need to run a session at home or at a café.</p>
+            </div>
+        </div>
+    </section>
+    
+    <!-- Card to D&D Conversion Demo -->
+    <section class="conversion-section">
+        <div class="section-header">
+            <h2 class="section-title">Card → Character Conversion</h2>
+            <p class="section-subtitle">See how your NWG cards transform into playable D&D characters</p>
+        </div>
+        
+        <div class="conversion-demo">
+            <div class="card-preview">
+                <div class="card-rarity">★★★★ Legendary</div>
+                <div class="card-name">RegginA</div>
+                <div style="font-size: 0.875rem; color: rgba(255,255,255,0.6);">Guild Master • Founder</div>
+                <div class="card-stats">
+                    <div class="card-stat">ATK: 95</div>
+                    <div class="card-stat">DEF: 88</div>
+                    <div class="card-stat">SPD: 72</div>
+                </div>
+            </div>
+            
+            <div class="conversion-arrow">
+                <i class="fas fa-arrow-right"></i><br>
+                <i class="fas fa-arrow-right"></i>
+            </div>
+            
+            <div class="dnd-sheet">
+                <div class="dnd-header">REGGINA</div>
+                <div class="dnd-stat-row">
+                    <span class="dnd-stat-label">Class:</span>
+                    <span>Paladin (Legendary)</span>
+                </div>
+                <div class="dnd-stat-row">
+                    <span class="dnd-stat-label">Level:</span>
+                    <span>12</span>
+                </div>
+                <div class="dnd-stat-row">
+                    <span class="dnd-stat-label">HP:</span>
+                    <span>98</span>
+                </div>
+                <div class="dnd-stat-row">
+                    <span class="dnd-stat-label">AC:</span>
+                    <span>18</span>
+                </div>
+                <div class="dnd-abilities">
+                    <div class="dnd-ability">
+                        <div class="dnd-ability-name">STR</div>
+                        <div class="dnd-ability-score">18</div>
+                    </div>
+                    <div class="dnd-ability">
+                        <div class="dnd-ability-name">DEX</div>
+                        <div class="dnd-ability-score">14</div>
+                    </div>
+                    <div class="dnd-ability">
+                        <div class="dnd-ability-name">CON</div>
+                        <div class="dnd-ability-score">16</div>
+                    </div>
+                    <div class="dnd-ability">
+                        <div class="dnd-ability-name">INT</div>
+                        <div class="dnd-ability-score">12</div>
+                    </div>
+                    <div class="dnd-ability">
+                        <div class="dnd-ability-name">WIS</div>
+                        <div class="dnd-ability-score">15</div>
+                    </div>
+                    <div class="dnd-ability">
+                        <div class="dnd-ability-name">CHA</div>
+                        <div class="dnd-ability-score">17</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <!-- Quick Start Rules -->
+    <section class="rules-section">
+        <div class="section-header">
+            <h2 class="section-title">Quick Start Rules</h2>
+            <p class="section-subtitle">Everything you need to start playing in 5 minutes</p>
+        </div>
+        
+        <div class="rules-grid">
+            <div class="rule-card">
+                <span class="rule-number">1</span>
+                <h3 class="rule-title"><i class="fas fa-cards"></i> Pick Your Cards</h3>
+                <p class="rule-desc">Each player chooses 1-3 NWG cards to form their party. Higher rarity = stronger character. Mix roles for a balanced team.</p>
+            </div>
+            <div class="rule-card">
+                <span class="rule-number">2</span>
+                <h3 class="rule-title"><i class="fas fa-exchange-alt"></i> Convert Stats</h3>
+                <p class="rule-desc">Use our converter tool or the quick formula: ATK÷5 = STR, DEF÷5 = CON, SPD÷5 = DEX. Rarity sets your level (Common=3, Legendary=12).</p>
+            </div>
+            <div class="rule-card">
+                <span class="rule-number">3</span>
+                <h3 class="rule-title"><i class="fas fa-dice-d20"></i> Roll to Act</h3>
+                <p class="rule-desc">When you try something risky, roll d20 + relevant modifier. Beat the target number (usually 10-20) to succeed.</p>
+            </div>
+            <div class="rule-card">
+                <span class="rule-number">4</span>
+                <h3 class="rule-title"><i class="fas fa-heart"></i> Track HP</h3>
+                <p class="rule-desc">Damage reduces HP. At 0 HP, you're knocked out. Allies can revive you with healing or potions. Full rest restores all HP.</p>
+            </div>
+            <div class="rule-card">
+                <span class="rule-number">5</span>
+                <h3 class="rule-title"><i class="fas fa-bolt"></i> Use Abilities</h3>
+                <p class="rule-desc">Special card abilities = once per battle spells. "Guild Buff" might give +2 to ally rolls. DM interprets effects.</p>
+            </div>
+            <div class="rule-card">
+                <span class="rule-number">6</span>
+                <h3 class="rule-title"><i class="fas fa-crown"></i> Earn Rewards</h3>
+                <p class="rule-desc">Completing quests earns "Sacred Logs" (XP). 10 logs = level up. Find rare items, unlock new abilities, become legends.</p>
+            </div>
+        </div>
+    </section>
+    
+    <!-- Features -->
+    <section class="features-section">
+        <div class="section-header">
+            <h2 class="section-title">Tools & Resources</h2>
+            <p class="section-subtitle">Everything a DM or player needs</p>
+        </div>
+        
+        <div class="features-grid">
+            <div class="feature-card">
+                <div class="feature-header">
+                    <div class="feature-icon"><i class="fas fa-book-open"></i></div>
+                    <h3 class="feature-title">D&D Rulebook <span class="feature-badge">PDF</span></h3>
+                </div>
+                <div class="feature-body">
+                    <ul class="feature-list">
+                        <li><i class="fas fa-check"></i> Complete card-to-character conversion tables</li>
+                        <li><i class="fas fa-check"></i> 12 NWG-themed character classes</li>
+                        <li><i class="fas fa-check"></i> Combat rules simplified for fast play</li>
+                        <li><i class="fas fa-check"></i> Role bonuses based on guild roles</li>
+                        <li><i class="fas fa-check"></i> Sacred Log progression system</li>
+                    </ul>
+                </div>
+                <a href="/tabletop/rulebook" class="feature-cta">Download Rulebook</a>
+            </div>
+            
+            <div class="feature-card">
+                <div class="feature-header">
+                    <div class="feature-icon"><i class="fas fa-user-shield"></i></div>
+                    <h3 class="feature-title">Character Sheets <span class="feature-badge">Printable</span></h3>
+                </div>
+                <div class="feature-body">
+                    <ul class="feature-list">
+                        <li><i class="fas fa-check"></i> NWG-themed character sheet design</li>
+                        <li><i class="fas fa-check"></i> Space for card artwork reference</li>
+                        <li><i class="fas fa-check"></i> Ability tracker and HP dial</li>
+                        <li><i class="fas fa-check"></i> Inventory and Sacred Log counter</li>
+                        <li><i class="fas fa-check"></i> Quick reference on back</li>
+                    </ul>
+                </div>
+                <a href="/tabletop/character-sheets" class="feature-cta">Get Character Sheets</a>
+            </div>
+            
+            <div class="feature-card">
+                <div class="feature-header">
+                    <div class="feature-icon"><i class="fas fa-map"></i></div>
+                    <h3 class="feature-title">Campaign: Zakum's Return <span class="feature-badge">New</span></h3>
+                </div>
+                <div class="feature-body">
+                    <ul class="feature-list">
+                        <li><i class="fas fa-check"></i> 5-session mini-campaign</li>
+                        <li><i class="fas fa-check"></i> Printable maps and tokens</li>
+                        <li><i class="fas fa-check"></i> Pre-built encounters using NWG lore</li>
+                        <li><i class="fas fa-check"></i> Boss fight: Zakum awakened</li>
+                        <li><i class="fas fa-check"></i> Rewards tie back to digital cards</li>
+                    </ul>
+                </div>
+                <a href="/tabletop/campaigns" class="feature-cta">Start Campaign</a>
+            </div>
+            
+            <div class="feature-card">
+                <div class="feature-header">
+                    <div class="feature-icon"><i class="fas fa-wand-sparkles"></i></div>
+                    <h3 class="feature-title">DM Tools <span class="feature-badge">Interactive</span></h3>
+                </div>
+                <div class="feature-body">
+                    <ul class="feature-list">
+                        <li><i class="fas fa-check"></i> Random encounter generator</li>
+                        <li><i class="fas fa-check"></i> NPC name/personality roller</li>
+                        <li><i class="fas fa-check"></i> Loot table based on card pools</li>
+                        <li><i class="fas fa-check"></i> Initiative tracker</li>
+                        <li><i class="fas fa-check"></i> Ambient sound links</li>
+                    </ul>
+                </div>
+                <a href="/tabletop/dm-tools" class="feature-cta">Open DM Tools</a>
+            </div>
+        </div>
+    </section>
+    
+    <!-- Coming Soon -->
+    <section class="coming-soon-section">
+        <div class="coming-soon-card">
+            <div class="coming-soon-icon"><i class="fas fa-dragon"></i></div>
+            <h3 class="coming-soon-title">First Guild Night: Coming Soon</h3>
+            <p class="coming-soon-desc">Join us for the inaugural NumbahWan tabletop session! Stream your adventures, earn exclusive cards.</p>
+            <div class="countdown">
+                <div class="countdown-item">
+                    <div class="countdown-value" id="days">--</div>
+                    <div class="countdown-label">Days</div>
+                </div>
+                <div class="countdown-item">
+                    <div class="countdown-value" id="hours">--</div>
+                    <div class="countdown-label">Hours</div>
+                </div>
+                <div class="countdown-item">
+                    <div class="countdown-value" id="minutes">--</div>
+                    <div class="countdown-label">Minutes</div>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <!-- Footer -->
+    <footer class="tabletop-footer">
+        <div class="footer-links">
+            <a href="/tabletop/rulebook" class="footer-link">Rulebook</a>
+            <a href="/tabletop/character-sheets" class="footer-link">Character Sheets</a>
+            <a href="/tabletop/converter" class="footer-link">Card Converter</a>
+            <a href="/tabletop/campaigns" class="footer-link">Campaigns</a>
+            <a href="/tabletop/dm-tools" class="footer-link">DM Tools</a>
+            <a href="/lore" class="footer-link">The Abyss</a>
+        </div>
+        <p class="footer-credits">
+            NumbahWan Tabletop Realm • Powered by friendship and imagination • 
+            <a href="/guide" style="color: var(--nw-amber);">Arena Guide</a> for digital battles
+        </p>
+    </footer>
+    
+    <script>
+        // Countdown timer (set to 7 days from now for demo)
+        function updateCountdown() {
+            const target = new Date();
+            target.setDate(target.getDate() + 7);
+            const now = new Date();
+            const diff = target - now;
+            
+            const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+            const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+            
+            document.getElementById('days').textContent = days.toString().padStart(2, '0');
+            document.getElementById('hours').textContent = hours.toString().padStart(2, '0');
+            document.getElementById('minutes').textContent = minutes.toString().padStart(2, '0');
+        }
+        
+        updateCountdown();
+        setInterval(updateCountdown, 60000);
+        
+        // Initialize nav and wallet
+        document.addEventListener('DOMContentLoaded', () => {
+            if (typeof NW_WALLET !== 'undefined') NW_WALLET.init();
+            if (typeof NW_NAV !== 'undefined') NW_NAV.init('tabletop-hub');
+        });
+    </script>
+</body>
+</html>

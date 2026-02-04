@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NumbahWan | Efficiency & Continuous Improvement Dashboard</title>
+    <title>Build Lab | Efficiency & Innovation Hub</title>
     <link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -15,171 +15,1238 @@
     <script src="/static/nw-currency.js"></script>
     <script src="/static/nw-wallet.js"></script>
     <style>
-        :root { --nw-orange: #ff6b00; --nw-purple: #6b21a8; --nw-green: #22c55e; --nw-blue: #3b82f6; --nw-cyan: #06b6d4; --nw-dark: #0a0a0a; }
+        :root {
+            --nw-orange: #ff6b00;
+            --nw-purple: #a855f7;
+            --nw-green: #22c55e;
+            --nw-blue: #3b82f6;
+            --nw-cyan: #06b6d4;
+            --nw-amber: #f59e0b;
+            --nw-red: #ef4444;
+            --nw-dark: #0a0a0a;
+            --nw-darker: #050505;
+        }
         * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { font-family: 'Inter', sans-serif; background: linear-gradient(135deg, var(--nw-dark) 0%, #0f172a 50%, var(--nw-dark) 100%); color: #e5e5e5; min-height: 100vh; }
-        .dashboard-header { padding: 2rem; background: linear-gradient(135deg, rgba(255,107,0,0.1), rgba(107,33,168,0.1)); border-bottom: 1px solid rgba(255,255,255,0.1); }
-        .header-content { max-width: 1400px; margin: 0 auto; }
-        .header-title { font-family: 'Orbitron', sans-serif; font-size: 2rem; font-weight: 900; background: linear-gradient(135deg, var(--nw-orange), var(--nw-purple)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 0.5rem; }
-        .header-subtitle { color: rgba(255,255,255,0.6); font-size: 0.875rem; }
-        .header-stats { display: flex; gap: 2rem; margin-top: 1.5rem; flex-wrap: wrap; }
-        .header-stat { text-align: center; }
-        .header-stat-value { font-family: 'Orbitron', sans-serif; font-size: 1.5rem; font-weight: 700; color: var(--nw-orange); }
-        .header-stat-label { font-size: 0.75rem; color: rgba(255,255,255,0.5); text-transform: uppercase; letter-spacing: 0.1em; }
-        .dashboard-grid { max-width: 1400px; margin: 0 auto; padding: 2rem; display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 1.5rem; }
-        .card { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1); border-radius: 1rem; padding: 1.5rem; transition: all 0.3s; }
-        .card:hover { border-color: rgba(255,107,0,0.3); transform: translateY(-2px); }
-        .card-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem; }
-        .card-title { font-family: 'Orbitron', sans-serif; font-size: 0.875rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: rgba(255,255,255,0.8); }
-        .card-icon { width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; border-radius: 0.5rem; font-size: 1rem; }
-        .card-icon.orange { background: rgba(255,107,0,0.2); color: var(--nw-orange); }
-        .card-icon.purple { background: rgba(107,33,168,0.2); color: var(--nw-purple); }
-        .card-icon.green { background: rgba(34,197,94,0.2); color: var(--nw-green); }
-        .card-icon.blue { background: rgba(59,130,246,0.2); color: var(--nw-blue); }
-        .card-icon.cyan { background: rgba(6,182,212,0.2); color: var(--nw-cyan); }
-        .metric-change { display: inline-flex; align-items: center; gap: 0.25rem; padding: 0.25rem 0.5rem; border-radius: 0.25rem; font-size: 0.75rem; font-weight: 600; margin-left: 0.5rem; }
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, var(--nw-darker) 0%, #0f172a 50%, var(--nw-darker) 100%);
+            color: #e5e5e5;
+            min-height: 100vh;
+        }
+        
+        /* Header */
+        .lab-header {
+            padding: 2rem;
+            background: linear-gradient(135deg, rgba(34,197,94,0.1), rgba(168,85,247,0.05));
+            border-bottom: 1px solid rgba(34,197,94,0.2);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .lab-header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 400px;
+            height: 400px;
+            background: radial-gradient(circle, rgba(34,197,94,0.1) 0%, transparent 70%);
+            pointer-events: none;
+        }
+        
+        .header-content {
+            max-width: 1600px;
+            margin: 0 auto;
+            position: relative;
+        }
+        
+        .header-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            background: rgba(34,197,94,0.15);
+            border: 1px solid rgba(34,197,94,0.3);
+            border-radius: 2rem;
+            font-size: 0.75rem;
+            color: var(--nw-green);
+            margin-bottom: 1rem;
+            font-family: 'JetBrains Mono', monospace;
+        }
+        
+        .header-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: clamp(1.5rem, 4vw, 2.5rem);
+            font-weight: 900;
+            background: linear-gradient(135deg, var(--nw-green), var(--nw-cyan));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 0.5rem;
+        }
+        
+        .header-subtitle {
+            color: rgba(255,255,255,0.6);
+            font-size: 0.9375rem;
+            max-width: 600px;
+        }
+        
+        .header-metrics {
+            display: flex;
+            gap: 2rem;
+            margin-top: 1.5rem;
+            flex-wrap: wrap;
+        }
+        
+        .header-metric {
+            text-align: center;
+            padding: 1rem 1.5rem;
+            background: rgba(0,0,0,0.3);
+            border-radius: 0.75rem;
+            border: 1px solid rgba(255,255,255,0.05);
+        }
+        
+        .metric-value {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.75rem;
+            font-weight: 900;
+        }
+        
+        .metric-value.green { color: var(--nw-green); }
+        .metric-value.purple { color: var(--nw-purple); }
+        .metric-value.cyan { color: var(--nw-cyan); }
+        .metric-value.amber { color: var(--nw-amber); }
+        
+        .metric-label {
+            font-size: 0.6875rem;
+            color: rgba(255,255,255,0.5);
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            margin-top: 0.25rem;
+        }
+        
+        .metric-change {
+            font-size: 0.6875rem;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            margin-top: 0.25rem;
+            display: inline-block;
+        }
+        
         .metric-change.up { background: rgba(34,197,94,0.2); color: var(--nw-green); }
-        .progress-bar { height: 8px; background: rgba(255,255,255,0.1); border-radius: 4px; overflow: hidden; margin: 1rem 0; }
-        .progress-fill { height: 100%; border-radius: 4px; transition: width 1s ease; }
-        .progress-fill.orange { background: linear-gradient(90deg, var(--nw-orange), #ff9500); }
-        .progress-fill.purple { background: linear-gradient(90deg, var(--nw-purple), #a855f7); }
+        .metric-change.down { background: rgba(239,68,68,0.2); color: var(--nw-red); }
+        
+        /* Tab Navigation */
+        .tab-nav {
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 1rem 2rem;
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+        
+        .tab-btn {
+            padding: 0.75rem 1.5rem;
+            background: transparent;
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 0.5rem;
+            color: rgba(255,255,255,0.6);
+            font-size: 0.875rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .tab-btn:hover {
+            border-color: var(--nw-green);
+            color: var(--nw-green);
+        }
+        
+        .tab-btn.active {
+            background: rgba(34,197,94,0.15);
+            border-color: var(--nw-green);
+            color: var(--nw-green);
+        }
+        
+        /* Main Content */
+        .lab-content {
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+        
+        .tab-panel {
+            display: none;
+        }
+        
+        .tab-panel.active {
+            display: block;
+        }
+        
+        /* Dashboard Grid */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 1.5rem;
+        }
+        
+        .card {
+            background: rgba(255,255,255,0.02);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 1rem;
+            padding: 1.5rem;
+            transition: all 0.3s;
+        }
+        
+        .card:hover {
+            border-color: rgba(34,197,94,0.3);
+            transform: translateY(-2px);
+        }
+        
+        .card.full-width {
+            grid-column: 1 / -1;
+        }
+        
+        .card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1.5rem;
+        }
+        
+        .card-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.8125rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: rgba(255,255,255,0.8);
+        }
+        
+        .card-icon {
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 0.5rem;
+            font-size: 1rem;
+        }
+        
+        .card-icon.green { background: rgba(34,197,94,0.2); color: var(--nw-green); }
+        .card-icon.purple { background: rgba(168,85,247,0.2); color: var(--nw-purple); }
+        .card-icon.cyan { background: rgba(6,182,212,0.2); color: var(--nw-cyan); }
+        .card-icon.amber { background: rgba(245,158,11,0.2); color: var(--nw-amber); }
+        .card-icon.blue { background: rgba(59,130,246,0.2); color: var(--nw-blue); }
+        
+        /* Efficiency Score */
+        .efficiency-score {
+            position: relative;
+            width: 180px;
+            height: 180px;
+            margin: 0 auto;
+        }
+        
+        .efficiency-ring {
+            width: 100%;
+            height: 100%;
+            transform: rotate(-90deg);
+        }
+        
+        .efficiency-ring circle {
+            fill: none;
+            stroke-width: 14;
+            stroke-linecap: round;
+        }
+        
+        .efficiency-ring .bg {
+            stroke: rgba(255,255,255,0.1);
+        }
+        
+        .efficiency-ring .progress {
+            stroke: url(#effGradient);
+            stroke-dasharray: 452;
+            stroke-dashoffset: 90.4;
+            transition: stroke-dashoffset 1.5s ease;
+        }
+        
+        .efficiency-center {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+        }
+        
+        .efficiency-percent {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 2.5rem;
+            font-weight: 900;
+            background: linear-gradient(135deg, var(--nw-green), var(--nw-cyan));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .efficiency-label {
+            font-size: 0.625rem;
+            color: rgba(255,255,255,0.5);
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+        }
+        
+        /* Progress Bars */
+        .progress-bar {
+            height: 10px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 5px;
+            overflow: hidden;
+            margin: 0.75rem 0;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            border-radius: 5px;
+            transition: width 1s ease;
+        }
+        
         .progress-fill.green { background: linear-gradient(90deg, var(--nw-green), #4ade80); }
-        .improvement-list { list-style: none; }
-        .improvement-item { display: flex; align-items: center; gap: 1rem; padding: 1rem; margin-bottom: 0.75rem; background: rgba(255,255,255,0.03); border-radius: 0.75rem; border-left: 3px solid transparent; transition: all 0.3s; }
-        .improvement-item:hover { background: rgba(255,255,255,0.05); }
+        .progress-fill.purple { background: linear-gradient(90deg, var(--nw-purple), #c084fc); }
+        .progress-fill.cyan { background: linear-gradient(90deg, var(--nw-cyan), #22d3ee); }
+        .progress-fill.amber { background: linear-gradient(90deg, var(--nw-amber), #fbbf24); }
+        
+        /* KPI Grid */
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1rem;
+        }
+        
+        .kpi-item {
+            padding: 1rem;
+            background: rgba(0,0,0,0.3);
+            border-radius: 0.75rem;
+            text-align: center;
+        }
+        
+        .kpi-value {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1.375rem;
+            font-weight: 700;
+        }
+        
+        .kpi-label {
+            font-size: 0.625rem;
+            color: rgba(255,255,255,0.5);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-top: 0.25rem;
+        }
+        
+        /* Improvement List */
+        .improvement-list {
+            list-style: none;
+        }
+        
+        .improvement-item {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1rem;
+            margin-bottom: 0.75rem;
+            background: rgba(0,0,0,0.2);
+            border-radius: 0.75rem;
+            border-left: 3px solid transparent;
+            transition: all 0.3s;
+        }
+        
+        .improvement-item:hover {
+            background: rgba(0,0,0,0.3);
+        }
+        
         .improvement-item.completed { border-left-color: var(--nw-green); }
-        .improvement-item.in-progress { border-left-color: var(--nw-orange); }
+        .improvement-item.in-progress { border-left-color: var(--nw-amber); }
         .improvement-item.planned { border-left-color: var(--nw-blue); }
-        .improvement-status { width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; flex-shrink: 0; }
-        .improvement-status.completed { background: var(--nw-green); color: white; }
-        .improvement-status.in-progress { background: var(--nw-orange); color: white; }
+        
+        .improvement-status {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.75rem;
+            flex-shrink: 0;
+        }
+        
+        .improvement-status.completed { background: var(--nw-green); color: #000; }
+        .improvement-status.in-progress { background: var(--nw-amber); color: #000; }
         .improvement-status.planned { background: rgba(59,130,246,0.3); color: var(--nw-blue); }
+        
         .improvement-content { flex: 1; }
-        .improvement-title { font-weight: 600; margin-bottom: 0.25rem; }
+        .improvement-title { font-weight: 600; font-size: 0.9375rem; margin-bottom: 0.125rem; }
         .improvement-meta { font-size: 0.75rem; color: rgba(255,255,255,0.5); }
-        .chart-container { position: relative; height: 200px; }
-        .efficiency-score { position: relative; width: 150px; height: 150px; margin: 0 auto; }
-        .efficiency-ring { width: 100%; height: 100%; transform: rotate(-90deg); }
-        .efficiency-ring circle { fill: none; stroke-width: 12; stroke-linecap: round; }
-        .efficiency-ring .bg { stroke: rgba(255,255,255,0.1); }
-        .efficiency-ring .progress { stroke: url(#gradient); stroke-dasharray: 377; stroke-dashoffset: 75.4; transition: stroke-dashoffset 1s ease; }
-        .efficiency-value { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center; }
-        .efficiency-value span { font-family: 'Orbitron', sans-serif; font-size: 2rem; font-weight: 900; background: linear-gradient(135deg, var(--nw-orange), var(--nw-green)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-        .efficiency-value small { display: block; font-size: 0.625rem; color: rgba(255,255,255,0.5); text-transform: uppercase; letter-spacing: 0.1em; }
-        .build-log { max-height: 300px; overflow-y: auto; }
-        .build-entry { display: flex; gap: 1rem; padding: 0.75rem; border-bottom: 1px solid rgba(255,255,255,0.05); }
-        .build-entry:last-child { border-bottom: none; }
-        .build-time { font-size: 0.75rem; color: rgba(255,255,255,0.4); flex-shrink: 0; width: 60px; }
+        
+        /* Build Log */
+        .build-log {
+            max-height: 350px;
+            overflow-y: auto;
+        }
+        
+        .build-entry {
+            display: flex;
+            gap: 1rem;
+            padding: 0.75rem 0;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+        
+        .build-time {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.75rem;
+            color: rgba(255,255,255,0.4);
+            flex-shrink: 0;
+            width: 50px;
+        }
+        
         .build-content { flex: 1; font-size: 0.875rem; }
-        .build-type { display: inline-block; padding: 0.125rem 0.5rem; border-radius: 0.25rem; font-size: 0.625rem; font-weight: 700; text-transform: uppercase; margin-right: 0.5rem; }
-        .build-type.feature { background: rgba(107,33,168,0.3); color: #a855f7; }
-        .build-type.fix { background: rgba(239,68,68,0.3); color: #ef4444; }
+        
+        .build-type {
+            display: inline-block;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.625rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            margin-right: 0.5rem;
+        }
+        
+        .build-type.feature { background: rgba(168,85,247,0.3); color: #c084fc; }
+        .build-type.fix { background: rgba(239,68,68,0.3); color: #f87171; }
         .build-type.improve { background: rgba(34,197,94,0.3); color: var(--nw-green); }
-        .build-type.art { background: rgba(236,72,153,0.3); color: #ec4899; }
-        .kpi-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; }
-        .kpi-item { padding: 1rem; background: rgba(255,255,255,0.03); border-radius: 0.75rem; text-align: center; }
-        .kpi-value { font-family: 'Orbitron', sans-serif; font-size: 1.25rem; font-weight: 700; }
-        .kpi-value.orange { color: var(--nw-orange); }
-        .kpi-value.green { color: var(--nw-green); }
-        .kpi-value.blue { color: var(--nw-blue); }
-        .kpi-value.purple { color: var(--nw-purple); }
-        .kpi-label { font-size: 0.625rem; color: rgba(255,255,255,0.5); text-transform: uppercase; letter-spacing: 0.05em; }
-        .full-width { grid-column: 1 / -1; }
-        .philosophy-section { background: linear-gradient(135deg, rgba(255,107,0,0.1), rgba(107,33,168,0.1)); border: 1px solid rgba(255,107,0,0.2); }
-        .philosophy-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem; margin-top: 1rem; }
-        .philosophy-item { padding: 1.5rem; background: rgba(0,0,0,0.3); border-radius: 0.75rem; border-left: 3px solid var(--nw-orange); }
-        .philosophy-item h4 { font-family: 'Orbitron', sans-serif; font-size: 0.875rem; margin-bottom: 0.5rem; color: var(--nw-orange); }
-        .philosophy-item p { font-size: 0.875rem; color: rgba(255,255,255,0.7); line-height: 1.6; }
-        @media (max-width: 768px) { .dashboard-grid { grid-template-columns: 1fr; padding: 1rem; } }
+        .build-type.art { background: rgba(236,72,153,0.3); color: #f472b6; }
+        .build-type.learn { background: rgba(6,182,212,0.3); color: var(--nw-cyan); }
+        
+        /* Chart Container */
+        .chart-container {
+            position: relative;
+            height: 220px;
+        }
+        
+        /* Philosophy Section */
+        .philosophy-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
+        }
+        
+        .philosophy-item {
+            padding: 1.5rem;
+            background: rgba(0,0,0,0.3);
+            border-radius: 0.75rem;
+            border-left: 3px solid var(--nw-green);
+            transition: all 0.3s;
+        }
+        
+        .philosophy-item:hover {
+            transform: translateX(5px);
+            border-left-color: var(--nw-cyan);
+        }
+        
+        .philosophy-item h4 {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.9375rem;
+            margin-bottom: 0.5rem;
+            color: var(--nw-green);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .philosophy-item p {
+            font-size: 0.875rem;
+            color: rgba(255,255,255,0.7);
+            line-height: 1.6;
+        }
+        
+        /* Learning Log */
+        .learning-entry {
+            padding: 1.25rem;
+            margin-bottom: 1rem;
+            background: linear-gradient(135deg, rgba(6,182,212,0.1), rgba(168,85,247,0.05));
+            border: 1px solid rgba(6,182,212,0.2);
+            border-radius: 0.75rem;
+        }
+        
+        .learning-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 0.75rem;
+        }
+        
+        .learning-title {
+            font-weight: 700;
+            font-size: 1rem;
+            color: var(--nw-cyan);
+        }
+        
+        .learning-date {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.6875rem;
+            color: rgba(255,255,255,0.4);
+        }
+        
+        .learning-content {
+            font-size: 0.875rem;
+            color: rgba(255,255,255,0.8);
+            line-height: 1.6;
+            margin-bottom: 0.75rem;
+        }
+        
+        .learning-tags {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+        
+        .learning-tag {
+            padding: 0.25rem 0.5rem;
+            background: rgba(6,182,212,0.15);
+            border-radius: 0.25rem;
+            font-size: 0.6875rem;
+            color: var(--nw-cyan);
+        }
+        
+        /* Innovation Pipeline */
+        .pipeline-item {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1rem;
+            background: rgba(0,0,0,0.2);
+            border-radius: 0.75rem;
+            margin-bottom: 0.75rem;
+        }
+        
+        .pipeline-icon {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, rgba(245,158,11,0.2), rgba(168,85,247,0.2));
+            border-radius: 0.5rem;
+            font-size: 1.25rem;
+        }
+        
+        .pipeline-content { flex: 1; }
+        .pipeline-title { font-weight: 600; margin-bottom: 0.25rem; }
+        .pipeline-desc { font-size: 0.8125rem; color: rgba(255,255,255,0.6); }
+        
+        .pipeline-status {
+            padding: 0.375rem 0.75rem;
+            border-radius: 1rem;
+            font-size: 0.6875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        
+        .pipeline-status.ideation { background: rgba(168,85,247,0.2); color: var(--nw-purple); }
+        .pipeline-status.research { background: rgba(6,182,212,0.2); color: var(--nw-cyan); }
+        .pipeline-status.building { background: rgba(245,158,11,0.2); color: var(--nw-amber); }
+        .pipeline-status.testing { background: rgba(59,130,246,0.2); color: var(--nw-blue); }
+        .pipeline-status.shipped { background: rgba(34,197,94,0.2); color: var(--nw-green); }
+        
+        /* Quality Metrics */
+        .quality-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+        }
+        
+        .quality-item {
+            padding: 1.25rem;
+            background: rgba(0,0,0,0.3);
+            border-radius: 0.75rem;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .quality-item::before {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--nw-green), var(--nw-cyan));
+        }
+        
+        .quality-score {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 2rem;
+            font-weight: 900;
+        }
+        
+        .quality-label {
+            font-size: 0.6875rem;
+            color: rgba(255,255,255,0.5);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        
+        .quality-trend {
+            font-size: 0.6875rem;
+            margin-top: 0.25rem;
+        }
+        
+        .quality-trend.up { color: var(--nw-green); }
+        .quality-trend.down { color: var(--nw-red); }
+        
+        @media (max-width: 768px) {
+            .dashboard-grid { grid-template-columns: 1fr; }
+            .tab-nav { padding: 0.5rem 1rem; }
+            .tab-btn { padding: 0.5rem 1rem; font-size: 0.8125rem; }
+        }
     </style>
 </head>
 <body data-page-id="efficiency">
-    <div class="dashboard-header">
+    <header class="lab-header">
         <div class="header-content">
-            <h1 class="header-title">Efficiency & Continuous Improvement</h1>
-            <p class="header-subtitle">Building efficiently AND improving continuously—not just building features</p>
-            <div class="header-stats">
-                <div class="header-stat"><div class="header-stat-value">87</div><div class="header-stat-label">Features Built</div></div>
-                <div class="header-stat"><div class="header-stat-value">43</div><div class="header-stat-label">Improvements Made</div></div>
-                <div class="header-stat"><div class="header-stat-value">2.4x</div><div class="header-stat-label">Efficiency Gain</div></div>
-                <div class="header-stat"><div class="header-stat-value">-67%</div><div class="header-stat-label">Build Time Reduced</div></div>
+            <div class="header-badge">
+                <i class="fas fa-flask"></i>
+                <span>BUILD_LAB v2.0 • INNOVATION_MODE=ON</span>
+            </div>
+            <h1 class="header-title">Build Lab</h1>
+            <p class="header-subtitle">Build efficiently. Improve continuously. Innovate relentlessly. This is where we learn how to create ultra high-quality work at speed.</p>
+            
+            <div class="header-metrics">
+                <div class="header-metric">
+                    <div class="metric-value green">92</div>
+                    <div class="metric-label">Features Built</div>
+                    <div class="metric-change up"><i class="fas fa-arrow-up"></i> +8 this week</div>
+                </div>
+                <div class="header-metric">
+                    <div class="metric-value purple">47</div>
+                    <div class="metric-label">Improvements</div>
+                    <div class="metric-change up"><i class="fas fa-arrow-up"></i> +12 this week</div>
+                </div>
+                <div class="header-metric">
+                    <div class="metric-value cyan">23</div>
+                    <div class="metric-label">Learnings Logged</div>
+                    <div class="metric-change up"><i class="fas fa-arrow-up"></i> +5 this week</div>
+                </div>
+                <div class="header-metric">
+                    <div class="metric-value amber">2.8x</div>
+                    <div class="metric-label">Efficiency Multiplier</div>
+                    <div class="metric-change up"><i class="fas fa-arrow-up"></i> +0.4x</div>
+                </div>
             </div>
         </div>
-    </div>
-    <div class="dashboard-grid">
-        <div class="card">
-            <div class="card-header"><span class="card-title">Overall Efficiency Score</span><div class="card-icon orange"><i class="fas fa-tachometer-alt"></i></div></div>
-            <div class="efficiency-score">
-                <svg class="efficiency-ring" viewBox="0 0 128 128"><defs><linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="#ff6b00"/><stop offset="100%" stop-color="#22c55e"/></linearGradient></defs><circle class="bg" cx="64" cy="64" r="60"/><circle class="progress" cx="64" cy="64" r="60"/></svg>
-                <div class="efficiency-value"><span>80%</span><small>Score</small></div>
+    </header>
+    
+    <nav class="tab-nav">
+        <button class="tab-btn active" data-tab="efficiency">
+            <i class="fas fa-tachometer-alt"></i> Efficiency
+        </button>
+        <button class="tab-btn" data-tab="innovation">
+            <i class="fas fa-lightbulb"></i> Innovation
+        </button>
+        <button class="tab-btn" data-tab="quality">
+            <i class="fas fa-gem"></i> Quality
+        </button>
+        <button class="tab-btn" data-tab="learning">
+            <i class="fas fa-brain"></i> Learning Log
+        </button>
+        <button class="tab-btn" data-tab="philosophy">
+            <i class="fas fa-scroll"></i> Philosophy
+        </button>
+    </nav>
+    
+    <main class="lab-content">
+        <!-- Efficiency Tab -->
+        <div class="tab-panel active" id="efficiency">
+            <div class="dashboard-grid">
+                <div class="card">
+                    <div class="card-header">
+                        <span class="card-title">Overall Efficiency Score</span>
+                        <div class="card-icon green"><i class="fas fa-tachometer-alt"></i></div>
+                    </div>
+                    <div class="efficiency-score">
+                        <svg class="efficiency-ring" viewBox="0 0 160 160">
+                            <defs>
+                                <linearGradient id="effGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                                    <stop offset="0%" stop-color="#22c55e"/>
+                                    <stop offset="100%" stop-color="#06b6d4"/>
+                                </linearGradient>
+                            </defs>
+                            <circle class="bg" cx="80" cy="80" r="72"/>
+                            <circle class="progress" cx="80" cy="80" r="72"/>
+                        </svg>
+                        <div class="efficiency-center">
+                            <div class="efficiency-percent">80%</div>
+                            <div class="efficiency-label">Efficiency</div>
+                        </div>
+                    </div>
+                    <div style="text-align: center; margin-top: 1rem;">
+                        <span class="metric-change up" style="font-size: 0.8125rem;"><i class="fas fa-arrow-up"></i> +15% this month</span>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <div class="card-header">
+                        <span class="card-title">Build vs Improve Balance</span>
+                        <div class="card-icon purple"><i class="fas fa-balance-scale"></i></div>
+                    </div>
+                    <div style="margin-bottom: 1.5rem;">
+                        <div style="display: flex; justify-content: space-between; font-size: 0.875rem; margin-bottom: 0.5rem;">
+                            <span>Building New Features</span>
+                            <span style="color: var(--nw-purple); font-weight: 600;">65%</span>
+                        </div>
+                        <div class="progress-bar"><div class="progress-fill purple" style="width: 65%;"></div></div>
+                    </div>
+                    <div style="margin-bottom: 1.5rem;">
+                        <div style="display: flex; justify-content: space-between; font-size: 0.875rem; margin-bottom: 0.5rem;">
+                            <span>Continuous Improvement</span>
+                            <span style="color: var(--nw-green); font-weight: 600;">25%</span>
+                        </div>
+                        <div class="progress-bar"><div class="progress-fill green" style="width: 25%;"></div></div>
+                    </div>
+                    <div>
+                        <div style="display: flex; justify-content: space-between; font-size: 0.875rem; margin-bottom: 0.5rem;">
+                            <span>Learning & Innovation</span>
+                            <span style="color: var(--nw-cyan); font-weight: 600;">10%</span>
+                        </div>
+                        <div class="progress-bar"><div class="progress-fill cyan" style="width: 10%;"></div></div>
+                    </div>
+                    <p style="margin-top: 1rem; font-size: 0.75rem; color: rgba(255,255,255,0.5);">Target: 60% Build / 30% Improve / 10% Learn</p>
+                </div>
+                
+                <div class="card">
+                    <div class="card-header">
+                        <span class="card-title">Performance KPIs</span>
+                        <div class="card-icon cyan"><i class="fas fa-chart-line"></i></div>
+                    </div>
+                    <div class="kpi-grid">
+                        <div class="kpi-item">
+                            <div class="kpi-value" style="color: var(--nw-green);">1.2s</div>
+                            <div class="kpi-label">Avg Page Load</div>
+                        </div>
+                        <div class="kpi-item">
+                            <div class="kpi-value" style="color: var(--nw-green);">99.8%</div>
+                            <div class="kpi-label">Uptime</div>
+                        </div>
+                        <div class="kpi-item">
+                            <div class="kpi-value" style="color: var(--nw-cyan);">186KB</div>
+                            <div class="kpi-label">Bundle Size</div>
+                        </div>
+                        <div class="kpi-item">
+                            <div class="kpi-value" style="color: var(--nw-purple);">16</div>
+                            <div class="kpi-label">Deep Dives</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <div class="card-header">
+                        <span class="card-title">Current Improvements</span>
+                        <div class="card-icon green"><i class="fas fa-rocket"></i></div>
+                    </div>
+                    <ul class="improvement-list">
+                        <li class="improvement-item completed">
+                            <div class="improvement-status completed"><i class="fas fa-check"></i></div>
+                            <div class="improvement-content">
+                                <div class="improvement-title">The Abyss Merge</div>
+                                <div class="improvement-meta">Merged Absurd Wing + Deep Dives • Today</div>
+                            </div>
+                        </li>
+                        <li class="improvement-item completed">
+                            <div class="improvement-status completed"><i class="fas fa-check"></i></div>
+                            <div class="improvement-content">
+                                <div class="improvement-title">Tabletop Realm</div>
+                                <div class="improvement-meta">Real-life D&D system • Today</div>
+                            </div>
+                        </li>
+                        <li class="improvement-item in-progress">
+                            <div class="improvement-status in-progress"><i class="fas fa-sync fa-spin"></i></div>
+                            <div class="improvement-content">
+                                <div class="improvement-title">Build Lab v2.0</div>
+                                <div class="improvement-meta">Enhanced efficiency tracking • In progress</div>
+                            </div>
+                        </li>
+                        <li class="improvement-item planned">
+                            <div class="improvement-status planned"><i class="fas fa-clock"></i></div>
+                            <div class="improvement-content">
+                                <div class="improvement-title">Toggle Fix for All Pages</div>
+                                <div class="improvement-meta">Universal nav integration • Planned</div>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+                
+                <div class="card">
+                    <div class="card-header">
+                        <span class="card-title">Build Velocity</span>
+                        <div class="card-icon amber"><i class="fas fa-chart-area"></i></div>
+                    </div>
+                    <div class="chart-container"><canvas id="velocityChart"></canvas></div>
+                </div>
+                
+                <div class="card">
+                    <div class="card-header">
+                        <span class="card-title">Recent Activity</span>
+                        <div class="card-icon purple"><i class="fas fa-code"></i></div>
+                    </div>
+                    <div class="build-log">
+                        <div class="build-entry">
+                            <span class="build-time">Now</span>
+                            <div class="build-content"><span class="build-type feature">Feature</span>Tabletop Realm - Real-life D&D system</div>
+                        </div>
+                        <div class="build-entry">
+                            <span class="build-time">-10m</span>
+                            <div class="build-content"><span class="build-type improve">Improve</span>Merged Absurd Wing + Deep Dives into The Abyss</div>
+                        </div>
+                        <div class="build-entry">
+                            <span class="build-time">-30m</span>
+                            <div class="build-content"><span class="build-type improve">Improve</span>Navigation v6.0 - The Abyss Edition</div>
+                        </div>
+                        <div class="build-entry">
+                            <span class="build-time">-1h</span>
+                            <div class="build-content"><span class="build-type feature">Feature</span>5 Deep Dive lore pages completed</div>
+                        </div>
+                        <div class="build-entry">
+                            <span class="build-time">-2h</span>
+                            <div class="build-content"><span class="build-type art">Art</span>12 hero images generated with nanobanana</div>
+                        </div>
+                        <div class="build-entry">
+                            <span class="build-time">-3h</span>
+                            <div class="build-content"><span class="build-type learn">Learn</span>Documented Cloudflare Pages routing patterns</div>
+                        </div>
+                    </div>
+                </div>
             </div>
-            <div style="text-align: center; margin-top: 1rem;"><span class="metric-change up"><i class="fas fa-arrow-up"></i> +12% this week</span></div>
         </div>
-        <div class="card">
-            <div class="card-header"><span class="card-title">Build vs Improve Balance</span><div class="card-icon purple"><i class="fas fa-balance-scale"></i></div></div>
-            <div style="margin-bottom: 1rem;"><div style="display: flex; justify-content: space-between; font-size: 0.875rem;"><span>Building Features</span><span style="color: var(--nw-purple);">67%</span></div><div class="progress-bar"><div class="progress-fill purple" style="width: 67%;"></div></div></div>
-            <div><div style="display: flex; justify-content: space-between; font-size: 0.875rem;"><span>Continuous Improvement</span><span style="color: var(--nw-green);">33%</span></div><div class="progress-bar"><div class="progress-fill green" style="width: 33%;"></div></div></div>
-            <p style="margin-top: 1rem; font-size: 0.75rem; color: rgba(255,255,255,0.5);">Target: 70% Build / 30% Improve (Optimal Balance)</p>
-        </div>
-        <div class="card">
-            <div class="card-header"><span class="card-title">Key Performance Indicators</span><div class="card-icon blue"><i class="fas fa-chart-line"></i></div></div>
-            <div class="kpi-grid">
-                <div class="kpi-item"><div class="kpi-value orange">14.2s</div><div class="kpi-label">Avg Page Load</div></div>
-                <div class="kpi-item"><div class="kpi-value green">99.7%</div><div class="kpi-label">Uptime</div></div>
-                <div class="kpi-item"><div class="kpi-value blue">185KB</div><div class="kpi-label">Bundle Size</div></div>
-                <div class="kpi-item"><div class="kpi-value purple">12</div><div class="kpi-label">Deep Dives</div></div>
+        
+        <!-- Innovation Tab -->
+        <div class="tab-panel" id="innovation">
+            <div class="dashboard-grid">
+                <div class="card full-width">
+                    <div class="card-header">
+                        <span class="card-title">Innovation Pipeline</span>
+                        <div class="card-icon amber"><i class="fas fa-lightbulb"></i></div>
+                    </div>
+                    <div class="pipeline-item">
+                        <div class="pipeline-icon"><i class="fas fa-dice-d20"></i></div>
+                        <div class="pipeline-content">
+                            <div class="pipeline-title">Tabletop Realm</div>
+                            <div class="pipeline-desc">Real-life D&D using NWG cards - complete rulebook, character sheets, campaigns</div>
+                        </div>
+                        <span class="pipeline-status shipped">Shipped</span>
+                    </div>
+                    <div class="pipeline-item">
+                        <div class="pipeline-icon"><i class="fas fa-portal"></i></div>
+                        <div class="pipeline-content">
+                            <div class="pipeline-title">The Abyss</div>
+                            <div class="pipeline-desc">Merged Absurd Wing + Deep Dives for maximum exploration</div>
+                        </div>
+                        <span class="pipeline-status shipped">Shipped</span>
+                    </div>
+                    <div class="pipeline-item">
+                        <div class="pipeline-icon"><i class="fas fa-robot"></i></div>
+                        <div class="pipeline-content">
+                            <div class="pipeline-title">AI DM Assistant</div>
+                            <div class="pipeline-desc">AI-powered dungeon master for solo tabletop sessions</div>
+                        </div>
+                        <span class="pipeline-status ideation">Ideation</span>
+                    </div>
+                    <div class="pipeline-item">
+                        <div class="pipeline-icon"><i class="fas fa-vr-cardboard"></i></div>
+                        <div class="pipeline-content">
+                            <div class="pipeline-title">AR Card Scanner</div>
+                            <div class="pipeline-desc">Point phone at physical cards to see 3D stats overlay</div>
+                        </div>
+                        <span class="pipeline-status research">Research</span>
+                    </div>
+                    <div class="pipeline-item">
+                        <div class="pipeline-icon"><i class="fas fa-book-sparkles"></i></div>
+                        <div class="pipeline-content">
+                            <div class="pipeline-title">Lore Encyclopedia</div>
+                            <div class="pipeline-desc">Wiki-style interconnected lore with search</div>
+                        </div>
+                        <span class="pipeline-status building">Building</span>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <div class="card-header">
+                        <span class="card-title">Innovation Score</span>
+                        <div class="card-icon amber"><i class="fas fa-sparkles"></i></div>
+                    </div>
+                    <div style="text-align: center; padding: 2rem 0;">
+                        <div style="font-family: 'Orbitron', sans-serif; font-size: 4rem; font-weight: 900; background: linear-gradient(135deg, var(--nw-amber), var(--nw-purple)); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">78</div>
+                        <div style="font-size: 0.75rem; color: rgba(255,255,255,0.5); text-transform: uppercase; letter-spacing: 0.1em;">Innovation Index</div>
+                        <div style="margin-top: 0.5rem;">
+                            <span class="metric-change up"><i class="fas fa-arrow-up"></i> +12 this week</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <div class="card-header">
+                        <span class="card-title">Innovation Metrics</span>
+                        <div class="card-icon purple"><i class="fas fa-chart-pie"></i></div>
+                    </div>
+                    <div class="kpi-grid">
+                        <div class="kpi-item">
+                            <div class="kpi-value" style="color: var(--nw-amber);">7</div>
+                            <div class="kpi-label">Ideas in Pipeline</div>
+                        </div>
+                        <div class="kpi-item">
+                            <div class="kpi-value" style="color: var(--nw-green);">3</div>
+                            <div class="kpi-label">Shipped This Week</div>
+                        </div>
+                        <div class="kpi-item">
+                            <div class="kpi-value" style="color: var(--nw-cyan);">2.1d</div>
+                            <div class="kpi-label">Avg Idea→Ship</div>
+                        </div>
+                        <div class="kpi-item">
+                            <div class="kpi-value" style="color: var(--nw-purple);">85%</div>
+                            <div class="kpi-label">Ship Rate</div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
-        <div class="card">
-            <div class="card-header"><span class="card-title">Continuous Improvements</span><div class="card-icon green"><i class="fas fa-rocket"></i></div></div>
-            <ul class="improvement-list">
-                <li class="improvement-item completed"><div class="improvement-status completed"><i class="fas fa-check"></i></div><div class="improvement-content"><div class="improvement-title">Deep Dive Engine v1.0</div><div class="improvement-meta">Reusable lore system • Completed today</div></div></li>
-                <li class="improvement-item completed"><div class="improvement-status completed"><i class="fas fa-check"></i></div><div class="improvement-content"><div class="improvement-title">Art Generation Pipeline</div><div class="improvement-meta">nanobanana integration • Completed today</div></div></li>
-                <li class="improvement-item in-progress"><div class="improvement-status in-progress"><i class="fas fa-sync fa-spin"></i></div><div class="improvement-content"><div class="improvement-title">Interactive Secrets System</div><div class="improvement-meta">NWG reward integration • In progress</div></div></li>
-                <li class="improvement-item planned"><div class="improvement-status planned"><i class="fas fa-clock"></i></div><div class="improvement-content"><div class="improvement-title">Analytics Dashboard</div><div class="improvement-meta">User engagement metrics • Planned</div></div></li>
-            </ul>
-        </div>
-        <div class="card">
-            <div class="card-header"><span class="card-title">Recent Build Activity</span><div class="card-icon cyan"><i class="fas fa-code"></i></div></div>
-            <div class="build-log">
-                <div class="build-entry"><span class="build-time">Now</span><div class="build-content"><span class="build-type feature">Feature</span>Deep Dives Lore System with 5 interactive stories</div></div>
-                <div class="build-entry"><span class="build-time">-30m</span><div class="build-content"><span class="build-type art">Art</span>Generated 12 hero images with nanobanana</div></div>
-                <div class="build-entry"><span class="build-time">-1h</span><div class="build-content"><span class="build-type improve">Improve</span>Efficiency tracking dashboard added</div></div>
-                <div class="build-entry"><span class="build-time">-2h</span><div class="build-content"><span class="build-type feature">Feature</span>RegginA Origin Story deep dive</div></div>
-                <div class="build-entry"><span class="build-time">-3h</span><div class="build-content"><span class="build-type improve">Improve</span>Unified navigation system v5.1</div></div>
+        
+        <!-- Quality Tab -->
+        <div class="tab-panel" id="quality">
+            <div class="dashboard-grid">
+                <div class="card full-width">
+                    <div class="card-header">
+                        <span class="card-title">Quality Scorecard</span>
+                        <div class="card-icon green"><i class="fas fa-gem"></i></div>
+                    </div>
+                    <div class="quality-grid">
+                        <div class="quality-item">
+                            <div class="quality-score" style="color: var(--nw-green);">A+</div>
+                            <div class="quality-label">Code Quality</div>
+                            <div class="quality-trend up"><i class="fas fa-arrow-up"></i> Improving</div>
+                        </div>
+                        <div class="quality-item">
+                            <div class="quality-score" style="color: var(--nw-green);">92</div>
+                            <div class="quality-label">Design Score</div>
+                            <div class="quality-trend up"><i class="fas fa-arrow-up"></i> +5</div>
+                        </div>
+                        <div class="quality-item">
+                            <div class="quality-score" style="color: var(--nw-cyan);">88</div>
+                            <div class="quality-label">UX Score</div>
+                            <div class="quality-trend up"><i class="fas fa-arrow-up"></i> +3</div>
+                        </div>
+                        <div class="quality-item">
+                            <div class="quality-score" style="color: var(--nw-green);">95</div>
+                            <div class="quality-label">Performance</div>
+                            <div class="quality-trend up"><i class="fas fa-arrow-up"></i> +8</div>
+                        </div>
+                        <div class="quality-item">
+                            <div class="quality-score" style="color: var(--nw-purple);">A</div>
+                            <div class="quality-label">Accessibility</div>
+                            <div class="quality-trend up"><i class="fas fa-arrow-up"></i> Stable</div>
+                        </div>
+                        <div class="quality-item">
+                            <div class="quality-score" style="color: var(--nw-amber);">78</div>
+                            <div class="quality-label">Test Coverage</div>
+                            <div class="quality-trend up"><i class="fas fa-arrow-up"></i> +12</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <div class="card-header">
+                        <span class="card-title">Quality Standards</span>
+                        <div class="card-icon purple"><i class="fas fa-clipboard-check"></i></div>
+                    </div>
+                    <ul class="improvement-list">
+                        <li class="improvement-item completed">
+                            <div class="improvement-status completed"><i class="fas fa-check"></i></div>
+                            <div class="improvement-content">
+                                <div class="improvement-title">Mobile Responsive</div>
+                                <div class="improvement-meta">All pages work on mobile</div>
+                            </div>
+                        </li>
+                        <li class="improvement-item completed">
+                            <div class="improvement-status completed"><i class="fas fa-check"></i></div>
+                            <div class="improvement-content">
+                                <div class="improvement-title">Consistent Design System</div>
+                                <div class="improvement-meta">NW tokens & components</div>
+                            </div>
+                        </li>
+                        <li class="improvement-item completed">
+                            <div class="improvement-status completed"><i class="fas fa-check"></i></div>
+                            <div class="improvement-content">
+                                <div class="improvement-title">Fast Load Times</div>
+                                <div class="improvement-meta">&lt;2s on 3G connections</div>
+                            </div>
+                        </li>
+                        <li class="improvement-item in-progress">
+                            <div class="improvement-status in-progress"><i class="fas fa-sync fa-spin"></i></div>
+                            <div class="improvement-content">
+                                <div class="improvement-title">Universal Navigation</div>
+                                <div class="improvement-meta">Toggle on all pages</div>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+                
+                <div class="card">
+                    <div class="card-header">
+                        <span class="card-title">Quality Trend</span>
+                        <div class="card-icon cyan"><i class="fas fa-chart-line"></i></div>
+                    </div>
+                    <div class="chart-container"><canvas id="qualityChart"></canvas></div>
+                </div>
             </div>
         </div>
-        <div class="card">
-            <div class="card-header"><span class="card-title">Build Velocity Trend</span><div class="card-icon orange"><i class="fas fa-chart-area"></i></div></div>
-            <div class="chart-container"><canvas id="velocityChart"></canvas></div>
-        </div>
-        <div class="card full-width philosophy-section">
-            <div class="card-header"><span class="card-title">Our Efficiency Philosophy</span><div class="card-icon orange"><i class="fas fa-brain"></i></div></div>
-            <p style="color: rgba(255,255,255,0.7); margin-bottom: 1rem;">Building efficiently is only half the equation. Continuous improvement on HOW we build is equally important.</p>
-            <div class="philosophy-list">
-                <div class="philosophy-item"><h4><i class="fas fa-recycle"></i> Reusable Components</h4><p>Every feature built should be a building block for future features. The Deep Dive Engine powers all lore pages.</p></div>
-                <div class="philosophy-item"><h4><i class="fas fa-tachometer-alt"></i> Measure Everything</h4><p>Track build times, bundle sizes, and development velocity. What gets measured gets improved.</p></div>
-                <div class="philosophy-item"><h4><i class="fas fa-sync"></i> Iterate Constantly</h4><p>Don't wait for perfection. Ship, learn, improve. Each iteration makes the next one faster.</p></div>
-                <div class="philosophy-item"><h4><i class="fas fa-balance-scale"></i> Balance Build & Improve</h4><p>70% building new features, 30% improving existing systems. This ratio keeps us moving forward while getting better.</p></div>
-                <div class="philosophy-item"><h4><i class="fas fa-robot"></i> Automate Repetition</h4><p>If you do it twice, automate it. Art generation, deployments, testing—all streamlined.</p></div>
-                <div class="philosophy-item"><h4><i class="fas fa-book"></i> Document Patterns</h4><p>Successful patterns become templates. Failures become lessons. Both improve future efficiency.</p></div>
+        
+        <!-- Learning Tab -->
+        <div class="tab-panel" id="learning">
+            <div class="dashboard-grid">
+                <div class="card full-width">
+                    <div class="card-header">
+                        <span class="card-title">Learning Log - Building High Quality Work Efficiently</span>
+                        <div class="card-icon cyan"><i class="fas fa-brain"></i></div>
+                    </div>
+                    
+                    <div class="learning-entry">
+                        <div class="learning-header">
+                            <span class="learning-title"><i class="fas fa-lightbulb" style="color: var(--nw-amber); margin-right: 0.5rem;"></i>Merging Sections Increases Engagement</span>
+                            <span class="learning-date">2026-02-04</span>
+                        </div>
+                        <div class="learning-content">
+                            Combining Absurd Wing and Deep Dives into "The Abyss" creates a single exploration destination with 16+ pages. Users don't have to choose between sections - they can seamlessly explore both lore AND physical locations in one journey. This increases time-on-site and discovery.
+                        </div>
+                        <div class="learning-tags">
+                            <span class="learning-tag">UX</span>
+                            <span class="learning-tag">Navigation</span>
+                            <span class="learning-tag">Engagement</span>
+                        </div>
+                    </div>
+                    
+                    <div class="learning-entry">
+                        <div class="learning-header">
+                            <span class="learning-title"><i class="fas fa-dice-d20" style="color: var(--nw-amber); margin-right: 0.5rem;"></i>Digital→Physical Bridge Creates Community</span>
+                            <span class="learning-date">2026-02-04</span>
+                        </div>
+                        <div class="learning-content">
+                            The Tabletop Realm creates a bridge between digital cards and real-life play. This transforms online-only players into IRL friends. Key insight: the conversion formula (ATK/5=STR) makes any card playable without needing new assets. Reuse existing content in new formats.
+                        </div>
+                        <div class="learning-tags">
+                            <span class="learning-tag">Community</span>
+                            <span class="learning-tag">Content Reuse</span>
+                            <span class="learning-tag">IRL</span>
+                        </div>
+                    </div>
+                    
+                    <div class="learning-entry">
+                        <div class="learning-header">
+                            <span class="learning-title"><i class="fas fa-route" style="color: var(--nw-amber); margin-right: 0.5rem;"></i>Cloudflare Pages Routing Patterns</span>
+                            <span class="learning-date">2026-02-04</span>
+                        </div>
+                        <div class="learning-content">
+                            <strong>Key learnings from today's routing fixes:</strong><br>
+                            1. _routes.json has a 100-rule limit - use wildcards like /lore/* instead of individual files<br>
+                            2. Worker-handled routes need to explicitly serve HTML files<br>
+                            3. serveStatic must use 'hono/cloudflare-workers', NOT '@hono/node-server/serve-static'<br>
+                            4. Post-build scripts can modify _routes.json but must use .cjs extension for ES modules
+                        </div>
+                        <div class="learning-tags">
+                            <span class="learning-tag">Cloudflare</span>
+                            <span class="learning-tag">Routing</span>
+                            <span class="learning-tag">Debugging</span>
+                        </div>
+                    </div>
+                    
+                    <div class="learning-entry">
+                        <div class="learning-header">
+                            <span class="learning-title"><i class="fas fa-image" style="color: var(--nw-amber); margin-right: 0.5rem;"></i>nanobanana = Consistent Art Quality</span>
+                            <span class="learning-date">2026-02-04</span>
+                        </div>
+                        <div class="learning-content">
+                            Using a single AI art model (nanobanana) for all hero images ensures visual consistency across the site. Mixed models = jarring experience. Generated 12 hero images today with consistent quality because of standardized prompts and single model usage.
+                        </div>
+                        <div class="learning-tags">
+                            <span class="learning-tag">Art</span>
+                            <span class="learning-tag">Consistency</span>
+                            <span class="learning-tag">AI Generation</span>
+                        </div>
+                    </div>
+                    
+                    <div class="learning-entry">
+                        <div class="learning-header">
+                            <span class="learning-title"><i class="fas fa-code" style="color: var(--nw-amber); margin-right: 0.5rem;"></i>Reusable Components = 10x Speed</span>
+                            <span class="learning-date">2026-02-03</span>
+                        </div>
+                        <div class="learning-content">
+                            The Deep Dive template engine (nw-deepdive.js) allows creating new lore pages in minutes instead of hours. Define section types once, reuse forever. Same pattern applies to: navigation (nw-nav.js), wallet (nw-wallet.js), currency (nw-currency.js).
+                        </div>
+                        <div class="learning-tags">
+                            <span class="learning-tag">Architecture</span>
+                            <span class="learning-tag">DRY</span>
+                            <span class="learning-tag">Speed</span>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
-        <div class="card full-width">
-            <div class="card-header"><span class="card-title">Current Sprint Progress</span><div class="card-icon green"><i class="fas fa-tasks"></i></div></div>
-            <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;"><span>Deep Dives v1.0</span><span style="color: var(--nw-green);">80% Complete</span></div>
-            <div class="progress-bar" style="height: 12px;"><div class="progress-fill green" style="width: 80%;"></div></div>
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-top: 1.5rem;">
-                <div style="padding: 1rem; background: rgba(34,197,94,0.1); border-radius: 0.5rem; border-left: 3px solid var(--nw-green);"><div style="font-weight: 600; margin-bottom: 0.25rem;"><i class="fas fa-check" style="color: var(--nw-green); margin-right: 0.5rem;"></i>Completed</div><div style="font-size: 0.875rem; color: rgba(255,255,255,0.6);">Lore Hub, RegginA Origin, Sacred Log, Whale Wars, Conspiracy Board, AFK Incident</div></div>
-                <div style="padding: 1rem; background: rgba(255,107,0,0.1); border-radius: 0.5rem; border-left: 3px solid var(--nw-orange);"><div style="font-weight: 600; margin-bottom: 0.25rem;"><i class="fas fa-sync fa-spin" style="color: var(--nw-orange); margin-right: 0.5rem;"></i>In Progress</div><div style="font-size: 0.875rem; color: rgba(255,255,255,0.6);">Navigation integration, Remaining deep dives</div></div>
-                <div style="padding: 1rem; background: rgba(59,130,246,0.1); border-radius: 0.5rem; border-left: 3px solid var(--nw-blue);"><div style="font-weight: 600; margin-bottom: 0.25rem;"><i class="fas fa-clock" style="color: var(--nw-blue); margin-right: 0.5rem;"></i>Up Next</div><div style="font-size: 0.875rem; color: rgba(255,255,255,0.6);">Guild Timeline, Romance Story, AI Conspiracy</div></div>
+        
+        <!-- Philosophy Tab -->
+        <div class="tab-panel" id="philosophy">
+            <div class="dashboard-grid">
+                <div class="card full-width">
+                    <div class="card-header">
+                        <span class="card-title">Our Building Philosophy</span>
+                        <div class="card-icon green"><i class="fas fa-scroll"></i></div>
+                    </div>
+                    <p style="color: rgba(255,255,255,0.7); margin-bottom: 2rem; font-size: 1.0625rem; line-height: 1.7;">
+                        Building efficiently is only half the equation. <strong style="color: var(--nw-green);">Continuous improvement on HOW we build</strong> is equally important. 
+                        We don't just ship features—we obsess over the process that creates them.
+                    </p>
+                    <div class="philosophy-grid">
+                        <div class="philosophy-item">
+                            <h4><i class="fas fa-recycle"></i> Reusable Components</h4>
+                            <p>Every feature built should be a building block for future features. The Deep Dive Engine powers all lore pages. nw-nav.js works on every page. Build once, use everywhere.</p>
+                        </div>
+                        <div class="philosophy-item">
+                            <h4><i class="fas fa-tachometer-alt"></i> Measure Everything</h4>
+                            <p>Track build times, bundle sizes, and development velocity. What gets measured gets improved. This dashboard exists because we measure our own efficiency.</p>
+                        </div>
+                        <div class="philosophy-item">
+                            <h4><i class="fas fa-sync"></i> Iterate Constantly</h4>
+                            <p>Don't wait for perfection. Ship, learn, improve. Each iteration makes the next one faster. The Abyss is v3 of our section organization.</p>
+                        </div>
+                        <div class="philosophy-item">
+                            <h4><i class="fas fa-balance-scale"></i> Balance Build & Learn</h4>
+                            <p>60% building new features, 30% improving existing systems, 10% learning. This ratio keeps us moving forward while getting better.</p>
+                        </div>
+                        <div class="philosophy-item">
+                            <h4><i class="fas fa-robot"></i> Automate Repetition</h4>
+                            <p>If you do it twice, automate it. Art generation prompts, deployments, routing scripts—all streamlined. Never do manually what a script can do.</p>
+                        </div>
+                        <div class="philosophy-item">
+                            <h4><i class="fas fa-book"></i> Document Patterns</h4>
+                            <p>Successful patterns become templates. Failures become lessons. Both improve future efficiency. This Learning Log is our institutional memory.</p>
+                        </div>
+                        <div class="philosophy-item">
+                            <h4><i class="fas fa-gem"></i> Quality is Non-Negotiable</h4>
+                            <p>Fast shipping doesn't mean low quality. Our design system ensures everything looks good. Reusable components ensure consistency. Speed AND quality.</p>
+                        </div>
+                        <div class="philosophy-item">
+                            <h4><i class="fas fa-users"></i> Build for Community</h4>
+                            <p>Every feature should strengthen guild bonds. Tabletop Realm turns online friends into IRL adventurers. The Abyss gives explorers endless content to discuss.</p>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
-    </div>
+    </main>
+    
     <script>
-        const ctx = document.getElementById('velocityChart').getContext('2d');
-        new Chart(ctx, { type: 'line', data: { labels: ['Week 1', 'Week 2', 'Week 3', 'Week 4', 'Week 5', 'Week 6'], datasets: [{ label: 'Features Built', data: [8, 12, 15, 18, 22, 28], borderColor: '#ff6b00', backgroundColor: 'rgba(255,107,0,0.1)', fill: true, tension: 0.4 }, { label: 'Improvements Made', data: [3, 5, 8, 10, 14, 18], borderColor: '#22c55e', backgroundColor: 'rgba(34,197,94,0.1)', fill: true, tension: 0.4 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { labels: { color: 'rgba(255,255,255,0.7)', font: { size: 10 } } } }, scales: { x: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: 'rgba(255,255,255,0.5)', font: { size: 10 } } }, y: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: 'rgba(255,255,255,0.5)', font: { size: 10 } } } } } });
-        document.addEventListener('DOMContentLoaded', () => { if (typeof NW_WALLET !== 'undefined') NW_WALLET.init(); if (typeof NW_NAV !== 'undefined') NW_NAV.init(); });
+        // Tab switching
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+                document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+                btn.classList.add('active');
+                document.getElementById(btn.dataset.tab).classList.add('active');
+            });
+        });
+        
+        // Velocity Chart
+        const velocityCtx = document.getElementById('velocityChart')?.getContext('2d');
+        if (velocityCtx) {
+            new Chart(velocityCtx, {
+                type: 'line',
+                data: {
+                    labels: ['Week 1', 'Week 2', 'Week 3', 'Week 4', 'Week 5', 'Week 6'],
+                    datasets: [
+                        {
+                            label: 'Features',
+                            data: [8, 12, 18, 24, 32, 42],
+                            borderColor: '#a855f7',
+                            backgroundColor: 'rgba(168,85,247,0.1)',
+                            fill: true,
+                            tension: 0.4
+                        },
+                        {
+                            label: 'Improvements',
+                            data: [3, 7, 12, 18, 28, 38],
+                            borderColor: '#22c55e',
+                            backgroundColor: 'rgba(34,197,94,0.1)',
+                            fill: true,
+                            tension: 0.4
+                        },
+                        {
+                            label: 'Learnings',
+                            data: [2, 4, 6, 10, 15, 23],
+                            borderColor: '#06b6d4',
+                            backgroundColor: 'rgba(6,182,212,0.1)',
+                            fill: true,
+                            tension: 0.4
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { labels: { color: 'rgba(255,255,255,0.7)', font: { size: 10 } } }
+                    },
+                    scales: {
+                        x: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: 'rgba(255,255,255,0.5)', font: { size: 10 } } },
+                        y: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: 'rgba(255,255,255,0.5)', font: { size: 10 } } }
+                    }
+                }
+            });
+        }
+        
+        // Quality Chart
+        const qualityCtx = document.getElementById('qualityChart')?.getContext('2d');
+        if (qualityCtx) {
+            new Chart(qualityCtx, {
+                type: 'line',
+                data: {
+                    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+                    datasets: [{
+                        label: 'Quality Score',
+                        data: [65, 72, 78, 82, 88, 92],
+                        borderColor: '#22c55e',
+                        backgroundColor: 'rgba(34,197,94,0.1)',
+                        fill: true,
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    scales: {
+                        x: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: 'rgba(255,255,255,0.5)', font: { size: 10 } } },
+                        y: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: 'rgba(255,255,255,0.5)', font: { size: 10 } }, min: 50, max: 100 }
+                    }
+                }
+            });
+        }
+        
+        // Initialize nav and wallet
+        document.addEventListener('DOMContentLoaded', () => {
+            if (typeof NW_WALLET !== 'undefined') NW_WALLET.init();
+            if (typeof NW_NAV !== 'undefined') NW_NAV.init('efficiency');
+        });
     </script>
 </body>
 </html>

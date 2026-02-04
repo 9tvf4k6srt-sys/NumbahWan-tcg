@@ -19,6 +19,8 @@ const routes = {
     "/museum/*",
     "/vault/*",
     "/research/*",
+    "/tabletop/*",
+    "/tabletop.html",
     "/.well-known/*"
   ]
 };

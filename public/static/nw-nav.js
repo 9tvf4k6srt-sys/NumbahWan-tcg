@@ -1,12 +1,13 @@
 /**
- * NumbahWan TCG - Unified Navigation System v5.1
- * Collapsible sections, less clutter, more chaos
+ * NumbahWan TCG - Unified Navigation System v6.0
+ * THE ABYSS EDITION - Merged Absurd Wing + Deep Dives
  * Uses ONLY custom NW icons - NO EMOJIS!
  * 
- * FIXES in v5.1:
- * - Fixed language toggle freeze (event listener duplication)
- * - Fixed icon rendering (inline SVG paths)
- * - Fixed event dispatch (window vs document)
+ * v6.0 CHANGES:
+ * - Merged Absurd Wing + Deep Dives into "The Abyss"
+ * - Added Real-Life D&D section "Tabletop Realm"
+ * - Renamed How to Play to Arena Guide
+ * - Added Build Lab improvements
  */
 
 const NW_NAV = {
@@ -39,7 +40,15 @@ const NW_NAV = {
         menu: '<path d="M4 6h16M4 12h16M4 18h16"/>',
         close: '<path d="M6 18L18 6M6 6l12 12"/>',
         'arrow-right': '<path d="M9 18l6-6-6-6"/>',
-        globe: '<circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15 15 0 010 20 15 15 0 010-20z"/>'
+        globe: '<circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15 15 0 010 20 15 15 0 010-20z"/>',
+        // New icons for The Abyss
+        portal: '<circle cx="12" cy="12" r="9"/><path d="M12 3v18M3 12h18"/><circle cx="12" cy="12" r="4"/>',
+        dragon: '<path d="M4 8c0-2 2-4 4-4 1 0 2 .5 3 1l1 1 1-1c1-.5 2-1 3-1 2 0 4 2 4 4 0 3-4 6-8 10-4-4-8-7-8-10z"/>',
+        dice: '<rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8" cy="8" r="1.5"/><circle cx="16" cy="8" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="8" cy="16" r="1.5"/><circle cx="16" cy="16" r="1.5"/>',
+        book: '<path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/>',
+        lightning: '<path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>',
+        sparkles: '<path d="M12 2l2 7h7l-5.5 4 2 7-5.5-4-5.5 4 2-7L3 9h7l2-7z"/>',
+        theater: '<path d="M4 8c0-2 2-4 4-4h8c2 0 4 2 4 4v8c0 2-2 4-4 4H8c-2 0-4-2-4-4V8zm4 3v2m8-2v2m-8 4c2 2 6 2 8 0"/>'
     },
     
     // Icon helper - inline SVG for reliable rendering
@@ -58,9 +67,9 @@ const NW_NAV = {
             pages: [
                 { id: 'index', name: { en: 'Home', zh: '首頁', th: 'หน้าหลัก' }, icon: 'home', href: '/' },
                 { id: 'forge', name: { en: 'Open Packs', zh: '開卡包', th: 'เปิดแพ็ค' }, icon: 'fire', href: '/forge' },
-                { id: 'battle', name: { en: 'Battle', zh: '戰鬥', th: 'ต่อสู้' }, icon: 'swords', href: '/battle' },
+                { id: 'battle', name: { en: 'Battle Arena', zh: '戰鬥場', th: 'สนามรบ' }, icon: 'swords', href: '/battle' },
                 { id: 'wallet', name: { en: 'Wallet', zh: '錢包', th: 'กระเป๋า' }, icon: 'wallet', href: '/wallet' },
-                { id: 'profile-card', name: { en: 'Profile Card', zh: '個人卡片', th: 'การ์ดโปรไฟล์' }, icon: 'card', href: '/profile-card', isNew: true },
+                { id: 'profile-card', name: { en: 'Profile Card', zh: '個人卡片', th: 'การ์ดโปรไฟล์' }, icon: 'form', href: '/profile-card', isNew: true },
                 { id: 'achievements', name: { en: 'Achievements', zh: '成就', th: 'ความสำเร็จ' }, icon: 'trophy', href: '/achievements', isNew: true }
             ]
         },
@@ -129,48 +138,64 @@ const NW_NAV = {
                 { id: 'intelligence', name: { en: 'Intelligence', zh: '情報局', th: 'หน่วยข่าวกรอง' }, icon: 'eye', href: '/intelligence' }
             ]
         },
-        absurd: {
-            name: { en: 'Absurd Wing', zh: '荒誕區', th: 'ปีกไร้สาระ' },
-            icon: 'skull',
-            color: '#ff66ff',
-            collapsed: true,
-            desc: { en: '(Enter at own risk)', zh: '(後果自負)', th: '(เสี่ยงเอง)' },
-            pages: [
-                { id: 'therapy', name: { en: 'Guild Therapy', zh: '公會治療', th: 'บำบัดกิลด์' }, icon: 'crystal-ball', href: '/therapy' },
-                { id: 'hr', name: { en: 'HR Department', zh: '人資部', th: 'ฝ่ายบุคคล' }, icon: 'form', href: '/hr' },
-                { id: 'conspiracy', name: { en: 'Conspiracy Board', zh: '陰謀論板', th: 'บอร์ดสมคบคิด' }, icon: 'eye', href: '/conspiracy' },
-                { id: 'cafeteria', name: { en: 'Cafeteria', zh: '食堂', th: 'โรงอาหาร' }, icon: 'fire', href: '/cafeteria', isNew: true },
-                { id: 'lost-found', name: { en: 'Lost & Found', zh: '失物招領', th: 'ของหาย' }, icon: 'inventory', href: '/lost-found', isNew: true },
-                { id: 'parking', name: { en: 'Parking Lot', zh: '停車場', th: 'ที่จอดรถ' }, icon: 'anchor', href: '/parking', isNew: true },
-                { id: 'maintenance', name: { en: 'Maintenance', zh: '維護室', th: 'ห้องซ่อม' }, icon: 'scroll', href: '/maintenance', isNew: true },
-                { id: 'breakroom', name: { en: 'Break Room', zh: '休息室', th: 'ห้องพัก' }, icon: 'meme', href: '/breakroom', isNew: true },
-                { id: 'basement', name: { en: 'Basement', zh: '地下室', th: 'ห้องใต้ดิน' }, icon: 'skull', href: '/basement', isNew: true },
-                { id: 'zakum', name: { en: 'Zakum Lore', zh: '扎昆傳說', th: 'ตำนานซาคุม' }, icon: 'skull', href: '/zakum' }
-            ]
-        },
-        lore: {
-            name: { en: 'Deep Dives', zh: '深度探索', th: 'เจาะลึก' },
-            icon: 'scroll',
+        // THE ABYSS - Merged Absurd Wing + Deep Dives
+        abyss: {
+            name: { en: 'The Abyss', zh: '深淵', th: 'นรกลึก' },
+            icon: 'portal',
             color: '#a855f7',
             collapsed: true,
-            desc: { en: '(Endless rabbit holes)', zh: '(無盡的兔子洞)', th: '(หลุมกระต่ายไม่สิ้นสุด)' },
+            desc: { en: '(Once you enter, you cannot leave)', zh: '(一旦進入，無法離開)', th: '(เมื่อเข้าแล้ว ออกไม่ได้)' },
             pages: [
+                // DEEP DIVES - Lore Hub
                 { id: 'lore', name: { en: 'Lore Archives', zh: '傳說檔案', th: 'คลังตำนาน' }, icon: 'scroll', href: '/lore', isHot: true },
+                // Character Deep Dives
                 { id: 'reggina-origin', name: { en: 'RegginA Origin', zh: 'RegginA起源', th: 'กำเนิด RegginA' }, icon: 'fire', href: '/lore/reggina-origin.html', isNew: true },
                 { id: 'sacred-log', name: { en: 'Sacred Log', zh: '聖木', th: 'ท่อนไม้ศักดิ์สิทธิ์' }, icon: 'scroll', href: '/lore/sacred-log.html', isNew: true },
                 { id: 'whale-wars', name: { en: 'Whale Wars', zh: '鯨魚大戰', th: 'สงครามวาฬ' }, icon: 'coins', href: '/lore/whale-wars.html', isNew: true },
                 { id: 'afk-incident', name: { en: 'AFK Incident', zh: 'AFK事件', th: 'เหตุการณ์ AFK' }, icon: 'meme', href: '/lore/afk-incident.html', isNew: true },
-                { id: 'conspiracy-board', name: { en: 'Conspiracy Board', zh: '陰謀板', th: 'บอร์ดสมคบคิด' }, icon: 'eye', href: '/lore/conspiracy-board.html', isNew: true }
+                { id: 'conspiracy-lore', name: { en: 'Conspiracy Board', zh: '陰謀板', th: 'บอร์ดสมคบคิด' }, icon: 'eye', href: '/lore/conspiracy-board.html', isNew: true },
+                // ABSURD WING - Physical Locations
+                { id: 'therapy', name: { en: 'Guild Therapy', zh: '公會治療', th: 'บำบัดกิลด์' }, icon: 'crystal-ball', href: '/therapy' },
+                { id: 'hr', name: { en: 'HR Department', zh: '人資部', th: 'ฝ่ายบุคคล' }, icon: 'form', href: '/hr' },
+                { id: 'conspiracy', name: { en: 'Conspiracy Wall', zh: '陰謀牆', th: 'กำแพงสมคบคิด' }, icon: 'eye', href: '/conspiracy' },
+                { id: 'cafeteria', name: { en: 'Cafeteria', zh: '食堂', th: 'โรงอาหาร' }, icon: 'fire', href: '/cafeteria' },
+                { id: 'lost-found', name: { en: 'Lost & Found', zh: '失物招領', th: 'ของหาย' }, icon: 'inventory', href: '/lost-found' },
+                { id: 'parking', name: { en: 'Parking Lot', zh: '停車場', th: 'ที่จอดรถ' }, icon: 'anchor', href: '/parking' },
+                { id: 'maintenance', name: { en: 'Maintenance', zh: '維護室', th: 'ห้องซ่อม' }, icon: 'scroll', href: '/maintenance' },
+                { id: 'breakroom', name: { en: 'Break Room', zh: '休息室', th: 'ห้องพัก' }, icon: 'meme', href: '/breakroom' },
+                { id: 'basement', name: { en: 'The Basement', zh: '地下室', th: 'ห้องใต้ดิน' }, icon: 'skull', href: '/basement' },
+                { id: 'zakum', name: { en: 'Zakum Lore', zh: '扎昆傳說', th: 'ตำนานซาคุม' }, icon: 'dragon', href: '/zakum' }
             ]
         },
-        efficiency: {
+        // TABLETOP REALM - Real-Life D&D with NWG Cards
+        tabletop: {
+            name: { en: 'Tabletop Realm', zh: '桌遊領域', th: 'อาณาจักรบอร์ดเกม' },
+            icon: 'dice',
+            color: '#f59e0b',
+            collapsed: true,
+            desc: { en: '(IRL Adventures)', zh: '(現實冒險)', th: '(ผจญภัยในชีวิตจริง)' },
+            pages: [
+                { id: 'tabletop-hub', name: { en: 'Tabletop Hub', zh: '桌遊中心', th: 'ศูนย์กลางบอร์ดเกม' }, icon: 'dice', href: '/tabletop', isHot: true },
+                { id: 'dnd-rulebook', name: { en: 'D&D Rulebook', zh: 'D&D規則書', th: 'กฎ D&D' }, icon: 'book', href: '/tabletop/rulebook', isNew: true },
+                { id: 'character-sheets', name: { en: 'Character Sheets', zh: '角色卡', th: 'แผ่นตัวละคร' }, icon: 'form', href: '/tabletop/character-sheets', isNew: true },
+                { id: 'campaign-logs', name: { en: 'Campaign Logs', zh: '戰役日誌', th: 'บันทึกแคมเปญ' }, icon: 'scroll', href: '/tabletop/campaigns', isNew: true },
+                { id: 'card-to-dnd', name: { en: 'Card→D&D Converter', zh: '卡牌→D&D轉換器', th: 'แปลงการ์ด→D&D' }, icon: 'lightning', href: '/tabletop/converter', isNew: true },
+                { id: 'dm-tools', name: { en: 'DM Tools', zh: 'DM工具', th: 'เครื่องมือ DM' }, icon: 'sparkles', href: '/tabletop/dm-tools', isNew: true },
+                { id: 'print-play', name: { en: 'Print & Play', zh: '列印遊玩', th: 'พิมพ์และเล่น' }, icon: 'form', href: '/tabletop/print-play', isNew: true }
+            ]
+        },
+        // BUILD LAB - Enhanced Efficiency System
+        buildlab: {
             name: { en: 'Build Lab', zh: '建設實驗室', th: 'ห้องแล็บสร้าง' },
             icon: 'chart',
             color: '#22c55e',
             collapsed: true,
-            desc: { en: '(Efficiency Obsessed)', zh: '(效率至上)', th: '(หมกมุ่นประสิทธิภาพ)' },
+            desc: { en: '(Innovation Factory)', zh: '(創新工廠)', th: '(โรงงานนวัตกรรม)' },
             pages: [
-                { id: 'efficiency', name: { en: 'Efficiency Dashboard', zh: '效率儀表板', th: 'แดชบอร์ดประสิทธิภาพ' }, icon: 'chart', href: '/efficiency', isNew: true }
+                { id: 'efficiency', name: { en: 'Efficiency Dashboard', zh: '效率儀表板', th: 'แดชบอร์ดประสิทธิภาพ' }, icon: 'chart', href: '/efficiency', isHot: true },
+                { id: 'innovation', name: { en: 'Innovation Lab', zh: '創新實驗室', th: 'ห้องนวัตกรรม' }, icon: 'lightning', href: '/innovation', isNew: true },
+                { id: 'quality-metrics', name: { en: 'Quality Metrics', zh: '質量指標', th: 'ตัวชี้วัดคุณภาพ' }, icon: 'trophy', href: '/quality', isNew: true },
+                { id: 'learning-log', name: { en: 'Learning Log', zh: '學習日誌', th: 'บันทึกการเรียนรู้' }, icon: 'book', href: '/learning', isNew: true }
             ]
         },
         resources: {
@@ -179,7 +204,7 @@ const NW_NAV = {
             color: '#888',
             collapsed: true,
             pages: [
-                { id: 'guide', name: { en: 'How to Play', zh: '遊戲教學', th: 'วิธีเล่น' }, icon: 'scroll', href: '/guide' },
+                { id: 'guide', name: { en: 'Arena Guide', zh: '競技場指南', th: 'คู่มือสนาม' }, icon: 'swords', href: '/guide' },
                 { id: 'academy', name: { en: 'Academy', zh: '學院', th: 'สถาบัน' }, icon: 'scroll', href: '/academy' },
                 { id: 'wyckoff', name: { en: 'Wyckoff Method', zh: '威科夫方法', th: 'วิธีไวคอฟฟ์' }, icon: 'chart', href: '/wyckoff', isNew: true },
                 { id: 'vault', name: { en: 'Archive Vault', zh: '檔案庫', th: 'คลังเก็บ' }, icon: 'lock', href: '/vault' },
@@ -228,7 +253,9 @@ const NW_NAV = {
                 '👀 You found a secret! Your reward: knowing this exists.',
                 '🔮 The ancient prophecy speaks of one who would find this...',
                 '💀 Zakum whispers: "Nice try, mortal."',
-                '🦆 A wild rubber duck appears! It does nothing.'
+                '🦆 A wild rubber duck appears! It does nothing.',
+                '🎲 Roll for initiative! You rolled a 1. Critical fail.',
+                '📜 The Abyss gazes back at you...'
             ];
             const msg = messages[Math.floor(Math.random() * messages.length)];
             if (typeof NW_SOUNDS !== 'undefined') NW_SOUNDS.play('legendary');
@@ -280,7 +307,7 @@ const NW_NAV = {
         this.bindEvents();
         this.easterEggs.init();
         this.initialized = true;
-        console.log('[NW_NAV] v5.1 Ready - Fixed icons & language toggle');
+        console.log('[NW_NAV] v6.0 Ready - The Abyss Edition');
     },
 
     t(obj) {
@@ -334,8 +361,8 @@ const NW_NAV = {
             <div class="nw-quick-access">
                 <a href="/forge" class="nw-quick-btn" title="Open Packs">${this.iconSvg('fire', 20)}</a>
                 <a href="/battle" class="nw-quick-btn" title="Battle">${this.iconSvg('swords', 20)}</a>
-                <a href="/wallet" class="nw-quick-btn" title="Wallet">${this.iconSvg('wallet', 20)}</a>
-                <a href="/market" class="nw-quick-btn" title="Market">${this.iconSvg('trade', 20)}</a>
+                <a href="/lore" class="nw-quick-btn" title="The Abyss">${this.iconSvg('portal', 20)}</a>
+                <a href="/tabletop" class="nw-quick-btn" title="Tabletop">${this.iconSvg('dice', 20)}</a>
             </div>
         `;
 
@@ -352,7 +379,7 @@ const NW_NAV = {
                     ${sectionsHTML}
                 </div>
                 <div class="nw-nav-footer">
-                    <div class="nw-nav-version">v5.1 • Made with chaos</div>
+                    <div class="nw-nav-version">v6.0 • The Abyss Edition</div>
                 </div>
             </nav>
             <button id="nwNavToggle" class="nw-nav-toggle">${this.iconSvg('menu', 22)}</button>
@@ -386,31 +413,31 @@ const NW_NAV = {
         const style = document.createElement('style');
         style.id = 'nwNavStyles';
         style.textContent = `
-            /* NW Nav v5.1 - Fixed Chaos Edition */
+            /* NW Nav v6.0 - The Abyss Edition */
             .nw-nav-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 9998; opacity: 0; visibility: hidden; transition: all 0.3s; backdrop-filter: blur(4px); }
             .nw-nav-overlay.open { opacity: 1; visibility: visible; }
             
-            .nw-nav-panel { position: fixed; top: 0; right: -320px; width: 300px; max-width: 85vw; height: 100vh; background: linear-gradient(180deg, #0d0d15 0%, #12121e 100%); z-index: 9999; transition: right 0.3s cubic-bezier(0.4, 0, 0.2, 1); display: flex; flex-direction: column; border-left: 1px solid rgba(255,215,0,0.2); box-shadow: -5px 0 30px rgba(0,0,0,0.5); }
+            .nw-nav-panel { position: fixed; top: 0; right: -320px; width: 300px; max-width: 85vw; height: 100vh; background: linear-gradient(180deg, #0d0d15 0%, #12121e 100%); z-index: 9999; transition: right 0.3s cubic-bezier(0.4, 0, 0.2, 1); display: flex; flex-direction: column; border-left: 1px solid rgba(168,85,247,0.3); box-shadow: -5px 0 30px rgba(168,85,247,0.2); }
             .nw-nav-panel.open { right: 0; }
             
-            .nw-nav-header { display: flex; justify-content: space-between; align-items: center; padding: 16px; border-bottom: 1px solid rgba(255,215,0,0.2); background: rgba(0,0,0,0.3); }
-            .nw-nav-title { font-family: 'Orbitron', sans-serif; font-size: 16px; font-weight: 700; color: #ffd700; display: flex; align-items: center; gap: 8px; }
+            .nw-nav-header { display: flex; justify-content: space-between; align-items: center; padding: 16px; border-bottom: 1px solid rgba(168,85,247,0.3); background: rgba(0,0,0,0.3); }
+            .nw-nav-title { font-family: 'Orbitron', sans-serif; font-size: 16px; font-weight: 700; color: #a855f7; display: flex; align-items: center; gap: 8px; }
             .nw-nav-close { background: none; border: none; color: #888; cursor: pointer; padding: 8px; border-radius: 8px; transition: all 0.2s; }
             .nw-nav-close:hover { color: #fff; background: rgba(255,255,255,0.1); }
             
-            .nw-quick-access { display: flex; justify-content: space-around; padding: 12px 16px; border-bottom: 1px solid rgba(255,255,255,0.1); background: rgba(255,107,0,0.05); }
-            .nw-quick-btn { width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; background: rgba(255,255,255,0.05); border-radius: 12px; color: #ffd700; transition: all 0.2s; }
-            .nw-quick-btn:hover { background: rgba(255,215,0,0.2); transform: scale(1.1); }
+            .nw-quick-access { display: flex; justify-content: space-around; padding: 12px 16px; border-bottom: 1px solid rgba(255,255,255,0.1); background: linear-gradient(135deg, rgba(168,85,247,0.1), rgba(255,107,0,0.05)); }
+            .nw-quick-btn { width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; background: rgba(255,255,255,0.05); border-radius: 12px; color: #a855f7; transition: all 0.2s; }
+            .nw-quick-btn:hover { background: rgba(168,85,247,0.3); transform: scale(1.1); }
             
             .nw-nav-lang { display: flex; justify-content: center; gap: 8px; padding: 12px; border-bottom: 1px solid rgba(255,255,255,0.1); }
             .nw-lang-btn { background: rgba(255,255,255,0.05); border: 1px solid transparent; color: #888; padding: 6px 12px; border-radius: 6px; font-size: 12px; cursor: pointer; transition: all 0.2s; }
-            .nw-lang-btn:hover { border-color: rgba(255,215,0,0.3); color: #fff; }
-            .nw-lang-btn.active { background: rgba(255,215,0,0.2); border-color: #ffd700; color: #ffd700; }
+            .nw-lang-btn:hover { border-color: rgba(168,85,247,0.3); color: #fff; }
+            .nw-lang-btn.active { background: rgba(168,85,247,0.2); border-color: #a855f7; color: #a855f7; }
             
             .nw-nav-scroll { flex: 1; overflow-y: auto; padding: 8px 0; }
             .nw-nav-scroll::-webkit-scrollbar { width: 4px; }
             .nw-nav-scroll::-webkit-scrollbar-track { background: transparent; }
-            .nw-nav-scroll::-webkit-scrollbar-thumb { background: rgba(255,215,0,0.3); border-radius: 2px; }
+            .nw-nav-scroll::-webkit-scrollbar-thumb { background: rgba(168,85,247,0.3); border-radius: 2px; }
             
             .nw-nav-section { margin: 4px 8px; }
             .nw-nav-section-header { display: flex; align-items: center; gap: 8px; padding: 12px 14px; font-size: 14px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; border-radius: 8px; transition: all 0.2s; }
@@ -425,22 +452,22 @@ const NW_NAV = {
             .nw-nav-pages { padding: 4px 0 4px 8px; }
             .nw-nav-link { display: flex; align-items: center; gap: 10px; padding: 12px 14px; color: rgba(255,255,255,0.7); text-decoration: none; border-radius: 8px; transition: all 0.2s; font-size: 15px; font-weight: 500; }
             .nw-nav-link:hover { background: rgba(255,255,255,0.08); color: #fff; transform: translateX(4px); }
-            .nw-nav-link.active { background: rgba(255,215,0,0.15); color: #ffd700; border-left: 3px solid #ffd700; }
+            .nw-nav-link.active { background: rgba(168,85,247,0.15); color: #a855f7; border-left: 3px solid #a855f7; }
             
             .nw-nav-icon { flex-shrink: 0; opacity: 0.9; }
             .nw-nav-text { flex: 1; }
             
             .nw-new-badge, .nw-hot-badge { font-size: 9px; padding: 2px 5px; border-radius: 4px; font-weight: 600; }
             .nw-new-badge { background: #00d26a; color: #000; }
-            .nw-hot-badge { background: #ff4444; color: #fff; animation: hotPulse 1s infinite; }
+            .nw-hot-badge { background: #a855f7; color: #fff; animation: hotPulse 1s infinite; }
             @keyframes hotPulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.7; } }
             
             .nw-nav-footer { padding: 12px; border-top: 1px solid rgba(255,255,255,0.1); text-align: center; }
-            .nw-nav-version { font-size: 10px; color: rgba(255,255,255,0.3); }
+            .nw-nav-version { font-size: 10px; color: rgba(168,85,247,0.5); }
             
             .nw-nav-toggle, .nw-nav-home { position: fixed; z-index: 9997; width: 48px; height: 48px; border: none; border-radius: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
-            .nw-nav-toggle { top: 12px; right: 12px; background: linear-gradient(135deg, rgba(255,107,0,0.9), rgba(255,165,0,0.9)); color: #fff; box-shadow: 0 4px 15px rgba(255,107,0,0.4); }
-            .nw-nav-home { top: 12px; right: 68px; background: rgba(0,0,0,0.7); color: #ffd700; border: 1px solid rgba(255,215,0,0.3); text-decoration: none; }
+            .nw-nav-toggle { top: 12px; right: 12px; background: linear-gradient(135deg, rgba(168,85,247,0.9), rgba(236,72,153,0.9)); color: #fff; box-shadow: 0 4px 15px rgba(168,85,247,0.4); }
+            .nw-nav-home { top: 12px; right: 68px; background: rgba(0,0,0,0.7); color: #a855f7; border: 1px solid rgba(168,85,247,0.3); text-decoration: none; }
             .nw-nav-toggle:hover, .nw-nav-home:hover { transform: scale(1.05); }
             
             @media (max-width: 480px) {
@@ -552,4 +579,4 @@ if (typeof window !== 'undefined') {
     });
 }
 
-console.log('[NW_NAV] v5.1 Module loaded');
+console.log('[NW_NAV] v6.0 The Abyss Edition loaded');
