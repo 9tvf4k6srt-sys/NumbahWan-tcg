@@ -645,9 +645,9 @@
         <div class="hero-bg"></div>
         <div class="hero-overlay"></div>
         <div class="hero-content">
-            <div class="hero-badge"><i class="fas fa-book-open"></i> Official Rulebook v1.0</div>
-            <h1 class="hero-title">The Sacred Tome</h1>
-            <p class="hero-subtitle">Transform your NWG cards into epic tabletop adventures. Simple rules, maximum fun.</p>
+            <div class="hero-badge"><i class="fas fa-book-open"></i> <span data-i18n="rulebook.badge">Official Rulebook v1.0</span></div>
+            <h1 class="hero-title" data-i18n="rulebook.title">The Sacred Tome</h1>
+            <p class="hero-subtitle" data-i18n="rulebook.subtitle">Transform your NWG cards into epic tabletop adventures. Simple rules, maximum fun.</p>
         </div>
     </section>
     
@@ -656,11 +656,11 @@
         <section class="weekly-progress">
             <div class="progress-header">
                 <h2 class="progress-title">
-                    <i class="fas fa-fire"></i> Weekly Adventure Progress
+                    <i class="fas fa-fire"></i> <span data-i18n="rulebook.weeklyProgress">Weekly Adventure Progress</span>
                 </h2>
                 <div class="progress-streak">
                     <i class="fas fa-bolt"></i>
-                    <span id="streakCount">0</span> Week Streak
+                    <span id="streakCount">0</span> <span data-i18n="rulebook.weekStreak">Week Streak</span>
                 </div>
             </div>
             
@@ -1283,11 +1283,61 @@
             window.location.href = '/tabletop/leaderboard';
         }
         
+        // Translations
+        const rulebookTranslations = {
+            en: {
+                'rulebook.badge': 'Official Rulebook v1.0',
+                'rulebook.title': 'The Sacred Tome',
+                'rulebook.subtitle': 'Transform your NWG cards into epic tabletop adventures. Simple rules, maximum fun.',
+                'rulebook.weeklyProgress': 'Weekly Adventure Progress',
+                'rulebook.weekStreak': 'Week Streak',
+                'rulebook.logSession': "Log Today's Session",
+                'rulebook.qrCode': 'Meetup QR Code',
+                'rulebook.leaderboard': 'Leaderboard',
+                'rulebook.weeklyQuests': "This Week's Quests"
+            },
+            zh: {
+                'rulebook.badge': '官方規則書 v1.0',
+                'rulebook.title': '神聖聖典',
+                'rulebook.subtitle': '將你的NWG卡牌轉化為史詩級桌遊冒險。簡單規則，最大樂趣。',
+                'rulebook.weeklyProgress': '每週冒險進度',
+                'rulebook.weekStreak': '週連續',
+                'rulebook.logSession': '記錄今日場次',
+                'rulebook.qrCode': '聚會QR碼',
+                'rulebook.leaderboard': '排行榜',
+                'rulebook.weeklyQuests': '本週任務'
+            },
+            th: {
+                'rulebook.badge': 'หนังสือกฎอย่างเป็นทางการ v1.0',
+                'rulebook.title': 'คัมภีร์ศักดิ์สิทธิ์',
+                'rulebook.subtitle': 'เปลี่ยนการ์ด NWG ของคุณเป็นการผจญภัยบอร์ดเกมสุดมหากาพย์ กฎง่าย สนุกเต็มที่',
+                'rulebook.weeklyProgress': 'ความคืบหน้าการผจญภัยประจำสัปดาห์',
+                'rulebook.weekStreak': 'สตรีคสัปดาห์',
+                'rulebook.logSession': 'บันทึกเซสชันวันนี้',
+                'rulebook.qrCode': 'QR Code นัดพบ',
+                'rulebook.leaderboard': 'ลีดเดอร์บอร์ด',
+                'rulebook.weeklyQuests': 'เควสประจำสัปดาห์นี้'
+            }
+        };
+        
+        function applyTranslations(lang) {
+            const t = rulebookTranslations[lang] || rulebookTranslations.en;
+            document.querySelectorAll('[data-i18n]').forEach(el => {
+                const key = el.getAttribute('data-i18n');
+                if (t[key]) el.textContent = t[key];
+            });
+        }
+        
+        // Listen for language changes
+        window.addEventListener('nw-lang-change', (e) => applyTranslations(e.detail.lang));
+        
         // Initialize
         document.addEventListener('DOMContentLoaded', () => {
             loadProgress();
             if (typeof NW_WALLET !== 'undefined') NW_WALLET.init();
             if (typeof NW_NAV !== 'undefined') NW_NAV.init('dnd-rulebook');
+            const lang = localStorage.getItem('numbahwan_lang') || 'en';
+            applyTranslations(lang);
         });
     </script>
 </body>
