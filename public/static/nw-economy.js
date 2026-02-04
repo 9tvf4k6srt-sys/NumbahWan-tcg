@@ -399,7 +399,7 @@ const NW_ECONOMY = {
             fullName: 'NumbahWan Gold',
             icon: '◆',
             color: '#00d4ff',
-            iconPath: '/static/icons/nwg.svg',
+            iconPath: '/static/icons/nwg.png',
             tier: 'premium',
             purchasable: true,
             description: {
@@ -415,7 +415,7 @@ const NW_ECONOMY = {
             fullName: 'Gold',
             icon: '●',
             color: '#ffd700',
-            iconPath: '/static/icons/gold.svg',
+            iconPath: '/static/icons/gold.png',
             tier: 'standard',
             purchasable: false,
             description: {
@@ -431,7 +431,7 @@ const NW_ECONOMY = {
             fullName: 'Sacred Log',
             icon: '⧫',
             color: '#00ff88',
-            iconPath: '/static/icons/sacred-log.svg',
+            iconPath: '/static/icons/sacred-log.png',
             tier: 'prestige',
             purchasable: false,
             tradeable: false,
