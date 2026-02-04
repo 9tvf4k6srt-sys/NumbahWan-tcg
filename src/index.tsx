@@ -3708,7 +3708,7 @@ app.get('/api/purchase/verify', async (c) => {
 // ROUTE FACTORY - DRY Pattern (Don't Repeat Yourself)
 // Add new pages by just adding to the array - no copy-paste needed!
 // ============================================================================
-const staticPages = ['fashion', 'merch', 'fortune', 'arcade', 'memes', 'apply', 'wallet', 'forge', 'tcg', 'market', 'cards', 'guide', 'battle', 'pvp-battle', 'card-bridge', 'collection', 'deckbuilder', 'zakum', 'tournament', 'academy', 'vault', 'museum', 'research', 'historical-society', 'menu-demo', 'exchange', 'ai-lounge', 'court', 'therapy', 'hr', 'conspiracy', 'updates', 'about', 'treasury', 'intelligence', 'citizenship', 'invest', 'markets', 'buy', 'business', 'supermarket', 'restaurants', 'services', 'crafts', 'realestate', 'jobs', 'my-business', 'cafeteria', 'lost-found', 'parking', 'maintenance', 'breakroom', 'basement', 'nwg-shop', 'card-print-template', 'wyckoff', 'matchalatte', 'embassy', 'profile-card', 'achievements']
+const staticPages = ['fashion', 'merch', 'fortune', 'arcade', 'memes', 'apply', 'wallet', 'forge', 'tcg', 'market', 'cards', 'guide', 'battle', 'pvp-battle', 'card-bridge', 'collection', 'deckbuilder', 'zakum', 'tournament', 'academy', 'vault', 'museum', 'research', 'historical-society', 'menu-demo', 'exchange', 'ai-lounge', 'court', 'therapy', 'hr', 'conspiracy', 'updates', 'about', 'treasury', 'intelligence', 'citizenship', 'invest', 'markets', 'buy', 'business', 'supermarket', 'restaurants', 'services', 'crafts', 'realestate', 'jobs', 'my-business', 'cafeteria', 'lost-found', 'parking', 'maintenance', 'breakroom', 'basement', 'nwg-shop', 'card-print-template', 'wyckoff', 'matchalatte', 'embassy', 'profile-card', 'achievements', 'lore', 'restaurant']
 
 staticPages.forEach(page => {
   app.get(`/${page}`, async (c) => {
@@ -3784,6 +3784,26 @@ researchPapers.forEach(paper => {
       // Fallback for local development
     }
     return c.redirect(`/research/${paper}.html`)
+  })
+})
+
+// Lore deep dive pages - endless rabbit holes
+const lorePages = ['reggina-origin']
+
+lorePages.forEach(page => {
+  app.get(`/lore/${page}`, async (c) => {
+    try {
+      // @ts-ignore - env is provided by Cloudflare Pages
+      const asset = await c.env?.ASSETS?.fetch(new Request(`https://dummy/lore/${page}.html`))
+      if (asset) {
+        return new Response(asset.body, {
+          headers: { 'Content-Type': 'text/html; charset=utf-8' }
+        })
+      }
+    } catch (e) {
+      // Fallback for local development
+    }
+    return c.redirect(`/lore/${page}.html`)
   })
 })
 

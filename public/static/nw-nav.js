@@ -148,6 +148,17 @@ const NW_NAV = {
                 { id: 'zakum', name: { en: 'Zakum Lore', zh: '扎昆傳說', th: 'ตำนานซาคุม' }, icon: 'skull', href: '/zakum' }
             ]
         },
+        lore: {
+            name: { en: 'Deep Dives', zh: '深度探索', th: 'เจาะลึก' },
+            icon: 'scroll',
+            color: '#a855f7',
+            collapsed: true,
+            desc: { en: '(Endless rabbit holes)', zh: '(無盡的兔子洞)', th: '(หลุมกระต่ายไม่สิ้นสุด)' },
+            pages: [
+                { id: 'lore', name: { en: 'Lore Archives', zh: '傳說檔案', th: 'คลังตำนาน' }, icon: 'scroll', href: '/lore', isHot: true },
+                { id: 'reggina-origin', name: { en: 'RegginA Origin', zh: 'RegginA起源', th: 'กำเนิด RegginA' }, icon: 'fire', href: '/lore/reggina-origin.html', isNew: true }
+            ]
+        },
         resources: {
             name: { en: 'Resources', zh: '資源', th: 'แหล่งข้อมูล' },
             icon: 'scroll',
