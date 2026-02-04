@@ -1,0 +1,823 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profile Card | NumbahWan TCG</title>
+    <link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="/static/nw-wallet.js"></script>
+    <script src="/static/nw-nav.js" defer></script>
+    <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+    <style>
+        :root {
+            --gold: #ffd700; --orange: #ff6b00; --dark: #0a0a0f;
+            --mythic: #ff6b6b; --legendary: #ffd700; --epic: #a855f7;
+            --rare: #3b82f6; --uncommon: #22c55e; --common: #9ca3af;
+            --neon-blue: #00d4ff; --neon-pink: #ff00ff; --neon-green: #00ff88;
+        }
+        
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            font-family: 'Inter', sans-serif; 
+            background: var(--dark); 
+            color: #fff; 
+            min-height: 100vh;
+            padding-top: 80px;
+        }
+        
+        .page-container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .page-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: clamp(24px, 5vw, 36px);
+            text-align: center;
+            margin-bottom: 8px;
+            background: linear-gradient(135deg, var(--gold), var(--orange));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .page-subtitle {
+            text-align: center;
+            color: rgba(255,255,255,0.6);
+            margin-bottom: 32px;
+            font-size: 14px;
+        }
+        
+        /* === THE PROFILE CARD === */
+        .card-container {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 32px;
+            perspective: 1000px;
+        }
+        
+        .profile-card {
+            width: 380px;
+            height: 520px;
+            background: linear-gradient(145deg, #12121a 0%, #1a1a2e 50%, #0d0d15 100%);
+            border-radius: 24px;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 
+                0 0 0 2px rgba(255,215,0,0.3),
+                0 25px 50px -12px rgba(0,0,0,0.8),
+                0 0 100px -20px rgba(255,107,0,0.3);
+            transform-style: preserve-3d;
+            transition: transform 0.3s ease;
+        }
+        
+        .profile-card:hover {
+            transform: rotateY(-5deg) rotateX(5deg);
+        }
+        
+        /* Holographic overlay */
+        .holo-overlay {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(
+                125deg,
+                transparent 0%,
+                rgba(255,255,255,0.03) 25%,
+                rgba(255,215,0,0.05) 50%,
+                rgba(255,255,255,0.03) 75%,
+                transparent 100%
+            );
+            pointer-events: none;
+            animation: holoShift 8s ease infinite;
+        }
+        
+        @keyframes holoShift {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+        
+        /* Card inner glow border */
+        .card-glow {
+            position: absolute;
+            inset: 2px;
+            border-radius: 22px;
+            border: 1px solid rgba(255,215,0,0.2);
+            pointer-events: none;
+        }
+        
+        /* Top banner with rank */
+        .card-banner {
+            height: 140px;
+            background: linear-gradient(180deg, rgba(255,107,0,0.3) 0%, transparent 100%);
+            position: relative;
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+            padding-bottom: 60px;
+        }
+        
+        .card-banner::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 60px;
+            background: linear-gradient(90deg, 
+                transparent 0%, 
+                rgba(255,215,0,0.1) 20%, 
+                rgba(255,215,0,0.2) 50%, 
+                rgba(255,215,0,0.1) 80%, 
+                transparent 100%
+            );
+        }
+        
+        .rank-badge {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            background: linear-gradient(135deg, var(--gold), var(--orange));
+            color: #000;
+            font-family: 'Orbitron', sans-serif;
+            font-weight: 900;
+            font-size: 11px;
+            padding: 6px 12px;
+            border-radius: 20px;
+            letter-spacing: 1px;
+        }
+        
+        .citizen-id {
+            position: absolute;
+            top: 16px;
+            left: 16px;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 10px;
+            color: rgba(255,255,255,0.5);
+            letter-spacing: 2px;
+        }
+        
+        /* Avatar area */
+        .avatar-container {
+            position: absolute;
+            top: 80px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 120px;
+            height: 120px;
+        }
+        
+        .avatar-ring {
+            position: absolute;
+            inset: -8px;
+            border-radius: 50%;
+            background: conic-gradient(from 0deg, var(--gold), var(--orange), var(--mythic), var(--gold));
+            animation: ringRotate 4s linear infinite;
+        }
+        
+        @keyframes ringRotate {
+            to { transform: rotate(360deg); }
+        }
+        
+        .avatar-inner {
+            position: absolute;
+            inset: 4px;
+            border-radius: 50%;
+            background: var(--dark);
+        }
+        
+        .avatar {
+            position: absolute;
+            inset: 8px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #2a2a3e, #1a1a2e);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 56px;
+            overflow: hidden;
+        }
+        
+        /* Username & title */
+        .user-info {
+            position: absolute;
+            top: 210px;
+            left: 0;
+            right: 0;
+            text-align: center;
+            padding: 0 20px;
+        }
+        
+        .username {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 24px;
+            font-weight: 900;
+            background: linear-gradient(135deg, #fff, var(--gold));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 4px;
+        }
+        
+        .user-title {
+            font-size: 12px;
+            color: var(--gold);
+            letter-spacing: 3px;
+            text-transform: uppercase;
+        }
+        
+        /* Stats grid */
+        .stats-grid {
+            position: absolute;
+            top: 280px;
+            left: 20px;
+            right: 20px;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+        }
+        
+        .stat-box {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 12px;
+            padding: 12px 8px;
+            text-align: center;
+            transition: all 0.2s;
+        }
+        
+        .stat-box:hover {
+            border-color: rgba(255,215,0,0.3);
+            background: rgba(255,215,0,0.05);
+        }
+        
+        .stat-value {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--neon-blue);
+            text-shadow: 0 0 10px rgba(0,212,255,0.5);
+        }
+        
+        .stat-value.gold { color: var(--gold); text-shadow: 0 0 10px rgba(255,215,0,0.5); }
+        .stat-value.green { color: var(--neon-green); text-shadow: 0 0 10px rgba(0,255,136,0.5); }
+        .stat-value.pink { color: var(--neon-pink); text-shadow: 0 0 10px rgba(255,0,255,0.5); }
+        
+        .stat-label {
+            font-size: 9px;
+            color: rgba(255,255,255,0.5);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-top: 4px;
+        }
+        
+        /* Rarity bar */
+        .rarity-bar {
+            position: absolute;
+            top: 400px;
+            left: 20px;
+            right: 20px;
+        }
+        
+        .rarity-label {
+            font-size: 10px;
+            color: rgba(255,255,255,0.5);
+            margin-bottom: 8px;
+            letter-spacing: 1px;
+        }
+        
+        .rarity-track {
+            height: 8px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 4px;
+            overflow: hidden;
+            display: flex;
+        }
+        
+        .rarity-segment {
+            height: 100%;
+            transition: width 0.5s ease;
+        }
+        
+        .rarity-segment.common { background: var(--common); }
+        .rarity-segment.uncommon { background: var(--uncommon); }
+        .rarity-segment.rare { background: var(--rare); }
+        .rarity-segment.epic { background: var(--epic); }
+        .rarity-segment.legendary { background: var(--legendary); }
+        .rarity-segment.mythic { background: var(--mythic); }
+        
+        /* Achievements row */
+        .achievements-row {
+            position: absolute;
+            bottom: 50px;
+            left: 20px;
+            right: 20px;
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+        }
+        
+        .achievement-badge {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.1);
+            border: 2px solid rgba(255,215,0,0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            transition: all 0.2s;
+        }
+        
+        .achievement-badge:hover {
+            transform: scale(1.2);
+            border-color: var(--gold);
+            box-shadow: 0 0 15px rgba(255,215,0,0.4);
+        }
+        
+        /* Footer */
+        .card-footer {
+            position: absolute;
+            bottom: 12px;
+            left: 0;
+            right: 0;
+            text-align: center;
+        }
+        
+        .card-footer span {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 8px;
+            color: rgba(255,255,255,0.3);
+            letter-spacing: 3px;
+        }
+        
+        /* === CONTROLS === */
+        .controls {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            margin-bottom: 32px;
+        }
+        
+        .control-row {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        
+        .btn {
+            padding: 14px 28px;
+            border-radius: 12px;
+            font-weight: 700;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: none;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, var(--orange), #ff4444);
+            color: #fff;
+            box-shadow: 0 4px 15px rgba(255,107,0,0.3);
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(255,107,0,0.4);
+        }
+        
+        .btn-secondary {
+            background: rgba(255,255,255,0.1);
+            color: #fff;
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+        
+        .btn-secondary:hover {
+            background: rgba(255,255,255,0.15);
+        }
+        
+        .btn-gold {
+            background: linear-gradient(135deg, var(--gold), var(--orange));
+            color: #000;
+        }
+        
+        /* Customization panel */
+        .customize-panel {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 32px;
+        }
+        
+        .panel-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 14px;
+            color: var(--gold);
+            margin-bottom: 16px;
+            letter-spacing: 1px;
+        }
+        
+        .input-group {
+            margin-bottom: 16px;
+        }
+        
+        .input-group label {
+            display: block;
+            font-size: 12px;
+            color: rgba(255,255,255,0.6);
+            margin-bottom: 6px;
+        }
+        
+        .input-group input, .input-group select {
+            width: 100%;
+            padding: 12px 16px;
+            background: rgba(0,0,0,0.3);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 8px;
+            color: #fff;
+            font-size: 14px;
+        }
+        
+        .input-group input:focus, .input-group select:focus {
+            outline: none;
+            border-color: var(--gold);
+        }
+        
+        .avatar-picker {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        
+        .avatar-option {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            background: rgba(255,255,255,0.05);
+            border: 2px solid transparent;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .avatar-option:hover, .avatar-option.selected {
+            border-color: var(--gold);
+            background: rgba(255,215,0,0.1);
+        }
+        
+        /* Toast notification */
+        .toast {
+            position: fixed;
+            bottom: 100px;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background: linear-gradient(135deg, var(--neon-green), #00cc6a);
+            color: #000;
+            padding: 16px 32px;
+            border-radius: 12px;
+            font-weight: 700;
+            opacity: 0;
+            transition: all 0.3s ease;
+            z-index: 1000;
+        }
+        
+        .toast.show {
+            transform: translateX(-50%) translateY(0);
+            opacity: 1;
+        }
+        
+        /* Responsive */
+        @media (max-width: 480px) {
+            .profile-card {
+                width: 340px;
+                height: 480px;
+            }
+            .avatar-container { width: 100px; height: 100px; top: 70px; }
+            .avatar { font-size: 44px; }
+            .user-info { top: 185px; }
+            .stats-grid { top: 250px; }
+            .rarity-bar { top: 365px; }
+            .achievements-row { bottom: 45px; }
+        }
+    </style>
+</head>
+<body data-page-id="profile-card">
+    <div class="page-container">
+        <h1 class="page-title" data-i18n="title">Profile Card</h1>
+        <p class="page-subtitle" data-i18n="subtitle">Generate your shareable player card</p>
+        
+        <!-- THE CARD -->
+        <div class="card-container">
+            <div class="profile-card" id="profileCard">
+                <div class="holo-overlay"></div>
+                <div class="card-glow"></div>
+                
+                <div class="card-banner">
+                    <span class="citizen-id" id="citizenId">NW-XXXXXXXXXXXX</span>
+                    <span class="rank-badge" id="rankBadge">VETERAN</span>
+                </div>
+                
+                <div class="avatar-container">
+                    <div class="avatar-ring"></div>
+                    <div class="avatar-inner"></div>
+                    <div class="avatar" id="avatarDisplay">🔥</div>
+                </div>
+                
+                <div class="user-info">
+                    <div class="username" id="usernameDisplay">PLAYER_NAME</div>
+                    <div class="user-title" id="titleDisplay">Card Collector</div>
+                </div>
+                
+                <div class="stats-grid">
+                    <div class="stat-box">
+                        <div class="stat-value" id="statCards">0</div>
+                        <div class="stat-label">Cards</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-value gold" id="statWins">0</div>
+                        <div class="stat-label">Wins</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-value green" id="statStreak">0</div>
+                        <div class="stat-label">Best Streak</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-value pink" id="statNwg">0</div>
+                        <div class="stat-label">NWG</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-value" id="statLogs">0</div>
+                        <div class="stat-label">Sacred Logs</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-value gold" id="statDays">0</div>
+                        <div class="stat-label">Days</div>
+                    </div>
+                </div>
+                
+                <div class="rarity-bar">
+                    <div class="rarity-label">COLLECTION RARITY</div>
+                    <div class="rarity-track" id="rarityTrack">
+                        <div class="rarity-segment common" style="width: 40%"></div>
+                        <div class="rarity-segment uncommon" style="width: 25%"></div>
+                        <div class="rarity-segment rare" style="width: 20%"></div>
+                        <div class="rarity-segment epic" style="width: 10%"></div>
+                        <div class="rarity-segment legendary" style="width: 4%"></div>
+                        <div class="rarity-segment mythic" style="width: 1%"></div>
+                    </div>
+                </div>
+                
+                <div class="achievements-row" id="achievementsRow">
+                    <div class="achievement-badge" title="First Card">🃏</div>
+                    <div class="achievement-badge" title="10 Wins">⚔️</div>
+                    <div class="achievement-badge" title="Collector">📚</div>
+                    <div class="achievement-badge" title="7-Day Streak">🔥</div>
+                    <div class="achievement-badge" title="Mythic Owner">👑</div>
+                </div>
+                
+                <div class="card-footer">
+                    <span>NUMBAHWAN TCG • EST. 2024</span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- CONTROLS -->
+        <div class="controls">
+            <div class="control-row">
+                <button class="btn btn-primary" onclick="downloadCard()">
+                    📥 <span data-i18n="download">Download Card</span>
+                </button>
+                <button class="btn btn-secondary" onclick="copyShareLink()">
+                    🔗 <span data-i18n="share">Copy Share Link</span>
+                </button>
+            </div>
+        </div>
+        
+        <!-- CUSTOMIZATION -->
+        <div class="customize-panel">
+            <div class="panel-title">⚙️ CUSTOMIZE</div>
+            
+            <div class="input-group">
+                <label data-i18n="labelName">Display Name</label>
+                <input type="text" id="inputName" placeholder="Enter your name" maxlength="16" oninput="updateCard()">
+            </div>
+            
+            <div class="input-group">
+                <label data-i18n="labelTitle">Title</label>
+                <select id="inputTitle" onchange="updateCard()">
+                    <option value="Card Collector">Card Collector</option>
+                    <option value="Battle Master">Battle Master</option>
+                    <option value="Mythic Hunter">Mythic Hunter</option>
+                    <option value="Sacred Guardian">Sacred Guardian</option>
+                    <option value="Forge Addict">Forge Addict</option>
+                    <option value="NWG Whale">NWG Whale</option>
+                    <option value="Lucky 47">Lucky 47</option>
+                    <option value="OG Member">OG Member</option>
+                </select>
+            </div>
+            
+            <div class="input-group">
+                <label data-i18n="labelAvatar">Avatar</label>
+                <div class="avatar-picker" id="avatarPicker">
+                    <div class="avatar-option selected" data-avatar="🔥" onclick="selectAvatar(this)">🔥</div>
+                    <div class="avatar-option" data-avatar="⚔️" onclick="selectAvatar(this)">⚔️</div>
+                    <div class="avatar-option" data-avatar="👑" onclick="selectAvatar(this)">👑</div>
+                    <div class="avatar-option" data-avatar="🐉" onclick="selectAvatar(this)">🐉</div>
+                    <div class="avatar-option" data-avatar="🎭" onclick="selectAvatar(this)">🎭</div>
+                    <div class="avatar-option" data-avatar="🌟" onclick="selectAvatar(this)">🌟</div>
+                    <div class="avatar-option" data-avatar="💎" onclick="selectAvatar(this)">💎</div>
+                    <div class="avatar-option" data-avatar="🦅" onclick="selectAvatar(this)">🦅</div>
+                    <div class="avatar-option" data-avatar="🐺" onclick="selectAvatar(this)">🐺</div>
+                    <div class="avatar-option" data-avatar="🎯" onclick="selectAvatar(this)">🎯</div>
+                    <div class="avatar-option" data-avatar="🍵" onclick="selectAvatar(this)">🍵</div>
+                    <div class="avatar-option" data-avatar="🗿" onclick="selectAvatar(this)">🗿</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="toast" id="toast">✓ Saved to gallery!</div>
+    
+    <script>
+        let currentAvatar = '🔥';
+        
+        // Load real stats from wallet
+        async function loadStats() {
+            if (typeof NW_WALLET === 'undefined') return;
+            
+            try {
+                await NW_WALLET.init();
+                const wallet = NW_WALLET.wallet;
+                
+                // Citizen ID
+                document.getElementById('citizenId').textContent = wallet?.guestId || 'NW-GUEST';
+                
+                // Stats
+                document.getElementById('statCards').textContent = wallet?.collection?.length || 0;
+                document.getElementById('statNwg').textContent = formatNumber(NW_WALLET.getBalance('nwg') || 0);
+                document.getElementById('statLogs').textContent = formatNumber(NW_WALLET.getBalance('logs') || 0);
+                
+                // Battle stats from localStorage
+                const battleStats = JSON.parse(localStorage.getItem('nw_battle_stats') || '{}');
+                document.getElementById('statWins').textContent = battleStats.wins || 0;
+                document.getElementById('statStreak').textContent = battleStats.bestStreak || 0;
+                
+                // Days since first visit
+                const firstVisit = localStorage.getItem('nw_first_visit');
+                if (firstVisit) {
+                    const days = Math.floor((Date.now() - parseInt(firstVisit)) / (1000 * 60 * 60 * 24));
+                    document.getElementById('statDays').textContent = days;
+                } else {
+                    localStorage.setItem('nw_first_visit', Date.now().toString());
+                    document.getElementById('statDays').textContent = '0';
+                }
+                
+                // Calculate rank based on stats
+                updateRank();
+                
+                // Load saved customization
+                const savedName = localStorage.getItem('nw_profile_name');
+                const savedTitle = localStorage.getItem('nw_profile_title');
+                const savedAvatar = localStorage.getItem('nw_profile_avatar');
+                
+                if (savedName) {
+                    document.getElementById('inputName').value = savedName;
+                    document.getElementById('usernameDisplay').textContent = savedName;
+                }
+                if (savedTitle) {
+                    document.getElementById('inputTitle').value = savedTitle;
+                    document.getElementById('titleDisplay').textContent = savedTitle;
+                }
+                if (savedAvatar) {
+                    currentAvatar = savedAvatar;
+                    document.getElementById('avatarDisplay').textContent = savedAvatar;
+                    document.querySelectorAll('.avatar-option').forEach(opt => {
+                        opt.classList.toggle('selected', opt.dataset.avatar === savedAvatar);
+                    });
+                }
+                
+            } catch (e) {
+                console.error('Failed to load stats:', e);
+            }
+        }
+        
+        function formatNumber(num) {
+            if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M';
+            if (num >= 1000) return (num / 1000).toFixed(1) + 'K';
+            return num.toString();
+        }
+        
+        function updateRank() {
+            const cards = parseInt(document.getElementById('statCards').textContent) || 0;
+            const wins = parseInt(document.getElementById('statWins').textContent) || 0;
+            const days = parseInt(document.getElementById('statDays').textContent) || 0;
+            
+            let rank = 'NEWCOMER';
+            if (cards >= 100 && wins >= 50) rank = 'LEGEND';
+            else if (cards >= 50 && wins >= 25) rank = 'MASTER';
+            else if (cards >= 25 && wins >= 10) rank = 'VETERAN';
+            else if (cards >= 10 || wins >= 5) rank = 'REGULAR';
+            else if (days >= 7) rank = 'MEMBER';
+            
+            document.getElementById('rankBadge').textContent = rank;
+        }
+        
+        function updateCard() {
+            const name = document.getElementById('inputName').value || 'PLAYER';
+            const title = document.getElementById('inputTitle').value;
+            
+            document.getElementById('usernameDisplay').textContent = name.toUpperCase();
+            document.getElementById('titleDisplay').textContent = title;
+            
+            // Save
+            localStorage.setItem('nw_profile_name', name);
+            localStorage.setItem('nw_profile_title', title);
+        }
+        
+        function selectAvatar(el) {
+            document.querySelectorAll('.avatar-option').forEach(opt => opt.classList.remove('selected'));
+            el.classList.add('selected');
+            currentAvatar = el.dataset.avatar;
+            document.getElementById('avatarDisplay').textContent = currentAvatar;
+            localStorage.setItem('nw_profile_avatar', currentAvatar);
+        }
+        
+        async function downloadCard() {
+            const card = document.getElementById('profileCard');
+            
+            try {
+                // Temporarily remove hover effects
+                card.style.transform = 'none';
+                
+                const canvas = await html2canvas(card, {
+                    backgroundColor: '#0a0a0f',
+                    scale: 2,
+                    useCORS: true,
+                    logging: false
+                });
+                
+                const link = document.createElement('a');
+                link.download = `nwg-profile-${Date.now()}.png`;
+                link.href = canvas.toDataURL('image/png');
+                link.click();
+                
+                showToast('📥 Card downloaded!');
+            } catch (e) {
+                console.error('Download failed:', e);
+                showToast('❌ Download failed', true);
+            }
+        }
+        
+        function copyShareLink() {
+            const name = document.getElementById('inputName').value || 'Player';
+            const shareUrl = `${window.location.origin}/profile-card?ref=${encodeURIComponent(name)}`;
+            
+            navigator.clipboard.writeText(shareUrl).then(() => {
+                showToast('🔗 Link copied!');
+            }).catch(() => {
+                showToast('❌ Copy failed', true);
+            });
+        }
+        
+        function showToast(msg, isError = false) {
+            const toast = document.getElementById('toast');
+            toast.textContent = msg;
+            toast.style.background = isError 
+                ? 'linear-gradient(135deg, #ef4444, #dc2626)'
+                : 'linear-gradient(135deg, #00ff88, #00cc6a)';
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 2500);
+        }
+        
+        // i18n
+        const i18n = {
+            en: { title: 'Profile Card', subtitle: 'Generate your shareable player card', download: 'Download Card', share: 'Copy Share Link', labelName: 'Display Name', labelTitle: 'Title', labelAvatar: 'Avatar' },
+            zh: { title: '個人卡片', subtitle: '生成可分享的玩家卡片', download: '下載卡片', share: '複製分享連結', labelName: '顯示名稱', labelTitle: '稱號', labelAvatar: '頭像' },
+            th: { title: 'การ์ดโปรไฟล์', subtitle: 'สร้างการ์ดผู้เล่นที่แชร์ได้', download: 'ดาวน์โหลดการ์ด', share: 'คัดลอกลิงก์แชร์', labelName: 'ชื่อที่แสดง', labelTitle: 'ตำแหน่ง', labelAvatar: 'อวาตาร์' }
+        };
+        
+        function applyTranslations(lang) {
+            document.querySelectorAll('[data-i18n]').forEach(el => {
+                const key = el.getAttribute('data-i18n');
+                if (i18n[lang]?.[key]) el.textContent = i18n[lang][key];
+            });
+        }
+        
+        document.addEventListener('nw-lang-change', (e) => applyTranslations(e.detail.lang));
+        
+        document.addEventListener('DOMContentLoaded', () => {
+            applyTranslations(localStorage.getItem('numbahwan_lang') || 'en');
+            loadStats();
+        });
+    </script>
+</body>
+</html>
