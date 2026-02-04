@@ -83,17 +83,47 @@ const NW_CURRENCY = {
                 zh: '每筆交易燃燒 1% • 最高 40% APY 質押 • 10% 商品收益支撐 • 等級福利',
                 th: 'เผา 1% ต่อธุรกรรม • สเตคสูงสุด 40% APY • รายได้สินค้าหนุน 10% • สิทธิ์ตามระดับ'
             },
-            icon: `<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M12 2L2 9L12 22L22 9L12 2Z" fill="url(#nwg-grad)" stroke="#fff" stroke-width="0.5"/>
-                <path d="M2 9H22M12 2L7 9L12 22L17 9L12 2" stroke="rgba(255,255,255,0.6)" stroke-width="0.5"/>
-                <text x="12" y="14" text-anchor="middle" fill="#fff" font-size="5" font-weight="bold">NWG</text>
+            icon: `<svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <defs>
-                    <linearGradient id="nwg-grad" x1="0%" y1="0%" x2="100%" y2="100%">
-                        <stop offset="0%" style="stop-color:#4df0ff"/>
-                        <stop offset="50%" style="stop-color:#00d4ff"/>
-                        <stop offset="100%" style="stop-color:#0099cc"/>
+                    <linearGradient id="nwg-main" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stop-color="#7dd3fc"/>
+                        <stop offset="30%" stop-color="#00d4ff"/>
+                        <stop offset="60%" stop-color="#0284c7"/>
+                        <stop offset="100%" stop-color="#0369a1"/>
                     </linearGradient>
+                    <linearGradient id="nwg-inner" x1="100%" y1="0%" x2="0%" y2="100%">
+                        <stop offset="0%" stop-color="#67e8f9"/>
+                        <stop offset="100%" stop-color="#0891b2"/>
+                    </linearGradient>
+                    <linearGradient id="nwg-shine" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stop-color="#ffffff" stop-opacity="0.9"/>
+                        <stop offset="50%" stop-color="#ffffff" stop-opacity="0"/>
+                    </linearGradient>
+                    <filter id="nwg-glow" x="-50%" y="-50%" width="200%" height="200%">
+                        <feGaussianBlur in="SourceGraphic" stdDeviation="1.5" result="blur"/>
+                        <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+                    </filter>
+                    <filter id="nwg-inner-shadow">
+                        <feOffset dx="0" dy="1"/>
+                        <feGaussianBlur stdDeviation="0.5"/>
+                        <feComposite in2="SourceAlpha" operator="arithmetic" k2="-1" k3="1"/>
+                        <feColorMatrix values="0 0 0 0 0 0 0 0 0 0.5 0 0 0 0 0.7 0 0 0 0.3 0"/>
+                        <feBlend in2="SourceGraphic"/>
+                    </filter>
                 </defs>
+                <!-- Outer hexagon crystal -->
+                <polygon points="16,1 28,8 28,24 16,31 4,24 4,8" fill="url(#nwg-main)" filter="url(#nwg-glow)"/>
+                <!-- Inner crystal facets -->
+                <polygon points="16,4 24,9 24,23 16,28 8,23 8,9" fill="url(#nwg-inner)" filter="url(#nwg-inner-shadow)"/>
+                <!-- Crystal lines -->
+                <path d="M16 4L16 28M8 9L24 23M24 9L8 23" stroke="#0ea5e9" stroke-width="0.5" opacity="0.6"/>
+                <!-- Top shine -->
+                <polygon points="16,4 24,9 16,12 8,9" fill="url(#nwg-shine)" opacity="0.7"/>
+                <!-- Center emblem - stylized "N" -->
+                <path d="M11 12L11 20L13 20L13 15L19 20L21 20L21 12L19 12L19 17L13 12Z" fill="#ffffff" opacity="0.95"/>
+                <!-- Sparkle accents -->
+                <circle cx="10" cy="7" r="1" fill="#ffffff" opacity="0.8"/>
+                <circle cx="22" cy="25" r="0.7" fill="#7dd3fc" opacity="0.6"/>
             </svg>`
         },
         gold: {
@@ -128,17 +158,55 @@ const NW_CURRENCY = {
                 zh: ['普通抽卡', '卡牌升級', '商品購買', '基本功能'],
                 th: ['ดึงมาตรฐาน', 'อัพเกรดการ์ด', 'ซื้อสินค้า', 'ฟีเจอร์พื้นฐาน']
             },
-            icon: `<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <circle cx="12" cy="12" r="10" fill="url(#gold-grad)" stroke="#b8860b" stroke-width="1"/>
-                <circle cx="12" cy="12" r="7" stroke="rgba(255,255,255,0.4)" stroke-width="0.5" fill="none"/>
-                <text x="12" y="16" text-anchor="middle" fill="#8B6914" font-size="10" font-weight="bold">G</text>
+            icon: `<svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <defs>
-                    <linearGradient id="gold-grad" x1="0%" y1="0%" x2="100%" y2="100%">
-                        <stop offset="0%" style="stop-color:#ffe566"/>
-                        <stop offset="50%" style="stop-color:#ffd700"/>
-                        <stop offset="100%" style="stop-color:#cc9900"/>
+                    <linearGradient id="gold-outer" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stop-color="#fef08a"/>
+                        <stop offset="25%" stop-color="#fbbf24"/>
+                        <stop offset="50%" stop-color="#f59e0b"/>
+                        <stop offset="75%" stop-color="#d97706"/>
+                        <stop offset="100%" stop-color="#b45309"/>
                     </linearGradient>
+                    <linearGradient id="gold-inner" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stop-color="#fde047"/>
+                        <stop offset="50%" stop-color="#eab308"/>
+                        <stop offset="100%" stop-color="#ca8a04"/>
+                    </linearGradient>
+                    <linearGradient id="gold-shine" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stop-color="#ffffff" stop-opacity="0.8"/>
+                        <stop offset="100%" stop-color="#ffffff" stop-opacity="0"/>
+                    </linearGradient>
+                    <filter id="gold-emboss">
+                        <feOffset dx="0" dy="0.5"/>
+                        <feGaussianBlur stdDeviation="0.3"/>
+                        <feComposite in2="SourceAlpha" operator="arithmetic" k2="-1" k3="1"/>
+                        <feColorMatrix values="0 0 0 0 0.4 0 0 0 0 0.3 0 0 0 0 0 0 0 0 0.4 0"/>
+                        <feBlend in2="SourceGraphic"/>
+                    </filter>
+                    <filter id="gold-glow" x="-30%" y="-30%" width="160%" height="160%">
+                        <feGaussianBlur in="SourceGraphic" stdDeviation="1" result="blur"/>
+                        <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+                    </filter>
                 </defs>
+                <!-- Outer coin rim -->
+                <circle cx="16" cy="16" r="14" fill="url(#gold-outer)" filter="url(#gold-glow)"/>
+                <!-- Coin edge detail -->
+                <circle cx="16" cy="16" r="13" fill="none" stroke="#92400e" stroke-width="0.5" opacity="0.5"/>
+                <!-- Inner coin face -->
+                <circle cx="16" cy="16" r="11" fill="url(#gold-inner)" filter="url(#gold-emboss)"/>
+                <!-- Inner ring detail -->
+                <circle cx="16" cy="16" r="9.5" fill="none" stroke="#a16207" stroke-width="0.4" opacity="0.6"/>
+                <!-- Crown emblem (represents value) -->
+                <path d="M10 18L10 14L12 16L16 12L20 16L22 14L22 18Z" fill="#92400e" opacity="0.85"/>
+                <path d="M10 17L10 13L12 15L16 11L20 15L22 13L22 17Z" fill="#fef3c7" opacity="0.9"/>
+                <!-- Crown dots -->
+                <circle cx="10" cy="13" r="1" fill="#fef3c7" opacity="0.9"/>
+                <circle cx="16" cy="11" r="1.2" fill="#fef3c7" opacity="0.9"/>
+                <circle cx="22" cy="13" r="1" fill="#fef3c7" opacity="0.9"/>
+                <!-- Top shine arc -->
+                <path d="M8 10 Q16 4 24 10" stroke="url(#gold-shine)" stroke-width="2" fill="none" opacity="0.6"/>
+                <!-- Sparkle -->
+                <circle cx="22" cy="8" r="1.2" fill="#ffffff" opacity="0.7"/>
             </svg>`
         },
         wood: {
@@ -154,9 +222,9 @@ const NW_CURRENCY = {
                 th: 'ท่อนไม้ศักดิ์สิทธิ์'
             },
             symbol: '⧫',
-            color: '#00ff88',
-            gradient: 'linear-gradient(135deg, #00ff88 0%, #00cc6a 50%, #009950 100%)',
-            glow: '0 0 15px rgba(0, 255, 136, 0.6)',
+            color: '#22c55e',
+            gradient: 'linear-gradient(135deg, #4ade80 0%, #22c55e 50%, #16a34a 100%)',
+            glow: '0 0 15px rgba(34, 197, 94, 0.6)',
             tier: 0, // Ultra Prestige (CANNOT BE BOUGHT)
             description: {
                 en: 'Prestige currency - Proof of mastery',
@@ -178,43 +246,67 @@ const NW_CURRENCY = {
                 zh: '⚠️ 無法購買 - 必須靠實力獲得！',
                 th: '⚠️ ซื้อไม่ได้ - ต้องได้รับจากความสามารถ!'
             },
-            icon: `<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            icon: `<svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <defs>
-                    <linearGradient id="sacred-wood-body" x1="0%" y1="0%" x2="100%" y2="100%">
-                        <stop offset="0%" style="stop-color:#2d1810"/>
-                        <stop offset="50%" style="stop-color:#1a0f0a"/>
-                        <stop offset="100%" style="stop-color:#0d0805"/>
+                    <linearGradient id="wood-bark" x1="0%" y1="0%" x2="100%" y2="0%">
+                        <stop offset="0%" stop-color="#78350f"/>
+                        <stop offset="30%" stop-color="#451a03"/>
+                        <stop offset="60%" stop-color="#292524"/>
+                        <stop offset="100%" stop-color="#1c1917"/>
                     </linearGradient>
-                    <linearGradient id="sacred-rune-glow" x1="0%" y1="0%" x2="100%" y2="100%">
-                        <stop offset="0%" style="stop-color:#ffd700"/>
-                        <stop offset="50%" style="stop-color:#ff9500"/>
-                        <stop offset="100%" style="stop-color:#ffd700"/>
+                    <linearGradient id="wood-inner" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stop-color="#a16207"/>
+                        <stop offset="50%" stop-color="#78350f"/>
+                        <stop offset="100%" stop-color="#451a03"/>
                     </linearGradient>
-                    <filter id="sacred-glow">
-                        <feGaussianBlur stdDeviation="0.5" result="coloredBlur"/>
-                        <feMerge><feMergeNode in="coloredBlur"/><feMergeNode in="SourceGraphic"/></feMerge>
+                    <linearGradient id="rune-glow" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stop-color="#4ade80"/>
+                        <stop offset="50%" stop-color="#22c55e"/>
+                        <stop offset="100%" stop-color="#16a34a"/>
+                    </linearGradient>
+                    <filter id="wood-glow" x="-50%" y="-50%" width="200%" height="200%">
+                        <feGaussianBlur in="SourceGraphic" stdDeviation="1.2" result="blur"/>
+                        <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+                    </filter>
+                    <filter id="rune-filter">
+                        <feGaussianBlur stdDeviation="0.8" result="blur"/>
+                        <feMerge>
+                            <feMergeNode in="blur"/>
+                            <feMergeNode in="blur"/>
+                            <feMergeNode in="SourceGraphic"/>
+                        </feMerge>
                     </filter>
                 </defs>
-                <!-- Dark wood body -->
-                <rect x="6" y="2" width="12" height="20" rx="3" fill="url(#sacred-wood-body)" stroke="#3d2817" stroke-width="0.5"/>
-                <!-- Wood rings -->
-                <ellipse cx="12" cy="5" rx="4" ry="1.5" fill="none" stroke="#3d2817" stroke-width="0.3" opacity="0.5"/>
-                <!-- Glowing runes -->
-                <g filter="url(#sacred-glow)" fill="url(#sacred-rune-glow)">
-                    <path d="M12 6L10 8L12 10L14 8Z" opacity="0.9"/>
-                    <path d="M10 11L9 13L10 15L11 13Z" opacity="0.8"/>
-                    <path d="M14 11L13 13L14 15L15 13Z" opacity="0.8"/>
-                    <path d="M12 16L10.5 18L12 20L13.5 18Z" opacity="0.9"/>
+                <!-- Wood log body - cylindrical shape -->
+                <ellipse cx="16" cy="28" rx="10" ry="3" fill="#1c1917"/>
+                <rect x="6" y="5" width="20" height="23" fill="url(#wood-bark)"/>
+                <ellipse cx="16" cy="5" rx="10" ry="3.5" fill="url(#wood-inner)"/>
+                <!-- Wood rings on top -->
+                <ellipse cx="16" cy="5" rx="7" ry="2.3" fill="none" stroke="#92400e" stroke-width="0.5" opacity="0.6"/>
+                <ellipse cx="16" cy="5" rx="4" ry="1.3" fill="none" stroke="#a16207" stroke-width="0.4" opacity="0.5"/>
+                <circle cx="16" cy="5" r="1" fill="#78350f"/>
+                <!-- Vertical bark lines -->
+                <path d="M9 6L8 26M13 5L12 27M19 5L20 27M24 6L25 26" stroke="#1c1917" stroke-width="0.5" opacity="0.4"/>
+                <!-- Sacred rune - glowing emblem -->
+                <g filter="url(#rune-filter)">
+                    <!-- Main rune symbol - ancient tree/life symbol -->
+                    <path d="M16 10L16 24" stroke="url(#rune-glow)" stroke-width="2" stroke-linecap="round"/>
+                    <path d="M16 12L11 16L16 14L21 16Z" fill="url(#rune-glow)" opacity="0.9"/>
+                    <path d="M16 18L12 22L16 20L20 22Z" fill="url(#rune-glow)" opacity="0.8"/>
+                    <!-- Rune dots -->
+                    <circle cx="16" cy="10" r="1.5" fill="#4ade80"/>
+                    <circle cx="11" cy="16" r="1" fill="#22c55e" opacity="0.8"/>
+                    <circle cx="21" cy="16" r="1" fill="#22c55e" opacity="0.8"/>
                 </g>
-                <!-- Cosmic particles -->
-                <circle cx="8" cy="7" r="0.5" fill="#ffd700" opacity="0.7">
-                    <animate attributeName="opacity" values="0.7;0.3;0.7" dur="2s" repeatCount="indefinite"/>
+                <!-- Magical particles -->
+                <circle cx="8" cy="12" r="0.8" fill="#4ade80" opacity="0.6">
+                    <animate attributeName="opacity" values="0.6;0.2;0.6" dur="2s" repeatCount="indefinite"/>
                 </circle>
-                <circle cx="16" cy="12" r="0.4" fill="#ff9500" opacity="0.6">
-                    <animate attributeName="opacity" values="0.6;0.2;0.6" dur="1.5s" repeatCount="indefinite"/>
-                </circle>
-                <circle cx="9" cy="18" r="0.3" fill="#ffd700" opacity="0.5">
+                <circle cx="24" cy="18" r="0.6" fill="#22c55e" opacity="0.5">
                     <animate attributeName="opacity" values="0.5;0.1;0.5" dur="2.5s" repeatCount="indefinite"/>
+                </circle>
+                <circle cx="10" cy="22" r="0.5" fill="#16a34a" opacity="0.4">
+                    <animate attributeName="opacity" values="0.4;0.1;0.4" dur="1.8s" repeatCount="indefinite"/>
                 </circle>
             </svg>`
         },
