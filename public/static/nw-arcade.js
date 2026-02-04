@@ -9,12 +9,12 @@ const NW_ARCADE = {
     // Current session
     session: null,
     
-    // Reward config
+    // Reward config - 3-Tier Currency (HARD RULE #7: nwg, gold, wood only)
     REWARDS: {
-        win: { diamond: 5, gold: 20 },
+        win: { nwg: 5, gold: 20 },
         lose: { gold: 5 },
-        highScore: { diamond: 10, gold: 50 },
-        perfect: { diamond: 25, gold: 100 }
+        highScore: { nwg: 10, gold: 50 },
+        perfect: { nwg: 25, gold: 100 }
     },
     
     // Leaderboard
@@ -26,7 +26,7 @@ const NW_ARCADE = {
             id,
             name: config.name || id,
             description: config.description || '',
-            cost: config.cost || { diamond: 5 },
+            cost: config.cost || { nwg: 5 },
             maxScore: config.maxScore || 100,
             rewardMultiplier: config.rewardMultiplier || 1,
             onStart: config.onStart || (() => {}),

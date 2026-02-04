@@ -652,18 +652,19 @@ const NW_WALLET = {
     
     DAILY_REWARDS_KEY: 'nw_daily_login',
     
-    // Escalating rewards - each day better than the last!
+    // Escalating rewards - 3-Tier System (NWG → Gold → Sacred Log)
+    // HARD RULE #7: No iron, stone, or diamond - use nwg, gold, wood ONLY
     DAILY_REWARDS: [
-        // Day 1-3: Taste the currencies
-        { day: 1, rewards: { stone: 10, gold: 5 }, label: '🌱 Welcome Back!' },
-        { day: 2, rewards: { stone: 15, gold: 8, iron: 2 }, label: '📈 Growing!' },
-        { day: 3, rewards: { stone: 20, gold: 12, iron: 5, diamond: 1 }, label: '✨ Shining!' },
-        // Day 4-6: Building momentum
-        { day: 4, rewards: { stone: 30, gold: 20, iron: 8, diamond: 3 }, label: '🔥 On Fire!' },
-        { day: 5, rewards: { stone: 40, gold: 30, iron: 12, diamond: 5 }, label: '⚡ Unstoppable!' },
-        { day: 6, rewards: { stone: 50, gold: 40, iron: 15, diamond: 8 }, label: '💫 Almost There!' },
+        // Day 1-3: Start small with Gold
+        { day: 1, rewards: { gold: 20 }, label: '🌱 Welcome Back!' },
+        { day: 2, rewards: { gold: 40, nwg: 2 }, label: '📈 Growing!' },
+        { day: 3, rewards: { gold: 60, nwg: 5 }, label: '✨ Shining!' },
+        // Day 4-6: Building momentum with more NWG
+        { day: 4, rewards: { gold: 80, nwg: 10 }, label: '🔥 On Fire!' },
+        { day: 5, rewards: { gold: 100, nwg: 15 }, label: '⚡ Unstoppable!' },
+        { day: 6, rewards: { gold: 125, nwg: 20 }, label: '💫 Almost There!' },
         // Day 7: THE BIG REWARD - Sacred Log!
-        { day: 7, rewards: { stone: 100, gold: 75, iron: 25, diamond: 15, wood: 1 }, label: 'SACRED LOG!', icon: 'wood' }
+        { day: 7, rewards: { gold: 200, nwg: 50, wood: 1 }, label: '🪵 SACRED LOG!', icon: 'wood' }
     ],
     
     // Get daily login state
@@ -825,39 +826,40 @@ const NW_WALLET = {
     
     ACHIEVEMENTS_KEY: 'nw_achievements',
     
+    // HARD RULE #7: 3-Tier Currency Only (nwg, gold, wood)
     ACHIEVEMENTS: {
         // Login Achievements
-        first_login: { id: 'first_login', name: 'Welcome!', desc: 'Log in for the first time', icon: '🎉', reward: { diamond: 10 }, category: 'login' },
-        streak_3: { id: 'streak_3', name: 'Dedicated', desc: 'Reach a 3-day login streak', icon: '🔥', reward: { diamond: 15, gold: 25 }, category: 'login' },
-        streak_7: { id: 'streak_7', name: 'Committed', desc: 'Complete a 7-day streak', icon: '🌟', reward: { diamond: 50, wood: 1 }, category: 'login' },
-        streak_30: { id: 'streak_30', name: 'Legend', desc: 'Log in 30 total days', icon: '👑', reward: { diamond: 100, wood: 3 }, category: 'login' },
+        first_login: { id: 'first_login', name: 'Welcome!', desc: 'Log in for the first time', icon: '🎉', reward: { nwg: 10 }, category: 'login' },
+        streak_3: { id: 'streak_3', name: 'Dedicated', desc: 'Reach a 3-day login streak', icon: '🔥', reward: { nwg: 15, gold: 25 }, category: 'login' },
+        streak_7: { id: 'streak_7', name: 'Committed', desc: 'Complete a 7-day streak', icon: '🌟', reward: { nwg: 50, wood: 1 }, category: 'login' },
+        streak_30: { id: 'streak_30', name: 'Legend', desc: 'Log in 30 total days', icon: '👑', reward: { nwg: 100, wood: 3 }, category: 'login' },
         
         // Collection Achievements
         first_card: { id: 'first_card', name: 'Collector', desc: 'Get your first card', icon: '🃏', reward: { gold: 50 }, category: 'collection' },
-        cards_10: { id: 'cards_10', name: 'Card Hoarder', desc: 'Collect 10 unique cards', icon: '📦', reward: { diamond: 20, iron: 30 }, category: 'collection' },
-        cards_50: { id: 'cards_50', name: 'Deck Master', desc: 'Collect 50 unique cards', icon: '🎴', reward: { diamond: 75, wood: 1 }, category: 'collection' },
-        first_mythic: { id: 'first_mythic', name: 'Mythic Hunter', desc: 'Pull your first Mythic', icon: 'diamond', reward: { wood: 2, diamond: 100 }, category: 'collection' },
-        first_legendary: { id: 'first_legendary', name: 'Lucky Star', desc: 'Pull your first Legendary', icon: '⭐', reward: { diamond: 50 }, category: 'collection' },
+        cards_10: { id: 'cards_10', name: 'Card Hoarder', desc: 'Collect 10 unique cards', icon: '📦', reward: { nwg: 20, gold: 50 }, category: 'collection' },
+        cards_50: { id: 'cards_50', name: 'Deck Master', desc: 'Collect 50 unique cards', icon: '🎴', reward: { nwg: 75, wood: 1 }, category: 'collection' },
+        first_mythic: { id: 'first_mythic', name: 'Mythic Hunter', desc: 'Pull your first Mythic', icon: '💎', reward: { wood: 2, nwg: 100 }, category: 'collection' },
+        first_legendary: { id: 'first_legendary', name: 'Lucky Star', desc: 'Pull your first Legendary', icon: '⭐', reward: { nwg: 50 }, category: 'collection' },
         
         // Spending Achievements
-        first_pull: { id: 'first_pull', name: 'First Pull', desc: 'Make your first forge pull', icon: '🔮', reward: { stone: 25 }, category: 'spending' },
-        pulls_10: { id: 'pulls_10', name: 'Fortune Seeker', desc: 'Make 10 forge pulls', icon: '🎰', reward: { diamond: 15 }, category: 'spending' },
-        pulls_50: { id: 'pulls_50', name: 'High Roller', desc: 'Make 50 forge pulls', icon: '🎲', reward: { diamond: 50, wood: 1 }, category: 'spending' },
-        first_purchase: { id: 'first_purchase', name: 'Supporter', desc: 'Make your first merch purchase', icon: '🛒', reward: { diamond: 25 }, category: 'spending' },
+        first_pull: { id: 'first_pull', name: 'First Pull', desc: 'Make your first forge pull', icon: '🔮', reward: { gold: 50 }, category: 'spending' },
+        pulls_10: { id: 'pulls_10', name: 'Fortune Seeker', desc: 'Make 10 forge pulls', icon: '🎰', reward: { nwg: 15 }, category: 'spending' },
+        pulls_50: { id: 'pulls_50', name: 'High Roller', desc: 'Make 50 forge pulls', icon: '🎲', reward: { nwg: 50, wood: 1 }, category: 'spending' },
+        first_purchase: { id: 'first_purchase', name: 'Supporter', desc: 'Make your first merch purchase', icon: '🛒', reward: { nwg: 25 }, category: 'spending' },
         
         // Exchange Achievements
         first_exchange: { id: 'first_exchange', name: 'Trader', desc: 'Complete your first exchange', icon: '💱', reward: { gold: 20 }, category: 'economy' },
-        exchanges_10: { id: 'exchanges_10', name: 'Money Moves', desc: 'Complete 10 exchanges', icon: '📊', reward: { diamond: 20 }, category: 'economy' },
-        rich_diamond: { id: 'rich_diamond', name: 'Diamond Hands', desc: 'Own 500+ diamonds at once', icon: 'diamond', reward: { wood: 1 }, category: 'economy' },
-        rich_wood: { id: 'rich_wood', name: 'Lumberjack', desc: 'Own 5+ Sacred Logs at once', icon: 'wood', reward: { diamond: 100 }, category: 'economy' },
+        exchanges_10: { id: 'exchanges_10', name: 'Money Moves', desc: 'Complete 10 exchanges', icon: '📊', reward: { nwg: 20 }, category: 'economy' },
+        rich_nwg: { id: 'rich_nwg', name: 'NWG Whale', desc: 'Own 500+ NWG at once', icon: '◆', reward: { wood: 1 }, category: 'economy' },
+        rich_wood: { id: 'rich_wood', name: 'Lumberjack', desc: 'Own 5+ Sacred Logs at once', icon: '🪵', reward: { nwg: 100 }, category: 'economy' },
         
         // Gaming Achievements
         first_game: { id: 'first_game', name: 'Gamer', desc: 'Play your first arcade game', icon: '🎮', reward: { gold: 25 }, category: 'gaming' },
-        games_10: { id: 'games_10', name: 'Arcade Regular', desc: 'Play 10 arcade games', icon: '👾', reward: { diamond: 15 }, category: 'gaming' },
-        games_won_10: { id: 'games_won_10', name: 'Winner', desc: 'Win 10 arcade games', icon: '🏆', reward: { diamond: 30, iron: 20 }, category: 'gaming' },
+        games_10: { id: 'games_10', name: 'Arcade Regular', desc: 'Play 10 arcade games', icon: '👾', reward: { nwg: 15 }, category: 'gaming' },
+        games_won_10: { id: 'games_won_10', name: 'Winner', desc: 'Win 10 arcade games', icon: '🏆', reward: { nwg: 30, gold: 50 }, category: 'gaming' },
         
         // Special Achievements
-        easter_egg: { id: 'easter_egg', name: 'Explorer', desc: 'Find a hidden Easter egg', icon: '🥚', reward: { diamond: 50 }, category: 'special' },
+        easter_egg: { id: 'easter_egg', name: 'Explorer', desc: 'Find a hidden Easter egg', icon: '🥚', reward: { nwg: 50 }, category: 'special' },
         gm_mode: { id: 'gm_mode', name: 'Power User', desc: 'Activate GM mode', icon: '👑', reward: {}, category: 'special', hidden: true }
     },
     
@@ -942,7 +944,7 @@ const NW_WALLET = {
         if (stats.exchangesMade >= 10 && !state.exchanges_10) this.unlockAchievement('exchanges_10');
         
         // Economy achievements
-        if (balances.diamond >= 500 && !state.rich_diamond) this.unlockAchievement('rich_diamond');
+        if (balances.nwg >= 500 && !state.rich_nwg) this.unlockAchievement('rich_nwg');
         if (balances.wood >= 5 && !state.rich_wood) this.unlockAchievement('rich_wood');
         
         // Gaming achievements
@@ -1290,26 +1292,24 @@ console.log('%c  NW_WALLET.deactivateGM() - Deactivate GM mode', 'color: #666;')
 console.log('%c  NW_WALLET.addToGMWhitelist() - Show your Guest ID for permanent GM', 'color: #666;');
 
 // =====================================================
-// FLOATING BALANCE WIDGET - Slim bottom bar
-// Only shows on pages without their own balance display
+// FLOATING BALANCE WIDGET - 3-Tier Currency System
+// HARD RULE #7: NWG → Gold → Sacred Log ONLY
 // =====================================================
 (function() {
-    // Inject CSS - slim bottom bar, full width, minimal height
+    // Inject CSS - 3-tier slim bottom bar
     var style = document.createElement('style');
-    style.textContent = '.nw-bottom-bar{position:fixed;bottom:0;left:0;right:0;z-index:9998;font-family:Orbitron,Inter,sans-serif;background:linear-gradient(180deg,rgba(15,15,25,0.98),rgba(10,10,18,0.99));border-top:1px solid rgba(255,215,0,0.3);padding:6px 0;display:flex;justify-content:center;align-items:center;gap:16px;box-shadow:0 -2px 15px rgba(0,0,0,0.4)}.nw-bottom-bar .nw-item{display:flex;align-items:center;gap:4px}.nw-bottom-bar .nw-ico{width:16px;height:16px;object-fit:contain}.nw-bottom-bar .nw-val{font-size:13px;font-weight:700}.nw-bottom-bar .nw-val.diamond{color:#00ffff}.nw-bottom-bar .nw-val.gold{color:#ffd700}.nw-bottom-bar .nw-val.iron{color:#94a3b8}.nw-bottom-bar .nw-val.stone{color:#00ff88}.nw-bottom-bar .nw-val.wood{color:#c97f3d}.nw-bottom-bar-active{padding-bottom:36px}';
+    style.textContent = '.nw-bottom-bar{position:fixed;bottom:0;left:0;right:0;z-index:9998;font-family:Orbitron,Inter,sans-serif;background:linear-gradient(180deg,rgba(15,15,25,0.98),rgba(10,10,18,0.99));border-top:1px solid rgba(255,215,0,0.3);padding:6px 0;display:flex;justify-content:center;align-items:center;gap:20px;box-shadow:0 -2px 15px rgba(0,0,0,0.4)}.nw-bottom-bar .nw-item{display:flex;align-items:center;gap:4px}.nw-bottom-bar .nw-ico{width:16px;height:16px;object-fit:contain}.nw-bottom-bar .nw-val{font-size:13px;font-weight:700}.nw-bottom-bar .nw-val.nwg{color:#00d4ff}.nw-bottom-bar .nw-val.gold{color:#ffd700}.nw-bottom-bar .nw-val.wood{color:#00ff88}.nw-bottom-bar-active{padding-bottom:36px}';
     document.head.appendChild(style);
     
-    // Create widget HTML - slim bottom bar (shows on ALL pages)
+    // Create widget HTML - 3-tier currencies only
     function createWidget() {
-        
         var bar = document.createElement('div');
         bar.className = 'nw-bottom-bar';
         bar.id = 'nwBottomBar';
-        bar.innerHTML = '<div class="nw-item"><img src="/static/icons/diamond.svg" class="nw-ico"><span class="nw-val diamond" id="nwfDiamond">0</span></div>' +
-            '<div class="nw-item"><img src="/static/icons/gold.svg" class="nw-ico"><span class="nw-val gold" id="nwfGold">0</span></div>' +
-            '<div class="nw-item"><img src="/static/icons/iron.svg" class="nw-ico"><span class="nw-val iron" id="nwfIron">0</span></div>' +
-            '<div class="nw-item"><img src="/static/icons/black-jade.svg" class="nw-ico"><span class="nw-val stone" id="nwfStone">0</span></div>' +
-            '<div class="nw-item"><img src="/static/icons/sacred-log.svg" class="nw-ico"><span class="nw-val wood" id="nwfWood">0</span></div>';
+        // 3-Tier System: NWG (premium) → Gold (earned) → Sacred Log (prestige)
+        bar.innerHTML = '<div class="nw-item"><span style="font-size:14px">◆</span><span class="nw-val nwg" id="nwfNwg">0</span></div>' +
+            '<div class="nw-item"><span style="font-size:14px">●</span><span class="nw-val gold" id="nwfGold">0</span></div>' +
+            '<div class="nw-item"><span style="font-size:14px">⧫</span><span class="nw-val wood" id="nwfWood">0</span></div>';
         document.body.appendChild(bar);
         document.body.classList.add('nw-bottom-bar-active');
         
@@ -1328,15 +1328,11 @@ console.log('%c  NW_WALLET.addToGMWhitelist() - Show your Guest ID for permanent
             return n;
         }
         
-        var d = document.getElementById('nwfDiamond');
+        var nwg = document.getElementById('nwfNwg');
         var g = document.getElementById('nwfGold');
-        var i = document.getElementById('nwfIron');
-        var s = document.getElementById('nwfStone');
         var w = document.getElementById('nwfWood');
-        if (d) d.textContent = fmt(info.currencies.diamond || 0);
+        if (nwg) nwg.textContent = fmt(info.currencies.nwg || 0);
         if (g) g.textContent = fmt(info.currencies.gold || 0);
-        if (i) i.textContent = fmt(info.currencies.iron || 0);
-        if (s) s.textContent = fmt(info.currencies.stone || 0);
         if (w) w.textContent = fmt(info.currencies.wood || 0);
     }
     

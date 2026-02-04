@@ -3,24 +3,22 @@
 // Uses NW_WALLET for secure, persistent storage
 // =====================================================
 
-// Currency metadata - 3-Tier System v2.0
+// Currency metadata - 3-Tier System v2.0 (HARD RULE #7: No iron, stone, or diamond)
 // NWG (premium) → Gold (earned) → Sacred Log (prestige)
 const CURRENCY_DATA = {
     nwg: { icon: '◆', name: 'NWG', tier: 1, color: '#00d4ff', rarity: 'premium' },
-    diamond: { icon: '◆', name: 'NWG', tier: 1, color: '#00d4ff', rarity: 'premium' }, // Legacy alias
     gold: { icon: '●', name: 'Gold', tier: 2, color: '#ffd700', rarity: 'common' },
     wood: { icon: '⧫', name: 'Sacred Log', tier: 0, color: '#00ff88', rarity: 'mythic' }
 };
 
 // ═══════════════════════════════════════════════════════════════
-// 3-TIER EXCHANGE RATES v2.0
+// 3-TIER EXCHANGE RATES v2.0 (HARD RULE #7: NWG→Gold→SacredLog ONLY)
 // ONE-WAY conversions only (value flows DOWN, never UP)
 // $1 USD = 100 NWG | 1 NWG = 10 Gold | Sacred Log = EARNED ONLY
 // ═══════════════════════════════════════════════════════════════
 const EXCHANGE_RATES = {
     // ONE-WAY CONVERSION (NWG → Gold only)
     'nwg->gold': 10,          // 1 NWG = 10 Gold (matches economy)
-    'diamond->gold': 10,      // Legacy alias
     
     // Sacred Log CANNOT be exchanged - must be EARNED!
     // 'wood->*': NOT ALLOWED
@@ -30,7 +28,6 @@ const EXCHANGE_RATES = {
 // "Almost There" milestone thresholds for engagement messages
 const MILESTONES = {
     nwg: [100, 500, 1000, 5000],
-    diamond: [100, 500, 1000, 5000],  // Legacy alias
     gold: [100, 500, 1000, 5000, 10000],
     wood: [1, 3, 5, 10, 25]   // Sacred Log - every one is precious!
 };
@@ -109,7 +106,7 @@ function updateUI() {
     
     // Wallet bar - 3-Tier System (NWG, Gold, Sacred Log)
     const nwgDisplay = document.getElementById('diamonds') || document.getElementById('nwg');
-    if (nwgDisplay) nwgDisplay.textContent = formatNum(balances.nwg || balances.diamond || 0);
+    if (nwgDisplay) nwgDisplay.textContent = formatNum(balances.nwg || 0);
     
     const goldDisplay = document.getElementById('gold');
     if (goldDisplay) goldDisplay.textContent = formatNum(balances.gold || 0);
@@ -123,7 +120,7 @@ function updateUI() {
     
     // Exchange section (3-tier only)
     const exNwg = document.getElementById('ex-diamond') || document.getElementById('ex-nwg');
-    if (exNwg) exNwg.textContent = formatNum(balances.nwg || balances.diamond || 0);
+    if (exNwg) exNwg.textContent = formatNum(balances.nwg || 0);
     
     const exGold = document.getElementById('ex-gold');
     if (exGold) exGold.textContent = formatNum(balances.gold || 0);
@@ -196,7 +193,7 @@ function openGame(game) {
     title.textContent = g.title;
     // Use NW_CURRENCY for premium icon display
     if (typeof NW_CURRENCY !== 'undefined') {
-        cost.innerHTML = 'Cost: ' + NW_CURRENCY.format('diamond', g.cost);
+        cost.innerHTML = 'Cost: ' + NW_CURRENCY.format('nwg', g.cost);
     } else {
         cost.textContent = 'Cost: ' + g.cost + ' Diamonds';
     }
@@ -235,7 +232,7 @@ function renderSlots() {
 
 function spinSlots() {
     if (slotsSpinning) return;
-    if (!spend('diamond', 10)) return;
+    if (!spend('nwg', 10)) return;
     
     slotsSpinning = true;
     document.getElementById('spinBtn').disabled = true;
@@ -276,7 +273,7 @@ function spinSlots() {
         if (results[0] === results[1] && results[1] === results[2]) {
             // Jackpot!
             if (results[0] === '⧫') { win = 5; currency = 'wood'; }
-            else if (results[0] === '◆') { win = 100; currency = 'diamond'; }
+            else if (results[0] === '◆') { win = 100; currency = 'nwg'; }
             else if (results[0] === '7️⃣') { win = 200; currency = 'gold'; }
             else { win = 50; currency = 'gold'; }
         } else if (results[0] === results[1] || results[1] === results[2]) {
@@ -285,7 +282,7 @@ function spinSlots() {
         
         if (win > 0) {
             earn(currency, win);
-            const icon = currency === 'wood' ? '⧫' : currency === 'diamond' ? '◆' : '●';
+            const icon = currency === 'wood' ? '⧫' : currency === 'nwg' ? '◆' : '●';
             document.getElementById('slotsResult').innerHTML = `
                 <div class="result-display win">
                     <div class="result-text win">🎉 WINNER!</div>
@@ -310,13 +307,13 @@ let scratchRevealed = false;
 let scratchPrize = null;
 
 function renderScratch() {
-    // Determine prize
+    // Determine prize (3-Tier Currency Only: NWG, Gold, Sacred Log)
     const roll = Math.random();
-    if (roll < 0.01) { scratchPrize = { icon: '⧫', amount: 3, type: 'wood' }; }
-    else if (roll < 0.05) { scratchPrize = { icon: '●', amount: 50, type: 'gold' }; }
-    else if (roll < 0.20) { scratchPrize = { icon: '●', amount: 25, type: 'gold' }; }
-    else if (roll < 0.50) { scratchPrize = { icon: '⬡', amount: 20, type: 'iron' }; }
-    else { scratchPrize = { icon: '▣', amount: 15, type: 'stone' }; }
+    if (roll < 0.01) { scratchPrize = { icon: '⧫', amount: 3, type: 'wood' }; }         // 1% - Sacred Log
+    else if (roll < 0.05) { scratchPrize = { icon: '◆', amount: 10, type: 'nwg' }; }    // 4% - NWG
+    else if (roll < 0.20) { scratchPrize = { icon: '●', amount: 50, type: 'gold' }; }   // 15% - Gold (high)
+    else if (roll < 0.50) { scratchPrize = { icon: '●', amount: 30, type: 'gold' }; }   // 30% - Gold (medium)
+    else { scratchPrize = { icon: '●', amount: 15, type: 'gold' }; }                     // 50% - Gold (low)
     
     return `
         <div class="scratch-container">
@@ -357,7 +354,7 @@ function initScratch() {
 }
 
 function buyScratch() {
-    if (!spend('diamond', 15)) return;
+    if (!spend('nwg', 15)) return;
     document.getElementById('scratchBtn').style.display = 'none';
     document.getElementById('scratchCanvas').style.pointerEvents = 'auto';
     
@@ -436,7 +433,7 @@ function chooseCoin(choice) {
 
 function flipCoin() {
     if (!coinChoice) return;
-    if (!spend('diamond', 20)) return;
+    if (!spend('nwg', 20)) return;
     
     const coin = document.getElementById('coin');
     const btn = document.getElementById('flipBtn');
@@ -506,7 +503,7 @@ function selectGuess(n) {
 
 function makeGuess() {
     if (!guessNum) return;
-    if (!spend('diamond', 25)) return;
+    if (!spend('nwg', 25)) return;
     
     const btn = document.getElementById('guessBtn');
     btn.disabled = true;
@@ -575,7 +572,7 @@ function renderDice() {
 }
 
 function rollDice() {
-    if (!spend('diamond', 30)) return;
+    if (!spend('nwg', 30)) return;
     
     const playerDice = document.getElementById('playerDice');
     const dealerDice = document.getElementById('dealerDice');
@@ -642,24 +639,24 @@ let treasurePrizes = [];
 let treasureWinner = 0;
 
 function buyTreasure() {
-    if (!spend('diamond', 50)) return;
+    if (!spend('nwg', 50)) return;
     treasurePaid = true;
     document.getElementById('treasureBtn').style.display = 'none';
     
-    // Generate prizes
+    // Generate prizes (3-Tier Currency Only: NWG, Gold, Sacred Log)
     treasureWinner = Math.floor(Math.random() * 3) + 1;
     const prizes = [
-        { icon: '▣', amount: 30, type: 'stone' },
-        { icon: '⬡', amount: 40, type: 'iron' },
-        { icon: '●', amount: 75, type: 'gold' }
+        { icon: '●', amount: 30, type: 'gold' },    // Common
+        { icon: '●', amount: 50, type: 'gold' },    // Medium
+        { icon: '◆', amount: 15, type: 'nwg' }      // Good
     ];
     
     // Shuffle and assign winner
     treasurePrizes = prizes.sort(() => Math.random() - 0.5);
-    // Make winner chest have gold or better
+    // Make winner chest have Sacred Log or NWG
     const goodPrize = Math.random() < 0.1 
-        ? { icon: '⧫', amount: 5, type: 'wood' }
-        : { icon: '●', amount: 100, type: 'gold' };
+        ? { icon: '⧫', amount: 5, type: 'wood' }     // 10% Sacred Log
+        : { icon: '◆', amount: 25, type: 'nwg' };    // 90% NWG
     treasurePrizes[treasureWinner - 1] = goodPrize;
 }
 
@@ -853,20 +850,17 @@ function updateProgression() {
     
     const balances = NW_WALLET.getAllBalances();
     
-    // Calculate total "value" in terms of diamond equivalent
+    // Calculate total "value" in terms of NWG equivalent (3-Tier System)
+    // $1 = 100 NWG | 1 NWG = 10 Gold | Sacred Log = Prestige
     const values = {
-        diamond: 1,
-        gold: 100,
-        iron: 5000,      // 100 * 50
-        stone: 125000,   // 100 * 50 * 25
-        wood: 12500000   // 100 * 50 * 25 * 100
+        nwg: 1,           // Base unit
+        gold: 0.1,        // 10 Gold = 1 NWG
+        wood: 100         // Sacred Log = very valuable (prestige)
     };
     
     const total = 
-        (balances.diamond || 0) * values.diamond +
+        (balances.nwg || 0) * values.nwg +
         (balances.gold || 0) * values.gold +
-        (balances.iron || 0) * values.iron +
-        (balances.stone || 0) * values.stone +
         (balances.wood || 0) * values.wood;
     
     // Max is having 100 logs worth
