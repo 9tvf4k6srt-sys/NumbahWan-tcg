@@ -206,7 +206,7 @@
                     </div>
                     <div class="partner-actions">
                         <button class="btn btn-primary" onclick="claimVisit('matchalatte')" id="btn-matchalatte" data-i18n="claimReward">Claim Reward</button>
-                        <a href="/matchalatte" class="btn btn-secondary" data-i18n="visitGuild">Visit Guild</a>
+                        <a href="/matchalatte" class="btn btn-secondary" id="link-matchalatte" data-i18n="visitGuild" onclick="return addCitizenToLink(this, 'https://3001-i8pqrv0s1id0a05f7rae2-583b4d74.sandbox.novita.ai')">Visit Guild</a>
                     </div>
                     <div class="visitor-stats">
                         <p><strong>847</strong> <span data-i18n="visitorsThisWeek">visitors this week</span></p>
@@ -487,6 +487,21 @@
         
         function closeModal() {
             document.getElementById('claimModal').classList.remove('active');
+        }
+        
+        // Add citizen ID to outbound partner links (for cross-domain verification)
+        function addCitizenToLink(linkEl, baseUrl) {
+            const citizenId = getCitizenId();
+            if (citizenId) {
+                // Append citizen ID to URL for cross-domain verification
+                const url = new URL(baseUrl);
+                url.searchParams.set('nwg_citizen', citizenId);
+                url.searchParams.set('ref', 'embassy');
+                linkEl.href = url.toString();
+            } else {
+                linkEl.href = baseUrl;
+            }
+            return true; // Allow default link behavior
         }
         
         function showToast(msg, isError = false) {

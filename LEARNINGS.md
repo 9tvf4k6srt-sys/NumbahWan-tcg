@@ -370,4 +370,73 @@ Bottom positioning:
 
 ---
 
+## Recent Learnings (2026-02-04)
+
+### Embassy System - Cross-Domain Authentication
+
+**Challenge**: How to verify NWG citizenship when partner sites are on different domains?
+**Problem**: localStorage doesn't share across domains in production.
+
+**Solution**: URL-based citizen referral system
+```javascript
+// 1. NWG Embassy page adds citizen ID to outbound links
+function addCitizenToLink(linkEl, baseUrl) {
+    const citizenId = getCitizenId();
+    if (citizenId) {
+        const url = new URL(baseUrl);
+        url.searchParams.set('nwg_citizen', citizenId);
+        linkEl.href = url.toString();
+    }
+}
+
+// 2. Partner widget checks URL first, then localStorage
+const urlCitizenId = urlParams.get('nwg_citizen');
+if (urlCitizenId?.startsWith('NW-')) {
+    localStorage.setItem('nw_embassy_citizen', urlCitizenId);
+    // User is now verified on this domain
+}
+```
+
+**Lesson**: Design for cross-domain from the start. URL params are the universal way to pass auth between domains.
+
+### Event Naming Consistency
+
+**Bug**: Embassy page language toggle didn't work
+**Cause**: Listening for `nw-lang-changed` but nav dispatches `nw-lang-change`
+**Fix**: Use the exact event name from the emitter
+**Lesson**: Establish and document event naming conventions. Check emitter code before adding listeners.
+
+```javascript
+// ✅ Correct - matches nw-nav.js
+document.addEventListener('nw-lang-change', handler);
+
+// ❌ Wrong - typo/mismatch
+window.addEventListener('nw-lang-changed', handler);
+```
+
+### Don't Duplicate Event Listeners
+
+**Issue**: Had both `window.addEventListener` and `document.addEventListener` for same event
+**Why it's bad**: Event fires twice, wastes resources, can cause bugs
+**Fix**: Choose one (prefer `document` for custom events dispatched to document)
+
+### Guild Emblem Consistency
+
+**Problem**: Used emoji 🔥 for NWG logo instead of actual SVG emblem
+**Impact**: Looks inconsistent, unprofessional
+**Solution**: Use SVG from favicon.svg for official logo everywhere
+**Lesson**: Create a `/static/emblems/` folder with official guild SVGs for reuse
+
+### 溫故知新 (Review Old, Learn New) Checklist
+
+Before each build session, check:
+1. [ ] Read last 3 entries in LEARNINGS.md
+2. [ ] Check event naming in nw-nav.js before adding listeners
+3. [ ] Use official SVG logos, not emojis
+4. [ ] Design cross-domain features with URL params
+5. [ ] Test language toggle on new pages
+6. [ ] Single listener per event (document OR window, not both)
+
+---
+
 *Update this file after every significant change!*

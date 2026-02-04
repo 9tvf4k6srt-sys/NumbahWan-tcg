@@ -211,9 +211,23 @@ const NWG_BASE_URL = window.location.hostname.includes('sandbox')
         lastClaim: null
     };
     
-    // Check if user has NWG citizen ID (stored in localStorage from visiting NWG site)
+    // Check if user has NWG citizen ID
+    // Priority: 1) URL param (from NWG referral) 2) localStorage (same-domain) 3) embassy storage
     function checkCitizenship() {
-        // Check multiple possible storage keys
+        // 1. Check URL for citizen ID (cross-domain referral from NWG)
+        const urlParams = new URLSearchParams(window.location.search);
+        const urlCitizenId = urlParams.get('nwg_citizen');
+        if (urlCitizenId && urlCitizenId.startsWith('NW-')) {
+            state.citizenId = urlCitizenId;
+            // Store for future visits on this domain
+            localStorage.setItem('nw_embassy_citizen', urlCitizenId);
+            // Clean URL without reloading (optional UX improvement)
+            const cleanUrl = window.location.pathname + window.location.hash;
+            window.history.replaceState({}, '', cleanUrl);
+            return true;
+        }
+        
+        // 2. Check same-domain localStorage (works in sandbox/same-domain setups)
         const walletData = localStorage.getItem('nw_wallet');
         if (walletData) {
             try {
@@ -225,7 +239,7 @@ const NWG_BASE_URL = window.location.hostname.includes('sandbox')
             } catch (e) {}
         }
         
-        // Check for embassy-specific ID
+        // 3. Check embassy-specific storage (from previous URL referral)
         const embassyId = localStorage.getItem('nw_embassy_citizen');
         if (embassyId && embassyId.startsWith('NW-')) {
             state.citizenId = embassyId;
