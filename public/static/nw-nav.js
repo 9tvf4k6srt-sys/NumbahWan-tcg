@@ -166,13 +166,14 @@ const NW_NAV = {
             ]
         },
         sisters: {
-            name: { en: 'Sister Guilds', zh: '姐妹公會', th: 'กิลด์พี่น้อง' },
+            name: { en: 'Alliance', zh: '聯盟', th: 'พันธมิตร' },
             icon: 'anchor',
             color: '#7ab87a',
             collapsed: true,
-            desc: { en: '(Allied guilds)', zh: '(同盟公會)', th: '(กิลด์พันธมิตร)' },
+            desc: { en: '(Partner guilds)', zh: '(合作公會)', th: '(กิลด์พาร์ทเนอร์)' },
             pages: [
-                { id: 'matchalatte', name: { en: 'MatchaLatte', zh: '抹茶拿鐵', th: 'มัทฉะลาเต้' }, icon: 'trophy', href: '/matchalatte', isNew: true, external: false }
+                { id: 'embassy', name: { en: 'Embassy', zh: '大使館', th: 'สถานทูต' }, icon: 'globe', href: '/embassy', isNew: true },
+                { id: 'matchalatte', name: { en: 'MatchaLatte', zh: '抹茶拿鐵', th: 'มัทฉะลาเต้' }, icon: 'trophy', href: '/matchalatte', external: false }
             ]
         }
     },
