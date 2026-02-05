@@ -13,6 +13,7 @@
     <script src="/static/nw-wallet.js"></script>
     <script src="/static/nw-icons-inline.js"></script>
     <script src="/static/nw-nav.js"></script>
+    <script src="/static/i18n.js"></script>
     <style>
         :root {
             --gold: #ffd700; --orange: #ff6b00; --purple: #a855f7; --blue: #3b82f6;
@@ -56,6 +57,20 @@
             border: 1px solid rgba(255,255,255,0.15); border-radius: 8px;
             color: #fff; font-size: 13px; text-decoration: none; font-weight: 600;
         }
+        
+        /* Language Switcher */
+        .lang-switcher {
+            display: flex; gap: 4px; margin-left: 8px;
+        }
+        .lang-btn {
+            padding: 6px 10px; border-radius: 6px;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            color: rgba(255,255,255,0.7); font-size: 11px; font-weight: 600;
+            cursor: pointer; transition: all 0.2s;
+        }
+        .lang-btn:hover { border-color: var(--orange); color: #fff; }
+        .lang-btn.active { background: var(--orange); color: #000; border-color: var(--orange); }
         
         main { max-width: 900px; margin: 0 auto; padding: 20px 16px; }
         
@@ -314,12 +329,17 @@
     <header>
         <a href="/tcg" class="logo">
             <span class="nw-icon" style="width:24px;height:24px" data-nw-icon="calendar"></span>
-            EVENTS
+            <span data-i18n="pageTitle">EVENTS</span>
         </a>
         <div class="nav-links">
-            <a href="/forge" class="nav-link">🔥 Forge</a>
-            <a href="/staking" class="nav-link">⚡ Staking</a>
-            <a href="/arcade" class="nav-link">🎮 Arcade</a>
+            <a href="/forge" class="nav-link">🔥 <span data-i18n="navForge">Forge</span></a>
+            <a href="/staking" class="nav-link">⚡ <span data-i18n="navStaking">Staking</span></a>
+            <a href="/arcade" class="nav-link">🎮 <span data-i18n="navArcade">Arcade</span></a>
+            <div class="lang-switcher">
+                <button class="lang-btn" data-l="en" onclick="setLanguage('en')">EN</button>
+                <button class="lang-btn" data-l="zh" onclick="setLanguage('zh')">中文</button>
+                <button class="lang-btn" data-l="th" onclick="setLanguage('th')">ไทย</button>
+            </div>
         </div>
     </header>
     
@@ -328,15 +348,15 @@
         <div class="today-banner" id="todayBanner">
             <div class="today-label">
                 <span class="live-dot"></span>
-                HAPPENING NOW
+                <span data-i18n="happeningNow">HAPPENING NOW</span>
             </div>
             <h1 class="today-title" id="todayTitle">Loading...</h1>
-            <p class="today-desc" id="todayDesc">Check out today's special bonuses!</p>
+            <p class="today-desc" id="todayDesc" data-i18n="checkTodayBonuses">Check out today's special bonuses!</p>
             <div class="today-bonuses" id="todayBonuses">
                 <!-- Bonuses will be rendered here -->
             </div>
             <div class="today-timer">
-                <div class="timer-label">Ends in</div>
+                <div class="timer-label" data-i18n="endsIn">Ends in</div>
                 <div class="timer-value" id="timerValue">--:--:--</div>
             </div>
         </div>
@@ -345,19 +365,19 @@
         <div class="stats-row">
             <div class="stat-item">
                 <div class="stat-value" id="eventsParticipated">0</div>
-                <div class="stat-label">Events Joined</div>
+                <div class="stat-label" data-i18n="eventsJoined">Events Joined</div>
             </div>
             <div class="stat-item">
                 <div class="stat-value" id="bonusesEarned">0%</div>
-                <div class="stat-label">Extra Earned</div>
+                <div class="stat-label" data-i18n="extraEarned">Extra Earned</div>
             </div>
             <div class="stat-item">
                 <div class="stat-value" id="streakDays">0</div>
-                <div class="stat-label">Day Streak</div>
+                <div class="stat-label" data-i18n="dayStreak">Day Streak</div>
             </div>
             <div class="stat-item">
                 <div class="stat-value" id="nextBonus">--</div>
-                <div class="stat-label">Next Big Event</div>
+                <div class="stat-label" data-i18n="nextBigEvent">Next Big Event</div>
             </div>
         </div>
         
@@ -365,7 +385,7 @@
         <div class="week-section">
             <div class="section-title">
                 <span class="nw-icon" style="width:20px;height:20px" data-nw-icon="calendar"></span>
-                THIS WEEK
+                <span data-i18n="thisWeek">THIS WEEK</span>
             </div>
             <div class="week-grid" id="weekGrid">
                 <!-- Days will be rendered here -->
@@ -375,7 +395,7 @@
         <!-- Weekly Events List -->
         <div class="section-title">
             <span class="nw-icon" style="width:20px;height:20px" data-nw-icon="star"></span>
-            WEEKLY EVENTS
+            <span data-i18n="weeklyEvents">WEEKLY EVENTS</span>
         </div>
         <div class="events-list" id="eventsList">
             <!-- Events will be rendered here -->
@@ -385,7 +405,7 @@
         <div class="upcoming-section">
             <div class="section-title">
                 <span class="nw-icon" style="width:20px;height:20px" data-nw-icon="rocket"></span>
-                COMING SOON
+                <span data-i18n="comingSoon">COMING SOON</span>
             </div>
             <div class="upcoming-grid" id="upcomingGrid">
                 <!-- Upcoming events will be rendered here -->
@@ -395,114 +415,374 @@
     
     <script>
         // ============================================
+        // TRILINGUAL TRANSLATIONS
+        // ============================================
+        const pageTranslations = {
+            en: {
+                pageTitle: "EVENTS",
+                navForge: "Forge",
+                navStaking: "Staking",
+                navArcade: "Arcade",
+                happeningNow: "HAPPENING NOW",
+                checkTodayBonuses: "Check out today's special bonuses!",
+                endsIn: "Ends in",
+                eventsJoined: "Events Joined",
+                extraEarned: "Extra Earned",
+                dayStreak: "Day Streak",
+                nextBigEvent: "Next Big Event",
+                thisWeek: "THIS WEEK",
+                weeklyEvents: "WEEKLY EVENTS",
+                comingSoon: "COMING SOON",
+                today: "TODAY!",
+                tomorrow: "Tomorrow",
+                days: "days",
+                every: "Every",
+                // Day names
+                monday: "Monday",
+                tuesday: "Tuesday",
+                wednesday: "Wednesday",
+                thursday: "Thursday",
+                friday: "Friday",
+                saturday: "Saturday",
+                sunday: "Sunday",
+                mon: "Mon",
+                tue: "Tue",
+                wed: "Wed",
+                thu: "Thu",
+                fri: "Fri",
+                sat: "Sat",
+                sun: "Sun",
+                // Event names
+                marketMonday: "Market Monday",
+                trainingTuesday: "Training Tuesday",
+                warWednesday: "War Wednesday",
+                throwbackThursday: "Throwback Thursday",
+                forgeFriday: "Forge Friday",
+                socialSaturday: "Social Saturday",
+                stakeSunday: "Stake Sunday",
+                // Event descriptions
+                marketMondayDesc: "Trading bonuses and market discounts every Monday!",
+                trainingTuesdayDesc: "Earn bonus XP from battles and challenges.",
+                warWednesdayDesc: "Battle tournaments with prize pools!",
+                throwbackThursdayDesc: "Limited-time access to previous season cards.",
+                forgeFridayDesc: "Double pity progress and boosted mythic rates!",
+                socialSaturdayDesc: "Community events and guild competitions.",
+                stakeSundayDesc: "Double staking rewards all day!",
+                // Bonuses
+                tradeValue: "+10% Trade Value",
+                marketFees: "-5% Market Fees",
+                battleXP: "1.5× Battle XP",
+                freeTutorials: "Free Tutorials",
+                tournamentOpen: "Tournament Open",
+                battleRewards: "1.5× Battle Rewards",
+                legacyCards: "Legacy Cards Available",
+                nostalgiaPacks: "Nostalgia Packs",
+                pityProgress: "2× Pity Progress",
+                mythicRate: "2× Mythic Rate",
+                coopRewards: "2× Co-op Rewards",
+                guildBonus: "Guild Bonus Active",
+                stakingRewards: "2× Staking Rewards",
+                bonusClaimWindow: "Bonus Claim Window",
+                // Upcoming
+                season3Launch: "Season 3 Launch",
+                season3Desc: "New card set with 120+ cards, new mechanics, and exclusive launch rewards!",
+                anniversaryCelebration: "Anniversary Celebration",
+                anniversaryDesc: "Celebrate NumbahWan's anniversary with massive giveaways and throwback events!",
+                collaborationDrop: "Collaboration Drop",
+                collaborationDesc: "Special collaboration with a surprise partner. Exclusive cards only available during this event!",
+                march2026: "March 2026",
+                april2026: "April 2026",
+                comingSoonDate: "Coming Soon",
+                newCards: "New Cards",
+                limitedPacks: "Limited Packs",
+                freePulls: "Free Pulls",
+                freeMythic: "Free Mythic",
+                bonusLogs: "Bonus Logs",
+                legacyReturns: "Legacy Returns",
+                exclusive: "Exclusive",
+                limitedTime: "Limited Time"
+            },
+            zh: {
+                pageTitle: "活動",
+                navForge: "鍛造",
+                navStaking: "質押",
+                navArcade: "遊樂場",
+                happeningNow: "正在進行",
+                checkTodayBonuses: "查看今日特別獎勵！",
+                endsIn: "剩餘時間",
+                eventsJoined: "參與活動數",
+                extraEarned: "額外獲得",
+                dayStreak: "連續天數",
+                nextBigEvent: "下個大活動",
+                thisWeek: "本週",
+                weeklyEvents: "每週活動",
+                comingSoon: "即將推出",
+                today: "今天！",
+                tomorrow: "明天",
+                days: "天",
+                every: "每週",
+                // Day names
+                monday: "週一",
+                tuesday: "週二",
+                wednesday: "週三",
+                thursday: "週四",
+                friday: "週五",
+                saturday: "週六",
+                sunday: "週日",
+                mon: "一",
+                tue: "二",
+                wed: "三",
+                thu: "四",
+                fri: "五",
+                sat: "六",
+                sun: "日",
+                // Event names
+                marketMonday: "市場星期一",
+                trainingTuesday: "訓練星期二",
+                warWednesday: "戰爭星期三",
+                throwbackThursday: "懷舊星期四",
+                forgeFriday: "鍛造星期五",
+                socialSaturday: "社交星期六",
+                stakeSunday: "質押星期日",
+                // Event descriptions
+                marketMondayDesc: "每週一享受交易獎勵和市場折扣！",
+                trainingTuesdayDesc: "從戰鬥和挑戰中獲得額外經驗值。",
+                warWednesdayDesc: "參加有獎池的戰鬥錦標賽！",
+                throwbackThursdayDesc: "限時解鎖上季卡牌。",
+                forgeFridayDesc: "雙倍保底進度和提升神話機率！",
+                socialSaturdayDesc: "社區活動和公會競賽。",
+                stakeSundayDesc: "全天雙倍質押獎勵！",
+                // Bonuses
+                tradeValue: "+10% 交易價值",
+                marketFees: "-5% 市場手續費",
+                battleXP: "1.5倍 戰鬥經驗",
+                freeTutorials: "免費教程",
+                tournamentOpen: "錦標賽開放",
+                battleRewards: "1.5倍 戰鬥獎勵",
+                legacyCards: "傳承卡牌可用",
+                nostalgiaPacks: "懷舊卡包",
+                pityProgress: "2倍 保底進度",
+                mythicRate: "2倍 神話機率",
+                coopRewards: "2倍 合作獎勵",
+                guildBonus: "公會加成啟動",
+                stakingRewards: "2倍 質押獎勵",
+                bonusClaimWindow: "獎勵領取時段",
+                // Upcoming
+                season3Launch: "第三季上線",
+                season3Desc: "全新卡組包含120+張卡牌、新機制和專屬上線獎勵！",
+                anniversaryCelebration: "週年慶典",
+                anniversaryDesc: "慶祝NumbahWan週年，超多好禮和懷舊活動！",
+                collaborationDrop: "聯名活動",
+                collaborationDesc: "與神秘夥伴的特別聯名。活動期間限定卡牌！",
+                march2026: "2026年3月",
+                april2026: "2026年4月",
+                comingSoonDate: "即將推出",
+                newCards: "新卡牌",
+                limitedPacks: "限定卡包",
+                freePulls: "免費抽卡",
+                freeMythic: "免費神話",
+                bonusLogs: "額外木材",
+                legacyReturns: "傳承回歸",
+                exclusive: "獨家",
+                limitedTime: "限時"
+            },
+            th: {
+                pageTitle: "กิจกรรม",
+                navForge: "หลอมการ์ด",
+                navStaking: "สเตค",
+                navArcade: "อาร์เคด",
+                happeningNow: "กำลังดำเนินอยู่",
+                checkTodayBonuses: "ดูโบนัสพิเศษประจำวันนี้!",
+                endsIn: "สิ้นสุดใน",
+                eventsJoined: "เข้าร่วมกิจกรรม",
+                extraEarned: "ได้รับเพิ่ม",
+                dayStreak: "วันติดต่อกัน",
+                nextBigEvent: "กิจกรรมใหญ่ถัดไป",
+                thisWeek: "สัปดาห์นี้",
+                weeklyEvents: "กิจกรรมประจำสัปดาห์",
+                comingSoon: "เร็วๆ นี้",
+                today: "วันนี้!",
+                tomorrow: "พรุ่งนี้",
+                days: "วัน",
+                every: "ทุก",
+                // Day names
+                monday: "วันจันทร์",
+                tuesday: "วันอังคาร",
+                wednesday: "วันพุธ",
+                thursday: "วันพฤหัสบดี",
+                friday: "วันศุกร์",
+                saturday: "วันเสาร์",
+                sunday: "วันอาทิตย์",
+                mon: "จ.",
+                tue: "อ.",
+                wed: "พ.",
+                thu: "พฤ.",
+                fri: "ศ.",
+                sat: "ส.",
+                sun: "อา.",
+                // Event names
+                marketMonday: "จันทร์ตลาด",
+                trainingTuesday: "อังคารฝึกซ้อม",
+                warWednesday: "พุธสงคราม",
+                throwbackThursday: "พฤหัสย้อนอดีต",
+                forgeFriday: "ศุกร์หลอมการ์ด",
+                socialSaturday: "เสาร์สังคม",
+                stakeSunday: "อาทิตย์สเตค",
+                // Event descriptions
+                marketMondayDesc: "โบนัสการซื้อขายและส่วนลดตลาดทุกวันจันทร์!",
+                trainingTuesdayDesc: "รับโบนัส XP จากการต่อสู้และความท้าทาย",
+                warWednesdayDesc: "ทัวร์นาเมนต์การต่อสู้พร้อมรางวัล!",
+                throwbackThursdayDesc: "เข้าถึงการ์ดซีซันก่อนแบบจำกัดเวลา",
+                forgeFridayDesc: "ความคืบหน้าการันตี 2 เท่าและเพิ่มอัตราการ์ดมิธิค!",
+                socialSaturdayDesc: "กิจกรรมชุมชนและการแข่งขันกิลด์",
+                stakeSundayDesc: "รางวัลสเตค 2 เท่าตลอดทั้งวัน!",
+                // Bonuses
+                tradeValue: "+10% มูลค่าการซื้อขาย",
+                marketFees: "-5% ค่าธรรมเนียมตลาด",
+                battleXP: "1.5 เท่า XP การต่อสู้",
+                freeTutorials: "บทเรียนฟรี",
+                tournamentOpen: "เปิดทัวร์นาเมนต์",
+                battleRewards: "1.5 เท่า รางวัลการต่อสู้",
+                legacyCards: "การ์ดมรดกพร้อมใช้",
+                nostalgiaPacks: "แพ็คความทรงจำ",
+                pityProgress: "2 เท่า ความคืบหน้าการันตี",
+                mythicRate: "2 เท่า อัตรามิธิค",
+                coopRewards: "2 เท่า รางวัลร่วมมือ",
+                guildBonus: "โบนัสกิลด์ทำงาน",
+                stakingRewards: "2 เท่า รางวัลสเตค",
+                bonusClaimWindow: "ช่วงเวลารับโบนัส",
+                // Upcoming
+                season3Launch: "เปิดตัวซีซัน 3",
+                season3Desc: "ชุดการ์ดใหม่กว่า 120 ใบ, กลไกใหม่, และรางวัลเปิดตัวสุดพิเศษ!",
+                anniversaryCelebration: "ฉลองครบรอบ",
+                anniversaryDesc: "ฉลองครบรอบ NumbahWan ด้วยของแจกเพียบและกิจกรรมย้อนอดีต!",
+                collaborationDrop: "คอลแลบพิเศษ",
+                collaborationDesc: "คอลแลบพิเศษกับพันธมิตรลับ การ์ดพิเศษเฉพาะช่วงกิจกรรมนี้เท่านั้น!",
+                march2026: "มีนาคม 2026",
+                april2026: "เมษายน 2026",
+                comingSoonDate: "เร็วๆ นี้",
+                newCards: "การ์ดใหม่",
+                limitedPacks: "แพ็คจำกัด",
+                freePulls: "สุ่มฟรี",
+                freeMythic: "มิธิคฟรี",
+                bonusLogs: "โบนัสล็อก",
+                legacyReturns: "มรดกกลับมา",
+                exclusive: "พิเศษ",
+                limitedTime: "จำกัดเวลา"
+            }
+        };
+        
+        // Initialize i18n
+        document.addEventListener('DOMContentLoaded', () => {
+            initI18n(pageTranslations);
+            
+            // Update lang buttons active state
+            document.querySelectorAll('.lang-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.l === getCurrentLang());
+            });
+        });
+        
+        // Listen for language changes
+        document.addEventListener('languageChanged', (e) => {
+            document.querySelectorAll('.lang-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.l === e.detail.lang);
+            });
+            // Re-render content with new language
+            renderTodayEvent();
+            renderWeekCalendar();
+            renderEventsList();
+            renderUpcomingEvents();
+            loadUserStats();
+        });
+        
+        // ============================================
         // NW CONTENT CALENDAR SYSTEM
         // ============================================
         
         const WEEKLY_EVENTS = [
             {
                 id: 'market_monday',
-                name: 'Market Monday',
-                day: 1, // Monday
+                nameKey: 'marketMonday',
+                day: 1,
                 emoji: '🏪',
-                description: 'Trading bonuses and market discounts every Monday!',
-                bonuses: [
-                    { label: '+10% Trade Value', active: true },
-                    { label: '-5% Market Fees', active: true }
-                ],
+                descKey: 'marketMondayDesc',
+                bonusKeys: ['tradeValue', 'marketFees'],
                 color: 'var(--blue)'
             },
             {
                 id: 'training_tuesday',
-                name: 'Training Tuesday',
+                nameKey: 'trainingTuesday',
                 day: 2,
                 emoji: '⚔️',
-                description: 'Earn bonus XP from battles and challenges.',
-                bonuses: [
-                    { label: '1.5× Battle XP', active: true },
-                    { label: 'Free Tutorials', active: true }
-                ],
+                descKey: 'trainingTuesdayDesc',
+                bonusKeys: ['battleXP', 'freeTutorials'],
                 color: 'var(--green)'
             },
             {
                 id: 'war_wednesday',
-                name: 'War Wednesday',
+                nameKey: 'warWednesday',
                 day: 3,
                 emoji: '🏆',
-                description: 'Battle tournaments with prize pools!',
-                bonuses: [
-                    { label: 'Tournament Open', active: true },
-                    { label: '1.5× Battle Rewards', active: true }
-                ],
+                descKey: 'warWednesdayDesc',
+                bonusKeys: ['tournamentOpen', 'battleRewards'],
                 color: 'var(--red)'
             },
             {
                 id: 'throwback_thursday',
-                name: 'Throwback Thursday',
+                nameKey: 'throwbackThursday',
                 day: 4,
                 emoji: '⏰',
-                description: 'Limited-time access to previous season cards.',
-                bonuses: [
-                    { label: 'Legacy Cards Available', active: true },
-                    { label: 'Nostalgia Packs', active: true }
-                ],
+                descKey: 'throwbackThursdayDesc',
+                bonusKeys: ['legacyCards', 'nostalgiaPacks'],
                 color: 'var(--purple)'
             },
             {
                 id: 'forge_friday',
-                name: 'Forge Friday',
+                nameKey: 'forgeFriday',
                 day: 5,
                 emoji: '🔥',
-                description: 'Double pity progress and boosted mythic rates!',
-                bonuses: [
-                    { label: '2× Pity Progress', active: true },
-                    { label: '2× Mythic Rate', active: true }
-                ],
+                descKey: 'forgeFridayDesc',
+                bonusKeys: ['pityProgress', 'mythicRate'],
                 color: 'var(--orange)'
             },
             {
                 id: 'social_saturday',
-                name: 'Social Saturday',
+                nameKey: 'socialSaturday',
                 day: 6,
                 emoji: '🤝',
-                description: 'Community events and guild competitions.',
-                bonuses: [
-                    { label: '2× Co-op Rewards', active: true },
-                    { label: 'Guild Bonus Active', active: true }
-                ],
+                descKey: 'socialSaturdayDesc',
+                bonusKeys: ['coopRewards', 'guildBonus'],
                 color: 'var(--cyan)'
             },
             {
                 id: 'stake_sunday',
-                name: 'Stake Sunday',
+                nameKey: 'stakeSunday',
                 day: 0,
                 emoji: '💎',
-                description: 'Double staking rewards all day!',
-                bonuses: [
-                    { label: '2× Staking Rewards', active: true },
-                    { label: 'Bonus Claim Window', active: true }
-                ],
+                descKey: 'stakeSundayDesc',
+                bonusKeys: ['stakingRewards', 'bonusClaimWindow'],
                 color: 'var(--gold)'
             }
         ];
         
         const UPCOMING_EVENTS = [
             {
-                name: 'Season 3 Launch',
-                date: 'March 2026',
-                description: 'New card set with 120+ cards, new mechanics, and exclusive launch rewards!',
-                tags: ['New Cards', 'Limited Packs', 'Free Pulls']
+                nameKey: 'season3Launch',
+                dateKey: 'march2026',
+                descKey: 'season3Desc',
+                tagKeys: ['newCards', 'limitedPacks', 'freePulls']
             },
             {
-                name: 'Anniversary Celebration',
-                date: 'April 2026',
-                description: "Celebrate NumbahWan's anniversary with massive giveaways and throwback events!",
-                tags: ['Free Mythic', 'Bonus Logs', 'Legacy Returns']
+                nameKey: 'anniversaryCelebration',
+                dateKey: 'april2026',
+                descKey: 'anniversaryDesc',
+                tagKeys: ['freeMythic', 'bonusLogs', 'legacyReturns']
             },
             {
-                name: 'Collaboration Drop',
-                date: 'Coming Soon',
-                description: 'Special collaboration with a surprise partner. Exclusive cards only available during this event!',
-                tags: ['Exclusive', 'Limited Time', '???']
+                nameKey: 'collaborationDrop',
+                dateKey: 'comingSoonDate',
+                descKey: 'collaborationDesc',
+                tagKeys: ['exclusive', 'limitedTime']
             }
         ];
         
@@ -521,24 +801,25 @@
         });
         
         function getTodayEvent() {
-            const today = new Date().getDay(); // 0 = Sunday, 1 = Monday, etc.
+            const today = new Date().getDay();
             return WEEKLY_EVENTS.find(e => e.day === today) || WEEKLY_EVENTS[0];
         }
         
         function renderTodayEvent() {
             const event = getTodayEvent();
             
-            document.getElementById('todayTitle').textContent = event.name;
-            document.getElementById('todayDesc').textContent = event.description;
+            const eventName = getTranslation(event.nameKey) || event.nameKey;
+            const eventDesc = getTranslation(event.descKey) || event.descKey;
             
-            const bonusesHtml = event.bonuses.map(b => `
-                <div class="bonus-tag ${b.active ? 'active' : ''}">
-                    ${b.active ? '✓' : ''} ${b.label}
-                </div>
-            `).join('');
+            document.getElementById('todayTitle').textContent = eventName;
+            document.getElementById('todayDesc').textContent = eventDesc;
+            
+            const bonusesHtml = event.bonusKeys.map(key => {
+                const label = getTranslation(key) || key;
+                return `<div class="bonus-tag active">✓ ${label}</div>`;
+            }).join('');
             document.getElementById('todayBonuses').innerHTML = bonusesHtml;
             
-            // Update banner gradient
             document.getElementById('todayBanner').style.borderColor = event.color;
         }
         
@@ -547,13 +828,12 @@
             const today = new Date();
             const currentDay = today.getDay();
             
-            // Get start of week (Monday)
             const startOfWeek = new Date(today);
             const diff = currentDay === 0 ? -6 : 1 - currentDay;
             startOfWeek.setDate(today.getDate() + diff);
             
-            const dayNames = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-            const dayMapping = [1, 2, 3, 4, 5, 6, 0]; // Mon-Sun to day numbers
+            const dayNameKeys = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'];
+            const dayMapping = [1, 2, 3, 4, 5, 6, 0];
             
             let html = '';
             for (let i = 0; i < 7; i++) {
@@ -565,13 +845,16 @@
                 const isToday = date.toDateString() === today.toDateString();
                 const isPast = date < today && !isToday;
                 
+                const dayName = getTranslation(dayNameKeys[i]) || dayNameKeys[i];
+                const eventName = event ? (getTranslation(event.nameKey) || '').split(' ')[0] : '';
+                
                 html += `
                     <div class="day-card ${isToday ? 'today' : ''} ${isPast ? 'past' : ''}" 
                          onclick="showEventDetail('${event?.id}')">
-                        <div class="day-name">${dayNames[i]}</div>
+                        <div class="day-name">${dayName}</div>
                         <div class="day-date">${date.getDate()}</div>
                         <div class="day-event">${event?.emoji || '📅'}</div>
-                        <div class="day-event-name">${event?.name?.split(' ')[0] || ''}</div>
+                        <div class="day-event-name">${eventName}</div>
                     </div>
                 `;
             }
@@ -583,16 +866,20 @@
             const list = document.getElementById('eventsList');
             const today = new Date().getDay();
             
-            // Sort events so today's event is first
             const sortedEvents = [...WEEKLY_EVENTS].sort((a, b) => {
                 if (a.day === today) return -1;
                 if (b.day === today) return 1;
                 return (a.day - today + 7) % 7 - (b.day - today + 7) % 7;
             });
             
+            const dayNameKeys = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+            const everyText = getTranslation('every') || 'Every';
+            
             list.innerHTML = sortedEvents.map(event => {
                 const isActive = event.day === today;
-                const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+                const dayName = getTranslation(dayNameKeys[event.day]) || dayNameKeys[event.day];
+                const eventName = getTranslation(event.nameKey) || event.nameKey;
+                const eventDesc = getTranslation(event.descKey) || event.descKey;
                 
                 return `
                     <div class="event-card ${isActive ? 'active' : ''}" data-event="${event.id}">
@@ -601,12 +888,12 @@
                         </div>
                         <div class="event-content">
                             <div class="event-header">
-                                <div class="event-name">${event.name}</div>
-                                <div class="event-schedule weekly">Every ${dayNames[event.day]}</div>
+                                <div class="event-name">${eventName}</div>
+                                <div class="event-schedule weekly">${everyText} ${dayName}</div>
                             </div>
-                            <div class="event-desc">${event.description}</div>
+                            <div class="event-desc">${eventDesc}</div>
                             <div class="event-bonuses">
-                                ${event.bonuses.map(b => `<span class="event-bonus">${b.label}</span>`).join('')}
+                                ${event.bonusKeys.map(key => `<span class="event-bonus">${getTranslation(key) || key}</span>`).join('')}
                             </div>
                         </div>
                     </div>
@@ -617,22 +904,27 @@
         function renderUpcomingEvents() {
             const grid = document.getElementById('upcomingGrid');
             
-            grid.innerHTML = UPCOMING_EVENTS.map(event => `
-                <div class="upcoming-card">
-                    <div class="upcoming-header">
-                        <div class="upcoming-name">${event.name}</div>
-                        <div class="upcoming-date">${event.date}</div>
+            grid.innerHTML = UPCOMING_EVENTS.map(event => {
+                const eventName = getTranslation(event.nameKey) || event.nameKey;
+                const eventDate = getTranslation(event.dateKey) || event.dateKey;
+                const eventDesc = getTranslation(event.descKey) || event.descKey;
+                
+                return `
+                    <div class="upcoming-card">
+                        <div class="upcoming-header">
+                            <div class="upcoming-name">${eventName}</div>
+                            <div class="upcoming-date">${eventDate}</div>
+                        </div>
+                        <div class="upcoming-desc">${eventDesc}</div>
+                        <div class="upcoming-preview">
+                            ${event.tagKeys.map(key => `<span class="preview-tag">${getTranslation(key) || key}</span>`).join('')}
+                        </div>
                     </div>
-                    <div class="upcoming-desc">${event.description}</div>
-                    <div class="upcoming-preview">
-                        ${event.tags.map(tag => `<span class="preview-tag">${tag}</span>`).join('')}
-                    </div>
-                </div>
-            `).join('');
+                `;
+            }).join('');
         }
         
         function loadUserStats() {
-            // Load from localStorage
             const stats = JSON.parse(localStorage.getItem('nw_event_stats') || '{}');
             
             document.getElementById('eventsParticipated').textContent = stats.participated || 0;
@@ -643,11 +935,11 @@
         
         function getNextBigEvent() {
             const today = new Date().getDay();
-            // Forge Friday is the "big" event
             const daysUntilFriday = (5 - today + 7) % 7;
-            if (daysUntilFriday === 0) return 'TODAY!';
-            if (daysUntilFriday === 1) return 'Tomorrow';
-            return `${daysUntilFriday} days`;
+            
+            if (daysUntilFriday === 0) return getTranslation('today') || 'TODAY!';
+            if (daysUntilFriday === 1) return getTranslation('tomorrow') || 'Tomorrow';
+            return `${daysUntilFriday} ${getTranslation('days') || 'days'}`;
         }
         
         function startTimer() {
@@ -670,20 +962,15 @@
         }
         
         function showEventDetail(eventId) {
-            const event = WEEKLY_EVENTS.find(e => e.id === eventId);
-            if (!event) return;
-            
-            // Scroll to event card
             const card = document.querySelector(`[data-event="${eventId}"]`);
             if (card) {
                 card.scrollIntoView({ behavior: 'smooth', block: 'center' });
                 card.style.animation = 'none';
-                card.offsetHeight; // Trigger reflow
+                card.offsetHeight;
                 card.style.animation = 'highlight 1s ease-out';
             }
         }
         
-        // Track participation (demo)
         function recordParticipation() {
             const stats = JSON.parse(localStorage.getItem('nw_event_stats') || '{}');
             stats.participated = (stats.participated || 0) + 1;
@@ -693,11 +980,10 @@
             loadUserStats();
         }
         
-        // Auto-record today's visit
         const lastVisit = localStorage.getItem('nw_event_last_visit');
-        const today = new Date().toDateString();
-        if (lastVisit !== today) {
-            localStorage.setItem('nw_event_last_visit', today);
+        const todayStr = new Date().toDateString();
+        if (lastVisit !== todayStr) {
+            localStorage.setItem('nw_event_last_visit', todayStr);
             recordParticipation();
         }
     </script>

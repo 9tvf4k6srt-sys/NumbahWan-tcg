@@ -13,6 +13,7 @@
     <script src="/static/nw-wallet.js"></script>
     <script src="/static/nw-icons-inline.js"></script>
     <script src="/static/nw-nav.js"></script>
+    <script src="/static/i18n.js"></script>
     <style>
         :root {
             --gold: #ffd700; --orange: #ff6b00; --purple: #a855f7; --blue: #3b82f6;
@@ -55,6 +56,20 @@
             border: 1px solid rgba(255,255,255,0.15); border-radius: 8px;
             color: #fff; font-size: 13px; text-decoration: none; font-weight: 600;
         }
+        
+        /* Language Switcher */
+        .lang-switcher {
+            display: flex; gap: 4px; margin-left: 8px;
+        }
+        .lang-btn {
+            padding: 6px 10px; border-radius: 6px;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            color: rgba(255,255,255,0.7); font-size: 11px; font-weight: 600;
+            cursor: pointer; transition: all 0.2s;
+        }
+        .lang-btn:hover { border-color: var(--gold); color: #fff; }
+        .lang-btn.active { background: var(--gold); color: #000; border-color: var(--gold); }
         
         main {
             max-width: 600px; margin: 0 auto; padding: 40px 20px;
@@ -100,11 +115,8 @@
             color: var(--gold); margin-bottom: 12px;
             display: flex; align-items: center; gap: 8px;
         }
-        .code-input-group {
-            display: flex; gap: 8px;
-        }
         .code-input {
-            flex: 1;
+            width: 100%;
             background: rgba(0,0,0,0.5);
             border: 2px solid rgba(255,215,0,0.3);
             border-radius: 12px;
@@ -356,11 +368,16 @@
     <header>
         <a href="/tcg" class="logo">
             <span class="nw-icon" style="width:24px;height:24px" data-nw-icon="gift"></span>
-            MERCH CLAIM
+            <span data-i18n="pageTitle">MERCH CLAIM</span>
         </a>
         <div class="nav-links">
-            <a href="/collection" class="nav-link">📚 Collection</a>
-            <a href="/wallet" class="nav-link">💳 Wallet</a>
+            <a href="/collection" class="nav-link">📚 <span data-i18n="navCollection">Collection</span></a>
+            <a href="/wallet" class="nav-link">💳 <span data-i18n="navWallet">Wallet</span></a>
+            <div class="lang-switcher">
+                <button class="lang-btn" data-l="en" onclick="setLanguage('en')">EN</button>
+                <button class="lang-btn" data-l="zh" onclick="setLanguage('zh')">中文</button>
+                <button class="lang-btn" data-l="th" onclick="setLanguage('th')">ไทย</button>
+            </div>
         </div>
     </header>
     
@@ -368,49 +385,50 @@
         <!-- Hero -->
         <div class="hero">
             <div class="hero-icon">🎁</div>
-            <h1 class="hero-title">CLAIM YOUR REWARDS</h1>
-            <p class="hero-subtitle">Enter the code from your NumbahWan merchandise to unlock exclusive digital rewards!</p>
+            <h1 class="hero-title" data-i18n="heroTitle">CLAIM YOUR REWARDS</h1>
+            <p class="hero-subtitle" data-i18n="heroSubtitle">Enter the code from your NumbahWan merchandise to unlock exclusive digital rewards!</p>
         </div>
         
         <!-- Code Input -->
         <div class="code-section">
             <div class="code-label">
                 <span class="nw-icon" style="width:14px;height:14px" data-nw-icon="key"></span>
-                REDEMPTION CODE
+                <span data-i18n="redemptionCode">REDEMPTION CODE</span>
             </div>
             <input type="text" 
                    class="code-input" 
                    id="codeInput"
+                   data-i18n-placeholder="codePlaceholder"
                    placeholder="NWMR-XXXX-XXXX"
                    maxlength="14"
                    autocomplete="off"
                    spellcheck="false">
             <button class="claim-btn" id="claimBtn" onclick="claimCode()">
-                🎁 CLAIM REWARDS
+                🎁 <span data-i18n="claimRewards">CLAIM REWARDS</span>
             </button>
         </div>
         
-        <div class="or-divider">OR</div>
+        <div class="or-divider"><span data-i18n="or">OR</span></div>
         
         <button class="scan-btn" onclick="openScanner()">
-            📷 SCAN QR CODE
+            📷 <span data-i18n="scanQRCode">SCAN QR CODE</span>
         </button>
         
         <!-- Tier Info -->
         <div class="tier-info">
-            <div class="tier-title">🏆 REWARD TIERS</div>
+            <div class="tier-title">🏆 <span data-i18n="rewardTiers">REWARD TIERS</span></div>
             <div class="tier-grid">
                 <div class="tier-card bronze">
-                    <div class="tier-name">BRONZE</div>
-                    <div class="tier-rewards">
+                    <div class="tier-name" data-i18n="bronze">BRONZE</div>
+                    <div class="tier-rewards" data-i18n-html="bronzeRewards">
                         1 Rare Card<br>
                         "Supporter" Title<br>
                         5% Discount
                     </div>
                 </div>
                 <div class="tier-card silver">
-                    <div class="tier-name">SILVER</div>
-                    <div class="tier-rewards">
+                    <div class="tier-name" data-i18n="silver">SILVER</div>
+                    <div class="tier-rewards" data-i18n-html="silverRewards">
                         1 Epic Card<br>
                         Profile Badge<br>
                         10% Discount<br>
@@ -418,8 +436,8 @@
                     </div>
                 </div>
                 <div class="tier-card gold">
-                    <div class="tier-name">GOLD</div>
-                    <div class="tier-rewards">
+                    <div class="tier-name" data-i18n="goldTier">GOLD</div>
+                    <div class="tier-rewards" data-i18n-html="goldRewards">
                         1 Legendary Card<br>
                         Profile Border<br>
                         15% Discount<br>
@@ -427,8 +445,8 @@
                     </div>
                 </div>
                 <div class="tier-card platinum">
-                    <div class="tier-name">PLATINUM</div>
-                    <div class="tier-rewards">
+                    <div class="tier-name" data-i18n="platinum">PLATINUM</div>
+                    <div class="tier-rewards" data-i18n-html="platinumRewards">
                         1 Mythic Card<br>
                         "Founder" Status<br>
                         20% Discount<br>
@@ -453,11 +471,151 @@
             <div class="scanner-line"></div>
             <span style="font-size: 48px; opacity: 0.3;">📷</span>
         </div>
-        <p style="color: rgba(255,255,255,0.6); margin-bottom: 20px;">Position QR code within the frame</p>
-        <button class="scanner-close" onclick="closeScanner()">Cancel</button>
+        <p style="color: rgba(255,255,255,0.6); margin-bottom: 20px;" data-i18n="positionQR">Position QR code within the frame</p>
+        <button class="scanner-close" onclick="closeScanner()" data-i18n="cancel">Cancel</button>
     </div>
     
     <script>
+        // ============================================
+        // TRILINGUAL TRANSLATIONS
+        // ============================================
+        const pageTranslations = {
+            en: {
+                pageTitle: "MERCH CLAIM",
+                navCollection: "Collection",
+                navWallet: "Wallet",
+                heroTitle: "CLAIM YOUR REWARDS",
+                heroSubtitle: "Enter the code from your NumbahWan merchandise to unlock exclusive digital rewards!",
+                redemptionCode: "REDEMPTION CODE",
+                codePlaceholder: "NWMR-XXXX-XXXX",
+                claimRewards: "CLAIM REWARDS",
+                or: "OR",
+                scanQRCode: "SCAN QR CODE",
+                rewardTiers: "REWARD TIERS",
+                bronze: "BRONZE",
+                silver: "SILVER",
+                goldTier: "GOLD",
+                platinum: "PLATINUM",
+                bronzeRewards: "1 Rare Card<br>\"Supporter\" Title<br>5% Discount",
+                silverRewards: "1 Epic Card<br>Profile Badge<br>10% Discount<br>50 Sacred Logs",
+                goldRewards: "1 Legendary Card<br>Profile Border<br>15% Discount<br>200 Sacred Logs",
+                platinumRewards: "1 Mythic Card<br>\"Founder\" Status<br>20% Discount<br>500 Sacred Logs<br>2× Voting Power",
+                positionQR: "Position QR code within the frame",
+                cancel: "Cancel",
+                verifyingCode: "VERIFYING CODE...",
+                rewardsClaimed: "REWARDS CLAIMED!",
+                youReceived: "YOU RECEIVED",
+                gold: "Gold",
+                sacredLogs: "Sacred Logs",
+                title: "Title",
+                permanentDiscount: "Permanent Discount",
+                awesome: "AWESOME!",
+                invalidCode: "Invalid Code",
+                invalidCodeMsg: "Please enter a valid 12-character code.",
+                alreadyClaimed: "Already Claimed",
+                alreadyClaimedMsg: "This code has already been redeemed on this device.",
+                claimFailed: "Claim Failed",
+                codeNotRecognized: "This code is not recognized. Please check and try again.",
+                tryAgain: "TRY AGAIN",
+                qrDetected: "QR Code detected!"
+            },
+            zh: {
+                pageTitle: "周邊兌換",
+                navCollection: "收藏",
+                navWallet: "錢包",
+                heroTitle: "領取您的獎勵",
+                heroSubtitle: "輸入您NumbahWan周邊商品上的兌換碼，解鎖專屬數位獎勵！",
+                redemptionCode: "兌換碼",
+                codePlaceholder: "NWMR-XXXX-XXXX",
+                claimRewards: "領取獎勵",
+                or: "或",
+                scanQRCode: "掃描 QR 碼",
+                rewardTiers: "獎勵等級",
+                bronze: "青銅",
+                silver: "白銀",
+                goldTier: "黃金",
+                platinum: "白金",
+                bronzeRewards: "1張精良卡<br>「支持者」稱號<br>5%折扣",
+                silverRewards: "1張史詩卡<br>個人檔案徽章<br>10%折扣<br>50木材",
+                goldRewards: "1張傳說卡<br>個人檔案邊框<br>15%折扣<br>200木材",
+                platinumRewards: "1張神話卡<br>「創始人」身份<br>20%折扣<br>500木材<br>2倍投票權",
+                positionQR: "將QR碼對準框內",
+                cancel: "取消",
+                verifyingCode: "驗證碼中...",
+                rewardsClaimed: "獎勵已領取！",
+                youReceived: "您獲得了",
+                gold: "金幣",
+                sacredLogs: "神聖木材",
+                title: "稱號",
+                permanentDiscount: "永久折扣",
+                awesome: "太棒了！",
+                invalidCode: "無效兌換碼",
+                invalidCodeMsg: "請輸入有效的12位兌換碼。",
+                alreadyClaimed: "已兌換",
+                alreadyClaimedMsg: "此兌換碼已在此設備上使用。",
+                claimFailed: "兌換失敗",
+                codeNotRecognized: "無法識別此兌換碼，請檢查後重試。",
+                tryAgain: "重試",
+                qrDetected: "已偵測到QR碼！"
+            },
+            th: {
+                pageTitle: "แลกของรางวัล",
+                navCollection: "คอลเลคชั่น",
+                navWallet: "กระเป๋าเงิน",
+                heroTitle: "รับรางวัลของคุณ",
+                heroSubtitle: "ใส่รหัสจากสินค้า NumbahWan ของคุณเพื่อปลดล็อครางวัลดิจิทัลสุดพิเศษ!",
+                redemptionCode: "รหัสแลกรับ",
+                codePlaceholder: "NWMR-XXXX-XXXX",
+                claimRewards: "รับรางวัล",
+                or: "หรือ",
+                scanQRCode: "สแกน QR โค้ด",
+                rewardTiers: "ระดับรางวัล",
+                bronze: "บรอนซ์",
+                silver: "ซิลเวอร์",
+                goldTier: "โกลด์",
+                platinum: "แพลตตินั่ม",
+                bronzeRewards: "การ์ดหายาก 1 ใบ<br>ตำแหน่ง \"ผู้สนับสนุน\"<br>ส่วนลด 5%",
+                silverRewards: "การ์ดเอปิค 1 ใบ<br>เหรียญตราโปรไฟล์<br>ส่วนลด 10%<br>ล็อกศักดิ์สิทธิ์ 50",
+                goldRewards: "การ์ดตำนาน 1 ใบ<br>กรอบโปรไฟล์<br>ส่วนลด 15%<br>ล็อกศักดิ์สิทธิ์ 200",
+                platinumRewards: "การ์ดมิธิค 1 ใบ<br>สถานะ \"ผู้ก่อตั้ง\"<br>ส่วนลด 20%<br>ล็อกศักดิ์สิทธิ์ 500<br>พลังโหวต 2 เท่า",
+                positionQR: "วาง QR โค้ดในกรอบ",
+                cancel: "ยกเลิก",
+                verifyingCode: "กำลังตรวจสอบรหัส...",
+                rewardsClaimed: "รับรางวัลแล้ว!",
+                youReceived: "คุณได้รับ",
+                gold: "ทอง",
+                sacredLogs: "ล็อกศักดิ์สิทธิ์",
+                title: "ตำแหน่ง",
+                permanentDiscount: "ส่วนลดถาวร",
+                awesome: "เยี่ยมไปเลย!",
+                invalidCode: "รหัสไม่ถูกต้อง",
+                invalidCodeMsg: "กรุณาใส่รหัส 12 ตัวอักษรที่ถูกต้อง",
+                alreadyClaimed: "แลกไปแล้ว",
+                alreadyClaimedMsg: "รหัสนี้ถูกใช้ในอุปกรณ์นี้แล้ว",
+                claimFailed: "แลกไม่สำเร็จ",
+                codeNotRecognized: "ไม่รู้จักรหัสนี้ กรุณาตรวจสอบและลองอีกครั้ง",
+                tryAgain: "ลองอีกครั้ง",
+                qrDetected: "ตรวจพบ QR โค้ดแล้ว!"
+            }
+        };
+        
+        // Initialize i18n
+        document.addEventListener('DOMContentLoaded', () => {
+            initI18n(pageTranslations);
+            
+            // Update lang buttons active state
+            document.querySelectorAll('.lang-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.l === getCurrentLang());
+            });
+        });
+        
+        // Listen for language changes
+        document.addEventListener('languageChanged', (e) => {
+            document.querySelectorAll('.lang-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.l === e.detail.lang);
+            });
+        });
+        
         // ============================================
         // NW MERCH CLAIM SYSTEM
         // ============================================
@@ -549,7 +707,7 @@
             const code = document.getElementById('codeInput').value.toUpperCase();
             
             if (code.length < 14) {
-                showError('Invalid Code', 'Please enter a valid 12-character code.');
+                showError(getTranslation('invalidCode'), getTranslation('invalidCodeMsg'));
                 return;
             }
             
@@ -565,7 +723,7 @@
                 // Check if already claimed
                 const claimed = JSON.parse(localStorage.getItem('nw_claimed_codes') || '[]');
                 if (claimed.includes(code)) {
-                    showError('Already Claimed', 'This code has already been redeemed on this device.');
+                    showError(getTranslation('alreadyClaimed'), getTranslation('alreadyClaimedMsg'));
                     return;
                 }
                 
@@ -589,11 +747,11 @@
                     showSuccess(data);
                 } else {
                     const error = await response.json();
-                    showError('Claim Failed', error.message || 'Invalid or expired code.');
+                    showError(getTranslation('claimFailed'), error.message || getTranslation('codeNotRecognized'));
                 }
             } catch (err) {
                 // For demo, show invalid code error
-                showError('Invalid Code', 'This code is not recognized. Please check and try again.');
+                showError(getTranslation('invalidCode'), getTranslation('codeNotRecognized'));
             }
         }
         
@@ -643,7 +801,7 @@
             
             content.innerHTML = `
                 <div class="loading-spinner"></div>
-                <div class="result-title" style="color: var(--gold);">VERIFYING CODE...</div>
+                <div class="result-title" style="color: var(--gold);">${getTranslation('verifyingCode')}</div>
             `;
             
             overlay.classList.add('active');
@@ -676,7 +834,7 @@
                 rewardsHTML += `
                     <div class="reward-item">
                         <span class="reward-icon">💰</span>
-                        <span class="reward-text">Gold</span>
+                        <span class="reward-text">${getTranslation('gold')}</span>
                         <span class="reward-value">+${reward.rewards.currency.gold.toLocaleString()}</span>
                     </div>
                 `;
@@ -685,7 +843,7 @@
                 rewardsHTML += `
                     <div class="reward-item">
                         <span class="reward-icon">🪵</span>
-                        <span class="reward-text">Sacred Logs</span>
+                        <span class="reward-text">${getTranslation('sacredLogs')}</span>
                         <span class="reward-value">+${reward.rewards.currency.logs}</span>
                     </div>
                 `;
@@ -696,7 +854,7 @@
                 rewardsHTML += `
                     <div class="reward-item">
                         <span class="reward-icon">👑</span>
-                        <span class="reward-text">Title</span>
+                        <span class="reward-text">${getTranslation('title')}</span>
                         <span class="reward-value">"${reward.rewards.title}"</span>
                     </div>
                 `;
@@ -707,7 +865,7 @@
                 rewardsHTML += `
                     <div class="reward-item">
                         <span class="reward-icon">🏷️</span>
-                        <span class="reward-text">Permanent Discount</span>
+                        <span class="reward-text">${getTranslation('permanentDiscount')}</span>
                         <span class="reward-value">${Math.round(reward.rewards.discount * 100)}% OFF</span>
                     </div>
                 `;
@@ -716,15 +874,15 @@
             content.innerHTML = `
                 <div class="result-success">
                     <div class="result-icon">🎉</div>
-                    <h2 class="result-title">REWARDS CLAIMED!</h2>
+                    <h2 class="result-title">${getTranslation('rewardsClaimed')}</h2>
                     <p class="result-product">${reward.product}</p>
                     
                     <div class="rewards-list">
-                        <div class="rewards-title">🎁 YOU RECEIVED</div>
+                        <div class="rewards-title">🎁 ${getTranslation('youReceived')}</div>
                         ${rewardsHTML}
                     </div>
                     
-                    <button class="result-btn" onclick="closeResult()">AWESOME!</button>
+                    <button class="result-btn" onclick="closeResult()">${getTranslation('awesome')}</button>
                 </div>
             `;
         }
@@ -738,7 +896,7 @@
                     <div class="result-icon">❌</div>
                     <h2 class="result-title">${title}</h2>
                     <p class="result-message">${message}</p>
-                    <button class="result-btn" onclick="closeResult()">TRY AGAIN</button>
+                    <button class="result-btn" onclick="closeResult()">${getTranslation('tryAgain')}</button>
                 </div>
             `;
             
@@ -759,7 +917,7 @@
                 document.getElementById('codeInput').value = 'NWMR-TEST-SLVR';
                 formatCodeInput({ target: document.getElementById('codeInput') });
                 closeScanner();
-                showToast('QR Code detected!');
+                showToast(getTranslation('qrDetected'));
             }, 3000);
         }
         
