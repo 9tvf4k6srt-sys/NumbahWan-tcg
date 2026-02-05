@@ -1,0 +1,1129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Guild Confessional | NumbahWan TCG</title>
+    <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Crimson+Text:ital,wght@0,400;0,600;1,400&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/static/nw-tokens.css">
+    <link rel="stylesheet" href="/static/nw-utilities.css">
+    <style>
+        :root {
+            --candle-glow: #ffd700;
+            --blood-red: #8b0000;
+            --church-purple: #4a1c6b;
+            --parchment: #f4e8d1;
+            --ink: #1a1a2e;
+            --confession-dark: #0d0d14;
+            --gold: #ffd700;
+            --orange: #ff6b00;
+        }
+
+        * { box-sizing: border-box; }
+        
+        body {
+            font-family: 'Crimson Text', Georgia, serif;
+            background: var(--confession-dark);
+            background-image: 
+                radial-gradient(ellipse at top, rgba(74, 28, 107, 0.3) 0%, transparent 60%),
+                radial-gradient(ellipse at bottom, rgba(139, 0, 0, 0.2) 0%, transparent 60%);
+            color: var(--parchment);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* Floating candles background */
+        .candles-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
+            overflow: hidden;
+        }
+
+        .candle {
+            position: absolute;
+            width: 4px;
+            height: 20px;
+            background: linear-gradient(to top, #3a2a1a, #5a4a3a);
+            border-radius: 2px 2px 0 0;
+        }
+
+        .candle::before {
+            content: '';
+            position: absolute;
+            top: -15px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 12px;
+            height: 20px;
+            background: radial-gradient(ellipse at bottom, #ffd700 0%, #ff8c00 40%, transparent 70%);
+            animation: flicker 0.5s ease-in-out infinite alternate;
+            filter: blur(1px);
+        }
+
+        .candle::after {
+            content: '';
+            position: absolute;
+            top: -8px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 3px;
+            height: 8px;
+            background: linear-gradient(to top, #ff4500, #ffd700);
+            border-radius: 50% 50% 20% 20%;
+            animation: flicker 0.3s ease-in-out infinite alternate;
+        }
+
+        @keyframes flicker {
+            0% { opacity: 0.8; transform: translateX(-50%) scale(1); }
+            100% { opacity: 1; transform: translateX(-50%) scale(1.1); }
+        }
+
+        /* Main container */
+        .confessional-container {
+            position: relative;
+            z-index: 1;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            padding-bottom: 100px;
+        }
+
+        /* Header */
+        .confessional-header {
+            text-align: center;
+            padding: 40px 20px;
+            margin-bottom: 30px;
+        }
+
+        .confessional-title {
+            font-family: 'Cinzel', serif;
+            font-size: 2.5rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--candle-glow), var(--orange));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 0 40px rgba(255, 215, 0, 0.3);
+            margin-bottom: 10px;
+        }
+
+        .confessional-subtitle {
+            font-style: italic;
+            color: rgba(244, 232, 209, 0.7);
+            font-size: 1.2rem;
+        }
+
+        /* Confession form */
+        .confession-booth {
+            background: linear-gradient(145deg, rgba(30, 20, 40, 0.9), rgba(20, 15, 30, 0.95));
+            border: 2px solid rgba(255, 215, 0, 0.3);
+            border-radius: 16px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 
+                0 0 40px rgba(255, 215, 0, 0.1),
+                inset 0 0 60px rgba(0, 0, 0, 0.5);
+        }
+
+        .booth-title {
+            font-family: 'Cinzel', serif;
+            font-size: 1.4rem;
+            color: var(--candle-glow);
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .confession-textarea {
+            width: 100%;
+            min-height: 120px;
+            background: rgba(10, 10, 20, 0.8);
+            border: 1px solid rgba(255, 215, 0, 0.2);
+            border-radius: 12px;
+            padding: 16px;
+            color: var(--parchment);
+            font-family: 'Crimson Text', serif;
+            font-size: 1.1rem;
+            resize: vertical;
+            transition: all 0.3s ease;
+        }
+
+        .confession-textarea:focus {
+            outline: none;
+            border-color: var(--candle-glow);
+            box-shadow: 0 0 20px rgba(255, 215, 0, 0.2);
+        }
+
+        .confession-textarea::placeholder {
+            color: rgba(244, 232, 209, 0.4);
+            font-style: italic;
+        }
+
+        /* Sin categories */
+        .sin-categories {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin: 20px 0;
+        }
+
+        .sin-btn {
+            padding: 10px 16px;
+            background: rgba(30, 20, 40, 0.8);
+            border: 1px solid rgba(255, 215, 0, 0.2);
+            border-radius: 20px;
+            color: var(--parchment);
+            font-family: 'Crimson Text', serif;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .sin-btn:hover {
+            background: rgba(255, 215, 0, 0.1);
+            border-color: var(--candle-glow);
+            transform: translateY(-2px);
+        }
+
+        .sin-btn.active {
+            background: linear-gradient(135deg, rgba(255, 215, 0, 0.3), rgba(255, 107, 0, 0.3));
+            border-color: var(--candle-glow);
+            box-shadow: 0 0 15px rgba(255, 215, 0, 0.3);
+        }
+
+        .confess-btn {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, var(--candle-glow), var(--orange));
+            border: none;
+            border-radius: 12px;
+            color: var(--ink);
+            font-family: 'Cinzel', serif;
+            font-size: 1.2rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .confess-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 30px rgba(255, 215, 0, 0.4);
+        }
+
+        .confess-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .char-count {
+            text-align: right;
+            font-size: 0.9rem;
+            color: rgba(244, 232, 209, 0.5);
+            margin-top: 8px;
+        }
+
+        /* Priest response modal */
+        .priest-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .priest-modal.show {
+            display: flex;
+            animation: fadeIn 0.5s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .priest-response {
+            background: linear-gradient(145deg, #1a1528, #0d0a14);
+            border: 2px solid var(--candle-glow);
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 500px;
+            text-align: center;
+            box-shadow: 0 0 60px rgba(255, 215, 0, 0.3);
+            animation: slideUp 0.5s ease;
+        }
+
+        @keyframes slideUp {
+            from { transform: translateY(50px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        .priest-icon {
+            font-size: 4rem;
+            margin-bottom: 20px;
+            animation: float 3s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .priest-text {
+            font-family: 'Crimson Text', serif;
+            font-size: 1.3rem;
+            font-style: italic;
+            line-height: 1.6;
+            color: var(--parchment);
+            margin-bottom: 30px;
+        }
+
+        .priest-close {
+            padding: 12px 30px;
+            background: transparent;
+            border: 2px solid var(--candle-glow);
+            border-radius: 8px;
+            color: var(--candle-glow);
+            font-family: 'Cinzel', serif;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .priest-close:hover {
+            background: var(--candle-glow);
+            color: var(--ink);
+        }
+
+        /* Filter tabs */
+        .filter-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .filter-tab {
+            padding: 10px 20px;
+            background: rgba(30, 20, 40, 0.6);
+            border: 1px solid rgba(255, 215, 0, 0.2);
+            border-radius: 8px;
+            color: var(--parchment);
+            font-family: 'Cinzel', serif;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .filter-tab:hover, .filter-tab.active {
+            background: rgba(255, 215, 0, 0.15);
+            border-color: var(--candle-glow);
+        }
+
+        /* Confession cards */
+        .confessions-list {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .confession-card {
+            background: linear-gradient(145deg, rgba(30, 20, 40, 0.8), rgba(20, 15, 30, 0.9));
+            border: 1px solid rgba(255, 215, 0, 0.15);
+            border-radius: 16px;
+            padding: 24px;
+            transition: all 0.3s ease;
+        }
+
+        .confession-card:hover {
+            border-color: rgba(255, 215, 0, 0.4);
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .confession-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .sin-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 12px;
+            background: rgba(139, 0, 0, 0.3);
+            border: 1px solid rgba(139, 0, 0, 0.5);
+            border-radius: 12px;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .sin-badge.greed { background: rgba(255, 215, 0, 0.2); border-color: rgba(255, 215, 0, 0.4); }
+        .sin-badge.addiction { background: rgba(139, 0, 0, 0.3); border-color: rgba(139, 0, 0, 0.5); }
+        .sin-badge.betrayal { background: rgba(75, 0, 130, 0.3); border-color: rgba(75, 0, 130, 0.5); }
+        .sin-badge.stupidity { background: rgba(255, 165, 0, 0.2); border-color: rgba(255, 165, 0, 0.4); }
+        .sin-badge.salt { background: rgba(0, 191, 255, 0.2); border-color: rgba(0, 191, 255, 0.4); }
+        .sin-badge.shame { background: rgba(128, 128, 128, 0.3); border-color: rgba(128, 128, 128, 0.5); }
+
+        .confession-time {
+            font-size: 0.85rem;
+            color: rgba(244, 232, 209, 0.5);
+        }
+
+        .confession-text {
+            font-size: 1.15rem;
+            line-height: 1.6;
+            margin-bottom: 16px;
+            color: var(--parchment);
+        }
+
+        .priest-quote {
+            background: rgba(255, 215, 0, 0.05);
+            border-left: 3px solid var(--candle-glow);
+            padding: 12px 16px;
+            margin-bottom: 16px;
+            font-style: italic;
+            color: rgba(244, 232, 209, 0.8);
+        }
+
+        .priest-quote::before {
+            content: '🕯️ ';
+        }
+
+        .confession-actions {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .action-btn {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 16px;
+            background: rgba(30, 20, 40, 0.6);
+            border: 1px solid rgba(255, 215, 0, 0.2);
+            border-radius: 20px;
+            color: var(--parchment);
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .action-btn:hover {
+            background: rgba(255, 215, 0, 0.15);
+            border-color: var(--candle-glow);
+        }
+
+        .action-btn.prayed {
+            background: rgba(255, 215, 0, 0.2);
+            border-color: var(--candle-glow);
+        }
+
+        .action-btn .count {
+            font-weight: 600;
+            color: var(--candle-glow);
+        }
+
+        /* Sinner of the week */
+        .sinner-of-week {
+            background: linear-gradient(145deg, rgba(139, 0, 0, 0.3), rgba(74, 28, 107, 0.3));
+            border: 2px solid var(--candle-glow);
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 30px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .sinner-of-week::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: radial-gradient(circle at center, rgba(255, 215, 0, 0.1), transparent 70%);
+            pointer-events: none;
+        }
+
+        .sinner-crown {
+            font-size: 3rem;
+            margin-bottom: 10px;
+        }
+
+        .sinner-title {
+            font-family: 'Cinzel', serif;
+            font-size: 1.2rem;
+            color: var(--candle-glow);
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            margin-bottom: 15px;
+        }
+
+        .sinner-confession {
+            font-size: 1.1rem;
+            font-style: italic;
+            margin-bottom: 15px;
+            padding: 0 20px;
+        }
+
+        .sinner-stats {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            font-size: 1rem;
+            color: rgba(244, 232, 209, 0.7);
+        }
+
+        /* Stats bar */
+        .stats-bar {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .stat-box {
+            background: rgba(30, 20, 40, 0.6);
+            border: 1px solid rgba(255, 215, 0, 0.2);
+            border-radius: 12px;
+            padding: 16px;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-family: 'Cinzel', serif;
+            font-size: 1.8rem;
+            color: var(--candle-glow);
+            font-weight: 700;
+        }
+
+        .stat-label {
+            font-size: 0.85rem;
+            color: rgba(244, 232, 209, 0.6);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        /* Floating prayers animation */
+        .floating-prayer {
+            position: fixed;
+            pointer-events: none;
+            font-size: 1.5rem;
+            animation: floatUp 2s ease-out forwards;
+            z-index: 100;
+        }
+
+        @keyframes floatUp {
+            0% { opacity: 1; transform: translateY(0) scale(1); }
+            100% { opacity: 0; transform: translateY(-100px) scale(1.5); }
+        }
+
+        /* Loading skeleton */
+        .skeleton {
+            background: linear-gradient(90deg, rgba(30, 20, 40, 0.5) 25%, rgba(50, 40, 60, 0.5) 50%, rgba(30, 20, 40, 0.5) 75%);
+            background-size: 200% 100%;
+            animation: shimmer 1.5s infinite;
+            border-radius: 8px;
+        }
+
+        @keyframes shimmer {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+
+        /* Responsive */
+        @media (max-width: 640px) {
+            .confessional-title { font-size: 1.8rem; }
+            .stats-bar { grid-template-columns: repeat(2, 1fr); }
+            .sin-categories { justify-content: center; }
+            .confession-actions { justify-content: center; }
+        }
+    </style>
+</head>
+<body data-page-id="confessional">
+    <!-- Floating candles background -->
+    <div class="candles-bg" id="candlesBg"></div>
+
+    <!-- Main container -->
+    <div class="confessional-container">
+        <!-- Header -->
+        <header class="confessional-header">
+            <h1 class="confessional-title">
+                <i class="fas fa-cross"></i>
+                Guild Confessional
+            </h1>
+            <p class="confessional-subtitle" data-i18n="confessionalSubtitle">"Unburden your TCG soul"</p>
+        </header>
+
+        <!-- Stats bar -->
+        <div class="stats-bar" id="statsBar">
+            <div class="stat-box">
+                <div class="stat-value" id="statConfessions">--</div>
+                <div class="stat-label" data-i18n="confessions">Confessions</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-value" id="statPrayers">--</div>
+                <div class="stat-label" data-i18n="prayers">Prayers</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-value" id="statSames">--</div>
+                <div class="stat-label" data-i18n="solidarity">Solidarity</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-value" id="statSinners">--</div>
+                <div class="stat-label" data-i18n="sinners">Sinners</div>
+            </div>
+        </div>
+
+        <!-- Sinner of the week -->
+        <div class="sinner-of-week" id="sinnerOfWeek">
+            <div class="sinner-crown">👑</div>
+            <div class="sinner-title" data-i18n="sinnerOfWeek">Sinner of the Week</div>
+            <p class="sinner-confession" id="sinnerConfession">"Loading the most sinful confession..."</p>
+            <div class="sinner-stats">
+                <span>🙏 <span id="sinnerPrayers">--</span> prayers</span>
+                <span>💀 <span id="sinnerSames">--</span> same</span>
+            </div>
+        </div>
+
+        <!-- Confession booth -->
+        <div class="confession-booth">
+            <h2 class="booth-title">
+                <i class="fas fa-mask"></i>
+                <span data-i18n="confessAnonymously">Confess Anonymously</span>
+            </h2>
+            
+            <textarea 
+                class="confession-textarea" 
+                id="confessionInput"
+                placeholder="I spent my rent money on gacha pulls..."
+                maxlength="500"
+                data-i18n-placeholder="confessionPlaceholder"
+            ></textarea>
+            <div class="char-count"><span id="charCount">0</span>/500</div>
+
+            <div class="sin-categories">
+                <button class="sin-btn" data-sin="greed">
+                    <span>💸</span> <span data-i18n="sinGreed">Greed</span>
+                </button>
+                <button class="sin-btn" data-sin="addiction">
+                    <span>🎰</span> <span data-i18n="sinAddiction">Addiction</span>
+                </button>
+                <button class="sin-btn" data-sin="betrayal">
+                    <span>😈</span> <span data-i18n="sinBetrayal">Betrayal</span>
+                </button>
+                <button class="sin-btn" data-sin="stupidity">
+                    <span>🤡</span> <span data-i18n="sinStupidity">Stupidity</span>
+                </button>
+                <button class="sin-btn" data-sin="salt">
+                    <span>🧂</span> <span data-i18n="sinSalt">Salt</span>
+                </button>
+                <button class="sin-btn active" data-sin="shame">
+                    <span>🙈</span> <span data-i18n="sinShame">Shame</span>
+                </button>
+            </div>
+
+            <button class="confess-btn" id="confessBtn" data-i18n="confessNow">
+                🙏 CONFESS YOUR SINS
+            </button>
+        </div>
+
+        <!-- Filter tabs -->
+        <div class="filter-tabs">
+            <button class="filter-tab active" data-sort="new">
+                <i class="fas fa-clock"></i> <span data-i18n="newest">Newest</span>
+            </button>
+            <button class="filter-tab" data-sort="hot">
+                <i class="fas fa-fire"></i> <span data-i18n="mostPrayed">Most Prayed</span>
+            </button>
+            <button class="filter-tab" data-category="all">
+                <span data-i18n="allSins">All Sins</span>
+            </button>
+        </div>
+
+        <!-- Confessions list -->
+        <div class="confessions-list" id="confessionsList">
+            <!-- Loaded dynamically -->
+            <div class="confession-card skeleton" style="height: 180px;"></div>
+            <div class="confession-card skeleton" style="height: 200px;"></div>
+            <div class="confession-card skeleton" style="height: 160px;"></div>
+        </div>
+
+        <!-- Load more -->
+        <button class="filter-tab" style="width: 100%; margin-top: 20px;" id="loadMoreBtn">
+            <i class="fas fa-chevron-down"></i> <span data-i18n="loadMore">Load More Confessions</span>
+        </button>
+    </div>
+
+    <!-- Priest response modal -->
+    <div class="priest-modal" id="priestModal">
+        <div class="priest-response">
+            <div class="priest-icon">🕯️</div>
+            <p class="priest-text" id="priestText">
+                "Your confession has been heard..."
+            </p>
+            <button class="priest-close" id="priestClose" data-i18n="amen">Amen</button>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="/static/nw-essentials.js"></script>
+    <script src="/static/nw-wallet.js"></script>
+    <script src="/static/nw-icons-inline.js"></script>
+    <script src="/static/nw-nav.js"></script>
+    <script src="/static/i18n.js"></script>
+    <script>
+        // ============================================================================
+        // GUILD CONFESSIONAL - "Where TCG sinners seek absolution"
+        // ============================================================================
+
+        // i18n translations
+        const CONFESSIONAL_I18N = {
+            en: {
+                confessionalSubtitle: '"Unburden your TCG soul"',
+                confessions: 'Confessions',
+                prayers: 'Prayers',
+                solidarity: 'Solidarity',
+                sinners: 'Sinners',
+                sinnerOfWeek: 'Sinner of the Week',
+                confessAnonymously: 'Confess Anonymously',
+                confessionPlaceholder: 'I spent my rent money on gacha pulls...',
+                sinGreed: 'Greed',
+                sinAddiction: 'Addiction',
+                sinBetrayal: 'Betrayal',
+                sinStupidity: 'Stupidity',
+                sinSalt: 'Salt',
+                sinShame: 'Shame',
+                confessNow: '🙏 CONFESS YOUR SINS',
+                newest: 'Newest',
+                mostPrayed: 'Most Prayed',
+                allSins: 'All Sins',
+                loadMore: 'Load More Confessions',
+                amen: 'Amen',
+                pray: 'Pray',
+                same: 'Same',
+                reportHeresy: 'Report'
+            },
+            zh: {
+                confessionalSubtitle: '"释放你的TCG灵魂"',
+                confessions: '忏悔',
+                prayers: '祈祷',
+                solidarity: '共鸣',
+                sinners: '罪人',
+                sinnerOfWeek: '本周罪人',
+                confessAnonymously: '匿名忏悔',
+                confessionPlaceholder: '我把房租钱都花在抽卡上了...',
+                sinGreed: '贪婪',
+                sinAddiction: '上瘾',
+                sinBetrayal: '背叛',
+                sinStupidity: '愚蠢',
+                sinSalt: '嫉妒',
+                sinShame: '羞耻',
+                confessNow: '🙏 忏悔你的罪过',
+                newest: '最新',
+                mostPrayed: '最多祈祷',
+                allSins: '所有罪过',
+                loadMore: '加载更多',
+                amen: '阿门',
+                pray: '祈祷',
+                same: '同感',
+                reportHeresy: '举报'
+            },
+            th: {
+                confessionalSubtitle: '"ปลดปล่อยจิตวิญญาณ TCG ของคุณ"',
+                confessions: 'คำสารภาพ',
+                prayers: 'การสวดมนต์',
+                solidarity: 'ความเห็นอกเห็นใจ',
+                sinners: 'คนบาป',
+                sinnerOfWeek: 'คนบาปแห่งสัปดาห์',
+                confessAnonymously: 'สารภาพแบบไม่ระบุตัวตน',
+                confessionPlaceholder: 'ฉันเอาเงินค่าเช่าไปเล่นกาชา...',
+                sinGreed: 'ความโลภ',
+                sinAddiction: 'การเสพติด',
+                sinBetrayal: 'การทรยศ',
+                sinStupidity: 'ความโง่',
+                sinSalt: 'ความอิจฉา',
+                sinShame: 'ความอาย',
+                confessNow: '🙏 สารภาพบาปของคุณ',
+                newest: 'ใหม่ล่าสุด',
+                mostPrayed: 'สวดมากที่สุด',
+                allSins: 'บาปทั้งหมด',
+                loadMore: 'โหลดเพิ่มเติม',
+                amen: 'อาเมน',
+                pray: 'สวดมนต์',
+                same: 'เหมือนกัน',
+                reportHeresy: 'รายงาน'
+            }
+        };
+
+        // State
+        let selectedSin = 'shame';
+        let currentSort = 'new';
+        let currentCategory = 'all';
+        let confessions = [];
+        let offset = 0;
+        const limit = 10;
+        let prayedConfessions = JSON.parse(localStorage.getItem('nw_prayed') || '{}');
+
+        // Sin emoji map
+        const SIN_EMOJIS = {
+            greed: '💸',
+            addiction: '🎰',
+            betrayal: '😈',
+            stupidity: '🤡',
+            salt: '🧂',
+            shame: '🙈'
+        };
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            if (typeof initI18n === 'function') {
+                initI18n(CONFESSIONAL_I18N);
+            }
+            
+            createCandles();
+            loadStats();
+            loadConfessions();
+            setupEventListeners();
+            
+            // Listen for language changes
+            document.addEventListener('languageChanged', () => {
+                // Re-render with new language
+            });
+        });
+
+        // Create floating candles
+        function createCandles() {
+            const bg = document.getElementById('candlesBg');
+            const numCandles = 15;
+            
+            for (let i = 0; i < numCandles; i++) {
+                const candle = document.createElement('div');
+                candle.className = 'candle';
+                candle.style.left = `${Math.random() * 100}%`;
+                candle.style.top = `${Math.random() * 100}%`;
+                candle.style.opacity = 0.3 + Math.random() * 0.4;
+                bg.appendChild(candle);
+            }
+        }
+
+        // Load stats
+        async function loadStats() {
+            try {
+                const res = await fetch('/api/confessions/stats');
+                const data = await res.json();
+                
+                if (data.success) {
+                    document.getElementById('statConfessions').textContent = formatNumber(data.stats.totalConfessions);
+                    document.getElementById('statPrayers').textContent = formatNumber(data.stats.totalPrayers);
+                    document.getElementById('statSames').textContent = formatNumber(data.stats.totalSames);
+                    document.getElementById('statSinners').textContent = formatNumber(data.stats.uniqueSinners);
+                }
+            } catch (e) {
+                console.error('[Confessional] Stats error:', e);
+            }
+        }
+
+        // Load confessions
+        async function loadConfessions(append = false) {
+            try {
+                const params = new URLSearchParams({
+                    sort: currentSort,
+                    limit: limit.toString(),
+                    offset: (append ? offset : 0).toString()
+                });
+                
+                if (currentCategory !== 'all') {
+                    params.append('category', currentCategory);
+                }
+                
+                const res = await fetch(`/api/confessions?${params}`);
+                const data = await res.json();
+                
+                if (data.success) {
+                    if (append) {
+                        confessions = [...confessions, ...data.confessions];
+                    } else {
+                        confessions = data.confessions;
+                        offset = 0;
+                    }
+                    
+                    renderConfessions();
+                    
+                    // Update sinner of the week
+                    if (data.sinnerOfWeek) {
+                        document.getElementById('sinnerConfession').textContent = `"${data.sinnerOfWeek.confession_text}"`;
+                        document.getElementById('sinnerPrayers').textContent = data.sinnerOfWeek.prayers;
+                        document.getElementById('sinnerSames').textContent = data.sinnerOfWeek.sames;
+                    }
+                }
+            } catch (e) {
+                console.error('[Confessional] Load error:', e);
+            }
+        }
+
+        // Render confessions
+        function renderConfessions() {
+            const list = document.getElementById('confessionsList');
+            
+            if (confessions.length === 0) {
+                list.innerHTML = `
+                    <div class="confession-card" style="text-align: center; padding: 40px;">
+                        <p style="font-size: 1.2rem; opacity: 0.7;">No confessions yet. Be the first sinner!</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            list.innerHTML = confessions.map(c => {
+                const hasPrayed = prayedConfessions[c.id]?.pray;
+                const hasSamed = prayedConfessions[c.id]?.same;
+                const timeAgo = getTimeAgo(c.created_at);
+                
+                return `
+                    <div class="confession-card" data-id="${c.id}">
+                        <div class="confession-meta">
+                            <span class="sin-badge ${c.sin_category}">
+                                ${SIN_EMOJIS[c.sin_category] || '🙈'} ${c.sin_category.toUpperCase()}
+                            </span>
+                            <span class="confession-time">${timeAgo}</span>
+                        </div>
+                        <p class="confession-text">"${escapeHtml(c.confession_text)}"</p>
+                        ${c.priest_response ? `<div class="priest-quote">${escapeHtml(c.priest_response)}</div>` : ''}
+                        <div class="confession-actions">
+                            <button class="action-btn ${hasPrayed ? 'prayed' : ''}" onclick="react(${c.id}, 'pray')">
+                                🙏 <span class="count">${c.prayers}</span>
+                            </button>
+                            <button class="action-btn ${hasSamed ? 'prayed' : ''}" onclick="react(${c.id}, 'same')">
+                                💀 <span class="count">${c.sames}</span>
+                            </button>
+                            <button class="action-btn" onclick="react(${c.id}, 'report')">
+                                🚨
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Setup event listeners
+        function setupEventListeners() {
+            // Confession input
+            const input = document.getElementById('confessionInput');
+            input.addEventListener('input', () => {
+                document.getElementById('charCount').textContent = input.value.length;
+            });
+
+            // Sin category buttons
+            document.querySelectorAll('.sin-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    document.querySelectorAll('.sin-btn').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    selectedSin = btn.dataset.sin;
+                });
+            });
+
+            // Confess button
+            document.getElementById('confessBtn').addEventListener('click', submitConfession);
+
+            // Filter tabs
+            document.querySelectorAll('.filter-tab').forEach(tab => {
+                tab.addEventListener('click', () => {
+                    if (tab.dataset.sort) {
+                        document.querySelectorAll('.filter-tab[data-sort]').forEach(t => t.classList.remove('active'));
+                        tab.classList.add('active');
+                        currentSort = tab.dataset.sort;
+                        loadConfessions();
+                    }
+                    if (tab.dataset.category) {
+                        currentCategory = tab.dataset.category;
+                        loadConfessions();
+                    }
+                });
+            });
+
+            // Load more
+            document.getElementById('loadMoreBtn').addEventListener('click', () => {
+                offset += limit;
+                loadConfessions(true);
+            });
+
+            // Priest modal close
+            document.getElementById('priestClose').addEventListener('click', () => {
+                document.getElementById('priestModal').classList.remove('show');
+            });
+
+            document.getElementById('priestModal').addEventListener('click', (e) => {
+                if (e.target.id === 'priestModal') {
+                    document.getElementById('priestModal').classList.remove('show');
+                }
+            });
+        }
+
+        // Submit confession
+        async function submitConfession() {
+            const input = document.getElementById('confessionInput');
+            const confession = input.value.trim();
+            
+            if (confession.length < 10) {
+                alert('Your confession must be at least 10 characters. Elaborate on your sins!');
+                return;
+            }
+
+            const btn = document.getElementById('confessBtn');
+            btn.disabled = true;
+            btn.textContent = '🕯️ Seeking absolution...';
+
+            try {
+                const res = await fetch('/api/confess', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        confession,
+                        category: selectedSin,
+                        deviceId: localStorage.getItem('nw_device_id') || 'anonymous',
+                        language: localStorage.getItem('nw_lang') || 'en'
+                    })
+                });
+
+                const data = await res.json();
+
+                if (data.success) {
+                    // Show priest response
+                    document.getElementById('priestText').textContent = `"${data.priestResponse}"`;
+                    document.getElementById('priestModal').classList.add('show');
+                    
+                    // Clear input
+                    input.value = '';
+                    document.getElementById('charCount').textContent = '0';
+                    
+                    // Reload confessions
+                    setTimeout(() => loadConfessions(), 500);
+                    loadStats();
+                } else {
+                    alert(data.error || 'Failed to submit confession');
+                }
+            } catch (e) {
+                console.error('[Confessional] Submit error:', e);
+                alert('The confession booth is experiencing technical difficulties. Try again later.');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = '🙏 CONFESS YOUR SINS';
+            }
+        }
+
+        // React to confession (pray/same/report)
+        async function react(confessionId, type) {
+            // Check if already reacted
+            if (prayedConfessions[confessionId]?.[type]) {
+                return;
+            }
+
+            try {
+                const res = await fetch(`/api/confessions/${confessionId}/pray`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        deviceId: localStorage.getItem('nw_device_id') || 'anonymous',
+                        reactionType: type
+                    })
+                });
+
+                const data = await res.json();
+
+                if (data.success) {
+                    // Update local state
+                    if (!prayedConfessions[confessionId]) {
+                        prayedConfessions[confessionId] = {};
+                    }
+                    prayedConfessions[confessionId][type] = true;
+                    localStorage.setItem('nw_prayed', JSON.stringify(prayedConfessions));
+
+                    // Update UI
+                    const card = document.querySelector(`.confession-card[data-id="${confessionId}"]`);
+                    if (card) {
+                        const confession = confessions.find(c => c.id === confessionId);
+                        if (confession) {
+                            if (type === 'pray') confession.prayers = data.prayers;
+                            if (type === 'same') confession.sames = data.sames;
+                        }
+                        renderConfessions();
+                    }
+
+                    // Floating prayer animation
+                    if (type === 'pray') {
+                        createFloatingPrayer(event);
+                    }
+
+                    // Show feedback
+                    if (type === 'report') {
+                        alert('Report submitted. The clergy will review this confession.');
+                    }
+                }
+            } catch (e) {
+                console.error('[Confessional] React error:', e);
+            }
+        }
+
+        // Create floating prayer animation
+        function createFloatingPrayer(event) {
+            const prayer = document.createElement('div');
+            prayer.className = 'floating-prayer';
+            prayer.textContent = '🙏';
+            prayer.style.left = `${event?.clientX || window.innerWidth / 2}px`;
+            prayer.style.top = `${event?.clientY || window.innerHeight / 2}px`;
+            document.body.appendChild(prayer);
+            
+            setTimeout(() => prayer.remove(), 2000);
+        }
+
+        // Utility functions
+        function formatNumber(num) {
+            if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M';
+            if (num >= 1000) return (num / 1000).toFixed(1) + 'K';
+            return num?.toString() || '0';
+        }
+
+        function getTimeAgo(dateString) {
+            const date = new Date(dateString);
+            const now = new Date();
+            const seconds = Math.floor((now - date) / 1000);
+            
+            if (seconds < 60) return 'Just now';
+            if (seconds < 3600) return `${Math.floor(seconds / 60)}m ago`;
+            if (seconds < 86400) return `${Math.floor(seconds / 3600)}h ago`;
+            if (seconds < 604800) return `${Math.floor(seconds / 86400)}d ago`;
+            return date.toLocaleDateString();
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+    </script>
+</body>
+</html>
