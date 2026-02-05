@@ -107,8 +107,8 @@ const langMeta = {
   th: { flag: "🇹🇭", name: "ไทย", code: "ไทย" }
 };
 
-// Current language state
-let currentLang = localStorage.getItem('lang') || 'en';
+// Current language state - sync with NW_NAV
+let currentLang = localStorage.getItem('nw_lang') || localStorage.getItem('lang') || 'en';
 let pageTranslations = {};
 
 /**
@@ -146,6 +146,7 @@ function setLanguage(lang) {
   
   currentLang = lang;
   localStorage.setItem('lang', lang);
+  localStorage.setItem('nw_lang', lang); // Sync with NW_NAV
   
   // Update HTML lang attribute
   document.documentElement.lang = lang;

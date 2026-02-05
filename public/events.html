@@ -26,7 +26,7 @@
             background: var(--dark); 
             color: #fff;
             min-height: 100vh;
-            padding-bottom: 40px;
+            padding-bottom: 80px;
         }
         
         .bg {
@@ -56,18 +56,51 @@
             padding: 8px 14px; background: rgba(255,255,255,0.05);
             border: 1px solid rgba(255,255,255,0.15); border-radius: 8px;
             color: #fff; font-size: 13px; text-decoration: none; font-weight: 600;
+            transition: all 0.2s;
         }
-        
-        
+        .nav-link:hover { border-color: var(--orange); background: rgba(255,107,0,0.1); }
         
         main { max-width: 900px; margin: 0 auto; padding: 20px 16px; }
         
-        /* Today's Event Banner */
+        /* ===== URGENCY BANNER - Ticking Clock ===== */
+        .urgency-banner {
+            background: linear-gradient(90deg, rgba(239,68,68,0.3), rgba(255,107,0,0.3), rgba(239,68,68,0.3));
+            background-size: 200% 100%;
+            animation: urgencyPulse 3s ease-in-out infinite;
+            border: 2px solid var(--red);
+            border-radius: 12px;
+            padding: 12px 16px;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+        }
+        @keyframes urgencyPulse {
+            0%, 100% { background-position: 0% 50%; border-color: var(--red); }
+            50% { background-position: 100% 50%; border-color: var(--orange); }
+        }
+        .urgency-text {
+            font-size: 13px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .urgency-timer {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 18px;
+            font-weight: 800;
+            color: var(--cyan);
+            text-shadow: 0 0 10px rgba(0,255,255,0.5);
+        }
+        
+        /* ===== TODAY'S EVENT - HAPPENING NOW ===== */
         .today-banner {
             background: linear-gradient(135deg, rgba(255,107,0,0.2), rgba(168,85,247,0.2));
             border: 2px solid var(--orange);
             border-radius: 20px; padding: 24px;
-            margin-bottom: 24px;
+            margin-bottom: 20px;
             position: relative; overflow: hidden;
         }
         .today-banner::before {
@@ -82,14 +115,15 @@
             position: relative;
         }
         .live-dot {
-            width: 8px; height: 8px;
+            width: 10px; height: 10px;
             background: var(--green);
             border-radius: 50%;
-            animation: pulse 1.5s ease-in-out infinite;
+            animation: livePulse 1s ease-in-out infinite;
+            box-shadow: 0 0 10px var(--green);
         }
-        @keyframes pulse {
-            0%, 100% { opacity: 1; transform: scale(1); }
-            50% { opacity: 0.5; transform: scale(1.2); }
+        @keyframes livePulse {
+            0%, 100% { opacity: 1; transform: scale(1); box-shadow: 0 0 10px var(--green); }
+            50% { opacity: 0.7; transform: scale(1.3); box-shadow: 0 0 20px var(--green); }
         }
         .today-title {
             font-family: 'Orbitron', sans-serif;
@@ -98,6 +132,11 @@
             -webkit-background-clip: text; -webkit-text-fill-color: transparent;
             margin-bottom: 8px;
             position: relative;
+            animation: titleShimmer 3s ease-in-out infinite;
+        }
+        @keyframes titleShimmer {
+            0%, 100% { filter: brightness(1); }
+            50% { filter: brightness(1.2); }
         }
         .today-desc {
             color: rgba(255,255,255,0.7);
@@ -114,27 +153,147 @@
             border-radius: 20px; padding: 8px 16px;
             font-size: 13px; font-weight: 600;
             display: flex; align-items: center; gap: 6px;
+            transition: all 0.3s;
         }
         .bonus-tag.active {
             background: linear-gradient(135deg, var(--green), #16a34a);
             border-color: var(--green);
             color: #fff;
+            animation: bonusGlow 2s ease-in-out infinite;
+        }
+        @keyframes bonusGlow {
+            0%, 100% { box-shadow: 0 0 5px rgba(34,197,94,0.3); }
+            50% { box-shadow: 0 0 15px rgba(34,197,94,0.6); }
         }
         .today-timer {
             position: absolute; top: 20px; right: 24px;
             text-align: right;
         }
-        .timer-label { font-size: 10px; color: rgba(255,255,255,0.5); }
+        .timer-label { font-size: 10px; color: rgba(255,255,255,0.5); text-transform: uppercase; }
         .timer-value {
             font-family: 'Orbitron', sans-serif;
-            font-size: 20px; font-weight: 700;
+            font-size: 22px; font-weight: 700;
             color: var(--cyan);
+            text-shadow: 0 0 15px rgba(0,255,255,0.5);
         }
         
-        /* Weekly Calendar */
-        .week-section {
-            margin-bottom: 32px;
+        /* ===== MYSTERY BONUS - Variable Reward ===== */
+        .mystery-section {
+            background: linear-gradient(135deg, rgba(168,85,247,0.2), rgba(255,0,255,0.15));
+            border: 2px dashed rgba(168,85,247,0.5);
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 24px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
         }
+        .mystery-section:hover {
+            border-color: var(--purple);
+            transform: scale(1.02);
+        }
+        .mystery-section::before {
+            content: '?';
+            position: absolute;
+            font-size: 200px;
+            font-weight: 900;
+            color: rgba(168,85,247,0.1);
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            animation: mysteryFloat 4s ease-in-out infinite;
+        }
+        @keyframes mysteryFloat {
+            0%, 100% { transform: translate(-50%, -50%) scale(1); opacity: 0.1; }
+            50% { transform: translate(-50%, -50%) scale(1.1); opacity: 0.15; }
+        }
+        .mystery-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--purple);
+            margin-bottom: 8px;
+            position: relative;
+        }
+        .mystery-desc {
+            font-size: 13px;
+            color: rgba(255,255,255,0.6);
+            margin-bottom: 12px;
+            position: relative;
+        }
+        .mystery-btn {
+            background: linear-gradient(135deg, var(--purple), #9333ea);
+            border: none;
+            border-radius: 25px;
+            padding: 10px 24px;
+            color: #fff;
+            font-weight: 700;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.3s;
+            position: relative;
+        }
+        .mystery-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 20px rgba(168,85,247,0.5);
+        }
+        .mystery-revealed {
+            padding: 16px;
+            background: rgba(34,197,94,0.2);
+            border: 2px solid var(--green);
+            border-radius: 12px;
+            animation: revealPop 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        }
+        @keyframes revealPop {
+            0% { transform: scale(0.8); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        .mystery-reward {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 20px;
+            font-weight: 800;
+            color: var(--gold);
+        }
+        
+        /* ===== STATS ROW - Progress/Achievement ===== */
+        .stats-row {
+            display: grid; grid-template-columns: repeat(4, 1fr);
+            gap: 12px; margin-bottom: 24px;
+        }
+        .stat-item {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 12px; padding: 16px; text-align: center;
+            transition: all 0.3s;
+        }
+        .stat-item:hover {
+            border-color: var(--gold);
+            transform: translateY(-2px);
+        }
+        .stat-value {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 24px; font-weight: 700;
+            color: var(--gold);
+        }
+        .stat-label {
+            font-size: 10px;
+            color: rgba(255,255,255,0.5);
+            text-transform: uppercase;
+            margin-top: 4px;
+        }
+        .stat-item.streak .stat-value {
+            color: var(--orange);
+            animation: streakFire 1.5s ease-in-out infinite;
+        }
+        @keyframes streakFire {
+            0%, 100% { text-shadow: 0 0 5px rgba(255,107,0,0.5); }
+            50% { text-shadow: 0 0 15px rgba(255,107,0,0.8), 0 0 25px rgba(255,69,0,0.5); }
+        }
+        
+        /* ===== WEEKLY CALENDAR ===== */
+        .week-section { margin-bottom: 32px; }
         .section-title {
             font-family: 'Orbitron', sans-serif;
             font-size: 16px; font-weight: 700;
@@ -157,8 +316,15 @@
         .day-card.today {
             background: linear-gradient(135deg, rgba(255,107,0,0.2), rgba(255,215,0,0.2));
             border-color: var(--orange);
+            box-shadow: 0 0 20px rgba(255,107,0,0.3);
+            animation: todayPulse 2s ease-in-out infinite;
         }
-        .day-card.past { opacity: 0.5; }
+        @keyframes todayPulse {
+            0%, 100% { box-shadow: 0 0 15px rgba(255,107,0,0.3); }
+            50% { box-shadow: 0 0 25px rgba(255,107,0,0.5); }
+        }
+        .day-card.past { opacity: 0.4; }
+        .day-card.upcoming { border-color: rgba(168,85,247,0.3); }
         .day-name {
             font-size: 10px; font-weight: 700;
             color: rgba(255,255,255,0.5);
@@ -171,16 +337,14 @@
             font-size: 18px; font-weight: 700;
             margin-bottom: 8px;
         }
-        .day-event {
-            font-size: 20px; margin-bottom: 4px;
-        }
+        .day-event { font-size: 20px; margin-bottom: 4px; }
         .day-event-name {
             font-size: 9px; font-weight: 600;
             color: rgba(255,255,255,0.7);
             line-height: 1.2;
         }
         
-        /* Event Details */
+        /* ===== WEEKLY EVENTS LIST ===== */
         .events-list {
             display: flex; flex-direction: column;
             gap: 16px;
@@ -192,10 +356,11 @@
             display: flex; gap: 16px;
             transition: all 0.3s;
         }
-        .event-card:hover { border-color: var(--orange); }
+        .event-card:hover { border-color: var(--orange); transform: translateX(4px); }
         .event-card.active {
             background: linear-gradient(135deg, rgba(255,107,0,0.1), rgba(168,85,247,0.1));
             border-color: var(--orange);
+            border-width: 2px;
         }
         .event-icon {
             width: 60px; height: 60px;
@@ -219,16 +384,12 @@
             background: rgba(255,255,255,0.1);
         }
         .event-schedule.weekly { background: rgba(59,130,246,0.3); color: var(--blue); }
-        .event-schedule.daily { background: rgba(34,197,94,0.3); color: var(--green); }
-        .event-schedule.limited { background: rgba(255,107,0,0.3); color: var(--orange); }
         .event-desc {
             font-size: 13px;
             color: rgba(255,255,255,0.6);
             margin-bottom: 12px;
         }
-        .event-bonuses {
-            display: flex; flex-wrap: wrap; gap: 8px;
-        }
+        .event-bonuses { display: flex; flex-wrap: wrap; gap: 8px; }
         .event-bonus {
             font-size: 11px; font-weight: 600;
             padding: 4px 10px; border-radius: 8px;
@@ -236,10 +397,8 @@
             color: var(--gold);
         }
         
-        /* Upcoming Section */
-        .upcoming-section {
-            margin-top: 32px;
-        }
+        /* ===== COMING SOON - Information Gap / Cliffhanger ===== */
+        .upcoming-section { margin-top: 32px; }
         .upcoming-grid {
             display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
             gap: 16px;
@@ -248,6 +407,28 @@
             background: linear-gradient(135deg, rgba(168,85,247,0.1), rgba(255,0,255,0.1));
             border: 1px solid rgba(168,85,247,0.3);
             border-radius: 16px; padding: 20px;
+            position: relative;
+            overflow: hidden;
+        }
+        .upcoming-card::before {
+            content: 'COMING';
+            position: absolute;
+            top: 10px;
+            right: -30px;
+            background: var(--purple);
+            color: #fff;
+            font-size: 9px;
+            font-weight: 700;
+            padding: 4px 40px;
+            transform: rotate(45deg);
+        }
+        .upcoming-card.secret {
+            border-style: dashed;
+            animation: secretPulse 3s ease-in-out infinite;
+        }
+        @keyframes secretPulse {
+            0%, 100% { border-color: rgba(168,85,247,0.3); }
+            50% { border-color: rgba(255,0,255,0.6); }
         }
         .upcoming-header {
             display: flex; justify-content: space-between; align-items: center;
@@ -267,39 +448,77 @@
             color: rgba(255,255,255,0.6);
             margin-bottom: 12px;
         }
-        .upcoming-preview {
-            display: flex; gap: 8px;
-        }
+        .upcoming-preview { display: flex; gap: 8px; flex-wrap: wrap; }
         .preview-tag {
             font-size: 10px;
             padding: 3px 8px;
             background: rgba(255,255,255,0.1);
             border-radius: 4px;
         }
+        .preview-tag.mystery {
+            background: rgba(168,85,247,0.3);
+            color: var(--purple);
+            animation: mysteryTag 2s ease-in-out infinite;
+        }
+        @keyframes mysteryTag {
+            0%, 100% { opacity: 0.7; }
+            50% { opacity: 1; }
+        }
         
-        /* Stats Row */
-        .stats-row {
-            display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-            gap: 12px; margin-bottom: 24px;
+        /* ===== STREAK CHALLENGE - Commitment Device ===== */
+        .streak-challenge {
+            background: linear-gradient(135deg, rgba(255,107,0,0.15), rgba(255,215,0,0.15));
+            border: 2px solid rgba(255,107,0,0.4);
+            border-radius: 16px;
+            padding: 20px;
+            margin-top: 24px;
         }
-        .stat-item {
-            background: rgba(255,255,255,0.03);
-            border: 1px solid rgba(255,255,255,0.1);
-            border-radius: 12px; padding: 16px; text-align: center;
+        .streak-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
         }
-        .stat-value {
+        .streak-title {
             font-family: 'Orbitron', sans-serif;
-            font-size: 24px; font-weight: 700;
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--orange);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .streak-count {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 24px;
+            font-weight: 800;
             color: var(--gold);
         }
-        .stat-label {
+        .streak-progress {
+            height: 8px;
+            background: rgba(0,0,0,0.3);
+            border-radius: 4px;
+            overflow: hidden;
+            margin-bottom: 12px;
+        }
+        .streak-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--orange), var(--gold));
+            border-radius: 4px;
+            transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .streak-milestones {
+            display: flex;
+            justify-content: space-between;
             font-size: 10px;
             color: rgba(255,255,255,0.5);
-            text-transform: uppercase;
-            margin-top: 4px;
         }
+        .milestone { text-align: center; }
+        .milestone.achieved { color: var(--green); }
+        .milestone.current { color: var(--gold); font-weight: 700; }
         
         @media (max-width: 700px) {
+            .stats-row { grid-template-columns: repeat(2, 1fr); }
             .week-grid { grid-template-columns: repeat(7, 1fr); gap: 4px; }
             .day-card { padding: 8px 4px; }
             .day-date { font-size: 14px; }
@@ -308,6 +527,7 @@
             .today-timer { position: static; margin-top: 16px; text-align: left; }
             .event-card { flex-direction: column; }
             .event-icon { width: 100%; height: 50px; }
+            .urgency-banner { flex-direction: column; text-align: center; }
         }
     </style>
 </head>
@@ -316,7 +536,7 @@
     
     <header>
         <a href="/tcg" class="logo">
-            <span class="nw-icon" style="width:24px;height:24px" data-nw-icon="calendar"></span>
+            <span>📅</span>
             <span data-i18n="pageTitle">EVENTS</span>
         </a>
         <div class="nav-links">
@@ -327,24 +547,38 @@
     </header>
     
     <main>
-        <!-- Today's Event Banner -->
+        <!-- URGENCY BANNER - Ticking Clock -->
+        <div class="urgency-banner" id="urgencyBanner">
+            <div class="urgency-text">
+                <span>⚡</span>
+                <span id="urgencyMessage" data-i18n="bonusEnding">Today's bonus ends in:</span>
+            </div>
+            <div class="urgency-timer" id="urgencyTimer">--:--:--</div>
+        </div>
+        
+        <!-- TODAY'S EVENT -->
         <div class="today-banner" id="todayBanner">
             <div class="today-label">
                 <span class="live-dot"></span>
                 <span data-i18n="happeningNow">HAPPENING NOW</span>
             </div>
-            <h1 class="today-title" id="todayTitle">Loading...</h1>
-            <p class="today-desc" id="todayDesc" data-i18n="checkTodayBonuses">Check out today's special bonuses!</p>
-            <div class="today-bonuses" id="todayBonuses">
-                <!-- Bonuses will be rendered here -->
-            </div>
+            <h1 class="today-title" id="todayTitle"></h1>
+            <p class="today-desc" id="todayDesc"></p>
+            <div class="today-bonuses" id="todayBonuses"></div>
             <div class="today-timer">
                 <div class="timer-label" data-i18n="endsIn">Ends in</div>
                 <div class="timer-value" id="timerValue">--:--:--</div>
             </div>
         </div>
         
-        <!-- Stats -->
+        <!-- MYSTERY BONUS - Variable Reward (Dopamine) -->
+        <div class="mystery-section" id="mysterySection" onclick="revealMysteryBonus()">
+            <div class="mystery-title" data-i18n="mysteryBonus">🎁 MYSTERY BONUS</div>
+            <div class="mystery-desc" data-i18n="mysteryDesc">Tap to reveal today's hidden reward!</div>
+            <button class="mystery-btn" data-i18n="revealNow">REVEAL NOW</button>
+        </div>
+        
+        <!-- STATS ROW -->
         <div class="stats-row">
             <div class="stat-item">
                 <div class="stat-value" id="eventsParticipated">0</div>
@@ -354,8 +588,8 @@
                 <div class="stat-value" id="bonusesEarned">0%</div>
                 <div class="stat-label" data-i18n="extraEarned">Extra Earned</div>
             </div>
-            <div class="stat-item">
-                <div class="stat-value" id="streakDays">0</div>
+            <div class="stat-item streak">
+                <div class="stat-value" id="streakDays">🔥 0</div>
                 <div class="stat-label" data-i18n="dayStreak">Day Streak</div>
             </div>
             <div class="stat-item">
@@ -364,78 +598,88 @@
             </div>
         </div>
         
-        <!-- Weekly Calendar -->
+        <!-- WEEKLY CALENDAR -->
         <div class="week-section">
             <div class="section-title">
-                <span class="nw-icon" style="width:20px;height:20px" data-nw-icon="calendar"></span>
+                <span>📆</span>
                 <span data-i18n="thisWeek">THIS WEEK</span>
             </div>
-            <div class="week-grid" id="weekGrid">
-                <!-- Days will be rendered here -->
-            </div>
+            <div class="week-grid" id="weekGrid"></div>
         </div>
         
-        <!-- Weekly Events List -->
+        <!-- WEEKLY EVENTS LIST -->
         <div class="section-title">
-            <span class="nw-icon" style="width:20px;height:20px" data-nw-icon="star"></span>
+            <span>⭐</span>
             <span data-i18n="weeklyEvents">WEEKLY EVENTS</span>
         </div>
-        <div class="events-list" id="eventsList">
-            <!-- Events will be rendered here -->
+        <div class="events-list" id="eventsList"></div>
+        
+        <!-- STREAK CHALLENGE - Commitment Device -->
+        <div class="streak-challenge">
+            <div class="streak-header">
+                <div class="streak-title">
+                    <span>🔥</span>
+                    <span data-i18n="streakChallenge">STREAK CHALLENGE</span>
+                </div>
+                <div class="streak-count" id="streakDisplay">0 Days</div>
+            </div>
+            <div class="streak-progress">
+                <div class="streak-fill" id="streakFill" style="width: 0%"></div>
+            </div>
+            <div class="streak-milestones">
+                <div class="milestone" data-days="3">3 days<br><small>+5% bonus</small></div>
+                <div class="milestone" data-days="7">7 days<br><small>+10% bonus</small></div>
+                <div class="milestone" data-days="14">14 days<br><small>+20% bonus</small></div>
+                <div class="milestone" data-days="30">30 days<br><small>🏆 MYTHIC</small></div>
+            </div>
         </div>
         
-        <!-- Upcoming Special Events -->
+        <!-- UPCOMING - Information Gap / Cliffhanger -->
         <div class="upcoming-section">
             <div class="section-title">
-                <span class="nw-icon" style="width:20px;height:20px" data-nw-icon="rocket"></span>
+                <span>🔮</span>
                 <span data-i18n="comingSoon">COMING SOON</span>
             </div>
-            <div class="upcoming-grid" id="upcomingGrid">
-                <!-- Upcoming events will be rendered here -->
-            </div>
+            <div class="upcoming-grid" id="upcomingGrid"></div>
         </div>
     </main>
-    
+
     <script>
         // ============================================
-        // TRILINGUAL TRANSLATIONS
+        // NW EVENTS - NARRATIVE ADDICTION SYSTEM
+        // Implementing: Ticking Clocks, Variable Rewards,
+        // Information Gaps, FOMO, Progress Loops
         // ============================================
+        
         const pageTranslations = {
             en: {
                 pageTitle: "EVENTS",
                 navForge: "Forge",
-                navStaking: "Staking",
+                navStaking: "Staking", 
                 navArcade: "Arcade",
+                bonusEnding: "⚡ Today's bonus ends in:",
                 happeningNow: "HAPPENING NOW",
-                checkTodayBonuses: "Check out today's special bonuses!",
                 endsIn: "Ends in",
+                mysteryBonus: "🎁 MYSTERY BONUS",
+                mysteryDesc: "Tap to reveal today's hidden reward!",
+                revealNow: "REVEAL NOW",
                 eventsJoined: "Events Joined",
                 extraEarned: "Extra Earned",
                 dayStreak: "Day Streak",
                 nextBigEvent: "Next Big Event",
                 thisWeek: "THIS WEEK",
                 weeklyEvents: "WEEKLY EVENTS",
+                streakChallenge: "STREAK CHALLENGE",
                 comingSoon: "COMING SOON",
                 today: "TODAY!",
                 tomorrow: "Tomorrow",
                 days: "days",
                 every: "Every",
-                // Day names
-                monday: "Monday",
-                tuesday: "Tuesday",
-                wednesday: "Wednesday",
-                thursday: "Thursday",
-                friday: "Friday",
-                saturday: "Saturday",
-                sunday: "Sunday",
-                mon: "Mon",
-                tue: "Tue",
-                wed: "Wed",
-                thu: "Thu",
-                fri: "Fri",
-                sat: "Sat",
-                sun: "Sun",
-                // Event names
+                // Days
+                monday: "Monday", tuesday: "Tuesday", wednesday: "Wednesday",
+                thursday: "Thursday", friday: "Friday", saturday: "Saturday", sunday: "Sunday",
+                mon: "MON", tue: "TUE", wed: "WED", thu: "THU", fri: "FRI", sat: "SAT", sun: "SUN",
+                // Events
                 marketMonday: "Market Monday",
                 trainingTuesday: "Training Tuesday",
                 warWednesday: "War Wednesday",
@@ -443,106 +687,104 @@
                 forgeFriday: "Forge Friday",
                 socialSaturday: "Social Saturday",
                 stakeSunday: "Stake Sunday",
-                // Event descriptions
+                // Descriptions
                 marketMondayDesc: "Trading bonuses and market discounts every Monday!",
-                trainingTuesdayDesc: "Earn bonus XP from battles and challenges.",
-                warWednesdayDesc: "Battle tournaments with prize pools!",
-                throwbackThursdayDesc: "Limited-time access to previous season cards.",
-                forgeFridayDesc: "Double pity progress and boosted mythic rates!",
-                socialSaturdayDesc: "Community events and guild competitions.",
-                stakeSundayDesc: "Double staking rewards all day!",
+                trainingTuesdayDesc: "Earn bonus XP from battles and challenges",
+                warWednesdayDesc: "Weekly tournament battles with exclusive rewards!",
+                throwbackThursdayDesc: "Limited-time access to legacy season cards",
+                forgeFridayDesc: "2x pity progress & increased mythic rates!",
+                socialSaturdayDesc: "Community events and guild competitions",
+                stakeSundayDesc: "2x staking rewards all day!",
                 // Bonuses
                 tradeValue: "+10% Trade Value",
                 marketFees: "-5% Market Fees",
-                battleXP: "1.5× Battle XP",
+                battleXP: "1.5x Battle XP",
                 freeTutorials: "Free Tutorials",
                 tournamentOpen: "Tournament Open",
-                battleRewards: "1.5× Battle Rewards",
+                battleRewards: "1.5x Battle Rewards",
                 legacyCards: "Legacy Cards Available",
                 nostalgiaPacks: "Nostalgia Packs",
-                pityProgress: "2× Pity Progress",
-                mythicRate: "2× Mythic Rate",
-                coopRewards: "2× Co-op Rewards",
+                pityProgress: "2x Pity Progress",
+                mythicRate: "2x Mythic Rate",
+                coopRewards: "2x Co-op Rewards",
                 guildBonus: "Guild Bonus Active",
-                stakingRewards: "2× Staking Rewards",
+                stakingRewards: "2x Staking Rewards",
                 bonusClaimWindow: "Bonus Claim Window",
+                // Mystery
+                mysteryRevealed: "🎉 TODAY'S SECRET BONUS:",
+                mysteryRewards: [
+                    "+25 FREE LOGS",
+                    "FREE RARE CARD",
+                    "2x XP FOR 1 HOUR",
+                    "+100 GOLD BONUS",
+                    "MYSTERY BOX UNLOCK"
+                ],
                 // Upcoming
                 season3Launch: "Season 3 Launch",
-                season3Desc: "New card set with 120+ cards, new mechanics, and exclusive launch rewards!",
+                season3Desc: "120+ new cards, new mechanics, and exclusive launch rewards!",
                 anniversaryCelebration: "Anniversary Celebration",
-                anniversaryDesc: "Celebrate NumbahWan's anniversary with massive giveaways and throwback events!",
-                collaborationDrop: "Collaboration Drop",
-                collaborationDesc: "Special collaboration with a surprise partner. Exclusive cards only available during this event!",
+                anniversaryDesc: "Celebrate NumbahWan anniversary with mega giveaways and throwback events!",
+                collaborationDrop: "??? Collaboration ???",
+                collaborationDesc: "A secret collaboration with [REDACTED]. Exclusive cards only during this event!",
                 march2026: "March 2026",
                 april2026: "April 2026",
-                comingSoonDate: "Coming Soon",
-                newCards: "New Cards",
+                comingSoonDate: "Coming Soon™",
+                newCards: "120+ Cards",
                 limitedPacks: "Limited Packs",
                 freePulls: "Free Pulls",
                 freeMythic: "Free Mythic",
                 bonusLogs: "Bonus Logs",
                 legacyReturns: "Legacy Returns",
-                exclusive: "Exclusive",
+                exclusive: "???",
                 limitedTime: "Limited Time"
             },
             zh: {
                 pageTitle: "活動",
                 navForge: "鍛造",
                 navStaking: "質押",
-                navArcade: "遊樂場",
+                navArcade: "街機",
+                bonusEnding: "⚡ 今日獎勵倒數：",
                 happeningNow: "正在進行",
-                checkTodayBonuses: "查看今日特別獎勵！",
-                endsIn: "剩餘時間",
-                eventsJoined: "參與活動數",
-                extraEarned: "額外獲得",
+                endsIn: "結束於",
+                mysteryBonus: "🎁 神秘獎勵",
+                mysteryDesc: "點擊揭曉今日隱藏獎勵！",
+                revealNow: "立即揭曉",
+                eventsJoined: "參與活動",
+                extraEarned: "額外收益",
                 dayStreak: "連續天數",
                 nextBigEvent: "下個大活動",
                 thisWeek: "本週",
                 weeklyEvents: "每週活動",
+                streakChallenge: "連續挑戰",
                 comingSoon: "即將推出",
                 today: "今天！",
                 tomorrow: "明天",
                 days: "天",
                 every: "每週",
-                // Day names
-                monday: "週一",
-                tuesday: "週二",
-                wednesday: "週三",
-                thursday: "週四",
-                friday: "週五",
-                saturday: "週六",
-                sunday: "週日",
-                mon: "一",
-                tue: "二",
-                wed: "三",
-                thu: "四",
-                fri: "五",
-                sat: "六",
-                sun: "日",
-                // Event names
-                marketMonday: "市場星期一",
-                trainingTuesday: "訓練星期二",
-                warWednesday: "戰爭星期三",
-                throwbackThursday: "懷舊星期四",
-                forgeFriday: "鍛造星期五",
-                socialSaturday: "社交星期六",
-                stakeSunday: "質押星期日",
-                // Event descriptions
+                monday: "週一", tuesday: "週二", wednesday: "週三",
+                thursday: "週四", friday: "週五", saturday: "週六", sunday: "週日",
+                mon: "一", tue: "二", wed: "三", thu: "四", fri: "五", sat: "六", sun: "日",
+                marketMonday: "市場週一",
+                trainingTuesday: "訓練週二",
+                warWednesday: "戰爭週三",
+                throwbackThursday: "懷舊週四",
+                forgeFriday: "鍛造週五",
+                socialSaturday: "社交週六",
+                stakeSunday: "質押週日",
                 marketMondayDesc: "每週一享受交易獎勵和市場折扣！",
-                trainingTuesdayDesc: "從戰鬥和挑戰中獲得額外經驗值。",
-                warWednesdayDesc: "參加有獎池的戰鬥錦標賽！",
-                throwbackThursdayDesc: "限時解鎖上季卡牌。",
-                forgeFridayDesc: "雙倍保底進度和提升神話機率！",
-                socialSaturdayDesc: "社區活動和公會競賽。",
-                stakeSundayDesc: "全天雙倍質押獎勵！",
-                // Bonuses
+                trainingTuesdayDesc: "從戰鬥和挑戰中獲得額外XP",
+                warWednesdayDesc: "每週錦標賽，專屬獎勵！",
+                throwbackThursdayDesc: "限時獲取經典賽季卡牌",
+                forgeFridayDesc: "2倍保底進度 & 提升神話機率！",
+                socialSaturdayDesc: "社群活動和公會競賽",
+                stakeSundayDesc: "全天2倍質押獎勵！",
                 tradeValue: "+10% 交易價值",
                 marketFees: "-5% 市場手續費",
-                battleXP: "1.5倍 戰鬥經驗",
-                freeTutorials: "免費教程",
+                battleXP: "1.5倍 戰鬥XP",
+                freeTutorials: "免費教學",
                 tournamentOpen: "錦標賽開放",
                 battleRewards: "1.5倍 戰鬥獎勵",
-                legacyCards: "傳承卡牌可用",
+                legacyCards: "經典卡牌可用",
                 nostalgiaPacks: "懷舊卡包",
                 pityProgress: "2倍 保底進度",
                 mythicRate: "2倍 神話機率",
@@ -550,252 +792,164 @@
                 guildBonus: "公會加成啟動",
                 stakingRewards: "2倍 質押獎勵",
                 bonusClaimWindow: "獎勵領取時段",
-                // Upcoming
-                season3Launch: "第三季上線",
-                season3Desc: "全新卡組包含120+張卡牌、新機制和專屬上線獎勵！",
+                mysteryRevealed: "🎉 今日秘密獎勵：",
+                mysteryRewards: ["+25 免費原木", "免費稀有卡", "2倍XP 1小時", "+100 金幣獎勵", "神秘箱解鎖"],
+                season3Launch: "第三季啟動",
+                season3Desc: "120+張新卡、新機制、專屬啟動獎勵！",
                 anniversaryCelebration: "週年慶典",
-                anniversaryDesc: "慶祝NumbahWan週年，超多好禮和懷舊活動！",
-                collaborationDrop: "聯名活動",
-                collaborationDesc: "與神秘夥伴的特別聯名。活動期間限定卡牌！",
+                anniversaryDesc: "慶祝NumbahWan週年，超多贈品和懷舊活動！",
+                collaborationDrop: "??? 神秘聯動 ???",
+                collaborationDesc: "與[已隱藏]的秘密聯動。限定卡牌僅限此活動！",
                 march2026: "2026年3月",
                 april2026: "2026年4月",
-                comingSoonDate: "即將推出",
-                newCards: "新卡牌",
+                comingSoonDate: "敬請期待™",
+                newCards: "120+張卡",
                 limitedPacks: "限定卡包",
                 freePulls: "免費抽卡",
                 freeMythic: "免費神話",
-                bonusLogs: "額外木材",
-                legacyReturns: "傳承回歸",
-                exclusive: "獨家",
+                bonusLogs: "獎勵原木",
+                legacyReturns: "經典回歸",
+                exclusive: "???",
                 limitedTime: "限時"
             },
             th: {
                 pageTitle: "กิจกรรม",
-                navForge: "หลอมการ์ด",
-                navStaking: "สเตค",
+                navForge: "หลอม",
+                navStaking: "เดิมพัน",
                 navArcade: "อาร์เคด",
+                bonusEnding: "⚡ โบนัสวันนี้หมดใน:",
                 happeningNow: "กำลังดำเนินอยู่",
-                checkTodayBonuses: "ดูโบนัสพิเศษประจำวันนี้!",
                 endsIn: "สิ้นสุดใน",
+                mysteryBonus: "🎁 โบนัสลึกลับ",
+                mysteryDesc: "แตะเพื่อเปิดเผยรางวัลที่ซ่อนอยู่!",
+                revealNow: "เปิดเผยเดี๋ยวนี้",
                 eventsJoined: "เข้าร่วมกิจกรรม",
-                extraEarned: "ได้รับเพิ่ม",
-                dayStreak: "วันติดต่อกัน",
+                extraEarned: "รายได้พิเศษ",
+                dayStreak: "ติดต่อกัน",
                 nextBigEvent: "กิจกรรมใหญ่ถัดไป",
                 thisWeek: "สัปดาห์นี้",
                 weeklyEvents: "กิจกรรมประจำสัปดาห์",
+                streakChallenge: "ความท้าทายต่อเนื่อง",
                 comingSoon: "เร็วๆ นี้",
                 today: "วันนี้!",
                 tomorrow: "พรุ่งนี้",
                 days: "วัน",
                 every: "ทุก",
-                // Day names
-                monday: "วันจันทร์",
-                tuesday: "วันอังคาร",
-                wednesday: "วันพุธ",
-                thursday: "วันพฤหัสบดี",
-                friday: "วันศุกร์",
-                saturday: "วันเสาร์",
-                sunday: "วันอาทิตย์",
-                mon: "จ.",
-                tue: "อ.",
-                wed: "พ.",
-                thu: "พฤ.",
-                fri: "ศ.",
-                sat: "ส.",
-                sun: "อา.",
-                // Event names
-                marketMonday: "จันทร์ตลาด",
-                trainingTuesday: "อังคารฝึกซ้อม",
-                warWednesday: "พุธสงคราม",
-                throwbackThursday: "พฤหัสย้อนอดีต",
-                forgeFriday: "ศุกร์หลอมการ์ด",
-                socialSaturday: "เสาร์สังคม",
-                stakeSunday: "อาทิตย์สเตค",
-                // Event descriptions
+                monday: "วันจันทร์", tuesday: "วันอังคาร", wednesday: "วันพุธ",
+                thursday: "วันพฤหัส", friday: "วันศุกร์", saturday: "วันเสาร์", sunday: "วันอาทิตย์",
+                mon: "จ.", tue: "อ.", wed: "พ.", thu: "พฤ.", fri: "ศ.", sat: "ส.", sun: "อา.",
+                marketMonday: "ตลาดวันจันทร์",
+                trainingTuesday: "ฝึกซ้อมวันอังคาร",
+                warWednesday: "สงครามวันพุธ",
+                throwbackThursday: "ย้อนอดีตวันพฤหัส",
+                forgeFriday: "หลอมวันศุกร์",
+                socialSaturday: "สังคมวันเสาร์",
+                stakeSunday: "เดิมพันวันอาทิตย์",
                 marketMondayDesc: "โบนัสการซื้อขายและส่วนลดตลาดทุกวันจันทร์!",
-                trainingTuesdayDesc: "รับโบนัส XP จากการต่อสู้และความท้าทาย",
-                warWednesdayDesc: "ทัวร์นาเมนต์การต่อสู้พร้อมรางวัล!",
-                throwbackThursdayDesc: "เข้าถึงการ์ดซีซันก่อนแบบจำกัดเวลา",
-                forgeFridayDesc: "ความคืบหน้าการันตี 2 เท่าและเพิ่มอัตราการ์ดมิธิค!",
+                trainingTuesdayDesc: "รับ XP โบนัสจากการต่อสู้และความท้าทาย",
+                warWednesdayDesc: "ทัวร์นาเมนต์ประจำสัปดาห์พร้อมรางวัลพิเศษ!",
+                throwbackThursdayDesc: "เข้าถึงการ์ดซีซันเก่าแบบจำกัดเวลา",
+                forgeFridayDesc: "2x ความคืบหน้าการันตี & อัตรามิธิคเพิ่มขึ้น!",
                 socialSaturdayDesc: "กิจกรรมชุมชนและการแข่งขันกิลด์",
-                stakeSundayDesc: "รางวัลสเตค 2 เท่าตลอดทั้งวัน!",
-                // Bonuses
+                stakeSundayDesc: "รางวัลเดิมพัน 2x ตลอดทั้งวัน!",
                 tradeValue: "+10% มูลค่าการซื้อขาย",
                 marketFees: "-5% ค่าธรรมเนียมตลาด",
-                battleXP: "1.5 เท่า XP การต่อสู้",
+                battleXP: "1.5x XP การต่อสู้",
                 freeTutorials: "บทเรียนฟรี",
-                tournamentOpen: "เปิดทัวร์นาเมนต์",
-                battleRewards: "1.5 เท่า รางวัลการต่อสู้",
+                tournamentOpen: "ทัวร์นาเมนต์เปิด",
+                battleRewards: "1.5x รางวัลการต่อสู้",
                 legacyCards: "การ์ดมรดกพร้อมใช้",
                 nostalgiaPacks: "แพ็คความทรงจำ",
-                pityProgress: "2 เท่า ความคืบหน้าการันตี",
-                mythicRate: "2 เท่า อัตรามิธิค",
-                coopRewards: "2 เท่า รางวัลร่วมมือ",
+                pityProgress: "2x ความคืบหน้าการันตี",
+                mythicRate: "2x อัตรามิธิค",
+                coopRewards: "2x รางวัลร่วมมือ",
                 guildBonus: "โบนัสกิลด์ทำงาน",
-                stakingRewards: "2 เท่า รางวัลสเตค",
+                stakingRewards: "2x รางวัลเดิมพัน",
                 bonusClaimWindow: "ช่วงเวลารับโบนัส",
-                // Upcoming
+                mysteryRevealed: "🎉 โบนัสลับวันนี้:",
+                mysteryRewards: ["+25 ไม้ฟรี", "การ์ดแรร์ฟรี", "2x XP 1 ชม.", "+100 ทองโบนัส", "ปลดล็อคกล่องลึกลับ"],
                 season3Launch: "เปิดตัวซีซัน 3",
-                season3Desc: "ชุดการ์ดใหม่กว่า 120 ใบ, กลไกใหม่, และรางวัลเปิดตัวสุดพิเศษ!",
+                season3Desc: "การ์ดใหม่ 120+ ใบ กลไกใหม่ และรางวัลเปิดตัวสุดพิเศษ!",
                 anniversaryCelebration: "ฉลองครบรอบ",
-                anniversaryDesc: "ฉลองครบรอบ NumbahWan ด้วยของแจกเพียบและกิจกรรมย้อนอดีต!",
-                collaborationDrop: "คอลแลบพิเศษ",
-                collaborationDesc: "คอลแลบพิเศษกับพันธมิตรลับ การ์ดพิเศษเฉพาะช่วงกิจกรรมนี้เท่านั้น!",
+                anniversaryDesc: "ฉลองครบรอบ NumbahWan ด้วยของแจกมากมายและกิจกรรมย้อนอดีต!",
+                collaborationDrop: "??? คอลแลบ ???",
+                collaborationDesc: "คอลแลบลับกับ [ปิดบัง] การ์ดพิเศษเฉพาะช่วงกิจกรรมนี้!",
                 march2026: "มีนาคม 2026",
                 april2026: "เมษายน 2026",
-                comingSoonDate: "เร็วๆ นี้",
-                newCards: "การ์ดใหม่",
+                comingSoonDate: "เร็วๆ นี้™",
+                newCards: "120+ การ์ด",
                 limitedPacks: "แพ็คจำกัด",
                 freePulls: "สุ่มฟรี",
                 freeMythic: "มิธิคฟรี",
-                bonusLogs: "โบนัสล็อก",
+                bonusLogs: "ไม้โบนัส",
                 legacyReturns: "มรดกกลับมา",
-                exclusive: "พิเศษ",
+                exclusive: "???",
                 limitedTime: "จำกัดเวลา"
             }
         };
         
-        // Initialize i18n
-        document.addEventListener('DOMContentLoaded', () => {
-            initI18n(pageTranslations);
-        });
-        
-        // Listen for language changes
-        document.addEventListener('languageChanged', (e) => {
-            // Re-render content with new language
-            renderTodayEvent();
-            renderWeekCalendar();
-            renderEventsList();
-            renderUpcomingEvents();
-            loadUserStats();
-        });
-        
-        // ============================================
-        // NW CONTENT CALENDAR SYSTEM
-        // ============================================
-        
+        // Weekly Events Data
         const WEEKLY_EVENTS = [
-            {
-                id: 'market_monday',
-                nameKey: 'marketMonday',
-                day: 1,
-                emoji: '🏪',
-                descKey: 'marketMondayDesc',
-                bonusKeys: ['tradeValue', 'marketFees'],
-                color: 'var(--blue)'
-            },
-            {
-                id: 'training_tuesday',
-                nameKey: 'trainingTuesday',
-                day: 2,
-                emoji: '⚔️',
-                descKey: 'trainingTuesdayDesc',
-                bonusKeys: ['battleXP', 'freeTutorials'],
-                color: 'var(--green)'
-            },
-            {
-                id: 'war_wednesday',
-                nameKey: 'warWednesday',
-                day: 3,
-                emoji: '🏆',
-                descKey: 'warWednesdayDesc',
-                bonusKeys: ['tournamentOpen', 'battleRewards'],
-                color: 'var(--red)'
-            },
-            {
-                id: 'throwback_thursday',
-                nameKey: 'throwbackThursday',
-                day: 4,
-                emoji: '⏰',
-                descKey: 'throwbackThursdayDesc',
-                bonusKeys: ['legacyCards', 'nostalgiaPacks'],
-                color: 'var(--purple)'
-            },
-            {
-                id: 'forge_friday',
-                nameKey: 'forgeFriday',
-                day: 5,
-                emoji: '🔥',
-                descKey: 'forgeFridayDesc',
-                bonusKeys: ['pityProgress', 'mythicRate'],
-                color: 'var(--orange)'
-            },
-            {
-                id: 'social_saturday',
-                nameKey: 'socialSaturday',
-                day: 6,
-                emoji: '🤝',
-                descKey: 'socialSaturdayDesc',
-                bonusKeys: ['coopRewards', 'guildBonus'],
-                color: 'var(--cyan)'
-            },
-            {
-                id: 'stake_sunday',
-                nameKey: 'stakeSunday',
-                day: 0,
-                emoji: '💎',
-                descKey: 'stakeSundayDesc',
-                bonusKeys: ['stakingRewards', 'bonusClaimWindow'],
-                color: 'var(--gold)'
-            }
+            { id: 'market_monday', nameKey: 'marketMonday', day: 1, emoji: '🏪', descKey: 'marketMondayDesc', bonusKeys: ['tradeValue', 'marketFees'], color: 'var(--blue)' },
+            { id: 'training_tuesday', nameKey: 'trainingTuesday', day: 2, emoji: '⚔️', descKey: 'trainingTuesdayDesc', bonusKeys: ['battleXP', 'freeTutorials'], color: 'var(--green)' },
+            { id: 'war_wednesday', nameKey: 'warWednesday', day: 3, emoji: '🏆', descKey: 'warWednesdayDesc', bonusKeys: ['tournamentOpen', 'battleRewards'], color: 'var(--red)' },
+            { id: 'throwback_thursday', nameKey: 'throwbackThursday', day: 4, emoji: '⏰', descKey: 'throwbackThursdayDesc', bonusKeys: ['legacyCards', 'nostalgiaPacks'], color: 'var(--purple)' },
+            { id: 'forge_friday', nameKey: 'forgeFriday', day: 5, emoji: '🔥', descKey: 'forgeFridayDesc', bonusKeys: ['pityProgress', 'mythicRate'], color: 'var(--orange)' },
+            { id: 'social_saturday', nameKey: 'socialSaturday', day: 6, emoji: '🤝', descKey: 'socialSaturdayDesc', bonusKeys: ['coopRewards', 'guildBonus'], color: 'var(--cyan)' },
+            { id: 'stake_sunday', nameKey: 'stakeSunday', day: 0, emoji: '💎', descKey: 'stakeSundayDesc', bonusKeys: ['stakingRewards', 'bonusClaimWindow'], color: 'var(--gold)' }
         ];
         
+        // Upcoming Events - Information Gaps & Cliffhangers
         const UPCOMING_EVENTS = [
-            {
-                nameKey: 'season3Launch',
-                dateKey: 'march2026',
-                descKey: 'season3Desc',
-                tagKeys: ['newCards', 'limitedPacks', 'freePulls']
-            },
-            {
-                nameKey: 'anniversaryCelebration',
-                dateKey: 'april2026',
-                descKey: 'anniversaryDesc',
-                tagKeys: ['freeMythic', 'bonusLogs', 'legacyReturns']
-            },
-            {
-                nameKey: 'collaborationDrop',
-                dateKey: 'comingSoonDate',
-                descKey: 'collaborationDesc',
-                tagKeys: ['exclusive', 'limitedTime']
-            }
+            { nameKey: 'season3Launch', dateKey: 'march2026', descKey: 'season3Desc', tagKeys: ['newCards', 'limitedPacks', 'freePulls'], secret: false },
+            { nameKey: 'anniversaryCelebration', dateKey: 'april2026', descKey: 'anniversaryDesc', tagKeys: ['freeMythic', 'bonusLogs', 'legacyReturns'], secret: false },
+            { nameKey: 'collaborationDrop', dateKey: 'comingSoonDate', descKey: 'collaborationDesc', tagKeys: ['exclusive', 'limitedTime'], secret: true }
         ];
         
         let timerInterval;
+        let mysteryRevealed = false;
         
         // Initialize
         document.addEventListener('DOMContentLoaded', () => {
+            initI18n(pageTranslations);
+            renderAll();
+            startTimers();
+            trackVisit();
+        });
+        
+        // Language change handler
+        document.addEventListener('languageChanged', () => renderAll());
+        document.addEventListener('nw-lang-change', () => renderAll());
+        
+        function renderAll() {
             renderTodayEvent();
             renderWeekCalendar();
             renderEventsList();
             renderUpcomingEvents();
             loadUserStats();
-            startTimer();
-            
-            if (window.NWIconsInline) NWIconsInline.init();
-        });
+            updateStreakDisplay();
+        }
         
         function getTodayEvent() {
             const today = new Date().getDay();
-            return WEEKLY_EVENTS.find(e => e.day === today) || WEEKLY_EVENTS[0];
+            return WEEKLY_EVENTS.find(e => e.day === today) || WEEKLY_EVENTS[4]; // Default to Forge Friday
         }
         
         function renderTodayEvent() {
             const event = getTodayEvent();
+            const title = document.getElementById('todayTitle');
+            const desc = document.getElementById('todayDesc');
+            const bonuses = document.getElementById('todayBonuses');
+            const banner = document.getElementById('todayBanner');
             
-            const eventName = getTranslation(event.nameKey) || event.nameKey;
-            const eventDesc = getTranslation(event.descKey) || event.descKey;
+            title.textContent = getTranslation(event.nameKey) || event.nameKey;
+            desc.textContent = getTranslation(event.descKey) || event.descKey;
             
-            document.getElementById('todayTitle').textContent = eventName;
-            document.getElementById('todayDesc').textContent = eventDesc;
+            bonuses.innerHTML = event.bonusKeys.map(key => 
+                `<div class="bonus-tag active">✓ ${getTranslation(key) || key}</div>`
+            ).join('');
             
-            const bonusesHtml = event.bonusKeys.map(key => {
-                const label = getTranslation(key) || key;
-                return `<div class="bonus-tag active">✓ ${label}</div>`;
-            }).join('');
-            document.getElementById('todayBonuses').innerHTML = bonusesHtml;
-            
-            document.getElementById('todayBanner').style.borderColor = event.color;
+            banner.style.borderColor = event.color;
         }
         
         function renderWeekCalendar() {
@@ -804,14 +958,12 @@
             const currentDay = today.getDay();
             
             const startOfWeek = new Date(today);
-            const diff = currentDay === 0 ? -6 : 1 - currentDay;
-            startOfWeek.setDate(today.getDate() + diff);
+            startOfWeek.setDate(today.getDate() - ((currentDay + 6) % 7));
             
-            const dayNameKeys = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'];
+            const dayKeys = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'];
             const dayMapping = [1, 2, 3, 4, 5, 6, 0];
             
-            let html = '';
-            for (let i = 0; i < 7; i++) {
+            grid.innerHTML = dayKeys.map((dayKey, i) => {
                 const date = new Date(startOfWeek);
                 date.setDate(startOfWeek.getDate() + i);
                 
@@ -820,53 +972,40 @@
                 const isToday = date.toDateString() === today.toDateString();
                 const isPast = date < today && !isToday;
                 
-                const dayName = getTranslation(dayNameKeys[i]) || dayNameKeys[i];
-                const eventName = event ? (getTranslation(event.nameKey) || '').split(' ')[0] : '';
-                
-                html += `
+                return `
                     <div class="day-card ${isToday ? 'today' : ''} ${isPast ? 'past' : ''}" 
                          onclick="showEventDetail('${event?.id}')">
-                        <div class="day-name">${dayName}</div>
+                        <div class="day-name">${getTranslation(dayKey) || dayKey}</div>
                         <div class="day-date">${date.getDate()}</div>
                         <div class="day-event">${event?.emoji || '📅'}</div>
-                        <div class="day-event-name">${eventName}</div>
+                        <div class="day-event-name">${(getTranslation(event?.nameKey) || '').split(' ')[0]}</div>
                     </div>
                 `;
-            }
-            
-            grid.innerHTML = html;
+            }).join('');
         }
         
         function renderEventsList() {
             const list = document.getElementById('eventsList');
             const today = new Date().getDay();
+            const dayKeys = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
             
             const sortedEvents = [...WEEKLY_EVENTS].sort((a, b) => {
                 if (a.day === today) return -1;
                 if (b.day === today) return 1;
-                return (a.day - today + 7) % 7 - (b.day - today + 7) % 7;
+                return ((a.day - today + 7) % 7) - ((b.day - today + 7) % 7);
             });
-            
-            const dayNameKeys = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
-            const everyText = getTranslation('every') || 'Every';
             
             list.innerHTML = sortedEvents.map(event => {
                 const isActive = event.day === today;
-                const dayName = getTranslation(dayNameKeys[event.day]) || dayNameKeys[event.day];
-                const eventName = getTranslation(event.nameKey) || event.nameKey;
-                const eventDesc = getTranslation(event.descKey) || event.descKey;
-                
                 return `
                     <div class="event-card ${isActive ? 'active' : ''}" data-event="${event.id}">
-                        <div class="event-icon" style="background: ${event.color}20;">
-                            ${event.emoji}
-                        </div>
+                        <div class="event-icon" style="background: ${event.color}20;">${event.emoji}</div>
                         <div class="event-content">
                             <div class="event-header">
-                                <div class="event-name">${eventName}</div>
-                                <div class="event-schedule weekly">${everyText} ${dayName}</div>
+                                <div class="event-name">${getTranslation(event.nameKey) || event.nameKey}</div>
+                                <div class="event-schedule weekly">${getTranslation('every') || 'Every'} ${getTranslation(dayKeys[event.day]) || dayKeys[event.day]}</div>
                             </div>
-                            <div class="event-desc">${eventDesc}</div>
+                            <div class="event-desc">${getTranslation(event.descKey) || event.descKey}</div>
                             <div class="event-bonuses">
                                 ${event.bonusKeys.map(key => `<span class="event-bonus">${getTranslation(key) || key}</span>`).join('')}
                             </div>
@@ -879,24 +1018,18 @@
         function renderUpcomingEvents() {
             const grid = document.getElementById('upcomingGrid');
             
-            grid.innerHTML = UPCOMING_EVENTS.map(event => {
-                const eventName = getTranslation(event.nameKey) || event.nameKey;
-                const eventDate = getTranslation(event.dateKey) || event.dateKey;
-                const eventDesc = getTranslation(event.descKey) || event.descKey;
-                
-                return `
-                    <div class="upcoming-card">
-                        <div class="upcoming-header">
-                            <div class="upcoming-name">${eventName}</div>
-                            <div class="upcoming-date">${eventDate}</div>
-                        </div>
-                        <div class="upcoming-desc">${eventDesc}</div>
-                        <div class="upcoming-preview">
-                            ${event.tagKeys.map(key => `<span class="preview-tag">${getTranslation(key) || key}</span>`).join('')}
-                        </div>
+            grid.innerHTML = UPCOMING_EVENTS.map(event => `
+                <div class="upcoming-card ${event.secret ? 'secret' : ''}">
+                    <div class="upcoming-header">
+                        <div class="upcoming-name">${getTranslation(event.nameKey) || event.nameKey}</div>
+                        <div class="upcoming-date">${getTranslation(event.dateKey) || event.dateKey}</div>
                     </div>
-                `;
-            }).join('');
+                    <div class="upcoming-desc">${getTranslation(event.descKey) || event.descKey}</div>
+                    <div class="upcoming-preview">
+                        ${event.tagKeys.map(key => `<span class="preview-tag ${event.secret ? 'mystery' : ''}">${getTranslation(key) || key}</span>`).join('')}
+                    </div>
+                </div>
+            `).join('');
         }
         
         function loadUserStats() {
@@ -904,7 +1037,7 @@
             
             document.getElementById('eventsParticipated').textContent = stats.participated || 0;
             document.getElementById('bonusesEarned').textContent = (stats.bonusPercent || 0) + '%';
-            document.getElementById('streakDays').textContent = stats.streak || 0;
+            document.getElementById('streakDays').textContent = '🔥 ' + (stats.streak || 0);
             document.getElementById('nextBonus').textContent = getNextBigEvent();
         }
         
@@ -917,8 +1050,23 @@
             return `${daysUntilFriday} ${getTranslation('days') || 'days'}`;
         }
         
-        function startTimer() {
-            function updateTimer() {
+        function updateStreakDisplay() {
+            const stats = JSON.parse(localStorage.getItem('nw_event_stats') || '{}');
+            const streak = stats.streak || 0;
+            
+            document.getElementById('streakDisplay').textContent = `${streak} Days`;
+            document.getElementById('streakFill').style.width = `${Math.min(streak / 30 * 100, 100)}%`;
+            
+            // Update milestones
+            document.querySelectorAll('.milestone').forEach(m => {
+                const days = parseInt(m.dataset.days);
+                m.classList.toggle('achieved', streak >= days);
+                m.classList.toggle('current', streak < days && streak >= days - 3);
+            });
+        }
+        
+        function startTimers() {
+            function updateTimers() {
                 const now = new Date();
                 const endOfDay = new Date(now);
                 endOfDay.setHours(23, 59, 59, 999);
@@ -928,12 +1076,62 @@
                 const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
                 const seconds = Math.floor((diff % (1000 * 60)) / 1000);
                 
-                document.getElementById('timerValue').textContent = 
-                    `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+                const timeStr = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+                
+                document.getElementById('timerValue').textContent = timeStr;
+                document.getElementById('urgencyTimer').textContent = timeStr;
             }
             
-            updateTimer();
-            timerInterval = setInterval(updateTimer, 1000);
+            updateTimers();
+            timerInterval = setInterval(updateTimers, 1000);
+        }
+        
+        // Variable Reward - Mystery Bonus (Dopamine trigger)
+        function revealMysteryBonus() {
+            if (mysteryRevealed) return;
+            
+            const section = document.getElementById('mysterySection');
+            const rewards = getTranslation('mysteryRewards') || ["Bonus Reward"];
+            const randomReward = rewards[Math.floor(Math.random() * rewards.length)];
+            
+            section.innerHTML = `
+                <div class="mystery-revealed">
+                    <div class="mystery-title">${getTranslation('mysteryRevealed') || '🎉 REVEALED:'}</div>
+                    <div class="mystery-reward">${randomReward}</div>
+                </div>
+            `;
+            section.style.cursor = 'default';
+            section.onclick = null;
+            mysteryRevealed = true;
+            
+            // Track mystery reveal
+            const stats = JSON.parse(localStorage.getItem('nw_event_stats') || '{}');
+            stats.mysteryReveals = (stats.mysteryReveals || 0) + 1;
+            localStorage.setItem('nw_event_stats', JSON.stringify(stats));
+        }
+        
+        function trackVisit() {
+            const lastVisit = localStorage.getItem('nw_event_last_visit');
+            const todayStr = new Date().toDateString();
+            
+            if (lastVisit !== todayStr) {
+                localStorage.setItem('nw_event_last_visit', todayStr);
+                
+                const stats = JSON.parse(localStorage.getItem('nw_event_stats') || '{}');
+                stats.participated = (stats.participated || 0) + 1;
+                
+                // Check if streak continues
+                const yesterday = new Date();
+                yesterday.setDate(yesterday.getDate() - 1);
+                if (lastVisit === yesterday.toDateString()) {
+                    stats.streak = (stats.streak || 0) + 1;
+                } else if (lastVisit !== todayStr) {
+                    stats.streak = 1; // Reset streak
+                }
+                
+                stats.bonusPercent = Math.min((stats.bonusPercent || 0) + 5, 100);
+                localStorage.setItem('nw_event_stats', JSON.stringify(stats));
+            }
         }
         
         function showEventDetail(eventId) {
@@ -942,24 +1140,8 @@
                 card.scrollIntoView({ behavior: 'smooth', block: 'center' });
                 card.style.animation = 'none';
                 card.offsetHeight;
-                card.style.animation = 'highlight 1s ease-out';
+                card.style.animation = 'highlight 0.5s ease-out';
             }
-        }
-        
-        function recordParticipation() {
-            const stats = JSON.parse(localStorage.getItem('nw_event_stats') || '{}');
-            stats.participated = (stats.participated || 0) + 1;
-            stats.streak = (stats.streak || 0) + 1;
-            stats.bonusPercent = Math.min((stats.bonusPercent || 0) + 5, 100);
-            localStorage.setItem('nw_event_stats', JSON.stringify(stats));
-            loadUserStats();
-        }
-        
-        const lastVisit = localStorage.getItem('nw_event_last_visit');
-        const todayStr = new Date().toDateString();
-        if (lastVisit !== todayStr) {
-            localStorage.setItem('nw_event_last_visit', todayStr);
-            recordParticipation();
         }
     </script>
 </body>
