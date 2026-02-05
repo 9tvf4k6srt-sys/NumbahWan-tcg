@@ -1,0 +1,831 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NumbahWan TCG | Physical Card Admin</title>
+    <link rel="icon" href="/static/favicon.svg">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="/static/nw-tokens.css">
+    <style>
+        body {
+            background: linear-gradient(135deg, #0a0a0f 0%, #1a1a2e 50%, #0a0a0f 100%);
+            min-height: 100vh;
+        }
+        
+        .admin-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .stat-card {
+            background: rgba(255,255,255,0.05);
+            border-radius: 16px;
+            padding: 24px;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        
+        .stat-value {
+            font-size: 2.5rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #ff6b00, #fbbf24);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .table-container {
+            background: rgba(255,255,255,0.03);
+            border-radius: 16px;
+            overflow: hidden;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        th {
+            background: rgba(255,255,255,0.05);
+            padding: 16px;
+            text-align: left;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #94a3b8;
+        }
+        
+        td {
+            padding: 16px;
+            border-top: 1px solid rgba(255,255,255,0.05);
+        }
+        
+        tr:hover {
+            background: rgba(255,255,255,0.03);
+        }
+        
+        .rarity-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 8px;
+        }
+        
+        .rarity-dot.mythic { background: #ff6b00; }
+        .rarity-dot.legendary { background: #fbbf24; }
+        .rarity-dot.epic { background: #a855f7; }
+        .rarity-dot.rare { background: #3b82f6; }
+        .rarity-dot.uncommon { background: #22c55e; }
+        .rarity-dot.common { background: #6b7280; }
+        
+        .progress-bar {
+            height: 8px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #22c55e, #3b82f6);
+            transition: width 0.3s ease;
+        }
+        
+        .action-btn {
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border: none;
+        }
+        
+        .action-btn.primary {
+            background: linear-gradient(135deg, #ff6b00, #ff8c00);
+            color: white;
+        }
+        
+        .action-btn.primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(255, 107, 0, 0.3);
+        }
+        
+        .action-btn.secondary {
+            background: rgba(255,255,255,0.1);
+            color: white;
+        }
+        
+        .action-btn.secondary:hover {
+            background: rgba(255,255,255,0.2);
+        }
+        
+        .gm-badge {
+            background: linear-gradient(135deg, #ffd700, #ff6b00);
+            color: #1a1a2e;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 700;
+        }
+        
+        .code-preview {
+            font-family: monospace;
+            background: rgba(0,0,0,0.3);
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+        }
+        
+        .modal {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+        
+        .modal-content {
+            background: #1a1a2e;
+            border-radius: 16px;
+            padding: 32px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        
+        .tab-bar {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 24px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            padding-bottom: 16px;
+        }
+        
+        .tab {
+            padding: 8px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-weight: 600;
+        }
+        
+        .tab:hover { background: rgba(255,255,255,0.1); }
+        .tab.active { background: linear-gradient(135deg, #ff6b00, #ff8c00); color: white; }
+        
+        .hidden { display: none !important; }
+    </style>
+</head>
+<body class="text-white">
+    <script src="/static/nw-essentials.js"></script>
+    <script src="/static/nw-nav.js"></script>
+    
+    <div class="admin-container pt-20 pb-32">
+        <!-- Header -->
+        <div class="flex items-center justify-between mb-8">
+            <div>
+                <h1 class="text-3xl font-bold">Physical Card Admin</h1>
+                <p class="text-gray-400 mt-1">Origins of NumbahWan - First Edition</p>
+            </div>
+            <span class="gm-badge">GM ACCESS</span>
+        </div>
+        
+        <!-- Tab Navigation -->
+        <div class="tab-bar">
+            <button class="tab active" data-tab="overview" onclick="switchTab('overview')">Overview</button>
+            <button class="tab" data-tab="codes" onclick="switchTab('codes')">Claim Codes</button>
+            <button class="tab" data-tab="generate" onclick="switchTab('generate')">Generate Codes</button>
+            <button class="tab" data-tab="lookup" onclick="switchTab('lookup')">Code Lookup</button>
+        </div>
+        
+        <!-- Tab Content: Overview -->
+        <div id="tab-overview" class="tab-content">
+            <!-- Stats Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+                <div class="stat-card">
+                    <div class="text-gray-400 text-sm mb-2">Total Cards in Set</div>
+                    <div class="stat-value" id="stat-total-cards">50</div>
+                </div>
+                <div class="stat-card">
+                    <div class="text-gray-400 text-sm mb-2">Total Codes Generated</div>
+                    <div class="stat-value" id="stat-total-codes">0</div>
+                </div>
+                <div class="stat-card">
+                    <div class="text-gray-400 text-sm mb-2">Codes Claimed</div>
+                    <div class="stat-value" id="stat-claimed">0</div>
+                </div>
+                <div class="stat-card">
+                    <div class="text-gray-400 text-sm mb-2">Claim Rate</div>
+                    <div class="stat-value" id="stat-claim-rate">0%</div>
+                </div>
+            </div>
+            
+            <!-- Rarity Breakdown -->
+            <div class="table-container mb-8">
+                <h3 class="text-lg font-bold p-4 border-b border-white/10">Claim Stats by Rarity</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Rarity</th>
+                            <th>Total Codes</th>
+                            <th>Claimed</th>
+                            <th>Available</th>
+                            <th>Claim Rate</th>
+                        </tr>
+                    </thead>
+                    <tbody id="rarity-stats-body">
+                        <tr>
+                            <td><span class="rarity-dot mythic"></span>Mythic</td>
+                            <td>1,000</td>
+                            <td>0</td>
+                            <td>1,000</td>
+                            <td>
+                                <div class="flex items-center gap-3">
+                                    <div class="progress-bar flex-1">
+                                        <div class="progress-fill" style="width: 0%"></div>
+                                    </div>
+                                    <span>0%</span>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td><span class="rarity-dot legendary"></span>Legendary</td>
+                            <td>6,000</td>
+                            <td>0</td>
+                            <td>6,000</td>
+                            <td>
+                                <div class="flex items-center gap-3">
+                                    <div class="progress-bar flex-1">
+                                        <div class="progress-fill" style="width: 0%"></div>
+                                    </div>
+                                    <span>0%</span>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td><span class="rarity-dot epic"></span>Epic</td>
+                            <td>32,000</td>
+                            <td>0</td>
+                            <td>32,000</td>
+                            <td>
+                                <div class="flex items-center gap-3">
+                                    <div class="progress-bar flex-1">
+                                        <div class="progress-fill" style="width: 0%"></div>
+                                    </div>
+                                    <span>0%</span>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td><span class="rarity-dot rare"></span>Rare</td>
+                            <td>120,000</td>
+                            <td>0</td>
+                            <td>120,000</td>
+                            <td>
+                                <div class="flex items-center gap-3">
+                                    <div class="progress-bar flex-1">
+                                        <div class="progress-fill" style="width: 0%"></div>
+                                    </div>
+                                    <span>0%</span>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td><span class="rarity-dot uncommon"></span>Uncommon</td>
+                            <td>200,000</td>
+                            <td>0</td>
+                            <td>200,000</td>
+                            <td>
+                                <div class="flex items-center gap-3">
+                                    <div class="progress-bar flex-1">
+                                        <div class="progress-fill" style="width: 0%"></div>
+                                    </div>
+                                    <span>0%</span>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td><span class="rarity-dot common"></span>Common</td>
+                            <td>300,000</td>
+                            <td>0</td>
+                            <td>300,000</td>
+                            <td>
+                                <div class="flex items-center gap-3">
+                                    <div class="progress-bar flex-1">
+                                        <div class="progress-fill" style="width: 0%"></div>
+                                    </div>
+                                    <span>0%</span>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- Quick Actions -->
+            <div class="flex gap-4 flex-wrap">
+                <button class="action-btn primary" onclick="exportAllCodes()">📥 Export All Codes (CSV)</button>
+                <button class="action-btn secondary" onclick="exportUnclaimedCodes()">📄 Export Unclaimed</button>
+                <button class="action-btn secondary" onclick="switchTab('generate')">🔧 Generate New Codes</button>
+            </div>
+        </div>
+        
+        <!-- Tab Content: Codes List -->
+        <div id="tab-codes" class="tab-content hidden">
+            <div class="flex items-center gap-4 mb-6">
+                <input type="text" id="code-search" class="flex-1 px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white" 
+                       placeholder="Search codes or card names...">
+                <select id="rarity-filter" class="px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white">
+                    <option value="">All Rarities</option>
+                    <option value="mythic">Mythic</option>
+                    <option value="legendary">Legendary</option>
+                    <option value="epic">Epic</option>
+                    <option value="rare">Rare</option>
+                    <option value="uncommon">Uncommon</option>
+                    <option value="common">Common</option>
+                </select>
+                <select id="status-filter" class="px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white">
+                    <option value="">All Status</option>
+                    <option value="claimed">Claimed</option>
+                    <option value="unclaimed">Unclaimed</option>
+                </select>
+            </div>
+            
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Code</th>
+                            <th>Card</th>
+                            <th>Rarity</th>
+                            <th>Print #</th>
+                            <th>Status</th>
+                            <th>Claimed By</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="codes-table-body">
+                        <tr>
+                            <td colspan="7" class="text-center text-gray-400 py-8">
+                                No codes in database yet. Generate codes in the "Generate Codes" tab.
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            
+            <div class="flex justify-between items-center mt-4">
+                <span class="text-gray-400" id="codes-count">Showing 0 of 0 codes</span>
+                <div class="flex gap-2">
+                    <button class="action-btn secondary" id="prev-page" disabled>← Previous</button>
+                    <button class="action-btn secondary" id="next-page" disabled>Next →</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Tab Content: Generate Codes -->
+        <div id="tab-generate" class="tab-content hidden">
+            <div class="stat-card max-w-xl">
+                <h3 class="text-xl font-bold mb-4">Generate Claim Codes</h3>
+                <p class="text-gray-400 mb-6">
+                    Generate unique QR claim codes for physical cards. Codes are generated based on 
+                    the Origins set configuration and can be exported for printing.
+                </p>
+                
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm text-gray-400 mb-2">Mode</label>
+                        <select id="gen-mode" class="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white">
+                            <option value="preview">Preview (10 codes per card)</option>
+                            <option value="full">Full Production Run</option>
+                            <option value="custom">Custom Count</option>
+                        </select>
+                    </div>
+                    
+                    <div id="custom-count-section" class="hidden">
+                        <label class="block text-sm text-gray-400 mb-2">Codes per Card</label>
+                        <input type="number" id="gen-count" value="100" min="1" max="10000"
+                               class="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm text-gray-400 mb-2">Output Format</label>
+                        <div class="flex gap-4">
+                            <label class="flex items-center gap-2">
+                                <input type="checkbox" id="gen-json" checked class="rounded">
+                                <span>JSON</span>
+                            </label>
+                            <label class="flex items-center gap-2">
+                                <input type="checkbox" id="gen-csv" checked class="rounded">
+                                <span>CSV</span>
+                            </label>
+                            <label class="flex items-center gap-2">
+                                <input type="checkbox" id="gen-sql" checked class="rounded">
+                                <span>SQL</span>
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <button class="action-btn primary w-full mt-4" onclick="generateCodes()">
+                        🎲 Generate Codes
+                    </button>
+                </div>
+                
+                <div id="gen-result" class="mt-6 hidden">
+                    <h4 class="font-bold mb-2">Generation Complete!</h4>
+                    <div class="bg-black/30 rounded-lg p-4">
+                        <pre id="gen-summary" class="text-sm text-gray-300 whitespace-pre-wrap"></pre>
+                    </div>
+                    <div class="flex gap-4 mt-4">
+                        <button class="action-btn secondary flex-1" onclick="downloadGenerated('json')">📥 Download JSON</button>
+                        <button class="action-btn secondary flex-1" onclick="downloadGenerated('csv')">📥 Download CSV</button>
+                        <button class="action-btn secondary flex-1" onclick="downloadGenerated('sql')">📥 Download SQL</button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="mt-8 text-gray-400 text-sm">
+                <h4 class="font-bold text-white mb-2">Code Format</h4>
+                <p>Codes follow the format: <code class="code-preview">OG{PRINT#}{RARITY}{SALT}{CHECKSUM}</code></p>
+                <ul class="list-disc list-inside mt-2 space-y-1">
+                    <li><strong>OG</strong> - Set prefix (Origins)</li>
+                    <li><strong>PRINT#</strong> - 4-digit print number (0001-9999)</li>
+                    <li><strong>RARITY</strong> - 2-char rarity code (MY, LG, EP, RA, UC, CO)</li>
+                    <li><strong>SALT</strong> - 4-char random salt</li>
+                    <li><strong>CHECKSUM</strong> - 4-char CRC16 validation</li>
+                </ul>
+                <p class="mt-2">Example: <code class="code-preview">OG0047MYA7B23F4D</code></p>
+            </div>
+        </div>
+        
+        <!-- Tab Content: Code Lookup -->
+        <div id="tab-lookup" class="tab-content hidden">
+            <div class="stat-card max-w-xl">
+                <h3 class="text-xl font-bold mb-4">Code Lookup</h3>
+                <p class="text-gray-400 mb-6">
+                    Look up a specific claim code to see its status and details.
+                </p>
+                
+                <div class="flex gap-4">
+                    <input type="text" id="lookup-code" 
+                           class="flex-1 px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white font-mono text-lg tracking-wider"
+                           placeholder="Enter code (e.g., OG0047MYA7B23F4D)"
+                           maxlength="16">
+                    <button class="action-btn primary" onclick="lookupCode()">🔍 Lookup</button>
+                </div>
+                
+                <div id="lookup-result" class="mt-6 hidden">
+                    <div class="bg-black/30 rounded-lg p-6">
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <div class="text-sm text-gray-400">Code</div>
+                                <div class="font-mono text-lg" id="lookup-code-display"></div>
+                            </div>
+                            <div>
+                                <div class="text-sm text-gray-400">Status</div>
+                                <div id="lookup-status"></div>
+                            </div>
+                            <div>
+                                <div class="text-sm text-gray-400">Card</div>
+                                <div id="lookup-card"></div>
+                            </div>
+                            <div>
+                                <div class="text-sm text-gray-400">Rarity</div>
+                                <div id="lookup-rarity"></div>
+                            </div>
+                            <div>
+                                <div class="text-sm text-gray-400">Print Number</div>
+                                <div id="lookup-print"></div>
+                            </div>
+                            <div>
+                                <div class="text-sm text-gray-400">NWG Value</div>
+                                <div id="lookup-nwg"></div>
+                            </div>
+                            <div class="col-span-2" id="lookup-claimed-info">
+                                <div class="text-sm text-gray-400">Claimed By</div>
+                                <div id="lookup-claimed-by"></div>
+                            </div>
+                        </div>
+                        
+                        <div class="flex gap-4 mt-6">
+                            <button class="action-btn secondary flex-1" onclick="copyClaimUrl()">📋 Copy Claim URL</button>
+                            <button class="action-btn secondary flex-1" onclick="generateQRPreview()">🔲 Show QR</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div id="lookup-error" class="mt-6 hidden">
+                    <div class="bg-red-500/20 text-red-400 rounded-lg p-4">
+                        <span id="lookup-error-message">Code not found</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- QR Preview Modal -->
+    <div id="qr-modal" class="modal hidden">
+        <div class="modal-content text-center">
+            <h3 class="text-xl font-bold mb-4">QR Code Preview</h3>
+            <div id="qr-preview" class="bg-white p-4 rounded-lg inline-block">
+                <img id="qr-image" src="" alt="QR Code" class="w-48 h-48">
+            </div>
+            <p class="mt-4 font-mono text-sm text-gray-400" id="qr-code-text"></p>
+            <div class="flex gap-4 mt-6 justify-center">
+                <button class="action-btn secondary" onclick="downloadQR()">📥 Download QR</button>
+                <button class="action-btn secondary" onclick="closeQRModal()">Close</button>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // =====================================================
+        // Physical Card Admin Panel
+        // =====================================================
+        
+        let generatedCodes = null;
+        let currentPage = 1;
+        const codesPerPage = 50;
+        
+        // Tab switching
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.add('hidden'));
+            
+            document.querySelector(`[data-tab="${tabId}"]`).classList.add('active');
+            document.getElementById(`tab-${tabId}`).classList.remove('hidden');
+        }
+        
+        // Generation mode toggle
+        document.getElementById('gen-mode').addEventListener('change', (e) => {
+            const customSection = document.getElementById('custom-count-section');
+            if (e.target.value === 'custom') {
+                customSection.classList.remove('hidden');
+            } else {
+                customSection.classList.add('hidden');
+            }
+        });
+        
+        // Generate codes (client-side for now)
+        async function generateCodes() {
+            const mode = document.getElementById('gen-mode').value;
+            const resultDiv = document.getElementById('gen-result');
+            const summaryPre = document.getElementById('gen-summary');
+            
+            resultDiv.classList.remove('hidden');
+            summaryPre.textContent = 'Generating codes...';
+            
+            try {
+                // Load set data
+                const response = await fetch('/static/data/physical-origins-set.json');
+                const setData = await response.json();
+                
+                const codes = [];
+                const codesByRarity = {};
+                
+                const RARITY_CODES = {
+                    mythic: 'MY',
+                    legendary: 'LG',
+                    epic: 'EP',
+                    rare: 'RA',
+                    uncommon: 'UC',
+                    common: 'CO'
+                };
+                
+                // Generate codes for each card
+                for (const card of setData.cards) {
+                    const printCount = mode === 'preview' ? 10 : 
+                                      mode === 'custom' ? parseInt(document.getElementById('gen-count').value) :
+                                      setData.rarityDistribution[card.rarity].printPerCard;
+                    
+                    for (let printNum = 1; printNum <= printCount; printNum++) {
+                        const code = generateClaimCode('OG', printNum, RARITY_CODES[card.rarity]);
+                        
+                        const codeData = {
+                            code,
+                            claimUrl: `https://nwg.gg/claim?code=${code}`,
+                            setId: setData.setId,
+                            setNumber: card.setNumber,
+                            cardId: card.cardId,
+                            cardName: card.name,
+                            rarity: card.rarity,
+                            printNumber: printNum,
+                            totalPrint: printCount,
+                            nwgValue: card.nwgValue,
+                            dailyYield: card.dailyYield,
+                            isFirstEdition: true,
+                            createdAt: new Date().toISOString()
+                        };
+                        
+                        codes.push(codeData);
+                        
+                        if (!codesByRarity[card.rarity]) codesByRarity[card.rarity] = [];
+                        codesByRarity[card.rarity].push(codeData);
+                    }
+                }
+                
+                generatedCodes = { codes, codesByRarity, setData };
+                
+                // Summary
+                let summary = `✅ Generation Complete!\n\n`;
+                summary += `Set: ${setData.setName}\n`;
+                summary += `Mode: ${mode}\n`;
+                summary += `Total Codes: ${codes.length.toLocaleString()}\n\n`;
+                summary += `By Rarity:\n`;
+                Object.entries(codesByRarity).forEach(([rarity, rCodes]) => {
+                    summary += `  ${rarity.toUpperCase()}: ${rCodes.length.toLocaleString()}\n`;
+                });
+                
+                summaryPre.textContent = summary;
+                
+            } catch (err) {
+                summaryPre.textContent = `Error: ${err.message}`;
+            }
+        }
+        
+        function generateClaimCode(setPrefix, printNumber, rarityCode) {
+            const base = `${setPrefix}${String(printNumber).padStart(4, '0')}${rarityCode}`;
+            const salt = randomHex(4);
+            const withSalt = base + salt;
+            const checksum = crc16(withSalt).toString(16).toUpperCase().padStart(4, '0');
+            return `${withSalt}${checksum}`;
+        }
+        
+        function randomHex(length) {
+            const chars = '0123456789ABCDEF';
+            let result = '';
+            for (let i = 0; i < length; i++) {
+                result += chars.charAt(Math.floor(Math.random() * chars.length));
+            }
+            return result;
+        }
+        
+        function crc16(str) {
+            let crc = 0xFFFF;
+            for (let i = 0; i < str.length; i++) {
+                crc ^= str.charCodeAt(i);
+                for (let j = 0; j < 8; j++) {
+                    crc = (crc & 1) ? ((crc >> 1) ^ 0xA001) : (crc >> 1);
+                }
+            }
+            return crc;
+        }
+        
+        function downloadGenerated(format) {
+            if (!generatedCodes) {
+                alert('No codes generated yet!');
+                return;
+            }
+            
+            let content, filename, mimeType;
+            
+            if (format === 'json') {
+                content = JSON.stringify(generatedCodes.codes, null, 2);
+                filename = 'origins-codes.json';
+                mimeType = 'application/json';
+            } else if (format === 'csv') {
+                const header = 'code,claim_url,set_id,set_number,card_id,card_name,rarity,print_number,total_print,nwg_value,is_first_edition\n';
+                const rows = generatedCodes.codes.map(c => 
+                    `${c.code},${c.claimUrl},${c.setId},${c.setNumber},${c.cardId},"${c.cardName}",${c.rarity},${c.printNumber},${c.totalPrint},${c.nwgValue},${c.isFirstEdition}`
+                ).join('\n');
+                content = header + rows;
+                filename = 'origins-codes.csv';
+                mimeType = 'text/csv';
+            } else if (format === 'sql') {
+                const statements = generatedCodes.codes.map(c => 
+                    `INSERT INTO physical_claim_codes (code, set_id, set_number, card_id, rarity, print_number, total_print, is_first_edition, nwg_granted, bonus_multiplier) VALUES ('${c.code}', '${c.setId}', '${c.setNumber}', ${c.cardId}, '${c.rarity}', ${c.printNumber}, ${c.totalPrint}, ${c.isFirstEdition ? 1 : 0}, ${c.nwgValue}, 1.5);`
+                ).join('\n');
+                content = `-- NumbahWan Origins Set - Claim Code Seed Data\n-- Generated: ${new Date().toISOString()}\n-- Total Codes: ${generatedCodes.codes.length}\n\n${statements}`;
+                filename = 'origins-codes.sql';
+                mimeType = 'text/plain';
+            }
+            
+            downloadFile(content, filename, mimeType);
+        }
+        
+        function downloadFile(content, filename, mimeType) {
+            const blob = new Blob([content], { type: mimeType });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+        
+        function exportAllCodes() {
+            if (!generatedCodes) {
+                alert('Generate codes first in the "Generate Codes" tab');
+                switchTab('generate');
+                return;
+            }
+            downloadGenerated('csv');
+        }
+        
+        function exportUnclaimedCodes() {
+            exportAllCodes(); // All codes are unclaimed initially
+        }
+        
+        // Code lookup
+        function lookupCode() {
+            const code = document.getElementById('lookup-code').value.trim().toUpperCase();
+            const resultDiv = document.getElementById('lookup-result');
+            const errorDiv = document.getElementById('lookup-error');
+            
+            resultDiv.classList.add('hidden');
+            errorDiv.classList.add('hidden');
+            
+            if (code.length !== 16) {
+                errorDiv.classList.remove('hidden');
+                document.getElementById('lookup-error-message').textContent = 'Invalid code format. Must be 16 characters.';
+                return;
+            }
+            
+            // Validate checksum
+            const content = code.slice(0, 12);
+            const providedChecksum = code.slice(12, 16);
+            const expectedChecksum = crc16(content).toString(16).toUpperCase().padStart(4, '0');
+            
+            if (providedChecksum !== expectedChecksum) {
+                errorDiv.classList.remove('hidden');
+                document.getElementById('lookup-error-message').textContent = 'Invalid code. Checksum mismatch.';
+                return;
+            }
+            
+            // Parse code
+            const setPrefix = code.slice(0, 2);
+            const printNumber = parseInt(code.slice(2, 6), 10);
+            const rarityCode = code.slice(6, 8);
+            
+            const rarityNames = { MY: 'Mythic', LG: 'Legendary', EP: 'Epic', RA: 'Rare', UC: 'Uncommon', CO: 'Common' };
+            const rarityNwg = { MY: 1500, LG: 500, EP: 200, RA: 75, UC: 25, CO: 10 };
+            
+            resultDiv.classList.remove('hidden');
+            document.getElementById('lookup-code-display').textContent = code;
+            document.getElementById('lookup-status').innerHTML = '<span class="text-green-400">✓ Valid (Unclaimed)</span>';
+            document.getElementById('lookup-card').textContent = 'Origins Set Card';
+            document.getElementById('lookup-rarity').innerHTML = `<span class="rarity-dot ${rarityNames[rarityCode]?.toLowerCase()}"></span>${rarityNames[rarityCode] || 'Unknown'}`;
+            document.getElementById('lookup-print').textContent = `#${printNumber}`;
+            document.getElementById('lookup-nwg').textContent = `◆${(rarityNwg[rarityCode] || 0).toLocaleString()}`;
+            document.getElementById('lookup-claimed-info').classList.add('hidden');
+        }
+        
+        function copyClaimUrl() {
+            const code = document.getElementById('lookup-code').value.trim().toUpperCase();
+            const url = `https://nwg.gg/claim?code=${code}`;
+            navigator.clipboard.writeText(url);
+            alert('Claim URL copied!');
+        }
+        
+        function generateQRPreview() {
+            const code = document.getElementById('lookup-code').value.trim().toUpperCase();
+            const url = `https://nwg.gg/claim?code=${code}`;
+            
+            // Use QR API service for preview
+            const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(url)}`;
+            
+            document.getElementById('qr-image').src = qrUrl;
+            document.getElementById('qr-code-text').textContent = code;
+            document.getElementById('qr-modal').classList.remove('hidden');
+        }
+        
+        function closeQRModal() {
+            document.getElementById('qr-modal').classList.add('hidden');
+        }
+        
+        function downloadQR() {
+            const img = document.getElementById('qr-image');
+            const a = document.createElement('a');
+            a.href = img.src;
+            a.download = `qr-${document.getElementById('qr-code-text').textContent}.png`;
+            a.click();
+        }
+        
+        // Close modal on click outside
+        document.getElementById('qr-modal').addEventListener('click', (e) => {
+            if (e.target.id === 'qr-modal') closeQRModal();
+        });
+        
+        // Load stats on page load
+        async function loadStats() {
+            try {
+                const response = await fetch('/api/physical/stats');
+                if (response.ok) {
+                    const data = await response.json();
+                    updateStatsDisplay(data);
+                }
+            } catch (err) {
+                console.log('Stats API not available');
+            }
+        }
+        
+        loadStats();
+    </script>
+</body>
+</html>
