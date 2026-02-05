@@ -1,0 +1,836 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+    <title>NumbahWan TCG | Card Fusion</title>
+    <link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="/static/nw-tokens.css">
+    <link rel="stylesheet" href="/static/nw-utilities.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="/static/nw-essentials.js"></script>
+    <script src="/static/nw-wallet.js"></script>
+    <script src="/static/nw-icons-inline.js"></script>
+    <script src="/static/nw-nav.js"></script>
+    <style>
+        :root {
+            --gold: #ffd700; --orange: #ff6b00; --purple: #a855f7; --blue: #3b82f6;
+            --green: #22c55e; --red: #ef4444; --dark: #0a0a0f; --mythic: #ff00ff;
+            --cyan: #00ffff; --log: #c97f3d;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            font-family: 'Inter', system-ui, sans-serif; 
+            background: var(--dark); 
+            color: #fff;
+            min-height: 100vh;
+            padding-bottom: 120px;
+        }
+        
+        .bg {
+            position: fixed; inset: 0; z-index: -1;
+            background: 
+                radial-gradient(ellipse at top, rgba(168,85,247,0.15) 0%, transparent 50%),
+                radial-gradient(ellipse at bottom right, rgba(255,0,255,0.1) 0%, transparent 40%),
+                var(--dark);
+        }
+        
+        header {
+            position: sticky; top: 0; z-index: 100;
+            padding: 12px 16px;
+            background: rgba(10,10,15,0.98);
+            display: flex; justify-content: space-between; align-items: center;
+            backdrop-filter: blur(10px);
+            border-bottom: 2px solid rgba(168,85,247,0.4);
+        }
+        .logo {
+            font-family: 'Orbitron', sans-serif; font-size: 18px; font-weight: 800;
+            color: var(--purple); text-decoration: none;
+            text-shadow: 0 0 20px rgba(168,85,247,0.5);
+            display: flex; align-items: center; gap: 8px;
+        }
+        .nav-links { display: flex; gap: 8px; align-items: center; }
+        .nav-link {
+            padding: 8px 14px; background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.15); border-radius: 8px;
+            color: #fff; font-size: 13px; text-decoration: none; font-weight: 600;
+            transition: all 0.2s;
+        }
+        .nav-link:hover { background: rgba(168,85,247,0.2); border-color: var(--purple); }
+        
+        main { max-width: 1000px; margin: 0 auto; padding: 20px 16px; }
+        
+        /* Fusion Recipes */
+        .recipes-section {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 16px; padding: 20px; margin-bottom: 24px;
+        }
+        .recipes-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 14px; font-weight: 700;
+            color: var(--purple); margin-bottom: 16px;
+            display: flex; align-items: center; gap: 8px;
+        }
+        .recipes-grid {
+            display: flex; flex-wrap: wrap; gap: 12px;
+        }
+        .recipe-card {
+            flex: 1; min-width: 140px;
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 12px; padding: 12px; text-align: center;
+            cursor: pointer; transition: all 0.3s;
+        }
+        .recipe-card:hover { border-color: var(--purple); transform: translateY(-2px); }
+        .recipe-card.selected { border-color: var(--cyan); box-shadow: 0 0 20px rgba(0,255,255,0.3); }
+        .recipe-formula {
+            font-size: 12px; margin-bottom: 8px;
+            display: flex; align-items: center; justify-content: center; gap: 4px;
+        }
+        .recipe-input { padding: 4px 8px; border-radius: 4px; font-weight: 600; }
+        .recipe-input.common { background: rgba(156,163,175,0.3); }
+        .recipe-input.uncommon { background: rgba(34,197,94,0.3); color: var(--green); }
+        .recipe-input.rare { background: rgba(59,130,246,0.3); color: var(--blue); }
+        .recipe-input.epic { background: rgba(168,85,247,0.3); color: var(--purple); }
+        .recipe-input.legendary { background: rgba(255,215,0,0.3); color: var(--gold); }
+        .recipe-output {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 14px; font-weight: 700;
+        }
+        .recipe-output.uncommon { color: var(--green); }
+        .recipe-output.rare { color: var(--blue); }
+        .recipe-output.epic { color: var(--purple); }
+        .recipe-output.legendary { color: var(--gold); }
+        .recipe-output.mythic { 
+            background: linear-gradient(135deg, var(--mythic), var(--cyan));
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        }
+        .recipe-cost { font-size: 11px; color: var(--gold); margin-top: 4px; }
+        
+        /* Fusion Chamber */
+        .fusion-chamber {
+            background: linear-gradient(135deg, rgba(168,85,247,0.1), rgba(255,0,255,0.1));
+            border: 2px solid rgba(168,85,247,0.3);
+            border-radius: 24px; padding: 30px; margin-bottom: 24px;
+            position: relative; overflow: hidden;
+        }
+        .fusion-chamber::before {
+            content: '';
+            position: absolute; inset: 0;
+            background: radial-gradient(circle at center, rgba(168,85,247,0.2) 0%, transparent 70%);
+            animation: pulse 3s ease-in-out infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 0.5; }
+            50% { opacity: 1; }
+        }
+        
+        .chamber-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 20px; font-weight: 800;
+            text-align: center; margin-bottom: 24px;
+            background: linear-gradient(135deg, var(--purple), var(--mythic));
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            position: relative;
+        }
+        
+        .fusion-slots {
+            display: flex; justify-content: center; align-items: center;
+            gap: 12px; flex-wrap: wrap;
+            position: relative;
+        }
+        
+        .fusion-slot {
+            width: 80px; height: 110px;
+            background: rgba(0,0,0,0.5);
+            border: 2px dashed rgba(168,85,247,0.5);
+            border-radius: 12px;
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            cursor: pointer; transition: all 0.3s;
+            position: relative;
+        }
+        .fusion-slot:hover { border-color: var(--purple); }
+        .fusion-slot.filled {
+            border-style: solid;
+            border-color: var(--cyan);
+            background: rgba(0,255,255,0.1);
+        }
+        .fusion-slot.filled .slot-art {
+            font-size: 28px;
+        }
+        .slot-number {
+            position: absolute; top: -8px; left: -8px;
+            background: var(--purple); color: #fff;
+            width: 20px; height: 20px; border-radius: 50%;
+            font-size: 10px; font-weight: 700;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .slot-placeholder {
+            font-size: 24px; opacity: 0.3;
+        }
+        .slot-remove {
+            position: absolute; top: -8px; right: -8px;
+            background: var(--red); color: #fff;
+            width: 20px; height: 20px; border-radius: 50%;
+            font-size: 14px; cursor: pointer;
+            display: none; align-items: center; justify-content: center;
+        }
+        .fusion-slot.filled .slot-remove { display: flex; }
+        
+        .fusion-arrow {
+            font-size: 32px; color: var(--purple);
+            animation: arrowPulse 1s ease-in-out infinite;
+        }
+        @keyframes arrowPulse {
+            0%, 100% { transform: translateX(0); opacity: 0.5; }
+            50% { transform: translateX(5px); opacity: 1; }
+        }
+        
+        .fusion-result {
+            width: 100px; height: 140px;
+            background: linear-gradient(135deg, rgba(168,85,247,0.3), rgba(255,0,255,0.3));
+            border: 3px solid var(--purple);
+            border-radius: 16px;
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            position: relative;
+        }
+        .result-rarity {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 12px; font-weight: 700;
+            padding: 4px 8px; border-radius: 4px;
+            background: rgba(0,0,0,0.5);
+        }
+        .result-unknown { font-size: 40px; opacity: 0.3; }
+        
+        /* Card Selection */
+        .selection-section {
+            background: rgba(255,255,255,0.02);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 16px; padding: 20px;
+        }
+        .selection-header {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 16px;
+        }
+        .selection-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 16px; font-weight: 700;
+            display: flex; align-items: center; gap: 8px;
+        }
+        
+        .cards-grid {
+            display: grid; grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
+            gap: 10px;
+        }
+        .card-item {
+            aspect-ratio: 3/4;
+            background: rgba(255,255,255,0.03);
+            border: 2px solid rgba(255,255,255,0.1);
+            border-radius: 10px;
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            cursor: pointer; transition: all 0.3s;
+            position: relative;
+        }
+        .card-item:hover { border-color: var(--purple); transform: scale(1.05); }
+        .card-item.selected { border-color: var(--cyan); box-shadow: 0 0 15px rgba(0,255,255,0.4); }
+        .card-item.disabled { opacity: 0.3; pointer-events: none; }
+        .card-item .card-art { font-size: 24px; margin-bottom: 4px; }
+        .card-item .card-name { font-size: 9px; text-align: center; padding: 0 4px; }
+        .card-item .card-badge {
+            position: absolute; top: 4px; right: 4px;
+            background: var(--cyan); color: #000;
+            font-size: 8px; font-weight: 700;
+            padding: 2px 4px; border-radius: 4px;
+        }
+        
+        /* Rarity backgrounds */
+        .card-item.common { border-color: rgba(156,163,175,0.3); }
+        .card-item.uncommon { border-color: rgba(34,197,94,0.3); }
+        .card-item.rare { border-color: rgba(59,130,246,0.3); }
+        .card-item.epic { border-color: rgba(168,85,247,0.3); }
+        .card-item.legendary { border-color: rgba(255,215,0,0.3); }
+        .card-item.mythic { border-color: rgba(255,0,255,0.3); }
+        
+        /* Action Bar */
+        .action-bar {
+            position: fixed; bottom: 0; left: 0; right: 0;
+            background: rgba(10,10,15,0.98);
+            backdrop-filter: blur(10px);
+            border-top: 2px solid rgba(168,85,247,0.3);
+            padding: 16px; display: flex; gap: 12px; flex-direction: column;
+            align-items: center; z-index: 100;
+        }
+        .fusion-cost {
+            display: flex; align-items: center; gap: 16px;
+            font-size: 14px;
+        }
+        .cost-item {
+            display: flex; align-items: center; gap: 6px;
+        }
+        .cost-item img { width: 20px; height: 20px; }
+        .fusion-btn {
+            padding: 16px 48px; border-radius: 12px;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 16px; font-weight: 700;
+            cursor: pointer; transition: all 0.3s;
+            border: none;
+            background: linear-gradient(135deg, var(--purple), var(--mythic));
+            color: #fff;
+        }
+        .fusion-btn:hover { transform: scale(1.05); box-shadow: 0 0 40px rgba(168,85,247,0.5); }
+        .fusion-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+        
+        /* Fusion Animation */
+        .fusion-overlay {
+            position: fixed; inset: 0; z-index: 1000;
+            background: rgba(0,0,0,0.95);
+            display: none; align-items: center; justify-content: center;
+            flex-direction: column;
+        }
+        .fusion-overlay.active { display: flex; }
+        .fusion-anim {
+            width: 200px; height: 200px;
+            background: radial-gradient(circle, var(--purple) 0%, transparent 70%);
+            border-radius: 50%;
+            animation: fusionPulse 0.5s ease-in-out infinite;
+        }
+        @keyframes fusionPulse {
+            0%, 100% { transform: scale(1); opacity: 0.8; }
+            50% { transform: scale(1.3); opacity: 1; }
+        }
+        .fusion-text {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 24px; font-weight: 800;
+            color: var(--purple); margin-top: 24px;
+        }
+        
+        /* Result Card */
+        .result-card {
+            width: 200px; padding: 24px;
+            background: linear-gradient(135deg, rgba(168,85,247,0.3), rgba(255,0,255,0.3));
+            border: 3px solid var(--purple);
+            border-radius: 20px; text-align: center;
+            animation: resultAppear 0.5s ease-out;
+        }
+        @keyframes resultAppear {
+            from { transform: scale(0) rotate(-180deg); opacity: 0; }
+            to { transform: scale(1) rotate(0); opacity: 1; }
+        }
+        .result-card .card-art { font-size: 64px; margin-bottom: 16px; }
+        .result-card .card-name {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 18px; font-weight: 700;
+        }
+        .result-card .card-rarity {
+            margin-top: 8px; padding: 6px 12px;
+            border-radius: 8px; display: inline-block;
+            font-weight: 700; text-transform: uppercase;
+        }
+        .result-card .card-rarity.epic { background: var(--purple); }
+        .result-card .card-rarity.legendary { background: var(--gold); color: #000; }
+        .result-card .card-rarity.mythic { 
+            background: linear-gradient(135deg, var(--mythic), var(--cyan));
+            color: #000;
+        }
+        
+        .close-result {
+            margin-top: 24px;
+            padding: 12px 32px;
+            background: rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.3);
+            border-radius: 8px;
+            color: #fff; font-size: 14px; cursor: pointer;
+        }
+        
+        /* Filters */
+        .filters {
+            display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 12px;
+        }
+        .filter-btn {
+            padding: 6px 12px; border-radius: 16px;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            color: #fff; font-size: 11px; cursor: pointer;
+        }
+        .filter-btn.active { background: var(--purple); border-color: var(--purple); }
+        
+        @media (max-width: 600px) {
+            .fusion-slot { width: 60px; height: 85px; }
+            .fusion-result { width: 70px; height: 100px; }
+            .cards-grid { grid-template-columns: repeat(4, 1fr); gap: 8px; }
+            .recipes-grid { flex-direction: column; }
+            .recipe-card { min-width: 100%; }
+        }
+    </style>
+</head>
+<body data-page-id="fusion">
+    <div class="bg"></div>
+    
+    <header>
+        <a href="/tcg" class="logo">
+            <span class="nw-icon" style="width:24px;height:24px" data-nw-icon="sparkles"></span>
+            CARD FUSION
+        </a>
+        <div class="nav-links">
+            <a href="/staking" class="nav-link">⚡ Staking</a>
+            <a href="/collection" class="nav-link">📚 Collection</a>
+            <a href="/forge" class="nav-link">🔥 Forge</a>
+        </div>
+    </header>
+    
+    <main>
+        <!-- Fusion Recipes -->
+        <div class="recipes-section">
+            <div class="recipes-title">
+                <span class="nw-icon" style="width:16px;height:16px" data-nw-icon="book"></span>
+                FUSION RECIPES
+            </div>
+            <div class="recipes-grid">
+                <div class="recipe-card" data-recipe="common" onclick="selectRecipe('common')">
+                    <div class="recipe-formula">
+                        <span class="recipe-input common">5 Common</span>
+                        →
+                    </div>
+                    <div class="recipe-output uncommon">1 UNCOMMON</div>
+                    <div class="recipe-cost">50 Gold</div>
+                </div>
+                <div class="recipe-card" data-recipe="uncommon" onclick="selectRecipe('uncommon')">
+                    <div class="recipe-formula">
+                        <span class="recipe-input uncommon">5 Uncommon</span>
+                        →
+                    </div>
+                    <div class="recipe-output rare">1 RARE</div>
+                    <div class="recipe-cost">200 Gold</div>
+                </div>
+                <div class="recipe-card" data-recipe="rare" onclick="selectRecipe('rare')">
+                    <div class="recipe-formula">
+                        <span class="recipe-input rare">3 Rare</span>
+                        →
+                    </div>
+                    <div class="recipe-output epic">1 EPIC</div>
+                    <div class="recipe-cost">500 Gold</div>
+                </div>
+                <div class="recipe-card" data-recipe="epic" onclick="selectRecipe('epic')">
+                    <div class="recipe-formula">
+                        <span class="recipe-input epic">3 Epic</span>
+                        →
+                    </div>
+                    <div class="recipe-output legendary">1 LEGENDARY</div>
+                    <div class="recipe-cost">2,000 Gold</div>
+                </div>
+                <div class="recipe-card" data-recipe="legendary" onclick="selectRecipe('legendary')">
+                    <div class="recipe-formula">
+                        <span class="recipe-input legendary">2 Legendary</span>
+                        →
+                    </div>
+                    <div class="recipe-output mythic">1 MYTHIC</div>
+                    <div class="recipe-cost">10,000 Gold</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Fusion Chamber -->
+        <div class="fusion-chamber">
+            <div class="chamber-title">⚗️ FUSION CHAMBER</div>
+            <div class="fusion-slots" id="fusionSlots">
+                <!-- Slots will be generated based on selected recipe -->
+                <div class="fusion-slot" onclick="openSlot(0)">
+                    <span class="slot-number">1</span>
+                    <span class="slot-placeholder">+</span>
+                </div>
+                <div class="fusion-slot" onclick="openSlot(1)">
+                    <span class="slot-number">2</span>
+                    <span class="slot-placeholder">+</span>
+                </div>
+                <div class="fusion-slot" onclick="openSlot(2)">
+                    <span class="slot-number">3</span>
+                    <span class="slot-placeholder">+</span>
+                </div>
+                <div class="fusion-slot" onclick="openSlot(3)">
+                    <span class="slot-number">4</span>
+                    <span class="slot-placeholder">+</span>
+                </div>
+                <div class="fusion-slot" onclick="openSlot(4)">
+                    <span class="slot-number">5</span>
+                    <span class="slot-placeholder">+</span>
+                </div>
+                
+                <div class="fusion-arrow">→</div>
+                
+                <div class="fusion-result">
+                    <span class="result-unknown">?</span>
+                    <span class="result-rarity" id="resultRarity">UNCOMMON</span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Card Selection -->
+        <div class="selection-section">
+            <div class="selection-header">
+                <div class="selection-title">
+                    <span class="nw-icon" style="width:20px;height:20px" data-nw-icon="cards"></span>
+                    SELECT CARDS (<span id="requiredRarity">Common</span>)
+                </div>
+                <span id="cardCount" style="color: rgba(255,255,255,0.6);">0 available</span>
+            </div>
+            
+            <div class="filters" id="filtersContainer">
+                <!-- Filters will be hidden when recipe is selected -->
+            </div>
+            
+            <div class="cards-grid" id="cardsGrid">
+                <!-- Cards will be rendered here -->
+            </div>
+        </div>
+    </main>
+    
+    <!-- Action Bar -->
+    <div class="action-bar">
+        <div class="fusion-cost">
+            <div class="cost-item">
+                <img src="/static/icons/gold.png" alt="Gold">
+                <span id="fusionCost">50</span> Gold
+            </div>
+            <div class="cost-item">
+                <span style="color: var(--gold);" id="goldBalance">Balance: 0</span>
+            </div>
+        </div>
+        <button class="fusion-btn" id="fusionBtn" onclick="performFusion()" disabled>
+            ⚗️ FUSE CARDS
+        </button>
+    </div>
+    
+    <!-- Fusion Animation Overlay -->
+    <div class="fusion-overlay" id="fusionOverlay">
+        <div class="fusion-anim" id="fusionAnim"></div>
+        <div class="fusion-text" id="fusionText">FUSING...</div>
+    </div>
+    
+    <script>
+        // ============================================
+        // NW FUSION SYSTEM
+        // ============================================
+        
+        const FUSION_RECIPES = {
+            common: { input: 5, output: 'uncommon', cost: 50 },
+            uncommon: { input: 5, output: 'rare', cost: 200 },
+            rare: { input: 3, output: 'epic', cost: 500 },
+            epic: { input: 3, output: 'legendary', cost: 2000 },
+            legendary: { input: 2, output: 'mythic', cost: 10000 }
+        };
+        
+        const RARITY_ORDER = ['common', 'uncommon', 'rare', 'epic', 'legendary', 'mythic'];
+        
+        let userCards = [];
+        let selectedRecipe = 'common';
+        let fusionSlots = [];
+        let goldBalance = 0;
+        
+        // Initialize
+        document.addEventListener('DOMContentLoaded', async () => {
+            await loadUserCards();
+            selectRecipe('common');
+            updateGoldBalance();
+            
+            if (window.NWIconsInline) {
+                NWIconsInline.init();
+            }
+        });
+        
+        async function loadUserCards() {
+            const stored = localStorage.getItem('nw_user_cards');
+            if (stored) {
+                const data = JSON.parse(stored);
+                userCards = data.available || [];
+            } else {
+                userCards = generateDemoCards();
+            }
+            
+            const wallet = JSON.parse(localStorage.getItem('nw_wallet') || '{}');
+            goldBalance = wallet.gold || 500;
+        }
+        
+        function generateDemoCards() {
+            const cards = [];
+            const names = ['Wolf', 'Drake', 'Knight', 'Mage', 'Golem', 'Spirit', 'Titan', 'Phoenix', 'Dragon'];
+            const emojis = ['🐺', '🐉', '⚔️', '🧙', '🤖', '👻', '🏔️', '🔥', '🐲'];
+            
+            // Generate more common/uncommon for fusion testing
+            for (let i = 0; i < 8; i++) {
+                cards.push({ id: `common_${i}`, name: `${names[i % names.length]} Scout`, rarity: 'common', emoji: emojis[i % emojis.length] });
+            }
+            for (let i = 0; i < 6; i++) {
+                cards.push({ id: `uncommon_${i}`, name: `${names[i % names.length]} Warrior`, rarity: 'uncommon', emoji: emojis[i % emojis.length] });
+            }
+            for (let i = 0; i < 4; i++) {
+                cards.push({ id: `rare_${i}`, name: `${names[i % names.length]} Champion`, rarity: 'rare', emoji: emojis[i % emojis.length] });
+            }
+            for (let i = 0; i < 3; i++) {
+                cards.push({ id: `epic_${i}`, name: `${names[i % names.length]} Lord`, rarity: 'epic', emoji: emojis[i % emojis.length] });
+            }
+            cards.push({ id: 'legendary_0', name: 'Dragon King', rarity: 'legendary', emoji: '👑' });
+            
+            return cards;
+        }
+        
+        function selectRecipe(rarity) {
+            selectedRecipe = rarity;
+            const recipe = FUSION_RECIPES[rarity];
+            
+            // Update UI
+            document.querySelectorAll('.recipe-card').forEach(card => {
+                card.classList.toggle('selected', card.dataset.recipe === rarity);
+            });
+            
+            // Update slots
+            fusionSlots = new Array(recipe.input).fill(null);
+            renderFusionSlots();
+            
+            // Update result preview
+            document.getElementById('resultRarity').textContent = recipe.output.toUpperCase();
+            document.getElementById('resultRarity').className = `result-rarity ${recipe.output}`;
+            
+            // Update required rarity
+            document.getElementById('requiredRarity').textContent = rarity.charAt(0).toUpperCase() + rarity.slice(1);
+            
+            // Update cost
+            document.getElementById('fusionCost').textContent = recipe.cost.toLocaleString();
+            
+            // Render available cards
+            renderCards();
+            updateFusionButton();
+        }
+        
+        function renderFusionSlots() {
+            const container = document.getElementById('fusionSlots');
+            const recipe = FUSION_RECIPES[selectedRecipe];
+            
+            let html = '';
+            for (let i = 0; i < recipe.input; i++) {
+                const card = fusionSlots[i];
+                if (card) {
+                    html += `
+                        <div class="fusion-slot filled" onclick="removeFromSlot(${i})">
+                            <span class="slot-number">${i + 1}</span>
+                            <span class="slot-art">${card.emoji}</span>
+                            <span class="slot-remove" onclick="event.stopPropagation(); removeFromSlot(${i})">×</span>
+                        </div>
+                    `;
+                } else {
+                    html += `
+                        <div class="fusion-slot" onclick="openSlot(${i})">
+                            <span class="slot-number">${i + 1}</span>
+                            <span class="slot-placeholder">+</span>
+                        </div>
+                    `;
+                }
+            }
+            
+            html += `
+                <div class="fusion-arrow">→</div>
+                <div class="fusion-result">
+                    <span class="result-unknown">?</span>
+                    <span class="result-rarity ${recipe.output}" id="resultRarity">${recipe.output.toUpperCase()}</span>
+                </div>
+            `;
+            
+            container.innerHTML = html;
+        }
+        
+        function renderCards() {
+            const grid = document.getElementById('cardsGrid');
+            const availableCards = userCards.filter(c => c.rarity === selectedRecipe);
+            const selectedIds = fusionSlots.filter(Boolean).map(c => c.id);
+            
+            document.getElementById('cardCount').textContent = `${availableCards.length} available`;
+            
+            if (availableCards.length === 0) {
+                grid.innerHTML = `
+                    <div style="grid-column: 1/-1; text-align: center; padding: 40px; color: rgba(255,255,255,0.5);">
+                        <div style="font-size: 48px; margin-bottom: 12px;">📭</div>
+                        <div>No ${selectedRecipe} cards available</div>
+                        <a href="/forge" style="color: var(--orange); text-decoration: underline;">Pull cards from Forge</a>
+                    </div>
+                `;
+                return;
+            }
+            
+            grid.innerHTML = availableCards.map(card => {
+                const isSelected = selectedIds.includes(card.id);
+                return `
+                    <div class="card-item ${card.rarity} ${isSelected ? 'selected' : ''}" 
+                         onclick="selectCard('${card.id}')" data-id="${card.id}">
+                        ${isSelected ? '<span class="card-badge">SLOT</span>' : ''}
+                        <div class="card-art">${card.emoji || '🃏'}</div>
+                        <div class="card-name">${card.name}</div>
+                    </div>
+                `;
+            }).join('');
+        }
+        
+        function selectCard(cardId) {
+            const card = userCards.find(c => c.id === cardId);
+            if (!card) return;
+            
+            // Check if already in slot
+            const existingIndex = fusionSlots.findIndex(c => c && c.id === cardId);
+            if (existingIndex >= 0) {
+                // Remove from slot
+                fusionSlots[existingIndex] = null;
+            } else {
+                // Find empty slot
+                const emptyIndex = fusionSlots.findIndex(c => c === null);
+                if (emptyIndex >= 0) {
+                    fusionSlots[emptyIndex] = card;
+                }
+            }
+            
+            renderFusionSlots();
+            renderCards();
+            updateFusionButton();
+        }
+        
+        function removeFromSlot(index) {
+            fusionSlots[index] = null;
+            renderFusionSlots();
+            renderCards();
+            updateFusionButton();
+        }
+        
+        function updateFusionButton() {
+            const recipe = FUSION_RECIPES[selectedRecipe];
+            const filledSlots = fusionSlots.filter(Boolean).length;
+            const canFuse = filledSlots === recipe.input && goldBalance >= recipe.cost;
+            
+            document.getElementById('fusionBtn').disabled = !canFuse;
+        }
+        
+        function updateGoldBalance() {
+            document.getElementById('goldBalance').textContent = `Balance: ${goldBalance.toLocaleString()}`;
+        }
+        
+        async function performFusion() {
+            const recipe = FUSION_RECIPES[selectedRecipe];
+            const filledSlots = fusionSlots.filter(Boolean);
+            
+            if (filledSlots.length !== recipe.input) {
+                showToast('Fill all slots first!');
+                return;
+            }
+            
+            if (goldBalance < recipe.cost) {
+                showToast('Not enough Gold!');
+                return;
+            }
+            
+            // Show animation
+            const overlay = document.getElementById('fusionOverlay');
+            overlay.classList.add('active');
+            document.getElementById('fusionText').textContent = 'FUSING...';
+            
+            // Deduct cost
+            goldBalance -= recipe.cost;
+            updateGoldBalance();
+            
+            // Wait for animation
+            await new Promise(r => setTimeout(r, 2000));
+            
+            // Remove input cards
+            const inputIds = filledSlots.map(c => c.id);
+            userCards = userCards.filter(c => !inputIds.includes(c.id));
+            
+            // Generate result card
+            const resultCard = {
+                id: `fused_${Date.now()}`,
+                name: generateFusionName(recipe.output),
+                rarity: recipe.output,
+                emoji: getRandomEmoji(recipe.output),
+                fusedFrom: inputIds,
+                fusedAt: Date.now()
+            };
+            
+            userCards.push(resultCard);
+            saveCards();
+            
+            // Show result
+            document.getElementById('fusionAnim').style.display = 'none';
+            document.getElementById('fusionText').innerHTML = `
+                <div class="result-card">
+                    <div class="card-art">${resultCard.emoji}</div>
+                    <div class="card-name">${resultCard.name}</div>
+                    <div class="card-rarity ${resultCard.rarity}">${resultCard.rarity}</div>
+                </div>
+                <button class="close-result" onclick="closeFusionResult()">AWESOME!</button>
+            `;
+        }
+        
+        function closeFusionResult() {
+            const overlay = document.getElementById('fusionOverlay');
+            overlay.classList.remove('active');
+            document.getElementById('fusionAnim').style.display = 'block';
+            
+            // Reset slots
+            fusionSlots = fusionSlots.map(() => null);
+            renderFusionSlots();
+            renderCards();
+            updateFusionButton();
+        }
+        
+        function generateFusionName(rarity) {
+            const prefixes = {
+                uncommon: ['Blessed', 'Enhanced', 'Awakened'],
+                rare: ['Mighty', 'Glorious', 'Valiant'],
+                epic: ['Ancient', 'Divine', 'Celestial'],
+                legendary: ['Mythical', 'Eternal', 'Supreme'],
+                mythic: ['Transcendent', 'Godlike', 'Primordial']
+            };
+            const suffixes = ['Guardian', 'Champion', 'Overlord', 'Sovereign', 'Titan'];
+            
+            const prefix = prefixes[rarity][Math.floor(Math.random() * prefixes[rarity].length)];
+            const suffix = suffixes[Math.floor(Math.random() * suffixes.length)];
+            
+            return `${prefix} ${suffix}`;
+        }
+        
+        function getRandomEmoji(rarity) {
+            const emojis = {
+                uncommon: ['⚔️', '🛡️', '🏹', '🔮'],
+                rare: ['👑', '💎', '🌟', '⚡'],
+                epic: ['🐉', '🦅', '🦁', '🐺'],
+                legendary: ['🔱', '👁️', '💀', '🌙'],
+                mythic: ['🌌', '✨', '🔥', '❄️']
+            };
+            const list = emojis[rarity] || ['🃏'];
+            return list[Math.floor(Math.random() * list.length)];
+        }
+        
+        function saveCards() {
+            const stored = JSON.parse(localStorage.getItem('nw_user_cards') || '{}');
+            stored.available = userCards;
+            localStorage.setItem('nw_user_cards', JSON.stringify(stored));
+            
+            const wallet = JSON.parse(localStorage.getItem('nw_wallet') || '{}');
+            wallet.gold = goldBalance;
+            localStorage.setItem('nw_wallet', JSON.stringify(wallet));
+        }
+        
+        function showToast(message) {
+            const toast = document.createElement('div');
+            toast.style.cssText = `
+                position: fixed; bottom: 140px; left: 50%; transform: translateX(-50%);
+                background: rgba(0,0,0,0.9); color: #fff; padding: 12px 24px;
+                border-radius: 8px; font-size: 14px; z-index: 1000;
+                border: 1px solid var(--purple);
+            `;
+            toast.textContent = message;
+            document.body.appendChild(toast);
+            setTimeout(() => toast.remove(), 3000);
+        }
+    </script>
+</body>
+</html>

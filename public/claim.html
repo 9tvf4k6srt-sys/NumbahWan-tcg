@@ -1,0 +1,784 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+    <title>NumbahWan TCG | Merch Claim</title>
+    <link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="/static/nw-tokens.css">
+    <link rel="stylesheet" href="/static/nw-utilities.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="/static/nw-essentials.js"></script>
+    <script src="/static/nw-wallet.js"></script>
+    <script src="/static/nw-icons-inline.js"></script>
+    <script src="/static/nw-nav.js"></script>
+    <style>
+        :root {
+            --gold: #ffd700; --orange: #ff6b00; --purple: #a855f7; --blue: #3b82f6;
+            --green: #22c55e; --red: #ef4444; --dark: #0a0a0f; --mythic: #ff00ff;
+            --cyan: #00ffff; --log: #c97f3d;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            font-family: 'Inter', system-ui, sans-serif; 
+            background: var(--dark); 
+            color: #fff;
+            min-height: 100vh;
+        }
+        
+        .bg {
+            position: fixed; inset: 0; z-index: -1;
+            background: 
+                radial-gradient(ellipse at top, rgba(255,215,0,0.15) 0%, transparent 50%),
+                radial-gradient(ellipse at bottom right, rgba(255,107,0,0.1) 0%, transparent 40%),
+                var(--dark);
+        }
+        
+        header {
+            position: sticky; top: 0; z-index: 100;
+            padding: 12px 16px;
+            background: rgba(10,10,15,0.98);
+            display: flex; justify-content: space-between; align-items: center;
+            backdrop-filter: blur(10px);
+            border-bottom: 2px solid rgba(255,215,0,0.4);
+        }
+        .logo {
+            font-family: 'Orbitron', sans-serif; font-size: 18px; font-weight: 800;
+            color: var(--gold); text-decoration: none;
+            text-shadow: 0 0 20px rgba(255,215,0,0.5);
+            display: flex; align-items: center; gap: 8px;
+        }
+        .nav-links { display: flex; gap: 8px; align-items: center; }
+        .nav-link {
+            padding: 8px 14px; background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.15); border-radius: 8px;
+            color: #fff; font-size: 13px; text-decoration: none; font-weight: 600;
+        }
+        
+        main {
+            max-width: 600px; margin: 0 auto; padding: 40px 20px;
+            min-height: calc(100vh - 60px);
+            display: flex; flex-direction: column; align-items: center;
+        }
+        
+        /* Hero Section */
+        .hero {
+            text-align: center; margin-bottom: 40px;
+        }
+        .hero-icon {
+            font-size: 80px; margin-bottom: 20px;
+            animation: float 3s ease-in-out infinite;
+        }
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+        .hero-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 28px; font-weight: 800;
+            background: linear-gradient(135deg, var(--gold), var(--orange));
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            margin-bottom: 12px;
+        }
+        .hero-subtitle {
+            color: rgba(255,255,255,0.7);
+            font-size: 16px; max-width: 400px;
+        }
+        
+        /* Code Input */
+        .code-section {
+            width: 100%; max-width: 400px;
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 20px; padding: 30px;
+            margin-bottom: 30px;
+        }
+        .code-label {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 12px; font-weight: 600;
+            color: var(--gold); margin-bottom: 12px;
+            display: flex; align-items: center; gap: 8px;
+        }
+        .code-input-group {
+            display: flex; gap: 8px;
+        }
+        .code-input {
+            flex: 1;
+            background: rgba(0,0,0,0.5);
+            border: 2px solid rgba(255,215,0,0.3);
+            border-radius: 12px;
+            padding: 16px 20px;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 18px; font-weight: 700;
+            color: #fff;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            text-align: center;
+        }
+        .code-input:focus {
+            outline: none;
+            border-color: var(--gold);
+            box-shadow: 0 0 20px rgba(255,215,0,0.3);
+        }
+        .code-input::placeholder {
+            color: rgba(255,255,255,0.3);
+            font-size: 14px;
+            letter-spacing: 0;
+        }
+        
+        .claim-btn {
+            width: 100%;
+            padding: 18px 32px;
+            background: linear-gradient(135deg, var(--gold), var(--orange));
+            border: none; border-radius: 12px;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 18px; font-weight: 700;
+            color: #000; cursor: pointer;
+            transition: all 0.3s;
+            margin-top: 16px;
+        }
+        .claim-btn:hover { transform: scale(1.02); box-shadow: 0 0 30px rgba(255,215,0,0.5); }
+        .claim-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+        
+        /* QR Scanner Option */
+        .or-divider {
+            display: flex; align-items: center; gap: 16px;
+            width: 100%; max-width: 400px; margin-bottom: 20px;
+            color: rgba(255,255,255,0.4);
+        }
+        .or-divider::before, .or-divider::after {
+            content: ''; flex: 1; height: 1px;
+            background: rgba(255,255,255,0.2);
+        }
+        
+        .scan-btn {
+            width: 100%; max-width: 400px;
+            padding: 16px 32px;
+            background: rgba(255,255,255,0.05);
+            border: 2px solid rgba(255,255,255,0.2);
+            border-radius: 12px;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 14px; font-weight: 600;
+            color: #fff; cursor: pointer;
+            display: flex; align-items: center; justify-content: center; gap: 12px;
+            transition: all 0.3s;
+        }
+        .scan-btn:hover { border-color: var(--cyan); background: rgba(0,255,255,0.1); }
+        
+        /* Tier Info */
+        .tier-info {
+            width: 100%; max-width: 500px;
+            background: rgba(255,255,255,0.02);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 16px; padding: 24px;
+            margin-top: 40px;
+        }
+        .tier-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 14px; font-weight: 700;
+            color: var(--gold); margin-bottom: 16px;
+            text-align: center;
+        }
+        .tier-grid {
+            display: grid; grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+        }
+        .tier-card {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 12px; padding: 16px; text-align: center;
+        }
+        .tier-card.bronze { border-color: rgba(205,127,50,0.5); }
+        .tier-card.silver { border-color: rgba(192,192,192,0.5); }
+        .tier-card.gold { border-color: rgba(255,215,0,0.5); }
+        .tier-card.platinum { border-color: rgba(229,228,226,0.5); background: linear-gradient(135deg, rgba(229,228,226,0.1), rgba(168,85,247,0.1)); }
+        
+        .tier-name {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 14px; font-weight: 700;
+            margin-bottom: 8px;
+        }
+        .tier-card.bronze .tier-name { color: #cd7f32; }
+        .tier-card.silver .tier-name { color: #c0c0c0; }
+        .tier-card.gold .tier-name { color: var(--gold); }
+        .tier-card.platinum .tier-name { 
+            background: linear-gradient(135deg, #e5e4e2, var(--purple));
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        }
+        
+        .tier-rewards { font-size: 11px; color: rgba(255,255,255,0.6); line-height: 1.6; }
+        
+        /* Result Overlay */
+        .result-overlay {
+            position: fixed; inset: 0; z-index: 1000;
+            background: rgba(0,0,0,0.95);
+            display: none; align-items: center; justify-content: center;
+            flex-direction: column; padding: 20px;
+        }
+        .result-overlay.active { display: flex; }
+        
+        .result-content {
+            text-align: center; max-width: 400px;
+        }
+        
+        /* Success State */
+        .result-success .result-icon {
+            font-size: 100px; margin-bottom: 24px;
+            animation: successBounce 0.5s ease-out;
+        }
+        @keyframes successBounce {
+            0% { transform: scale(0); }
+            50% { transform: scale(1.2); }
+            100% { transform: scale(1); }
+        }
+        .result-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 28px; font-weight: 800;
+            margin-bottom: 16px;
+        }
+        .result-success .result-title {
+            background: linear-gradient(135deg, var(--gold), var(--orange));
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        }
+        .result-product {
+            font-size: 16px; color: rgba(255,255,255,0.7);
+            margin-bottom: 24px;
+        }
+        
+        .rewards-list {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,215,0,0.3);
+            border-radius: 16px; padding: 20px;
+            margin-bottom: 24px;
+        }
+        .rewards-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 12px; color: var(--gold);
+            margin-bottom: 16px;
+        }
+        .reward-item {
+            display: flex; align-items: center; gap: 12px;
+            padding: 10px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+        .reward-item:last-child { border-bottom: none; }
+        .reward-icon { font-size: 24px; }
+        .reward-text { font-size: 14px; }
+        .reward-value { 
+            margin-left: auto;
+            font-family: 'Orbitron', sans-serif;
+            font-weight: 700;
+            color: var(--gold);
+        }
+        
+        .result-btn {
+            padding: 16px 48px;
+            background: linear-gradient(135deg, var(--gold), var(--orange));
+            border: none; border-radius: 12px;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 16px; font-weight: 700;
+            color: #000; cursor: pointer;
+        }
+        
+        /* Error State */
+        .result-error .result-icon {
+            font-size: 80px; margin-bottom: 24px;
+        }
+        .result-error .result-title { color: var(--red); }
+        .result-error .result-message {
+            color: rgba(255,255,255,0.6);
+            margin-bottom: 24px;
+        }
+        .result-error .result-btn {
+            background: rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.3);
+            color: #fff;
+        }
+        
+        /* Loading State */
+        .loading-spinner {
+            width: 60px; height: 60px;
+            border: 4px solid rgba(255,215,0,0.2);
+            border-top-color: var(--gold);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 24px;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        
+        /* QR Scanner Modal */
+        .scanner-modal {
+            position: fixed; inset: 0; z-index: 1000;
+            background: rgba(0,0,0,0.95);
+            display: none; align-items: center; justify-content: center;
+            flex-direction: column;
+        }
+        .scanner-modal.active { display: flex; }
+        .scanner-preview {
+            width: 280px; height: 280px;
+            background: rgba(255,255,255,0.1);
+            border: 2px solid var(--cyan);
+            border-radius: 16px;
+            display: flex; align-items: center; justify-content: center;
+            margin-bottom: 20px;
+            position: relative;
+            overflow: hidden;
+        }
+        .scanner-line {
+            position: absolute; top: 0; left: 0; right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, transparent, var(--cyan), transparent);
+            animation: scanLine 2s ease-in-out infinite;
+        }
+        @keyframes scanLine {
+            0% { top: 0; }
+            100% { top: 100%; }
+        }
+        .scanner-close {
+            padding: 12px 32px;
+            background: rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.3);
+            border-radius: 8px;
+            color: #fff; cursor: pointer;
+        }
+        
+        @media (max-width: 500px) {
+            .tier-grid { grid-template-columns: 1fr; }
+            .hero-title { font-size: 24px; }
+            .code-input { font-size: 16px; padding: 14px 16px; }
+        }
+    </style>
+</head>
+<body data-page-id="claim">
+    <div class="bg"></div>
+    
+    <header>
+        <a href="/tcg" class="logo">
+            <span class="nw-icon" style="width:24px;height:24px" data-nw-icon="gift"></span>
+            MERCH CLAIM
+        </a>
+        <div class="nav-links">
+            <a href="/collection" class="nav-link">📚 Collection</a>
+            <a href="/wallet" class="nav-link">💳 Wallet</a>
+        </div>
+    </header>
+    
+    <main>
+        <!-- Hero -->
+        <div class="hero">
+            <div class="hero-icon">🎁</div>
+            <h1 class="hero-title">CLAIM YOUR REWARDS</h1>
+            <p class="hero-subtitle">Enter the code from your NumbahWan merchandise to unlock exclusive digital rewards!</p>
+        </div>
+        
+        <!-- Code Input -->
+        <div class="code-section">
+            <div class="code-label">
+                <span class="nw-icon" style="width:14px;height:14px" data-nw-icon="key"></span>
+                REDEMPTION CODE
+            </div>
+            <input type="text" 
+                   class="code-input" 
+                   id="codeInput"
+                   placeholder="NWMR-XXXX-XXXX"
+                   maxlength="14"
+                   autocomplete="off"
+                   spellcheck="false">
+            <button class="claim-btn" id="claimBtn" onclick="claimCode()">
+                🎁 CLAIM REWARDS
+            </button>
+        </div>
+        
+        <div class="or-divider">OR</div>
+        
+        <button class="scan-btn" onclick="openScanner()">
+            📷 SCAN QR CODE
+        </button>
+        
+        <!-- Tier Info -->
+        <div class="tier-info">
+            <div class="tier-title">🏆 REWARD TIERS</div>
+            <div class="tier-grid">
+                <div class="tier-card bronze">
+                    <div class="tier-name">BRONZE</div>
+                    <div class="tier-rewards">
+                        1 Rare Card<br>
+                        "Supporter" Title<br>
+                        5% Discount
+                    </div>
+                </div>
+                <div class="tier-card silver">
+                    <div class="tier-name">SILVER</div>
+                    <div class="tier-rewards">
+                        1 Epic Card<br>
+                        Profile Badge<br>
+                        10% Discount<br>
+                        50 Sacred Logs
+                    </div>
+                </div>
+                <div class="tier-card gold">
+                    <div class="tier-name">GOLD</div>
+                    <div class="tier-rewards">
+                        1 Legendary Card<br>
+                        Profile Border<br>
+                        15% Discount<br>
+                        200 Sacred Logs
+                    </div>
+                </div>
+                <div class="tier-card platinum">
+                    <div class="tier-name">PLATINUM</div>
+                    <div class="tier-rewards">
+                        1 Mythic Card<br>
+                        "Founder" Status<br>
+                        20% Discount<br>
+                        500 Sacred Logs<br>
+                        2× Voting Power
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+    
+    <!-- Result Overlay -->
+    <div class="result-overlay" id="resultOverlay">
+        <div class="result-content" id="resultContent">
+            <!-- Content will be injected -->
+        </div>
+    </div>
+    
+    <!-- QR Scanner Modal -->
+    <div class="scanner-modal" id="scannerModal">
+        <div class="scanner-preview">
+            <div class="scanner-line"></div>
+            <span style="font-size: 48px; opacity: 0.3;">📷</span>
+        </div>
+        <p style="color: rgba(255,255,255,0.6); margin-bottom: 20px;">Position QR code within the frame</p>
+        <button class="scanner-close" onclick="closeScanner()">Cancel</button>
+    </div>
+    
+    <script>
+        // ============================================
+        // NW MERCH CLAIM SYSTEM
+        // ============================================
+        
+        // Demo codes for testing
+        const DEMO_CODES = {
+            'NWMR-TEST-BRNZ': {
+                tier: 'bronze',
+                product: 'NumbahWan T-Shirt (Demo)',
+                rewards: {
+                    cards: [{ name: 'Loyal Guardian', rarity: 'rare', emoji: '🛡️' }],
+                    currency: { logs: 0, gold: 100 },
+                    badges: ['supporter'],
+                    title: 'Supporter',
+                    discount: 0.05
+                }
+            },
+            'NWMR-TEST-SLVR': {
+                tier: 'silver',
+                product: 'NumbahWan Hoodie (Demo)',
+                rewards: {
+                    cards: [{ name: 'Storm Caller', rarity: 'epic', emoji: '⚡' }],
+                    currency: { logs: 50, gold: 250 },
+                    badges: ['collector'],
+                    title: 'Collector',
+                    discount: 0.10
+                }
+            },
+            'NWMR-TEST-GOLD': {
+                tier: 'gold',
+                product: 'NumbahWan Premium Bundle (Demo)',
+                rewards: {
+                    cards: [{ name: 'Golden Phoenix', rarity: 'legendary', emoji: '🔥' }],
+                    currency: { logs: 200, gold: 1000 },
+                    badges: ['elite', 'profile_border_gold'],
+                    title: 'Elite Member',
+                    discount: 0.15
+                }
+            },
+            'NWMR-TEST-PLAT': {
+                tier: 'platinum',
+                product: "NumbahWan Collector's Edition (Demo)",
+                rewards: {
+                    cards: [{ name: 'Primordial Dragon', rarity: 'mythic', emoji: '🐉' }],
+                    currency: { logs: 500, gold: 5000 },
+                    badges: ['founder', 'profile_border_mythic', 'voting_2x'],
+                    title: 'Founding Member',
+                    discount: 0.20
+                }
+            }
+        };
+        
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            // Format code input
+            const input = document.getElementById('codeInput');
+            input.addEventListener('input', formatCodeInput);
+            
+            // Check URL for code parameter
+            const urlParams = new URLSearchParams(window.location.search);
+            const codeParam = urlParams.get('code');
+            if (codeParam) {
+                input.value = codeParam.toUpperCase();
+                formatCodeInput({ target: input });
+            }
+            
+            // Init icons
+            if (window.NWIconsInline) NWIconsInline.init();
+        });
+        
+        function formatCodeInput(e) {
+            let value = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
+            
+            // Add dashes at appropriate positions
+            if (value.length > 4) {
+                value = value.slice(0, 4) + '-' + value.slice(4);
+            }
+            if (value.length > 9) {
+                value = value.slice(0, 9) + '-' + value.slice(9);
+            }
+            
+            e.target.value = value.slice(0, 14);
+            
+            // Enable/disable button
+            document.getElementById('claimBtn').disabled = value.length < 14;
+        }
+        
+        async function claimCode() {
+            const code = document.getElementById('codeInput').value.toUpperCase();
+            
+            if (code.length < 14) {
+                showError('Invalid Code', 'Please enter a valid 12-character code.');
+                return;
+            }
+            
+            // Show loading
+            showLoading();
+            
+            // Simulate API call
+            await new Promise(r => setTimeout(r, 1500));
+            
+            // Check demo codes first
+            const demoReward = DEMO_CODES[code];
+            if (demoReward) {
+                // Check if already claimed
+                const claimed = JSON.parse(localStorage.getItem('nw_claimed_codes') || '[]');
+                if (claimed.includes(code)) {
+                    showError('Already Claimed', 'This code has already been redeemed on this device.');
+                    return;
+                }
+                
+                // Process claim
+                await processClaimRewards(code, demoReward);
+                showSuccess(demoReward);
+                return;
+            }
+            
+            // Try API (would be real implementation)
+            try {
+                const response = await fetch(`/api/merch/claim`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ code })
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    await processClaimRewards(code, data);
+                    showSuccess(data);
+                } else {
+                    const error = await response.json();
+                    showError('Claim Failed', error.message || 'Invalid or expired code.');
+                }
+            } catch (err) {
+                // For demo, show invalid code error
+                showError('Invalid Code', 'This code is not recognized. Please check and try again.');
+            }
+        }
+        
+        async function processClaimRewards(code, reward) {
+            // Mark code as claimed
+            const claimed = JSON.parse(localStorage.getItem('nw_claimed_codes') || '[]');
+            claimed.push(code);
+            localStorage.setItem('nw_claimed_codes', JSON.stringify(claimed));
+            
+            // Add cards to collection
+            const userData = JSON.parse(localStorage.getItem('nw_user_cards') || '{"available":[],"staked":[]}');
+            reward.rewards.cards.forEach(card => {
+                userData.available.push({
+                    id: `merch_${Date.now()}_${Math.random().toString(36).slice(2)}`,
+                    name: card.name,
+                    rarity: card.rarity,
+                    emoji: card.emoji,
+                    obtainedFrom: 'merch_claim',
+                    obtainedAt: Date.now()
+                });
+            });
+            localStorage.setItem('nw_user_cards', JSON.stringify(userData));
+            
+            // Add currency
+            const wallet = JSON.parse(localStorage.getItem('nw_wallet') || '{}');
+            wallet.gold = (wallet.gold || 0) + (reward.rewards.currency.gold || 0);
+            wallet.logs = (wallet.logs || 0) + (reward.rewards.currency.logs || 0);
+            localStorage.setItem('nw_wallet', JSON.stringify(wallet));
+            
+            // Add perks
+            const perks = JSON.parse(localStorage.getItem('nw_user_perks') || '[]');
+            if (reward.rewards.title) {
+                perks.push({ type: 'title', value: reward.rewards.title, source: 'merch', code });
+            }
+            if (reward.rewards.discount) {
+                perks.push({ type: 'discount', value: reward.rewards.discount, source: 'merch', code });
+            }
+            reward.rewards.badges.forEach(badge => {
+                perks.push({ type: 'badge', value: badge, source: 'merch', code });
+            });
+            localStorage.setItem('nw_user_perks', JSON.stringify(perks));
+        }
+        
+        function showLoading() {
+            const overlay = document.getElementById('resultOverlay');
+            const content = document.getElementById('resultContent');
+            
+            content.innerHTML = `
+                <div class="loading-spinner"></div>
+                <div class="result-title" style="color: var(--gold);">VERIFYING CODE...</div>
+            `;
+            
+            overlay.classList.add('active');
+        }
+        
+        function showSuccess(reward) {
+            const content = document.getElementById('resultContent');
+            
+            let rewardsHTML = '';
+            
+            // Cards
+            reward.rewards.cards.forEach(card => {
+                const rarityColors = {
+                    rare: 'var(--blue)',
+                    epic: 'var(--purple)',
+                    legendary: 'var(--gold)',
+                    mythic: 'var(--mythic)'
+                };
+                rewardsHTML += `
+                    <div class="reward-item">
+                        <span class="reward-icon">${card.emoji}</span>
+                        <span class="reward-text">${card.name}</span>
+                        <span class="reward-value" style="color: ${rarityColors[card.rarity]}">${card.rarity.toUpperCase()}</span>
+                    </div>
+                `;
+            });
+            
+            // Currency
+            if (reward.rewards.currency.gold > 0) {
+                rewardsHTML += `
+                    <div class="reward-item">
+                        <span class="reward-icon">💰</span>
+                        <span class="reward-text">Gold</span>
+                        <span class="reward-value">+${reward.rewards.currency.gold.toLocaleString()}</span>
+                    </div>
+                `;
+            }
+            if (reward.rewards.currency.logs > 0) {
+                rewardsHTML += `
+                    <div class="reward-item">
+                        <span class="reward-icon">🪵</span>
+                        <span class="reward-text">Sacred Logs</span>
+                        <span class="reward-value">+${reward.rewards.currency.logs}</span>
+                    </div>
+                `;
+            }
+            
+            // Title
+            if (reward.rewards.title) {
+                rewardsHTML += `
+                    <div class="reward-item">
+                        <span class="reward-icon">👑</span>
+                        <span class="reward-text">Title</span>
+                        <span class="reward-value">"${reward.rewards.title}"</span>
+                    </div>
+                `;
+            }
+            
+            // Discount
+            if (reward.rewards.discount) {
+                rewardsHTML += `
+                    <div class="reward-item">
+                        <span class="reward-icon">🏷️</span>
+                        <span class="reward-text">Permanent Discount</span>
+                        <span class="reward-value">${Math.round(reward.rewards.discount * 100)}% OFF</span>
+                    </div>
+                `;
+            }
+            
+            content.innerHTML = `
+                <div class="result-success">
+                    <div class="result-icon">🎉</div>
+                    <h2 class="result-title">REWARDS CLAIMED!</h2>
+                    <p class="result-product">${reward.product}</p>
+                    
+                    <div class="rewards-list">
+                        <div class="rewards-title">🎁 YOU RECEIVED</div>
+                        ${rewardsHTML}
+                    </div>
+                    
+                    <button class="result-btn" onclick="closeResult()">AWESOME!</button>
+                </div>
+            `;
+        }
+        
+        function showError(title, message) {
+            const overlay = document.getElementById('resultOverlay');
+            const content = document.getElementById('resultContent');
+            
+            content.innerHTML = `
+                <div class="result-error">
+                    <div class="result-icon">❌</div>
+                    <h2 class="result-title">${title}</h2>
+                    <p class="result-message">${message}</p>
+                    <button class="result-btn" onclick="closeResult()">TRY AGAIN</button>
+                </div>
+            `;
+            
+            overlay.classList.add('active');
+        }
+        
+        function closeResult() {
+            document.getElementById('resultOverlay').classList.remove('active');
+            document.getElementById('codeInput').value = '';
+            document.getElementById('claimBtn').disabled = true;
+        }
+        
+        function openScanner() {
+            document.getElementById('scannerModal').classList.add('active');
+            // Note: Real implementation would use a QR scanning library
+            // For demo, we'll simulate finding a code after 3 seconds
+            setTimeout(() => {
+                document.getElementById('codeInput').value = 'NWMR-TEST-SLVR';
+                formatCodeInput({ target: document.getElementById('codeInput') });
+                closeScanner();
+                showToast('QR Code detected!');
+            }, 3000);
+        }
+        
+        function closeScanner() {
+            document.getElementById('scannerModal').classList.remove('active');
+        }
+        
+        function showToast(message) {
+            const toast = document.createElement('div');
+            toast.style.cssText = `
+                position: fixed; bottom: 100px; left: 50%; transform: translateX(-50%);
+                background: rgba(0,0,0,0.9); color: #fff; padding: 12px 24px;
+                border-radius: 8px; font-size: 14px; z-index: 2000;
+                border: 1px solid var(--gold);
+            `;
+            toast.textContent = message;
+            document.body.appendChild(toast);
+            setTimeout(() => toast.remove(), 3000);
+        }
+    </script>
+</body>
+</html>

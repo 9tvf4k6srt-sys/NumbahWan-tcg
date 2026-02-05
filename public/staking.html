@@ -1,0 +1,688 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+    <title>NumbahWan TCG | Card Staking</title>
+    <link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="/static/nw-tokens.css">
+    <link rel="stylesheet" href="/static/nw-utilities.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="/static/nw-essentials.js"></script>
+    <script src="/static/nw-wallet.js"></script>
+    <script src="/static/nw-icons-inline.js"></script>
+    <script src="/static/nw-nav.js"></script>
+    <style>
+        :root {
+            --gold: #ffd700; --orange: #ff6b00; --purple: #a855f7; --blue: #3b82f6;
+            --green: #22c55e; --red: #ef4444; --dark: #0a0a0f; --mythic: #ff00ff;
+            --cyan: #00ffff; --log: #c97f3d;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            font-family: 'Inter', system-ui, sans-serif; 
+            background: var(--dark); 
+            color: #fff;
+            min-height: 100vh;
+            padding-bottom: 100px;
+        }
+        
+        .bg {
+            position: fixed; inset: 0; z-index: -1;
+            background: 
+                radial-gradient(ellipse at top, rgba(34,197,94,0.15) 0%, transparent 50%),
+                radial-gradient(ellipse at bottom right, rgba(255,215,0,0.1) 0%, transparent 40%),
+                var(--dark);
+        }
+        
+        header {
+            position: sticky; top: 0; z-index: 100;
+            padding: 12px 16px;
+            background: rgba(10,10,15,0.98);
+            display: flex; justify-content: space-between; align-items: center;
+            backdrop-filter: blur(10px);
+            border-bottom: 2px solid rgba(34,197,94,0.4);
+        }
+        .logo {
+            font-family: 'Orbitron', sans-serif; font-size: 18px; font-weight: 800;
+            color: var(--green); text-decoration: none;
+            text-shadow: 0 0 20px rgba(34,197,94,0.5);
+            display: flex; align-items: center; gap: 8px;
+        }
+        .nav-links { display: flex; gap: 8px; align-items: center; }
+        .nav-link {
+            padding: 8px 14px; background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.15); border-radius: 8px;
+            color: #fff; font-size: 13px; text-decoration: none; font-weight: 600;
+            transition: all 0.2s;
+        }
+        .nav-link:hover { background: rgba(34,197,94,0.2); border-color: var(--green); }
+        
+        main { max-width: 1200px; margin: 0 auto; padding: 20px 16px; }
+        
+        /* Stats Overview */
+        .stats-grid {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 12px; margin-bottom: 24px;
+        }
+        .stat-card {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 12px; padding: 16px; text-align: center;
+        }
+        .stat-value {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 24px; font-weight: 700;
+            background: linear-gradient(135deg, var(--green), var(--gold));
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        }
+        .stat-label { font-size: 11px; color: rgba(255,255,255,0.6); margin-top: 4px; text-transform: uppercase; }
+        
+        /* Staking Rates */
+        .rates-section {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 16px; padding: 20px; margin-bottom: 24px;
+        }
+        .rates-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 14px; font-weight: 700;
+            color: var(--green); margin-bottom: 16px;
+            display: flex; align-items: center; gap: 8px;
+        }
+        .rates-grid {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+            gap: 8px;
+        }
+        .rate-card {
+            padding: 12px 8px; border-radius: 8px; text-align: center;
+        }
+        .rate-card.common { background: rgba(156,163,175,0.2); }
+        .rate-card.uncommon { background: rgba(34,197,94,0.2); }
+        .rate-card.rare { background: rgba(59,130,246,0.2); }
+        .rate-card.epic { background: rgba(168,85,247,0.2); }
+        .rate-card.legendary { background: linear-gradient(135deg, rgba(255,215,0,0.3), rgba(255,107,0,0.3)); }
+        .rate-card.mythic { background: linear-gradient(135deg, rgba(255,0,255,0.3), rgba(0,255,255,0.3)); }
+        .rate-rarity { font-size: 10px; font-weight: 700; text-transform: uppercase; margin-bottom: 4px; }
+        .rate-gold { font-family: 'Orbitron', sans-serif; font-size: 14px; color: var(--gold); }
+        .rate-logs { font-size: 10px; color: var(--log); }
+        
+        /* Sections */
+        .section {
+            background: rgba(255,255,255,0.02);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 16px; padding: 20px; margin-bottom: 20px;
+        }
+        .section-header {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 16px;
+        }
+        .section-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 16px; font-weight: 700;
+            display: flex; align-items: center; gap: 8px;
+        }
+        
+        /* Card Grid */
+        .cards-grid {
+            display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+            gap: 12px;
+        }
+        .card-slot {
+            aspect-ratio: 3/4;
+            background: rgba(255,255,255,0.03);
+            border: 2px solid rgba(255,255,255,0.1);
+            border-radius: 12px;
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            cursor: pointer; transition: all 0.3s;
+            position: relative; overflow: hidden;
+        }
+        .card-slot:hover { border-color: var(--green); transform: translateY(-4px); }
+        .card-slot.staked { border-color: var(--gold); }
+        .card-slot.staked::before {
+            content: '⚡ STAKED';
+            position: absolute; top: 0; left: 0; right: 0;
+            background: linear-gradient(135deg, var(--green), var(--gold));
+            color: #000; font-size: 9px; font-weight: 800;
+            padding: 4px; text-align: center;
+        }
+        .card-slot.selected { border-color: var(--cyan); box-shadow: 0 0 20px rgba(0,255,255,0.3); }
+        
+        .card-art {
+            width: 80%; height: 60%;
+            background: linear-gradient(135deg, rgba(255,255,255,0.1), rgba(255,255,255,0.05));
+            border-radius: 8px; margin-bottom: 8px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 32px;
+        }
+        .card-name { font-size: 10px; font-weight: 600; text-align: center; padding: 0 4px; }
+        .card-rarity {
+            font-size: 8px; font-weight: 700; text-transform: uppercase;
+            padding: 2px 6px; border-radius: 4px; margin-top: 4px;
+        }
+        .card-rarity.common { background: rgba(156,163,175,0.3); }
+        .card-rarity.uncommon { background: rgba(34,197,94,0.3); color: var(--green); }
+        .card-rarity.rare { background: rgba(59,130,246,0.3); color: var(--blue); }
+        .card-rarity.epic { background: rgba(168,85,247,0.3); color: var(--purple); }
+        .card-rarity.legendary { background: rgba(255,215,0,0.3); color: var(--gold); }
+        .card-rarity.mythic { background: rgba(255,0,255,0.3); color: var(--mythic); }
+        
+        .card-earnings {
+            position: absolute; bottom: 4px; right: 4px;
+            background: rgba(0,0,0,0.8); border-radius: 4px;
+            padding: 2px 6px; font-size: 9px;
+            color: var(--gold);
+        }
+        
+        /* Action Buttons */
+        .action-bar {
+            position: fixed; bottom: 0; left: 0; right: 0;
+            background: rgba(10,10,15,0.98);
+            backdrop-filter: blur(10px);
+            border-top: 2px solid rgba(34,197,94,0.3);
+            padding: 16px; display: flex; gap: 12px;
+            justify-content: center; z-index: 100;
+        }
+        .action-btn {
+            padding: 14px 28px; border-radius: 12px;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 14px; font-weight: 700;
+            cursor: pointer; transition: all 0.3s;
+            border: none;
+        }
+        .action-btn.stake {
+            background: linear-gradient(135deg, var(--green), #16a34a);
+            color: #fff;
+        }
+        .action-btn.stake:hover { transform: scale(1.05); box-shadow: 0 0 30px rgba(34,197,94,0.5); }
+        .action-btn.unstake {
+            background: rgba(255,255,255,0.1);
+            border: 2px solid var(--gold);
+            color: var(--gold);
+        }
+        .action-btn.claim {
+            background: linear-gradient(135deg, var(--gold), var(--orange));
+            color: #000;
+        }
+        .action-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        
+        /* Pending Rewards */
+        .rewards-banner {
+            background: linear-gradient(135deg, rgba(255,215,0,0.15), rgba(34,197,94,0.15));
+            border: 2px solid var(--gold);
+            border-radius: 16px; padding: 20px; margin-bottom: 24px;
+            text-align: center;
+        }
+        .rewards-title { font-size: 12px; color: rgba(255,255,255,0.7); margin-bottom: 8px; }
+        .rewards-value {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 32px; font-weight: 800;
+            color: var(--gold);
+        }
+        .rewards-detail { font-size: 12px; color: rgba(255,255,255,0.5); margin-top: 8px; }
+        
+        /* Empty State */
+        .empty-state {
+            text-align: center; padding: 60px 20px;
+            color: rgba(255,255,255,0.5);
+        }
+        .empty-icon { font-size: 64px; margin-bottom: 16px; opacity: 0.3; }
+        .empty-title { font-family: 'Orbitron', sans-serif; font-size: 18px; margin-bottom: 8px; }
+        .empty-text { font-size: 14px; margin-bottom: 20px; }
+        .empty-cta {
+            display: inline-block; padding: 12px 24px;
+            background: linear-gradient(135deg, var(--orange), var(--gold));
+            color: #000; font-weight: 700; border-radius: 8px;
+            text-decoration: none;
+        }
+        
+        /* Filters */
+        .filters {
+            display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px;
+        }
+        .filter-btn {
+            padding: 8px 16px; border-radius: 20px;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            color: #fff; font-size: 12px; cursor: pointer;
+            transition: all 0.2s;
+        }
+        .filter-btn.active { background: var(--green); color: #000; border-color: var(--green); }
+        .filter-btn:hover { border-color: var(--green); }
+        
+        @media (max-width: 600px) {
+            .cards-grid { grid-template-columns: repeat(3, 1fr); gap: 8px; }
+            .stats-grid { grid-template-columns: repeat(2, 1fr); }
+            .action-btn { padding: 12px 20px; font-size: 12px; }
+        }
+    </style>
+</head>
+<body data-page-id="staking">
+    <div class="bg"></div>
+    
+    <header>
+        <a href="/tcg" class="logo">
+            <span class="nw-icon" style="width:24px;height:24px" data-nw-icon="layers"></span>
+            CARD STAKING
+        </a>
+        <div class="nav-links">
+            <a href="/fusion" class="nav-link">⚗️ Fusion</a>
+            <a href="/collection" class="nav-link">📚 Collection</a>
+            <a href="/forge" class="nav-link">🔥 Forge</a>
+        </div>
+    </header>
+    
+    <main>
+        <!-- Stats Overview -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-value" id="totalStaked">0</div>
+                <div class="stat-label">Cards Staked</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="dailyEarnings">0</div>
+                <div class="stat-label">Gold / Day</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="weeklyLogs">0</div>
+                <div class="stat-label">Logs / Week</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="totalEarned">0</div>
+                <div class="stat-label">Total Earned</div>
+            </div>
+        </div>
+        
+        <!-- Pending Rewards -->
+        <div class="rewards-banner" id="rewardsBanner">
+            <div class="rewards-title">🎁 PENDING REWARDS</div>
+            <div class="rewards-value">
+                <span id="pendingGold">0</span> Gold + <span id="pendingLogs">0</span> Logs
+            </div>
+            <div class="rewards-detail">Accumulating since <span id="lastClaim">-</span></div>
+        </div>
+        
+        <!-- Staking Rates -->
+        <div class="rates-section">
+            <div class="rates-title">
+                <span class="nw-icon" style="width:16px;height:16px" data-nw-icon="chart"></span>
+                STAKING RATES (7-Day Lock)
+            </div>
+            <div class="rates-grid">
+                <div class="rate-card common">
+                    <div class="rate-rarity">Common</div>
+                    <div class="rate-gold">1 Gold/day</div>
+                </div>
+                <div class="rate-card uncommon">
+                    <div class="rate-rarity">Uncommon</div>
+                    <div class="rate-gold">2 Gold/day</div>
+                </div>
+                <div class="rate-card rare">
+                    <div class="rate-rarity">Rare</div>
+                    <div class="rate-gold">5 Gold/day</div>
+                </div>
+                <div class="rate-card epic">
+                    <div class="rate-rarity">Epic</div>
+                    <div class="rate-gold">15 Gold/day</div>
+                </div>
+                <div class="rate-card legendary">
+                    <div class="rate-rarity">Legendary</div>
+                    <div class="rate-gold">50 Gold/day</div>
+                    <div class="rate-logs">+1 Log/week</div>
+                </div>
+                <div class="rate-card mythic">
+                    <div class="rate-rarity">Mythic</div>
+                    <div class="rate-gold">200 Gold/day</div>
+                    <div class="rate-logs">+5 Logs/week</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Currently Staked -->
+        <div class="section">
+            <div class="section-header">
+                <div class="section-title">
+                    <span class="nw-icon" style="width:20px;height:20px" data-nw-icon="lock"></span>
+                    CURRENTLY STAKED
+                </div>
+                <span id="stakedCount" style="color: var(--green); font-weight: 600;">0 cards</span>
+            </div>
+            <div class="cards-grid" id="stakedGrid">
+                <div class="empty-state" id="noStakedMsg">
+                    <div class="empty-icon">📭</div>
+                    <div class="empty-title">No Cards Staked</div>
+                    <div class="empty-text">Stake cards below to earn passive rewards!</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Available to Stake -->
+        <div class="section">
+            <div class="section-header">
+                <div class="section-title">
+                    <span class="nw-icon" style="width:20px;height:20px" data-nw-icon="cards"></span>
+                    AVAILABLE TO STAKE
+                </div>
+                <span id="availableCount" style="color: rgba(255,255,255,0.6);">0 cards</span>
+            </div>
+            
+            <div class="filters">
+                <button class="filter-btn active" data-filter="all">All</button>
+                <button class="filter-btn" data-filter="common">Common</button>
+                <button class="filter-btn" data-filter="uncommon">Uncommon</button>
+                <button class="filter-btn" data-filter="rare">Rare</button>
+                <button class="filter-btn" data-filter="epic">Epic</button>
+                <button class="filter-btn" data-filter="legendary">Legendary</button>
+                <button class="filter-btn" data-filter="mythic">Mythic</button>
+            </div>
+            
+            <div class="cards-grid" id="availableGrid">
+                <div class="empty-state" id="noCardsMsg">
+                    <div class="empty-icon">🃏</div>
+                    <div class="empty-title">No Cards Yet</div>
+                    <div class="empty-text">Pull cards from the Forge to start staking!</div>
+                    <a href="/forge" class="empty-cta">🔥 Go to Forge</a>
+                </div>
+            </div>
+        </div>
+    </main>
+    
+    <!-- Action Bar -->
+    <div class="action-bar">
+        <button class="action-btn claim" id="claimBtn" onclick="claimRewards()" disabled>
+            🎁 CLAIM REWARDS
+        </button>
+        <button class="action-btn stake" id="stakeBtn" onclick="stakeSelected()" disabled>
+            ⚡ STAKE SELECTED (<span id="selectedCount">0</span>)
+        </button>
+        <button class="action-btn unstake" id="unstakeBtn" onclick="unstakeSelected()" disabled>
+            🔓 UNSTAKE
+        </button>
+    </div>
+    
+    <script>
+        // ============================================
+        // NW STAKING SYSTEM
+        // ============================================
+        
+        const STAKING_RATES = {
+            common: { gold: 1, logs: 0 },
+            uncommon: { gold: 2, logs: 0 },
+            rare: { gold: 5, logs: 0 },
+            epic: { gold: 15, logs: 0 },
+            legendary: { gold: 50, logs: 1 },
+            mythic: { gold: 200, logs: 5 }
+        };
+        
+        const MIN_LOCK_DAYS = 7;
+        const EARLY_UNSTAKE_PENALTY = 0.1; // 10%
+        
+        let userCards = [];
+        let stakedCards = [];
+        let selectedCards = new Set();
+        let selectedStaked = new Set();
+        let currentFilter = 'all';
+        
+        // Initialize
+        document.addEventListener('DOMContentLoaded', async () => {
+            await loadUserCards();
+            renderCards();
+            updateStats();
+            setupFilters();
+            
+            // Initialize icons
+            if (window.NWIconsInline) {
+                NWIconsInline.init();
+            }
+        });
+        
+        // Load cards from localStorage (will be replaced with API)
+        async function loadUserCards() {
+            const stored = localStorage.getItem('nw_user_cards');
+            if (stored) {
+                const data = JSON.parse(stored);
+                userCards = data.available || [];
+                stakedCards = data.staked || [];
+            } else {
+                // Demo cards for testing
+                userCards = generateDemoCards();
+                stakedCards = [];
+            }
+        }
+        
+        function generateDemoCards() {
+            const rarities = ['common', 'common', 'common', 'uncommon', 'uncommon', 'rare', 'rare', 'epic', 'legendary'];
+            const names = ['Shadow Wolf', 'Fire Drake', 'Ice Guardian', 'Thunder Knight', 'Void Walker', 'Crystal Mage', 'Steel Golem', 'Wind Spirit', 'Earth Titan'];
+            return rarities.map((rarity, i) => ({
+                id: `card_${i + 1}`,
+                name: names[i] || `Card ${i + 1}`,
+                rarity: rarity,
+                season: 1,
+                emoji: ['🐺', '🐉', '🧊', '⚡', '🌑', '💎', '🤖', '🌪️', '🏔️'][i] || '🃏'
+            }));
+        }
+        
+        function renderCards() {
+            renderStakedCards();
+            renderAvailableCards();
+        }
+        
+        function renderStakedCards() {
+            const grid = document.getElementById('stakedGrid');
+            const noMsg = document.getElementById('noStakedMsg');
+            
+            if (stakedCards.length === 0) {
+                grid.innerHTML = '';
+                grid.appendChild(noMsg);
+                noMsg.style.display = 'block';
+                return;
+            }
+            
+            noMsg.style.display = 'none';
+            grid.innerHTML = stakedCards.map(card => `
+                <div class="card-slot staked ${selectedStaked.has(card.id) ? 'selected' : ''}" 
+                     onclick="toggleStakedSelection('${card.id}')" data-id="${card.id}">
+                    <div class="card-art">${card.emoji || '🃏'}</div>
+                    <div class="card-name">${card.name}</div>
+                    <div class="card-rarity ${card.rarity}">${card.rarity}</div>
+                    <div class="card-earnings">+${STAKING_RATES[card.rarity].gold}/d</div>
+                </div>
+            `).join('');
+            
+            document.getElementById('stakedCount').textContent = `${stakedCards.length} cards`;
+        }
+        
+        function renderAvailableCards() {
+            const grid = document.getElementById('availableGrid');
+            const noMsg = document.getElementById('noCardsMsg');
+            
+            const filtered = currentFilter === 'all' 
+                ? userCards 
+                : userCards.filter(c => c.rarity === currentFilter);
+            
+            if (filtered.length === 0) {
+                grid.innerHTML = '';
+                grid.appendChild(noMsg);
+                noMsg.style.display = 'block';
+                return;
+            }
+            
+            noMsg.style.display = 'none';
+            grid.innerHTML = filtered.map(card => `
+                <div class="card-slot ${selectedCards.has(card.id) ? 'selected' : ''}" 
+                     onclick="toggleSelection('${card.id}')" data-id="${card.id}">
+                    <div class="card-art">${card.emoji || '🃏'}</div>
+                    <div class="card-name">${card.name}</div>
+                    <div class="card-rarity ${card.rarity}">${card.rarity}</div>
+                    <div class="card-earnings">+${STAKING_RATES[card.rarity].gold}/d</div>
+                </div>
+            `).join('');
+            
+            document.getElementById('availableCount').textContent = `${filtered.length} cards`;
+        }
+        
+        function toggleSelection(cardId) {
+            if (selectedCards.has(cardId)) {
+                selectedCards.delete(cardId);
+            } else {
+                selectedCards.add(cardId);
+            }
+            renderAvailableCards();
+            updateButtons();
+        }
+        
+        function toggleStakedSelection(cardId) {
+            if (selectedStaked.has(cardId)) {
+                selectedStaked.delete(cardId);
+            } else {
+                selectedStaked.add(cardId);
+            }
+            renderStakedCards();
+            updateButtons();
+        }
+        
+        function updateButtons() {
+            document.getElementById('selectedCount').textContent = selectedCards.size;
+            document.getElementById('stakeBtn').disabled = selectedCards.size === 0;
+            document.getElementById('unstakeBtn').disabled = selectedStaked.size === 0;
+            document.getElementById('claimBtn').disabled = stakedCards.length === 0;
+        }
+        
+        function updateStats() {
+            let dailyGold = 0;
+            let weeklyLogs = 0;
+            
+            stakedCards.forEach(card => {
+                const rates = STAKING_RATES[card.rarity];
+                dailyGold += rates.gold;
+                weeklyLogs += rates.logs;
+            });
+            
+            document.getElementById('totalStaked').textContent = stakedCards.length;
+            document.getElementById('dailyEarnings').textContent = dailyGold;
+            document.getElementById('weeklyLogs').textContent = weeklyLogs;
+            
+            // Calculate pending rewards (demo: based on time since last claim)
+            const lastClaimTime = localStorage.getItem('nw_last_stake_claim') || Date.now();
+            const hoursSinceClaim = (Date.now() - parseInt(lastClaimTime)) / (1000 * 60 * 60);
+            const pendingGold = Math.floor(dailyGold * (hoursSinceClaim / 24));
+            const pendingLogs = Math.floor(weeklyLogs * (hoursSinceClaim / 168));
+            
+            document.getElementById('pendingGold').textContent = pendingGold;
+            document.getElementById('pendingLogs').textContent = pendingLogs;
+            document.getElementById('lastClaim').textContent = new Date(parseInt(lastClaimTime)).toLocaleDateString();
+            
+            const totalEarned = parseInt(localStorage.getItem('nw_total_stake_earned') || '0');
+            document.getElementById('totalEarned').textContent = totalEarned;
+            
+            updateButtons();
+        }
+        
+        function setupFilters() {
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    currentFilter = btn.dataset.filter;
+                    renderAvailableCards();
+                });
+            });
+        }
+        
+        async function stakeSelected() {
+            if (selectedCards.size === 0) return;
+            
+            const toStake = userCards.filter(c => selectedCards.has(c.id));
+            toStake.forEach(card => {
+                card.stakedAt = Date.now();
+                card.unlockAt = Date.now() + (MIN_LOCK_DAYS * 24 * 60 * 60 * 1000);
+            });
+            
+            stakedCards.push(...toStake);
+            userCards = userCards.filter(c => !selectedCards.has(c.id));
+            selectedCards.clear();
+            
+            saveCards();
+            renderCards();
+            updateStats();
+            
+            showToast(`⚡ Staked ${toStake.length} cards! Earning begins now.`);
+        }
+        
+        async function unstakeSelected() {
+            if (selectedStaked.size === 0) return;
+            
+            const toUnstake = stakedCards.filter(c => selectedStaked.has(c.id));
+            let penalized = 0;
+            
+            toUnstake.forEach(card => {
+                if (card.unlockAt && Date.now() < card.unlockAt) {
+                    penalized++;
+                }
+                delete card.stakedAt;
+                delete card.unlockAt;
+            });
+            
+            userCards.push(...toUnstake);
+            stakedCards = stakedCards.filter(c => !selectedStaked.has(c.id));
+            selectedStaked.clear();
+            
+            saveCards();
+            renderCards();
+            updateStats();
+            
+            if (penalized > 0) {
+                showToast(`⚠️ Unstaked ${toUnstake.length} cards. ${penalized} early unstakes had 10% penalty.`);
+            } else {
+                showToast(`🔓 Unstaked ${toUnstake.length} cards.`);
+            }
+        }
+        
+        async function claimRewards() {
+            const pendingGold = parseInt(document.getElementById('pendingGold').textContent);
+            const pendingLogs = parseInt(document.getElementById('pendingLogs').textContent);
+            
+            if (pendingGold === 0 && pendingLogs === 0) {
+                showToast('No rewards to claim yet!');
+                return;
+            }
+            
+            // Update totals
+            const totalEarned = parseInt(localStorage.getItem('nw_total_stake_earned') || '0');
+            localStorage.setItem('nw_total_stake_earned', totalEarned + pendingGold);
+            localStorage.setItem('nw_last_stake_claim', Date.now());
+            
+            // Add to wallet (will integrate with real wallet)
+            const wallet = JSON.parse(localStorage.getItem('nw_wallet') || '{}');
+            wallet.gold = (wallet.gold || 0) + pendingGold;
+            wallet.logs = (wallet.logs || 0) + pendingLogs;
+            localStorage.setItem('nw_wallet', JSON.stringify(wallet));
+            
+            updateStats();
+            showToast(`🎁 Claimed ${pendingGold} Gold and ${pendingLogs} Logs!`);
+        }
+        
+        function saveCards() {
+            localStorage.setItem('nw_user_cards', JSON.stringify({
+                available: userCards,
+                staked: stakedCards
+            }));
+        }
+        
+        function showToast(message) {
+            const toast = document.createElement('div');
+            toast.style.cssText = `
+                position: fixed; bottom: 100px; left: 50%; transform: translateX(-50%);
+                background: rgba(0,0,0,0.9); color: #fff; padding: 12px 24px;
+                border-radius: 8px; font-size: 14px; z-index: 1000;
+                border: 1px solid var(--green);
+            `;
+            toast.textContent = message;
+            document.body.appendChild(toast);
+            setTimeout(() => toast.remove(), 3000);
+        }
+    </script>
+</body>
+</html>
