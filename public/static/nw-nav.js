@@ -1,18 +1,18 @@
 /**
- * NumbahWan TCG - Unified Navigation System v7.0
- * ADDICTION BY DESIGN EDITION - NumbahWan Gold/Orange/Purple Theme
- * Single source of truth for i18n - NO duplicate language toggles!
+ * NumbahWan TCG - Unified Navigation System v8.0
+ * 60FPS BUTTERY SMOOTH EDITION
  * 
- * v7.0 CHANGES:
- * - NumbahWan signature color scheme (gold, orange, purple, fire)
- * - Addiction by design: dopamine-triggering animations
- * - Glowing effects, pulse animations, reward feedback
- * - Single unified language toggle (removes page duplicates)
- * - Enhanced visual hierarchy with premium feel
+ * Performance optimizations:
+ * - GPU-accelerated transforms only (no layout thrashing)
+ * - will-change hints for compositor optimization
+ * - requestAnimationFrame for smooth animations
+ * - CSS containment for isolation
+ * - Passive event listeners
+ * - No display:none toggling (use transforms + opacity)
  */
 
 const NW_NAV = {
-    // Inline icon paths for reliable rendering
+    // Inline icon paths
     icons: {
         home: '<path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>',
         fire: '<path d="M12 2C9 6 9 9 9 9c0 2 1.5 3 3 3s3-1 3-3c0-3-3-7-3-7zm0 20c-5 0-8-4-8-8 0-4 2-7 4-9 0 3 2 5 4 5s4-2 4-5c2 2 4 5 4 9 0 4-3 8-8 8z"/>',
@@ -51,13 +51,11 @@ const NW_NAV = {
         theater: '<path d="M4 8c0-2 2-4 4-4h8c2 0 4 2 4 4v8c0 2-2 4-4 4H8c-2 0-4-2-4-4V8zm4 3v2m8-2v2m-8 4c2 2 6 2 8 0"/>'
     },
     
-    // Icon helper - inline SVG for reliable rendering
     iconSvg(iconId, size = 18) {
         const path = this.icons[iconId] || this.icons.star;
         return `<svg class="nw-nav-icon" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${path}</svg>`;
     },
 
-    // Streamlined navigation - grouped by user intent
     sections: {
         core: {
             name: { en: 'Core', zh: '核心', th: 'หลัก' },
@@ -228,77 +226,34 @@ const NW_NAV = {
         }
     },
 
-    // Easter eggs - triggered by Konami code
     easterEggs: {
         konamiCode: [],
         konamiSequence: ['ArrowUp', 'ArrowUp', 'ArrowDown', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'ArrowLeft', 'ArrowRight', 'b', 'a'],
-        
-        init() {
-            document.addEventListener('keydown', (e) => this.checkKonami(e.key));
-        },
-        
+        init() { document.addEventListener('keydown', (e) => this.checkKonami(e.key), { passive: true }); },
         checkKonami(key) {
             this.konamiCode.push(key);
             if (this.konamiCode.length > 10) this.konamiCode.shift();
-            if (this.konamiCode.join(',') === this.konamiSequence.join(',')) {
-                this.triggerSecret();
-            }
+            if (this.konamiCode.join(',') === this.konamiSequence.join(',')) this.triggerSecret();
         },
-        
         triggerSecret() {
-            const messages = [
-                '🎮 KONAMI CODE ACTIVATED! +9999 Sacred Logs... just kidding.',
-                '👀 You found a secret! Your reward: knowing this exists.',
-                '🔮 The ancient prophecy speaks of one who would find this...',
-                '💀 Zakum whispers: "Nice try, mortal."',
-                '🦆 A wild rubber duck appears! It does nothing.',
-                '🎲 Roll for initiative! You rolled a 1. Critical fail.',
-                '📜 The Abyss gazes back at you...'
-            ];
-            const msg = messages[Math.floor(Math.random() * messages.length)];
-            if (typeof NW_SOUNDS !== 'undefined') NW_SOUNDS.play('legendary');
-            alert(msg);
+            const messages = ['🎮 KONAMI CODE ACTIVATED!', '👀 You found a secret!', '🔮 The prophecy speaks of you...', '💀 Zakum whispers: "Nice try."'];
+            alert(messages[Math.floor(Math.random() * messages.length)]);
             this.konamiCode = [];
         }
     },
 
-    languages: {
-        en: { code: 'EN', icon: 'globe' },
-        zh: { code: '中文', icon: 'globe' },
-        th: { code: 'ไทย', icon: 'globe' }
-    },
-
+    languages: { en: { code: 'EN' }, zh: { code: '中文' }, th: { code: 'ไทย' } },
     currentPage: null,
     currentLang: 'en',
     isOpen: false,
     collapsedSections: {},
     initialized: false,
-    _boundEvents: false,
+    _raf: null,
 
-    getStoredLang() {
-        // Priority: nw_lang (canonical) > lang (legacy)
-        return localStorage.getItem('nw_lang') || localStorage.getItem('lang') || 'en';
-    },
-
-    setStoredLang(lang) {
-        // Sync ALL language keys for backward compatibility
-        localStorage.setItem('nw_lang', lang);      // Canonical key
-        localStorage.setItem('lang', lang);          // Legacy key
-        localStorage.setItem('numbahwan_lang', lang); // Old legacy key
-        localStorage.setItem('preferred_lang', lang); // Another legacy key
-    },
-
-    getCollapsedState() {
-        try {
-            const saved = localStorage.getItem('nw_nav_collapsed');
-            return saved ? JSON.parse(saved) : {};
-        } catch (e) { return {}; }
-    },
-
-    setCollapsedState(section, collapsed) {
-        this.collapsedSections[section] = collapsed;
-        localStorage.setItem('nw_nav_collapsed', JSON.stringify(this.collapsedSections));
-    },
+    getStoredLang() { return localStorage.getItem('nw_lang') || localStorage.getItem('lang') || 'en'; },
+    setStoredLang(lang) { ['nw_lang', 'lang', 'numbahwan_lang', 'preferred_lang'].forEach(k => localStorage.setItem(k, lang)); },
+    getCollapsedState() { try { return JSON.parse(localStorage.getItem('nw_nav_collapsed') || '{}'); } catch { return {}; } },
+    setCollapsedState(section, collapsed) { this.collapsedSections[section] = collapsed; localStorage.setItem('nw_nav_collapsed', JSON.stringify(this.collapsedSections)); },
 
     init(pageId) {
         if (this.initialized) return;
@@ -309,13 +264,9 @@ const NW_NAV = {
         this.bindEvents();
         this.easterEggs.init();
         this.initialized = true;
-        console.log('[NW_NAV] v7.0 Ready - Addiction by Design Edition');
     },
 
-    t(obj) {
-        if (typeof obj === 'string') return obj;
-        return obj[this.currentLang] || obj.en || '';
-    },
+    t(obj) { return typeof obj === 'string' ? obj : (obj[this.currentLang] || obj.en || ''); },
 
     generateNavHTML() {
         const sectionsHTML = Object.entries(this.sections).map(([key, section]) => {
@@ -326,47 +277,27 @@ const NW_NAV = {
             
             const pagesHTML = section.pages.map(page => {
                 const isActive = page.id === this.currentPage;
-                const hotBadge = page.isHot ? '<span class="nw-hot-badge">HOT</span>' : '';
-                const newBadge = page.isNew ? '<span class="nw-new-badge">NEW</span>' : '';
-                return `
-                    <a href="${page.href}" class="nw-nav-link ${isActive ? 'active' : ''}">
-                        ${this.iconSvg(page.icon, 16)}
-                        <span class="nw-nav-text">${this.t(page.name)}</span>
-                        ${hotBadge}${newBadge}
-                    </a>
-                `;
+                return `<a href="${page.href}" class="nw-nav-link ${isActive ? 'active' : ''}">${this.iconSvg(page.icon, 16)}<span class="nw-nav-text">${this.t(page.name)}</span>${page.isHot ? '<span class="nw-hot-badge">HOT</span>' : ''}${page.isNew ? '<span class="nw-new-badge">NEW</span>' : ''}</a>`;
             }).join('');
 
             const chevron = isCollapsible ? `<span class="nw-nav-chevron ${showCollapsed ? '' : 'open'}">${this.iconSvg('arrow-right', 12)}</span>` : '';
-            const desc = section.desc ? `<span class="nw-nav-desc">${this.t(section.desc)}</span>` : '';
-            const countBadge = isCollapsible ? `<span class="nw-nav-count">${section.pages.length}</span>` : '';
-
             return `
                 <div class="nw-nav-section ${showCollapsed ? 'collapsed' : ''}" data-section="${key}">
-                    <div class="nw-nav-section-header ${isCollapsible ? 'collapsible' : ''}" style="color: ${section.color}" data-section="${key}">
+                    <div class="nw-nav-section-header ${isCollapsible ? 'collapsible' : ''}" style="--section-color: ${section.color}" data-section="${key}">
                         ${this.iconSvg(section.icon, 16)}
                         <span>${this.t(section.name)}</span>
-                        ${desc}
-                        ${countBadge}
+                        ${section.desc ? `<span class="nw-nav-desc">${this.t(section.desc)}</span>` : ''}
+                        ${isCollapsible ? `<span class="nw-nav-count">${section.pages.length}</span>` : ''}
                         ${chevron}
                     </div>
-                    <div class="nw-nav-pages" style="${showCollapsed ? 'display:none;' : ''}">${pagesHTML}</div>
+                    <div class="nw-nav-pages ${showCollapsed ? 'collapsed' : ''}">${pagesHTML}</div>
                 </div>
             `;
         }).join('');
 
-        const langButtons = Object.entries(this.languages).map(([code, lang]) => `
-            <button class="nw-lang-btn ${code === this.currentLang ? 'active' : ''}" data-lang="${code}">${lang.code}</button>
-        `).join('');
-
-        const quickAccess = `
-            <div class="nw-quick-access">
-                <a href="/forge" class="nw-quick-btn nw-quick-fire" title="Open Packs">${this.iconSvg('fire', 20)}</a>
-                <a href="/battle" class="nw-quick-btn nw-quick-battle" title="Battle">${this.iconSvg('swords', 20)}</a>
-                <a href="/claim" class="nw-quick-btn nw-quick-claim" title="Claim Rewards">${this.iconSvg('sparkles', 20)}</a>
-                <a href="/tabletop" class="nw-quick-btn nw-quick-tabletop" title="Tabletop">${this.iconSvg('dice', 20)}</a>
-            </div>
-        `;
+        const langButtons = Object.entries(this.languages).map(([code, lang]) => 
+            `<button class="nw-lang-btn ${code === this.currentLang ? 'active' : ''}" data-lang="${code}">${lang.code}</button>`
+        ).join('');
 
         return `
             <div id="nwNavOverlay" class="nw-nav-overlay"></div>
@@ -375,14 +306,15 @@ const NW_NAV = {
                     <div class="nw-nav-title">${this.iconSvg('crown', 20)} NumbahWan</div>
                     <button id="nwNavClose" class="nw-nav-close">${this.iconSvg('close', 18)}</button>
                 </div>
-                ${quickAccess}
+                <div class="nw-quick-access">
+                    <a href="/forge" class="nw-quick-btn fire">${this.iconSvg('fire', 20)}</a>
+                    <a href="/battle" class="nw-quick-btn battle">${this.iconSvg('swords', 20)}</a>
+                    <a href="/claim" class="nw-quick-btn claim">${this.iconSvg('sparkles', 20)}</a>
+                    <a href="/tabletop" class="nw-quick-btn tabletop">${this.iconSvg('dice', 20)}</a>
+                </div>
                 <div class="nw-nav-lang">${langButtons}</div>
-                <div class="nw-nav-scroll">
-                    ${sectionsHTML}
-                </div>
-                <div class="nw-nav-footer">
-                    <div class="nw-nav-version">v7.0 • Addiction Edition</div>
-                </div>
+                <div class="nw-nav-scroll">${sectionsHTML}</div>
+                <div class="nw-nav-footer"><div class="nw-nav-version">v8.0 • 60fps Edition</div></div>
             </nav>
             <button id="nwNavToggle" class="nw-nav-toggle">${this.iconSvg('menu', 22)}</button>
             <a href="/" id="nwNavHome" class="nw-nav-home">${this.iconSvg('home', 22)}</a>
@@ -390,10 +322,7 @@ const NW_NAV = {
     },
 
     injectNav() {
-        // Remove existing nav completely
         document.querySelectorAll('#nwNavContainer, #nwNavPanel, #nwNavOverlay, #nwNavToggle, #nwNavHome').forEach(el => el.remove());
-        
-        // CRITICAL: Reset body overflow when reinecting nav (fixes iOS scroll lock after lang change)
         document.body.style.overflow = '';
         this.isOpen = false;
         
@@ -402,317 +331,300 @@ const NW_NAV = {
         container.innerHTML = this.generateNavHTML();
         document.body.appendChild(container);
         this.injectStyles();
-        
-        // Re-bind events after re-injection (for language change)
-        if (this._boundEvents) {
-            this._bindCoreEvents();
-        }
+        this._bindCoreEvents();
     },
 
     injectStyles() {
         if (document.getElementById('nwNavStyles')) return;
-        
         const style = document.createElement('style');
         style.id = 'nwNavStyles';
         style.textContent = `
-            /* NW Nav v7.0 - ADDICTION BY DESIGN EDITION */
-            /* NumbahWan Signature Colors: Gold #ffd700, Orange #ff6b00, Purple #a855f7, Fire #ff4500 */
-            
-            .nw-nav-overlay { 
-                position: fixed; inset: 0; 
-                background: rgba(0,0,0,0.85); 
-                z-index: 9998; opacity: 0; visibility: hidden; 
-                transition: all 0.3s; 
-                backdrop-filter: blur(8px); 
-            }
-            .nw-nav-overlay.open { opacity: 1; visibility: visible; }
-            
-            .nw-nav-panel { 
-                position: fixed; top: 0; right: -320px; 
-                width: 300px; max-width: 85vw; height: 100vh; 
-                background: linear-gradient(180deg, #0a0808 0%, #1a1212 50%, #0d0a0a 100%); 
-                z-index: 9999; 
-                transition: right 0.3s cubic-bezier(0.4, 0, 0.2, 1); 
-                display: flex; flex-direction: column; 
-                border-left: 2px solid rgba(255,107,0,0.5); 
-                box-shadow: -5px 0 40px rgba(255,107,0,0.3), -2px 0 20px rgba(255,215,0,0.2); 
-            }
-            .nw-nav-panel.open { right: 0; }
-            
-            /* Header - Premium Gold Accent */
-            .nw-nav-header { 
-                display: flex; justify-content: space-between; align-items: center; 
-                padding: 16px; 
-                border-bottom: 2px solid rgba(255,215,0,0.4); 
-                background: linear-gradient(135deg, rgba(255,107,0,0.15), rgba(255,215,0,0.1), rgba(0,0,0,0.5)); 
-            }
-            .nw-nav-title { 
-                font-family: 'Orbitron', monospace, sans-serif; 
-                font-size: 18px; font-weight: 900; 
-                background: linear-gradient(135deg, #ffd700, #ff6b00); 
-                -webkit-background-clip: text; -webkit-text-fill-color: transparent; 
-                display: flex; align-items: center; gap: 8px; 
-                text-shadow: 0 0 20px rgba(255,215,0,0.5);
-                animation: titleGlow 2s ease-in-out infinite;
-            }
-            @keyframes titleGlow {
-                0%, 100% { filter: drop-shadow(0 0 5px rgba(255,215,0,0.5)); }
-                50% { filter: drop-shadow(0 0 15px rgba(255,107,0,0.8)); }
-            }
-            .nw-nav-title svg { stroke: #ffd700; }
-            .nw-nav-close { 
-                background: rgba(255,107,0,0.1); border: 1px solid rgba(255,107,0,0.3); 
-                color: #ff6b00; cursor: pointer; padding: 8px; border-radius: 8px; 
-                transition: all 0.2s; 
-            }
-            .nw-nav-close:hover { color: #ffd700; background: rgba(255,215,0,0.2); border-color: #ffd700; transform: rotate(90deg); }
-            
-            /* Quick Access - Dopamine Buttons */
-            .nw-quick-access { 
-                display: flex; justify-content: space-around; 
-                padding: 14px 16px; 
-                border-bottom: 1px solid rgba(255,215,0,0.2); 
-                background: linear-gradient(135deg, rgba(255,107,0,0.1), rgba(168,85,247,0.05), rgba(0,0,0,0.3)); 
-            }
-            .nw-quick-btn { 
-                width: 50px; height: 50px; 
-                display: flex; align-items: center; justify-content: center; 
-                border-radius: 14px; 
-                transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); 
-                position: relative;
-                overflow: hidden;
-            }
-            .nw-quick-btn::before {
-                content: '';
-                position: absolute;
-                inset: 0;
-                background: radial-gradient(circle at center, rgba(255,255,255,0.2) 0%, transparent 70%);
-                opacity: 0;
-                transition: opacity 0.3s;
-            }
-            .nw-quick-btn:hover::before { opacity: 1; }
-            .nw-quick-btn:hover { transform: scale(1.15) translateY(-3px); }
-            .nw-quick-btn:active { transform: scale(0.95); }
-            
-            .nw-quick-fire { background: linear-gradient(135deg, #ff4500, #ff6b00); color: #fff; box-shadow: 0 4px 20px rgba(255,69,0,0.5); }
-            .nw-quick-fire:hover { box-shadow: 0 6px 30px rgba(255,69,0,0.7); }
-            .nw-quick-battle { background: linear-gradient(135deg, #a855f7, #9333ea); color: #fff; box-shadow: 0 4px 20px rgba(168,85,247,0.5); }
-            .nw-quick-battle:hover { box-shadow: 0 6px 30px rgba(168,85,247,0.7); }
-            .nw-quick-claim { background: linear-gradient(135deg, #ffd700, #f59e0b); color: #000; box-shadow: 0 4px 20px rgba(255,215,0,0.5); animation: claimPulse 2s infinite; }
-            .nw-quick-claim:hover { box-shadow: 0 6px 30px rgba(255,215,0,0.7); }
-            @keyframes claimPulse {
-                0%, 100% { box-shadow: 0 4px 20px rgba(255,215,0,0.5); }
-                50% { box-shadow: 0 4px 30px rgba(255,215,0,0.8), 0 0 40px rgba(255,215,0,0.4); }
-            }
-            .nw-quick-tabletop { background: linear-gradient(135deg, #f59e0b, #d97706); color: #fff; box-shadow: 0 4px 20px rgba(245,158,11,0.5); }
-            .nw-quick-tabletop:hover { box-shadow: 0 6px 30px rgba(245,158,11,0.7); }
-            
-            /* Language Toggle - Premium Style */
-            .nw-nav-lang { 
-                display: flex; justify-content: center; gap: 8px; 
-                padding: 14px; 
-                border-bottom: 1px solid rgba(255,215,0,0.15); 
-                background: rgba(0,0,0,0.2);
-            }
-            .nw-lang-btn { 
-                background: rgba(255,107,0,0.1); 
-                border: 1px solid rgba(255,107,0,0.3); 
-                color: rgba(255,255,255,0.6); 
-                padding: 8px 16px; border-radius: 8px; 
-                font-size: 13px; font-weight: 600;
-                cursor: pointer; 
-                transition: all 0.2s; 
-            }
-            .nw-lang-btn:hover { 
-                border-color: #ff6b00; 
-                color: #ff6b00; 
-                background: rgba(255,107,0,0.15);
-                transform: translateY(-2px);
-            }
-            .nw-lang-btn.active { 
-                background: linear-gradient(135deg, rgba(255,215,0,0.3), rgba(255,107,0,0.2)); 
-                border-color: #ffd700; 
-                color: #ffd700; 
-                box-shadow: 0 0 15px rgba(255,215,0,0.3);
-                font-weight: 700;
-            }
-            
-            /* Scroll Area */
-            .nw-nav-scroll { flex: 1; overflow-y: auto; padding: 8px 0; }
-            .nw-nav-scroll::-webkit-scrollbar { width: 4px; }
-            .nw-nav-scroll::-webkit-scrollbar-track { background: transparent; }
-            .nw-nav-scroll::-webkit-scrollbar-thumb { background: linear-gradient(180deg, #ff6b00, #ffd700); border-radius: 2px; }
-            
-            /* Sections */
-            .nw-nav-section { margin: 4px 8px; }
-            .nw-nav-section-header { 
-                display: flex; align-items: center; gap: 8px; 
-                padding: 12px 14px; 
-                font-size: 14px; font-weight: 700; 
-                text-transform: uppercase; letter-spacing: 0.5px; 
-                border-radius: 10px; 
-                transition: all 0.2s; 
-                border: 1px solid transparent;
-            }
-            .nw-nav-section-header.collapsible { cursor: pointer; }
-            .nw-nav-section-header.collapsible:hover { 
-                background: rgba(255,107,0,0.1); 
-                border-color: rgba(255,107,0,0.3);
-            }
-            
-            .nw-nav-desc { font-size: 9px; font-weight: 400; opacity: 0.5; text-transform: none; letter-spacing: 0; margin-left: 4px; }
-            .nw-nav-count { 
-                font-size: 10px; 
-                background: linear-gradient(135deg, rgba(255,107,0,0.3), rgba(255,215,0,0.2)); 
-                padding: 2px 8px; border-radius: 10px; 
-                margin-left: auto; 
-                color: #ffd700;
-            }
-            .nw-nav-chevron { margin-left: auto; transition: transform 0.2s; opacity: 0.5; }
-            .nw-nav-chevron.open { transform: rotate(90deg); opacity: 1; }
-            
-            /* Navigation Links */
-            .nw-nav-pages { padding: 4px 0 4px 8px; }
-            .nw-nav-link { 
-                display: flex; align-items: center; gap: 10px; 
-                padding: 12px 14px; 
-                color: rgba(255,255,255,0.7); 
-                text-decoration: none; 
-                border-radius: 10px; 
-                transition: all 0.2s; 
-                font-size: 14px; font-weight: 500; 
-                border: 1px solid transparent;
-                position: relative;
-                overflow: hidden;
-            }
-            .nw-nav-link::before {
-                content: '';
-                position: absolute;
-                left: 0;
-                top: 0;
-                height: 100%;
-                width: 0;
-                background: linear-gradient(90deg, rgba(255,107,0,0.2), transparent);
-                transition: width 0.3s;
-            }
-            .nw-nav-link:hover::before { width: 100%; }
-            .nw-nav-link:hover { 
-                background: rgba(255,107,0,0.1); 
-                color: #fff; 
-                transform: translateX(6px); 
-                border-color: rgba(255,107,0,0.3);
-            }
-            .nw-nav-link.active { 
-                background: linear-gradient(90deg, rgba(255,215,0,0.2), rgba(255,107,0,0.1)); 
-                color: #ffd700; 
-                border-left: 3px solid #ffd700; 
-                box-shadow: inset 0 0 20px rgba(255,215,0,0.1);
-            }
-            
-            .nw-nav-icon { flex-shrink: 0; opacity: 0.9; }
-            .nw-nav-text { flex: 1; }
-            
-            /* Badges - Addictive Pulse */
-            .nw-new-badge, .nw-hot-badge { 
-                font-size: 9px; padding: 3px 6px; border-radius: 4px; font-weight: 700; 
-                text-transform: uppercase;
-            }
-            .nw-new-badge { 
-                background: linear-gradient(135deg, #22c55e, #16a34a); 
-                color: #fff; 
-                box-shadow: 0 0 10px rgba(34,197,94,0.5);
-            }
-            .nw-hot-badge { 
-                background: linear-gradient(135deg, #ff4500, #ff6b00); 
-                color: #fff; 
-                animation: hotBadgePulse 1.5s infinite; 
-                box-shadow: 0 0 10px rgba(255,69,0,0.5);
-            }
-            @keyframes hotBadgePulse { 
-                0%, 100% { transform: scale(1); box-shadow: 0 0 10px rgba(255,69,0,0.5); } 
-                50% { transform: scale(1.1); box-shadow: 0 0 20px rgba(255,69,0,0.8); } 
-            }
-            
-            /* Footer */
-            .nw-nav-footer { 
-                padding: 12px; 
-                border-top: 1px solid rgba(255,215,0,0.2); 
-                text-align: center; 
-                background: linear-gradient(180deg, transparent, rgba(255,107,0,0.05));
-            }
-            .nw-nav-version { 
-                font-size: 10px; 
-                background: linear-gradient(135deg, #ff6b00, #ffd700);
-                -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-            }
-            
-            /* Toggle & Home Buttons - Bottom Right FAB Style (No Header Overlap) */
-            .nw-nav-toggle, .nw-nav-home { 
-                position: fixed; z-index: 9997; 
-                width: 52px; height: 52px; 
-                border: none; border-radius: 50%; 
-                cursor: pointer; 
-                display: flex; align-items: center; justify-content: center; 
-                transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); 
-            }
-            .nw-nav-toggle { 
-                bottom: 80px; right: 16px; 
-                background: linear-gradient(135deg, #ff6b00, #ff4500, #ffd700); 
-                color: #fff; 
-                box-shadow: 0 4px 20px rgba(255,107,0,0.5), 0 0 40px rgba(255,215,0,0.2);
-                animation: toggleGlow 3s ease-in-out infinite;
-            }
-            @keyframes toggleGlow {
-                0%, 100% { box-shadow: 0 4px 20px rgba(255,107,0,0.5), 0 0 40px rgba(255,215,0,0.2); }
-                50% { box-shadow: 0 4px 30px rgba(255,107,0,0.7), 0 0 60px rgba(255,215,0,0.4); }
-            }
-            .nw-nav-home { 
-                bottom: 140px; right: 16px; 
-                background: rgba(10,10,15,0.95); 
-                color: #ffd700; 
-                border: 2px solid rgba(255,215,0,0.4); 
-                text-decoration: none; 
-                backdrop-filter: blur(10px);
-            }
-            .nw-nav-toggle:hover, .nw-nav-home:hover { 
-                transform: scale(1.15); 
-            }
-            .nw-nav-home:hover { 
-                border-color: #ffd700; 
-                box-shadow: 0 0 20px rgba(255,215,0,0.5); 
-            }
-            
-            @media (max-width: 480px) {
-                .nw-nav-panel { width: 100vw; max-width: 100vw; right: -100vw; }
-                .nw-nav-toggle, .nw-nav-home { width: 48px; height: 48px; }
-                .nw-nav-toggle { bottom: 75px; right: 12px; }
-                .nw-nav-home { bottom: 130px; right: 12px; }
-            }
-        `;
+/* NW Nav v8.0 - 60FPS BUTTERY SMOOTH */
+/* GPU-accelerated animations only, no layout thrashing */
+
+.nw-nav-overlay {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.85);
+    z-index: 9998;
+    opacity: 0;
+    visibility: hidden;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    transition: opacity 0.2s ease-out, visibility 0.2s ease-out;
+    will-change: opacity;
+    contain: strict;
+}
+.nw-nav-overlay.open { opacity: 1; visibility: visible; }
+
+.nw-nav-panel {
+    position: fixed; top: 0; right: 0;
+    width: 300px; max-width: 85vw; height: 100vh;
+    background: linear-gradient(180deg, #0a0808 0%, #1a1212 50%, #0d0a0a 100%);
+    z-index: 9999;
+    transform: translate3d(100%, 0, 0);
+    transition: transform 0.25s cubic-bezier(0.32, 0.72, 0, 1);
+    will-change: transform;
+    contain: layout style;
+    display: flex; flex-direction: column;
+    border-left: 2px solid rgba(255,107,0,0.5);
+    box-shadow: -5px 0 40px rgba(255,107,0,0.3);
+}
+.nw-nav-panel.open { transform: translate3d(0, 0, 0); }
+
+.nw-nav-header {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 16px;
+    border-bottom: 2px solid rgba(255,215,0,0.4);
+    background: linear-gradient(135deg, rgba(255,107,0,0.15), rgba(255,215,0,0.1), rgba(0,0,0,0.5));
+}
+.nw-nav-title {
+    font-family: 'Orbitron', monospace, sans-serif;
+    font-size: 18px; font-weight: 900;
+    background: linear-gradient(135deg, #ffd700, #ff6b00);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    background-clip: text;
+    display: flex; align-items: center; gap: 8px;
+}
+.nw-nav-title svg { stroke: #ffd700; }
+.nw-nav-close {
+    background: rgba(255,107,0,0.1); border: 1px solid rgba(255,107,0,0.3);
+    color: #ff6b00; cursor: pointer; padding: 8px; border-radius: 8px;
+    transition: transform 0.15s ease-out, color 0.15s, background 0.15s;
+    will-change: transform;
+}
+.nw-nav-close:hover { color: #ffd700; background: rgba(255,215,0,0.2); transform: rotate(90deg); }
+.nw-nav-close:active { transform: rotate(90deg) scale(0.9); }
+
+/* Quick Access - GPU accelerated hovers */
+.nw-quick-access {
+    display: flex; justify-content: space-around;
+    padding: 14px 16px;
+    border-bottom: 1px solid rgba(255,215,0,0.2);
+    background: linear-gradient(135deg, rgba(255,107,0,0.1), rgba(168,85,247,0.05), rgba(0,0,0,0.3));
+}
+.nw-quick-btn {
+    width: 50px; height: 50px;
+    display: flex; align-items: center; justify-content: center;
+    border-radius: 14px;
+    transition: transform 0.15s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.15s;
+    will-change: transform;
+    text-decoration: none;
+}
+.nw-quick-btn:hover { transform: scale(1.12) translateY(-2px); }
+.nw-quick-btn:active { transform: scale(0.95); }
+.nw-quick-btn.fire { background: linear-gradient(135deg, #ff4500, #ff6b00); color: #fff; box-shadow: 0 4px 20px rgba(255,69,0,0.5); }
+.nw-quick-btn.battle { background: linear-gradient(135deg, #a855f7, #9333ea); color: #fff; box-shadow: 0 4px 20px rgba(168,85,247,0.5); }
+.nw-quick-btn.claim { background: linear-gradient(135deg, #ffd700, #f59e0b); color: #000; box-shadow: 0 4px 20px rgba(255,215,0,0.5); }
+.nw-quick-btn.tabletop { background: linear-gradient(135deg, #f59e0b, #d97706); color: #fff; box-shadow: 0 4px 20px rgba(245,158,11,0.5); }
+
+/* Language Toggle */
+.nw-nav-lang {
+    display: flex; justify-content: center; gap: 8px;
+    padding: 14px;
+    border-bottom: 1px solid rgba(255,215,0,0.15);
+    background: rgba(0,0,0,0.2);
+}
+.nw-lang-btn {
+    background: rgba(255,107,0,0.1);
+    border: 1px solid rgba(255,107,0,0.3);
+    color: rgba(255,255,255,0.6);
+    padding: 8px 16px; border-radius: 8px;
+    font-size: 13px; font-weight: 600;
+    cursor: pointer;
+    transition: transform 0.1s, color 0.1s, border-color 0.1s, background 0.1s;
+    will-change: transform;
+}
+.nw-lang-btn:hover { border-color: #ff6b00; color: #ff6b00; transform: translateY(-2px); }
+.nw-lang-btn:active { transform: translateY(0) scale(0.97); }
+.nw-lang-btn.active {
+    background: linear-gradient(135deg, rgba(255,215,0,0.3), rgba(255,107,0,0.2));
+    border-color: #ffd700; color: #ffd700;
+    box-shadow: 0 0 15px rgba(255,215,0,0.3);
+}
+
+/* Scroll Area - Hardware accelerated */
+.nw-nav-scroll {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding: 8px 0;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+}
+.nw-nav-scroll::-webkit-scrollbar { width: 4px; }
+.nw-nav-scroll::-webkit-scrollbar-track { background: transparent; }
+.nw-nav-scroll::-webkit-scrollbar-thumb { background: linear-gradient(180deg, #ff6b00, #ffd700); border-radius: 2px; }
+
+/* Sections */
+.nw-nav-section { margin: 4px 8px; contain: content; }
+.nw-nav-section-header {
+    display: flex; align-items: center; gap: 8px;
+    padding: 12px 14px;
+    font-size: 14px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 0.5px;
+    border-radius: 10px;
+    color: var(--section-color);
+    transition: background 0.1s, transform 0.1s;
+    will-change: transform;
+    border: 1px solid transparent;
+}
+.nw-nav-section-header.collapsible { cursor: pointer; }
+.nw-nav-section-header.collapsible:hover { background: rgba(255,107,0,0.1); border-color: rgba(255,107,0,0.3); }
+.nw-nav-section-header.collapsible:active { transform: scale(0.98); }
+
+.nw-nav-desc { font-size: 9px; font-weight: 400; opacity: 0.5; text-transform: none; letter-spacing: 0; margin-left: 4px; }
+.nw-nav-count {
+    font-size: 10px;
+    background: linear-gradient(135deg, rgba(255,107,0,0.3), rgba(255,215,0,0.2));
+    padding: 2px 8px; border-radius: 10px;
+    margin-left: auto; color: #ffd700;
+}
+.nw-nav-chevron {
+    margin-left: auto;
+    transition: transform 0.15s ease-out;
+    opacity: 0.5;
+    will-change: transform;
+}
+.nw-nav-chevron.open { transform: rotate(90deg); opacity: 1; }
+
+/* Pages - Smooth height animation with max-height */
+.nw-nav-pages {
+    padding: 4px 0 4px 8px;
+    max-height: 2000px;
+    overflow: hidden;
+    transition: max-height 0.25s ease-out, opacity 0.2s ease-out;
+    opacity: 1;
+    will-change: max-height, opacity;
+}
+.nw-nav-pages.collapsed {
+    max-height: 0;
+    opacity: 0;
+    padding: 0 0 0 8px;
+}
+
+/* Navigation Links - GPU accelerated */
+.nw-nav-link {
+    display: flex; align-items: center; gap: 10px;
+    padding: 12px 14px;
+    color: rgba(255,255,255,0.7);
+    text-decoration: none;
+    border-radius: 10px;
+    font-size: 14px; font-weight: 500;
+    border: 1px solid transparent;
+    position: relative;
+    transition: transform 0.1s ease-out, color 0.1s, background 0.1s, border-color 0.1s;
+    will-change: transform;
+}
+.nw-nav-link:hover {
+    background: rgba(255,107,0,0.1);
+    color: #fff;
+    transform: translateX(6px);
+    border-color: rgba(255,107,0,0.3);
+}
+.nw-nav-link:active { transform: translateX(6px) scale(0.98); }
+.nw-nav-link.active {
+    background: linear-gradient(90deg, rgba(255,215,0,0.2), rgba(255,107,0,0.1));
+    color: #ffd700;
+    border-left: 3px solid #ffd700;
+}
+
+.nw-nav-icon { flex-shrink: 0; opacity: 0.9; }
+.nw-nav-text { flex: 1; }
+
+/* Badges */
+.nw-new-badge, .nw-hot-badge {
+    font-size: 9px; padding: 3px 6px; border-radius: 4px; font-weight: 700;
+    text-transform: uppercase;
+}
+.nw-new-badge { background: linear-gradient(135deg, #22c55e, #16a34a); color: #fff; }
+.nw-hot-badge { background: linear-gradient(135deg, #ff4500, #ff6b00); color: #fff; }
+
+/* Footer */
+.nw-nav-footer {
+    padding: 12px;
+    border-top: 1px solid rgba(255,215,0,0.2);
+    text-align: center;
+}
+.nw-nav-version {
+    font-size: 10px;
+    background: linear-gradient(135deg, #ff6b00, #ffd700);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+/* Toggle & Home - FAB Style */
+.nw-nav-toggle, .nw-nav-home {
+    position: fixed; z-index: 9997;
+    width: 52px; height: 52px;
+    border: none; border-radius: 50%;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: transform 0.15s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.15s;
+    will-change: transform;
+    -webkit-tap-highlight-color: transparent;
+}
+.nw-nav-toggle {
+    bottom: 80px; right: 16px;
+    background: linear-gradient(135deg, #ff6b00, #ff4500, #ffd700);
+    color: #fff;
+    box-shadow: 0 4px 20px rgba(255,107,0,0.5);
+}
+.nw-nav-home {
+    bottom: 140px; right: 16px;
+    background: rgba(10,10,15,0.95);
+    color: #ffd700;
+    border: 2px solid rgba(255,215,0,0.4);
+    text-decoration: none;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+}
+.nw-nav-toggle:hover, .nw-nav-home:hover { transform: scale(1.12); }
+.nw-nav-toggle:active, .nw-nav-home:active { transform: scale(0.95); }
+.nw-nav-home:hover { border-color: #ffd700; box-shadow: 0 0 20px rgba(255,215,0,0.5); }
+
+@media (max-width: 480px) {
+    .nw-nav-panel { width: 100vw; max-width: 100vw; }
+    .nw-nav-toggle, .nw-nav-home { width: 48px; height: 48px; }
+    .nw-nav-toggle { bottom: 75px; right: 12px; }
+    .nw-nav-home { bottom: 130px; right: 12px; }
+}
+
+/* Reduce motion for accessibility */
+@media (prefers-reduced-motion: reduce) {
+    .nw-nav-overlay,
+    .nw-nav-panel,
+    .nw-nav-close,
+    .nw-quick-btn,
+    .nw-lang-btn,
+    .nw-nav-section-header,
+    .nw-nav-chevron,
+    .nw-nav-pages,
+    .nw-nav-link,
+    .nw-nav-toggle,
+    .nw-nav-home {
+        transition: none !important;
+    }
+}
+`;
         document.head.appendChild(style);
     },
 
     bindEvents() {
-        if (this._boundEvents) return;
-        this._boundEvents = true;
-        this._bindCoreEvents();
-
-        // Close on escape
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Escape' && this.isOpen) this.close();
-        });
+        }, { passive: true });
     },
-    
+
     _bindCoreEvents() {
         const toggle = document.getElementById('nwNavToggle');
         const close = document.getElementById('nwNavClose');
         const overlay = document.getElementById('nwNavOverlay');
 
-        toggle?.addEventListener('click', () => this.open());
-        close?.addEventListener('click', () => this.close());
-        overlay?.addEventListener('click', () => this.close());
+        toggle?.addEventListener('click', () => this.open(), { passive: true });
+        close?.addEventListener('click', () => this.close(), { passive: true });
+        overlay?.addEventListener('click', () => this.close(), { passive: true });
 
-        // Section collapse toggle
+        // Section collapse - smooth with RAF
         document.querySelectorAll('.nw-nav-section-header.collapsible').forEach(header => {
             header.addEventListener('click', (e) => {
                 e.stopPropagation();
@@ -721,17 +633,21 @@ const NW_NAV = {
                 const pages = sectionEl.querySelector('.nw-nav-pages');
                 const chevron = header.querySelector('.nw-nav-chevron');
                 
-                const isCollapsed = pages.style.display === 'none';
-                pages.style.display = isCollapsed ? 'block' : 'none';
-                chevron?.classList.toggle('open', isCollapsed);
-                sectionEl.classList.toggle('collapsed', !isCollapsed);
-                this.setCollapsedState(section, !isCollapsed);
+                const isCollapsed = pages.classList.contains('collapsed');
+                
+                // Use RAF for smooth 60fps
+                requestAnimationFrame(() => {
+                    pages.classList.toggle('collapsed', !isCollapsed);
+                    chevron?.classList.toggle('open', isCollapsed);
+                    sectionEl.classList.toggle('collapsed', !isCollapsed);
+                    this.setCollapsedState(section, !isCollapsed);
+                });
                 
                 if (typeof NW_SOUNDS !== 'undefined') NW_SOUNDS.play('click');
-            });
+            }, { passive: true });
         });
 
-        // Language buttons - dispatch event for page re-render
+        // Language buttons
         document.querySelectorAll('.nw-lang-btn').forEach(btn => {
             btn.addEventListener('click', (e) => {
                 e.stopPropagation();
@@ -741,63 +657,55 @@ const NW_NAV = {
                 this.currentLang = lang;
                 this.setStoredLang(lang);
                 
-                // Re-inject nav with new language
-                this.injectNav();
-                
-                // Dispatch events for page content update
-                const event = new CustomEvent('nw-lang-change', { detail: { lang } });
-                document.dispatchEvent(event);
-                window.dispatchEvent(event);
-                
-                // Also dispatch standard languageChanged event
-                document.dispatchEvent(new CustomEvent('languageChanged', { detail: { lang } }));
-                
-                // Sync with NW_I18N if available (the new unified system)
-                if (typeof NW_I18N !== 'undefined' && NW_I18N.setLang) {
-                    NW_I18N.setLang(lang);
-                }
+                requestAnimationFrame(() => {
+                    this.injectNav();
+                    ['nw-lang-change', 'languageChanged'].forEach(evtName => {
+                        document.dispatchEvent(new CustomEvent(evtName, { detail: { lang } }));
+                        if (evtName === 'nw-lang-change') window.dispatchEvent(new CustomEvent(evtName, { detail: { lang } }));
+                    });
+                    if (typeof NW_I18N !== 'undefined' && NW_I18N.setLang) NW_I18N.setLang(lang);
+                });
                 
                 if (typeof NW_SOUNDS !== 'undefined') NW_SOUNDS.play('click');
-                console.log('[NW_NAV] Language changed to:', lang);
-            });
+            }, { passive: true });
         });
     },
 
     open() {
         this.isOpen = true;
-        document.getElementById('nwNavPanel')?.classList.add('open');
-        document.getElementById('nwNavOverlay')?.classList.add('open');
-        document.body.style.overflow = 'hidden';
+        requestAnimationFrame(() => {
+            document.getElementById('nwNavPanel')?.classList.add('open');
+            document.getElementById('nwNavOverlay')?.classList.add('open');
+            document.body.style.overflow = 'hidden';
+        });
         if (typeof NW_SOUNDS !== 'undefined') NW_SOUNDS.play('click');
     },
 
     close() {
         this.isOpen = false;
-        document.getElementById('nwNavPanel')?.classList.remove('open');
-        document.getElementById('nwNavOverlay')?.classList.remove('open');
-        document.body.style.overflow = '';
+        requestAnimationFrame(() => {
+            document.getElementById('nwNavPanel')?.classList.remove('open');
+            document.getElementById('nwNavOverlay')?.classList.remove('open');
+            document.body.style.overflow = '';
+        });
     },
 
     setLang(lang) {
         if (lang === this.currentLang) return;
         this.currentLang = lang;
         this.setStoredLang(lang);
-        this.injectNav();
-        
-        const event = new CustomEvent('nw-lang-change', { detail: { lang } });
-        document.dispatchEvent(event);
-        window.dispatchEvent(event);
-        document.dispatchEvent(new CustomEvent('languageChanged', { detail: { lang } }));
+        requestAnimationFrame(() => {
+            this.injectNav();
+            ['nw-lang-change', 'languageChanged'].forEach(evtName => {
+                document.dispatchEvent(new CustomEvent(evtName, { detail: { lang } }));
+            });
+        });
     }
 };
 
-// Auto-init
 if (typeof window !== 'undefined') {
     window.NW_NAV = NW_NAV;
     document.addEventListener('DOMContentLoaded', () => {
-        const pageId = document.body.dataset.pageId || 'index';
-        NW_NAV.init(pageId);
+        NW_NAV.init(document.body.dataset.pageId || 'index');
     });
 }
-
-console.log('[NW_NAV] v7.0 Addiction by Design Edition loaded');
