@@ -642,17 +642,17 @@ const NW_NAV = {
                 -webkit-background-clip: text; -webkit-text-fill-color: transparent;
             }
             
-            /* Toggle & Home Buttons - Fire Theme */
+            /* Toggle & Home Buttons - Bottom Right FAB Style (No Header Overlap) */
             .nw-nav-toggle, .nw-nav-home { 
                 position: fixed; z-index: 9997; 
-                width: 48px; height: 48px; 
-                border: none; border-radius: 14px; 
+                width: 52px; height: 52px; 
+                border: none; border-radius: 50%; 
                 cursor: pointer; 
                 display: flex; align-items: center; justify-content: center; 
                 transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); 
             }
             .nw-nav-toggle { 
-                top: 12px; right: 12px; 
+                bottom: 80px; right: 16px; 
                 background: linear-gradient(135deg, #ff6b00, #ff4500, #ffd700); 
                 color: #fff; 
                 box-shadow: 0 4px 20px rgba(255,107,0,0.5), 0 0 40px rgba(255,215,0,0.2);
@@ -663,14 +663,15 @@ const NW_NAV = {
                 50% { box-shadow: 0 4px 30px rgba(255,107,0,0.7), 0 0 60px rgba(255,215,0,0.4); }
             }
             .nw-nav-home { 
-                top: 12px; right: 68px; 
-                background: rgba(0,0,0,0.8); 
+                bottom: 140px; right: 16px; 
+                background: rgba(10,10,15,0.95); 
                 color: #ffd700; 
                 border: 2px solid rgba(255,215,0,0.4); 
                 text-decoration: none; 
+                backdrop-filter: blur(10px);
             }
             .nw-nav-toggle:hover, .nw-nav-home:hover { 
-                transform: scale(1.1) translateY(-2px); 
+                transform: scale(1.15); 
             }
             .nw-nav-home:hover { 
                 border-color: #ffd700; 
@@ -679,9 +680,9 @@ const NW_NAV = {
             
             @media (max-width: 480px) {
                 .nw-nav-panel { width: 100vw; max-width: 100vw; right: -100vw; }
-                .nw-nav-toggle, .nw-nav-home { top: 8px; width: 44px; height: 44px; }
-                .nw-nav-toggle { right: 8px; }
-                .nw-nav-home { right: 58px; }
+                .nw-nav-toggle, .nw-nav-home { width: 48px; height: 48px; }
+                .nw-nav-toggle { bottom: 75px; right: 12px; }
+                .nw-nav-home { bottom: 130px; right: 12px; }
             }
         `;
         document.head.appendChild(style);
