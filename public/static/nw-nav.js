@@ -1,14 +1,16 @@
 /**
- * NumbahWan TCG - Unified Navigation System v8.0
- * 60FPS BUTTERY SMOOTH EDITION
+ * NumbahWan TCG - Unified Navigation System v8.1
+ * 60FPS BUTTERY SMOOTH EDITION - Mobile Optimized
  * 
  * Performance optimizations:
- * - GPU-accelerated transforms only (no layout thrashing)
+ * - GPU-accelerated transforms only (translate3d, no layout thrashing)
+ * - Removed backdrop-filter blur (laggy on mobile Safari)
  * - will-change hints for compositor optimization
  * - requestAnimationFrame for smooth animations
- * - CSS containment for isolation
+ * - CSS containment for paint/layout isolation
  * - Passive event listeners
- * - No display:none toggling (use transforms + opacity)
+ * - backface-visibility hidden for GPU layers
+ * - Faster transitions (0.08s-0.2s range)
  */
 
 const NW_NAV = {
@@ -344,30 +346,32 @@ const NW_NAV = {
 
 .nw-nav-overlay {
     position: fixed; inset: 0;
-    background: rgba(0,0,0,0.85);
+    background: rgba(0,0,0,0.9);
     z-index: 9998;
     opacity: 0;
     visibility: hidden;
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
-    transition: opacity 0.2s ease-out, visibility 0.2s ease-out;
+    transition: opacity 0.15s ease-out, visibility 0.15s ease-out;
     will-change: opacity;
     contain: strict;
+    transform: translateZ(0);
+    -webkit-transform: translateZ(0);
 }
 .nw-nav-overlay.open { opacity: 1; visibility: visible; }
 
 .nw-nav-panel {
     position: fixed; top: 0; right: 0;
-    width: 300px; max-width: 85vw; height: 100vh;
+    width: 300px; max-width: 85vw; height: 100vh; height: 100dvh;
     background: linear-gradient(180deg, #0a0808 0%, #1a1212 50%, #0d0a0a 100%);
     z-index: 9999;
     transform: translate3d(100%, 0, 0);
-    transition: transform 0.25s cubic-bezier(0.32, 0.72, 0, 1);
+    transition: transform 0.2s cubic-bezier(0.32, 0.72, 0, 1);
     will-change: transform;
-    contain: layout style;
+    contain: layout style paint;
     display: flex; flex-direction: column;
     border-left: 2px solid rgba(255,107,0,0.5);
-    box-shadow: -5px 0 40px rgba(255,107,0,0.3);
+    box-shadow: -5px 0 30px rgba(255,107,0,0.2);
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
 }
 .nw-nav-panel.open { transform: translate3d(0, 0, 0); }
 
@@ -487,19 +491,19 @@ const NW_NAV = {
 }
 .nw-nav-chevron.open { transform: rotate(90deg); opacity: 1; }
 
-/* Pages - Smooth height animation with max-height */
+/* Pages - Smooth collapse with transform */
 .nw-nav-pages {
     padding: 4px 0 4px 8px;
-    max-height: 2000px;
     overflow: hidden;
-    transition: max-height 0.25s ease-out, opacity 0.2s ease-out;
+    transition: max-height 0.18s ease-out, opacity 0.12s ease-out, padding 0.18s ease-out;
     opacity: 1;
-    will-change: max-height, opacity;
+    max-height: 1500px;
 }
 .nw-nav-pages.collapsed {
     max-height: 0;
     opacity: 0;
-    padding: 0 0 0 8px;
+    padding-top: 0;
+    padding-bottom: 0;
 }
 
 /* Navigation Links - GPU accelerated */
@@ -512,16 +516,17 @@ const NW_NAV = {
     font-size: 14px; font-weight: 500;
     border: 1px solid transparent;
     position: relative;
-    transition: transform 0.1s ease-out, color 0.1s, background 0.1s, border-color 0.1s;
+    transition: transform 0.08s ease-out, color 0.08s, background 0.08s;
     will-change: transform;
+    -webkit-tap-highlight-color: transparent;
+    transform: translateZ(0);
 }
 .nw-nav-link:hover {
-    background: rgba(255,107,0,0.1);
+    background: rgba(255,107,0,0.12);
     color: #fff;
-    transform: translateX(6px);
-    border-color: rgba(255,107,0,0.3);
+    transform: translate3d(6px, 0, 0);
 }
-.nw-nav-link:active { transform: translateX(6px) scale(0.98); }
+.nw-nav-link:active { transform: translate3d(4px, 0, 0) scale(0.98); }
 .nw-nav-link.active {
     background: linear-gradient(90deg, rgba(255,215,0,0.2), rgba(255,107,0,0.1));
     color: #ffd700;
@@ -559,9 +564,12 @@ const NW_NAV = {
     border: none; border-radius: 50%;
     cursor: pointer;
     display: flex; align-items: center; justify-content: center;
-    transition: transform 0.15s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.15s;
+    transition: transform 0.1s cubic-bezier(0.34, 1.56, 0.64, 1);
     will-change: transform;
     -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
 }
 .nw-nav-toggle {
     bottom: 80px; right: 16px;
@@ -571,15 +579,15 @@ const NW_NAV = {
 }
 .nw-nav-home {
     bottom: 140px; right: 16px;
-    background: rgba(10,10,15,0.95);
+    background: rgba(10,10,15,0.98);
     color: #ffd700;
     border: 2px solid rgba(255,215,0,0.4);
     text-decoration: none;
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
 }
-.nw-nav-toggle:hover, .nw-nav-home:hover { transform: scale(1.12); }
-.nw-nav-toggle:active, .nw-nav-home:active { transform: scale(0.95); }
+.nw-nav-toggle:hover, .nw-nav-home:hover { transform: scale(1.08); }
+.nw-nav-toggle:active, .nw-nav-home:active { transform: scale(0.92); }
 .nw-nav-home:hover { border-color: #ffd700; box-shadow: 0 0 20px rgba(255,215,0,0.5); }
 
 @media (max-width: 480px) {
