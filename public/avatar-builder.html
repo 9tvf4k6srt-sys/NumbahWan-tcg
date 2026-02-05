@@ -1,0 +1,695 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NumbahWan TCG | Avatar Builder</title>
+    <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/nw-tokens.css">
+    <link rel="stylesheet" href="/static/nw-utilities.css">
+    <style>
+        :root {
+            --gold: #d4af37;
+            --orange: #ff6b00;
+            --purple: #6b21a8;
+            --ink: #1a1a2e;
+            --paper: #f5f0e1;
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f0f23 100%);
+            min-height: 100vh;
+            color: #f5f0e1;
+        }
+        .slot-card {
+            background: rgba(26, 26, 46, 0.8);
+            border: 2px solid rgba(212, 175, 55, 0.3);
+            border-radius: 12px;
+            transition: all 0.2s ease;
+        }
+        .slot-card:hover {
+            border-color: var(--gold);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(212, 175, 55, 0.2);
+        }
+        .slot-card.selected {
+            border-color: var(--orange);
+            box-shadow: 0 0 20px rgba(255, 107, 0, 0.3);
+        }
+        .component-item {
+            background: rgba(255, 255, 255, 0.05);
+            border: 2px solid transparent;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+        .component-item:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(212, 175, 55, 0.5);
+        }
+        .component-item.active {
+            background: rgba(212, 175, 55, 0.2);
+            border-color: var(--gold);
+        }
+        .preview-area {
+            background: linear-gradient(180deg, #87CEEB 0%, #98D8E8 100%);
+            border-radius: 16px;
+            position: relative;
+            overflow: hidden;
+        }
+        .preview-area::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 200px;
+            height: 60px;
+            background: linear-gradient(180deg, #4a7c20 0%, #3d6b1a 100%);
+            border-radius: 100% 100% 0 0;
+        }
+        .reference-sheet {
+            background: #000;
+            border: 3px solid var(--gold);
+            border-radius: 12px;
+        }
+        .prompt-output {
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(212, 175, 55, 0.3);
+            border-radius: 8px;
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 12px;
+        }
+        .btn-generate {
+            background: linear-gradient(135deg, var(--gold) 0%, #b8960c 100%);
+            color: #1a1a2e;
+            font-weight: 700;
+            padding: 12px 32px;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+        }
+        .btn-generate:hover {
+            transform: scale(1.05);
+            box-shadow: 0 8px 24px rgba(212, 175, 55, 0.4);
+        }
+        .accuracy-meter {
+            height: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        .accuracy-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #ef4444 0%, #f59e0b 50%, #22c55e 100%);
+            transition: width 0.3s ease;
+        }
+        .upload-zone {
+            border: 2px dashed rgba(212, 175, 55, 0.5);
+            border-radius: 12px;
+            transition: all 0.2s ease;
+        }
+        .upload-zone:hover, .upload-zone.dragover {
+            border-color: var(--gold);
+            background: rgba(212, 175, 55, 0.1);
+        }
+    </style>
+</head>
+<body>
+    <script src="/static/nw-essentials.js"></script>
+    <script src="/static/nw-icons-inline.js"></script>
+    <script src="/static/nw-nav.js"></script>
+    <script src="/static/nw-i18n-core.js"></script>
+
+    <div class="container mx-auto px-4 py-8 max-w-7xl">
+        <!-- Header -->
+        <div class="text-center mb-8">
+            <h1 class="text-4xl font-bold mb-2" style="font-family: 'Orbitron', sans-serif; color: var(--gold);">
+                <span data-i18n="title">Avatar Builder</span>
+            </h1>
+            <p class="text-gray-400" data-i18n="subtitle">Build accurate reference sheets for card art generation</p>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <!-- Left Column: Component Selector -->
+            <div class="lg:col-span-2 space-y-4">
+                <!-- Upload Reference -->
+                <div class="slot-card p-4">
+                    <h3 class="text-lg font-semibold mb-3 flex items-center gap-2" style="color: var(--gold);">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                        </svg>
+                        <span data-i18n="uploadRef">Upload Reference Screenshot</span>
+                    </h3>
+                    <div id="uploadZone" class="upload-zone p-8 text-center cursor-pointer">
+                        <input type="file" id="refUpload" accept="image/*" class="hidden">
+                        <svg class="w-12 h-12 mx-auto mb-3 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
+                        </svg>
+                        <p class="text-gray-400" data-i18n="dropHere">Drop your MapleStory avatar screenshot here</p>
+                        <p class="text-sm text-gray-500 mt-1" data-i18n="orClick">or click to browse</p>
+                    </div>
+                    <div id="uploadedRef" class="hidden mt-4">
+                        <img id="uploadedImage" class="max-h-48 mx-auto rounded-lg border-2 border-gold/30">
+                    </div>
+                </div>
+
+                <!-- Component Slots -->
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-3" id="slotGrid">
+                    <!-- Slots will be generated by JS -->
+                </div>
+
+                <!-- Component Picker (shows when slot is selected) -->
+                <div id="componentPicker" class="slot-card p-4 hidden">
+                    <h3 class="text-lg font-semibold mb-3" style="color: var(--gold);">
+                        <span id="pickerTitle">Select Component</span>
+                    </h3>
+                    <div id="componentGrid" class="grid grid-cols-3 md:grid-cols-5 gap-3">
+                        <!-- Components will be generated by JS -->
+                    </div>
+                </div>
+
+                <!-- Generated Prompt -->
+                <div class="slot-card p-4">
+                    <h3 class="text-lg font-semibold mb-3 flex items-center justify-between" style="color: var(--gold);">
+                        <span class="flex items-center gap-2">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/>
+                            </svg>
+                            <span data-i18n="generatedPrompt">Generated Prompt</span>
+                        </span>
+                        <button onclick="copyPrompt()" class="text-sm px-3 py-1 bg-white/10 rounded hover:bg-white/20 transition">
+                            <span data-i18n="copy">Copy</span>
+                        </button>
+                    </h3>
+                    <div id="promptOutput" class="prompt-output p-4 text-green-400 whitespace-pre-wrap max-h-48 overflow-y-auto">
+                        Select components to generate prompt...
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column: Preview & Actions -->
+            <div class="space-y-4">
+                <!-- Avatar Preview -->
+                <div class="slot-card p-4">
+                    <h3 class="text-lg font-semibold mb-3" style="color: var(--gold);" data-i18n="preview">Preview</h3>
+                    <div class="preview-area h-64 flex items-center justify-center">
+                        <div id="previewContent" class="relative z-10 text-center">
+                            <p class="text-gray-600" data-i18n="selectComponents">Select components to preview</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Reference Sheet -->
+                <div class="slot-card p-4">
+                    <h3 class="text-lg font-semibold mb-3" style="color: var(--gold);" data-i18n="refSheet">Reference Sheet</h3>
+                    <div id="referenceSheet" class="reference-sheet p-2 min-h-[200px]">
+                        <div class="grid grid-cols-3 gap-1" id="refSheetGrid">
+                            <!-- Will show selected component images -->
+                            <div class="aspect-square bg-white/5 rounded flex items-center justify-center text-xs text-gray-500">Hat</div>
+                            <div class="aspect-square bg-white/5 rounded flex items-center justify-center text-xs text-gray-500">Hair</div>
+                            <div class="aspect-square bg-white/5 rounded flex items-center justify-center text-xs text-gray-500">Eyes</div>
+                            <div class="aspect-square bg-white/5 rounded flex items-center justify-center text-xs text-gray-500">Face</div>
+                            <div class="aspect-square bg-white/5 rounded flex items-center justify-center text-xs text-gray-500">Costume</div>
+                            <div class="aspect-square bg-white/5 rounded flex items-center justify-center text-xs text-gray-500">Weapon</div>
+                        </div>
+                    </div>
+                    <button onclick="downloadRefSheet()" class="w-full mt-3 px-4 py-2 bg-white/10 rounded-lg hover:bg-white/20 transition text-sm">
+                        <span data-i18n="downloadSheet">Download Reference Sheet</span>
+                    </button>
+                </div>
+
+                <!-- Selected Components Summary -->
+                <div class="slot-card p-4">
+                    <h3 class="text-lg font-semibold mb-3" style="color: var(--gold);" data-i18n="selected">Selected Components</h3>
+                    <div id="selectedSummary" class="space-y-2 text-sm">
+                        <p class="text-gray-500" data-i18n="noneSelected">No components selected</p>
+                    </div>
+                </div>
+
+                <!-- Actions -->
+                <div class="space-y-3">
+                    <button onclick="generateArt()" class="btn-generate w-full text-lg">
+                        <span data-i18n="generateArt">Generate Card Art</span>
+                    </button>
+                    <button onclick="savePreset()" class="w-full px-4 py-3 bg-purple-600/50 hover:bg-purple-600/70 rounded-lg transition">
+                        <span data-i18n="savePreset">Save as Preset</span>
+                    </button>
+                    <button onclick="loadPreset()" class="w-full px-4 py-3 bg-white/10 hover:bg-white/20 rounded-lg transition">
+                        <span data-i18n="loadPreset">Load Preset</span>
+                    </button>
+                </div>
+
+                <!-- Presets -->
+                <div class="slot-card p-4">
+                    <h3 class="text-lg font-semibold mb-3" style="color: var(--gold);" data-i18n="presets">Saved Presets</h3>
+                    <div id="presetsList" class="space-y-2">
+                        <!-- Presets loaded from JSON -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Avatar Builder State
+        const state = {
+            components: null,
+            selectedSlot: null,
+            selected: {
+                hat: null,
+                hair: null,
+                eyewear: null,
+                face: null,
+                costume: null,
+                weapon: null,
+                skin: null,
+                background: null
+            },
+            uploadedRef: null
+        };
+
+        const slotConfig = {
+            hat: { label: 'Hat', labelZh: '帽子', labelTh: 'หมวก', icon: '🎩', category: 'hats' },
+            hair: { label: 'Hair', labelZh: '髮型', labelTh: 'ผม', icon: '💇', category: 'hair' },
+            eyewear: { label: 'Eyewear', labelZh: '眼鏡', labelTh: 'แว่นตา', icon: '🕶️', category: 'eyewear' },
+            face: { label: 'Face', labelZh: '臉部', labelTh: 'ใบหน้า', icon: '🧔', category: 'face' },
+            costume: { label: 'Costume', labelZh: '服裝', labelTh: 'เครื่องแต่งกาย', icon: '👕', category: 'costumes' },
+            weapon: { label: 'Weapon', labelZh: '武器', labelTh: 'อาวุธ', icon: '⚔️', category: 'weapons' },
+            skin: { label: 'Skin', labelZh: '膚色', labelTh: 'สีผิว', icon: '✋', category: 'skin' },
+            background: { label: 'Background', labelZh: '背景', labelTh: 'พื้นหลัง', icon: '🏝️', category: 'backgrounds' }
+        };
+
+        // Load component data
+        async function loadComponents() {
+            try {
+                const res = await fetch('/static/data/avatar-components.json');
+                state.components = await res.json();
+                renderSlots();
+                renderPresets();
+            } catch (e) {
+                console.error('Failed to load components:', e);
+            }
+        }
+
+        // Render slot grid
+        function renderSlots() {
+            const grid = document.getElementById('slotGrid');
+            grid.innerHTML = Object.entries(slotConfig).map(([key, config]) => `
+                <div class="slot-card p-3 cursor-pointer ${state.selectedSlot === key ? 'selected' : ''}" 
+                     onclick="selectSlot('${key}')" id="slot-${key}">
+                    <div class="text-2xl mb-1">${config.icon}</div>
+                    <div class="text-sm font-medium">${config.label}</div>
+                    <div class="text-xs text-gray-500 mt-1 truncate" id="slot-${key}-value">
+                        ${state.selected[key] ? getComponentName(key, state.selected[key]) : 'None'}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Get component name
+        function getComponentName(slot, componentId) {
+            if (!state.components || !componentId) return 'None';
+            const category = slotConfig[slot].category;
+            const component = state.components.components[category]?.[componentId];
+            return component?.name || componentId;
+        }
+
+        // Select slot
+        function selectSlot(slot) {
+            state.selectedSlot = slot;
+            renderSlots();
+            renderComponentPicker(slot);
+        }
+
+        // Render component picker for selected slot
+        function renderComponentPicker(slot) {
+            const picker = document.getElementById('componentPicker');
+            const grid = document.getElementById('componentGrid');
+            const title = document.getElementById('pickerTitle');
+            
+            picker.classList.remove('hidden');
+            title.textContent = `Select ${slotConfig[slot].label}`;
+
+            const category = slotConfig[slot].category;
+            const components = state.components?.components[category] || {};
+
+            // Add "None" option
+            let html = `
+                <div class="component-item p-2 text-center ${!state.selected[slot] ? 'active' : ''}"
+                     onclick="selectComponent('${slot}', null)">
+                    <div class="aspect-square bg-white/5 rounded-lg flex items-center justify-center mb-1">
+                        <span class="text-2xl">❌</span>
+                    </div>
+                    <div class="text-xs">None</div>
+                </div>
+            `;
+
+            // Add components
+            html += Object.entries(components).map(([id, comp]) => `
+                <div class="component-item p-2 text-center ${state.selected[slot] === id ? 'active' : ''}"
+                     onclick="selectComponent('${slot}', '${id}')">
+                    <div class="aspect-square bg-white/5 rounded-lg flex items-center justify-center mb-1 overflow-hidden">
+                        <img src="${comp.image}" alt="${comp.name}" class="w-full h-full object-contain"
+                             onerror="this.parentElement.innerHTML='<span class=\\'text-2xl\\'>${slotConfig[slot].icon}</span>'">
+                    </div>
+                    <div class="text-xs truncate" title="${comp.name}">${comp.name}</div>
+                </div>
+            `).join('');
+
+            grid.innerHTML = html;
+        }
+
+        // Select component
+        function selectComponent(slot, componentId) {
+            state.selected[slot] = componentId;
+            renderSlots();
+            renderComponentPicker(slot);
+            updatePrompt();
+            updateRefSheet();
+            updateSelectedSummary();
+        }
+
+        // Update generated prompt
+        function updatePrompt() {
+            const output = document.getElementById('promptOutput');
+            const parts = ['MapleStory 2D pixel art sprite, chibi character'];
+            
+            // Add background
+            if (state.selected.background) {
+                const bg = state.components.components.backgrounds[state.selected.background];
+                if (bg) parts.push(bg.promptKeywords);
+            } else {
+                parts.push('on floating green grassy island platform, bright blue sky with clouds');
+            }
+
+            // Add skin
+            if (state.selected.skin) {
+                const skin = state.components.components.skin[state.selected.skin];
+                if (skin) parts.push(skin.promptKeywords);
+            }
+
+            // Character description
+            parts.push('\n\nCharacter wearing:');
+
+            // Add each selected component
+            const slots = ['hat', 'hair', 'eyewear', 'face', 'costume', 'weapon'];
+            slots.forEach(slot => {
+                const componentId = state.selected[slot];
+                if (componentId) {
+                    const category = slotConfig[slot].category;
+                    const comp = state.components.components[category][componentId];
+                    if (comp) {
+                        parts.push(`- ${comp.name.toUpperCase()}: ${comp.promptKeywords}`);
+                    }
+                } else if (slot === 'hat') {
+                    parts.push('- NO HAT (no headwear, hair visible on top)');
+                }
+            });
+
+            parts.push('\n\nExact MapleStory game aesthetic, clean pixel art, 2D side-view chibi sprite, vibrant saturated colors');
+
+            output.textContent = parts.join('\n');
+        }
+
+        // Update reference sheet
+        function updateRefSheet() {
+            const grid = document.getElementById('refSheetGrid');
+            const slots = ['hat', 'hair', 'eyewear', 'face', 'costume', 'weapon'];
+            
+            grid.innerHTML = slots.map(slot => {
+                const componentId = state.selected[slot];
+                if (componentId) {
+                    const category = slotConfig[slot].category;
+                    const comp = state.components.components[category][componentId];
+                    if (comp) {
+                        return `
+                            <div class="aspect-square bg-white/10 rounded overflow-hidden">
+                                <img src="${comp.image}" alt="${comp.name}" class="w-full h-full object-contain">
+                            </div>
+                        `;
+                    }
+                }
+                return `<div class="aspect-square bg-white/5 rounded flex items-center justify-center text-xs text-gray-500">${slotConfig[slot].label}</div>`;
+            }).join('');
+        }
+
+        // Update selected summary
+        function updateSelectedSummary() {
+            const summary = document.getElementById('selectedSummary');
+            const selected = Object.entries(state.selected).filter(([_, v]) => v);
+            
+            if (selected.length === 0) {
+                summary.innerHTML = '<p class="text-gray-500">No components selected</p>';
+                return;
+            }
+
+            summary.innerHTML = selected.map(([slot, componentId]) => {
+                const name = getComponentName(slot, componentId);
+                return `
+                    <div class="flex justify-between items-center py-1 border-b border-white/10">
+                        <span class="text-gray-400">${slotConfig[slot].label}:</span>
+                        <span class="text-white">${name}</span>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Copy prompt to clipboard
+        function copyPrompt() {
+            const prompt = document.getElementById('promptOutput').textContent;
+            navigator.clipboard.writeText(prompt);
+            alert('Prompt copied to clipboard!');
+        }
+
+        // Download reference sheet as image
+        async function downloadRefSheet() {
+            alert('Reference sheet download - coming soon!');
+        }
+
+        // Generate art (placeholder - will integrate with AI)
+        function generateArt() {
+            const prompt = document.getElementById('promptOutput').textContent;
+            console.log('Generate with prompt:', prompt);
+            
+            // Get reference images
+            const refImages = [];
+            Object.entries(state.selected).forEach(([slot, componentId]) => {
+                if (componentId) {
+                    const category = slotConfig[slot].category;
+                    const comp = state.components.components[category]?.[componentId];
+                    if (comp?.image) {
+                        refImages.push(window.location.origin + comp.image);
+                    }
+                }
+            });
+            
+            // Add uploaded reference if available
+            if (state.uploadedRef) {
+                refImages.unshift(state.uploadedRef);
+            }
+
+            console.log('Reference images:', refImages);
+            
+            // Store for external use
+            window.avatarBuilderOutput = {
+                prompt,
+                referenceImages: refImages,
+                selected: { ...state.selected }
+            };
+
+            alert(`Ready to generate!\n\nPrompt: ${prompt.substring(0, 100)}...\n\nReference images: ${refImages.length}\n\nCheck console for full output.`);
+        }
+
+        // Save preset
+        function savePreset() {
+            const name = prompt('Preset name:');
+            if (!name) return;
+            
+            const presets = JSON.parse(localStorage.getItem('avatarPresets') || '{}');
+            presets[name.toLowerCase().replace(/\s+/g, '-')] = {
+                name,
+                components: { ...state.selected },
+                created: new Date().toISOString()
+            };
+            localStorage.setItem('avatarPresets', JSON.stringify(presets));
+            renderPresets();
+            alert('Preset saved!');
+        }
+
+        // Load preset
+        function loadPreset() {
+            const presets = JSON.parse(localStorage.getItem('avatarPresets') || '{}');
+            const names = Object.keys(presets);
+            if (names.length === 0) {
+                alert('No saved presets');
+                return;
+            }
+            const choice = prompt(`Load preset:\n${names.join('\n')}`);
+            if (choice && presets[choice]) {
+                Object.assign(state.selected, presets[choice].components);
+                renderSlots();
+                updatePrompt();
+                updateRefSheet();
+                updateSelectedSummary();
+            }
+        }
+
+        // Render presets list
+        function renderPresets() {
+            const list = document.getElementById('presetsList');
+            
+            // Built-in presets from JSON
+            const builtIn = state.components?.presets || {};
+            const local = JSON.parse(localStorage.getItem('avatarPresets') || '{}');
+            const all = { ...builtIn, ...local };
+
+            if (Object.keys(all).length === 0) {
+                list.innerHTML = '<p class="text-gray-500 text-sm">No presets available</p>';
+                return;
+            }
+
+            list.innerHTML = Object.entries(all).map(([id, preset]) => `
+                <div class="flex justify-between items-center p-2 bg-white/5 rounded hover:bg-white/10 cursor-pointer"
+                     onclick="applyPreset('${id}')">
+                    <span class="text-sm">${preset.name}</span>
+                    <span class="text-xs text-gray-500">${preset.character || 'Custom'}</span>
+                </div>
+            `).join('');
+        }
+
+        // Apply preset
+        function applyPreset(presetId) {
+            const builtIn = state.components?.presets || {};
+            const local = JSON.parse(localStorage.getItem('avatarPresets') || '{}');
+            const preset = builtIn[presetId] || local[presetId];
+            
+            if (preset) {
+                Object.assign(state.selected, preset.components);
+                renderSlots();
+                if (state.selectedSlot) {
+                    renderComponentPicker(state.selectedSlot);
+                }
+                updatePrompt();
+                updateRefSheet();
+                updateSelectedSummary();
+            }
+        }
+
+        // File upload handling
+        document.addEventListener('DOMContentLoaded', () => {
+            const uploadZone = document.getElementById('uploadZone');
+            const fileInput = document.getElementById('refUpload');
+            const uploadedDiv = document.getElementById('uploadedRef');
+            const uploadedImg = document.getElementById('uploadedImage');
+
+            uploadZone.addEventListener('click', () => fileInput.click());
+            
+            uploadZone.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                uploadZone.classList.add('dragover');
+            });
+            
+            uploadZone.addEventListener('dragleave', () => {
+                uploadZone.classList.remove('dragover');
+            });
+            
+            uploadZone.addEventListener('drop', (e) => {
+                e.preventDefault();
+                uploadZone.classList.remove('dragover');
+                if (e.dataTransfer.files.length) {
+                    handleFile(e.dataTransfer.files[0]);
+                }
+            });
+
+            fileInput.addEventListener('change', (e) => {
+                if (e.target.files.length) {
+                    handleFile(e.target.files[0]);
+                }
+            });
+
+            function handleFile(file) {
+                if (!file.type.startsWith('image/')) {
+                    alert('Please upload an image file');
+                    return;
+                }
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    state.uploadedRef = e.target.result;
+                    uploadedImg.src = e.target.result;
+                    uploadedDiv.classList.remove('hidden');
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        // i18n translations
+        const pageTranslations = {
+            en: {
+                title: 'Avatar Builder',
+                subtitle: 'Build accurate reference sheets for card art generation',
+                uploadRef: 'Upload Reference Screenshot',
+                dropHere: 'Drop your MapleStory avatar screenshot here',
+                orClick: 'or click to browse',
+                generatedPrompt: 'Generated Prompt',
+                copy: 'Copy',
+                preview: 'Preview',
+                selectComponents: 'Select components to preview',
+                refSheet: 'Reference Sheet',
+                downloadSheet: 'Download Reference Sheet',
+                selected: 'Selected Components',
+                noneSelected: 'No components selected',
+                generateArt: 'Generate Card Art',
+                savePreset: 'Save as Preset',
+                loadPreset: 'Load Preset',
+                presets: 'Saved Presets'
+            },
+            zh: {
+                title: '頭像建構器',
+                subtitle: '建立精確的卡片藝術參考圖',
+                uploadRef: '上傳參考截圖',
+                dropHere: '將你的楓之谷頭像截圖拖放到這裡',
+                orClick: '或點擊瀏覽',
+                generatedPrompt: '生成的提示詞',
+                copy: '複製',
+                preview: '預覽',
+                selectComponents: '選擇組件以預覽',
+                refSheet: '參考圖表',
+                downloadSheet: '下載參考圖表',
+                selected: '已選組件',
+                noneSelected: '尚未選擇組件',
+                generateArt: '生成卡片藝術',
+                savePreset: '儲存為預設',
+                loadPreset: '載入預設',
+                presets: '已儲存的預設'
+            },
+            th: {
+                title: 'ตัวสร้างอวาตาร์',
+                subtitle: 'สร้างแผ่นอ้างอิงที่แม่นยำสำหรับการสร้างภาพการ์ด',
+                uploadRef: 'อัปโหลดภาพหน้าจออ้างอิง',
+                dropHere: 'วางภาพหน้าจออวาตาร์ MapleStory ของคุณที่นี่',
+                orClick: 'หรือคลิกเพื่อเรียกดู',
+                generatedPrompt: 'พรอมต์ที่สร้างขึ้น',
+                copy: 'คัดลอก',
+                preview: 'ดูตัวอย่าง',
+                selectComponents: 'เลือกส่วนประกอบเพื่อดูตัวอย่าง',
+                refSheet: 'แผ่นอ้างอิง',
+                downloadSheet: 'ดาวน์โหลดแผ่นอ้างอิง',
+                selected: 'ส่วนประกอบที่เลือก',
+                noneSelected: 'ยังไม่ได้เลือกส่วนประกอบ',
+                generateArt: 'สร้างภาพการ์ด',
+                savePreset: 'บันทึกเป็นพรีเซ็ต',
+                loadPreset: 'โหลดพรีเซ็ต',
+                presets: 'พรีเซ็ตที่บันทึกไว้'
+            }
+        };
+
+        // Initialize
+        loadComponents();
+        if (typeof initI18n === 'function') {
+            initI18n(pageTranslations);
+        }
+    </script>
+</body>
+</html>

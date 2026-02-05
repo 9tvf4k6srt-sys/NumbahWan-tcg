@@ -193,7 +193,8 @@ const NW_NAV = {
                 { id: 'efficiency', name: { en: 'Efficiency Dashboard', zh: '效率儀表板', th: 'แดชบอร์ดประสิทธิภาพ' }, icon: 'chart', href: '/efficiency', isHot: true },
                 { id: 'innovation', name: { en: 'Innovation Lab', zh: '創新實驗室', th: 'ห้องนวัตกรรม' }, icon: 'lightning', href: '/innovation', isNew: true },
                 { id: 'quality-metrics', name: { en: 'Quality Metrics', zh: '質量指標', th: 'ตัวชี้วัดคุณภาพ' }, icon: 'trophy', href: '/quality', isNew: true },
-                { id: 'learning-log', name: { en: 'Learning Log', zh: '學習日誌', th: 'บันทึกการเรียนรู้' }, icon: 'book', href: '/learning', isNew: true }
+                { id: 'learning-log', name: { en: 'Learning Log', zh: '學習日誌', th: 'บันทึกการเรียนรู้' }, icon: 'book', href: '/learning', isNew: true },
+                { id: 'card-lab', name: { en: 'Card Lab', zh: '卡片實驗室', th: 'ห้องแล็บการ์ด' }, icon: 'sparkles', href: '/card-lab', isNew: true }
             ]
         },
         resources: {
