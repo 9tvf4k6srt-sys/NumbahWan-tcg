@@ -651,7 +651,7 @@
         // Information Gaps, FOMO, Progress Loops
         // ============================================
         
-        const pageTranslations = {
+        const EVENTS_TRANSLATIONS = {
             en: {
                 pageTitle: "EVENTS",
                 navForge: "Forge",
@@ -908,18 +908,42 @@
         
         let timerInterval;
         let mysteryRevealed = false;
+        let eventsCurrentLang = 'en';
+        
+        // Self-contained translation helper (doesn't rely on external i18n.js)
+        function t(key) {
+            const lang = eventsCurrentLang || localStorage.getItem('nw_lang') || localStorage.getItem('lang') || 'en';
+            const translations = EVENTS_TRANSLATIONS[lang] || EVENTS_TRANSLATIONS.en;
+            return translations[key] || EVENTS_TRANSLATIONS.en[key] || key;
+        }
         
         // Initialize
         document.addEventListener('DOMContentLoaded', () => {
-            initI18n(pageTranslations);
+            // Get current language
+            eventsCurrentLang = localStorage.getItem('nw_lang') || localStorage.getItem('lang') || 'en';
+            
+            // Try to init external i18n if available
+            if (typeof initI18n === 'function') {
+                try { initI18n(EVENTS_TRANSLATIONS); } catch(e) { console.warn('i18n init failed:', e); }
+            }
+            
+            // Always render (self-contained)
             renderAll();
             startTimers();
             trackVisit();
+            
+            console.log('[Events] Loaded with lang:', currentLang);
         });
         
         // Language change handler
-        document.addEventListener('languageChanged', () => renderAll());
-        document.addEventListener('nw-lang-change', () => renderAll());
+        document.addEventListener('languageChanged', (e) => {
+            eventsCurrentLang = e?.detail?.lang || 'en';
+            renderAll();
+        });
+        document.addEventListener('nw-lang-change', (e) => {
+            eventsCurrentLang = e?.detail?.lang || 'en';
+            renderAll();
+        });
         
         function renderAll() {
             renderTodayEvent();
@@ -942,14 +966,20 @@
             const bonuses = document.getElementById('todayBonuses');
             const banner = document.getElementById('todayBanner');
             
-            title.textContent = getTranslation(event.nameKey) || event.nameKey;
-            desc.textContent = getTranslation(event.descKey) || event.descKey;
+            if (!title || !desc || !bonuses || !banner) {
+                console.error('[Events] Missing DOM elements');
+                return;
+            }
+            
+            title.textContent = t(event.nameKey);
+            desc.textContent = t(event.descKey);
             
             bonuses.innerHTML = event.bonusKeys.map(key => 
-                `<div class="bonus-tag active">✓ ${getTranslation(key) || key}</div>`
+                `<div class="bonus-tag active">✓ ${t(key)}</div>`
             ).join('');
             
             banner.style.borderColor = event.color;
+            console.log('[Events] Rendered today:', event.nameKey);
         }
         
         function renderWeekCalendar() {
@@ -975,10 +1005,10 @@
                 return `
                     <div class="day-card ${isToday ? 'today' : ''} ${isPast ? 'past' : ''}" 
                          onclick="showEventDetail('${event?.id}')">
-                        <div class="day-name">${getTranslation(dayKey) || dayKey}</div>
+                        <div class="day-name">${t(dayKey)}</div>
                         <div class="day-date">${date.getDate()}</div>
                         <div class="day-event">${event?.emoji || '📅'}</div>
-                        <div class="day-event-name">${(getTranslation(event?.nameKey) || '').split(' ')[0]}</div>
+                        <div class="day-event-name">${t(event?.nameKey).split(' ')[0]}</div>
                     </div>
                 `;
             }).join('');
@@ -1002,12 +1032,12 @@
                         <div class="event-icon" style="background: ${event.color}20;">${event.emoji}</div>
                         <div class="event-content">
                             <div class="event-header">
-                                <div class="event-name">${getTranslation(event.nameKey) || event.nameKey}</div>
-                                <div class="event-schedule weekly">${getTranslation('every') || 'Every'} ${getTranslation(dayKeys[event.day]) || dayKeys[event.day]}</div>
+                                <div class="event-name">${t(event.nameKey)}</div>
+                                <div class="event-schedule weekly">${t('every')} ${t(dayKeys[event.day])}</div>
                             </div>
-                            <div class="event-desc">${getTranslation(event.descKey) || event.descKey}</div>
+                            <div class="event-desc">${t(event.descKey)}</div>
                             <div class="event-bonuses">
-                                ${event.bonusKeys.map(key => `<span class="event-bonus">${getTranslation(key) || key}</span>`).join('')}
+                                ${event.bonusKeys.map(key => `<span class="event-bonus">${t(key)}</span>`).join('')}
                             </div>
                         </div>
                     </div>
@@ -1021,12 +1051,12 @@
             grid.innerHTML = UPCOMING_EVENTS.map(event => `
                 <div class="upcoming-card ${event.secret ? 'secret' : ''}">
                     <div class="upcoming-header">
-                        <div class="upcoming-name">${getTranslation(event.nameKey) || event.nameKey}</div>
-                        <div class="upcoming-date">${getTranslation(event.dateKey) || event.dateKey}</div>
+                        <div class="upcoming-name">${t(event.nameKey)}</div>
+                        <div class="upcoming-date">${t(event.dateKey)}</div>
                     </div>
-                    <div class="upcoming-desc">${getTranslation(event.descKey) || event.descKey}</div>
+                    <div class="upcoming-desc">${t(event.descKey)}</div>
                     <div class="upcoming-preview">
-                        ${event.tagKeys.map(key => `<span class="preview-tag ${event.secret ? 'mystery' : ''}">${getTranslation(key) || key}</span>`).join('')}
+                        ${event.tagKeys.map(key => `<span class="preview-tag ${event.secret ? 'mystery' : ''}">${t(key)}</span>`).join('')}
                     </div>
                 </div>
             `).join('');
@@ -1035,19 +1065,24 @@
         function loadUserStats() {
             const stats = JSON.parse(localStorage.getItem('nw_event_stats') || '{}');
             
-            document.getElementById('eventsParticipated').textContent = stats.participated || 0;
-            document.getElementById('bonusesEarned').textContent = (stats.bonusPercent || 0) + '%';
-            document.getElementById('streakDays').textContent = '🔥 ' + (stats.streak || 0);
-            document.getElementById('nextBonus').textContent = getNextBigEvent();
+            const eventsEl = document.getElementById('eventsParticipated');
+            const bonusEl = document.getElementById('bonusesEarned');
+            const streakEl = document.getElementById('streakDays');
+            const nextEl = document.getElementById('nextBonus');
+            
+            if (eventsEl) eventsEl.textContent = stats.participated || 0;
+            if (bonusEl) bonusEl.textContent = (stats.bonusPercent || 0) + '%';
+            if (streakEl) streakEl.textContent = '🔥 ' + (stats.streak || 0);
+            if (nextEl) nextEl.textContent = getNextBigEvent();
         }
         
         function getNextBigEvent() {
             const today = new Date().getDay();
             const daysUntilFriday = (5 - today + 7) % 7;
             
-            if (daysUntilFriday === 0) return getTranslation('today') || 'TODAY!';
-            if (daysUntilFriday === 1) return getTranslation('tomorrow') || 'Tomorrow';
-            return `${daysUntilFriday} ${getTranslation('days') || 'days'}`;
+            if (daysUntilFriday === 0) return t('today');
+            if (daysUntilFriday === 1) return t('tomorrow');
+            return `${daysUntilFriday} ${t('days')}`;
         }
         
         function updateStreakDisplay() {
@@ -1091,12 +1126,13 @@
             if (mysteryRevealed) return;
             
             const section = document.getElementById('mysterySection');
-            const rewards = getTranslation('mysteryRewards') || ["Bonus Reward"];
-            const randomReward = rewards[Math.floor(Math.random() * rewards.length)];
+            const rewards = t('mysteryRewards');
+            const rewardsArray = Array.isArray(rewards) ? rewards : EVENTS_TRANSLATIONS.en.mysteryRewards;
+            const randomReward = rewardsArray[Math.floor(Math.random() * rewardsArray.length)];
             
             section.innerHTML = `
                 <div class="mystery-revealed">
-                    <div class="mystery-title">${getTranslation('mysteryRevealed') || '🎉 REVEALED:'}</div>
+                    <div class="mystery-title">${t('mysteryRevealed')}</div>
                     <div class="mystery-reward">${randomReward}</div>
                 </div>
             `;
