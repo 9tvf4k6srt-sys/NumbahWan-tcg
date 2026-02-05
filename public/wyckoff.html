@@ -91,24 +91,26 @@
             left: 0;
             right: 0;
             bottom: 0;
-            background: rgba(0,0,0,0.9);
+            background: rgba(0,0,0,0.95);
             display: none;
             align-items: center;
             justify-content: center;
             z-index: 1000;
-            padding: 20px;
+            padding: 16px;
+            cursor: pointer;
         }
         
         .why-popup.active {
             display: flex;
         }
         
-        .why-content {
-            max-width: 600px;
-            background: var(--paper);
+        .popup-image {
+            max-width: 90vw;
+            max-height: 90vh;
+            object-fit: contain;
             border: 4px solid var(--gold);
-            padding: 20px;
-            position: relative;
+            box-shadow: 0 0 60px rgba(212,175,55,0.4);
+            cursor: default;
         }
         
         @keyframes float {
@@ -198,14 +200,9 @@
         </div>
     </main>
     
-    <!-- Why Popup -->
-    <div class="why-popup" id="whyPopup" onclick="closePopup(event)">
-        <div class="why-content" onclick="event.stopPropagation()">
-            <button onclick="closePopup()" class="absolute top-2 right-2 text-3xl text-gray-600 hover:text-red-600">&times;</button>
-            <h3 class="brush-title text-2xl text-center text-[#c41e3a] mb-4" id="popupTitle"></h3>
-            <img id="popupImage" class="w-full ink-image mb-4" src="" alt="">
-            <p class="text-center text-gray-600 text-sm" id="popupReason"></p>
-        </div>
+    <!-- Why Popup - Image Only -->
+    <div class="why-popup" id="whyPopup" onclick="closePopup()">
+        <img id="popupImage" class="popup-image" src="" alt="" onclick="event.stopPropagation()">
     </div>
     
     <!-- Footer -->
@@ -408,19 +405,16 @@
             `).join('');
         }
         
-        // Show why popup
+        // Show why popup - image only
         function showWhy(index) {
             const stock = stocksData[index];
-            document.getElementById('popupTitle').textContent = `#${stock.rank} ${getStockField(stock, 'name')} - ${t('whyTitle')}`;
             document.getElementById('popupImage').src = stock.whyImage;
-            document.getElementById('popupReason').textContent = getStockField(stock, 'why');
             document.getElementById('whyPopup').classList.add('active');
             document.body.style.overflow = 'hidden';
         }
         
         // Close popup
-        function closePopup(event) {
-            if (event && event.target !== document.getElementById('whyPopup')) return;
+        function closePopup() {
             document.getElementById('whyPopup').classList.remove('active');
             document.body.style.overflow = '';
         }
