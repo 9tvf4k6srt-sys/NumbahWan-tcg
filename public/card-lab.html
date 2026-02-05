@@ -1,0 +1,622 @@
+<!DOCTYPE html>
+<html lang="en" data-page-id="card-lab">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NumbahWan TCG | Card Lab</title>
+    <link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="/static/nw-essentials.js"></script>
+    <script src="/static/nw-nav.js"></script>
+    <script src="/static/nw-i18n-core.js"></script>
+    <style>
+        :root {
+            --gold: #ffd700;
+            --orange: #ff6b00;
+            --purple: #a855f7;
+            --dark: #0a0a0f;
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #0a0a0f 0%, #1a1a2e 50%, #0f0f1a 100%);
+            min-height: 100vh;
+            color: #fff;
+        }
+        .card-preview {
+            background: linear-gradient(145deg, #1a1a2e, #0f0f1a);
+            border: 2px solid var(--gold);
+            border-radius: 16px;
+            box-shadow: 0 0 40px rgba(255,215,0,0.2);
+        }
+        .rarity-mythic { border-color: #ff6b00; box-shadow: 0 0 30px rgba(255,107,0,0.4); }
+        .rarity-legendary { border-color: #fbbf24; box-shadow: 0 0 30px rgba(251,191,36,0.4); }
+        .rarity-epic { border-color: #a855f7; box-shadow: 0 0 30px rgba(168,85,247,0.4); }
+        .rarity-rare { border-color: #3b82f6; box-shadow: 0 0 30px rgba(59,130,246,0.4); }
+        .rarity-uncommon { border-color: #22c55e; box-shadow: 0 0 30px rgba(34,197,94,0.4); }
+        .rarity-common { border-color: #71717a; box-shadow: 0 0 20px rgba(113,113,122,0.3); }
+        .analysis-card {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,215,0,0.2);
+            border-radius: 12px;
+        }
+        .stat-good { color: #22c55e; }
+        .stat-bad { color: #ef4444; }
+        .stat-neutral { color: #fbbf24; }
+        .glow-text {
+            text-shadow: 0 0 20px rgba(255,215,0,0.5);
+        }
+        .proposal-queue {
+            background: rgba(0,0,0,0.3);
+            border: 1px dashed rgba(255,215,0,0.3);
+        }
+    </style>
+</head>
+<body class="p-4 pb-40">
+    <div class="max-w-6xl mx-auto">
+        <!-- Header -->
+        <header class="text-center mb-8">
+            <h1 class="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 via-orange-500 to-purple-500 glow-text" style="font-family: Orbitron">
+                🔬 CARD LAB
+            </h1>
+            <p class="text-gray-400 mt-2" data-i18n="labSubtitle">Propose New Cards • Analyze Collection Impact • Strategic Planning</p>
+        </header>
+
+        <!-- Stats Overview -->
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+            <div class="analysis-card p-4 text-center">
+                <div class="text-3xl font-bold text-yellow-400" id="totalCards">--</div>
+                <div class="text-xs text-gray-400" data-i18n="totalCards">Total Cards</div>
+            </div>
+            <div class="analysis-card p-4 text-center">
+                <div class="text-3xl font-bold text-orange-500" id="mythicCount">--</div>
+                <div class="text-xs text-gray-400" data-i18n="mythicCards">Mythic Cards</div>
+            </div>
+            <div class="analysis-card p-4 text-center">
+                <div class="text-3xl font-bold text-purple-500" id="pendingCount">0</div>
+                <div class="text-xs text-gray-400" data-i18n="pendingProposals">Pending Proposals</div>
+            </div>
+            <div class="analysis-card p-4 text-center">
+                <div class="text-3xl font-bold text-green-500" id="healthScore">--</div>
+                <div class="text-xs text-gray-400" data-i18n="collectionHealth">Collection Health</div>
+            </div>
+        </div>
+
+        <!-- Main Content Grid -->
+        <div class="grid md:grid-cols-2 gap-8">
+            <!-- Left: Card Proposal Form -->
+            <div>
+                <h2 class="text-xl font-bold text-yellow-400 mb-4 flex items-center gap-2">
+                    <span>📝</span>
+                    <span data-i18n="proposeNewCard">Propose New Card</span>
+                </h2>
+                
+                <div class="analysis-card p-6">
+                    <form id="cardProposalForm" class="space-y-4">
+                        <div>
+                            <label class="block text-sm text-gray-400 mb-1" data-i18n="cardName">Card Name</label>
+                            <input type="text" id="cardName" class="w-full bg-black/50 border border-gray-700 rounded-lg px-4 py-2 text-white focus:border-yellow-400 focus:outline-none" placeholder="RegginA - Amber Soprano">
+                        </div>
+                        
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm text-gray-400 mb-1" data-i18n="rarity">Rarity</label>
+                                <select id="cardRarity" class="w-full bg-black/50 border border-gray-700 rounded-lg px-4 py-2 text-white focus:border-yellow-400 focus:outline-none">
+                                    <option value="mythic">🔥 Mythic</option>
+                                    <option value="legendary">⭐ Legendary</option>
+                                    <option value="epic" selected>💎 Epic</option>
+                                    <option value="rare">💙 Rare</option>
+                                    <option value="uncommon">💚 Uncommon</option>
+                                    <option value="common">⚪ Common</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm text-gray-400 mb-1" data-i18n="category">Category</label>
+                                <select id="cardCategory" class="w-full bg-black/50 border border-gray-700 rounded-lg px-4 py-2 text-white focus:border-yellow-400 focus:outline-none">
+                                    <option value="member">👤 Member</option>
+                                    <option value="moment">⚡ Moment</option>
+                                    <option value="gear">✦ Gear</option>
+                                    <option value="vibe">🌀 Vibe</option>
+                                    <option value="spot">📍 Spot</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm text-gray-400 mb-1" data-i18n="role">Role</label>
+                            <select id="cardRole" class="w-full bg-black/50 border border-gray-700 rounded-lg px-4 py-2 text-white focus:border-yellow-400 focus:outline-none">
+                                <option value="carry">🗡️ Carry</option>
+                                <option value="whale">🐋 Whale</option>
+                                <option value="grinder">⚒️ Grinder</option>
+                                <option value="fashion_main">👗 Fashion Main</option>
+                                <option value="theory_crafter">🧠 Theory Crafter</option>
+                                <option value="troll">🃏 Troll</option>
+                                <option value="lurker">👁️ Lurker</option>
+                                <option value="simp">💕 Simp</option>
+                                <option value="guild_parent">👨‍👩‍👧 Guild Parent</option>
+                                <option value="rage_quitter">💢 Rage Quitter</option>
+                                <option value="afk_king">💤 AFK King</option>
+                                <option value="leech">🧲 Leech</option>
+                            </select>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm text-gray-400 mb-1" data-i18n="description">Description</label>
+                            <textarea id="cardDescription" rows="3" class="w-full bg-black/50 border border-gray-700 rounded-lg px-4 py-2 text-white focus:border-yellow-400 focus:outline-none resize-none" placeholder="The story behind this card..."></textarea>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm text-gray-400 mb-1" data-i18n="imagePrompt">AI Image Prompt (optional)</label>
+                            <textarea id="imagePrompt" rows="2" class="w-full bg-black/50 border border-gray-700 rounded-lg px-4 py-2 text-white focus:border-yellow-400 focus:outline-none resize-none" placeholder="MapleStory chibi character with..."></textarea>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm text-gray-400 mb-1" data-i18n="source">Source/Reason</label>
+                            <input type="text" id="cardSource" class="w-full bg-black/50 border border-gray-700 rounded-lg px-4 py-2 text-white focus:border-yellow-400 focus:outline-none" placeholder="MapleStory cash shop update, guild event, etc.">
+                        </div>
+                        
+                        <button type="submit" class="w-full bg-gradient-to-r from-yellow-500 to-orange-500 text-black font-bold py-3 rounded-lg hover:from-yellow-400 hover:to-orange-400 transition-all">
+                            🔍 <span data-i18n="analyzeProposal">Analyze Proposal</span>
+                        </button>
+                    </form>
+                </div>
+            </div>
+            
+            <!-- Right: Analysis Results -->
+            <div>
+                <h2 class="text-xl font-bold text-purple-400 mb-4 flex items-center gap-2">
+                    <span>📊</span>
+                    <span data-i18n="impactAnalysis">Impact Analysis</span>
+                </h2>
+                
+                <div id="analysisResults" class="analysis-card p-6 min-h-[400px]">
+                    <div class="text-center text-gray-500 py-12">
+                        <div class="text-6xl mb-4">🔮</div>
+                        <p data-i18n="fillFormToAnalyze">Fill the form to see collection impact analysis</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Proposal Queue -->
+        <div class="mt-8">
+            <h2 class="text-xl font-bold text-green-400 mb-4 flex items-center gap-2">
+                <span>📋</span>
+                <span data-i18n="proposalQueue">Proposal Queue</span>
+            </h2>
+            
+            <div id="proposalQueue" class="proposal-queue rounded-xl p-6 min-h-[150px]">
+                <div class="text-center text-gray-500 py-8">
+                    <p data-i18n="noProposals">No pending proposals. Add cards above to build your queue.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recently Added Cards -->
+        <div class="mt-8">
+            <h2 class="text-xl font-bold text-blue-400 mb-4 flex items-center gap-2">
+                <span>🆕</span>
+                <span data-i18n="recentlyAdded">Recently Added to Collection</span>
+            </h2>
+            
+            <div id="recentCards" class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <!-- Populated by JS -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Card data cache
+        let cardsData = null;
+        let proposalQueue = JSON.parse(localStorage.getItem('nw_card_proposals') || '[]');
+
+        // Load cards data
+        async function loadCardsData() {
+            try {
+                const res = await fetch('/static/data/cards.json');
+                cardsData = await res.json();
+                updateStats();
+                renderRecentCards();
+                renderProposalQueue();
+            } catch (e) {
+                console.error('Failed to load cards:', e);
+            }
+        }
+
+        // Update stats display
+        function updateStats() {
+            if (!cardsData) return;
+            
+            const cards = cardsData.cards;
+            const mythicCount = cards.filter(c => c.rarity === 'mythic').length;
+            const legendaryCount = cards.filter(c => c.rarity === 'legendary').length;
+            const epicCount = cards.filter(c => c.rarity === 'epic').length;
+            
+            document.getElementById('totalCards').textContent = cards.length;
+            document.getElementById('mythicCount').textContent = mythicCount;
+            document.getElementById('pendingCount').textContent = proposalQueue.length;
+            
+            // Calculate health score (balance check)
+            const mythicRatio = mythicCount / cards.length;
+            const idealMythicRatio = 0.05; // 5% mythics is ideal
+            const healthScore = Math.min(100, Math.round((1 - Math.abs(mythicRatio - idealMythicRatio) / idealMythicRatio) * 100));
+            document.getElementById('healthScore').textContent = healthScore + '%';
+        }
+
+        // Analyze proposal impact
+        function analyzeProposal(proposal) {
+            if (!cardsData) return null;
+            
+            const cards = cardsData.cards;
+            const analysis = {
+                rarityImpact: '',
+                categoryBalance: '',
+                roleDistribution: '',
+                investmentThesis: '',
+                recommendation: '',
+                score: 0
+            };
+            
+            // Count current distribution
+            const rarityCount = {};
+            const categoryCount = {};
+            const roleCount = {};
+            
+            cards.forEach(c => {
+                rarityCount[c.rarity] = (rarityCount[c.rarity] || 0) + 1;
+                categoryCount[c.category] = (categoryCount[c.category] || 0) + 1;
+                if (c.role) roleCount[c.role] = (roleCount[c.role] || 0) + 1;
+            });
+            
+            // Analyze rarity impact
+            const currentRarityPct = ((rarityCount[proposal.rarity] || 0) / cards.length * 100).toFixed(1);
+            const newRarityPct = ((rarityCount[proposal.rarity] || 0) + 1) / (cards.length + 1) * 100;
+            
+            if (proposal.rarity === 'mythic') {
+                const mythicPct = (rarityCount.mythic || 0) / cards.length * 100;
+                if (mythicPct > 5) {
+                    analysis.rarityImpact = `⚠️ Mythic saturation at ${mythicPct.toFixed(1)}%. Adding more may dilute value.`;
+                    analysis.score -= 10;
+                } else {
+                    analysis.rarityImpact = `✅ Mythic ratio healthy at ${mythicPct.toFixed(1)}%. New mythic adds prestige.`;
+                    analysis.score += 20;
+                }
+            } else {
+                analysis.rarityImpact = `📊 ${proposal.rarity} cards: ${currentRarityPct}% → ${newRarityPct.toFixed(1)}%`;
+                analysis.score += 5;
+            }
+            
+            // Category balance
+            const categoryPct = ((categoryCount[proposal.category] || 0) / cards.length * 100).toFixed(1);
+            const lowestCategory = Object.entries(categoryCount).sort((a,b) => a[1] - b[1])[0];
+            
+            if (proposal.category === lowestCategory?.[0]) {
+                analysis.categoryBalance = `✅ Filling gap in ${proposal.category} category (currently lowest at ${lowestCategory[1]} cards)`;
+                analysis.score += 15;
+            } else {
+                analysis.categoryBalance = `📊 ${proposal.category} category: ${categoryCount[proposal.category] || 0} cards (${categoryPct}%)`;
+            }
+            
+            // Role distribution (for member cards)
+            if (proposal.category === 'member' && proposal.role) {
+                const rolePct = ((roleCount[proposal.role] || 0) / Object.values(roleCount).reduce((a,b) => a+b, 0) * 100).toFixed(1);
+                analysis.roleDistribution = `🎭 ${proposal.role} representation: ${roleCount[proposal.role] || 0} cards (${rolePct}%)`;
+                
+                // Fashion main is rare and valuable
+                if (proposal.role === 'fashion_main') {
+                    analysis.score += 10;
+                    analysis.roleDistribution += ' - Fashion cards are collector favorites!';
+                }
+            }
+            
+            // Investment thesis
+            if (proposal.rarity === 'mythic' && proposal.category === 'member') {
+                analysis.investmentThesis = '💎 HIGH VALUE: Mythic member cards are the core of any collection. Strong long-term hold.';
+                analysis.score += 25;
+            } else if (proposal.rarity === 'legendary') {
+                analysis.investmentThesis = '⭐ SOLID: Legendary cards provide good value and are easier to complete sets.';
+                analysis.score += 15;
+            } else if (proposal.category === 'moment') {
+                analysis.investmentThesis = '⚡ MEMORABLE: Moment cards capture guild history. Sentimental value appreciates over time.';
+                analysis.score += 10;
+            } else {
+                analysis.investmentThesis = '📈 STANDARD: Contributes to collection completeness and set bonuses.';
+                analysis.score += 5;
+            }
+            
+            // Final recommendation
+            if (analysis.score >= 40) {
+                analysis.recommendation = '🚀 STRONGLY RECOMMENDED - This card adds significant value to the collection!';
+            } else if (analysis.score >= 20) {
+                analysis.recommendation = '✅ RECOMMENDED - Good addition that improves collection balance.';
+            } else if (analysis.score >= 0) {
+                analysis.recommendation = '🤔 NEUTRAL - Consider if it fills a specific need or want.';
+            } else {
+                analysis.recommendation = '⚠️ CAUTION - May not be the best investment right now.';
+            }
+            
+            analysis.score = Math.max(0, Math.min(100, 50 + analysis.score));
+            return analysis;
+        }
+
+        // Render analysis results
+        function renderAnalysis(proposal, analysis) {
+            const container = document.getElementById('analysisResults');
+            
+            const scoreColor = analysis.score >= 70 ? 'text-green-400' : 
+                               analysis.score >= 40 ? 'text-yellow-400' : 'text-red-400';
+            
+            container.innerHTML = `
+                <div class="space-y-4">
+                    <!-- Card Preview -->
+                    <div class="card-preview rarity-${proposal.rarity} p-4 text-center">
+                        <div class="text-2xl mb-2">${getCategoryIcon(proposal.category)}</div>
+                        <h3 class="font-bold text-lg">${proposal.name || 'Unnamed Card'}</h3>
+                        <p class="text-sm text-gray-400">${proposal.rarity.toUpperCase()} • ${proposal.category}</p>
+                        ${proposal.role ? `<p class="text-xs text-purple-400 mt-1">${proposal.role}</p>` : ''}
+                    </div>
+                    
+                    <!-- Score -->
+                    <div class="text-center py-4">
+                        <div class="text-5xl font-black ${scoreColor}">${analysis.score}</div>
+                        <div class="text-sm text-gray-400">Investment Score</div>
+                    </div>
+                    
+                    <!-- Analysis Details -->
+                    <div class="space-y-3 text-sm">
+                        <div class="p-3 bg-black/30 rounded-lg">
+                            <div class="font-semibold text-yellow-400 mb-1">Rarity Impact</div>
+                            <div class="text-gray-300">${analysis.rarityImpact}</div>
+                        </div>
+                        <div class="p-3 bg-black/30 rounded-lg">
+                            <div class="font-semibold text-purple-400 mb-1">Category Balance</div>
+                            <div class="text-gray-300">${analysis.categoryBalance}</div>
+                        </div>
+                        ${analysis.roleDistribution ? `
+                        <div class="p-3 bg-black/30 rounded-lg">
+                            <div class="font-semibold text-blue-400 mb-1">Role Distribution</div>
+                            <div class="text-gray-300">${analysis.roleDistribution}</div>
+                        </div>
+                        ` : ''}
+                        <div class="p-3 bg-black/30 rounded-lg">
+                            <div class="font-semibold text-green-400 mb-1">Investment Thesis</div>
+                            <div class="text-gray-300">${analysis.investmentThesis}</div>
+                        </div>
+                    </div>
+                    
+                    <!-- Recommendation -->
+                    <div class="p-4 bg-gradient-to-r from-yellow-500/10 to-orange-500/10 rounded-lg border border-yellow-500/30 text-center">
+                        <div class="font-bold text-lg">${analysis.recommendation}</div>
+                    </div>
+                    
+                    <!-- Actions -->
+                    <div class="flex gap-2">
+                        <button onclick="addToQueue()" class="flex-1 bg-green-600 hover:bg-green-500 text-white font-bold py-2 rounded-lg transition">
+                            ➕ Add to Queue
+                        </button>
+                        <button onclick="clearForm()" class="flex-1 bg-gray-700 hover:bg-gray-600 text-white font-bold py-2 rounded-lg transition">
+                            🗑️ Clear
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+
+        function getCategoryIcon(category) {
+            const icons = { member: '👤', moment: '⚡', gear: '✦', vibe: '🌀', spot: '📍' };
+            return icons[category] || '❓';
+        }
+
+        // Form submission
+        document.getElementById('cardProposalForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            
+            const proposal = {
+                name: document.getElementById('cardName').value,
+                rarity: document.getElementById('cardRarity').value,
+                category: document.getElementById('cardCategory').value,
+                role: document.getElementById('cardRole').value,
+                description: document.getElementById('cardDescription').value,
+                imagePrompt: document.getElementById('imagePrompt').value,
+                source: document.getElementById('cardSource').value,
+                timestamp: new Date().toISOString()
+            };
+            
+            const analysis = analyzeProposal(proposal);
+            if (analysis) {
+                renderAnalysis(proposal, analysis);
+                window.currentProposal = proposal;
+            }
+        });
+
+        // Add to queue
+        function addToQueue() {
+            if (!window.currentProposal) return;
+            
+            proposalQueue.push(window.currentProposal);
+            localStorage.setItem('nw_card_proposals', JSON.stringify(proposalQueue));
+            renderProposalQueue();
+            updateStats();
+            clearForm();
+            
+            alert('✅ Card added to proposal queue!');
+        }
+
+        // Clear form
+        function clearForm() {
+            document.getElementById('cardProposalForm').reset();
+            document.getElementById('analysisResults').innerHTML = `
+                <div class="text-center text-gray-500 py-12">
+                    <div class="text-6xl mb-4">🔮</div>
+                    <p>Fill the form to see collection impact analysis</p>
+                </div>
+            `;
+            window.currentProposal = null;
+        }
+
+        // Render proposal queue
+        function renderProposalQueue() {
+            const container = document.getElementById('proposalQueue');
+            
+            if (proposalQueue.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center text-gray-500 py-8">
+                        <p>No pending proposals. Add cards above to build your queue.</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            container.innerHTML = `
+                <div class="grid gap-3">
+                    ${proposalQueue.map((p, i) => `
+                        <div class="flex items-center justify-between bg-black/30 p-3 rounded-lg">
+                            <div class="flex items-center gap-3">
+                                <span class="text-2xl">${getCategoryIcon(p.category)}</span>
+                                <div>
+                                    <div class="font-semibold">${p.name || 'Unnamed'}</div>
+                                    <div class="text-xs text-gray-400">${p.rarity} • ${p.category}</div>
+                                </div>
+                            </div>
+                            <button onclick="removeFromQueue(${i})" class="text-red-400 hover:text-red-300 px-3 py-1">✕</button>
+                        </div>
+                    `).join('')}
+                </div>
+                <div class="mt-4 flex gap-2">
+                    <button onclick="exportQueue()" class="flex-1 bg-blue-600 hover:bg-blue-500 text-white font-bold py-2 rounded-lg transition text-sm">
+                        📤 Export Queue
+                    </button>
+                    <button onclick="clearQueue()" class="flex-1 bg-red-600 hover:bg-red-500 text-white font-bold py-2 rounded-lg transition text-sm">
+                        🗑️ Clear All
+                    </button>
+                </div>
+            `;
+        }
+
+        function removeFromQueue(index) {
+            proposalQueue.splice(index, 1);
+            localStorage.setItem('nw_card_proposals', JSON.stringify(proposalQueue));
+            renderProposalQueue();
+            updateStats();
+        }
+
+        function clearQueue() {
+            if (confirm('Clear all proposals?')) {
+                proposalQueue = [];
+                localStorage.setItem('nw_card_proposals', JSON.stringify(proposalQueue));
+                renderProposalQueue();
+                updateStats();
+            }
+        }
+
+        function exportQueue() {
+            const blob = new Blob([JSON.stringify(proposalQueue, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `nw-card-proposals-${new Date().toISOString().split('T')[0]}.json`;
+            a.click();
+        }
+
+        // Render recent cards
+        function renderRecentCards() {
+            if (!cardsData) return;
+            
+            const container = document.getElementById('recentCards');
+            const recentCards = cardsData.cards
+                .filter(c => c.addedDate || c.id > 600)
+                .slice(-8)
+                .reverse();
+            
+            if (recentCards.length === 0) {
+                container.innerHTML = '<p class="text-gray-500 col-span-4 text-center py-4">No recent additions tracked.</p>';
+                return;
+            }
+            
+            container.innerHTML = recentCards.map(card => `
+                <div class="card-preview rarity-${card.rarity} p-3 text-center">
+                    <div class="text-3xl mb-2">${getCategoryIcon(card.category)}</div>
+                    <div class="text-sm font-semibold truncate">${card.name}</div>
+                    <div class="text-xs text-gray-400">${card.rarity}</div>
+                    ${card.addedDate ? `<div class="text-xs text-green-400 mt-1">Added ${card.addedDate}</div>` : ''}
+                </div>
+            `).join('');
+        }
+
+        // i18n translations
+        const pageTranslations = {
+            en: {
+                labSubtitle: "Propose New Cards • Analyze Collection Impact • Strategic Planning",
+                totalCards: "Total Cards",
+                mythicCards: "Mythic Cards",
+                pendingProposals: "Pending Proposals",
+                collectionHealth: "Collection Health",
+                proposeNewCard: "Propose New Card",
+                cardName: "Card Name",
+                rarity: "Rarity",
+                category: "Category",
+                role: "Role",
+                description: "Description",
+                imagePrompt: "AI Image Prompt (optional)",
+                source: "Source/Reason",
+                analyzeProposal: "Analyze Proposal",
+                impactAnalysis: "Impact Analysis",
+                fillFormToAnalyze: "Fill the form to see collection impact analysis",
+                proposalQueue: "Proposal Queue",
+                noProposals: "No pending proposals. Add cards above to build your queue.",
+                recentlyAdded: "Recently Added to Collection"
+            },
+            zh: {
+                labSubtitle: "提議新卡片 • 分析收藏影響 • 策略規劃",
+                totalCards: "總卡片數",
+                mythicCards: "神話卡",
+                pendingProposals: "待處理提案",
+                collectionHealth: "收藏健康度",
+                proposeNewCard: "提議新卡片",
+                cardName: "卡片名稱",
+                rarity: "稀有度",
+                category: "類別",
+                role: "角色",
+                description: "描述",
+                imagePrompt: "AI 圖片提示 (選填)",
+                source: "來源/原因",
+                analyzeProposal: "分析提案",
+                impactAnalysis: "影響分析",
+                fillFormToAnalyze: "填寫表單以查看收藏影響分析",
+                proposalQueue: "提案隊列",
+                noProposals: "沒有待處理提案。在上方添加卡片以建立隊列。",
+                recentlyAdded: "最近添加到收藏"
+            },
+            th: {
+                labSubtitle: "เสนอการ์ดใหม่ • วิเคราะห์ผลกระทบต่อคอลเลกชัน • วางแผนกลยุทธ์",
+                totalCards: "การ์ดทั้งหมด",
+                mythicCards: "การ์ด Mythic",
+                pendingProposals: "ข้อเสนอที่รอดำเนินการ",
+                collectionHealth: "สุขภาพคอลเลกชัน",
+                proposeNewCard: "เสนอการ์ดใหม่",
+                cardName: "ชื่อการ์ด",
+                rarity: "ความหายาก",
+                category: "หมวดหมู่",
+                role: "บทบาท",
+                description: "คำอธิบาย",
+                imagePrompt: "คำสั่ง AI สำหรับภาพ (ไม่บังคับ)",
+                source: "แหล่งที่มา/เหตุผล",
+                analyzeProposal: "วิเคราะห์ข้อเสนอ",
+                impactAnalysis: "การวิเคราะห์ผลกระทบ",
+                fillFormToAnalyze: "กรอกแบบฟอร์มเพื่อดูการวิเคราะห์ผลกระทบต่อคอลเลกชัน",
+                proposalQueue: "คิวข้อเสนอ",
+                noProposals: "ไม่มีข้อเสนอที่รอดำเนินการ เพิ่มการ์ดด้านบนเพื่อสร้างคิว",
+                recentlyAdded: "เพิ่มล่าสุดในคอลเลกชัน"
+            }
+        };
+
+        // Init
+        document.addEventListener('DOMContentLoaded', () => {
+            loadCardsData();
+            if (typeof initI18n === 'function') {
+                initI18n(pageTranslations);
+            }
+        });
+    </script>
+</body>
+</html>
