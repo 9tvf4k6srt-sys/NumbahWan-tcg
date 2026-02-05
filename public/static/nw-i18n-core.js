@@ -344,10 +344,34 @@
   // Expose globally
   window.NW_I18N = NW_I18N;
 
+  // ============================================================================
+  // BACKWARD COMPATIBILITY - Support old initI18n() function calls
+  // ============================================================================
+  
+  // Alias for old initI18n function - maps to NW_I18N.register()
+  window.initI18n = function(translations) {
+    return NW_I18N.register(translations);
+  };
+  
+  // Alias for old setLanguage function
+  window.setLanguage = function(lang) {
+    return NW_I18N.setLang(lang);
+  };
+  
+  // Alias for old getTranslation function
+  window.getTranslation = function(key, fallback) {
+    return NW_I18N.t(key, fallback);
+  };
+  
+  // Alias for old getCurrentLang function
+  window.getCurrentLang = function() {
+    return NW_I18N.lang;
+  };
+
   // Also expose as module if needed
   if (typeof module !== 'undefined' && module.exports) {
     module.exports = NW_I18N;
   }
 
-  console.log('[NW_I18N] v2.0 Core loaded');
+  console.log('[NW_I18N] v2.0 Core loaded (with backward compatibility)');
 })();
