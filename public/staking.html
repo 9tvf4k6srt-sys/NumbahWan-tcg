@@ -60,19 +60,7 @@
         }
         .nav-link:hover { background: rgba(34,197,94,0.2); border-color: var(--green); }
         
-        /* Language Switcher */
-        .lang-switcher {
-            display: flex; gap: 4px; margin-left: 8px;
-        }
-        .lang-btn {
-            padding: 6px 10px; border-radius: 6px;
-            background: rgba(255,255,255,0.05);
-            border: 1px solid rgba(255,255,255,0.1);
-            color: rgba(255,255,255,0.7); font-size: 11px; font-weight: 600;
-            cursor: pointer; transition: all 0.2s;
-        }
-        .lang-btn:hover { border-color: var(--green); color: #fff; }
-        .lang-btn.active { background: var(--green); color: #000; border-color: var(--green); }
+        /* Language handled by unified nav (nw-nav.js) */
         
         main { max-width: 1200px; margin: 0 auto; padding: 20px 16px; }
         
@@ -286,11 +274,7 @@
             <a href="/fusion" class="nav-link">⚗️ <span data-i18n="navFusion">Fusion</span></a>
             <a href="/collection" class="nav-link">📚 <span data-i18n="navCollection">Collection</span></a>
             <a href="/forge" class="nav-link">🔥 <span data-i18n="navForge">Forge</span></a>
-            <div class="lang-switcher">
-                <button class="lang-btn" data-l="en" onclick="setLanguage('en')">EN</button>
-                <button class="lang-btn" data-l="zh" onclick="setLanguage('zh')">中文</button>
-                <button class="lang-btn" data-l="th" onclick="setLanguage('th')">ไทย</button>
-            </div>
+            <!-- Language toggle in unified nav (menu button) -->
         </div>
     </header>
     
@@ -556,17 +540,14 @@
         document.addEventListener('DOMContentLoaded', () => {
             initI18n(pageTranslations);
             
-            // Update lang buttons active state
-            document.querySelectorAll('.lang-btn').forEach(btn => {
-                btn.classList.toggle('active', btn.dataset.l === getCurrentLang());
-            });
         });
         
-        // Listen for language changes
+        // Listen for language changes from unified nav
+        document.addEventListener('nw-lang-change', (e) => {
+            if (typeof setLanguage === 'function') setLanguage(e.detail.lang);
+        });
         document.addEventListener('languageChanged', (e) => {
-            document.querySelectorAll('.lang-btn').forEach(btn => {
-                btn.classList.toggle('active', btn.dataset.l === e.detail.lang);
-            });
+            if (typeof setLanguage === 'function') setLanguage(e.detail.lang);
         });
         
         // ============================================

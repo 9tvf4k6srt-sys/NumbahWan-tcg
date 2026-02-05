@@ -1,13 +1,14 @@
 /**
- * NumbahWan TCG - Unified Navigation System v6.0
- * THE ABYSS EDITION - Merged Absurd Wing + Deep Dives
- * Uses ONLY custom NW icons - NO EMOJIS!
+ * NumbahWan TCG - Unified Navigation System v7.0
+ * ADDICTION BY DESIGN EDITION - NumbahWan Gold/Orange/Purple Theme
+ * Single source of truth for i18n - NO duplicate language toggles!
  * 
- * v6.0 CHANGES:
- * - Merged Absurd Wing + Deep Dives into "The Abyss"
- * - Added Real-Life D&D section "Tabletop Realm"
- * - Renamed How to Play to Arena Guide
- * - Added Build Lab improvements
+ * v7.0 CHANGES:
+ * - NumbahWan signature color scheme (gold, orange, purple, fire)
+ * - Addiction by design: dopamine-triggering animations
+ * - Glowing effects, pulse animations, reward feedback
+ * - Single unified language toggle (removes page duplicates)
+ * - Enhanced visual hierarchy with premium feel
  */
 
 const NW_NAV = {
@@ -41,7 +42,6 @@ const NW_NAV = {
         close: '<path d="M6 18L18 6M6 6l12 12"/>',
         'arrow-right': '<path d="M9 18l6-6-6-6"/>',
         globe: '<circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15 15 0 010 20 15 15 0 010-20z"/>',
-        // New icons for The Abyss
         portal: '<circle cx="12" cy="12" r="9"/><path d="M12 3v18M3 12h18"/><circle cx="12" cy="12" r="4"/>',
         dragon: '<path d="M4 8c0-2 2-4 4-4 1 0 2 .5 3 1l1 1 1-1c1-.5 2-1 3-1 2 0 4 2 4 4 0 3-4 6-8 10-4-4-8-7-8-10z"/>',
         dice: '<rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8" cy="8" r="1.5"/><circle cx="16" cy="8" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="8" cy="16" r="1.5"/><circle cx="16" cy="16" r="1.5"/>',
@@ -81,7 +81,9 @@ const NW_NAV = {
             pages: [
                 { id: 'cards', name: { en: 'All Cards', zh: '全部卡牌', th: 'การ์ดทั้งหมด' }, icon: 'cards-stack', href: '/cards' },
                 { id: 'collection', name: { en: 'My Cards', zh: '我的卡牌', th: 'การ์ดของฉัน' }, icon: 'inventory', href: '/collection' },
-                { id: 'deckbuilder', name: { en: 'Deck Builder', zh: '卡組', th: 'สร้างเด็ค' }, icon: 'clipboard', href: '/deckbuilder' }
+                { id: 'deckbuilder', name: { en: 'Deck Builder', zh: '卡組', th: 'สร้างเด็ค' }, icon: 'clipboard', href: '/deckbuilder' },
+                { id: 'staking', name: { en: 'Card Staking', zh: '卡牌質押', th: 'เดิมพันการ์ด' }, icon: 'coins', href: '/staking', isNew: true },
+                { id: 'fusion', name: { en: 'Card Fusion', zh: '卡牌融合', th: 'หลอมรวมการ์ด' }, icon: 'lightning', href: '/fusion', isNew: true }
             ]
         },
         economy: {
@@ -93,7 +95,9 @@ const NW_NAV = {
                 { id: 'arcade', name: { en: 'Arcade', zh: '街機', th: 'อาร์เคด' }, icon: 'gaming', href: '/arcade' },
                 { id: 'market', name: { en: 'Card Market', zh: '卡牌市場', th: 'ตลาดการ์ด' }, icon: 'trade', href: '/market' },
                 { id: 'merch', name: { en: 'Merch Shop', zh: '周邊商店', th: 'ร้านสินค้า' }, icon: 'shopping-bag', href: '/merch' },
-                { id: 'exchange', name: { en: 'Exchange', zh: '兌換', th: 'แลกเปลี่ยน' }, icon: 'chart', href: '/exchange', isNew: true }
+                { id: 'claim', name: { en: 'Merch Claim', zh: '周邊兌換', th: 'รับสินค้า' }, icon: 'form', href: '/claim', isHot: true },
+                { id: 'exchange', name: { en: 'Exchange', zh: '兌換', th: 'แลกเปลี่ยน' }, icon: 'chart', href: '/exchange', isNew: true },
+                { id: 'events', name: { en: 'Events', zh: '活動', th: 'กิจกรรม' }, icon: 'sparkles', href: '/events', isHot: true }
             ]
         },
         business: {
@@ -138,7 +142,6 @@ const NW_NAV = {
                 { id: 'intelligence', name: { en: 'Intelligence', zh: '情報局', th: 'หน่วยข่าวกรอง' }, icon: 'eye', href: '/intelligence' }
             ]
         },
-        // THE ABYSS - Merged Absurd Wing + Deep Dives
         abyss: {
             name: { en: 'The Abyss', zh: '深淵', th: 'นรกลึก' },
             icon: 'portal',
@@ -146,15 +149,12 @@ const NW_NAV = {
             collapsed: true,
             desc: { en: '(Once you enter, you cannot leave)', zh: '(一旦進入，無法離開)', th: '(เมื่อเข้าแล้ว ออกไม่ได้)' },
             pages: [
-                // DEEP DIVES - Lore Hub
                 { id: 'lore', name: { en: 'Lore Archives', zh: '傳說檔案', th: 'คลังตำนาน' }, icon: 'scroll', href: '/lore', isHot: true },
-                // Character Deep Dives
                 { id: 'reggina-origin', name: { en: 'RegginA Origin', zh: 'RegginA起源', th: 'กำเนิด RegginA' }, icon: 'fire', href: '/lore/reggina-origin.html', isNew: true },
                 { id: 'sacred-log', name: { en: 'Sacred Log', zh: '聖木', th: 'ท่อนไม้ศักดิ์สิทธิ์' }, icon: 'scroll', href: '/lore/sacred-log.html', isNew: true },
                 { id: 'whale-wars', name: { en: 'Whale Wars', zh: '鯨魚大戰', th: 'สงครามวาฬ' }, icon: 'coins', href: '/lore/whale-wars.html', isNew: true },
                 { id: 'afk-incident', name: { en: 'AFK Incident', zh: 'AFK事件', th: 'เหตุการณ์ AFK' }, icon: 'meme', href: '/lore/afk-incident.html', isNew: true },
                 { id: 'conspiracy-lore', name: { en: 'Conspiracy Board', zh: '陰謀板', th: 'บอร์ดสมคบคิด' }, icon: 'eye', href: '/lore/conspiracy-board.html', isNew: true },
-                // ABSURD WING - Physical Locations
                 { id: 'therapy', name: { en: 'Guild Therapy', zh: '公會治療', th: 'บำบัดกิลด์' }, icon: 'crystal-ball', href: '/therapy' },
                 { id: 'hr', name: { en: 'HR Department', zh: '人資部', th: 'ฝ่ายบุคคล' }, icon: 'form', href: '/hr' },
                 { id: 'conspiracy', name: { en: 'Conspiracy Wall', zh: '陰謀牆', th: 'กำแพงสมคบคิด' }, icon: 'eye', href: '/conspiracy' },
@@ -167,7 +167,6 @@ const NW_NAV = {
                 { id: 'zakum', name: { en: 'Zakum Lore', zh: '扎昆傳說', th: 'ตำนานซาคุม' }, icon: 'dragon', href: '/zakum' }
             ]
         },
-        // TABLETOP REALM - Real-Life D&D with NWG Cards
         tabletop: {
             name: { en: 'Tabletop Realm', zh: '桌遊領域', th: 'อาณาจักรบอร์ดเกม' },
             icon: 'dice',
@@ -184,7 +183,6 @@ const NW_NAV = {
                 { id: 'print-play', name: { en: 'Print & Play', zh: '列印遊玩', th: 'พิมพ์และเล่น' }, icon: 'form', href: '/tabletop/print-play', isNew: true }
             ]
         },
-        // BUILD LAB - Enhanced Efficiency System
         buildlab: {
             name: { en: 'Build Lab', zh: '建設實驗室', th: 'ห้องแล็บสร้าง' },
             icon: 'chart',
@@ -307,7 +305,7 @@ const NW_NAV = {
         this.bindEvents();
         this.easterEggs.init();
         this.initialized = true;
-        console.log('[NW_NAV] v6.0 Ready - The Abyss Edition');
+        console.log('[NW_NAV] v7.0 Ready - Addiction by Design Edition');
     },
 
     t(obj) {
@@ -359,10 +357,10 @@ const NW_NAV = {
 
         const quickAccess = `
             <div class="nw-quick-access">
-                <a href="/forge" class="nw-quick-btn" title="Open Packs">${this.iconSvg('fire', 20)}</a>
-                <a href="/battle" class="nw-quick-btn" title="Battle">${this.iconSvg('swords', 20)}</a>
-                <a href="/lore" class="nw-quick-btn" title="The Abyss">${this.iconSvg('portal', 20)}</a>
-                <a href="/tabletop" class="nw-quick-btn" title="Tabletop">${this.iconSvg('dice', 20)}</a>
+                <a href="/forge" class="nw-quick-btn nw-quick-fire" title="Open Packs">${this.iconSvg('fire', 20)}</a>
+                <a href="/battle" class="nw-quick-btn nw-quick-battle" title="Battle">${this.iconSvg('swords', 20)}</a>
+                <a href="/claim" class="nw-quick-btn nw-quick-claim" title="Claim Rewards">${this.iconSvg('sparkles', 20)}</a>
+                <a href="/tabletop" class="nw-quick-btn nw-quick-tabletop" title="Tabletop">${this.iconSvg('dice', 20)}</a>
             </div>
         `;
 
@@ -370,7 +368,7 @@ const NW_NAV = {
             <div id="nwNavOverlay" class="nw-nav-overlay"></div>
             <nav id="nwNavPanel" class="nw-nav-panel">
                 <div class="nw-nav-header">
-                    <div class="nw-nav-title">${this.iconSvg('menu', 20)} NumbahWan</div>
+                    <div class="nw-nav-title">${this.iconSvg('crown', 20)} NumbahWan</div>
                     <button id="nwNavClose" class="nw-nav-close">${this.iconSvg('close', 18)}</button>
                 </div>
                 ${quickAccess}
@@ -379,7 +377,7 @@ const NW_NAV = {
                     ${sectionsHTML}
                 </div>
                 <div class="nw-nav-footer">
-                    <div class="nw-nav-version">v6.0 • The Abyss Edition</div>
+                    <div class="nw-nav-version">v7.0 • Addiction Edition</div>
                 </div>
             </nav>
             <button id="nwNavToggle" class="nw-nav-toggle">${this.iconSvg('menu', 22)}</button>
@@ -413,79 +411,288 @@ const NW_NAV = {
         const style = document.createElement('style');
         style.id = 'nwNavStyles';
         style.textContent = `
-            /* NW Nav v6.0 - The Abyss Edition */
-            .nw-nav-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 9998; opacity: 0; visibility: hidden; transition: all 0.3s; backdrop-filter: blur(4px); }
+            /* NW Nav v7.0 - ADDICTION BY DESIGN EDITION */
+            /* NumbahWan Signature Colors: Gold #ffd700, Orange #ff6b00, Purple #a855f7, Fire #ff4500 */
+            
+            .nw-nav-overlay { 
+                position: fixed; inset: 0; 
+                background: rgba(0,0,0,0.85); 
+                z-index: 9998; opacity: 0; visibility: hidden; 
+                transition: all 0.3s; 
+                backdrop-filter: blur(8px); 
+            }
             .nw-nav-overlay.open { opacity: 1; visibility: visible; }
             
-            .nw-nav-panel { position: fixed; top: 0; right: -320px; width: 300px; max-width: 85vw; height: 100vh; background: linear-gradient(180deg, #0d0d15 0%, #12121e 100%); z-index: 9999; transition: right 0.3s cubic-bezier(0.4, 0, 0.2, 1); display: flex; flex-direction: column; border-left: 1px solid rgba(168,85,247,0.3); box-shadow: -5px 0 30px rgba(168,85,247,0.2); }
+            .nw-nav-panel { 
+                position: fixed; top: 0; right: -320px; 
+                width: 300px; max-width: 85vw; height: 100vh; 
+                background: linear-gradient(180deg, #0a0808 0%, #1a1212 50%, #0d0a0a 100%); 
+                z-index: 9999; 
+                transition: right 0.3s cubic-bezier(0.4, 0, 0.2, 1); 
+                display: flex; flex-direction: column; 
+                border-left: 2px solid rgba(255,107,0,0.5); 
+                box-shadow: -5px 0 40px rgba(255,107,0,0.3), -2px 0 20px rgba(255,215,0,0.2); 
+            }
             .nw-nav-panel.open { right: 0; }
             
-            .nw-nav-header { display: flex; justify-content: space-between; align-items: center; padding: 16px; border-bottom: 1px solid rgba(168,85,247,0.3); background: rgba(0,0,0,0.3); }
-            .nw-nav-title { font-family: 'Orbitron', sans-serif; font-size: 16px; font-weight: 700; color: #a855f7; display: flex; align-items: center; gap: 8px; }
-            .nw-nav-close { background: none; border: none; color: #888; cursor: pointer; padding: 8px; border-radius: 8px; transition: all 0.2s; }
-            .nw-nav-close:hover { color: #fff; background: rgba(255,255,255,0.1); }
+            /* Header - Premium Gold Accent */
+            .nw-nav-header { 
+                display: flex; justify-content: space-between; align-items: center; 
+                padding: 16px; 
+                border-bottom: 2px solid rgba(255,215,0,0.4); 
+                background: linear-gradient(135deg, rgba(255,107,0,0.15), rgba(255,215,0,0.1), rgba(0,0,0,0.5)); 
+            }
+            .nw-nav-title { 
+                font-family: 'Orbitron', monospace, sans-serif; 
+                font-size: 18px; font-weight: 900; 
+                background: linear-gradient(135deg, #ffd700, #ff6b00); 
+                -webkit-background-clip: text; -webkit-text-fill-color: transparent; 
+                display: flex; align-items: center; gap: 8px; 
+                text-shadow: 0 0 20px rgba(255,215,0,0.5);
+                animation: titleGlow 2s ease-in-out infinite;
+            }
+            @keyframes titleGlow {
+                0%, 100% { filter: drop-shadow(0 0 5px rgba(255,215,0,0.5)); }
+                50% { filter: drop-shadow(0 0 15px rgba(255,107,0,0.8)); }
+            }
+            .nw-nav-title svg { stroke: #ffd700; }
+            .nw-nav-close { 
+                background: rgba(255,107,0,0.1); border: 1px solid rgba(255,107,0,0.3); 
+                color: #ff6b00; cursor: pointer; padding: 8px; border-radius: 8px; 
+                transition: all 0.2s; 
+            }
+            .nw-nav-close:hover { color: #ffd700; background: rgba(255,215,0,0.2); border-color: #ffd700; transform: rotate(90deg); }
             
-            .nw-quick-access { display: flex; justify-content: space-around; padding: 12px 16px; border-bottom: 1px solid rgba(255,255,255,0.1); background: linear-gradient(135deg, rgba(168,85,247,0.1), rgba(255,107,0,0.05)); }
-            .nw-quick-btn { width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; background: rgba(255,255,255,0.05); border-radius: 12px; color: #a855f7; transition: all 0.2s; }
-            .nw-quick-btn:hover { background: rgba(168,85,247,0.3); transform: scale(1.1); }
+            /* Quick Access - Dopamine Buttons */
+            .nw-quick-access { 
+                display: flex; justify-content: space-around; 
+                padding: 14px 16px; 
+                border-bottom: 1px solid rgba(255,215,0,0.2); 
+                background: linear-gradient(135deg, rgba(255,107,0,0.1), rgba(168,85,247,0.05), rgba(0,0,0,0.3)); 
+            }
+            .nw-quick-btn { 
+                width: 50px; height: 50px; 
+                display: flex; align-items: center; justify-content: center; 
+                border-radius: 14px; 
+                transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); 
+                position: relative;
+                overflow: hidden;
+            }
+            .nw-quick-btn::before {
+                content: '';
+                position: absolute;
+                inset: 0;
+                background: radial-gradient(circle at center, rgba(255,255,255,0.2) 0%, transparent 70%);
+                opacity: 0;
+                transition: opacity 0.3s;
+            }
+            .nw-quick-btn:hover::before { opacity: 1; }
+            .nw-quick-btn:hover { transform: scale(1.15) translateY(-3px); }
+            .nw-quick-btn:active { transform: scale(0.95); }
             
-            .nw-nav-lang { display: flex; justify-content: center; gap: 8px; padding: 12px; border-bottom: 1px solid rgba(255,255,255,0.1); }
-            .nw-lang-btn { background: rgba(255,255,255,0.05); border: 1px solid transparent; color: #888; padding: 6px 12px; border-radius: 6px; font-size: 12px; cursor: pointer; transition: all 0.2s; }
-            .nw-lang-btn:hover { border-color: rgba(168,85,247,0.3); color: #fff; }
-            .nw-lang-btn.active { background: rgba(168,85,247,0.2); border-color: #a855f7; color: #a855f7; }
+            .nw-quick-fire { background: linear-gradient(135deg, #ff4500, #ff6b00); color: #fff; box-shadow: 0 4px 20px rgba(255,69,0,0.5); }
+            .nw-quick-fire:hover { box-shadow: 0 6px 30px rgba(255,69,0,0.7); }
+            .nw-quick-battle { background: linear-gradient(135deg, #a855f7, #9333ea); color: #fff; box-shadow: 0 4px 20px rgba(168,85,247,0.5); }
+            .nw-quick-battle:hover { box-shadow: 0 6px 30px rgba(168,85,247,0.7); }
+            .nw-quick-claim { background: linear-gradient(135deg, #ffd700, #f59e0b); color: #000; box-shadow: 0 4px 20px rgba(255,215,0,0.5); animation: claimPulse 2s infinite; }
+            .nw-quick-claim:hover { box-shadow: 0 6px 30px rgba(255,215,0,0.7); }
+            @keyframes claimPulse {
+                0%, 100% { box-shadow: 0 4px 20px rgba(255,215,0,0.5); }
+                50% { box-shadow: 0 4px 30px rgba(255,215,0,0.8), 0 0 40px rgba(255,215,0,0.4); }
+            }
+            .nw-quick-tabletop { background: linear-gradient(135deg, #f59e0b, #d97706); color: #fff; box-shadow: 0 4px 20px rgba(245,158,11,0.5); }
+            .nw-quick-tabletop:hover { box-shadow: 0 6px 30px rgba(245,158,11,0.7); }
             
+            /* Language Toggle - Premium Style */
+            .nw-nav-lang { 
+                display: flex; justify-content: center; gap: 8px; 
+                padding: 14px; 
+                border-bottom: 1px solid rgba(255,215,0,0.15); 
+                background: rgba(0,0,0,0.2);
+            }
+            .nw-lang-btn { 
+                background: rgba(255,107,0,0.1); 
+                border: 1px solid rgba(255,107,0,0.3); 
+                color: rgba(255,255,255,0.6); 
+                padding: 8px 16px; border-radius: 8px; 
+                font-size: 13px; font-weight: 600;
+                cursor: pointer; 
+                transition: all 0.2s; 
+            }
+            .nw-lang-btn:hover { 
+                border-color: #ff6b00; 
+                color: #ff6b00; 
+                background: rgba(255,107,0,0.15);
+                transform: translateY(-2px);
+            }
+            .nw-lang-btn.active { 
+                background: linear-gradient(135deg, rgba(255,215,0,0.3), rgba(255,107,0,0.2)); 
+                border-color: #ffd700; 
+                color: #ffd700; 
+                box-shadow: 0 0 15px rgba(255,215,0,0.3);
+                font-weight: 700;
+            }
+            
+            /* Scroll Area */
             .nw-nav-scroll { flex: 1; overflow-y: auto; padding: 8px 0; }
             .nw-nav-scroll::-webkit-scrollbar { width: 4px; }
             .nw-nav-scroll::-webkit-scrollbar-track { background: transparent; }
-            .nw-nav-scroll::-webkit-scrollbar-thumb { background: rgba(168,85,247,0.3); border-radius: 2px; }
+            .nw-nav-scroll::-webkit-scrollbar-thumb { background: linear-gradient(180deg, #ff6b00, #ffd700); border-radius: 2px; }
             
+            /* Sections */
             .nw-nav-section { margin: 4px 8px; }
-            .nw-nav-section-header { display: flex; align-items: center; gap: 8px; padding: 12px 14px; font-size: 14px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; border-radius: 8px; transition: all 0.2s; }
+            .nw-nav-section-header { 
+                display: flex; align-items: center; gap: 8px; 
+                padding: 12px 14px; 
+                font-size: 14px; font-weight: 700; 
+                text-transform: uppercase; letter-spacing: 0.5px; 
+                border-radius: 10px; 
+                transition: all 0.2s; 
+                border: 1px solid transparent;
+            }
             .nw-nav-section-header.collapsible { cursor: pointer; }
-            .nw-nav-section-header.collapsible:hover { background: rgba(255,255,255,0.05); }
+            .nw-nav-section-header.collapsible:hover { 
+                background: rgba(255,107,0,0.1); 
+                border-color: rgba(255,107,0,0.3);
+            }
             
             .nw-nav-desc { font-size: 9px; font-weight: 400; opacity: 0.5; text-transform: none; letter-spacing: 0; margin-left: 4px; }
-            .nw-nav-count { font-size: 10px; background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 10px; margin-left: auto; opacity: 0.6; }
+            .nw-nav-count { 
+                font-size: 10px; 
+                background: linear-gradient(135deg, rgba(255,107,0,0.3), rgba(255,215,0,0.2)); 
+                padding: 2px 8px; border-radius: 10px; 
+                margin-left: auto; 
+                color: #ffd700;
+            }
             .nw-nav-chevron { margin-left: auto; transition: transform 0.2s; opacity: 0.5; }
-            .nw-nav-chevron.open { transform: rotate(90deg); }
+            .nw-nav-chevron.open { transform: rotate(90deg); opacity: 1; }
             
+            /* Navigation Links */
             .nw-nav-pages { padding: 4px 0 4px 8px; }
-            .nw-nav-link { display: flex; align-items: center; gap: 10px; padding: 12px 14px; color: rgba(255,255,255,0.7); text-decoration: none; border-radius: 8px; transition: all 0.2s; font-size: 15px; font-weight: 500; }
-            .nw-nav-link:hover { background: rgba(255,255,255,0.08); color: #fff; transform: translateX(4px); }
-            .nw-nav-link.active { background: rgba(168,85,247,0.15); color: #a855f7; border-left: 3px solid #a855f7; }
+            .nw-nav-link { 
+                display: flex; align-items: center; gap: 10px; 
+                padding: 12px 14px; 
+                color: rgba(255,255,255,0.7); 
+                text-decoration: none; 
+                border-radius: 10px; 
+                transition: all 0.2s; 
+                font-size: 14px; font-weight: 500; 
+                border: 1px solid transparent;
+                position: relative;
+                overflow: hidden;
+            }
+            .nw-nav-link::before {
+                content: '';
+                position: absolute;
+                left: 0;
+                top: 0;
+                height: 100%;
+                width: 0;
+                background: linear-gradient(90deg, rgba(255,107,0,0.2), transparent);
+                transition: width 0.3s;
+            }
+            .nw-nav-link:hover::before { width: 100%; }
+            .nw-nav-link:hover { 
+                background: rgba(255,107,0,0.1); 
+                color: #fff; 
+                transform: translateX(6px); 
+                border-color: rgba(255,107,0,0.3);
+            }
+            .nw-nav-link.active { 
+                background: linear-gradient(90deg, rgba(255,215,0,0.2), rgba(255,107,0,0.1)); 
+                color: #ffd700; 
+                border-left: 3px solid #ffd700; 
+                box-shadow: inset 0 0 20px rgba(255,215,0,0.1);
+            }
             
             .nw-nav-icon { flex-shrink: 0; opacity: 0.9; }
             .nw-nav-text { flex: 1; }
             
-            .nw-new-badge, .nw-hot-badge { font-size: 9px; padding: 2px 5px; border-radius: 4px; font-weight: 600; }
-            .nw-new-badge { background: #00d26a; color: #000; }
-            .nw-hot-badge { background: #a855f7; color: #fff; animation: hotPulse 1s infinite; }
-            @keyframes hotPulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.7; } }
+            /* Badges - Addictive Pulse */
+            .nw-new-badge, .nw-hot-badge { 
+                font-size: 9px; padding: 3px 6px; border-radius: 4px; font-weight: 700; 
+                text-transform: uppercase;
+            }
+            .nw-new-badge { 
+                background: linear-gradient(135deg, #22c55e, #16a34a); 
+                color: #fff; 
+                box-shadow: 0 0 10px rgba(34,197,94,0.5);
+            }
+            .nw-hot-badge { 
+                background: linear-gradient(135deg, #ff4500, #ff6b00); 
+                color: #fff; 
+                animation: hotBadgePulse 1.5s infinite; 
+                box-shadow: 0 0 10px rgba(255,69,0,0.5);
+            }
+            @keyframes hotBadgePulse { 
+                0%, 100% { transform: scale(1); box-shadow: 0 0 10px rgba(255,69,0,0.5); } 
+                50% { transform: scale(1.1); box-shadow: 0 0 20px rgba(255,69,0,0.8); } 
+            }
             
-            .nw-nav-footer { padding: 12px; border-top: 1px solid rgba(255,255,255,0.1); text-align: center; }
-            .nw-nav-version { font-size: 10px; color: rgba(168,85,247,0.5); }
+            /* Footer */
+            .nw-nav-footer { 
+                padding: 12px; 
+                border-top: 1px solid rgba(255,215,0,0.2); 
+                text-align: center; 
+                background: linear-gradient(180deg, transparent, rgba(255,107,0,0.05));
+            }
+            .nw-nav-version { 
+                font-size: 10px; 
+                background: linear-gradient(135deg, #ff6b00, #ffd700);
+                -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            }
             
-            .nw-nav-toggle, .nw-nav-home { position: fixed; z-index: 9997; width: 48px; height: 48px; border: none; border-radius: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
-            .nw-nav-toggle { top: 12px; right: 12px; background: linear-gradient(135deg, rgba(168,85,247,0.9), rgba(236,72,153,0.9)); color: #fff; box-shadow: 0 4px 15px rgba(168,85,247,0.4); }
-            .nw-nav-home { top: 12px; right: 68px; background: rgba(0,0,0,0.7); color: #a855f7; border: 1px solid rgba(168,85,247,0.3); text-decoration: none; }
-            .nw-nav-toggle:hover, .nw-nav-home:hover { transform: scale(1.05); }
+            /* Toggle & Home Buttons - Fire Theme */
+            .nw-nav-toggle, .nw-nav-home { 
+                position: fixed; z-index: 9997; 
+                width: 48px; height: 48px; 
+                border: none; border-radius: 14px; 
+                cursor: pointer; 
+                display: flex; align-items: center; justify-content: center; 
+                transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); 
+            }
+            .nw-nav-toggle { 
+                top: 12px; right: 12px; 
+                background: linear-gradient(135deg, #ff6b00, #ff4500, #ffd700); 
+                color: #fff; 
+                box-shadow: 0 4px 20px rgba(255,107,0,0.5), 0 0 40px rgba(255,215,0,0.2);
+                animation: toggleGlow 3s ease-in-out infinite;
+            }
+            @keyframes toggleGlow {
+                0%, 100% { box-shadow: 0 4px 20px rgba(255,107,0,0.5), 0 0 40px rgba(255,215,0,0.2); }
+                50% { box-shadow: 0 4px 30px rgba(255,107,0,0.7), 0 0 60px rgba(255,215,0,0.4); }
+            }
+            .nw-nav-home { 
+                top: 12px; right: 68px; 
+                background: rgba(0,0,0,0.8); 
+                color: #ffd700; 
+                border: 2px solid rgba(255,215,0,0.4); 
+                text-decoration: none; 
+            }
+            .nw-nav-toggle:hover, .nw-nav-home:hover { 
+                transform: scale(1.1) translateY(-2px); 
+            }
+            .nw-nav-home:hover { 
+                border-color: #ffd700; 
+                box-shadow: 0 0 20px rgba(255,215,0,0.5); 
+            }
             
             @media (max-width: 480px) {
                 .nw-nav-panel { width: 100vw; max-width: 100vw; right: -100vw; }
-                .nw-nav-toggle, .nw-nav-home { top: 8px; width: 40px; height: 40px; }
+                .nw-nav-toggle, .nw-nav-home { top: 8px; width: 44px; height: 44px; }
                 .nw-nav-toggle { right: 8px; }
-                .nw-nav-home { right: 56px; }
+                .nw-nav-home { right: 58px; }
             }
         `;
         document.head.appendChild(style);
     },
 
     bindEvents() {
-        if (this._boundEvents) return; // Prevent duplicate binding
+        if (this._boundEvents) return;
         this._boundEvents = true;
         this._bindCoreEvents();
 
-        // Close on escape (only bind once)
+        // Close on escape
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Escape' && this.isOpen) this.close();
         });
@@ -519,23 +726,26 @@ const NW_NAV = {
             });
         });
 
-        // Language buttons - FIXED: no re-binding, uses event delegation approach
+        // Language buttons - dispatch event for page re-render
         document.querySelectorAll('.nw-lang-btn').forEach(btn => {
             btn.addEventListener('click', (e) => {
                 e.stopPropagation();
                 const lang = btn.dataset.lang;
-                if (lang === this.currentLang) return; // No change needed
+                if (lang === this.currentLang) return;
                 
                 this.currentLang = lang;
                 this.setStoredLang(lang);
                 
-                // Re-inject nav with new language (events re-bound via _bindCoreEvents)
+                // Re-inject nav with new language
                 this.injectNav();
                 
-                // Dispatch to BOTH document and window for compatibility
+                // Dispatch events for page content update
                 const event = new CustomEvent('nw-lang-change', { detail: { lang } });
                 document.dispatchEvent(event);
                 window.dispatchEvent(event);
+                
+                // Also dispatch standard languageChanged event
+                document.dispatchEvent(new CustomEvent('languageChanged', { detail: { lang } }));
                 
                 if (typeof NW_SOUNDS !== 'undefined') NW_SOUNDS.play('click');
                 console.log('[NW_NAV] Language changed to:', lang);
@@ -567,6 +777,7 @@ const NW_NAV = {
         const event = new CustomEvent('nw-lang-change', { detail: { lang } });
         document.dispatchEvent(event);
         window.dispatchEvent(event);
+        document.dispatchEvent(new CustomEvent('languageChanged', { detail: { lang } }));
     }
 };
 
@@ -579,4 +790,4 @@ if (typeof window !== 'undefined') {
     });
 }
 
-console.log('[NW_NAV] v6.0 The Abyss Edition loaded');
+console.log('[NW_NAV] v7.0 Addiction by Design Edition loaded');

@@ -57,19 +57,7 @@
             color: #fff; font-size: 13px; text-decoration: none; font-weight: 600;
         }
         
-        /* Language Switcher */
-        .lang-switcher {
-            display: flex; gap: 4px; margin-left: 8px;
-        }
-        .lang-btn {
-            padding: 6px 10px; border-radius: 6px;
-            background: rgba(255,255,255,0.05);
-            border: 1px solid rgba(255,255,255,0.1);
-            color: rgba(255,255,255,0.7); font-size: 11px; font-weight: 600;
-            cursor: pointer; transition: all 0.2s;
-        }
-        .lang-btn:hover { border-color: var(--gold); color: #fff; }
-        .lang-btn.active { background: var(--gold); color: #000; border-color: var(--gold); }
+        /* Language handled by unified nav (nw-nav.js) */
         
         main {
             max-width: 600px; margin: 0 auto; padding: 40px 20px;
@@ -373,11 +361,7 @@
         <div class="nav-links">
             <a href="/collection" class="nav-link">📚 <span data-i18n="navCollection">Collection</span></a>
             <a href="/wallet" class="nav-link">💳 <span data-i18n="navWallet">Wallet</span></a>
-            <div class="lang-switcher">
-                <button class="lang-btn" data-l="en" onclick="setLanguage('en')">EN</button>
-                <button class="lang-btn" data-l="zh" onclick="setLanguage('zh')">中文</button>
-                <button class="lang-btn" data-l="th" onclick="setLanguage('th')">ไทย</button>
-            </div>
+            <!-- Language toggle in unified nav (menu button) -->
         </div>
     </header>
     
@@ -603,17 +587,21 @@
         document.addEventListener('DOMContentLoaded', () => {
             initI18n(pageTranslations);
             
-            // Update lang buttons active state
-            document.querySelectorAll('.lang-btn').forEach(btn => {
-                btn.classList.toggle('active', btn.dataset.l === getCurrentLang());
-            });
         });
         
-        // Listen for language changes
+        // Listen for language changes from unified nav
         document.addEventListener('languageChanged', (e) => {
-            document.querySelectorAll('.lang-btn').forEach(btn => {
-                btn.classList.toggle('active', btn.dataset.l === e.detail.lang);
-            });
+            // Re-apply translations when language changes via nav
+            if (typeof setLanguage === 'function') {
+                setLanguage(e.detail.lang);
+            }
+        });
+        
+        // Also listen for nw-lang-change event from nav
+        document.addEventListener('nw-lang-change', (e) => {
+            if (typeof setLanguage === 'function') {
+                setLanguage(e.detail.lang);
+            }
         });
         
         // ============================================
