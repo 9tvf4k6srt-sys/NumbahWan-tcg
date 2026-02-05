@@ -1,1794 +1,453 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Wyckoff Method Academy | NumbahWan Guild</title>
-    <meta name="description" content="Learn the Wyckoff Method - Master accumulation, distribution, markup and markdown phases. Educational tool for technical analysis.">
-    <link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
+    <title>報明牌方法 | 台灣AI受惠股 Top 20</title>
+    <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;900&family=Inter:wght@400;500;600;700&family=Noto+Sans+TC:wght@400;500;700&family=Noto+Sans+Thai:wght@400;500;700&display=swap" rel="stylesheet">
-    <script src="/static/nw-nav.js" defer></script>
-    <script src="/static/nw-i18n-core.js" defer></script>
-    <script src="/static/nw-icons-inline.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@400;700;900&family=Ma+Shan+Zheng&display=swap" rel="stylesheet">
     <style>
         :root {
-            --gold: #ffd700;
-            --orange: #ff6b00;
-            --purple: #7c3aed;
-            --dark: #0a0a0f;
-            --green: #22c55e;
-            --red: #ef4444;
-            --blue: #3b82f6;
-            --cyan: #06b6d4;
+            --gold: #d4af37;
+            --red: #c41e3a;
+            --ink: #1a1a2e;
+            --paper: #f5f0e1;
+            --seal: #8b0000;
         }
         
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        html { scroll-behavior: smooth; }
-        body { 
-            font-family: 'Inter', sans-serif; 
-            background: var(--dark); 
-            color: #fff;
-            overflow-x: hidden;
-            min-height: 100vh;
+        body {
+            font-family: 'Noto Serif TC', serif;
+            background: var(--paper);
+            background-image: 
+                url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23d4af37' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
         }
         
-        body[data-lang="zh"] { font-family: 'Noto Sans TC', 'Inter', sans-serif; }
-        body[data-lang="th"] { font-family: 'Noto Sans Thai', 'Inter', sans-serif; }
-        
-        .font-cinzel { font-family: 'Cinzel', serif; }
-        
-        /* Header - using unified nw-nav */
-        /* No custom header needed - nw-nav.js handles it */
-        
-        /* Main Content */
-        main {
-            padding-top: 80px;
-            max-width: 1400px;
-            margin: 0 auto;
-            padding-left: 1rem;
-            padding-right: 1rem;
-        }
-        
-        /* Hero */
-        .hero {
-            text-align: center;
-            padding: 4rem 1rem;
-            background: linear-gradient(180deg, rgba(255,215,0,0.05) 0%, transparent 100%);
-            border-radius: 24px;
-            margin-bottom: 3rem;
-        }
-        
-        .hero h1 {
-            font-size: clamp(2rem, 5vw, 3.5rem);
-            font-weight: 700;
-            background: linear-gradient(180deg, #fff 0%, var(--gold) 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            margin-bottom: 1rem;
-        }
-        
-        .hero-subtitle {
-            font-size: 1.1rem;
-            color: rgba(255,255,255,0.7);
-            max-width: 700px;
-            margin: 0 auto 2rem;
-        }
-        
-        /* Disclaimer Banner */
-        .disclaimer-banner {
-            background: linear-gradient(135deg, rgba(239,68,68,0.1), rgba(239,68,68,0.05));
-            border: 1px solid rgba(239,68,68,0.3);
-            border-radius: 12px;
-            padding: 1rem 1.5rem;
-            margin-bottom: 3rem;
-            display: flex;
-            align-items: flex-start;
-            gap: 1rem;
-        }
-        
-        .disclaimer-icon {
-            font-size: 1.5rem;
-            flex-shrink: 0;
-        }
-        
-        .disclaimer-text {
-            font-size: 0.9rem;
-            color: rgba(255,255,255,0.8);
-            line-height: 1.6;
-        }
-        
-        /* Tabs */
-        .tabs {
-            display: flex;
-            gap: 0.5rem;
-            margin-bottom: 2rem;
-            flex-wrap: wrap;
-            justify-content: center;
-        }
-        
-        .tab-btn {
-            padding: 0.75rem 1.5rem;
-            border-radius: 12px;
-            border: 1px solid rgba(255,255,255,0.2);
-            background: rgba(255,255,255,0.05);
-            color: rgba(255,255,255,0.7);
-            font-weight: 500;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-        
-        .tab-btn.active {
-            background: var(--gold);
-            color: #000;
-            border-color: var(--gold);
-        }
-        
-        .tab-btn:hover:not(.active) {
-            border-color: var(--gold);
-            color: var(--gold);
-        }
-        
-        .tab-content {
-            display: none;
-        }
-        
-        .tab-content.active {
-            display: block;
-        }
-        
-        /* Section Cards */
-        .section-card {
-            background: rgba(255,255,255,0.03);
-            border: 1px solid rgba(255,255,255,0.1);
-            border-radius: 16px;
-            padding: 2rem;
-            margin-bottom: 2rem;
-        }
-        
-        .section-card h2 {
-            font-size: 1.5rem;
-            font-weight: 700;
-            color: var(--gold);
-            margin-bottom: 1rem;
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
-        }
-        
-        .section-card h3 {
-            font-size: 1.2rem;
-            font-weight: 600;
-            color: #fff;
-            margin: 1.5rem 0 0.75rem;
-        }
-        
-        .section-card p {
-            color: rgba(255,255,255,0.8);
-            line-height: 1.7;
-            margin-bottom: 1rem;
-        }
-        
-        /* Price Cycle Visualization */
-        .cycle-visual {
-            background: rgba(0,0,0,0.3);
-            border-radius: 16px;
-            padding: 2rem;
-            margin: 2rem 0;
-            position: relative;
-            overflow: hidden;
-        }
-        
-        .cycle-diagram {
-            display: flex;
-            justify-content: space-around;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 1rem;
-            padding: 2rem 0;
-        }
-        
-        .cycle-phase {
-            text-align: center;
-            padding: 1.5rem;
-            border-radius: 16px;
-            min-width: 150px;
-            cursor: pointer;
-            transition: all 0.3s;
-            position: relative;
-        }
-        
-        .cycle-phase:hover {
-            transform: translateY(-5px);
-        }
-        
-        .cycle-phase.accumulation {
-            background: linear-gradient(135deg, rgba(34,197,94,0.2), rgba(34,197,94,0.1));
-            border: 2px solid var(--green);
-        }
-        
-        .cycle-phase.markup {
-            background: linear-gradient(135deg, rgba(59,130,246,0.2), rgba(59,130,246,0.1));
-            border: 2px solid var(--blue);
-        }
-        
-        .cycle-phase.distribution {
-            background: linear-gradient(135deg, rgba(239,68,68,0.2), rgba(239,68,68,0.1));
-            border: 2px solid var(--red);
-        }
-        
-        .cycle-phase.markdown {
-            background: linear-gradient(135deg, rgba(124,58,237,0.2), rgba(124,58,237,0.1));
-            border: 2px solid var(--purple);
-        }
-        
-        .cycle-phase .phase-icon {
-            font-size: 2rem;
-            margin-bottom: 0.5rem;
-        }
-        
-        .cycle-phase .phase-name {
-            font-weight: 700;
-            font-size: 1rem;
-            margin-bottom: 0.25rem;
-        }
-        
-        .cycle-phase .phase-desc {
-            font-size: 0.8rem;
-            color: rgba(255,255,255,0.6);
-        }
-        
-        .cycle-arrow {
-            font-size: 2rem;
-            color: rgba(255,255,255,0.3);
-        }
-        
-        /* Phase Detail */
-        .phase-detail {
-            display: none;
-            background: rgba(0,0,0,0.4);
-            border-radius: 12px;
-            padding: 1.5rem;
-            margin-top: 1.5rem;
-            border-left: 4px solid var(--gold);
-        }
-        
-        .phase-detail.active {
-            display: block;
-            animation: fadeIn 0.3s ease;
-        }
-        
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(-10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        
-        .phase-detail h4 {
-            font-size: 1.1rem;
-            font-weight: 700;
-            margin-bottom: 0.75rem;
-            color: var(--gold);
-        }
-        
-        .phase-detail ul {
-            list-style: none;
-            padding: 0;
-        }
-        
-        .phase-detail li {
-            padding: 0.5rem 0;
-            padding-left: 1.5rem;
-            position: relative;
-            color: rgba(255,255,255,0.8);
-        }
-        
-        .phase-detail li::before {
-            content: '→';
-            position: absolute;
-            left: 0;
-            color: var(--gold);
-        }
-        
-        /* Schematic Events Table */
-        .events-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 1rem;
-            margin: 1.5rem 0;
-        }
-        
-        .event-card {
-            background: rgba(255,255,255,0.05);
-            border-radius: 12px;
-            padding: 1rem;
-            border: 1px solid rgba(255,255,255,0.1);
-        }
-        
-        .event-card .event-abbr {
-            font-weight: 700;
-            color: var(--cyan);
-            font-size: 0.9rem;
-            margin-bottom: 0.25rem;
-        }
-        
-        .event-card .event-name {
-            font-weight: 600;
-            color: #fff;
-            margin-bottom: 0.5rem;
-        }
-        
-        .event-card .event-desc {
-            font-size: 0.85rem;
-            color: rgba(255,255,255,0.7);
-            line-height: 1.5;
-        }
-        
-        /* Three Laws */
-        .laws-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 1.5rem;
-            margin: 2rem 0;
-        }
-        
-        .law-card {
-            background: linear-gradient(135deg, rgba(255,215,0,0.1), rgba(255,107,0,0.05));
-            border: 1px solid rgba(255,215,0,0.3);
-            border-radius: 16px;
-            padding: 1.5rem;
-            text-align: center;
-        }
-        
-        .law-card .law-number {
-            width: 48px;
-            height: 48px;
-            border-radius: 50%;
-            background: var(--gold);
-            color: #000;
-            font-weight: 900;
-            font-size: 1.5rem;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin: 0 auto 1rem;
-        }
-        
-        .law-card h3 {
-            color: var(--gold);
-            margin-bottom: 0.75rem;
-        }
-        
-        .law-card p {
-            font-size: 0.9rem;
-            color: rgba(255,255,255,0.8);
-        }
-        
-        /* Interactive Schematic */
-        .schematic-container {
-            background: rgba(0,0,0,0.4);
-            border-radius: 16px;
-            padding: 2rem;
-            margin: 2rem 0;
-            overflow-x: auto;
-        }
-        
-        .schematic-svg {
-            width: 100%;
-            min-width: 600px;
-            height: 400px;
-        }
-        
-        /* Footer Disclaimer */
-        .footer-disclaimer {
-            background: rgba(239,68,68,0.05);
-            border-top: 1px solid rgba(239,68,68,0.2);
-            padding: 2rem;
-            margin-top: 4rem;
-            text-align: center;
-        }
-        
-        .footer-disclaimer h4 {
-            color: var(--red);
-            margin-bottom: 1rem;
-            font-size: 1.1rem;
-        }
-        
-        .footer-disclaimer p {
-            color: rgba(255,255,255,0.7);
-            font-size: 0.85rem;
-            max-width: 800px;
-            margin: 0 auto;
-            line-height: 1.7;
-        }
-        
-        /* Quick Start 3-Step Guide */
-        .quick-start-box {
-            background: linear-gradient(135deg, rgba(34,197,94,0.15), rgba(59,130,246,0.1));
-            border: 2px solid var(--green);
-            border-radius: 20px;
-            padding: 2rem;
-            margin: 2rem 0;
-        }
-        
-        .step-card {
-            background: rgba(0,0,0,0.4);
-            border-radius: 16px;
-            padding: 1.5rem;
-            margin: 1rem 0;
-            border-left: 4px solid var(--gold);
-        }
-        
-        .step-number {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            background: var(--gold);
-            color: #000;
-            font-weight: 900;
-            font-size: 1.2rem;
-            margin-right: 1rem;
-        }
-        
-        .step-title {
-            font-size: 1.2rem;
-            font-weight: 700;
-            color: #fff;
-            display: inline;
-        }
-        
-        .step-content {
-            margin-top: 1rem;
-            padding-left: 56px;
-        }
-        
-        .step-content p {
-            margin-bottom: 0.75rem;
-        }
-        
-        .checklist {
-            list-style: none;
-            padding: 0;
-            margin: 1rem 0;
-        }
-        
-        .checklist li {
-            padding: 0.5rem 0;
-            padding-left: 2rem;
-            position: relative;
-        }
-        
-        .checklist li::before {
-            content: '☐';
-            position: absolute;
-            left: 0;
-            color: var(--gold);
-            font-size: 1.2rem;
-        }
-        
-        .checklist li.check::before {
-            content: '☑';
-            color: var(--green);
+        .brush-title {
+            font-family: 'Ma Shan Zheng', cursive;
         }
         
-        /* Example Box */
-        .example-box {
-            background: rgba(255,215,0,0.05);
-            border: 1px solid rgba(255,215,0,0.3);
-            border-radius: 12px;
-            padding: 1.5rem;
-            margin: 1.5rem 0;
+        .stock-card {
+            background: linear-gradient(135deg, #fff 0%, #f8f4e8 100%);
+            border: 2px solid var(--gold);
+            box-shadow: 
+                0 4px 6px rgba(0,0,0,0.1),
+                inset 0 0 20px rgba(212,175,55,0.1);
+            transition: all 0.3s ease;
         }
         
-        .example-box h4 {
-            color: var(--gold);
-            margin-bottom: 1rem;
-            font-size: 1.1rem;
+        .stock-card:hover {
+            transform: translateY(-8px) scale(1.02);
+            box-shadow: 
+                0 12px 24px rgba(0,0,0,0.2),
+                inset 0 0 30px rgba(212,175,55,0.2);
         }
         
-        .stock-info {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-            gap: 1rem;
-            margin: 1rem 0;
+        .rank-badge {
+            background: linear-gradient(135deg, var(--red) 0%, #8b0000 100%);
+            font-family: 'Ma Shan Zheng', cursive;
         }
         
-        .stock-stat {
-            background: rgba(0,0,0,0.3);
-            padding: 1rem;
+        .seal {
+            width: 60px;
+            height: 60px;
+            background: var(--seal);
             border-radius: 8px;
-            text-align: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-family: 'Ma Shan Zheng', cursive;
+            font-size: 1.2rem;
+            transform: rotate(-15deg);
+            box-shadow: 2px 2px 4px rgba(0,0,0,0.3);
         }
         
-        .stock-stat .label {
-            font-size: 0.8rem;
-            color: rgba(255,255,255,0.6);
-            margin-bottom: 0.25rem;
+        .ink-image {
+            border: 3px solid var(--ink);
+            box-shadow: 4px 4px 0 var(--gold);
+            transition: all 0.3s ease;
         }
         
-        .stock-stat .value {
-            font-size: 1.25rem;
-            font-weight: 700;
-            color: var(--gold);
+        .ink-image:hover {
+            box-shadow: 6px 6px 0 var(--gold);
         }
         
-        .verdict-box {
-            background: rgba(34,197,94,0.1);
-            border: 1px solid var(--green);
-            border-radius: 12px;
-            padding: 1.5rem;
-            margin-top: 1.5rem;
-            text-align: center;
+        .scroll-border {
+            border-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40'%3E%3Crect width='40' height='40' fill='%23d4af37'/%3E%3Crect x='2' y='2' width='36' height='36' fill='%23f5f0e1'/%3E%3C/svg%3E") 20 stretch;
         }
         
-        .verdict-box.caution {
-            background: rgba(245,158,11,0.1);
-            border-color: #f59e0b;
+        .why-popup {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.9);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            padding: 20px;
         }
         
-        .verdict-box.danger {
-            background: rgba(239,68,68,0.1);
-            border-color: var(--red);
+        .why-popup.active {
+            display: flex;
         }
         
-        .verdict-label {
-            font-size: 0.9rem;
-            color: rgba(255,255,255,0.7);
-            margin-bottom: 0.5rem;
+        .why-content {
+            max-width: 600px;
+            background: var(--paper);
+            border: 4px solid var(--gold);
+            padding: 20px;
+            position: relative;
         }
         
-        .verdict-result {
-            font-size: 1.5rem;
-            font-weight: 700;
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
         }
         
-        .verdict-box .verdict-result { color: var(--green); }
-        .verdict-box.caution .verdict-result { color: #f59e0b; }
-        .verdict-box.danger .verdict-result { color: var(--red); }
+        .floating {
+            animation: float 3s ease-in-out infinite;
+        }
         
-        /* Responsive */
-        @media (max-width: 768px) {
-            .page-header {
-                padding: 0.75rem 1rem;
-            }
-            
-            .hero {
-                padding: 3rem 1rem;
-            }
-            
-            .cycle-arrow {
-                display: none;
-            }
-            
-            .cycle-diagram {
-                flex-direction: column;
-            }
-            
-            .section-card {
-                padding: 1.5rem;
-            }
+        .disclaimer {
+            background: linear-gradient(90deg, transparent, var(--gold), transparent);
+            height: 2px;
         }
     </style>
 </head>
-<body data-page-id="wyckoff">
-    <!-- Navigation handled by nw-nav.js -->
+<body class="min-h-screen">
+    <!-- Header -->
+    <header class="bg-gradient-to-b from-[#1a1a2e] to-[#2d2d44] text-white py-8 px-4">
+        <div class="max-w-6xl mx-auto text-center">
+            <h1 class="brush-title text-5xl md:text-7xl text-[#d4af37] mb-4 floating">
+                報明牌方法
+            </h1>
+            <p class="text-xl md:text-2xl text-gray-300 mb-2">
+                Wyckoff Method × 水墨瘋狂版
+            </p>
+            <p class="text-lg text-[#d4af37]">
+                台灣 AI 受惠股 Top 20 | 2026 Edition
+            </p>
+            <div class="mt-6 flex justify-center gap-4 flex-wrap">
+                <div class="seal">買</div>
+                <div class="seal" style="transform: rotate(10deg)">賺</div>
+                <div class="seal" style="transform: rotate(-5deg)">發</div>
+            </div>
+        </div>
+    </header>
     
-    <main>
-        <!-- Hero -->
-        <section class="hero">
-            <h1 data-i18n="hero.title">Wyckoff Method Academy</h1>
-            <p class="hero-subtitle" data-i18n="hero.subtitle">
-                Master the art of reading market structure through accumulation, distribution, markup and markdown phases. Learn to think like the "Composite Man".
+    <!-- Disclaimer -->
+    <div class="bg-[#1a1a2e] text-center py-4 px-4">
+        <p class="text-gray-400 text-sm max-w-4xl mx-auto">
+            ⚠️ <span class="text-[#d4af37]">純屬娛樂</span> ⚠️ 
+            本頁面為搞笑藝術作品，不構成任何投資建議。圖片由 AI 生成，如有雷同純屬巧合。
+            投資有風險，入市需謹慎。看完笑笑就好，別真的 All-in 啊！
+        </p>
+        <div class="disclaimer mt-4"></div>
+    </div>
+    
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto py-12 px-4">
+        <!-- Intro -->
+        <div class="text-center mb-16">
+            <h2 class="brush-title text-4xl text-[#1a1a2e] mb-4">看圖說故事</h2>
+            <p class="text-gray-600 max-w-2xl mx-auto">
+                每家公司一張「是誰」+ 一張「為什麼選它」<br>
+                全部用傳統水墨畫風格呈現，但內容超級荒謬<br>
+                <span class="text-[#c41e3a] font-bold">點擊圖片看「為什麼」</span>
             </p>
-        </section>
-        
-        <!-- Disclaimer Banner -->
-        <div class="disclaimer-banner">
-            <span class="disclaimer-icon">⚠️</span>
-            <p class="disclaimer-text" data-i18n="disclaimer.main">
-                <strong>Educational Purpose Only:</strong> This content is for educational purposes only and does not constitute financial advice. The Wyckoff Method is a framework for market analysis, not a prediction tool. Past patterns do not guarantee future results. Always consult a licensed financial advisor before making investment decisions.
-            </p>
         </div>
         
-        <!-- Tabs -->
-        <div class="tabs">
-            <button class="tab-btn active" data-tab="quickstart" data-i18n="tabs.quickstart">⚡ 3-Step Guide</button>
-            <button class="tab-btn" data-tab="overview" data-i18n="tabs.overview">Overview</button>
-            <button class="tab-btn" data-tab="accumulation" data-i18n="tabs.accumulation">Accumulation</button>
-            <button class="tab-btn" data-tab="distribution" data-i18n="tabs.distribution">Distribution</button>
-            <button class="tab-btn" data-tab="laws" data-i18n="tabs.laws">Three Laws</button>
-            <button class="tab-btn" data-tab="tests" data-i18n="tabs.tests">9 Tests</button>
+        <!-- Stock Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8" id="stockGrid">
+            <!-- Cards will be injected by JS -->
         </div>
-        
-        <!-- Tab: Quick Start 3-Step Guide -->
-        <div id="tab-quickstart" class="tab-content active">
-            <div class="section-card">
-                <h2>⚡ <span data-i18n="quickstart.title">Fool-Proof 3-Step Wyckoff Analysis</span></h2>
-                <p data-i18n="quickstart.intro">
-                    Use this simple checklist to identify which phase a stock is in. We'll use <strong>TSMC (2330.TW)</strong> as a real-world example.
-                </p>
-                
-                <div class="quick-start-box">
-                    <!-- Step 1 -->
-                    <div class="step-card">
-                        <span class="step-number">1</span>
-                        <span class="step-title" data-i18n="quickstart.step1.title">Identify the Trend Context</span>
-                        <div class="step-content">
-                            <p data-i18n="quickstart.step1.desc">First, zoom out and ask: What happened BEFORE the current sideways range?</p>
-                            <ul class="checklist">
-                                <li data-i18n="quickstart.step1.q1">Was there a significant DOWNTREND before? → Possible <strong>Accumulation</strong></li>
-                                <li data-i18n="quickstart.step1.q2">Was there a significant UPTREND before? → Possible <strong>Distribution</strong></li>
-                                <li data-i18n="quickstart.step1.q3">Is price clearly trending (not sideways)? → You're in <strong>Markup</strong> or <strong>Markdown</strong></li>
-                            </ul>
-                        </div>
-                    </div>
-                    
-                    <!-- Step 2 -->
-                    <div class="step-card">
-                        <span class="step-number">2</span>
-                        <span class="step-title" data-i18n="quickstart.step2.title">Check Volume Behavior</span>
-                        <div class="step-content">
-                            <p data-i18n="quickstart.step2.desc">Volume reveals who's in control - smart money or retail panic.</p>
-                            <ul class="checklist">
-                                <li data-i18n="quickstart.step2.q1">Volume INCREASES on rallies, DECREASES on dips? → <strong>Bullish</strong> (Accumulation/Markup)</li>
-                                <li data-i18n="quickstart.step2.q2">Volume INCREASES on drops, DECREASES on rallies? → <strong>Bearish</strong> (Distribution/Markdown)</li>
-                                <li data-i18n="quickstart.step2.q3">Was there a HUGE volume spike at extreme price? → Look for Climax (SC or BC)</li>
-                            </ul>
-                        </div>
-                    </div>
-                    
-                    <!-- Step 3 -->
-                    <div class="step-card">
-                        <span class="step-number">3</span>
-                        <span class="step-title" data-i18n="quickstart.step3.title">Look for the "Trap" Signal</span>
-                        <div class="step-content">
-                            <p data-i18n="quickstart.step3.desc">The most powerful entry signals are "traps" - false breakouts that reverse quickly.</p>
-                            <ul class="checklist">
-                                <li data-i18n="quickstart.step3.q1"><strong>Spring (Bear Trap)</strong>: Price dips BELOW support, then quickly recovers → Bullish signal</li>
-                                <li data-i18n="quickstart.step3.q2"><strong>Upthrust (Bull Trap)</strong>: Price breaks ABOVE resistance, then quickly falls → Bearish signal</li>
-                                <li data-i18n="quickstart.step3.q3">After the trap, wait for a <strong>test on low volume</strong> to confirm</li>
-                            </ul>
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- TSMC Example -->
-                <h3 data-i18n="quickstart.example.title">📈 Real Example: TSMC (2330.TW) - February 2026</h3>
-                
-                <div class="example-box">
-                    <h4>🔍 Applying the 3 Steps to TSMC</h4>
-                    
-                    <div class="stock-info">
-                        <div class="stock-stat">
-                            <div class="label" data-i18n="quickstart.example.price">Current Price</div>
-                            <div class="value">NT$1,800</div>
-                        </div>
-                        <div class="stock-stat">
-                            <div class="label" data-i18n="quickstart.example.range52w">52-Week Range</div>
-                            <div class="value">780 - 1,835</div>
-                        </div>
-                        <div class="stock-stat">
-                            <div class="label" data-i18n="quickstart.example.ytd">2025 Performance</div>
-                            <div class="value">+55%</div>
-                        </div>
-                        <div class="stock-stat">
-                            <div class="label" data-i18n="quickstart.example.volume">Avg Volume</div>
-                            <div class="value">31M</div>
-                        </div>
-                    </div>
-                    
-                    <div class="step-card" style="border-left-color: var(--green);">
-                        <strong>Step 1 Result:</strong>
-                        <p data-i18n="quickstart.example.step1">
-                            ✅ TSMC had a STRONG UPTREND in 2024-2025 (from ~NT$500 to NT$1,800+). Price is now consolidating near all-time highs. This suggests we may be in a <strong>Distribution</strong> or <strong>Re-accumulation</strong> phase.
-                        </p>
-                    </div>
-                    
-                    <div class="step-card" style="border-left-color: var(--blue);">
-                        <strong>Step 2 Result:</strong>
-                        <p data-i18n="quickstart.example.step2">
-                            ⚠️ Volume has been DECREASING during recent consolidation. On pullbacks to NT$1,700-1,750, volume stays relatively low. This is more consistent with <strong>Re-accumulation</strong> (healthy pause before continuing up) than Distribution.
-                        </p>
-                    </div>
-                    
-                    <div class="step-card" style="border-left-color: var(--purple);">
-                        <strong>Step 3 Result:</strong>
-                        <p data-i18n="quickstart.example.step3">
-                            🔍 No clear Spring or Upthrust yet. Price is respecting the NT$1,700 support level. A <strong>Spring would be a quick dip below NT$1,700</strong> that immediately recovers - that would be a bullish confirmation for re-accumulation.
-                        </p>
-                    </div>
-                    
-                    <div class="verdict-box caution">
-                        <div class="verdict-label" data-i18n="quickstart.example.verdict.label">Current Wyckoff Assessment</div>
-                        <div class="verdict-result" data-i18n="quickstart.example.verdict.result">RE-ACCUMULATION (Wait for Spring/Test)</div>
-                        <p style="margin-top: 1rem; font-size: 0.9rem; color: rgba(255,255,255,0.7);" data-i18n="quickstart.example.verdict.note">
-                            ⚠️ TSMC appears to be in a healthy consolidation after a strong rally. Watch for a Spring below NT$1,700 as a potential entry signal. If instead it breaks below NT$1,700 on HIGH volume, reassess for possible Distribution.
-                        </p>
-                    </div>
-                </div>
-                
-                <!-- Quick Reference Formula -->
-                <h3 data-i18n="quickstart.formula.title">🧮 The Wyckoff Quick Formula</h3>
-                <div class="example-box" style="text-align: center;">
-                    <div style="font-size: 1.5rem; font-weight: 700; color: var(--gold); margin-bottom: 1rem;">
-                        Phase = Trend Context + Volume Behavior + Trap Signal
-                    </div>
-                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; text-align: left;">
-                        <div style="background: rgba(34,197,94,0.1); padding: 1rem; border-radius: 8px;">
-                            <strong style="color: var(--green);">🟢 ACCUMULATION</strong><br>
-                            <span style="font-size: 0.85rem; color: rgba(255,255,255,0.7);">
-                                Prior Downtrend + Low Volume Dips + Spring = BUY ZONE
-                            </span>
-                        </div>
-                        <div style="background: rgba(59,130,246,0.1); padding: 1rem; border-radius: 8px;">
-                            <strong style="color: var(--blue);">🔵 MARKUP</strong><br>
-                            <span style="font-size: 0.85rem; color: rgba(255,255,255,0.7);">
-                                Higher Highs + Volume on Rallies = HOLD/RIDE
-                            </span>
-                        </div>
-                        <div style="background: rgba(239,68,68,0.1); padding: 1rem; border-radius: 8px;">
-                            <strong style="color: var(--red);">🔴 DISTRIBUTION</strong><br>
-                            <span style="font-size: 0.85rem; color: rgba(255,255,255,0.7);">
-                                Prior Uptrend + Low Volume Rallies + Upthrust = SELL ZONE
-                            </span>
-                        </div>
-                        <div style="background: rgba(124,58,237,0.1); padding: 1rem; border-radius: 8px;">
-                            <strong style="color: var(--purple);">🟣 MARKDOWN</strong><br>
-                            <span style="font-size: 0.85rem; color: rgba(255,255,255,0.7);">
-                                Lower Lows + Volume on Drops = AVOID/SHORT
-                            </span>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="disclaimer-banner" style="margin-top: 2rem;">
-                    <span class="disclaimer-icon">⚠️</span>
-                    <p class="disclaimer-text" data-i18n="quickstart.disclaimer">
-                        <strong>Remember:</strong> This is a FRAMEWORK for analysis, not a crystal ball. The Wyckoff Method helps you think like institutional traders, but markets can do anything. Never invest money you can't afford to lose. This TSMC example is for educational purposes only and is NOT a buy/sell recommendation.
-                    </p>
-                </div>
-            </div>
-        </div>
-        
-        <!-- Tab: Overview -->
-        <div id="tab-overview" class="tab-content">
-            <div class="section-card">
-                <h2>📊 <span data-i18n="overview.title">The Wyckoff Price Cycle</span></h2>
-                <p data-i18n="overview.intro">
-                    Richard D. Wyckoff (1873-1934) developed a method to understand market movements by analyzing the actions of large institutional operators, which he called the "Composite Man". The market moves in recurring cycles consisting of four distinct phases.
-                </p>
-                
-                <div class="cycle-visual">
-                    <div class="cycle-diagram">
-                        <div class="cycle-phase accumulation" data-phase="accumulation">
-                            <div class="phase-icon">📦</div>
-                            <div class="phase-name" data-i18n="cycle.accumulation.name">Accumulation</div>
-                            <div class="phase-desc" data-i18n="cycle.accumulation.desc">Smart money buys</div>
-                        </div>
-                        <span class="cycle-arrow">→</span>
-                        <div class="cycle-phase markup" data-phase="markup">
-                            <div class="phase-icon">📈</div>
-                            <div class="phase-name" data-i18n="cycle.markup.name">Markup</div>
-                            <div class="phase-desc" data-i18n="cycle.markup.desc">Price rises</div>
-                        </div>
-                        <span class="cycle-arrow">→</span>
-                        <div class="cycle-phase distribution" data-phase="distribution">
-                            <div class="phase-icon">📤</div>
-                            <div class="phase-name" data-i18n="cycle.distribution.name">Distribution</div>
-                            <div class="phase-desc" data-i18n="cycle.distribution.desc">Smart money sells</div>
-                        </div>
-                        <span class="cycle-arrow">→</span>
-                        <div class="cycle-phase markdown" data-phase="markdown">
-                            <div class="phase-icon">📉</div>
-                            <div class="phase-name" data-i18n="cycle.markdown.name">Markdown</div>
-                            <div class="phase-desc" data-i18n="cycle.markdown.desc">Price falls</div>
-                        </div>
-                    </div>
-                    
-                    <!-- Phase Details -->
-                    <div id="detail-accumulation" class="phase-detail">
-                        <h4 data-i18n="detail.accumulation.title">Accumulation Phase</h4>
-                        <ul>
-                            <li data-i18n="detail.accumulation.p1">Large institutions quietly buy shares at low prices</li>
-                            <li data-i18n="detail.accumulation.p2">Occurs after a prolonged downtrend (markdown)</li>
-                            <li data-i18n="detail.accumulation.p3">Price moves sideways within a trading range</li>
-                            <li data-i18n="detail.accumulation.p4">Supply is gradually absorbed by demand</li>
-                            <li data-i18n="detail.accumulation.p5">Ends with a "Spring" or successful test of support</li>
-                        </ul>
-                    </div>
-                    
-                    <div id="detail-markup" class="phase-detail">
-                        <h4 data-i18n="detail.markup.title">Markup Phase</h4>
-                        <ul>
-                            <li data-i18n="detail.markup.p1">Price breaks out above the trading range</li>
-                            <li data-i18n="detail.markup.p2">Demand exceeds supply consistently</li>
-                            <li data-i18n="detail.markup.p3">Higher highs and higher lows form an uptrend</li>
-                            <li data-i18n="detail.markup.p4">Public interest and volume increase</li>
-                            <li data-i18n="detail.markup.p5">Re-accumulation zones may form (stepping stones)</li>
-                        </ul>
-                    </div>
-                    
-                    <div id="detail-distribution" class="phase-detail">
-                        <h4 data-i18n="detail.distribution.title">Distribution Phase</h4>
-                        <ul>
-                            <li data-i18n="detail.distribution.p1">Large institutions sell shares to the public at high prices</li>
-                            <li data-i18n="detail.distribution.p2">Occurs after a prolonged uptrend (markup)</li>
-                            <li data-i18n="detail.distribution.p3">Price moves sideways within a trading range</li>
-                            <li data-i18n="detail.distribution.p4">Supply gradually overwhelms demand</li>
-                            <li data-i18n="detail.distribution.p5">Ends with an "Upthrust" or failed test of resistance</li>
-                        </ul>
-                    </div>
-                    
-                    <div id="detail-markdown" class="phase-detail">
-                        <h4 data-i18n="detail.markdown.title">Markdown Phase</h4>
-                        <ul>
-                            <li data-i18n="detail.markdown.p1">Price breaks down below the trading range</li>
-                            <li data-i18n="detail.markdown.p2">Supply exceeds demand consistently</li>
-                            <li data-i18n="detail.markdown.p3">Lower highs and lower lows form a downtrend</li>
-                            <li data-i18n="detail.markdown.p4">Panic selling may occur at climax</li>
-                            <li data-i18n="detail.markdown.p5">Re-distribution zones may form (stepping stones down)</li>
-                        </ul>
-                    </div>
-                </div>
-                
-                <h3 data-i18n="overview.composite.title">🎭 The Composite Man</h3>
-                <p data-i18n="overview.composite.desc">
-                    Wyckoff advised traders to imagine all market fluctuations as the result of one operator - the "Composite Man" - who manipulates markets for his benefit. Understanding his strategies allows traders to align their positions with smart money rather than against it. The Composite Man carefully plans, executes, and concludes campaigns to accumulate or distribute shares.
-                </p>
-            </div>
-        </div>
-        
-        <!-- Tab: Accumulation -->
-        <div id="tab-accumulation" class="tab-content">
-            <div class="section-card">
-                <h2>📦 <span data-i18n="accumulation.title">Accumulation Schematic</span></h2>
-                <p data-i18n="accumulation.intro">
-                    Accumulation occurs when large operators buy shares at low prices before marking up. The schematic consists of five phases (A-E) with specific events that signal the progression of accumulation.
-                </p>
-                
-                <!-- SVG Schematic -->
-                <div class="schematic-container">
-                    <svg class="schematic-svg" viewBox="0 0 800 350">
-                        <!-- Background grid -->
-                        <defs>
-                            <pattern id="grid" width="50" height="50" patternUnits="userSpaceOnUse">
-                                <path d="M 50 0 L 0 0 0 50" fill="none" stroke="rgba(255,255,255,0.05)" stroke-width="1"/>
-                            </pattern>
-                        </defs>
-                        <rect width="800" height="350" fill="url(#grid)"/>
-                        
-                        <!-- Support/Resistance Lines -->
-                        <line x1="50" y1="100" x2="750" y2="100" stroke="rgba(239,68,68,0.5)" stroke-dasharray="5,5" stroke-width="1"/>
-                        <line x1="50" y1="250" x2="750" y2="250" stroke="rgba(34,197,94,0.5)" stroke-dasharray="5,5" stroke-width="1"/>
-                        <text x="760" y="105" fill="rgba(239,68,68,0.7)" font-size="12">Resistance</text>
-                        <text x="760" y="255" fill="rgba(34,197,94,0.7)" font-size="12">Support</text>
-                        
-                        <!-- Price Path -->
-                        <path d="M 50 50 
-                                 L 80 120 
-                                 L 100 280 
-                                 L 130 150 
-                                 L 180 260 
-                                 L 220 170 
-                                 L 280 240 
-                                 L 320 180 
-                                 L 380 220 
-                                 L 420 160 
-                                 L 480 200 
-                                 L 500 290 
-                                 L 530 200 
-                                 L 580 170 
-                                 L 620 200 
-                                 L 660 150 
-                                 L 700 120 
-                                 L 750 80" 
-                              fill="none" 
-                              stroke="var(--gold)" 
-                              stroke-width="3"
-                              stroke-linecap="round"
-                              stroke-linejoin="round"/>
-                        
-                        <!-- Event Labels -->
-                        <g font-size="11" font-weight="600">
-                            <!-- PS -->
-                            <circle cx="80" cy="120" r="6" fill="var(--cyan)"/>
-                            <text x="80" y="145" fill="var(--cyan)" text-anchor="middle">PS</text>
-                            
-                            <!-- SC -->
-                            <circle cx="100" cy="280" r="8" fill="var(--green)"/>
-                            <text x="100" y="305" fill="var(--green)" text-anchor="middle">SC</text>
-                            
-                            <!-- AR -->
-                            <circle cx="130" cy="150" r="6" fill="var(--blue)"/>
-                            <text x="130" y="135" fill="var(--blue)" text-anchor="middle">AR</text>
-                            
-                            <!-- ST -->
-                            <circle cx="180" cy="260" r="6" fill="var(--purple)"/>
-                            <text x="180" y="285" fill="var(--purple)" text-anchor="middle">ST</text>
-                            
-                            <!-- Spring -->
-                            <circle cx="500" cy="290" r="8" fill="var(--green)"/>
-                            <text x="500" y="315" fill="var(--green)" text-anchor="middle">Spring</text>
-                            
-                            <!-- Test -->
-                            <circle cx="530" cy="200" r="6" fill="var(--cyan)"/>
-                            <text x="530" y="225" fill="var(--cyan)" text-anchor="middle">Test</text>
-                            
-                            <!-- SOS -->
-                            <circle cx="620" cy="200" r="6" fill="var(--blue)"/>
-                            <text x="620" y="185" fill="var(--blue)" text-anchor="middle">SOS</text>
-                            
-                            <!-- LPS -->
-                            <circle cx="660" cy="150" r="6" fill="var(--purple)"/>
-                            <text x="660" y="175" fill="var(--purple)" text-anchor="middle">LPS</text>
-                        </g>
-                        
-                        <!-- Phase Labels -->
-                        <g font-size="14" font-weight="700" fill="rgba(255,255,255,0.5)">
-                            <text x="90" y="330">Phase A</text>
-                            <text x="250" y="330">Phase B</text>
-                            <text x="480" y="330">Phase C</text>
-                            <text x="600" y="330">Phase D</text>
-                            <text x="720" y="330">E</text>
-                        </g>
-                        
-                        <!-- Phase Dividers -->
-                        <line x1="200" y1="300" x2="200" y2="340" stroke="rgba(255,255,255,0.2)" stroke-width="1"/>
-                        <line x1="450" y1="300" x2="450" y2="340" stroke="rgba(255,255,255,0.2)" stroke-width="1"/>
-                        <line x1="560" y1="300" x2="560" y2="340" stroke="rgba(255,255,255,0.2)" stroke-width="1"/>
-                        <line x1="680" y1="300" x2="680" y2="340" stroke="rgba(255,255,255,0.2)" stroke-width="1"/>
-                    </svg>
-                </div>
-                
-                <h3 data-i18n="accumulation.events.title">Key Events in Accumulation</h3>
-                <div class="events-grid">
-                    <div class="event-card">
-                        <div class="event-abbr">PS</div>
-                        <div class="event-name" data-i18n="events.ps.name">Preliminary Support</div>
-                        <div class="event-desc" data-i18n="events.ps.desc">Substantial buying begins after a prolonged down-move. Volume increases, signaling the down-move may be ending.</div>
-                    </div>
-                    <div class="event-card">
-                        <div class="event-abbr">SC</div>
-                        <div class="event-name" data-i18n="events.sc.name">Selling Climax</div>
-                        <div class="event-desc" data-i18n="events.sc.desc">Panicky selling by the public is absorbed by large interests. Wide spread and heavy volume mark a potential bottom.</div>
-                    </div>
-                    <div class="event-card">
-                        <div class="event-abbr">AR</div>
-                        <div class="event-name" data-i18n="events.ar.name">Automatic Rally</div>
-                        <div class="event-desc" data-i18n="events.ar.desc">After intense selling pressure diminishes, buying and short-covering push prices up. Sets the upper boundary of the trading range.</div>
-                    </div>
-                    <div class="event-card">
-                        <div class="event-abbr">ST</div>
-                        <div class="event-name" data-i18n="events.st.name">Secondary Test</div>
-                        <div class="event-desc" data-i18n="events.st.desc">Price revisits the SC area to test supply/demand balance. Decreased volume and narrower spread confirm the bottom.</div>
-                    </div>
-                    <div class="event-card">
-                        <div class="event-abbr">Spring</div>
-                        <div class="event-name" data-i18n="events.spring.name">Spring / Shakeout</div>
-                        <div class="event-desc" data-i18n="events.spring.desc">Price drops below support to trigger stop-losses and trap bears, then quickly reverses back into the range. A bear trap.</div>
-                    </div>
-                    <div class="event-card">
-                        <div class="event-abbr">Test</div>
-                        <div class="event-name" data-i18n="events.test.name">Test</div>
-                        <div class="event-desc" data-i18n="events.test.desc">After a spring, a successful test makes a higher low on lower volume, indicating supply has been exhausted.</div>
-                    </div>
-                    <div class="event-card">
-                        <div class="event-abbr">SOS</div>
-                        <div class="event-name" data-i18n="events.sos.name">Sign of Strength</div>
-                        <div class="event-desc" data-i18n="events.sos.desc">Price advances on increasing spread and volume, confirming demand is now dominant. Often follows a spring.</div>
-                    </div>
-                    <div class="event-card">
-                        <div class="event-abbr">LPS</div>
-                        <div class="event-name" data-i18n="events.lps.name">Last Point of Support</div>
-                        <div class="event-desc" data-i18n="events.lps.desc">A pullback on diminished spread and volume after a SOS. Ideal entry point for long positions before markup begins.</div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        
-        <!-- Tab: Distribution -->
-        <div id="tab-distribution" class="tab-content">
-            <div class="section-card">
-                <h2>📤 <span data-i18n="distribution.title">Distribution Schematic</span></h2>
-                <p data-i18n="distribution.intro">
-                    Distribution occurs when large operators sell shares to the public at high prices before marking down. It mirrors accumulation but with opposite intent - transferring shares from strong hands to weak hands.
-                </p>
-                
-                <!-- SVG Schematic -->
-                <div class="schematic-container">
-                    <svg class="schematic-svg" viewBox="0 0 800 350">
-                        <!-- Background grid -->
-                        <rect width="800" height="350" fill="url(#grid)"/>
-                        
-                        <!-- Support/Resistance Lines -->
-                        <line x1="50" y1="100" x2="750" y2="100" stroke="rgba(239,68,68,0.5)" stroke-dasharray="5,5" stroke-width="1"/>
-                        <line x1="50" y1="250" x2="750" y2="250" stroke="rgba(34,197,94,0.5)" stroke-dasharray="5,5" stroke-width="1"/>
-                        <text x="760" y="105" fill="rgba(239,68,68,0.7)" font-size="12">Resistance</text>
-                        <text x="760" y="255" fill="rgba(34,197,94,0.7)" font-size="12">Support</text>
-                        
-                        <!-- Price Path (Distribution) -->
-                        <path d="M 50 300 
-                                 L 80 180 
-                                 L 100 70 
-                                 L 130 200 
-                                 L 180 90 
-                                 L 220 180 
-                                 L 280 110 
-                                 L 320 170 
-                                 L 380 130 
-                                 L 420 190 
-                                 L 480 150 
-                                 L 500 60 
-                                 L 530 150 
-                                 L 580 180 
-                                 L 620 150 
-                                 L 660 200 
-                                 L 700 230 
-                                 L 750 280" 
-                              fill="none" 
-                              stroke="var(--red)" 
-                              stroke-width="3"
-                              stroke-linecap="round"
-                              stroke-linejoin="round"/>
-                        
-                        <!-- Event Labels -->
-                        <g font-size="11" font-weight="600">
-                            <!-- PSY -->
-                            <circle cx="80" cy="180" r="6" fill="var(--cyan)"/>
-                            <text x="80" y="205" fill="var(--cyan)" text-anchor="middle">PSY</text>
-                            
-                            <!-- BC -->
-                            <circle cx="100" cy="70" r="8" fill="var(--red)"/>
-                            <text x="100" y="55" fill="var(--red)" text-anchor="middle">BC</text>
-                            
-                            <!-- AR -->
-                            <circle cx="130" cy="200" r="6" fill="var(--blue)"/>
-                            <text x="130" y="225" fill="var(--blue)" text-anchor="middle">AR</text>
-                            
-                            <!-- ST -->
-                            <circle cx="180" cy="90" r="6" fill="var(--purple)"/>
-                            <text x="180" y="75" fill="var(--purple)" text-anchor="middle">ST</text>
-                            
-                            <!-- UTAD -->
-                            <circle cx="500" cy="60" r="8" fill="var(--red)"/>
-                            <text x="500" y="45" fill="var(--red)" text-anchor="middle">UTAD</text>
-                            
-                            <!-- SOW -->
-                            <circle cx="580" cy="180" r="6" fill="var(--cyan)"/>
-                            <text x="580" y="205" fill="var(--cyan)" text-anchor="middle">SOW</text>
-                            
-                            <!-- LPSY -->
-                            <circle cx="620" cy="150" r="6" fill="var(--purple)"/>
-                            <text x="620" y="135" fill="var(--purple)" text-anchor="middle">LPSY</text>
-                        </g>
-                        
-                        <!-- Phase Labels -->
-                        <g font-size="14" font-weight="700" fill="rgba(255,255,255,0.5)">
-                            <text x="90" y="330">Phase A</text>
-                            <text x="250" y="330">Phase B</text>
-                            <text x="480" y="330">Phase C</text>
-                            <text x="600" y="330">Phase D</text>
-                            <text x="720" y="330">E</text>
-                        </g>
-                        
-                        <!-- Phase Dividers -->
-                        <line x1="200" y1="300" x2="200" y2="340" stroke="rgba(255,255,255,0.2)" stroke-width="1"/>
-                        <line x1="450" y1="300" x2="450" y2="340" stroke="rgba(255,255,255,0.2)" stroke-width="1"/>
-                        <line x1="560" y1="300" x2="560" y2="340" stroke="rgba(255,255,255,0.2)" stroke-width="1"/>
-                        <line x1="680" y1="300" x2="680" y2="340" stroke="rgba(255,255,255,0.2)" stroke-width="1"/>
-                    </svg>
-                </div>
-                
-                <h3 data-i18n="distribution.events.title">Key Events in Distribution</h3>
-                <div class="events-grid">
-                    <div class="event-card">
-                        <div class="event-abbr">PSY</div>
-                        <div class="event-name" data-i18n="events.psy.name">Preliminary Supply</div>
-                        <div class="event-desc" data-i18n="events.psy.desc">Large interests begin selling after a prolonged up-move. Volume expands and spread widens, signaling potential trend change.</div>
-                    </div>
-                    <div class="event-card">
-                        <div class="event-abbr">BC</div>
-                        <div class="event-name" data-i18n="events.bc.name">Buying Climax</div>
-                        <div class="event-desc" data-i18n="events.bc.desc">Heavy public buying is met by institutional selling. Often coincides with good news. Marks potential top.</div>
-                    </div>
-                    <div class="event-card">
-                        <div class="event-abbr">AR</div>
-                        <div class="event-name" data-i18n="events.ar2.name">Automatic Reaction</div>
-                        <div class="event-desc" data-i18n="events.ar2.desc">After buying diminishes, heavy supply causes prices to fall. Sets the lower boundary of the distribution range.</div>
-                    </div>
-                    <div class="event-card">
-                        <div class="event-abbr">ST</div>
-                        <div class="event-name" data-i18n="events.st2.name">Secondary Test</div>
-                        <div class="event-desc" data-i18n="events.st2.desc">Price revisits the BC area. Decreased volume and narrower spread confirm resistance and supply dominance.</div>
-                    </div>
-                    <div class="event-card">
-                        <div class="event-abbr">UTAD</div>
-                        <div class="event-name" data-i18n="events.utad.name">Upthrust After Distribution</div>
-                        <div class="event-desc" data-i18n="events.utad.desc">Price breaks above resistance to trap bulls, then quickly reverses. A bull trap that signals the end of distribution.</div>
-                    </div>
-                    <div class="event-card">
-                        <div class="event-abbr">SOW</div>
-                        <div class="event-name" data-i18n="events.sow.name">Sign of Weakness</div>
-                        <div class="event-desc" data-i18n="events.sow.desc">Price drops to or below the trading range support on increased spread and volume. Confirms supply dominance.</div>
-                    </div>
-                    <div class="event-card">
-                        <div class="event-abbr">LPSY</div>
-                        <div class="event-name" data-i18n="events.lpsy.name">Last Point of Supply</div>
-                        <div class="event-desc" data-i18n="events.lpsy.desc">A weak rally on narrow spread after SOW. Ideal entry point for short positions before markdown begins.</div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        
-        <!-- Tab: Three Laws -->
-        <div id="tab-laws" class="tab-content">
-            <div class="section-card">
-                <h2>⚖️ <span data-i18n="laws.title">Wyckoff's Three Laws</span></h2>
-                <p data-i18n="laws.intro">
-                    These fundamental laws form the foundation of Wyckoff analysis. They explain how and why markets move, and help traders anticipate future price direction.
-                </p>
-                
-                <div class="laws-grid">
-                    <div class="law-card">
-                        <div class="law-number">1</div>
-                        <h3 data-i18n="laws.supply.title">Supply and Demand</h3>
-                        <p data-i18n="laws.supply.desc">
-                            When demand exceeds supply, prices rise. When supply exceeds demand, prices fall. By analyzing price and volume together, traders can assess the balance between supply and demand.
-                        </p>
-                    </div>
-                    <div class="law-card">
-                        <div class="law-number">2</div>
-                        <h3 data-i18n="laws.cause.title">Cause and Effect</h3>
-                        <p data-i18n="laws.cause.desc">
-                            The horizontal count within a trading range (Cause) determines the potential price movement (Effect). A larger accumulation base suggests a larger subsequent markup.
-                        </p>
-                    </div>
-                    <div class="law-card">
-                        <div class="law-number">3</div>
-                        <h3 data-i18n="laws.effort.title">Effort vs Result</h3>
-                        <p data-i18n="laws.effort.desc">
-                            Volume (Effort) should confirm price movement (Result). Divergences between effort and result warn of potential trend changes. High volume with little price progress suggests resistance.
-                        </p>
-                    </div>
-                </div>
-            </div>
-        </div>
-        
-        <!-- Tab: Nine Tests -->
-        <div id="tab-tests" class="tab-content">
-            <div class="section-card">
-                <h2>✅ <span data-i18n="tests.title">Nine Buying/Selling Tests</span></h2>
-                <p data-i18n="tests.intro">
-                    These tests help determine when a trading range is ending and a new trend is beginning. They define the line of least resistance in the market.
-                </p>
-                
-                <h3 style="color: var(--green);" data-i18n="tests.buying.title">Nine Buying Tests (Accumulation)</h3>
-                <div class="events-grid">
-                    <div class="event-card">
-                        <div class="event-abbr">1</div>
-                        <div class="event-desc" data-i18n="tests.buying.1">Downside price objective accomplished</div>
-                    </div>
-                    <div class="event-card">
-                        <div class="event-abbr">2</div>
-                        <div class="event-desc" data-i18n="tests.buying.2">Preliminary Support, Selling Climax, Secondary Test present</div>
-                    </div>
-                    <div class="event-card">
-                        <div class="event-abbr">3</div>
-                        <div class="event-desc" data-i18n="tests.buying.3">Activity bullish (volume up on rallies, down on reactions)</div>
-                    </div>
-                    <div class="event-card">
-                        <div class="event-abbr">4</div>
-                        <div class="event-desc" data-i18n="tests.buying.4">Downward stride/trend line broken</div>
-                    </div>
-                    <div class="event-card">
-                        <div class="event-abbr">5</div>
-                        <div class="event-desc" data-i18n="tests.buying.5">Higher lows forming</div>
-                    </div>
-                    <div class="event-card">
-                        <div class="event-abbr">6</div>
-                        <div class="event-desc" data-i18n="tests.buying.6">Higher highs forming</div>
-                    </div>
-                    <div class="event-card">
-                        <div class="event-abbr">7</div>
-                        <div class="event-desc" data-i18n="tests.buying.7">Stock stronger than the market</div>
-                    </div>
-                    <div class="event-card">
-                        <div class="event-abbr">8</div>
-                        <div class="event-desc" data-i18n="tests.buying.8">Base forming (horizontal price line)</div>
-                    </div>
-                    <div class="event-card">
-                        <div class="event-abbr">9</div>
-                        <div class="event-desc" data-i18n="tests.buying.9">Reward/risk ratio at least 3:1</div>
-                    </div>
-                </div>
-                
-                <h3 style="color: var(--red); margin-top: 2rem;" data-i18n="tests.selling.title">Nine Selling Tests (Distribution)</h3>
-                <div class="events-grid">
-                    <div class="event-card">
-                        <div class="event-abbr">1</div>
-                        <div class="event-desc" data-i18n="tests.selling.1">Upside objective accomplished</div>
-                    </div>
-                    <div class="event-card">
-                        <div class="event-abbr">2</div>
-                        <div class="event-desc" data-i18n="tests.selling.2">Activity bearish (volume down on rallies, up on reactions)</div>
-                    </div>
-                    <div class="event-card">
-                        <div class="event-abbr">3</div>
-                        <div class="event-desc" data-i18n="tests.selling.3">Preliminary Supply, Buying Climax present</div>
-                    </div>
-                    <div class="event-card">
-                        <div class="event-abbr">4</div>
-                        <div class="event-desc" data-i18n="tests.selling.4">Stock weaker than the market</div>
-                    </div>
-                    <div class="event-card">
-                        <div class="event-abbr">5</div>
-                        <div class="event-desc" data-i18n="tests.selling.5">Upward stride/trend line broken</div>
-                    </div>
-                    <div class="event-card">
-                        <div class="event-abbr">6</div>
-                        <div class="event-desc" data-i18n="tests.selling.6">Lower highs forming</div>
-                    </div>
-                    <div class="event-card">
-                        <div class="event-abbr">7</div>
-                        <div class="event-desc" data-i18n="tests.selling.7">Lower lows forming</div>
-                    </div>
-                    <div class="event-card">
-                        <div class="event-abbr">8</div>
-                        <div class="event-desc" data-i18n="tests.selling.8">Crown forming (lateral movement)</div>
-                    </div>
-                    <div class="event-card">
-                        <div class="event-abbr">9</div>
-                        <div class="event-desc" data-i18n="tests.selling.9">Reward/risk ratio at least 3:1</div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        
-        <!-- Footer Disclaimer -->
-        <footer class="footer-disclaimer">
-            <h4 data-i18n="footer.title">⚠️ Important Disclaimer</h4>
-            <p data-i18n="footer.text">
-                This educational content is provided by NumbahWan Guild for informational purposes only. The Wyckoff Method is a historical framework for understanding market structure and does not guarantee trading success. Markets are inherently unpredictable and past patterns do not guarantee future results. Never invest money you cannot afford to lose. This is not financial advice. Always conduct your own research and consult with a licensed financial advisor before making any investment decisions.
-            </p>
-        </footer>
     </main>
     
-    <script>
-    // i18n translations - COMPLETE for all 113 keys
-    const translations = {
-        en: {
-            // Hero & Disclaimer
-            'hero.title': 'Wyckoff Method Academy',
-            'hero.subtitle': 'Master the art of reading market structure through accumulation, distribution, markup and markdown phases. Learn to think like the "Composite Man".',
-            'disclaimer.main': '<strong>Educational Purpose Only:</strong> This content is for educational purposes only and does not constitute financial advice. The Wyckoff Method is a framework for market analysis, not a prediction tool. Past patterns do not guarantee future results. Always consult a licensed financial advisor before making investment decisions.',
-            // Tabs
-            'tabs.quickstart': '⚡ 3-Step Guide',
-            'tabs.overview': 'Overview',
-            'tabs.accumulation': 'Accumulation',
-            'tabs.distribution': 'Distribution',
-            'tabs.laws': 'Three Laws',
-            'tabs.tests': '9 Tests',
-            // Quickstart
-            'quickstart.title': 'Fool-Proof 3-Step Wyckoff Analysis',
-            'quickstart.intro': 'Use this simple checklist to identify which phase a stock is in. We\'ll use <strong>TSMC (2330.TW)</strong> as a real-world example.',
-            'quickstart.step1.title': 'Identify the Trend Context',
-            'quickstart.step1.desc': 'First, zoom out and ask: What happened BEFORE the current sideways range?',
-            'quickstart.step1.q1': 'Was there a significant DOWNTREND before? → Possible <strong>Accumulation</strong>',
-            'quickstart.step1.q2': 'Was there a significant UPTREND before? → Possible <strong>Distribution</strong>',
-            'quickstart.step1.q3': 'Is price clearly trending (not sideways)? → You\'re in <strong>Markup</strong> or <strong>Markdown</strong>',
-            'quickstart.step2.title': 'Check Volume Behavior',
-            'quickstart.step2.desc': 'Volume reveals who\'s in control - smart money or retail panic.',
-            'quickstart.step2.q1': 'Volume INCREASES on rallies, DECREASES on dips? → <strong>Bullish</strong> (Accumulation/Markup)',
-            'quickstart.step2.q2': 'Volume INCREASES on drops, DECREASES on rallies? → <strong>Bearish</strong> (Distribution/Markdown)',
-            'quickstart.step2.q3': 'Was there a HUGE volume spike at extreme price? → Look for Climax (SC or BC)',
-            'quickstart.step3.title': 'Look for the "Trap" Signal',
-            'quickstart.step3.desc': 'The most powerful entry signals are "traps" - false breakouts that reverse quickly.',
-            'quickstart.step3.q1': '<strong>Spring (Bear Trap)</strong>: Price dips BELOW support, then quickly recovers → Bullish signal',
-            'quickstart.step3.q2': '<strong>Upthrust (Bull Trap)</strong>: Price breaks ABOVE resistance, then quickly falls → Bearish signal',
-            'quickstart.step3.q3': 'After the trap, wait for a <strong>test on low volume</strong> to confirm',
-            'quickstart.example.title': '📈 Real Example: TSMC (2330.TW) - February 2026',
-            'quickstart.example.price': 'Current Price',
-            'quickstart.example.range52w': '52-Week Range',
-            'quickstart.example.ytd': '2025 Performance',
-            'quickstart.example.volume': 'Avg Volume',
-            'quickstart.example.step1': '✅ TSMC had a STRONG UPTREND in 2024-2025 (from ~NT$500 to NT$1,800+). Price is now consolidating near all-time highs. This suggests we may be in a <strong>Distribution</strong> or <strong>Re-accumulation</strong> phase.',
-            'quickstart.example.step2': '⚠️ Volume has been DECREASING during recent consolidation. On pullbacks to NT$1,700-1,750, volume stays relatively low. This is more consistent with <strong>Re-accumulation</strong> (healthy pause before continuing up) than Distribution.',
-            'quickstart.example.step3': '🔍 No clear Spring or Upthrust yet. Price is respecting the NT$1,700 support level. A <strong>Spring would be a quick dip below NT$1,700</strong> that immediately recovers - that would be a bullish confirmation for re-accumulation.',
-            'quickstart.example.verdict.label': 'Current Wyckoff Assessment',
-            'quickstart.example.verdict.result': 'RE-ACCUMULATION (Wait for Spring/Test)',
-            'quickstart.example.verdict.note': '⚠️ TSMC appears to be in a healthy consolidation after a strong rally. Watch for a Spring below NT$1,700 as a potential entry signal. If instead it breaks below NT$1,700 on HIGH volume, reassess for possible Distribution.',
-            'quickstart.formula.title': '🧮 The Wyckoff Quick Formula',
-            'quickstart.disclaimer': '<strong>Remember:</strong> This is a FRAMEWORK for analysis, not a crystal ball. The Wyckoff Method helps you think like institutional traders, but markets can do anything. Never invest money you can\'t afford to lose. This TSMC example is for educational purposes only and is NOT a buy/sell recommendation.',
-            // Overview
-            'overview.title': 'The Wyckoff Price Cycle',
-            'overview.intro': 'Richard D. Wyckoff (1873-1934) developed a method to understand market movements by analyzing the actions of large institutional operators, which he called the "Composite Man". The market moves in recurring cycles consisting of four distinct phases.',
-            'overview.composite.title': '🎭 The Composite Man',
-            'overview.composite.desc': 'Wyckoff advised traders to imagine all market fluctuations as the result of one operator - the "Composite Man" - who manipulates markets for his benefit. Understanding his strategies allows traders to align their positions with smart money rather than against it.',
-            // Cycle phases
-            'cycle.accumulation.name': 'Accumulation',
-            'cycle.accumulation.desc': 'Smart money buys',
-            'cycle.markup.name': 'Markup',
-            'cycle.markup.desc': 'Price rises',
-            'cycle.distribution.name': 'Distribution',
-            'cycle.distribution.desc': 'Smart money sells',
-            'cycle.markdown.name': 'Markdown',
-            'cycle.markdown.desc': 'Price falls',
-            // Phase details
-            'detail.accumulation.title': 'Accumulation Phase',
-            'detail.accumulation.p1': 'Large institutions quietly buy shares at low prices',
-            'detail.accumulation.p2': 'Occurs after a prolonged downtrend (markdown)',
-            'detail.accumulation.p3': 'Price moves sideways within a trading range',
-            'detail.accumulation.p4': 'Supply is gradually absorbed by demand',
-            'detail.accumulation.p5': 'Ends with a "Spring" or successful test of support',
-            'detail.markup.title': 'Markup Phase',
-            'detail.markup.p1': 'Price breaks out above the trading range',
-            'detail.markup.p2': 'Demand exceeds supply consistently',
-            'detail.markup.p3': 'Higher highs and higher lows form an uptrend',
-            'detail.markup.p4': 'Public interest and volume increase',
-            'detail.markup.p5': 'Re-accumulation zones may form (stepping stones)',
-            'detail.distribution.title': 'Distribution Phase',
-            'detail.distribution.p1': 'Large institutions sell shares to the public at high prices',
-            'detail.distribution.p2': 'Occurs after a prolonged uptrend (markup)',
-            'detail.distribution.p3': 'Price moves sideways within a trading range',
-            'detail.distribution.p4': 'Supply gradually overwhelms demand',
-            'detail.distribution.p5': 'Ends with an "Upthrust" or failed test of resistance',
-            'detail.markdown.title': 'Markdown Phase',
-            'detail.markdown.p1': 'Price breaks down below the trading range',
-            'detail.markdown.p2': 'Supply exceeds demand consistently',
-            'detail.markdown.p3': 'Lower highs and lower lows form a downtrend',
-            'detail.markdown.p4': 'Panic selling may occur at climax',
-            'detail.markdown.p5': 'Re-distribution zones may form (stepping stones down)',
-            // Accumulation tab
-            'accumulation.title': 'Accumulation Schematic',
-            'accumulation.intro': 'Accumulation occurs when large operators buy shares at low prices before marking up. The schematic consists of five phases (A-E) with specific events that signal the progression of accumulation.',
-            'accumulation.events.title': 'Key Events in Accumulation',
-            // Distribution tab
-            'distribution.title': 'Distribution Schematic',
-            'distribution.intro': 'Distribution occurs when large operators sell shares to the public at high prices before marking down. It mirrors accumulation but with opposite intent - transferring shares from strong hands to weak hands.',
-            'distribution.events.title': 'Key Events in Distribution',
-            // Events
-            'events.ps.name': 'Preliminary Support',
-            'events.ps.desc': 'Substantial buying begins after a prolonged down-move. Volume increases, signaling the down-move may be ending.',
-            'events.sc.name': 'Selling Climax',
-            'events.sc.desc': 'Panicky selling by the public is absorbed by large interests. Wide spread and heavy volume mark a potential bottom.',
-            'events.ar.name': 'Automatic Rally',
-            'events.ar.desc': 'After intense selling pressure diminishes, buying and short-covering push prices up. Sets the upper boundary of the trading range.',
-            'events.st.name': 'Secondary Test',
-            'events.st.desc': 'Price revisits the SC area to test supply/demand balance. Decreased volume and narrower spread confirm the bottom.',
-            'events.spring.name': 'Spring / Shakeout',
-            'events.spring.desc': 'Price drops below support to trigger stop-losses and trap bears, then quickly reverses back into the range. A bear trap.',
-            'events.test.name': 'Test',
-            'events.test.desc': 'After a spring, a successful test makes a higher low on lower volume, indicating supply has been exhausted.',
-            'events.sos.name': 'Sign of Strength',
-            'events.sos.desc': 'Price advances on increasing spread and volume, confirming demand is now dominant. Often follows a spring.',
-            'events.lps.name': 'Last Point of Support',
-            'events.lps.desc': 'A pullback on diminished spread and volume after a SOS. Ideal entry point for long positions before markup begins.',
-            'events.psy.name': 'Preliminary Supply',
-            'events.psy.desc': 'Large interests begin selling after a prolonged up-move. Volume expands and spread widens, signaling potential trend change.',
-            'events.bc.name': 'Buying Climax',
-            'events.bc.desc': 'Heavy public buying is met by institutional selling. Often coincides with good news. Marks potential top.',
-            'events.ar2.name': 'Automatic Reaction',
-            'events.ar2.desc': 'After buying diminishes, heavy supply causes prices to fall. Sets the lower boundary of the distribution range.',
-            'events.st2.name': 'Secondary Test',
-            'events.st2.desc': 'Price revisits the BC area. Decreased volume and narrower spread confirm resistance and supply dominance.',
-            'events.utad.name': 'Upthrust After Distribution',
-            'events.utad.desc': 'Price breaks above resistance to trap bulls, then quickly reverses. A bull trap that signals the end of distribution.',
-            'events.sow.name': 'Sign of Weakness',
-            'events.sow.desc': 'Price drops to or below the trading range support on increased spread and volume. Confirms supply dominance.',
-            'events.lpsy.name': 'Last Point of Supply',
-            'events.lpsy.desc': 'A weak rally on narrow spread after SOW. Ideal entry point for short positions before markdown begins.',
-            // Three Laws
-            'laws.title': 'Wyckoff\'s Three Laws',
-            'laws.intro': 'These fundamental laws form the foundation of Wyckoff analysis. They explain how and why markets move, and help traders anticipate future price direction.',
-            'laws.supply.title': 'Supply and Demand',
-            'laws.supply.desc': 'When demand exceeds supply, prices rise. When supply exceeds demand, prices fall. By analyzing price and volume together, traders can assess the balance between supply and demand.',
-            'laws.cause.title': 'Cause and Effect',
-            'laws.cause.desc': 'The horizontal count within a trading range (Cause) determines the potential price movement (Effect). A larger accumulation base suggests a larger subsequent markup.',
-            'laws.effort.title': 'Effort vs Result',
-            'laws.effort.desc': 'Volume (Effort) should confirm price movement (Result). Divergences between effort and result warn of potential trend changes. High volume with little price progress suggests resistance.',
-            // Nine Tests
-            'tests.title': 'Nine Buying/Selling Tests',
-            'tests.intro': 'These tests help determine when a trading range is ending and a new trend is beginning. They define the line of least resistance in the market.',
-            'tests.buying.title': 'Nine Buying Tests (Accumulation)',
-            'tests.buying.1': 'Downside price objective accomplished',
-            'tests.buying.2': 'Preliminary Support, Selling Climax, Secondary Test present',
-            'tests.buying.3': 'Activity bullish (volume up on rallies, down on reactions)',
-            'tests.buying.4': 'Downward stride/trend line broken',
-            'tests.buying.5': 'Higher lows forming',
-            'tests.buying.6': 'Higher highs forming',
-            'tests.buying.7': 'Stock stronger than the market',
-            'tests.buying.8': 'Base forming (horizontal price line)',
-            'tests.buying.9': 'Reward/risk ratio at least 3:1',
-            'tests.selling.title': 'Nine Selling Tests (Distribution)',
-            'tests.selling.1': 'Upside objective accomplished',
-            'tests.selling.2': 'Activity bearish (volume down on rallies, up on reactions)',
-            'tests.selling.3': 'Preliminary Supply, Buying Climax present',
-            'tests.selling.4': 'Stock weaker than the market',
-            'tests.selling.5': 'Upward stride/trend line broken',
-            'tests.selling.6': 'Lower highs forming',
-            'tests.selling.7': 'Lower lows forming',
-            'tests.selling.8': 'Crown forming (lateral movement)',
-            'tests.selling.9': 'Reward/risk ratio at least 3:1',
-            // Footer
-            'footer.title': '⚠️ Important Disclaimer',
-            'footer.text': 'This educational content is provided by NumbahWan Guild for informational purposes only. The Wyckoff Method is a historical framework for understanding market structure and does not guarantee trading success. Markets are inherently unpredictable and past patterns do not guarantee future results. Never invest money you cannot afford to lose. This is not financial advice. Always conduct your own research and consult with a licensed financial advisor before making any investment decisions.'
-        },
-        zh: {
-            // Hero & Disclaimer
-            'hero.title': '威科夫方法學院',
-            'hero.subtitle': '掌握透過累積、派發、上漲和下跌四個階段來解讀市場結構的藝術。學習像「複合人」一樣思考。',
-            'disclaimer.main': '<strong>僅供教育目的：</strong>本內容僅供教育目的，不構成投資建議。威科夫方法是市場分析的框架，而非預測工具。過去的模式不能保證未來的結果。在做出投資決策前，請務必諮詢持牌金融顧問。',
-            // Tabs
-            'tabs.quickstart': '⚡ 三步指南',
-            'tabs.overview': '概覽',
-            'tabs.accumulation': '累積',
-            'tabs.distribution': '派發',
-            'tabs.laws': '三大法則',
-            'tabs.tests': '九項測試',
-            // Quickstart
-            'quickstart.title': '簡單三步威科夫分析法',
-            'quickstart.intro': '使用這個簡單的清單來判斷股票所處的階段。我們將以<strong>台積電 (2330.TW)</strong>作為實際範例。',
-            'quickstart.step1.title': '辨識趨勢背景',
-            'quickstart.step1.desc': '首先，拉遠視角問自己：在目前的橫盤區間之前發生了什麼？',
-            'quickstart.step1.q1': '之前有明顯的下跌趨勢嗎？→ 可能是<strong>累積</strong>階段',
-            'quickstart.step1.q2': '之前有明顯的上漲趨勢嗎？→ 可能是<strong>派發</strong>階段',
-            'quickstart.step1.q3': '價格正在明顯趨勢中（非橫盤）？→ 你正處於<strong>上漲</strong>或<strong>下跌</strong>階段',
-            'quickstart.step2.title': '檢查成交量行為',
-            'quickstart.step2.desc': '成交量揭示誰在掌控——聰明資金還是散戶恐慌。',
-            'quickstart.step2.q1': '上漲時成交量增加，下跌時減少？→ <strong>看漲</strong>（累積/上漲）',
-            'quickstart.step2.q2': '下跌時成交量增加，上漲時減少？→ <strong>看跌</strong>（派發/下跌）',
-            'quickstart.step2.q3': '在極端價格出現巨量？→ 尋找高潮（SC或BC）',
-            'quickstart.step3.title': '尋找「陷阱」信號',
-            'quickstart.step3.desc': '最強大的進場信號是「陷阱」——快速反轉的假突破。',
-            'quickstart.step3.q1': '<strong>彈簧（空頭陷阱）</strong>：價格跌破支撐後快速收復 → 看漲信號',
-            'quickstart.step3.q2': '<strong>上沖（多頭陷阱）</strong>：價格突破阻力後快速下跌 → 看跌信號',
-            'quickstart.step3.q3': '陷阱之後，等待<strong>低成交量測試</strong>來確認',
-            'quickstart.example.title': '📈 實際範例：台積電 (2330.TW) - 2026年2月',
-            'quickstart.example.price': '目前股價',
-            'quickstart.example.range52w': '52週區間',
-            'quickstart.example.ytd': '2025年表現',
-            'quickstart.example.volume': '平均成交量',
-            'quickstart.example.step1': '✅ 台積電在2024-2025年有強勁上漲趨勢（從約NT$500漲到NT$1,800以上）。價格目前在歷史高點附近整理。這表明我們可能處於<strong>派發</strong>或<strong>再累積</strong>階段。',
-            'quickstart.example.step2': '⚠️ 近期整理期間成交量持續下降。回調至NT$1,700-1,750時，成交量保持相對低檔。這更符合<strong>再累積</strong>（繼續上漲前的健康休息）而非派發。',
-            'quickstart.example.step3': '🔍 尚未出現明確的彈簧或上沖。價格正在尊重NT$1,700的支撐位。<strong>彈簧將是快速跌破NT$1,700</strong>後立即收復——這將是再累積的看漲確認信號。',
-            'quickstart.example.verdict.label': '目前威科夫評估',
-            'quickstart.example.verdict.result': '再累積（等待彈簧/測試）',
-            'quickstart.example.verdict.note': '⚠️ 台積電似乎在強勁上漲後進入健康整理。關注NT$1,700以下的彈簧作為潛在進場信號。如果反而在高成交量下跌破NT$1,700，則需重新評估可能的派發。',
-            'quickstart.formula.title': '🧮 威科夫快速公式',
-            'quickstart.disclaimer': '<strong>記住：</strong>這是分析的框架，而非水晶球。威科夫方法幫助你像機構交易者一樣思考，但市場什麼都可能發生。永遠不要投資你無法承受損失的資金。此台積電範例僅供教育目的，並非買賣建議。',
-            // Overview
-            'overview.title': '威科夫價格週期',
-            'overview.intro': '理查德·威科夫（1873-1934）開發了一種方法，通過分析大型機構操作者（他稱之為「複合人」）的行為來理解市場走勢。市場以四個不同階段的循環方式運行。',
-            'overview.composite.title': '🎭 複合人',
-            'overview.composite.desc': '威科夫建議交易者將所有市場波動想像成一個操作者——「複合人」——為自己利益操縱市場的結果。理解他的策略可以讓交易者與聰明資金站在同一邊，而不是對立面。',
-            // Cycle phases
-            'cycle.accumulation.name': '累積',
-            'cycle.accumulation.desc': '聰明資金買入',
-            'cycle.markup.name': '上漲',
-            'cycle.markup.desc': '價格上升',
-            'cycle.distribution.name': '派發',
-            'cycle.distribution.desc': '聰明資金賣出',
-            'cycle.markdown.name': '下跌',
-            'cycle.markdown.desc': '價格下降',
-            // Phase details
-            'detail.accumulation.title': '累積階段',
-            'detail.accumulation.p1': '大型機構悄悄以低價買入股票',
-            'detail.accumulation.p2': '發生在長期下跌趨勢（下跌階段）之後',
-            'detail.accumulation.p3': '價格在交易區間內橫盤整理',
-            'detail.accumulation.p4': '供應逐漸被需求吸收',
-            'detail.accumulation.p5': '以「彈簧」或成功的支撐測試結束',
-            'detail.markup.title': '上漲階段',
-            'detail.markup.p1': '價格突破交易區間上方',
-            'detail.markup.p2': '需求持續超過供應',
-            'detail.markup.p3': '更高的高點和更高的低點形成上升趨勢',
-            'detail.markup.p4': '公眾興趣和成交量增加',
-            'detail.markup.p5': '可能形成再累積區（墊腳石）',
-            'detail.distribution.title': '派發階段',
-            'detail.distribution.p1': '大型機構以高價向公眾賣出股票',
-            'detail.distribution.p2': '發生在長期上漲趨勢（上漲階段）之後',
-            'detail.distribution.p3': '價格在交易區間內橫盤整理',
-            'detail.distribution.p4': '供應逐漸壓過需求',
-            'detail.distribution.p5': '以「上沖」或失敗的阻力測試結束',
-            'detail.markdown.title': '下跌階段',
-            'detail.markdown.p1': '價格跌破交易區間下方',
-            'detail.markdown.p2': '供應持續超過需求',
-            'detail.markdown.p3': '更低的高點和更低的低點形成下降趨勢',
-            'detail.markdown.p4': '高潮時可能出現恐慌性拋售',
-            'detail.markdown.p5': '可能形成再派發區（向下的墊腳石）',
-            // Accumulation tab
-            'accumulation.title': '累積型態圖',
-            'accumulation.intro': '累積發生在大型機構以低價買入股票、準備推升價格之前。型態圖由五個階段（A-E）組成，每個階段都有特定事件標示累積的進展。',
-            'accumulation.events.title': '累積階段的關鍵事件',
-            // Distribution tab
-            'distribution.title': '派發型態圖',
-            'distribution.intro': '派發發生在大型機構以高價向公眾賣出股票、準備壓低價格之前。它與累積相反——將股票從強手轉移到弱手。',
-            'distribution.events.title': '派發階段的關鍵事件',
-            // Events
-            'events.ps.name': '初步支撐（PS）',
-            'events.ps.desc': '經過長期下跌後，大量買盤開始進場。成交量增加，顯示下跌可能即將結束。',
-            'events.sc.name': '賣出高潮（SC）',
-            'events.sc.desc': '公眾的恐慌性賣出被大戶吸收。寬幅和大量成交量標示潛在底部。',
-            'events.ar.name': '自動反彈（AR）',
-            'events.ar.desc': '當強烈的賣壓減弱後，買盤和空單回補推動價格上漲。設定交易區間的上邊界。',
-            'events.st.name': '二次測試（ST）',
-            'events.st.desc': '價格回到賣出高潮區域測試供需平衡。成交量減少和價差收窄確認底部。',
-            'events.spring.name': '彈簧/震倉',
-            'events.spring.desc': '價格跌破支撐以觸發停損並誘捕空頭，然後快速反彈回區間內。一個空頭陷阱。',
-            'events.test.name': '測試',
-            'events.test.desc': '彈簧之後，成功的測試在較低成交量下形成更高的低點，表明供應已被耗盡。',
-            'events.sos.name': '強勢信號（SOS）',
-            'events.sos.desc': '價格在價差和成交量增加的情況下上漲，確認需求現在占主導地位。通常跟隨彈簧出現。',
-            'events.lps.name': '最後支撐點（LPS）',
-            'events.lps.desc': '強勢信號之後在價差和成交量減少的情況下回調。上漲開始前做多的理想進場點。',
-            'events.psy.name': '初步供應（PSY）',
-            'events.psy.desc': '經過長期上漲後，大戶開始賣出。成交量擴大和價差加寬，顯示可能的趨勢變化。',
-            'events.bc.name': '買入高潮（BC）',
-            'events.bc.desc': '公眾的大量買入遇到機構賣出。通常伴隨利好消息。標示潛在頂部。',
-            'events.ar2.name': '自動反應（AR）',
-            'events.ar2.desc': '當買盤減弱後，大量供應導致價格下跌。設定派發區間的下邊界。',
-            'events.st2.name': '二次測試（ST）',
-            'events.st2.desc': '價格回到買入高潮區域。成交量減少和價差收窄確認阻力和供應主導。',
-            'events.utad.name': '派發後上沖（UTAD）',
-            'events.utad.desc': '價格突破阻力以誘捕多頭，然後快速反轉。一個多頭陷阱，標示派發結束。',
-            'events.sow.name': '弱勢信號（SOW）',
-            'events.sow.desc': '價格在價差和成交量增加的情況下跌至或跌破交易區間支撐。確認供應主導。',
-            'events.lpsy.name': '最後供應點（LPSY）',
-            'events.lpsy.desc': '弱勢信號之後在窄幅上的微弱反彈。下跌開始前做空的理想進場點。',
-            // Three Laws
-            'laws.title': '威科夫三大法則',
-            'laws.intro': '這些基本法則構成威科夫分析的基礎。它們解釋市場如何以及為何移動，並幫助交易者預測未來價格方向。',
-            'laws.supply.title': '供需法則',
-            'laws.supply.desc': '當需求超過供應時，價格上漲。當供應超過需求時，價格下跌。通過同時分析價格和成交量，交易者可以評估供需之間的平衡。',
-            'laws.cause.title': '因果法則',
-            'laws.cause.desc': '交易區間內的橫向計數（因）決定潛在的價格移動（果）。較大的累積基礎暗示較大的後續上漲。',
-            'laws.effort.title': '努力與結果法則',
-            'laws.effort.desc': '成交量（努力）應該確認價格移動（結果）。努力與結果之間的背離警告潛在的趨勢變化。大量成交但價格進展甚微表明存在阻力。',
-            // Nine Tests
-            'tests.title': '九項買入/賣出測試',
-            'tests.intro': '這些測試幫助判斷交易區間何時結束、新趨勢何時開始。它們定義市場中的最小阻力線。',
-            'tests.buying.title': '九項買入測試（累積）',
-            'tests.buying.1': '下跌價格目標已達成',
-            'tests.buying.2': '初步支撐、賣出高潮、二次測試已出現',
-            'tests.buying.3': '活動看漲（反彈時成交量增加，回調時減少）',
-            'tests.buying.4': '下降趨勢線已被突破',
-            'tests.buying.5': '正在形成更高的低點',
-            'tests.buying.6': '正在形成更高的高點',
-            'tests.buying.7': '股票強於大盤',
-            'tests.buying.8': '正在形成底部（水平價格線）',
-            'tests.buying.9': '風險報酬比至少3:1',
-            'tests.selling.title': '九項賣出測試（派發）',
-            'tests.selling.1': '上漲目標已達成',
-            'tests.selling.2': '活動看跌（反彈時成交量減少，回調時增加）',
-            'tests.selling.3': '初步供應、買入高潮已出現',
-            'tests.selling.4': '股票弱於大盤',
-            'tests.selling.5': '上升趨勢線已被突破',
-            'tests.selling.6': '正在形成更低的高點',
-            'tests.selling.7': '正在形成更低的低點',
-            'tests.selling.8': '正在形成頂部（橫向移動）',
-            'tests.selling.9': '風險報酬比至少3:1',
-            // Footer
-            'footer.title': '⚠️ 重要免責聲明',
-            'footer.text': '本教育內容由NumbahWan公會僅供參考目的提供。威科夫方法是理解市場結構的歷史框架，不保證交易成功。市場本質上是不可預測的，過去的模式不能保證未來的結果。永遠不要投資你無法承受損失的資金。這不是財務建議。在做出任何投資決策之前，請務必進行自己的研究並諮詢持牌財務顧問。'
-        },
-        th: {
-            // Hero & Disclaimer
-            'hero.title': 'สถาบันวิธีไวคอฟฟ์',
-            'hero.subtitle': 'เชี่ยวชาญศิลปะการอ่านโครงสร้างตลาดผ่านช่วงสะสม, กระจาย, ขาขึ้น และขาลง เรียนรู้การคิดเหมือน "Composite Man"',
-            'disclaimer.main': '<strong>เพื่อการศึกษาเท่านั้น:</strong> เนื้อหานี้มีวัตถุประสงค์เพื่อการศึกษาเท่านั้น ไม่ถือเป็นคำแนะนำทางการเงิน วิธีไวคอฟฟ์เป็นกรอบการวิเคราะห์ตลาด ไม่ใช่เครื่องมือทำนาย รูปแบบในอดีตไม่รับประกันผลลัพธ์ในอนาคต โปรดปรึกษาที่ปรึกษาทางการเงินที่มีใบอนุญาตก่อนตัดสินใจลงทุน',
-            // Tabs
-            'tabs.quickstart': '⚡ 3 ขั้นตอน',
-            'tabs.overview': 'ภาพรวม',
-            'tabs.accumulation': 'ช่วงสะสม',
-            'tabs.distribution': 'ช่วงกระจาย',
-            'tabs.laws': 'กฎ 3 ข้อ',
-            'tabs.tests': '9 การทดสอบ',
-            // Quickstart
-            'quickstart.title': 'วิเคราะห์ไวคอฟฟ์ 3 ขั้นตอนง่ายๆ',
-            'quickstart.intro': 'ใช้รายการตรวจสอบง่ายๆ นี้เพื่อระบุว่าหุ้นอยู่ในช่วงใด เราจะใช้ <strong>TSMC (2330.TW)</strong> เป็นตัวอย่างจริง',
-            'quickstart.step1.title': 'ระบุบริบทแนวโน้ม',
-            'quickstart.step1.desc': 'ก่อนอื่น ซูมออกแล้วถาม: เกิดอะไรขึ้นก่อนช่วงพักตัวปัจจุบัน?',
-            'quickstart.step1.q1': 'มีแนวโน้มขาลงที่สำคัญก่อนหน้านี้หรือไม่? → อาจเป็น<strong>ช่วงสะสม</strong>',
-            'quickstart.step1.q2': 'มีแนวโน้มขาขึ้นที่สำคัญก่อนหน้านี้หรือไม่? → อาจเป็น<strong>ช่วงกระจาย</strong>',
-            'quickstart.step1.q3': 'ราคากำลังเคลื่อนที่ชัดเจน (ไม่ใช่แกว่งตัว)? → คุณอยู่ใน<strong>ขาขึ้น</strong>หรือ<strong>ขาลง</strong>',
-            'quickstart.step2.title': 'ตรวจสอบพฤติกรรมปริมาณ',
-            'quickstart.step2.desc': 'ปริมาณการซื้อขายเผยว่าใครควบคุม - เงินฉลาดหรือความตื่นตระหนกของรายย่อย',
-            'quickstart.step2.q1': 'ปริมาณเพิ่มขึ้นเมื่อขึ้น ลดลงเมื่อลง? → <strong>ขาขึ้น</strong> (สะสม/มาร์คอัพ)',
-            'quickstart.step2.q2': 'ปริมาณเพิ่มขึ้นเมื่อลง ลดลงเมื่อขึ้น? → <strong>ขาลง</strong> (กระจาย/มาร์คดาวน์)',
-            'quickstart.step2.q3': 'มีปริมาณการซื้อขายพุ่งสูงมากที่ราคาสุดขีด? → มองหาไคลแม็กซ์ (SC หรือ BC)',
-            'quickstart.step3.title': 'มองหาสัญญาณ "กับดัก"',
-            'quickstart.step3.desc': 'สัญญาณเข้าที่ทรงพลังที่สุดคือ "กับดัก" - การทะลุหลอกที่กลับตัวอย่างรวดเร็ว',
-            'quickstart.step3.q1': '<strong>สปริง (กับดักหมี)</strong>: ราคาหลุดแนวรับแล้วกลับมาอย่างรวดเร็ว → สัญญาณขาขึ้น',
-            'quickstart.step3.q2': '<strong>อัพทรัสต์ (กับดักกระทิง)</strong>: ราคาทะลุแนวต้านแล้วลงอย่างรวดเร็ว → สัญญาณขาลง',
-            'quickstart.step3.q3': 'หลังจากกับดัก รอ<strong>การทดสอบด้วยปริมาณต่ำ</strong>เพื่อยืนยัน',
-            'quickstart.example.title': '📈 ตัวอย่างจริง: TSMC (2330.TW) - กุมภาพันธ์ 2026',
-            'quickstart.example.price': 'ราคาปัจจุบัน',
-            'quickstart.example.range52w': 'ช่วง 52 สัปดาห์',
-            'quickstart.example.ytd': 'ผลงานปี 2025',
-            'quickstart.example.volume': 'ปริมาณเฉลี่ย',
-            'quickstart.example.step1': '✅ TSMC มีแนวโน้มขาขึ้นแข็งแกร่งในปี 2024-2025 (จาก ~NT$500 ถึง NT$1,800+) ราคากำลังพักตัวใกล้จุดสูงสุดตลอดกาล นี่บ่งชี้ว่าเราอาจอยู่ในช่วง<strong>กระจาย</strong>หรือ<strong>สะสมซ้ำ</strong>',
-            'quickstart.example.step2': '⚠️ ปริมาณการซื้อขายลดลงในช่วงพักตัวล่าสุด เมื่อย่อตัวมาที่ NT$1,700-1,750 ปริมาณยังคงค่อนข้างต่ำ นี่สอดคล้องกับ<strong>การสะสมซ้ำ</strong> (พักตัวก่อนขึ้นต่อ) มากกว่าการกระจาย',
-            'quickstart.example.step3': '🔍 ยังไม่มีสปริงหรืออัพทรัสต์ที่ชัดเจน ราคายังคงเคารพแนวรับที่ NT$1,700 <strong>สปริงจะเป็นการหลุดต่ำกว่า NT$1,700 อย่างรวดเร็ว</strong>แล้วกลับมาทันที - นั่นจะเป็นการยืนยันขาขึ้นสำหรับการสะสมซ้ำ',
-            'quickstart.example.verdict.label': 'การประเมินไวคอฟฟ์ปัจจุบัน',
-            'quickstart.example.verdict.result': 'สะสมซ้ำ (รอสปริง/ทดสอบ)',
-            'quickstart.example.verdict.note': '⚠️ TSMC ดูเหมือนอยู่ในช่วงพักตัวที่ดีหลังจากขึ้นมาแรง จับตาดูสปริงต่ำกว่า NT$1,700 เป็นสัญญาณเข้าที่เป็นไปได้ ถ้าหลุด NT$1,700 ด้วยปริมาณสูง ให้ประเมินใหม่สำหรับการกระจายที่เป็นไปได้',
-            'quickstart.formula.title': '🧮 สูตรด่วนไวคอฟฟ์',
-            'quickstart.disclaimer': '<strong>จำไว้:</strong> นี่คือกรอบการวิเคราะห์ ไม่ใช่ลูกแก้ววิเศษ วิธีไวคอฟฟ์ช่วยให้คุณคิดเหมือนนักเทรดสถาบัน แต่ตลาดสามารถเป็นอะไรก็ได้ อย่าลงทุนเงินที่คุณไม่สามารถรับความเสียหายได้ ตัวอย่าง TSMC นี้เพื่อการศึกษาเท่านั้น ไม่ใช่คำแนะนำซื้อ/ขาย',
-            // Overview
-            'overview.title': 'วงจรราคาไวคอฟฟ์',
-            'overview.intro': 'Richard D. Wyckoff (1873-1934) พัฒนาวิธีการทำความเข้าใจการเคลื่อนไหวของตลาดโดยวิเคราะห์การกระทำของนักลงทุนสถาบันขนาดใหญ่ ซึ่งเขาเรียกว่า "Composite Man" ตลาดเคลื่อนไหวเป็นวงจรซ้ำๆ ประกอบด้วย 4 ช่วงที่แตกต่างกัน',
-            'overview.composite.title': '🎭 Composite Man',
-            'overview.composite.desc': 'ไวคอฟฟ์แนะนำให้นักเทรดจินตนาการว่าความผันผวนของตลาดทั้งหมดเป็นผลจากผู้ดำเนินการคนเดียว - "Composite Man" - ผู้บิดเบือนตลาดเพื่อผลประโยชน์ของตัวเอง การเข้าใจกลยุทธ์ของเขาทำให้นักเทรดสามารถจัดตำแหน่งร่วมกับเงินฉลาดแทนที่จะต่อต้าน',
-            // Cycle phases
-            'cycle.accumulation.name': 'สะสม',
-            'cycle.accumulation.desc': 'เงินฉลาดซื้อ',
-            'cycle.markup.name': 'ขาขึ้น',
-            'cycle.markup.desc': 'ราคาขึ้น',
-            'cycle.distribution.name': 'กระจาย',
-            'cycle.distribution.desc': 'เงินฉลาดขาย',
-            'cycle.markdown.name': 'ขาลง',
-            'cycle.markdown.desc': 'ราคาลง',
-            // Phase details
-            'detail.accumulation.title': 'ช่วงสะสม',
-            'detail.accumulation.p1': 'สถาบันใหญ่ซื้อหุ้นอย่างเงียบๆ ในราคาต่ำ',
-            'detail.accumulation.p2': 'เกิดขึ้นหลังจากขาลงยาวนาน (มาร์คดาวน์)',
-            'detail.accumulation.p3': 'ราคาเคลื่อนที่แนวราบภายในกรอบการซื้อขาย',
-            'detail.accumulation.p4': 'อุปทานค่อยๆ ถูกดูดซับโดยอุปสงค์',
-            'detail.accumulation.p5': 'จบลงด้วย "สปริง" หรือการทดสอบแนวรับที่สำเร็จ',
-            'detail.markup.title': 'ช่วงขาขึ้น',
-            'detail.markup.p1': 'ราคาทะลุขึ้นเหนือกรอบการซื้อขาย',
-            'detail.markup.p2': 'อุปสงค์มากกว่าอุปทานอย่างต่อเนื่อง',
-            'detail.markup.p3': 'จุดสูงสุดและจุดต่ำสุดที่สูงขึ้นเรื่อยๆ สร้างแนวโน้มขาขึ้น',
-            'detail.markup.p4': 'ความสนใจของสาธารณะและปริมาณเพิ่มขึ้น',
-            'detail.markup.p5': 'อาจเกิดโซนสะสมซ้ำ (บันไดขั้น)',
-            'detail.distribution.title': 'ช่วงกระจาย',
-            'detail.distribution.p1': 'สถาบันใหญ่ขายหุ้นให้สาธารณะในราคาสูง',
-            'detail.distribution.p2': 'เกิดขึ้นหลังจากขาขึ้นยาวนาน (มาร์คอัพ)',
-            'detail.distribution.p3': 'ราคาเคลื่อนที่แนวราบภายในกรอบการซื้อขาย',
-            'detail.distribution.p4': 'อุปทานค่อยๆ กลบอุปสงค์',
-            'detail.distribution.p5': 'จบลงด้วย "อัพทรัสต์" หรือการทดสอบแนวต้านที่ล้มเหลว',
-            'detail.markdown.title': 'ช่วงขาลง',
-            'detail.markdown.p1': 'ราคาทะลุลงต่ำกว่ากรอบการซื้อขาย',
-            'detail.markdown.p2': 'อุปทานมากกว่าอุปสงค์อย่างต่อเนื่อง',
-            'detail.markdown.p3': 'จุดสูงสุดและจุดต่ำสุดที่ต่ำลงเรื่อยๆ สร้างแนวโน้มขาลง',
-            'detail.markdown.p4': 'อาจเกิดการขายแบบตื่นตระหนกที่ไคลแม็กซ์',
-            'detail.markdown.p5': 'อาจเกิดโซนกระจายซ้ำ (บันไดลง)',
-            // Accumulation tab
-            'accumulation.title': 'แผนผังการสะสม',
-            'accumulation.intro': 'การสะสมเกิดขึ้นเมื่อผู้ดำเนินการรายใหญ่ซื้อหุ้นในราคาต่ำก่อนจะดันราคาขึ้น แผนผังประกอบด้วย 5 ช่วง (A-E) พร้อมเหตุการณ์เฉพาะที่ส่งสัญญาณความคืบหน้าของการสะสม',
-            'accumulation.events.title': 'เหตุการณ์สำคัญในการสะสม',
-            // Distribution tab
-            'distribution.title': 'แผนผังการกระจาย',
-            'distribution.intro': 'การกระจายเกิดขึ้นเมื่อผู้ดำเนินการรายใหญ่ขายหุ้นให้สาธารณะในราคาสูงก่อนจะกดราคาลง มันเหมือนกระจกสะท้อนการสะสมแต่มีเจตนาตรงข้าม - โอนหุ้นจากมือแข็งไปยังมืออ่อน',
-            'distribution.events.title': 'เหตุการณ์สำคัญในการกระจาย',
-            // Events
-            'events.ps.name': 'แนวรับเบื้องต้น (PS)',
-            'events.ps.desc': 'การซื้อจำนวนมากเริ่มต้นหลังจากขาลงยาวนาน ปริมาณเพิ่มขึ้น ส่งสัญญาณว่าการลงอาจจะสิ้นสุด',
-            'events.sc.name': 'ไคลแม็กซ์ขาย (SC)',
-            'events.sc.desc': 'การขายตื่นตระหนกของสาธารณะถูกดูดซับโดยผู้เล่นรายใหญ่ กรอบกว้างและปริมาณหนักบ่งบอกจุดต่ำสุดที่เป็นไปได้',
-            'events.ar.name': 'การรีบาวน์อัตโนมัติ (AR)',
-            'events.ar.desc': 'หลังจากแรงขายรุนแรงลดลง การซื้อและการปิดสถานะช็อร์ตดันราคาขึ้น กำหนดขอบบนของกรอบการซื้อขาย',
-            'events.st.name': 'การทดสอบรอง (ST)',
-            'events.st.desc': 'ราคากลับมาที่พื้นที่ SC เพื่อทดสอบสมดุลอุปสงค์/อุปทาน ปริมาณลดลงและกรอบแคบลงยืนยันจุดต่ำสุด',
-            'events.spring.name': 'สปริง / การเขย่า',
-            'events.spring.desc': 'ราคาลงต่ำกว่าแนวรับเพื่อกระตุ้น stop-loss และดักหมี จากนั้นกลับเข้ากรอบอย่างรวดเร็ว กับดักหมี',
-            'events.test.name': 'การทดสอบ',
-            'events.test.desc': 'หลังสปริง การทดสอบที่สำเร็จสร้างจุดต่ำสุดที่สูงขึ้นบนปริมาณที่ต่ำกว่า บ่งชี้ว่าอุปทานหมดแล้ว',
-            'events.sos.name': 'สัญญาณแข็งแกร่ง (SOS)',
-            'events.sos.desc': 'ราคาเพิ่มขึ้นบนกรอบและปริมาณที่เพิ่มขึ้น ยืนยันว่าอุปสงค์ครองตลาด มักตามหลังสปริง',
-            'events.lps.name': 'จุดรับสุดท้าย (LPS)',
-            'events.lps.desc': 'การย่อตัวบนกรอบและปริมาณที่ลดลงหลัง SOS จุดเข้าที่เหมาะสำหรับสถานะซื้อก่อนมาร์คอัพเริ่มต้น',
-            'events.psy.name': 'อุปทานเบื้องต้น (PSY)',
-            'events.psy.desc': 'ผู้เล่นรายใหญ่เริ่มขายหลังจากขาขึ้นยาวนาน ปริมาณขยายและกรอบกว้างขึ้น ส่งสัญญาณการเปลี่ยนแนวโน้มที่เป็นไปได้',
-            'events.bc.name': 'ไคลแม็กซ์ซื้อ (BC)',
-            'events.bc.desc': 'การซื้อหนักของสาธารณะพบกับการขายของสถาบัน มักตรงกับข่าวดี บ่งบอกจุดสูงสุดที่เป็นไปได้',
-            'events.ar2.name': 'ปฏิกิริยาอัตโนมัติ (AR)',
-            'events.ar2.desc': 'หลังจากการซื้อลดลง อุปทานหนักทำให้ราคาลง กำหนดขอบล่างของกรอบกระจาย',
-            'events.st2.name': 'การทดสอบรอง (ST)',
-            'events.st2.desc': 'ราคากลับมาที่พื้นที่ BC ปริมาณลดลงและกรอบแคบลงยืนยันแนวต้านและอุปทานครอง',
-            'events.utad.name': 'อัพทรัสต์หลังกระจาย (UTAD)',
-            'events.utad.desc': 'ราคาทะลุเหนือแนวต้านเพื่อดักกระทิง จากนั้นกลับตัวอย่างรวดเร็ว กับดักกระทิงที่ส่งสัญญาณสิ้นสุดการกระจาย',
-            'events.sow.name': 'สัญญาณอ่อนแอ (SOW)',
-            'events.sow.desc': 'ราคาลงถึงหรือต่ำกว่าแนวรับของกรอบซื้อขายบนกรอบและปริมาณที่เพิ่มขึ้น ยืนยันอุปทานครอง',
-            'events.lpsy.name': 'จุดอุปทานสุดท้าย (LPSY)',
-            'events.lpsy.desc': 'การรีบาวน์อ่อนบนกรอบแคบหลัง SOW จุดเข้าที่เหมาะสำหรับสถานะขายก่อนมาร์คดาวน์เริ่มต้น',
-            // Three Laws
-            'laws.title': 'กฎ 3 ข้อของไวคอฟฟ์',
-            'laws.intro': 'กฎพื้นฐานเหล่านี้เป็นรากฐานของการวิเคราะห์ไวคอฟฟ์ อธิบายว่าตลาดเคลื่อนไหวอย่างไรและทำไม และช่วยนักเทรดคาดการณ์ทิศทางราคาในอนาคต',
-            'laws.supply.title': 'อุปสงค์และอุปทาน',
-            'laws.supply.desc': 'เมื่ออุปสงค์มากกว่าอุปทาน ราคาขึ้น เมื่ออุปทานมากกว่าอุปสงค์ ราคาลง โดยการวิเคราะห์ราคาและปริมาณร่วมกัน นักเทรดสามารถประเมินสมดุลระหว่างอุปสงค์และอุปทาน',
-            'laws.cause.title': 'เหตุและผล',
-            'laws.cause.desc': 'การนับแนวนอนภายในกรอบซื้อขาย (เหตุ) กำหนดการเคลื่อนไหวราคาที่เป็นไปได้ (ผล) ฐานสะสมที่ใหญ่กว่าบ่งบอกมาร์คอัพที่ใหญ่กว่า',
-            'laws.effort.title': 'ความพยายาม vs ผลลัพธ์',
-            'laws.effort.desc': 'ปริมาณ (ความพยายาม) ควรยืนยันการเคลื่อนไหวราคา (ผลลัพธ์) ความขัดแย้งระหว่างความพยายามและผลลัพธ์เตือนการเปลี่ยนแนวโน้มที่เป็นไปได้ ปริมาณสูงโดยราคาไม่คืบหน้ามากบ่งบอกแนวต้าน',
-            // Nine Tests
-            'tests.title': 'การทดสอบ 9 ข้อซื้อ/ขาย',
-            'tests.intro': 'การทดสอบเหล่านี้ช่วยกำหนดว่ากรอบซื้อขายจะสิ้นสุดเมื่อใดและแนวโน้มใหม่จะเริ่มเมื่อใด กำหนดเส้นแนวต้านต่ำสุดในตลาด',
-            'tests.buying.title': 'การทดสอบซื้อ 9 ข้อ (สะสม)',
-            'tests.buying.1': 'เป้าหมายราคาขาลงสำเร็จ',
-            'tests.buying.2': 'แนวรับเบื้องต้น, ไคลแม็กซ์ขาย, การทดสอบรองปรากฏ',
-            'tests.buying.3': 'กิจกรรมขาขึ้น (ปริมาณขึ้นเมื่อขึ้น, ลงเมื่อย่อ)',
-            'tests.buying.4': 'เส้นแนวโน้มขาลงถูกทะลุ',
-            'tests.buying.5': 'กำลังสร้างจุดต่ำสุดที่สูงขึ้น',
-            'tests.buying.6': 'กำลังสร้างจุดสูงสุดที่สูงขึ้น',
-            'tests.buying.7': 'หุ้นแข็งแกร่งกว่าตลาด',
-            'tests.buying.8': 'กำลังสร้างฐาน (เส้นราคาแนวนอน)',
-            'tests.buying.9': 'อัตราส่วนผลตอบแทน/ความเสี่ยงอย่างน้อย 3:1',
-            'tests.selling.title': 'การทดสอบขาย 9 ข้อ (กระจาย)',
-            'tests.selling.1': 'เป้าหมายขาขึ้นสำเร็จ',
-            'tests.selling.2': 'กิจกรรมขาลง (ปริมาณลงเมื่อขึ้น, ขึ้นเมื่อย่อ)',
-            'tests.selling.3': 'อุปทานเบื้องต้น, ไคลแม็กซ์ซื้อปรากฏ',
-            'tests.selling.4': 'หุ้นอ่อนแอกว่าตลาด',
-            'tests.selling.5': 'เส้นแนวโน้มขาขึ้นถูกทะลุ',
-            'tests.selling.6': 'กำลังสร้างจุดสูงสุดที่ต่ำลง',
-            'tests.selling.7': 'กำลังสร้างจุดต่ำสุดที่ต่ำลง',
-            'tests.selling.8': 'กำลังสร้างยอด (การเคลื่อนที่แนวราบ)',
-            'tests.selling.9': 'อัตราส่วนผลตอบแทน/ความเสี่ยงอย่างน้อย 3:1',
-            // Footer
-            'footer.title': '⚠️ ข้อจำกัดความรับผิดชอบที่สำคัญ',
-            'footer.text': 'เนื้อหาการศึกษานี้จัดทำโดย NumbahWan Guild เพื่อวัตถุประสงค์ในการให้ข้อมูลเท่านั้น วิธีไวคอฟฟ์เป็นกรอบประวัติศาสตร์สำหรับทำความเข้าใจโครงสร้างตลาด และไม่รับประกันความสำเร็จในการซื้อขาย ตลาดมีความไม่แน่นอนโดยธรรมชาติ และรูปแบบในอดีตไม่รับประกันผลลัพธ์ในอนาคต อย่าลงทุนเงินที่คุณไม่สามารถรับความเสียหายได้ นี่ไม่ใช่คำแนะนำทางการเงิน กรุณาทำวิจัยของคุณเองและปรึกษาที่ปรึกษาทางการเงินที่มีใบอนุญาตก่อนตัดสินใจลงทุน'
-        }
-    };
+    <!-- Why Popup -->
+    <div class="why-popup" id="whyPopup" onclick="closePopup(event)">
+        <div class="why-content" onclick="event.stopPropagation()">
+            <button onclick="closePopup()" class="absolute top-2 right-2 text-3xl text-gray-600 hover:text-red-600">&times;</button>
+            <h3 class="brush-title text-2xl text-center text-[#c41e3a] mb-4" id="popupTitle"></h3>
+            <img id="popupImage" class="w-full ink-image mb-4" src="" alt="">
+            <p class="text-center text-gray-600 text-sm" id="popupReason"></p>
+        </div>
+    </div>
     
-    // Initialize
-    document.addEventListener('DOMContentLoaded', () => {
-        // Tab switching
-        const tabBtns = document.querySelectorAll('.tab-btn');
-        const tabContents = document.querySelectorAll('.tab-content');
+    <!-- Footer -->
+    <footer class="bg-[#1a1a2e] text-white py-8 px-4 mt-12">
+        <div class="max-w-4xl mx-auto text-center">
+            <p class="brush-title text-2xl text-[#d4af37] mb-4">投資箴言</p>
+            <p class="text-gray-400 italic mb-4">
+                "Buy low, sell high" — 古人說的，但他們沒說怎麼知道哪裡是 low
+            </p>
+            <p class="text-gray-500 text-sm">
+                © 2026 報明牌研究院 | 一個連自己股票都賠錢的團隊製作
+            </p>
+            <a href="/" class="inline-block mt-4 text-[#d4af37] hover:text-white transition">
+                ← 回到 NumbahWan Guild
+            </a>
+        </div>
+    </footer>
+    
+    <script>
+        // Stock data with all 40 images
+        const stocks = [
+            {
+                rank: 1,
+                name: "台積電",
+                ticker: "2330",
+                sector: "半導體代工",
+                animal: "神龍",
+                image: "https://www.genspark.ai/api/files/s/Dhh1LunY?cache_control=3600",
+                whyImage: "https://www.genspark.ai/api/files/s/JBHvw1MO?cache_control=3600",
+                whyReason: "從諾基亞廢墟中升起的鳳凰，變身AI晶片雲龍，全球領袖跪拜"
+            },
+            {
+                rank: 2,
+                name: "信驊",
+                ticker: "5274",
+                sector: "IC設計",
+                animal: "仙鶴",
+                image: "https://www.genspark.ai/api/files/s/xELv74xm?cache_control=3600",
+                whyImage: "https://www.genspark.ai/api/files/s/bgVb0K9F?cache_control=3600",
+                whyReason: "手持唯一鑰匙的仙鶴，所有伺服器的門只為它開啟"
+            },
+            {
+                rank: 3,
+                name: "廣達",
+                ticker: "2382",
+                sector: "伺服器代工",
+                animal: "螞蟻軍團",
+                image: "https://www.genspark.ai/api/files/s/PBfD1kdj?cache_control=3600",
+                whyImage: "https://www.genspark.ai/api/files/s/47K1XoeH?cache_control=3600",
+                whyReason: "螞蟻大軍以不可思議的速度建造伺服器，黃仁勳化身佛祖微笑注視"
+            },
+            {
+                rank: 4,
+                name: "緯創",
+                ticker: "3231",
+                sector: "伺服器代工",
+                animal: "猛虎",
+                image: "https://www.genspark.ai/api/files/s/2WowMJdp?cache_control=3600",
+                whyImage: "https://www.genspark.ai/api/files/s/U7X9g95c?cache_control=3600",
+                whyReason: "背著黃金GB200包裹奔跑的猛虎，其他動物在後面苦苦追趕"
+            },
+            {
+                rank: 5,
+                name: "日月光",
+                ticker: "3711",
+                sector: "封裝測試",
+                animal: "八爪章魚",
+                image: "https://www.genspark.ai/api/files/s/ana8E5pe?cache_control=3600",
+                whyImage: "https://www.genspark.ai/api/files/s/eByr8Czl?cache_control=3600",
+                whyReason: "秘密實驗室裡的章魚大師，把數千顆小晶片封裝成完美禮物，競爭對手只能隔窗絕望"
+            },
+            {
+                rank: 6,
+                name: "奇鋐",
+                ticker: "3548",
+                sector: "散熱",
+                animal: "扇尾鯉魚",
+                image: "https://www.genspark.ai/api/files/s/vRZk8Zbd?cache_control=3600",
+                whyImage: "https://www.genspark.ai/api/files/s/7FcxIENG?cache_control=3600",
+                whyReason: "資料中心化身噴火龍，唯有神奇的扇尾鯉魚能讓它冷靜下來"
+            },
+            {
+                rank: 7,
+                name: "雙鴻",
+                ticker: "3324",
+                sector: "散熱",
+                animal: "水龍",
+                image: "https://www.genspark.ai/api/files/s/aHpwpR1S?cache_control=3600",
+                whyImage: "https://www.genspark.ai/api/files/s/45r3QVqW?cache_control=3600",
+                whyReason: "水龍游過伺服器機架，所經之處晶片從燃燒紅變成冷卻藍"
+            },
+            {
+                rank: 8,
+                name: "健策",
+                ticker: "3653",
+                sector: "散熱",
+                animal: "蒸汽精靈",
+                image: "https://www.genspark.ai/api/files/s/zyUX9mfy?cache_control=3600",
+                whyImage: "https://www.genspark.ai/api/files/s/ERiSj5yP?cache_control=3600",
+                whyReason: "住在晶片裡的蒸汽雲精靈，吸收所有熱量然後像幽靈一樣消散無蹤"
+            },
+            {
+                rank: 9,
+                name: "台達電",
+                ticker: "2308",
+                sector: "電源/散熱",
+                animal: "智慧龜",
+                image: "https://www.genspark.ai/api/files/s/UbZmXu7n?cache_control=3600",
+                whyImage: "https://www.genspark.ai/api/files/s/uC7amtdo?cache_control=3600",
+                whyReason: "手持閃電與雪花的智慧龜，站在電力與散熱帝國的交叉路口"
+            },
+            {
+                rank: 10,
+                name: "鴻海",
+                ticker: "2317",
+                sector: "製造",
+                animal: "工廠鯨魚",
+                image: "https://www.genspark.ai/api/files/s/EZHMgiqe?cache_control=3600",
+                whyImage: "https://www.genspark.ai/api/files/s/1NIgUZKc?cache_control=3600",
+                whyReason: "肚子透明可見組裝線的巨鯨，吞下原料吐出完整AI伺服器"
+            },
+            {
+                rank: 11,
+                name: "聯發科",
+                ticker: "2454",
+                sector: "IC設計",
+                animal: "狡狐商人",
+                image: "https://www.genspark.ai/api/files/s/C26g830G?cache_control=3600",
+                whyImage: "https://www.genspark.ai/api/files/s/2bf70eC4?cache_control=3600",
+                whyReason: "站在十字路口的狐狸商人，同時賣晶片給手機、汽車、平板、IoT"
+            },
+            {
+                rank: 12,
+                name: "華通",
+                ticker: "2313",
+                sector: "PCB",
+                animal: "織絲蠶",
+                image: "https://www.genspark.ai/api/files/s/kSO2tlHo?cache_control=3600",
+                whyImage: "https://www.genspark.ai/api/files/s/iXNWODt3?cache_control=3600",
+                whyReason: "編織不可思議複雜多層網的巨蠶，競爭對手只會織簡單圖案"
+            },
+            {
+                rank: 13,
+                name: "欣興",
+                ticker: "3037",
+                sector: "PCB/ABF",
+                animal: "熊貓學者",
+                image: "https://www.genspark.ai/api/files/s/R0BaFGlI?cache_control=3600",
+                whyImage: "https://www.genspark.ai/api/files/s/PKzr9WFU?cache_control=3600",
+                whyReason: "手持發光玉基板的熊貓學者，所有AI晶片必須坐在這個寶座上"
+            },
+            {
+                rank: 14,
+                name: "嘉澤",
+                ticker: "3533",
+                sector: "連接器",
+                animal: "金蜘蛛",
+                image: "https://www.genspark.ai/api/files/s/kn2LD2No?cache_control=3600",
+                whyImage: "https://www.genspark.ai/api/files/s/je5YoovZ?cache_control=3600",
+                whyReason: "盤踞在巨網中央的金蜘蛛，連接每一台伺服器與每一顆晶片"
+            },
+            {
+                rank: 15,
+                name: "光焱",
+                ticker: "7728",
+                sector: "矽光子",
+                animal: "螢火蟲",
+                image: "https://www.genspark.ai/api/files/s/h3nZ2dpN?cache_control=3600",
+                whyImage: "https://www.genspark.ai/api/files/s/0tufWZx1?cache_control=3600",
+                whyReason: "螢火蟲星座網絡取代老舊銅線河流，數據以光速飛行"
+            },
+            {
+                rank: 16,
+                name: "華星光",
+                ticker: "4979",
+                sector: "光通訊",
+                animal: "燈塔貓頭鷹",
+                image: "https://www.genspark.ai/api/files/s/TvBaPmYb?cache_control=3600",
+                whyImage: "https://www.genspark.ai/api/files/s/HHOD9teo?cache_control=3600",
+                whyReason: "貓頭鷹燈塔照亮無盡的數據海洋，沒有光船隻就會撞毀"
+            },
+            {
+                rank: 17,
+                name: "力成",
+                ticker: "6239",
+                sector: "封裝",
+                animal: "建塔象",
+                image: "https://www.genspark.ai/api/files/s/tG2YpXiy?cache_control=3600",
+                whyImage: "https://www.genspark.ai/api/files/s/h8fKcnvs?cache_control=3600",
+                whyReason: "古老大象建築師精心堆疊記憶體寶塔，HBM層層升起"
+            },
+            {
+                rank: 18,
+                name: "京元電",
+                ticker: "2449",
+                sector: "測試",
+                animal: "醫官鷹",
+                image: "https://www.genspark.ai/api/files/s/TLuS3WAz?cache_control=3600",
+                whyImage: "https://www.genspark.ai/api/files/s/SvnmH4rP?cache_control=3600",
+                whyReason: "拿著御用印章的鷹醫官，晶片排隊等候品質認證蓋章"
+            },
+            {
+                rank: 19,
+                name: "川湖",
+                ticker: "2059",
+                sector: "伺服器滑軌",
+                animal: "穿山甲",
+                image: "https://www.genspark.ai/api/files/s/XdHwfeqH?cache_control=3600",
+                whyImage: "https://www.genspark.ai/api/files/s/2sgKWVGG?cache_control=3600",
+                whyReason: "鱗片滑動如伺服器滑軌的穿山甲，無限機架組裝線上的隱形英雄"
+            },
+            {
+                rank: 20,
+                name: "凱崴",
+                ticker: "5498",
+                sector: "材料",
+                animal: "築壩河狸",
+                image: "https://www.genspark.ai/api/files/s/hvsuuDp6?cache_control=3600",
+                whyImage: "https://www.genspark.ai/api/files/s/29MKzCaQ?cache_control=3600",
+                whyReason: "謙卑的河狸建造PCB材料之壩，所有華麗建築都建在這個基礎上"
+            }
+        ];
         
-        tabBtns.forEach(btn => {
-            btn.addEventListener('click', () => {
-                const tabId = btn.dataset.tab;
-                
-                tabBtns.forEach(b => b.classList.remove('active'));
-                tabContents.forEach(c => c.classList.remove('active'));
-                
-                btn.classList.add('active');
-                document.getElementById(`tab-${tabId}`).classList.add('active');
-            });
-        });
-        
-        // Phase click to show details
-        const phases = document.querySelectorAll('.cycle-phase');
-        const details = document.querySelectorAll('.phase-detail');
-        
-        phases.forEach(phase => {
-            phase.addEventListener('click', () => {
-                const phaseId = phase.dataset.phase;
-                
-                details.forEach(d => d.classList.remove('active'));
-                document.getElementById(`detail-${phaseId}`).classList.add('active');
-            });
-        });
-        
-        // Listen to unified language change from nw-nav
-        window.addEventListener('nw-lang-change', (e) => {
-            const lang = e.detail?.lang || 'en';
-            document.body.dataset.lang = lang;
-            applyTranslations(lang);
-        });
-        
-        // Apply initial language from localStorage
-        const storedLang = localStorage.getItem('lang') || localStorage.getItem('nw_lang') || 'en';
-        document.body.dataset.lang = storedLang;
-        applyTranslations(storedLang);
-        
-        function applyTranslations(lang) {
-            const t = translations[lang] || translations.en;
-            
-            document.querySelectorAll('[data-i18n]').forEach(el => {
-                const key = el.dataset.i18n;
-                if (t[key]) {
-                    if (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA') {
-                        el.placeholder = t[key];
-                    } else {
-                        el.innerHTML = t[key];
-                    }
-                }
-            });
+        // Render stock cards
+        function renderStocks() {
+            const grid = document.getElementById('stockGrid');
+            grid.innerHTML = stocks.map(stock => `
+                <div class="stock-card rounded-lg overflow-hidden cursor-pointer" onclick="showWhy(${stock.rank - 1})">
+                    <div class="relative">
+                        <img src="${stock.image}" alt="${stock.name}" class="w-full aspect-square object-cover">
+                        <div class="rank-badge absolute top-2 left-2 w-12 h-12 rounded-full flex items-center justify-center text-white text-2xl">
+                            ${stock.rank}
+                        </div>
+                        <div class="seal absolute top-2 right-2" style="width:40px;height:40px;font-size:0.9rem;">
+                            ${stock.animal.charAt(0)}
+                        </div>
+                    </div>
+                    <div class="p-4 text-center">
+                        <h3 class="brush-title text-2xl text-[#1a1a2e]">${stock.name}</h3>
+                        <p class="text-gray-500 text-sm">${stock.ticker} | ${stock.sector}</p>
+                        <p class="text-[#c41e3a] text-xs mt-2">
+                            化身：${stock.animal}
+                        </p>
+                        <p class="text-[#d4af37] text-xs mt-1">👆 點擊看為什麼</p>
+                    </div>
+                </div>
+            `).join('');
         }
-    });
+        
+        // Show why popup
+        function showWhy(index) {
+            const stock = stocks[index];
+            document.getElementById('popupTitle').textContent = `#${stock.rank} ${stock.name} - 為什麼選它？`;
+            document.getElementById('popupImage').src = stock.whyImage;
+            document.getElementById('popupReason').textContent = stock.whyReason;
+            document.getElementById('whyPopup').classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+        
+        // Close popup
+        function closePopup(event) {
+            if (event && event.target !== document.getElementById('whyPopup')) return;
+            document.getElementById('whyPopup').classList.remove('active');
+            document.body.style.overflow = '';
+        }
+        
+        // ESC to close
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') closePopup();
+        });
+        
+        // Initialize
+        renderStocks();
     </script>
 </body>
 </html>
