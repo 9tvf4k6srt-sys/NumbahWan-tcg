@@ -85,7 +85,7 @@ const NW_ACHIEVEMENTS = {
     
     // Celebration animation
     celebrate(id, def) {
-        const lang = localStorage.getItem('numbahwan_lang') || 'en';
+        const lang = localStorage.getItem('nw_lang') || 'en';
         
         // Create overlay
         const overlay = document.createElement('div');
@@ -281,7 +281,7 @@ const NW_ACHIEVEMENTS = {
     // Get all achievements for display
     getAll() {
         const unlocked = this.getUnlocked();
-        const lang = localStorage.getItem('numbahwan_lang') || 'en';
+        const lang = localStorage.getItem('nw_lang') || 'en';
         
         return Object.entries(this.definitions).map(([id, def]) => ({
             id,

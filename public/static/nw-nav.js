@@ -276,12 +276,16 @@ const NW_NAV = {
     _boundEvents: false,
 
     getStoredLang() {
-        return localStorage.getItem('lang') || localStorage.getItem('nw_lang') || 'en';
+        // Priority: nw_lang (canonical) > lang (legacy)
+        return localStorage.getItem('nw_lang') || localStorage.getItem('lang') || 'en';
     },
 
     setStoredLang(lang) {
-        localStorage.setItem('lang', lang);
-        localStorage.setItem('nw_lang', lang);
+        // Sync ALL language keys for backward compatibility
+        localStorage.setItem('nw_lang', lang);      // Canonical key
+        localStorage.setItem('lang', lang);          // Legacy key
+        localStorage.setItem('numbahwan_lang', lang); // Old legacy key
+        localStorage.setItem('preferred_lang', lang); // Another legacy key
     },
 
     getCollapsedState() {
@@ -747,6 +751,11 @@ const NW_NAV = {
                 
                 // Also dispatch standard languageChanged event
                 document.dispatchEvent(new CustomEvent('languageChanged', { detail: { lang } }));
+                
+                // Sync with NW_I18N if available (the new unified system)
+                if (typeof NW_I18N !== 'undefined' && NW_I18N.setLang) {
+                    NW_I18N.setLang(lang);
+                }
                 
                 if (typeof NW_SOUNDS !== 'undefined') NW_SOUNDS.play('click');
                 console.log('[NW_NAV] Language changed to:', lang);

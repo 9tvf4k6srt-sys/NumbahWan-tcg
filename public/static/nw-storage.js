@@ -311,7 +311,7 @@ const NW_STORAGE = {
         const migrations = [
             // Old key -> New key
             ['lang', this.KEYS.LANG],
-            ['numbahwan_lang', this.KEYS.LANG],
+            ['nw_lang', this.KEYS.LANG],
             ['nw_collection', this.KEYS.COLLECTION],
             ['nw_deck_1', this.KEYS.DECKS]
         ];

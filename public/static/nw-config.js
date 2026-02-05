@@ -591,7 +591,7 @@ const NW_CONFIG = {
     
     // Get current language
     getCurrentLang() {
-        return localStorage.getItem('numbahwan_lang') || 'en';
+        return localStorage.getItem('nw_lang') || 'en';
     },
     
     // Get page info

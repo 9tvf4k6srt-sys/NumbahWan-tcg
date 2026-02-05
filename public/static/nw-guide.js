@@ -9,7 +9,7 @@
     'use strict';
 
     // Current language - syncs with site language setting (check multiple keys for compatibility)
-    let currentLang = localStorage.getItem('lang') || localStorage.getItem('nw_lang') || localStorage.getItem('numbahwan_lang') || 'en';
+    let currentLang = localStorage.getItem('lang') || localStorage.getItem('nw_lang') || localStorage.getItem('nw_lang') || 'en';
 
     // ==================== UI TRANSLATIONS (Guide-specific) ====================
     const guideI18n = {
@@ -617,7 +617,7 @@
 
     function setLanguage(lang) {
         currentLang = lang;
-        localStorage.setItem('numbahwan_lang', lang);
+        localStorage.setItem('nw_lang', lang);
         
         const chat = document.getElementById('nw-guide-chat');
         if (chat) {
@@ -912,7 +912,7 @@
 
         // Listen for language changes from other components
         window.addEventListener('storage', (e) => {
-            if (e.key === 'numbahwan_lang' && e.newValue !== currentLang) {
+            if (e.key === 'nw_lang' && e.newValue !== currentLang) {
                 currentLang = e.newValue || 'en';
                 const chatEl = document.getElementById('nw-guide-chat');
                 if (chatEl) {

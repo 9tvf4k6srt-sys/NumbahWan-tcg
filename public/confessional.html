@@ -694,13 +694,13 @@
     <script src="/static/nw-wallet.js"></script>
     <script src="/static/nw-icons-inline.js"></script>
     <script src="/static/nw-nav.js"></script>
-    <script src="/static/i18n.js"></script>
+    <script src="/static/nw-i18n-core.js"></script>
     <script>
         // ============================================================================
         // GUILD CONFESSIONAL - "Where TCG sinners seek absolution"
         // ============================================================================
 
-        // i18n translations
+        // Register page translations with NW_I18N
         const CONFESSIONAL_I18N = {
             en: {
                 confessionalSubtitle: '"Unburden your TCG soul"',
@@ -800,19 +800,21 @@
 
         // Initialize
         document.addEventListener('DOMContentLoaded', () => {
-            if (typeof initI18n === 'function') {
-                initI18n(CONFESSIONAL_I18N);
+            // Register translations with NW_I18N (auto-applies)
+            if (window.NW_I18N) {
+                NW_I18N.register(CONFESSIONAL_I18N);
+                
+                // Re-render dynamic content on language change
+                NW_I18N.onChange(() => {
+                    renderConfessions();
+                    loadStats();
+                });
             }
             
             createCandles();
             loadStats();
             loadConfessions();
             setupEventListeners();
-            
-            // Listen for language changes
-            document.addEventListener('languageChanged', () => {
-                // Re-render with new language
-            });
         });
 
         // Create floating candles
