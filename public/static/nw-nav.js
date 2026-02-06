@@ -53,7 +53,7 @@ const NW_NAV = {
         theater: '<path d="M4 8c0-2 2-4 4-4h8c2 0 4 2 4 4v8c0 2-2 4-4 4H8c-2 0-4-2-4-4V8zm4 3v2m8-2v2m-8 4c2 2 6 2 8 0"/>'
     },
     
-    iconSvg(iconId, size = 24) {
+    iconSvg(iconId, size = 18) {
         const path = this.icons[iconId] || this.icons.star;
         return `<svg class="nw-nav-icon" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${path}</svg>`;
     },
@@ -306,21 +306,21 @@ const NW_NAV = {
             <div id="nwNavOverlay" class="nw-nav-overlay"></div>
             <nav id="nwNavPanel" class="nw-nav-panel">
                 <div class="nw-nav-header">
-                    <div class="nw-nav-title">${this.iconSvg('crown', 28)} NumbahWan</div>
-                    <button id="nwNavClose" class="nw-nav-close">${this.iconSvg('close', 26)}</button>
+                    <div class="nw-nav-title">${this.iconSvg('crown', 20)} NumbahWan</div>
+                    <button id="nwNavClose" class="nw-nav-close">${this.iconSvg('close', 18)}</button>
                 </div>
                 <div class="nw-quick-access">
-                    <a href="/forge" class="nw-quick-btn fire">${this.iconSvg('fire', 28)}</a>
-                    <a href="/battle" class="nw-quick-btn battle">${this.iconSvg('swords', 28)}</a>
-                    <a href="/claim" class="nw-quick-btn claim">${this.iconSvg('sparkles', 28)}</a>
-                    <a href="/tabletop" class="nw-quick-btn tabletop">${this.iconSvg('dice', 28)}</a>
+                    <a href="/forge" class="nw-quick-btn fire">${this.iconSvg('fire', 20)}</a>
+                    <a href="/battle" class="nw-quick-btn battle">${this.iconSvg('swords', 20)}</a>
+                    <a href="/claim" class="nw-quick-btn claim">${this.iconSvg('sparkles', 20)}</a>
+                    <a href="/tabletop" class="nw-quick-btn tabletop">${this.iconSvg('dice', 20)}</a>
                 </div>
                 <div class="nw-nav-lang">${langButtons}</div>
                 <div class="nw-nav-scroll">${sectionsHTML}</div>
                 <div class="nw-nav-footer"><div class="nw-nav-version">v8.0 • 60fps Edition</div></div>
             </nav>
-            <button id="nwNavToggle" class="nw-nav-toggle">${this.iconSvg('menu', 30)}</button>
-            <a href="/" id="nwNavHome" class="nw-nav-home">${this.iconSvg('home', 30)}</a>
+            <button id="nwNavToggle" class="nw-nav-toggle">${this.iconSvg('menu', 22)}</button>
+            <a href="/" id="nwNavHome" class="nw-nav-home">${this.iconSvg('home', 22)}</a>
         `;
     },
 
@@ -384,7 +384,7 @@ const NW_NAV = {
 }
 .nw-nav-title {
     font-family: 'Orbitron', monospace, sans-serif;
-    font-size: 26px; font-weight: 900;
+    font-size: 20px; font-weight: 900;
     background: linear-gradient(135deg, #ffd700, #ff6b00);
     -webkit-background-clip: text; -webkit-text-fill-color: transparent;
     background-clip: text;
@@ -403,12 +403,12 @@ const NW_NAV = {
 /* Quick Access - GPU accelerated hovers */
 .nw-quick-access {
     display: flex; justify-content: space-around;
-    padding: 18px 16px;
+    padding: 14px 16px;
     border-bottom: 1px solid rgba(255,215,0,0.2);
     background: linear-gradient(135deg, rgba(255,107,0,0.1), rgba(168,85,247,0.05), rgba(0,0,0,0.3));
 }
 .nw-quick-btn {
-    width: 64px; height: 64px;
+    width: 54px; height: 54px;
     display: flex; align-items: center; justify-content: center;
     border-radius: 14px;
     transition: transform 0.15s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.15s;
@@ -431,10 +431,10 @@ const NW_NAV = {
 }
 .nw-lang-btn {
     background: rgba(255,107,0,0.1);
-    border: 2px solid rgba(255,107,0,0.3);
+    border: 1px solid rgba(255,107,0,0.3);
     color: rgba(255,255,255,0.6);
-    padding: 12px 24px; border-radius: 12px;
-    font-size: 22px; font-weight: 600;
+    padding: 10px 18px; border-radius: 10px;
+    font-size: 16px; font-weight: 600;
     cursor: pointer;
     transition: transform 0.1s, color 0.1s, border-color 0.1s, background 0.1s;
     will-change: transform;
@@ -461,11 +461,11 @@ const NW_NAV = {
 .nw-nav-scroll::-webkit-scrollbar-thumb { background: linear-gradient(180deg, #ff6b00, #ffd700); border-radius: 2px; }
 
 /* Sections */
-.nw-nav-section { margin: 6px 10px; contain: content; }
+.nw-nav-section { margin: 4px 8px; contain: content; }
 .nw-nav-section-header {
     display: flex; align-items: center; gap: 10px;
-    padding: 16px 16px;
-    font-size: 22px; font-weight: 700;
+    padding: 14px 16px;
+    font-size: 16px; font-weight: 700;
     text-transform: uppercase; letter-spacing: 0.5px;
     border-radius: 10px;
     color: var(--section-color);
@@ -477,11 +477,11 @@ const NW_NAV = {
 .nw-nav-section-header.collapsible:hover { background: rgba(255,107,0,0.1); border-color: rgba(255,107,0,0.3); }
 .nw-nav-section-header.collapsible:active { transform: scale(0.98); }
 
-.nw-nav-desc { font-size: 14px; font-weight: 400; opacity: 0.5; text-transform: none; letter-spacing: 0; margin-left: 4px; }
+.nw-nav-desc { font-size: 10px; font-weight: 400; opacity: 0.5; text-transform: none; letter-spacing: 0; margin-left: 4px; }
 .nw-nav-count {
-    font-size: 16px;
+    font-size: 12px;
     background: linear-gradient(135deg, rgba(255,107,0,0.3), rgba(255,215,0,0.2));
-    padding: 4px 12px; border-radius: 12px;
+    padding: 2px 8px; border-radius: 10px;
     margin-left: auto; color: #ffd700;
 }
 .nw-nav-chevron {
@@ -509,12 +509,12 @@ const NW_NAV = {
 
 /* Navigation Links - GPU accelerated */
 .nw-nav-link {
-    display: flex; align-items: center; gap: 14px;
-    padding: 16px 16px;
+    display: flex; align-items: center; gap: 12px;
+    padding: 14px 16px;
     color: rgba(255,255,255,0.7);
     text-decoration: none;
-    border-radius: 12px;
-    font-size: 22px; font-weight: 500;
+    border-radius: 10px;
+    font-size: 16px; font-weight: 500;
     border: 1px solid transparent;
     position: relative;
     transition: transform 0.08s ease-out, color 0.08s, background 0.08s;
@@ -539,7 +539,7 @@ const NW_NAV = {
 
 /* Badges */
 .nw-new-badge, .nw-hot-badge {
-    font-size: 14px; padding: 5px 10px; border-radius: 6px; font-weight: 700;
+    font-size: 10px; padding: 4px 7px; border-radius: 5px; font-weight: 700;
     text-transform: uppercase;
 }
 .nw-new-badge { background: linear-gradient(135deg, #22c55e, #16a34a); color: #fff; }
@@ -547,12 +547,12 @@ const NW_NAV = {
 
 /* Footer */
 .nw-nav-footer {
-    padding: 16px;
+    padding: 12px;
     border-top: 1px solid rgba(255,215,0,0.2);
     text-align: center;
 }
 .nw-nav-version {
-    font-size: 16px;
+    font-size: 10px;
     background: linear-gradient(135deg, #ff6b00, #ffd700);
     -webkit-background-clip: text; -webkit-text-fill-color: transparent;
     background-clip: text;
@@ -561,7 +561,7 @@ const NW_NAV = {
 /* Toggle & Home - FAB Style */
 .nw-nav-toggle, .nw-nav-home {
     position: fixed; z-index: 9997;
-    width: 64px; height: 64px;
+    width: 56px; height: 56px;
     border: none; border-radius: 50%;
     cursor: pointer;
     display: flex; align-items: center; justify-content: center;
@@ -593,13 +593,12 @@ const NW_NAV = {
 
 @media (max-width: 480px) {
     .nw-nav-panel { width: 100vw; max-width: 100vw; }
-    .nw-nav-toggle, .nw-nav-home { width: 60px; height: 60px; }
+    .nw-nav-toggle, .nw-nav-home { width: 52px; height: 52px; }
     .nw-nav-toggle { bottom: 80px; right: 14px; }
-    .nw-nav-home { bottom: 150px; right: 14px; }
-    .nw-nav-link { padding: 14px; font-size: 20px; }
-    .nw-nav-section-header { padding: 14px; font-size: 20px; }
-    .nw-lang-btn { padding: 10px 20px; font-size: 20px; }
-    .nw-quick-btn { width: 56px; height: 56px; }
+    .nw-nav-home { bottom: 140px; right: 14px; }
+    .nw-nav-link { padding: 12px 14px; font-size: 15px; }
+    .nw-nav-section-header { padding: 12px 14px; font-size: 15px; }
+    .nw-lang-btn { padding: 8px 14px; font-size: 14px; }
 }
 
 /* Reduce motion for accessibility */
