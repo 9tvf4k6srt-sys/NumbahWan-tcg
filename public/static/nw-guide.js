@@ -1,7 +1,13 @@
 /**
- * NumbahWan AI Guide v4.0
- * Multi-language floating assistant for site navigation
- * NOW WITH: Viewing history tracking, smart recommendations, comprehensive tips!
+ * NumbahWan AI Guide v5.0 - REAL AI EDITION!
+ * Multi-language floating assistant with LLM integration
+ * 
+ * LEARNING FEATURES:
+ * - Real AI chat using LLM API
+ * - Streaming responses (typing effect)
+ * - Conversation memory
+ * - Fallback to rule-based when AI unavailable
+ * 
  * Supports: English, 繁體中文, ภาษาไทย
  */
 
@@ -10,6 +16,26 @@
 
     // Current language - syncs with site language setting
     let currentLang = localStorage.getItem('lang') || localStorage.getItem('nw_lang') || 'en';
+    
+    // ==================== AI MODE CONFIGURATION ====================
+    // Toggle between AI mode and rule-based mode
+    let aiEnabled = true; // Set to false to disable AI
+    let conversationHistory = []; // Store conversation for context
+    const MAX_CONVERSATION_HISTORY = 10; // Keep last 10 messages
+    let isAiAvailable = null; // null = unknown, true/false = checked
+    
+    // Check if AI is available on load
+    async function checkAiAvailability() {
+        try {
+            const response = await fetch('/api/guide/health');
+            const data = await response.json();
+            isAiAvailable = data.status === 'ready';
+            console.log('[NW_GUIDE] AI status:', isAiAvailable ? 'READY' : 'FALLBACK MODE');
+        } catch (e) {
+            isAiAvailable = false;
+            console.log('[NW_GUIDE] AI not available, using fallback');
+        }
+    }
 
     // ==================== VIEWING HISTORY SYSTEM ====================
     const HISTORY_KEY = 'nw_guide_history';
@@ -686,6 +712,41 @@
                 transform: scale(0.97);
                 background: linear-gradient(135deg, #ff8533, #ffaa33);
             }
+            
+            /* Typing indicator animation */
+            .typing-indicator {
+                display: flex;
+                gap: 4px;
+                padding: 12px 16px;
+            }
+            .typing-indicator .dot {
+                width: 8px;
+                height: 8px;
+                background: #ff9500;
+                border-radius: 50%;
+                animation: typing-bounce 1.4s infinite ease-in-out;
+            }
+            .typing-indicator .dot:nth-child(1) { animation-delay: 0s; }
+            .typing-indicator .dot:nth-child(2) { animation-delay: 0.2s; }
+            .typing-indicator .dot:nth-child(3) { animation-delay: 0.4s; }
+            @keyframes typing-bounce {
+                0%, 60%, 100% { transform: translateY(0); }
+                30% { transform: translateY(-8px); }
+            }
+            
+            /* Streaming cursor */
+            .typing-cursor {
+                animation: cursor-blink 1s infinite;
+            }
+            @keyframes cursor-blink {
+                0%, 50% { opacity: 1; }
+                51%, 100% { opacity: 0; }
+            }
+            
+            /* AI badge */
+            .nw-guide-msg.streaming {
+                min-height: 20px;
+            }
 
             @media (max-width: 480px) {
                 #nw-guide-toggle {
@@ -1078,14 +1139,200 @@
                 showContextualSuggestions();
             }
             else {
-                addMessage(tRandom('confused'));
-                showSuggestions([
-                    { label: guideI18n.chips.showPages[currentLang], value: 'show all pages' },
-                    { label: guideI18n.chips.newFeatures[currentLang], value: 'new features', isNew: true },
-                    { label: guideI18n.chips.recommend[currentLang], value: 'recommend', isRecommend: true }
-                ]);
+                // ============================================
+                // REAL AI INTEGRATION!
+                // If we can't match a command, ask the AI
+                // ============================================
+                if (aiEnabled && isAiAvailable) {
+                    askAI(input);
+                } else {
+                    // Fallback to rule-based confused response
+                    addMessage(tRandom('confused'));
+                    showSuggestions([
+                        { label: guideI18n.chips.showPages[currentLang], value: 'show all pages' },
+                        { label: guideI18n.chips.newFeatures[currentLang], value: 'new features', isNew: true },
+                        { label: guideI18n.chips.recommend[currentLang], value: 'recommend', isRecommend: true }
+                    ]);
+                }
             }
         }, 300);
+    }
+    
+    // ==================== AI CHAT FUNCTION ====================
+    // This is where the magic happens!
+    // We send the user's message to our AI API and stream the response
+    
+    async function askAI(message) {
+        // Show typing indicator
+        const typingId = showTypingIndicator();
+        
+        try {
+            // Prepare context from viewing history
+            const recentPages = getRecentPages(3);
+            const userContext = {
+                viewingHistory: recentPages
+            };
+            
+            // Get currencies from localStorage if available
+            try {
+                const walletData = JSON.parse(localStorage.getItem('nw_wallet') || '{}');
+                if (walletData.currencies) {
+                    userContext.currencies = walletData.currencies;
+                }
+            } catch (e) {}
+            
+            // Try streaming first for better UX
+            const response = await fetch('/api/guide/stream', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    message,
+                    conversationHistory: conversationHistory.slice(-MAX_CONVERSATION_HISTORY),
+                    language: currentLang,
+                    currentPage: window.location.pathname,
+                    userContext
+                })
+            });
+            
+            // Remove typing indicator
+            removeTypingIndicator(typingId);
+            
+            if (!response.ok) {
+                throw new Error('AI request failed');
+            }
+            
+            // Handle streaming response
+            const reader = response.body?.getReader();
+            if (!reader) {
+                throw new Error('No reader available');
+            }
+            
+            const decoder = new TextDecoder();
+            let fullMessage = '';
+            let messageElement = null;
+            
+            while (true) {
+                const { done, value } = await reader.read();
+                if (done) break;
+                
+                const chunk = decoder.decode(value);
+                const lines = chunk.split('\n').filter(line => line.startsWith('data: '));
+                
+                for (const line of lines) {
+                    try {
+                        const data = JSON.parse(line.slice(6));
+                        
+                        if (data.done) {
+                            // Streaming complete
+                            break;
+                        }
+                        
+                        if (data.content) {
+                            fullMessage += data.content;
+                            
+                            // Create or update message element
+                            if (!messageElement) {
+                                messageElement = createStreamingMessage();
+                            }
+                            
+                            // Update with markdown-like formatting
+                            messageElement.innerHTML = formatAIResponse(fullMessage);
+                            
+                            // Scroll to bottom
+                            const container = document.getElementById('nw-guide-messages');
+                            if (container) container.scrollTop = container.scrollHeight;
+                        }
+                        
+                        if (data.error) {
+                            console.error('[NW_GUIDE] AI Error:', data.error);
+                        }
+                    } catch (e) {
+                        // Skip malformed JSON
+                    }
+                }
+            }
+            
+            // Save to conversation history
+            conversationHistory.push(
+                { role: 'user', content: message },
+                { role: 'assistant', content: fullMessage }
+            );
+            
+            // Trim history if too long
+            if (conversationHistory.length > MAX_CONVERSATION_HISTORY * 2) {
+                conversationHistory = conversationHistory.slice(-MAX_CONVERSATION_HISTORY * 2);
+            }
+            
+            // Show follow-up suggestions
+            showContextualSuggestions();
+            
+        } catch (error) {
+            console.error('[NW_GUIDE] AI Error:', error);
+            removeTypingIndicator(typingId);
+            
+            // Fallback to rule-based response
+            addMessage(tRandom('confused'));
+            showSuggestions([
+                { label: guideI18n.chips.showPages[currentLang], value: 'show all pages' },
+                { label: guideI18n.chips.newFeatures[currentLang], value: 'new features', isNew: true },
+                { label: guideI18n.chips.recommend[currentLang], value: 'recommend', isRecommend: true }
+            ]);
+        }
+    }
+    
+    // Create a message element for streaming
+    function createStreamingMessage() {
+        const container = document.getElementById('nw-guide-messages');
+        if (!container) return null;
+        
+        const msg = document.createElement('div');
+        msg.className = 'nw-guide-msg bot streaming';
+        msg.innerHTML = '<span class="typing-cursor">|</span>';
+        container.appendChild(msg);
+        return msg;
+    }
+    
+    // Show typing indicator
+    function showTypingIndicator() {
+        const container = document.getElementById('nw-guide-messages');
+        if (!container) return null;
+        
+        const id = 'typing-' + Date.now();
+        const indicator = document.createElement('div');
+        indicator.id = id;
+        indicator.className = 'nw-guide-msg bot typing-indicator';
+        indicator.innerHTML = `
+            <span class="dot"></span>
+            <span class="dot"></span>
+            <span class="dot"></span>
+        `;
+        container.appendChild(indicator);
+        container.scrollTop = container.scrollHeight;
+        return id;
+    }
+    
+    // Remove typing indicator
+    function removeTypingIndicator(id) {
+        if (!id) return;
+        const indicator = document.getElementById(id);
+        if (indicator) indicator.remove();
+    }
+    
+    // Format AI response with markdown-like formatting
+    function formatAIResponse(text) {
+        return text
+            // Bold: **text** or __text__
+            .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
+            .replace(/__([^_]+)__/g, '<strong>$1</strong>')
+            // Italic: *text* or _text_
+            .replace(/\*([^*]+)\*/g, '<em>$1</em>')
+            .replace(/_([^_]+)_/g, '<em>$1</em>')
+            // Links: [text](url) - make them clickable
+            .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" class="nw-guide-page-link">$1</a>')
+            // Page paths: /path - make them clickable
+            .replace(/(?<!href=")(\/[a-z-]+)(?![a-z-])/gi, '<a href="$1" class="nw-guide-page-link">$1</a>')
+            // Line breaks
+            .replace(/\n/g, '<br>');
     }
 
     // ==================== EVENT BINDING ====================
@@ -1285,6 +1532,9 @@
         }
     });
 
-    console.log('%c[NW_GUIDE] v4.0 - Smart recommendations & comprehensive tips! Mobile touch fixed!', 
+    console.log('%c[NW_GUIDE] v5.0 - REAL AI EDITION! LLM-powered responses with streaming!', 
         'background: #1a1a2e; color: #ff6b00; font-size: 12px; padding: 4px 8px; border-radius: 4px;');
+    
+    // Check AI availability on load
+    checkAiAvailability();
 })();

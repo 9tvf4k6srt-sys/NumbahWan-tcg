@@ -1,5 +1,36 @@
 import { Hono } from 'hono'
 import { serveStatic } from 'hono/cloudflare-pages'
+import * as fs from 'fs'
+import * as path from 'path'
+import * as yaml from 'js-yaml'
+import * as os from 'os'
+
+// ============================================================================
+// LOAD LLM CONFIG FROM ~/.genspark_llm.yaml
+// ============================================================================
+// LEARNING: This is how we securely load API credentials
+// In production, you'd use environment variables in Cloudflare dashboard
+// ============================================================================
+
+let llmConfig: { openai?: { api_key?: string; base_url?: string } } = {};
+try {
+  const configPath = path.join(os.homedir(), '.genspark_llm.yaml');
+  if (fs.existsSync(configPath)) {
+    let fileContents = fs.readFileSync(configPath, 'utf8');
+    // Substitute environment variables like ${GENSPARK_TOKEN}
+    fileContents = fileContents.replace(/\$\{(\w+)\}/g, (_, varName) => {
+      return process.env[varName] || '';
+    });
+    llmConfig = yaml.load(fileContents) as typeof llmConfig;
+    console.log('[LLM] Config loaded from ~/.genspark_llm.yaml');
+    // Log if API key is present (without exposing it)
+    if (llmConfig?.openai?.api_key) {
+      console.log('[LLM] API key found:', llmConfig.openai.api_key.slice(0, 8) + '...');
+    }
+  }
+} catch (e) {
+  console.log('[LLM] No config file found, will use environment variables');
+}
 
 // Import data from JSON files (Fallback when D1 not available)
 import rosterData from './data/roster.json'
@@ -4677,5 +4708,222 @@ app.get('/api/avatar/components', async (c) => {
       }
     });
   }
+});
+
+// ============================================================================
+// AI GUIDE API - LLM-Powered Assistant
+// ============================================================================
+// 
+// LEARNING: This is your first real AI integration!
+// Key concepts:
+// 1. System prompts define AI personality and knowledge
+// 2. Streaming provides real-time response delivery
+// 3. Conversation history enables context-aware responses
+// 4. Error handling with graceful fallbacks
+// ============================================================================
+
+import AIGuide, { chat as aiChat, chatStream, getQuickResponse, type GuideRequest, type Message } from './services/ai-guide';
+
+// Environment variables for AI (set in wrangler.toml or Cloudflare dashboard)
+// OPENAI_API_KEY and OPENAI_BASE_URL
+
+// POST /api/guide/chat - Chat with AI Guide (non-streaming)
+app.post('/api/guide/chat', async (c) => {
+  try {
+    const body = await c.req.json() as GuideRequest;
+    const { message, conversationHistory, language, currentPage, userContext } = body;
+
+    if (!message || message.trim().length === 0) {
+      return c.json({ 
+        success: false, 
+        error: 'Message is required' 
+      }, 400);
+    }
+
+    // Get API credentials from config file or environment
+    const apiKey = c.env?.OPENAI_API_KEY || process.env.OPENAI_API_KEY || llmConfig?.openai?.api_key;
+    const baseUrl = c.env?.OPENAI_BASE_URL || process.env.OPENAI_BASE_URL || llmConfig?.openai?.base_url || 'https://www.genspark.ai/api/llm_proxy/v1';
+
+    if (!apiKey) {
+      // Return fallback response if no API key
+      console.warn('[AI Guide] No API key configured, using fallback');
+      return c.json({
+        success: true,
+        message: getQuickResponse('fallback', language || 'en'),
+        source: 'fallback',
+        note: 'AI service not configured'
+      });
+    }
+
+    // Call AI
+    const response = await aiChat(
+      { message, conversationHistory, language, currentPage, userContext },
+      apiKey,
+      baseUrl
+    );
+
+    if (!response.success) {
+      return c.json({
+        success: true,
+        message: getQuickResponse('error', language || 'en'),
+        source: 'fallback',
+        error: response.error
+      });
+    }
+
+    return c.json({
+      success: true,
+      message: response.message,
+      usage: response.usage,
+      source: 'ai'
+    });
+
+  } catch (e) {
+    console.error('[AI Guide] Error:', e);
+    return c.json({
+      success: true,
+      message: getQuickResponse('error', 'en'),
+      source: 'fallback',
+      error: String(e)
+    });
+  }
+});
+
+// POST /api/guide/stream - Chat with AI Guide (streaming)
+// 
+// LEARNING: Streaming responses!
+// Instead of waiting for the full response, we send chunks as they arrive.
+// This creates a "typing" effect and feels more responsive.
+app.post('/api/guide/stream', async (c) => {
+  try {
+    const body = await c.req.json() as GuideRequest;
+    const { message, conversationHistory, language, currentPage, userContext } = body;
+
+    if (!message || message.trim().length === 0) {
+      return c.json({ success: false, error: 'Message is required' }, 400);
+    }
+
+    const apiKey = c.env?.OPENAI_API_KEY || process.env.OPENAI_API_KEY || llmConfig?.openai?.api_key;
+    const baseUrl = c.env?.OPENAI_BASE_URL || process.env.OPENAI_BASE_URL || llmConfig?.openai?.base_url || 'https://www.genspark.ai/api/llm_proxy/v1';
+
+    if (!apiKey) {
+      // Return fallback as stream-like response
+      const fallbackMessage = getQuickResponse('fallback', language || 'en');
+      return new Response(
+        `data: ${JSON.stringify({ content: fallbackMessage, done: true })}\n\n`,
+        {
+          headers: {
+            'Content-Type': 'text/event-stream',
+            'Cache-Control': 'no-cache',
+            'Connection': 'keep-alive'
+          }
+        }
+      );
+    }
+
+    const stream = await chatStream(
+      { message, conversationHistory, language, currentPage, userContext },
+      apiKey,
+      baseUrl
+    );
+
+    if (!stream) {
+      const errorMessage = getQuickResponse('error', language || 'en');
+      return new Response(
+        `data: ${JSON.stringify({ content: errorMessage, done: true })}\n\n`,
+        {
+          headers: {
+            'Content-Type': 'text/event-stream',
+            'Cache-Control': 'no-cache'
+          }
+        }
+      );
+    }
+
+    // Transform the OpenAI stream to our format
+    const transformedStream = new ReadableStream({
+      async start(controller) {
+        const reader = stream.getReader();
+        const decoder = new TextDecoder();
+
+        try {
+          while (true) {
+            const { done, value } = await reader.read();
+            if (done) {
+              controller.enqueue(new TextEncoder().encode(`data: ${JSON.stringify({ done: true })}\n\n`));
+              controller.close();
+              break;
+            }
+
+            const chunk = decoder.decode(value);
+            const lines = chunk.split('\n').filter(line => line.startsWith('data: '));
+
+            for (const line of lines) {
+              const data = line.slice(6); // Remove 'data: ' prefix
+              if (data === '[DONE]') {
+                controller.enqueue(new TextEncoder().encode(`data: ${JSON.stringify({ done: true })}\n\n`));
+                continue;
+              }
+
+              try {
+                const parsed = JSON.parse(data);
+                const content = parsed.choices?.[0]?.delta?.content;
+                if (content) {
+                  controller.enqueue(
+                    new TextEncoder().encode(`data: ${JSON.stringify({ content })}\n\n`)
+                  );
+                }
+              } catch {
+                // Skip malformed JSON
+              }
+            }
+          }
+        } catch (error) {
+          console.error('[AI Guide] Stream error:', error);
+          controller.enqueue(
+            new TextEncoder().encode(`data: ${JSON.stringify({ error: String(error), done: true })}\n\n`)
+          );
+          controller.close();
+        }
+      }
+    });
+
+    return new Response(transformedStream, {
+      headers: {
+        'Content-Type': 'text/event-stream',
+        'Cache-Control': 'no-cache',
+        'Connection': 'keep-alive'
+      }
+    });
+
+  } catch (e) {
+    console.error('[AI Guide] Stream Error:', e);
+    return new Response(
+      `data: ${JSON.stringify({ error: String(e), done: true })}\n\n`,
+      {
+        headers: {
+          'Content-Type': 'text/event-stream',
+          'Cache-Control': 'no-cache'
+        }
+      }
+    );
+  }
+});
+
+// GET /api/guide/health - Check if AI Guide is available
+app.get('/api/guide/health', (c) => {
+  const apiKey = c.env?.OPENAI_API_KEY || process.env.OPENAI_API_KEY || llmConfig?.openai?.api_key;
+  
+  return c.json({
+    success: true,
+    status: apiKey ? 'ready' : 'fallback_only',
+    features: {
+      chat: true,
+      streaming: true,
+      conversationMemory: true,
+      multiLanguage: ['en', 'zh', 'th']
+    },
+    version: '1.0.0'
+  });
 });
 
