@@ -13,14 +13,67 @@ const NW_CONFIG = {
     // ═══════════════════════════════════════════════════════════════
     // VERSION & META
     // ═══════════════════════════════════════════════════════════════
-    version: '2.1.1',
-    lastUpdate: '2026-02-02',
+    version: '2.2.0',
+    lastUpdate: '2026-02-06',
     environment: 'production',
     
     // ═══════════════════════════════════════════════════════════════
     // PATCH HISTORY - Auto-feeds to /updates page
     // ═══════════════════════════════════════════════════════════════
     patches: [
+        {
+            version: '2.2.0',
+            date: '2026-02-06',
+            title: { 
+                en: 'Avatar Studio & AI Guide Enhancement', 
+                zh: '頭像工作室和AI指南增強', 
+                th: 'สตูดิโออวาตาร์และการปรับปรุงไกด์ AI' 
+            },
+            type: 'major',
+            changes: [
+                {
+                    category: 'new',
+                    title: { en: 'MapleStory Avatar Studio', zh: 'MapleStory頭像工作室', th: 'สตูดิโออวาตาร์ MapleStory' },
+                    desc: { 
+                        en: 'Upload your MapleStory screenshot and generate AI-powered avatar art in 8 different poses!',
+                        zh: '上傳你的楓之谷截圖，以8種不同姿勢生成AI頭像藝術！',
+                        th: 'อัปโหลดภาพหน้าจอ MapleStory ของคุณและสร้างอวาตาร์ AI ใน 8 โพสที่แตกต่างกัน!'
+                    },
+                    icon: '🎨',
+                    path: '/avatar-studio'
+                },
+                {
+                    category: 'new',
+                    title: { en: 'Smart AI Guide', zh: '智能AI指南', th: 'ไกด์ AI อัจฉริยะ' },
+                    desc: { 
+                        en: 'Chatbot now tracks your viewing history and suggests features based on your interests!',
+                        zh: '聊天機器人現在追蹤你的瀏覽歷史，並根據你的興趣推薦功能！',
+                        th: 'แชทบอทตอนนี้ติดตามประวัติการดูของคุณและแนะนำฟีเจอร์ตามความสนใจ!'
+                    },
+                    icon: '🤖'
+                },
+                {
+                    category: 'feature',
+                    title: { en: 'Full i18n for Avatar Studio', zh: '頭像工作室完整i18n', th: 'i18n เต็มรูปแบบสำหรับสตูดิโออวาตาร์' },
+                    desc: { 
+                        en: 'Avatar Studio supports English, Traditional Chinese, and Thai!',
+                        zh: '頭像工作室支援英文、繁體中文和泰文！',
+                        th: 'สตูดิโออวาตาร์รองรับภาษาอังกฤษ จีนตัวเต็ม และไทย!'
+                    },
+                    icon: '🌐'
+                },
+                {
+                    category: 'fix',
+                    title: { en: 'Mobile Tips Button Fix', zh: '手機提示按鈕修復', th: 'แก้ไขปุ่มเคล็ดลับบนมือถือ' },
+                    desc: { 
+                        en: 'Fixed "Learn More" tips buttons not responding on mobile devices',
+                        zh: '修復「了解更多」提示按鈕在手機上無反應的問題',
+                        th: 'แก้ไขปุ่ม "เรียนรู้เพิ่มเติม" ที่ไม่ตอบสนองบนอุปกรณ์มือถือ'
+                    },
+                    icon: '📱'
+                }
+            ]
+        },
         {
             version: '2.1.1',
             date: '2026-02-02',
@@ -372,6 +425,27 @@ const NW_CONFIG = {
             name: { en: 'About Us', zh: '關於我們', th: 'เกี่ยวกับเรา' },
             desc: { en: 'Meet the team & guild lore', zh: '認識團隊和公會傳說', th: 'พบทีมและตำนานกิลด์' },
             keywords: { en: ['about', 'team', 'lore', 'story'], zh: ['關於', '團隊', '故事'], th: ['เกี่ยวกับ', 'ทีม', 'เรื่องราว'] }
+        },
+        // Avatar & Creative Tools
+        avatarStudio: { path: '/avatar-studio', emoji: '🎨', category: 'creative',
+            name: { en: 'Avatar Studio', zh: '頭像工作室', th: 'สตูดิโออวาตาร์' },
+            desc: { en: 'Generate AI maple avatars from your screenshots', zh: '從截圖生成AI楓之谷頭像', th: 'สร้างอวาตาร์เมเปิ้ลจากภาพหน้าจอของคุณ' },
+            keywords: { en: ['avatar', 'studio', 'photo', 'generate', 'ai', 'pose', 'screenshot'], zh: ['頭像', '工作室', '照片', '生成'], th: ['อวาตาร์', 'สตูดิโอ', 'รูป', 'สร้าง'] },
+            tips: {
+                en: ['Upload a clear MapleStory screenshot!', '8 poses: Hero, Cute, Cool, Victory, Magic, Action, AFK, Party', 'Best results: full-body, centered, bright background', 'Download HD PNG or share to Discord!'],
+                zh: ['上傳清晰的楓之谷截圖！', '8種姿勢：英雄、可愛、酷炫、勝利、魔法、動作、AFK、派對', '最佳效果：全身、居中、明亮背景', '下載高清PNG或分享到Discord！'],
+                th: ['อัปโหลดภาพหน้าจอ MapleStory ที่ชัดเจน!', '8 โพส: ฮีโร่, น่ารัก, คูล, ชนะ, เวทมนตร์, แอคชั่น, AFK, ปาร์ตี้', 'ผลลัพธ์ดีที่สุด: เต็มตัว ตรงกลาง พื้นหลังสว่าง', 'ดาวน์โหลด HD PNG หรือแชร์ไป Discord!']
+            }
+        },
+        confessional: { path: '/confessional', emoji: '🎭', category: 'fun',
+            name: { en: 'Confessional', zh: '告解室', th: 'ห้องสารภาพ' },
+            desc: { en: 'Anonymous guild confessions', zh: '匿名公會告解', th: 'คำสารภาพกิลด์แบบไม่ระบุตัวตน' },
+            keywords: { en: ['confess', 'confession', 'anonymous', 'secret'], zh: ['告解', '匿名', '秘密'], th: ['สารภาพ', 'ไม่ระบุตัวตน', 'ความลับ'] },
+            tips: {
+                en: ['Submit anonymous confessions!', 'Vote on the juiciest guild secrets 👀', 'All confessions are anonymous... or are they? 😈'],
+                zh: ['提交匿名告解！', '為最勁爆的公會秘密投票 👀', '所有告解都是匿名的...還是？😈'],
+                th: ['ส่งคำสารภาพแบบไม่ระบุตัวตน!', 'โหวตความลับกิลด์ที่น่าสนใจที่สุด 👀', 'คำสารภาพทั้งหมดไม่ระบุตัวตน... หรือเปล่า? 😈']
+            }
         }
     },
 

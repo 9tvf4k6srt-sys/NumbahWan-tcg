@@ -1,17 +1,65 @@
 /**
- * NumbahWan AI Guide v3.0
+ * NumbahWan AI Guide v4.0
  * Multi-language floating assistant for site navigation
- * NOW AUTO-READS FROM NW_CONFIG - Single Source of Truth!
+ * NOW WITH: Viewing history tracking, smart recommendations, comprehensive tips!
  * Supports: English, 繁體中文, ภาษาไทย
  */
 
 (function() {
     'use strict';
 
-    // Current language - syncs with site language setting (check multiple keys for compatibility)
-    let currentLang = localStorage.getItem('lang') || localStorage.getItem('nw_lang') || localStorage.getItem('nw_lang') || 'en';
+    // Current language - syncs with site language setting
+    let currentLang = localStorage.getItem('lang') || localStorage.getItem('nw_lang') || 'en';
 
-    // ==================== UI TRANSLATIONS (Guide-specific) ====================
+    // ==================== VIEWING HISTORY SYSTEM ====================
+    const HISTORY_KEY = 'nw_guide_history';
+    const MAX_HISTORY = 50;
+    
+    function getViewingHistory() {
+        try {
+            return JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]');
+        } catch {
+            return [];
+        }
+    }
+    
+    function saveViewingHistory(history) {
+        localStorage.setItem(HISTORY_KEY, JSON.stringify(history.slice(-MAX_HISTORY)));
+    }
+    
+    function trackPageView(path) {
+        const history = getViewingHistory();
+        history.push({
+            path,
+            timestamp: Date.now(),
+            lang: currentLang
+        });
+        saveViewingHistory(history);
+    }
+    
+    function getPageViewCounts() {
+        const history = getViewingHistory();
+        const counts = {};
+        history.forEach(item => {
+            counts[item.path] = (counts[item.path] || 0) + 1;
+        });
+        return counts;
+    }
+    
+    function getRecentPages(limit = 5) {
+        const history = getViewingHistory();
+        const seen = new Set();
+        const recent = [];
+        for (let i = history.length - 1; i >= 0 && recent.length < limit; i--) {
+            if (!seen.has(history[i].path)) {
+                seen.add(history[i].path);
+                recent.push(history[i].path);
+            }
+        }
+        return recent;
+    }
+
+    // ==================== UI TRANSLATIONS ====================
     const guideI18n = {
         ui: {
             en: {
@@ -19,21 +67,33 @@
                 online: '● Online - Here to help!',
                 placeholder: 'Ask me anything...',
                 goTo: 'Go to',
-                newBadge: 'NEW!'
+                newBadge: 'NEW!',
+                learnMore: 'Learn More',
+                basedOnHistory: 'Based on your history:',
+                youMightLike: 'You might like:',
+                popularPages: 'Popular pages:'
             },
             zh: {
                 title: 'NumbahWan 嚮導',
                 online: '● 在線 - 隨時為您服務！',
                 placeholder: '問我任何問題...',
                 goTo: '前往',
-                newBadge: '新功能！'
+                newBadge: '新功能！',
+                learnMore: '了解更多',
+                basedOnHistory: '根據你的瀏覽記錄：',
+                youMightLike: '你可能會喜歡：',
+                popularPages: '熱門頁面：'
             },
             th: {
                 title: 'ไกด์ NumbahWan',
                 online: '● ออนไลน์ - พร้อมช่วยเหลือ!',
                 placeholder: 'ถามอะไรก็ได้...',
                 goTo: 'ไปที่',
-                newBadge: 'ใหม่!'
+                newBadge: 'ใหม่!',
+                learnMore: 'เรียนรู้เพิ่มเติม',
+                basedOnHistory: 'ตามประวัติการดูของคุณ:',
+                youMightLike: 'คุณอาจชอบ:',
+                popularPages: 'หน้ายอดนิยม:'
             }
         },
         greetings: {
@@ -80,7 +140,8 @@
             joke: { en: '😂 Tell a joke', zh: '😂 講個笑話', th: '😂 เล่าเรื่องตลก' },
             help: { en: '❓ Help', zh: '❓ 幫助', th: '❓ ช่วยเหลือ' },
             langSwitch: { en: '🌐 Language', zh: '🌐 語言', th: '🌐 ภาษา' },
-            newFeatures: { en: '🆕 New Features', zh: '🆕 新功能', th: '🆕 ฟีเจอร์ใหม่' }
+            newFeatures: { en: '🆕 New Features', zh: '🆕 新功能', th: '🆕 ฟีเจอร์ใหม่' },
+            recommend: { en: '🎯 Recommend', zh: '🎯 推薦', th: '🎯 แนะนำ' }
         },
         langNames: {
             en: { en: 'English', zh: '英文', th: 'อังกฤษ' },
@@ -88,42 +149,95 @@
             th: { en: 'Thai', zh: '泰文', th: 'ไทย' }
         },
         help: {
-            en: "I can help you navigate! Try:\n• Ask about any page (Exchange, Court, Therapy, etc.)\n• 'show pages' - see all sections\n• 'new features' - see latest updates\n• 'tips' - get tips for current page\n• 'joke' - I'm hilarious! 😏\n• '🌐 Language' - switch language",
-            zh: "我可以幫你導航！試試：\n• 詢問任何頁面（交易所、法院、療程等）\n• 「顯示頁面」- 查看所有區域\n• 「新功能」- 查看最新更新\n• 「提示」- 獲取當前頁面提示\n• 「笑話」- 我超幽默！😏\n• 「🌐 語言」- 切換語言",
-            th: "ฉันช่วยนำทางได้! ลอง:\n• ถามเกี่ยวกับหน้าใดก็ได้ (Exchange, Court, Therapy ฯลฯ)\n• 'แสดงหน้า' - ดูทุกส่วน\n• 'ฟีเจอร์ใหม่' - ดูอัปเดตล่าสุด\n• 'เคล็ดลับ' - รับเคล็ดลับหน้าปัจจุบัน\n• 'ตลก' - ฉันตลกมาก! 😏\n• '🌐 ภาษา' - เปลี่ยนภาษา"
+            en: "I can help you navigate! Try:\n• Ask about any page (Avatar Studio, Court, Therapy, etc.)\n• 'show pages' - see all sections\n• 'new features' - see latest updates\n• 'tips' - get tips for current page\n• 'recommend' - get personalized suggestions\n• 'joke' - I'm hilarious! 😏\n• '🌐 Language' - switch language",
+            zh: "我可以幫你導航！試試：\n• 詢問任何頁面（頭像工作室、法院、療程等）\n• 「顯示頁面」- 查看所有區域\n• 「新功能」- 查看最新更新\n• 「提示」- 獲取當前頁面提示\n• 「推薦」- 獲取個性化建議\n• 「笑話」- 我超幽默！😏\n• 「🌐 語言」- 切換語言",
+            th: "ฉันช่วยนำทางได้! ลอง:\n• ถามเกี่ยวกับหน้าใดก็ได้ (Avatar Studio, Court, Therapy ฯลฯ)\n• 'แสดงหน้า' - ดูทุกส่วน\n• 'ฟีเจอร์ใหม่' - ดูอัปเดตล่าสุด\n• 'เคล็ดลับ' - รับเคล็ดลับหน้าปัจจุบัน\n• 'แนะนำ' - รับคำแนะนำส่วนตัว\n• 'ตลก' - ฉันตลกมาก! 😏\n• '🌐 ภาษา' - เปลี่ยนภาษา"
         },
-        // Fallback page tips (when NW_CONFIG not available)
+        // Comprehensive fallback tips for each page
         fallbackTips: {
             '/': {
-                en: ["Welcome to NumbahWan! Try the 📈 Exchange", "Check out the 🏫 Academy", "New here? Visit the 🏛️ Museum"],
-                zh: ["歡迎來到NumbahWan！試試 📈 交易所", "看看 🏫 學院", "新手？去 🏛️ 博物館"],
-                th: ["ยินดีต้อนรับสู่ NumbahWan! ลอง 📈 Exchange", "ดู 🏫 สถาบัน", "มาใหม่? ไปที่ 🏛️ พิพิธภัณฑ์"]
+                en: ["Welcome to NumbahWan! Check out the new Avatar Studio 🎨", "Try the 📈 Exchange for parody stocks", "New here? Visit the 🏛️ Museum for guild history"],
+                zh: ["歡迎來到NumbahWan！看看新的頭像工作室 🎨", "試試 📈 交易所玩惡搞股票", "新手？去 🏛️ 博物館了解公會歷史"],
+                th: ["ยินดีต้อนรับสู่ NumbahWan! ดู Avatar Studio ใหม่ 🎨", "ลอง 📈 Exchange สำหรับหุ้นล้อเลียน", "มาใหม่? ไปที่ 🏛️ พิพิธภัณฑ์ดูประวัติกิลด์"]
+            },
+            '/avatar-studio': {
+                en: ["Upload a clear, full-body MapleStory screenshot for best results! 📸", "8 poses available: Hero, Cute, Cool, Victory, Magic, Action, AFK, Party 🎭", "Center your character and use bright backgrounds ☀️", "Download HD PNG or share directly to Discord! 🎮"],
+                zh: ["上傳清晰的全身楓之谷截圖效果最佳！📸", "8種姿勢：英雄、可愛、酷炫、勝利、魔法、動作、AFK、派對 🎭", "將角色置中並使用明亮背景 ☀️", "下載高清PNG或直接分享到Discord！🎮"],
+                th: ["อัปโหลดภาพหน้าจอ MapleStory เต็มตัวที่ชัดเจนเพื่อผลลัพธ์ที่ดีที่สุด! 📸", "8 โพส: ฮีโร่ น่ารัก เท่ ชนะ เวทมนตร์ แอ็คชั่น AFK ปาร์ตี้ 🎭", "วางตัวละครไว้ตรงกลางและใช้พื้นหลังสว่าง ☀️", "ดาวน์โหลด HD PNG หรือแชร์ไป Discord โดยตรง! 🎮"]
+            },
+            '/forge': {
+                en: ["Use Sacred Logs ⧫ to pull cards!", "Multi-pull (10x) gives better value 💎", "Check your pity counter for guaranteed rares!"],
+                zh: ["使用神聖原木 ⧫ 抽卡！", "十連抽更划算 💎", "查看保底計數器獲得保底稀有卡！"],
+                th: ["ใช้ Sacred Logs ⧫ สุ่มการ์ด!", "สุ่ม 10 ครั้ง คุ้มกว่า 💎", "ดูตัวนับ pity สำหรับการันตีหายาก!"]
+            },
+            '/court': {
+                en: ["File complaints for 5◆, win to earn 25●! ⚖️", "Appeal costs 10◆ with only 3% success rate 😈", "10 crime categories from Loot Theft to AFK Abuse!"],
+                zh: ["提交訴狀5◆，勝訴獲25●！⚖️", "上訴需10◆，只有3%成功率 😈", "10種罪名從偷寶到掛機濫用！"],
+                th: ["ยื่นคำร้อง 5◆ ชนะได้ 25●! ⚖️", "อุทธรณ์ 10◆ สำเร็จแค่ 3% 😈", "10 หมวดอาชญากรรมจากขโมยของถึงใช้ AFK ในทางที่ผิด!"]
+            },
+            '/therapy': {
+                en: ["Complete a therapy session to earn 3◆! 🛋️", "Get diagnosed with Gacha Pull Depression 🎰", "Dr. NumbahWan accepts all gaming traumas!"],
+                zh: ["完成療程獲3◆！🛋️", "被診斷為抽卡憂鬱症 🎰", "NumbahWan醫生接受所有遊戲創傷！"],
+                th: ["ทำเซสชันเสร็จรับ 3◆! 🛋️", "วินิจฉัยว่าเป็น Gacha Pull Depression 🎰", "Dr. NumbahWan รับบาดแผลเกมทุกชนิด!"]
+            },
+            '/hr': {
+                en: ["Apply for Chief Banana Officer! 🍌", "Application costs 5◆, consolation prize: 10●", "100% rejection rate guaranteed! 📋"],
+                zh: ["申請首席香蕉官！🍌", "申請費5◆，安慰獎：10●", "100%拒絕率保證！📋"],
+                th: ["สมัคร Chief Banana Officer! 🍌", "ค่าสมัคร 5◆ รางวัลปลอบใจ: 10●", "รับประกันอัตราปฏิเสธ 100%! 📋"]
+            },
+            '/conspiracy': {
+                en: ["Drag evidence to connect the dots! 📌", "Submit theories for 2◆, earn 15● for truth!", "Is the banana patch a lie? 👁️"],
+                zh: ["拖動證據連接線索！📌", "提交理論2◆，揭密獲15●！", "香蕉園是謊言嗎？👁️"],
+                th: ["ลากหลักฐานเชื่อมจุด! 📌", "ส่งทฤษฎี 2◆ ได้ 15● หาความจริง!", "สวนกล้วยเป็นเรื่องโกหกหรือเปล่า? 👁️"]
+            },
+            '/arcade': {
+                en: ["Play mini-games to earn currencies! 🕹️", "Try the slot machine for big wins! 🎰", "Daily bonus available for regular players!"],
+                zh: ["玩小遊戲賺貨幣！🕹️", "試試老虎機贏大獎！🎰", "每日獎勵給常玩玩家！"],
+                th: ["เล่นมินิเกมหาสกุลเงิน! 🕹️", "ลองสล็อตแมชชีนลุ้นรางวัลใหญ่! 🎰", "โบนัสรายวันสำหรับผู้เล่นประจำ!"]
+            },
+            '/wallet': {
+                en: ["Manage all your currencies here! 💰", "Claim daily login rewards for free loot!", "7-day streak gives Sacred Log on day 7! ⧫"],
+                zh: ["在這裡管理所有貨幣！💰", "領取每日登入獎勵免費拿寶！", "7天連續登入第7天送神聖原木！⧫"],
+                th: ["จัดการสกุลเงินทั้งหมดที่นี่! 💰", "รับรางวัลล็อกอินรายวันฟรี!", "ล็อกอิน 7 วันติดได้ Sacred Log วันที่ 7! ⧫"]
+            },
+            '/exchange': {
+                en: ["Trade parody stocks of guild members! 📈", "Buy low, sell high for profits!", "Market trends change daily!"],
+                zh: ["交易公會成員的惡搞股票！📈", "低買高賣賺差價！", "市場趨勢每日變化！"],
+                th: ["ซื้อขายหุ้นล้อเลียนของสมาชิกกิลด์! 📈", "ซื้อถูกขายแพงทำกำไร!", "แนวโน้มตลาดเปลี่ยนทุกวัน!"]
+            },
+            '/confessional': {
+                en: ["Submit anonymous guild confessions! 🎭", "Vote on the juiciest secrets 👀", "Everything is anonymous... maybe 😈"],
+                zh: ["提交匿名公會告解！🎭", "為最勁爆的秘密投票 👀", "一切都是匿名的...也許 😈"],
+                th: ["ส่งคำสารภาพกิลด์แบบไม่ระบุตัวตน! 🎭", "โหวตความลับที่น่าสนใจที่สุด 👀", "ทุกอย่างไม่ระบุตัวตน... อาจจะ 😈"]
+            },
+            '/collection': {
+                en: ["View all your collected cards! 📚", "Star upgrades: use duplicates for +15%/30%/50%/75% stats! ⭐", "Burn unwanted cards for Sacred Logs! 🔥"],
+                zh: ["查看所有收集的卡牌！📚", "星級升級：用重複卡牌獲得 +15%/30%/50%/75% 屬性！⭐", "燃燒不要的卡換神聖原木！🔥"],
+                th: ["ดูการ์ดที่สะสมทั้งหมด! 📚", "อัพเกรดดาว: ใช้การ์ดซ้ำเพิ่ม +15%/30%/50%/75% สถานะ! ⭐", "เผาการ์ดที่ไม่ต้องการรับ Sacred Logs! 🔥"]
             }
         }
     };
 
     // ==================== FALLBACK PAGE DATA ====================
-    // Used when NW_CONFIG is not loaded
     const fallbackPages = {
         home: { path: '/', emoji: '🏠', name: { en: 'Home', zh: '首頁', th: 'หน้าแรก' }, desc: { en: 'Guild headquarters', zh: '公會總部', th: 'สำนักงานใหญ่กิลด์' }, category: 'core' },
+        avatarStudio: { path: '/avatar-studio', emoji: '🎨', name: { en: 'Avatar Studio', zh: '頭像工作室', th: 'สตูดิโออวาตาร์' }, desc: { en: 'Generate AI maple avatars', zh: '生成AI楓之谷頭像', th: 'สร้างอวาตาร์เมเปิ้ล AI' }, category: 'creative' },
         forge: { path: '/forge', emoji: '🎰', name: { en: 'Card Forge', zh: '卡牌鍛造', th: 'โรงหลอมการ์ด' }, desc: { en: 'Open packs and collect cards', zh: '開包收集卡牌', th: 'เปิดแพ็คสะสมการ์ด' }, category: 'core' },
         battle: { path: '/battle', emoji: '⚔️', name: { en: 'Battle', zh: '戰鬥', th: 'ต่อสู้' }, desc: { en: 'Card battles and PvP', zh: '卡牌對戰', th: 'การต่อสู้การ์ด' }, category: 'game' },
-        collection: { path: '/collection', emoji: '📚', name: { en: 'Collection', zh: '收藏', th: 'คอลเลกชัน' }, desc: { en: 'View your cards and achievements', zh: '查看卡牌和成就', th: 'ดูการ์ดและความสำเร็จ' }, category: 'core' },
-        wallet: { path: '/wallet', emoji: '👛', name: { en: 'Wallet', zh: '錢包', th: 'กระเป๋าเงิน' }, desc: { en: 'Manage currencies and account', zh: '管理貨幣和帳戶', th: 'จัดการสกุลเงินและบัญชี' }, category: 'core' },
-        market: { path: '/market', emoji: '🏪', name: { en: 'Card Market', zh: '卡牌市場', th: 'ตลาดการ์ด' }, desc: { en: 'Trade cards with others', zh: '與他人交易卡牌', th: 'ซื้อขายการ์ดกับผู้อื่น' }, category: 'economy' },
-        arcade: { path: '/arcade', emoji: '🕹️', name: { en: 'Arcade', zh: '遊戲廳', th: 'อาร์เคด' }, desc: { en: 'Mini-games to earn currency', zh: '小遊戲賺取貨幣', th: 'มินิเกมหาเงิน' }, category: 'game' },
+        collection: { path: '/collection', emoji: '📚', name: { en: 'Collection', zh: '收藏', th: 'คอลเลกชัน' }, desc: { en: 'View your cards', zh: '查看卡牌', th: 'ดูการ์ด' }, category: 'core' },
+        wallet: { path: '/wallet', emoji: '👛', name: { en: 'Wallet', zh: '錢包', th: 'กระเป๋าเงิน' }, desc: { en: 'Manage currencies', zh: '管理貨幣', th: 'จัดการสกุลเงิน' }, category: 'core' },
+        market: { path: '/market', emoji: '🏪', name: { en: 'Card Market', zh: '卡牌市場', th: 'ตลาดการ์ด' }, desc: { en: 'Trade cards', zh: '交易卡牌', th: 'ซื้อขายการ์ด' }, category: 'economy' },
+        arcade: { path: '/arcade', emoji: '🕹️', name: { en: 'Arcade', zh: '遊戲廳', th: 'อาร์เคด' }, desc: { en: 'Mini-games', zh: '小遊戲', th: 'มินิเกม' }, category: 'game' },
         exchange: { path: '/exchange', emoji: '📈', name: { en: 'Exchange', zh: '交易所', th: 'ตลาดแลกเปลี่ยน' }, desc: { en: 'Trade currencies', zh: '交易貨幣', th: 'แลกเปลี่ยนสกุลเงิน' }, category: 'economy' },
         merch: { path: '/merch', emoji: '🛍️', name: { en: 'Merch Shop', zh: '周邊商店', th: 'ร้านค้า' }, desc: { en: 'Guild merchandise', zh: '公會周邊', th: 'สินค้ากิลด์' }, category: 'economy' },
         court: { path: '/court', emoji: '⚖️', name: { en: 'Guild Court', zh: '公會法院', th: 'ศาลกิลด์' }, desc: { en: 'Sue your guildmates!', zh: '告你的隊友！', th: 'ฟ้องเพื่อนกิลด์!' }, category: 'absurdist' },
-        therapy: { path: '/therapy', emoji: '🛋️', name: { en: 'Guild Therapy', zh: '公會療程', th: 'การบำบัดกิลด์' }, desc: { en: 'AI therapist for gaming trauma', zh: 'AI治療師處理遊戲創傷', th: 'นักบำบัด AI สำหรับบาดแผลเกม' }, category: 'absurdist' },
-        hr: { path: '/hr', emoji: '📋', name: { en: 'HR Department', zh: '人事部', th: 'ฝ่ายบุคคล' }, desc: { en: 'Apply for guild jobs', zh: '申請公會職位', th: 'สมัครงานกิลด์' }, category: 'absurdist' },
-        conspiracy: { path: '/conspiracy', emoji: '👁️', name: { en: 'Conspiracy Board', zh: '陰謀板', th: 'บอร์ดสมคบคิด' }, desc: { en: 'Connect the dots...', zh: '連接線索...', th: 'เชื่อมจุด...' }, category: 'absurdist' },
-        academy: { path: '/academy', emoji: '🏫', name: { en: 'Academy', zh: '學院', th: 'สถาบัน' }, desc: { en: 'Learn coding wizardry', zh: '學習程式魔法', th: 'เรียนเวทมนตร์โค้ด' }, category: 'meta' },
-        museum: { path: '/museum', emoji: '🏛️', name: { en: 'Museum', zh: '博物館', th: 'พิพิธภัณฑ์' }, desc: { en: 'Guild history and artifacts', zh: '公會歷史和文物', th: 'ประวัติและสิ่งประดิษฐ์กิลด์' }, category: 'meta' },
-        vault: { path: '/vault', emoji: '🔒', name: { en: 'Archive Vault', zh: '檔案庫', th: 'ห้องนิรภัย' }, desc: { en: 'Secret archives', zh: '秘密檔案', th: 'เอกสารลับ' }, category: 'meta' },
-        about: { path: '/about', emoji: '📜', name: { en: 'About', zh: '關於', th: 'เกี่ยวกับ' }, desc: { en: 'About NumbahWan', zh: '關於NumbahWan', th: 'เกี่ยวกับ NumbahWan' }, category: 'meta' },
+        therapy: { path: '/therapy', emoji: '🛋️', name: { en: 'Guild Therapy', zh: '公會療程', th: 'การบำบัดกิลด์' }, desc: { en: 'AI therapist', zh: 'AI治療師', th: 'นักบำบัด AI' }, category: 'absurdist' },
+        hr: { path: '/hr', emoji: '📋', name: { en: 'HR Department', zh: '人事部', th: 'ฝ่ายบุคคล' }, desc: { en: 'Apply for jobs', zh: '申請職位', th: 'สมัครงาน' }, category: 'absurdist' },
+        conspiracy: { path: '/conspiracy', emoji: '👁️', name: { en: 'Conspiracy Board', zh: '陰謀板', th: 'บอร์ดสมคบคิด' }, desc: { en: 'Connect the dots', zh: '連接線索', th: 'เชื่อมจุด' }, category: 'absurdist' },
+        confessional: { path: '/confessional', emoji: '🎭', name: { en: 'Confessional', zh: '告解室', th: 'ห้องสารภาพ' }, desc: { en: 'Anonymous confessions', zh: '匿名告解', th: 'คำสารภาพนิรนาม' }, category: 'fun' },
+        academy: { path: '/academy', emoji: '🏫', name: { en: 'Academy', zh: '學院', th: 'สถาบัน' }, desc: { en: 'Training grounds', zh: '訓練場', th: 'สนามฝึก' }, category: 'meta' },
+        museum: { path: '/museum', emoji: '🏛️', name: { en: 'Museum', zh: '博物館', th: 'พิพิธภัณฑ์' }, desc: { en: 'Guild history', zh: '公會歷史', th: 'ประวัติกิลด์' }, category: 'meta' },
         fortune: { path: '/fortune', emoji: '🔮', name: { en: 'Fortune Teller', zh: '算命師', th: 'หมอดู' }, desc: { en: 'Daily fortunes', zh: '每日運勢', th: 'ดวงรายวัน' }, category: 'fun' },
-        deckbuilder: { path: '/deckbuilder', emoji: '🃏', name: { en: 'Deck Builder', zh: '牌組構築', th: 'สร้างสำรับ' }, desc: { en: 'Build your decks', zh: '構築你的牌組', th: 'สร้างสำรับของคุณ' }, category: 'game' },
         updates: { path: '/updates', emoji: '📋', name: { en: 'Patch Notes', zh: '更新日誌', th: 'บันทึกแพทช์' }, desc: { en: 'Latest updates', zh: '最新更新', th: 'อัปเดตล่าสุด' }, category: 'meta' }
     };
 
@@ -134,11 +248,9 @@
         for (const k of keys) {
             result = result?.[k];
         }
-        // Handle both structures: ui.title.en and ui.en.title
         if (result?.[currentLang]) {
             return result[currentLang];
         }
-        // If result is an object with language keys inside (like ui.en.title)
         if (keys.length === 2 && guideI18n[keys[0]]?.[currentLang]?.[keys[1]]) {
             return guideI18n[keys[0]][currentLang][keys[1]];
         }
@@ -153,14 +265,11 @@
         return Array.isArray(arr) ? arr[Math.floor(Math.random() * arr.length)] : arr;
     }
 
-    // Get page info from NW_CONFIG (with fallback)
     function getPageInfo(pageKey) {
-        // Try NW_CONFIG first (Single Source of Truth)
         if (window.NW_CONFIG?.getPage) {
             const page = NW_CONFIG.getPage(pageKey);
             if (page) return page;
         }
-        // Fallback to built-in data
         const fb = fallbackPages[pageKey];
         if (fb) {
             return {
@@ -172,12 +281,10 @@
         return null;
     }
 
-    // Get all pages from NW_CONFIG
     function getAllPages(category = null) {
         if (window.NW_CONFIG?.getAllPages) {
             return NW_CONFIG.getAllPages(category);
         }
-        // Fallback to built-in data
         const pages = Object.entries(fallbackPages).map(([key, page]) => ({
             key,
             ...page,
@@ -190,22 +297,20 @@
         return pages;
     }
 
-    // Get tips for current page
     function getPageTips(path) {
         // Try NW_CONFIG first
         if (window.NW_CONFIG) {
-            const pages = Object.values(NW_CONFIG.pages);
+            const pages = Object.values(NW_CONFIG.pages || {});
             const page = pages.find(p => p.path === path);
             if (page?.tips) {
-                const tips = NW_CONFIG.t(page.tips, currentLang);
+                const tips = NW_CONFIG.t ? NW_CONFIG.t(page.tips, currentLang) : (page.tips[currentLang] || page.tips.en);
                 if (Array.isArray(tips) && tips.length > 0) return tips;
             }
         }
-        // Fallback
+        // Fallback to built-in comprehensive tips
         return guideI18n.fallbackTips[path]?.[currentLang] || guideI18n.fallbackTips['/'][currentLang];
     }
 
-    // Match user input to a page
     function findPageByInput(input) {
         const lower = input.toLowerCase();
         
@@ -231,6 +336,71 @@
         return null;
     }
 
+    // ==================== SMART RECOMMENDATIONS ====================
+    function getSmartRecommendations() {
+        const history = getViewingHistory();
+        const viewCounts = getPageViewCounts();
+        const currentPath = window.location.pathname;
+        
+        // Category-based recommendations
+        const categoryMap = {
+            core: ['forge', 'wallet', 'collection', 'battle'],
+            economy: ['exchange', 'market', 'merch', 'arcade'],
+            absurdist: ['court', 'therapy', 'hr', 'conspiracy'],
+            fun: ['fortune', 'memes', 'confessional'],
+            creative: ['avatarStudio'],
+            meta: ['academy', 'museum', 'updates']
+        };
+        
+        // Find user's preferred categories based on history
+        const categoryScores = {};
+        history.forEach(item => {
+            const pageKey = Object.keys(fallbackPages).find(k => fallbackPages[k].path === item.path);
+            if (pageKey) {
+                const category = fallbackPages[pageKey]?.category;
+                if (category) {
+                    categoryScores[category] = (categoryScores[category] || 0) + 1;
+                }
+            }
+        });
+        
+        // Get top categories
+        const sortedCategories = Object.entries(categoryScores)
+            .sort((a, b) => b[1] - a[1])
+            .map(([cat]) => cat);
+        
+        // Generate recommendations
+        const recommendations = [];
+        const addedPaths = new Set([currentPath]);
+        
+        // First: recommend from favorite categories
+        for (const cat of sortedCategories) {
+            const pagesInCat = categoryMap[cat] || [];
+            for (const pageKey of pagesInCat) {
+                const page = getPageInfo(pageKey);
+                if (page && !addedPaths.has(page.path)) {
+                    recommendations.push(page);
+                    addedPaths.add(page.path);
+                    if (recommendations.length >= 3) break;
+                }
+            }
+            if (recommendations.length >= 3) break;
+        }
+        
+        // Add new features if not seen recently
+        const newFeatures = ['avatarStudio', 'court', 'therapy', 'hr', 'conspiracy'];
+        for (const feat of newFeatures) {
+            if (recommendations.length >= 5) break;
+            const page = getPageInfo(feat);
+            if (page && !addedPaths.has(page.path) && !viewCounts[page.path]) {
+                recommendations.push(page);
+                addedPaths.add(page.path);
+            }
+        }
+        
+        return recommendations;
+    }
+
     // ==================== UI CREATION ====================
     function createChatUI() {
         const style = document.createElement('style');
@@ -252,8 +422,11 @@
                 justify-content: center;
                 transition: all 0.2s ease;
                 overflow: visible;
+                -webkit-tap-highlight-color: transparent;
+                touch-action: manipulation;
+                user-select: none;
             }
-            #nw-guide-toggle:hover {
+            #nw-guide-toggle:hover, #nw-guide-toggle:active {
                 transform: translateY(-2px);
                 border-color: rgba(255, 107, 0, 0.5);
                 box-shadow: 0 6px 28px rgba(0, 0, 0, 0.5), 0 0 20px rgba(255, 107, 0, 0.1);
@@ -396,6 +569,7 @@
             .nw-guide-page-link {
                 display: inline-block;
                 margin-top: 8px;
+                margin-right: 6px;
                 padding: 6px 12px;
                 background: rgba(255, 107, 0, 0.15);
                 border: 1px solid rgba(255, 107, 0, 0.3);
@@ -403,10 +577,13 @@
                 color: #ff9500 !important;
                 font-size: 12px;
                 transition: all 0.2s;
+                -webkit-tap-highlight-color: transparent;
+                touch-action: manipulation;
             }
-            .nw-guide-page-link:hover {
+            .nw-guide-page-link:hover, .nw-guide-page-link:active {
                 background: rgba(255, 107, 0, 0.25);
                 text-decoration: none !important;
+                transform: scale(0.98);
             }
             .nw-guide-page-link.new::after {
                 content: 'NEW';
@@ -426,20 +603,28 @@
                 gap: 8px;
             }
             .nw-guide-chip {
-                padding: 6px 12px;
+                padding: 8px 14px;
                 background: #21262d;
                 border: 1px solid #30363d;
                 border-radius: 16px;
                 color: #8b949e;
                 font-size: 12px;
                 cursor: pointer;
-                transition: all 0.2s;
+                transition: all 0.15s ease;
                 white-space: nowrap;
+                -webkit-tap-highlight-color: transparent;
+                touch-action: manipulation;
+                user-select: none;
+                min-height: 36px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
             }
-            .nw-guide-chip:hover {
+            .nw-guide-chip:hover, .nw-guide-chip:active {
                 background: #30363d;
                 color: #fff;
                 border-color: #ff6b00;
+                transform: scale(0.97);
             }
             .nw-guide-chip.lang-chip {
                 background: rgba(255, 107, 0, 0.1);
@@ -450,6 +635,11 @@
                 background: rgba(0, 255, 136, 0.1);
                 border-color: rgba(0, 255, 136, 0.3);
                 color: #00ff88;
+            }
+            .nw-guide-chip.recommend-chip {
+                background: rgba(99, 102, 241, 0.1);
+                border-color: rgba(99, 102, 241, 0.3);
+                color: #818cf8;
             }
 
             .nw-guide-input-area {
@@ -482,15 +672,18 @@
                 color: #fff;
                 font-size: 14px;
                 cursor: pointer;
-                transition: all 0.2s;
-                touch-action: manipulation;
+                transition: all 0.15s ease;
                 -webkit-tap-highlight-color: transparent;
+                touch-action: manipulation;
                 user-select: none;
-                min-width: 44px;
+                min-width: 48px;
                 min-height: 44px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
             }
             .nw-guide-send:hover, .nw-guide-send:active {
-                transform: scale(1.05);
+                transform: scale(0.97);
                 background: linear-gradient(135deg, #ff8533, #ffaa33);
             }
 
@@ -505,6 +698,15 @@
                     bottom: 110px;
                     left: 16px;
                     max-width: calc(100vw - 32px);
+                }
+                .nw-guide-chip {
+                    padding: 10px 16px;
+                    min-height: 40px;
+                    font-size: 13px;
+                }
+                .nw-guide-send {
+                    min-width: 52px;
+                    min-height: 48px;
                 }
             }
         `;
@@ -540,7 +742,7 @@
     }
 
     function updateChatHTML(chat) {
-        const version = window.NW_CONFIG?.version || '3.0.0';
+        const version = window.NW_CONFIG?.version || '4.0.0';
         chat.innerHTML = `
             <div class="nw-guide-header">
                 <div class="nw-guide-avatar">
@@ -586,8 +788,33 @@
         const container = document.getElementById('nw-guide-suggestions');
         if (!container) return;
         container.innerHTML = suggestions.map(s => 
-            `<div class="nw-guide-chip ${s.isLang ? 'lang-chip' : ''} ${s.isNew ? 'new-chip' : ''}" data-action="${s.action || ''}" data-value="${s.value || ''}">${s.label}</div>`
+            `<div class="nw-guide-chip ${s.isLang ? 'lang-chip' : ''} ${s.isNew ? 'new-chip' : ''} ${s.isRecommend ? 'recommend-chip' : ''}" data-action="${s.action || ''}" data-value="${s.value || ''}">${s.label}</div>`
         ).join('');
+        
+        // Bind touch events for mobile
+        container.querySelectorAll('.nw-guide-chip').forEach(chip => {
+            chip.addEventListener('touchend', handleChipTouch, { passive: false });
+        });
+    }
+    
+    function handleChipTouch(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        const chip = e.target.closest('.nw-guide-chip');
+        if (!chip) return;
+        
+        const action = chip.dataset.action;
+        const value = chip.dataset.value;
+        
+        console.log('[NW_GUIDE] Chip touched:', { action, value });
+        
+        if (action === 'lang') {
+            showLanguageOptions();
+        } else if (action === 'setlang') {
+            setLanguage(value);
+        } else if (value) {
+            processInput(value);
+        }
     }
 
     function showContextualSuggestions() {
@@ -595,6 +822,7 @@
             { label: guideI18n.chips.showPages[currentLang], value: 'show pages' },
             { label: guideI18n.chips.newFeatures[currentLang], value: 'new features', isNew: true },
             { label: guideI18n.chips.tips[currentLang], value: 'tips' },
+            { label: guideI18n.chips.recommend[currentLang], value: 'recommend', isRecommend: true },
             { label: guideI18n.chips.langSwitch[currentLang], action: 'lang', isLang: true }
         ];
         showSuggestions(suggestions);
@@ -618,6 +846,7 @@
     function setLanguage(lang) {
         currentLang = lang;
         localStorage.setItem('nw_lang', lang);
+        localStorage.setItem('lang', lang);
         
         const chat = document.getElementById('nw-guide-chat');
         if (chat) {
@@ -639,6 +868,7 @@
         addMessage(confirmMsg[lang]);
         showContextualSuggestions();
 
+        window.dispatchEvent(new CustomEvent('nw-lang-change', { detail: { lang } }));
         window.dispatchEvent(new CustomEvent('nw-lang-changed', { detail: { lang } }));
     }
 
@@ -650,11 +880,23 @@
         }
         
         const goToText = t('ui.goTo');
-        const isNew = page.category === 'absurdist';
+        const learnMoreText = t('ui.learnMore');
+        const isNew = page.category === 'absurdist' || page.category === 'creative';
         const newClass = isNew ? ' new' : '';
         
-        addMessage(`${page.emoji} <strong>${page.name}</strong><br>${page.desc}<br><br><a href="${page.path}" class="nw-guide-page-link${newClass}">${page.emoji} ${goToText} ${page.name}</a>`);
-        showContextualSuggestions();
+        // Get tips for the page
+        const tips = getPageTips(page.path);
+        const tipText = tips && tips.length > 0 ? `<br><br>💡 <em>${tips[0]}</em>` : '';
+        
+        addMessage(`${page.emoji} <strong>${page.name}</strong><br>${page.desc}${tipText}<br><br><a href="${page.path}" class="nw-guide-page-link${newClass}">${page.emoji} ${goToText} ${page.name}</a>`);
+        
+        // Show related suggestions
+        const relatedSuggestions = [
+            { label: `💡 ${learnMoreText}`, value: `tips ${page.path}` },
+            { label: guideI18n.chips.showPages[currentLang], value: 'show pages' },
+            { label: guideI18n.chips.recommend[currentLang], value: 'recommend', isRecommend: true }
+        ];
+        showSuggestions(relatedSuggestions);
     }
 
     function respondWithPageList() {
@@ -664,23 +906,13 @@
             return;
         }
         
-        // Group by category
-        const categories = {
-            core: { emoji: '🏠', name: { en: 'Core', zh: '核心', th: 'หลัก' } },
-            economy: { emoji: '💰', name: { en: 'Economy', zh: '經濟', th: 'เศรษฐกิจ' } },
-            game: { emoji: '🎮', name: { en: 'Games', zh: '遊戲', th: 'เกม' } },
-            fun: { emoji: '🎉', name: { en: 'Fun', zh: '趣味', th: 'สนุก' } },
-            absurdist: { emoji: '🤪', name: { en: 'NEW! Absurdist', zh: '新！荒誕', th: 'ใหม่! ไร้สาระ' } },
-            meta: { emoji: '📋', name: { en: 'Info', zh: '資訊', th: 'ข้อมูล' } }
-        };
-        
-        // Featured pages
-        const featured = ['exchange', 'forge', 'arcade', 'court', 'therapy', 'hr', 'conspiracy'];
+        // Featured pages including Avatar Studio
+        const featured = ['avatarStudio', 'exchange', 'forge', 'arcade', 'court', 'therapy', 'hr', 'conspiracy'];
         const list = featured
             .map(key => {
                 const p = getPageInfo(key);
                 if (!p) return '';
-                const isNew = p.category === 'absurdist';
+                const isNew = p.category === 'absurdist' || p.category === 'creative';
                 return `<a href="${p.path}" class="nw-guide-page-link${isNew ? ' new' : ''}">${p.emoji} ${p.name}</a>`;
             })
             .filter(Boolean)
@@ -712,22 +944,66 @@
             msg += `<br><a href="/updates" class="nw-guide-page-link">📋 ${currentLang === 'zh' ? '完整更新日誌' : currentLang === 'th' ? 'บันทึกแพทช์ทั้งหมด' : 'Full Patch Notes'}</a>`;
             addMessage(msg);
         } else {
-            // Fallback: show absurdist pages as "new features"
+            // Fallback: show new features
             const newFeatures = {
-                en: '🆕 <strong>Latest Features</strong><br><br>⚖️ <strong>Guild Court</strong> - Sue your guildmates! <a href="/court" class="nw-guide-page-link new">/court</a><br>🛋️ <strong>Guild Therapy</strong> - AI therapist <a href="/therapy" class="nw-guide-page-link new">/therapy</a><br>📋 <strong>HR Department</strong> - Apply for jobs <a href="/hr" class="nw-guide-page-link new">/hr</a><br>👁️ <strong>Conspiracy Board</strong> - Connect the dots <a href="/conspiracy" class="nw-guide-page-link new">/conspiracy</a><br>⭐ <strong>Card Upgrades</strong> - Star levels & burn system <a href="/collection" class="nw-guide-page-link new">/collection</a>',
-                zh: '🆕 <strong>最新功能</strong><br><br>⚖️ <strong>公會法院</strong> - 告你的隊友！ <a href="/court" class="nw-guide-page-link new">/court</a><br>🛋️ <strong>公會療程</strong> - AI治療師 <a href="/therapy" class="nw-guide-page-link new">/therapy</a><br>📋 <strong>人事部</strong> - 申請職位 <a href="/hr" class="nw-guide-page-link new">/hr</a><br>👁️ <strong>陰謀板</strong> - 連接線索 <a href="/conspiracy" class="nw-guide-page-link new">/conspiracy</a><br>⭐ <strong>卡牌升級</strong> - 星級和燃燒系統 <a href="/collection" class="nw-guide-page-link new">/collection</a>',
-                th: '🆕 <strong>ฟีเจอร์ใหม่</strong><br><br>⚖️ <strong>ศาลกิลด์</strong> - ฟ้องเพื่อนกิลด์! <a href="/court" class="nw-guide-page-link new">/court</a><br>🛋️ <strong>การบำบัดกิลด์</strong> - นักบำบัด AI <a href="/therapy" class="nw-guide-page-link new">/therapy</a><br>📋 <strong>ฝ่ายบุคคล</strong> - สมัครงาน <a href="/hr" class="nw-guide-page-link new">/hr</a><br>👁️ <strong>บอร์ดสมคบคิด</strong> - เชื่อมจุด <a href="/conspiracy" class="nw-guide-page-link new">/conspiracy</a><br>⭐ <strong>อัปเกรดการ์ด</strong> - ระบบดาวและเบิร์น <a href="/collection" class="nw-guide-page-link new">/collection</a>'
+                en: '🆕 <strong>Latest Features</strong><br><br>🎨 <strong>Avatar Studio</strong> - Generate AI maple avatars! <a href="/avatar-studio" class="nw-guide-page-link new">/avatar-studio</a><br>⚖️ <strong>Guild Court</strong> - Sue your guildmates! <a href="/court" class="nw-guide-page-link new">/court</a><br>🛋️ <strong>Guild Therapy</strong> - AI therapist <a href="/therapy" class="nw-guide-page-link new">/therapy</a><br>📋 <strong>HR Department</strong> - Apply for jobs <a href="/hr" class="nw-guide-page-link new">/hr</a><br>👁️ <strong>Conspiracy Board</strong> - Connect the dots <a href="/conspiracy" class="nw-guide-page-link new">/conspiracy</a>',
+                zh: '🆕 <strong>最新功能</strong><br><br>🎨 <strong>頭像工作室</strong> - 生成AI楓之谷頭像！ <a href="/avatar-studio" class="nw-guide-page-link new">/avatar-studio</a><br>⚖️ <strong>公會法院</strong> - 告你的隊友！ <a href="/court" class="nw-guide-page-link new">/court</a><br>🛋️ <strong>公會療程</strong> - AI治療師 <a href="/therapy" class="nw-guide-page-link new">/therapy</a><br>📋 <strong>人事部</strong> - 申請職位 <a href="/hr" class="nw-guide-page-link new">/hr</a><br>👁️ <strong>陰謀板</strong> - 連接線索 <a href="/conspiracy" class="nw-guide-page-link new">/conspiracy</a>',
+                th: '🆕 <strong>ฟีเจอร์ใหม่</strong><br><br>🎨 <strong>Avatar Studio</strong> - สร้างอวาตาร์เมเปิ้ล AI! <a href="/avatar-studio" class="nw-guide-page-link new">/avatar-studio</a><br>⚖️ <strong>ศาลกิลด์</strong> - ฟ้องเพื่อนกิลด์! <a href="/court" class="nw-guide-page-link new">/court</a><br>🛋️ <strong>การบำบัดกิลด์</strong> - นักบำบัด AI <a href="/therapy" class="nw-guide-page-link new">/therapy</a><br>📋 <strong>ฝ่ายบุคคล</strong> - สมัครงาน <a href="/hr" class="nw-guide-page-link new">/hr</a><br>👁️ <strong>บอร์ดสมคบคิด</strong> - เชื่อมจุด <a href="/conspiracy" class="nw-guide-page-link new">/conspiracy</a>'
             };
             addMessage(newFeatures[currentLang] || newFeatures.en);
         }
         showContextualSuggestions();
     }
 
-    function respondWithTips() {
-        const path = window.location.pathname;
+    function respondWithTips(specificPath = null) {
+        const path = specificPath || window.location.pathname;
         const tips = getPageTips(path);
-        const tip = tips[Math.floor(Math.random() * tips.length)];
-        addMessage(`💡 ${tip}`);
+        
+        // Show all tips for the page
+        let msg = `💡 <strong>${currentLang === 'zh' ? '提示' : currentLang === 'th' ? 'เคล็ดลับ' : 'Tips'}</strong> for this page:<br><br>`;
+        tips.forEach((tip, i) => {
+            msg += `${i + 1}. ${tip}<br>`;
+        });
+        
+        addMessage(msg);
+        showContextualSuggestions();
+    }
+
+    function respondWithRecommendations() {
+        const recommendations = getSmartRecommendations();
+        const headerText = {
+            en: "🎯 Based on your interests:",
+            zh: "🎯 根據你的興趣：",
+            th: "🎯 ตามความสนใจของคุณ:"
+        };
+        
+        if (recommendations.length === 0) {
+            // No history, show popular pages
+            const popularText = {
+                en: "🔥 Try these popular pages:",
+                zh: "🔥 試試這些熱門頁面：",
+                th: "🔥 ลองหน้ายอดนิยมเหล่านี้:"
+            };
+            const popular = ['avatarStudio', 'forge', 'court', 'arcade'];
+            const list = popular
+                .map(key => {
+                    const p = getPageInfo(key);
+                    if (!p) return '';
+                    return `<a href="${p.path}" class="nw-guide-page-link">${p.emoji} ${p.name}</a>`;
+                })
+                .filter(Boolean)
+                .join(' ');
+            addMessage(`${popularText[currentLang]}<br><br>${list}`);
+        } else {
+            const list = recommendations
+                .map(p => {
+                    const isNew = p.category === 'absurdist' || p.category === 'creative';
+                    return `<a href="${p.path}" class="nw-guide-page-link${isNew ? ' new' : ''}">${p.emoji} ${p.name}</a>`;
+                })
+                .join(' ');
+            addMessage(`${headerText[currentLang]}<br><br>${list}`);
+        }
+        
         showContextualSuggestions();
     }
 
@@ -740,9 +1016,21 @@
     function processInput(input) {
         const lower = input.toLowerCase().trim();
         
-        addMessage(input, false);
+        // Don't echo if it's a chip action
+        if (!lower.startsWith('tips ')) {
+            addMessage(input, false);
+        }
 
         setTimeout(() => {
+            // Check for specific tips request
+            if (lower.startsWith('tips ') || lower.startsWith('提示 ') || lower.startsWith('เคล็ดลับ ')) {
+                const pathMatch = lower.match(/tips\s+(\S+)/i) || lower.match(/提示\s+(\S+)/) || lower.match(/เคล็ดลับ\s+(\S+)/);
+                if (pathMatch) {
+                    respondWithTips(pathMatch[1]);
+                    return;
+                }
+            }
+            
             // Try to match a page from NW_CONFIG
             const pageKey = findPageByInput(input);
             if (pageKey) {
@@ -761,6 +1049,11 @@
                      lower.includes('ใหม่') || lower.includes('อัปเดต')) {
                 respondWithNewFeatures();
             }
+            else if (lower.includes('recommend') || lower.includes('suggest') || lower.includes('for me') ||
+                     lower.includes('推薦') || lower.includes('建議') ||
+                     lower.includes('แนะนำ') || lower.includes('สำหรับฉัน')) {
+                respondWithRecommendations();
+            }
             else if (lower.includes('help') || lower === '?' ||
                      lower.includes('幫助') || lower.includes('ช่วย')) {
                 respondWithHelp();
@@ -771,8 +1064,9 @@
                 addMessage(tRandom('jokes'));
                 showContextualSuggestions();
             }
-            else if (lower.includes('tip') || lower.includes('hint') ||
-                     lower.includes('提示') || lower.includes('เคล็ดลับ')) {
+            else if (lower === 'tips' || lower.includes('tip') || lower.includes('hint') || lower.includes('learn more') ||
+                     lower.includes('提示') || lower.includes('了解更多') ||
+                     lower.includes('เคล็ดลับ') || lower.includes('เรียนรู้เพิ่มเติม')) {
                 respondWithTips();
             }
             else if (lower.includes('language') || lower.includes('lang') || lower === '🌐' ||
@@ -788,7 +1082,7 @@
                 showSuggestions([
                     { label: guideI18n.chips.showPages[currentLang], value: 'show all pages' },
                     { label: guideI18n.chips.newFeatures[currentLang], value: 'new features', isNew: true },
-                    { label: guideI18n.chips.joke[currentLang], value: 'joke' }
+                    { label: guideI18n.chips.recommend[currentLang], value: 'recommend', isRecommend: true }
                 ]);
             }
         }, 300);
@@ -827,17 +1121,18 @@
         const freshInput = document.getElementById('nw-guide-input');
         
         if (freshBtn) {
-            // Use both click and touchend for mobile compatibility
+            // Click for desktop
             freshBtn.addEventListener('click', (e) => {
                 e.preventDefault();
                 e.stopPropagation();
                 sendMessage();
             });
+            // Touch for mobile - use touchend with passive: false
             freshBtn.addEventListener('touchend', (e) => {
                 e.preventDefault();
                 e.stopPropagation();
                 sendMessage();
-            });
+            }, { passive: false });
         }
         
         if (freshInput) {
@@ -847,7 +1142,6 @@
                     sendMessage();
                 }
             });
-            // Also handle keydown for mobile keyboards
             freshInput.addEventListener('keydown', (e) => {
                 if (e.key === 'Enter' || e.keyCode === 13) {
                     e.preventDefault();
@@ -861,10 +1155,26 @@
 
     // ==================== INITIALIZATION ====================
     function init() {
+        // Track current page view
+        trackPageView(window.location.pathname);
+        
         const { toggle, chat } = createChatUI();
         let isOpen = false;
 
-        toggle.addEventListener('click', () => {
+        // Toggle click for desktop
+        toggle.addEventListener('click', (e) => {
+            e.preventDefault();
+            toggleChat();
+        });
+        
+        // Toggle touch for mobile
+        toggle.addEventListener('touchend', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            toggleChat();
+        }, { passive: false });
+        
+        function toggleChat() {
             isOpen = !isOpen;
             chat.classList.toggle('open', isOpen);
             toggle.classList.toggle('open', isOpen);
@@ -880,17 +1190,32 @@
             }
             
             if (typeof NW_SOUNDS !== 'undefined') NW_SOUNDS.play('click');
-        });
+        }
 
         bindInputEvents();
 
-        // Chip clicks
-        document.getElementById('nw-guide-suggestions').addEventListener('click', (e) => {
+        // Chip clicks - use event delegation on the suggestions container
+        const suggestionsContainer = document.getElementById('nw-guide-suggestions');
+        if (suggestionsContainer) {
+            // Click for desktop
+            suggestionsContainer.addEventListener('click', (e) => {
+                handleChipClick(e);
+            });
+            // Touch for mobile
+            suggestionsContainer.addEventListener('touchend', (e) => {
+                e.preventDefault();
+                handleChipClick(e);
+            }, { passive: false });
+        }
+        
+        function handleChipClick(e) {
             const chip = e.target.closest('.nw-guide-chip');
             if (!chip) return;
             
             const action = chip.dataset.action;
             const value = chip.dataset.value;
+            
+            console.log('[NW_GUIDE] Chip activated:', { action, value });
             
             if (action === 'lang') {
                 showLanguageOptions();
@@ -899,7 +1224,7 @@
             } else if (value) {
                 processInput(value);
             }
-        });
+        }
 
         // Close on outside click
         document.addEventListener('click', (e) => {
@@ -912,12 +1237,12 @@
 
         // Listen for language changes from other components
         window.addEventListener('storage', (e) => {
-            if (e.key === 'nw_lang' && e.newValue !== currentLang) {
+            if ((e.key === 'nw_lang' || e.key === 'lang') && e.newValue !== currentLang) {
                 currentLang = e.newValue || 'en';
                 const chatEl = document.getElementById('nw-guide-chat');
                 if (chatEl) {
                     updateChatHTML(chatEl);
-                    bindInputEvents(); // Re-bind after HTML update
+                    bindInputEvents();
                 }
             }
         });
@@ -925,6 +1250,11 @@
         // Listen for config updates
         window.addEventListener('nw-config-update', () => {
             console.log('[NW_GUIDE] Config updated, refreshing data...');
+        });
+        
+        // Track page views on navigation
+        window.addEventListener('popstate', () => {
+            trackPageView(window.location.pathname);
         });
     }
 
@@ -949,12 +1279,12 @@
             const chat = document.getElementById('nw-guide-chat');
             if (chat) {
                 updateChatHTML(chat);
-                bindInputEvents(); // Re-bind after HTML update
+                bindInputEvents();
             }
             console.log('[NW_GUIDE] Language updated to:', newLang);
         }
     });
 
-    console.log('%c[NW_GUIDE] v3.3 - Fixed mobile touch events for send button!', 
+    console.log('%c[NW_GUIDE] v4.0 - Smart recommendations & comprehensive tips! Mobile touch fixed!', 
         'background: #1a1a2e; color: #ff6b00; font-size: 12px; padding: 4px 8px; border-radius: 4px;');
 })();
