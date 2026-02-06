@@ -1754,13 +1754,18 @@ function setup() {
         };
     });
     
-    $$('.lang button').forEach(btn => {
-        btn.onclick = () => {
-            $$('.lang button').forEach(b => b.classList.remove('on'));
-            btn.classList.add('on');
-            lang = btn.dataset.l;
-            updateUILanguage();
-        };
+    // Listen for NW_NAV language changes
+    ['nw-lang-change', 'languageChanged'].forEach(evtName => {
+        document.addEventListener(evtName, (e) => {
+            const newLang = e.detail?.lang;
+            if (newLang && newLang !== lang) {
+                lang = newLang;
+                localStorage.setItem('nw_lang', lang);
+                updateUILanguage();
+                render(); // Re-render cards with new language
+                console.log(`[Cards] Language changed to: ${lang}`);
+            }
+        });
     });
     
     $('#close').onclick = closeModal;
@@ -1894,12 +1899,16 @@ function openCenteredCard() {
 
 // Update all UI text based on current language
 function updateUILanguage() {
-    // Sync lang with NW_NAV if available
-    if (typeof NW_NAV !== 'undefined' && NW_NAV.currentLang) {
+    // Sync lang with NW_NAV or NW_I18N if available
+    if (typeof NW_I18N !== 'undefined' && NW_I18N.lang) {
+        lang = NW_I18N.lang;
+    } else if (typeof NW_NAV !== 'undefined' && NW_NAV.currentLang) {
         lang = NW_NAV.currentLang;
     } else {
         lang = localStorage.getItem('nw_lang') || 'en';
     }
+    
+    console.log(`[Cards] Updating UI for language: ${lang}`);
     
     $('#hint').textContent = i18n[lang].hint;
     $('#ltType').textContent = i18n[lang].type;
