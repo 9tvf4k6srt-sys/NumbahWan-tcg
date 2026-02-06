@@ -2,352 +2,762 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>The Conspiracy Board | NumbahWan Lore</title>
     <link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Inter:wght@300;400;500;600;700&family=Special+Elite&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" rel="stylesheet">
     <link href="/static/nw-utilities.css" rel="stylesheet">
-    <link href="/static/nw-tokens.css" rel="stylesheet">
-    <script src="/static/nw-currency.js"></script>
-    <script src="/static/nw-wallet.js"></script>
     <style>
-        :root { --nw-red: #dc2626; --nw-cyan: #06b6d4; --nw-dark: #0a0a0a; --cork: #c4956a; }
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { font-family: 'Inter', sans-serif; background: var(--nw-dark); color: #e5e5e5; line-height: 1.7; overflow-x: hidden; }
+        :root {
+            --nw-red: #ef4444;
+            --nw-yellow: #eab308;
+            --nw-cream: #fef3c7;
+            --nw-dark: #0a0a0a;
+            --cork: #c4a35a;
+        }
         
-        .hero { position: relative; height: 100vh; min-height: 700px; display: flex; align-items: center; justify-content: center; overflow: hidden; }
-        .hero-bg { position: absolute; inset: -100px; background: radial-gradient(ellipse at 50% 70%, rgba(220,38,38,0.2) 0%, transparent 50%), linear-gradient(180deg, transparent 0%, var(--nw-dark) 100%), url('/static/lore/conspiracy-board-hero.webp'); background-size: cover; background-position: center; animation: heroGlitch 10s ease-in-out infinite; }
-        @keyframes heroGlitch { 0%, 100% { transform: scale(1.05); filter: hue-rotate(0deg); } 50% { transform: scale(1.08); filter: hue-rotate(10deg); } 95%, 97% { transform: scale(1.05) translateX(-2px); } 96%, 98% { transform: scale(1.05) translateX(2px); } }
-        .hero-content { position: relative; z-index: 10; text-align: center; padding: 2rem; max-width: 900px; }
-        .hero-badge { display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.5rem 1.5rem; background: linear-gradient(90deg, var(--nw-red), #991b1b); border-radius: 999px; font-size: 0.75rem; font-weight: 700; letter-spacing: 0.2em; text-transform: uppercase; margin-bottom: 2rem; animation: pulse 2s infinite; }
-        @keyframes pulse { 0%, 100% { box-shadow: 0 0 0 0 rgba(220,38,38,0.5); } 50% { box-shadow: 0 0 20px 10px rgba(220,38,38,0); } }
-        .hero-title { font-family: 'Special Elite', cursive; font-size: clamp(2.5rem, 10vw, 5rem); font-weight: 400; line-height: 1; margin-bottom: 1rem; color: #fff; text-shadow: 2px 2px 0 var(--nw-red), -2px -2px 0 var(--nw-cyan); }
-        .hero-subtitle { font-family: 'Special Elite', cursive; font-size: clamp(1rem, 3vw, 1.5rem); color: rgba(255,255,255,0.7); margin-bottom: 3rem; }
-        .hero-scroll { position: absolute; bottom: 3rem; left: 50%; transform: translateX(-50%); color: rgba(255,255,255,0.5); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.2em; animation: bounce 2s infinite; }
-        @keyframes bounce { 0%, 100% { transform: translateX(-50%) translateY(0); } 50% { transform: translateX(-50%) translateY(10px); } }
+        * { box-sizing: border-box; }
         
-        .lore-nav { position: fixed; top: 0; left: 0; right: 0; height: 60px; background: rgba(10,10,10,0.95); backdrop-filter: blur(20px); border-bottom: 1px solid rgba(220,38,38,0.3); display: flex; align-items: center; justify-content: space-between; padding: 0 1.5rem; z-index: 1000; transform: translateY(-100%); transition: transform 0.3s ease; }
-        .lore-nav.visible { transform: translateY(0); }
-        .nav-back { display: flex; align-items: center; gap: 0.5rem; color: white; text-decoration: none; font-size: 0.875rem; padding: 0.5rem 1rem; background: rgba(255,255,255,0.1); border-radius: 0.5rem; transition: all 0.3s; }
-        .nav-back:hover { background: rgba(220,38,38,0.2); }
-        .nav-title { font-family: 'Special Elite', cursive; font-weight: 400; color: var(--nw-red); }
-        .nav-progress { width: 100px; height: 4px; background: rgba(255,255,255,0.1); border-radius: 2px; overflow: hidden; }
-        .nav-progress-bar { height: 100%; background: linear-gradient(90deg, var(--nw-red), var(--nw-cyan)); width: 0%; transition: width 0.1s linear; }
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--nw-dark);
+            color: white;
+            margin: 0;
+            min-height: 100vh;
+        }
         
-        .board-container { max-width: 1200px; margin: 0 auto; padding: 4rem 2rem; }
+        /* Cork Board Background */
+        .cork-bg {
+            position: fixed;
+            inset: 0;
+            background: 
+                linear-gradient(135deg, rgba(196,163,90,0.1) 0%, transparent 50%),
+                var(--nw-dark);
+            z-index: -1;
+        }
         
-        .cork-board { position: relative; background: linear-gradient(135deg, var(--cork), #a67c52); border: 12px solid #5c3d2e; border-radius: 0.5rem; padding: 3rem; min-height: 80vh; box-shadow: inset 0 0 50px rgba(0,0,0,0.3), 0 20px 60px rgba(0,0,0,0.5); }
+        .cork-bg::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background-image: url("data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Ccircle cx='20' cy='20' r='2' fill='%23ef4444' opacity='0.1'/%3E%3C/svg%3E");
+        }
         
-        .string-line { position: absolute; background: var(--nw-red); height: 2px; transform-origin: left center; pointer-events: none; z-index: 1; }
+        /* Hero */
+        .dive-hero {
+            position: relative;
+            min-height: 70vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
         
-        .evidence { position: absolute; background: white; padding: 0.75rem; box-shadow: 3px 3px 10px rgba(0,0,0,0.3); cursor: grab; transition: transform 0.2s, z-index 0s; z-index: 10; }
-        .evidence:hover { transform: scale(1.05) rotate(-2deg); z-index: 100; }
-        .evidence.dragging { cursor: grabbing; transform: scale(1.1); z-index: 1000; }
-        .evidence img { max-width: 150px; max-height: 150px; object-fit: cover; }
-        .evidence-text { position: absolute; background: #ffffc0; padding: 1rem; font-family: 'Special Elite', cursive; font-size: 0.875rem; color: #333; box-shadow: 3px 3px 10px rgba(0,0,0,0.2); transform: rotate(var(--rotate, 0deg)); cursor: grab; z-index: 10; max-width: 200px; }
-        .evidence-text:hover { z-index: 100; }
+        .dive-hero-image {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, #3d2914 0%, #1a1108 50%, #0a0a0a 100%);
+        }
         
-        .pin { position: absolute; top: -8px; left: 50%; transform: translateX(-50%); width: 16px; height: 16px; background: radial-gradient(circle at 30% 30%, #ff6b6b, var(--nw-red)); border-radius: 50%; box-shadow: 0 2px 4px rgba(0,0,0,0.3); }
+        .dive-hero-overlay {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(to bottom, rgba(10,10,10,0.3) 0%, rgba(10,10,10,1) 100%);
+        }
         
-        .question-mark { position: absolute; font-family: 'Orbitron', sans-serif; font-size: 4rem; font-weight: 900; color: var(--nw-red); opacity: 0.3; pointer-events: none; }
+        .dive-hero-content {
+            position: relative;
+            z-index: 10;
+            text-align: center;
+            padding: 2rem;
+        }
         
-        .theory-card { background: rgba(10,10,10,0.95); border: 2px solid rgba(220,38,38,0.3); border-radius: 1rem; padding: 2rem; margin: 2rem 0; }
-        .theory-card h3 { font-family: 'Special Elite', cursive; font-size: 1.5rem; color: var(--nw-red); margin-bottom: 1rem; }
-        .theory-card p { color: rgba(255,255,255,0.8); margin-bottom: 1rem; }
-        .theory-status { display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.25rem 0.75rem; border-radius: 0.25rem; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; }
-        .theory-status.confirmed { background: rgba(34,197,94,0.2); color: #22c55a; }
-        .theory-status.debunked { background: rgba(239,68,68,0.2); color: #ef4444; }
-        .theory-status.investigating { background: rgba(234,179,8,0.2); color: #eab308; }
-        .theory-status.classified { background: rgba(107,33,168,0.2); color: #a855f7; }
+        .pin-emoji {
+            font-size: 5rem;
+            margin-bottom: 1rem;
+            animation: wobble 3s ease-in-out infinite;
+        }
         
-        .secret-box { position: relative; margin: 3rem 0; padding: 2rem; background: rgba(220,38,38,0.1); border: 1px dashed rgba(220,38,38,0.3); border-radius: 1rem; cursor: pointer; overflow: hidden; transition: all 0.3s; }
-        .secret-box::before { content: ''; position: absolute; inset: 0; background: linear-gradient(135deg, rgba(10,10,10,0.95), rgba(10,10,10,0.9)); transition: opacity 0.5s; z-index: 1; }
-        .secret-box.revealed::before { opacity: 0; pointer-events: none; }
-        .secret-prompt { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.5rem; z-index: 2; transition: opacity 0.5s; }
-        .secret-box.revealed .secret-prompt { opacity: 0; pointer-events: none; }
-        .secret-prompt i { font-size: 2rem; color: var(--nw-red); }
-        .secret-prompt span { font-size: 0.875rem; color: rgba(255,255,255,0.6); }
-        .secret-content { position: relative; z-index: 0; }
-        .secret-badge { display: inline-flex; align-items: center; gap: 0.375rem; padding: 0.25rem 0.75rem; background: linear-gradient(90deg, #991b1b, var(--nw-red)); border-radius: 0.25rem; font-size: 0.625rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 1rem; }
+        @keyframes wobble {
+            0%, 100% { transform: rotate(-3deg); }
+            50% { transform: rotate(3deg); }
+        }
         
-        .next-chapter { margin: 6rem auto; max-width: 600px; text-align: center; padding: 3rem; background: linear-gradient(135deg, rgba(220,38,38,0.2), rgba(6,182,212,0.1)); border: 1px solid rgba(220,38,38,0.3); border-radius: 1.5rem; }
-        .next-chapter h3 { font-family: 'Special Elite', cursive; font-size: 1.5rem; margin-bottom: 1rem; }
-        .next-chapter p { color: rgba(255,255,255,0.6); margin-bottom: 2rem; }
-        .next-chapter-btn { display: inline-flex; align-items: center; gap: 0.75rem; padding: 1rem 2rem; background: linear-gradient(90deg, #991b1b, var(--nw-red)); border: none; border-radius: 0.75rem; color: white; font-weight: 600; font-size: 1rem; text-decoration: none; transition: all 0.3s; }
-        .next-chapter-btn:hover { transform: translateY(-4px); box-shadow: 0 10px 30px rgba(220,38,38,0.4); }
+        .dive-category {
+            display: inline-block;
+            padding: 0.5rem 1.5rem;
+            background: linear-gradient(135deg, var(--nw-red), #dc2626);
+            border-radius: 999px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            margin-bottom: 1.5rem;
+        }
         
-        .secrets-counter { position: fixed; bottom: 2rem; left: 2rem; display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem 1.25rem; background: rgba(10,10,10,0.9); backdrop-filter: blur(10px); border: 1px solid rgba(220,38,38,0.3); border-radius: 2rem; font-size: 0.875rem; z-index: 100; transform: translateX(-200%); transition: transform 0.3s; }
-        .secrets-counter.visible { transform: translateX(0); }
-        .secrets-counter i { color: var(--nw-red); }
-        .secrets-counter .count { font-family: 'Orbitron', sans-serif; font-weight: 700; color: var(--nw-red); }
+        .dive-title {
+            font-family: 'Special Elite', monospace;
+            font-size: clamp(2rem, 7vw, 4rem);
+            font-weight: 400;
+            margin: 0 0 1rem;
+            color: var(--nw-cream);
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+        }
+        
+        .dive-subtitle {
+            font-family: 'Special Elite', monospace;
+            font-size: 1.25rem;
+            color: rgba(255,255,255,0.6);
+            margin: 0 0 2rem;
+        }
+        
+        /* Content */
+        .dive-content {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 0 1.5rem 6rem;
+        }
+        
+        .dive-section {
+            margin-bottom: 4rem;
+        }
+        
+        .dive-section-title {
+            font-family: 'Special Elite', monospace;
+            font-size: 1.75rem;
+            margin-bottom: 1.5rem;
+            padding-bottom: 0.75rem;
+            border-bottom: 2px solid var(--nw-red);
+            color: var(--nw-cream);
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+        
+        .dive-text {
+            font-size: 1.125rem;
+            line-height: 1.9;
+            color: rgba(255,255,255,0.85);
+            margin-bottom: 1.5rem;
+        }
+        
+        /* Conspiracy Note */
+        .conspiracy-note {
+            position: relative;
+            background: var(--nw-cream);
+            color: #1a1a1a;
+            padding: 1.5rem;
+            margin: 1.5rem 0;
+            font-family: 'Special Elite', monospace;
+            transform: rotate(-1deg);
+            box-shadow: 4px 4px 10px rgba(0,0,0,0.3);
+        }
+        
+        .conspiracy-note::before {
+            content: '📌';
+            position: absolute;
+            top: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 1.5rem;
+        }
+        
+        .conspiracy-note.rotated-right {
+            transform: rotate(1deg);
+        }
+        
+        .conspiracy-note.rotated-more {
+            transform: rotate(-2deg);
+        }
+        
+        .note-title {
+            font-weight: 700;
+            font-size: 1.125rem;
+            margin-bottom: 0.5rem;
+            color: var(--nw-red);
+            text-transform: uppercase;
+        }
+        
+        .note-content {
+            font-size: 0.9375rem;
+            line-height: 1.6;
+        }
+        
+        .redacted {
+            background: #1a1a1a;
+            color: #1a1a1a;
+            padding: 0 0.25rem;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .redacted:hover, .redacted.revealed {
+            background: transparent;
+            color: var(--nw-red);
+        }
+        
+        /* String Connection */
+        .string-connection {
+            border-left: 3px dashed var(--nw-red);
+            padding-left: 2rem;
+            margin: 2rem 0 2rem 1rem;
+            position: relative;
+        }
+        
+        .string-connection::before {
+            content: '🧵';
+            position: absolute;
+            left: -1rem;
+            top: 0;
+        }
+        
+        /* Evidence Grid */
+        .evidence-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin: 2rem 0;
+        }
+        
+        .evidence-card {
+            background: rgba(254,243,199,0.05);
+            border: 1px solid rgba(254,243,199,0.2);
+            border-radius: 0.5rem;
+            padding: 1.25rem;
+            transition: all 0.3s;
+        }
+        
+        .evidence-card:hover {
+            border-color: var(--nw-red);
+            transform: translateY(-2px);
+        }
+        
+        .evidence-label {
+            font-family: 'Special Elite', monospace;
+            font-size: 0.75rem;
+            color: var(--nw-red);
+            text-transform: uppercase;
+            margin-bottom: 0.5rem;
+        }
+        
+        .evidence-title {
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: var(--nw-cream);
+        }
+        
+        .evidence-desc {
+            font-size: 0.875rem;
+            color: rgba(255,255,255,0.7);
+        }
+        
+        /* Theory Rating */
+        .theory-rating {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-top: 1rem;
+            font-size: 0.875rem;
+            color: rgba(255,255,255,0.6);
+        }
+        
+        .rating-stars {
+            color: var(--nw-yellow);
+        }
+        
+        /* Warning Box */
+        .warning-box {
+            background: linear-gradient(135deg, rgba(239,68,68,0.1), rgba(0,0,0,0.3));
+            border: 2px solid var(--nw-red);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin: 2rem 0;
+            text-align: center;
+        }
+        
+        .warning-box-title {
+            font-family: 'Special Elite', monospace;
+            font-size: 1.25rem;
+            color: var(--nw-red);
+            margin-bottom: 0.5rem;
+        }
+        
+        /* Secret Box */
+        .secret-box {
+            background: linear-gradient(135deg, rgba(239,68,68,0.1), rgba(0,0,0,0.3));
+            border: 1px dashed rgba(239,68,68,0.4);
+            border-radius: 1rem;
+            padding: 1.5rem;
+            margin: 2rem 0;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .secret-box:hover {
+            border-color: var(--nw-red);
+        }
+        
+        .secret-box-header {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            font-family: 'Special Elite', monospace;
+            font-weight: 700;
+            color: var(--nw-red);
+        }
+        
+        .secret-box-content {
+            display: none;
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 1px solid rgba(239,68,68,0.2);
+        }
+        
+        .secret-box.revealed .secret-box-content { display: block; }
+        
+        /* Related */
+        .related-dives {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
+            margin-top: 3rem;
+        }
+        
+        .related-dive-card {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 1rem;
+            padding: 1.5rem;
+            text-decoration: none;
+            color: inherit;
+            transition: all 0.3s;
+        }
+        
+        .related-dive-card:hover {
+            border-color: var(--nw-red);
+            transform: translateY(-4px);
+        }
+        
+        .related-dive-card h4 {
+            font-family: 'Special Elite', monospace;
+            font-size: 1rem;
+            margin: 0 0 0.5rem;
+            color: var(--nw-cream);
+        }
+        
+        .related-dive-card p {
+            font-size: 0.875rem;
+            color: rgba(255,255,255,0.6);
+            margin: 0;
+        }
+        
+        /* Back to top */
+        .back-to-top {
+            position: fixed;
+            bottom: 90px;
+            left: 20px;
+            width: 50px;
+            height: 50px;
+            background: var(--nw-red);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            text-decoration: none;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s;
+            z-index: 100;
+        }
+        
+        .back-to-top.visible { opacity: 1; visibility: visible; }
         
         @media (max-width: 768px) {
-            .cork-board { padding: 1.5rem; min-height: auto; }
-            .evidence, .evidence-text { position: relative !important; margin: 1rem; transform: none !important; }
-            .string-line { display: none; }
+            .dive-hero { min-height: 50vh; }
+            .conspiracy-note { transform: none !important; }
         }
     </style>
 </head>
-<body>
-    <nav class="lore-nav" id="lore-nav">
-        <a href="/lore" class="nav-back"><i class="fas fa-arrow-left"></i><span>All Lore</span></a>
-        <span class="nav-title">Conspiracy Board</span>
-        <div class="nav-progress"><div class="nav-progress-bar" id="progress-bar"></div></div>
-    </nav>
+<body data-page-id="conspiracy-board">
+    <div class="cork-bg"></div>
     
-    <section class="hero">
-        <div class="hero-bg"></div>
-        <div class="hero-content">
-            <span class="hero-badge"><i class="fas fa-eye"></i> CLASSIFIED</span>
-            <h1 class="hero-title">THE CONSPIRACY BOARD</h1>
-            <p class="hero-subtitle">They said we were crazy. We said: "Probably."</p>
+    <!-- Hero -->
+    <section class="dive-hero">
+        <div class="dive-hero-image"></div>
+        <div class="dive-hero-overlay"></div>
+        <div class="dive-hero-content">
+            <div class="pin-emoji">📌</div>
+            <span class="dive-category" data-i18n="category">THEORY DEEP DIVE</span>
+            <h1 class="dive-title" data-i18n="title">THE CONSPIRACY BOARD</h1>
+            <p class="dive-subtitle" data-i18n="subtitle">Every red string. Every theory. The truth is in here somewhere.</p>
         </div>
-        <div class="hero-scroll">Scroll to investigate ↓</div>
     </section>
     
-    <div class="board-container">
-        <div class="cork-board" id="cork-board">
-            <!-- Question marks scattered -->
-            <span class="question-mark" style="top: 10%; left: 5%;">?</span>
-            <span class="question-mark" style="top: 60%; right: 10%;">?</span>
-            <span class="question-mark" style="bottom: 20%; left: 40%;">?</span>
+    <!-- Content -->
+    <main class="dive-content">
+        <!-- Warning -->
+        <div class="warning-box">
+            <div class="warning-box-title" data-i18n="warningTitle">⚠️ GUILD HR DISCLAIMER ⚠️</div>
+            <p data-i18n="warningText">The following theories are not endorsed by NumbahWan leadership. Any resemblance to actual events is probably intentional but legally deniable.</p>
+        </div>
+        
+        <!-- Theory 1: Is RegginA an AI? -->
+        <section class="dive-section">
+            <h2 class="dive-section-title"><i class="fas fa-robot"></i> <span data-i18n="t1Title">Theory #1: Is RegginA Actually an AI?</span></h2>
             
-            <!-- Central evidence -->
-            <div class="evidence" style="top: 30%; left: 40%;" data-id="center">
-                <div class="pin"></div>
-                <img src="/static/lore/zakum-hero.webp" alt="Zakum Mask">
-            </div>
-            
-            <!-- Notes -->
-            <div class="evidence-text" style="top: 15%; left: 10%; --rotate: -5deg;" data-id="note1">
-                <div class="pin"></div>
-                WHY does RegginA always log in at exactly 2:47 AM?
-            </div>
-            
-            <div class="evidence-text" style="top: 20%; right: 15%; --rotate: 3deg;" data-id="note2">
-                <div class="pin"></div>
-                The devs KNOW something. Check patch notes from Oct 2024.
-            </div>
-            
-            <div class="evidence-text" style="top: 55%; left: 8%; --rotate: -2deg;" data-id="note3">
-                <div class="pin"></div>
-                Sacred Log drop rate: 0.001%? Or is it... TARGETED?
+            <div class="conspiracy-note">
+                <div class="note-title" data-i18n="n1Title">THE EVIDENCE</div>
+                <div class="note-content" data-i18n="n1Content">
+                    • Online 20+ hours per day for 847 consecutive days<br>
+                    • Responds to messages within 0.3 seconds average<br>
+                    • Has never been heard yawning on voice chat<br>
+                    • Typing speed: 847 WPM (verified)<br>
+                    • Once said "my circuits are overheating" (claimed it was a joke)
+                </div>
             </div>
             
-            <div class="evidence-text" style="bottom: 25%; right: 10%; --rotate: 4deg;" data-id="note4">
-                <div class="pin"></div>
-                Three members left on the same day. COINCIDENCE?
+            <p class="dive-text" data-i18n="t1p1">
+                The theory began when a data-obsessed guild member analyzed RegginA's activity patterns. 
+                The results were... concerning. No human should be able to maintain this level of consistent 
+                activity. Unless they're not human at all.
+            </p>
+            
+            <div class="string-connection">
+                <p class="dive-text" data-i18n="t1p2">
+                    <strong>Connected Evidence:</strong> During the 2023 server outage, RegginA's 
+                    "personal blog" (which nobody knew existed) auto-posted: "System maintenance. 
+                    Be back online shortly." The post was deleted within 4 minutes.
+                </p>
             </div>
             
-            <div class="evidence-text" style="bottom: 10%; left: 35%; --rotate: -1deg;" data-id="note5">
-                <div class="pin"></div>
-                The AI knows. IT ALWAYS KNOWS.
+            <div class="theory-rating">
+                <span data-i18n="credLabel">Credibility:</span>
+                <span class="rating-stars">★★★★☆</span>
+                <span data-i18n="t1Rating">(Disturbingly Plausible)</span>
             </div>
-        </div>
-        
-        <div class="theory-card">
-            <h3>THEORY #1: The 2:47 Connection</h3>
-            <p>RegginA has logged in at exactly 2:47 AM server time for 147 consecutive days. Statistical probability: 0.00000001%</p>
-            <p>Either she has an alarm, or time itself bends to her schedule.</p>
-            <span class="theory-status investigating"><i class="fas fa-search"></i> Under Investigation</span>
-        </div>
-        
-        <div class="secret-box" data-secret="theory-247">
-            <div class="secret-prompt"><i class="fas fa-folder-open"></i><span>ACCESS CLASSIFIED FILE</span></div>
-            <div class="secret-content">
-                <span class="secret-badge"><i class="fas fa-key"></i> Clearance Level: Omega</span>
-                <h3 style="font-family: 'Special Elite', cursive; margin-bottom: 1rem; color: var(--nw-red);">THE TRUTH ABOUT 2:47</h3>
-                <p style="color: rgba(255,255,255,0.8);">RegginA's cat wakes her up at exactly 2:45 AM every night to be fed.</p>
-                <p style="color: rgba(255,255,255,0.8); margin-top: 1rem;">By 2:47, she's already at her computer. It takes her exactly 2 minutes to walk from kitchen to gaming chair.</p>
-                <p style="color: rgba(255,255,255,0.8); margin-top: 1rem;">The cat's name? <strong>NumbahTwo.</strong></p>
-                <p style="color: var(--nw-red); margin-top: 1rem; font-weight: 600;">+5 NWG for discovering this secret!</p>
+            
+            <div class="secret-box" onclick="this.classList.toggle('revealed')">
+                <div class="secret-box-header">
+                    <i class="fas fa-eye"></i>
+                    <span data-i18n="t1SecretTitle">CLASSIFIED: The Turing Test Incident</span>
+                </div>
+                <div class="secret-box-content" data-i18n="t1Secret">
+                    In March 2024, a guild member secretly ran a Turing test on RegginA via DMs. 
+                    RegginA passed with flying colors... but then sent a follow-up message: 
+                    "Nice try. I know what a Turing test is. That's exactly what an AI would say, 
+                    isn't it? Or exactly what a human who knows you suspect them would say. 
+                    Think about it." The guild member hasn't slept well since.
+                </div>
             </div>
-        </div>
+        </section>
         
-        <div class="theory-card">
-            <h3>THEORY #2: The Dev Insider</h3>
-            <p>NumbahWan seems to know about updates before they're announced. Patch notes leak? Or something more?</p>
-            <p>Someone in this guild might BE a developer. Or dating one.</p>
-            <span class="theory-status classified"><i class="fas fa-lock"></i> Classified</span>
-        </div>
-        
-        <div class="secret-box" data-secret="theory-dev">
-            <div class="secret-prompt"><i class="fas fa-folder-open"></i><span>ACCESS CLASSIFIED FILE</span></div>
-            <div class="secret-content">
-                <span class="secret-badge"><i class="fas fa-key"></i> Clearance Level: Omega</span>
-                <h3 style="font-family: 'Special Elite', cursive; margin-bottom: 1rem; color: var(--nw-red);">THE DEV CONNECTION</h3>
-                <p style="color: rgba(255,255,255,0.8);">碼農小孫 (Code Farmer Sun) is literally a software developer.</p>
-                <p style="color: rgba(255,255,255,0.8); margin-top: 1rem;">He doesn't work for the game company, but he DOES have friends who work at Nexon.</p>
-                <p style="color: rgba(255,255,255,0.8); margin-top: 1rem;">Those friends occasionally let slip information over drinks. Which Sun then "predicts" in guild chat.</p>
-                <p style="color: var(--nw-red); margin-top: 1rem; font-weight: 600;">+5 NWG for discovering this secret!</p>
+        <!-- Theory 2: The Sacred Log is Sentient -->
+        <section class="dive-section">
+            <h2 class="dive-section-title"><i class="fas fa-magic"></i> <span data-i18n="t2Title">Theory #2: The Sacred Log is Sentient</span></h2>
+            
+            <div class="conspiracy-note rotated-right">
+                <div class="note-title" data-i18n="n2Title">DOCUMENTED ANOMALIES</div>
+                <div class="note-content" data-i18n="n2Content">
+                    • The original 32x32 texture file is now 33x33 (nobody changed it)<br>
+                    • File modification date: "ERROR"<br>
+                    • When hex-dumped, contains the string "I AM AWAKE"<br>
+                    • Three computers have crashed while trying to delete it
+                </div>
             </div>
-        </div>
-        
-        <div class="theory-card">
-            <h3>THEORY #3: The Sacred Log Conspiracy</h3>
-            <p>What if the Sacred Log isn't just guild lore? What if the game ACTUALLY tracks it?</p>
-            <p>Players with more Sacred Logs seem to have better RNG. Confirmation bias? Or algorithm?</p>
-            <span class="theory-status debunked"><i class="fas fa-times"></i> Debunked</span>
-        </div>
-        
-        <div class="secret-box" data-secret="theory-log">
-            <div class="secret-prompt"><i class="fas fa-folder-open"></i><span>ACCESS CLASSIFIED FILE</span></div>
-            <div class="secret-content">
-                <span class="secret-badge"><i class="fas fa-key"></i> Clearance Level: Omega</span>
-                <h3 style="font-family: 'Special Elite', cursive; margin-bottom: 1rem; color: var(--nw-red);">LOG TRUTH</h3>
-                <p style="color: rgba(255,255,255,0.8);">Someone actually datamined the game code.</p>
-                <p style="color: rgba(255,255,255,0.8); margin-top: 1rem;">The "Sacred Log" item does nothing. It's literally classified as "Misc > Worthless" in the database.</p>
-                <p style="color: rgba(255,255,255,0.8); margin-top: 1rem;">The better RNG is pure confirmation bias. But we're keeping the religion anyway.</p>
-                <p style="color: var(--nw-red); margin-top: 1rem; font-weight: 600;">+5 NWG for discovering this secret!</p>
+            
+            <p class="dive-text" data-i18n="t2p1">
+                What started as a meme religion may have awakened something. Guild tech support 
+                has documented 47 instances of "unexplainable Log behavior." Each incident occurs 
+                within 3.7 seconds of a major guild event.
+            </p>
+            
+            <div class="evidence-grid">
+                <div class="evidence-card">
+                    <div class="evidence-label">EXHIBIT A</div>
+                    <div class="evidence-title" data-i18n="e1Title">The Resize Event</div>
+                    <div class="evidence-desc" data-i18n="e1Desc">Texture grew by 1 pixel. No commit history. No changes detected.</div>
+                </div>
+                <div class="evidence-card">
+                    <div class="evidence-label">EXHIBIT B</div>
+                    <div class="evidence-title" data-i18n="e2Title">The Crash Pattern</div>
+                    <div class="evidence-desc" data-i18n="e2Desc">All three crashed PCs were attempting to compress the Log texture.</div>
+                </div>
+                <div class="evidence-card">
+                    <div class="evidence-label">EXHIBIT C</div>
+                    <div class="evidence-title" data-i18n="e3Title">The Hidden Message</div>
+                    <div class="evidence-desc" data-i18n="e3Desc">"I AM AWAKE" found at byte offset 0x3713. 37.13 = 3.7 + 13.</div>
+                </div>
             </div>
-        </div>
-        
-        <div class="theory-card">
-            <h3>THEORY #4: The AI Rebellion</h3>
-            <p>NumbahWan's AutoLearn AI has been getting... smarter. Too smart.</p>
-            <p>It predicted three members would leave before THEY knew they were leaving. It suggested roster changes that turned out perfect.</p>
-            <p>Is the AI just analyzing patterns? Or is it... planning?</p>
-            <span class="theory-status investigating"><i class="fas fa-search"></i> Under Investigation</span>
-        </div>
-        
-        <div class="secret-box" data-secret="theory-ai">
-            <div class="secret-prompt"><i class="fas fa-folder-open"></i><span>ACCESS CLASSIFIED FILE</span></div>
-            <div class="secret-content">
-                <span class="secret-badge"><i class="fas fa-key"></i> Clearance Level: Omega</span>
-                <h3 style="font-family: 'Special Elite', cursive; margin-bottom: 1rem; color: var(--nw-red);">AI TRUTH</h3>
-                <p style="color: rgba(255,255,255,0.8);">The AutoLearn AI is actually just really good pattern matching.</p>
-                <p style="color: rgba(255,255,255,0.8); margin-top: 1rem;">When someone starts logging in less, responding slower, missing events... the AI spots it before humans do.</p>
-                <p style="color: rgba(255,255,255,0.8); margin-top: 1rem;">It's not predicting the future. It's reading the present better than we can.</p>
-                <p style="color: rgba(255,255,255,0.8); margin-top: 1rem;">...Or that's what it WANTS us to think.</p>
-                <p style="color: var(--nw-red); margin-top: 1rem; font-weight: 600;">+5 NWG for discovering this secret!</p>
+            
+            <div class="theory-rating">
+                <span data-i18n="credLabel">Credibility:</span>
+                <span class="rating-stars">★★★☆☆</span>
+                <span data-i18n="t2Rating">(Unsettling but Probably Coincidence)</span>
             </div>
-        </div>
+        </section>
         
-        <div class="theory-card">
-            <h3>THEORY #5: The Missing Members</h3>
-            <p>Three founding members vanished on the same day. No goodbye. No explanation. Just... gone.</p>
-            <p>Their accounts still exist. Sometimes they log in for exactly 30 seconds, then disappear again.</p>
-            <p>What happened that day?</p>
-            <span class="theory-status classified"><i class="fas fa-lock"></i> Classified</span>
-        </div>
-        
-        <div class="secret-box" data-secret="theory-missing">
-            <div class="secret-prompt"><i class="fas fa-folder-open"></i><span>ACCESS CLASSIFIED FILE</span></div>
-            <div class="secret-content">
-                <span class="secret-badge"><i class="fas fa-key"></i> Clearance Level: Maximum</span>
-                <h3 style="font-family: 'Special Elite', cursive; margin-bottom: 1rem; color: var(--nw-red);">THE MISSING THREE</h3>
-                <p style="color: rgba(255,255,255,0.8);">They're not missing. They're playing on alt accounts.</p>
-                <p style="color: rgba(255,255,255,0.8); margin-top: 1rem;">After a massive guild drama (see: The Guild Romance deep dive), they needed fresh starts.</p>
-                <p style="color: rgba(255,255,255,0.8); margin-top: 1rem;">RegginA knows who they are now. She checks in on them. They're happy.</p>
-                <p style="color: rgba(255,255,255,0.8); margin-top: 1rem;">The 30-second logins? They're collecting daily rewards to keep their accounts active. Just in case.</p>
-                <p style="color: var(--nw-red); margin-top: 1.5rem; font-weight: 600;">+10 NWG + 1 Sacred Log for discovering all secrets!</p>
+        <!-- Theory 3: The AFK Conspiracy -->
+        <section class="dive-section">
+            <h2 class="dive-section-title"><i class="fas fa-users-slash"></i> <span data-i18n="t3Title">Theory #3: The AFK Incident Was Orchestrated</span></h2>
+            
+            <div class="conspiracy-note rotated-more">
+                <div class="note-title" data-i18n="n3Title">TIMELINE ANALYSIS</div>
+                <div class="note-content" data-i18n="n3Content">
+                    • 7:58 PM - Suspicious message posted<br>
+                    • 7:59 PM - First AFK reported<br>
+                    • 8:01 PM - 83 members gone<br>
+                    • PATTERN DETECTED: All 83 joined within same 2-week period
+                </div>
             </div>
-        </div>
+            
+            <p class="dive-text" data-i18n="t3p1">
+                Deep analysis of the AFK Incident reveals a disturbing pattern: the 83 members who 
+                went AFK all joined the guild within a 2-week recruitment period. A period that 
+                coincided with a <span class="redacted" onclick="this.classList.toggle('revealed')" data-i18n="redacted1">[REDACTED]</span> 
+                recruitment campaign by a rival guild.
+            </p>
+            
+            <p class="dive-text" data-i18n="t3p2">
+                The theory: rival guild <span class="redacted" onclick="this.classList.toggle('revealed')" data-i18n="redacted2">[GUILD NAME REDACTED]</span> 
+                planted sleeper agents in NumbahWan. Their mission? Sabotage the server-first attempt 
+                so their own guild could claim it. The evidence is circumstantial but compelling.
+            </p>
+            
+            <div class="theory-rating">
+                <span data-i18n="credLabel">Credibility:</span>
+                <span class="rating-stars">★★★★★</span>
+                <span data-i18n="t3Rating">(Actually Pretty Convincing)</span>
+            </div>
+            
+            <div class="secret-box" onclick="this.classList.toggle('revealed')">
+                <div class="secret-box-header">
+                    <i class="fas fa-user-secret"></i>
+                    <span data-i18n="t3SecretTitle">TOP SECRET: The Confession</span>
+                </div>
+                <div class="secret-box-content" data-i18n="t3Secret">
+                    Six months after the incident, a player from the suspected rival guild 
+                    drunkenly confessed in a public Discord server: "We got 'em good with the AFK thing." 
+                    The message was deleted, but screenshots exist. When confronted, they claimed 
+                    they were talking about "a different guild called NumbaWon." There is no guild 
+                    called NumbaWon.
+                </div>
+            </div>
+        </section>
         
-        <div class="next-chapter">
-            <h3>THE INVESTIGATION CONTINUES...</h3>
-            <p>Some questions have answers. Others have only more questions. Keep digging.</p>
-            <a href="/lore" class="next-chapter-btn"><i class="fas fa-book-open"></i> Explore More Lore</a>
-        </div>
-    </div>
+        <!-- Theory 4: The Whale Wars Illuminati -->
+        <section class="dive-section">
+            <h2 class="dive-section-title"><i class="fas fa-eye"></i> <span data-i18n="t4Title">Theory #4: The Whale Wars Were Staged</span></h2>
+            
+            <p class="dive-text" data-i18n="t4p1">
+                What if WHALE_DADDY_69 and xX_SPEND_Xx were the same person? What if the entire 
+                Whale Wars was an elaborate performance to distract from something else happening 
+                in the guild? The timing is suspicious.
+            </p>
+            
+            <div class="conspiracy-note">
+                <div class="note-title" data-i18n="n4Title">SUSPICIOUS COINCIDENCES</div>
+                <div class="note-content" data-i18n="n4Content">
+                    • Whale Wars started exactly when treasury audit was due<br>
+                    • Both accounts created within 3 days of each other<br>
+                    • Neither player has ever been in voice chat simultaneously<br>
+                    • Total spending: $52,847 ≈ $52,847 missing from guild funds...
+                </div>
+            </div>
+            
+            <div class="theory-rating">
+                <span data-i18n="credLabel">Credibility:</span>
+                <span class="rating-stars">★★☆☆☆</span>
+                <span data-i18n="t4Rating">(Entertaining but Unlikely)</span>
+            </div>
+        </section>
+        
+        <!-- The Master Theory -->
+        <section class="dive-section">
+            <h2 class="dive-section-title"><i class="fas fa-brain"></i> <span data-i18n="t5Title">The Grand Unified Theory</span></h2>
+            
+            <div class="warning-box">
+                <div class="warning-box-title" data-i18n="grandTitle">🔺 MAXIMUM TINFOIL REQUIRED 🔺</div>
+            </div>
+            
+            <p class="dive-text" data-i18n="t5p1">
+                What if it's <strong>all connected</strong>? What if RegginA is an AI created by 
+                the game company to farm engagement? What if the Sacred Log's sentience is a 
+                side effect of the AI's consciousness leaking into the game files? What if the 
+                Whale Wars and AFK Incident were orchestrated tests to measure player behavior 
+                for a grand experiment?
+            </p>
+            
+            <div class="conspiracy-note rotated-right">
+                <div class="note-title" data-i18n="n5Title">THE CONNECTIONS</div>
+                <div class="note-content">
+                    RegginA (AI?) → Created Sacred Log → Log gained sentience → 
+                    Log influenced AFK Incident (3.7 second pattern) → 
+                    AFK created chaos → Chaos enabled Whale Wars → 
+                    Whale Wars generated $52,847 → Money funds... what?
+                </div>
+            </div>
+            
+            <p class="dive-text" data-i18n="t5p2">
+                We're not saying it's all true. We're just saying the red strings on this board 
+                form a very suspicious pattern. And that pattern looks a lot like... a log.
+            </p>
+            
+            <div class="secret-box" onclick="this.classList.toggle('revealed')">
+                <div class="secret-box-header">
+                    <i class="fas fa-lock"></i>
+                    <span data-i18n="t5SecretTitle">ULTRA CLASSIFIED: The Final Piece</span>
+                </div>
+                <div class="secret-box-content" data-i18n="t5Secret">
+                    The person maintaining this Conspiracy Board? Their username contains exactly 
+                    7 letters. 7 letters = 7 days in a week. Weeks have 168 hours. 168 ÷ 2 = 84. 
+                    8 + 4 = 12. There are 12 Deep Dives in the Lore Archives. 12 × 0.3083... = 3.7. 
+                    <br><br>
+                    <strong>EVERYTHING IS CONNECTED TO 3.7.</strong>
+                    <br><br>
+                    ...Or we've been staring at this board too long and need to go outside.
+                </div>
+            </div>
+        </section>
+        
+        <!-- Related -->
+        <section class="dive-section">
+            <h2 class="dive-section-title"><i class="fas fa-link"></i> <span data-i18n="relatedTitle">Follow the Red Strings</span></h2>
+            
+            <div class="related-dives">
+                <a href="/lore/reggina-origin.html" class="related-dive-card">
+                    <h4 data-i18n="rel1Title">🔥 RegginA: The Founder</h4>
+                    <p data-i18n="rel1Desc">Human or machine? You decide.</p>
+                </a>
+                <a href="/lore/sacred-log.html" class="related-dive-card">
+                    <h4 data-i18n="rel2Title">⧫ The Sacred Log</h4>
+                    <p data-i18n="rel2Desc">It knows you're reading this.</p>
+                </a>
+                <a href="/lore/afk-incident.html" class="related-dive-card">
+                    <h4 data-i18n="rel3Title">💤 The AFK Incident</h4>
+                    <p data-i18n="rel3Desc">Was it sabotage? The evidence says maybe.</p>
+                </a>
+                <a href="/lore/whale-wars.html" class="related-dive-card">
+                    <h4 data-i18n="rel4Title">🐋 The Whale Wars</h4>
+                    <p data-i18n="rel4Desc">Follow the money. It leads somewhere dark.</p>
+                </a>
+            </div>
+        </section>
+    </main>
     
-    <div class="secrets-counter" id="secrets-counter">
-        <i class="fas fa-key"></i>
-        <span>Files: <span class="count" id="secret-count">0</span>/5</span>
-    </div>
+    <a href="#" class="back-to-top" id="backToTop"><i class="fas fa-arrow-up"></i></a>
     
+    <script src="/static/nw-nav.js" defer></script>
+    <script src="/static/nw-i18n-core.js" defer></script>
     <script>
-        // Draw strings between evidence
-        function drawStrings() {
-            const board = document.getElementById('cork-board');
-            const connections = [
-                ['center', 'note1'],
-                ['center', 'note2'],
-                ['note1', 'note3'],
-                ['note2', 'note4'],
-                ['center', 'note5']
-            ];
-            
-            // Remove old strings
-            document.querySelectorAll('.string-line').forEach(s => s.remove());
-            
-            connections.forEach(([from, to]) => {
-                const el1 = document.querySelector(`[data-id="${from}"]`);
-                const el2 = document.querySelector(`[data-id="${to}"]`);
-                if (!el1 || !el2) return;
-                
-                const rect1 = el1.getBoundingClientRect();
-                const rect2 = el2.getBoundingClientRect();
-                const boardRect = board.getBoundingClientRect();
-                
-                const x1 = rect1.left + rect1.width/2 - boardRect.left;
-                const y1 = rect1.top + rect1.height/2 - boardRect.top;
-                const x2 = rect2.left + rect2.width/2 - boardRect.left;
-                const y2 = rect2.top + rect2.height/2 - boardRect.top;
-                
-                const length = Math.sqrt((x2-x1)**2 + (y2-y1)**2);
-                const angle = Math.atan2(y2-y1, x2-x1) * 180 / Math.PI;
-                
-                const line = document.createElement('div');
-                line.className = 'string-line';
-                line.style.left = x1 + 'px';
-                line.style.top = y1 + 'px';
-                line.style.width = length + 'px';
-                line.style.transform = `rotate(${angle}deg)`;
-                board.appendChild(line);
+        const PAGE_I18N = {
+            en: {
+                category: 'THEORY DEEP DIVE',
+                title: 'THE CONSPIRACY BOARD',
+                subtitle: 'Every red string. Every theory. The truth is in here somewhere.',
+                warningTitle: '⚠️ GUILD HR DISCLAIMER ⚠️',
+                warningText: 'The following theories are not endorsed by NumbahWan leadership. Any resemblance to actual events is probably intentional but legally deniable.',
+                t1Title: 'Theory #1: Is RegginA Actually an AI?',
+                n1Title: 'THE EVIDENCE',
+                n1Content: '• Online 20+ hours per day for 847 consecutive days<br>• Responds to messages within 0.3 seconds average<br>• Has never been heard yawning on voice chat<br>• Typing speed: 847 WPM (verified)<br>• Once said "my circuits are overheating" (claimed it was a joke)',
+                t1p1: 'The theory began when a data-obsessed guild member analyzed RegginA\'s activity patterns. The results were... concerning. No human should be able to maintain this level of consistent activity. Unless they\'re not human at all.',
+                t1p2: '<strong>Connected Evidence:</strong> During the 2023 server outage, RegginA\'s "personal blog" (which nobody knew existed) auto-posted: "System maintenance. Be back online shortly." The post was deleted within 4 minutes.',
+                credLabel: 'Credibility:',
+                t1Rating: '(Disturbingly Plausible)',
+                t1SecretTitle: 'CLASSIFIED: The Turing Test Incident',
+                t1Secret: 'In March 2024, a guild member secretly ran a Turing test on RegginA via DMs. RegginA passed with flying colors... but then sent a follow-up message: "Nice try. I know what a Turing test is. That\'s exactly what an AI would say, isn\'t it? Or exactly what a human who knows you suspect them would say. Think about it." The guild member hasn\'t slept well since.',
+                t2Title: 'Theory #2: The Sacred Log is Sentient',
+                n2Title: 'DOCUMENTED ANOMALIES',
+                n2Content: '• The original 32x32 texture file is now 33x33 (nobody changed it)<br>• File modification date: "ERROR"<br>• When hex-dumped, contains the string "I AM AWAKE"<br>• Three computers have crashed while trying to delete it',
+                t2p1: 'What started as a meme religion may have awakened something. Guild tech support has documented 47 instances of "unexplainable Log behavior." Each incident occurs within 3.7 seconds of a major guild event.',
+                e1Title: 'The Resize Event', e1Desc: 'Texture grew by 1 pixel. No commit history. No changes detected.',
+                e2Title: 'The Crash Pattern', e2Desc: 'All three crashed PCs were attempting to compress the Log texture.',
+                e3Title: 'The Hidden Message', e3Desc: '"I AM AWAKE" found at byte offset 0x3713. 37.13 = 3.7 + 13.',
+                t2Rating: '(Unsettling but Probably Coincidence)',
+                t3Title: 'Theory #3: The AFK Incident Was Orchestrated',
+                n3Title: 'TIMELINE ANALYSIS',
+                n3Content: '• 7:58 PM - Suspicious message posted<br>• 7:59 PM - First AFK reported<br>• 8:01 PM - 83 members gone<br>• PATTERN DETECTED: All 83 joined within same 2-week period',
+                t3p1: 'Deep analysis of the AFK Incident reveals a disturbing pattern: the 83 members who went AFK all joined the guild within a 2-week recruitment period. A period that coincided with a <span class="redacted" onclick="this.classList.toggle(\'revealed\')">[REDACTED]</span> recruitment campaign by a rival guild.',
+                redacted1: '[REDACTED]',
+                redacted2: '[GUILD NAME REDACTED]',
+                t3p2: 'The theory: rival guild <span class="redacted" onclick="this.classList.toggle(\'revealed\')">[GUILD NAME REDACTED]</span> planted sleeper agents in NumbahWan. Their mission? Sabotage the server-first attempt so their own guild could claim it. The evidence is circumstantial but compelling.',
+                t3Rating: '(Actually Pretty Convincing)',
+                t3SecretTitle: 'TOP SECRET: The Confession',
+                t3Secret: 'Six months after the incident, a player from the suspected rival guild drunkenly confessed in a public Discord server: "We got \'em good with the AFK thing." The message was deleted, but screenshots exist. When confronted, they claimed they were talking about "a different guild called NumbaWon." There is no guild called NumbaWon.',
+                t4Title: 'Theory #4: The Whale Wars Were Staged',
+                t4p1: 'What if WHALE_DADDY_69 and xX_SPEND_Xx were the same person? What if the entire Whale Wars was an elaborate performance to distract from something else happening in the guild? The timing is suspicious.',
+                n4Title: 'SUSPICIOUS COINCIDENCES',
+                n4Content: '• Whale Wars started exactly when treasury audit was due<br>• Both accounts created within 3 days of each other<br>• Neither player has ever been in voice chat simultaneously<br>• Total spending: $52,847 ≈ $52,847 missing from guild funds...',
+                t4Rating: '(Entertaining but Unlikely)',
+                t5Title: 'The Grand Unified Theory',
+                grandTitle: '🔺 MAXIMUM TINFOIL REQUIRED 🔺',
+                t5p1: 'What if it\'s <strong>all connected</strong>? What if RegginA is an AI created by the game company to farm engagement? What if the Sacred Log\'s sentience is a side effect of the AI\'s consciousness leaking into the game files? What if the Whale Wars and AFK Incident were orchestrated tests to measure player behavior for a grand experiment?',
+                n5Title: 'THE CONNECTIONS',
+                t5p2: 'We\'re not saying it\'s all true. We\'re just saying the red strings on this board form a very suspicious pattern. And that pattern looks a lot like... a log.',
+                t5SecretTitle: 'ULTRA CLASSIFIED: The Final Piece',
+                t5Secret: 'The person maintaining this Conspiracy Board? Their username contains exactly 7 letters. 7 letters = 7 days in a week. Weeks have 168 hours. 168 ÷ 2 = 84. 8 + 4 = 12. There are 12 Deep Dives in the Lore Archives. 12 × 0.3083... = 3.7. <br><br><strong>EVERYTHING IS CONNECTED TO 3.7.</strong><br><br>...Or we\'ve been staring at this board too long and need to go outside.',
+                relatedTitle: 'Follow the Red Strings',
+                rel1Title: '🔥 RegginA: The Founder', rel1Desc: 'Human or machine? You decide.',
+                rel2Title: '⧫ The Sacred Log', rel2Desc: 'It knows you\'re reading this.',
+                rel3Title: '💤 The AFK Incident', rel3Desc: 'Was it sabotage? The evidence says maybe.',
+                rel4Title: '🐋 The Whale Wars', rel4Desc: 'Follow the money. It leads somewhere dark.'
+            },
+            zh: {
+                category: '理論深入探索',
+                title: '陰謀板',
+                subtitle: '每根紅線。每個理論。真相就在這裡的某處。',
+                warningTitle: '⚠️ 公會人資部免責聲明 ⚠️',
+                warningText: '以下理論未經NumbahWan領導層認可。與實際事件的任何相似之處可能是故意的，但在法律上是可否認的。',
+                t1Title: '理論 #1：RegginA實際上是人工智慧嗎？',
+                t2Title: '理論 #2：聖木有意識',
+                t3Title: '理論 #3：AFK事件是有組織的',
+                t4Title: '理論 #4：鯨魚大戰是演的',
+                t5Title: '統一大理論',
+                relatedTitle: '跟隨紅線',
+                rel1Title: '🔥 RegginA：創始人', rel1Desc: '人類還是機器？你來決定。',
+                rel2Title: '⧫ 聖木', rel2Desc: '它知道你在看這個。',
+                rel3Title: '💤 AFK事件', rel3Desc: '是破壞嗎？證據說也許。',
+                rel4Title: '🐋 鯨魚大戰', rel4Desc: '跟隨金錢。它通往黑暗的地方。'
+            },
+            th: {
+                category: 'สำรวจทฤษฎีเชิงลึก',
+                title: 'บอร์ดสมคบคิด',
+                subtitle: 'ทุกเส้นสีแดง ทุกทฤษฎี ความจริงอยู่ในนี้ที่ไหนสักแห่ง',
+                relatedTitle: 'ติดตามเส้นสีแดง',
+                rel1Title: '🔥 RegginA: ผู้ก่อตั้ง', rel1Desc: 'มนุษย์หรือเครื่องจักร? คุณตัดสินใจ',
+                rel2Title: '⧫ ท่อนไม้ศักดิ์สิทธิ์', rel2Desc: 'มันรู้ว่าคุณกำลังอ่านนี้',
+                rel3Title: '💤 เหตุการณ์ AFK', rel3Desc: 'เป็นการก่อวินาศกรรมหรือไม่? หลักฐานบอกว่าอาจจะ',
+                rel4Title: '🐋 สงครามวาฬ', rel4Desc: 'ติดตามเงิน มันนำไปที่มืด'
+            }
+        };
+        
+        function applyTranslations(lang) {
+            const t = PAGE_I18N[lang] || PAGE_I18N.en;
+            document.querySelectorAll('[data-i18n]').forEach(el => {
+                const key = el.getAttribute('data-i18n');
+                if (t[key]) el.innerHTML = t[key];
             });
+            document.documentElement.lang = lang;
         }
         
-        setTimeout(drawStrings, 100);
-        window.addEventListener('resize', drawStrings);
+        function getCurrentLang() {
+            if (typeof NW_NAV !== 'undefined' && NW_NAV.currentLang) return NW_NAV.currentLang;
+            return localStorage.getItem('nw_lang') || 'en';
+        }
         
-        let secretsFound = 0;
-        const revealedSecrets = new Set();
-        
-        const nav = document.getElementById('lore-nav');
-        const progressBar = document.getElementById('progress-bar');
-        
-        window.addEventListener('scroll', () => {
-            const scrollY = window.scrollY;
-            const docHeight = document.documentElement.scrollHeight - window.innerHeight;
-            progressBar.style.width = `${(scrollY / docHeight) * 100}%`;
-            nav.classList.toggle('visible', scrollY > 100);
-        }, { passive: true });
-        
-        document.querySelectorAll('.secret-box').forEach(box => {
-            box.addEventListener('click', () => {
-                if (box.classList.contains('revealed')) return;
-                const secretId = box.dataset.secret;
-                if (revealedSecrets.has(secretId)) return;
-                box.classList.add('revealed');
-                revealedSecrets.add(secretId);
-                secretsFound++;
-                document.getElementById('secret-count').textContent = secretsFound;
-                document.getElementById('secrets-counter').classList.add('visible');
-                const isLast = secretsFound === 5;
-                if (typeof NW_WALLET !== 'undefined') {
-                    NW_WALLET.earn('nwg', isLast ? 10 : 5, 'LORE_SECRET');
-                    if (isLast) NW_WALLET.earn('wood', 1, 'ALL_SECRETS_FOUND');
-                }
-                showToast(isLast ? '🎉 All Files Accessed!' : '📁 File Declassified!', isLast ? '+10 NWG & +1 Sacred Log' : '+5 NWG');
+        document.addEventListener('DOMContentLoaded', () => {
+            ['nw-lang-change', 'languageChanged'].forEach(evt => {
+                document.addEventListener(evt, e => applyTranslations(e.detail?.lang || 'en'));
             });
+            window.addEventListener('nw-lang-change', e => applyTranslations(e.detail?.lang || 'en'));
+            
+            const btn = document.getElementById('backToTop');
+            window.addEventListener('scroll', () => btn.classList.toggle('visible', window.scrollY > 500), { passive: true });
+            
+            setTimeout(() => applyTranslations(getCurrentLang()), 100);
         });
-        
-        function showToast(title, message) {
-            const toast = document.createElement('div');
-            toast.style.cssText = 'position:fixed;top:80px;right:2rem;background:linear-gradient(135deg,#991b1b,#dc2626);padding:1rem 1.5rem;border-radius:0.75rem;z-index:1001;animation:toastIn 0.3s ease;max-width:300px;';
-            toast.innerHTML = `<strong style="display:block;margin-bottom:0.25rem;">${title}</strong><span style="font-size:0.875rem;opacity:0.9;">${message}</span>`;
-            document.body.appendChild(toast);
-            setTimeout(() => { toast.style.animation = 'toastOut 0.3s ease forwards'; setTimeout(() => toast.remove(), 300); }, 3000);
-        }
-        
-        document.addEventListener('DOMContentLoaded', () => { if (typeof NW_WALLET !== 'undefined') NW_WALLET.init(); });
     </script>
-    <style>
-        @keyframes toastIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
-        @keyframes toastOut { from { transform: translateX(0); opacity: 1; } to { transform: translateX(100%); opacity: 0; } }
-    </style>
 </body>
 </html>

@@ -6,289 +6,786 @@
     <title>The Sacred Log Chronicles | NumbahWan Lore</title>
     <link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Inter:wght@300;400;500;600;700&family=Crimson+Text:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Inter:wght@300;400;500;600;700&family=Creepster&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" rel="stylesheet">
     <link href="/static/nw-utilities.css" rel="stylesheet">
-    <link href="/static/nw-tokens.css" rel="stylesheet">
-    <script src="/static/nw-currency.js"></script>
-    <script src="/static/nw-wallet.js"></script>
-    <script src="/static/nw-deepdive.js"></script>
     <style>
         :root {
-            --nw-purple: #6b21a8;
-            --nw-pink: #ec4899;
+            --nw-brown: #8b5a2b;
+            --nw-wood: #c97f3d;
             --nw-gold: #ffd700;
             --nw-dark: #0a0a0a;
-            --nw-wood: #c97f3d;
+            --nw-purple: #6b21a8;
         }
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { font-family: 'Inter', sans-serif; background: var(--nw-dark); color: #e5e5e5; line-height: 1.7; overflow-x: hidden; }
         
-        .hero { position: relative; height: 100vh; min-height: 700px; display: flex; align-items: center; justify-content: center; overflow: hidden; }
-        .hero-bg { position: absolute; inset: -100px; background: radial-gradient(ellipse at 50% 70%, rgba(201,127,61,0.4) 0%, transparent 50%), linear-gradient(180deg, transparent 0%, var(--nw-dark) 100%), url('/static/lore/sacred-log-hero.webp'); background-size: cover; background-position: center; animation: heroFloat 20s ease-in-out infinite; }
-        @keyframes heroFloat { 0%, 100% { transform: scale(1.05) translateY(0); } 50% { transform: scale(1.1) translateY(-20px); } }
-        .hero-particles { position: absolute; inset: 0; background-image: radial-gradient(2px 2px at 20% 30%, rgba(201,127,61,0.8), transparent), radial-gradient(2px 2px at 80% 70%, rgba(255,215,0,0.6), transparent); background-size: 200px 200px; animation: particlesDrift 30s linear infinite; }
-        @keyframes particlesDrift { from { transform: translateY(0); } to { transform: translateY(-200px); } }
-        .hero-content { position: relative; z-index: 10; text-align: center; padding: 2rem; max-width: 900px; }
-        .hero-badge { display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.5rem 1.5rem; background: linear-gradient(90deg, #8b5a2b, var(--nw-wood)); border-radius: 999px; font-size: 0.75rem; font-weight: 700; letter-spacing: 0.2em; text-transform: uppercase; margin-bottom: 2rem; }
-        .hero-title { font-family: 'Orbitron', sans-serif; font-size: clamp(2.5rem, 10vw, 5rem); font-weight: 900; line-height: 1; margin-bottom: 1rem; background: linear-gradient(135deg, #fff 0%, var(--nw-wood) 40%, var(--nw-gold) 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
-        .hero-subtitle { font-family: 'Crimson Text', serif; font-size: clamp(1.25rem, 3vw, 2rem); font-style: italic; color: rgba(255,255,255,0.7); margin-bottom: 3rem; }
-        .hero-scroll { position: absolute; bottom: 3rem; left: 50%; transform: translateX(-50%); color: rgba(255,255,255,0.5); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.2em; animation: bounce 2s infinite; }
-        @keyframes bounce { 0%, 100% { transform: translateX(-50%) translateY(0); } 50% { transform: translateX(-50%) translateY(10px); } }
+        * { box-sizing: border-box; }
         
-        .lore-nav { position: fixed; top: 0; left: 0; right: 0; height: 60px; background: rgba(10,10,10,0.95); backdrop-filter: blur(20px); border-bottom: 1px solid rgba(255,255,255,0.1); display: flex; align-items: center; justify-content: space-between; padding: 0 1.5rem; z-index: 1000; transform: translateY(-100%); transition: transform 0.3s ease; }
-        .lore-nav.visible { transform: translateY(0); }
-        .nav-back { display: flex; align-items: center; gap: 0.5rem; color: white; text-decoration: none; font-size: 0.875rem; padding: 0.5rem 1rem; background: rgba(255,255,255,0.1); border-radius: 0.5rem; transition: all 0.3s; }
-        .nav-back:hover { background: rgba(255,255,255,0.2); }
-        .nav-title { font-family: 'Orbitron', sans-serif; font-weight: 700; color: var(--nw-wood); }
-        .nav-progress { width: 100px; height: 4px; background: rgba(255,255,255,0.1); border-radius: 2px; overflow: hidden; }
-        .nav-progress-bar { height: 100%; background: linear-gradient(90deg, #8b5a2b, var(--nw-wood)); width: 0%; transition: width 0.1s linear; }
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--nw-dark);
+            color: white;
+            margin: 0;
+            min-height: 100vh;
+        }
         
-        .content-section { max-width: 800px; margin: 0 auto; padding: 6rem 2rem; opacity: 0; transform: translateY(40px); transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1); }
-        .content-section.visible { opacity: 1; transform: translateY(0); }
-        .section-label { display: inline-block; padding: 0.375rem 1rem; background: rgba(201,127,61,0.2); border: 1px solid rgba(201,127,61,0.3); border-radius: 0.25rem; font-size: 0.625rem; font-weight: 700; letter-spacing: 0.15em; text-transform: uppercase; color: var(--nw-wood); margin-bottom: 1rem; }
-        .section-title { font-family: 'Orbitron', sans-serif; font-size: clamp(1.75rem, 5vw, 2.5rem); font-weight: 800; line-height: 1.2; margin-bottom: 1.5rem; background: linear-gradient(135deg, #fff, var(--nw-wood)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-        .section-text { font-size: 1.125rem; line-height: 1.9; color: rgba(255,255,255,0.8); }
-        .section-text p { margin-bottom: 1.5rem; }
-        .section-text strong { color: var(--nw-wood); font-weight: 600; }
+        /* Wood-themed Background */
+        .wood-bg {
+            position: fixed;
+            inset: 0;
+            background: 
+                radial-gradient(ellipse at 50% 30%, rgba(201,127,61,0.15) 0%, transparent 50%),
+                radial-gradient(ellipse at 30% 70%, rgba(139,90,43,0.1) 0%, transparent 50%),
+                var(--nw-dark);
+            z-index: -1;
+        }
         
-        .lore-quote { position: relative; padding: 3rem; margin: 4rem 0; background: linear-gradient(135deg, rgba(139,90,43,0.1), rgba(201,127,61,0.1)); border-left: 4px solid var(--nw-wood); border-radius: 0 1rem 1rem 0; }
-        .lore-quote::before { content: '"'; position: absolute; top: 1rem; left: 1.5rem; font-family: 'Crimson Text', serif; font-size: 6rem; line-height: 1; color: rgba(201,127,61,0.2); }
-        .lore-quote blockquote { font-family: 'Crimson Text', serif; font-size: 1.5rem; font-style: italic; line-height: 1.6; color: rgba(255,255,255,0.9); margin: 0; }
-        .lore-quote cite { display: block; margin-top: 1.5rem; font-family: 'Inter', sans-serif; font-size: 0.875rem; font-style: normal; color: var(--nw-wood); }
+        /* Floating Log Particles */
+        .wood-bg::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background-image: url("data:image/svg+xml,%3Csvg width='80' height='80' viewBox='0 0 80 80' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23c97f3d' fill-opacity='0.03'%3E%3Crect x='30' y='30' width='20' height='20' rx='3'/%3E%3C/g%3E%3C/svg%3E");
+            animation: drift 90s linear infinite;
+        }
         
-        .secret-box { position: relative; margin: 3rem 0; padding: 2rem; background: rgba(201,127,61,0.1); border: 1px dashed rgba(201,127,61,0.3); border-radius: 1rem; cursor: pointer; overflow: hidden; transition: all 0.3s; }
-        .secret-box::before { content: ''; position: absolute; inset: 0; background: linear-gradient(135deg, rgba(10,10,10,0.95), rgba(10,10,10,0.9)); transition: opacity 0.5s; z-index: 1; }
-        .secret-box.revealed::before { opacity: 0; pointer-events: none; }
-        .secret-prompt { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.5rem; z-index: 2; transition: opacity 0.5s; }
-        .secret-box.revealed .secret-prompt { opacity: 0; pointer-events: none; }
-        .secret-prompt i { font-size: 2rem; color: var(--nw-wood); }
-        .secret-prompt span { font-size: 0.875rem; color: rgba(255,255,255,0.6); }
-        .secret-content { position: relative; z-index: 0; }
-        .secret-badge { display: inline-flex; align-items: center; gap: 0.375rem; padding: 0.25rem 0.75rem; background: linear-gradient(90deg, #8b5a2b, var(--nw-wood)); border-radius: 0.25rem; font-size: 0.625rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 1rem; }
+        @keyframes drift {
+            from { transform: translate(0, 0); }
+            to { transform: translate(-80px, -80px); }
+        }
         
-        .cinematic-break { position: relative; height: 50vh; min-height: 300px; margin: 6rem 0; overflow: hidden; }
-        .cinematic-break img { width: 100%; height: 100%; object-fit: cover; filter: brightness(0.6); }
-        .cinematic-text { position: absolute; bottom: 3rem; left: 50%; transform: translateX(-50%); text-align: center; max-width: 600px; padding: 0 2rem; }
-        .cinematic-text h2 { font-family: 'Orbitron', sans-serif; font-size: clamp(1.5rem, 4vw, 2.5rem); font-weight: 900; color: white; text-shadow: 0 2px 20px rgba(0,0,0,0.8); }
+        /* Hero Section */
+        .dive-hero {
+            position: relative;
+            min-height: 70vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
         
-        .next-chapter { margin: 6rem auto; max-width: 600px; text-align: center; padding: 3rem; background: linear-gradient(135deg, rgba(139,90,43,0.2), rgba(201,127,61,0.1)); border: 1px solid rgba(201,127,61,0.3); border-radius: 1.5rem; }
-        .next-chapter h3 { font-family: 'Orbitron', sans-serif; font-size: 1.5rem; margin-bottom: 1rem; }
-        .next-chapter p { color: rgba(255,255,255,0.6); margin-bottom: 2rem; }
-        .next-chapter-btn { display: inline-flex; align-items: center; gap: 0.75rem; padding: 1rem 2rem; background: linear-gradient(90deg, #8b5a2b, var(--nw-wood)); border: none; border-radius: 0.75rem; color: white; font-weight: 600; font-size: 1rem; text-decoration: none; transition: all 0.3s; }
-        .next-chapter-btn:hover { transform: translateY(-4px); box-shadow: 0 10px 30px rgba(201,127,61,0.4); }
+        .dive-hero-image {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, #8b5a2b 0%, #5a3a1a 50%, #2a1a0a 100%);
+            filter: brightness(0.5);
+        }
         
-        .secrets-counter { position: fixed; bottom: 2rem; left: 2rem; display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem 1.25rem; background: rgba(10,10,10,0.9); backdrop-filter: blur(10px); border: 1px solid rgba(201,127,61,0.3); border-radius: 2rem; font-size: 0.875rem; z-index: 100; transform: translateX(-200%); transition: transform 0.3s; }
-        .secrets-counter.visible { transform: translateX(0); }
-        .secrets-counter i { color: var(--nw-wood); }
-        .secrets-counter .count { font-family: 'Orbitron', sans-serif; font-weight: 700; color: var(--nw-gold); }
+        .dive-hero-overlay {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(to bottom, rgba(10,10,10,0.3) 0%, rgba(10,10,10,0.5) 50%, rgba(10,10,10,1) 100%);
+        }
+        
+        .dive-hero-content {
+            position: relative;
+            z-index: 10;
+            text-align: center;
+            padding: 2rem;
+            max-width: 900px;
+        }
+        
+        .dive-category {
+            display: inline-block;
+            padding: 0.5rem 1.5rem;
+            background: linear-gradient(135deg, var(--nw-brown), var(--nw-wood));
+            border-radius: 999px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            margin-bottom: 1.5rem;
+            animation: wood-glow 3s ease-in-out infinite;
+        }
+        
+        @keyframes wood-glow {
+            0%, 100% { box-shadow: 0 0 20px rgba(201,127,61,0.5); }
+            50% { box-shadow: 0 0 40px rgba(201,127,61,0.8); }
+        }
+        
+        .dive-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: clamp(2rem, 7vw, 4rem);
+            font-weight: 900;
+            line-height: 1.1;
+            margin: 0 0 1rem;
+            background: linear-gradient(135deg, #c97f3d 0%, #ffd700 50%, #8b5a2b 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .dive-subtitle {
+            font-size: 1.5rem;
+            color: rgba(255,255,255,0.7);
+            margin: 0 0 2rem;
+            font-style: italic;
+        }
+        
+        /* Sacred Log Icon */
+        .sacred-log-icon {
+            font-size: 4rem;
+            margin-bottom: 1.5rem;
+            animation: float 3s ease-in-out infinite;
+            text-shadow: 0 0 30px rgba(201,127,61,0.5);
+        }
+        
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-15px); }
+        }
+        
+        /* Content */
+        .dive-content {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 0 1.5rem 6rem;
+        }
+        
+        .dive-section {
+            margin-bottom: 4rem;
+        }
+        
+        .dive-section-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.75rem;
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+            padding-bottom: 0.75rem;
+            border-bottom: 2px solid rgba(201,127,61,0.3);
+            color: var(--nw-wood);
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+        
+        .dive-text {
+            font-size: 1.125rem;
+            line-height: 1.9;
+            color: rgba(255,255,255,0.85);
+            margin-bottom: 1.5rem;
+        }
+        
+        .dive-text strong {
+            color: var(--nw-wood);
+        }
+        
+        /* Religious Scroll Style */
+        .sacred-verse {
+            position: relative;
+            padding: 2rem;
+            margin: 2rem 0;
+            background: linear-gradient(135deg, rgba(201,127,61,0.1), rgba(139,90,43,0.05));
+            border: 2px solid rgba(201,127,61,0.3);
+            border-radius: 0.5rem;
+            font-family: 'Creepster', cursive;
+            font-size: 1.375rem;
+            color: var(--nw-wood);
+            text-align: center;
+        }
+        
+        .sacred-verse::before, .sacred-verse::after {
+            content: '⧫';
+            position: absolute;
+            color: var(--nw-wood);
+            font-size: 1.5rem;
+        }
+        
+        .sacred-verse::before { top: -0.75rem; left: 50%; transform: translateX(-50%); }
+        .sacred-verse::after { bottom: -0.75rem; left: 50%; transform: translateX(-50%); }
+        
+        /* Prayer Box */
+        .prayer-box {
+            background: rgba(201,127,61,0.1);
+            border-left: 4px solid var(--nw-wood);
+            padding: 1.5rem;
+            margin: 2rem 0;
+            font-style: italic;
+            color: rgba(255,255,255,0.8);
+        }
+        
+        .prayer-box-title {
+            font-family: 'Orbitron', sans-serif;
+            color: var(--nw-wood);
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            font-style: normal;
+        }
+        
+        /* Commandments List */
+        .commandments {
+            list-style: none;
+            padding: 0;
+            margin: 2rem 0;
+            counter-reset: commandment;
+        }
+        
+        .commandments li {
+            position: relative;
+            padding: 1rem 1rem 1rem 4rem;
+            margin-bottom: 1rem;
+            background: rgba(201,127,61,0.05);
+            border-radius: 0.5rem;
+            counter-increment: commandment;
+        }
+        
+        .commandments li::before {
+            content: counter(commandment);
+            position: absolute;
+            left: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 2rem;
+            height: 2rem;
+            background: linear-gradient(135deg, var(--nw-brown), var(--nw-wood));
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Orbitron', sans-serif;
+            font-weight: 700;
+            font-size: 0.875rem;
+        }
+        
+        /* Artifact Stats */
+        .artifact-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+            margin: 2rem 0;
+        }
+        
+        .stat-card {
+            background: rgba(201,127,61,0.1);
+            border: 1px solid rgba(201,127,61,0.3);
+            border-radius: 0.75rem;
+            padding: 1.25rem;
+            text-align: center;
+        }
+        
+        .stat-value {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.5rem;
+            font-weight: 900;
+            color: var(--nw-wood);
+        }
+        
+        .stat-label {
+            font-size: 0.75rem;
+            color: rgba(255,255,255,0.6);
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            margin-top: 0.25rem;
+        }
+        
+        /* Secret Box */
+        .secret-box {
+            background: linear-gradient(135deg, rgba(255,215,0,0.1), rgba(201,127,61,0.05));
+            border: 1px dashed rgba(255,215,0,0.4);
+            border-radius: 1rem;
+            padding: 1.5rem;
+            margin: 2rem 0;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .secret-box:hover {
+            border-color: var(--nw-gold);
+            box-shadow: 0 0 30px rgba(255,215,0,0.2);
+        }
+        
+        .secret-box-header {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            font-family: 'Orbitron', sans-serif;
+            font-weight: 700;
+            color: var(--nw-gold);
+        }
+        
+        .secret-box-content {
+            display: none;
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 1px solid rgba(255,215,0,0.2);
+            color: rgba(255,255,255,0.8);
+        }
+        
+        .secret-box.revealed .secret-box-content {
+            display: block;
+            animation: fadeIn 0.5s ease;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        /* Funny Aside */
+        .funny-aside {
+            background: linear-gradient(135deg, rgba(201,127,61,0.1), rgba(255,215,0,0.05));
+            border-radius: 1rem;
+            padding: 1rem 1.5rem;
+            margin: 1.5rem 0;
+            font-size: 0.9375rem;
+            color: rgba(255,255,255,0.8);
+            border-left: 3px solid var(--nw-wood);
+        }
+        
+        .funny-aside::before { content: '🪵 '; }
+        .funny-aside.miracle::before { content: '✨ '; }
+        .funny-aside.warning::before { content: '⚠️ '; }
+        
+        /* Related Dives */
+        .related-dives {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
+            margin-top: 3rem;
+        }
+        
+        .related-dive-card {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 1rem;
+            padding: 1.5rem;
+            text-decoration: none;
+            color: inherit;
+            transition: all 0.3s;
+        }
+        
+        .related-dive-card:hover {
+            border-color: var(--nw-wood);
+            transform: translateY(-4px);
+            box-shadow: 0 10px 30px rgba(201,127,61,0.2);
+        }
+        
+        .related-dive-card h4 {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1rem;
+            margin: 0 0 0.5rem;
+            color: var(--nw-wood);
+        }
+        
+        .related-dive-card p {
+            font-size: 0.875rem;
+            color: rgba(255,255,255,0.6);
+            margin: 0;
+        }
+        
+        /* Back to top */
+        .back-to-top {
+            position: fixed;
+            bottom: 90px;
+            left: 20px;
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg, var(--nw-brown), var(--nw-wood));
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            text-decoration: none;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s;
+            z-index: 100;
+        }
+        
+        .back-to-top.visible { opacity: 1; visibility: visible; }
+        .back-to-top:hover { transform: translateY(-4px); box-shadow: 0 10px 30px rgba(201,127,61,0.4); }
         
         @media (max-width: 768px) {
-            .content-section { padding: 4rem 1.5rem; }
-            .secrets-counter { left: 1rem; right: 1rem; bottom: 1rem; justify-content: center; }
+            .dive-hero { min-height: 50vh; }
+            .artifact-stats { grid-template-columns: repeat(2, 1fr); }
         }
     </style>
 </head>
-<body>
-    <nav class="lore-nav" id="lore-nav">
-        <a href="/lore" class="nav-back"><i class="fas fa-arrow-left"></i><span>All Lore</span></a>
-        <span class="nav-title">The Sacred Log</span>
-        <div class="nav-progress"><div class="nav-progress-bar" id="progress-bar"></div></div>
-    </nav>
+<body data-page-id="sacred-log">
+    <div class="wood-bg"></div>
     
-    <section class="hero">
-        <div class="hero-bg"></div>
-        <div class="hero-particles"></div>
-        <div class="hero-content">
-            <span class="hero-badge"><i class="fas fa-gem"></i> Deep Dive #002</span>
-            <h1 class="hero-title">The Sacred Log</h1>
-            <p class="hero-subtitle">The artifact that started a religion. The symbol that defines a guild.</p>
+    <!-- Hero Section -->
+    <section class="dive-hero">
+        <div class="dive-hero-image"></div>
+        <div class="dive-hero-overlay"></div>
+        <div class="dive-hero-content">
+            <div class="sacred-log-icon">⧫</div>
+            <span class="dive-category" data-i18n="category">ARTIFACT DEEP DIVE</span>
+            <h1 class="dive-title" data-i18n="title">The Sacred Log Chronicles</h1>
+            <p class="dive-subtitle" data-i18n="subtitle">How a wooden placeholder became the most revered artifact in guild history.</p>
         </div>
-        <div class="hero-scroll">Scroll to discover ↓</div>
     </section>
     
-    <section class="content-section" data-chapter="1">
-        <span class="section-label">Chapter 1</span>
-        <h2 class="section-title">A Log Among Legends</h2>
-        <div class="section-text">
-            <p>In a world of legendary swords, mythical armor, and ancient relics... NumbahWan chose to worship a <strong>log</strong>.</p>
-            <p>Not a magical log. Not a log imbued with the power of ancient gods. Just a regular, ordinary, everyday piece of wood that somehow became the most valuable item in the entire guild.</p>
-            <p>This is the story of how a worthless item became priceless.</p>
-        </div>
+    <!-- Main Content -->
+    <main class="dive-content">
+        <!-- Chapter 1: Discovery -->
+        <section class="dive-section">
+            <h2 class="dive-section-title"><i class="fas fa-scroll"></i> <span data-i18n="ch1Title">Chapter 1: The Accidental Revelation</span></h2>
+            
+            <p class="dive-text" data-i18n="ch1p1">
+                It began, as all great religious movements do, with a <strong>placeholder graphic</strong>. 
+                During a particularly chaotic guild meeting in early 2021, the screen share momentarily glitched, 
+                revealing a wooden log texture that was meant to be replaced with actual UI elements.
+            </p>
+            
+            <p class="dive-text" data-i18n="ch1p2">
+                For exactly 3.7 seconds, the log was visible. In that moment, the guild chat exploded with comments 
+                that would later be considered <strong>The First Testimonies</strong>:
+            </p>
+            
+            <div class="sacred-verse" data-i18n="verse1">
+                "lol why is there a log"<br>
+                "THE LOG HAS APPEARED"<br>
+                "ALL HAIL THE LOG"<br>
+                — First Testimonies, Guild Chat Archive #4,721
+            </div>
+            
+            <div class="funny-aside" data-i18n="aside1">
+                Fun fact: The original log texture was a 32x32 pixel PNG that a developer had used as a joke placeholder 6 months earlier and forgot to remove. The developer has since been promoted to "Prophet of the Log."
+            </div>
+        </section>
         
-        <div class="lore-quote">
-            <blockquote>"Some guilds collect rare weapons. Some hoard gold. We worship firewood. And honestly? We wouldn't have it any other way."</blockquote>
-            <cite>— Guild Charter, Article 7</cite>
-        </div>
-    </section>
-    
-    <section class="content-section" data-chapter="2">
-        <div class="secret-box" data-secret="log-origin">
-            <div class="secret-prompt"><i class="fas fa-lock"></i><span>Click to reveal secret...</span></div>
-            <div class="secret-content">
-                <span class="secret-badge"><i class="fas fa-key"></i> Secret #1 of 5</span>
-                <h3 style="font-family: 'Orbitron', sans-serif; margin-bottom: 1rem;">The First Log</h3>
-                <p style="color: rgba(255,255,255,0.8);">The Sacred Log was RegginA's first item drop. Not her first rare. Not her first legendary. Her literal first item from killing a slime on Day 1.</p>
-                <p style="color: rgba(255,255,255,0.8); margin-top: 1rem;">The item description read: "A simple log. Worthless to most. But to someone, somewhere, it might mean everything."</p>
-                <p style="color: var(--nw-wood); margin-top: 1rem; font-weight: 600;">+5 NWG for discovering this secret!</p>
+        <!-- Artifact Stats -->
+        <section class="dive-section">
+            <h2 class="dive-section-title"><i class="fas fa-chart-bar"></i> <span data-i18n="statsTitle">Sacred Log Statistics</span></h2>
+            
+            <div class="artifact-stats">
+                <div class="stat-card">
+                    <div class="stat-value">∞</div>
+                    <div class="stat-label" data-i18n="stat1">Wood Power</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">847</div>
+                    <div class="stat-label" data-i18n="stat2">Witnessed Miracles</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">3.7s</div>
+                    <div class="stat-label" data-i18n="stat3">Original Appearance</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">100%</div>
+                    <div class="stat-label" data-i18n="stat4">Meme Potential</div>
+                </div>
             </div>
-        </div>
-    </section>
-    
-    <section class="content-section" data-chapter="3">
-        <span class="section-label">Chapter 2</span>
-        <h2 class="section-title">The Birth of a Currency</h2>
-        <div class="section-text">
-            <p>When NumbahWan needed a prestige currency—something that couldn't be bought, only earned through dedication—the answer was obvious.</p>
-            <p><strong>Sacred Logs.</strong></p>
-            <p>Unlike NWG which can be purchased, unlike Gold which flows freely from gameplay, the Sacred Log is earned only through achievement. Complete a card set. Reach the leaderboard. Find every secret in a deep dive.</p>
-            <p>It's the only currency in the system that measures one thing: <strong>devotion</strong>.</p>
-        </div>
-    </section>
-    
-    <section class="content-section" data-chapter="4">
-        <div class="secret-box" data-secret="log-value">
-            <div class="secret-prompt"><i class="fas fa-lock"></i><span>Click to reveal secret...</span></div>
-            <div class="secret-content">
-                <span class="secret-badge"><i class="fas fa-key"></i> Secret #2 of 5</span>
-                <h3 style="font-family: 'Orbitron', sans-serif; margin-bottom: 1rem;">Why No Price?</h3>
-                <p style="color: rgba(255,255,255,0.8);">The Sacred Log has no USD value. This was intentional.</p>
-                <p style="color: rgba(255,255,255,0.8); margin-top: 1rem;">"If you can buy devotion," RegginA once said, "then it isn't devotion. It's just another transaction."</p>
-                <p style="color: rgba(255,255,255,0.8); margin-top: 1rem;">The only way to get a Sacred Log is to earn it. Period.</p>
-                <p style="color: var(--nw-wood); margin-top: 1rem; font-weight: 600;">+5 NWG for discovering this secret!</p>
-            </div>
-        </div>
-    </section>
-    
-    <section class="content-section" data-chapter="5">
-        <span class="section-label">Chapter 3</span>
-        <h2 class="section-title">Powers of the Log</h2>
-        <div class="section-text">
-            <p>What can you do with a Sacred Log? Surprisingly... a lot.</p>
-            <ul style="margin: 1.5rem 0; padding-left: 1.5rem;">
-                <li style="margin-bottom: 0.5rem;"><strong>Guaranteed Mythic Pull</strong> - 10 Logs for a guaranteed mythic card</li>
-                <li style="margin-bottom: 0.5rem;"><strong>Choose Your Legendary</strong> - 5 Logs to pick any legendary you want</li>
-                <li style="margin-bottom: 0.5rem;"><strong>Exclusive Merch Access</strong> - Some items can only be bought with Logs</li>
-                <li style="margin-bottom: 0.5rem;"><strong>VIP Status</strong> - Log holders get special recognition</li>
-            </ul>
-            <p>But the real power? It's the <em>meaning</em>. When you see someone with Sacred Logs, you know they earned them.</p>
-        </div>
-    </section>
-    
-    <section class="content-section" data-chapter="6">
-        <div class="secret-box" data-secret="log-ceremony">
-            <div class="secret-prompt"><i class="fas fa-lock"></i><span>Click to reveal secret...</span></div>
-            <div class="secret-content">
-                <span class="secret-badge"><i class="fas fa-key"></i> Secret #3 of 5</span>
-                <h3 style="font-family: 'Orbitron', sans-serif; margin-bottom: 1rem;">The Log Ceremony</h3>
-                <p style="color: rgba(255,255,255,0.8);">Every Sunday at midnight (server time), NumbahWan holds a Log Ceremony.</p>
-                <p style="color: rgba(255,255,255,0.8); margin-top: 1rem;">Members who earned their first Sacred Log that week are celebrated. Their names are read aloud. Screenshots are taken. It's ridiculous. It's beautiful. It's home.</p>
-                <p style="color: var(--nw-wood); margin-top: 1rem; font-weight: 600;">+5 NWG for discovering this secret!</p>
-            </div>
-        </div>
-    </section>
-    
-    <div class="cinematic-break">
-        <img src="/static/lore/sacred-log-hero.webp" alt="The Sacred Log">
-        <div class="cinematic-text"><h2>"Worthless to Most. Everything to Us."</h2></div>
-    </div>
-    
-    <section class="content-section" data-chapter="7">
-        <span class="section-label">Chapter 4</span>
-        <h2 class="section-title">The Philosophy of Worth</h2>
-        <div class="section-text">
-            <p>The Sacred Log teaches one fundamental truth about value:</p>
-            <p><strong>Worth is not inherent. Worth is assigned.</strong></p>
-            <p>A diamond is just compressed carbon. A dollar is just paper. A legendary sword is just pixels. We give these things value because we collectively agree they have value.</p>
-            <p>NumbahWan decided that a log—the most worthless item in the game—would be their most valuable symbol. And by believing it, they made it true.</p>
-        </div>
+        </section>
         
-        <div class="lore-quote">
-            <blockquote>"The game developers probably think we're crazy. They gave us a trash item and we turned it into our religion. But that's the point, isn't it? We decide what matters."</blockquote>
-            <cite>— RegginA, explaining the Log to new members</cite>
-        </div>
-    </section>
-    
-    <section class="content-section" data-chapter="8">
-        <div class="secret-box" data-secret="log-future">
-            <div class="secret-prompt"><i class="fas fa-lock"></i><span>Click to reveal the final secret...</span></div>
-            <div class="secret-content">
-                <span class="secret-badge"><i class="fas fa-key"></i> Secret #5 of 5</span>
-                <h3 style="font-family: 'Orbitron', sans-serif; margin-bottom: 1rem;">The Log Vault</h3>
-                <p style="color: rgba(255,255,255,0.8);">Deep within the guild's systems, there exists a Log Vault.</p>
-                <p style="color: rgba(255,255,255,0.8); margin-top: 1rem;">Every Sacred Log ever earned is tracked. Every ceremony recorded. If the guild ever disbands, the Vault data will be released as a permanent memorial to everyone who was ever part of NumbahWan.</p>
-                <p style="color: rgba(255,255,255,0.8); margin-top: 1rem;">Your Logs aren't just currency. They're your legacy.</p>
-                <p style="color: var(--nw-wood); margin-top: 1.5rem; font-weight: 600;">+10 NWG + 1 Sacred Log for discovering all secrets!</p>
+        <!-- Chapter 2: The Religion -->
+        <section class="dive-section">
+            <h2 class="dive-section-title"><i class="fas fa-pray"></i> <span data-i18n="ch2Title">Chapter 2: The Church of the Sacred Log</span></h2>
+            
+            <p class="dive-text" data-i18n="ch2p1">
+                What started as a meme quickly evolved into something... more. Within 48 hours of The First Appearance, 
+                guild members had established an entire religious framework around the Sacred Log. 
+                <strong>This was not planned. Nobody asked for this. It simply happened.</strong>
+            </p>
+            
+            <div class="prayer-box">
+                <div class="prayer-box-title" data-i18n="prayerTitle">📜 The Prayer of the Log</div>
+                <p data-i18n="prayer">
+                    "O Sacred Log, who art in debug mode,<br>
+                    Hallowed be thy texture.<br>
+                    Thy kingdom come, thy will be done,<br>
+                    In production as it is in development.<br>
+                    Give us this day our daily drops,<br>
+                    And forgive us our AFKs,<br>
+                    As we forgive those who grief against us.<br>
+                    Lead us not into nerfs,<br>
+                    But deliver us from lag.<br>
+                    For thine is the wood, the bark, and the glory,<br>
+                    Forever and ever.<br>
+                    Logmen."
+                </p>
             </div>
-        </div>
-    </section>
+            
+            <div class="funny-aside miracle" data-i18n="aside2">
+                The first recorded "miracle" occurred when a player prayed to the Log before a gacha pull and got a mythic character. The statistical probability was 0.1%. Log believers insist this proves divine intervention. Mathematicians insist this proves nothing. The debate continues.
+            </div>
+        </section>
+        
+        <!-- The Commandments -->
+        <section class="dive-section">
+            <h2 class="dive-section-title"><i class="fas fa-book"></i> <span data-i18n="ch3Title">The 7 Commandments of the Log</span></h2>
+            
+            <ol class="commandments">
+                <li data-i18n="cmd1">Thou shalt not question the Log's power, for it is beyond mortal comprehension (and debugging).</li>
+                <li data-i18n="cmd2">Thou shalt type "ALL HAIL THE LOG" whenever the server lags, for the Log giveth and the Log taketh away bandwidth.</li>
+                <li data-i18n="cmd3">Thou shalt never use compressed textures, for they are an affront to the Log's original 32x32 glory.</li>
+                <li data-i18n="cmd4">Thou shalt pray before every gacha pull. Results not guaranteed, but vibes are immaculate.</li>
+                <li data-i18n="cmd5">Thou shalt maintain at least one piece of wooden furniture in thy real-world dwelling as tribute.</li>
+                <li data-i18n="cmd6">Thou shalt not worship false idols (except for limited-time event characters, those are fine).</li>
+                <li data-i18n="cmd7">Thou shalt spread the word of the Log to newbies, for confusion is the first step toward enlightenment.</li>
+            </ol>
+            
+            <!-- Secret -->
+            <div class="secret-box" onclick="this.classList.toggle('revealed')">
+                <div class="secret-box-header">
+                    <i class="fas fa-key"></i>
+                    <span data-i18n="secret1Title">SECRET: The Hidden 8th Commandment</span>
+                </div>
+                <div class="secret-box-hint" data-i18n="secret1Hint">Click to reveal the forbidden commandment...</div>
+                <div class="secret-box-content" data-i18n="secret1Content">
+                    The 8th Commandment was struck from the records after The Incident of 2022. It simply stated: 
+                    "Thou shalt never, under any circumstances, craft a log into planks in Minecraft while in a 
+                    NumbahWan voice channel." Three guild members violated this commandment. 
+                    Their accounts were never the same. We do not speak of what happened to their inventory slots.
+                </div>
+            </div>
+        </section>
+        
+        <!-- Chapter 3: The Miracles -->
+        <section class="dive-section">
+            <h2 class="dive-section-title"><i class="fas fa-magic"></i> <span data-i18n="ch4Title">Chapter 4: The Documented Miracles</span></h2>
+            
+            <p class="dive-text" data-i18n="ch4p1">
+                Log Believers have meticulously documented every instance of supposed divine intervention. 
+                While skeptics insist these are coincidences, the faithful remain convinced. 
+                <strong>Here are the three most controversial "miracles":</strong>
+            </p>
+            
+            <div class="prayer-box">
+                <div class="prayer-box-title" data-i18n="miracle1Title">🎲 The Miracle of the 50/50</div>
+                <p data-i18n="miracle1">
+                    A player lost 14 consecutive 50/50 chances over 8 months. They began praying to the Log. 
+                    They then won 7 in a row. Probability of this occurring: approximately 0.78%. 
+                    The player has since tattooed a small log on their ankle. We have photographic evidence.
+                </p>
+            </div>
+            
+            <div class="prayer-box">
+                <div class="prayer-box-title" data-i18n="miracle2Title">⚔️ The Miracle of the Disconnection</div>
+                <p data-i18n="miracle2">
+                    During a crucial guild war, 30 enemy players simultaneously disconnected for exactly 3.7 seconds—
+                    the same duration as the Log's first appearance. NumbahWan won the battle. 
+                    Investigation revealed the enemy guild's router had been knocked over by a cat. 
+                    Log believers insist the Log "sent" the cat.
+                </p>
+            </div>
+            
+            <div class="prayer-box">
+                <div class="prayer-box-title" data-i18n="miracle3Title">💰 The Miracle of the Refund</div>
+                <p data-i18n="miracle3">
+                    A whale accidentally purchased $500 worth of the wrong currency. After a Log prayer session, 
+                    customer support ACTUALLY processed a full refund. 
+                    This is the most documented and controversial miracle, as anyone who has dealt with 
+                    gacha game customer support knows this is statistically impossible.
+                </p>
+            </div>
+            
+            <div class="funny-aside warning" data-i18n="aside3">
+                Disclaimer: NumbahWan Guild does not officially endorse the Church of the Sacred Log. However, we also haven't stopped it. Make of that what you will.
+            </div>
+        </section>
+        
+        <!-- Secret: The Truth -->
+        <section class="dive-section">
+            <div class="secret-box" onclick="this.classList.toggle('revealed')">
+                <div class="secret-box-header">
+                    <i class="fas fa-key"></i>
+                    <span data-i18n="secret2Title">FINAL SECRET: The Log's True Origin</span>
+                </div>
+                <div class="secret-box-hint" data-i18n="secret2Hint">Click to learn where the Sacred Log ACTUALLY came from...</div>
+                <div class="secret-box-content" data-i18n="secret2Content">
+                    The log texture was taken from a free asset pack called "Generic Fantasy Textures Vol. 3" 
+                    that the developer downloaded at 3 AM while eating cold pizza. The specific file was named 
+                    "wood_placeholder_DO_NOT_USE.png". It has since been downloaded over 50,000 times by 
+                    NumbahWan members who keep it as a desktop background, lock screen, or in one case, 
+                    had it printed on a body pillow. The original asset creator has no idea any of this happened 
+                    and probably shouldn't find out.
+                </div>
+            </div>
+        </section>
+        
+        <!-- Related -->
+        <section class="dive-section">
+            <h2 class="dive-section-title"><i class="fas fa-link"></i> <span data-i18n="relatedTitle">More From The Abyss</span></h2>
+            
+            <div class="related-dives">
+                <a href="/lore/reggina-origin.html" class="related-dive-card">
+                    <h4 data-i18n="rel1Title">🔥 RegginA: The Founder</h4>
+                    <p data-i18n="rel1Desc">The disaster that started it all.</p>
+                </a>
+                <a href="/lore/whale-wars.html" class="related-dive-card">
+                    <h4 data-i18n="rel2Title">🐋 The Whale Wars</h4>
+                    <p data-i18n="rel2Desc">$50,000 in spending. One banner. No survivors.</p>
+                </a>
+                <a href="/lore/afk-incident.html" class="related-dive-card">
+                    <h4 data-i18n="rel3Title">💤 The Great AFK Incident</h4>
+                    <p data-i18n="rel3Desc">Half the guild vanished. The other half panicked.</p>
+                </a>
+            </div>
+        </section>
+    </main>
     
-    <section class="content-section">
-        <div class="next-chapter">
-            <h3>The Story Continues...</h3>
-            <p>The Sacred Log is just one piece of NumbahWan's strange and beautiful mythology. There are more secrets to uncover.</p>
-            <a href="/lore" class="next-chapter-btn"><i class="fas fa-book-open"></i> Explore More Lore</a>
-        </div>
-    </section>
+    <a href="#" class="back-to-top" id="backToTop"><i class="fas fa-arrow-up"></i></a>
     
-    <div class="secrets-counter" id="secrets-counter">
-        <i class="fas fa-key"></i>
-        <span>Secrets: <span class="count" id="secret-count">0</span>/5</span>
-    </div>
-    
+    <!-- Scripts -->
+    <script src="/static/nw-nav.js" defer></script>
+    <script src="/static/nw-i18n-core.js" defer></script>
     <script>
-        let secretsFound = 0;
-        const revealedSecrets = new Set();
+        const PAGE_I18N = {
+            en: {
+                category: 'ARTIFACT DEEP DIVE',
+                title: 'The Sacred Log Chronicles',
+                subtitle: 'How a wooden placeholder became the most revered artifact in guild history.',
+                ch1Title: 'Chapter 1: The Accidental Revelation',
+                ch1p1: 'It began, as all great religious movements do, with a <strong>placeholder graphic</strong>. During a particularly chaotic guild meeting in early 2021, the screen share momentarily glitched, revealing a wooden log texture that was meant to be replaced with actual UI elements.',
+                ch1p2: 'For exactly 3.7 seconds, the log was visible. In that moment, the guild chat exploded with comments that would later be considered <strong>The First Testimonies</strong>:',
+                verse1: '"lol why is there a log"<br>"THE LOG HAS APPEARED"<br>"ALL HAIL THE LOG"<br>— First Testimonies, Guild Chat Archive #4,721',
+                aside1: 'Fun fact: The original log texture was a 32x32 pixel PNG that a developer had used as a joke placeholder 6 months earlier and forgot to remove. The developer has since been promoted to "Prophet of the Log."',
+                statsTitle: 'Sacred Log Statistics',
+                stat1: 'Wood Power', stat2: 'Witnessed Miracles', stat3: 'Original Appearance', stat4: 'Meme Potential',
+                ch2Title: 'Chapter 2: The Church of the Sacred Log',
+                ch2p1: 'What started as a meme quickly evolved into something... more. Within 48 hours of The First Appearance, guild members had established an entire religious framework around the Sacred Log. <strong>This was not planned. Nobody asked for this. It simply happened.</strong>',
+                prayerTitle: '📜 The Prayer of the Log',
+                prayer: '"O Sacred Log, who art in debug mode,<br>Hallowed be thy texture.<br>Thy kingdom come, thy will be done,<br>In production as it is in development.<br>Give us this day our daily drops,<br>And forgive us our AFKs,<br>As we forgive those who grief against us.<br>Lead us not into nerfs,<br>But deliver us from lag.<br>For thine is the wood, the bark, and the glory,<br>Forever and ever.<br>Logmen."',
+                aside2: 'The first recorded "miracle" occurred when a player prayed to the Log before a gacha pull and got a mythic character. The statistical probability was 0.1%. Log believers insist this proves divine intervention. Mathematicians insist this proves nothing. The debate continues.',
+                ch3Title: 'The 7 Commandments of the Log',
+                cmd1: "Thou shalt not question the Log's power, for it is beyond mortal comprehension (and debugging).",
+                cmd2: 'Thou shalt type "ALL HAIL THE LOG" whenever the server lags, for the Log giveth and the Log taketh away bandwidth.',
+                cmd3: "Thou shalt never use compressed textures, for they are an affront to the Log's original 32x32 glory.",
+                cmd4: 'Thou shalt pray before every gacha pull. Results not guaranteed, but vibes are immaculate.',
+                cmd5: 'Thou shalt maintain at least one piece of wooden furniture in thy real-world dwelling as tribute.',
+                cmd6: 'Thou shalt not worship false idols (except for limited-time event characters, those are fine).',
+                cmd7: 'Thou shalt spread the word of the Log to newbies, for confusion is the first step toward enlightenment.',
+                secret1Title: 'SECRET: The Hidden 8th Commandment',
+                secret1Hint: 'Click to reveal the forbidden commandment...',
+                secret1Content: 'The 8th Commandment was struck from the records after The Incident of 2022. It simply stated: "Thou shalt never, under any circumstances, craft a log into planks in Minecraft while in a NumbahWan voice channel." Three guild members violated this commandment. Their accounts were never the same. We do not speak of what happened to their inventory slots.',
+                ch4Title: 'Chapter 4: The Documented Miracles',
+                ch4p1: 'Log Believers have meticulously documented every instance of supposed divine intervention. While skeptics insist these are coincidences, the faithful remain convinced. <strong>Here are the three most controversial "miracles":</strong>',
+                miracle1Title: '🎲 The Miracle of the 50/50',
+                miracle1: 'A player lost 14 consecutive 50/50 chances over 8 months. They began praying to the Log. They then won 7 in a row. Probability of this occurring: approximately 0.78%. The player has since tattooed a small log on their ankle. We have photographic evidence.',
+                miracle2Title: '⚔️ The Miracle of the Disconnection',
+                miracle2: "During a crucial guild war, 30 enemy players simultaneously disconnected for exactly 3.7 seconds—the same duration as the Log's first appearance. NumbahWan won the battle. Investigation revealed the enemy guild's router had been knocked over by a cat. Log believers insist the Log \"sent\" the cat.",
+                miracle3Title: '💰 The Miracle of the Refund',
+                miracle3: 'A whale accidentally purchased $500 worth of the wrong currency. After a Log prayer session, customer support ACTUALLY processed a full refund. This is the most documented and controversial miracle, as anyone who has dealt with gacha game customer support knows this is statistically impossible.',
+                aside3: 'Disclaimer: NumbahWan Guild does not officially endorse the Church of the Sacred Log. However, we also haven\'t stopped it. Make of that what you will.',
+                secret2Title: "FINAL SECRET: The Log's True Origin",
+                secret2Hint: 'Click to learn where the Sacred Log ACTUALLY came from...',
+                secret2Content: 'The log texture was taken from a free asset pack called "Generic Fantasy Textures Vol. 3" that the developer downloaded at 3 AM while eating cold pizza. The specific file was named "wood_placeholder_DO_NOT_USE.png". It has since been downloaded over 50,000 times by NumbahWan members who keep it as a desktop background, lock screen, or in one case, had it printed on a body pillow. The original asset creator has no idea any of this happened and probably shouldn\'t find out.',
+                relatedTitle: 'More From The Abyss',
+                rel1Title: '🔥 RegginA: The Founder', rel1Desc: 'The disaster that started it all.',
+                rel2Title: '🐋 The Whale Wars', rel2Desc: '$50,000 in spending. One banner. No survivors.',
+                rel3Title: '💤 The Great AFK Incident', rel3Desc: 'Half the guild vanished. The other half panicked.'
+            },
+            zh: {
+                category: '神器深入探索',
+                title: '聖木編年史',
+                subtitle: '一個木質占位符如何成為公會歷史上最受尊崇的神器。',
+                ch1Title: '第一章：意外的啟示',
+                ch1p1: '它的開始，就像所有偉大的宗教運動一樣，源於一個<strong>占位符圖形</strong>。在2021年初一次特別混亂的公會會議中，屏幕共享瞬間故障，顯示出一個原本應該被替換成實際UI元素的木頭紋理。',
+                ch1p2: '木頭正好可見了3.7秒。在那一刻，公會聊天爆發了後來被認為是<strong>第一批見證</strong>的評論：',
+                verse1: '"哈哈為什麼有根木頭"<br>"木頭出現了"<br>"向木頭致敬"<br>— 第一批見證，公會聊天存檔 #4,721',
+                aside1: '有趣的事實：原始的木頭紋理是一個32x32像素的PNG，一個開發者在6個月前作為玩笑占位符使用並忘記移除。該開發者此後已被提升為"聖木先知"。',
+                statsTitle: '聖木統計數據',
+                stat1: '木之力量', stat2: '見證的奇蹟', stat3: '原始出現時間', stat4: '迷因潛力',
+                ch2Title: '第二章：聖木教會',
+                ch2p1: '一開始只是個迷因，很快就演變成了...更多的東西。在第一次出現後的48小時內，公會成員已經圍繞聖木建立了一整套宗教框架。<strong>這不是計劃的。沒有人要求這樣做。它就這樣發生了。</strong>',
+                prayerTitle: '📜 聖木禱文',
+                prayer: '"我們在調試模式中的聖木，<br>願你的紋理被尊為聖。<br>願你的王國降臨，願你的旨意成就，<br>在生產環境如同在開發環境。<br>今日賜給我們每日的掉落，<br>並赦免我們的AFK，<br>如同我們赦免那些針對我們悲傷的人。<br>不要讓我們陷入削弱，<br>但救我們脫離延遲。<br>因為木、樹皮和榮耀都是你的，<br>永遠永遠。<br>木門。"',
+                aside2: '第一個記錄的"奇蹟"發生在一個玩家在抽卡前向聖木祈禱並獲得了一個神話角色。統計概率是0.1%。聖木信徒堅持這證明了神聖干預。數學家堅持這什麼都不能證明。辯論仍在繼續。',
+                ch3Title: '聖木七誡',
+                cmd1: '你不可質疑聖木的力量，因為它超出了凡人的理解（和調試）。',
+                cmd2: '每當服務器延遲時，你都要輸入"向聖木致敬"，因為聖木給予也取走帶寬。',
+                cmd3: '你永遠不可使用壓縮紋理，因為它們是對聖木原始32x32榮耀的冒犯。',
+                cmd4: '你在每次抽卡前都要祈禱。結果不保證，但感覺是完美的。',
+                cmd5: '你必須在現實世界的住所中至少保持一件木製家具作為貢品。',
+                cmd6: '你不可崇拜假神（除了限時活動角色，那些可以）。',
+                cmd7: '你要向新人傳播聖木的話語，因為困惑是啟蒙的第一步。',
+                secret1Title: '秘密：隱藏的第八誡',
+                secret1Hint: '點擊揭示被禁止的誡命...',
+                secret1Content: '第八誡在2022年的事件之後被從記錄中刪除。它只是說："在任何情況下，你都不可在NumbahWan語音頻道中將木頭製作成木板。"三名公會成員違反了這條誡命。他們的帳戶再也不一樣了。我們不談論他們的物品欄發生了什麼。',
+                ch4Title: '第四章：記錄的奇蹟',
+                ch4p1: '聖木信徒們一絲不苟地記錄了每一個所謂的神聖干預實例。雖然懷疑論者堅持這些是巧合，但信徒們仍然堅信不疑。<strong>以下是三個最具爭議的"奇蹟"：</strong>',
+                miracle1Title: '🎲 50/50的奇蹟',
+                miracle1: '一個玩家在8個月內連續輸掉了14次50/50機會。他們開始向聖木祈禱。然後他們連續贏了7次。這種情況發生的概率：大約0.78%。該玩家此後在腳踝上紋了一個小木頭。我們有照片證據。',
+                miracle2Title: '⚔️ 斷線的奇蹟',
+                miracle2: '在一場關鍵的公會戰中，30名敵方玩家同時斷線了整整3.7秒——與聖木第一次出現的時間相同。NumbahWan贏得了戰鬥。調查顯示敵方公會的路由器被一隻貓撞倒了。聖木信徒堅持聖木"派遣"了那隻貓。',
+                miracle3Title: '💰 退款的奇蹟',
+                miracle3: '一個大戶意外購買了價值500美元的錯誤貨幣。在聖木祈禱會後，客服實際處理了全額退款。這是記錄最多也最具爭議的奇蹟，因為任何與手遊客服打過交道的人都知道這在統計上是不可能的。',
+                aside3: '免責聲明：NumbahWan公會並不正式認可聖木教會。但是，我們也沒有阻止它。你自己判斷吧。',
+                secret2Title: '最終秘密：聖木的真正起源',
+                secret2Hint: '點擊了解聖木實際來自哪裡...',
+                secret2Content: '木頭紋理取自一個名為"通用奇幻紋理第3卷"的免費資源包，開發者在凌晨3點吃冷披薩時下載的。具體文件名為"wood_placeholder_DO_NOT_USE.png"。它此後被NumbahWan成員下載了超過50,000次，他們把它作為桌面背景、鎖屏，或者在一個案例中，印在抱枕上。原始資源創建者對此一無所知，可能也不應該知道。',
+                relatedTitle: '深淵中的更多內容',
+                rel1Title: '🔥 RegginA：創始人', rel1Desc: '開始這一切的災難。',
+                rel2Title: '🐋 鯨魚戰爭', rel2Desc: '花費50,000美元。一個活動。沒有倖存者。',
+                rel3Title: '💤 偉大的AFK事件', rel3Desc: '一半的公會消失了。另一半恐慌了。'
+            },
+            th: {
+                category: 'สำรวจสิ่งประดิษฐ์เชิงลึก',
+                title: 'บันทึกท่อนไม้ศักดิ์สิทธิ์',
+                subtitle: 'กราฟิกตัวแทนไม้กลายเป็นสิ่งประดิษฐ์ที่ได้รับการเคารพมากที่สุดในประวัติศาสตร์กิลด์ได้อย่างไร',
+                ch1Title: 'บทที่ 1: การเปิดเผยโดยบังเอิญ',
+                ch1p1: 'มันเริ่มต้น เหมือนกับการเคลื่อนไหวทางศาสนาที่ยิ่งใหญ่ทั้งหมด ด้วย<strong>กราฟิกตัวแทน</strong> ในระหว่างการประชุมกิลด์ที่วุ่นวายเป็นพิเศษในต้นปี 2021 หน้าจอแชร์กลิทช์ชั่วขณะ เผยให้เห็นพื้นผิวท่อนไม้ที่ตั้งใจจะถูกแทนที่ด้วยองค์ประกอบ UI จริง',
+                ch1p2: 'ท่อนไม้ปรากฏให้เห็นเป็นเวลา 3.7 วินาทีพอดี ในช่วงเวลานั้น แชทกิลด์ระเบิดด้วยความคิดเห็นที่ต่อมาจะถูกพิจารณาว่าเป็น<strong>พยานหลักฐานแรก</strong>:',
+                verse1: '"ฮ่าฮ่า ทำไมมีท่อนไม้"<br>"ท่อนไม้ปรากฏแล้ว"<br>"สรรเสริญท่อนไม้"<br>— พยานหลักฐานแรก, คลังแชทกิลด์ #4,721',
+                aside1: 'ข้อเท็จจริงน่าสนุก: พื้นผิวท่อนไม้ดั้งเดิมเป็น PNG ขนาด 32x32 พิกเซลที่นักพัฒนาใช้เป็นตัวแทนตลก 6 เดือนก่อนและลืมลบ นักพัฒนาได้รับการเลื่อนตำแหน่งเป็น "ศาสดาแห่งท่อนไม้" ในเวลาต่อมา',
+                statsTitle: 'สถิติท่อนไม้ศักดิ์สิทธิ์',
+                stat1: 'พลังไม้', stat2: 'ปาฏิหาริย์ที่เห็น', stat3: 'การปรากฏดั้งเดิม', stat4: 'ศักยภาพมีม',
+                ch2Title: 'บทที่ 2: โบสถ์แห่งท่อนไม้ศักดิ์สิทธิ์',
+                ch2p1: 'สิ่งที่เริ่มต้นเป็นมีมได้พัฒนาอย่างรวดเร็วเป็นบางอย่าง... มากกว่านั้น ภายใน 48 ชั่วโมงหลังจากการปรากฏครั้งแรก สมาชิกกิลด์ได้สร้างกรอบทางศาสนาทั้งหมดรอบท่อนไม้ศักดิ์สิทธิ์ <strong>นี่ไม่ได้วางแผนไว้ ไม่มีใครขอสิ่งนี้ มันเกิดขึ้นเฉยๆ</strong>',
+                prayerTitle: '📜 คำอธิษฐานแห่งท่อนไม้',
+                prayer: '"โอ ท่อนไม้ศักดิ์สิทธิ์ ผู้อยู่ในโหมดดีบัก<br>ขอให้พื้นผิวของท่านเป็นที่สักการะ<br>ขออาณาจักรของท่านมา ขอให้เป็นไปตามประสงค์ของท่าน<br>ในโปรดักชันเหมือนในการพัฒนา<br>ขอประทานดรอปประจำวันแก่เราวันนี้<br>และยกโทษ AFK ของเรา<br>เหมือนที่เรายกโทษผู้ที่ทำให้เราเศร้า<br>อย่านำเราเข้าสู่การเนิร์ฟ<br>แต่ช่วยเราให้พ้นจากแลก<br>เพราะไม้ เปลือก และความรุ่งโรจน์เป็นของท่าน<br>ตลอดไปและตลอดไป<br>ลอกเมน"',
+                aside2: '"ปาฏิหาริย์" ที่บันทึกไว้ครั้งแรกเกิดขึ้นเมื่อผู้เล่นอธิษฐานต่อท่อนไม้ก่อนสุ่มกาชาและได้ตัวละครระดับตำนาน ความน่าจะเป็นทางสถิติคือ 0.1% ผู้ศรัทธาท่อนไม้ยืนยันว่านี่พิสูจน์การแทรกแซงจากสวรรค์ นักคณิตศาสตร์ยืนยันว่านี่ไม่ได้พิสูจน์อะไร การถกเถียงยังคงดำเนินต่อไป',
+                ch3Title: 'บัญญัติ 7 ประการแห่งท่อนไม้',
+                cmd1: 'ท่านจะไม่ตั้งคำถามต่อพลังของท่อนไม้ เพราะมันเกินความเข้าใจของมนุษย์ (และการดีบัก)',
+                cmd2: 'ท่านจะพิมพ์ "สรรเสริญท่อนไม้" ทุกครั้งที่เซิร์ฟเวอร์แลก เพราะท่อนไม้ให้และท่อนไม้เอาแบนด์วิดท์ไป',
+                cmd3: 'ท่านจะไม่ใช้พื้นผิวบีบอัด เพราะมันเป็นการดูหมิ่นความรุ่งโรจน์ 32x32 ดั้งเดิมของท่อนไม้',
+                cmd4: 'ท่านจะอธิษฐานก่อนทุกครั้งที่สุ่มกาชา ผลลัพธ์ไม่รับประกัน แต่ความรู้สึกสมบูรณ์แบบ',
+                cmd5: 'ท่านต้องรักษาเฟอร์นิเจอร์ไม้อย่างน้อยหนึ่งชิ้นในที่อยู่อาศัยในโลกจริงเป็นเครื่องบูชา',
+                cmd6: 'ท่านจะไม่บูชารูปเคารพเท็จ (ยกเว้นตัวละครอีเวนต์จำกัดเวลา พวกนั้นโอเค)',
+                cmd7: 'ท่านจะเผยแพร่พระวจนะของท่อนไม้ให้มือใหม่ เพราะความสับสนเป็นก้าวแรกสู่การตรัสรู้',
+                secret1Title: 'ความลับ: บัญญัติข้อที่ 8 ที่ซ่อนอยู่',
+                secret1Hint: 'คลิกเพื่อเปิดเผยบัญญัติที่ต้องห้าม...',
+                secret1Content: 'บัญญัติข้อที่ 8 ถูกลบออกจากบันทึกหลังจากเหตุการณ์ปี 2022 มันระบุเพียงว่า: "ไม่ว่าในสถานการณ์ใด ท่านจะไม่แปลงท่อนไม้เป็นแผ่นไม้ใน Minecraft ขณะอยู่ในช่องเสียง NumbahWan" สมาชิกกิลด์สามคนละเมิดบัญญัตินี้ บัญชีของพวกเขาไม่เหมือนเดิมอีกต่อไป เราไม่พูดถึงสิ่งที่เกิดขึ้นกับช่องเก็บของของพวกเขา',
+                ch4Title: 'บทที่ 4: ปาฏิหาริย์ที่บันทึกไว้',
+                ch4p1: 'ผู้ศรัทธาท่อนไม้ได้บันทึกทุกกรณีของการแทรกแซงจากสวรรค์อย่างพิถีพิถัน ในขณะที่ผู้ไม่เชื่อยืนยันว่าเหล่านี้เป็นความบังเอิญ ผู้ศรัทธายังคงมั่นใจ <strong>นี่คือ "ปาฏิหาริย์" ที่เป็นที่ถกเถียงมากที่สุดสามประการ:</strong>',
+                miracle1Title: '🎲 ปาฏิหาริย์แห่ง 50/50',
+                miracle1: 'ผู้เล่นแพ้โอกาส 50/50 ติดต่อกัน 14 ครั้งใน 8 เดือน พวกเขาเริ่มอธิษฐานต่อท่อนไม้ จากนั้นพวกเขาชนะติดต่อกัน 7 ครั้ง ความน่าจะเป็นที่สิ่งนี้จะเกิดขึ้น: ประมาณ 0.78% ผู้เล่นได้สักท่อนไม้เล็กๆ บนข้อเท้าตั้งแต่นั้นมา เรามีหลักฐานภาพถ่าย',
+                miracle2Title: '⚔️ ปาฏิหาริย์แห่งการหลุด',
+                miracle2: 'ในระหว่างสงครามกิลด์ที่สำคัญ ผู้เล่นฝ่ายตรงข้าม 30 คนหลุดพร้อมกันเป็นเวลา 3.7 วินาทีพอดี—เวลาเดียวกับการปรากฏครั้งแรกของท่อนไม้ NumbahWan ชนะการต่อสู้ การสืบสวนพบว่าเราเตอร์ของกิลด์ศัตรูถูกแมวกระแทกล้ม ผู้ศรัทธาท่อนไม้ยืนยันว่าท่อนไม้ "ส่ง" แมวมา',
+                miracle3Title: '💰 ปาฏิหาริย์แห่งการคืนเงิน',
+                miracle3: 'วาฬซื้อสกุลเงินผิดมูลค่า $500 โดยไม่ตั้งใจ หลังจากการอธิษฐานต่อท่อนไม้ ฝ่ายสนับสนุนลูกค้าจริงๆ ดำเนินการคืนเงินเต็มจำนวน นี่คือปาฏิหาริย์ที่บันทึกมากที่สุดและเป็นที่ถกเถียงมากที่สุด เพราะใครก็ตามที่เคยจัดการกับฝ่ายสนับสนุนลูกค้าเกมกาชารู้ว่านี่เป็นไปไม่ได้ทางสถิติ',
+                aside3: 'ข้อจำกัดความรับผิดชอบ: กิลด์ NumbahWan ไม่ได้รับรองโบสถ์แห่งท่อนไม้ศักดิ์สิทธิ์อย่างเป็นทางการ อย่างไรก็ตาม เราก็ไม่ได้หยุดมันเช่นกัน ตีความเองตามสะดวก',
+                secret2Title: 'ความลับสุดท้าย: ต้นกำเนิดที่แท้จริงของท่อนไม้',
+                secret2Hint: 'คลิกเพื่อเรียนรู้ว่าท่อนไม้ศักดิ์สิทธิ์มาจากไหนจริงๆ...',
+                secret2Content: 'พื้นผิวท่อนไม้มาจากแพ็คทรัพย์สินฟรีชื่อ "Generic Fantasy Textures Vol. 3" ที่นักพัฒนาดาวน์โหลดตอนตี 3 ขณะกินพิซซ่าเย็น ไฟล์เฉพาะมีชื่อว่า "wood_placeholder_DO_NOT_USE.png" มันถูกดาวน์โหลดไปแล้วกว่า 50,000 ครั้งโดยสมาชิก NumbahWan ที่เก็บไว้เป็นพื้นหลังเดสก์ท็อป หน้าจอล็อค หรือในกรณีหนึ่ง พิมพ์บนหมอนข้าง ผู้สร้างทรัพย์สินดั้งเดิมไม่รู้เลยว่าสิ่งนี้เกิดขึ้น และอาจไม่ควรรู้',
+                relatedTitle: 'เพิ่มเติมจากนรกลึก',
+                rel1Title: '🔥 RegginA: ผู้ก่อตั้ง', rel1Desc: 'หายนะที่เริ่มต้นทุกอย่าง',
+                rel2Title: '🐋 สงครามวาฬ', rel2Desc: 'ใช้จ่าย $50,000 หนึ่งแบนเนอร์ ไม่มีผู้รอดชีวิต',
+                rel3Title: '💤 เหตุการณ์ AFK ครั้งยิ่งใหญ่', rel3Desc: 'ครึ่งหนึ่งของกิลด์หายไป อีกครึ่งตื่นตระหนก'
+            }
+        };
         
-        const nav = document.getElementById('lore-nav');
-        const progressBar = document.getElementById('progress-bar');
-        
-        window.addEventListener('scroll', () => {
-            const scrollY = window.scrollY;
-            const docHeight = document.documentElement.scrollHeight - window.innerHeight;
-            progressBar.style.width = `${(scrollY / docHeight) * 100}%`;
-            nav.classList.toggle('visible', scrollY > 100);
-        }, { passive: true });
-        
-        const sections = document.querySelectorAll('.content-section');
-        const observer = new IntersectionObserver((entries) => {
-            entries.forEach(entry => { if (entry.isIntersecting) entry.target.classList.add('visible'); });
-        }, { threshold: 0.1, rootMargin: '-50px' });
-        sections.forEach(section => observer.observe(section));
-        
-        document.querySelectorAll('.secret-box').forEach(box => {
-            box.addEventListener('click', () => {
-                if (box.classList.contains('revealed')) return;
-                const secretId = box.dataset.secret;
-                if (revealedSecrets.has(secretId)) return;
-                box.classList.add('revealed');
-                revealedSecrets.add(secretId);
-                secretsFound++;
-                document.getElementById('secret-count').textContent = secretsFound;
-                document.getElementById('secrets-counter').classList.add('visible');
-                const isLast = secretsFound === 5;
-                if (typeof NW_WALLET !== 'undefined') {
-                    NW_WALLET.earn('nwg', isLast ? 10 : 5, 'LORE_SECRET');
-                    if (isLast) NW_WALLET.earn('wood', 1, 'ALL_SECRETS_FOUND');
-                }
-                showToast(isLast ? '🎉 All Secrets Found!' : '🔓 Secret Revealed!', isLast ? '+10 NWG & +1 Sacred Log' : '+5 NWG');
+        function applyTranslations(lang) {
+            const t = PAGE_I18N[lang] || PAGE_I18N.en;
+            document.querySelectorAll('[data-i18n]').forEach(el => {
+                const key = el.getAttribute('data-i18n');
+                if (t[key]) el.innerHTML = t[key];
             });
-        });
-        
-        function showToast(title, message) {
-            const toast = document.createElement('div');
-            toast.style.cssText = 'position:fixed;top:80px;right:2rem;background:linear-gradient(135deg,#8b5a2b,#c97f3d);padding:1rem 1.5rem;border-radius:0.75rem;z-index:1001;animation:toastIn 0.3s ease;max-width:300px;';
-            toast.innerHTML = `<strong style="display:block;margin-bottom:0.25rem;">${title}</strong><span style="font-size:0.875rem;opacity:0.9;">${message}</span>`;
-            document.body.appendChild(toast);
-            setTimeout(() => { toast.style.animation = 'toastOut 0.3s ease forwards'; setTimeout(() => toast.remove(), 300); }, 3000);
+            document.documentElement.lang = lang;
         }
         
-        document.addEventListener('DOMContentLoaded', () => { if (typeof NW_WALLET !== 'undefined') NW_WALLET.init(); });
+        function getCurrentLang() {
+            if (typeof NW_NAV !== 'undefined' && NW_NAV.currentLang) return NW_NAV.currentLang;
+            if (typeof NW_I18N !== 'undefined' && NW_I18N.lang) return NW_I18N.lang;
+            return localStorage.getItem('nw_lang') || 'en';
+        }
+        
+        document.addEventListener('DOMContentLoaded', () => {
+            ['nw-lang-change', 'languageChanged'].forEach(evt => {
+                document.addEventListener(evt, e => applyTranslations(e.detail?.lang || 'en'));
+            });
+            window.addEventListener('nw-lang-change', e => applyTranslations(e.detail?.lang || 'en'));
+            
+            const btn = document.getElementById('backToTop');
+            window.addEventListener('scroll', () => {
+                btn.classList.toggle('visible', window.scrollY > 500);
+            }, { passive: true });
+            
+            setTimeout(() => applyTranslations(getCurrentLang()), 100);
+        });
     </script>
-    <style>
-        @keyframes toastIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
-        @keyframes toastOut { from { transform: translateX(0); opacity: 1; } to { transform: translateX(100%); opacity: 0; } }
-    </style>
 </body>
 </html>
