@@ -253,6 +253,16 @@
     },
 
     /**
+     * Register page-specific translations (alias for register with page id)
+     * @param {string} pageId - Page identifier (for debugging)
+     * @param {Object} translations - { en: {...}, zh: {...}, th: {...} }
+     */
+    registerPage(pageId, translations = {}) {
+      console.log(`[NW_I18N] Registering translations for page: ${pageId}`);
+      return this.register(translations);
+    },
+
+    /**
      * Set language
      * @param {string} lang - Language code (en, zh, th)
      */
