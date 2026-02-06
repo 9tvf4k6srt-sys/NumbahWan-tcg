@@ -1,12 +1,23 @@
 /**
- * NumbahWan AI Guide v5.0 - REAL AI EDITION!
- * Multi-language floating assistant with LLM integration
+ * NumbahWan AI Guide v6.0 - ACTION EDITION!
+ * Multi-language floating assistant with LLM integration + ACTIONS!
  * 
  * LEARNING FEATURES:
  * - Real AI chat using LLM API
  * - Streaming responses (typing effect)
  * - Conversation memory
+ * - ACTION SYSTEM: AI can navigate, show balances, claim rewards!
  * - Fallback to rule-based when AI unavailable
+ * 
+ * ACTIONS SUPPORTED:
+ * - navigate: Go to any page
+ * - showBalance: Display wallet popup
+ * - claimDaily: Claim daily login reward
+ * - openForge: Open card forge
+ * - showCards: Show card collection
+ * - playSound: Play sound effects
+ * - showToast: Show notifications
+ * - copyText: Copy to clipboard
  * 
  * Supports: English, 繁體中文, ภาษาไทย
  */
@@ -23,6 +34,307 @@
     let conversationHistory = []; // Store conversation for context
     const MAX_CONVERSATION_HISTORY = 10; // Keep last 10 messages
     let isAiAvailable = null; // null = unknown, true/false = checked
+    
+    // ==================== ACTION EXECUTOR ====================
+    // Execute actions returned by the AI
+    // This is where the magic happens - AI responses can DO things!
+    
+    const ActionExecutor = {
+        // Execute a single action
+        execute(action) {
+            console.log('[NW_GUIDE] Executing action:', action);
+            
+            switch (action.type) {
+                case 'navigate':
+                    return this.navigate(action.target);
+                case 'showBalance':
+                    return this.showBalance();
+                case 'claimDaily':
+                    return this.claimDaily();
+                case 'openForge':
+                    return this.openForge();
+                case 'showCards':
+                    return this.showCards();
+                case 'playSound':
+                    return this.playSound(action.target || 'click');
+                case 'showToast':
+                    return this.showToast(action.data?.message, action.data?.type);
+                case 'toggleTheme':
+                    return this.toggleTheme();
+                case 'copyText':
+                    return this.copyText(action.data?.text);
+                case 'shareDiscord':
+                    return this.shareDiscord(action.data);
+                default:
+                    console.warn('[NW_GUIDE] Unknown action type:', action.type);
+                    return false;
+            }
+        },
+        
+        // Execute multiple actions with delay between them
+        async executeAll(actions) {
+            if (!actions || actions.length === 0) return;
+            
+            for (let i = 0; i < actions.length; i++) {
+                const action = actions[i];
+                const success = await this.execute(action);
+                
+                // Small delay between actions for better UX
+                if (i < actions.length - 1) {
+                    await new Promise(resolve => setTimeout(resolve, 500));
+                }
+            }
+        },
+        
+        // Navigate to a page
+        navigate(target) {
+            if (!target) return false;
+            
+            // Validate target is a valid path
+            if (!target.startsWith('/')) {
+                target = '/' + target;
+            }
+            
+            // Use soft navigation if available, otherwise hard navigation
+            if (window.NW_NAV?.navigate) {
+                window.NW_NAV.navigate(target);
+            } else {
+                window.location.href = target;
+            }
+            
+            console.log('[NW_GUIDE] Navigating to:', target);
+            return true;
+        },
+        
+        // Show wallet/balance popup
+        showBalance() {
+            // Try to trigger wallet popup
+            if (window.NW_WALLET?.showPopup) {
+                window.NW_WALLET.showPopup();
+                return true;
+            }
+            
+            // Fallback: navigate to wallet page
+            if (window.NW_NAV?.navigate) {
+                window.NW_NAV.navigate('/wallet');
+            } else {
+                window.location.href = '/wallet';
+            }
+            return true;
+        },
+        
+        // Claim daily login reward
+        claimDaily() {
+            // Try to trigger daily claim
+            if (window.NW_WALLET?.claimDaily) {
+                window.NW_WALLET.claimDaily();
+                return true;
+            }
+            
+            // Dispatch event for other systems to handle
+            window.dispatchEvent(new CustomEvent('nw-claim-daily'));
+            
+            // Show a toast if claim system not available
+            this.showToast('Opening daily rewards...', 'info');
+            
+            // Navigate to wallet where daily claim usually lives
+            setTimeout(() => {
+                this.navigate('/wallet');
+            }, 500);
+            
+            return true;
+        },
+        
+        // Open card forge
+        openForge() {
+            // Try to open forge modal
+            if (window.NW_FORGE?.open) {
+                window.NW_FORGE.open();
+                return true;
+            }
+            
+            // Dispatch event
+            window.dispatchEvent(new CustomEvent('nw-open-forge'));
+            
+            // Navigate to forge page
+            this.navigate('/forge');
+            return true;
+        },
+        
+        // Show card collection
+        showCards() {
+            // Try to open collection modal
+            if (window.NW_CARDS?.showCollection) {
+                window.NW_CARDS.showCollection();
+                return true;
+            }
+            
+            // Dispatch event
+            window.dispatchEvent(new CustomEvent('nw-show-cards'));
+            
+            // Navigate to collection page
+            this.navigate('/collection');
+            return true;
+        },
+        
+        // Play a sound effect
+        playSound(soundName) {
+            if (typeof NW_SOUNDS !== 'undefined' && NW_SOUNDS.play) {
+                NW_SOUNDS.play(soundName);
+                return true;
+            }
+            
+            // Fallback: try to play from common audio elements
+            const audio = document.querySelector(`audio[data-sound="${soundName}"]`);
+            if (audio) {
+                audio.play().catch(() => {});
+                return true;
+            }
+            
+            return false;
+        },
+        
+        // Show a toast notification
+        showToast(message, type = 'info') {
+            if (!message) return false;
+            
+            // Try global toast system
+            if (window.NW_TOAST?.show) {
+                window.NW_TOAST.show(message, type);
+                return true;
+            }
+            
+            // Create a simple toast
+            const toast = document.createElement('div');
+            toast.className = 'nw-guide-toast';
+            toast.setAttribute('data-type', type);
+            toast.innerHTML = `
+                <span class="toast-icon">${type === 'success' ? '✅' : type === 'error' ? '❌' : type === 'warning' ? '⚠️' : 'ℹ️'}</span>
+                <span class="toast-message">${message}</span>
+            `;
+            
+            // Add toast styles if not present
+            if (!document.getElementById('nw-toast-styles')) {
+                const style = document.createElement('style');
+                style.id = 'nw-toast-styles';
+                style.textContent = `
+                    .nw-guide-toast {
+                        position: fixed;
+                        bottom: 180px;
+                        left: 24px;
+                        background: #1a1f26;
+                        border: 1px solid #30363d;
+                        border-radius: 12px;
+                        padding: 12px 20px;
+                        color: #fff;
+                        font-size: 14px;
+                        display: flex;
+                        align-items: center;
+                        gap: 10px;
+                        z-index: 99999;
+                        animation: nw-toast-in 0.3s ease, nw-toast-out 0.3s ease 2.7s forwards;
+                        box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+                    }
+                    .nw-guide-toast[data-type="success"] { border-color: #22c55e; }
+                    .nw-guide-toast[data-type="error"] { border-color: #ef4444; }
+                    .nw-guide-toast[data-type="warning"] { border-color: #f59e0b; }
+                    .nw-guide-toast[data-type="info"] { border-color: #3b82f6; }
+                    @keyframes nw-toast-in {
+                        from { opacity: 0; transform: translateY(20px); }
+                        to { opacity: 1; transform: translateY(0); }
+                    }
+                    @keyframes nw-toast-out {
+                        from { opacity: 1; transform: translateY(0); }
+                        to { opacity: 0; transform: translateY(-20px); }
+                    }
+                `;
+                document.head.appendChild(style);
+            }
+            
+            document.body.appendChild(toast);
+            
+            // Remove after 3 seconds
+            setTimeout(() => toast.remove(), 3000);
+            
+            return true;
+        },
+        
+        // Toggle dark/light theme
+        toggleTheme() {
+            if (window.NW_THEME?.toggle) {
+                window.NW_THEME.toggle();
+                return true;
+            }
+            
+            // Fallback: toggle data-theme attribute
+            const html = document.documentElement;
+            const current = html.getAttribute('data-theme');
+            html.setAttribute('data-theme', current === 'light' ? 'dark' : 'light');
+            return true;
+        },
+        
+        // Copy text to clipboard
+        async copyText(text) {
+            if (!text) return false;
+            
+            try {
+                await navigator.clipboard.writeText(text);
+                this.showToast('Copied to clipboard! 📋', 'success');
+                return true;
+            } catch (e) {
+                // Fallback for older browsers
+                const textarea = document.createElement('textarea');
+                textarea.value = text;
+                textarea.style.position = 'fixed';
+                textarea.style.opacity = '0';
+                document.body.appendChild(textarea);
+                textarea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textarea);
+                this.showToast('Copied to clipboard! 📋', 'success');
+                return true;
+            }
+        },
+        
+        // Share to Discord
+        shareDiscord(data) {
+            if (window.NW_DISCORD?.share) {
+                window.NW_DISCORD.share(data);
+                return true;
+            }
+            
+            // Open Discord in new tab with pre-filled message
+            const message = data?.message || 'Check out NumbahWan Guild!';
+            const url = data?.url || window.location.href;
+            window.open(`https://discord.com/channels/@me?content=${encodeURIComponent(message + ' ' + url)}`, '_blank');
+            return true;
+        }
+    };
+    
+    // Parse actions from AI response text
+    function parseActionsFromText(text) {
+        const actions = [];
+        const actionRegex = /<<<ACTION:(\{[^>]+\})>>>/g;
+        let match;
+        
+        while ((match = actionRegex.exec(text)) !== null) {
+            try {
+                const actionData = JSON.parse(match[1]);
+                if (actionData.type) {
+                    actions.push(actionData);
+                }
+            } catch (e) {
+                console.error('[NW_GUIDE] Failed to parse action:', match[1], e);
+            }
+        }
+        
+        return actions;
+    }
+    
+    // Remove action tags from text for display
+    function cleanActionTags(text) {
+        return text.replace(/<<<ACTION:\{[^>]+\}>>>/g, '').trim();
+    }
     
     // Check if AI is available on load
     async function checkAiAvailability() {
@@ -1235,12 +1547,24 @@
                                 messageElement = createStreamingMessage();
                             }
                             
-                            // Update with markdown-like formatting
-                            messageElement.innerHTML = formatAIResponse(fullMessage);
+                            // Clean action tags from display but keep them for parsing
+                            const cleanedMessage = cleanActionTags(fullMessage);
+                            
+                            // Update with markdown-like formatting (without action tags)
+                            messageElement.innerHTML = formatAIResponse(cleanedMessage);
                             
                             // Scroll to bottom
                             const container = document.getElementById('nw-guide-messages');
                             if (container) container.scrollTop = container.scrollHeight;
+                        }
+                        
+                        // PHASE 4: Handle actions sent directly from backend
+                        if (data.actions && Array.isArray(data.actions) && data.actions.length > 0) {
+                            console.log('[NW_GUIDE] Actions received from backend:', data.actions);
+                            // Small delay so user can read the message first
+                            setTimeout(() => {
+                                ActionExecutor.executeAll(data.actions);
+                            }, 800);
                         }
                         
                         if (data.error) {
@@ -1252,10 +1576,20 @@
                 }
             }
             
-            // Save to conversation history
+            // Parse and execute any actions from the response
+            const actions = parseActionsFromText(fullMessage);
+            if (actions.length > 0) {
+                console.log('[NW_GUIDE] Found actions in response:', actions);
+                // Delay action execution slightly so user can read the message
+                setTimeout(() => {
+                    ActionExecutor.executeAll(actions);
+                }, 800);
+            }
+            
+            // Save to conversation history (cleaned version)
             conversationHistory.push(
                 { role: 'user', content: message },
-                { role: 'assistant', content: fullMessage }
+                { role: 'assistant', content: cleanActionTags(fullMessage) }
             );
             
             // Trim history if too long
@@ -1532,8 +1866,11 @@
         }
     });
 
-    console.log('%c[NW_GUIDE] v5.0 - REAL AI EDITION! LLM-powered responses with streaming!', 
+    console.log('%c[NW_GUIDE] v6.0 - ACTION EDITION! AI can navigate, claim rewards, and more!', 
         'background: #1a1a2e; color: #ff6b00; font-size: 12px; padding: 4px 8px; border-radius: 4px;');
+    
+    // Expose ActionExecutor globally for debugging
+    window.NW_GUIDE_ACTIONS = ActionExecutor;
     
     // Check AI availability on load
     checkAiAvailability();

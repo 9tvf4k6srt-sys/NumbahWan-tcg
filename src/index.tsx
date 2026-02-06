@@ -4722,7 +4722,7 @@ app.get('/api/avatar/components', async (c) => {
 // 4. Error handling with graceful fallbacks
 // ============================================================================
 
-import AIGuide, { chat as aiChat, chatStream, getQuickResponse, type GuideRequest, type Message } from './services/ai-guide';
+import AIGuide, { chat as aiChat, chatStream, getQuickResponse, parseActionsFromResponse, type GuideRequest, type Message, type GuideAction } from './services/ai-guide';
 
 // Environment variables for AI (set in wrangler.toml or Cloudflare dashboard)
 // OPENAI_API_KEY and OPENAI_BASE_URL
@@ -4841,15 +4841,25 @@ app.post('/api/guide/stream', async (c) => {
     }
 
     // Transform the OpenAI stream to our format
+    // PHASE 4: Also collect full response to parse actions at the end
     const transformedStream = new ReadableStream({
       async start(controller) {
         const reader = stream.getReader();
         const decoder = new TextDecoder();
+        let fullResponse = ''; // Collect full response for action parsing
 
         try {
           while (true) {
             const { done, value } = await reader.read();
             if (done) {
+              // PHASE 4: Parse actions from the full response and send them
+              const { actions } = parseActionsFromResponse(fullResponse);
+              if (actions && actions.length > 0) {
+                controller.enqueue(
+                  new TextEncoder().encode(`data: ${JSON.stringify({ actions, done: false })}\n\n`)
+                );
+                console.log('[AI Guide] Actions found:', actions);
+              }
               controller.enqueue(new TextEncoder().encode(`data: ${JSON.stringify({ done: true })}\n\n`));
               controller.close();
               break;
@@ -4861,6 +4871,13 @@ app.post('/api/guide/stream', async (c) => {
             for (const line of lines) {
               const data = line.slice(6); // Remove 'data: ' prefix
               if (data === '[DONE]') {
+                // PHASE 4: Parse actions before sending done
+                const { actions } = parseActionsFromResponse(fullResponse);
+                if (actions && actions.length > 0) {
+                  controller.enqueue(
+                    new TextEncoder().encode(`data: ${JSON.stringify({ actions, done: false })}\n\n`)
+                  );
+                }
                 controller.enqueue(new TextEncoder().encode(`data: ${JSON.stringify({ done: true })}\n\n`));
                 continue;
               }
@@ -4869,6 +4886,7 @@ app.post('/api/guide/stream', async (c) => {
                 const parsed = JSON.parse(data);
                 const content = parsed.choices?.[0]?.delta?.content;
                 if (content) {
+                  fullResponse += content; // Accumulate response
                   controller.enqueue(
                     new TextEncoder().encode(`data: ${JSON.stringify({ content })}\n\n`)
                   );
@@ -4921,9 +4939,23 @@ app.get('/api/guide/health', (c) => {
       chat: true,
       streaming: true,
       conversationMemory: true,
-      multiLanguage: ['en', 'zh', 'th']
+      multiLanguage: ['en', 'zh', 'th'],
+      // PHASE 4: Action system!
+      actions: true,
+      supportedActions: [
+        'navigate',    // Go to a page
+        'showBalance', // Display wallet popup
+        'claimDaily',  // Claim daily reward
+        'openForge',   // Open card forge
+        'showCards',   // Show card collection
+        'playSound',   // Play a sound effect
+        'showToast',   // Show a notification
+        'toggleTheme', // Toggle dark/light mode
+        'shareDiscord',// Share to Discord
+        'copyText'     // Copy text to clipboard
+      ]
     },
-    version: '1.0.0'
+    version: '2.0.0'
   });
 });
 

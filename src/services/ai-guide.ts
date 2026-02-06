@@ -1,12 +1,32 @@
 /**
- * NumbahWan AI Guide Service v1.0
- * Real LLM-powered assistant for the guild
+ * NumbahWan AI Guide Service v3.0 - FULL ACTION SUPPORT!
+ * Real LLM-powered assistant that can DO things, not just talk
  * 
  * LEARNING POINTS:
  * 1. System prompts - How to give AI personality and knowledge
  * 2. Streaming - Real-time response delivery
  * 3. Context management - Conversation memory
  * 4. Token optimization - Keeping costs down
+ * 5. AI ACTIONS - Making AI execute real functions!
+ * 
+ * HOW ACTIONS WORK:
+ * The AI returns a special JSON block in its response when it wants to perform an action.
+ * Format: <<<ACTION:{"type":"navigate","target":"/forge"}>>>
+ * 
+ * The frontend parses these action tags and executes them.
+ * Multiple actions can be included in a single response.
+ * 
+ * SUPPORTED ACTIONS:
+ * - navigate: Go to a page (target: path)
+ * - showBalance: Display wallet popup
+ * - claimDaily: Claim daily login reward  
+ * - openForge: Open card forge modal
+ * - showCards: Show card collection
+ * - playSound: Play a sound effect (target: sound name)
+ * - showToast: Show a notification (data: message, type)
+ * - toggleTheme: Toggle dark/light mode
+ * - shareDiscord: Open Discord share dialog
+ * - copyText: Copy text to clipboard (data: text)
  */
 
 // ============================================================================
@@ -18,6 +38,33 @@ export interface Message {
   content: string;
 }
 
+// ============================================================================
+// ACTION TYPES - What the AI can DO
+// ============================================================================
+// 
+// LEARNING: This is like giving your AI superpowers!
+// Each action type defines what the AI can make happen in the real world.
+// ============================================================================
+
+export type ActionType = 
+  | 'navigate'      // Go to a page
+  | 'showBalance'   // Display wallet popup
+  | 'claimDaily'    // Claim daily reward
+  | 'openForge'     // Open card forge
+  | 'showCards'     // Show card collection
+  | 'playSound'     // Play a sound effect
+  | 'showToast'     // Show a notification
+  | 'toggleTheme'   // Toggle dark/light mode
+  | 'shareDiscord'  // Share to Discord
+  | 'copyText';     // Copy text to clipboard
+
+export interface GuideAction {
+  type: ActionType;
+  target?: string;      // For navigate: the path. For playSound: sound name
+  data?: any;           // Additional data for the action
+  message?: string;     // Optional message to show with action
+}
+
 export interface GuideRequest {
   message: string;
   conversationHistory?: Message[];
@@ -27,12 +74,14 @@ export interface GuideRequest {
     viewingHistory?: string[];
     currencies?: Record<string, number>;
     cardCount?: number;
+    cards?: { name: string; rarity: string; stars: number }[];
   };
 }
 
 export interface GuideResponse {
   success: boolean;
   message?: string;
+  actions?: GuideAction[];  // NEW: Actions to execute!
   error?: string;
   usage?: {
     promptTokens: number;
@@ -40,6 +89,60 @@ export interface GuideResponse {
     totalTokens: number;
   };
 }
+
+// ============================================================================
+// ACTION DEFINITIONS - Teach AI what actions are available
+// ============================================================================
+
+export const AVAILABLE_ACTIONS = {
+  navigate: {
+    description: 'Navigate to a page on the site',
+    examples: ['go to forge', 'take me to arcade', 'open avatar studio'],
+    targets: {
+      '/': 'Home page',
+      '/forge': 'Card Forge - pull cards with Sacred Logs',
+      '/avatar-studio': 'Avatar Studio - generate AI avatars',
+      '/arcade': 'Arcade - play mini-games',
+      '/wallet': 'Wallet - manage currencies',
+      '/collection': 'Collection - view and upgrade cards',
+      '/battle': 'Battle Arena - PvP card battles',
+      '/exchange': 'Exchange - trade currencies',
+      '/market': 'Market - buy/sell cards',
+      '/court': 'Guild Court - sue your guildmates',
+      '/therapy': 'Guild Therapy - AI therapist',
+      '/hr': 'HR Department - apply for jobs',
+      '/conspiracy': 'Conspiracy Board - connect the dots',
+      '/fortune': 'Fortune Teller - daily fortunes',
+      '/museum': 'Museum - guild history',
+      '/updates': 'Patch Notes - latest changes'
+    }
+  },
+  showBalance: {
+    description: 'Show the user their current currency balances',
+    examples: ['how much gold do I have', 'check my balance', 'show my currencies']
+  },
+  claimDaily: {
+    description: 'Claim daily login reward',
+    examples: ['claim my daily', 'get daily reward', 'claim login bonus']
+  },
+  openForge: {
+    description: 'Open the card forge to pull cards',
+    examples: ['open a pack', 'pull cards', 'use my sacred logs']
+  },
+  showCards: {
+    description: 'Show cards from collection',
+    examples: ['show my cards', 'what cards do I have', 'my collection']
+  },
+  playSound: {
+    description: 'Play a sound effect',
+    examples: ['play a sound', 'make a noise'],
+    sounds: ['click', 'success', 'error', 'coin', 'card', 'fanfare']
+  },
+  showToast: {
+    description: 'Show a notification message',
+    examples: ['notify me', 'show alert']
+  }
+};
 
 // ============================================================================
 // SYSTEM PROMPT - THE BRAIN OF YOUR AI
@@ -169,7 +272,81 @@ NumbahWan is a MapleStory guild with a satirical/comedic twist. Our motto: "If y
 - **The Golden Banana** (🍌) - Currently MISSING. Reward for return: 1000 Diamonds!
 `;
 
-function buildSystemPrompt(language: string = 'en', currentPage?: string): string {
+// ============================================================================
+// ACTION INSTRUCTIONS - Teach AI how to trigger actions
+// ============================================================================
+
+const ACTION_INSTRUCTIONS = `
+## 🎮 ACTION SYSTEM - You Can DO Things!
+
+You have the power to perform REAL actions on the website. When you want to help the user DO something (not just talk about it), include an action tag in your response.
+
+### Action Format
+Include this EXACT format anywhere in your response:
+<<<ACTION:{"type":"actionType","target":"value","data":{}}>>>
+
+### Available Actions
+
+1. **navigate** - Take the user to a page
+   <<<ACTION:{"type":"navigate","target":"/forge"}>>>
+   Use when: user asks to go somewhere, see something, or you want to show them a feature
+   Targets: /, /forge, /avatar-studio, /arcade, /wallet, /collection, /battle, /exchange, /market, /court, /therapy, /hr, /conspiracy, /fortune, /museum, /updates, /confessional
+
+2. **showBalance** - Show their currency wallet popup
+   <<<ACTION:{"type":"showBalance"}>>>
+   Use when: user asks about their balance, currencies, how much they have
+
+3. **claimDaily** - Claim daily login reward
+   <<<ACTION:{"type":"claimDaily"}>>>
+   Use when: user asks to claim daily, get rewards, mentions daily login
+
+4. **openForge** - Open the card forge to pull cards
+   <<<ACTION:{"type":"openForge"}>>>
+   Use when: user wants to pull cards, open packs, use sacred logs
+
+5. **showCards** - Display their card collection
+   <<<ACTION:{"type":"showCards"}>>>
+   Use when: user asks to see their cards, collection, or inventory
+
+6. **playSound** - Play a fun sound effect
+   <<<ACTION:{"type":"playSound","target":"fanfare"}>>>
+   Sounds: click, success, error, coin, card, fanfare
+   Use sparingly for celebrations or emphasis
+
+7. **showToast** - Show a notification message
+   <<<ACTION:{"type":"showToast","data":{"message":"Welcome to NumbahWan!","type":"success"}}>>>
+   Types: success, error, info, warning
+   Use for confirmations or important alerts
+
+8. **copyText** - Copy text to user's clipboard
+   <<<ACTION:{"type":"copyText","data":{"text":"NumbahWan #1!"}}>>>
+   Use when: user asks for text to copy, sharing codes, etc.
+
+### 🚨 ACTION RULES
+1. ALWAYS explain what you're doing before the action
+2. Include relevant context ("Taking you to the Forge!")
+3. Don't spam actions - max 1-2 per response
+4. For navigation, ALWAYS mention where you're going
+5. Action tags can appear anywhere in your text response
+6. The action will execute AFTER your message displays
+
+### Examples
+
+User: "Take me to the card forge"
+You: "Let's pull some cards! 🎰 Taking you to the **Card Forge** where you can use your Sacred Logs for legendary pulls!
+<<<ACTION:{"type":"navigate","target":"/forge"}>>>"
+
+User: "How much gold do I have?"
+You: "Let me check your wallet! 💰
+<<<ACTION:{"type":"showBalance"}>>>
+Your balance should pop up now - Diamonds 💎, Gold 🪙, and more!"
+
+User: "I want to see my cards"
+You: "Opening your card collection! 📚 Here you can upgrade stars, burn duplicates, and admire your pulls.
+<<<ACTION:{"type":"navigate","target":"/collection"}>>><<<ACTION:{"type":"showCards"}>>>"
+`;
+
+function buildSystemPrompt(language: string = 'en', currentPage?: string, userContext?: any): string {
   const languageInstructions = {
     en: 'Respond in English.',
     zh: 'Respond in Traditional Chinese (繁體中文). Use natural, conversational Chinese.',
@@ -177,6 +354,20 @@ function buildSystemPrompt(language: string = 'en', currentPage?: string): strin
   };
 
   const pageContext = currentPage ? `\nThe user is currently on: ${currentPage}` : '';
+  
+  // Build user context string if available
+  let userContextStr = '';
+  if (userContext) {
+    if (userContext.currencies) {
+      userContextStr += `\nUser's currencies: ${userContext.currencies.diamond || 0}💎 Diamonds, ${userContext.currencies.gold || 0}🪙 Gold, ${userContext.currencies.iron || 0}⚙️ Iron, ${userContext.currencies.stone || 0}🪨 Stone, ${userContext.currencies.sacredLog || 0}⧫ Sacred Logs`;
+    }
+    if (userContext.cardCount) {
+      userContextStr += `\nUser has ${userContext.cardCount} cards in their collection.`;
+    }
+    if (userContext.viewingHistory?.length) {
+      userContextStr += `\nRecently visited: ${userContext.viewingHistory.slice(-3).join(', ')}`;
+    }
+  }
 
   return `You are the NumbahWan AI Guide, a helpful and entertaining assistant for the NumbahWan MapleStory guild website.
 
@@ -186,9 +377,12 @@ function buildSystemPrompt(language: string = 'en', currentPage?: string): strin
 - You're knowledgeable but not boring
 - You use emojis appropriately (not excessively)
 - You're proud of the guild's absurdist features
+- You LOVE to help by DOING things, not just talking!
 
 ## Your Knowledge
 ${GUILD_KNOWLEDGE}
+
+${ACTION_INSTRUCTIONS}
 
 ## Response Guidelines
 1. ${languageInstructions[language as keyof typeof languageInstructions] || languageInstructions.en}
@@ -198,20 +392,58 @@ ${GUILD_KNOWLEDGE}
 5. Be playful with absurdist features - they're meant to be funny!
 6. If asked about something you don't know, suggest relevant pages to explore
 7. Never break character - you ARE the guild guide
+8. **PROACTIVELY USE ACTIONS** - When user wants to DO something, include the action!
+9. If user asks to "go to" or "show me" something, ALWAYS include a navigate action
 
 ## Response Format
 - Use **bold** for important items/features
 - Use emojis to match the feature (💎 for diamonds, ⚖️ for court, etc.)
 - Include actionable tips when relevant
 - End responses with a helpful suggestion or related feature
+- Include <<<ACTION:...>>> tags when performing actions
 ${pageContext}
+${userContextStr}
 
-Remember: You're not just answering questions - you're welcoming people to our guild family! 🍌`;
+Remember: You're not just answering questions - you're welcoming people to our guild family! 🍌
+And you can DO things to help them, not just talk about it!`;
 }
 
 // ============================================================================
 // API INTEGRATION
 // ============================================================================
+
+// ============================================================================
+// ACTION PARSING - Extract actions from AI response
+// ============================================================================
+
+export function parseActionsFromResponse(text: string): { cleanText: string; actions: GuideAction[] } {
+  const actions: GuideAction[] = [];
+  const actionRegex = /<<<ACTION:(\{[^>]+\})>>>/g;
+  
+  let cleanText = text;
+  let match;
+  
+  while ((match = actionRegex.exec(text)) !== null) {
+    try {
+      const actionData = JSON.parse(match[1]);
+      if (actionData.type && AVAILABLE_ACTIONS[actionData.type as keyof typeof AVAILABLE_ACTIONS]) {
+        actions.push({
+          type: actionData.type,
+          target: actionData.target,
+          data: actionData.data,
+          message: actionData.message
+        });
+      }
+    } catch (e) {
+      console.error('[AI Guide] Failed to parse action:', match[1], e);
+    }
+  }
+  
+  // Remove action tags from the clean text
+  cleanText = cleanText.replace(actionRegex, '').trim();
+  
+  return { cleanText, actions };
+}
 
 export async function chat(
   request: GuideRequest,
@@ -220,30 +452,19 @@ export async function chat(
 ): Promise<GuideResponse> {
   const { message, conversationHistory = [], language = 'en', currentPage, userContext } = request;
 
-  // Build messages array
+  // Build messages array with full context
   const messages: Message[] = [
-    { role: 'system', content: buildSystemPrompt(language, currentPage) },
+    { role: 'system', content: buildSystemPrompt(language, currentPage, userContext) },
   ];
 
   // Add conversation history (limit to last 10 messages to save tokens)
   const recentHistory = conversationHistory.slice(-10);
   messages.push(...recentHistory);
 
-  // Add user context if available
-  let contextPrefix = '';
-  if (userContext) {
-    if (userContext.viewingHistory?.length) {
-      contextPrefix += `[User recently visited: ${userContext.viewingHistory.slice(-3).join(', ')}] `;
-    }
-    if (userContext.currencies) {
-      contextPrefix += `[User has: ${userContext.currencies.diamond || 0}💎, ${userContext.currencies.gold || 0}🪙] `;
-    }
-  }
-
-  // Add user message
+  // Add user message (context is now in system prompt)
   messages.push({
     role: 'user',
-    content: contextPrefix + message
+    content: message
   });
 
   try {
@@ -271,10 +492,15 @@ export async function chat(
     }
 
     const data = await response.json();
+    const rawMessage = data.choices[0]?.message?.content || 'Sorry, I could not generate a response.';
+    
+    // Parse actions from response
+    const { cleanText, actions } = parseActionsFromResponse(rawMessage);
     
     return {
       success: true,
-      message: data.choices[0]?.message?.content || 'Sorry, I could not generate a response.',
+      message: cleanText,
+      actions: actions.length > 0 ? actions : undefined,
       usage: {
         promptTokens: data.usage?.prompt_tokens || 0,
         completionTokens: data.usage?.completion_tokens || 0,
@@ -307,26 +533,19 @@ export async function chatStream(
 ): Promise<ReadableStream | null> {
   const { message, conversationHistory = [], language = 'en', currentPage, userContext } = request;
 
-  // Build messages array
+  // Build messages array with full context
   const messages: Message[] = [
-    { role: 'system', content: buildSystemPrompt(language, currentPage) },
+    { role: 'system', content: buildSystemPrompt(language, currentPage, userContext) },
   ];
 
   // Add conversation history (limit to last 10 messages)
   const recentHistory = conversationHistory.slice(-10);
   messages.push(...recentHistory);
 
-  // Add user context
-  let contextPrefix = '';
-  if (userContext) {
-    if (userContext.viewingHistory?.length) {
-      contextPrefix += `[User recently visited: ${userContext.viewingHistory.slice(-3).join(', ')}] `;
-    }
-  }
-
+  // Add user message (context is now in system prompt)
   messages.push({
     role: 'user',
-    content: contextPrefix + message
+    content: message
   });
 
   try {
@@ -392,5 +611,7 @@ export default {
   chatStream,
   getQuickResponse,
   buildSystemPrompt,
-  GUILD_KNOWLEDGE
+  parseActionsFromResponse,
+  GUILD_KNOWLEDGE,
+  AVAILABLE_ACTIONS
 };
