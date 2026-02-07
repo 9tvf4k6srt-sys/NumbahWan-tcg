@@ -183,6 +183,147 @@ function scanProject(rootDir, ignoreList) {
 }
 
 // ════════════════════════════════════════════════════════════════════
+// i18n COVERAGE SCANNER
+// ════════════════════════════════════════════════════════════════════
+
+function scanI18nCoverage(rootDir) {
+  const publicDir = path.join(rootDir, 'public');
+  const results = { pages: [], summary: {} };
+  const SUPPORTED_LANGS = ['en', 'zh', 'th'];
+  
+  // Patterns that indicate hardcoded English text (not i18n-ized)
+  // Match text content between > and < that has 2+ English words
+  const HARDCODED_PATTERN = />\s*([A-Z][a-zA-Z]+(?: [a-zA-Z]+){1,}[^<]{0,80})\s*</g;
+  
+  // Strings to ignore (framework artifacts, not user-facing)
+  const IGNORE_STRINGS = new Set([
+    'NW_I18N', 'data-i18n', 'text/javascript', 'text/css',
+    'Content-Type', 'application/json', 'UTF-8', 'viewport'
+  ]);
+  
+  // Check if text looks like code/markup rather than user-facing content
+  function isCodeFragment(text) {
+    if (text.length < 4 || text.length > 200) return true;
+    if (/[{}()\[\];=<>]/.test(text)) return true;
+    if (/^(var|let|const|function|if|else|return|import|export|class|new|true|false)\b/.test(text)) return true;
+    if (/^(https?:\/\/|mailto:|\/)/.test(text)) return true;
+    if (/\.(js|css|html|json|ts|tsx|svg|png|jpg|webp)$/.test(text)) return true;
+    if (/^[A-Z_]+$/.test(text.replace(/\s/g, ''))) return true; // ALL_CAPS_CONSTANTS
+    if (IGNORE_STRINGS.has(text.trim())) return true;
+    return false;
+  }
+  
+  let htmlFiles;
+  try {
+    htmlFiles = fs.readdirSync(publicDir)
+      .filter(f => f.endsWith('.html'))
+      .map(f => ({ name: f, full: path.join(publicDir, f) }));
+  } catch { return results; }
+  
+  let totalPages = 0;
+  let pagesWithI18n = 0;
+  let pagesWithRegister = 0;
+  let totalKeys = 0;
+  let totalKeysWithTranslations = 0;
+  let totalHardcodedStrings = 0;
+  
+  for (const file of htmlFiles) {
+    let content;
+    try { content = fs.readFileSync(file.full, 'utf8'); } catch { continue; }
+    totalPages++;
+    
+    const hasI18nScript = content.includes('nw-i18n-core');
+    const hasRegister = content.includes('NW_I18N.register');
+    
+    if (hasI18nScript) pagesWithI18n++;
+    if (hasRegister) pagesWithRegister++;
+    
+    // Count data-i18n keys
+    const i18nKeyMatches = content.match(/data-i18n=["']([^"']+)["']/g) || [];
+    const keyCount = i18nKeyMatches.length;
+    totalKeys += keyCount;
+    
+    // Check which languages have translations registered
+    const registeredLangs = [];
+    for (const lang of SUPPORTED_LANGS) {
+      // Look for lang key in register block: en: {, zh: {, th: {
+      if (new RegExp(`${lang}\\s*:\\s*\\{`).test(content)) {
+        registeredLangs.push(lang);
+      }
+    }
+    if (registeredLangs.length >= SUPPORTED_LANGS.length) {
+      totalKeysWithTranslations += keyCount;
+    }
+    
+    // Detect hardcoded English strings in visible text
+    const hardcoded = [];
+    let match;
+    const hardcodedRegex = />([^<]{4,120})</g;
+    while ((match = hardcodedRegex.exec(content)) !== null) {
+      const text = match[1].trim();
+      // Must contain at least 2 English words, not inside script/style
+      if (/^[A-Z][a-z]+(?: [a-zA-Z]+)+/.test(text) && !isCodeFragment(text)) {
+        // Check if this element has data-i18n
+        const before = content.slice(Math.max(0, match.index - 200), match.index);
+        if (!before.includes('data-i18n')) {
+          hardcoded.push(text.slice(0, 80));
+        }
+      }
+    }
+    totalHardcodedStrings += hardcoded.length;
+    
+    // Determine page status
+    let status;
+    if (hasRegister && registeredLangs.length >= SUPPORTED_LANGS.length) {
+      status = 'translated';
+    } else if (hasI18nScript && keyCount > 0 && registeredLangs.length > 0) {
+      status = 'partial';
+    } else if (hasI18nScript && keyCount > 0) {
+      status = 'keys-only';
+    } else if (keyCount > 0) {
+      status = 'keys-no-script';
+    } else {
+      status = 'none';
+    }
+    
+    results.pages.push({
+      page: file.name,
+      status,
+      hasI18nScript,
+      hasRegister,
+      keyCount,
+      registeredLangs,
+      hardcodedStrings: hardcoded.length,
+      sampleHardcoded: hardcoded.slice(0, 5)
+    });
+  }
+  
+  // Sort: worst first (most hardcoded + least translated)
+  results.pages.sort((a, b) => {
+    const scoreA = (a.status === 'translated' ? 0 : a.status === 'partial' ? 1 : 2) * 1000 + b.hardcodedStrings;
+    const scoreB = (b.status === 'translated' ? 0 : b.status === 'partial' ? 1 : 2) * 1000 + a.hardcodedStrings;
+    return scoreB - scoreA;
+  });
+  
+  const coveragePercent = totalPages > 0 ? Math.round((pagesWithRegister / totalPages) * 100) : 0;
+  
+  results.summary = {
+    totalPages,
+    pagesWithI18nScript: pagesWithI18n,
+    pagesWithRegister,
+    coveragePercent,
+    supportedLanguages: SUPPORTED_LANGS,
+    totalI18nKeys: totalKeys,
+    keysWithAllTranslations: totalKeysWithTranslations,
+    totalHardcodedStrings,
+    grade: coveragePercent >= 90 ? 'A' : coveragePercent >= 70 ? 'B' : coveragePercent >= 50 ? 'C' : coveragePercent >= 30 ? 'D' : 'F',
+    status: coveragePercent >= 80 ? 'good' : coveragePercent >= 50 ? 'needs-work' : 'poor'
+  };
+  
+  return results;
+}
+
+// ════════════════════════════════════════════════════════════════════
 // ISSUE DETECTION
 // ════════════════════════════════════════════════════════════════════
 
@@ -412,6 +553,9 @@ function runSentinel(rootDir, options = {}) {
   // 3. Detect issues
   const issues = detectIssues(files, duplicates, thresholds);
   
+  // 3b. i18n coverage scan
+  const i18nResults = scanI18nCoverage(rootDir);
+  
   // 4. Score
   const { score, grade, sourceScore, staticScore } = calculateHealth(issues, totalSourceLines, thresholds);
   
@@ -482,6 +626,11 @@ function runSentinel(rootDir, options = {}) {
       threshold: i.threshold,
       fix: i.fix
     })),
+    
+    i18n: {
+      summary: i18nResults.summary,
+      pages: i18nResults.pages
+    },
     
     plan: plan,
     
@@ -590,4 +739,4 @@ if (require.main === module) {
 }
 
 // Export for programmatic use
-module.exports = { runSentinel, scanProject, detectIssues, calculateHealth, buildOptimizationPlan };
+module.exports = { runSentinel, scanProject, detectIssues, calculateHealth, buildOptimizationPlan, scanI18nCoverage };

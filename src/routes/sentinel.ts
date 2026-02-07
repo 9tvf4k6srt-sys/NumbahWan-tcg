@@ -83,4 +83,19 @@ router.get('/sentinel/files', (c) => {
   });
 });
 
+// ─── i18n Coverage Audit ─────────────────────────────────────
+router.get('/sentinel/i18n', (c) => {
+  if (!sentinelReport) {
+    return c.json({ error: 'Run: node sentinel.cjs first' }, 404);
+  }
+  const r = sentinelReport as any;
+  if (!r.i18n) {
+    return c.json({ error: 'i18n data not available. Re-run sentinel.' }, 404);
+  }
+  return c.json({
+    engine: 'nw-sentinel v1.1.0',
+    ...r.i18n
+  });
+});
+
 export default router;
