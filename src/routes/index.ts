@@ -36,6 +36,7 @@ import avatarRoutes from './avatar'
 import guideRoutes from './guide'
 import translateRoutes from './translate'
 import gmRoutes from './gm'
+import cipherRoutes from './cipher'
 
 export {
   healthRoutes,
@@ -63,5 +64,6 @@ export {
   avatarRoutes,
   guideRoutes,
   translateRoutes,
-  gmRoutes
+  gmRoutes,
+  cipherRoutes
 }

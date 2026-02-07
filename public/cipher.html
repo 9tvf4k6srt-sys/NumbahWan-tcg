@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="en" data-page-id="cipher-vault">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+    <title>Cipher Vault | NumbahWan TCG</title>
+    <link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;900&family=JetBrains+Mono:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="/static/nw-nav.js" defer></script>
+    <script src="/static/nw-i18n-core.js" defer></script>
+    <script src="/static/nw-icons-inline.js"></script>
+    <style>
+        :root {
+            --gold: #ffd700;
+            --amber: #f59e0b;
+            --orange: #ff6b00;
+            --crimson: #dc2626;
+            --emerald: #10b981;
+            --cyan: #06b6d4;
+            --dark: #050508;
+            --steel: #1e293b;
+            --cipher-glow: rgba(255, 215, 0, 0.15);
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html { scroll-behavior: smooth; }
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--dark);
+            color: #e2e8f0;
+            overflow-x: hidden;
+        }
+        .font-cipher { font-family: 'Cinzel', serif; }
+        .font-mono { font-family: 'JetBrains Mono', monospace; }
+
+        /* Animated background */
+        .bg-matrix {
+            position: fixed; inset: 0; z-index: 0; pointer-events: none; opacity: 0.04;
+            background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(255,215,0,0.03) 2px, rgba(255,215,0,0.03) 4px);
+        }
+
+        /* Pot counter glow */
+        .pot-glow {
+            text-shadow: 0 0 20px rgba(255,215,0,0.6), 0 0 40px rgba(255,215,0,0.3);
+            animation: potPulse 2s ease-in-out infinite;
+        }
+        @keyframes potPulse {
+            0%, 100% { text-shadow: 0 0 20px rgba(255,215,0,0.6), 0 0 40px rgba(255,215,0,0.3); }
+            50% { text-shadow: 0 0 30px rgba(255,215,0,0.8), 0 0 60px rgba(255,215,0,0.5); }
+        }
+
+        /* Cipher text style */
+        .cipher-text {
+            background: linear-gradient(135deg, #0f172a, #1e293b);
+            border: 1px solid rgba(255,215,0,0.2);
+            border-radius: 12px;
+            padding: 1.5rem;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1.1rem;
+            letter-spacing: 0.05em;
+            line-height: 1.8;
+            word-break: break-all;
+            color: var(--gold);
+            position: relative;
+            overflow: hidden;
+        }
+        .cipher-text::before {
+            content: '';
+            position: absolute; inset: 0;
+            background: linear-gradient(135deg, rgba(255,215,0,0.05), transparent);
+            pointer-events: none;
+        }
+
+        /* Hint cards */
+        .hint-card {
+            background: linear-gradient(135deg, rgba(16,185,129,0.1), rgba(6,182,212,0.05));
+            border: 1px solid rgba(16,185,129,0.3);
+            border-radius: 10px;
+            padding: 1rem 1.25rem;
+            transition: all 0.3s;
+        }
+        .hint-card:hover { border-color: var(--emerald); transform: translateY(-1px); }
+        .hint-locked {
+            background: linear-gradient(135deg, rgba(100,116,139,0.1), rgba(71,85,105,0.05));
+            border-color: rgba(100,116,139,0.3);
+            color: #64748b;
+        }
+
+        /* Submit input */
+        .cipher-input {
+            background: #0f172a;
+            border: 2px solid rgba(255,215,0,0.3);
+            border-radius: 12px;
+            padding: 1rem 1.25rem;
+            color: #fff;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1rem;
+            width: 100%;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+        .cipher-input:focus { border-color: var(--gold); box-shadow: 0 0 20px rgba(255,215,0,0.15); }
+        .cipher-input::placeholder { color: #475569; }
+
+        /* Buttons */
+        .btn-submit {
+            background: linear-gradient(135deg, var(--gold), var(--amber));
+            color: #000;
+            font-weight: 700;
+            padding: 0.875rem 2rem;
+            border: none;
+            border-radius: 12px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        .btn-submit:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(255,215,0,0.3); }
+        .btn-submit:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+        /* Result flash */
+        .result-msg {
+            padding: 1rem 1.5rem;
+            border-radius: 12px;
+            font-weight: 600;
+            text-align: center;
+            animation: fadeSlideIn 0.3s ease-out;
+        }
+        .result-correct {
+            background: linear-gradient(135deg, rgba(16,185,129,0.2), rgba(16,185,129,0.05));
+            border: 1px solid var(--emerald);
+            color: var(--emerald);
+        }
+        .result-wrong {
+            background: linear-gradient(135deg, rgba(220,38,38,0.2), rgba(220,38,38,0.05));
+            border: 1px solid var(--crimson);
+            color: #f87171;
+        }
+        .result-rate-limit {
+            background: linear-gradient(135deg, rgba(245,158,11,0.2), rgba(245,158,11,0.05));
+            border: 1px solid var(--amber);
+            color: var(--amber);
+        }
+        @keyframes fadeSlideIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Leaderboard table */
+        .lb-row {
+            display: grid;
+            grid-template-columns: 40px 1fr 100px 80px 80px;
+            gap: 1rem;
+            padding: 0.75rem 1rem;
+            align-items: center;
+            border-radius: 8px;
+            transition: background 0.2s;
+        }
+        .lb-row:hover { background: rgba(255,215,0,0.05); }
+        .lb-header { color: #64748b; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.1em; }
+
+        /* Section dividers */
+        .section-glow {
+            position: relative;
+            padding: 2.5rem 0;
+        }
+        .section-glow::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 50%;
+            transform: translateX(-50%);
+            width: 120px; height: 1px;
+            background: linear-gradient(90deg, transparent, var(--gold), transparent);
+        }
+
+        /* Difficulty badge */
+        .diff-badge {
+            display: inline-flex; align-items: center; gap: 4px;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        .diff-1 { background: rgba(16,185,129,0.2); color: #34d399; border: 1px solid rgba(16,185,129,0.3); }
+        .diff-2 { background: rgba(6,182,212,0.2); color: #22d3ee; border: 1px solid rgba(6,182,212,0.3); }
+        .diff-3 { background: rgba(245,158,11,0.2); color: #fbbf24; border: 1px solid rgba(245,158,11,0.3); }
+        .diff-4 { background: rgba(239,68,68,0.2); color: #f87171; border: 1px solid rgba(239,68,68,0.3); }
+        .diff-5 { background: rgba(168,85,247,0.2); color: #c084fc; border: 1px solid rgba(168,85,247,0.3); }
+
+        /* Skeleton loader */
+        .skeleton {
+            background: linear-gradient(90deg, #1e293b 25%, #334155 50%, #1e293b 75%);
+            background-size: 200% 100%;
+            animation: shimmer 1.5s infinite;
+            border-radius: 8px;
+        }
+        @keyframes shimmer {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+
+        /* Responsive */
+        @media (max-width: 640px) {
+            .cipher-text { font-size: 0.9rem; padding: 1rem; }
+            .lb-row { grid-template-columns: 30px 1fr 80px 60px; }
+            .lb-row > :nth-child(5) { display: none; }
+        }
+    </style>
+</head>
+<body>
+<div class="bg-matrix"></div>
+
+<div class="relative z-10 min-h-screen">
+    <!-- Header -->
+    <header class="text-center pt-16 pb-8 px-4">
+        <p class="text-amber-400 text-sm font-semibold tracking-widest uppercase mb-2">The Vault</p>
+        <h1 class="font-cipher text-4xl sm:text-5xl lg:text-6xl font-black text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 via-amber-400 to-orange-500 mb-3">
+            CIPHER VAULT
+        </h1>
+        <p class="text-slate-400 max-w-lg mx-auto">
+            Crack the cipher. Claim the pot. The longer it goes unsolved, the bigger the prize.
+        </p>
+    </header>
+
+    <!-- Main Content -->
+    <main class="max-w-4xl mx-auto px-4 pb-20 space-y-6">
+
+        <!-- Pot Counter -->
+        <section id="pot-section" class="text-center py-6">
+            <div class="inline-block bg-gradient-to-br from-slate-900 to-slate-800 border border-amber-500/30 rounded-2xl px-8 py-6 sm:px-12 sm:py-8">
+                <p class="text-slate-400 text-sm mb-1">Current Prize Pool</p>
+                <div id="pot-value" class="pot-glow font-cipher text-5xl sm:text-6xl font-black text-amber-400">
+                    <span class="skeleton inline-block w-48 h-14">&nbsp;</span>
+                </div>
+                <p class="text-slate-500 text-sm mt-2">
+                    +<span id="pot-rate">--</span> NWG / day &middot; Day <span id="pot-days">--</span>
+                </p>
+            </div>
+        </section>
+
+        <!-- Active Cipher -->
+        <section id="cipher-section" class="bg-slate-900/50 border border-slate-700/50 rounded-2xl p-6 sm:p-8">
+            <div class="flex items-center justify-between mb-4 flex-wrap gap-2">
+                <div>
+                    <h2 id="vault-title" class="font-cipher text-xl font-bold text-amber-300">Loading...</h2>
+                    <p id="vault-lore" class="text-slate-500 text-sm mt-1"></p>
+                </div>
+                <div id="vault-badge" class="diff-badge diff-1"></div>
+            </div>
+            <div class="cipher-text" id="cipher-display">
+                <span class="skeleton inline-block w-full h-20">&nbsp;</span>
+            </div>
+            <p class="text-slate-600 text-xs mt-2 text-right">
+                Type: <span id="cipher-type" class="text-slate-400">--</span> &middot;
+                Attempts: <span id="cipher-attempts" class="text-slate-400">0</span> &middot;
+                Decoders: <span id="cipher-attempters" class="text-slate-400">0</span>
+            </p>
+        </section>
+
+        <!-- Hints -->
+        <section id="hints-section" class="space-y-3">
+            <h3 class="font-cipher text-lg font-bold text-slate-300 flex items-center gap-2">
+                <span class="text-amber-400">&#128273;</span> Hints
+            </h3>
+            <div id="hints-container" class="space-y-2">
+                <div class="hint-locked hint-card text-center py-4">Loading hints...</div>
+            </div>
+        </section>
+
+        <!-- Submit Answer -->
+        <section id="submit-section" class="bg-slate-900/50 border border-slate-700/50 rounded-2xl p-6 sm:p-8">
+            <h3 class="font-cipher text-lg font-bold text-slate-300 mb-4">Submit Your Answer</h3>
+            <div class="space-y-3">
+                <input type="text" id="wallet-input" class="cipher-input" placeholder="Your wallet address or name" autocomplete="off">
+                <input type="text" id="answer-input" class="cipher-input" placeholder="Decoded message..." autocomplete="off">
+                <button id="submit-btn" class="btn-submit w-full" onclick="submitAnswer()">
+                    CRACK THE CIPHER
+                </button>
+            </div>
+            <div id="result-container" class="mt-4 hidden"></div>
+        </section>
+
+        <!-- Leaderboard -->
+        <section class="section-glow">
+            <h3 class="font-cipher text-2xl font-bold text-center text-amber-300 mb-6">
+                Hall of Fame
+            </h3>
+            <div id="leaderboard-container" class="bg-slate-900/50 border border-slate-700/50 rounded-2xl overflow-hidden">
+                <div class="lb-row lb-header border-b border-slate-700/50">
+                    <span>#</span><span>Solver</span><span>Prize</span><span>Days</span><span>Level</span>
+                </div>
+                <div id="leaderboard-rows" class="divide-y divide-slate-800/50">
+                    <div class="text-center text-slate-600 py-8">No ciphers solved yet. Be the first!</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- History -->
+        <section class="section-glow">
+            <h3 class="font-cipher text-2xl font-bold text-center text-slate-300 mb-6">
+                Past Ciphers
+            </h3>
+            <div id="history-container" class="space-y-4">
+                <div class="text-center text-slate-600 py-8">No past ciphers yet.</div>
+            </div>
+        </section>
+    </main>
+</div>
+
+<script>
+const API = '/api/cipher';
+let currentVault = null;
+
+// ── Helpers ──
+function $(id) { return document.getElementById(id); }
+function diffClass(d) { return 'diff-' + Math.min(d, 5); }
+function diffLabel(d) {
+    return { 1: 'Novice', 2: 'Apprentice', 3: 'Adept', 4: 'Master', 5: 'Legendary' }[d] || 'Unknown';
+}
+function fmtNWG(n) { return n.toLocaleString(); }
+function fmtDate(ts) { return new Date(ts).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }); }
+function timeAgo(ts) {
+    const d = Math.floor((Date.now() - ts) / 86400000);
+    if (d === 0) return 'today';
+    if (d === 1) return 'yesterday';
+    return d + ' days ago';
+}
+
+// ── Load Active Vault ──
+async function loadVault() {
+    try {
+        const res = await fetch(API + '/active');
+        const data = await res.json();
+        if (!data.success) throw new Error(data.error);
+        renderVault(data.vault);
+        currentVault = data.vault;
+    } catch (e) {
+        $('vault-title').textContent = 'Vault Offline';
+        $('cipher-display').innerHTML = '<span class="text-red-400">Could not load cipher. Try refreshing.</span>';
+    }
+}
+
+function renderVault(v) {
+    // Pot
+    $('pot-value').innerHTML = '<span class="text-amber-400">' + fmtNWG(v.pot.current) + '</span> <span class="text-2xl text-amber-500/70">NWG</span>';
+    $('pot-rate').textContent = v.pot.rate;
+    $('pot-days').textContent = v.timing.daysElapsed;
+
+    // Title + lore
+    $('vault-title').textContent = v.flavorTitle;
+    $('vault-lore').textContent = v.flavorLore;
+
+    // Badge
+    const badge = $('vault-badge');
+    badge.className = 'diff-badge ' + diffClass(v.difficulty);
+    badge.textContent = 'Lv.' + v.difficulty + ' ' + v.difficultyLabel;
+
+    // Cipher
+    $('cipher-display').textContent = v.encryptedMessage;
+    $('cipher-type').textContent = v.cipherType;
+    $('cipher-attempts').textContent = v.stats.totalAttempts;
+    $('cipher-attempters').textContent = v.stats.uniqueAttempters;
+
+    // Hints
+    renderHints(v.hints);
+
+    // Live pot tick
+    startPotTicker(v.pot.rate, v.pot.current, v.timing.createdAt);
+}
+
+function renderHints(hints) {
+    const container = $('hints-container');
+    let html = '';
+
+    hints.revealed.forEach((h, i) => {
+        html += '<div class="hint-card"><span class="text-emerald-400 font-bold mr-2">Hint ' + (i + 1) + ':</span>' + escHTML(h.text) + '</div>';
+    });
+
+    hints.locked.forEach((h) => {
+        html += '<div class="hint-card hint-locked">&#128274; Next hint unlocks in <strong>' + h.daysUntil + ' day' + (h.daysUntil !== 1 ? 's' : '') + '</strong></div>';
+    });
+
+    if (hints.revealed.length === 0 && hints.locked.length === 0) {
+        html = '<div class="hint-card hint-locked text-center">No hints available yet.</div>';
+    }
+
+    container.innerHTML = html;
+}
+
+function escHTML(s) {
+    const d = document.createElement('div');
+    d.textContent = s;
+    return d.innerHTML;
+}
+
+// ── Live Pot Ticker ──
+let potInterval;
+function startPotTicker(rate, currentPot, createdAt) {
+    if (potInterval) clearInterval(potInterval);
+    const ratePerMs = rate / 86400000;
+    potInterval = setInterval(() => {
+        const elapsed = Date.now() - createdAt;
+        const pot = Math.floor(ratePerMs * elapsed);
+        $('pot-value').innerHTML = '<span class="text-amber-400">' + fmtNWG(pot) + '</span> <span class="text-2xl text-amber-500/70">NWG</span>';
+        $('pot-days').textContent = (elapsed / 86400000).toFixed(2);
+    }, 1000);
+}
+
+// ── Submit Answer ──
+async function submitAnswer() {
+    const wallet = $('wallet-input').value.trim();
+    const answer = $('answer-input').value.trim();
+    const btn = $('submit-btn');
+    const resultEl = $('result-container');
+
+    if (!wallet) { showResult('Please enter your wallet address or name.', 'wrong'); return; }
+    if (!answer || answer.length < 3) { showResult('Answer must be at least 3 characters.', 'wrong'); return; }
+
+    btn.disabled = true;
+    btn.textContent = 'DECRYPTING...';
+
+    try {
+        const res = await fetch(API + '/attempt', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ wallet, answer, name: wallet.slice(0, 16) })
+        });
+        const data = await res.json();
+
+        if (res.status === 429) {
+            showResult(data.error, 'rate-limit');
+        } else if (data.correct) {
+            showResult(data.message, 'correct');
+            // Reload everything after win
+            setTimeout(() => { loadVault(); loadLeaderboard(); loadHistory(); }, 2000);
+        } else {
+            showResult(data.message || data.error || 'Incorrect.', 'wrong');
+        }
+    } catch (e) {
+        showResult('Network error. Try again.', 'wrong');
+    } finally {
+        btn.disabled = false;
+        btn.textContent = 'CRACK THE CIPHER';
+    }
+}
+
+function showResult(msg, type) {
+    const el = $('result-container');
+    el.className = 'mt-4 result-msg result-' + type;
+    el.textContent = msg;
+    el.classList.remove('hidden');
+    setTimeout(() => { el.classList.add('hidden'); }, 8000);
+}
+
+// ── Leaderboard ──
+async function loadLeaderboard() {
+    try {
+        const res = await fetch(API + '/leaderboard');
+        const data = await res.json();
+        if (!data.success || !data.leaderboard.length) return;
+
+        const rows = data.leaderboard.map((w, i) => {
+            const rank = i + 1;
+            const medal = rank === 1 ? '&#129351;' : rank === 2 ? '&#129352;' : rank === 3 ? '&#129353;' : rank;
+            return '<div class="lb-row">' +
+                '<span class="font-bold text-amber-400">' + medal + '</span>' +
+                '<span class="truncate font-medium">' + escHTML(w.name) + '</span>' +
+                '<span class="text-amber-400 font-bold font-mono">' + fmtNWG(w.amount) + '</span>' +
+                '<span class="text-slate-400 text-sm">' + w.daysElapsed + 'd</span>' +
+                '<span class="diff-badge ' + diffClass(w.difficulty) + ' text-xs">Lv.' + w.difficulty + '</span>' +
+                '</div>';
+        }).join('');
+
+        $('leaderboard-rows').innerHTML = rows;
+    } catch (e) { /* silent */ }
+}
+
+// ── History ──
+async function loadHistory() {
+    try {
+        const res = await fetch(API + '/history');
+        const data = await res.json();
+        if (!data.success || !data.history.length) return;
+
+        const cards = data.history.map(v => {
+            return '<div class="bg-slate-900/50 border border-slate-700/50 rounded-xl p-5">' +
+                '<div class="flex items-center justify-between mb-2">' +
+                    '<h4 class="font-cipher font-bold text-slate-300">' + escHTML(v.flavorTitle) + '</h4>' +
+                    '<span class="diff-badge ' + diffClass(v.difficulty) + '">' + (v.difficultyLabel || 'Lv.' + v.difficulty) + '</span>' +
+                '</div>' +
+                '<p class="text-slate-500 text-sm mb-3">' + escHTML(v.flavorLore) + '</p>' +
+                '<div class="cipher-text text-sm mb-3" style="padding:0.75rem">' + escHTML(v.encryptedMessage) + '</div>' +
+                '<div class="flex flex-wrap gap-4 text-sm text-slate-400">' +
+                    '<span>Prize: <strong class="text-amber-400">' + fmtNWG(v.pot || 0) + ' NWG</strong></span>' +
+                    '<span>Solver: <strong class="text-emerald-400">' + escHTML(v.claimedBy || 'Unknown') + '</strong></span>' +
+                    '<span>Active: <strong>' + (v.daysActive || '?') + ' days</strong></span>' +
+                    '<span>Attempts: <strong>' + v.totalAttempts + '</strong></span>' +
+                '</div>' +
+                (v.hints && v.hints.length ? '<details class="mt-3"><summary class="text-slate-500 text-sm cursor-pointer hover:text-slate-300">View hints</summary><div class="mt-2 space-y-1">' +
+                    v.hints.map(function(h, i) { return '<div class="text-slate-400 text-sm pl-4 border-l-2 border-slate-700">Hint ' + (i+1) + ': ' + escHTML(h.text) + '</div>'; }).join('') +
+                '</div></details>' : '') +
+                '</div>';
+        }).join('');
+
+        $('history-container').innerHTML = cards;
+    } catch (e) { /* silent */ }
+}
+
+// Enter key submit
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter' && document.activeElement === $('answer-input')) {
+        submitAnswer();
+    }
+});
+
+// ── Init ──
+loadVault();
+loadLeaderboard();
+loadHistory();
+</script>
+</body>
+</html>

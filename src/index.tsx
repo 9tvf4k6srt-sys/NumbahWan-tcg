@@ -10,7 +10,7 @@ import {
   confessionalRoutes, shrineRoutes, cardEngineRoutes,
   cardEngineExtraRoutes, walletExtraRoutes,
   physicalRoutes, avatarRoutes, guideRoutes, translateRoutes,
-  gmRoutes
+  gmRoutes, cipherRoutes
 } from './routes'
 
 // ============================================================================
@@ -35,7 +35,8 @@ app.use('/research/*', serveStatic())
 // Named static pages with clean URLs
 const namedStatic = [
   'efficiency', 'lore', 'tabletop', 'staking', 'fusion',
-  'claim', 'events', 'confessional', 'avatar-studio', 'research-library'
+  'claim', 'events', 'confessional', 'avatar-studio', 'research-library',
+  'cipher'
 ]
 namedStatic.forEach(page => {
   app.get(`/${page}`, serveStatic({ path: `./${page}.html` }))
@@ -70,6 +71,7 @@ app.route('/api/avatar', avatarRoutes)
 app.route('/api/guide', guideRoutes)
 app.route('/api', translateRoutes)
 app.route('/api/gm', gmRoutes)
+app.route('/api/cipher', cipherRoutes)
 
 // Page routes (static pages, /, /regina, /pvp, museum, vault, research, lore)
 app.route('', pagesRoutes)
