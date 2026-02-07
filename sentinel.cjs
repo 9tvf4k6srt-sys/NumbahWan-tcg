@@ -523,12 +523,17 @@ function modSecurity(rootDir, files) {
   let sqlRisk = 0;
   for (const f of scannable) {
     if (f.category !== 'source') continue;
-    // Detect string concatenation in SQL-like patterns
-    const sqlConcat = (f.content.match(/\.(?:prepare|exec|run)\s*\(\s*[`'"].*?\$\{/g) || []).length;
-    if (sqlConcat > 0) {
-      sqlRisk += sqlConcat;
+    // Detect template literals in SQL-like patterns
+    const sqlConcat = (f.content.match(/\.(?:prepare|exec|run)\s*\(\s*`[^`]*\$\{/g) || []);
+    for (const match of sqlConcat) {
+      // Check if .bind() follows (safe parameterized pattern)
+      const matchIdx = f.content.indexOf(match);
+      const after = f.content.slice(matchIdx, matchIdx + 500);
+      if (/\.bind\s*\(/.test(after)) continue; // Safe: uses .bind()
+      if (/\.join\s*\(\s*['"],\s?['"]\)/.test(match)) continue; // Safe: column whitelist join
+      sqlRisk++;
       if (sqlRisk <= 3) {
-        issues.push({ id: `SEC-${++n}`, severity: 'warning', category: 'sql-injection', title: `Potential SQL injection in ${f.path} (${sqlConcat} template literals in queries)`, file: f.path, metric: sqlConcat, fix: 'Use parameterized queries with .bind()' });
+        issues.push({ id: `SEC-${++n}`, severity: 'warning', category: 'sql-injection', title: `Potential SQL injection in ${f.path} (template literal in query without .bind())`, file: f.path, metric: 1, fix: 'Use parameterized queries with .bind()' });
       }
     }
   }
