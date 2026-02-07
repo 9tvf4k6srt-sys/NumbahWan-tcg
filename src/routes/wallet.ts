@@ -7,10 +7,23 @@ type Bindings = {
   DB: D1Database;
 }
 
-const wallet = new Hono<{ Bindings: Bindings }>()
+
+// Route helpers
+function jsonError(c: any, msg: string, status = 400) {
+  return c.json({ success: false, error: msg }, status);
+}
+function jsonSuccess(c: any, data: any) {
+  return c.json({ success: true, ...data });
+}
+function parseIntParam(val: string | undefined, fallback: number): number {
+  const n = parseInt(val || '');
+  return isNaN(n) ? fallback : n;
+}
+
+const router = new Hono<{ Bindings: Bindings }>()
 
 // POST /register - Register citizen and create wallet
-wallet.post('/register', async (c) => {
+router.post('/register', async (c) => {
   const { env } = c
   const { deviceUUID, deviceHash, trustScore, spoofFlags } = await c.req.json()
   
@@ -65,7 +78,7 @@ wallet.post('/register', async (c) => {
 })
 
 // GET /:deviceUUID - Get wallet by device UUID
-wallet.get('/:deviceUUID', async (c) => {
+router.get('/:deviceUUID', async (c) => {
   const { env } = c
   const deviceUUID = c.req.param('deviceUUID')
   
@@ -89,7 +102,7 @@ wallet.get('/:deviceUUID', async (c) => {
 })
 
 // POST /transaction - Record transaction
-wallet.post('/transaction', async (c) => {
+router.post('/transaction', async (c) => {
   const { env } = c
   const { deviceUUID, type, currency, amount, description, reference } = await c.req.json()
   
@@ -142,7 +155,7 @@ wallet.post('/transaction', async (c) => {
 })
 
 // GET /transactions/:deviceUUID - Get transaction history
-wallet.get('/transactions/:deviceUUID', async (c) => {
+router.get('/transactions/:deviceUUID', async (c) => {
   const { env } = c
   const deviceUUID = c.req.param('deviceUUID')
   const limit = parseInt(c.req.query('limit') || '50')
@@ -177,4 +190,4 @@ wallet.get('/transactions/:deviceUUID', async (c) => {
   }
 })
 
-export default wallet
+export default router

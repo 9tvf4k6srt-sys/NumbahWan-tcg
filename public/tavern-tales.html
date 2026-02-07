@@ -1,0 +1,1386 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+    <title>Tavern Tales | The Eternal Campaign | NumbahWan D&D</title>
+    <link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700&family=Crimson+Text:ital,wght@0,400;0,600;1,400&family=Orbitron:wght@500;700&display=swap" rel="stylesheet">
+    <script src="/static/nw-currency.js"></script>
+    <script src="/static/nw-wallet.js"></script>
+    <script src="/static/nw-dnd-engine.js"></script>
+    <script src="/static/nw-nav.js" defer></script>
+    <style>
+        :root {
+            --gold: #d4af37;
+            --gold-dark: #b8860b;
+            --blood-red: #8b0000;
+            --parchment: #f4e4bc;
+            --ink: #2c1810;
+            --wood: #3d2914;
+            --tavern-glow: rgba(255, 147, 41, 0.3);
+            --mythic: #ff6b00;
+            --legendary: #fbbf24;
+            --epic: #a855f7;
+            --rare: #3b82f6;
+            --uncommon: #22c55e;
+            --common: #71717a;
+        }
+        
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            background: linear-gradient(135deg, #1a0f0a 0%, #2d1f15 50%, #1a0f0a 100%);
+            color: var(--parchment);
+            font-family: 'Crimson Text', Georgia, serif;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+        
+        /* ═══════════════════════════════════════════════════════════════════
+           HEADER
+           ═══════════════════════════════════════════════════════════════════ */
+        .header {
+            background: linear-gradient(180deg, rgba(0,0,0,0.9) 0%, rgba(45,31,21,0.95) 100%);
+            padding: 12px 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid var(--gold);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        
+        .logo {
+            font-family: 'Cinzel', serif;
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: var(--gold);
+            text-shadow: 0 0 20px var(--tavern-glow);
+            text-decoration: none;
+        }
+        
+        .viewer-count {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.9rem;
+            color: #ef4444;
+        }
+        
+        .viewer-dot {
+            width: 8px;
+            height: 8px;
+            background: #ef4444;
+            border-radius: 50%;
+            animation: pulse 2s ease-in-out infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.5; transform: scale(1.2); }
+        }
+        
+        /* ═══════════════════════════════════════════════════════════════════
+           MAIN LAYOUT
+           ═══════════════════════════════════════════════════════════════════ */
+        .main-container {
+            display: grid;
+            grid-template-columns: 1fr 350px;
+            gap: 0;
+            min-height: calc(100vh - 60px);
+        }
+        
+        @media (max-width: 1024px) {
+            .main-container {
+                grid-template-columns: 1fr;
+            }
+            .sidebar {
+                display: none;
+            }
+        }
+        
+        /* ═══════════════════════════════════════════════════════════════════
+           BATTLE THEATER (Main Stage)
+           ═══════════════════════════════════════════════════════════════════ */
+        .theater {
+            background: url('/static/tavern-bg.jpg') center/cover no-repeat;
+            background-color: #1a0f0a;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .theater::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(180deg, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0.4) 50%, rgba(0,0,0,0.8) 100%);
+            pointer-events: none;
+        }
+        
+        /* Location Banner */
+        .location-banner {
+            position: relative;
+            z-index: 10;
+            background: linear-gradient(90deg, transparent, rgba(0,0,0,0.8), transparent);
+            text-align: center;
+            padding: 20px;
+            border-bottom: 1px solid var(--gold-dark);
+        }
+        
+        .location-name {
+            font-family: 'Cinzel', serif;
+            font-size: 1.8rem;
+            color: var(--gold);
+            text-shadow: 0 0 30px var(--tavern-glow);
+            margin-bottom: 5px;
+        }
+        
+        .location-desc {
+            font-style: italic;
+            color: rgba(244, 228, 188, 0.7);
+            font-size: 1rem;
+        }
+        
+        /* Party Display */
+        .party-section {
+            position: relative;
+            z-index: 10;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+        }
+        
+        .section-title {
+            font-family: 'Cinzel', serif;
+            font-size: 1.2rem;
+            color: var(--gold);
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .party-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .character-card {
+            background: linear-gradient(135deg, rgba(61,41,20,0.9), rgba(26,15,10,0.95));
+            border: 2px solid var(--gold-dark);
+            border-radius: 10px;
+            padding: 12px;
+            position: relative;
+            transition: all 0.3s ease;
+        }
+        
+        .character-card.active-turn {
+            border-color: var(--gold);
+            box-shadow: 0 0 20px var(--tavern-glow), inset 0 0 20px rgba(255,147,41,0.1);
+            transform: scale(1.02);
+        }
+        
+        .character-card.dead {
+            opacity: 0.5;
+            filter: grayscale(70%);
+        }
+        
+        .char-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+        
+        .char-avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            border: 2px solid var(--gold-dark);
+            object-fit: cover;
+            background: linear-gradient(135deg, #3d2914, #1a0f0a);
+        }
+        
+        .char-info {
+            flex: 1;
+            min-width: 0;
+        }
+        
+        .char-name {
+            font-family: 'Cinzel', serif;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--gold);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        
+        .char-class {
+            font-size: 0.75rem;
+            color: rgba(244, 228, 188, 0.7);
+        }
+        
+        .char-level {
+            font-size: 0.7rem;
+            background: var(--gold-dark);
+            color: #000;
+            padding: 2px 6px;
+            border-radius: 10px;
+            font-weight: 700;
+        }
+        
+        /* HP Bar */
+        .hp-bar {
+            height: 8px;
+            background: rgba(0,0,0,0.5);
+            border-radius: 4px;
+            overflow: hidden;
+            margin-bottom: 8px;
+        }
+        
+        .hp-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #22c55e, #16a34a);
+            transition: width 0.5s ease;
+            border-radius: 4px;
+        }
+        
+        .hp-fill.low { background: linear-gradient(90deg, #ef4444, #dc2626); }
+        .hp-fill.medium { background: linear-gradient(90deg, #f59e0b, #d97706); }
+        
+        .hp-text {
+            font-size: 0.7rem;
+            text-align: center;
+            color: rgba(244, 228, 188, 0.8);
+        }
+        
+        /* Rarity colors */
+        .rarity-mythic { border-color: var(--mythic); }
+        .rarity-mythic .char-name { color: var(--mythic); }
+        .rarity-legendary { border-color: var(--legendary); }
+        .rarity-legendary .char-name { color: var(--legendary); }
+        .rarity-epic { border-color: var(--epic); }
+        .rarity-epic .char-name { color: var(--epic); }
+        
+        /* ═══════════════════════════════════════════════════════════════════
+           ENEMIES SECTION
+           ═══════════════════════════════════════════════════════════════════ */
+        .enemies-section {
+            position: relative;
+            z-index: 10;
+            padding: 20px;
+            background: linear-gradient(180deg, transparent, rgba(139,0,0,0.2));
+        }
+        
+        .enemies-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 12px;
+        }
+        
+        .enemy-card {
+            background: linear-gradient(135deg, rgba(139,0,0,0.3), rgba(26,15,10,0.9));
+            border: 2px solid var(--blood-red);
+            border-radius: 8px;
+            padding: 10px;
+            text-align: center;
+        }
+        
+        .enemy-card.dead {
+            opacity: 0.3;
+            filter: grayscale(100%);
+        }
+        
+        .enemy-name {
+            font-family: 'Cinzel', serif;
+            font-size: 0.8rem;
+            color: #ef4444;
+            margin-bottom: 8px;
+        }
+        
+        /* ═══════════════════════════════════════════════════════════════════
+           NARRATIVE LOG (The Scroll)
+           ═══════════════════════════════════════════════════════════════════ */
+        .narrative-section {
+            position: relative;
+            z-index: 10;
+            background: linear-gradient(180deg, rgba(0,0,0,0.8), rgba(61,41,20,0.6));
+            border-top: 2px solid var(--gold-dark);
+            max-height: 300px;
+            overflow: hidden;
+        }
+        
+        .narrative-scroll {
+            height: 100%;
+            max-height: 280px;
+            overflow-y: auto;
+            padding: 15px;
+            scroll-behavior: smooth;
+        }
+        
+        .narrative-scroll::-webkit-scrollbar {
+            width: 6px;
+        }
+        
+        .narrative-scroll::-webkit-scrollbar-track {
+            background: rgba(0,0,0,0.3);
+        }
+        
+        .narrative-scroll::-webkit-scrollbar-thumb {
+            background: var(--gold-dark);
+            border-radius: 3px;
+        }
+        
+        .narrative-entry {
+            margin-bottom: 10px;
+            padding: 8px 12px;
+            border-radius: 5px;
+            font-size: 0.95rem;
+            line-height: 1.5;
+            animation: fadeIn 0.3s ease;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .narrative-entry.dm {
+            background: linear-gradient(90deg, rgba(212,175,55,0.1), transparent);
+            border-left: 3px solid var(--gold);
+        }
+        
+        .narrative-entry.combat {
+            background: linear-gradient(90deg, rgba(239,68,68,0.1), transparent);
+            border-left: 3px solid #ef4444;
+        }
+        
+        .narrative-entry.system {
+            background: linear-gradient(90deg, rgba(59,130,246,0.1), transparent);
+            border-left: 3px solid #3b82f6;
+            font-family: 'Orbitron', monospace;
+            font-size: 0.8rem;
+        }
+        
+        .narrative-entry.vote {
+            background: linear-gradient(90deg, rgba(168,85,247,0.1), transparent);
+            border-left: 3px solid #a855f7;
+        }
+        
+        .narrative-entry.bet {
+            background: linear-gradient(90deg, rgba(34,197,94,0.1), transparent);
+            border-left: 3px solid #22c55e;
+        }
+        
+        .narrative-entry.commentary {
+            background: linear-gradient(90deg, rgba(255,107,0,0.1), transparent);
+            border-left: 3px solid #ff6b00;
+            font-style: italic;
+            font-weight: 600;
+        }
+        
+        .narrative-entry.tip {
+            background: linear-gradient(90deg, rgba(255,215,0,0.2), transparent);
+            border-left: 3px solid #ffd700;
+            font-weight: 600;
+        }
+        
+        /* ═══════════════════════════════════════════════════════════════════
+           SIDEBAR
+           ═══════════════════════════════════════════════════════════════════ */
+        .sidebar {
+            background: linear-gradient(180deg, #1a0f0a, #2d1f15);
+            border-left: 2px solid var(--gold-dark);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        
+        .sidebar-section {
+            padding: 15px;
+            border-bottom: 1px solid rgba(212,175,55,0.3);
+        }
+        
+        .sidebar-title {
+            font-family: 'Cinzel', serif;
+            font-size: 1rem;
+            color: var(--gold);
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        /* Betting Panel */
+        .betting-panel {
+            background: rgba(0,0,0,0.3);
+            border-radius: 8px;
+            padding: 12px;
+        }
+        
+        .betting-pool {
+            text-align: center;
+            margin-bottom: 15px;
+        }
+        
+        .pool-amount {
+            font-family: 'Orbitron', monospace;
+            font-size: 1.5rem;
+            color: var(--gold);
+        }
+        
+        .pool-label {
+            font-size: 0.8rem;
+            color: rgba(244, 228, 188, 0.7);
+        }
+        
+        .bet-buttons {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        
+        .bet-btn {
+            padding: 12px;
+            border: 2px solid;
+            border-radius: 8px;
+            font-family: 'Cinzel', serif;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .bet-btn.party {
+            background: linear-gradient(135deg, rgba(34,197,94,0.2), rgba(34,197,94,0.1));
+            border-color: #22c55e;
+            color: #22c55e;
+        }
+        
+        .bet-btn.enemies {
+            background: linear-gradient(135deg, rgba(239,68,68,0.2), rgba(239,68,68,0.1));
+            border-color: #ef4444;
+            color: #ef4444;
+        }
+        
+        .bet-btn:hover {
+            transform: scale(1.05);
+        }
+        
+        .bet-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .bet-input {
+            width: 100%;
+            padding: 10px;
+            background: rgba(0,0,0,0.5);
+            border: 1px solid var(--gold-dark);
+            border-radius: 5px;
+            color: var(--parchment);
+            font-family: 'Orbitron', monospace;
+            text-align: center;
+        }
+        
+        /* Voting Panel */
+        .voting-panel {
+            background: rgba(168,85,247,0.1);
+            border: 1px solid #a855f7;
+            border-radius: 8px;
+            padding: 12px;
+        }
+        
+        .vote-timer {
+            text-align: center;
+            font-family: 'Orbitron', monospace;
+            font-size: 1.5rem;
+            color: #a855f7;
+            margin-bottom: 10px;
+        }
+        
+        .vote-option {
+            padding: 10px;
+            margin-bottom: 8px;
+            background: rgba(0,0,0,0.3);
+            border: 1px solid rgba(168,85,247,0.3);
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .vote-option:hover {
+            background: rgba(168,85,247,0.2);
+            border-color: #a855f7;
+        }
+        
+        .vote-option.selected {
+            background: rgba(168,85,247,0.3);
+            border-color: #a855f7;
+        }
+        
+        .vote-count {
+            background: #a855f7;
+            color: #fff;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+        
+        /* MVP Leaderboard */
+        .mvp-list {
+            list-style: none;
+        }
+        
+        .mvp-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px;
+            margin-bottom: 5px;
+            background: rgba(0,0,0,0.2);
+            border-radius: 5px;
+        }
+        
+        .mvp-rank {
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--gold-dark);
+            color: #000;
+            border-radius: 50%;
+            font-weight: 700;
+            font-size: 0.8rem;
+        }
+        
+        .mvp-rank.gold { background: #ffd700; }
+        .mvp-rank.silver { background: #c0c0c0; }
+        .mvp-rank.bronze { background: #cd7f32; }
+        
+        .mvp-name {
+            flex: 1;
+            font-size: 0.85rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        
+        .mvp-wins {
+            font-family: 'Orbitron', monospace;
+            font-size: 0.8rem;
+            color: var(--gold);
+        }
+        
+        /* Tips Panel */
+        .tip-panel {
+            text-align: center;
+        }
+        
+        .tip-amounts {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            margin-bottom: 10px;
+        }
+        
+        .tip-btn {
+            padding: 10px 5px;
+            background: linear-gradient(135deg, rgba(255,215,0,0.2), rgba(255,215,0,0.1));
+            border: 1px solid var(--gold);
+            border-radius: 5px;
+            color: var(--gold);
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .tip-btn:hover {
+            background: linear-gradient(135deg, rgba(255,215,0,0.3), rgba(255,215,0,0.2));
+            transform: scale(1.05);
+        }
+        
+        /* Campaign Stats */
+        .campaign-stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            text-align: center;
+        }
+        
+        .stat-box {
+            background: rgba(0,0,0,0.3);
+            padding: 10px;
+            border-radius: 5px;
+        }
+        
+        .stat-value {
+            font-family: 'Orbitron', monospace;
+            font-size: 1.2rem;
+            color: var(--gold);
+        }
+        
+        .stat-label {
+            font-size: 0.7rem;
+            color: rgba(244, 228, 188, 0.7);
+            text-transform: uppercase;
+        }
+        
+        /* ═══════════════════════════════════════════════════════════════════
+           CONTROL BAR
+           ═══════════════════════════════════════════════════════════════════ */
+        .control-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(180deg, rgba(26,15,10,0.95), rgba(0,0,0,0.98));
+            border-top: 2px solid var(--gold-dark);
+            padding: 12px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 200;
+        }
+        
+        .speed-controls {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .speed-label {
+            font-size: 0.8rem;
+            color: rgba(244, 228, 188, 0.7);
+        }
+        
+        .speed-btn {
+            padding: 8px 16px;
+            background: rgba(0,0,0,0.5);
+            border: 1px solid var(--gold-dark);
+            border-radius: 5px;
+            color: var(--parchment);
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .speed-btn:hover, .speed-btn.active {
+            background: var(--gold-dark);
+            color: #000;
+        }
+        
+        .play-btn {
+            padding: 10px 30px;
+            background: linear-gradient(135deg, var(--gold), var(--gold-dark));
+            border: none;
+            border-radius: 8px;
+            color: #000;
+            font-family: 'Cinzel', serif;
+            font-size: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .play-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 20px var(--tavern-glow);
+        }
+        
+        .play-btn.playing {
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+        }
+        
+        .balance-display {
+            font-family: 'Orbitron', monospace;
+            color: var(--gold);
+        }
+        
+        /* ═══════════════════════════════════════════════════════════════════
+           MOBILE BOTTOM SHEET
+           ═══════════════════════════════════════════════════════════════════ */
+        .mobile-tabs {
+            display: none;
+            position: fixed;
+            bottom: 60px;
+            left: 0;
+            right: 0;
+            background: rgba(26,15,10,0.98);
+            border-top: 1px solid var(--gold-dark);
+            padding: 10px;
+            z-index: 150;
+        }
+        
+        @media (max-width: 1024px) {
+            .mobile-tabs {
+                display: flex;
+                justify-content: space-around;
+            }
+            
+            .main-container {
+                padding-bottom: 120px;
+            }
+        }
+        
+        .mobile-tab {
+            padding: 10px 20px;
+            background: transparent;
+            border: 1px solid var(--gold-dark);
+            border-radius: 5px;
+            color: var(--parchment);
+            font-family: 'Cinzel', serif;
+            cursor: pointer;
+        }
+        
+        .mobile-tab.active {
+            background: var(--gold-dark);
+            color: #000;
+        }
+        
+        /* Mobile Bottom Sheet Content */
+        .mobile-sheet {
+            display: none;
+            position: fixed;
+            bottom: 120px;
+            left: 0;
+            right: 0;
+            max-height: 50vh;
+            background: rgba(26,15,10,0.98);
+            border-top: 2px solid var(--gold);
+            padding: 15px;
+            overflow-y: auto;
+            z-index: 140;
+        }
+        
+        .mobile-sheet.active {
+            display: block;
+        }
+        
+        @media (max-width: 1024px) {
+            .narrative-section {
+                max-height: 200px;
+            }
+        }
+        
+        /* ═══════════════════════════════════════════════════════════════════
+           MOBILE RESPONSIVE FIXES
+           ═══════════════════════════════════════════════════════════════════ */
+        @media (max-width: 768px) {
+            /* Control bar - stack vertically on mobile */
+            .control-bar {
+                flex-direction: column;
+                gap: 15px;
+                padding: 20px 16px 30px;
+                padding-bottom: calc(30px + env(safe-area-inset-bottom));
+            }
+            
+            .speed-controls {
+                width: 100%;
+                justify-content: center;
+                flex-wrap: wrap;
+                gap: 8px;
+            }
+            
+            .speed-label {
+                width: 100%;
+                text-align: center;
+                font-size: 0.9rem;
+                margin-bottom: 5px;
+            }
+            
+            .speed-btn {
+                padding: 12px 20px;
+                font-size: 1rem;
+                min-width: 70px;
+            }
+            
+            .play-btn {
+                width: 100%;
+                padding: 16px 30px;
+                font-size: 1.2rem;
+                margin: 10px 0;
+            }
+            
+            .balance-display {
+                font-size: 1.1rem;
+                padding: 10px;
+                background: rgba(0,0,0,0.3);
+                border-radius: 8px;
+                width: 100%;
+                text-align: center;
+            }
+            
+            /* Main container needs more bottom padding */
+            .main-container {
+                padding-bottom: 220px;
+            }
+            
+            /* Hide mobile tabs - use simplified control bar */
+            .mobile-tabs {
+                display: none !important;
+            }
+            
+            /* Bigger text throughout */
+            .location-name {
+                font-size: 1.5rem;
+            }
+            
+            .location-desc {
+                font-size: 1rem;
+            }
+            
+            .section-title {
+                font-size: 1.1rem;
+            }
+            
+            .narrative-entry {
+                font-size: 1.05rem;
+                padding: 12px 15px;
+            }
+            
+            /* Character cards - bigger on mobile */
+            .party-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 12px;
+            }
+            
+            .character-card {
+                padding: 15px;
+            }
+            
+            .char-name {
+                font-size: 0.95rem;
+            }
+            
+            .char-class {
+                font-size: 0.85rem;
+            }
+            
+            .hp-text {
+                font-size: 0.85rem;
+            }
+            
+            /* Enemy cards */
+            .enemies-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .enemy-name {
+                font-size: 0.9rem;
+            }
+            
+            /* Header */
+            .logo {
+                font-size: 1.2rem;
+            }
+            
+            .viewer-count {
+                font-size: 1rem;
+            }
+        }
+        
+        /* Extra small screens */
+        @media (max-width: 400px) {
+            .speed-btn {
+                padding: 10px 14px;
+                font-size: 0.9rem;
+                min-width: 60px;
+            }
+            
+            .party-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .character-card {
+                display: flex;
+                flex-direction: row;
+                align-items: center;
+                gap: 15px;
+            }
+            
+            .char-header {
+                flex: 1;
+                margin-bottom: 0;
+            }
+            
+            .hp-bar {
+                width: 100px;
+                margin-bottom: 0;
+            }
+            
+            .hp-text {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body data-page-id="tavern-tales">
+    <header class="header">
+        <a href="/" class="logo">🎲 TAVERN TALES</a>
+        <div class="viewer-count">
+            <span class="viewer-dot"></span>
+            <span id="viewerCount">0</span> watching
+        </div>
+    </header>
+    
+    <div class="main-container">
+        <!-- Main Theater -->
+        <div class="theater">
+            <!-- Location Banner -->
+            <div class="location-banner">
+                <div class="location-name" id="locationName">The Dungeon of Eternal Grind</div>
+                <div class="location-desc" id="locationDesc">Loading the eternal campaign...</div>
+            </div>
+            
+            <!-- Party Section -->
+            <div class="party-section">
+                <div class="section-title">⚔️ THE PARTY</div>
+                <div class="party-grid" id="partyGrid">
+                    <!-- Characters injected by JS -->
+                </div>
+            </div>
+            
+            <!-- Enemies Section -->
+            <div class="enemies-section" id="enemiesSection" style="display: none;">
+                <div class="section-title">💀 ENEMIES</div>
+                <div class="enemies-grid" id="enemiesGrid">
+                    <!-- Enemies injected by JS -->
+                </div>
+            </div>
+            
+            <!-- Narrative Log -->
+            <div class="narrative-section">
+                <div class="narrative-scroll" id="narrativeScroll">
+                    <div class="narrative-entry system">
+                        🎮 Welcome to Tavern Tales - The Eternal Campaign!
+                    </div>
+                    <div class="narrative-entry dm">
+                        Press PLAY to begin the adventure...
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <!-- Campaign Stats -->
+            <div class="sidebar-section">
+                <div class="sidebar-title">📊 CAMPAIGN STATS</div>
+                <div class="campaign-stats">
+                    <div class="stat-box">
+                        <div class="stat-value" id="statEncounters">0</div>
+                        <div class="stat-label">Encounters</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-value" id="statBosses">0</div>
+                        <div class="stat-label">Bosses</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-value" id="statXP">0</div>
+                        <div class="stat-label">Total XP</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Betting Panel -->
+            <div class="sidebar-section" id="bettingSection">
+                <div class="sidebar-title">🎰 PLACE YOUR BETS</div>
+                <div class="betting-panel">
+                    <div class="betting-pool">
+                        <div class="pool-amount" id="bettingPool">0</div>
+                        <div class="pool-label">NWG in Pool</div>
+                    </div>
+                    <input type="number" class="bet-input" id="betAmount" placeholder="Bet amount" value="100" min="10" max="10000">
+                    <div class="bet-buttons">
+                        <button class="bet-btn party" id="betParty" onclick="placeBet('party')">🟢 PARTY</button>
+                        <button class="bet-btn enemies" id="betEnemies" onclick="placeBet('enemies')">🔴 ENEMIES</button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Voting Panel (Hidden by default) -->
+            <div class="sidebar-section" id="votingSection" style="display: none;">
+                <div class="sidebar-title">🗳️ VOTE NOW!</div>
+                <div class="voting-panel">
+                    <div class="vote-timer" id="voteTimer">30</div>
+                    <div id="voteOptions">
+                        <!-- Vote options injected by JS -->
+                    </div>
+                </div>
+            </div>
+            
+            <!-- MVP Leaderboard -->
+            <div class="sidebar-section">
+                <div class="sidebar-title">🏆 MVP LEADERBOARD</div>
+                <ul class="mvp-list" id="mvpList">
+                    <li class="mvp-item">
+                        <span class="mvp-rank gold">1</span>
+                        <span class="mvp-name">Waiting for data...</span>
+                        <span class="mvp-wins">0</span>
+                    </li>
+                </ul>
+            </div>
+            
+            <!-- Tip Panel -->
+            <div class="sidebar-section">
+                <div class="sidebar-title">💰 TIP THE DM</div>
+                <div class="tip-panel">
+                    <div class="tip-amounts">
+                        <button class="tip-btn" onclick="sendTip(10)">10</button>
+                        <button class="tip-btn" onclick="sendTip(25)">25</button>
+                        <button class="tip-btn" onclick="sendTip(50)">50</button>
+                        <button class="tip-btn" onclick="sendTip(100)">100</button>
+                        <button class="tip-btn" onclick="sendTip(200)">200</button>
+                        <button class="tip-btn" onclick="sendTip(500)">500</button>
+                    </div>
+                    <div style="font-size: 0.8rem; color: rgba(244,228,188,0.6);">
+                        Tips trigger special events!
+                    </div>
+                </div>
+            </div>
+        </aside>
+    </div>
+    
+    <!-- Mobile Tabs -->
+    <div class="mobile-tabs">
+        <button class="mobile-tab" onclick="showMobileSheet('betting')">🎰 Bet</button>
+        <button class="mobile-tab" onclick="showMobileSheet('mvp')">🏆 MVP</button>
+        <button class="mobile-tab" onclick="showMobileSheet('tip')">💰 Tip</button>
+    </div>
+    
+    <!-- Control Bar -->
+    <div class="control-bar">
+        <div class="speed-controls">
+            <span class="speed-label">Speed:</span>
+            <button class="speed-btn" onclick="setSpeed(5000)">Slow</button>
+            <button class="speed-btn active" onclick="setSpeed(3000)">Normal</button>
+            <button class="speed-btn" onclick="setSpeed(1500)">Fast</button>
+            <button class="speed-btn" onclick="setSpeed(800)">Chaos</button>
+        </div>
+        
+        <button class="play-btn" id="playBtn" onclick="togglePlay()">
+            ▶️ PLAY
+        </button>
+        
+        <div class="balance-display">
+            <span id="userBalance">0</span> NWG
+        </div>
+    </div>
+    
+    <script>
+        // ═══════════════════════════════════════════════════════════════════
+        // TAVERN TALES - MAIN CLIENT
+        // ═══════════════════════════════════════════════════════════════════
+        
+        let isPlaying = false;
+        let currentSpeed = 3000;
+        let cardsData = [];
+        let viewerCount = Math.floor(Math.random() * 50) + 20;
+        
+        // Load cards data
+        async function loadCards() {
+            try {
+                const response = await fetch('/static/data/cards-v2.json');
+                const data = await response.json();
+                cardsData = data.cards.filter(c => c.category === 'member' && c.hasArt);
+                console.log(`Loaded ${cardsData.length} playable cards`);
+                initGame();
+            } catch (e) {
+                console.error('Failed to load cards:', e);
+                // Use mock data
+                cardsData = [
+                    { id: 1, name: "RegginA, The Eternal Flame", rarity: "mythic", role: "carry", img: "01-reggina-mythic-maplestory.webp" },
+                    { id: 201, name: "Reggino, Shadow Commander", rarity: "legendary", role: "lurker", img: "02-reggino-legendary.webp" },
+                    { id: 202, name: "Burnout, The Eternal Grinder", rarity: "legendary", role: "grinder", img: "legendary-burnout.webp" },
+                    { id: 207, name: "Chadwick, The Absolute Carry", rarity: "legendary", role: "carry", img: "legendary-chadwick.webp" }
+                ];
+                initGame();
+            }
+        }
+        
+        // Initialize game
+        function initGame() {
+            if (typeof NW_DND === 'undefined') {
+                console.error('NW_DND engine not loaded!');
+                return;
+            }
+            
+            NW_DND.init(cardsData);
+            updateUI();
+            
+            // Listen for events
+            window.addEventListener('nw-dnd-narrative', (e) => {
+                addNarrativeEntry(e.detail);
+            });
+            
+            window.addEventListener('nw-dnd-vote-start', (e) => {
+                showVotingPanel(e.detail);
+            });
+            
+            window.addEventListener('nw-dnd-vote-end', (e) => {
+                hideVotingPanel();
+            });
+            
+            window.addEventListener('nw-dnd-betting-open', (e) => {
+                enableBetting(true);
+            });
+            
+            window.addEventListener('nw-dnd-betting-closed', (e) => {
+                enableBetting(false);
+            });
+            
+            // Update viewer count randomly
+            setInterval(() => {
+                viewerCount += Math.floor(Math.random() * 5) - 2;
+                viewerCount = Math.max(10, Math.min(200, viewerCount));
+                document.getElementById('viewerCount').textContent = viewerCount;
+            }, 5000);
+            
+            // Load wallet balance
+            if (typeof NW_WALLET !== 'undefined') {
+                setTimeout(() => {
+                    const balance = NW_WALLET.getBalance('nwg');
+                    document.getElementById('userBalance').textContent = balance.toLocaleString();
+                }, 500);
+            }
+        }
+        
+        // Update full UI
+        function updateUI() {
+            const state = NW_DND.getGameState();
+            
+            // Update location
+            if (state.location) {
+                document.getElementById('locationName').textContent = state.location.name;
+                document.getElementById('locationDesc').textContent = state.location.desc;
+            }
+            
+            // Update party
+            renderParty(state.party);
+            
+            // Update enemies
+            if (state.encounter && state.encounter.enemies) {
+                document.getElementById('enemiesSection').style.display = 'block';
+                renderEnemies(state.encounter.enemies);
+            } else {
+                document.getElementById('enemiesSection').style.display = 'none';
+            }
+            
+            // Update stats
+            document.getElementById('statEncounters').textContent = state.stats.encountersCompleted;
+            document.getElementById('statBosses').textContent = state.stats.bossesDefeated;
+            document.getElementById('statXP').textContent = formatNumber(state.stats.totalXP);
+            
+            // Update betting pool
+            document.getElementById('bettingPool').textContent = state.bettingPool.toLocaleString();
+            
+            // Update MVP leaderboard
+            renderMVPLeaderboard(state.mvpLeaderboard);
+        }
+        
+        // Render party characters
+        function renderParty(party) {
+            const grid = document.getElementById('partyGrid');
+            grid.innerHTML = party.map((char, index) => {
+                const hpPercent = Math.round((char.currentHP / char.maxHP) * 100);
+                const hpClass = hpPercent < 25 ? 'low' : hpPercent < 50 ? 'medium' : '';
+                const rarityClass = `rarity-${char.cardData.rarity}`;
+                const deadClass = !char.isAlive ? 'dead' : '';
+                
+                return `
+                    <div class="character-card ${rarityClass} ${deadClass}" id="char-${char.id}">
+                        <div class="char-header">
+                            <img class="char-avatar" src="/static/cards/${char.cardData.img}" alt="${char.name}" onerror="this.src='/static/cards/placeholder.webp'">
+                            <div class="char-info">
+                                <div class="char-name">${char.name.split(',')[0]}</div>
+                                <div class="char-class">${char.class} <span class="char-level">Lv.${char.level}</span></div>
+                            </div>
+                        </div>
+                        <div class="hp-bar">
+                            <div class="hp-fill ${hpClass}" style="width: ${hpPercent}%"></div>
+                        </div>
+                        <div class="hp-text">${char.currentHP}/${char.maxHP} HP</div>
+                    </div>
+                `;
+            }).join('');
+        }
+        
+        // Render enemies
+        function renderEnemies(enemies) {
+            const grid = document.getElementById('enemiesGrid');
+            grid.innerHTML = enemies.map(enemy => {
+                const hpPercent = Math.round((enemy.currentHP / enemy.hp) * 100);
+                const hpClass = hpPercent < 25 ? 'low' : hpPercent < 50 ? 'medium' : '';
+                const deadClass = enemy.currentHP <= 0 ? 'dead' : '';
+                
+                return `
+                    <div class="enemy-card ${deadClass}">
+                        <div class="enemy-name">${enemy.name}</div>
+                        <div class="hp-bar">
+                            <div class="hp-fill ${hpClass}" style="width: ${hpPercent}%"></div>
+                        </div>
+                        <div class="hp-text">${enemy.currentHP}/${enemy.hp}</div>
+                    </div>
+                `;
+            }).join('');
+        }
+        
+        // Add narrative entry
+        function addNarrativeEntry(entry) {
+            const scroll = document.getElementById('narrativeScroll');
+            const div = document.createElement('div');
+            div.className = `narrative-entry ${entry.type}`;
+            div.textContent = entry.message;
+            scroll.appendChild(div);
+            
+            // Auto-scroll to bottom
+            scroll.scrollTop = scroll.scrollHeight;
+            
+            // Update UI after each narrative
+            updateUI();
+        }
+        
+        // Render MVP leaderboard
+        function renderMVPLeaderboard(leaderboard) {
+            const list = document.getElementById('mvpList');
+            if (!leaderboard || leaderboard.length === 0) {
+                list.innerHTML = '<li class="mvp-item"><span class="mvp-name">No data yet...</span></li>';
+                return;
+            }
+            
+            list.innerHTML = leaderboard.slice(0, 5).map((mvp, index) => {
+                const rankClass = index === 0 ? 'gold' : index === 1 ? 'silver' : index === 2 ? 'bronze' : '';
+                return `
+                    <li class="mvp-item">
+                        <span class="mvp-rank ${rankClass}">${index + 1}</span>
+                        <span class="mvp-name">${mvp.name.split(',')[0]}</span>
+                        <span class="mvp-wins">${mvp.mvpWins} MVP</span>
+                    </li>
+                `;
+            }).join('');
+        }
+        
+        // Show voting panel
+        function showVotingPanel(vote) {
+            document.getElementById('bettingSection').style.display = 'none';
+            document.getElementById('votingSection').style.display = 'block';
+            
+            const optionsDiv = document.getElementById('voteOptions');
+            optionsDiv.innerHTML = vote.options.map((opt, i) => `
+                <div class="vote-option" onclick="castVote('${opt.id}')">
+                    <span>${opt.label}</span>
+                    <span class="vote-count" id="vote-count-${opt.id}">0</span>
+                </div>
+            `).join('');
+            
+            // Start timer
+            let timeLeft = vote.duration / 1000;
+            const timerEl = document.getElementById('voteTimer');
+            const timerInterval = setInterval(() => {
+                timeLeft--;
+                timerEl.textContent = timeLeft;
+                if (timeLeft <= 0) {
+                    clearInterval(timerInterval);
+                }
+            }, 1000);
+        }
+        
+        // Hide voting panel
+        function hideVotingPanel() {
+            document.getElementById('votingSection').style.display = 'none';
+            document.getElementById('bettingSection').style.display = 'block';
+        }
+        
+        // Cast vote
+        function castVote(optionId) {
+            const userId = 'viewer_' + Math.random().toString(36).substr(2, 9);
+            NW_DND.castVote(optionId, userId);
+            
+            // Visual feedback
+            document.querySelectorAll('.vote-option').forEach(el => el.classList.remove('selected'));
+            event.currentTarget.classList.add('selected');
+        }
+        
+        // Enable/disable betting
+        function enableBetting(enabled) {
+            document.getElementById('betParty').disabled = !enabled;
+            document.getElementById('betEnemies').disabled = !enabled;
+        }
+        
+        // Place bet
+        function placeBet(side) {
+            const amount = parseInt(document.getElementById('betAmount').value) || 100;
+            const userId = 'viewer_' + Math.random().toString(36).substr(2, 9);
+            
+            const result = NW_DND.placeBet(userId, amount, side);
+            if (result.success) {
+                document.getElementById('bettingPool').textContent = result.pool.toLocaleString();
+                enableBetting(false); // Disable after betting
+            }
+        }
+        
+        // Send tip
+        function sendTip(amount) {
+            const userId = 'generous_tipper';
+            NW_DND.processTip(userId, amount);
+        }
+        
+        // Toggle play
+        function togglePlay() {
+            const btn = document.getElementById('playBtn');
+            
+            if (isPlaying) {
+                NW_DND.stopAutoPlay();
+                btn.textContent = '▶️ PLAY';
+                btn.classList.remove('playing');
+                isPlaying = false;
+            } else {
+                NW_DND.startAutoPlay(currentSpeed);
+                btn.textContent = '⏸️ PAUSE';
+                btn.classList.add('playing');
+                isPlaying = true;
+            }
+        }
+        
+        // Set speed
+        function setSpeed(speed) {
+            currentSpeed = speed;
+            document.querySelectorAll('.speed-btn').forEach(btn => btn.classList.remove('active'));
+            event.currentTarget.classList.add('active');
+            
+            if (isPlaying) {
+                NW_DND.stopAutoPlay();
+                NW_DND.startAutoPlay(speed);
+            }
+        }
+        
+        // Format number
+        function formatNumber(num) {
+            if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M';
+            if (num >= 1000) return (num / 1000).toFixed(1) + 'K';
+            return num.toString();
+        }
+        
+        // Mobile sheet
+        function showMobileSheet(type) {
+            // TODO: Implement mobile bottom sheet
+        }
+        
+        // Initialize on load
+        document.addEventListener('DOMContentLoaded', loadCards);
+    </script>
+</body>
+</html>

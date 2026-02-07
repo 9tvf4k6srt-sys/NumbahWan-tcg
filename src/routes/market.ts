@@ -8,10 +8,10 @@ let marketListings: any[] = []
 let marketChat: any[] = []
 let onlineUsers = new Map<string, { lastSeen: number; name: string }>()
 
-const market = new Hono()
+const router = new Hono()
 
 // GET /listings - Get all active listings
-market.get('/listings', (c) => {
+router.get('/listings', (c) => {
   const now = Date.now()
   // Filter out expired listings (24h)
   const activeListings = marketListings.filter(l => now - l.createdAt < 86400000)
@@ -19,7 +19,7 @@ market.get('/listings', (c) => {
 })
 
 // POST /buy - Purchase a listing
-market.post('/buy', async (c) => {
+router.post('/buy', async (c) => {
   const { listingId, buyerId, buyerName } = await c.req.json()
   
   const listingIndex = marketListings.findIndex(l => l.id === listingId)
@@ -53,7 +53,7 @@ market.post('/buy', async (c) => {
 })
 
 // POST /list - Create new listing
-market.post('/list', async (c) => {
+router.post('/list', async (c) => {
   const { card, price, currency, sellerId, sellerName } = await c.req.json()
   
   if (!card || !price || !sellerId) {
@@ -96,7 +96,7 @@ market.post('/list', async (c) => {
 })
 
 // GET /chat - Get chat messages
-market.get('/chat', (c) => {
+router.get('/chat', (c) => {
   const since = parseInt(c.req.query('since') || '0')
   const messages = since > 0 
     ? marketChat.filter(m => m.timestamp > since)
@@ -106,7 +106,7 @@ market.get('/chat', (c) => {
 })
 
 // POST /chat - Send chat message
-market.post('/chat', async (c) => {
+router.post('/chat', async (c) => {
   const { userId, userName, text } = await c.req.json()
   
   if (!text || text.trim().length === 0) {
@@ -136,7 +136,7 @@ market.post('/chat', async (c) => {
 })
 
 // POST /heartbeat - Update online status
-market.post('/heartbeat', async (c) => {
+router.post('/heartbeat', async (c) => {
   const { userId, userName } = await c.req.json()
   
   if (!userId) {
@@ -160,7 +160,7 @@ market.post('/heartbeat', async (c) => {
 })
 
 // DELETE /listing/:id - Remove own listing
-market.delete('/listing/:id', async (c) => {
+router.delete('/listing/:id', async (c) => {
   const listingId = c.req.param('id')
   const { sellerId } = await c.req.json()
   
@@ -179,4 +179,4 @@ market.delete('/listing/:id', async (c) => {
   return c.json({ success: true })
 })
 
-export default market
+export default router

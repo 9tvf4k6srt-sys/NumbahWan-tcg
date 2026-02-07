@@ -1,0 +1,771 @@
+<!DOCTYPE html>
+<html lang="en" data-page-id="system-dashboard">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+    <title>System Dashboard - NumbahWan TCG</title>
+    <link rel="stylesheet" href="/static/nw-core.css">
+    <link rel="stylesheet" href="/static/nw-tokens.css">
+    <link rel="stylesheet" href="/static/nw-utilities.css">
+    <style>
+        :root {
+            --sd-bg: #0a0e1a;
+            --sd-card: #111827;
+            --sd-border: rgba(255,215,0,0.15);
+            --sd-gold: #ffd700;
+            --sd-green: #22c55e;
+            --sd-red: #ef4444;
+            --sd-blue: #3b82f6;
+            --sd-purple: #a855f7;
+            --sd-text: #e5e7eb;
+            --sd-dim: #6b7280;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background: var(--sd-bg);
+            color: var(--sd-text);
+            font-family: 'Inter', -apple-system, sans-serif;
+            min-height: 100vh;
+            padding: 0 0 80px 0;
+        }
+
+        .sd-header {
+            background: linear-gradient(135deg, #111827 0%, #1e1a2e 100%);
+            border-bottom: 1px solid var(--sd-border);
+            padding: 20px 16px;
+            text-align: center;
+        }
+        .sd-header h1 {
+            font-size: 1.5rem;
+            background: linear-gradient(135deg, var(--sd-gold), #fff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 4px;
+        }
+        .sd-header .sd-subtitle {
+            font-size: 0.85rem;
+            color: var(--sd-dim);
+        }
+
+        .sd-tabs {
+            display: flex;
+            gap: 2px;
+            padding: 12px 16px 0;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+        .sd-tab {
+            background: var(--sd-card);
+            border: 1px solid transparent;
+            border-bottom: none;
+            color: var(--sd-dim);
+            padding: 10px 16px;
+            font-size: 0.85rem;
+            border-radius: 8px 8px 0 0;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: all 0.2s;
+        }
+        .sd-tab.active {
+            background: rgba(255,215,0,0.08);
+            color: var(--sd-gold);
+            border-color: var(--sd-border);
+        }
+
+        .sd-content { padding: 16px; }
+
+        .sd-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .sd-card {
+            background: var(--sd-card);
+            border: 1px solid var(--sd-border);
+            border-radius: 12px;
+            padding: 16px;
+        }
+        .sd-card h3 {
+            font-size: 0.9rem;
+            color: var(--sd-gold);
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .sd-card h3 .sd-icon {
+            width: 20px;
+            height: 20px;
+            opacity: 0.8;
+        }
+
+        .sd-stat {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.04);
+        }
+        .sd-stat:last-child { border-bottom: none; }
+        .sd-stat-label { color: var(--sd-dim); font-size: 0.85rem; }
+        .sd-stat-value { font-weight: 600; font-size: 0.95rem; }
+        .sd-stat-value.good { color: var(--sd-green); }
+        .sd-stat-value.warn { color: var(--sd-gold); }
+        .sd-stat-value.bad { color: var(--sd-red); }
+
+        .sd-badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+        .sd-badge.green { background: rgba(34,197,94,0.15); color: var(--sd-green); }
+        .sd-badge.gold { background: rgba(255,215,0,0.15); color: var(--sd-gold); }
+        .sd-badge.red { background: rgba(239,68,68,0.15); color: var(--sd-red); }
+        .sd-badge.blue { background: rgba(59,130,246,0.15); color: var(--sd-blue); }
+        .sd-badge.purple { background: rgba(168,85,247,0.15); color: var(--sd-purple); }
+
+        .sd-list { list-style: none; }
+        .sd-list li {
+            padding: 8px 12px;
+            border-left: 3px solid var(--sd-border);
+            margin-bottom: 8px;
+            background: rgba(255,255,255,0.02);
+            border-radius: 0 8px 8px 0;
+            font-size: 0.85rem;
+        }
+        .sd-list li.improvement { border-left-color: var(--sd-green); }
+        .sd-list li.pattern { border-left-color: var(--sd-blue); }
+        .sd-list li.warning { border-left-color: var(--sd-gold); }
+        .sd-list li.error { border-left-color: var(--sd-red); }
+
+        .sd-chart {
+            height: 120px;
+            display: flex;
+            align-items: flex-end;
+            gap: 4px;
+            padding: 0 4px;
+        }
+        .sd-chart-bar {
+            flex: 1;
+            background: linear-gradient(to top, rgba(255,215,0,0.3), rgba(255,215,0,0.6));
+            border-radius: 4px 4px 0 0;
+            min-height: 4px;
+            transition: height 0.5s ease;
+            position: relative;
+        }
+        .sd-chart-bar:hover::after {
+            content: attr(data-value);
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--sd-card);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 0.7rem;
+            white-space: nowrap;
+        }
+        .sd-chart-label {
+            text-align: center;
+            font-size: 0.65rem;
+            color: var(--sd-dim);
+            margin-top: 4px;
+        }
+
+        .sd-cron-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 8px;
+        }
+        .sd-cron-job {
+            background: rgba(255,255,255,0.02);
+            border: 1px solid rgba(255,255,255,0.06);
+            border-radius: 8px;
+            padding: 10px;
+        }
+        .sd-cron-job .name { font-weight: 600; font-size: 0.85rem; margin-bottom: 4px; }
+        .sd-cron-job .schedule { font-size: 0.75rem; color: var(--sd-dim); }
+
+        .sd-perf-score {
+            font-size: 3rem;
+            font-weight: 700;
+            text-align: center;
+            padding: 16px;
+        }
+        .sd-perf-score.grade-a { color: var(--sd-green); }
+        .sd-perf-score.grade-b { color: var(--sd-gold); }
+        .sd-perf-score.grade-c { color: #f59e0b; }
+        .sd-perf-score.grade-d { color: var(--sd-red); }
+
+        .sd-empty {
+            text-align: center;
+            padding: 32px;
+            color: var(--sd-dim);
+            font-style: italic;
+        }
+
+        .sd-btn {
+            background: linear-gradient(135deg, var(--sd-gold), #b8860b);
+            color: #000;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: transform 0.1s, opacity 0.2s;
+        }
+        .sd-btn:active { transform: scale(0.97); }
+        .sd-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        .sd-btn-group { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
+
+        .sd-loading {
+            text-align: center;
+            padding: 48px 16px;
+        }
+        .sd-loading .spinner {
+            width: 32px;
+            height: 32px;
+            border: 3px solid rgba(255,215,0,0.2);
+            border-top-color: var(--sd-gold);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin: 0 auto 12px;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        .sd-section-title {
+            font-size: 1.1rem;
+            color: var(--sd-gold);
+            margin: 24px 0 12px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--sd-border);
+        }
+
+        @media (max-width: 640px) {
+            .sd-grid { grid-template-columns: 1fr; }
+            .sd-tabs { padding: 8px 8px 0; }
+            .sd-tab { padding: 8px 12px; font-size: 0.8rem; }
+            .sd-content { padding: 12px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="sd-header">
+        <h1>System Dashboard</h1>
+        <div class="sd-subtitle">Continuous Learning Engine - Real-time System Intelligence</div>
+    </div>
+
+    <div class="sd-tabs">
+        <button class="sd-tab active" onclick="switchTab('overview')">Overview</button>
+        <button class="sd-tab" onclick="switchTab('performance')">Performance</button>
+        <button class="sd-tab" onclick="switchTab('learning')">Learning</button>
+        <button class="sd-tab" onclick="switchTab('patterns')">Patterns</button>
+        <button class="sd-tab" onclick="switchTab('cron')">Cron Jobs</button>
+    </div>
+
+    <div class="sd-content" id="tabContent">
+        <div class="sd-loading">
+            <div class="spinner"></div>
+            <div>Loading system intelligence...</div>
+        </div>
+    </div>
+
+    <!-- Translations -->
+    <script>
+        const translations = {
+            en: {
+                pageTitle: 'System Dashboard',
+                subtitle: 'Continuous Learning Engine',
+                overview: 'Overview',
+                performance: 'Performance',
+                learning: 'Learning',
+                patterns: 'Patterns',
+                cronJobs: 'Cron Jobs',
+                systemHealth: 'System Health',
+                improvements: 'Improvements',
+                recentLogs: 'Recent Logs',
+                loading: 'Loading...',
+                noData: 'No data available yet',
+                refresh: 'Refresh',
+                runAudit: 'Run Audit',
+                generatePatchNotes: 'Generate Patch Notes'
+            },
+            zh: {
+                pageTitle: '系統儀表板',
+                subtitle: '持續學習引擎',
+                overview: '概覽',
+                performance: '效能',
+                learning: '學習',
+                patterns: '模式',
+                cronJobs: '排程任務',
+                systemHealth: '系統健康',
+                improvements: '改進建議',
+                recentLogs: '最近日誌',
+                loading: '載入中...',
+                noData: '尚無可用數據',
+                refresh: '重新整理',
+                runAudit: '執行審計',
+                generatePatchNotes: '生成更新日誌'
+            },
+            th: {
+                pageTitle: 'แดชบอร์ดระบบ',
+                subtitle: 'เครื่องยนต์เรียนรู้ต่อเนื่อง',
+                overview: 'ภาพรวม',
+                performance: 'ประสิทธิภาพ',
+                learning: 'การเรียนรู้',
+                patterns: 'รูปแบบ',
+                cronJobs: 'งานตามกำหนด',
+                systemHealth: 'สุขภาพระบบ',
+                improvements: 'ข้อเสนอแนะ',
+                recentLogs: 'บันทึกล่าสุด',
+                loading: 'กำลังโหลด...',
+                noData: 'ยังไม่มีข้อมูล',
+                refresh: 'รีเฟรช',
+                runAudit: 'ตรวจสอบ',
+                generatePatchNotes: 'สร้างบันทึกอัปเดต'
+            }
+        };
+    </script>
+
+    <script src="/static/nw-nav.js" defer></script>
+    <script src="/static/nw-perf.js" defer></script>
+    <script src="/static/nw-micro.js" defer></script>
+
+    <script>
+    (function() {
+        'use strict';
+
+        const BASE = '/api';
+        let currentTab = 'overview';
+        let systemData = null;
+
+        // =============================================
+        // DATA FETCHING
+        // =============================================
+
+        async function fetchJSON(path) {
+            try {
+                const res = await fetch(BASE + path);
+                if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                return await res.json();
+            } catch (e) {
+                console.warn('[SD] Fetch error:', path, e.message);
+                return null;
+            }
+        }
+
+        async function loadSystemData() {
+            const [summary, improvements, patchNotes, health, cards, auction] = await Promise.all([
+                fetchJSON('/system/summary'),
+                fetchJSON('/system/improvements'),
+                fetchJSON('/system/patch-notes'),
+                fetchJSON('/health'),
+                fetchJSON('/cards'),
+                fetchJSON('/auction/stats')
+            ]);
+
+            systemData = {
+                summary: summary?.summary || null,
+                improvements: improvements?.improvements || [],
+                patchNotes: patchNotes?.patchNotes || [],
+                health: health || {},
+                cards: cards || {},
+                auction: auction || {},
+                timestamp: Date.now()
+            };
+
+            return systemData;
+        }
+
+        // =============================================
+        // OVERVIEW TAB
+        // =============================================
+
+        function renderOverview() {
+            const d = systemData;
+            const h = d?.health || {};
+            const s = d?.summary || {};
+            const imp = d?.improvements || [];
+            const perfLog = (typeof NW_PERF !== 'undefined') ? NW_PERF.getPerformanceLog() : [];
+            const lastPerf = perfLog[perfLog.length - 1];
+
+            return `
+                <div class="sd-grid">
+                    <div class="sd-card">
+                        <h3>System Status</h3>
+                        <div class="sd-stat">
+                            <span class="sd-stat-label">API Health</span>
+                            <span class="sd-stat-value ${h.status === 'ok' ? 'good' : 'bad'}">${h.status === 'ok' ? 'Online' : 'Degraded'}</span>
+                        </div>
+                        <div class="sd-stat">
+                            <span class="sd-stat-label">Version</span>
+                            <span class="sd-stat-value">${h.version || '-'}</span>
+                        </div>
+                        <div class="sd-stat">
+                            <span class="sd-stat-label">Architecture</span>
+                            <span class="sd-stat-value"><span class="sd-badge blue">${h.architecture || 'modular'}</span></span>
+                        </div>
+                        <div class="sd-stat">
+                            <span class="sd-stat-label">Cards</span>
+                            <span class="sd-stat-value">${d?.cards?.total || '-'}</span>
+                        </div>
+                        <div class="sd-stat">
+                            <span class="sd-stat-label">Active Auctions</span>
+                            <span class="sd-stat-value">${d?.auction?.overview?.totalActive || 0}</span>
+                        </div>
+                    </div>
+
+                    <div class="sd-card">
+                        <h3>Performance Snapshot</h3>
+                        ${lastPerf ? `
+                            <div class="sd-perf-score grade-${(lastPerf.grade || 'b')[0].toLowerCase()}">${lastPerf.grade || '?'}</div>
+                            <div class="sd-stat">
+                                <span class="sd-stat-label">Score</span>
+                                <span class="sd-stat-value">${lastPerf.score || '-'}/100</span>
+                            </div>
+                            <div class="sd-stat">
+                                <span class="sd-stat-label">FCP</span>
+                                <span class="sd-stat-value ${(lastPerf.fcp||0) < 1800 ? 'good' : 'warn'}">${lastPerf.fcp ? lastPerf.fcp + 'ms' : '-'}</span>
+                            </div>
+                            <div class="sd-stat">
+                                <span class="sd-stat-label">LCP</span>
+                                <span class="sd-stat-value ${(lastPerf.lcp||0) < 2500 ? 'good' : 'warn'}">${lastPerf.lcp ? lastPerf.lcp + 'ms' : '-'}</span>
+                            </div>
+                            <div class="sd-stat">
+                                <span class="sd-stat-label">CLS</span>
+                                <span class="sd-stat-value ${(lastPerf.cls||0) < 0.1 ? 'good' : 'warn'}">${lastPerf.cls != null ? lastPerf.cls : '-'}</span>
+                            </div>
+                            <div class="sd-stat">
+                                <span class="sd-stat-label">Device Tier</span>
+                                <span class="sd-stat-value"><span class="sd-badge ${lastPerf.tier === 'high' ? 'green' : lastPerf.tier === 'medium' ? 'gold' : 'red'}">${lastPerf.tier || 'unknown'}</span></span>
+                            </div>
+                        ` : '<div class="sd-empty">Run NW_PERF.audit() to collect data</div>'}
+                    </div>
+
+                    <div class="sd-card">
+                        <h3>Auto-Learn Status</h3>
+                        <div class="sd-stat">
+                            <span class="sd-stat-label">Improvements Found</span>
+                            <span class="sd-stat-value">${imp.length}</span>
+                        </div>
+                        <div class="sd-stat">
+                            <span class="sd-stat-label">Applied</span>
+                            <span class="sd-stat-value good">${imp.filter(i => i.status === 'applied').length}</span>
+                        </div>
+                        <div class="sd-stat">
+                            <span class="sd-stat-label">Pending</span>
+                            <span class="sd-stat-value warn">${imp.filter(i => i.status === 'pending').length}</span>
+                        </div>
+                        <div class="sd-stat">
+                            <span class="sd-stat-label">Active Patterns</span>
+                            <span class="sd-stat-value">${s?.recentIssues?.length || 0}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <h2 class="sd-section-title">Recent System Intelligence</h2>
+                <ul class="sd-list">
+                    ${(s?.autoUpdates || []).slice(0, 5).map(u => `
+                        <li class="improvement">${u}</li>
+                    `).join('') || '<li>System learning in progress...</li>'}
+                </ul>
+
+                <div class="sd-btn-group">
+                    <button class="sd-btn" onclick="refreshDashboard()">Refresh</button>
+                    <button class="sd-btn" onclick="runPerformanceAudit()">Run Perf Audit</button>
+                </div>
+            `;
+        }
+
+        // =============================================
+        // PERFORMANCE TAB
+        // =============================================
+
+        function renderPerformance() {
+            const perfLog = (typeof NW_PERF !== 'undefined') ? NW_PERF.getPerformanceLog() : [];
+            const navPatterns = (typeof NW_PERF !== 'undefined') ? NW_PERF.getNavPatterns() : {};
+            const caching = (typeof NW_PERF !== 'undefined') ? NW_PERF.analyzeCaching() : {};
+
+            return `
+                <div class="sd-grid">
+                    <div class="sd-card">
+                        <h3>Performance History</h3>
+                        ${perfLog.length > 0 ? `
+                            <div class="sd-chart">
+                                ${perfLog.slice(-20).map((entry, i) => {
+                                    const height = Math.max(5, entry.score);
+                                    return `<div class="sd-chart-bar" style="height:${height}%" data-value="${entry.grade} ${entry.score}/100 - ${entry.page}"></div>`;
+                                }).join('')}
+                            </div>
+                            <div class="sd-chart-label">Last ${Math.min(perfLog.length, 20)} page loads (score %)</div>
+                        ` : '<div class="sd-empty">No performance data yet. Run NW_PERF.audit() on any page.</div>'}
+                    </div>
+
+                    <div class="sd-card">
+                        <h3>Resource Caching</h3>
+                        <div class="sd-stat">
+                            <span class="sd-stat-label">Total Resources</span>
+                            <span class="sd-stat-value">${caching.totalResources || '-'}</span>
+                        </div>
+                        <div class="sd-stat">
+                            <span class="sd-stat-label">Cache Hit Rate</span>
+                            <span class="sd-stat-value ${(caching.cacheHitRate||0) > 70 ? 'good' : 'warn'}">${caching.cacheHitRate || 0}%</span>
+                        </div>
+                        <div class="sd-stat">
+                            <span class="sd-stat-label">Cached</span>
+                            <span class="sd-stat-value good">${caching.cached || 0}</span>
+                        </div>
+                        <div class="sd-stat">
+                            <span class="sd-stat-label">Uncached</span>
+                            <span class="sd-stat-value">${caching.uncached || 0}</span>
+                        </div>
+                        <div class="sd-stat">
+                            <span class="sd-stat-label">Transfer Size</span>
+                            <span class="sd-stat-value">${caching.totalTransfer || 0} KB</span>
+                        </div>
+                    </div>
+
+                    <div class="sd-card">
+                        <h3>Navigation Intelligence</h3>
+                        ${(navPatterns.topPages || []).length > 0 ? `
+                            <div style="font-size:0.8rem;margin-bottom:8px;color:var(--sd-dim)">Most visited pages:</div>
+                            ${navPatterns.topPages.slice(0, 5).map(([page, count]) => `
+                                <div class="sd-stat">
+                                    <span class="sd-stat-label">${page}</span>
+                                    <span class="sd-stat-value">${count} visits</span>
+                                </div>
+                            `).join('')}
+                            ${navPatterns.predictions?.length > 0 ? `
+                                <div style="margin-top:12px;font-size:0.8rem;color:var(--sd-dim)">Predicted next pages:</div>
+                                ${navPatterns.predictions.map(p => `
+                                    <div class="sd-stat">
+                                        <span class="sd-stat-label">${p.page}</span>
+                                        <span class="sd-stat-value"><span class="sd-badge purple">P=${p.probability}</span></span>
+                                    </div>
+                                `).join('')}
+                            ` : ''}
+                        ` : '<div class="sd-empty">Navigate around to build patterns</div>'}
+                    </div>
+                </div>
+
+                <div class="sd-btn-group">
+                    <button class="sd-btn" onclick="runPerformanceAudit()">Run Full Audit</button>
+                    <button class="sd-btn" onclick="clearPerfLog()">Clear History</button>
+                </div>
+            `;
+        }
+
+        // =============================================
+        // LEARNING TAB
+        // =============================================
+
+        function renderLearning() {
+            const imp = systemData?.improvements || [];
+            const pn = systemData?.patchNotes || [];
+
+            return `
+                <h2 class="sd-section-title">Improvement Suggestions</h2>
+                ${imp.length > 0 ? `
+                    <ul class="sd-list">
+                        ${imp.slice(0, 15).map(i => `
+                            <li class="${i.status === 'applied' ? 'improvement' : i.priority === 'high' ? 'error' : 'warning'}">
+                                <strong>${i.title || i.type}</strong>
+                                <div style="font-size:0.8rem;color:var(--sd-dim);margin-top:4px">${i.description || i.suggestion || ''}</div>
+                                <div style="margin-top:4px">
+                                    <span class="sd-badge ${i.status === 'applied' ? 'green' : i.status === 'rejected' ? 'red' : 'gold'}">${i.status}</span>
+                                    ${i.priority ? `<span class="sd-badge ${i.priority === 'high' ? 'red' : i.priority === 'medium' ? 'gold' : 'blue'}">${i.priority}</span>` : ''}
+                                    ${i.file ? `<span class="sd-badge purple">${i.file}</span>` : ''}
+                                </div>
+                            </li>
+                        `).join('')}
+                    </ul>
+                ` : '<div class="sd-empty">No improvements found yet. The system learns from logs and patterns.</div>'}
+
+                <h2 class="sd-section-title">Patch Notes</h2>
+                ${pn.length > 0 ? `
+                    ${pn.slice(0, 5).map(p => `
+                        <div class="sd-card" style="margin-bottom:12px">
+                            <h3>v${p.version} - ${p.date ? new Date(p.date).toLocaleDateString() : 'Recent'}</h3>
+                            <ul class="sd-list">
+                                ${(p.changes || []).map(c => `
+                                    <li class="${c.type === 'fix' ? 'error' : c.type === 'improvement' ? 'improvement' : 'pattern'}">
+                                        <span class="sd-badge ${c.type === 'fix' ? 'red' : c.type === 'improvement' ? 'green' : 'blue'}">${c.type}</span>
+                                        <strong>${c.title}</strong>
+                                        ${c.description ? `<div style="font-size:0.8rem;color:var(--sd-dim)">${c.description}</div>` : ''}
+                                    </li>
+                                `).join('')}
+                            </ul>
+                        </div>
+                    `).join('')}
+                ` : '<div class="sd-empty">No patch notes generated yet.</div>'}
+            `;
+        }
+
+        // =============================================
+        // PATTERNS TAB
+        // =============================================
+
+        function renderPatterns() {
+            const s = systemData?.summary || {};
+            const issues = s?.recentIssues || [];
+
+            // Known patterns from auto-learn
+            const knownPatterns = [
+                { id: 'ios-touch-double-fire', name: 'iOS Touch Double-Fire', status: 'resolved', desc: 'Touch events firing twice on iOS Safari' },
+                { id: 'language-toggle-fail', name: 'Language Toggle Failure', status: 'resolved', desc: 'Language buttons not switching correctly' },
+                { id: 'api-rate-limit', name: 'API Rate Limiting', status: 'monitoring', desc: 'External API returning 429 errors' },
+                { id: 'localstorage-error', name: 'LocalStorage Access Error', status: 'active', desc: 'Failed to read/write in private browsing' },
+                { id: 'fetch-timeout', name: 'Fetch Request Timeout', status: 'active', desc: 'API requests timing out' },
+                { id: 'rage-click', name: 'Rage Click Detection', status: 'monitoring', desc: 'Users rapidly clicking same element (UX friction)' },
+                { id: 'long-task', name: 'Long Task Detection', status: 'monitoring', desc: 'Main thread blocks >50ms detected by NW_PERF' },
+                { id: 'memory-high', name: 'High Memory Usage', status: 'monitoring', desc: 'JS heap usage >80% reported by NW_PERF' }
+            ];
+
+            return `
+                <h2 class="sd-section-title">Known Patterns</h2>
+                <div class="sd-grid">
+                    ${knownPatterns.map(p => `
+                        <div class="sd-card">
+                            <h3>${p.name}</h3>
+                            <div style="font-size:0.85rem;color:var(--sd-dim);margin-bottom:8px">${p.desc}</div>
+                            <span class="sd-badge ${p.status === 'resolved' ? 'green' : p.status === 'monitoring' ? 'gold' : 'red'}">${p.status}</span>
+                        </div>
+                    `).join('')}
+                </div>
+
+                <h2 class="sd-section-title">Code Quality Rules</h2>
+                <ul class="sd-list">
+                    <li class="pattern"><strong>Console Log Cleanup</strong> - Remove debug console.log before deploy</li>
+                    <li class="pattern"><strong>Magic Numbers</strong> - Replace hardcoded values with named constants</li>
+                    <li class="pattern"><strong>Duplicate Fetch</strong> - Reuse cached data instead of re-fetching</li>
+                    <li class="pattern"><strong>Missing Error Handling</strong> - All async operations need try/catch</li>
+                    <li class="pattern"><strong>Hardcoded URLs</strong> - Use config-based URL management</li>
+                </ul>
+
+                ${issues.length > 0 ? `
+                    <h2 class="sd-section-title">Recent Issues</h2>
+                    <ul class="sd-list">
+                        ${issues.map(i => `<li class="warning">${typeof i === 'string' ? i : JSON.stringify(i)}</li>`).join('')}
+                    </ul>
+                ` : ''}
+            `;
+        }
+
+        // =============================================
+        // CRON JOBS TAB
+        // =============================================
+
+        function renderCron() {
+            const cronJobs = [
+                { name: 'Price Update', schedule: '*/5 * * * *', desc: 'Fetch latest market prices' },
+                { name: 'Log Analysis', schedule: '*/15 * * * *', desc: 'Analyze recent logs for patterns' },
+                { name: 'Health Check', schedule: '*/10 * * * *', desc: 'Monitor system health metrics' },
+                { name: 'Cache Cleanup', schedule: '0 * * * *', desc: 'Clear expired cache entries' },
+                { name: 'Daily Stats', schedule: '0 0 * * *', desc: 'Generate daily statistics' },
+                { name: 'Patch Notes', schedule: '0 6 * * 1', desc: 'Auto-generate weekly patch notes' },
+                { name: 'Test Runner', schedule: '0 */6 * * *', desc: 'Run automated test suite (75 tests)' }
+            ];
+
+            const tasks = systemData?.summary?.upcomingTasks || [];
+
+            return `
+                <h2 class="sd-section-title">Scheduled Jobs</h2>
+                <div class="sd-cron-grid">
+                    ${cronJobs.map(j => `
+                        <div class="sd-cron-job">
+                            <div class="name">${j.name}</div>
+                            <div class="schedule"><code>${j.schedule}</code></div>
+                            <div style="font-size:0.8rem;color:var(--sd-dim);margin-top:4px">${j.desc}</div>
+                            <span class="sd-badge green" style="margin-top:6px;display:inline-block">enabled</span>
+                        </div>
+                    `).join('')}
+                </div>
+
+                ${tasks.length > 0 ? `
+                    <h2 class="sd-section-title">Upcoming Tasks</h2>
+                    <ul class="sd-list">
+                        ${tasks.map(t => `<li class="pattern">${t}</li>`).join('')}
+                    </ul>
+                ` : ''}
+            `;
+        }
+
+        // =============================================
+        // TAB SWITCHING
+        // =============================================
+
+        window.switchTab = function(tab) {
+            currentTab = tab;
+            document.querySelectorAll('.sd-tab').forEach(t => t.classList.remove('active'));
+            event.target.classList.add('active');
+            renderCurrentTab();
+        };
+
+        function renderCurrentTab() {
+            const content = document.getElementById('tabContent');
+            switch (currentTab) {
+                case 'overview': content.innerHTML = renderOverview(); break;
+                case 'performance': content.innerHTML = renderPerformance(); break;
+                case 'learning': content.innerHTML = renderLearning(); break;
+                case 'patterns': content.innerHTML = renderPatterns(); break;
+                case 'cron': content.innerHTML = renderCron(); break;
+            }
+        }
+
+        // =============================================
+        // ACTIONS
+        // =============================================
+
+        window.refreshDashboard = async function() {
+            const content = document.getElementById('tabContent');
+            content.innerHTML = '<div class="sd-loading"><div class="spinner"></div><div>Refreshing...</div></div>';
+            await loadSystemData();
+            renderCurrentTab();
+        };
+
+        window.runPerformanceAudit = function() {
+            if (typeof NW_PERF !== 'undefined') {
+                const report = NW_PERF.audit();
+                alert(`Performance Audit: ${report.summary.grade} (${report.summary.score}/100)\n${report.summary.issues} issues found\nDevice: ${report.deviceTier}`);
+                renderCurrentTab();
+            } else {
+                alert('NW_PERF not loaded yet. Try refreshing.');
+            }
+        };
+
+        window.clearPerfLog = function() {
+            localStorage.removeItem('nw_perf_log');
+            renderCurrentTab();
+        };
+
+        // =============================================
+        // INIT
+        // =============================================
+
+        async function init() {
+            await loadSystemData();
+            renderCurrentTab();
+
+            // Auto-refresh every 30s
+            setInterval(async () => {
+                await loadSystemData();
+                if (document.visibilityState === 'visible') {
+                    renderCurrentTab();
+                }
+            }, 30000);
+        }
+
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', init);
+        } else {
+            init();
+        }
+    })();
+    </script>
+</body>
+</html>
