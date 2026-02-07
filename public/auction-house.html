@@ -1,0 +1,1099 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+    <title>NumbahWan TCG | Auction House</title>
+    <link rel="stylesheet" href="/static/nw-tokens.css">
+    <link rel="stylesheet" href="/static/nw-utilities.css">
+    <link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="/static/nw-currency.js"></script>
+    <script src="/static/nw-essentials.js"></script>
+    <script src="/static/nw-components.js"></script>
+    <script src="/static/nw-wallet.js"></script>
+    <script src="/static/nw-icons-inline.js"></script>
+    <script src="/static/nw-nav.js"></script>
+    <script src="/static/nw-sounds.js" defer></script>
+    <script src="/static/nw-guide.js" defer></script>
+    <script src="/static/nw-features.js" defer></script>
+    <style>
+        :root {
+            --ah-gold: #ffd700;
+            --ah-fire: #ff6b35;
+            --ah-mythic: #ff00ff;
+            --ah-legendary: #ffd700;
+            --ah-epic: #a855f7;
+            --ah-rare: #3b82f6;
+            --ah-uncommon: #22c55e;
+            --ah-common: #9ca3af;
+            --ah-dark: #0a0a0f;
+            --ah-surface: #13131a;
+            --ah-surface-2: #1a1a25;
+            --ah-border: rgba(255,215,0,0.15);
+            --ah-glow: rgba(255,215,0,0.3);
+            --ah-bid-green: #00e676;
+            --ah-urgent: #ff4444;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--ah-dark);
+            color: #e0e0e0;
+            min-height: 100dvh;
+            overflow-x: hidden;
+        }
+
+        /* ===== HERO BANNER ===== */
+        .ah-hero {
+            position: relative;
+            background: linear-gradient(135deg, #0a0a1a 0%, #1a0a2e 30%, #0a1a2e 60%, #0a0a1a 100%);
+            padding: 60px 16px 30px;
+            text-align: center;
+            overflow: hidden;
+            border-bottom: 1px solid var(--ah-border);
+        }
+        .ah-hero::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(ellipse at 50% 0%, rgba(255,215,0,0.08) 0%, transparent 70%);
+            pointer-events: none;
+        }
+        .ah-hero-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: clamp(24px, 5vw, 42px);
+            font-weight: 900;
+            background: linear-gradient(135deg, #ffd700, #ffaa00, #ff6b35);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-shadow: none;
+            letter-spacing: 2px;
+            margin-bottom: 8px;
+        }
+        .ah-hero-sub {
+            font-size: clamp(12px, 2.5vw, 16px);
+            color: rgba(255,255,255,0.6);
+            max-width: 500px;
+            margin: 0 auto;
+        }
+        .ah-hero-stats {
+            display: flex;
+            justify-content: center;
+            gap: 24px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+        .ah-stat {
+            text-align: center;
+            padding: 8px 16px;
+            background: rgba(255,255,255,0.03);
+            border-radius: 12px;
+            border: 1px solid rgba(255,255,255,0.06);
+        }
+        .ah-stat-value {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--ah-gold);
+        }
+        .ah-stat-label {
+            font-size: 11px;
+            color: rgba(255,255,255,0.4);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-top: 2px;
+        }
+
+        /* ===== NOTIFICATION BELL ===== */
+        .ah-notif-bell {
+            position: fixed;
+            top: 68px;
+            right: 16px;
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
+            background: var(--ah-surface-2);
+            border: 1px solid var(--ah-border);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            z-index: 100;
+            transition: all 0.2s;
+            color: #fff;
+            font-size: 18px;
+        }
+        .ah-notif-bell:hover { border-color: var(--ah-gold); transform: scale(1.05); }
+        .ah-notif-badge {
+            position: absolute;
+            top: -4px;
+            right: -4px;
+            background: var(--ah-urgent);
+            color: #fff;
+            font-size: 10px;
+            font-weight: 700;
+            min-width: 18px;
+            height: 18px;
+            border-radius: 9px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            animation: ah-pulse 2s infinite;
+        }
+        @keyframes ah-pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.15); }
+        }
+
+        /* ===== FILTERS BAR ===== */
+        .ah-filters {
+            position: sticky;
+            top: 0;
+            z-index: 90;
+            background: rgba(10,10,15,0.95);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--ah-border);
+            display: flex;
+            gap: 8px;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: none;
+        }
+        .ah-filters::-webkit-scrollbar { display: none; }
+        .ah-filter-btn {
+            flex-shrink: 0;
+            padding: 8px 16px;
+            border-radius: 20px;
+            border: 1px solid rgba(255,255,255,0.1);
+            background: var(--ah-surface);
+            color: rgba(255,255,255,0.7);
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+        .ah-filter-btn:hover { border-color: var(--ah-gold); color: #fff; }
+        .ah-filter-btn.active {
+            background: linear-gradient(135deg, rgba(255,215,0,0.15), rgba(255,107,53,0.15));
+            border-color: var(--ah-gold);
+            color: var(--ah-gold);
+        }
+        .ah-search {
+            flex: 1;
+            min-width: 120px;
+            padding: 8px 16px;
+            border-radius: 20px;
+            border: 1px solid rgba(255,255,255,0.1);
+            background: var(--ah-surface);
+            color: #fff;
+            font-size: 13px;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        .ah-search:focus { border-color: var(--ah-gold); }
+        .ah-search::placeholder { color: rgba(255,255,255,0.3); }
+
+        /* ===== SORT BAR ===== */
+        .ah-sort-bar {
+            padding: 10px 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 13px;
+            color: rgba(255,255,255,0.5);
+        }
+        .ah-sort-select {
+            background: var(--ah-surface);
+            border: 1px solid rgba(255,255,255,0.1);
+            color: #fff;
+            padding: 6px 12px;
+            border-radius: 8px;
+            font-size: 12px;
+            cursor: pointer;
+        }
+
+        /* ===== AUCTION GRID ===== */
+        .ah-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 16px;
+            padding: 16px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        @media (max-width: 640px) {
+            .ah-grid { grid-template-columns: 1fr; gap: 12px; padding: 12px; }
+        }
+
+        /* ===== AUCTION CARD ===== */
+        .ah-card {
+            background: var(--ah-surface);
+            border: 1px solid var(--ah-border);
+            border-radius: 16px;
+            overflow: hidden;
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            contain: content;
+        }
+        .ah-card:hover {
+            border-color: var(--ah-gold);
+            transform: translateY(-4px);
+            box-shadow: 0 12px 40px rgba(255,215,0,0.1);
+        }
+        .ah-card.featured {
+            border-color: var(--ah-gold);
+            box-shadow: 0 0 20px rgba(255,215,0,0.08);
+        }
+        .ah-card-featured-badge {
+            position: absolute;
+            top: 12px;
+            left: 12px;
+            background: linear-gradient(135deg, #ffd700, #ff6b35);
+            color: #000;
+            font-size: 10px;
+            font-weight: 800;
+            padding: 3px 10px;
+            border-radius: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            z-index: 5;
+        }
+
+        /* Card Image Area */
+        .ah-card-img {
+            position: relative;
+            height: 180px;
+            background: linear-gradient(135deg, #0a0a20, #1a0a30);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+        .ah-card-img img {
+            max-height: 160px;
+            max-width: 120px;
+            object-fit: contain;
+            filter: drop-shadow(0 4px 12px rgba(0,0,0,0.5));
+            transition: transform 0.3s;
+        }
+        .ah-card:hover .ah-card-img img { transform: scale(1.05) rotate(1deg); }
+        .ah-card-rarity {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            padding: 3px 10px;
+            border-radius: 8px;
+            font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .ah-card-rarity.mythic { background: rgba(255,0,255,0.2); color: var(--ah-mythic); border: 1px solid rgba(255,0,255,0.3); }
+        .ah-card-rarity.legendary { background: rgba(255,215,0,0.15); color: var(--ah-legendary); border: 1px solid rgba(255,215,0,0.3); }
+        .ah-card-rarity.epic { background: rgba(168,85,247,0.15); color: var(--ah-epic); border: 1px solid rgba(168,85,247,0.3); }
+        .ah-card-rarity.rare { background: rgba(59,130,246,0.15); color: var(--ah-rare); border: 1px solid rgba(59,130,246,0.3); }
+        .ah-card-rarity.uncommon { background: rgba(34,197,94,0.1); color: var(--ah-uncommon); border: 1px solid rgba(34,197,94,0.2); }
+        .ah-card-rarity.common { background: rgba(156,163,175,0.1); color: var(--ah-common); border: 1px solid rgba(156,163,175,0.2); }
+
+        /* Card Info */
+        .ah-card-body { padding: 16px; }
+        .ah-card-name {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 14px;
+            font-weight: 700;
+            color: #fff;
+            margin-bottom: 4px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .ah-card-seller {
+            font-size: 11px;
+            color: rgba(255,255,255,0.4);
+            margin-bottom: 12px;
+        }
+
+        /* Bid Section */
+        .ah-bid-section {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            margin-bottom: 12px;
+        }
+        .ah-bid-current-label {
+            font-size: 10px;
+            color: rgba(255,255,255,0.4);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .ah-bid-current {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 22px;
+            font-weight: 800;
+            color: var(--ah-bid-green);
+        }
+        .ah-bid-count {
+            font-size: 11px;
+            color: rgba(255,255,255,0.5);
+        }
+        .ah-buynow {
+            text-align: right;
+        }
+        .ah-buynow-label {
+            font-size: 9px;
+            color: rgba(255,255,255,0.3);
+            text-transform: uppercase;
+        }
+        .ah-buynow-price {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--ah-gold);
+        }
+
+        /* Timer */
+        .ah-timer {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 12px;
+            color: rgba(255,255,255,0.5);
+            margin-bottom: 12px;
+            padding: 6px 10px;
+            background: rgba(255,255,255,0.03);
+            border-radius: 8px;
+        }
+        .ah-timer.urgent {
+            color: var(--ah-urgent);
+            background: rgba(255,68,68,0.08);
+            animation: ah-timer-pulse 1s infinite;
+        }
+        @keyframes ah-timer-pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+        .ah-timer-icon { font-size: 14px; }
+
+        /* Action Buttons */
+        .ah-card-actions { display: flex; gap: 8px; }
+        .ah-btn-bid {
+            flex: 1;
+            padding: 10px;
+            border: none;
+            border-radius: 10px;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 12px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .ah-btn-bid.primary {
+            background: linear-gradient(135deg, #00e676, #00c853);
+            color: #000;
+        }
+        .ah-btn-bid.primary:hover { filter: brightness(1.1); transform: translateY(-1px); }
+        .ah-btn-bid.primary:active { transform: translateY(0); }
+        .ah-btn-bid.secondary {
+            background: linear-gradient(135deg, rgba(255,215,0,0.15), rgba(255,107,53,0.15));
+            color: var(--ah-gold);
+            border: 1px solid rgba(255,215,0,0.3);
+        }
+        .ah-btn-bid.secondary:hover { border-color: var(--ah-gold); background: rgba(255,215,0,0.2); }
+
+        /* ===== BID MODAL ===== */
+        .ah-modal-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.7);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            padding: 16px;
+            animation: ah-fade-in 0.2s;
+        }
+        .ah-modal-overlay.active { display: flex; }
+        @keyframes ah-fade-in { from { opacity: 0; } to { opacity: 1; } }
+        .ah-modal {
+            background: var(--ah-surface);
+            border: 1px solid var(--ah-border);
+            border-radius: 20px;
+            padding: 24px;
+            max-width: 420px;
+            width: 100%;
+            animation: ah-slide-up 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        @keyframes ah-slide-up { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        .ah-modal h3 {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 18px;
+            color: var(--ah-gold);
+            margin-bottom: 16px;
+        }
+        .ah-modal-card-info {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 16px;
+            padding: 12px;
+            background: rgba(255,255,255,0.03);
+            border-radius: 12px;
+        }
+        .ah-modal-card-info img { width: 60px; height: 80px; object-fit: contain; border-radius: 8px; }
+        .ah-modal-card-details h4 { font-size: 14px; color: #fff; margin-bottom: 4px; }
+        .ah-modal-card-details p { font-size: 12px; color: rgba(255,255,255,0.5); }
+        .ah-bid-input-group { margin-bottom: 16px; }
+        .ah-bid-input-group label { display: block; font-size: 12px; color: rgba(255,255,255,0.5); margin-bottom: 6px; }
+        .ah-bid-input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid rgba(255,255,255,0.1);
+            border-radius: 12px;
+            background: var(--ah-dark);
+            color: #fff;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 20px;
+            font-weight: 700;
+            text-align: center;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        .ah-bid-input:focus { border-color: var(--ah-bid-green); }
+        .ah-bid-presets {
+            display: flex;
+            gap: 8px;
+            margin-top: 8px;
+        }
+        .ah-bid-preset {
+            flex: 1;
+            padding: 6px;
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 8px;
+            background: transparent;
+            color: rgba(255,255,255,0.6);
+            font-size: 11px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .ah-bid-preset:hover { border-color: var(--ah-gold); color: var(--ah-gold); }
+        .ah-modal-actions { display: flex; gap: 10px; margin-top: 20px; }
+        .ah-modal-btn {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 12px;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 13px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .ah-modal-btn.confirm {
+            background: linear-gradient(135deg, #00e676, #00c853);
+            color: #000;
+        }
+        .ah-modal-btn.cancel {
+            background: rgba(255,255,255,0.05);
+            color: rgba(255,255,255,0.6);
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        /* ===== CREATE AUCTION SECTION ===== */
+        .ah-create-section {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 24px 16px;
+        }
+        .ah-create-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            width: 100%;
+            padding: 14px;
+            border: 2px dashed rgba(255,215,0,0.3);
+            border-radius: 16px;
+            background: rgba(255,215,0,0.03);
+            color: var(--ah-gold);
+            font-family: 'Orbitron', sans-serif;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .ah-create-btn:hover {
+            border-color: var(--ah-gold);
+            background: rgba(255,215,0,0.08);
+        }
+
+        /* ===== LOADING & EMPTY ===== */
+        .ah-loading {
+            text-align: center;
+            padding: 60px 16px;
+            color: rgba(255,255,255,0.4);
+        }
+        .ah-loading-spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid rgba(255,215,0,0.2);
+            border-top-color: var(--ah-gold);
+            border-radius: 50%;
+            animation: ah-spin 0.8s linear infinite;
+            margin: 0 auto 16px;
+        }
+        @keyframes ah-spin { to { transform: rotate(360deg); } }
+        .ah-empty {
+            text-align: center;
+            padding: 60px 16px;
+            color: rgba(255,255,255,0.3);
+        }
+        .ah-empty-icon { font-size: 48px; margin-bottom: 12px; }
+
+        /* ===== TOAST ANIMATIONS ===== */
+        .ah-toast {
+            position: fixed;
+            bottom: 80px;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background: var(--ah-surface-2);
+            border: 1px solid var(--ah-bid-green);
+            color: #fff;
+            padding: 12px 24px;
+            border-radius: 12px;
+            font-size: 13px;
+            font-weight: 500;
+            z-index: 2000;
+            opacity: 0;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            pointer-events: none;
+        }
+        .ah-toast.show {
+            transform: translateX(-50%) translateY(0);
+            opacity: 1;
+        }
+
+        /* ===== BOTTOM SAFE AREA ===== */
+        .ah-bottom-spacer { height: 80px; }
+    </style>
+</head>
+<body data-page-id="auction-house">
+
+    <!-- Hero Banner -->
+    <section class="ah-hero">
+        <h1 class="ah-hero-title" data-i18n="heroTitle">AUCTION HOUSE</h1>
+        <p class="ah-hero-sub" data-i18n="heroSubtitle">Bid on rare cards. Snipe legendary deals. Build your empire.</p>
+        <div class="ah-hero-stats" id="heroStats">
+            <div class="ah-stat">
+                <div class="ah-stat-value" id="statActive">-</div>
+                <div class="ah-stat-label" data-i18n="activeAuctions">Active Auctions</div>
+            </div>
+            <div class="ah-stat">
+                <div class="ah-stat-value" id="statVolume">-</div>
+                <div class="ah-stat-label" data-i18n="totalVolume">Total Volume</div>
+            </div>
+            <div class="ah-stat">
+                <div class="ah-stat-value" id="statTraders">-</div>
+                <div class="ah-stat-label" data-i18n="traders">Traders</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Notification Bell -->
+    <div class="ah-notif-bell" id="notifBell" onclick="toggleNotifications()">
+        <span>&#128276;</span>
+        <div class="ah-notif-badge" id="notifBadge" style="display:none">0</div>
+    </div>
+
+    <!-- Filters -->
+    <div class="ah-filters">
+        <input type="text" class="ah-search" placeholder="Search cards..." id="searchInput" data-i18n-placeholder="searchPlaceholder">
+        <button class="ah-filter-btn active" data-rarity="all" data-i18n="all">All</button>
+        <button class="ah-filter-btn" data-rarity="mythic" data-i18n="mythic">Mythic</button>
+        <button class="ah-filter-btn" data-rarity="legendary" data-i18n="legendary">Legendary</button>
+        <button class="ah-filter-btn" data-rarity="epic" data-i18n="epic">Epic</button>
+        <button class="ah-filter-btn" data-rarity="rare" data-i18n="rare">Rare</button>
+        <button class="ah-filter-btn" data-rarity="uncommon" data-i18n="uncommon">Uncommon</button>
+    </div>
+
+    <!-- Sort Bar -->
+    <div class="ah-sort-bar">
+        <span id="resultCount" data-i18n="showing">Showing 0 auctions</span>
+        <select class="ah-sort-select" id="sortSelect">
+            <option value="ending-soon" data-i18n="sortEndingSoon">Ending Soon</option>
+            <option value="price-low" data-i18n="sortPriceLow">Price: Low to High</option>
+            <option value="price-high" data-i18n="sortPriceHigh">Price: High to Low</option>
+            <option value="newest" data-i18n="sortNewest">Newest First</option>
+            <option value="most-bids" data-i18n="sortMostBids">Most Bids</option>
+        </select>
+    </div>
+
+    <!-- Auction Grid -->
+    <div class="ah-grid" id="auctionGrid">
+        <div class="ah-loading" id="loadingState">
+            <div class="ah-loading-spinner"></div>
+            <p data-i18n="loading">Loading auctions...</p>
+        </div>
+    </div>
+
+    <!-- Create Auction Button -->
+    <div class="ah-create-section">
+        <button class="ah-create-btn" id="createAuctionBtn" onclick="openCreateModal()">
+            <span>+</span>
+            <span data-i18n="createAuction">CREATE AUCTION</span>
+        </button>
+    </div>
+
+    <div class="ah-bottom-spacer"></div>
+
+    <!-- Bid Modal -->
+    <div class="ah-modal-overlay" id="bidModal">
+        <div class="ah-modal">
+            <h3 data-i18n="placeBid">Place Your Bid</h3>
+            <div class="ah-modal-card-info" id="bidModalCardInfo"></div>
+            <div class="ah-bid-input-group">
+                <label data-i18n="yourBid">Your Bid (Gold)</label>
+                <input type="number" class="ah-bid-input" id="bidAmountInput" min="1" step="1">
+                <div class="ah-bid-presets" id="bidPresets"></div>
+            </div>
+            <div class="ah-modal-actions">
+                <button class="ah-modal-btn cancel" onclick="closeBidModal()" data-i18n="cancel">Cancel</button>
+                <button class="ah-modal-btn confirm" id="confirmBidBtn" onclick="confirmBid()" data-i18n="confirmBid">PLACE BID</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast -->
+    <div class="ah-toast" id="ahToast"></div>
+
+    <script>
+    /**
+     * NumbahWan Auction House v1.0
+     * AUTO-LEARN: auction-house-frontend
+     * 
+     * Features:
+     * - Real-time auction listing with countdown timers
+     * - Bid placement with snipe protection
+     * - Rarity filtering and search
+     * - Notification system
+     * - Mobile-optimized touch targets
+     */
+    
+    // ============================================================================
+    // TRANSLATIONS
+    // ============================================================================
+    const translations = {
+        heroTitle: { en: 'AUCTION HOUSE', zh: '拍賣場', th: 'ห้องประมูล' },
+        heroSubtitle: { en: 'Bid on rare cards. Snipe legendary deals. Build your empire.', zh: '競標稀有卡牌。搶奪傳說級交易。建立你的帝國。', th: 'ประมูลการ์ดหายาก คว้าดีลระดับตำนาน สร้างอาณาจักรของคุณ' },
+        activeAuctions: { en: 'Active Auctions', zh: '進行中拍賣', th: 'การประมูลที่กำลังดำเนิน' },
+        totalVolume: { en: 'Total Volume', zh: '總交易量', th: 'ปริมาณรวม' },
+        traders: { en: 'Traders', zh: '交易者', th: 'ผู้ค้า' },
+        searchPlaceholder: { en: 'Search cards...', zh: '搜尋卡牌...', th: 'ค้นหาการ์ด...' },
+        all: { en: 'All', zh: '全部', th: 'ทั้งหมด' },
+        mythic: { en: 'Mythic', zh: '神話', th: 'ตำนาน' },
+        legendary: { en: 'Legendary', zh: '傳說', th: 'ระดับตำนาน' },
+        epic: { en: 'Epic', zh: '史詩', th: 'มหากาพย์' },
+        rare: { en: 'Rare', zh: '稀有', th: 'หายาก' },
+        uncommon: { en: 'Uncommon', zh: '不常見', th: 'ไม่ธรรมดา' },
+        showing: { en: 'Showing {n} auctions', zh: '顯示 {n} 個拍賣', th: 'แสดง {n} การประมูล' },
+        sortEndingSoon: { en: 'Ending Soon', zh: '即將結束', th: 'ใกล้สิ้นสุด' },
+        sortPriceLow: { en: 'Price: Low to High', zh: '價格：低到高', th: 'ราคา: ต่ำไปสูง' },
+        sortPriceHigh: { en: 'Price: High to Low', zh: '價格：高到低', th: 'ราคา: สูงไปต่ำ' },
+        sortNewest: { en: 'Newest First', zh: '最新優先', th: 'ใหม่สุดก่อน' },
+        sortMostBids: { en: 'Most Bids', zh: '最多競標', th: 'ประมูลมากสุด' },
+        loading: { en: 'Loading auctions...', zh: '載入拍賣中...', th: 'กำลังโหลดการประมูล...' },
+        createAuction: { en: 'CREATE AUCTION', zh: '建立拍賣', th: 'สร้างการประมูล' },
+        placeBid: { en: 'Place Your Bid', zh: '出價競標', th: 'วางราคาของคุณ' },
+        yourBid: { en: 'Your Bid (Gold)', zh: '你的出價 (金幣)', th: 'ราคาของคุณ (ทอง)' },
+        cancel: { en: 'Cancel', zh: '取消', th: 'ยกเลิก' },
+        confirmBid: { en: 'PLACE BID', zh: '確認出價', th: 'วางราคา' },
+        bidSuccess: { en: 'Bid placed successfully!', zh: '出價成功！', th: 'วางราคาสำเร็จ!' },
+        bidError: { en: 'Failed to place bid', zh: '出價失敗', th: 'วางราคาล้มเหลว' },
+        currentBid: { en: 'Current Bid', zh: '目前出價', th: 'ราคาปัจจุบัน' },
+        buyNow: { en: 'Buy Now', zh: '立即購買', th: 'ซื้อเลย' },
+        bids: { en: 'bids', zh: '個出價', th: 'ราคา' },
+        bid: { en: 'BID', zh: '出價', th: 'ประมูล' },
+        buy: { en: 'BUY NOW', zh: '立即購買', th: 'ซื้อเลย' },
+        by: { en: 'by', zh: '來自', th: 'โดย' },
+        noAuctions: { en: 'No auctions found', zh: '找不到拍賣', th: 'ไม่พบการประมูล' },
+        endingSoon: { en: 'Ending soon!', zh: '即將結束！', th: 'ใกล้สิ้นสุด!' },
+        min: { en: 'Min', zh: '最低', th: 'ต่ำสุด' },
+        extended: { en: 'Timer extended! (Snipe protection)', zh: '時間延長！(防搶標保護)', th: 'เวลาขยาย! (ป้องกันการแย่ง)' },
+        pageTitle: { en: 'Auction House', zh: '拍賣場', th: 'ห้องประมูล' }
+    };
+
+    let currentLang = localStorage.getItem('nw_lang') || 'en';
+    let currentFilter = 'all';
+    let currentSort = 'ending-soon';
+    let currentSearch = '';
+    let allAuctions = [];
+    let selectedAuction = null;
+    let refreshInterval = null;
+
+    function t(key, vars = {}) {
+        const entry = translations[key];
+        if (!entry) return key;
+        let text = entry[currentLang] || entry.en || key;
+        Object.entries(vars).forEach(([k, v]) => { text = text.replace(`{${k}}`, v); });
+        return text;
+    }
+
+    function applyTranslations() {
+        document.querySelectorAll('[data-i18n]').forEach(el => {
+            const key = el.getAttribute('data-i18n');
+            el.textContent = t(key);
+        });
+        document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+            el.placeholder = t(el.getAttribute('data-i18n-placeholder'));
+        });
+    }
+
+    // ============================================================================
+    // API CALLS
+    // ============================================================================
+    
+    async function fetchAuctions() {
+        try {
+            const params = new URLSearchParams({
+                sort: currentSort,
+                ...(currentFilter !== 'all' ? { rarity: currentFilter } : {}),
+                ...(currentSearch ? { q: currentSearch } : {})
+            });
+            const res = await fetch(`/api/auction/listings?${params}`);
+            const data = await res.json();
+            if (data.success) {
+                allAuctions = data.auctions;
+                renderAuctions();
+                document.getElementById('resultCount').textContent = t('showing', { n: data.total });
+            }
+        } catch (e) {
+            console.error('Failed to fetch auctions:', e);
+        }
+    }
+
+    async function fetchStats() {
+        try {
+            const res = await fetch('/api/auction/stats');
+            const data = await res.json();
+            if (data.success) {
+                document.getElementById('statActive').textContent = data.overview.activeListings;
+                document.getElementById('statVolume').textContent = data.overview.totalVolume.toLocaleString();
+                document.getElementById('statTraders').textContent = data.overview.uniqueTraders;
+            }
+        } catch (e) { /* silent */ }
+    }
+
+    async function fetchNotifications() {
+        try {
+            const wallet = getWalletId();
+            if (!wallet) return;
+            const res = await fetch(`/api/auction/notifications/${wallet}`);
+            const data = await res.json();
+            if (data.success && data.unread > 0) {
+                const badge = document.getElementById('notifBadge');
+                badge.textContent = data.unread;
+                badge.style.display = 'flex';
+            }
+        } catch (e) { /* silent */ }
+    }
+
+    function getWalletId() {
+        try {
+            return typeof NW_WALLET !== 'undefined' ? NW_WALLET.getGuestId?.() : localStorage.getItem('nw_guest_id');
+        } catch { return null; }
+    }
+
+    // ============================================================================
+    // RENDER
+    // ============================================================================
+    
+    function formatTimeRemaining(ms) {
+        if (ms <= 0) return { text: 'Ended', urgent: true };
+        const seconds = Math.floor(ms / 1000);
+        const minutes = Math.floor(seconds / 60);
+        const hours = Math.floor(minutes / 60);
+        const days = Math.floor(hours / 24);
+        
+        if (days > 0) return { text: `${days}d ${hours % 24}h`, urgent: false };
+        if (hours > 0) return { text: `${hours}h ${minutes % 60}m`, urgent: hours < 1 };
+        if (minutes > 0) return { text: `${minutes}m ${seconds % 60}s`, urgent: minutes < 5 };
+        return { text: `${seconds}s`, urgent: true };
+    }
+
+    function renderAuctions() {
+        const grid = document.getElementById('auctionGrid');
+        const loading = document.getElementById('loadingState');
+        
+        if (loading) loading.style.display = 'none';
+        
+        if (allAuctions.length === 0) {
+            grid.innerHTML = `
+                <div class="ah-empty" style="grid-column: 1/-1">
+                    <div class="ah-empty-icon">&#128722;</div>
+                    <p>${t('noAuctions')}</p>
+                </div>`;
+            return;
+        }
+        
+        grid.innerHTML = allAuctions.map(auc => {
+            const timer = formatTimeRemaining(auc.timeRemaining);
+            const cardImg = auc.card.img ? `/static/images/cards/${auc.card.img}` : '/static/icons/card-back.png';
+            
+            return `
+            <div class="ah-card ${auc.featured ? 'featured' : ''}" data-id="${auc.id}" onclick="openBidModal('${auc.id}')">
+                ${auc.featured ? `<div class="ah-card-featured-badge">FEATURED</div>` : ''}
+                <div class="ah-card-img">
+                    <img src="${cardImg}" alt="${auc.card.name}" loading="lazy" onerror="this.src='/static/icons/card-back.png'">
+                    <span class="ah-card-rarity ${auc.card.rarity}">${auc.card.rarity.toUpperCase()}</span>
+                </div>
+                <div class="ah-card-body">
+                    <div class="ah-card-name">${auc.card.name}${auc.card.stars ? ' ★'.repeat(auc.card.stars) : ''}</div>
+                    <div class="ah-card-seller">${t('by')} ${auc.sellerName}</div>
+                    
+                    <div class="ah-bid-section">
+                        <div>
+                            <div class="ah-bid-current-label">${t('currentBid')}</div>
+                            <div class="ah-bid-current">${auc.currentBid.toLocaleString()}</div>
+                            <div class="ah-bid-count">${auc.bidCount} ${t('bids')}</div>
+                        </div>
+                        ${auc.buyNowPrice ? `
+                        <div class="ah-buynow">
+                            <div class="ah-buynow-label">${t('buyNow')}</div>
+                            <div class="ah-buynow-price">${auc.buyNowPrice.toLocaleString()}</div>
+                        </div>` : ''}
+                    </div>
+                    
+                    <div class="ah-timer ${timer.urgent ? 'urgent' : ''}">
+                        <span class="ah-timer-icon">&#9202;</span>
+                        <span>${timer.text}</span>
+                        ${timer.urgent ? `<span style="margin-left:auto;font-size:10px">${t('endingSoon')}</span>` : ''}
+                    </div>
+                    
+                    <div class="ah-card-actions" onclick="event.stopPropagation()">
+                        <button class="ah-btn-bid primary" onclick="openBidModal('${auc.id}')">${t('bid')}</button>
+                        ${auc.buyNowPrice ? `<button class="ah-btn-bid secondary" onclick="buyNow('${auc.id}')">${t('buy')}</button>` : ''}
+                    </div>
+                </div>
+            </div>`;
+        }).join('');
+    }
+
+    // ============================================================================
+    // BID MODAL
+    // ============================================================================
+    
+    function openBidModal(auctionId) {
+        selectedAuction = allAuctions.find(a => a.id === auctionId);
+        if (!selectedAuction) return;
+        
+        const modal = document.getElementById('bidModal');
+        const cardInfo = document.getElementById('bidModalCardInfo');
+        const input = document.getElementById('bidAmountInput');
+        const presets = document.getElementById('bidPresets');
+        
+        const cardImg = selectedAuction.card.img ? `/static/images/cards/${selectedAuction.card.img}` : '/static/icons/card-back.png';
+        cardInfo.innerHTML = `
+            <img src="${cardImg}" alt="${selectedAuction.card.name}" onerror="this.src='/static/icons/card-back.png'">
+            <div class="ah-modal-card-details">
+                <h4>${selectedAuction.card.name}</h4>
+                <p>${selectedAuction.card.rarity.toUpperCase()} | ${selectedAuction.bidCount} ${t('bids')}</p>
+                <p style="color:var(--ah-bid-green);font-family:'Orbitron';font-weight:700;margin-top:4px">${t('currentBid')}: ${selectedAuction.currentBid.toLocaleString()}</p>
+            </div>`;
+        
+        const minBid = selectedAuction.minNextBid;
+        input.min = minBid;
+        input.value = minBid;
+        input.placeholder = `${t('min')}: ${minBid}`;
+        
+        // Generate preset amounts
+        const presetAmounts = [minBid, Math.ceil(minBid * 1.1), Math.ceil(minBid * 1.25), Math.ceil(minBid * 1.5)];
+        presets.innerHTML = presetAmounts.map(amount => 
+            `<button class="ah-bid-preset" onclick="document.getElementById('bidAmountInput').value=${amount}">${amount}</button>`
+        ).join('');
+        
+        modal.classList.add('active');
+    }
+
+    function closeBidModal() {
+        document.getElementById('bidModal').classList.remove('active');
+        selectedAuction = null;
+    }
+
+    async function confirmBid() {
+        if (!selectedAuction) return;
+        
+        const amount = parseInt(document.getElementById('bidAmountInput').value);
+        if (!amount || amount < selectedAuction.minNextBid) {
+            showToast(`${t('min')}: ${selectedAuction.minNextBid}`, 'error');
+            return;
+        }
+        
+        try {
+            const res = await fetch('/api/auction/bid', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    auctionId: selectedAuction.id,
+                    bidderId: getWalletId() || 'guest-' + Date.now(),
+                    bidderName: localStorage.getItem('nw_display_name') || 'Guest',
+                    amount
+                })
+            });
+            const data = await res.json();
+            
+            if (data.success) {
+                closeBidModal();
+                showToast(data.extended ? t('extended') : t('bidSuccess'));
+                if (typeof NW_SOUNDS !== 'undefined') NW_SOUNDS.play?.('coin');
+                fetchAuctions();
+                fetchStats();
+            } else {
+                showToast(data.error || t('bidError'), 'error');
+            }
+        } catch (e) {
+            showToast(t('bidError'), 'error');
+        }
+    }
+
+    async function buyNow(auctionId) {
+        const auc = allAuctions.find(a => a.id === auctionId);
+        if (!auc || !auc.buyNowPrice) return;
+        
+        if (!confirm(`Buy ${auc.card.name} for ${auc.buyNowPrice} Gold?`)) return;
+        
+        try {
+            const res = await fetch('/api/auction/bid', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    auctionId,
+                    bidderId: getWalletId() || 'guest-' + Date.now(),
+                    bidderName: localStorage.getItem('nw_display_name') || 'Guest',
+                    amount: auc.buyNowPrice
+                })
+            });
+            const data = await res.json();
+            
+            if (data.success) {
+                showToast(data.message || 'Purchase successful!');
+                if (typeof NW_SOUNDS !== 'undefined') NW_SOUNDS.play?.('legendary');
+                fetchAuctions();
+                fetchStats();
+            } else {
+                showToast(data.error || 'Purchase failed', 'error');
+            }
+        } catch (e) {
+            showToast('Purchase failed', 'error');
+        }
+    }
+
+    // ============================================================================
+    // UI UTILITIES
+    // ============================================================================
+    
+    function showToast(msg, type = 'success') {
+        const toast = document.getElementById('ahToast');
+        toast.textContent = msg;
+        toast.style.borderColor = type === 'error' ? 'var(--ah-urgent)' : 'var(--ah-bid-green)';
+        toast.classList.add('show');
+        setTimeout(() => toast.classList.remove('show'), 3000);
+    }
+
+    function openCreateModal() {
+        showToast('Coming soon! List your cards for auction.', 'info');
+    }
+
+    function toggleNotifications() {
+        showToast('Notifications panel coming soon!', 'info');
+    }
+
+    // ============================================================================
+    // EVENT LISTENERS
+    // ============================================================================
+    
+    // Filter buttons
+    document.querySelectorAll('.ah-filter-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            document.querySelectorAll('.ah-filter-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            currentFilter = btn.dataset.rarity;
+            fetchAuctions();
+        });
+    });
+
+    // Sort select
+    document.getElementById('sortSelect').addEventListener('change', (e) => {
+        currentSort = e.target.value;
+        fetchAuctions();
+    });
+
+    // Search (debounced)
+    let searchTimeout;
+    document.getElementById('searchInput').addEventListener('input', (e) => {
+        clearTimeout(searchTimeout);
+        searchTimeout = setTimeout(() => {
+            currentSearch = e.target.value;
+            fetchAuctions();
+        }, 300);
+    });
+
+    // Close modal on overlay click
+    document.getElementById('bidModal').addEventListener('click', (e) => {
+        if (e.target.id === 'bidModal') closeBidModal();
+    });
+
+    // Language change listener
+    document.addEventListener('nw-lang-change', (e) => {
+        currentLang = e.detail?.lang || 'en';
+        applyTranslations();
+        renderAuctions();
+    });
+
+    // ============================================================================
+    // INIT
+    // ============================================================================
+    
+    applyTranslations();
+    fetchAuctions();
+    fetchStats();
+    fetchNotifications();
+    
+    // Auto-refresh every 10 seconds (live feel)
+    refreshInterval = setInterval(() => {
+        fetchAuctions();
+    }, 10000);
+    
+    // Update stats every 30 seconds
+    setInterval(fetchStats, 30000);
+    
+    // Update countdown timers every second (client-side for smoothness)
+    setInterval(() => {
+        allAuctions.forEach(auc => {
+            if (auc.timeRemaining > 0) auc.timeRemaining -= 1000;
+        });
+        // Only re-render timer elements, not full grid (performance)
+        document.querySelectorAll('.ah-card').forEach(card => {
+            const id = card.dataset.id;
+            const auc = allAuctions.find(a => a.id === id);
+            if (!auc) return;
+            const timerEl = card.querySelector('.ah-timer');
+            if (timerEl) {
+                const timer = formatTimeRemaining(auc.timeRemaining);
+                timerEl.className = `ah-timer ${timer.urgent ? 'urgent' : ''}`;
+                timerEl.innerHTML = `
+                    <span class="ah-timer-icon">&#9202;</span>
+                    <span>${timer.text}</span>
+                    ${timer.urgent ? `<span style="margin-left:auto;font-size:10px">${t('endingSoon')}</span>` : ''}`;
+            }
+        });
+    }, 1000);
+    
+    console.log('[AuctionHouse] v1.0 loaded - AUTO-LEARN tracked');
+    </script>
+</body>
+</html>

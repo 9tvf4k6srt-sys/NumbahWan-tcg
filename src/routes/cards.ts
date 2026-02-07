@@ -3,7 +3,7 @@
 
 import { Hono } from 'hono'
 
-const cards = new Hono()
+const router = new Hono()
 
 // Card data cache (loaded from JSON files)
 let cardCache: Map<string, any[]> = new Map()
@@ -19,7 +19,7 @@ async function loadCards(season: string = 'all'): Promise<any[]> {
 }
 
 // GET / - Get all cards or by query
-cards.get('/', async (c) => {
+router.get('/', async (c) => {
   const season = c.req.query('season')
   const rarity = c.req.query('rarity')
   const category = c.req.query('category')
@@ -49,7 +49,7 @@ cards.get('/', async (c) => {
 })
 
 // GET /:id - Get single card by ID
-cards.get('/:id', async (c) => {
+router.get('/:id', async (c) => {
   const id = c.req.param('id')
   const allCards = await loadCards('all')
   const card = allCards.find(card => card.id === id)
@@ -62,7 +62,7 @@ cards.get('/:id', async (c) => {
 })
 
 // GET /rarity/:rarity - Get cards by rarity
-cards.get('/rarity/:rarity', async (c) => {
+router.get('/rarity/:rarity', async (c) => {
   const rarity = c.req.param('rarity')
   const allCards = await loadCards('all')
   const filtered = allCards.filter(card => card.rarity === rarity)
@@ -75,7 +75,7 @@ cards.get('/rarity/:rarity', async (c) => {
 })
 
 // GET /season/:season - Get cards by season
-cards.get('/season/:season', async (c) => {
+router.get('/season/:season', async (c) => {
   const season = c.req.param('season')
   const seasonCards = await loadCards(season)
   
@@ -87,7 +87,7 @@ cards.get('/season/:season', async (c) => {
 })
 
 // GET /random - Get random card(s)
-cards.get('/random', async (c) => {
+router.get('/random', async (c) => {
   const count = Math.min(parseInt(c.req.query('count') || '1'), 10)
   const rarity = c.req.query('rarity')
   
@@ -111,7 +111,7 @@ cards.get('/random', async (c) => {
 })
 
 // GET /stats - Get card statistics
-cards.get('/stats', async (c) => {
+router.get('/stats', async (c) => {
   const allCards = await loadCards('all')
   
   const stats = {
@@ -144,4 +144,4 @@ export function setCardCache(season: string, cards: any[]) {
   cardCache.set(season, cards)
 }
 
-export default cards
+export default router

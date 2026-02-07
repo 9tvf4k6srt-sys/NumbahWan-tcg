@@ -1,6 +1,11 @@
 /**
- * NumbahWan TCG - Unified Navigation System v8.1
+ * NumbahWan TCG - Unified Navigation System v8.2
  * 60FPS BUTTERY SMOOTH EDITION - Mobile Optimized
+ * 
+ * NEW in v8.2:
+ * - Intuitive Back Button System
+ * - Smart navigation history tracking
+ * - Contextual back navigation (browser history or parent page)
  * 
  * Performance optimizations:
  * - GPU-accelerated transforms only (translate3d, no layout thrashing)
@@ -70,7 +75,8 @@ const NW_NAV = {
                 { id: 'battle', name: { en: 'Battle Arena', zh: '戰鬥場', th: 'สนามรบ' }, icon: 'swords', href: '/battle' },
                 { id: 'wallet', name: { en: 'Wallet', zh: '錢包', th: 'กระเป๋า' }, icon: 'wallet', href: '/wallet' },
                 { id: 'profile-card', name: { en: 'Profile Card', zh: '個人卡片', th: 'การ์ดโปรไฟล์' }, icon: 'form', href: '/profile-card', isNew: true },
-                { id: 'achievements', name: { en: 'Achievements', zh: '成就', th: 'ความสำเร็จ' }, icon: 'trophy', href: '/achievements', isNew: true }
+                { id: 'achievements', name: { en: 'Achievements', zh: '成就', th: 'ความสำเร็จ' }, icon: 'trophy', href: '/achievements', isNew: true },
+                { id: 'shrine', name: { en: '\ud83d\udd25 Summoning Shrine', zh: '\ud83d\udd25 召喚神殿', th: '\ud83d\udd25 ศาลเรียกวิญญาณ' }, icon: 'fire', href: '/shrine', isNew: true, isHot: true }
             ]
         },
         cards: {
@@ -81,6 +87,7 @@ const NW_NAV = {
             pages: [
                 { id: 'cards', name: { en: 'All Cards', zh: '全部卡牌', th: 'การ์ดทั้งหมด' }, icon: 'cards-stack', href: '/cards' },
                 { id: 'collection', name: { en: 'My Cards', zh: '我的卡牌', th: 'การ์ดของฉัน' }, icon: 'inventory', href: '/collection' },
+                { id: 'leaderboard', name: { en: 'Leaderboard', zh: '排行榜', th: 'ลีดเดอร์บอร์ด' }, icon: 'trophy', href: '/leaderboard', isNew: true },
                 { id: 'deckbuilder', name: { en: 'Deck Builder', zh: '卡組', th: 'สร้างเด็ค' }, icon: 'clipboard', href: '/deckbuilder' },
                 { id: 'staking', name: { en: 'Card Staking', zh: '卡牌質押', th: 'เดิมพันการ์ด' }, icon: 'coins', href: '/staking', isNew: true },
                 { id: 'fusion', name: { en: 'Card Fusion', zh: '卡牌融合', th: 'หลอมรวมการ์ด' }, icon: 'lightning', href: '/fusion', isNew: true }
@@ -97,6 +104,7 @@ const NW_NAV = {
                 { id: 'merch', name: { en: 'Merch Shop', zh: '周邊商店', th: 'ร้านสินค้า' }, icon: 'shopping-bag', href: '/merch' },
                 { id: 'claim', name: { en: 'Merch Claim', zh: '周邊兌換', th: 'รับสินค้า' }, icon: 'form', href: '/claim', isHot: true },
                 { id: 'exchange', name: { en: 'Exchange', zh: '兌換', th: 'แลกเปลี่ยน' }, icon: 'chart', href: '/exchange', isNew: true },
+                { id: 'auction-house', name: { en: 'Auction House', zh: '拍賣場', th: 'ห้องประมูล' }, icon: 'crown', href: '/auction-house', isNew: true, isHot: true },
                 { id: 'events', name: { en: 'Events', zh: '活動', th: 'กิจกรรม' }, icon: 'sparkles', href: '/events', isHot: true }
             ]
         },
@@ -174,7 +182,8 @@ const NW_NAV = {
             collapsed: true,
             desc: { en: '(IRL Adventures)', zh: '(現實冒險)', th: '(ผจญภัยในชีวิตจริง)' },
             pages: [
-                { id: 'tabletop-hub', name: { en: 'Tabletop Hub', zh: '桌遊中心', th: 'ศูนย์กลางบอร์ดเกม' }, icon: 'dice', href: '/tabletop', isHot: true },
+                { id: 'tavern-tales', name: { en: 'Tavern Tales', zh: '酒館故事', th: 'เรื่องเล่าโรงเตี๊ยม' }, icon: 'theater', href: '/tavern-tales', isHot: true },
+                { id: 'tabletop-hub', name: { en: 'Tabletop Hub', zh: '桌遊中心', th: 'ศูนย์กลางบอร์ดเกม' }, icon: 'dice', href: '/tabletop' },
                 { id: 'dnd-rulebook', name: { en: 'D&D Rulebook', zh: 'D&D規則書', th: 'กฎ D&D' }, icon: 'book', href: '/tabletop/rulebook', isNew: true },
                 { id: 'character-sheets', name: { en: 'Character Sheets', zh: '角色卡', th: 'แผ่นตัวละคร' }, icon: 'form', href: '/tabletop/character-sheets', isNew: true },
                 { id: 'campaign-logs', name: { en: 'Campaign Logs', zh: '戰役日誌', th: 'บันทึกแคมเปญ' }, icon: 'scroll', href: '/tabletop/campaigns', isNew: true },
@@ -210,6 +219,7 @@ const NW_NAV = {
                 { id: 'museum', name: { en: 'Museum', zh: '博物館', th: 'พิพิธภัณฑ์' }, icon: 'scroll', href: '/museum' },
                 { id: 'historical-society', name: { en: 'Historical Society', zh: '歷史學會', th: 'สมาคมประวัติศาสตร์' }, icon: 'scroll', href: '/historical-society' },
                 { id: 'research', name: { en: 'Research Archives', zh: '研究檔案', th: 'คลังงานวิจัย' }, icon: 'scroll', href: '/research' },
+                { id: 'research-library', name: { en: 'Psychology Library', zh: '心理學圖書館', th: 'ห้องสมุดจิตวิทยา' }, icon: 'book', href: '/research-library', isNew: true },
                 { id: 'fortune', name: { en: 'Fortune', zh: '占卜', th: 'ดูดวง' }, icon: 'crystal-ball', href: '/fortune' },
                 { id: 'updates', name: { en: 'Patch Notes', zh: '更新日誌', th: 'บันทึกแพทช์' }, icon: 'clipboard', href: '/updates' },
                 { id: 'apply', name: { en: 'Join Guild', zh: '加入公會', th: 'สมัครกิลด์' }, icon: 'form', href: '/apply' },
@@ -227,6 +237,216 @@ const NW_NAV = {
                 { id: 'matchalatte', name: { en: 'MatchaLatte', zh: '抹茶拿鐵', th: 'มัทฉะลาเต้' }, icon: 'trophy', href: '/matchalatte', external: false }
             ]
         }
+    },
+
+    // Navigation hierarchy for smart back navigation
+    pageHierarchy: {
+        // Core pages -> Home
+        'forge': '/',
+        'battle': '/',
+        'wallet': '/',
+        'profile-card': '/',
+        'achievements': '/',
+        // Collection pages -> Cards
+        'cards': '/',
+        'collection': '/cards',
+        'leaderboard': '/cards',
+        'deckbuilder': '/collection',
+        'staking': '/collection',
+        'fusion': '/collection',
+        // Economy pages -> Home
+        'arcade': '/',
+        'market': '/',
+        'merch': '/',
+        'claim': '/merch',
+        'exchange': '/wallet',
+        'events': '/',
+        'shrine': '/',
+        // Business pages -> Business Hub
+        'business': '/',
+        'supermarket': '/business',
+        'restaurant': '/business',
+        'services': '/business',
+        'my-business': '/business',
+        // Guild pages -> Home
+        'tournament': '/',
+        'pvp': '/',
+        'regina': '/',
+        'fashion': '/',
+        'memes': '/',
+        // Abyss pages -> Lore
+        'lore': '/',
+        'therapy': '/lore',
+        'hr': '/lore',
+        'conspiracy': '/lore',
+        'cafeteria': '/lore',
+        'lost-found': '/lore',
+        'parking': '/lore',
+        'maintenance': '/lore',
+        'breakroom': '/lore',
+        'basement': '/lore',
+        'zakum': '/lore',
+        // Resources -> Home
+        'guide': '/',
+        'academy': '/',
+        'vault': '/',
+        'museum': '/',
+        'research': '/',
+        'research-library': '/research',
+        'fortune': '/',
+        'updates': '/',
+        'apply': '/',
+        'about': '/',
+        // Tabletop -> Tabletop Hub
+        'tabletop-hub': '/',
+        'dnd-rulebook': '/tabletop',
+        'character-sheets': '/tabletop',
+        'campaign-logs': '/tabletop',
+        'card-to-dnd': '/tabletop',
+        'dm-tools': '/tabletop',
+        'print-play': '/tabletop',
+        // Tabletop -> Tabletop hub or home
+        'tavern-tales': '/',
+        'tabletop': '/',
+        // Build Lab -> Home
+        'efficiency': '/',
+        'innovation': '/efficiency',
+        'quality-metrics': '/efficiency',
+        'learning-log': '/efficiency',
+        'card-lab': '/efficiency',
+        // Alliance
+        'embassy': '/',
+        'matchalatte': '/embassy'
+    },
+
+    // Navigation history tracking
+    navHistory: [],
+    maxHistorySize: 20,
+
+    // Track page visit
+    trackPageVisit(pageId) {
+        const entry = { pageId, path: window.location.pathname, time: Date.now() };
+        // Don't add duplicate consecutive entries
+        const lastEntry = this.navHistory[this.navHistory.length - 1];
+        if (lastEntry && lastEntry.path === entry.path) return;
+        
+        this.navHistory.push(entry);
+        if (this.navHistory.length > this.maxHistorySize) {
+            this.navHistory.shift();
+        }
+        // Store in sessionStorage for persistence during session
+        try {
+            sessionStorage.setItem('nw_nav_history', JSON.stringify(this.navHistory));
+        } catch (e) {}
+    },
+
+    // Load history from sessionStorage
+    loadNavHistory() {
+        try {
+            const stored = sessionStorage.getItem('nw_nav_history');
+            if (stored) {
+                this.navHistory = JSON.parse(stored);
+            }
+        } catch (e) {
+            this.navHistory = [];
+        }
+    },
+
+    // Get smart back destination - ALWAYS returns a valid in-app path
+    getBackDestination() {
+        const currentPath = window.location.pathname;
+        // Normalize path - remove trailing slashes and .html
+        const normalizedPath = currentPath.replace(/\.html$/, '').replace(/\/$/, '') || '/';
+        const currentPageId = this.currentPage || this.getPageIdFromPath(normalizedPath);
+        
+        console.log('[NW_NAV] getBackDestination - currentPath:', currentPath, 'pageId:', currentPageId);
+        
+        // First priority: Check our navigation history for a valid previous page
+        if (this.navHistory.length > 1) {
+            // Get previous entry that's different from current
+            for (let i = this.navHistory.length - 2; i >= 0; i--) {
+                const prevPath = this.navHistory[i].path;
+                const normalizedPrev = prevPath.replace(/\.html$/, '').replace(/\/$/, '') || '/';
+                // Only use if it's a different page
+                if (normalizedPrev !== normalizedPath && prevPath !== '') {
+                    console.log('[NW_NAV] Using history:', prevPath);
+                    return { type: 'history', path: prevPath };
+                }
+            }
+        }
+        
+        // Second priority: Use hierarchy-based navigation (always reliable)
+        const parentPath = this.pageHierarchy[currentPageId];
+        if (parentPath && parentPath !== normalizedPath) {
+            console.log('[NW_NAV] Using hierarchy:', parentPath);
+            return { type: 'navigate', path: parentPath };
+        }
+        
+        // Ultimate fallback: home (always safe) - NEVER return null except at home
+        if (normalizedPath !== '/' && normalizedPath !== '' && normalizedPath !== '/index') {
+            console.log('[NW_NAV] Fallback to home');
+            return { type: 'navigate', path: '/' };
+        }
+        
+        console.log('[NW_NAV] Already at home');
+        return null; // Already at home
+    },
+
+    // Helper to extract page ID from path
+    getPageIdFromPath(path) {
+        // Remove leading slash and .html extension
+        const cleaned = path.replace(/^\//, '').replace(/\.html$/, '');
+        // Handle subpaths like /tabletop/rulebook -> dnd-rulebook
+        if (cleaned.startsWith('tabletop/')) {
+            const sub = cleaned.split('/')[1];
+            if (sub === 'rulebook') return 'dnd-rulebook';
+            if (sub === 'character-sheets') return 'character-sheets';
+            if (sub === 'campaigns') return 'campaign-logs';
+            if (sub === 'converter') return 'card-to-dnd';
+            if (sub === 'dm-tools') return 'dm-tools';
+            if (sub === 'print-play') return 'print-play';
+            return 'tabletop-hub';
+        }
+        if (cleaned.startsWith('lore/')) {
+            return cleaned.replace('/', '-').replace('.html', '');
+        }
+        return cleaned || 'index';
+    },
+
+    // Execute back navigation
+    goBack() {
+        console.log('[NW_NAV] goBack triggered');
+        const destination = this.getBackDestination();
+        
+        if (!destination) {
+            // Already at home, do nothing or show subtle feedback
+            console.log('[NW_NAV] No destination, staying at home');
+            if (typeof NW_SOUNDS !== 'undefined') NW_SOUNDS.play('error');
+            return;
+        }
+        
+        if (typeof NW_SOUNDS !== 'undefined') NW_SOUNDS.play('click');
+        
+        // Validate destination path before navigating
+        const targetPath = destination.path;
+        if (!targetPath || targetPath === '' || targetPath === 'about:blank' || targetPath.startsWith('chrome://')) {
+            console.warn('[NW_NAV] Invalid destination, going home:', targetPath);
+            window.location.href = '/';
+            return;
+        }
+        
+        console.log('[NW_NAV] Navigating to:', targetPath);
+        
+        // ALWAYS navigate directly to avoid black screen issues with browser history
+        // Browser history.back() can go to external sites or about:blank
+        window.location.href = targetPath;
+    },
+
+    // Check if back button should be visible
+    shouldShowBackButton() {
+        const currentPath = window.location.pathname;
+        // Hide on home page
+        return currentPath !== '/' && currentPath !== '/index' && currentPath !== '/index.html';
     },
 
     easterEggs: {
@@ -263,6 +483,8 @@ const NW_NAV = {
         this.currentPage = pageId;
         this.currentLang = this.getStoredLang();
         this.collapsedSections = this.getCollapsedState();
+        this.loadNavHistory();
+        this.trackPageVisit(pageId);
         this.injectNav();
         this.bindEvents();
         this.easterEggs.init();
@@ -320,6 +542,7 @@ const NW_NAV = {
                 <div class="nw-nav-footer"><div class="nw-nav-version">v8.0 • 60fps Edition</div></div>
             </nav>
             <button id="nwNavToggle" class="nw-nav-toggle">${this.iconSvg('menu', 22)}</button>
+            ${this.shouldShowBackButton() ? `<button id="nwNavBack" class="nw-nav-back" title="Back">${this.iconSvg('arrow-right', 22)}</button>` : ''}
             <a href="/" id="nwNavHome" class="nw-nav-home">${this.iconSvg('home', 22)}</a>
         `;
     },
@@ -587,15 +810,54 @@ const NW_NAV = {
     -webkit-backface-visibility: hidden;
     backface-visibility: hidden;
 }
+/* Back Button - Prominent orange with arrow */
+.nw-nav-back {
+    position: fixed; z-index: 9997;
+    bottom: 200px; right: 16px;
+    width: 56px; height: 56px;
+    border: none; border-radius: 50%;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    background: linear-gradient(135deg, #ff6b00, #f59e0b);
+    color: #fff;
+    box-shadow: 0 4px 20px rgba(255,107,0,0.5);
+    transition: transform 0.1s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.15s;
+    will-change: transform;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
+}
+.nw-nav-back svg {
+    transform: rotate(180deg); /* Point arrow left for 'back' */
+}
+.nw-nav-back:hover {
+    transform: scale(1.08);
+    box-shadow: 0 6px 25px rgba(255,107,0,0.7);
+}
+.nw-nav-back:active {
+    transform: scale(0.92);
+}
+
+/* Pulse animation for back button on new pages */
+@keyframes backButtonPulse {
+    0%, 100% { box-shadow: 0 4px 20px rgba(255,107,0,0.5); }
+    50% { box-shadow: 0 4px 30px rgba(255,107,0,0.8), 0 0 10px rgba(255,215,0,0.5); }
+}
+.nw-nav-back.pulse {
+    animation: backButtonPulse 2s ease-in-out 3; /* Pulse 3 times when page loads */
+}
+
 .nw-nav-toggle:hover, .nw-nav-home:hover { transform: scale(1.08); }
 .nw-nav-toggle:active, .nw-nav-home:active { transform: scale(0.92); }
 .nw-nav-home:hover { border-color: #ffd700; box-shadow: 0 0 20px rgba(255,215,0,0.5); }
 
 @media (max-width: 480px) {
     .nw-nav-panel { width: 100vw; max-width: 100vw; }
-    .nw-nav-toggle, .nw-nav-home { width: 52px; height: 52px; }
+    .nw-nav-toggle, .nw-nav-home, .nw-nav-back { width: 52px; height: 52px; }
     .nw-nav-toggle { bottom: 80px; right: 14px; }
     .nw-nav-home { bottom: 140px; right: 14px; }
+    .nw-nav-back { bottom: 200px; right: 14px; }
     .nw-nav-link { padding: 12px 14px; font-size: 15px; }
     .nw-nav-section-header { padding: 12px 14px; font-size: 15px; }
     .nw-lang-btn { padding: 8px 14px; font-size: 14px; }
@@ -613,7 +875,8 @@ const NW_NAV = {
     .nw-nav-pages,
     .nw-nav-link,
     .nw-nav-toggle,
-    .nw-nav-home {
+    .nw-nav-home,
+    .nw-nav-back {
         transition: none !important;
     }
 }
@@ -635,6 +898,15 @@ const NW_NAV = {
         toggle?.addEventListener('click', () => this.open(), { passive: true });
         close?.addEventListener('click', () => this.close(), { passive: true });
         overlay?.addEventListener('click', () => this.close(), { passive: true });
+
+        // Back button - smart navigation
+        const back = document.getElementById('nwNavBack');
+        if (back) {
+            back.addEventListener('click', () => this.goBack(), { passive: true });
+            // Add pulse animation on page load
+            back.classList.add('pulse');
+            setTimeout(() => back.classList.remove('pulse'), 6000);
+        }
 
         // Section collapse - smooth with RAF
         document.querySelectorAll('.nw-nav-section-header.collapsible').forEach(header => {
@@ -659,9 +931,10 @@ const NW_NAV = {
             }, { passive: true });
         });
 
-        // Language buttons
+        // Language buttons - iOS Safari fix: use both click and touchend
         document.querySelectorAll('.nw-lang-btn').forEach(btn => {
-            btn.addEventListener('click', (e) => {
+            const handleLangChange = (e) => {
+                e.preventDefault();
                 e.stopPropagation();
                 const lang = btn.dataset.lang;
                 if (lang === this.currentLang) return;
@@ -679,7 +952,14 @@ const NW_NAV = {
                 });
                 
                 if (typeof NW_SOUNDS !== 'undefined') NW_SOUNDS.play('click');
-            }, { passive: true });
+            };
+            
+            // iOS Safari needs explicit touchend handler, not passive
+            btn.addEventListener('click', handleLangChange);
+            btn.addEventListener('touchend', (e) => {
+                e.preventDefault(); // Prevent ghost click on iOS
+                handleLangChange(e);
+            });
         });
     },
 

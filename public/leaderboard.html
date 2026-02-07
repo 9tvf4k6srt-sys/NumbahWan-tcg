@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Collection Leaderboard | NumbahWan TCG</title>
+    <link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Orbitron:wght@500;600;700&display=swap" rel="stylesheet">
+    <script src="/static/nw-currency.js"></script>
+    <script src="/static/nw-wallet.js"></script>
+    <script src="/static/nw-cards.js"></script>
+    <script src="/static/nw-features.js"></script>
+    <script src="/static/nw-nav.js"></script>
+    <style>
+        :root {
+            --bg: #0a0a0f;
+            --card: #12121a;
+            --border: #2a2a35;
+            --primary: #ff6b00;
+            --gold: #ffd700;
+            --text: #fff;
+            --text-dim: #888;
+        }
+        
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            padding-bottom: 100px;
+        }
+        
+        .hero {
+            background: linear-gradient(135deg, rgba(255, 107, 0, 0.15), transparent);
+            padding: 60px 20px 40px;
+            text-align: center;
+            border-bottom: 1px solid var(--border);
+        }
+        
+        .hero h1 {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 2rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--gold), var(--primary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 8px;
+        }
+        
+        .hero p {
+            color: var(--text-dim);
+            font-size: 0.9rem;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        /* User Stats Card */
+        .user-stats {
+            background: linear-gradient(135deg, var(--card), rgba(255, 107, 0, 0.1));
+            border: 1px solid var(--primary);
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 24px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            align-items: center;
+        }
+        
+        .user-rank {
+            text-align: center;
+            min-width: 100px;
+        }
+        
+        .rank-number {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 3rem;
+            font-weight: 700;
+            color: var(--gold);
+        }
+        
+        .rank-label {
+            font-size: 0.75rem;
+            color: var(--text-dim);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .user-details {
+            flex: 1;
+        }
+        
+        .user-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+        
+        .user-value {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.5rem;
+            color: var(--gold);
+            font-weight: 700;
+        }
+        
+        .user-value span {
+            font-size: 0.9rem;
+            color: var(--text-dim);
+            font-family: 'Inter', sans-serif;
+        }
+        
+        .progress-to-next {
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px solid rgba(255,255,255,0.1);
+        }
+        
+        .progress-to-next .label {
+            font-size: 0.8rem;
+            color: var(--text-dim);
+            margin-bottom: 6px;
+        }
+        
+        .progress-bar {
+            height: 8px;
+            background: rgba(0,0,0,0.3);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary), var(--gold));
+            border-radius: 4px;
+            transition: width 0.5s ease;
+        }
+        
+        /* Featured Card */
+        .featured-section {
+            margin-bottom: 24px;
+        }
+        
+        .section-title {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        /* Leaderboard */
+        .leaderboard {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            overflow: hidden;
+        }
+        
+        .leaderboard-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--border);
+            background: rgba(0,0,0,0.2);
+        }
+        
+        .leaderboard-header h2 {
+            font-size: 1rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .leaderboard-header .update {
+            font-size: 0.75rem;
+            color: var(--text-dim);
+        }
+        
+        .leaderboard-list {
+            padding: 8px 0;
+        }
+        
+        .leaderboard-entry {
+            display: flex;
+            align-items: center;
+            padding: 14px 20px;
+            transition: background 0.2s;
+        }
+        
+        .leaderboard-entry:hover {
+            background: rgba(255,255,255,0.02);
+        }
+        
+        .leaderboard-entry.is-user {
+            background: rgba(255, 107, 0, 0.1);
+            border-left: 3px solid var(--primary);
+        }
+        
+        .leaderboard-entry.top-3 {
+            background: linear-gradient(90deg, rgba(255, 215, 0, 0.08), transparent);
+        }
+        
+        .entry-rank {
+            width: 50px;
+            font-weight: 700;
+            font-size: 1.1rem;
+        }
+        
+        .entry-rank.gold { color: #ffd700; }
+        .entry-rank.silver { color: #c0c0c0; }
+        .entry-rank.bronze { color: #cd7f32; }
+        
+        .entry-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary), var(--gold));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            margin-right: 12px;
+        }
+        
+        .entry-info {
+            flex: 1;
+        }
+        
+        .entry-name {
+            font-weight: 600;
+            font-size: 0.95rem;
+        }
+        
+        .entry-title {
+            font-size: 0.75rem;
+            color: var(--text-dim);
+        }
+        
+        .entry-stats {
+            text-align: right;
+        }
+        
+        .entry-value {
+            font-family: 'Orbitron', sans-serif;
+            font-weight: 600;
+            color: var(--gold);
+        }
+        
+        .entry-cards {
+            font-size: 0.75rem;
+            color: var(--text-dim);
+        }
+        
+        /* Quick Actions */
+        .quick-actions {
+            display: flex;
+            gap: 12px;
+            margin-top: 24px;
+        }
+        
+        .quick-btn {
+            flex: 1;
+            padding: 14px;
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            color: var(--text);
+            text-decoration: none;
+            text-align: center;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+        
+        .quick-btn:hover {
+            border-color: var(--primary);
+            transform: translateY(-2px);
+        }
+        
+        .quick-btn span {
+            display: block;
+            font-size: 1.5rem;
+            margin-bottom: 4px;
+        }
+        
+        @media (max-width: 600px) {
+            .user-stats {
+                flex-direction: column;
+                text-align: center;
+            }
+            .quick-actions {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="hero">
+        <h1>🏆 Collection Leaderboard</h1>
+        <p>Top collectors in the NumbahWan TCG community</p>
+    </div>
+    
+    <div class="container">
+        <!-- User Stats -->
+        <div class="user-stats" id="userStats">
+            <div class="user-rank">
+                <div class="rank-number" id="userRankNumber">--</div>
+                <div class="rank-label">Your Rank</div>
+            </div>
+            <div class="user-details">
+                <div class="user-title" id="userTitle">Loading...</div>
+                <div class="user-value"><span id="userValue">0</span> <span>NWG Value</span></div>
+                <div class="progress-to-next" id="progressSection">
+                    <div class="label" id="progressLabel">-- NWG to rank up</div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="progressFill" style="width: 0%"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Featured Card -->
+        <div class="featured-section">
+            <div class="section-title">⭐ Today's Featured Card</div>
+            <div id="featuredCardBanner"></div>
+        </div>
+        
+        <!-- Leaderboard -->
+        <div class="leaderboard">
+            <div class="leaderboard-header">
+                <h2>🏆 Top Collectors</h2>
+                <span class="update" id="lastUpdate">Updated just now</span>
+            </div>
+            <div class="leaderboard-list" id="leaderboardList">
+                <!-- Entries will be rendered here -->
+            </div>
+        </div>
+        
+        <!-- Quick Actions -->
+        <div class="quick-actions">
+            <a href="/forge" class="quick-btn">
+                <span>🔮</span>
+                Pull Cards
+            </a>
+            <a href="/collection" class="quick-btn">
+                <span>🃏</span>
+                My Collection
+            </a>
+            <a href="/wallet" class="quick-btn">
+                <span>💳</span>
+                Wallet
+            </a>
+        </div>
+    </div>
+    
+    <script>
+        // Initialize when DOM is ready
+        document.addEventListener('DOMContentLoaded', async () => {
+            // Wait for wallet and features to load
+            await new Promise(r => setTimeout(r, 300));
+            
+            // Initialize wallet
+            if (typeof NW_WALLET !== 'undefined') {
+                await NW_WALLET.init();
+            }
+            
+            // Render leaderboard
+            renderLeaderboard();
+            
+            // Render featured card
+            if (typeof NW_FEATURES !== 'undefined') {
+                NW_FEATURES.renderFeaturedCardBanner('featuredCardBanner');
+            }
+        });
+        
+        function renderLeaderboard() {
+            if (typeof NW_FEATURES === 'undefined') {
+                document.getElementById('leaderboardList').innerHTML = '<p style="padding: 20px; text-align: center; color: #888;">Loading leaderboard...</p>';
+                return;
+            }
+            
+            const leaderboard = NW_FEATURES.getLeaderboard();
+            const userInfo = NW_FEATURES.getUserRankInfo();
+            
+            // Update user stats
+            document.getElementById('userRankNumber').textContent = `#${userInfo.rank}`;
+            document.getElementById('userTitle').textContent = userInfo.title || 'New Adventurer';
+            document.getElementById('userValue').textContent = (userInfo.value || 0).toLocaleString();
+            
+            // Progress to next rank
+            if (userInfo.toNextRank > 0 && userInfo.nextRank) {
+                document.getElementById('progressLabel').textContent = `${userInfo.toNextRank.toLocaleString()} NWG to overtake ${userInfo.nextRank.name}`;
+                const progress = Math.min(100, (userInfo.value / (userInfo.value + userInfo.toNextRank)) * 100);
+                document.getElementById('progressFill').style.width = `${progress}%`;
+            } else {
+                document.getElementById('progressSection').style.display = 'none';
+            }
+            
+            // Update last update time
+            document.getElementById('lastUpdate').textContent = `Updated ${NW_FEATURES.formatTimeAgo(leaderboard.lastUpdated)}`;
+            
+            // Render entries
+            const medalEmojis = ['🥇', '🥈', '🥉'];
+            const list = document.getElementById('leaderboardList');
+            
+            list.innerHTML = leaderboard.entries.slice(0, 15).map((entry, i) => {
+                const rankClass = i === 0 ? 'gold' : i === 1 ? 'silver' : i === 2 ? 'bronze' : '';
+                const initial = entry.name.charAt(0).toUpperCase();
+                
+                return `
+                    <div class="leaderboard-entry ${entry.isUser ? 'is-user' : ''} ${i < 3 ? 'top-3' : ''}">
+                        <span class="entry-rank ${rankClass}">${i < 3 ? medalEmojis[i] : `#${entry.rank}`}</span>
+                        <div class="entry-avatar">${initial}</div>
+                        <div class="entry-info">
+                            <div class="entry-name">${entry.name}${entry.isUser ? ' (You)' : ''}</div>
+                            <div class="entry-title">${entry.title}</div>
+                        </div>
+                        <div class="entry-stats">
+                            <div class="entry-value">${entry.value.toLocaleString()}</div>
+                            <div class="entry-cards">${entry.cards} cards</div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+    </script>
+</body>
+</html>

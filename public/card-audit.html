@@ -1,0 +1,635 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Card Balance Audit | NumbahWan TCG</title>
+  <!-- styles inlined below -->
+  <style>
+    :root {
+      --bg: #0a0a0f;
+      --surface: #12121a;
+      --surface2: #1a1a28;
+      --border: #2a2a3a;
+      --dim: #8888aa;
+      --text: #e0e0f0;
+      --fire: #ff6b00;
+      --gold: #fbbf24;
+      --mythic: #ff6b00;
+      --legendary: #fbbf24;
+      --epic: #a855f7;
+      --rare: #3b82f6;
+      --uncommon: #22c55e;
+      --common: #71717a;
+      --success: #22c55e;
+      --warning: #fbbf24;
+      --danger: #ef4444;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: var(--bg); color: var(--text); font-family: 'Inter', system-ui, sans-serif; min-height: 100vh; }
+
+    .audit-header {
+      background: linear-gradient(135deg, #12121a 0%, #1a0a1e 100%);
+      border-bottom: 1px solid var(--border);
+      padding: 24px;
+      text-align: center;
+    }
+    .audit-title {
+      font-size: 2rem;
+      font-weight: 900;
+      background: linear-gradient(135deg, var(--fire), var(--gold));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 4px;
+    }
+    .audit-subtitle { color: var(--dim); font-size: 0.9rem; }
+
+    .audit-content { max-width: 1200px; margin: 0 auto; padding: 24px; }
+
+    /* Health Overview */
+    .health-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 16px;
+      margin-bottom: 32px;
+    }
+    .health-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px;
+      text-align: center;
+    }
+    .health-card .grade {
+      font-size: 2.5rem;
+      font-weight: 900;
+      line-height: 1;
+      margin-bottom: 8px;
+    }
+    .health-card .label { color: var(--dim); font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.05em; }
+    .health-card .value { font-size: 1.2rem; font-weight: 700; margin-top: 4px; }
+    .grade-A { color: var(--success); }
+    .grade-B { color: var(--gold); }
+    .grade-C { color: var(--warning); }
+    .grade-D { color: var(--danger); }
+
+    /* Sections */
+    .section {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 24px;
+      margin-bottom: 24px;
+    }
+    .section-title {
+      font-size: 1.3rem;
+      font-weight: 800;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    /* Tier Health Bars */
+    .tier-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 12px;
+      padding: 12px;
+      background: var(--surface2);
+      border-radius: 10px;
+    }
+    .tier-label {
+      width: 100px;
+      font-weight: 700;
+      font-size: 0.85rem;
+      text-transform: capitalize;
+    }
+    .tier-bar-wrap {
+      flex: 1;
+      height: 24px;
+      background: #1a1a2a;
+      border-radius: 12px;
+      overflow: hidden;
+      position: relative;
+    }
+    .tier-bar {
+      height: 100%;
+      border-radius: 12px;
+      transition: width 0.8s ease;
+    }
+    .tier-bar-text {
+      position: absolute;
+      right: 8px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: white;
+      text-shadow: 0 1px 3px rgba(0,0,0,0.8);
+    }
+    .tier-stats {
+      width: 140px;
+      font-size: 0.75rem;
+      color: var(--dim);
+      text-align: right;
+    }
+    .tier-grade {
+      width: 40px;
+      font-size: 1.2rem;
+      font-weight: 900;
+      text-align: center;
+    }
+
+    /* Issues Table */
+    .issues-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    .issues-table th {
+      text-align: left;
+      padding: 10px 12px;
+      border-bottom: 2px solid var(--border);
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      color: var(--dim);
+      letter-spacing: 0.05em;
+    }
+    .issues-table td {
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--border);
+      font-size: 0.85rem;
+    }
+    .issues-table tr:hover { background: var(--surface2); }
+    .badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 6px;
+      font-size: 0.7rem;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+    .badge-critical { background: rgba(239,68,68,0.2); color: var(--danger); }
+    .badge-fix { background: rgba(251,191,36,0.2); color: var(--warning); }
+    .badge-warn { background: rgba(59,130,246,0.2); color: var(--rare); }
+    .badge-info { background: rgba(113,113,122,0.2); color: var(--dim); }
+
+    .rarity-dot {
+      display: inline-block;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      margin-right: 6px;
+    }
+
+    /* Synergies */
+    .synergy-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+      gap: 16px;
+    }
+    .synergy-card {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px;
+      transition: transform 0.2s;
+    }
+    .synergy-card:hover { transform: translateY(-2px); border-color: var(--fire); }
+    .synergy-name { font-weight: 800; font-size: 1rem; margin-bottom: 4px; color: var(--gold); }
+    .synergy-desc { font-size: 0.85rem; color: var(--text); margin-bottom: 8px; }
+    .synergy-effect { font-size: 0.8rem; color: var(--fire); font-weight: 600; }
+    .synergy-flavor { font-size: 0.75rem; color: var(--dim); font-style: italic; margin-top: 6px; }
+
+    /* Shrine Cards Preview */
+    .shrine-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 16px;
+    }
+    .shrine-preview {
+      text-align: center;
+      cursor: pointer;
+      transition: transform 0.2s;
+    }
+    .shrine-preview:hover { transform: scale(1.05); }
+    .shrine-preview img {
+      width: 100%;
+      border-radius: 10px;
+      border: 2px solid var(--border);
+      aspect-ratio: 3/4;
+      object-fit: cover;
+    }
+    .shrine-preview img[data-rarity="mythic"] { border-color: var(--mythic); box-shadow: 0 0 20px rgba(255,107,0,0.3); }
+    .shrine-preview img[data-rarity="legendary"] { border-color: var(--legendary); box-shadow: 0 0 15px rgba(251,191,36,0.2); }
+    .shrine-preview img[data-rarity="epic"] { border-color: var(--epic); box-shadow: 0 0 15px rgba(168,85,247,0.2); }
+    .shrine-preview img[data-rarity="rare"] { border-color: var(--rare); box-shadow: 0 0 15px rgba(59,130,246,0.2); }
+    .shrine-preview .card-name { font-size: 0.75rem; font-weight: 700; margin-top: 8px; }
+    .shrine-preview .card-stats { font-size: 0.65rem; color: var(--dim); }
+
+    /* Power Distribution */
+    .power-chart {
+      display: flex;
+      align-items: flex-end;
+      gap: 3px;
+      height: 120px;
+      margin-top: 12px;
+      padding: 0 4px;
+    }
+    .power-bar {
+      flex: 1;
+      border-radius: 3px 3px 0 0;
+      min-width: 4px;
+      position: relative;
+      cursor: pointer;
+      transition: opacity 0.2s;
+    }
+    .power-bar:hover { opacity: 0.8; }
+    .power-bar .tooltip {
+      display: none;
+      position: absolute;
+      bottom: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 6px 10px;
+      font-size: 0.7rem;
+      white-space: nowrap;
+      z-index: 10;
+    }
+    .power-bar:hover .tooltip { display: block; }
+
+    /* Tabs */
+    .tabs { display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap; }
+    .tab-btn {
+      padding: 8px 16px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--text);
+      cursor: pointer;
+      font-size: 0.85rem;
+      font-weight: 600;
+      transition: all 0.2s;
+    }
+    .tab-btn.active { background: var(--fire); color: white; border-color: var(--fire); }
+    .tab-btn:hover:not(.active) { border-color: var(--fire); }
+
+    .loading {
+      text-align: center;
+      padding: 40px;
+      color: var(--dim);
+    }
+    .loading .spinner {
+      width: 32px;
+      height: 32px;
+      border: 3px solid var(--border);
+      border-top-color: var(--fire);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin: 0 auto 12px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .btn {
+      padding: 10px 20px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--text);
+      cursor: pointer;
+      font-weight: 700;
+      transition: all 0.2s;
+    }
+    .btn:hover { border-color: var(--fire); background: var(--surface2); }
+    .btn-primary { background: var(--fire); border-color: var(--fire); color: white; }
+    .btn-primary:hover { background: #e05500; }
+
+    .back-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      color: var(--dim);
+      text-decoration: none;
+      font-size: 0.85rem;
+      margin-bottom: 16px;
+    }
+    .back-link:hover { color: var(--fire); }
+
+    @media (max-width: 640px) {
+      .health-grid { grid-template-columns: repeat(2, 1fr); }
+      .synergy-grid { grid-template-columns: 1fr; }
+      .tier-stats { display: none; }
+      .issues-table { font-size: 0.75rem; }
+    }
+  </style>
+</head>
+<body>
+  <header class="audit-header">
+    <div class="audit-title">CARD BALANCE AUDIT</div>
+    <div class="audit-subtitle">NW-CARD-ENGINE v2.0 | Automatic Rebalancing System | Season 1: Age of Alimony | NW = #1, Shrine = Underdog</div>
+  </header>
+
+  <div class="audit-content">
+    <a href="/" class="back-link">&larr; Back to Home</a>
+
+    <!-- Health Overview -->
+    <div id="healthOverview" class="health-grid">
+      <div class="loading"><div class="spinner"></div>Loading audit data...</div>
+    </div>
+
+    <!-- Tabs -->
+    <div class="tabs">
+      <button class="tab-btn active" onclick="showTab('tierHealth')">Tier Health</button>
+      <button class="tab-btn" onclick="showTab('issues')">Issues</button>
+      <button class="tab-btn" onclick="showTab('shrineCards')">Shrine Cards</button>
+      <button class="tab-btn" onclick="showTab('synergies')">Synergies</button>
+      <button class="tab-btn" onclick="showTab('powerDist')">Power Distribution</button>
+      <button class="tab-btn" onclick="showTab('meta')">Meta Report</button>
+    </div>
+
+    <!-- Tab Content -->
+    <div id="tab-tierHealth" class="section">
+      <div class="section-title">Tier Health Breakdown</div>
+      <div id="tierHealthBars"></div>
+    </div>
+
+    <div id="tab-issues" class="section" style="display:none">
+      <div class="section-title">Balance Issues <span id="issueCount" style="font-size:0.8rem;color:var(--dim);font-weight:400"></span></div>
+      <table class="issues-table">
+        <thead><tr><th>Card</th><th>Rarity</th><th>Power</th><th>Issues</th></tr></thead>
+        <tbody id="issuesBody"></tbody>
+      </table>
+    </div>
+
+    <div id="tab-shrineCards" class="section" style="display:none">
+      <div class="section-title">The React Lord Collection — Shrine Exclusive Cards</div>
+      <div id="shrineGrid" class="shrine-grid"></div>
+      <div id="shrineSetBonuses" style="margin-top:20px"></div>
+    </div>
+
+    <div id="tab-synergies" class="section" style="display:none">
+      <div class="section-title">Role Synergies & Combos</div>
+      <div id="synergiesGrid" class="synergy-grid"></div>
+    </div>
+
+    <div id="tab-powerDist" class="section" style="display:none">
+      <div class="section-title">Power Distribution by Tier</div>
+      <div id="powerDistChart"></div>
+    </div>
+
+    <div id="tab-meta" class="section" style="display:none">
+      <div class="section-title">Season 1 Meta Report</div>
+      <div id="metaReport"></div>
+    </div>
+  </div>
+
+  <script>
+    let auditData = null;
+    let metaData = null;
+    let synergiesData = null;
+    let shrineMeta = null;
+    let balanceReport = null;
+
+    // Fetch all data
+    async function loadData() {
+      try {
+        const [auditRes, metaRes, synRes, shrineRes, balRes] = await Promise.all([
+          fetch('/api/card-engine/audit').then(r => r.json()),
+          fetch('/api/card-engine/meta').then(r => r.json()),
+          fetch('/api/card-engine/synergies').then(r => r.json()),
+          fetch('/api/card-engine/shrine-meta').then(r => r.json()),
+          fetch('/api/card-engine/balance-report').then(r => r.json())
+        ]);
+        auditData = auditRes;
+        metaData = metaRes;
+        synergiesData = synRes;
+        shrineMeta = shrineRes;
+        balanceReport = balRes;
+        renderAll();
+      } catch(e) {
+        console.error('Failed to load audit data:', e);
+        document.getElementById('healthOverview').innerHTML = '<div class="health-card" style="grid-column:1/-1;color:var(--danger)">Failed to load audit data. Please try again.</div>';
+      }
+    }
+
+    function renderAll() {
+      renderHealthOverview();
+      renderTierHealth();
+      renderIssues();
+      renderShrineCards();
+      renderSynergies();
+      renderPowerDist();
+      renderMeta();
+    }
+
+    function renderHealthOverview() {
+      const r = balanceReport?.report || {};
+      const a = auditData || {};
+      document.getElementById('healthOverview').innerHTML = `
+        <div class="health-card">
+          <div class="grade grade-${r.overallGrade || 'C'}">${r.overallGrade || '?'}</div>
+          <div class="label">Overall Health</div>
+          <div class="value">${r.overallHealth || 0}%</div>
+        </div>
+        <div class="health-card">
+          <div class="grade" style="color:var(--text)">${a.totalCards || 0}</div>
+          <div class="label">Total Cards</div>
+          <div class="value">${Object.keys(a.tierStats || {}).length} tiers</div>
+        </div>
+        <div class="health-card">
+          <div class="grade" style="color:${a.totalIssues > 20 ? 'var(--danger)' : a.totalIssues > 10 ? 'var(--warning)' : 'var(--success)'}">${a.totalIssues || 0}</div>
+          <div class="label">Issues Found</div>
+          <div class="value">${a.criticalIssues || 0} critical</div>
+        </div>
+        <div class="health-card">
+          <div class="grade" style="color:var(--fire)">${r.totalViolations || 0}</div>
+          <div class="label">Violations</div>
+          <div class="value">Rule breaks</div>
+        </div>
+        <div class="health-card">
+          <div class="grade" style="color:var(--gold)">S1</div>
+          <div class="label">Season</div>
+          <div class="value">nw-engine v1.0</div>
+        </div>
+      `;
+    }
+
+    function renderTierHealth() {
+      const tierHealth = balanceReport?.report?.tierHealth || {};
+      const tierColors = { mythic:'var(--mythic)', legendary:'var(--legendary)', epic:'var(--epic)', rare:'var(--rare)', uncommon:'var(--uncommon)', common:'var(--common)' };
+      const order = ['mythic','legendary','epic','rare','uncommon','common'];
+      let html = '';
+      for (const rarity of order) {
+        const t = tierHealth[rarity];
+        if (!t) continue;
+        const barWidth = Math.min(100, t.healthScore);
+        const barColor = t.healthScore >= 80 ? 'var(--success)' : t.healthScore >= 60 ? 'var(--gold)' : t.healthScore >= 40 ? 'var(--warning)' : 'var(--danger)';
+        html += `
+          <div class="tier-row">
+            <div class="tier-label" style="color:${tierColors[rarity]}">${rarity}</div>
+            <div class="tier-bar-wrap">
+              <div class="tier-bar" style="width:${barWidth}%;background:${barColor}"></div>
+              <div class="tier-bar-text">${t.healthScore}%</div>
+            </div>
+            <div class="tier-stats">${t.count} cards | Avg: ${t.avgPower} | Target: ${t.target}</div>
+            <div class="tier-grade grade-${t.healthGrade}">${t.healthGrade}</div>
+          </div>`;
+      }
+      document.getElementById('tierHealthBars').innerHTML = html;
+    }
+
+    function renderIssues() {
+      const issues = auditData?.issues || [];
+      document.getElementById('issueCount').textContent = `(${issues.length} cards with issues)`;
+      const rarityColors = { mythic:'var(--mythic)', legendary:'var(--legendary)', epic:'var(--epic)', rare:'var(--rare)', uncommon:'var(--uncommon)', common:'var(--common)' };
+      let html = '';
+      for (const item of issues.slice(0, 50)) {
+        const badges = item.issues.map(i =>
+          `<span class="badge badge-${i.severity || 'info'}">${i.type}</span>`
+        ).join(' ');
+        html += `
+          <tr>
+            <td><strong>${item.name}</strong> <span style="color:var(--dim);font-size:0.7rem">#${item.id}</span></td>
+            <td><span class="rarity-dot" style="background:${rarityColors[item.rarity]}"></span>${item.rarity}</td>
+            <td>${item.power}</td>
+            <td>${badges}</td>
+          </tr>`;
+      }
+      document.getElementById('issuesBody').innerHTML = html || '<tr><td colspan="4" style="text-align:center;color:var(--success)">No issues found! All cards are balanced.</td></tr>';
+    }
+
+    function renderShrineCards() {
+      const cards = shrineMeta?.shrineMeta?.cards || [];
+      const imgs = {
+        700: '/static/images/cards/shrine-asmongold-mythic.webp',
+        701: '/static/images/cards/shrine-react-throne.webp',
+        702: '/static/images/cards/shrine-mcconnell.webp',
+        703: '/static/images/cards/shrine-transmog.webp',
+        704: '/static/images/cards/shrine-dr-pepper.webp',
+        705: '/static/images/cards/shrine-cockroach.webp',
+        706: '/static/images/cards/shrine-chat.webp'
+      };
+      let html = '';
+      for (const card of cards) {
+        const gs = card.stats || {};
+        html += `
+          <div class="shrine-preview">
+            <img src="${imgs[card.id] || card.image}" data-rarity="${card.rarity}" alt="${card.name}" loading="lazy">
+            <div class="card-name" style="color:var(--${card.rarity})">${card.name}</div>
+            <div class="card-stats">ATK:${gs.atk||0} HP:${gs.hp||0} Cost:${gs.cost||0} | ${(gs.abilities||[]).join(', ') || 'No abilities'}</div>
+          </div>`;
+      }
+      document.getElementById('shrineGrid').innerHTML = html;
+
+      // Set bonuses
+      const bonuses = shrineMeta?.shrineMeta?.setBonuses || [];
+      let bhtml = '<div style="margin-top:16px"><strong style="color:var(--gold)">React Lord Collection Set Bonuses:</strong><ul style="margin-top:8px;list-style:none;padding:0">';
+      for (const b of bonuses) {
+        bhtml += `<li style="margin-bottom:6px;padding:8px 12px;background:var(--surface2);border-radius:8px;font-size:0.85rem"><span style="color:var(--fire);font-weight:700">${b.count}x:</span> ${b.bonus}</li>`;
+      }
+      bhtml += '</ul></div>';
+      document.getElementById('shrineSetBonuses').innerHTML = bhtml;
+    }
+
+    function renderSynergies() {
+      const syns = synergiesData?.roleSynergies || [];
+      let html = '';
+      for (const syn of syns) {
+        html += `
+          <div class="synergy-card">
+            <div class="synergy-name">${syn.name}</div>
+            <div class="synergy-desc">Requires: ${syn.requires}</div>
+            <div class="synergy-effect">${syn.effect}</div>
+            <div class="synergy-flavor">${syn.flavor}</div>
+          </div>`;
+      }
+      document.getElementById('synergiesGrid').innerHTML = html;
+    }
+
+    function renderPowerDist() {
+      const tierStats = auditData?.tierStats || {};
+      const tierColors = { mythic:'var(--mythic)', legendary:'var(--legendary)', epic:'var(--epic)', rare:'var(--rare)', uncommon:'var(--uncommon)', common:'var(--common)' };
+      const order = ['common','uncommon','rare','epic','legendary','mythic'];
+      let html = '';
+      for (const rarity of order) {
+        const t = tierStats[rarity];
+        if (!t) continue;
+        html += `
+          <div style="margin-bottom:20px">
+            <div style="font-weight:700;color:${tierColors[rarity]};margin-bottom:6px;text-transform:capitalize">${rarity} (${t.count} cards) — Avg Power: ${t.avgPower}, Range: ${t.minPower} - ${t.maxPower}</div>
+            <div style="height:30px;background:var(--surface2);border-radius:8px;overflow:hidden;position:relative">
+              <div style="position:absolute;left:${(t.minPower/50)*100}%;width:${((t.maxPower-t.minPower)/50)*100}%;height:100%;background:${tierColors[rarity]};opacity:0.3;border-radius:8px"></div>
+              <div style="position:absolute;left:${(t.avgPower/50)*100}%;width:3px;height:100%;background:${tierColors[rarity]}"></div>
+            </div>
+          </div>`;
+      }
+      document.getElementById('powerDistChart').innerHTML = html || '<div style="color:var(--dim)">No power data available.</div>';
+    }
+
+    function renderMeta() {
+      const meta = metaData?.meta || {};
+      let html = '';
+
+      // Top Decks
+      if (meta.topDecks) {
+        html += '<div style="margin-bottom:20px"><strong style="color:var(--gold)">Top Decks:</strong>';
+        for (const deck of meta.topDecks) {
+          html += `
+            <div style="margin-top:10px;padding:12px;background:var(--surface2);border-radius:10px;border-left:3px solid var(--fire)">
+              <div style="font-weight:800;font-size:1rem">${deck.name} <span style="color:var(--fire);font-size:0.85rem">${deck.winRate}% WR</span></div>
+              <div style="font-size:0.8rem;color:var(--dim);margin-top:4px">${deck.desc}</div>
+              <div style="font-size:0.75rem;color:var(--dim);margin-top:2px">Cards: [${deck.cards.join(', ')}] | Set: ${deck.set}</div>
+            </div>`;
+        }
+        html += '</div>';
+      }
+
+      // Best Combos
+      if (meta.bestCombos) {
+        html += '<div style="margin-bottom:20px"><strong style="color:var(--gold)">Best 2-Card Combos:</strong>';
+        html += '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:10px;margin-top:10px">';
+        for (const combo of meta.bestCombos) {
+          html += `
+            <div style="padding:10px;background:var(--surface2);border-radius:8px">
+              <div style="font-weight:700;font-size:0.9rem;color:var(--gold)">${combo.synergy}</div>
+              <div style="font-size:0.8rem">${combo.cards.join(' ')}</div>
+              <div style="font-size:0.75rem;color:var(--fire)">${combo.effect}</div>
+            </div>`;
+        }
+        html += '</div></div>';
+      }
+
+      // Ability Reference
+      if (meta.abilities) {
+        html += '<div><strong style="color:var(--gold)">Ability Reference:</strong>';
+        html += '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:8px;margin-top:10px">';
+        for (const [name, info] of Object.entries(meta.abilities)) {
+          const a = info;
+          html += `
+            <div style="padding:8px;background:var(--surface2);border-radius:6px;font-size:0.8rem">
+              <span style="font-weight:800;color:var(--fire)">${name}</span>: ${a.effect}
+              <div style="font-size:0.7rem;color:var(--dim)">Best on: ${a.bestOn.join(', ')}</div>
+            </div>`;
+        }
+        html += '</div></div>';
+      }
+
+      document.getElementById('metaReport').innerHTML = html || '<div style="color:var(--dim)">No meta data available.</div>';
+    }
+
+    function showTab(tabId) {
+      document.querySelectorAll('[id^="tab-"]').forEach(el => el.style.display = 'none');
+      document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+      document.getElementById('tab-' + tabId).style.display = 'block';
+      event.target.classList.add('active');
+    }
+
+    // Init
+    loadData();
+  </script>
+</body>
+</html>

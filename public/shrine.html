@@ -1,0 +1,1214 @@
+<!DOCTYPE html>
+<html lang="en" data-page-id="shrine">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Summoning Shrine | NumbahWan TCG</title>
+    <link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
+    
+    <!-- OG Meta Tags for viral sharing -->
+    <meta property="og:title" content="The Summoning Shrine - We're Trying to Summon Asmongold Into MapleStory">
+    <meta property="og:description" content="A MapleStory guild built an entire summoning shrine. Join the ritual. The Bald One must answer.">
+    <meta property="og:type" content="website">
+    <meta property="og:image" content="/static/images/shrine/og-shrine.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="The Summoning Shrine - Summoning Asmongold Into MapleStory">
+    <meta name="twitter:description" content="We've been summoning. He hasn't answered. Yet.">
+    
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=Inter:wght@300;400;600;700&family=MedievalSharp&family=Noto+Sans+TC:wght@400;700&family=Noto+Sans+Thai:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0a0608; --altar: #1a0f14; --border: #2a1520; --text: #e8d5c4;
+            --dim: #7a6b60; --gold: #ffd700; --fire: #ff6b00; --ember: #ff3d00;
+            --purple: #8b5cf6; --blood: #dc2626; --sacred: #22c55e; --nwg: #00d4ff;
+            --glow: rgba(255,107,0,0.4);
+        }
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body { background:var(--bg); color:var(--text); font-family:Inter,sans-serif; overflow-x:hidden; min-height:100vh; }
+        body[data-lang="zh"] { font-family:'Noto Sans TC',Inter,sans-serif; }
+        body[data-lang="th"] { font-family:'Noto Sans Thai',Inter,sans-serif; }
+
+        /* === BACKGROUND === */
+        .bg-layer { position:fixed; inset:0; z-index:0; pointer-events:none; }
+        .bg-layer::before { content:''; position:absolute; inset:0; background:radial-gradient(ellipse at 50% 30%, rgba(255,107,0,0.08) 0%, transparent 60%); }
+        .bg-layer::after { content:''; position:absolute; inset:0; background:url("data:image/svg+xml,%3Csvg width='60' height='60' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M30 0L60 30L30 60L0 30Z' fill='none' stroke='rgba(255,107,0,0.03)' stroke-width='0.5'/%3E%3C/svg%3E"); }
+
+        .content { position:relative; z-index:1; max-width:900px; margin:0 auto; padding:20px; padding-bottom:80px; }
+
+        /* === LANGUAGE SWITCHER === */
+        .lang-bar { position:fixed; top:12px; right:12px; display:flex; gap:4px; z-index:100; background:rgba(26,15,20,0.9); border:1px solid var(--border); border-radius:8px; padding:3px; backdrop-filter:blur(10px); }
+        .lang-btn { padding:4px 10px; border-radius:6px; border:none; background:transparent; color:var(--dim); cursor:pointer; font-size:0.8rem; font-weight:600; transition:all .2s; }
+        .lang-btn.active { background:var(--fire); color:#000; }
+
+        /* === HEADER === */
+        .back-link { display:inline-flex; align-items:center; gap:6px; color:var(--dim); text-decoration:none; font-size:.85rem; margin-bottom:20px; transition:color .2s; }
+        .back-link:hover { color:var(--fire); }
+        .shrine-title { font-family:Cinzel,serif; font-size:clamp(2rem,6vw,3.5rem); text-align:center; font-weight:900; background:linear-gradient(135deg,var(--fire),var(--gold),var(--fire)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; text-shadow:0 0 60px rgba(255,107,0,0.3); line-height:1.1; margin-bottom:8px; animation:titlePulse 4s ease-in-out infinite; }
+        @keyframes titlePulse { 0%,100%{filter:brightness(1)} 50%{filter:brightness(1.2)} }
+        .shrine-subtitle { text-align:center; font-family:MedievalSharp,serif; color:var(--dim); font-size:1.1rem; margin-bottom:32px; font-style:italic; }
+
+        /* === GLOBAL COUNTER === */
+        .counter-shrine { text-align:center; margin-bottom:32px; padding:24px; background:linear-gradient(135deg,rgba(255,107,0,0.05),rgba(139,92,246,0.05)); border:1px solid var(--border); border-radius:16px; position:relative; overflow:hidden; }
+        .counter-shrine::before { content:''; position:absolute; inset:-2px; border-radius:16px; background:conic-gradient(from 0deg,transparent,var(--fire),transparent,var(--purple),transparent); opacity:0.3; animation:rotateBorder 8s linear infinite; z-index:-1; }
+        @keyframes rotateBorder { to{transform:rotate(360deg)} }
+        .counter-label { font-family:Cinzel,serif; font-size:.9rem; color:var(--dim); text-transform:uppercase; letter-spacing:3px; margin-bottom:8px; }
+        .counter-number { font-family:Cinzel,serif; font-size:clamp(2.5rem,8vw,4.5rem); font-weight:900; color:var(--gold); text-shadow:0 0 30px rgba(255,215,0,0.4); transition:all .3s; }
+        .counter-sub { font-size:.85rem; color:var(--dim); margin-top:4px; }
+        .milestone-bar { margin-top:16px; height:6px; background:rgba(255,255,255,0.05); border-radius:3px; overflow:hidden; }
+        .milestone-fill { height:100%; border-radius:3px; background:linear-gradient(90deg,var(--fire),var(--gold)); transition:width 1s ease; }
+        .milestone-label { display:flex; justify-content:space-between; font-size:.75rem; color:var(--dim); margin-top:4px; }
+
+        /* === THE ALTAR === */
+        .altar { position:relative; margin:0 auto 32px; max-width:600px; }
+        .altar-frame { background:var(--altar); border:2px solid var(--border); border-radius:20px; padding:40px 30px; text-align:center; position:relative; overflow:hidden; min-height:350px; display:flex; flex-direction:column; align-items:center; justify-content:center; transition:all .5s; }
+        .altar-frame.shaking { animation:shake .5s ease-in-out; }
+        .altar-frame.heavy-shake { animation:heavyShake .8s ease-in-out; }
+        @keyframes shake { 0%,100%{transform:translate(0)} 25%{transform:translate(-4px,2px)} 50%{transform:translate(4px,-2px)} 75%{transform:translate(-2px,4px)} }
+        @keyframes heavyShake { 0%,100%{transform:translate(0)} 10%{transform:translate(-8px,4px)} 20%{transform:translate(8px,-6px)} 30%{transform:translate(-6px,8px)} 40%{transform:translate(6px,-4px)} 50%{transform:translate(-4px,6px)} 60%{transform:translate(4px,-8px)} 70%{transform:translate(-8px,4px)} 80%{transform:translate(6px,-2px)} 90%{transform:translate(-2px,6px)} }
+
+        /* Runes */
+        .runes { position:absolute; inset:0; pointer-events:none; opacity:0.15; }
+        .rune { position:absolute; font-size:1.8rem; color:var(--fire); opacity:0; transition:opacity .5s, text-shadow .5s; }
+        .rune.active { opacity:1; text-shadow:0 0 20px var(--fire); animation:runeFloat 3s ease-in-out infinite; }
+        @keyframes runeFloat { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-6px)} }
+        .rune:nth-child(1){top:10%;left:8%} .rune:nth-child(2){top:10%;right:8%} .rune:nth-child(3){top:45%;left:3%} .rune:nth-child(4){top:45%;right:3%} .rune:nth-child(5){bottom:10%;left:12%} .rune:nth-child(6){bottom:10%;right:12%} .rune:nth-child(7){top:25%;left:15%} .rune:nth-child(8){top:25%;right:15%}
+
+        /* Throne */
+        .throne { font-size:5rem; margin-bottom:16px; filter:grayscale(0.3); transition:all .5s; }
+        .throne.glow { filter:grayscale(0) drop-shadow(0 0 30px var(--fire)); }
+        .throne-text { font-family:MedievalSharp,serif; font-size:1.1rem; color:var(--dim); max-width:300px; margin:0 auto; line-height:1.5; transition:all .5s; }
+        .throne-text.dramatic { color:var(--fire); font-size:1.3rem; text-shadow:0 0 20px rgba(255,107,0,0.5); }
+
+        /* Result overlay */
+        .result-overlay { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; background:rgba(10,6,8,0.95); opacity:0; pointer-events:none; transition:opacity .3s; z-index:10; border-radius:20px; }
+        .result-overlay.show { opacity:1; pointer-events:auto; }
+        .result-text { font-family:Cinzel,serif; font-size:1.5rem; text-align:center; padding:20px; max-width:400px; line-height:1.5; }
+        .result-text.fail { color:var(--dim); }
+        .result-text.legendary { color:var(--gold); text-shadow:0 0 30px rgba(255,215,0,0.5); font-size:1.8rem; }
+        .result-text.mythic { color:var(--fire); text-shadow:0 0 40px rgba(255,107,0,0.6); font-size:2rem; animation:mythicPulse 1s ease-in-out infinite; }
+        @keyframes mythicPulse { 0%,100%{text-shadow:0 0 40px rgba(255,107,0,0.6)} 50%{text-shadow:0 0 80px rgba(255,107,0,0.9)} }
+        .result-sub { color:var(--dim); font-size:.9rem; margin-top:12px; text-align:center; }
+        .result-card { margin-top:16px; text-align:center; perspective:800px; }
+        .result-card .card-name { font-family:Cinzel,serif; font-weight:700; font-size:1.1rem; color:var(--gold); margin-top:10px; }
+        .result-card .card-rarity { font-size:.8rem; color:var(--fire); text-transform:uppercase; letter-spacing:2px; margin-top:4px; }
+        .result-card-art { width:180px; height:240px; margin:0 auto; border-radius:12px; overflow:hidden; position:relative; animation:cardRevealFlip .8s ease-out; box-shadow:0 0 0 3px var(--gold), 0 0 30px rgba(255,215,0,0.3); }
+        .result-card-art.mythic { box-shadow:0 0 0 3px var(--fire), 0 0 40px rgba(255,107,0,0.5), 0 0 80px rgba(255,107,0,0.2); }
+        .result-card-art.legendary { box-shadow:0 0 0 3px var(--gold), 0 0 35px rgba(255,215,0,0.4), 0 0 60px rgba(255,215,0,0.15); }
+        .result-card-art.epic { box-shadow:0 0 0 3px var(--purple), 0 0 30px rgba(139,92,246,0.4); }
+        .result-card-art.rare { box-shadow:0 0 0 3px var(--nwg), 0 0 25px rgba(0,212,255,0.3); }
+        .result-card-art img { width:100%; height:100%; object-fit:cover; display:block; }
+        .result-card-sparkles { position:absolute; inset:0; pointer-events:none; }
+        @keyframes cardRevealFlip { 0%{transform:rotateY(180deg) scale(0.5); opacity:0} 40%{transform:rotateY(90deg) scale(0.8); opacity:0.5} 100%{transform:rotateY(0) scale(1); opacity:1} }
+        @keyframes cardRevealParticle { 0%{opacity:1;transform:translate(0,0) scale(1)} 100%{opacity:0;transform:translate(var(--px),var(--py)) scale(0)} }
+        .result-card .view-in-carousel { margin-top:10px; padding:6px 16px; border:1px solid var(--border); background:transparent; color:var(--nwg); border-radius:8px; font-size:.75rem; cursor:pointer; transition:all .2s; letter-spacing:1px; text-transform:uppercase; }
+        .result-card .view-in-carousel:hover { border-color:var(--nwg); background:rgba(0,212,255,0.08); }
+
+        /* === SUMMON BUTTON === */
+        .summon-area { text-align:center; margin-bottom:32px; }
+        .summon-btn { font-family:Cinzel,serif; font-size:1.4rem; font-weight:900; padding:18px 48px; border:2px solid var(--fire); background:linear-gradient(135deg,rgba(255,107,0,0.15),rgba(255,107,0,0.05)); color:var(--fire); border-radius:12px; cursor:pointer; text-transform:uppercase; letter-spacing:3px; transition:all .3s; position:relative; overflow:hidden; }
+        .summon-btn:hover { background:linear-gradient(135deg,rgba(255,107,0,0.25),rgba(255,107,0,0.1)); box-shadow:0 0 40px rgba(255,107,0,0.3); transform:translateY(-2px); }
+        .summon-btn:active { transform:translateY(0); }
+        .summon-btn:disabled { opacity:0.4; cursor:not-allowed; transform:none; box-shadow:none; }
+        .summon-btn::after { content:''; position:absolute; inset:0; background:linear-gradient(90deg,transparent,rgba(255,107,0,0.1),transparent); transform:translateX(-100%); }
+        .summon-btn:hover::after { animation:shimmer 1.5s ease infinite; }
+        @keyframes shimmer { to{transform:translateX(100%)} }
+        .summon-cost { display:flex; align-items:center; justify-content:center; gap:6px; margin-top:10px; font-size:.85rem; color:var(--dim); }
+        .summon-cost img { width:18px; height:18px; }
+        .pity-counter { font-size:.8rem; color:var(--purple); margin-top:6px; }
+
+        /* === FAIL MESSAGES === */
+        .fail-msgs { font-family:MedievalSharp,serif; font-style:italic; }
+
+        /* === PRAYER WALL === */
+        .prayer-section { margin-top:40px; }
+        .section-head { font-family:Cinzel,serif; font-size:1.3rem; color:var(--gold); margin-bottom:16px; text-align:center; }
+        .prayer-form { display:flex; gap:8px; margin-bottom:20px; }
+        .prayer-input { flex:1; padding:12px 16px; background:var(--altar); border:1px solid var(--border); border-radius:10px; color:var(--text); font-size:.9rem; font-family:inherit; outline:none; transition:border-color .2s; }
+        .prayer-input:focus { border-color:var(--fire); }
+        .prayer-input::placeholder { color:var(--dim); }
+        .prayer-send { padding:12px 24px; background:var(--fire); border:none; border-radius:10px; color:#000; font-weight:700; cursor:pointer; font-family:Cinzel,serif; font-size:.9rem; transition:all .2s; }
+        .prayer-send:hover { background:var(--gold); }
+        .prayer-send:disabled { opacity:0.4; cursor:not-allowed; }
+        .prayer-wall { display:flex; flex-direction:column; gap:10px; max-height:400px; overflow-y:auto; padding-right:8px; }
+        .prayer-wall::-webkit-scrollbar { width:4px; } .prayer-wall::-webkit-scrollbar-thumb { background:var(--border); border-radius:2px; }
+        .prayer-card { padding:14px; background:var(--altar); border:1px solid var(--border); border-radius:10px; position:relative; }
+        .prayer-text { font-size:.9rem; line-height:1.5; margin-bottom:6px; }
+        .prayer-meta { display:flex; justify-content:space-between; align-items:center; font-size:.75rem; color:var(--dim); }
+        .prayer-flames { cursor:pointer; transition:all .2s; padding:4px 8px; border-radius:6px; background:rgba(255,107,0,0.05); border:1px solid transparent; }
+        .prayer-flames:hover { border-color:var(--fire); background:rgba(255,107,0,0.1); }
+
+        /* === LEADERBOARD === */
+        .leaderboard { margin-top:40px; }
+        .lb-table { width:100%; border-collapse:collapse; }
+        .lb-table th { font-family:Cinzel,serif; text-align:left; padding:10px 8px; border-bottom:2px solid var(--border); color:var(--dim); font-size:.75rem; text-transform:uppercase; letter-spacing:1px; }
+        .lb-table td { padding:8px; border-bottom:1px solid rgba(255,255,255,0.03); font-size:.85rem; }
+        .lb-table tr:hover { background:rgba(255,107,0,0.03); }
+        .lb-rank { font-family:Cinzel,serif; font-weight:700; }
+        .lb-rank.gold { color:var(--gold); } .lb-rank.silver { color:#c0c0c0; } .lb-rank.bronze { color:#cd7f32; }
+
+        /* === SHARE BANNER === */
+        .share-bar { display:flex; gap:8px; justify-content:center; margin-top:24px; flex-wrap:wrap; }
+        .share-btn { padding:10px 20px; border-radius:10px; border:1px solid var(--border); background:var(--altar); color:var(--text); font-size:.85rem; cursor:pointer; transition:all .2s; display:flex; align-items:center; gap:6px; }
+        .share-btn:hover { border-color:var(--fire); color:var(--fire); }
+
+        /* === EMBERS === */
+        .embers { position:fixed; inset:0; pointer-events:none; z-index:0; overflow:hidden; }
+        .ember { position:absolute; width:3px; height:3px; border-radius:50%; background:var(--fire); opacity:0; animation:emberRise linear infinite; }
+        @keyframes emberRise { 0%{opacity:0;transform:translateY(100vh) scale(0)} 10%{opacity:0.8} 90%{opacity:0.3} 100%{opacity:0;transform:translateY(-20vh) scale(1.5) translateX(var(--drift))} }
+
+        /* === MILESTONE UNLOCKS === */
+        .milestone-unlock { position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); z-index:200; padding:32px 48px; background:rgba(10,6,8,0.98); border:2px solid var(--gold); border-radius:20px; text-align:center; opacity:0; pointer-events:none; transition:opacity .5s; }
+        .milestone-unlock.show { opacity:1; pointer-events:auto; animation:milestoneIn .5s ease; }
+        @keyframes milestoneIn { 0%{transform:translate(-50%,-50%) scale(0.8)} 100%{transform:translate(-50%,-50%) scale(1)} }
+        .milestone-unlock h2 { font-family:Cinzel,serif; color:var(--gold); font-size:1.5rem; margin-bottom:8px; }
+        .milestone-unlock p { color:var(--dim); }
+
+        /* === CARD CAROUSEL === */
+        .carousel-wrap { position:relative; display:flex; align-items:center; gap:8px; margin:0 auto; max-width:800px; }
+        .carousel-viewport { flex:1; overflow:hidden; border-radius:16px; }
+        .carousel-track { display:flex; transition:transform .5s cubic-bezier(.25,.8,.25,1); will-change:transform; }
+        .carousel-arrow { width:40px; height:40px; border-radius:50%; border:1px solid var(--border); background:var(--altar); color:var(--text); font-size:1.2rem; cursor:pointer; display:flex; align-items:center; justify-content:center; flex-shrink:0; transition:all .2s; z-index:5; }
+        .carousel-arrow:hover { border-color:var(--fire); color:var(--fire); background:rgba(255,107,0,0.08); }
+        .carousel-dots { display:flex; justify-content:center; gap:6px; margin-top:12px; }
+        .carousel-dot { width:8px; height:8px; border-radius:50%; background:var(--border); cursor:pointer; transition:all .3s; border:none; }
+        .carousel-dot.active { background:var(--fire); transform:scale(1.3); box-shadow:0 0 8px rgba(255,107,0,0.5); }
+
+        /* --- Card in Carousel --- */
+        .tcg-card { flex:0 0 100%; max-width:100%; display:flex; align-items:center; justify-content:center; padding:20px; cursor:pointer; }
+        .tcg-card-inner { position:relative; width:280px; max-width:90vw; aspect-ratio:3/4; border-radius:16px; overflow:hidden; transition:transform .4s, box-shadow .4s; transform-style:preserve-3d; }
+        .tcg-card-inner:hover { transform:scale(1.03) translateY(-4px); }
+        
+        /* Rarity card frames */
+        .tcg-card-inner.mythic { box-shadow:0 0 30px rgba(255,107,0,0.4), 0 0 60px rgba(255,107,0,0.15), inset 0 0 30px rgba(255,107,0,0.1); }
+        .tcg-card-inner.mythic::before { content:''; position:absolute; inset:-3px; border-radius:18px; background:conic-gradient(from 0deg, #ff6b00, #ffd700, #ff3d00, #ff6b00, #ffd700, #ff3d00, #ff6b00); z-index:-1; animation:mythicSpin 4s linear infinite; }
+        @keyframes mythicSpin { to{background:conic-gradient(from 360deg, #ff6b00, #ffd700, #ff3d00, #ff6b00, #ffd700, #ff3d00, #ff6b00);} }
+        
+        .tcg-card-inner.legendary { box-shadow:0 0 25px rgba(255,215,0,0.35), 0 0 50px rgba(255,215,0,0.1); }
+        .tcg-card-inner.legendary::before { content:''; position:absolute; inset:-3px; border-radius:18px; background:conic-gradient(from 0deg, #ffd700, #b8860b, #ffd700, #daa520, #ffd700); z-index:-1; animation:legendSpin 6s linear infinite; }
+        @keyframes legendSpin { to{background:conic-gradient(from 360deg, #ffd700, #b8860b, #ffd700, #daa520, #ffd700);} }
+        
+        .tcg-card-inner.epic { box-shadow:0 0 20px rgba(139,92,246,0.35), 0 0 40px rgba(139,92,246,0.1); }
+        .tcg-card-inner.epic::before { content:''; position:absolute; inset:-2px; border-radius:18px; background:linear-gradient(135deg, #8b5cf6, #6d28d9, #8b5cf6); z-index:-1; }
+        
+        .tcg-card-inner.rare { box-shadow:0 0 15px rgba(0,212,255,0.25), 0 0 30px rgba(0,212,255,0.08); }
+        .tcg-card-inner.rare::before { content:''; position:absolute; inset:-2px; border-radius:18px; background:linear-gradient(135deg, #00d4ff, #0891b2, #00d4ff); z-index:-1; }
+
+        .tcg-card-art { width:100%; height:100%; object-fit:cover; display:block; border-radius:14px; }
+        .tcg-card-overlay { position:absolute; bottom:0; left:0; right:0; padding:16px 14px 14px; background:linear-gradient(transparent, rgba(0,0,0,0.85) 40%); border-radius:0 0 14px 14px; }
+        .tcg-card-name { font-family:Cinzel,serif; font-weight:700; font-size:.95rem; color:#fff; text-shadow:0 2px 8px rgba(0,0,0,0.8); line-height:1.2; }
+        .tcg-card-tag { font-size:.6rem; text-transform:uppercase; letter-spacing:2px; margin-top:4px; font-weight:700; }
+        .tcg-card-tag.mythic { color:var(--fire); } .tcg-card-tag.legendary { color:var(--gold); } .tcg-card-tag.epic { color:var(--purple); } .tcg-card-tag.rare { color:var(--nwg); }
+        .tcg-card-stats-bar { display:flex; gap:10px; margin-top:6px; font-size:.7rem; font-weight:600; }
+        .tcg-card-stats-bar .stat { display:flex; align-items:center; gap:3px; }
+        .tcg-card-stats-bar .stat-atk { color:#ff6b6b; } .tcg-card-stats-bar .stat-hp { color:#51cf66; } .tcg-card-stats-bar .stat-cost { color:#ffd700; }
+
+        /* Holographic shimmer effect on hover */
+        .tcg-card-holo { position:absolute; inset:0; border-radius:14px; opacity:0; transition:opacity .3s; pointer-events:none; background:linear-gradient(125deg, transparent 20%, rgba(255,255,255,0.08) 40%, rgba(255,255,255,0.15) 50%, rgba(255,255,255,0.08) 60%, transparent 80%); background-size:200% 200%; }
+        .tcg-card-inner:hover .tcg-card-holo { opacity:1; animation:holoShimmer 2s ease infinite; }
+        @keyframes holoShimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
+
+        /* NanoBanana branding watermark */
+        .nanobanana-badge { display:inline-flex; align-items:center; gap:6px; padding:4px 12px; background:rgba(255,215,0,0.06); border:1px solid rgba(255,215,0,0.15); border-radius:20px; font-size:.7rem; font-weight:600; color:var(--gold); letter-spacing:1px; margin-top:16px; }
+        .nanobanana-badge .nb-icon { font-size:1rem; }
+        .carousel-branding { text-align:center; margin-top:16px; opacity:0.7; transition:opacity .3s; }
+        .carousel-branding:hover { opacity:1; }
+
+        /* Auto-play indicator */
+        .carousel-auto-indicator { display:flex; align-items:center; justify-content:center; gap:8px; margin-top:8px; }
+        .carousel-auto-btn { background:none; border:1px solid var(--border); color:var(--dim); border-radius:6px; padding:3px 10px; font-size:.65rem; cursor:pointer; transition:all .2s; text-transform:uppercase; letter-spacing:1px; }
+        .carousel-auto-btn:hover, .carousel-auto-btn.active { border-color:var(--fire); color:var(--fire); }
+
+        /* Card highlight glow (when just pulled) */
+        .tcg-card-inner.just-pulled { animation:justPulled 2s ease-in-out infinite; }
+        @keyframes justPulled { 0%,100%{box-shadow:0 0 20px rgba(255,107,0,0.3)} 50%{box-shadow:0 0 50px rgba(255,107,0,0.6), 0 0 80px rgba(255,215,0,0.3)} }
+
+        /* Card detail panel */
+        .card-detail { margin-top:24px; padding:24px; background:var(--altar); border:1px solid var(--border); border-radius:16px; display:flex; gap:20px; align-items:flex-start; animation:detailIn .3s ease; position:relative; overflow:hidden; }
+        .card-detail::before { content:''; position:absolute; top:0; left:0; right:0; height:3px; background:var(--border); }
+        .card-detail.detail-mythic { border-color:rgba(255,107,0,0.3); }
+        .card-detail.detail-mythic::before { background:linear-gradient(90deg, transparent, var(--fire), transparent); }
+        .card-detail.detail-legendary { border-color:rgba(255,215,0,0.3); }
+        .card-detail.detail-legendary::before { background:linear-gradient(90deg, transparent, var(--gold), transparent); }
+        .card-detail.detail-epic { border-color:rgba(139,92,246,0.3); }
+        .card-detail.detail-epic::before { background:linear-gradient(90deg, transparent, var(--purple), transparent); }
+        .card-detail.detail-rare { border-color:rgba(0,212,255,0.3); }
+        .card-detail.detail-rare::before { background:linear-gradient(90deg, transparent, var(--nwg), transparent); }
+        @keyframes detailIn { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
+        .card-detail-art { width:120px; flex-shrink:0; border-radius:10px; overflow:hidden; }
+        .card-detail-art img { width:100%; display:block; }
+        .card-detail-info { flex:1; min-width:0; }
+        .card-detail-name { font-family:Cinzel,serif; font-size:1.2rem; font-weight:700; color:var(--gold); }
+        .card-detail-rarity { font-size:.7rem; text-transform:uppercase; letter-spacing:2px; margin:4px 0 10px; font-weight:700; }
+        .card-detail-desc { font-size:.85rem; color:var(--text); line-height:1.5; margin-bottom:8px; }
+        .card-detail-flavor { font-size:.8rem; color:var(--dim); font-style:italic; margin-bottom:12px; font-family:MedievalSharp,serif; }
+        .card-detail-stats { display:flex; flex-wrap:wrap; gap:8px; }
+        .card-detail-stats .stat-chip { padding:4px 10px; border-radius:6px; font-size:.75rem; font-weight:600; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.06); }
+
+        /* === RESPONSIVE === */
+        @media(max-width:640px) {
+            .content { padding:12px; padding-top:50px; }
+            .altar-frame { padding:24px 16px; min-height:280px; }
+            .throne { font-size:3.5rem; }
+            .summon-btn { font-size:1.1rem; padding:14px 32px; }
+            .prayer-form { flex-direction:column; }
+            .tcg-card-inner { width:240px; }
+            .card-detail { flex-direction:column; align-items:center; text-align:center; }
+            .card-detail-art { width:160px; }
+            .card-detail-stats { justify-content:center; }
+            .carousel-arrow { width:32px; height:32px; font-size:1rem; }
+        }
+
+        /* (old card grid CSS removed - replaced by carousel above) */
+    </style>
+</head>
+<body data-page-id="shrine">
+    <div class="bg-layer"></div>
+    <div class="embers" id="embers"></div>
+
+    <!-- Language Switcher -->
+    <div class="lang-bar">
+        <button class="lang-btn active" data-lang="en" onclick="switchLang('en')">EN</button>
+        <button class="lang-btn" data-lang="zh" onclick="switchLang('zh')">中文</button>
+        <button class="lang-btn" data-lang="th" onclick="switchLang('th')">ไทย</button>
+    </div>
+
+    <div class="content">
+        <a href="/" class="back-link" data-i18n="backHome">&larr; Back to Guild</a>
+
+        <h1 class="shrine-title" data-i18n="shrineTitle">THE SUMMONING SHRINE</h1>
+        <p class="shrine-subtitle" data-i18n="shrineSubtitle">"We tried asking nicely. Now we try ritual."</p>
+
+        <!-- GLOBAL COUNTER -->
+        <div class="counter-shrine">
+            <div class="counter-label" data-i18n="globalSummons">Global Summoning Attempts</div>
+            <div class="counter-number" id="globalCounter">0</div>
+            <div class="counter-sub" id="counterSub" data-i18n="counterSub">The Bald One has not yet answered.</div>
+            <div class="milestone-bar"><div class="milestone-fill" id="milestoneFill" style="width:0%"></div></div>
+            <div class="milestone-label">
+                <span id="milestoneFrom">0</span>
+                <span id="milestoneTo" data-i18n="nextMilestone">Next milestone: 10,000</span>
+            </div>
+        </div>
+
+        <!-- THE ALTAR -->
+        <div class="altar">
+            <div class="altar-frame" id="altarFrame">
+                <div class="runes" id="runes">
+                    <span class="rune">&#5765;</span><span class="rune">&#5769;</span>
+                    <span class="rune">&#5768;</span><span class="rune">&#5766;</span>
+                    <span class="rune">&#5770;</span><span class="rune">&#5763;</span>
+                    <span class="rune">&#5764;</span><span class="rune">&#5767;</span>
+                </div>
+                <div class="throne" id="throne">&#128186;</div>
+                <div class="throne-text" id="throneText" data-i18n="throneEmpty">The throne stands empty. The Bald One has not yet arrived.</div>
+
+                <div class="result-overlay" id="resultOverlay">
+                    <div class="result-text" id="resultText"></div>
+                    <div class="result-sub" id="resultSub"></div>
+                    <div class="result-card" id="resultCard" style="display:none"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- SUMMON BUTTON -->
+        <div class="summon-area">
+            <button class="summon-btn" id="summonBtn" onclick="performSummon()" data-i18n="beginSummoning">BEGIN SUMMONING</button>
+            <div class="summon-cost">
+                <span data-i18n="cost">Cost:</span> 1 <img src="/static/icons/sacred-log.png" alt="Sacred Log"> <span data-i18n="sacredLog">Sacred Log</span>
+            </div>
+            <div class="pity-counter" id="pityDisplay"></div>
+        </div>
+
+        <!-- SHARE BAR -->
+        <div class="share-bar">
+            <button class="share-btn" onclick="shareResult('twitter')">&#120143; <span data-i18n="shareTwitter">Share on X</span></button>
+            <button class="share-btn" onclick="shareResult('copy')">&#128203; <span data-i18n="copyLink">Copy Link</span></button>
+            <button class="share-btn" onclick="shareResult('reddit')">&#129428; <span data-i18n="shareReddit">Post to Reddit</span></button>
+        </div>
+
+        <!-- PRAYER WALL -->
+        <div class="prayer-section">
+            <h2 class="section-head" data-i18n="prayerWallTitle">&#128220; Prayer Wall</h2>
+            <div class="prayer-form">
+                <input class="prayer-input" id="prayerInput" maxlength="200" data-i18n-placeholder="prayerPlaceholder" placeholder="Leave a prayer for The Bald One...">
+                <button class="prayer-send" id="prayerSend" onclick="submitPrayer()" data-i18n="pray">PRAY</button>
+            </div>
+            <div class="prayer-wall" id="prayerWall"></div>
+        </div>
+
+        <!-- TOP SUMMONERS -->
+        <div class="leaderboard">
+            <h2 class="section-head" data-i18n="topSummoners">&#127942; Top Summoners</h2>
+            <table class="lb-table">
+                <thead><tr>
+                    <th>#</th>
+                    <th data-i18n="thSummoner">Summoner</th>
+                    <th data-i18n="thAttempts">Attempts</th>
+                    <th data-i18n="thBestPull">Best Pull</th>
+                </tr></thead>
+                <tbody id="leaderboardBody"></tbody>
+            </table>
+        </div>
+
+        <!-- REACT LORD COLLECTION - PREMIUM CARD CAROUSEL -->
+        <div class="card-collection" style="margin-top:48px;">
+            <h2 class="section-head" data-i18n="reactLordCollection">&#127183; The React Lord Collection</h2>
+            <p style="text-align:center;color:var(--dim);font-size:.85rem;margin-bottom:24px;" data-i18n="collectionDesc">7 shrine-exclusive cards. Collect them all to unlock the ultimate set bonus.</p>
+            
+            <!-- CAROUSEL -->
+            <div class="carousel-wrap">
+                <button class="carousel-arrow carousel-prev" onclick="carouselMove(-1)">&#10094;</button>
+                <div class="carousel-viewport" id="carouselViewport">
+                    <div class="carousel-track" id="carouselTrack"></div>
+                </div>
+                <button class="carousel-arrow carousel-next" onclick="carouselMove(1)">&#10095;</button>
+            </div>
+            <div class="carousel-dots" id="carouselDots"></div>
+            <div class="carousel-auto-indicator">
+                <button class="carousel-auto-btn active" id="autoPlayBtn" onclick="toggleAutoPlay()">&#9654; Auto</button>
+                <span style="font-size:.65rem;color:var(--dim);" id="carouselCounter">1 / 7</span>
+            </div>
+            <div class="carousel-branding">
+                <span class="nanobanana-badge"><span class="nb-icon">&#127820;</span> NanoBanana Exclusive Art</span>
+            </div>
+            
+            <!-- CARD DETAIL PANEL -->
+            <div class="card-detail" id="cardDetail" style="display:none;">
+                <div class="card-detail-art" id="detailArt"></div>
+                <div class="card-detail-info">
+                    <div class="card-detail-name" id="detailName"></div>
+                    <div class="card-detail-rarity" id="detailRarity"></div>
+                    <div class="card-detail-desc" id="detailDesc"></div>
+                    <div class="card-detail-flavor" id="detailFlavor"></div>
+                    <div class="card-detail-stats" id="detailStats"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- THE CALL TO ACTION - VIRAL BAIT -->
+        <div style="margin-top:48px;text-align:center;padding:32px 24px;background:linear-gradient(135deg,rgba(255,107,0,0.04),rgba(139,92,246,0.04));border:1px solid var(--border);border-radius:16px;">
+            <h2 class="section-head" style="margin-bottom:12px;" data-i18n="callToAction">&#128227; The Summoning Protocol</h2>
+            <p style="color:var(--dim);font-size:.9rem;line-height:1.6;max-width:600px;margin:0 auto 20px;" data-i18n="protocolDesc">A MapleStory guild built an entire summoning shrine to bring Asmongold into their game. It's been <span id="ctaCount" style="color:var(--fire);font-weight:700;">0</span> attempts. The shrine is starting to crack.</p>
+            <div style="display:flex;flex-wrap:wrap;gap:8px;justify-content:center;">
+                <a href="https://x.com/intent/tweet?text=A%20MapleStory%20guild%20built%20a%20summoning%20shrine%20to%20bring%20%40Asmongold%20into%20their%20game.%20The%20counter%20is%20rising.%20%F0%9F%92%80%20%23SummonAsmon%20%23MapleStory&url=" id="ctaTweet" target="_blank" style="display:inline-flex;align-items:center;gap:6px;padding:10px 20px;border-radius:10px;border:1px solid var(--fire);background:rgba(255,107,0,0.08);color:var(--fire);text-decoration:none;font-weight:600;font-size:.85rem;transition:all .2s;">&#120143; <span data-i18n="tweetAt">Tweet @Asmongold</span></a>
+                <a href="https://www.reddit.com/submit?title=A%20MapleStory%20guild%20built%20a%20summoning%20shrine%20for%20Asmongold&url=" id="ctaReddit" target="_blank" style="display:inline-flex;align-items:center;gap:6px;padding:10px 20px;border-radius:10px;border:1px solid var(--purple);background:rgba(139,92,246,0.08);color:var(--purple);text-decoration:none;font-weight:600;font-size:.85rem;transition:all .2s;">&#129428; <span data-i18n="postReddit">Post to r/Asmongold</span></a>
+                <button onclick="navigator.clipboard?.writeText(window.location.href);alert(T('copied'));" style="display:inline-flex;align-items:center;gap:6px;padding:10px 20px;border-radius:10px;border:1px solid var(--border);background:var(--altar);color:var(--text);font-weight:600;font-size:.85rem;cursor:pointer;transition:all .2s;">&#128279; <span data-i18n="copyUrl">Copy URL</span></button>
+            </div>
+            <p style="color:var(--dim);font-size:.75rem;margin-top:16px;font-style:italic;" data-i18n="hashtag">#SummonAsmon #MapleStory #NumbahWan</p>
+        </div>
+    </div>
+
+    <div class="milestone-unlock" id="milestonePopup">
+        <h2 id="milestoneTitle"></h2>
+        <p id="milestoneDesc"></p>
+    </div>
+
+    <script src="/static/nw-nav.js" defer></script>
+    <script src="/static/nw-wallet.js" defer></script>
+    <script src="/static/nw-i18n-core.js"></script>
+    <script>
+    // =========================================================================
+    // TRANSLATIONS
+    // =========================================================================
+    const SHRINE_I18N = {
+        en: {
+            backHome: '\u2190 Back to Guild',
+            shrineTitle: 'THE SUMMONING SHRINE',
+            shrineSubtitle: '"We tried asking nicely. Now we try ritual."',
+            globalSummons: 'Global Summoning Attempts',
+            counterSub: 'The Bald One has not yet answered.',
+            nextMilestone: 'Next milestone: {target}',
+            throneEmpty: 'The throne stands empty. The Bald One has not yet arrived.',
+            beginSummoning: 'BEGIN SUMMONING',
+            cost: 'Cost:',
+            sacredLog: 'Sacred Log',
+            pityDisplay: 'Pity: {count}/200 \u2014 Mythic guaranteed at 200',
+            shareTwitter: 'Share on X',
+            copyLink: 'Copy Link',
+            shareReddit: 'Post to Reddit',
+            prayerWallTitle: '\ud83d\udcdc Prayer Wall',
+            prayerPlaceholder: 'Leave a prayer for The Bald One...',
+            pray: 'PRAY',
+            topSummoners: '\ud83c\udfc6 Top Summoners',
+            thSummoner: 'Summoner',
+            thAttempts: 'Attempts',
+            thBestPull: 'Best Pull',
+            copied: 'Link copied!',
+            needLogs: 'Not enough Sacred Logs! Earn more at /arcade',
+            summoning: 'SUMMONING...',
+            // Fail messages
+            fail1: 'The Bald One ignores your plea... Try again.',
+            fail2: '"It is what it is." \u2014 The Void',
+            fail3: 'You hear a distant keyboard clacking... but no one appears.',
+            fail4: 'The shrine rumbles. A cockroach scurries away. Nothing else.',
+            fail5: 'A faint voice: "Dude, I\'m busy." The ritual fails.',
+            fail6: 'The runes flicker and spell out "LUL".',
+            fail7: 'You feel a presence... it was just McConnell.',
+            fail8: 'The shrine demands more copium. Try again.',
+            fail9: 'A Dr Pepper can materializes, then vanishes. Close, but no.',
+            fail10: 'The chat whispers KEKW. The summoning fails.',
+            fail11: '"React to this." The throne remains empty.',
+            fail12: 'The energy was not bald enough. Channel more.',
+            // Card drops
+            gotCard: 'A CARD MATERIALIZES!',
+            cardObtained: 'Card obtained! Check your collection.',
+            // Milestones
+            milestone10k: 'The shrine trembles...',
+            milestone10kDesc: 'Phase 2 unlocked! 10,000 summoners have tried.',
+            milestone100k: 'Why do I hear boss music?',
+            milestone100kDesc: 'The shrine cracks open. Something stirs within.',
+            milestone1m: 'IMPOSSIBLE.',
+            milestone1mDesc: '1,000,000 attempts. A cockroach emerges. It\u2019s him.',
+            // Prayer
+            prayerSent: 'Prayer sent!',
+            prayerLimit: 'One prayer per day, mortal.',
+            flameCount: '{count} \ud83d\udd25',
+            timeAgo: '{time} ago',
+            // Share
+            shareText: 'I tried to summon Asmongold into MapleStory. Attempt #{count}. He still hasn\'t come. \ud83d\udc80',
+            shareUrl: 'Can you summon The Bald One?',
+            reactLordCollection: '\ud83c\udccf The React Lord Collection',
+            collectionDesc: '7 shrine-exclusive cards. Collect them all to unlock the ultimate set bonus.',
+            callToAction: '\ud83d\udce3 The Summoning Protocol',
+            protocolDesc: 'A MapleStory guild built an entire summoning shrine to bring Asmongold into their game. It\'s been {count} attempts. The shrine is starting to crack.',
+            tweetAt: 'Tweet @Asmongold',
+            postReddit: 'Post to r/Asmongold',
+            copyUrl: 'Copy URL',
+            hashtag: '#SummonAsmon #MapleStory #NumbahWan',
+            dropRate: 'Drop: {rate}%',
+            owned: 'OWNED',
+            notOwned: 'Not yet'
+        },
+        zh: {
+            backHome: '\u2190 \u8fd4\u56de\u516c\u6703',
+            shrineTitle: '\u53ec\u559a\u795e\u6bbf',
+            shrineSubtitle: '\u300c\u6211\u5011\u5df2\u7d93\u597d\u597d\u554f\u904e\u4e86\u3002\u73fe\u5728\u8a66\u8a66\u5100\u5f0f\u3002\u300d',
+            globalSummons: '\u5168\u7403\u53ec\u559a\u6b21\u6578',
+            counterSub: '\u79bf\u982d\u5927\u4eba\u5c1a\u672a\u56de\u61c9\u3002',
+            nextMilestone: '\u4e0b\u500b\u91cc\u7a0b\u7891\uff1a{target}',
+            throneEmpty: '\u738b\u5ea7\u7a7a\u7a7a\u5982\u4e5f\u3002\u79bf\u982d\u5927\u4eba\u5c1a\u672a\u964d\u81e8\u3002',
+            beginSummoning: '\u958b\u59cb\u53ec\u559a',
+            cost: '\u8cbb\u7528\uff1a',
+            sacredLog: '\u795e\u8056\u539f\u6728',
+            pityDisplay: '\u4fdd\u5e95\uff1a{count}/200 \u2014 200\u6b21\u5fc5\u5f97\u795e\u8a71\u5361',
+            shareTwitter: '\u5206\u4eab\u5230 X',
+            copyLink: '\u8907\u88fd\u9023\u7d50',
+            shareReddit: '\u767c\u4f48\u5230 Reddit',
+            prayerWallTitle: '\ud83d\udcdc \u7948\u79b1\u7246',
+            prayerPlaceholder: '\u7559\u4e0b\u5c0d\u79bf\u982d\u5927\u4eba\u7684\u7948\u79b1...',
+            pray: '\u7948\u79b1',
+            topSummoners: '\ud83c\udfc6 \u53ec\u559a\u5e2b\u6392\u884c\u699c',
+            thSummoner: '\u53ec\u559a\u5e2b',
+            thAttempts: '\u6b21\u6578',
+            thBestPull: '\u6700\u4f73\u62bd\u5361',
+            copied: '\u5df2\u8907\u88fd\u9023\u7d50\uff01',
+            needLogs: '\u795e\u8056\u539f\u6728\u4e0d\u8db3\uff01\u53bb /arcade \u7372\u53d6\u66f4\u591a',
+            summoning: '\u53ec\u559a\u4e2d...',
+            fail1: '\u79bf\u982d\u5927\u4eba\u7121\u8996\u4e86\u4f60\u7684\u8acb\u6c42...\u518d\u8a66\u4e00\u6b21\u3002',
+            fail2: '\u300c\u5c31\u662f\u9019\u6a23\u3002\u300d\u2014 \u865b\u7a7a',
+            fail3: '\u4f60\u807d\u5230\u9060\u8655\u7684\u9375\u76e4\u8072...\u4f46\u7121\u4eba\u51fa\u73fe\u3002',
+            fail4: '\u795e\u6bbf\u632f\u52d5\u3002\u4e00\u96bb\u87f3\u8782\u8dd1\u8d70\u4e86\u3002\u5176\u4ed6\u4ec0\u9ebc\u90fd\u6c92\u6709\u3002',
+            fail5: '\u4e00\u500b\u5fae\u5f31\u7684\u8072\u97f3\uff1a\u300c\u8001\u5144\uff0c\u6211\u5f88\u5fd9\u3002\u300d\u5100\u5f0f\u5931\u6557\u3002',
+            fail6: '\u7b26\u6587\u9583\u720d\u4e26\u62fc\u51fa\u4e86\u300cLUL\u300d\u3002',
+            fail7: '\u4f60\u611f\u89ba\u5230\u4e00\u500b\u5b58\u5728...\u90a3\u53ea\u662f McConnell\u3002',
+            fail8: '\u795e\u6bbf\u9700\u8981\u66f4\u591a copium\u3002\u518d\u8a66\u4e00\u6b21\u3002',
+            fail9: '\u4e00\u7f50 Dr Pepper \u51fa\u73fe\u53c8\u6d88\u5931\u3002\u5dee\u4e00\u9ede\u3002',
+            fail10: '\u804a\u5929\u5ba4\u8033\u8a9e KEKW\u3002\u53ec\u559a\u5931\u6557\u3002',
+            fail11: '\u300c\u53cd\u61c9\u9019\u500b\u3002\u300d\u738b\u5ea7\u4ecd\u7136\u7a7a\u7a7a\u5982\u4e5f\u3002',
+            fail12: '\u80fd\u91cf\u4e0d\u5920\u79bf\u3002\u518d\u5f15\u5c0e\u66f4\u591a\u3002',
+            gotCard: '\u5361\u7247\u51fa\u73fe\u4e86\uff01',
+            cardObtained: '\u5df2\u7372\u5f97\u5361\u7247\uff01\u67e5\u770b\u4f60\u7684\u6536\u85cf\u3002',
+            milestone10k: '\u795e\u6bbf\u986b\u6296\u4e86...',
+            milestone10kDesc: '\u7b2c\u4e8c\u968e\u6bb5\u89e3\u9396\uff0110,000 \u540d\u53ec\u559a\u5e2b\u5df2\u5617\u8a66\u3002',
+            milestone100k: '\u70ba\u4ec0\u9ebc\u6211\u807d\u5230\u4e86 Boss \u97f3\u6a02\uff1f',
+            milestone100kDesc: '\u795e\u6bbf\u88c2\u958b\u3002\u88e1\u9762\u6709\u4ec0\u9ebc\u5728\u8e81\u52d5\u3002',
+            milestone1m: '\u4e0d\u53ef\u80fd\u3002',
+            milestone1mDesc: '1,000,000 \u6b21\u5617\u8a66\u3002\u4e00\u96bb\u87f3\u8782\u51fa\u73fe\u3002\u662f\u4ed6\u3002',
+            prayerSent: '\u7948\u79b1\u5df2\u767c\u9001\uff01',
+            prayerLimit: '\u6bcf\u65e5\u53ea\u80fd\u7948\u79b1\u4e00\u6b21\uff0c\u51e1\u4eba\u3002',
+            flameCount: '{count} \ud83d\udd25',
+            timeAgo: '{time}\u524d',
+            shareText: '\u6211\u5617\u8a66\u5728\u6953\u4e4b\u8c37\u53ec\u559a Asmongold\u3002\u7b2c #{count} \u6b21\u3002\u4ed6\u9084\u6c92\u4f86\u3002\ud83d\udc80',
+            shareUrl: '\u4f60\u80fd\u53ec\u559a\u79bf\u982d\u5927\u4eba\u55ce\uff1f',
+            reactLordCollection: '\ud83c\udccf \u53cd\u61c9\u4e4b\u738b\u5408\u96c6',
+            collectionDesc: '7 \u5f35\u795e\u6bbf\u9650\u5b9a\u5361\u3002\u96c6\u9f4a\u5168\u90e8\u89e3\u9396\u7d42\u6975\u5957\u88dd\u52a0\u6210\u3002',
+            callToAction: '\ud83d\udce3 \u53ec\u559a\u5354\u8b70',
+            protocolDesc: '\u4e00\u500b\u6953\u4e4b\u8c37\u516c\u6703\u5efa\u4e86\u4e00\u5ea7\u53ec\u559a\u795e\u6bbf\u4f86\u53ec\u559a Asmongold\u3002\u5df2\u7d93 {count} \u6b21\u5617\u8a66\u3002\u795e\u6bbf\u958b\u59cb\u88c2\u958b\u4e86\u3002',
+            tweetAt: '\u767c\u63a8 @Asmongold',
+            postReddit: '\u767c\u4f48\u5230 r/Asmongold',
+            copyUrl: '\u8907\u88fd\u7db2\u5740',
+            hashtag: '#SummonAsmon #MapleStory #NumbahWan',
+            dropRate: '\u6a5f\u7387: {rate}%',
+            owned: '\u5df2\u64c1\u6709',
+            notOwned: '\u5c1a\u672a\u7372\u5f97'
+        },
+        th: {
+            backHome: '\u2190 \u0e01\u0e25\u0e31\u0e1a\u0e2a\u0e39\u0e48\u0e01\u0e34\u0e25\u0e14\u0e4c',
+            shrineTitle: '\u0e28\u0e32\u0e25\u0e40\u0e23\u0e35\u0e22\u0e01\u0e27\u0e34\u0e0d\u0e0d\u0e32\u0e13',
+            shrineSubtitle: '"\u0e40\u0e23\u0e32\u0e25\u0e2d\u0e07\u0e16\u0e32\u0e21\u0e14\u0e35\u0e46 \u0e41\u0e25\u0e49\u0e27 \u0e15\u0e2d\u0e19\u0e19\u0e35\u0e49\u0e25\u0e2d\u0e07\u0e17\u0e33\u0e1e\u0e34\u0e18\u0e35\u0e01\u0e23\u0e23\u0e21"',
+            globalSummons: '\u0e08\u0e33\u0e19\u0e27\u0e19\u0e01\u0e32\u0e23\u0e40\u0e23\u0e35\u0e22\u0e01\u0e17\u0e31\u0e48\u0e27\u0e42\u0e25\u0e01',
+            counterSub: '\u0e1c\u0e39\u0e49\u0e28\u0e35\u0e23\u0e29\u0e30\u0e25\u0e49\u0e32\u0e19\u0e22\u0e31\u0e07\u0e44\u0e21\u0e48\u0e15\u0e2d\u0e1a',
+            nextMilestone: '\u0e40\u0e1b\u0e49\u0e32\u0e2b\u0e21\u0e32\u0e22\u0e16\u0e31\u0e14\u0e44\u0e1b: {target}',
+            throneEmpty: '\u0e1a\u0e31\u0e25\u0e25\u0e31\u0e07\u0e01\u0e4c\u0e27\u0e48\u0e32\u0e07\u0e40\u0e1b\u0e25\u0e48\u0e32 \u0e1c\u0e39\u0e49\u0e28\u0e35\u0e23\u0e29\u0e30\u0e25\u0e49\u0e32\u0e19\u0e22\u0e31\u0e07\u0e44\u0e21\u0e48\u0e21\u0e32',
+            beginSummoning: '\u0e40\u0e23\u0e34\u0e48\u0e21\u0e40\u0e23\u0e35\u0e22\u0e01',
+            cost: '\u0e04\u0e48\u0e32\u0e43\u0e0a\u0e49\u0e08\u0e48\u0e32\u0e22:',
+            sacredLog: '\u0e17\u0e48\u0e2d\u0e19\u0e44\u0e21\u0e49\u0e28\u0e31\u0e01\u0e14\u0e34\u0e4c\u0e2a\u0e34\u0e17\u0e18\u0e34\u0e4c',
+            pityDisplay: '\u0e01\u0e32\u0e23\u0e31\u0e19\u0e15\u0e35: {count}/200 \u2014 200 \u0e04\u0e23\u0e31\u0e49\u0e07\u0e01\u0e32\u0e23\u0e31\u0e19\u0e15\u0e35 Mythic',
+            shareTwitter: '\u0e41\u0e0a\u0e23\u0e4c\u0e1a\u0e19 X',
+            copyLink: '\u0e04\u0e31\u0e14\u0e25\u0e2d\u0e01\u0e25\u0e34\u0e07\u0e01\u0e4c',
+            shareReddit: '\u0e42\u0e1e\u0e2a\u0e15\u0e4c\u0e25\u0e07 Reddit',
+            prayerWallTitle: '\ud83d\udcdc \u0e01\u0e33\u0e41\u0e1e\u0e07\u0e2d\u0e18\u0e34\u0e29\u0e10\u0e32\u0e19',
+            prayerPlaceholder: '\u0e1d\u0e32\u0e01\u0e04\u0e33\u0e2d\u0e18\u0e34\u0e29\u0e10\u0e32\u0e19\u0e16\u0e36\u0e07\u0e1c\u0e39\u0e49\u0e28\u0e35\u0e23\u0e29\u0e30\u0e25\u0e49\u0e32\u0e19...',
+            pray: '\u0e2d\u0e18\u0e34\u0e29\u0e10\u0e32\u0e19',
+            topSummoners: '\ud83c\udfc6 \u0e19\u0e31\u0e01\u0e40\u0e23\u0e35\u0e22\u0e01\u0e22\u0e2d\u0e14\u0e40\u0e22\u0e35\u0e48\u0e22\u0e21',
+            thSummoner: '\u0e19\u0e31\u0e01\u0e40\u0e23\u0e35\u0e22\u0e01',
+            thAttempts: '\u0e04\u0e23\u0e31\u0e49\u0e07',
+            thBestPull: '\u0e01\u0e32\u0e23\u0e4c\u0e14\u0e17\u0e35\u0e48\u0e14\u0e35\u0e17\u0e35\u0e48\u0e2a\u0e38\u0e14',
+            copied: '\u0e04\u0e31\u0e14\u0e25\u0e2d\u0e01\u0e25\u0e34\u0e07\u0e01\u0e4c\u0e41\u0e25\u0e49\u0e27!',
+            needLogs: '\u0e17\u0e48\u0e2d\u0e19\u0e44\u0e21\u0e49\u0e28\u0e31\u0e01\u0e14\u0e34\u0e4c\u0e2a\u0e34\u0e17\u0e18\u0e34\u0e4c\u0e44\u0e21\u0e48\u0e1e\u0e2d! \u0e44\u0e1b\u0e2b\u0e32\u0e40\u0e1e\u0e34\u0e48\u0e21\u0e17\u0e35\u0e48 /arcade',
+            summoning: '\u0e01\u0e33\u0e25\u0e31\u0e07\u0e40\u0e23\u0e35\u0e22\u0e01...',
+            fail1: '\u0e1c\u0e39\u0e49\u0e28\u0e35\u0e23\u0e29\u0e30\u0e25\u0e49\u0e32\u0e19\u0e40\u0e1e\u0e34\u0e01\u0e40\u0e09\u0e22\u0e04\u0e33\u0e02\u0e2d\u0e02\u0e2d\u0e07\u0e04\u0e38\u0e13... \u0e25\u0e2d\u0e07\u0e2d\u0e35\u0e01\u0e04\u0e23\u0e31\u0e49\u0e07',
+            fail2: '"\u0e21\u0e31\u0e19\u0e01\u0e47\u0e40\u0e1b\u0e47\u0e19\u0e41\u0e1a\u0e1a\u0e19\u0e35\u0e49\u0e41\u0e2b\u0e25\u0e30" \u2014 \u0e04\u0e27\u0e32\u0e21\u0e27\u0e48\u0e32\u0e07\u0e40\u0e1b\u0e25\u0e48\u0e32',
+            fail3: '\u0e04\u0e38\u0e13\u0e44\u0e14\u0e49\u0e22\u0e34\u0e19\u0e40\u0e2a\u0e35\u0e22\u0e07\u0e04\u0e35\u0e22\u0e4c\u0e1a\u0e2d\u0e23\u0e4c\u0e14\u0e44\u0e01\u0e25\u0e46... \u0e41\u0e15\u0e48\u0e44\u0e21\u0e48\u0e21\u0e35\u0e43\u0e04\u0e23\u0e1b\u0e23\u0e32\u0e01\u0e0f',
+            fail4: '\u0e28\u0e32\u0e25\u0e2a\u0e31\u0e48\u0e19\u0e2a\u0e30\u0e40\u0e17\u0e37\u0e2d\u0e19 \u0e41\u0e21\u0e25\u0e07\u0e2a\u0e32\u0e1a\u0e27\u0e34\u0e48\u0e07\u0e2b\u0e19\u0e35 \u0e44\u0e21\u0e48\u0e21\u0e35\u0e2d\u0e30\u0e44\u0e23\u0e2d\u0e37\u0e48\u0e19',
+            fail5: '\u0e40\u0e2a\u0e35\u0e22\u0e07\u0e40\u0e1a\u0e32\u0e46: "\u0e1e\u0e35\u0e48 \u0e02\u0e49\u0e32\u0e07\u0e22\u0e38\u0e48\u0e07" \u0e1e\u0e34\u0e18\u0e35\u0e25\u0e49\u0e21\u0e40\u0e2b\u0e25\u0e27',
+            fail6: '\u0e2d\u0e31\u0e01\u0e29\u0e23\u0e23\u0e39\u0e19\u0e2a\u0e27\u0e48\u0e32\u0e07\u0e41\u0e25\u0e30\u0e2a\u0e30\u0e01\u0e14\u0e27\u0e48\u0e32 "LUL"',
+            fail7: '\u0e04\u0e38\u0e13\u0e23\u0e39\u0e49\u0e2a\u0e36\u0e01\u0e21\u0e35\u0e15\u0e31\u0e27\u0e15\u0e19... \u0e41\u0e15\u0e48\u0e40\u0e1b\u0e47\u0e19\u0e41\u0e04\u0e48 McConnell',
+            fail8: '\u0e28\u0e32\u0e25\u0e15\u0e49\u0e2d\u0e07\u0e01\u0e32\u0e23 copium \u0e40\u0e1e\u0e34\u0e48\u0e21 \u0e25\u0e2d\u0e07\u0e2d\u0e35\u0e01\u0e04\u0e23\u0e31\u0e49\u0e07',
+            fail9: '\u0e01\u0e23\u0e30\u0e1b\u0e4b\u0e2d\u0e07 Dr Pepper \u0e1b\u0e23\u0e32\u0e01\u0e0f\u0e41\u0e25\u0e49\u0e27\u0e2b\u0e32\u0e22\u0e44\u0e1b \u0e40\u0e01\u0e37\u0e2d\u0e1a\u0e41\u0e25\u0e49\u0e27',
+            fail10: '\u0e41\u0e0a\u0e17\u0e01\u0e23\u0e30\u0e0b\u0e34\u0e1a KEKW \u0e01\u0e32\u0e23\u0e40\u0e23\u0e35\u0e22\u0e01\u0e25\u0e49\u0e21\u0e40\u0e2b\u0e25\u0e27',
+            fail11: '"\u0e23\u0e35\u0e41\u0e2d\u0e04\u0e2d\u0e31\u0e19\u0e19\u0e35\u0e49\u0e2a\u0e34" \u0e1a\u0e31\u0e25\u0e25\u0e31\u0e07\u0e01\u0e4c\u0e22\u0e31\u0e07\u0e04\u0e07\u0e27\u0e48\u0e32\u0e07\u0e40\u0e1b\u0e25\u0e48\u0e32',
+            fail12: '\u0e1e\u0e25\u0e31\u0e07\u0e07\u0e32\u0e19\u0e22\u0e31\u0e07\u0e44\u0e21\u0e48\u0e25\u0e49\u0e32\u0e19\u0e1e\u0e2d \u0e15\u0e49\u0e2d\u0e07\u0e0a\u0e32\u0e23\u0e4c\u0e08\u0e40\u0e1e\u0e34\u0e48\u0e21',
+            gotCard: '\u0e01\u0e32\u0e23\u0e4c\u0e14\u0e1b\u0e23\u0e32\u0e01\u0e0f\u0e41\u0e25\u0e49\u0e27!',
+            cardObtained: '\u0e44\u0e14\u0e49\u0e23\u0e31\u0e1a\u0e01\u0e32\u0e23\u0e4c\u0e14\u0e41\u0e25\u0e49\u0e27! \u0e40\u0e0a\u0e47\u0e04\u0e04\u0e2d\u0e25\u0e40\u0e25\u0e47\u0e01\u0e0a\u0e31\u0e48\u0e19',
+            milestone10k: '\u0e28\u0e32\u0e25\u0e2a\u0e31\u0e48\u0e19\u0e2a\u0e30\u0e40\u0e17\u0e37\u0e2d\u0e19...',
+            milestone10kDesc: '\u0e40\u0e1f\u0e2a 2 \u0e1b\u0e25\u0e14\u0e25\u0e47\u0e2d\u0e04! \u0e19\u0e31\u0e01\u0e40\u0e23\u0e35\u0e22\u0e01 10,000 \u0e04\u0e19\u0e25\u0e2d\u0e07\u0e41\u0e25\u0e49\u0e27',
+            milestone100k: '\u0e17\u0e33\u0e44\u0e21\u0e44\u0e14\u0e49\u0e22\u0e34\u0e19\u0e40\u0e1e\u0e25\u0e07\u0e1a\u0e2d\u0e2a?',
+            milestone100kDesc: '\u0e28\u0e32\u0e25\u0e41\u0e15\u0e01 \u0e21\u0e35\u0e1a\u0e32\u0e07\u0e2d\u0e22\u0e48\u0e32\u0e07\u0e02\u0e22\u0e31\u0e1a\u0e15\u0e31\u0e27\u0e02\u0e49\u0e32\u0e07\u0e43\u0e19',
+            milestone1m: '\u0e40\u0e1b\u0e47\u0e19\u0e44\u0e1b\u0e44\u0e21\u0e48\u0e44\u0e14\u0e49!',
+            milestone1mDesc: '1,000,000 \u0e04\u0e23\u0e31\u0e49\u0e07 \u0e41\u0e21\u0e25\u0e07\u0e2a\u0e32\u0e1a\u0e1b\u0e23\u0e32\u0e01\u0e0f \u0e21\u0e31\u0e19\u0e04\u0e37\u0e2d\u0e40\u0e02\u0e32',
+            prayerSent: '\u0e2a\u0e48\u0e07\u0e04\u0e33\u0e2d\u0e18\u0e34\u0e29\u0e10\u0e32\u0e19\u0e41\u0e25\u0e49\u0e27!',
+            prayerLimit: '\u0e27\u0e31\u0e19\u0e25\u0e30\u0e04\u0e23\u0e31\u0e49\u0e07\u0e40\u0e17\u0e48\u0e32\u0e19\u0e31\u0e49\u0e19 \u0e21\u0e19\u0e38\u0e29\u0e22\u0e4c',
+            flameCount: '{count} \ud83d\udd25',
+            timeAgo: '{time} \u0e17\u0e35\u0e48\u0e41\u0e25\u0e49\u0e27',
+            shareText: '\u0e09\u0e31\u0e19\u0e25\u0e2d\u0e07\u0e40\u0e23\u0e35\u0e22\u0e01 Asmongold \u0e43\u0e19 MapleStory \u0e04\u0e23\u0e31\u0e49\u0e07\u0e17\u0e35\u0e48 #{count} \u0e40\u0e02\u0e32\u0e22\u0e31\u0e07\u0e44\u0e21\u0e48\u0e21\u0e32 \ud83d\udc80',
+            shareUrl: '\u0e04\u0e38\u0e13\u0e40\u0e23\u0e35\u0e22\u0e01\u0e1c\u0e39\u0e49\u0e28\u0e35\u0e23\u0e29\u0e30\u0e25\u0e49\u0e32\u0e19\u0e44\u0e14\u0e49\u0e21\u0e31\u0e49\u0e22?',
+            reactLordCollection: '\ud83c\udccf \u0e04\u0e2d\u0e25\u0e40\u0e25\u0e47\u0e01\u0e0a\u0e31\u0e48\u0e19\u0e23\u0e32\u0e0a\u0e32\u0e23\u0e35\u0e41\u0e2d\u0e04',
+            collectionDesc: '7 \u0e01\u0e32\u0e23\u0e4c\u0e14\u0e40\u0e09\u0e1e\u0e32\u0e30\u0e28\u0e32\u0e25 \u0e2a\u0e30\u0e2a\u0e21\u0e04\u0e23\u0e1a\u0e40\u0e1e\u0e37\u0e48\u0e2d\u0e1b\u0e25\u0e14\u0e25\u0e47\u0e2d\u0e04\u0e42\u0e1a\u0e19\u0e31\u0e2a\u0e40\u0e0b\u0e47\u0e15',
+            callToAction: '\ud83d\udce3 \u0e1e\u0e34\u0e18\u0e35\u0e01\u0e32\u0e23\u0e40\u0e23\u0e35\u0e22\u0e01',
+            protocolDesc: '\u0e01\u0e34\u0e25\u0e14\u0e4c MapleStory \u0e2a\u0e23\u0e49\u0e32\u0e07\u0e28\u0e32\u0e25\u0e40\u0e23\u0e35\u0e22\u0e01\u0e40\u0e1e\u0e37\u0e48\u0e2d\u0e19\u0e33 Asmongold \u0e21\u0e32 \u0e1e\u0e22\u0e32\u0e22\u0e32\u0e21\u0e41\u0e25\u0e49\u0e27 {count} \u0e04\u0e23\u0e31\u0e49\u0e07 \u0e28\u0e32\u0e25\u0e40\u0e23\u0e34\u0e48\u0e21\u0e41\u0e15\u0e01',
+            tweetAt: '\u0e17\u0e27\u0e35\u0e15 @Asmongold',
+            postReddit: '\u0e42\u0e1e\u0e2a\u0e15\u0e4c\u0e25\u0e07 r/Asmongold',
+            copyUrl: '\u0e04\u0e31\u0e14\u0e25\u0e2d\u0e01 URL',
+            hashtag: '#SummonAsmon #MapleStory #NumbahWan',
+            dropRate: '\u0e42\u0e2d\u0e01\u0e32\u0e2a: {rate}%',
+            owned: '\u0e21\u0e35\u0e41\u0e25\u0e49\u0e27',
+            notOwned: '\u0e22\u0e31\u0e07\u0e44\u0e21\u0e48\u0e21\u0e35'
+        }
+    };
+
+    if (typeof NW_I18N !== 'undefined') NW_I18N.registerPage('shrine', SHRINE_I18N);
+
+    function T(key, fallback, reps) {
+        let lang = (typeof NW_I18N !== 'undefined') ? NW_I18N.lang : (localStorage.getItem('nw_lang') || 'en');
+        let txt = SHRINE_I18N[lang]?.[key] || SHRINE_I18N.en?.[key] || fallback || key;
+        if (reps) Object.entries(reps).forEach(([k,v]) => { txt = txt.replace(`{${k}}`, v); });
+        return txt;
+    }
+
+    // =========================================================================
+    // STATE
+    // =========================================================================
+    let globalCount = 0;
+    let localCount = parseInt(localStorage.getItem('shrine_local_count') || '0');
+    let localPity = parseInt(localStorage.getItem('shrine_pity') || '0');
+    let isAnimating = false;
+
+    const SHRINE_CARDS = [
+        { id: 700, name: "Asmongold, The Bald Sovereign", rarity: 'mythic', rate: 0.005, img: '/static/images/cards/shrine-asmongold-mythic.webp', desc: 'The Bald One himself. Summoned from the React Throne after 1 million prayers. His mere presence makes copium levels drop to zero.', flavor: '"It is what it is... and what it is, is legendary."', cost: 10, atk: 9, hp: 7, abilities: ['RUSH','CRIT_BOOST','LIFESTEAL'] },
+        { id: 701, name: "The React Throne", rarity: 'legendary', rate: 0.01, img: '/static/images/cards/shrine-react-throne.webp', desc: 'A legendary gaming chair forged from a million hours of content. Whoever sits upon it gains the power to react to anything.', flavor: '"You see this clip? Chat, look at this. Look at this clip."', cost: 7, atk: 6, hp: 8, abilities: ['TAUNT','CRIT_BOOST'] },
+        { id: 702, name: "McConnell, The Eternal Backseat", rarity: 'legendary', rate: 0.01, img: '/static/images/cards/shrine-mcconnell.webp', desc: 'The voice in the background. Always has an opinion. Never takes the wheel. Somehow makes everything funnier.', flavor: '"Dude, just do the thing. No, not that thing. The OTHER thing."', cost: 6, atk: 4, hp: 7, abilities: ['STEALTH','DODGE_BOOST'] },
+        { id: 703, name: "The One True Transmog", rarity: 'legendary', rate: 0.01, img: '/static/images/cards/shrine-transmog.webp', desc: 'The ultimate cosmetic achievement. Looks terrible. Absolutely perfect. True transmog is about the journey, not the destination.', flavor: '"This is the best transmog in the game. No, I\'m not being ironic."', cost: 6, atk: 5, hp: 6, abilities: ['SHIELD'] },
+        { id: 704, name: "Zack's Dr Pepper", rarity: 'epic', rate: 0.05, img: '/static/images/cards/shrine-dr-pepper.webp', desc: 'The sacred beverage. 23 flavors of pure gaming fuel. Grants +50% react speed and -100% hydration awareness.', flavor: '"You know what? This is actually pretty good."', cost: 4, atk: 4, hp: 5, abilities: ['RUSH'] },
+        { id: 705, name: "The Cockroach (Survivor)", rarity: 'epic', rate: 0.05, img: '/static/images/cards/shrine-cockroach.webp', desc: 'It has witnessed everything. Every react, every take, every ban. It remains. It endures. It is the true content king.', flavor: '"Even after the apocalypse, this thing will still be watching streams."', cost: 3, atk: 2, hp: 8, abilities: ['DODGE_BOOST'] },
+        { id: 706, name: "Chat (Collective Consciousness)", rarity: 'rare', rate: 0.10, img: '/static/images/cards/shrine-chat.webp', desc: '10,000 voices speaking as one. Usually wrong. Always loud. The true power behind the throne.', flavor: '"KEKW KEKW KEKW KEKW KEKW KEKW KEKW"', cost: 2, atk: 3, hp: 3, abilities: [] }
+    ];
+
+    const FAIL_KEYS = ['fail1','fail2','fail3','fail4','fail5','fail6','fail7','fail8','fail9','fail10','fail11','fail12'];
+
+    const MILESTONES = [
+        { target: 10000, key: 'milestone10k', descKey: 'milestone10kDesc' },
+        { target: 100000, key: 'milestone100k', descKey: 'milestone100kDesc' },
+        { target: 1000000, key: 'milestone1m', descKey: 'milestone1mDesc' }
+    ];
+
+    // =========================================================================
+    // AUDIO (Web Audio API)
+    // =========================================================================
+    let audioCtx;
+    function initAudio() {
+        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+    }
+    function playTone(freq, dur, type='sine', vol=0.15) {
+        if (!audioCtx) return;
+        const o = audioCtx.createOscillator(); const g = audioCtx.createGain();
+        o.type = type; o.frequency.value = freq; g.gain.value = vol;
+        g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + dur);
+        o.connect(g); g.connect(audioCtx.destination);
+        o.start(); o.stop(audioCtx.currentTime + dur);
+    }
+    function playSummonAudio() {
+        initAudio();
+        // Eerie ascending chant
+        [220,277,330,440,554].forEach((f,i) => setTimeout(() => playTone(f, 0.8, 'sine', 0.1), i * 200));
+    }
+    function playFailAudio() {
+        initAudio();
+        playTone(150, 0.6, 'sawtooth', 0.08);
+        setTimeout(() => playTone(100, 0.8, 'sawtooth', 0.06), 200);
+    }
+    function playCardAudio(rarity) {
+        initAudio();
+        if (rarity === 'mythic') {
+            [440,554,659,880,1108].forEach((f,i) => setTimeout(() => playTone(f, 1.2, 'sine', 0.15), i * 150));
+        } else if (rarity === 'legendary') {
+            [330,440,554,659].forEach((f,i) => setTimeout(() => playTone(f, 0.8, 'sine', 0.12), i * 200));
+        } else {
+            playTone(440, 0.5, 'triangle', 0.1); setTimeout(() => playTone(554, 0.5, 'triangle', 0.1), 150);
+        }
+    }
+
+    // =========================================================================
+    // LANGUAGE SWITCH
+    // =========================================================================
+    function switchLang(lang) {
+        document.querySelectorAll('.lang-btn').forEach(b => b.classList.toggle('active', b.dataset.lang === lang));
+        if (typeof NW_I18N !== 'undefined') NW_I18N.setLang(lang);
+        localStorage.setItem('nw_lang', lang); localStorage.setItem('lang', lang);
+        updatePityDisplay(); updateMilestone();
+    }
+
+    // =========================================================================
+    // EMBERS
+    // =========================================================================
+    function createEmbers() {
+        const container = document.getElementById('embers');
+        for (let i = 0; i < 25; i++) {
+            const e = document.createElement('div'); e.className = 'ember';
+            e.style.left = Math.random() * 100 + '%';
+            e.style.animationDuration = (4 + Math.random() * 6) + 's';
+            e.style.animationDelay = Math.random() * 8 + 's';
+            e.style.setProperty('--drift', (Math.random() * 60 - 30) + 'px');
+            e.style.width = (2 + Math.random() * 3) + 'px';
+            e.style.height = e.style.width;
+            container.appendChild(e);
+        }
+    }
+
+    // =========================================================================
+    // GLOBAL COUNTER
+    // =========================================================================
+    async function fetchGlobalCount() {
+        try {
+            const res = await fetch('/api/shrine/count');
+            const data = await res.json();
+            globalCount = data.count || 0;
+            updateCounterDisplay();
+        } catch (e) { console.error('Failed to fetch shrine count:', e); }
+    }
+
+    function updateCounterDisplay() {
+        document.getElementById('globalCounter').textContent = globalCount.toLocaleString();
+        updateMilestone();
+    }
+
+    function updateMilestone() {
+        const current = globalCount;
+        let nextMs = MILESTONES.find(m => current < m.target) || MILESTONES[MILESTONES.length - 1];
+        let prevTarget = 0;
+        for (const m of MILESTONES) { if (current >= m.target) prevTarget = m.target; else break; }
+        const pct = nextMs ? Math.min(100, ((current - prevTarget) / (nextMs.target - prevTarget)) * 100) : 100;
+        document.getElementById('milestoneFill').style.width = pct + '%';
+        document.getElementById('milestoneFrom').textContent = current.toLocaleString();
+        if (nextMs && current < nextMs.target) {
+            document.getElementById('milestoneTo').textContent = T('nextMilestone', 'Next: {target}', { target: nextMs.target.toLocaleString() });
+        } else {
+            document.getElementById('milestoneTo').textContent = '???';
+        }
+    }
+
+    function updatePityDisplay() {
+        document.getElementById('pityDisplay').textContent = T('pityDisplay', 'Pity: {count}/200', { count: localPity });
+    }
+
+    // =========================================================================
+    // THE SUMMON
+    // =========================================================================
+    async function performSummon() {
+        if (isAnimating) return;
+
+        // Check Sacred Logs
+        if (typeof NW_WALLET !== 'undefined' && NW_WALLET.initialized) {
+            const bal = NW_WALLET.getBalance('wood');
+            if (bal < 1 && !NW_WALLET.isGM) {
+                alert(T('needLogs'));
+                return;
+            }
+            NW_WALLET.spend('wood', 1, 'SHRINE_SUMMON');
+        }
+
+        isAnimating = true;
+        const btn = document.getElementById('summonBtn');
+        btn.disabled = true;
+        btn.textContent = T('summoning');
+
+        localCount++;
+        localPity++;
+        localStorage.setItem('shrine_local_count', localCount);
+        localStorage.setItem('shrine_pity', localPity);
+
+        // Increment global counter
+        try { 
+            const res = await fetch('/api/shrine/summon', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ walletId: typeof NW_WALLET !== 'undefined' ? NW_WALLET.getGuestId() : 'anon' }) });
+            const data = await res.json();
+            globalCount = data.count || globalCount + 1;
+        } catch (e) { globalCount++; }
+        updateCounterDisplay();
+
+        // Phase 1: Runes activate
+        playSummonAudio();
+        const runes = document.querySelectorAll('.rune');
+        runes.forEach((r, i) => setTimeout(() => r.classList.add('active'), i * 100));
+        document.getElementById('altarFrame').classList.add('shaking');
+
+        await sleep(1200);
+
+        // Phase 2: Heavy shake
+        document.getElementById('altarFrame').classList.remove('shaking');
+        document.getElementById('altarFrame').classList.add('heavy-shake');
+        document.getElementById('throne').classList.add('glow');
+
+        await sleep(800);
+
+        // Phase 3: Result
+        document.getElementById('altarFrame').classList.remove('heavy-shake');
+        runes.forEach(r => r.classList.remove('active'));
+
+        // Roll for card
+        const card = rollForCard();
+
+        const overlay = document.getElementById('resultOverlay');
+        const resultText = document.getElementById('resultText');
+        const resultSub = document.getElementById('resultSub');
+        const resultCard = document.getElementById('resultCard');
+
+        if (card) {
+            // GOT A CARD! - Cinematic reveal with art
+            playCardAudio(card.rarity);
+            resultText.className = 'result-text ' + (card.rarity === 'mythic' ? 'mythic' : card.rarity === 'legendary' ? 'legendary' : card.rarity);
+            resultText.textContent = T('gotCard');
+            resultSub.textContent = T('cardObtained');
+            resultCard.style.display = 'block';
+            
+            // Build cinematic card art reveal
+            const cardIndex = SHRINE_CARDS.findIndex(c => c.id === card.id);
+            const sparkleCount = card.rarity === 'mythic' ? 20 : card.rarity === 'legendary' ? 14 : 8;
+            let sparklesHtml = '';
+            for (let s = 0; s < sparkleCount; s++) {
+                const angle = (360 / sparkleCount) * s;
+                const dist = 60 + Math.random() * 40;
+                sparklesHtml += `<div style="position:absolute;left:50%;top:50%;width:4px;height:4px;border-radius:50%;background:${card.rarity==='mythic'?'var(--fire)':card.rarity==='legendary'?'var(--gold)':'var(--purple)'};animation:cardRevealParticle .8s ease-out forwards;--px:${Math.cos(angle*Math.PI/180)*dist}px;--py:${Math.sin(angle*Math.PI/180)*dist}px"></div>`;
+            }
+            resultCard.innerHTML = `
+                <div class="result-card-art ${card.rarity}">
+                    <img src="${card.img}" alt="${card.name}">
+                    <div class="result-card-sparkles">${sparklesHtml}</div>
+                </div>
+                <div class="card-name">${card.name}</div>
+                <div class="card-rarity" style="color:${card.rarity==='mythic'?'var(--fire)':card.rarity==='legendary'?'var(--gold)':card.rarity==='epic'?'var(--purple)':'var(--nwg)'}">${card.rarity.toUpperCase()}</div>
+                ${cardIndex >= 0 ? `<button class="view-in-carousel" onclick="scrollToCard(${cardIndex})">View in Collection &#8594;</button>` : ''}
+            `;
+            document.getElementById('throne').textContent = card.rarity === 'mythic' ? '\ud83d\udc51' : '\u2728';
+            
+            // Highlight this card in the carousel
+            if (cardIndex >= 0) {
+                lastPulledCardIndex = cardIndex;
+                setTimeout(() => highlightPulledCard(cardIndex), 200);
+            }
+
+            if (card.rarity === 'mythic') localPity = 0;
+            localStorage.setItem('shrine_pity', localPity);
+
+            // Add to wallet collection
+            if (typeof NW_WALLET !== 'undefined') NW_WALLET.addToCollection(card.id, card.rarity);
+
+            // Report pull to leaderboard
+            try { fetch('/api/shrine/report-pull', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ walletId: typeof NW_WALLET !== 'undefined' ? NW_WALLET.getGuestId() : 'anon', cardName: card.name, rarity: card.rarity }) }); } catch(e) {}
+        } else {
+            // FAIL
+            playFailAudio();
+            const failKey = FAIL_KEYS[Math.floor(Math.random() * FAIL_KEYS.length)];
+            resultText.className = 'result-text fail';
+            resultText.innerHTML = '<span class="fail-msgs">' + T(failKey) + '</span>';
+            resultSub.textContent = `#${localCount}`;
+            resultCard.style.display = 'none';
+            document.getElementById('throne').classList.remove('glow');
+            document.getElementById('throne').textContent = '\ud83e\ude91';
+            setTimeout(() => { document.getElementById('throne').textContent = '\ud83d\udcba'; }, 2000);
+        }
+
+        overlay.classList.add('show');
+        updatePityDisplay();
+
+        // Auto-dismiss
+        await sleep(card ? 4000 : 2500);
+        overlay.classList.remove('show');
+        btn.disabled = false;
+        btn.textContent = T('beginSummoning');
+        isAnimating = false;
+    }
+
+    function rollForCard() {
+        // Pity system: guaranteed mythic at 200
+        if (localPity >= 200) return SHRINE_CARDS[0]; // Asmongold mythic
+
+        // Soft pity: increased rates after 150
+        let mythicBonus = localPity >= 150 ? (localPity - 150) * 0.002 : 0;
+
+        const roll = Math.random();
+        let cumulative = 0;
+
+        for (const card of SHRINE_CARDS) {
+            let rate = card.rate;
+            if (card.rarity === 'mythic') rate += mythicBonus;
+            cumulative += rate;
+            if (roll < cumulative) return card;
+        }
+        return null; // Fail (~78% chance)
+    }
+
+    function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+    // =========================================================================
+    // PRAYER WALL
+    // =========================================================================
+    async function loadPrayers() {
+        try {
+            const res = await fetch('/api/shrine/prayers');
+            const data = await res.json();
+            renderPrayers(data.prayers || []);
+        } catch (e) { renderPrayers(getDemoPrayers()); }
+    }
+
+    function getDemoPrayers() {
+        return [
+            { id: 1, text: "Dear Bald One, please grace our guild with your presence. We've been grinding for 3 weeks.", flames: 342, time: Date.now() - 3600000 },
+            { id: 2, text: "My copium reserves are running low. We need you, Zack.", flames: 256, time: Date.now() - 7200000 },
+            { id: 3, text: "I sacrificed 200 Sacred Logs for this. Please. PLEASE.", flames: 189, time: Date.now() - 14400000 },
+            { id: 4, text: "McConnell told me this wouldn't work. Prove him wrong.", flames: 445, time: Date.now() - 21600000 },
+            { id: 5, text: "If you come to MapleStory, I'll donate my entire transmog collection.", flames: 167, time: Date.now() - 28800000 },
+            { id: 6, text: "The cockroach in my apartment said you'd come. Don't make it a liar.", flames: 523, time: Date.now() - 43200000 },
+            { id: 7, text: "Day 47 of summoning. The shrine is starting to crack. Or maybe that's just me.", flames: 298, time: Date.now() - 86400000 },
+            { id: 8, text: "It is what it is. But it doesn't have to be.", flames: 712, time: Date.now() - 172800000 }
+        ];
+    }
+
+    function renderPrayers(prayers) {
+        const wall = document.getElementById('prayerWall');
+        wall.innerHTML = prayers.sort((a,b) => b.flames - a.flames).map(p => {
+            const ago = timeAgo(p.time || p.created_at);
+            return `<div class="prayer-card">
+                <div class="prayer-text">${escapeHtml(p.text)}</div>
+                <div class="prayer-meta">
+                    <span>${ago}</span>
+                    <span class="prayer-flames" onclick="flamePrayer(${p.id})">${T('flameCount','',{count:p.flames||0})}</span>
+                </div>
+            </div>`;
+        }).join('');
+    }
+
+    async function submitPrayer() {
+        const input = document.getElementById('prayerInput');
+        const text = input.value.trim();
+        if (!text || text.length < 3) return;
+
+        const lastPrayer = localStorage.getItem('shrine_last_prayer');
+        const now = Date.now();
+        if (lastPrayer && now - parseInt(lastPrayer) < 86400000) {
+            alert(T('prayerLimit'));
+            return;
+        }
+
+        try {
+            await fetch('/api/shrine/pray', {
+                method: 'POST',
+                headers: {'Content-Type':'application/json'},
+                body: JSON.stringify({ text, walletId: typeof NW_WALLET !== 'undefined' ? NW_WALLET.getGuestId() : 'anon' })
+            });
+        } catch (e) {}
+
+        localStorage.setItem('shrine_last_prayer', now.toString());
+        input.value = '';
+        alert(T('prayerSent'));
+        loadPrayers();
+    }
+
+    async function flamePrayer(id) {
+        try { await fetch(`/api/shrine/prayers/${id}/flame`, { method: 'POST' }); } catch(e) {}
+        loadPrayers();
+    }
+
+    // =========================================================================
+    // LEADERBOARD
+    // =========================================================================
+    async function loadLeaderboard() {
+        try {
+            const res = await fetch('/api/shrine/leaderboard');
+            const data = await res.json();
+            renderLeaderboard(data.leaders || []);
+        } catch (e) { renderLeaderboard(getDemoLeaders()); }
+    }
+
+    function getDemoLeaders() {
+        return [
+            { name: 'NW-A7F3B2', attempts: 847, bestPull: 'The Cockroach (Epic)' },
+            { name: 'NW-9C1D4E', attempts: 623, bestPull: 'McConnell (Legendary)' },
+            { name: 'NW-2EF826', attempts: 412, bestPull: 'Dr Pepper (Epic)' },
+            { name: 'NW-8B3F1A', attempts: 389, bestPull: 'Chat (Rare)' },
+            { name: 'NW-F4C2D9', attempts: 256, bestPull: 'None yet' }
+        ];
+    }
+
+    function renderLeaderboard(leaders) {
+        const body = document.getElementById('leaderboardBody');
+        body.innerHTML = leaders.map((l, i) => {
+            const rankCls = i === 0 ? 'gold' : i === 1 ? 'silver' : i === 2 ? 'bronze' : '';
+            return `<tr>
+                <td><span class="lb-rank ${rankCls}">${i+1}</span></td>
+                <td>${l.name}</td>
+                <td style="color:var(--fire);font-weight:700">${l.attempts.toLocaleString()}</td>
+                <td style="color:var(--dim)">${l.bestPull || '---'}</td>
+            </tr>`;
+        }).join('');
+    }
+
+    // =========================================================================
+    // SHARE
+    // =========================================================================
+    function shareResult(platform) {
+        const text = T('shareText', '', { count: localCount });
+        const url = window.location.href;
+
+        if (platform === 'twitter') {
+            window.open(`https://x.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`, '_blank');
+        } else if (platform === 'reddit') {
+            window.open(`https://www.reddit.com/submit?title=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`, '_blank');
+        } else if (platform === 'copy') {
+            navigator.clipboard?.writeText(url + '\n' + text);
+            alert(T('copied'));
+        }
+    }
+
+    // =========================================================================
+    // HELPERS
+    // =========================================================================
+    function escapeHtml(s) { const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+    function timeAgo(ts) {
+        const ms = Date.now() - (typeof ts === 'string' ? new Date(ts).getTime() : ts);
+        const m = Math.floor(ms/60000); if (m < 60) return T('timeAgo','',{time:m+'m'});
+        const h = Math.floor(m/60); if (h < 24) return T('timeAgo','',{time:h+'h'});
+        return T('timeAgo','',{time:Math.floor(h/24)+'d'});
+    }
+
+    // =========================================================================
+    // CARD CAROUSEL (with auto-play, keyboard nav, NanoBanana branding)
+    // =========================================================================
+    let carouselIndex = 0;
+    let autoPlayTimer = null;
+    let autoPlayActive = true;
+    let lastPulledCardIndex = -1;
+    const AUTOPLAY_INTERVAL = 4000; // 4s per card
+
+    function buildCarousel() {
+        const track = document.getElementById('carouselTrack');
+        const dots = document.getElementById('carouselDots');
+        if (!track) return;
+
+        track.innerHTML = SHRINE_CARDS.map((card, i) => `
+            <div class="tcg-card" onclick="showCardDetail(${i})" data-card-index="${i}">
+                <div class="tcg-card-inner ${card.rarity}" id="carouselCard${i}">
+                    <img class="tcg-card-art" src="${card.img}" alt="${card.name}" loading="${i < 2 ? 'eager' : 'lazy'}">
+                    <div class="tcg-card-holo"></div>
+                    <div class="tcg-card-overlay">
+                        <div class="tcg-card-name">${card.name}</div>
+                        <div class="tcg-card-tag ${card.rarity}">${card.rarity.toUpperCase()} \u2022 ${(card.rate*100).toFixed(1)}%</div>
+                        <div class="tcg-card-stats-bar">
+                            <span class="stat stat-cost">\u2B50 ${card.cost}</span>
+                            <span class="stat stat-atk">\u2694\uFE0F ${card.atk}</span>
+                            <span class="stat stat-hp">\u2764\uFE0F ${card.hp}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `).join('');
+
+        dots.innerHTML = SHRINE_CARDS.map((_, i) => 
+            `<button class="carousel-dot ${i === 0 ? 'active' : ''}" onclick="carouselGoTo(${i})" aria-label="Card ${i+1}"></button>`
+        ).join('');
+
+        carouselIndex = 0;
+        updateCarousel();
+        startAutoPlay();
+    }
+
+    function carouselMove(dir) {
+        carouselIndex = (carouselIndex + dir + SHRINE_CARDS.length) % SHRINE_CARDS.length;
+        updateCarousel();
+        resetAutoPlay();
+    }
+
+    function carouselGoTo(i) {
+        carouselIndex = i;
+        updateCarousel();
+        resetAutoPlay();
+    }
+
+    function updateCarousel() {
+        const track = document.getElementById('carouselTrack');
+        if (track) track.style.transform = `translateX(-${carouselIndex * 100}%)`;
+        document.querySelectorAll('.carousel-dot').forEach((d, i) => d.classList.toggle('active', i === carouselIndex));
+        showCardDetail(carouselIndex);
+        // Update counter
+        const counter = document.getElementById('carouselCounter');
+        if (counter) counter.textContent = `${carouselIndex + 1} / ${SHRINE_CARDS.length}`;
+    }
+
+    function startAutoPlay() {
+        if (autoPlayTimer) clearInterval(autoPlayTimer);
+        if (!autoPlayActive) return;
+        autoPlayTimer = setInterval(() => {
+            carouselIndex = (carouselIndex + 1) % SHRINE_CARDS.length;
+            updateCarousel();
+        }, AUTOPLAY_INTERVAL);
+    }
+
+    function resetAutoPlay() {
+        if (autoPlayTimer) clearInterval(autoPlayTimer);
+        if (autoPlayActive) startAutoPlay();
+    }
+
+    function toggleAutoPlay() {
+        autoPlayActive = !autoPlayActive;
+        const btn = document.getElementById('autoPlayBtn');
+        if (btn) {
+            btn.classList.toggle('active', autoPlayActive);
+            btn.innerHTML = autoPlayActive ? '&#9654; Auto' : '&#9646;&#9646; Paused';
+        }
+        if (autoPlayActive) startAutoPlay(); else if (autoPlayTimer) clearInterval(autoPlayTimer);
+    }
+
+    function highlightPulledCard(index) {
+        const el = document.getElementById(`carouselCard${index}`);
+        if (el) {
+            el.classList.add('just-pulled');
+            setTimeout(() => el.classList.remove('just-pulled'), 6000);
+        }
+    }
+
+    function scrollToCard(index) {
+        // Dismiss the result overlay
+        const overlay = document.getElementById('resultOverlay');
+        if (overlay) overlay.classList.remove('show');
+        
+        // Scroll to carousel and show the card
+        const collection = document.querySelector('.card-collection');
+        if (collection) collection.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        setTimeout(() => {
+            carouselGoTo(index);
+            highlightPulledCard(index);
+        }, 400);
+    }
+
+    function showCardDetail(i) {
+        const card = SHRINE_CARDS[i];
+        const detail = document.getElementById('cardDetail');
+        if (!detail) return;
+        detail.style.display = 'flex';
+        detail.className = `card-detail detail-${card.rarity}`;
+        document.getElementById('detailArt').innerHTML = `<img src="${card.img}" alt="${card.name}">`;
+        document.getElementById('detailName').textContent = card.name;
+        const rarityEl = document.getElementById('detailRarity');
+        rarityEl.textContent = card.rarity.toUpperCase();
+        rarityEl.style.color = card.rarity === 'mythic' ? 'var(--fire)' : card.rarity === 'legendary' ? 'var(--gold)' : card.rarity === 'epic' ? 'var(--purple)' : 'var(--nwg)';
+        document.getElementById('detailDesc').textContent = card.desc;
+        document.getElementById('detailFlavor').textContent = card.flavor;
+        document.getElementById('detailStats').innerHTML = [
+            `<span class="stat-chip" style="color:var(--gold)">\u2B50 Cost: ${card.cost}</span>`,
+            `<span class="stat-chip" style="color:#ff6b6b">\u2694\uFE0F ATK: ${card.atk}</span>`,
+            `<span class="stat-chip" style="color:#51cf66">\u2764\uFE0F HP: ${card.hp}</span>`,
+            ...card.abilities.map(a => `<span class="stat-chip" style="color:var(--nwg)">\u26A1 ${a}</span>`),
+            `<span class="stat-chip" style="color:var(--dim)">${T('dropRate','Drop: {rate}%',{rate:(card.rate*100).toFixed(1)})}</span>`,
+            `<span class="stat-chip nanobanana-badge" style="margin:0;padding:2px 8px;">\ud83c\udf4c NanoBanana</span>`
+        ].join('');
+    }
+
+    // Keyboard navigation for carousel
+    document.addEventListener('keydown', e => {
+        if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+        if (e.key === 'ArrowLeft') { carouselMove(-1); e.preventDefault(); }
+        else if (e.key === 'ArrowRight') { carouselMove(1); e.preventDefault(); }
+        else if (e.key === ' ' && document.activeElement?.closest('.card-collection')) { toggleAutoPlay(); e.preventDefault(); }
+    });
+
+    // Touch/swipe support
+    let touchStartX = 0;
+    document.addEventListener('touchstart', e => { 
+        if (e.target.closest('.carousel-viewport')) { touchStartX = e.touches[0].clientX; resetAutoPlay(); }
+    }, { passive: true });
+    document.addEventListener('touchend', e => {
+        if (!e.target.closest('.carousel-viewport')) return;
+        const diff = touchStartX - e.changedTouches[0].clientX;
+        if (Math.abs(diff) > 50) carouselMove(diff > 0 ? 1 : -1);
+    }, { passive: true });
+
+    // Pause autoplay on hover
+    const vp = document.getElementById && document.getElementById('carouselViewport');
+    if (vp) {
+        vp.addEventListener('mouseenter', () => { if (autoPlayTimer) clearInterval(autoPlayTimer); });
+        vp.addEventListener('mouseleave', () => { if (autoPlayActive) startAutoPlay(); });
+    }
+
+    // =========================================================================
+    // INIT
+    // =========================================================================
+
+    function updateCTALinks() {
+        const ctaCount = document.getElementById('ctaCount');
+        if (ctaCount) ctaCount.textContent = globalCount.toLocaleString();
+        const base = window.location.href;
+        const tweet = document.getElementById('ctaTweet');
+        if (tweet) tweet.href = `https://x.com/intent/tweet?text=${encodeURIComponent('A MapleStory guild built a summoning shrine to bring @Asmongold into their game. ' + globalCount.toLocaleString() + ' attempts and counting. \ud83d\udc80 #SummonAsmon #MapleStory')}&url=${encodeURIComponent(base)}`;
+        const reddit = document.getElementById('ctaReddit');
+        if (reddit) reddit.href = `https://www.reddit.com/submit?title=${encodeURIComponent('A MapleStory guild built a summoning shrine for Asmongold - ' + globalCount.toLocaleString() + ' attempts')}&url=${encodeURIComponent(base)}`;
+    }
+
+    document.addEventListener('DOMContentLoaded', async () => {
+        // Restore lang
+        const lang = localStorage.getItem('nw_lang') || 'en';
+        document.querySelectorAll('.lang-btn').forEach(b => b.classList.toggle('active', b.dataset.lang === lang));
+
+        createEmbers();
+        updatePityDisplay();
+        fetchGlobalCount().then(() => updateCTALinks());
+        loadPrayers();
+        loadLeaderboard();
+        buildCarousel();
+
+        if (typeof NW_I18N !== 'undefined') {
+            NW_I18N.onChange(() => { updatePityDisplay(); updateMilestone(); loadPrayers(); loadLeaderboard(); showCardDetail(carouselIndex); updateCTALinks(); });
+        }
+    });
+    </script>
+</body>
+</html>

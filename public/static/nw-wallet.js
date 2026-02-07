@@ -18,7 +18,11 @@ const NW_WALLET = {
     GM_WHITELIST: [
         // Format: 'NW-XXXXXXXXXXXX'
         // Add your Guest ID here after visiting /wallet to see it
+        // Or use: NW_WALLET.activateGM('numbahwan-gm-2026') in console
     ],
+    
+    // GM Activation Key (same as backend)
+    GM_ACTIVATION_KEY: 'numbahwan-gm-2026',
     
     // GM mode can also be activated by localStorage flag (for current session testing)
     // Set localStorage.setItem('nw_gm_mode', 'true') to enable
@@ -79,15 +83,43 @@ const NW_WALLET = {
         const urlParams = new URLSearchParams(window.location.search);
         const urlFlag = urlParams.get('gm') === 'true';
         
-        this.isGM = inWhitelist || localFlag || urlFlag;
+        // Check if GM key is in URL (auto-activate)
+        const gmKeyInUrl = urlParams.get('gmKey') === this.GM_ACTIVATION_KEY;
+        if (gmKeyInUrl && !localFlag) {
+            localStorage.setItem(this.GM_KEY, 'true');
+        }
+        
+        this.isGM = inWhitelist || localFlag || urlFlag || gmKeyInUrl;
         
         if (this.isGM) {
             console.log('%c[NW_WALLET] 👑 GM MODE ACTIVE - Infinite Resources Enabled!', 
                 'background: linear-gradient(90deg, #ffd700, #ff6b00); color: black; font-size: 16px; font-weight: bold; padding: 10px;');
-            this.log('GM_MODE_ACTIVATED', { guestId: this.wallet.guestId, method: inWhitelist ? 'whitelist' : localFlag ? 'localStorage' : 'url' });
+            console.log('%c   Guest ID: ' + this.wallet.guestId, 'color: #ffd700;');
+            this.log('GM_MODE_ACTIVATED', { guestId: this.wallet.guestId, method: inWhitelist ? 'whitelist' : localFlag ? 'localStorage' : gmKeyInUrl ? 'urlKey' : 'url' });
         }
         
         return this.isGM;
+    },
+    
+    // Verify GM status with server
+    async verifyGMWithServer() {
+        if (!this.wallet) return false;
+        
+        try {
+            const response = await fetch(`/api/gm/verify/${this.wallet.guestId}`);
+            const data = await response.json();
+            
+            if (data.success && data.isGM) {
+                this.isGM = true;
+                localStorage.setItem(this.GM_KEY, 'true');
+                console.log('%c[NW_WALLET] 👑 GM Status Verified by Server!', 
+                    'background: linear-gradient(90deg, #ffd700, #ff6b00); color: black; font-weight: bold; padding: 5px;');
+                return true;
+            }
+        } catch (e) {
+            console.warn('[NW_WALLET] Server GM verification failed:', e);
+        }
+        return false;
     },
     
     // Activate GM mode for current session
@@ -516,6 +548,11 @@ const NW_WALLET = {
         return true;
     },
     
+    // Burn rate constants (deflationary mechanism)
+    BURN_RATE: 0.01,           // 1% burned on every spend
+    EXCHANGE_BURN_RATE: 0.02,  // 2% burned on exchange
+    totalBurned: { nwg: 0, gold: 0, wood: 0 },
+    
     spend(currency, amount, purpose = 'UNKNOWN') {
         if (!this.wallet || amount <= 0) return false;
         
@@ -530,11 +567,30 @@ const NW_WALLET = {
             return false;
         }
         
-        this.wallet.currencies[currency] -= amount;
+        // BURN MECHANISM: 1% of NWG transactions are permanently destroyed
+        let burnAmount = 0;
+        if (currency === 'nwg' && amount > 1) {
+            burnAmount = Math.max(1, Math.floor(amount * this.BURN_RATE));
+            this.totalBurned.nwg = (this.totalBurned.nwg || 0) + burnAmount;
+            // Track total burned in wallet stats
+            this.wallet.stats.totalBurned = this.wallet.stats.totalBurned || { nwg: 0, gold: 0, wood: 0 };
+            this.wallet.stats.totalBurned.nwg = (this.wallet.stats.totalBurned.nwg || 0) + burnAmount;
+        }
+        
+        // Deduct amount + burn
+        const totalDeducted = amount + burnAmount;
+        this.wallet.currencies[currency] -= totalDeducted;
         this.wallet.stats.totalSpent[currency] = (this.wallet.stats.totalSpent[currency] || 0) + amount;
         
-        this.log('SPEND', { currency, amount, purpose, newBalance: this.wallet.currencies[currency] });
+        this.log('SPEND', { currency, amount, burnAmount, totalDeducted, purpose, newBalance: this.wallet.currencies[currency] });
         this.saveWallet();
+        
+        // Emit burn event for UI feedback
+        if (burnAmount > 0) {
+            window.dispatchEvent(new CustomEvent('nw-burn', {
+                detail: { currency, burnAmount, totalBurned: this.wallet.stats.totalBurned.nwg }
+            }));
+        }
         
         return true;
     },
@@ -542,17 +598,32 @@ const NW_WALLET = {
     exchange(fromCurrency, toCurrency, fromAmount, toAmount) {
         if (!this.wallet) return false;
         
-        if (this.wallet.currencies[fromCurrency] < fromAmount) {
-            this.log('EXCHANGE_FAILED', { fromCurrency, toCurrency, fromAmount, toAmount, reason: 'insufficient_funds' });
+        // EXCHANGE BURN: 2% burned on NWG exchanges
+        let burnAmount = 0;
+        if (fromCurrency === 'nwg' && fromAmount > 1) {
+            burnAmount = Math.max(1, Math.floor(fromAmount * this.EXCHANGE_BURN_RATE));
+            this.wallet.stats.totalBurned = this.wallet.stats.totalBurned || { nwg: 0, gold: 0, wood: 0 };
+            this.wallet.stats.totalBurned.nwg = (this.wallet.stats.totalBurned.nwg || 0) + burnAmount;
+        }
+        
+        const totalFromDeducted = fromAmount + burnAmount;
+        if (this.wallet.currencies[fromCurrency] < totalFromDeducted) {
+            this.log('EXCHANGE_FAILED', { fromCurrency, toCurrency, fromAmount, toAmount, burnAmount, reason: 'insufficient_funds' });
             return false;
         }
         
-        this.wallet.currencies[fromCurrency] -= fromAmount;
+        this.wallet.currencies[fromCurrency] -= totalFromDeducted;
         this.wallet.currencies[toCurrency] = (this.wallet.currencies[toCurrency] || 0) + toAmount;
         this.wallet.stats.exchangesMade++;
         
-        this.log('EXCHANGE', { fromCurrency, toCurrency, fromAmount, toAmount });
+        this.log('EXCHANGE', { fromCurrency, toCurrency, fromAmount, toAmount, burnAmount });
         this.saveWallet();
+        
+        if (burnAmount > 0) {
+            window.dispatchEvent(new CustomEvent('nw-burn', {
+                detail: { currency: fromCurrency, burnAmount, totalBurned: this.wallet.stats.totalBurned.nwg }
+            }));
+        }
         
         return true;
     },
@@ -647,6 +718,278 @@ const NW_WALLET = {
         return this.wallet?.forge || { pityCounter: 0, totalPulls: 0, lastPull: null };
     },
     
+    // ===== CARD STAKING (Passive NWG Income) =====
+    // Cards earn daily NWG based on rarity - makes cards productive assets
+    STAKING_KEY: 'nw_card_staking',
+    
+    // Daily NWG yield by rarity (aligned with NW_ECONOMY.cardStaking)
+    STAKING_YIELDS: {
+        common: 0.1, uncommon: 0.25, rare: 0.5, epic: 1.0, legendary: 2.5, mythic: 5.0
+    },
+    
+    getStakingState() {
+        try {
+            return JSON.parse(localStorage.getItem(this.STAKING_KEY) || '{}');
+        } catch (e) { return {}; }
+    },
+    
+    saveStakingState(state) {
+        localStorage.setItem(this.STAKING_KEY, JSON.stringify(state));
+    },
+    
+    // Stake a card to start earning passive NWG
+    stakeCard(cardId, rarity) {
+        if (!this.wallet || !this.hasCard(cardId)) return { success: false, reason: 'card_not_owned' };
+        
+        const state = this.getStakingState();
+        if (state[cardId]) return { success: false, reason: 'already_staked' };
+        
+        const cardData = this.getCardData(cardId);
+        const stars = cardData?.level || 1;
+        const starMult = { 1: 1.0, 2: 1.2, 3: 1.5, 4: 2.0, 5: 3.0 }[Math.min(stars, 5)] || 1;
+        const dailyYield = (this.STAKING_YIELDS[rarity] || 0.1) * starMult;
+        
+        state[cardId] = {
+            rarity,
+            stakedAt: Date.now(),
+            lastClaimed: Date.now(),
+            dailyYield,
+            stars,
+            totalClaimed: 0
+        };
+        this.saveStakingState(state);
+        
+        this.log('CARD_STAKED', { cardId, rarity, dailyYield, stars });
+        window.dispatchEvent(new CustomEvent('nw-card-staked', { detail: { cardId, dailyYield } }));
+        return { success: true, dailyYield };
+    },
+    
+    // Unstake a card and claim final rewards
+    unstakeCard(cardId) {
+        const state = this.getStakingState();
+        if (!state[cardId]) return { success: false, reason: 'not_staked' };
+        
+        // Claim any pending rewards first
+        const claimed = this._claimCardReward(cardId, state[cardId]);
+        delete state[cardId];
+        this.saveStakingState(state);
+        
+        this.log('CARD_UNSTAKED', { cardId, finalClaimed: claimed });
+        return { success: true, claimed };
+    },
+    
+    // Claim staking rewards for one card
+    _claimCardReward(cardId, stakeInfo) {
+        const now = Date.now();
+        const msSinceLastClaim = now - stakeInfo.lastClaimed;
+        const daysSinceLastClaim = msSinceLastClaim / (1000 * 60 * 60 * 24);
+        const reward = Math.floor(stakeInfo.dailyYield * daysSinceLastClaim * 10) / 10; // 0.1 precision
+        
+        if (reward >= 0.1) {
+            const nwgReward = Math.floor(reward);
+            if (nwgReward > 0) {
+                this.earn('nwg', nwgReward, `CARD_STAKING:${cardId}`);
+            }
+            stakeInfo.lastClaimed = now;
+            stakeInfo.totalClaimed = (stakeInfo.totalClaimed || 0) + reward;
+            return reward;
+        }
+        return 0;
+    },
+    
+    // Claim all staking rewards across all staked cards
+    claimAllStakingRewards() {
+        const state = this.getStakingState();
+        let totalClaimed = 0;
+        let cardsRewarded = 0;
+        
+        for (const [cardId, stakeInfo] of Object.entries(state)) {
+            const claimed = this._claimCardReward(cardId, stakeInfo);
+            if (claimed > 0) {
+                totalClaimed += claimed;
+                cardsRewarded++;
+            }
+        }
+        
+        this.saveStakingState(state);
+        if (totalClaimed > 0) {
+            this.log('STAKING_REWARDS_CLAIMED', { totalClaimed, cardsRewarded });
+            window.dispatchEvent(new CustomEvent('nw-staking-claimed', {
+                detail: { totalClaimed, cardsRewarded }
+            }));
+        }
+        return { totalClaimed: Math.floor(totalClaimed), cardsRewarded };
+    },
+    
+    // Get staking summary for UI
+    getStakingSummary() {
+        const state = this.getStakingState();
+        const entries = Object.entries(state);
+        let totalDailyYield = 0;
+        let totalPendingRewards = 0;
+        
+        const now = Date.now();
+        entries.forEach(([cardId, info]) => {
+            totalDailyYield += info.dailyYield;
+            const daysSinceClaim = (now - info.lastClaimed) / (1000 * 60 * 60 * 24);
+            totalPendingRewards += info.dailyYield * daysSinceClaim;
+        });
+        
+        return {
+            stakedCards: entries.length,
+            totalDailyYield: Math.round(totalDailyYield * 10) / 10,
+            pendingRewards: Math.floor(totalPendingRewards),
+            annualProjection: Math.round(totalDailyYield * 365)
+        };
+    },
+    
+    // ===== CARD BURN (Convert Cards → NWG + Sacred Logs) =====
+    // Base values by rarity (from NW_ECONOMY.cardValues)
+    BURN_VALUES: {
+        common: 10, uncommon: 25, rare: 75, epic: 200, legendary: 500, mythic: 1500
+    },
+    BURN_LOG_REWARDS: {
+        common: 0, uncommon: 0, rare: 1, epic: 2, legendary: 5, mythic: 10
+    },
+    BURN_PREMIUM: 0.10, // +10% bonus for burning
+    
+    burnCard(cardId, rarity) {
+        if (!this.wallet || !this.hasCard(cardId)) return { success: false, reason: 'card_not_owned' };
+        
+        // Unstake first if staked
+        const staking = this.getStakingState();
+        if (staking[cardId]) {
+            this.unstakeCard(cardId);
+        }
+        
+        const cardData = this.getCardData(cardId);
+        const stars = cardData?.level || 1;
+        const starMult = { 1: 1.0, 2: 1.25, 3: 1.5, 4: 2.0, 5: 3.0 }[Math.min(stars, 5)] || 1;
+        
+        const baseValue = this.BURN_VALUES[rarity] || 10;
+        const cardValue = Math.floor(baseValue * starMult);
+        const premium = Math.floor(cardValue * this.BURN_PREMIUM);
+        const totalNWG = cardValue + premium;
+        const sacredLogs = this.BURN_LOG_REWARDS[rarity] || 0;
+        
+        // Remove card from collection
+        if (this.wallet.collection && !Array.isArray(this.wallet.collection)) {
+            const cardInfo = this.wallet.collection[cardId];
+            if (cardInfo && cardInfo.count > 1) {
+                cardInfo.count--;
+            } else {
+                delete this.wallet.collection[cardId];
+            }
+        }
+        
+        // Give NWG + Logs
+        this.earn('nwg', totalNWG, `CARD_BURN:${cardId}`);
+        if (sacredLogs > 0) {
+            this.earn('wood', sacredLogs, `CARD_BURN_LOGS:${cardId}`);
+        }
+        
+        // Track burn stats
+        this.wallet.stats.cardsBurned = (this.wallet.stats.cardsBurned || 0) + 1;
+        this.wallet.stats.totalNWGFromBurns = (this.wallet.stats.totalNWGFromBurns || 0) + totalNWG;
+        
+        this.saveWallet();
+        this.log('CARD_BURNED', { cardId, rarity, stars, nwgReceived: totalNWG, sacredLogs, premium });
+        
+        window.dispatchEvent(new CustomEvent('nw-card-burned', {
+            detail: { cardId, rarity, nwgReceived: totalNWG, sacredLogs }
+        }));
+        
+        return { success: true, nwgReceived: totalNWG, sacredLogs, premium };
+    },
+    
+    // ===== SET COMPLETION TRACKING =====
+    SET_TRACKING_KEY: 'nw_set_tracking',
+    
+    // Define which cards belong to which set
+    getSetProgress(cardsData) {
+        if (!this.wallet?.collection) return {};
+        
+        const ownedIds = new Set(this.getCollection());
+        const sets = {};
+        
+        // Group cards by set
+        (cardsData || []).forEach(card => {
+            const setName = card.set || 'unknown';
+            if (!sets[setName]) {
+                sets[setName] = { total: 0, owned: 0, cards: [], completion: 0 };
+            }
+            sets[setName].total++;
+            sets[setName].cards.push(card.id);
+            if (ownedIds.has(card.id)) {
+                sets[setName].owned++;
+            }
+        });
+        
+        // Calculate completion percentages and bonuses
+        for (const [setName, info] of Object.entries(sets)) {
+            info.completion = info.total > 0 ? info.owned / info.total : 0;
+            // Bonus tiers: 50%=+10%, 80%=+25%, 100%=+50%
+            if (info.completion >= 1) info.bonus = 0.50;
+            else if (info.completion >= 0.8) info.bonus = 0.25;
+            else if (info.completion >= 0.5) info.bonus = 0.10;
+            else info.bonus = 0;
+            info.completionPercent = Math.round(info.completion * 100);
+        }
+        
+        return sets;
+    },
+    
+    // Get total portfolio value in NWG (liquid + card value + staking)
+    getPortfolioValue(cardsData) {
+        if (!this.wallet) return { total: 0 };
+        
+        const liquid = this.wallet.currencies?.nwg || 0;
+        const gold = this.wallet.currencies?.gold || 0;
+        const wood = this.wallet.currencies?.wood || 0;
+        
+        // Card values
+        let cardValue = 0;
+        const collection = this.getFullCollection();
+        const setProgress = this.getSetProgress(cardsData);
+        
+        for (const [cardId, cardInfo] of Object.entries(collection)) {
+            // Find card data
+            const cardMeta = (cardsData || []).find(c => c.id === Number(cardId));
+            if (!cardMeta) continue;
+            
+            const rarity = cardMeta.rarity || 'common';
+            const stars = cardInfo.level || 1;
+            const baseVal = this.BURN_VALUES[rarity] || 10;
+            const starMult = { 1: 1.0, 2: 1.25, 3: 1.5, 4: 2.0, 5: 3.0 }[Math.min(stars, 5)] || 1;
+            
+            // Set bonus
+            const setName = cardMeta.set || 'unknown';
+            const setBonus = setProgress[setName]?.bonus || 0;
+            
+            cardValue += Math.floor(baseVal * starMult * (1 + setBonus)) * (cardInfo.count || 1);
+        }
+        
+        // Staking summary
+        const staking = this.getStakingSummary();
+        
+        return {
+            liquid,
+            gold,
+            wood,
+            cardValue,
+            stakingDailyYield: staking.totalDailyYield,
+            stakingPending: staking.pendingRewards,
+            total: liquid + cardValue + staking.pendingRewards,
+            totalBurned: this.wallet.stats?.totalBurned?.nwg || 0
+        };
+    },
+    
+    // Check if enough of a currency
+    hasEnough(currency, amount) {
+        if (this.isGM) return true;
+        return (this.wallet?.currencies?.[currency] || 0) >= amount;
+    },
+    
     // ===== DAILY LOGIN REWARD SYSTEM =====
     // Creates addictive progression: login → earn → spend → want more → login again
     
@@ -701,10 +1044,115 @@ const NW_WALLET = {
             todayClaimed: false,
             weeklyResets: 0,
             firstLoginDate: Date.now(),
-            streakBroken: false
+            streakBroken: false,
+            streakProtections: 0,      // Number of protections owned
+            protectionsUsed: 0         // Total protections used all-time
         };
         this.saveDailyLoginState(state);
         return state;
+    },
+    
+    // ===== STREAK PROTECTION SYSTEM =====
+    // Based on Paper #111: Loss aversion is 2x stronger than gain seeking
+    STREAK_PROTECTION_COST: 25, // NWG cost for 1 protection
+    
+    // Buy streak protection (stockpile for future)
+    buyStreakProtection(quantity = 1) {
+        if (!this.wallet) return { success: false, reason: 'no_wallet' };
+        
+        const cost = this.STREAK_PROTECTION_COST * quantity;
+        if (!this.hasEnough('nwg', cost)) {
+            return { success: false, reason: 'insufficient_nwg', cost };
+        }
+        
+        // Deduct NWG
+        this.spend('nwg', cost, 'STREAK_PROTECTION_PURCHASE');
+        
+        // Add protections
+        const state = this.getDailyLoginState();
+        state.streakProtections = (state.streakProtections || 0) + quantity;
+        this.saveDailyLoginState(state);
+        
+        this.log('STREAK_PROTECTION_PURCHASED', { quantity, cost, total: state.streakProtections });
+        
+        window.dispatchEvent(new CustomEvent('nw-streak-protection-bought', {
+            detail: { quantity, total: state.streakProtections, cost }
+        }));
+        
+        return { success: true, quantity, total: state.streakProtections, cost };
+    },
+    
+    // Use streak protection to prevent streak loss
+    useStreakProtection() {
+        const state = this.getDailyLoginState();
+        
+        if (!state.streakProtections || state.streakProtections < 1) {
+            return { success: false, reason: 'no_protections' };
+        }
+        
+        if (!state.streakBroken) {
+            return { success: false, reason: 'streak_not_broken' };
+        }
+        
+        // Restore streak!
+        const restoredStreak = state.currentStreak || (state.longestStreak > 0 ? Math.min(state.longestStreak, 6) : 1);
+        state.currentStreak = restoredStreak;
+        state.streakBroken = false;
+        state.streakProtections--;
+        state.protectionsUsed = (state.protectionsUsed || 0) + 1;
+        
+        // Set last claim to yesterday so they can claim today
+        const yesterday = new Date();
+        yesterday.setDate(yesterday.getDate() - 1);
+        yesterday.setHours(12, 0, 0, 0);
+        state.lastClaimDate = yesterday.getTime();
+        state.todayClaimed = false;
+        
+        this.saveDailyLoginState(state);
+        
+        this.log('STREAK_PROTECTION_USED', { 
+            restoredStreak, 
+            protectionsRemaining: state.streakProtections 
+        });
+        
+        window.dispatchEvent(new CustomEvent('nw-streak-restored', {
+            detail: { streak: restoredStreak, protectionsRemaining: state.streakProtections }
+        }));
+        
+        return { success: true, restoredStreak, protectionsRemaining: state.streakProtections };
+    },
+    
+    // Check if streak is about to be lost (for prompting protection use)
+    isStreakAtRisk() {
+        const state = this.getDailyLoginState();
+        return state.streakBroken && state.currentStreak > 0;
+    },
+    
+    // Get streak info for UI
+    getStreakInfo() {
+        const state = this.getDailyLoginState();
+        const canClaim = this.canClaimDailyReward();
+        
+        // Calculate time until next day reset
+        const now = new Date();
+        const tomorrow = new Date(now);
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        tomorrow.setHours(0, 0, 0, 0);
+        const msUntilReset = tomorrow - now;
+        
+        return {
+            currentStreak: state.currentStreak || 0,
+            longestStreak: state.longestStreak || 0,
+            totalDays: state.totalDaysLoggedIn || 0,
+            streakBroken: state.streakBroken || false,
+            canClaim,
+            protections: state.streakProtections || 0,
+            protectionCost: this.STREAK_PROTECTION_COST,
+            nextReward: this.DAILY_REWARDS[(state.currentStreak || 0) % 7],
+            msUntilReset,
+            hoursUntilReset: Math.floor(msUntilReset / (1000 * 60 * 60)),
+            minutesUntilReset: Math.floor((msUntilReset % (1000 * 60 * 60)) / (1000 * 60))
+        };
     },
     
     saveDailyLoginState(state) {

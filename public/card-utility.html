@@ -1,0 +1,871 @@
+<!DOCTYPE html>
+<html lang="en" data-page-id="card-utility">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Card Utility Analysis | NumbahWan TCG</title>
+    <link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Inter:wght@300;400;500;600;700&family=Noto+Sans+TC:wght@300;400;500;700&family=Noto+Sans+Thai:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <style>
+        :root { --bg: #0a0a14; --card-bg: #12121e; --border: #1e1e3a; --text: #e2e8f0; --dim: #64748b; --nwg: #00d4ff; --gold: #ffd700; --sacred: #22c55e; --burn: #ff4444; --mythic: #ff6b00; --legendary: #fbbf24; --epic: #a855f7; --rare: #3b82f6; --uncommon: #22c55e; --common: #71717a; }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { background: var(--bg); color: var(--text); font-family: Inter, sans-serif; padding: 20px; padding-bottom: 60px; }
+        body[data-lang="zh"] { font-family: 'Noto Sans TC', Inter, sans-serif; }
+        body[data-lang="th"] { font-family: 'Noto Sans Thai', Inter, sans-serif; }
+        h1 { font-family: Orbitron, monospace; font-size: 1.8rem; text-align: center; margin-bottom: 8px; background: linear-gradient(135deg, var(--nwg), var(--gold)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .subtitle { text-align: center; color: var(--dim); font-size: 0.9rem; margin-bottom: 24px; }
+        
+        .grid { display: grid; gap: 16px; margin-bottom: 24px; }
+        .grid-2 { grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); }
+        .grid-3 { grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
+        .grid-4 { grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); }
+        
+        .card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 12px; padding: 20px; }
+        .card h3 { font-family: Orbitron, monospace; font-size: 0.85rem; color: var(--dim); margin-bottom: 12px; text-transform: uppercase; letter-spacing: 1px; }
+        
+        .big-number { font-family: Orbitron, monospace; font-size: 2.4rem; font-weight: 900; line-height: 1.1; }
+        .big-number.nwg { color: var(--nwg); }
+        .big-number.gold { color: var(--gold); }
+        .big-number.burn { color: var(--burn); }
+        .big-number.sacred { color: var(--sacred); }
+        .label { color: var(--dim); font-size: 0.75rem; margin-top: 4px; }
+        
+        .meter { height: 8px; background: rgba(255,255,255,0.05); border-radius: 4px; margin-top: 8px; overflow: hidden; }
+        .meter-fill { height: 100%; border-radius: 4px; transition: width 0.8s ease; }
+        
+        .rarity-bar { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.05); }
+        .rarity-bar:last-child { border-bottom: none; }
+        .rarity-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+        .rarity-name { font-weight: 600; min-width: 90px; font-size: 0.85rem; }
+        .rarity-stats { display: flex; gap: 16px; font-size: 0.8rem; color: var(--dim); flex: 1; }
+        .rarity-stats span { white-space: nowrap; }
+        
+        .utility-score { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,0.05); }
+        .utility-score:last-child { border-bottom: none; }
+        .score-bar { flex: 1; }
+        .score-label { font-size: 0.85rem; min-width: 120px; }
+        .score-value { font-family: Orbitron, monospace; font-weight: 700; min-width: 50px; text-align: right; }
+        
+        .flow-chart { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 8px; padding: 16px; background: rgba(0,212,255,0.03); border-radius: 8px; }
+        .flow-node { padding: 8px 14px; border-radius: 8px; font-size: 0.8rem; font-weight: 600; border: 1px solid; text-align: center; }
+        .flow-arrow { color: var(--dim); font-size: 1.2rem; }
+        .flow-active { border-color: var(--nwg); color: var(--nwg); background: rgba(0,212,255,0.1); }
+        .flow-broken { border-color: var(--burn); color: var(--burn); background: rgba(255,68,68,0.1); opacity: 0.5; text-decoration: line-through; }
+        .flow-new { border-color: var(--sacred); color: var(--sacred); background: rgba(34,197,94,0.1); animation: pulse 2s infinite; }
+        @keyframes pulse { 0%, 100% { box-shadow: none; } 50% { box-shadow: 0 0 12px rgba(34,197,94,0.3); } }
+        
+        .tag { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 0.7rem; font-weight: 600; margin: 2px; }
+        .tag-active { background: rgba(34,197,94,0.15); color: #22c55e; }
+        .tag-new { background: rgba(0,212,255,0.15); color: #00d4ff; }
+        .tag-missing { background: rgba(255,68,68,0.15); color: #ff4444; }
+        
+        table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+        th { text-align: left; padding: 10px 8px; border-bottom: 2px solid var(--border); color: var(--dim); font-size: 0.75rem; text-transform: uppercase; }
+        td { padding: 8px; border-bottom: 1px solid rgba(255,255,255,0.05); }
+        tr:hover { background: rgba(255,255,255,0.02); }
+        
+        .section-title { font-family: Orbitron, monospace; font-size: 1.2rem; margin: 32px 0 16px 0; padding-bottom: 8px; border-bottom: 2px solid var(--border); }
+        
+        .back-btn { display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; background: var(--card-bg); border: 1px solid var(--border); border-radius: 8px; color: var(--text); text-decoration: none; font-size: 0.85rem; margin-bottom: 16px; transition: all 0.2s; }
+        .back-btn:hover { border-color: var(--nwg); color: var(--nwg); }
+
+        .lang-switcher { position: fixed; top: 16px; right: 16px; display: flex; gap: 4px; z-index: 100; background: var(--card-bg); border: 1px solid var(--border); border-radius: 8px; padding: 4px; }
+        .lang-btn { padding: 4px 10px; border-radius: 6px; border: none; background: transparent; color: var(--dim); cursor: pointer; font-size: 0.8rem; font-weight: 600; transition: all 0.2s; }
+        .lang-btn.active { background: var(--nwg); color: var(--bg); }
+        .lang-btn:hover { color: var(--text); }
+        
+        @media (max-width: 640px) { 
+            body { padding: 12px; padding-top: 50px; } 
+            .big-number { font-size: 1.8rem; }
+            h1 { font-size: 1.4rem; }
+            .grid-4 { grid-template-columns: 1fr 1fr; }
+        }
+    </style>
+</head>
+<body data-page-id="card-utility">
+    <!-- Language Switcher -->
+    <div class="lang-switcher" id="langSwitcher">
+        <button class="lang-btn active" data-lang="en" onclick="switchLang('en')">EN</button>
+        <button class="lang-btn" data-lang="zh" onclick="switchLang('zh')">中文</button>
+        <button class="lang-btn" data-lang="th" onclick="switchLang('th')">ไทย</button>
+    </div>
+
+    <a href="/" class="back-btn" data-i18n="backHome">&larr; Back to Guild</a>
+    <h1 data-i18n="pageTitle">Card Utility Analysis</h1>
+    <p class="subtitle" data-i18n="pageSubtitle">NW Auto-Learn: Understanding how cards drive currency value</p>
+    
+    <!-- EXECUTIVE SUMMARY -->
+    <div class="grid grid-4" id="summaryCards">
+        <div class="card">
+            <h3 data-i18n="totalCards">Total Cards</h3>
+            <div class="big-number nwg" id="totalCards">&mdash;</div>
+            <div class="label" id="battleReady" data-i18n="loading">Loading...</div>
+        </div>
+        <div class="card">
+            <h3 data-i18n="nwgLockedInCards">NWG Locked in Cards</h3>
+            <div class="big-number gold" id="totalLocked">&mdash;</div>
+            <div class="label" data-i18n="baseValueAllRarities">Base value across all rarities</div>
+        </div>
+        <div class="card">
+            <h3 data-i18n="dailyYieldPotential">Daily Yield Potential</h3>
+            <div class="big-number sacred" id="dailyYield">&mdash;</div>
+            <div class="label" data-i18n="nwgPerDayAllStaked">NWG/day if all cards staked</div>
+        </div>
+        <div class="card">
+            <h3 data-i18n="burnPotential">Burn Potential</h3>
+            <div class="big-number burn" id="burnPotential">&mdash;</div>
+            <div class="label" data-i18n="nwgDestroyableViaBurns">NWG destroyable via card burns</div>
+        </div>
+    </div>
+    
+    <!-- VALUE FLOW -->
+    <h2 class="section-title" data-i18n="valueFlowTitle">Value Flow (Before vs After)</h2>
+    <div class="card" style="margin-bottom: 16px">
+        <h3 data-i18n="beforeUpdate">Before This Update (Broken Flow)</h3>
+        <div class="flow-chart" id="flowBefore"></div>
+    </div>
+    <div class="card">
+        <h3 data-i18n="afterUpdate">After This Update (Complete Loop)</h3>
+        <div class="flow-chart" id="flowAfter"></div>
+    </div>
+    
+    <!-- UTILITY SCORES -->
+    <h2 class="section-title" data-i18n="utilityScoreTitle">Utility Score by Feature</h2>
+    <div class="grid grid-2">
+        <div class="card">
+            <h3 data-i18n="featuresActivated">Features Activated</h3>
+            <div id="utilityScores"></div>
+        </div>
+        <div class="card">
+            <h3 data-i18n="changesThisSession">Changes Made This Session</h3>
+            <div id="changeLog"></div>
+        </div>
+    </div>
+    
+    <!-- RARITY ECONOMICS -->
+    <h2 class="section-title" data-i18n="rarityEconomics">Rarity Economics</h2>
+    <div class="card">
+        <table>
+            <thead>
+                <tr>
+                    <th data-i18n="thRarity">Rarity</th>
+                    <th data-i18n="thCards">Cards</th>
+                    <th data-i18n="thNwgLocked">NWG Locked</th>
+                    <th data-i18n="thDailyYield">Daily Yield</th>
+                    <th data-i18n="thBurnValue">Burn Value</th>
+                    <th data-i18n="thSacredLogs">Sacred Logs</th>
+                    <th data-i18n="thAvgAtk">Avg ATK</th>
+                    <th data-i18n="thAvgHp">Avg HP</th>
+                    <th data-i18n="thAbilities">Abilities</th>
+                </tr>
+            </thead>
+            <tbody id="rarityTable"></tbody>
+        </table>
+    </div>
+    
+    <!-- SET ANALYSIS -->
+    <h2 class="section-title" data-i18n="setCompletionValue">Set Completion Value</h2>
+    <div class="grid grid-3" id="setCards"></div>
+    
+    <!-- ROLE DISTRIBUTION -->
+    <h2 class="section-title" data-i18n="roleDistribution">Role Distribution (Deck Building)</h2>
+    <div class="card">
+        <div id="roleChart"></div>
+    </div>
+    
+    <!-- TOP CARDS BY UTILITY -->
+    <h2 class="section-title" data-i18n="topCardsByUtility">Top Cards by Total Utility Value</h2>
+    <div class="card">
+        <table>
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th data-i18n="thCard">Card</th>
+                    <th data-i18n="thRarity">Rarity</th>
+                    <th data-i18n="thRole">Role</th>
+                    <th data-i18n="thLockedNwg">Locked NWG</th>
+                    <th data-i18n="thDailyYield">Daily Yield</th>
+                    <th data-i18n="thBattlePower">Battle Power</th>
+                    <th data-i18n="thTotalUtility">Total Utility</th>
+                </tr>
+            </thead>
+            <tbody id="topCards"></tbody>
+        </table>
+    </div>
+
+    <script src="/static/nw-nav.js" defer></script>
+    <script src="/static/nw-wallet.js" defer></script>
+    <script src="/static/nw-economy.js" defer></script>
+    
+    <!-- i18n Core -->
+    <script src="/static/nw-i18n-core.js"></script>
+    <script>
+    // =========================================================================
+    // FULL TRANSLATIONS: EN / 繁體中文 / ไทย
+    // =========================================================================
+    const PAGE_I18N = {
+        en: {
+            backHome: '\u2190 Back to Guild',
+            pageTitle: 'Card Utility Analysis',
+            pageSubtitle: 'NW Auto-Learn: Understanding how cards drive currency value',
+            totalCards: 'Total Cards',
+            nwgLockedInCards: 'NWG Locked in Cards',
+            dailyYieldPotential: 'Daily Yield Potential',
+            burnPotential: 'Burn Potential',
+            baseValueAllRarities: 'Base value across all rarities',
+            nwgPerDayAllStaked: 'NWG/day if all cards staked',
+            nwgDestroyableViaBurns: 'NWG destroyable via card burns',
+            battleReadyLabel: '{ready}/{total} battle-ready',
+            valueFlowTitle: 'Value Flow (Before vs After)',
+            beforeUpdate: 'Before This Update (Broken Flow)',
+            afterUpdate: 'After This Update (Complete Loop)',
+            utilityScoreTitle: 'Utility Score by Feature',
+            featuresActivated: 'Features Activated',
+            changesThisSession: 'Changes Made This Session',
+            rarityEconomics: 'Rarity Economics',
+            thRarity: 'Rarity',
+            thCards: 'Cards',
+            thNwgLocked: 'NWG Locked',
+            thDailyYield: 'Daily Yield',
+            thBurnValue: 'Burn Value',
+            thSacredLogs: 'Sacred Logs',
+            thAvgAtk: 'Avg ATK',
+            thAvgHp: 'Avg HP',
+            thAbilities: 'Abilities',
+            setCompletionValue: 'Set Completion Value',
+            roleDistribution: 'Role Distribution (Deck Building)',
+            topCardsByUtility: 'Top Cards by Total Utility Value',
+            thCard: 'Card',
+            thRole: 'Role',
+            thLockedNwg: 'Locked NWG',
+            thBattlePower: 'Battle Power',
+            thTotalUtility: 'Total Utility',
+            loading: 'Loading...',
+            // Flow nodes
+            flowBuyNWG: 'Buy NWG',
+            flowPullCards: 'Pull Cards',
+            flowCardsIdle: 'Cards Sit Idle',
+            flowNoBattle: 'No Battle (0 gameStats)',
+            flowNoEarnings: 'No Earnings',
+            flowNWGInflates: 'NWG Inflates',
+            flowBattleCards: 'Battle ({count} cards w/ stats)',
+            flowWinNWG: 'Win NWG',
+            flowStakeCards: 'Stake Cards (earn daily)',
+            flowBurnOnSpend: '1% Burn on Spend',
+            flowNWGDeflates: 'NWG Deflates',
+            flowNWGWorthMore: 'NWG Worth More',
+            // Features
+            featBattleSystem: 'Battle System',
+            featCardStaking: 'Card Staking',
+            featBurnMechanism: 'Burn Mechanism',
+            featCardBurn: 'Card Burn \u2192 NWG',
+            featRoleCoverage: 'Role Coverage',
+            featSetTracking: 'Set Tracking',
+            featDailyRewards: 'Daily Rewards',
+            featAchievements: 'Achievements',
+            featAuctionHouse: 'Auction House',
+            featPortfolioCalc: 'Portfolio Calc',
+            // Feature details
+            detailBattle: 'gameStats added to all {count} cards',
+            detailStaking: 'Passive NWG income wired to wallet',
+            detailBurn: '1% burn on spend + 2% on exchange',
+            detailCardBurn: 'Cards destroyable for NWG + Sacred Logs',
+            detailRole: 'All {count} cards have roles',
+            detailSet: 'Set completion bonuses calculated',
+            detailDaily: 'Already working, minor improvements',
+            detailAchievements: 'Already working',
+            detailAuction: 'Live with real card images',
+            detailPortfolio: 'Total NWG value calculation',
+            // Changes
+            changeGameStats1: 'gameStats (atk/hp/cost/abilities/crit/dodge) added to all 109 cards in cards.json',
+            changeGameStats2: 'gameStats added to all 110 cards in cards-v2.json',
+            changeRoles: 'Roles assigned to 59 previously role-less cards',
+            changeBurn1: '1% NWG burn on every spend() transaction',
+            changeBurn2: '2% NWG burn on every exchange() operation',
+            changeStaking: 'Card staking system: stake/unstake/claimAll in wallet',
+            changeBurnSystem: 'Card burn system: burn cards for NWG + Sacred Logs',
+            changeSetTracking: 'Set completion tracking with bonus multipliers',
+            changePortfolio: 'Portfolio value calculator (liquid + cards + staking)',
+            changeBattleEngine: 'Battle engine can now load 109+ cards with real stats',
+            // Set cards
+            setLabel: '{name} Set',
+            setCards: 'cards',
+            setNwgLocked: 'NWG Locked:',
+            setYield: 'Yield:',
+            setPerDay: '/day',
+            setFullBonus: '100% Bonus:',
+            setAnnual: 'Annual:',
+            // Roles
+            roleCarry: 'carry',
+            roleGrinder: 'grinder',
+            roleWhale: 'whale',
+            roleLurker: 'lurker',
+            roleSimp: 'simp',
+            roleTroll: 'troll',
+            roleLeech: 'leech',
+            roleGuildParent: 'guild parent',
+            roleRageQuitter: 'rage quitter',
+            roleAfkKing: 'afk king',
+            roleTheoryCrafter: 'theory crafter',
+            roleFashionMain: 'fashion main',
+            roleNone: 'none',
+            // Rarities
+            rarMythic: 'MYTHIC',
+            rarLegendary: 'LEGENDARY',
+            rarEpic: 'EPIC',
+            rarRare: 'RARE',
+            rarUncommon: 'UNCOMMON',
+            rarCommon: 'COMMON'
+        },
+        zh: {
+            backHome: '\u2190 \u8fd4\u56de\u516c\u6703',
+            pageTitle: '\u5361\u7247\u6548\u7528\u5206\u6790',
+            pageSubtitle: 'NW \u81ea\u52d5\u5b78\u7fd2\uff1a\u7406\u89e3\u5361\u7247\u5982\u4f55\u63a8\u52d5\u8ca8\u5e63\u50f9\u503c',
+            totalCards: '\u5361\u7247\u7e3d\u6578',
+            nwgLockedInCards: '\u5361\u7247\u9396\u5b9a NWG',
+            dailyYieldPotential: '\u6bcf\u65e5\u6536\u76ca\u6f5b\u529b',
+            burnPotential: '\u92b7\u6bc0\u6f5b\u529b',
+            baseValueAllRarities: '\u6240\u6709\u7a00\u6709\u5ea6\u7684\u57fa\u790e\u50f9\u503c',
+            nwgPerDayAllStaked: '\u6240\u6709\u5361\u7247\u8cea\u62bc\u6642\u6bcf\u65e5 NWG',
+            nwgDestroyableViaBurns: '\u900f\u904e\u92b7\u6bc0\u53ef\u6467\u6bc0\u7684 NWG',
+            battleReadyLabel: '{ready}/{total} \u6230\u9b25\u5c31\u7dd2',
+            valueFlowTitle: '\u50f9\u503c\u6d41\u5411\uff08\u524d\u5f8c\u5c0d\u6bd4\uff09',
+            beforeUpdate: '\u66f4\u65b0\u524d\uff08\u65b7\u88c2\u6d41\u7a0b\uff09',
+            afterUpdate: '\u66f4\u65b0\u5f8c\uff08\u5b8c\u6574\u5faa\u74b0\uff09',
+            utilityScoreTitle: '\u529f\u80fd\u6548\u7528\u8a55\u5206',
+            featuresActivated: '\u5df2\u555f\u7528\u529f\u80fd',
+            changesThisSession: '\u672c\u6b21\u8b8a\u66f4\u5167\u5bb9',
+            rarityEconomics: '\u7a00\u6709\u5ea6\u7d93\u6fdf\u5b78',
+            thRarity: '\u7a00\u6709\u5ea6',
+            thCards: '\u5361\u7247',
+            thNwgLocked: '\u9396\u5b9a NWG',
+            thDailyYield: '\u6bcf\u65e5\u6536\u76ca',
+            thBurnValue: '\u92b7\u6bc0\u50f9\u503c',
+            thSacredLogs: '\u795e\u8056\u539f\u6728',
+            thAvgAtk: '\u5e73\u5747\u653b\u64ca',
+            thAvgHp: '\u5e73\u5747\u8840\u91cf',
+            thAbilities: '\u6280\u80fd',
+            setCompletionValue: '\u5957\u88dd\u5b8c\u6210\u50f9\u503c',
+            roleDistribution: '\u89d2\u8272\u5206\u4f48\uff08\u7d44\u724c\u69cb\u7bc9\uff09',
+            topCardsByUtility: '\u7e3d\u6548\u7528\u503c\u6700\u9ad8\u5361\u7247',
+            thCard: '\u5361\u7247',
+            thRole: '\u89d2\u8272',
+            thLockedNwg: '\u9396\u5b9a NWG',
+            thBattlePower: '\u6230\u9b25\u529b',
+            thTotalUtility: '\u7e3d\u6548\u7528',
+            loading: '\u8f09\u5165\u4e2d...',
+            flowBuyNWG: '\u8cfc\u8cb7 NWG',
+            flowPullCards: '\u62bd\u5361',
+            flowCardsIdle: '\u5361\u7247\u9592\u7f6e',
+            flowNoBattle: '\u7121\u6cd5\u6230\u9b25 (0 gameStats)',
+            flowNoEarnings: '\u7121\u6536\u76ca',
+            flowNWGInflates: 'NWG \u901a\u8ca8\u81a8\u8139',
+            flowBattleCards: '\u6230\u9b25 ({count} \u5f35\u5361\u7247\u542b\u6578\u64da)',
+            flowWinNWG: '\u8d0f\u53d6 NWG',
+            flowStakeCards: '\u8cea\u62bc\u5361\u7247\uff08\u6bcf\u65e5\u8ce3\u5165\uff09',
+            flowBurnOnSpend: '\u6d88\u8cbb 1% \u92b7\u6bc0',
+            flowNWGDeflates: 'NWG \u901a\u7e2e',
+            flowNWGWorthMore: 'NWG \u66f4\u6709\u50f9\u503c',
+            featBattleSystem: '\u6230\u9b25\u7cfb\u7d71',
+            featCardStaking: '\u5361\u7247\u8cea\u62bc',
+            featBurnMechanism: '\u92b7\u6bc0\u6a5f\u5236',
+            featCardBurn: '\u5361\u7247\u92b7\u6bc0 \u2192 NWG',
+            featRoleCoverage: '\u89d2\u8272\u8986\u84cb\u7387',
+            featSetTracking: '\u5957\u88dd\u8ffd\u8e64',
+            featDailyRewards: '\u6bcf\u65e5\u734e\u52f5',
+            featAchievements: '\u6210\u5c31\u7cfb\u7d71',
+            featAuctionHouse: '\u62cd\u8ce3\u884c',
+            featPortfolioCalc: '\u6295\u8cc7\u7d44\u5408\u8a08\u7b97',
+            detailBattle: '\u5df2\u70ba\u5168\u90e8 {count} \u5f35\u5361\u7247\u65b0\u589e gameStats',
+            detailStaking: '\u88ab\u52d5 NWG \u6536\u5165\u5df2\u9023\u63a5\u9322\u5305',
+            detailBurn: '\u6d88\u8cbb\u71d2\u6bc0 1% + \u5151\u63db\u71d2\u6bc0 2%',
+            detailCardBurn: '\u5361\u7247\u53ef\u92b7\u6bc0\u63db NWG + \u795e\u8056\u539f\u6728',
+            detailRole: '\u5168\u90e8 {count} \u5f35\u5361\u7247\u5df2\u64c1\u6709\u89d2\u8272',
+            detailSet: '\u5957\u88dd\u5b8c\u6210\u52a0\u6210\u5df2\u8a08\u7b97',
+            detailDaily: '\u5df2\u904b\u4f5c\uff0c\u5c0f\u5e45\u6539\u9032',
+            detailAchievements: '\u5df2\u904b\u4f5c',
+            detailAuction: '\u5df2\u4e0a\u7dda\uff0c\u542b\u771f\u5be6\u5361\u7247\u5716\u7247',
+            detailPortfolio: 'NWG \u7e3d\u50f9\u503c\u8a08\u7b97',
+            changeGameStats1: '\u5df2\u70ba cards.json \u4e2d\u6240\u6709 109 \u5f35\u5361\u7247\u65b0\u589e gameStats\uff08atk/hp/cost/abilities/crit/dodge\uff09',
+            changeGameStats2: '\u5df2\u70ba cards-v2.json \u4e2d\u6240\u6709 110 \u5f35\u5361\u7247\u65b0\u589e gameStats',
+            changeRoles: '\u5df2\u70ba 59 \u5f35\u7121\u89d2\u8272\u5361\u7247\u5206\u914d\u89d2\u8272',
+            changeBurn1: '\u6bcf\u6b21 spend() \u4ea4\u6613\u71d2\u6bc0 1% NWG',
+            changeBurn2: '\u6bcf\u6b21 exchange() \u64cd\u4f5c\u71d2\u6bc0 2% NWG',
+            changeStaking: '\u5361\u7247\u8cea\u62bc\u7cfb\u7d71\uff1a\u9322\u5305\u4e2d\u7684 stake/unstake/claimAll',
+            changeBurnSystem: '\u5361\u7247\u92b7\u6bc0\u7cfb\u7d71\uff1a\u71d2\u6bc0\u5361\u7247\u63db NWG + \u795e\u8056\u539f\u6728',
+            changeSetTracking: '\u5957\u88dd\u5b8c\u6210\u8ffd\u8e64\u8207\u52a0\u6210\u500d\u7387',
+            changePortfolio: '\u6295\u8cc7\u7d44\u5408\u8a08\u7b97\u5668\uff08\u6d41\u52d5 + \u5361\u7247 + \u8cea\u62bc\uff09',
+            changeBattleEngine: '\u6230\u9b25\u5f15\u64ce\u73fe\u53ef\u8f09\u5165 109+ \u5f35\u5361\u7247\u7684\u771f\u5be6\u6578\u64da',
+            setLabel: '{name} \u5957\u88dd',
+            setCards: '\u5f35\u5361\u7247',
+            setNwgLocked: '\u9396\u5b9a NWG\uff1a',
+            setYield: '\u6536\u76ca\uff1a',
+            setPerDay: '/\u65e5',
+            setFullBonus: '100% \u52a0\u6210\uff1a',
+            setAnnual: '\u5e74\u5316\uff1a',
+            roleCarry: '\u8f38\u51fa',
+            roleGrinder: '\u80a5\u5b85',
+            roleWhale: '\u5927\u4f6c',
+            roleLurker: '\u6f5b\u6c34\u54e1',
+            roleSimp: '\u820d\u5f1f',
+            roleTroll: '\u6376\u86cb\u9b3c',
+            roleLeech: '\u5403\u66f8\u4eba',
+            roleGuildParent: '\u516c\u6703\u7236\u6bcd',
+            roleRageQuitter: '\u6012\u9000\u738b',
+            roleAfkKing: '\u639b\u6a5f\u738b',
+            roleTheoryCrafter: '\u7406\u8ad6\u5bb6',
+            roleFashionMain: '\u6642\u88dd\u9054\u4eba',
+            roleNone: '\u7121',
+            rarMythic: 'MYTHIC',
+            rarLegendary: 'LEGENDARY',
+            rarEpic: 'EPIC',
+            rarRare: 'RARE',
+            rarUncommon: 'UNCOMMON',
+            rarCommon: 'COMMON'
+        },
+        th: {
+            backHome: '\u2190 \u0e01\u0e25\u0e31\u0e1a\u0e2a\u0e39\u0e48\u0e01\u0e34\u0e25\u0e14\u0e4c',
+            pageTitle: '\u0e27\u0e34\u0e40\u0e04\u0e23\u0e32\u0e30\u0e2b\u0e4c\u0e1b\u0e23\u0e30\u0e42\u0e22\u0e0a\u0e19\u0e4c\u0e01\u0e32\u0e23\u0e4c\u0e14',
+            pageSubtitle: 'NW Auto-Learn: \u0e40\u0e02\u0e49\u0e32\u0e43\u0e08\u0e27\u0e48\u0e32\u0e01\u0e32\u0e23\u0e4c\u0e14\u0e02\u0e31\u0e1a\u0e40\u0e04\u0e25\u0e37\u0e48\u0e2d\u0e19\u0e21\u0e39\u0e25\u0e04\u0e48\u0e32\u0e2a\u0e01\u0e38\u0e25\u0e40\u0e07\u0e34\u0e19\u0e2d\u0e22\u0e48\u0e32\u0e07\u0e44\u0e23',
+            totalCards: '\u0e01\u0e32\u0e23\u0e4c\u0e14\u0e17\u0e31\u0e49\u0e07\u0e2b\u0e21\u0e14',
+            nwgLockedInCards: 'NWG \u0e17\u0e35\u0e48\u0e25\u0e47\u0e2d\u0e04\u0e43\u0e19\u0e01\u0e32\u0e23\u0e4c\u0e14',
+            dailyYieldPotential: '\u0e28\u0e31\u0e01\u0e22\u0e20\u0e32\u0e1e\u0e23\u0e32\u0e22\u0e44\u0e14\u0e49\u0e15\u0e48\u0e2d\u0e27\u0e31\u0e19',
+            burnPotential: '\u0e28\u0e31\u0e01\u0e22\u0e20\u0e32\u0e1e\u0e01\u0e32\u0e23\u0e40\u0e1c\u0e32',
+            baseValueAllRarities: '\u0e21\u0e39\u0e25\u0e04\u0e48\u0e32\u0e1e\u0e37\u0e49\u0e19\u0e10\u0e32\u0e19\u0e02\u0e2d\u0e07\u0e17\u0e38\u0e01\u0e23\u0e30\u0e14\u0e31\u0e1a\u0e04\u0e27\u0e32\u0e21\u0e2b\u0e32\u0e22\u0e32\u0e01',
+            nwgPerDayAllStaked: 'NWG/\u0e27\u0e31\u0e19 \u0e2b\u0e32\u0e01\u0e2a\u0e40\u0e15\u0e04\u0e01\u0e32\u0e23\u0e4c\u0e14\u0e17\u0e31\u0e49\u0e07\u0e2b\u0e21\u0e14',
+            nwgDestroyableViaBurns: 'NWG \u0e17\u0e35\u0e48\u0e17\u0e33\u0e25\u0e32\u0e22\u0e44\u0e14\u0e49\u0e1c\u0e48\u0e32\u0e19\u0e01\u0e32\u0e23\u0e40\u0e1c\u0e32\u0e01\u0e32\u0e23\u0e4c\u0e14',
+            battleReadyLabel: '{ready}/{total} \u0e1e\u0e23\u0e49\u0e2d\u0e21\u0e23\u0e1a',
+            valueFlowTitle: '\u0e01\u0e23\u0e30\u0e41\u0e2a\u0e21\u0e39\u0e25\u0e04\u0e48\u0e32 (\u0e01\u0e48\u0e2d\u0e19 vs \u0e2b\u0e25\u0e31\u0e07)',
+            beforeUpdate: '\u0e01\u0e48\u0e2d\u0e19\u0e2d\u0e31\u0e1b\u0e40\u0e14\u0e15 (\u0e01\u0e23\u0e30\u0e41\u0e2a\u0e02\u0e32\u0e14)',
+            afterUpdate: '\u0e2b\u0e25\u0e31\u0e07\u0e2d\u0e31\u0e1b\u0e40\u0e14\u0e15 (\u0e27\u0e07\u0e08\u0e23\u0e2a\u0e21\u0e1a\u0e39\u0e23\u0e13\u0e4c)',
+            utilityScoreTitle: '\u0e04\u0e30\u0e41\u0e19\u0e19\u0e1b\u0e23\u0e30\u0e42\u0e22\u0e0a\u0e19\u0e4c\u0e15\u0e32\u0e21\u0e1f\u0e35\u0e40\u0e08\u0e2d\u0e23\u0e4c',
+            featuresActivated: '\u0e1f\u0e35\u0e40\u0e08\u0e2d\u0e23\u0e4c\u0e17\u0e35\u0e48\u0e40\u0e1b\u0e34\u0e14\u0e43\u0e0a\u0e49\u0e07\u0e32\u0e19',
+            changesThisSession: '\u0e01\u0e32\u0e23\u0e40\u0e1b\u0e25\u0e35\u0e48\u0e22\u0e19\u0e41\u0e1b\u0e25\u0e07\u0e04\u0e23\u0e31\u0e49\u0e07\u0e19\u0e35\u0e49',
+            rarityEconomics: '\u0e40\u0e28\u0e23\u0e29\u0e10\u0e28\u0e32\u0e2a\u0e15\u0e23\u0e4c\u0e04\u0e27\u0e32\u0e21\u0e2b\u0e32\u0e22\u0e32\u0e01',
+            thRarity: '\u0e04\u0e27\u0e32\u0e21\u0e2b\u0e32\u0e22\u0e32\u0e01',
+            thCards: '\u0e01\u0e32\u0e23\u0e4c\u0e14',
+            thNwgLocked: '\u0e25\u0e47\u0e2d\u0e04 NWG',
+            thDailyYield: '\u0e23\u0e32\u0e22\u0e44\u0e14\u0e49/\u0e27\u0e31\u0e19',
+            thBurnValue: '\u0e21\u0e39\u0e25\u0e04\u0e48\u0e32\u0e40\u0e1c\u0e32',
+            thSacredLogs: '\u0e17\u0e48\u0e2d\u0e19\u0e44\u0e21\u0e49\u0e28\u0e31\u0e01\u0e14\u0e34\u0e4c\u0e2a\u0e34\u0e17\u0e18\u0e34\u0e4c',
+            thAvgAtk: '\u0e1e\u0e25\u0e31\u0e07\u0e42\u0e08\u0e21\u0e15\u0e35\u0e40\u0e09\u0e25\u0e35\u0e48\u0e22',
+            thAvgHp: 'HP \u0e40\u0e09\u0e25\u0e35\u0e48\u0e22',
+            thAbilities: '\u0e04\u0e27\u0e32\u0e21\u0e2a\u0e32\u0e21\u0e32\u0e23\u0e16',
+            setCompletionValue: '\u0e21\u0e39\u0e25\u0e04\u0e48\u0e32\u0e40\u0e0b\u0e47\u0e15\u0e2a\u0e21\u0e1a\u0e39\u0e23\u0e13\u0e4c',
+            roleDistribution: '\u0e01\u0e32\u0e23\u0e01\u0e23\u0e30\u0e08\u0e32\u0e22\u0e1a\u0e17\u0e1a\u0e32\u0e17 (\u0e2a\u0e23\u0e49\u0e32\u0e07\u0e40\u0e14\u0e47\u0e04)',
+            topCardsByUtility: '\u0e01\u0e32\u0e23\u0e4c\u0e14\u0e17\u0e35\u0e48\u0e21\u0e35\u0e1b\u0e23\u0e30\u0e42\u0e22\u0e0a\u0e19\u0e4c\u0e2a\u0e39\u0e07\u0e2a\u0e38\u0e14',
+            thCard: '\u0e01\u0e32\u0e23\u0e4c\u0e14',
+            thRole: '\u0e1a\u0e17\u0e1a\u0e32\u0e17',
+            thLockedNwg: '\u0e25\u0e47\u0e2d\u0e04 NWG',
+            thBattlePower: '\u0e1e\u0e25\u0e31\u0e07\u0e23\u0e1a',
+            thTotalUtility: '\u0e1b\u0e23\u0e30\u0e42\u0e22\u0e0a\u0e19\u0e4c\u0e23\u0e27\u0e21',
+            loading: '\u0e01\u0e33\u0e25\u0e31\u0e07\u0e42\u0e2b\u0e25\u0e14...',
+            flowBuyNWG: '\u0e0b\u0e37\u0e49\u0e2d NWG',
+            flowPullCards: '\u0e2a\u0e38\u0e48\u0e21\u0e01\u0e32\u0e23\u0e4c\u0e14',
+            flowCardsIdle: '\u0e01\u0e32\u0e23\u0e4c\u0e14\u0e2d\u0e22\u0e39\u0e48\u0e40\u0e09\u0e22\u0e46',
+            flowNoBattle: '\u0e44\u0e21\u0e48\u0e21\u0e35\u0e01\u0e32\u0e23\u0e15\u0e48\u0e2d\u0e2a\u0e39\u0e49 (0 gameStats)',
+            flowNoEarnings: '\u0e44\u0e21\u0e48\u0e21\u0e35\u0e23\u0e32\u0e22\u0e44\u0e14\u0e49',
+            flowNWGInflates: 'NWG \u0e40\u0e07\u0e34\u0e19\u0e40\u0e1f\u0e49\u0e2d',
+            flowBattleCards: '\u0e15\u0e48\u0e2d\u0e2a\u0e39\u0e49 ({count} \u0e01\u0e32\u0e23\u0e4c\u0e14\u0e21\u0e35\u0e2a\u0e16\u0e34\u0e15\u0e34)',
+            flowWinNWG: '\u0e0a\u0e19\u0e30 NWG',
+            flowStakeCards: '\u0e2a\u0e40\u0e15\u0e04\u0e01\u0e32\u0e23\u0e4c\u0e14 (\u0e23\u0e31\u0e1a\u0e23\u0e32\u0e22\u0e27\u0e31\u0e19)',
+            flowBurnOnSpend: '\u0e40\u0e1c\u0e32 1% \u0e40\u0e21\u0e37\u0e48\u0e2d\u0e43\u0e0a\u0e49\u0e08\u0e48\u0e32\u0e22',
+            flowNWGDeflates: 'NWG \u0e25\u0e14\u0e25\u0e07',
+            flowNWGWorthMore: 'NWG \u0e21\u0e35\u0e04\u0e48\u0e32\u0e21\u0e32\u0e01\u0e02\u0e36\u0e49\u0e19',
+            featBattleSystem: '\u0e23\u0e30\u0e1a\u0e1a\u0e01\u0e32\u0e23\u0e15\u0e48\u0e2d\u0e2a\u0e39\u0e49',
+            featCardStaking: '\u0e2a\u0e40\u0e15\u0e04\u0e01\u0e32\u0e23\u0e4c\u0e14',
+            featBurnMechanism: '\u0e01\u0e25\u0e44\u0e01\u0e01\u0e32\u0e23\u0e40\u0e1c\u0e32',
+            featCardBurn: '\u0e40\u0e1c\u0e32\u0e01\u0e32\u0e23\u0e4c\u0e14 \u2192 NWG',
+            featRoleCoverage: '\u0e04\u0e27\u0e32\u0e21\u0e04\u0e23\u0e2d\u0e1a\u0e04\u0e25\u0e38\u0e21\u0e1a\u0e17\u0e1a\u0e32\u0e17',
+            featSetTracking: '\u0e15\u0e34\u0e14\u0e15\u0e32\u0e21\u0e40\u0e0b\u0e47\u0e15',
+            featDailyRewards: '\u0e23\u0e32\u0e07\u0e27\u0e31\u0e25\u0e1b\u0e23\u0e30\u0e08\u0e33\u0e27\u0e31\u0e19',
+            featAchievements: '\u0e04\u0e27\u0e32\u0e21\u0e2a\u0e33\u0e40\u0e23\u0e47\u0e08',
+            featAuctionHouse: '\u0e1a\u0e49\u0e32\u0e19\u0e1b\u0e23\u0e30\u0e21\u0e39\u0e25',
+            featPortfolioCalc: '\u0e04\u0e33\u0e19\u0e27\u0e13\u0e1e\u0e2d\u0e23\u0e4c\u0e15\u0e42\u0e1f\u0e25\u0e34\u0e42\u0e2d',
+            detailBattle: '\u0e40\u0e1e\u0e34\u0e48\u0e21 gameStats \u0e43\u0e2b\u0e49\u0e01\u0e32\u0e23\u0e4c\u0e14\u0e17\u0e31\u0e49\u0e07\u0e2b\u0e21\u0e14 {count} \u0e43\u0e1a',
+            detailStaking: '\u0e23\u0e32\u0e22\u0e44\u0e14\u0e49 NWG \u0e1e\u0e32\u0e2a\u0e0b\u0e35\u0e1f\u0e40\u0e0a\u0e37\u0e48\u0e2d\u0e21\u0e01\u0e31\u0e1a\u0e01\u0e23\u0e30\u0e40\u0e1b\u0e4b\u0e32',
+            detailBurn: '\u0e40\u0e1c\u0e32 1% \u0e40\u0e21\u0e37\u0e48\u0e2d\u0e43\u0e0a\u0e49\u0e08\u0e48\u0e32\u0e22 + 2% \u0e40\u0e21\u0e37\u0e48\u0e2d\u0e41\u0e25\u0e01\u0e40\u0e1b\u0e25\u0e35\u0e48\u0e22\u0e19',
+            detailCardBurn: '\u0e01\u0e32\u0e23\u0e4c\u0e14\u0e2a\u0e32\u0e21\u0e32\u0e23\u0e16\u0e17\u0e33\u0e25\u0e32\u0e22\u0e40\u0e1e\u0e37\u0e48\u0e2d\u0e41\u0e25\u0e01 NWG + \u0e17\u0e48\u0e2d\u0e19\u0e44\u0e21\u0e49\u0e28\u0e31\u0e01\u0e14\u0e34\u0e4c\u0e2a\u0e34\u0e17\u0e18\u0e34\u0e4c',
+            detailRole: '\u0e01\u0e32\u0e23\u0e4c\u0e14\u0e17\u0e31\u0e49\u0e07\u0e2b\u0e21\u0e14 {count} \u0e43\u0e1a\u0e21\u0e35\u0e1a\u0e17\u0e1a\u0e32\u0e17\u0e41\u0e25\u0e49\u0e27',
+            detailSet: '\u0e04\u0e33\u0e19\u0e27\u0e13\u0e42\u0e1a\u0e19\u0e31\u0e2a\u0e2a\u0e21\u0e1a\u0e39\u0e23\u0e13\u0e4c\u0e40\u0e0b\u0e47\u0e15\u0e41\u0e25\u0e49\u0e27',
+            detailDaily: '\u0e17\u0e33\u0e07\u0e32\u0e19\u0e2d\u0e22\u0e39\u0e48\u0e41\u0e25\u0e49\u0e27 \u0e1b\u0e23\u0e31\u0e1a\u0e1b\u0e23\u0e38\u0e07\u0e40\u0e25\u0e47\u0e01\u0e19\u0e49\u0e2d\u0e22',
+            detailAchievements: '\u0e17\u0e33\u0e07\u0e32\u0e19\u0e2d\u0e22\u0e39\u0e48\u0e41\u0e25\u0e49\u0e27',
+            detailAuction: '\u0e40\u0e1b\u0e34\u0e14\u0e43\u0e0a\u0e49\u0e07\u0e32\u0e19\u0e41\u0e25\u0e49\u0e27\u0e1e\u0e23\u0e49\u0e2d\u0e21\u0e23\u0e39\u0e1b\u0e01\u0e32\u0e23\u0e4c\u0e14\u0e08\u0e23\u0e34\u0e07',
+            detailPortfolio: '\u0e04\u0e33\u0e19\u0e27\u0e13\u0e21\u0e39\u0e25\u0e04\u0e48\u0e32\u0e23\u0e27\u0e21 NWG',
+            changeGameStats1: '\u0e40\u0e1e\u0e34\u0e48\u0e21 gameStats (atk/hp/cost/abilities/crit/dodge) \u0e43\u0e2b\u0e49\u0e01\u0e32\u0e23\u0e4c\u0e14\u0e17\u0e31\u0e49\u0e07\u0e2b\u0e21\u0e14 109 \u0e43\u0e1a\u0e43\u0e19 cards.json',
+            changeGameStats2: '\u0e40\u0e1e\u0e34\u0e48\u0e21 gameStats \u0e43\u0e2b\u0e49\u0e01\u0e32\u0e23\u0e4c\u0e14\u0e17\u0e31\u0e49\u0e07\u0e2b\u0e21\u0e14 110 \u0e43\u0e1a\u0e43\u0e19 cards-v2.json',
+            changeRoles: '\u0e01\u0e33\u0e2b\u0e19\u0e14\u0e1a\u0e17\u0e1a\u0e32\u0e17\u0e43\u0e2b\u0e49\u0e01\u0e32\u0e23\u0e4c\u0e14 59 \u0e43\u0e1a\u0e17\u0e35\u0e48\u0e44\u0e21\u0e48\u0e21\u0e35\u0e1a\u0e17\u0e1a\u0e32\u0e17',
+            changeBurn1: '\u0e40\u0e1c\u0e32 1% NWG \u0e17\u0e38\u0e01\u0e04\u0e23\u0e31\u0e49\u0e07\u0e17\u0e35\u0e48 spend()',
+            changeBurn2: '\u0e40\u0e1c\u0e32 2% NWG \u0e17\u0e38\u0e01\u0e04\u0e23\u0e31\u0e49\u0e07\u0e17\u0e35\u0e48 exchange()',
+            changeStaking: '\u0e23\u0e30\u0e1a\u0e1a\u0e2a\u0e40\u0e15\u0e04\u0e01\u0e32\u0e23\u0e4c\u0e14: stake/unstake/claimAll \u0e43\u0e19\u0e01\u0e23\u0e30\u0e40\u0e1b\u0e4b\u0e32',
+            changeBurnSystem: '\u0e23\u0e30\u0e1a\u0e1a\u0e40\u0e1c\u0e32\u0e01\u0e32\u0e23\u0e4c\u0e14: \u0e17\u0e33\u0e25\u0e32\u0e22\u0e01\u0e32\u0e23\u0e4c\u0e14\u0e41\u0e25\u0e01 NWG + \u0e17\u0e48\u0e2d\u0e19\u0e44\u0e21\u0e49\u0e28\u0e31\u0e01\u0e14\u0e34\u0e4c\u0e2a\u0e34\u0e17\u0e18\u0e34\u0e4c',
+            changeSetTracking: '\u0e15\u0e34\u0e14\u0e15\u0e32\u0e21\u0e40\u0e0b\u0e47\u0e15\u0e2a\u0e21\u0e1a\u0e39\u0e23\u0e13\u0e4c\u0e1e\u0e23\u0e49\u0e2d\u0e21\u0e15\u0e31\u0e27\u0e04\u0e39\u0e13\u0e42\u0e1a\u0e19\u0e31\u0e2a',
+            changePortfolio: '\u0e40\u0e04\u0e23\u0e37\u0e48\u0e2d\u0e07\u0e04\u0e33\u0e19\u0e27\u0e13\u0e1e\u0e2d\u0e23\u0e4c\u0e15\u0e42\u0e1f\u0e25\u0e34\u0e42\u0e2d (\u0e2a\u0e20\u0e32\u0e1e\u0e04\u0e25\u0e48\u0e2d\u0e07 + \u0e01\u0e32\u0e23\u0e4c\u0e14 + \u0e2a\u0e40\u0e15\u0e04)',
+            changeBattleEngine: '\u0e23\u0e30\u0e1a\u0e1a\u0e01\u0e32\u0e23\u0e15\u0e48\u0e2d\u0e2a\u0e39\u0e49\u0e42\u0e2b\u0e25\u0e14\u0e01\u0e32\u0e23\u0e4c\u0e14 109+ \u0e43\u0e1a\u0e1e\u0e23\u0e49\u0e2d\u0e21\u0e2a\u0e16\u0e34\u0e15\u0e34\u0e08\u0e23\u0e34\u0e07\u0e44\u0e14\u0e49',
+            setLabel: '\u0e40\u0e0b\u0e47\u0e15 {name}',
+            setCards: '\u0e01\u0e32\u0e23\u0e4c\u0e14',
+            setNwgLocked: '\u0e25\u0e47\u0e2d\u0e04 NWG:',
+            setYield: '\u0e23\u0e32\u0e22\u0e44\u0e14\u0e49:',
+            setPerDay: '/\u0e27\u0e31\u0e19',
+            setFullBonus: '100% \u0e42\u0e1a\u0e19\u0e31\u0e2a:',
+            setAnnual: '\u0e15\u0e48\u0e2d\u0e1b\u0e35:',
+            roleCarry: '\u0e41\u0e04\u0e23\u0e35\u0e48',
+            roleGrinder: '\u0e44\u0e23\u0e40\u0e14\u0e2d\u0e23\u0e4c',
+            roleWhale: '\u0e27\u0e32\u0e2c',
+            roleLurker: '\u0e04\u0e19\u0e14\u0e33\u0e19\u0e49\u0e33',
+            roleSimp: '\u0e0b\u0e34\u0e21\u0e1b\u0e4c',
+            roleTroll: '\u0e42\u0e17\u0e23\u0e25\u0e25\u0e4c',
+            roleLeech: '\u0e25\u0e35\u0e0a',
+            roleGuildParent: '\u0e1e\u0e48\u0e2d\u0e41\u0e21\u0e48\u0e01\u0e34\u0e25\u0e14\u0e4c',
+            roleRageQuitter: '\u0e42\u0e01\u0e23\u0e18\u0e2d\u0e2d\u0e01',
+            roleAfkKing: '\u0e23\u0e32\u0e0a\u0e32 AFK',
+            roleTheoryCrafter: '\u0e19\u0e31\u0e01\u0e17\u0e24\u0e29\u0e0e\u0e35',
+            roleFashionMain: '\u0e2a\u0e32\u0e22\u0e41\u0e1f\u0e0a\u0e31\u0e48\u0e19',
+            roleNone: '\u0e44\u0e21\u0e48\u0e21\u0e35',
+            rarMythic: 'MYTHIC',
+            rarLegendary: 'LEGENDARY',
+            rarEpic: 'EPIC',
+            rarRare: 'RARE',
+            rarUncommon: 'UNCOMMON',
+            rarCommon: 'COMMON'
+        }
+    };
+
+    // Register with NW_I18N system
+    if (typeof NW_I18N !== 'undefined') {
+        NW_I18N.registerPage('card-utility', PAGE_I18N);
+    }
+
+    // =========================================================================
+    // TRANSLATION HELPER
+    // =========================================================================
+    function T(key, fallback, replacements) {
+        let lang = (typeof NW_I18N !== 'undefined') ? NW_I18N.lang : (localStorage.getItem('nw_lang') || 'en');
+        let text = PAGE_I18N[lang]?.[key] || PAGE_I18N.en?.[key] || fallback || key;
+        if (replacements) {
+            Object.entries(replacements).forEach(([k, v]) => {
+                text = text.replace(`{${k}}`, v);
+            });
+        }
+        return text;
+    }
+
+    // Role translation helper
+    const ROLE_MAP = {
+        carry: 'roleCarry', grinder: 'roleGrinder', whale: 'roleWhale',
+        lurker: 'roleLurker', simp: 'roleSimp', troll: 'roleTroll',
+        leech: 'roleLeech', guild_parent: 'roleGuildParent',
+        rage_quitter: 'roleRageQuitter', afk_king: 'roleAfkKing',
+        theory_crafter: 'roleTheoryCrafter', fashion_main: 'roleFashionMain',
+        none: 'roleNone'
+    };
+
+    function translateRole(role) {
+        const key = ROLE_MAP[role] || ROLE_MAP.none;
+        return T(key, role.replace(/_/g, ' '));
+    }
+
+    // Rarity translation helper
+    const RARITY_MAP = {
+        mythic: 'rarMythic', legendary: 'rarLegendary', epic: 'rarEpic',
+        rare: 'rarRare', uncommon: 'rarUncommon', common: 'rarCommon'
+    };
+
+    function translateRarity(rarity) {
+        const key = RARITY_MAP[rarity] || rarity.toUpperCase();
+        return T(key, rarity.toUpperCase());
+    }
+
+    // =========================================================================
+    // LANGUAGE SWITCHER
+    // =========================================================================
+    function switchLang(lang) {
+        // Update button states
+        document.querySelectorAll('.lang-btn').forEach(btn => {
+            btn.classList.toggle('active', btn.dataset.lang === lang);
+        });
+        // Set via NW_I18N (which triggers data-i18n re-apply)
+        if (typeof NW_I18N !== 'undefined') {
+            NW_I18N.setLang(lang);
+        }
+        localStorage.setItem('nw_lang', lang);
+        localStorage.setItem('lang', lang);
+        // Re-render dynamic content
+        renderAllDynamic();
+    }
+
+    // Restore language on load
+    function restoreLangSwitcher() {
+        const lang = (typeof NW_I18N !== 'undefined') ? NW_I18N.lang : (localStorage.getItem('nw_lang') || 'en');
+        document.querySelectorAll('.lang-btn').forEach(btn => {
+            btn.classList.toggle('active', btn.dataset.lang === lang);
+        });
+        // Update body font
+        if (lang === 'zh') document.body.style.fontFamily = "'Noto Sans TC', Inter, sans-serif";
+        else if (lang === 'th') document.body.style.fontFamily = "'Noto Sans Thai', Inter, sans-serif";
+        else document.body.style.fontFamily = "'Inter', sans-serif";
+    }
+
+    // =========================================================================
+    // MAIN LOGIC
+    // =========================================================================
+    let _cards = [];
+
+    async function loadCards() {
+        try {
+            const res = await fetch('/api/cards');
+            const data = await res.json();
+            _cards = data.cards || [];
+        } catch (e) {
+            console.error('Failed to load cards:', e);
+        }
+    }
+
+    function renderAllDynamic() {
+        if (_cards.length === 0) return;
+        renderSummary(_cards);
+        renderFlowCharts(_cards);
+        renderUtilityScores(_cards);
+        renderChanges();
+        renderRarityTable(_cards);
+        renderSetAnalysis(_cards);
+        renderRoleDistribution(_cards);
+        renderTopCards(_cards);
+    }
+
+    // ===== CONSTANTS =====
+    const BURN_VALUES = { common: 10, uncommon: 25, rare: 75, epic: 200, legendary: 500, mythic: 1500 };
+    const DAILY_YIELDS = { common: 0.1, uncommon: 0.25, rare: 0.5, epic: 1.0, legendary: 2.5, mythic: 5.0 };
+    const BURN_LOGS = { common: 0, uncommon: 0, rare: 1, epic: 2, legendary: 5, mythic: 10 };
+    const BURN_PREMIUM = 0.10;
+    const rarities = ['mythic', 'legendary', 'epic', 'rare', 'uncommon', 'common'];
+    const rarityColors = { mythic: '#ff6b00', legendary: '#fbbf24', epic: '#a855f7', rare: '#3b82f6', uncommon: '#22c55e', common: '#71717a' };
+    const roleColors = { carry: '#3b82f6', grinder: '#ff6b00', whale: '#ffd700', lurker: '#6b21a8', simp: '#ec4899', troll: '#22c55e', leech: '#92400e', guild_parent: '#f5f5f4', rage_quitter: '#dc2626', afk_king: '#94a3b8', theory_crafter: '#06b6d4', fashion_main: '#d946ef' };
+
+    // ===== RENDER FUNCTIONS =====
+
+    function renderSummary(cards) {
+        const battleReady = cards.filter(c => c.gameStats).length;
+        let totalLocked = 0, totalDailyYield = 0, totalBurnPotential = 0;
+        cards.forEach(c => {
+            const r = c.rarity;
+            totalLocked += BURN_VALUES[r] || 10;
+            totalDailyYield += DAILY_YIELDS[r] || 0.1;
+            totalBurnPotential += Math.floor((BURN_VALUES[r] || 10) * (1 + BURN_PREMIUM));
+        });
+        document.getElementById('totalCards').textContent = cards.length;
+        document.getElementById('battleReady').textContent = T('battleReadyLabel', '{ready}/{total} battle-ready', { ready: battleReady, total: cards.length });
+        document.getElementById('totalLocked').textContent = totalLocked.toLocaleString();
+        document.getElementById('dailyYield').textContent = totalDailyYield.toFixed(1);
+        document.getElementById('burnPotential').textContent = totalBurnPotential.toLocaleString();
+    }
+
+    function renderFlowCharts(cards) {
+        const battleCount = cards.filter(c => c.gameStats).length;
+        // Before flow
+        const beforeNodes = [
+            { text: T('flowBuyNWG'), cls: 'flow-active' },
+            { text: T('flowPullCards'), cls: 'flow-active' },
+            { text: T('flowCardsIdle'), cls: 'flow-broken' },
+            { text: T('flowNoBattle'), cls: 'flow-broken' },
+            { text: T('flowNoEarnings'), cls: 'flow-broken' },
+            { text: T('flowNWGInflates'), cls: 'flow-broken' }
+        ];
+        // After flow
+        const afterNodes = [
+            { text: T('flowBuyNWG'), cls: 'flow-active' },
+            { text: T('flowPullCards'), cls: 'flow-active' },
+            { text: T('flowBattleCards', 'Battle ({count} cards w/ stats)', { count: battleCount }), cls: 'flow-new' },
+            { text: T('flowWinNWG'), cls: 'flow-new' },
+            { text: T('flowStakeCards'), cls: 'flow-new' },
+            { text: T('flowBurnOnSpend'), cls: 'flow-new' },
+            { text: T('flowNWGDeflates'), cls: 'flow-new' },
+            { text: T('flowNWGWorthMore'), cls: 'flow-active' }
+        ];
+        function buildFlow(nodes) {
+            return nodes.map((n, i) => {
+                const arrow = i < nodes.length - 1 ? '<span class="flow-arrow">\u2192</span>' : '';
+                return `<div class="flow-node ${n.cls}">${n.text}</div>${arrow}`;
+            }).join('');
+        }
+        document.getElementById('flowBefore').innerHTML = buildFlow(beforeNodes);
+        document.getElementById('flowAfter').innerHTML = buildFlow(afterNodes);
+    }
+
+    function renderUtilityScores(cards) {
+        const cardCount = cards.length;
+        const features = [
+            { key: 'featBattleSystem', before: 0, after: 100, detailKey: 'detailBattle', detailReplace: { count: cardCount } },
+            { key: 'featCardStaking', before: 15, after: 95, detailKey: 'detailStaking' },
+            { key: 'featBurnMechanism', before: 0, after: 90, detailKey: 'detailBurn' },
+            { key: 'featCardBurn', before: 10, after: 85, detailKey: 'detailCardBurn' },
+            { key: 'featRoleCoverage', before: 46, after: 100, detailKey: 'detailRole', detailReplace: { count: cardCount } },
+            { key: 'featSetTracking', before: 0, after: 80, detailKey: 'detailSet' },
+            { key: 'featDailyRewards', before: 90, after: 95, detailKey: 'detailDaily' },
+            { key: 'featAchievements', before: 85, after: 90, detailKey: 'detailAchievements' },
+            { key: 'featAuctionHouse', before: 80, after: 85, detailKey: 'detailAuction' },
+            { key: 'featPortfolioCalc', before: 5, after: 75, detailKey: 'detailPortfolio' },
+        ];
+        let html = '';
+        features.forEach(f => {
+            const change = f.after - f.before;
+            const color = change > 50 ? 'var(--sacred)' : change > 20 ? 'var(--nwg)' : 'var(--dim)';
+            html += `<div class="utility-score">
+                <div class="score-label">${T(f.key)}</div>
+                <div class="score-bar">
+                    <div class="meter"><div class="meter-fill" style="width:${f.after}%; background:${color}"></div></div>
+                </div>
+                <div class="score-value" style="color:${color}">${f.after}%</div>
+            </div>`;
+        });
+        document.getElementById('utilityScores').innerHTML = html;
+    }
+
+    function renderChanges() {
+        const changes = [
+            { tag: 'new', key: 'changeGameStats1' },
+            { tag: 'new', key: 'changeGameStats2' },
+            { tag: 'new', key: 'changeRoles' },
+            { tag: 'new', key: 'changeBurn1' },
+            { tag: 'new', key: 'changeBurn2' },
+            { tag: 'new', key: 'changeStaking' },
+            { tag: 'new', key: 'changeBurnSystem' },
+            { tag: 'new', key: 'changeSetTracking' },
+            { tag: 'new', key: 'changePortfolio' },
+            { tag: 'active', key: 'changeBattleEngine' },
+        ];
+        let html = '';
+        changes.forEach(c => {
+            html += `<div style="padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.05)">
+                <span class="tag tag-${c.tag}">${c.tag.toUpperCase()}</span> ${T(c.key)}
+            </div>`;
+        });
+        document.getElementById('changeLog').innerHTML = html;
+    }
+
+    function renderRarityTable(cards) {
+        const byRarity = {};
+        rarities.forEach(r => byRarity[r] = []);
+        cards.forEach(c => (byRarity[c.rarity] || byRarity.common).push(c));
+        let html = '';
+        rarities.forEach(r => {
+            const group = byRarity[r];
+            if (group.length === 0) return;
+            const locked = group.reduce((s, c) => s + (BURN_VALUES[c.rarity] || 10), 0);
+            const yield_ = group.reduce((s, c) => s + (DAILY_YIELDS[c.rarity] || 0.1), 0);
+            const burn = group.reduce((s, c) => s + Math.floor((BURN_VALUES[c.rarity] || 10) * 1.1), 0);
+            const logs = group.reduce((s, c) => s + (BURN_LOGS[c.rarity] || 0), 0);
+            const withStats = group.filter(c => c.gameStats);
+            const avgAtk = withStats.reduce((s, c) => s + c.gameStats.atk, 0) / Math.max(1, withStats.length);
+            const avgHp = withStats.reduce((s, c) => s + c.gameStats.hp, 0) / Math.max(1, withStats.length);
+            const totalAbilities = group.filter(c => c.gameStats?.abilities?.length > 0).length;
+            html += `<tr>
+                <td><span style="color:${rarityColors[r]}; font-weight:700">${translateRarity(r)}</span></td>
+                <td>${group.length}</td>
+                <td style="color:var(--gold)">${locked.toLocaleString()}</td>
+                <td style="color:var(--sacred)">${yield_.toFixed(1)}${T('setPerDay')}</td>
+                <td style="color:var(--burn)">${burn.toLocaleString()}</td>
+                <td>${logs}</td>
+                <td>${avgAtk.toFixed(1)}</td>
+                <td>${avgHp.toFixed(1)}</td>
+                <td>${totalAbilities}/${group.length}</td>
+            </tr>`;
+        });
+        document.getElementById('rarityTable').innerHTML = html;
+    }
+
+    function renderSetAnalysis(cards) {
+        const sets = {};
+        cards.forEach(c => {
+            const s = c.set || 'unknown';
+            if (!sets[s]) sets[s] = { count: 0, totalValue: 0, totalYield: 0 };
+            sets[s].count++;
+            sets[s].totalValue += BURN_VALUES[c.rarity] || 10;
+            sets[s].totalYield += DAILY_YIELDS[c.rarity] || 0.1;
+        });
+        let html = '';
+        Object.entries(sets).sort((a, b) => b[1].totalValue - a[1].totalValue).forEach(([name, info]) => {
+            const setName = name.charAt(0).toUpperCase() + name.slice(1);
+            html += `<div class="card">
+                <h3>${T('setLabel', '{name} Set', { name: setName })}</h3>
+                <div style="font-size:2rem;font-weight:900;font-family:Orbitron;color:var(--gold)">${info.count}</div>
+                <div class="label">${T('setCards')}</div>
+                <div style="margin-top:12px;display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:0.85rem">
+                    <div>${T('setNwgLocked')} <span style="color:var(--gold)">${info.totalValue.toLocaleString()}</span></div>
+                    <div>${T('setYield')} <span style="color:var(--sacred)">${info.totalYield.toFixed(1)}${T('setPerDay')}</span></div>
+                    <div>${T('setFullBonus')} <span style="color:var(--nwg)">+50%</span></div>
+                    <div>${T('setAnnual')} <span style="color:var(--sacred)">${Math.round(info.totalYield * 365).toLocaleString()}</span></div>
+                </div>
+            </div>`;
+        });
+        document.getElementById('setCards').innerHTML = html;
+    }
+
+    function renderRoleDistribution(cards) {
+        const roles = {};
+        cards.forEach(c => {
+            const r = c.role || 'none';
+            roles[r] = (roles[r] || 0) + 1;
+        });
+        let html = '';
+        Object.entries(roles).sort((a, b) => b[1] - a[1]).forEach(([role, count]) => {
+            const pct = Math.round((count / cards.length) * 100);
+            const color = roleColors[role] || '#888';
+            html += `<div class="rarity-bar">
+                <div class="rarity-dot" style="background:${color}"></div>
+                <div class="rarity-name" style="color:${color}">${translateRole(role)}</div>
+                <div style="flex:1">
+                    <div class="meter"><div class="meter-fill" style="width:${pct}%; background:${color}"></div></div>
+                </div>
+                <div style="min-width:60px;text-align:right;font-family:Orbitron;font-size:0.85rem">${count} (${pct}%)</div>
+            </div>`;
+        });
+        document.getElementById('roleChart').innerHTML = html;
+    }
+
+    function renderTopCards(cards) {
+        const utilityCards = cards.map(c => {
+            const locked = BURN_VALUES[c.rarity] || 10;
+            const yield_ = DAILY_YIELDS[c.rarity] || 0.1;
+            const gs = c.gameStats || {};
+            const battlePower = (gs.atk || 0) + (gs.hp || 0) + (gs.abilities?.length || 0) * 3;
+            const annualYield = yield_ * 365;
+            const totalUtility = locked + annualYield + battlePower * 10;
+            return { ...c, locked, yield_, battlePower, totalUtility };
+        }).sort((a, b) => b.totalUtility - a.totalUtility);
+        let html = '';
+        utilityCards.slice(0, 20).forEach((c, i) => {
+            const color = rarityColors[c.rarity] || '#888';
+            html += `<tr>
+                <td style="color:var(--dim)">${i + 1}</td>
+                <td style="font-weight:600">${c.name}</td>
+                <td><span style="color:${color}">${translateRarity(c.rarity).toLowerCase()}</span></td>
+                <td>${translateRole(c.role || 'none')}</td>
+                <td style="color:var(--gold)">${c.locked}</td>
+                <td style="color:var(--sacred)">${c.yield_}${T('setPerDay')}</td>
+                <td>${c.battlePower}</td>
+                <td style="font-family:Orbitron;font-weight:700;color:var(--nwg)">${Math.round(c.totalUtility)}</td>
+            </tr>`;
+        });
+        document.getElementById('topCards').innerHTML = html;
+    }
+
+    // =========================================================================
+    // INIT
+    // =========================================================================
+    document.addEventListener('DOMContentLoaded', async () => {
+        restoreLangSwitcher();
+        await loadCards();
+        renderAllDynamic();
+
+        // Listen for NW_I18N language changes (from nav or other sources)
+        if (typeof NW_I18N !== 'undefined') {
+            NW_I18N.onChange((lang) => {
+                restoreLangSwitcher();
+                renderAllDynamic();
+            });
+        }
+    });
+    </script>
+</body>
+</html>

@@ -506,7 +506,7 @@
     <!-- Header -->
     <header class="header">
         <div class="header-title" data-i18n="battleArena">⚔️ BATTLE ARENA</div>
-        <div class="header-balance">💰 <span id="balanceDisplay">1,000</span> NWG</div>
+        <div class="header-balance"><span id="nwgIcon"></span> <span id="balanceDisplay">1,000</span> NWG</div>
     </header>
     
     <!-- Instructions -->
@@ -879,12 +879,24 @@
     // ═══════════════════════════════════════════════════════════════════════════
     
     async function init() {
-        // Load wallet balance if available
+        // Render NWG icon using unified system
+        if (typeof NW_CURRENCY !== 'undefined') {
+            document.getElementById('nwgIcon').innerHTML = NW_CURRENCY.icon('nwg', { size: 18 });
+        } else {
+            document.getElementById('nwgIcon').textContent = '💎';
+        }
+        
+        // Load wallet balance if available - use NW_WALLET if available
         try {
-            const walletData = localStorage.getItem('nw_wallet');
-            if (walletData) {
-                const wallet = JSON.parse(walletData);
-                state.balance = wallet.balance || 1000;
+            if (typeof NW_WALLET !== 'undefined') {
+                await NW_WALLET.init();
+                state.balance = NW_WALLET.getBalance('nwg') || 1000;
+            } else {
+                const walletData = localStorage.getItem('nw_wallet');
+                if (walletData) {
+                    const wallet = JSON.parse(walletData);
+                    state.balance = wallet.balance || 1000;
+                }
             }
         } catch (e) {}
         

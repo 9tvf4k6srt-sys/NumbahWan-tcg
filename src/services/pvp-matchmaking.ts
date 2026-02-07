@@ -1,15 +1,10 @@
-// ═══════════════════════════════════════════════════════════════════════════════
-// NWG PVP MATCHMAKING SYSTEM
 // Real player vs player battles with queue-based matchmaking
-// ═══════════════════════════════════════════════════════════════════════════════
 
 import { Hono } from 'hono';
 
 const pvp = new Hono();
 
-// ═══════════════════════════════════════════════════════════════════════════════
 // IN-MEMORY STORAGE (For demo - production should use D1/KV)
-// ═══════════════════════════════════════════════════════════════════════════════
 
 interface QueueEntry {
   odenom: string;           // Player wallet ID
@@ -57,11 +52,6 @@ interface BattleResult {
 const matchQueue: Map<string, QueueEntry> = new Map();
 const activeMatches: Map<string, Match> = new Map();
 const playerMatches: Map<string, string> = new Map(); // odenom -> matchId
-
-// ═══════════════════════════════════════════════════════════════════════════════
-// MATCHMAKING CONFIGURATION
-// ═══════════════════════════════════════════════════════════════════════════════
-
 const CONFIG = {
   // Match players within this bet range (±50%)
   BET_TOLERANCE: 0.5,
@@ -81,11 +71,6 @@ const CONFIG = {
   // Maximum bet
   MAX_BET: 100000,
 };
-
-// ═══════════════════════════════════════════════════════════════════════════════
-// LUCK CALCULATION (Same as battle-unified)
-// ═══════════════════════════════════════════════════════════════════════════════
-
 function calculateLuck(cards: CardSelection[]): number {
   let luck = 50; // Base luck
   
@@ -102,11 +87,6 @@ function calculateLuck(cards: CardSelection[]): number {
   
   return Math.min(luck, 85);
 }
-
-// ═══════════════════════════════════════════════════════════════════════════════
-// MATCHMAKING LOGIC
-// ═══════════════════════════════════════════════════════════════════════════════
-
 function findMatch(entry: QueueEntry): QueueEntry | null {
   const minBet = entry.betAmount * (1 - CONFIG.BET_TOLERANCE);
   const maxBet = entry.betAmount * (1 + CONFIG.BET_TOLERANCE);
@@ -227,9 +207,7 @@ function cleanupStaleEntries(): void {
 // NOTE: No setInterval in Cloudflare Workers global scope
 // Cleanup will be triggered on each request instead
 
-// ═══════════════════════════════════════════════════════════════════════════════
 // API ENDPOINTS
-// ═══════════════════════════════════════════════════════════════════════════════
 
 // GET /api/pvp/info - System info
 pvp.get('/info', (c) => {
@@ -469,9 +447,7 @@ pvp.post('/leave', async (c) => {
   }
 });
 
-// ═══════════════════════════════════════════════════════════════════════════════
 // HELPER FUNCTIONS
-// ═══════════════════════════════════════════════════════════════════════════════
 
 function getQueuePosition(odenom: string): number {
   const waiting = [...matchQueue.entries()]
