@@ -1270,6 +1270,25 @@ window.selectDifficulty = function(diff) {
     // ═══════════════════════════════════════════════════════════════════
     function startGame() {
         console.log('[Battle Arena v5.0] Starting game...');
+        console.log(`[Battle Arena v5.0] Hand: ${gameState.playerHand.length} cards, Deck: ${gameState.playerDeck.length} cards`);
+        
+        // Safety: if hand is somehow empty, deal now
+        if (gameState.playerHand.length === 0 && CARDS.length > 0) {
+            console.warn('[Battle Arena v5.0] SAFETY: Hand was empty, dealing now!');
+            if (!gameState.playerDeck.length) gameState.playerDeck = createDeck(true);
+            if (!gameState.playerDeck.length) {
+                for (let i = 0; i < CONFIG.DECK_SIZE && i < CARDS.length; i++) gameState.playerDeck.push({...CARDS[i]});
+            }
+            if (!gameState.enemyDeck.length) gameState.enemyDeck = createDeck(false);
+            if (!gameState.enemyDeck.length) {
+                for (let i = 0; i < CONFIG.DECK_SIZE && i < CARDS.length; i++) gameState.enemyDeck.push({...CARDS[i]});
+            }
+            for (let i = 0; i < CONFIG.STARTING_HAND; i++) {
+                if (gameState.playerDeck.length) gameState.playerHand.push(gameState.playerDeck.pop());
+                if (gameState.enemyDeck.length) gameState.enemyHand.push(gameState.enemyDeck.pop());
+            }
+        }
+        
         try { Effects.createParticles(); } catch(e) {}
         const diffNames = { casual:'Casual Bot', ranked:'Ranked Rival', boss:'MYTHIC BOSS' };
         const eName = document.getElementById('enemyHpName');
@@ -1329,43 +1348,53 @@ window.selectDifficulty = function(diff) {
             console.log('[Battle Arena v5.0] NW_SET_BONUSES:', typeof NW_SET_BONUSES !== 'undefined');
             console.log('[Battle Arena v5.0] NW_ROLE_SYNERGIES:', typeof NW_ROLE_SYNERGIES !== 'undefined');
 
-            // Load cards
+            // Load cards — robust with multiple fallbacks
             try {
                 if (typeof NW_CARDS !== 'undefined') { await NW_CARDS.init(); CARDS = NW_CARDS.getAll().filter(c => c.gameStats); }
-                if (!CARDS.length) { const res = await fetch('/static/data/cards-v2.json'); CARDS = ((await res.json()).cards || []).filter(c => c.gameStats); }
+                if (!CARDS.length) { const res = await fetch('/static/data/cards-v2.json'); const data = await res.json(); CARDS = (data.cards || []).filter(c => c.gameStats); }
             } catch(e) {
-                try { const res = await fetch('/static/data/cards-v2.json'); CARDS = ((await res.json()).cards || []).filter(c => c.gameStats); }
+                console.warn('[Battle Arena v5.0] Primary load failed:', e.message);
+                try { const res = await fetch('/static/data/cards-v2.json'); const data = await res.json(); CARDS = (data.cards || []).filter(c => c.gameStats); }
                 catch(e2) { showError('Cards failed: ' + e2.message); }
             }
             console.log(`[Battle Arena v5.0] ${CARDS.length} cards loaded`);
-            if (!CARDS.length) { showError('No cards!'); return; }
-
-            // Set difficulty from picker
-            gameState.difficulty = window._selectedDifficulty || 'casual';
-            if (gameState.difficulty === 'boss') { gameState.enemyHP = BOSS_CONFIG.hp; }
-
-            // Build decks
-            gameState.playerDeck = createDeck(true);
-            gameState.enemyDeck = createDeck(false);
-            if (!gameState.playerDeck.length) for(let i=0;i<CONFIG.DECK_SIZE&&i<CARDS.length;i++) gameState.playerDeck.push({...CARDS[i]});
-            if (!gameState.enemyDeck.length) for(let i=0;i<CONFIG.DECK_SIZE&&i<CARDS.length;i++) gameState.enemyDeck.push({...CARDS[i]});
-
-            // Draw starting hands
-            for (let i=0;i<CONFIG.STARTING_HAND;i++) {
-                if (gameState.playerDeck.length) gameState.playerHand.push(gameState.playerDeck.pop());
-                if (gameState.enemyDeck.length) gameState.enemyHand.push(gameState.enemyDeck.pop());
-            }
+            if (!CARDS.length) { showError('No cards loaded! Check network.'); return; }
 
             initCardDetailModal();
             await Audio.init();
 
-            // Wire start button to countdown
+            // Wire start button — deck building + dealing happens HERE on click, not early
             const startBtn = document.getElementById('startBtn');
             if (startBtn) {
                 startBtn.onclick = async () => {
                     startBtn.disabled = true;
+                    startBtn.textContent = '⏳ LOADING...';
+                    
+                    // Set difficulty
                     gameState.difficulty = window._selectedDifficulty || 'casual';
                     if (gameState.difficulty === 'boss') gameState.enemyHP = BOSS_CONFIG.hp;
+                    
+                    // Build decks fresh NOW (not in init)
+                    gameState.playerDeck = createDeck(true);
+                    gameState.enemyDeck = createDeck(false);
+                    if (!gameState.playerDeck.length) {
+                        for (let i = 0; i < CONFIG.DECK_SIZE && i < CARDS.length; i++) gameState.playerDeck.push({...CARDS[i]});
+                    }
+                    if (!gameState.enemyDeck.length) {
+                        for (let i = 0; i < CONFIG.DECK_SIZE && i < CARDS.length; i++) gameState.enemyDeck.push({...CARDS[i]});
+                    }
+                    
+                    // Deal starting hands fresh NOW
+                    gameState.playerHand = [];
+                    gameState.enemyHand = [];
+                    for (let i = 0; i < CONFIG.STARTING_HAND; i++) {
+                        if (gameState.playerDeck.length) gameState.playerHand.push(gameState.playerDeck.pop());
+                        if (gameState.enemyDeck.length) gameState.enemyHand.push(gameState.enemyDeck.pop());
+                    }
+                    
+                    console.log(`[Battle Arena v5.0] Decks built: player=${gameState.playerDeck.length}, enemy=${gameState.enemyDeck.length}`);
+                    console.log(`[Battle Arena v5.0] Hands dealt: player=${gameState.playerHand.length}, enemy=${gameState.enemyHand.length}`);
+                    
                     await startCountdown();
                 };
             }
