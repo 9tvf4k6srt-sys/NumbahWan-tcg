@@ -1343,7 +1343,9 @@ window.selectDifficulty = function(diff) {
         cd.style.display = 'none'; ft.style.display = 'block';
         ft.classList.add('show'); Audio.play('fight'); await sleep(1000);
         ft.style.display = 'none';
-        document.getElementById('startOverlay').classList.add('hidden');
+        const overlay = document.getElementById('startOverlay');
+        overlay.classList.add('hidden');
+        overlay.style.display = 'none';
         startGame();
     }
 
@@ -1383,54 +1385,61 @@ window.selectDifficulty = function(diff) {
             // Audio loads in background — do NOT block init on it
             Audio.init().catch(e => console.warn('Audio init failed:', e));
 
-            mobileDebug('wiring startBtn');
-            
-            // Wire start button — deck building + dealing happens HERE on click, not early
+            // Build decks and deal hands immediately
+            function buildAndDeal() {
+                gameState.difficulty = window._selectedDifficulty || 'casual';
+                if (gameState.difficulty === 'boss') gameState.enemyHP = BOSS_CONFIG.hp;
+                gameState.playerDeck = createDeck(true);
+                gameState.enemyDeck = createDeck(false);
+                if (!gameState.playerDeck.length) {
+                    for (let i = 0; i < CONFIG.DECK_SIZE && i < CARDS.length; i++) gameState.playerDeck.push({...CARDS[i]});
+                }
+                if (!gameState.enemyDeck.length) {
+                    for (let i = 0; i < CONFIG.DECK_SIZE && i < CARDS.length; i++) gameState.enemyDeck.push({...CARDS[i]});
+                }
+                gameState.playerHand = [];
+                gameState.enemyHand = [];
+                for (let i = 0; i < CONFIG.STARTING_HAND; i++) {
+                    if (gameState.playerDeck.length) gameState.playerHand.push(gameState.playerDeck.pop());
+                    if (gameState.enemyDeck.length) gameState.enemyHand.push(gameState.enemyDeck.pop());
+                }
+                mobileDebug('dealt deck=' + gameState.playerDeck.length + ' hand=' + gameState.playerHand.length);
+            }
+
+            // Wire start button for overlay flow
             const startBtn = document.getElementById('startBtn');
+            const overlay = document.getElementById('startOverlay');
             if (startBtn) {
                 startBtn.onclick = async () => {
                     mobileDebug('START clicked');
                     startBtn.disabled = true;
                     startBtn.textContent = '⏳ LOADING...';
-                    
-                    // Set difficulty
-                    gameState.difficulty = window._selectedDifficulty || 'casual';
-                    if (gameState.difficulty === 'boss') gameState.enemyHP = BOSS_CONFIG.hp;
-                    
-                    // Build decks fresh NOW (not in init)
-                    gameState.playerDeck = createDeck(true);
-                    gameState.enemyDeck = createDeck(false);
-                    if (!gameState.playerDeck.length) {
-                        for (let i = 0; i < CONFIG.DECK_SIZE && i < CARDS.length; i++) gameState.playerDeck.push({...CARDS[i]});
-                    }
-                    if (!gameState.enemyDeck.length) {
-                        for (let i = 0; i < CONFIG.DECK_SIZE && i < CARDS.length; i++) gameState.enemyDeck.push({...CARDS[i]});
-                    }
-                    
-                    // Deal starting hands fresh NOW
-                    gameState.playerHand = [];
-                    gameState.enemyHand = [];
-                    for (let i = 0; i < CONFIG.STARTING_HAND; i++) {
-                        if (gameState.playerDeck.length) gameState.playerHand.push(gameState.playerDeck.pop());
-                        if (gameState.enemyDeck.length) gameState.enemyHand.push(gameState.enemyDeck.pop());
-                    }
-                    
-                    mobileDebug('deck=' + gameState.playerDeck.length + ' hand=' + gameState.playerHand.length);
-                    console.log(`[Battle Arena v5.0] Decks built: player=${gameState.playerDeck.length}, enemy=${gameState.enemyDeck.length}`);
-                    console.log(`[Battle Arena v5.0] Hands dealt: player=${gameState.playerHand.length}, enemy=${gameState.enemyHand.length}`);
-                    
+                    buildAndDeal();
                     await startCountdown();
                 };
             }
 
-            // Show profile level on start screen
-            const profile = getProfile();
-            const subtitle = document.querySelector('.start-guild.player .guild-subtitle');
-            if (subtitle) subtitle.textContent = `Level ${profile.level} | ${profile.wins}W ${profile.losses}L`;
+            // AUTO-START: If overlay is not visible (hidden by CSS/browser), start game directly
+            const overlayVisible = overlay && overlay.offsetParent !== null && getComputedStyle(overlay).display !== 'none';
+            mobileDebug('overlay visible=' + overlayVisible);
+            
+            if (!overlayVisible) {
+                // Overlay not showing — auto-start game immediately
+                mobileDebug('AUTO-START (no overlay)');
+                buildAndDeal();
+                if (overlay) { overlay.classList.add('hidden'); overlay.style.display = 'none'; }
+                startGame();
+            } else {
+                // Show profile level on start screen
+                const profile = getProfile();
+                const subtitle = document.querySelector('.start-guild.player .guild-subtitle');
+                if (subtitle) subtitle.textContent = `Level ${profile.level} | ${profile.wins}W ${profile.losses}L`;
+            }
 
-            console.log('[Battle Arena v5.0] Ready! Waiting for START button.');
+            console.log('[Battle Arena v5.0] Ready!');
         } catch(error) {
             showError('Init failed: ' + error.message + ' at ' + error.stack);
+            mobileDebug('ERROR: ' + error.message);
         }
     }
 
