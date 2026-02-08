@@ -158,6 +158,20 @@ window.selectDifficulty = function(diff) {
         return line;
     }
 
+    // On-screen debug for mobile (temporary)
+    function mobileDebug(msg) {
+        console.log('[BATTLE-DEBUG] ' + msg);
+        let d = document.getElementById('mobileDebug');
+        if (!d) {
+            d = document.createElement('div');
+            d.id = 'mobileDebug';
+            d.style.cssText = 'position:fixed;bottom:60px;left:4px;right:4px;background:rgba(0,0,0,0.9);color:#0f0;padding:6px 8px;z-index:999999;font-size:10px;font-family:monospace;max-height:120px;overflow-y:auto;border:1px solid #0f0;border-radius:6px;pointer-events:none;';
+            document.body.appendChild(d);
+        }
+        d.innerHTML += msg + '<br>';
+        d.scrollTop = d.scrollHeight;
+    }
+
     // ═══════════════════════════════════════════════════════════════════
     // GAME STATE
     // ═══════════════════════════════════════════════════════════════════
@@ -490,6 +504,7 @@ window.selectDifficulty = function(diff) {
 
     function renderHand() {
         const container = document.getElementById('playerHand'); if (!container) return; container.innerHTML = '';
+        mobileDebug('renderHand=' + gameState.playerHand.length);
         console.log('[renderHand] cards:', gameState.playerHand.length);
         gameState.playerHand.forEach((card, idx) => {
             if (!card || !card.gameStats) { console.warn('[renderHand] skip card', idx, card); return; }
@@ -1269,6 +1284,7 @@ window.selectDifficulty = function(diff) {
     // START GAME — With countdown animation
     // ═══════════════════════════════════════════════════════════════════
     function startGame() {
+        mobileDebug('startGame hand=' + gameState.playerHand.length + ' deck=' + gameState.playerDeck.length);
         console.log('[Battle Arena v5.0] Starting game...');
         console.log(`[Battle Arena v5.0] Hand: ${gameState.playerHand.length} cards, Deck: ${gameState.playerDeck.length} cards`);
         
@@ -1343,6 +1359,7 @@ window.selectDifficulty = function(diff) {
 
     async function init() {
         try {
+            mobileDebug('v5.1 init start');
             console.log('[Battle Arena v5.0] Init...');
             console.log('[Battle Arena v5.0] NW_ABILITIES:', typeof NW_ABILITIES !== 'undefined');
             console.log('[Battle Arena v5.0] NW_SET_BONUSES:', typeof NW_SET_BONUSES !== 'undefined');
@@ -1357,8 +1374,9 @@ window.selectDifficulty = function(diff) {
                 try { const res = await fetch('/static/data/cards-v2.json'); const data = await res.json(); CARDS = (data.cards || []).filter(c => c.gameStats); }
                 catch(e2) { showError('Cards failed: ' + e2.message); }
             }
+            mobileDebug('cards=' + CARDS.length);
             console.log(`[Battle Arena v5.0] ${CARDS.length} cards loaded`);
-            if (!CARDS.length) { showError('No cards loaded! Check network.'); return; }
+            if (!CARDS.length) { showError('No cards loaded! Check network.'); mobileDebug('ERROR: 0 cards!'); return; }
 
             initCardDetailModal();
             await Audio.init();
@@ -1367,6 +1385,7 @@ window.selectDifficulty = function(diff) {
             const startBtn = document.getElementById('startBtn');
             if (startBtn) {
                 startBtn.onclick = async () => {
+                    mobileDebug('START clicked');
                     startBtn.disabled = true;
                     startBtn.textContent = '⏳ LOADING...';
                     
@@ -1392,6 +1411,7 @@ window.selectDifficulty = function(diff) {
                         if (gameState.enemyDeck.length) gameState.enemyHand.push(gameState.enemyDeck.pop());
                     }
                     
+                    mobileDebug('deck=' + gameState.playerDeck.length + ' hand=' + gameState.playerHand.length);
                     console.log(`[Battle Arena v5.0] Decks built: player=${gameState.playerDeck.length}, enemy=${gameState.enemyDeck.length}`);
                     console.log(`[Battle Arena v5.0] Hands dealt: player=${gameState.playerHand.length}, enemy=${gameState.enemyHand.length}`);
                     
