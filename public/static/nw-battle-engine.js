@@ -1379,8 +1379,12 @@ window.selectDifficulty = function(diff) {
             if (!CARDS.length) { showError('No cards loaded! Check network.'); mobileDebug('ERROR: 0 cards!'); return; }
 
             initCardDetailModal();
-            await Audio.init();
+            
+            // Audio loads in background — do NOT block init on it
+            Audio.init().catch(e => console.warn('Audio init failed:', e));
 
+            mobileDebug('wiring startBtn');
+            
             // Wire start button — deck building + dealing happens HERE on click, not early
             const startBtn = document.getElementById('startBtn');
             if (startBtn) {
