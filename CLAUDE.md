@@ -7,11 +7,14 @@
 
 These rules are calibrated to the owner's building style. Violating them wastes time and money.
 
-### Rule 1: BUILD, DON'T STUDY
-- Read MAX 2 files before writing code. The conversation history + this file has enough context.
-- If you need info from a file, grep for the specific thing — don't read the whole file.
-- NEVER read the same file twice in one session.
+### Rule 1: THINK DEEP, ACT FAST
+- Deep thinking is GOOD. Overthinking is BAD. Know the difference:
+  - Deep thinking: "This card engine has 12 abilities, the battle engine only uses 3 — I need to wire all 12." → GOOD
+  - Overthinking: Reading the same file 3 times, re-reading things already in conversation history, creating a 10-item plan before writing line 1. → BAD
+- Study UNTIL you have enough to start building. Then BUILD.
+- If you get stuck mid-build, THEN go read more. Don't front-load every possible read.
 - The owner builds fast — 142K insertions in a single commit, 5800-line features in one shot. Match that energy.
+- Use grep for targeted lookups. Read full files only when you genuinely need the full picture.
 
 ### Rule 2: ONE CONTINUOUS FLOW
 - When told to build something, execute ALL steps without stopping:
