@@ -669,30 +669,6 @@ const NW = (function() {
     }
 
     // =========================================================================
-    // EXPORT
-    // =========================================================================
-    return {
-        // Icons
-        icon,
-        iconHTML,
-        ICONS: ICON_MAP,
-        
-        // Components
-        toast,
-        modal,
-        confirm,
-        loader,
-        currency,
-        currencyHTML,
-        rarityBadge,
-        progressBar,
-        
-        // Version
-        version: '1.0.0'
-    };
-})();
-
-    // =========================================================================
     // EMOJI REPLACEMENT SYSTEM
     // Auto-converts emojis to custom SVG icons
     // =========================================================================

@@ -489,8 +489,10 @@ window.selectDifficulty = function(diff) {
     }
 
     function renderHand() {
-        const container = document.getElementById('playerHand'); container.innerHTML = '';
+        const container = document.getElementById('playerHand'); if (!container) return; container.innerHTML = '';
+        console.log('[renderHand] cards:', gameState.playerHand.length);
         gameState.playerHand.forEach((card, idx) => {
+            if (!card || !card.gameStats) { console.warn('[renderHand] skip card', idx, card); return; }
             const canPlay = card.gameStats.cost <= gameState.energy && gameState.isPlayerTurn;
             const el = document.createElement('div');
             el.className = `hand-card ${card.rarity||''}${canPlay?'':' unplayable'}${gameState.selectedCard===idx?' selected':''}`;
@@ -1274,6 +1276,11 @@ window.selectDifficulty = function(diff) {
         if (eName) eName.textContent = diffNames[gameState.difficulty] || 'AI GUILD';
         if (gameState.difficulty === 'boss') addLog(`💀 ${announce('bossEntry')}`, 'ability');
         renderAll();
+        // Ensure hand is visible on mobile by scrolling to bottom
+        setTimeout(() => {
+            const ac = document.querySelector('.arena-container');
+            if (ac && ac.scrollHeight > ac.clientHeight) ac.scrollTop = ac.scrollHeight;
+        }, 100);
         document.getElementById('endTurnBtn').onclick = endTurn;
         document.getElementById('attackBtn').onclick = () => {
             const tIdx = gameState.enemyBoard.findIndex(c => c);
