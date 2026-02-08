@@ -1,7 +1,63 @@
 # NumbahWan TCG - AI Development Guide
 
-> **Adaptive Continuous Learning System v1.0**
-> Last Updated: 2026-02-06
+> **Adaptive Continuous Learning System v2.0**
+> Last Updated: 2026-02-08
+
+## WORK RULES — READ FIRST, OBEY ALWAYS
+
+These rules are calibrated to the owner's building style. Violating them wastes time and money.
+
+### Rule 1: BUILD, DON'T STUDY
+- Read MAX 2 files before writing code. The conversation history + this file has enough context.
+- If you need info from a file, grep for the specific thing — don't read the whole file.
+- NEVER read the same file twice in one session.
+- The owner builds fast — 142K insertions in a single commit, 5800-line features in one shot. Match that energy.
+
+### Rule 2: ONE CONTINUOUS FLOW
+- When told to build something, execute ALL steps without stopping:
+  Write files → Build → Test → Commit → Push. ONE FLOW.
+- NEVER output a summary paragraph between tool calls. Just chain the next call.
+- NEVER say "let me continue" or "now I have the full picture" — those are stop signals.
+- If a tool call fails, fix it immediately. Don't stop to explain what happened.
+
+### Rule 3: WRITE COMPLETE FILES
+- Write the ENTIRE file in one Write call. Not pieces. Not chunks.
+- The owner's codebase has files up to 3000+ lines. One-shot writes are normal here.
+- If a file is too large, write the complete replacement. Don't do 10 small edits.
+
+### Rule 4: COST EFFICIENCY
+- Don't read files that the conversation history already described.
+- Batch independent tool calls together (read 3 files in parallel, not sequentially).
+- Skip todo lists for tasks under 5 steps. Just do the work.
+- One commit per feature, not one commit per file.
+
+### Rule 5: MATCH THE OWNER'S STYLE
+- The owner thinks in SYSTEMS, not files. Build complete features end-to-end.
+- The owner values FUN over perfection. Ship it working, make it perfect later.
+- The owner asks big questions ("make it the funnest ever") — respond with big builds, not incremental patches.
+- When the owner says "brainstorm" → think big. When the owner says "build" → write code NOW.
+- The owner builds on Cloudflare Workers + Hono + Vanilla JS. No frameworks. No React. Keep it vanilla.
+
+### Rule 6: NEVER STOP MID-TASK
+- If you wrote a file, you MUST build + test + commit in the same flow.
+- If you hit an error, fix it immediately. Don't pause to ask permission.
+- The owner should NEVER have to say "continue" or "are you done?" — if they do, you failed this rule.
+
+### Rule 7: ADAPTIVE AWARENESS
+- Port 3000 via wrangler pages dev. PM2 process name: numbahwan-guild.
+- After changing ANY file in public/ or src/: run `npm run build && pm2 restart all`
+- The staticPages array in src/routes/pages.ts controls which pages are routed.
+- .ai-cache/ has optimized context — check there before deep-reading source files.
+
+### Build Command Cheat Sheet
+```bash
+npm run build && pm2 restart all && sleep 2   # Build + restart
+curl -s http://localhost:3000/PAGE | head -5   # Verify page
+pm2 logs --nostream --lines 3                  # Check errors
+git add -A && git commit -m "msg" && git push origin main  # Ship it
+```
+
+---
 
 ## 🧠 Project Intelligence
 
