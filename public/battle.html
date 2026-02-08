@@ -3,143 +3,160 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>NumbahWan TCG | BATTLE ARENA v6.0</title>
+    <title>NumbahWan TCG | BATTLE ARENA v7.0</title>
     <link rel="icon" type="image/svg+xml" href="/favicon.svg">
-    <link rel="stylesheet" href="/static/battle-v6.css">
+    <link rel="stylesheet" href="/static/battle-v7.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet">
     <script defer src="/static/nw-cards.js"></script>
 </head>
 <body>
-    <!-- ═══ BATTLE ARENA v6.0 — TAP TO PLAY ═══ -->
+    <!-- ═══ BATTLE ARENA v7.0 — ACCESSIBILITY-FIRST REDESIGN ═══ -->
+    <!-- Research: Marvel Snap lanes, 60px+ touch targets, 16pt+ fonts, thumb-zone actions -->
     <div id="arena">
-        <!-- TOP: Enemy Info -->
+
+        <!-- ═══ TOP BAR: Compact info row ═══ -->
         <header id="topBar">
-            <a href="/" class="back-link">← Back</a>
-            <div class="turn-badge" id="turnBadge">TURN 1</div>
-            <div class="energy-display" id="energyDisplay">
-                <span class="energy-icon">⚡</span>
-                <span id="energyText">1/1</span>
+            <a href="/" class="back-btn" aria-label="Back to home">←</a>
+            <div class="top-info">
+                <span class="turn-pill" id="turnBadge">TURN 1</span>
+                <span class="energy-pill" id="energyPill">⚡ <span id="energyText">1/1</span></span>
             </div>
+            <button class="menu-btn" id="menuBtn" aria-label="Game menu">☰</button>
         </header>
 
-        <!-- ENEMY HP BAR -->
-        <div class="hp-row enemy-hp">
-            <div class="hp-avatar" id="enemyAvatar">🤖</div>
-            <div class="hp-info">
-                <div class="hp-name" id="enemyName">Enemy</div>
-                <div class="hp-bar-wrap">
-                    <div class="hp-bar-fill enemy-fill" id="enemyHpBar" style="width:100%"></div>
-                    <span class="hp-text" id="enemyHpText">30/30</span>
+        <!-- ═══ ENEMY ZONE ═══ -->
+        <div class="player-zone enemy-zone">
+            <div class="zone-header">
+                <div class="avatar-hp">
+                    <span class="zone-avatar" id="enemyAvatar">🤖</span>
+                    <div class="zone-info">
+                        <span class="zone-name enemy-name" id="enemyName">Enemy</span>
+                        <div class="hp-bar-track">
+                            <div class="hp-bar-fill enemy-bar" id="enemyHpBar" style="width:100%"></div>
+                            <span class="hp-label" id="enemyHpText">30/30</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- Enemy Board: 5 slots -->
+            <div class="board-row" id="enemyBoard">
+                <div class="board-slot enemy-slot" data-slot="0" data-side="enemy"></div>
+                <div class="board-slot enemy-slot" data-slot="1" data-side="enemy"></div>
+                <div class="board-slot enemy-slot" data-slot="2" data-side="enemy"></div>
+                <div class="board-slot enemy-slot" data-slot="3" data-side="enemy"></div>
+                <div class="board-slot enemy-slot" data-slot="4" data-side="enemy"></div>
+            </div>
+        </div>
+
+        <!-- ═══ BATTLE DIVIDER ═══ -->
+        <div class="battle-divider">
+            <div class="divider-line"></div>
+            <span class="divider-icon">⚔️</span>
+            <div class="divider-line"></div>
+        </div>
+
+        <!-- ═══ PLAYER ZONE ═══ -->
+        <div class="player-zone your-zone">
+            <!-- Player Board: 5 slots -->
+            <div class="board-row" id="playerBoard">
+                <div class="board-slot player-slot" data-slot="0" data-side="player"></div>
+                <div class="board-slot player-slot" data-slot="1" data-side="player"></div>
+                <div class="board-slot player-slot" data-slot="2" data-side="player"></div>
+                <div class="board-slot player-slot" data-slot="3" data-side="player"></div>
+                <div class="board-slot player-slot" data-slot="4" data-side="player"></div>
+            </div>
+            <div class="zone-header player-header">
+                <div class="avatar-hp">
+                    <span class="zone-avatar">😎</span>
+                    <div class="zone-info">
+                        <span class="zone-name your-name">You</span>
+                        <div class="hp-bar-track">
+                            <div class="hp-bar-fill player-bar" id="playerHpBar" style="width:100%"></div>
+                            <span class="hp-label" id="playerHpText">30/30</span>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
 
-        <!-- BATTLEFIELD -->
-        <div id="battlefield">
-            <!-- Enemy Board -->
-            <div class="board-side enemy-side" id="enemyBoard">
-                <div class="board-slot" data-slot="0"></div>
-                <div class="board-slot" data-slot="1"></div>
-                <div class="board-slot" data-slot="2"></div>
-                <div class="board-slot" data-slot="3"></div>
-                <div class="board-slot" data-slot="4"></div>
-            </div>
+        <!-- ═══ SYNERGY TICKER ═══ -->
+        <div id="synergyTicker" class="synergy-ticker"></div>
 
-            <!-- Divider -->
-            <div class="board-divider">
-                <span class="vs-text">⚔️</span>
-            </div>
-
-            <!-- Player Board -->
-            <div class="board-side player-side" id="playerBoard">
-                <div class="board-slot player-slot" data-slot="0"></div>
-                <div class="board-slot player-slot" data-slot="1"></div>
-                <div class="board-slot player-slot" data-slot="2"></div>
-                <div class="board-slot player-slot" data-slot="3"></div>
-                <div class="board-slot player-slot" data-slot="4"></div>
-            </div>
-        </div>
-
-        <!-- PLAYER HP BAR -->
-        <div class="hp-row player-hp">
-            <div class="hp-avatar">😎</div>
-            <div class="hp-info">
-                <div class="hp-name player-name">You</div>
-                <div class="hp-bar-wrap">
-                    <div class="hp-bar-fill player-fill" id="playerHpBar" style="width:100%"></div>
-                    <span class="hp-text" id="playerHpText">30/30</span>
-                </div>
-            </div>
-        </div>
-
-        <!-- SYNERGY BAR -->
-        <div id="synergyBar" class="synergy-bar"></div>
-
-        <!-- HAND — THE STAR OF THE SHOW -->
-        <div id="handArea">
+        <!-- ═══ HAND AREA: The Star — Big Carousel Cards ═══ -->
+        <div id="handArea" class="hand-area">
             <div class="hand-header">
                 <span class="hand-label">YOUR HAND</span>
-                <span class="hand-count" id="handCount">0/7</span>
+                <span class="hand-count" id="handCount">0 / 7</span>
             </div>
-            <div class="hand-cards" id="playerHand"></div>
+            <div class="hand-carousel" id="playerHand">
+                <!-- Cards rendered here as big swipeable cards -->
+            </div>
+            <div class="hand-dots" id="handDots"></div>
         </div>
 
-        <!-- ACTION BUTTONS -->
-        <div id="actionBar">
-            <button class="action-btn end-turn-btn" id="endTurnBtn">END TURN</button>
-            <button class="action-btn attack-btn" id="attackBtn" disabled>⚔️ ATTACK</button>
+        <!-- ═══ ACTION BAR: Thumb Zone — Always at Bottom ═══ -->
+        <div id="actionBar" class="action-bar">
+            <button class="action-btn end-btn" id="endTurnBtn" aria-label="End your turn">
+                <span class="btn-icon">⏭</span>
+                <span class="btn-text">END TURN</span>
+            </button>
+            <button class="action-btn attack-btn" id="attackBtn" disabled aria-label="Attack enemy">
+                <span class="btn-icon">⚔️</span>
+                <span class="btn-text">ATTACK</span>
+            </button>
         </div>
 
-        <!-- ANNOUNCER -->
-        <div id="announcer" class="announcer hidden"></div>
+        <!-- ═══ ANNOUNCER: Big, readable, center screen ═══ -->
+        <div id="announcer" class="announcer hidden" role="alert" aria-live="assertive"></div>
 
-        <!-- GAME OVER OVERLAY -->
-        <div id="gameOver" class="game-over hidden">
-            <div class="game-over-content">
-                <h1 id="gameOverTitle"></h1>
-                <div id="gameOverStats"></div>
-                <button class="play-again-btn" onclick="location.reload()">PLAY AGAIN</button>
-                <a href="/" class="home-btn">← Home</a>
+        <!-- ═══ COMBAT LOG: Floating toasts ═══ -->
+        <div id="combatLog" class="combat-log" aria-live="polite"></div>
+
+        <!-- ═══ GAME OVER OVERLAY ═══ -->
+        <div id="gameOver" class="overlay hidden">
+            <div class="overlay-card">
+                <h1 id="gameOverTitle" class="overlay-title"></h1>
+                <div id="gameOverStats" class="overlay-stats"></div>
+                <button class="big-btn gold-btn" onclick="location.reload()">⚔️ PLAY AGAIN</button>
+                <a href="/" class="overlay-link">← Back to Home</a>
             </div>
         </div>
 
-        <!-- START SCREEN -->
-        <div id="startScreen" class="start-screen">
-            <div class="start-content">
+        <!-- ═══ START SCREEN ═══ -->
+        <div id="startScreen" class="overlay">
+            <div class="overlay-card start-card">
                 <h1 class="start-title">⚔️ BATTLE ARENA</h1>
-                <p class="start-subtitle">NumbahWan TCG v6.0</p>
-                <div class="diff-select">
-                    <button class="diff-btn selected" data-diff="casual" onclick="selectDiff('casual')">
-                        <span class="diff-icon">🤖</span>
-                        <span class="diff-name">Casual</span>
-                        <span class="diff-desc">Vibes only</span>
+                <p class="start-sub">NumbahWan TCG v7.0</p>
+                <div class="diff-grid">
+                    <button class="diff-card selected" data-diff="casual" onclick="selectDiff('casual')">
+                        <span class="diff-emoji">🤖</span>
+                        <span class="diff-label">Casual</span>
+                        <span class="diff-hint">Vibes only</span>
                     </button>
-                    <button class="diff-btn" data-diff="ranked" onclick="selectDiff('ranked')">
-                        <span class="diff-icon">🏆</span>
-                        <span class="diff-name">Ranked</span>
-                        <span class="diff-desc">Smart AI</span>
+                    <button class="diff-card" data-diff="ranked" onclick="selectDiff('ranked')">
+                        <span class="diff-emoji">🏆</span>
+                        <span class="diff-label">Ranked</span>
+                        <span class="diff-hint">Smart AI</span>
                     </button>
-                    <button class="diff-btn" data-diff="boss" onclick="selectDiff('boss')">
-                        <span class="diff-icon">💀</span>
-                        <span class="diff-name">Boss</span>
-                        <span class="diff-desc">No mercy</span>
+                    <button class="diff-card" data-diff="boss" onclick="selectDiff('boss')">
+                        <span class="diff-emoji">💀</span>
+                        <span class="diff-label">Boss</span>
+                        <span class="diff-hint">No mercy</span>
                     </button>
                 </div>
-                <button class="start-btn" id="startBtn">⚔️ START BATTLE</button>
+                <button class="big-btn gold-btn" id="startBtn">⚔️ START BATTLE</button>
             </div>
         </div>
 
-        <!-- FLOATING COMBAT LOG -->
-        <div id="combatLog" class="combat-log"></div>
-    </div>
+        <!-- ═══ CARD DETAIL MODAL ═══ -->
+        <div id="cardModal" class="overlay hidden" onclick="closeCardModal(event)">
+            <div class="overlay-card modal-card" id="cardModalContent"></div>
+        </div>
 
-    <!-- Card Detail Modal -->
-    <div id="cardModal" class="card-modal hidden" onclick="closeCardModal(event)">
-        <div class="card-modal-content" id="cardModalContent"></div>
     </div>
 
     <script src="/static/nw-card-engine.js"></script>
-    <script src="/static/nw-battle-v6.js"></script>
+    <script src="/static/nw-battle-v7.js"></script>
 </body>
 </html>
