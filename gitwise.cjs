@@ -888,6 +888,383 @@ function status() {
   }
 }
 
+// ─── Eval: Is the learning system getting better? ──────────────────
+// The hardest question: does knowing about past mistakes actually prevent new ones?
+// This measures 7 signals and grades the system A→F.
+
+function evaluate() {
+  const mem = load();
+
+  if (mem.commits.length < 20) {
+    console.log('\n  gitwise eval: need at least 20 commits for meaningful evaluation.\n');
+    return;
+  }
+
+  console.log('');
+  console.log('  \x1b[1mgitwise eval\x1b[0m — is the learning system getting better?');
+  console.log('  ─'.repeat(35));
+
+  const scores = {};
+  const insights = [];
+  const upgrades = [];
+
+  // ── 1. Fix Rate Trend (is it going DOWN over time?) ──────────────
+  // Split commits into halves. If fix rate is lower in 2nd half → learning.
+  const half = Math.floor(mem.commits.length / 2);
+  const firstHalf = mem.commits.slice(0, half);
+  const secondHalf = mem.commits.slice(half);
+
+  const fixRate1 = firstHalf.filter(c => c.isFix).length / firstHalf.length;
+  const fixRate2 = secondHalf.filter(c => c.isFix).length / secondHalf.length;
+  const fixRateDelta = fixRate1 - fixRate2; // positive = improving
+
+  if (fixRateDelta > 0.1) {
+    scores.fixRateTrend = 100;
+    insights.push(`Fix rate declining: ${pct(fixRate1)} → ${pct(fixRate2)} (${pct(fixRateDelta)} improvement)`);
+  } else if (fixRateDelta > 0) {
+    scores.fixRateTrend = 60;
+    insights.push(`Fix rate slightly better: ${pct(fixRate1)} → ${pct(fixRate2)} (marginal)`);
+  } else if (fixRateDelta > -0.05) {
+    scores.fixRateTrend = 40;
+    insights.push(`Fix rate flat: ${pct(fixRate1)} → ${pct(fixRate2)} (not learning)`);
+    upgrades.push('Fix rate not declining — lessons exist but aren\'t preventing new bugs');
+  } else {
+    scores.fixRateTrend = 10;
+    insights.push(`Fix rate INCREASING: ${pct(fixRate1)} → ${pct(fixRate2)} — getting worse`);
+    upgrades.push('CRITICAL: Fix rate rising — more bugs over time, not fewer');
+  }
+
+  // ── 2. Repeat Breakage Rate (are the SAME files breaking again?) ──
+  // Files that broke in 1st half AND broke again in 2nd half = learning failure
+  const brokenInFirst = new Set();
+  const brokenInSecond = new Set();
+  for (const b of mem.breakages) {
+    const idx = mem.commits.findIndex(c => c.hash === b.fixHash);
+    for (const f of b.files) {
+      if (idx < half) brokenInFirst.add(f);
+      else brokenInSecond.add(f);
+    }
+  }
+  const repeatFiles = [...brokenInFirst].filter(f => brokenInSecond.has(f));
+  const repeatRate = brokenInFirst.size > 0 ? repeatFiles.length / brokenInFirst.size : 0;
+
+  if (repeatRate === 0) {
+    scores.repeatBreakage = 100;
+    insights.push(`Zero repeat breakages — no file that broke early broke again later`);
+  } else if (repeatRate < 0.2) {
+    scores.repeatBreakage = 70;
+    insights.push(`Low repeat rate: ${repeatFiles.length}/${brokenInFirst.size} files broke again (${pct(repeatRate)})`);
+  } else if (repeatRate < 0.5) {
+    scores.repeatBreakage = 40;
+    insights.push(`Moderate repeats: ${repeatFiles.length}/${brokenInFirst.size} files broke again (${pct(repeatRate)})`);
+    upgrades.push(`${repeatFiles.length} files broke AGAIN despite having lessons: ${repeatFiles.slice(0, 3).join(', ')}`);
+  } else {
+    scores.repeatBreakage = 10;
+    insights.push(`High repeat rate: ${repeatFiles.length}/${brokenInFirst.size} files — lessons aren't preventing rework`);
+    upgrades.push('CRITICAL: Majority of broken files break again — lessons not actionable enough');
+  }
+
+  // ── 3. Lesson Quality (are lessons specific enough to act on?) ────
+  let specificLessons = 0;
+  let genericLessons = 0;
+  let emptyLessons = 0;
+  const genericPatterns = [
+    'fix-chain: same files', 'mobile/responsive breakage', 'styling fix',
+    'event handling issue', 'test at small viewports'
+  ];
+
+  for (const b of mem.breakages) {
+    if (!b.lesson || b.lesson.length < 10) {
+      emptyLessons++;
+    } else if (genericPatterns.some(p => b.lesson.toLowerCase().includes(p))) {
+      genericLessons++;
+    } else {
+      specificLessons++;
+    }
+  }
+  const totalLessons = mem.breakages.length;
+  const specificPct = totalLessons > 0 ? specificLessons / totalLessons : 0;
+
+  if (specificPct > 0.9) {
+    scores.lessonQuality = 100;
+    insights.push(`Lesson quality: ${pct(specificPct)} specific (${specificLessons}/${totalLessons})`);
+  } else if (specificPct > 0.7) {
+    scores.lessonQuality = 70;
+    insights.push(`Lesson quality: ${pct(specificPct)} specific, ${genericLessons} generic, ${emptyLessons} empty`);
+  } else if (specificPct > 0.4) {
+    scores.lessonQuality = 40;
+    insights.push(`Lesson quality: only ${pct(specificPct)} specific — ${genericLessons} generic lessons don't help`);
+    upgrades.push(`${genericLessons + emptyLessons} lessons are too vague to prevent bugs — need commit body/diff analysis`);
+  } else {
+    scores.lessonQuality = 10;
+    insights.push(`Lesson quality POOR: ${pct(specificPct)} specific — most lessons are noise`);
+    upgrades.push('CRITICAL: Lessons are not specific — extractLesson needs commit body + diff analysis upgrade');
+  }
+
+  // ── 4. Coupling Accuracy (do coupling warnings match reality?) ────
+  // If files A+B are coupled AND A broke without B → coupling detection is useful
+  // Measure: what % of breakages involved files that have known couplings?
+  let breakagesWithKnownCoupling = 0;
+  let breakagesMissingCoupledFile = 0;
+
+  for (const b of mem.breakages) {
+    for (const f of b.files) {
+      for (const [pair, count] of Object.entries(mem.couplings)) {
+        if (count >= 5 && pair.includes(f)) {
+          breakagesWithKnownCoupling++;
+          const other = pair.split('<->').find(s => s !== f);
+          if (other && !b.files.includes(other)) {
+            breakagesMissingCoupledFile++;
+          }
+        }
+      }
+    }
+  }
+
+  const couplingCoverage = mem.breakages.length > 0
+    ? Math.min(1, breakagesWithKnownCoupling / mem.breakages.length)
+    : 0;
+
+  if (couplingCoverage > 0.5) {
+    scores.couplingAccuracy = 80;
+    insights.push(`Coupling coverage: ${pct(couplingCoverage)} of breakages involve known coupled files`);
+    if (breakagesMissingCoupledFile > 0) {
+      insights.push(`  → ${breakagesMissingCoupledFile} times a coupled file was missing during a fix (could have been warned)`);
+    }
+  } else if (couplingCoverage > 0.2) {
+    scores.couplingAccuracy = 50;
+    insights.push(`Coupling coverage: ${pct(couplingCoverage)} — most breakages are in uncoupled areas`);
+  } else {
+    scores.couplingAccuracy = 30;
+    insights.push(`Coupling coverage low: ${pct(couplingCoverage)} — couplings not detecting risky co-changes`);
+    upgrades.push('Lower coupling threshold or scan more history to detect weaker co-change patterns');
+  }
+
+  // ── 5. Fix Chain Length (are fixes getting resolved in fewer attempts?) ──
+  // Count consecutive fix commits on same files — shorter chains = better
+  const chains = [];
+  let currentChain = [];
+  for (let i = 0; i < mem.commits.length; i++) {
+    const c = mem.commits[i];
+    if (c.isFix) {
+      if (currentChain.length > 0) {
+        const prev = currentChain[currentChain.length - 1];
+        const overlap = c.files.some(f => prev.files.includes(f));
+        if (overlap) {
+          currentChain.push(c);
+          continue;
+        }
+      }
+      // Start new chain
+      if (currentChain.length > 1) chains.push(currentChain);
+      currentChain = [c];
+    } else {
+      if (currentChain.length > 1) chains.push(currentChain);
+      currentChain = [];
+    }
+  }
+  if (currentChain.length > 1) chains.push(currentChain);
+
+  const avgChainLen = chains.length > 0
+    ? chains.reduce((sum, c) => sum + c.length, 0) / chains.length
+    : 0;
+
+  // Compare early chains vs recent chains
+  const chainHalf = Math.floor(chains.length / 2);
+  const earlyChains = chains.slice(0, chainHalf);
+  const lateChains = chains.slice(chainHalf);
+  const earlyAvg = earlyChains.length > 0 ? earlyChains.reduce((s, c) => s + c.length, 0) / earlyChains.length : 0;
+  const lateAvg = lateChains.length > 0 ? lateChains.reduce((s, c) => s + c.length, 0) / lateChains.length : 0;
+
+  if (chains.length === 0) {
+    scores.fixChainLength = 80;
+    insights.push(`No fix chains detected — fixes are single-shot (good)`);
+  } else if (lateAvg < earlyAvg) {
+    scores.fixChainLength = 80;
+    insights.push(`Fix chains shortening: ${earlyAvg.toFixed(1)} → ${lateAvg.toFixed(1)} avg length (learning)`);
+  } else if (lateAvg === earlyAvg) {
+    scores.fixChainLength = 50;
+    insights.push(`Fix chains flat: avg ${avgChainLen.toFixed(1)} steps (${chains.length} chains total)`);
+    upgrades.push('Fix chains not getting shorter — postfix lessons may not be specific enough');
+  } else {
+    scores.fixChainLength = 20;
+    insights.push(`Fix chains GROWING: ${earlyAvg.toFixed(1)} → ${lateAvg.toFixed(1)} — fixes need more attempts`);
+    upgrades.push('CRITICAL: Fixes taking more attempts over time — root cause analysis not deep enough');
+  }
+
+  // ── 6. Warning Coverage (would past breakages have been warned?) ──
+  // Simulate: for each breakage, check if the files had risk data at that point
+  let wouldHaveWarned = 0;
+  const seenBreaks = new Set();
+  for (const b of mem.breakages) {
+    for (const f of b.files) {
+      if (seenBreaks.has(f)) {
+        wouldHaveWarned++;
+        break; // Only count once per breakage
+      }
+    }
+    // After recording this breakage, future ones on same files would be warned
+    for (const f of b.files) seenBreaks.add(f);
+  }
+  const warnCoverage = mem.breakages.length > 1
+    ? wouldHaveWarned / (mem.breakages.length - 1) // -1 because first breakage can't be warned
+    : 0;
+
+  if (warnCoverage > 0.6) {
+    scores.warningCoverage = 90;
+    insights.push(`Warning coverage: ${pct(warnCoverage)} of breakages would have triggered a pre-commit warning`);
+  } else if (warnCoverage > 0.3) {
+    scores.warningCoverage = 60;
+    insights.push(`Warning coverage: ${pct(warnCoverage)} — many breakages on previously-unseen files`);
+  } else {
+    scores.warningCoverage = 30;
+    insights.push(`Warning coverage low: ${pct(warnCoverage)} — most breakages hit new, un-warned files`);
+    upgrades.push('Breakages keep hitting new files — need cross-file pattern detection, not just per-file');
+  }
+
+  // ── 7. Knowledge Density (enough data per file to be useful?) ─────
+  const filesWithRisk = Object.keys(mem.risks).length;
+  const filesWithLessons = Object.values(mem.risks).filter(r => r.lessons.length > 0).length;
+  const lessonDensity = filesWithRisk > 0 ? filesWithLessons / filesWithRisk : 0;
+
+  if (lessonDensity > 0.8) {
+    scores.knowledgeDensity = 90;
+    insights.push(`Knowledge density: ${pct(lessonDensity)} of risky files have lessons (${filesWithLessons}/${filesWithRisk})`);
+  } else if (lessonDensity > 0.5) {
+    scores.knowledgeDensity = 60;
+    insights.push(`Knowledge density: ${pct(lessonDensity)} — ${filesWithRisk - filesWithLessons} risky files have NO lessons`);
+    upgrades.push(`${filesWithRisk - filesWithLessons} files have break history but no lesson — extractLesson missed them`);
+  } else {
+    scores.knowledgeDensity = 30;
+    insights.push(`Knowledge density LOW: only ${pct(lessonDensity)} of risky files have lessons`);
+    upgrades.push('CRITICAL: Most risky files have no lessons — extraction pipeline is failing');
+  }
+
+  // ── Overall Grade ─────────────────────────────────────────────────
+  const weights = {
+    fixRateTrend: 25,       // Most important: are we producing fewer bugs?
+    repeatBreakage: 20,     // Second: are we repeating the same mistakes?
+    lessonQuality: 15,      // Are the lessons useful?
+    fixChainLength: 15,     // Are fixes getting resolved faster?
+    warningCoverage: 10,    // Would warnings have helped?
+    couplingAccuracy: 10,   // Are couplings detecting risk?
+    knowledgeDensity: 5     // Is there enough data?
+  };
+
+  let totalScore = 0;
+  let totalWeight = 0;
+  for (const [key, weight] of Object.entries(weights)) {
+    if (scores[key] !== undefined) {
+      totalScore += scores[key] * weight;
+      totalWeight += weight;
+    }
+  }
+  const overallScore = totalWeight > 0 ? Math.round(totalScore / totalWeight) : 0;
+  const grade = overallScore >= 90 ? 'A' : overallScore >= 75 ? 'B' : overallScore >= 60 ? 'C' :
+                overallScore >= 40 ? 'D' : 'F';
+
+  const gradeColor = grade === 'A' ? '\x1b[32m' : grade === 'B' ? '\x1b[32m' :
+                     grade === 'C' ? '\x1b[33m' : '\x1b[31m';
+
+  // ── Print Results ─────────────────────────────────────────────────
+  console.log('');
+  console.log(`  ${gradeColor}\x1b[1m  Overall: ${overallScore}/100 (${grade})\x1b[0m`);
+  console.log('');
+
+  // Score breakdown
+  console.log('  \x1b[1mScorecard:\x1b[0m');
+  const metricNames = {
+    fixRateTrend: 'Fix Rate Trend',
+    repeatBreakage: 'Repeat Prevention',
+    lessonQuality: 'Lesson Quality',
+    fixChainLength: 'Fix Chain Speed',
+    warningCoverage: 'Warning Coverage',
+    couplingAccuracy: 'Coupling Detection',
+    knowledgeDensity: 'Knowledge Density'
+  };
+
+  for (const [key, weight] of Object.entries(weights)) {
+    const score = scores[key] || 0;
+    const name = metricNames[key] || key;
+    const barLen = Math.round(score / 10);
+    const barColor = score >= 70 ? '\x1b[32m' : score >= 40 ? '\x1b[33m' : '\x1b[31m';
+    const bar = barColor + '█'.repeat(barLen) + '\x1b[0m' + '░'.repeat(10 - barLen);
+    console.log(`    ${bar} ${score.toString().padStart(3)}  ${name.padEnd(20)} (weight: ${weight}%)`);
+  }
+
+  console.log('');
+  console.log('  \x1b[1mInsights:\x1b[0m');
+  for (const i of insights) {
+    console.log(`    ${i}`);
+  }
+
+  if (upgrades.length > 0) {
+    console.log('');
+    console.log('  \x1b[1m\x1b[31mUpgrades needed:\x1b[0m');
+    for (const u of upgrades) {
+      const icon = u.startsWith('CRITICAL') ? '\x1b[31m!!\x1b[0m' : '\x1b[33m!\x1b[0m';
+      console.log(`    ${icon} ${u}`);
+    }
+  }
+
+  // ── Verdict ───────────────────────────────────────────────────────
+  console.log('');
+  if (overallScore >= 75) {
+    console.log('  \x1b[32m✓ Learning system is working.\x1b[0m Fewer bugs, specific lessons, warnings would help.');
+  } else if (overallScore >= 50) {
+    console.log('  \x1b[33m~ Learning system is partially working.\x1b[0m Some improvements needed (see upgrades above).');
+  } else {
+    console.log('  \x1b[31m✗ Learning system is NOT working.\x1b[0m Lessons exist but aren\'t preventing bugs. Needs upgrade.');
+  }
+  console.log('');
+
+  // ── Trend snapshot (save for future comparison) ───────────────────
+  const evalSnapshot = {
+    date: new Date().toISOString().slice(0, 10),
+    overallScore,
+    grade,
+    scores: { ...scores },
+    metrics: {
+      commits: mem.commits.length,
+      breakages: mem.breakages.length,
+      fixRate: Math.round((mem.stats.totalFixes / mem.stats.totalCommits) * 100),
+      specificLessons: specificLessons,
+      repeatFiles: repeatFiles.length,
+      fixChains: chains.length,
+      avgChainLength: parseFloat(avgChainLen.toFixed(1))
+    }
+  };
+
+  // Store evaluations for trending
+  if (!mem.evaluations) mem.evaluations = [];
+  mem.evaluations.push(evalSnapshot);
+  if (mem.evaluations.length > 50) mem.evaluations = mem.evaluations.slice(-50);
+  save(mem);
+
+  // Show trend if we have history
+  if (mem.evaluations.length > 1) {
+    console.log('  \x1b[1mTrend:\x1b[0m');
+    const recent = mem.evaluations.slice(-5);
+    for (const e of recent) {
+      const g = e.grade;
+      const color = g === 'A' || g === 'B' ? '\x1b[32m' : g === 'C' ? '\x1b[33m' : '\x1b[31m';
+      const bar = '█'.repeat(Math.round(e.overallScore / 10)) + '░'.repeat(10 - Math.round(e.overallScore / 10));
+      console.log(`    ${e.date}  ${color}${bar} ${e.overallScore}/100 (${g})\x1b[0m  ${e.metrics.commits} commits, ${e.metrics.breakages} breakages`);
+    }
+    // Delta
+    const prev = mem.evaluations[mem.evaluations.length - 2];
+    const delta = overallScore - prev.overallScore;
+    if (delta > 0) console.log(`    \x1b[32m↑ +${delta} points since last eval\x1b[0m`);
+    else if (delta < 0) console.log(`    \x1b[31m↓ ${delta} points since last eval\x1b[0m`);
+    else console.log('    → unchanged since last eval');
+    console.log('');
+  }
+}
+
+function pct(n) {
+  return Math.round(n * 100) + '%';
+}
+
 // ─── Uninstall ──────────────────────────────────────────────────────
 
 function uninstall() {
@@ -934,6 +1311,8 @@ if (arg === '--install' || arg === 'install') {
   warn();
 } else if (arg === '--status' || arg === 'status') {
   status();
+} else if (arg === '--eval' || arg === 'eval') {
+  evaluate();
 } else if (arg === '--backfill' || arg === 'backfill') {
   backfill();
 } else if (arg === '--uninstall' || arg === 'uninstall') {
@@ -945,6 +1324,7 @@ if (arg === '--install' || arg === 'install') {
   Usage:
     node gitwise.cjs --install     Set up hooks + learn from existing history
     node gitwise.cjs --status      See what gitwise has learned
+    node gitwise.cjs --eval        Evaluate: is the learning system getting better?
     node gitwise.cjs --uninstall   Remove gitwise completely
 
   After install, gitwise runs automatically on every commit.

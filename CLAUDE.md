@@ -100,6 +100,8 @@ node nw-memory.cjs --wip-done
 | gitwise dashboard (danger scores, risks) | `node gitwise.cjs --status` |
 | gitwise warn on staged files | `node gitwise.cjs --warn` |
 | gitwise reinstall (rescan history) | `node gitwise.cjs --install` |
+| **Evaluate learning system** | `node nw-memory.cjs --eval` (combined NW-Memory + gitwise) |
+| **Evaluate gitwise only** | `node gitwise.cjs --eval` (7 metrics, A→F grade) |
 
 ## Two Learning Systems (both active)
 
