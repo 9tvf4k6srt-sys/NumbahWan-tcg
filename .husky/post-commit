@@ -1,5 +1,12 @@
 #!/bin/sh
-# NW-MEMORY: Post-commit — snapshot + refresh context
+# NW-MEMORY + gitwise: Post-commit — snapshot, learn, refresh context
+
+# ─── gitwise: learn from this commit (zero config, always runs) ───
+if [ -f "gitwise.cjs" ]; then
+  node "gitwise.cjs" --learn 2>/dev/null || true
+fi
+
+# ─── NW-MEMORY: snapshot + context refresh ───
 if [ ! -f "nw-memory.cjs" ]; then exit 0; fi
 node nw-memory.cjs >/dev/null 2>&1
 node nw-memory.cjs --brief >/dev/null 2>&1
@@ -16,6 +23,3 @@ case "$COMMIT_MSG" in
     ;;
 esac
 exit 0
-
-# gitwise: learn from this commit
-node "gitwise.cjs" --learn 2>/dev/null || true
