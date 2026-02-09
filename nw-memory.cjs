@@ -2632,6 +2632,331 @@ function status() {
   console.log('');
 }
 
+// ─── Eval: Is the learning system getting better? ──────────────────
+// Evaluates NW-Memory's discipline layer + gitwise's intelligence layer together.
+// Answers: are constraints preventing bugs? Are decisions reducing rework?
+
+function evaluate() {
+  const mem = loadMemory();
+
+  const totalConstraints = Object.values(mem.constraints || {}).flat().length;
+  const totalBreakages = (mem.breakages || []).length;
+  const totalDecisions = (mem.decisions || []).length;
+  const totalLearnings = (mem.learnings || []).length;
+  const totalSnapshots = (mem.snapshots || []).length;
+  const fixChains = (mem.patterns?.fixChains || []).length;
+  const reflections = (mem.reflections || []).length;
+
+  if (totalSnapshots < 10) {
+    console.log('\n[NW-MEMORY] Eval: need at least 10 snapshots for meaningful evaluation.\n');
+    return;
+  }
+
+  console.log('');
+  console.log('  \x1b[1mNW-MEMORY eval\x1b[0m — is the learning system getting better?');
+  console.log('  ─'.repeat(35));
+
+  const scores = {};
+  const insights = [];
+  const upgrades = [];
+
+  // ── 1. Constraint Coverage: do areas with breakages have constraints? ──
+  const areaBreakages = {};
+  for (const b of (mem.breakages || [])) {
+    const a = (b.area || 'unknown').toLowerCase();
+    areaBreakages[a] = (areaBreakages[a] || 0) + 1;
+  }
+  const areasWithBreakages = Object.keys(areaBreakages);
+  const areasWithConstraints = Object.keys(mem.constraints || {}).filter(a =>
+    (mem.constraints[a] || []).length > 0
+  );
+  const coveredAreas = areasWithBreakages.filter(a => areasWithConstraints.includes(a));
+  const constraintCoverage = areasWithBreakages.length > 0
+    ? coveredAreas.length / areasWithBreakages.length : 0;
+
+  if (constraintCoverage > 0.8) {
+    scores.constraintCoverage = 90;
+    insights.push(`Constraint coverage: ${Math.round(constraintCoverage * 100)}% of breakage areas have constraints`);
+  } else if (constraintCoverage > 0.5) {
+    scores.constraintCoverage = 60;
+    insights.push(`Constraint coverage: ${Math.round(constraintCoverage * 100)}% — some breakage areas lack constraints`);
+    const uncovered = areasWithBreakages.filter(a => !areasWithConstraints.includes(a));
+    upgrades.push(`Areas with breakages but NO constraints: ${uncovered.join(', ')}`);
+  } else {
+    scores.constraintCoverage = 20;
+    insights.push(`Constraint coverage LOW: ${Math.round(constraintCoverage * 100)}% — most breakage areas have no constraints`);
+    upgrades.push('CRITICAL: Record constraints after each fix — they prevent repeat breakages');
+  }
+
+  // ── 2. Constraint Effectiveness: do areas with more constraints have fewer breakages? ──
+  const areaConstraintCount = {};
+  for (const [area, constraints] of Object.entries(mem.constraints || {})) {
+    areaConstraintCount[area] = (constraints || []).length;
+  }
+  // Compare: areas with constraints vs without — which have more breakages per snapshot?
+  let constrainedAreaBreakRate = 0;
+  let unconstrainedAreaBreakRate = 0;
+  let constrainedCount = 0;
+  let unconstrainedCount = 0;
+
+  for (const [area, breaks] of Object.entries(areaBreakages)) {
+    if (areaConstraintCount[area] > 0) {
+      constrainedAreaBreakRate += breaks;
+      constrainedCount++;
+    } else {
+      unconstrainedAreaBreakRate += breaks;
+      unconstrainedCount++;
+    }
+  }
+  const constrainedAvg = constrainedCount > 0 ? constrainedAreaBreakRate / constrainedCount : 0;
+  const unconstrainedAvg = unconstrainedCount > 0 ? unconstrainedAreaBreakRate / unconstrainedCount : 0;
+
+  if (constrainedCount > 0 && unconstrainedCount > 0) {
+    if (constrainedAvg <= unconstrainedAvg) {
+      scores.constraintEffectiveness = 75;
+      insights.push(`Constrained areas avg ${constrainedAvg.toFixed(1)} breakages vs ${unconstrainedAvg.toFixed(1)} unconstrained — constraints help`);
+    } else {
+      scores.constraintEffectiveness = 30;
+      insights.push(`Constrained areas avg ${constrainedAvg.toFixed(1)} breakages vs ${unconstrainedAvg.toFixed(1)} unconstrained — constraints NOT helping`);
+      upgrades.push('Areas with constraints still break more — constraints may be too vague or not enforced');
+    }
+  } else {
+    scores.constraintEffectiveness = 50;
+    insights.push('Cannot compare constrained vs unconstrained areas (need both)');
+  }
+
+  // ── 3. Decision-to-Breakage Ratio: are decisions preventing bugs? ──
+  // Hypothesis: more decisions per commit → fewer breakages per commit
+  const decisionsPerCommit = totalSnapshots > 0 ? totalDecisions / totalSnapshots : 0;
+  const breakagesPerCommit = totalSnapshots > 0 ? totalBreakages / totalSnapshots : 0;
+
+  if (decisionsPerCommit > 0.2 && breakagesPerCommit < 0.15) {
+    scores.decisionImpact = 90;
+    insights.push(`Decisions: ${decisionsPerCommit.toFixed(2)}/commit, breakages: ${breakagesPerCommit.toFixed(2)}/commit — high discipline, low bugs`);
+  } else if (decisionsPerCommit > 0.1) {
+    scores.decisionImpact = 60;
+    insights.push(`Decisions: ${decisionsPerCommit.toFixed(2)}/commit — recording decisions but breakages still at ${breakagesPerCommit.toFixed(2)}/commit`);
+  } else {
+    scores.decisionImpact = 30;
+    insights.push(`Decisions: ${decisionsPerCommit.toFixed(2)}/commit — not enough decision recording`);
+    upgrades.push('Record more decisions with --decide — decisions that go unrecorded get repeated');
+  }
+
+  // ── 4. Learning Capture Rate: are learnings being recorded? ──
+  // Every fix should produce at least one learning
+  const learningsPerBreakage = totalBreakages > 0 ? totalLearnings / totalBreakages : 0;
+
+  if (learningsPerBreakage >= 1) {
+    scores.learningCapture = 100;
+    insights.push(`Learning capture: ${learningsPerBreakage.toFixed(1)} learnings per breakage — every bug teaches something`);
+  } else if (learningsPerBreakage > 0.5) {
+    scores.learningCapture = 60;
+    insights.push(`Learning capture: ${learningsPerBreakage.toFixed(1)} learnings per breakage — some bugs don't produce learnings`);
+    upgrades.push(`${totalBreakages - totalLearnings} breakages without corresponding learnings — use --learned after --postfix`);
+  } else {
+    scores.learningCapture = 20;
+    insights.push(`Learning capture LOW: only ${learningsPerBreakage.toFixed(1)} learnings per breakage`);
+    upgrades.push('CRITICAL: Most breakages produce no learnings — discipline gap');
+  }
+
+  // ── 5. Fix Chain Trend: are fix chains getting shorter or fewer? ──
+  const snapHalf = Math.floor(totalSnapshots / 2);
+  const earlyChains = (mem.patterns?.fixChains || []).filter((_, i) => i < fixChains / 2).length;
+  const lateChains = fixChains - earlyChains;
+
+  if (fixChains === 0) {
+    scores.fixChainTrend = 80;
+    insights.push('No fix chains — fixes are clean');
+  } else if (lateChains < earlyChains) {
+    scores.fixChainTrend = 80;
+    insights.push(`Fix chains declining: ${earlyChains} early → ${lateChains} recent — learning from mistakes`);
+  } else {
+    scores.fixChainTrend = 40;
+    insights.push(`Fix chains: ${earlyChains} early → ${lateChains} recent — not declining`);
+    upgrades.push('Fix chains aren\'t declining — run --postfix and --learned after every fix');
+  }
+
+  // ── 6. Reflection Quality: are auto-reflections producing insights? ──
+  const reflectionTypes = {};
+  for (const r of (mem.reflections || [])) {
+    reflectionTypes[r.type] = (reflectionTypes[r.type] || 0) + 1;
+  }
+  const diverseTypes = Object.keys(reflectionTypes).length;
+
+  if (diverseTypes >= 3 && reflections >= 5) {
+    scores.reflectionQuality = 80;
+    insights.push(`Reflections: ${reflections} across ${diverseTypes} types (${Object.keys(reflectionTypes).join(', ')})`);
+  } else if (reflections >= 3) {
+    scores.reflectionQuality = 50;
+    insights.push(`Reflections: ${reflections} but only ${diverseTypes} types — needs more diverse analysis`);
+  } else {
+    scores.reflectionQuality = 20;
+    insights.push(`Reflections: only ${reflections} — run --reflect to generate more insights`);
+    upgrades.push('Too few reflections — auto-reflect not running often enough');
+  }
+
+  // ── 7. gitwise Integration: is the deep intelligence wired in? ──
+  let gitwiseScore = 0;
+  try {
+    const gwMem = JSON.parse(fs.readFileSync(path.join(__dirname, '.gitwise', 'memory.json'), 'utf8'));
+    const gwBreakages = gwMem.breakages?.length || 0;
+    const gwLessons = gwMem.breakages?.filter(b => b.lesson && b.lesson.length > 20).length || 0;
+    const gwLessonRate = gwBreakages > 0 ? gwLessons / gwBreakages : 0;
+
+    if (gwLessonRate > 0.9) {
+      gitwiseScore = 100;
+      insights.push(`gitwise integration: ${gwBreakages} breakages, ${Math.round(gwLessonRate * 100)}% with deep lessons`);
+    } else if (gwLessonRate > 0.5) {
+      gitwiseScore = 60;
+      insights.push(`gitwise integration: ${Math.round(gwLessonRate * 100)}% lesson rate — needs deeper diff analysis`);
+    } else {
+      gitwiseScore = 30;
+      insights.push(`gitwise integration: only ${Math.round(gwLessonRate * 100)}% lesson rate — extractLesson is weak`);
+      upgrades.push('gitwise lesson extraction needs upgrade — most breakages lack root cause');
+    }
+  } catch {
+    gitwiseScore = 0;
+    insights.push('gitwise: not installed — run node gitwise.cjs --install for passive learning');
+    upgrades.push('Install gitwise for automatic breakage detection from git history');
+  }
+  scores.gitwiseIntegration = gitwiseScore;
+
+  // ── Overall Grade ─────────────────────────────────────────────────
+  const weights = {
+    constraintCoverage: 20,
+    constraintEffectiveness: 20,
+    decisionImpact: 15,
+    learningCapture: 15,
+    fixChainTrend: 10,
+    reflectionQuality: 10,
+    gitwiseIntegration: 10
+  };
+
+  let totalScore = 0;
+  let totalWeight = 0;
+  for (const [key, weight] of Object.entries(weights)) {
+    if (scores[key] !== undefined) {
+      totalScore += scores[key] * weight;
+      totalWeight += weight;
+    }
+  }
+  const overallScore = totalWeight > 0 ? Math.round(totalScore / totalWeight) : 0;
+  const grade = overallScore >= 90 ? 'A' : overallScore >= 75 ? 'B' : overallScore >= 60 ? 'C' :
+                overallScore >= 40 ? 'D' : 'F';
+  const gradeColor = (grade === 'A' || grade === 'B') ? '\x1b[32m' :
+                     grade === 'C' ? '\x1b[33m' : '\x1b[31m';
+
+  // ── Print ─────────────────────────────────────────────────────────
+  console.log('');
+  console.log(`  ${gradeColor}\x1b[1m  Overall: ${overallScore}/100 (${grade})\x1b[0m`);
+  console.log('');
+
+  console.log('  \x1b[1mScorecard:\x1b[0m');
+  const metricNames = {
+    constraintCoverage: 'Constraint Coverage',
+    constraintEffectiveness: 'Constraint Effect.',
+    decisionImpact: 'Decision Impact',
+    learningCapture: 'Learning Capture',
+    fixChainTrend: 'Fix Chain Trend',
+    reflectionQuality: 'Reflection Quality',
+    gitwiseIntegration: 'gitwise Integration'
+  };
+  for (const [key, weight] of Object.entries(weights)) {
+    const score = scores[key] || 0;
+    const name = metricNames[key] || key;
+    const barLen = Math.round(score / 10);
+    const barColor = score >= 70 ? '\x1b[32m' : score >= 40 ? '\x1b[33m' : '\x1b[31m';
+    const bar = barColor + '█'.repeat(barLen) + '\x1b[0m' + '░'.repeat(10 - barLen);
+    console.log(`    ${bar} ${score.toString().padStart(3)}  ${name.padEnd(22)} (weight: ${weight}%)`);
+  }
+
+  console.log('');
+  console.log('  \x1b[1mInsights:\x1b[0m');
+  for (const i of insights) {
+    console.log(`    ${i}`);
+  }
+
+  if (upgrades.length > 0) {
+    console.log('');
+    console.log('  \x1b[1m\x1b[31mUpgrades needed:\x1b[0m');
+    for (const u of upgrades) {
+      const icon = u.startsWith('CRITICAL') ? '\x1b[31m!!\x1b[0m' : '\x1b[33m!\x1b[0m';
+      console.log(`    ${icon} ${u}`);
+    }
+  }
+
+  // ── Combined Score (NW-Memory + gitwise) ──────────────────────────
+  let combinedScore = overallScore;
+  let combinedGrade = grade;
+  try {
+    const gwMem = JSON.parse(fs.readFileSync(path.join(__dirname, '.gitwise', 'memory.json'), 'utf8'));
+    if (gwMem.evaluations?.length > 0) {
+      const gwEval = gwMem.evaluations[gwMem.evaluations.length - 1];
+      combinedScore = Math.round((overallScore + gwEval.overallScore) / 2);
+      combinedGrade = combinedScore >= 90 ? 'A' : combinedScore >= 75 ? 'B' :
+                      combinedScore >= 60 ? 'C' : combinedScore >= 40 ? 'D' : 'F';
+      console.log('');
+      console.log(`  \x1b[1mCombined Score (NW-Memory + gitwise):\x1b[0m`);
+      console.log(`    NW-Memory:  ${overallScore}/100 (${grade})`);
+      console.log(`    gitwise:    ${gwEval.overallScore}/100 (${gwEval.grade})`);
+      const cc = (combinedGrade === 'A' || combinedGrade === 'B') ? '\x1b[32m' :
+                 combinedGrade === 'C' ? '\x1b[33m' : '\x1b[31m';
+      console.log(`    ${cc}\x1b[1mCombined:   ${combinedScore}/100 (${combinedGrade})\x1b[0m`);
+    }
+  } catch { /* gitwise eval not available */ }
+
+  // ── Verdict ───────────────────────────────────────────────────────
+  console.log('');
+  if (combinedScore >= 75) {
+    console.log('  \x1b[32m✓ Learning system is working.\x1b[0m Knowledge is preventing bugs and reducing rework.');
+  } else if (combinedScore >= 50) {
+    console.log('  \x1b[33m~ Learning system is partially working.\x1b[0m Some improvements needed (see upgrades above).');
+  } else {
+    console.log('  \x1b[31m✗ Learning system is NOT working.\x1b[0m Knowledge exists but isn\'t preventing bugs. Needs upgrade.');
+  }
+  console.log('');
+
+  // ── Store evaluation ──────────────────────────────────────────────
+  if (!mem.evaluations) mem.evaluations = [];
+  mem.evaluations.push({
+    date: new Date().toISOString().slice(0, 10),
+    overallScore,
+    grade,
+    combinedScore,
+    combinedGrade,
+    scores: { ...scores },
+    metrics: {
+      snapshots: totalSnapshots,
+      constraints: totalConstraints,
+      breakages: totalBreakages,
+      decisions: totalDecisions,
+      learnings: totalLearnings,
+      fixChains,
+      reflections
+    }
+  });
+  if (mem.evaluations.length > 50) mem.evaluations = mem.evaluations.slice(-50);
+  saveMemory(mem);
+
+  // Show trend
+  if (mem.evaluations.length > 1) {
+    console.log('  \x1b[1mTrend:\x1b[0m');
+    const recent = mem.evaluations.slice(-5);
+    for (const e of recent) {
+      const g = e.grade;
+      const color = (g === 'A' || g === 'B') ? '\x1b[32m' : g === 'C' ? '\x1b[33m' : '\x1b[31m';
+      const bar = '█'.repeat(Math.round(e.overallScore / 10)) + '░'.repeat(10 - Math.round(e.overallScore / 10));
+      console.log(`    ${e.date}  ${color}${bar} ${e.overallScore}/100 (${g})\x1b[0m`);
+    }
+    const prev = mem.evaluations[mem.evaluations.length - 2];
+    const delta = overallScore - prev.overallScore;
+    if (delta > 0) console.log(`    \x1b[32m↑ +${delta} points since last eval\x1b[0m`);
+    else if (delta < 0) console.log(`    \x1b[31m↓ ${delta} points since last eval\x1b[0m`);
+    else console.log('    → unchanged since last eval');
+    console.log('');
+  }
+}
+
 // ─── Main ───────────────────────────────────────────────────────────
 
 const arg = process.argv[2];
@@ -2641,6 +2966,8 @@ if (arg === '--init') {
   onboard();
 } else if (arg === '--status') {
   status();
+} else if (arg === '--eval') {
+  evaluate();
 } else if (arg === '--query') {
   query();
 } else if (arg === '--brief') {
