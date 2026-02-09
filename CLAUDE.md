@@ -42,6 +42,15 @@ Patterns that trigger this gate:
 **History**: AI wasted 30+ edits moving scripts into `.mycelium/` because user asked
 "is duplicating mycelium necessary?" — a question, not a request. Zero value added.
 
+## ⛔ HONESTY GATE — No Untested Claims
+When asked "can X do Y?" or "does X work for Z?":
+1. **VERIFY FIRST** — test it, don't assume
+2. **Never undersell to appear cautious** — that's as dishonest as overselling
+3. **Never confuse OUR DATA with TOOL CAPABILITIES** — the tool works on any git history
+
+**History**: AI told user mycelium was "useless to other developers" without testing it.
+Every component works on any git repo — the scoring is math on commits, not project-specific.
+
 ## CRITICAL: Mobile-First iOS Development
 - **Primary target**: iOS mobile (iPhone). User tests on iOS Safari.
 - **All screenshots**: Use iPhone viewport (375x812 or 390x844) with `is_mobile=True`, touch support.
