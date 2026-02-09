@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NumbahWan TCG | Collection Stats</title>
+    <link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="/static/nw-tokens.css">
+    <link rel="stylesheet" href="/static/nw-utilities.css">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <script defer src="/static/nw-icons-inline.js"></script>
+    <script defer src="/static/nw-cards.js"></script>
+    <style>
+        :root { --nw-bg: #0a0a0f; }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Inter', sans-serif; background: var(--nw-bg); color: #fff; min-height: 100vh; }
+
+        .page-header {
+            position: sticky; top: 0; z-index: 100;
+            display: flex; align-items: center; gap: 12px;
+            padding: 12px 16px;
+            background: linear-gradient(to bottom, rgba(10,10,15,0.98), rgba(10,10,15,0.85));
+            backdrop-filter: blur(10px);
+        }
+        .back-btn {
+            color: #fff; text-decoration: none; opacity: 0.7;
+            width: 36px; height: 36px; display: flex; align-items: center; justify-content: center;
+            border-radius: 8px; transition: opacity 0.2s;
+        }
+        .back-btn:hover { opacity: 1; }
+        .page-title { font-family: 'Orbitron', sans-serif; font-size: clamp(16px, 4vw, 22px); font-weight: 900; }
+
+        .stats-container { padding: 16px; max-width: 600px; margin: 0 auto; }
+
+        .stat-card {
+            background: rgba(255,255,255,0.04);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 12px;
+        }
+        .stat-card-title {
+            font-size: 11px; text-transform: uppercase; letter-spacing: 1px;
+            opacity: 0.5; margin-bottom: 8px; font-weight: 700;
+        }
+
+        .stat-grid {
+            display: flex; flex-wrap: wrap; gap: 8px 16px;
+            justify-content: center;
+        }
+        .stat-item { text-align: center; min-width: 70px; }
+        .stat-val {
+            font-family: 'Orbitron', sans-serif; font-size: 24px; font-weight: 900;
+            background: linear-gradient(135deg, #ffd700, #ff6b00);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        }
+        .stat-label { font-size: 10px; opacity: 0.5; text-transform: uppercase; }
+
+        .rarity-bar {
+            display: flex; flex-wrap: wrap; gap: 6px;
+            margin-top: 8px;
+        }
+        .rarity-chip {
+            display: flex; align-items: center; gap: 6px;
+            padding: 4px 10px; border-radius: 6px; font-size: 12px; font-weight: 600;
+            background: rgba(255,255,255,0.06);
+        }
+        .rarity-dot { width: 8px; height: 8px; border-radius: 50%; }
+
+        .season-row {
+            display: flex; flex-wrap: wrap; align-items: center; gap: 8px;
+            padding: 8px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.04);
+        }
+        .season-row:last-child { border-bottom: none; }
+        .season-name { flex: 1; min-width: 100px; font-weight: 600; }
+        .season-count { font-family: 'Orbitron', sans-serif; font-size: 14px; color: #ffd700; }
+        .season-bar { flex: 2; min-width: 80px; height: 6px; border-radius: 3px; background: rgba(255,255,255,0.08); overflow: hidden; }
+        .season-fill { height: 100%; border-radius: 3px; background: linear-gradient(90deg, #ffd700, #ff6b00); transition: width 0.5s ease; }
+
+        .empty-state {
+            text-align: center; padding: 40px 16px; opacity: 0.4;
+        }
+        .empty-state svg { margin-bottom: 12px; }
+
+        /* Mobile 320px safe — flex-wrap everywhere */
+        @media (max-width: 375px) {
+            .stat-val { font-size: 20px; }
+            .stat-item { min-width: 60px; }
+            .stats-container { padding: 12px; }
+        }
+    </style>
+</head>
+<body>
+    <header class="page-header">
+        <a href="/" class="back-btn" aria-label="Back">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M15 18l-6-6 6-6"/></svg>
+        </a>
+        <h1 class="page-title" data-i18n="collectionStats">Collection Stats</h1>
+    </header>
+
+    <div class="stats-container">
+        <!-- Overview -->
+        <div class="stat-card" id="overviewCard">
+            <div class="stat-card-title" data-i18n="overview">Overview</div>
+            <div class="stat-grid" id="overviewGrid">
+                <div class="stat-item"><div class="stat-val" id="totalCards">-</div><div class="stat-label" data-i18n="totalCards">Total Cards</div></div>
+                <div class="stat-item"><div class="stat-val" id="totalSeasons">-</div><div class="stat-label" data-i18n="seasons">Seasons</div></div>
+                <div class="stat-item"><div class="stat-val" id="uniqueRoles">-</div><div class="stat-label" data-i18n="roles">Roles</div></div>
+            </div>
+        </div>
+
+        <!-- Rarity Breakdown -->
+        <div class="stat-card" id="rarityCard">
+            <div class="stat-card-title" data-i18n="rarityBreakdown">Rarity Breakdown</div>
+            <div class="rarity-bar" id="rarityBar"></div>
+        </div>
+
+        <!-- Per-Season -->
+        <div class="stat-card" id="seasonCard">
+            <div class="stat-card-title" data-i18n="bySeason">By Season</div>
+            <div id="seasonList"></div>
+        </div>
+    </div>
+
+    <script defer src="/static/nw-game-juice.js"></script>
+    <script defer src="/static/nw-nav.js"></script>
+    <script defer src="/static/nw-ui-guardian.js"></script>
+    <script defer src="/static/nw-i18n-guardian.js"></script>
+    <script defer src="/static/nw-guardians.js"></script>
+    <script>
+    // Collection Stats page logic
+    (function() {
+        'use strict';
+
+        const SEASON_FILES = {
+            1: '/static/data/cards-v2.json',
+            2: '/static/data/cards-s2.json', 3: '/static/data/cards-s3.json',
+            4: '/static/data/cards-s4.json', 5: '/static/data/cards-s5.json',
+            6: '/static/data/cards-s6.json', 7: '/static/data/cards-s7.json',
+            8: '/static/data/cards-s8.json', 9: '/static/data/cards-s9.json',
+            10: '/static/data/cards-s10.json'
+        };
+
+        const RARITY_COLORS = {
+            mythic: '#ff4500', legendary: '#ffd700', epic: '#9b59b6',
+            rare: '#3498db', uncommon: '#2ecc71', common: '#95a5a6'
+        };
+
+        async function loadAllCards() {
+            const allCards = [];
+            const seasonCounts = {};
+            
+            for (const [season, file] of Object.entries(SEASON_FILES)) {
+                try {
+                    const res = await fetch(file);
+                    const data = await res.json();
+                    const cards = data.cards || [];
+                    allCards.push(...cards);
+                    seasonCounts[season] = cards.length;
+                } catch (e) {
+                    seasonCounts[season] = 0;
+                }
+            }
+            return { allCards, seasonCounts };
+        }
+
+        function renderOverview(cards, seasonCounts) {
+            document.getElementById('totalCards').textContent = cards.length;
+            document.getElementById('totalSeasons').textContent = Object.keys(seasonCounts).length;
+            const roles = new Set(cards.map(c => c.role).filter(Boolean));
+            document.getElementById('uniqueRoles').textContent = roles.size;
+        }
+
+        function renderRarity(cards) {
+            const counts = {};
+            cards.forEach(c => {
+                const r = (c.rarity || 'common').toLowerCase();
+                counts[r] = (counts[r] || 0) + 1;
+            });
+
+            const bar = document.getElementById('rarityBar');
+            bar.innerHTML = Object.entries(counts)
+                .sort((a, b) => b[1] - a[1])
+                .map(([rarity, count]) => `
+                    <div class="rarity-chip">
+                        <span class="rarity-dot" style="background:${RARITY_COLORS[rarity] || '#888'}"></span>
+                        ${rarity.toUpperCase()} <strong>${count}</strong>
+                    </div>
+                `).join('');
+        }
+
+        function renderSeasons(seasonCounts, maxCards) {
+            const list = document.getElementById('seasonList');
+            const seasonNames = {
+                1:'Origins', 2:'Hounds', 3:'Cyber Siege', 4:'Shadows', 5:'Champions',
+                6:'Whale Wars', 7:'Rage Quit', 8:'Reborn', 9:'Multiverse', 10:'Final Dawn'
+            };
+
+            list.innerHTML = Object.entries(seasonCounts)
+                .sort((a, b) => Number(a[0]) - Number(b[0]))
+                .map(([s, count]) => {
+                    const pct = maxCards > 0 ? Math.round((count / maxCards) * 100) : 0;
+                    return `<div class="season-row">
+                        <span class="season-name">S${s}: ${seasonNames[s] || 'Season ' + s}</span>
+                        <span class="season-count">${count}</span>
+                        <div class="season-bar"><div class="season-fill" style="width:${pct}%"></div></div>
+                    </div>`;
+                }).join('');
+        }
+
+        async function init() {
+            const { allCards, seasonCounts } = await loadAllCards();
+            if (!allCards.length) {
+                document.querySelector('.stats-container').innerHTML = `
+                    <div class="empty-state">
+                        <svg viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/></svg>
+                        <p>No card data found</p>
+                    </div>`;
+                return;
+            }
+            const maxCards = Math.max(...Object.values(seasonCounts));
+            renderOverview(allCards, seasonCounts);
+            renderRarity(allCards);
+            renderSeasons(seasonCounts, maxCards);
+        }
+
+        if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
+        else init();
+    })();
+    </script>
+
+    <script defer src="/static/nw-i18n-core.js"></script>
+    <script>
+    const COLLSTATS_I18N = {
+      en: { collectionStats: 'Collection Stats', overview: 'Overview', totalCards: 'Total Cards',
+            seasons: 'Seasons', roles: 'Roles', rarityBreakdown: 'Rarity Breakdown', bySeason: 'By Season', back: 'Back' },
+      zh: { collectionStats: '收藏统计', overview: '概览', totalCards: '总卡牌数',
+            seasons: '赛季', roles: '角色', rarityBreakdown: '稀有度分布', bySeason: '按赛季', back: '返回' },
+      th: { collectionStats: 'สถิติคอลเลกชัน', overview: 'ภาพรวม', totalCards: 'การ์ดทั้งหมด',
+            seasons: 'ซีซัน', roles: 'บทบาท', rarityBreakdown: 'การแจกแจงความหายาก', bySeason: 'ตามซีซัน', back: 'กลับ' },
+      ja: { collectionStats: 'コレクション統計', overview: '概要', totalCards: 'カード総数',
+            seasons: 'シーズン', roles: 'ロール', rarityBreakdown: 'レア度分布', bySeason: 'シーズン別', back: '戻る' }
+    };
+    if (typeof NW_I18N !== 'undefined') NW_I18N.register(COLLSTATS_I18N);
+    </script>
+</body>
+</html>

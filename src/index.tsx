@@ -47,7 +47,7 @@ app.use('/research/*', serveStatic())
 const namedStatic = [
   'efficiency', 'lore', 'tabletop', 'staking', 'fusion',
   'claim', 'events', 'confessional', 'avatar-studio', 'research-library',
-  'cipher', 'oracle'
+  'cipher', 'oracle', 'collection-stats'
 ]
 namedStatic.forEach(page => {
   app.get(`/${page}`, serveStatic({ path: `./${page}.html` }))
