@@ -260,9 +260,12 @@ function autoReflect(mem, commit) {
         }
         const repeatOffenders = Object.entries(fileRepeatCount).filter(([_, c]) => c >= 2);
 
-        // Generate a real lesson, not just a timestamp
+        // Generate a real lesson using deep intelligence (commit body + diff)
         let lesson;
-        if (repeatOffenders.length > 0) {
+        const deepLesson = extractDeepLesson(commit.hash, commit.msg);
+        if (deepLesson && deepLesson.length > 20) {
+          lesson = deepLesson;
+        } else if (repeatOffenders.length > 0) {
           const worst = repeatOffenders.sort((a, b) => b[1] - a[1])[0];
           lesson = `${worst[0]} has broken ${worst[1]+1} times — it's structurally fragile, not just unlucky. Consider splitting or adding guards.`;
         } else if (isMultiArea) {
@@ -287,6 +290,106 @@ function autoReflect(mem, commit) {
 
   // Keep last 50
   if (mem.reflections.length > 50) mem.reflections = mem.reflections.slice(-50);
+}
+
+// ─── Deep Intelligence (shared with gitwise.cjs) ────────────────────
+// Reads commit bodies + analyzes diffs for specific, actionable lessons.
+// Used by: autoReflect, postfix, recordBreakage
+
+function getCommitBody(hash) {
+  try { return run(`git log -1 "--pretty=format:%b" ${hash}`); }
+  catch { return ''; }
+}
+
+function analyzeDiff(hash) {
+  const result = { removed: [], added: [], cssProps: [], jsPatterns: [] };
+  try {
+    // Analyze CSS files separately for CSS property detection
+    const cssDiff = run(`git show ${hash} --no-commit-id --diff-filter=M -p --unified=1 -- "*.css" "*.scss"`);
+    if (cssDiff) {
+      for (const line of cssDiff.split('\n')) {
+        if (line.startsWith('-') && !line.startsWith('---')) {
+          const m = line.slice(1).trim().match(/^\s*([a-z-]+)\s*:\s*(.+?)\s*;?\s*$/);
+          if (m) result.cssProps.push({ prop: m[1], oldVal: m[2], action: 'removed' });
+        }
+        if (line.startsWith('+') && !line.startsWith('+++')) {
+          const m = line.slice(1).trim().match(/^\s*([a-z-]+)\s*:\s*(.+?)\s*;?\s*$/);
+          if (m) result.cssProps.push({ prop: m[1], newVal: m[2], action: 'added' });
+        }
+      }
+    }
+    // Analyze all modified files for JS patterns
+    const diff = run(`git show ${hash} --no-commit-id --diff-filter=M -p --unified=1 -- "*.js" "*.ts" "*.html"`);
+    if (diff) {
+      for (const line of diff.split('\n')) {
+        if (line.startsWith('-') && !line.startsWith('---')) {
+          const t = line.slice(1).trim();
+          if (t.length > 3 && t.length < 200) result.removed.push(t);
+        }
+        if (line.startsWith('+') && !line.startsWith('+++')) {
+          const t = line.slice(1).trim();
+          if (t.length > 3 && t.length < 200) result.added.push(t);
+        }
+      }
+    }
+    for (const line of [...result.removed, ...result.added]) {
+      if (line.match(/\.innerHTML\s*[+=]/)) result.jsPatterns.push('innerHTML assignment');
+      if (line.match(/Audio\.(init|play|context)/i)) result.jsPatterns.push('Audio API');
+      if (line.match(/addEventListener|removeEventListener/)) result.jsPatterns.push('event listener');
+      if (line.match(/touchend|touchstart|touchmove/)) result.jsPatterns.push('touch event');
+      if (line.match(/await\s+/)) result.jsPatterns.push('async/await');
+    }
+    result.jsPatterns = [...new Set(result.jsPatterns)];
+  } catch { /* best-effort */ }
+  return result;
+}
+
+/**
+ * Extract a specific lesson from a fix commit.
+ * Priority: 1) commit body root cause, 2) diff analysis, 3) message parsing
+ */
+function extractDeepLesson(hash, msg) {
+  // 1. Commit body — look for root cause / because / caused by
+  const body = getCommitBody(hash);
+  if (body && body.length > 20) {
+    const bodyLines = body.split('\n').filter(l => l.trim());
+    for (const line of bodyLines) {
+      const lower = line.toLowerCase();
+      if (lower.includes('root cause') || lower.includes('because') ||
+          lower.includes('the problem was') || lower.includes('the issue was') ||
+          lower.includes('caused by') || lower.includes('broke when') ||
+          lower.includes('failed because')) {
+        const cleaned = line.replace(/^[\s*-]+/, '').replace(/^root cause:\s*/i, '').trim();
+        if (cleaned.length > 15) return cleaned.slice(0, 150);
+      }
+    }
+    const substantive = bodyLines.find(l =>
+      l.trim().length > 20 && !l.startsWith('#') &&
+      !l.match(/^(signed-off|co-authored|change-id|reviewed)/i)
+    );
+    if (substantive) return substantive.trim().slice(0, 150);
+  }
+
+  // 2. Diff analysis — what actually changed in the code
+  const diff = analyzeDiff(hash);
+  if (diff.cssProps.length > 0) {
+    const removed = diff.cssProps.filter(c => c.action === 'removed');
+    const added = diff.cssProps.filter(c => c.action === 'added');
+    if (removed.length > 0 && added.length > 0) {
+      return `changed ${removed[0].prop}: ${removed[0].oldVal} → ${added[0].newVal || 'removed'}`.slice(0, 150);
+    }
+    if (removed.length > 0) {
+      return `removed ${removed[0].prop}: ${removed[0].oldVal} — was causing the issue`.slice(0, 150);
+    }
+  }
+  if (diff.jsPatterns.length > 0) {
+    const msgClean = msg.replace(/^fix\([^)]*\):\s*/i, '').replace(/^fix:\s*/i, '').slice(0, 80);
+    return `${diff.jsPatterns[0]} — ${msgClean}`.slice(0, 150);
+  }
+
+  // 3. Message parsing fallback
+  const msgClean = msg.replace(/^fix\([^)]*\):\s*/i, '').replace(/^fix:\s*/i, '').replace(/^fix\s+/i, '').trim();
+  return msgClean.length > 15 ? msgClean.slice(0, 150) : msg.slice(0, 100);
 }
 
 // Classify a file path into an area name.
@@ -1121,15 +1224,30 @@ function recordConstraint(area, fact) {
 
 function recordBreakage(area, what) {
   const mem = loadMemory();
-  mem.breakages.push({
+  const entry = {
     ts: Date.now(),
     date: new Date().toISOString().split('T')[0],
     area: area.toLowerCase(),
     what
-  });
+  };
+  // Auto-enrich: if we have a recent fix commit, extract deeper lesson
+  try {
+    const hash = run('git rev-parse --short HEAD');
+    const msg = run('git log -1 "--pretty=format:%s"');
+    if (hash && msg && msg.toLowerCase().startsWith('fix')) {
+      const deepLesson = extractDeepLesson(hash, msg);
+      if (deepLesson && deepLesson.length > 15) {
+        entry.deepLesson = deepLesson;
+      }
+    }
+  } catch { /* best-effort enrichment */ }
+  mem.breakages.push(entry);
   if (mem.breakages.length > 100) mem.breakages = mem.breakages.slice(-100);
   saveMemory(mem);
   console.log(`[NW-MEMORY] Breakage recorded: [${area}] ${what}`);
+  if (entry.deepLesson) {
+    console.log(`[NW-MEMORY] Auto-enriched: ↳ ${entry.deepLesson}`);
+  }
 }
 
 // ─── Pre-mortem: What to check before building in an area ───────────
@@ -1381,6 +1499,32 @@ function postfix() {
       console.log(`  ${rf.file} — broken ${rf.count} times before this fix`);
     }
     console.log('');
+  }
+
+  // Deep intelligence: extract root cause from commit body + diff
+  const fixHash = current.commit?.hash;
+  if (fixHash) {
+    const deepLesson = extractDeepLesson(fixHash, current.commit?.msg || '');
+    if (deepLesson && deepLesson.length > 15) {
+      console.log('## Root Cause (auto-extracted from commit body + diff)');
+      console.log(`  ↳ ${deepLesson}`);
+      console.log('');
+
+      // Show diff-level details if available
+      const diff = analyzeDiff(fixHash);
+      if (diff.cssProps.length > 0) {
+        console.log('  CSS changes:');
+        for (const c of diff.cssProps.slice(0, 3)) {
+          if (c.action === 'removed') console.log(`    - ${c.prop}: ${c.oldVal}`);
+          else console.log(`    + ${c.prop}: ${c.newVal}`);
+        }
+        console.log('');
+      }
+      if (diff.jsPatterns.length > 0) {
+        console.log(`  JS patterns involved: ${diff.jsPatterns.join(', ')}`);
+        console.log('');
+      }
+    }
   }
 
   // Prompt for learning

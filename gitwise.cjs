@@ -122,11 +122,23 @@ function save(mem) {
 // ─── Core Intelligence ──────────────────────────────────────────────
 
 /**
- * Detect if a commit message indicates a fix.
+ * Detect if a commit message indicates a REAL fix (not a typo/doc/version fix).
  * Returns { isFix: true, area, hint } or { isFix: false }
  */
 function detectFix(msg) {
   const lower = msg.toLowerCase();
+
+  // Filter out non-real fixes (these aren't breakages worth learning from)
+  const falsePositives = [
+    /\btypo\b/, /\bspelling\b/, /\bwhitespace\b/, /\bformat\b/,
+    /\breadme\b/, /\bdocs?\b/, /\bcomment\b/, /\bversion bump\b/,
+    /\bchangelog\b/, /\blint\b/, /\bprettier\b/, /\beslint\b/,
+    /\brename\b/, /\bcleanup\b/, /\bclean up\b/, /\bnit\b/,
+    /\bchore\b/, /\bmerge\b/
+  ];
+  if (falsePositives.some(p => p.test(lower))) {
+    return { isFix: false };
+  }
 
   // Conventional commit: fix(...): ...
   const conventional = lower.match(/^fix\(?([^)]*)\)?[:\s]/);
@@ -134,16 +146,12 @@ function detectFix(msg) {
     return { isFix: true, area: conventional[1] || '', hint: msg };
   }
 
-  // Common fix patterns
+  // Common fix patterns (but only if the message suggests a real code fix)
   const fixPatterns = [
     /\bfix(?:e[ds])?\b/i,
     /\bhotfix\b/i,
     /\bbugfix\b/i,
-    /\bpatch(?:e[ds])?\b/i,
     /\brevert\b/i,
-    /\bresolve[ds]?\b/i,
-    /\brepair\b/i,
-    /\bcorrect\b/i,
   ];
 
   if (fixPatterns.some(p => p.test(lower))) {
@@ -154,71 +162,164 @@ function detectFix(msg) {
 }
 
 /**
- * Extract what went wrong from a fix commit.
- * Looks at the commit message and the diff to figure out the breakage pattern.
+ * Read the full commit body (not just the subject line).
+ * This is where root cause analysis lives.
  */
-function extractLesson(fixMsg, fixFiles, prevCommits) {
-  const lower = fixMsg.toLowerCase();
-  const lessons = [];
+function getCommitBody(hash) {
+  return git(`log -1 "--pretty=format:%b" ${hash}`);
+}
 
-  // Pattern: overflow/clipping
-  if (lower.includes('overflow') || lower.includes('clip')) {
-    lessons.push('overflow/clipping issue — CSS overflow property caused visual cutoff');
-  }
+/**
+ * Analyze the actual diff of a fix commit to extract specific changes.
+ * Returns { removedLines[], addedLines[], cssChanges[], jsChanges[] }
+ */
+function analyzeDiff(hash) {
+  const result = { removed: [], added: [], cssProps: [], jsPatterns: [] };
+  try {
+    const diff = git(`show ${hash} --no-commit-id --diff-filter=M -p --unified=1`);
+    if (!diff) return result;
 
-  // Pattern: mobile/responsive
-  if (lower.includes('mobile') || lower.includes('responsive') || lower.includes('viewport')) {
-    lessons.push('mobile/responsive breakage — test at small viewports');
-  }
+    // Only look at actual code changes (not headers)
+    const lines = diff.split('\n');
+    for (const line of lines) {
+      if (line.startsWith('-') && !line.startsWith('---')) {
+        const trimmed = line.slice(1).trim();
+        if (trimmed.length > 3 && trimmed.length < 200) result.removed.push(trimmed);
+      }
+      if (line.startsWith('+') && !line.startsWith('+++')) {
+        const trimmed = line.slice(1).trim();
+        if (trimmed.length > 3 && trimmed.length < 200) result.added.push(trimmed);
+      }
+    }
 
-  // Pattern: iOS/Safari specific
-  if (lower.includes('ios') || lower.includes('safari') || lower.includes('webkit')) {
-    lessons.push('iOS/Safari specific issue — platform requires special handling');
-  }
+    // Extract CSS property changes
+    for (const line of result.removed) {
+      const cssProp = line.match(/^\s*([a-z-]+)\s*:\s*(.+?)\s*;?\s*$/);
+      if (cssProp) result.cssProps.push({ prop: cssProp[1], oldVal: cssProp[2], action: 'removed' });
+    }
+    for (const line of result.added) {
+      const cssProp = line.match(/^\s*([a-z-]+)\s*:\s*(.+?)\s*;?\s*$/);
+      if (cssProp) result.cssProps.push({ prop: cssProp[1], newVal: cssProp[2], action: 'added' });
+    }
 
-  // Pattern: load order / initialization
-  if (lower.includes('load order') || lower.includes('init') || lower.includes('undefined') || lower.includes('not defined')) {
-    lessons.push('initialization/load order issue — dependency timing matters');
-  }
+    // Extract JS patterns (function calls, assignments, etc.)
+    for (const line of [...result.removed, ...result.added]) {
+      if (line.match(/\.innerHTML\s*[+=]/)) result.jsPatterns.push('innerHTML assignment');
+      if (line.match(/Audio\.(init|play|context)/i)) result.jsPatterns.push('Audio API usage');
+      if (line.match(/addEventListener|removeEventListener/)) result.jsPatterns.push('event listener');
+      if (line.match(/touchend|touchstart|touchmove/)) result.jsPatterns.push('touch event');
+      if (line.match(/display\s*:\s*none/)) result.jsPatterns.push('display:none toggle');
+      if (line.match(/overflow\s*:\s*hidden/)) result.jsPatterns.push('overflow:hidden');
+      if (line.match(/position\s*:\s*fixed/)) result.jsPatterns.push('position:fixed');
+      if (line.match(/await\s+/)) result.jsPatterns.push('async/await');
+    }
+    // Deduplicate
+    result.jsPatterns = [...new Set(result.jsPatterns)];
 
-  // Pattern: event handling
-  if (lower.includes('event') || lower.includes('handler') || lower.includes('listener') || lower.includes('click') || lower.includes('touch')) {
-    lessons.push('event handling issue — handlers may be lost or double-fired');
-  }
+  } catch { /* diff analysis is best-effort */ }
+  return result;
+}
 
-  // Pattern: innerHTML / DOM manipulation
-  if (lower.includes('innerhtml') || lower.includes('dom') || lower.includes('handler')) {
-    lessons.push('DOM manipulation issue — innerHTML destroys event handlers');
-  }
-
-  // Pattern: CSS/styling
-  if (fixFiles.some(f => f.endsWith('.css') || f.endsWith('.scss'))) {
-    lessons.push('styling fix required — CSS changes needed');
-  }
-
-  // Pattern: same files touched as previous commit (fix-chain)
-  for (const prev of prevCommits.slice(-3)) {
-    const overlap = fixFiles.filter(f => prev.files.includes(f));
-    if (overlap.length > 0 && prev.hash) {
-      lessons.push(`fix-chain: same files as commit ${prev.hash.slice(0, 7)} (${prev.msg.slice(0, 40)})`);
-      break;
+/**
+ * Extract a specific, actionable lesson from a fix commit.
+ * Priority: 1) commit body (root cause), 2) diff analysis, 3) message parsing
+ */
+function extractLesson(fixHash, fixMsg, fixFiles, prevCommits) {
+  // === Priority 1: Commit body contains root cause ===
+  const body = getCommitBody(fixHash);
+  if (body && body.length > 20) {
+    // Look for explicit root cause / why / because statements
+    const bodyLines = body.split('\n').filter(l => l.trim());
+    for (const line of bodyLines) {
+      const lower = line.toLowerCase();
+      if (lower.includes('root cause') || lower.includes('because') ||
+          lower.includes('the problem was') || lower.includes('the issue was') ||
+          lower.includes('the bug was') || lower.includes('caused by') ||
+          lower.includes('broke when') || lower.includes('failed because')) {
+        // Found the root cause line — clean it up
+        const cleaned = line.replace(/^[\s*-]+/, '').replace(/^root cause:\s*/i, '').trim();
+        if (cleaned.length > 15) return cleaned.slice(0, 150);
+      }
+    }
+    // No explicit root cause, but body has useful context — use first substantive line
+    const substantive = bodyLines.find(l =>
+      l.trim().length > 20 &&
+      !l.startsWith('#') &&
+      !l.match(/^(signed-off|co-authored|change-id|reviewed)/i)
+    );
+    if (substantive) {
+      return substantive.trim().slice(0, 150);
     }
   }
 
-  // Fallback: derive from commit message
-  if (lessons.length === 0) {
-    // Clean up the message for a generic lesson
-    const cleaned = fixMsg
-      .replace(/^fix\([^)]*\):\s*/i, '')
-      .replace(/^fix:\s*/i, '')
-      .replace(/^fix\s+/i, '')
-      .slice(0, 100);
-    if (cleaned.length > 5) {
-      lessons.push(cleaned);
+  // === Priority 2: Diff analysis — what actually changed in the code ===
+  const diff = analyzeDiff(fixHash);
+
+  // CSS property changes tell a specific story
+  if (diff.cssProps.length > 0) {
+    const removed = diff.cssProps.filter(c => c.action === 'removed');
+    const added = diff.cssProps.filter(c => c.action === 'added');
+    if (removed.length > 0 && added.length > 0) {
+      return `changed ${removed[0].prop}: ${removed[0].oldVal} → ${added[0].newVal || 'removed'}`.slice(0, 150);
+    }
+    if (removed.length > 0) {
+      return `removed ${removed[0].prop}: ${removed[0].oldVal} — was causing the issue`.slice(0, 150);
     }
   }
 
-  return lessons;
+  // JS patterns tell a different story
+  if (diff.jsPatterns.length > 0) {
+    const pattern = diff.jsPatterns[0];
+    const msgClean = fixMsg.replace(/^fix\([^)]*\):\s*/i, '').replace(/^fix:\s*/i, '').slice(0, 80);
+    return `${pattern} — ${msgClean}`.slice(0, 150);
+  }
+
+  // === Priority 3: Parse the commit message for specifics ===
+  const msgClean = fixMsg
+    .replace(/^fix\([^)]*\):\s*/i, '')
+    .replace(/^fix:\s*/i, '')
+    .replace(/^fix\s+/i, '')
+    .trim();
+
+  if (msgClean.length > 15) {
+    return msgClean.slice(0, 150);
+  }
+
+  return fixMsg.slice(0, 100);
+}
+
+/**
+ * Calculate a danger score for a file based on compound risk factors.
+ * Higher = more dangerous to edit.
+ */
+function dangerScore(file, mem) {
+  const risk = mem.risks[file];
+  const hotspot = mem.hotspots[file] || 0;
+
+  if (!risk) return 0;
+
+  // Compound factors:
+  // - breakCount: how many times this file was in a fix commit
+  // - couplingCount: how many files this is coupled with (more = more fragile)
+  // - churn: how often it changes (more churn = more risk)
+  // - recency: recent breaks are scarier (decay over 30 days)
+  const breakWeight = risk.breakCount * 3;
+
+  let couplingCount = 0;
+  for (const [pair, count] of Object.entries(mem.couplings)) {
+    if (count >= 3 && pair.includes(file)) couplingCount++;
+  }
+  const couplingWeight = Math.min(couplingCount, 5) * 1.5;
+
+  const churnWeight = Math.min(hotspot / 10, 3);
+
+  let recencyWeight = 0;
+  if (risk.lastBreak) {
+    const daysSince = Math.max(1, (Date.now() - new Date(risk.lastBreak).getTime()) / 86400000);
+    recencyWeight = Math.max(0, 3 - daysSince / 10); // decays over 30 days
+  }
+
+  return Math.round((breakWeight + couplingWeight + churnWeight + recencyWeight) * 10) / 10;
 }
 
 /**
@@ -349,7 +450,7 @@ function learn() {
   if (isFix) {
     mem.stats.totalFixes++;
 
-    const lessons = extractLesson(msg, files, mem.commits.slice(-10));
+    const lesson = extractLesson(hash, msg, files, mem.commits.slice(-10));
 
     // Record breakage
     const breakage = {
@@ -357,7 +458,7 @@ function learn() {
       files,
       date,
       fixHash: hash,
-      lesson: lessons.join('; ')
+      lesson
     };
 
     // Try to find the original commit this fixes
@@ -373,7 +474,7 @@ function learn() {
       if (!mem.risks[f]) mem.risks[f] = { breakCount: 0, lastBreak: '', lessons: [] };
       mem.risks[f].breakCount++;
       mem.risks[f].lastBreak = date;
-      for (const lesson of lessons) {
+      if (lesson) {
         if (!mem.risks[f].lessons.includes(lesson) && mem.risks[f].lessons.length < 10) {
           mem.risks[f].lessons.push(lesson);
         }
@@ -407,14 +508,20 @@ function warn() {
 
   const warnings = [];
 
-  // 1. Files that have broken before
+  // 1. Files that have broken before — show the best lesson
   for (const f of staged) {
     const risk = mem.risks[f];
     if (risk && risk.breakCount >= 1) {
-      const lessonStr = risk.lessons.length > 0 ? ` (${risk.lessons[0]})` : '';
+      const score = dangerScore(f, mem);
+      // Pick the most specific lesson (longest = usually most detailed)
+      const bestLesson = risk.lessons.length > 0
+        ? risk.lessons.reduce((a, b) => a.length > b.length ? a : b)
+        : '';
+      const lessonStr = bestLesson ? `\n       \x1b[2m↳ ${bestLesson.slice(0, 80)}\x1b[0m` : '';
       warnings.push({
-        severity: risk.breakCount >= 3 ? 'high' : risk.breakCount >= 2 ? 'medium' : 'low',
-        msg: `${f} has broken ${risk.breakCount}x before${lessonStr}`
+        severity: score >= 15 ? 'high' : score >= 8 ? 'medium' : 'low',
+        score,
+        msg: `${f} — broke ${risk.breakCount}x, danger ${score}${lessonStr}`
       });
     }
   }
@@ -557,14 +664,14 @@ function backfill() {
 
     // Breakages from fix commits
     if (c.isFix) {
-      const lessons = extractLesson(c.msg, c.files, mem.commits.slice(Math.max(0, i - 5), i));
+      const lesson = extractLesson(c.hash, c.msg, c.files, mem.commits.slice(Math.max(0, i - 5), i));
 
       const breakage = {
         pattern: c.msg.slice(0, 100),
         files: c.files,
         date: c.date,
         fixHash: c.hash,
-        lesson: lessons.join('; ')
+        lesson
       };
 
       // Find original commit
@@ -583,7 +690,7 @@ function backfill() {
         if (!mem.risks[f]) mem.risks[f] = { breakCount: 0, lastBreak: '', lessons: [] };
         mem.risks[f].breakCount++;
         mem.risks[f].lastBreak = c.date;
-        for (const lesson of lessons) {
+        if (lesson) {
           if (!mem.risks[f].lessons.includes(lesson) && mem.risks[f].lessons.length < 10) {
             mem.risks[f].lessons.push(lesson);
           }
@@ -711,17 +818,22 @@ function status() {
   console.log(`  Patterns learned:  ${mem.patterns.length}`);
   console.log('');
 
-  // Riskiest files
+  // Riskiest files (by danger score, not just break count)
   const riskyFiles = Object.entries(mem.risks)
-    .filter(([, r]) => r.breakCount >= 2)
-    .sort((a, b) => b[1].breakCount - a[1].breakCount)
+    .map(([file, risk]) => [file, risk, dangerScore(file, mem)])
+    .filter(([, , score]) => score >= 5)
+    .sort((a, b) => b[2] - a[2])
     .slice(0, 5);
 
   if (riskyFiles.length > 0) {
     console.log('  \x1b[1mRiskiest files:\x1b[0m');
-    for (const [file, risk] of riskyFiles) {
-      const lesson = risk.lessons[0] ? ` — ${risk.lessons[0].slice(0, 60)}` : '';
-      console.log(`    ${risk.breakCount}x broken  ${file}${lesson}`);
+    for (const [file, risk, score] of riskyFiles) {
+      const bestLesson = risk.lessons.length > 0
+        ? risk.lessons.reduce((a, b) => a.length > b.length ? a : b)
+        : '';
+      const lessonStr = bestLesson ? `\n      \x1b[2m↳ ${bestLesson.slice(0, 70)}\x1b[0m` : '';
+      const bar = '\x1b[31m' + '█'.repeat(Math.min(Math.round(score / 3), 10)) + '\x1b[0m' + '░'.repeat(Math.max(0, 10 - Math.round(score / 3)));
+      console.log(`    ${bar} ${file} — danger ${score}, broke ${risk.breakCount}x${lessonStr}`);
     }
     console.log('');
   }
@@ -762,14 +874,14 @@ function status() {
     console.log('');
   }
 
-  // Recent breakages
-  const recentBreakages = mem.breakages.slice(-3);
+  // Recent breakages (with actual lessons)
+  const recentBreakages = mem.breakages.slice(-5);
   if (recentBreakages.length > 0) {
     console.log('  \x1b[1mRecent breakages:\x1b[0m');
     for (const b of recentBreakages) {
       console.log(`    ${b.date} ${b.fixHash || '???'} ${b.pattern.slice(0, 70)}`);
       if (b.lesson) {
-        console.log(`           \x1b[2mlesson: ${b.lesson.slice(0, 70)}\x1b[0m`);
+        console.log(`      \x1b[2m↳ ${b.lesson.slice(0, 90)}\x1b[0m`);
       }
     }
     console.log('');
