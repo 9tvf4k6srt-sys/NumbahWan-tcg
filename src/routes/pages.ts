@@ -35,32 +35,35 @@ router.get('/api/members', (c) => {
 router.get('/', serveStatic({ path: './index.html' }))
 router.get('/index.html', serveStatic({ path: './index.html' }))
 
-// AI-friendly files
-router.get('/llms.txt', async (c) => {
+// AI-friendly & crawler files (all served from public/ static files)
+const textFiles = ['llms.txt', 'llms-full.txt', 'robots.txt']
+textFiles.forEach(file => {
+  router.get(`/${file}`, async (c) => {
+    try {
+      // @ts-ignore
+      const asset = await c.env?.ASSETS?.fetch(new Request(`https://dummy/${file}`))
+      if (asset) {
+        return new Response(asset.body, {
+          headers: { 'Content-Type': 'text/plain; charset=utf-8', 'Cache-Control': 'public, max-age=3600' }
+        })
+      }
+    } catch (e) {}
+    return c.text(`${file} not found`, 404)
+  })
+})
+
+// Sitemap XML
+router.get('/sitemap.xml', async (c) => {
   try {
     // @ts-ignore
-    const asset = await c.env?.ASSETS?.fetch(new Request('https://dummy/llms.txt'))
+    const asset = await c.env?.ASSETS?.fetch(new Request('https://dummy/sitemap.xml'))
     if (asset) {
       return new Response(asset.body, {
-        headers: { 'Content-Type': 'text/plain; charset=utf-8' }
+        headers: { 'Content-Type': 'application/xml; charset=utf-8', 'Cache-Control': 'public, max-age=3600' }
       })
     }
   } catch (e) {}
-  return c.redirect('/llms.txt')
-})
-
-router.get('/robots.txt', async (c) => {
-  const robotsTxt = `User-agent: *
-Allow: /
-
-# AI Assistants Welcome!
-# See /llms.txt for AI-specific guidance
-
-Sitemap: https://numbahwan.pages.dev/sitemap.xml
-`
-  return new Response(robotsTxt, {
-    headers: { 'Content-Type': 'text/plain; charset=utf-8' }
-  })
+  return c.text('sitemap.xml not found', 404)
 })
 
 // Named page routes (regina, pvp)

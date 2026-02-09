@@ -1,0 +1,295 @@
+# NumbahWan — Full Technical Reference for AI Agents
+# Last updated: 2026-02-09
+# This is the deep-dive companion to /llms.txt
+# For the summary version, see /llms.txt
+
+## Repository Structure
+
+```
+NumbahWan-tcg/
+├── src/
+│   ├── index.tsx              # Hono app entry — all routes mounted here
+│   ├── routes/
+│   │   ├── index.ts           # Route barrel export (27 route modules)
+│   │   ├── pages.ts           # Static page serving, llms.txt, robots.txt
+│   │   ├── oracle.ts          # Oracle wisdom API (1220 lines — needs split)
+│   │   ├── health.ts          # /api/health
+│   │   ├── data.ts            # /api/data endpoints
+│   │   ├── sentinel.ts        # /api/system/sentinel
+│   │   ├── wallet.ts          # /api/wallet/*
+│   │   ├── auction.ts         # /api/auction/*
+│   │   ├── avatar.ts          # /api/avatar/*
+│   │   ├── cards.ts           # /api/cards/*
+│   │   ├── admin-cards.ts     # /api/admin/*
+│   │   ├── card-engine.ts     # /api/card-engine/*
+│   │   ├── card-bridge.ts     # /api/card-bridge/*
+│   │   ├── market-trading.ts  # /api/market/*
+│   │   ├── market-prices.ts   # /api/market pricing
+│   │   ├── gamification.ts    # /api/game/*
+│   │   ├── purchase.ts        # /api/purchase/*
+│   │   ├── events-merch.ts    # /api/events-merch
+│   │   ├── confessional.ts    # /api/confessional
+│   │   ├── shrine.ts          # /api/shrine/*
+│   │   ├── physical.ts        # /api/physical/*
+│   │   ├── guide.ts           # /api/guide/*
+│   │   ├── translate.ts       # /api/translate
+│   │   ├── gm.ts              # /api/gm/* (Game Master)
+│   │   └── cipher.ts          # /api/cipher/*
+│   ├── services/
+│   │   └── pvp-matchmaking.ts # PvP matchmaking engine
+│   └── data/
+│       └── roster.json        # Guild member roster
+├── public/
+│   ├── *.html                 # 90 HTML page files
+│   ├── llms.txt               # AI visitor guide (summary)
+│   ├── llms-full.txt          # This file (deep technical reference)
+│   ├── static/
+│   │   ├── nw-nav.js          # Navigation system
+│   │   ├── nw-i18n-core.js    # i18n engine (12KB)
+│   │   ├── nw-core.css        # Core stylesheet (49KB)
+│   │   ├── nw-wallet.js       # Wallet system
+│   │   ├── nw-sounds.js       # Sound effects
+│   │   ├── nw-config.js       # Configuration
+│   │   ├── fonts/
+│   │   │   ├── NumbahWan-Regular.woff2  # Custom pixel font (2KB)
+│   │   │   ├── inter-variable.woff2     # Inter variable (24KB)
+│   │   │   └── orbitron-variable.woff2  # Orbitron variable (12KB)
+│   │   ├── data/
+│   │   │   ├── cards-v2.json           # Card definitions
+│   │   │   ├── cards-s2.json through cards-s10.json  # Season data
+│   │   │   ├── game-mechanics.json     # Game rules
+│   │   │   ├── tabletop-stats.json     # Tabletop card stats
+│   │   │   ├── avatar-components.json  # Avatar builder components
+│   │   │   ├── lore-index.json         # Lore navigation
+│   │   │   ├── navigation.json         # Site navigation structure
+│   │   │   ├── seasons.json            # Season definitions
+│   │   │   └── sentinel-report.json    # Latest health report
+│   │   └── images/              # 125+ card images, 17 avatars
+│   ├── museum/                  # 10 exhibit pages
+│   ├── vault/                   # 3 vault floor pages
+│   ├── research/                # 6 research paper pages
+│   └── lore/                    # Lore story pages
+├── scripts/
+│   ├── nw-deepdive-guardian.cjs  # Sentinel health scanner (1682 lines)
+│   ├── audit-i18n.cjs            # i18n coverage auditor
+│   └── 27 other build/utility scripts
+├── sentinel.cjs                  # Symlink/copy of health scanner
+├── nw-memory.cjs                 # AI session memory system (964 lines)
+├── memory.json                   # Memory data store (99 snapshots)
+├── CLAUDE.md                     # AI assistant session protocol
+├── README.md                     # GitHub-facing README
+├── package.json                  # 29 npm scripts
+└── wrangler.jsonc                # Cloudflare Workers config
+```
+
+## API Reference
+
+### Oracle Endpoints
+
+#### POST /api/oracle/ask
+Ask the Oracle a life question. Returns wisdom synthesized from 4 sacred traditions.
+
+Request:
+```json
+{
+  "question": "I'm stressed about money",
+  "language": "en",
+  "history": []
+}
+```
+
+Response:
+```json
+{
+  "success": true,
+  "message": "**Your bank account at 2am is not your life's report card.**\n\n**The Ancient Consensus:**\n- **Buddhism** (Middle Way): Neither extreme wealth nor poverty...\n- **Taoism** (Contentment): Knowing you have enough IS enough...\n- **Bible** (Proverbs 21:5): Steady plodding brings prosperity...\n- **Quran** (65:2-3): Whoever fears Allah, He will provide...\n\n**The Funny Truth:**\nDave Ramsey voice: 'Have you tried not being poor?'\n\n**Your One Step:**\nOpen your bank app. Look at last month's spending. Not to judge — to see.\n\n**Oracle's Seal:**\nYour net worth is not your self-worth. One is a spreadsheet problem, the other was solved at birth.",
+  "source": "curated",
+  "topic": "money"
+}
+```
+
+Supported languages: en, zh (繁體中文), th (ไทย)
+Topics covered: heartbreak, anxiety, failure, money, anger, fear, loneliness, grief, self-worth, stuck, forgiveness, comparison, burnout, change, purpose
+
+#### GET /api/oracle/random?lang=en
+Returns a random wisdom entry.
+
+Response: Same format as /ask
+
+### Health Endpoints
+
+#### GET /api/health
+Returns server status.
+
+#### GET /api/system/sentinel
+Returns the latest code health report as JSON.
+
+### Member Data
+
+#### GET /api/members
+Returns the full guild roster with CP values and sorted rankings.
+
+## Standalone Tools — Usage Guide
+
+### sentinel.cjs
+
+```bash
+# Basic health check (any JS/TS project)
+node sentinel.cjs
+
+# Output:
+# Composite Score:  72/100 (B-)
+# Trend:            =0 (stable)  | Build #50
+# Module Breakdown (10 modules):
+#     71 B-  architecture   (15%)  10 issues
+#     54 D   assets         (15%)  22 issues
+#    100 A+  deadCode       (10%)
+#     92 A   security       (15%)  1 issues
+#     60 C   performance    (10%)  4 issues
+# ...
+# Auto-Fix Engine: 9 fixes available (5 automated, 4 manual)
+
+# With auto-fix
+node sentinel.cjs --auto-fix
+
+# JSON output
+node sentinel.cjs --json
+```
+
+10 modules scored:
+- architecture (file sizes, complexity, nesting depth)
+- assets (image optimization, unused assets)
+- i18n (translation coverage, missing keys)
+- deadCode (unused exports, unreachable code)
+- security (eval usage, exposed secrets, CSP headers)
+- performance (bundle size, lazy loading, render blocking)
+- apiSurface (endpoint documentation, error handling)
+- dependencies (outdated packages, vulnerability audit)
+- accessibility (alt tags, ARIA labels, color contrast)
+- seoMeta (title, description, OG tags, structured data)
+
+### nw-memory.cjs
+
+```bash
+# What does the AI need to know right now?
+node nw-memory.cjs --query
+
+# Output:
+# Total snapshots: 99 (First: 2026-02-05, Latest: 2026-02-09)
+# Current Build: Bundle 536KB, Pages 116, JS Modules 62
+# Hotspot Files: public/battle.html (37 changes), src/index.tsx (34)...
+# Recent Fix Chains: oracle font loading → self-hosted fix → resolved
+# Known Constraints: iOS audio, Cloudflare limits, i18n innerHTML...
+
+# Pre-mortem for a specific area
+node nw-memory.cjs --premortem battle
+# → Shows what broke last time in battle-related files
+
+# Record a breakage
+node nw-memory.cjs --broke "i18n" "innerHTML replaced DOM, lost event handlers"
+
+# Record a decision
+node nw-memory.cjs --decide "Used inline translations instead of JSON files"
+
+# Show file coupling (files that always change together)
+node nw-memory.cjs --coupled
+```
+
+Data stored in memory.json (plain JSON, human-readable, git-tracked).
+
+### nw-i18n-core.js — i18n Pattern
+
+The i18n approach is intentionally simple and may be useful as a pattern:
+
+1. Each HTML page has inline `<script>` with translations:
+```javascript
+const NW_I18N = {
+  en: { title: "The Oracle", subtitle: "Ancient Wisdom" },
+  zh: { title: "神諭", subtitle: "古老的智慧" },
+  th: { title: "ออราเคิล", subtitle: "ปัญญาโบราณ" }
+};
+```
+
+2. nw-i18n-core.js reads `localStorage.getItem('nw_lang')`, applies translations via `data-i18n` attributes, and fires `lang-change` events.
+
+3. Language switch: user clicks lang button → localStorage updated → `applyTranslations(lang)` called → DOM updated → `lang-change` event dispatched.
+
+No build step. No JSON files to maintain. No framework. Works with any HTML page.
+
+## Architecture Notes
+
+### Why Vanilla JS?
+- 116 pages at ~57KB average HTML — total site is smaller than most React bundles
+- Each page is self-contained; no shared state to manage
+- Cloudflare Workers serve static HTML with 0ms cold start
+- i18n is per-page, so translation files don't bloat
+
+### Why Hono?
+- Lightweight (14KB) Express-like framework designed for edge runtimes
+- Native Cloudflare Workers support
+- File-based routing would add complexity for 27 route modules
+- TypeScript throughout
+
+### Security Headers (applied globally)
+- X-Content-Type-Options: nosniff
+- X-Frame-Options: SAMEORIGIN
+- Strict-Transport-Security: max-age=31536000
+- Referrer-Policy: strict-origin-when-cross-origin
+- Content-Security-Policy: default-src 'self' with specific allowlists
+
+### Build Pipeline
+1. `npm run build` → Vite bundles src/ into dist/_worker.js (549KB)
+2. Public assets copied to dist/
+3. `wrangler pages dev dist/` for local development
+4. `wrangler pages deploy dist/` for production
+
+## Data Formats
+
+### Card Data (cards-v2.json)
+```json
+{
+  "id": "card-001",
+  "name": "RegginA",
+  "rarity": "legendary",
+  "season": 1,
+  "class": "Warrior",
+  "attack": 85,
+  "defense": 72,
+  "image": "/static/images/cards/card-001.webp"
+}
+```
+
+### Memory Snapshot (memory.json)
+```json
+{
+  "snapshots": [
+    {
+      "timestamp": "2026-02-09T04:43:31Z",
+      "commit": "f24dcb0",
+      "message": "feat(oracle): Premium multilingual Oracle page",
+      "filesChanged": 6,
+      "bundleSize": 536000,
+      "pageCount": 116,
+      "jsModules": 62
+    }
+  ],
+  "breakages": [...],
+  "decisions": [...],
+  "constraints": [...]
+}
+```
+
+## Contributing
+
+The repo is public at https://github.com/9tvf4k6srt-sys/NumbahWan-tcg
+MIT License. Use sentinel.cjs and nw-memory.cjs in your own projects.
+
+For AI assistants: Read CLAUDE.md for session protocol. Run `node nw-memory.cjs --query` before making changes.
+
+---
+format: llms-full
+version: 1.0
+pages: 116
+api-routes: 30
+standalone-tools: sentinel.cjs, nw-memory.cjs, nw-i18n-core.js
+languages: en, zh, th
