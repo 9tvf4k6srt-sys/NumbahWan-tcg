@@ -135,6 +135,7 @@ function extractRawData() {
   const brokenAfter = new Set();
   for (const b of watchBreakages) {
     const idx = commits.findIndex(c => c.hash === b.fixHash);
+    if (idx < 0) continue; // skip breakages with unknown fixHash — don't pollute either bucket
     for (const f of (b.files || [])) {
       if (idx < installIdx) brokenBefore.add(f);
       else brokenAfter.add(f);
