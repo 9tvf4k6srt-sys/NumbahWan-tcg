@@ -1,5 +1,12 @@
 #!/bin/sh
-# NW-MEMORY: Pre-commit — enforce protocol, auto-guard, compact
+# NW-MEMORY + gitwise: Pre-commit — enforce protocol, auto-guard, compact, warn
+
+# ─── gitwise: warn about known risks (zero config, always runs) ───
+if [ -f "gitwise.cjs" ]; then
+  node "gitwise.cjs" --warn 2>/dev/null >&2 || true
+fi
+
+# ─── NW-MEMORY: protocol enforcement + guard ───
 if [ ! -f "nw-memory.cjs" ]; then exit 0; fi
 
 # Session marker must exist
@@ -23,6 +30,3 @@ git add memory.json 2>/dev/null || true
 node nw-memory.cjs --guard 2>/dev/null >&2 || true
 
 exit 0
-
-# gitwise: warn about known risks
-node "gitwise.cjs" --warn 2>/dev/null || true

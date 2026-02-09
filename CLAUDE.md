@@ -97,6 +97,32 @@ node nw-memory.cjs --wip-done
 | Export learnings to shared library | `node nw-memory.cjs --export-shared` |
 | Import learnings from shared library | `node nw-memory.cjs --import-shared` |
 | View shared library | `node nw-memory.cjs --shared` |
+| gitwise dashboard (danger scores, risks) | `node gitwise.cjs --status` |
+| gitwise warn on staged files | `node gitwise.cjs --warn` |
+| gitwise reinstall (rescan history) | `node gitwise.cjs --install` |
+
+## Two Learning Systems (both active)
+
+### gitwise (passive — zero config, zero commands)
+gitwise watches every commit and warns before you repeat a mistake. You don't run it.
+- **Post-commit hook**: auto-learns breakages, file couplings, risk patterns
+- **Pre-commit hook**: auto-warns if staged files have broken before or are missing coupled files
+- **Dashboard**: `node gitwise.cjs --status` (danger scores, riskiest files, couplings)
+- **Manual warn**: `node gitwise.cjs --warn` (test what warnings staged files would get)
+- **Install on any repo**: `node gitwise.cjs --install` (scans history, sets up hooks)
+
+### NW-Memory (active — discipline-based power tool)
+NW-Memory stores constraints, decisions, breakages, and learnings you explicitly record.
+Both tools share intelligence: NW-Memory uses gitwise's deep lesson extraction (commit body + diff analysis)
+for auto-reflect, postfix, and breakage recording.
+
+| What | gitwise does automatically | NW-Memory adds on top |
+|------|--------------------------|----------------------|
+| Learn from fixes | Reads commit body + diff | Stores in constraints/learnings |
+| Warn before mistakes | Pre-commit: "broke 7x, danger 31.9" | --guard: area constraints + coupled files |
+| Risk tracking | Danger score per file | Area-level breakage history |
+| Lessons | 98% specific from diffs | Human-curated + auto-extracted |
+| Workflow | Invisible | Session protocol + WIP persistence |
 
 ## Areas
 battle, forge, i18n, nav, economy, collection, wallet, cards, tabletop, emoji, dom, ios, modules, font, memory, workflow, oracle, sentinel, lore, discoverability, absurd, exchange
