@@ -40,4 +40,151 @@ if [ "$GUARD_EXIT" -ne 0 ]; then
   exit 1
 fi
 
+
+# ─── MYCELIUM-UPGRADE: Pattern-specific guards (auto-generated) ───
+# Source: 50 breakages analyzed from .mycelium/watch.json
+# Generated: 2026-02-09
+
+COUPLING_WARNINGS=0
+BLOCK=0
+
+# ── Coupling enforcement ──
+
+# Coupling: nw-nav.js <-> index.tsx (13x co-changed)
+if git diff --cached --name-only | grep -q "public/static/nw-nav\.js"; then
+  if ! git diff --cached --name-only | grep -q "src/index\.tsx"; then
+    echo "  ⚠ WARNING: nw-nav.js changed without index.tsx (coupled 13x in history)" >&2
+    COUPLING_WARNINGS=$((COUPLING_WARNINGS + 1))
+  fi
+fi
+
+# Coupling: memory.json <-> nw-memory.cjs (13x co-changed)
+if git diff --cached --name-only | grep -q "memory\.json"; then
+  if ! git diff --cached --name-only | grep -q "nw-memory\.cjs"; then
+    echo "  ⚠ WARNING: memory.json changed without nw-memory.cjs (coupled 13x in history)" >&2
+    COUPLING_WARNINGS=$((COUPLING_WARNINGS + 1))
+  fi
+fi
+
+# Coupling: gitwise.cjs <-> memory.json (7x co-changed)
+if git diff --cached --name-only | grep -q "gitwise\.cjs"; then
+  if ! git diff --cached --name-only | grep -q "memory\.json"; then
+    echo "  ⚠ WARNING: gitwise.cjs changed without memory.json (coupled 7x in history)" >&2
+    COUPLING_WARNINGS=$((COUPLING_WARNINGS + 1))
+  fi
+fi
+
+# Coupling: arcade.html <-> forge.html (6x co-changed)
+if git diff --cached --name-only | grep -q "public/arcade\.html"; then
+  if ! git diff --cached --name-only | grep -q "public/forge\.html"; then
+    echo "  ⚠ WARNING: arcade.html changed without forge.html (coupled 6x in history)" >&2
+    COUPLING_WARNINGS=$((COUPLING_WARNINGS + 1))
+  fi
+fi
+
+# Coupling: markets.html <-> index.tsx (6x co-changed)
+if git diff --cached --name-only | grep -q "public/markets\.html"; then
+  if ! git diff --cached --name-only | grep -q "src/index\.tsx"; then
+    echo "  ⚠ WARNING: markets.html changed without index.tsx (coupled 6x in history)" >&2
+    COUPLING_WARNINGS=$((COUPLING_WARNINGS + 1))
+  fi
+fi
+
+# Coupling: post-commit <-> memory.json (6x co-changed)
+if git diff --cached --name-only | grep -q "\.husky/post-commit"; then
+  if ! git diff --cached --name-only | grep -q "memory\.json"; then
+    echo "  ⚠ WARNING: post-commit changed without memory.json (coupled 6x in history)" >&2
+    COUPLING_WARNINGS=$((COUPLING_WARNINGS + 1))
+  fi
+fi
+
+# Coupling: gitwise.cjs <-> nw-memory.cjs (6x co-changed)
+if git diff --cached --name-only | grep -q "gitwise\.cjs"; then
+  if ! git diff --cached --name-only | grep -q "nw-memory\.cjs"; then
+    echo "  ⚠ WARNING: gitwise.cjs changed without nw-memory.cjs (coupled 6x in history)" >&2
+    COUPLING_WARNINGS=$((COUPLING_WARNINGS + 1))
+  fi
+fi
+
+# ── Repeat-offender file checks ──
+
+  # cards: broke 10x total
+  f="public/cards.html"
+  if git diff --cached --name-only | grep -q "public/cards\.html"; then
+    
+    # i18n check (broke 2x from i18n issues)
+    if grep -P 'data-i18n="\d' "$f" >/dev/null 2>&1; then
+      echo "  ✗ BLOCKED: $f has i18n key starting with digit" >&2
+      BLOCK=1
+    fi
+    
+    # Mobile viewport check (broke 1x from mobile/iOS issues)  
+    if ! grep -q 'viewport' "$f"; then
+      echo "  ⚠ WARNING: $f missing viewport meta tag (mobile broke 1x)" >&2
+    fi
+  fi
+
+  # markets: broke 7x total
+  f="public/markets.html"
+  if git diff --cached --name-only | grep -q "public/markets\.html"; then
+    
+    # i18n check (broke 3x from i18n issues)
+    if grep -P 'data-i18n="\d' "$f" >/dev/null 2>&1; then
+      echo "  ✗ BLOCKED: $f has i18n key starting with digit" >&2
+      BLOCK=1
+    fi
+    
+    # Mobile viewport check (broke 2x from mobile/iOS issues)  
+    if ! grep -q 'viewport' "$f"; then
+      echo "  ⚠ WARNING: $f missing viewport meta tag (mobile broke 2x)" >&2
+    fi
+  fi
+
+  # battle: broke 7x total
+  f="public/battle.html"
+  if git diff --cached --name-only | grep -q "public/battle\.html"; then
+    
+    # Mobile viewport check (broke 2x from mobile/iOS issues)  
+    if ! grep -q 'viewport' "$f"; then
+      echo "  ⚠ WARNING: $f missing viewport meta tag (mobile broke 2x)" >&2
+    fi
+  fi
+
+  # wyckoff: broke 5x total
+  f="public/wyckoff.html"
+  if git diff --cached --name-only | grep -q "public/wyckoff\.html"; then
+    
+    # i18n check (broke 4x from i18n issues)
+    if grep -P 'data-i18n="\d' "$f" >/dev/null 2>&1; then
+      echo "  ✗ BLOCKED: $f has i18n key starting with digit" >&2
+      BLOCK=1
+    fi
+  fi
+
+  # merch: broke 5x total
+  f="public/merch.html"
+  if git diff --cached --name-only | grep -q "public/merch\.html"; then
+    
+    # i18n check (broke 2x from i18n issues)
+    if grep -P 'data-i18n="\d' "$f" >/dev/null 2>&1; then
+      echo "  ✗ BLOCKED: $f has i18n key starting with digit" >&2
+      BLOCK=1
+    fi
+  fi
+
+if [ "$COUPLING_WARNINGS" -gt 2 ]; then
+  echo "" >&2
+  echo "  ⚠ $COUPLING_WARNINGS coupling warnings — consider updating paired files" >&2
+  echo "" >&2
+fi
+
+if [ "$BLOCK" -ne 0 ]; then
+  echo "" >&2
+  echo "  PRE-COMMIT BLOCKED: Pattern violations detected." >&2
+  echo "  These patterns have caused breakages before." >&2
+  echo "  Bypass: git commit --no-verify" >&2
+  echo "" >&2
+  exit 1
+fi
+
 exit 0
