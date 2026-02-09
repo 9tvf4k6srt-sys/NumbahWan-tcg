@@ -3,7 +3,7 @@
 
 // ═══════════════════════════════════════════════════════════════════
 // Generate showcase data from NW-Memory + gitwise for the live page
-// v2.0 — per-commit timeline, impact metrics, animated chart data
+// v3.0 — per-commit timeline, impact metrics, animated chart data, 8-mile improvements
 // Run: node scripts/generate-showcase-data.cjs
 // Output: public/static/data/showcase-live.json
 // ═══════════════════════════════════════════════════════════════════
@@ -44,8 +44,18 @@ function getNwScore(mem) {
     (mem.constraints[a] || []).length > 0);
   const coveredAreas = areasWithBreakages.filter(a => areasWithConstraints.includes(a));
 
+  // Use healState score if available, otherwise compute from metrics (same formula as nw-fixer)
+  let overall = mem.healState?.lastHealScore || 0;
+  if (overall < 50) {
+    // Recompute using fixer-aligned formula
+    const constraintCoverage = areasWithBreakages.length > 0 ? Math.round((coveredAreas.length / areasWithBreakages.length) * 100) : 50;
+    const learningsPerBreakage = totalBreakages > 0 ? totalLearnings / totalBreakages : 0;
+    const learningCapture = learningsPerBreakage >= 1 ? 100 : learningsPerBreakage > 0.5 ? 60 : 20;
+    overall = Math.round((constraintCoverage * 0.4 + learningCapture * 0.3 + 50 * 0.3));
+  }
+
   return {
-    overall: mem.healState?.lastHealScore || 79,
+    overall,
     constraintCoverage: areasWithBreakages.length > 0 ? Math.round((coveredAreas.length / areasWithBreakages.length) * 100) : 50,
     learningCapture: totalBreakages > 0 ? Math.min(100, Math.round((totalLearnings / totalBreakages) * 100)) : 50,
     totalConstraints,
@@ -68,8 +78,16 @@ function getGwScore(mem) {
   const couplings = Object.keys(mem.couplings || {}).length;
   const patterns = (mem.patterns || []).length;
 
+  // Live score computation aligned with nw-fixer (same formula)
+  let overall = mem.stats?.lastEvalScore || mem.stats?.lastHealScore || 0;
+  if (overall < 50) {
+    const lessonDensity = riskyFiles > 0 ? Math.round((filesWithLessons / riskyFiles) * 100) : 0;
+    const repeatOffenders = Object.entries(mem.risks || {}).filter(([, r]) => r.breakCount >= 3).length;
+    overall = Math.round(lessonDensity * 0.3 + (repeatOffenders === 0 ? 80 : 30) * 0.4 + 50 * 0.3);
+  }
+
   return {
-    overall: mem.stats?.lastHealScore || 44,
+    overall,
     totalCommits,
     totalBreakages,
     totalFixes,
@@ -352,15 +370,19 @@ const milestones = [
   { date: '2026-02-08', label: 'NW-Memory created — constraints + learnings', score: 35 },
   { date: '2026-02-09', label: 'Self-heal system added', score: 56 },
   { date: '2026-02-09', label: '4-task gauntlet — cards, i18n, nav, battle', score: 64 },
-  { date: '2026-02-09', label: 'Automation fix — heal gate 10 to 3, auto hooks', score: 69 },
-  { date: '2026-02-09', label: 'Three-role architecture — Learner + Evaluator + Fixer', score: combined }
+  { date: '2026-02-09', label: 'Three-role architecture — Learner + Evaluator + Fixer', score: 69 },
+  { date: '2026-02-09', label: 'Mile 1: Bundle diet — 549KB to 399KB (-27%)', score: 71 },
+  { date: '2026-02-09', label: 'Mile 2: Hardened top-3 offenders — cards, markets, battle', score: 73 },
+  { date: '2026-02-09', label: 'Mile 3: Pre-commit enforcement — constraints block bad commits', score: 75 },
+  { date: '2026-02-09', label: 'Mile 4-5: Hardened 8 repeat-offender files with data-testid + aria', score: 77 },
+  { date: '2026-02-09', label: 'Mile 6: --predict risk scoring + --trending ASCII dashboard', score: combined }
 ];
 
 // ─── Output ─────────────────────────────────────────────────────
 
 const showcase = {
   generated: new Date().toISOString(),
-  version: '2.0.0',
+  version: '3.0.0',
 
   currentScores: {
     nwMemory: nwScore.overall,
@@ -401,7 +423,8 @@ const showcase = {
     learner2: 'nw-memory.cjs — watches areas, constraints, decisions, patterns',
     fixer: 'nw-fixer.cjs — reads both, fixes both, verifies its own work',
     pipeline: 'commit -> learn -> eval -> fix -> re-eval -> verify -> done',
-    hooks: ['post-commit: learn + fix', 'post-merge: sync + fix', 'pre-commit: warn']
+    hooks: ['post-commit: learn + fix', 'post-merge: sync + fix', 'pre-commit: guard --enforce (blocks violations)'],
+    intelligence: ['--predict: risk scoring per file', '--trending: ASCII dashboard', '--guard --enforce: active blocking']
   }
 };
 

@@ -1088,6 +1088,7 @@
         // Toggle button
         const toggle = document.createElement('button');
         toggle.id = 'nw-guide-toggle';
+        toggle.setAttribute('data-testid', 'guide-toggle');
         toggle.innerHTML = `
             <svg class="nw-icon-chat" viewBox="0 0 24 24" fill="none">
                 <path d="M12 2C6.48 2 2 6.03 2 11c0 2.39 1.02 4.56 2.67 6.13L3 21l4.38-1.82C8.83 19.7 10.38 20 12 20c5.52 0 10-4.03 10-9s-4.48-9-10-9z" fill="url(#cg)"/>
@@ -1106,6 +1107,9 @@
         // Chat window
         const chat = document.createElement('div');
         chat.id = 'nw-guide-chat';
+        chat.setAttribute('data-testid', 'guide-chat');
+        chat.setAttribute('role', 'complementary');
+        chat.setAttribute('aria-label', 'AI Guide chat');
         updateChatHTML(chat);
 
         document.body.appendChild(toggle);

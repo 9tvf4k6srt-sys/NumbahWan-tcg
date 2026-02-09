@@ -771,6 +771,9 @@ const NW_NAV = {
         
         const container = document.createElement('div');
         container.id = 'nwNavContainer';
+        container.setAttribute('data-testid', 'nav-container');
+        container.setAttribute('role', 'navigation');
+        container.setAttribute('aria-label', 'Main navigation');
         container.innerHTML = this.generateNavHTML();
         document.body.appendChild(container);
         this.injectStyles();
