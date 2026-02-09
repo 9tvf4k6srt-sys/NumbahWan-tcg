@@ -33,14 +33,17 @@ const path = require('path');
 const fs = require('fs');
 
 const ROOT = path.resolve(__dirname, '..');
-const VERSION = '2.0.0';
+const VERSION = '3.0.0';
 
 // ─── Script paths ─────────────────────────────────────────────────
 const SCRIPTS = {
-  core:  path.join(ROOT, 'mycelium.cjs'),
-  eval:  path.join(ROOT, 'mycelium-eval.cjs'),
-  fix:   path.join(ROOT, 'mycelium-fix.cjs'),
-  watch: path.join(ROOT, 'mycelium-watch.cjs'),
+  core:    path.join(ROOT, 'mycelium.cjs'),
+  eval:    path.join(ROOT, 'mycelium-eval.cjs'),
+  fix:     path.join(ROOT, 'mycelium-fix.cjs'),
+  watch:   path.join(ROOT, 'mycelium-watch.cjs'),
+  doctor:  path.join(ROOT, 'mycelium-doctor.cjs'),
+  why:     path.join(ROOT, 'mycelium-why.cjs'),
+  upgrade: path.join(ROOT, 'mycelium-upgrade.cjs'),
 };
 
 // ─── Helpers ──────────────────────────────────────────────────────
@@ -395,10 +398,13 @@ switch (cmd) {
   case '-v':
     banner();
     console.log(`  Components:`);
-    console.log(`    mycelium.cjs       ${exists(SCRIPTS.core) ? '✓' : '✗'} — The Learner (memory, snapshots, constraints)`);
-    console.log(`    mycelium-watch.cjs ${exists(SCRIPTS.watch) ? '✓' : '✗'} — The Watcher (commits, risks, couplings)`);
-    console.log(`    mycelium-eval.cjs  ${exists(SCRIPTS.eval) ? '✓' : '✗'} — The Evaluator (9 KPIs, cryptographic proof)`);
-    console.log(`    mycelium-fix.cjs   ${exists(SCRIPTS.fix) ? '✓' : '✗'} — The Fixer (diagnose → prescribe → execute → verify)`);
+    console.log(`    mycelium.cjs         ${exists(SCRIPTS.core) ? '✓' : '✗'} — The Learner (memory, snapshots, constraints)`);
+    console.log(`    mycelium-watch.cjs   ${exists(SCRIPTS.watch) ? '✓' : '✗'} — The Watcher (commits, risks, couplings)`);
+    console.log(`    mycelium-eval.cjs    ${exists(SCRIPTS.eval) ? '✓' : '✗'} — The Evaluator (9 KPIs, cryptographic proof)`);
+    console.log(`    mycelium-fix.cjs     ${exists(SCRIPTS.fix) ? '✓' : '✗'} — The Fixer (diagnose → prescribe → execute → verify)`);
+    console.log(`    mycelium-doctor.cjs  ${exists(SCRIPTS.doctor) ? '✓' : '✗'} — The Doctor (pre-flight health check)`);
+    console.log(`    mycelium-why.cjs     ${exists(SCRIPTS.why) ? '✓' : '✗'} — The Explainer (file intelligence reports)`);
+    console.log(`    mycelium-upgrade.cjs ${exists(SCRIPTS.upgrade) ? '✓' : '✗'} — The Upgrader (auto-generate defenses)`);
     console.log();
     // Show data directory
     const dataDir = path.join(ROOT, '.mycelium');
@@ -412,6 +418,24 @@ switch (cmd) {
       });
     }
     console.log();
+    break;
+
+  // ── Doctor ──────────────────────────────────────────────────────
+  case 'doctor':
+    if (!exists(SCRIPTS.doctor)) { console.error('mycelium-doctor.cjs not found'); process.exit(1); }
+    run(`node "${SCRIPTS.doctor}" ${rest}`);
+    break;
+
+  // ── Why ─────────────────────────────────────────────────────────
+  case 'why':
+    if (!exists(SCRIPTS.why)) { console.error('mycelium-why.cjs not found'); process.exit(1); }
+    run(`node "${SCRIPTS.why}" ${rest}`);
+    break;
+
+  // ── Upgrade ─────────────────────────────────────────────────────
+  case 'upgrade':
+    if (!exists(SCRIPTS.upgrade)) { console.error('mycelium-upgrade.cjs not found'); process.exit(1); }
+    run(`node "${SCRIPTS.upgrade}" ${rest}`);
     break;
 
   // ── Help ────────────────────────────────────────────────────────
@@ -436,10 +460,20 @@ switch (cmd) {
     console.log(`    mycelium watch --warn  Pre-commit risk check`);
     console.log(`    mycelium health        Project health summary`);
     console.log(`    mycelium query         Interactive memory query`);
+    console.log(`    mycelium doctor        Pre-flight health check (hooks, data, config)`);
+    console.log(`    mycelium doctor --fix  Auto-repair common issues`);
+    console.log(`    mycelium doctor --json Machine-readable doctor output`);
+    console.log(`    mycelium why <file>    Full intelligence report on any file`);
+    console.log(`    mycelium why <f> --json Machine-readable file report`);
+    console.log(`    mycelium upgrade       Preview auto-generated defenses`);
+    console.log(`    mycelium upgrade --apply Apply all upgrades`);
     console.log(`    mycelium version       Show component status`);
     console.log();
     console.log(`  Pipeline: Learner → Evaluator → Fixer (continuous loop)`);
     console.log(`    Every commit triggers: watch --learn → eval → fix (if needed)`);
+    console.log(`    File intel: why <file> → breakages, couplings, constraints, advice`);
+    console.log(`    Health check: doctor → 14-point system verification`);
+    console.log(`    CI: .github/workflows/mycelium-ci.yml → PR comments with scores`);
     console.log(`    Pre-commit: watch --warn → guard constraints → block if violated`);
     console.log(`    Ship: auth → test → sync → squash → push → PR → merge (atomic)`);
     console.log();
