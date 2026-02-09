@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tools | NumbahWan — Standalone Dev Tools</title>
+    <meta name="description" content="Two standalone Node.js tools: sentinel.cjs (codebase health scanner) and nw-memory.cjs (AI session memory). No install, no config. Works on any project.">
+    <link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
+    <meta property="og:title" content="NumbahWan Dev Tools — sentinel.cjs + nw-memory.cjs">
+    <meta property="og:description" content="Zero-dependency codebase health scanner and AI session memory. Copy, paste, run.">
+    <meta property="og:type" content="website">
+    <style>
+        @font-face{font-family:'NumbahWan';src:url('/static/fonts/NumbahWan-Regular.woff2') format('woff2');font-weight:400;font-style:normal;font-display:swap}
+        @font-face{font-family:'Inter';src:url('/static/fonts/inter-variable.woff2') format('woff2');font-weight:400 700;font-style:normal;font-display:swap}
+
+        :root{--bg:#0a0a0f;--surface:rgba(255,255,255,0.03);--surface-2:rgba(255,255,255,0.06);--border:rgba(255,255,255,0.08);--text:#e8e0d8;--dim:rgba(255,255,255,0.4);--accent:#ff9500;--gold:#ffd700;--green:#00dc82;--blue:#00d4ff;--red:#ff4444;--terminal-bg:#0d1117;--terminal-border:rgba(255,255,255,0.1)}
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden}
+        body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
+            background:radial-gradient(ellipse at 30% 0%,rgba(0,212,130,0.03) 0%,transparent 50%),
+            radial-gradient(ellipse at 70% 100%,rgba(255,150,0,0.03) 0%,transparent 50%)}
+
+        .container{position:relative;z-index:1;max-width:900px;margin:0 auto;padding:24px 20px 80px}
+
+        /* Header */
+        .hero{text-align:center;padding:60px 0 20px}
+        .hero-label{font-size:10px;letter-spacing:3px;text-transform:uppercase;color:var(--dim);margin-bottom:12px}
+        .hero-title{font-family:'NumbahWan',monospace;font-size:clamp(2rem,6vw,3rem);
+            background:linear-gradient(135deg,var(--green) 0%,var(--blue) 100%);
+            -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+            letter-spacing:3px;margin-bottom:12px}
+        .hero-sub{font-size:15px;color:var(--dim);line-height:1.8;max-width:560px;margin:0 auto}
+
+        /* Tool cards */
+        .tool{margin:48px 0;padding:32px;border-radius:20px;background:var(--surface);border:1px solid var(--border);position:relative;overflow:hidden}
+        .tool::before{content:'';position:absolute;top:0;left:0;right:0;height:2px}
+        .tool-sentinel::before{background:linear-gradient(90deg,var(--accent),var(--gold))}
+        .tool-memory::before{background:linear-gradient(90deg,var(--green),var(--blue))}
+
+        .tool-header{display:flex;align-items:flex-start;gap:16px;margin-bottom:20px;flex-wrap:wrap}
+        .tool-icon{font-size:32px;line-height:1}
+        .tool-meta{flex:1;min-width:200px}
+        .tool-name{font-size:20px;font-weight:700;margin-bottom:4px}
+        .tool-name code{font-weight:700;font-family:'Inter',system-ui,sans-serif}
+        .tool-tagline{font-size:13px;color:var(--dim);line-height:1.6}
+        .tool-badges{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+        .badge{font-size:10px;padding:3px 10px;border-radius:12px;letter-spacing:.5px;font-weight:500}
+        .badge-lines{background:rgba(255,150,0,0.1);color:var(--accent);border:1px solid rgba(255,150,0,0.2)}
+        .badge-deps{background:rgba(0,220,130,0.1);color:var(--green);border:1px solid rgba(0,220,130,0.2)}
+        .badge-standalone{background:rgba(0,212,255,0.1);color:var(--blue);border:1px solid rgba(0,212,255,0.2)}
+
+        /* Terminal */
+        .terminal{background:var(--terminal-bg);border:1px solid var(--terminal-border);border-radius:12px;overflow:hidden;margin:16px 0;font-family:'SF Mono','Fira Code','Cascadia Code',monospace}
+        .terminal-bar{display:flex;align-items:center;gap:6px;padding:10px 14px;background:rgba(255,255,255,0.03);border-bottom:1px solid var(--terminal-border)}
+        .terminal-dot{width:10px;height:10px;border-radius:50%}
+        .dot-red{background:#ff5f56}
+        .dot-yellow{background:#ffbd2e}
+        .dot-green{background:#27c93f}
+        .terminal-title{font-size:11px;color:var(--dim);margin-left:8px;letter-spacing:.5px}
+        .terminal-body{padding:16px;font-size:12.5px;line-height:1.7;overflow-x:auto}
+        .terminal-body .cmd{color:var(--green)}
+        .terminal-body .prompt{color:var(--dim)}
+        .terminal-body .output{color:rgba(255,255,255,0.7)}
+        .terminal-body .highlight{color:var(--accent);font-weight:600}
+        .terminal-body .score-a{color:#27c93f}
+        .terminal-body .score-b{color:#a8d08d}
+        .terminal-body .score-c{color:#ffbd2e}
+        .terminal-body .score-d{color:#ff9500}
+        .terminal-body .score-f{color:#ff5f56}
+        .terminal-body .comment{color:rgba(255,255,255,0.25);font-style:italic}
+
+        /* Copy button */
+        .copy-wrap{position:relative}
+        .copy-btn{position:absolute;top:44px;right:8px;padding:5px 12px;border-radius:6px;background:rgba(255,255,255,0.06);
+            border:1px solid rgba(255,255,255,0.1);color:var(--dim);font-size:11px;cursor:pointer;font-family:inherit;
+            transition:all .2s;z-index:2}
+        .copy-btn:hover{background:rgba(255,255,255,0.1);color:var(--text)}
+        .copy-btn.copied{background:rgba(0,220,130,0.15);color:var(--green);border-color:rgba(0,220,130,0.3)}
+
+        /* Feature list */
+        .features{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:16px 0}
+        .feature{display:flex;align-items:flex-start;gap:8px;font-size:13px;color:rgba(255,255,255,0.6);line-height:1.5;padding:6px 0}
+        .feature-check{color:var(--green);font-size:14px;flex-shrink:0;margin-top:1px}
+
+        /* Commands reference */
+        .cmd-grid{display:grid;grid-template-columns:auto 1fr;gap:4px 16px;margin:16px 0;font-size:12.5px}
+        .cmd-grid code{font-family:'SF Mono','Fira Code',monospace;color:var(--green);background:rgba(0,220,130,0.06);padding:2px 8px;border-radius:4px;white-space:nowrap}
+        .cmd-grid span{color:var(--dim);padding:4px 0}
+
+        /* Links */
+        .tool-links{display:flex;gap:10px;margin-top:20px;flex-wrap:wrap}
+        .tool-link{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:8px;
+            font-size:12px;font-weight:500;text-decoration:none;transition:all .2s;letter-spacing:.3px}
+        .link-primary{background:rgba(255,150,0,0.1);border:1px solid rgba(255,150,0,0.2);color:var(--accent)}
+        .link-primary:hover{background:rgba(255,150,0,0.15);border-color:rgba(255,150,0,0.35)}
+        .link-secondary{background:var(--surface-2);border:1px solid var(--border);color:var(--dim)}
+        .link-secondary:hover{border-color:rgba(255,255,255,0.15);color:var(--text)}
+
+        /* Section divider */
+        .divider{text-align:center;padding:32px 0;color:var(--dim);font-size:11px;letter-spacing:3px;text-transform:uppercase}
+
+        /* Footer */
+        .footer{text-align:center;padding:40px 0 20px;border-top:1px solid var(--border);margin-top:40px}
+        .footer p{font-size:12px;color:var(--dim);line-height:1.8}
+        .footer a{color:var(--accent);text-decoration:none}
+        .footer a:hover{text-decoration:underline}
+
+        /* Responsive */
+        @media(max-width:600px){
+            .features{grid-template-columns:1fr}
+            .tool{padding:20px}
+            .cmd-grid{grid-template-columns:1fr;gap:2px 0}
+            .cmd-grid code{margin-bottom:2px}
+        }
+    </style>
+    <link rel="stylesheet" href="/static/nw-core.css">
+    <script src="/static/nw-nav.js" defer></script>
+</head>
+<body>
+    <div class="container">
+        <div class="hero">
+            <div class="hero-label">NumbahWan Open Source</div>
+            <h1 class="hero-title">TOOLS</h1>
+            <p class="hero-sub">
+                Two standalone Node.js scripts that work on <strong>any</strong> project.<br>
+                No install. No config. No dependencies. Just download and run.
+            </p>
+        </div>
+
+        <!-- SENTINEL -->
+        <div class="tool tool-sentinel">
+            <div class="tool-header">
+                <div class="tool-icon">🛡️</div>
+                <div class="tool-meta">
+                    <div class="tool-name">sentinel.cjs</div>
+                    <div class="tool-tagline">Zero-dependency codebase health scanner. Scores your project across 10 modules, gives you a letter grade, and suggests fixes.</div>
+                    <div class="tool-badges">
+                        <span class="badge badge-lines">1,700 lines</span>
+                        <span class="badge badge-deps">0 dependencies</span>
+                        <span class="badge badge-standalone">standalone</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="copy-wrap">
+                <button class="copy-btn" onclick="copyCmd(this, 'curl -O https://raw.githubusercontent.com/9tvf4k6srt-sys/NumbahWan-tcg/main/sentinel.cjs && node sentinel.cjs')">Copy</button>
+                <div class="terminal">
+                    <div class="terminal-bar">
+                        <span class="terminal-dot dot-red"></span>
+                        <span class="terminal-dot dot-yellow"></span>
+                        <span class="terminal-dot dot-green"></span>
+                        <span class="terminal-title">terminal</span>
+                    </div>
+                    <div class="terminal-body">
+<span class="prompt">$</span> <span class="cmd">curl -O https://raw.githubusercontent.com/9tvf4k6srt-sys/NumbahWan-tcg/main/sentinel.cjs</span>
+<span class="prompt">$</span> <span class="cmd">node sentinel.cjs</span>
+
+<span class="output">NW-SENTINEL v2.5 — Codebase Health Report</span>
+
+<span class="output">Composite Score:</span>  <span class="highlight">72/100 (B-)</span>
+<span class="output">Trend:</span>            <span class="output">=0 (stable)  | Build #50</span>
+
+<span class="output">Module Breakdown (10 modules):</span>
+    <span class="score-b">71 B-</span>  architecture   (15%)  10 issues
+    <span class="score-d">54 D </span>  assets         (15%)  22 issues
+    <span class="score-f">46 F </span>  i18n           (10%)  2 issues
+   <span class="score-a">100 A+</span>  deadCode       (10%)
+    <span class="score-a">92 A </span>  security       (15%)  1 issues
+    <span class="score-c">60 C </span>  performance    (10%)  4 issues
+    <span class="score-c">61 C </span>  apiSurface     ( 8%)  3 issues
+    <span class="score-b">80 B+</span>  dependencies   ( 7%)  2 issues
+    <span class="score-b">82 B+</span>  accessibility  ( 5%)  4 issues
+    <span class="score-b">82 B+</span>  seoMeta        ( 5%)  5 issues
+
+<span class="output">Issues:</span> <span class="score-f">2 critical</span> · <span class="score-c">37 warnings</span> · 14 info
+<span class="output">Auto-Fix Engine:</span> 9 fixes available (5 automated, 4 manual)
+                    </div>
+                </div>
+            </div>
+
+            <div class="features">
+                <div class="feature"><span class="feature-check">&#10003;</span> File bloat &amp; cyclomatic complexity</div>
+                <div class="feature"><span class="feature-check">&#10003;</span> Dead code detection</div>
+                <div class="feature"><span class="feature-check">&#10003;</span> Security patterns &amp; exposed secrets</div>
+                <div class="feature"><span class="feature-check">&#10003;</span> SEO meta &amp; Open Graph audit</div>
+                <div class="feature"><span class="feature-check">&#10003;</span> Accessibility (ARIA, alt tags)</div>
+                <div class="feature"><span class="feature-check">&#10003;</span> Asset optimization checks</div>
+                <div class="feature"><span class="feature-check">&#10003;</span> API surface analysis</div>
+                <div class="feature"><span class="feature-check">&#10003;</span> Build-over-build trend tracking</div>
+                <div class="feature"><span class="feature-check">&#10003;</span> Dependency audit</div>
+                <div class="feature"><span class="feature-check">&#10003;</span> Auto-fix engine with executable scripts</div>
+            </div>
+
+            <div class="tool-links">
+                <a class="tool-link link-primary" href="https://github.com/9tvf4k6srt-sys/NumbahWan-tcg/blob/main/sentinel.cjs">View Source</a>
+                <a class="tool-link link-secondary" href="https://github.com/9tvf4k6srt-sys/NumbahWan-tcg#sentinelcjs--zero-dependency-codebase-health-scanner">Documentation</a>
+            </div>
+        </div>
+
+        <!-- NW-MEMORY -->
+        <div class="tool tool-memory">
+            <div class="tool-header">
+                <div class="tool-icon">🧠</div>
+                <div class="tool-meta">
+                    <div class="tool-name">nw-memory.cjs</div>
+                    <div class="tool-tagline">AI session memory that survives context resets. Tracks hotspots, coupled files, fix chains, decisions, and breakages across sessions.</div>
+                    <div class="tool-badges">
+                        <span class="badge badge-lines">960 lines</span>
+                        <span class="badge badge-deps">0 dependencies</span>
+                        <span class="badge badge-standalone">standalone</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="copy-wrap">
+                <button class="copy-btn" onclick="copyCmd(this, 'curl -O https://raw.githubusercontent.com/9tvf4k6srt-sys/NumbahWan-tcg/main/nw-memory.cjs && node nw-memory.cjs --query')">Copy</button>
+                <div class="terminal">
+                    <div class="terminal-bar">
+                        <span class="terminal-dot dot-red"></span>
+                        <span class="terminal-dot dot-yellow"></span>
+                        <span class="terminal-dot dot-green"></span>
+                        <span class="terminal-title">terminal</span>
+                    </div>
+                    <div class="terminal-body">
+<span class="prompt">$</span> <span class="cmd">node nw-memory.cjs --health</span>
+
+<span class="output">Project Health:</span> <span class="score-a">90/100 (A)</span>
+<span class="output">Snapshots: 101 | Window: last 20 | Bundle: 536KB | Pages: 117</span>
+
+<span class="output">Bonuses:</span> <span class="score-a">12/17 commits proven stable (+15)</span>
+         Avg commit quality <span class="score-b">72/100</span> (+5)
+<span class="output">Issues:</span>  Bundle 536KB > 400KB target
+         15 fix chains this week
+
+<span class="output">Learnings:</span>
+  <span class="highlight">battle:</span> 5 decisions but 5 breakages — decisions alone don't prevent bugs
+  <span class="highlight">i18n:</span> 3 decisions, 3 breakages — recurring innerHTML/DOM conflicts
+  <span class="highlight">guide:</span> 1 breakage, 0 decisions — unprotected area
+  <span class="highlight">velocity:</span> sprint days avg 77/100 vs normal 68/100
+  <span class="highlight">score-trend:</span> commit quality declining (77 → 69)
+                    </div>
+                </div>
+            </div>
+
+            <h4 style="font-size:13px;color:var(--dim);margin:20px 0 8px;letter-spacing:1px;text-transform:uppercase">Commands</h4>
+            <div class="cmd-grid">
+                <code>--query</code> <span>What does the AI need to know right now?</span>
+                <code>--health</code> <span>Project health score with trend analysis</span>
+                <code>--reflect</code> <span>Deep analysis: decision-breakage correlation</span>
+                <code>--premortem &lt;area&gt;</code> <span>What broke last time in this area?</span>
+                <code>--broke "area" "what"</code> <span>Record a breakage for future sessions</span>
+                <code>--decide "area" "what" "why"</code> <span>Record a decision with reasoning</span>
+                <code>--constraint "area" "fact"</code> <span>Record a hard constraint</span>
+                <code>--compact</code> <span>Compress memory.json to stay under 200KB</span>
+            </div>
+
+            <div class="features">
+                <div class="feature"><span class="feature-check">&#10003;</span> Auto-snapshot via git hooks</div>
+                <div class="feature"><span class="feature-check">&#10003;</span> Hotspot file detection</div>
+                <div class="feature"><span class="feature-check">&#10003;</span> Coupled file tracking</div>
+                <div class="feature"><span class="feature-check">&#10003;</span> Fix chain detection</div>
+                <div class="feature"><span class="feature-check">&#10003;</span> Decision/breakage correlation</div>
+                <div class="feature"><span class="feature-check">&#10003;</span> Commit quality scoring</div>
+                <div class="feature"><span class="feature-check">&#10003;</span> Sprint velocity analysis</div>
+                <div class="feature"><span class="feature-check">&#10003;</span> Auto-compact (200KB limit)</div>
+                <div class="feature"><span class="feature-check">&#10003;</span> Works with Claude, GPT, Copilot</div>
+                <div class="feature"><span class="feature-check">&#10003;</span> Plain JSON storage</div>
+            </div>
+
+            <div class="tool-links">
+                <a class="tool-link link-primary" href="https://github.com/9tvf4k6srt-sys/NumbahWan-tcg/blob/main/nw-memory.cjs">View Source</a>
+                <a class="tool-link link-secondary" href="https://github.com/9tvf4k6srt-sys/NumbahWan-tcg#nw-memorycjs--ai-session-memory-that-survives-context-resets">Documentation</a>
+            </div>
+        </div>
+
+        <div class="divider">&#8226; &#8226; &#8226;</div>
+
+        <!-- Quick comparison -->
+        <div style="text-align:center;margin-bottom:32px">
+            <p style="font-size:14px;color:var(--dim);line-height:1.8;max-width:500px;margin:0 auto">
+                Both tools are single files with zero dependencies.<br>
+                Download them into any project directory and run with <code style="color:var(--green);background:rgba(0,220,130,0.06);padding:2px 6px;border-radius:3px;font-size:12px">node</code>.
+            </p>
+        </div>
+
+        <div class="footer">
+            <p>
+                Part of the <a href="/">NumbahWan</a> project.
+                <a href="/showcase">Browse all 116 pages</a> ·
+                <a href="/oracle">Try The Oracle</a> ·
+                <a href="https://github.com/9tvf4k6srt-sys/NumbahWan-tcg">GitHub</a>
+            </p>
+        </div>
+    </div>
+
+    <script>
+    function copyCmd(btn, text) {
+        navigator.clipboard.writeText(text).then(() => {
+            btn.textContent = 'Copied!';
+            btn.classList.add('copied');
+            setTimeout(() => { btn.textContent = 'Copy'; btn.classList.remove('copied'); }, 2000);
+        });
+    }
+    </script>
+</body>
+</html>

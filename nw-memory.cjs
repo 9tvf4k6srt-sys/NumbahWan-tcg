@@ -219,32 +219,250 @@ function scoreCommit(commit, mem) {
 }
 
 // ─── Auto-Reflection (Blueprint: Critique→Refine) ──────────────────
-// When a fix chain is detected, auto-generate a constraint from it.
-// This is the "distill insight from failure" step.
+// Generates real lessons from fix chains by analyzing what went wrong.
+// Also detects cross-area patterns and decision-impact correlation.
 
 function autoReflect(mem, commit) {
-  if (!commit.msg.toLowerCase().startsWith('fix')) return;
-  
-  const prevSnapshot = mem.snapshots[mem.snapshots.length - 1];
-  if (!prevSnapshot) return;
-  
-  const prevFiles = new Set((prevSnapshot.commit?.files || []).map(f => f.path));
-  const overlap = commit.files.map(f => f.path).filter(f => prevFiles.has(f));
-  if (overlap.length === 0) return;
-  
-  // Auto-generate a reflection entry
   if (!mem.reflections) mem.reflections = [];
-  mem.reflections.push({
-    ts: Date.now(),
-    date: new Date().toISOString().split('T')[0],
-    type: 'fix_chain',
-    original: prevSnapshot.commit?.hash,
-    fix: commit.hash,
-    originalMsg: prevSnapshot.commit?.msg,
-    fixMsg: commit.msg,
-    files: overlap,
-    lesson: `Change "${prevSnapshot.commit?.msg}" needed immediate fix "${commit.msg}" on files: ${overlap.join(', ')}`
-  });
+
+  // ── 1. Fix chain reflection: why did this break? ──
+  if (commit.msg.toLowerCase().startsWith('fix')) {
+    const prevSnapshot = mem.snapshots[mem.snapshots.length - 1];
+    if (prevSnapshot) {
+      const prevFiles = new Set((prevSnapshot.commit?.files || []).map(f => f.path));
+      const overlap = commit.files.map(f => f.path).filter(f => prevFiles.has(f));
+      if (overlap.length > 0) {
+        // Classify what kind of fix chain this is
+        const areas = new Set(overlap.map(f => classifyArea(f)));
+        const isMultiArea = areas.size > 1;
+        const affectedAreas = [...areas].join(', ');
+        
+        // Count how many times these specific files have been in fix chains
+        const fcHistory = (mem.patterns.fixChains || []);
+        const fileRepeatCount = {};
+        for (const f of overlap) {
+          fileRepeatCount[f] = fcHistory.filter(fc => (fc.files || []).includes(f)).length;
+        }
+        const repeatOffenders = Object.entries(fileRepeatCount).filter(([_, c]) => c >= 2);
+
+        // Generate a real lesson, not just a timestamp
+        let lesson;
+        if (repeatOffenders.length > 0) {
+          const worst = repeatOffenders.sort((a, b) => b[1] - a[1])[0];
+          lesson = `${worst[0]} has broken ${worst[1]+1} times — it's structurally fragile, not just unlucky. Consider splitting or adding guards.`;
+        } else if (isMultiArea) {
+          lesson = `Fix crossed ${areas.size} areas (${affectedAreas}) — the original change had hidden dependencies between them.`;
+        } else {
+          lesson = `Immediate fix needed in ${affectedAreas} area — the change wasn't tested against its own files.`;
+        }
+
+        mem.reflections.push({
+          ts: Date.now(),
+          date: new Date().toISOString().split('T')[0],
+          type: 'fix_chain',
+          original: prevSnapshot.commit?.hash,
+          fix: commit.hash,
+          files: overlap,
+          areas: [...areas],
+          lesson
+        });
+      }
+    }
+  }
+
+  // Keep last 50
+  if (mem.reflections.length > 50) mem.reflections = mem.reflections.slice(-50);
+}
+
+// Classify a file path into an area name
+function classifyArea(filePath) {
+  if (filePath.includes('battle') || filePath.includes('pvp')) return 'battle';
+  if (filePath.includes('i18n') || filePath.includes('translate')) return 'i18n';
+  if (filePath.includes('oracle')) return 'oracle';
+  if (filePath.includes('wallet') || filePath.includes('economy') || filePath.includes('forge') || filePath.includes('market')) return 'economy';
+  if (filePath.includes('memory') || filePath.includes('nw-context')) return 'memory';
+  if (filePath.includes('nav') || filePath.includes('boot')) return 'nav';
+  if (filePath.includes('card')) return 'cards';
+  if (filePath.includes('sentinel')) return 'sentinel';
+  if (filePath.includes('museum') || filePath.includes('vault') || filePath.includes('lore')) return 'lore';
+  const dir = filePath.split('/').slice(0, -1).join('/');
+  return dir || 'root';
+}
+
+// ─── Deep Reflection (runs every 10 snapshots alongside autoDistill) ─
+// Analyzes cross-cutting patterns that simple fix-chain detection misses.
+
+function deepReflect(mem, force) {
+  const snapshotCount = mem.snapshots.length;
+  if (!force && snapshotCount % 10 !== 0) return;
+  if (!mem.reflections) mem.reflections = [];
+
+  const now = Date.now();
+  const WEEK = 7 * 24 * 60 * 60 * 1000;
+  const today = new Date().toISOString().split('T')[0];
+
+  // ── A. Decision-Impact correlation ──
+  // If an area has decisions recorded but ALSO has breakages, the decisions
+  // didn't prevent problems — that's a real insight.
+  const decisionAreas = {};
+  for (const d of (mem.decisions || [])) {
+    decisionAreas[d.area] = (decisionAreas[d.area] || 0) + 1;
+  }
+  const breakageAreas = {};
+  for (const b of (mem.breakages || [])) {
+    breakageAreas[b.area] = (breakageAreas[b.area] || 0) + 1;
+  }
+  for (const area of Object.keys(breakageAreas)) {
+    const decisions = decisionAreas[area] || 0;
+    const breakages = breakageAreas[area];
+    if (decisions > 0 && breakages >= decisions) {
+      const existing = mem.reflections.find(r => r.type === 'decision_impact' && r.area === area);
+      if (!existing) {
+        mem.reflections.push({
+          ts: now, date: today, type: 'decision_impact', area,
+          lesson: `${area} has ${decisions} recorded decisions but still ${breakages} breakages — decisions alone aren't preventing bugs here. The area needs structural protection (tests, guards, or simplification), not just documented intent.`
+        });
+      }
+    }
+  }
+
+  // ── B. Unprotected areas — breakages with zero decisions ──
+  for (const area of Object.keys(breakageAreas)) {
+    if (!decisionAreas[area]) {
+      const existing = mem.reflections.find(r => r.type === 'unprotected_area' && r.area === area);
+      if (!existing) {
+        mem.reflections.push({
+          ts: now, date: today, type: 'unprotected_area', area,
+          lesson: `${area} has ${breakageAreas[area]} breakage(s) but zero documented decisions — it's a blind spot. Before touching ${area}, record why things are the way they are.`
+        });
+      }
+    }
+  }
+
+  // ── C. Recurring theme detection across breakages ──
+  // Look for common words/patterns in breakage descriptions
+  const breakageTexts = (mem.breakages || []).map(b => b.what.toLowerCase());
+  const themes = {
+    'innerHTML/DOM': breakageTexts.filter(t => t.includes('innerhtml') || t.includes('dom') || t.includes('event handler')),
+    'iOS/mobile': breakageTexts.filter(t => t.includes('ios') || t.includes('mobile') || t.includes('safari') || t.includes('touch')),
+    'language/i18n': breakageTexts.filter(t => t.includes('i18n') || t.includes('translation') || t.includes('language') || t.includes('[zh]') || t.includes('[th]')),
+    'AI workflow': breakageTexts.filter(t => t.includes('ai ') || t.includes('clarify') || t.includes('recommend'))
+  };
+  for (const [theme, matches] of Object.entries(themes)) {
+    if (matches.length >= 2) {
+      const existing = mem.reflections.find(r => r.type === 'recurring_theme' && r.theme === theme);
+      if (!existing) {
+        mem.reflections.push({
+          ts: now, date: today, type: 'recurring_theme', theme,
+          count: matches.length,
+          lesson: `"${theme}" appears in ${matches.length} separate breakages — this is a systemic weakness, not isolated incidents. Every change in this area needs the same pre-check.`
+        });
+      }
+    }
+  }
+
+  // ── D. Velocity reflection — work rhythm analysis ──
+  const dateCounts = {};
+  for (const s of mem.snapshots) {
+    dateCounts[s.date] = (dateCounts[s.date] || 0) + 1;
+  }
+  const dates = Object.entries(dateCounts).sort((a, b) => a[0].localeCompare(b[0]));
+  if (dates.length >= 3) {
+    // Find sprint days (2x average)
+    const avg = mem.snapshots.length / dates.length;
+    const sprintDays = dates.filter(([_, c]) => c >= avg * 2);
+    
+    if (sprintDays.length > 0) {
+      // Check if sprint days have lower quality scores
+      const sprintScores = [];
+      const normalScores = [];
+      for (const s of mem.snapshots) {
+        if (typeof s.score !== 'number') continue;
+        const dayCount = dateCounts[s.date] || 0;
+        if (dayCount >= avg * 2) sprintScores.push(s.score);
+        else normalScores.push(s.score);
+      }
+      if (sprintScores.length >= 3 && normalScores.length >= 3) {
+        const sprintAvg = Math.round(sprintScores.reduce((a, b) => a + b, 0) / sprintScores.length);
+        const normalAvg = Math.round(normalScores.reduce((a, b) => a + b, 0) / normalScores.length);
+        const existing = mem.reflections.find(r => r.type === 'velocity');
+        if (!existing) {
+          if (sprintAvg < normalAvg - 5) {
+            mem.reflections.push({
+              ts: now, date: today, type: 'velocity',
+              lesson: `Sprint days (${sprintDays.map(d => d[0]).join(', ')}) average ${sprintAvg}/100 commit quality vs ${normalAvg}/100 on normal days — speed costs quality. On heavy days, pause more between commits.`
+            });
+          } else {
+            mem.reflections.push({
+              ts: now, date: today, type: 'velocity',
+              lesson: `Sprint days average ${sprintAvg}/100 vs normal days ${normalAvg}/100 — quality holds under pressure. Current workflow handles high-volume days well.`
+            });
+          }
+        }
+      }
+    }
+  }
+
+  // ── E. Score trend reflection ──
+  const scoredSnapshots = mem.snapshots.filter(s => typeof s.score === 'number');
+  if (scoredSnapshots.length >= 10) {
+    const firstHalf = scoredSnapshots.slice(0, Math.floor(scoredSnapshots.length / 2));
+    const secondHalf = scoredSnapshots.slice(Math.floor(scoredSnapshots.length / 2));
+    const firstAvg = Math.round(firstHalf.reduce((a, s) => a + s.score, 0) / firstHalf.length);
+    const secondAvg = Math.round(secondHalf.reduce((a, s) => a + s.score, 0) / secondHalf.length);
+    const existing = mem.reflections.find(r => r.type === 'score_trend');
+    if (!existing) {
+      const delta = secondAvg - firstAvg;
+      if (delta >= 5) {
+        mem.reflections.push({
+          ts: now, date: today, type: 'score_trend',
+          lesson: `Commit quality is improving: first half averaged ${firstAvg}/100, recent half ${secondAvg}/100 (+${delta}). Whatever changed in the workflow is working.`
+        });
+      } else if (delta <= -5) {
+        mem.reflections.push({
+          ts: now, date: today, type: 'score_trend',
+          lesson: `Commit quality is declining: first half averaged ${firstAvg}/100, recent half ${secondAvg}/100 (${delta}). Commits are getting less focused or more sprawling.`
+        });
+      } else {
+        mem.reflections.push({
+          ts: now, date: today, type: 'score_trend',
+          lesson: `Commit quality is stable: first half ${firstAvg}/100, recent half ${secondAvg}/100. Consistency is good — the workflow is predictable.`
+        });
+      }
+    }
+  }
+
+  // ── F. Area focus shift detection ──
+  // Compare what areas were worked on in first vs second half
+  if (mem.snapshots.length >= 20) {
+    const half = Math.floor(mem.snapshots.length / 2);
+    const firstAreas = {};
+    const secondAreas = {};
+    for (let i = 0; i < mem.snapshots.length; i++) {
+      const files = (mem.snapshots[i].commit?.files || []).map(f => f.path);
+      const areas = new Set(files.filter(f => !isNoise(f)).map(f => classifyArea(f)));
+      const target = i < half ? firstAreas : secondAreas;
+      for (const a of areas) target[a] = (target[a] || 0) + 1;
+    }
+    // Find areas that appeared in second half but not first (new focus)
+    const newFocus = Object.keys(secondAreas).filter(a => !firstAreas[a] && secondAreas[a] >= 2);
+    // Find areas that disappeared (abandoned)
+    const abandoned = Object.keys(firstAreas).filter(a => !secondAreas[a] && firstAreas[a] >= 3);
+    
+    if (newFocus.length > 0 || abandoned.length > 0) {
+      const existing = mem.reflections.find(r => r.type === 'focus_shift');
+      if (!existing) {
+        const parts = [];
+        if (newFocus.length) parts.push(`New focus areas: ${newFocus.join(', ')}`);
+        if (abandoned.length) parts.push(`Moved away from: ${abandoned.join(', ')}`);
+        mem.reflections.push({
+          ts: now, date: today, type: 'focus_shift',
+          lesson: `Project focus has shifted. ${parts.join('. ')}. Check if abandoned areas have unfinished work or growing debt.`
+        });
+      }
+    }
+  }
+
   // Keep last 50
   if (mem.reflections.length > 50) mem.reflections = mem.reflections.slice(-50);
 }
@@ -265,9 +483,9 @@ function autoDistill(mem) {
   for (const [file, count] of hotspots.slice(0, 5)) {
     if (count >= 10) {
       const rule = `${file} changed ${count}x — high churn, test after every change`;
-      if (!mem.autoRules.some(r => r.file === file)) {
-        mem.autoRules.push({ type: 'hotspot', file, count, rule, ts: Date.now() });
-      }
+      const existing = mem.autoRules.find(r => r.file === file && r.type === 'hotspot');
+      if (existing) { existing.count = count; existing.rule = rule; existing.ts = Date.now(); }
+      else { mem.autoRules.push({ type: 'hotspot', file, count, rule, ts: Date.now() }); }
     }
   }
 
@@ -278,9 +496,9 @@ function autoDistill(mem) {
   for (const [pair, count] of coChanges.slice(0, 5)) {
     if (count >= 5) {
       const rule = `${pair} always change together (${count}x) — consider if they should share a module`;
-      if (!mem.autoRules.some(r => r.pair === pair)) {
-        mem.autoRules.push({ type: 'coupling', pair, count, rule, ts: Date.now() });
-      }
+      const existing = mem.autoRules.find(r => r.pair === pair && r.type === 'coupling');
+      if (existing) { existing.count = count; existing.rule = rule; existing.ts = Date.now(); }
+      else { mem.autoRules.push({ type: 'coupling', pair, count, rule, ts: Date.now() }); }
     }
   }
 
@@ -296,14 +514,17 @@ function autoDistill(mem) {
   for (const [area, count] of Object.entries(areaFixes)) {
     if (count >= 3) {
       const rule = `${area} has ${count} fix chains — high breakage area, extra caution needed`;
-      if (!mem.autoRules.some(r => r.area === area && r.type === 'fragile_area')) {
-        mem.autoRules.push({ type: 'fragile_area', area, count, rule, ts: Date.now() });
-      }
+      const existing = mem.autoRules.find(r => r.area === area && r.type === 'fragile_area');
+      if (existing) { existing.count = count; existing.rule = rule; existing.ts = Date.now(); }
+      else { mem.autoRules.push({ type: 'fragile_area', area, count, rule, ts: Date.now() }); }
     }
   }
 
   // Cap auto-rules
   if (mem.autoRules.length > 50) mem.autoRules = mem.autoRules.slice(-50);
+
+  // Run deep reflection alongside distillation
+  deepReflect(mem);
 }
 
 // ─── Snapshot ───────────────────────────────────────────────────────
@@ -482,6 +703,16 @@ function query() {
     console.log(`  ⚠ ${fixChains.length} fix chains in recent history — changes are introducing bugs`);
   }
   console.log('');
+
+  // Learnings — organic insights from accumulated data
+  const reflections = (mem.reflections || []).filter(r => r.type !== 'fix_chain');
+  if (reflections.length > 0) {
+    console.log('## Learnings (auto-distilled from project patterns)');
+    for (const r of reflections) {
+      console.log(`  [${r.type.replace(/_/g, '-')}] ${r.lesson}`);
+    }
+    console.log('');
+  }
 }
 
 // ─── Health: Quick project health check ─────────────────────────────
@@ -872,14 +1103,27 @@ function brief() {
 
   // STOP signals — things that MUST NOT be repeated
   const breakages = (mem.breakages || []).slice(-5);
-  const reflections = (mem.reflections || []).slice(-3);
-  if (breakages.length || reflections.length) {
+  const fixChainReflections = (mem.reflections || []).filter(r => r.type === 'fix_chain').slice(-3);
+  if (breakages.length || fixChainReflections.length) {
     lines.push('## STOP — do not repeat these mistakes');
     for (const b of breakages) {
       lines.push(`  [${b.area}] ${b.what}`);
     }
-    for (const r of reflections) {
-      lines.push(`  [auto] ${r.lesson}`);
+    for (const r of fixChainReflections) {
+      lines.push(`  [fix-chain] ${r.lesson}`);
+    }
+    lines.push('');
+  }
+
+  // Learnings — organic insights distilled from real data
+  const deepReflections = (mem.reflections || []).filter(r => 
+    r.type !== 'fix_chain'  // fix chains shown above in STOP
+  ).slice(-10);
+  if (deepReflections.length) {
+    lines.push('## Learnings (auto-distilled from project data)');
+    for (const r of deepReflections) {
+      const tag = r.type.replace(/_/g, '-');
+      lines.push(`  [${tag}] ${r.lesson}`);
     }
     lines.push('');
   }
@@ -949,6 +1193,17 @@ if (arg === '--query') {
   premortem(process.argv[3]);
 } else if (arg === '--health') {
   health();
+} else if (arg === '--reflect') {
+  // Force-run deep reflection against existing data (normally runs every 10 snapshots)
+  const mem = loadMemory();
+  const before = (mem.reflections || []).length;
+  deepReflect(mem, true);  // force=true bypasses the every-10 check
+  const after = (mem.reflections || []).length;
+  saveMemory(mem);
+  console.log(`[NW-MEMORY] Deep reflection complete: ${after - before} new insights generated (${after} total)`);
+  for (const r of (mem.reflections || []).filter(r => r.type !== 'fix_chain')) {
+    console.log(`  [${r.type.replace(/_/g, '-')}] ${r.lesson}`);
+  }
 } else if (arg === '--decide' && process.argv[3] && process.argv[4]) {
   recordDecision(process.argv[3], process.argv[4], process.argv[5] || '');
 } else if (arg === '--constraint' && process.argv[3] && process.argv[4]) {
