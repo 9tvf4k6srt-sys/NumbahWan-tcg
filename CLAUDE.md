@@ -124,9 +124,18 @@ The Mycelium system auto-evaluates and auto-fixes itself:
 - **Every 10 commits/snapshots**: silently runs eval, detects weak scores, takes corrective action
 - **Learner (mycelium.cjs)**: auto-creates constraints from breakage lessons, enriches constraints with watcher deep lessons, promotes breakages to learnings, triggers deep reflection, marks fix-chain hotspots
 - **Watcher (mycelium-watch.cjs)**: escalates repeat offenders, lowers coupling threshold, re-extracts weak lessons, tags volatile files in active fix-chains, backfills missing risk entries
-- **Evaluator (mycelium-eval.cjs)**: 9 KPIs, cryptographic SHA-256 proof, 25 self-checks, sliding window delta
+- **Evaluator (mycelium-eval.cjs)**: 9 KPIs, cryptographic SHA-256 proof, 28 self-checks (including 4 anti-gaming), hash-locked scoring rules
 - **Fixer (mycelium-fix.cjs)**: diagnoses root causes, prescribes 6 fix types, executes automatically, verifies improvement
 - **No human intervention needed**: the system improves itself after every learning event
+
+### EVAL ANTI-GAMING RULES (MANDATORY)
+**NEVER** modify eval scoring thresholds, add bonus systems, or create secondary signals.
+- Each metric score = ONE raw number → frozen threshold lookup → score
+- No "bonus", "credit", "nudge", "momentum", or "active prevention" systems
+- The ONLY way to improve a score is to improve actual raw data (fewer bugs, fewer repeat files, shorter fix chains)
+- Verify checks AG-1 through AG-4 will FAIL if scoring rules are tampered with
+- Scoring rules hash is frozen: any threshold change breaks verification
+- If `--verify` fails, the scoring has been gamed — revert immediately
 
 ## Two Learning Subsystems (both active)
 

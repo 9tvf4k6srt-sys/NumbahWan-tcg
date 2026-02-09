@@ -402,7 +402,7 @@ const showcase = {
     mycelium: mycScore.overall,
     'mycelium-watch': watchScore.overall,
     combined,
-    evaluator: 'mycelium-eval.cjs v3.0',
+    evaluator: 'mycelium-eval.cjs v4.0',
     proof: evalResult?.proof || {},
     honestSplit: evalResult?.honestSplit || {},
     fixClassification: evalResult?.fixClassification || {},
@@ -444,7 +444,7 @@ const showcase = {
     pipeline: 'commit -> learn -> eval -> fix -> re-eval -> verify -> done',
     hooks: ['post-commit: learn + fix', 'post-merge: sync + fix', 'pre-commit: guard --enforce (blocks violations)'],
     intelligence: ['--predict: risk scoring per file', '--trending: ASCII dashboard', '--guard --enforce: active blocking'],
-    evaluation: 'mycelium-eval.cjs v3.0 — foolproof: honest split, fix classification, SHA-256 proof, 25/25 self-checks'
+    evaluation: 'mycelium-eval.cjs v4.0 — foolproof: honest split, fix classification, SHA-256 proof, 25/25 self-checks'
   }
 };
 
