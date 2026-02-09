@@ -464,7 +464,323 @@ function diagnose(evalData) {
   return diagnoses;
 }
 
-// ─── Phase 2: FIX — apply corrective actions to both systems ────────
+// ─── Phase 2: FIX — prescription-driven + data-sync ────────────────
+//
+// v3: FIX now reads diagnose() prescriptions and EXECUTES them.
+// The old 8 data-sync actions are preserved as "housekeeping".
+// New: each prescription type has an executor that modifies the
+// memory/constraint/risk data to directly improve the weak metric.
+//
+// Flow: diagnose() → prescriptions[] → executePrescriptions() → fix()
+//
+
+function executePrescriptions(diagnoses, dryRun) {
+  const actions = [];
+  const nwMem = loadJson(NW_MEM_PATH);
+  const gwMem = loadJson(GW_MEM_PATH);
+  if (!nwMem || !gwMem) return actions;
+
+  for (const d of diagnoses) {
+    for (const rx of d.prescriptions) {
+      switch (rx.action) {
+
+        // ════════════════════════════════════════════════════════════
+        // STRENGTHEN_CONSTRAINTS: for files with 5+ breaks that have
+        // lessons but keep breaking → lessons aren't preventive.
+        // Action: extract actionable constraints from lessons,
+        //   mark files with preventive constraints, add testability markers.
+        // ════════════════════════════════════════════════════════════
+        case 'STRENGTHEN_CONSTRAINTS': {
+          const files = Array.isArray(rx.target) ? rx.target.filter(f => typeof f === 'string') : [];
+          let strengthened = 0;
+          for (const file of files) {
+            const risk = gwMem.risks?.[file];
+            if (!risk) continue;
+            const lessons = risk.lessons || [];
+            if (!risk.constraints) risk.constraints = [];
+
+            // Extract actionable constraints from each lesson
+            for (const lesson of lessons) {
+              const lower = (lesson || '').toLowerCase();
+              const constraints = [];
+
+              // Pattern: mobile/responsive → constraint: test at 320px, 768px
+              if (lower.includes('mobile') || lower.includes('responsive') || lower.includes('overflow')) {
+                constraints.push(`MUST test ${file} at 320px and 768px before commit`);
+              }
+              // Pattern: i18n → constraint: verify all lang toggles work
+              if (lower.includes('i18n') || lower.includes('lang') || lower.includes('translation')) {
+                constraints.push(`MUST verify i18n toggles on ${file} before commit`);
+              }
+              // Pattern: iOS/safari → constraint: test on safari/iOS
+              if (lower.includes('ios') || lower.includes('safari') || lower.includes('webkit')) {
+                constraints.push(`MUST test ${file} on Safari/iOS before commit`);
+              }
+              // Pattern: overlap/z-index/layout → constraint: check z-index stacking
+              if (lower.includes('overlap') || lower.includes('z-index') || lower.includes('layout')) {
+                constraints.push(`MUST check z-index stacking and layout on ${file} before commit`);
+              }
+              // Pattern: event/click/touch → constraint: verify event handlers
+              if (lower.includes('event') || lower.includes('click') || lower.includes('touch')) {
+                constraints.push(`MUST verify event handlers on ${file} — no duplicate listeners`);
+              }
+
+              // Add non-duplicate constraints
+              for (const c of constraints) {
+                if (!risk.constraints.includes(c) && risk.constraints.length < 15) {
+                  if (!dryRun) risk.constraints.push(c);
+                  strengthened++;
+                }
+              }
+            }
+
+            // Mark as prescription-strengthened
+            if (!dryRun && strengthened > 0) {
+              risk.prescriptionApplied = risk.prescriptionApplied || [];
+              risk.prescriptionApplied.push({
+                date: new Date().toISOString().split('T')[0],
+                action: 'STRENGTHEN_CONSTRAINTS',
+                constraintsAdded: strengthened,
+                source: 'nw-fixer: prescription executor'
+              });
+            }
+          }
+          if (strengthened > 0) {
+            actions.push({ type: 'rx-strengthen', desc: `strengthened constraints on ${files.length} files (+${strengthened} preventive rules)`, system: 'gitwise', metric: d.metric });
+          }
+          break;
+        }
+
+        // ════════════════════════════════════════════════════════════
+        // ADD_CONSTRAINTS: for repeat-breaking files with NO constraints.
+        // Action: extract constraints from breakage lessons and create them.
+        // ════════════════════════════════════════════════════════════
+        case 'ADD_CONSTRAINTS': {
+          const files = Array.isArray(rx.target) ? rx.target.filter(f => typeof f === 'string') : [];
+          let added = 0;
+          for (const file of files) {
+            const risk = gwMem.risks?.[file];
+            if (!risk || (risk.constraints && risk.constraints.length > 0)) continue;
+            risk.constraints = [];
+
+            // Pull constraints from lessons
+            const lessons = risk.lessons || [];
+            if (lessons.length > 0) {
+              // Take the most recent 3 lessons as constraints
+              const recent = lessons.slice(-3);
+              for (const lesson of recent) {
+                if (lesson.length > 10 && risk.constraints.length < 10) {
+                  if (!dryRun) risk.constraints.push(`GUARD: ${lesson.slice(0, 150)}`);
+                  added++;
+                }
+              }
+            }
+
+            // Also sync from NW-Memory area constraints
+            const area = classifyFileToArea(file);
+            const areaConstraints = nwMem.constraints?.[area] || [];
+            for (const ac of areaConstraints.slice(0, 3)) {
+              if (ac.fact && risk.constraints.length < 10) {
+                if (!dryRun) risk.constraints.push(`AREA[${area}]: ${ac.fact.slice(0, 150)}`);
+                added++;
+              }
+            }
+
+            if (!dryRun) {
+              risk.prescriptionApplied = risk.prescriptionApplied || [];
+              risk.prescriptionApplied.push({
+                date: new Date().toISOString().split('T')[0],
+                action: 'ADD_CONSTRAINTS',
+                constraintsAdded: added,
+                source: 'nw-fixer: prescription executor'
+              });
+            }
+          }
+          if (added > 0) {
+            actions.push({ type: 'rx-add-constraints', desc: `added ${added} constraints to ${files.length} unconstrained files`, system: 'gitwise', metric: d.metric });
+          }
+          break;
+        }
+
+        // ════════════════════════════════════════════════════════════
+        // ENFORCE_CO_CHANGES: for coupled files that must change together.
+        // Action: record coupling enforcement in risk data + NW-Memory.
+        // ════════════════════════════════════════════════════════════
+        case 'ENFORCE_CO_CHANGES': {
+          const targets = Array.isArray(rx.target) ? rx.target : [];
+          let enforced = 0;
+          for (const t of targets) {
+            const file = t.file || t;
+            const coupledWith = t.coupledWith || [];
+            const risk = gwMem.risks?.[file];
+            if (!risk) continue;
+            if (!risk.constraints) risk.constraints = [];
+
+            for (const partner of coupledWith) {
+              const rule = `CO-CHANGE ENFORCED: when ${file} changes, ${partner} MUST also change`;
+              if (!risk.constraints.includes(rule) && risk.constraints.length < 15) {
+                if (!dryRun) {
+                  risk.constraints.push(rule);
+                  // Also add to partner's constraints
+                  if (gwMem.risks?.[partner]) {
+                    if (!gwMem.risks[partner].constraints) gwMem.risks[partner].constraints = [];
+                    const reverseRule = `CO-CHANGE ENFORCED: when ${partner} changes, ${file} MUST also change`;
+                    if (!gwMem.risks[partner].constraints.includes(reverseRule) && gwMem.risks[partner].constraints.length < 15) {
+                      gwMem.risks[partner].constraints.push(reverseRule);
+                    }
+                  }
+                }
+                enforced++;
+              }
+            }
+          }
+          if (enforced > 0) {
+            actions.push({ type: 'rx-co-change', desc: `enforced ${enforced} co-change rules for coupled files`, system: 'gitwise', metric: d.metric });
+          }
+          break;
+        }
+
+        // ════════════════════════════════════════════════════════════
+        // PREVENT_NEW_BUGS: for top post-learning bug files.
+        // Action: create file-specific guard constraints + area constraints.
+        // ════════════════════════════════════════════════════════════
+        case 'PREVENT_NEW_BUGS': {
+          const files = Array.isArray(rx.target) ? rx.target.filter(f => typeof f === 'string') : [];
+          let prevented = 0;
+          for (const file of files) {
+            const risk = gwMem.risks?.[file];
+            if (!risk) continue;
+            if (!risk.constraints) risk.constraints = [];
+
+            const guardRule = `GUARD: ${file} has ${risk.breakCount || '?'}x post-learning breaks — require pre-commit review`;
+            if (!risk.constraints.includes(guardRule) && risk.constraints.length < 15) {
+              if (!dryRun) risk.constraints.push(guardRule);
+              prevented++;
+            }
+
+            // Add regression constraint based on dominant failure type
+            const area = classifyFileToArea(file);
+            const areaKey = area.toLowerCase();
+            if (!nwMem.constraints[areaKey]) nwMem.constraints[areaKey] = [];
+            const preventionRule = `[auto] ${file} is a top post-learning bug source (${risk.breakCount}x). Require: data-testid markers, regression tests, pre-commit guard check.`;
+            const exists = nwMem.constraints[areaKey].some(c => c.fact && c.fact.includes(file) && c.fact.includes('post-learning'));
+            if (!exists && nwMem.constraints[areaKey].length < 15) {
+              if (!dryRun) {
+                nwMem.constraints[areaKey].push({
+                  fact: preventionRule,
+                  ts: Date.now(),
+                  date: new Date().toISOString().split('T')[0],
+                  autoGenerated: true,
+                  source: 'nw-fixer: PREVENT_NEW_BUGS prescription'
+                });
+              }
+              prevented++;
+            }
+          }
+          if (prevented > 0) {
+            actions.push({ type: 'rx-prevent-bugs', desc: `added ${prevented} bug-prevention rules for ${files.length} top-offending files`, system: 'both', metric: d.metric });
+          }
+          break;
+        }
+
+        // ════════════════════════════════════════════════════════════
+        // PRE_MORTEM_FOR_CHAIN_FILES: for files in the longest fix chain.
+        // Action: add pre-mortem constraints + testing requirements.
+        // ════════════════════════════════════════════════════════════
+        case 'PRE_MORTEM_FOR_CHAIN_FILES': {
+          const files = Array.isArray(rx.target) ? rx.target.filter(f => typeof f === 'string') : [];
+          let premortem = 0;
+          for (const file of files) {
+            const risk = gwMem.risks?.[file];
+            if (!risk) continue;
+            if (!risk.constraints) risk.constraints = [];
+
+            const chainRule = `PRE-MORTEM: ${file} was in a ${d.rootCauses?.[0]?.chainLength || '?'}-commit fix chain. Before editing: (1) run premortem, (2) test at 320px, (3) verify coupled files`;
+            if (!risk.constraints.includes(chainRule) && risk.constraints.length < 15) {
+              if (!dryRun) risk.constraints.push(chainRule);
+              premortem++;
+            }
+
+            // Mark as chain-risk file
+            if (!dryRun) {
+              risk.chainRisk = true;
+              risk.chainRiskDate = new Date().toISOString().split('T')[0];
+            }
+          }
+
+          // Add process constraint to NW-Memory
+          const processArea = 'process';
+          if (!nwMem.constraints[processArea]) nwMem.constraints[processArea] = [];
+          const processRule = `[auto] Fix-chain files (${files.slice(0,3).join(', ')}) require pre-mortem analysis before any edit. Run: nw-memory.cjs --premortem <area>`;
+          const pExists = nwMem.constraints[processArea].some(c => c.fact && c.fact.includes('pre-mortem'));
+          if (!pExists && nwMem.constraints[processArea].length < 15) {
+            if (!dryRun) {
+              nwMem.constraints[processArea].push({
+                fact: processRule,
+                ts: Date.now(),
+                date: new Date().toISOString().split('T')[0],
+                autoGenerated: true,
+                source: 'nw-fixer: PRE_MORTEM_FOR_CHAIN_FILES prescription'
+              });
+            }
+            premortem++;
+          }
+
+          if (premortem > 0) {
+            actions.push({ type: 'rx-premortem', desc: `added pre-mortem constraints to ${files.length} fix-chain files`, system: 'both', metric: d.metric });
+          }
+          break;
+        }
+
+        // ════════════════════════════════════════════════════════════
+        // ROOT_CAUSE_FIRST: process constraint — no fix commit
+        // without a root-cause note.
+        // ════════════════════════════════════════════════════════════
+        case 'ROOT_CAUSE_FIRST': {
+          const wfArea = 'workflow';
+          if (!nwMem.constraints[wfArea]) nwMem.constraints[wfArea] = [];
+          const rcRule = '[auto] ROOT-CAUSE FIRST: every fix commit MUST include root-cause in commit message. Protocol: (1) reproduce, (2) identify root cause, (3) fix, (4) verify coupled files.';
+          const rcExists = nwMem.constraints[wfArea].some(c => c.fact && c.fact.includes('ROOT-CAUSE FIRST'));
+          if (!rcExists && nwMem.constraints[wfArea].length < 15) {
+            if (!dryRun) {
+              nwMem.constraints[wfArea].push({
+                fact: rcRule,
+                ts: Date.now(),
+                date: new Date().toISOString().split('T')[0],
+                autoGenerated: true,
+                source: 'nw-fixer: ROOT_CAUSE_FIRST prescription'
+              });
+            }
+            actions.push({ type: 'rx-root-cause', desc: 'added ROOT-CAUSE-FIRST protocol to workflow constraints', system: 'nw-memory', metric: d.metric });
+          }
+          break;
+        }
+
+        // ════════════════════════════════════════════════════════════
+        // VERIFY_EXISTING_FIXES: re-run fixer to confirm prior fixes
+        // ════════════════════════════════════════════════════════════
+        case 'VERIFY_EXISTING_FIXES': {
+          // This is handled by the verify loop in run_cycle itself
+          actions.push({ type: 'rx-verify', desc: 'flagged for re-verification in fix→verify loop', system: 'fixer', metric: d.metric });
+          break;
+        }
+
+        default: {
+          actions.push({ type: 'rx-unknown', desc: `unhandled prescription: ${rx.action}`, system: 'unknown', metric: d.metric });
+          break;
+        }
+      }
+    }
+  }
+
+  // Save changes from prescriptions
+  if (!dryRun && actions.length > 0) {
+    saveJson(NW_MEM_PATH, nwMem);
+    saveJson(GW_MEM_PATH, gwMem);
+  }
+
+  return actions;
+}
 
 function fix(evalData, dryRun) {
   const actions = [];
@@ -783,24 +1099,46 @@ function run_cycle(opts) {
     return { status: 'ok', score: combinedBefore, actions: [], loops: 0 };
   }
 
-  // Phase 2+3: Fix → Verify loop
-  let totalActions = [];
+  // Phase 1.5: DIAGNOSE — find friction points and prescriptions
+  if (!silent) log('Phase 1.5: diagnosing friction points...');
+  const diagnoses = diagnose(beforeEval);
+  let rxActions = [];
+  if (diagnoses.length > 0) {
+    if (!silent) {
+      log(`found ${diagnoses.length} friction points with ${diagnoses.reduce((s,d) => s + d.prescriptions.length, 0)} prescriptions`);
+    }
+    // Execute prescriptions FIRST — these are targeted, evidence-based fixes
+    rxActions = executePrescriptions(diagnoses, dryRun);
+    if (!silent && rxActions.length > 0) {
+      log(`Phase 1.5: executed ${rxActions.length} prescription actions:`);
+      for (const a of rxActions) {
+        dim(`  Rx [${a.metric}] → ${a.desc}`);
+      }
+    }
+  } else {
+    if (!silent) log('no friction points — all metrics >= 60');
+  }
+
+  // Phase 2+3: Housekeeping Fix → Verify loop
+  let totalActions = [...rxActions];
   let loops = 0;
   let lastVerification = null;
 
   for (let i = 0; i < MAX_FIX_LOOPS; i++) {
     loops++;
-    if (!silent) log(`loop ${loops}/${MAX_FIX_LOOPS}: applying fixes...`);
+    if (!silent) log(`loop ${loops}/${MAX_FIX_LOOPS}: applying housekeeping fixes...`);
 
-    // Fix
+    // Fix (housekeeping: cross-sync, backfill, escalate, etc.)
     const currentEval = i === 0 ? beforeEval : evaluate();
     const actions = fix(currentEval, dryRun);
     totalActions.push(...actions);
 
-    if (actions.length === 0) {
+    if (actions.length === 0 && rxActions.length === 0) {
       if (!silent) log('no more actions to take — stopping');
       break;
     }
+    // Reset rxActions so it doesn't keep us looping if only prescriptions ran
+    rxActions = [];
 
     if (!silent) {
       for (const a of actions) {
@@ -907,17 +1245,17 @@ function status() {
     log(`total:     ${flog.totalFixes} fixes applied, ${flog.totalVerified} verified`);
   }
 
-  // Show what would be fixed
+  // Show what would be fixed (housekeeping)
   const actions = fix(evalData, true);
   if (actions.length > 0) {
     console.log('');
-    log(`pending fixes (${actions.length}):`);
+    log(`pending housekeeping fixes (${actions.length}):`);
     for (const a of actions) {
       dim(`  → [${a.system}] ${a.desc}`);
     }
   }
 
-  // Show friction diagnosis summary
+  // Show friction diagnosis + pending prescriptions
   const diag = diagnose(evalData);
   if (diag.length > 0) {
     console.log('');
@@ -926,7 +1264,20 @@ function status() {
       const label = d.metric.replace(/([A-Z])/g, ' $1').replace(/^./, c => c.toUpperCase()).trim();
       log(`  \x1b[31m${label}\x1b[0m: ${d.score}/100 — ${d.rootCauses.length} root causes, ${d.prescriptions.length} prescriptions (+${d.potentialGain} pts potential)`);
     }
+
+    // Show what prescriptions WOULD do
+    const rxPreview = executePrescriptions(diag, true /* dryRun */);
+    if (rxPreview.length > 0) {
+      console.log('');
+      log(`prescription preview (${rxPreview.length} actions would execute):`);
+      for (const a of rxPreview) {
+        dim(`  Rx [${a.metric}] → ${a.desc}`);
+      }
+    }
+
+    const totalPotential = diag.reduce((s, d) => s + d.potentialGain, 0);
     log(`run \x1b[1mnw-fixer --diagnose\x1b[0m for full root-cause analysis`);
+    log(`run \x1b[1mnw-fixer --force\x1b[0m to execute all prescriptions + fixes (potential: +${totalPotential} pts)`);
   }
 
   console.log('');
@@ -1000,6 +1351,19 @@ function printDiagnose() {
   const totalPotential = diag.reduce((s, d) => s + d.potentialGain, 0);
   const totalPrescriptions = diag.reduce((s, d) => s + d.prescriptions.length, 0);
   log(`${B}Summary: ${diag.length} friction points, ${totalPrescriptions} prescriptions, +${totalPotential} pts potential${X}`);
+
+  // Show what the executor would do in dry-run
+  const rxPreview = executePrescriptions(diag, true);
+  if (rxPreview.length > 0) {
+    console.log('');
+    console.log(`  ${B}Prescription Executor Preview (${rxPreview.length} actions):${X}`);
+    for (const a of rxPreview) {
+      console.log(`    ${G}▸${X} [${a.metric}] ${a.desc}`);
+    }
+    console.log('');
+    log(`Run ${B}nw-fixer --force${X} to execute all prescriptions + verify improvement`);
+  }
+
   console.log('');
 
   return diag;
