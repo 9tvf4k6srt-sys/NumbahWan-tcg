@@ -305,12 +305,14 @@ function ship(commitMsg) {
   // ── Step 9: Sync back ─────────────────────────────────────────
   step(9, 'Sync local');
   try {
+    runCapture('git stash 2>&1', { allowFail: true });
     runCapture('git checkout main 2>&1');
     runCapture('git pull origin main 2>&1');
     runCapture(`git checkout -B ${BRANCH} main 2>&1`);
+    runCapture('git stash pop 2>&1', { allowFail: true });
     ok('Local synced to merged main');
   } catch {
-    info('Sync-back failed — run: git checkout main && git pull');
+    info('Sync-back incomplete — run: git checkout main && git pull && git checkout -B genspark_ai_developer main');
   }
 
   // ── Done ──────────────────────────────────────────────────────
