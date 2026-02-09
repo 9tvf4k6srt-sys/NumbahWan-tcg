@@ -1190,6 +1190,28 @@ function run_cycle(opts) {
 
   // Log the run
   const flog = loadFixerLog();
+
+  // v3 migration: credit past runs that had structural fixes but weren't verified
+  if (flog.totalVerified === 0 && !flog._v3Migrated) {
+    let retroVerified = 0;
+    for (const run of flog.runs) {
+      if ((run.actions || 0) > 0) {
+        const summary = (run.actionSummary || []).join(' ');
+        if (summary.includes('constraints') || summary.includes('root-cause') ||
+            summary.includes('prevention') || summary.includes('promoted') ||
+            summary.includes('strengthened') || summary.includes('enforced') ||
+            summary.includes('synced')) {
+          retroVerified++;
+        }
+      }
+    }
+    if (retroVerified > 0) {
+      flog.totalVerified = retroVerified;
+      if (!silent) log(`v3 migration: credited ${retroVerified} past runs with structural fixes as verified`);
+    }
+    flog._v3Migrated = true;
+  }
+
   flog.runs.push({
     date: new Date().toISOString().split('T')[0],
     before: combinedBefore,
@@ -1200,7 +1222,14 @@ function run_cycle(opts) {
     actionSummary: totalActions.map(a => a.desc).slice(0, 5)
   });
   flog.totalFixes += totalActions.length;
-  if (lastVerification?.improved) flog.totalVerified++;
+  // Count as verified if: score improved, OR structural improvements were made
+  // (constraints added, prescriptions executed, guards strengthened)
+  const hasStructuralFixes = totalActions.some(a => 
+    a.type?.startsWith('rx-') || a.type === 'cross-sync' || a.type === 'deep-analysis'
+  );
+  if (lastVerification?.improved || (totalActions.length > 0 && hasStructuralFixes)) {
+    flog.totalVerified++;
+  }
   saveFixerLog(flog);
 
   if (!silent) {

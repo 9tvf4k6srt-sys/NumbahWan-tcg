@@ -33,7 +33,7 @@ const path = require('path');
 const fs = require('fs');
 
 const ROOT = path.resolve(__dirname, '..');
-const VERSION = '1.1.0';
+const VERSION = '2.0.0';
 
 // ─── Script paths ─────────────────────────────────────────────────
 const SCRIPTS = {

@@ -228,5 +228,78 @@ test('[ios] touch+click double-fire handling', () => {
   }
 });
 
+// ═══════════════════════════════════════════════════════════════════
+// NEW: Repeat-offender regression tests (from Mycelium diagnosis)
+// Target: files with 5+ breaks that keep recurring
+// ═══════════════════════════════════════════════════════════════════
+
+// cards.html: broke 10x — dominant: ui/layout
+test('[cards] cards.html has data-testid markers for automated testing', () => {
+  const content = readFile('public/cards.html');
+  if (!content) return 'skip';
+  assert(content.includes('data-testid'), 'cards.html needs data-testid markers — broke 10x');
+  assert(content.includes('data-testid="cards-page"'), 'cards.html needs page-level testid');
+});
+
+test('[cards] cards.html has no inline styles that break layout', () => {
+  const content = readFile('public/cards.html');
+  if (!content) return 'skip';
+  // Common pattern that caused breaks: inline overflow:hidden on card containers
+  const lines = content.split('\n');
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i].toLowerCase();
+    if (line.includes('style=') && line.includes('overflow') && line.includes('hidden') && line.includes('card')) {
+      assert(false, `cards.html:${i+1} has inline overflow:hidden on card element — caused layout breaks before`);
+    }
+  }
+});
+
+// markets.html: broke 7x — dominant: i18n
+test('[i18n] markets.html has data-i18n on all user-visible text', () => {
+  const content = readFile('public/markets.html');
+  if (!content) return 'skip';
+  assert(content.includes('data-i18n'), 'markets.html needs i18n markers — broke 7x mostly from i18n issues');
+  // Check no [ZH] or [TH] placeholder prefixes
+  assert(!content.includes('[ZH]') && !content.includes('[TH]'), 'markets.html has [ZH]/[TH] placeholders visible to users');
+});
+
+// battle.html: broke 7x — dominant: ios
+test('[battle] battle.html has data-testid markers', () => {
+  const content = readFile('public/battle.html');
+  if (!content) return 'skip';
+  assert(content.includes('data-testid'), 'battle.html needs data-testid markers — broke 7x');
+});
+
+// wallet.html: broke 6x
+test('[economy] wallet.html has data-testid markers', () => {
+  const content = readFile('public/wallet.html');
+  if (!content) return 'skip';
+  assert(content.includes('data-testid'), 'wallet.html needs data-testid markers — broke 6x');
+  assert(content.includes('data-testid="wallet-page"'), 'wallet.html needs page-level testid');
+});
+
+// wyckoff.html: broke 5x — dominant: i18n
+test('[i18n] wyckoff.html has i18n support and no placeholders', () => {
+  const content = readFile('public/wyckoff.html');
+  if (!content) return 'skip';
+  assert(content.includes('data-i18n'), 'wyckoff.html needs i18n markers — broke 5x mostly from i18n');
+  assert(!content.includes('[ZH]') && !content.includes('[TH]'), 'wyckoff.html has i18n placeholders');
+});
+
+// Cross-cutting: coupled files must reference each other
+test('[coupling] battle.html and nw-battle-engine.js are linked', () => {
+  const battle = readFile('public/battle.html');
+  const engine = readFile('public/static/nw-battle-engine.js');
+  if (!battle || !engine) return 'skip';
+  assert(battle.includes('nw-battle-engine') || battle.includes('nw-battle-v'), 'battle.html must reference its engine script');
+});
+
+test('[coupling] markets.html loads required scripts', () => {
+  const markets = readFile('public/markets.html');
+  if (!markets) return 'skip';
+  // Markets is coupled with src/index.tsx via API routes
+  assert(markets.includes('nw-i18n') || markets.includes('data-i18n'), 'markets.html must have i18n support');
+});
+
 console.log(`\n${passed} passed, ${failed} failed, ${skipped} skipped\n`);
 if (failed > 0) process.exit(1);
