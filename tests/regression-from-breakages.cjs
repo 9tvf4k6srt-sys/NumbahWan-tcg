@@ -2,7 +2,7 @@
 /**
  * AUTO-GENERATED regression tests from NW-MEMORY breakages & constraints
  * Generated: 2026-02-09
- * Breakages: 12 | Constraints: 39
+ * Breakages: 12 | Constraints: 40
  * Test cases: 13
  *
  * Run: node tests/regression-from-breakages.cjs
