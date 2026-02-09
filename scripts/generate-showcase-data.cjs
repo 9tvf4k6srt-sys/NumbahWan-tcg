@@ -230,73 +230,41 @@ const dailyTimeline = Object.entries(dailyData)
     filesChanged: d.files instanceof Set ? d.files.size : d.files
   }));
 
-// ─── Impact Metrics (the money shot) ────────────────────────────
+// ─── Impact Metrics — ONLY provable numbers ─────────────────────
+// NO estimates, NO assumed rates, NO made-up multipliers.
+// Every number here can be verified by running the tools.
 
-// Time saved calculation:
-// Average fix commit takes ~30 min to diagnose + fix without the system
-// With the system: warnings prevent ~60% of repeat mistakes
-// Each constraint saves ~15 min of research time
-// Each learning saves ~10 min of re-discovery
+// Count regression tests
+let regressionTests = 0;
+try {
+  const testFile = fs.readFileSync(path.join(__dirname, '..', 'tests', 'regression-from-breakages.cjs'), 'utf8');
+  regressionTests = (testFile.match(/^test\(/gm) || []).length;
+} catch {}
 
-const warningPrevention = 0.6; // 60% of repeat issues caught by warnings
-const repeatBreakages = breakages.filter(b => {
-  const fileRisks = Object.entries(watchMem.risks || {}).filter(([f, r]) => r.breakCount >= 2);
-  return fileRisks.some(([f]) => (b.files || []).includes(f));
-}).length;
-
-const preventedIssues = Math.round(repeatBreakages * warningPrevention);
-const avgFixTimeMin = 30; // minutes per fix without system
-const constraintResearchMin = 15;
-const learningRediscoveryMin = 10;
-
-const timeSavedMin = (preventedIssues * avgFixTimeMin) +
-  (mycScore.totalConstraints * constraintResearchMin * 0.3) + // 30% of constraints actively used
-  (mycScore.totalLearnings * learningRediscoveryMin * 0.5);   // 50% of learnings prevent re-work
-
-const timeSavedHours = Math.round(timeSavedMin / 60 * 10) / 10;
-
-// Money saved calculation:
-// Average developer hourly rate: $75/hr
-const devHourlyRate = 75;
-const moneySaved = Math.round(timeSavedHours * devHourlyRate);
-
-// Productivity improvement:
-// Compare early vs late fix rates
-const midpoint = Math.floor(commits.length / 2);
-const earlyCommits = commits.slice(0, midpoint);
-const lateCommits = commits.slice(midpoint);
-const earlyFixRate = earlyCommits.filter(c => c.isFix).length / (earlyCommits.length || 1);
-const lateFixRate = lateCommits.filter(c => c.isFix).length / (lateCommits.length || 1);
-const fixRateImprovement = earlyFixRate > 0 ? Math.round((1 - lateFixRate / earlyFixRate) * 100) : 0;
-
-// Average improvement per commit (score change / commits since system was active)
-const systemActiveCommits = commits.filter(c => c.date >= '2026-02-08').length; // since mycelium-watch active
-const scoreGain = combined - 0; // from 0 (no system) to current
-const avgImprovementPerCommit = systemActiveCommits > 0 ? Math.round(scoreGain / systemActiveCommits * 100) / 100 : 0;
-
-// Break-rate improvement
-const earlyBreakDates = Object.entries(dailyData)
-  .filter(([d]) => d <= '2026-02-05')
-  .reduce((s, [, d]) => s + (d.breakages || 0), 0);
-const lateBreakDates = Object.entries(dailyData)
-  .filter(([d]) => d >= '2026-02-08')
-  .reduce((s, [, d]) => s + (d.breakages || 0), 0);
+// Count hardened files (HTML files with data-testid)
+let hardenedFiles = 0;
+try {
+  const htmlDir = path.join(__dirname, '..', 'public');
+  if (fs.existsSync(htmlDir)) {
+    fs.readdirSync(htmlDir).filter(f => f.endsWith('.html')).forEach(f => {
+      const content = fs.readFileSync(path.join(htmlDir, f), 'utf8');
+      if (content.includes('data-testid')) hardenedFiles++;
+    });
+  }
+} catch {}
 
 const impact = {
-  timeSavedHours,
-  timeSavedMin: Math.round(timeSavedMin),
-  moneySaved,
-  devHourlyRate,
-  preventedIssues,
-  fixRateImprovement: Math.max(0, fixRateImprovement),
-  avgImprovementPerCommit,
-  earlyFixRate: Math.round(earlyFixRate * 100),
-  lateFixRate: Math.round(lateFixRate * 100),
-  earlyBreakages: earlyBreakDates,
-  lateBreakages: lateBreakDates,
-  knowledgeDensity: watchScore.knowledgeDensity,
-  constraintCoverage: mycScore.constraintCoverage,
-  systemActiveCommits
+  regressionTests,
+  hardenedFiles,
+  learnings: mycScore.totalLearnings || 0,
+  breakages: breakages.length,
+  constraints: mycScore.totalConstraints || 0,
+  // These are real numbers from real eval — not estimates
+  slidingWindow: {
+    earliest: Math.round((mycScore.earliestFixRate || 0) * 100),
+    latest: Math.round((mycScore.latestRealFixRate || 0) * 100),
+    windowSize: mycScore.windowSize || 40
+  }
 };
 
 // ─── Bundle Size Trend ──────────────────────────────────────────
@@ -424,7 +392,9 @@ const showcase = {
     deepAnalyses: watchScore.filesWithDeep,
     couplings: watchScore.couplings,
     fixerRuns: fixerLog.totalFixes,
-    fixerVerified: fixerLog.totalVerified
+    fixerVerified: fixerLog.totalVerified,
+    regressionTests,
+    hardenedFiles
   },
 
   impact,
@@ -451,5 +421,5 @@ const showcase = {
 fs.writeFileSync(OUTPUT_PATH, JSON.stringify(showcase, null, 2));
 console.log(`[showcase] Generated: ${OUTPUT_PATH}`);
 console.log(`[showcase] Scores: unified ${unifiedScore}/100 (${unifiedGrade}) — via mycelium-eval.cjs`);
-console.log(`[showcase] Impact: ${timeSavedHours}h saved | $${moneySaved} saved | ${avgImprovementPerCommit} pts/commit`);
+console.log(`[showcase] Impact: ${regressionTests} tests | ${hardenedFiles} hardened | ${impact.learnings} learnings | ${impact.breakages} breakages tracked`);
 console.log(`[showcase] Timeline: ${dailyTimeline.length} days | ${commitTimeline.length} commits | ${bundleTrend.length} bundle snapshots`);
