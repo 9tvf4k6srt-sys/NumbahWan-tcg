@@ -1,6 +1,6 @@
 <div align="center">
 
-# Mycelium self improving codebase
+# Mycelium : For self-improving codebases
 
 ### 116 pages. 62 JS modules. 30 API routes. 3 languages. Zero frameworks.
 
