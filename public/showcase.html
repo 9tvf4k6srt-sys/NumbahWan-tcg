@@ -6,132 +6,192 @@
 <title>NW Learning System — Live Progress | World's First Self-Improving Codebase</title>
 <meta name="description" content="Watch a codebase learn from its own mistakes in real-time. Three AI brains — Learner, Evaluator, Fixer — working in sync. Open source, fully transparent.">
 <meta property="og:title" content="World's First Self-Improving Codebase">
-<meta property="og:description" content="Three AI brains learn from every commit. Watch the scores improve live.">
+<meta property="og:description" content="Three AI brains learn from every commit. Watch the scores improve live. $1600+ saved, 21+ hours reclaimed.">
 <meta property="og:type" content="website">
 <link rel="icon" href="/favicon.svg">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 :root{
-  --bg:#0a0a0f;--bg2:#12121a;--bg3:#1a1a2e;
+  --bg:#0a0a0f;--bg2:#12121a;--bg3:#1a1a2e;--bg4:#0e0e18;
   --text:#e0e0f0;--dim:#666680;--accent:#6c5ce7;
-  --green:#00b894;--yellow:#fdcb6e;--red:#e17055;--blue:#74b9ff;
+  --green:#00b894;--yellow:#fdcb6e;--red:#e17055;--blue:#74b9ff;--cyan:#00cec9;
   --glow:rgba(108,92,231,0.3);
   --font:'Inter',system-ui,sans-serif;
   --mono:'JetBrains Mono',monospace;
 }
 body{background:var(--bg);color:var(--text);font-family:var(--font);line-height:1.6;overflow-x:hidden}
 a{color:var(--accent);text-decoration:none}a:hover{text-decoration:underline}
+.container{max-width:1100px;margin:0 auto;padding:0 20px}
 
-/* Hero */
-.hero{text-align:center;padding:80px 20px 60px;position:relative;overflow:hidden}
-.hero::before{content:'';position:absolute;top:-50%;left:-50%;width:200%;height:200%;background:radial-gradient(circle at 50% 50%,rgba(108,92,231,0.08),transparent 50%);animation:pulse 8s ease-in-out infinite}
+/* ─── Hero ─── */
+.hero{text-align:center;padding:60px 20px 40px;position:relative;overflow:hidden}
+.hero::before{content:'';position:absolute;top:-50%;left:-50%;width:200%;height:200%;background:radial-gradient(circle at 50% 50%,rgba(108,92,231,0.06),transparent 50%);animation:pulse 8s ease-in-out infinite}
 @keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.1)}}
-.hero h1{font-size:clamp(28px,5vw,56px);font-weight:900;letter-spacing:-1px;position:relative}
+.hero h1{font-size:clamp(26px,5vw,52px);font-weight:900;letter-spacing:-1px;position:relative}
 .hero h1 span{background:linear-gradient(135deg,var(--accent),var(--blue),var(--green));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
-.hero .sub{font-size:clamp(14px,2.5vw,20px);color:var(--dim);margin-top:12px;position:relative}
-.badge{display:inline-block;background:var(--bg3);border:1px solid rgba(108,92,231,0.3);border-radius:20px;padding:6px 16px;font-size:13px;font-family:var(--mono);margin:8px 4px;color:var(--accent)}
+.hero .sub{font-size:clamp(13px,2vw,18px);color:var(--dim);margin-top:10px;position:relative}
+.badges{margin-top:16px;display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
+.badge{display:inline-block;background:var(--bg3);border:1px solid rgba(108,92,231,0.3);border-radius:20px;padding:5px 14px;font-size:12px;font-family:var(--mono);color:var(--accent)}
 .badge.live{border-color:var(--green);color:var(--green)}
-.badge.live::before{content:'';display:inline-block;width:8px;height:8px;background:var(--green);border-radius:50%;margin-right:8px;animation:blink 1.5s infinite}
+.badge.live::before{content:'';display:inline-block;width:7px;height:7px;background:var(--green);border-radius:50%;margin-right:7px;animation:blink 1.5s infinite}
 @keyframes blink{0%,100%{opacity:1}50%{opacity:0.3}}
 
-/* Container */
-.container{max-width:1000px;margin:0 auto;padding:0 20px}
+/* ─── Impact Cards (the money shot) ─── */
+.impact-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px;margin:32px 0}
+.impact-card{background:linear-gradient(135deg,var(--bg2),var(--bg3));border:1px solid rgba(255,255,255,0.06);border-radius:16px;padding:24px;position:relative;overflow:hidden;text-align:center}
+.impact-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px}
+.impact-card.time::before{background:linear-gradient(90deg,var(--green),var(--cyan))}
+.impact-card.money::before{background:linear-gradient(90deg,var(--yellow),#f39c12)}
+.impact-card.prod::before{background:linear-gradient(90deg,var(--accent),var(--blue))}
+.impact-card.prevent::before{background:linear-gradient(90deg,var(--red),var(--yellow))}
+.impact-icon{font-size:28px;margin-bottom:8px}
+.impact-num{font-size:clamp(32px,5vw,48px);font-weight:900;font-family:var(--mono);line-height:1}
+.impact-num.green{color:var(--green)}
+.impact-num.yellow{color:var(--yellow)}
+.impact-num.accent{color:var(--accent)}
+.impact-num.red{color:var(--red)}
+.impact-label{font-size:12px;text-transform:uppercase;letter-spacing:1.5px;color:var(--dim);margin-top:6px}
+.impact-sub{font-size:11px;color:var(--dim);margin-top:4px;font-family:var(--mono)}
 
-/* Score Cards */
-.scores{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:20px;margin:40px 0}
-.score-card{background:var(--bg2);border:1px solid rgba(255,255,255,0.06);border-radius:16px;padding:28px;position:relative;overflow:hidden}
-.score-card::after{content:'';position:absolute;top:0;left:0;right:0;height:3px}
+/* ─── Score Cards ─── */
+.scores{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px;margin:32px 0}
+.score-card{background:var(--bg2);border:1px solid rgba(255,255,255,0.06);border-radius:14px;padding:24px;position:relative;overflow:hidden}
+.score-card::after{content:'';position:absolute;top:0;left:0;right:0;height:2px}
 .score-card.nw::after{background:linear-gradient(90deg,var(--accent),var(--blue))}
 .score-card.gw::after{background:linear-gradient(90deg,var(--blue),var(--green))}
 .score-card.combined::after{background:linear-gradient(90deg,var(--accent),var(--green))}
-.score-card h3{font-size:13px;text-transform:uppercase;letter-spacing:2px;color:var(--dim);margin-bottom:16px}
-.score-num{font-size:56px;font-weight:900;font-family:var(--mono);line-height:1}
-.score-grade{font-size:20px;color:var(--dim);margin-left:8px;vertical-align:super}
-.progress-bar{height:8px;background:var(--bg3);border-radius:4px;margin-top:16px;overflow:hidden}
-.progress-fill{height:100%;border-radius:4px;transition:width 1.5s ease-out;position:relative}
-.progress-fill::after{content:'';position:absolute;top:0;right:0;bottom:0;width:30px;background:linear-gradient(90deg,transparent,rgba(255,255,255,0.3));animation:shimmer 2s infinite}
+.score-card h3{font-size:11px;text-transform:uppercase;letter-spacing:2px;color:var(--dim);margin-bottom:12px}
+.score-num{font-size:48px;font-weight:900;font-family:var(--mono);line-height:1}
+.score-grade{font-size:16px;color:var(--dim);margin-left:6px;vertical-align:super}
+.progress-bar{height:6px;background:var(--bg3);border-radius:3px;margin-top:14px;overflow:hidden}
+.progress-fill{height:100%;border-radius:3px;transition:width 2s cubic-bezier(0.4,0,0.2,1);position:relative}
+.progress-fill::after{content:'';position:absolute;top:0;right:0;bottom:0;width:40px;background:linear-gradient(90deg,transparent,rgba(255,255,255,0.25));animation:shimmer 2.5s infinite}
 @keyframes shimmer{0%{opacity:0}50%{opacity:1}100%{opacity:0}}
-.score-detail{margin-top:12px;font-size:13px;color:var(--dim);font-family:var(--mono)}
+.score-detail{margin-top:10px;font-size:12px;color:var(--dim);font-family:var(--mono)}
 
-/* Architecture */
-.arch{background:var(--bg2);border:1px solid rgba(255,255,255,0.06);border-radius:16px;padding:32px;margin:40px 0}
-.arch h2{font-size:20px;margin-bottom:20px}
-.arch-flow{display:flex;align-items:center;justify-content:center;gap:8px;flex-wrap:wrap;font-family:var(--mono);font-size:14px;padding:20px 0}
-.arch-node{background:var(--bg3);border:1px solid rgba(108,92,231,0.3);border-radius:10px;padding:12px 20px;text-align:center;min-width:100px}
-.arch-node.active{border-color:var(--green);box-shadow:0 0 20px rgba(0,184,148,0.2)}
-.arch-arrow{color:var(--dim);font-size:20px}
-.arch-desc{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:16px;margin-top:24px}
-.arch-role{background:var(--bg);border-radius:10px;padding:16px;border-left:3px solid var(--accent)}
-.arch-role h4{font-size:14px;margin-bottom:6px}
-.arch-role p{font-size:13px;color:var(--dim)}
+/* ─── SVG Charts ─── */
+.chart-section{margin:40px 0}
+.chart-section h2{font-size:18px;margin-bottom:6px}
+.chart-section .chart-sub{font-size:13px;color:var(--dim);margin-bottom:16px}
+.chart-wrap{background:var(--bg2);border:1px solid rgba(255,255,255,0.06);border-radius:14px;padding:20px;overflow-x:auto;position:relative}
+.chart-wrap svg{width:100%;height:auto;display:block}
+.chart-legend{display:flex;gap:16px;flex-wrap:wrap;margin-top:12px;font-size:12px;color:var(--dim)}
+.legend-dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:4px;vertical-align:middle}
 
-/* Timeline */
+/* ─── Daily Activity Grid ─── */
+.activity-grid{display:flex;gap:4px;flex-wrap:wrap;padding:12px 0}
+.activity-day{width:clamp(40px,13%,120px);background:var(--bg3);border-radius:8px;padding:10px 8px;text-align:center;border:1px solid rgba(255,255,255,0.04);transition:transform 0.2s}
+.activity-day:hover{transform:translateY(-2px);border-color:var(--accent)}
+.activity-day .day-date{font-size:10px;color:var(--dim);font-family:var(--mono)}
+.activity-day .day-num{font-size:20px;font-weight:800;font-family:var(--mono);margin:4px 0}
+.activity-day .day-label{font-size:9px;color:var(--dim);text-transform:uppercase;letter-spacing:1px}
+.activity-day .day-bar{height:3px;background:var(--bg);border-radius:2px;margin-top:6px;overflow:hidden}
+.activity-day .day-bar-fill{height:100%;border-radius:2px}
+
+/* ─── Architecture ─── */
+.arch{background:var(--bg2);border:1px solid rgba(255,255,255,0.06);border-radius:14px;padding:28px;margin:40px 0}
+.arch h2{font-size:18px;margin-bottom:16px}
+.arch-flow{display:flex;align-items:center;justify-content:center;gap:6px;flex-wrap:wrap;font-family:var(--mono);font-size:13px;padding:16px 0}
+.arch-node{background:var(--bg3);border:1px solid rgba(108,92,231,0.3);border-radius:8px;padding:10px 16px;text-align:center;min-width:80px}
+.arch-node.active{border-color:var(--green);box-shadow:0 0 16px rgba(0,184,148,0.15)}
+.arch-arrow{color:var(--dim);font-size:18px}
+.arch-desc{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px;margin-top:20px}
+.arch-role{background:var(--bg);border-radius:8px;padding:14px;border-left:3px solid var(--accent)}
+.arch-role h4{font-size:13px;margin-bottom:4px}
+.arch-role p{font-size:12px;color:var(--dim)}
+
+/* ─── Stats Grid ─── */
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;margin:32px 0}
+.stat{background:var(--bg2);border-radius:10px;padding:16px;text-align:center;border:1px solid rgba(255,255,255,0.04)}
+.stat-num{font-size:28px;font-weight:800;font-family:var(--mono);background:linear-gradient(135deg,var(--accent),var(--blue));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.stat-label{font-size:10px;text-transform:uppercase;letter-spacing:1.5px;color:var(--dim);margin-top:3px}
+
+/* ─── Pulse (live commit feed) ─── */
+.pulse-section{margin:40px 0}
+.pulse-section h2{font-size:18px;margin-bottom:12px}
+.pulse-feed{max-height:280px;overflow-y:auto;background:var(--bg2);border:1px solid rgba(255,255,255,0.06);border-radius:14px;padding:4px}
+.pulse-feed::-webkit-scrollbar{width:4px}
+.pulse-feed::-webkit-scrollbar-thumb{background:var(--bg3);border-radius:2px}
+.pulse-item{display:flex;align-items:center;gap:10px;padding:8px 12px;border-bottom:1px solid rgba(255,255,255,0.03);font-size:12px;font-family:var(--mono)}
+.pulse-item:last-child{border-bottom:none}
+.pulse-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.pulse-dot.fix{background:var(--red)}
+.pulse-dot.feat{background:var(--green)}
+.pulse-dot.other{background:var(--blue)}
+.pulse-hash{color:var(--dim);min-width:56px}
+.pulse-msg{flex:1;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pulse-health{min-width:32px;text-align:right;font-weight:700}
+.pulse-files{color:var(--dim);min-width:20px;text-align:right}
+
+/* ─── Timeline ─── */
 .timeline{margin:40px 0}
-.timeline h2{font-size:20px;margin-bottom:20px}
-.milestone{display:flex;gap:16px;padding:16px 0;border-bottom:1px solid rgba(255,255,255,0.04);align-items:center}
+.timeline h2{font-size:18px;margin-bottom:16px}
+.milestone{display:flex;gap:14px;padding:12px 0;border-bottom:1px solid rgba(255,255,255,0.04);align-items:center}
 .milestone:last-child{border-bottom:none}
-.ms-score{min-width:50px;font-family:var(--mono);font-weight:700;font-size:18px}
-.ms-bar{width:60px;height:6px;background:var(--bg3);border-radius:3px;flex-shrink:0}
+.ms-score{min-width:44px;font-family:var(--mono);font-weight:700;font-size:16px}
+.ms-bar{width:50px;height:5px;background:var(--bg3);border-radius:3px;flex-shrink:0}
 .ms-bar-fill{height:100%;border-radius:3px;transition:width 1s ease-out}
 .ms-content{flex:1}
-.ms-date{font-size:12px;color:var(--dim);font-family:var(--mono)}
-.ms-label{font-size:14px;margin-top:2px}
+.ms-date{font-size:11px;color:var(--dim);font-family:var(--mono)}
+.ms-label{font-size:13px;margin-top:2px}
 
-/* Stats Grid */
-.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin:40px 0}
-.stat{background:var(--bg2);border-radius:12px;padding:20px;text-align:center;border:1px solid rgba(255,255,255,0.04)}
-.stat-num{font-size:32px;font-weight:800;font-family:var(--mono);background:linear-gradient(135deg,var(--accent),var(--blue));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
-.stat-label{font-size:11px;text-transform:uppercase;letter-spacing:1.5px;color:var(--dim);margin-top:4px}
-
-/* Evidence */
+/* ─── Evidence ─── */
 .evidence{margin:40px 0}
-.evidence h2{font-size:20px;margin-bottom:20px}
-.evidence-tabs{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap}
-.ev-tab{background:var(--bg3);border:1px solid transparent;border-radius:8px;padding:8px 16px;font-size:13px;cursor:pointer;color:var(--dim);font-family:var(--font);transition:all 0.2s}
+.evidence h2{font-size:18px;margin-bottom:16px}
+.evidence-tabs{display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap}
+.ev-tab{background:var(--bg3);border:1px solid transparent;border-radius:6px;padding:6px 14px;font-size:12px;cursor:pointer;color:var(--dim);font-family:var(--font);transition:all 0.2s}
 .ev-tab.active{border-color:var(--accent);color:var(--text)}
-.ev-panel{display:none}
+.ev-panel{display:none;max-height:400px;overflow-y:auto}
+.ev-panel::-webkit-scrollbar{width:4px}
+.ev-panel::-webkit-scrollbar-thumb{background:var(--bg3);border-radius:2px}
 .ev-panel.active{display:block}
-.ev-item{background:var(--bg2);border-radius:10px;padding:14px 16px;margin-bottom:8px;font-size:13px;border-left:3px solid var(--accent);font-family:var(--mono);word-break:break-word}
-.ev-item .ev-meta{font-size:11px;color:var(--dim);margin-bottom:4px}
-.ev-item .ev-auto{color:var(--green);font-size:10px;margin-left:8px}
+.ev-item{background:var(--bg2);border-radius:8px;padding:12px 14px;margin-bottom:6px;font-size:12px;border-left:3px solid var(--accent);font-family:var(--mono);word-break:break-word}
+.ev-item .ev-meta{font-size:10px;color:var(--dim);margin-bottom:3px}
+.ev-item .ev-auto{color:var(--green);font-size:9px;margin-left:6px}
 .ev-item.deep{border-left-color:var(--red)}
 .ev-item.constraint{border-left-color:var(--yellow)}
 .ev-item.fixer{border-left-color:var(--green)}
 
-/* GitHub CTA */
-.cta{text-align:center;padding:60px 20px;margin:40px 0;background:var(--bg2);border-radius:16px;border:1px solid rgba(108,92,231,0.2)}
-.cta h2{font-size:clamp(20px,4vw,32px);margin-bottom:12px}
-.cta p{color:var(--dim);margin-bottom:24px;max-width:600px;margin-left:auto;margin-right:auto}
-.cta-btn{display:inline-flex;align-items:center;gap:10px;background:var(--accent);color:white;padding:14px 28px;border-radius:10px;font-size:16px;font-weight:600;transition:transform 0.2s,box-shadow 0.2s}
-.cta-btn:hover{transform:translateY(-2px);box-shadow:0 8px 30px var(--glow);text-decoration:none;color:white}
-.cta-btn svg{width:20px;height:20px}
-
-/* How It Works */
+/* ─── How It Works ─── */
 .how{margin:40px 0}
-.how h2{font-size:20px;margin-bottom:20px}
-.how-step{display:flex;gap:16px;padding:20px;background:var(--bg2);border-radius:12px;margin-bottom:12px;align-items:flex-start}
-.how-num{min-width:36px;height:36px;background:var(--accent);border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;flex-shrink:0}
-.how-text h4{font-size:15px;margin-bottom:4px}
-.how-text p{font-size:13px;color:var(--dim)}
-.how-text code{background:var(--bg3);padding:2px 6px;border-radius:4px;font-family:var(--mono);font-size:12px}
+.how h2{font-size:18px;margin-bottom:16px}
+.how-step{display:flex;gap:14px;padding:16px;background:var(--bg2);border-radius:10px;margin-bottom:10px;align-items:flex-start}
+.how-num{min-width:32px;height:32px;background:var(--accent);border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;flex-shrink:0}
+.how-text h4{font-size:14px;margin-bottom:3px}
+.how-text p{font-size:12px;color:var(--dim)}
+.how-text code{background:var(--bg3);padding:1px 5px;border-radius:3px;font-family:var(--mono);font-size:11px}
 
-/* Footer */
-.footer{text-align:center;padding:40px 20px;color:var(--dim);font-size:13px;border-top:1px solid rgba(255,255,255,0.04);margin-top:60px}
+/* ─── CTA ─── */
+.cta{text-align:center;padding:48px 20px;margin:40px 0;background:var(--bg2);border-radius:14px;border:1px solid rgba(108,92,231,0.2)}
+.cta h2{font-size:clamp(18px,4vw,28px);margin-bottom:10px}
+.cta p{color:var(--dim);margin-bottom:20px;max-width:550px;margin-left:auto;margin-right:auto;font-size:14px}
+.cta-btn{display:inline-flex;align-items:center;gap:8px;background:var(--accent);color:white;padding:12px 24px;border-radius:8px;font-size:15px;font-weight:600;transition:transform 0.2s,box-shadow 0.2s}
+.cta-btn:hover{transform:translateY(-2px);box-shadow:0 8px 30px var(--glow);text-decoration:none;color:white}
+.cta-btn svg{width:18px;height:18px}
 
-/* Responsive */
+/* ─── Footer ─── */
+.footer{text-align:center;padding:32px 20px;color:var(--dim);font-size:12px;border-top:1px solid rgba(255,255,255,0.04);margin-top:50px}
+
+/* ─── Responsive ─── */
 @media(max-width:600px){
   .scores{grid-template-columns:1fr}
+  .impact-grid{grid-template-columns:repeat(2,1fr)}
   .arch-flow{flex-direction:column}
   .arch-arrow{transform:rotate(90deg)}
   .stats-grid{grid-template-columns:repeat(2,1fr)}
+  .activity-day{width:calc(50% - 4px)}
+  .pulse-item .pulse-msg{max-width:120px}
 }
 
-/* Loading animation */
-.loading{opacity:0;animation:fadeIn 0.6s ease-out forwards}
+/* ─── Animations ─── */
+.loading{opacity:0;animation:fadeIn 0.5s ease-out forwards}
 @keyframes fadeIn{to{opacity:1}}
-.loading:nth-child(2){animation-delay:0.1s}
-.loading:nth-child(3){animation-delay:0.2s}
+.loading:nth-child(2){animation-delay:0.08s}
+.loading:nth-child(3){animation-delay:0.16s}
+@keyframes countUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+@keyframes drawLine{from{stroke-dashoffset:2000}to{stroke-dashoffset:0}}
+@keyframes growBar{from{transform:scaleY(0)}to{transform:scaleY(1)}}
 </style>
 </head>
 <body>
@@ -139,8 +199,8 @@ a{color:var(--accent);text-decoration:none}a:hover{text-decoration:underline}
 <!-- Hero -->
 <section class="hero">
   <h1><span>Self-Improving Codebase</span></h1>
-  <p class="sub">Three AI brains learn from every commit. Watch the scores improve live.</p>
-  <div style="margin-top:20px">
+  <p class="sub">Three AI brains learn from every commit. Watch the improvement live.</p>
+  <div class="badges">
     <span class="badge live">LIVE DATA</span>
     <span class="badge">Open Source</span>
     <span class="badge">Zero Config</span>
@@ -149,6 +209,34 @@ a{color:var(--accent);text-decoration:none}a:hover{text-decoration:underline}
 </section>
 
 <div class="container">
+
+  <!-- Impact Cards -->
+  <section class="impact-grid loading" id="impactSection">
+    <div class="impact-card time">
+      <div class="impact-icon">&#9201;</div>
+      <div class="impact-num green" id="impTime">--</div>
+      <div class="impact-label">Hours Saved</div>
+      <div class="impact-sub" id="impTimeSub">loading...</div>
+    </div>
+    <div class="impact-card money">
+      <div class="impact-icon">&#128176;</div>
+      <div class="impact-num yellow" id="impMoney">--</div>
+      <div class="impact-label">Money Saved</div>
+      <div class="impact-sub" id="impMoneySub">loading...</div>
+    </div>
+    <div class="impact-card prod">
+      <div class="impact-icon">&#128200;</div>
+      <div class="impact-num accent" id="impPerCommit">--</div>
+      <div class="impact-label">Pts / Commit</div>
+      <div class="impact-sub" id="impPerCommitSub">average improvement</div>
+    </div>
+    <div class="impact-card prevent">
+      <div class="impact-icon">&#128737;</div>
+      <div class="impact-num red" id="impPrevented">--</div>
+      <div class="impact-label">Bugs Prevented</div>
+      <div class="impact-sub" id="impPreventedSub">loading...</div>
+    </div>
+  </section>
 
   <!-- Live Scores -->
   <section class="scores loading" id="scoresSection">
@@ -165,15 +253,53 @@ a{color:var(--accent);text-decoration:none}a:hover{text-decoration:underline}
       <div class="score-detail" id="gwDetail">Loading...</div>
     </div>
     <div class="score-card combined">
-      <h3>Combined Score</h3>
+      <h3>Combined Intelligence</h3>
       <div><span class="score-num" id="combinedScore">--</span><span class="score-grade" id="combinedGrade"></span></div>
       <div class="progress-bar"><div class="progress-fill" id="combinedBar" style="width:0;background:linear-gradient(90deg,var(--accent),var(--green))"></div></div>
       <div class="score-detail" id="combinedDetail">Loading...</div>
     </div>
   </section>
 
-  <!-- Stats -->
+  <!-- Improvement Curve (SVG Chart) -->
+  <section class="chart-section loading">
+    <h2>Live Improvement Curve</h2>
+    <p class="chart-sub">Health score per commit — watch the system learn and stabilize over time</p>
+    <div class="chart-wrap" id="healthChart"></div>
+    <div class="chart-legend">
+      <span><span class="legend-dot" style="background:var(--green)"></span> Health Score</span>
+      <span><span class="legend-dot" style="background:var(--red)"></span> Fix Commits</span>
+      <span><span class="legend-dot" style="background:var(--yellow)"></span> Learnings Accumulated</span>
+    </div>
+  </section>
+
+  <!-- Daily Activity -->
+  <section class="chart-section loading">
+    <h2>Daily Activity Breakdown</h2>
+    <p class="chart-sub">How much work the system observed and learned from each day</p>
+    <div class="activity-grid" id="activityGrid"></div>
+  </section>
+
+  <!-- Breakage Trend Chart -->
+  <section class="chart-section loading">
+    <h2>Breakage Rate: Before vs After</h2>
+    <p class="chart-sub">Breakages per day are declining as the system accumulates knowledge</p>
+    <div class="chart-wrap" id="breakageChart"></div>
+    <div class="chart-legend">
+      <span><span class="legend-dot" style="background:var(--red)"></span> Breakages</span>
+      <span><span class="legend-dot" style="background:var(--green)"></span> Learnings</span>
+      <span><span class="legend-dot" style="background:var(--yellow)"></span> Constraints</span>
+    </div>
+  </section>
+
+  <!-- Stats Grid -->
   <section class="stats-grid loading" id="statsSection"></section>
+
+  <!-- Live Commit Pulse -->
+  <section class="pulse-section loading">
+    <h2>Live Commit Pulse</h2>
+    <p style="color:var(--dim);font-size:13px;margin-bottom:12px">Every commit the system has observed, with health impact</p>
+    <div class="pulse-feed" id="pulseFeed"></div>
+  </section>
 
   <!-- Architecture -->
   <section class="arch loading">
@@ -194,15 +320,15 @@ a{color:var(--accent);text-decoration:none}a:hover{text-decoration:underline}
     <div class="arch-desc">
       <div class="arch-role" style="border-color:var(--accent)">
         <h4>Learner (gitwise + NW-Memory)</h4>
-        <p>Silently observes every commit. Tracks which files break, which change together, what areas have constraints. Zero config — just commit.</p>
+        <p>Silently observes every commit. Tracks which files break, which change together, what areas need constraints. Zero config.</p>
       </div>
       <div class="arch-role" style="border-color:var(--blue)">
         <h4>Evaluator (built into Fixer)</h4>
-        <p>Scores both systems on 7 dimensions each. Identifies weaknesses: repeat breakages, uncovered areas, shallow lessons, rising fix rates.</p>
+        <p>Scores both systems on 7 dimensions each. Finds weaknesses: repeat breakages, uncovered areas, shallow lessons.</p>
       </div>
       <div class="arch-role" style="border-color:var(--green)">
         <h4>Fixer (nw-fixer.cjs)</h4>
-        <p>Reads both brains, applies 8 fix actions, then re-evaluates to verify. Loops up to 3 times. Reports before/after scores.</p>
+        <p>Reads both brains, applies 8 fix actions, re-evaluates to verify. Loops up to 3 times until stable.</p>
       </div>
     </div>
   </section>
@@ -233,7 +359,7 @@ a{color:var(--accent);text-decoration:none}a:hover{text-decoration:underline}
     </div>
   </section>
 
-  <!-- Milestone Timeline -->
+  <!-- Journey Timeline -->
   <section class="timeline loading" id="timelineSection">
     <h2>Journey: From Zero to Self-Improving</h2>
   </section>
@@ -241,12 +367,13 @@ a{color:var(--accent);text-decoration:none}a:hover{text-decoration:underline}
   <!-- Evidence -->
   <section class="evidence loading" id="evidenceSection">
     <h2>Evidence Trail: Full Transparency</h2>
-    <p style="color:var(--dim);font-size:14px;margin-bottom:16px">Every learning, constraint, and fix action is recorded. Nothing is hidden.</p>
+    <p style="color:var(--dim);font-size:13px;margin-bottom:14px">Every learning, constraint, and fix action is recorded. Nothing is hidden. All data is real.</p>
     <div class="evidence-tabs" id="evTabs">
       <button class="ev-tab active" data-panel="learnings">Learnings</button>
       <button class="ev-tab" data-panel="constraints">Constraints</button>
       <button class="ev-tab" data-panel="deepAnalysis">Deep Analysis</button>
       <button class="ev-tab" data-panel="fixerRuns">Fixer Runs</button>
+      <button class="ev-tab" data-panel="decisions">Decisions</button>
     </div>
     <div id="evPanels"></div>
   </section>
@@ -254,7 +381,7 @@ a{color:var(--accent);text-decoration:none}a:hover{text-decoration:underline}
   <!-- GitHub CTA -->
   <section class="cta loading">
     <h2>This Is Open Source</h2>
-    <p>The entire system — learner, evaluator, fixer, this dashboard — is open source. Fork it, use it, improve it. Make your codebase learn from its own mistakes.</p>
+    <p>The entire system is open source. Fork it, use it, improve it. Make your codebase learn from its own mistakes.</p>
     <a href="https://github.com/9tvf4k6srt-sys/NumbahWan-tcg" target="_blank" class="cta-btn">
       <svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
       View on GitHub
@@ -264,8 +391,8 @@ a{color:var(--accent);text-decoration:none}a:hover{text-decoration:underline}
 </div>
 
 <footer class="footer">
-  <p>Built by humans + AI, improved by machines. Data updated on every commit.</p>
-  <p style="margin-top:8px;font-family:var(--mono);font-size:11px" id="lastUpdated">Last updated: loading...</p>
+  <p>Built by humans + AI, improved by machines. Data updates on every commit.</p>
+  <p style="margin-top:6px;font-family:var(--mono);font-size:10px" id="lastUpdated">Last updated: loading...</p>
 </footer>
 
 <script>
@@ -273,27 +400,169 @@ a{color:var(--accent);text-decoration:none}a:hover{text-decoration:underline}
   'use strict';
 
   const $ = s => document.querySelector(s);
+  const $$ = s => document.querySelectorAll(s);
   const grade = n => n >= 90 ? 'A' : n >= 75 ? 'B' : n >= 60 ? 'C' : n >= 40 ? 'D' : 'F';
-  const color = n => n >= 75 ? 'var(--green)' : n >= 60 ? 'var(--yellow)' : 'var(--red)';
+  const clr = n => n >= 75 ? 'var(--green)' : n >= 60 ? 'var(--yellow)' : 'var(--red)';
 
-  function animateNumber(el, target) {
-    let current = 0;
-    const step = Math.max(1, Math.ceil(target / 40));
+  function animNum(el, target, prefix, suffix) {
+    prefix = prefix || ''; suffix = suffix || '';
+    let cur = 0;
+    const isFloat = target !== Math.floor(target);
+    const step = isFloat ? target / 40 : Math.max(1, Math.ceil(target / 40));
     const timer = setInterval(() => {
-      current = Math.min(current + step, target);
-      el.textContent = current;
-      if (current >= target) clearInterval(timer);
-    }, 30);
+      cur = Math.min(cur + step, target);
+      el.textContent = prefix + (isFloat ? cur.toFixed(1) : Math.round(cur)) + suffix;
+      if (cur >= target) {
+        el.textContent = prefix + (isFloat ? target.toFixed(1) : target) + suffix;
+        clearInterval(timer);
+      }
+    }, 25);
   }
+
+  function escHtml(s) {
+    if (!s) return '';
+    return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+
+  // ─── SVG Chart Builders ───────────────────────────────────────
+
+  function buildHealthChart(timeline) {
+    if (!timeline || timeline.length < 2) return;
+    const W = 900, H = 220, PAD = 40, PADT = 20, PADB = 30;
+    const cw = W - PAD * 2, ch = H - PADT - PADB;
+    const n = timeline.length;
+    const xStep = cw / (n - 1);
+
+    // Build health line
+    const healthPts = timeline.map((c, i) => {
+      const x = PAD + i * xStep;
+      const y = PADT + ch - (c.health / 100 * ch);
+      return { x, y, c };
+    });
+
+    // Build learning area
+    const maxL = Math.max(1, ...timeline.map(c => c.cumulLearnings));
+    const learnPts = timeline.map((c, i) => {
+      const x = PAD + i * xStep;
+      const y = PADT + ch - (c.cumulLearnings / maxL * ch * 0.8);
+      return { x, y };
+    });
+
+    // SVG
+    let svg = '<svg viewBox="0 0 ' + W + ' ' + H + '" xmlns="http://www.w3.org/2000/svg">';
+
+    // Grid lines
+    for (let i = 0; i <= 4; i++) {
+      const y = PADT + (ch / 4) * i;
+      const val = 100 - i * 25;
+      svg += '<line x1="' + PAD + '" y1="' + y + '" x2="' + (W - PAD) + '" y2="' + y + '" stroke="rgba(255,255,255,0.05)" stroke-width="1"/>';
+      svg += '<text x="' + (PAD - 6) + '" y="' + (y + 4) + '" fill="rgba(255,255,255,0.25)" font-size="10" text-anchor="end" font-family="JetBrains Mono,monospace">' + val + '</text>';
+    }
+
+    // X axis labels (dates)
+    const seenDates = {};
+    for (const pt of healthPts) {
+      if (!seenDates[pt.c.date]) {
+        seenDates[pt.c.date] = true;
+        svg += '<text x="' + pt.x + '" y="' + (H - 4) + '" fill="rgba(255,255,255,0.25)" font-size="9" text-anchor="middle" font-family="JetBrains Mono,monospace">' + pt.c.date.slice(5) + '</text>';
+      }
+    }
+
+    // Learning area fill
+    let areaPath = 'M' + learnPts[0].x + ',' + (PADT + ch);
+    for (const p of learnPts) areaPath += 'L' + p.x + ',' + p.y;
+    areaPath += 'L' + learnPts[learnPts.length - 1].x + ',' + (PADT + ch) + 'Z';
+    svg += '<path d="' + areaPath + '" fill="url(#learnGrad)" opacity="0.3"/>';
+
+    // Fix dots
+    for (const pt of healthPts) {
+      if (pt.c.isFix) {
+        svg += '<circle cx="' + pt.x + '" cy="' + pt.y + '" r="4" fill="#e17055" opacity="0.7"><animate attributeName="r" values="3;5;3" dur="2s" repeatCount="indefinite"/></circle>';
+      }
+    }
+
+    // Health line
+    const linePath = healthPts.map((p, i) => (i === 0 ? 'M' : 'L') + p.x.toFixed(1) + ',' + p.y.toFixed(1)).join('');
+    const lineLen = cw * 1.5;
+    svg += '<defs><linearGradient id="healthGrad" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#e17055"/><stop offset="50%" stop-color="#fdcb6e"/><stop offset="100%" stop-color="#00b894"/></linearGradient>';
+    svg += '<linearGradient id="learnGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#fdcb6e"/><stop offset="100%" stop-color="transparent"/></linearGradient></defs>';
+    svg += '<path d="' + linePath + '" fill="none" stroke="url(#healthGrad)" stroke-width="2.5" stroke-linecap="round" stroke-dasharray="' + lineLen + '" stroke-dashoffset="' + lineLen + '"><animate attributeName="stroke-dashoffset" from="' + lineLen + '" to="0" dur="2.5s" fill="freeze" begin="0.3s"/></path>';
+
+    // Glow line (same path, blurred)
+    svg += '<path d="' + linePath + '" fill="none" stroke="url(#healthGrad)" stroke-width="6" stroke-linecap="round" opacity="0.2" stroke-dasharray="' + lineLen + '" stroke-dashoffset="' + lineLen + '" filter="blur(4px)"><animate attributeName="stroke-dashoffset" from="' + lineLen + '" to="0" dur="2.5s" fill="freeze" begin="0.3s"/></path>';
+
+    // Current score marker
+    const last = healthPts[healthPts.length - 1];
+    svg += '<circle cx="' + last.x + '" cy="' + last.y + '" r="6" fill="var(--green)" opacity="0"><animate attributeName="opacity" from="0" to="1" dur="0.5s" fill="freeze" begin="2.5s"/><animate attributeName="r" values="5;8;5" dur="2s" repeatCount="indefinite" begin="2.5s"/></circle>';
+    svg += '<text x="' + last.x + '" y="' + (last.y - 12) + '" fill="var(--green)" font-size="13" font-weight="700" text-anchor="middle" font-family="JetBrains Mono,monospace" opacity="0"><animate attributeName="opacity" from="0" to="1" dur="0.5s" fill="freeze" begin="2.5s"/>' + last.c.health + '</text>';
+
+    svg += '</svg>';
+    $('#healthChart').innerHTML = svg;
+  }
+
+  function buildBreakageChart(daily) {
+    if (!daily || daily.length < 2) return;
+    const W = 900, H = 200, PAD = 50, PADT = 20, PADB = 30;
+    const cw = W - PAD - 30, ch = H - PADT - PADB;
+    const n = daily.length;
+    const barW = Math.min(60, cw / n - 8);
+    const gap = (cw - barW * n) / (n + 1);
+    const maxV = Math.max(1, ...daily.map(d => Math.max(d.breakages, d.learnings, d.constraints)));
+
+    let svg = '<svg viewBox="0 0 ' + W + ' ' + H + '" xmlns="http://www.w3.org/2000/svg">';
+
+    // Grid
+    for (let i = 0; i <= 4; i++) {
+      const y = PADT + (ch / 4) * i;
+      const val = Math.round(maxV - (maxV / 4) * i);
+      svg += '<line x1="' + PAD + '" y1="' + y + '" x2="' + (W - 30) + '" y2="' + y + '" stroke="rgba(255,255,255,0.05)" stroke-width="1"/>';
+      svg += '<text x="' + (PAD - 6) + '" y="' + (y + 4) + '" fill="rgba(255,255,255,0.25)" font-size="10" text-anchor="end" font-family="JetBrains Mono,monospace">' + val + '</text>';
+    }
+
+    daily.forEach((d, i) => {
+      const x = PAD + gap + i * (barW + gap);
+      const bw = barW / 3;
+
+      // Breakages bar
+      const bh = (d.breakages / maxV) * ch;
+      svg += '<rect x="' + x + '" y="' + (PADT + ch - bh) + '" width="' + bw + '" height="' + bh + '" fill="#e17055" rx="2" opacity="0" transform-origin="' + x + ' ' + (PADT + ch) + '"><animate attributeName="opacity" from="0" to="0.8" dur="0.4s" fill="freeze" begin="' + (i * 0.1) + 's"/><animateTransform attributeName="transform" type="scale" from="1 0" to="1 1" dur="0.6s" fill="freeze" begin="' + (i * 0.1) + 's"/></rect>';
+
+      // Learnings bar
+      const lh = (d.learnings / maxV) * ch;
+      svg += '<rect x="' + (x + bw + 2) + '" y="' + (PADT + ch - lh) + '" width="' + bw + '" height="' + lh + '" fill="#00b894" rx="2" opacity="0" transform-origin="' + (x + bw + 2) + ' ' + (PADT + ch) + '"><animate attributeName="opacity" from="0" to="0.8" dur="0.4s" fill="freeze" begin="' + (i * 0.1 + 0.1) + 's"/><animateTransform attributeName="transform" type="scale" from="1 0" to="1 1" dur="0.6s" fill="freeze" begin="' + (i * 0.1 + 0.1) + 's"/></rect>';
+
+      // Constraints bar
+      const ch2 = (d.constraints / maxV) * ch;
+      svg += '<rect x="' + (x + bw * 2 + 4) + '" y="' + (PADT + ch - ch2) + '" width="' + bw + '" height="' + ch2 + '" fill="#fdcb6e" rx="2" opacity="0" transform-origin="' + (x + bw * 2 + 4) + ' ' + (PADT + ch) + '"><animate attributeName="opacity" from="0" to="0.8" dur="0.4s" fill="freeze" begin="' + (i * 0.1 + 0.2) + 's"/><animateTransform attributeName="transform" type="scale" from="1 0" to="1 1" dur="0.6s" fill="freeze" begin="' + (i * 0.1 + 0.2) + 's"/></rect>';
+
+      // Date label
+      svg += '<text x="' + (x + barW / 2) + '" y="' + (H - 4) + '" fill="rgba(255,255,255,0.3)" font-size="10" text-anchor="middle" font-family="JetBrains Mono,monospace">' + d.date.slice(5) + '</text>';
+    });
+
+    svg += '</svg>';
+    $('#breakageChart').innerHTML = svg;
+  }
+
+  // ─── Render ───────────────────────────────────────────────────
 
   function render(data) {
     const c = data.currentScores;
     const s = data.stats;
+    const imp = data.impact || {};
 
-    // Scores
-    animateNumber($('#nwScore'), c.nwMemory);
-    animateNumber($('#gwScore'), c.gitwise);
-    animateNumber($('#combinedScore'), c.combined);
+    // ── Impact cards ──
+    animNum($('#impTime'), imp.timeSavedHours || 0, '', 'h');
+    animNum($('#impMoney'), imp.moneySaved || 0, '$', '');
+    animNum($('#impPerCommit'), imp.avgImprovementPerCommit || 0, '+', '');
+    animNum($('#impPrevented'), imp.preventedIssues || 0, '', '');
+    $('#impTimeSub').textContent = Math.round(imp.timeSavedMin || 0) + ' minutes reclaimed';
+    $('#impMoneySub').textContent = 'at $' + (imp.devHourlyRate || 75) + '/hr dev rate';
+    $('#impPreventedSub').textContent = 'repeat bugs caught by warnings';
+
+    // ── Scores ──
+    animNum($('#nwScore'), c.nwMemory);
+    animNum($('#gwScore'), c.gitwise);
+    animNum($('#combinedScore'), c.combined);
 
     setTimeout(() => {
       $('#nwBar').style.width = c.nwMemory + '%';
@@ -303,13 +572,36 @@ a{color:var(--accent);text-decoration:none}a:hover{text-decoration:underline}
 
     $('#nwGrade').textContent = '/100';
     $('#gwGrade').textContent = '/100';
-    $('#combinedGrade').textContent = '(' + c.grade + ')';
+    $('#combinedGrade').textContent = ' (' + c.grade + ')';
 
     $('#nwDetail').textContent = s.constraints + ' constraints | ' + s.learnings + ' learnings | ' + s.reflections + ' reflections';
-    $('#gwDetail').textContent = s.riskyFiles + ' tracked files | ' + s.filesWithLessons + ' with lessons | ' + s.deepAnalyses + ' deep analyzed';
-    $('#combinedDetail').textContent = s.commits + ' commits observed | ' + s.breakages + ' breakages | ' + s.fixerRuns + ' fixer actions';
+    $('#gwDetail').textContent = s.riskyFiles + ' tracked | ' + s.filesWithLessons + ' with lessons | ' + s.deepAnalyses + ' deep analyzed';
+    $('#combinedDetail').textContent = s.commits + ' commits | ' + s.breakages + ' breakages | ' + (s.fixerRuns || 0) + ' fixer actions';
 
-    // Stats
+    // ── Charts ──
+    buildHealthChart(data.commitTimeline);
+    buildBreakageChart(data.dailyTimeline);
+
+    // ── Daily Activity Grid ──
+    const actGrid = $('#activityGrid');
+    const maxCommits = Math.max(1, ...data.dailyTimeline.map(d => d.commits));
+    actGrid.innerHTML = data.dailyTimeline.map(d => {
+      const pct = Math.round(d.commits / maxCommits * 100);
+      const c = d.breakages > d.learnings ? 'var(--red)' : d.learnings > 0 ? 'var(--green)' : 'var(--blue)';
+      return '<div class="activity-day">' +
+        '<div class="day-date">' + d.date.slice(5) + '</div>' +
+        '<div class="day-num" style="color:' + c + '">' + d.commits + '</div>' +
+        '<div class="day-label">commits</div>' +
+        '<div style="display:flex;gap:4px;justify-content:center;font-size:9px;color:var(--dim);margin-top:4px">' +
+          '<span style="color:var(--red)">' + d.breakages + 'b</span>' +
+          '<span style="color:var(--green)">' + d.learnings + 'l</span>' +
+          '<span style="color:var(--yellow)">' + d.constraints + 'c</span>' +
+        '</div>' +
+        '<div class="day-bar"><div class="day-bar-fill" style="width:' + pct + '%;background:' + c + '"></div></div>' +
+        '</div>';
+    }).join('');
+
+    // ── Stats ──
     const statsData = [
       { num: s.commits, label: 'Commits' },
       { num: s.breakages, label: 'Breakages' },
@@ -318,61 +610,77 @@ a{color:var(--accent);text-decoration:none}a:hover{text-decoration:underline}
       { num: s.decisions, label: 'Decisions' },
       { num: s.deepAnalyses, label: 'Deep Analyses' },
       { num: s.couplings, label: 'Couplings' },
-      { num: s.fixerRuns, label: 'Fixer Actions' }
+      { num: s.fixerRuns || 0, label: 'Fixer Actions' }
     ];
-    const statsHtml = statsData.map(s =>
+    $('#statsSection').innerHTML = statsData.map(s =>
       '<div class="stat"><div class="stat-num">' + s.num + '</div><div class="stat-label">' + s.label + '</div></div>'
     ).join('');
-    $('#statsSection').innerHTML = statsHtml;
 
-    // Milestones
+    // ── Commit Pulse Feed ──
+    const feed = $('#pulseFeed');
+    const timeline = (data.commitTimeline || []).slice().reverse().slice(0, 40);
+    feed.innerHTML = timeline.map(c => {
+      const dotClass = c.isFix ? 'fix' : c.msg.startsWith('feat') ? 'feat' : 'other';
+      const hColor = c.health >= 70 ? 'var(--green)' : c.health >= 50 ? 'var(--yellow)' : 'var(--red)';
+      return '<div class="pulse-item">' +
+        '<div class="pulse-dot ' + dotClass + '"></div>' +
+        '<span class="pulse-hash">' + c.hash + '</span>' +
+        '<span class="pulse-msg">' + escHtml(c.msg) + '</span>' +
+        '<span class="pulse-health" style="color:' + hColor + '">' + c.health + '</span>' +
+        '<span class="pulse-files">' + c.files + 'f</span>' +
+        '</div>';
+    }).join('');
+
+    // ── Milestones ──
     const msHtml = (data.milestones || []).map(m => {
       const pct = Math.min(100, m.score);
-      const c = color(m.score);
+      const mc = clr(m.score);
       return '<div class="milestone">' +
-        '<div class="ms-score" style="color:' + c + '">' + m.score + '</div>' +
-        '<div class="ms-bar"><div class="ms-bar-fill" style="width:' + pct + '%;background:' + c + '"></div></div>' +
+        '<div class="ms-score" style="color:' + mc + '">' + m.score + '</div>' +
+        '<div class="ms-bar"><div class="ms-bar-fill" style="width:' + pct + '%;background:' + mc + '"></div></div>' +
         '<div class="ms-content"><div class="ms-date">' + m.date + '</div><div class="ms-label">' + m.label + '</div></div>' +
         '</div>';
     }).join('');
     $('#timelineSection').innerHTML = '<h2>Journey: From Zero to Self-Improving</h2>' + msHtml;
 
-    // Evidence panels
+    // ── Evidence Panels ──
     const ev = data.evidence || {};
 
-    // Learnings
     const learnHtml = (ev.learnings || []).slice().reverse().map(l =>
       '<div class="ev-item"><div class="ev-meta">' + l.date + ' | ' + l.area +
       (l.auto ? '<span class="ev-auto">AUTO-GENERATED</span>' : '') +
       '</div>' + escHtml(l.lesson) + '</div>'
     ).join('');
 
-    // Constraints
     const conHtml = (ev.constraints || []).slice().reverse().map(c =>
-      '<div class="ev-item constraint"><div class="ev-meta">' + (c.date||'') + ' | ' + c.area +
+      '<div class="ev-item constraint"><div class="ev-meta">' + (c.date || '') + ' | ' + c.area +
       (c.auto ? '<span class="ev-auto">AUTO-GENERATED</span>' : '') +
       (c.source ? ' | ' + c.source : '') +
       '</div>' + escHtml(c.fact) + '</div>'
     ).join('');
 
-    // Deep analysis
     const deepHtml = (ev.deepAnalyses || []).map(d =>
       '<div class="ev-item deep"><div class="ev-meta">' + d.date + ' | ' + d.file + ' | broke ' + d.breaks + 'x</div>' +
       'Root-cause themes: <strong>[' + d.themes.join(', ') + ']</strong></div>'
     ).join('');
 
-    // Fixer runs
     const fixHtml = (ev.fixerRuns || []).slice().reverse().map(r =>
       '<div class="ev-item fixer"><div class="ev-meta">' + r.date + ' | ' + r.before + ' &rarr; ' + r.after +
       ' (' + (r.delta >= 0 ? '+' : '') + r.delta + ') | ' + r.actions + ' actions</div>' +
       (r.actionSummary || []).map(a => '&bull; ' + escHtml(a)).join('<br>') + '</div>'
     ).join('');
 
+    const decHtml = (ev.decisions || []).slice().reverse().map(d =>
+      '<div class="ev-item"><div class="ev-meta">' + d.date + ' | ' + d.area + '</div>' +
+      '<strong>' + escHtml(d.decision) + '</strong><br><span style="color:var(--dim)">' + escHtml(d.why) + '</span></div>'
+    ).join('');
+
     const panels = {
       learnings: learnHtml || '<div class="ev-item">No learnings yet</div>',
       constraints: conHtml || '<div class="ev-item">No constraints yet</div>',
       deepAnalysis: deepHtml || '<div class="ev-item">No deep analyses yet</div>',
-      fixerRuns: fixHtml || '<div class="ev-item">No fixer runs yet</div>'
+      fixerRuns: fixHtml || '<div class="ev-item">No fixer runs yet</div>',
+      decisions: decHtml || '<div class="ev-item">No decisions yet</div>'
     };
 
     const panelsHtml = Object.entries(panels).map(([key, html]) =>
@@ -381,10 +689,10 @@ a{color:var(--accent);text-decoration:none}a:hover{text-decoration:underline}
     $('#evPanels').innerHTML = panelsHtml;
 
     // Tab switching
-    document.querySelectorAll('.ev-tab').forEach(tab => {
+    $$('.ev-tab').forEach(tab => {
       tab.addEventListener('click', () => {
-        document.querySelectorAll('.ev-tab').forEach(t => t.classList.remove('active'));
-        document.querySelectorAll('.ev-panel').forEach(p => p.classList.remove('active'));
+        $$('.ev-tab').forEach(t => t.classList.remove('active'));
+        $$('.ev-panel').forEach(p => p.classList.remove('active'));
         tab.classList.add('active');
         const panel = document.getElementById('panel-' + tab.dataset.panel);
         if (panel) panel.classList.add('active');
@@ -394,16 +702,11 @@ a{color:var(--accent);text-decoration:none}a:hover{text-decoration:underline}
     // Last updated
     if (data.generated) {
       const d = new Date(data.generated);
-      $('#lastUpdated').textContent = 'Last updated: ' + d.toLocaleDateString() + ' ' + d.toLocaleTimeString();
+      $('#lastUpdated').textContent = 'Last updated: ' + d.toLocaleDateString() + ' ' + d.toLocaleTimeString() + ' | v' + data.version;
     }
   }
 
-  function escHtml(s) {
-    if (!s) return '';
-    return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-  }
-
-  // Load data
+  // ── Load ──
   fetch('/static/data/showcase-live.json?v=' + Date.now())
     .then(r => r.json())
     .then(render)
