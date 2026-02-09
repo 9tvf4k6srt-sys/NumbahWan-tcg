@@ -265,7 +265,8 @@ const NW_NAV = {
                 { id: 'leaderboard', name: { en: 'Leaderboard', zh: '排行榜', th: 'ลีดเดอร์บอร์ด' }, icon: 'trophy', href: '/leaderboard', isNew: true },
                 { id: 'deckbuilder', name: { en: 'Deck Builder', zh: '卡組', th: 'สร้างเด็ค' }, icon: 'clipboard', href: '/deckbuilder' },
                 { id: 'staking', name: { en: 'Card Staking', zh: '卡牌質押', th: 'เดิมพันการ์ด' }, icon: 'coins', href: '/staking', isNew: true },
-                { id: 'fusion', name: { en: 'Card Fusion', zh: '卡牌融合', th: 'หลอมรวมการ์ด' }, icon: 'lightning', href: '/fusion', isNew: true }
+                { id: 'fusion', name: { en: 'Card Fusion', zh: '卡牌融合', th: 'หลอมรวมการ์ด' }, icon: 'lightning', href: '/fusion', isNew: true },
+                { id: 'collection-stats', name: { en: 'Collection Stats', zh: '收藏统计', th: 'สถิติคอลเลกชัน', ja: 'コレクション統計' }, icon: 'chart', href: '/collection-stats', isNew: true }
             ]
         },
         economy: {
