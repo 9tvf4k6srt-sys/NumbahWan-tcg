@@ -58,7 +58,7 @@ This project uses git hooks to track development context:
 
 ```bash
 # Before your first commit, create a session marker:
-echo $(date +%s) > .nw-session
+echo $(date +%s) > .mycelium-session
 
 # Before touching a sensitive area:
 node mycelium.cjs --premortem <area>

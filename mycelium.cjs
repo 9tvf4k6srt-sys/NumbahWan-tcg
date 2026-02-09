@@ -126,7 +126,7 @@ function getBuildInfo() {
   // Count source files
   const srcFiles = run('find src -name "*.ts" -o -name "*.tsx" 2>/dev/null | wc -l');
   const htmlPages = run('find public -name "*.html" 2>/dev/null | wc -l');
-  const jsModules = run('ls public/static/nw-*.js 2>/dev/null | wc -l');
+  const jsModules = run('find . -name "*.js" -not -path "./node_modules/*" -not -path "./.git/*" 2>/dev/null | wc -l');
   
   return {
     bundleKB: Math.round(bundleSize / 1024),
@@ -411,9 +411,9 @@ function classifyArea(filePath) {
   if (fp.includes('migrat') || fp.includes('schema') || fp.includes('/models/')) return 'database';
   if (fp.includes('deploy') || fp.includes('docker') || fp.includes('.github/workflows')) return 'devops';
   if (fp.includes('.css') || fp.includes('.scss') || fp.includes('.less')) return 'styles';
-  if (fp.includes('memory') || fp.includes('nw-context') || fp.includes('mycelium')) return 'memory';
+  if (fp.includes('memory') || fp.includes('mycelium-context') || fp.includes('mycelium')) return 'memory';
 
-  // 3. Legacy NumbahWan patterns (kept for backward compat — ignored if custom areas have entries)
+  // 3. Legacy patterns (kept for backward compat — ignored if custom areas have entries)
   if (!CONFIG.areas || Object.keys(CONFIG.areas).length === 0) {
     if (fp.includes('battle') || fp.includes('pvp')) return 'battle';
     if (fp.includes('oracle')) return 'oracle';
@@ -1625,7 +1625,7 @@ function compact(memOverride, silent) {
 function brief() {
   const mem = loadMemory();
   const lines = [];
-  lines.push('# NW-CONTEXT (auto-generated — re-read anytime with: cat .nw-context)');
+  lines.push('# MYCELIUM-CONTEXT (auto-generated — re-read anytime with: cat .mycelium-context)');
   lines.push('');
 
   // Health score from recent commits
@@ -1654,7 +1654,7 @@ function brief() {
   lines.push('  [memory] mycelium.cjs — auto-snapshots every commit, scoring, pattern detection');
   lines.push('  [memory] memory.json — ' + mem.snapshots.length + ' snapshots, ' + totalConstraints + ' constraints, ' + (mem.decisions||[]).length + ' decisions, ' + (mem.breakages||[]).length + ' breakages');
   lines.push('  [hooks] .husky/pre-commit — auto-compact, stage memory.json, constraint checker (detects areas from staged files, warns about relevant constraints + breakages)');
-  lines.push('  [hooks] .husky/post-commit — auto-snapshot + refresh .nw-context');
+  lines.push('  [hooks] .husky/post-commit — auto-snapshot + refresh .mycelium-context');
   lines.push('  [cli] --query (full intel), --health (scored), --brief (context file), --premortem <area>, --decide, --constraint, --broke, --compact');
   lines.push('  [scoring] commit quality scoring (focus, fix-chain, churn, size), project health (sliding window, time-decayed churn, retroactive stability, focus bonus)');
   lines.push('  [detection] co-change pairs, hotspot files, fix chains, auto-distilled rules, bundle trend');
@@ -1744,7 +1744,7 @@ function brief() {
   }
 
   // ── WIP section: survives chat compaction ──
-  const wipPath = path.join(__dirname, '.nw-wip');
+  const wipPath = path.join(__dirname, '.mycelium-wip');
   if (fs.existsSync(wipPath)) {
     const wipRaw = fs.readFileSync(wipPath, 'utf8').trim();
     if (wipRaw) {
@@ -1755,7 +1755,7 @@ function brief() {
   }
 
   const content = lines.join('\n');
-  fs.writeFileSync(path.join(__dirname, '.nw-context'), content);
+  fs.writeFileSync(path.join(__dirname, '.mycelium-context'), content);
   console.log(content);
 }
 
@@ -2580,7 +2580,9 @@ function init() {
   const projectName = path.basename(__dirname);
   console.log(`\n# MYCELIUM: Setting up for "${projectName}"\n`);
 
-  // 1. Create memory.json if it doesn't exist
+  // 1. Create .mycelium/ directory + memory.json if they don't exist
+  const myceliumDir = path.join(__dirname, '.mycelium');
+  if (!fs.existsSync(myceliumDir)) fs.mkdirSync(myceliumDir, { recursive: true });
   if (!fs.existsSync(MEMORY_FILE)) {
     fs.writeFileSync(MEMORY_FILE, JSON.stringify({
       version: 2, snapshots: [], patterns: {}, decisions: [], constraints: {}, breakages: [], learnings: [], reflections: [], autoRules: []
@@ -2599,21 +2601,21 @@ function init() {
 if [ ! -f "mycelium.cjs" ]; then exit 0; fi
 
 # Session marker must exist
-if [ ! -f ".nw-session" ]; then
+if [ ! -f ".mycelium-session" ]; then
   echo "" >&2
-  echo "  BLOCKED: No .nw-session file." >&2
-  echo "  Run: cat .nw-context && echo \\$(date +%s) > .nw-session" >&2
+  echo "  BLOCKED: No .mycelium-session file." >&2
+  echo "  Run: cat .mycelium-context && echo \\$(date +%s) > .mycelium-session" >&2
   echo "" >&2
   exit 1
 fi
 
 # Auto-compact if needed
-MEM_SIZE=$(wc -c < memory.json 2>/dev/null || echo 0)
+MEM_SIZE=$(wc -c < .mycelium/memory.json 2>/dev/null || echo 0)
 if [ "$MEM_SIZE" -gt 204800 ]; then
   node mycelium.cjs --compact >/dev/null 2>&1
 fi
 
-git add memory.json 2>/dev/null || true
+git add .mycelium/memory.json 2>/dev/null || true
 
 # Auto-guard: show warnings for areas being touched
 node mycelium.cjs --guard 2>/dev/null >&2 || true
@@ -2652,7 +2654,7 @@ exit 0
   // 4. Add to .gitignore
   const gitignorePath = path.join(__dirname, '.gitignore');
   let gitignore = fs.existsSync(gitignorePath) ? fs.readFileSync(gitignorePath, 'utf8') : '';
-  const additions = ['.nw-session', '.nw-wip', '.nw-context'];
+  const additions = ['.mycelium-session', '.mycelium-wip', '.mycelium-context'];
   let added = 0;
   for (const entry of additions) {
     if (!gitignore.includes(entry)) {
@@ -2674,8 +2676,8 @@ exit 0
 
 ## Before you write any code:
 \`\`\`bash
-cat .nw-context                          # read the project brain
-echo $(date +%s) > .nw-session           # mark session started
+cat .mycelium-context                          # read the project brain
+echo $(date +%s) > .mycelium-session           # mark session started
 node mycelium.cjs --premortem <area>    # check what broke before
 \`\`\`
 
@@ -2714,13 +2716,26 @@ Run \`node mycelium.cjs --onboard\` for a complete guide.
     console.log('  · .mycelium/config.json already exists');
   }
 
-  // 7. Take initial snapshot
+  // 7. Install watcher (if mycelium-watch.cjs exists alongside)
+  const watchScript = path.join(__dirname, 'mycelium-watch.cjs');
+  if (fs.existsSync(watchScript)) {
+    try {
+      execSync(`node "${watchScript}" --install`, { cwd: __dirname, timeout: 30000, stdio: 'pipe' });
+      console.log('  ✓ Installed mycelium-watch (scanned git history, set up hooks)');
+    } catch (e) {
+      console.log('  · mycelium-watch install skipped (run manually: node mycelium-watch.cjs --install)');
+    }
+  } else {
+    console.log('  · mycelium-watch.cjs not found — watch system skipped');
+  }
+
+  // 8. Take initial snapshot
   takeSnapshot();
   brief();
 
   console.log('\n  Setup complete! Start your first session:');
-  console.log('    cat .nw-context');
-  console.log('    echo $(date +%s) > .nw-session');
+  console.log('    cat .mycelium-context');
+  console.log('    echo $(date +%s) > .mycelium-session');
   console.log('    node mycelium.cjs --onboard');
   console.log('');
 }
@@ -2742,8 +2757,8 @@ You are working on a project with ${snapCount} recorded commits, ${constraintCou
 ${breakageCount} breakages, ${decisionCount} decisions, and ${learningCount} learnings.
 
 ## What you MUST do before coding:
-  1. cat .nw-context                          # read project brain — rules, breakages, fragile files
-  2. echo $(date +%s) > .nw-session           # mark session (required or commits are blocked)
+  1. cat .mycelium-context                          # read project brain — rules, breakages, fragile files
+  2. echo $(date +%s) > .mycelium-session           # mark session (required or commits are blocked)
   3. node mycelium.cjs --premortem <area>    # see what broke before in the area you'll touch
 
 ## What you MUST do before committing:
@@ -2835,7 +2850,7 @@ function status() {
   }
 
   // WIP
-  const wipPath = path.join(__dirname, '.nw-wip');
+  const wipPath = path.join(__dirname, '.mycelium-wip');
   if (fs.existsSync(wipPath)) {
     const wip = fs.readFileSync(wipPath, 'utf8').trim();
     if (wip) {
@@ -3359,7 +3374,7 @@ function evaluate() {
     console.log('');
   }
 
-  // After printing, delegate to nw-fixer for cross-system fix → verify
+  // After printing, delegate to mycelium-fix for cross-system fix → verify
   try { callFixer(); } catch { selfHealNw(mem); }
 }
 
@@ -3445,16 +3460,16 @@ if (arg === '--init') {
   showSharedLibrary();
 } else if (arg === '--wip' && process.argv[3]) {
   // Write current work-in-progress to disk so it survives chat compaction
-  const wipPath = path.join(__dirname, '.nw-wip');
+  const wipPath = path.join(__dirname, '.mycelium-wip');
   const wipLine = process.argv.slice(3).join(' ');
   const ts = new Date().toISOString().slice(0, 16);
   fs.writeFileSync(wipPath, `  ${ts} ${wipLine}\n`);
   console.log(`[mycelium] WIP saved: ${wipLine}`);
-  console.log('  This will appear in .nw-context after next commit.');
+  console.log('  This will appear in .mycelium-context after next commit.');
   console.log('  Clear with: node mycelium.cjs --wip-done');
 } else if (arg === '--wip-append' && process.argv[3]) {
   // Append to WIP (for multi-step tasks)
-  const wipPath = path.join(__dirname, '.nw-wip');
+  const wipPath = path.join(__dirname, '.mycelium-wip');
   const existing = fs.existsSync(wipPath) ? fs.readFileSync(wipPath, 'utf8') : '';
   const wipLine = process.argv.slice(3).join(' ');
   const ts = new Date().toISOString().slice(0, 16);
@@ -3462,7 +3477,7 @@ if (arg === '--init') {
   console.log(`[mycelium] WIP appended: ${wipLine}`);
 } else if (arg === '--wip-done') {
   // Clear WIP — task is complete
-  const wipPath = path.join(__dirname, '.nw-wip');
+  const wipPath = path.join(__dirname, '.mycelium-wip');
   if (fs.existsSync(wipPath)) {
     fs.unlinkSync(wipPath);
     console.log('[mycelium] WIP cleared. Good work.');
@@ -3476,7 +3491,7 @@ if (arg === '--init') {
 } else if (arg === '--trending') {
   trending();
 } else if (arg === '--sync') {
-  // Catch up: take snapshot + delegate to nw-fixer for fix → verify → confirm
+  // Catch up: take snapshot + delegate to mycelium-fix for fix → verify → confirm
   console.log('[mycelium] Syncing after pull/merge...');
   takeSnapshot();
   try { callFixer(); } catch {

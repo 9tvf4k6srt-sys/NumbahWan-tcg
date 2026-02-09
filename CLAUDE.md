@@ -1,26 +1,26 @@
 # CLAUDE.md — Mycelium Session Protocol
 
 ## !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-## !! STOP. READ .nw-context BEFORE YOU WRITE A SINGLE LINE OF CODE.
+## !! STOP. READ .mycelium-context BEFORE YOU WRITE A SINGLE LINE OF CODE.
 ## !! YOU SKIPPED THIS LAST SESSION AND WASTED THE USER'S TIME.
-## !! RUN: cat .nw-context
+## !! RUN: cat .mycelium-context
 ## !! IF YOU DON'T, THE PRE-COMMIT HOOK WILL BLOCK YOUR COMMIT.
 ## !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 ## Session Startup Checklist (MANDATORY — do ALL of these FIRST)
 ```bash
 # 1. Read the brain — this has rules, breakages, decisions, fragile files
-cat .nw-context
+cat .mycelium-context
 
 # 2. Create session marker (REQUIRED or commits will be blocked)
-echo $(date +%s) > .nw-session
+echo $(date +%s) > .mycelium-session
 
 # 3. Pre-mortem for the area you're about to touch
 node mycelium.cjs --premortem <area>
 ```
 
 If you skip steps 1-2, the pre-commit hook will reject your commit with:
-`BLOCKED: No .nw-session file. Read CLAUDE.md and run the startup checklist.`
+`BLOCKED: No .mycelium-session file. Read CLAUDE.md and run the startup checklist.`
 
 ## CRITICAL: Mobile-First iOS Development
 
@@ -74,9 +74,9 @@ This isn't optional. Every session produces knowledge. Record it.
 
 ## The Protocol
 ```
-1. cat .nw-context              ← read the brain (includes WIP if any)
-2. echo $(date +%s) > .nw-session  ← mark session started
-3. IF .nw-context has WIP section ← RESUME that work, do NOT re-plan
+1. cat .mycelium-context              ← read the brain (includes WIP if any)
+2. echo $(date +%s) > .mycelium-session  ← mark session started
+3. IF .mycelium-context has WIP section ← RESUME that work, do NOT re-plan
 4. premortem for your area      ← check what broke before
 5. --wip "what I'm doing now"   ← save task state to disk (survives compaction)
 6. work                         ← build the thing
@@ -85,7 +85,7 @@ This isn't optional. Every session produces knowledge. Record it.
 9. --wip-done                   ← clear WIP after task complete
 10. node bin/mycelium.cjs ship "msg" ← DEPLOY: auth→test→sync→push→PR→merge
      ↑                                                    │
-     └──── .nw-context auto-refreshed on every commit ───┘
+     └──── .mycelium-context auto-refreshed on every commit ───┘
 ```
 
 ## CRITICAL: Deployment — ALWAYS use `mycelium ship`
@@ -103,7 +103,7 @@ Steps: [1] auto-commit → [2] validate (eval+tests) → [3] refresh auth → [4
 ## CRITICAL: Chat Compaction Survival
 Chat platforms compress history, which **destroys in-flight task state** (todo lists, progress).
 The fix: write your current task to disk with `--wip` BEFORE starting work.
-After compaction, `.nw-context` will show the WIP section and you can RESUME instead of re-planning.
+After compaction, `.mycelium-context` will show the WIP section and you can RESUME instead of re-planning.
 ```bash
 # Starting a multi-step task:
 node mycelium.cjs --wip "upgrading battle arena v8 — step 1: refactor CSS"
@@ -118,7 +118,7 @@ node mycelium.cjs --wip-done
 ## Quick Reference
 | When | Do |
 |------|-----|
-| Session start | `cat .nw-context` then `echo $(date +%s) > .nw-session` |
+| Session start | `cat .mycelium-context` then `echo $(date +%s) > .mycelium-session` |
 | Before modifying an area | `node mycelium.cjs --premortem <area>` |
 | Before modifying a specific file | `node mycelium.cjs --whyfile <path>` |
 | After fixing a bug | `node mycelium.cjs --postfix` then `--learned` |
