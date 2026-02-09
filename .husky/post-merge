@@ -1,0 +1,17 @@
+#!/bin/sh
+# NW-MEMORY + gitwise: Post-merge — learn from pulled/merged commits
+# This fires after: git pull, git merge, PR merge-back
+# Without this, commits that arrive via PR merge are invisible to learning
+# This is what makes the system TRULY automatic — no manual --heal needed
+
+# ─── gitwise: catch up on all new commits ───
+if [ -f "gitwise.cjs" ]; then
+  node "gitwise.cjs" --sync 2>/dev/null || true
+fi
+
+# ─── NW-MEMORY: sync snapshot + force eval/heal ───
+if [ -f "nw-memory.cjs" ]; then
+  node nw-memory.cjs --sync 2>/dev/null || true
+fi
+
+exit 0

@@ -2859,9 +2859,9 @@ function selfHealNw(mem) {
   const totalSnapshots = (mem.snapshots || []).length;
   if (totalSnapshots < 10) return;
 
-  // Only run every 10 snapshots to avoid overhead
+  // Run every 3 snapshots (was 10 — too conservative, missed heal cycles due to squashing)
   const lastHealAt = mem.healState?.lastHealAt || 0;
-  if (totalSnapshots - lastHealAt < 10) return;
+  if (totalSnapshots - lastHealAt < 3) return;
 
   const result = runNwEval(mem);
   if (!result) return;
@@ -3221,6 +3221,21 @@ if (arg === '--init') {
   }
 } else if (arg === '--compact') {
   compact();
+} else if (arg === '--sync') {
+  // Catch up: take snapshot + force eval/heal regardless of interval
+  console.log('[NW-MEMORY] Syncing after pull/merge...');
+  takeSnapshot();
+  const mem = loadMemory();
+  if (mem.snapshots && mem.snapshots.length >= 10) {
+    // Force self-heal by resetting lastHealAt
+    if (!mem.healState) mem.healState = {};
+    mem.healState.lastHealAt = 0;
+    saveMemory(mem);
+    selfHealNw(mem);
+    console.log('[NW-MEMORY] Sync complete — snapshot + self-heal done.');
+  } else {
+    console.log('[NW-MEMORY] Sync complete — snapshot saved.');
+  }
 } else {
   takeSnapshot();
 }

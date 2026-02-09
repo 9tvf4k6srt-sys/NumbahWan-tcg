@@ -405,6 +405,97 @@ function detectPatterns(mem) {
   return newPatterns;
 }
 
+// ─── Sync: Catch up on all commits not yet in memory ────────────────
+// Runs after git pull / git merge / PR merge-back.
+// Scans recent git log, learns from any commits not already recorded.
+
+function sync() {
+  const mem = load();
+  const knownHashes = new Set(mem.commits.map(c => c.hash));
+
+  // Get last 50 commits (covers most PR merges)
+  const logRaw = git('log "--pretty=format:%h|%s|%ai" --name-only -50');
+  if (!logRaw) return;
+
+  const lines = logRaw.split('\n');
+  const newCommits = [];
+  let current = null;
+
+  for (const line of lines) {
+    const commitMatch = line.match(/^([a-f0-9]+)\|(.+)\|(\d{4}-\d{2}-\d{2})/);
+    if (commitMatch) {
+      if (current && current.files.length > 0 && !knownHashes.has(current.hash)) {
+        newCommits.push(current);
+      }
+      const [, hash, msg, date] = commitMatch;
+      const { isFix } = detectFix(msg);
+      current = { hash, msg: msg.slice(0, 120), date, files: [], isFix };
+    } else if (current && line.trim() && !line.startsWith('|')) {
+      const file = line.trim();
+      if (!isNoise(file)) current.files.push(file);
+    }
+  }
+  if (current && current.files.length > 0 && !knownHashes.has(current.hash)) {
+    newCommits.push(current);
+  }
+
+  if (newCommits.length === 0) return;
+
+  // Process newest-first → oldest-first for chronological order
+  newCommits.reverse();
+
+  let fixCount = 0;
+  for (const c of newCommits) {
+    mem.commits.push(c);
+    mem.stats.totalCommits++;
+
+    // Hotspots
+    for (const f of c.files) {
+      mem.hotspots[f] = (mem.hotspots[f] || 0) + 1;
+    }
+
+    // Couplings
+    if (c.files.length >= 2 && c.files.length <= 15) {
+      for (let i = 0; i < c.files.length; i++) {
+        for (let j = i + 1; j < c.files.length; j++) {
+          const pair = [c.files[i], c.files[j]].sort().join('<->');
+          mem.couplings[pair] = (mem.couplings[pair] || 0) + 1;
+        }
+      }
+    }
+
+    // Fix processing
+    if (c.isFix) {
+      mem.stats.totalFixes++;
+      fixCount++;
+      const lesson = extractLesson(c.hash, c.msg, c.files, mem.commits.slice(-10));
+      const breakage = { pattern: c.msg.slice(0, 100), files: c.files, date: c.date, fixHash: c.hash, lesson };
+      mem.breakages.push(breakage);
+
+      for (const f of c.files) {
+        if (!mem.risks[f]) mem.risks[f] = { breakCount: 0, lastBreak: '', lessons: [] };
+        mem.risks[f].breakCount++;
+        mem.risks[f].lastBreak = c.date;
+        if (lesson && !mem.risks[f].lessons.includes(lesson) && mem.risks[f].lessons.length < 10) {
+          mem.risks[f].lessons.push(lesson);
+        }
+      }
+    }
+  }
+
+  // Detect patterns
+  const newPatterns = detectPatterns(mem);
+  if (newPatterns.length > 0) mem.patterns.push(...newPatterns);
+
+  mem.stats.lastScan = new Date().toISOString();
+  save(mem);
+
+  console.log(`  gitwise sync: ${newCommits.length} new commits (${fixCount} fixes) learned`);
+
+  // Auto-heal with new data
+  selfHeal(mem);
+}
+
 // ─── Post-Commit: Learn ─────────────────────────────────────────────
 // Called silently after every commit. Extracts knowledge from git history.
 
@@ -570,6 +661,31 @@ function warn() {
       warnings.push({
         severity: 'high',
         msg: `You're editing files that were just fixed (${lastCommit.hash}) — potential fix chain`
+      });
+    }
+  }
+
+  // 5. Constraint warnings: show NW-Memory constraints synced to this file
+  for (const f of staged) {
+    const risk = mem.risks[f];
+    if (risk && risk.constraints && risk.constraints.length > 0) {
+      for (const c of risk.constraints.slice(0, 2)) {  // max 2 per file
+        warnings.push({
+          severity: 'medium',
+          msg: `${f} has constraint: ${c.slice(0, 100)}`
+        });
+      }
+    }
+  }
+
+  // 6. Deep analysis warnings: surface root-cause themes for repeat offenders
+  for (const f of staged) {
+    const risk = mem.risks[f];
+    if (risk && risk.deepAnalysis && risk.deepAnalysis.length > 0) {
+      const latest = risk.deepAnalysis[risk.deepAnalysis.length - 1];
+      warnings.push({
+        severity: 'high',
+        msg: `${f} root-cause themes: [${latest.themes.join(', ')}] (${risk.breakCount}x broken)`
       });
     }
   }
@@ -1152,9 +1268,9 @@ function evaluate() {
 function selfHeal(mem) {
   if (!mem || mem.commits.length < 20) return;
 
-  // Only run every 10 commits to avoid overhead
+  // Run every 3 commits (was 10 — too conservative, missed heal cycles due to squashing)
   const lastHealAt = mem.stats.lastHealAt || 0;
-  if (mem.commits.length - lastHealAt < 10) return;
+  if (mem.commits.length - lastHealAt < 3) return;
 
   const result = runEval(mem);
   if (!result) return;
@@ -1263,6 +1379,96 @@ function selfHeal(mem) {
     }
   }
 
+  // ── Action 7: Deep root-cause analysis for repeat offenders ──
+  // This is the #1 weakness: "root cause not deep enough" — gitwise eval says learning is NOT working
+  // because files keep breaking even with lessons. We need deeper WHY analysis.
+  if (result.scores.repeatBreakage < 50) {
+    const worstOffenders = Object.entries(mem.risks)
+      .filter(([, r]) => r.breakCount >= 2)
+      .sort((a, b) => b[1].breakCount - a[1].breakCount)
+      .slice(0, 10);
+
+    for (const [file, risk] of worstOffenders) {
+      // Gather ALL breakages for this file
+      const fileBreakages = mem.breakages.filter(b => b.files.includes(file));
+      if (fileBreakages.length < 2) continue;
+
+      // Extract patterns: what words/themes repeat across breakages?
+      const allLessons = fileBreakages.map(b => (b.lesson || b.pattern || '').toLowerCase());
+      const wordFreq = {};
+      for (const lesson of allLessons) {
+        // Extract meaningful tokens (3+ chars, skip common words)
+        const skip = new Set(['the','and','for','was','not','that','with','this','from','but','are','fix','add','bug']);
+        const tokens = lesson.match(/[a-z]{3,}/g) || [];
+        for (const t of tokens) {
+          if (!skip.has(t)) wordFreq[t] = (wordFreq[t] || 0) + 1;
+        }
+      }
+
+      // Find recurring themes (words appearing in 2+ breakages = root cause signal)
+      const recurringThemes = Object.entries(wordFreq)
+        .filter(([, count]) => count >= 2)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 5)
+        .map(([word]) => word);
+
+      if (recurringThemes.length > 0) {
+        const rootCause = `DEEP ROOT-CAUSE: broke ${risk.breakCount}x — recurring themes: [${recurringThemes.join(', ')}]. ` +
+          `Common file pairs: ${fileBreakages.flatMap(b => b.files).filter(f => f !== file).slice(0, 3).join(', ') || 'none'}. ` +
+          `Pattern: ${fileBreakages.length} breakages share these themes, suggesting a structural/coupling issue.`;
+
+        // Store as a deep-analysis entry (separate from lessons)
+        if (!risk.deepAnalysis) risk.deepAnalysis = [];
+        const exists = risk.deepAnalysis.some(d => d.themes.join(',') === recurringThemes.join(','));
+        if (!exists) {
+          risk.deepAnalysis.push({
+            date: new Date().toISOString().slice(0, 10),
+            themes: recurringThemes,
+            breakCount: risk.breakCount,
+            rootCause,
+            source: 'self-heal: deep root-cause analysis (Action 7)'
+          });
+          // Also promote to a lesson if it's new knowledge
+          if (!risk.lessons.includes(rootCause) && risk.lessons.length < 10) {
+            risk.lessons.push(rootCause);
+          }
+          actions.push(`deep analysis [${file}]: themes=[${recurringThemes.join(',')}] (${risk.breakCount}x broken)`);
+        }
+      }
+    }
+  }
+
+  // ── Action 8: Cross-system sync — read NW-Memory constraints into gitwise warnings ──
+  // NW-Memory tracks constraints by area (battle, i18n, cards...), gitwise tracks by file.
+  // Bridge: map area → files using gitwise breakage data (file paths contain area keywords).
+  try {
+    const nwMemPath = path.join(__dirname, 'memory.json');
+    if (fs.existsSync(nwMemPath)) {
+      const nwMem = JSON.parse(fs.readFileSync(nwMemPath, 'utf8'));
+      const constraints = nwMem.constraints || {};
+      let synced = 0;
+      for (const [area, areaConstraints] of Object.entries(constraints)) {
+        if (!areaConstraints || areaConstraints.length === 0) continue;
+        // Map area to gitwise files: file path must contain the area keyword
+        const areaLower = area.toLowerCase();
+        const matchingFiles = Object.keys(mem.risks).filter(f =>
+          f.toLowerCase().includes(areaLower) ||
+          f.toLowerCase().includes(areaLower.replace(/s$/, ''))  // battle→battle, cards→card
+        );
+        for (const f of matchingFiles) {
+          if (!mem.risks[f].constraints) mem.risks[f].constraints = [];
+          for (const c of areaConstraints) {
+            if (!mem.risks[f].constraints.includes(c.fact) && mem.risks[f].constraints.length < 10) {
+              mem.risks[f].constraints.push(c.fact);
+              synced++;
+            }
+          }
+        }
+      }
+      if (synced > 0) actions.push(`synced ${synced} NW-Memory constraints into gitwise risk data`);
+    }
+  } catch { /* NW-Memory not available */ }
+
   // Store results
   mem.stats.lastHealAt = mem.commits.length;
   mem.stats.lastHealDate = new Date().toISOString().slice(0, 10);
@@ -1351,6 +1557,8 @@ if (arg === '--install' || arg === 'install') {
   evaluate();
 } else if (arg === '--backfill' || arg === 'backfill') {
   backfill();
+} else if (arg === '--sync' || arg === 'sync') {
+  sync();
 } else if (arg === '--uninstall' || arg === 'uninstall') {
   uninstall();
 } else {
