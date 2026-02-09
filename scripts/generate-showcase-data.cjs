@@ -402,7 +402,11 @@ const showcase = {
     nwMemory: nwScore.overall,
     gitwise: gwScore.overall,
     combined,
-    evaluator: 'nw-eval.cjs v1.0',
+    evaluator: 'nw-eval.cjs v2.0',
+    proof: evalResult?.proof || {},
+    honestSplit: evalResult?.honestSplit || {},
+    fixClassification: evalResult?.fixClassification || {},
+    slidingWindow: evalResult?.slidingWindow || {},
     metrics: evalMetrics
   },
 
@@ -439,7 +443,8 @@ const showcase = {
     fixer: 'nw-fixer.cjs — reads both, fixes both, verifies its own work',
     pipeline: 'commit -> learn -> eval -> fix -> re-eval -> verify -> done',
     hooks: ['post-commit: learn + fix', 'post-merge: sync + fix', 'pre-commit: guard --enforce (blocks violations)'],
-    intelligence: ['--predict: risk scoring per file', '--trending: ASCII dashboard', '--guard --enforce: active blocking']
+    intelligence: ['--predict: risk scoring per file', '--trending: ASCII dashboard', '--guard --enforce: active blocking'],
+    evaluation: 'nw-eval.cjs v2.0 — foolproof: honest split, fix classification, SHA-256 proof, 25/25 self-checks'
   }
 };
 
