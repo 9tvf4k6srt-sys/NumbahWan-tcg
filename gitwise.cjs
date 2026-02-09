@@ -492,8 +492,8 @@ function sync() {
 
   console.log(`  gitwise sync: ${newCommits.length} new commits (${fixCount} fixes) learned`);
 
-  // Auto-heal with new data
-  selfHeal(mem);
+  // Delegate to nw-fixer for cross-system fix → verify → confirm
+  callFixer();
 }
 
 // ─── Post-Commit: Learn ─────────────────────────────────────────────
@@ -582,8 +582,8 @@ function learn() {
   mem.stats.lastScan = new Date().toISOString();
   save(mem);
 
-  // Self-heal: auto-evaluate and fix weak scores every 10 commits
-  selfHeal(mem);
+  // Delegate to nw-fixer for cross-system fix → verify → confirm
+  callFixer();
 }
 
 // ─── Pre-Commit: Warn ───────────────────────────────────────────────
@@ -1261,6 +1261,25 @@ function evaluate() {
   }
 }
 
+// ─── Delegate to nw-fixer: the unified fix → verify → confirm system ─
+// selfHeal is kept for backwards compat but the primary path is nw-fixer.
+
+function callFixer(force) {
+  try {
+    const fixerPath = path.join(__dirname, 'nw-fixer.cjs');
+    if (fs.existsSync(fixerPath)) {
+      const flag = force ? '--force' : '--silent';
+      require('child_process').execSync(`node "${fixerPath}" ${flag}`, {
+        cwd: __dirname, stdio: force ? 'inherit' : 'pipe', timeout: 30000
+      });
+    } else {
+      // Fallback: run old selfHeal if nw-fixer not available
+      const mem = load();
+      selfHeal(mem);
+    }
+  } catch { /* best effort */ }
+}
+
 // ─── Self-Heal: auto-eval + auto-fix weak scores ──────────────────
 // Runs silently every N commits. Detects weaknesses and takes corrective action.
 // This is what turns gitwise from a measurement tool into a self-improving system.
@@ -1548,12 +1567,8 @@ if (arg === '--install' || arg === 'install') {
 } else if (arg === '--eval' || arg === 'eval') {
   evaluate();
 } else if (arg === '--heal' || arg === 'heal') {
-  const mem = load();
-  // Force heal by resetting lastHealAt
-  mem.stats.lastHealAt = 0;
-  selfHeal(mem);
-  save(mem);
-  // Then show the eval so you can see the result
+  // Delegate to nw-fixer (the unified fixer)
+  callFixer(true);
   evaluate();
 } else if (arg === '--backfill' || arg === 'backfill') {
   backfill();

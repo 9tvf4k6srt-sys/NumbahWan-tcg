@@ -1,17 +1,28 @@
 #!/bin/sh
-# NW-MEMORY + gitwise: Post-merge — learn from pulled/merged commits
-# This fires after: git pull, git merge, PR merge-back
-# Without this, commits that arrive via PR merge are invisible to learning
-# This is what makes the system TRULY automatic — no manual --heal needed
+# ═══════════════════════════════════════════════════════════════════
+# NW Pipeline: post-merge — LEARN + FIX for pulled/merged commits
+# ═══════════════════════════════════════════════════════════════════
+#
+# Without this, commits arriving via PR merge are invisible to learning.
+# Fires after: git pull, git merge, PR merge-back
+#
+# Three roles, same as post-commit:
+#   1. LEARNER:    gitwise --sync + nw-memory --sync
+#   2. EVALUATOR:  built into nw-fixer
+#   3. FIXER:      nw-fixer.cjs (fix → verify → confirm)
+# ═══════════════════════════════════════════════════════════════════
 
-# ─── gitwise: catch up on all new commits ───
+# ─── STEP 1: LEARN (sync all new commits) ───
 if [ -f "gitwise.cjs" ]; then
   node "gitwise.cjs" --sync 2>/dev/null || true
 fi
-
-# ─── NW-MEMORY: sync snapshot + force eval/heal ───
 if [ -f "nw-memory.cjs" ]; then
   node nw-memory.cjs --sync 2>/dev/null || true
+fi
+
+# ─── STEP 2+3: FIX + VERIFY ───
+if [ -f "nw-fixer.cjs" ]; then
+  node "nw-fixer.cjs" --silent 2>/dev/null || true
 fi
 
 exit 0
