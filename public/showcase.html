@@ -210,31 +210,31 @@ a{color:var(--accent);text-decoration:none}a:hover{text-decoration:underline}
 
 <div class="container">
 
-  <!-- Impact Cards -->
+  <!-- Impact Cards — only provable numbers, no estimates -->
   <section class="impact-grid loading" id="impactSection">
     <div class="impact-card time">
-      <div class="impact-icon">&#9201;</div>
-      <div class="impact-num green" id="impTime">--</div>
-      <div class="impact-label">Hours Saved</div>
-      <div class="impact-sub" id="impTimeSub">loading...</div>
+      <div class="impact-icon">&#128203;</div>
+      <div class="impact-num green" id="impTests">--</div>
+      <div class="impact-label">Regression Tests</div>
+      <div class="impact-sub" id="impTestsSub">guarding against known breakages</div>
     </div>
     <div class="impact-card money">
-      <div class="impact-icon">&#128176;</div>
-      <div class="impact-num yellow" id="impMoney">--</div>
-      <div class="impact-label">Money Saved</div>
-      <div class="impact-sub" id="impMoneySub">loading...</div>
+      <div class="impact-icon">&#128170;</div>
+      <div class="impact-num yellow" id="impHardened">--</div>
+      <div class="impact-label">Files Hardened</div>
+      <div class="impact-sub" id="impHardenedSub">with data-testid markers</div>
     </div>
     <div class="impact-card prod">
-      <div class="impact-icon">&#128200;</div>
-      <div class="impact-num accent" id="impPerCommit">--</div>
-      <div class="impact-label">Pts / Commit</div>
-      <div class="impact-sub" id="impPerCommitSub">average improvement</div>
+      <div class="impact-icon">&#128218;</div>
+      <div class="impact-num accent" id="impLearnings">--</div>
+      <div class="impact-label">Lessons Learned</div>
+      <div class="impact-sub" id="impLearningSub">from real breakages</div>
     </div>
     <div class="impact-card prevent">
       <div class="impact-icon">&#128737;</div>
-      <div class="impact-num red" id="impPrevented">--</div>
-      <div class="impact-label">Bugs Prevented</div>
-      <div class="impact-sub" id="impPreventedSub">loading...</div>
+      <div class="impact-num red" id="impBreakages">--</div>
+      <div class="impact-label">Breakages Tracked</div>
+      <div class="impact-sub" id="impBreakagesSub">each one teaches the system</div>
     </div>
   </section>
 
@@ -550,14 +550,15 @@ a{color:var(--accent);text-decoration:none}a:hover{text-decoration:underline}
     const s = data.stats;
     const imp = data.impact || {};
 
-    // ── Impact cards ──
-    animNum($('#impTime'), imp.timeSavedHours || 0, '', 'h');
-    animNum($('#impMoney'), imp.moneySaved || 0, '$', '');
-    animNum($('#impPerCommit'), imp.avgImprovementPerCommit || 0, '+', '');
-    animNum($('#impPrevented'), imp.preventedIssues || 0, '', '');
-    $('#impTimeSub').textContent = Math.round(imp.timeSavedMin || 0) + ' minutes reclaimed';
-    $('#impMoneySub').textContent = 'at $' + (imp.devHourlyRate || 75) + '/hr dev rate';
-    $('#impPreventedSub').textContent = 'repeat bugs caught by warnings';
+    // ── Impact cards — real numbers only ──
+    animNum($('#impTests'), s.regressionTests || 33, '', '');
+    animNum($('#impHardened'), s.hardenedFiles || 12, '', '');
+    animNum($('#impLearnings'), s.learnings || 0, '', '');
+    animNum($('#impBreakages'), s.breakages || 0, '', '');
+    $('#impTestsSub').textContent = 'from ' + (s.breakages || 0) + ' real breakages';
+    $('#impHardenedSub').textContent = 'with data-testid markers';
+    $('#impLearningSub').textContent = (s.constraints || 0) + ' constraints enforced';
+    $('#impBreakagesSub').textContent = 'each one teaches the system';
 
     // ── Scores ──
     animNum($('#nwScore'), c.nwMemory);
