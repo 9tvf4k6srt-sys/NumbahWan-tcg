@@ -904,9 +904,9 @@ function takeSnapshot() {
   saveMemory(mem);
   console.log(`[NW-MEMORY] Snapshot saved: ${commit.hash} | ${build.bundleKB}KB | +${commit.added}/-${commit.removed} lines`);
 
-  // Self-heal: auto-evaluate and auto-fix after every learning event
-  // Runs silently every 10 snapshots — this is what makes it self-improving
-  try { selfHealNw(mem); } catch { /* best-effort self-heal */ }
+  // Delegate to nw-fixer: the unified fix → verify → confirm system
+  // Runs silently after every learning event — selfHealNw kept as fallback
+  try { callFixer(); } catch { try { selfHealNw(mem); } catch { /* best-effort */ } }
 }
 
 // ─── Query: What an AI should read at session start ─────────────────
@@ -2849,6 +2849,19 @@ function runNwEval(mem) {
   };
 }
 
+// ─── Delegate to nw-fixer: unified fix → verify → confirm system ────
+// selfHealNw kept as fallback when nw-fixer.cjs is not present.
+
+function callFixer(force) {
+  const fixerPath = path.join(__dirname, 'nw-fixer.cjs');
+  if (!fs.existsSync(fixerPath)) return false;
+  const flag = force ? '--force' : '--silent';
+  require('child_process').execSync(`node "${fixerPath}" ${flag}`, {
+    cwd: __dirname, stdio: force ? 'inherit' : 'pipe', timeout: 30000
+  });
+  return true;
+}
+
 // ─── Self-Heal NW-Memory: auto-eval + auto-fix weak scores ──────────
 // Runs silently every 10 snapshots inside takeSnapshot().
 // Detects weaknesses and takes corrective action without human intervention.
@@ -3116,8 +3129,8 @@ function evaluate() {
     console.log('');
   }
 
-  // After printing, also run self-heal to auto-fix anything weak
-  selfHealNw(mem);
+  // After printing, delegate to nw-fixer for cross-system fix → verify
+  try { callFixer(); } catch { selfHealNw(mem); }
 }
 
 // ─── Main ───────────────────────────────────────────────────────────
@@ -3132,12 +3145,13 @@ if (arg === '--init') {
 } else if (arg === '--eval') {
   evaluate();
 } else if (arg === '--heal') {
-  // Force self-heal: evaluate + auto-fix + show results
-  const mem = loadMemory();
-  // Reset heal gate so it runs immediately
-  if (mem.healState) mem.healState.lastHealAt = 0;
-  selfHealNw(mem);
-  // Then show full eval
+  // Delegate to nw-fixer: unified fix → verify → confirm
+  try { callFixer(true); } catch {
+    // Fallback: legacy selfHeal
+    const mem = loadMemory();
+    if (mem.healState) mem.healState.lastHealAt = 0;
+    selfHealNw(mem);
+  }
   evaluate();
 } else if (arg === '--query') {
   query();
@@ -3222,20 +3236,20 @@ if (arg === '--init') {
 } else if (arg === '--compact') {
   compact();
 } else if (arg === '--sync') {
-  // Catch up: take snapshot + force eval/heal regardless of interval
+  // Catch up: take snapshot + delegate to nw-fixer for fix → verify → confirm
   console.log('[NW-MEMORY] Syncing after pull/merge...');
   takeSnapshot();
-  const mem = loadMemory();
-  if (mem.snapshots && mem.snapshots.length >= 10) {
-    // Force self-heal by resetting lastHealAt
-    if (!mem.healState) mem.healState = {};
-    mem.healState.lastHealAt = 0;
-    saveMemory(mem);
-    selfHealNw(mem);
-    console.log('[NW-MEMORY] Sync complete — snapshot + self-heal done.');
-  } else {
-    console.log('[NW-MEMORY] Sync complete — snapshot saved.');
+  try { callFixer(); } catch {
+    // Fallback: legacy selfHeal
+    const mem = loadMemory();
+    if (mem.snapshots && mem.snapshots.length >= 10) {
+      if (!mem.healState) mem.healState = {};
+      mem.healState.lastHealAt = 0;
+      saveMemory(mem);
+      selfHealNw(mem);
+    }
   }
+  console.log('[NW-MEMORY] Sync complete — snapshot + fix cycle done.');
 } else {
   takeSnapshot();
 }
