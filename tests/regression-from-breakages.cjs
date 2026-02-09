@@ -301,5 +301,155 @@ test('[coupling] markets.html loads required scripts', () => {
   assert(markets.includes('nw-i18n') || markets.includes('data-i18n'), 'markets.html must have i18n support');
 });
 
+// ═══════════════════════════════════════════════════════════════════
+// REAL REGRESSION TESTS — targeting actual failure modes from 24 breakages
+// across 6 repeat-offender files (events, pvp, embassy, index, 
+// historical-society, profile-card)
+// ═══════════════════════════════════════════════════════════════════
+
+// --- events.html: broke 4x ---
+// Root cause 1: i18n variable conflicts — events.html declared 'let pageTranslations' 
+// which clashed with i18n.js's global 'let pageTranslations'
+test('[events] no duplicate i18n variable declarations (broke from let pageTranslations conflict)', () => {
+  const content = readFile('public/events.html');
+  if (!content) return 'skip';
+  const matches = content.match(/let\s+pageTranslations/g) || [];
+  assert(matches.length <= 1, 'events.html declares pageTranslations ' + matches.length + 'x — must be 0 or 1 (clashed with i18n.js before)');
+  const langMatches = content.match(/let\s+currentLang/g) || [];
+  assert(langMatches.length <= 1, 'events.html declares currentLang ' + langMatches.length + 'x — must be 0 or 1');
+});
+
+// Root cause 2: script deferral broke execution order
+test('[events] scripts load in correct order (nw-i18n-core must come after nw-nav)', () => {
+  const content = readFile('public/events.html');
+  if (!content) return 'skip';
+  const navIdx = content.indexOf('nw-nav.js');
+  const i18nIdx = content.indexOf('nw-i18n-core.js');
+  if (navIdx === -1 || i18nIdx === -1) return 'skip';
+  assert(navIdx < i18nIdx, 'nw-nav.js must load before nw-i18n-core.js — script order broke events page');
+});
+
+// --- pvp-battle.html: broke 4x ---
+// Root cause: card images cropped by object-fit: cover
+test('[pvp] no object-fit:cover on card images (broke: cropped sword/feet)', () => {
+  const content = readFile('public/pvp-battle.html');
+  if (!content) return 'skip';
+  // Check inline styles on card image containers
+  const lines = content.split('\n');
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i].toLowerCase();
+    if (line.includes('card') && line.includes('img') && line.includes('object-fit') && line.includes('cover')) {
+      assert(false, 'pvp-battle.html:' + (i+1) + ' has object-fit:cover on card image — cropped art before');
+    }
+  }
+});
+
+// Root cause: missing required scripts
+test('[pvp] pvp-battle.html loads battle-critical scripts', () => {
+  const content = readFile('public/pvp-battle.html');
+  if (!content) return 'skip';
+  assert(content.includes('nw-nav.js'), 'pvp-battle.html must load nw-nav.js');
+  assert(content.includes('nw-wallet.js'), 'pvp-battle.html must load nw-wallet.js (balance display)');
+});
+
+// --- embassy.html: broke 4x ---
+// Root cause 1: wrong event listener name (nw-lang-changed vs nw-lang-change)  
+test('[embassy] correct i18n event listener name (broke: nw-lang-changed vs nw-lang-change)', () => {
+  const content = readFile('public/embassy.html');
+  if (!content) return 'skip';
+  if (content.includes('nw-lang-change')) {
+    assert(!content.includes("'nw-lang-changed'") && !content.includes('"nw-lang-changed"'), 
+      'embassy.html uses wrong event name nw-lang-changed (correct: nw-lang-change)');
+  }
+});
+
+// Root cause 2: multiple localStorage keys for language
+test('[embassy] single localStorage key for language (broke: 3 different keys)', () => {
+  const content = readFile('public/embassy.html');
+  if (!content) return 'skip';
+  const scripts = content.match(/<script[\s\S]*?<\/script>/gi) || [];
+  const inlineCode = scripts.join('\n');
+  // Should use nw_lang consistently, not lang or numbahwan_lang
+  const badKeys = [];
+  if (inlineCode.includes("localStorage.getItem('lang')") || inlineCode.includes('localStorage.getItem("lang")')) badKeys.push('lang');
+  if (inlineCode.includes("'numbahwan_lang'") || inlineCode.includes('"numbahwan_lang"')) badKeys.push('numbahwan_lang');
+  assert(badKeys.length === 0, 'embassy.html uses non-standard localStorage keys: ' + badKeys.join(', ') + ' (should use nw_lang)');
+});
+
+// --- index.html: broke 4x ---
+// Root cause 1: GSAP scripts with defer broke loading animations
+test('[index] GSAP CDN scripts are NOT deferred (broke loading screen)', () => {
+  const content = readFile('public/index.html');
+  if (!content) return 'skip';
+  const lines = content.split('\n');
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+    if (line.includes('gsap') && line.includes('cdnjs') && line.includes('defer')) {
+      assert(false, 'index.html:' + (i+1) + ' has defer on GSAP CDN script — this broke the loading screen before');
+    }
+  }
+});
+
+// Root cause 2: i18n keys starting with digits are invalid JS identifiers
+test('[index] no digit-starting i18n keys (broke: invalid JS identifiers)', () => {
+  const content = readFile('public/index.html');
+  if (!content) return 'skip';
+  const i18nKeys = content.match(/data-i18n="([^"]+)"/g) || [];
+  for (const match of i18nKeys) {
+    const key = match.replace('data-i18n="', '').replace('"', '');
+    const lastPart = key.split('.').pop();
+    assert(!/^\d/.test(lastPart), 'index.html has digit-starting i18n key: ' + key + ' — not a valid JS identifier');
+  }
+});
+
+// --- historical-society.html: broke 4x ---
+// Root cause: i18n unification — must use unified i18n system
+test('[historical-society] uses unified i18n system (broke 4x from i18n fragmentation)', () => {
+  const content = readFile('public/historical-society.html');
+  if (!content) return 'skip';
+  assert(content.includes('nw-i18n-core.js'), 'historical-society.html must use nw-i18n-core.js (unified system)');
+  assert(content.includes('data-i18n'), 'historical-society.html must have data-i18n markers');
+  // Must not have old-style inline translation code
+  const hasOldI18n = content.includes('function translatePage') || content.includes('function setLanguage');
+  assert(!hasOldI18n, 'historical-society.html has old inline i18n code — must use unified nw-i18n-core.js');
+});
+
+// --- profile-card.html: broke 4x ---
+// Root cause 1: iOS mobile overlap — card was too wide for small screens
+test('[profile-card] card fits mobile viewport (broke: iOS overlap at 320px)', () => {
+  const content = readFile('public/profile-card.html');
+  if (!content) return 'skip';
+  // The profile card should have max-width constraint for mobile
+  const hasMaxWidth = content.includes('max-width') && (content.includes('320') || content.includes('100%') || content.includes('90vw'));
+  assert(hasMaxWidth, 'profile-card.html needs max-width constraint for mobile — overlapped on iOS before');
+});
+
+// Root cause 2: same i18n fragmentation
+test('[profile-card] uses unified i18n (broke 4x from fragmented i18n)', () => {
+  const content = readFile('public/profile-card.html');
+  if (!content) return 'skip';
+  assert(content.includes('nw-i18n-core.js'), 'profile-card.html must use nw-i18n-core.js');
+  assert(!content.includes("'nw-lang-changed'") && !content.includes('"nw-lang-changed"'),
+    'profile-card.html uses wrong event name (nw-lang-changed instead of nw-lang-change)');
+});
+
+// --- Cross-cutting: script deferral safety ---
+// All 6 pages broke from script deferral (perf commit deferred 309 scripts)
+test('[perf] no defer on scripts that must run synchronously (GSAP, critical init)', () => {
+  const files = ['public/index.html', 'public/events.html', 'public/battle.html'];
+  for (const fp of files) {
+    const content = readFile(fp);
+    if (!content) continue;
+    const lines = content.split('\n');
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i];
+      // GSAP must not be deferred — it broke loading animations
+      if (line.includes('gsap') && line.includes('.min.js') && line.includes('defer') && !line.includes('//')) {
+        assert(false, fp + ':' + (i+1) + ' defers GSAP — broke animations before');
+      }
+    }
+  }
+});
+
 console.log(`\n${passed} passed, ${failed} failed, ${skipped} skipped\n`);
 if (failed > 0) process.exit(1);
