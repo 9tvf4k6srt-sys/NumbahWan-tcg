@@ -1,43 +1,43 @@
 #!/bin/sh
 # ═══════════════════════════════════════════════════════════════════
-# NW Pipeline: commit → LEARN → EVAL → FIX → VERIFY → confirm
+# Mycelium Pipeline: commit → WATCH → LEARN → FIX → VERIFY
 # ═══════════════════════════════════════════════════════════════════
 #
 # Three roles, working in sync:
-#   1. LEARNER:    gitwise --learn + nw-memory snapshot
-#   2. EVALUATOR:  built into nw-fixer (reads both systems)
-#   3. FIXER:      nw-fixer.cjs (fix → verify → confirm loop)
+#   1. WATCHER:    mycelium-watch --learn (commit intelligence)
+#   2. LEARNER:    mycelium snapshot (memory + constraints)
+#   3. FIXER:      mycelium-fix (diagnose → prescribe → fix → verify)
 #
-# No manual --heal, --eval, or --postfix ever needed.
+# No manual intervention ever needed.
 # ═══════════════════════════════════════════════════════════════════
 
-# ─── STEP 1: LEARN (both systems observe this commit) ───
-if [ -f "gitwise.cjs" ]; then
-  node "gitwise.cjs" --learn 2>/dev/null || true
+# ─── STEP 1: WATCH + LEARN (both systems observe this commit) ───
+if [ -f "mycelium-watch.cjs" ]; then
+  node "mycelium-watch.cjs" --learn 2>/dev/null || true
 fi
-if [ -f "nw-memory.cjs" ]; then
-  node nw-memory.cjs 2>/dev/null || true
-  node nw-memory.cjs --brief 2>/dev/null || true
+if [ -f "mycelium.cjs" ]; then
+  node mycelium.cjs 2>/dev/null || true
+  node mycelium.cjs --brief 2>/dev/null || true
 fi
 
-# ─── STEP 2+3: FIX + VERIFY (nw-fixer reads both, fixes, verifies) ───
-if [ -f "nw-fixer.cjs" ]; then
-  node "nw-fixer.cjs" --silent 2>/dev/null || true
+# ─── STEP 2+3: FIX + VERIFY (mycelium-fix reads both, fixes, verifies) ───
+if [ -f "mycelium-fix.cjs" ]; then
+  node "mycelium-fix.cjs" --silent 2>/dev/null || true
 fi
 
 # ─── BONUS: Fix commit? Also run postfix analysis ───
 COMMIT_MSG=$(git log -1 --pretty=format:"%s" 2>/dev/null)
 case "$COMMIT_MSG" in
   fix*|Fix*|hotfix*|Hotfix*)
-    if [ -f "nw-fixer.cjs" ]; then
-      node "nw-fixer.cjs" --force 2>/dev/null || true
+    if [ -f "mycelium-fix.cjs" ]; then
+      node "mycelium-fix.cjs" --force 2>/dev/null || true
     fi
-    if [ -f "nw-memory.cjs" ]; then
-      node nw-memory.cjs --postfix 2>/dev/null || true
+    if [ -f "mycelium.cjs" ]; then
+      node mycelium.cjs --postfix 2>/dev/null || true
     fi
     echo "" >&2
     echo "  FIX DETECTED — auto-fixed + verified. Record what you learned:" >&2
-    echo "    node nw-memory.cjs --learned \"area\" \"lesson\"" >&2
+    echo "    node mycelium.cjs --learned \"area\" \"lesson\"" >&2
     echo "" >&2
     ;;
 esac

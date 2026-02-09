@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 /**
- * gitwise — your git learns from its own mistakes
+ * mycelium-watch — your git learns from its own mistakes
  *
- * Install:  node gitwise.cjs --install
+ * Install:  node mycelium-watch.cjs --install
  * That's it. You never touch it again.
  *
  * What it does:
@@ -26,8 +26,8 @@ const { execSync } = require('child_process');
 
 // ─── Constants ──────────────────────────────────────────────────────
 
-const GITWISE_DIR = path.join(findGitRoot(), '.gitwise');
-const MEMORY_FILE = path.join(GITWISE_DIR, 'memory.json');
+const MYCELIUM-WATCH_DIR = path.join(findGitRoot(), '.mycelium-watch');
+const MEMORY_FILE = path.join(MYCELIUM-WATCH_DIR, '.mycelium/memory.json');
 const MAX_MEMORY_KB = 200;
 const MAX_ENTRIES = 300;
 
@@ -36,7 +36,7 @@ const NOISE = [
   'package-lock.json', 'yarn.lock', 'pnpm-lock.yaml',
   'node_modules/', 'dist/', 'build/', 'out/', '.next/',
   'coverage/', '__pycache__/', '.pytest_cache/', '.nyc_output/',
-  '.gitwise/', '.DS_Store', 'Thumbs.db',
+  '.mycelium-watch/', '.DS_Store', 'Thumbs.db',
   '.ai-files-auto', 'sentinel-report', 'sentinel-history'
 ];
 
@@ -67,7 +67,7 @@ function isNoise(fp) {
 }
 
 function ensureDir() {
-  if (!fs.existsSync(GITWISE_DIR)) fs.mkdirSync(GITWISE_DIR, { recursive: true });
+  if (!fs.existsSync(MYCELIUM-WATCH_DIR)) fs.mkdirSync(MYCELIUM-WATCH_DIR, { recursive: true });
 }
 
 function load() {
@@ -490,7 +490,7 @@ function sync() {
   mem.stats.lastScan = new Date().toISOString();
   save(mem);
 
-  console.log(`  gitwise sync: ${newCommits.length} new commits (${fixCount} fixes) learned`);
+  console.log(`  mycelium-watch sync: ${newCommits.length} new commits (${fixCount} fixes) learned`);
 
   // Delegate to nw-fixer for cross-system fix → verify → confirm
   callFixer();
@@ -665,7 +665,7 @@ function warn() {
     }
   }
 
-  // 5. Constraint warnings: show NW-Memory constraints synced to this file
+  // 5. Constraint warnings: show Mycelium constraints synced to this file
   for (const f of staged) {
     const risk = mem.risks[f];
     if (risk && risk.constraints && risk.constraints.length > 0) {
@@ -711,7 +711,7 @@ function warn() {
   const icons = { high: '\x1b[31m!\x1b[0m', medium: '\x1b[33m~\x1b[0m', low: '\x1b[2m.\x1b[0m' };
 
   console.error('');
-  console.error('  \x1b[2mgitwise:\x1b[0m');
+  console.error('  \x1b[2mmycelium-watch:\x1b[0m');
   for (const w of show) {
     console.error(`  ${icons[w.severity]} ${w.msg}`);
   }
@@ -723,13 +723,13 @@ function warn() {
 
 // ─── Cold Start: Backfill from git history ──────────────────────────
 // On first run, scans existing git history to build initial knowledge base.
-// This means gitwise is useful from the very first commit after install.
+// This means mycelium-watch is useful from the very first commit after install.
 
 function backfill() {
   const mem = load();
   if (mem.commits.length > 0) return mem; // Already have data
 
-  console.log('  gitwise: scanning git history...');
+  console.log('  mycelium-watch: scanning git history...');
 
   // Get last 200 commits (enough to find patterns, fast enough for any repo)
   const logRaw = git('log "--pretty=format:%h|%s|%ai" --name-only -200');
@@ -828,7 +828,7 @@ function backfill() {
   mem.stats.lastScan = new Date().toISOString();
   save(mem);
 
-  console.log(`  gitwise: learned from ${mem.commits.length} commits — ${mem.breakages.length} breakages, ${Object.keys(mem.couplings).length} file couplings, ${mem.patterns.length} patterns`);
+  console.log(`  mycelium-watch: learned from ${mem.commits.length} commits — ${mem.breakages.length} breakages, ${Object.keys(mem.couplings).length} file couplings, ${mem.patterns.length} patterns`);
 
   // Self-heal after backfill (first-time setup gets the benefit immediately)
   selfHeal(mem);
@@ -842,20 +842,20 @@ function backfill() {
 function install() {
   const root = findGitRoot();
   console.log('');
-  console.log('  \x1b[1mgitwise\x1b[0m — your git learns from its own mistakes');
+  console.log('  \x1b[1mmycelium-watch\x1b[0m — your git learns from its own mistakes');
   console.log('');
 
-  // 1. Create .gitwise directory
+  // 1. Create .mycelium-watch directory
   ensureDir();
-  console.log('  \x1b[32m+\x1b[0m created .gitwise/');
+  console.log('  \x1b[32m+\x1b[0m created .mycelium-watch/');
 
-  // 2. Add .gitwise to .gitignore
+  // 2. Add .mycelium-watch to .gitignore
   const gitignorePath = path.join(root, '.gitignore');
   let gitignore = fs.existsSync(gitignorePath) ? fs.readFileSync(gitignorePath, 'utf8') : '';
-  if (!gitignore.includes('.gitwise')) {
-    gitignore = gitignore.trimEnd() + '\n.gitwise/\n';
+  if (!gitignore.includes('.mycelium-watch')) {
+    gitignore = gitignore.trimEnd() + '\n.mycelium-watch/\n';
     fs.writeFileSync(gitignorePath, gitignore);
-    console.log('  \x1b[32m+\x1b[0m added .gitwise/ to .gitignore');
+    console.log('  \x1b[32m+\x1b[0m added .mycelium-watch/ to .gitignore');
   } else {
     console.log('  \x1b[2m.\x1b[0m .gitignore already configured');
   }
@@ -868,40 +868,40 @@ function install() {
   // Determine the script path relative to git root
   const scriptRelative = path.relative(root, __filename).replace(/\\/g, '/');
 
-  // Pre-commit hook: append gitwise warn to existing hook or create new
+  // Pre-commit hook: append mycelium-watch warn to existing hook or create new
   const preCommitPath = path.join(hooksDir, 'pre-commit');
-  const gitwisePreCommit = `node "${scriptRelative}" --warn 2>/dev/null || true`;
+  const mycelium-watchPreCommit = `node "${scriptRelative}" --warn 2>/dev/null || true`;
 
   if (fs.existsSync(preCommitPath)) {
     const existing = fs.readFileSync(preCommitPath, 'utf8');
-    if (!existing.includes('gitwise')) {
+    if (!existing.includes('mycelium-watch')) {
       // Append to existing hook (don't replace it)
-      const appended = existing.trimEnd() + '\n\n# gitwise: warn about known risks\n' + gitwisePreCommit + '\n';
+      const appended = existing.trimEnd() + '\n\n# mycelium-watch: warn about known risks\n' + mycelium-watchPreCommit + '\n';
       fs.writeFileSync(preCommitPath, appended, { mode: 0o755 });
-      console.log('  \x1b[32m+\x1b[0m appended gitwise to existing pre-commit hook');
+      console.log('  \x1b[32m+\x1b[0m appended mycelium-watch to existing pre-commit hook');
     } else {
-      console.log('  \x1b[2m.\x1b[0m pre-commit hook already has gitwise');
+      console.log('  \x1b[2m.\x1b[0m pre-commit hook already has mycelium-watch');
     }
   } else {
-    fs.writeFileSync(preCommitPath, `#!/bin/sh\n# gitwise: warn about known risks\n${gitwisePreCommit}\n`, { mode: 0o755 });
+    fs.writeFileSync(preCommitPath, `#!/bin/sh\n# mycelium-watch: warn about known risks\n${mycelium-watchPreCommit}\n`, { mode: 0o755 });
     console.log('  \x1b[32m+\x1b[0m created pre-commit hook');
   }
 
-  // Post-commit hook: append gitwise learn to existing hook or create new
+  // Post-commit hook: append mycelium-watch learn to existing hook or create new
   const postCommitPath = path.join(hooksDir, 'post-commit');
-  const gitwisePostCommit = `node "${scriptRelative}" --learn 2>/dev/null || true`;
+  const mycelium-watchPostCommit = `node "${scriptRelative}" --learn 2>/dev/null || true`;
 
   if (fs.existsSync(postCommitPath)) {
     const existing = fs.readFileSync(postCommitPath, 'utf8');
-    if (!existing.includes('gitwise')) {
-      const appended = existing.trimEnd() + '\n\n# gitwise: learn from this commit\n' + gitwisePostCommit + '\n';
+    if (!existing.includes('mycelium-watch')) {
+      const appended = existing.trimEnd() + '\n\n# mycelium-watch: learn from this commit\n' + mycelium-watchPostCommit + '\n';
       fs.writeFileSync(postCommitPath, appended, { mode: 0o755 });
-      console.log('  \x1b[32m+\x1b[0m appended gitwise to existing post-commit hook');
+      console.log('  \x1b[32m+\x1b[0m appended mycelium-watch to existing post-commit hook');
     } else {
-      console.log('  \x1b[2m.\x1b[0m post-commit hook already has gitwise');
+      console.log('  \x1b[2m.\x1b[0m post-commit hook already has mycelium-watch');
     }
   } else {
-    fs.writeFileSync(postCommitPath, `#!/bin/sh\n# gitwise: learn from this commit\n${gitwisePostCommit}\n`, { mode: 0o755 });
+    fs.writeFileSync(postCommitPath, `#!/bin/sh\n# mycelium-watch: learn from this commit\n${mycelium-watchPostCommit}\n`, { mode: 0o755 });
     console.log('  \x1b[32m+\x1b[0m created post-commit hook');
   }
 
@@ -914,24 +914,24 @@ function install() {
   backfill();
 
   console.log('');
-  console.log('  \x1b[1mDone.\x1b[0m gitwise will now learn from every commit.');
+  console.log('  \x1b[1mDone.\x1b[0m mycelium-watch will now learn from every commit.');
   console.log('  You never need to run anything again.');
   console.log('');
 }
 
-// ─── Status: Quick look at what gitwise knows ───────────────────────
+// ─── Status: Quick look at what mycelium-watch knows ───────────────────────
 // Optional — for curious developers who want to see what's been learned.
 
 function status() {
   const mem = load();
 
   if (mem.commits.length === 0) {
-    console.log('\n  gitwise: no data yet. Run --install first or make some commits.\n');
+    console.log('\n  mycelium-watch: no data yet. Run --install first or make some commits.\n');
     return;
   }
 
   console.log('');
-  console.log('  \x1b[1mgitwise\x1b[0m — what I\x27ve learned');
+  console.log('  \x1b[1mmycelium-watch\x1b[0m — what I\x27ve learned');
   console.log('');
 
   // Key numbers
@@ -1198,7 +1198,7 @@ function evaluate() {
   const result = runEval(mem);
 
   if (!result) {
-    console.log('\n  gitwise eval: need at least 20 commits for meaningful evaluation.\n');
+    console.log('\n  mycelium-watch eval: need at least 20 commits for meaningful evaluation.\n');
     return;
   }
 
@@ -1206,7 +1206,7 @@ function evaluate() {
   const gradeColor = (grade === 'A' || grade === 'B') ? '\x1b[32m' : grade === 'C' ? '\x1b[33m' : '\x1b[31m';
 
   console.log('');
-  console.log('  \x1b[1mgitwise eval\x1b[0m — is the learning system getting better?');
+  console.log('  \x1b[1mmycelium-watch eval\x1b[0m — is the learning system getting better?');
   console.log('  ─'.repeat(35));
   console.log('');
   console.log(`  ${gradeColor}\x1b[1m  Overall: ${overallScore}/100 (${grade})\x1b[0m`);
@@ -1266,7 +1266,7 @@ function evaluate() {
 
 function callFixer(force) {
   try {
-    const fixerPath = path.join(__dirname, 'nw-fixer.cjs');
+    const fixerPath = path.join(__dirname, 'mycelium-fix.cjs');
     if (fs.existsSync(fixerPath)) {
       const flag = force ? '--force' : '--silent';
       require('child_process').execSync(`node "${fixerPath}" ${flag}`, {
@@ -1282,7 +1282,7 @@ function callFixer(force) {
 
 // ─── Self-Heal: auto-eval + auto-fix weak scores ──────────────────
 // Runs silently every N commits. Detects weaknesses and takes corrective action.
-// This is what turns gitwise from a measurement tool into a self-improving system.
+// This is what turns mycelium-watch from a measurement tool into a self-improving system.
 
 function selfHeal(mem) {
   if (!mem || mem.commits.length < 20) return;
@@ -1399,7 +1399,7 @@ function selfHeal(mem) {
   }
 
   // ── Action 7: Deep root-cause analysis for repeat offenders ──
-  // This is the #1 weakness: "root cause not deep enough" — gitwise eval says learning is NOT working
+  // This is the #1 weakness: "root cause not deep enough" — mycelium-watch eval says learning is NOT working
   // because files keep breaking even with lessons. We need deeper WHY analysis.
   if (result.scores.repeatBreakage < 50) {
     const worstOffenders = Object.entries(mem.risks)
@@ -1457,18 +1457,18 @@ function selfHeal(mem) {
     }
   }
 
-  // ── Action 8: Cross-system sync — read NW-Memory constraints into gitwise warnings ──
-  // NW-Memory tracks constraints by area (battle, i18n, cards...), gitwise tracks by file.
-  // Bridge: map area → files using gitwise breakage data (file paths contain area keywords).
+  // ── Action 8: Cross-system sync — read Mycelium constraints into mycelium-watch warnings ──
+  // Mycelium tracks constraints by area (battle, i18n, cards...), mycelium-watch tracks by file.
+  // Bridge: map area → files using mycelium-watch breakage data (file paths contain area keywords).
   try {
-    const nwMemPath = path.join(__dirname, 'memory.json');
+    const nwMemPath = path.join(__dirname, '.mycelium/memory.json');
     if (fs.existsSync(nwMemPath)) {
       const nwMem = JSON.parse(fs.readFileSync(nwMemPath, 'utf8'));
       const constraints = nwMem.constraints || {};
       let synced = 0;
       for (const [area, areaConstraints] of Object.entries(constraints)) {
         if (!areaConstraints || areaConstraints.length === 0) continue;
-        // Map area to gitwise files: file path must contain the area keyword
+        // Map area to mycelium-watch files: file path must contain the area keyword
         const areaLower = area.toLowerCase();
         const matchingFiles = Object.keys(mem.risks).filter(f =>
           f.toLowerCase().includes(areaLower) ||
@@ -1484,9 +1484,9 @@ function selfHeal(mem) {
           }
         }
       }
-      if (synced > 0) actions.push(`synced ${synced} NW-Memory constraints into gitwise risk data`);
+      if (synced > 0) actions.push(`synced ${synced} Mycelium constraints into mycelium-watch risk data`);
     }
-  } catch { /* NW-Memory not available */ }
+  } catch { /* Mycelium not available */ }
 
   // Store results
   mem.stats.lastHealAt = mem.commits.length;
@@ -1503,7 +1503,7 @@ function selfHeal(mem) {
 
   // Log if any actions were taken (silently during post-commit)
   if (actions.length > 0) {
-    console.error(`  \x1b[2mgitwise self-heal: ${actions.length} action(s) taken (score: ${result.overallScore}/100)\x1b[0m`);
+    console.error(`  \x1b[2mmycelium-watch self-heal: ${actions.length} action(s) taken (score: ${result.overallScore}/100)\x1b[0m`);
     for (const a of actions.slice(0, 3)) {
       console.error(`    \x1b[2m→ ${a}\x1b[0m`);
     }
@@ -1530,26 +1530,26 @@ function uninstall() {
       const hookPath = path.join(dir, hookName);
       if (fs.existsSync(hookPath)) {
         let content = fs.readFileSync(hookPath, 'utf8');
-        if (content.includes('gitwise')) {
-          // Remove gitwise lines
+        if (content.includes('mycelium-watch')) {
+          // Remove mycelium-watch lines
           content = content.split('\n')
-            .filter(l => !l.includes('gitwise'))
+            .filter(l => !l.includes('mycelium-watch'))
             .join('\n')
             .replace(/\n{3,}/g, '\n\n');
           fs.writeFileSync(hookPath, content, { mode: 0o755 });
-          console.log(`  \x1b[31m-\x1b[0m removed gitwise from ${hookName}`);
+          console.log(`  \x1b[31m-\x1b[0m removed mycelium-watch from ${hookName}`);
         }
       }
     }
   }
 
-  // Remove .gitwise directory
-  if (fs.existsSync(GITWISE_DIR)) {
-    fs.rmSync(GITWISE_DIR, { recursive: true });
-    console.log('  \x1b[31m-\x1b[0m removed .gitwise/');
+  // Remove .mycelium-watch directory
+  if (fs.existsSync(MYCELIUM-WATCH_DIR)) {
+    fs.rmSync(MYCELIUM-WATCH_DIR, { recursive: true });
+    console.log('  \x1b[31m-\x1b[0m removed .mycelium-watch/');
   }
 
-  console.log('  Done. gitwise has been removed.\n');
+  console.log('  Done. mycelium-watch has been removed.\n');
 }
 
 // ─── Main ───────────────────────────────────────────────────────────
@@ -1578,16 +1578,16 @@ if (arg === '--install' || arg === 'install') {
   uninstall();
 } else {
   console.log(`
-  \x1b[1mgitwise\x1b[0m — your git learns from its own mistakes
+  \x1b[1mmycelium-watch\x1b[0m — your git learns from its own mistakes
 
   Usage:
-    node gitwise.cjs --install     Set up hooks + learn from existing history
-    node gitwise.cjs --status      See what gitwise has learned
-    node gitwise.cjs --eval        Evaluate: is the learning system getting better?
-    node gitwise.cjs --heal        Force self-heal: fix weak scores + show eval
-    node gitwise.cjs --uninstall   Remove gitwise completely
+    node mycelium-watch.cjs --install     Set up hooks + learn from existing history
+    node mycelium-watch.cjs --status      See what mycelium-watch has learned
+    node mycelium-watch.cjs --eval        Evaluate: is the learning system getting better?
+    node mycelium-watch.cjs --heal        Force self-heal: fix weak scores + show eval
+    node mycelium-watch.cjs --uninstall   Remove mycelium-watch completely
 
-  After install, gitwise runs automatically on every commit.
+  After install, mycelium-watch runs automatically on every commit.
   Self-heal runs every 10 commits — no manual intervention needed.
 `);
 }

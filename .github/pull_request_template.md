@@ -7,7 +7,7 @@
 - [ ] Bug fix
 - [ ] New page
 - [ ] New Oracle wisdom
-- [ ] Tool improvement (sentinel / nw-memory)
+- [ ] Tool improvement (sentinel / mycelium)
 - [ ] i18n / translation
 - [ ] Documentation
 - [ ] Other

@@ -1,10 +1,10 @@
 #!/usr/bin/env node
 /**
- * NW-MEMORY: Compounding Project Memory for AI-Assisted Development
+ * MYCELIUM: Compounding Project Memory for AI-Assisted Development
  * 
  * Drop this file into ANY project. Zero dependencies. Zero config.
- *   node nw-memory.cjs --init        # Set up hooks + memory.json + .gitignore
- *   node nw-memory.cjs --onboard     # Explain the system to any AI in 10 lines
+ *   node mycelium.cjs --init        # Set up hooks + memory.json + .gitignore
+ *   node mycelium.cjs --onboard     # Explain the system to any AI in 10 lines
  *
  * What it does:
  *   Runs on every commit via git hook. Extracts facts from git history.
@@ -22,7 +22,7 @@
  *   --constraint "area" "fact"       # Record a hard platform/tech fact
  *   --decide "area" "what" "why"     # Record a non-obvious decision
  *   --gen-tests                      # Auto-generate regression tests from breakages
- *   --export-shared                  # Export universal lessons to ~/.nw-shared-memory.json
+ *   --export-shared                  # Export universal lessons to ~/.mycelium-shared.json
  *   --import-shared                  # Import lessons from shared library
  *   --wip "task"                     # Save work-in-progress (survives chat compaction)
  *   --wip-done                       # Clear WIP after task complete
@@ -32,7 +32,7 @@ const fs = require('fs');
 const path = require('path');
 const { execSync } = require('child_process');
 
-const MEMORY_FILE = path.join(__dirname, 'memory.json');
+const MEMORY_FILE = path.join(__dirname, '.mycelium/memory.json');
 const MAX_ENTRIES = 500; // Keep last 500 snapshots (~6 months of daily work)
 const MAX_HOTSPOTS = 200; // Only track top 200 hotspots
 const MAX_COCHANGES = 300; // Only track top 300 co-change pairs
@@ -73,7 +73,7 @@ function saveMemory(mem) {
   // Auto-compact if file is too large
   const sizeKB = Math.round(Buffer.byteLength(json) / 1024);
   if (sizeKB > MAX_MEMORY_KB) {
-    console.log(`[NW-MEMORY] Auto-compacting: ${sizeKB}KB > ${MAX_MEMORY_KB}KB limit`);
+    console.log(`[mycelium] Auto-compacting: ${sizeKB}KB > ${MAX_MEMORY_KB}KB limit`);
     compact(mem, true); // silent save inside
   }
 }
@@ -84,13 +84,13 @@ function fileExists(fp) {
 }
 
 // Paths to skip in query display (noise, archives, generated)
-// Configurable via .nw-config.json { "noisePaths": [...] }
+// Configurable via .mycelium/config.json { "noisePaths": [...] }
 const DEFAULT_NOISE = ['archive/', 'node_modules/', '.husky/', 'dist/', 'build/', 'out/', '.next/', 
-  'package-lock.json', 'yarn.lock', 'pnpm-lock.yaml', 'memory.json', 
+  'package-lock.json', 'yarn.lock', 'pnpm-lock.yaml', '.mycelium/memory.json', 
   'coverage/', '.nyc_output/', '__pycache__/', '.pytest_cache/'];
 function loadConfig() {
   try {
-    const cfg = JSON.parse(fs.readFileSync(path.join(__dirname, '.nw-config.json'), 'utf8'));
+    const cfg = JSON.parse(fs.readFileSync(path.join(__dirname, '.mycelium/config.json'), 'utf8'));
     return cfg;
   } catch { return {}; }
 }
@@ -292,7 +292,7 @@ function autoReflect(mem, commit) {
   if (mem.reflections.length > 50) mem.reflections = mem.reflections.slice(-50);
 }
 
-// ─── Deep Intelligence (shared with gitwise.cjs) ────────────────────
+// ─── Deep Intelligence (shared with mycelium-watch.cjs) ────────────────────
 // Reads commit bodies + analyzes diffs for specific, actionable lessons.
 // Used by: autoReflect, postfix, recordBreakage
 
@@ -393,11 +393,11 @@ function extractDeepLesson(hash, msg) {
 }
 
 // Classify a file path into an area name.
-// Priority: 1) .nw-config.json custom areas, 2) universal patterns, 3) legacy, 4) directory fallback
+// Priority: 1) .mycelium/config.json custom areas, 2) universal patterns, 3) legacy, 4) directory fallback
 function classifyArea(filePath) {
   const fp = filePath.toLowerCase();
 
-  // 1. User-defined area mappings from .nw-config.json { "areas": { "payments": ["stripe", "billing"] } }
+  // 1. User-defined area mappings from .mycelium/config.json { "areas": { "payments": ["stripe", "billing"] } }
   const customAreas = CONFIG.areas || {};
   for (const [area, patterns] of Object.entries(customAreas)) {
     if (Array.isArray(patterns) && patterns.some(p => fp.includes(p.toLowerCase()))) return area;
@@ -411,7 +411,7 @@ function classifyArea(filePath) {
   if (fp.includes('migrat') || fp.includes('schema') || fp.includes('/models/')) return 'database';
   if (fp.includes('deploy') || fp.includes('docker') || fp.includes('.github/workflows')) return 'devops';
   if (fp.includes('.css') || fp.includes('.scss') || fp.includes('.less')) return 'styles';
-  if (fp.includes('memory') || fp.includes('nw-context') || fp.includes('nw-memory')) return 'memory';
+  if (fp.includes('memory') || fp.includes('nw-context') || fp.includes('mycelium')) return 'memory';
 
   // 3. Legacy NumbahWan patterns (kept for backward compat — ignored if custom areas have entries)
   if (!CONFIG.areas || Object.keys(CONFIG.areas).length === 0) {
@@ -614,7 +614,7 @@ function recordLearning(area, lesson) {
   // Keep last 200 learnings
   if (mem.learnings.length > 200) mem.learnings = mem.learnings.slice(-200);
   saveMemory(mem);
-  console.log(`[NW-MEMORY] Learning recorded: [${area}] ${lesson}`);
+  console.log(`[mycelium] Learning recorded: [${area}] ${lesson}`);
 }
 
 // ─── Deep Reflection (runs every 10 snapshots alongside autoDistill) ─
@@ -902,9 +902,9 @@ function takeSnapshot() {
   }
 
   saveMemory(mem);
-  console.log(`[NW-MEMORY] Snapshot saved: ${commit.hash} | ${build.bundleKB}KB | +${commit.added}/-${commit.removed} lines`);
+  console.log(`[mycelium] Snapshot saved: ${commit.hash} | ${build.bundleKB}KB | +${commit.added}/-${commit.removed} lines`);
 
-  // Delegate to nw-fixer: the unified fix → verify → confirm system
+  // Delegate to mycelium-fix: the unified fix → verify → confirm system
   // Runs silently after every learning event — selfHealNw kept as fallback
   try { callFixer(); } catch { try { selfHealNw(mem); } catch { /* best-effort */ } }
 }
@@ -921,7 +921,7 @@ function query() {
   const recent = mem.snapshots.slice(-10);
   const latest = recent[recent.length - 1];
 
-  console.log('# NW-MEMORY: Project Intelligence\n');
+  console.log('# MYCELIUM: Project Intelligence\n');
   console.log(`Total snapshots: ${mem.snapshots.length} | First: ${mem.snapshots[0].date} | Latest: ${latest.date}\n`);
 
   // Current state
@@ -1209,7 +1209,7 @@ function recordDecision(area, decision, why) {
   // Keep last 200 decisions
   if (mem.decisions.length > 200) mem.decisions = mem.decisions.slice(-200);
   saveMemory(mem);
-  console.log(`[NW-MEMORY] Decision recorded: [${area}] ${decision}`);
+  console.log(`[mycelium] Decision recorded: [${area}] ${decision}`);
 }
 
 function recordConstraint(area, fact) {
@@ -1220,9 +1220,9 @@ function recordConstraint(area, fact) {
   if (!existing.some(c => c.fact === fact)) {
     existing.push({ fact, ts: Date.now(), date: new Date().toISOString().split('T')[0] });
     saveMemory(mem);
-    console.log(`[NW-MEMORY] Constraint recorded: [${area}] ${fact}`);
+    console.log(`[mycelium] Constraint recorded: [${area}] ${fact}`);
   } else {
-    console.log(`[NW-MEMORY] Constraint already exists: [${area}] ${fact}`);
+    console.log(`[mycelium] Constraint already exists: [${area}] ${fact}`);
   }
 }
 
@@ -1248,9 +1248,9 @@ function recordBreakage(area, what) {
   mem.breakages.push(entry);
   if (mem.breakages.length > 100) mem.breakages = mem.breakages.slice(-100);
   saveMemory(mem);
-  console.log(`[NW-MEMORY] Breakage recorded: [${area}] ${what}`);
+  console.log(`[mycelium] Breakage recorded: [${area}] ${what}`);
   if (entry.deepLesson) {
-    console.log(`[NW-MEMORY] Auto-enriched: ↳ ${entry.deepLesson}`);
+    console.log(`[mycelium] Auto-enriched: ↳ ${entry.deepLesson}`);
   }
 }
 
@@ -1401,8 +1401,8 @@ function premortem(area) {
       areaCommits.length === 0 && learnings.length === 0) {
     console.log('No intelligence found for this area yet. This is the first time working here.');
     console.log('After building, record what you learned:');
-    console.log('  node nw-memory.cjs --learned "' + area + '" "what you discovered"');
-    console.log('  node nw-memory.cjs --constraint "' + area + '" "hard fact"');
+    console.log('  node mycelium.cjs --learned "' + area + '" "what you discovered"');
+    console.log('  node mycelium.cjs --constraint "' + area + '" "hard fact"');
     console.log('');
   }
 }
@@ -1538,13 +1538,13 @@ function postfix() {
   console.log('Run one of these to capture the lesson:');
   console.log('');
   console.log(`  # What went wrong (root cause):`)
-  console.log(`  node nw-memory.cjs --broke "${areaList}" "description of what broke and why"`);
+  console.log(`  node mycelium.cjs --broke "${areaList}" "description of what broke and why"`);
   console.log('');
   console.log(`  # What you learned (so next AI doesn't repeat it):`);
-  console.log(`  node nw-memory.cjs --learned "${areaList}" "the lesson from this fix"`);
+  console.log(`  node mycelium.cjs --learned "${areaList}" "the lesson from this fix"`);
   console.log('');
   console.log(`  # A hard rule to prevent recurrence:`);
-  console.log(`  node nw-memory.cjs --constraint "${areaList}" "never do X because Y"`);
+  console.log(`  node mycelium.cjs --constraint "${areaList}" "never do X because Y"`);
   console.log('');
 }
 
@@ -1610,7 +1610,7 @@ function compact(memOverride, silent) {
 
   if (!silent) {
     const saved = Math.round((sizeBefore - sizeAfter) / 1024);
-    console.log(`[NW-MEMORY] Compacted:`);
+    console.log(`[mycelium] Compacted:`);
     console.log(`  Hotspots pruned: ${pruned.hotspots} (${Object.keys(mem.patterns.hotspots).length} remain)`);
     console.log(`  CoChanges pruned: ${pruned.coChanges} (${Object.keys(mem.patterns.coChanges).length} remain)`);
     console.log(`  Snapshots deduped: ${pruned.snapshots} (${mem.snapshots.length} remain)`);
@@ -1651,7 +1651,7 @@ function brief() {
   // System inventory — what's already built (READ THIS BEFORE RECOMMENDING FEATURES)
   const totalConstraints = Object.values(mem.constraints || {}).reduce((s, arr) => s + arr.length, 0);
   lines.push('## Already built (do NOT recommend these — they exist)');
-  lines.push('  [memory] nw-memory.cjs — auto-snapshots every commit, scoring, pattern detection');
+  lines.push('  [memory] mycelium.cjs — auto-snapshots every commit, scoring, pattern detection');
   lines.push('  [memory] memory.json — ' + mem.snapshots.length + ' snapshots, ' + totalConstraints + ' constraints, ' + (mem.decisions||[]).length + ' decisions, ' + (mem.breakages||[]).length + ' breakages');
   lines.push('  [hooks] .husky/pre-commit — auto-compact, stage memory.json, constraint checker (detects areas from staged files, warns about relevant constraints + breakages)');
   lines.push('  [hooks] .husky/post-commit — auto-snapshot + refresh .nw-context');
@@ -1778,7 +1778,7 @@ function guard(files) {
   }
 
   if (files.length === 0) {
-    console.log('[NW-MEMORY] No files to guard. Stage some files or pass paths.');
+    console.log('[mycelium] No files to guard. Stage some files or pass paths.');
     return;
   }
 
@@ -1790,7 +1790,7 @@ function guard(files) {
   }
 
   if (areas.size === 0) {
-    console.log('[NW-MEMORY] No known areas detected in these files. Checking root constraints...');
+    console.log('[mycelium] No known areas detected in these files. Checking root constraints...');
     areas.add('root');
   }
 
@@ -1874,7 +1874,7 @@ function predict(files) {
   const mem = loadMemory();
   
   if (!files || files.length === 0) {
-    console.log('[NW-MEMORY] Usage: --predict <file1> [file2] ...');
+    console.log('[mycelium] Usage: --predict <file1> [file2] ...');
     return;
   }
 
@@ -1970,11 +1970,11 @@ function trending() {
 
   const days = Object.keys(dailyMap).sort();
   if (days.length === 0) {
-    console.log('[NW-MEMORY] No data for trending.');
+    console.log('[mycelium] No data for trending.');
     return;
   }
 
-  console.log('\n# Score Trend — NW-Memory Learning System\n');
+  console.log('\n# Score Trend — Mycelium Learning System\n');
 
   // ASCII bar chart
   const barWidth = 40;
@@ -2026,7 +2026,7 @@ function generateRegressionTests() {
   const breakages = mem.breakages || [];
   
   if (breakages.length === 0) {
-    console.log('[NW-MEMORY] No breakages recorded. Nothing to generate tests for.');
+    console.log('[mycelium] No breakages recorded. Nothing to generate tests for.');
     return;
   }
 
@@ -2052,7 +2052,7 @@ function generateRegressionTests() {
   const lines = [];
   lines.push('#!/usr/bin/env node');
   lines.push('/**');
-  lines.push(' * AUTO-GENERATED regression tests from NW-MEMORY breakages & constraints');
+  lines.push(' * AUTO-GENERATED regression tests from MYCELIUM breakages & constraints');
   lines.push(` * Generated: ${new Date().toISOString().split('T')[0]}`);
   lines.push(` * Breakages: ${breakages.length} | Constraints: ${Object.values(mem.constraints || {}).reduce((s, a) => s + a.length, 0)}`);
   lines.push(` * Test cases: ${testCases.length}`);
@@ -2103,7 +2103,7 @@ function generateRegressionTests() {
   if (!fs.existsSync(testsDir)) fs.mkdirSync(testsDir);
 
   fs.writeFileSync(testFile, lines.join('\n'));
-  console.log(`[NW-MEMORY] Generated ${testCases.length} regression tests from ${breakages.length} breakages + constraints`);
+  console.log(`[mycelium] Generated ${testCases.length} regression tests from ${breakages.length} breakages + constraints`);
   console.log(`  Written to: tests/regression-from-breakages.cjs`);
   console.log(`  Run: node tests/regression-from-breakages.cjs`);
 }
@@ -2308,10 +2308,10 @@ function constraintToTest(area, constraint, mem) {
 }
 
 // ─── FEATURE 3: Cross-project shared constraint library ──────────────
-// Export portable constraints/learnings to ~/.nw-shared-memory.json
+// Export portable constraints/learnings to ~/.mycelium-shared.json
 // Import them into any new project. Universal truths carry forward.
 
-const SHARED_MEMORY_PATH = path.join(require('os').homedir(), '.nw-shared-memory.json');
+const SHARED_MEMORY_PATH = path.join(require('os').homedir(), '.mycelium-shared.json');
 
 function loadSharedMemory() {
   try {
@@ -2406,13 +2406,13 @@ function exportToShared() {
 
   saveSharedMemory(shared);
 
-  console.log(`[NW-MEMORY] Exported to shared library: ${SHARED_MEMORY_PATH}`);
+  console.log(`[mycelium] Exported to shared library: ${SHARED_MEMORY_PATH}`);
   console.log(`  ${exportedConstraints} new constraints exported`);
   console.log(`  ${exportedLearnings} new learnings exported`);
   console.log(`  Total in library: ${shared.constraints.length} constraints, ${shared.learnings.length} learnings`);
   console.log(`  Projects: ${shared.meta.projects.join(', ')}`);
   console.log('');
-  console.log('  Use in any project: node nw-memory.cjs --import-shared');
+  console.log('  Use in any project: node mycelium.cjs --import-shared');
 }
 
 function importFromShared() {
@@ -2421,7 +2421,7 @@ function importFromShared() {
   const projectName = path.basename(__dirname);
 
   if (shared.constraints.length === 0 && shared.learnings.length === 0) {
-    console.log('[NW-MEMORY] Shared library is empty. Export from a project first: --export-shared');
+    console.log('[mycelium] Shared library is empty. Export from a project first: --export-shared');
     return;
   }
 
@@ -2466,7 +2466,7 @@ function importFromShared() {
     saveMemory(mem);
   }
 
-  console.log(`[NW-MEMORY] Imported from shared library:`);
+  console.log(`[mycelium] Imported from shared library:`);
   console.log(`  ${importedConstraints} constraints imported`);
   console.log(`  ${importedLearnings} learnings imported`);
   console.log(`  Source: ${shared.meta.projects.filter(p => p !== projectName).join(', ') || 'none (all from this project)'}`);
@@ -2502,7 +2502,7 @@ function showSharedLibrary() {
 
 function init() {
   const projectName = path.basename(__dirname);
-  console.log(`\n# NW-MEMORY: Setting up for "${projectName}"\n`);
+  console.log(`\n# MYCELIUM: Setting up for "${projectName}"\n`);
 
   // 1. Create memory.json if it doesn't exist
   if (!fs.existsSync(MEMORY_FILE)) {
@@ -2519,8 +2519,8 @@ function init() {
   if (!fs.existsSync(huskyDir)) fs.mkdirSync(huskyDir, { recursive: true });
 
   const preCommit = `#!/bin/sh
-# NW-MEMORY: Pre-commit — enforce protocol, auto-guard, compact
-if [ ! -f "nw-memory.cjs" ]; then exit 0; fi
+# MYCELIUM: Pre-commit — enforce protocol, auto-guard, compact
+if [ ! -f "mycelium.cjs" ]; then exit 0; fi
 
 # Session marker must exist
 if [ ! -f ".nw-session" ]; then
@@ -2534,22 +2534,22 @@ fi
 # Auto-compact if needed
 MEM_SIZE=$(wc -c < memory.json 2>/dev/null || echo 0)
 if [ "$MEM_SIZE" -gt 204800 ]; then
-  node nw-memory.cjs --compact >/dev/null 2>&1
+  node mycelium.cjs --compact >/dev/null 2>&1
 fi
 
 git add memory.json 2>/dev/null || true
 
 # Auto-guard: show warnings for areas being touched
-node nw-memory.cjs --guard 2>/dev/null >&2 || true
+node mycelium.cjs --guard 2>/dev/null >&2 || true
 
 exit 0
 `;
 
   const postCommit = `#!/bin/sh
-# NW-MEMORY: Post-commit — snapshot + refresh context
-if [ ! -f "nw-memory.cjs" ]; then exit 0; fi
-node nw-memory.cjs >/dev/null 2>&1
-node nw-memory.cjs --brief >/dev/null 2>&1
+# MYCELIUM: Post-commit — snapshot + refresh context
+if [ ! -f "mycelium.cjs" ]; then exit 0; fi
+node mycelium.cjs >/dev/null 2>&1
+node mycelium.cjs --brief >/dev/null 2>&1
 
 # Fix detection: prompt for learnings
 COMMIT_MSG=$(git log -1 --pretty=format:"%s" 2>/dev/null)
@@ -2557,8 +2557,8 @@ case "$COMMIT_MSG" in
   fix*|Fix*)
     echo "" >&2
     echo "  FIX DETECTED. Record what you learned:" >&2
-    echo "    node nw-memory.cjs --postfix" >&2
-    echo "    node nw-memory.cjs --learned \\"area\\" \\"lesson\\"" >&2
+    echo "    node mycelium.cjs --postfix" >&2
+    echo "    node mycelium.cjs --learned \\"area\\" \\"lesson\\"" >&2
     echo "" >&2
     ;;
 esac
@@ -2600,31 +2600,31 @@ exit 0
 \`\`\`bash
 cat .nw-context                          # read the project brain
 echo $(date +%s) > .nw-session           # mark session started
-node nw-memory.cjs --premortem <area>    # check what broke before
+node mycelium.cjs --premortem <area>    # check what broke before
 \`\`\`
 
 ## Before every commit:
 Record at least one learning:
 \`\`\`bash
-node nw-memory.cjs --decide "area" "what" "why"
-node nw-memory.cjs --constraint "area" "fact"
-node nw-memory.cjs --broke "area" "what happened"
-node nw-memory.cjs --learned "area" "lesson"
+node mycelium.cjs --decide "area" "what" "why"
+node mycelium.cjs --constraint "area" "fact"
+node mycelium.cjs --broke "area" "what happened"
+node mycelium.cjs --learned "area" "lesson"
 \`\`\`
 
 ## Full command reference:
-Run \`node nw-memory.cjs --onboard\` for a complete guide.
+Run \`node mycelium.cjs --onboard\` for a complete guide.
 `);
     console.log('  ✓ Created CLAUDE.md (AI session protocol)');
   } else {
     console.log('  · CLAUDE.md already exists');
   }
 
-  // 6. Create initial .nw-config.json example if it doesn't exist
-  const configPath = path.join(__dirname, '.nw-config.json');
+  // 6. Create initial .mycelium/config.json example if it doesn't exist
+  const configPath = path.join(__dirname, '.mycelium/config.json');
   if (!fs.existsSync(configPath)) {
     fs.writeFileSync(configPath, JSON.stringify({
-      _comment: "Customize NW-MEMORY for your project. All fields optional.",
+      _comment: "Customize MYCELIUM for your project. All fields optional.",
       areas: {},
       noisePaths: DEFAULT_NOISE,
       _example_areas: {
@@ -2633,9 +2633,9 @@ Run \`node nw-memory.cjs --onboard\` for a complete guide.
         api: ["routes/", "controllers/", "handlers/"]
       }
     }, null, 2));
-    console.log('  ✓ Created .nw-config.json (customize areas + noise paths)');
+    console.log('  ✓ Created .mycelium/config.json (customize areas + noise paths)');
   } else {
-    console.log('  · .nw-config.json already exists');
+    console.log('  · .mycelium/config.json already exists');
   }
 
   // 7. Take initial snapshot
@@ -2645,7 +2645,7 @@ Run \`node nw-memory.cjs --onboard\` for a complete guide.
   console.log('\n  Setup complete! Start your first session:');
   console.log('    cat .nw-context');
   console.log('    echo $(date +%s) > .nw-session');
-  console.log('    node nw-memory.cjs --onboard');
+  console.log('    node mycelium.cjs --onboard');
   console.log('');
 }
 
@@ -2660,7 +2660,7 @@ function onboard() {
   const learningCount = (mem.learnings || []).length;
 
   console.log(`
-# NW-MEMORY: Project Memory System
+# MYCELIUM: Project Memory System
 
 You are working on a project with ${snapCount} recorded commits, ${constraintCount} constraints,
 ${breakageCount} breakages, ${decisionCount} decisions, and ${learningCount} learnings.
@@ -2668,7 +2668,7 @@ ${breakageCount} breakages, ${decisionCount} decisions, and ${learningCount} lea
 ## What you MUST do before coding:
   1. cat .nw-context                          # read project brain — rules, breakages, fragile files
   2. echo $(date +%s) > .nw-session           # mark session (required or commits are blocked)
-  3. node nw-memory.cjs --premortem <area>    # see what broke before in the area you'll touch
+  3. node mycelium.cjs --premortem <area>    # see what broke before in the area you'll touch
 
 ## What you MUST do before committing:
   4. Record at least ONE learning:
@@ -2797,7 +2797,7 @@ function status() {
 //   evaluate()       — prints eval results to console + stores snapshot
 //
 // selfHealNw runs automatically inside takeSnapshot() every 10 snapshots.
-// This makes NW-Memory a self-improving system — it evaluates itself after
+// This makes Mycelium a self-improving system — it evaluates itself after
 // every learning event and automatically fixes what's weak.
 
 function runNwEval(mem) {
@@ -2939,40 +2939,40 @@ function runNwEval(mem) {
     upgrades.push('Too few reflections — auto-reflect not running often enough');
   }
 
-  // ── 7. gitwise Integration ──
-  let gitwiseScore = 0;
-  let gitwiseLastEval = null;
+  // ── 7. Watch Integration ──
+  let watchScore = 0;
+  let watchLastEval = null;
   try {
-    const gwMem = JSON.parse(fs.readFileSync(path.join(__dirname, '.gitwise', 'memory.json'), 'utf8'));
+    const gwMem = JSON.parse(fs.readFileSync(path.join(__dirname, '.mycelium', 'watch.json'), 'utf8'));
     const gwBreakages = gwMem.breakages?.length || 0;
     const gwLessons = gwMem.breakages?.filter(b => b.lesson && b.lesson.length > 20).length || 0;
     const gwLessonRate = gwBreakages > 0 ? gwLessons / gwBreakages : 0;
 
     if (gwLessonRate > 0.9) {
-      gitwiseScore = 100;
-      insights.push(`gitwise integration: ${gwBreakages} breakages, ${Math.round(gwLessonRate * 100)}% with deep lessons`);
+      watchScore = 100;
+      insights.push(`watcher integration: ${gwBreakages} breakages, ${Math.round(gwLessonRate * 100)}% with deep lessons`);
     } else if (gwLessonRate > 0.5) {
-      gitwiseScore = 60;
-      insights.push(`gitwise integration: ${Math.round(gwLessonRate * 100)}% lesson rate — needs deeper diff analysis`);
+      watchScore = 60;
+      insights.push(`watcher integration: ${Math.round(gwLessonRate * 100)}% lesson rate — needs deeper diff analysis`);
     } else {
-      gitwiseScore = 30;
-      insights.push(`gitwise integration: only ${Math.round(gwLessonRate * 100)}% lesson rate — extractLesson is weak`);
-      upgrades.push('gitwise lesson extraction needs upgrade — most breakages lack root cause');
+      watchScore = 30;
+      insights.push(`watcher integration: only ${Math.round(gwLessonRate * 100)}% lesson rate — extractLesson is weak`);
+      upgrades.push('watcher lesson extraction needs upgrade — most breakages lack root cause');
     }
     if (gwMem.evaluations?.length > 0) {
-      gitwiseLastEval = gwMem.evaluations[gwMem.evaluations.length - 1];
+      watchLastEval = gwMem.evaluations[gwMem.evaluations.length - 1];
     }
   } catch {
-    gitwiseScore = 0;
-    insights.push('gitwise: not installed — run node gitwise.cjs --install for passive learning');
-    upgrades.push('Install gitwise for automatic breakage detection from git history');
+    watchScore = 0;
+    insights.push('gitwise: not installed — run node mycelium-watch.cjs --install for passive learning');
+    upgrades.push('Install mycelium-watch for automatic breakage detection from git history');
   }
-  scores.gitwiseIntegration = gitwiseScore;
+  scores.watchIntegration = watchScore;
 
   // ── Overall Grade ──
   const weights = {
     constraintCoverage: 20, constraintEffectiveness: 20, decisionImpact: 15,
-    learningCapture: 15, fixChainTrend: 10, reflectionQuality: 10, gitwiseIntegration: 10
+    learningCapture: 15, fixChainTrend: 10, reflectionQuality: 10, watchIntegration: 10
   };
 
   let totalScore = 0, totalWeight = 0;
@@ -2986,15 +2986,15 @@ function runNwEval(mem) {
   // Combined score with gitwise
   let combinedScore = overallScore;
   let combinedGrade = grade;
-  if (gitwiseLastEval) {
-    combinedScore = Math.round((overallScore + gitwiseLastEval.overallScore) / 2);
+  if (watchLastEval) {
+    combinedScore = Math.round((overallScore + watchLastEval.overallScore) / 2);
     combinedGrade = combinedScore >= 90 ? 'A' : combinedScore >= 75 ? 'B' :
                     combinedScore >= 60 ? 'C' : combinedScore >= 40 ? 'D' : 'F';
   }
 
   return {
     overallScore, grade, combinedScore, combinedGrade, scores, insights, upgrades,
-    gitwiseLastEval, uncoveredAreas, areaBreakages, weights,
+    watchLastEval, uncoveredAreas, areaBreakages, weights,
     metrics: {
       snapshots: totalSnapshots, constraints: totalConstraints, breakages: totalBreakages,
       decisions: totalDecisions, learnings: totalLearnings, fixChains: fixChainCount,
@@ -3003,11 +3003,11 @@ function runNwEval(mem) {
   };
 }
 
-// ─── Delegate to nw-fixer: unified fix → verify → confirm system ────
-// selfHealNw kept as fallback when nw-fixer.cjs is not present.
+// ─── Delegate to mycelium-fix: unified fix → verify → confirm system ────
+// selfHealNw kept as fallback when mycelium-fix.cjs is not present.
 
 function callFixer(force) {
-  const fixerPath = path.join(__dirname, 'nw-fixer.cjs');
+  const fixerPath = path.join(__dirname, 'mycelium-fix.cjs');
   if (!fs.existsSync(fixerPath)) return false;
   const flag = force ? '--force' : '--silent';
   require('child_process').execSync(`node "${fixerPath}" ${flag}`, {
@@ -3016,10 +3016,10 @@ function callFixer(force) {
   return true;
 }
 
-// ─── Self-Heal NW-Memory: auto-eval + auto-fix weak scores ──────────
+// ─── Self-Heal Mycelium: auto-eval + auto-fix weak scores ──────────
 // Runs silently every 10 snapshots inside takeSnapshot().
 // Detects weaknesses and takes corrective action without human intervention.
-// This turns NW-Memory from a measurement tool into a self-improving system.
+// This turns Mycelium from a measurement tool into a self-improving system.
 
 function selfHealNw(mem) {
   if (!mem) return;
@@ -3056,10 +3056,10 @@ function selfHealNw(mem) {
     }
   }
 
-  // ── Action 2: Constraint Effectiveness low -> enrich with gitwise deep lessons ──
+  // ── Action 2: Constraint Effectiveness low -> enrich with watcher deep lessons ──
   if (result.scores.constraintEffectiveness < 40) {
     try {
-      const gwMem = JSON.parse(fs.readFileSync(path.join(__dirname, '.gitwise', 'memory.json'), 'utf8'));
+      const gwMem = JSON.parse(fs.readFileSync(path.join(__dirname, '.mycelium', 'watch.json'), 'utf8'));
       for (const [area, breaks] of Object.entries(result.areaBreakages)) {
         if (breaks >= 3 && (mem.constraints[area] || []).length > 0) {
           const areaBreakFiles = (mem.breakages || [])
@@ -3072,16 +3072,16 @@ function selfHealNw(mem) {
                 mem.constraints[area].push({
                   fact: gwB.lesson, ts: Date.now(),
                   date: new Date().toISOString().split('T')[0],
-                  autoGenerated: true, source: 'self-heal: gitwise deep lesson promoted (constraint ineffective)'
+                  autoGenerated: true, source: 'self-heal: watcher deep lesson promoted (constraint ineffective)'
                 });
-                actions.push(`enriched [${area}] constraint with gitwise lesson`);
+                actions.push(`enriched [${area}] constraint with watcher lesson`);
                 break;
               }
             }
           }
         }
       }
-    } catch { /* gitwise not available */ }
+    } catch { /* watcher not available */ }
   }
 
   // ── Action 3: Learning Capture low -> auto-create learnings from breakages ──
@@ -3140,15 +3140,15 @@ function selfHealNw(mem) {
     }
   }
 
-  // ── Action 6: gitwise not integrated -> attempt to install ──
-  if (result.scores.gitwiseIntegration === 0) {
+  // ── Action 6: watcher not integrated -> attempt to install ──
+  if (result.scores.watchIntegration === 0) {
     try {
-      const gwPath = path.join(__dirname, 'gitwise.cjs');
+      const gwPath = path.join(__dirname, 'mycelium-watch.cjs');
       if (fs.existsSync(gwPath)) {
-        require('child_process').execSync('node gitwise.cjs --install', {
+        require('child_process').execSync('node mycelium-watch.cjs --install', {
           cwd: __dirname, stdio: 'pipe', timeout: 10000
         });
-        actions.push('auto-installed gitwise (was not initialized)');
+        actions.push('auto-installed mycelium-watch (was not initialized)');
       }
     } catch { /* best effort */ }
   }
@@ -3173,7 +3173,7 @@ function selfHealNw(mem) {
 
   // Log silently to stderr
   if (actions.length > 0) {
-    console.error(`  \x1b[2mNW-MEMORY self-heal: ${actions.length} action(s) taken (score: ${result.overallScore}/100 ${result.grade})\x1b[0m`);
+    console.error(`  \x1b[2mMYCELIUM self-heal: ${actions.length} action(s) taken (score: ${result.overallScore}/100 ${result.grade})\x1b[0m`);
     for (const a of actions.slice(0, 4)) {
       console.error(`    \x1b[2m-> ${a}\x1b[0m`);
     }
@@ -3190,17 +3190,17 @@ function evaluate() {
   const result = runNwEval(mem);
 
   if (!result) {
-    console.log('\n[NW-MEMORY] Eval: need at least 10 snapshots for meaningful evaluation.\n');
+    console.log('\n[mycelium] Eval: need at least 10 snapshots for meaningful evaluation.\n');
     return;
   }
 
   const { overallScore, grade, combinedScore, combinedGrade, scores, insights, upgrades,
-          gitwiseLastEval, weights, metrics } = result;
+          watchLastEval, weights, metrics } = result;
   const gradeColor = (grade === 'A' || grade === 'B') ? '\x1b[32m' :
                      grade === 'C' ? '\x1b[33m' : '\x1b[31m';
 
   console.log('');
-  console.log('  \x1b[1mNW-MEMORY eval\x1b[0m — is the learning system getting better?');
+  console.log('  \x1b[1mMYCELIUM eval\x1b[0m — is the learning system getting better?');
   console.log('  ─'.repeat(35));
   console.log('');
   console.log(`  ${gradeColor}\x1b[1m  Overall: ${overallScore}/100 (${grade})\x1b[0m`);
@@ -3210,7 +3210,7 @@ function evaluate() {
     constraintCoverage: 'Constraint Coverage', constraintEffectiveness: 'Constraint Effect.',
     decisionImpact: 'Decision Impact', learningCapture: 'Learning Capture',
     fixChainTrend: 'Fix Chain Trend', reflectionQuality: 'Reflection Quality',
-    gitwiseIntegration: 'gitwise Integration'
+    watchIntegration: 'Watch Integration'
   };
 
   console.log('  \x1b[1mScorecard:\x1b[0m');
@@ -3236,11 +3236,11 @@ function evaluate() {
     }
   }
 
-  if (gitwiseLastEval) {
+  if (watchLastEval) {
     console.log('');
-    console.log(`  \x1b[1mCombined Score (NW-Memory + gitwise):\x1b[0m`);
-    console.log(`    NW-Memory:  ${overallScore}/100 (${grade})`);
-    console.log(`    gitwise:    ${gitwiseLastEval.overallScore}/100 (${gitwiseLastEval.grade})`);
+    console.log(`  \x1b[1mCombined Score (Learner + Watcher):\x1b[0m`);
+    console.log(`    Mycelium:  ${overallScore}/100 (${grade})`);
+    console.log(`    gitwise:    ${watchLastEval.overallScore}/100 (${watchLastEval.grade})`);
     const cc = (combinedGrade === 'A' || combinedGrade === 'B') ? '\x1b[32m' :
                combinedGrade === 'C' ? '\x1b[33m' : '\x1b[31m';
     console.log(`    ${cc}\x1b[1mCombined:   ${combinedScore}/100 (${combinedGrade})\x1b[0m`);
@@ -3299,7 +3299,7 @@ if (arg === '--init') {
 } else if (arg === '--eval') {
   evaluate();
 } else if (arg === '--heal') {
-  // Delegate to nw-fixer: unified fix → verify → confirm
+  // Delegate to mycelium-fix: unified fix → verify → confirm
   try { callFixer(true); } catch {
     // Fallback: legacy selfHeal
     const mem = loadMemory();
@@ -3325,7 +3325,7 @@ if (arg === '--init') {
   deepReflect(mem, true);  // force=true bypasses the every-10 check
   const after = (mem.reflections || []).length;
   saveMemory(mem);
-  console.log(`[NW-MEMORY] Deep reflection complete: ${after - before} new insights generated (${after} total)`);
+  console.log(`[mycelium] Deep reflection complete: ${after - before} new insights generated (${after} total)`);
   for (const r of (mem.reflections || []).filter(r => r.type !== 'fix_chain')) {
     console.log(`  [${r.type.replace(/_/g, '-')}] ${r.lesson}`);
   }
@@ -3373,9 +3373,9 @@ if (arg === '--init') {
   const wipLine = process.argv.slice(3).join(' ');
   const ts = new Date().toISOString().slice(0, 16);
   fs.writeFileSync(wipPath, `  ${ts} ${wipLine}\n`);
-  console.log(`[NW-MEMORY] WIP saved: ${wipLine}`);
+  console.log(`[mycelium] WIP saved: ${wipLine}`);
   console.log('  This will appear in .nw-context after next commit.');
-  console.log('  Clear with: node nw-memory.cjs --wip-done');
+  console.log('  Clear with: node mycelium.cjs --wip-done');
 } else if (arg === '--wip-append' && process.argv[3]) {
   // Append to WIP (for multi-step tasks)
   const wipPath = path.join(__dirname, '.nw-wip');
@@ -3383,15 +3383,15 @@ if (arg === '--init') {
   const wipLine = process.argv.slice(3).join(' ');
   const ts = new Date().toISOString().slice(0, 16);
   fs.writeFileSync(wipPath, existing + `  ${ts} ${wipLine}\n`);
-  console.log(`[NW-MEMORY] WIP appended: ${wipLine}`);
+  console.log(`[mycelium] WIP appended: ${wipLine}`);
 } else if (arg === '--wip-done') {
   // Clear WIP — task is complete
   const wipPath = path.join(__dirname, '.nw-wip');
   if (fs.existsSync(wipPath)) {
     fs.unlinkSync(wipPath);
-    console.log('[NW-MEMORY] WIP cleared. Good work.');
+    console.log('[mycelium] WIP cleared. Good work.');
   } else {
-    console.log('[NW-MEMORY] No WIP to clear.');
+    console.log('[mycelium] No WIP to clear.');
   }
 } else if (arg === '--compact') {
   compact();
@@ -3401,7 +3401,7 @@ if (arg === '--init') {
   trending();
 } else if (arg === '--sync') {
   // Catch up: take snapshot + delegate to nw-fixer for fix → verify → confirm
-  console.log('[NW-MEMORY] Syncing after pull/merge...');
+  console.log('[mycelium] Syncing after pull/merge...');
   takeSnapshot();
   try { callFixer(); } catch {
     // Fallback: legacy selfHeal
@@ -3413,7 +3413,7 @@ if (arg === '--init') {
       selfHealNw(mem);
     }
   }
-  console.log('[NW-MEMORY] Sync complete — snapshot + fix cycle done.');
+  console.log('[mycelium] Sync complete — snapshot + fix cycle done.');
 } else {
   takeSnapshot();
 }

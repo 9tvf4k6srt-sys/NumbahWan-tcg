@@ -2,7 +2,7 @@
 'use strict';
 
 // ═══════════════════════════════════════════════════════════════════════════
-// NW-EVAL v2.0 — Foolproof Evaluation: Zero Lies, Cryptographic Proof
+// MYCELIUM-EVAL v2.0 — Foolproof Evaluation: Zero Lies, Cryptographic Proof
 // ═══════════════════════════════════════════════════════════════════════════
 //
 // WHAT CHANGED from v1:
@@ -18,17 +18,17 @@
 //      consistency, weight sum, and score-bound checks.
 //
 // Usage:
-//   node nw-eval.cjs              # Full evaluation with human-readable output
-//   node nw-eval.cjs --json       # Machine-readable JSON
-//   node nw-eval.cjs --verify     # Cross-check mode: prove every number
-//   node nw-eval.cjs --proof      # Show cryptographic proof chain
-//   node nw-eval.cjs --history    # Show score history + improvement delta
-//   node nw-eval.cjs --audit      # Deep audit: list every commit classified
+//   node mycelium-eval.cjs              # Full evaluation with human-readable output
+//   node mycelium-eval.cjs --json       # Machine-readable JSON
+//   node mycelium-eval.cjs --verify     # Cross-check mode: prove every number
+//   node mycelium-eval.cjs --proof      # Show cryptographic proof chain
+//   node mycelium-eval.cjs --history    # Show score history + improvement delta
+//   node mycelium-eval.cjs --audit      # Deep audit: list every commit classified
 //
 // Data sources (read-only):
-//   memory.json          — NW-Memory
-//   .gitwise/memory.json — gitwise
-//   .nw-fixer-log.json   — Fixer
+//   memory.json          — Mycelium
+//   .mycelium/watch.json — mycelium-watch
+//   .mycelium/fix-log.json   — Fixer
 // ═══════════════════════════════════════════════════════════════════════════
 
 const fs = require('fs');
@@ -36,11 +36,11 @@ const path = require('path');
 const crypto = require('crypto');
 
 const ROOT = path.resolve(__dirname);
-const NW_MEM_PATH = path.join(ROOT, 'memory.json');
-const GW_MEM_PATH = path.join(ROOT, '.gitwise', 'memory.json');
-const FIXER_LOG_PATH = path.join(ROOT, '.nw-fixer-log.json');
-const EVAL_OUTPUT_PATH = path.join(ROOT, '.nw-eval-result.json');
-const HISTORY_PATH = path.join(ROOT, '.nw-eval-history.json');
+const MYC_MEM_PATH = path.join(ROOT, '.mycelium/memory.json');
+const WATCH_MEM_PATH = path.join(ROOT, '.mycelium', 'watch.json');
+const FIX_LOG_PATH = path.join(ROOT, '.mycelium/fix-log.json');
+const EVAL_PATH = path.join(ROOT, '.mycelium', 'eval.json');
+const HISTORY_PATH = path.join(ROOT, '.mycelium', 'eval-history.json');
 
 function loadJson(fp) {
   try { return JSON.parse(fs.readFileSync(fp, 'utf8')); }
@@ -56,7 +56,7 @@ function pct(n) { return Math.round(n * 100) + '%'; }
 // Automation/self-heal patterns — these are NOT real bugs
 const AUTOMATION_PATTERNS = [
   'self-heal', 'auto-fix', 'auto-eval', 'automation',
-  'wire gitwise', 'wire hooks', 'learning system'
+  'wire mycelium-watch', 'wire hooks', 'learning system'
 ];
 
 function isAutomationFix(msg) {
@@ -66,7 +66,7 @@ function isAutomationFix(msg) {
 
 function findLearningSystemInstallPoint(commits) {
   // Find the first commit that installed the learning system
-  const patterns = ['self-heal', 'learning', 'nw-memory', 'gitwise', 'learnings'];
+  const patterns = ['self-heal', 'learning', 'mycelium', 'mycelium-watch', 'learnings'];
   const idx = commits.findIndex(c => {
     const msg = (c.msg || '').toLowerCase();
     return patterns.some(p => msg.includes(p));
@@ -75,12 +75,12 @@ function findLearningSystemInstallPoint(commits) {
 }
 
 function extractRawData() {
-  const nwMem = loadJson(NW_MEM_PATH) || {};
-  const gwMem = loadJson(GW_MEM_PATH) || {};
-  const fixerLog = loadJson(FIXER_LOG_PATH) || { runs: [], totalFixes: 0, totalVerified: 0 };
+  const mycMem = loadJson(MYC_MEM_PATH) || {};
+  const watchMem = loadJson(WATCH_MEM_PATH) || {};
+  const fixerLog = loadJson(FIX_LOG_PATH) || { runs: [], totalFixes: 0, totalVerified: 0 };
 
   // ── Commits with HONEST classification ──
-  const commits = gwMem.commits || [];
+  const commits = watchMem.commits || [];
   const totalCommits = commits.length;
   const installIdx = findLearningSystemInstallPoint(commits);
   const beforeLearn = commits.slice(0, installIdx);
@@ -109,13 +109,13 @@ function extractRawData() {
   const latestRealFixRate = latest.length > 0 ? latest.filter(c => c.isFix && !isAutomationFix(c.msg)).length / latest.length : 0;
 
   // ── Breakages ──
-  const gwBreakages = gwMem.breakages || [];
-  const nwBreakages = nwMem.breakages || [];
+  const watchBreakages = watchMem.breakages || [];
+  const mycBreakages = mycMem.breakages || [];
 
   // Split breakages at install point
   const brokenBefore = new Set();
   const brokenAfter = new Set();
-  for (const b of gwBreakages) {
+  for (const b of watchBreakages) {
     const idx = commits.findIndex(c => c.hash === b.fixHash);
     for (const f of (b.files || [])) {
       if (idx < installIdx) brokenBefore.add(f);
@@ -126,7 +126,7 @@ function extractRawData() {
 
   // Recent window repeat check: files that broke in latest window
   const recentBreakFiles = new Set();
-  for (const b of gwBreakages) {
+  for (const b of watchBreakages) {
     const idx = commits.findIndex(c => c.hash === b.fixHash);
     if (idx >= totalCommits - window) {
       for (const f of (b.files || [])) recentBreakFiles.add(f);
@@ -164,50 +164,50 @@ function extractRawData() {
   const avgChainAfter = chainsAfter.length > 0 ? chainsAfter.reduce((s, c) => s + c.length, 0) / chainsAfter.length : 0;
 
   // ── Lessons ──
-  const nwLearnings = nwMem.learnings || [];
+  const mycLearnings = mycMem.learnings || [];
   const genericPatterns = ['fix-chain: same files', 'mobile/responsive breakage', 'styling fix', 'event handling issue', 'test at small viewports'];
-  const specificLessons = gwBreakages.filter(b => b.lesson && b.lesson.length >= 10 && !genericPatterns.some(p => b.lesson.toLowerCase().includes(p))).length;
+  const specificLessons = watchBreakages.filter(b => b.lesson && b.lesson.length >= 10 && !genericPatterns.some(p => b.lesson.toLowerCase().includes(p))).length;
 
   // ── Constraints ──
-  const constraintAreas = Object.keys(nwMem.constraints || {});
-  const totalConstraints = Object.values(nwMem.constraints || {}).flat().length;
+  const constraintAreas = Object.keys(mycMem.constraints || {});
+  const totalConstraints = Object.values(mycMem.constraints || {}).flat().length;
   const areaBreakages = {};
-  for (const b of nwBreakages) {
+  for (const b of mycBreakages) {
     const a = (b.area || 'unknown').toLowerCase();
     areaBreakages[a] = (areaBreakages[a] || 0) + 1;
   }
   const areasWithBreakages = Object.keys(areaBreakages);
-  const areasWithConstraints = constraintAreas.filter(a => (nwMem.constraints[a] || []).length > 0);
+  const areasWithConstraints = constraintAreas.filter(a => (mycMem.constraints[a] || []).length > 0);
   const coveredAreas = areasWithBreakages.filter(a => areasWithConstraints.includes(a));
 
   // ── Knowledge Density ──
-  const risks = gwMem.risks || {};
+  const risks = watchMem.risks || {};
   const riskyFiles = Object.keys(risks).length;
   const filesWithLessons = Object.values(risks).filter(r => (r.lessons || []).length > 0).length;
 
   // ── Warning Coverage ──
   const seenBreaks = new Set();
   let wouldHaveWarned = 0;
-  for (const b of gwBreakages) {
+  for (const b of watchBreakages) {
     for (const f of (b.files || [])) { if (seenBreaks.has(f)) { wouldHaveWarned++; break; } }
     for (const f of (b.files || [])) seenBreaks.add(f);
   }
-  const warningCoverage = gwBreakages.length > 1 ? wouldHaveWarned / (gwBreakages.length - 1) : 0;
+  const warningCoverage = watchBreakages.length > 1 ? wouldHaveWarned / (watchBreakages.length - 1) : 0;
 
   // ── Couplings ──
-  const couplings = gwMem.couplings || {};
+  const couplings = watchMem.couplings || {};
   let breakagesWithKnownCoupling = 0;
-  for (const b of gwBreakages) {
+  for (const b of watchBreakages) {
     for (const f of (b.files || [])) {
       for (const [pair, count] of Object.entries(couplings)) {
         if (count >= 5 && pair.includes(f)) { breakagesWithKnownCoupling++; break; }
       }
     }
   }
-  const couplingCoverage = gwBreakages.length > 0 ? Math.min(1, breakagesWithKnownCoupling / gwBreakages.length) : 0;
+  const couplingCoverage = watchBreakages.length > 0 ? Math.min(1, breakagesWithKnownCoupling / watchBreakages.length) : 0;
 
   // ── Bundle ──
-  const snapshots = nwMem.snapshots || [];
+  const snapshots = mycMem.snapshots || [];
   const latestSnap = snapshots.length > 0 ? snapshots[snapshots.length - 1] : null;
   const bundleKB = latestSnap?.build?.bundleKB || 0;
 
@@ -234,12 +234,12 @@ function extractRawData() {
 
   return {
     _sources: {
-      nwMemory: !!nwMem.snapshots,
-      gitwise: commits.length > 0,
+      mycMemory: !!mycMem.snapshots,
+      watch: commits.length > 0,
       fixer: fixerRuns.length > 0,
-      nwMemPath: NW_MEM_PATH,
-      gwMemPath: GW_MEM_PATH,
-      fixerPath: FIXER_LOG_PATH
+      mycMemPath: MYC_MEM_PATH,
+      watchMemPath: WATCH_MEM_PATH,
+      fixerPath: FIX_LOG_PATH
     },
     // Honest commit classification
     totalCommits,
@@ -263,8 +263,8 @@ function extractRawData() {
     latestAllFixRate,
     latestRealFixRate,
     // Breakages
-    totalBreakages: gwBreakages.length,
-    nwBreakageCount: nwBreakages.length,
+    totalBreakages: watchBreakages.length,
+    nwBreakageCount: mycBreakages.length,
     brokenBeforeCount: brokenBefore.size,
     brokenAfterCount: brokenAfter.size,
     repeatFileCount: repeatFiles.length,
@@ -279,9 +279,9 @@ function extractRawData() {
     avgChainAfter,
     chainImproving: avgChainAfter < avgChainBefore || chainsAfter.length === 0,
     // Lessons
-    totalLearnings: nwLearnings.length,
+    totalLearnings: mycLearnings.length,
     specificLessons,
-    lessonQualityRate: gwBreakages.length > 0 ? specificLessons / gwBreakages.length : 0,
+    lessonQualityRate: watchBreakages.length > 0 ? specificLessons / watchBreakages.length : 0,
     // Constraints
     totalConstraints,
     constraintAreaCount: constraintAreas.length,
@@ -306,8 +306,8 @@ function extractRawData() {
     hardenedFiles,
     guardEnforced,
     // Meta
-    decisions: (nwMem.decisions || []).length,
-    reflections: (nwMem.reflections || []).length,
+    decisions: (mycMem.decisions || []).length,
+    reflections: (mycMem.reflections || []).length,
   };
 }
 
@@ -579,7 +579,7 @@ function printEval(result, raw, proof) {
   const gradeColor = overall >= 75 ? G : overall >= 45 ? Y : R;
 
   console.log(`\n  ${'═'.repeat(55)}`);
-  console.log(`  NW-EVAL v2.0 — Foolproof Learning System Evaluation`);
+  console.log(`  MYCELIUM-EVAL v2.0 — Foolproof Learning System Evaluation`);
   console.log(`  ${'═'.repeat(55)}`);
   console.log(`\n  ${gradeColor}${B}  Overall: ${overall}/100 (${grade})${X}  [proof: ${proof.hash}]`);
   console.log(`  Data: ${raw.totalCommits} commits | ${raw.totalBreakages} breakages | ${raw.totalLearnings} learnings | ${raw.totalConstraints} constraints`);
@@ -628,7 +628,7 @@ function printEval(result, raw, proof) {
 function printVerify(result, raw, proof) {
   const G = '\x1b[32m', R = '\x1b[31m', X = '\x1b[0m';
   console.log(`\n  ${'═'.repeat(55)}`);
-  console.log(`  NW-EVAL v2.0 VERIFICATION — Proving Every Number`);
+  console.log(`  MYCELIUM-EVAL v2.0 VERIFICATION — Proving Every Number`);
   console.log(`  ${'═'.repeat(55)}\n`);
 
   const checks = [];
@@ -789,13 +789,13 @@ function printVerify(result, raw, proof) {
 
 function printProof(result, raw, proof) {
   console.log(`\n  ${'═'.repeat(55)}`);
-  console.log(`  NW-EVAL v2.0 CRYPTOGRAPHIC PROOF`);
+  console.log(`  MYCELIUM-EVAL v2.0 CRYPTOGRAPHIC PROOF`);
   console.log(`  ${'═'.repeat(55)}\n`);
   console.log(`  Score: ${result.overall}/100 (${result.grade})`);
   console.log(`  Hash:  ${proof.hash}`);
   console.log(`  Time:  ${new Date().toISOString()}`);
   console.log(`\n  How to verify:`);
-  console.log(`  1. Run: node nw-eval.cjs --verify`);
+  console.log(`  1. Run: node mycelium-eval.cjs --verify`);
   console.log(`  2. The hash is SHA-256 of the scoring inputs below`);
   console.log(`  3. If ANY data changes, the hash changes — impossible to fake\n`);
   console.log(`  Scoring inputs (hash of this = ${proof.hash}):`);
@@ -811,7 +811,7 @@ function printHistory(result, raw, proof) {
   const G = '\x1b[32m', R = '\x1b[31m', Y = '\x1b[33m', B = '\x1b[1m', X = '\x1b[0m';
 
   console.log(`\n  ${'═'.repeat(55)}`);
-  console.log(`  NW-EVAL v2.0 SCORE HISTORY — Proving Improvement`);
+  console.log(`  MYCELIUM-EVAL v2.0 SCORE HISTORY — Proving Improvement`);
   console.log(`  ${'═'.repeat(55)}\n`);
 
   if (history.evaluations.length < 2) {
@@ -852,12 +852,12 @@ function printHistory(result, raw, proof) {
 }
 
 function printAudit(raw) {
-  const gwMem = loadJson(GW_MEM_PATH) || {};
-  const commits = gwMem.commits || [];
+  const watchMem = loadJson(WATCH_MEM_PATH) || {};
+  const commits = watchMem.commits || [];
   const G = '\x1b[32m', R = '\x1b[31m', Y = '\x1b[33m', B = '\x1b[1m', X = '\x1b[0m';
 
   console.log(`\n  ${'═'.repeat(55)}`);
-  console.log(`  NW-EVAL v2.0 COMMIT AUDIT — Classifying Every Commit`);
+  console.log(`  MYCELIUM-EVAL v2.0 COMMIT AUDIT — Classifying Every Commit`);
   console.log(`  ${'═'.repeat(55)}\n`);
   console.log(`  ${B}Install point:${X} commit #${raw.installIdx} — ${raw.installCommitMsg}\n`);
   console.log(`  ${B}All fix commits (${raw.totalFixes}):${X}`);
@@ -892,7 +892,7 @@ function toJson(result, raw, proof) {
     proof: {
       dataHash: proof.hash,
       algorithm: 'sha256-first16',
-      howToVerify: 'Re-run nw-eval.cjs --verify; hash must match'
+      howToVerify: 'Re-run mycelium-eval.cjs --verify; hash must match'
     },
     honestSplit: {
       installIdx: raw.installIdx,
@@ -951,7 +951,7 @@ const proof = computeDataHash(raw);
 
 // Always write result + record history
 const jsonResult = toJson(result, raw, proof);
-fs.writeFileSync(EVAL_OUTPUT_PATH, JSON.stringify(jsonResult, null, 2));
+fs.writeFileSync(EVAL_PATH, JSON.stringify(jsonResult, null, 2));
 const history = recordHistory(result, raw, proof);
 
 if (arg === '--json') {

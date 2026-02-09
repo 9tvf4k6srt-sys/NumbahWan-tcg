@@ -2,7 +2,7 @@
 'use strict';
 
 // ═══════════════════════════════════════════════════════════════════════════
-// NW-FIXER — The Third Brain: Fix → Verify → Confirm
+// MYCELIUM-FIX — The Third Brain: Fix → Verify → Confirm
 // ═══════════════════════════════════════════════════════════════════════════
 //
 // Architecture: Three separate roles working in sync
@@ -10,7 +10,7 @@
 //   ┌─────────┐     ┌───────────┐     ┌─────────┐
 //   │ LEARNER │ ──> │ EVALUATOR │ ──> │  FIXER  │
 //   │         │     │           │     │         │
-//   │ gitwise │     │ runEval() │     │ nw-fixer│
+//   │ mycelium-watch │     │ runEval() │     │ mycelium-fix│
 //   │ nw-mem  │     │ runNwEval │     │         │
 //   │ --learn │     │           │     │ fix()   │
 //   │ snapshot│     │ scores{}  │     │ verify()│
@@ -29,10 +29,10 @@
 //   4. Be called independently or from hooks
 //
 // Usage:
-//   node nw-fixer.cjs              Run fix cycle (fix → verify → report)
-//   node nw-fixer.cjs --status     Show current state without fixing
-//   node nw-fixer.cjs --force      Force fix even if scores are OK
-//   node nw-fixer.cjs --dry-run    Show what would be fixed without doing it
+//   node mycelium-fix.cjs              Run fix cycle (fix → verify → report)
+//   node mycelium-fix.cjs --status     Show current state without fixing
+//   node mycelium-fix.cjs --force      Force fix even if scores are OK
+//   node mycelium-fix.cjs --dry-run    Show what would be fixed without doing it
 //
 // ═══════════════════════════════════════════════════════════════════════════
 
@@ -42,9 +42,9 @@ const { execSync } = require('child_process');
 
 // ─── Constants ──────────────────────────────────────────────────────
 const ROOT = __dirname;
-const NW_MEM_PATH = path.join(ROOT, 'memory.json');
-const GW_MEM_PATH = path.join(ROOT, '.gitwise', 'memory.json');
-const FIXER_LOG_PATH = path.join(ROOT, '.nw-fixer-log.json');
+const MYC_MEM_PATH = path.join(ROOT, '.mycelium/memory.json');
+const WATCH_MEM_PATH = path.join(ROOT, '.mycelium', 'watch.json');
+const FIX_LOG_PATH = path.join(ROOT, '.mycelium', 'fix-log.json');
 
 const MAX_FIX_LOOPS = 3;       // Max fix→verify cycles before giving up
 const MIN_IMPROVEMENT = 2;     // Min score improvement to count as "fixed"
@@ -68,26 +68,26 @@ function run(cmd) {
   catch { return ''; }
 }
 
-function log(msg) { console.log(`  [fixer] ${msg}`); }
-function dim(msg) { console.error(`  \x1b[2m[fixer] ${msg}\x1b[0m`); }
+function log(msg) { console.log(`  [mycelium-fix] ${msg}`); }
+function dim(msg) { console.error(`  \x1b[2m[mycelium-fix] ${msg}\x1b[0m`); }
 
 function loadFixerLog() {
-  return loadJson(FIXER_LOG_PATH) || { runs: [], totalFixes: 0, totalVerified: 0 };
+  return loadJson(FIX_LOG_PATH) || { runs: [], totalFixes: 0, totalVerified: 0 };
 }
 
 function saveFixerLog(flog) {
   // Keep last 30 runs
   if (flog.runs.length > 30) flog.runs = flog.runs.slice(-30);
-  saveJson(FIXER_LOG_PATH, flog);
+  saveJson(FIX_LOG_PATH, flog);
 }
 
-// ─── Phase 1: EVALUATE — unified scoring via nw-eval.cjs ───────────────
+// ─── Phase 1: EVALUATE — unified scoring via mycelium-eval.cjs ───────────────
 
 function evaluate() {
-  // Primary: use nw-eval.cjs as single source of truth
+  // Primary: use mycelium-eval.cjs as single source of truth
   try {
-    run('node nw-eval.cjs 2>/dev/null');
-    const evalResult = loadJson(path.join(ROOT, '.nw-eval-result.json'));
+    run('node mycelium-eval.cjs 2>/dev/null');
+    const evalResult = loadJson(path.join(ROOT, '.mycelium/eval.json'));
     if (evalResult && evalResult.overall !== undefined) {
       return {
         unified: true,
@@ -96,8 +96,8 @@ function evaluate() {
         metrics: evalResult.metrics,
         data: evalResult.data,
         // Legacy compatibility: expose as nw/gw for fix() function
-        nw: { overallScore: evalResult.overall, scores: evalResult.metrics, source: 'nw-eval' },
-        gw: { overallScore: evalResult.overall, scores: evalResult.metrics, source: 'nw-eval' }
+        nw: { overallScore: evalResult.overall, scores: evalResult.metrics, source: 'mycelium-eval' },
+        gw: { overallScore: evalResult.overall, scores: evalResult.metrics, source: 'mycelium-eval' }
       };
     }
   } catch { /* fallback below */ }
@@ -107,26 +107,26 @@ function evaluate() {
   let gwResult = null;
 
   try {
-    const nwOut = run('node nw-memory.cjs --eval-json 2>/dev/null');
+    const nwOut = run('node mycelium.cjs --eval-json 2>/dev/null');
     if (nwOut) nwResult = JSON.parse(nwOut);
   } catch { /* fallback: read from memory */ }
 
   if (!nwResult) {
-    const nwMem = loadJson(NW_MEM_PATH);
-    if (nwMem) {
-      nwResult = computeNwEval(nwMem);
+    const mycMem = loadJson(MYC_MEM_PATH);
+    if (mycMem) {
+      nwResult = computeNwEval(mycMem);
     }
   }
 
   try {
-    const gwOut = run('node gitwise.cjs --eval-json 2>/dev/null');
+    const gwOut = run('node mycelium-watch.cjs --eval-json 2>/dev/null');
     if (gwOut) gwResult = JSON.parse(gwOut);
   } catch { /* fallback: read from memory */ }
 
   if (!gwResult) {
-    const gwMem = loadJson(GW_MEM_PATH);
-    if (gwMem) {
-      gwResult = computeGwEval(gwMem);
+    const watchMem = loadJson(WATCH_MEM_PATH);
+    if (watchMem) {
+      gwResult = computeGwEval(watchMem);
     }
   }
 
@@ -141,7 +141,7 @@ function computeNwEval(mem) {
   const totalSnapshots = (mem.snapshots || []).length;
   if (totalSnapshots < 5) return null;
 
-  // Simplified scoring — the real eval is in nw-memory.cjs
+  // Simplified scoring — the real eval is in mycelium.cjs
   // This is a fallback when CLI isn't available
   const areaBreakages = {};
   for (const b of (mem.breakages || [])) {
@@ -204,17 +204,17 @@ function computeGwEval(mem) {
 // The fixer reads these prescriptions to know EXACTLY what to fix.
 
 function diagnose(evalData) {
-  const evalResult = loadJson(path.join(ROOT, '.nw-eval-result.json'));
+  const evalResult = loadJson(path.join(ROOT, '.mycelium/eval.json'));
   if (!evalResult || !evalResult.metrics) return [];
 
-  const gwMem = loadJson(GW_MEM_PATH) || {};
-  const nwMem = loadJson(NW_MEM_PATH) || {};
-  const commits = gwMem.commits || [];
-  const breakages = gwMem.breakages || [];
-  const risks = gwMem.risks || {};
+  const watchMem = loadJson(WATCH_MEM_PATH) || {};
+  const mycMem = loadJson(MYC_MEM_PATH) || {};
+  const commits = watchMem.commits || [];
+  const breakages = watchMem.breakages || [];
+  const risks = watchMem.risks || {};
 
   // Automation filter
-  const autoPatterns = ['self-heal', 'auto-fix', 'auto-eval', 'automation', 'wire gitwise', 'wire hooks', 'learning system'];
+  const autoPatterns = ['self-heal', 'auto-fix', 'auto-eval', 'automation', 'wire mycelium-watch', 'wire hooks', 'learning system'];
   const isAuto = (msg) => autoPatterns.some(p => (msg || '').toLowerCase().includes(p));
 
   const installIdx = evalResult.honestSplit?.installIdx || Math.floor(commits.length / 2);
@@ -255,7 +255,7 @@ function diagnose(evalData) {
         lessons: (risks[f] || {}).lessons || [],
         hasConstraints: ((risks[f] || {}).constraints || []).length > 0,
         escalated: !!(risks[f] || {}).escalated,
-        coupledWith: Object.entries(gwMem.couplings || {}).filter(([pair, count]) => count >= 5 && pair.includes(f)).map(([pair]) => pair.replace(f, '').replace('||', '').trim()),
+        coupledWith: Object.entries(watchMem.couplings || {}).filter(([pair, count]) => count >= 5 && pair.includes(f)).map(([pair]) => pair.replace(f, '').replace('||', '').trim()),
       })).sort((a, b) => b.breakCount - a.breakCount);
 
       diagnosis.evidence.files = byBreaks;
@@ -384,7 +384,7 @@ function diagnose(evalData) {
         diagnosis.prescriptions.push({
           action: 'PRE_MORTEM_FOR_CHAIN_FILES',
           target: [...new Set(longestAfter.flatMap(c => c.files || []))],
-          detail: `Longest after-learning chain is ${longestAfter.length} commits. Before touching these files again, run: node nw-memory.cjs --premortem <area> to surface known risks. Add constraint: 'test at 320px before committing mobile fixes.'`,
+          detail: `Longest after-learning chain is ${longestAfter.length} commits. Before touching these files again, run: node mycelium.cjs --premortem <area> to surface known risks. Add constraint: 'test at 320px before committing mobile fixes.'`,
           expectedImpact: 'fixChainSpeed +15-30 points'
         });
       }
@@ -438,7 +438,7 @@ function diagnose(evalData) {
       diagnosis.prescriptions.push({
         action: 'VERIFY_EXISTING_FIXES',
         target: 'fixer',
-        detail: 'Run nw-fixer --force to re-run the fix cycle. Then check if score improved. If yes, mark as verified.',
+        detail: 'Run mycelium fix --force to re-run the fix cycle. Then check if score improved. If yes, mark as verified.',
         expectedImpact: 'fixerEffectiveness +20-40 points'
       });
     }
@@ -453,7 +453,7 @@ function diagnose(evalData) {
       diagnosis.prescriptions.push({
         action: 'INVESTIGATE',
         target: metricName,
-        detail: `Manual investigation needed. Run: node nw-eval.cjs --verify to see the raw data, then trace back to specific files/commits.`,
+        detail: `Manual investigation needed. Run: node mycelium-eval.cjs --verify to see the raw data, then trace back to specific files/commits.`,
         expectedImpact: 'unknown'
       });
     }
@@ -476,9 +476,9 @@ function diagnose(evalData) {
 
 function executePrescriptions(diagnoses, dryRun) {
   const actions = [];
-  const nwMem = loadJson(NW_MEM_PATH);
-  const gwMem = loadJson(GW_MEM_PATH);
-  if (!nwMem || !gwMem) return actions;
+  const mycMem = loadJson(MYC_MEM_PATH);
+  const watchMem = loadJson(WATCH_MEM_PATH);
+  if (!mycMem || !watchMem) return actions;
 
   for (const d of diagnoses) {
     for (const rx of d.prescriptions) {
@@ -494,7 +494,7 @@ function executePrescriptions(diagnoses, dryRun) {
           const files = Array.isArray(rx.target) ? rx.target.filter(f => typeof f === 'string') : [];
           let strengthened = 0;
           for (const file of files) {
-            const risk = gwMem.risks?.[file];
+            const risk = watchMem.risks?.[file];
             if (!risk) continue;
             const lessons = risk.lessons || [];
             if (!risk.constraints) risk.constraints = [];
@@ -541,12 +541,12 @@ function executePrescriptions(diagnoses, dryRun) {
                 date: new Date().toISOString().split('T')[0],
                 action: 'STRENGTHEN_CONSTRAINTS',
                 constraintsAdded: strengthened,
-                source: 'nw-fixer: prescription executor'
+                source: 'mycelium-fix: prescription executor'
               });
             }
           }
           if (strengthened > 0) {
-            actions.push({ type: 'rx-strengthen', desc: `strengthened constraints on ${files.length} files (+${strengthened} preventive rules)`, system: 'gitwise', metric: d.metric });
+            actions.push({ type: 'rx-strengthen', desc: `strengthened constraints on ${files.length} files (+${strengthened} preventive rules)`, system: 'mycelium-watch', metric: d.metric });
           }
           break;
         }
@@ -559,7 +559,7 @@ function executePrescriptions(diagnoses, dryRun) {
           const files = Array.isArray(rx.target) ? rx.target.filter(f => typeof f === 'string') : [];
           let added = 0;
           for (const file of files) {
-            const risk = gwMem.risks?.[file];
+            const risk = watchMem.risks?.[file];
             if (!risk || (risk.constraints && risk.constraints.length > 0)) continue;
             risk.constraints = [];
 
@@ -576,9 +576,9 @@ function executePrescriptions(diagnoses, dryRun) {
               }
             }
 
-            // Also sync from NW-Memory area constraints
+            // Also sync from Mycelium area constraints
             const area = classifyFileToArea(file);
-            const areaConstraints = nwMem.constraints?.[area] || [];
+            const areaConstraints = mycMem.constraints?.[area] || [];
             for (const ac of areaConstraints.slice(0, 3)) {
               if (ac.fact && risk.constraints.length < 10) {
                 if (!dryRun) risk.constraints.push(`AREA[${area}]: ${ac.fact.slice(0, 150)}`);
@@ -592,19 +592,19 @@ function executePrescriptions(diagnoses, dryRun) {
                 date: new Date().toISOString().split('T')[0],
                 action: 'ADD_CONSTRAINTS',
                 constraintsAdded: added,
-                source: 'nw-fixer: prescription executor'
+                source: 'mycelium-fix: prescription executor'
               });
             }
           }
           if (added > 0) {
-            actions.push({ type: 'rx-add-constraints', desc: `added ${added} constraints to ${files.length} unconstrained files`, system: 'gitwise', metric: d.metric });
+            actions.push({ type: 'rx-add-constraints', desc: `added ${added} constraints to ${files.length} unconstrained files`, system: 'mycelium-watch', metric: d.metric });
           }
           break;
         }
 
         // ════════════════════════════════════════════════════════════
         // ENFORCE_CO_CHANGES: for coupled files that must change together.
-        // Action: record coupling enforcement in risk data + NW-Memory.
+        // Action: record coupling enforcement in risk data + Mycelium.
         // ════════════════════════════════════════════════════════════
         case 'ENFORCE_CO_CHANGES': {
           const targets = Array.isArray(rx.target) ? rx.target : [];
@@ -612,7 +612,7 @@ function executePrescriptions(diagnoses, dryRun) {
           for (const t of targets) {
             const file = t.file || t;
             const coupledWith = t.coupledWith || [];
-            const risk = gwMem.risks?.[file];
+            const risk = watchMem.risks?.[file];
             if (!risk) continue;
             if (!risk.constraints) risk.constraints = [];
 
@@ -622,11 +622,11 @@ function executePrescriptions(diagnoses, dryRun) {
                 if (!dryRun) {
                   risk.constraints.push(rule);
                   // Also add to partner's constraints
-                  if (gwMem.risks?.[partner]) {
-                    if (!gwMem.risks[partner].constraints) gwMem.risks[partner].constraints = [];
+                  if (watchMem.risks?.[partner]) {
+                    if (!watchMem.risks[partner].constraints) watchMem.risks[partner].constraints = [];
                     const reverseRule = `CO-CHANGE ENFORCED: when ${partner} changes, ${file} MUST also change`;
-                    if (!gwMem.risks[partner].constraints.includes(reverseRule) && gwMem.risks[partner].constraints.length < 15) {
-                      gwMem.risks[partner].constraints.push(reverseRule);
+                    if (!watchMem.risks[partner].constraints.includes(reverseRule) && watchMem.risks[partner].constraints.length < 15) {
+                      watchMem.risks[partner].constraints.push(reverseRule);
                     }
                   }
                 }
@@ -635,7 +635,7 @@ function executePrescriptions(diagnoses, dryRun) {
             }
           }
           if (enforced > 0) {
-            actions.push({ type: 'rx-co-change', desc: `enforced ${enforced} co-change rules for coupled files`, system: 'gitwise', metric: d.metric });
+            actions.push({ type: 'rx-co-change', desc: `enforced ${enforced} co-change rules for coupled files`, system: 'mycelium-watch', metric: d.metric });
           }
           break;
         }
@@ -648,7 +648,7 @@ function executePrescriptions(diagnoses, dryRun) {
           const files = Array.isArray(rx.target) ? rx.target.filter(f => typeof f === 'string') : [];
           let prevented = 0;
           for (const file of files) {
-            const risk = gwMem.risks?.[file];
+            const risk = watchMem.risks?.[file];
             if (!risk) continue;
             if (!risk.constraints) risk.constraints = [];
 
@@ -661,17 +661,17 @@ function executePrescriptions(diagnoses, dryRun) {
             // Add regression constraint based on dominant failure type
             const area = classifyFileToArea(file);
             const areaKey = area.toLowerCase();
-            if (!nwMem.constraints[areaKey]) nwMem.constraints[areaKey] = [];
+            if (!mycMem.constraints[areaKey]) mycMem.constraints[areaKey] = [];
             const preventionRule = `[auto] ${file} is a top post-learning bug source (${risk.breakCount}x). Require: data-testid markers, regression tests, pre-commit guard check.`;
-            const exists = nwMem.constraints[areaKey].some(c => c.fact && c.fact.includes(file) && c.fact.includes('post-learning'));
-            if (!exists && nwMem.constraints[areaKey].length < 15) {
+            const exists = mycMem.constraints[areaKey].some(c => c.fact && c.fact.includes(file) && c.fact.includes('post-learning'));
+            if (!exists && mycMem.constraints[areaKey].length < 15) {
               if (!dryRun) {
-                nwMem.constraints[areaKey].push({
+                mycMem.constraints[areaKey].push({
                   fact: preventionRule,
                   ts: Date.now(),
                   date: new Date().toISOString().split('T')[0],
                   autoGenerated: true,
-                  source: 'nw-fixer: PREVENT_NEW_BUGS prescription'
+                  source: 'mycelium-fix: PREVENT_NEW_BUGS prescription'
                 });
               }
               prevented++;
@@ -691,7 +691,7 @@ function executePrescriptions(diagnoses, dryRun) {
           const files = Array.isArray(rx.target) ? rx.target.filter(f => typeof f === 'string') : [];
           let premortem = 0;
           for (const file of files) {
-            const risk = gwMem.risks?.[file];
+            const risk = watchMem.risks?.[file];
             if (!risk) continue;
             if (!risk.constraints) risk.constraints = [];
 
@@ -708,19 +708,19 @@ function executePrescriptions(diagnoses, dryRun) {
             }
           }
 
-          // Add process constraint to NW-Memory
+          // Add process constraint to Mycelium
           const processArea = 'process';
-          if (!nwMem.constraints[processArea]) nwMem.constraints[processArea] = [];
-          const processRule = `[auto] Fix-chain files (${files.slice(0,3).join(', ')}) require pre-mortem analysis before any edit. Run: nw-memory.cjs --premortem <area>`;
-          const pExists = nwMem.constraints[processArea].some(c => c.fact && c.fact.includes('pre-mortem'));
-          if (!pExists && nwMem.constraints[processArea].length < 15) {
+          if (!mycMem.constraints[processArea]) mycMem.constraints[processArea] = [];
+          const processRule = `[auto] Fix-chain files (${files.slice(0,3).join(', ')}) require pre-mortem analysis before any edit. Run: mycelium.cjs --premortem <area>`;
+          const pExists = mycMem.constraints[processArea].some(c => c.fact && c.fact.includes('pre-mortem'));
+          if (!pExists && mycMem.constraints[processArea].length < 15) {
             if (!dryRun) {
-              nwMem.constraints[processArea].push({
+              mycMem.constraints[processArea].push({
                 fact: processRule,
                 ts: Date.now(),
                 date: new Date().toISOString().split('T')[0],
                 autoGenerated: true,
-                source: 'nw-fixer: PRE_MORTEM_FOR_CHAIN_FILES prescription'
+                source: 'mycelium-fix: PRE_MORTEM_FOR_CHAIN_FILES prescription'
               });
             }
             premortem++;
@@ -738,20 +738,20 @@ function executePrescriptions(diagnoses, dryRun) {
         // ════════════════════════════════════════════════════════════
         case 'ROOT_CAUSE_FIRST': {
           const wfArea = 'workflow';
-          if (!nwMem.constraints[wfArea]) nwMem.constraints[wfArea] = [];
+          if (!mycMem.constraints[wfArea]) mycMem.constraints[wfArea] = [];
           const rcRule = '[auto] ROOT-CAUSE FIRST: every fix commit MUST include root-cause in commit message. Protocol: (1) reproduce, (2) identify root cause, (3) fix, (4) verify coupled files.';
-          const rcExists = nwMem.constraints[wfArea].some(c => c.fact && c.fact.includes('ROOT-CAUSE FIRST'));
-          if (!rcExists && nwMem.constraints[wfArea].length < 15) {
+          const rcExists = mycMem.constraints[wfArea].some(c => c.fact && c.fact.includes('ROOT-CAUSE FIRST'));
+          if (!rcExists && mycMem.constraints[wfArea].length < 15) {
             if (!dryRun) {
-              nwMem.constraints[wfArea].push({
+              mycMem.constraints[wfArea].push({
                 fact: rcRule,
                 ts: Date.now(),
                 date: new Date().toISOString().split('T')[0],
                 autoGenerated: true,
-                source: 'nw-fixer: ROOT_CAUSE_FIRST prescription'
+                source: 'mycelium-fix: ROOT_CAUSE_FIRST prescription'
               });
             }
-            actions.push({ type: 'rx-root-cause', desc: 'added ROOT-CAUSE-FIRST protocol to workflow constraints', system: 'nw-memory', metric: d.metric });
+            actions.push({ type: 'rx-root-cause', desc: 'added ROOT-CAUSE-FIRST protocol to workflow constraints', system: 'mycelium', metric: d.metric });
           }
           break;
         }
@@ -775,8 +775,8 @@ function executePrescriptions(diagnoses, dryRun) {
 
   // Save changes from prescriptions
   if (!dryRun && actions.length > 0) {
-    saveJson(NW_MEM_PATH, nwMem);
-    saveJson(GW_MEM_PATH, gwMem);
+    saveJson(MYC_MEM_PATH, mycMem);
+    saveJson(WATCH_MEM_PATH, watchMem);
   }
 
   return actions;
@@ -787,108 +787,108 @@ function fix(evalData, dryRun) {
   const nw = evalData.nw;
   const gw = evalData.gw;
 
-  const nwMem = loadJson(NW_MEM_PATH);
-  const gwMem = loadJson(GW_MEM_PATH);
+  const mycMem = loadJson(MYC_MEM_PATH);
+  const watchMem = loadJson(WATCH_MEM_PATH);
 
-  if (!nwMem && !gwMem) {
+  if (!mycMem && !watchMem) {
     log('No data found for either system — nothing to fix');
     return actions;
   }
 
   // ──────────────────────────────────────────────────────────────────
-  // FIX 1: Cross-system constraint sync (NW-Memory → gitwise)
-  // NW-Memory tracks constraints by area, gitwise by file.
+  // FIX 1: Cross-system constraint sync (Mycelium → mycelium-watch)
+  // Mycelium tracks constraints by area, mycelium-watch by file.
   // Bridge: map area keywords to file paths.
   // ──────────────────────────────────────────────────────────────────
-  if (nwMem && gwMem) {
-    const constraints = nwMem.constraints || {};
+  if (mycMem && watchMem) {
+    const constraints = mycMem.constraints || {};
     let synced = 0;
     for (const [area, areaConstraints] of Object.entries(constraints)) {
       if (!areaConstraints || areaConstraints.length === 0) continue;
       const areaLower = area.toLowerCase();
-      const matchingFiles = Object.keys(gwMem.risks || {}).filter(f =>
+      const matchingFiles = Object.keys(watchMem.risks || {}).filter(f =>
         f.toLowerCase().includes(areaLower) ||
         f.toLowerCase().includes(areaLower.replace(/s$/, ''))
       );
       for (const f of matchingFiles) {
-        if (!gwMem.risks[f].constraints) gwMem.risks[f].constraints = [];
+        if (!watchMem.risks[f].constraints) watchMem.risks[f].constraints = [];
         for (const c of areaConstraints) {
-          if (!gwMem.risks[f].constraints.includes(c.fact) && gwMem.risks[f].constraints.length < 10) {
-            if (!dryRun) gwMem.risks[f].constraints.push(c.fact);
+          if (!watchMem.risks[f].constraints.includes(c.fact) && watchMem.risks[f].constraints.length < 10) {
+            if (!dryRun) watchMem.risks[f].constraints.push(c.fact);
             synced++;
           }
         }
       }
     }
-    if (synced > 0) actions.push({ type: 'cross-sync', desc: `synced ${synced} NW-Memory constraints → gitwise`, system: 'both' });
+    if (synced > 0) actions.push({ type: 'cross-sync', desc: `synced ${synced} Mycelium constraints → mycelium-watch`, system: 'both' });
   }
 
   // ──────────────────────────────────────────────────────────────────
-  // FIX 2: Reverse sync — gitwise deep lessons → NW-Memory constraints
-  // When gitwise has deep root-cause analysis, promote to NW-Memory constraint
+  // FIX 2: Reverse sync — mycelium-watch deep lessons → Mycelium constraints
+  // When mycelium-watch has deep root-cause analysis, promote to Mycelium constraint
   // ──────────────────────────────────────────────────────────────────
-  if (gwMem && nwMem) {
+  if (watchMem && mycMem) {
     let promoted = 0;
-    for (const [file, risk] of Object.entries(gwMem.risks || {})) {
+    for (const [file, risk] of Object.entries(watchMem.risks || {})) {
       if (!risk.deepAnalysis || risk.deepAnalysis.length === 0) continue;
-      // Determine the NW-Memory area from the file path
+      // Determine the Mycelium area from the file path
       const area = classifyFileToArea(file);
-      if (!nwMem.constraints[area]) nwMem.constraints[area] = [];
+      if (!mycMem.constraints[area]) mycMem.constraints[area] = [];
       for (const da of risk.deepAnalysis) {
         const fact = `[auto-fixer] ${file} root-cause themes: [${da.themes.join(', ')}] — ${risk.breakCount}x broken`;
-        const exists = nwMem.constraints[area].some(c => c.fact === fact);
-        if (!exists && nwMem.constraints[area].length < 15) {
+        const exists = mycMem.constraints[area].some(c => c.fact === fact);
+        if (!exists && mycMem.constraints[area].length < 15) {
           if (!dryRun) {
-            nwMem.constraints[area].push({
+            mycMem.constraints[area].push({
               fact, ts: Date.now(),
               date: new Date().toISOString().split('T')[0],
               autoGenerated: true,
-              source: 'nw-fixer: gitwise deep analysis promoted to constraint'
+              source: 'mycelium-fix: mycelium-watch deep analysis promoted to constraint'
             });
           }
           promoted++;
         }
       }
     }
-    if (promoted > 0) actions.push({ type: 'reverse-sync', desc: `promoted ${promoted} gitwise deep analyses → NW-Memory constraints`, system: 'both' });
+    if (promoted > 0) actions.push({ type: 'reverse-sync', desc: `promoted ${promoted} mycelium-watch deep analyses → Mycelium constraints`, system: 'both' });
   }
 
   // ──────────────────────────────────────────────────────────────────
   // FIX 3: Auto-constrain uncovered areas
-  // If NW-Memory eval shows uncovered areas, create constraints from lessons
+  // If Mycelium eval shows uncovered areas, create constraints from lessons
   // ──────────────────────────────────────────────────────────────────
-  if (nw && nw.uncoveredAreas && nw.uncoveredAreas.length > 0 && nwMem) {
+  if (nw && nw.uncoveredAreas && nw.uncoveredAreas.length > 0 && mycMem) {
     let created = 0;
     for (const area of nw.uncoveredAreas) {
-      const areaBreaks = (nwMem.breakages || []).filter(b => (b.area || '').toLowerCase() === area);
+      const areaBreaks = (mycMem.breakages || []).filter(b => (b.area || '').toLowerCase() === area);
       const lessons = areaBreaks.map(b => b.what || b.deepLesson || '').filter(l => l.length > 10);
-      if (lessons.length > 0 && !nwMem.constraints[area]) {
+      if (lessons.length > 0 && !mycMem.constraints[area]) {
         if (!dryRun) {
-          nwMem.constraints[area] = [{
+          mycMem.constraints[area] = [{
             fact: lessons[lessons.length - 1],
             ts: Date.now(), date: new Date().toISOString().split('T')[0],
-            autoGenerated: true, source: 'nw-fixer: uncovered area auto-constrained'
+            autoGenerated: true, source: 'mycelium-fix: uncovered area auto-constrained'
           }];
         }
         created++;
-        actions.push({ type: 'auto-constrain', desc: `created constraint for uncovered area [${area}]`, system: 'nw-memory' });
+        actions.push({ type: 'auto-constrain', desc: `created constraint for uncovered area [${area}]`, system: 'mycelium' });
       }
     }
   }
 
   // ──────────────────────────────────────────────────────────────────
-  // FIX 4: Deep root-cause for repeat offenders (gitwise)
+  // FIX 4: Deep root-cause for repeat offenders (mycelium-watch)
   // Extract recurring themes from breakage lessons using word frequency
   // ──────────────────────────────────────────────────────────────────
-  if (gwMem) {
-    const offenders = Object.entries(gwMem.risks || {})
+  if (watchMem) {
+    const offenders = Object.entries(watchMem.risks || {})
       .filter(([, r]) => r.breakCount >= 2 && (!r.deepAnalysis || r.deepAnalysis.length === 0))
       .sort((a, b) => b[1].breakCount - a[1].breakCount)
       .slice(0, 15);
 
     let analyzed = 0;
     for (const [file, risk] of offenders) {
-      const fileBreakages = (gwMem.breakages || []).filter(b => (b.files || []).includes(file));
+      const fileBreakages = (watchMem.breakages || []).filter(b => (b.files || []).includes(file));
       if (fileBreakages.length < 2) continue;
 
       const allLessons = fileBreakages.map(b => (b.lesson || b.pattern || '').toLowerCase());
@@ -912,7 +912,7 @@ function fix(evalData, dryRun) {
             date: new Date().toISOString().split('T')[0],
             themes: recurringThemes,
             breakCount: risk.breakCount,
-            source: 'nw-fixer: deep root-cause analysis'
+            source: 'mycelium-fix: deep root-cause analysis'
           });
           // Promote to lesson
           const rootCause = `ROOT-CAUSE: themes=[${recurringThemes.join(',')}] across ${fileBreakages.length} breakages`;
@@ -924,37 +924,37 @@ function fix(evalData, dryRun) {
         analyzed++;
       }
     }
-    if (analyzed > 0) actions.push({ type: 'deep-analysis', desc: `deep root-cause on ${analyzed} repeat offenders`, system: 'gitwise' });
+    if (analyzed > 0) actions.push({ type: 'deep-analysis', desc: `deep root-cause on ${analyzed} repeat offenders`, system: 'mycelium-watch' });
   }
 
   // ──────────────────────────────────────────────────────────────────
-  // FIX 5: Escalate high-risk files (gitwise)
+  // FIX 5: Escalate high-risk files (mycelium-watch)
   // Mark files with 3+ breaks as escalated for louder warnings
   // ──────────────────────────────────────────────────────────────────
-  if (gwMem) {
+  if (watchMem) {
     let escalated = 0;
-    for (const [file, risk] of Object.entries(gwMem.risks || {})) {
+    for (const [file, risk] of Object.entries(watchMem.risks || {})) {
       if (risk.breakCount >= 3 && !risk.escalated) {
         if (!dryRun) {
           risk.escalated = true;
           risk.escalatedAt = new Date().toISOString().slice(0, 10);
-          risk.escalatedReason = `[nw-fixer] broke ${risk.breakCount}x — auto-escalated`;
+          risk.escalatedReason = `[mycelium-fix] broke ${risk.breakCount}x — auto-escalated`;
         }
         escalated++;
       }
     }
-    if (escalated > 0) actions.push({ type: 'escalate', desc: `escalated ${escalated} files (3+ breaks)`, system: 'gitwise' });
+    if (escalated > 0) actions.push({ type: 'escalate', desc: `escalated ${escalated} files (3+ breaks)`, system: 'mycelium-watch' });
   }
 
   // ──────────────────────────────────────────────────────────────────
-  // FIX 6: Backfill empty lessons (gitwise)
+  // FIX 6: Backfill empty lessons (mycelium-watch)
   // For files with risk but no lessons, pull from breakage data
   // ──────────────────────────────────────────────────────────────────
-  if (gwMem) {
+  if (watchMem) {
     let backfilled = 0;
-    for (const [file, risk] of Object.entries(gwMem.risks || {})) {
+    for (const [file, risk] of Object.entries(watchMem.risks || {})) {
       if ((!risk.lessons || risk.lessons.length === 0) && risk.breakCount >= 1) {
-        const relevantBreakage = (gwMem.breakages || []).find(b =>
+        const relevantBreakage = (watchMem.breakages || []).find(b =>
           (b.files || []).includes(file) && b.lesson && b.lesson.length > 15
         );
         if (relevantBreakage && !dryRun) {
@@ -964,53 +964,53 @@ function fix(evalData, dryRun) {
         }
       }
     }
-    if (backfilled > 0) actions.push({ type: 'backfill', desc: `backfilled lessons for ${backfilled} files`, system: 'gitwise' });
+    if (backfilled > 0) actions.push({ type: 'backfill', desc: `backfilled lessons for ${backfilled} files`, system: 'mycelium-watch' });
   }
 
   // ──────────────────────────────────────────────────────────────────
-  // FIX 7: Auto-create learnings from unlearned breakages (NW-Memory)
+  // FIX 7: Auto-create learnings from unlearned breakages (Mycelium)
   // ──────────────────────────────────────────────────────────────────
-  if (nwMem) {
+  if (mycMem) {
     let created = 0;
-    for (const b of (nwMem.breakages || [])) {
+    for (const b of (mycMem.breakages || [])) {
       const area = (b.area || 'unknown').toLowerCase();
       const lesson = b.deepLesson || b.what || '';
       if (lesson.length > 15) {
-        if (!nwMem.learnings) nwMem.learnings = [];
-        const exists = nwMem.learnings.some(l => l.area === area && l.lesson === lesson);
+        if (!mycMem.learnings) mycMem.learnings = [];
+        const exists = mycMem.learnings.some(l => l.area === area && l.lesson === lesson);
         if (!exists) {
           if (!dryRun) {
-            nwMem.learnings.push({
+            mycMem.learnings.push({
               ts: Date.now(), date: new Date().toISOString().split('T')[0],
               area, lesson, autoGenerated: true,
-              source: 'nw-fixer: breakage promoted to learning'
+              source: 'mycelium-fix: breakage promoted to learning'
             });
           }
           created++;
         }
       }
     }
-    if (created > 0) actions.push({ type: 'auto-learn', desc: `promoted ${created} breakages → learnings`, system: 'nw-memory' });
+    if (created > 0) actions.push({ type: 'auto-learn', desc: `promoted ${created} breakages → learnings`, system: 'mycelium' });
   }
 
   // ──────────────────────────────────────────────────────────────────
-  // FIX 8: Lower coupling threshold if accuracy is low (gitwise)
+  // FIX 8: Lower coupling threshold if accuracy is low (mycelium-watch)
   // ──────────────────────────────────────────────────────────────────
-  if (gw && gwMem && gw.scores && gw.scores.couplingAccuracy < 50) {
-    const current = gwMem.stats?.couplingThreshold || 5;
+  if (gw && watchMem && gw.scores && gw.scores.couplingAccuracy < 50) {
+    const current = watchMem.stats?.couplingThreshold || 5;
     if (current > 3) {
       if (!dryRun) {
-        if (!gwMem.stats) gwMem.stats = {};
-        gwMem.stats.couplingThreshold = 3;
+        if (!watchMem.stats) watchMem.stats = {};
+        watchMem.stats.couplingThreshold = 3;
       }
-      actions.push({ type: 'coupling', desc: `coupling threshold ${current} → 3`, system: 'gitwise' });
+      actions.push({ type: 'coupling', desc: `coupling threshold ${current} → 3`, system: 'mycelium-watch' });
     }
   }
 
   // ── Save both systems after all fixes ──
   if (!dryRun) {
-    if (nwMem) saveJson(NW_MEM_PATH, nwMem);
-    if (gwMem) saveJson(GW_MEM_PATH, gwMem);
+    if (mycMem) saveJson(MYC_MEM_PATH, mycMem);
+    if (watchMem) saveJson(WATCH_MEM_PATH, watchMem);
   }
 
   return actions;
@@ -1050,7 +1050,7 @@ function verify(beforeScores) {
   return { eval: afterEval, verification: result };
 }
 
-// ─── Classify file path to NW-Memory area ───────────────────────────
+// ─── Classify file path to Mycelium area ───────────────────────────
 
 function classifyFileToArea(filePath) {
   const fp = filePath.toLowerCase();
@@ -1075,7 +1075,7 @@ function run_cycle(opts) {
 
   if (!silent) {
     console.log('');
-    console.log('  \x1b[1mnw-fixer\x1b[0m — fix → verify → confirm');
+    console.log('  \x1b[1mmycelium-fix\x1b[0m — fix → verify → confirm');
     console.log('  ' + '─'.repeat(55));
   }
 
@@ -1085,11 +1085,11 @@ function run_cycle(opts) {
 
   if (!silent) {
     if (beforeEval.unified) {
-      log(`before: unified ${combinedBefore}/100 (${beforeEval.grade}) — via nw-eval.cjs`);
+      log(`before: unified ${combinedBefore}/100 (${beforeEval.grade}) — via mycelium-eval.cjs`);
     } else {
       const nwS = beforeEval.nw?.overallScore || 0;
       const gwS = beforeEval.gw?.overallScore || 0;
-      log(`before: NW-Memory ${nwS}/100 | gitwise ${gwS}/100 | combined ${combinedBefore}/100`);
+      log(`before: Mycelium ${nwS}/100 | mycelium-watch ${gwS}/100 | combined ${combinedBefore}/100`);
     }
   }
 
@@ -1217,7 +1217,7 @@ function run_cycle(opts) {
 
 function status() {
   console.log('');
-  console.log('  \x1b[1mnw-fixer status\x1b[0m');
+  console.log('  \x1b[1mmycelium status\x1b[0m');
   console.log('  ' + '─'.repeat(55));
 
   const evalData = evaluate();
@@ -1225,14 +1225,14 @@ function status() {
   if (evalData.unified) {
     combined = evalData.overall;
     gradeStr = evalData.grade;
-    log(`unified:   ${combined}/100 (${gradeStr}) — via nw-eval.cjs`);
+    log(`unified:   ${combined}/100 (${gradeStr}) — via mycelium-eval.cjs`);
   } else {
     const nwScore = evalData.nw?.overallScore || 0;
     const gwScore = evalData.gw?.overallScore || 0;
     combined = Math.round((nwScore + gwScore) / 2);
     gradeStr = combined >= 75 ? 'B' : combined >= 60 ? 'C' : 'D';
-    log(`NW-Memory: ${nwScore}/100 (legacy)`);
-    log(`gitwise:   ${gwScore}/100 (legacy)`);
+    log(`Mycelium: ${nwScore}/100 (legacy)`);
+    log(`mycelium-watch:   ${gwScore}/100 (legacy)`);
     log(`combined:  ${combined}/100`);
   }
   log(`threshold: ${SCORE_OK_THRESHOLD} (auto-fix triggers below this)`);
@@ -1276,8 +1276,8 @@ function status() {
     }
 
     const totalPotential = diag.reduce((s, d) => s + d.potentialGain, 0);
-    log(`run \x1b[1mnw-fixer --diagnose\x1b[0m for full root-cause analysis`);
-    log(`run \x1b[1mnw-fixer --force\x1b[0m to execute all prescriptions + fixes (potential: +${totalPotential} pts)`);
+    log(`run \x1b[1mmycelium diagnose\x1b[0m for full root-cause analysis`);
+    log(`run \x1b[1mmycelium fix --force\x1b[0m to execute all prescriptions + fixes (potential: +${totalPotential} pts)`);
   }
 
   console.log('');
@@ -1289,7 +1289,7 @@ function printDiagnose() {
   const B = '\x1b[1m', R = '\x1b[31m', G = '\x1b[32m', Y = '\x1b[33m', D = '\x1b[2m', X = '\x1b[0m';
 
   console.log('');
-  console.log(`  ${B}nw-fixer — Friction Analysis Engine${X}`);
+  console.log(`  ${B}mycelium-fix — Friction Analysis Engine${X}`);
   console.log('  ' + '═'.repeat(55));
 
   const evalData = evaluate();
@@ -1361,7 +1361,7 @@ function printDiagnose() {
       console.log(`    ${G}▸${X} [${a.metric}] ${a.desc}`);
     }
     console.log('');
-    log(`Run ${B}nw-fixer --force${X} to execute all prescriptions + verify improvement`);
+    log(`Run ${B}mycelium fix --force${X} to execute all prescriptions + verify improvement`);
   }
 
   console.log('');

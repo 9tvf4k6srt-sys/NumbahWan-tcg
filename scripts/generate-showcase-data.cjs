@@ -2,7 +2,7 @@
 'use strict';
 
 // ═══════════════════════════════════════════════════════════════════
-// Generate showcase data from NW-Memory + gitwise for the live page
+// Generate showcase data from Mycelium + mycelium-watch for the live page
 // v3.0 — per-commit timeline, impact metrics, animated chart data, 8-mile improvements
 // Run: node scripts/generate-showcase-data.cjs
 // Output: public/static/data/showcase-live.json
@@ -12,9 +12,9 @@ const fs = require('fs');
 const path = require('path');
 
 const ROOT = path.resolve(__dirname, '..');
-const NW_MEM_PATH = path.join(ROOT, 'memory.json');
-const GW_MEM_PATH = path.join(ROOT, '.gitwise', 'memory.json');
-const FIXER_LOG_PATH = path.join(ROOT, '.nw-fixer-log.json');
+const MYC_MEM_PATH = path.join(ROOT, '.mycelium/memory.json');
+const GW_MEM_PATH = path.join(ROOT, '.mycelium', 'watch.json');
+const FIXER_LOG_PATH = path.join(ROOT, '.mycelium', 'fix-log.json');
 const OUTPUT_PATH = path.join(ROOT, 'public', 'static', 'data', 'showcase-live.json');
 
 function loadJson(fp) {
@@ -22,8 +22,8 @@ function loadJson(fp) {
   catch { return null; }
 }
 
-const nwMem = loadJson(NW_MEM_PATH) || {};
-const gwMem = loadJson(GW_MEM_PATH) || {};
+const mycMem = loadJson(MYC_MEM_PATH) || {};
+const watchMem = loadJson(GW_MEM_PATH) || {};
 const fixerLog = loadJson(FIXER_LOG_PATH) || { runs: [], totalFixes: 0, totalVerified: 0 };
 
 // ─── Current Scores ─────────────────────────────────────────────
@@ -44,7 +44,7 @@ function getNwScore(mem) {
     (mem.constraints[a] || []).length > 0);
   const coveredAreas = areasWithBreakages.filter(a => areasWithConstraints.includes(a));
 
-  // Use healState score if available, otherwise compute from metrics (same formula as nw-fixer)
+  // Use healState score if available, otherwise compute from metrics (same formula as mycelium-fix)
   let overall = mem.healState?.lastHealScore || 0;
   if (overall < 50) {
     // Recompute using fixer-aligned formula
@@ -78,7 +78,7 @@ function getGwScore(mem) {
   const couplings = Object.keys(mem.couplings || {}).length;
   const patterns = (mem.patterns || []).length;
 
-  // Live score computation aligned with nw-fixer (same formula)
+  // Live score computation aligned with mycelium-fix (same formula)
   let overall = mem.stats?.lastEvalScore || mem.stats?.lastHealScore || 0;
   if (overall < 50) {
     const lessonDensity = riskyFiles > 0 ? Math.round((filesWithLessons / riskyFiles) * 100) : 0;
@@ -100,26 +100,26 @@ function getGwScore(mem) {
   };
 }
 
-const nwScore = getNwScore(nwMem);
-const gwScore = getGwScore(gwMem);
+const mycScore = getNwScore(mycMem);
+const watchScore = getGwScore(watchMem);
 
-// ── Use nw-eval.cjs as single source of truth for scores ──
-const EVAL_PATH = path.join(ROOT, '.nw-eval-result.json');
+// ── Use mycelium-eval.cjs as single source of truth for scores ──
+const EVAL_PATH = path.join(ROOT, '.mycelium', 'eval.json');
 let evalResult = loadJson(EVAL_PATH);
 if (!evalResult) {
   // Generate eval if not yet run
-  try { require('child_process').execSync('node nw-eval.cjs 2>/dev/null', { cwd: ROOT }); } catch {}
+  try { require('child_process').execSync('node mycelium-eval.cjs 2>/dev/null', { cwd: ROOT }); } catch {}
   evalResult = loadJson(EVAL_PATH);
 }
-const unifiedScore = evalResult?.overall || Math.round((nwScore.overall + gwScore.overall) / 2);
+const unifiedScore = evalResult?.overall || Math.round((mycScore.overall + watchScore.overall) / 2);
 const unifiedGrade = evalResult?.grade || (unifiedScore >= 90 ? 'A' : unifiedScore >= 75 ? 'B' : unifiedScore >= 60 ? 'C' : unifiedScore >= 45 ? 'D' : 'F');
 const evalMetrics = evalResult?.metrics || {};
 const combined = unifiedScore;
 
 // ─── Per-Commit Timeline (the heartbeat) ────────────────────────
 
-const commits = gwMem.commits || [];
-const breakages = gwMem.breakages || [];
+const commits = watchMem.commits || [];
+const breakages = watchMem.breakages || [];
 
 // Build per-commit health timeline
 const commitTimeline = [];
@@ -136,14 +136,14 @@ for (const b of breakages) {
 
 // Map learnings by date for accumulation
 const learningsByDate = {};
-for (const l of (nwMem.learnings || [])) {
+for (const l of (mycMem.learnings || [])) {
   if (!learningsByDate[l.date]) learningsByDate[l.date] = 0;
   learningsByDate[l.date]++;
 }
 
 // Map constraints by date
 const constraintsByDate = {};
-for (const [area, cs] of Object.entries(nwMem.constraints || {})) {
+for (const [area, cs] of Object.entries(mycMem.constraints || {})) {
   for (const c of cs) {
     if (c.date) {
       if (!constraintsByDate[c.date]) constraintsByDate[c.date] = 0;
@@ -240,7 +240,7 @@ const dailyTimeline = Object.entries(dailyData)
 
 const warningPrevention = 0.6; // 60% of repeat issues caught by warnings
 const repeatBreakages = breakages.filter(b => {
-  const fileRisks = Object.entries(gwMem.risks || {}).filter(([f, r]) => r.breakCount >= 2);
+  const fileRisks = Object.entries(watchMem.risks || {}).filter(([f, r]) => r.breakCount >= 2);
   return fileRisks.some(([f]) => (b.files || []).includes(f));
 }).length;
 
@@ -250,8 +250,8 @@ const constraintResearchMin = 15;
 const learningRediscoveryMin = 10;
 
 const timeSavedMin = (preventedIssues * avgFixTimeMin) +
-  (nwScore.totalConstraints * constraintResearchMin * 0.3) + // 30% of constraints actively used
-  (nwScore.totalLearnings * learningRediscoveryMin * 0.5);   // 50% of learnings prevent re-work
+  (mycScore.totalConstraints * constraintResearchMin * 0.3) + // 30% of constraints actively used
+  (mycScore.totalLearnings * learningRediscoveryMin * 0.5);   // 50% of learnings prevent re-work
 
 const timeSavedHours = Math.round(timeSavedMin / 60 * 10) / 10;
 
@@ -270,7 +270,7 @@ const lateFixRate = lateCommits.filter(c => c.isFix).length / (lateCommits.lengt
 const fixRateImprovement = earlyFixRate > 0 ? Math.round((1 - lateFixRate / earlyFixRate) * 100) : 0;
 
 // Average improvement per commit (score change / commits since system was active)
-const systemActiveCommits = commits.filter(c => c.date >= '2026-02-08').length; // since gitwise active
+const systemActiveCommits = commits.filter(c => c.date >= '2026-02-08').length; // since mycelium-watch active
 const scoreGain = combined - 0; // from 0 (no system) to current
 const avgImprovementPerCommit = systemActiveCommits > 0 ? Math.round(scoreGain / systemActiveCommits * 100) / 100 : 0;
 
@@ -294,14 +294,14 @@ const impact = {
   lateFixRate: Math.round(lateFixRate * 100),
   earlyBreakages: earlyBreakDates,
   lateBreakages: lateBreakDates,
-  knowledgeDensity: gwScore.knowledgeDensity,
-  constraintCoverage: nwScore.constraintCoverage,
+  knowledgeDensity: watchScore.knowledgeDensity,
+  constraintCoverage: mycScore.constraintCoverage,
   systemActiveCommits
 };
 
 // ─── Bundle Size Trend ──────────────────────────────────────────
 
-const bundleTrend = (nwMem.patterns?.bundleTrend || [])
+const bundleTrend = (mycMem.patterns?.bundleTrend || [])
   .filter((_, i, a) => i === 0 || i === a.length - 1 || i % Math.max(1, Math.floor(a.length / 20)) === 0)
   .map(b => ({
     date: new Date(b.ts).toISOString().split('T')[0],
@@ -311,13 +311,13 @@ const bundleTrend = (nwMem.patterns?.bundleTrend || [])
 // ─── Score Timeline (from healHistory + fixer) ──────────────────
 
 const scoreTrend = [];
-for (const h of (nwMem.healHistory || [])) {
+for (const h of (mycMem.healHistory || [])) {
   scoreTrend.push({
     date: h.date,
-    nwScore: h.scoreBefore,
+    mycScore: h.scoreBefore,
     combined: h.combinedBefore || h.scoreBefore,
     actions: h.actionsCount || h.actions?.length || 0,
-    source: 'nw-memory'
+    source: 'mycelium'
   });
 }
 for (const r of (fixerLog.runs || [])) {
@@ -335,14 +335,14 @@ scoreTrend.sort((a, b) => a.date.localeCompare(b.date));
 // ─── Evidence ───────────────────────────────────────────────────
 
 const evidence = {
-  learnings: (nwMem.learnings || []).map(l => ({
+  learnings: (mycMem.learnings || []).map(l => ({
     date: l.date,
     area: l.area,
     lesson: l.lesson,
     auto: !!l.autoGenerated
   })).slice(-30),
 
-  constraints: Object.entries(nwMem.constraints || {}).flatMap(([area, cs]) =>
+  constraints: Object.entries(mycMem.constraints || {}).flatMap(([area, cs]) =>
     cs.map(c => ({
       area,
       fact: c.fact,
@@ -352,14 +352,14 @@ const evidence = {
     }))
   ).slice(-30),
 
-  decisions: (nwMem.decisions || []).map(d => ({
+  decisions: (mycMem.decisions || []).map(d => ({
     date: d.date,
     area: d.area,
     decision: d.decision,
     why: d.why
   })).slice(-20),
 
-  deepAnalyses: Object.entries(gwMem.risks || {})
+  deepAnalyses: Object.entries(watchMem.risks || {})
     .filter(([, r]) => r.deepAnalysis && r.deepAnalysis.length > 0)
     .map(([file, r]) => ({
       file,
@@ -378,8 +378,8 @@ const evidence = {
 const milestones = [
   { date: '2026-02-03', label: 'Project inception — first commits', score: 0 },
   { date: '2026-02-04', label: '41 commits — rapid feature development', score: 10 },
-  { date: '2026-02-05', label: 'gitwise installed — passive learning begins', score: 20 },
-  { date: '2026-02-08', label: 'NW-Memory created — constraints + learnings', score: 35 },
+  { date: '2026-02-05', label: 'mycelium-watch installed — passive learning begins', score: 20 },
+  { date: '2026-02-08', label: 'Mycelium created — constraints + learnings', score: 35 },
   { date: '2026-02-09', label: 'Self-heal system added', score: 56 },
   { date: '2026-02-09', label: '4-task gauntlet — cards, i18n, nav, battle', score: 64 },
   { date: '2026-02-09', label: 'Three-role architecture — Learner + Evaluator + Fixer', score: 69 },
@@ -399,10 +399,10 @@ const showcase = {
   currentScores: {
     unified: unifiedScore,
     grade: unifiedGrade,
-    nwMemory: nwScore.overall,
-    gitwise: gwScore.overall,
+    mycelium: mycScore.overall,
+    'mycelium-watch': watchScore.overall,
     combined,
-    evaluator: 'nw-eval.cjs v2.0',
+    evaluator: 'mycelium-eval.cjs v2.0',
     proof: evalResult?.proof || {},
     honestSplit: evalResult?.honestSplit || {},
     fixClassification: evalResult?.fixClassification || {},
@@ -411,18 +411,18 @@ const showcase = {
   },
 
   stats: {
-    commits: gwScore.totalCommits,
-    snapshots: nwScore.totalSnapshots,
-    breakages: gwScore.totalBreakages,
-    learnings: nwScore.totalLearnings,
-    constraints: nwScore.totalConstraints,
-    decisions: nwScore.totalDecisions,
-    reflections: nwScore.totalReflections,
-    fixChains: nwScore.fixChains,
-    riskyFiles: gwScore.riskyFiles,
-    filesWithLessons: gwScore.filesWithLessons,
-    deepAnalyses: gwScore.filesWithDeep,
-    couplings: gwScore.couplings,
+    commits: watchScore.totalCommits,
+    snapshots: mycScore.totalSnapshots,
+    breakages: watchScore.totalBreakages,
+    learnings: mycScore.totalLearnings,
+    constraints: mycScore.totalConstraints,
+    decisions: mycScore.totalDecisions,
+    reflections: mycScore.totalReflections,
+    fixChains: mycScore.fixChains,
+    riskyFiles: watchScore.riskyFiles,
+    filesWithLessons: watchScore.filesWithLessons,
+    deepAnalyses: watchScore.filesWithDeep,
+    couplings: watchScore.couplings,
     fixerRuns: fixerLog.totalFixes,
     fixerVerified: fixerLog.totalVerified
   },
@@ -438,18 +438,18 @@ const showcase = {
   evidence,
 
   architecture: {
-    learner1: 'gitwise.cjs — watches files, breakages, couplings, risks',
-    learner2: 'nw-memory.cjs — watches areas, constraints, decisions, patterns',
-    fixer: 'nw-fixer.cjs — reads both, fixes both, verifies its own work',
+    learner1: 'mycelium-watch.cjs — watches files, breakages, couplings, risks',
+    learner2: 'mycelium.cjs — watches areas, constraints, decisions, patterns',
+    fixer: 'mycelium-fix.cjs — reads both, fixes both, verifies its own work',
     pipeline: 'commit -> learn -> eval -> fix -> re-eval -> verify -> done',
     hooks: ['post-commit: learn + fix', 'post-merge: sync + fix', 'pre-commit: guard --enforce (blocks violations)'],
     intelligence: ['--predict: risk scoring per file', '--trending: ASCII dashboard', '--guard --enforce: active blocking'],
-    evaluation: 'nw-eval.cjs v2.0 — foolproof: honest split, fix classification, SHA-256 proof, 25/25 self-checks'
+    evaluation: 'mycelium-eval.cjs v2.0 — foolproof: honest split, fix classification, SHA-256 proof, 25/25 self-checks'
   }
 };
 
 fs.writeFileSync(OUTPUT_PATH, JSON.stringify(showcase, null, 2));
 console.log(`[showcase] Generated: ${OUTPUT_PATH}`);
-console.log(`[showcase] Scores: unified ${unifiedScore}/100 (${unifiedGrade}) — via nw-eval.cjs`);
+console.log(`[showcase] Scores: unified ${unifiedScore}/100 (${unifiedGrade}) — via mycelium-eval.cjs`);
 console.log(`[showcase] Impact: ${timeSavedHours}h saved | $${moneySaved} saved | ${avgImprovementPerCommit} pts/commit`);
 console.log(`[showcase] Timeline: ${dailyTimeline.length} days | ${commitTimeline.length} commits | ${bundleTrend.length} bundle snapshots`);
