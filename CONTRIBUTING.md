@@ -20,7 +20,7 @@ Open `http://localhost:3000` — you should see the guild homepage.
 - `public/static/nw-*.js` — 62 shared JS modules
 - `src/routes/` — 30 API route handlers (Hono + TypeScript)
 - `sentinel.cjs` — Standalone codebase health scanner
-- `nw-memory.cjs` — AI session memory system
+- `mycelium.cjs` — AI session memory system
 - `scripts/` — 29 build and audit tools
 
 ## Good First Contributions
@@ -61,10 +61,10 @@ This project uses git hooks to track development context:
 echo $(date +%s) > .nw-session
 
 # Before touching a sensitive area:
-node nw-memory.cjs --premortem <area>
+node mycelium.cjs --premortem <area>
 
 # After discovering something important:
-node nw-memory.cjs --constraint "area" "what you learned"
+node mycelium.cjs --constraint "area" "what you learned"
 ```
 
 The post-commit hook automatically snapshots your work. This isn't required for external contributors, but it helps if you're doing multi-session work.

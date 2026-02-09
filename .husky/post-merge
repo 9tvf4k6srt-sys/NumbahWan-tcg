@@ -1,28 +1,23 @@
 #!/bin/sh
 # ═══════════════════════════════════════════════════════════════════
-# NW Pipeline: post-merge — LEARN + FIX for pulled/merged commits
+# Mycelium Pipeline: post-merge — WATCH + LEARN + FIX for merged commits
 # ═══════════════════════════════════════════════════════════════════
 #
 # Without this, commits arriving via PR merge are invisible to learning.
 # Fires after: git pull, git merge, PR merge-back
-#
-# Three roles, same as post-commit:
-#   1. LEARNER:    gitwise --sync + nw-memory --sync
-#   2. EVALUATOR:  built into nw-fixer
-#   3. FIXER:      nw-fixer.cjs (fix → verify → confirm)
 # ═══════════════════════════════════════════════════════════════════
 
-# ─── STEP 1: LEARN (sync all new commits) ───
-if [ -f "gitwise.cjs" ]; then
-  node "gitwise.cjs" --sync 2>/dev/null || true
+# ─── STEP 1: WATCH + LEARN (sync all new commits) ───
+if [ -f "mycelium-watch.cjs" ]; then
+  node "mycelium-watch.cjs" --sync 2>/dev/null || true
 fi
-if [ -f "nw-memory.cjs" ]; then
-  node nw-memory.cjs --sync 2>/dev/null || true
+if [ -f "mycelium.cjs" ]; then
+  node mycelium.cjs --sync 2>/dev/null || true
 fi
 
 # ─── STEP 2+3: FIX + VERIFY ───
-if [ -f "nw-fixer.cjs" ]; then
-  node "nw-fixer.cjs" --silent 2>/dev/null || true
+if [ -f "mycelium-fix.cjs" ]; then
+  node "mycelium-fix.cjs" --silent 2>/dev/null || true
 fi
 
 exit 0

@@ -1,14 +1,14 @@
 #!/bin/sh
-# NW-MEMORY + gitwise: Pre-commit — enforce protocol, auto-guard, compact, warn
-# Mile 3: constraints now BLOCK bad commits via --enforce
+# Mycelium: Pre-commit — enforce protocol, auto-guard, compact, warn
+# The underground network protects before every commit
 
-# ─── gitwise: warn about known risks (zero config, always runs) ───
-if [ -f "gitwise.cjs" ]; then
-  node "gitwise.cjs" --warn 2>/dev/null >&2 || true
+# ─── Mycelium Watch: warn about known risks (zero config, always runs) ───
+if [ -f "mycelium-watch.cjs" ]; then
+  node "mycelium-watch.cjs" --warn 2>/dev/null >&2 || true
 fi
 
-# ─── NW-MEMORY: protocol enforcement + guard ───
-if [ ! -f "nw-memory.cjs" ]; then exit 0; fi
+# ─── Mycelium Core: protocol enforcement + guard ───
+if [ ! -f "mycelium.cjs" ]; then exit 0; fi
 
 # Session marker must exist
 if [ ! -f ".nw-session" ]; then
@@ -20,16 +20,16 @@ if [ ! -f ".nw-session" ]; then
 fi
 
 # Auto-compact if needed
-MEM_SIZE=$(wc -c < memory.json 2>/dev/null || echo 0)
+MEM_SIZE=$(wc -c < .mycelium/memory.json 2>/dev/null || echo 0)
 if [ "$MEM_SIZE" -gt 204800 ]; then
-  node nw-memory.cjs --compact >/dev/null 2>&1
+  node mycelium.cjs --compact >/dev/null 2>&1
 fi
 
-git add memory.json 2>/dev/null || true
+git add .mycelium/memory.json 2>/dev/null || true
 
 # Auto-guard with ENFORCEMENT: constraints actively block bad commits
 # Shows warnings for areas being touched AND blocks if violations detected
-node nw-memory.cjs --guard --enforce 2>&1 >&2
+node mycelium.cjs --guard --enforce 2>&1 >&2
 GUARD_EXIT=$?
 if [ "$GUARD_EXIT" -ne 0 ]; then
   echo "" >&2

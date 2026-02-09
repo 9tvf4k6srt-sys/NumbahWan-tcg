@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * AUTO-GENERATED regression tests from NW-MEMORY breakages & constraints
+ * AUTO-GENERATED regression tests from MYCELIUM breakages & constraints
  * Generated: 2026-02-09
  * Breakages: 12 | Constraints: 40
  * Test cases: 13

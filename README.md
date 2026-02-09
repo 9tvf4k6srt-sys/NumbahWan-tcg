@@ -24,16 +24,128 @@ No React. No Vue. No Next. Just HTML files and a lot of stubbornness.
 
 ---
 
-## Standalone Tools
+## Mycelium — Codebase Immune System
 
-This repo contains two standalone tools that work on **any** project. No install, no config — just download and run.
+**The world's first self-improving codebase.** Four scripts that learn from every commit, remember every breakage, diagnose root causes, prescribe fixes, and prove improvement with cryptographic evidence.
+
+> Like biological mycelium — the underground fungal network that connects trees, shares nutrients, and strengthens the entire forest — this system connects your files, shares constraints, and strengthens your codebase with every commit.
+
+```bash
+# Unified CLI
+npx mycelium help          # See all commands
+npx mycelium eval          # 9 KPIs with cryptographic proof
+npx mycelium diagnose      # Root-cause analysis → files → failure modes
+npx mycelium fix           # Auto-diagnose → prescribe → execute → verify
+npx mycelium status        # Current state + pending prescriptions
+npx mycelium health        # Project health summary
+npx mycelium version       # Component status + data sizes
+```
+
+### The Four Components
+
+| Script | Role | What It Does |
+|--------|------|-------------|
+| `mycelium.cjs` | **The Learner** | Snapshots every commit, tracks hotspots, detects couplings, stores constraints in `.mycelium/memory.json` |
+| `mycelium-watch.cjs` | **The Watcher** | Analyzes commits, scores risk, identifies repeat offenders, maps file relationships in `.mycelium/watch.json` |
+| `mycelium-eval.cjs` | **The Evaluator** | Single source of truth: 9 weighted KPIs, honest before/after split, SHA-256 cryptographic proof, 25 self-checks |
+| `mycelium-fix.cjs` | **The Fixer** | Diagnoses friction, prescribes 6 fix types, executes automatically, verifies improvement |
+
+### How It Works
+
+```
+Every commit triggers:
+  watch --learn → snapshot → eval → diagnose → fix (if needed)
+
+Pre-commit hook:
+  watch --warn → guard constraints → BLOCK if violated
+
+Pipeline: Learner → Evaluator → Fixer (continuous loop)
+```
+
+<details>
+<summary><b>See the evaluation scorecard</b> — 9 KPIs, weighted scoring, cryptographic proof</summary>
+
+```
+Mycelium-Eval v2.0 — Foolproof Learning System Evaluation
+
+  Overall: 69/100 (C) [proof: 60a5319cca03a01f]
+
+  Scorecard:
+    ████████░░ Fix Rate Trend       50/100 (15%) real bug fix rate flat
+    █░░░░░░░░░ Repeat Prevention    10/100 (15%) majority repeat 53%
+    ██████████ Constraint Coverage  100/100 (15%) 6/6 areas covered
+    ██████████ Lesson Quality       100/100 (15%) 50/50 lessons specific
+    ██░░░░░░░░ Fix Chain Speed       20/100 (10%) chains growing 0→4
+    ██████████ Knowledge Density    100/100 (10%) 141/141 files
+    █████████░ Warning Coverage      90/100 (10%) 63% warning rate
+    ██████████ Bundle Health        100/100  (5%) 390KB < 400KB
+    ████████░░ Fixer Effectiveness   80/100  (5%) 8 fixes, guard enforced
+
+  Verification: 25/25 self-checks passed
+  Proof: SHA-256 hash 60a5319cca03a01f — re-run to verify
+```
+
+</details>
+
+<details>
+<summary><b>See the diagnosis engine</b> — root causes mapped to specific files</summary>
+
+```
+Friction Analysis — Root-Cause Diagnosis
+
+  Fix Rate Trend: 50/100 (weight 15%)
+    Root causes: 5 files (cards.html 10x, markets.html 7x, battle.html 7x...)
+    Prescription: PREVENT_NEW_BUGS → add guards to top 5 offenders
+    Expected: +15-30 points
+
+  Repeat Prevention: 10/100 (weight 15%)
+    Root causes: 16/30 files repeat (53%)
+    Prescriptions:
+      STRENGTHEN_CONSTRAINTS → 7 files (+27 preventive rules)
+      ADD_CONSTRAINTS → 8 files (+24 constraints from lessons)
+      ENFORCE_CO_CHANGES → 3 coupled pairs (battle↔engine, markets↔index)
+    Expected: +14 points
+
+  Fix Chain Speed: 20/100 (weight 10%)
+    Root causes: 3 chains (4-fix UI chain, 2-fix coupling chain, 6-fix mobile chain)
+    Prescriptions:
+      PRE_MORTEM_FOR_CHAIN_FILES → require pre-mortem before editing
+      ROOT_CAUSE_FIRST → every fix must include root-cause note
+    Expected: +8 points
+
+  Summary: 3 friction points, 6 prescriptions, +30 pts potential
+```
+
+</details>
+
+<details>
+<summary><b>See the memory system</b> — project intelligence across sessions</summary>
+
+```bash
+npx mycelium health        # Project health score with trend analysis
+npx mycelium query         # What does the AI need to know right now?
+```
+
+```
+Project Health: 85/100 (B)
+Snapshots: 134 | Window: last 20 | Bundle: 390KB | Pages: 119
+
+Bonuses: 9/17 commits proven stable (+15) | Avg commit quality 73/100 (+5)
+Issues:  17 fix chains this week
+
+Data: 150 commits analyzed | 50 breakages tracked | 37 learnings |
+      64 constraints | 141 risky files with lessons | 8 coupling pairs
+```
+
+</details>
+
+---
 
 ### `sentinel.cjs` — Zero-Dependency Codebase Health Scanner
 
 > One file. No dependencies. Works on any JS/TS project.
 
 ```bash
-# Try it on your own project right now:
 curl -O https://raw.githubusercontent.com/9tvf4k6srt-sys/NumbahWan-tcg/main/sentinel.cjs
 node sentinel.cjs
 ```
@@ -42,76 +154,12 @@ node sentinel.cjs
 <summary><b>See output</b> — 10 modules scored, letter grade, auto-fix suggestions</summary>
 
 ```
-┌─────────────────────────────────────────────────────────┐
-│  NW-SENTINEL v2.5 — Codebase Health Report              │
-├─────────────────────────────────────────────────────────┤
-│  Composite Score:  72/100 (B-)                          │
-│  Trend:            =0 (stable)  | Build #50             │
-├─────────────────────────────────────────────────────────┤
-│  Module Breakdown (10 modules):                         │
-│      71 B-  architecture   (15%)  10 issues             │
-│      54 D   assets         (15%)  22 issues             │
-│      46 F   i18n           (10%)  2 issues              │
-│     100 A+  deadCode       (10%)                        │
-│      92 A   security       (15%)  1 issues              │
-│      60 C   performance    (10%)  4 issues              │
-│      61 C   apiSurface     ( 8%)  3 issues              │
-│      80 B+  dependencies   ( 7%)  2 issues              │
-│      82 B+  accessibility  ( 5%)  4 issues              │
-│      82 B+  seoMeta        ( 5%)  5 issues              │
-├─────────────────────────────────────────────────────────┤
-│  Issues: 2 critical · 37 warnings · 14 info            │
-│  Auto-Fix Engine: 9 fixes available (5 auto, 4 manual) │
-└─────────────────────────────────────────────────────────┘
+NW-SENTINEL v2.5 — Codebase Health Report
+  Composite Score:  72/100 (B-)
+  10 modules: architecture, assets, i18n, deadCode, security,
+              performance, apiSurface, dependencies, accessibility, seoMeta
+  Auto-Fix Engine: 9 fixes available (5 auto, 4 manual)
 ```
-
-What it checks: file bloat, cyclomatic complexity, dead code, security patterns, missing alt tags, SEO meta, API surface analysis, dependency audit, asset optimization, i18n coverage. Tracks history across builds. Suggests specific fixes. Has an auto-fix mode.
-
-</details>
-
----
-
-### `nw-memory.cjs` — AI Session Memory That Survives Context Resets
-
-> If you use Claude, GPT, or Copilot — every session starts from zero. This fixes that.
-
-A 960-line script that records snapshots on every commit (via git hooks), tracks hotspot files, detects coupled changes, logs fix chains, and stores decisions in plain JSON.
-
-```bash
-# Add to any project:
-curl -O https://raw.githubusercontent.com/9tvf4k6srt-sys/NumbahWan-tcg/main/nw-memory.cjs
-node nw-memory.cjs --query
-```
-
-<details>
-<summary><b>See all commands</b> — session memory, premortem checks, project intelligence</summary>
-
-```bash
-node nw-memory.cjs --query           # What does the AI need to know right now?
-node nw-memory.cjs --health          # Project health score with trend analysis
-node nw-memory.cjs --reflect         # Deep analysis: decision/breakage correlation
-node nw-memory.cjs --premortem battle # What broke last time in this area?
-node nw-memory.cjs --broke "i18n" "innerHTML replaced DOM, lost event handlers"
-node nw-memory.cjs --decide "battle" "Coach in separate file" "5 fix chains"
-node nw-memory.cjs --constraint "ios" "touchend + click both fire"
-```
-
-```
-Project Health: 90/100 (A)
-Snapshots: 101 | Window: last 20 | Bundle: 536KB | Pages: 117
-
-Bonuses: 12/17 commits proven stable (+15) | Avg commit quality 72/100 (+5)
-Issues:  Bundle 536KB > 400KB target | 15 fix chains this week
-
-Learnings:
-  battle: 5 decisions but 5 breakages — decisions alone don't prevent bugs
-  i18n: 3 decisions, 3 breakages — recurring innerHTML/DOM conflicts
-  guide: 1 breakage, 0 decisions — unprotected area, document before editing
-  velocity: sprint days avg 77/100 vs normal 68/100
-  score-trend: commit quality declining (77 → 69, Δ-8)
-```
-
-How it works: git hooks auto-snapshot on every commit. `--query` gives the AI everything it needs. `--premortem` warns about fragile areas. `--reflect` correlates decisions with breakages to find systemic patterns. It's a JSON file and a CLI — but it's the difference between an AI that repeats your mistakes and one that doesn't.
 
 </details>
 
@@ -209,40 +257,40 @@ npm run preview    # → localhost:3000
 
 ```bash
 # Health scanner — works on ANY JS/TS project
-npx -y https://raw.githubusercontent.com/9tvf4k6srt-sys/NumbahWan-tcg/main/sentinel.cjs
-# or:
 curl -O https://raw.githubusercontent.com/9tvf4k6srt-sys/NumbahWan-tcg/main/sentinel.cjs
 node sentinel.cjs
 
-# AI session memory — add to any project
-curl -O https://raw.githubusercontent.com/9tvf4k6srt-sys/NumbahWan-tcg/main/nw-memory.cjs
-node nw-memory.cjs --query
+# Mycelium — codebase immune system (add to any project)
+curl -O https://raw.githubusercontent.com/9tvf4k6srt-sys/NumbahWan-tcg/main/mycelium.cjs
+node mycelium.cjs --health
 ```
 
 ## Project Structure
 
 ```
 NumbahWan/
+├── bin/mycelium.cjs          # Unified CLI entry point
+├── mycelium.cjs              # The Learner — memory, snapshots, constraints
+├── mycelium-watch.cjs        # The Watcher — commits, risks, couplings
+├── mycelium-eval.cjs         # The Evaluator — 9 KPIs, cryptographic proof
+├── mycelium-fix.cjs          # The Fixer — diagnose → prescribe → execute → verify
 ├── sentinel.cjs              # Codebase health scanner (standalone)
-├── nw-memory.cjs             # AI session memory system (standalone)
+├── .mycelium/                # All Mycelium data
+│   ├── memory.json           # Learner state (snapshots, breakages, constraints)
+│   ├── watch.json            # Watcher state (commits, risks, couplings)
+│   ├── eval.json             # Latest evaluation result
+│   ├── eval-history.json     # Score history over time
+│   ├── fix-log.json          # Fixer run history
+│   └── config.json           # System configuration
 ├── src/
 │   ├── index.tsx              # Hono app entry point
 │   └── routes/                # 30 API route modules
-│       ├── oracle.ts          # The Oracle wisdom engine
-│       ├── card-engine.ts     # Gacha + pack opening
-│       ├── wallet-economy.ts  # Currency system
-│       └── ...
 ├── public/
 │   ├── *.html                 # 116 page files
-│   ├── oracle.html            # The Oracle UI
-│   ├── museum/                # 10 museum exhibits
-│   ├── research/              # 6 research papers
 │   └── static/
 │       ├── nw-*.js            # 62 JS modules
-│       ├── nw-i18n-core.js    # i18n engine (200 lines)
-│       ├── images/cards/      # 125 card images
-│       └── fonts/             # Self-hosted (NumbahWan, Inter, Orbitron)
-└── scripts/                   # 29 build/audit tools
+│       └── images/cards/      # 125 card images
+└── scripts/                   # Build/audit tools
 ```
 
 ## Tech Stack

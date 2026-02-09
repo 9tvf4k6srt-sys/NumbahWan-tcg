@@ -13,7 +13,7 @@ A clear description of the feature.
 - [ ] New guild world page
 - [ ] Oracle wisdom / life topic
 - [ ] sentinel.cjs improvement
-- [ ] nw-memory.cjs improvement
+- [ ] mycelium.cjs improvement
 - [ ] i18n / translation
 - [ ] Trading card game
 - [ ] Other

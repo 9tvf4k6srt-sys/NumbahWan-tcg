@@ -7,40 +7,40 @@
 
 ## MANDATORY: Memory-Driven Workflow
 
-This project has a learning system (`nw-memory.cjs` + `memory.json`). It only works if you use it. These steps are **not optional**.
+This project has a learning system (`mycelium.cjs` + `memory.json`). It only works if you use it. These steps are **not optional**.
 
 ### On Session Start (BEFORE writing any code)
 ```bash
-node nw-memory.cjs --query           # Read project intelligence first
+node mycelium.cjs --query           # Read project intelligence first
 ```
 This shows: recent commits, hotspot files, constraints, past breakages, decisions, debt signals. Read it. It prevents repeat mistakes.
 
 ### Before Working on Any Area
 ```bash
-node nw-memory.cjs --premortem battle     # or: forge, i18n, nav, economy, etc.
+node mycelium.cjs --premortem battle     # or: forge, i18n, nav, economy, etc.
 ```
 This shows what broke last time, hard constraints, and past decisions for that area. If you skip this, you WILL repeat old bugs.
 
 ### After Something Breaks or You Revert
 ```bash
-node nw-memory.cjs --broke "area" "what happened and why"
+node mycelium.cjs --broke "area" "what happened and why"
 ```
-Example: `node nw-memory.cjs --broke "emoji" "Regex cleanup pattern ate HTML attribute spaces — never use quote char in cleanup regex"`
+Example: `node mycelium.cjs --broke "emoji" "Regex cleanup pattern ate HTML attribute spaces — never use quote char in cleanup regex"`
 
 ### After Making a Non-Obvious Decision
 ```bash
-node nw-memory.cjs --decide "area" "what you chose" "why you chose it"
+node mycelium.cjs --decide "area" "what you chose" "why you chose it"
 ```
-Example: `node nw-memory.cjs --decide "emoji" "Strip emojis instead of replacing with SVG spans" "4329 lines across 152 files — manual SVG replacement would be 10x the work and bloat HTML"`
+Example: `node mycelium.cjs --decide "emoji" "Strip emojis instead of replacing with SVG spans" "4329 lines across 152 files — manual SVG replacement would be 10x the work and bloat HTML"`
 
 ### After Discovering a Hard Platform Fact
 ```bash
-node nw-memory.cjs --constraint "area" "the fact"
+node mycelium.cjs --constraint "area" "the fact"
 ```
-Example: `node nw-memory.cjs --constraint "regex" "Never include quote chars in post-strip cleanup patterns — they eat HTML attribute boundaries"`
+Example: `node mycelium.cjs --constraint "regex" "Never include quote chars in post-strip cleanup patterns — they eat HTML attribute boundaries"`
 
 ### On Commit (automatic)
-The pre-commit hook runs `node nw-memory.cjs` automatically. It records the snapshot, detects fix chains, updates hotspots and co-change patterns. You don't need to do anything — just commit normally.
+The pre-commit hook runs `node mycelium.cjs` automatically. It records the snapshot, detects fix chains, updates hotspots and co-change patterns. You don't need to do anything — just commit normally.
 
 ### Why This Matters
 Each session starts cold. Without `--query`, you have zero context. Without `--premortem`, you repeat old bugs. Without `--broke` and `--decide`, the next session has zero context too. The loop is:
@@ -271,12 +271,12 @@ Branch: `genspark_ai_developer` → PR to `main`
 - Embassy cross-guild system with MatchaLatte sister guild
 - Physical card system with QR codes (50-card Origins set)
 - Daily rewards, achievements, GM mode, wallet system
-- 2026-02-08: Progressive Disclosure Nav v9.0 — reduced Day 1 nav from 80 pages to 6; tier system (0-5) based on wallet stats; unlock toast; existing players auto-detect; all pages still accessible by direct URL; recorded nav constraints and decisions in NW-MEMORY
+- 2026-02-08: Progressive Disclosure Nav v9.0 — reduced Day 1 nav from 80 pages to 6; tier system (0-5) based on wallet stats; unlock toast; existing players auto-detect; all pages still accessible by direct URL; recorded nav constraints and decisions in Mycelium
 - 2026-02-08: D&D 5e tabletop stats generator — 117 cards, 12 roles→D&D classes, shrine penalty 90%, 60 star abilities, Sacred Log currency sink
-- 2026-02-08: NW-MEMORY system — 3-layer compounding memory (auto-snapshots, decisions, pre-mortem); pre-commit hook; seeded 16 constraints + 8 breakages + 5 decisions; archived 17 legacy files (-374KB dead weight)
+- 2026-02-08: Mycelium system — 3-layer compounding memory (auto-snapshots, decisions, pre-mortem); pre-commit hook; seeded 16 constraints + 8 breakages + 5 decisions; archived 17 legacy files (-374KB dead weight)
 - 2026-02-08: Sitewide emoji strip — 5695 emojis removed across 151 files using scripts/strip-emojis.py v5; NW_ICONS SVG system (37 icons: 12 ability + 25 UI) for battle/forge UI; Battle Arena v7.1 (bigger cards, tap-to-zoom, spring-damper physics, Perlin shake)
-- 2026-02-08: NW-MEMORY v2 — added --compact (prunes dead files from hotspots/coChanges, deduplicates snapshots, caps at 200/300); auto-compact in pre-commit hook at 200KB; noise filter for archive/dist/memory.json paths; memory.json 975KB→135KB (-86%); recorded emoji regex breakage + 6 decisions + 2 constraints
+- 2026-02-08: Mycelium v2 — added --compact (prunes dead files from hotspots/coChanges, deduplicates snapshots, caps at 200/300); auto-compact in pre-commit hook at 200KB; noise filter for archive/dist/memory.json paths; memory.json 975KB→135KB (-86%); recorded emoji regex breakage + 6 decisions + 2 constraints
 - 2026-02-08: i18n fix — stripped 3792 [ZH]/[TH] placeholder prefixes across 69 pages; deleted 1.5MB dead i18n JSON reports; rewrote sentinel i18n module (83/B+ lie → 15/F truth); merged dual i18n systems in breakroom.html
-- 2026-02-08: Workflow fix — moved NW-MEMORY snapshot from pre-commit to post-commit hook (pre-commit captured previous commit hash, not the new one); pre-commit now only auto-compacts + stages memory.json; post-commit captures real commit hash; .husky/ hooks are the source of truth (core.hooksPath=.husky); tested full cycle — snapshot hash matches HEAD
+- 2026-02-08: Workflow fix — moved Mycelium snapshot from pre-commit to post-commit hook (pre-commit captured previous commit hash, not the new one); pre-commit now only auto-compacts + stages memory.json; post-commit captures real commit hash; .husky/ hooks are the source of truth (core.hooksPath=.husky); tested full cycle — snapshot hash matches HEAD
 - 2026-02-08: Battle Coach — Hearthstone-style first-battle tutorial (nw-battle-coach.js); 10 contextual just-in-time steps; MutationObserver-driven (does not touch battle code); highlights target + darkens rest; auto-advances on correct action; localStorage flag prevents re-show; SKIP TUTORIAL always visible; research: Hearthstone scripted tutorial, Marvel Snap FTUE, ACM CHI 2022 just-in-time reminders
 - 2026-02-08: Battle Assist v2 — Smart Glow (BEST tag on best hand card, ATK tag on best board attacker), Auto-Target (HIT tag on best enemy target, face glow when face is best), Auto-Play (AUTO button: plays cards + attacks + ends turn automatically); nw-battle-assist.js is separate from battle engine; reads via NW_BATTLE API; skips visuals during coach tutorial; scoring: stat efficiency + ability bonuses + board context + synergy + lethal check
