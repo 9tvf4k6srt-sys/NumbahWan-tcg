@@ -102,6 +102,17 @@ node nw-memory.cjs --wip-done
 | gitwise reinstall (rescan history) | `node gitwise.cjs --install` |
 | **Evaluate learning system** | `node nw-memory.cjs --eval` (combined NW-Memory + gitwise) |
 | **Evaluate gitwise only** | `node gitwise.cjs --eval` (7 metrics, A→F grade) |
+| **Self-heal NW-Memory** | `node nw-memory.cjs --heal` (force eval + auto-fix weak scores) |
+| **Self-heal gitwise** | `node gitwise.cjs --heal` (force eval + auto-fix weak scores) |
+
+## Self-Healing Learning System
+
+Both NW-Memory and gitwise auto-evaluate and auto-fix themselves:
+- **Every 10 commits/snapshots**: silently runs eval, detects weak scores, takes corrective action
+- **NW-Memory self-heal actions**: auto-creates constraints from breakage lessons, enriches constraints with gitwise deep lessons, promotes breakages to learnings, triggers deep reflection, marks fix-chain hotspots
+- **gitwise self-heal actions**: escalates repeat offenders, lowers coupling threshold, re-extracts weak lessons, tags volatile files in active fix-chains, backfills missing risk entries
+- **Manual trigger**: `--heal` on either tool forces immediate eval + fix cycle
+- **No human intervention needed**: the system improves itself after every learning event
 
 ## Two Learning Systems (both active)
 
