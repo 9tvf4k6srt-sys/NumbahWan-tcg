@@ -1861,6 +1861,160 @@ function guard(files) {
     console.log(`⚡ ${totalWarnings} warning(s) total. Review before editing.`);
   }
   console.log('');
+
+  // Enforce mode: return warning count so callers can block on violations
+  return totalWarnings;
+}
+
+// ─── FEATURE 1b: Predict risks for files BEFORE you edit them ────────
+// Usage: --predict <file1> <file2> ...
+// Shows: breakage probability, coupled files you'll need, constraints to obey
+
+function predict(files) {
+  const mem = loadMemory();
+  
+  if (!files || files.length === 0) {
+    console.log('[NW-MEMORY] Usage: --predict <file1> [file2] ...');
+    return;
+  }
+
+  console.log(`\n# Risk Prediction for ${files.length} file(s)\n`);
+
+  for (const file of files) {
+    const area = classifyArea(file);
+    const breakages = (mem.breakages || []).filter(b => 
+      (b.files && b.files.includes(file)) || b.area === area
+    );
+    const fixChains = (mem.patterns.fixChains || []).filter(fc =>
+      fc.files && fc.files.includes(file)
+    );
+    const coChanges = mem.patterns.coChanges || {};
+    const coupled = [];
+    for (const [pair, count] of Object.entries(coChanges)) {
+      if (count >= 5 && pair.includes(file)) {
+        const other = pair.split('<->').map(s => s.trim()).find(s => s !== file);
+        if (other) coupled.push({ file: other, count });
+      }
+    }
+    coupled.sort((a, b) => b.count - a.count);
+
+    const constraints = mem.constraints[area] || [];
+    const learnings = (mem.learnings || []).filter(l => l.area === area);
+
+    // Risk score: 0-100
+    const breakScore = Math.min(breakages.length * 15, 50);
+    const chainScore = Math.min(fixChains.length * 10, 30);
+    const coupledScore = coupled.length > 0 ? 10 : 0;
+    const constraintScore = constraints.length > 3 ? 10 : 0;
+    const risk = Math.min(breakScore + chainScore + coupledScore + constraintScore, 100);
+
+    const riskLabel = risk >= 70 ? 'HIGH' : risk >= 40 ? 'MEDIUM' : 'LOW';
+    const riskColor = risk >= 70 ? '🔴' : risk >= 40 ? '🟡' : '🟢';
+
+    console.log(`## ${file} — ${riskColor} ${riskLabel} RISK (${risk}/100)`);
+    console.log(`   Area: ${area} | Breakages: ${breakages.length} | Fix chains: ${fixChains.length} | Constraints: ${constraints.length}`);
+
+    if (coupled.length > 0) {
+      console.log(`   Coupled files (edit these too):`);
+      for (const c of coupled.slice(0, 5)) {
+        console.log(`     → ${c.file} (${c.count}x co-changed)`);
+      }
+    }
+
+    if (constraints.length > 0) {
+      console.log(`   Must obey:`);
+      for (const c of constraints.slice(0, 3)) {
+        console.log(`     ⚠ ${c.fact}`);
+      }
+    }
+
+    if (learnings.length > 0) {
+      console.log(`   Key lessons:`);
+      for (const l of learnings.slice(-2)) {
+        console.log(`     📝 ${l.lesson}`);
+      }
+    }
+
+    console.log('');
+  }
+}
+
+// ─── FEATURE 1c: Trending — show score trend in terminal ────────
+// Usage: --trending
+// Shows: ASCII chart of recent scores, improvement rate, trajectory
+
+function trending() {
+  const mem = loadMemory();
+  const snapshots = mem.snapshots || [];
+  const breakages = mem.breakages || [];
+
+  // Build daily stats
+  const dailyMap = {};
+  for (const s of snapshots) {
+    const date = s.date || (s.ts ? new Date(s.ts).toISOString().slice(0, 10) : null);
+    if (!date) continue;
+    if (!dailyMap[date]) dailyMap[date] = { commits: 0, fixes: 0, score: 0, count: 0 };
+    dailyMap[date].commits++;
+    if (s.commit && s.commit.isFix) dailyMap[date].fixes++;
+    if (s.score !== undefined) {
+      dailyMap[date].score += s.score;
+      dailyMap[date].count++;
+    }
+  }
+
+  // Count breakages per day
+  for (const b of breakages) {
+    const date = b.date;
+    if (date && dailyMap[date]) dailyMap[date].breakages = (dailyMap[date].breakages || 0) + 1;
+  }
+
+  const days = Object.keys(dailyMap).sort();
+  if (days.length === 0) {
+    console.log('[NW-MEMORY] No data for trending.');
+    return;
+  }
+
+  console.log('\n# Score Trend — NW-Memory Learning System\n');
+
+  // ASCII bar chart
+  const barWidth = 40;
+  const maxCommits = Math.max(...days.map(d => dailyMap[d].commits), 1);
+
+  console.log('  Date       | Commits | Fixes | Brk | Avg Score | Activity');
+  console.log('  ' + '-'.repeat(75));
+
+  for (const day of days) {
+    const d = dailyMap[day];
+    const avg = d.count > 0 ? Math.round(d.score / d.count) : '-';
+    const barLen = Math.round((d.commits / maxCommits) * barWidth);
+    const bar = '█'.repeat(barLen) + '░'.repeat(barWidth - barLen);
+    const brk = d.breakages || 0;
+    console.log(`  ${day} | ${String(d.commits).padStart(7)} | ${String(d.fixes).padStart(5)} | ${String(brk).padStart(3)} | ${String(avg).padStart(9)} | ${bar}`);
+  }
+
+  // Summary
+  const totalCommits = days.reduce((s, d) => s + dailyMap[d].commits, 0);
+  const totalFixes = days.reduce((s, d) => s + dailyMap[d].fixes, 0);
+  const totalBreakages = days.reduce((s, d) => s + (dailyMap[d].breakages || 0), 0);
+
+  const earlyDays = days.slice(0, Math.ceil(days.length / 2));
+  const lateDays = days.slice(Math.ceil(days.length / 2));
+  const earlyFixRate = earlyDays.reduce((s, d) => s + dailyMap[d].fixes, 0) / Math.max(earlyDays.reduce((s, d) => s + dailyMap[d].commits, 0), 1);
+  const lateFixRate = lateDays.reduce((s, d) => s + dailyMap[d].fixes, 0) / Math.max(lateDays.reduce((s, d) => s + dailyMap[d].commits, 0), 1);
+
+  console.log('\n  Summary:');
+  console.log(`    Total: ${totalCommits} commits, ${totalFixes} fixes, ${totalBreakages} breakages`);
+  console.log(`    Fix rate: ${(earlyFixRate * 100).toFixed(0)}% (early) → ${(lateFixRate * 100).toFixed(0)}% (late) ${lateFixRate < earlyFixRate ? '📈 IMPROVING' : '📉 needs work'}`);
+  console.log(`    Learnings: ${(mem.learnings || []).length} | Constraints: ${Object.values(mem.constraints || {}).reduce((s, a) => s + a.length, 0)} | Decisions: ${(mem.decisions || []).length}`);
+
+  // Trajectory
+  if (lateDays.length > 0 && earlyDays.length > 0) {
+    const earlyBreakRate = earlyDays.reduce((s, d) => s + (dailyMap[d].breakages || 0), 0) / earlyDays.length;
+    const lateBreakRate = lateDays.reduce((s, d) => s + (dailyMap[d].breakages || 0), 0) / lateDays.length;
+    const trajectory = lateBreakRate < earlyBreakRate ? '🟢 Breakage rate declining' : '🔴 Breakage rate flat/rising';
+    console.log(`    Trajectory: ${trajectory} (${earlyBreakRate.toFixed(1)}/day → ${lateBreakRate.toFixed(1)}/day)`);
+  }
+  console.log('');
 }
 
 // ─── FEATURE 2: Auto-generate regression tests from breakages ────────
@@ -3193,8 +3347,14 @@ if (arg === '--init') {
   showAreaMap();
 } else if (arg === '--guard') {
   // Auto-premortem: detect areas from files, show only the dangerous stuff
-  const files = process.argv.slice(3);
-  guard(files);
+  const enforce = process.argv.includes('--enforce');
+  const files = process.argv.slice(3).filter(f => f !== '--enforce');
+  const warnings = guard(files);
+  if (enforce && warnings > 0) {
+    console.error(`\n  BLOCKED by --enforce: ${warnings} constraint warning(s) detected.`);
+    console.error('  Fix the warnings above or use --no-verify to bypass.\n');
+    process.exit(1);
+  }
 } else if (arg === '--gen-tests') {
   // Auto-generate regression tests from breakages + constraints
   generateRegressionTests();
@@ -3235,6 +3395,10 @@ if (arg === '--init') {
   }
 } else if (arg === '--compact') {
   compact();
+} else if (arg === '--predict') {
+  predict(process.argv.slice(3));
+} else if (arg === '--trending') {
+  trending();
 } else if (arg === '--sync') {
   // Catch up: take snapshot + delegate to nw-fixer for fix → verify → confirm
   console.log('[NW-MEMORY] Syncing after pull/merge...');

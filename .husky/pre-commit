@@ -1,5 +1,6 @@
 #!/bin/sh
 # NW-MEMORY + gitwise: Pre-commit — enforce protocol, auto-guard, compact, warn
+# Mile 3: constraints now BLOCK bad commits via --enforce
 
 # ─── gitwise: warn about known risks (zero config, always runs) ───
 if [ -f "gitwise.cjs" ]; then
@@ -26,7 +27,17 @@ fi
 
 git add memory.json 2>/dev/null || true
 
-# Auto-guard: show warnings for areas being touched
-node nw-memory.cjs --guard 2>/dev/null >&2 || true
+# Auto-guard with ENFORCEMENT: constraints actively block bad commits
+# Shows warnings for areas being touched AND blocks if violations detected
+node nw-memory.cjs --guard --enforce 2>&1 >&2
+GUARD_EXIT=$?
+if [ "$GUARD_EXIT" -ne 0 ]; then
+  echo "" >&2
+  echo "  PRE-COMMIT BLOCKED: Constraint violations detected." >&2
+  echo "  Review the warnings above and address them." >&2
+  echo "  Bypass: git commit --no-verify" >&2
+  echo "" >&2
+  exit 1
+fi
 
 exit 0
