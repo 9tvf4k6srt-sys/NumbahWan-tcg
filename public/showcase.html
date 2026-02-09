@@ -1,339 +1,418 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Showcase | NumbahWan — 116 Pages, Zero Frameworks</title>
-    <meta name="description" content="A visual directory of everything built with vanilla JS: 116 pages, 62 modules, 30 API routes, 3 languages. No React. No Vue. Just HTML.">
-    <link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
-    <style>
-        @font-face{font-family:'NumbahWan';src:url('/static/fonts/NumbahWan-Regular.woff2') format('woff2');font-weight:400;font-style:normal;font-display:swap}
-        @font-face{font-family:'Inter';src:url('/static/fonts/inter-variable.woff2') format('woff2');font-weight:400 700;font-style:normal;font-display:swap}
-        :root{--bg:#0a0a0f;--surface:rgba(255,255,255,0.03);--border:rgba(255,255,255,0.06);--text:#e8e0d8;--dim:rgba(255,255,255,0.35);--accent:#ff9500;--gold:#ffd700;--ember:#ff6b00}
-        *{margin:0;padding:0;box-sizing:border-box}
-        body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden}
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NW Learning System — Live Progress | World's First Self-Improving Codebase</title>
+<meta name="description" content="Watch a codebase learn from its own mistakes in real-time. Three AI brains — Learner, Evaluator, Fixer — working in sync. Open source, fully transparent.">
+<meta property="og:title" content="World's First Self-Improving Codebase">
+<meta property="og:description" content="Three AI brains learn from every commit. Watch the scores improve live.">
+<meta property="og:type" content="website">
+<link rel="icon" href="/favicon.svg">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#0a0a0f;--bg2:#12121a;--bg3:#1a1a2e;
+  --text:#e0e0f0;--dim:#666680;--accent:#6c5ce7;
+  --green:#00b894;--yellow:#fdcb6e;--red:#e17055;--blue:#74b9ff;
+  --glow:rgba(108,92,231,0.3);
+  --font:'Inter',system-ui,sans-serif;
+  --mono:'JetBrains Mono',monospace;
+}
+body{background:var(--bg);color:var(--text);font-family:var(--font);line-height:1.6;overflow-x:hidden}
+a{color:var(--accent);text-decoration:none}a:hover{text-decoration:underline}
 
-        /* Subtle ambient */
-        body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
-            background:radial-gradient(ellipse at 50% 0%,rgba(255,150,0,0.04) 0%,transparent 50%),
-            radial-gradient(ellipse at 80% 80%,rgba(255,100,0,0.02) 0%,transparent 40%)}
+/* Hero */
+.hero{text-align:center;padding:80px 20px 60px;position:relative;overflow:hidden}
+.hero::before{content:'';position:absolute;top:-50%;left:-50%;width:200%;height:200%;background:radial-gradient(circle at 50% 50%,rgba(108,92,231,0.08),transparent 50%);animation:pulse 8s ease-in-out infinite}
+@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.1)}}
+.hero h1{font-size:clamp(28px,5vw,56px);font-weight:900;letter-spacing:-1px;position:relative}
+.hero h1 span{background:linear-gradient(135deg,var(--accent),var(--blue),var(--green));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.hero .sub{font-size:clamp(14px,2.5vw,20px);color:var(--dim);margin-top:12px;position:relative}
+.badge{display:inline-block;background:var(--bg3);border:1px solid rgba(108,92,231,0.3);border-radius:20px;padding:6px 16px;font-size:13px;font-family:var(--mono);margin:8px 4px;color:var(--accent)}
+.badge.live{border-color:var(--green);color:var(--green)}
+.badge.live::before{content:'';display:inline-block;width:8px;height:8px;background:var(--green);border-radius:50%;margin-right:8px;animation:blink 1.5s infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0.3}}
 
-        .container{position:relative;z-index:1;max-width:1100px;margin:0 auto;padding:24px 20px 80px}
+/* Container */
+.container{max-width:1000px;margin:0 auto;padding:0 20px}
 
-        /* Header */
-        .hero{text-align:center;padding:60px 0 40px}
-        .hero-title{font-family:'NumbahWan',monospace;font-size:clamp(2rem,6vw,3.2rem);
-            background:linear-gradient(180deg,#ffd700 0%,#ff9500 50%,#ff6b00 100%);
-            -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
-            letter-spacing:3px;margin-bottom:12px}
-        .hero-sub{font-size:15px;color:var(--dim);line-height:1.8;max-width:600px;margin:0 auto}
-        .hero-sub strong{color:var(--text);font-weight:500}
+/* Score Cards */
+.scores{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:20px;margin:40px 0}
+.score-card{background:var(--bg2);border:1px solid rgba(255,255,255,0.06);border-radius:16px;padding:28px;position:relative;overflow:hidden}
+.score-card::after{content:'';position:absolute;top:0;left:0;right:0;height:3px}
+.score-card.nw::after{background:linear-gradient(90deg,var(--accent),var(--blue))}
+.score-card.gw::after{background:linear-gradient(90deg,var(--blue),var(--green))}
+.score-card.combined::after{background:linear-gradient(90deg,var(--accent),var(--green))}
+.score-card h3{font-size:13px;text-transform:uppercase;letter-spacing:2px;color:var(--dim);margin-bottom:16px}
+.score-num{font-size:56px;font-weight:900;font-family:var(--mono);line-height:1}
+.score-grade{font-size:20px;color:var(--dim);margin-left:8px;vertical-align:super}
+.progress-bar{height:8px;background:var(--bg3);border-radius:4px;margin-top:16px;overflow:hidden}
+.progress-fill{height:100%;border-radius:4px;transition:width 1.5s ease-out;position:relative}
+.progress-fill::after{content:'';position:absolute;top:0;right:0;bottom:0;width:30px;background:linear-gradient(90deg,transparent,rgba(255,255,255,0.3));animation:shimmer 2s infinite}
+@keyframes shimmer{0%{opacity:0}50%{opacity:1}100%{opacity:0}}
+.score-detail{margin-top:12px;font-size:13px;color:var(--dim);font-family:var(--mono)}
 
-        /* Stats ribbon */
-        .stats{display:flex;justify-content:center;gap:32px;flex-wrap:wrap;margin:28px 0 40px;
-            padding:16px 0;border-top:1px solid var(--border);border-bottom:1px solid var(--border)}
-        .stat{text-align:center}
-        .stat-num{font-family:'NumbahWan',monospace;font-size:24px;color:var(--accent);display:block}
-        .stat-label{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--dim);margin-top:2px}
+/* Architecture */
+.arch{background:var(--bg2);border:1px solid rgba(255,255,255,0.06);border-radius:16px;padding:32px;margin:40px 0}
+.arch h2{font-size:20px;margin-bottom:20px}
+.arch-flow{display:flex;align-items:center;justify-content:center;gap:8px;flex-wrap:wrap;font-family:var(--mono);font-size:14px;padding:20px 0}
+.arch-node{background:var(--bg3);border:1px solid rgba(108,92,231,0.3);border-radius:10px;padding:12px 20px;text-align:center;min-width:100px}
+.arch-node.active{border-color:var(--green);box-shadow:0 0 20px rgba(0,184,148,0.2)}
+.arch-arrow{color:var(--dim);font-size:20px}
+.arch-desc{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:16px;margin-top:24px}
+.arch-role{background:var(--bg);border-radius:10px;padding:16px;border-left:3px solid var(--accent)}
+.arch-role h4{font-size:14px;margin-bottom:6px}
+.arch-role p{font-size:13px;color:var(--dim)}
 
-        /* Filter tabs */
-        .filters{display:flex;gap:6px;flex-wrap:wrap;justify-content:center;margin-bottom:32px}
-        .filter-btn{padding:7px 16px;border-radius:20px;background:var(--surface);border:1px solid var(--border);
-            color:var(--dim);font-size:12px;cursor:pointer;transition:all .25s;font-family:inherit;letter-spacing:.5px}
-        .filter-btn:hover{border-color:rgba(255,150,0,.2);color:var(--accent)}
-        .filter-btn.active{background:rgba(255,150,0,.08);border-color:rgba(255,150,0,.25);color:var(--accent)}
+/* Timeline */
+.timeline{margin:40px 0}
+.timeline h2{font-size:20px;margin-bottom:20px}
+.milestone{display:flex;gap:16px;padding:16px 0;border-bottom:1px solid rgba(255,255,255,0.04);align-items:center}
+.milestone:last-child{border-bottom:none}
+.ms-score{min-width:50px;font-family:var(--mono);font-weight:700;font-size:18px}
+.ms-bar{width:60px;height:6px;background:var(--bg3);border-radius:3px;flex-shrink:0}
+.ms-bar-fill{height:100%;border-radius:3px;transition:width 1s ease-out}
+.ms-content{flex:1}
+.ms-date{font-size:12px;color:var(--dim);font-family:var(--mono)}
+.ms-label{font-size:14px;margin-top:2px}
 
-        /* Zone sections */
-        .zone{margin-bottom:40px}
-        .zone-header{display:flex;align-items:center;gap:10px;margin-bottom:16px;padding-bottom:8px;border-bottom:1px solid var(--border)}
-        .zone-icon{font-size:20px;width:28px;text-align:center}
-        .zone-name{font-size:14px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--text)}
-        .zone-count{font-size:11px;color:var(--dim);margin-left:auto;letter-spacing:1px}
+/* Stats Grid */
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin:40px 0}
+.stat{background:var(--bg2);border-radius:12px;padding:20px;text-align:center;border:1px solid rgba(255,255,255,0.04)}
+.stat-num{font-size:32px;font-weight:800;font-family:var(--mono);background:linear-gradient(135deg,var(--accent),var(--blue));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.stat-label{font-size:11px;text-transform:uppercase;letter-spacing:1.5px;color:var(--dim);margin-top:4px}
 
-        /* Page cards grid */
-        .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px}
-        .card{display:block;padding:14px 16px;border-radius:12px;background:var(--surface);border:1px solid var(--border);
-            text-decoration:none;color:var(--text);transition:all .25s;position:relative;overflow:hidden}
-        .card:hover{border-color:rgba(255,150,0,.2);transform:translateY(-2px);
-            box-shadow:0 8px 24px rgba(255,107,0,.06)}
-        .card-title{font-size:13px;font-weight:500;line-height:1.4;margin-bottom:4px;
-            display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
-        .card-path{font-size:10px;color:var(--dim);font-family:monospace;letter-spacing:.5px}
-        .card-badge{position:absolute;top:8px;right:8px;font-size:9px;padding:2px 7px;border-radius:8px;
-            letter-spacing:1px;text-transform:uppercase;font-weight:600}
-        .badge-api{background:rgba(100,200,255,.1);color:rgba(100,200,255,.7);border:1px solid rgba(100,200,255,.15)}
-        .badge-game{background:rgba(255,150,0,.1);color:var(--accent);border:1px solid rgba(255,150,0,.15)}
-        .badge-lore{background:rgba(200,150,255,.1);color:rgba(200,150,255,.7);border:1px solid rgba(200,150,255,.15)}
-        .badge-tool{background:rgba(0,220,130,.1);color:rgba(0,220,130,.7);border:1px solid rgba(0,220,130,.15)}
-        .badge-i18n{background:rgba(255,215,0,.1);color:rgba(255,215,0,.7);border:1px solid rgba(255,215,0,.15)}
+/* Evidence */
+.evidence{margin:40px 0}
+.evidence h2{font-size:20px;margin-bottom:20px}
+.evidence-tabs{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap}
+.ev-tab{background:var(--bg3);border:1px solid transparent;border-radius:8px;padding:8px 16px;font-size:13px;cursor:pointer;color:var(--dim);font-family:var(--font);transition:all 0.2s}
+.ev-tab.active{border-color:var(--accent);color:var(--text)}
+.ev-panel{display:none}
+.ev-panel.active{display:block}
+.ev-item{background:var(--bg2);border-radius:10px;padding:14px 16px;margin-bottom:8px;font-size:13px;border-left:3px solid var(--accent);font-family:var(--mono);word-break:break-word}
+.ev-item .ev-meta{font-size:11px;color:var(--dim);margin-bottom:4px}
+.ev-item .ev-auto{color:var(--green);font-size:10px;margin-left:8px}
+.ev-item.deep{border-left-color:var(--red)}
+.ev-item.constraint{border-left-color:var(--yellow)}
+.ev-item.fixer{border-left-color:var(--green)}
 
-        /* Highlights section */
-        .highlights{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px;margin-bottom:48px}
-        .highlight{padding:24px;border-radius:16px;background:var(--surface);border:1px solid var(--border);transition:all .3s}
-        .highlight:hover{border-color:rgba(255,150,0,.15)}
-        .hl-label{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--dim);margin-bottom:8px}
-        .hl-title{font-size:16px;font-weight:600;margin-bottom:6px}
-        .hl-desc{font-size:13px;color:var(--dim);line-height:1.6}
-        .hl-title a{color:var(--accent);text-decoration:none}
-        .hl-title a:hover{text-decoration:underline}
+/* GitHub CTA */
+.cta{text-align:center;padding:60px 20px;margin:40px 0;background:var(--bg2);border-radius:16px;border:1px solid rgba(108,92,231,0.2)}
+.cta h2{font-size:clamp(20px,4vw,32px);margin-bottom:12px}
+.cta p{color:var(--dim);margin-bottom:24px;max-width:600px;margin-left:auto;margin-right:auto}
+.cta-btn{display:inline-flex;align-items:center;gap:10px;background:var(--accent);color:white;padding:14px 28px;border-radius:10px;font-size:16px;font-weight:600;transition:transform 0.2s,box-shadow 0.2s}
+.cta-btn:hover{transform:translateY(-2px);box-shadow:0 8px 30px var(--glow);text-decoration:none;color:white}
+.cta-btn svg{width:20px;height:20px}
 
-        /* Footer */
-        .footer{text-align:center;padding:40px 0 20px;border-top:1px solid var(--border);margin-top:40px}
-        .footer p{font-size:12px;color:var(--dim);line-height:1.8}
-        .footer a{color:var(--accent);text-decoration:none}
-        .footer a:hover{text-decoration:underline}
+/* How It Works */
+.how{margin:40px 0}
+.how h2{font-size:20px;margin-bottom:20px}
+.how-step{display:flex;gap:16px;padding:20px;background:var(--bg2);border-radius:12px;margin-bottom:12px;align-items:flex-start}
+.how-num{min-width:36px;height:36px;background:var(--accent);border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;flex-shrink:0}
+.how-text h4{font-size:15px;margin-bottom:4px}
+.how-text p{font-size:13px;color:var(--dim)}
+.how-text code{background:var(--bg3);padding:2px 6px;border-radius:4px;font-family:var(--mono);font-size:12px}
 
-        @media(max-width:500px){
-            .grid{grid-template-columns:1fr 1fr}
-            .stats{gap:20px}
-            .hero{padding:40px 0 24px}
-        }
-    </style>
-    <link rel="stylesheet" href="/static/nw-core.css">
-    <script src="/static/nw-nav.js" defer></script>
+/* Footer */
+.footer{text-align:center;padding:40px 20px;color:var(--dim);font-size:13px;border-top:1px solid rgba(255,255,255,0.04);margin-top:60px}
+
+/* Responsive */
+@media(max-width:600px){
+  .scores{grid-template-columns:1fr}
+  .arch-flow{flex-direction:column}
+  .arch-arrow{transform:rotate(90deg)}
+  .stats-grid{grid-template-columns:repeat(2,1fr)}
+}
+
+/* Loading animation */
+.loading{opacity:0;animation:fadeIn 0.6s ease-out forwards}
+@keyframes fadeIn{to{opacity:1}}
+.loading:nth-child(2){animation-delay:0.1s}
+.loading:nth-child(3){animation-delay:0.2s}
+</style>
 </head>
 <body>
-    <div class="container">
-        <div class="hero">
-            <h1 class="hero-title">SHOWCASE</h1>
-            <p class="hero-sub">
-                Every page in this project. <strong>116 HTML files</strong>, each self-contained,
-                each with its own CSS and JS. No shared component library. No framework. They're just pages, and they work.
-            </p>
-        </div>
 
-        <div class="stats">
-            <div class="stat"><span class="stat-num">116</span><span class="stat-label">Pages</span></div>
-            <div class="stat"><span class="stat-num">62</span><span class="stat-label">JS Modules</span></div>
-            <div class="stat"><span class="stat-num">30</span><span class="stat-label">API Routes</span></div>
-            <div class="stat"><span class="stat-num">125</span><span class="stat-label">Card Images</span></div>
-            <div class="stat"><span class="stat-num">3</span><span class="stat-label">Languages</span></div>
-            <div class="stat"><span class="stat-num">0</span><span class="stat-label">Frameworks</span></div>
-        </div>
+<!-- Hero -->
+<section class="hero">
+  <h1><span>Self-Improving Codebase</span></h1>
+  <p class="sub">Three AI brains learn from every commit. Watch the scores improve live.</p>
+  <div style="margin-top:20px">
+    <span class="badge live">LIVE DATA</span>
+    <span class="badge">Open Source</span>
+    <span class="badge">Zero Config</span>
+    <span class="badge">3 Brains</span>
+  </div>
+</section>
 
-        <!-- Highlights -->
-        <div class="highlights">
-            <div class="highlight">
-                <div class="hl-label">Standalone Tool</div>
-                <div class="hl-title"><a href="https://github.com/9tvf4k6srt-sys/NumbahWan-tcg#sentinelcjs--zero-dependency-codebase-health-scanner">sentinel.cjs</a></div>
-                <div class="hl-desc">Zero-dependency codebase health scorer. 10 modules, letter grades, auto-fix engine. Works on any JS/TS project. <code>node sentinel.cjs</code></div>
-            </div>
-            <div class="highlight">
-                <div class="hl-label">Standalone Tool</div>
-                <div class="hl-title"><a href="https://github.com/9tvf4k6srt-sys/NumbahWan-tcg#nw-memorycjs--ai-session-memory-that-survives-context-resets">nw-memory.cjs</a></div>
-                <div class="hl-desc">AI session memory. Tracks hotspots, coupled files, fix chains, decisions. Your AI stops repeating your mistakes. <code>node nw-memory.cjs --query</code></div>
-            </div>
-            <div class="highlight">
-                <div class="hl-label">Featured Page</div>
-                <div class="hl-title"><a href="/oracle">The Oracle</a></div>
-                <div class="hl-desc">Life advice from Buddhist sutras, Tao Te Ching, Bible, and Quran. 60 wisdoms in 3 languages. Self-hosted, 17ms TTFB.</div>
-            </div>
-        </div>
+<div class="container">
 
-        <!-- Filters -->
-        <div class="filters" id="filters">
-            <button class="filter-btn active" data-filter="all">All</button>
-            <button class="filter-btn" data-filter="game">Game</button>
-            <button class="filter-btn" data-filter="guild">Guild World</button>
-            <button class="filter-btn" data-filter="economy">Economy</button>
-            <button class="filter-btn" data-filter="lore">Lore & Museum</button>
-            <button class="filter-btn" data-filter="research">Research</button>
-            <button class="filter-btn" data-filter="absurd">Absurd Wing</button>
-            <button class="filter-btn" data-filter="government">Government</button>
-            <button class="filter-btn" data-filter="vault">Vault</button>
-            <button class="filter-btn" data-filter="tools">Tools & Meta</button>
-        </div>
-
-        <div id="zones"></div>
-
-        <div class="footer">
-            <p>
-                Built with vanilla JS for the <a href="/">NumbahWan Guild</a>.<br>
-                Source on <a href="https://github.com/9tvf4k6srt-sys/NumbahWan-tcg">GitHub</a>.
-                No frameworks were harmed in the making of this site.
-            </p>
-        </div>
+  <!-- Live Scores -->
+  <section class="scores loading" id="scoresSection">
+    <div class="score-card nw">
+      <h3>NW-Memory (Project Brain)</h3>
+      <div><span class="score-num" id="nwScore">--</span><span class="score-grade" id="nwGrade"></span></div>
+      <div class="progress-bar"><div class="progress-fill" id="nwBar" style="width:0;background:linear-gradient(90deg,var(--accent),var(--blue))"></div></div>
+      <div class="score-detail" id="nwDetail">Loading...</div>
     </div>
+    <div class="score-card gw">
+      <h3>gitwise (File Brain)</h3>
+      <div><span class="score-num" id="gwScore">--</span><span class="score-grade" id="gwGrade"></span></div>
+      <div class="progress-bar"><div class="progress-fill" id="gwBar" style="width:0;background:linear-gradient(90deg,var(--blue),var(--green))"></div></div>
+      <div class="score-detail" id="gwDetail">Loading...</div>
+    </div>
+    <div class="score-card combined">
+      <h3>Combined Score</h3>
+      <div><span class="score-num" id="combinedScore">--</span><span class="score-grade" id="combinedGrade"></span></div>
+      <div class="progress-bar"><div class="progress-fill" id="combinedBar" style="width:0;background:linear-gradient(90deg,var(--accent),var(--green))"></div></div>
+      <div class="score-detail" id="combinedDetail">Loading...</div>
+    </div>
+  </section>
 
-    <script>
-    (function(){
-        const zones = [
-            { id:'game', icon:'🃏', name:'Trading Card Game', pages:[
-                {p:'/cards', t:'Card Collection', badge:'game'},
-                {p:'/tcg', t:'TCG Command Center', badge:'game'},
-                {p:'/battle', t:'Battle Arena v7.1', badge:'game'},
-                {p:'/deckbuilder', t:'Deck Builder', badge:'game'},
-                {p:'/forge', t:'Mythic Forge', badge:'game'},
-                {p:'/fusion', t:'Card Fusion', badge:'game'},
-                {p:'/collection', t:'Collection & Achievements', badge:'game'},
-                {p:'/achievements', t:'Achievements', badge:'game'},
-                {p:'/shrine', t:'Summoning Shrine', badge:'game'},
-                {p:'/card-bridge', t:'Card Bridge — Stake, Fuse, Trade', badge:'game'},
-                {p:'/card-lab', t:'Card Lab', badge:'game'},
-                {p:'/card-audit', t:'Card Balance Audit', badge:'tool'},
-                {p:'/card-utility', t:'Card Utility Analysis', badge:'tool'},
-                {p:'/card-print-template', t:'Physical Card Template', badge:'tool'},
-                {p:'/staking', t:'Card Staking', badge:'game'},
-                {p:'/leaderboard', t:'Collection Leaderboard', badge:'game'},
-                {p:'/events', t:'Events & Bonuses', badge:'game'},
-                {p:'/guide', t:'Arena Guide', badge:'game'},
-                {p:'/profile-card', t:'Profile Card', badge:'game'},
-                {p:'/battle-legacy', t:'Battle Arena v5 (Legacy)', badge:'game'},
-                {p:'/pvp-battle', t:'PvP Arena', badge:'game'},
-            ]},
-            { id:'guild', icon:'🏰', name:'Guild World', pages:[
-                {p:'/', t:'Guild Homepage'},
-                {p:'/about', t:'About — The Greatest Nation That Doesn\'t Exist Yet'},
-                {p:'/apply', t:'Guild Application — Prepare Your Soul'},
-                {p:'/academy', t:'Parry Hotter School of Coding Wizardry'},
-                {p:'/oracle', t:'The Oracle — 4 Sacred Traditions', badge:'i18n'},
-                {p:'/fortune', t:'Daily Tarot Fortune'},
-                {p:'/tavern-tales', t:'Tavern Tales — D&D Campaign'},
-                {p:'/tabletop', t:'Tabletop Realm'},
-                {p:'/tabletop/converter', t:'Card to D&D Converter', badge:'tool'},
-                {p:'/tabletop/rulebook', t:'D&D Rulebook'},
-                {p:'/avatar-builder', t:'Avatar Builder'},
-                {p:'/avatar-studio', t:'MapleStory Avatar Studio'},
-                {p:'/matchalatte', t:'MatchaLatte — Sister Guild'},
-                {p:'/regina', t:'R.M.S. REGINA — 779 Years in the Making'},
-                {p:'/pvp', t:'RegginA\'s PVP Diary'},
-                {p:'/fashion', t:'RegginA\'s Fashion Disasters'},
-                {p:'/memes', t:'Meme Vault'},
-                {p:'/updates', t:'Patch Notes'},
-                {p:'/citizenship', t:'Citizen Identity System'},
-                {p:'/embassy', t:'Embassy Alliance'},
-            ]},
-            { id:'economy', icon:'💰', name:'Economy & Commerce', pages:[
-                {p:'/wallet', t:'Wallet'},
-                {p:'/market', t:'Card Market'},
-                {p:'/auction-house', t:'Auction House'},
-                {p:'/arcade', t:'Arcade — Premium Guild Games', badge:'game'},
-                {p:'/exchange', t:'NWX Exchange'},
-                {p:'/markets', t:'Live Markets — Digital Asset Index'},
-                {p:'/merch', t:'Exclusive Merch'},
-                {p:'/nwg-shop', t:'NWG Shop'},
-                {p:'/buy', t:'Buy NWG'},
-                {p:'/invest', t:'Invest in NWG — Outperforms Everything'},
-                {p:'/business', t:'Business Hub'},
-                {p:'/my-business', t:'My Business'},
-                {p:'/supermarket', t:'Supermarket'},
-                {p:'/restaurant', t:'Restaurant District'},
-                {p:'/restaurants', t:'Restaurant Directory'},
-                {p:'/services', t:'Guild Services Directory'},
-                {p:'/crafts', t:'Artisan Market'},
-                {p:'/realestate', t:'Real Estate Property Market'},
-                {p:'/jobs', t:'Job Board'},
-                {p:'/claim', t:'Claim Physical Card'},
-            ]},
-            { id:'lore', icon:'📜', name:'Lore & Museum', pages:[
-                {p:'/lore', t:'Lore Index — Deep Dives', badge:'lore'},
-                {p:'/lore/reggina-origin', t:'RegginA: The Founder\'s Origin', badge:'lore'},
-                {p:'/lore/whale-wars', t:'The Whale Wars', badge:'lore'},
-                {p:'/lore/afk-incident', t:'The Great AFK Incident', badge:'lore'},
-                {p:'/lore/sacred-log', t:'The Sacred Log Chronicles', badge:'lore'},
-                {p:'/lore/conspiracy-board', t:'The Conspiracy Board', badge:'lore'},
-                {p:'/museum', t:'Fashion Museum — 10 Exhibits', badge:'lore'},
-                {p:'/museum/exhibit-001', t:'Zakum Helmet', badge:'lore'},
-                {p:'/museum/exhibit-002', t:'Pink Adventurer Cape', badge:'lore'},
-                {p:'/museum/exhibit-003', t:'The Sauna Robe', badge:'lore'},
-                {p:'/museum/exhibit-004', t:'Spectrum Goggles', badge:'lore'},
-                {p:'/museum/exhibit-005', t:'The 7-Slot Work Gloves', badge:'lore'},
-                {p:'/museum/exhibit-006', t:'Maple Bandana', badge:'lore'},
-                {p:'/museum/exhibit-007', t:'Tree Branch Nose', badge:'lore'},
-                {p:'/museum/exhibit-008', t:'Facestompers', badge:'lore'},
-                {p:'/museum/exhibit-009', t:'Red Whip', badge:'lore'},
-                {p:'/museum/exhibit-010', t:'The Transparent Set', badge:'lore'},
-                {p:'/historical-society', t:'Historical Society Archive', badge:'lore'},
-                {p:'/wyckoff', t:'Wyckoff Method — Market Psychology'},
-                {p:'/zakum', t:'Zakum Lore'},
-            ]},
-            { id:'research', icon:'🔬', name:'Research Division', pages:[
-                {p:'/research', t:'Research Archives'},
-                {p:'/research-library', t:'Research Library — Gaming Psychology'},
-                {p:'/research/work-gloves-economic-impact', t:'Economic Impact of 7-Slot Work Gloves', badge:'lore'},
-                {p:'/research/transparent-set-psychology', t:'Psychology of Paying for Nothing', badge:'lore'},
-                {p:'/research/zakum-helmet-spectral-analysis', t:'Zakum Helmet Spectral Analysis', badge:'lore'},
-                {p:'/research/vault-security-analysis', t:'847 Ways to Fail [RESTRICTED]', badge:'lore'},
-                {p:'/research/reggina-misprint-forensic-examination', t:'RegginA Misprint Forensics [CLASSIFIED]', badge:'lore'},
-                {p:'/research/nx-fashion-revolution', t:'The NX Cash Shop Revolution', badge:'lore'},
-            ]},
-            { id:'government', icon:'🏛️', name:'Government & Administration', pages:[
-                {p:'/court', t:'Supreme Court — Justice System'},
-                {p:'/treasury', t:'National Treasury Dashboard'},
-                {p:'/intelligence', t:'Intelligence Agency'},
-                {p:'/admin-physical', t:'Physical Card Admin', badge:'tool'},
-                {p:'/system-dashboard', t:'System Dashboard', badge:'tool'},
-                {p:'/efficiency', t:'Build Lab — Innovation Hub'},
-                {p:'/tournament', t:'World Championship'},
-            ]},
-            { id:'absurd', icon:'🎪', name:'Absurd Wing', pages:[
-                {p:'/therapy', t:'Guild Therapy'},
-                {p:'/hr', t:'HR Department'},
-                {p:'/conspiracy', t:'Conspiracy Board'},
-                {p:'/confessional', t:'Guild Confessional'},
-                {p:'/cafeteria', t:'Guild Cafeteria'},
-                {p:'/breakroom', t:'Employee Break Room'},
-                {p:'/lost-found', t:'Lost & Found'},
-                {p:'/parking', t:'Guild Parking Lot'},
-                {p:'/maintenance', t:'Maintenance Closet'},
-                {p:'/basement', t:'Guild Basement'},
-                {p:'/cipher', t:'Cipher Vault'},
-                {p:'/ai-lounge', t:'AI Lounge'},
-                {p:'/menu-demo', t:'Weekly Lunch Menu (Chinese)'},
-            ]},
-            { id:'vault', icon:'🔒', name:'The Vault', pages:[
-                {p:'/vault', t:'Guild Vault — 13 Floors Deep'},
-                {p:'/vault/b3-decontamination', t:'B3 — Decontamination Chamber'},
-                {p:'/vault/b7-hall-of-failures', t:'B7 — Hall of Failed Intruders'},
-                {p:'/vault/b12-antechamber', t:'B12 — The Antechamber'},
-            ]},
-            { id:'tools', icon:'🛠️', name:'Tools & Meta', pages:[
-                {p:'/tools', t:'Standalone Dev Tools — sentinel + nw-memory', badge:'tool'},
-                {p:'/showcase', t:'This Page — Showcase'},
-            ]},
-        ];
+  <!-- Stats -->
+  <section class="stats-grid loading" id="statsSection"></section>
 
-        const container = document.getElementById('zones');
-        let currentFilter = 'all';
+  <!-- Architecture -->
+  <section class="arch loading">
+    <h2>How It Works: Three Roles, One Pipeline</h2>
+    <div class="arch-flow">
+      <div class="arch-node">commit</div>
+      <span class="arch-arrow">&rarr;</span>
+      <div class="arch-node active">LEARN</div>
+      <span class="arch-arrow">&rarr;</span>
+      <div class="arch-node active">EVAL</div>
+      <span class="arch-arrow">&rarr;</span>
+      <div class="arch-node active">FIX</div>
+      <span class="arch-arrow">&rarr;</span>
+      <div class="arch-node active">VERIFY</div>
+      <span class="arch-arrow">&rarr;</span>
+      <div class="arch-node">done</div>
+    </div>
+    <div class="arch-desc">
+      <div class="arch-role" style="border-color:var(--accent)">
+        <h4>Learner (gitwise + NW-Memory)</h4>
+        <p>Silently observes every commit. Tracks which files break, which change together, what areas have constraints. Zero config — just commit.</p>
+      </div>
+      <div class="arch-role" style="border-color:var(--blue)">
+        <h4>Evaluator (built into Fixer)</h4>
+        <p>Scores both systems on 7 dimensions each. Identifies weaknesses: repeat breakages, uncovered areas, shallow lessons, rising fix rates.</p>
+      </div>
+      <div class="arch-role" style="border-color:var(--green)">
+        <h4>Fixer (nw-fixer.cjs)</h4>
+        <p>Reads both brains, applies 8 fix actions, then re-evaluates to verify. Loops up to 3 times. Reports before/after scores.</p>
+      </div>
+    </div>
+  </section>
 
-        function render() {
-            container.innerHTML = '';
-            zones.forEach(z => {
-                if (currentFilter !== 'all' && z.id !== currentFilter) return;
-                const section = document.createElement('div');
-                section.className = 'zone';
-                section.innerHTML = `
-                    <div class="zone-header">
-                        <span class="zone-icon">${z.icon}</span>
-                        <span class="zone-name">${z.name}</span>
-                        <span class="zone-count">${z.pages.length} pages</span>
-                    </div>
-                    <div class="grid">
-                        ${z.pages.map(p => {
-                            const href = p.p.endsWith('.html') ? p.p : (p.p === '/' ? '/' : p.p);
-                            const badgeHtml = p.badge ? `<span class="card-badge badge-${p.badge}">${p.badge}</span>` : '';
-                            return `<a class="card" href="${href}">
-                                ${badgeHtml}
-                                <div class="card-title">${p.t}</div>
-                                <div class="card-path">${p.p}</div>
-                            </a>`;
-                        }).join('')}
-                    </div>
-                `;
-                container.appendChild(section);
-            });
-        }
+  <!-- How It Works -->
+  <section class="how loading">
+    <h2>Setup: 30 Seconds, Zero Dependencies</h2>
+    <div class="how-step">
+      <div class="how-num">1</div>
+      <div class="how-text">
+        <h4>Drop three files into your repo</h4>
+        <p><code>gitwise.cjs</code> + <code>nw-memory.cjs</code> + <code>nw-fixer.cjs</code></p>
+      </div>
+    </div>
+    <div class="how-step">
+      <div class="how-num">2</div>
+      <div class="how-text">
+        <h4>Install git hooks</h4>
+        <p><code>node gitwise.cjs --install</code> and <code>node nw-memory.cjs --init</code></p>
+      </div>
+    </div>
+    <div class="how-step">
+      <div class="how-num">3</div>
+      <div class="how-text">
+        <h4>Just commit. The system learns from you.</h4>
+        <p>Every commit triggers: learn &rarr; eval &rarr; fix &rarr; verify. No manual intervention ever needed.</p>
+      </div>
+    </div>
+  </section>
 
-        document.getElementById('filters').addEventListener('click', function(e) {
-            const btn = e.target.closest('.filter-btn');
-            if (!btn) return;
-            currentFilter = btn.dataset.filter;
-            document.querySelectorAll('.filter-btn').forEach(b => b.classList.toggle('active', b === btn));
-            render();
-        });
+  <!-- Milestone Timeline -->
+  <section class="timeline loading" id="timelineSection">
+    <h2>Journey: From Zero to Self-Improving</h2>
+  </section>
 
-        render();
-    })();
-    </script>
+  <!-- Evidence -->
+  <section class="evidence loading" id="evidenceSection">
+    <h2>Evidence Trail: Full Transparency</h2>
+    <p style="color:var(--dim);font-size:14px;margin-bottom:16px">Every learning, constraint, and fix action is recorded. Nothing is hidden.</p>
+    <div class="evidence-tabs" id="evTabs">
+      <button class="ev-tab active" data-panel="learnings">Learnings</button>
+      <button class="ev-tab" data-panel="constraints">Constraints</button>
+      <button class="ev-tab" data-panel="deepAnalysis">Deep Analysis</button>
+      <button class="ev-tab" data-panel="fixerRuns">Fixer Runs</button>
+    </div>
+    <div id="evPanels"></div>
+  </section>
+
+  <!-- GitHub CTA -->
+  <section class="cta loading">
+    <h2>This Is Open Source</h2>
+    <p>The entire system — learner, evaluator, fixer, this dashboard — is open source. Fork it, use it, improve it. Make your codebase learn from its own mistakes.</p>
+    <a href="https://github.com/9tvf4k6srt-sys/NumbahWan-tcg" target="_blank" class="cta-btn">
+      <svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+      View on GitHub
+    </a>
+  </section>
+
+</div>
+
+<footer class="footer">
+  <p>Built by humans + AI, improved by machines. Data updated on every commit.</p>
+  <p style="margin-top:8px;font-family:var(--mono);font-size:11px" id="lastUpdated">Last updated: loading...</p>
+</footer>
+
+<script>
+(function() {
+  'use strict';
+
+  const $ = s => document.querySelector(s);
+  const grade = n => n >= 90 ? 'A' : n >= 75 ? 'B' : n >= 60 ? 'C' : n >= 40 ? 'D' : 'F';
+  const color = n => n >= 75 ? 'var(--green)' : n >= 60 ? 'var(--yellow)' : 'var(--red)';
+
+  function animateNumber(el, target) {
+    let current = 0;
+    const step = Math.max(1, Math.ceil(target / 40));
+    const timer = setInterval(() => {
+      current = Math.min(current + step, target);
+      el.textContent = current;
+      if (current >= target) clearInterval(timer);
+    }, 30);
+  }
+
+  function render(data) {
+    const c = data.currentScores;
+    const s = data.stats;
+
+    // Scores
+    animateNumber($('#nwScore'), c.nwMemory);
+    animateNumber($('#gwScore'), c.gitwise);
+    animateNumber($('#combinedScore'), c.combined);
+
+    setTimeout(() => {
+      $('#nwBar').style.width = c.nwMemory + '%';
+      $('#gwBar').style.width = c.gitwise + '%';
+      $('#combinedBar').style.width = c.combined + '%';
+    }, 100);
+
+    $('#nwGrade').textContent = '/100';
+    $('#gwGrade').textContent = '/100';
+    $('#combinedGrade').textContent = '(' + c.grade + ')';
+
+    $('#nwDetail').textContent = s.constraints + ' constraints | ' + s.learnings + ' learnings | ' + s.reflections + ' reflections';
+    $('#gwDetail').textContent = s.riskyFiles + ' tracked files | ' + s.filesWithLessons + ' with lessons | ' + s.deepAnalyses + ' deep analyzed';
+    $('#combinedDetail').textContent = s.commits + ' commits observed | ' + s.breakages + ' breakages | ' + s.fixerRuns + ' fixer actions';
+
+    // Stats
+    const statsData = [
+      { num: s.commits, label: 'Commits' },
+      { num: s.breakages, label: 'Breakages' },
+      { num: s.learnings, label: 'Learnings' },
+      { num: s.constraints, label: 'Constraints' },
+      { num: s.decisions, label: 'Decisions' },
+      { num: s.deepAnalyses, label: 'Deep Analyses' },
+      { num: s.couplings, label: 'Couplings' },
+      { num: s.fixerRuns, label: 'Fixer Actions' }
+    ];
+    const statsHtml = statsData.map(s =>
+      '<div class="stat"><div class="stat-num">' + s.num + '</div><div class="stat-label">' + s.label + '</div></div>'
+    ).join('');
+    $('#statsSection').innerHTML = statsHtml;
+
+    // Milestones
+    const msHtml = (data.milestones || []).map(m => {
+      const pct = Math.min(100, m.score);
+      const c = color(m.score);
+      return '<div class="milestone">' +
+        '<div class="ms-score" style="color:' + c + '">' + m.score + '</div>' +
+        '<div class="ms-bar"><div class="ms-bar-fill" style="width:' + pct + '%;background:' + c + '"></div></div>' +
+        '<div class="ms-content"><div class="ms-date">' + m.date + '</div><div class="ms-label">' + m.label + '</div></div>' +
+        '</div>';
+    }).join('');
+    $('#timelineSection').innerHTML = '<h2>Journey: From Zero to Self-Improving</h2>' + msHtml;
+
+    // Evidence panels
+    const ev = data.evidence || {};
+
+    // Learnings
+    const learnHtml = (ev.learnings || []).slice().reverse().map(l =>
+      '<div class="ev-item"><div class="ev-meta">' + l.date + ' | ' + l.area +
+      (l.auto ? '<span class="ev-auto">AUTO-GENERATED</span>' : '') +
+      '</div>' + escHtml(l.lesson) + '</div>'
+    ).join('');
+
+    // Constraints
+    const conHtml = (ev.constraints || []).slice().reverse().map(c =>
+      '<div class="ev-item constraint"><div class="ev-meta">' + (c.date||'') + ' | ' + c.area +
+      (c.auto ? '<span class="ev-auto">AUTO-GENERATED</span>' : '') +
+      (c.source ? ' | ' + c.source : '') +
+      '</div>' + escHtml(c.fact) + '</div>'
+    ).join('');
+
+    // Deep analysis
+    const deepHtml = (ev.deepAnalyses || []).map(d =>
+      '<div class="ev-item deep"><div class="ev-meta">' + d.date + ' | ' + d.file + ' | broke ' + d.breaks + 'x</div>' +
+      'Root-cause themes: <strong>[' + d.themes.join(', ') + ']</strong></div>'
+    ).join('');
+
+    // Fixer runs
+    const fixHtml = (ev.fixerRuns || []).slice().reverse().map(r =>
+      '<div class="ev-item fixer"><div class="ev-meta">' + r.date + ' | ' + r.before + ' &rarr; ' + r.after +
+      ' (' + (r.delta >= 0 ? '+' : '') + r.delta + ') | ' + r.actions + ' actions</div>' +
+      (r.actionSummary || []).map(a => '&bull; ' + escHtml(a)).join('<br>') + '</div>'
+    ).join('');
+
+    const panels = {
+      learnings: learnHtml || '<div class="ev-item">No learnings yet</div>',
+      constraints: conHtml || '<div class="ev-item">No constraints yet</div>',
+      deepAnalysis: deepHtml || '<div class="ev-item">No deep analyses yet</div>',
+      fixerRuns: fixHtml || '<div class="ev-item">No fixer runs yet</div>'
+    };
+
+    const panelsHtml = Object.entries(panels).map(([key, html]) =>
+      '<div class="ev-panel' + (key === 'learnings' ? ' active' : '') + '" id="panel-' + key + '">' + html + '</div>'
+    ).join('');
+    $('#evPanels').innerHTML = panelsHtml;
+
+    // Tab switching
+    document.querySelectorAll('.ev-tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        document.querySelectorAll('.ev-tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.ev-panel').forEach(p => p.classList.remove('active'));
+        tab.classList.add('active');
+        const panel = document.getElementById('panel-' + tab.dataset.panel);
+        if (panel) panel.classList.add('active');
+      });
+    });
+
+    // Last updated
+    if (data.generated) {
+      const d = new Date(data.generated);
+      $('#lastUpdated').textContent = 'Last updated: ' + d.toLocaleDateString() + ' ' + d.toLocaleTimeString();
+    }
+  }
+
+  function escHtml(s) {
+    if (!s) return '';
+    return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+
+  // Load data
+  fetch('/static/data/showcase-live.json?v=' + Date.now())
+    .then(r => r.json())
+    .then(render)
+    .catch(err => {
+      console.error('Failed to load showcase data:', err);
+      $('#combinedDetail').textContent = 'Data unavailable — run: node scripts/generate-showcase-data.cjs';
+    });
+})();
+</script>
+
 </body>
 </html>
