@@ -26,8 +26,8 @@ const { execSync } = require('child_process');
 
 // ─── Constants ──────────────────────────────────────────────────────
 
-const MYCELIUM-WATCH_DIR = path.join(findGitRoot(), '.mycelium-watch');
-const MEMORY_FILE = path.join(MYCELIUM-WATCH_DIR, '.mycelium/memory.json');
+const WATCH_DIR = path.join(findGitRoot(), '.mycelium');
+const MEMORY_FILE = path.join(WATCH_DIR, 'watch.json');
 const MAX_MEMORY_KB = 200;
 const MAX_ENTRIES = 300;
 
@@ -67,7 +67,7 @@ function isNoise(fp) {
 }
 
 function ensureDir() {
-  if (!fs.existsSync(MYCELIUM-WATCH_DIR)) fs.mkdirSync(MYCELIUM-WATCH_DIR, { recursive: true });
+  if (!fs.existsSync(WATCH_DIR)) fs.mkdirSync(WATCH_DIR, { recursive: true });
 }
 
 function load() {
@@ -870,38 +870,38 @@ function install() {
 
   // Pre-commit hook: append mycelium-watch warn to existing hook or create new
   const preCommitPath = path.join(hooksDir, 'pre-commit');
-  const mycelium-watchPreCommit = `node "${scriptRelative}" --warn 2>/dev/null || true`;
+  const watchPreCommit = `node "${scriptRelative}" --warn 2>/dev/null || true`;
 
   if (fs.existsSync(preCommitPath)) {
     const existing = fs.readFileSync(preCommitPath, 'utf8');
     if (!existing.includes('mycelium-watch')) {
       // Append to existing hook (don't replace it)
-      const appended = existing.trimEnd() + '\n\n# mycelium-watch: warn about known risks\n' + mycelium-watchPreCommit + '\n';
+      const appended = existing.trimEnd() + '\n\n# mycelium-watch: warn about known risks\n' + watchPreCommit + '\n';
       fs.writeFileSync(preCommitPath, appended, { mode: 0o755 });
       console.log('  \x1b[32m+\x1b[0m appended mycelium-watch to existing pre-commit hook');
     } else {
       console.log('  \x1b[2m.\x1b[0m pre-commit hook already has mycelium-watch');
     }
   } else {
-    fs.writeFileSync(preCommitPath, `#!/bin/sh\n# mycelium-watch: warn about known risks\n${mycelium-watchPreCommit}\n`, { mode: 0o755 });
+    fs.writeFileSync(preCommitPath, `#!/bin/sh\n# mycelium-watch: warn about known risks\n${watchPreCommit}\n`, { mode: 0o755 });
     console.log('  \x1b[32m+\x1b[0m created pre-commit hook');
   }
 
   // Post-commit hook: append mycelium-watch learn to existing hook or create new
   const postCommitPath = path.join(hooksDir, 'post-commit');
-  const mycelium-watchPostCommit = `node "${scriptRelative}" --learn 2>/dev/null || true`;
+  const watchPostCommit = `node "${scriptRelative}" --learn 2>/dev/null || true`;
 
   if (fs.existsSync(postCommitPath)) {
     const existing = fs.readFileSync(postCommitPath, 'utf8');
     if (!existing.includes('mycelium-watch')) {
-      const appended = existing.trimEnd() + '\n\n# mycelium-watch: learn from this commit\n' + mycelium-watchPostCommit + '\n';
+      const appended = existing.trimEnd() + '\n\n# mycelium-watch: learn from this commit\n' + watchPostCommit + '\n';
       fs.writeFileSync(postCommitPath, appended, { mode: 0o755 });
       console.log('  \x1b[32m+\x1b[0m appended mycelium-watch to existing post-commit hook');
     } else {
       console.log('  \x1b[2m.\x1b[0m post-commit hook already has mycelium-watch');
     }
   } else {
-    fs.writeFileSync(postCommitPath, `#!/bin/sh\n# mycelium-watch: learn from this commit\n${mycelium-watchPostCommit}\n`, { mode: 0o755 });
+    fs.writeFileSync(postCommitPath, `#!/bin/sh\n# mycelium-watch: learn from this commit\n${watchPostCommit}\n`, { mode: 0o755 });
     console.log('  \x1b[32m+\x1b[0m created post-commit hook');
   }
 
@@ -1544,8 +1544,8 @@ function uninstall() {
   }
 
   // Remove .mycelium-watch directory
-  if (fs.existsSync(MYCELIUM-WATCH_DIR)) {
-    fs.rmSync(MYCELIUM-WATCH_DIR, { recursive: true });
+  if (fs.existsSync(WATCH_DIR)) {
+    fs.rmSync(WATCH_DIR, { recursive: true });
     console.log('  \x1b[31m-\x1b[0m removed .mycelium-watch/');
   }
 
