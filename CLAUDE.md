@@ -54,9 +54,22 @@ This isn't optional. Every session produces knowledge. Record it.
 7. record learnings             ← --decide, --constraint, or --broke
 8. git commit                   ← hooks handle the rest
 9. --wip-done                   ← clear WIP after task complete
+10. node bin/mycelium.cjs ship "msg" ← DEPLOY: auth→test→sync→push→PR→merge
      ↑                                                    │
      └──── .nw-context auto-refreshed on every commit ───┘
 ```
+
+## CRITICAL: Deployment — ALWAYS use `mycelium ship`
+**NEVER** manually run `git push` + `gh pr create` + `gh pr merge` separately.
+Two bugs recurred 3+ times before this was fixed:
+1. **Auth token expires** → `git push` fails with "Invalid username or token"
+2. **Workflow stops after PR creation** → PR never gets merged
+
+The fix is `mycelium ship` which does all 9 steps atomically:
+```bash
+node bin/mycelium.cjs ship "feat: my change description"
+```
+Steps: [1] auto-commit → [2] validate (eval+tests) → [3] refresh auth → [4] sync remote → [5] squash → [6] push → [7] PR → [8] merge → [9] sync local
 
 ## CRITICAL: Chat Compaction Survival
 Chat platforms compress history, which **destroys in-flight task state** (todo lists, progress).
