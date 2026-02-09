@@ -160,7 +160,7 @@ const NW_IDENTITY = {
             
             ctx.fillStyle = '#069';
             ctx.font = '14px Arial';
-            ctx.fillText('NumbahWan Guild 🎮', 2, 15);
+            ctx.fillText('NumbahWan Guild ', 2, 15);
             
             ctx.fillStyle = 'rgba(102, 204, 0, 0.7)';
             ctx.font = '18px Georgia';

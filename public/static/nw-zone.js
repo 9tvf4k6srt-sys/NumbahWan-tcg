@@ -62,8 +62,8 @@ const NW_ZONE = {
     // =========================================
     microRewards: [
         // Tiny instant gratification (most common)
-        { type: 'sparkle', weight: 30, msg: '+✨', value: 0, visual: 'sparkle' },
-        { type: 'glow', weight: 25, msg: '💫', value: 0, visual: 'glow-pulse' },
+        { type: 'sparkle', weight: 30, msg: '+', value: 0, visual: 'sparkle' },
+        { type: 'glow', weight: 25, msg: '', value: 0, visual: 'glow-pulse' },
         { type: 'combo', weight: 15, msg: 'Nice!', value: 0, visual: 'text-pop' },
         
         // Small currency drops (uncommon)
@@ -74,22 +74,22 @@ const NW_ZONE = {
         { type: 'xp', weight: 5, msg: '+5 XP', value: 5, currency: 'xp', visual: 'xp-burst' },
         
         // Lucky drops (very rare)
-        { type: 'lucky', weight: 3, msg: '🍀 Lucky!', value: 5, currency: 'gold', visual: 'rainbow' },
-        { type: 'bonus', weight: 2, msg: '🎰 BONUS!', value: 10, currency: 'gold', visual: 'jackpot' }
+        { type: 'lucky', weight: 3, msg: 'Lucky!', value: 5, currency: 'gold', visual: 'rainbow' },
+        { type: 'bonus', weight: 2, msg: 'BONUS!', value: 10, currency: 'gold', visual: 'jackpot' }
     ],
     
     // =========================================
     // NEAR-MISS MESSAGES (Creates "almost there" feeling)
     // =========================================
     nearMissMessages: [
-        { msg: 'So close!', icon: '😮' },
-        { msg: 'Almost had it!', icon: '🔥' },
-        { msg: 'Just missed!', icon: '💨' },
-        { msg: 'Next time for sure!', icon: '✨' },
-        { msg: 'One more try...', icon: '🎯' },
-        { msg: 'Almost legendary!', icon: '⭐' },
-        { msg: 'The odds are with you!', icon: '🍀' },
-        { msg: 'So close to rare!', icon: '💎' }
+        { msg: 'So close!', icon: '' },
+        { msg: 'Almost had it!', icon: '' },
+        { msg: 'Just missed!', icon: '' },
+        { msg: 'Next time for sure!', icon: '' },
+        { msg: 'One more try...', icon: '' },
+        { msg: 'Almost legendary!', icon: '' },
+        { msg: 'The odds are with you!', icon: '' },
+        { msg: 'So close to rare!', icon: '' }
     ],
     
     // =========================================
@@ -103,7 +103,7 @@ const NW_ZONE = {
         { msg: "The cards sense your dedication!", threshold: 60 },
         { msg: "You're in the ZONE!", threshold: 70 },
         { msg: "Legendary drops happen to dedicated players...", threshold: 80 },
-        { msg: "✨ DEEP FLOW STATE ACHIEVED ✨", threshold: 85 }
+        { msg: "DEEP FLOW STATE ACHIEVED ", threshold: 85 }
     ],
     
     // =========================================
@@ -134,7 +134,7 @@ const NW_ZONE = {
         // Entry animation - instant engagement
         this.showEntryReward();
         
-        console.log(`🌀 NW_ZONE v${this.version} initialized - Zone System Active`);
+        console.log(`NW_ZONE v${this.version} initialized - Zone System Active`);
     },
     
     loadState() {
@@ -161,7 +161,7 @@ const NW_ZONE = {
     showEntryReward() {
         // Immediate reward upon entering ANY page
         setTimeout(() => {
-            this.showMicroFeedback('Welcome back! ✨', 'sparkle');
+            this.showMicroFeedback('Welcome back! ', 'sparkle');
             this.incrementZone(5);
             
             // Check for returning user bonus
@@ -172,7 +172,7 @@ const NW_ZONE = {
                 
                 if (hoursSince > 1 && hoursSince < 24) {
                     setTimeout(() => {
-                        this.showMicroFeedback('Return bonus! +5 Gold 🎁', 'coin-drop');
+                        this.showMicroFeedback('Return bonus! +5 Gold ', 'coin-drop');
                         this.giveReward('gold', 5);
                     }, 1500);
                 }
@@ -213,13 +213,13 @@ const NW_ZONE = {
     },
     
     onFlowAchieved() {
-        this.showZoneNotification("🔥 You're in the Zone!", 'flow');
+        this.showZoneNotification("You're in the Zone!", 'flow');
         document.body.classList.add('nw-flow-state');
         this.playSound('zoneUp');
     },
     
     onDeepFlowAchieved() {
-        this.showZoneNotification("✨ DEEP FLOW STATE ✨", 'deep-flow');
+        this.showZoneNotification("DEEP FLOW STATE ", 'deep-flow');
         document.body.classList.add('nw-deep-flow');
         this.playSound('deepFlow');
         this.giveReward('gold', 10);
@@ -423,7 +423,7 @@ const NW_ZONE = {
                 <div class="nw-zone-fill"></div>
             </div>
             <div class="nw-zone-label">
-                <span class="nw-zone-icon">🔥</span>
+                <span class="nw-zone-icon"></span>
                 <span class="nw-zone-text">Zone</span>
             </div>
         `;
@@ -462,13 +462,13 @@ const NW_ZONE = {
         
         if (icon) {
             if (this.state.zoneLevel >= 85) {
-                icon.textContent = '✨';
+                icon.textContent = '';
             } else if (this.state.zoneLevel >= 60) {
-                icon.textContent = '🔥';
+                icon.textContent = '';
             } else if (this.state.zoneLevel >= 30) {
-                icon.textContent = '💫';
+                icon.textContent = '';
             } else {
-                icon.textContent = '⚡';
+                icon.textContent = '';
             }
         }
     },
@@ -500,24 +500,24 @@ const NW_ZONE = {
         
         const suggestions = {
             'forge': [
-                { text: 'Open another pack!', href: '/forge', icon: '🎴' },
-                { text: 'Check your collection', href: '/collection', icon: '📚' },
-                { text: 'Battle with new cards', href: '/battle', icon: '⚔️' }
+                { text: 'Open another pack!', href: '/forge', icon: '' },
+                { text: 'Check your collection', href: '/collection', icon: '' },
+                { text: 'Battle with new cards', href: '/battle', icon: '' }
             ],
             'battle': [
-                { text: 'Battle again!', href: '/battle', icon: '⚔️' },
-                { text: 'Upgrade your deck', href: '/deckbuilder', icon: '📋' },
-                { text: 'Open more packs', href: '/forge', icon: '🎴' }
+                { text: 'Battle again!', href: '/battle', icon: '' },
+                { text: 'Upgrade your deck', href: '/deckbuilder', icon: '' },
+                { text: 'Open more packs', href: '/forge', icon: '' }
             ],
             'collection': [
-                { text: 'Build a deck', href: '/deckbuilder', icon: '📋' },
-                { text: 'Get more cards', href: '/forge', icon: '🎴' },
-                { text: 'Test in battle', href: '/battle', icon: '⚔️' }
+                { text: 'Build a deck', href: '/deckbuilder', icon: '' },
+                { text: 'Get more cards', href: '/forge', icon: '' },
+                { text: 'Test in battle', href: '/battle', icon: '' }
             ],
             'default': [
-                { text: 'Open packs', href: '/forge', icon: '🎴' },
-                { text: 'Start battling', href: '/battle', icon: '⚔️' },
-                { text: 'Explore cards', href: '/cards', icon: '📚' }
+                { text: 'Open packs', href: '/forge', icon: '' },
+                { text: 'Start battling', href: '/battle', icon: '' },
+                { text: 'Explore cards', href: '/cards', icon: '' }
             ]
         };
         
@@ -924,4 +924,4 @@ if (document.readyState === 'loading') {
 // Expose globally
 window.NW_ZONE = NW_ZONE;
 
-console.log('🌀 NW_ZONE module loaded - Flow State Engineering Active');
+console.log('NW_ZONE module loaded - Flow State Engineering Active');

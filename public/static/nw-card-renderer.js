@@ -448,7 +448,7 @@ const NW_CARD_RENDERER = (function() {
                 margin: 20px 0 15px;
                 background: ${rarityInfo.gradient};
                 border-radius: 10px;
-                font-family: 'Orbitron', sans-serif;
+                font-family: 'NumbahWan', 'Orbitron', sans-serif;
                 font-weight: 700;
                 color: white;
                 text-transform: uppercase;

@@ -10,44 +10,44 @@ const NW_ACHIEVEMENTS = {
     definitions: {
         // Collection
         'first_card': { icon: '🃏', name: { en: 'First Pull', zh: '首抽', th: 'การ์ดแรก' }, desc: { en: 'Open your first pack', zh: '開啟第一個卡包', th: 'เปิดแพ็คแรก' }, secret: false },
-        'collector_10': { icon: '📚', name: { en: 'Collector', zh: '收藏家', th: 'นักสะสม' }, desc: { en: 'Own 10 unique cards', zh: '擁有10張不同卡片', th: 'มีการ์ด 10 ใบ' }, secret: false },
-        'collector_50': { icon: '🏛️', name: { en: 'Curator', zh: '策展人', th: 'ภัณฑารักษ์' }, desc: { en: 'Own 50 unique cards', zh: '擁有50張不同卡片', th: 'มีการ์ด 50 ใบ' }, secret: false },
-        'collector_100': { icon: '🏆', name: { en: 'Completionist', zh: '完美主義者', th: 'นักสะสมครบ' }, desc: { en: 'Own 100 unique cards', zh: '擁有100張不同卡片', th: 'มีการ์ด 100 ใบ' }, secret: false },
+        'collector_10': { icon: '', name: { en: 'Collector', zh: '收藏家', th: 'นักสะสม' }, desc: { en: 'Own 10 unique cards', zh: '擁有10張不同卡片', th: 'มีการ์ด 10 ใบ' }, secret: false },
+        'collector_50': { icon: '', name: { en: 'Curator', zh: '策展人', th: 'ภัณฑารักษ์' }, desc: { en: 'Own 50 unique cards', zh: '擁有50張不同卡片', th: 'มีการ์ด 50 ใบ' }, secret: false },
+        'collector_100': { icon: '', name: { en: 'Completionist', zh: '完美主義者', th: 'นักสะสมครบ' }, desc: { en: 'Own 100 unique cards', zh: '擁有100張不同卡片', th: 'มีการ์ด 100 ใบ' }, secret: false },
         
         // Rarity
-        'rare_first': { icon: '💎', name: { en: 'Rare Find', zh: '稀有發現', th: 'พบของหายาก' }, desc: { en: 'Pull your first rare', zh: '抽到第一張稀有', th: 'ได้การ์ดแรร์' }, secret: false },
-        'epic_first': { icon: '🌟', name: { en: 'Epic Moment', zh: '史詩時刻', th: 'ช่วงเวลาอิพิค' }, desc: { en: 'Pull your first epic', zh: '抽到第一張史詩', th: 'ได้การ์ดอีพิค' }, secret: false },
-        'legendary_first': { icon: '👑', name: { en: 'Golden Touch', zh: '黃金之觸', th: 'สัมผัสทอง' }, desc: { en: 'Pull your first legendary', zh: '抽到第一張傳說', th: 'ได้การ์ดเลเจนด์' }, secret: false },
-        'mythic_first': { icon: '🔱', name: { en: 'Myth Becomes Real', zh: '神話成真', th: 'ตำนานเป็นจริง' }, desc: { en: 'Pull a mythic card', zh: '抽到神話卡', th: 'ได้การ์ดมิธิค' }, secret: false },
+        'rare_first': { icon: '', name: { en: 'Rare Find', zh: '稀有發現', th: 'พบของหายาก' }, desc: { en: 'Pull your first rare', zh: '抽到第一張稀有', th: 'ได้การ์ดแรร์' }, secret: false },
+        'epic_first': { icon: '', name: { en: 'Epic Moment', zh: '史詩時刻', th: 'ช่วงเวลาอิพิค' }, desc: { en: 'Pull your first epic', zh: '抽到第一張史詩', th: 'ได้การ์ดอีพิค' }, secret: false },
+        'legendary_first': { icon: '', name: { en: 'Golden Touch', zh: '黃金之觸', th: 'สัมผัสทอง' }, desc: { en: 'Pull your first legendary', zh: '抽到第一張傳說', th: 'ได้การ์ดเลเจนด์' }, secret: false },
+        'mythic_first': { icon: '', name: { en: 'Myth Becomes Real', zh: '神話成真', th: 'ตำนานเป็นจริง' }, desc: { en: 'Pull a mythic card', zh: '抽到神話卡', th: 'ได้การ์ดมิธิค' }, secret: false },
         
         // Battle
-        'first_win': { icon: '⚔️', name: { en: 'Victor', zh: '勝利者', th: 'ผู้ชนะ' }, desc: { en: 'Win your first battle', zh: '贏得第一場戰鬥', th: 'ชนะครั้งแรก' }, secret: false },
-        'wins_10': { icon: '🗡️', name: { en: 'Warrior', zh: '戰士', th: 'นักรบ' }, desc: { en: 'Win 10 battles', zh: '贏得10場戰鬥', th: 'ชนะ 10 ครั้ง' }, secret: false },
-        'wins_50': { icon: '⚡', name: { en: 'Champion', zh: '冠軍', th: 'แชมป์' }, desc: { en: 'Win 50 battles', zh: '贏得50場戰鬥', th: 'ชนะ 50 ครั้ง' }, secret: false },
-        'wins_100': { icon: '🏅', name: { en: 'Legend', zh: '傳奇', th: 'ตำนาน' }, desc: { en: 'Win 100 battles', zh: '贏得100場戰鬥', th: 'ชนะ 100 ครั้ง' }, secret: false },
-        'streak_5': { icon: '🔥', name: { en: 'On Fire', zh: '火熱連勝', th: 'ไฟลุก' }, desc: { en: '5 win streak', zh: '5連勝', th: 'ชนะติดต่อ 5' }, secret: false },
-        'streak_10': { icon: '💥', name: { en: 'Unstoppable', zh: '勢不可擋', th: 'หยุดไม่ได้' }, desc: { en: '10 win streak', zh: '10連勝', th: 'ชนะติดต่อ 10' }, secret: false },
+        'first_win': { icon: '', name: { en: 'Victor', zh: '勝利者', th: 'ผู้ชนะ' }, desc: { en: 'Win your first battle', zh: '贏得第一場戰鬥', th: 'ชนะครั้งแรก' }, secret: false },
+        'wins_10': { icon: '', name: { en: 'Warrior', zh: '戰士', th: 'นักรบ' }, desc: { en: 'Win 10 battles', zh: '贏得10場戰鬥', th: 'ชนะ 10 ครั้ง' }, secret: false },
+        'wins_50': { icon: '', name: { en: 'Champion', zh: '冠軍', th: 'แชมป์' }, desc: { en: 'Win 50 battles', zh: '贏得50場戰鬥', th: 'ชนะ 50 ครั้ง' }, secret: false },
+        'wins_100': { icon: '', name: { en: 'Legend', zh: '傳奇', th: 'ตำนาน' }, desc: { en: 'Win 100 battles', zh: '贏得100場戰鬥', th: 'ชนะ 100 ครั้ง' }, secret: false },
+        'streak_5': { icon: '', name: { en: 'On Fire', zh: '火熱連勝', th: 'ไฟลุก' }, desc: { en: '5 win streak', zh: '5連勝', th: 'ชนะติดต่อ 5' }, secret: false },
+        'streak_10': { icon: '', name: { en: 'Unstoppable', zh: '勢不可擋', th: 'หยุดไม่ได้' }, desc: { en: '10 win streak', zh: '10連勝', th: 'ชนะติดต่อ 10' }, secret: false },
         
         // Economy
-        'nwg_1000': { icon: '💰', name: { en: 'Saver', zh: '儲蓄者', th: 'นักออม' }, desc: { en: 'Accumulate 1,000 NWG', zh: '累積1,000 NWG', th: 'สะสม 1,000 NWG' }, secret: false },
-        'nwg_10000': { icon: '🤑', name: { en: 'Rich', zh: '富有', th: 'รวย' }, desc: { en: 'Accumulate 10,000 NWG', zh: '累積10,000 NWG', th: 'สะสม 10,000 NWG' }, secret: false },
-        'nwg_100000': { icon: '💎', name: { en: 'Whale', zh: '鯨魚', th: 'ปลาวาฬ' }, desc: { en: 'Accumulate 100,000 NWG', zh: '累積100,000 NWG', th: 'สะสม 100,000 NWG' }, secret: false },
+        'nwg_1000': { icon: '', name: { en: 'Saver', zh: '儲蓄者', th: 'นักออม' }, desc: { en: 'Accumulate 1,000 NWG', zh: '累積1,000 NWG', th: 'สะสม 1,000 NWG' }, secret: false },
+        'nwg_10000': { icon: '', name: { en: 'Rich', zh: '富有', th: 'รวย' }, desc: { en: 'Accumulate 10,000 NWG', zh: '累積10,000 NWG', th: 'สะสม 10,000 NWG' }, secret: false },
+        'nwg_100000': { icon: '', name: { en: 'Whale', zh: '鯨魚', th: 'ปลาวาฬ' }, desc: { en: 'Accumulate 100,000 NWG', zh: '累積100,000 NWG', th: 'สะสม 100,000 NWG' }, secret: false },
         
         // Engagement
-        'login_7': { icon: '📅', name: { en: 'Dedicated', zh: '忠誠', th: 'ทุ่มเท' }, desc: { en: '7-day login streak', zh: '7天連續登入', th: 'ล็อกอิน 7 วัน' }, secret: false },
-        'login_30': { icon: '🗓️', name: { en: 'Committed', zh: '堅定', th: 'มุ่งมั่น' }, desc: { en: '30-day login streak', zh: '30天連續登入', th: 'ล็อกอิน 30 วัน' }, secret: false },
-        'embassy_visit': { icon: '🏛️', name: { en: 'Diplomat', zh: '外交官', th: 'นักการทูต' }, desc: { en: 'Claim embassy reward', zh: '領取大使館獎勵', th: 'รับรางวัลสถานทูต' }, secret: false },
+        'login_7': { icon: '', name: { en: 'Dedicated', zh: '忠誠', th: 'ทุ่มเท' }, desc: { en: '7-day login streak', zh: '7天連續登入', th: 'ล็อกอิน 7 วัน' }, secret: false },
+        'login_30': { icon: '', name: { en: 'Committed', zh: '堅定', th: 'มุ่งมั่น' }, desc: { en: '30-day login streak', zh: '30天連續登入', th: 'ล็อกอิน 30 วัน' }, secret: false },
+        'embassy_visit': { icon: '', name: { en: 'Diplomat', zh: '外交官', th: 'นักการทูต' }, desc: { en: 'Claim embassy reward', zh: '領取大使館獎勵', th: 'รับรางวัลสถานทูต' }, secret: false },
         
         // Upgrades
-        'first_upgrade': { icon: '⭐', name: { en: 'Upgrader', zh: '升級者', th: 'นักอัพเกรด' }, desc: { en: 'Upgrade your first card', zh: '升級第一張卡', th: 'อัพเกรดการ์ดแรก' }, secret: false },
-        'max_star': { icon: '🌟', name: { en: 'Perfectionist', zh: '完美主義', th: 'สมบูรณ์แบบ' }, desc: { en: 'Max out a card (5★)', zh: '滿星卡片(5★)', th: 'การ์ด 5★' }, secret: false },
-        'first_burn': { icon: '🔥', name: { en: 'Sacrifice', zh: '獻祭', th: 'สังเวย' }, desc: { en: 'Burn a card for logs', zh: '燒卡換原木', th: 'เผาการ์ดเอา logs' }, secret: false },
+        'first_upgrade': { icon: '', name: { en: 'Upgrader', zh: '升級者', th: 'นักอัพเกรด' }, desc: { en: 'Upgrade your first card', zh: '升級第一張卡', th: 'อัพเกรดการ์ดแรก' }, secret: false },
+        'max_star': { icon: '', name: { en: 'Perfectionist', zh: '完美主義', th: 'สมบูรณ์แบบ' }, desc: { en: 'Max out a card (5)', zh: '滿星卡片(5)', th: 'การ์ด 5' }, secret: false },
+        'first_burn': { icon: '', name: { en: 'Sacrifice', zh: '獻祭', th: 'สังเวย' }, desc: { en: 'Burn a card for logs', zh: '燒卡換原木', th: 'เผาการ์ดเอา logs' }, secret: false },
         
         // Secret / Easter eggs
-        'lucky_47': { icon: '🍀', name: { en: 'Lucky 47', zh: '幸運47', th: 'โชคดี 47' }, desc: { en: '???', zh: '???', th: '???' }, secret: true },
-        'regina_fan': { icon: '👸', name: { en: 'RegginA Stan', zh: 'RegginA粉', th: 'แฟน RegginA' }, desc: { en: 'Own all RegginA cards', zh: '擁有所有RegginA卡', th: 'มีการ์ด RegginA ทั้งหมด' }, secret: true },
-        'night_owl': { icon: '🦉', name: { en: 'Night Owl', zh: '夜貓子', th: 'นกฮูก' }, desc: { en: 'Play at 3 AM', zh: '凌晨3點玩', th: 'เล่นตอนตี 3' }, secret: true },
-        'og_member': { icon: '🏅', name: { en: 'OG', zh: '元老', th: 'OG' }, desc: { en: 'Joined before Season 2', zh: '第二季前加入', th: 'เข้าร่วมก่อน Season 2' }, secret: true },
+        'lucky_47': { icon: '', name: { en: 'Lucky 47', zh: '幸運47', th: 'โชคดี 47' }, desc: { en: '???', zh: '???', th: '???' }, secret: true },
+        'regina_fan': { icon: '', name: { en: 'RegginA Stan', zh: 'RegginA粉', th: 'แฟน RegginA' }, desc: { en: 'Own all RegginA cards', zh: '擁有所有RegginA卡', th: 'มีการ์ด RegginA ทั้งหมด' }, secret: true },
+        'night_owl': { icon: '', name: { en: 'Night Owl', zh: '夜貓子', th: 'นกฮูก' }, desc: { en: 'Play at 3 AM', zh: '凌晨3點玩', th: 'เล่นตอนตี 3' }, secret: true },
+        'og_member': { icon: '', name: { en: 'OG', zh: '元老', th: 'OG' }, desc: { en: 'Joined before Season 2', zh: '第二季前加入', th: 'เข้าร่วมก่อน Season 2' }, secret: true },
     },
     
     // Get unlocked achievements from storage
@@ -79,7 +79,7 @@ const NW_ACHIEVEMENTS = {
         // Show celebration
         this.celebrate(id, def);
         
-        console.log(`🏆 Achievement unlocked: ${def.name.en}`);
+        console.log(`Achievement unlocked: ${def.name.en}`);
         return true;
     },
     
@@ -136,7 +136,7 @@ const NW_ACHIEVEMENTS = {
                     margin-bottom: 8px;
                 }
                 .ach-name {
-                    font-family: 'Orbitron', sans-serif;
+                    font-family: 'NumbahWan', 'Orbitron', sans-serif;
                     font-size: 28px;
                     color: #fff;
                     margin-bottom: 12px;
@@ -178,7 +178,7 @@ const NW_ACHIEVEMENTS = {
             </style>
             <div class="particles" id="achParticles"></div>
             <div class="ach-card">
-                <div class="ach-label">🏆 ACHIEVEMENT UNLOCKED</div>
+                <div class="ach-label">ACHIEVEMENT UNLOCKED</div>
                 <div class="ach-icon">${def.icon}</div>
                 <div class="ach-name">${def.name[lang] || def.name.en}</div>
                 <div class="ach-desc">${def.secret ? '???' : (def.desc[lang] || def.desc.en)}</div>
@@ -192,7 +192,7 @@ const NW_ACHIEVEMENTS = {
         
         // Particle effects
         const particles = document.getElementById('achParticles');
-        const emojis = ['⭐', '✨', '🎉', '🏆', '💫', def.icon];
+        const emojis = ['', '', '', '', '', def.icon];
         for (let i = 0; i < 30; i++) {
             const p = document.createElement('div');
             p.className = 'particle';

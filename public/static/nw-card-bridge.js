@@ -1,5 +1,5 @@
 /**
- * 🃏💰 NWG Card Bridge UI
+ * 🃏NWG Card Bridge UI
  * Staking, Fusion, Trading - All in one
  */
 
@@ -73,19 +73,19 @@ const NWCardBridge = (function() {
       <div class="card-bridge">
         <!-- Header -->
         <div class="bridge-header">
-          <h1>🃏💰 Card Bridge</h1>
+          <h1>🃏Card Bridge</h1>
           <div class="wallet-info">
-            <span class="nwg-balance">💰 ${state.collection.totalValue?.toLocaleString() || 0} NWG</span>
-            <span class="pending">⏳ +${state.collection.pendingYield || 0}/day</span>
+            <span class="nwg-balance">${state.collection.totalValue?.toLocaleString() || 0} NWG</span>
+            <span class="pending">+${state.collection.pendingYield || 0}/day</span>
           </div>
         </div>
 
         <!-- Tabs -->
         <div class="bridge-tabs">
-          <button class="tab ${state.tab === 'collection' ? 'active' : ''}" data-tab="collection">📦 Collection</button>
-          <button class="tab ${state.tab === 'staking' ? 'active' : ''}" data-tab="staking">🔒 Staking</button>
-          <button class="tab ${state.tab === 'fusion' ? 'active' : ''}" data-tab="fusion">🔥 Fusion</button>
-          <button class="tab ${state.tab === 'market' ? 'active' : ''}" data-tab="market">🏪 Market</button>
+          <button class="tab ${state.tab === 'collection' ? 'active' : ''}" data-tab="collection">Collection</button>
+          <button class="tab ${state.tab === 'staking' ? 'active' : ''}" data-tab="staking">Staking</button>
+          <button class="tab ${state.tab === 'fusion' ? 'active' : ''}" data-tab="fusion">Fusion</button>
+          <button class="tab ${state.tab === 'market' ? 'active' : ''}" data-tab="market">Market</button>
         </div>
 
         <!-- Content -->
@@ -131,7 +131,7 @@ const NWCardBridge = (function() {
         <div class="yield-display">
           <div class="yield-big">+${state.collection.pendingYield || 0} NWG</div>
           <div class="yield-label">Pending Rewards</div>
-          <button class="claim-btn" id="claimRewardsBtn">💰 Claim All</button>
+          <button class="claim-btn" id="claimRewardsBtn">Claim All</button>
         </div>
       </div>
       <div class="staking-rates">
@@ -163,7 +163,7 @@ const NWCardBridge = (function() {
 
     return `
       <div class="fusion-recipes">
-        <h4>🔥 Fusion Recipes</h4>
+        <h4>Fusion Recipes</h4>
         ${recipes.map(r => `
           <div class="recipe" data-target="${r.target}">
             <span class="input">${r.input}</span>
@@ -179,14 +179,14 @@ const NWCardBridge = (function() {
         <div class="selected-cards" id="selectedFusionCards">
           ${state.selectedCards.map((c,i) => `
             <div class="selected-slot filled" data-idx="${i}">
-              <span class="remove-card" data-idx="${i}">✕</span>
+              <span class="remove-card" data-idx="${i}"></span>
               ${c.id}
             </div>
           `).join('')}
           ${state.selectedCards.length < 5 ? '<div class="selected-slot empty">+ Add</div>' : ''}
         </div>
         <button class="fuse-btn" id="fuseBtn" ${state.selectedCards.length < 2 ? 'disabled' : ''}>
-          🔥 FUSE CARDS
+          FUSE CARDS
         </button>
       </div>
       <div class="card-grid fusion-grid">
@@ -233,7 +233,7 @@ const NWCardBridge = (function() {
       <div class="card-item ${isStaked ? 'staked' : ''}" data-id="${cardId}">
         <div class="card-id">${cardId}</div>
         <button class="stake-toggle" data-id="${cardId}" data-staked="${isStaked}">
-          ${isStaked ? '🔓 Unstake' : '🔒 Stake'}
+          ${isStaked ? 'Unstake' : 'Stake'}
         </button>
       </div>
     `;
@@ -244,7 +244,7 @@ const NWCardBridge = (function() {
     return `
       <div class="card-item fusion-card ${isSelected ? 'selected' : ''}" data-id="${cardId}">
         <div class="card-id">${cardId}</div>
-        ${!isSelected ? '<button class="select-fusion" data-id="' + cardId + '">+ Select</button>' : '<span class="selected-badge">✓</span>'}
+        ${!isSelected ? '<button class="select-fusion" data-id="' + cardId + '">+ Select</button>' : '<span class="selected-badge"></span>'}
       </div>
     `;
   }
@@ -266,7 +266,7 @@ const NWCardBridge = (function() {
     if (claimBtn) {
       claimBtn.onclick = async () => {
         const result = await claimRewards();
-        showToast(result.success ? `💰 Claimed ${result.totalClaimed} NWG!` : result.message);
+        showToast(result.success ? `Claimed ${result.totalClaimed} NWG!` : result.message);
         await loadCollection();
         render('cardBridgeContainer');
       };

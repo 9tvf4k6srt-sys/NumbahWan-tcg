@@ -44,7 +44,7 @@
  * 
  * Card NWG Value = Base Value + (Star Bonus) + (Set Bonus) + (Age Bonus)
  * 
- * Example: A 5★ Mythic card in a complete set, held for 1 year:
+ * Example: A 5Mythic card in a complete set, held for 1 year:
  *   Base: 1000 NWG
  *   Star Bonus: +75% = 750 NWG
  *   Set Bonus: +50% = 500 NWG  
@@ -54,7 +54,7 @@
  */
 
 const NW_ECONOMY = {
-    version: '3.1.0',
+    version: '3.2.0',
     
     // ═══════════════════════════════════════════════════════════════
     // INVESTMENT THESIS (For AI/Human Analysis)
@@ -151,7 +151,7 @@ const NW_ECONOMY = {
             2: 1.25,   // +25%
             3: 1.50,   // +50%
             4: 2.00,   // +100%
-            5: 3.00    // +200% (5★ mythic = 4500 NWG locked!)
+            5: 3.00    // +200% (5mythic = 4500 NWG locked!)
         },
         
         // Set completion bonus (owning full set)
@@ -200,14 +200,20 @@ const NW_ECONOMY = {
         enabled: true,
         
         // Daily NWG earnings per card (by rarity)
+        // v3.2 REBALANCE: Reduced 10x for sustainability (365% APY → 36.5%)
+        // Old ROI: 100 days. New ROI: 1000 days. Makes burn vs stake a real decision.
         dailyYield: {
-            common: 0.1,       // 0.1 NWG/day
-            uncommon: 0.25,    // 0.25 NWG/day
-            rare: 0.5,         // 0.5 NWG/day
-            epic: 1.0,         // 1 NWG/day
-            legendary: 2.5,    // 2.5 NWG/day
-            mythic: 5.0        // 5 NWG/day
+            common: 0.01,      // 0.01 NWG/day (was 0.1)
+            uncommon: 0.025,   // 0.025 NWG/day (was 0.25)
+            rare: 0.05,        // 0.05 NWG/day (was 0.5)
+            epic: 0.1,         // 0.1 NWG/day (was 1.0)
+            legendary: 0.25,   // 0.25 NWG/day (was 2.5)
+            mythic: 0.5        // 0.5 NWG/day (was 5.0)
         },
+        
+        // Maximum cards that can be staked simultaneously
+        // v3.2: Cap at 5 to force strategic choice and reduce inflation
+        maxStakedCards: 5,
         
         // Star multiplier for yield
         starYieldMultiplier: {
@@ -329,7 +335,7 @@ const NW_ECONOMY = {
         citizen: {
             name: { en: 'Citizen', zh: '公民', th: 'พลเมือง' },
             minNwg: 0,
-            icon: '🌱',
+            icon: '',
             color: '#888888',
             rewardBonus: 1.0,
             benefits: { en: ['Basic access', 'Daily rewards'], zh: ['基本功能', '每日獎勵'], th: ['การเข้าถึงพื้นฐาน', 'รางวัลรายวัน'] }
@@ -337,7 +343,7 @@ const NW_ECONOMY = {
         bronze: {
             name: { en: 'Bronze', zh: '青銅', th: 'บรอนซ์' },
             minNwg: 100,
-            icon: '🥉',
+            icon: '',
             color: '#cd7f32',
             rewardBonus: 1.05,
             benefits: { en: ['5% bonus rewards', 'Bronze badge', 'Member events'], zh: ['獎勵+5%', '青銅徽章', '會員活動'], th: ['โบนัส+5%', 'เหรียญบรอนซ์', 'กิจกรรมสมาชิก'] }
@@ -345,7 +351,7 @@ const NW_ECONOMY = {
         silver: {
             name: { en: 'Silver', zh: '白銀', th: 'ซิลเวอร์' },
             minNwg: 1000,
-            icon: '🥈',
+            icon: '',
             color: '#c0c0c0',
             rewardBonus: 1.10,
             benefits: { en: ['10% bonus', 'Early access (24h)', 'Priority support'], zh: ['獎勵+10%', '提前24小時', '優先客服'], th: ['โบนัส+10%', 'เข้าถึงก่อน 24 ชม.', 'ซัพพอร์ตพิเศษ'] }
@@ -353,7 +359,7 @@ const NW_ECONOMY = {
         gold: {
             name: { en: 'Gold', zh: '黃金', th: 'โกลด์' },
             minNwg: 10000,
-            icon: '🥇',
+            icon: '',
             color: '#ffd700',
             rewardBonus: 1.15,
             benefits: { en: ['15% bonus', 'Vote on new cards', 'Exclusive Discord', 'Monthly giveaway'], zh: ['獎勵+15%', '卡牌投票', '專屬Discord', '每月抽獎'], th: ['โบนัส+15%', 'โหวตการ์ด', 'Discord พิเศษ', 'แจกของรายเดือน'] }
@@ -361,7 +367,7 @@ const NW_ECONOMY = {
         diamond: {
             name: { en: 'Diamond', zh: '鑽石', th: 'ไดมอนด์' },
             minNwg: 100000,
-            icon: '💎',
+            icon: '',
             color: '#00d4ff',
             rewardBonus: 1.25,
             revenueShare: 0.001,
@@ -370,7 +376,7 @@ const NW_ECONOMY = {
         mythic: {
             name: { en: 'Mythic', zh: '神話', th: 'มิธิค' },
             minNwg: 1000000,
-            icon: '👑',
+            icon: '',
             color: '#ff00ff',
             rewardBonus: 1.50,
             revenueShare: 0.01,
@@ -397,7 +403,7 @@ const NW_ECONOMY = {
             id: 'nwg',
             name: 'NWG',
             fullName: 'NumbahWan Gold',
-            icon: '◆',
+            icon: '',
             color: '#00d4ff',
             iconPath: '/static/icons/nwg.png',
             tier: 'premium',
@@ -413,7 +419,7 @@ const NW_ECONOMY = {
             id: 'gold',
             name: 'Gold',
             fullName: 'Gold',
-            icon: '●',
+            icon: '',
             color: '#ffd700',
             iconPath: '/static/icons/gold.png',
             tier: 'standard',
@@ -507,7 +513,29 @@ const NW_ECONOMY = {
         single: { nwg: 10, gold: 100 },
         tenPull: { nwg: 90, gold: 900 },
         guaranteedRare: { nwg: 50 },
-        guaranteedMythic: { wood: 10 }
+        guaranteedMythic: { wood: 10 },
+        // v3.2 GOLD SINK: Buy guaranteed low-rarity cards with Gold
+        goldCommon: { gold: 500 },        // 500 Gold = 1 guaranteed Common
+        goldUncommon: { gold: 2000 },      // 2000 Gold = 1 guaranteed Uncommon
+        goldRare: { gold: 8000 }           // 8000 Gold = 1 guaranteed Rare
+    },
+    
+    // v3.2 BURN-TO-CRAFT: Burn 4 of same rarity → 1 random card of next rarity
+    // This makes burning the primary duplicate sink instead of staking
+    craftUpgrade: {
+        enabled: true,
+        cardsRequired: 4,  // Burn 4 cards of same rarity
+        rarityLadder: ['common', 'uncommon', 'rare', 'epic', 'legendary', 'mythic'],
+        // Can't craft up from mythic (already max)
+        canCraftUp(rarity) {
+            const idx = this.rarityLadder.indexOf(rarity);
+            return idx >= 0 && idx < this.rarityLadder.length - 1;
+        },
+        getTargetRarity(rarity) {
+            const idx = this.rarityLadder.indexOf(rarity);
+            if (idx < 0 || idx >= this.rarityLadder.length - 1) return null;
+            return this.rarityLadder[idx + 1];
+        }
     },
     
     dailyRewards: {
@@ -615,7 +643,7 @@ if (typeof window !== 'undefined') {
     window.NW_ECONOMY = NW_ECONOMY;
 }
 
-console.log('%c💰 NW Economy v3.1 - Unified Investment Ecosystem', 
+console.log('%cNW Economy v3.2 - Rebalanced Investment Ecosystem', 
     'background: linear-gradient(90deg, #00d4ff, #ffd700, #00ff88); color: #000; font-size: 14px; padding: 6px 12px; border-radius: 4px; font-weight: bold;');
 console.log('%cCards = Locked NWG | Staking = Growing NWG | Portfolio = Total NWG Value', 
     'color: #888; font-size: 11px;');

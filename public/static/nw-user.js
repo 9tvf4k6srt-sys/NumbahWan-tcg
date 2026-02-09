@@ -608,7 +608,7 @@ const NW_USER = {
         return this._data?.business !== null;
     },
     
-    createBusiness(name, type, emoji = '🏪') {
+    createBusiness(name, type, emoji = '') {
         if (this.hasBusiness()) return null; // Already has one
         
         this._data.business = {
@@ -779,7 +779,7 @@ const NW_USER = {
                 toId: this.id
             });
             
-            console.log('%c✅ ACCOUNT TRANSFERRED SUCCESSFULLY!', 'color: #00ff00; font-size: 16px;');
+            console.log('%cACCOUNT TRANSFERRED SUCCESSFULLY!', 'color: #00ff00; font-size: 16px;');
             console.log('%c   Your ID: ' + this.id, 'color: #00ffff;');
             
             return {
@@ -825,7 +825,7 @@ const NW_USER = {
         }
         
         this._dispatch('nw-gm-activated');
-        console.log('%c🎮 GM MODE ACTIVATED', 'background: linear-gradient(90deg, #ffd700, #ff6b00); color: #000; font-size: 20px; font-weight: bold; padding: 10px 20px; border-radius: 5px;');
+        console.log('%cGM MODE ACTIVATED', 'background: linear-gradient(90deg, #ffd700, #ff6b00); color: #000; font-size: 20px; font-weight: bold; padding: 10px 20px; border-radius: 5px;');
         console.log('%c   All currencies are now INFINITE (999,999)', 'color: #ffd700;');
         return true;
     },

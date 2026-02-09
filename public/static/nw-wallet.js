@@ -92,7 +92,7 @@ const NW_WALLET = {
         this.isGM = inWhitelist || localFlag || urlFlag || gmKeyInUrl;
         
         if (this.isGM) {
-            console.log('%c[NW_WALLET] 👑 GM MODE ACTIVE - Infinite Resources Enabled!', 
+            console.log('%c[NW_WALLET] GM MODE ACTIVE - Infinite Resources Enabled!', 
                 'background: linear-gradient(90deg, #ffd700, #ff6b00); color: black; font-size: 16px; font-weight: bold; padding: 10px;');
             console.log('%c   Guest ID: ' + this.wallet.guestId, 'color: #ffd700;');
             this.log('GM_MODE_ACTIVATED', { guestId: this.wallet.guestId, method: inWhitelist ? 'whitelist' : localFlag ? 'localStorage' : gmKeyInUrl ? 'urlKey' : 'url' });
@@ -112,7 +112,7 @@ const NW_WALLET = {
             if (data.success && data.isGM) {
                 this.isGM = true;
                 localStorage.setItem(this.GM_KEY, 'true');
-                console.log('%c[NW_WALLET] 👑 GM Status Verified by Server!', 
+                console.log('%c[NW_WALLET] GM Status Verified by Server!', 
                     'background: linear-gradient(90deg, #ffd700, #ff6b00); color: black; font-weight: bold; padding: 5px;');
                 return true;
             }
@@ -135,7 +135,7 @@ const NW_WALLET = {
         localStorage.setItem(this.GM_KEY, 'true');
         this.isGM = true;
         
-        console.log('%c[NW_WALLET] 👑 GM MODE ACTIVATED!', 
+        console.log('%c[NW_WALLET] GM MODE ACTIVATED!', 
             'background: linear-gradient(90deg, #ffd700, #ff6b00); color: black; font-size: 20px; font-weight: bold; padding: 15px;');
         
         this.log('GM_MODE_ACTIVATED_MANUAL', { guestId: this.wallet?.guestId });
@@ -193,12 +193,12 @@ const NW_WALLET = {
             currencies: {
                 nwg: 50,       // Starting NWG - try a few pulls
                 gold: 100,     // Starting Gold - play some games
-                wood: 0        // Sacred Logs - MUST BE EARNED!
+                wood: 3        // Welcome Pack! 3 Sacred Logs = first multi-pull experience
             },
             
             // Stats
             stats: {
-                totalEarned: { nwg: 50, gold: 100, wood: 0 },
+                totalEarned: { nwg: 50, gold: 100, wood: 3 },
                 totalSpent: { nwg: 0, gold: 0, wood: 0 },
                 gamesPlayed: 0,
                 gamesWon: 0,
@@ -284,7 +284,7 @@ const NW_WALLET = {
             ctx.fillStyle = '#f60';
             ctx.fillRect(125, 1, 62, 20);
             ctx.fillStyle = '#069';
-            ctx.fillText('NumbahWan 🎮', 2, 15);
+            ctx.fillText('NumbahWan ', 2, 15);
             ctx.fillStyle = 'rgba(102, 204, 0, 0.7)';
             ctx.fillText('Guest Wallet', 4, 35);
             components.push(canvas.toDataURL());
@@ -722,10 +722,13 @@ const NW_WALLET = {
     // Cards earn daily NWG based on rarity - makes cards productive assets
     STAKING_KEY: 'nw_card_staking',
     
-    // Daily NWG yield by rarity (aligned with NW_ECONOMY.cardStaking)
+    // Daily NWG yield by rarity (aligned with NW_ECONOMY v3.2 - 10x reduction)
     STAKING_YIELDS: {
-        common: 0.1, uncommon: 0.25, rare: 0.5, epic: 1.0, legendary: 2.5, mythic: 5.0
+        common: 0.01, uncommon: 0.025, rare: 0.05, epic: 0.1, legendary: 0.25, mythic: 0.5
     },
+    
+    // v3.2: Maximum cards that can be staked at once (forces strategic choice)
+    MAX_STAKED_CARDS: 5,
     
     getStakingState() {
         try {
@@ -743,6 +746,12 @@ const NW_WALLET = {
         
         const state = this.getStakingState();
         if (state[cardId]) return { success: false, reason: 'already_staked' };
+        
+        // v3.2: Enforce staking cap
+        const stakedCount = Object.keys(state).length;
+        if (stakedCount >= this.MAX_STAKED_CARDS) {
+            return { success: false, reason: 'max_staked', message: `Max ${this.MAX_STAKED_CARDS} cards can be staked. Unstake one first.`, current: stakedCount, max: this.MAX_STAKED_CARDS };
+        }
         
         const cardData = this.getCardData(cardId);
         const stars = cardData?.level || 1;
@@ -837,6 +846,8 @@ const NW_WALLET = {
         
         return {
             stakedCards: entries.length,
+            maxStakedCards: this.MAX_STAKED_CARDS,
+            slotsAvailable: Math.max(0, this.MAX_STAKED_CARDS - entries.length),
             totalDailyYield: Math.round(totalDailyYield * 10) / 10,
             pendingRewards: Math.floor(totalPendingRewards),
             annualProjection: Math.round(totalDailyYield * 365)
@@ -900,6 +911,151 @@ const NW_WALLET = {
         }));
         
         return { success: true, nwgReceived: totalNWG, sacredLogs, premium };
+    },
+    
+    // ===== GOLD SINK: Buy Guaranteed Cards with Gold (v3.2) =====
+    // Gives Gold meaning; speeds low-rarity collection
+    GOLD_PULL_COSTS: {
+        common: 500,      // 500 Gold = 1 guaranteed Common
+        uncommon: 2000,    // 2000 Gold = 1 guaranteed Uncommon
+        rare: 8000         // 8000 Gold = 1 guaranteed Rare
+    },
+    
+    buyCardWithGold(targetRarity, cardsData) {
+        if (!this.wallet) return { success: false, reason: 'no_wallet' };
+        
+        const cost = this.GOLD_PULL_COSTS[targetRarity];
+        if (!cost) return { success: false, reason: 'invalid_rarity', message: 'Can only buy common, uncommon, or rare' };
+        
+        if (!this.hasEnough('gold', cost)) {
+            return { success: false, reason: 'insufficient_gold', cost, balance: this.getBalance('gold') };
+        }
+        
+        // Find cards of that rarity
+        const pool = (cardsData || []).filter(c => c.rarity === targetRarity);
+        if (pool.length === 0) return { success: false, reason: 'no_cards_in_pool' };
+        
+        // Spend Gold
+        this.spend('gold', cost, `GOLD_PULL_${targetRarity.toUpperCase()}`);
+        
+        // Get random card from pool
+        const card = pool[Math.floor(Math.random() * pool.length)];
+        
+        // Add to collection
+        this.addToCollection(card.id, targetRarity);
+        
+        this.log('GOLD_PULL', { targetRarity, cardId: card.id, cost });
+        
+        window.dispatchEvent(new CustomEvent('nw-gold-pull', {
+            detail: { card, rarity: targetRarity, cost }
+        }));
+        
+        return { success: true, card, cost, rarity: targetRarity };
+    },
+    
+    // ===== BURN-TO-CRAFT: Burn 4 same rarity -> 1 next rarity (v3.2) =====
+    // This makes burning the PRIMARY duplicate sink instead of staking
+    CRAFT_CARDS_REQUIRED: 4,
+    CRAFT_RARITY_LADDER: ['common', 'uncommon', 'rare', 'epic', 'legendary', 'mythic'],
+    
+    craftUpgrade(cardIds, sourceRarity, cardsData) {
+        if (!this.wallet) return { success: false, reason: 'no_wallet' };
+        if (!cardIds || cardIds.length < this.CRAFT_CARDS_REQUIRED) {
+            return { success: false, reason: 'not_enough_cards', required: this.CRAFT_CARDS_REQUIRED, provided: cardIds?.length || 0 };
+        }
+        
+        // Validate rarity ladder
+        const rarityIdx = this.CRAFT_RARITY_LADDER.indexOf(sourceRarity);
+        if (rarityIdx < 0 || rarityIdx >= this.CRAFT_RARITY_LADDER.length - 1) {
+            return { success: false, reason: 'cannot_craft', message: sourceRarity === 'mythic' ? 'Mythic is already max rarity' : 'Invalid rarity' };
+        }
+        const targetRarity = this.CRAFT_RARITY_LADDER[rarityIdx + 1];
+        
+        // Verify all cards are owned and of correct rarity
+        for (const cardId of cardIds.slice(0, this.CRAFT_CARDS_REQUIRED)) {
+            if (!this.hasCard(cardId)) {
+                return { success: false, reason: 'card_not_owned', cardId };
+            }
+        }
+        
+        // Burn the source cards (remove from collection)
+        const burnedIds = cardIds.slice(0, this.CRAFT_CARDS_REQUIRED);
+        for (const cardId of burnedIds) {
+            // Unstake if staked
+            const staking = this.getStakingState();
+            if (staking[cardId]) this.unstakeCard(cardId);
+            
+            // Remove from collection
+            if (this.wallet.collection && !Array.isArray(this.wallet.collection)) {
+                const cardInfo = this.wallet.collection[cardId];
+                if (cardInfo && cardInfo.count > 1) {
+                    cardInfo.count--;
+                } else {
+                    delete this.wallet.collection[cardId];
+                }
+            }
+        }
+        
+        // Get random card of target rarity
+        const pool = (cardsData || []).filter(c => c.rarity === targetRarity);
+        if (pool.length === 0) return { success: false, reason: 'no_target_cards' };
+        
+        const newCard = pool[Math.floor(Math.random() * pool.length)];
+        
+        // Add new card to collection
+        this.addToCollection(newCard.id, targetRarity);
+        
+        // Track stats
+        this.wallet.stats.cardsCrafted = (this.wallet.stats.cardsCrafted || 0) + 1;
+        
+        this.saveWallet();
+        this.log('CRAFT_UPGRADE', { burnedIds, sourceRarity, targetRarity, newCardId: newCard.id });
+        
+        window.dispatchEvent(new CustomEvent('nw-craft-upgrade', {
+            detail: { burnedIds, sourceRarity, targetRarity, newCard }
+        }));
+        
+        return { success: true, burnedCards: burnedIds, sourceRarity, targetRarity, newCard };
+    },
+    
+    // Get craftable sets (groups of 4+ same-rarity cards)
+    getCraftableGroups(cardsData) {
+        if (!this.wallet?.collection) return [];
+        
+        const groups = {};
+        const collection = this.getFullCollection();
+        
+        for (const [cardId, info] of Object.entries(collection)) {
+            const cardMeta = (cardsData || []).find(c => c.id === Number(cardId));
+            if (!cardMeta) continue;
+            
+            const rarity = cardMeta.rarity;
+            // Can't craft up from mythic
+            if (rarity === 'mythic') continue;
+            
+            if (!groups[rarity]) groups[rarity] = [];
+            // Add one entry per copy
+            for (let i = 0; i < (info.count || 1); i++) {
+                groups[rarity].push({ cardId: Number(cardId), name: cardMeta.name, rarity });
+            }
+        }
+        
+        // Only return groups with 4+ cards
+        const craftable = [];
+        for (const [rarity, cards] of Object.entries(groups)) {
+            if (cards.length >= this.CRAFT_CARDS_REQUIRED) {
+                const targetIdx = this.CRAFT_RARITY_LADDER.indexOf(rarity) + 1;
+                craftable.push({
+                    sourceRarity: rarity,
+                    targetRarity: this.CRAFT_RARITY_LADDER[targetIdx],
+                    availableCards: cards.length,
+                    craftableSets: Math.floor(cards.length / this.CRAFT_CARDS_REQUIRED),
+                    cards
+                });
+            }
+        }
+        
+        return craftable;
     },
     
     // ===== SET COMPLETION TRACKING =====
@@ -998,16 +1154,18 @@ const NW_WALLET = {
     // Escalating rewards - 3-Tier System (NWG → Gold → Sacred Log)
     // HARD RULE #7: No iron, stone, or diamond - use nwg, gold, wood ONLY
     DAILY_REWARDS: [
-        // Day 1-3: Start small with Gold
-        { day: 1, rewards: { gold: 20 }, label: '🌱 Welcome Back!' },
-        { day: 2, rewards: { gold: 40, nwg: 2 }, label: '📈 Growing!' },
-        { day: 3, rewards: { gold: 60, nwg: 5 }, label: '✨ Shining!' },
-        // Day 4-6: Building momentum with more NWG
-        { day: 4, rewards: { gold: 80, nwg: 10 }, label: '🔥 On Fire!' },
-        { day: 5, rewards: { gold: 100, nwg: 15 }, label: '⚡ Unstoppable!' },
-        { day: 6, rewards: { gold: 125, nwg: 20 }, label: '💫 Almost There!' },
-        // Day 7: THE BIG REWARD - Sacred Log!
-        { day: 7, rewards: { gold: 200, nwg: 50, wood: 1 }, label: '🪵 SACRED LOG!', icon: 'wood' }
+        // Day 1-2: Build habit with Gold + NWG
+        { day: 1, rewards: { gold: 30, nwg: 5 }, label: 'Welcome Back!' },
+        { day: 2, rewards: { gold: 50, nwg: 10 }, label: 'Growing!' },
+        // Day 3: First log reward — "come back tomorrow" hook
+        { day: 3, rewards: { gold: 75, nwg: 15, wood: 1 }, label: 'Sacred Log!', icon: 'wood' },
+        // Day 4: Momentum
+        { day: 4, rewards: { gold: 100, nwg: 15 }, label: 'On Fire!' },
+        // Day 5: Second log — multi-pull feels close
+        { day: 5, rewards: { gold: 120, nwg: 20, wood: 1 }, label: 'Another Log!', icon: 'wood' },
+        { day: 6, rewards: { gold: 150, nwg: 25 }, label: 'Almost There!' },
+        // Day 7: Big payout — 3 logs = multi-pull celebration
+        { day: 7, rewards: { gold: 250, nwg: 50, wood: 3 }, label: 'JACKPOT!', icon: 'wood' }
     ],
     
     // Get daily login state
@@ -1277,38 +1435,46 @@ const NW_WALLET = {
     // HARD RULE #7: 3-Tier Currency Only (nwg, gold, wood)
     ACHIEVEMENTS: {
         // Login Achievements
-        first_login: { id: 'first_login', name: 'Welcome!', desc: 'Log in for the first time', icon: '🎉', reward: { nwg: 10 }, category: 'login' },
-        streak_3: { id: 'streak_3', name: 'Dedicated', desc: 'Reach a 3-day login streak', icon: '🔥', reward: { nwg: 15, gold: 25 }, category: 'login' },
-        streak_7: { id: 'streak_7', name: 'Committed', desc: 'Complete a 7-day streak', icon: '🌟', reward: { nwg: 50, wood: 1 }, category: 'login' },
-        streak_30: { id: 'streak_30', name: 'Legend', desc: 'Log in 30 total days', icon: '👑', reward: { nwg: 100, wood: 3 }, category: 'login' },
+        first_login: { id: 'first_login', name: 'Welcome!', desc: 'Log in for the first time', icon: '', reward: { nwg: 10 }, category: 'login' },
+        streak_3: { id: 'streak_3', name: 'Dedicated', desc: 'Reach a 3-day login streak', icon: '', reward: { nwg: 15, gold: 25 }, category: 'login' },
+        streak_7: { id: 'streak_7', name: 'Committed', desc: 'Complete a 7-day streak', icon: '', reward: { nwg: 50, wood: 1 }, category: 'login' },
+        streak_30: { id: 'streak_30', name: 'Legend', desc: 'Log in 30 total days', icon: '', reward: { nwg: 100, wood: 3 }, category: 'login' },
         
         // Collection Achievements
         first_card: { id: 'first_card', name: 'Collector', desc: 'Get your first card', icon: '🃏', reward: { gold: 50 }, category: 'collection' },
-        cards_10: { id: 'cards_10', name: 'Card Hoarder', desc: 'Collect 10 unique cards', icon: '📦', reward: { nwg: 20, gold: 50 }, category: 'collection' },
-        cards_50: { id: 'cards_50', name: 'Deck Master', desc: 'Collect 50 unique cards', icon: '🎴', reward: { nwg: 75, wood: 1 }, category: 'collection' },
-        first_mythic: { id: 'first_mythic', name: 'Mythic Hunter', desc: 'Pull your first Mythic', icon: '💎', reward: { wood: 2, nwg: 100 }, category: 'collection' },
-        first_legendary: { id: 'first_legendary', name: 'Lucky Star', desc: 'Pull your first Legendary', icon: '⭐', reward: { nwg: 50 }, category: 'collection' },
+        cards_10: { id: 'cards_10', name: 'Card Hoarder', desc: 'Collect 10 unique cards', icon: '', reward: { nwg: 20, gold: 50 }, category: 'collection' },
+        cards_50: { id: 'cards_50', name: 'Deck Master', desc: 'Collect 50 unique cards', icon: '', reward: { nwg: 75, wood: 1 }, category: 'collection' },
+        first_mythic: { id: 'first_mythic', name: 'Mythic Hunter', desc: 'Pull your first Mythic', icon: '', reward: { wood: 2, nwg: 100 }, category: 'collection' },
+        first_legendary: { id: 'first_legendary', name: 'Lucky Star', desc: 'Pull your first Legendary', icon: '', reward: { nwg: 50 }, category: 'collection' },
         
         // Spending Achievements
-        first_pull: { id: 'first_pull', name: 'First Pull', desc: 'Make your first forge pull', icon: '🔮', reward: { gold: 50 }, category: 'spending' },
-        pulls_10: { id: 'pulls_10', name: 'Fortune Seeker', desc: 'Make 10 forge pulls', icon: '🎰', reward: { nwg: 15 }, category: 'spending' },
-        pulls_50: { id: 'pulls_50', name: 'High Roller', desc: 'Make 50 forge pulls', icon: '🎲', reward: { nwg: 50, wood: 1 }, category: 'spending' },
-        first_purchase: { id: 'first_purchase', name: 'Supporter', desc: 'Make your first merch purchase', icon: '🛒', reward: { nwg: 25 }, category: 'spending' },
+        first_pull: { id: 'first_pull', name: 'First Pull', desc: 'Make your first forge pull', icon: '', reward: { gold: 50 }, category: 'spending' },
+        pulls_10: { id: 'pulls_10', name: 'Fortune Seeker', desc: 'Make 10 forge pulls', icon: '', reward: { nwg: 15 }, category: 'spending' },
+        pulls_50: { id: 'pulls_50', name: 'High Roller', desc: 'Make 50 forge pulls', icon: '', reward: { nwg: 50, wood: 1 }, category: 'spending' },
+        first_purchase: { id: 'first_purchase', name: 'Supporter', desc: 'Make your first merch purchase', icon: '', reward: { nwg: 25 }, category: 'spending' },
         
         // Exchange Achievements
-        first_exchange: { id: 'first_exchange', name: 'Trader', desc: 'Complete your first exchange', icon: '💱', reward: { gold: 20 }, category: 'economy' },
-        exchanges_10: { id: 'exchanges_10', name: 'Money Moves', desc: 'Complete 10 exchanges', icon: '📊', reward: { nwg: 20 }, category: 'economy' },
-        rich_nwg: { id: 'rich_nwg', name: 'NWG Whale', desc: 'Own 500+ NWG at once', icon: '◆', reward: { wood: 1 }, category: 'economy' },
-        rich_wood: { id: 'rich_wood', name: 'Lumberjack', desc: 'Own 5+ Sacred Logs at once', icon: '🪵', reward: { nwg: 100 }, category: 'economy' },
+        first_exchange: { id: 'first_exchange', name: 'Trader', desc: 'Complete your first exchange', icon: '', reward: { gold: 20 }, category: 'economy' },
+        exchanges_10: { id: 'exchanges_10', name: 'Money Moves', desc: 'Complete 10 exchanges', icon: '', reward: { nwg: 20 }, category: 'economy' },
+        rich_nwg: { id: 'rich_nwg', name: 'NWG Whale', desc: 'Own 500+ NWG at once', icon: '', reward: { wood: 1 }, category: 'economy' },
+        rich_wood: { id: 'rich_wood', name: 'Lumberjack', desc: 'Own 5+ Sacred Logs at once', icon: '', reward: { nwg: 100 }, category: 'economy' },
         
         // Gaming Achievements
-        first_game: { id: 'first_game', name: 'Gamer', desc: 'Play your first arcade game', icon: '🎮', reward: { gold: 25 }, category: 'gaming' },
-        games_10: { id: 'games_10', name: 'Arcade Regular', desc: 'Play 10 arcade games', icon: '👾', reward: { nwg: 15 }, category: 'gaming' },
-        games_won_10: { id: 'games_won_10', name: 'Winner', desc: 'Win 10 arcade games', icon: '🏆', reward: { nwg: 30, gold: 50 }, category: 'gaming' },
+        first_game: { id: 'first_game', name: 'Gamer', desc: 'Play your first arcade game', icon: '', reward: { gold: 25 }, category: 'gaming' },
+        games_10: { id: 'games_10', name: 'Arcade Regular', desc: 'Play 10 arcade games', icon: '', reward: { nwg: 15 }, category: 'gaming' },
+        games_won_10: { id: 'games_won_10', name: 'Winner', desc: 'Win 10 arcade games', icon: '', reward: { nwg: 30, gold: 50 }, category: 'gaming' },
+        
+        // Battle Achievements - Sacred Log rewards to fuel the pull loop
+        first_battle: { id: 'first_battle', name: 'Arena Rookie', desc: 'Play your first battle', icon: '', reward: { wood: 2, gold: 50 }, category: 'battle' },
+        battles_5: { id: 'battles_5', name: 'Gladiator', desc: 'Win 5 battles', icon: '', reward: { wood: 3, nwg: 25 }, category: 'battle' },
+        battles_20: { id: 'battles_20', name: 'Warlord', desc: 'Win 20 battles', icon: '', reward: { wood: 5, nwg: 50 }, category: 'battle' },
+        battles_50: { id: 'battles_50', name: 'Champion', desc: 'Win 50 battles', icon: '', reward: { wood: 10, nwg: 100 }, category: 'battle' },
+        battle_streak_3: { id: 'battle_streak_3', name: 'Hot Streak', desc: 'Win 3 battles in a row', icon: '', reward: { wood: 1, gold: 100 }, category: 'battle' },
+        battle_streak_5: { id: 'battle_streak_5', name: 'Unstoppable', desc: 'Win 5 battles in a row', icon: '', reward: { wood: 3, nwg: 50 }, category: 'battle' },
         
         // Special Achievements
-        easter_egg: { id: 'easter_egg', name: 'Explorer', desc: 'Find a hidden Easter egg', icon: '🥚', reward: { nwg: 50 }, category: 'special' },
-        gm_mode: { id: 'gm_mode', name: 'Power User', desc: 'Activate GM mode', icon: '👑', reward: {}, category: 'special', hidden: true }
+        easter_egg: { id: 'easter_egg', name: 'Explorer', desc: 'Find a hidden Easter egg', icon: '', reward: { nwg: 50 }, category: 'special' },
+        gm_mode: { id: 'gm_mode', name: 'Power User', desc: 'Activate GM mode', icon: '', reward: {}, category: 'special', hidden: true }
     },
     
     getAchievementState() {
@@ -1400,6 +1566,16 @@ const NW_WALLET = {
         if (stats.gamesPlayed >= 10 && !state.games_10) this.unlockAchievement('games_10');
         if (stats.gamesWon >= 10 && !state.games_won_10) this.unlockAchievement('games_won_10');
         
+        // Battle achievements (battlesWon tracked by recordBattle)
+        const bw = stats.battlesWon || 0;
+        const bs = stats.battleWinStreak || 0;
+        if (stats.battlesPlayed >= 1 && !state.first_battle) this.unlockAchievement('first_battle');
+        if (bw >= 5 && !state.battles_5) this.unlockAchievement('battles_5');
+        if (bw >= 20 && !state.battles_20) this.unlockAchievement('battles_20');
+        if (bw >= 50 && !state.battles_50) this.unlockAchievement('battles_50');
+        if (bs >= 3 && !state.battle_streak_3) this.unlockAchievement('battle_streak_3');
+        if (bs >= 5 && !state.battle_streak_5) this.unlockAchievement('battle_streak_5');
+        
         // GM mode achievement
         if (this.isGM && !state.gm_mode) this.unlockAchievement('gm_mode');
     },
@@ -1435,6 +1611,81 @@ const NW_WALLET = {
         
         // Check gaming achievements
         this.checkAchievements();
+    },
+    
+    // ===== BATTLE REWARDS =====
+    // Battle is the free core loop — rewards keep players engaged
+    // Win: guaranteed Gold + chance at Sacred Log
+    // Lose: small Gold consolation (never zero — respect time spent)
+    BATTLE_REWARDS: {
+        win: { gold: 30, logChance: 0.10, logAmount: 1 },   // 10% chance per win
+        lose: { gold: 10, logChance: 0, logAmount: 0 },      // Consolation prize
+        streak3: { goldBonus: 20, logChance: 0.25 },          // 3-win streak: better odds
+        streak5: { goldBonus: 50, logChance: 0.50 },          // 5-win streak: coin flip for log
+        streak10: { goldBonus: 100, logGuaranteed: true }     // 10-win streak: guaranteed log
+    },
+    
+    recordBattle(won) {
+        if (!this.wallet) return { gold: 0, wood: 0, streak: 0 };
+        
+        // Track battle stats
+        this.wallet.stats.battlesPlayed = (this.wallet.stats.battlesPlayed || 0) + 1;
+        
+        let goldEarned = 0;
+        let woodEarned = 0;
+        let streak = this.wallet.stats.battleWinStreak || 0;
+        
+        if (won) {
+            this.wallet.stats.battlesWon = (this.wallet.stats.battlesWon || 0) + 1;
+            streak++;
+            this.wallet.stats.battleWinStreak = streak;
+            if (streak > (this.wallet.stats.battleBestStreak || 0)) {
+                this.wallet.stats.battleBestStreak = streak;
+            }
+            
+            // Base win reward
+            goldEarned = this.BATTLE_REWARDS.win.gold;
+            let logChance = this.BATTLE_REWARDS.win.logChance;
+            
+            // Streak bonuses stack
+            if (streak >= 10) {
+                goldEarned += this.BATTLE_REWARDS.streak10.goldBonus;
+                woodEarned = 1; // Guaranteed
+            } else if (streak >= 5) {
+                goldEarned += this.BATTLE_REWARDS.streak5.goldBonus;
+                logChance = this.BATTLE_REWARDS.streak5.logChance;
+            } else if (streak >= 3) {
+                goldEarned += this.BATTLE_REWARDS.streak3.goldBonus;
+                logChance = this.BATTLE_REWARDS.streak3.logChance;
+            }
+            
+            // Roll for Sacred Log (if not already guaranteed)
+            if (woodEarned === 0 && Math.random() < logChance) {
+                woodEarned = this.BATTLE_REWARDS.win.logAmount;
+            }
+        } else {
+            // Loss — reset streak, give consolation
+            streak = 0;
+            this.wallet.stats.battleWinStreak = 0;
+            goldEarned = this.BATTLE_REWARDS.lose.gold;
+        }
+        
+        // Give rewards
+        if (goldEarned > 0) this.earn('gold', goldEarned, 'BATTLE_REWARD');
+        if (woodEarned > 0) this.earn('wood', woodEarned, 'BATTLE_REWARD');
+        
+        this.log('BATTLE_RESULT', { won, goldEarned, woodEarned, streak });
+        this.saveWallet();
+        
+        // Dispatch event for UI / progressive disclosure
+        document.dispatchEvent(new CustomEvent('game-complete', { 
+            detail: { won, gold: goldEarned, wood: woodEarned, streak } 
+        }));
+        
+        // Check achievements after battle
+        this.checkAchievements();
+        
+        return { gold: goldEarned, wood: woodEarned, streak };
     },
     
     recordPull(rarity) {
@@ -1619,7 +1870,7 @@ const NW_WALLET = {
                 toGuestId: newGuestId
             });
             
-            console.log('%c✅ ACCOUNT TRANSFERRED SUCCESSFULLY!', 'color: #00ff00; font-size: 16px;');
+            console.log('%cACCOUNT TRANSFERRED SUCCESSFULLY!', 'color: #00ff00; font-size: 16px;');
             console.log('%c   Your ID: ' + newGuestId, 'color: #00ffff;');
             console.log('%c   All currency, cards, and progress restored!', 'color: #ffd700;');
             
@@ -1681,7 +1932,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // Show GM status prominently
         if (NW_WALLET.isGM) {
             console.log('%c╔════════════════════════════════════════════╗', 'color: #ffd700;');
-            console.log('%c║     👑 GAME MASTER MODE ACTIVE 👑          ║', 'color: #ffd700; font-weight: bold;');
+            console.log('%c║     GAME MASTER MODE ACTIVE          ║', 'color: #ffd700; font-weight: bold;');
             console.log('%c║   All currencies are INFINITE (999,999)    ║', 'color: #00ff00;');
             console.log('%c║   Guest ID: ' + wallet.guestId.padEnd(28) + '   ║', 'color: #00ffff;');
             console.log('%c╚════════════════════════════════════════════╝', 'color: #ffd700;');
@@ -1694,7 +1945,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (NW_WALLET.canClaimDailyReward()) {
             const dailyState = NW_WALLET.getDailyLoginState();
             const nextDay = (dailyState.currentStreak % 7) + 1;
-            console.log('%c🎁 Daily Reward Available! Day ' + nextDay + '/7', 
+            console.log('%cDaily Reward Available! Day ' + nextDay + '/7', 
                 'color: #00ff88; font-weight: bold; font-size: 14px;');
             console.log('%c   Claim at /wallet or call: NW_WALLET.claimDailyReward()', 'color: #888;');
         }
@@ -1702,17 +1953,17 @@ document.addEventListener('DOMContentLoaded', () => {
         // Process pending embassy rewards (claimed from partner sites)
         const pendingRewards = JSON.parse(localStorage.getItem('nw_embassy_pending') || '[]');
         if (pendingRewards.length > 0) {
-            console.log('%c🏛️ Processing Embassy Rewards...', 'color: #ffd700; font-weight: bold;');
+            console.log('%cProcessing Embassy Rewards...', 'color: #ffd700; font-weight: bold;');
             let totalNwg = 0, totalWood = 0;
             pendingRewards.forEach(reward => {
                 NW_WALLET.addCurrency('nwg', reward.rewards.nwg || 0, `Embassy: ${reward.partnerName}`);
                 NW_WALLET.addCurrency('wood', reward.rewards.wood || 0, `Embassy: ${reward.partnerName}`);
                 totalNwg += reward.rewards.nwg || 0;
                 totalWood += reward.rewards.wood || 0;
-                console.log(`  ✓ ${reward.partnerName}: +${reward.rewards.nwg} NWG, +${reward.rewards.wood} Wood`);
+                console.log(`  ${reward.partnerName}: +${reward.rewards.nwg} NWG, +${reward.rewards.wood} Wood`);
             });
             localStorage.removeItem('nw_embassy_pending');
-            console.log(`%c🎉 Total Embassy Rewards: +${totalNwg} NWG, +${totalWood} Wood`, 'color: #00ff88;');
+            console.log(`%cTotal Embassy Rewards: +${totalNwg} NWG, +${totalWood} Wood`, 'color: #00ff88;');
             
             // Dispatch embassy reward event for UI notifications
             window.dispatchEvent(new CustomEvent('nw-embassy-rewards-processed', {

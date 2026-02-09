@@ -7,29 +7,31 @@
  * Burn cards → Get NWG + Sacred Logs back (with appreciation)
  * 
  * STAR SYSTEM:
- * - 1★ = Base card (first pull) = Base NWG value
- * - 2★ = Need 1 dupe (2 total) = +25% NWG value
- * - 3★ = Need 2 more dupes (4 total) = +50% NWG value  
- * - 4★ = Need 4 more dupes (8 total) = +100% NWG value
- * - 5★ = Need 8 more dupes (16 total) = +200% NWG value (MAX)
+ * - 1= Base card (first pull) = Base NWG value
+ * - 2= Need 1 dupe (2 total) = +25% NWG value
+ * - 3= Need 1 more dupe (3 total) = +50% NWG value  
+ * - 4= Need 2 more dupes (5 total) = +100% NWG value
+ * - 5= Need 5 more dupes (10 total) = +200% NWG value (MAX)
  * 
  * INVESTMENT THESIS:
  * Cards lock NWG + earn passive NWG + can be burned for NWG profit
  */
 
 const NW_UPGRADE = {
-    VERSION: '2.0.0',
+    VERSION: '2.1.0',
     
     // Storage key
     STORAGE_KEY: 'nw_card_upgrades',
     
     // Star level requirements (total cards needed)
+    // v2.1 REBALANCE: Reduced from {1:1,2:2,3:4,4:8,5:16} to make 5★ achievable
+    // Old 5★ common: 32 months F2P. New: ~10 months F2P.
     STAR_REQUIREMENTS: {
         1: 1,   // Base card
         2: 2,   // +1 dupe
-        3: 4,   // +2 more
-        4: 8,   // +4 more
-        5: 16   // +8 more (MAX)
+        3: 3,   // +1 more (was 4)
+        4: 5,   // +2 more (was 8)
+        5: 10   // +5 more (was 16)
     },
     
     // Stat multipliers per star level
@@ -159,7 +161,7 @@ const NW_UPGRADE = {
         }
         
         if (status.isMaxed) {
-            return { success: false, message: "Card is already at MAX (5★)" };
+            return { success: false, message: "Card is already at MAX (5)" };
         }
         
         if (!status.canUpgrade) {
@@ -182,13 +184,13 @@ const NW_UPGRADE = {
             detail: { cardId: id, oldStars: status.stars, newStars }
         }));
         
-        console.log(`[NW_UPGRADE] Card ${id} upgraded to ${newStars}★`);
+        console.log(`[NW_UPGRADE] Card ${id} upgraded to ${newStars}`);
         
         return {
             success: true,
             oldStars: status.stars,
             newStars,
-            message: `Upgraded to ${newStars}★!`
+            message: `Upgraded to ${newStars}!`
         };
     },
     
@@ -297,7 +299,7 @@ const NW_UPGRADE = {
             quantity,
             newStarLevel,
             starsReduced: willReduceStars,
-            message: `Burned ${quantity} card(s) for ◆${nwgEarned} NWG${logsEarned > 0 ? ` + ⧫${logsEarned} Sacred Logs` : ''}!`
+            message: `Burned ${quantity} card(s) for ${nwgEarned} NWG${logsEarned > 0 ? ` + ⧫${logsEarned} Sacred Logs` : ''}!`
         };
     },
     
@@ -372,8 +374,8 @@ const NW_UPGRADE = {
             return NW_ECONOMY.cardStaking.calculateDailyYield(rarity, stars);
         }
         
-        // Fallback
-        const yields = { common: 0.1, uncommon: 0.25, rare: 0.5, epic: 1, legendary: 2.5, mythic: 5 };
+        // Fallback (v2.1 rebalanced - 10x reduction)
+        const yields = { common: 0.01, uncommon: 0.025, rare: 0.05, epic: 0.1, legendary: 0.25, mythic: 0.5 };
         const starMult = { 1: 1, 2: 1.2, 3: 1.5, 4: 2, 5: 3 };
         return (yields[rarity] || 0.1) * (starMult[stars] || 1);
     },
@@ -423,9 +425,9 @@ const NW_UPGRADE = {
         let html = '';
         for (let i = 1; i <= maxStars; i++) {
             if (i <= stars) {
-                html += '<span class="star filled">★</span>';
+                html += '<span class="star filled"></span>';
             } else {
-                html += '<span class="star empty">☆</span>';
+                html += '<span class="star empty"></span>';
             }
         }
         return html;
@@ -460,4 +462,4 @@ const NW_UPGRADE = {
 window.NW_UPGRADE = NW_UPGRADE;
 document.addEventListener('DOMContentLoaded', () => NW_UPGRADE.init());
 
-console.log('[NW_UPGRADE] v1.0 Module loaded');
+console.log('[NW_UPGRADE] v2.1 Module loaded');

@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Showcase | NumbahWan — 116 Pages, Zero Frameworks</title>
+    <meta name="description" content="A visual directory of everything built with vanilla JS: 116 pages, 62 modules, 30 API routes, 3 languages. No React. No Vue. Just HTML.">
+    <link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
+    <style>
+        @font-face{font-family:'NumbahWan';src:url('/static/fonts/NumbahWan-Regular.woff2') format('woff2');font-weight:400;font-style:normal;font-display:swap}
+        @font-face{font-family:'Inter';src:url('/static/fonts/inter-variable.woff2') format('woff2');font-weight:400 700;font-style:normal;font-display:swap}
+        :root{--bg:#0a0a0f;--surface:rgba(255,255,255,0.03);--border:rgba(255,255,255,0.06);--text:#e8e0d8;--dim:rgba(255,255,255,0.35);--accent:#ff9500;--gold:#ffd700;--ember:#ff6b00}
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden}
+
+        /* Subtle ambient */
+        body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
+            background:radial-gradient(ellipse at 50% 0%,rgba(255,150,0,0.04) 0%,transparent 50%),
+            radial-gradient(ellipse at 80% 80%,rgba(255,100,0,0.02) 0%,transparent 40%)}
+
+        .container{position:relative;z-index:1;max-width:1100px;margin:0 auto;padding:24px 20px 80px}
+
+        /* Header */
+        .hero{text-align:center;padding:60px 0 40px}
+        .hero-title{font-family:'NumbahWan',monospace;font-size:clamp(2rem,6vw,3.2rem);
+            background:linear-gradient(180deg,#ffd700 0%,#ff9500 50%,#ff6b00 100%);
+            -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+            letter-spacing:3px;margin-bottom:12px}
+        .hero-sub{font-size:15px;color:var(--dim);line-height:1.8;max-width:600px;margin:0 auto}
+        .hero-sub strong{color:var(--text);font-weight:500}
+
+        /* Stats ribbon */
+        .stats{display:flex;justify-content:center;gap:32px;flex-wrap:wrap;margin:28px 0 40px;
+            padding:16px 0;border-top:1px solid var(--border);border-bottom:1px solid var(--border)}
+        .stat{text-align:center}
+        .stat-num{font-family:'NumbahWan',monospace;font-size:24px;color:var(--accent);display:block}
+        .stat-label{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--dim);margin-top:2px}
+
+        /* Filter tabs */
+        .filters{display:flex;gap:6px;flex-wrap:wrap;justify-content:center;margin-bottom:32px}
+        .filter-btn{padding:7px 16px;border-radius:20px;background:var(--surface);border:1px solid var(--border);
+            color:var(--dim);font-size:12px;cursor:pointer;transition:all .25s;font-family:inherit;letter-spacing:.5px}
+        .filter-btn:hover{border-color:rgba(255,150,0,.2);color:var(--accent)}
+        .filter-btn.active{background:rgba(255,150,0,.08);border-color:rgba(255,150,0,.25);color:var(--accent)}
+
+        /* Zone sections */
+        .zone{margin-bottom:40px}
+        .zone-header{display:flex;align-items:center;gap:10px;margin-bottom:16px;padding-bottom:8px;border-bottom:1px solid var(--border)}
+        .zone-icon{font-size:20px;width:28px;text-align:center}
+        .zone-name{font-size:14px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--text)}
+        .zone-count{font-size:11px;color:var(--dim);margin-left:auto;letter-spacing:1px}
+
+        /* Page cards grid */
+        .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px}
+        .card{display:block;padding:14px 16px;border-radius:12px;background:var(--surface);border:1px solid var(--border);
+            text-decoration:none;color:var(--text);transition:all .25s;position:relative;overflow:hidden}
+        .card:hover{border-color:rgba(255,150,0,.2);transform:translateY(-2px);
+            box-shadow:0 8px 24px rgba(255,107,0,.06)}
+        .card-title{font-size:13px;font-weight:500;line-height:1.4;margin-bottom:4px;
+            display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+        .card-path{font-size:10px;color:var(--dim);font-family:monospace;letter-spacing:.5px}
+        .card-badge{position:absolute;top:8px;right:8px;font-size:9px;padding:2px 7px;border-radius:8px;
+            letter-spacing:1px;text-transform:uppercase;font-weight:600}
+        .badge-api{background:rgba(100,200,255,.1);color:rgba(100,200,255,.7);border:1px solid rgba(100,200,255,.15)}
+        .badge-game{background:rgba(255,150,0,.1);color:var(--accent);border:1px solid rgba(255,150,0,.15)}
+        .badge-lore{background:rgba(200,150,255,.1);color:rgba(200,150,255,.7);border:1px solid rgba(200,150,255,.15)}
+        .badge-tool{background:rgba(0,220,130,.1);color:rgba(0,220,130,.7);border:1px solid rgba(0,220,130,.15)}
+        .badge-i18n{background:rgba(255,215,0,.1);color:rgba(255,215,0,.7);border:1px solid rgba(255,215,0,.15)}
+
+        /* Highlights section */
+        .highlights{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px;margin-bottom:48px}
+        .highlight{padding:24px;border-radius:16px;background:var(--surface);border:1px solid var(--border);transition:all .3s}
+        .highlight:hover{border-color:rgba(255,150,0,.15)}
+        .hl-label{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--dim);margin-bottom:8px}
+        .hl-title{font-size:16px;font-weight:600;margin-bottom:6px}
+        .hl-desc{font-size:13px;color:var(--dim);line-height:1.6}
+        .hl-title a{color:var(--accent);text-decoration:none}
+        .hl-title a:hover{text-decoration:underline}
+
+        /* Footer */
+        .footer{text-align:center;padding:40px 0 20px;border-top:1px solid var(--border);margin-top:40px}
+        .footer p{font-size:12px;color:var(--dim);line-height:1.8}
+        .footer a{color:var(--accent);text-decoration:none}
+        .footer a:hover{text-decoration:underline}
+
+        @media(max-width:500px){
+            .grid{grid-template-columns:1fr 1fr}
+            .stats{gap:20px}
+            .hero{padding:40px 0 24px}
+        }
+    </style>
+    <link rel="stylesheet" href="/static/nw-core.css">
+    <script src="/static/nw-nav.js" defer></script>
+</head>
+<body>
+    <div class="container">
+        <div class="hero">
+            <h1 class="hero-title">SHOWCASE</h1>
+            <p class="hero-sub">
+                Every page in this project. <strong>116 HTML files</strong>, each self-contained,
+                each with its own CSS and JS. No shared component library. No framework. They're just pages, and they work.
+            </p>
+        </div>
+
+        <div class="stats">
+            <div class="stat"><span class="stat-num">116</span><span class="stat-label">Pages</span></div>
+            <div class="stat"><span class="stat-num">62</span><span class="stat-label">JS Modules</span></div>
+            <div class="stat"><span class="stat-num">30</span><span class="stat-label">API Routes</span></div>
+            <div class="stat"><span class="stat-num">125</span><span class="stat-label">Card Images</span></div>
+            <div class="stat"><span class="stat-num">3</span><span class="stat-label">Languages</span></div>
+            <div class="stat"><span class="stat-num">0</span><span class="stat-label">Frameworks</span></div>
+        </div>
+
+        <!-- Highlights -->
+        <div class="highlights">
+            <div class="highlight">
+                <div class="hl-label">Standalone Tool</div>
+                <div class="hl-title"><a href="https://github.com/9tvf4k6srt-sys/NumbahWan-tcg#sentinelcjs--zero-dependency-codebase-health-scanner">sentinel.cjs</a></div>
+                <div class="hl-desc">Zero-dependency codebase health scorer. 10 modules, letter grades, auto-fix engine. Works on any JS/TS project. <code>node sentinel.cjs</code></div>
+            </div>
+            <div class="highlight">
+                <div class="hl-label">Standalone Tool</div>
+                <div class="hl-title"><a href="https://github.com/9tvf4k6srt-sys/NumbahWan-tcg#nw-memorycjs--ai-session-memory-that-survives-context-resets">nw-memory.cjs</a></div>
+                <div class="hl-desc">AI session memory. Tracks hotspots, coupled files, fix chains, decisions. Your AI stops repeating your mistakes. <code>node nw-memory.cjs --query</code></div>
+            </div>
+            <div class="highlight">
+                <div class="hl-label">Featured Page</div>
+                <div class="hl-title"><a href="/oracle">The Oracle</a></div>
+                <div class="hl-desc">Life advice from Buddhist sutras, Tao Te Ching, Bible, and Quran. 60 wisdoms in 3 languages. Self-hosted, 17ms TTFB.</div>
+            </div>
+        </div>
+
+        <!-- Filters -->
+        <div class="filters" id="filters">
+            <button class="filter-btn active" data-filter="all">All</button>
+            <button class="filter-btn" data-filter="game">Game</button>
+            <button class="filter-btn" data-filter="guild">Guild World</button>
+            <button class="filter-btn" data-filter="economy">Economy</button>
+            <button class="filter-btn" data-filter="lore">Lore & Museum</button>
+            <button class="filter-btn" data-filter="research">Research</button>
+            <button class="filter-btn" data-filter="absurd">Absurd Wing</button>
+            <button class="filter-btn" data-filter="government">Government</button>
+            <button class="filter-btn" data-filter="vault">Vault</button>
+            <button class="filter-btn" data-filter="tools">Tools & Meta</button>
+        </div>
+
+        <div id="zones"></div>
+
+        <div class="footer">
+            <p>
+                Built with vanilla JS for the <a href="/">NumbahWan Guild</a>.<br>
+                Source on <a href="https://github.com/9tvf4k6srt-sys/NumbahWan-tcg">GitHub</a>.
+                No frameworks were harmed in the making of this site.
+            </p>
+        </div>
+    </div>
+
+    <script>
+    (function(){
+        const zones = [
+            { id:'game', icon:'🃏', name:'Trading Card Game', pages:[
+                {p:'/cards', t:'Card Collection', badge:'game'},
+                {p:'/tcg', t:'TCG Command Center', badge:'game'},
+                {p:'/battle', t:'Battle Arena v7.1', badge:'game'},
+                {p:'/deckbuilder', t:'Deck Builder', badge:'game'},
+                {p:'/forge', t:'Mythic Forge', badge:'game'},
+                {p:'/fusion', t:'Card Fusion', badge:'game'},
+                {p:'/collection', t:'Collection & Achievements', badge:'game'},
+                {p:'/achievements', t:'Achievements', badge:'game'},
+                {p:'/shrine', t:'Summoning Shrine', badge:'game'},
+                {p:'/card-bridge', t:'Card Bridge — Stake, Fuse, Trade', badge:'game'},
+                {p:'/card-lab', t:'Card Lab', badge:'game'},
+                {p:'/card-audit', t:'Card Balance Audit', badge:'tool'},
+                {p:'/card-utility', t:'Card Utility Analysis', badge:'tool'},
+                {p:'/card-print-template', t:'Physical Card Template', badge:'tool'},
+                {p:'/staking', t:'Card Staking', badge:'game'},
+                {p:'/leaderboard', t:'Collection Leaderboard', badge:'game'},
+                {p:'/events', t:'Events & Bonuses', badge:'game'},
+                {p:'/guide', t:'Arena Guide', badge:'game'},
+                {p:'/profile-card', t:'Profile Card', badge:'game'},
+                {p:'/battle-legacy', t:'Battle Arena v5 (Legacy)', badge:'game'},
+                {p:'/pvp-battle', t:'PvP Arena', badge:'game'},
+            ]},
+            { id:'guild', icon:'🏰', name:'Guild World', pages:[
+                {p:'/', t:'Guild Homepage'},
+                {p:'/about', t:'About — The Greatest Nation That Doesn\'t Exist Yet'},
+                {p:'/apply', t:'Guild Application — Prepare Your Soul'},
+                {p:'/academy', t:'Parry Hotter School of Coding Wizardry'},
+                {p:'/oracle', t:'The Oracle — 4 Sacred Traditions', badge:'i18n'},
+                {p:'/fortune', t:'Daily Tarot Fortune'},
+                {p:'/tavern-tales', t:'Tavern Tales — D&D Campaign'},
+                {p:'/tabletop', t:'Tabletop Realm'},
+                {p:'/tabletop/converter', t:'Card to D&D Converter', badge:'tool'},
+                {p:'/tabletop/rulebook', t:'D&D Rulebook'},
+                {p:'/avatar-builder', t:'Avatar Builder'},
+                {p:'/avatar-studio', t:'MapleStory Avatar Studio'},
+                {p:'/matchalatte', t:'MatchaLatte — Sister Guild'},
+                {p:'/regina', t:'R.M.S. REGINA — 779 Years in the Making'},
+                {p:'/pvp', t:'RegginA\'s PVP Diary'},
+                {p:'/fashion', t:'RegginA\'s Fashion Disasters'},
+                {p:'/memes', t:'Meme Vault'},
+                {p:'/updates', t:'Patch Notes'},
+                {p:'/citizenship', t:'Citizen Identity System'},
+                {p:'/embassy', t:'Embassy Alliance'},
+            ]},
+            { id:'economy', icon:'💰', name:'Economy & Commerce', pages:[
+                {p:'/wallet', t:'Wallet'},
+                {p:'/market', t:'Card Market'},
+                {p:'/auction-house', t:'Auction House'},
+                {p:'/arcade', t:'Arcade — Premium Guild Games', badge:'game'},
+                {p:'/exchange', t:'NWX Exchange'},
+                {p:'/markets', t:'Live Markets — Digital Asset Index'},
+                {p:'/merch', t:'Exclusive Merch'},
+                {p:'/nwg-shop', t:'NWG Shop'},
+                {p:'/buy', t:'Buy NWG'},
+                {p:'/invest', t:'Invest in NWG — Outperforms Everything'},
+                {p:'/business', t:'Business Hub'},
+                {p:'/my-business', t:'My Business'},
+                {p:'/supermarket', t:'Supermarket'},
+                {p:'/restaurant', t:'Restaurant District'},
+                {p:'/restaurants', t:'Restaurant Directory'},
+                {p:'/services', t:'Guild Services Directory'},
+                {p:'/crafts', t:'Artisan Market'},
+                {p:'/realestate', t:'Real Estate Property Market'},
+                {p:'/jobs', t:'Job Board'},
+                {p:'/claim', t:'Claim Physical Card'},
+            ]},
+            { id:'lore', icon:'📜', name:'Lore & Museum', pages:[
+                {p:'/lore', t:'Lore Index — Deep Dives', badge:'lore'},
+                {p:'/lore/reggina-origin', t:'RegginA: The Founder\'s Origin', badge:'lore'},
+                {p:'/lore/whale-wars', t:'The Whale Wars', badge:'lore'},
+                {p:'/lore/afk-incident', t:'The Great AFK Incident', badge:'lore'},
+                {p:'/lore/sacred-log', t:'The Sacred Log Chronicles', badge:'lore'},
+                {p:'/lore/conspiracy-board', t:'The Conspiracy Board', badge:'lore'},
+                {p:'/museum', t:'Fashion Museum — 10 Exhibits', badge:'lore'},
+                {p:'/museum/exhibit-001', t:'Zakum Helmet', badge:'lore'},
+                {p:'/museum/exhibit-002', t:'Pink Adventurer Cape', badge:'lore'},
+                {p:'/museum/exhibit-003', t:'The Sauna Robe', badge:'lore'},
+                {p:'/museum/exhibit-004', t:'Spectrum Goggles', badge:'lore'},
+                {p:'/museum/exhibit-005', t:'The 7-Slot Work Gloves', badge:'lore'},
+                {p:'/museum/exhibit-006', t:'Maple Bandana', badge:'lore'},
+                {p:'/museum/exhibit-007', t:'Tree Branch Nose', badge:'lore'},
+                {p:'/museum/exhibit-008', t:'Facestompers', badge:'lore'},
+                {p:'/museum/exhibit-009', t:'Red Whip', badge:'lore'},
+                {p:'/museum/exhibit-010', t:'The Transparent Set', badge:'lore'},
+                {p:'/historical-society', t:'Historical Society Archive', badge:'lore'},
+                {p:'/wyckoff', t:'Wyckoff Method — Market Psychology'},
+                {p:'/zakum', t:'Zakum Lore'},
+            ]},
+            { id:'research', icon:'🔬', name:'Research Division', pages:[
+                {p:'/research', t:'Research Archives'},
+                {p:'/research-library', t:'Research Library — Gaming Psychology'},
+                {p:'/research/work-gloves-economic-impact', t:'Economic Impact of 7-Slot Work Gloves', badge:'lore'},
+                {p:'/research/transparent-set-psychology', t:'Psychology of Paying for Nothing', badge:'lore'},
+                {p:'/research/zakum-helmet-spectral-analysis', t:'Zakum Helmet Spectral Analysis', badge:'lore'},
+                {p:'/research/vault-security-analysis', t:'847 Ways to Fail [RESTRICTED]', badge:'lore'},
+                {p:'/research/reggina-misprint-forensic-examination', t:'RegginA Misprint Forensics [CLASSIFIED]', badge:'lore'},
+                {p:'/research/nx-fashion-revolution', t:'The NX Cash Shop Revolution', badge:'lore'},
+            ]},
+            { id:'government', icon:'🏛️', name:'Government & Administration', pages:[
+                {p:'/court', t:'Supreme Court — Justice System'},
+                {p:'/treasury', t:'National Treasury Dashboard'},
+                {p:'/intelligence', t:'Intelligence Agency'},
+                {p:'/admin-physical', t:'Physical Card Admin', badge:'tool'},
+                {p:'/system-dashboard', t:'System Dashboard', badge:'tool'},
+                {p:'/efficiency', t:'Build Lab — Innovation Hub'},
+                {p:'/tournament', t:'World Championship'},
+            ]},
+            { id:'absurd', icon:'🎪', name:'Absurd Wing', pages:[
+                {p:'/therapy', t:'Guild Therapy'},
+                {p:'/hr', t:'HR Department'},
+                {p:'/conspiracy', t:'Conspiracy Board'},
+                {p:'/confessional', t:'Guild Confessional'},
+                {p:'/cafeteria', t:'Guild Cafeteria'},
+                {p:'/breakroom', t:'Employee Break Room'},
+                {p:'/lost-found', t:'Lost & Found'},
+                {p:'/parking', t:'Guild Parking Lot'},
+                {p:'/maintenance', t:'Maintenance Closet'},
+                {p:'/basement', t:'Guild Basement'},
+                {p:'/cipher', t:'Cipher Vault'},
+                {p:'/ai-lounge', t:'AI Lounge'},
+                {p:'/menu-demo', t:'Weekly Lunch Menu (Chinese)'},
+            ]},
+            { id:'vault', icon:'🔒', name:'The Vault', pages:[
+                {p:'/vault', t:'Guild Vault — 13 Floors Deep'},
+                {p:'/vault/b3-decontamination', t:'B3 — Decontamination Chamber'},
+                {p:'/vault/b7-hall-of-failures', t:'B7 — Hall of Failed Intruders'},
+                {p:'/vault/b12-antechamber', t:'B12 — The Antechamber'},
+            ]},
+            { id:'tools', icon:'🛠️', name:'Tools & Meta', pages:[
+                {p:'/showcase', t:'This Page — Showcase'},
+            ]},
+        ];
+
+        const container = document.getElementById('zones');
+        let currentFilter = 'all';
+
+        function render() {
+            container.innerHTML = '';
+            zones.forEach(z => {
+                if (currentFilter !== 'all' && z.id !== currentFilter) return;
+                const section = document.createElement('div');
+                section.className = 'zone';
+                section.innerHTML = `
+                    <div class="zone-header">
+                        <span class="zone-icon">${z.icon}</span>
+                        <span class="zone-name">${z.name}</span>
+                        <span class="zone-count">${z.pages.length} pages</span>
+                    </div>
+                    <div class="grid">
+                        ${z.pages.map(p => {
+                            const href = p.p.endsWith('.html') ? p.p : (p.p === '/' ? '/' : p.p);
+                            const badgeHtml = p.badge ? `<span class="card-badge badge-${p.badge}">${p.badge}</span>` : '';
+                            return `<a class="card" href="${href}">
+                                ${badgeHtml}
+                                <div class="card-title">${p.t}</div>
+                                <div class="card-path">${p.p}</div>
+                            </a>`;
+                        }).join('')}
+                    </div>
+                `;
+                container.appendChild(section);
+            });
+        }
+
+        document.getElementById('filters').addEventListener('click', function(e) {
+            const btn = e.target.closest('.filter-btn');
+            if (!btn) return;
+            currentFilter = btn.dataset.filter;
+            document.querySelectorAll('.filter-btn').forEach(b => b.classList.toggle('active', b === btn));
+            render();
+        });
+
+        render();
+    })();
+    </script>
+</body>
+</html>

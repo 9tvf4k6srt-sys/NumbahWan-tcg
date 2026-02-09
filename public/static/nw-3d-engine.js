@@ -311,7 +311,7 @@ const NW_3D = (function() {
     /* ===== DAMAGE NUMBERS ===== */
     .nw-damage-number {
         position: absolute;
-        font-family: 'Orbitron', sans-serif;
+        font-family: 'NumbahWan', 'Orbitron', sans-serif;
         font-weight: 900;
         font-size: 32px;
         color: #ff4444;
@@ -397,7 +397,7 @@ const NW_3D = (function() {
             pack.className = 'nw-pack nw-3d-object';
             pack.innerHTML = `
                 <div class="nw-pack-face nw-pack-front">
-                    ${image ? `<img src="${image}" alt="Pack">` : '<span style="font-size:60px">🔥</span>'}
+                    ${image ? `<img src="${image}" alt="Pack">` : '<span style="font-size:60px"></span>'}
                 </div>
                 <div class="nw-pack-face nw-pack-back"></div>
                 <div class="nw-pack-side nw-pack-side-top nw-pack-top-flap"></div>
@@ -722,7 +722,7 @@ const NW_3D = (function() {
                 left: ${rect.left + rect.width/2}px;
                 top: ${rect.top - 30}px;
                 transform: translateX(-50%);
-                font-family: 'Orbitron', sans-serif;
+                font-family: 'NumbahWan', 'Orbitron', sans-serif;
                 font-size: 16px;
                 font-weight: bold;
                 color: ${color};

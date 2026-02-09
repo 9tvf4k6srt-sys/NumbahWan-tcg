@@ -1,8 +1,15 @@
 /**
- * NumbahWan TCG - Unified Navigation System v8.2
+ * NumbahWan TCG - Unified Navigation System v9.0
  * 60FPS BUTTERY SMOOTH EDITION - Mobile Optimized
+ * Progressive Disclosure — show 4 pages Day 1, unlock rest as you play
  * 
- * NEW in v8.2:
+ * NEW in v9.0:
+ * - Progressive Disclosure: sections unlock based on play stats
+ * - Unlock notifications with toast animation
+ * - Existing players auto-detected, see everything immediately
+ * - All pages still accessible by direct URL (never blocked)
+ * 
+ * v8.2:
  * - Intuitive Back Button System
  * - Smart navigation history tracking
  * - Contextual back navigation (browser history or parent page)
@@ -61,6 +68,174 @@ const NW_NAV = {
     iconSvg(iconId, size = 18) {
         const path = this.icons[iconId] || this.icons.star;
         return `<svg class="nw-nav-icon" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${path}</svg>`;
+    },
+
+    // ===== PROGRESSIVE DISCLOSURE =====
+    // Tier thresholds — what stat unlocks what
+    // Tier 0: brand new (pullsMade=0, gamesPlayed=0)
+    // Tier 1: first pull (pullsMade >= 1)
+    // Tier 2: engaged (pullsMade >= 10 OR gamesPlayed >= 5)
+    // Tier 3: invested (collection >= 20 OR gamesPlayed >= 20)
+    // Tier 4: veteran (collection >= 50 OR gamesPlayed >= 50)
+    // Tier 5: endgame (collection >= 80 OR pullsMade >= 100)
+    //
+    // ALL PAGES are always accessible by direct URL. Only nav visibility changes.
+    // Existing players (any stat > 0) auto-resolve to correct tier on first load.
+    sectionUnlockTier: {
+        core: 0,        // Always visible (Home, Forge, Battle, Wallet)
+        cards: 0,       // Always visible (All Cards, My Cards)
+        economy: 2,     // After engagement
+        business: 3,    // After investment
+        guild: 3,       // After investment
+        government: 4,  // Veterans
+        abyss: 3,       // After investment (lore = retention hook)
+        tabletop: 4,    // Veterans (D&D content)
+        buildlab: 4,    // Veterans
+        resources: 2,   // After engagement (guide, academy)
+        sisters: 5      // Endgame (alliance)
+    },
+
+    // Per-page overrides: some pages within an unlocked section need higher tier
+    pageUnlockTier: {
+        // Core pages — gate some behind first pull
+        'profile-card': 1,
+        'achievements': 1,
+        'shrine': 1,
+        // Cards — gate advanced features
+        'leaderboard': 1,
+        'deckbuilder': 2,
+        'staking': 2,
+        'fusion': 3,
+        // Economy — events always visible once section unlocks
+        'auction-house': 3,
+        'exchange': 2
+    },
+
+    _playerTier: null,
+    _unlockedSectionsKey: 'nw_unlocked_sections',
+
+    // Calculate player tier from wallet stats — no new localStorage keys needed
+    getPlayerTier() {
+        if (this._playerTier !== null) return this._playerTier;
+
+        // GM mode = max tier (all content visible)
+        if (typeof NW_WALLET !== 'undefined' && NW_WALLET.isGM) {
+            this._playerTier = 5;
+            return 5;
+        }
+        // URL param shortcut: ?tier=5 for review
+        try {
+            const tp = new URLSearchParams(window.location.search).get('tier');
+            if (tp !== null) { this._playerTier = Math.min(5, Math.max(0, parseInt(tp) || 0)); return this._playerTier; }
+        } catch(e) {}
+
+        // Read from NW_WALLET if available
+        let stats = { pullsMade: 0, gamesPlayed: 0, gamesWon: 0 };
+        let collectionCount = 0;
+
+        if (typeof NW_WALLET !== 'undefined' && NW_WALLET.getStats) {
+            const s = NW_WALLET.getStats();
+            stats = { ...stats, ...s };
+        }
+        if (typeof NW_WALLET !== 'undefined' && NW_WALLET.getWalletInfo) {
+            const info = NW_WALLET.getWalletInfo();
+            if (info) collectionCount = info.collectionCount || 0;
+        }
+
+        // Fallback: try reading raw localStorage for wallets not yet initialized
+        if (stats.pullsMade === 0 && stats.gamesPlayed === 0) {
+            try {
+                const raw = localStorage.getItem('nw_wallet_v2');
+                if (raw) {
+                    const w = JSON.parse(raw);
+                    if (w.stats) {
+                        stats = { ...stats, ...w.stats };
+                    }
+                    if (Array.isArray(w.collection)) {
+                        collectionCount = w.collection.length;
+                    } else if (w.collection && typeof w.collection === 'object') {
+                        collectionCount = Object.keys(w.collection).length;
+                    }
+                }
+            } catch (e) {}
+        }
+
+        let tier = 0;
+        if (collectionCount >= 80 || stats.pullsMade >= 100) tier = 5;
+        else if (collectionCount >= 50 || stats.gamesPlayed >= 50) tier = 4;
+        else if (collectionCount >= 20 || stats.gamesPlayed >= 20) tier = 3;
+        else if (stats.pullsMade >= 10 || stats.gamesPlayed >= 5) tier = 2;
+        else if (stats.pullsMade >= 1) tier = 1;
+
+        this._playerTier = tier;
+        return tier;
+    },
+
+    // Recompute tier (call after wallet changes)
+    refreshTier() {
+        this._playerTier = null;
+        const oldTier = parseInt(localStorage.getItem('nw_player_tier') || '0');
+        const newTier = this.getPlayerTier();
+        localStorage.setItem('nw_player_tier', String(newTier));
+        if (newTier > oldTier && oldTier > 0) {
+            this._showUnlockToast(newTier);
+        }
+        return newTier;
+    },
+
+    // Check if a section should be visible
+    isSectionVisible(sectionKey) {
+        const tier = this.getPlayerTier();
+        const required = this.sectionUnlockTier[sectionKey] ?? 0;
+        return tier >= required;
+    },
+
+    // Check if a page should be visible
+    isPageVisible(pageId, sectionKey) {
+        if (!this.isSectionVisible(sectionKey)) return false;
+        const tier = this.getPlayerTier();
+        const required = this.pageUnlockTier[pageId] ?? 0;
+        return tier >= required;
+    },
+
+    // Get visible sections/pages for current tier
+    getVisibleSections() {
+        const tier = this.getPlayerTier();
+        const result = {};
+        for (const [key, section] of Object.entries(this.sections)) {
+            if (!this.isSectionVisible(key)) continue;
+            const visiblePages = section.pages.filter(p => {
+                const pageTier = this.pageUnlockTier[p.id] ?? 0;
+                return tier >= pageTier;
+            });
+            if (visiblePages.length > 0) {
+                result[key] = { ...section, pages: visiblePages };
+            }
+        }
+        return result;
+    },
+
+    // Toast notification when new sections unlock
+    _showUnlockToast(newTier) {
+        const tierNames = {
+            1: { en: 'First Pull!', zh: '\u9996\u62BD\uff01', th: '\u0e14\u0e36\u0e07\u0e41\u0e23\u0e01!' },
+            2: { en: 'Getting Hooked!', zh: '\u8d8a\u4f86\u8d8a\u611b\uff01', th: '\u0e15\u0e34\u0e14\u0e43\u0e08\u0e41\u0e25\u0e49\u0e27!' },
+            3: { en: 'Deep Dive Unlocked', zh: '\u89e3\u9396\u6df1\u5165\u63a2\u7d22', th: '\u0e1b\u0e25\u0e14\u0e25\u0e47\u0e2d\u0e01\u0e01\u0e32\u0e23\u0e14\u0e33\u0e14\u0e34\u0e48\u0e07\u0e25\u0e36\u0e01' },
+            4: { en: 'Veteran Status!', zh: '\u8001\u624b\u5730\u4f4d\uff01', th: '\u0e23\u0e30\u0e14\u0e31\u0e1a\u0e17\u0e2b\u0e32\u0e23\u0e1c\u0e48\u0e32\u0e19\u0e28\u0e36\u0e01!' },
+            5: { en: 'Full Access', zh: '\u5168\u90e8\u89e3\u9396', th: '\u0e40\u0e02\u0e49\u0e32\u0e16\u0e36\u0e07\u0e17\u0e31\u0e49\u0e07\u0e2b\u0e21\u0e14' }
+        };
+        const name = tierNames[newTier];
+        if (!name) return;
+        const text = this.t(name);
+        const toast = document.createElement('div');
+        toast.className = 'nw-unlock-toast';
+        toast.innerHTML = `<span class="nw-unlock-icon">${this.iconSvg('sparkles', 20)}</span><span>${text}</span><span class="nw-unlock-sub">${this.t({ en: 'New sections unlocked in menu!', zh: '\u83dc\u55ae\u4e2d\u5df2\u89e3\u9396\u65b0\u5340\u57df\uff01', th: '\u0e1b\u0e25\u0e14\u0e25\u0e47\u0e2d\u0e01\u0e2a\u0e48\u0e27\u0e19\u0e43\u0e2b\u0e21\u0e48\u0e43\u0e19\u0e40\u0e21\u0e19\u0e39!' })}</span>`;
+        document.body.appendChild(toast);
+        requestAnimationFrame(() => toast.classList.add('show'));
+        setTimeout(() => {
+            toast.classList.remove('show');
+            setTimeout(() => toast.remove(), 400);
+        }, 4000);
     },
 
     sections: {
@@ -459,7 +634,7 @@ const NW_NAV = {
             if (this.konamiCode.join(',') === this.konamiSequence.join(',')) this.triggerSecret();
         },
         triggerSecret() {
-            const messages = ['🎮 KONAMI CODE ACTIVATED!', '👀 You found a secret!', '🔮 The prophecy speaks of you...', '💀 Zakum whispers: "Nice try."'];
+            const messages = ['KONAMI CODE ACTIVATED!', 'You found a secret!', 'The prophecy speaks of you...', 'Zakum whispers: "Nice try."'];
             alert(messages[Math.floor(Math.random() * messages.length)]);
             this.konamiCode = [];
         }
@@ -485,16 +660,47 @@ const NW_NAV = {
         this.collapsedSections = this.getCollapsedState();
         this.loadNavHistory();
         this.trackPageVisit(pageId);
+
+        // Progressive disclosure: compute tier before rendering nav
+        this._playerTier = null; // force fresh compute
+        const tier = this.getPlayerTier();
+        const storedTier = parseInt(localStorage.getItem('nw_player_tier') || '0');
+        if (tier > storedTier) {
+            localStorage.setItem('nw_player_tier', String(tier));
+            // Show unlock toast if player upgraded (not first visit)
+            if (storedTier > 0) {
+                setTimeout(() => this._showUnlockToast(tier), 1500);
+            }
+        }
+
         this.injectNav();
         this.bindEvents();
         this.easterEggs.init();
         this.initialized = true;
+
+        // Listen for wallet changes to refresh tier dynamically
+        if (typeof document !== 'undefined') {
+            ['card-pulled', 'game-complete', 'currency-change'].forEach(evt => {
+                document.addEventListener(evt, () => {
+                    const oldTier = this._playerTier;
+                    this.refreshTier();
+                    if (this._playerTier > oldTier) {
+                        // Re-render nav to show new sections
+                        requestAnimationFrame(() => this.injectNav());
+                    }
+                });
+            });
+        }
     },
 
     t(obj) { return typeof obj === 'string' ? obj : (obj[this.currentLang] || obj.en || ''); },
 
     generateNavHTML() {
-        const sectionsHTML = Object.entries(this.sections).map(([key, section]) => {
+        // Use progressive disclosure — only show sections/pages the player has earned
+        const visibleSections = this.getVisibleSections();
+        const tier = this.getPlayerTier();
+
+        const sectionsHTML = Object.entries(visibleSections).map(([key, section]) => {
             const isCollapsible = section.collapsed !== false;
             const isCollapsed = isCollapsible && (this.collapsedSections[key] ?? section.collapsed);
             const hasActivePage = section.pages.some(p => p.id === this.currentPage);
@@ -505,6 +711,7 @@ const NW_NAV = {
                 return `<a href="${page.href}" class="nw-nav-link ${isActive ? 'active' : ''}">${this.iconSvg(page.icon, 16)}<span class="nw-nav-text">${this.t(page.name)}</span>${page.isHot ? '<span class="nw-hot-badge">HOT</span>' : ''}${page.isNew ? '<span class="nw-new-badge">NEW</span>' : ''}</a>`;
             }).join('');
 
+            const visibleCount = section.pages.length;
             const chevron = isCollapsible ? `<span class="nw-nav-chevron ${showCollapsed ? '' : 'open'}">${this.iconSvg('arrow-right', 12)}</span>` : '';
             return `
                 <div class="nw-nav-section ${showCollapsed ? 'collapsed' : ''}" data-section="${key}">
@@ -512,7 +719,7 @@ const NW_NAV = {
                         ${this.iconSvg(section.icon, 16)}
                         <span>${this.t(section.name)}</span>
                         ${section.desc ? `<span class="nw-nav-desc">${this.t(section.desc)}</span>` : ''}
-                        ${isCollapsible ? `<span class="nw-nav-count">${section.pages.length}</span>` : ''}
+                        ${isCollapsible ? `<span class="nw-nav-count">${visibleCount}</span>` : ''}
                         ${chevron}
                     </div>
                     <div class="nw-nav-pages ${showCollapsed ? 'collapsed' : ''}">${pagesHTML}</div>
@@ -520,8 +727,22 @@ const NW_NAV = {
             `;
         }).join('');
 
+        // Show tier progress hint at bottom of nav (below tier 5)
+        const tierHintHTML = tier < 5 ? `<div class="nw-tier-hint">${this.iconSvg('sparkles', 14)} ${this.t({ en: 'Keep playing to unlock more!', zh: '\u7e7c\u7e8c\u904a\u73a9\u89e3\u9396\u66f4\u591a\uff01', th: '\u0e40\u0e25\u0e48\u0e19\u0e15\u0e48\u0e2d\u0e40\u0e1e\u0e37\u0e48\u0e2d\u0e1b\u0e25\u0e14\u0e25\u0e47\u0e2d\u0e01\u0e40\u0e1e\u0e34\u0e48\u0e21\u0e40\u0e15\u0e34\u0e21!' })}</div>` : '';
+
         const langButtons = Object.entries(this.languages).map(([code, lang]) => 
             `<button class="nw-lang-btn ${code === this.currentLang ? 'active' : ''}" data-lang="${code}">${lang.code}</button>`
+        ).join('');
+
+        // Quick access buttons — only show what's relevant to tier
+        const quickBtns = [
+            { href: '/forge', cls: 'fire', icon: 'fire', tier: 0 },
+            { href: '/battle', cls: 'battle', icon: 'swords', tier: 0 },
+            { href: '/claim', cls: 'claim', icon: 'sparkles', tier: 2 },
+            { href: '/tabletop', cls: 'tabletop', icon: 'dice', tier: 4 }
+        ].filter(b => tier >= b.tier);
+        const quickHTML = quickBtns.map(b => 
+            `<a href="${b.href}" class="nw-quick-btn ${b.cls}">${this.iconSvg(b.icon, 20)}</a>`
         ).join('');
 
         return `
@@ -531,15 +752,10 @@ const NW_NAV = {
                     <div class="nw-nav-title">${this.iconSvg('crown', 20)} NumbahWan</div>
                     <button id="nwNavClose" class="nw-nav-close">${this.iconSvg('close', 18)}</button>
                 </div>
-                <div class="nw-quick-access">
-                    <a href="/forge" class="nw-quick-btn fire">${this.iconSvg('fire', 20)}</a>
-                    <a href="/battle" class="nw-quick-btn battle">${this.iconSvg('swords', 20)}</a>
-                    <a href="/claim" class="nw-quick-btn claim">${this.iconSvg('sparkles', 20)}</a>
-                    <a href="/tabletop" class="nw-quick-btn tabletop">${this.iconSvg('dice', 20)}</a>
-                </div>
+                <div class="nw-quick-access">${quickHTML}</div>
                 <div class="nw-nav-lang">${langButtons}</div>
-                <div class="nw-nav-scroll">${sectionsHTML}</div>
-                <div class="nw-nav-footer"><div class="nw-nav-version">v8.0 • 60fps Edition</div></div>
+                <div class="nw-nav-scroll">${sectionsHTML}${tierHintHTML}</div>
+                <div class="nw-nav-footer"><div class="nw-nav-version">v9.0 • Progressive</div></div>
             </nav>
             <button id="nwNavToggle" class="nw-nav-toggle">${this.iconSvg('menu', 22)}</button>
             ${this.shouldShowBackButton() ? `<button id="nwNavBack" class="nw-nav-back" title="Back">${this.iconSvg('arrow-right', 22)}</button>` : ''}
@@ -606,7 +822,7 @@ const NW_NAV = {
     background: linear-gradient(135deg, rgba(255,107,0,0.15), rgba(255,215,0,0.1), rgba(0,0,0,0.5));
 }
 .nw-nav-title {
-    font-family: 'Orbitron', monospace, sans-serif;
+    font-family: 'NumbahWan', 'Orbitron', monospace, sans-serif;
     font-size: 20px; font-weight: 900;
     background: linear-gradient(135deg, #ffd700, #ff6b00);
     -webkit-background-clip: text; -webkit-text-fill-color: transparent;
@@ -863,6 +1079,46 @@ const NW_NAV = {
     .nw-lang-btn { padding: 8px 14px; font-size: 14px; }
 }
 
+/* Progressive Disclosure — Tier hint */
+.nw-tier-hint {
+    display: flex; align-items: center; gap: 8px;
+    padding: 12px 16px; margin: 8px 12px;
+    background: linear-gradient(135deg, rgba(168,85,247,0.15), rgba(255,107,0,0.1));
+    border: 1px dashed rgba(168,85,247,0.4);
+    border-radius: 10px;
+    color: rgba(255,255,255,0.6);
+    font-size: 13px;
+    font-style: italic;
+}
+.nw-tier-hint svg { stroke: #a855f7; flex-shrink: 0; }
+
+/* Unlock Toast */
+.nw-unlock-toast {
+    position: fixed;
+    top: -80px; left: 50%;
+    transform: translateX(-50%);
+    z-index: 10001;
+    display: flex; flex-direction: column; align-items: center; gap: 4px;
+    padding: 16px 28px;
+    background: linear-gradient(135deg, #1a0a2e, #0d1117);
+    border: 2px solid rgba(255,215,0,0.6);
+    border-radius: 16px;
+    box-shadow: 0 8px 40px rgba(255,215,0,0.3), 0 0 20px rgba(168,85,247,0.3);
+    color: #ffd700;
+    font-family: 'NumbahWan', 'Orbitron', monospace, sans-serif;
+    font-size: 18px; font-weight: 700;
+    transition: top 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+    will-change: top;
+    white-space: nowrap;
+}
+.nw-unlock-toast.show { top: 24px; }
+.nw-unlock-toast .nw-unlock-icon svg { stroke: #ffd700; }
+.nw-unlock-toast .nw-unlock-sub {
+    font-size: 12px; font-weight: 400;
+    color: rgba(255,255,255,0.6);
+    font-family: inherit;
+}
+
 /* Reduce motion for accessibility */
 @media (prefers-reduced-motion: reduce) {
     .nw-nav-overlay,
@@ -876,7 +1132,8 @@ const NW_NAV = {
     .nw-nav-link,
     .nw-nav-toggle,
     .nw-nav-home,
-    .nw-nav-back {
+    .nw-nav-back,
+    .nw-unlock-toast {
         transition: none !important;
     }
 }

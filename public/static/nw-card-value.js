@@ -49,8 +49,8 @@ const NW_CARD_VALUE = {
             const remaining = maxPrint - (cardNumber - 1);
             const percentRemaining = ((remaining / maxPrint) * 100).toFixed(1);
             
-            if (percentRemaining <= 10) return `🔥 ULTRA RARE: #${cardNumber} of ${maxPrint} (${percentRemaining}% remain)`;
-            if (percentRemaining <= 25) return `⚠️ SCARCE: #${cardNumber} of ${maxPrint}`;
+            if (percentRemaining <= 10) return `ULTRA RARE: #${cardNumber} of ${maxPrint} (${percentRemaining}% remain)`;
+            if (percentRemaining <= 25) return `SCARCE: #${cardNumber} of ${maxPrint}`;
             return `#${cardNumber} of ${maxPrint}`;
         },
         
@@ -76,13 +76,13 @@ const NW_CARD_VALUE = {
                 name: 'Battle Arena',
                 description: 'Use in luck-based card battles',
                 valueBoost: 1.0, // Base value
-                icon: '⚔️'
+                icon: ''
             },
             dnd: {
                 name: 'Tabletop Realm',
                 description: 'Convert to D&D character for IRL play',
                 valueBoost: 1.25, // +25% for D&D-playable cards
-                icon: '🎲',
+                icon: '',
                 // D&D conversion makes cards MORE valuable (utility expansion)
                 conversionBonuses: {
                     // Higher rarity = stronger D&D character = more desirable
@@ -98,7 +98,7 @@ const NW_CARD_VALUE = {
                 name: 'Staking',
                 description: 'Lock for passive NWG rewards (APY)',
                 valueBoost: 1.15, // +15% for stakeable cards
-                icon: '🔒',
+                icon: '',
                 apyRates: {
                     common:    0.05,  // 5% APY
                     uncommon:  0.10,  // 10% APY
@@ -112,19 +112,19 @@ const NW_CARD_VALUE = {
                 name: 'Market Trading',
                 description: 'Buy/sell on open market',
                 valueBoost: 1.10, // +10% for tradeable cards
-                icon: '💱'
+                icon: ''
             },
             display: {
                 name: 'Profile Display',
                 description: 'Show off in profile/gallery',
                 valueBoost: 1.05, // +5% for displayable
-                icon: '🖼️'
+                icon: ''
             },
             tournament: {
                 name: 'Tournament Entry',
                 description: 'Required for ranked tournaments',
                 valueBoost: 1.20, // +20% for tournament-legal
-                icon: '🏆'
+                icon: ''
             }
         },
         
@@ -200,13 +200,13 @@ const NW_CARD_VALUE = {
     socialProof: {
         // Achievement badges add value
         badges: {
-            'first-owner': { boost: 1.10, label: '🥇 First Owner' },
-            'whale-owned': { boost: 1.25, label: '🐋 Whale Collection' },
-            'tournament-winner': { boost: 1.30, label: '🏆 Tournament Winner' },
-            'zakum-slayer': { boost: 1.20, label: '⚔️ Zakum Slayer' },
-            'dnd-legendary': { boost: 1.15, label: '🎲 D&D Legend' },
-            'streak-master': { boost: 1.10, label: '🔥 100 Win Streak' },
-            'og-player': { boost: 1.35, label: '👴 OG Player (Day 1)' },
+            'first-owner': { boost: 1.10, label: 'First Owner' },
+            'whale-owned': { boost: 1.25, label: 'Whale Collection' },
+            'tournament-winner': { boost: 1.30, label: 'Tournament Winner' },
+            'zakum-slayer': { boost: 1.20, label: 'Zakum Slayer' },
+            'dnd-legendary': { boost: 1.15, label: 'D&D Legend' },
+            'streak-master': { boost: 1.10, label: '100 Win Streak' },
+            'og-player': { boost: 1.35, label: 'OG Player (Day 1)' },
         },
         
         // Display recent notable owners
@@ -248,7 +248,7 @@ const NW_CARD_VALUE = {
         
         // NO REPRINTS policy
         noReprintPolicy: `
-            ⚠️ NO REPRINTS EVER
+            NO REPRINTS EVER
             Once a card's print run ends, it's gone forever.
             S1 cards can never be obtained again.
             This is how we protect your investment.
@@ -275,7 +275,7 @@ const NW_CARD_VALUE = {
             const scarcityMult = this.scarcity.getScarcityMultiplier(remaining, card.maxPrint);
             if (scarcityMult > 1) {
                 value *= scarcityMult;
-                factors.push({ name: 'Scarcity', mult: scarcityMult, icon: '🔥' });
+                factors.push({ name: 'Scarcity', mult: scarcityMult, icon: '' });
             }
         }
         
@@ -284,14 +284,14 @@ const NW_CARD_VALUE = {
         const utilityMult = this.utility.getTotalUtilityMultiplier(utilities);
         if (utilityMult > 1) {
             value *= utilityMult;
-            factors.push({ name: 'Utility', mult: utilityMult, icon: '🔧' });
+            factors.push({ name: 'Utility', mult: utilityMult, icon: '' });
         }
         
         // 3. Lore boost
         const lore = this.story.getLoreBoost(card.id);
         if (lore.boost > 1) {
             value *= lore.boost;
-            factors.push({ name: lore.description, mult: lore.boost, icon: '📖' });
+            factors.push({ name: lore.description, mult: lore.boost, icon: '' });
         }
         
         // 4. Social proof badges
@@ -300,7 +300,7 @@ const NW_CARD_VALUE = {
                 const badge = this.socialProof.badges[badgeId];
                 if (badge) {
                     value *= badge.boost;
-                    factors.push({ name: badge.label, mult: badge.boost, icon: '🏅' });
+                    factors.push({ name: badge.label, mult: badge.boost, icon: '' });
                 }
             });
         }
@@ -310,7 +310,7 @@ const NW_CARD_VALUE = {
             const seasonMult = this.timeValue.seasonMultipliers[card.season] || 1.0;
             if (seasonMult > 1) {
                 value *= seasonMult;
-                factors.push({ name: `${card.season} Card`, mult: seasonMult, icon: '📅' });
+                factors.push({ name: `${card.season} Card`, mult: seasonMult, icon: '' });
             }
         }
         
@@ -318,7 +318,7 @@ const NW_CARD_VALUE = {
             const ageMult = this.timeValue.getAgeBonus(card.mintDate);
             if (ageMult > 1) {
                 value *= ageMult;
-                factors.push({ name: 'Aged Value', mult: ageMult, icon: '⏳' });
+                factors.push({ name: 'Aged Value', mult: ageMult, icon: '' });
             }
         }
         
@@ -333,9 +333,9 @@ const NW_CARD_VALUE = {
     
     // Format NWG display
     formatNWG(amount) {
-        if (amount >= 1000000) return `◆ ${(amount / 1000000).toFixed(2)}M`;
-        if (amount >= 1000) return `◆ ${(amount / 1000).toFixed(1)}K`;
-        return `◆ ${amount}`;
+        if (amount >= 1000000) return `${(amount / 1000000).toFixed(2)}M`;
+        if (amount >= 1000) return `${(amount / 1000).toFixed(1)}K`;
+        return `${amount}`;
     },
     
     // ═══════════════════════════════════════════════════════════════════════
@@ -353,7 +353,7 @@ const NW_CARD_VALUE = {
                 </div>
                 
                 <div style="font-size: 11px; color: rgba(255,255,255,0.5); margin-bottom: 8px;">
-                    Base: ◆ ${valuation.baseValue} × ${valuation.multiplier}
+                    Base: ${valuation.baseValue} × ${valuation.multiplier}
                 </div>
                 
                 ${valuation.factors.length > 0 ? `
@@ -369,7 +369,7 @@ const NW_CARD_VALUE = {
                 ` : ''}
                 
                 <div style="margin-top: 12px; padding: 8px; background: rgba(0,212,255,0.1); border-radius: 8px; font-size: 10px; color: #00d4ff;">
-                    💎 This card has locked NWG value that can be redeemed when burned
+                    This card has locked NWG value that can be redeemed when burned
                 </div>
             </div>
         `;

@@ -6,8 +6,8 @@
 // Currency metadata - 3-Tier System v2.0 (HARD RULE #7: No iron, stone, or diamond)
 // NWG (premium) → Gold (earned) → Sacred Log (prestige)
 const CURRENCY_DATA = {
-    nwg: { icon: '◆', name: 'NWG', tier: 1, color: '#00d4ff', rarity: 'premium' },
-    gold: { icon: '●', name: 'Gold', tier: 2, color: '#ffd700', rarity: 'common' },
+    nwg: { icon: '', name: 'NWG', tier: 1, color: '#00d4ff', rarity: 'premium' },
+    gold: { icon: '', name: 'Gold', tier: 2, color: '#ffd700', rarity: 'common' },
     wood: { icon: '⧫', name: 'Sacred Log', tier: 0, color: '#00ff88', rarity: 'mythic' }
 };
 
@@ -59,14 +59,14 @@ function showGMStatus() {
         if (walletIdEl && !document.getElementById('gmIndicator')) {
             const gmBadge = document.createElement('span');
             gmBadge.id = 'gmIndicator';
-            gmBadge.innerHTML = '👑 GM';
+            gmBadge.innerHTML = 'GM';
             gmBadge.style.cssText = `
                 background: linear-gradient(135deg, rgba(255,215,0,0.3), rgba(255,107,0,0.2));
                 border: 2px solid #ffd700;
                 color: #ffd700;
                 padding: 4px 10px;
                 border-radius: 6px;
-                font-family: 'Orbitron', sans-serif;
+                font-family: 'NumbahWan', 'Orbitron', sans-serif;
                 font-size: 11px;
                 font-weight: 800;
                 letter-spacing: 1px;
@@ -89,7 +89,7 @@ function showGMStatus() {
             }
         }
         
-        //console.log('%c[ARCADE] 👑 GM MODE ACTIVE - Infinite resources!', 
+        //console.log('%c[ARCADE] GM MODE ACTIVE - Infinite resources!', 
             'background: linear-gradient(90deg, #ffd700, #ff6b00); color: black; font-weight: bold; padding: 8px;');
     }
 }
@@ -181,12 +181,12 @@ function openGame(game) {
     const content = document.getElementById('modalContent');
     
     const games = {
-        slots: { title: '🎰 GOLDEN REELS', cost: 10, render: renderSlots },
-        scratch: { title: '🎫 FORTUNE SCRATCHER', cost: 15, render: renderScratch },
-        coinflip: { title: '● FATE\'S COIN', cost: 20, render: renderCoinflip },
-        guess: { title: '🔮 ORACLE\'S GAMBIT', cost: 25, render: renderGuess },
-        dice: { title: '🎲 DRAGON\'S DICE', cost: 30, render: renderDice },
-        treasure: { title: '🏛️ ANCIENT VAULT', cost: 50, render: renderTreasure }
+        slots: { title: 'GOLDEN REELS', cost: 10, render: renderSlots },
+        scratch: { title: 'FORTUNE SCRATCHER', cost: 15, render: renderScratch },
+        coinflip: { title: 'FATE\'S COIN', cost: 20, render: renderCoinflip },
+        guess: { title: 'ORACLE\'S GAMBIT', cost: 25, render: renderGuess },
+        dice: { title: 'DRAGON\'S DICE', cost: 30, render: renderDice },
+        treasure: { title: 'ANCIENT VAULT', cost: 50, render: renderTreasure }
     };
     
     const g = games[game];
@@ -211,7 +211,7 @@ function closeGame() {
 }
 
 // ==================== SLOTS ====================
-const SLOT_SYMBOLS = ['🍒', '🍋', '🍊', '🍇', '⭐', '◆', '7️⃣', '⧫'];
+const SLOT_SYMBOLS = ['', '', '', '', '', '', '7', '⧫'];
 let slotsSpinning = false;
 
 function renderSlots() {
@@ -273,8 +273,8 @@ function spinSlots() {
         if (results[0] === results[1] && results[1] === results[2]) {
             // Jackpot!
             if (results[0] === '⧫') { win = 5; currency = 'wood'; }
-            else if (results[0] === '◆') { win = 100; currency = 'nwg'; }
-            else if (results[0] === '7️⃣') { win = 200; currency = 'gold'; }
+            else if (results[0] === '') { win = 100; currency = 'nwg'; }
+            else if (results[0] === '7') { win = 200; currency = 'gold'; }
             else { win = 50; currency = 'gold'; }
         } else if (results[0] === results[1] || results[1] === results[2]) {
             win = 15; currency = 'gold';
@@ -282,10 +282,10 @@ function spinSlots() {
         
         if (win > 0) {
             earn(currency, win);
-            const icon = currency === 'wood' ? '⧫' : currency === 'nwg' ? '◆' : '●';
+            const icon = currency === 'wood' ? '⧫' : currency === 'nwg' ? '' : '';
             document.getElementById('slotsResult').innerHTML = `
                 <div class="result-display win">
-                    <div class="result-text win">🎉 WINNER!</div>
+                    <div class="result-text win">WINNER!</div>
                     <div class="result-amount">+${win} ${icon}</div>
                 </div>
             `;
@@ -310,10 +310,10 @@ function renderScratch() {
     // Determine prize (3-Tier Currency Only: NWG, Gold, Sacred Log)
     const roll = Math.random();
     if (roll < 0.01) { scratchPrize = { icon: '⧫', amount: 3, type: 'wood' }; }         // 1% - Sacred Log
-    else if (roll < 0.05) { scratchPrize = { icon: '◆', amount: 10, type: 'nwg' }; }    // 4% - NWG
-    else if (roll < 0.20) { scratchPrize = { icon: '●', amount: 50, type: 'gold' }; }   // 15% - Gold (high)
-    else if (roll < 0.50) { scratchPrize = { icon: '●', amount: 30, type: 'gold' }; }   // 30% - Gold (medium)
-    else { scratchPrize = { icon: '●', amount: 15, type: 'gold' }; }                     // 50% - Gold (low)
+    else if (roll < 0.05) { scratchPrize = { icon: '', amount: 10, type: 'nwg' }; }    // 4% - NWG
+    else if (roll < 0.20) { scratchPrize = { icon: '', amount: 50, type: 'gold' }; }   // 15% - Gold (high)
+    else if (roll < 0.50) { scratchPrize = { icon: '', amount: 30, type: 'gold' }; }   // 30% - Gold (medium)
+    else { scratchPrize = { icon: '', amount: 15, type: 'gold' }; }                     // 50% - Gold (low)
     
     return `
         <div class="scratch-container">
@@ -325,7 +325,7 @@ function renderScratch() {
                 <canvas class="scratch-canvas" id="scratchCanvas" width="260" height="180"></canvas>
             </div>
             <p class="scratch-hint">Scratch to reveal your prize!</p>
-            <button class="play-btn" id="scratchBtn" onclick="buyScratch()" style="margin-top:16px;">BUY CARD (◆ 15)</button>
+            <button class="play-btn" id="scratchBtn" onclick="buyScratch()" style="margin-top:16px;">BUY CARD (15)</button>
         </div>
         <div id="scratchResult"></div>
     `;
@@ -346,7 +346,7 @@ function initScratch() {
     
     // Add text
     scratchCtx.fillStyle = '#888';
-    scratchCtx.font = 'bold 16px Orbitron';
+    scratchCtx.font = 'bold 16px NumbahWan, Orbitron';
     scratchCtx.textAlign = 'center';
     scratchCtx.fillText('SCRATCH HERE', 130, 95);
     
@@ -375,7 +375,7 @@ function buyScratch() {
             earn(scratchPrize.type, scratchPrize.amount);
             document.getElementById('scratchResult').innerHTML = `
                 <div class="result-display win">
-                    <div class="result-text win">🎉 YOU WON!</div>
+                    <div class="result-text win">YOU WON!</div>
                     <div class="result-amount">+${scratchPrize.amount} ${scratchPrize.icon}</div>
                 </div>
             `;
@@ -410,15 +410,15 @@ function renderCoinflip() {
         <div class="coinflip-container">
             <div class="coin-stage">
                 <div class="coin" id="coin">
-                    <div class="coin-face coin-heads">👑</div>
-                    <div class="coin-face coin-tails">🦅</div>
+                    <div class="coin-face coin-heads"></div>
+                    <div class="coin-face coin-tails"></div>
                 </div>
             </div>
             <div class="coin-choice">
-                <button class="choice-btn" id="choiceHeads" onclick="chooseCoin('heads')">👑 HEADS</button>
-                <button class="choice-btn" id="choiceTails" onclick="chooseCoin('tails')">🦅 TAILS</button>
+                <button class="choice-btn" id="choiceHeads" onclick="chooseCoin('heads')">HEADS</button>
+                <button class="choice-btn" id="choiceTails" onclick="chooseCoin('tails')">TAILS</button>
             </div>
-            <button class="play-btn" id="flipBtn" onclick="flipCoin()" disabled>FLIP COIN (◆ 20)</button>
+            <button class="play-btn" id="flipBtn" onclick="flipCoin()" disabled>FLIP COIN (20)</button>
         </div>
         <div id="coinResult"></div>
     `;
@@ -451,8 +451,8 @@ function flipCoin() {
             earn('gold', 40);
             document.getElementById('coinResult').innerHTML = `
                 <div class="result-display win">
-                    <div class="result-text win">🎉 CORRECT!</div>
-                    <div class="result-amount">+40 ● Gold</div>
+                    <div class="result-text win">CORRECT!</div>
+                    <div class="result-amount">+40 Gold</div>
                 </div>
             `;
             toast('Won 40 gold!', 'success');
@@ -460,7 +460,7 @@ function flipCoin() {
             document.getElementById('coinResult').innerHTML = `
                 <div class="result-display lose">
                     <div class="result-text lose">Wrong call!</div>
-                    <div class="result-amount">It was ${result === 'heads' ? '👑 Heads' : '🦅 Tails'}</div>
+                    <div class="result-amount">It was ${result === 'heads' ? 'Heads' : 'Tails'}</div>
                 </div>
             `;
         }
@@ -487,7 +487,7 @@ function renderGuess() {
                     <button class="guess-num" id="guess${n}" onclick="selectGuess(${n})">${n}</button>
                 `).join('')}
             </div>
-            <button class="play-btn" id="guessBtn" onclick="makeGuess()" disabled>REVEAL (◆ 25)</button>
+            <button class="play-btn" id="guessBtn" onclick="makeGuess()" disabled>REVEAL (25)</button>
         </div>
         <div id="guessResult"></div>
     `;
@@ -524,8 +524,8 @@ function makeGuess() {
                 earn('gold', 250);
                 document.getElementById('guessResult').innerHTML = `
                     <div class="result-display win">
-                        <div class="result-text win">🎯 PERFECT!</div>
-                        <div class="result-amount">+250 ● Gold (10x!)</div>
+                        <div class="result-text win">PERFECT!</div>
+                        <div class="result-amount">+250 Gold (10x!)</div>
                     </div>
                 `;
                 toast('JACKPOT! Won 250 gold!', 'success');
@@ -565,7 +565,7 @@ function renderDice() {
                     <div class="dice dealer" id="dealerDice">?</div>
                 </div>
             </div>
-            <button class="play-btn" onclick="rollDice()">ROLL DICE (◆ 30)</button>
+            <button class="play-btn" onclick="rollDice()">ROLL DICE (30)</button>
         </div>
         <div id="diceResult"></div>
     `;
@@ -601,8 +601,8 @@ function rollDice() {
                 earn('gold', prize);
                 document.getElementById('diceResult').innerHTML = `
                     <div class="result-display win">
-                        <div class="result-text win">🎉 YOU WIN!</div>
-                        <div class="result-amount">+${prize} ● Gold</div>
+                        <div class="result-text win">YOU WIN!</div>
+                        <div class="result-amount">+${prize} Gold</div>
                     </div>
                 `;
                 toast(`Won ${prize} gold!`, 'success');
@@ -624,11 +624,11 @@ function renderTreasure() {
         <div class="treasure-container">
             <p style="text-align:center;color:rgba(255,255,255,0.6);margin-bottom:16px;">Choose a chest wisely...</p>
             <div class="treasure-boxes">
-                <div class="treasure-box" id="chest1" onclick="openChest(1)">📦</div>
-                <div class="treasure-box" id="chest2" onclick="openChest(2)">📦</div>
-                <div class="treasure-box" id="chest3" onclick="openChest(3)">📦</div>
+                <div class="treasure-box" id="chest1" onclick="openChest(1)"></div>
+                <div class="treasure-box" id="chest2" onclick="openChest(2)"></div>
+                <div class="treasure-box" id="chest3" onclick="openChest(3)"></div>
             </div>
-            <button class="play-btn" id="treasureBtn" onclick="buyTreasure()">PAY TO PLAY (◆ 50)</button>
+            <button class="play-btn" id="treasureBtn" onclick="buyTreasure()">PAY TO PLAY (50)</button>
         </div>
         <div id="treasureResult"></div>
     `;
@@ -646,9 +646,9 @@ function buyTreasure() {
     // Generate prizes (3-Tier Currency Only: NWG, Gold, Sacred Log)
     treasureWinner = Math.floor(Math.random() * 3) + 1;
     const prizes = [
-        { icon: '●', amount: 30, type: 'gold' },    // Common
-        { icon: '●', amount: 50, type: 'gold' },    // Medium
-        { icon: '◆', amount: 15, type: 'nwg' }      // Good
+        { icon: '', amount: 30, type: 'gold' },    // Common
+        { icon: '', amount: 50, type: 'gold' },    // Medium
+        { icon: '', amount: 15, type: 'nwg' }      // Good
     ];
     
     // Shuffle and assign winner
@@ -656,7 +656,7 @@ function buyTreasure() {
     // Make winner chest have Sacred Log or NWG
     const goodPrize = Math.random() < 0.1 
         ? { icon: '⧫', amount: 5, type: 'wood' }     // 10% Sacred Log
-        : { icon: '◆', amount: 25, type: 'nwg' };    // 90% NWG
+        : { icon: '', amount: 25, type: 'nwg' };    // 90% NWG
     treasurePrizes[treasureWinner - 1] = goodPrize;
 }
 
@@ -693,7 +693,7 @@ function openChest(n) {
     
     document.getElementById('treasureResult').innerHTML = `
         <div class="result-display win">
-            <div class="result-text win">🎉 TREASURE!</div>
+            <div class="result-text win">TREASURE!</div>
             <div class="result-amount">+${prize.amount} ${prize.icon}</div>
         </div>
     `;
@@ -726,7 +726,7 @@ function openExchange(from, to) {
     const currentBalance = NW_WALLET.getBalance(from);
     
     // Update modal UI
-    document.getElementById('exTitle').textContent = isUpgrade ? '▲ UPGRADE' : '▼ CONVERT';
+    document.getElementById('exTitle').textContent = isUpgrade ? 'UPGRADE' : 'CONVERT';
     document.getElementById('exSubtitle').textContent = isUpgrade 
         ? `Trade ${fromData.name} for ${toData.name} (${rate}:1 rate)`
         : `Convert ${fromData.name} to ${toData.name} (1:${rate} rate)`;

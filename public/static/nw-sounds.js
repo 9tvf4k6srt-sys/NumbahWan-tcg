@@ -83,7 +83,7 @@ const NW_SOUNDS = {
         this.preloadWebAudio(prioritySounds);
         this.preload(prioritySounds); // HTML5 fallback
         
-        console.log('🔊 NW Sound System v2.0 initialized (Web Audio API)');
+        console.log('NW Sound System v2.0 initialized (Web Audio API)');
         return this;
     },
     

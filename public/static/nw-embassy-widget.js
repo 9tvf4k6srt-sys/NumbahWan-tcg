@@ -285,16 +285,16 @@ const NWG_BASE_URL = window.location.hostname.includes('sandbox')
         container.className = 'nwg-embassy-widget';
         container.innerHTML = `
             <button class="nwg-embassy-badge ${isCitizen ? 'verified' : ''}" onclick="NWGEmbassy.toggle()">
-                🏛️ NWG Embassy ${isCitizen ? '✓' : ''}
+                NWG Embassy ${isCitizen ? '' : ''}
             </button>
             <div class="nwg-embassy-panel" id="nwg-embassy-panel">
-                <button class="nwg-embassy-close" onclick="NWGEmbassy.close()">✕</button>
-                <h3>🏛️ NumbahWan Embassy</h3>
+                <button class="nwg-embassy-close" onclick="NWGEmbassy.close()"></button>
+                <h3>NumbahWan Embassy</h3>
                 
                 <div class="nwg-embassy-status ${isCitizen ? 'verified' : 'not-verified'}">
                     ${isCitizen 
-                        ? `✓ Citizen Verified<br><small>${state.citizenId}</small>` 
-                        : '⚠️ Not a NWG Citizen'}
+                        ? `Citizen Verified<br><small>${state.citizenId}</small>` 
+                        : 'Not a NWG Citizen'}
                 </div>
                 
                 ${isCitizen ? `
@@ -312,12 +312,12 @@ const NWG_BASE_URL = window.location.hostname.includes('sandbox')
                     <button class="nwg-embassy-btn nwg-embassy-btn-primary" 
                             onclick="NWGEmbassy.claim()" 
                             ${!claimStatus.canClaim ? 'disabled' : ''}>
-                        ${claimStatus.canClaim ? '🎁 Claim Reward' : `⏳ Come back in ${claimStatus.nextClaim}`}
+                        ${claimStatus.canClaim ? 'Claim Reward' : `Come back in ${claimStatus.nextClaim}`}
                     </button>
                 ` : `
                     <p>You need to be a NumbahWan citizen to claim Embassy rewards. Visit NWG to get your citizen ID!</p>
                     <a href="${NWG_BASE_URL}/wallet" target="_blank" class="nwg-embassy-btn nwg-embassy-btn-primary" style="display: block; text-align: center; text-decoration: none;">
-                        🎫 Get Citizenship
+                        Get Citizenship
                     </a>
                 `}
                 
@@ -389,13 +389,13 @@ const NWG_BASE_URL = window.location.hostname.includes('sandbox')
                 const statusDiv = panel.querySelector('.nwg-embassy-status');
                 if (statusDiv) {
                     statusDiv.className = 'nwg-embassy-status verified';
-                    statusDiv.innerHTML = `🎉 Claimed!<br><small>+${partner.rewards.nwg} NWG, +${partner.rewards.wood} Wood</small>`;
+                    statusDiv.innerHTML = `Claimed!<br><small>+${partner.rewards.nwg} NWG, +${partner.rewards.wood} Wood</small>`;
                 }
             }
             
             // Also show alert for clarity
             setTimeout(() => {
-                alert(`🎉 Claimed ${partner.rewards.nwg} NWG + ${partner.rewards.wood} Wood!\n\nRewards will be added to your wallet when you visit NWG.`);
+                alert(`Claimed ${partner.rewards.nwg} NWG + ${partner.rewards.wood} Wood!\n\nRewards will be added to your wallet when you visit NWG.`);
             }, 300);
             
             // Refresh widget
@@ -421,5 +421,5 @@ const NWG_BASE_URL = window.location.hostname.includes('sandbox')
         render();
     }
     
-    console.log(`🏛️ NWG Embassy Widget v${WIDGET_VERSION} loaded for partner: ${partnerId}`);
+    console.log(`NWG Embassy Widget v${WIDGET_VERSION} loaded for partner: ${partnerId}`);
 })();

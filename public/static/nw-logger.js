@@ -122,7 +122,7 @@
       this.addToHistory('warn', message, data);
       const f = this.format('warn', message, data);
       console.warn(
-        `%c${f.prefix}%c ${f.time} %c⚠️ ${f.message}`,
+        `%c${f.prefix}%c ${f.time} %c${f.message}`,
         'color: #00d4ff; font-weight: bold',
         'color: #8b949e',
         'color: #ffd700',
@@ -135,7 +135,7 @@
       this.addToHistory('error', message, data);
       const f = this.format('error', message, data);
       console.error(
-        `%c${f.prefix}%c ${f.time} %c❌ ${f.message}`,
+        `%c${f.prefix}%c ${f.time} %c${f.message}`,
         'color: #00d4ff; font-weight: bold',
         'color: #8b949e',
         'color: #ff3366',
@@ -149,7 +149,7 @@
       this.addToHistory('success', message, data);
       const f = this.format('success', message, data);
       console.log(
-        `%c${f.prefix}%c ${f.time} %c✅ ${f.message}`,
+        `%c${f.prefix}%c ${f.time} %c${f.message}`,
         'color: #00d4ff; font-weight: bold',
         'color: #8b949e',
         'color: #00ff88',
@@ -160,7 +160,7 @@
     // API call logging
     api(endpoint, status, data = null) {
       if (this.getLevel() < 3) return;
-      const statusIcon = status === 'success' ? '✅' : status === 'error' ? '❌' : '🔄';
+      const statusIcon = status === 'success' ? '' : status === 'error' ? '' : '';
       const statusColor = status === 'success' ? '#00ff88' : status === 'error' ? '#ff3366' : '#a855f7';
       this.addToHistory('api', `${endpoint} - ${status}`, data);
       console.log(
@@ -184,7 +184,7 @@
         delete perfMarks[label];
         if (NW_LOGGER.getLevel() >= 3) {
           console.log(
-            `%c[NWG:${NW_LOGGER.page}]%c ⏱️ ${label}: %c${duration}ms`,
+            `%c[NWG:${NW_LOGGER.page}]%c ${label}: %c${duration}ms`,
             'color: #00d4ff; font-weight: bold',
             'color: #8b949e',
             'color: #ffd700'
@@ -199,7 +199,7 @@
       this.addToHistory('event', `${category}:${action}`, { label, value });
       if (this.getLevel() >= 4) {
         console.log(
-          `%c[NWG:${this.page}]%c 📊 Event: %c${category}%c → %c${action}`,
+          `%c[NWG:${this.page}]%c Event: %c${category}%c → %c${action}`,
           'color: #00d4ff; font-weight: bold',
           'color: #8b949e',
           'color: #ffd700',
@@ -262,7 +262,7 @@
       // Log page load in development mode
       if (this.getLevel() >= 3) {
         console.log(
-          `%c[NWG:${this.page}]%c 🚀 Page loaded`,
+          `%c[NWG:${this.page}]%c Page loaded`,
           'color: #00d4ff; font-weight: bold',
           'color: #00ff88'
         );
@@ -279,7 +279,7 @@
             this.addToHistory('perf', 'Page load', { ms: loadTime });
             if (this.getLevel() >= 4) {
               console.log(
-                `%c[NWG:${this.page}]%c ⏱️ Page load: %c${loadTime}ms`,
+                `%c[NWG:${this.page}]%c Page load: %c${loadTime}ms`,
                 'color: #00d4ff; font-weight: bold',
                 'color: #8b949e',
                 'color: #ffd700'

@@ -165,7 +165,7 @@ const NW_UI_GUARDIAN = {
             // Generate CSS fix suggestion
             const style = window.getComputedStyle(lower.el);
             const suggestion = this.generateFixSuggestion(lower, higher, o);
-            console.log('%c💡 Suggested CSS fix:', 'color: #00ff00');
+            console.log('%cSuggested CSS fix:', 'color: #00ff00');
             console.log(`%c${suggestion}`, 'background: #1a1a2e; color: #00ff00; padding: 8px; font-family: monospace;');
             
             console.groupEnd();
@@ -215,9 +215,9 @@ const NW_UI_GUARDIAN = {
         setTimeout(() => {
             const remaining = this.detectOverlaps();
             if (remaining.length === 0) {
-                console.log('%c[UI_GUARDIAN] ✓ All overlaps fixed!', 'color: #00ff00; font-weight: bold');
+                console.log('%c[UI_GUARDIAN] All overlaps fixed!', 'color: #00ff00; font-weight: bold');
             } else {
-                console.log('%c[UI_GUARDIAN] ⚠ Some overlaps remain - may need manual CSS fix', 'color: #ff6b00');
+                console.log('%c[UI_GUARDIAN] Some overlaps remain - may need manual CSS fix', 'color: #ff6b00');
             }
         }, 100);
     },
@@ -241,7 +241,7 @@ const NW_UI_GUARDIAN = {
             }
             
             this.fixes.push(`Moved ${toMove.desc} to left corner`);
-            console.log(`%c  ✓ Moved ${toMove.desc} to left corner`, 'color: #00ff00');
+            console.log(`%c  Moved ${toMove.desc} to left corner`, 'color: #00ff00');
             
         } else if (toMove.zone === 'bottom') {
             // Move down
@@ -250,7 +250,7 @@ const NW_UI_GUARDIAN = {
             el.style.bottom = newBottom + 'px';
             
             this.fixes.push(`Moved ${toMove.desc} down to bottom: ${newBottom}px`);
-            console.log(`%c  ✓ Moved ${toMove.desc} down (bottom: ${newBottom}px)`, 'color: #00ff00');
+            console.log(`%c  Moved ${toMove.desc} down (bottom: ${newBottom}px)`, 'color: #00ff00');
             
         } else if (toMove.zone === 'top') {
             // Move down from top
@@ -259,7 +259,7 @@ const NW_UI_GUARDIAN = {
             el.style.top = newTop + 'px';
             
             this.fixes.push(`Moved ${toMove.desc} down to top: ${newTop}px`);
-            console.log(`%c  ✓ Moved ${toMove.desc} down (top: ${newTop}px)`, 'color: #00ff00');
+            console.log(`%c  Moved ${toMove.desc} down (top: ${newTop}px)`, 'color: #00ff00');
         }
     },
     

@@ -236,8 +236,8 @@ function renderHand() {
             <div class="card-info">
                 <div class="card-title">${card.name}</div>
                 <div class="card-stats-row">
-                    <span class="mini-stat mini-atk">${gs.atk}⚔</span>
-                    <span class="mini-stat mini-hp">${gs.hp}❤</span>
+                    <span class="mini-stat mini-atk">${gs.atk}</span>
+                    <span class="mini-stat mini-hp">${gs.hp}</span>
                 </div>
             </div>`;
         // TAP to select
@@ -277,8 +277,8 @@ function renderBoardCard(card, isEnemy) {
         <div class="ability-icons">${icons}</div>
         ${card.hasTaunt?'<div class="taunt-badge">TAUNT</div>':''}
         <div class="card-stats">
-            <span class="stat stat-atk">${getEffAtk(card)}⚔</span>
-            <span class="stat stat-hp">${card.currentHp}❤</span>
+            <span class="stat stat-atk">${getEffAtk(card)}</span>
+            <span class="stat stat-hp">${card.currentHp}</span>
         </div>
     </div>`;
 }
@@ -340,15 +340,15 @@ function renderSynergies() {
 
 function updateAttackBtn() {
     const btn=$('attackBtn');
-    if (!G.isPlayerTurn || G.isAnimating) { btn.disabled=true; btn.textContent='⚔️ ATTACK'; btn.classList.remove('face-mode'); return; }
+    if (!G.isPlayerTurn || G.isAnimating) { btn.disabled=true; btn.textContent='ATTACK'; btn.classList.remove('face-mode'); return; }
     const hasAttacker = G.playerBoard.some(c => c && c.canAttackThisTurn && !c.hasAttacked && c.stealthTurns<=0);
-    if (!hasAttacker) { btn.disabled=true; btn.textContent='⚔️ ATTACK'; btn.classList.remove('face-mode'); return; }
+    if (!hasAttacker) { btn.disabled=true; btn.textContent='ATTACK'; btn.classList.remove('face-mode'); return; }
     const hasTaunt = G.enemyBoard.some(c => c && c.hasTaunt && c.stealthTurns<=0);
     const hasEnemyCards = G.enemyBoard.some(c => c);
     if (!hasEnemyCards || (!hasTaunt && selectedAttacker!==null)) {
-        btn.disabled=false; btn.textContent='💥 GO FACE'; btn.classList.add('face-mode');
+        btn.disabled=false; btn.textContent='GO FACE'; btn.classList.add('face-mode');
     } else {
-        btn.disabled=false; btn.textContent='⚔️ ATTACK'; btn.classList.remove('face-mode');
+        btn.disabled=false; btn.textContent='ATTACK'; btn.classList.remove('face-mode');
     }
 }
 
@@ -391,7 +391,7 @@ async function playCard(slotIdx) {
     G.playerSynergies = synergies; G.playerSetBonuses = setBonuses;
     applyBonuses(G.playerBoard, synergies, setBonuses, true);
     addLog(`You summon ${bc.name}!`, 'summon');
-    if (bc.hasRush) addLog(`⚡ ${announce('rushPlay')}`, 'ability');
+    if (bc.hasRush) addLog(`${announce('rushPlay')}`, 'ability');
     renderAll();
     G.isAnimating = false;
 }
@@ -577,8 +577,8 @@ async function processEndTurn(board, boardId) {
     if (chaosCards.length) {
         const lucky = Math.random()<0.5;
         const cards = board.filter(c=>c);
-        if (lucky) { cards.forEach(c=>c.synergyAtkBonus+=Math.ceil(c.currentAtk*0.20)); addLog('🎲 CHAT DECIDES: +20% ATK!','ability'); }
-        else { cards.forEach(c=>c.synergyAtkBonus-=Math.ceil(c.currentAtk*0.15)); addLog('🎲 CHAT DECIDES: -15% ATK! KEKW','damage'); }
+        if (lucky) { cards.forEach(c=>c.synergyAtkBonus+=Math.ceil(c.currentAtk*0.20)); addLog('CHAT DECIDES: +20% ATK!','ability'); }
+        else { cards.forEach(c=>c.synergyAtkBonus-=Math.ceil(c.currentAtk*0.15)); addLog('CHAT DECIDES: -15% ATK! KEKW','damage'); }
     }
     renderBoards();
 }
@@ -781,8 +781,8 @@ window.selectDiff = function(diff) {
     document.querySelector(`[data-diff="${diff}"]`)?.classList.add('selected');
     difficulty=diff;
     const names={casual:['Sleepy Bot','AFK Andy'],ranked:['Try-Hard Tina','Meta Knight'],boss:['RegginA, The Eternal Flame','Guild Destroyer']};
-    const avatars={casual:'🤖',ranked:'🏆',boss:'💀'};
-    $('enemyAvatar').textContent=avatars[diff]||'🤖';
+    const avatars={casual:'',ranked:'',boss:''};
+    $('enemyAvatar').textContent=avatars[diff]||'';
     $('enemyName').textContent=(names[diff]||names.casual)[Math.floor(Math.random()*(names[diff]||names.casual).length)];
 };
 
@@ -810,7 +810,7 @@ async function init() {
     $('startBtn').addEventListener('click', async () => {
         console.log('[Battle v6.0] START clicked');
         $('startBtn').disabled = true;
-        $('startBtn').textContent = '⏳ LOADING...';
+        $('startBtn').textContent = 'LOADING...';
         // Set difficulty
         if (difficulty==='boss') G.enemyHP = CFG.BOSS.hp;
         // Build decks

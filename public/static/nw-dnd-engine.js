@@ -210,10 +210,10 @@ const NW_DND = {
     narrativeTemplates: {
         combat: {
             start: [
-                "🗡️ COMBAT INITIATED! {enemies} emerge from the shadows!",
-                "⚔️ AMBUSH! The party is surrounded by {enemies}!",
-                "🔥 BATTLE STATIONS! {enemies} block the path forward!",
-                "💀 DANGER! {enemies} have been waiting for this moment!"
+                "COMBAT INITIATED! {enemies} emerge from the shadows!",
+                "AMBUSH! The party is surrounded by {enemies}!",
+                "BATTLE STATIONS! {enemies} block the path forward!",
+                "DANGER! {enemies} have been waiting for this moment!"
             ],
             attack: [
                 "{attacker} lunges at {target} with deadly intent!",
@@ -222,53 +222,53 @@ const NW_DND = {
                 "{attacker} focuses their energy and attacks {target}!"
             ],
             hit: [
-                "💥 CRITICAL CONNECTION! {damage} damage!",
-                "🎯 DIRECT HIT! {target} takes {damage} damage!",
-                "✨ SOLID STRIKE! {damage} damage dealt!",
-                "⚡ IMPACT! {target} reels from {damage} damage!"
+                "CRITICAL CONNECTION! {damage} damage!",
+                "DIRECT HIT! {target} takes {damage} damage!",
+                "SOLID STRIKE! {damage} damage dealt!",
+                "IMPACT! {target} reels from {damage} damage!"
             ],
             miss: [
-                "😤 MISS! {target} dodges at the last second!",
-                "🌪️ WHIFF! The attack goes wide!",
-                "🛡️ BLOCKED! {target}'s defense holds!",
-                "💨 EVADED! {target} is too quick!"
+                "MISS! {target} dodges at the last second!",
+                "WHIFF! The attack goes wide!",
+                "BLOCKED! {target}'s defense holds!",
+                "EVADED! {target} is too quick!"
             ],
             crit: [
-                "🌟 NATURAL 20! CRITICAL HIT!!!",
-                "💎 PERFECT STRIKE! MAXIMUM DAMAGE!",
-                "🔥 DEVASTATING BLOW! THE CROWD GOES WILD!",
-                "⭐ LEGENDARY CRIT! THIS IS WHAT WE'RE HERE FOR!"
+                "NATURAL 20! CRITICAL HIT!!!",
+                "PERFECT STRIKE! MAXIMUM DAMAGE!",
+                "DEVASTATING BLOW! THE CROWD GOES WILD!",
+                "LEGENDARY CRIT! THIS IS WHAT WE'RE HERE FOR!"
             ],
             ability: [
-                "✨ {character} activates {ability}!",
-                "🌟 SPECIAL MOVE! {character} uses {ability}!",
-                "💫 {ability} ACTIVATED! {character} shows their true power!"
+                "{character} activates {ability}!",
+                "SPECIAL MOVE! {character} uses {ability}!",
+                "{ability} ACTIVATED! {character} shows their true power!"
             ],
             victory: [
-                "🎉 VICTORY! The party stands triumphant!",
-                "🏆 FLAWLESS! All enemies have been defeated!",
-                "⚔️ CONQUEST! The battlefield belongs to NumbahWan!",
-                "🎊 LEGENDARY WIN! The guild's power is unmatched!"
+                "VICTORY! The party stands triumphant!",
+                "FLAWLESS! All enemies have been defeated!",
+                "CONQUEST! The battlefield belongs to NumbahWan!",
+                "LEGENDARY WIN! The guild's power is unmatched!"
             ],
             defeat: [
-                "💀 PARTY WIPE! The heroes have fallen...",
-                "😱 TOTAL DEFEAT! Time to regroup...",
-                "☠️ DARKNESS CLAIMS THE PARTY! But they'll be back...",
-                "💔 DEFEAT! The respawn timer begins..."
+                "PARTY WIPE! The heroes have fallen...",
+                "TOTAL DEFEAT! Time to regroup...",
+                "DARKNESS CLAIMS THE PARTY! But they'll be back...",
+                "DEFEAT! The respawn timer begins..."
             ]
         },
         exploration: {
             enter: [
-                "🚪 The party enters {location}...",
-                "🗺️ Before them lies {location}...",
-                "⛏️ Descending into {location}...",
-                "🏰 The gates of {location} creak open..."
+                "The party enters {location}...",
+                "Before them lies {location}...",
+                "Descending into {location}...",
+                "The gates of {location} creak open..."
             ],
             discovery: [
-                "👁️ {character} spots something unusual!",
-                "✨ A glimmer catches {character}'s eye!",
-                "🔍 {character}'s keen senses detect a hidden passage!",
-                "📜 Ancient runes reveal themselves to {character}!"
+                "{character} spots something unusual!",
+                "A glimmer catches {character}'s eye!",
+                "{character}'s keen senses detect a hidden passage!",
+                "Ancient runes reveal themselves to {character}!"
             ]
         },
         commentary: {
@@ -287,7 +287,7 @@ const NW_DND = {
                 "Hold your breath, chat..."
             ],
             funny: [
-                "...did they really just do that? 😂",
+                "...did they really just do that? ",
                 "Classic guild moment right there",
                 "The prophecy is fulfilled once again",
                 "And THAT'S why we love this guild",
@@ -370,7 +370,7 @@ const NW_DND = {
         // Select starting location
         this.state.currentLocation = this.locations[Math.floor(Math.random() * this.locations.length)];
         
-        this.addNarrative('system', `🎮 THE ETERNAL CAMPAIGN BEGINS!`);
+        this.addNarrative('system', `THE ETERNAL CAMPAIGN BEGINS!`);
         this.addNarrative('dm', this.fillTemplate(this.getTemplate('exploration', 'enter'), { location: this.state.currentLocation.name }));
         
         return this.state;
@@ -465,7 +465,7 @@ const NW_DND = {
         // Announce combat
         const enemyNames = enemies.map(e => e.name).join(', ');
         this.addNarrative('dm', this.fillTemplate(this.getTemplate('combat', 'start'), { enemies: enemyNames }));
-        this.addNarrative('system', `⚔️ Roll Initiative! Combat begins!`);
+        this.addNarrative('system', `Roll Initiative! Combat begins!`);
         
         // Enable betting
         this.openBetting();
@@ -592,7 +592,7 @@ const NW_DND = {
         if (attackRoll.result === 1) {
             result.isHit = false;
             result.isCritMiss = true;
-            this.addNarrative('dm', `💀 NATURAL 1! Critical miss! ${attacker.name} stumbles!`);
+            this.addNarrative('dm', `NATURAL 1! Critical miss! ${attacker.name} stumbles!`);
         } else if (totalAttack >= result.targetAC || result.isCrit) {
             result.isHit = true;
             
@@ -626,10 +626,10 @@ const NW_DND = {
                 if (isParty) {
                     attacker.kills = (attacker.kills || 0) + 1;
                     attacker.xp = (attacker.xp || 0) + (target.xp || 50);
-                    this.addNarrative('dm', `☠️ ${target.name} has been SLAIN by ${attacker.name}!`);
+                    this.addNarrative('dm', `${target.name} has been SLAIN by ${attacker.name}!`);
                 } else {
                     target.isAlive = false;
-                    this.addNarrative('dm', `💀 ${target.name} falls! ${attacker.name} claims another victim!`);
+                    this.addNarrative('dm', `${target.name} falls! ${attacker.name} claims another victim!`);
                 }
             }
             
@@ -682,7 +682,7 @@ const NW_DND = {
                 const heal = this.rollDice(`2d10+${character.level}`).total;
                 character.currentHP = Math.min(character.maxHP, character.currentHP + heal);
                 character.healingDone = (character.healingDone || 0) + heal;
-                this.addNarrative('dm', `💚 ${character.name} recovers ${heal} HP! Now at ${character.currentHP}/${character.maxHP}`);
+                this.addNarrative('dm', `${character.name} recovers ${heal} HP! Now at ${character.currentHP}/${character.maxHP}`);
                 result.heal = heal;
                 break;
                 
@@ -690,7 +690,7 @@ const NW_DND = {
                 const smiteDamage = this.rollDice('3d8').total;
                 target.currentHP = Math.max(0, target.currentHP - smiteDamage);
                 character.damageDealt = (character.damageDealt || 0) + smiteDamage;
-                this.addNarrative('dm', `✨ DIVINE SMITE! ${smiteDamage} radiant damage to ${target.name}!`);
+                this.addNarrative('dm', `DIVINE SMITE! ${smiteDamage} radiant damage to ${target.name}!`);
                 result.damage = smiteDamage;
                 break;
                 
@@ -698,7 +698,7 @@ const NW_DND = {
                 const sneakDamage = this.rollDice(character.damage).total * 2;
                 target.currentHP = Math.max(0, target.currentHP - sneakDamage);
                 character.damageDealt = (character.damageDealt || 0) + sneakDamage;
-                this.addNarrative('dm', `🗡️ SNEAK ATTACK! ${sneakDamage} damage from the shadows!`);
+                this.addNarrative('dm', `SNEAK ATTACK! ${sneakDamage} damage from the shadows!`);
                 result.damage = sneakDamage;
                 break;
                 
@@ -710,17 +710,17 @@ const NW_DND = {
                     }
                 });
                 character.healingDone = (character.healingDone || 0) + (massHeal * this.state.party.filter(p => p.isAlive).length);
-                this.addNarrative('dm', `💖 MASS HEAL! The entire party recovers ${massHeal} HP!`);
+                this.addNarrative('dm', `MASS HEAL! The entire party recovers ${massHeal} HP!`);
                 result.heal = massHeal;
                 break;
                 
             case 'Rage Mode':
                 character.conditions.push({ name: 'Raging', duration: 3 });
-                this.addNarrative('dm', `🔥 ${character.name} ENTERS RAGE MODE! Double damage, but vulnerable!`);
+                this.addNarrative('dm', `${character.name} ENTERS RAGE MODE! Double damage, but vulnerable!`);
                 break;
                 
             case 'Vicious Mockery':
-                this.addNarrative('dm', `😂 ${character.name} roasts ${target.name}! Disadvantage on next attack!`);
+                this.addNarrative('dm', `${character.name} roasts ${target.name}! Disadvantage on next attack!`);
                 target.disadvantage = true;
                 break;
                 
@@ -729,7 +729,7 @@ const NW_DND = {
                 const genericDamage = this.rollDice('2d6').total + character.level;
                 target.currentHP = Math.max(0, target.currentHP - genericDamage);
                 character.damageDealt = (character.damageDealt || 0) + genericDamage;
-                this.addNarrative('dm', `⚡ ${character.ability}! ${genericDamage} damage!`);
+                this.addNarrative('dm', `${character.ability}! ${genericDamage} damage!`);
                 result.damage = genericDamage;
         }
         
@@ -739,7 +739,7 @@ const NW_DND = {
         if (target.currentHP <= 0) {
             character.kills = (character.kills || 0) + 1;
             character.xp = (character.xp || 0) + (target.xp || 50);
-            this.addNarrative('dm', `☠️ ${target.name} is DESTROYED!`);
+            this.addNarrative('dm', `${target.name} is DESTROYED!`);
         }
         
         return result;
@@ -767,11 +767,11 @@ const NW_DND = {
             // Boss?
             if (this.state.currentEncounter.enemies.some(e => e.phases)) {
                 this.state.bossesDefeated++;
-                this.addNarrative('dm', `🏆 BOSS DEFEATED! ${totalXP} XP earned!`);
+                this.addNarrative('dm', `BOSS DEFEATED! ${totalXP} XP earned!`);
             }
             
             this.addNarrative('dm', this.getTemplate('combat', 'victory'));
-            this.addNarrative('system', `💰 Party earns ${xpPerMember} XP each!`);
+            this.addNarrative('system', `Party earns ${xpPerMember} XP each!`);
             
             // Commentary
             this.addNarrative('commentary', this.getTemplate('commentary', 'hype'));
@@ -781,7 +781,7 @@ const NW_DND = {
             
         } else {
             this.addNarrative('dm', this.getTemplate('combat', 'defeat'));
-            this.addNarrative('system', `💀 The party will respawn shortly...`);
+            this.addNarrative('system', `The party will respawn shortly...`);
             
             // Revive party with half HP
             this.state.party.forEach(p => {
@@ -810,21 +810,21 @@ const NW_DND = {
     
     voteOptions: {
         path: [
-            { id: 'left', label: '🚪 Take the left passage (Unknown danger)', weight: 1 },
-            { id: 'right', label: '🚪 Take the right passage (Ominous glow)', weight: 1 },
-            { id: 'forward', label: '⬆️ Continue forward (Sounds of battle)', weight: 1 },
-            { id: 'back', label: '🔙 Turn back (Coward\'s way)', weight: 0.5 }
+            { id: 'left', label: 'Take the left passage (Unknown danger)', weight: 1 },
+            { id: 'right', label: 'Take the right passage (Ominous glow)', weight: 1 },
+            { id: 'forward', label: 'Continue forward (Sounds of battle)', weight: 1 },
+            { id: 'back', label: 'Turn back (Coward\'s way)', weight: 0.5 }
         ],
         action: [
-            { id: 'attack', label: '⚔️ Attack aggressively!', weight: 1.2 },
-            { id: 'defend', label: '🛡️ Defensive formation', weight: 1 },
-            { id: 'sneak', label: '🥷 Attempt stealth approach', weight: 0.8 },
-            { id: 'negotiate', label: '🗣️ Try to negotiate', weight: 0.5 }
+            { id: 'attack', label: 'Attack aggressively!', weight: 1.2 },
+            { id: 'defend', label: 'Defensive formation', weight: 1 },
+            { id: 'sneak', label: 'Attempt stealth approach', weight: 0.8 },
+            { id: 'negotiate', label: 'Try to negotiate', weight: 0.5 }
         ],
         treasure: [
-            { id: 'open', label: '📦 Open the chest (Could be trapped)', weight: 1 },
-            { id: 'check', label: '🔍 Check for traps first', weight: 1.2 },
-            { id: 'leave', label: '🚶 Leave it alone', weight: 0.3 }
+            { id: 'open', label: 'Open the chest (Could be trapped)', weight: 1 },
+            { id: 'check', label: 'Check for traps first', weight: 1.2 },
+            { id: 'leave', label: 'Leave it alone', weight: 0.3 }
         ]
     },
     
@@ -842,7 +842,7 @@ const NW_DND = {
         
         this.state.phase = 'voting';
         
-        this.addNarrative('vote', `\n🗳️ VOTE NOW! You have ${duration/1000} seconds!`);
+        this.addNarrative('vote', `\nVOTE NOW! You have ${duration/1000} seconds!`);
         options.forEach((opt, i) => {
             this.addNarrative('vote', `   ${i + 1}. ${opt.label}`);
         });
@@ -910,9 +910,9 @@ const NW_DND = {
         // If no votes, pick random
         if (Object.keys(this.state.activeVote.votes).length === 0) {
             winner = this.state.activeVote.options[Math.floor(Math.random() * this.state.activeVote.options.length)];
-            this.addNarrative('vote', `🤷 No votes cast! The DM decides: ${winner.label}`);
+            this.addNarrative('vote', `No votes cast! The DM decides: ${winner.label}`);
         } else {
-            this.addNarrative('vote', `🗳️ THE PEOPLE HAVE SPOKEN! Winner: ${winner.label}`);
+            this.addNarrative('vote', `THE PEOPLE HAVE SPOKEN! Winner: ${winner.label}`);
         }
         
         const result = {
@@ -939,9 +939,9 @@ const NW_DND = {
         this.state.activeBets = [];
         this.state.bettingPool = 0;
         
-        this.addNarrative('bet', `\n💰 BETTING IS OPEN! ${duration/1000} seconds to place your bets!`);
-        this.addNarrative('bet', `   🟢 Bet on PARTY to win`);
-        this.addNarrative('bet', `   🔴 Bet on ENEMIES to win`);
+        this.addNarrative('bet', `\nBETTING IS OPEN! ${duration/1000} seconds to place your bets!`);
+        this.addNarrative('bet', `   Bet on PARTY to win`);
+        this.addNarrative('bet', `   Bet on ENEMIES to win`);
         
         // Auto-close betting after duration
         setTimeout(() => {
@@ -972,13 +972,13 @@ const NW_DND = {
         
         this.state.bettingPool += amount;
         
-        this.addNarrative('bet', `💵 ${userId} bets ${amount} NWG on ${side.toUpperCase()}!`);
+        this.addNarrative('bet', `${userId} bets ${amount} NWG on ${side.toUpperCase()}!`);
         
         return { success: true, pool: this.state.bettingPool };
     },
     
     closeBetting() {
-        this.addNarrative('bet', `🔒 BETTING CLOSED! Total pool: ${this.state.bettingPool} NWG`);
+        this.addNarrative('bet', `BETTING CLOSED! Total pool: ${this.state.bettingPool} NWG`);
         
         if (typeof window !== 'undefined') {
             window.dispatchEvent(new CustomEvent('nw-dnd-betting-closed', { 
@@ -997,7 +997,7 @@ const NW_DND = {
         const winnerPool = winners.reduce((sum, b) => sum + b.amount, 0);
         
         if (winners.length === 0) {
-            this.addNarrative('bet', `😱 NO ONE BET ON ${winner.toUpperCase()}! House wins ${this.state.bettingPool} NWG!`);
+            this.addNarrative('bet', `NO ONE BET ON ${winner.toUpperCase()}! House wins ${this.state.bettingPool} NWG!`);
             return;
         }
         
@@ -1009,9 +1009,9 @@ const NW_DND = {
             payouts.push({ userId: bet.userId, bet: bet.amount, winnings: winnings });
         });
         
-        this.addNarrative('bet', `\n🎰 BET RESULTS (${winner.toUpperCase()} WINS!):`);
+        this.addNarrative('bet', `\nBET RESULTS (${winner.toUpperCase()} WINS!):`);
         payouts.forEach(p => {
-            this.addNarrative('bet', `   💰 ${p.userId}: +${p.winnings} NWG (${p.winnings - p.bet} profit)`);
+            this.addNarrative('bet', `   ${p.userId}: +${p.winnings} NWG (${p.winnings - p.bet} profit)`);
         });
         
         if (typeof window !== 'undefined') {
@@ -1041,14 +1041,14 @@ const NW_DND = {
         // Find the highest tier event for this amount
         const eligibleEvents = this.tipEvents.filter(e => amount >= e.minAmount);
         if (eligibleEvents.length === 0) {
-            this.addNarrative('tip', `💵 ${userId} tips ${amount} NWG! Thank you!`);
+            this.addNarrative('tip', `${userId} tips ${amount} NWG! Thank you!`);
             return;
         }
         
         const event = eligibleEvents[eligibleEvents.length - 1]; // Highest tier
         
-        this.addNarrative('tip', `\n🎁 ${userId} TIPS ${amount} NWG!`);
-        this.addNarrative('tip', `✨ ${event.desc}`);
+        this.addNarrative('tip', `\n${userId} TIPS ${amount} NWG!`);
+        this.addNarrative('tip', `${event.desc}`);
         
         // Apply event effect
         switch (event.event) {
@@ -1070,7 +1070,7 @@ const NW_DND = {
                     if (target) {
                         const damage = this.rollDice('6d10').total;
                         target.currentHP = Math.max(0, target.currentHP - damage);
-                        this.addNarrative('dm', `⚡ DIVINE SMITE! ${target.name} takes ${damage} damage!`);
+                        this.addNarrative('dm', `DIVINE SMITE! ${target.name} takes ${damage} damage!`);
                     }
                 }
                 break;
@@ -1079,11 +1079,11 @@ const NW_DND = {
                 if (fallen) {
                     fallen.isAlive = true;
                     fallen.currentHP = Math.floor(fallen.maxHP / 2);
-                    this.addNarrative('dm', `✨ ${fallen.name} RISES FROM THE DEAD!`);
+                    this.addNarrative('dm', `${fallen.name} RISES FROM THE DEAD!`);
                 }
                 break;
             case 'boss':
-                this.addNarrative('system', `\n⚠️ A BONUS BOSS APPROACHES!`);
+                this.addNarrative('system', `\nA BONUS BOSS APPROACHES!`);
                 this.state.pendingEvents.push({ type: 'boss', source: userId });
                 break;
         }
@@ -1131,7 +1131,7 @@ const NW_DND = {
         
         if (mvp && this.state.mvpStats[mvp.id]) {
             this.state.mvpStats[mvp.id].mvpWins++;
-            this.addNarrative('system', `🏆 MVP: ${mvp.name}! (${mvp.kills || 0} kills, ${mvp.damageDealt || 0} damage)`);
+            this.addNarrative('system', `MVP: ${mvp.name}! (${mvp.kills || 0} kills, ${mvp.damageDealt || 0} damage)`);
         }
         
         // Reset encounter stats
@@ -1167,7 +1167,7 @@ const NW_DND = {
             this.autoPlayTick();
         }, this.autoPlaySpeed);
         
-        this.addNarrative('system', `🎮 AUTO-PLAY STARTED! Action every ${speed/1000}s`);
+        this.addNarrative('system', `AUTO-PLAY STARTED! Action every ${speed/1000}s`);
         
         // Start first encounter if idle
         if (this.state.phase === 'idle') {
@@ -1180,7 +1180,7 @@ const NW_DND = {
             clearInterval(this.autoPlayInterval);
             this.autoPlayInterval = null;
         }
-        this.addNarrative('system', `⏸️ AUTO-PLAY PAUSED`);
+        this.addNarrative('system', `AUTO-PLAY PAUSED`);
     },
     
     autoPlayTick() {
@@ -1230,7 +1230,7 @@ const NW_DND = {
         if (this.state.pendingEvents.length > 0 && this.state.phase === 'idle') {
             const event = this.state.pendingEvents.shift();
             if (event.type === 'boss') {
-                this.addNarrative('dm', `\n⚠️ ${event.source}'s BONUS BOSS APPEARS!`);
+                this.addNarrative('dm', `\n${event.source}'s BONUS BOSS APPEARS!`);
                 this.startCombat('boss');
             }
         }

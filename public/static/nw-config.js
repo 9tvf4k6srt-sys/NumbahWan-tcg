@@ -39,7 +39,7 @@ const NW_CONFIG = {
                         zh: '上傳你的楓之谷截圖，以8種不同姿勢生成AI頭像藝術！',
                         th: 'อัปโหลดภาพหน้าจอ MapleStory ของคุณและสร้างอวาตาร์ AI ใน 8 โพสที่แตกต่างกัน!'
                     },
-                    icon: '🎨',
+                    icon: '',
                     path: '/avatar-studio'
                 },
                 {
@@ -50,7 +50,7 @@ const NW_CONFIG = {
                         zh: '聊天機器人現在追蹤你的瀏覽歷史，並根據你的興趣推薦功能！',
                         th: 'แชทบอทตอนนี้ติดตามประวัติการดูของคุณและแนะนำฟีเจอร์ตามความสนใจ!'
                     },
-                    icon: '🤖'
+                    icon: ''
                 },
                 {
                     category: 'feature',
@@ -60,7 +60,7 @@ const NW_CONFIG = {
                         zh: '頭像工作室支援英文、繁體中文和泰文！',
                         th: 'สตูดิโออวาตาร์รองรับภาษาอังกฤษ จีนตัวเต็ม และไทย!'
                     },
-                    icon: '🌐'
+                    icon: ''
                 },
                 {
                     category: 'fix',
@@ -70,7 +70,7 @@ const NW_CONFIG = {
                         zh: '修復「了解更多」提示按鈕在手機上無反應的問題',
                         th: 'แก้ไขปุ่ม "เรียนรู้เพิ่มเติม" ที่ไม่ตอบสนองบนอุปกรณ์มือถือ'
                     },
-                    icon: '📱'
+                    icon: ''
                 }
             ]
         },
@@ -86,13 +86,13 @@ const NW_CONFIG = {
             changes: [
                 {
                     category: 'new',
-                    title: { en: 'Star Upgrades (1★-5★)', zh: '星級升級 (1★-5★)', th: 'อัพเกรดดาว (1★-5★)' },
+                    title: { en: 'Star Upgrades (1-5)', zh: '星級升級 (1-5)', th: 'อัพเกรดดาว (1-5)' },
                     desc: { 
                         en: 'Use duplicate cards to upgrade star level. Higher stars = better stats (+15%/30%/50%/75%)',
                         zh: '使用重複卡片升級星級。星級越高 = 屬性越強 (+15%/30%/50%/75%)',
                         th: 'ใช้การ์ดซ้ำเพื่ออัพเกรดระดับดาว ดาวสูงขึ้น = สถานะดีขึ้น (+15%/30%/50%/75%)'
                     },
-                    icon: '⭐',
+                    icon: '',
                     path: '/collection'
                 },
                 {
@@ -103,7 +103,7 @@ const NW_CONFIG = {
                         zh: '燃燒不需要的卡片換取神聖原木。稀有度和星級越高 = 原木越多！',
                         th: 'เผาการ์ดที่ไม่ต้องการเพื่อรับ Sacred Logs ความหายากและดาวสูงขึ้น = ท่อนไม้มากขึ้น!'
                     },
-                    icon: '🔥',
+                    icon: '',
                     path: '/collection'
                 },
                 {
@@ -114,7 +114,7 @@ const NW_CONFIG = {
                         zh: '新引導加載器、統一存儲系統、集中錯誤處理',
                         th: 'บูตโหลดเดอร์ใหม่ ระบบจัดเก็บรวม การจัดการข้อผิดพลาดส่วนกลาง'
                     },
-                    icon: '🏗️'
+                    icon: ''
                 },
                 {
                     category: 'fix',
@@ -124,7 +124,7 @@ const NW_CONFIG = {
                         zh: '修復AI指南顯示 "ui.title" 而不是翻譯文字',
                         th: 'แก้ไข AI Guide แสดง "ui.title" แทนข้อความแปล'
                     },
-                    icon: '🔧'
+                    icon: ''
                 },
                 {
                     category: 'fix',
@@ -134,7 +134,7 @@ const NW_CONFIG = {
                         zh: '添加了吐司通知和已領取獎勵的禁用狀態',
                         th: 'เพิ่มการแจ้งเตือนและสถานะปิดสำหรับรางวัลที่รับแล้ว'
                     },
-                    icon: '✅'
+                    icon: ''
                 }
             ]
         },
@@ -156,7 +156,7 @@ const NW_CONFIG = {
                         zh: '告你的隊友！10種罪名、郵件判決書、3%上訴成功率',
                         th: 'ฟ้องเพื่อนกิลด์! 10 หมวดหมู่อาชญากรรม อีเมลคำตัดสิน อัตราอุทธรณ์สำเร็จ 3%'
                     },
-                    icon: '⚖️',
+                    icon: '',
                     path: '/court'
                 },
                 {
@@ -167,7 +167,7 @@ const NW_CONFIG = {
                         zh: 'AI治療師NumbahWan醫生診斷你的遊戲創傷',
                         th: 'นักบำบัด AI Dr. NumbahWan วินิจฉัยบาดแผลทางเกมของคุณ'
                     },
-                    icon: '🛋️',
+                    icon: '',
                     path: '/therapy'
                 },
                 {
@@ -178,7 +178,7 @@ const NW_CONFIG = {
                         zh: '8個荒謬職位，100%拒絕率保證！',
                         th: '8 ตำแหน่งงานไร้สาระ รับประกันอัตราปฏิเสธ 100%!'
                     },
-                    icon: '👔',
+                    icon: '',
                     path: '/hr'
                 },
                 {
@@ -189,7 +189,7 @@ const NW_CONFIG = {
                         zh: '軟木板證據系統，連接線索，揭露公會秘密',
                         th: 'ระบบหลักฐานกระดานคอร์ก เชื่อมจุด เปิดโปงความลับกิลด์'
                     },
-                    icon: '📌',
+                    icon: '',
                     path: '/conspiracy'
                 },
                 {
@@ -200,7 +200,7 @@ const NW_CONFIG = {
                         zh: '中央配置現在可在整個網站傳播更新',
                         th: 'การกำหนดค่าส่วนกลางตอนนี้เผยแพร่การเปลี่ยนแปลงทั่วทั้งเว็บไซต์'
                     },
-                    icon: '🔄'
+                    icon: ''
                 },
                 {
                     category: 'balance',
@@ -210,7 +210,7 @@ const NW_CONFIG = {
                         zh: '系統現在監控並自動調整定價以防止通貨膨脹',
                         th: 'ระบบตอนนี้ตรวจสอบและปรับราคาอัตโนมัติเพื่อป้องกันเงินเฟ้อ'
                     },
-                    icon: '📊'
+                    icon: ''
                 }
             ]
         },
@@ -228,25 +228,25 @@ const NW_CONFIG = {
                     category: 'new',
                     title: { en: 'Unified Wallet System', zh: '統一錢包系統', th: 'ระบบกระเป๋าเงินรวม' },
                     desc: { en: 'One wallet across all pages', zh: '所有頁面共用錢包', th: 'กระเป๋าเงินเดียวทุกหน้า' },
-                    icon: '💰'
+                    icon: ''
                 },
                 {
                     category: 'new',
                     title: { en: 'Daily Login Rewards', zh: '每日登入獎勵', th: 'รางวัลล็อกอินรายวัน' },
                     desc: { en: '7-day reward cycle with Sacred Log on Day 7', zh: '7天獎勵週期，第7天送神聖原木', th: 'รอบรางวัล 7 วัน มี Sacred Log วันที่ 7' },
-                    icon: '📅'
+                    icon: ''
                 },
                 {
                     category: 'new',
                     title: { en: 'Achievement System', zh: '成就系統', th: 'ระบบความสำเร็จ' },
                     desc: { en: '50+ achievements to unlock', zh: '50+個成就等你解鎖', th: '50+ ความสำเร็จให้ปลดล็อก' },
-                    icon: '🏆'
+                    icon: ''
                 },
                 {
                     category: 'feature',
                     title: { en: 'GM Testing Mode', zh: 'GM測試模式', th: 'โหมดทดสอบ GM' },
                     desc: { en: 'Infinite resources for testing', zh: '無限資源供測試', th: 'ทรัพยากรไม่จำกัดสำหรับการทดสอบ' },
-                    icon: '👑'
+                    icon: ''
                 }
             ]
         },
@@ -264,19 +264,19 @@ const NW_CONFIG = {
                     category: 'new',
                     title: { en: 'AI Chat Guide', zh: 'AI聊天嚮導', th: 'ไกด์แชท AI' },
                     desc: { en: 'Floating assistant on all pages', zh: '所有頁面的浮動助手', th: 'ผู้ช่วยลอยตัวในทุกหน้า' },
-                    icon: '🤖'
+                    icon: ''
                 },
                 {
                     category: 'new',
                     title: { en: 'Sound Effects', zh: '音效系統', th: 'ระบบเสียง' },
                     desc: { en: 'Immersive audio feedback', zh: '沉浸式音效回饋', th: 'เสียงตอบรับแบบดื่มด่ำ' },
-                    icon: '🔊'
+                    icon: ''
                 },
                 {
                     category: 'feature',
                     title: { en: 'i18n Support', zh: '多語言支援', th: 'รองรับหลายภาษา' },
                     desc: { en: 'EN/ZH/TH across all pages', zh: '所有頁面支援英/中/泰', th: 'EN/ZH/TH ทุกหน้า' },
-                    icon: '🌐'
+                    icon: ''
                 }
             ]
         },
@@ -294,7 +294,7 @@ const NW_CONFIG = {
                     category: 'new',
                     title: { en: 'NumbahWan Guild Website', zh: 'NumbahWan公會網站', th: 'เว็บไซต์กิลด์ NumbahWan' },
                     desc: { en: 'The beginning of something beautiful', zh: '美好的開始', th: 'จุดเริ่มต้นของสิ่งที่สวยงาม' },
-                    icon: '🚀'
+                    icon: ''
                 }
             ]
         }
@@ -305,27 +305,27 @@ const NW_CONFIG = {
     // ═══════════════════════════════════════════════════════════════
     pages: {
         // Core pages
-        home: { path: '/', emoji: '🏠', category: 'core',
+        home: { path: '/', emoji: '', category: 'core',
             name: { en: 'Home', zh: '首頁', th: 'หน้าแรก' },
             desc: { en: 'Guild headquarters', zh: '公會總部', th: 'สำนักงานใหญ่กิลด์' },
             keywords: { en: ['home', 'main', 'start'], zh: ['首頁', '主頁'], th: ['หน้าแรก', 'บ้าน'] }
         },
-        academy: { path: '/academy', emoji: '🏫', category: 'core',
+        academy: { path: '/academy', emoji: '', category: 'core',
             name: { en: 'Academy', zh: '學院', th: 'สถาบัน' },
             desc: { en: 'Training grounds & schedule', zh: '訓練場和行程', th: 'สนามฝึกและตาราง' },
             keywords: { en: ['academy', 'train', 'schedule'], zh: ['學院', '訓練'], th: ['สถาบัน', 'ฝึก'] }
         },
-        exchange: { path: '/exchange', emoji: '📈', category: 'economy',
+        exchange: { path: '/exchange', emoji: '', category: 'economy',
             name: { en: 'NWX Exchange', zh: 'NWX交易所', th: 'NWX Exchange' },
             desc: { en: 'Parody stock market', zh: '惡搞股市', th: 'ตลาดหุ้นล้อเลียน' },
             keywords: { en: ['exchange', 'stock', 'trade'], zh: ['交易', '股票'], th: ['แลกเปลี่ยน', 'หุ้น'] }
         },
-        museum: { path: '/museum', emoji: '🏛️', category: 'core',
+        museum: { path: '/museum', emoji: '', category: 'core',
             name: { en: 'Museum', zh: '博物館', th: 'พิพิธภัณฑ์' },
             desc: { en: 'Guild history & artifacts', zh: '公會歷史與文物', th: 'ประวัติและสิ่งประดิษฐ์' },
             keywords: { en: ['museum', 'history', 'artifact'], zh: ['博物館', '歷史'], th: ['พิพิธภัณฑ์'] }
         },
-        vault: { path: '/vault', emoji: '🔐', category: 'core',
+        vault: { path: '/vault', emoji: '', category: 'core',
             name: { en: 'Vault', zh: '金庫', th: 'ห้องนิรภัย' },
             desc: { en: 'Treasure storage', zh: '寶藏儲存', th: 'เก็บสมบัติ' },
             keywords: { en: ['vault', 'treasure', 'secure'], zh: ['金庫', '寶藏'], th: ['ห้องนิรภัย'] }
@@ -335,99 +335,99 @@ const NW_CONFIG = {
             desc: { en: 'Collect & battle cards', zh: '收集並戰鬥卡牌', th: 'สะสมและต่อสู้การ์ด' },
             keywords: { en: ['card', 'tcg', 'battle'], zh: ['卡', '遊戲'], th: ['การ์ด', 'เกม'] }
         },
-        market: { path: '/market', emoji: '🛒', category: 'economy',
+        market: { path: '/market', emoji: '', category: 'economy',
             name: { en: 'Market', zh: '市場', th: 'ตลาด' },
             desc: { en: 'Buy & sell cards', zh: '買賣卡牌', th: 'ซื้อขายการ์ด' },
             keywords: { en: ['market', 'buy', 'sell'], zh: ['市場', '買', '賣'], th: ['ตลาด', 'ซื้อ', 'ขาย'] }
         },
-        forge: { path: '/forge', emoji: '⚒️', category: 'game',
+        forge: { path: '/forge', emoji: '', category: 'game',
             name: { en: 'Forge', zh: '鍛造', th: 'โรงตีเหล็ก' },
             desc: { en: 'Pull cards with Sacred Logs', zh: '用神聖原木抽卡', th: 'สุ่มการ์ดด้วย Sacred Logs' },
             keywords: { en: ['forge', 'craft', 'pull'], zh: ['鍛造', '抽'], th: ['โรงตี', 'สุ่ม'] }
         },
-        arcade: { path: '/arcade', emoji: '🕹️', category: 'game',
+        arcade: { path: '/arcade', emoji: '', category: 'game',
             name: { en: 'Arcade', zh: '遊樂場', th: 'อาร์เคด' },
             desc: { en: 'Mini-games for currencies', zh: '小遊戲賺貨幣', th: 'มินิเกมรับสกุลเงิน' },
             keywords: { en: ['arcade', 'game', 'play'], zh: ['遊樂', '玩'], th: ['อาร์เคด', 'เล่น'] }
         },
-        merch: { path: '/merch', emoji: '👕', category: 'economy',
+        merch: { path: '/merch', emoji: '', category: 'economy',
             name: { en: 'Merch', zh: '商品', th: 'สินค้า' },
             desc: { en: 'Guild merchandise', zh: '公會周邊', th: 'สินค้ากิลด์' },
             keywords: { en: ['merch', 'shop', 'store'], zh: ['商品', '周邊'], th: ['สินค้า'] }
         },
-        wallet: { path: '/wallet', emoji: '💰', category: 'economy',
+        wallet: { path: '/wallet', emoji: '', category: 'economy',
             name: { en: 'Wallet', zh: '錢包', th: 'กระเป๋าเงิน' },
             desc: { en: 'Manage currencies', zh: '管理貨幣', th: 'จัดการสกุลเงิน' },
             keywords: { en: ['wallet', 'money', 'currency'], zh: ['錢包', '貨幣'], th: ['กระเป๋า'] }
         },
-        memes: { path: '/memes', emoji: '😂', category: 'fun',
+        memes: { path: '/memes', emoji: '', category: 'fun',
             name: { en: 'Memes', zh: '迷因', th: 'มีม' },
             desc: { en: 'Guild meme collection', zh: '公會迷因', th: 'คอลเลกชันมีม' },
             keywords: { en: ['meme', 'funny'], zh: ['迷因'], th: ['มีม'] }
         },
-        fortune: { path: '/fortune', emoji: '🔮', category: 'fun',
+        fortune: { path: '/fortune', emoji: '', category: 'fun',
             name: { en: 'Fortune', zh: '占卜', th: 'ดวง' },
             desc: { en: 'Daily fortune readings', zh: '每日運勢', th: 'ดูดวงประจำวัน' },
             keywords: { en: ['fortune', 'luck'], zh: ['占卜', '運勢'], th: ['ดวง'] }
         },
-        apply: { path: '/apply', emoji: '📝', category: 'core',
+        apply: { path: '/apply', emoji: '', category: 'core',
             name: { en: 'Apply', zh: '申請', th: 'สมัคร' },
             desc: { en: 'Join the guild', zh: '加入公會', th: 'เข้าร่วมกิลด์' },
             keywords: { en: ['apply', 'join'], zh: ['申請', '加入'], th: ['สมัคร'] }
         },
         // Absurdist pages
-        court: { path: '/court', emoji: '⚖️', category: 'absurdist',
+        court: { path: '/court', emoji: '', category: 'absurdist',
             name: { en: 'Supreme Court', zh: '最高法院', th: 'ศาลสูงสุด' },
             desc: { en: 'File complaints, deliver verdicts', zh: '提交訴狀、宣判', th: 'ยื่นคำร้อง ตัดสิน' },
             keywords: { en: ['court', 'sue', 'complaint', 'verdict', 'judge'], zh: ['法院', '訴', '告', '判'], th: ['ศาล', 'ฟ้อง', 'ตัดสิน'] },
             tips: {
-                en: ['File complaints for 5◆, win to earn 25●!', 'Appeal costs 10◆ with 3% success rate 😈'],
-                zh: ['提交訴狀5◆，勝訴獲25●！', '上訴需10◆，只有3%成功率 😈'],
-                th: ['ยื่นคำร้อง 5◆ ชนะได้ 25●!', 'อุทธรณ์ 10◆ สำเร็จแค่ 3% 😈']
+                en: ['File complaints for 5, win to earn 25!', 'Appeal costs 10with 3% success rate '],
+                zh: ['提交訴狀5，勝訴獲25！', '上訴需10，只有3%成功率 '],
+                th: ['ยื่นคำร้อง 5ชนะได้ 25!', 'อุทธรณ์ 10สำเร็จแค่ 3% ']
             }
         },
-        therapy: { path: '/therapy', emoji: '🛋️', category: 'absurdist',
+        therapy: { path: '/therapy', emoji: '', category: 'absurdist',
             name: { en: 'Guild Therapy', zh: '公會療程', th: 'การบำบัดกิลด์' },
             desc: { en: 'AI therapist for gaming trauma', zh: 'AI治療師幫助遊戲創傷', th: 'นักบำบัด AI สำหรับบาดแผลเกม' },
             keywords: { en: ['therapy', 'therapist', 'mental', 'counsel'], zh: ['療', '心理', '治療'], th: ['บำบัด', 'จิต', 'ปรึกษา'] },
             tips: {
-                en: ['Complete session to earn 3◆!', 'Get diagnosed with Gacha Pull Depression 🎰'],
-                zh: ['完成療程獲3◆！', '被診斷為抽卡憂鬱症 🎰'],
-                th: ['ทำเซสชันเสร็จรับ 3◆!', 'วินิจฉัยว่าเป็น Gacha Pull Depression 🎰']
+                en: ['Complete session to earn 3!', 'Get diagnosed with Gacha Pull Depression '],
+                zh: ['完成療程獲3！', '被診斷為抽卡憂鬱症 '],
+                th: ['ทำเซสชันเสร็จรับ 3!', 'วินิจฉัยว่าเป็น Gacha Pull Depression ']
             }
         },
-        hr: { path: '/hr', emoji: '👔', category: 'absurdist',
+        hr: { path: '/hr', emoji: '', category: 'absurdist',
             name: { en: 'HR Department', zh: '人力資源部', th: 'ฝ่ายบุคคล' },
             desc: { en: 'Absurd positions, 100% rejection', zh: '荒謬職位，100%被拒', th: 'ตำแหน่งไร้สาระ ปฏิเสธ 100%' },
             keywords: { en: ['hr', 'job', 'hire', 'position', 'banana officer'], zh: ['人力', '工作', '職位'], th: ['บุคคล', 'งาน', 'สมัคร'] },
             tips: {
-                en: ['Apply for Chief Banana Officer! 🍌', 'Application 5◆, consolation: 10●'],
-                zh: ['申請首席香蕉官！🍌', '申請費5◆，安慰獎：10●'],
-                th: ['สมัคร Chief Banana Officer! 🍌', 'สมัคร 5◆ ปลอบใจ: 10●']
+                en: ['Apply for Chief Banana Officer! ', 'Application 5, consolation: 10'],
+                zh: ['申請首席香蕉官！', '申請費5，安慰獎：10'],
+                th: ['สมัคร Chief Banana Officer! ', 'สมัคร 5ปลอบใจ: 10']
             }
         },
-        conspiracy: { path: '/conspiracy', emoji: '📌', category: 'absurdist',
+        conspiracy: { path: '/conspiracy', emoji: '', category: 'absurdist',
             name: { en: 'Conspiracy Board', zh: '陰謀論板', th: 'บอร์ดสมคบคิด' },
             desc: { en: 'Connect dots, uncover secrets', zh: '連接線索、揭露秘密', th: 'เชื่อมจุด เปิดโปงความลับ' },
             keywords: { en: ['conspiracy', 'theory', 'secret', 'illuminati', 'evidence'], zh: ['陰謀', '秘密', '理論'], th: ['สมคบ', 'ความลับ', 'ทฤษฎี'] },
             tips: {
-                en: ['Drag evidence to connect dots!', 'Submit theories 2◆, truth seekers earn 15●'],
-                zh: ['拖動證據連接線索！', '提交理論2◆，揭密者獲15●'],
-                th: ['ลากหลักฐานเชื่อมจุด!', 'ส่งทฤษฎี 2◆ นักแสวงหาความจริงได้ 15●']
+                en: ['Drag evidence to connect dots!', 'Submit theories 2, truth seekers earn 15'],
+                zh: ['拖動證據連接線索！', '提交理論2，揭密者獲15'],
+                th: ['ลากหลักฐานเชื่อมจุด!', 'ส่งทฤษฎี 2นักแสวงหาความจริงได้ 15']
             }
         },
-        updates: { path: '/updates', emoji: '📋', category: 'meta',
+        updates: { path: '/updates', emoji: '', category: 'meta',
             name: { en: 'Patch Notes', zh: '更新日誌', th: 'บันทึกแพทช์' },
             desc: { en: 'Version history & changes', zh: '版本歷史和更改', th: 'ประวัติเวอร์ชันและการเปลี่ยนแปลง' },
             keywords: { en: ['updates', 'patch', 'notes', 'changelog'], zh: ['更新', '日誌', '版本'], th: ['อัปเดต', 'แพทช์', 'บันทึก'] }
         },
-        about: { path: '/about', emoji: '👥', category: 'meta',
+        about: { path: '/about', emoji: '', category: 'meta',
             name: { en: 'About Us', zh: '關於我們', th: 'เกี่ยวกับเรา' },
             desc: { en: 'Meet the team & guild lore', zh: '認識團隊和公會傳說', th: 'พบทีมและตำนานกิลด์' },
             keywords: { en: ['about', 'team', 'lore', 'story'], zh: ['關於', '團隊', '故事'], th: ['เกี่ยวกับ', 'ทีม', 'เรื่องราว'] }
         },
         // Avatar & Creative Tools
-        avatarStudio: { path: '/avatar-studio', emoji: '🎨', category: 'creative',
+        avatarStudio: { path: '/avatar-studio', emoji: '', category: 'creative',
             name: { en: 'Avatar Studio', zh: '頭像工作室', th: 'สตูดิโออวาตาร์' },
             desc: { en: 'Generate AI maple avatars from your screenshots', zh: '從截圖生成AI楓之谷頭像', th: 'สร้างอวาตาร์เมเปิ้ลจากภาพหน้าจอของคุณ' },
             keywords: { en: ['avatar', 'studio', 'photo', 'generate', 'ai', 'pose', 'screenshot'], zh: ['頭像', '工作室', '照片', '生成'], th: ['อวาตาร์', 'สตูดิโอ', 'รูป', 'สร้าง'] },
@@ -437,14 +437,14 @@ const NW_CONFIG = {
                 th: ['อัปโหลดภาพหน้าจอ MapleStory ที่ชัดเจน!', '8 โพส: ฮีโร่, น่ารัก, คูล, ชนะ, เวทมนตร์, แอคชั่น, AFK, ปาร์ตี้', 'ผลลัพธ์ดีที่สุด: เต็มตัว ตรงกลาง พื้นหลังสว่าง', 'ดาวน์โหลด HD PNG หรือแชร์ไป Discord!']
             }
         },
-        confessional: { path: '/confessional', emoji: '🎭', category: 'fun',
+        confessional: { path: '/confessional', emoji: '', category: 'fun',
             name: { en: 'Confessional', zh: '告解室', th: 'ห้องสารภาพ' },
             desc: { en: 'Anonymous guild confessions', zh: '匿名公會告解', th: 'คำสารภาพกิลด์แบบไม่ระบุตัวตน' },
             keywords: { en: ['confess', 'confession', 'anonymous', 'secret'], zh: ['告解', '匿名', '秘密'], th: ['สารภาพ', 'ไม่ระบุตัวตน', 'ความลับ'] },
             tips: {
-                en: ['Submit anonymous confessions!', 'Vote on the juiciest guild secrets 👀', 'All confessions are anonymous... or are they? 😈'],
-                zh: ['提交匿名告解！', '為最勁爆的公會秘密投票 👀', '所有告解都是匿名的...還是？😈'],
-                th: ['ส่งคำสารภาพแบบไม่ระบุตัวตน!', 'โหวตความลับกิลด์ที่น่าสนใจที่สุด 👀', 'คำสารภาพทั้งหมดไม่ระบุตัวตน... หรือเปล่า? 😈']
+                en: ['Submit anonymous confessions!', 'Vote on the juiciest guild secrets ', 'All confessions are anonymous... or are they? '],
+                zh: ['提交匿名告解！', '為最勁爆的公會秘密投票 ', '所有告解都是匿名的...還是？'],
+                th: ['ส่งคำสารภาพแบบไม่ระบุตัวตน!', 'โหวตความลับกิลด์ที่น่าสนใจที่สุด ', 'คำสารภาพทั้งหมดไม่ระบุตัวตน... หรือเปล่า? ']
             }
         }
     },
@@ -648,7 +648,7 @@ const NW_CONFIG = {
                     zh: '頒發給最有奉獻精神的公會成員。目前失蹤。歸還獎勵：1000鑽石。',
                     th: 'มอบให้สมาชิกกิลด์ที่ทุ่มเทที่สุด ปัจจุบันหายไป รางวัลคืน: 1000 เพชร'
                 },
-                emoji: '🍌'
+                emoji: ''
             }
         ]
     },

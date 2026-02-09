@@ -1,10 +1,5 @@
 /**
  * Health & Debug Routes
- * Split from monolithic index.tsx for maintainability
- * 
- * AUTO-LEARN PATTERN: route-modularization
- * Improves: code_quality, maintainability
- * Impact: Reduces cognitive load, enables parallel development
  */
 import { Hono } from 'hono'
 
@@ -46,7 +41,7 @@ router.get('/debug', (c) => {
       type: 'modular-routes',
       modules: [
         'health', 'data', 'database', 'market', 'cards',
-        'wallet', 'market-automation', 'auto-learn',
+        'wallet', 'market-automation',
         'gamification', 'card-bridge', 'purchase',
         'events-merch', 'confessional', 'physical',
         'avatar', 'guide', 'translate', 'gm', 'auction'

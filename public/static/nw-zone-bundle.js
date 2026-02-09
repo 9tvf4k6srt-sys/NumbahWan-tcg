@@ -9,6 +9,7 @@
  * - NW_ZONE: Flow state and variable rewards
  * - NW_LOOPS: Seamless action loops
  * - NW_FRICTION_FREE: Friction elimination
+ * - NW_HOOKS: Engagement hooks (pity whisper, comeback, set radar, streaks, momentum)
  */
 
 (function() {
@@ -17,7 +18,8 @@
     const ZONE_SCRIPTS = [
         '/static/nw-zone.js',
         '/static/nw-seamless-loops.js',
-        '/static/nw-friction-free.js'
+        '/static/nw-friction-free.js',
+        '/static/nw-engagement-hooks.js'
     ];
     
     // Load scripts in sequence
@@ -25,7 +27,7 @@
     
     function loadNext() {
         if (loadedCount >= ZONE_SCRIPTS.length) {
-            console.log('🎮 NW ZONE BUNDLE - All systems active');
+            console.log('NW ZONE BUNDLE - All systems active');
             document.dispatchEvent(new CustomEvent('nw-zone-ready'));
             return;
         }

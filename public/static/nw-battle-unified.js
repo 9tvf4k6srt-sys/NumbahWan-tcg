@@ -105,16 +105,16 @@
         streaks: {
             bonusPerWin: 0.05,    // +5% per consecutive win
             maxBonus: 0.50,       // Cap at +50% bonus
-            streakLossMessage: "💔 Streak lost! You were so close to {next}...",
+            streakLossMessage: "Streak lost! You were so close to {next}...",
         },
         
         // Near-miss messages (triggers retry behavior)
         nearMissMessages: [
-            "😱 SO CLOSE! Just 2% away from victory!",
-            "🔥 Almost had it! Your luck is building...",
-            "⚡ Near miss! Next one's yours!",
-            "💫 The cards almost aligned! Try again?",
-            "🎯 Hair's breadth away! Fortune favors the persistent!",
+            "SO CLOSE! Just 2% away from victory!",
+            "Almost had it! Your luck is building...",
+            "Near miss! Next one's yours!",
+            "The cards almost aligned! Try again?",
+            "Hair's breadth away! Fortune favors the persistent!",
         ],
     };
 
@@ -185,9 +185,9 @@
             const legendary = this.thresholds.legendary;
             if (pullCount >= legendary.soft) {
                 const remaining = legendary.hard - pullCount;
-                if (remaining <= 5) return `🔥 LEGENDARY GUARANTEED IN ${remaining} PULLS!`;
-                if (remaining <= 15) return `⚡ Pity building... ${remaining} pulls to legendary!`;
-                return `✨ Luck increasing... ${remaining} to guaranteed legendary`;
+                if (remaining <= 5) return `LEGENDARY GUARANTEED IN ${remaining} PULLS!`;
+                if (remaining <= 15) return `Pity building... ${remaining} pulls to legendary!`;
+                return `Luck increasing... ${remaining} to guaranteed legendary`;
             }
             return null;
         }
@@ -303,12 +303,12 @@
                     <span class="text">87% - Almost complete!</span>
                 </div>
                 <div class="progress-bar" id="streakProgress">
-                    <span class="label">🔥 Win Streak</span>
+                    <span class="label">Win Streak</span>
                     <div class="bar streak"><div class="fill" style="width: 0%"></div></div>
                     <span class="text" id="streakText">Start your streak!</span>
                 </div>
                 <div class="progress-bar pity" id="pityProgress">
-                    <span class="label">✨ Luck Building</span>
+                    <span class="label">Luck Building</span>
                     <div class="bar pity"><div class="fill" style="width: 0%"></div></div>
                     <span class="text" id="pityText">Pity: 0/80</span>
                 </div>
@@ -316,7 +316,7 @@
             
             <!-- Open Loop Teaser (Information Gap) -->
             <div class="mystery-teaser" id="mysteryTeaser">
-                <span class="mystery-icon">❓</span>
+                <span class="mystery-icon"></span>
                 <span class="mystery-text">??? Card unlocks after 5 more wins...</span>
             </div>
             
@@ -366,11 +366,11 @@
                     <button class="diff-btn easy" data-diff="easy">Easy (1.3x)</button>
                     <button class="diff-btn medium active" data-diff="medium">Medium (2x)</button>
                     <button class="diff-btn hard" data-diff="hard">Hard (3.5x)</button>
-                    <button class="diff-btn boss" data-diff="boss">👹 Boss (8x)</button>
+                    <button class="diff-btn boss" data-diff="boss">Boss (8x)</button>
                 </div>
                 
                 <button class="battle-btn" id="battleBtn" onclick="startBattle()">
-                    ⚔️ BATTLE!
+                    BATTLE!
                 </button>
             </div>
             
@@ -447,7 +447,7 @@
         await delay(800);
         statusEl.textContent = '1...';
         await delay(800);
-        statusEl.textContent = '⚔️ FIGHT!';
+        statusEl.textContent = 'FIGHT!';
         
         // Simulate battle duration
         await delay(mode.duration);
@@ -463,12 +463,12 @@
         overlay?.classList.remove('hidden');
         
         if (result.won) {
-            titleEl.textContent = '🎉 VICTORY!';
+            titleEl.textContent = 'VICTORY!';
             titleEl.className = 'result-title victory';
             statsEl.innerHTML = `
                 <div>Your Luck: ${result.playerLuck}%</div>
                 <div>Roll: ${result.roll} vs ${result.threshold}</div>
-                <div>Streak: 🔥 ${gameState.streak}</div>
+                <div>Streak: ${gameState.streak}</div>
             `;
             rewardEl.innerHTML = `
                 <div class="reward-amount">+${result.payout} NWG</div>
@@ -477,7 +477,7 @@
         } else {
             if (result.isNearMiss) {
                 // Near-miss psychology!
-                titleEl.textContent = '😱 SO CLOSE!';
+                titleEl.textContent = 'SO CLOSE!';
                 const nearMissMsg = BATTLE_CONFIG.nearMissMessages[
                     Math.floor(Math.random() * BATTLE_CONFIG.nearMissMessages.length)
                 ];
@@ -487,7 +487,7 @@
                     <div>You needed just ${result.threshold - result.roll}% more luck!</div>
                 `;
             } else {
-                titleEl.textContent = '💔 DEFEAT';
+                titleEl.textContent = 'DEFEAT';
                 statsEl.innerHTML = `
                     <div>Your Luck: ${result.playerLuck}%</div>
                     <div>Roll: ${result.roll} vs ${result.threshold}</div>
@@ -496,7 +496,7 @@
             titleEl.className = 'result-title defeat';
             rewardEl.innerHTML = `
                 <div class="loss-amount">-${result.loss} NWG</div>
-                <div class="pity-notice">✨ Pity: ${gameState.pityCounter}/${PITY_SYSTEM.thresholds.legendary.hard}</div>
+                <div class="pity-notice">Pity: ${gameState.pityCounter}/${PITY_SYSTEM.thresholds.legendary.hard}</div>
             `;
         }
         
@@ -540,7 +540,7 @@
                 textEl.textContent = 'Start your streak!';
             } else {
                 const bonus = Math.min(gameState.streak * 5, 25);
-                textEl.textContent = `🔥 ${gameState.streak} wins (+${bonus}% luck)`;
+                textEl.textContent = `${gameState.streak} wins (+${bonus}% luck)`;
             }
         }
         
@@ -597,8 +597,8 @@
                 <div class="card-rarity" style="color: ${rarity.color}">${card.rarity.toUpperCase()}</div>
                 <div class="card-nwg">${rarity.nwg} NWG</div>
             </div>
-            ${card.staked ? '<div class="staked-badge">📌 STAKED</div>' : ''}
-            ${card.foil ? '<div class="foil-badge">✨ FOIL</div>' : ''}
+            ${card.staked ? '<div class="staked-badge">STAKED</div>' : ''}
+            ${card.foil ? '<div class="foil-badge">FOIL</div>' : ''}
         </div>
         `;
     }

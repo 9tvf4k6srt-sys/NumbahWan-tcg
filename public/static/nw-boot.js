@@ -208,7 +208,7 @@ const NW_BOOT = {
         const status = this.status();
         console.table(Object.entries(status.modules).map(([name, info]) => ({
             Module: name,
-            Loaded: info.loaded ? '✓' : '✗',
+            Loaded: info.loaded ? '' : '',
             Dependencies: info.deps.join(', ') || 'none'
         })));
     }

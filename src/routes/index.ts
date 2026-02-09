@@ -21,7 +21,6 @@ import adminCardsRoutes from './admin-cards'
 import walletEconomyRoutes from './wallet-economy'
 import auctionRoutes from './auction'
 import marketPricesRoutes from './market-prices'
-import autoLearnRoutes from './auto-learn-routes'
 import gamificationRoutes from './gamification-routes'
 import cardBridgeRoutes from './card-bridge-routes'
 import purchaseRoutes from './purchase'
@@ -37,6 +36,7 @@ import guideRoutes from './guide'
 import translateRoutes from './translate'
 import gmRoutes from './gm'
 import cipherRoutes from './cipher'
+import oracleRoutes from './oracle'
 
 export {
   healthRoutes,
@@ -50,7 +50,6 @@ export {
   walletEconomyRoutes,
   auctionRoutes,
   marketPricesRoutes,
-  autoLearnRoutes,
   gamificationRoutes,
   cardBridgeRoutes,
   purchaseRoutes,
@@ -65,5 +64,6 @@ export {
   guideRoutes,
   translateRoutes,
   gmRoutes,
-  cipherRoutes
+  cipherRoutes,
+  oracleRoutes
 }
