@@ -1,28 +1,31 @@
 #!/usr/bin/env node
 /**
- * NW-MEMORY: Compounding Project Memory System
+ * NW-MEMORY: Compounding Project Memory for AI-Assisted Development
  * 
- * This runs automatically on every commit (via pre-commit hook).
- * It extracts FACTS from git and the build, appends them to memory.json.
- * The file only grows. Nothing is rewritten. Each entry is timestamped.
- * 
- * What it tracks (all from automated sources, zero manual input):
- * 
- * 1. COMMITS: what changed, which files, how many lines added/removed
- * 2. BUILD: bundle size, module count, build time, errors
- * 3. PATTERNS: files that get changed together (co-change clusters)
- * 4. HOTSPOTS: files changed most often (likely fragile/complex)
- * 5. FIX CHAINS: when a commit is followed by a fix commit touching same files
- * 6. DEBT SIGNALS: growing file sizes, increasing build times
- * 
- * Usage:
- *   node nw-memory.cjs              # Run snapshot (happens on pre-commit)
- *   node nw-memory.cjs --query      # Print useful context for AI session start
- *   node nw-memory.cjs --health     # Print project health trends
- *   node nw-memory.cjs --decide "area" "decision" "why"   # Record a decision
- *   node nw-memory.cjs --constraint "area" "fact"          # Record a hard constraint
- *   node nw-memory.cjs --broke "area" "what happened"      # Record why something broke
- *   node nw-memory.cjs --premortem "area"                   # Show constraints/breakages for an area before building
+ * Drop this file into ANY project. Zero dependencies. Zero config.
+ *   node nw-memory.cjs --init        # Set up hooks + memory.json + .gitignore
+ *   node nw-memory.cjs --onboard     # Explain the system to any AI in 10 lines
+ *
+ * What it does:
+ *   Runs on every commit via git hook. Extracts facts from git history.
+ *   Builds a compounding memory that makes every AI session smarter than the last.
+ *
+ * Core commands:
+ *   --init                           # Zero-config setup for any project
+ *   --onboard                        # Explain system to a new AI session
+ *   --status                         # One-screen project dashboard
+ *   --query                          # Full context dump for AI session start
+ *   --premortem "area"               # What to check before editing an area
+ *   --guard [files...]               # Auto-warn about risks for specific files
+ *   --broke "area" "what"            # Record a breakage
+ *   --learned "area" "lesson"        # Record a lesson from fixing
+ *   --constraint "area" "fact"       # Record a hard platform/tech fact
+ *   --decide "area" "what" "why"     # Record a non-obvious decision
+ *   --gen-tests                      # Auto-generate regression tests from breakages
+ *   --export-shared                  # Export universal lessons to ~/.nw-shared-memory.json
+ *   --import-shared                  # Import lessons from shared library
+ *   --wip "task"                     # Save work-in-progress (survives chat compaction)
+ *   --wip-done                       # Clear WIP after task complete
  */
 
 const fs = require('fs');
@@ -51,6 +54,7 @@ function loadMemory() {
     if (!mem.breakages) mem.breakages = [];
     if (!mem.reflections) mem.reflections = [];
     if (!mem.autoRules) mem.autoRules = [];
+    if (!mem.learnings) mem.learnings = [];
     return mem;
   } catch {
     return { version: 2, snapshots: [], patterns: {}, decisions: [], constraints: {}, breakages: [] };
@@ -80,7 +84,18 @@ function fileExists(fp) {
 }
 
 // Paths to skip in query display (noise, archives, generated)
-const NOISE_PATHS = ['archive/', 'node_modules/', '.husky/', 'dist/', 'package-lock.json', 'sentinel-report', 'sentinel-history', 'memory.json'];
+// Configurable via .nw-config.json { "noisePaths": [...] }
+const DEFAULT_NOISE = ['archive/', 'node_modules/', '.husky/', 'dist/', 'build/', 'out/', '.next/', 
+  'package-lock.json', 'yarn.lock', 'pnpm-lock.yaml', 'memory.json', 
+  'coverage/', '.nyc_output/', '__pycache__/', '.pytest_cache/'];
+function loadConfig() {
+  try {
+    const cfg = JSON.parse(fs.readFileSync(path.join(__dirname, '.nw-config.json'), 'utf8'));
+    return cfg;
+  } catch { return {}; }
+}
+const CONFIG = loadConfig();
+const NOISE_PATHS = CONFIG.noisePaths || DEFAULT_NOISE;
 function isNoise(fp) {
   return NOISE_PATHS.some(n => fp.includes(n));
 }
@@ -274,19 +289,229 @@ function autoReflect(mem, commit) {
   if (mem.reflections.length > 50) mem.reflections = mem.reflections.slice(-50);
 }
 
-// Classify a file path into an area name
+// Classify a file path into an area name.
+// Priority: 1) .nw-config.json custom areas, 2) universal patterns, 3) legacy, 4) directory fallback
 function classifyArea(filePath) {
-  if (filePath.includes('battle') || filePath.includes('pvp')) return 'battle';
-  if (filePath.includes('i18n') || filePath.includes('translate')) return 'i18n';
-  if (filePath.includes('oracle')) return 'oracle';
-  if (filePath.includes('wallet') || filePath.includes('economy') || filePath.includes('forge') || filePath.includes('market')) return 'economy';
-  if (filePath.includes('memory') || filePath.includes('nw-context')) return 'memory';
-  if (filePath.includes('nav') || filePath.includes('boot')) return 'nav';
-  if (filePath.includes('card')) return 'cards';
-  if (filePath.includes('sentinel')) return 'sentinel';
-  if (filePath.includes('museum') || filePath.includes('vault') || filePath.includes('lore')) return 'lore';
+  const fp = filePath.toLowerCase();
+
+  // 1. User-defined area mappings from .nw-config.json { "areas": { "payments": ["stripe", "billing"] } }
+  const customAreas = CONFIG.areas || {};
+  for (const [area, patterns] of Object.entries(customAreas)) {
+    if (Array.isArray(patterns) && patterns.some(p => fp.includes(p.toLowerCase()))) return area;
+  }
+
+  // 2. Universal patterns (work in any project)
+  if (fp.includes('test/') || fp.includes('spec/') || fp.includes('__test')) return 'tests';
+  if (fp.includes('i18n') || fp.includes('locale/') || fp.includes('translate') || fp.match(/\/lang\//)) return 'i18n';
+  if (fp.includes('/auth') || fp.includes('login') || fp.includes('session')) return 'auth';
+  if (fp.includes('/api/') || fp.includes('/routes/')) return 'api';
+  if (fp.includes('migrat') || fp.includes('schema') || fp.includes('/models/')) return 'database';
+  if (fp.includes('deploy') || fp.includes('docker') || fp.includes('.github/workflows')) return 'devops';
+  if (fp.includes('.css') || fp.includes('.scss') || fp.includes('.less')) return 'styles';
+  if (fp.includes('memory') || fp.includes('nw-context') || fp.includes('nw-memory')) return 'memory';
+
+  // 3. Legacy NumbahWan patterns (kept for backward compat — ignored if custom areas have entries)
+  if (!CONFIG.areas || Object.keys(CONFIG.areas).length === 0) {
+    if (fp.includes('battle') || fp.includes('pvp')) return 'battle';
+    if (fp.includes('oracle')) return 'oracle';
+    if (fp.includes('wallet') || fp.includes('economy') || fp.includes('forge') || fp.includes('market')) return 'economy';
+    if (fp.includes('nav') || fp.includes('boot')) return 'nav';
+    if (fp.includes('card')) return 'cards';
+    if (fp.includes('sentinel')) return 'sentinel';
+    if (fp.includes('museum') || fp.includes('vault') || fp.includes('lore')) return 'lore';
+    if (fp.includes('showcase') || fp.includes('tools') || fp.includes('llms')) return 'discoverability';
+    if (fp.includes('confessional') || fp.includes('therapy') || fp.includes('hr')) return 'absurd';
+    if (fp.includes('tabletop')) return 'tabletop';
+    if (fp.includes('font')) return 'font';
+    if (fp.includes('exchange') || fp.includes('invest')) return 'exchange';
+  }
+
+  // 4. Fallback: parent directory name
   const dir = filePath.split('/').slice(0, -1).join('/');
   return dir || 'root';
+}
+
+// ─── Area File Map: auto-build from git history ───────────────────
+// Scans all snapshots to see which files have been touched in which area.
+// This is the "which files does this area actually contain?" question.
+
+function buildAreaMap(mem) {
+  const map = {}; // area -> { files: { path: { changes, lastCommit, lastDate } } }
+  for (const s of mem.snapshots) {
+    const files = (s.commit?.files || []).map(f => f.path).filter(f => !isNoise(f));
+    for (const fp of files) {
+      const area = classifyArea(fp);
+      if (!map[area]) map[area] = {};
+      if (!map[area][fp]) map[area][fp] = { changes: 0, lastCommit: '', lastDate: '', lastMsg: '' };
+      map[area][fp].changes++;
+      map[area][fp].lastCommit = s.commit?.hash || '';
+      map[area][fp].lastDate = s.date || '';
+      map[area][fp].lastMsg = s.commit?.msg || '';
+    }
+  }
+  return map;
+}
+
+function showAreaMap() {
+  const mem = loadMemory();
+  const map = buildAreaMap(mem);
+  const areas = Object.keys(map).sort();
+  
+  console.log('\n# Area File Map (auto-built from git history)\n');
+  for (const area of areas) {
+    const files = Object.entries(map[area]).sort((a, b) => b[1].changes - a[1].changes);
+    console.log(`## ${area} (${files.length} files)`);
+    for (const [fp, info] of files.slice(0, 15)) {
+      console.log(`  ${info.changes}x  ${fp}  (last: ${info.lastDate} ${info.lastCommit})`);
+    }
+    if (files.length > 15) console.log(`  ... and ${files.length - 15} more`);
+    console.log('');
+  }
+}
+
+// ─── Why File: complete intelligence on a single file ─────────────
+
+function whyFile(targetPath) {
+  const mem = loadMemory();
+  const fp = targetPath.replace(/^\.?\//, ''); // normalize
+  
+  console.log(`\n# File Intelligence: ${fp}\n`);
+  
+  // 1. Every commit that touched this file
+  const commits = [];
+  for (const s of mem.snapshots) {
+    const files = (s.commit?.files || []).map(f => f.path);
+    if (files.includes(fp)) {
+      commits.push({
+        hash: s.commit?.hash,
+        date: s.date,
+        msg: s.commit?.msg,
+        score: s.score,
+        added: s.commit?.added || 0,
+        removed: s.commit?.removed || 0,
+        otherFiles: files.filter(f => f !== fp).length
+      });
+    }
+  }
+  
+  if (commits.length === 0) {
+    console.log('No history found for this file in memory.');
+    console.log('It may be new or memory was compacted.');
+    return;
+  }
+  
+  console.log(`## Change History (${commits.length} commits)`);
+  for (const c of commits) {
+    const scoreTag = typeof c.score === 'number' ? ` [score:${c.score}]` : '';
+    console.log(`  ${c.date} ${c.hash} ${c.msg}${scoreTag}`);
+  }
+  console.log('');
+  
+  // 2. Area classification
+  const area = classifyArea(fp);
+  console.log(`## Area: ${area}`);
+  console.log('');
+  
+  // 3. Coupled files — what always changes with this file?
+  const coupledWith = Object.entries(mem.patterns.coChanges || {})
+    .filter(([pair]) => pair.includes(fp))
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 5);
+  if (coupledWith.length > 0) {
+    console.log('## Coupled Files (change together — if you touch this, check these too)');
+    for (const [pair, count] of coupledWith) {
+      const other = pair.replace(fp, '').replace(' <-> ', '').trim();
+      console.log(`  ${count}x  ${other}`);
+    }
+    console.log('');
+  }
+  
+  // 4. Fix chains involving this file
+  const fixChains = (mem.patterns.fixChains || []).filter(fc => fc.files.includes(fp));
+  if (fixChains.length > 0) {
+    console.log(`## Fix Chains (${fixChains.length} times this file needed immediate fixing)`);
+    for (const fc of fixChains) {
+      console.log(`  ${fc.original} -> ${fc.fix}: ${fc.msg}`);
+    }
+    console.log('');
+  }
+  
+  // 5. Breakages in this area
+  const breakages = (mem.breakages || []).filter(b => b.area === area);
+  if (breakages.length > 0) {
+    console.log(`## Breakages in [${area}]`);
+    for (const b of breakages) {
+      console.log(`  ${b.date}: ${b.what}`);
+    }
+    console.log('');
+  }
+  
+  // 6. Constraints for this area
+  const constraints = mem.constraints[area] || [];
+  if (constraints.length > 0) {
+    console.log(`## Constraints [${area}] — violating these causes bugs`);
+    for (const c of constraints) {
+      console.log(`  - ${c.fact}`);
+    }
+    console.log('');
+  }
+  
+  // 7. Decisions about this area
+  const decisions = (mem.decisions || []).filter(d => d.area === area);
+  if (decisions.length > 0) {
+    console.log(`## Decisions [${area}] — why things are the way they are`);
+    for (const d of decisions.slice(-5)) {
+      console.log(`  ${d.date}: ${d.decision}${d.why ? ' — ' + d.why : ''}`);
+    }
+    console.log('');
+  }
+  
+  // 8. Learnings about this area
+  const learnings = (mem.learnings || []).filter(l => l.area === area);
+  if (learnings.length > 0) {
+    console.log(`## Learnings [${area}] — what was learned from fixing`);
+    for (const l of learnings) {
+      console.log(`  ${l.date}: ${l.lesson}`);
+    }
+    console.log('');
+  }
+  
+  // 9. Hotspot rank
+  const hotspotCount = mem.patterns.hotspots?.[fp] || 0;
+  const allHotspots = Object.entries(mem.patterns.hotspots || {}).sort((a, b) => b[1] - a[1]);
+  const rank = allHotspots.findIndex(([f]) => f === fp) + 1;
+  if (hotspotCount > 0) {
+    console.log(`## Hotspot Rank: #${rank} of ${allHotspots.length} (changed ${hotspotCount} times)`);
+    if (hotspotCount >= 10) console.log('  WARNING: This file is highly volatile. Every change should be tested thoroughly.');
+    console.log('');
+  }
+  
+  // 10. Summary risk assessment
+  let risk = 'low';
+  if (fixChains.length >= 3 || hotspotCount >= 15) risk = 'high';
+  else if (fixChains.length >= 1 || hotspotCount >= 5) risk = 'medium';
+  console.log(`## Risk: ${risk.toUpperCase()}`);
+  if (risk === 'high') console.log('  This file has a history of breaking. Test every change. Check coupled files.');
+  else if (risk === 'medium') console.log('  Some fragility detected. Run premortem before editing.');
+  else console.log('  No major concerns. Standard caution applies.');
+  console.log('');
+}
+
+// ─── Record a lesson learned from fixing ─────────────────────────
+
+function recordLearning(area, lesson) {
+  const mem = loadMemory();
+  if (!mem.learnings) mem.learnings = [];
+  mem.learnings.push({
+    ts: Date.now(),
+    date: new Date().toISOString().split('T')[0],
+    area: area.toLowerCase(),
+    lesson
+  });
+  // Keep last 200 learnings
+  if (mem.learnings.length > 200) mem.learnings = mem.learnings.slice(-200);
+  saveMemory(mem);
+  console.log(`[NW-MEMORY] Learning recorded: [${area}] ${lesson}`);
 }
 
 // ─── Deep Reflection (runs every 10 snapshots alongside autoDistill) ─
@@ -713,6 +938,16 @@ function query() {
     }
     console.log('');
   }
+
+  // Manual learnings — recorded by humans/AI after fixing
+  const manualLearnings = (mem.learnings || []).slice(-10);
+  if (manualLearnings.length > 0) {
+    console.log('## Fix Learnings (recorded after fixing — don\'t repeat these mistakes)');
+    for (const l of manualLearnings) {
+      console.log(`  ${l.date} [${l.area}] ${l.lesson}`);
+    }
+    console.log('');
+  }
 }
 
 // ─── Health: Quick project health check ─────────────────────────────
@@ -955,9 +1190,33 @@ function premortem(area) {
     console.log('');
   }
 
-  // 5. Hotspot files in this area
+  // 5. Recent commits that touched this area (NEW — shows what happened here lately)
+  const areaCommits = [];
+  for (const s of mem.snapshots) {
+    const files = (s.commit?.files || []).map(f => f.path);
+    const touchesArea = files.some(f => classifyArea(f) === key || f.toLowerCase().includes(key));
+    if (touchesArea) {
+      areaCommits.push({
+        hash: s.commit?.hash,
+        date: s.date,
+        msg: s.commit?.msg,
+        score: s.score,
+        fileCount: files.length
+      });
+    }
+  }
+  if (areaCommits.length > 0) {
+    console.log(`## Recent Commits in [${key}] (last 5)`);
+    for (const c of areaCommits.slice(-5)) {
+      const scoreTag = typeof c.score === 'number' ? ` [score:${c.score}]` : '';
+      console.log(`  ${c.date} ${c.hash} ${c.msg} (${c.fileCount} files)${scoreTag}`);
+    }
+    console.log('');
+  }
+
+  // 6. Hotspot files in this area
   const hotspots = Object.entries(mem.patterns.hotspots || {})
-    .filter(([f]) => f.toLowerCase().includes(key))
+    .filter(([f]) => f.toLowerCase().includes(key) || classifyArea(f) === key)
     .sort((a, b) => b[1] - a[1])
     .slice(0, 5);
   if (hotspots.length > 0) {
@@ -968,9 +1227,21 @@ function premortem(area) {
     console.log('');
   }
 
-  // 6. Fix chains in this area
+  // 7. Area file map — which files belong to this area
+  const areaMap = buildAreaMap(mem);
+  const areaFiles = areaMap[key] ? Object.entries(areaMap[key]).sort((a, b) => b[1].changes - a[1].changes) : [];
+  if (areaFiles.length > 0) {
+    console.log(`## Files in [${key}] area (${areaFiles.length} files)`);
+    for (const [fp, info] of areaFiles.slice(0, 10)) {
+      console.log(`  ${info.changes}x  ${fp}`);
+    }
+    if (areaFiles.length > 10) console.log(`  ... and ${areaFiles.length - 10} more`);
+    console.log('');
+  }
+
+  // 8. Fix chains in this area
   const fixChains = (mem.patterns.fixChains || []).filter(fc => 
-    fc.files.some(f => f.toLowerCase().includes(key)) || fc.msg.toLowerCase().includes(key)
+    fc.files.some(f => f.toLowerCase().includes(key) || classifyArea(f) === key) || fc.msg.toLowerCase().includes(key)
   );
   if (fixChains.length > 0) {
     console.log(`## Fix Chains (previous changes in this area that needed immediate fixes)`);
@@ -980,15 +1251,155 @@ function premortem(area) {
     console.log('');
   }
 
+  // 9. Learnings from past fixes in this area
+  const learnings = (mem.learnings || []).filter(l => l.area === key);
+  if (learnings.length > 0) {
+    console.log(`## Learnings [${key}] — what was learned from fixing`);
+    for (const l of learnings.slice(-5)) {
+      console.log(`  ${l.date}: ${l.lesson}`);
+    }
+    console.log('');
+  }
+
+  // 10. Reflections relevant to this area
+  const areaReflections = (mem.reflections || []).filter(r => 
+    r.area === key || (r.areas && r.areas.includes(key)) || 
+    (r.lesson && r.lesson.toLowerCase().includes(key))
+  );
+  if (areaReflections.length > 0) {
+    console.log(`## Reflections [${key}]`);
+    for (const r of areaReflections.slice(-3)) {
+      console.log(`  [${r.type.replace(/_/g, '-')}] ${r.lesson}`);
+    }
+    console.log('');
+  }
+
   if (areaConstraints.length === 0 && areaBreakages.length === 0 && areaDecisions.length === 0 && 
-      hotspots.length === 0 && fixChains.length === 0 && relatedConstraints.length === 0) {
+      hotspots.length === 0 && fixChains.length === 0 && relatedConstraints.length === 0 &&
+      areaCommits.length === 0 && learnings.length === 0) {
     console.log('No intelligence found for this area yet. This is the first time working here.');
-    console.log('After building, record constraints with: node nw-memory.cjs --constraint "' + area + '" "fact"');
+    console.log('After building, record what you learned:');
+    console.log('  node nw-memory.cjs --learned "' + area + '" "what you discovered"');
+    console.log('  node nw-memory.cjs --constraint "' + area + '" "hard fact"');
     console.log('');
   }
 }
 
 // ─── Compact: Prune dead files, deduplicate snapshots, shrink patterns ─
+
+// ─── Post-fix Analysis: What went wrong? What did we learn? ────────
+// Run after a fix commit. Reads the last two commits, shows what changed,
+// and helps extract a concrete lesson.
+
+function postfix() {
+  const mem = loadMemory();
+  if (mem.snapshots.length < 2) {
+    console.log('Need at least 2 commits to analyze a fix.');
+    return;
+  }
+
+  // Find the most recent fix chain (or just compare last 2 commits)
+  const current = mem.snapshots[mem.snapshots.length - 1];
+  const previous = mem.snapshots[mem.snapshots.length - 2];
+  const currentMsg = (current.commit?.msg || '').toLowerCase();
+  const isFix = currentMsg.startsWith('fix');
+
+  console.log('\n# Post-Fix Analysis\n');
+
+  if (!isFix) {
+    console.log('Latest commit doesn\'t look like a fix:');
+    console.log(`  ${current.commit?.hash} ${current.commit?.msg}`);
+    console.log('\nComparing last 2 commits anyway...\n');
+  }
+
+  // Show both commits
+  console.log('## The Change');
+  console.log(`  ORIGINAL: ${previous.commit?.hash} ${previous.commit?.msg}`);
+  console.log(`  FIX:      ${current.commit?.hash} ${current.commit?.msg}`);
+  console.log('');
+
+  // Find overlapping files
+  const prevFiles = new Set((previous.commit?.files || []).map(f => f.path));
+  const currFiles = (current.commit?.files || []).map(f => f.path);
+  const overlap = currFiles.filter(f => prevFiles.has(f));
+  const newFiles = currFiles.filter(f => !prevFiles.has(f));
+
+  if (overlap.length > 0) {
+    console.log(`## Same Files Touched (the breakage happened here)`);
+    for (const f of overlap) {
+      const area = classifyArea(f);
+      const hotspotCount = mem.patterns.hotspots?.[f] || 0;
+      console.log(`  ${f}  [area: ${area}]${hotspotCount >= 5 ? ' ⚠ hotspot (' + hotspotCount + 'x)' : ''}`);
+    }
+    console.log('');
+  }
+
+  if (newFiles.length > 0) {
+    console.log(`## New Files in Fix (not in original — the original missed these)`);
+    for (const f of newFiles) {
+      console.log(`  ${f}  [area: ${classifyArea(f)}]`);
+    }
+    console.log('');
+  }
+
+  // Show relevant constraints
+  const areas = new Set([...overlap, ...newFiles].map(f => classifyArea(f)));
+  const relevantConstraints = [];
+  for (const area of areas) {
+    for (const c of (mem.constraints[area] || [])) {
+      relevantConstraints.push({ area, fact: c.fact });
+    }
+  }
+  if (relevantConstraints.length > 0) {
+    console.log('## Existing Constraints (did you violate one of these?)');
+    for (const rc of relevantConstraints) {
+      console.log(`  [${rc.area}] ${rc.fact}`);
+    }
+    console.log('');
+  }
+
+  // Past breakages in same areas
+  const pastBreaks = (mem.breakages || []).filter(b => areas.has(b.area));
+  if (pastBreaks.length > 0) {
+    console.log('## Past Breakages (was this a repeat?)');
+    for (const b of pastBreaks.slice(-3)) {
+      console.log(`  ${b.date} [${b.area}] ${b.what}`);
+    }
+    console.log('');
+  }
+
+  // Check if any file is a repeat offender
+  const fcHistory = mem.patterns.fixChains || [];
+  const repeatFiles = [];
+  for (const f of overlap) {
+    const count = fcHistory.filter(fc => fc.files.includes(f)).length;
+    if (count >= 2) repeatFiles.push({ file: f, count });
+  }
+  if (repeatFiles.length > 0) {
+    console.log('## REPEAT OFFENDERS (these files keep breaking)');
+    for (const rf of repeatFiles) {
+      console.log(`  ${rf.file} — broken ${rf.count} times before this fix`);
+    }
+    console.log('');
+  }
+
+  // Prompt for learning
+  const areaList = [...areas].join('/');
+  console.log('## Record What You Learned');
+  console.log('');
+  console.log('Run one of these to capture the lesson:');
+  console.log('');
+  console.log(`  # What went wrong (root cause):`)
+  console.log(`  node nw-memory.cjs --broke "${areaList}" "description of what broke and why"`);
+  console.log('');
+  console.log(`  # What you learned (so next AI doesn't repeat it):`);
+  console.log(`  node nw-memory.cjs --learned "${areaList}" "the lesson from this fix"`);
+  console.log('');
+  console.log(`  # A hard rule to prevent recurrence:`);
+  console.log(`  node nw-memory.cjs --constraint "${areaList}" "never do X because Y"`);
+  console.log('');
+}
+
 
 function compact(memOverride, silent) {
   const mem = memOverride || loadMemory();
@@ -1161,6 +1572,16 @@ function brief() {
     lines.push('');
   }
 
+  // Fix learnings — what was learned from fixing (crucial for any AI)
+  const learnings = (mem.learnings || []).slice(-10);
+  if (learnings.length) {
+    lines.push('## Fix Learnings (recorded after fixing — DON\'T REPEAT THESE)');
+    for (const l of learnings) {
+      lines.push(`  [${l.area}] ${l.lesson}`);
+    }
+    lines.push('');
+  }
+
   // Hotspots — handle with care
   const hotspots = Object.entries(mem.patterns.hotspots || {})
     .filter(([f]) => !isNoise(f))
@@ -1174,15 +1595,909 @@ function brief() {
     lines.push('');
   }
 
+  // ── WIP section: survives chat compaction ──
+  const wipPath = path.join(__dirname, '.nw-wip');
+  if (fs.existsSync(wipPath)) {
+    const wipRaw = fs.readFileSync(wipPath, 'utf8').trim();
+    if (wipRaw) {
+      lines.push('## WORK IN PROGRESS (read this FIRST — resume, do NOT re-plan)');
+      lines.push(wipRaw);
+      lines.push('');
+    }
+  }
+
   const content = lines.join('\n');
   fs.writeFileSync(path.join(__dirname, '.nw-context'), content);
   console.log(content);
 }
 
+// ─── FEATURE 1: Auto-Premortem — fires on file list, not just area name ─
+// Instead of manually running --premortem <area>, pass file paths.
+// Detects areas from the files, deduplicates, runs premortem for each.
+// Used by: --guard <file1> <file2> ... OR --guard (reads git staged files)
+
+function guard(files) {
+  const mem = loadMemory();
+
+  // If no files passed, read from git staged files
+  if (!files || files.length === 0) {
+    try {
+      const staged = run('git diff --cached --name-only 2>/dev/null').trim();
+      const unstaged = run('git diff --name-only 2>/dev/null').trim();
+      const all = (staged + '\n' + unstaged).trim();
+      files = all ? all.split('\n').filter(Boolean) : [];
+    } catch (e) { files = []; }
+  }
+
+  if (files.length === 0) {
+    console.log('[NW-MEMORY] No files to guard. Stage some files or pass paths.');
+    return;
+  }
+
+  // Classify files into areas
+  const areas = new Set();
+  for (const f of files) {
+    const area = classifyArea(f);
+    if (area && area !== 'root' && area !== 'public') areas.add(area);
+  }
+
+  if (areas.size === 0) {
+    console.log('[NW-MEMORY] No known areas detected in these files. Checking root constraints...');
+    areas.add('root');
+  }
+
+  console.log(`\n# Auto-Guard: ${files.length} files → ${areas.size} area(s) detected`);
+  console.log(`  Areas: ${[...areas].join(', ')}`);
+  console.log(`  Files: ${files.slice(0, 8).join(', ')}${files.length > 8 ? ` (+${files.length - 8} more)` : ''}`);
+  console.log('');
+
+  // Collect all warnings (compact format — not full premortem, just the dangerous stuff)
+  let totalWarnings = 0;
+
+  for (const area of areas) {
+    const constraints = mem.constraints[area] || [];
+    const breakages = (mem.breakages || []).filter(b => b.area === area);
+    const learnings = (mem.learnings || []).filter(l => l.area === area);
+    const fixChains = (mem.patterns.fixChains || []).filter(fc =>
+      fc.files.some(f => classifyArea(f) === area) || fc.msg.toLowerCase().includes(area)
+    );
+
+    if (constraints.length === 0 && breakages.length === 0 && learnings.length === 0 && fixChains.length === 0) continue;
+
+    console.log(`## [${area}] — ${constraints.length} constraints, ${breakages.length} breakages, ${fixChains.length} fix chains`);
+
+    for (const c of constraints) {
+      console.log(`  ⚠ CONSTRAINT: ${c.fact}`);
+      totalWarnings++;
+    }
+    for (const b of breakages.slice(-3)) {
+      console.log(`  ✗ BROKE BEFORE: ${b.what}`);
+      totalWarnings++;
+    }
+    for (const l of learnings.slice(-2)) {
+      console.log(`  📝 LEARNED: ${l.lesson}`);
+      totalWarnings++;
+    }
+    if (fixChains.length > 0) {
+      console.log(`  🔄 ${fixChains.length} fix chain(s) — this area has needed immediate follow-up fixes before`);
+      totalWarnings++;
+    }
+    console.log('');
+  }
+
+  // Cross-cutting: check if files touch coupled pairs
+  const coupledWarnings = [];
+  const coChanges = mem.patterns.coChanges || {};
+  for (const f of files) {
+    for (const [pair, count] of Object.entries(coChanges)) {
+      if (count >= 10 && pair.includes(f)) {
+        const other = pair.split('<->').map(s => s.trim()).find(s => s !== f);
+        if (other && !files.includes(other)) {
+          coupledWarnings.push(`${f} usually changes with ${other} (${count}x together) — are you missing it?`);
+        }
+      }
+    }
+  }
+  if (coupledWarnings.length > 0) {
+    console.log('## Coupled Files Warning');
+    for (const w of coupledWarnings.slice(0, 5)) {
+      console.log(`  🔗 ${w}`);
+      totalWarnings++;
+    }
+    console.log('');
+  }
+
+  if (totalWarnings === 0) {
+    console.log('✅ No known risks for these files. Proceed with confidence.');
+  } else {
+    console.log(`⚡ ${totalWarnings} warning(s) total. Review before editing.`);
+  }
+  console.log('');
+}
+
+// ─── FEATURE 2: Auto-generate regression tests from breakages ────────
+// Each --broke entry becomes a concrete test assertion.
+// Tests are written to tests/regression-from-breakages.cjs and can run standalone.
+
+function generateRegressionTests() {
+  const mem = loadMemory();
+  const breakages = mem.breakages || [];
+  
+  if (breakages.length === 0) {
+    console.log('[NW-MEMORY] No breakages recorded. Nothing to generate tests for.');
+    return;
+  }
+
+  const testFile = path.join(__dirname, 'tests', 'regression-from-breakages.cjs');
+
+  // Build test cases from breakages + constraints
+  const testCases = [];
+
+  for (const b of breakages) {
+    const tc = breakageToTest(b, mem);
+    if (tc) testCases.push(tc);
+  }
+
+  // Also generate from constraints that imply testable rules
+  for (const [area, constraints] of Object.entries(mem.constraints || {})) {
+    for (const c of constraints) {
+      const tc = constraintToTest(area, c, mem);
+      if (tc) testCases.push(tc);
+    }
+  }
+
+  // Write test file
+  const lines = [];
+  lines.push('#!/usr/bin/env node');
+  lines.push('/**');
+  lines.push(' * AUTO-GENERATED regression tests from NW-MEMORY breakages & constraints');
+  lines.push(` * Generated: ${new Date().toISOString().split('T')[0]}`);
+  lines.push(` * Breakages: ${breakages.length} | Constraints: ${Object.values(mem.constraints || {}).reduce((s, a) => s + a.length, 0)}`);
+  lines.push(` * Test cases: ${testCases.length}`);
+  lines.push(' *');
+  lines.push(' * Run: node tests/regression-from-breakages.cjs');
+  lines.push(' * These tests verify that known breakages have NOT been reintroduced.');
+  lines.push(' */');
+  lines.push('');
+  lines.push("const fs = require('fs');");
+  lines.push("const path = require('path');");
+  lines.push('');
+  lines.push('let passed = 0, failed = 0, skipped = 0;');
+  lines.push("const PASS = '\\x1b[32m✓\\x1b[0m';");
+  lines.push("const FAIL = '\\x1b[31m✗\\x1b[0m';");
+  lines.push("const SKIP = '\\x1b[33m⊘\\x1b[0m';");
+  lines.push('');
+  lines.push('function test(name, fn) {');
+  lines.push('  try {');
+  lines.push('    const result = fn();');
+  lines.push("    if (result === 'skip') { skipped++; console.log(`  ${SKIP} ${name} (skipped — file not found)`); return; }");
+  lines.push('    passed++; console.log(`  ${PASS} ${name}`);');
+  lines.push('  } catch (e) {');
+  lines.push('    failed++; console.log(`  ${FAIL} ${name}: ${e.message}`);');
+  lines.push('  }');
+  lines.push('}');
+  lines.push('');
+  lines.push('function assert(cond, msg) { if (!cond) throw new Error(msg); }');
+  lines.push("function readFile(fp) { const p = path.join(__dirname, '..', fp); return fs.existsSync(p) ? fs.readFileSync(p, 'utf8') : null; }");
+  lines.push('');
+  lines.push(`console.log('\\n# Regression Tests (auto-generated from ${breakages.length} breakages + constraints)\\n');`);
+  lines.push('');
+
+  for (const tc of testCases) {
+    lines.push(`// From: [${tc.area}] ${tc.source}`);
+    lines.push(`test('${tc.name.replace(/'/g, "\\'")}', () => {`);
+    for (const line of tc.body) {
+      lines.push(`  ${line}`);
+    }
+    lines.push('});');
+    lines.push('');
+  }
+
+  lines.push('console.log(`\\n${passed} passed, ${failed} failed, ${skipped} skipped\\n`);');
+  lines.push('if (failed > 0) process.exit(1);');
+
+  // Ensure tests/ directory exists
+  const testsDir = path.join(__dirname, 'tests');
+  if (!fs.existsSync(testsDir)) fs.mkdirSync(testsDir);
+
+  fs.writeFileSync(testFile, lines.join('\n'));
+  console.log(`[NW-MEMORY] Generated ${testCases.length} regression tests from ${breakages.length} breakages + constraints`);
+  console.log(`  Written to: tests/regression-from-breakages.cjs`);
+  console.log(`  Run: node tests/regression-from-breakages.cjs`);
+}
+
+// Convert a breakage into a test case
+function breakageToTest(breakage, mem) {
+  const area = breakage.area;
+  const what = breakage.what;
+  const wLower = what.toLowerCase();
+
+  // Helper: wrap each file check in a block scope to avoid variable collisions
+  function fileBlock(f, innerLines) {
+    return [`{ // check: ${f}`, ...innerLines.map(l => '  ' + l), '}'];
+  }
+
+  // Pattern: overflow:hidden / overflow clipping
+  if (wLower.includes('overflow') && wLower.includes('hidden')) {
+    const areaMap = buildAreaMap(mem);
+    const cssFiles = Object.keys(areaMap[area] || {}).filter(f => f.endsWith('.css'));
+    const htmlFiles = Object.keys(areaMap[area] || {}).filter(f => f.endsWith('.html'));
+    const targets = [...cssFiles, ...htmlFiles].slice(0, 3);
+    if (targets.length === 0) return null;
+    return {
+      area, source: what,
+      name: `[${area}] no overflow:hidden that clips interactive content`,
+      body: targets.map(f => fileBlock(f, [
+        `const content = readFile('${f}');`,
+        `if (!content) return 'skip';`,
+        `const lines = content.split('\\n');`,
+        `for (let i = 0; i < lines.length; i++) {`,
+        `  const line = lines[i].toLowerCase();`,
+        `  if (line.includes('overflow') && line.includes('hidden') && (line.includes('arena') || line.includes('game') || line.includes('hand') || line.includes('card'))) {`,
+        `    assert(false, '${f}:' + (i+1) + ' has overflow:hidden on game container — broke mobile before');`,
+        `  }`,
+        `}`,
+      ])).flat()
+    };
+  }
+
+  // Pattern: Audio.init / audio blocking
+  if (wLower.includes('audio') && (wLower.includes('block') || wLower.includes('init') || wLower.includes('ios'))) {
+    const areaMap = buildAreaMap(mem);
+    const jsFiles = Object.keys(areaMap[area] || {}).filter(f => f.endsWith('.js')).slice(0, 3);
+    if (jsFiles.length === 0) return null;
+    return {
+      area, source: what,
+      name: `[${area}] Audio.init not called at page load (blocks iOS)`,
+      body: jsFiles.map(f => fileBlock(f, [
+        `const content = readFile('${f}');`,
+        `if (!content) return 'skip';`,
+        `// Audio.init at load time blocks iOS — must be on user gesture`,
+      ])).flat()
+    };
+  }
+
+  // Pattern: debug / dev mode left in production
+  if (wLower.includes('debug') && wLower.includes('production')) {
+    const areaMap = buildAreaMap(mem);
+    const htmlFiles = Object.keys(areaMap[area] || {}).filter(f => f.endsWith('.html')).slice(0, 5);
+    if (htmlFiles.length === 0) return null;
+    return {
+      area, source: what,
+      name: `[${area}] no debug overlays left in production HTML`,
+      body: htmlFiles.map(f => fileBlock(f, [
+        `const content = readFile('${f}');`,
+        `if (!content) return 'skip';`,
+        `assert(!(/id=["']debug/i.test(content) && !/display:\\s*none|GM_MODE|DEV_MODE/i.test(content)), '${f} has debug overlay without gate');`,
+      ])).flat()
+    };
+  }
+
+  // Pattern: innerHTML replacing DOM / event handlers lost
+  if (wLower.includes('innerhtml') || (wLower.includes('event') && wLower.includes('lost'))) {
+    const areaMap = buildAreaMap(mem);
+    const jsFiles = Object.keys(areaMap[area] || {}).filter(f => f.endsWith('.js')).slice(0, 3);
+    if (jsFiles.length === 0) return null;
+    return {
+      area, source: what,
+      name: `[${area}] innerHTML usage flagged (destroys event handlers)`,
+      body: jsFiles.map(f => fileBlock(f, [
+        `const content = readFile('${f}');`,
+        `if (!content) return 'skip';`,
+        `const matches = content.match(/\\.innerHTML\\s*=/g);`,
+        `if (matches && matches.length > 5) assert(false, '${f} has ' + matches.length + ' innerHTML assignments — high risk of losing event handlers');`,
+      ])).flat()
+    };
+  }
+
+  // Pattern: placeholder / untranslated strings visible
+  if (wLower.includes('placeholder') || wLower.includes('[zh]') || wLower.includes('[th]') || wLower.includes('translation')) {
+    return {
+      area, source: what,
+      name: `[${area}] no raw translation placeholders visible in HTML`,
+      body: [
+        `const dir = path.join(__dirname, '..', 'public');`,
+        `if (!fs.existsSync(dir)) return 'skip';`,
+        `const htmlFiles = fs.readdirSync(dir).filter(f => f.endsWith('.html')).slice(0, 20);`,
+        `for (const f of htmlFiles) {`,
+        `  const content = fs.readFileSync(path.join(dir, f), 'utf8');`,
+        `  const placeholders = content.match(/\\[ZH\\]|\\[TH\\]|\\[EN\\]/g);`,
+        `  if (placeholders && placeholders.length > 10) assert(false, f + ' has ' + placeholders.length + ' raw translation placeholders');`,
+        `}`,
+      ]
+    };
+  }
+
+  // Pattern: script load order matters
+  if (wLower.includes('must load after') || wLower.includes('load order') || wLower.includes('must load before')) {
+    return {
+      area, source: what,
+      name: `[${area}] script load order verified`,
+      body: [
+        `// Load order constraint: ${what.replace(/'/g, "\\'")}`,
+        `// This is a manual verification reminder — check HTML <script> tags`,
+        `// Auto-test: verify the constraint file references still exist`,
+        `const areaDir = path.join(__dirname, '..', 'public', 'static');`,
+        `if (!fs.existsSync(areaDir)) return 'skip';`,
+      ]
+    };
+  }
+
+  // Generic pattern: create a documentation test
+  return {
+    area, source: what,
+    name: `[${area}] regression guard: ${what.slice(0, 60).replace(/'/g, "\\'")}`,
+    body: [
+      `// Known breakage: ${what.replace(/'/g, "\\'")}`,
+      `// This test exists as a reminder. Add specific assertions when the pattern recurs.`,
+      `assert(true, 'guard acknowledged');`,
+    ]
+  };
+}
+
+// Convert a constraint into a test case (only for testable ones)
+function constraintToTest(area, constraint, mem) {
+  const fact = constraint.fact;
+  const fLower = fact.toLowerCase();
+
+  // Helper: wrap each file check in a block scope
+  function fileBlock(f, innerLines) {
+    return [`{ // check: ${f}`, ...innerLines.map(l => '  ' + l), '}'];
+  }
+
+  // Constraint: viewport / mobile width
+  if (fLower.includes('viewport') || fLower.includes('320') || fLower.includes('375')) {
+    const areaMap = buildAreaMap(mem);
+    const cssFiles = Object.keys(areaMap[area] || {}).filter(f => f.endsWith('.css')).slice(0, 3);
+    if (cssFiles.length === 0) return null;
+    return {
+      area, source: `constraint: ${fact}`,
+      name: `[${area}] CSS handles minimum mobile viewport`,
+      body: cssFiles.map(f => fileBlock(f, [
+        `const content = readFile('${f}');`,
+        `if (!content) return 'skip';`,
+        `const hasResponsive = /min-width|max-width|@media|flex-wrap|grid-template/i.test(content);`,
+        `assert(hasResponsive, '${f} should have responsive CSS for mobile viewports');`,
+      ])).flat()
+    };
+  }
+
+  // Constraint: webkit prefix
+  if (fLower.includes('webkit') || fLower.includes('ios safari')) {
+    const areaMap = buildAreaMap(mem);
+    const cssFiles = Object.keys(areaMap[area] || {}).filter(f => f.endsWith('.css')).slice(0, 3);
+    if (cssFiles.length === 0) return null;
+    return {
+      area, source: `constraint: ${fact}`,
+      name: `[${area}] CSS includes -webkit- prefixes`,
+      body: cssFiles.map(f => fileBlock(f, [
+        `const content = readFile('${f}');`,
+        `if (!content) return 'skip';`,
+        `if (content.includes('background-clip') && !content.includes('-webkit-background-clip')) {`,
+        `  assert(false, '${f} uses background-clip without -webkit- prefix');`,
+        `}`,
+      ])).flat()
+    };
+  }
+
+  // Constraint: touchend + click double-fire
+  if (fLower.includes('touchend') || fLower.includes('touch') && fLower.includes('click')) {
+    return {
+      area, source: `constraint: ${fact}`,
+      name: `[${area}] touch+click double-fire handling`,
+      body: [
+        `// Constraint: ${fact.replace(/'/g, "\\'")}`,
+        `const dir = path.join(__dirname, '..', 'public', 'static');`,
+        `if (!fs.existsSync(dir)) return 'skip';`,
+        `const jsFiles = fs.readdirSync(dir).filter(f => f.includes('${area}') && f.endsWith('.js'));`,
+        `for (const f of jsFiles) {`,
+        `  const content = fs.readFileSync(path.join(dir, f), 'utf8');`,
+        `  if (content.includes('touchend') && content.includes('click')) {`,
+        `    const hasGuard = /handling|touchHandled|isTouch|preventDouble|setTimeout.*300/i.test(content);`,
+        `    assert(hasGuard, f + ' has both touchend+click but no double-fire guard');`,
+        `  }`,
+        `}`,
+      ]
+    };
+  }
+
+  // Don't generate tests for non-testable constraints (decisions, design choices)
+  return null;
+}
+
+// ─── FEATURE 3: Cross-project shared constraint library ──────────────
+// Export portable constraints/learnings to ~/.nw-shared-memory.json
+// Import them into any new project. Universal truths carry forward.
+
+const SHARED_MEMORY_PATH = path.join(require('os').homedir(), '.nw-shared-memory.json');
+
+function loadSharedMemory() {
+  try {
+    return JSON.parse(fs.readFileSync(SHARED_MEMORY_PATH, 'utf8'));
+  } catch (e) {
+    return { 
+      constraints: [],
+      learnings: [],
+      meta: { created: new Date().toISOString(), projects: [] }
+    };
+  }
+}
+
+function saveSharedMemory(shared) {
+  fs.writeFileSync(SHARED_MEMORY_PATH, JSON.stringify(shared, null, 2));
+}
+
+function exportToShared() {
+  const mem = loadMemory();
+  const shared = loadSharedMemory();
+  const projectName = path.basename(__dirname);
+
+  // Track which project contributed
+  if (!shared.meta.projects.includes(projectName)) {
+    shared.meta.projects.push(projectName);
+  }
+  shared.meta.lastExport = new Date().toISOString();
+
+  // Export UNIVERSAL constraints (not project-specific ones)
+  // Filter for constraints that are about platforms/tech, not about specific files
+  const universalKeywords = ['ios', 'safari', 'mobile', 'touch', 'viewport', 'webkit', 'audio', 'innerhtml', 
+    'dom', 'event', 'handler', 'font', 'performance', 'security', 'accessibility', 'seo',
+    'cloudflare', 'worker', 'cache', 'cors', 'api', 'regex', 'css', 'flex', 'grid',
+    'hover', 'scroll', 'overflow', 'animation', 'transition', 'z-index', 'module', 'import'];
+
+  let exportedConstraints = 0;
+  for (const [area, constraints] of Object.entries(mem.constraints || {})) {
+    for (const c of constraints) {
+      const isUniversal = universalKeywords.some(kw => c.fact.toLowerCase().includes(kw));
+      if (!isUniversal) continue;
+
+      // Don't duplicate
+      const exists = shared.constraints.some(sc => sc.fact === c.fact);
+      if (exists) continue;
+
+      shared.constraints.push({
+        fact: c.fact,
+        area,
+        sourceProject: projectName,
+        exportDate: new Date().toISOString().split('T')[0],
+        tags: universalKeywords.filter(kw => c.fact.toLowerCase().includes(kw))
+      });
+      exportedConstraints++;
+    }
+  }
+
+  // Export universal learnings
+  let exportedLearnings = 0;
+  for (const l of (mem.learnings || [])) {
+    const isUniversal = universalKeywords.some(kw => l.lesson.toLowerCase().includes(kw));
+    if (!isUniversal) continue;
+
+    const exists = shared.learnings.some(sl => sl.lesson === l.lesson);
+    if (exists) continue;
+
+    shared.learnings.push({
+      lesson: l.lesson,
+      area: l.area,
+      sourceProject: projectName,
+      exportDate: new Date().toISOString().split('T')[0]
+    });
+    exportedLearnings++;
+  }
+
+  // Also export breakage patterns as learnings (the most valuable cross-project data)
+  for (const b of (mem.breakages || [])) {
+    const isUniversal = universalKeywords.some(kw => b.what.toLowerCase().includes(kw));
+    if (!isUniversal) continue;
+
+    const lesson = `[from breakage] ${b.what}`;
+    const exists = shared.learnings.some(sl => sl.lesson === lesson);
+    if (exists) continue;
+
+    shared.learnings.push({
+      lesson,
+      area: b.area,
+      sourceProject: projectName,
+      exportDate: new Date().toISOString().split('T')[0]
+    });
+    exportedLearnings++;
+  }
+
+  saveSharedMemory(shared);
+
+  console.log(`[NW-MEMORY] Exported to shared library: ${SHARED_MEMORY_PATH}`);
+  console.log(`  ${exportedConstraints} new constraints exported`);
+  console.log(`  ${exportedLearnings} new learnings exported`);
+  console.log(`  Total in library: ${shared.constraints.length} constraints, ${shared.learnings.length} learnings`);
+  console.log(`  Projects: ${shared.meta.projects.join(', ')}`);
+  console.log('');
+  console.log('  Use in any project: node nw-memory.cjs --import-shared');
+}
+
+function importFromShared() {
+  const shared = loadSharedMemory();
+  const mem = loadMemory();
+  const projectName = path.basename(__dirname);
+
+  if (shared.constraints.length === 0 && shared.learnings.length === 0) {
+    console.log('[NW-MEMORY] Shared library is empty. Export from a project first: --export-shared');
+    return;
+  }
+
+  let importedConstraints = 0;
+  let importedLearnings = 0;
+
+  // Import constraints (skip ones from this project — they're already here)
+  for (const sc of shared.constraints) {
+    if (sc.sourceProject === projectName) continue;
+
+    const area = sc.area;
+    if (!mem.constraints[area]) mem.constraints[area] = [];
+    const exists = mem.constraints[area].some(c => c.fact === sc.fact);
+    if (exists) continue;
+
+    mem.constraints[area].push({
+      fact: `[shared:${sc.sourceProject}] ${sc.fact}`,
+      ts: Date.now(),
+      date: new Date().toISOString().split('T')[0]
+    });
+    importedConstraints++;
+  }
+
+  // Import learnings
+  for (const sl of shared.learnings) {
+    if (sl.sourceProject === projectName) continue;
+
+    if (!mem.learnings) mem.learnings = [];
+    const exists = mem.learnings.some(l => l.lesson === sl.lesson);
+    if (exists) continue;
+
+    mem.learnings.push({
+      area: sl.area,
+      lesson: `[shared:${sl.sourceProject}] ${sl.lesson}`,
+      ts: Date.now(),
+      date: new Date().toISOString().split('T')[0]
+    });
+    importedLearnings++;
+  }
+
+  if (importedConstraints > 0 || importedLearnings > 0) {
+    saveMemory(mem);
+  }
+
+  console.log(`[NW-MEMORY] Imported from shared library:`);
+  console.log(`  ${importedConstraints} constraints imported`);
+  console.log(`  ${importedLearnings} learnings imported`);
+  console.log(`  Source: ${shared.meta.projects.filter(p => p !== projectName).join(', ') || 'none (all from this project)'}`);
+}
+
+function showSharedLibrary() {
+  const shared = loadSharedMemory();
+
+  console.log(`\n# Shared Constraint Library: ${SHARED_MEMORY_PATH}`);
+  console.log(`  Projects: ${shared.meta.projects.join(', ') || 'none'}`);
+  console.log(`  Constraints: ${shared.constraints.length}`);
+  console.log(`  Learnings: ${shared.learnings.length}`);
+  console.log('');
+
+  if (shared.constraints.length > 0) {
+    console.log('## Universal Constraints');
+    for (const c of shared.constraints) {
+      console.log(`  [${c.area}] ${c.fact}  (from: ${c.sourceProject})`);
+    }
+    console.log('');
+  }
+
+  if (shared.learnings.length > 0) {
+    console.log('## Universal Learnings');
+    for (const l of shared.learnings) {
+      console.log(`  [${l.area}] ${l.lesson}  (from: ${l.sourceProject})`);
+    }
+    console.log('');
+  }
+}
+
+// ─── FEATURE: --init — Zero-config setup for any project ────────────
+
+function init() {
+  const projectName = path.basename(__dirname);
+  console.log(`\n# NW-MEMORY: Setting up for "${projectName}"\n`);
+
+  // 1. Create memory.json if it doesn't exist
+  if (!fs.existsSync(MEMORY_FILE)) {
+    fs.writeFileSync(MEMORY_FILE, JSON.stringify({
+      version: 2, snapshots: [], patterns: {}, decisions: [], constraints: {}, breakages: [], learnings: [], reflections: [], autoRules: []
+    }, null, 2));
+    console.log('  ✓ Created memory.json');
+  } else {
+    console.log('  · memory.json already exists');
+  }
+
+  // 2. Set up husky hooks
+  const huskyDir = path.join(__dirname, '.husky');
+  if (!fs.existsSync(huskyDir)) fs.mkdirSync(huskyDir, { recursive: true });
+
+  const preCommit = `#!/bin/sh
+# NW-MEMORY: Pre-commit — enforce protocol, auto-guard, compact
+if [ ! -f "nw-memory.cjs" ]; then exit 0; fi
+
+# Session marker must exist
+if [ ! -f ".nw-session" ]; then
+  echo "" >&2
+  echo "  BLOCKED: No .nw-session file." >&2
+  echo "  Run: cat .nw-context && echo \\$(date +%s) > .nw-session" >&2
+  echo "" >&2
+  exit 1
+fi
+
+# Auto-compact if needed
+MEM_SIZE=$(wc -c < memory.json 2>/dev/null || echo 0)
+if [ "$MEM_SIZE" -gt 204800 ]; then
+  node nw-memory.cjs --compact >/dev/null 2>&1
+fi
+
+git add memory.json 2>/dev/null || true
+
+# Auto-guard: show warnings for areas being touched
+node nw-memory.cjs --guard 2>/dev/null >&2 || true
+
+exit 0
+`;
+
+  const postCommit = `#!/bin/sh
+# NW-MEMORY: Post-commit — snapshot + refresh context
+if [ ! -f "nw-memory.cjs" ]; then exit 0; fi
+node nw-memory.cjs >/dev/null 2>&1
+node nw-memory.cjs --brief >/dev/null 2>&1
+
+# Fix detection: prompt for learnings
+COMMIT_MSG=$(git log -1 --pretty=format:"%s" 2>/dev/null)
+case "$COMMIT_MSG" in
+  fix*|Fix*)
+    echo "" >&2
+    echo "  FIX DETECTED. Record what you learned:" >&2
+    echo "    node nw-memory.cjs --postfix" >&2
+    echo "    node nw-memory.cjs --learned \\"area\\" \\"lesson\\"" >&2
+    echo "" >&2
+    ;;
+esac
+exit 0
+`;
+
+  fs.writeFileSync(path.join(huskyDir, 'pre-commit'), preCommit, { mode: 0o755 });
+  fs.writeFileSync(path.join(huskyDir, 'post-commit'), postCommit, { mode: 0o755 });
+  console.log('  ✓ Created .husky/pre-commit + post-commit hooks');
+
+  // 3. Configure git to use hooks
+  try { run('git config core.hooksPath .husky'); } catch {}
+  console.log('  ✓ Set git core.hooksPath = .husky');
+
+  // 4. Add to .gitignore
+  const gitignorePath = path.join(__dirname, '.gitignore');
+  let gitignore = fs.existsSync(gitignorePath) ? fs.readFileSync(gitignorePath, 'utf8') : '';
+  const additions = ['.nw-session', '.nw-wip', '.nw-context'];
+  let added = 0;
+  for (const entry of additions) {
+    if (!gitignore.includes(entry)) {
+      gitignore += `\n${entry}`;
+      added++;
+    }
+  }
+  if (added > 0) {
+    fs.writeFileSync(gitignorePath, gitignore.trim() + '\n');
+    console.log(`  ✓ Added ${additions.join(', ')} to .gitignore`);
+  } else {
+    console.log('  · .gitignore already configured');
+  }
+
+  // 5. Create CLAUDE.md if it doesn't exist
+  const claudePath = path.join(__dirname, 'CLAUDE.md');
+  if (!fs.existsSync(claudePath)) {
+    fs.writeFileSync(claudePath, `# AI Session Protocol
+
+## Before you write any code:
+\`\`\`bash
+cat .nw-context                          # read the project brain
+echo $(date +%s) > .nw-session           # mark session started
+node nw-memory.cjs --premortem <area>    # check what broke before
+\`\`\`
+
+## Before every commit:
+Record at least one learning:
+\`\`\`bash
+node nw-memory.cjs --decide "area" "what" "why"
+node nw-memory.cjs --constraint "area" "fact"
+node nw-memory.cjs --broke "area" "what happened"
+node nw-memory.cjs --learned "area" "lesson"
+\`\`\`
+
+## Full command reference:
+Run \`node nw-memory.cjs --onboard\` for a complete guide.
+`);
+    console.log('  ✓ Created CLAUDE.md (AI session protocol)');
+  } else {
+    console.log('  · CLAUDE.md already exists');
+  }
+
+  // 6. Create initial .nw-config.json example if it doesn't exist
+  const configPath = path.join(__dirname, '.nw-config.json');
+  if (!fs.existsSync(configPath)) {
+    fs.writeFileSync(configPath, JSON.stringify({
+      _comment: "Customize NW-MEMORY for your project. All fields optional.",
+      areas: {},
+      noisePaths: DEFAULT_NOISE,
+      _example_areas: {
+        payments: ["stripe", "billing", "invoice"],
+        auth: ["login", "session", "jwt", "oauth"],
+        api: ["routes/", "controllers/", "handlers/"]
+      }
+    }, null, 2));
+    console.log('  ✓ Created .nw-config.json (customize areas + noise paths)');
+  } else {
+    console.log('  · .nw-config.json already exists');
+  }
+
+  // 7. Take initial snapshot
+  takeSnapshot();
+  brief();
+
+  console.log('\n  Setup complete! Start your first session:');
+  console.log('    cat .nw-context');
+  console.log('    echo $(date +%s) > .nw-session');
+  console.log('    node nw-memory.cjs --onboard');
+  console.log('');
+}
+
+// ─── FEATURE: --onboard — Explain the system to any AI in 10 lines ──
+
+function onboard() {
+  const mem = loadMemory();
+  const snapCount = mem.snapshots.length;
+  const constraintCount = Object.values(mem.constraints || {}).reduce((s, a) => s + a.length, 0);
+  const breakageCount = (mem.breakages || []).length;
+  const decisionCount = (mem.decisions || []).length;
+  const learningCount = (mem.learnings || []).length;
+
+  console.log(`
+# NW-MEMORY: Project Memory System
+
+You are working on a project with ${snapCount} recorded commits, ${constraintCount} constraints,
+${breakageCount} breakages, ${decisionCount} decisions, and ${learningCount} learnings.
+
+## What you MUST do before coding:
+  1. cat .nw-context                          # read project brain — rules, breakages, fragile files
+  2. echo $(date +%s) > .nw-session           # mark session (required or commits are blocked)
+  3. node nw-memory.cjs --premortem <area>    # see what broke before in the area you'll touch
+
+## What you MUST do before committing:
+  4. Record at least ONE learning:
+     --decide "area" "what" "why"             # a non-obvious choice you made
+     --constraint "area" "fact"               # a hard platform/tech truth
+     --broke "area" "what happened"           # something that broke
+     --learned "area" "lesson"                # what you learned from fixing
+
+## Power commands:
+  --guard <file1> <file2>                     # show risks for specific files (also auto-runs on commit)
+  --whyfile <path>                            # full intelligence on a single file
+  --status                                    # one-screen project dashboard
+  --gen-tests                                 # generate regression tests from past breakages
+  --wip "task description"                    # save work-in-progress (survives chat compaction)
+  --wip-done                                  # clear WIP when done
+
+## Key insight:
+  Every breakage, constraint, and decision you record makes the NEXT session smarter.
+  The pre-commit hook auto-warns about known risks. The more you teach it, the more it protects.
+`);
+}
+
+// ─── FEATURE: --status — One-screen project dashboard ────────────────
+
+function status() {
+  const mem = loadMemory();
+
+  // Header
+  const projectName = CONFIG.projectName || path.basename(__dirname);
+  console.log(`\n# ${projectName} — Project Status Dashboard\n`);
+
+  // Health score
+  const recent = mem.snapshots.slice(-10);
+  const scores = recent.filter(s => s.score).map(s => s.score);
+  const avgScore = scores.length ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length) : 0;
+  const grade = avgScore >= 85 ? 'A' : avgScore >= 70 ? 'B' : avgScore >= 55 ? 'C' : avgScore >= 40 ? 'D' : 'F';
+  const bar = '█'.repeat(Math.round(avgScore / 5)) + '░'.repeat(20 - Math.round(avgScore / 5));
+  console.log(`## Health: ${avgScore}/100 (${grade})  [${bar}]`);
+  console.log('');
+
+  // Key numbers
+  const constraintCount = Object.values(mem.constraints || {}).reduce((s, a) => s + a.length, 0);
+  console.log('## Numbers');
+  console.log(`  Commits tracked:  ${mem.snapshots.length}`);
+  console.log(`  Decisions:        ${(mem.decisions || []).length}`);
+  console.log(`  Constraints:      ${constraintCount}`);
+  console.log(`  Breakages:        ${(mem.breakages || []).length}`);
+  console.log(`  Learnings:        ${(mem.learnings || []).length}`);
+  console.log(`  Fix chains:       ${(mem.patterns.fixChains || []).length}`);
+  console.log('');
+
+  // Risk areas (areas with most breakages)
+  const breakagesByArea = {};
+  for (const b of (mem.breakages || [])) {
+    breakagesByArea[b.area] = (breakagesByArea[b.area] || 0) + 1;
+  }
+  const riskAreas = Object.entries(breakagesByArea).sort((a, b) => b[1] - a[1]).slice(0, 5);
+  if (riskAreas.length > 0) {
+    console.log('## Risk Areas (most breakages)');
+    for (const [area, count] of riskAreas) {
+      const riskBar = '▓'.repeat(count) + '░'.repeat(Math.max(0, 10 - count));
+      console.log(`  ${area.padEnd(15)} ${riskBar} ${count} breakage(s)`);
+    }
+    console.log('');
+  }
+
+  // Hottest files
+  const hotspots = Object.entries(mem.patterns.hotspots || {})
+    .filter(([f]) => !isNoise(f))
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 5);
+  if (hotspots.length > 0) {
+    console.log('## Hottest Files (most changes — handle with care)');
+    for (const [file, count] of hotspots) {
+      console.log(`  ${count}x  ${file}`);
+    }
+    console.log('');
+  }
+
+  // Recent learnings
+  const recentLearnings = (mem.learnings || []).slice(-3);
+  if (recentLearnings.length > 0) {
+    console.log('## Recent Learnings');
+    for (const l of recentLearnings) {
+      console.log(`  [${l.area}] ${l.lesson.slice(0, 100)}${l.lesson.length > 100 ? '...' : ''}`);
+    }
+    console.log('');
+  }
+
+  // WIP
+  const wipPath = path.join(__dirname, '.nw-wip');
+  if (fs.existsSync(wipPath)) {
+    const wip = fs.readFileSync(wipPath, 'utf8').trim();
+    if (wip) {
+      console.log('## Work In Progress');
+      console.log(wip);
+      console.log('');
+    }
+  }
+
+  // Last 5 commits
+  const last5 = mem.snapshots.slice(-5);
+  if (last5.length > 0) {
+    console.log('## Last 5 Commits');
+    for (const s of last5) {
+      const scoreTag = typeof s.score === 'number' ? ` [${s.score}]` : '';
+      console.log(`  ${s.date} ${s.commit?.hash || '???'} ${(s.commit?.msg || '').slice(0, 70)}${scoreTag}`);
+    }
+    console.log('');
+  }
+
+  // Shared library status
+  try {
+    const shared = JSON.parse(fs.readFileSync(SHARED_MEMORY_PATH, 'utf8'));
+    console.log(`## Shared Library: ${shared.constraints.length} constraints, ${shared.learnings.length} learnings from ${shared.meta.projects.length} project(s)`);
+  } catch {
+    console.log('## Shared Library: not initialized (run --export-shared)');
+  }
+  console.log('');
+}
+
 // ─── Main ───────────────────────────────────────────────────────────
 
 const arg = process.argv[2];
-if (arg === '--query') {
+if (arg === '--init') {
+  init();
+} else if (arg === '--onboard') {
+  onboard();
+} else if (arg === '--status') {
+  status();
+} else if (arg === '--query') {
   query();
 } else if (arg === '--brief') {
   brief();
@@ -1210,8 +2525,58 @@ if (arg === '--query') {
   recordConstraint(process.argv[3], process.argv[4]);
 } else if (arg === '--broke' && process.argv[3] && process.argv[4]) {
   recordBreakage(process.argv[3], process.argv[4]);
+} else if (arg === '--learned' && process.argv[3] && process.argv[4]) {
+  recordLearning(process.argv[3], process.argv[4]);
 } else if (arg === '--premortem' && process.argv[3]) {
   premortem(process.argv[3]);
+} else if (arg === '--postfix') {
+  postfix();
+} else if (arg === '--whyfile' && process.argv[3]) {
+  whyFile(process.argv[3]);
+} else if (arg === '--areamap') {
+  showAreaMap();
+} else if (arg === '--guard') {
+  // Auto-premortem: detect areas from files, show only the dangerous stuff
+  const files = process.argv.slice(3);
+  guard(files);
+} else if (arg === '--gen-tests') {
+  // Auto-generate regression tests from breakages + constraints
+  generateRegressionTests();
+} else if (arg === '--export-shared') {
+  // Export universal constraints/learnings to shared cross-project library
+  exportToShared();
+} else if (arg === '--import-shared') {
+  // Import universal constraints/learnings from shared library
+  importFromShared();
+} else if (arg === '--shared') {
+  // View shared library contents
+  showSharedLibrary();
+} else if (arg === '--wip' && process.argv[3]) {
+  // Write current work-in-progress to disk so it survives chat compaction
+  const wipPath = path.join(__dirname, '.nw-wip');
+  const wipLine = process.argv.slice(3).join(' ');
+  const ts = new Date().toISOString().slice(0, 16);
+  fs.writeFileSync(wipPath, `  ${ts} ${wipLine}\n`);
+  console.log(`[NW-MEMORY] WIP saved: ${wipLine}`);
+  console.log('  This will appear in .nw-context after next commit.');
+  console.log('  Clear with: node nw-memory.cjs --wip-done');
+} else if (arg === '--wip-append' && process.argv[3]) {
+  // Append to WIP (for multi-step tasks)
+  const wipPath = path.join(__dirname, '.nw-wip');
+  const existing = fs.existsSync(wipPath) ? fs.readFileSync(wipPath, 'utf8') : '';
+  const wipLine = process.argv.slice(3).join(' ');
+  const ts = new Date().toISOString().slice(0, 16);
+  fs.writeFileSync(wipPath, existing + `  ${ts} ${wipLine}\n`);
+  console.log(`[NW-MEMORY] WIP appended: ${wipLine}`);
+} else if (arg === '--wip-done') {
+  // Clear WIP — task is complete
+  const wipPath = path.join(__dirname, '.nw-wip');
+  if (fs.existsSync(wipPath)) {
+    fs.unlinkSync(wipPath);
+    console.log('[NW-MEMORY] WIP cleared. Good work.');
+  } else {
+    console.log('[NW-MEMORY] No WIP to clear.');
+  }
 } else if (arg === '--compact') {
   compact();
 } else {

@@ -1,6 +1,18 @@
 #!/bin/sh
-# NW-MEMORY: Post-commit — snapshot + refresh context file (silent)
+# NW-MEMORY: Post-commit — snapshot + refresh context
 if [ ! -f "nw-memory.cjs" ]; then exit 0; fi
 node nw-memory.cjs >/dev/null 2>&1
 node nw-memory.cjs --brief >/dev/null 2>&1
+
+# Fix detection: prompt for learnings
+COMMIT_MSG=$(git log -1 --pretty=format:"%s" 2>/dev/null)
+case "$COMMIT_MSG" in
+  fix*|Fix*)
+    echo "" >&2
+    echo "  FIX DETECTED. Record what you learned:" >&2
+    echo "    node nw-memory.cjs --postfix" >&2
+    echo "    node nw-memory.cjs --learned \"area\" \"lesson\"" >&2
+    echo "" >&2
+    ;;
+esac
 exit 0
