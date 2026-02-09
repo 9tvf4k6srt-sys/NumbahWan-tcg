@@ -1,211 +1,267 @@
 <div align="center">
 
-# Mycelium
+# 🍄 Mycelium
 
-### Self-improving codebase immune system
+### Your codebase learns from its own mistakes
 
-**Four scripts. Zero dependencies. Drop into any repo.**<br>
-Learns from every commit, warns before repeating mistakes, auto-fixes with cryptographic proof.
+**Five scripts. Zero dependencies. Drop into any git repo.**<br>
+It reads your commit history, finds what keeps breaking, and builds defenses automatically.
 
-[![Mycelium Score](https://img.shields.io/badge/Mycelium_Score-75%2F100_(B)-6c5ce7?style=for-the-badge)](https://numbahwan.pages.dev/showcase)
-[![Tests](https://img.shields.io/badge/Regression_Tests-33_passing-00b894?style=for-the-badge)]()
-[![Zero Dependencies](https://img.shields.io/badge/Dependencies-Zero-e8e0d8?style=for-the-badge)]()
+[![Live Showcase](https://img.shields.io/badge/🍄_Live_Showcase-See_It_Working-6c5ce7?style=for-the-badge)](https://numbahwan.pages.dev/showcase)
+[![Score](https://img.shields.io/badge/Score-75%2F100_(B)-00b894?style=for-the-badge)](https://numbahwan.pages.dev/showcase)
+[![Tests](https://img.shields.io/badge/Tests-84_passing-00b894?style=for-the-badge)]()
+[![Deps](https://img.shields.io/badge/Dependencies-0-e8e0d8?style=for-the-badge)]()
+
+**[Live Showcase](https://numbahwan.pages.dev/showcase)** · every number on that page is real, hash-locked, and independently verifiable
 
 </div>
 
 ---
 
-## What Is Mycelium?
+## The Problem
 
-Like biological mycelium — the underground fungal network that connects trees and strengthens the entire forest — this system connects your files, shares constraints, and strengthens your codebase with every commit.
+You fix a bug. Two weeks later, the same file breaks the same way. Your team has 50 "lessons learned" docs that nobody reads. Your pre-commit hooks check formatting, not whether you're about to repeat a mistake from 3 months ago.
+
+## The Solution
 
 ```bash
-# Add to any project in 30 seconds
-cp mycelium.cjs mycelium-watch.cjs mycelium-eval.cjs mycelium-fix.cjs your-project/
+# Add to any project — takes 30 seconds, zero npm install
+cp mycelium*.cjs your-project/
 cd your-project && node mycelium.cjs --init
-# Done. It learns from your git history immediately.
+
+# It reads your entire git history and immediately knows:
+# - Which files break the most (and why)
+# - Which files always change together
+# - What patterns cause the most fix chains
+# - What your pre-commit hook should actually be checking
 ```
 
-### The Four Components
+**After init, every commit makes it smarter.** Every bug you fix teaches it. Every pattern it detects gets enforced.
 
-| Script | Role | What It Does |
-|--------|------|-------------|
-| `mycelium.cjs` | **The Learner** | Snapshots every commit, tracks hotspots, detects couplings, stores constraints |
-| `mycelium-watch.cjs` | **The Watcher** | Analyzes git history, scores file risk, warns before repeating mistakes |
-| `mycelium-eval.cjs` | **The Evaluator** | 9 weighted KPIs, honest before/after split, SHA-256 cryptographic proof, 28 self-checks |
-| `mycelium-fix.cjs` | **The Fixer** | Diagnoses friction, prescribes 6 fix types, executes automatically, verifies improvement |
+---
 
-### How It Works
+## What Makes It Different
+
+| Feature | Mycelium | ESLint / Prettier | SonarQube | Custom Scripts |
+|---------|----------|-------------------|-----------|----------------|
+| Learns from YOUR history | ✅ reads git log | ❌ generic rules | ❌ generic rules | ❌ manual rules |
+| Knows which files break together | ✅ coupling detection | ❌ | ❌ | ❌ |
+| Blocks repeated mistakes | ✅ constraint enforcement | ❌ | ⚠️ some | ❌ |
+| Auto-generates tests from breakages | ✅ mycelium-upgrade | ❌ | ❌ | ❌ |
+| Cryptographic proof of scores | ✅ SHA-256 hash-locked | ❌ | ❌ | ❌ |
+| Zero dependencies | ✅ just Node.js | ❌ plugins | ❌ Java/Docker | ⚠️ depends |
+| Works on any repo | ✅ reads git | ⚠️ config needed | ⚠️ config needed | ❌ custom per project |
+
+---
+
+## The Five Brains
 
 ```
 Every commit triggers:
-  watch --learn -> snapshot -> eval -> diagnose -> fix (if needed)
+  Watcher --learn → Learner --snapshot → Evaluator --score → Fixer --heal
 
 Pre-commit hook:
-  watch --warn -> guard constraints -> BLOCK if violated
+  Watcher --warn → Guard --enforce → BLOCK if pattern violation detected
 
-Pipeline: Learner -> Evaluator -> Fixer (continuous loop)
+On demand:
+  Upgrader --apply → read breakages → generate tests + harden files + strengthen guards
 ```
 
-### Quick Start
+| Script | Role | One-liner |
+|--------|------|-----------|
+| `mycelium.cjs` | **The Learner** | Snapshots every commit, tracks constraints, detects couplings |
+| `mycelium-watch.cjs` | **The Watcher** | Scores file risk, maps breakage patterns, warns before you repeat |
+| `mycelium-eval.cjs` | **The Evaluator** | 9 KPIs, SHA-256 proof, 28 self-checks including 4 anti-gaming |
+| `mycelium-fix.cjs` | **The Fixer** | Diagnoses friction → prescribes → executes → verifies improvement |
+| `mycelium-upgrade.cjs` | **The Upgrader** | Reads breakage history → auto-generates regression tests + guards |
+
+---
+
+## Quick Start
 
 ```bash
-# Install (zero dependencies, just copy files)
+# 1. Copy the scripts (that's literally the install)
+cp mycelium.cjs mycelium-watch.cjs mycelium-eval.cjs mycelium-fix.cjs mycelium-upgrade.cjs your-project/
+cd your-project
+
+# 2. Initialize (reads your git history, installs hooks, creates memory)
 node mycelium.cjs --init
 
-# See what it learned
-node mycelium.cjs --status
-node mycelium.cjs --onboard
+# 3. See what it learned about your codebase
+node mycelium.cjs --status       # health score, risk areas, hottest files
+node mycelium-eval.cjs           # 9 KPIs with cryptographic proof
+node mycelium-watch.cjs --status # riskiest files, couplings, patterns
 
-# Evaluate your codebase learning health
-node mycelium-eval.cjs
+# 4. Auto-fix the weakest areas
+node mycelium-fix.cjs --force    # diagnose → prescribe → execute
+node mycelium-upgrade.cjs --apply # generate tests from breakage history
 
-# Auto-fix weak areas
-node mycelium-fix.cjs --force
+# 5. Ship (atomic: commit → test → sync → PR → merge)
+node bin/mycelium.cjs ship "your commit message"
 ```
 
-### CLI Reference
+---
 
-```bash
-# Unified CLI
-npx mycelium help          # See all commands
-npx mycelium eval          # 9 KPIs with cryptographic proof
-npx mycelium diagnose      # Root-cause analysis -> files -> failure modes
-npx mycelium fix           # Auto-diagnose -> prescribe -> execute -> verify
-npx mycelium status        # Current state + pending prescriptions
-npx mycelium ship "msg"    # Atomic deploy: commit -> test -> sync -> PR -> merge
-```
+## Real Results (not hypothetical)
+
+Mycelium was built and tested on a [116-page vanilla JS project](https://numbahwan.pages.dev) with 150+ commits. Every number below comes from `mycelium-eval.cjs` and can be verified by running it yourself.
+
+**[→ See the live showcase with all metrics](https://numbahwan.pages.dev/showcase)**
+
+| What It Found | What It Did |
+|--------------|-------------|
+| `cards.html` broke **10 times** from the same pattern | Auto-generated i18n key validation test — caught 24 invalid keys on first run |
+| `battle.html` + `nw-battle-engine.js` always change together (28x) | Added coupling enforcement — pre-commit warns if you change one without the other |
+| 3 files kept breaking after fix (30% repeat rate) | Classified failure modes (i18n, mobile, layout) and generated targeted regression tests |
+| `nw-battle-engine-old.js` was an exact duplicate (identical md5) | Detected by sentinel, deleted 97KB of dead weight |
+| 50 total breakages across the project lifetime | Each one became a lesson, constraint, or test — **84 regression tests** now run on every commit |
 
 <details>
-<summary><b>See the evaluation scorecard</b> -- 9 KPIs, weighted scoring, cryptographic proof</summary>
+<summary><b>See the full evaluation scorecard</b></summary>
 
 ```
-Mycelium-Eval v4.0 -- Foolproof Learning System Evaluation
+Mycelium-Eval v4.0 — Foolproof Learning System Evaluation
 
-  Overall: 75/100 (B) [proof: cb90524fba81ccd4]
+  Overall: 75/100 (B) [proof: 6bc6c35005d35e8c]
+  Data: 150 commits | 50 breakages | 49 learnings | 75 constraints
 
   Scorecard:
-    --------- Fix Rate Trend       50/100 (15%) real bug fix rate flat
-    -------   Repeat Prevention    35/100 (15%) 3/10 files repeat (30%)
-    ---------- Constraint Coverage  100/100 (15%) 7/7 areas covered
-    ---------- Lesson Quality       100/100 (15%) 50/50 lessons specific
-    ------    Fix Chain Speed       40/100 (10%) 3 chains avg length 4.0
-    ---------- Knowledge Density    100/100 (10%) 141/141 files
-    ---------  Warning Coverage      90/100 (10%) 63% warning rate
-    ---------- Bundle Health        100/100  (5%) 390KB < 400KB
-    ---------  Fixer Effectiveness   90/100  (5%) 17 fixes, 13 hardened
+    █████░░░░░   50  Fix Rate Trend       (15%)  Real bug fix rate: 15%→16%
+    ████░░░░░░   35  Repeat Prevention    (15%)  3/10 files still repeat (30%)
+    ██████████  100  Constraint Coverage  (15%)  7/7 breakage areas covered
+    ██████████  100  Lesson Quality       (15%)  50/50 lessons are specific
+    ████░░░░░░   40  Fix Chain Speed      (10%)  3 chains, avg length 4.0
+    ██████████  100  Knowledge Density    (10%)  141/141 risky files documented
+    █████████░   90  Warning Coverage     (10%)  63% warning, 82% coupling
+    ██████████  100  Bundle Health         (5%)  390KB under 400KB target
+    █████████░   90  Fixer Effectiveness   (5%)  17 fixes, 13 hardened, guard enforced
 
-  Verification: 28/28 self-checks passed (including 4 anti-gaming)
-  Proof: SHA-256 hash cb90524fba81ccd4 -- re-run to verify
+  Verification: 28/28 self-checks passed (4 anti-gaming checks included)
+  Sliding Window: real bug rate improved 13% (earliest 40 vs latest 40 commits)
 ```
+
+The score is **75, not 95** — because Mycelium is honest. Repeat Prevention is 35/100 because 3 files still repeat. The only way to improve is to actually stop those files from breaking.
 
 </details>
 
 <details>
-<summary><b>See the diagnosis engine</b> -- root causes mapped to specific files</summary>
+<summary><b>See the diagnosis engine output</b></summary>
 
 ```
-Friction Analysis -- Root-Cause Diagnosis
+mycelium-fix — Friction Analysis Engine
 
-  Fix Rate Trend: 50/100 (weight 15%)
-    Root causes: 5 files (cards.html 10x, markets.html 7x, battle.html 7x...)
-    Prescription: PREVENT_NEW_BUGS -> add guards to top 5 offenders
+  ▸ Fix Rate Trend: 50/100 (weight 15%)
+    Root Causes:
+      ! cards.html — fixed 6x after learning system installed
+      ! nw-battle-engine.js — fixed 5x after learning system installed
+      ! battle.html — fixed 4x after learning system installed
+    Prescription: PREVENT_NEW_BUGS → add guards to top 5 offenders
     Expected: +15-30 points
 
-  Repeat Prevention: 35/100 (weight 15%)
-    Root causes: 3/10 files repeat (30%)
+  ▸ Repeat Prevention: 35/100 (weight 15%)
+    Root Causes:
+      ✗ cards.html — broke 10x, dominant failure: ui/layout (4x)
+      ✗ markets.html — broke 7x, dominant failure: i18n (3x)
+      ✗ battle.html — broke 7x, dominant failure: ios (2x)
     Prescriptions:
-      STRENGTHEN_CONSTRAINTS -> files (+preventive rules)
-      ADD_CONSTRAINTS -> files (+constraints from lessons)
-    Expected: +10 points
+      STRENGTHEN_CONSTRAINTS → preventive rules for 7 repeat files
+      ENFORCE_CO_CHANGES → make coupling violations blocking
+    Expected: +20-40 points
 
-  Fix Chain Speed: 40/100 (weight 10%)
-    Root causes: 3 chains (avg length 4.0)
-    Prescriptions:
-      PRE_MORTEM_FOR_CHAIN_FILES -> require pre-mortem before editing
-      ROOT_CAUSE_FIRST -> every fix must include root-cause note
-    Expected: +6 points
+  Summary: 3 friction points, 5 prescriptions, +24 pts potential
+```
+
+</details>
+
+<details>
+<summary><b>See the upgrade tool output</b></summary>
+
+```
+mycelium-upgrade — The Immune Booster
+
+  Analysis:
+    Breakages analyzed:  50
+    Repeat offenders:    15
+    File couplings:      8 (≥5x co-changed)
+    Constraint areas:    20
+
+  Top repeat offenders:
+    10x  public/cards.html       [i18n:2, mobile:1, layout:1]
+     7x  public/markets.html     [i18n:3, mobile:2]
+     7x  public/battle.html      [layout:1, mobile:2]
+
+  [1] Harden HTML files with data-testid markers
+    ✓ Applied 3 files
+
+  [2] Generate targeted regression tests
+    Tests generated: 52 (i18n:20, mobile:9, layout:3, structure:11, runtime:9)
+    ✓ Written to tests/regression-upgrade.cjs
+
+  [3] Strengthen pre-commit guard
+    Coupling checks: 7 | File-specific checks: 5
+    ✓ Written to .husky/pre-commit
 ```
 
 </details>
 
 ---
 
-## Proving Ground: NumbahWan TCG
+## Also Included: `sentinel.cjs`
 
-Mycelium was built and battle-tested on **NumbahWan** — a 116-page browser-based guild world built with vanilla JS, Hono, and Cloudflare Workers.
-
-This project is the live proving ground where Mycelium learned from 150+ commits, tracked 50 breakages, and accumulated 49 learnings. Every metric on the [showcase page](https://numbahwan.pages.dev/showcase) is real and independently verifiable.
-
-<details>
-<summary><b>About NumbahWan</b> -- the project that feeds Mycelium</summary>
-
-### 116 pages. 62 JS modules. 30 API routes. 3 languages. Zero frameworks.
-
-A browser-based world built entirely with **vanilla JS**, **Hono**, and **Cloudflare Workers**.
-No React. No Vue. No Next. Just HTML files.
-
-| Feature | Description |
-|---------|-------------|
-| Trading Card Game | 125+ cards, gacha system, deck builder, AI battle arena |
-| The Oracle | Life advice from Buddhist, Taoist, Biblical, and Quranic traditions |
-| NWX Exchange | Bloomberg Terminal parody with real volatility simulation |
-| i18n System | 3,700+ translation keys across EN, Traditional Chinese, Thai |
-| Museum & Vault | 10 exhibits, 13 underground floors, legendary misprint card |
-
-**[Live Site](https://numbahwan.pages.dev)** | **[The Oracle](https://numbahwan.pages.dev/oracle)** | **[Showcase](https://numbahwan.pages.dev/showcase)**
-
-Built for the NumbahWan guild from MapleStory Idle RPG (TW Server).
-
-</details>
-
----
-
-## `sentinel.cjs` -- Zero-Dependency Codebase Health Scanner
-
-> One file. No dependencies. Works on any JS/TS project.
+> Zero-dependency codebase health scanner. One file. Works on any JS/TS project.
 
 ```bash
+# Try it on your project right now
 curl -O https://raw.githubusercontent.com/9tvf4k6srt-sys/NumbahWan-tcg/main/sentinel.cjs
 node sentinel.cjs
 ```
 
-Scores 10 modules (architecture, assets, i18n, deadCode, security, performance, apiSurface, dependencies, accessibility, seoMeta) with letter grade and auto-fix suggestions.
+Scores 10 modules: architecture, assets, i18n, dead code, security, performance, API surface, dependencies, accessibility, SEO meta. Includes auto-fix commands.
+
+---
+
+## Why "Mycelium"?
+
+In nature, [mycelium](https://en.wikipedia.org/wiki/Mycelium) is the underground fungal network that connects trees in a forest. When one tree is attacked, the network warns the others. When one tree has excess nutrients, the network shares them.
+
+This system does the same thing for your codebase. When one file breaks, every connected file learns. When you fix a bug, the pattern becomes a constraint that prevents recurrence.
 
 ---
 
 ## Project Structure
 
 ```
-mycelium/
-├── bin/mycelium.cjs          # Unified CLI entry point
 ├── mycelium.cjs              # The Learner
 ├── mycelium-watch.cjs        # The Watcher
 ├── mycelium-eval.cjs         # The Evaluator
 ├── mycelium-fix.cjs          # The Fixer
-├── sentinel.cjs              # Codebase health scanner (standalone)
-├── .mycelium/                # All Mycelium data
-│   ├── memory.json           # Learner state
-│   ├── watch.json            # Watcher state
-│   ├── eval.json             # Latest evaluation
-│   ├── eval-history.json     # Score history
-│   ├── fix-log.json          # Fixer run history
+├── mycelium-upgrade.cjs      # The Upgrader (NEW)
+├── sentinel.cjs              # Health scanner (standalone)
+├── bin/mycelium.cjs          # Unified CLI
+├── .mycelium/                # All runtime data
+│   ├── memory.json           # Learner state (snapshots, constraints, breakages)
+│   ├── watch.json            # Watcher state (commits, risks, couplings)
 │   └── config.json           # Configuration
-├── src/                      # NumbahWan app source
-├── public/                   # 116 HTML pages
-└── tests/                    # 33 regression tests
+└── tests/
+    ├── regression-from-breakages.cjs  # 32 tests from real breakages
+    └── regression-upgrade.cjs         # 52 tests auto-generated by upgrader
 ```
 
 ## Contributing
 
-See [CONTRIBUTING.md](CONTRIBUTING.md). The project uses git hooks for memory tracking.
+See [CONTRIBUTING.md](CONTRIBUTING.md). If you find something useful — take it. MIT license.
 
-If you find something useful — Mycelium, sentinel, the i18n pattern, the Oracle — take it. That's what it's for.
+Good first contributions:
+- Run `node mycelium.cjs --init` on your own project and share what it finds
+- Run `node sentinel.cjs` on any JS project and open a PR with improvements
+- Add an [issue](../../issues) if a breakage pattern isn't caught
 
 ---
 
 <div align="center">
 
-**Mycelium** — the codebase immune system · [Live Showcase](https://numbahwan.pages.dev/showcase) · [GitHub](https://github.com/9tvf4k6srt-sys/NumbahWan-tcg)
+**🍄 Mycelium** — your codebase remembers so you don't have to
+
+**[Live Showcase](https://numbahwan.pages.dev/showcase)** · **[Get Started](#quick-start)** · **[How It Works](#the-five-brains)**
 
 </div>
