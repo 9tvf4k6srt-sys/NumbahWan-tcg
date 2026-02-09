@@ -23,6 +23,26 @@ If you skip steps 1-2, the pre-commit hook will reject your commit with:
 `BLOCKED: No .nw-session file. Read CLAUDE.md and run the startup checklist.`
 
 ## CRITICAL: Mobile-First iOS Development
+
+## ⛔ VALUE GATE — Read Before Building ANYTHING
+Before ANY multi-file change, answer these three questions OUT LOUD:
+1. **What metric does this improve?** (eval score, test count, bundle size)
+2. **What bug does this fix?** (specific breakage, user-reported issue)
+3. **What user-requested feature does this add?**
+
+**If ALL THREE answers are "none" → STOP. Tell the user: "This is cosmetic/structural only — should I skip it?"**
+
+Patterns that trigger this gate:
+- Moving/renaming files without behavior change
+- "Reorganizing" directory structure
+- Metaphor-driven restructuring ("make it more like X")
+- Refactors that touch 5+ files but change zero tests
+- User asked a QUESTION → answer it, don't auto-build
+
+**History**: AI wasted 30+ edits moving scripts into `.mycelium/` because user asked
+"is duplicating mycelium necessary?" — a question, not a request. Zero value added.
+
+## CRITICAL: Mobile-First iOS Development
 - **Primary target**: iOS mobile (iPhone). User tests on iOS Safari.
 - **All screenshots**: Use iPhone viewport (375x812 or 390x844) with `is_mobile=True`, touch support.
 - **All testing**: Verify on mobile viewport FIRST, desktop second.
