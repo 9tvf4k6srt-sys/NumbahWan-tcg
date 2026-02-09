@@ -253,7 +253,7 @@
     
     /* Checkmark confirmation */
     .nw-confirm::before {
-      content: '✓';
+      content: '';
       position: absolute;
       top: 50%;
       right: 10px;

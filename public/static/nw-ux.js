@@ -75,15 +75,16 @@ const NW_UX = {
         if (this.config.shortcutsEnabled) this.initKeyboardShortcuts();
         if (this.config.breadcrumbsEnabled) this.initBreadcrumbs();
         
-        // Check for first-time user
-        if (!this.isOnboardingComplete()) {
+        // Check for first-time user - only show onboarding on game pages, not homepage
+        const gamePages = ['forge', 'collection', 'deckbuilder', 'battle', 'cards', 'wallet', 'market', 'arcade', 'guide'];
+        if (!this.isOnboardingComplete() && gamePages.includes(this.currentPage)) {
             setTimeout(() => this.showOnboarding(), 1500);
         }
         
         // Track page visit
         this.trackPageVisit(this.currentPage);
         
-        console.log(`🎯 NW_UX v${this.version} initialized on page: ${this.currentPage}`);
+        console.log(`NW_UX v${this.version} initialized on page: ${this.currentPage}`);
     },
 
     detectPage() {
@@ -186,19 +187,19 @@ const NW_UX = {
                 action: null
             },
             {
-                title: { en: '🔥 Pull Cards', zh: '🔥 抽卡', th: '🔥 สุ่มการ์ด' },
+                title: { en: 'Pull Cards', zh: '抽卡', th: 'สุ่มการ์ด' },
                 desc: { en: 'Open packs to collect 110+ unique guild member cards!', zh: '開卡包收集 110+ 張獨特的公會成員卡！', th: 'เปิดแพ็คเพื่อสะสมการ์ดสมาชิกกิลด์ 110+ ใบ!' },
                 icon: 'fire',
                 action: { label: { en: 'Try Now', zh: '試試看', th: 'ลองเลย' }, href: '/forge' }
             },
             {
-                title: { en: '⚔️ Battle', zh: '⚔️ 戰鬥', th: '⚔️ ต่อสู้' },
+                title: { en: 'Battle', zh: '戰鬥', th: 'ต่อสู้' },
                 desc: { en: 'Build decks and battle AI opponents to earn rewards!', zh: '組建卡組，與AI對戰賺取獎勵！', th: 'สร้างเด็คและต่อสู้กับ AI เพื่อรับรางวัล!' },
                 icon: 'swords',
                 action: { label: { en: 'Learn More', zh: '了解更多', th: 'เรียนรู้เพิ่มเติม' }, href: '/guide' }
             },
             {
-                title: { en: '💰 Earn & Spend', zh: '💰 賺取和消費', th: '💰 หาและใช้จ่าย' },
+                title: { en: 'Earn & Spend', zh: '賺取和消費', th: 'หาและใช้จ่าย' },
                 desc: { en: 'Collect coins, sacred logs, and gems. Manage your wallet!', zh: '收集金幣、神聖原木和寶石。管理你的錢包！', th: 'สะสมเหรียญ ซาเครดล็อก และเจม จัดการกระเป๋าของคุณ!' },
                 icon: 'wallet',
                 action: { label: { en: 'Open Wallet', zh: '打開錢包', th: 'เปิดกระเป๋า' }, href: '/wallet' }
@@ -476,7 +477,7 @@ const NW_UX = {
         modal.innerHTML = `
             <div class="nw-modal">
                 <div class="nw-modal-header">
-                    <h3>⌨️ Keyboard Shortcuts</h3>
+                    <h3>Keyboard Shortcuts</h3>
                     <button class="nw-modal-close" onclick="NW_UX.closeAllModals()">×</button>
                 </div>
                 <div class="nw-modal-body">
@@ -929,4 +930,4 @@ if (document.readyState === 'loading') {
 // Expose globally
 window.NW_UX = NW_UX;
 
-console.log('📱 NW_UX module loaded');
+console.log('NW_UX module loaded');

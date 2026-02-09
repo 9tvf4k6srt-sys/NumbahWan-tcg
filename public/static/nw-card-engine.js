@@ -30,7 +30,7 @@ const NW_ABILITIES = {
     name: 'Rush',
     desc: 'Attacks first. +20% ATK on first strike.',
     phase: 'pre-combat',
-    icon: '⚡',
+    icon: 'RUSH',
     effect: (card, team, enemy) => ({
       priority: 1,
       atkBonus: Math.ceil(card.atk * 0.20),
@@ -43,7 +43,7 @@ const NW_ABILITIES = {
     name: 'Crit Boost',
     desc: 'Crit chance +15%. Critical hits deal 2x damage.',
     phase: 'on-attack',
-    icon: '🎯',
+    icon: 'CRIT_BOOST',
     effect: (card) => ({
       critBonus: 0.15,
       critMultiplier: 2.0
@@ -55,7 +55,7 @@ const NW_ABILITIES = {
     name: 'Lifesteal',
     desc: 'Heals for 30% of damage dealt.',
     phase: 'on-hit',
-    icon: '🩸',
+    icon: 'LIFESTEAL',
     effect: (card, team, enemy, dmgDealt) => ({
       healSelf: Math.ceil(dmgDealt * 0.30)
     }),
@@ -66,7 +66,7 @@ const NW_ABILITIES = {
     name: 'Self Destruct',
     desc: 'On death: deals 150% ATK to all enemies. Goes out swinging.',
     phase: 'on-death',
-    icon: '💥',
+    icon: 'SELF_DESTRUCT',
     effect: (card) => ({
       aoeDeathDamage: Math.ceil(card.atk * 1.50)
     }),
@@ -77,7 +77,7 @@ const NW_ABILITIES = {
     name: 'Debuff',
     desc: 'Reduces enemy team ATK by 15% for 2 rounds.',
     phase: 'pre-combat',
-    icon: '☠️',
+    icon: 'DEBUFF',
     effect: (card, team, enemy) => ({
       enemyAtkReduction: 0.15,
       duration: 2
@@ -90,7 +90,7 @@ const NW_ABILITIES = {
     name: 'Taunt',
     desc: 'Forces enemies to attack this card first. +20% HP.',
     phase: 'pre-combat',
-    icon: '🛡️',
+    icon: 'TAUNT',
     effect: (card) => ({
       taunt: true,
       hpBonus: Math.ceil(card.hp * 0.20)
@@ -102,7 +102,7 @@ const NW_ABILITIES = {
     name: 'Shield',
     desc: 'Blocks the first hit entirely. "Not today."',
     phase: 'on-defend',
-    icon: '🔰',
+    icon: 'SHIELD',
     effect: () => ({
       blockFirstHit: true,
       shieldHP: 0
@@ -114,7 +114,7 @@ const NW_ABILITIES = {
     name: 'Dodge',
     desc: '25% chance to completely dodge an attack.',
     phase: 'on-defend',
-    icon: '💨',
+    icon: 'DODGE',
     effect: (card) => ({
       dodgeChance: 0.25 + (card.dodge || 0)
     }),
@@ -125,7 +125,7 @@ const NW_ABILITIES = {
     name: 'Dodge Boost',
     desc: 'Boosts entire team dodge rate by +10%.',
     phase: 'team-buff',
-    icon: '🌀',
+    icon: 'DODGE_BOOST',
     effect: (card, team) => ({
       teamDodgeBonus: 0.10
     }),
@@ -136,7 +136,7 @@ const NW_ABILITIES = {
     name: 'Heal',
     desc: 'Heals lowest HP teammate for 25% of this card\'s HP each round.',
     phase: 'end-of-round',
-    icon: '💚',
+    icon: 'HEAL',
     effect: (card, team) => {
       const lowest = team.filter(c => c.currentHP > 0).sort((a, b) => a.currentHP - b.currentHP)[0];
       return { healTarget: lowest?.id, healAmount: Math.ceil(card.hp * 0.25) };
@@ -149,7 +149,7 @@ const NW_ABILITIES = {
     name: 'Buff',
     desc: 'Boosts team ATK by 10%. Stacks with multiple Buffers.',
     phase: 'pre-combat',
-    icon: '✨',
+    icon: 'BUFF',
     effect: (card, team) => ({
       teamAtkBonus: 0.10,
       stackable: true
@@ -161,7 +161,7 @@ const NW_ABILITIES = {
     name: 'Stealth',
     desc: 'Cannot be targeted for 1 round. Attacks from shadows deal +25% damage.',
     phase: 'pre-combat',
-    icon: '👻',
+    icon: 'STEALTH',
     effect: (card) => ({
       untargetable: 1,
       stealthAtkBonus: Math.ceil(card.atk * 0.25)

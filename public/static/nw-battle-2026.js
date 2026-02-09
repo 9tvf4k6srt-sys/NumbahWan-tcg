@@ -1,5 +1,5 @@
 /**
- * 🎰 NWG BATTLE ARENA 2026
+ * NWG BATTLE ARENA 2026
  * Quick Auto-Battles + NWG Betting + Social Features
  * Optimized for short attention spans & mobile-first
  */
@@ -20,10 +20,10 @@ const NWBattle2026 = (function() {
     
     // Difficulty payouts & win rates
     DIFFICULTIES: {
-      easy:   { payout: 1.5, winRate: 0.70, name: 'Easy', emoji: '🟢' },
-      medium: { payout: 2.0, winRate: 0.50, name: 'Medium', emoji: '🟡' },
-      hard:   { payout: 3.0, winRate: 0.30, name: 'Hard', emoji: '🔴' },
-      boss:   { payout: 10.0, winRate: 0.10, name: 'BOSS', emoji: '💀' }
+      easy:   { payout: 1.5, winRate: 0.70, name: 'Easy', emoji: '' },
+      medium: { payout: 2.0, winRate: 0.50, name: 'Medium', emoji: '' },
+      hard:   { payout: 3.0, winRate: 0.30, name: 'Hard', emoji: '' },
+      boss:   { payout: 10.0, winRate: 0.10, name: 'BOSS', emoji: '' }
     },
     
     // Power by rarity
@@ -192,17 +192,17 @@ const NWBattle2026 = (function() {
       <div class="battle-2026">
         <!-- Header -->
         <div class="battle-header">
-          <h1>⚔️ NWG BATTLE ARENA</h1>
+          <h1>NWG BATTLE ARENA</h1>
           <div class="battle-stats">
-            <span class="stat win">🏆 ${state.stats.wins}</span>
-            <span class="stat lose">💀 ${state.stats.losses}</span>
-            <span class="stat nwg">💰 ${(state.stats.totalWon - state.stats.totalLost).toLocaleString()} NWG</span>
+            <span class="stat win">${state.stats.wins}</span>
+            <span class="stat lose">${state.stats.losses}</span>
+            <span class="stat nwg">${(state.stats.totalWon - state.stats.totalLost).toLocaleString()} NWG</span>
           </div>
         </div>
 
         <!-- Deck Selection -->
         <div class="deck-section">
-          <h3>📦 YOUR DECK (Pick 3)</h3>
+          <h3>YOUR DECK (Pick 3)</h3>
           <div class="deck-slots" id="userDeckSlots">
             ${[0,1,2].map(i => `
               <div class="deck-slot ${state.userDeck[i] ? 'filled' : ''}" data-slot="${i}">
@@ -215,7 +215,7 @@ const NWBattle2026 = (function() {
 
         <!-- Difficulty Selection -->
         <div class="difficulty-section">
-          <h3>🎯 DIFFICULTY</h3>
+          <h3>DIFFICULTY</h3>
           <div class="difficulty-buttons">
             ${Object.entries(CONFIG.DIFFICULTIES).map(([key, d]) => `
               <button class="diff-btn ${state.difficulty === key ? 'active' : ''}" data-diff="${key}">
@@ -227,7 +227,7 @@ const NWBattle2026 = (function() {
 
         <!-- Betting Section -->
         <div class="bet-section">
-          <h3>💰 YOUR BET</h3>
+          <h3>YOUR BET</h3>
           <div class="bet-controls">
             <button class="bet-btn" data-bet="min">MIN</button>
             <button class="bet-btn" data-bet="half">½</button>
@@ -242,7 +242,7 @@ const NWBattle2026 = (function() {
 
         <!-- Battle Button -->
         <button class="battle-btn" id="startBattleBtn" ${state.userDeck.length < 3 ? 'disabled' : ''}>
-          ⚔️ START BATTLE
+          START BATTLE
         </button>
 
         <!-- Card Picker Modal -->
@@ -250,7 +250,7 @@ const NWBattle2026 = (function() {
           <div class="picker-content">
             <h3>Select a Card</h3>
             <div class="picker-grid" id="pickerGrid"></div>
-            <button class="close-picker" id="closePickerBtn">✕ Close</button>
+            <button class="close-picker" id="closePickerBtn">Close</button>
           </div>
         </div>
 
@@ -258,7 +258,7 @@ const NWBattle2026 = (function() {
         <div class="battle-overlay" id="battleOverlay" style="display:none;">
           <div class="battle-arena-anim">
             <div class="team user-team" id="userTeamAnim"></div>
-            <div class="vs-flash">⚔️</div>
+            <div class="vs-flash"></div>
             <div class="team enemy-team" id="enemyTeamAnim"></div>
           </div>
           <div class="battle-result" id="battleResultDisplay"></div>
@@ -279,7 +279,7 @@ const NWBattle2026 = (function() {
              onerror="this.src='/static/images/cards/placeholder.webp'" alt="${card.name}">
         <div class="mini-name">${card.name.substring(0,12)}</div>
         <div class="mini-power">${calculateCardPower(card, isStaked, state.userDeck)}</div>
-        ${isStaked ? '<div class="staked-badge">🔒</div>' : ''}
+        ${isStaked ? '<div class="staked-badge"></div>' : ''}
       </div>
     `;
   }
@@ -430,7 +430,7 @@ const NWBattle2026 = (function() {
     const winClass = result.won ? 'victory' : 'defeat';
     resultDisplay.innerHTML = `
       <div class="result-box ${winClass}">
-        <div class="result-title">${result.won ? '🏆 VICTORY!' : '💀 DEFEAT'}</div>
+        <div class="result-title">${result.won ? 'VICTORY!' : 'DEFEAT'}</div>
         <div class="result-powers">
           <span>Your Power: ${result.userPower}</span>
           <span>vs</span>

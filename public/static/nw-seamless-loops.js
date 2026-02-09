@@ -19,10 +19,10 @@ const NW_LOOPS = {
         'forge': {
             triggers: ['pack-opened', 'card-revealed'],
             actions: [
-                { weight: 50, type: 'continue', text: 'Pull Again! 🎴', href: null, action: 'pullAgain' },
+                { weight: 50, type: 'continue', text: 'Pull Again! ', href: null, action: 'pullAgain' },
                 { weight: 25, type: 'link', text: 'Build a Deck →', href: '/deckbuilder' },
                 { weight: 15, type: 'link', text: 'See All Cards', href: '/collection' },
-                { weight: 10, type: 'link', text: 'Battle Now! ⚔️', href: '/battle' }
+                { weight: 10, type: 'link', text: 'Battle Now! ', href: '/battle' }
             ],
             postReveal: {
                 delay: 1500,
@@ -35,13 +35,13 @@ const NW_LOOPS = {
         'battle': {
             triggers: ['battle-end', 'victory', 'defeat'],
             actions: [
-                { weight: 60, type: 'continue', text: 'Battle Again! ⚔️', href: null, action: 'rematch' },
-                { weight: 20, type: 'link', text: 'Upgrade Deck 📋', href: '/deckbuilder' },
-                { weight: 15, type: 'link', text: 'Get More Cards 🎴', href: '/forge' },
+                { weight: 60, type: 'continue', text: 'Battle Again! ', href: null, action: 'rematch' },
+                { weight: 20, type: 'link', text: 'Upgrade Deck ', href: '/deckbuilder' },
+                { weight: 15, type: 'link', text: 'Get More Cards ', href: '/forge' },
                 { weight: 5, type: 'link', text: 'View Stats', href: '/profile' }
             ],
             postBattle: {
-                victoryBonus: { chance: 0.25, msg: 'STREAK BONUS! +5 Gold 🔥' },
+                victoryBonus: { chance: 0.25, msg: 'STREAK BONUS! +5 Gold ' },
                 defeatEncourage: [
                     'Almost had them! Try a different strategy?',
                     'So close! One more round?',
@@ -55,10 +55,10 @@ const NW_LOOPS = {
         'collection': {
             triggers: ['card-viewed', 'filter-applied'],
             actions: [
-                { weight: 40, type: 'link', text: 'Hunt for More 🎴', href: '/forge' },
+                { weight: 40, type: 'link', text: 'Hunt for More ', href: '/forge' },
                 { weight: 30, type: 'link', text: 'Build Deck →', href: '/deckbuilder' },
-                { weight: 20, type: 'link', text: 'Test in Battle ⚔️', href: '/battle' },
-                { weight: 10, type: 'link', text: 'Check Market 📈', href: '/market' }
+                { weight: 20, type: 'link', text: 'Test in Battle ', href: '/battle' },
+                { weight: 10, type: 'link', text: 'Check Market ', href: '/market' }
             ],
             missingCardPrompt: {
                 text: 'Missing this card? Hunt it at the Forge!',
@@ -70,7 +70,7 @@ const NW_LOOPS = {
         'deckbuilder': {
             triggers: ['deck-saved', 'card-added'],
             actions: [
-                { weight: 50, type: 'link', text: 'Test Your Deck! ⚔️', href: '/battle' },
+                { weight: 50, type: 'link', text: 'Test Your Deck! ', href: '/battle' },
                 { weight: 25, type: 'link', text: 'Need More Cards?', href: '/forge' },
                 { weight: 25, type: 'link', text: 'Check Collection', href: '/collection' }
             ]
@@ -80,10 +80,10 @@ const NW_LOOPS = {
         'market': {
             triggers: ['purchase', 'sale', 'item-viewed'],
             actions: [
-                { weight: 40, type: 'continue', text: 'Keep Browsing 🔍', href: null, action: 'refresh' },
-                { weight: 30, type: 'link', text: 'Open Packs 🎴', href: '/forge' },
-                { weight: 20, type: 'link', text: 'Check Wallet 💰', href: '/wallet' },
-                { weight: 10, type: 'link', text: 'Battle & Earn ⚔️', href: '/battle' }
+                { weight: 40, type: 'continue', text: 'Keep Browsing ', href: null, action: 'refresh' },
+                { weight: 30, type: 'link', text: 'Open Packs ', href: '/forge' },
+                { weight: 20, type: 'link', text: 'Check Wallet ', href: '/wallet' },
+                { weight: 10, type: 'link', text: 'Battle & Earn ', href: '/battle' }
             ]
         },
         
@@ -91,9 +91,9 @@ const NW_LOOPS = {
         'arcade': {
             triggers: ['game-end', 'score-submitted'],
             actions: [
-                { weight: 60, type: 'continue', text: 'Play Again! 🎮', href: null, action: 'replay' },
+                { weight: 60, type: 'continue', text: 'Play Again! ', href: null, action: 'replay' },
                 { weight: 20, type: 'link', text: 'Try Another Game', href: '/arcade' },
-                { weight: 15, type: 'link', text: 'Spend Winnings 🎴', href: '/forge' },
+                { weight: 15, type: 'link', text: 'Spend Winnings ', href: '/forge' },
                 { weight: 5, type: 'link', text: 'View Leaderboard', href: '/arcade#leaderboard' }
             ]
         },
@@ -102,10 +102,10 @@ const NW_LOOPS = {
         'wallet': {
             triggers: ['balance-viewed'],
             actions: [
-                { weight: 40, type: 'link', text: 'Open Packs 🎴', href: '/forge' },
-                { weight: 30, type: 'link', text: 'Trade on Market 📈', href: '/market' },
-                { weight: 20, type: 'link', text: 'Earn More! ⚔️', href: '/battle' },
-                { weight: 10, type: 'link', text: 'Play Arcade 🎮', href: '/arcade' }
+                { weight: 40, type: 'link', text: 'Open Packs ', href: '/forge' },
+                { weight: 30, type: 'link', text: 'Trade on Market ', href: '/market' },
+                { weight: 20, type: 'link', text: 'Earn More! ', href: '/battle' },
+                { weight: 10, type: 'link', text: 'Play Arcade ', href: '/arcade' }
             ]
         },
         
@@ -113,9 +113,9 @@ const NW_LOOPS = {
         'tabletop': {
             triggers: ['rule-read', 'section-viewed'],
             actions: [
-                { weight: 35, type: 'link', text: 'Read Rulebook 📖', href: '/tabletop/rulebook' },
+                { weight: 35, type: 'link', text: 'Read Rulebook ', href: '/tabletop/rulebook' },
                 { weight: 35, type: 'link', text: 'Create Character', href: '/tabletop/character-sheets' },
-                { weight: 20, type: 'link', text: 'Get Cards First 🎴', href: '/forge' },
+                { weight: 20, type: 'link', text: 'Get Cards First ', href: '/forge' },
                 { weight: 10, type: 'link', text: 'Start Campaign', href: '/tabletop/campaigns' }
             ]
         },
@@ -124,10 +124,10 @@ const NW_LOOPS = {
         'lore': {
             triggers: ['story-read', 'page-viewed'],
             actions: [
-                { weight: 40, type: 'continue', text: 'More Stories 📜', href: null, action: 'nextStory' },
-                { weight: 25, type: 'link', text: 'Meet the Characters 🎴', href: '/cards' },
+                { weight: 40, type: 'continue', text: 'More Stories ', href: null, action: 'nextStory' },
+                { weight: 25, type: 'link', text: 'Meet the Characters ', href: '/cards' },
                 { weight: 20, type: 'link', text: 'Explore The Abyss', href: '/lore' },
-                { weight: 15, type: 'link', text: 'Battle Their Cards ⚔️', href: '/battle' }
+                { weight: 15, type: 'link', text: 'Battle Their Cards ', href: '/battle' }
             ]
         }
     },
@@ -143,7 +143,7 @@ const NW_LOOPS = {
             "The Forge is warm and ready."
         ],
         streak: [
-            "You're on fire! 🔥",
+            "You're on fire! ",
             "Keep the momentum going!",
             "The cards favor you today!",
             "Legendary vibes detected!"
@@ -181,7 +181,7 @@ const NW_LOOPS = {
         this.setupIdleDetection();
         this.injectStyles();
         
-        console.log(`🔄 NW_LOOPS v${this.version} initialized on: ${this.state.currentPage}`);
+        console.log(`NW_LOOPS v${this.version} initialized on: ${this.state.currentPage}`);
     },
     
     detectPage() {
@@ -303,7 +303,7 @@ const NW_LOOPS = {
         // Add contextual message
         let contextMsg = '';
         if (data.victory) {
-            contextMsg = '<div class="nw-loop-victory">🏆 Victory! Keep the streak going!</div>';
+            contextMsg = '<div class="nw-loop-victory">Victory! Keep the streak going!</div>';
         } else if (data.victory === false) {
             const encourageMsg = pageConfig.postBattle?.defeatEncourage || this.motivationalMessages.streak;
             contextMsg = `<div class="nw-loop-encourage">${encourageMsg[Math.floor(Math.random() * encourageMsg.length)]}</div>`;
@@ -454,12 +454,12 @@ const NW_LOOPS = {
         prompt.className = 'nw-idle-prompt';
         prompt.innerHTML = `
             <div class="nw-idle-content">
-                <span class="nw-idle-icon">✨</span>
+                <span class="nw-idle-icon"></span>
                 <span class="nw-idle-text">${msg}</span>
             </div>
             <div class="nw-idle-actions">
-                <a href="/forge" class="nw-idle-btn primary">Open Packs 🎴</a>
-                <a href="/battle" class="nw-idle-btn">Battle ⚔️</a>
+                <a href="/forge" class="nw-idle-btn primary">Open Packs </a>
+                <a href="/battle" class="nw-idle-btn">Battle </a>
             </div>
         `;
         
@@ -718,4 +718,4 @@ if (document.readyState === 'loading') {
 // Expose globally
 window.NW_LOOPS = NW_LOOPS;
 
-console.log('🔄 NW_LOOPS module loaded - Seamless Loop Engineering Active');
+console.log('NW_LOOPS module loaded - Seamless Loop Engineering Active');

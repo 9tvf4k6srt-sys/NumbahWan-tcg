@@ -319,16 +319,16 @@ const NW_FEATURES = {
         
         const info = NW_WALLET.getStreakInfo?.() || { currentStreak: 0, canClaim: false };
         
-        const fireEmoji = info.currentStreak >= 7 ? '🔥🔥🔥' : 
-                         info.currentStreak >= 3 ? '🔥🔥' : 
-                         info.currentStreak > 0 ? '🔥' : '💤';
+        const fireEmoji = info.currentStreak >= 7 ? '' : 
+                         info.currentStreak >= 3 ? '' : 
+                         info.currentStreak > 0 ? '' : '';
         
         container.innerHTML = `
             <div class="nw-streak-badge ${info.canClaim ? 'can-claim' : ''} ${info.streakBroken ? 'broken' : ''}">
                 <span class="streak-fire">${fireEmoji}</span>
                 <span class="streak-count">${info.currentStreak}</span>
                 <span class="streak-label">day streak</span>
-                ${info.protections > 0 ? `<span class="streak-shield">🛡️${info.protections}</span>` : ''}
+                ${info.protections > 0 ? `<span class="streak-shield">${info.protections}</span>` : ''}
                 ${info.canClaim ? '<span class="claim-dot"></span>' : ''}
             </div>
         `;
@@ -360,7 +360,7 @@ const NW_FEATURES = {
                 <div class="featured-glow"></div>
                 <div class="featured-content">
                     <div class="featured-label">
-                        <span class="featured-icon">⭐</span>
+                        <span class="featured-icon"></span>
                         <span>TODAY'S FEATURED CARD</span>
                     </div>
                     <div class="featured-card-preview" data-card-id="${featured.cardId}" data-rarity="${featured.rarity}">
@@ -371,7 +371,7 @@ const NW_FEATURES = {
                         <span class="bonus-value">${bonusText}</span>
                     </div>
                     <div class="featured-timer">
-                        <span class="timer-icon">⏰</span>
+                        <span class="timer-icon"></span>
                         <span class="timer-value">${featured.hoursRemaining}h ${featured.minutesRemaining}m</span>
                         <span class="timer-label">remaining</span>
                     </div>
@@ -410,12 +410,12 @@ const NW_FEATURES = {
         const topEntries = leaderboard.entries.slice(0, limit);
         const userInfo = this.getUserRankInfo();
         
-        const medalEmojis = ['🥇', '🥈', '🥉'];
+        const medalEmojis = ['', '', ''];
         
         container.innerHTML = `
             <div class="nw-leaderboard">
                 <div class="leaderboard-header">
-                    <h3>🏆 Collection Value Leaderboard</h3>
+                    <h3>Collection Value Leaderboard</h3>
                     <span class="leaderboard-update">Updated ${this.formatTimeAgo(leaderboard.lastUpdated)}</span>
                 </div>
                 <div class="leaderboard-list">

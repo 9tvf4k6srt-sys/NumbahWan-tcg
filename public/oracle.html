@@ -1,0 +1,1071 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>The Oracle | NumbahWan Guild</title>
+    <meta name="description" content="Ancient wisdom meets modern problems. Ask the NumbahWan Oracle anything — get answers from Buddhist sutras, Tao Te Ching, Bible, and Quran, delivered with humor that actually helps.">
+    <link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
+    <meta property="og:title" content="The Oracle | NumbahWan Guild">
+    <meta property="og:description" content="Life advice from 4,000 years of wisdom traditions — delivered with humor that actually fixes your problems.">
+    <meta property="og:type" content="website">
+    <link rel="preload" href="/static/fonts/inter-variable.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="preload" href="/static/fonts/NumbahWan-Regular.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="preload" href="/static/fonts/orbitron-variable.woff2" as="font" type="font/woff2" crossorigin>
+    <style>
+        @font-face{font-family:'NumbahWan';src:url('/static/fonts/NumbahWan-Regular.woff2') format('woff2'),url('/static/fonts/NumbahWan-Regular.ttf') format('truetype');font-weight:400;font-style:normal;font-display:swap}
+        @font-face{font-family:'Orbitron';src:url('/static/fonts/orbitron-variable.woff2') format('woff2');font-weight:400 900;font-style:normal;font-display:swap}
+        @font-face{font-family:'Inter';src:url('/static/fonts/inter-variable.woff2') format('woff2');font-weight:400 700;font-style:normal;font-display:swap}
+    </style>
+    <link rel="stylesheet" href="/static/nw-core.css">
+    <script src="/static/nw-nav.js" defer></script>
+    <script src="/static/nw-i18n-core.js" defer></script>
+    <style>
+        :root {
+            --oracle-gold: #ffd700;
+            --oracle-amber: #ff9500;
+            --oracle-ember: #ff6b00;
+            --oracle-deep: #0a0605;
+            --oracle-surface: rgba(255, 150, 0, 0.03);
+            --oracle-glow: rgba(255, 170, 50, 0.12);
+            --oracle-text: #ede4d8;
+            --oracle-dim: rgba(255, 200, 150, 0.4);
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html { scroll-behavior: smooth; }
+        body {
+            font-family: 'Inter', system-ui, sans-serif;
+            background: var(--oracle-deep);
+            color: var(--oracle-text);
+            min-height: 100vh; min-height: 100dvh;
+            overflow-x: hidden;
+        }
+
+        /* ━━ COSMIC BACKGROUND ━━ */
+        .cosmos {
+            position: fixed; inset: 0; z-index: 0; pointer-events: none;
+            background:
+                radial-gradient(ellipse at 50% -10%, rgba(255,150,0,0.10) 0%, transparent 55%),
+                radial-gradient(ellipse at 15% 85%, rgba(120,60,10,0.06) 0%, transparent 45%),
+                radial-gradient(ellipse at 85% 50%, rgba(255,215,0,0.04) 0%, transparent 40%),
+                radial-gradient(ellipse at 50% 100%, rgba(255,100,0,0.06) 0%, transparent 50%);
+        }
+
+        /* Stars field */
+        .stars {
+            position: fixed; inset: 0; pointer-events: none; z-index: 0;
+        }
+        .star {
+            position: absolute; width: 2px; height: 2px;
+            background: rgba(255,220,150,0.6); border-radius: 50%;
+            animation: starTwinkle var(--dur) ease-in-out infinite;
+        }
+        @keyframes starTwinkle {
+            0%,100% { opacity: 0.15; } 50% { opacity: 0.8; }
+        }
+
+        /* Sacred geometry rings */
+        .sacred-ring {
+            position: fixed; pointer-events: none; z-index: 0;
+            border-radius: 50%; border: 1px solid;
+        }
+        .ring-1 {
+            top: 5%; left: -5%; width: 400px; height: 400px;
+            border-color: rgba(255,215,0,0.03);
+            animation: ringRotate 90s linear infinite;
+        }
+        .ring-2 {
+            bottom: -10%; right: -8%; width: 500px; height: 500px;
+            border-color: rgba(255,150,0,0.025);
+            animation: ringRotate 120s linear infinite reverse;
+        }
+        .ring-3 {
+            top: 30%; left: 50%; width: 250px; height: 250px; transform: translateX(-50%);
+            border-color: rgba(255,200,100,0.02);
+            animation: ringPulse 10s ease-in-out infinite;
+        }
+        @keyframes ringRotate { to { transform: rotate(360deg); } }
+        @keyframes ringPulse { 0%,100% { opacity: 0.3; transform: translateX(-50%) scale(1); } 50% { opacity: 0.6; transform: translateX(-50%) scale(1.08); } }
+
+        /* Floating particles (incense) */
+        .particles { position: fixed; inset: 0; pointer-events: none; z-index: 0; overflow: hidden; }
+        .particle {
+            position: absolute; border-radius: 50%;
+            background: radial-gradient(circle, rgba(255,180,80,0.25) 0%, transparent 70%);
+            filter: blur(1px); animation: particleFloat linear infinite;
+        }
+        @keyframes particleFloat {
+            0% { transform: translateY(0) translateX(0) scale(1); opacity: 0.3; }
+            25% { transform: translateY(-25vh) translateX(15px) scale(1.8); opacity: 0.25; }
+            50% { transform: translateY(-50vh) translateX(-10px) scale(2.5); opacity: 0.15; }
+            75% { transform: translateY(-75vh) translateX(20px) scale(3.5); opacity: 0.08; }
+            100% { transform: translateY(-100vh) translateX(-5px) scale(4); opacity: 0; }
+        }
+
+        /* ━━ LAYOUT ━━ */
+        .oracle-app {
+            position: relative; z-index: 1;
+            max-width: 520px; margin: 0 auto;
+            min-height: 100vh; min-height: 100dvh;
+            display: flex; flex-direction: column;
+            padding: 0 16px;
+        }
+
+        /* ━━ HEADER ━━ */
+        .oracle-header {
+            text-align: center; padding: 80px 0 12px;
+            flex-shrink: 0;
+        }
+        .emblem-wrap {
+            width: 96px; height: 96px; margin: 0 auto 16px;
+            position: relative;
+        }
+        .emblem-glow {
+            position: absolute; inset: -20px; border-radius: 50%;
+            background: radial-gradient(circle, rgba(255,150,0,0.15) 0%, transparent 70%);
+            animation: emblemPulse 4s ease-in-out infinite;
+        }
+        @keyframes emblemPulse { 0%,100% { opacity: 0.5; transform: scale(1); } 50% { opacity: 1; transform: scale(1.1); } }
+        .emblem-svg {
+            position: relative; width: 100%; height: 100%;
+            filter: drop-shadow(0 0 24px rgba(255,150,0,0.4));
+            animation: emblemFloat 5s ease-in-out infinite;
+        }
+        @keyframes emblemFloat { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
+
+        .oracle-title {
+            font-family: 'NumbahWan', 'Orbitron', sans-serif;
+            font-size: clamp(1.6rem, 6vw, 2.4rem);
+            background: linear-gradient(180deg, #ffd700 0%, #ff9500 50%, #ff6b00 100%);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            background-clip: text; letter-spacing: 3px;
+            text-shadow: none; /* clip handles it */
+        }
+        .oracle-subtitle {
+            font-size: 11px; color: var(--oracle-dim);
+            letter-spacing: 4px; text-transform: uppercase; margin-top: 6px;
+        }
+        .traditions {
+            display: flex; justify-content: center; gap: 24px;
+            margin: 14px 0 4px; opacity: 0.45;
+        }
+        .tradition {
+            width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;
+            font-size: 20px; transition: all 0.4s ease;
+            cursor: default; -webkit-tap-highlight-color: transparent;
+        }
+        .tradition:hover { opacity: 1; transform: scale(1.25); filter: drop-shadow(0 0 8px rgba(255,150,0,0.5)); }
+        .tradition-label {
+            font-size: 8px; color: var(--oracle-dim); letter-spacing: 1px;
+            opacity: 0; transition: opacity 0.3s;
+        }
+        .tradition:hover + .tradition-label, .tradition:active + .tradition-label { opacity: 1; }
+
+        /* ━━ LANGUAGE SWITCHER ━━ */
+        .lang-switcher {
+            display: flex; justify-content: center; gap: 6px;
+            margin: 10px 0 4px;
+        }
+        .lang-btn {
+            padding: 6px 14px; border-radius: 20px;
+            background: rgba(255,150,0,0.04);
+            border: 1px solid rgba(255,150,0,0.1);
+            color: var(--oracle-dim); font-size: 12px; font-weight: 500;
+            cursor: pointer; transition: all 0.3s;
+            -webkit-tap-highlight-color: transparent;
+            font-family: inherit; letter-spacing: 0.5px;
+        }
+        .lang-btn:hover { border-color: rgba(255,150,0,0.25); color: var(--oracle-amber); }
+        .lang-btn:active { transform: scale(0.95); }
+        .lang-btn.active {
+            background: linear-gradient(135deg, rgba(255,150,0,0.12), rgba(255,100,0,0.08));
+            border-color: rgba(255,150,0,0.3);
+            color: var(--oracle-amber);
+            box-shadow: 0 0 12px rgba(255,107,0,0.1);
+        }
+
+        /* ━━ STREAK / COUNTER BAR ━━ */
+        .stats-bar {
+            display: flex; justify-content: center; gap: 24px;
+            padding: 8px 0; margin-bottom: 4px;
+        }
+        .stat {
+            display: flex; align-items: center; gap: 5px;
+            font-size: 10px; color: var(--oracle-dim);
+            letter-spacing: 1px; text-transform: uppercase;
+        }
+        .stat-value {
+            color: var(--oracle-amber);
+            font-family: 'NumbahWan', monospace; font-size: 13px;
+        }
+        .stat-icon { font-size: 14px; }
+
+        /* ━━ CHAT AREA ━━ */
+        .chat-area {
+            flex: 1; overflow-y: auto; padding: 8px 0 8px;
+            display: flex; flex-direction: column; gap: 16px;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: thin;
+            scrollbar-color: rgba(255,150,0,0.1) transparent;
+        }
+        .chat-area::-webkit-scrollbar { width: 3px; }
+        .chat-area::-webkit-scrollbar-thumb { background: rgba(255,150,0,0.1); border-radius: 3px; }
+
+        /* ━━ WELCOME STATE ━━ */
+        .welcome {
+            flex: 1; display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            text-align: center; padding: 20px 0; gap: 24px;
+            animation: welcomeFade 1s ease-out;
+        }
+        @keyframes welcomeFade { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+        .welcome-art {
+            width: 180px; height: 180px; position: relative; margin-bottom: 4px;
+        }
+        .mandala {
+            width: 100%; height: 100%; opacity: 0.12;
+            animation: mandalaRotate 60s linear infinite;
+        }
+        @keyframes mandalaRotate { to { transform: rotate(360deg); } }
+        .welcome-inner {
+            position: absolute; inset: 30px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 48px; filter: drop-shadow(0 0 20px rgba(255,150,0,0.3));
+            animation: emblemFloat 4s ease-in-out infinite;
+        }
+        .welcome-text {
+            font-size: 14px; color: rgba(255,200,150,0.45); line-height: 2;
+            max-width: 320px;
+        }
+        .welcome-text strong { color: rgba(255,200,150,0.7); font-weight: 500; }
+        .chips {
+            display: flex; flex-wrap: wrap; gap: 8px; justify-content: center;
+            max-width: 400px;
+        }
+        .chip {
+            padding: 10px 16px; border-radius: 24px;
+            background: rgba(255,150,0,0.04);
+            border: 1px solid rgba(255,150,0,0.1);
+            color: rgba(255,200,150,0.6); font-size: 12.5px;
+            cursor: pointer; transition: all 0.3s;
+            -webkit-tap-highlight-color: transparent;
+            line-height: 1.4;
+        }
+        .chip:hover, .chip:active {
+            background: rgba(255,150,0,0.1);
+            border-color: rgba(255,150,0,0.25);
+            color: var(--oracle-amber);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 16px rgba(255,107,0,0.1);
+        }
+
+        /* ━━ MESSAGES ━━ */
+        .msg {
+            max-width: 92%; line-height: 1.75; font-size: 14px;
+            animation: msgSlide 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        @keyframes msgSlide {
+            from { opacity: 0; transform: translateY(20px) scale(0.97); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        .msg-user {
+            align-self: flex-end;
+            background: linear-gradient(135deg, rgba(255,150,0,0.10), rgba(255,100,0,0.06));
+            border: 1px solid rgba(255,150,0,0.12);
+            border-radius: 20px 20px 4px 20px;
+            padding: 14px 18px; color: #f0d8b8;
+        }
+        .msg-oracle {
+            align-self: flex-start;
+            background: rgba(255,255,255,0.015);
+            border: 1px solid rgba(255,255,255,0.04);
+            border-radius: 4px 20px 20px 20px;
+            padding: 20px; color: var(--oracle-text);
+            position: relative; overflow: hidden;
+        }
+        .msg-oracle::before {
+            content: ''; position: absolute; top: 0; left: 20px; right: 20px; height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(255,150,0,0.25), transparent);
+        }
+        .msg-oracle strong { color: var(--oracle-amber); font-weight: 600; }
+        .msg-oracle em { color: rgba(255,200,150,0.65); font-style: italic; }
+        .msg-oracle p { margin-bottom: 12px; }
+        .msg-oracle p:last-child { margin-bottom: 0; }
+        .msg-oracle ul, .msg-oracle ol { margin: 8px 0 12px 20px; }
+        .msg-oracle li { margin-bottom: 6px; }
+
+        /* Oracle seal — the punchline */
+        .wisdom-seal {
+            display: block; margin-top: 16px; padding-top: 12px;
+            border-top: 1px solid rgba(255,150,0,0.08);
+            font-style: italic; color: var(--oracle-amber); font-size: 13.5px;
+            line-height: 1.6; letter-spacing: 0.3px;
+        }
+
+        /* Source badge */
+        .source-badge {
+            display: inline-flex; align-items: center; gap: 4px;
+            margin-top: 12px; padding: 3px 10px; border-radius: 12px;
+            font-size: 9px; letter-spacing: 1px; text-transform: uppercase;
+            background: rgba(255,150,0,0.06); color: var(--oracle-dim);
+            border: 1px solid rgba(255,150,0,0.08);
+        }
+        .source-dot {
+            width: 5px; height: 5px; border-radius: 50%;
+        }
+        .source-dot.oracle { background: var(--oracle-gold); }
+        .source-dot.curated { background: var(--oracle-amber); }
+
+        /* Typing indicator */
+        .thinking {
+            display: flex; align-items: center; gap: 10px;
+            padding: 16px 20px; font-size: 13px; color: var(--oracle-dim);
+            animation: msgSlide 0.3s ease-out;
+        }
+        .think-dots { display: flex; gap: 5px; }
+        .think-dot {
+            width: 7px; height: 7px; border-radius: 50%;
+            background: var(--oracle-amber);
+            animation: dotBounce 1.4s ease-in-out infinite;
+        }
+        .think-dot:nth-child(2) { animation-delay: 0.15s; }
+        .think-dot:nth-child(3) { animation-delay: 0.3s; }
+        @keyframes dotBounce {
+            0%,80%,100% { opacity: 0.15; transform: scale(0.7); }
+            40% { opacity: 0.9; transform: scale(1.2); }
+        }
+
+        /* ━━ INPUT AREA ━━ */
+        .input-area {
+            flex-shrink: 0;
+            padding: 10px 0 max(10px, env(safe-area-inset-bottom));
+            position: sticky; bottom: 0;
+            background: linear-gradient(to top, var(--oracle-deep) 60%, transparent);
+        }
+        .input-row { display: flex; gap: 10px; align-items: flex-end; }
+        .input-wrap {
+            flex: 1; position: relative;
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,150,0,0.08);
+            border-radius: 28px; transition: all 0.3s;
+        }
+        .input-wrap:focus-within {
+            border-color: rgba(255,150,0,0.3);
+            box-shadow: 0 0 30px rgba(255,150,0,0.04);
+        }
+        #oracle-input {
+            width: 100%; padding: 14px 20px; background: none; border: none;
+            color: #f0d8b8; font-size: 15px; font-family: inherit;
+            outline: none; resize: none;
+            max-height: 120px; line-height: 1.5;
+        }
+        #oracle-input::placeholder { color: rgba(255,180,100,0.25); }
+        .send-btn {
+            width: 50px; height: 50px; border-radius: 50%;
+            background: linear-gradient(135deg, var(--oracle-ember), var(--oracle-amber));
+            border: none; cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            transition: all 0.3s ease; flex-shrink: 0;
+            box-shadow: 0 4px 24px rgba(255,107,0,0.3);
+            -webkit-tap-highlight-color: transparent;
+        }
+        .send-btn:hover { transform: scale(1.06); box-shadow: 0 6px 32px rgba(255,107,0,0.45); }
+        .send-btn:active { transform: scale(0.94); }
+        .send-btn:disabled { opacity: 0.3; cursor: not-allowed; transform: none; box-shadow: none; }
+        .send-btn svg { width: 20px; height: 20px; fill: white; }
+
+        /* Glow pulse after response */
+        .glow-pulse {
+            animation: sendGlow 2.5s ease-in-out infinite;
+        }
+        @keyframes sendGlow {
+            0%,100% { box-shadow: 0 4px 24px rgba(255,107,0,0.3); }
+            50% { box-shadow: 0 4px 48px rgba(255,107,0,0.55), 0 0 80px rgba(255,215,0,0.15); }
+        }
+
+        /* ━━ DAILY ORACLE CARD ━━ */
+        .daily-card {
+            margin: 0 auto 16px; padding: 16px 20px;
+            background: linear-gradient(135deg, rgba(255,150,0,0.05), rgba(255,215,0,0.02));
+            border: 1px solid rgba(255,150,0,0.08);
+            border-radius: 16px; text-align: center;
+            cursor: pointer; transition: all 0.3s;
+            max-width: 320px; width: 100%;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .daily-card:hover {
+            border-color: rgba(255,150,0,0.2);
+            box-shadow: 0 4px 24px rgba(255,107,0,0.08);
+            transform: translateY(-1px);
+        }
+        .daily-card.revealed {
+            cursor: default; transform: none;
+            background: rgba(255,150,0,0.03);
+        }
+        .daily-label {
+            font-size: 9px; letter-spacing: 3px; text-transform: uppercase;
+            color: var(--oracle-dim); margin-bottom: 6px;
+        }
+        .daily-icon {
+            font-size: 28px; margin-bottom: 4px;
+            filter: drop-shadow(0 0 10px rgba(255,150,0,0.3));
+        }
+        .daily-prompt {
+            font-size: 12px; color: rgba(255,200,150,0.5);
+        }
+        .daily-wisdom {
+            display: none; font-size: 13px; color: var(--oracle-text);
+            line-height: 1.7; text-align: left; margin-top: 12px;
+        }
+        .daily-card.revealed .daily-prompt { display: none; }
+        .daily-card.revealed .daily-wisdom { display: block; }
+        .daily-card.revealed .daily-icon { animation: none; }
+
+        /* ━━ SHARE BUTTON ━━ */
+        .share-btn {
+            display: inline-flex; align-items: center; gap: 5px;
+            margin-top: 10px; padding: 6px 14px; border-radius: 16px;
+            background: rgba(255,150,0,0.06); border: 1px solid rgba(255,150,0,0.1);
+            color: var(--oracle-dim); font-size: 11px; cursor: pointer;
+            transition: all 0.3s; -webkit-tap-highlight-color: transparent;
+        }
+        .share-btn:hover { background: rgba(255,150,0,0.12); color: var(--oracle-amber); }
+        .share-btn svg { width: 12px; height: 12px; fill: currentColor; }
+
+        /* ━━ TOAST ━━ */
+        .toast {
+            position: fixed; bottom: 100px; left: 50%; transform: translateX(-50%);
+            padding: 10px 24px; border-radius: 24px;
+            background: rgba(255,150,0,0.15); border: 1px solid rgba(255,150,0,0.2);
+            color: var(--oracle-amber); font-size: 13px;
+            z-index: 100; pointer-events: none;
+            animation: toastIn 0.3s ease-out, toastOut 0.3s ease-in 2s forwards;
+        }
+        @keyframes toastIn { from { opacity: 0; transform: translateX(-50%) translateY(10px); } }
+        @keyframes toastOut { to { opacity: 0; transform: translateX(-50%) translateY(-10px); } }
+
+        /* ━━ RESPONSIVE ━━ */
+        @media (max-width: 375px) {
+            .oracle-app { padding: 0 12px; }
+            .chips { gap: 6px; }
+            .chip { padding: 8px 12px; font-size: 11.5px; }
+            .msg { font-size: 13.5px; }
+        }
+
+        /* NW nav spacing */
+        .oracle-app { padding-top: 0; }
+        .oracle-header { padding-top: 80px; }
+    </style>
+</head>
+<body>
+    <!-- Ambient layers -->
+    <div class="cosmos"></div>
+    <div class="stars" id="stars"></div>
+    <div class="sacred-ring ring-1"></div>
+    <div class="sacred-ring ring-2"></div>
+    <div class="sacred-ring ring-3"></div>
+    <div class="particles" id="particles"></div>
+
+    <div class="oracle-app">
+        <!-- Header -->
+        <header class="oracle-header">
+            <div class="emblem-wrap">
+                <div class="emblem-glow"></div>
+                <svg class="emblem-svg" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                    <defs>
+                        <linearGradient id="gG" x1="0%" y1="0%" x2="0%" y2="100%">
+                            <stop offset="0%" stop-color="#ffd700"/>
+                            <stop offset="50%" stop-color="#ff9500"/>
+                            <stop offset="100%" stop-color="#ff6b00"/>
+                        </linearGradient>
+                    </defs>
+                    <!-- Lotus petals -->
+                    <path d="M50 75 Q35 68 30 78 Q38 80 50 75Z" fill="url(#gG)" opacity="0.3"/>
+                    <path d="M50 75 Q65 68 70 78 Q62 80 50 75Z" fill="url(#gG)" opacity="0.3"/>
+                    <path d="M50 75 Q42 65 25 72 Q35 78 50 75Z" fill="url(#gG)" opacity="0.2"/>
+                    <path d="M50 75 Q58 65 75 72 Q65 78 50 75Z" fill="url(#gG)" opacity="0.2"/>
+                    <!-- N emblem -->
+                    <rect x="30" y="20" width="10" height="46" rx="2" fill="url(#gG)"/>
+                    <rect x="60" y="20" width="10" height="46" rx="2" fill="url(#gG)"/>
+                    <polygon points="30,20 40,20 70,66 60,66" fill="url(#gG)"/>
+                    <!-- Third eye -->
+                    <circle cx="50" cy="12" r="3.5" fill="#ffd700" opacity="0.7">
+                        <animate attributeName="opacity" values="0.3;1;0.3" dur="3s" repeatCount="indefinite"/>
+                        <animate attributeName="r" values="3;4;3" dur="3s" repeatCount="indefinite"/>
+                    </circle>
+                    <!-- Inner halo -->
+                    <circle cx="50" cy="44" r="34" fill="none" stroke="url(#gG)" stroke-width="0.6" opacity="0.2" stroke-dasharray="4 6">
+                        <animateTransform attributeName="transform" type="rotate" values="0 50 44;360 50 44" dur="40s" repeatCount="indefinite"/>
+                    </circle>
+                    <!-- Outer halo -->
+                    <circle cx="50" cy="44" r="44" fill="none" stroke="url(#gG)" stroke-width="0.3" opacity="0.1" stroke-dasharray="2 8">
+                        <animateTransform attributeName="transform" type="rotate" values="360 50 44;0 50 44" dur="60s" repeatCount="indefinite"/>
+                    </circle>
+                </svg>
+            </div>
+            <h1 class="oracle-title" data-i18n="oracleTitle">THE ORACLE</h1>
+            <p class="oracle-subtitle" data-i18n="oracleSubtitle">Ancient Wisdom &bull; Modern Problems</p>
+            <div class="traditions">
+                <span class="tradition" title="Buddhism">&#x2638;&#xFE0F;</span>
+                <span class="tradition" title="Taoism">&#x262F;&#xFE0F;</span>
+                <span class="tradition" title="Christianity">&#x271D;&#xFE0F;</span>
+                <span class="tradition" title="Islam">&#x262A;&#xFE0F;</span>
+            </div>
+            <!-- Language Switcher -->
+            <div class="lang-switcher" id="lang-switcher">
+                <button class="lang-btn active" data-lang="en">EN</button>
+                <button class="lang-btn" data-lang="zh">繁中</button>
+                <button class="lang-btn" data-lang="th">ไทย</button>
+            </div>
+        </header>
+
+        <!-- Stats bar -->
+        <div class="stats-bar">
+            <div class="stat">
+                <span class="stat-icon">&#x1F4DC;</span>
+                <span class="stat-value" id="wisdom-count">0</span>
+                <span data-i18n="wisdomLabel">wisdoms</span>
+            </div>
+            <div class="stat">
+                <span class="stat-icon">&#x1F525;</span>
+                <span class="stat-value" id="streak-count">0</span>
+                <span data-i18n="streakLabel">day streak</span>
+            </div>
+        </div>
+
+        <!-- Chat Messages -->
+        <div class="chat-area" id="chat-area">
+            <div class="welcome" id="welcome">
+                <!-- Mandala art -->
+                <div class="welcome-art">
+                    <svg class="mandala" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+                        <defs><linearGradient id="mG"><stop offset="0%" stop-color="#ffd700"/><stop offset="100%" stop-color="#ff6b00"/></linearGradient></defs>
+                        <circle cx="100" cy="100" r="95" fill="none" stroke="url(#mG)" stroke-width="0.5"/>
+                        <circle cx="100" cy="100" r="75" fill="none" stroke="url(#mG)" stroke-width="0.3" stroke-dasharray="8 4"/>
+                        <circle cx="100" cy="100" r="55" fill="none" stroke="url(#mG)" stroke-width="0.5"/>
+                        <circle cx="100" cy="100" r="35" fill="none" stroke="url(#mG)" stroke-width="0.3" stroke-dasharray="4 8"/>
+                        <!-- Petals -->
+                        <g stroke="url(#mG)" stroke-width="0.4" fill="none">
+                            <ellipse cx="100" cy="50" rx="12" ry="30" transform="rotate(0 100 100)"/>
+                            <ellipse cx="100" cy="50" rx="12" ry="30" transform="rotate(30 100 100)"/>
+                            <ellipse cx="100" cy="50" rx="12" ry="30" transform="rotate(60 100 100)"/>
+                            <ellipse cx="100" cy="50" rx="12" ry="30" transform="rotate(90 100 100)"/>
+                            <ellipse cx="100" cy="50" rx="12" ry="30" transform="rotate(120 100 100)"/>
+                            <ellipse cx="100" cy="50" rx="12" ry="30" transform="rotate(150 100 100)"/>
+                        </g>
+                    </svg>
+                    <div class="welcome-inner">&#x1F9D8;</div>
+                </div>
+
+                <div class="welcome-text" data-i18n-html="oracleWelcome">
+                    <strong>Four ancient traditions</strong> studied your problem<br>before you were born.<br><br>
+                    Ask anything. The Oracle listens.
+                </div>
+
+                <!-- Daily Oracle Card -->
+                <div class="daily-card" id="daily-card" title="Tap for today's wisdom">
+                    <div class="daily-label" data-i18n="dailyLabel">&#x2728; Daily Oracle</div>
+                    <div class="daily-icon">&#x1F3B4;</div>
+                    <div class="daily-prompt" data-i18n="dailyPrompt">Tap to reveal today's wisdom</div>
+                    <div class="daily-wisdom" id="daily-wisdom"></div>
+                </div>
+
+                <!-- Suggestion chips -->
+                <div class="chips" id="chips">
+                    <div class="chip" data-q="I feel stuck in life and don't know what to do next">&#x1F30A; I feel stuck</div>
+                    <div class="chip" data-q="How do I stop overthinking everything?">&#x1F4AD; I overthink everything</div>
+                    <div class="chip" data-q="I'm heartbroken and can't move on">&#x1F494; Can't move on</div>
+                    <div class="chip" data-q="How do I deal with toxic people in my life?">&#x1F40D; Toxic people</div>
+                    <div class="chip" data-q="I'm scared of the future and the unknown">&#x1F52E; Scared of the future</div>
+                    <div class="chip" data-q="Why do I keep making the same mistakes over and over?">&#x1F503; Same mistakes again</div>
+                    <div class="chip" data-q="How do I forgive someone who hurt me?">&#x1F54A; Learning to forgive</div>
+                    <div class="chip" data-q="I feel lonely even when I'm surrounded by people">&#x1F311; Feeling alone</div>
+                    <div class="chip" data-q="I keep procrastinating and can't get started">&#x23F3; Can't get started</div>
+                    <div class="chip" data-q="I'm comparing myself to everyone and feeling behind">&#x1F3C3; Falling behind</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Input -->
+        <div class="input-area">
+            <div class="input-row">
+                <div class="input-wrap">
+                    <textarea id="oracle-input" rows="1" placeholder="What troubles your mind?" data-i18n-placeholder="oraclePlaceholder"></textarea>
+                </div>
+                <button class="send-btn" id="send-btn" aria-label="Ask the Oracle">
+                    <svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    (function() {
+        'use strict';
+
+        // ─── DOM ───
+        const chatArea = document.getElementById('chat-area');
+        const welcome = document.getElementById('welcome');
+        const input = document.getElementById('oracle-input');
+        const sendBtn = document.getElementById('send-btn');
+        const wisdomEl = document.getElementById('wisdom-count');
+        const streakEl = document.getElementById('streak-count');
+        const chips = document.getElementById('chips');
+        const dailyCard = document.getElementById('daily-card');
+        const dailyWisdom = document.getElementById('daily-wisdom');
+        const starsEl = document.getElementById('stars');
+        const particlesEl = document.getElementById('particles');
+        const langSwitcher = document.getElementById('lang-switcher');
+
+        let history = [];
+        let isAsking = false;
+        let currentLang = localStorage.getItem('nw_lang') || 'en';
+
+        // ─── UI TRANSLATIONS ───
+        const uiText = {
+            en: {
+                thinking: 'The Oracle contemplates...',
+                errorMsg: 'The Oracle\'s connection to the cosmos wavered. Try asking again.',
+                dailyLoading: 'Consulting the cosmos...',
+                dailyFallback: 'The cosmic signal is faint today. Ask the Oracle directly.',
+                milestone1: 'First wisdom received \u2728',
+                milestone5: '5 wisdoms! The Oracle smiles \uD83D\uDE4F',
+                milestone10: '10 wisdoms! You seek like a monk \uD83D\uDCFF',
+                milestone25: '25 wisdoms! Path of enlightenment \uD83C\uDF1F',
+                milestone50: '50 wisdoms! The Oracle bows to you \uD83E\uDEB7',
+                milestoneBig: ' wisdoms! Legendary seeker \u26A1'
+            },
+            zh: {
+                thinking: '\u795E\u8AED\u6B63\u5728\u6C89\u601D\u2026\u2026',
+                errorMsg: '\u795E\u8AED\u8207\u5B87\u5B99\u7684\u9023\u7DDA\u52D5\u6416\u4E86\u3002\u8ACB\u518D\u554F\u4E00\u6B21\u3002',
+                dailyLoading: '\u6B63\u5728\u8ACB\u793A\u5B87\u5B99\u2026\u2026',
+                dailyFallback: '\u4ECA\u5929\u5B87\u5B99\u4FE1\u865F\u5FAE\u5F31\u3002\u76F4\u63A5\u554F\u795E\u8AED\u5427\u3002',
+                milestone1: '\u7372\u5F97\u7B2C\u4E00\u689D\u667A\u6167 \u2728',
+                milestone5: '5\u689D\u667A\u6167\uFF01\u795E\u8AED\u5FAE\u7B11\u4E86 \uD83D\uDE4F',
+                milestone10: '10\u689D\u667A\u6167\uFF01\u4F60\u50CF\u50E7\u4F36\u4E00\u6A23\u6C42\u9053 \uD83D\uDCFF',
+                milestone25: '25\u689D\u667A\u6167\uFF01\u958B\u609F\u4E4B\u8DEF \uD83C\uDF1F',
+                milestone50: '50\u689D\u667A\u6167\uFF01\u795E\u8AED\u5411\u4F60\u81E8\u62DC \uD83E\uDEB7',
+                milestoneBig: '\u689D\u667A\u6167\uFF01\u50B3\u5947\u6C42\u9053\u8005 \u26A1'
+            },
+            th: {
+                thinking: '\u0E19\u0E31\u0E01\u0E1B\u0E23\u0E32\u0E0A\u0E0D\u0E4C\u0E01\u0E33\u0E25\u0E31\u0E07\u0E04\u0E34\u0E14...',
+                errorMsg: '\u0E01\u0E32\u0E23\u0E40\u0E0A\u0E37\u0E48\u0E2D\u0E21\u0E15\u0E48\u0E2D\u0E08\u0E31\u0E01\u0E23\u0E27\u0E32\u0E25\u0E02\u0E2D\u0E07\u0E19\u0E31\u0E01\u0E1B\u0E23\u0E32\u0E0A\u0E0D\u0E4C\u0E2A\u0E31\u0E48\u0E19\u0E04\u0E25\u0E2D\u0E19 \u0E25\u0E2D\u0E07\u0E16\u0E32\u0E21\u0E2D\u0E35\u0E01\u0E04\u0E23\u0E31\u0E49\u0E07',
+                dailyLoading: '\u0E01\u0E33\u0E25\u0E31\u0E07\u0E1B\u0E23\u0E36\u0E01\u0E29\u0E32\u0E08\u0E31\u0E01\u0E23\u0E27\u0E32\u0E25...',
+                dailyFallback: '\u0E2A\u0E31\u0E0D\u0E0D\u0E32\u0E13\u0E08\u0E31\u0E01\u0E23\u0E27\u0E32\u0E25\u0E2D\u0E48\u0E2D\u0E19\u0E27\u0E31\u0E19\u0E19\u0E35\u0E49 \u0E16\u0E32\u0E21\u0E19\u0E31\u0E01\u0E1B\u0E23\u0E32\u0E0A\u0E0D\u0E4C\u0E42\u0E14\u0E22\u0E15\u0E23\u0E07',
+                milestone1: '\u0E44\u0E14\u0E49\u0E23\u0E31\u0E1A\u0E1B\u0E31\u0E0D\u0E0D\u0E32\u0E41\u0E23\u0E01 \u2728',
+                milestone5: '5 \u0E1B\u0E31\u0E0D\u0E0D\u0E32! \u0E19\u0E31\u0E01\u0E1B\u0E23\u0E32\u0E0A\u0E0D\u0E4C\u0E22\u0E34\u0E49\u0E21 \uD83D\uDE4F',
+                milestone10: '10 \u0E1B\u0E31\u0E0D\u0E0D\u0E32! \u0E04\u0E38\u0E13\u0E41\u0E2A\u0E27\u0E07\u0E2B\u0E32\u0E40\u0E2B\u0E21\u0E37\u0E2D\u0E19\u0E1E\u0E23\u0E30 \uD83D\uDCFF',
+                milestone25: '25 \u0E1B\u0E31\u0E0D\u0E0D\u0E32! \u0E40\u0E2A\u0E49\u0E19\u0E17\u0E32\u0E07\u0E2A\u0E39\u0E48\u0E01\u0E32\u0E23\u0E15\u0E23\u0E31\u0E2A\u0E23\u0E39\u0E49 \uD83C\uDF1F',
+                milestone50: '50 \u0E1B\u0E31\u0E0D\u0E0D\u0E32! \u0E19\u0E31\u0E01\u0E1B\u0E23\u0E32\u0E0A\u0E0D\u0E4C\u0E04\u0E33\u0E19\u0E31\u0E1A \uD83E\uDEB7',
+                milestoneBig: ' \u0E1B\u0E31\u0E0D\u0E0D\u0E32! \u0E19\u0E31\u0E01\u0E41\u0E2A\u0E27\u0E07\u0E2B\u0E32\u0E15\u0E33\u0E19\u0E32\u0E19 \u26A1'
+            }
+        };
+        function t(key) { return (uiText[currentLang] || uiText.en)[key] || uiText.en[key]; }
+
+        const chipData = {
+            en: [
+                { q: 'I feel stuck in life and don\'t know what to do next', label: '\u{1F30A} I feel stuck' },
+                { q: 'How do I stop overthinking everything?', label: '\u{1F4AD} I overthink everything' },
+                { q: 'I\'m heartbroken and can\'t move on', label: '\u{1F494} Can\'t move on' },
+                { q: 'How do I deal with toxic people in my life?', label: '\u{1F40D} Toxic people' },
+                { q: 'I\'m scared of the future and the unknown', label: '\u{1F52E} Scared of the future' },
+                { q: 'Why do I keep making the same mistakes over and over?', label: '\u{1F503} Same mistakes again' },
+                { q: 'How do I forgive someone who hurt me?', label: '\u{1F54A} Learning to forgive' },
+                { q: 'I feel lonely even when I\'m surrounded by people', label: '\u{1F311} Feeling alone' },
+                { q: 'I keep procrastinating and can\'t get started', label: '\u{23F3} Can\'t get started' },
+                { q: 'I\'m comparing myself to everyone and feeling behind', label: '\u{1F3C3} Falling behind' }
+            ],
+            zh: [
+                { q: '\u6211\u611f\u89ba\u751F\u6d3b\u505c\u6efe\u4e86\uff0c\u4e0d\u77e5\u9053\u63a5\u4e0b\u4f86\u8a72\u600e\u9ebc\u8fa6', label: '\u{1F30A} \u611f\u89ba\u505c\u6efe\u4e86' },
+                { q: '\u600e\u6a23\u624d\u80fd\u505c\u6b62\u60f3\u592a\u591a\uff1f', label: '\u{1F4AD} \u60f3\u592a\u591a\u4e86' },
+                { q: '\u5fc3\u788e\u4e86\uff0c\u7121\u6cd5\u653e\u4e0b', label: '\u{1F494} \u7121\u6cd5\u653e\u4e0b' },
+                { q: '\u600e\u9ebc\u61c9\u5c0d\u8eab\u908a\u6709\u6bd2\u7684\u4eba\uff1f', label: '\u{1F40D} \u6709\u6bd2\u7684\u4eba' },
+                { q: '\u6211\u5bb3\u6015\u672a\u4f86\u548c\u672a\u77e5', label: '\u{1F52E} \u5bb3\u6015\u672a\u4f86' },
+                { q: '\u70ba\u4ec0\u9ebc\u6211\u7e3d\u662f\u72af\u540c\u6a23\u7684\u932f\uff1f', label: '\u{1F503} \u7e3d\u662f\u540c\u6a23\u7684\u932f' },
+                { q: '\u600e\u6a23\u539f\u8ad2\u50b7\u5bb3\u904e\u6211\u7684\u4eba\uff1f', label: '\u{1F54A} \u5b78\u6703\u539f\u8ad2' },
+                { q: '\u5373\u4f7f\u8eab\u908a\u6709\u4eba\u4f46\u9084\u662f\u611f\u89ba\u5b64\u7368', label: '\u{1F311} \u611f\u89ba\u5b64\u7368' },
+                { q: '\u6211\u4e00\u76f4\u5728\u62d6\u5ef6\uff0c\u7121\u6cd5\u958b\u59cb', label: '\u{23F3} \u7121\u6cd5\u958b\u59cb' },
+                { q: '\u6211\u7e3d\u662f\u8ddf\u5225\u4eba\u6bd4\u8f03\uff0c\u89ba\u5f97\u81ea\u5df1\u843d\u5f8c\u4e86', label: '\u{1F3C3} \u843d\u5f8c\u4e86' }
+            ],
+            th: [
+                { q: '\u0e23\u0e39\u0e49\u0e2a\u0e36\u0e01\u0e15\u0e34\u0e14\u0e2d\u0e22\u0e39\u0e48\u0e01\u0e31\u0e1a\u0e17\u0e35\u0e48 \u0e44\u0e21\u0e48\u0e23\u0e39\u0e49\u0e08\u0e30\u0e17\u0e33\u0e22\u0e31\u0e07\u0e44\u0e07\u0e15\u0e48\u0e2d', label: '\u{1F30A} \u0e23\u0e39\u0e49\u0e2a\u0e36\u0e01\u0e15\u0e34\u0e14' },
+                { q: '\u0e17\u0e33\u0e22\u0e31\u0e07\u0e44\u0e07\u0e16\u0e36\u0e07\u0e08\u0e30\u0e2b\u0e22\u0e38\u0e14\u0e04\u0e34\u0e14\u0e21\u0e32\u0e01?', label: '\u{1F4AD} \u0e04\u0e34\u0e14\u0e21\u0e32\u0e01\u0e40\u0e01\u0e34\u0e19\u0e44\u0e1b' },
+                { q: '\u0e2d\u0e01\u0e2b\u0e31\u0e01\u0e41\u0e25\u0e30\u0e1b\u0e25\u0e48\u0e2d\u0e22\u0e27\u0e32\u0e07\u0e44\u0e21\u0e48\u0e44\u0e14\u0e49', label: '\u{1F494} \u0e1b\u0e25\u0e48\u0e2d\u0e22\u0e27\u0e32\u0e07\u0e44\u0e21\u0e48\u0e44\u0e14\u0e49' },
+                { q: '\u0e08\u0e30\u0e23\u0e31\u0e1a\u0e21\u0e37\u0e2d\u0e01\u0e31\u0e1a\u0e04\u0e19\u0e17\u0e35\u0e48\u0e40\u0e1b\u0e47\u0e19\u0e1e\u0e34\u0e29\u0e44\u0e14\u0e49\u0e22\u0e31\u0e07\u0e44\u0e07?', label: '\u{1F40D} \u0e04\u0e19\u0e17\u0e35\u0e48\u0e40\u0e1b\u0e47\u0e19\u0e1e\u0e34\u0e29' },
+                { q: '\u0e01\u0e25\u0e31\u0e27\u0e2d\u0e19\u0e32\u0e04\u0e15\u0e41\u0e25\u0e30\u0e2a\u0e34\u0e48\u0e07\u0e17\u0e35\u0e48\u0e44\u0e21\u0e48\u0e23\u0e39\u0e49', label: '\u{1F52E} \u0e01\u0e25\u0e31\u0e27\u0e2d\u0e19\u0e32\u0e04\u0e15' },
+                { q: '\u0e17\u0e33\u0e44\u0e21\u0e16\u0e36\u0e07\u0e17\u0e33\u0e1c\u0e34\u0e14\u0e0b\u0e49\u0e33\u0e46 \u0e0b\u0e32\u0e01\u0e46?', label: '\u{1F503} \u0e17\u0e33\u0e1c\u0e34\u0e14\u0e0b\u0e49\u0e33\u0e46' },
+                { q: '\u0e08\u0e30\u0e43\u0e2b\u0e49\u0e2d\u0e20\u0e31\u0e22\u0e04\u0e19\u0e17\u0e35\u0e48\u0e17\u0e33\u0e23\u0e49\u0e32\u0e22\u0e40\u0e23\u0e32\u0e44\u0e14\u0e49\u0e22\u0e31\u0e07\u0e44\u0e07?', label: '\u{1F54A} \u0e40\u0e23\u0e35\u0e22\u0e19\u0e23\u0e39\u0e49\u0e01\u0e32\u0e23\u0e43\u0e2b\u0e49\u0e2d\u0e20\u0e31\u0e22' },
+                { q: '\u0e23\u0e39\u0e49\u0e2a\u0e36\u0e01\u0e42\u0e14\u0e14\u0e40\u0e14\u0e35\u0e48\u0e22\u0e27\u0e41\u0e21\u0e49\u0e08\u0e30\u0e21\u0e35\u0e04\u0e19\u0e23\u0e2d\u0e1a\u0e02\u0e49\u0e32\u0e07', label: '\u{1F311} \u0e23\u0e39\u0e49\u0e2a\u0e36\u0e01\u0e42\u0e14\u0e14\u0e40\u0e14\u0e35\u0e48\u0e22\u0e27' },
+                { q: '\u0e1c\u0e31\u0e14\u0e27\u0e31\u0e19\u0e1b\u0e23\u0e30\u0e01\u0e31\u0e19\u0e1e\u0e23\u0e38\u0e48\u0e07\u0e19\u0e35\u0e49\u0e44\u0e14\u0e49\u0e44\u0e2b\u0e21?', label: '\u{23F3} \u0e40\u0e23\u0e34\u0e48\u0e21\u0e44\u0e21\u0e48\u0e44\u0e14\u0e49' },
+                { q: '\u0e0a\u0e2d\u0e1a\u0e40\u0e17\u0e35\u0e22\u0e1a\u0e15\u0e31\u0e27\u0e40\u0e2d\u0e07\u0e01\u0e31\u0e1a\u0e04\u0e19\u0e2d\u0e37\u0e48\u0e19\u0e41\u0e25\u0e30\u0e23\u0e39\u0e49\u0e2a\u0e36\u0e01\u0e15\u0e32\u0e21\u0e44\u0e21\u0e48\u0e17\u0e31\u0e19', label: '\u{1F3C3} \u0e15\u0e32\u0e21\u0e44\u0e21\u0e48\u0e17\u0e31\u0e19' }
+            ]
+        };
+
+        // ─── PERSISTENCE ───
+        const store = {
+            get(k, d) { try { return JSON.parse(localStorage.getItem('nw_oracle_' + k)) ?? d; } catch { return d; } },
+            set(k, v) { try { localStorage.setItem('nw_oracle_' + k, JSON.stringify(v)); } catch {} }
+        };
+
+        let wisdomCount = store.get('count', 0);
+        let streak = store.get('streak', 0);
+        let lastVisit = store.get('lastVisit', null);
+
+        // Update streak
+        (function updateStreak() {
+            const today = new Date().toDateString();
+            if (lastVisit) {
+                const last = new Date(lastVisit);
+                const diff = Math.floor((new Date(today) - last) / 86400000);
+                if (diff === 1) { streak++; }
+                else if (diff > 1) { streak = 1; }
+                // diff === 0 means same day — keep streak
+            } else {
+                streak = 1;
+            }
+            store.set('streak', streak);
+            store.set('lastVisit', today);
+        })();
+
+        wisdomEl.textContent = wisdomCount;
+        streakEl.textContent = streak;
+
+        // ─── LANGUAGE SWITCHER ───
+        function setLang(lang) {
+            currentLang = lang;
+            localStorage.setItem('nw_lang', lang);
+            // Update buttons
+            document.querySelectorAll('.lang-btn').forEach(b => {
+                b.classList.toggle('active', b.dataset.lang === lang);
+            });
+            // Update chips
+            const data = chipData[lang] || chipData.en;
+            const chipEls = chips.querySelectorAll('.chip');
+            data.forEach((d, i) => {
+                if (chipEls[i]) {
+                    chipEls[i].setAttribute('data-q', d.q);
+                    chipEls[i].textContent = d.label;
+                }
+            });
+            // Update placeholder
+            const placeholders = { en: 'What troubles your mind?', zh: '\u4f60\u5fc3\u4e2d\u6709\u4ec0\u9ebc\u7169\u60f1\uff1f', th: '\u0e04\u0e38\u0e13\u0e01\u0e33\u0e25\u0e31\u0e07\u0e01\u0e31\u0e07\u0e27\u0e25\u0e40\u0e23\u0e37\u0e48\u0e2d\u0e07\u0e2d\u0e30\u0e44\u0e23?' };
+            input.placeholder = placeholders[lang] || placeholders.en;
+            // Dispatch event for NW_I18N
+            document.dispatchEvent(new CustomEvent('nw-lang-change', { detail: { lang } }));
+            if (typeof NW_I18N !== 'undefined' && NW_I18N.setLang) NW_I18N.setLang(lang);
+        }
+        // Init language from storage
+        if (currentLang !== 'en') setLang(currentLang);
+
+        langSwitcher.addEventListener('click', function(e) {
+            const btn = e.target.closest('.lang-btn');
+            if (btn && btn.dataset.lang !== currentLang) {
+                setLang(btn.dataset.lang);
+            }
+        });
+        // Also listen for nav language changes
+        document.addEventListener('nw-lang-change', function(e) {
+            const lang = e.detail?.lang;
+            if (lang && lang !== currentLang) setLang(lang);
+        });
+
+        // ─── STARS FIELD ───
+        (function createStars() {
+            const count = Math.min(60, Math.floor(window.innerWidth / 15));
+            for (let i = 0; i < count; i++) {
+                const s = document.createElement('div');
+                s.className = 'star';
+                s.style.cssText = `
+                    left: ${Math.random() * 100}%;
+                    top: ${Math.random() * 100}%;
+                    --dur: ${3 + Math.random() * 5}s;
+                    animation-delay: ${Math.random() * 5}s;
+                    width: ${1 + Math.random() * 2}px;
+                    height: ${1 + Math.random() * 2}px;
+                `;
+                starsEl.appendChild(s);
+            }
+        })();
+
+        // ─── INCENSE PARTICLES ───
+        (function createParticles() {
+            for (let i = 0; i < 10; i++) {
+                const p = document.createElement('div');
+                p.className = 'particle';
+                const size = 3 + Math.random() * 5;
+                p.style.cssText = `
+                    left: ${35 + Math.random() * 30}%;
+                    bottom: -10px;
+                    width: ${size}px; height: ${size}px;
+                    animation-duration: ${10 + Math.random() * 15}s;
+                    animation-delay: ${Math.random() * 12}s;
+                `;
+                particlesEl.appendChild(p);
+            }
+        })();
+
+        // ─── AUTO-RESIZE TEXTAREA ───
+        input.addEventListener('input', function() {
+            this.style.height = 'auto';
+            this.style.height = Math.min(this.scrollHeight, 120) + 'px';
+        });
+
+        // ─── ENTER TO SEND ───
+        input.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                askOracle();
+            }
+        });
+        sendBtn.addEventListener('click', askOracle);
+        // Touch support
+        sendBtn.addEventListener('touchend', function(e) {
+            e.preventDefault();
+            askOracle();
+        });
+
+        // ─── SUGGESTION CHIPS ───
+        chips.addEventListener('click', function(e) {
+            const chip = e.target.closest('.chip');
+            if (chip) {
+                input.value = chip.getAttribute('data-q');
+                askOracle();
+            }
+        });
+
+        // ─── DAILY ORACLE CARD ───
+        dailyCard.addEventListener('click', async function() {
+            if (dailyCard.classList.contains('revealed')) return;
+            dailyCard.classList.add('revealed');
+            dailyWisdom.textContent = t('dailyLoading');
+            dailyWisdom.style.display = 'block';
+            try {
+                const res = await fetch('/api/oracle/random?lang=' + currentLang);
+                const data = await res.json();
+                if (data.success) {
+                    typewriteInto(dailyWisdom, formatPlain(data.message));
+                }
+            } catch {
+                dailyWisdom.innerHTML = '<em>' + t('dailyFallback') + '</em>';
+            }
+        });
+
+        // ─── FORMAT RESPONSE ───
+        function formatResponse(text) {
+            let html = text
+                .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                .replace(/\*(.*?)\*/g, '<em>$1</em>')
+                .replace(/^- (.+)$/gm, '<li>$1</li>')
+                .replace(/\n\n/g, '</p><p>')
+                .replace(/\n/g, '<br>');
+
+            html = '<p>' + html + '</p>';
+            // Wrap consecutive <li> in <ul>
+            html = html.replace(/(<li>.*?<\/li>)+/gs, '<ul>$&</ul>');
+
+            // Detect last paragraph as seal
+            const parts = html.split('</p><p>');
+            if (parts.length > 2) {
+                const last = parts[parts.length - 1];
+                if (last.length < 250 && (last.includes('<em>') || last.includes('Seal') || last.includes('seal'))) {
+                    parts[parts.length - 1] = '<span class="wisdom-seal">' + last.replace(/<\/?p>/g, '') + '</span>';
+                    html = parts.join('</p><p>');
+                }
+            }
+            return html;
+        }
+
+        function formatPlain(text) {
+            return text.replace(/\*\*/g, '').replace(/\*/g, '').replace(/#{1,3}\s/g, '');
+        }
+
+        // ─── TYPEWRITER EFFECT ───
+        function typewriteInto(el, text) {
+            el.textContent = '';
+            let i = 0;
+            const speed = 12; // ms per char
+            function tick() {
+                if (i < text.length) {
+                    el.textContent += text[i];
+                    i++;
+                    setTimeout(tick, speed + Math.random() * 8);
+                }
+            }
+            tick();
+        }
+
+        function typewriteHTML(el, html) {
+            el.innerHTML = html;
+            el.style.opacity = '0';
+            // Fade in instead of char-by-char for HTML
+            requestAnimationFrame(() => {
+                el.style.transition = 'opacity 0.6s ease-out';
+                el.style.opacity = '1';
+            });
+        }
+
+        // ─── SHARE ───
+        function createShareBtn(text) {
+            const btn = document.createElement('button');
+            btn.className = 'share-btn';
+            btn.innerHTML = '<svg viewBox="0 0 24 24"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92 1.61 0 2.92-1.31 2.92-2.92s-1.31-2.92-2.92-2.92z"/></svg> Share';
+            btn.addEventListener('click', function() {
+                const plain = text.replace(/\*\*/g, '').replace(/\*/g, '').substring(0, 280);
+                if (navigator.share) {
+                    navigator.share({ title: 'Oracle Wisdom — NumbahWan', text: plain, url: window.location.href });
+                } else if (navigator.clipboard) {
+                    navigator.clipboard.writeText(plain + '\n\n— The NumbahWan Oracle\nhttps://numbahwan.pages.dev/oracle');
+                    showToast('Wisdom copied ✨');
+                }
+            });
+            return btn;
+        }
+
+        function showToast(msg) {
+            const t = document.createElement('div');
+            t.className = 'toast';
+            t.textContent = msg;
+            document.body.appendChild(t);
+            setTimeout(() => t.remove(), 2500);
+        }
+
+        // ─── MAIN ASK FUNCTION ───
+        async function askOracle() {
+            const q = input.value.trim();
+            if (!q || isAsking) return;
+
+            isAsking = true;
+            sendBtn.disabled = true;
+            sendBtn.classList.remove('glow-pulse');
+
+            // Hide welcome
+            if (welcome) welcome.style.display = 'none';
+
+            // User message
+            const userMsg = document.createElement('div');
+            userMsg.className = 'msg msg-user';
+            userMsg.textContent = q;
+            chatArea.appendChild(userMsg);
+
+            input.value = '';
+            input.style.height = 'auto';
+
+            // Thinking indicator
+            const thinking = document.createElement('div');
+            thinking.className = 'thinking';
+            thinking.innerHTML = '<div class="think-dots"><div class="think-dot"></div><div class="think-dot"></div><div class="think-dot"></div></div><span>' + t('thinking') + '</span>';
+            chatArea.appendChild(thinking);
+            chatArea.scrollTop = chatArea.scrollHeight;
+
+            try {
+                const res = await fetch('/api/oracle/ask', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        question: q,
+                        history: history.slice(-6),
+                        language: currentLang
+                    })
+                });
+
+                const data = await res.json();
+                thinking.remove();
+
+                // Oracle response
+                const oracleMsg = document.createElement('div');
+                oracleMsg.className = 'msg msg-oracle';
+                const html = formatResponse(data.message || 'The Oracle is silent. Try again.');
+                typewriteHTML(oracleMsg, html);
+
+                // Source badge
+                const badge = document.createElement('div');
+                badge.className = 'source-badge';
+                badge.innerHTML = data.source === 'oracle'
+                    ? '<span class="source-dot oracle"></span> Oracle AI'
+                    : '<span class="source-dot curated"></span> Ancient Wisdom';
+                oracleMsg.appendChild(badge);
+
+                // Share button
+                oracleMsg.appendChild(createShareBtn(data.message));
+
+                chatArea.appendChild(oracleMsg);
+
+                // Update history
+                history.push({ role: 'user', content: q });
+                history.push({ role: 'assistant', content: data.message });
+
+                // Increment counter
+                wisdomCount++;
+                wisdomEl.textContent = wisdomCount;
+                store.set('count', wisdomCount);
+
+                // Milestone toasts
+                if (wisdomCount === 1) showToast(t('milestone1'));
+                else if (wisdomCount === 5) showToast(t('milestone5'));
+                else if (wisdomCount === 10) showToast(t('milestone10'));
+                else if (wisdomCount === 25) showToast(t('milestone25'));
+                else if (wisdomCount === 50) showToast(t('milestone50'));
+                else if (wisdomCount % 100 === 0) showToast(wisdomCount + t('milestoneBig'));
+
+            } catch (err) {
+                thinking.remove();
+                const errMsg = document.createElement('div');
+                errMsg.className = 'msg msg-oracle';
+                errMsg.innerHTML = '<p><em>' + t('errorMsg') + '</em></p>';
+                chatArea.appendChild(errMsg);
+            }
+
+            chatArea.scrollTop = chatArea.scrollHeight;
+            isAsking = false;
+            sendBtn.disabled = false;
+
+            // Glow effect after response
+            setTimeout(() => sendBtn.classList.add('glow-pulse'), 800);
+        }
+
+        // ─── i18n ───
+        function registerI18n() {
+            if (typeof NW_I18N !== 'undefined') {
+                NW_I18N.register('oracle', {
+                    en: {
+                        oracleTitle: 'THE ORACLE',
+                        oracleSubtitle: 'Ancient Wisdom \u2022 Modern Problems',
+                        oracleWelcome: '<strong>Four ancient traditions</strong> studied your problem<br>before you were born.<br><br>Ask anything. The Oracle listens.',
+                        oraclePlaceholder: 'What troubles your mind?',
+                        wisdomLabel: 'wisdoms',
+                        streakLabel: 'day streak',
+                        dailyLabel: '\u2728 Daily Oracle',
+                        dailyPrompt: 'Tap to reveal today\'s wisdom'
+                    },
+                    zh: {
+                        oracleTitle: '\u795E\u8AED',
+                        oracleSubtitle: '\u53E4\u8001\u667A\u6167 \u2022 \u73FE\u4EE3\u554F\u984C',
+                        oracleWelcome: '<strong>\u56DB\u5927\u53E4\u8001\u50B3\u7D71</strong>\u5728\u4F60\u51FA\u751F\u524D<br>\u5C31\u5DF2\u7D93\u7814\u7A76\u904E\u4F60\u7684\u554F\u984C\u3002<br><br>\u554F\u4EFB\u4F55\u4E8B\u3002\u795E\u8AED\u6B63\u5728\u50BE\u807D\u3002',
+                        oraclePlaceholder: '\u4F60\u5FC3\u4E2D\u6709\u4EC0\u9EBC\u7169\u60F1\uFF1F',
+                        wisdomLabel: '\u667A\u6167',
+                        streakLabel: '\u5929\u9023\u7E8C',
+                        dailyLabel: '\u2728 \u6BCF\u65E5\u795E\u8AED',
+                        dailyPrompt: '\u9EDE\u64CA\u63ED\u66C9\u4ECA\u65E5\u667A\u6167'
+                    },
+                    th: {
+                        oracleTitle: '\u0E19\u0E31\u0E01\u0E1B\u0E23\u0E32\u0E0A\u0E0D\u0E4C',
+                        oracleSubtitle: '\u0E20\u0E39\u0E21\u0E34\u0E1B\u0E31\u0E0D\u0E0D\u0E32\u0E42\u0E1A\u0E23\u0E32\u0E13 \u2022 \u0E1B\u0E31\u0E0D\u0E2B\u0E32\u0E2A\u0E21\u0E31\u0E22\u0E43\u0E2B\u0E21\u0E48',
+                        oracleWelcome: '<strong>\u0E2A\u0E35\u0E48\u0E1B\u0E23\u0E30\u0E40\u0E1E\u0E13\u0E35\u0E42\u0E1A\u0E23\u0E32\u0E13</strong>\u0E44\u0E14\u0E49\u0E28\u0E36\u0E01\u0E29\u0E32\u0E1B\u0E31\u0E0D\u0E2B\u0E32\u0E02\u0E2D\u0E07\u0E04\u0E38\u0E13<br>\u0E01\u0E48\u0E2D\u0E19\u0E17\u0E35\u0E48\u0E04\u0E38\u0E13\u0E08\u0E30\u0E40\u0E01\u0E34\u0E14\u0E21\u0E32\u0E40\u0E2A\u0E35\u0E22\u0E2D\u0E35\u0E01<br><br>\u0E16\u0E32\u0E21\u0E2D\u0E30\u0E44\u0E23\u0E01\u0E47\u0E44\u0E14\u0E49 \u0E19\u0E31\u0E01\u0E1B\u0E23\u0E32\u0E0A\u0E0D\u0E4C\u0E23\u0E31\u0E1A\u0E1F\u0E31\u0E07',
+                        oraclePlaceholder: '\u0E04\u0E38\u0E13\u0E01\u0E33\u0E25\u0E31\u0E07\u0E01\u0E31\u0E07\u0E27\u0E25\u0E40\u0E23\u0E37\u0E48\u0E2D\u0E07\u0E2D\u0E30\u0E44\u0E23?',
+                        wisdomLabel: '\u0E1B\u0E31\u0E0D\u0E0D\u0E32',
+                        streakLabel: '\u0E27\u0E31\u0E19\u0E15\u0E48\u0E2D\u0E40\u0E19\u0E37\u0E48\u0E2D\u0E07',
+                        dailyLabel: '\u2728 \u0E1B\u0E31\u0E0D\u0E0D\u0E32\u0E1B\u0E23\u0E30\u0E08\u0E33\u0E27\u0E31\u0E19',
+                        dailyPrompt: '\u0E41\u0E15\u0E30\u0E40\u0E1E\u0E37\u0E48\u0E2D\u0E40\u0E1B\u0E34\u0E14\u0E40\u0E1C\u0E22\u0E1B\u0E31\u0E0D\u0E0D\u0E32\u0E27\u0E31\u0E19\u0E19\u0E35\u0E49'
+                    }
+                });
+            }
+        }
+
+        // Try registering i18n immediately and on load
+        registerI18n();
+        window.addEventListener('load', registerI18n);
+
+    })();
+    </script>
+</body>
+</html>

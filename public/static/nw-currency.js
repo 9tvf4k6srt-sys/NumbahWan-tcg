@@ -58,7 +58,7 @@ const NW_CURRENCY = {
                 zh: 'NumbahWan 黃金幣',
                 th: 'NumbahWan โกลด์'
             },
-            symbol: '◆',
+            symbol: '',
             color: '#00d4ff',
             gradient: 'linear-gradient(135deg, #00d4ff 0%, #0099cc 50%, #00d4ff 100%)',
             glow: '0 0 10px rgba(0, 212, 255, 0.5)',
@@ -138,7 +138,7 @@ const NW_CURRENCY = {
                 zh: '金幣',
                 th: 'เหรียญทอง'
             },
-            symbol: '●',
+            symbol: '',
             color: '#ffd700',
             gradient: 'linear-gradient(135deg, #ffd700 0%, #ffaa00 50%, #ffd700 100%)',
             glow: '0 0 10px rgba(255, 215, 0, 0.5)',
@@ -242,9 +242,9 @@ const NW_CURRENCY = {
                 th: ['ดึง Mythic แน่นอน', 'เลือก Legendary', 'สินค้าพิเศษ', 'ตำแหน่งโปรไฟล์']
             },
             special: {
-                en: '⚠️ CANNOT BE PURCHASED - Must be EARNED!',
-                zh: '⚠️ 無法購買 - 必須靠實力獲得！',
-                th: '⚠️ ซื้อไม่ได้ - ต้องได้รับจากความสามารถ!'
+                en: 'CANNOT BE PURCHASED - Must be EARNED!',
+                zh: '無法購買 - 必須靠實力獲得！',
+                th: 'ซื้อไม่ได้ - ต้องได้รับจากความสามารถ!'
             },
             icon: `<svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <defs>
@@ -335,9 +335,9 @@ const NW_CURRENCY = {
         
         console.log('%c[NW_CURRENCY] v3.0 - World\'s Most Coveted Digital Currency', 
             'background: linear-gradient(90deg, #00d4ff, #ffd700, #00ff88); color: #000; font-size: 12px; padding: 4px 8px; border-radius: 4px; font-weight: bold;');
-        console.log('%c◆ NWG (Deflationary + Stakeable) → ● Gold (Earned) → ⧫ Sacred Log (Prestige)', 
+        console.log('%cNWG (Deflationary + Stakeable) → Gold (Earned) → ⧫ Sacred Log (Prestige)', 
             'color: #888; font-size: 11px;');
-        console.log('%c🔥 1% BURN per transaction | 📈 Up to 40% APY | 💎 Tier benefits', 
+        console.log('%c1% BURN per transaction | Up to 40% APY | Tier benefits', 
             'color: #00d4ff; font-size: 10px;');
     },
 
@@ -679,11 +679,11 @@ const NW_CURRENCY = {
 
     replaceEmoji(text) {
         const emojiMap = {
-            '💎': this.icon('nwg', { size: 16 }),
-            '◆': this.icon('nwg', { size: 16 }),
-            '🪙': this.icon('gold', { size: 16 }),
-            '●': this.icon('gold', { size: 16 }),
-            '🪵': this.icon('wood', { size: 16 }),
+            '': this.icon('nwg', { size: 16 }),
+            '': this.icon('nwg', { size: 16 }),
+            '': this.icon('gold', { size: 16 }),
+            '': this.icon('gold', { size: 16 }),
+            '': this.icon('wood', { size: 16 }),
             '⧫': this.icon('wood', { size: 16 })
         };
         

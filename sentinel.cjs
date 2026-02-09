@@ -308,6 +308,7 @@ function modAssets(rootDir, files) {
 
 // ════════════════════════════════════════════════════════════════════
 // MODULE 3: i18n COVERAGE (10%)
+// Checks: [ZH]/[TH] placeholders, missing keys per language, dual systems, hardcoded strings
 // ════════════════════════════════════════════════════════════════════
 
 function modI18n(rootDir, files) {
@@ -320,25 +321,86 @@ function modI18n(rootDir, files) {
   const pages = [];
   let totalPages = 0, withScript = 0, withRegister = 0;
   let totalKeys = 0, keysTranslated = 0, hardcoded = 0;
+  let totalPlaceholders = 0, totalDualSystems = 0, totalMissingKeys = 0;
 
-  let htmlFiles;
-  try { htmlFiles = fs.readdirSync(publicDir).filter(f => f.endsWith('.html')); } catch { htmlFiles = []; }
+  // Recursively find HTML files in public/
+  function findHtml(dir, prefix) {
+    let results = [];
+    try {
+      for (const f of fs.readdirSync(dir)) {
+        const fp = path.join(dir, f);
+        const rel = prefix ? prefix + '/' + f : f;
+        if (fs.statSync(fp).isDirectory() && !IGNORE.includes(f)) {
+          results = results.concat(findHtml(fp, rel));
+        } else if (f.endsWith('.html')) {
+          results.push({ abs: fp, rel });
+        }
+      }
+    } catch {}
+    return results;
+  }
 
-  for (const fname of htmlFiles) {
+  const htmlFiles = findHtml(publicDir, '');
+
+  for (const { abs: filePath, rel: fname } of htmlFiles) {
     let content;
-    try { content = fs.readFileSync(path.join(publicDir, fname), 'utf8'); } catch { continue; }
+    try { content = fs.readFileSync(filePath, 'utf8'); } catch { continue; }
     totalPages++;
     const hasScript = content.includes('nw-i18n-core');
     const hasReg = content.includes('NW_I18N.register');
     if (hasScript) withScript++;
     if (hasReg) withRegister++;
 
-    const keys = (content.match(/data-i18n=["'][^"']+["']/g) || []).length;
+    // Count data-i18n keys
+    const i18nMatches = content.match(/data-i18n(?:-html)?=["']([^"']+)["']/g) || [];
+    const keys = i18nMatches.length;
+    const keyNames = i18nMatches.map(m => m.replace(/data-i18n(?:-html)?=["']/, '').replace(/["']$/, ''));
     totalKeys += keys;
 
-    const langs = LANGS.filter(l => new RegExp(`${l}\\s*:\\s*\\{`).test(content));
-    if (langs.length >= LANGS.length) keysTranslated += keys;
+    // CHECK 1: [ZH]/[TH] placeholder markers — these are untranslated
+    const zhPlaceholders = (content.match(/\[ZH\]/g) || []).length;
+    const thPlaceholders = (content.match(/\[TH\]/g) || []).length;
+    const placeholders = zhPlaceholders + thPlaceholders;
+    totalPlaceholders += placeholders;
 
+    // CHECK 2: Dual i18n systems (multiple translation objects/functions)
+    const i18nSystems = [];
+    if (hasReg) i18nSystems.push('NW_I18N.register');
+    if (content.includes('applyTranslations')) i18nSystems.push('applyTranslations');
+    const constI18nMatches = content.match(/const\s+\w+(?:_I18N|Translations|_TRANSLATIONS)\s*=/gi) || [];
+    for (const cm of constI18nMatches) i18nSystems.push(cm.trim().replace(/\s*=\s*$/, ''));
+    const dualSystem = i18nSystems.length > 2; // register + 1 const is fine; more is conflict
+    if (dualSystem) totalDualSystems++;
+
+    // CHECK 3: Missing translation keys — extract keys from each lang block
+    let missingKeys = 0;
+    if (hasReg) {
+      // Count keys per language block (rough but catches major gaps)
+      const langKeyCounts = {};
+      for (const lang of LANGS) {
+        const rx = new RegExp(`['"]${lang}['"]\\s*:\\s*\\{([^}]*(?:\\{[^}]*\\}[^}]*)*)\\}`, 'g');
+        let lm;
+        let maxKeys = 0;
+        while ((lm = rx.exec(content)) !== null) {
+          const block = lm[1];
+          const kc = (block.match(/['"][^'"]+['"]\s*:/g) || []).length;
+          maxKeys += kc;
+        }
+        langKeyCounts[lang] = maxKeys;
+      }
+      const enKeys = langKeyCounts.en || 0;
+      const zhKeys = langKeyCounts.zh || 0;
+      const thKeys = langKeyCounts.th || 0;
+      if (enKeys > 0) {
+        missingKeys = Math.max(0, enKeys - zhKeys) + Math.max(0, enKeys - thKeys);
+      }
+    }
+    totalMissingKeys += missingKeys;
+
+    // Count keys as translated only if no placeholders and no major gaps
+    if (hasReg && placeholders === 0 && missingKeys < 3) keysTranslated += keys;
+
+    // Hardcoded string detection (text without data-i18n)
     let hc = 0;
     const rx = />([^<]{4,120})</g;
     let m;
@@ -351,31 +413,57 @@ function modI18n(rootDir, files) {
     }
     hardcoded += hc;
 
-    const status = hasReg && langs.length >= LANGS.length ? 'translated' :
-                   hasScript && keys > 0 ? 'partial' :
-                   keys > 0 ? 'keys-only' : 'none';
+    const status = placeholders > 0 ? 'has-placeholders' :
+                   dualSystem ? 'dual-system' :
+                   hasReg && missingKeys === 0 ? 'translated' :
+                   hasReg && missingKeys > 0 ? 'partial' :
+                   hasScript && keys > 0 ? 'keys-only' : 'none';
 
-    pages.push({ page: fname, status, hasScript, hasRegister: hasReg, keys, langs, hardcoded: hc });
+    pages.push({ page: fname, status, hasScript, hasRegister: hasReg, keys, langs: LANGS.filter(l => new RegExp(`['"]${l}['"]\\s*:`).test(content)), hardcoded: hc, placeholders, dualSystem, missingKeys });
   }
 
+  // Scoring: start at coverage%, then penalize real problems
   const coveragePct = totalPages > 0 ? Math.round(withRegister / totalPages * 100) : 0;
   score = coveragePct;
-  if (hardcoded > 50) score -= Math.min(20, Math.round((hardcoded - 50) / 10));
+
+  // Heavy penalties for real broken translations
+  if (totalPlaceholders > 0) score -= Math.min(30, Math.round(totalPlaceholders / 50));
+  if (totalDualSystems > 0) score -= Math.min(15, totalDualSystems * 2);
+  if (totalMissingKeys > 20) score -= Math.min(15, Math.round(totalMissingKeys / 10));
+  if (hardcoded > 50) score -= Math.min(10, Math.round((hardcoded - 50) / 20));
+
+  // Issue reporting: group by category for actionable output
+  if (totalPlaceholders > 0) {
+    const placeholderPages = pages.filter(p => p.placeholders > 0).sort((a, b) => b.placeholders - a.placeholders);
+    issues.push({ id: `I18N-${++n}`, severity: 'critical', category: 'i18n',
+      title: `${totalPlaceholders} [ZH]/[TH] placeholder strings across ${placeholderPages.length} pages — users see untranslated text`,
+      metric: totalPlaceholders,
+      fix: `Top offenders: ${placeholderPages.slice(0, 5).map(p => p.page + '(' + p.placeholders + ')').join(', ')}`
+    });
+  }
+
+  if (totalDualSystems > 0) {
+    const dualPages = pages.filter(p => p.dualSystem);
+    issues.push({ id: `I18N-${++n}`, severity: 'warning', category: 'i18n',
+      title: `${totalDualSystems} pages have conflicting i18n systems — translations fight each other`,
+      metric: totalDualSystems,
+      fix: `Merge into single NW_I18N.register(): ${dualPages.slice(0, 5).map(p => p.page).join(', ')}`
+    });
+  }
 
   const untranslated = pages.filter(p => p.status !== 'translated');
-  if (untranslated.length > 0 && untranslated.length <= 10) {
-    untranslated.forEach(p => {
-      issues.push({ id: `I18N-${++n}`, severity: p.hardcoded > 20 ? 'warning' : 'info', category: 'i18n', title: `${p.page}: ${p.status} (${p.hardcoded} hardcoded strings)`, file: `public/${p.page}`, metric: p.hardcoded, fix: 'Run: node scripts/i18n-auto-fix.cjs --page ' + p.page });
+  if (untranslated.length > 0) {
+    issues.push({ id: `I18N-${++n}`, severity: 'warning', category: 'i18n',
+      title: `${untranslated.length}/${totalPages} pages not fully translated`,
+      metric: untranslated.length
     });
-  } else if (untranslated.length > 10) {
-    issues.push({ id: `I18N-${++n}`, severity: 'warning', category: 'i18n', title: `${untranslated.length} pages lack full translations`, metric: untranslated.length, fix: 'Run: node scripts/i18n-auto-fix.cjs' });
   }
 
   return {
     name: 'i18n', score: clamp(score), issues,
     data: {
-      summary: { totalPages, withScript, withRegister, coveragePct, totalKeys, keysTranslated, hardcoded, grade: gradeFromScore(clamp(score)) },
-      pages: pages.sort((a, b) => (b.hardcoded - a.hardcoded))
+      summary: { totalPages, withScript, withRegister, coveragePct, totalKeys, keysTranslated, hardcoded, placeholders: totalPlaceholders, dualSystems: totalDualSystems, missingKeys: totalMissingKeys, grade: gradeFromScore(clamp(score)) },
+      pages: pages.sort((a, b) => (b.placeholders + b.missingKeys) - (a.placeholders + a.missingKeys))
     }
   };
 }

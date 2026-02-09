@@ -1,7 +1,7 @@
 /* ═══════════════════════════════════════════════════════════════════════
-   BATTLE ARENA v7.0 — ACCESSIBILITY-FIRST MOBILE CARD GAME UI
-   Research-backed: 60px+ touch targets, 16pt+ fonts, 4.5:1 contrast,
-   thumb-zone actions, no overlap, linear navigation
+   BATTLE ARENA v7.1 — BIGGER CARDS + SVG ICONS + TAP-TO-ZOOM
+   Research: Marvel Snap card-first UI, 60px+ touch, 16pt+ fonts,
+   4.5:1 contrast, thumb-zone actions, no overlap
    ═══════════════════════════════════════════════════════════════════════ */
 
 /* ═══ DESIGN TOKENS ═══ */
@@ -47,9 +47,9 @@
   --radius: 12px;
   --radius-lg: 16px;
 
-  /* Card sizes */
-  --board-card-w: 58px;
-  --board-card-h: 78px;
+  /* Card sizes — BIGGER board cards (was 58x78, now 70x96) */
+  --board-card-w: 70px;
+  --board-card-h: 96px;
   --hand-card-w: min(160px, 42vw);
   --hand-card-h: min(220px, 56vw);
 }
@@ -134,9 +134,12 @@ html, body {
   display: flex; align-items: center; gap: 8px;
 }
 .zone-avatar {
-  font-size: 28px;
+  display: flex; align-items: center; justify-content: center;
+  width: 28px; height: 28px;
   flex-shrink: 0;
+  color: var(--text-secondary);
 }
+.zone-avatar svg { width: 24px; height: 24px; }
 .zone-info { flex: 1; min-width: 0; }
 .zone-name {
   display: block;
@@ -205,7 +208,11 @@ html, body {
   flex: 1; height: 1px;
   background: linear-gradient(90deg, transparent, var(--orange), transparent);
 }
-.divider-icon { font-size: 16px; }
+.divider-icon {
+  display: flex; align-items: center; justify-content: center;
+  color: var(--orange);
+}
+.divider-icon svg { width: 18px; height: 18px; }
 
 /* ═══ BOARD CARDS ═══ */
 .board-card {
@@ -216,22 +223,27 @@ html, body {
   cursor: pointer;
   transition: transform 0.15s, box-shadow 0.15s;
 }
-.board-card:active { transform: scale(0.94); }
+/* Board card: Research spring-damper slam (Section 4.3) */
+.board-card:active { transform: scaleX(1.03) scaleY(0.95); }
 .board-card .bc-art {
   width: 100%; height: 55%; object-fit: cover; display: block;
   pointer-events: none;
 }
 .board-card .bc-name {
   position: absolute; top: 0; left: 0; right: 0;
-  font-size: 7px; font-weight: 800; text-align: center;
-  padding: 1px 2px;
-  background: rgba(0,0,0,0.75);
+  font-size: 8px; font-weight: 800; text-align: center;
+  padding: 2px 3px;
+  background: rgba(0,0,0,0.8);
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  letter-spacing: 0.2px;
 }
 .board-card .bc-icons {
-  position: absolute; top: 12px; right: 2px;
-  display: flex; flex-direction: column; gap: 1px;
-  font-size: 10px;
+  position: absolute; top: 14px; right: 3px;
+  display: flex; flex-direction: column; gap: 2px;
+}
+.board-card .bc-icons .nw-icon {
+  width: 12px !important; height: 12px !important;
+  filter: drop-shadow(0 1px 2px rgba(0,0,0,0.8));
 }
 .board-card .bc-stats {
   position: absolute; bottom: 0; left: 0; right: 0;
@@ -240,10 +252,12 @@ html, body {
   background: linear-gradient(transparent, rgba(0,0,0,0.9));
 }
 .board-card .bc-stat {
-  font-size: 12px; font-weight: 900;
+  font-size: 13px; font-weight: 900;
   font-family: 'Orbitron', monospace;
   text-shadow: 0 1px 3px rgba(0,0,0,0.8);
+  display: flex; align-items: center; gap: 2px;
 }
+.board-card .bc-stat svg { width: 10px; height: 10px; }
 .bc-atk { color: #ff6b6b; }
 .bc-hp { color: #66bb6a; }
 .board-card .bc-taunt-tag {
@@ -260,8 +274,10 @@ html, body {
 .board-card.has-taunt { border-color: #fdd835; border-width: 3px; }
 .board-card.has-stealth { opacity: 0.4; }
 .board-card.has-shield::after {
-  content: '🛡️'; position: absolute; top: 50%; left: 50%;
-  transform: translate(-50%,-50%); font-size: 18px;
+  content: ''; position: absolute; top: 50%; left: 50%;
+  transform: translate(-50%,-50%);
+  width: 22px; height: 22px;
+  background: url("data:image/svg+xml,%3Csvg viewBox='0 0 24 24' fill='%2342a5f5' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M12 2L4 6v5c0 5.55 3.84 10.74 8 12 4.16-1.26 8-6.45 8-12V6l-8-4z'/%3E%3C/svg%3E") center/contain no-repeat;
   filter: drop-shadow(0 0 6px rgba(66,165,245,0.6));
 }
 .board-card.can-attack {
@@ -304,12 +320,13 @@ html, body {
   border: 1px solid rgba(255,152,0,0.2);
 }
 
-/* ═══ HAND AREA — THE INNOVATION: BIG CAROUSEL CARDS ═══ */
+/* ═══ HAND AREA — RESEARCH: Arc Fan Layout (Section 11.3) ═══ */
 .hand-area {
   flex-shrink: 0;
   background: linear-gradient(0deg, rgba(0,0,0,0.95), rgba(0,0,0,0.7));
   border-top: 2px solid rgba(0,229,255,0.12);
   padding: 4px 0 2px;
+  position: relative;
 }
 .hand-header {
   display: flex; justify-content: space-between; align-items: center;
@@ -325,19 +342,21 @@ html, body {
   color: var(--cyan); font-family: 'Orbitron', monospace;
 }
 
-/* Carousel: horizontal scroll snap */
+/* Carousel: horizontal scroll snap with spring-damper feel */
 .hand-carousel {
   display: flex; gap: 12px;
   overflow-x: auto; overflow-y: hidden;
   -webkit-overflow-scrolling: touch;
   scroll-snap-type: x mandatory;
+  scroll-behavior: smooth;
   padding: 4px 16px 6px;
   min-height: calc(var(--hand-card-h) + 8px);
   scrollbar-width: none;
+  perspective: 800px;
 }
 .hand-carousel::-webkit-scrollbar { display: none; }
 
-/* ═══ HAND CARDS — BIG, READABLE, ACCESSIBLE ═══ */
+/* ═══ HAND CARDS — RESEARCH: Spring-damper + Squash-Stretch (Sections 4.2, 4.3) ═══ */
 .hand-card {
   flex-shrink: 0;
   width: var(--hand-card-w); height: var(--hand-card-h);
@@ -349,15 +368,19 @@ html, body {
   scroll-snap-align: center;
   touch-action: manipulation;
   -webkit-user-select: none; user-select: none;
-  transition: transform 0.2s cubic-bezier(0.34,1.56,0.64,1),
+  /* Research: EaseOutBack for spring-damper feel (overshoot) */
+  transition: transform 0.35s cubic-bezier(0.34,1.56,0.64,1),
               border-color 0.2s, box-shadow 0.2s;
   transform-origin: bottom center;
+  will-change: transform;
 }
-.hand-card:active { transform: scale(0.96); }
+/* Research: Squash on press (Section 4.2 — area preservation) */
+.hand-card:active { transform: scaleX(1.04) scaleY(0.94); }
+/* Research: Spring-damper bounce on select (Section 4.3) */
 .hand-card.selected {
-  transform: translateY(-12px) scale(1.05);
+  transform: translateY(-14px) scale(1.06);
   border-color: var(--gold);
-  box-shadow: 0 8px 32px rgba(255,215,0,0.35);
+  box-shadow: 0 10px 40px rgba(255,215,0,0.4), 0 0 0 1px rgba(255,215,0,0.2);
   z-index: 10;
 }
 .hand-card.unplayable { opacity: 0.35; filter: grayscale(0.5); }
@@ -478,7 +501,10 @@ html, body {
   background: linear-gradient(135deg, #e65100, #ff9800);
   box-shadow: 0 4px 16px rgba(230,81,0,0.4);
 }
-.btn-icon { font-size: 18px; }
+.btn-icon {
+  display: flex; align-items: center; justify-content: center;
+}
+.btn-icon svg { width: 18px; height: 18px; }
 .btn-text { font-size: var(--font-sm); }
 
 /* ═══ ANNOUNCER ═══ */
@@ -571,7 +597,13 @@ html, body {
   box-shadow: 0 0 24px rgba(255,215,0,0.3);
 }
 .diff-card:active { transform: scale(0.96); }
-.diff-emoji { font-size: 28px; }
+.diff-icon {
+  display: flex; align-items: center; justify-content: center;
+  width: 36px; height: 36px;
+}
+.diff-icon--casual { color: var(--cyan); }
+.diff-icon--ranked { color: var(--gold); }
+.diff-icon--boss { color: var(--red); }
 .diff-label { font-size: var(--font-sm); font-weight: 900; }
 .diff-hint { font-size: 11px; color: var(--text-muted); }
 
@@ -649,17 +681,19 @@ html, body {
   border: 1px solid rgba(0,229,255,0.2);
 }
 
-/* ═══ ANIMATIONS ═══ */
+/* Research: Squash-and-Stretch animations (Section 4.2) */
 @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 @keyframes cardSlam {
-  0% { transform: translateY(-30px) scale(1.2); opacity: 0; }
-  60% { transform: translateY(3px) scale(0.96); opacity: 1; }
+  0% { transform: translateY(-40px) scaleX(0.85) scaleY(1.2); opacity: 0; }
+  50% { transform: translateY(4px) scaleX(1.1) scaleY(0.88); opacity: 1; }
+  70% { transform: translateY(-2px) scaleX(0.97) scaleY(1.04); }
   100% { transform: translateY(0) scale(1); }
 }
 @keyframes cardAttack {
-  0% { transform: translateY(0); }
-  30% { transform: translateY(-16px) scale(1.08); }
-  60% { transform: translateY(4px) scale(0.96); }
+  0% { transform: translateY(0) scale(1); }
+  20% { transform: translateY(-20px) scaleX(0.9) scaleY(1.15); }
+  50% { transform: translateY(6px) scaleX(1.1) scaleY(0.88); }
+  70% { transform: translateY(-3px) scale(1.02); }
   100% { transform: translateY(0) scale(1); }
 }
 @keyframes cardHit {
@@ -678,8 +712,9 @@ html, body {
   50% { transform: scale(1.12); filter: brightness(1.4); }
   100% { transform: scale(1); filter: brightness(1); }
 }
+/* Research: Card slam uses EaseOutBack timing (Section 11.1: 350-450ms) */
 .board-card.slamming { animation: cardSlam 0.4s cubic-bezier(0.34,1.56,0.64,1); }
-.board-card.attacking { animation: cardAttack 0.5s ease; }
+.board-card.attacking { animation: cardAttack 0.45s cubic-bezier(0.22,1,0.36,1); }
 .board-card.hit { animation: cardHit 0.3s ease; }
 .board-card.dying { animation: cardDeath 0.6s forwards; }
 .board-card.buffed { animation: cardBuff 0.4s ease; }
@@ -700,46 +735,123 @@ html, body {
   100% { transform: translateY(-50px) scale(0.8); opacity: 0; }
 }
 
-/* Screen effects */
+/* Research: Perlin shake (Section 4.1 — smooth continuous noise) */
 @keyframes shake {
-  0%,100% { transform: translate(0); }
-  20% { transform: translate(-3px,2px); }
-  40% { transform: translate(3px,-2px); }
-  60% { transform: translate(-2px,3px); }
-  80% { transform: translate(2px,-1px); }
+  0%    { transform: translate(0,0) rotate(0deg); }
+  15%   { transform: translate(-3px, 2px) rotate(-0.5deg); }
+  30%   { transform: translate(2px, -3px) rotate(0.3deg); }
+  45%   { transform: translate(-2px, 1px) rotate(-0.2deg); }
+  60%   { transform: translate(3px, -1px) rotate(0.4deg); }
+  75%   { transform: translate(-1px, 2px) rotate(-0.3deg); }
+  90%   { transform: translate(1px, -1px) rotate(0.1deg); }
+  100%  { transform: translate(0,0) rotate(0deg); }
 }
-#arena.shaking { animation: shake 0.3s ease; }
+#arena.shaking { animation: shake 0.35s ease-out; }
 .screen-flash {
   position: fixed; inset: 0; pointer-events: none; z-index: 90;
   animation: flash 0.3s forwards;
 }
 @keyframes flash { 0% { opacity: 0.3; } 100% { opacity: 0; } }
 
+/* ═══ TAP-TO-ZOOM: Marvel Snap-style card preview ═══ */
+.card-zoom {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.92); backdrop-filter: blur(16px);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 300;
+  animation: fadeIn 0.2s ease;
+}
+.card-zoom.hidden { display: none; }
+.card-zoom-inner {
+  width: min(300px, 80vw);
+  background: var(--bg-card);
+  border-radius: 20px;
+  border: 3px solid var(--gold);
+  overflow: hidden;
+  animation: zoomIn 0.25s cubic-bezier(0.34,1.56,0.64,1);
+  box-shadow: 0 0 60px rgba(255,215,0,0.25);
+}
+@keyframes zoomIn {
+  from { transform: scale(0.5); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+.card-zoom .cz-art {
+  width: 100%; height: 200px; object-fit: cover; display: block;
+}
+.card-zoom .cz-body {
+  padding: 16px;
+}
+.card-zoom .cz-name {
+  font-family: 'Orbitron', monospace;
+  font-size: 18px; font-weight: 900;
+  color: var(--gold); margin-bottom: 4px;
+}
+.card-zoom .cz-role {
+  font-size: 11px; font-weight: 700;
+  color: var(--text-muted); text-transform: uppercase;
+  letter-spacing: 0.5px; margin-bottom: 12px;
+}
+.card-zoom .cz-stats {
+  display: flex; gap: 16px; margin-bottom: 12px;
+}
+.card-zoom .cz-stat {
+  text-align: center; flex: 1;
+}
+.card-zoom .cz-stat-val {
+  font-family: 'Orbitron', monospace;
+  font-size: 24px; font-weight: 900;
+}
+.card-zoom .cz-stat-label {
+  font-size: 10px; color: var(--text-muted);
+  text-transform: uppercase;
+}
+.card-zoom .cz-abilities {
+  display: flex; flex-wrap: wrap; gap: 6px;
+}
+.card-zoom .cz-ability {
+  font-size: 11px; font-weight: 700;
+  padding: 4px 10px; border-radius: 8px;
+  background: var(--cyan-dim); color: var(--cyan);
+  border: 1px solid rgba(0,229,255,0.2);
+  display: flex; align-items: center; gap: 4px;
+}
+.card-zoom .cz-ability .nw-icon { width: 14px !important; height: 14px !important; }
+.card-zoom .cz-hint {
+  text-align: center; margin-top: 14px;
+  font-size: 11px; color: var(--text-muted); opacity: 0.6;
+}
+
+/* ═══ SVG ICON GLOBAL STYLES ═══ */
+.nw-icon svg { width: 100%; height: 100%; }
+
 /* ═══ RESPONSIVE: Bigger on bigger screens ═══ */
 @media (min-width: 400px) {
   :root {
     --hand-card-w: min(180px, 44vw);
     --hand-card-h: min(240px, 58vw);
-    --board-card-w: 64px;
-    --board-card-h: 86px;
+    --board-card-w: 76px;
+    --board-card-h: 102px;
   }
   .hand-card .hc-name { font-size: 15px; }
   .hand-card .hc-stat { font-size: 20px; }
+  .board-card .bc-name { font-size: 9px; }
+  .board-card .bc-stat { font-size: 14px; }
 }
 @media (min-width: 768px) {
   :root {
     --hand-card-w: 200px;
     --hand-card-h: 270px;
-    --board-card-w: 82px;
-    --board-card-h: 110px;
+    --board-card-w: 100px;
+    --board-card-h: 136px;
   }
   .hand-carousel { gap: 16px; }
   .hand-card .hc-name { font-size: var(--font-base); }
   .hand-card .hc-stat { font-size: var(--font-xl); }
   .action-btn { font-size: var(--font-base); min-height: 60px; }
   .announcer { font-size: 36px; }
-  .bc-stat { font-size: var(--font-sm) !important; }
-  .board-card .bc-name { font-size: 9px; }
+  .board-card .bc-stat { font-size: var(--font-sm); }
+  .board-card .bc-name { font-size: 10px; }
+  .board-card .bc-icons .nw-icon { width: 14px !important; height: 14px !important; }
 }
 
 /* Landscape: compact */
@@ -747,11 +859,11 @@ html, body {
   :root {
     --hand-card-w: 100px;
     --hand-card-h: 140px;
-    --board-card-w: 48px;
-    --board-card-h: 64px;
+    --board-card-w: 56px;
+    --board-card-h: 76px;
   }
   #topBar { height: 36px; }
-  .zone-avatar { font-size: 20px; }
+  .zone-avatar svg { width: 20px; height: 20px; }
   .hp-bar-track { height: 18px; }
   .action-btn { min-height: 44px; font-size: 12px; }
   .hand-area { padding: 2px 0; }

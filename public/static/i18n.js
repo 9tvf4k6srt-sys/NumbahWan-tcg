@@ -31,7 +31,7 @@ const coreTranslations = {
     success: "Success",
     
     // Footer
-    madeWith: "Made with ❤️ by the family",
+    madeWith: "Made with by the family",
     server: "Server: TW",
     
     // Guild info
@@ -60,7 +60,7 @@ const coreTranslations = {
     success: "成功",
     
     // Footer
-    madeWith: "家人們用 ❤️ 製作",
+    madeWith: "家人們用 製作",
     server: "伺服器：台灣",
     
     // Guild info
@@ -89,7 +89,7 @@ const coreTranslations = {
     success: "สำเร็จ",
     
     // Footer
-    madeWith: "สร้างด้วย ❤️ โดยครอบครัว",
+    madeWith: "สร้างด้วย โดยครอบครัว",
     server: "เซิร์ฟเวอร์: TW",
     
     // Guild info
@@ -309,7 +309,7 @@ function generateNavHTML(options = {}) {
     <nav class="fixed top-0 left-0 right-0 z-50 glass-card mx-4 mt-4 rounded-full">
       <div class="container mx-auto px-4 py-3 flex items-center justify-between">
         <a href="/" class="flex items-center gap-2">
-          <span class="text-2xl">🎮</span>
+          <span class="text-2xl"></span>
           <span class="pixel-font text-xs text-orange-400">NumbahWan</span>
         </a>
         <div class="flex items-center gap-3">

@@ -192,7 +192,7 @@
         const rect = el.getBoundingClientRect();
         for (let i = 0; i < 5; i++) {
           const spark = document.createElement('div');
-          spark.innerHTML = '✦';
+          spark.innerHTML = '';
           spark.style.cssText = `
             position:fixed;color:#ffcc00;font-size:${10 + Math.random() * 10}px;
             left:${rect.left + Math.random() * rect.width}px;
@@ -422,7 +422,7 @@
       this.scrollProgress.init();
       this.backToTop.init();
       
-      console.log('🎨 NW Effects initialized');
+      console.log('NW Effects initialized');
     }
   };
 

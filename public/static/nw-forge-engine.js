@@ -7,7 +7,7 @@
 const DEV_MODE = false;
 
 // ═══════════════════════════════════════════════════════════════════════════
-// 🔧 STUB FUNCTIONS - Replace missing external dependencies
+// STUB FUNCTIONS - Replace missing external dependencies
 // ═══════════════════════════════════════════════════════════════════════════
 if (typeof NW_CORE === 'undefined') {
     window.NW_CORE = { throttle: (fn) => fn };
@@ -51,7 +51,7 @@ if (typeof NW_JUICE === 'undefined') {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
-// 🎵 PREMIUM GACHA AUDIO ENGINE - Casino-Grade Sound Design
+// PREMIUM GACHA AUDIO ENGINE - Casino-Grade Sound Design
 // ═══════════════════════════════════════════════════════════════════════════
 const AudioCtx = window.AudioContext || window.webkitAudioContext;
 let audioCtx = null;
@@ -87,14 +87,14 @@ function initAudio() {
             audioCtx.master = comp;
             audioCtx.masterGain = masterGain;
             
-            console.log('[FORGE] 🔊 Audio context created, state:', audioCtx.state);
+            console.log('[FORGE] Audio context created, state:', audioCtx.state);
         } catch (e) {
-            console.error('[FORGE] ❌ Audio init error:', e);
+            console.error('[FORGE] Audio init error:', e);
         }
     } else if (audioCtx.state === 'suspended') {
         // Resume if suspended
         audioCtx.resume().then(() => {
-            console.log('[FORGE] 🔊 Audio resumed');
+            console.log('[FORGE] Audio resumed');
         });
     }
 }
@@ -158,7 +158,7 @@ function createNoise(duration, start, gainVal, dest, filter = null) {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
-// 📳 HAPTIC FEEDBACK SYSTEM - Phone vibration patterns
+// HAPTIC FEEDBACK SYSTEM - Phone vibration patterns
 // ═══════════════════════════════════════════════════════════════════════════
 function haptic(pattern) {
     if (!navigator.vibrate) return;
@@ -177,10 +177,10 @@ function haptic(pattern) {
     navigator.vibrate(patterns[pattern] || [20]);
 }
 
-// 📱 SCREEN SHAKE for epic moments - defined later in the file
+// SCREEN SHAKE for epic moments - defined later in the file
 
 // ═══════════════════════════════════════════════════════════════════════════
-// 🔊 AUDIO SYSTEM - Using NW_AUDIO helper for better performance
+// AUDIO SYSTEM - Using NW_AUDIO helper for better performance
 // ═══════════════════════════════════════════════════════════════════════════
 
 // Load all forge audio files through NW_AUDIO helper
@@ -216,7 +216,7 @@ async function initForgeAudio() {
     try {
         await NW_AUDIO.loadAll(forgeAudioFiles);
         audioLoaded = true;
-        console.log('[Forge Audio] ✅ Loaded all sounds via NW_AUDIO');
+        console.log('[Forge Audio] Loaded all sounds via NW_AUDIO');
     } catch (e) {
         console.warn('[Forge Audio] Failed to load:', e);
     }
@@ -234,19 +234,19 @@ window.PremiumAudio = {
 };
 
 // ═══════════════════════════════════════════════════════════════════════════
-// 🍎 iOS AUDIO UNLOCK - Must happen during user gesture!
+// iOS AUDIO UNLOCK - Must happen during user gesture!
 // ═══════════════════════════════════════════════════════════════════════════
 function unlockAudioForIOS() {
-    console.log('[FORGE] 🔊 Unlocking audio for iOS...');
+    console.log('[FORGE] Unlocking audio for iOS...');
     
     // 1. Initialize NW_JUICE sound system (loads MP3 buffers)
     if (typeof NW_JUICE !== 'undefined' && NW_JUICE.sound) {
         NW_JUICE.sound.init().then(() => {
-            console.log('[FORGE] ✅ NW_JUICE audio initialized');
+            console.log('[FORGE] NW_JUICE audio initialized');
             // Resume context if suspended
             if (NW_JUICE.sound.ctx && NW_JUICE.sound.ctx.state === 'suspended') {
                 NW_JUICE.sound.ctx.resume().then(() => {
-                    console.log('[FORGE] ✅ NW_JUICE AudioContext resumed');
+                    console.log('[FORGE] NW_JUICE AudioContext resumed');
                 });
             }
         });
@@ -259,7 +259,7 @@ function unlockAudioForIOS() {
     // 3. Play a silent sound to fully unlock iOS audio
     if (audioCtx && audioCtx.state === 'suspended') {
         audioCtx.resume().then(() => {
-            console.log('[FORGE] ✅ Local AudioContext resumed');
+            console.log('[FORGE] Local AudioContext resumed');
         });
     }
 }
@@ -270,11 +270,11 @@ document.addEventListener('touchstart', unlockAudioForIOS, { once: true });
 document.addEventListener('touchend', unlockAudioForIOS, { once: true });
 
 // ═══════════════════════════════════════════════════════════════════════════
-// 🎰 PREMIUM SOUND LIBRARY - Each rarity has unique audio identity
+// PREMIUM SOUND LIBRARY - Each rarity has unique audio identity
 // Uses MP3 files when available, falls back to synth
 // ═══════════════════════════════════════════════════════════════════════════
 function playSound(type) {
-    console.log('[FORGE] 🔊 playSound:', type, 'audioCtx:', !!audioCtx);
+    console.log('[FORGE] playSound:', type, 'audioCtx:', !!audioCtx);
     
     // Always trigger haptic
     haptic(type);
@@ -287,12 +287,12 @@ function playSound(type) {
         try {
             initAudio();
         } catch (e) {
-            console.log('[FORGE] ⚠️ Audio init failed:', e);
+            console.log('[FORGE] Audio init failed:', e);
             return;
         }
     }
     if (!audioCtx) {
-        console.log('[FORGE] ⚠️ No audio context available');
+        console.log('[FORGE] No audio context available');
         return;
     }
     
@@ -419,7 +419,7 @@ function playSound(type) {
         },
         
         // ═══════════════════════════════════════════════════════════════════
-        // LEGENDARY REVEAL - HYPE MODE! 🔥
+        // LEGENDARY REVEAL - HYPE MODE! 
         // ═══════════════════════════════════════════════════════════════════
         legendary: () => {
             // Epic fanfare - triumphant ascending progression
@@ -450,7 +450,7 @@ function playSound(type) {
         },
         
         // ═══════════════════════════════════════════════════════════════════
-        // MYTHIC REVEAL - MAXIMUM HYPE! 🌟◆✨
+        // MYTHIC REVEAL - MAXIMUM HYPE! 
         // ═══════════════════════════════════════════════════════════════════
         mythic: () => {
             // LEGENDARY ASCENSION - Multi-layered orchestral hit
@@ -657,7 +657,7 @@ function getCardFullUrl(img) {
     return IMAGE_FULL + img.replace(/\.(png|jpg|jpeg)$/i, '.webp');
 }
 
-// 🚀 PRELOAD CACHE - Store preloaded images for instant reveal
+// PRELOAD CACHE - Store preloaded images for instant reveal
 const preloadedImages = new Map();
 let preloadQueue = [];
 let isPreloading = false;
@@ -778,32 +778,37 @@ async function loadGachaCards(setId = 1) {
 }
 
 // ═══════════════════════════════════════════════════════════════════
-// 🎰 ADDICTIVE GACHA DROP RATES - Psychological Optimization
+// GACHA DROP RATES - v3.2 REBALANCED
 // ═══════════════════════════════════════════════════════════════════
-// MYTHIC:     0.01% (1 in 10,000) - Ultra chase card, whale bait
-// LEGENDARY:  1.00% (1 in 100)    - Achievable goal, keeps hope alive  
+// OLD: Mythic 0.01% was predatory - created hopelessness, not desire
+// NEW: Mythic 0.5% gives ~1 mythic per 200 pulls (matches hard pity)
+//      First mythic is exciting, collecting all 5 is a 2-4 year goal
+//
+// MYTHIC:     0.50% (1 in 200)    - Chase card, hard but achievable
+// LEGENDARY:  2.00% (1 in 50)     - Buffed to keep hope alive
 // EPIC:       8.00% (1 in 12.5)   - Frequent dopamine, "almost there!"
-// RARE:      20.00% (1 in 5)      - Satisfying progress feeling
-// UNCOMMON:  35.00% (1 in 2.86)   - Base satisfaction layer
-// COMMON:    35.99% (remainder)   - Filler, makes rares feel good
+// RARE:      19.50% (1 in 5.1)    - Satisfying progress feeling
+// UNCOMMON:  33.00% (1 in 3.0)    - Base satisfaction layer
+// COMMON:    37.00% (remainder)   - Filler, makes rares feel good
 // ═══════════════════════════════════════════════════════════════════
 const RATES = { 
-    mythic: 0.0001,      // 0.01% - 1 in 10,000 pulls
-    legendary: 0.01,     // 1.00% - 1 in 100 pulls
-    epic: 0.08,          // 8.00% - 1 in 12.5 pulls
-    rare: 0.20,          // 20.0% - 1 in 5 pulls
-    uncommon: 0.35,      // 35.0% - Common satisfaction
-    common: 0.3599       // 35.99% - Filler (ensures total = 100%)
+    mythic: 0.005,       // 0.50% - 1 in 200 pulls (was 0.01%)
+    legendary: 0.02,     // 2.00% - 1 in 50 pulls (was 1%)
+    epic: 0.08,          // 8.00% - unchanged
+    rare: 0.195,         // 19.5% - slightly adjusted
+    uncommon: 0.33,      // 33.0% - slightly adjusted
+    common: 0.37         // 37.0% - Filler (ensures total = 100%)
 };
 
-// 🔥 PITY SYSTEM - Guarantees to prevent frustration & drive spending
+// PITY SYSTEM - v3.2 REBALANCED with higher base rates
+// With 0.5% mythic rate, soft pity is safety net not primary mechanic
 const PITY = {
-    mythic: { soft: 150, hard: 200 },    // Soft pity at 150, guaranteed at 200
-    legendary: { soft: 50, hard: 80 },   // Soft pity at 50, guaranteed at 80
-    epic: { soft: 15, hard: 25 }         // Soft pity at 15, guaranteed at 25
+    mythic: { soft: 120, hard: 180 },    // Soft at 120, guaranteed at 180 (was 150/200)
+    legendary: { soft: 30, hard: 50 },   // Soft at 30, guaranteed at 50 (was 50/80)
+    epic: { soft: 10, hard: 20 }         // Soft at 10, guaranteed at 20 (was 15/25)
 };
 
-// 📈 SOFT PITY MULTIPLIERS - Rates increase as you approach hard pity
+// SOFT PITY MULTIPLIERS - Rates increase as you approach hard pity
 // Creates "I'm so close!" psychology
 function getAdjustedRates(pityCounters) {
     const adjusted = { ...RATES };
@@ -849,13 +854,13 @@ let forgeState = {
     recentCards: [], 
     collection: new Set(), 
     mythicsOwned: 0,
-    // 🎰 Individual pity counters for addictive mechanics
+    // Individual pity counters for addictive mechanics
     pity: {
         mythic: 0,      // Resets when mythic pulled
         legendary: 0,   // Resets when legendary+ pulled  
         epic: 0         // Resets when epic+ pulled
     },
-    // 📊 Statistics for "almost there!" psychology
+    // Statistics for "almost there!" psychology
     stats: {
         totalMythics: 0,
         totalLegendaries: 0,
@@ -870,7 +875,7 @@ let forgeState = {
 // walletReady declared at top of script
 
 // =====================================================
-// 🔧 GM MODE - Uses wallet GM system for testing
+// GM MODE - Uses wallet GM system for testing
 // =====================================================
 // GM mode is activated via: NW_WALLET.activateGM("numbahwan-gm-2026")
 // Or add ?gm=true to URL
@@ -1006,7 +1011,7 @@ function showGMStatus() {
                 color: #ffd700;
                 padding: 4px 12px;
                 border-radius: 6px;
-                font-family: 'Orbitron', sans-serif;
+                font-family: 'NumbahWan', 'Orbitron', sans-serif;
                 font-size: 11px;
                 font-weight: 800;
                 letter-spacing: 1px;
@@ -1115,32 +1120,32 @@ function updateUI() {
     }
     lastLogBalance = currentLogs;
     
-    // 🎰 UPDATE ALL THREE PITY BARS
+    // UPDATE ALL THREE PITY BARS
     // Mythic Pity (0-200, soft at 150)
     const mythicPity = forgeState.pity?.mythic || forgeState.pityCounter || 0;
     const mythicEl = document.getElementById('pityFillMythic');
     const mythicCountEl = document.getElementById('pityMythic');
-    if (mythicEl) mythicEl.style.width = Math.min(100, (mythicPity / 200) * 100) + '%';
+    if (mythicEl) mythicEl.style.width = Math.min(100, (mythicPity / 180) * 100) + '%';
     if (mythicCountEl) mythicCountEl.textContent = mythicPity;
     
     // Legendary Pity (0-80, soft at 50)
     const legendaryPity = forgeState.pity?.legendary || 0;
     const legendaryEl = document.getElementById('pityFillLegendary');
     const legendaryCountEl = document.getElementById('pityLegendary');
-    if (legendaryEl) legendaryEl.style.width = Math.min(100, (legendaryPity / 80) * 100) + '%';
+    if (legendaryEl) legendaryEl.style.width = Math.min(100, (legendaryPity / 50) * 100) + '%';
     if (legendaryCountEl) legendaryCountEl.textContent = legendaryPity;
     
     // Epic Pity (0-25, soft at 15)
     const epicPity = forgeState.pity?.epic || 0;
     const epicEl = document.getElementById('pityFillEpic');
     const epicCountEl = document.getElementById('pityEpic');
-    if (epicEl) epicEl.style.width = Math.min(100, (epicPity / 25) * 100) + '%';
+    if (epicEl) epicEl.style.width = Math.min(100, (epicPity / 20) * 100) + '%';
     if (epicCountEl) epicCountEl.textContent = epicPity;
     
     // Highlight rows when close to pity
-    document.querySelector('.mythic-pity')?.classList.toggle('close', mythicPity >= 150);
-    document.querySelector('.legendary-pity')?.classList.toggle('close', legendaryPity >= 50);
-    document.querySelector('.epic-pity')?.classList.toggle('close', epicPity >= 15);
+    document.querySelector('.mythic-pity')?.classList.toggle('close', mythicPity >= 120);
+    document.querySelector('.legendary-pity')?.classList.toggle('close', legendaryPity >= 30);
+    document.querySelector('.epic-pity')?.classList.toggle('close', epicPity >= 10);
     
     // Update displayed rates with soft pity boosts
     const rates = getAdjustedRates(forgeState.pity || { mythic: 0, legendary: 0, epic: 0 });
@@ -1245,10 +1250,10 @@ function toggleRates() {
     const g = document.getElementById('ratesGrid');
     const t = document.getElementById('ratesToggle');
     g.style.display = g.style.display === 'none' ? 'grid' : 'none';
-    t.textContent = g.style.display === 'none' ? '▼' : '▲';
+    t.textContent = g.style.display === 'none' ? '' : '';
 }
 
-// 🎰 ADDICTIVE ROLL SYSTEM with Multi-Tier Pity
+// ADDICTIVE ROLL SYSTEM with Multi-Tier Pity
 function rollRarity() {
     // Get adjusted rates based on current pity counters
     const rates = getAdjustedRates(forgeState.pity);
@@ -1257,15 +1262,15 @@ function rollRarity() {
     // HARD PITY GUARANTEES - Prevents infinite frustration
     // ═══════════════════════════════════════════════════
     if (forgeState.pity.mythic >= PITY.mythic.hard) {
-        console.log('🎉 MYTHIC HARD PITY TRIGGERED @ ' + forgeState.pity.mythic + ' pulls!');
+        console.log('MYTHIC HARD PITY TRIGGERED @ ' + forgeState.pity.mythic + ' pulls!');
         return 'mythic';
     }
     if (forgeState.pity.legendary >= PITY.legendary.hard) {
-        console.log('⭐ LEGENDARY HARD PITY TRIGGERED @ ' + forgeState.pity.legendary + ' pulls!');
+        console.log('LEGENDARY HARD PITY TRIGGERED @ ' + forgeState.pity.legendary + ' pulls!');
         return 'legendary';
     }
     if (forgeState.pity.epic >= PITY.epic.hard) {
-        console.log('💜 EPIC HARD PITY TRIGGERED @ ' + forgeState.pity.epic + ' pulls!');
+        console.log('EPIC HARD PITY TRIGGERED @ ' + forgeState.pity.epic + ' pulls!');
         return 'epic';
     }
     
@@ -1299,7 +1304,7 @@ function rollRarity() {
     return 'common';
 }
 
-// 🔄 Update pity counters after a pull
+// Update pity counters after a pull
 function updatePityCounters(rarity) {
     const tierOrder = ['common', 'uncommon', 'rare', 'epic', 'legendary', 'mythic'];
     const pulledTier = tierOrder.indexOf(rarity);
@@ -1346,7 +1351,7 @@ function updatePityCounters(rarity) {
 function getCard(rarity) {
     console.log('[FORGE] getCard called, CARDS.length:', CARDS.length, 'rarity:', rarity);
     if (CARDS.length === 0) {
-        console.error('[FORGE] ❌ CARDS array is empty! Generating sample cards...');
+        console.error('[FORGE] CARDS array is empty! Generating sample cards...');
         CARDS = generateSampleCards();
     }
     const pool = CARDS.filter(c => c.rarity === rarity);
@@ -1359,7 +1364,7 @@ function getCard(rarity) {
 }
 
 // ═══════════════════════════════════════════════════════════════════
-// 🎰 SWIPE-TO-TEAR PACK OPENING SYSTEM
+// SWIPE-TO-TEAR PACK OPENING SYSTEM
 // Maximum anticipation and satisfaction!
 // ═══════════════════════════════════════════════════════════════════
 let packOpeningResolve = null;
@@ -1390,7 +1395,7 @@ const PACK_CONFIG = {
 };
 
 // ═══════════════════════════════════════════════════════════════════
-// 🎴 FLASH MASK TEAR SYSTEM - Based on South Park: Phone Destroyer
+// FLASH MASK TEAR SYSTEM - Based on South Park: Phone Destroyer
 // The "tear" is actually:
 // 1. One image split into TOP/BOTTOM using clip-path
 // 2. A bright flash hides the transition
@@ -1966,7 +1971,7 @@ function resetPackVisual(packEl, isBox) {
 }
 
 async function tearOpenPack(packEl, cards, isBox) {
-    console.log('[FORGE] 🎴 tearOpenPack START - isBox:', isBox, 'cards:', cards.length);
+    console.log('[FORGE] tearOpenPack START - isBox:', isBox, 'cards:', cards.length);
     const instruction = document.getElementById('packInstruction');
     instruction.classList.add('hidden');
     
@@ -2083,20 +2088,20 @@ async function tearOpenPack(packEl, cards, isBox) {
     }
     
     // Create burst particles
-    console.log('[FORGE] 🎴 Creating burst particles...');
+    console.log('[FORGE] Creating burst particles...');
     createPackParticles(highestRarityInPack);
     
     // Cards fly out preview
-    console.log('[FORGE] 🎴 Waiting 400ms before flying cards...');
+    console.log('[FORGE] Waiting 400ms before flying cards...');
     await sleep(400);
-    console.log('[FORGE] 🎴 Showing cards flying...');
+    console.log('[FORGE] Showing cards flying...');
     await showCardsFlying(packEl, cards);
     
     // Transition to reveal
-    console.log('[FORGE] 🎴 Waiting 600ms before reveal...');
+    console.log('[FORGE] Waiting 600ms before reveal...');
     await sleep(600);
     
-    console.log('[FORGE] 🎴 Removing pack overlay, showing reveal...');
+    console.log('[FORGE] Removing pack overlay, showing reveal...');
     document.getElementById('packOverlay').classList.remove('show');
     document.getElementById('tearEffect').classList.remove('active', 'tearing');
     
@@ -2330,7 +2335,7 @@ function createPackParticles(rarity) {
 }
 
 function getRarityColor(rarity) {
-    // 🎮 Use NW_GUILD if available
+    // Use NW_GUILD if available
     if (typeof NW_GUILD !== 'undefined') {
         return NW_GUILD.getRarityColor(rarity);
     }
@@ -2354,20 +2359,20 @@ function sleep(ms) {
 async function executePull() {
     // Show immediate feedback
     showToast('Opening pack...');
-    console.log('[FORGE] 🎴 executePull CALLED!');
+    console.log('[FORGE] executePull CALLED!');
     
     try {
-        console.log('[FORGE] 🎴 executePull START - DEV_MODE:', DEV_MODE, 'selectedPulls:', selectedPulls, 'CARDS:', CARDS.length);
+        console.log('[FORGE] executePull START - DEV_MODE:', DEV_MODE, 'selectedPulls:', selectedPulls, 'CARDS:', CARDS.length);
         
         // Make sure we have cards
         if (CARDS.length === 0) {
-            console.log('[FORGE] ⚠️ No cards! Generating...');
+            console.log('[FORGE] No cards! Generating...');
             CARDS = generateSampleCards();
         }
         
         // ALWAYS init audio on first pull (required for mobile)
         initAudio();
-        console.log('[FORGE] 🔊 Audio initialized');
+        console.log('[FORGE] Audio initialized');
         
         // DEV MODE: Skip wallet checks entirely
         if (!DEV_MODE) {
@@ -2381,7 +2386,7 @@ async function executePull() {
         if (selectedPulls === 5) actual = 6;
         if (selectedPulls === 10) actual = 12;
         
-        console.log('[FORGE] 🎴 Pulling', actual, 'cards...');
+        console.log('[FORGE] Pulling', actual, 'cards...');
     
     cardsToReveal = [];
     let gotMythic = false, gotLegendary = false, gotEpic = false;
@@ -2395,7 +2400,7 @@ async function executePull() {
         forgeState.recentCards.push(card);
         if (forgeState.recentCards.length > 50) forgeState.recentCards.shift();
         
-        // 🎰 Update pity counters with new system
+        // Update pity counters with new system
         updatePityCounters(rarity);
         
         // Record in wallet with progression system
@@ -2408,7 +2413,7 @@ async function executePull() {
                 const prevLevel = Math.floor((cardProgress.xp - getXPForRarity(rarity)) / 100) + 1;
                 if (cardProgress.level > prevLevel) {
                     setTimeout(() => {
-                        showToast(`⬆️ ${card.name[lang] || card.name.en} LEVEL UP! Lv.${cardProgress.level}`, 'legendary');
+                        showToast(`${card.name[lang] || card.name.en} LEVEL UP! Lv.${cardProgress.level}`, 'legendary');
                         if (typeof NW_JUICE !== 'undefined') NW_JUICE.haptic.success();
                     }, 500);
                 } else {
@@ -2422,7 +2427,7 @@ async function executePull() {
             gotMythic = true;
             forgeState.mythicsOwned++; 
             addLogs(100, 'MYTHIC_PULL_BONUS');  // Increased bonus!
-            showToast('🎉 MYTHIC! +100 Sacred Logs Bonus!', 'mythic');
+            showToast('MYTHIC! +100 Sacred Logs Bonus!', 'mythic');
             // Announce to global chat!
             announcePull(card.id, 'mythic', card.name);
         } else if (rarity === 'legendary') {
@@ -2443,7 +2448,7 @@ async function executePull() {
     saveState();
     updateUI();
     
-    // 🚀 PRELOAD ALL REVEAL IMAGES BEFORE SHOWING (instant reveals!)
+    // PRELOAD ALL REVEAL IMAGES BEFORE SHOWING (instant reveals!)
     // Show quick loading feedback
     const pullBtn = document.querySelector('.pull-btn');
     if (pullBtn) {
@@ -2451,9 +2456,9 @@ async function executePull() {
         pullBtn.innerHTML = '<span class="nw-icon nw-spin" style="width:16px;height:16px;display:inline-flex" data-nw-icon="sparkles"></span> Loading...';
     }
     
-    console.log('[FORGE] 🎴 Preloading card images...');
+    console.log('[FORGE] Preloading card images...');
     await preloadRevealCards(cardsToReveal);
-    console.log('[FORGE] 🎴 Preload complete!');
+    console.log('[FORGE] Preload complete!');
     
     if (pullBtn) {
         pullBtn.disabled = false;
@@ -2462,32 +2467,32 @@ async function executePull() {
     
     // ===== PACK OPENING ANIMATION =====
     // Use NW_GACHA Ultimate system if available, fallback to old system
-    console.log('[FORGE] 🎴 Starting pack opening animation...');
+    console.log('[FORGE] Starting pack opening animation...');
     try {
         if (typeof NW_GACHA !== 'undefined') {
             // NEW: Ultimate Gacha System with addiction-by-design psychology
-            console.log('[FORGE] 🎰 Using NW_GACHA Ultimate system');
+            console.log('[FORGE] Using NW_GACHA Ultimate system');
             await NW_GACHA.pull(cardsToReveal);
         } else {
             // FALLBACK: Old swipe-to-tear system
-            console.log('[FORGE] 📦 Using legacy pack opening');
+            console.log('[FORGE] Using legacy pack opening');
             await showPackOpening(cardsToReveal);
         }
-        console.log('[FORGE] 🎴 Pack animation complete!');
+        console.log('[FORGE] Pack animation complete!');
     } catch (err) {
-        console.error('[FORGE] ❌ Pack animation error:', err);
+        console.error('[FORGE] Pack animation error:', err);
         // Fallback: hide overlay if animation fails
         const packOverlay = document.getElementById('packOverlay');
         if (packOverlay) packOverlay.classList.remove('show');
     }
     
     currentIndex = 0;
-    console.log('[FORGE] 🎴 Calling showReveal with', cardsToReveal.length, 'cards');
+    console.log('[FORGE] Calling showReveal with', cardsToReveal.length, 'cards');
     showReveal();
-    console.log('[FORGE] 🎴 executePull COMPLETE!');
+    console.log('[FORGE] executePull COMPLETE!');
     } catch (error) {
-        console.error('[FORGE] ❌ executePull ERROR:', error);
-        console.error('[FORGE] ❌ Error details:', error.message, error.stack);
+        console.error('[FORGE] executePull ERROR:', error);
+        console.error('[FORGE] Error details:', error.message, error.stack);
         showToast('Error: ' + error.message);
     }
 }
@@ -2511,7 +2516,7 @@ async function announcePull(cardId, rarity, cardName) {
             })
         });
         
-        console.log(`📢 Announced ${rarity} pull: ${cardName}`);
+        console.log(`Announced ${rarity} pull: ${cardName}`);
     } catch (err) {
         console.log('Pull announcement failed (non-critical):', err);
     }
@@ -2520,19 +2525,19 @@ async function announcePull(cardId, rarity, cardName) {
 // ===== ULTRA PREMIUM REVEAL SYSTEM =====
 function showReveal() {
     try {
-        console.log('[FORGE] 🎴 showReveal called, cardsToReveal:', cardsToReveal.length);
+        console.log('[FORGE] showReveal called, cardsToReveal:', cardsToReveal.length);
         
         const overlay = document.getElementById('revealOverlay');
-        console.log('[FORGE] 🎴 revealOverlay found:', !!overlay);
+        console.log('[FORGE] revealOverlay found:', !!overlay);
         
         if (!overlay) {
-            console.error('[FORGE] ❌ revealOverlay not found!');
+            console.error('[FORGE] revealOverlay not found!');
             showToast('Error: Reveal overlay missing');
             return;
         }
         
         overlay.classList.add('show');
-        console.log('[FORGE] 🎴 Overlay shown');
+        console.log('[FORGE] Overlay shown');
         
         // Safe element access
         const cardInner = document.getElementById('cardInner');
@@ -2553,26 +2558,26 @@ function showReveal() {
         if (cardHolo) cardHolo.classList.remove('active');
         if (cardSparkle) cardSparkle.classList.remove('active');
         
-        console.log('[FORGE] 🎴 Calling revealCard()');
+        console.log('[FORGE] Calling revealCard()');
         revealCard();
     } catch (err) {
-        console.error('[FORGE] ❌ showReveal ERROR:', err);
+        console.error('[FORGE] showReveal ERROR:', err);
         showToast('Reveal error: ' + err.message);
     }
 }
 
 function revealCard() {
     try {
-        console.log('[FORGE] 🎴 revealCard called, currentIndex:', currentIndex, 'total:', cardsToReveal.length);
+        console.log('[FORGE] revealCard called, currentIndex:', currentIndex, 'total:', cardsToReveal.length);
         
         if (currentIndex >= cardsToReveal.length) { 
-            console.log('[FORGE] 🎴 All cards revealed, closing');
+            console.log('[FORGE] All cards revealed, closing');
             closeReveal(); 
             return; 
         }
         
         const card = cardsToReveal[currentIndex];
-        console.log('[FORGE] 🎴 Revealing card:', card.name.en, card.rarity, 'img:', card.img);
+        console.log('[FORGE] Revealing card:', card.name.en, card.rarity, 'img:', card.img);
         
         // Reset state - with null checks
         const cardInner = document.getElementById('cardInner');
@@ -2601,14 +2606,14 @@ function revealCard() {
         // Update counter
         if (revealCounter) revealCounter.textContent = `${currentIndex + 1} / ${cardsToReveal.length}`;
         
-        // 🎴 SIMPLE CARD IMAGE - Clean, no frames or overlays
+        // SIMPLE CARD IMAGE - Clean, no frames or overlays
         const thumbUrl = getCardThumbUrl(card.img);
-        console.log('[FORGE] 🎴 Card image URL:', thumbUrl);
+        console.log('[FORGE] Card image URL:', thumbUrl);
         
         if (cardImg) {
             cardImg.src = thumbUrl;
             cardImg.onerror = () => {
-                console.error('[FORGE] ❌ Image failed to load:', thumbUrl);
+                console.error('[FORGE] Image failed to load:', thumbUrl);
                 cardImg.src = '/static/images/cards/placeholder.webp';
             };
         }
@@ -2619,7 +2624,7 @@ function revealCard() {
         // Format stats string from flavorStats (display only)
         const stats = card.flavorStats || card.gameStats;
         const statsText = stats 
-            ? `⚡ ${stats.power || stats.atk || '?'} | 💪 ${stats.endurance || stats.hp || '?'}`
+            ? `ATK ${stats.power || stats.atk || '?'} | HP ${stats.endurance || stats.hp || '?'}`
             : '';
         if (cardStats) cardStats.textContent = statsText;
         
@@ -2684,7 +2689,7 @@ function revealCard() {
         playSound('anticipation');
     }
     
-    // 🎰 RARITY HINT SYSTEM - Build suspense with color tease!
+    // RARITY HINT SYSTEM - Build suspense with color tease!
     const rarityColors = {
         common: '#6b7280',
         uncommon: '#22c55e', 
@@ -2718,7 +2723,7 @@ function revealCard() {
         revealCardEl.classList.add('rarity-tease');
         revealCardEl.style.setProperty('--tease-color', hintColor);
         
-        // 🎮 NW_JUICE anticipation with escalating haptics
+        // NW_JUICE anticipation with escalating haptics
         if (typeof NW_JUICE !== 'undefined') {
             NW_JUICE.gacha.anticipate(revealCardEl, delay);
         }
@@ -2748,7 +2753,7 @@ function revealCard() {
             });
         }
         
-        // 🎮 Haptic feedback on flip
+        // Haptic feedback on flip
         if (typeof NW_JUICE !== 'undefined') {
             NW_JUICE.haptic.medium();
         }
@@ -2763,13 +2768,13 @@ function revealCard() {
         
         // After flip, show effects - REDUCED delay for mobile
         setTimeout(() => {
-            console.log('[FORGE] 🎴 Showing rarity effects for:', card.rarity);
+            console.log('[FORGE] Showing rarity effects for:', card.rarity);
             showRarityEffects(card);
         }, 200);
     }, delay);
     
     } catch (err) {
-        console.error('[FORGE] ❌ revealCard ERROR:', err);
+        console.error('[FORGE] revealCard ERROR:', err);
         showToast('Card reveal error: ' + err.message);
     }
 }
@@ -2778,7 +2783,7 @@ function showRarityEffects(card) {
     const rarity = card.rarity;
     const revealCard = document.getElementById('revealCard');
     
-    // 🎮 Use NW_JUICE for optimized effects
+    // Use NW_JUICE for optimized effects
     if (typeof NW_JUICE !== 'undefined') {
         NW_JUICE.gacha.reveal(revealCard, rarity);
     }
@@ -2809,12 +2814,12 @@ function showRarityEffects(card) {
     const energyRing = document.getElementById('energyRing');
     
     // ═══════════════════════════════════════════════════════════════════
-    // 🎰 NW_JUICE PREMIUM EFFECTS - Full game juice experience!
+    // NW_JUICE PREMIUM EFFECTS - Full game juice experience!
     // ═══════════════════════════════════════════════════════════════════
     if (typeof NW_JUICE !== 'undefined') {
         // Use the premium NW_JUICE system for all effects
         const revealCardEl = document.getElementById('revealCard');
-        console.log('[FORGE] 🎮 NW_JUICE.gacha.reveal:', rarity);
+        console.log('[FORGE] NW_JUICE.gacha.reveal:', rarity);
         NW_JUICE.gacha.reveal(revealCardEl, rarity);
         
         // Extra effects for high rarities
@@ -2823,7 +2828,7 @@ function showRarityEffects(card) {
             setTimeout(() => energyRing.classList.remove('pulse'), 1200);
             startSparkleRain('#ff00ff', 3000);
             setTimeout(() => showMythicCelebration(card), 2500);
-            showToast(`◆ MYTHIC! ${card.name[lang] || card.name.en}`, 'mythic');
+            showToast(`MYTHIC! ${card.name[lang] || card.name.en}`, 'mythic');
             // NW_FX Premium celebration!
             if (window.NW_FX) {
                 NW_FX.celebrate.epicPull('mythic');
@@ -2833,7 +2838,7 @@ function showRarityEffects(card) {
             energyRing.classList.add('pulse');
             setTimeout(() => energyRing.classList.remove('pulse'), 800);
             startSparkleRain('#ffd700', 1500);
-            showToast(`⭐ LEGENDARY! ${card.name[lang] || card.name.en}`, 'legendary');
+            showToast(`LEGENDARY! ${card.name[lang] || card.name.en}`, 'legendary');
             // NW_FX Premium celebration!
             if (window.NW_FX) {
                 NW_FX.celebrate.epicPull('legendary');
@@ -2841,7 +2846,7 @@ function showRarityEffects(card) {
             }
         } else if (rarity === 'epic') {
             startSparkleRain('#a855f7', 800);
-            showToast(`💜 EPIC! ${card.name[lang] || card.name.en}`, 'epic');
+            showToast(`EPIC! ${card.name[lang] || card.name.en}`, 'epic');
         }
     } else {
         // Fallback to local functions if NW_JUICE not loaded
@@ -2861,10 +2866,19 @@ function showRarityEffects(card) {
         }
     }
     
-    // Show continue button
-    setTimeout(() => {
-        document.getElementById('revealContinue').classList.add('show');
-    }, rarity === 'mythic' ? 0 : 1200);
+    // Show continue button (or auto-advance for lower rarity)
+    const autoAdvanceDelay = { common: 800, uncommon: 1000, rare: 1200 };
+    if (autoAdvanceDelay[rarity]) {
+        // Auto-advance for common/uncommon/rare — smooth, no button needed
+        setTimeout(() => {
+            advanceReveal();
+        }, autoAdvanceDelay[rarity]);
+    } else {
+        // Epic+ gets the button for dramatic pause
+        setTimeout(() => {
+            document.getElementById('revealContinue').classList.add('show');
+        }, rarity === 'mythic' ? 0 : 1200);
+    }
 }
 
 function createRays(rarity) {
@@ -2932,7 +2946,7 @@ function createParticles(color, count) {
 }
 
 function screenFlash(color, delay = 0, intensity = 0.6) {
-    console.log('[FORGE] ⚡ screenFlash:', color);
+    console.log('[FORGE] screenFlash:', color);
     setTimeout(() => {
         const f = document.getElementById('screenFlash');
         if (!f) return;
@@ -2950,7 +2964,7 @@ function screenFlash(color, delay = 0, intensity = 0.6) {
 }
 
 function screenShake(intensity = 8, duration = 500) {
-    console.log('[FORGE] 📳 screenShake:', intensity, duration);
+    console.log('[FORGE] screenShake:', intensity, duration);
     // Shake the entire overlay for maximum impact
     const overlay = document.getElementById('revealOverlay');
     const stage = document.getElementById('cardStage');
@@ -2968,7 +2982,7 @@ function screenShake(intensity = 8, duration = 500) {
     }, duration);
 }
 
-// 🌟 Sparkle rain effect for high rarity reveals
+// Sparkle rain effect for high rarity reveals
 function startSparkleRain(color, duration) {
     const container = document.getElementById('revealParticles');
     const interval = setInterval(() => {
@@ -3001,12 +3015,12 @@ function closeReveal() {
     document.getElementById('revealRays').classList.remove('active');
     document.getElementById('revealParticles').innerHTML = '';
     
-    // Show "Go to Battle" toast after pulling
-    const pulledCount = cardsToReveal.length;
-    if (pulledCount > 0) {
+    // Show post-pull action panel (share + battle + challenge)
+    const pulledCards = [...cardsToReveal];
+    if (pulledCards.length > 0) {
         setTimeout(() => {
-            showBattlePrompt(pulledCount);
-        }, 500);
+            showPostPullPanel(pulledCards);
+        }, 400);
     }
     
     cardsToReveal = [];
@@ -3014,51 +3028,160 @@ function closeReveal() {
     updateUI();
 }
 
-// Show battle prompt after pulling cards
-function showBattlePrompt(count) {
-    // Create toast with battle button
-    const toast = document.createElement('div');
-    toast.style.cssText = `
-        position: fixed;
-        bottom: 120px;
-        left: 50%;
-        transform: translateX(-50%);
-        background: linear-gradient(135deg, rgba(255,107,0,0.95), rgba(255,215,0,0.95));
-        color: #000;
-        padding: 16px 24px;
-        border-radius: 16px;
-        display: flex;
-        align-items: center;
-        gap: 16px;
-        font-weight: 600;
-        z-index: 9999;
-        box-shadow: 0 4px 20px rgba(255,107,0,0.5);
-        animation: slideUp 0.3s ease;
-    `;
-    toast.innerHTML = `
-        <span>🎴 ${count} card${count > 1 ? 's' : ''} added!</span>
-        <button onclick="location.href='/battle'" style="
-            background: #000;
-            color: #ffd700;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 8px;
-            font-weight: 700;
-            cursor: pointer;
-            font-family: 'Orbitron', sans-serif;
-        ">⚔️ BATTLE NOW</button>
-        <button onclick="this.parentElement.remove()" style="
-            background: transparent;
-            border: none;
-            color: #000;
-            font-size: 18px;
-            cursor: pointer;
-        ">✕</button>
-    `;
-    document.body.appendChild(toast);
+// ═══════════════════════════════════════════════════════════════════
+// POST-PULL PANEL — Share, Battle, Challenge
+// ═══════════════════════════════════════════════════════════════════
+function showPostPullPanel(cards) {
+    // Find best card pulled
+    const rarityOrder = ['mythic','legendary','epic','rare','uncommon','common'];
+    const bestCard = cards.reduce((best, c) => {
+        const bi = rarityOrder.indexOf(best.rarity);
+        const ci = rarityOrder.indexOf(c.rarity);
+        return ci < bi ? c : best;
+    }, cards[0]);
     
-    // Auto-remove after 8 seconds
-    setTimeout(() => toast.remove(), 8000);
+    const bestName = bestCard.name[lang] || bestCard.name.en || 'Unknown';
+    const bestRarity = bestCard.rarity.toUpperCase();
+    const count = cards.length;
+    
+    // Build share text
+    const shareText = `I just pulled ${count > 1 ? count + ' cards including' : 'a'} ${bestRarity} ${bestName} in NumbahWan TCG! Can you beat this?`;
+    const shareUrl = 'https://numbahwan.pages.dev/forge';
+    
+    // Remove any existing panel
+    const existing = document.getElementById('postPullPanel');
+    if (existing) existing.remove();
+    
+    const panel = document.createElement('div');
+    panel.id = 'postPullPanel';
+    panel.style.cssText = `
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background: linear-gradient(180deg, rgba(13,17,23,0.98), rgba(13,17,23,1));
+        border-top: 2px solid #ffd700;
+        padding: 20px 16px 28px;
+        z-index: 10000;
+        animation: slideUpPanel 0.35s cubic-bezier(0.16,1,0.3,1);
+        font-family: 'Inter', system-ui, sans-serif;
+    `;
+    
+    const rarityColors = { mythic:'#ff00ff', legendary:'#ffd700', epic:'#a855f7', rare:'#3b82f6', uncommon:'#22c55e', common:'#888' };
+    const glowColor = rarityColors[bestCard.rarity] || '#ffd700';
+    
+    panel.innerHTML = `
+        <style>
+            @keyframes slideUpPanel { from { transform: translateY(100%); } to { transform: translateY(0); } }
+            .ppp-btn { 
+                flex: 1; min-width: 120px; padding: 12px 16px; border-radius: 12px; border: none;
+                font-weight: 700; font-size: 0.9rem; cursor: pointer; transition: all 0.2s;
+                display: flex; align-items: center; justify-content: center; gap: 8px;
+                font-family: 'Inter', system-ui, sans-serif;
+            }
+            .ppp-btn:active { transform: scale(0.96); }
+        </style>
+        <div style="max-width:480px; margin:0 auto;">
+            <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:14px;">
+                <div>
+                    <div style="font-size:1.1rem; font-weight:800; color:#fff;">
+                        \ud83c\udfb4 ${count} card${count > 1 ? 's' : ''} pulled!
+                    </div>
+                    <div style="font-size:0.85rem; color:${glowColor}; font-weight:600; margin-top:2px;">
+                        Best: ${bestRarity} ${bestName}
+                    </div>
+                </div>
+                <button onclick="document.getElementById('postPullPanel').remove()" 
+                    style="background:none;border:none;color:#666;font-size:22px;cursor:pointer;padding:4px 8px;">\u2715</button>
+            </div>
+            <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                <button class="ppp-btn" id="ppp-pull-again" style="background:linear-gradient(135deg,#ffd700,#ff8c00);color:#000;min-width:140px;font-size:1rem;">
+                    \ud83d\udd25 Pull Again
+                </button>
+                <button class="ppp-btn" onclick="location.href='/battle'" style="background:linear-gradient(135deg,#ff4500,#ff6b00);color:#fff;">
+                    \u2694\ufe0f Battle Now
+                </button>
+                <button class="ppp-btn" id="ppp-share" style="background:linear-gradient(135deg,#1DA1F2,#0d8bd9);color:#fff;">
+                    \ud83d\udcf1 Share Pull
+                </button>
+                <button class="ppp-btn" id="ppp-challenge" style="background:transparent;border:2px solid #ffd700;color:#ffd700;">
+                    \ud83d\udc4a Challenge Friend
+                </button>
+            </div>
+            <div id="ppp-pity-hook"></div>
+        </div>
+    `;
+    
+    document.body.appendChild(panel);
+    
+    // Pull Again button — closes panel and triggers a new pull
+    panel.querySelector('#ppp-pull-again').addEventListener('click', () => {
+        panel.remove();
+        // Try to trigger forge pull via known UI patterns
+        const singleBtn = document.querySelector('[data-pull="single"], .pull-single, #pullSingle, .forge-pull-btn');
+        const tenBtn = document.querySelector('[data-pull="ten"], .pull-ten, #pullTen');
+        if (tenBtn) { tenBtn.click(); }
+        else if (singleBtn) { singleBtn.click(); }
+        else if (typeof doPull === 'function') { doPull(1); }
+        else if (typeof forgeCards === 'function') { forgeCards(1); }
+        else { /* Scroll to forge area as fallback */ document.querySelector('.forge-area, .pack-container, #forge-area')?.scrollIntoView({ behavior: 'smooth' }); }
+    });
+    
+    // Pity whisper hook — let NW_HOOKS inject pity progress
+    if (typeof NW_HOOKS !== 'undefined') {
+        const pityHook = panel.querySelector('#ppp-pity-hook');
+        if (pityHook) NW_HOOKS.renderPityWhisper(pityHook);
+    }
+    
+    // Share button handler
+    panel.querySelector('#ppp-share').addEventListener('click', () => {
+        // Try Web Share API first (mobile), then clipboard
+        if (navigator.share) {
+            navigator.share({ title: 'NumbahWan TCG Pull', text: shareText, url: shareUrl })
+                .catch(() => {});
+        } else {
+            navigator.clipboard.writeText(shareText + ' ' + shareUrl).then(() => {
+                const btn = panel.querySelector('#ppp-share');
+                btn.textContent = '\u2705 Copied!';
+                setTimeout(() => { btn.innerHTML = '\ud83d\udcf1 Share Pull'; }, 2000);
+            }).catch(() => {
+                // Fallback
+                prompt('Copy this to share:', shareText + ' ' + shareUrl);
+            });
+        }
+        // Track share action
+        if (typeof NW_WALLET !== 'undefined') {
+            NW_WALLET.log('PULL_SHARED', { bestCard: bestName, rarity: bestCard.rarity, count });
+        }
+    });
+    
+    // Challenge button handler — generates a challenge link
+    panel.querySelector('#ppp-challenge').addEventListener('click', () => {
+        const challengeText = `\u2694\ufe0f I challenge you to beat my ${bestRarity} ${bestName}! Open your own packs at NumbahWan TCG:`;
+        if (navigator.share) {
+            navigator.share({ title: 'NumbahWan Challenge!', text: challengeText, url: shareUrl })
+                .catch(() => {});
+        } else {
+            navigator.clipboard.writeText(challengeText + ' ' + shareUrl).then(() => {
+                const btn = panel.querySelector('#ppp-challenge');
+                btn.textContent = '\u2705 Link Copied!';
+                setTimeout(() => { btn.innerHTML = '\ud83d\udc4a Challenge Friend'; }, 2000);
+            }).catch(() => {
+                prompt('Copy challenge link:', challengeText + ' ' + shareUrl);
+            });
+        }
+    });
+    
+    // Auto-dismiss after 15 seconds
+    setTimeout(() => {
+        const el = document.getElementById('postPullPanel');
+        if (el) {
+            el.style.transition = 'transform 0.3s ease, opacity 0.3s ease';
+            el.style.transform = 'translateY(100%)';
+            el.style.opacity = '0';
+            setTimeout(() => el.remove(), 300);
+        }
+    }, 15000);
 }
 
 // Mythic Celebration
@@ -3109,12 +3232,12 @@ function showToast(msg, rarity = null) {
     // Use NW_UI toast if available (much better!)
     if (typeof NW_UI !== 'undefined') {
         const rarityColors = {
-            mythic: { bg: 'linear-gradient(135deg, #ff00ff, #8b00ff)', icon: '◆' },
-            legendary: { bg: 'linear-gradient(135deg, #ffd700, #ff6b00)', icon: '⭐' },
-            epic: { bg: 'linear-gradient(135deg, #a855f7, #7c3aed)', icon: '💜' },
-            rare: { bg: 'linear-gradient(135deg, #3b82f6, #1d4ed8)', icon: '💙' },
-            uncommon: { bg: 'linear-gradient(135deg, #22c55e, #16a34a)', icon: '💚' },
-            common: { bg: 'linear-gradient(135deg, #6b7280, #4b5563)', icon: '⚪' }
+            mythic: { bg: 'linear-gradient(135deg, #ff00ff, #8b00ff)', icon: '' },
+            legendary: { bg: 'linear-gradient(135deg, #ffd700, #ff6b00)', icon: '' },
+            epic: { bg: 'linear-gradient(135deg, #a855f7, #7c3aed)', icon: '' },
+            rare: { bg: 'linear-gradient(135deg, #3b82f6, #1d4ed8)', icon: '' },
+            uncommon: { bg: 'linear-gradient(135deg, #22c55e, #16a34a)', icon: '' },
+            common: { bg: 'linear-gradient(135deg, #6b7280, #4b5563)', icon: '' }
         };
         
         if (rarity && rarityColors[rarity]) {
@@ -3141,44 +3264,44 @@ function showToast(msg, rarity = null) {
 // Init - Load cards first, then state, then preload common images
 (async function() {
     try {
-        console.log('[FORGE] 🚀 Initializing...');
+        console.log('[FORGE] Initializing...');
         
         await loadGachaCards();
-        console.log('[FORGE] ✅ Cards loaded:', CARDS.length);
+        console.log('[FORGE] Cards loaded:', CARDS.length);
         
         loadState();
-        console.log('[FORGE] ✅ State loaded');
+        console.log('[FORGE] State loaded');
         
         // DEV MODE: Setup UI immediately
         if (DEV_MODE) {
             setupDevModeUI();
             updateUI();
-            console.log('[FORGE] ✅ DEV MODE UI ready');
+            console.log('[FORGE] DEV MODE UI ready');
         }
         
-        // 🎮 Initialize NW_FORGE with card pool (skip if undefined)
+        // Initialize NW_FORGE with card pool (skip if undefined)
         if (typeof NW_FORGE !== 'undefined' && NW_FORGE.setCards) {
             NW_FORGE.setCards(CARDS);
             await NW_FORGE.init();
-            NW_FORGE.on('mythic', (card) => console.log('🎉 MYTHIC PULLED!', card));
-            NW_FORGE.on('legendary', (card) => console.log('⭐ LEGENDARY!', card));
-            console.log('[FORGE] ✅ NW_FORGE initialized');
+            NW_FORGE.on('mythic', (card) => console.log('MYTHIC PULLED!', card));
+            NW_FORGE.on('legendary', (card) => console.log('LEGENDARY!', card));
+            console.log('[FORGE] NW_FORGE initialized');
         }
         
-        // 🎮 Initialize NW_STATE for persistence (skip if undefined)
+        // Initialize NW_STATE for persistence (skip if undefined)
         if (typeof NW_STATE !== 'undefined' && NW_STATE.configure) {
             NW_STATE.configure({ persist: true, debug: false });
-            console.log('[FORGE] ✅ NW_STATE persistence enabled');
+            console.log('[FORGE] NW_STATE persistence enabled');
         }
         
-        console.log('[FORGE] 🎮 READY with', CARDS.length, 'pullable cards');
+        console.log('[FORGE] READY with', CARDS.length, 'pullable cards');
     } catch (err) {
-        console.error('[FORGE] ❌ Init error:', err);
+        console.error('[FORGE] Init error:', err);
         // Still try to set up DEV MODE UI
         if (DEV_MODE) setupDevModeUI();
     }
     
-    // 🚀 Background preload common cards for instant reveals
+    // Background preload common cards for instant reveals
     setTimeout(() => {
         preloadCommonCards().then(() => {
             console.log(`Preloaded ${preloadedImages.size} card thumbnails`);
@@ -3186,7 +3309,7 @@ function showToast(msg, rarity = null) {
     }, 1000);
 })();
 
-// 🔥 Generate floating embers
+// Generate floating embers
 function createEmbers() {
     const container = document.getElementById('embers');
     if (!container) return;
@@ -3204,7 +3327,7 @@ createEmbers();
 // Show test mode badge if enabled
 if (TEST_MODE) {
     document.getElementById('testBadge').style.display = 'inline';
-    console.log('🎮 TEST MODE ENABLED - Infinite Logs!');
+    console.log('TEST MODE ENABLED - Infinite Logs!');
 }
 
 setInterval(() => {

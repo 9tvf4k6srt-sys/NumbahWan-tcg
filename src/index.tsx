@@ -5,12 +5,12 @@ import {
   healthRoutes, dataRoutes, sentinelRoutes, pagesRoutes,
   databaseRoutes, marketTradingRoutes, cardDbRoutes,
   adminCardsRoutes, walletEconomyRoutes, auctionRoutes,
-  marketPricesRoutes, autoLearnRoutes, gamificationRoutes,
+  marketPricesRoutes, gamificationRoutes,
   cardBridgeRoutes, purchaseRoutes, eventsMerchRoutes,
   confessionalRoutes, shrineRoutes, cardEngineRoutes,
   cardEngineExtraRoutes, walletExtraRoutes,
   physicalRoutes, avatarRoutes, guideRoutes, translateRoutes,
-  gmRoutes, cipherRoutes
+  gmRoutes, cipherRoutes, oracleRoutes
 } from './routes'
 
 // ============================================================================
@@ -47,7 +47,7 @@ app.use('/research/*', serveStatic())
 const namedStatic = [
   'efficiency', 'lore', 'tabletop', 'staking', 'fusion',
   'claim', 'events', 'confessional', 'avatar-studio', 'research-library',
-  'cipher'
+  'cipher', 'oracle'
 ]
 namedStatic.forEach(page => {
   app.get(`/${page}`, serveStatic({ path: `./${page}.html` }))
@@ -66,7 +66,6 @@ app.route('/api/admin', adminCardsRoutes)
 app.route('/api/wallet', walletEconomyRoutes)
 app.route('/api/auction', auctionRoutes)
 app.route('/api', marketPricesRoutes)
-app.route('/api/system', autoLearnRoutes)
 app.route('/api/game', gamificationRoutes)
 app.route('/api/pvp', pvpMatchmaking)
 app.route('/api/card-bridge', cardBridgeRoutes)
@@ -83,6 +82,7 @@ app.route('/api/guide', guideRoutes)
 app.route('/api', translateRoutes)
 app.route('/api/gm', gmRoutes)
 app.route('/api/cipher', cipherRoutes)
+app.route('/api/oracle', oracleRoutes)
 
 // Page routes (static pages, /, /regina, /pvp, museum, vault, research, lore)
 app.route('', pagesRoutes)

@@ -219,7 +219,7 @@ const NW_DEEPDIVE = {
         easterEgg: (data) => `
             <div class="dd-easter-egg" data-egg="${data.id}" style="display: none;">
                 <div class="dd-egg-content">
-                    <span class="dd-egg-icon">🥚</span>
+                    <span class="dd-egg-icon"></span>
                     <h3>${data.title}</h3>
                     <p>${data.content}</p>
                     <span class="dd-egg-reward">+${data.reward || 10} NWG</span>
@@ -407,7 +407,7 @@ const NW_DEEPDIVE = {
         this.analytics.secretsFound.push(secretId);
         
         // Show toast
-        this.showToast('🔓 Secret Found!', `You discovered a hidden secret!`);
+        this.showToast('Secret Found!', `You discovered a hidden secret!`);
         
         // Award NWG if wallet available
         if (typeof NW_WALLET !== 'undefined') {
@@ -726,7 +726,7 @@ const NW_DEEPDIVE = {
             }
             
             .dd-secret::before {
-                content: '🔒 Click to reveal secret...';
+                content: 'Click to reveal secret...';
                 position: absolute;
                 inset: 0;
                 display: flex;

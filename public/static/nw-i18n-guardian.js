@@ -291,7 +291,7 @@ const NW_I18N_GUARDIAN = {
         const hasWarnings = this.warnings.length > 0;
         
         if (!hasIssues && !hasWarnings) {
-            console.log('%c[I18N_GUARDIAN] ✓ No i18n issues detected!', 'color: #00ff00; font-weight: bold');
+            console.log('%c[I18N_GUARDIAN] No i18n issues detected!', 'color: #00ff00; font-weight: bold');
             return;
         }
         
@@ -301,7 +301,7 @@ const NW_I18N_GUARDIAN = {
             this.issues.forEach((issue, i) => {
                 console.warn(`#${i + 1}: ${issue.message}`);
                 if (issue.suggestion) {
-                    console.log(`   💡 ${issue.suggestion}`);
+                    console.log(`   ${issue.suggestion}`);
                 }
                 if (issue.element) {
                     console.log('   Element:', issue.element);
@@ -314,9 +314,9 @@ const NW_I18N_GUARDIAN = {
         if (hasWarnings) {
             console.group('%c[I18N_GUARDIAN] Warnings', 'color: #ff6b00; font-weight: bold');
             this.warnings.forEach((warning, i) => {
-                console.log(`⚠️ ${warning.message}`);
+                console.log(`${warning.message}`);
                 if (warning.suggestion) {
-                    console.log(`   💡 ${warning.suggestion}`);
+                    console.log(`   ${warning.suggestion}`);
                 }
             });
             console.groupEnd();
@@ -363,9 +363,9 @@ const NW_I18N_GUARDIAN = {
         setTimeout(() => {
             const after = this.getCurrentLang();
             if (after === lang) {
-                console.log(`%c[I18N_GUARDIAN] ✓ Switch successful: ${before} → ${after}`, 'color: #00ff00');
+                console.log(`%c[I18N_GUARDIAN] Switch successful: ${before} → ${after}`, 'color: #00ff00');
             } else {
-                console.error(`[I18N_GUARDIAN] ✗ Switch failed: expected ${lang}, got ${after}`);
+                console.error(`[I18N_GUARDIAN] Switch failed: expected ${lang}, got ${after}`);
             }
             
             // Re-run checks

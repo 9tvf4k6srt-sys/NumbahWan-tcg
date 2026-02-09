@@ -56,7 +56,7 @@ const NW_PARTICLES = {
       this.energy(el, 'low');
     });
     
-    console.log('✨ NW_PARTICLES v2.0 initialized');
+    console.log('NW_PARTICLES v2.0 initialized');
   },
 
   create(container, type, intensity = 'medium') {
@@ -229,7 +229,7 @@ const NW_PARTICLES = {
     window.addEventListener('resize', resize);
     
     // NW-themed characters
-    const chars = 'NW◆●⧫▣⬡01アイウエオカキクケコ';
+    const chars = 'NW⧫▣01アイウエオカキクケコ';
     const fontSize = 14;
     const columns = Math.floor(canvas.width / fontSize);
     const drops = Array(columns).fill(0).map(() => Math.random() * -100);
@@ -447,7 +447,7 @@ const NW_PARTICLES = {
     el.style.overflow = 'hidden';
     
     const count = { low: 8, medium: 15, high: 25 }[intensity] || 15;
-    const symbols = ['◆', '⧫', '✦', '⬡', '◈', '✧', '⬢', '◇', '⟡', '⊛', '⊕', '⊗'];
+    const symbols = ['', '⧫', '', '', '', '', '', '', '⟡', '⊛', '⊕', '⊗'];
     const colors = [this.colors.gold, this.colors.secondary, this.colors.purple, this.colors.green];
     
     const canvas = document.createElement('canvas');

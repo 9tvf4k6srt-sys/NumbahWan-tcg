@@ -757,9 +757,9 @@ const NW_JUICE = (function() {
         console.log('[NW_JUICE] Game Juice System v1.0 loaded');
     }
     
-    // 🍎 iOS Audio Unlock - Initialize audio on first user interaction
+    // iOS Audio Unlock - Initialize audio on first user interaction
     function unlockAudio() {
-        console.log('[NW_JUICE] 🔊 Unlocking audio (user interaction)...');
+        console.log('[NW_JUICE] Unlocking audio (user interaction)...');
         soundManager.init();
     }
 

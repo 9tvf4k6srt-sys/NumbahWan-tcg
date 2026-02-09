@@ -9,10 +9,10 @@ window.selectDifficulty = function(diff) {
     document.querySelector(`[data-diff="${diff}"]`)?.classList.add('selected');
     window._selectedDifficulty = diff;
     const names = { casual: ['Sleepy Bot','AFK Andy','Tutorial Tim'], ranked: ['Try-Hard Tina','Meta Knight','Synergy Sam'], boss: ['RegginA, The Eternal Flame','The Mythic Overlord','Guild Destroyer'] };
-    const avatars = { casual:'🤖', ranked:'🏆', boss:'💀' };
+    const avatars = { casual:'', ranked:'', boss:'' };
     const subs = { casual:'Plays random cards, vibes only', ranked:'Uses synergies, targets smart', boss:'Mythic cards, boss HP, no mercy' };
     const n = names[diff] || names.casual;
-    document.getElementById('enemyAvatar').textContent = avatars[diff] || '🤖';
+    document.getElementById('enemyAvatar').textContent = avatars[diff] || '';
     document.getElementById('enemyName').textContent = n[Math.floor(Math.random()*n.length)];
     document.getElementById('enemySubtitle').textContent = subs[diff] || '';
 };
@@ -283,7 +283,7 @@ window.selectDifficulty = function(diff) {
         showSynergyBanner(text, flavor) {
             const b = document.createElement('div'); b.className = 'synergy-banner';
             b.innerHTML = `<div class="synergy-title">${text}</div><div class="synergy-flavor">${flavor||''}</div>`;
-            b.style.cssText = `position:fixed;top:50%;left:50%;transform:translate(-50%,-50%) scale(0);z-index:99999;padding:20px 40px;background:linear-gradient(135deg,rgba(255,215,0,0.95),rgba(255,107,0,0.9));color:#000;font-family:'Orbitron',sans-serif;text-align:center;border-radius:16px;box-shadow:0 0 60px rgba(255,215,0,0.8);animation:synergyPop 2s ease forwards;pointer-events:none;`;
+            b.style.cssText = `position:fixed;top:50%;left:50%;transform:translate(-50%,-50%) scale(0);z-index:99999;padding:20px 40px;background:linear-gradient(135deg,rgba(255,215,0,0.95),rgba(255,107,0,0.9));color:#000;font-family:'NumbahWan','Orbitron',sans-serif;text-align:center;border-radius:16px;box-shadow:0 0 60px rgba(255,215,0,0.8);animation:synergyPop 2s ease forwards;pointer-events:none;`;
             document.body.appendChild(b); setTimeout(() => b.remove(), CONFIG.SYNERGY_BANNER_DURATION);
         },
         showCombo(n) {
@@ -514,7 +514,7 @@ window.selectDifficulty = function(diff) {
             el.dataset.idx = idx;
             const abilities = card.gameStats?.abilities || [];
             const icons = abilities.map(a => { const d = typeof NW_ABILITIES!=='undefined'?NW_ABILITIES[a]:null; return d?d.icon:''; }).filter(Boolean).join('');
-            el.innerHTML = `<img class="hand-card-art" src="/static/images/cards/thumbs/${card.img||'placeholder.webp'}" onerror="this.onerror=null;this.src='/static/images/cards/placeholder.webp'" alt="${card.name}" draggable="false"><div class="hand-card-stats"><span class="hand-stat atk">⚔${card.gameStats.atk}</span><span class="hand-stat hp">❤${card.gameStats.hp}</span></div><div class="cost-badge">${card.gameStats.cost}</div>${icons?`<div style="position:absolute;bottom:2px;left:0;right:0;text-align:center;font-size:10px;pointer-events:none">${icons}</div>`:''}`;
+            el.innerHTML = `<img class="hand-card-art" src="/static/images/cards/thumbs/${card.img||'placeholder.webp'}" onerror="this.onerror=null;this.src='/static/images/cards/placeholder.webp'" alt="${card.name}" draggable="false"><div class="hand-card-stats"><span class="hand-stat atk">${card.gameStats.atk}</span><span class="hand-stat hp">${card.gameStats.hp}</span></div><div class="cost-badge">${card.gameStats.cost}</div>${icons?`<div style="position:absolute;bottom:2px;left:0;right:0;text-align:center;font-size:10px;pointer-events:none">${icons}</div>`:''}`;
             let tStart=0, tPos={x:0,y:0}, moved=false;
             el.addEventListener('touchstart', e => { tStart=Date.now(); tPos={x:e.touches[0].clientX,y:e.touches[0].clientY}; moved=false; if(canPlay) DragDrop.start(el,card,idx,e); }, {passive:false});
             el.addEventListener('touchmove', e => { if(!moved&&canPlay){const dx=Math.abs(e.touches[0].clientX-tPos.x),dy=Math.abs(e.touches[0].clientY-tPos.y);if(dx>10||dy>10)moved=true;} }, {passive:true});
@@ -538,17 +538,17 @@ window.selectDifficulty = function(diff) {
         slot.classList.toggle('has-card', !!card);
         if (card) {
             const icons = [];
-            if (card.hasShield) icons.push('<span class="status-icon" title="Shield">🔰</span>');
-            if (card.hasTaunt) icons.push('<span class="status-icon" title="Taunt">🛡️</span>');
-            if (card.stealthTurns > 0) icons.push('<span class="status-icon" title="Stealth">👻</span>');
-            if (card.hasLifesteal) icons.push('<span class="status-icon" title="Lifesteal">🩸</span>');
-            if (card.hasSelfDestruct) icons.push('<span class="status-icon" title="Self Destruct">💥</span>');
-            if (card.hasHeal) icons.push('<span class="status-icon" title="Heal">💚</span>');
-            if (card.hasDebuff && card.debuffTurnsLeft > 0) icons.push('<span class="status-icon" title="Debuff">☠️</span>');
-            if (card.hasCritBoost) icons.push('<span class="status-icon" title="Crit Boost">🎯</span>');
-            if (card.reviveOnce && !card.reviveUsed) icons.push('<span class="status-icon" title="Plot Armor">✨</span>');
+            if (card.hasShield) icons.push('<span class="status-icon" title="Shield"></span>');
+            if (card.hasTaunt) icons.push('<span class="status-icon" title="Taunt"></span>');
+            if (card.stealthTurns > 0) icons.push('<span class="status-icon" title="Stealth"></span>');
+            if (card.hasLifesteal) icons.push('<span class="status-icon" title="Lifesteal"></span>');
+            if (card.hasSelfDestruct) icons.push('<span class="status-icon" title="Self Destruct"></span>');
+            if (card.hasHeal) icons.push('<span class="status-icon" title="Heal"></span>');
+            if (card.hasDebuff && card.debuffTurnsLeft > 0) icons.push('<span class="status-icon" title="Debuff"></span>');
+            if (card.hasCritBoost) icons.push('<span class="status-icon" title="Crit Boost"></span>');
+            if (card.reviveOnce && !card.reviveUsed) icons.push('<span class="status-icon" title="Plot Armor"></span>');
             const eAtk = getEffectiveAtk(card);
-            slot.innerHTML = `<div class="board-card ${card.rarity}${card.stealthTurns>0?' stealthed':''}${card.hasTaunt?' taunting':''}" data-instance="${card.instanceId}"><div class="board-card-inner"><img class="board-card-art" src="/static/images/cards/thumbs/${card.img||'placeholder.webp'}" onerror="this.onerror=null;this.src='/static/images/cards/placeholder.webp'" alt="${card.name}" ${card.stealthTurns>0?'style="opacity:0.4;filter:blur(1px)"':''}><div class="board-card-stats"><div class="stat-box stat-atk${card.synergyAtkBonus>0?' buffed':''}">⚔${eAtk}</div><div class="stat-box stat-hp${card.currentHp<card.maxHp?' damaged':''}">❤${card.currentHp}</div></div></div>${icons.length?`<div class="status-row">${icons.join('')}</div>`:''}</div>`;
+            slot.innerHTML = `<div class="board-card ${card.rarity}${card.stealthTurns>0?' stealthed':''}${card.hasTaunt?' taunting':''}" data-instance="${card.instanceId}"><div class="board-card-inner"><img class="board-card-art" src="/static/images/cards/thumbs/${card.img||'placeholder.webp'}" onerror="this.onerror=null;this.src='/static/images/cards/placeholder.webp'" alt="${card.name}" ${card.stealthTurns>0?'style="opacity:0.4;filter:blur(1px)"':''}><div class="board-card-stats"><div class="stat-box stat-atk${card.synergyAtkBonus>0?' buffed':''}">${eAtk}</div><div class="stat-box stat-hp${card.currentHp<card.maxHp?' damaged':''}">${card.currentHp}</div></div></div>${icons.length?`<div class="status-row">${icons.join('')}</div>`:''}</div>`;
             const cardEl = slot.querySelector('.board-card');
             cardEl.onmouseenter = e => showTooltip(card, e);
             cardEl.onmouseleave = hideTooltip;
@@ -617,12 +617,12 @@ window.selectDifficulty = function(diff) {
             actEl.style.display = 'flex';
             const canPlay = card.gameStats?.cost <= gameState.energy && gameState.isPlayerTurn && !gameState.isAnimating;
             selBtn.disabled = !canPlay;
-            selBtn.textContent = canPlay ? '✨ SELECT TO PLAY' : (card.gameStats?.cost > gameState.energy ? '◆ NOT ENOUGH ENERGY' : '⏳ NOT YOUR TURN');
+            selBtn.textContent = canPlay ? 'SELECT TO PLAY' : (card.gameStats?.cost > gameState.energy ? 'NOT ENOUGH ENERGY' : 'NOT YOUR TURN');
         } else if (source === 'board-player') {
             actEl.style.display = 'flex';
             const canAtk = card.canAttackThisTurn && !card.hasAttacked && gameState.isPlayerTurn && !gameState.isAnimating && card.stealthTurns <= 0;
             selBtn.disabled = !canAtk;
-            selBtn.textContent = canAtk ? '⚔️ READY TO ATTACK' : (card.hasAttacked ? '😴 ALREADY ATTACKED' : card.stealthTurns > 0 ? '👻 IN STEALTH' : '⏳ CANNOT ATTACK YET');
+            selBtn.textContent = canAtk ? 'READY TO ATTACK' : (card.hasAttacked ? 'ALREADY ATTACKED' : card.stealthTurns > 0 ? 'IN STEALTH' : 'CANNOT ATTACK YET');
         } else { actEl.style.display = 'none'; }
         modal.classList.add('show'); Audio.play('select'); document.body.style.overflow = 'hidden';
     }
@@ -657,7 +657,7 @@ window.selectDifficulty = function(diff) {
         const sb=document.getElementById('slotButtons'); sb.innerHTML='';
         for(let i=0;i<CONFIG.MAX_BOARD;i++){
             const occ=gameState.playerBoard[i]!==null, btn=document.createElement('button');
-            btn.className=`slot-btn ${occ?'occupied':''}`; btn.textContent=occ?'✗':(i+1); btn.disabled=occ;
+            btn.className=`slot-btn ${occ?'occupied':''}`; btn.textContent=occ?'':(i+1); btn.disabled=occ;
             if(!occ) btn.onclick=e=>{e.stopPropagation();playCardToSlotFromModal(i);}; sb.appendChild(btn);
         }
         document.getElementById('cardDetailActions').style.display='none';
@@ -713,7 +713,7 @@ window.selectDifficulty = function(diff) {
         gameState.playerSynergies = synergies; gameState.playerSetBonuses = setBonuses;
         applyBoardBonuses(gameState.playerBoard, synergies, setBonuses, true);
         addLog(`You summon <span style="color:var(--gold)">${boardCard.name}</span>!`, 'summon');
-        if (boardCard.canAttackThisTurn && (card.gameStats?.abilities||[]).includes('RUSH')) addLog(`⚡ ${announce('rushPlay')}`, 'ability');
+        if (boardCard.canAttackThisTurn && (card.gameStats?.abilities||[]).includes('RUSH')) addLog(`${announce('rushPlay')}`, 'ability');
         renderBoards(); renderSynergyDisplay(); updateAttackButton(); gameState.isAnimating = false;
     }
 
@@ -854,7 +854,7 @@ window.selectDifficulty = function(diff) {
             const bName = isOnEnemyBoard ? 'playerBoard' : 'enemyBoard';
             kBoard.forEach((c,i) => { if(c){ c.currentHp -= aoeDmg; const el=document.querySelector(`#${bName} .board-slot[data-slot="${i}"] .board-card`); if(el)Effects.showDamage(el,aoeDmg); } });
             Effects.screenShake('heavy'); Effects.screenFlash('#ff4444');
-            addLog(`💥 ${card.name}: ${announce('selfDestruct')} ${aoeDmg} AOE!`, 'damage'); gameState.stats.abilitiesFired++;
+            addLog(`${card.name}: ${announce('selfDestruct')} ${aoeDmg} AOE!`, 'damage'); gameState.stats.abilitiesFired++;
             const clean = isOnEnemyBoard ? gameState.playerBoard : gameState.enemyBoard;
             for(let i=0;i<clean.length;i++) if(clean[i]&&clean[i].currentHp<=0){ addLog(`${clean[i].name} destroyed by explosion!`,'damage'); clean[i]=null; gameState.stats.cardsKilled++; }
         }
@@ -865,14 +865,14 @@ window.selectDifficulty = function(diff) {
             board.filter(c => c && c.role === 'rage_quitter' && c !== card).forEach(c => {
                 const bonus = Math.ceil(c.currentAtk * card._deathFury);
                 c.currentAtk += bonus;
-                addLog(`💢 ${c.name} RAGES! +${bonus} ATK from ${card.name}'s death!`, 'ability');
+                addLog(`${c.name} RAGES! +${bonus} ATK from ${card.name}'s death!`, 'ability');
             });
         }
 
         // REVIVE (Plot Armor)
         if (card.reviveOnce && !card.reviveUsed) {
             card.reviveUsed = true; card.currentHp = Math.ceil(card.maxHp * 0.30);
-            addLog(`✨ ${card.name} revives with PLOT ARMOR! ${card.currentHp} HP!`, 'ability'); gameState.stats.abilitiesFired++;
+            addLog(`${card.name} revives with PLOT ARMOR! ${card.currentHp} HP!`, 'ability'); gameState.stats.abilitiesFired++;
             renderBoards(); return;
         }
 
@@ -909,10 +909,10 @@ window.selectDifficulty = function(diff) {
         const cards = board.filter(c => c);
         if (lucky) {
             cards.forEach(c => c.synergyAtkBonus += Math.ceil(c.currentAtk * 0.20));
-            addLog(`🎲 CHAT DECIDES: +20% ATK! Chat is feeling generous!`, 'ability');
+            addLog(`CHAT DECIDES: +20% ATK! Chat is feeling generous!`, 'ability');
         } else {
             cards.forEach(c => c.synergyAtkBonus -= Math.ceil(c.currentAtk * 0.15));
-            addLog(`🎲 CHAT DECIDES: -15% ATK! Chat chose chaos. KEKW`, 'damage');
+            addLog(`CHAT DECIDES: -15% ATK! Chat chose chaos. KEKW`, 'damage');
         }
     }
 
@@ -1092,7 +1092,7 @@ window.selectDifficulty = function(diff) {
         gameState.playerBoard.forEach(c => { if(c){c.canAttackThisTurn=true;c.hasAttacked=false;} });
         gameState.enemyBoard.forEach(c => { if(c){c.canAttackThisTurn=true;c.hasAttacked=false;} });
         if (gameState.playerDeck.length > 0 && gameState.playerHand.length < CONFIG.MAX_HAND) { gameState.playerHand.push(gameState.playerDeck.pop()); Audio.play('draw'); }
-        if (gameState.playerHP <= 10 && gameState.enemyHP > 15 && !gameState.stats.comebackTriggered) { addLog(`🔥 ${announce('comeback')}`, 'ability'); gameState.stats.comebackTriggered = true; }
+        if (gameState.playerHP <= 10 && gameState.enemyHP > 15 && !gameState.stats.comebackTriggered) { addLog(`${announce('comeback')}`, 'ability'); gameState.stats.comebackTriggered = true; }
         addLog(`--- TURN ${gameState.turn} --- ${announce('turnStart')}`, '');
         renderAll();
     }
@@ -1130,7 +1130,7 @@ window.selectDifficulty = function(diff) {
         else { profile.losses++; profile.streak = 0; }
         profile.xp += xpEarned;
         const neededXP = xpForLevel(profile.level);
-        if (profile.xp >= neededXP) { profile.level++; profile.xp -= neededXP; bonuses.push(`🎉 LEVEL UP! Now Level ${profile.level}`); }
+        if (profile.xp >= neededXP) { profile.level++; profile.xp -= neededXP; bonuses.push(`LEVEL UP! Now Level ${profile.level}`); }
         saveProfile(profile);
 
         // Render
@@ -1146,14 +1146,14 @@ window.selectDifficulty = function(diff) {
 
         const grid = document.getElementById('rewardsGrid');
         grid.innerHTML = `
-            <div class="reward-card"><div class="reward-icon">⚡</div><div class="reward-value">+${xpEarned}</div><div class="reward-label">XP Earned</div></div>
-            <div class="reward-card"><div class="reward-icon">🪵</div><div class="reward-value">+${logsEarned}</div><div class="reward-label">Logs Earned</div></div>
-            <div class="reward-card"><div class="reward-icon">⚔️</div><div class="reward-value">${s.turnCount}</div><div class="reward-label">Turns</div></div>
-            <div class="reward-card"><div class="reward-icon">💥</div><div class="reward-value">${s.damageDealt}</div><div class="reward-label">Damage Dealt</div></div>
-            <div class="reward-card"><div class="reward-icon">🎯</div><div class="reward-value">${s.critsLanded}</div><div class="reward-label">Crits</div></div>
-            <div class="reward-card"><div class="reward-icon">🤝</div><div class="reward-value">${s.synergiesActivated}</div><div class="reward-label">Synergies</div></div>
+            <div class="reward-card"><div class="reward-icon"></div><div class="reward-value">+${xpEarned}</div><div class="reward-label">XP Earned</div></div>
+            <div class="reward-card"><div class="reward-icon"></div><div class="reward-value">+${logsEarned}</div><div class="reward-label">Logs Earned</div></div>
+            <div class="reward-card"><div class="reward-icon"></div><div class="reward-value">${s.turnCount}</div><div class="reward-label">Turns</div></div>
+            <div class="reward-card"><div class="reward-icon"></div><div class="reward-value">${s.damageDealt}</div><div class="reward-label">Damage Dealt</div></div>
+            <div class="reward-card"><div class="reward-icon"></div><div class="reward-value">${s.critsLanded}</div><div class="reward-label">Crits</div></div>
+            <div class="reward-card"><div class="reward-icon"></div><div class="reward-value">${s.synergiesActivated}</div><div class="reward-label">Synergies</div></div>
         `;
-        if (bonuses.length) grid.innerHTML += `<div class="reward-card" style="grid-column:span 2;border-color:var(--gold)"><div class="reward-icon">🏆</div><div class="reward-value" style="font-size:12px">${bonuses.join(' • ')}</div><div class="reward-label">Bonuses</div></div>`;
+        if (bonuses.length) grid.innerHTML += `<div class="reward-card" style="grid-column:span 2;border-color:var(--gold)"><div class="reward-icon"></div><div class="reward-value" style="font-size:12px">${bonuses.join(' • ')}</div><div class="reward-label">Bonuses</div></div>`;
 
         const xpPct = Math.min(100, (profile.xp / xpForLevel(profile.level)) * 100);
         document.getElementById('xpBarFill').style.width = xpPct + '%';
@@ -1202,7 +1202,7 @@ window.selectDifficulty = function(diff) {
             img.onerror=()=>{img.src='/static/images/cards/placeholder.webp';}; img.style.cssText='width:100%;height:100%;object-fit:cover;';
             g.appendChild(img);
             const cost=document.createElement('div'); cost.textContent=card.gameStats.cost;
-            cost.style.cssText=`position:absolute;top:-8px;left:-8px;width:28px;height:28px;background:linear-gradient(135deg,#00ffff,#3b82f6);border:2px solid white;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Orbitron',sans-serif;font-size:14px;font-weight:bold;color:white;`;
+            cost.style.cssText=`position:absolute;top:-8px;left:-8px;width:28px;height:28px;background:linear-gradient(135deg,#00ffff,#3b82f6);border:2px solid white;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'NumbahWan','Orbitron',sans-serif;font-size:14px;font-weight:bold;color:white;`;
             g.appendChild(cost); document.body.appendChild(g); this.dragGhost=g; this.updateGhostPosition(x,y);
         },
         updateGhostPosition(x,y) { if(this.dragGhost){this.dragGhost.style.left=(x-50)+'px';this.dragGhost.style.top=(y-90)+'px';} },
@@ -1309,7 +1309,7 @@ window.selectDifficulty = function(diff) {
         const diffNames = { casual:'Casual Bot', ranked:'Ranked Rival', boss:'MYTHIC BOSS' };
         const eName = document.getElementById('enemyHpName');
         if (eName) eName.textContent = diffNames[gameState.difficulty] || 'AI GUILD';
-        if (gameState.difficulty === 'boss') addLog(`💀 ${announce('bossEntry')}`, 'ability');
+        if (gameState.difficulty === 'boss') addLog(`${announce('bossEntry')}`, 'ability');
         renderAll();
         // Ensure hand is visible on mobile by scrolling to bottom
         setTimeout(() => {
@@ -1328,7 +1328,7 @@ window.selectDifficulty = function(diff) {
         const ehb = document.getElementById('enemyHpBar');
         if (ehb) ehb.onclick = () => attackFace();
 
-        addLog(`⚔️ ${announce('battleStart')}`, 'ability');
+        addLog(`${announce('battleStart')}`, 'ability');
         addLog(`Your deck: ${gameState.playerDeck.length + gameState.playerHand.length} cards | Difficulty: ${gameState.difficulty.toUpperCase()}`, '');
     }
 
@@ -1413,7 +1413,7 @@ window.selectDifficulty = function(diff) {
                 startBtn.onclick = async () => {
                     mobileDebug('START clicked');
                     startBtn.disabled = true;
-                    startBtn.textContent = '⏳ LOADING...';
+                    startBtn.textContent = 'LOADING...';
                     buildAndDeal();
                     await startCountdown();
                 };

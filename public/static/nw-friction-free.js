@@ -50,7 +50,7 @@ const NW_FRICTION_FREE = {
         this.eliminateConfirmationFatigue();
         this.setupProgressiveDisclosure();
         
-        console.log(`✨ NW_FRICTION_FREE v${this.version} initialized - Smooth Sailing Mode`);
+        console.log(`NW_FRICTION_FREE v${this.version} initialized - Smooth Sailing Mode`);
     },
     
     loadState() {
@@ -300,7 +300,7 @@ const NW_FRICTION_FREE = {
             const modalText = modal.textContent;
             if (this.isLowStakesAction(modalText)) {
                 // Auto-confirm and show toast
-                this.showQuickToast('✓ Confirmed');
+                this.showQuickToast('Confirmed');
                 confirmBtn.click();
                 modal.remove();
             }
@@ -508,4 +508,4 @@ if (document.readyState === 'loading') {
 // Expose globally
 window.NW_FRICTION_FREE = NW_FRICTION_FREE;
 
-console.log('✨ NW_FRICTION_FREE module loaded - Zero Friction Mode');
+console.log('NW_FRICTION_FREE module loaded - Zero Friction Mode');

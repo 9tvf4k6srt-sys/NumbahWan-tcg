@@ -818,16 +818,16 @@ const NW_FX = (function() {
 
         _getIcon(type) {
             const icons = {
-                info: 'ℹ️',
-                success: '✅',
-                warning: '⚠️',
-                error: '❌',
+                info: 'ℹ',
+                success: '',
+                warning: '',
+                error: '',
                 common: '🃏',
-                uncommon: '🟢',
-                rare: '🔵',
-                epic: '🟣',
-                legendary: '👑',
-                mythic: '🔥'
+                uncommon: '',
+                rare: '',
+                epic: '',
+                legendary: '',
+                mythic: ''
             };
             return icons[type] || icons.info;
         },

@@ -209,7 +209,7 @@
             toast.className = 'nw-guide-toast';
             toast.setAttribute('data-type', type);
             toast.innerHTML = `
-                <span class="toast-icon">${type === 'success' ? '✅' : type === 'error' ? '❌' : type === 'warning' ? '⚠️' : 'ℹ️'}</span>
+                <span class="toast-icon">${type === 'success' ? '' : type === 'error' ? '' : type === 'warning' ? '' : 'ℹ'}</span>
                 <span class="toast-message">${message}</span>
             `;
             
@@ -279,7 +279,7 @@
             
             try {
                 await navigator.clipboard.writeText(text);
-                this.showToast('Copied to clipboard! 📋', 'success');
+                this.showToast('Copied to clipboard! ', 'success');
                 return true;
             } catch (e) {
                 // Fallback for older browsers
@@ -291,7 +291,7 @@
                 textarea.select();
                 document.execCommand('copy');
                 document.body.removeChild(textarea);
-                this.showToast('Copied to clipboard! 📋', 'success');
+                this.showToast('Copied to clipboard! ', 'success');
                 return true;
             }
         },
@@ -402,7 +402,7 @@
         ui: {
             en: {
                 title: 'NumbahWan Guide',
-                online: '● Online - Here to help!',
+                online: 'Online - Here to help!',
                 placeholder: 'Ask me anything...',
                 goTo: 'Go to',
                 newBadge: 'NEW!',
@@ -413,7 +413,7 @@
             },
             zh: {
                 title: 'NumbahWan 嚮導',
-                online: '● 在線 - 隨時為您服務！',
+                online: '在線 - 隨時為您服務！',
                 placeholder: '問我任何問題...',
                 goTo: '前往',
                 newBadge: '新功能！',
@@ -424,7 +424,7 @@
             },
             th: {
                 title: 'ไกด์ NumbahWan',
-                online: '● ออนไลน์ - พร้อมช่วยเหลือ!',
+                online: 'ออนไลน์ - พร้อมช่วยเหลือ!',
                 placeholder: 'ถามอะไรก็ได้...',
                 goTo: 'ไปที่',
                 newBadge: 'ใหม่!',
@@ -435,51 +435,51 @@
             }
         },
         greetings: {
-            en: ["Hey there, adventurer! 👋", "Yo! Need directions? I got you 🗺️", "What's up! Looking for something? 🔍", "Greetings, traveler! 🎮"],
-            zh: ["嘿，冒險者！👋", "喲！需要指路嗎？交給我 🗺️", "嗨！在找什麼嗎？🔍", "你好，旅人！🎮"],
-            th: ["สวัสดี นักผจญภัย! 👋", "โย่! ต้องการทิศทางไหม? 🗺️", "ว่าไง! หาอะไรอยู่? 🔍", "ยินดีต้อนรับ นักเดินทาง! 🎮"]
+            en: ["Hey there, adventurer! ", "Yo! Need directions? I got you ", "What's up! Looking for something? ", "Greetings, traveler! "],
+            zh: ["嘿，冒險者！", "喲！需要指路嗎？交給我 ", "嗨！在找什麼嗎？", "你好，旅人！"],
+            th: ["สวัสดี นักผจญภัย! ", "โย่! ต้องการทิศทางไหม? ", "ว่าไง! หาอะไรอยู่? ", "ยินดีต้อนรับ นักเดินทาง! "]
         },
         intro: {
-            en: "I know all about this guild site! Ask me anything or tap a suggestion below 👇",
-            zh: "我對這個公會網站瞭如指掌！問我任何問題或點擊下方建議 👇",
-            th: "ฉันรู้ทุกอย่างเกี่ยวกับเว็บกิลด์นี้! ถามอะไรก็ได้หรือแตะคำแนะนำด้านล่าง 👇"
+            en: "I know all about this guild site! Ask me anything or tap a suggestion below ",
+            zh: "我對這個公會網站瞭如指掌！問我任何問題或點擊下方建議 ",
+            th: "ฉันรู้ทุกอย่างเกี่ยวกับเว็บกิลด์นี้! ถามอะไรก็ได้หรือแตะคำแนะนำด้านล่าง "
         },
         confused: {
-            en: ["Hmm, not sure about that one! Try asking about a page 🤔", "My brain hurts! Can you rephrase? 😵", "That's beyond my programming! Try 'show pages' 🤷"],
-            zh: ["嗯，不太確定耶！試著問問關於頁面的問題 🤔", "我腦袋打結了！能換個說法嗎？😵", "這超出我的能力了！試試「顯示頁面」🤷"],
-            th: ["อืม ไม่แน่ใจเลย! ลองถามเกี่ยวกับหน้าต่างๆ ดู 🤔", "สมองฉันมึน! พูดใหม่ได้ไหม? 😵", "เกินความสามารถของฉัน! ลอง 'แสดงหน้าทั้งหมด' 🤷"]
+            en: ["Hmm, not sure about that one! Try asking about a page ", "My brain hurts! Can you rephrase? ", "That's beyond my programming! Try 'show pages' "],
+            zh: ["嗯，不太確定耶！試著問問關於頁面的問題 ", "我腦袋打結了！能換個說法嗎？", "這超出我的能力了！試試「顯示頁面」"],
+            th: ["อืม ไม่แน่ใจเลย! ลองถามเกี่ยวกับหน้าต่างๆ ดู ", "สมองฉันมึน! พูดใหม่ได้ไหม? ", "เกินความสามารถของฉัน! ลอง 'แสดงหน้าทั้งหมด' "]
         },
         jokes: {
             en: [
-                "Why did the guild master cross the road? To avoid doing dailies! 😂",
-                "What's a hacker's favorite snack? Spam! 🥫",
-                "How many MapleStory players to change a lightbulb? None - they're all AFK! 💡",
-                "Why did HR reject the banana? It didn't have enough appeal! 🍌",
-                "What did the therapist say to the gacha player? 'Let's talk about your pull issues.' 🎰"
+                "Why did the guild master cross the road? To avoid doing dailies! ",
+                "What's a hacker's favorite snack? Spam! ",
+                "How many MapleStory players to change a lightbulb? None - they're all AFK! ",
+                "Why did HR reject the banana? It didn't have enough appeal! ",
+                "What did the therapist say to the gacha player? 'Let's talk about your pull issues.' "
             ],
             zh: [
-                "為什麼會長要過馬路？為了逃避每日任務！😂",
-                "駭客最愛的零食是什麼？垃圾郵件！🥫",
-                "需要多少楓之谷玩家換燈泡？零個——他們都在掛機！💡",
-                "為什麼人資拒絕香蕉？它不夠有吸引力！🍌",
-                "治療師對抽卡玩家說什麼？「讓我們談談你的抽卡問題。」🎰"
+                "為什麼會長要過馬路？為了逃避每日任務！",
+                "駭客最愛的零食是什麼？垃圾郵件！",
+                "需要多少楓之谷玩家換燈泡？零個——他們都在掛機！",
+                "為什麼人資拒絕香蕉？它不夠有吸引力！",
+                "治療師對抽卡玩家說什麼？「讓我們談談你的抽卡問題。」"
             ],
             th: [
-                "ทำไมหัวหน้ากิลด์ถึงข้ามถนน? เพื่อหนีเควสประจำวัน! 😂",
-                "แฮกเกอร์ชอบกินอะไร? สแปม! 🥫",
-                "ต้องใช้ผู้เล่น MapleStory กี่คนเปลี่ยนหลอดไฟ? ไม่มี - พวกเขา AFK หมด! 💡",
-                "ทำไม HR ถึงปฏิเสธกล้วย? มันไม่มีเสน่ห์พอ! 🍌",
-                "นักบำบัดพูดอะไรกับผู้เล่นกาชา? 'มาคุยเรื่องปัญหาการสุ่มของคุณ' 🎰"
+                "ทำไมหัวหน้ากิลด์ถึงข้ามถนน? เพื่อหนีเควสประจำวัน! ",
+                "แฮกเกอร์ชอบกินอะไร? สแปม! ",
+                "ต้องใช้ผู้เล่น MapleStory กี่คนเปลี่ยนหลอดไฟ? ไม่มี - พวกเขา AFK หมด! ",
+                "ทำไม HR ถึงปฏิเสธกล้วย? มันไม่มีเสน่ห์พอ! ",
+                "นักบำบัดพูดอะไรกับผู้เล่นกาชา? 'มาคุยเรื่องปัญหาการสุ่มของคุณ' "
             ]
         },
         chips: {
-            showPages: { en: '📋 Show all pages', zh: '📋 顯示所有頁面', th: '📋 แสดงหน้าทั้งหมด' },
-            tips: { en: '💡 Tips', zh: '💡 提示', th: '💡 เคล็ดลับ' },
-            joke: { en: '😂 Tell a joke', zh: '😂 講個笑話', th: '😂 เล่าเรื่องตลก' },
-            help: { en: '❓ Help', zh: '❓ 幫助', th: '❓ ช่วยเหลือ' },
-            langSwitch: { en: '🌐 Language', zh: '🌐 語言', th: '🌐 ภาษา' },
+            showPages: { en: 'Show all pages', zh: '顯示所有頁面', th: 'แสดงหน้าทั้งหมด' },
+            tips: { en: 'Tips', zh: '提示', th: 'เคล็ดลับ' },
+            joke: { en: 'Tell a joke', zh: '講個笑話', th: 'เล่าเรื่องตลก' },
+            help: { en: 'Help', zh: '幫助', th: 'ช่วยเหลือ' },
+            langSwitch: { en: 'Language', zh: '語言', th: 'ภาษา' },
             newFeatures: { en: '🆕 New Features', zh: '🆕 新功能', th: '🆕 ฟีเจอร์ใหม่' },
-            recommend: { en: '🎯 Recommend', zh: '🎯 推薦', th: '🎯 แนะนำ' }
+            recommend: { en: 'Recommend', zh: '推薦', th: 'แนะนำ' }
         },
         langNames: {
             en: { en: 'English', zh: '英文', th: 'อังกฤษ' },
@@ -487,96 +487,96 @@
             th: { en: 'Thai', zh: '泰文', th: 'ไทย' }
         },
         help: {
-            en: "I can help you navigate! Try:\n• Ask about any page (Avatar Studio, Court, Therapy, etc.)\n• 'show pages' - see all sections\n• 'new features' - see latest updates\n• 'tips' - get tips for current page\n• 'recommend' - get personalized suggestions\n• 'joke' - I'm hilarious! 😏\n• '🌐 Language' - switch language",
-            zh: "我可以幫你導航！試試：\n• 詢問任何頁面（頭像工作室、法院、療程等）\n• 「顯示頁面」- 查看所有區域\n• 「新功能」- 查看最新更新\n• 「提示」- 獲取當前頁面提示\n• 「推薦」- 獲取個性化建議\n• 「笑話」- 我超幽默！😏\n• 「🌐 語言」- 切換語言",
-            th: "ฉันช่วยนำทางได้! ลอง:\n• ถามเกี่ยวกับหน้าใดก็ได้ (Avatar Studio, Court, Therapy ฯลฯ)\n• 'แสดงหน้า' - ดูทุกส่วน\n• 'ฟีเจอร์ใหม่' - ดูอัปเดตล่าสุด\n• 'เคล็ดลับ' - รับเคล็ดลับหน้าปัจจุบัน\n• 'แนะนำ' - รับคำแนะนำส่วนตัว\n• 'ตลก' - ฉันตลกมาก! 😏\n• '🌐 ภาษา' - เปลี่ยนภาษา"
+            en: "I can help you navigate! Try:\n• Ask about any page (Avatar Studio, Court, Therapy, etc.)\n• 'show pages' - see all sections\n• 'new features' - see latest updates\n• 'tips' - get tips for current page\n• 'recommend' - get personalized suggestions\n• 'joke' - I'm hilarious! \n• 'Language' - switch language",
+            zh: "我可以幫你導航！試試：\n• 詢問任何頁面（頭像工作室、法院、療程等）\n• 「顯示頁面」- 查看所有區域\n• 「新功能」- 查看最新更新\n• 「提示」- 獲取當前頁面提示\n• 「推薦」- 獲取個性化建議\n• 「笑話」- 我超幽默！\n• 「語言」- 切換語言",
+            th: "ฉันช่วยนำทางได้! ลอง:\n• ถามเกี่ยวกับหน้าใดก็ได้ (Avatar Studio, Court, Therapy ฯลฯ)\n• 'แสดงหน้า' - ดูทุกส่วน\n• 'ฟีเจอร์ใหม่' - ดูอัปเดตล่าสุด\n• 'เคล็ดลับ' - รับเคล็ดลับหน้าปัจจุบัน\n• 'แนะนำ' - รับคำแนะนำส่วนตัว\n• 'ตลก' - ฉันตลกมาก! \n• 'ภาษา' - เปลี่ยนภาษา"
         },
         // Comprehensive fallback tips for each page
         fallbackTips: {
             '/': {
-                en: ["Welcome to NumbahWan! Check out the new Avatar Studio 🎨", "Try the 📈 Exchange for parody stocks", "New here? Visit the 🏛️ Museum for guild history"],
-                zh: ["歡迎來到NumbahWan！看看新的頭像工作室 🎨", "試試 📈 交易所玩惡搞股票", "新手？去 🏛️ 博物館了解公會歷史"],
-                th: ["ยินดีต้อนรับสู่ NumbahWan! ดู Avatar Studio ใหม่ 🎨", "ลอง 📈 Exchange สำหรับหุ้นล้อเลียน", "มาใหม่? ไปที่ 🏛️ พิพิธภัณฑ์ดูประวัติกิลด์"]
+                en: ["Welcome to NumbahWan! Check out the new Avatar Studio ", "Try the Exchange for parody stocks", "New here? Visit the Museum for guild history"],
+                zh: ["歡迎來到NumbahWan！看看新的頭像工作室 ", "試試 交易所玩惡搞股票", "新手？去 博物館了解公會歷史"],
+                th: ["ยินดีต้อนรับสู่ NumbahWan! ดู Avatar Studio ใหม่ ", "ลอง Exchange สำหรับหุ้นล้อเลียน", "มาใหม่? ไปที่ พิพิธภัณฑ์ดูประวัติกิลด์"]
             },
             '/avatar-studio': {
-                en: ["Upload a clear, full-body MapleStory screenshot for best results! 📸", "8 poses available: Hero, Cute, Cool, Victory, Magic, Action, AFK, Party 🎭", "Center your character and use bright backgrounds ☀️", "Download HD PNG or share directly to Discord! 🎮"],
-                zh: ["上傳清晰的全身楓之谷截圖效果最佳！📸", "8種姿勢：英雄、可愛、酷炫、勝利、魔法、動作、AFK、派對 🎭", "將角色置中並使用明亮背景 ☀️", "下載高清PNG或直接分享到Discord！🎮"],
-                th: ["อัปโหลดภาพหน้าจอ MapleStory เต็มตัวที่ชัดเจนเพื่อผลลัพธ์ที่ดีที่สุด! 📸", "8 โพส: ฮีโร่ น่ารัก เท่ ชนะ เวทมนตร์ แอ็คชั่น AFK ปาร์ตี้ 🎭", "วางตัวละครไว้ตรงกลางและใช้พื้นหลังสว่าง ☀️", "ดาวน์โหลด HD PNG หรือแชร์ไป Discord โดยตรง! 🎮"]
+                en: ["Upload a clear, full-body MapleStory screenshot for best results! ", "8 poses available: Hero, Cute, Cool, Victory, Magic, Action, AFK, Party ", "Center your character and use bright backgrounds ", "Download HD PNG or share directly to Discord! "],
+                zh: ["上傳清晰的全身楓之谷截圖效果最佳！", "8種姿勢：英雄、可愛、酷炫、勝利、魔法、動作、AFK、派對 ", "將角色置中並使用明亮背景 ", "下載高清PNG或直接分享到Discord！"],
+                th: ["อัปโหลดภาพหน้าจอ MapleStory เต็มตัวที่ชัดเจนเพื่อผลลัพธ์ที่ดีที่สุด! ", "8 โพส: ฮีโร่ น่ารัก เท่ ชนะ เวทมนตร์ แอ็คชั่น AFK ปาร์ตี้ ", "วางตัวละครไว้ตรงกลางและใช้พื้นหลังสว่าง ", "ดาวน์โหลด HD PNG หรือแชร์ไป Discord โดยตรง! "]
             },
             '/forge': {
-                en: ["Use Sacred Logs ⧫ to pull cards!", "Multi-pull (10x) gives better value 💎", "Check your pity counter for guaranteed rares!"],
-                zh: ["使用神聖原木 ⧫ 抽卡！", "十連抽更划算 💎", "查看保底計數器獲得保底稀有卡！"],
-                th: ["ใช้ Sacred Logs ⧫ สุ่มการ์ด!", "สุ่ม 10 ครั้ง คุ้มกว่า 💎", "ดูตัวนับ pity สำหรับการันตีหายาก!"]
+                en: ["Use Sacred Logs ⧫ to pull cards!", "Multi-pull (10x) gives better value ", "Check your pity counter for guaranteed rares!"],
+                zh: ["使用神聖原木 ⧫ 抽卡！", "十連抽更划算 ", "查看保底計數器獲得保底稀有卡！"],
+                th: ["ใช้ Sacred Logs ⧫ สุ่มการ์ด!", "สุ่ม 10 ครั้ง คุ้มกว่า ", "ดูตัวนับ pity สำหรับการันตีหายาก!"]
             },
             '/court': {
-                en: ["File complaints for 5◆, win to earn 25●! ⚖️", "Appeal costs 10◆ with only 3% success rate 😈", "10 crime categories from Loot Theft to AFK Abuse!"],
-                zh: ["提交訴狀5◆，勝訴獲25●！⚖️", "上訴需10◆，只有3%成功率 😈", "10種罪名從偷寶到掛機濫用！"],
-                th: ["ยื่นคำร้อง 5◆ ชนะได้ 25●! ⚖️", "อุทธรณ์ 10◆ สำเร็จแค่ 3% 😈", "10 หมวดอาชญากรรมจากขโมยของถึงใช้ AFK ในทางที่ผิด!"]
+                en: ["File complaints for 5, win to earn 25! ", "Appeal costs 10with only 3% success rate ", "10 crime categories from Loot Theft to AFK Abuse!"],
+                zh: ["提交訴狀5，勝訴獲25！", "上訴需10，只有3%成功率 ", "10種罪名從偷寶到掛機濫用！"],
+                th: ["ยื่นคำร้อง 5ชนะได้ 25! ", "อุทธรณ์ 10สำเร็จแค่ 3% ", "10 หมวดอาชญากรรมจากขโมยของถึงใช้ AFK ในทางที่ผิด!"]
             },
             '/therapy': {
-                en: ["Complete a therapy session to earn 3◆! 🛋️", "Get diagnosed with Gacha Pull Depression 🎰", "Dr. NumbahWan accepts all gaming traumas!"],
-                zh: ["完成療程獲3◆！🛋️", "被診斷為抽卡憂鬱症 🎰", "NumbahWan醫生接受所有遊戲創傷！"],
-                th: ["ทำเซสชันเสร็จรับ 3◆! 🛋️", "วินิจฉัยว่าเป็น Gacha Pull Depression 🎰", "Dr. NumbahWan รับบาดแผลเกมทุกชนิด!"]
+                en: ["Complete a therapy session to earn 3! ", "Get diagnosed with Gacha Pull Depression ", "Dr. NumbahWan accepts all gaming traumas!"],
+                zh: ["完成療程獲3！", "被診斷為抽卡憂鬱症 ", "NumbahWan醫生接受所有遊戲創傷！"],
+                th: ["ทำเซสชันเสร็จรับ 3! ", "วินิจฉัยว่าเป็น Gacha Pull Depression ", "Dr. NumbahWan รับบาดแผลเกมทุกชนิด!"]
             },
             '/hr': {
-                en: ["Apply for Chief Banana Officer! 🍌", "Application costs 5◆, consolation prize: 10●", "100% rejection rate guaranteed! 📋"],
-                zh: ["申請首席香蕉官！🍌", "申請費5◆，安慰獎：10●", "100%拒絕率保證！📋"],
-                th: ["สมัคร Chief Banana Officer! 🍌", "ค่าสมัคร 5◆ รางวัลปลอบใจ: 10●", "รับประกันอัตราปฏิเสธ 100%! 📋"]
+                en: ["Apply for Chief Banana Officer! ", "Application costs 5, consolation prize: 10", "100% rejection rate guaranteed! "],
+                zh: ["申請首席香蕉官！", "申請費5，安慰獎：10", "100%拒絕率保證！"],
+                th: ["สมัคร Chief Banana Officer! ", "ค่าสมัคร 5รางวัลปลอบใจ: 10", "รับประกันอัตราปฏิเสธ 100%! "]
             },
             '/conspiracy': {
-                en: ["Drag evidence to connect the dots! 📌", "Submit theories for 2◆, earn 15● for truth!", "Is the banana patch a lie? 👁️"],
-                zh: ["拖動證據連接線索！📌", "提交理論2◆，揭密獲15●！", "香蕉園是謊言嗎？👁️"],
-                th: ["ลากหลักฐานเชื่อมจุด! 📌", "ส่งทฤษฎี 2◆ ได้ 15● หาความจริง!", "สวนกล้วยเป็นเรื่องโกหกหรือเปล่า? 👁️"]
+                en: ["Drag evidence to connect the dots! ", "Submit theories for 2, earn 15for truth!", "Is the banana patch a lie? "],
+                zh: ["拖動證據連接線索！", "提交理論2，揭密獲15！", "香蕉園是謊言嗎？"],
+                th: ["ลากหลักฐานเชื่อมจุด! ", "ส่งทฤษฎี 2ได้ 15หาความจริง!", "สวนกล้วยเป็นเรื่องโกหกหรือเปล่า? "]
             },
             '/arcade': {
-                en: ["Play mini-games to earn currencies! 🕹️", "Try the slot machine for big wins! 🎰", "Daily bonus available for regular players!"],
-                zh: ["玩小遊戲賺貨幣！🕹️", "試試老虎機贏大獎！🎰", "每日獎勵給常玩玩家！"],
-                th: ["เล่นมินิเกมหาสกุลเงิน! 🕹️", "ลองสล็อตแมชชีนลุ้นรางวัลใหญ่! 🎰", "โบนัสรายวันสำหรับผู้เล่นประจำ!"]
+                en: ["Play mini-games to earn currencies! ", "Try the slot machine for big wins! ", "Daily bonus available for regular players!"],
+                zh: ["玩小遊戲賺貨幣！", "試試老虎機贏大獎！", "每日獎勵給常玩玩家！"],
+                th: ["เล่นมินิเกมหาสกุลเงิน! ", "ลองสล็อตแมชชีนลุ้นรางวัลใหญ่! ", "โบนัสรายวันสำหรับผู้เล่นประจำ!"]
             },
             '/wallet': {
-                en: ["Manage all your currencies here! 💰", "Claim daily login rewards for free loot!", "7-day streak gives Sacred Log on day 7! ⧫"],
-                zh: ["在這裡管理所有貨幣！💰", "領取每日登入獎勵免費拿寶！", "7天連續登入第7天送神聖原木！⧫"],
-                th: ["จัดการสกุลเงินทั้งหมดที่นี่! 💰", "รับรางวัลล็อกอินรายวันฟรี!", "ล็อกอิน 7 วันติดได้ Sacred Log วันที่ 7! ⧫"]
+                en: ["Manage all your currencies here! ", "Claim daily login rewards for free loot!", "7-day streak gives Sacred Log on day 7! ⧫"],
+                zh: ["在這裡管理所有貨幣！", "領取每日登入獎勵免費拿寶！", "7天連續登入第7天送神聖原木！⧫"],
+                th: ["จัดการสกุลเงินทั้งหมดที่นี่! ", "รับรางวัลล็อกอินรายวันฟรี!", "ล็อกอิน 7 วันติดได้ Sacred Log วันที่ 7! ⧫"]
             },
             '/exchange': {
-                en: ["Trade parody stocks of guild members! 📈", "Buy low, sell high for profits!", "Market trends change daily!"],
-                zh: ["交易公會成員的惡搞股票！📈", "低買高賣賺差價！", "市場趨勢每日變化！"],
-                th: ["ซื้อขายหุ้นล้อเลียนของสมาชิกกิลด์! 📈", "ซื้อถูกขายแพงทำกำไร!", "แนวโน้มตลาดเปลี่ยนทุกวัน!"]
+                en: ["Trade parody stocks of guild members! ", "Buy low, sell high for profits!", "Market trends change daily!"],
+                zh: ["交易公會成員的惡搞股票！", "低買高賣賺差價！", "市場趨勢每日變化！"],
+                th: ["ซื้อขายหุ้นล้อเลียนของสมาชิกกิลด์! ", "ซื้อถูกขายแพงทำกำไร!", "แนวโน้มตลาดเปลี่ยนทุกวัน!"]
             },
             '/confessional': {
-                en: ["Submit anonymous guild confessions! 🎭", "Vote on the juiciest secrets 👀", "Everything is anonymous... maybe 😈"],
-                zh: ["提交匿名公會告解！🎭", "為最勁爆的秘密投票 👀", "一切都是匿名的...也許 😈"],
-                th: ["ส่งคำสารภาพกิลด์แบบไม่ระบุตัวตน! 🎭", "โหวตความลับที่น่าสนใจที่สุด 👀", "ทุกอย่างไม่ระบุตัวตน... อาจจะ 😈"]
+                en: ["Submit anonymous guild confessions! ", "Vote on the juiciest secrets ", "Everything is anonymous... maybe "],
+                zh: ["提交匿名公會告解！", "為最勁爆的秘密投票 ", "一切都是匿名的...也許 "],
+                th: ["ส่งคำสารภาพกิลด์แบบไม่ระบุตัวตน! ", "โหวตความลับที่น่าสนใจที่สุด ", "ทุกอย่างไม่ระบุตัวตน... อาจจะ "]
             },
             '/collection': {
-                en: ["View all your collected cards! 📚", "Star upgrades: use duplicates for +15%/30%/50%/75% stats! ⭐", "Burn unwanted cards for Sacred Logs! 🔥"],
-                zh: ["查看所有收集的卡牌！📚", "星級升級：用重複卡牌獲得 +15%/30%/50%/75% 屬性！⭐", "燃燒不要的卡換神聖原木！🔥"],
-                th: ["ดูการ์ดที่สะสมทั้งหมด! 📚", "อัพเกรดดาว: ใช้การ์ดซ้ำเพิ่ม +15%/30%/50%/75% สถานะ! ⭐", "เผาการ์ดที่ไม่ต้องการรับ Sacred Logs! 🔥"]
+                en: ["View all your collected cards! ", "Star upgrades: use duplicates for +15%/30%/50%/75% stats! ", "Burn unwanted cards for Sacred Logs! "],
+                zh: ["查看所有收集的卡牌！", "星級升級：用重複卡牌獲得 +15%/30%/50%/75% 屬性！", "燃燒不要的卡換神聖原木！"],
+                th: ["ดูการ์ดที่สะสมทั้งหมด! ", "อัพเกรดดาว: ใช้การ์ดซ้ำเพิ่ม +15%/30%/50%/75% สถานะ! ", "เผาการ์ดที่ไม่ต้องการรับ Sacred Logs! "]
             }
         }
     };
 
     // ==================== FALLBACK PAGE DATA ====================
     const fallbackPages = {
-        home: { path: '/', emoji: '🏠', name: { en: 'Home', zh: '首頁', th: 'หน้าแรก' }, desc: { en: 'Guild headquarters', zh: '公會總部', th: 'สำนักงานใหญ่กิลด์' }, category: 'core' },
-        avatarStudio: { path: '/avatar-studio', emoji: '🎨', name: { en: 'Avatar Studio', zh: '頭像工作室', th: 'สตูดิโออวาตาร์' }, desc: { en: 'Generate AI maple avatars', zh: '生成AI楓之谷頭像', th: 'สร้างอวาตาร์เมเปิ้ล AI' }, category: 'creative' },
-        forge: { path: '/forge', emoji: '🎰', name: { en: 'Card Forge', zh: '卡牌鍛造', th: 'โรงหลอมการ์ด' }, desc: { en: 'Open packs and collect cards', zh: '開包收集卡牌', th: 'เปิดแพ็คสะสมการ์ด' }, category: 'core' },
-        battle: { path: '/battle', emoji: '⚔️', name: { en: 'Battle', zh: '戰鬥', th: 'ต่อสู้' }, desc: { en: 'Card battles and PvP', zh: '卡牌對戰', th: 'การต่อสู้การ์ด' }, category: 'game' },
-        collection: { path: '/collection', emoji: '📚', name: { en: 'Collection', zh: '收藏', th: 'คอลเลกชัน' }, desc: { en: 'View your cards', zh: '查看卡牌', th: 'ดูการ์ด' }, category: 'core' },
-        wallet: { path: '/wallet', emoji: '👛', name: { en: 'Wallet', zh: '錢包', th: 'กระเป๋าเงิน' }, desc: { en: 'Manage currencies', zh: '管理貨幣', th: 'จัดการสกุลเงิน' }, category: 'core' },
-        market: { path: '/market', emoji: '🏪', name: { en: 'Card Market', zh: '卡牌市場', th: 'ตลาดการ์ด' }, desc: { en: 'Trade cards', zh: '交易卡牌', th: 'ซื้อขายการ์ด' }, category: 'economy' },
-        arcade: { path: '/arcade', emoji: '🕹️', name: { en: 'Arcade', zh: '遊戲廳', th: 'อาร์เคด' }, desc: { en: 'Mini-games', zh: '小遊戲', th: 'มินิเกม' }, category: 'game' },
-        exchange: { path: '/exchange', emoji: '📈', name: { en: 'Exchange', zh: '交易所', th: 'ตลาดแลกเปลี่ยน' }, desc: { en: 'Trade currencies', zh: '交易貨幣', th: 'แลกเปลี่ยนสกุลเงิน' }, category: 'economy' },
-        merch: { path: '/merch', emoji: '🛍️', name: { en: 'Merch Shop', zh: '周邊商店', th: 'ร้านค้า' }, desc: { en: 'Guild merchandise', zh: '公會周邊', th: 'สินค้ากิลด์' }, category: 'economy' },
-        court: { path: '/court', emoji: '⚖️', name: { en: 'Guild Court', zh: '公會法院', th: 'ศาลกิลด์' }, desc: { en: 'Sue your guildmates!', zh: '告你的隊友！', th: 'ฟ้องเพื่อนกิลด์!' }, category: 'absurdist' },
-        therapy: { path: '/therapy', emoji: '🛋️', name: { en: 'Guild Therapy', zh: '公會療程', th: 'การบำบัดกิลด์' }, desc: { en: 'AI therapist', zh: 'AI治療師', th: 'นักบำบัด AI' }, category: 'absurdist' },
-        hr: { path: '/hr', emoji: '📋', name: { en: 'HR Department', zh: '人事部', th: 'ฝ่ายบุคคล' }, desc: { en: 'Apply for jobs', zh: '申請職位', th: 'สมัครงาน' }, category: 'absurdist' },
-        conspiracy: { path: '/conspiracy', emoji: '👁️', name: { en: 'Conspiracy Board', zh: '陰謀板', th: 'บอร์ดสมคบคิด' }, desc: { en: 'Connect the dots', zh: '連接線索', th: 'เชื่อมจุด' }, category: 'absurdist' },
-        confessional: { path: '/confessional', emoji: '🎭', name: { en: 'Confessional', zh: '告解室', th: 'ห้องสารภาพ' }, desc: { en: 'Anonymous confessions', zh: '匿名告解', th: 'คำสารภาพนิรนาม' }, category: 'fun' },
-        academy: { path: '/academy', emoji: '🏫', name: { en: 'Academy', zh: '學院', th: 'สถาบัน' }, desc: { en: 'Training grounds', zh: '訓練場', th: 'สนามฝึก' }, category: 'meta' },
-        museum: { path: '/museum', emoji: '🏛️', name: { en: 'Museum', zh: '博物館', th: 'พิพิธภัณฑ์' }, desc: { en: 'Guild history', zh: '公會歷史', th: 'ประวัติกิลด์' }, category: 'meta' },
-        fortune: { path: '/fortune', emoji: '🔮', name: { en: 'Fortune Teller', zh: '算命師', th: 'หมอดู' }, desc: { en: 'Daily fortunes', zh: '每日運勢', th: 'ดวงรายวัน' }, category: 'fun' },
-        updates: { path: '/updates', emoji: '📋', name: { en: 'Patch Notes', zh: '更新日誌', th: 'บันทึกแพทช์' }, desc: { en: 'Latest updates', zh: '最新更新', th: 'อัปเดตล่าสุด' }, category: 'meta' }
+        home: { path: '/', emoji: '', name: { en: 'Home', zh: '首頁', th: 'หน้าแรก' }, desc: { en: 'Guild headquarters', zh: '公會總部', th: 'สำนักงานใหญ่กิลด์' }, category: 'core' },
+        avatarStudio: { path: '/avatar-studio', emoji: '', name: { en: 'Avatar Studio', zh: '頭像工作室', th: 'สตูดิโออวาตาร์' }, desc: { en: 'Generate AI maple avatars', zh: '生成AI楓之谷頭像', th: 'สร้างอวาตาร์เมเปิ้ล AI' }, category: 'creative' },
+        forge: { path: '/forge', emoji: '', name: { en: 'Card Forge', zh: '卡牌鍛造', th: 'โรงหลอมการ์ด' }, desc: { en: 'Open packs and collect cards', zh: '開包收集卡牌', th: 'เปิดแพ็คสะสมการ์ด' }, category: 'core' },
+        battle: { path: '/battle', emoji: '', name: { en: 'Battle', zh: '戰鬥', th: 'ต่อสู้' }, desc: { en: 'Card battles and PvP', zh: '卡牌對戰', th: 'การต่อสู้การ์ด' }, category: 'game' },
+        collection: { path: '/collection', emoji: '', name: { en: 'Collection', zh: '收藏', th: 'คอลเลกชัน' }, desc: { en: 'View your cards', zh: '查看卡牌', th: 'ดูการ์ด' }, category: 'core' },
+        wallet: { path: '/wallet', emoji: '', name: { en: 'Wallet', zh: '錢包', th: 'กระเป๋าเงิน' }, desc: { en: 'Manage currencies', zh: '管理貨幣', th: 'จัดการสกุลเงิน' }, category: 'core' },
+        market: { path: '/market', emoji: '', name: { en: 'Card Market', zh: '卡牌市場', th: 'ตลาดการ์ด' }, desc: { en: 'Trade cards', zh: '交易卡牌', th: 'ซื้อขายการ์ด' }, category: 'economy' },
+        arcade: { path: '/arcade', emoji: '', name: { en: 'Arcade', zh: '遊戲廳', th: 'อาร์เคด' }, desc: { en: 'Mini-games', zh: '小遊戲', th: 'มินิเกม' }, category: 'game' },
+        exchange: { path: '/exchange', emoji: '', name: { en: 'Exchange', zh: '交易所', th: 'ตลาดแลกเปลี่ยน' }, desc: { en: 'Trade currencies', zh: '交易貨幣', th: 'แลกเปลี่ยนสกุลเงิน' }, category: 'economy' },
+        merch: { path: '/merch', emoji: '', name: { en: 'Merch Shop', zh: '周邊商店', th: 'ร้านค้า' }, desc: { en: 'Guild merchandise', zh: '公會周邊', th: 'สินค้ากิลด์' }, category: 'economy' },
+        court: { path: '/court', emoji: '', name: { en: 'Guild Court', zh: '公會法院', th: 'ศาลกิลด์' }, desc: { en: 'Sue your guildmates!', zh: '告你的隊友！', th: 'ฟ้องเพื่อนกิลด์!' }, category: 'absurdist' },
+        therapy: { path: '/therapy', emoji: '', name: { en: 'Guild Therapy', zh: '公會療程', th: 'การบำบัดกิลด์' }, desc: { en: 'AI therapist', zh: 'AI治療師', th: 'นักบำบัด AI' }, category: 'absurdist' },
+        hr: { path: '/hr', emoji: '', name: { en: 'HR Department', zh: '人事部', th: 'ฝ่ายบุคคล' }, desc: { en: 'Apply for jobs', zh: '申請職位', th: 'สมัครงาน' }, category: 'absurdist' },
+        conspiracy: { path: '/conspiracy', emoji: '', name: { en: 'Conspiracy Board', zh: '陰謀板', th: 'บอร์ดสมคบคิด' }, desc: { en: 'Connect the dots', zh: '連接線索', th: 'เชื่อมจุด' }, category: 'absurdist' },
+        confessional: { path: '/confessional', emoji: '', name: { en: 'Confessional', zh: '告解室', th: 'ห้องสารภาพ' }, desc: { en: 'Anonymous confessions', zh: '匿名告解', th: 'คำสารภาพนิรนาม' }, category: 'fun' },
+        academy: { path: '/academy', emoji: '', name: { en: 'Academy', zh: '學院', th: 'สถาบัน' }, desc: { en: 'Training grounds', zh: '訓練場', th: 'สนามฝึก' }, category: 'meta' },
+        museum: { path: '/museum', emoji: '', name: { en: 'Museum', zh: '博物館', th: 'พิพิธภัณฑ์' }, desc: { en: 'Guild history', zh: '公會歷史', th: 'ประวัติกิลด์' }, category: 'meta' },
+        fortune: { path: '/fortune', emoji: '', name: { en: 'Fortune Teller', zh: '算命師', th: 'หมอดู' }, desc: { en: 'Daily fortunes', zh: '每日運勢', th: 'ดวงรายวัน' }, category: 'fun' },
+        updates: { path: '/updates', emoji: '', name: { en: 'Patch Notes', zh: '更新日誌', th: 'บันทึกแพทช์' }, desc: { en: 'Latest updates', zh: '最新更新', th: 'อัปเดตล่าสุด' }, category: 'meta' }
     };
 
     // ==================== HELPER FUNCTIONS ====================
@@ -1137,7 +1137,7 @@
             <div class="nw-guide-suggestions" id="nw-guide-suggestions"></div>
             <div class="nw-guide-input-area">
                 <input type="text" class="nw-guide-input" id="nw-guide-input" placeholder="${t('ui.placeholder')}" autocomplete="off">
-                <button class="nw-guide-send" id="nw-guide-send">➤</button>
+                <button class="nw-guide-send" id="nw-guide-send"></button>
             </div>
         `;
     }
@@ -1259,13 +1259,13 @@
         
         // Get tips for the page
         const tips = getPageTips(page.path);
-        const tipText = tips && tips.length > 0 ? `<br><br>💡 <em>${tips[0]}</em>` : '';
+        const tipText = tips && tips.length > 0 ? `<br><br><em>${tips[0]}</em>` : '';
         
         addMessage(`${page.emoji} <strong>${page.name}</strong><br>${page.desc}${tipText}<br><br><a href="${page.path}" class="nw-guide-page-link${newClass}">${page.emoji} ${goToText} ${page.name}</a>`);
         
         // Show related suggestions
         const relatedSuggestions = [
-            { label: `💡 ${learnMoreText}`, value: `tips ${page.path}` },
+            { label: `${learnMoreText}`, value: `tips ${page.path}` },
             { label: guideI18n.chips.showPages[currentLang], value: 'show pages' },
             { label: guideI18n.chips.recommend[currentLang], value: 'recommend', isRecommend: true }
         ];
@@ -1296,7 +1296,7 @@
             zh: "這裡是精選區域：",
             th: "นี่คือจุดแนะนำ:"
         };
-        addMessage(`${introText[currentLang]}<br><br>${list}<br><br><a href="/updates" class="nw-guide-page-link">📋 ${currentLang === 'zh' ? '完整更新日誌' : currentLang === 'th' ? 'บันทึกแพทช์ทั้งหมด' : 'Full Patch Notes'}</a>`);
+        addMessage(`${introText[currentLang]}<br><br>${list}<br><br><a href="/updates" class="nw-guide-page-link">${currentLang === 'zh' ? '完整更新日誌' : currentLang === 'th' ? 'บันทึกแพทช์ทั้งหมด' : 'Full Patch Notes'}</a>`);
         showContextualSuggestions();
     }
 
@@ -1314,14 +1314,14 @@
                 if (item.path) msg += ` <a href="${item.path}" class="nw-guide-page-link new">${item.path}</a>`;
                 msg += `<br>`;
             });
-            msg += `<br><a href="/updates" class="nw-guide-page-link">📋 ${currentLang === 'zh' ? '完整更新日誌' : currentLang === 'th' ? 'บันทึกแพทช์ทั้งหมด' : 'Full Patch Notes'}</a>`;
+            msg += `<br><a href="/updates" class="nw-guide-page-link">${currentLang === 'zh' ? '完整更新日誌' : currentLang === 'th' ? 'บันทึกแพทช์ทั้งหมด' : 'Full Patch Notes'}</a>`;
             addMessage(msg);
         } else {
             // Fallback: show new features
             const newFeatures = {
-                en: '🆕 <strong>Latest Features</strong><br><br>🎨 <strong>Avatar Studio</strong> - Generate AI maple avatars! <a href="/avatar-studio" class="nw-guide-page-link new">/avatar-studio</a><br>⚖️ <strong>Guild Court</strong> - Sue your guildmates! <a href="/court" class="nw-guide-page-link new">/court</a><br>🛋️ <strong>Guild Therapy</strong> - AI therapist <a href="/therapy" class="nw-guide-page-link new">/therapy</a><br>📋 <strong>HR Department</strong> - Apply for jobs <a href="/hr" class="nw-guide-page-link new">/hr</a><br>👁️ <strong>Conspiracy Board</strong> - Connect the dots <a href="/conspiracy" class="nw-guide-page-link new">/conspiracy</a>',
-                zh: '🆕 <strong>最新功能</strong><br><br>🎨 <strong>頭像工作室</strong> - 生成AI楓之谷頭像！ <a href="/avatar-studio" class="nw-guide-page-link new">/avatar-studio</a><br>⚖️ <strong>公會法院</strong> - 告你的隊友！ <a href="/court" class="nw-guide-page-link new">/court</a><br>🛋️ <strong>公會療程</strong> - AI治療師 <a href="/therapy" class="nw-guide-page-link new">/therapy</a><br>📋 <strong>人事部</strong> - 申請職位 <a href="/hr" class="nw-guide-page-link new">/hr</a><br>👁️ <strong>陰謀板</strong> - 連接線索 <a href="/conspiracy" class="nw-guide-page-link new">/conspiracy</a>',
-                th: '🆕 <strong>ฟีเจอร์ใหม่</strong><br><br>🎨 <strong>Avatar Studio</strong> - สร้างอวาตาร์เมเปิ้ล AI! <a href="/avatar-studio" class="nw-guide-page-link new">/avatar-studio</a><br>⚖️ <strong>ศาลกิลด์</strong> - ฟ้องเพื่อนกิลด์! <a href="/court" class="nw-guide-page-link new">/court</a><br>🛋️ <strong>การบำบัดกิลด์</strong> - นักบำบัด AI <a href="/therapy" class="nw-guide-page-link new">/therapy</a><br>📋 <strong>ฝ่ายบุคคล</strong> - สมัครงาน <a href="/hr" class="nw-guide-page-link new">/hr</a><br>👁️ <strong>บอร์ดสมคบคิด</strong> - เชื่อมจุด <a href="/conspiracy" class="nw-guide-page-link new">/conspiracy</a>'
+                en: '🆕 <strong>Latest Features</strong><br><br><strong>Avatar Studio</strong> - Generate AI maple avatars! <a href="/avatar-studio" class="nw-guide-page-link new">/avatar-studio</a><br><strong>Guild Court</strong> - Sue your guildmates! <a href="/court" class="nw-guide-page-link new">/court</a><br><strong>Guild Therapy</strong> - AI therapist <a href="/therapy" class="nw-guide-page-link new">/therapy</a><br><strong>HR Department</strong> - Apply for jobs <a href="/hr" class="nw-guide-page-link new">/hr</a><br><strong>Conspiracy Board</strong> - Connect the dots <a href="/conspiracy" class="nw-guide-page-link new">/conspiracy</a>',
+                zh: '🆕 <strong>最新功能</strong><br><br><strong>頭像工作室</strong> - 生成AI楓之谷頭像！ <a href="/avatar-studio" class="nw-guide-page-link new">/avatar-studio</a><br><strong>公會法院</strong> - 告你的隊友！ <a href="/court" class="nw-guide-page-link new">/court</a><br><strong>公會療程</strong> - AI治療師 <a href="/therapy" class="nw-guide-page-link new">/therapy</a><br><strong>人事部</strong> - 申請職位 <a href="/hr" class="nw-guide-page-link new">/hr</a><br><strong>陰謀板</strong> - 連接線索 <a href="/conspiracy" class="nw-guide-page-link new">/conspiracy</a>',
+                th: '🆕 <strong>ฟีเจอร์ใหม่</strong><br><br><strong>Avatar Studio</strong> - สร้างอวาตาร์เมเปิ้ล AI! <a href="/avatar-studio" class="nw-guide-page-link new">/avatar-studio</a><br><strong>ศาลกิลด์</strong> - ฟ้องเพื่อนกิลด์! <a href="/court" class="nw-guide-page-link new">/court</a><br><strong>การบำบัดกิลด์</strong> - นักบำบัด AI <a href="/therapy" class="nw-guide-page-link new">/therapy</a><br><strong>ฝ่ายบุคคล</strong> - สมัครงาน <a href="/hr" class="nw-guide-page-link new">/hr</a><br><strong>บอร์ดสมคบคิด</strong> - เชื่อมจุด <a href="/conspiracy" class="nw-guide-page-link new">/conspiracy</a>'
             };
             addMessage(newFeatures[currentLang] || newFeatures.en);
         }
@@ -1333,7 +1333,7 @@
         const tips = getPageTips(path);
         
         // Show all tips for the page
-        let msg = `💡 <strong>${currentLang === 'zh' ? '提示' : currentLang === 'th' ? 'เคล็ดลับ' : 'Tips'}</strong> for this page:<br><br>`;
+        let msg = `<strong>${currentLang === 'zh' ? '提示' : currentLang === 'th' ? 'เคล็ดลับ' : 'Tips'}</strong> for this page:<br><br>`;
         tips.forEach((tip, i) => {
             msg += `${i + 1}. ${tip}<br>`;
         });
@@ -1345,17 +1345,17 @@
     function respondWithRecommendations() {
         const recommendations = getSmartRecommendations();
         const headerText = {
-            en: "🎯 Based on your interests:",
-            zh: "🎯 根據你的興趣：",
-            th: "🎯 ตามความสนใจของคุณ:"
+            en: "Based on your interests:",
+            zh: "根據你的興趣：",
+            th: "ตามความสนใจของคุณ:"
         };
         
         if (recommendations.length === 0) {
             // No history, show popular pages
             const popularText = {
-                en: "🔥 Try these popular pages:",
-                zh: "🔥 試試這些熱門頁面：",
-                th: "🔥 ลองหน้ายอดนิยมเหล่านี้:"
+                en: "Try these popular pages:",
+                zh: "試試這些熱門頁面：",
+                th: "ลองหน้ายอดนิยมเหล่านี้:"
             };
             const popular = ['avatarStudio', 'forge', 'court', 'arcade'];
             const list = popular
@@ -1442,7 +1442,7 @@
                      lower.includes('เคล็ดลับ') || lower.includes('เรียนรู้เพิ่มเติม')) {
                 respondWithTips();
             }
-            else if (lower.includes('language') || lower.includes('lang') || lower === '🌐' ||
+            else if (lower.includes('language') || lower.includes('lang') || lower === '' ||
                      lower.includes('語言') || lower.includes('ภาษา')) {
                 showLanguageOptions();
             }

@@ -112,7 +112,7 @@ const NW_GUILD = (function() {
 
     /** Format guild currency (NWG) */
     function formatCurrency(amount, options = {}) {
-        const { symbol = '⚡', compact = false, decimals = 0 } = options;
+        const { symbol = '', compact = false, decimals = 0 } = options;
         
         if (compact && amount >= 1000000) {
             return `${symbol}${(amount / 1000000).toFixed(1)}M`;
@@ -129,12 +129,12 @@ const NW_GUILD = (function() {
 
     /** Format crystals */
     function formatCrystals(amount) {
-        return formatCurrency(amount, { symbol: '💎' });
+        return formatCurrency(amount, { symbol: '' });
     }
 
     /** Format gold */
     function formatGold(amount) {
-        return formatCurrency(amount, { symbol: '🪙', compact: true });
+        return formatCurrency(amount, { symbol: '', compact: true });
     }
 
     // ═══════════════════════════════════════════════════════════════════════════
@@ -294,9 +294,9 @@ const NW_GUILD = (function() {
 
     /** Format leaderboard rank */
     function formatRank(rank) {
-        if (rank === 1) return '🥇';
-        if (rank === 2) return '🥈';
-        if (rank === 3) return '🥉';
+        if (rank === 1) return '';
+        if (rank === 2) return '';
+        if (rank === 3) return '';
         return `#${rank}`;
     }
 

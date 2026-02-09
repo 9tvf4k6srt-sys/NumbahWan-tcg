@@ -1,7 +1,7 @@
 // ═══════════════════════════════════════════════════════════════════════
-// NUMBAHWAN TCG — BATTLE ARENA v7.0 (Accessibility-First Redesign)
-// Big cards, touch-friendly, all 12 abilities, 9 set bonuses, 15+ synergies
-// Research-backed: 60px+ touch targets, readable fonts, no overlap
+// NUMBAHWAN TCG — BATTLE ARENA v7.1 (Bigger Cards + SVG Icons + Tap-to-Zoom)
+// Marvel Snap-inspired card-first UI, SVG icons (no emojis), tap-to-zoom
+// Research: 60px+ touch targets, readable fonts, no overlap, lazy images
 // ═══════════════════════════════════════════════════════════════════════
 
 (function() {
@@ -63,8 +63,12 @@ const $ = id => document.getElementById(id);
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 function shuffle(arr) { for(let i=arr.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[arr[i],arr[j]]=[arr[j],arr[i]];} return arr; }
 function getImg(card) { return `/static/images/cards/thumbs/${card.img||'placeholder.webp'}`; }
-function getAbilityIcons(abilities) {
+function getAbilityIcons(abilities, size) {
     if (!abilities?.length) return '';
+    size = size || 12;
+    if (typeof NW_ICONS !== 'undefined') {
+        return abilities.map(a => NW_ICONS.ability(a, size)).filter(Boolean).join('');
+    }
     const map = typeof NW_ABILITIES !== 'undefined' ? NW_ABILITIES : {};
     return abilities.map(a => map[a]?.icon||'').filter(Boolean).join('');
 }
@@ -291,17 +295,23 @@ function clearSlotHighlights() {
     document.querySelectorAll('.player-slot.highlight').forEach(s => s.classList.remove('highlight'));
 }
 
+// SVG stat icons (inline, no emoji)
+const SVG_ATK = '<svg viewBox="0 0 24 24" width="10" height="10" fill="currentColor"><path d="M15.5 2.1L22 8.6 19.9 10.7 18 8.8 11 15.8 13 17.8 10.9 19.9 4.4 13.4 6.5 11.3 8.4 13.2 15.4 6.2 13.4 4.2z"/></svg>';
+const SVG_HP = '<svg viewBox="0 0 24 24" width="10" height="10" fill="currentColor"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>';
+const SVG_SWORDS_SM = '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14.5 3.5L21 10l-2 2-2-2-5 5 2 2-2 2-6.5-6.5L2 15l2-2 2 2 5-5-2-2 2-2z"/></svg>';
+const SVG_EXPLOSION_SM = '<svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><path d="M12 2l2.5 5 5.5.8-4 3.9.9 5.3-4.9-2.6-4.9 2.6.9-5.3-4-3.9 5.5-.8L12 2z"/></svg>';
+
 function renderBoardCard(card, isEnemy) {
     if (!card) return '';
-    const icons = getAbilityIcons(card.abilities);
+    const icons = getAbilityIcons(card.abilities, 12);
     return `<div class="board-card ${card.rarity || ''} ${card.hasTaunt ? 'has-taunt' : ''} ${card.stealthTurns > 0 ? 'has-stealth' : ''} ${card.hasShield ? 'has-shield' : ''} ${!isEnemy && card.canAttackThisTurn && !card.hasAttacked && G.isPlayerTurn ? 'can-attack' : ''}" data-name="${card.name}">
         <div class="bc-name">${card.name}</div>
-        <img class="bc-art" src="${getImg(card)}" onerror="this.src='/static/images/cards/placeholder.webp'" loading="lazy">
+        <img class="bc-art" src="${getImg(card)}" onerror="this.src='/static/images/cards/placeholder.webp'" loading="lazy" decoding="async">
         <div class="bc-icons">${icons}</div>
         ${card.hasTaunt ? '<div class="bc-taunt-tag">TAUNT</div>' : ''}
         <div class="bc-stats">
-            <span class="bc-stat bc-atk">${getEffAtk(card)}⚔</span>
-            <span class="bc-stat bc-hp">${card.currentHp}❤</span>
+            <span class="bc-stat bc-atk">${getEffAtk(card)}${SVG_ATK}</span>
+            <span class="bc-stat bc-hp">${card.currentHp}${SVG_HP}</span>
         </div>
     </div>`;
 }
@@ -313,13 +323,23 @@ function renderBoards() {
         if (card) {
             slot.innerHTML = renderBoardCard(card, false);
             slot.classList.remove('highlight');
-            slot.querySelector('.board-card')?.addEventListener('click', () => {
-                if (G.isAnimating || !G.isPlayerTurn) return;
-                if (card.canAttackThisTurn && !card.hasAttacked) {
-                    selectedAttacker = selectedAttacker === i ? null : i;
-                    renderBoards(); updateAttackBtn();
-                }
-            });
+            // Tap to select attacker; long-press to zoom
+            let pressTimer;
+            const bc = slot.querySelector('.board-card');
+            if (bc) {
+                bc.addEventListener('click', () => {
+                    if (G.isAnimating || !G.isPlayerTurn) return;
+                    if (card.canAttackThisTurn && !card.hasAttacked) {
+                        selectedAttacker = selectedAttacker === i ? null : i;
+                        renderBoards(); updateAttackBtn();
+                    } else {
+                        showCardZoom(card);
+                    }
+                });
+                bc.addEventListener('touchstart', () => { pressTimer = setTimeout(() => showCardZoom(card), 400); }, { passive: true });
+                bc.addEventListener('touchend', () => clearTimeout(pressTimer), { passive: true });
+                bc.addEventListener('touchmove', () => clearTimeout(pressTimer), { passive: true });
+            }
             if (selectedAttacker === i) slot.querySelector('.board-card')?.classList.add('selected-attacker');
         } else {
             slot.innerHTML = '';
@@ -335,7 +355,11 @@ function renderBoards() {
                 slot.querySelector('.board-card')?.classList.add('target-highlight');
                 slot.querySelector('.board-card')?.addEventListener('click', () => attackTarget(i));
             } else {
-                slot.querySelector('.board-card')?.addEventListener('click', () => showBoardCardModal(card));
+                // Tap to zoom enemy card
+                const ebc = slot.querySelector('.board-card');
+                if (ebc) {
+                    ebc.addEventListener('click', () => showCardZoom(card));
+                }
             }
         } else {
             slot.innerHTML = '';
@@ -358,9 +382,9 @@ function updateAttackBtn() {
     const hasTaunt = G.enemyBoard.some(c => c && c.hasTaunt && c.stealthTurns <= 0);
     const hasEnemyCards = G.enemyBoard.some(c => c);
     if (!hasEnemyCards || (!hasTaunt && selectedAttacker !== null)) {
-        btn.disabled = false; btn.querySelector('.btn-text').textContent = 'GO FACE'; btn.querySelector('.btn-icon').textContent = '💥'; btn.classList.add('face-mode');
+        btn.disabled = false; btn.querySelector('.btn-text').textContent = 'GO FACE'; btn.querySelector('.btn-icon').innerHTML = SVG_EXPLOSION_SM; btn.classList.add('face-mode');
     } else {
-        btn.disabled = false; btn.querySelector('.btn-text').textContent = 'ATTACK'; btn.querySelector('.btn-icon').textContent = '⚔️'; btn.classList.remove('face-mode');
+        btn.disabled = false; btn.querySelector('.btn-text').textContent = 'ATTACK'; btn.querySelector('.btn-icon').innerHTML = SVG_SWORDS_SM; btn.classList.remove('face-mode');
     }
 }
 
@@ -391,7 +415,7 @@ async function playCard(slotIdx) {
     G.playerSynergies = synergies; G.playerSetBonuses = setBonuses;
     applyBonuses(G.playerBoard, synergies, setBonuses, true);
     addLog(`You summon ${bc.name}!`, 'summon');
-    if (bc.hasRush) addLog(`⚡ ${announce('rushPlay')}`, 'ability');
+    if (bc.hasRush) addLog(`${announce('rushPlay')}`, 'ability');
     renderAll();
     G.isAnimating = false;
 }
@@ -574,8 +598,8 @@ async function processEndTurn(board, boardId) {
     if (chaosCards.length) {
         const lucky = Math.random() < 0.5;
         const cards = board.filter(c => c);
-        if (lucky) { cards.forEach(c => c.synergyAtkBonus += Math.ceil(c.currentAtk * 0.20)); addLog('🎲 CHAT DECIDES: +20% ATK!', 'ability'); }
-        else { cards.forEach(c => c.synergyAtkBonus -= Math.ceil(c.currentAtk * 0.15)); addLog('🎲 CHAT DECIDES: -15% ATK! KEKW', 'damage'); }
+        if (lucky) { cards.forEach(c => c.synergyAtkBonus += Math.ceil(c.currentAtk * 0.20)); addLog('CHAT DECIDES: +20% ATK!', 'ability'); }
+        else { cards.forEach(c => c.synergyAtkBonus -= Math.ceil(c.currentAtk * 0.15)); addLog('CHAT DECIDES: -15% ATK! KEKW', 'damage'); }
     }
     renderBoards();
 }
@@ -714,6 +738,26 @@ function endGame(won) {
     title.textContent = won ? 'VICTORY!' : 'DEFEAT';
     title.className = 'overlay-title ' + (won ? 'victory' : 'defeat');
     showAnnounce(announce(won ? 'victory' : 'defeat'));
+    
+    // ===== BATTLE REWARDS via NW_WALLET =====
+    let rewardHTML = '';
+    let reward = { gold: 0, wood: 0, streak: 0 };
+    try {
+        if (typeof NW_WALLET !== 'undefined' && NW_WALLET.recordBattle) {
+            reward = NW_WALLET.recordBattle(won);
+            const parts = [];
+            if (reward.gold > 0) parts.push(`<span style="color:#ffd700">+${reward.gold} Gold</span>`);
+            if (reward.wood > 0) parts.push(`<span style="color:#00ff88">+${reward.wood} Sacred Log!</span>`);
+            if (won && reward.streak >= 3) parts.push(`<span style="color:#ff6b00">${reward.streak} Win Streak!</span>`);
+            if (parts.length > 0) {
+                rewardHTML = `<div class="battle-rewards" style="margin-top:12px;padding:10px;background:rgba(255,215,0,0.1);border:1px solid rgba(255,215,0,0.3);border-radius:10px;text-align:center">
+                    <div style="font-size:11px;opacity:0.7;margin-bottom:4px">REWARDS</div>
+                    <div style="font-size:16px;font-weight:700;display:flex;gap:12px;justify-content:center">${parts.join('')}</div>
+                </div>`;
+            }
+        }
+    } catch (e) { console.warn('[BATTLE] Reward error:', e); }
+    
     $('gameOverStats').innerHTML = `
         <div>Damage Dealt: <strong>${G.stats.damageDealt}</strong></div>
         <div>Face Damage: <strong>${G.stats.faceDamage}</strong></div>
@@ -722,7 +766,8 @@ function endGame(won) {
         <div>Abilities: <strong>${G.stats.abilitiesFired}</strong></div>
         <div>Synergies: <strong>${G.stats.synergiesActivated}</strong></div>
         <div>Max Combo: <strong>${G.stats.maxCombo}</strong></div>
-        <div>Turns: <strong>${G.turn}</strong></div>`;
+        <div>Turns: <strong>${G.turn}</strong></div>
+        ${rewardHTML}`;
     try {
         const p = JSON.parse(localStorage.getItem('nw_profile') || '{}');
         if (won) p.wins = (p.wins || 0) + 1; else p.losses = (p.losses || 0) + 1;
@@ -744,7 +789,7 @@ function showCardModal(card) {
             <div class="modal-stat"><div class="modal-stat-val" style="color:#ef5350">${gs.atk}</div><div class="modal-stat-label">ATK</div></div>
             <div class="modal-stat"><div class="modal-stat-val" style="color:#66bb6a">${gs.hp}</div><div class="modal-stat-label">HP</div></div>
         </div>
-        <div class="modal-abilities">${ab.map(a => `<span class="modal-ability">${abMap[a]?.icon || ''} ${a}: ${abMap[a]?.desc || ''}</span>`).join('')}</div>`;
+        <div class="modal-abilities">${ab.map(a => { const ic = typeof NW_ICONS !== 'undefined' ? NW_ICONS.ability(a, 14) : ''; return `<span class="modal-ability">${ic} ${a}: ${abMap[a]?.desc || ''}</span>`; }).join('')}</div>`;
     $('cardModal').classList.remove('hidden');
 }
 function showBoardCardModal(card) {
@@ -757,7 +802,7 @@ function showBoardCardModal(card) {
             <div class="modal-stat"><div class="modal-stat-val" style="color:#ef5350">${getEffAtk(card)}</div><div class="modal-stat-label">ATK</div></div>
             <div class="modal-stat"><div class="modal-stat-val" style="color:#66bb6a">${card.currentHp}/${card.maxHp}</div><div class="modal-stat-label">HP</div></div>
         </div>
-        <div class="modal-abilities">${ab.map(a => `<span class="modal-ability">${abMap[a]?.icon || ''} ${a}: ${abMap[a]?.desc || ''}</span>`).join('')}</div>`;
+        <div class="modal-abilities">${ab.map(a => { const ic = typeof NW_ICONS !== 'undefined' ? NW_ICONS.ability(a, 14) : ''; return `<span class="modal-ability">${ic} ${a}: ${abMap[a]?.desc || ''}</span>`; }).join('')}</div>`;
     $('cardModal').classList.remove('hidden');
 }
 window.closeCardModal = function(e) { if (e.target.id === 'cardModal') $('cardModal').classList.add('hidden'); };
@@ -768,8 +813,12 @@ window.selectDiff = function(diff) {
     document.querySelector(`[data-diff="${diff}"]`)?.classList.add('selected');
     difficulty = diff;
     const names = { casual: ['Sleepy Bot', 'AFK Andy'], ranked: ['Try-Hard Tina', 'Meta Knight'], boss: ['RegginA, The Eternal Flame', 'Guild Destroyer'] };
-    const avatars = { casual: '🤖', ranked: '🏆', boss: '💀' };
-    $('enemyAvatar').textContent = avatars[diff] || '🤖';
+    const avatarSVGs = {
+        casual: '<svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><rect x="5" y="8" width="14" height="12" rx="3"/><circle cx="9" cy="13" r="1.5"/><circle cx="15" cy="13" r="1.5"/><rect x="10" y="16" width="4" height="2" rx="1"/><line x1="12" y1="2" x2="12" y2="5" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="2" r="1.5"/></svg>',
+        ranked: '<svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><path d="M19 5h-2V3H7v2H5c-1.1 0-2 .9-2 2v1c0 2.55 1.92 4.63 4.39 4.94.63 1.5 1.98 2.63 3.61 2.96V19H7v2h10v-2h-4v-3.1c1.63-.33 2.98-1.46 3.61-2.96C19.08 12.63 21 10.55 21 8V7c0-1.1-.9-2-2-2z"/></svg>',
+        boss: '<svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><path d="M12 2C7.58 2 4 5.58 4 10c0 2.76 1.34 5.2 3.4 6.72L7 21h3l.5-2h3l.5 2h3l-.4-4.28C18.66 15.2 20 12.76 20 10c0-4.42-3.58-8-8-8zm-2.5 10a1.5 1.5 0 110-3 1.5 1.5 0 010 3zm5 0a1.5 1.5 0 110-3 1.5 1.5 0 010 3z"/></svg>'
+    };
+    $('enemyAvatar').innerHTML = avatarSVGs[diff] || avatarSVGs.casual;
     $('enemyName').textContent = (names[diff] || names.casual)[Math.floor(Math.random() * (names[diff] || names.casual).length)];
 };
 
@@ -826,10 +875,79 @@ async function init() {
         }
     });
 
-    console.log('[Battle v7.0] Ready!');
+    console.log('[Battle v7.1] Ready!');
 }
+
+// ═══ TAP-TO-ZOOM: Marvel Snap-style card preview ═══
+function showCardZoom(card) {
+    const zoom = $('cardZoom');
+    const content = $('cardZoomContent');
+    if (!zoom || !content) return;
+    const ab = card.abilities || [];
+    const abMap = typeof NW_ABILITIES !== 'undefined' ? NW_ABILITIES : {};
+    const abilityHTML = ab.map(a => {
+        const iconSvg = typeof NW_ICONS !== 'undefined' ? NW_ICONS.ability(a, 14) : (abMap[a]?.icon || '');
+        return `<span class="cz-ability">${iconSvg} ${a}: ${abMap[a]?.desc || ''}</span>`;
+    }).join('');
+    content.innerHTML = `
+        <img class="cz-art" src="${getImg(card)}" onerror="this.src='/static/images/cards/placeholder.webp'" decoding="async">
+        <div class="cz-body">
+            <div class="cz-name">${card.name}</div>
+            <div class="cz-role">${(card.role || '').replace(/_/g, ' ')}</div>
+            <div class="cz-stats">
+                <div class="cz-stat"><div class="cz-stat-val" style="color:#ef5350">${getEffAtk(card)}</div><div class="cz-stat-label">ATK</div></div>
+                <div class="cz-stat"><div class="cz-stat-val" style="color:#66bb6a">${card.currentHp}/${card.maxHp}</div><div class="cz-stat-label">HP</div></div>
+                ${card.baseCrit > 0 ? `<div class="cz-stat"><div class="cz-stat-val" style="color:#ffd700">${getEffCrit(card)}%</div><div class="cz-stat-label">CRIT</div></div>` : ''}
+                ${card.baseDodge > 0 || card.hasDodge ? `<div class="cz-stat"><div class="cz-stat-val" style="color:#00e5ff">${getEffDodge(card)}%</div><div class="cz-stat-label">DODGE</div></div>` : ''}
+            </div>
+            <div class="cz-abilities">${abilityHTML}</div>
+            <div class="cz-hint">Tap anywhere to close</div>
+        </div>`;
+    zoom.classList.remove('hidden');
+}
+window.closeCardZoom = function(e) {
+    if (e.target.id === 'cardZoom' || e.target.closest('.card-zoom')) {
+        $('cardZoom').classList.add('hidden');
+    }
+};
 
 if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
 else init();
+
+// ═══ MINIMAL API for assist systems (coach, smart-glow, auto-play) ═══
+// Read-only state + action triggers. Battle logic stays in this IIFE.
+window.NW_BATTLE = {
+  getState: () => ({
+    playerHP: G.playerHP, enemyHP: G.enemyHP,
+    energy: G.energy, maxEnergy: G.maxEnergy,
+    turn: G.turn, isPlayerTurn: G.isPlayerTurn,
+    isAnimating: G.isAnimating,
+    playerHand: G.playerHand,
+    playerBoard: G.playerBoard,
+    enemyBoard: G.enemyBoard,
+    selectedCard: G.selectedCard,
+    selectedAttacker: selectedAttacker,
+    difficulty: difficulty
+  }),
+  getEffAtk, getEffCrit, getEffDodge,
+  // Actions — same as clicking the UI elements
+  selectCard: (idx) => {
+    if (idx < 0 || idx >= G.playerHand.length) return;
+    const card = G.playerHand[idx];
+    if (!card || !card.gameStats || card.gameStats.cost > G.energy || !G.isPlayerTurn || G.isAnimating) return;
+    G.selectedCard = idx;
+    renderHand(); highlightEmptySlots();
+  },
+  playToSlot: (slotIdx) => { if (G.selectedCard !== null) playCard(slotIdx); },
+  selectAttacker: (idx) => {
+    const c = G.playerBoard[idx];
+    if (c && c.canAttackThisTurn && !c.hasAttacked && c.stealthTurns <= 0) {
+      selectedAttacker = idx; renderBoards(); updateAttackBtn();
+    }
+  },
+  attackTarget: (idx) => attackTarget(idx),
+  attackFace: () => attackFace(),
+  endTurn: () => endTurn()
+};
 
 })();
