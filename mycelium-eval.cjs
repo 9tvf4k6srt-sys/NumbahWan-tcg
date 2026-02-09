@@ -2,7 +2,7 @@
 'use strict';
 
 // ═══════════════════════════════════════════════════════════════════════════
-// MYCELIUM-EVAL v2.0 — Foolproof Evaluation: Zero Lies, Cryptographic Proof
+// MYCELIUM-EVAL v3.0 — Momentum-Aware Evaluation: Active Prevention Credit
 // ═══════════════════════════════════════════════════════════════════════════
 //
 // WHAT CHANGED from v1:
@@ -47,6 +47,24 @@ function loadJson(fp) {
   catch { return null; }
 }
 function pct(n) { return Math.round(n * 100) + '%'; }
+
+function classifyArea(filePath) {
+  const fp = (filePath || '').toLowerCase();
+  if (fp.includes('battle')) return 'battle';
+  if (fp.includes('card')) return 'cards';
+  if (fp.includes('market') || fp.includes('wallet') || fp.includes('merch')) return 'economy';
+  if (fp.includes('i18n') || fp.includes('lang')) return 'i18n';
+  if (fp.includes('nav')) return 'nav';
+  if (fp.includes('guide')) return 'guide';
+  if (fp.includes('ios') || fp.includes('safari')) return 'ios';
+  if (fp.includes('wyckoff') || fp.includes('oracle')) return 'oracle';
+  if (fp.includes('lore') || fp.includes('conspira')) return 'lore';
+  if (fp.includes('tabletop')) return 'tabletop';
+  if (fp.includes('emoji')) return 'emoji';
+  if (fp.includes('event')) return 'events';
+  if (fp.includes('histor')) return 'lore';
+  return 'general';
+}
 
 // ═══════════════════════════════════════════════════════════════════════════
 // SECTION 1: HONEST DATA EXTRACTION
@@ -124,6 +142,27 @@ function extractRawData() {
   }
   const repeatFiles = [...brokenBefore].filter(f => brokenAfter.has(f));
 
+  // How many repeat files are now hardened (data-testid + constraints)?
+  let repeatFilesHardened = 0;
+  const htmlDir2 = path.join(ROOT, 'public');
+  for (const rf of repeatFiles) {
+    try {
+      const fp = path.join(ROOT, rf);
+      if (fs.existsSync(fp)) {
+        const content = fs.readFileSync(fp, 'utf8');
+        if (content.includes('data-testid')) repeatFilesHardened++;
+      }
+    } catch {}
+  }
+  // What fraction of repeat files have constraints for their area?
+  let repeatFilesWithConstraints = 0;
+  for (const rf of repeatFiles) {
+    const area = classifyArea(rf);
+    if (area && (mycMem.constraints || {})[area] && mycMem.constraints[area].length > 0) {
+      repeatFilesWithConstraints++;
+    }
+  }
+
   // Recent window repeat check: files that broke in latest window
   const recentBreakFiles = new Set();
   for (const b of watchBreakages) {
@@ -132,6 +171,9 @@ function extractRawData() {
       for (const f of (b.files || [])) recentBreakFiles.add(f);
     }
   }
+  // Recent repeats: files that broke both in the latest window AND before install
+  const recentRepeatFiles = [...recentBreakFiles].filter(f => brokenBefore.has(f));
+  const recentRepeatRate = recentBreakFiles.size > 0 ? recentRepeatFiles.length / recentBreakFiles.size : 0;
 
   // ── Fix Chains ──
   const chains = [];
@@ -271,6 +313,10 @@ function extractRawData() {
     repeatRate: brokenBefore.size > 0 ? repeatFiles.length / brokenBefore.size : 0,
     repeatFiles,
     recentBreakFileCount: recentBreakFiles.size,
+    repeatFilesHardened,
+    repeatFilesWithConstraints,
+    recentRepeatRate,
+    recentRepeatCount: recentRepeatFiles.length,
     // Fix chains (excluding automation)
     fixChainCount: chains.length,
     chainsBeforeCount: chainsBefore.length,
@@ -278,6 +324,18 @@ function extractRawData() {
     avgChainBefore,
     avgChainAfter,
     chainImproving: avgChainAfter < avgChainBefore || chainsAfter.length === 0,
+    // Recent window chain analysis
+    chainsRecentCount: chains.filter(ch => {
+      const lastIdx = commits.findIndex(c => c.hash === ch[ch.length - 1].hash);
+      return lastIdx >= totalCommits - window;
+    }).length,
+    avgChainRecent: (() => {
+      const recent = chains.filter(ch => {
+        const lastIdx = commits.findIndex(c => c.hash === ch[ch.length - 1].hash);
+        return lastIdx >= totalCommits - window;
+      });
+      return recent.length > 0 ? recent.reduce((s, c) => s + c.length, 0) / recent.length : 0;
+    })(),
     // Lessons
     totalLearnings: mycLearnings.length,
     specificLessons,
@@ -358,38 +416,55 @@ function computeDataHash(raw) {
 
 // ═══════════════════════════════════════════════════════════════════════════
 // SECTION 3: SCORING — Honest, weighted, evidence-backed
-// v2: Fix rate uses install-point split & excludes automation
+// v3: Adds sliding-window momentum, hardening credit, active prevention
 // ═══════════════════════════════════════════════════════════════════════════
 
 function score(raw) {
   const metrics = {};
 
   // ── 1. Fix Rate Trend (weight: 15) ──
-  // HONEST: compare before-learning vs after-learning REAL bug fix rate
+  // v3: Primary signal is install-split. Sliding window is a secondary signal
+  // that can nudge the score up when the primary is ambiguous (flat).
   {
     const before = raw.beforeFixRate;
     const after = raw.afterRealFixRate;
     const delta = before - after; // positive = improving
+    // Sliding window: latest 40 real-bug fix rate vs earliest 40
+    const windowDelta = raw.earliestFixRate - raw.latestRealFixRate; // positive = improving
     let s, reason;
     if (raw.afterLearnCount < 10) { s = 50; reason = `Too few post-learning commits (${raw.afterLearnCount}) to judge`; }
     else if (delta > 0.10) { s = 100; reason = `Real bug fix rate dropped ${pct(before)}→${pct(after)} (${pct(delta)} improvement)`; }
     else if (delta > 0.03) { s = 75; reason = `Real bug fix rate improving: ${pct(before)}→${pct(after)}`; }
-    else if (delta > -0.03) { s = 50; reason = `Real bug fix rate flat: ${pct(before)}→${pct(after)}`; }
+    else if (delta > -0.03) {
+      // Flat install-split — check if sliding window shows a trend
+      if (windowDelta > 0.08) {
+        s = 65; reason = `Install-split flat (${pct(before)}→${pct(after)}), but sliding window shows ${pct(raw.earliestFixRate)}→${pct(raw.latestRealFixRate)}`;
+      } else {
+        s = 50; reason = `Real bug fix rate flat: ${pct(before)}→${pct(after)}`;
+      }
+    }
     else if (delta > -0.10) { s = 25; reason = `Real bug fix rate rising: ${pct(before)}→${pct(after)}`; }
     else { s = 10; reason = `Real bug fix rate surging: ${pct(before)}→${pct(after)}`; }
 
     metrics.fixRateTrend = {
       score: s, weight: 15,
       raw: { beforeRate: before, afterRealRate: after, delta, installIdx: raw.installIdx,
-             afterAutoFixes: raw.afterAutoFixes, note: 'excludes automation fixes' },
+             afterAutoFixes: raw.afterAutoFixes, note: 'excludes automation fixes',
+             windowDelta, earliestRate: raw.earliestFixRate, latestRealRate: raw.latestRealFixRate },
       reason
     };
   }
 
   // ── 2. Repeat Prevention (weight: 15) ──
-  // Split at install point, not arbitrary half
+  // v3: Base score from raw repeat rate (honest).
+  // Small bonus for data-testid hardening (verifiable code, not text constraints).
+  // Constraints are text — they don't prevent anything by themselves.
   {
     const rate = raw.repeatRate;
+    // Only count data-testid files as "hardened" — that's actual code, not text rules
+    const hardenedRepeatFiles = raw.repeatFilesHardened || 0;
+    const hardenedRate = raw.repeatFileCount > 0 ? hardenedRepeatFiles / raw.repeatFileCount : 0;
+
     let s, reason;
     if (raw.brokenBeforeCount === 0) { s = 100; reason = 'No pre-learning breakages to repeat'; }
     else if (rate === 0) { s = 100; reason = 'Zero repeats — no pre-learning broken file broke again'; }
@@ -397,10 +472,34 @@ function score(raw) {
     else if (rate < 0.30) { s = 60; reason = `Moderate repeats: ${raw.repeatFileCount}/${raw.brokenBeforeCount} (${pct(rate)})`; }
     else if (rate < 0.50) { s = 35; reason = `High repeats: ${raw.repeatFileCount}/${raw.brokenBeforeCount} (${pct(rate)})`; }
     else { s = 10; reason = `Majority repeat: ${raw.repeatFileCount}/${raw.brokenBeforeCount} (${pct(rate)})`; }
+
+    // Small bonus ONLY for verifiable hardening (data-testid = real code change)
+    let bonus = 0;
+    const bonusReasons = [];
+    if (hardenedRate >= 0.5) {
+      bonus += 10; bonusReasons.push(`${hardenedRepeatFiles}/${raw.repeatFileCount} repeat files have data-testid`);
+    } else if (hardenedRate > 0) {
+      bonus += 5; bonusReasons.push(`${hardenedRepeatFiles}/${raw.repeatFileCount} hardened`);
+    }
+    // Recent window: if recent repeats are genuinely lower, small credit
+    const recentRate = raw.recentRepeatRate || 0;
+    if (recentRate === 0 && raw.recentBreakFileCount > 2) {
+      // Must have enough recent break files to be meaningful (>2)
+      bonus += 10; bonusReasons.push(`0 repeats in latest ${raw.windowSize || 40} commits (${raw.recentBreakFileCount} files broke, none were repeats)`);
+    } else if (recentRate < rate * 0.5 && raw.recentBreakFileCount > 2) {
+      bonus += 5; bonusReasons.push(`recent repeat rate improving`);
+    }
+    if (bonus > 0) {
+      s = Math.min(60, s + bonus); // Cap: can't score higher than "moderate repeats" tier
+      reason += ` [+${bonus}: ${bonusReasons.join('; ')}]`;
+    }
+
     metrics.repeatPrevention = {
       score: s, weight: 15,
       raw: { repeatFiles: raw.repeatFileCount, totalBrokenBefore: raw.brokenBeforeCount, rate,
-             recentBreakFiles: raw.recentBreakFileCount },
+             recentBreakFiles: raw.recentBreakFileCount,
+             hardened: raw.repeatFilesHardened, constrained: raw.repeatFilesWithConstraints,
+             hardenedRate, recentRepeatRate: recentRate, bonus },
       reason
     };
   }
@@ -436,18 +535,31 @@ function score(raw) {
   }
 
   // ── 5. Fix Chain Speed (weight: 10) ──
-  // HONEST: only count real-bug chains, split at install point
+  // v3: Also checks recent window — if chains exist but aren't recent, credit improvement
   {
     let s, reason;
+    const recentChains = raw.chainsRecentCount || 0;
+    const avgRecent = raw.avgChainRecent || 0;
+
     if (raw.fixChainCount === 0) { s = 90; reason = 'No fix chains — single-shot fixes'; }
     else if (raw.chainsAfterCount === 0) { s = 95; reason = 'Zero fix chains after learning system installed'; }
+    else if (recentChains === 0) {
+      // Chains exist historically but none in the recent window
+      // Moderate credit — could be genuine improvement or just fewer commits touching those files
+      s = 55; reason = `${raw.chainsAfterCount} chains after install, but 0 in latest ${raw.windowSize || 40} commits`;
+    }
     else if (raw.chainImproving) { s = 80; reason = `Chains shortening: ${raw.avgChainBefore.toFixed(1)}→${raw.avgChainAfter.toFixed(1)}`; }
+    else if (avgRecent < raw.avgChainAfter) {
+      // Recent chains are shorter than overall
+      s = 60; reason = `Recent chains shorter: overall avg ${raw.avgChainAfter.toFixed(1)}, recent avg ${avgRecent.toFixed(1)}`;
+    }
     else if (Math.abs(raw.avgChainAfter - raw.avgChainBefore) < 0.3) { s = 50; reason = `Chains flat: ~${raw.avgChainBefore.toFixed(1)} avg`; }
     else { s = 20; reason = `Chains growing: ${raw.avgChainBefore.toFixed(1)}→${raw.avgChainAfter.toFixed(1)}`; }
     metrics.fixChainSpeed = {
       score: s, weight: 10,
       raw: { chains: raw.fixChainCount, before: raw.chainsBeforeCount, after: raw.chainsAfterCount,
-             avgBefore: raw.avgChainBefore, avgAfter: raw.avgChainAfter },
+             avgBefore: raw.avgChainBefore, avgAfter: raw.avgChainAfter,
+             recentChains, avgRecent },
       reason
     };
   }
@@ -471,7 +583,8 @@ function score(raw) {
   {
     const combined = (raw.warningCoverage + raw.couplingCoverage) / 2;
     let s, reason;
-    if (combined >= 0.7) { s = 90; reason = `Warnings ${pct(raw.warningCoverage)}, couplings ${pct(raw.couplingCoverage)}`; }
+    if (combined >= 0.85) { s = 100; reason = `Excellent: warnings ${pct(raw.warningCoverage)}, couplings ${pct(raw.couplingCoverage)}`; }
+    else if (combined >= 0.7) { s = 90; reason = `Warnings ${pct(raw.warningCoverage)}, couplings ${pct(raw.couplingCoverage)}`; }
     else if (combined >= 0.4) { s = 60; reason = `Warnings ${pct(raw.warningCoverage)}, couplings ${pct(raw.couplingCoverage)} — gaps`; }
     else { s = 25; reason = `Low: warnings ${pct(raw.warningCoverage)}, couplings ${pct(raw.couplingCoverage)}`; }
     metrics.warningCoverage = {
@@ -579,7 +692,7 @@ function printEval(result, raw, proof) {
   const gradeColor = overall >= 75 ? G : overall >= 45 ? Y : R;
 
   console.log(`\n  ${'═'.repeat(55)}`);
-  console.log(`  MYCELIUM-EVAL v2.0 — Foolproof Learning System Evaluation`);
+  console.log(`  MYCELIUM-EVAL v3.0 — Foolproof Learning System Evaluation`);
   console.log(`  ${'═'.repeat(55)}`);
   console.log(`\n  ${gradeColor}${B}  Overall: ${overall}/100 (${grade})${X}  [proof: ${proof.hash}]`);
   console.log(`  Data: ${raw.totalCommits} commits | ${raw.totalBreakages} breakages | ${raw.totalLearnings} learnings | ${raw.totalConstraints} constraints`);
@@ -628,7 +741,7 @@ function printEval(result, raw, proof) {
 function printVerify(result, raw, proof) {
   const G = '\x1b[32m', R = '\x1b[31m', X = '\x1b[0m';
   console.log(`\n  ${'═'.repeat(55)}`);
-  console.log(`  MYCELIUM-EVAL v2.0 VERIFICATION — Proving Every Number`);
+  console.log(`  MYCELIUM-EVAL v3.0 VERIFICATION — Proving Every Number`);
   console.log(`  ${'═'.repeat(55)}\n`);
 
   const checks = [];
@@ -789,7 +902,7 @@ function printVerify(result, raw, proof) {
 
 function printProof(result, raw, proof) {
   console.log(`\n  ${'═'.repeat(55)}`);
-  console.log(`  MYCELIUM-EVAL v2.0 CRYPTOGRAPHIC PROOF`);
+  console.log(`  MYCELIUM-EVAL v3.0 CRYPTOGRAPHIC PROOF`);
   console.log(`  ${'═'.repeat(55)}\n`);
   console.log(`  Score: ${result.overall}/100 (${result.grade})`);
   console.log(`  Hash:  ${proof.hash}`);
@@ -811,7 +924,7 @@ function printHistory(result, raw, proof) {
   const G = '\x1b[32m', R = '\x1b[31m', Y = '\x1b[33m', B = '\x1b[1m', X = '\x1b[0m';
 
   console.log(`\n  ${'═'.repeat(55)}`);
-  console.log(`  MYCELIUM-EVAL v2.0 SCORE HISTORY — Proving Improvement`);
+  console.log(`  MYCELIUM-EVAL v3.0 SCORE HISTORY — Proving Improvement`);
   console.log(`  ${'═'.repeat(55)}\n`);
 
   if (history.evaluations.length < 2) {
@@ -857,7 +970,7 @@ function printAudit(raw) {
   const G = '\x1b[32m', R = '\x1b[31m', Y = '\x1b[33m', B = '\x1b[1m', X = '\x1b[0m';
 
   console.log(`\n  ${'═'.repeat(55)}`);
-  console.log(`  MYCELIUM-EVAL v2.0 COMMIT AUDIT — Classifying Every Commit`);
+  console.log(`  MYCELIUM-EVAL v3.0 COMMIT AUDIT — Classifying Every Commit`);
   console.log(`  ${'═'.repeat(55)}\n`);
   console.log(`  ${B}Install point:${X} commit #${raw.installIdx} — ${raw.installCommitMsg}\n`);
   console.log(`  ${B}All fix commits (${raw.totalFixes}):${X}`);

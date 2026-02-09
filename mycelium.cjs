@@ -1862,6 +1862,82 @@ function guard(files) {
   }
   console.log('');
 
+  // ── FILE-SPECIFIC GUARD: check staged diffs against known failure patterns ──
+  // For files with 5+ breaks, extract root-cause themes from watch data
+  // and check if the diff contains those patterns. This is the upgrade from
+  // "passive warnings" to "active blocking."
+  try {
+    const watchPath = path.join(__dirname, '.mycelium', 'watch.json');
+    if (fs.existsSync(watchPath)) {
+      const watchData = JSON.parse(fs.readFileSync(watchPath, 'utf8'));
+      const risks = watchData.risks || {};
+
+      // Get the actual diff for staged files
+      let diff = '';
+      try { diff = run('git diff --cached 2>/dev/null').toLowerCase(); } catch {}
+      if (!diff) try { diff = run('git diff 2>/dev/null').toLowerCase(); } catch {}
+
+      const highRiskFiles = files.filter(f => {
+        const r = risks[f];
+        return r && r.breakCount >= 5;
+      });
+
+      if (highRiskFiles.length > 0) {
+        console.log('## File-Specific Risk Check (5+ break history)');
+
+        for (const f of highRiskFiles) {
+          const r = risks[f];
+          const breakCount = r.breakCount || 0;
+          const lessons = r.lessons || [];
+
+          // Extract failure patterns from lessons
+          const patterns = [];
+          for (const lesson of lessons) {
+            const text = (lesson.lesson || lesson || '').toLowerCase();
+            // Extract key problem phrases
+            if (text.includes('innerhtml')) patterns.push('innerHTML');
+            if (text.includes('i18n') || text.includes('data-i18n')) patterns.push('i18n/translation');
+            if (text.includes('ios') || text.includes('safari') || text.includes('webkit')) patterns.push('iOS/Safari');
+            if (text.includes('mobile') || text.includes('320px') || text.includes('responsive')) patterns.push('mobile/responsive');
+            if (text.includes('touch') || text.includes('click')) patterns.push('touch/click events');
+            if (text.includes('flex') || text.includes('overflow') || text.includes('layout')) patterns.push('layout/flex');
+            if (text.includes('font') || text.includes('text-align')) patterns.push('font/text');
+            if (text.includes('coupled') || text.includes('co-change')) patterns.push('coupled file');
+            if (text.includes('load order') || text.includes('init')) patterns.push('load order/init');
+          }
+          const uniquePatterns = [...new Set(patterns)];
+
+          // Check if diff touches this file and contains risky patterns
+          const fileDiffStart = diff.indexOf(f.toLowerCase());
+          if (fileDiffStart === -1) continue; // file not in diff
+
+          const fileDiff = diff.slice(fileDiffStart, diff.indexOf('diff --git', fileDiffStart + 1) || diff.length);
+
+          const triggeredPatterns = [];
+          for (const p of uniquePatterns) {
+            const keywords = p.toLowerCase().split('/');
+            if (keywords.some(k => fileDiff.includes(k))) {
+              triggeredPatterns.push(p);
+            }
+          }
+
+          if (triggeredPatterns.length > 0) {
+            console.log(`  🔴 ${f} (broke ${breakCount}x) — RISK: diff touches ${triggeredPatterns.join(', ')}`);
+            console.log(`     Known failure themes from ${lessons.length} lessons:`);
+            for (const p of triggeredPatterns) {
+              console.log(`       → ${p}: caused previous breakages — verify this change carefully`);
+            }
+            totalWarnings += triggeredPatterns.length;
+          } else if (fileDiff.length > 0) {
+            console.log(`  🟡 ${f} (broke ${breakCount}x) — editing a fragile file. Known patterns: ${uniquePatterns.slice(0, 4).join(', ') || 'general'}`);
+            totalWarnings++;
+          }
+        }
+        console.log('');
+      }
+    }
+  } catch (e) { /* file-specific guard is best-effort */ }
+
   // Enforce mode: return warning count so callers can block on violations
   return totalWarnings;
 }
