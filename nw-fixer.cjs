@@ -192,6 +192,278 @@ function computeGwEval(mem) {
   };
 }
 
+// ─── Phase 1.5: DIAGNOSE — Find friction points, trace root causes ───
+//
+// For each weak metric (<60 score), this engine:
+//   1. DISCOVERS: which metric is weak and by how much
+//   2. TRACES: which specific files/commits/patterns caused it
+//   3. ROOT-CAUSES: why those files keep failing (not word clouds — cause chains)
+//   4. PRESCRIBES: specific, actionable fix instructions
+//
+// Output: array of { metric, score, rootCauses[], prescriptions[] }
+// The fixer reads these prescriptions to know EXACTLY what to fix.
+
+function diagnose(evalData) {
+  const evalResult = loadJson(path.join(ROOT, '.nw-eval-result.json'));
+  if (!evalResult || !evalResult.metrics) return [];
+
+  const gwMem = loadJson(GW_MEM_PATH) || {};
+  const nwMem = loadJson(NW_MEM_PATH) || {};
+  const commits = gwMem.commits || [];
+  const breakages = gwMem.breakages || [];
+  const risks = gwMem.risks || {};
+
+  // Automation filter
+  const autoPatterns = ['self-heal', 'auto-fix', 'auto-eval', 'automation', 'wire gitwise', 'wire hooks', 'learning system'];
+  const isAuto = (msg) => autoPatterns.some(p => (msg || '').toLowerCase().includes(p));
+
+  const installIdx = evalResult.honestSplit?.installIdx || Math.floor(commits.length / 2);
+  const diagnoses = [];
+
+  // ── Scan all metrics, diagnose weak ones ──
+  for (const [metricName, metric] of Object.entries(evalResult.metrics)) {
+    if (metric.score >= 60) continue; // healthy — skip
+
+    const diagnosis = {
+      metric: metricName,
+      score: metric.score,
+      weight: metric.weight,
+      reason: metric.reason,
+      potentialGain: Math.round((100 - metric.score) * metric.weight / 100),
+      rootCauses: [],
+      prescriptions: [],
+      evidence: { files: [], commits: [], patterns: [] }
+    };
+
+    // ════════════════════════════════════════════════════════════════
+    // REPEAT PREVENTION — Why do the same files keep breaking?
+    // ════════════════════════════════════════════════════════════════
+    if (metricName === 'repeatPrevention') {
+      const brokenBefore = new Set(), brokenAfter = new Set();
+      for (const b of breakages) {
+        const idx = commits.findIndex(c => c.hash === b.fixHash);
+        for (const f of (b.files || [])) {
+          if (idx < installIdx) brokenBefore.add(f); else brokenAfter.add(f);
+        }
+      }
+      const repeatFiles = [...brokenBefore].filter(f => brokenAfter.has(f));
+
+      // Group repeat files by break count
+      const byBreaks = repeatFiles.map(f => ({
+        file: f,
+        breakCount: (risks[f] || {}).breakCount || 0,
+        lessons: (risks[f] || {}).lessons || [],
+        hasConstraints: ((risks[f] || {}).constraints || []).length > 0,
+        escalated: !!(risks[f] || {}).escalated,
+        coupledWith: Object.entries(gwMem.couplings || {}).filter(([pair, count]) => count >= 5 && pair.includes(f)).map(([pair]) => pair.replace(f, '').replace('||', '').trim()),
+      })).sort((a, b) => b.breakCount - a.breakCount);
+
+      diagnosis.evidence.files = byBreaks;
+
+      // Root cause analysis per file
+      for (const file of byBreaks.slice(0, 5)) {
+        // Find ALL breakages for this file and their lessons
+        const fileBreakages = breakages.filter(b => (b.files || []).includes(file.file));
+        const fixCommits = fileBreakages.map(b => commits.find(c => c.hash === b.fixHash)).filter(Boolean);
+        const lessons = fileBreakages.map(b => b.lesson || '').filter(l => l.length > 10);
+
+        // Analyze patterns: same type of fix? same coupled files? same area?
+        const fixTypes = fixCommits.map(c => {
+          const msg = (c.msg || '').toLowerCase();
+          if (msg.includes('mobile') || msg.includes('responsive') || msg.includes('overflow')) return 'mobile/responsive';
+          if (msg.includes('i18n') || msg.includes('lang')) return 'i18n';
+          if (msg.includes('ios') || msg.includes('safari')) return 'ios';
+          if (msg.includes('overlap') || msg.includes('ui') || msg.includes('css')) return 'ui/layout';
+          if (msg.includes('null') || msg.includes('error') || msg.includes('crash')) return 'null/error';
+          if (msg.includes('event') || msg.includes('click') || msg.includes('touch')) return 'events';
+          return 'other';
+        });
+        const typeFreq = {};
+        for (const t of fixTypes) typeFreq[t] = (typeFreq[t] || 0) + 1;
+        const dominantType = Object.entries(typeFreq).sort((a, b) => b[1] - a[1])[0];
+
+        const rootCause = {
+          file: file.file,
+          breakCount: file.breakCount,
+          dominantFailureType: dominantType ? dominantType[0] : 'unknown',
+          failureTypeCount: dominantType ? dominantType[1] : 0,
+          coupledFiles: file.coupledWith,
+          hasLessons: file.lessons.length > 0,
+          hasConstraints: file.hasConstraints,
+          isHardened: file.escalated,
+          lastLesson: lessons.length > 0 ? lessons[lessons.length - 1].slice(0, 120) : 'none',
+          causeChain: lessons.length >= 2
+            ? `Broke ${file.breakCount}x, mostly ${dominantType ? dominantType[0] : '?'} issues. Has ${file.lessons.length} lessons but keeps breaking → lessons are NOT preventing recurrence. ${file.coupledWith.length > 0 ? `Coupled with ${file.coupledWith.length} other files that might need simultaneous fixes.` : ''}`
+            : `Broke ${file.breakCount}x with insufficient root-cause data to determine pattern.`
+        };
+        diagnosis.rootCauses.push(rootCause);
+      }
+
+      // Generate prescriptions
+      const worstFiles = byBreaks.filter(f => f.breakCount >= 5);
+      if (worstFiles.length > 0) {
+        diagnosis.prescriptions.push({
+          action: 'STRENGTHEN_CONSTRAINTS',
+          target: worstFiles.map(f => f.file),
+          detail: `These ${worstFiles.length} files have 5+ breaks each despite having lessons. The lessons are descriptive but not preventive. Need: (1) data-testid markers for automated testing, (2) specific pre-commit constraints that block known bad patterns, (3) coupled-file co-change enforcement.`,
+          expectedImpact: 'repeatPrevention +20-40 points'
+        });
+      }
+
+      const unconstrained = byBreaks.filter(f => !f.hasConstraints);
+      if (unconstrained.length > 0) {
+        diagnosis.prescriptions.push({
+          action: 'ADD_CONSTRAINTS',
+          target: unconstrained.map(f => f.file),
+          detail: `${unconstrained.length} repeat-breaking files have NO constraints. The guard system can't protect them. Need: per-file constraints extracted from their breakage lessons.`,
+          expectedImpact: 'repeatPrevention +10-15 points'
+        });
+      }
+
+      const coupled = byBreaks.filter(f => f.coupledWith.length > 0);
+      if (coupled.length > 0) {
+        diagnosis.prescriptions.push({
+          action: 'ENFORCE_CO_CHANGES',
+          target: coupled.map(f => ({ file: f.file, coupledWith: f.coupledWith })),
+          detail: `${coupled.length} files have coupling partners. When one changes, the other must too. The guard warns but doesn't enforce. Need: make coupling violations a blocking error.`,
+          expectedImpact: 'repeatPrevention +5-10 points'
+        });
+      }
+    }
+
+    // ════════════════════════════════════════════════════════════════
+    // FIX CHAIN SPEED — Why do fixes take multiple attempts?
+    // ════════════════════════════════════════════════════════════════
+    if (metricName === 'fixChainSpeed') {
+      const chains = [];
+      let cur = [];
+      for (const c of commits) {
+        if (c.isFix && !isAuto(c.msg)) {
+          if (cur.length > 0 && (c.files || []).some(f => (cur[cur.length - 1].files || []).includes(f))) { cur.push(c); continue; }
+          if (cur.length > 1) chains.push([...cur]);
+          cur = [c];
+        } else { if (cur.length > 1) chains.push([...cur]); cur = []; }
+      }
+      if (cur.length > 1) chains.push([...cur]);
+
+      for (const chain of chains) {
+        const idx0 = commits.indexOf(chain[0]);
+        const phase = idx0 < installIdx ? 'before-learning' : 'after-learning';
+        const files = [...new Set(chain.flatMap(c => c.files || []))];
+        const msgs = chain.map(c => (c.msg || '').slice(0, 80));
+
+        // Analyze WHY this chain happened
+        let causeType = 'unknown';
+        const allMsgs = msgs.join(' ').toLowerCase();
+        if (allMsgs.includes('mobile') || allMsgs.includes('ios') || allMsgs.includes('overflow')) causeType = 'progressive-mobile-fix';
+        else if (allMsgs.includes('ui') || allMsgs.includes('overlap') || allMsgs.includes('css')) causeType = 'ui-iteration';
+        else if (allMsgs.includes('restore') || allMsgs.includes('revert')) causeType = 'fix-broke-something-else';
+        else if (chain.length >= 4) causeType = 'no-root-cause-found';
+
+        diagnosis.rootCauses.push({
+          chainLength: chain.length,
+          phase,
+          files: files.slice(0, 5),
+          commits: msgs,
+          causeType,
+          causeChain: causeType === 'progressive-mobile-fix'
+            ? `${chain.length}-fix chain on mobile/responsive issues. Developer couldn't reproduce the bug locally and iterated via deploy-test cycles. Root cause: no mobile testing setup.`
+            : causeType === 'ui-iteration'
+            ? `${chain.length}-fix chain on UI/layout. Each fix revealed another issue. Root cause: no visual regression tests.`
+            : causeType === 'fix-broke-something-else'
+            ? `${chain.length}-fix chain where fixing one thing broke another. Root cause: tight coupling between files, no integration tests.`
+            : `${chain.length}-fix chain: developer couldn't find root cause and tried multiple approaches. Root cause: insufficient debugging tools or understanding of the codebase.`
+        });
+        diagnosis.evidence.commits.push(...chain.map(c => c.hash));
+      }
+
+      // Prescriptions for fix chains
+      const afterChains = chains.filter(ch => commits.indexOf(ch[0]) >= installIdx);
+      if (afterChains.length > 0) {
+        const longestAfter = afterChains.sort((a, b) => b.length - a.length)[0];
+        diagnosis.prescriptions.push({
+          action: 'PRE_MORTEM_FOR_CHAIN_FILES',
+          target: [...new Set(longestAfter.flatMap(c => c.files || []))],
+          detail: `Longest after-learning chain is ${longestAfter.length} commits. Before touching these files again, run: node nw-memory.cjs --premortem <area> to surface known risks. Add constraint: 'test at 320px before committing mobile fixes.'`,
+          expectedImpact: 'fixChainSpeed +15-30 points'
+        });
+      }
+
+      diagnosis.prescriptions.push({
+        action: 'ROOT_CAUSE_FIRST',
+        target: 'process',
+        detail: 'The fix chains happen because developers jump to coding before diagnosing. Protocol: (1) reproduce the bug, (2) identify the root cause in code, (3) write the fix, (4) verify the fix doesn\'t break related files. Add constraint: no fix commit without a root-cause note in the commit message.',
+        expectedImpact: 'fixChainSpeed +10-20 points'
+      });
+    }
+
+    // ════════════════════════════════════════════════════════════════
+    // FIX RATE TREND — Why are bugs still happening?
+    // ════════════════════════════════════════════════════════════════
+    if (metricName === 'fixRateTrend') {
+      // Find the most bug-prone areas after learning system install
+      const afterCommits = commits.slice(installIdx);
+      const afterFixes = afterCommits.filter(c => c.isFix && !isAuto(c.msg));
+      const fileBreakFreq = {};
+      for (const c of afterFixes) {
+        for (const f of (c.files || [])) {
+          fileBreakFreq[f] = (fileBreakFreq[f] || 0) + 1;
+        }
+      }
+      const topBreakers = Object.entries(fileBreakFreq).sort((a, b) => b[1] - a[1]).slice(0, 5);
+
+      for (const [file, count] of topBreakers) {
+        diagnosis.rootCauses.push({
+          file,
+          fixCount: count,
+          causeChain: `${file} was fixed ${count}x after the learning system was installed. The existing lessons/constraints didn't prevent these fixes.`
+        });
+      }
+
+      diagnosis.prescriptions.push({
+        action: 'PREVENT_NEW_BUGS',
+        target: topBreakers.map(([f]) => f),
+        detail: `Top ${topBreakers.length} post-learning bug files. Need: (1) pre-commit guard blocks for these specific files, (2) automated regression tests covering their common failure modes, (3) review whether lessons are actionable enough.`,
+        expectedImpact: 'fixRateTrend +15-30 points'
+      });
+    }
+
+    // ════════════════════════════════════════════════════════════════
+    // FIXER EFFECTIVENESS — Are fixes being verified?
+    // ════════════════════════════════════════════════════════════════
+    if (metricName === 'fixerEffectiveness') {
+      diagnosis.rootCauses.push({
+        causeChain: `Fixer has applied ${evalResult.data.fixerApplied} fixes but verified ${evalResult.data.fixerVerified}. The verification step exists but never reports success because the score threshold is too tight.`
+      });
+      diagnosis.prescriptions.push({
+        action: 'VERIFY_EXISTING_FIXES',
+        target: 'fixer',
+        detail: 'Run nw-fixer --force to re-run the fix cycle. Then check if score improved. If yes, mark as verified.',
+        expectedImpact: 'fixerEffectiveness +20-40 points'
+      });
+    }
+
+    // ════════════════════════════════════════════════════════════════
+    // Generic fallback for any other weak metric
+    // ════════════════════════════════════════════════════════════════
+    if (diagnosis.rootCauses.length === 0) {
+      diagnosis.rootCauses.push({
+        causeChain: `Metric ${metricName} scored ${metric.score}/100. Raw data: ${JSON.stringify(metric.raw)}. No specific diagnosis implemented yet for this metric.`
+      });
+      diagnosis.prescriptions.push({
+        action: 'INVESTIGATE',
+        target: metricName,
+        detail: `Manual investigation needed. Run: node nw-eval.cjs --verify to see the raw data, then trace back to specific files/commits.`,
+        expectedImpact: 'unknown'
+      });
+    }
+
+    diagnoses.push(diagnosis);
+  }
+
+  return diagnoses;
+}
+
 // ─── Phase 2: FIX — apply corrective actions to both systems ────────
 
 function fix(evalData, dryRun) {
@@ -645,7 +917,92 @@ function status() {
     }
   }
 
+  // Show friction diagnosis summary
+  const diag = diagnose(evalData);
+  if (diag.length > 0) {
+    console.log('');
+    log(`friction points (${diag.length}):`);
+    for (const d of diag) {
+      const label = d.metric.replace(/([A-Z])/g, ' $1').replace(/^./, c => c.toUpperCase()).trim();
+      log(`  \x1b[31m${label}\x1b[0m: ${d.score}/100 — ${d.rootCauses.length} root causes, ${d.prescriptions.length} prescriptions (+${d.potentialGain} pts potential)`);
+    }
+    log(`run \x1b[1mnw-fixer --diagnose\x1b[0m for full root-cause analysis`);
+  }
+
   console.log('');
+}
+
+// ─── Diagnose: full friction analysis output ──────────────────────────
+
+function printDiagnose() {
+  const B = '\x1b[1m', R = '\x1b[31m', G = '\x1b[32m', Y = '\x1b[33m', D = '\x1b[2m', X = '\x1b[0m';
+
+  console.log('');
+  console.log(`  ${B}nw-fixer — Friction Analysis Engine${X}`);
+  console.log('  ' + '═'.repeat(55));
+
+  const evalData = evaluate();
+  const diag = diagnose(evalData);
+
+  if (diag.length === 0) {
+    log(`${G}No friction points detected — all metrics >= 60${X}`);
+    console.log('');
+    return;
+  }
+
+  for (const d of diag) {
+    const label = d.metric.replace(/([A-Z])/g, ' $1').replace(/^./, c => c.toUpperCase()).trim();
+    console.log('');
+    console.log(`  ${R}${B}▸ ${label}: ${d.score}/100 (weight ${d.weight}%)${X}`);
+    console.log(`  ${D}${d.reason}${X}`);
+    console.log(`  ${D}Fixing this adds up to +${d.potentialGain} points to overall score${X}`);
+
+    // Root causes
+    if (d.rootCauses.length > 0) {
+      console.log('');
+      console.log(`    ${B}Root Causes (${d.rootCauses.length}):${X}`);
+      for (let i = 0; i < d.rootCauses.length; i++) {
+        const rc = d.rootCauses[i];
+        if (rc.file) {
+          const icon = rc.breakCount >= 5 ? R + '✗' + X : Y + '!' + X;
+          console.log(`    ${icon} ${rc.file} — broke ${rc.breakCount || '?'}x`);
+          if (rc.dominantFailureType) console.log(`      ${D}Dominant failure: ${rc.dominantFailureType} (${rc.failureTypeCount}x)${X}`);
+          if (rc.coupledFiles && rc.coupledFiles.length > 0) console.log(`      ${D}Coupled with: ${rc.coupledFiles.slice(0, 3).join(', ')}${X}`);
+          if (rc.causeChain) console.log(`      ${Y}Why: ${rc.causeChain}${X}`);
+        } else if (rc.chainLength) {
+          console.log(`    ${Y}!${X} Fix chain of ${rc.chainLength} (${rc.phase}): ${rc.causeType}`);
+          if (rc.files) console.log(`      ${D}Files: ${rc.files.join(', ')}${X}`);
+          if (rc.causeChain) console.log(`      ${Y}Why: ${rc.causeChain}${X}`);
+        } else if (rc.causeChain) {
+          console.log(`    ${Y}!${X} ${rc.causeChain}`);
+        }
+      }
+    }
+
+    // Prescriptions
+    if (d.prescriptions.length > 0) {
+      console.log('');
+      console.log(`    ${B}Prescriptions (${d.prescriptions.length}):${X}`);
+      for (const p of d.prescriptions) {
+        console.log(`    ${G}→${X} ${B}${p.action}${X}`);
+        if (Array.isArray(p.target) && typeof p.target[0] === 'string') {
+          console.log(`      ${D}Target: ${p.target.slice(0, 5).join(', ')}${p.target.length > 5 ? ' +' + (p.target.length - 5) + ' more' : ''}${X}`);
+        }
+        console.log(`      ${p.detail}`);
+        console.log(`      ${G}Expected: ${p.expectedImpact}${X}`);
+      }
+    }
+  }
+
+  // Summary
+  console.log('');
+  console.log('  ' + '─'.repeat(55));
+  const totalPotential = diag.reduce((s, d) => s + d.potentialGain, 0);
+  const totalPrescriptions = diag.reduce((s, d) => s + d.prescriptions.length, 0);
+  log(`${B}Summary: ${diag.length} friction points, ${totalPrescriptions} prescriptions, +${totalPotential} pts potential${X}`);
+  console.log('');
+
+  return diag;
 }
 
 // ─── CLI ────────────────────────────────────────────────────────────
@@ -655,6 +1012,12 @@ const arg = args[0] || '';
 
 if (arg === '--status' || arg === 'status') {
   status();
+} else if (arg === '--diagnose' || arg === 'diagnose') {
+  printDiagnose();
+} else if (arg === '--diagnose-json') {
+  const evalData = evaluate();
+  const diag = diagnose(evalData);
+  console.log(JSON.stringify(diag, null, 2));
 } else if (arg === '--dry-run' || arg === 'dry-run') {
   run_cycle({ dryRun: true });
 } else if (arg === '--force' || arg === 'force') {
