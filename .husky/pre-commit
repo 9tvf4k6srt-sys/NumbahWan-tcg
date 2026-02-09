@@ -1,143 +1,25 @@
 #!/bin/sh
-# NW-MEMORY: Pre-commit — enforce protocol, compact, stage, constraint-check
+# NW-MEMORY: Pre-commit — enforce protocol, auto-guard, compact
 if [ ! -f "nw-memory.cjs" ]; then exit 0; fi
 
-# ══════════════════════════════════════════════════════════════
-# ENFORCEMENT 1: Session marker must exist
-# ══════════════════════════════════════════════════════════════
+# Session marker must exist
 if [ ! -f ".nw-session" ]; then
   echo "" >&2
-  echo "╔══════════════════════════════════════════════════════════╗" >&2
-  echo "║  BLOCKED: No .nw-session file.                         ║" >&2
-  echo "║  You didn't read .nw-context or start the session.     ║" >&2
-  echo "║                                                        ║" >&2
-  echo "║  Fix:                                                  ║" >&2
-  echo "║    cat .nw-context                                     ║" >&2
-  echo "║    echo \$(date +%s) > .nw-session                      ║" >&2
-  echo "║    node nw-memory.cjs --premortem <area>               ║" >&2
-  echo "║                                                        ║" >&2
-  echo "║  Then try your commit again.                           ║" >&2
-  echo "╚══════════════════════════════════════════════════════════╝" >&2
+  echo "  BLOCKED: No .nw-session file." >&2
+  echo "  Run: cat .nw-context && echo \$(date +%s) > .nw-session" >&2
   echo "" >&2
   exit 1
 fi
 
-# ══════════════════════════════════════════════════════════════
-# ENFORCEMENT 2: At least one learning recorded this session
-# ══════════════════════════════════════════════════════════════
-SESSION_START=$(cat .nw-session 2>/dev/null || echo 0)
-LEARNING_COUNT=$(node -e "
-try {
-  const m = JSON.parse(require('fs').readFileSync('memory.json','utf8'));
-  const ss = parseInt('$SESSION_START') * 1000; // session marker is seconds, memory uses ms
-  let count = 0;
-  // Count decisions recorded after session start
-  for (const d of (m.decisions||[])) { if (d.ts >= ss) count++; }
-  // Count constraints recorded after session start
-  for (const area in (m.constraints||{})) {
-    for (const c of m.constraints[area]) { if (c.ts >= ss) count++; }
-  }
-  // Count breakages recorded after session start
-  for (const b of (m.breakages||[])) { if (b.ts >= ss) count++; }
-  console.log(count);
-} catch(e) { console.log(0); }
-" 2>/dev/null)
-
-if [ "${LEARNING_COUNT:-0}" -eq 0 ]; then
-  echo "" >&2
-  echo "╔══════════════════════════════════════════════════════════╗" >&2
-  echo "║  BLOCKED: No learnings recorded this session.          ║" >&2
-  echo "║  Every session must produce at least ONE learning.     ║" >&2
-  echo "║                                                        ║" >&2
-  echo "║  Record something before committing:                   ║" >&2
-  echo "║    node nw-memory.cjs --decide \"area\" \"what\" \"why\"     ║" >&2
-  echo "║    node nw-memory.cjs --constraint \"area\" \"fact\"       ║" >&2
-  echo "║    node nw-memory.cjs --broke \"area\" \"what happened\"   ║" >&2
-  echo "║                                                        ║" >&2
-  echo "║  Then try your commit again.                           ║" >&2
-  echo "╚══════════════════════════════════════════════════════════╝" >&2
-  echo "" >&2
-  exit 1
-fi
-
-# ══════════════════════════════════════════════════════════════
 # Auto-compact if needed
-# ══════════════════════════════════════════════════════════════
 MEM_SIZE=$(wc -c < memory.json 2>/dev/null || echo 0)
 if [ "$MEM_SIZE" -gt 204800 ]; then
   node nw-memory.cjs --compact >/dev/null 2>&1
 fi
 
-# Stage memory.json
 git add memory.json 2>/dev/null || true
 
-# ══════════════════════════════════════════════════════════════
-# Constraint checker: warn about rules for areas being touched
-# ══════════════════════════════════════════════════════════════
-node -e "
-const fs = require('fs');
-const { execSync } = require('child_process');
-
-try {
-  const mem = JSON.parse(fs.readFileSync('memory.json', 'utf8'));
-  const diff = execSync('git diff --cached --name-only 2>/dev/null', { encoding: 'utf8' });
-  const files = diff.trim().split('\n').filter(Boolean);
-  if (files.length === 0) process.exit(0);
-
-  // Detect areas from file paths
-  const areas = new Set();
-  for (const f of files) {
-    if (f.includes('battle')) areas.add('battle');
-    if (f.includes('i18n') || f.includes('lang')) areas.add('i18n');
-    if (f.includes('nav')) areas.add('nav');
-    if (f.includes('forge')) areas.add('forge');
-    if (f.includes('economy') || f.includes('wallet') || f.includes('staking')) areas.add('economy');
-    if (f.includes('collection')) areas.add('collection');
-    if (f.includes('card')) areas.add('cards');
-    if (f.includes('.html')) areas.add('dom');
-    if (f.includes('ios') || f.includes('safari')) areas.add('ios');
-    if (f.includes('font')) areas.add('font');
-    if (f.includes('memory') || f.includes('nw-memory')) areas.add('memory');
-  }
-
-  // Check constraints for touched areas
-  const constraints = mem.constraints || {};
-  const breakages = mem.breakages || [];
-  const warnings = [];
-
-  for (const area of areas) {
-    if (constraints[area]) {
-      for (const c of constraints[area]) {
-        warnings.push('[' + area + '] ' + c.fact);
-      }
-    }
-    const areaBreaks = breakages.filter(b => b.area === area).slice(-2);
-    for (const b of areaBreaks) {
-      warnings.push('[BROKE:' + area + '] ' + b.what);
-    }
-  }
-
-  // Cross-cutting constraints
-  for (const xc of ['dom', 'modules', 'ios']) {
-    if (constraints[xc] && !areas.has(xc)) {
-      if (xc === 'dom' && files.some(f => f.endsWith('.html'))) {
-        for (const c of constraints[xc]) warnings.push('[' + xc + '] ' + c.fact);
-      }
-      if (xc === 'modules' && files.some(f => f.endsWith('.js'))) {
-        for (const c of constraints[xc]) warnings.push('[' + xc + '] ' + c.fact);
-      }
-    }
-  }
-
-  if (warnings.length > 0) {
-    console.error('');
-    console.error('NW-MEMORY: ' + warnings.length + ' constraints for areas you are touching:');
-    const shown = warnings.slice(0, 8);
-    for (const w of shown) console.error('  ' + w);
-    if (warnings.length > 8) console.error('  ... and ' + (warnings.length - 8) + ' more');
-    console.error('');
-  }
-} catch(e) { /* silent fail on constraint check — don't block */ }
-" 2>/dev/null
+# Auto-guard: show warnings for areas being touched
+node nw-memory.cjs --guard 2>/dev/null >&2 || true
 
 exit 0

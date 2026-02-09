@@ -45,14 +45,32 @@ This isn't optional. Every session produces knowledge. Record it.
 
 ## The Protocol
 ```
-1. cat .nw-context              ← read the brain
+1. cat .nw-context              ← read the brain (includes WIP if any)
 2. echo $(date +%s) > .nw-session  ← mark session started
-3. premortem for your area      ← check what broke before
-4. work                         ← build the thing
-5. record learnings             ← --decide, --constraint, or --broke
-6. git commit                   ← hooks handle the rest
+3. IF .nw-context has WIP section ← RESUME that work, do NOT re-plan
+4. premortem for your area      ← check what broke before
+5. --wip "what I'm doing now"   ← save task state to disk (survives compaction)
+6. work                         ← build the thing
+7. record learnings             ← --decide, --constraint, or --broke
+8. git commit                   ← hooks handle the rest
+9. --wip-done                   ← clear WIP after task complete
      ↑                                                    │
      └──── .nw-context auto-refreshed on every commit ───┘
+```
+
+## CRITICAL: Chat Compaction Survival
+Chat platforms compress history, which **destroys in-flight task state** (todo lists, progress).
+The fix: write your current task to disk with `--wip` BEFORE starting work.
+After compaction, `.nw-context` will show the WIP section and you can RESUME instead of re-planning.
+```bash
+# Starting a multi-step task:
+node nw-memory.cjs --wip "upgrading battle arena v8 — step 1: refactor CSS"
+
+# Progressed further:
+node nw-memory.cjs --wip-append "step 2: JS rewrite done, testing remaining"
+
+# Task complete:
+node nw-memory.cjs --wip-done
 ```
 
 ## Quick Reference
@@ -60,11 +78,25 @@ This isn't optional. Every session produces knowledge. Record it.
 |------|-----|
 | Session start | `cat .nw-context` then `echo $(date +%s) > .nw-session` |
 | Before modifying an area | `node nw-memory.cjs --premortem <area>` |
+| Before modifying a specific file | `node nw-memory.cjs --whyfile <path>` |
+| After fixing a bug | `node nw-memory.cjs --postfix` then `--learned` |
 | Something broke | `node nw-memory.cjs --broke "area" "what"` |
+| Learned something from fixing | `node nw-memory.cjs --learned "area" "lesson"` |
 | Made a non-obvious choice | `node nw-memory.cjs --decide "area" "what" "why"` |
 | Found a platform gotcha | `node nw-memory.cjs --constraint "area" "fact"` |
+| See which files belong to an area | `node nw-memory.cjs --areamap` |
 | Full history dump | `node nw-memory.cjs --query` |
 | Health check | `node nw-memory.cjs --health` |
+| Deep pattern analysis | `node nw-memory.cjs --reflect` |
+| Starting a task (survives compaction) | `node nw-memory.cjs --wip "what I'm doing"` |
+| Task progressed | `node nw-memory.cjs --wip-append "next step done"` |
+| Task finished | `node nw-memory.cjs --wip-done` |
+| Auto-guard before editing files | `node nw-memory.cjs --guard <file1> <file2>` |
+| Auto-guard (reads staged files) | `node nw-memory.cjs --guard` (also runs in pre-commit hook) |
+| Generate regression tests from breakages | `node nw-memory.cjs --gen-tests` |
+| Export learnings to shared library | `node nw-memory.cjs --export-shared` |
+| Import learnings from shared library | `node nw-memory.cjs --import-shared` |
+| View shared library | `node nw-memory.cjs --shared` |
 
 ## Areas
-battle, forge, i18n, nav, economy, collection, wallet, cards, tabletop, emoji, dom, ios, modules, font, memory, workflow
+battle, forge, i18n, nav, economy, collection, wallet, cards, tabletop, emoji, dom, ios, modules, font, memory, workflow, oracle, sentinel, lore, discoverability, absurd, exchange
