@@ -1,5 +1,7 @@
 #!/bin/sh
-# NW-MEMORY + gitwise: Post-commit — snapshot, learn, refresh context
+# NW-MEMORY + gitwise: Post-commit — snapshot, learn, auto-heal, refresh context
+# This is the FULLY AUTOMATIC pipeline: commit → learn → heal → eval
+# No manual --heal or --eval should ever be needed.
 
 # ─── gitwise: learn from this commit (zero config, always runs) ───
 if [ -f "gitwise.cjs" ]; then
@@ -11,13 +13,17 @@ if [ ! -f "nw-memory.cjs" ]; then exit 0; fi
 node nw-memory.cjs >/dev/null 2>&1
 node nw-memory.cjs --brief >/dev/null 2>&1
 
-# Fix detection: prompt for learnings
+# ─── Fix detection: auto-run heal + postfix (was: just a reminder) ───
 COMMIT_MSG=$(git log -1 --pretty=format:"%s" 2>/dev/null)
 case "$COMMIT_MSG" in
-  fix*|Fix*)
+  fix*|Fix*|hotfix*|Hotfix*)
+    # Auto-heal: force both systems to evaluate and self-correct NOW
+    node nw-memory.cjs --heal 2>/dev/null || true
+    node "gitwise.cjs" --heal 2>/dev/null || true
+    # Auto-postfix: analyze the fix chain
+    node nw-memory.cjs --postfix 2>/dev/null || true
     echo "" >&2
-    echo "  FIX DETECTED. Record what you learned:" >&2
-    echo "    node nw-memory.cjs --postfix" >&2
+    echo "  FIX DETECTED — auto-healed. Record what you learned:" >&2
     echo "    node nw-memory.cjs --learned \"area\" \"lesson\"" >&2
     echo "" >&2
     ;;
