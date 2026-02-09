@@ -81,19 +81,36 @@ function saveFixerLog(flog) {
   saveJson(FIXER_LOG_PATH, flog);
 }
 
-// ─── Phase 1: EVALUATE — get scores from both systems ───────────────
+// ─── Phase 1: EVALUATE — unified scoring via nw-eval.cjs ───────────────
 
 function evaluate() {
+  // Primary: use nw-eval.cjs as single source of truth
+  try {
+    run('node nw-eval.cjs 2>/dev/null');
+    const evalResult = loadJson(path.join(ROOT, '.nw-eval-result.json'));
+    if (evalResult && evalResult.overall !== undefined) {
+      return {
+        unified: true,
+        overall: evalResult.overall,
+        grade: evalResult.grade,
+        metrics: evalResult.metrics,
+        data: evalResult.data,
+        // Legacy compatibility: expose as nw/gw for fix() function
+        nw: { overallScore: evalResult.overall, scores: evalResult.metrics, source: 'nw-eval' },
+        gw: { overallScore: evalResult.overall, scores: evalResult.metrics, source: 'nw-eval' }
+      };
+    }
+  } catch { /* fallback below */ }
+
+  // Fallback: read from individual systems (legacy)
   let nwResult = null;
   let gwResult = null;
 
-  // Run NW-Memory eval
   try {
     const nwOut = run('node nw-memory.cjs --eval-json 2>/dev/null');
     if (nwOut) nwResult = JSON.parse(nwOut);
   } catch { /* fallback: read from memory */ }
 
-  // If --eval-json not available, compute from memory data
   if (!nwResult) {
     const nwMem = loadJson(NW_MEM_PATH);
     if (nwMem) {
@@ -101,7 +118,6 @@ function evaluate() {
     }
   }
 
-  // Run gitwise eval
   try {
     const gwOut = run('node gitwise.cjs --eval-json 2>/dev/null');
     if (gwOut) gwResult = JSON.parse(gwOut);
@@ -114,7 +130,7 @@ function evaluate() {
     }
   }
 
-  return { nw: nwResult, gw: gwResult };
+  return { unified: false, nw: nwResult, gw: gwResult };
 }
 
 // Lightweight eval computation (reads memory directly when CLI not available)
@@ -477,12 +493,16 @@ function run_cycle(opts) {
 
   // Phase 1: Evaluate
   const beforeEval = evaluate();
-  const nwScore = beforeEval.nw?.overallScore || 0;
-  const gwScore = beforeEval.gw?.overallScore || 0;
-  const combinedBefore = Math.round((nwScore + gwScore) / 2);
+  const combinedBefore = beforeEval.unified ? beforeEval.overall : Math.round(((beforeEval.nw?.overallScore || 0) + (beforeEval.gw?.overallScore || 0)) / 2);
 
   if (!silent) {
-    log(`before: NW-Memory ${nwScore}/100 | gitwise ${gwScore}/100 | combined ${combinedBefore}/100`);
+    if (beforeEval.unified) {
+      log(`before: unified ${combinedBefore}/100 (${beforeEval.grade}) — via nw-eval.cjs`);
+    } else {
+      const nwS = beforeEval.nw?.overallScore || 0;
+      const gwS = beforeEval.gw?.overallScore || 0;
+      log(`before: NW-Memory ${nwS}/100 | gitwise ${gwS}/100 | combined ${combinedBefore}/100`);
+    }
   }
 
   // Check if fixing is needed
@@ -591,13 +611,20 @@ function status() {
   console.log('  ' + '─'.repeat(55));
 
   const evalData = evaluate();
-  const nwScore = evalData.nw?.overallScore || 0;
-  const gwScore = evalData.gw?.overallScore || 0;
-  const combined = Math.round((nwScore + gwScore) / 2);
-
-  log(`NW-Memory: ${nwScore}/100`);
-  log(`gitwise:   ${gwScore}/100`);
-  log(`combined:  ${combined}/100`);
+  let combined, gradeStr;
+  if (evalData.unified) {
+    combined = evalData.overall;
+    gradeStr = evalData.grade;
+    log(`unified:   ${combined}/100 (${gradeStr}) — via nw-eval.cjs`);
+  } else {
+    const nwScore = evalData.nw?.overallScore || 0;
+    const gwScore = evalData.gw?.overallScore || 0;
+    combined = Math.round((nwScore + gwScore) / 2);
+    gradeStr = combined >= 75 ? 'B' : combined >= 60 ? 'C' : 'D';
+    log(`NW-Memory: ${nwScore}/100 (legacy)`);
+    log(`gitwise:   ${gwScore}/100 (legacy)`);
+    log(`combined:  ${combined}/100`);
+  }
   log(`threshold: ${SCORE_OK_THRESHOLD} (auto-fix triggers below this)`);
   log(`needs fix: ${combined < SCORE_OK_THRESHOLD ? 'YES' : 'NO'}`);
 

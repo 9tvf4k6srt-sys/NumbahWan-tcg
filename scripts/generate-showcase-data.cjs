@@ -102,7 +102,19 @@ function getGwScore(mem) {
 
 const nwScore = getNwScore(nwMem);
 const gwScore = getGwScore(gwMem);
-const combined = Math.round((nwScore.overall + gwScore.overall) / 2);
+
+// ── Use nw-eval.cjs as single source of truth for scores ──
+const EVAL_PATH = path.join(ROOT, '.nw-eval-result.json');
+let evalResult = loadJson(EVAL_PATH);
+if (!evalResult) {
+  // Generate eval if not yet run
+  try { require('child_process').execSync('node nw-eval.cjs 2>/dev/null', { cwd: ROOT }); } catch {}
+  evalResult = loadJson(EVAL_PATH);
+}
+const unifiedScore = evalResult?.overall || Math.round((nwScore.overall + gwScore.overall) / 2);
+const unifiedGrade = evalResult?.grade || (unifiedScore >= 90 ? 'A' : unifiedScore >= 75 ? 'B' : unifiedScore >= 60 ? 'C' : unifiedScore >= 45 ? 'D' : 'F');
+const evalMetrics = evalResult?.metrics || {};
+const combined = unifiedScore;
 
 // ─── Per-Commit Timeline (the heartbeat) ────────────────────────
 
@@ -385,10 +397,13 @@ const showcase = {
   version: '3.0.0',
 
   currentScores: {
+    unified: unifiedScore,
+    grade: unifiedGrade,
     nwMemory: nwScore.overall,
     gitwise: gwScore.overall,
     combined,
-    grade: combined >= 90 ? 'A' : combined >= 75 ? 'B' : combined >= 60 ? 'C' : combined >= 40 ? 'D' : 'F'
+    evaluator: 'nw-eval.cjs v1.0',
+    metrics: evalMetrics
   },
 
   stats: {
@@ -430,6 +445,6 @@ const showcase = {
 
 fs.writeFileSync(OUTPUT_PATH, JSON.stringify(showcase, null, 2));
 console.log(`[showcase] Generated: ${OUTPUT_PATH}`);
-console.log(`[showcase] Scores: NW-Memory ${nwScore.overall} | gitwise ${gwScore.overall} | combined ${combined}`);
+console.log(`[showcase] Scores: unified ${unifiedScore}/100 (${unifiedGrade}) — via nw-eval.cjs`);
 console.log(`[showcase] Impact: ${timeSavedHours}h saved | $${moneySaved} saved | ${avgImprovementPerCommit} pts/commit`);
 console.log(`[showcase] Timeline: ${dailyTimeline.length} days | ${commitTimeline.length} commits | ${bundleTrend.length} bundle snapshots`);
