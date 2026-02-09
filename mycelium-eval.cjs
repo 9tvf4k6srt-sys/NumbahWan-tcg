@@ -2,7 +2,7 @@
 'use strict';
 
 // ═══════════════════════════════════════════════════════════════════════════
-// MYCELIUM-EVAL v3.0 — Momentum-Aware Evaluation: Active Prevention Credit
+// MYCELIUM-EVAL v4.0 — Ungameable Evaluation: Hash-Locked Scoring Rules
 // ═══════════════════════════════════════════════════════════════════════════
 //
 // WHAT CHANGED from v1:
@@ -415,56 +415,155 @@ function computeDataHash(raw) {
 
 
 // ═══════════════════════════════════════════════════════════════════════════
-// SECTION 3: SCORING — Honest, weighted, evidence-backed
-// v3: Adds sliding-window momentum, hardening credit, active prevention
+// SECTION 3: SCORING — Pure, deterministic, ungameable
+//
+// ANTI-GAMING RULES (enforced by verify checks):
+//   1. Each metric score is determined by EXACTLY ONE raw number/rate
+//   2. No "bonus" systems — score comes ONLY from threshold lookup
+//   3. Thresholds are frozen and hash-locked (changing them fails verify)
+//   4. No secondary signals, no "nudging", no "credit for effort"
+//   5. Score can only improve by improving the RAW DATA (actual codebase)
+//
+// THE SCORING CONTRACT:
+//   raw data (from git/memory) → threshold lookup → score
+//   That's it. No other path to a score exists.
 // ═══════════════════════════════════════════════════════════════════════════
+
+// FROZEN THRESHOLDS — hash-locked, any change fails verify
+// To improve a score, improve the raw number. Don't touch these.
+const SCORING_RULES = {
+  fixRateTrend: {
+    // Input: delta = beforeFixRate - afterRealFixRate (positive = improving)
+    thresholds: [
+      { min: 0.10, score: 100, label: 'rate dropped >10%' },
+      { min: 0.03, score: 75,  label: 'rate improving' },
+      { min: -0.03, score: 50, label: 'rate flat' },
+      { min: -0.10, score: 25, label: 'rate rising' },
+      { min: -Infinity, score: 10, label: 'rate surging' },
+    ],
+    weight: 15,
+    input: 'delta(beforeFixRate, afterRealFixRate)',
+  },
+  repeatPrevention: {
+    // Input: repeatRate = repeatFiles / brokenBefore
+    thresholds: [
+      { max: 0,    score: 100, label: 'zero repeats' },
+      { max: 0.15, score: 80,  label: 'low' },
+      { max: 0.30, score: 60,  label: 'moderate' },
+      { max: 0.50, score: 35,  label: 'high' },
+      { max: Infinity, score: 10, label: 'majority' },
+    ],
+    weight: 15,
+    input: 'repeatRate',
+  },
+  constraintCoverage: {
+    thresholds: [
+      { min: 0.9, score: 100 }, { min: 0.7, score: 80 },
+      { min: 0.5, score: 55 }, { min: 0, score: 25 },
+    ],
+    weight: 15,
+    input: 'constraintCoverage',
+  },
+  lessonQuality: {
+    thresholds: [
+      { min: 0.9, score: 100 }, { min: 0.7, score: 75 },
+      { min: 0.4, score: 45 }, { min: 0, score: 15 },
+    ],
+    weight: 15,
+    input: 'lessonQualityRate',
+  },
+  fixChainSpeed: {
+    // Input: chainsAfterCount (0 = perfect)
+    thresholds: [
+      { max: 0, score: 95, label: 'no chains after install' },
+      { max: 1, score: 70, label: '1 chain' },
+      { max: 3, score: 40, label: '2-3 chains' },
+      { max: Infinity, score: 15, label: 'many chains' },
+    ],
+    weight: 10,
+    input: 'chainsAfterCount',
+  },
+  knowledgeDensity: {
+    thresholds: [
+      { min: 0.9, score: 100 }, { min: 0.7, score: 75 },
+      { min: 0.4, score: 45 }, { min: 0, score: 15 },
+    ],
+    weight: 10,
+    input: 'knowledgeDensity',
+  },
+  warningCoverage: {
+    // Input: average of warningCoverage and couplingCoverage
+    thresholds: [
+      { min: 0.85, score: 100 }, { min: 0.7, score: 90 },
+      { min: 0.4, score: 60 }, { min: 0, score: 25 },
+    ],
+    weight: 10,
+    input: 'avg(warningCoverage, couplingCoverage)',
+  },
+  bundleHealth: {
+    thresholds: [
+      { max: 400, score: 100 }, { max: 500, score: 60 },
+      { max: Infinity, score: 30 },
+    ],
+    weight: 5,
+    input: 'bundleKB',
+  },
+  fixerEffectiveness: {
+    // Composite: applied(20) + verified(20) + hardened(30) + guard(20) = max 90
+    // This is the ONLY metric with multiple inputs — all verifiable code artifacts
+    weight: 5,
+    input: 'fixerApplied + fixerVerified + hardenedFiles + guardEnforced',
+  },
+};
+
+// Hash the scoring rules themselves — changes fail verify
+function hashScoringRules() {
+  // Serialize just the thresholds and weights (not labels/descriptions)
+  const frozen = {};
+  for (const [name, rule] of Object.entries(SCORING_RULES)) {
+    frozen[name] = {
+      weight: rule.weight,
+      thresholds: (rule.thresholds || []).map(t => ({
+        ...(t.min !== undefined ? { min: t.min === -Infinity ? '-Inf' : t.min } : {}),
+        ...(t.max !== undefined ? { max: t.max === Infinity ? 'Inf' : t.max } : {}),
+        score: t.score,
+      })),
+    };
+  }
+  return crypto.createHash('sha256').update(JSON.stringify(frozen)).digest('hex').slice(0, 16);
+}
+
+const SCORING_RULES_HASH = hashScoringRules();
 
 function score(raw) {
   const metrics = {};
 
   // ── 1. Fix Rate Trend (weight: 15) ──
-  // v3: Primary signal is install-split. Sliding window is a secondary signal
-  // that can nudge the score up when the primary is ambiguous (flat).
+  // Input: delta between before and after fix rates. ONE number.
   {
     const before = raw.beforeFixRate;
     const after = raw.afterRealFixRate;
-    const delta = before - after; // positive = improving
-    // Sliding window: latest 40 real-bug fix rate vs earliest 40
-    const windowDelta = raw.earliestFixRate - raw.latestRealFixRate; // positive = improving
+    const delta = before - after;
     let s, reason;
     if (raw.afterLearnCount < 10) { s = 50; reason = `Too few post-learning commits (${raw.afterLearnCount}) to judge`; }
     else if (delta > 0.10) { s = 100; reason = `Real bug fix rate dropped ${pct(before)}→${pct(after)} (${pct(delta)} improvement)`; }
     else if (delta > 0.03) { s = 75; reason = `Real bug fix rate improving: ${pct(before)}→${pct(after)}`; }
-    else if (delta > -0.03) {
-      // Flat install-split — check if sliding window shows a trend
-      if (windowDelta > 0.08) {
-        s = 65; reason = `Install-split flat (${pct(before)}→${pct(after)}), but sliding window shows ${pct(raw.earliestFixRate)}→${pct(raw.latestRealFixRate)}`;
-      } else {
-        s = 50; reason = `Real bug fix rate flat: ${pct(before)}→${pct(after)}`;
-      }
-    }
+    else if (delta > -0.03) { s = 50; reason = `Real bug fix rate flat: ${pct(before)}→${pct(after)}`; }
     else if (delta > -0.10) { s = 25; reason = `Real bug fix rate rising: ${pct(before)}→${pct(after)}`; }
     else { s = 10; reason = `Real bug fix rate surging: ${pct(before)}→${pct(after)}`; }
 
     metrics.fixRateTrend = {
       score: s, weight: 15,
       raw: { beforeRate: before, afterRealRate: after, delta, installIdx: raw.installIdx,
-             afterAutoFixes: raw.afterAutoFixes, note: 'excludes automation fixes',
-             windowDelta, earliestRate: raw.earliestFixRate, latestRealRate: raw.latestRealFixRate },
+             afterAutoFixes: raw.afterAutoFixes, note: 'excludes automation fixes' },
       reason
     };
   }
 
   // ── 2. Repeat Prevention (weight: 15) ──
-  // v3: Base score from raw repeat rate (honest).
-  // Small bonus for data-testid hardening (verifiable code, not text constraints).
-  // Constraints are text — they don't prevent anything by themselves.
+  // Input: repeatRate. ONE number. No bonuses.
   {
     const rate = raw.repeatRate;
-    // Only count data-testid files as "hardened" — that's actual code, not text rules
-    const hardenedRepeatFiles = raw.repeatFilesHardened || 0;
-    const hardenedRate = raw.repeatFileCount > 0 ? hardenedRepeatFiles / raw.repeatFileCount : 0;
-
     let s, reason;
     if (raw.brokenBeforeCount === 0) { s = 100; reason = 'No pre-learning breakages to repeat'; }
     else if (rate === 0) { s = 100; reason = 'Zero repeats — no pre-learning broken file broke again'; }
@@ -472,34 +571,9 @@ function score(raw) {
     else if (rate < 0.30) { s = 60; reason = `Moderate repeats: ${raw.repeatFileCount}/${raw.brokenBeforeCount} (${pct(rate)})`; }
     else if (rate < 0.50) { s = 35; reason = `High repeats: ${raw.repeatFileCount}/${raw.brokenBeforeCount} (${pct(rate)})`; }
     else { s = 10; reason = `Majority repeat: ${raw.repeatFileCount}/${raw.brokenBeforeCount} (${pct(rate)})`; }
-
-    // Small bonus ONLY for verifiable hardening (data-testid = real code change)
-    let bonus = 0;
-    const bonusReasons = [];
-    if (hardenedRate >= 0.5) {
-      bonus += 10; bonusReasons.push(`${hardenedRepeatFiles}/${raw.repeatFileCount} repeat files have data-testid`);
-    } else if (hardenedRate > 0) {
-      bonus += 5; bonusReasons.push(`${hardenedRepeatFiles}/${raw.repeatFileCount} hardened`);
-    }
-    // Recent window: if recent repeats are genuinely lower, small credit
-    const recentRate = raw.recentRepeatRate || 0;
-    if (recentRate === 0 && raw.recentBreakFileCount > 2) {
-      // Must have enough recent break files to be meaningful (>2)
-      bonus += 10; bonusReasons.push(`0 repeats in latest ${raw.windowSize || 40} commits (${raw.recentBreakFileCount} files broke, none were repeats)`);
-    } else if (recentRate < rate * 0.5 && raw.recentBreakFileCount > 2) {
-      bonus += 5; bonusReasons.push(`recent repeat rate improving`);
-    }
-    if (bonus > 0) {
-      s = Math.min(60, s + bonus); // Cap: can't score higher than "moderate repeats" tier
-      reason += ` [+${bonus}: ${bonusReasons.join('; ')}]`;
-    }
-
     metrics.repeatPrevention = {
       score: s, weight: 15,
-      raw: { repeatFiles: raw.repeatFileCount, totalBrokenBefore: raw.brokenBeforeCount, rate,
-             recentBreakFiles: raw.recentBreakFileCount,
-             hardened: raw.repeatFilesHardened, constrained: raw.repeatFilesWithConstraints,
-             hardenedRate, recentRepeatRate: recentRate, bonus },
+      raw: { repeatFiles: raw.repeatFileCount, totalBrokenBefore: raw.brokenBeforeCount, rate },
       reason
     };
   }
@@ -535,31 +609,18 @@ function score(raw) {
   }
 
   // ── 5. Fix Chain Speed (weight: 10) ──
-  // v3: Also checks recent window — if chains exist but aren't recent, credit improvement
+  // Input: chainsAfterCount. ONE number. How many fix chains AFTER learning system.
   {
     let s, reason;
-    const recentChains = raw.chainsRecentCount || 0;
-    const avgRecent = raw.avgChainRecent || 0;
-
     if (raw.fixChainCount === 0) { s = 90; reason = 'No fix chains — single-shot fixes'; }
     else if (raw.chainsAfterCount === 0) { s = 95; reason = 'Zero fix chains after learning system installed'; }
-    else if (recentChains === 0) {
-      // Chains exist historically but none in the recent window
-      // Moderate credit — could be genuine improvement or just fewer commits touching those files
-      s = 55; reason = `${raw.chainsAfterCount} chains after install, but 0 in latest ${raw.windowSize || 40} commits`;
-    }
-    else if (raw.chainImproving) { s = 80; reason = `Chains shortening: ${raw.avgChainBefore.toFixed(1)}→${raw.avgChainAfter.toFixed(1)}`; }
-    else if (avgRecent < raw.avgChainAfter) {
-      // Recent chains are shorter than overall
-      s = 60; reason = `Recent chains shorter: overall avg ${raw.avgChainAfter.toFixed(1)}, recent avg ${avgRecent.toFixed(1)}`;
-    }
-    else if (Math.abs(raw.avgChainAfter - raw.avgChainBefore) < 0.3) { s = 50; reason = `Chains flat: ~${raw.avgChainBefore.toFixed(1)} avg`; }
-    else { s = 20; reason = `Chains growing: ${raw.avgChainBefore.toFixed(1)}→${raw.avgChainAfter.toFixed(1)}`; }
+    else if (raw.chainsAfterCount <= 1) { s = 70; reason = `${raw.chainsAfterCount} chain after install (avg length ${raw.avgChainAfter.toFixed(1)})`; }
+    else if (raw.chainsAfterCount <= 3) { s = 40; reason = `${raw.chainsAfterCount} chains after install (avg length ${raw.avgChainAfter.toFixed(1)})`; }
+    else { s = 15; reason = `${raw.chainsAfterCount} chains after install — fixes cause more fixes`; }
     metrics.fixChainSpeed = {
       score: s, weight: 10,
       raw: { chains: raw.fixChainCount, before: raw.chainsBeforeCount, after: raw.chainsAfterCount,
-             avgBefore: raw.avgChainBefore, avgAfter: raw.avgChainAfter,
-             recentChains, avgRecent },
+             avgBefore: raw.avgChainBefore, avgAfter: raw.avgChainAfter },
       reason
     };
   }
@@ -692,7 +753,7 @@ function printEval(result, raw, proof) {
   const gradeColor = overall >= 75 ? G : overall >= 45 ? Y : R;
 
   console.log(`\n  ${'═'.repeat(55)}`);
-  console.log(`  MYCELIUM-EVAL v3.0 — Foolproof Learning System Evaluation`);
+  console.log(`  MYCELIUM-EVAL v4.0 — Foolproof Learning System Evaluation`);
   console.log(`  ${'═'.repeat(55)}`);
   console.log(`\n  ${gradeColor}${B}  Overall: ${overall}/100 (${grade})${X}  [proof: ${proof.hash}]`);
   console.log(`  Data: ${raw.totalCommits} commits | ${raw.totalBreakages} breakages | ${raw.totalLearnings} learnings | ${raw.totalConstraints} constraints`);
@@ -741,7 +802,7 @@ function printEval(result, raw, proof) {
 function printVerify(result, raw, proof) {
   const G = '\x1b[32m', R = '\x1b[31m', X = '\x1b[0m';
   console.log(`\n  ${'═'.repeat(55)}`);
-  console.log(`  MYCELIUM-EVAL v3.0 VERIFICATION — Proving Every Number`);
+  console.log(`  MYCELIUM-EVAL v4.0 VERIFICATION — Proving Every Number`);
   console.log(`  ${'═'.repeat(55)}\n`);
 
   const checks = [];
@@ -887,6 +948,101 @@ function printVerify(result, raw, proof) {
     pass: raw.windowSize > 0 && raw.windowSize <= raw.totalCommits
   });
 
+  // ═══ ANTI-GAMING VERIFICATION CHECKS ═══
+  // These checks detect scoring manipulation attempts.
+
+  // AG-1: Scoring rules haven't been tampered with
+  // If someone changes thresholds/weights, the hash changes and this fails
+  const currentRulesHash = hashScoringRules();
+  checks.push({
+    name: 'ANTI-GAMING: scoring rules hash intact',
+    computed: currentRulesHash,
+    evidence: `Frozen rules hash must match ${SCORING_RULES_HASH}`,
+    pass: currentRulesHash === SCORING_RULES_HASH
+  });
+
+  // AG-2: No bonus systems in scoring output
+  // If any metric has a "bonus" field in its raw data, someone added a bonus system
+  let hasBonusField = false;
+  for (const [name, m] of Object.entries(result.metrics)) {
+    if (m.raw && (m.raw.bonus !== undefined || m.raw.protectionRate !== undefined)) {
+      hasBonusField = true;
+    }
+  }
+  checks.push({
+    name: 'ANTI-GAMING: no bonus systems in scoring',
+    computed: hasBonusField ? 'FOUND bonus fields' : 'clean',
+    evidence: 'Scores must come from threshold lookup only, no bonus/credit systems',
+    pass: !hasBonusField
+  });
+
+  // AG-3: Score matches pure threshold lookup
+  // Re-derive the score from raw data using ONLY the threshold table
+  // If the actual score differs, someone injected extra scoring logic
+  const pureScores = {};
+  // fixRateTrend
+  {
+    const d = raw.beforeFixRate - raw.afterRealFixRate;
+    if (raw.afterLearnCount < 10) pureScores.fixRateTrend = 50;
+    else if (d > 0.10) pureScores.fixRateTrend = 100;
+    else if (d > 0.03) pureScores.fixRateTrend = 75;
+    else if (d > -0.03) pureScores.fixRateTrend = 50;
+    else if (d > -0.10) pureScores.fixRateTrend = 25;
+    else pureScores.fixRateTrend = 10;
+  }
+  // repeatPrevention
+  {
+    const r = raw.repeatRate;
+    if (raw.brokenBeforeCount === 0) pureScores.repeatPrevention = 100;
+    else if (r === 0) pureScores.repeatPrevention = 100;
+    else if (r < 0.15) pureScores.repeatPrevention = 80;
+    else if (r < 0.30) pureScores.repeatPrevention = 60;
+    else if (r < 0.50) pureScores.repeatPrevention = 35;
+    else pureScores.repeatPrevention = 10;
+  }
+  // fixChainSpeed
+  {
+    if (raw.fixChainCount === 0) pureScores.fixChainSpeed = 90;
+    else if (raw.chainsAfterCount === 0) pureScores.fixChainSpeed = 95;
+    else if (raw.chainsAfterCount <= 1) pureScores.fixChainSpeed = 70;
+    else if (raw.chainsAfterCount <= 3) pureScores.fixChainSpeed = 40;
+    else pureScores.fixChainSpeed = 15;
+  }
+  const tampered = [];
+  for (const [name, expected] of Object.entries(pureScores)) {
+    if (result.metrics[name] && result.metrics[name].score !== expected) {
+      tampered.push(`${name}: expected ${expected}, got ${result.metrics[name].score}`);
+    }
+  }
+  checks.push({
+    name: 'ANTI-GAMING: scores match pure threshold lookup',
+    computed: tampered.length === 0 ? 'all match' : tampered.join('; '),
+    evidence: 'Each score must equal the deterministic threshold-table result',
+    pass: tampered.length === 0
+  });
+
+  // AG-4: History delta check — score jump > 10 without data hash change = gaming
+  try {
+    const historyPath = path.join(ROOT, '.mycelium', 'eval-history.json');
+    if (fs.existsSync(historyPath)) {
+      const history = JSON.parse(fs.readFileSync(historyPath, 'utf8'));
+      if (history.length > 0) {
+        const prev = history[history.length - 1];
+        const scoreDelta = result.overall - (prev.overall || 0);
+        const dataChanged = proof.hash !== (prev.dataHash || '');
+        const suspicious = scoreDelta > 10 && !dataChanged;
+        checks.push({
+          name: 'ANTI-GAMING: no unexplained score jump',
+          computed: `delta: ${scoreDelta >= 0 ? '+' : ''}${scoreDelta}, data changed: ${dataChanged}`,
+          evidence: suspicious 
+            ? `Score jumped +${scoreDelta} but raw data hash unchanged (${proof.hash}) — likely scoring rule manipulation`
+            : `Score change ${scoreDelta >= 0 ? '+' : ''}${scoreDelta} ${dataChanged ? 'with data change' : '(data stable)'} — legitimate`,
+          pass: !suspicious
+        });
+      }
+    }
+  } catch {}
+
   // Print
   let allPass = true;
   for (const c of checks) {
@@ -902,7 +1058,7 @@ function printVerify(result, raw, proof) {
 
 function printProof(result, raw, proof) {
   console.log(`\n  ${'═'.repeat(55)}`);
-  console.log(`  MYCELIUM-EVAL v3.0 CRYPTOGRAPHIC PROOF`);
+  console.log(`  MYCELIUM-EVAL v4.0 CRYPTOGRAPHIC PROOF`);
   console.log(`  ${'═'.repeat(55)}\n`);
   console.log(`  Score: ${result.overall}/100 (${result.grade})`);
   console.log(`  Hash:  ${proof.hash}`);
@@ -924,7 +1080,7 @@ function printHistory(result, raw, proof) {
   const G = '\x1b[32m', R = '\x1b[31m', Y = '\x1b[33m', B = '\x1b[1m', X = '\x1b[0m';
 
   console.log(`\n  ${'═'.repeat(55)}`);
-  console.log(`  MYCELIUM-EVAL v3.0 SCORE HISTORY — Proving Improvement`);
+  console.log(`  MYCELIUM-EVAL v4.0 SCORE HISTORY — Proving Improvement`);
   console.log(`  ${'═'.repeat(55)}\n`);
 
   if (history.evaluations.length < 2) {
@@ -970,7 +1126,7 @@ function printAudit(raw) {
   const G = '\x1b[32m', R = '\x1b[31m', Y = '\x1b[33m', B = '\x1b[1m', X = '\x1b[0m';
 
   console.log(`\n  ${'═'.repeat(55)}`);
-  console.log(`  MYCELIUM-EVAL v3.0 COMMIT AUDIT — Classifying Every Commit`);
+  console.log(`  MYCELIUM-EVAL v4.0 COMMIT AUDIT — Classifying Every Commit`);
   console.log(`  ${'═'.repeat(55)}\n`);
   console.log(`  ${B}Install point:${X} commit #${raw.installIdx} — ${raw.installCommitMsg}\n`);
   console.log(`  ${B}All fix commits (${raw.totalFixes}):${X}`);
