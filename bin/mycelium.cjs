@@ -44,6 +44,7 @@ const SCRIPTS = {
   doctor:  path.join(ROOT, 'mycelium-doctor.cjs'),
   why:     path.join(ROOT, 'mycelium-why.cjs'),
   upgrade: path.join(ROOT, 'mycelium-upgrade.cjs'),
+  serve:   path.join(ROOT, 'serve.cjs'),
 };
 
 // ─── Helpers ──────────────────────────────────────────────────────
@@ -438,6 +439,19 @@ switch (cmd) {
     run(`node "${SCRIPTS.upgrade}" ${rest}`);
     break;
 
+  // ── Serve: local static preview server ──────────────────────────
+  case 'serve':
+  case 'preview':
+    if (!exists(SCRIPTS.serve)) { console.error('serve.cjs not found'); process.exit(1); }
+    run(`node "${SCRIPTS.serve}" ${rest}`);
+    break;
+
+  // ── Init: zero-config project setup ─────────────────────────────
+  case 'init':
+    if (!exists(SCRIPTS.core)) { console.error('mycelium.cjs not found'); process.exit(1); }
+    run(`node "${SCRIPTS.core}" --init ${rest}`);
+    break;
+
   // ── Help ────────────────────────────────────────────────────────
   case 'help':
   case '--help':
@@ -467,6 +481,8 @@ switch (cmd) {
     console.log(`    mycelium why <f> --json Machine-readable file report`);
     console.log(`    mycelium upgrade       Preview auto-generated defenses`);
     console.log(`    mycelium upgrade --apply Apply all upgrades`);
+    console.log(`    mycelium serve         Start local preview server (0.0.0.0:8788)`);
+    console.log(`    mycelium init          Zero-config project setup`);
     console.log(`    mycelium version       Show component status`);
     console.log();
     console.log(`  Pipeline: Learner → Evaluator → Fixer (continuous loop)`);
