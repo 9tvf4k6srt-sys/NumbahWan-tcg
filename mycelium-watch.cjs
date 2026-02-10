@@ -36,7 +36,7 @@ const NOISE = [
   'package-lock.json', 'yarn.lock', 'pnpm-lock.yaml',
   'node_modules/', 'dist/', 'build/', 'out/', '.next/',
   'coverage/', '__pycache__/', '.pytest_cache/', '.nyc_output/',
-  '.mycelium-watch/', '.DS_Store', 'Thumbs.db',
+  '.mycelium/', '.DS_Store', 'Thumbs.db',
   '.ai-files-auto', 'sentinel-report', 'sentinel-history'
 ];
 
@@ -845,17 +845,27 @@ function install() {
   console.log('  \x1b[1mmycelium-watch\x1b[0m — your git learns from its own mistakes');
   console.log('');
 
-  // 1. Create .mycelium-watch directory
+  // 1. Ensure .mycelium directory exists
   ensureDir();
-  console.log('  \x1b[32m+\x1b[0m created .mycelium-watch/');
+  console.log('  \x1b[32m+\x1b[0m ensured .mycelium/');
 
-  // 2. Add .mycelium-watch to .gitignore
+  // 2. Verify .gitignore has .mycelium entries
   const gitignorePath = path.join(root, '.gitignore');
   let gitignore = fs.existsSync(gitignorePath) ? fs.readFileSync(gitignorePath, 'utf8') : '';
-  if (!gitignore.includes('.mycelium-watch')) {
-    gitignore = gitignore.trimEnd() + '\n.mycelium-watch/\n';
-    fs.writeFileSync(gitignorePath, gitignore);
-    console.log('  \x1b[32m+\x1b[0m added .mycelium-watch/ to .gitignore');
+  let giChanged = false;
+  // Ensure .mycelium-session is ignored
+  if (!gitignore.includes('.mycelium-session')) {
+    gitignore = gitignore.trimEnd() + '\n.mycelium-session\n';
+    giChanged = true;
+  }
+  // Clean up legacy .mycelium-watch/ entry if present
+  if (gitignore.includes('.mycelium-watch/')) {
+    gitignore = gitignore.replace(/\.mycelium-watch\/\n?/g, '');
+    giChanged = true;
+  }
+  if (giChanged) {
+    fs.writeFileSync(gitignorePath, gitignore.trimEnd() + '\n');
+    console.log('  \x1b[32m+\x1b[0m updated .gitignore');
   } else {
     console.log('  \x1b[2m.\x1b[0m .gitignore already configured');
   }
@@ -1543,10 +1553,10 @@ function uninstall() {
     }
   }
 
-  // Remove .mycelium-watch directory
-  if (fs.existsSync(WATCH_DIR)) {
-    fs.rmSync(WATCH_DIR, { recursive: true });
-    console.log('  \x1b[31m-\x1b[0m removed .mycelium-watch/');
+  // Remove watch.json from .mycelium (do NOT delete the whole .mycelium dir — it's shared)
+  if (fs.existsSync(MEMORY_FILE)) {
+    fs.unlinkSync(MEMORY_FILE);
+    console.log('  \x1b[31m-\x1b[0m removed .mycelium/watch.json');
   }
 
   console.log('  Done. mycelium-watch has been removed.\n');

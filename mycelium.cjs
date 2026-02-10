@@ -2729,13 +2729,40 @@ Run \`node mycelium.cjs --onboard\` for a complete guide.
     console.log('  · mycelium-watch.cjs not found — watch system skipped');
   }
 
-  // 8. Take initial snapshot
+  // 8. Ensure watch.json exists inside .mycelium/
+  const watchFile = path.join(myceliumDir, 'watch.json');
+  if (!fs.existsSync(watchFile)) {
+    fs.writeFileSync(watchFile, JSON.stringify({
+      version: 1, commits: [], breakages: [], couplings: {}, patterns: [], evaluations: []
+    }, null, 2));
+    console.log('  ✓ Created .mycelium/watch.json');
+  } else {
+    console.log('  · watch.json already exists');
+  }
+
+  // 9. Take initial snapshot + generate .mycelium-context
   takeSnapshot();
   brief();
 
+  // 10. Create session marker so first commit isn't blocked
+  const sessionPath = path.join(__dirname, '.mycelium-session');
+  if (!fs.existsSync(sessionPath)) {
+    fs.writeFileSync(sessionPath, String(Math.floor(Date.now() / 1000)));
+    console.log('  ✓ Created .mycelium-session (first commit unblocked)');
+  }
+
+  // 11. Run doctor to validate everything
+  const doctorPath = path.join(__dirname, 'mycelium-doctor.cjs');
+  if (fs.existsSync(doctorPath)) {
+    try {
+      const out = execSync(`node "${doctorPath}" --json`, { cwd: __dirname, timeout: 15000, encoding: 'utf8' });
+      const doc = JSON.parse(out);
+      console.log(`  ✓ Doctor: ${doc.passed}/${doc.total} checks passed (${doc.score})`);
+    } catch { console.log('  · Doctor check skipped'); }
+  }
+
   console.log('\n  Setup complete! Start your first session:');
   console.log('    cat .mycelium-context');
-  console.log('    echo $(date +%s) > .mycelium-session');
   console.log('    node mycelium.cjs --onboard');
   console.log('');
 }
@@ -3055,7 +3082,7 @@ function runNwEval(mem) {
     }
   } catch {
     watchScore = 0;
-    insights.push('gitwise: not installed — run node mycelium-watch.cjs --install for passive learning');
+    insights.push('mycelium-watch: not installed — run node mycelium-watch.cjs --install for passive learning');
     upgrades.push('Install mycelium-watch for automatic breakage detection from git history');
   }
   scores.watchIntegration = watchScore;
@@ -3074,7 +3101,7 @@ function runNwEval(mem) {
   const grade = overallScore >= 90 ? 'A' : overallScore >= 75 ? 'B' : overallScore >= 60 ? 'C' :
                 overallScore >= 40 ? 'D' : 'F';
 
-  // Combined score with gitwise
+  // Combined score with mycelium-watch
   let combinedScore = overallScore;
   let combinedGrade = grade;
   if (watchLastEval) {
@@ -3331,7 +3358,7 @@ function evaluate() {
     console.log('');
     console.log(`  \x1b[1mCombined Score (Learner + Watcher):\x1b[0m`);
     console.log(`    Mycelium:  ${overallScore}/100 (${grade})`);
-    console.log(`    gitwise:    ${watchLastEval.overallScore}/100 (${watchLastEval.grade})`);
+    console.log(`    watcher:    ${watchLastEval.overallScore}/100 (${watchLastEval.grade})`);
     const cc = (combinedGrade === 'A' || combinedGrade === 'B') ? '\x1b[32m' :
                combinedGrade === 'C' ? '\x1b[33m' : '\x1b[31m';
     console.log(`    ${cc}\x1b[1mCombined:   ${combinedScore}/100 (${combinedGrade})\x1b[0m`);
