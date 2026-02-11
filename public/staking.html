@@ -287,11 +287,11 @@
             </div>
             <div class="stat-card">
                 <div class="stat-value" id="dailyEarnings">0</div>
-                <div class="stat-label" data-i18n="goldPerDay">Gold / Day</div>
+                <div class="stat-label" data-i18n="nwgPerDay">NWG / Day</div>
             </div>
             <div class="stat-card">
                 <div class="stat-value" id="weeklyLogs">0</div>
-                <div class="stat-label" data-i18n="logsPerWeek">Logs / Week</div>
+                <div class="stat-label" data-i18n="nwgPerWeek">NWG / Week</div>
             </div>
             <div class="stat-card">
                 <div class="stat-value" id="totalEarned">0</div>
@@ -303,7 +303,7 @@
         <div class="rewards-banner" id="rewardsBanner">
             <div class="rewards-title"><span data-i18n="pendingRewards">PENDING REWARDS</span></div>
             <div class="rewards-value">
-                <span id="pendingGold">0</span> <span data-i18n="gold">Gold</span> + <span id="pendingLogs">0</span> <span data-i18n="logs">Logs</span>
+                <span id="pendingGold">0</span> <span data-i18n="nwg">NWG</span> = <span id="pendingLogs">$0</span> <span data-i18n="usdValue">USD value</span>
             </div>
             <div class="rewards-detail"><span data-i18n="accumulatingSince">Accumulating since</span> <span id="lastClaim">-</span></div>
         </div>
@@ -317,30 +317,37 @@
             <div class="rates-grid">
                 <div class="rate-card common">
                     <div class="rate-rarity" data-i18n="common">Common</div>
-                    <div class="rate-gold">1 <span data-i18n="goldDay">Gold/day</span></div>
+                    <div class="rate-gold">0.01 <span data-i18n="nwgDay">NWG/day</span></div>
+                    <div class="rate-logs" style="color:rgba(255,255,255,0.4)">36.5% APY</div>
                 </div>
                 <div class="rate-card uncommon">
                     <div class="rate-rarity" data-i18n="uncommon">Uncommon</div>
-                    <div class="rate-gold">2 <span data-i18n="goldDay">Gold/day</span></div>
+                    <div class="rate-gold">0.025 <span data-i18n="nwgDay">NWG/day</span></div>
+                    <div class="rate-logs" style="color:rgba(255,255,255,0.4)">36.5% APY</div>
                 </div>
                 <div class="rate-card rare">
                     <div class="rate-rarity" data-i18n="rare">Rare</div>
-                    <div class="rate-gold">5 <span data-i18n="goldDay">Gold/day</span></div>
+                    <div class="rate-gold">0.05 <span data-i18n="nwgDay">NWG/day</span></div>
+                    <div class="rate-logs" style="color:rgba(255,255,255,0.4)">24.3% APY</div>
                 </div>
                 <div class="rate-card epic">
                     <div class="rate-rarity" data-i18n="epic">Epic</div>
-                    <div class="rate-gold">15 <span data-i18n="goldDay">Gold/day</span></div>
+                    <div class="rate-gold">0.1 <span data-i18n="nwgDay">NWG/day</span></div>
+                    <div class="rate-logs" style="color:rgba(255,255,255,0.4)">18.3% APY</div>
                 </div>
                 <div class="rate-card legendary">
                     <div class="rate-rarity" data-i18n="legendary">Legendary</div>
-                    <div class="rate-gold">50 <span data-i18n="goldDay">Gold/day</span></div>
-                    <div class="rate-logs">+1 <span data-i18n="logWeek">Log/week</span></div>
+                    <div class="rate-gold">0.25 <span data-i18n="nwgDay">NWG/day</span></div>
+                    <div class="rate-logs" style="color:rgba(255,255,255,0.4)">18.3% APY</div>
                 </div>
                 <div class="rate-card mythic">
                     <div class="rate-rarity" data-i18n="mythic">Mythic</div>
-                    <div class="rate-gold">200 <span data-i18n="goldDay">Gold/day</span></div>
-                    <div class="rate-logs">+5 <span data-i18n="logsWeek">Logs/week</span></div>
+                    <div class="rate-gold">0.5 <span data-i18n="nwgDay">NWG/day</span></div>
+                    <div class="rate-logs" style="color:rgba(255,255,255,0.4)">12.2% APY</div>
                 </div>
+            </div>
+            <div style="margin-top:12px;font-size:11px;color:rgba(255,255,255,0.4);text-align:center;">
+                Max 5 cards staked | Star multipliers: 2* 1.2x, 3* 1.5x, 4* 2x, 5* 3x | <a href="/invest" style="color:var(--green);text-decoration:none;">Full APY Calculator</a>
             </div>
         </div>
         
@@ -555,13 +562,14 @@
         // NW STAKING SYSTEM
         // ============================================
         
+        // v3.2 REBALANCED: Rewards in NWG (not Gold). Aligned with NW_ECONOMY/NW_WALLET
         const STAKING_RATES = {
-            common: { gold: 1, logs: 0 },
-            uncommon: { gold: 2, logs: 0 },
-            rare: { gold: 5, logs: 0 },
-            epic: { gold: 15, logs: 0 },
-            legendary: { gold: 50, logs: 1 },
-            mythic: { gold: 200, logs: 5 }
+            common: { nwg: 0.01 },
+            uncommon: { nwg: 0.025 },
+            rare: { nwg: 0.05 },
+            epic: { nwg: 0.1 },
+            legendary: { nwg: 0.25 },
+            mythic: { nwg: 0.5 }
         };
         
         const MIN_LOCK_DAYS = 7;
@@ -635,7 +643,7 @@
                     <div class="card-art">${card.emoji || '🃏'}</div>
                     <div class="card-name">${card.name}</div>
                     <div class="card-rarity ${card.rarity}">${card.rarity}</div>
-                    <div class="card-earnings">+${STAKING_RATES[card.rarity].gold}/d</div>
+                    <div class="card-earnings">+${STAKING_RATES[card.rarity].nwg} NWG/d</div>
                 </div>
             `).join('');
             
@@ -664,7 +672,7 @@
                     <div class="card-art">${card.emoji || '🃏'}</div>
                     <div class="card-name">${card.name}</div>
                     <div class="card-rarity ${card.rarity}">${card.rarity}</div>
-                    <div class="card-earnings">+${STAKING_RATES[card.rarity].gold}/d</div>
+                    <div class="card-earnings">+${STAKING_RATES[card.rarity].nwg} NWG/d</div>
                 </div>
             `).join('');
             
@@ -699,27 +707,24 @@
         }
         
         function updateStats() {
-            let dailyGold = 0;
-            let weeklyLogs = 0;
+            let dailyNWG = 0;
             
             stakedCards.forEach(card => {
                 const rates = STAKING_RATES[card.rarity];
-                dailyGold += rates.gold;
-                weeklyLogs += rates.logs;
+                dailyNWG += rates.nwg;
             });
             
             document.getElementById('totalStaked').textContent = stakedCards.length;
-            document.getElementById('dailyEarnings').textContent = dailyGold;
-            document.getElementById('weeklyLogs').textContent = weeklyLogs;
+            document.getElementById('dailyEarnings').textContent = dailyNWG.toFixed(2);
+            document.getElementById('weeklyLogs').textContent = (dailyNWG * 7).toFixed(1);
             
-            // Calculate pending rewards (demo: based on time since last claim)
+            // Calculate pending rewards (based on time since last claim)
             const lastClaimTime = localStorage.getItem('nw_last_stake_claim') || Date.now();
             const hoursSinceClaim = (Date.now() - parseInt(lastClaimTime)) / (1000 * 60 * 60);
-            const pendingGold = Math.floor(dailyGold * (hoursSinceClaim / 24));
-            const pendingLogs = Math.floor(weeklyLogs * (hoursSinceClaim / 168));
+            const pendingNWG = Math.floor(dailyNWG * (hoursSinceClaim / 24) * 10) / 10;
             
-            document.getElementById('pendingGold').textContent = pendingGold;
-            document.getElementById('pendingLogs').textContent = pendingLogs;
+            document.getElementById('pendingGold').textContent = pendingNWG;
+            document.getElementById('pendingLogs').textContent = '$' + (pendingNWG * 0.01).toFixed(4);
             document.getElementById('lastClaim').textContent = new Date(parseInt(lastClaimTime)).toLocaleDateString();
             
             const totalEarned = parseInt(localStorage.getItem('nw_total_stake_earned') || '0');

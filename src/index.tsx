@@ -43,16 +43,7 @@ app.use('/museum/*', serveStatic())
 app.use('/vault/*', serveStatic())
 app.use('/research/*', serveStatic())
 
-// Named static pages with clean URLs
-const namedStatic = [
-  'efficiency', 'lore', 'tabletop', 'staking', 'fusion',
-  'claim', 'events', 'confessional', 'avatar-studio', 'research-library',
-  'cipher', 'oracle', 'collection-stats', 'showcase', 'dashboard'
-]
-namedStatic.forEach(page => {
-  app.get(`/${page}`, serveStatic({ path: `./${page}.html` }))
-  app.get(`/${page}.html`, serveStatic({ path: `./${page}.html` }))
-})
+// Tabletop sub-routes (static assets)
 app.use('/tabletop/*', serveStatic())
 
 // Mount all route modules

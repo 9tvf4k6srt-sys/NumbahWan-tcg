@@ -288,3 +288,96 @@ for auto-reflect, postfix, and breakage recording.
 
 ## Areas
 battle, forge, i18n, nav, economy, collection, wallet, cards, tabletop, emoji, dom, ios, modules, font, memory, workflow, oracle, sentinel, lore, discoverability, absurd, exchange
+
+## =====================================================
+## NumbahWan TCG — Project Architecture & Context
+## =====================================================
+## This section preserves context across conversations.
+## If you're a new AI session: READ THIS FIRST.
+
+### Stack
+- **Backend**: Hono (TypeScript) on Cloudflare Pages (Workers runtime)
+- **Frontend**: 94 static HTML pages in `public/`, each with inline JS
+- **Routing**: `src/routes/pages.ts` — Hono routes serve HTML files (ASSETS in prod, fs.readFileSync in dev)
+- **Dev server**: `serve.cjs` (Node.js static server with clean URL support, port 3000)
+- **Build**: Vite + @hono/vite-build + @hono/vite-dev-server
+- **Deploy**: `wrangler pages deploy dist/` (Cloudflare Pages)
+- **DB**: Cloudflare D1 (GUILD_DB binding), KV (MARKET_CACHE binding)
+
+### Key Files (DO NOT break these)
+| File | Purpose | Size |
+|------|---------|------|
+| `public/static/nw-nav.js` | Universal nav (hamburger menu, lang toggle, progressive disclosure) | 1283 lines |
+| `public/static/nw-i18n-core.js` | i18n system (register translations, apply to DOM, event-driven) | 387 lines |
+| `public/static/nw-wallet.js` | Wallet/economy (NWG currency, daily rewards, achievements) | 2119 lines |
+| `src/index.tsx` | Hono app entry — mounts all API routes + security headers | ~200 lines |
+| `src/routes/pages.ts` | Clean URL routing — serves `public/*.html` for `/<page>` URLs | ~140 lines |
+| `serve.cjs` | Dev static server — clean URLs, MIME types, port 3000 | ~65 lines |
+
+### i18n System — HOW IT WORKS
+1. **nw-i18n-core.js** is the single source of truth for language state
+   - Storage key: `nw_lang` (also syncs to legacy keys: `lang`, `preferred_lang`)
+   - Supported languages: `en`, `zh`, `th`
+   - Auto-initializes on DOMContentLoaded
+   - Applies translations to `[data-i18n]`, `[data-i18n-html]`, `[data-i18n-placeholder]`, `[data-i18n-title]`
+2. **Pages register translations** via `NW_I18N.register({ en: {...}, zh: {...}, th: {...} })`
+   - Backward-compatible alias: `initI18n(translations)` → calls `NW_I18N.register()`
+3. **Nav dispatches these events on language change**:
+   - `nw-lang-change` (on both `document` and `window`) ← THIS IS THE CORRECT EVENT NAME
+   - `languageChanged` (on `document`) ← legacy
+4. **nw-i18n-core.js listens** for `nw-lang-change` and `languageChanged` → calls `setLang()` → `_applyTranslations()`
+5. **Pages listen** for `nw-lang-change` on `window` for custom rendering updates
+
+### ⚠️ KNOWN PAST BUG: Event Name Mismatch
+Some pages had `nw-language-change` (wrong) instead of `nw-lang-change` (correct).
+The nav dispatches `nw-lang-change`. If a page listens for `nw-language-change`, it won't react.
+FIXED in Feb 2026. If you see `nw-language-change` in any page, it's a bug — change to `nw-lang-change`.
+
+### ⚠️ KNOWN PAST BUG: injectNav() Destroys Open Menu
+`NW_NAV.injectNav()` removes ALL nav DOM elements and recreates them. If called while the nav
+panel is open (e.g., during language switch), the menu disappears because the new panel lacks
+the `.open` class. FIXED: language change now updates button states in-place without calling
+`injectNav()`.
+
+### Nav System — Progressive Disclosure
+- `NW_NAV` in `nw-nav.js` manages all navigation
+- Tier system (0-5): sections unlock based on play stats (pullsMade, gamesPlayed, collection size)
+- All pages always accessible by direct URL (only nav visibility changes)
+- URL `?tier=5` forces showing everything (for testing)
+- Language buttons (`.nw-lang-btn`) are inside the nav panel
+- Page-level `.lang-btn` buttons are dead code from old system — nav handles all language switching now
+
+### Clean URL Routing
+- Production (Cloudflare): `c.env.ASSETS.fetch()` serves HTML
+- Dev (serve.cjs): reads `public/<page>.html` from disk for `/<page>` requests
+- Vite dev server: `src/routes/pages.ts` uses `fs.readFileSync` fallback when no ASSETS binding
+- ALL 94 pages accessible as both `/<page>` and `/<page>.html`
+
+### NWG Economy (reference)
+- $1 USD = 100 NWG (fixed)
+- Total supply: 1,000,000,000 NWG (burns reduce supply)
+- 1 NWG = 10 Gold; converting 100 NWG → Gold costs 2 NWG fee (100 NWG → 980 Gold)
+- Signup: 100 NWG; Daily login: up to 70 NWG/day (7-day streak); Referral: 100 NWG
+- Staking: 30% of supply in rewards pool, 10% early unstaking penalty
+
+### Dev Server Quick Start
+```bash
+# Start dev server (simple static, recommended for sandbox)
+cd /home/user/webapp && node serve.cjs &
+# Access at http://localhost:3000/markets, /treasury, /buy, etc.
+
+# OR: Start Vite dev server (with HMR, API routes)
+cd /home/user/webapp && npx vite --port 3000 --host 0.0.0.0
+# Note: Vite needs node_modules installed (npm install)
+
+# Test all routes
+for p in markets treasury buy restaurant services; do
+  echo "$(curl -s -o /dev/null -w '%{http_code}' http://localhost:3000/$p) /$p"
+done
+```
+
+### GitHub Workflow
+- Branch: `genspark_ai_developer`
+- PR: #42 (feat(nwg): What is NWG? intro + economy + fixes)
+- Repo: https://github.com/9tvf4k6srt-sys/NumbahWan-tcg
+- Always: `setup_github_environment` before push (token refresh)
