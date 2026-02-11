@@ -1,6 +1,6 @@
 {
   "_meta": {
-    "version": "2.0.0",
+    "version": "2.1.0",
     "created": "2026-02-11",
     "updated": "2026-02-11",
     "schema": "hybrid-ltm-v2",
@@ -90,7 +90,7 @@
         "繁中",
         "JP"
       ],
-      "language_storage_key": "qqb_lang"
+      "language_storage_key": "kintsugi_lang"
     },
     "frustration_triggers": [
       {
@@ -149,7 +149,7 @@
     "sandbox_host": "5060-i0086p3npyxmrzzh1l7ri-c07dda5e.sandbox.novita.ai",
     "related_systems": {
       "mycelium": "Self-improving codebase learning system. Uses .mycelium-context, CLAUDE.md, memory.json",
-      "sentinel": "Health check automation. scripts/qqb-sentinel.py. Run 29+, 12 catches, 0 current issues",
+      "sentinel": "Health check automation. scripts/qqb-sentinel.py (legacy name). Run 29+, 12 catches, 0 current issues",
       "nw_nav": "Universal nav in public/static/nw-nav.js. Tier-based progressive disclosure",
       "nw_i18n": "i18n in public/static/nw-i18n-core.js. Event: nw-lang-change (NOT nw-language-change)",
       "nw_wallet": "Economy system in public/static/nw-wallet.js. $1 = 100 NWG"
@@ -199,12 +199,13 @@
       "price_derivation": "July 2025 gold spot price → convert to NT$ → markup for mintage/collectibility",
       "features": [
         "Coin flip animation (front/back)",
-        "Buy toast interceptor",
-        "Spot gold pricing"
+        "Spot gold pricing",
+        "Direct /buy.html redirect on wallet CTAs",
+        "Pre-cropped circular coin images"
       ],
       "i18n_keys": 53,
       "scripts": 1,
-      "lines": 1124,
+      "lines": 1096,
       "mobile_overflow_guards": 3,
       "font_scaling": "+15% body text only via @media(max-width:768px)"
     },
@@ -269,12 +270,12 @@
       "features": [
         "TCG fullbleed agent cards",
         "Beta performance metrics",
-        "Buy toast interceptor",
-        "Feature image sections"
+        "Feature image sections",
+        "Direct /buy.html redirect on wallet CTAs"
       ],
       "i18n_keys": 49,
       "scripts": 1,
-      "lines": 866,
+      "lines": 844,
       "mobile_overflow_guards": 16,
       "font_scaling": "REMOVED conflicting readability block. Single mobile @media block handles all sizing."
     },
@@ -298,20 +299,21 @@
         "Gold price ticker",
         "Asset allocation grid with SVG icons",
         "4-tier staking",
-        "Buy toast interceptor",
-        "Achievement system",
-        "Particle effects"
+        "Particle effects",
+        "Direct /buy.html redirect on wallet CTAs",
+        "CSS-only gold drift particles",
+        "Bilingual banner (KINTSUGI + 金繕)"
       ],
       "i18n_keys": 49,
       "scripts": 5,
-      "lines": 2051,
+      "lines": 1894,
       "mobile_overflow_guards": 9,
       "font_scaling": "+15% body text only via @media(max-width:768px)"
     }
   },
   "navigation": {
     "unified": true,
-    "component": "Premium nav bar (inline per page, not nw-nav.js — these are QQB premium pages)",
+    "component": "Premium nav bar (inline per page, not nw-nav.js — these are KINTSUGI premium pages)",
     "links": [
       {
         "label": "Home",
@@ -345,7 +347,7 @@
       "繁中",
       "JP"
     ],
-    "language_persistence": "localStorage key: kintsugi_lang",
+    "language_persistence": "localStorage key: kintsugi_lang (kintsugi.html) / kin_lang (coin-shop, ai-assets)",
     "nav_style": {
       "position": "fixed top, z-index 10000",
       "background": "translucent backdrop blur",
@@ -500,8 +502,8 @@
   "github": {
     "repo": "9tvf4k6srt-sys/NumbahWan-tcg",
     "branch": "main",
-    "last_commit": "13c3163",
-    "last_commit_msg": "feat(rebrand): QinQin Coin → KINTSUGI — full art, names, i18n, assets",
+    "last_commit": "4e6d427",
+    "last_commit_msg": "fix: nuke buy-toast entirely — direct redirect to /buy.html, no popup",
     "push_protocol": "setup_github_environment → IMMEDIATELY git push (next command, no diagnostics). Token is ephemeral.",
     "deployment": "Mycelium ship command handles: commit → validate → auth → sync → squash → push → PR → merge",
     "ship_command": "node bin/mycelium.cjs ship \"feat: description\""
@@ -509,7 +511,7 @@
   "active_state": {
     "checkpoint": null,
     "wip": null,
-    "last_action": "Complete KINTSUGI rebrand — 13 images, 3 pages, full i18n",
+    "last_action": "System audit + AGENT-CONTEXT.md creation",
     "server_running": true,
     "server_pid_check": "lsof -i :5060",
     "sentinel_run": 29,
@@ -527,7 +529,9 @@
       "anti_pattern": ".feature-img has no max-width → 900px image escapes 375px viewport",
       "fix_pattern": ".feature-img { max-width: 100%; overflow: hidden } AND img { max-width: 100%; height: auto; display: block }",
       "date": "2026-02-11",
-      "recurrence_count": 3
+      "recurrence_count": 3,
+      "text": "Always set max-width: 100% on BOTH the image AND its container, plus overflow-x: hidden on html,body. Don't rely on parent constraints trickling down.",
+      "importance": 0.95
     },
     {
       "id": "L002",
@@ -538,7 +542,9 @@
       "anti_pattern": "MOBILE READABILITY block after MOBILE LAYOUT block → readability overrides layout sizes",
       "fix_pattern": "Single @media(max-width:768px) block per page. Merge all mobile rules into one block.",
       "date": "2026-02-11",
-      "recurrence_count": 1
+      "recurrence_count": 1,
+      "text": "Never have two competing @media blocks for the same breakpoint. The last one wins via CSS cascade and will override the first, causing unexpected size inflation.",
+      "importance": 0.95
     },
     {
       "id": "L003",
@@ -549,7 +555,9 @@
       "anti_pattern": "Running git config checks between setup and push → token expires → auth fails",
       "fix_pattern": "setup_github_environment && cd /home/user/flutter_app && git push origin main",
       "date": "2026-02-11",
-      "recurrence_count": 4
+      "recurrence_count": 4,
+      "text": "setup_github_environment token is ephemeral. Call setup, then git push in the VERY NEXT command. No diagnostics in between. If first method fails twice, try completely different approach.",
+      "importance": 0.95
     },
     {
       "id": "L004",
@@ -560,7 +568,9 @@
       "anti_pattern": "Setting width:100% on img but parent .feature-img has no width constraint",
       "fix_pattern": "Both container AND img get max-width: 100%. Container also gets overflow: hidden.",
       "date": "2026-02-11",
-      "recurrence_count": 2
+      "recurrence_count": 2,
+      "text": "User reviews on iPhone 375px. All images must be contained within viewport. Feature images need explicit max-width on container, not just on img tag.",
+      "importance": 0.8
     },
     {
       "id": "L005",
@@ -571,7 +581,9 @@
       "anti_pattern": "Applying 1.3x multiplier to ALL text including headings → layout explosion",
       "fix_pattern": "Only bump: nav links, body paragraphs, labels, badges, toast text. Leave alone: h1, h2, stat values, ticker prices.",
       "date": "2026-02-11",
-      "recurrence_count": 1
+      "recurrence_count": 1,
+      "text": "Font scaling must be subtle (+15% on body text, leave headings alone). 30% was too aggressive and broke layout. Only bump the small hard-to-read text (9-13px range).",
+      "importance": 0.8
     },
     {
       "id": "L006",
@@ -582,7 +594,9 @@
       "anti_pattern": "Explaining why the fix should work while user sees it doesn't",
       "fix_pattern": "Acknowledge → try completely different approach → show proof (screenshot/URL)",
       "date": "2026-02-11",
-      "recurrence_count": 2
+      "recurrence_count": 2,
+      "text": "When user repeats the same feedback, they're frustrated. Don't explain — just fix it differently. When a method fails twice, abandon it entirely.",
+      "importance": 0.8
     },
     {
       "id": "L007",
@@ -591,16 +605,20 @@
       "importance_score": 0.7,
       "lesson": "Replace emoji with professional SVG/WebP icons. User expects premium quality throughout. No placeholders in production.",
       "date": "2026-02-11",
-      "recurrence_count": 0
+      "recurrence_count": 0,
+      "text": "Replace emoji with professional SVG/WebP icons. User expects premium quality throughout. No placeholders in production.",
+      "importance": 0.6
     },
     {
       "id": "L008",
       "severity": "medium",
       "category": "i18n",
       "importance_score": 0.75,
-      "lesson": "All 3 pages must have matching i18n coverage (EN/ZH-TW/JP). Language persists via localStorage key 'qqb_lang' across page navigation. Event name is nw-lang-change (NOT nw-language-change).",
+      "lesson": "All 3 pages must have matching i18n coverage (EN/ZH-TW/JP). Language persists via localStorage key 'kintsugi_lang' (kintsugi.html) or 'kin_lang' (coin-shop, ai-assets). Event name is nw-lang-change (NOT nw-language-change).",
       "date": "2026-02-11",
-      "recurrence_count": 0
+      "recurrence_count": 0,
+      "text": "All 3 pages must have matching i18n coverage (EN/ZH-TW/JP). Language persists via localStorage key 'kintsugi_lang' (kintsugi.html) or 'kin_lang' (coin-shop, ai-assets). Event name is nw-lang-change (NOT nw-language-change).",
+      "importance": 0.6
     },
     {
       "id": "L009",
@@ -611,7 +629,9 @@
       "anti_pattern": "Fixing individual elements one by one while new ones overflow",
       "fix_pattern": "@media(max-width:768px) { * { max-width: 100vw } html, body { overflow-x: hidden } }",
       "date": "2026-02-11",
-      "recurrence_count": 0
+      "recurrence_count": 0,
+      "text": "Global catch-all * { max-width: 100vw } prevents ANY element from escaping viewport. Apply on mobile breakpoint as nuclear option.",
+      "importance": 0.95
     },
     {
       "id": "L010",
@@ -622,7 +642,9 @@
       "anti_pattern": ".feature-row { gap: 60px } without mobile override → pushes content off-screen",
       "fix_pattern": "@media(max-width:768px) { .feature-row { gap: 20px } }",
       "date": "2026-02-11",
-      "recurrence_count": 1
+      "recurrence_count": 1,
+      "text": "Desktop gap values (60px) bleed into mobile if not overridden. Feature-row gap: 60px on desktop must be explicitly reduced to 20px on mobile.",
+      "importance": 0.8
     },
     {
       "id": "L011",
@@ -631,7 +653,9 @@
       "importance_score": 0.85,
       "lesson": "User prefers nano-banana-pro for all image generation — best realism. Always use this model unless explicitly told otherwise.",
       "date": "2026-02-11",
-      "recurrence_count": 0
+      "recurrence_count": 0,
+      "text": "User prefers nano-banana-pro for all image generation — best realism. Always use this model unless explicitly told otherwise.",
+      "importance": 0.8
     }
   ],
   "session_history": [
@@ -639,7 +663,7 @@
       "id": "S001",
       "date": "2026-02-11",
       "importance_score": 0.9,
-      "summary": "Built ai-assets.html (AI Asset Manager beta page with 6 TCG agent cards, feature sections, coverage grid, beta metrics). Added SVG asset icons. Unified premium nav across qinqin/coin-shop/ai-assets. Implemented buy toast interceptor on all pages. Major mobile overflow hardening (triple-layer protection). Font scaling journey: 30% (too big) -> reverted -> 15% (still conflicting) -> single mobile block (final). Committed 43 files to GitHub.",
+      "summary": "Built ai-assets.html (AI Asset Manager beta page with 6 TCG agent cards, feature sections, coverage grid, beta metrics). Added SVG asset icons. Unified premium nav across kintsugi/coin-shop/ai-assets. Implemented buy toast interceptor on all pages. Major mobile overflow hardening (triple-layer protection). Font scaling journey: 30% (too big) -> reverted -> 15% (still conflicting) -> single mobile block (final). Committed 43 files to GitHub.",
       "commits": [
         "13c3163"
       ],
@@ -667,29 +691,28 @@
       "id": "S002",
       "date": "2026-02-11",
       "importance_score": 1.0,
-      "summary": "KINTSUGI REBRAND: Renamed QinQin Coin → KINTSUGI (KIN) across all 3 pages. Generated 13 new images via nano-banana-pro (6 coins, 3 heroes, 3 features, 1 brand icon). Updated all i18n (EN/繁中/JP). Deleted old QQB assets. All converted to optimized WebP.",
-      "key_decisions": [
-        "Brand: KINTSUGI — Japanese art of repairing with gold. Universal 2026 appeal",
-        "Ticker: KIN (clean, memorable)",
-        "Chinese: 金繕 (literally gold-repair)",
-        "Collections: Phoenix Rebirth, Dragon Mend, Qilin Grace",
-        "All images generated with nano-banana-pro for realism",
-        "localStorage prefix changed: qqb_ → kin_"
-      ]
-    },
-    {
-      "id": "S002",
-      "date": "2026-02-11",
-      "importance_score": 1.0,
-      "summary": "Complete rebrand: QinQin Coin (QQB) → KINTSUGI (KIN). Generated 13 images via nano-banana-pro: 6 coin faces, 3 hero banners, 3 feature images, 1 brand icon. All converted to optimized WebP. Renamed qinqin.html → kintsugi.html. Updated all brand names, ticker ($KIN), Chinese (金繕), Japanese (金繕), localStorage keys, CSS IDs, i18n across EN/繁中/JP. Deleted old QQB assets. All JS syntax passing. All pages HTTP 200.",
+      "summary": "Complete rebrand: KINTSUGI (QQB) → KINTSUGI (KIN). Generated 13 images via nano-banana-pro: 6 coin faces, 3 hero banners, 3 feature images, 1 brand icon. All converted to optimized WebP. Renamed kintsugi.html → kintsugi.html. Updated all brand names, ticker ($KIN), Chinese (金繕), Japanese (金繕), localStorage keys, CSS IDs, i18n across EN/繁中/JP. Deleted old QQB assets. All JS syntax passing. All pages HTTP 200.",
       "key_decisions": [
         "Brand name: KINTSUGI (Japanese art of golden repair) — universal appeal, bridges East-West",
         "Ticker: $KIN (short, clean, memorable)",
         "Chinese: 金繕 (gold repair — direct translation of kintsugi)",
         "Coin collections renamed: Phoenix Rebirth, Dragon's Mend, Qilin's Grace",
         "All art generated with nano-banana-pro for maximum realism",
-        "Page renamed: qinqin.html → kintsugi.html",
+        "Page renamed: legacy coin page → kintsugi.html",
         "localStorage keys: kintsugi_lang, kin_streak, kin_last_visit"
+      ]
+    },
+    {
+      "id": "S003",
+      "date": "2026-02-11",
+      "importance_score": 0.9,
+      "summary": "CLEANUP SESSION: Removed Qing/卿 personalization across EN/ZH/JP, deleted emoji animations (floating hearts, toast emoji, heart burst, click ripple), replaced with CSS-only gold particle effects, removed achievement/streak system, pre-cropped coin images to circular with transparent alpha, removed all Coming Soon/buy toast popups, added bilingual KINTSUGI+金繕 banner. Commits: f71797d, 3ab2707, 4e6d427.",
+      "key_decisions": [
+        "Toast popup fully removed — buy buttons redirect directly to /buy.html",
+        "Coin images pre-cropped to circle at image level (not just CSS)",
+        "Banner permanently shows both KINTSUGI and 金繕",
+        "CSS-only gold drift particles (24 count, lower opacity) replace emoji animations",
+        "Staking tiers renamed: Bronze/Silver/Gold/Kintsugi"
       ]
     }
   ],
@@ -726,6 +749,13 @@
       "L002",
       "L008",
       "L009"
+    ],
+    "when_removing_features": [
+      "L007",
+      "L008"
+    ],
+    "when_touching_buy_flow": [
+      "L007"
     ]
   }
 }
