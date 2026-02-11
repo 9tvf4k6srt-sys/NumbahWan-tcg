@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>QQB Gold Coin 3D</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { 
+    background: #0a0a14; 
+    display: flex; justify-content: center; align-items: center; 
+    height: 100vh; overflow: hidden;
+}
+canvas { display: block; }
+#info {
+    position: fixed; top: 8px; left: 8px;
+    color: #0f0; font-size: 10px; z-index: 999;
+    line-height: 1.3; background: rgba(0,0,0,0.8);
+    padding: 6px 10px; border-radius: 4px; font-family: monospace;
+}
+</style></head><body>
+<div id="info">Loading...</div>
+<canvas id="c" width="500" height="500"></canvas>
+<script>
+/**
+ * QQB GOLD COIN - v14 HULL FILL
+ * 
+ * WHY ALL PREVIOUS VERSIONS HAD A GAP:
+ * Edge = drawn from VISIBLE rim points only (partial arc)
+ * Face = drawn from ALL rim points (full circle)
+ * At the visibility boundary, edge polygon ENDS but face CONTINUES.
+ * That junction = the gap. Shared points, single-path, etc. don't fix this
+ * because the COVERAGE is different.
+ *
+ * v14 FIX — HULL APPROACH:
+ * 1. Compute full rim at +HT and -HT (all 360 pts, NO culling)
+ * 2. Compute the OUTER HULL (convex hull of all projected points)
+ * 3. Fill that hull solid gold — one shape, covers everything
+ * 4. Paint edge detail (gradient + grooves) on the visible edge zone
+ * 5. Paint face images on top, clipped to their respective rims
+ *
+ * Result: gap is impossible because gold fill is ONE continuous shape
+ * underneath everything. The face images sit ON TOP of the solid gold.
+ */
+
+const C = document.getElementById('c');
+const X = C.getContext('2d');
+const W = 500, H = 500;
+
+const R = 115;
+const THICK = 20;
+const HT = THICK / 2;
+const PERSP = 480;
+const CX = W/2, CY = H/2;
+
+const TILT = 0.12;
+const CT = Math.cos(TILT), ST = Math.sin(TILT);
+
+const N = 360;
+const STEP = (Math.PI * 2) / N;
+
+let ang = 0;
+let fImg = null, bImg = null;
+
+function load(s) {
+    return new Promise(r => {
+        const i = new Image();
+        i.crossOrigin = 'anonymous';
+        i.onload = () => r(i);
+        i.onerror = () => r(null);
+        i.src = s;
+    });
+}
+
+function p3d(x, y, z) {
+    const s = PERSP / (PERSP + z);
+    return [CX + x * s, CY + y * s, s];
+}
+
+function rot(x, y, z, ca, sa) {
+    const rx = x * ca + z * sa;
+    const rz = -x * sa + z * ca;
+    return [rx, y * CT - rz * ST, y * ST + rz * CT];
+}
+
+function computeRim(zo, ca, sa) {
+    const pts = [];
+    for (let i = 0; i <= N; i++) {
+        const a = i * STEP;
+        const px = R * Math.cos(a), py = R * Math.sin(a);
+        const [rx, ry, rz] = rot(px, py, zo, ca, sa);
+        const [sx, sy, ss] = p3d(rx, ry, rz);
+        pts.push({ x: sx, y: sy, s: ss, a: a });
+    }
+    return pts;
+}
+
+// Build the outer silhouette hull of the coin:
+// For each angle around the coin, take the OUTERMOST point
+// from either the top rim or bottom rim (whichever projects further from center).
+// This gives one continuous outline that envelops the entire coin.
+function computeHull(topRim, botRim) {
+    const hull = [];
+    for (let i = 0; i <= N; i++) {
+        const t = topRim[i], b = botRim[i];
+        // Distance from canvas center
+        const td = (t.x - CX) * (t.x - CX) + (t.y - CY) * (t.y - CY);
+        const bd = (b.x - CX) * (b.x - CX) + (b.y - CY) * (b.y - CY);
+        // Pick the one further from center (= outermost silhouette point)
+        hull.push(td >= bd ? t : b);
+    }
+    return hull;
+}
+
+function tracePoly(pts) {
+    X.moveTo(pts[0].x, pts[0].y);
+    for (let i = 1; i < pts.length; i++) {
+        X.lineTo(pts[i].x, pts[i].y);
+    }
+}
+
+function render() {
+    X.clearRect(0, 0, W, H);
+    const ca = Math.cos(ang), sa = Math.sin(ang);
+
+    // Full rims — ALL 360 points, no culling
+    const topRim = computeRim(HT, ca, sa);
+    const botRim = computeRim(-HT, ca, sa);
+
+    // Outer hull silhouette
+    const hull = computeHull(topRim, botRim);
+
+    const fv = ca > 0;
+
+    // =============================================
+    // LAYER 1: Solid gold hull fill (eliminates ALL gaps)
+    // =============================================
+    X.save();
+    X.beginPath();
+    tracePoly(hull);
+    X.closePath();
+    // Gradient across the hull for base gold
+    let minX = Infinity, maxX = -Infinity;
+    for (const p of hull) {
+        if (p.x < minX) minX = p.x;
+        if (p.x > maxX) maxX = p.x;
+    }
+    const baseGrad = X.createLinearGradient(minX, 0, maxX, 0);
+    baseGrad.addColorStop(0, 'rgb(150, 115, 25)');
+    baseGrad.addColorStop(0.5, 'rgb(210, 170, 50)');
+    baseGrad.addColorStop(1, 'rgb(150, 115, 25)');
+    X.fillStyle = baseGrad;
+    X.fill();
+    X.restore();
+
+    // =============================================
+    // LAYER 2: Edge detail (gradient + grooves) on visible portion only
+    // =============================================
+    drawEdgeDetail(topRim, botRim, ca, sa);
+
+    // =============================================
+    // LAYER 3: Face images (painter's order)
+    // Near face drawn last so it's on top
+    // =============================================
+    if (fv) {
+        drawFace(botRim, bImg, -HT, ca, sa, -1);  // far face first
+        drawFace(topRim, fImg, HT, ca, sa, 1);     // near face on top
+    } else {
+        drawFace(topRim, fImg, HT, ca, sa, 1);
+        drawFace(botRim, bImg, -HT, ca, sa, -1);
+    }
+
+    // Ambient glow
+    X.save();
+    X.globalCompositeOperation = 'screen';
+    const g = X.createRadialGradient(CX, CY, 30, CX, CY, 170);
+    g.addColorStop(0, 'rgba(255,215,0,0.07)');
+    g.addColorStop(1, 'transparent');
+    X.fillStyle = g;
+    X.fillRect(0, 0, W, H);
+    X.restore();
+}
+
+function drawEdgeDetail(topRim, botRim, ca, sa) {
+    // Collect only the visible-edge portion for detail overlay
+    const vTop = [], vBot = [];
+    for (let i = 0; i <= N; i++) {
+        const a = i * STEP;
+        const nz = -Math.cos(a) * sa;
+        if (nz <= 0.01) {
+            vTop.push(topRim[i]);
+            vBot.push(botRim[i]);
+        }
+    }
+    if (vTop.length < 3) return;
+
+    // Edge gradient overlay (richer than hull base)
+    X.save();
+    X.beginPath();
+    tracePoly(vTop);
+    for (let i = vBot.length - 1; i >= 0; i--) {
+        X.lineTo(vBot[i].x, vBot[i].y);
+    }
+    X.closePath();
+
+    let minX = Infinity, maxX = -Infinity;
+    for (const p of vTop) {
+        if (p.x < minX) minX = p.x;
+        if (p.x > maxX) maxX = p.x;
+    }
+    const eg = X.createLinearGradient(minX, 0, maxX, 0);
+    eg.addColorStop(0, 'rgb(130, 95, 15)');
+    eg.addColorStop(0.25, 'rgb(195, 155, 35)');
+    eg.addColorStop(0.5, 'rgb(230, 190, 70)');
+    eg.addColorStop(0.75, 'rgb(195, 155, 35)');
+    eg.addColorStop(1, 'rgb(130, 95, 15)');
+    X.fillStyle = eg;
+    X.fill();
+    X.restore();
+
+    // Groove lines
+    const gs = Math.max(1, Math.floor(vTop.length / 50));
+    for (let j = 0; j < vTop.length; j += gs) {
+        X.beginPath();
+        X.moveTo(vTop[j].x, vTop[j].y);
+        X.lineTo(vBot[j].x, vBot[j].y);
+        X.strokeStyle = 'rgba(90, 65, 5, 0.3)';
+        X.lineWidth = 0.8;
+        X.stroke();
+    }
+
+    // Top rim highlight
+    X.beginPath();
+    X.moveTo(vTop[0].x, vTop[0].y);
+    for (let i = 1; i < vTop.length; i++) X.lineTo(vTop[i].x, vTop[i].y);
+    X.strokeStyle = 'rgba(255, 240, 150, 0.45)';
+    X.lineWidth = 1.5;
+    X.stroke();
+
+    // Bottom rim shadow
+    X.beginPath();
+    X.moveTo(vBot[0].x, vBot[0].y);
+    for (let i = 1; i < vBot.length; i++) X.lineTo(vBot[i].x, vBot[i].y);
+    X.strokeStyle = 'rgba(70, 50, 5, 0.5)';
+    X.lineWidth = 1.5;
+    X.stroke();
+}
+
+function drawFace(faceRim, img, zo, ca, sa, side) {
+    const [cx, cy, cz] = rot(0, 0, zo, ca, sa);
+    const [px, py, ps] = p3d(cx, cy, cz);
+    const sx = Math.abs(ca);
+    if (sx < 0.01) return;
+
+    // Clip to rim polygon and draw image
+    if (img) {
+        X.save();
+        X.beginPath();
+        tracePoly(faceRim);
+        X.closePath();
+        X.clip();
+
+        X.translate(px, py);
+        X.scale(ps, ps);
+        if (side === -1) {
+            X.scale(-sx, 1);
+        } else {
+            X.scale(sx, 1);
+        }
+        X.drawImage(img, -R, -R, R * 2, R * 2);
+        X.restore();
+    }
+
+    // Subtle rim stroke
+    X.save();
+    X.beginPath();
+    tracePoly(faceRim);
+    X.closePath();
+    X.strokeStyle = 'rgba(255,215,0,0.2)';
+    X.lineWidth = 1;
+    X.stroke();
+    X.restore();
+}
+
+function animate() {
+    ang += 0.015;
+    render();
+    requestAnimationFrame(animate);
+}
+
+Promise.all([
+    load('/static/icons/qqb-coin-front.webp?v=22'),
+    load('/static/icons/qqb-coin-back.webp?v=22')
+]).then(([f, b]) => {
+    fImg = f;
+    bImg = b;
+    document.getElementById('info').innerHTML =
+        'v14 HULL FILL<br>' +
+        'R:' + R + ' T:' + THICK + ' P:' + PERSP + '<br>' +
+        'Solid gold hull underneath everything<br>' +
+        'F:' + (f ? 'OK' : 'X') + ' B:' + (b ? 'OK' : 'X');
+    animate();
+});
+</script>
+</body></html>

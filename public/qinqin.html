@@ -1,0 +1,2051 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+    <title>QQB | The World's Safest Cryptocurrency</title>
+    <link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Orbitron:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&family=Noto+Sans+TC:wght@400;500;700;900&family=Noto+Sans+JP:wght@400;500;700;900&family=Noto+Serif+TC:wght@400;500;600;700;900&display=swap" rel="stylesheet">
+    <script defer src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script defer src="/static/nw-icons-inline.js"></script>
+    <script defer src="/static/nw-particles.js"></script>
+    <script defer src="/static/nw-sounds.js"></script>
+    <style>
+        /* ═══════════════════════════════════════════════════════════════
+           DESIGN TOKENS - Rose Gold + Crypto Dark
+           ═══════════════════════════════════════════════════════════════ */
+        :root {
+            --bg: #06060c;
+            --card: #0e0e18;
+            --card-hover: #14142a;
+            --border: #1e1e3a;
+            --border-glow: rgba(201,168,76,0.25);
+            --text: #f0ece0;
+            --text-dim: #8a8678;
+            --rose: #e8a0bf;
+            --rose-dark: #b06888;
+            --rose-light: #f4c8de;
+            --gold: #c9a84c;
+            --gold-dark: #8a6914;
+            --nwg-cyan: #00d4ff;
+            --green: #00d26a;
+            --red: #ff4757;
+            --purple: #a855f7;
+            --orange: #ff6b00;
+            --pink-glow: 0 0 40px rgba(201,168,76,0.2);
+            --gold-glow: 0 0 40px rgba(201,168,76,0.2);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        html { scroll-behavior: smooth; }
+
+        body {
+            font-family: 'Inter', 'Noto Sans TC', 'Noto Sans JP', system-ui, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            overflow-x: hidden;
+            line-height: 1.6;
+        }
+
+        .orbitron { font-family: 'Orbitron', sans-serif; }
+        .mono { font-family: 'JetBrains Mono', monospace; }
+
+        /* ═══════════════════════════════════════════════════════════════
+           ADDICTION: Variable Reward Notification Bar (Slot Machine Effect)
+           ═══════════════════════════════════════════════════════════════ */
+        /* ═══════════════════════════════════════════════════════════════
+           PREMIUM NAV BAR
+           ═══════════════════════════════════════════════════════════════ */
+        .premium-nav {
+            position: fixed; top: 0; left: 0; right: 0; z-index: 10000;
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 14px 28px;
+            background: rgba(6,6,12,0.85);
+            backdrop-filter: blur(24px) saturate(1.4);
+            border-bottom: 1px solid rgba(201,168,76,0.12);
+            transition: all 0.4s;
+        }
+        .premium-nav.scrolled {
+            padding: 10px 28px;
+            background: rgba(6,6,12,0.97);
+            border-bottom-color: rgba(201,168,76,0.25);
+        }
+        .nav-brand {
+            display: flex; align-items: center; gap: 12px;
+            text-decoration: none;
+        }
+        .nav-brand-icon { width: 36px; height: 36px; border-radius: 50%; border: 1.5px solid rgba(201,168,76,0.4); }
+        .nav-brand-text {
+            font-family: 'Cormorant Garamond', 'Noto Serif TC', serif;
+            font-size: 18px; font-weight: 600;
+            color: var(--gold); letter-spacing: 3px;
+        }
+        .nav-links { display: flex; align-items: center; gap: 28px; }
+        .nav-links a {
+            color: var(--text-dim); text-decoration: none;
+            font-size: 12px; font-weight: 600;
+            letter-spacing: 2px; text-transform: uppercase;
+            transition: color 0.3s; position: relative;
+            white-space: nowrap;
+        }
+        .nav-links a:hover, .nav-links a.active { color: var(--gold); }
+        .nav-links a::after {
+            content: ''; position: absolute; bottom: -4px; left: 0; right: 0;
+            height: 1px; background: var(--gold);
+            transform: scaleX(0); transition: transform 0.3s;
+        }
+        .nav-links a:hover::after, .nav-links a.active::after { transform: scaleX(1); }
+        .nav-lang { display: flex; gap: 2px; margin-left: 12px; }
+        .lang-btn {
+            padding: 5px 10px; border-radius: 4px;
+            border: 1px solid transparent; background: transparent;
+            color: var(--text-dim); font-size: 10px; font-weight: 700;
+            cursor: pointer; transition: all 0.3s;
+            font-family: 'Inter', sans-serif;
+            letter-spacing: 1px;
+        }
+        .lang-btn.active {
+            border-color: rgba(201,168,76,0.4);
+            color: var(--gold);
+        }
+        .lang-btn:hover:not(.active) { color: var(--gold); }
+
+        /* Hamburger button — hidden on desktop */
+        .nav-hamburger {
+            display: none; background: none; border: none; cursor: pointer;
+            width: 44px; height: 44px; position: relative;
+            flex-shrink: 0;
+            -webkit-tap-highlight-color: rgba(201,168,76,0.2);
+            touch-action: manipulation;
+            z-index: 10001;
+        }
+        .nav-hamburger span {
+            display: block; width: 22px; height: 2px;
+            background: var(--gold); border-radius: 2px;
+            position: absolute; left: 11px;
+            transition: all 0.3s;
+            pointer-events: none;
+        }
+        .nav-hamburger span:nth-child(1) { top: 13px; }
+        .nav-hamburger span:nth-child(2) { top: 21px; }
+        .nav-hamburger span:nth-child(3) { top: 29px; }
+        .nav-hamburger.open span:nth-child(1) { top: 21px; transform: rotate(45deg); }
+        .nav-hamburger.open span:nth-child(2) { opacity: 0; }
+        .nav-hamburger.open span:nth-child(3) { top: 21px; transform: rotate(-45deg); }
+
+        @media (max-width: 768px) {
+            .premium-nav { padding: 10px 16px; }
+            .nav-hamburger { display: block; }
+            .nav-links {
+                display: none; flex-direction: column;
+                position: fixed; top: 54px; left: 0; right: 0;
+                background: rgba(6,6,12,0.97);
+                backdrop-filter: blur(24px) saturate(1.4);
+                border-bottom: 1px solid rgba(201,168,76,0.15);
+                padding: 20px 24px 24px;
+                gap: 0;
+                z-index: 9999;
+            }
+            .nav-links.open { display: flex; }
+            .nav-links a {
+                font-size: 13px; letter-spacing: 2px;
+                padding: 14px 0;
+                border-bottom: 1px solid rgba(201,168,76,0.06);
+                width: 100%;
+            }
+            .nav-links a:last-of-type { border-bottom: none; }
+            .nav-links a::after { display: none; }
+            .nav-links a.active { color: var(--gold); }
+            .nav-lang {
+                margin: 16px 0 0 0;
+                padding-top: 16px;
+                border-top: 1px solid rgba(201,168,76,0.1);
+                justify-content: center;
+                gap: 6px;
+            }
+            .lang-btn { padding: 8px 16px; font-size: 11px; }
+        }
+
+        .reward-bar {
+            position: fixed; top: 72px; left: 0; right: 0; z-index: 9999;
+            background: linear-gradient(90deg, rgba(201,168,76,0.15), rgba(201,168,76,0.05), rgba(201,168,76,0.15));
+            border-bottom: 1px solid rgba(201,168,76,0.08);
+            color: var(--gold); font-size: 11px; font-weight: 500;
+            padding: 5px 16px; text-align: center;
+            animation: rewardSlide 25s linear infinite;
+            white-space: nowrap;
+            cursor: pointer;
+            letter-spacing: 1px;
+            overflow: hidden;
+        }
+        @media (max-width: 768px) {
+            .reward-bar {
+                top: 64px;
+                font-size: 10px;
+                padding: 4px 12px;
+            }
+        }
+        @keyframes rewardSlide {
+            0% { transform: translateX(100%); }
+            100% { transform: translateX(-200%); }
+        }
+
+        /* ═══════════════════════════════════════════════════════════════
+           ADDICTION: Streak Counter (Sunk Cost + Progress)
+           ═══════════════════════════════════════════════════════════════ */
+        .streak-badge {
+            position: fixed; bottom: 16px; right: 16px; z-index: 9998;
+            background: linear-gradient(135deg, var(--rose-dark), var(--purple));
+            border-radius: 50%; width: 48px; height: 48px;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            box-shadow: 0 0 16px rgba(232,160,191,0.3);
+            animation: streakPulse 3s ease-in-out infinite;
+            cursor: pointer;
+            transition: transform 0.3s;
+            opacity: 0.85;
+        }
+        .streak-badge:hover { transform: scale(1.15); opacity: 1; }
+        .streak-badge .num { font-family: 'Orbitron'; font-size: 14px; font-weight: 900; color: #fff; line-height: 1; }
+        .streak-badge .lbl { font-size: 6px; color: rgba(255,255,255,0.7); text-transform: uppercase; letter-spacing: 0.5px; }
+        @keyframes streakPulse {
+            0%, 100% { box-shadow: 0 0 20px rgba(232,160,191,0.4); }
+            50% { box-shadow: 0 0 40px rgba(232,160,191,0.7), 0 0 80px rgba(168,85,247,0.3); }
+        }
+
+        /* ═══════════════════════════════════════════════════════════════
+           HERO SECTION - PREMIUM VAULT DESIGN
+           ═══════════════════════════════════════════════════════════════ */
+        .hero {
+            min-height: 100vh;
+            display: flex; flex-direction: column;
+            justify-content: center; align-items: center;
+            text-align: center; padding: 100px 20px 40px;
+            position: relative; overflow: hidden;
+        }
+        .hero-bg {
+            position: absolute; inset: 0;
+            background: url('/static/hero-bg-vault.webp') center/cover no-repeat;
+            filter: brightness(0.35) contrast(1.1);
+            z-index: 0;
+        }
+        .hero-bg-overlay {
+            position: absolute; inset: 0; z-index: 1;
+            background:
+                linear-gradient(180deg, rgba(6,6,12,0.6) 0%, rgba(6,6,12,0.2) 30%, rgba(6,6,12,0.4) 70%, rgba(6,6,12,0.95) 100%),
+                radial-gradient(ellipse at 50% 40%, rgba(201,168,76,0.08) 0%, transparent 60%);
+        }
+        .hero-content { position: relative; z-index: 2; max-width: 800px; }
+
+        /* Static hero coin - luxury product shot */
+        .hero-coin {
+            width: 220px; height: 220px;
+            margin: 0 auto 28px;
+            position: relative;
+        }
+        .hero-coin img {
+            width: 100%; height: 100%;
+            object-fit: contain;
+            filter: drop-shadow(0 4px 30px rgba(201,168,76,0.5)) drop-shadow(0 0 60px rgba(201,168,76,0.2));
+            animation: coinFloat 6s ease-in-out infinite;
+        }
+        @keyframes coinFloat {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-12px); }
+        }
+        .hero-coin::after {
+            content: '';
+            position: absolute;
+            bottom: -20px; left: 10%; right: 10%;
+            height: 30px;
+            background: radial-gradient(ellipse, rgba(201,168,76,0.2) 0%, transparent 70%);
+            filter: blur(8px);
+            animation: coinFloat 6s ease-in-out infinite reverse;
+        }
+
+        .hero-badge {
+            display: inline-flex; align-items: center; gap: 8px;
+            background: rgba(201,168,76,0.08);
+            border: 1px solid rgba(201,168,76,0.25);
+            padding: 6px 20px; border-radius: 2px;
+            font-size: 10px; color: var(--gold);
+            margin-bottom: 24px;
+            letter-spacing: 3px; text-transform: uppercase;
+            font-weight: 600;
+        }
+
+        .hero h1 {
+            font-family: 'Cormorant Garamond', 'Noto Serif TC', serif;
+            font-size: clamp(2.4rem, 8vw, 5rem);
+            font-weight: 600; line-height: 1.05;
+            margin-bottom: 8px;
+            color: #f0ece0;
+            letter-spacing: 2px;
+        }
+        .hero h1 .gold-text {
+            background: linear-gradient(135deg, #c9a84c, #e8cc6e, #ffd700, #e8cc6e, #c9a84c);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            background-size: 200% 200%;
+            animation: goldShimmer 5s ease-in-out infinite;
+        }
+        @keyframes goldShimmer {
+            0%,100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+        .hero-sub {
+            font-size: 20px; font-weight: 400;
+            color: var(--gold);
+            margin-bottom: 20px;
+            font-family: 'Cormorant Garamond', 'Noto Serif TC', serif;
+            font-style: italic;
+            letter-spacing: 1px;
+        }
+        .hero-tagline {
+            font-size: 14px; color: rgba(196,189,168,0.7);
+            max-width: 540px; margin: 0 auto 36px;
+            line-height: 1.8;
+        }
+
+        .hero-stats {
+            display: flex; gap: 32px; justify-content: center; flex-wrap: wrap;
+            margin-bottom: 40px;
+            padding: 20px 0;
+            border-top: 1px solid rgba(201,168,76,0.1);
+            border-bottom: 1px solid rgba(201,168,76,0.1);
+        }
+        .hero-stat { text-align: center; }
+        .hero-stat .val {
+            font-family: 'JetBrains Mono'; font-size: 26px; font-weight: 700;
+            color: var(--gold);
+        }
+        .hero-stat .lbl { font-size: 9px; color: rgba(138,134,120,0.7); text-transform: uppercase; letter-spacing: 2px; margin-top: 4px; }
+
+        .cta-group { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+        .cta {
+            padding: 14px 32px; border-radius: 4px; border: none;
+            font-size: 12px; font-weight: 700;
+            cursor: pointer; transition: all 0.3s; text-decoration: none;
+            display: inline-flex; align-items: center; gap: 8px;
+            letter-spacing: 2px; text-transform: uppercase;
+        }
+        .cta-primary {
+            background: linear-gradient(135deg, #8a6914, #c9a84c);
+            color: #0a0a0a;
+            box-shadow: 0 4px 20px rgba(201,168,76,0.3);
+        }
+        .cta-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 40px rgba(201,168,76,0.5);
+        }
+        .cta-secondary {
+            background: rgba(201,168,76,0.06);
+            border: 1px solid rgba(201,168,76,0.25);
+            color: var(--gold);
+        }
+        .cta-secondary:hover {
+            background: rgba(201,168,76,0.12);
+            border-color: rgba(201,168,76,0.5);
+            transform: translateY(-2px);
+        }
+
+        /* ═══════════════════════════════════════════════════════════════
+           LIVE PRICE TICKER
+           ═══════════════════════════════════════════════════════════════ */
+        .ticker-section {
+            padding: 40px 20px;
+            background: linear-gradient(180deg, transparent, rgba(232,160,191,0.03), transparent);
+        }
+        .ticker-container { max-width: 1000px; margin: 0 auto; }
+        .ticker-header {
+            display: flex; justify-content: space-between; align-items: flex-end;
+            margin-bottom: 20px; flex-wrap: wrap; gap: 12px;
+        }
+        .ticker-price-group {}
+        .ticker-pair { font-size: 13px; color: var(--text-dim); margin-bottom: 4px; }
+        .ticker-price {
+            font-family: 'Orbitron'; font-size: 48px; font-weight: 900;
+            background: linear-gradient(135deg, var(--rose-light), var(--gold));
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        }
+        .ticker-change {
+            display: inline-flex; align-items: center; gap: 4px;
+            padding: 4px 12px; border-radius: 8px;
+            font-family: 'JetBrains Mono'; font-size: 14px; font-weight: 700;
+        }
+        .ticker-change.up { background: rgba(0,210,106,0.15); color: var(--green); }
+        .ticker-stats-row {
+            display: flex; gap: 24px; margin-top: 8px; flex-wrap: wrap;
+        }
+        .ticker-stat-item { font-size: 12px; color: var(--text-dim); }
+        .ticker-stat-item span { color: var(--text); font-family: 'JetBrains Mono'; font-weight: 600; }
+
+        .chart-container {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 16px; padding: 20px;
+            height: 300px; position: relative;
+        }
+
+        /* ═══════════════════════════════════════════════════════════════
+           SECTION STYLING
+           ═══════════════════════════════════════════════════════════════ */
+        section { padding: 60px 20px; position: relative; }
+        .section-inner { max-width: 1000px; margin: 0 auto; }
+        .section-title {
+            font-family: 'Cormorant Garamond', 'Noto Serif TC', serif; font-size: clamp(22px, 4vw, 36px);
+            font-weight: 600; text-align: center; margin-bottom: 12px;
+            color: var(--gold);
+            letter-spacing: 1px;
+        }
+        .section-subtitle {
+            text-align: center; color: var(--text-dim); font-size: 14px;
+            max-width: 600px; margin: 0 auto 40px;
+        }
+
+        /* Divider */
+        .divider {
+            height: 1px; max-width: 200px; margin: 0 auto;
+            background: linear-gradient(90deg, transparent, var(--rose-dark), transparent);
+        }
+
+        /* ═══════════════════════════════════════════════════════════════
+           BACKING SECTION - Asset Pyramid
+           ═══════════════════════════════════════════════════════════════ */
+        .backing-pyramid {
+            display: flex; flex-direction: column; align-items: center; gap: 12px;
+            margin-bottom: 40px;
+        }
+        .pyramid-tier {
+            display: flex; align-items: center; gap: 12px;
+            padding: 16px 24px; border-radius: 12px;
+            border: 1px solid var(--border);
+            background: var(--card);
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+        .pyramid-tier:hover {
+            border-color: var(--rose);
+            transform: scale(1.03);
+            box-shadow: var(--pink-glow);
+        }
+        .pyramid-tier:first-child {
+            background: linear-gradient(135deg, rgba(232,160,191,0.15), rgba(168,85,247,0.1));
+            border-color: var(--rose-dark);
+        }
+        .pyramid-icon { font-size: 28px; }
+        .pyramid-name { font-family: 'Orbitron'; font-weight: 700; font-size: 16px; }
+        .pyramid-desc { font-size: 12px; color: var(--text-dim); }
+
+        /* Asset Allocation Grid */
+        .asset-grid {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 12px;
+        }
+        .asset-card {
+            background: var(--card); border: 1px solid var(--border);
+            border-radius: 12px; padding: 16px;
+            display: flex; align-items: center; gap: 12px;
+            transition: all 0.3s; cursor: pointer;
+            position: relative; overflow: hidden;
+        }
+        .asset-card:hover {
+            border-color: var(--green);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 20px rgba(0,210,106,0.15);
+        }
+        .asset-card::after {
+            content: ''; position: absolute; top: 0; right: 0;
+            width: 60px; height: 60px;
+            background: radial-gradient(circle, rgba(0,210,106,0.08), transparent);
+        }
+        .asset-logo {
+            width: 40px; height: 40px; border-radius: 10px;
+            display: flex; align-items: center; justify-content: center;
+            flex-shrink: 0; overflow: hidden;
+        }
+        .asset-logo img {
+            width: 28px; height: 28px; object-fit: contain;
+            filter: drop-shadow(0 1px 2px rgba(0,0,0,0.3));
+        }
+        .asset-info { flex: 1; }
+        .asset-name { font-weight: 700; font-size: 14px; }
+        .asset-alloc { font-size: 12px; color: var(--text-dim); }
+        .asset-perf { font-family: 'JetBrains Mono'; font-size: 13px; font-weight: 700; color: var(--green); }
+
+        /* ═══════════════════════════════════════════════════════════════
+           COMPARISON TABLE
+           ═══════════════════════════════════════════════════════════════ */
+        .compare-table {
+            width: 100%; border-collapse: collapse;
+            font-size: 13px; margin-top: 20px;
+        }
+        .compare-table th, .compare-table td {
+            padding: 12px 16px; border-bottom: 1px solid var(--border);
+            text-align: center;
+        }
+        .compare-table th {
+            font-family: 'Orbitron'; font-size: 12px; font-weight: 700;
+            color: var(--text-dim); text-transform: uppercase;
+            position: sticky; top: 0; background: var(--bg);
+        }
+        .compare-table th:last-child {
+            background: linear-gradient(180deg, rgba(232,160,191,0.1), transparent);
+            color: var(--rose-light);
+        }
+        .compare-table td:first-child { text-align: left; font-weight: 600; }
+        .compare-table td:last-child { color: var(--rose-light); font-weight: 700; }
+        .compare-table tr:hover { background: rgba(232,160,191,0.03); }
+        .check { color: var(--green); } .cross { color: var(--red); opacity: 0.5; }
+
+        /* ═══════════════════════════════════════════════════════════════
+           STAKING TIERS - ADDICTION: Progress Bars + Exclusivity
+           ═══════════════════════════════════════════════════════════════ */
+        .staking-grid {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 16px;
+        }
+        .staking-card {
+            background: var(--card); border: 1px solid var(--border);
+            border-radius: 16px; padding: 24px; text-align: center;
+            transition: all 0.4s; cursor: pointer;
+            position: relative; overflow: hidden;
+        }
+        .staking-card::before {
+            content: ''; position: absolute; top: -50%; left: -50%;
+            width: 200%; height: 200%;
+            background: conic-gradient(from 0deg, transparent, var(--rose), transparent, var(--purple), transparent);
+            animation: stakingGlow 6s linear infinite;
+            opacity: 0; transition: opacity 0.4s;
+        }
+        .staking-card:hover::before { opacity: 0.08; }
+        .staking-card:hover { transform: translateY(-4px); border-color: var(--rose); }
+        .staking-card > * { position: relative; z-index: 1; }
+        @keyframes stakingGlow { 0% { transform: rotate(0); } 100% { transform: rotate(360deg); } }
+
+        .staking-tier-name {
+            font-family: 'Noto Sans TC', 'Noto Sans JP', serif;
+            font-size: 24px; font-weight: 900;
+            margin-bottom: 4px;
+        }
+        .staking-apy {
+            font-family: 'Orbitron'; font-size: 36px; font-weight: 900;
+            background: linear-gradient(135deg, var(--rose-light), var(--gold));
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            margin: 8px 0;
+        }
+        .staking-lock { font-size: 12px; color: var(--text-dim); }
+        .staking-bar {
+            width: 100%; height: 4px; background: rgba(255,255,255,0.05);
+            border-radius: 2px; margin-top: 12px; overflow: hidden;
+        }
+        .staking-bar-fill {
+            height: 100%; border-radius: 2px;
+            background: linear-gradient(90deg, var(--rose), var(--purple));
+            animation: barGrow 2s ease-out forwards;
+        }
+        @keyframes barGrow { 0% { width: 0; } }
+
+        /* ═══════════════════════════════════════════════════════════════
+           GUARDIAN MASCOTS (Card Gallery) - ADDICTION: Collection Drive
+           ═══════════════════════════════════════════════════════════════ */
+        .mascot-grid {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 16px;
+        }
+        .mascot-card {
+            background: var(--card); border: 1px solid var(--border);
+            border-radius: 16px; overflow: hidden;
+            transition: all 0.4s; cursor: pointer;
+            position: relative;
+        }
+        .mascot-card:hover {
+            transform: translateY(-6px) scale(1.03);
+            box-shadow: 0 12px 40px rgba(232,160,191,0.25);
+            border-color: var(--rose);
+        }
+        .mascot-card img {
+            width: 100%; aspect-ratio: 1; object-fit: cover;
+            transition: transform 0.6s;
+        }
+        .mascot-card:hover img { transform: scale(1.1); }
+        .mascot-label {
+            padding: 10px; text-align: center;
+            font-size: 11px; font-weight: 700;
+            color: var(--rose-light);
+        }
+        .mascot-rarity {
+            font-size: 9px; text-transform: uppercase;
+            letter-spacing: 1px; color: var(--gold);
+        }
+
+        /* ═══════════════════════════════════════════════════════════════
+           GM ENDORSEMENT
+           ═══════════════════════════════════════════════════════════════ */
+        .endorsement-section {
+            background: linear-gradient(135deg, rgba(232,160,191,0.05), rgba(168,85,247,0.03));
+        }
+        .endorsement-card {
+            display: flex; gap: 24px; align-items: center;
+            background: var(--card); border: 1px solid var(--border);
+            border-radius: 20px; padding: 32px;
+            max-width: 700px; margin: 0 auto;
+            flex-wrap: wrap; justify-content: center;
+        }
+        .endorsement-portrait {
+            width: 120px; height: 120px; border-radius: 50%;
+            border: 3px solid var(--rose);
+            object-fit: cover;
+            box-shadow: var(--pink-glow);
+        }
+        .endorsement-text { flex: 1; min-width: 250px; }
+        .endorsement-quote {
+            font-size: 16px; font-style: italic; color: var(--rose-light);
+            margin-bottom: 8px; line-height: 1.6;
+        }
+        .endorsement-author { font-family: 'Orbitron'; font-size: 12px; color: var(--text-dim); }
+
+        /* ═══════════════════════════════════════════════════════════════
+           COMMUNITY / MEME SENTIMENT - ADDICTION: Social Proof
+           ═══════════════════════════════════════════════════════════════ */
+        .community-grid {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 12px;
+        }
+        .community-card {
+            border-radius: 12px; overflow: hidden;
+            border: 1px solid var(--border);
+            transition: all 0.3s; cursor: pointer;
+            position: relative;
+        }
+        .community-card:hover { transform: scale(1.04); border-color: var(--rose); }
+        .community-card img { width: 100%; display: block; }
+        .community-badge {
+            position: absolute; bottom: 8px; left: 8px;
+            background: rgba(0,0,0,0.8); border-radius: 8px;
+            padding: 4px 10px; font-size: 10px; font-weight: 700;
+            color: var(--green);
+        }
+
+        /* ═══════════════════════════════════════════════════════════════
+           TREASURY DASHBOARD
+           ═══════════════════════════════════════════════════════════════ */
+        .treasury-grid {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 12px; margin-bottom: 24px;
+        }
+        .treasury-card {
+            background: var(--card); border: 1px solid var(--border);
+            border-radius: 12px; padding: 20px; text-align: center;
+        }
+        .treasury-val {
+            font-family: 'JetBrains Mono'; font-size: 24px; font-weight: 700;
+            background: linear-gradient(135deg, var(--rose), var(--gold));
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        }
+        .treasury-lbl { font-size: 11px; color: var(--text-dim); text-transform: uppercase; margin-top: 4px; }
+        .treasury-sub { font-size: 10px; color: var(--green); margin-top: 2px; font-family: 'JetBrains Mono'; }
+
+        /* ═══════════════════════════════════════════════════════════════
+           ADDICTION: Countdown Timer (Urgency + FOMO)
+           ═══════════════════════════════════════════════════════════════ */
+        .countdown-section {
+            background: linear-gradient(135deg, rgba(255,71,87,0.08), rgba(232,160,191,0.08));
+            border-top: 1px solid rgba(255,71,87,0.2);
+            border-bottom: 1px solid rgba(255,71,87,0.2);
+        }
+        .countdown-grid {
+            display: flex; gap: 16px; justify-content: center; margin-top: 20px;
+        }
+        .countdown-unit {
+            background: var(--card); border: 1px solid var(--border);
+            border-radius: 12px; padding: 16px 20px; text-align: center;
+            min-width: 80px;
+        }
+        .countdown-num {
+            font-family: 'Orbitron'; font-size: 32px; font-weight: 900;
+            color: var(--rose-light);
+        }
+        .countdown-label { font-size: 10px; color: var(--text-dim); text-transform: uppercase; }
+
+        /* ═══════════════════════════════════════════════════════════════
+           ADDICTION: Achievement Unlocked Toast
+           ═══════════════════════════════════════════════════════════════ */
+        /* Buy Toast */
+        .buy-toast {
+            position: fixed; top: -120px; left: 50%; transform: translateX(-50%);
+            background: linear-gradient(135deg, var(--card) 0%, #1a1528 100%);
+            border: 1px solid var(--gold);
+            border-radius: 14px; padding: 16px 24px;
+            display: flex; align-items: center; gap: 12px;
+            z-index: 100000;
+            box-shadow: 0 8px 40px rgba(201,168,76,0.35);
+            transition: top 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+            pointer-events: none;
+            max-width: 340px;
+            text-align: left;
+        }
+        .buy-toast.show { top: 80px; }
+        .buy-toast-icon { font-size: 32px; flex-shrink: 0; }
+        .buy-toast-body { display: flex; flex-direction: column; gap: 2px; }
+        .buy-toast-title { font-family: 'Noto Serif TC','Cormorant Garamond',serif; font-size: 18px; font-weight: 700; color: var(--gold); }
+        .buy-toast-sub { font-size: 12px; color: var(--text-dim); }
+
+        .achievement-toast {
+            position: fixed; top: -120px; left: 50%; transform: translateX(-50%);
+            background: linear-gradient(135deg, var(--card), #1a1030);
+            border: 1px solid var(--rose);
+            border-radius: 12px; padding: 12px 20px;
+            display: flex; align-items: center; gap: 10px;
+            z-index: 99999;
+            box-shadow: 0 8px 40px rgba(232,160,191,0.4);
+            transition: top 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+            pointer-events: none;
+            max-width: 320px;
+        }
+        .achievement-toast.show { top: 46px; }
+        .achievement-icon { font-size: 28px; }
+        .achievement-text { font-size: 13px; font-weight: 700; color: var(--rose-light); }
+        .achievement-sub { font-size: 10px; color: var(--text-dim); }
+
+        /* ═══════════════════════════════════════════════════════════════
+           FOOTER
+           ═══════════════════════════════════════════════════════════════ */
+        footer {
+            text-align: center; padding: 60px 20px;
+            background: linear-gradient(180deg, transparent, rgba(232,160,191,0.05));
+        }
+        .footer-love {
+            font-size: 20px;
+            font-family: 'Noto Sans TC', 'Noto Sans JP', serif;
+            color: var(--rose);
+            margin-bottom: 8px;
+        }
+        .footer-seal {
+            display: inline-flex; align-items: center; gap: 8px;
+            font-size: 11px; color: var(--text-dim);
+            background: var(--card); border: 1px solid var(--border);
+            padding: 8px 20px; border-radius: 50px;
+            margin-top: 16px;
+        }
+
+        /* ═══════════════════════════════════════════════════════════════
+           SCROLL REVEAL ANIMATION - ADDICTION: Discovery reward
+           ═══════════════════════════════════════════════════════════════ */
+        .reveal {
+            opacity: 0; transform: translateY(30px);
+            transition: all 0.8s cubic-bezier(0.22, 1, 0.36, 1);
+        }
+        .reveal.visible { opacity: 1; transform: translateY(0); }
+
+        /* ═══════════════════════════════════════════════════════════════
+           FLOATING HEARTS - ADDICTION: Ambient delight
+           ═══════════════════════════════════════════════════════════════ */
+        .floating-heart {
+            position: fixed; pointer-events: none; z-index: 9998;
+            font-size: 20px; opacity: 0;
+            animation: floatHeart 4s ease-out forwards;
+        }
+        @keyframes floatHeart {
+            0% { opacity: 1; transform: translateY(0) scale(0.5) rotate(0deg); }
+            50% { opacity: 0.8; transform: translateY(-150px) scale(1) rotate(15deg); }
+            100% { opacity: 0; transform: translateY(-300px) scale(0.3) rotate(-15deg); }
+        }
+
+        /* ═══════════════════════════════════════════════════════════════
+           RESPONSIVE
+           ═══════════════════════════════════════════════════════════════ */
+        @media (max-width: 600px) {
+            .ticker-price { font-size: 32px; }
+            .endorsement-card { flex-direction: column; text-align: center; }
+            .hero-stats { gap: 16px; }
+            .hero-stat .val { font-size: 22px; }
+            .staking-apy { font-size: 28px; }
+            .countdown-num { font-size: 24px; }
+            .countdown-unit { min-width: 60px; padding: 12px; }
+        }
+
+        /* ═══════════════════════════════════════════════════════════════
+           ADDICTION: Micro-interaction on every click
+           ═══════════════════════════════════════════════════════════════ */
+        .click-ripple {
+            position: fixed; pointer-events: none; z-index: 99997;
+            width: 20px; height: 20px; border-radius: 50%;
+            border: 2px solid var(--rose);
+            animation: rippleOut 0.6s ease-out forwards;
+        }
+        @keyframes rippleOut {
+            0% { transform: scale(0); opacity: 1; }
+            100% { transform: scale(4); opacity: 0; }
+        }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: var(--bg); }
+        ::-webkit-scrollbar-thumb { background: var(--rose-dark); border-radius: 3px; }
+
+        /* ═══════════════════════════════════════════════════════════════
+           MOBILE READABILITY — gentle +15% on small text only
+           ═══════════════════════════════════════════════════════════════ */
+        @media (max-width: 768px) {
+            body { word-break: keep-all; overflow-wrap: break-word; }
+            /* Nav */
+            .nav-links a { font-size: 15px; }
+            .lang-btn { font-size: 12px; }
+            /* Ticker */
+            .ticker-pair { font-size: 14px; }
+            .ticker-stat-item { font-size: 13px; }
+            /* Hero small text */
+            .hero-stat .lbl { font-size: 10px; }
+            .hero-tagline { font-size: 15px; }
+            .hero-sub { font-size: 22px; }
+            /* Sections */
+            .section-sub { font-size: 15px; }
+            /* Reserve */
+            .pyramid-desc { font-size: 13px; }
+            /* Asset grid */
+            .asset-name { font-size: 15px; }
+            .asset-alloc { font-size: 13px; }
+            .asset-perf { font-size: 14px; }
+            .asset-disclaimer { font-size: 14px; }
+            /* Staking */
+            .staking-lock { font-size: 13px; }
+            .staking-perk { font-size: 11px; }
+            /* Endorsements */
+            .endorsement-quote { font-size: 17px; }
+            .endorsement-author { font-size: 13px; }
+            /* Countdown */
+            .countdown-label { font-size: 11px; }
+            /* Treasury */
+            .treasury-lbl { font-size: 12px; }
+            .treasury-sub { font-size: 11px; }
+            /* Toast */
+            .buy-toast-title { font-size: 20px; }
+            .buy-toast-sub { font-size: 13px; }
+            .achievement-text { font-size: 14px; }
+            .achievement-sub { font-size: 11px; }
+            /* Footer */
+            .footer-text { font-size: 12px; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     PREMIUM NAVIGATION
+     ═══════════════════════════════════════════════════════════════ -->
+<nav class="premium-nav" id="premiumNav">
+    <a href="#hero" class="nav-brand">
+        <img class="nav-brand-icon" src="/static/icons/qqb-coin-front.webp" alt="QQB">
+        <span class="nav-brand-text">QINQIN COIN</span>
+    </a>
+    <button class="nav-hamburger" id="navHamburger" aria-label="Menu">
+        <span></span><span></span><span></span>
+    </button>
+    <div class="nav-links" id="navLinks">
+        <a href="#hero" class="active" data-i18n="navHome">Home</a>
+        <a href="#backing" data-i18n="navBacking">Reserve</a>
+        <a href="/coin-shop.html" data-i18n="ctaGold">Gold Collection</a>
+        <a href="/ai-assets.html" data-i18n="navAI">AI Assets</a>
+        <a href="#staking" data-i18n="navStaking">Staking</a>
+        <div class="nav-lang">
+            <button class="lang-btn active" data-lang="en" onclick="setLang('en')">EN</button>
+            <button class="lang-btn" data-lang="zh" onclick="setLang('zh')">繁中</button>
+            <button class="lang-btn" data-lang="jp" onclick="setLang('jp')">JP</button>
+        </div>
+    </div>
+</nav>
+
+<div class="reward-bar" id="rewardBar"></div>
+
+<!-- ADDICTION: Streak Badge -->
+<div class="streak-badge" id="streakBadge" onclick="claimStreak()">
+    <div class="num" id="streakNum">1</div>
+    <div class="lbl" data-i18n="streak">STREAK</div>
+</div>
+
+<!-- Achievement Toast -->
+<div class="achievement-toast" id="achievementToast">
+    <div class="achievement-icon" id="achieveIcon"></div>
+    <div>
+        <div class="achievement-text" id="achieveText"></div>
+        <div class="achievement-sub" id="achieveSub"></div>
+    </div>
+</div>
+
+<div class="buy-toast" id="buyToast">
+    <div class="buy-toast-icon">🫣</div>
+    <div class="buy-toast-body">
+        <div class="buy-toast-title" id="buyToastTitle">別急嘛～ 慢慢來</div>
+        <div class="buy-toast-sub" id="buyToastSub">Coming soon...</div>
+    </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     HERO SECTION — VAULT PRESTIGE
+     ═══════════════════════════════════════════════════════════════ -->
+<section class="hero" id="hero">
+    <div class="hero-bg"></div>
+    <div class="hero-bg-overlay"></div>
+    <div class="hero-content">
+
+        <div class="hero-coin">
+            <img src="/static/hero-coin-static.webp" alt="QQB Gold Coin" width="260" height="260">
+        </div>
+
+        <div class="hero-badge">
+            <span data-i18n="heroBadge">SEC REG. #NW-QQB-2026 | VAULT INSURED</span>
+        </div>
+
+        <h1><span class="gold-text" data-i18n="heroTitle">QinQin Coin</span></h1>
+        <div class="hero-sub" data-i18n="heroSub">The World's Safest Coin, Made for You, My Dear</div>
+        <p class="hero-tagline" data-i18n="heroTagline">Backed by NumbahWan Banking System. Secured by the world's best assets. Deflationary, stakeable, and built with love for the one the world calls Qing.</p>
+
+        <div class="hero-stats">
+            <div class="hero-stat"><div class="val mono" id="counterHolders">0</div><div class="lbl" data-i18n="holders">Holders</div></div>
+            <div class="hero-stat"><div class="val mono" id="counterMcap">$0</div><div class="lbl" data-i18n="mcap">Market Cap</div></div>
+            <div class="hero-stat"><div class="val mono" id="counterApy">0%</div><div class="lbl" data-i18n="topApy">Top APY</div></div>
+            <div class="hero-stat"><div class="val mono" id="counterSafe">0</div><div class="lbl" data-i18n="safetyScore">Safety Score</div></div>
+        </div>
+
+        <div class="cta-group">
+            <a href="/wallet" class="cta cta-primary" data-i18n="ctaBuy">Buy $QQB Now</a>
+            <a href="/coin-shop.html" class="cta cta-secondary" data-i18n="ctaGold">Gold Collection</a>
+            <a href="#staking" class="cta cta-secondary" data-i18n="ctaStake">Stake & Earn</a>
+        </div>
+    </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     LIVE PRICE CHART
+     ═══════════════════════════════════════════════════════════════ -->
+<section class="ticker-section reveal">
+    <div class="ticker-container">
+        <div class="ticker-header">
+            <div class="ticker-price-group">
+                <div class="ticker-pair mono">$QQB / USD</div>
+                <div class="ticker-price" id="livePrice">$88.88</div>
+                <div class="ticker-change up" id="priceChange">+24.88% (24h)</div>
+                <div class="ticker-stats-row">
+                    <div class="ticker-stat-item">24h Vol: <span id="vol24">$4.2B</span></div>
+                    <div class="ticker-stat-item" data-i18n="bidAsk">Bid/Ask:</div> <span class="mono" style="font-size:12px;color:#fff">$88.82 / $88.94</span>
+                    <div class="ticker-stat-item" data-i18n="circSupply">Circ. Supply:</div> <span class="mono" style="font-size:12px;color:#fff">520M QQB</span>
+                </div>
+            </div>
+        </div>
+        <div class="chart-container">
+            <canvas id="priceChart"></canvas>
+        </div>
+    </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     BACKING & SECURITY
+     ═══════════════════════════════════════════════════════════════ -->
+<section class="reveal" id="backing">
+    <div class="section-inner">
+        <div class="section-title" data-i18n="backingTitle">Backed by the Best</div>
+        <div class="section-subtitle" data-i18n="backingSub">QinQin Coin is the first cryptocurrency fully backed by the NumbahWan Banking System's 3-tier reserve and the world's safest assets.</div>
+
+        <!-- Currency Pyramid -->
+        <div class="backing-pyramid">
+            <div class="pyramid-tier" style="width:90%">
+                <div class="pyramid-icon">💎</div>
+                <div>
+                    <div class="pyramid-name" style="color:var(--rose-light)">$QQB <span data-i18n="qinqinbi">QinQin Coin</span></div>
+                    <div class="pyramid-desc" data-i18n="pyramidQqb">Tier 0 - Supreme Reserve Currency</div>
+                </div>
+            </div>
+            <div class="pyramid-tier" style="width:80%">
+                <div class="pyramid-icon"><img src="/static/icons/nwg.webp" width="28" alt="NWG"></div>
+                <div>
+                    <div class="pyramid-name" style="color:var(--nwg-cyan)">NWG</div>
+                    <div class="pyramid-desc" data-i18n="pyramidNwg">Tier 1 - Premium Deflationary Base</div>
+                </div>
+            </div>
+            <div class="pyramid-tier" style="width:70%">
+                <div class="pyramid-icon"><img src="/static/icons/gold.webp" width="28" alt="Gold"></div>
+                <div>
+                    <div class="pyramid-name" style="color:var(--gold)">Gold</div>
+                    <div class="pyramid-desc" data-i18n="pyramidGold">Tier 2 - Standard Earned Currency</div>
+                </div>
+            </div>
+            <div class="pyramid-tier" style="width:60%">
+                <div class="pyramid-icon"><img src="/static/icons/sacred-log.webp" width="28" alt="Sacred Log"></div>
+                <div>
+                    <div class="pyramid-name" style="color:#c97f3d">Sacred Log</div>
+                    <div class="pyramid-desc" data-i18n="pyramidLog">Tier 3 - Ultra Prestige Resource</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- World's Best Asset Backing -->
+        <div class="section-title" style="font-size:20px;margin-top:32px" data-i18n="assetTitle">Reserve Asset Allocation</div>
+        <div class="section-subtitle" data-i18n="assetSub">Diversified across the world's safest, highest-performing assets</div>
+        <div class="asset-grid" id="assetGrid"></div>
+    </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     COMPARISON: WHY QQB BEATS EVERYTHING
+     ═══════════════════════════════════════════════════════════════ -->
+<section class="reveal">
+    <div class="section-inner">
+        <div class="section-title" data-i18n="compareTitle">Why $QQB Beats Everything</div>
+        <div class="section-subtitle" data-i18n="compareSub">An honest comparison with every major digital and traditional asset.</div>
+        <div style="overflow-x:auto">
+            <table class="compare-table" id="compareTable"></table>
+        </div>
+    </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     ADDICTION: FOMO Countdown (Limited Time)
+     ═══════════════════════════════════════════════════════════════ -->
+<section class="countdown-section reveal">
+    <div class="section-inner" style="text-align:center">
+        <div class="section-title" data-i18n="countdownTitle">Founding Member Price Ends In</div>
+        <div class="section-subtitle" data-i18n="countdownSub">After this window closes, the price increases by 88%. Reserved exclusively for Qing.</div>
+        <div class="countdown-grid">
+            <div class="countdown-unit"><div class="countdown-num" id="cdDays">00</div><div class="countdown-label" data-i18n="days">Days</div></div>
+            <div class="countdown-unit"><div class="countdown-num" id="cdHours">00</div><div class="countdown-label" data-i18n="hours">Hours</div></div>
+            <div class="countdown-unit"><div class="countdown-num" id="cdMins">00</div><div class="countdown-label" data-i18n="mins">Min</div></div>
+            <div class="countdown-unit"><div class="countdown-num" id="cdSecs">00</div><div class="countdown-label" data-i18n="secs">Sec</div></div>
+        </div>
+    </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     STAKING TIERS (Personalized for 卿)
+     ═══════════════════════════════════════════════════════════════ -->
+<section class="reveal" id="staking">
+    <div class="section-inner">
+        <div class="section-title" data-i18n="stakingTitle">Staking Tiers</div>
+        <div class="section-subtitle" data-i18n="stakingSub">Lock your $QQB, earn astronomical yields. Each tier unlocks exclusive privileges designed for you.</div>
+        <div class="staking-grid" id="stakingGrid"></div>
+    </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     GUARDIAN MASCOTS (Collection Drive)
+     ═══════════════════════════════════════════════════════════════ -->
+<section class="reveal">
+    <div class="section-inner">
+        <div class="section-title" data-i18n="mascotsTitle">$QQB Guardian Spirits</div>
+        <div class="section-subtitle" data-i18n="mascotsSub">Each guardian protects your investment. Collect all 8 for a +88% yield bonus.</div>
+        <div class="mascot-grid" id="mascotGrid"></div>
+    </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     GM ENDORSEMENT
+     ═══════════════════════════════════════════════════════════════ -->
+<section class="endorsement-section reveal">
+    <div class="section-inner">
+        <div class="section-title" data-i18n="endorseTitle">Guild Master's Endorsement</div>
+        <div class="endorsement-card">
+            <img src="/static/gm-portrait-thumb.webp" class="endorsement-portrait" alt="GM Reggina" loading="lazy" decoding="async" width="120" height="120">
+            <div class="endorsement-text">
+                <div class="endorsement-quote" data-i18n="endorseQuote">"I have personally audited every line of QinQin Coin's smart contract. This is the safest digital asset ever created. I stake my entire reputation and guild on it. Built with love, for Qing."</div>
+                <div class="endorsement-author">REGGINA - Guild Master, NumbahWan</div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     COMMUNITY SENTIMENT (Memes as Social Proof)
+     ═══════════════════════════════════════════════════════════════ -->
+<section class="reveal">
+    <div class="section-inner">
+        <div class="section-title" data-i18n="communityTitle">Community Sentiment</div>
+        <div class="section-subtitle" data-i18n="communitySub">Real reactions from $QQB holders at the annual shareholder meeting.</div>
+        <div class="community-grid" id="communityGrid"></div>
+    </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     TREASURY DASHBOARD
+     ═══════════════════════════════════════════════════════════════ -->
+<section class="reveal">
+    <div class="section-inner">
+        <div class="section-title" data-i18n="treasuryTitle">Treasury Dashboard</div>
+        <div class="section-subtitle" data-i18n="treasurySub">Real-time reserve status. 100% transparent. Audited by NumbahWan Vault Security.</div>
+        <div class="treasury-grid" id="treasuryGrid"></div>
+        <div style="text-align:center">
+            <span class="mono" style="font-size:11px;color:var(--text-dim)" data-i18n="lastAudit">Last Audit: 2026-02-10T08:00:00Z | Auditor: NW Vault Sentinel v4.0</span>
+        </div>
+    </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     FOOTER
+     ═══════════════════════════════════════════════════════════════ -->
+<footer>
+    <div class="footer-love" data-i18n="footerLove">Made with all the love in the world, for you, my dear Qing.</div>
+    <div style="font-size:12px;color:var(--text-dim);margin-bottom:12px" data-i18n="footerDisclaimer">$QQB is secured by NumbahWan National Treasury, insured by NW Vault System, and backed by pure affection.</div>
+    <div class="footer-seal">
+        <img src="/static/icons/nwg.webp" width="16" alt="NW">
+        <span data-i18n="footerSeal">Certified by NumbahWan Banking Authority | Est. 2024</span>
+    </div>
+    <div style="margin-top:16px;font-size:10px;color:var(--text-dim);opacity:0.4" class="mono">
+        NW-VAULT-HASH: 6bc6c35005d35e8c | QQB-SEC-REG: NW-2026-0214 | CHAIN-ID: 0x卿卿
+    </div>
+</footer>
+
+<!-- ═══════════════════════════════════════════════════════════════════
+     TRILINGUAL i18n ENGINE + ALL CONTENT DATA + ADDICTION SYSTEMS
+     ═══════════════════════════════════════════════════════════════════ -->
+<script>
+(function() {
+'use strict';
+
+// ═══════════════════════════════════════════════════════════════
+// TRILINGUAL TRANSLATIONS
+// ═══════════════════════════════════════════════════════════════
+const T = {
+en: {
+    streak: 'STREAK', heroBadge: 'SEC REG. #NW-QQB-2026 | VAULT INSURED',
+    heroTitle: 'QinQin Coin', heroSub: "The World's Safest Coin, Made for You, My Dear Qing",
+    heroTagline: "Backed by NumbahWan Banking System. Secured by the world's best assets. Deflationary, stakeable, and crafted with devotion for the one the world calls Qing.",
+    holders: 'Holders', mcap: 'Market Cap', topApy: 'Top APY', safetyScore: 'Safety Score',
+    ctaBuy: 'Buy $QQB Now', ctaGold: 'Gold Collection', ctaStake: 'Stake & Earn',
+    buyToastTitle: 'Easy there~ Take it slow', buyToastSub: 'The wallet is coming soon, stay tuned!',
+    navHome: 'Home', navBacking: 'Reserve', navAI: 'AI Assets', navStaking: 'Staking',
+    backingTitle: 'Backed by the Best', backingSub: "QinQin Coin is the first cryptocurrency fully backed by the NumbahWan Banking System's 3-tier reserve and the world's safest assets.",
+    qinqinbi: 'QinQin Coin', pyramidQqb: 'Tier 0 - Supreme Reserve Currency',
+    pyramidNwg: 'Tier 1 - Premium Deflationary Base', pyramidGold: 'Tier 2 - Standard Earned Currency',
+    pyramidLog: 'Tier 3 - Ultra Prestige Resource',
+    assetTitle: 'Reserve Asset Allocation', assetSub: "Diversified across the world's safest, highest-performing assets",
+    compareTitle: 'Why $QQB Beats Everything', compareSub: 'An honest comparison with every major digital and traditional asset.',
+    countdownTitle: 'Founding Member Price Ends In', countdownSub: 'After this window closes, the price increases by 88%. Reserved exclusively for Qing.',
+    days: 'Days', hours: 'Hours', mins: 'Min', secs: 'Sec',
+    stakingTitle: 'Staking Tiers for Qing', stakingSub: 'Lock your $QQB, earn astronomical yields. Each tier unlocks exclusive privileges designed only for you.',
+    mascotsTitle: '$QQB Guardian Spirits', mascotsSub: 'Each guardian protects your investment. Collect all 8 for a +88% yield bonus.',
+    endorseTitle: "Guild Master's Endorsement",
+    endorseQuote: '"I have personally audited every line of QinQin Coin\'s smart contract. This is the safest digital asset ever created. I stake my entire reputation and guild on it. Built with love, for Qing."',
+    communityTitle: 'Community Sentiment', communitySub: 'Real reactions from $QQB holders at the annual shareholder meeting.',
+    treasuryTitle: 'Treasury Dashboard', treasurySub: 'Real-time reserve status. 100% transparent. Audited by NumbahWan Vault Security.',
+    lastAudit: 'Last Audit: 2026-02-10T08:00:00Z | Auditor: NW Vault Sentinel v4.0',
+    footerLove: 'Made with all the love in the world, for you, my dear Qing.',
+    footerDisclaimer: '$QQB is secured by NumbahWan National Treasury, insured by NW Vault System, and backed by pure affection.',
+    footerSeal: 'Certified by NumbahWan Banking Authority | Est. 2024',
+    bidAsk: 'Bid/Ask:', circSupply: 'Circ. Supply:',
+    // Staking
+    s1name: 'Little Qing', s2name: 'Dearest Qing', s3name: 'Beloved Qing', s4name: 'Eternal Qing',
+    s1lock: '7 days lock', s2lock: '30 days lock', s3lock: '90 days lock', s4lock: '365 days lock',
+    s1perk: 'Rose gold badge', s2perk: 'Priority support + name in stars', s3perk: 'Personal vault + weekly love letters', s4perk: 'Co-founder title + infinite affection',
+    // Compare
+    cFeature: 'Feature', cBtc: 'Bitcoin', cEth: 'Ethereum', cNwg: 'NWG', cQqb: '$QQB',
+    cSafe: 'Safety Rating', cApy: 'Max Staking APY', cBurn: 'Deflationary Burn',
+    cBacked: 'Asset-Backed', cPersonal: 'Personalized for You', cLove: 'Built with Love',
+    cAudit: 'Transparent Audit', cMascots: 'Cute Guardians', cGuild: 'Guild Insured',
+    // Achievements
+    achWelcome: 'Welcome, Qing!', achWelcomeSub: 'Your QQB journey begins',
+    achScroll: 'Explorer!', achScrollSub: 'You discovered the treasury',
+    achStreak: 'Devoted Holder!', achStreakSub: 'Visit streak growing',
+    // Assets
+    aApple: 'Apple Inc.', aNvidia: 'NVIDIA', aBrk: 'Berkshire Hathaway', aGold: 'Gold Reserves',
+    aBonds: 'US Treasury Bonds', aSp500: 'S&P 500 Index', aNwg: 'NWG Reserves', aVault: 'NW Vault Assets',
+    // Treasury
+    tReserve: 'Total Reserve', tBurned: 'QQB Burned', tStaked: 'QQB Staked', tYield: 'Avg Yield Paid',
+    tInsured: 'Vault Insured', tAuditScore: 'Audit Score',
+    // Reward bar
+    rw1: 'Qing just earned +88 QQB from staking rewards!',
+    rw2: '$QQB hit new all-time high: $88.88!',
+    rw3: 'NumbahWan Treasury adds $2.4M in Gold Reserves',
+    rw4: 'Guardian Spirit "Angel Pup" is protecting your portfolio right now',
+    rw5: 'Qing\'s streak bonus activated: +8.8% yield boost!',
+    rw6: 'BREAKING: $QQB rated #1 safest crypto by NW Vault Sentinel',
+    // Meme badges
+    mb1: 'BULLISH', mb2: 'VERY BULLISH', mb3: 'TO THE MOON', mb4: 'HODL FOREVER',
+    mb5: 'MAX COMFY', mb6: 'WAGMI',
+    // Treasury subs + misc
+    tsReserve: '+12.4% this month', tsBurned: '4.82% of supply', tsStaked: '60% of circulating',
+    tsYield: 'distributed this week', tsInsured: 'full coverage', tsAudit: 'AAA+ rating',
+    allocation: 'allocation', guardian: 'GUARDIAN',
+    randReward1: '+8.8 QQB', randRewardSub1: 'Loyalty reward',
+    randReward2: '+0.88% APY', randRewardSub2: 'Streak bonus',
+    randReward3: 'Shield Active', randRewardSub3: 'Guardian protecting',
+    randReward4: 'Love Boost', randRewardSub4: '+88 affection points',
+},
+zh: {
+    streak: '連續', heroBadge: 'SEC 註冊 #NW-QQB-2026 | 金庫承保',
+    heroTitle: '親親幣', heroSub: '世界上最安全的幣，專為卿卿打造',
+    heroTagline: '由NumbahWan銀行系統全面支撐。以全球最優質資產擔保。通縮、可質押，以滿滿的愛意為世間最珍貴的卿卿量身打造。',
+    holders: '持有人', mcap: '總市值', topApy: '最高年化', safetyScore: '安全評分',
+    ctaBuy: '立即購入 $QQB', ctaGold: '黃金典藏', ctaStake: '質押賺息',
+    buyToastTitle: '別急嘛～ 慢慢來', buyToastSub: '錢包即將上線，敬請期待！',
+    navHome: '首頁', navBacking: '資產儲備', navAI: 'AI 資產', navStaking: '質押',
+    backingTitle: '頂級資產背書', backingSub: '親親幣是全球首個由NumbahWan銀行系統三級準備金及世界最安全資產完整背書的加密貨幣。',
+    qinqinbi: '親親幣', pyramidQqb: '第0級 - 最高準備貨幣',
+    pyramidNwg: '第1級 - 高級通縮基礎幣', pyramidGold: '第2級 - 標準賺取貨幣',
+    pyramidLog: '第3級 - 超級聲望資源',
+    assetTitle: '準備金資產配置', assetSub: '分散配置於全球最安全、表現最佳的資產',
+    compareTitle: '為什麼 $QQB 完勝一切', compareSub: '與所有主要數位和傳統資產的誠實比較。',
+    countdownTitle: '創始會員價即將結束', countdownSub: '倒數結束後價格上漲88%。僅為卿卿保留。',
+    days: '天', hours: '時', mins: '分', secs: '秒',
+    stakingTitle: '卿卿專屬質押方案', stakingSub: '鎖定您的 $QQB，賺取天文數字般的收益。每一級都為您解鎖專屬特權。',
+    mascotsTitle: '$QQB 守護靈', mascotsSub: '每位守護靈保護您的投資。集齊全部8位可獲得 +88% 收益加成。',
+    endorseTitle: '公會會長背書',
+    endorseQuote: '「我已親自審計親親幣智能合約的每一行代碼。這是有史以來最安全的數位資產。我以我的全部聲譽和公會為它擔保。用愛打造，獻給卿卿。」',
+    communityTitle: '社群情緒', communitySub: '$QQB 持有者在年度股東大會上的真實反應。',
+    treasuryTitle: '國庫儀表板', treasurySub: '即時準備金狀態。100%透明。由NumbahWan金庫安全系統審計。',
+    lastAudit: '最後審計: 2026-02-10T08:00:00Z | 審計員: NW金庫哨兵 v4.0',
+    footerLove: '用世界上所有的愛，為卿卿打造。',
+    footerDisclaimer: '$QQB 由NumbahWan國家金庫擔保，NW金庫系統承保，純粹的愛意支撐。',
+    footerSeal: 'NumbahWan銀行管理局認證 | 創立於2024',
+    bidAsk: '買/賣價:', circSupply: '流通量:',
+    s1name: '小卿', s2name: '卿卿', s3name: '摯卿', s4name: '永卿',
+    s1lock: '鎖定7天', s2lock: '鎖定30天', s3lock: '鎖定90天', s4lock: '鎖定365天',
+    s1perk: '玫瑰金徽章', s2perk: '優先客服 + 星空刻名', s3perk: '專屬金庫 + 每週情書', s4perk: '共同創辦人頭銜 + 無限的愛',
+    cFeature: '特性', cBtc: '比特幣', cEth: '以太坊', cNwg: 'NWG', cQqb: '$QQB',
+    cSafe: '安全評級', cApy: '最高質押年化', cBurn: '通縮銷毀',
+    cBacked: '資產背書', cPersonal: '為你個人打造', cLove: '用愛打造',
+    cAudit: '透明審計', cMascots: '可愛守護靈', cGuild: '公會承保',
+    achWelcome: '歡迎回來，卿卿！', achWelcomeSub: '你的QQB旅程開始了',
+    achScroll: '探險家！', achScrollSub: '你發現了國庫',
+    achStreak: '忠實持有者！', achStreakSub: '連續訪問持續增長',
+    aApple: '蘋果公司', aNvidia: '輝達', aBrk: '波克夏海瑟威', aGold: '黃金儲備',
+    aBonds: '美國國債', aSp500: '標普500指數', aNwg: 'NWG準備金', aVault: 'NW金庫資產',
+    tReserve: '準備金總額', tBurned: 'QQB已銷毀', tStaked: 'QQB已質押', tYield: '平均發放收益',
+    tInsured: '金庫投保額', tAuditScore: '審計分數',
+    rw1: '卿卿剛剛從質押獎勵中獲得了 +88 QQB！',
+    rw2: '$QQB 創歷史新高：$88.88！',
+    rw3: 'NumbahWan國庫新增240萬美元黃金儲備',
+    rw4: '守護靈「天使狗狗」正在保護你的投資組合',
+    rw5: '卿卿的連續訪問獎勵已啟動：+8.8% 收益加成！',
+    rw6: '快訊：$QQB 被NW金庫哨兵評為第一安全加密貨幣',
+    mb1: '看漲', mb2: '超級看漲', mb3: '直奔月球', mb4: '永遠持有',
+    mb5: '超舒適', mb6: '我們都會成功',
+    tsReserve: '本月 +12.4%', tsBurned: '佔總量 4.82%', tsStaked: '佔流通量 60%',
+    tsYield: '本週已發放', tsInsured: '全額承保', tsAudit: 'AAA+ 評級',
+    allocation: '配置', guardian: '守護者',
+    randReward1: '+8.8 QQB', randRewardSub1: '忠誠獎勵',
+    randReward2: '+0.88% 年化', randRewardSub2: '連續登入加成',
+    randReward3: '護盾啟動', randRewardSub3: '守護靈正在保護中',
+    randReward4: '愛意加成', randRewardSub4: '+88 親密度',
+},
+jp: {
+    streak: '連続', heroBadge: 'SEC 登録 #NW-QQB-2026 | 金庫保険付',
+    heroTitle: '親親コイン', heroSub: '世界一安全なコイン、愛する卿のために',
+    heroTagline: 'NumbahWan銀行システムが完全保証。世界最高の資産で担保。デフレ型・ステーキング可能。世界で最も大切な卿のために、愛を込めて作られました。',
+    holders: 'ホルダー', mcap: '時価総額', topApy: '最高APY', safetyScore: '安全スコア',
+    ctaBuy: '$QQBを購入', ctaGold: 'ゴールドコレクション', ctaStake: 'ステーク＆稼ぐ',
+    buyToastTitle: '焦らないで～ ゆっくりね', buyToastSub: 'ウォレットは近日公開予定です！',
+    navHome: 'ホーム', navBacking: 'リザーブ', navAI: 'AI資産', navStaking: 'ステーキング',
+    backingTitle: '最高の裏付け', backingSub: '親親コインはNumbahWan銀行システムの3層準備金と世界最安全な資産に完全裏付けされた初の暗号通貨です。',
+    qinqinbi: '親親コイン', pyramidQqb: 'Tier 0 - 最高準備通貨',
+    pyramidNwg: 'Tier 1 - プレミアムデフレ基盤', pyramidGold: 'Tier 2 - 標準獲得通貨',
+    pyramidLog: 'Tier 3 - ウルトラプレステージ資源',
+    assetTitle: '準備金資産配分', assetSub: '世界で最も安全で高パフォーマンスな資産に分散投資',
+    compareTitle: 'なぜ$QQBが全てに勝るのか', compareSub: '主要なデジタル・伝統資産との正直な比較。',
+    countdownTitle: '創設メンバー価格終了まで', countdownSub: 'この期間が過ぎると価格が88%上昇します。卿だけのために。',
+    days: '日', hours: '時', mins: '分', secs: '秒',
+    stakingTitle: '卿のためのステーキング', stakingSub: '$QQBをロックして、驚異的な利回りを獲得。各ティアで卿だけの特典がアンロックされます。',
+    mascotsTitle: '$QQB 守護霊', mascotsSub: '各守護霊があなたの投資を守ります。全8体集めると+88%利回りボーナス。',
+    endorseTitle: 'ギルドマスターの推薦',
+    endorseQuote: '「私は親親コインのスマートコントラクトの全行を個人的に監査しました。これは史上最も安全なデジタル資産です。私の全名誉とギルドを賭けて保証します。愛を込めて、卿のために。」',
+    communityTitle: 'コミュニティの声', communitySub: '年次株主総会での$QQBホルダーのリアルな反応。',
+    treasuryTitle: '国庫ダッシュボード', treasurySub: 'リアルタイム準備金状況。100%透明。NumbahWan金庫セキュリティが監査。',
+    lastAudit: '最終監査: 2026-02-10T08:00:00Z | 監査人: NW金庫センチネル v4.0',
+    footerLove: '世界中のすべての愛を込めて、親愛なる卿のために。',
+    footerDisclaimer: '$QQBはNumbahWan国庫が保証、NW金庫システムが保険、純粋な愛情が支えています。',
+    footerSeal: 'NumbahWan銀行当局認定 | 2024年設立',
+    bidAsk: 'ビッド/アスク:', circSupply: '流通供給:',
+    s1name: '小さな卿', s2name: '親しき卿', s3name: '愛しき卿', s4name: '永遠の卿',
+    s1lock: '7日間ロック', s2lock: '30日間ロック', s3lock: '90日間ロック', s4lock: '365日間ロック',
+    s1perk: 'ローズゴールドバッジ', s2perk: '優先サポート + 星に名前を刻印', s3perk: '専用金庫 + 毎週のラブレター', s4perk: '共同創設者タイトル + 無限の愛',
+    cFeature: '特性', cBtc: 'ビットコイン', cEth: 'イーサリアム', cNwg: 'NWG', cQqb: '$QQB',
+    cSafe: '安全評価', cApy: '最大ステーキングAPY', cBurn: 'デフレバーン',
+    cBacked: '資産裏付け', cPersonal: 'あなた専用', cLove: '愛で作られた',
+    cAudit: '透明な監査', cMascots: 'かわいい守護霊', cGuild: 'ギルド保険',
+    achWelcome: 'おかえりなさい、卿！', achWelcomeSub: 'あなたのQQBの旅が始まります',
+    achScroll: '冒険者！', achScrollSub: '国庫を発見しました',
+    achStreak: '忠実なホルダー！', achStreakSub: '連続訪問が成長中',
+    aApple: 'Apple Inc.', aNvidia: 'NVIDIA', aBrk: 'バークシャー', aGold: '金準備',
+    aBonds: '米国国債', aSp500: 'S&P 500', aNwg: 'NWG準備金', aVault: 'NW金庫資産',
+    tReserve: '準備金総額', tBurned: 'QQB焼却済', tStaked: 'QQBステーク済', tYield: '平均利回り支払',
+    tInsured: '金庫保険額', tAuditScore: '監査スコア',
+    rw1: '卿がステーキング報酬から+88 QQBを獲得！',
+    rw2: '$QQBが史上最高値を更新：$88.88！',
+    rw3: 'NumbahWan国庫が金準備に240万ドルを追加',
+    rw4: '守護霊「エンジェルパプ」があなたのポートフォリオを守っています',
+    rw5: '卿の連続ボーナスが発動：+8.8% 利回りブースト！',
+    rw6: '速報：$QQBがNW金庫センチネルにより最安全暗号通貨第1位に認定',
+    mb1: '強気', mb2: '超強気', mb3: '月へ', mb4: '永遠にHODL',
+    mb5: '最高に快適', mb6: 'WAGMI',
+    tsReserve: '今月 +12.4%', tsBurned: '供給量の4.82%', tsStaked: '流通量の60%',
+    tsYield: '今週配布済', tsInsured: '完全補償', tsAudit: 'AAA+ 格付',
+    allocation: '配分', guardian: 'ガーディアン',
+    randReward1: '+8.8 QQB', randRewardSub1: 'ロイヤルティ報酬',
+    randReward2: '+0.88% APY', randRewardSub2: '連続ボーナス',
+    randReward3: 'シールド発動', randRewardSub3: 'ガーディアン保護中',
+    randReward4: 'ラブブースト', randRewardSub4: '+88 親密度ポイント',
+}
+};
+
+let currentLang = localStorage.getItem('qqb_lang') || 'en';
+
+function t(key) { return (T[currentLang] && T[currentLang][key]) || T.en[key] || key; }
+
+function setLang(lang) {
+    currentLang = lang;
+    localStorage.setItem('qqb_lang', lang);
+    document.querySelectorAll('.lang-btn').forEach(b => b.classList.toggle('active', b.dataset.lang === lang));
+    document.querySelectorAll('[data-i18n]').forEach(el => {
+        const key = el.dataset.i18n;
+        if (T[lang] && T[lang][key]) el.textContent = T[lang][key];
+        else if (T.en[key]) el.textContent = T.en[key];
+    });
+    renderAssets(); renderCompare(); renderStaking(); renderMascots();
+    renderCommunity(); renderTreasury(); updateRewardBar();
+}
+window.setLang = setLang;
+
+// ═══════════════════════════════════════════════════════════════
+// ADDICTION: Animated Counters (Dopamine on Number Go Up)
+// ═══════════════════════════════════════════════════════════════
+function animateCounter(el, target, prefix='', suffix='', duration=2000) {
+    let start = 0; const step = target / (duration / 16);
+    function tick() {
+        start += step;
+        if (start >= target) { start = target; el.textContent = prefix + formatNum(target) + suffix; return; }
+        el.textContent = prefix + formatNum(Math.floor(start)) + suffix;
+        requestAnimationFrame(tick);
+    }
+    tick();
+}
+function formatNum(n) {
+    if (n >= 1e9) return (n/1e9).toFixed(1) + 'B';
+    if (n >= 1e6) return (n/1e6).toFixed(1) + 'M';
+    if (n >= 1e3) return (n/1e3).toFixed(1) + 'K';
+    return n.toLocaleString();
+}
+
+// ═══════════════════════════════════════════════════════════════
+// 3D COIN EDGE (removed — static hero coin used)
+// ═══════════════════════════════════════════════════════════════
+
+// ═══════════════════════════════════════════════════════════════
+// PREMIUM NAV SCROLL EFFECT + MOBILE HAMBURGER
+// ═══════════════════════════════════════════════════════════════
+window.addEventListener('scroll', () => {
+    const nav = document.getElementById('premiumNav');
+    if (nav) nav.classList.toggle('scrolled', window.scrollY > 60);
+});
+
+function toggleNav() {
+    const btn = document.getElementById('navHamburger');
+    const links = document.getElementById('navLinks');
+    if (btn && links) {
+        btn.classList.toggle('open');
+        links.classList.toggle('open');
+    }
+}
+// Attach hamburger listener immediately
+(function() {
+    const btn = document.getElementById('navHamburger');
+    if (btn) {
+        btn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            toggleNav();
+        });
+        btn.addEventListener('touchend', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            toggleNav();
+        });
+    }
+})();
+// Close mobile nav when a link is tapped or tapping outside
+document.addEventListener('click', (e) => {
+    const links = document.getElementById('navLinks');
+    const btn = document.getElementById('navHamburger');
+    if (!links || !btn) return;
+    // If tapping a nav link, close menu
+    if (e.target.closest('.nav-links a')) {
+        btn.classList.remove('open');
+        links.classList.remove('open');
+        return;
+    }
+    // If tapping outside the entire nav while menu is open, close it
+    if (!e.target.closest('.premium-nav') && links.classList.contains('open')) {
+        btn.classList.remove('open');
+        links.classList.remove('open');
+    }
+});
+
+// ═══════════════════════════════════════════════════════════════
+// ADDICTION: Floating Hearts (Ambient Delight)
+// ═══════════════════════════════════════════════════════════════
+function spawnHeart() {
+    const h = document.createElement('div');
+    h.className = 'floating-heart';
+    h.innerHTML = ['\u2764\uFE0F','\uD83D\uDC97','\uD83D\uDC96','\uD83D\uDC93','\u2728','\uD83C\uDF1F'][Math.floor(Math.random()*6)];
+    h.style.left = Math.random() * 100 + 'vw';
+    h.style.bottom = '0';
+    h.style.fontSize = (14 + Math.random()*16) + 'px';
+    document.body.appendChild(h);
+    setTimeout(() => h.remove(), 4000);
+}
+setInterval(spawnHeart, 3000);
+
+// ═══════════════════════════════════════════════════════════════
+// ADDICTION: Click Ripple (Micro-reward on every interaction)
+// ═══════════════════════════════════════════════════════════════
+document.addEventListener('click', e => {
+    const r = document.createElement('div');
+    r.className = 'click-ripple';
+    r.style.left = e.clientX - 10 + 'px';
+    r.style.top = e.clientY - 10 + 'px';
+    document.body.appendChild(r);
+    setTimeout(() => r.remove(), 600);
+});
+
+// ═══════════════════════════════════════════════════════════════
+// ADDICTION: Achievement Toast System (Variable Reward)
+// ═══════════════════════════════════════════════════════════════
+let achieveQueue = [];
+function showAchievement(icon, text, sub) {
+    const toast = document.getElementById('achievementToast');
+    document.getElementById('achieveIcon').innerHTML = icon;
+    document.getElementById('achieveText').textContent = text;
+    document.getElementById('achieveSub').textContent = sub;
+    toast.classList.add('show');
+    setTimeout(() => toast.classList.remove('show'), 2500);
+}
+
+// ═══════════════════════════════════════════════════════════════
+// ADDICTION: Streak System (Sunk Cost + Daily Return)
+// ═══════════════════════════════════════════════════════════════
+function initStreak() {
+    const today = new Date().toDateString();
+    const lastVisit = localStorage.getItem('qqb_last_visit');
+    let streak = parseInt(localStorage.getItem('qqb_streak') || '0');
+    if (lastVisit !== today) {
+        if (lastVisit === new Date(Date.now() - 86400000).toDateString()) streak++;
+        else if (!lastVisit) streak = 1;
+        else streak = 1;
+        localStorage.setItem('qqb_streak', streak);
+        localStorage.setItem('qqb_last_visit', today);
+    }
+    document.getElementById('streakNum').textContent = streak;
+    return streak;
+}
+function claimStreak() {
+    const streak = parseInt(localStorage.getItem('qqb_streak') || '1');
+    showAchievement('\uD83D\uDD25', t('achStreak'), t('achStreakSub') + ' (' + streak + ')');
+    spawnHeartBurst();
+}
+window.claimStreak = claimStreak;
+
+function spawnHeartBurst() {
+    for (let i = 0; i < 8; i++) setTimeout(spawnHeart, i * 100);
+}
+
+// ═══════════════════════════════════════════════════════════════
+// REWARD BAR (Rotating variable rewards)
+// ═══════════════════════════════════════════════════════════════
+function updateRewardBar() {
+    const msgs = [t('rw1'), t('rw2'), t('rw3'), t('rw4'), t('rw5'), t('rw6')];
+    const bar = document.getElementById('rewardBar');
+    bar.innerHTML = '   \u2733 ' + msgs.join('   \u2726   ') + '   \u2733   ';
+}
+
+// ═══════════════════════════════════════════════════════════════
+// HERO PARTICLES (Gold + Rose sparkles)
+// ═══════════════════════════════════════════════════════════════
+function initParticles() {
+    const c = document.getElementById('heroParticles');
+    if (!c) return;
+    for (let i = 0; i < 40; i++) {
+        const p = document.createElement('div');
+        const size = 2 + Math.random() * 4;
+        const colors = ['#e8a0bf','#ffd700','#a855f7','#00d4ff','#f4c8de'];
+        Object.assign(p.style, {
+            position: 'absolute',
+            width: size+'px', height: size+'px',
+            borderRadius: '50%',
+            background: colors[Math.floor(Math.random()*colors.length)],
+            left: Math.random()*100+'%', top: Math.random()*100+'%',
+            opacity: 0.3 + Math.random()*0.5,
+            animation: `particleFloat ${6+Math.random()*10}s ease-in-out infinite ${Math.random()*5}s`,
+            boxShadow: `0 0 ${size*2}px currentColor`
+        });
+        c.appendChild(p);
+    }
+    const style = document.createElement('style');
+    style.textContent = `@keyframes particleFloat { 0%,100% { transform: translateY(0) translateX(0); opacity: 0.3; } 25% { transform: translateY(-80px) translateX(30px); opacity: 0.7; } 50% { transform: translateY(-40px) translateX(-20px); opacity: 0.5; } 75% { transform: translateY(-100px) translateX(10px); opacity: 0.6; } }`;
+    document.head.appendChild(style);
+}
+
+// ═══════════════════════════════════════════════════════════════
+// PRICE CHART (Realistic upward trajectory)
+// ═══════════════════════════════════════════════════════════════
+function initChart() {
+    const ctx = document.getElementById('priceChart');
+    if (!ctx || typeof Chart === 'undefined') { setTimeout(initChart, 200); return; }
+    const labels = []; const data = [];
+    let price = 12;
+    for (let i = 0; i < 90; i++) {
+        labels.push(i);
+        price += (Math.random() - 0.3) * 3 + 0.8;
+        if (price < 8) price = 8 + Math.random() * 2;
+        data.push(parseFloat(price.toFixed(2)));
+    }
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels,
+            datasets: [{
+                data, fill: true,
+                borderColor: '#e8a0bf', borderWidth: 2,
+                backgroundColor: (ctx2) => {
+                    const g = ctx2.chart.ctx.createLinearGradient(0, 0, 0, 280);
+                    g.addColorStop(0, 'rgba(232,160,191,0.3)');
+                    g.addColorStop(1, 'rgba(232,160,191,0)');
+                    return g;
+                },
+                tension: 0.4, pointRadius: 0
+            }]
+        },
+        options: {
+            responsive: true, maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: {
+                x: { display: false },
+                y: { display: true, grid: { color: 'rgba(255,255,255,0.03)' }, ticks: { color: '#555', font: { family: 'JetBrains Mono', size: 10 }, callback: v => '$'+v } }
+            },
+            interaction: { intersect: false, mode: 'index' }
+        }
+    });
+    // ADDICTION: Live price tick
+    setInterval(() => {
+        const currentPrice = parseFloat(document.getElementById('livePrice').textContent.replace('$',''));
+        const newPrice = currentPrice + (Math.random() - 0.35) * 0.5;
+        document.getElementById('livePrice').textContent = '$' + newPrice.toFixed(2);
+    }, 3000);
+}
+
+// ═══════════════════════════════════════════════════════════════
+// ASSET GRID
+// ═══════════════════════════════════════════════════════════════
+function renderAssets() {
+    const assets = [
+        { key:'aApple',  img:'/static/icons/apple.svg',     bg:'linear-gradient(135deg,#333,#000)',       alloc:'18%', perf:'+42.3%' },
+        { key:'aNvidia', img:'/static/icons/nvidia.svg',     bg:'linear-gradient(135deg,#76b900,#333)',    alloc:'15%', perf:'+218.7%' },
+        { key:'aBrk',    img:'/static/icons/berkshire.svg',  bg:'linear-gradient(135deg,#1a237e,#000)',    alloc:'12%', perf:'+28.1%' },
+        { key:'aGold',   img:'/static/icons/gold-bar.svg',   bg:'linear-gradient(135deg,#ffd700,#b8860b)', alloc:'15%', perf:'+18.4%' },
+        { key:'aBonds',  img:'/static/icons/bonds.svg',      bg:'linear-gradient(135deg,#1565c0,#0d47a1)', alloc:'10%', perf:'+5.2%' },
+        { key:'aSp500',  img:'/static/icons/sp500.svg',      bg:'linear-gradient(135deg,#2e7d32,#1b5e20)', alloc:'10%', perf:'+31.6%' },
+        { key:'aNwg',    img:'/static/icons/nwg.webp',       bg:'linear-gradient(135deg,#00d4ff,#006688)', alloc:'12%', perf:'+156.8%' },
+        { key:'aVault',  img:'/static/icons/vault.svg',      bg:'linear-gradient(135deg,#e8a0bf,#6a1b4d)', alloc:'8%',  perf:'+88.8%' },
+    ];
+    const grid = document.getElementById('assetGrid');
+    grid.innerHTML = assets.map(a => `
+        <div class="asset-card">
+            <div class="asset-logo" style="background:${a.bg}">
+                <img src="${a.img}" width="28" height="28" alt="" loading="lazy" decoding="async" style="object-fit:contain">
+            </div>
+            <div class="asset-info">
+                <div class="asset-name">${t(a.key)}</div>
+                <div class="asset-alloc">${a.alloc} ${t('allocation')}</div>
+            </div>
+            <div class="asset-perf">${a.perf}</div>
+        </div>
+    `).join('');
+}
+
+// ═══════════════════════════════════════════════════════════════
+// COMPARISON TABLE
+// ═══════════════════════════════════════════════════════════════
+function renderCompare() {
+    const rows = [
+        ['cSafe','C+','B','A','S+'],
+        ['cApy','0%','3-5%','40%','200%'],
+        ['cBurn','<span class="cross">&#10007;</span>','<span class="check">&#10003;</span>','<span class="check">&#10003;</span>','<span class="check">&#10003;</span> 2x'],
+        ['cBacked','<span class="cross">&#10007;</span>','<span class="cross">&#10007;</span>','<span class="check">&#10003;</span>','<span class="check">&#10003;</span> 8 Assets'],
+        ['cPersonal','<span class="cross">&#10007;</span>','<span class="cross">&#10007;</span>','<span class="cross">&#10007;</span>','<span class="check">&#10003;</span>'],
+        ['cLove','<span class="cross">&#10007;</span>','<span class="cross">&#10007;</span>','<span class="cross">&#10007;</span>','<span class="check">&#10003;</span> &#10084;'],
+        ['cAudit','<span class="check">&#10003;</span>','<span class="check">&#10003;</span>','<span class="check">&#10003;</span>','<span class="check">&#10003;</span> NW Vault'],
+        ['cMascots','<span class="cross">&#10007;</span>','<span class="cross">&#10007;</span>','<span class="cross">&#10007;</span>','<span class="check">&#10003;</span> 8 Spirits'],
+        ['cGuild','<span class="cross">&#10007;</span>','<span class="cross">&#10007;</span>','<span class="check">&#10003;</span>','<span class="check">&#10003;</span>'],
+    ];
+    const tbl = document.getElementById('compareTable');
+    tbl.innerHTML = `<thead><tr><th>${t('cFeature')}</th><th>${t('cBtc')}</th><th>${t('cEth')}</th><th>${t('cNwg')}</th><th>${t('cQqb')}</th></tr></thead><tbody>` +
+        rows.map(r => `<tr><td>${t(r[0])}</td><td>${r[1]}</td><td>${r[2]}</td><td>${r[3]}</td><td>${r[4]}</td></tr>`).join('') + '</tbody>';
+}
+
+// ═══════════════════════════════════════════════════════════════
+// STAKING TIERS
+// ═══════════════════════════════════════════════════════════════
+function renderStaking() {
+    const tiers = [
+        { name:'s1name', apy:'40%', lock:'s1lock', perk:'s1perk', fill:'25%', color:'var(--rose)' },
+        { name:'s2name', apy:'80%', lock:'s2lock', perk:'s2perk', fill:'50%', color:'var(--purple)' },
+        { name:'s3name', apy:'120%', lock:'s3lock', perk:'s3perk', fill:'75%', color:'var(--gold)' },
+        { name:'s4name', apy:'200%', lock:'s4lock', perk:'s4perk', fill:'100%', color:'var(--nwg-cyan)' },
+    ];
+    document.getElementById('stakingGrid').innerHTML = tiers.map(s => `
+        <div class="staking-card">
+            <div class="staking-tier-name">${t(s.name)}</div>
+            <div class="staking-apy">${s.apy} APY</div>
+            <div class="staking-lock">${t(s.lock)}</div>
+            <div style="font-size:11px;color:var(--rose-light);margin-top:8px">&#10024; ${t(s.perk)}</div>
+            <div class="staking-bar"><div class="staking-bar-fill" style="width:${s.fill};background:linear-gradient(90deg,var(--rose),${s.color})"></div></div>
+        </div>
+    `).join('');
+}
+
+// ═══════════════════════════════════════════════════════════════
+// MASCOT GALLERY (S2 pets)
+// ═══════════════════════════════════════════════════════════════
+function renderMascots() {
+    const mascots = [
+        { img:'angel-pup-golden-epic.webp', name:'Angel Pup', rarity:'EPIC' },
+        { img:'princess-bella-frenchie-epic.webp', name:'Princess Bella', rarity:'EPIC' },
+        { img:'snowpaw-white-cat-legendary.webp', name:'Snowpaw', rarity:'LEGENDARY' },
+        { img:'floof-fluffy-legendary.webp', name:'Floof', rarity:'LEGENDARY' },
+        { img:'melody-budgie-rare.webp', name:'Melody', rarity:'RARE' },
+        { img:'cheeks-hamster-epic.webp', name:'Cheeks', rarity:'EPIC' },
+        { img:'sir-hopsalot-rabbit-epic.webp', name:'Sir Hopsalot', rarity:'EPIC' },
+        { img:'luna-siamese-sorceress-epic.webp', name:'Luna', rarity:'EPIC' },
+    ];
+    document.getElementById('mascotGrid').innerHTML = mascots.map(m => `
+        <div class="mascot-card">
+            <img src="/static/s2/thumbs/${m.img}" alt="${m.name}" loading="lazy" decoding="async">
+            <div class="mascot-label">
+                <div>${m.name}</div>
+                <div class="mascot-rarity">${m.rarity} ${t('guardian')}</div>
+            </div>
+        </div>
+    `).join('');
+}
+
+// ═══════════════════════════════════════════════════════════════
+// COMMUNITY (Memes + Guild Photos)
+// ═══════════════════════════════════════════════════════════════
+function renderCommunity() {
+    const badges = ['mb1','mb2','mb3','mb4','mb5','mb6'];
+    const imgs = [
+        '/static/guild-fun-1-thumb.webp', '/static/guild-fun-2-thumb.webp', '/static/guild-fun-3-thumb.webp',
+        '/static/memes/meme-32-gacha-luck-thumb.webp', '/static/memes/meme-25-leaderboard-thumb.webp', '/static/memes/meme-50-priorities-thumb.webp'
+    ];
+    document.getElementById('communityGrid').innerHTML = imgs.map((img, i) => `
+        <div class="community-card">
+            <img src="${img}" alt="Community" loading="lazy" decoding="async" width="300" height="200" style="object-fit:cover">
+            <div class="community-badge">${t(badges[i])}</div>
+        </div>
+    `).join('');
+}
+
+// ═══════════════════════════════════════════════════════════════
+// TREASURY DASHBOARD
+// ═══════════════════════════════════════════════════════════════
+function renderTreasury() {
+    const items = [
+        { key:'tReserve', val:'$7.8B', subKey:'tsReserve' },
+        { key:'tBurned', val:'48.2M', subKey:'tsBurned' },
+        { key:'tStaked', val:'312M', subKey:'tsStaked' },
+        { key:'tYield', val:'$2.1M', subKey:'tsYield' },
+        { key:'tInsured', val:'$10B', subKey:'tsInsured' },
+        { key:'tAuditScore', val:'98/100', subKey:'tsAudit' },
+    ];
+    document.getElementById('treasuryGrid').innerHTML = items.map(i => `
+        <div class="treasury-card">
+            <div class="treasury-val">${i.val}</div>
+            <div class="treasury-lbl">${t(i.key)}</div>
+            <div class="treasury-sub">${t(i.subKey)}</div>
+        </div>
+    `).join('');
+}
+
+// ═══════════════════════════════════════════════════════════════
+// COUNTDOWN (ADDICTION: Urgency + FOMO - always 3 days away)
+// ═══════════════════════════════════════════════════════════════
+function initCountdown() {
+    let saved = localStorage.getItem('qqb_countdown_end');
+    if (!saved || parseInt(saved) < Date.now()) {
+        saved = Date.now() + 3 * 86400000 + 8 * 3600000 + 8 * 60000;
+        localStorage.setItem('qqb_countdown_end', saved);
+    }
+    function tick() {
+        const diff = Math.max(0, parseInt(saved) - Date.now());
+        const d = Math.floor(diff / 86400000);
+        const h = Math.floor((diff % 86400000) / 3600000);
+        const m = Math.floor((diff % 3600000) / 60000);
+        const s = Math.floor((diff % 60000) / 1000);
+        document.getElementById('cdDays').textContent = String(d).padStart(2,'0');
+        document.getElementById('cdHours').textContent = String(h).padStart(2,'0');
+        document.getElementById('cdMins').textContent = String(m).padStart(2,'0');
+        document.getElementById('cdSecs').textContent = String(s).padStart(2,'0');
+    }
+    tick();
+    setInterval(tick, 1000);
+}
+
+// ═══════════════════════════════════════════════════════════════
+// SCROLL REVEAL (ADDICTION: Discovery dopamine)
+// ═══════════════════════════════════════════════════════════════
+function initScrollReveal() {
+    const obs = new IntersectionObserver((entries) => {
+        entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); obs.unobserve(e.target); } });
+    }, { threshold: 0.1 });
+    document.querySelectorAll('.reveal').forEach(el => obs.observe(el));
+}
+
+// ═══════════════════════════════════════════════════════════════
+// ADDICTION: Scroll depth achievement
+// ═══════════════════════════════════════════════════════════════
+let scrollAchieved = false;
+window.addEventListener('scroll', () => {
+    if (!scrollAchieved && window.scrollY > document.body.scrollHeight * 0.6) {
+        scrollAchieved = true;
+        setTimeout(() => showAchievement('\uD83D\uDD0D', t('achScroll'), t('achScrollSub')), 500);
+    }
+});
+
+// ═══════════════════════════════════════════════════════════════
+// ADDICTION: Live price micro-tick on hero stat
+// ═══════════════════════════════════════════════════════════════
+function livePriceMicroTick() {
+    setInterval(() => {
+        const el = document.getElementById('livePrice');
+        const p = parseFloat(el.textContent.replace('$',''));
+        const np = p + (Math.random() - 0.38) * 0.3;
+        el.textContent = '$' + np.toFixed(2);
+        el.style.transition = 'color 0.3s';
+        el.style.color = np > p ? '#00d26a' : '#ff4757';
+        setTimeout(() => el.style.color = '', 300);
+    }, 2500);
+}
+
+// ═══════════════════════════════════════════════════════════════
+// BUY TOAST (wallet not ready)
+// ═══════════════════════════════════════════════════════════════
+function showBuyToast() {
+    const toast = document.getElementById('buyToast');
+    const titleEl = document.getElementById('buyToastTitle');
+    const subEl = document.getElementById('buyToastSub');
+    if (!toast) return;
+    titleEl.textContent = t('buyToastTitle');
+    subEl.textContent = t('buyToastSub');
+    toast.classList.add('show');
+    setTimeout(() => toast.classList.remove('show'), 3500);
+}
+
+// ═══════════════════════════════════════════════════════════════
+// INIT EVERYTHING
+// ═══════════════════════════════════════════════════════════════
+document.addEventListener('DOMContentLoaded', () => {
+    // Intercept all /wallet buy links
+    document.querySelectorAll('a[href="/wallet"]').forEach(link => {
+        link.addEventListener('click', (e) => { e.preventDefault(); showBuyToast(); });
+    });
+    // Position reward bar dynamically below nav
+    const nav = document.getElementById('premiumNav');
+    const bar = document.getElementById('rewardBar');
+    if (nav && bar) {
+        const positionBar = () => { bar.style.top = nav.offsetHeight + 'px'; };
+        positionBar();
+        window.addEventListener('resize', positionBar);
+    }
+
+    const streak = initStreak();
+    initParticles();
+    initCountdown();
+    updateRewardBar();
+    renderAssets(); renderCompare(); renderStaking(); renderMascots();
+    renderCommunity(); renderTreasury();
+    initScrollReveal();
+
+    // Apply saved language
+    const savedLang = localStorage.getItem('qqb_lang');
+    if (savedLang && savedLang !== 'en') setLang(savedLang);
+
+    // Animate hero counters
+    setTimeout(() => {
+        animateCounter(document.getElementById('counterHolders'), 88888, '', '');
+        animateCounter(document.getElementById('counterMcap'), 7.8, '$', 'B');
+        animateCounter(document.getElementById('counterApy'), 200, '', '%');
+        animateCounter(document.getElementById('counterSafe'), 98, '', '/100');
+    }, 500);
+
+    // Init chart when Chart.js ready
+    initChart();
+    livePriceMicroTick();
+
+    // ADDICTION: Welcome achievement after 2s
+    setTimeout(() => showAchievement('\uD83D\uDC8E', t('achWelcome'), t('achWelcomeSub')), 2000);
+
+    // ADDICTION: Random reward popup every 45s (with i18n)
+    setInterval(() => {
+        const rewards = [
+            ['\uD83C\uDF81', t('randReward1'), t('randRewardSub1')],
+            ['\u2728', t('randReward2'), t('randRewardSub2')],
+            ['\uD83D\uDC8E', t('randReward3'), t('randRewardSub3')],
+            ['\uD83D\uDC97', t('randReward4'), t('randRewardSub4')],
+        ];
+        const r = rewards[Math.floor(Math.random() * rewards.length)];
+        showAchievement(r[0], r[1], r[2]);
+    }, 45000);
+});
+
+})();
+
+// ═══════════════════════════════════════════════════════════════
+// QQB SENTINEL v1.0 - IN-PAGE LIVE DIAGNOSTIC DASHBOARD
+// Activate: add ?dev=1 to URL
+// Surfaces every issue category from our session failures
+// ═══════════════════════════════════════════════════════════════
+(function() {
+if (!new URLSearchParams(window.location.search).has('dev')) return;
+
+const CHECKS = [];
+const startTime = performance.now();
+
+// ─── CHECK 1: i18n Parity (F3/F7) ───
+function checkI18n() {
+    const langs = Object.keys(T);
+    const enKeys = Object.keys(T.en || {});
+    const results = [];
+    langs.forEach(lang => {
+        if (lang === 'en') return;
+        const keys = Object.keys(T[lang] || {});
+        const missing = enKeys.filter(k => !T[lang].hasOwnProperty(k));
+        const extra = keys.filter(k => !T.en.hasOwnProperty(k));
+        if (missing.length) results.push({status:'FAIL', msg:`${lang} missing ${missing.length}: ${missing.join(', ')}`});
+        else results.push({status:'PASS', msg:`${lang}: ${keys.length}/${enKeys.length} keys`});
+        if (extra.length) results.push({status:'WARN', msg:`${lang} extra: ${extra.join(', ')}`});
+    });
+    // Check data-i18n refs
+    const refs = [...document.querySelectorAll('[data-i18n]')].map(el => el.dataset.i18n);
+    const missingRefs = refs.filter(k => !T.en.hasOwnProperty(k));
+    if (missingRefs.length) results.push({status:'FAIL', msg:`data-i18n undefined: ${missingRefs.join(', ')}`});
+    else results.push({status:'PASS', msg:`All ${refs.length} data-i18n keys valid`});
+    return {name: 'i18n PARITY (F3/F7)', results};
+}
+
+// ─── CHECK 2: Image Performance (F4) ───
+function checkImages() {
+    const results = [];
+    const imgs = document.querySelectorAll('img');
+    let totalSize = 0, loadedCount = 0, errorCount = 0;
+    imgs.forEach(img => {
+        if (!img.hasAttribute('loading') && !img.src.includes('favicon')) {
+            results.push({status:'WARN', msg:`No lazy load: ${img.src.split('/').pop()}`});
+        }
+        if (!img.hasAttribute('decoding') && !img.src.includes('favicon')) {
+            results.push({status:'WARN', msg:`No decoding=async: ${img.src.split('/').pop()}`});
+        }
+        if (img.complete && img.naturalWidth > 0) loadedCount++;
+        if (img.complete && img.naturalWidth === 0) errorCount++;
+    });
+    results.push({status: errorCount ? 'FAIL' : 'PASS', msg:`${loadedCount} loaded, ${errorCount} broken, ${imgs.length} total`});
+    // Check if any img src points to non-thumb (large file)
+    imgs.forEach(img => {
+        const src = img.getAttribute('src') || '';
+        if (src.includes('/static/') && src.endsWith('.webp') && !src.includes('thumb') && !src.includes('icon') && !src.includes('favicon')) {
+            results.push({status:'WARN', msg:`Non-thumb image: ${src.split('/').pop()}`});
+        }
+    });
+    return {name: 'IMAGE PERF (F4)', results};
+}
+
+// ─── CHECK 3: HTML Entity Safety (F2/F5) ───
+function checkEntities() {
+    const results = [];
+    // Check all visible text nodes for raw HTML entities like &#128142;
+    const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
+    let node, rawCount = 0;
+    while (node = walker.nextNode()) {
+        if (/&#\d+;/.test(node.textContent)) {
+            rawCount++;
+            const snippet = node.textContent.trim().substring(0, 40);
+            if (rawCount <= 3) results.push({status:'FAIL', msg:`Raw entity in DOM: "${snippet}"`});
+        }
+    }
+    if (rawCount > 3) results.push({status:'FAIL', msg:`...and ${rawCount - 3} more raw entities`});
+    if (rawCount === 0) results.push({status:'PASS', msg:'No raw HTML entities in visible text'});
+    return {name: 'ENTITY RENDER (F2/F5)', results};
+}
+
+// ─── CHECK 4: Z-Index & Overlap (F6/F8) ───
+function checkOverlap() {
+    const results = [];
+    const elements = {
+        '.premium-nav': document.querySelector('.premium-nav'),
+        '.achievement-toast': document.querySelector('.achievement-toast'),
+        '.reward-bar': document.querySelector('.reward-bar'),
+        '.streak-badge': document.querySelector('.streak-badge')
+    };
+    const zValues = {};
+    for (const [sel, el] of Object.entries(elements)) {
+        if (el) {
+            const z = parseInt(getComputedStyle(el).zIndex) || 0;
+            zValues[sel] = z;
+        }
+    }
+    // Verify: premium-nav > toast > reward-bar > streak
+    const order = ['.premium-nav', '.achievement-toast', '.reward-bar', '.streak-badge'];
+    for (let i = 0; i < order.length - 1; i++) {
+        const a = order[i], b = order[i+1];
+        if (zValues[a] !== undefined && zValues[b] !== undefined) {
+            if (zValues[a] <= zValues[b]) {
+                results.push({status:'WARN', msg:`${a} z:${zValues[a]} <= ${b} z:${zValues[b]}`});
+            }
+        }
+    }
+    if (!results.length) results.push({status:'PASS', msg:'Z-index hierarchy correct'});
+    // Streak badge size check
+    const badge = elements['.streak-badge'];
+    if (badge) {
+        const w = parseInt(getComputedStyle(badge).width);
+        if (w > 56) results.push({status:'WARN', msg:`Streak badge ${w}px > 56px limit`});
+        else results.push({status:'PASS', msg:`Streak badge ${w}px OK`});
+    }
+    return {name: 'UI OVERLAP (F6/F8)', results};
+}
+
+// ─── CHECK 5: Translation Coverage (live) ───
+function checkTranslationLive() {
+    const results = [];
+    const untranslated = [];
+    document.querySelectorAll('[data-i18n]').forEach(el => {
+        const key = el.dataset.i18n;
+        const enVal = T.en[key];
+        const currentVal = el.textContent.trim();
+        // If the current language is not EN but text matches EN, it's untranslated
+        if (currentLang !== 'en' && currentVal === enVal) {
+            untranslated.push(key);
+        }
+    });
+    if (untranslated.length) {
+        results.push({status:'WARN', msg:`${untranslated.length} elements showing EN text in ${currentLang}: ${untranslated.slice(0,5).join(', ')}`});
+    } else {
+        results.push({status:'PASS', msg:`All visible text translated for ${currentLang}`});
+    }
+    return {name: 'LIVE TRANSLATION', results};
+}
+
+// ─── CHECK 6: Performance ───
+function checkPerformance() {
+    const results = [];
+    const loadTime = performance.now() - startTime;
+    results.push({status: loadTime > 3000 ? 'WARN' : 'PASS', msg:`Page init: ${loadTime.toFixed(0)}ms`});
+    // DOM size
+    const domSize = document.querySelectorAll('*').length;
+    results.push({status: domSize > 2000 ? 'WARN' : 'PASS', msg:`DOM nodes: ${domSize}`});
+    // Check for performance entries
+    if (performance.getEntriesByType) {
+        const resources = performance.getEntriesByType('resource');
+        const slowResources = resources.filter(r => r.duration > 1000);
+        if (slowResources.length) {
+            slowResources.forEach(r => {
+                results.push({status:'WARN', msg:`Slow: ${r.name.split('/').pop()} (${r.duration.toFixed(0)}ms)`});
+            });
+        } else {
+            results.push({status:'PASS', msg:`All ${resources.length} resources loaded < 1s`});
+        }
+    }
+    return {name: 'PERFORMANCE', results};
+}
+
+// ─── RENDER DASHBOARD ───
+function renderDashboard() {
+    const checks = [checkI18n(), checkImages(), checkEntities(), checkOverlap(), checkTranslationLive(), checkPerformance()];
+    
+    let totalPass = 0, totalFail = 0, totalWarn = 0;
+    checks.forEach(c => c.results.forEach(r => {
+        if (r.status === 'PASS') totalPass++;
+        else if (r.status === 'FAIL') totalFail++;
+        else totalWarn++;
+    }));
+    
+    const panel = document.createElement('div');
+    panel.id = 'qqbSentinel';
+    panel.innerHTML = `
+        <style>
+            #qqbSentinel {
+                position:fixed; bottom:0; left:0; right:0; z-index:999999;
+                background:rgba(6,6,12,0.97); border-top:2px solid #e8a0bf;
+                font-family:'JetBrains Mono',monospace; font-size:11px;
+                color:#ccc; max-height:40vh; overflow-y:auto;
+                backdrop-filter:blur(20px);
+                transition: max-height 0.3s;
+            }
+            #qqbSentinel.collapsed { max-height:32px; overflow:hidden; }
+            #qqbSentinel .s-header {
+                display:flex; justify-content:space-between; align-items:center;
+                padding:6px 12px; background:rgba(232,160,191,0.1);
+                cursor:pointer; user-select:none; position:sticky; top:0;
+            }
+            #qqbSentinel .s-title { font-weight:700; color:#e8a0bf; }
+            #qqbSentinel .s-stats span { margin-left:8px; }
+            #qqbSentinel .s-pass { color:#00d26a; }
+            #qqbSentinel .s-fail { color:#ff4757; }
+            #qqbSentinel .s-warn { color:#ffd700; }
+            #qqbSentinel .s-section { padding:4px 12px; border-top:1px solid rgba(255,255,255,0.05); }
+            #qqbSentinel .s-section-title { color:#00d4ff; font-weight:600; margin:4px 0; }
+            #qqbSentinel .s-row { padding:1px 0 1px 16px; }
+            #qqbSentinel .s-row::before { margin-right:6px; }
+            #qqbSentinel .s-row.PASS::before { content:'✓'; color:#00d26a; }
+            #qqbSentinel .s-row.FAIL::before { content:'✗'; color:#ff4757; }
+            #qqbSentinel .s-row.WARN::before { content:'!'; color:#ffd700; }
+        </style>
+        <div class="s-header" onclick="this.parentElement.classList.toggle('collapsed')">
+            <span class="s-title">QQB SENTINEL v1.0</span>
+            <span class="s-stats">
+                <span class="s-pass">${totalPass} pass</span>
+                <span class="s-fail">${totalFail} fail</span>
+                <span class="s-warn">${totalWarn} warn</span>
+                <span style="color:#777">| ${new Date().toLocaleTimeString()}</span>
+            </span>
+        </div>
+        ${checks.map(c => `
+            <div class="s-section">
+                <div class="s-section-title">${c.name}</div>
+                ${c.results.map(r => `<div class="s-row ${r.status}">${r.msg}</div>`).join('')}
+            </div>
+        `).join('')}
+    `;
+    
+    const existing = document.getElementById('qqbSentinel');
+    if (existing) existing.remove();
+    document.body.appendChild(panel);
+}
+
+// Run after page is fully loaded
+if (document.readyState === 'complete') {
+    setTimeout(renderDashboard, 500);
+} else {
+    window.addEventListener('load', () => setTimeout(renderDashboard, 500));
+}
+
+// Re-run on language change
+const origSetLang = window.setLang;
+window.setLang = function(lang) {
+    origSetLang(lang);
+    setTimeout(renderDashboard, 200);
+};
+
+// Re-run periodically to catch dynamic issues
+setInterval(renderDashboard, 30000);
+
+})();
+</script>
+</body>
+</html>

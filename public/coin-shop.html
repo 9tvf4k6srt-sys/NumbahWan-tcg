@@ -1,0 +1,1124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+    <title>親幣 Gold Collection | NUMBAHWAN MINT</title>
+    <link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&family=Noto+Sans+TC:wght@400;500;700;900&family=Noto+Sans+JP:wght@400;500;700;900&family=Noto+Serif+TC:wght@400;500;600;700;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #08070c;
+            --card: #100f18;
+            --card-hover: #181625;
+            --border: #2a2840;
+            --gold: #c9a84c;
+            --gold-light: #e8cc6e;
+            --gold-bright: #ffd700;
+            --gold-dark: #8a6914;
+            --gold-muted: #a08832;
+            --text: #f0ece0;
+            --text-dim: #8a8678;
+            --text-body: #c4bda8;
+            --rose: #e8a0bf;
+            --red-badge: #c0392b;
+            --green: #2ecc71;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html { scroll-behavior: smooth; }
+
+        body {
+            font-family: 'Inter', 'Noto Sans TC', 'Noto Sans JP', system-ui, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            overflow-x: hidden;
+            line-height: 1.6;
+        }
+
+        .serif { font-family: 'Cormorant Garamond', 'Noto Serif TC', Georgia, serif; }
+        .mono { font-family: 'JetBrains Mono', monospace; }
+
+        /* ═══ PREMIUM NAV BAR (unified with main page) ═══ */
+        .premium-nav {
+            position: fixed; top: 0; left: 0; right: 0; z-index: 10000;
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 14px 28px;
+            background: rgba(8,7,12,0.85);
+            backdrop-filter: blur(24px) saturate(1.4);
+            border-bottom: 1px solid rgba(201,168,76,0.12);
+            transition: all 0.4s;
+        }
+        .premium-nav.scrolled {
+            padding: 10px 28px;
+            background: rgba(8,7,12,0.97);
+            border-bottom-color: rgba(201,168,76,0.25);
+        }
+        .nav-brand {
+            display: flex; align-items: center; gap: 12px;
+            text-decoration: none;
+        }
+        .nav-brand-icon { width: 36px; height: 36px; border-radius: 50%; border: 1.5px solid rgba(201,168,76,0.4); }
+        .nav-brand-text {
+            font-family: 'Cormorant Garamond', 'Noto Serif TC', serif;
+            font-size: 18px; font-weight: 600;
+            color: var(--gold); letter-spacing: 3px;
+        }
+        .nav-links { display: flex; align-items: center; gap: 28px; }
+        .nav-links a {
+            color: var(--text-dim); text-decoration: none;
+            font-size: 12px; font-weight: 600;
+            letter-spacing: 2px; text-transform: uppercase;
+            transition: color 0.3s; position: relative;
+            white-space: nowrap;
+        }
+        .nav-links a:hover, .nav-links a.active { color: var(--gold); }
+        .nav-links a::after {
+            content: ''; position: absolute; bottom: -4px; left: 0; right: 0;
+            height: 1px; background: var(--gold);
+            transform: scaleX(0); transition: transform 0.3s;
+        }
+        .nav-links a:hover::after, .nav-links a.active::after { transform: scaleX(1); }
+        .nav-lang { display: flex; gap: 2px; margin-left: 12px; }
+        .lang-btn {
+            padding: 5px 10px; border-radius: 4px;
+            border: 1px solid transparent; background: transparent;
+            color: var(--text-dim); font-size: 10px; font-weight: 700;
+            cursor: pointer; transition: all 0.3s;
+            font-family: 'Inter', sans-serif;
+            letter-spacing: 1px;
+        }
+        .lang-btn.active {
+            border-color: rgba(201,168,76,0.4);
+            color: var(--gold);
+        }
+        .lang-btn:hover:not(.active) { color: var(--gold); }
+
+        /* Hamburger button */
+        .nav-hamburger {
+            display: none; background: none; border: none; cursor: pointer;
+            width: 44px; height: 44px; position: relative;
+            flex-shrink: 0;
+            -webkit-tap-highlight-color: rgba(201,168,76,0.2);
+            touch-action: manipulation;
+            z-index: 10001;
+        }
+        .nav-hamburger span {
+            display: block; width: 22px; height: 2px;
+            background: var(--gold); border-radius: 2px;
+            position: absolute; left: 11px;
+            transition: all 0.3s;
+            pointer-events: none;
+        }
+        .nav-hamburger span:nth-child(1) { top: 13px; }
+        .nav-hamburger span:nth-child(2) { top: 21px; }
+        .nav-hamburger span:nth-child(3) { top: 29px; }
+        .nav-hamburger.open span:nth-child(1) { top: 21px; transform: rotate(45deg); }
+        .nav-hamburger.open span:nth-child(2) { opacity: 0; }
+        .nav-hamburger.open span:nth-child(3) { top: 21px; transform: rotate(-45deg); }
+
+        @media (max-width: 768px) {
+            .premium-nav { padding: 10px 16px; }
+            .nav-hamburger { display: block; }
+            .nav-links {
+                display: none; flex-direction: column;
+                position: fixed; top: 54px; left: 0; right: 0;
+                background: rgba(8,7,12,0.97);
+                backdrop-filter: blur(24px) saturate(1.4);
+                border-bottom: 1px solid rgba(201,168,76,0.15);
+                padding: 20px 24px 24px;
+                gap: 0;
+                z-index: 9999;
+            }
+            .nav-links.open { display: flex; }
+            .nav-links a {
+                font-size: 13px; letter-spacing: 2px;
+                padding: 14px 0;
+                border-bottom: 1px solid rgba(201,168,76,0.06);
+                width: 100%;
+            }
+            .nav-links a:last-of-type { border-bottom: none; }
+            .nav-links a::after { display: none; }
+            .nav-links a.active { color: var(--gold); }
+            .nav-lang {
+                margin: 16px 0 0 0;
+                padding-top: 16px;
+                border-top: 1px solid rgba(201,168,76,0.1);
+                justify-content: center;
+                gap: 6px;
+            }
+            .lang-btn { padding: 8px 16px; font-size: 11px; }
+        }
+
+        /* ═══ HERO BANNER ═══ */
+        .hero-banner {
+            position: relative;
+            width: 100%;
+            height: min(60vh, 540px);
+            padding-top: 54px;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .hero-banner img {
+            position: absolute;
+            width: 100%; height: 100%;
+            object-fit: cover;
+            filter: brightness(0.6);
+        }
+        .hero-banner-overlay {
+            position: absolute; inset: 0;
+            background: linear-gradient(180deg, 
+                rgba(8,7,12,0.3) 0%, 
+                rgba(8,7,12,0.1) 40%,
+                rgba(8,7,12,0.7) 80%, 
+                rgba(8,7,12,1) 100%
+            );
+        }
+        .hero-banner-content {
+            position: relative; z-index: 2;
+            text-align: center; padding: 40px 20px;
+        }
+        .hero-badge {
+            display: inline-block;
+            background: rgba(201,168,76,0.15);
+            border: 1px solid var(--gold-dark);
+            color: var(--gold-light);
+            font-size: 10px; font-weight: 700;
+            letter-spacing: 3px; text-transform: uppercase;
+            padding: 6px 20px; border-radius: 20px;
+            margin-bottom: 20px;
+        }
+        .hero-banner-content h1 {
+            font-family: 'Cormorant Garamond', 'Noto Serif TC', serif;
+            font-size: clamp(36px, 6vw, 64px);
+            font-weight: 700;
+            color: var(--gold-light);
+            letter-spacing: 4px;
+            line-height: 1.1;
+            text-shadow: 0 2px 40px rgba(201,168,76,0.3);
+        }
+        .hero-banner-content p {
+            font-size: 15px; color: var(--text-body);
+            max-width: 600px; margin: 16px auto 0;
+            line-height: 1.7;
+        }
+
+        /* ═══ GOLD PRICE TICKER ═══ */
+        .gold-ticker {
+            display: flex; justify-content: center; gap: 32px;
+            padding: 16px 20px;
+            background: rgba(201,168,76,0.05);
+            border-top: 1px solid rgba(201,168,76,0.1);
+            border-bottom: 1px solid rgba(201,168,76,0.1);
+            flex-wrap: wrap;
+        }
+        .ticker-item {
+            display: flex; align-items: center; gap: 8px;
+            font-size: 13px;
+        }
+        .ticker-label { color: var(--text-dim); font-weight: 600; letter-spacing: 1px; text-transform: uppercase; font-size: 10px; }
+        .ticker-val { color: var(--gold-light); font-family: 'JetBrains Mono', monospace; font-weight: 600; }
+
+        /* ═══ SECTION LAYOUT ═══ */
+        .shop-section {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 60px 20px;
+        }
+        .section-header {
+            text-align: center;
+            margin-bottom: 48px;
+        }
+        .section-header h2 {
+            font-family: 'Cormorant Garamond', 'Noto Serif TC', serif;
+            font-size: clamp(28px, 4vw, 42px);
+            font-weight: 600;
+            color: var(--gold-light);
+            letter-spacing: 2px;
+            margin-bottom: 12px;
+        }
+        .section-header p {
+            color: var(--text-dim);
+            font-size: 14px;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        .section-divider {
+            width: 60px; height: 1px;
+            background: linear-gradient(90deg, transparent, var(--gold), transparent);
+            margin: 16px auto;
+        }
+
+        /* ═══ COIN COLLECTION CARDS ═══ */
+        .collection-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 80px;
+        }
+
+        .coin-collection {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 48px;
+            align-items: center;
+            padding: 40px;
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            position: relative;
+            overflow: hidden;
+        }
+        .coin-collection::before {
+            content: '';
+            position: absolute; top: 0; left: 0; right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, var(--gold), transparent);
+        }
+        .coin-collection:nth-child(even) {
+            direction: rtl;
+        }
+        .coin-collection:nth-child(even) > * {
+            direction: ltr;
+        }
+
+        /* Coin image area */
+        .coin-visual {
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 16px;
+            padding: 20px;
+        }
+        .coin-img-wrap {
+            position: relative;
+            width: 220px; height: 220px;
+            transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .coin-img-wrap:hover {
+            transform: scale(1.08) rotate(-2deg);
+        }
+        .coin-img-wrap img {
+            width: 100%; height: 100%;
+            object-fit: cover;
+            border-radius: 50%;
+            box-shadow: 
+                0 0 0 3px var(--gold-dark),
+                0 0 0 5px rgba(201,168,76,0.2),
+                0 8px 32px rgba(0,0,0,0.6),
+                0 0 60px rgba(201,168,76,0.15);
+        }
+        .coin-side-label {
+            position: absolute;
+            bottom: -8px; left: 50%;
+            transform: translateX(-50%);
+            font-size: 9px; font-weight: 700;
+            letter-spacing: 2px; text-transform: uppercase;
+            color: var(--gold-muted);
+            background: var(--card);
+            padding: 2px 10px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+        }
+
+        /* Coin info area */
+        .coin-info { padding: 10px 0; }
+        .coin-series-badge {
+            display: inline-block;
+            font-size: 9px; font-weight: 700;
+            letter-spacing: 3px; text-transform: uppercase;
+            color: var(--gold);
+            border: 1px solid var(--gold-dark);
+            padding: 4px 14px;
+            border-radius: 12px;
+            margin-bottom: 12px;
+        }
+        .coin-name {
+            font-family: 'Cormorant Garamond', 'Noto Serif TC', serif;
+            font-size: clamp(24px, 3vw, 36px);
+            font-weight: 700;
+            color: var(--text);
+            line-height: 1.2;
+            margin-bottom: 8px;
+        }
+        .coin-subtitle {
+            font-size: 14px;
+            color: var(--text-dim);
+            margin-bottom: 20px;
+            font-style: italic;
+        }
+
+        /* Spec table */
+        .coin-specs {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px 24px;
+            margin-bottom: 24px;
+        }
+        .spec-item {
+            display: flex;
+            flex-direction: column;
+        }
+        .spec-label {
+            font-size: 9px; font-weight: 700;
+            letter-spacing: 2px; text-transform: uppercase;
+            color: var(--text-dim);
+            margin-bottom: 2px;
+        }
+        .spec-val {
+            font-size: 14px; font-weight: 600;
+            color: var(--text);
+        }
+
+        /* Pricing */
+        .coin-pricing {
+            background: rgba(201,168,76,0.05);
+            border: 1px solid rgba(201,168,76,0.15);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        .price-breakdown {
+            display: flex; flex-direction: column; gap: 8px;
+            margin-bottom: 12px;
+        }
+        .price-line {
+            display: flex; justify-content: space-between;
+            font-size: 13px;
+        }
+        .price-line-label { color: var(--text-dim); }
+        .price-line-val { color: var(--text); font-family: 'JetBrains Mono', monospace; }
+        .price-total {
+            display: flex; justify-content: space-between;
+            padding-top: 12px;
+            border-top: 1px solid rgba(201,168,76,0.2);
+            font-weight: 700;
+        }
+        .price-total-label { color: var(--gold-light); font-size: 14px; }
+        .price-total-val {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 22px;
+            color: var(--gold-bright);
+            text-shadow: 0 0 20px rgba(255,215,0,0.3);
+        }
+
+        /* Mintage & edition */
+        .coin-edition {
+            display: flex; gap: 12px; align-items: center;
+            margin-bottom: 20px;
+        }
+        .edition-badge {
+            font-size: 10px; font-weight: 700;
+            letter-spacing: 1px; text-transform: uppercase;
+            padding: 5px 12px; border-radius: 6px;
+        }
+        .edition-limited {
+            background: rgba(192,57,43,0.15); color: #e74c3c;
+            border: 1px solid rgba(192,57,43,0.3);
+        }
+        .edition-proof {
+            background: rgba(201,168,76,0.1); color: var(--gold-light);
+            border: 1px solid var(--gold-dark);
+        }
+        .edition-stock {
+            font-size: 12px; color: var(--text-dim);
+        }
+
+        /* Buy button */
+        .btn-buy {
+            display: inline-flex; align-items: center; gap: 8px;
+            padding: 14px 32px;
+            background: linear-gradient(135deg, var(--gold-dark), var(--gold));
+            color: #0a0a0a;
+            font-weight: 700; font-size: 14px;
+            letter-spacing: 1px; text-transform: uppercase;
+            border: none; border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-decoration: none;
+            box-shadow: 0 4px 20px rgba(201,168,76,0.3);
+        }
+        .btn-buy:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 32px rgba(201,168,76,0.5);
+        }
+
+        /* Description */
+        .coin-description {
+            margin-top: 24px;
+            padding-top: 20px;
+            border-top: 1px solid var(--border);
+        }
+        .coin-description h4 {
+            font-size: 11px; font-weight: 700;
+            letter-spacing: 2px; text-transform: uppercase;
+            color: var(--gold-muted);
+            margin-bottom: 8px;
+        }
+        .coin-description p {
+            font-size: 13px;
+            color: var(--text-dim);
+            line-height: 1.8;
+        }
+
+        /* ═══ MINT INFO FOOTER ═══ */
+        .mint-footer {
+            text-align: center;
+            padding: 48px 20px;
+            border-top: 1px solid var(--border);
+            margin-top: 40px;
+        }
+        .mint-footer-logo {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 24px; font-weight: 700;
+            color: var(--gold-muted);
+            letter-spacing: 4px;
+            margin-bottom: 12px;
+        }
+        .mint-footer p {
+            font-size: 12px; color: var(--text-dim);
+            max-width: 500px; margin: 0 auto;
+            line-height: 1.8;
+        }
+        .mint-footer .disclaimer {
+            margin-top: 20px;
+            font-size: 10px;
+            color: rgba(138,134,120,0.6);
+        }
+
+        /* ═══ RESPONSIVE ═══ */
+        @media (max-width: 768px) {
+            .coin-collection {
+                grid-template-columns: 1fr;
+                gap: 24px;
+                padding: 24px;
+            }
+            .coin-collection:nth-child(even) { direction: ltr; }
+            .coin-visual { gap: 12px; }
+            .coin-img-wrap { width: 160px; height: 160px; }
+            .coin-specs { grid-template-columns: 1fr; }
+            .gold-ticker { gap: 16px; }
+        }
+
+        /* ═══ ANIMATIONS ═══ */
+        .reveal {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: opacity 0.8s ease, transform 0.8s ease;
+        }
+        .reveal.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* Shimmer on coin images */
+        .coin-img-wrap::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: 50%;
+            background: linear-gradient(135deg, 
+                transparent 30%,
+                rgba(255,215,0,0.15) 45%,
+                rgba(255,215,0,0.25) 50%,
+                rgba(255,215,0,0.15) 55%,
+                transparent 70%
+            );
+            background-size: 300% 300%;
+            animation: shimmer 4s ease-in-out infinite;
+            pointer-events: none;
+        }
+        @keyframes shimmer {
+            0%, 100% { background-position: 100% 100%; }
+            50% { background-position: 0% 0%; }
+        }
+
+        /* Buy Toast */
+        .buy-toast {
+            position: fixed; top: -120px; left: 50%; transform: translateX(-50%);
+            background: linear-gradient(135deg, #0e0e18 0%, #1a1528 100%);
+            border: 1px solid #c9a84c;
+            border-radius: 14px; padding: 16px 24px;
+            display: flex; align-items: center; gap: 12px;
+            z-index: 100000;
+            box-shadow: 0 8px 40px rgba(201,168,76,0.35);
+            transition: top 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+            pointer-events: none;
+            max-width: 340px; text-align: left;
+        }
+        .buy-toast.show { top: 80px; }
+        .buy-toast-icon { font-size: 32px; flex-shrink: 0; }
+        .buy-toast-body { display: flex; flex-direction: column; gap: 2px; }
+        .buy-toast-title { font-family: 'Noto Serif TC','Cormorant Garamond',serif; font-size: 18px; font-weight: 700; color: #c9a84c; }
+        .buy-toast-sub { font-size: 12px; color: rgba(240,236,224,0.5); }
+
+        /* ═══════════════════════════════════════════════════════════════
+           MOBILE READABILITY — gentle +15% on small text only
+           ═══════════════════════════════════════════════════════════════ */
+        @media (max-width: 768px) {
+            body { word-break: keep-all; overflow-wrap: break-word; }
+            /* Nav */
+            .nav-links a { font-size: 15px; }
+            .lang-btn { font-size: 12px; }
+            /* Hero */
+            .hero-sub { font-size: 16px; }
+            .ticker-text { font-size: 14px; }
+            .ticker-label { font-size: 11px; }
+            /* Section */
+            .section-sub { font-size: 15px; }
+            /* Coin cards */
+            .coin-subtitle { font-size: 15px; }
+            .spec-label { font-size: 10px; }
+            .spec-value { font-size: 15px; }
+            /* Price */
+            .price-total-label { font-size: 15px; }
+            .price-total-value { font-size: 24px; }
+            .price-spot-note { font-size: 11px; }
+            .stock-badge { font-size: 11px; }
+            /* Buy button */
+            .btn-buy { font-size: 15px; }
+            /* Description */
+            .coin-description-text { font-size: 14px; }
+            .about-label { font-size: 13px; }
+            /* Mint footer */
+            .mint-footer-text { font-size: 13px; }
+            .mint-disclaimer { font-size: 11px; }
+            /* Toast */
+            .buy-toast-title { font-size: 20px; }
+            .buy-toast-sub { font-size: 13px; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="buy-toast" id="buyToast">
+    <div class="buy-toast-icon">🫣</div>
+    <div class="buy-toast-body">
+        <div class="buy-toast-title" id="buyToastTitle">別急嘛～ 慢慢來</div>
+        <div class="buy-toast-sub" id="buyToastSub">Coming soon...</div>
+    </div>
+</div>
+
+<!-- Premium Nav (unified with main site) -->
+<nav class="premium-nav" id="premiumNav">
+    <a href="/qinqin.html" class="nav-brand">
+        <img class="nav-brand-icon" src="/static/icons/qqb-coin-front.webp" alt="QQB">
+        <span class="nav-brand-text">QINQIN COIN</span>
+    </a>
+    <button class="nav-hamburger" id="navHamburger" aria-label="Menu">
+        <span></span><span></span><span></span>
+    </button>
+    <div class="nav-links" id="navLinks">
+        <a href="/qinqin.html" data-i18n="navHome">Home</a>
+        <a href="/qinqin.html#backing" data-i18n="navBacking">Reserve</a>
+        <a href="#collections" class="active" data-i18n="navCollections">Collections</a>
+        <a href="/ai-assets.html" data-i18n="navAI">AI Assets</a>
+        <a href="/qinqin.html#staking" data-i18n="navStaking">Staking</a>
+        <div class="nav-lang">
+            <button class="lang-btn active" data-lang="en" onclick="setLang('en')">EN</button>
+            <button class="lang-btn" data-lang="zh" onclick="setLang('zh')">繁中</button>
+            <button class="lang-btn" data-lang="jp" onclick="setLang('jp')">JP</button>
+        </div>
+    </div>
+</nav>
+
+<!-- Hero Banner -->
+<div class="hero-banner">
+    <img src="/static/coins/hero-banner.webp" alt="Gold Coin Collection" loading="eager">
+    <div class="hero-banner-overlay"></div>
+    <div class="hero-banner-content">
+        <div class="hero-badge" data-i18n="heroBadgeMint">NUMBAHWAN MINT EST. 2024</div>
+        <h1 data-i18n="heroTitleMint">親幣 Gold Collection</h1>
+        <p data-i18n="heroSubMint">Exquisite 24K proof gold coins, minted exclusively by NumbahWan Mint. Each piece is a certified investment-grade collectible struck in 999.9 fine gold.</p>
+    </div>
+</div>
+
+<!-- Gold Price Ticker -->
+<div class="gold-ticker">
+    <div class="ticker-item">
+        <span class="ticker-label" data-i18n="spotGold">SPOT GOLD</span>
+        <span class="ticker-val mono">US$3,309 / oz</span>
+    </div>
+    <div class="ticker-item">
+        <span class="ticker-label">USD/TWD</span>
+        <span class="ticker-val mono">30.12</span>
+    </div>
+    <div class="ticker-item">
+        <span class="ticker-label" data-i18n="goldPurity">PURITY</span>
+        <span class="ticker-val mono">999.9</span>
+    </div>
+    <div class="ticker-item">
+        <span class="ticker-label" data-i18n="mintDate">MINT DATE</span>
+        <span class="ticker-val mono">2025.07</span>
+    </div>
+</div>
+
+<!-- Collections -->
+<div class="shop-section" id="collections">
+    <div class="section-header reveal">
+        <h2 data-i18n="collectionsTitle">Collector's Series</h2>
+        <div class="section-divider"></div>
+        <p data-i18n="collectionsSub">Three legendary series celebrating Chinese mythology. Investment-grade 999.9 pure gold, individually numbered and certified.</p>
+    </div>
+
+    <div class="collection-grid" id="collectionGrid">
+
+        <!-- ════ COLLECTION 1: PHOENIX 鳳凰 ════ -->
+        <div class="coin-collection reveal">
+            <div class="coin-visual">
+                <div class="coin-img-wrap">
+                    <img src="/static/coins/phoenix-front.webp" alt="Phoenix Front">
+                    <div class="coin-side-label" data-i18n="obverse">OBVERSE</div>
+                </div>
+                <div class="coin-img-wrap">
+                    <img src="/static/coins/phoenix-back.webp" alt="Phoenix Back">
+                    <div class="coin-side-label" data-i18n="reverse">REVERSE</div>
+                </div>
+            </div>
+            <div class="coin-info">
+                <div class="coin-series-badge" data-i18n="seriesI">SERIES I</div>
+                <div class="coin-name" data-i18n="phoenixName">鳳凰涅槃 Phoenix Nirvana</div>
+                <div class="coin-subtitle" data-i18n="phoenixSub">First Strike - Inaugural Edition</div>
+
+                <div class="coin-specs">
+                    <div class="spec-item">
+                        <span class="spec-label" data-i18n="specWeight">Weight</span>
+                        <span class="spec-val">1 Troy Oz (31.1g)</span>
+                    </div>
+                    <div class="spec-item">
+                        <span class="spec-label" data-i18n="specPurity">Purity</span>
+                        <span class="spec-val">Au 999.9</span>
+                    </div>
+                    <div class="spec-item">
+                        <span class="spec-label" data-i18n="specDiameter">Diameter</span>
+                        <span class="spec-val">32.7 mm</span>
+                    </div>
+                    <div class="spec-item">
+                        <span class="spec-label" data-i18n="specThickness">Thickness</span>
+                        <span class="spec-val">2.87 mm</span>
+                    </div>
+                    <div class="spec-item">
+                        <span class="spec-label" data-i18n="specMintage">Mintage</span>
+                        <span class="spec-val">888</span>
+                    </div>
+                    <div class="spec-item">
+                        <span class="spec-label" data-i18n="specEdge">Edge</span>
+                        <span class="spec-val" data-i18n="edgeReeded">Reeded, 200 serrations</span>
+                    </div>
+                    <div class="spec-item">
+                        <span class="spec-label" data-i18n="specFinish">Finish</span>
+                        <span class="spec-val" data-i18n="finishProof">Mirror Proof</span>
+                    </div>
+                    <div class="spec-item">
+                        <span class="spec-label" data-i18n="specYear">Year</span>
+                        <span class="spec-val">2024</span>
+                    </div>
+                </div>
+
+                <div class="coin-pricing">
+                    <div class="price-breakdown">
+                        <div class="price-line">
+                            <span class="price-line-label" data-i18n="priceGold">Gold Value (1 oz @ $3,309)</span>
+                            <span class="price-line-val">NT$ 99,675</span>
+                        </div>
+                        <div class="price-line">
+                            <span class="price-line-label" data-i18n="priceMint">Minting & Certification</span>
+                            <span class="price-line-val">NT$ 8,800</span>
+                        </div>
+                        <div class="price-line">
+                            <span class="price-line-label" data-i18n="pricePremium">Collector's Premium</span>
+                            <span class="price-line-val">NT$ 12,888</span>
+                        </div>
+                    </div>
+                    <div class="price-total">
+                        <span class="price-total-label" data-i18n="totalPrice">Total Price</span>
+                        <span class="price-total-val">NT$ 121,363</span>
+                    </div>
+                </div>
+
+                <div class="coin-edition">
+                    <span class="edition-badge edition-limited" data-i18n="limitedEdition">LIMITED EDITION</span>
+                    <span class="edition-badge edition-proof" data-i18n="proofGrade">PROOF GRADE</span>
+                    <span class="edition-stock" data-i18n="phoenixStock">Only 112 remaining</span>
+                </div>
+
+                <a href="/wallet" class="btn-buy" data-i18n="btnBuy">Purchase Now</a>
+
+                <div class="coin-description">
+                    <h4 data-i18n="aboutCoin">About This Coin</h4>
+                    <p data-i18n="phoenixDesc">The inaugural coin of the 親幣 Gold Collection. The obverse features a magnificent phoenix (鳳凰) rising from sacred flames, symbolizing renewal and eternal prosperity. Each feather is struck with micro-engraved detail visible only under magnification. The reverse depicts the Temple of Heaven beneath celestial clouds. Minted in July 2024 at NumbahWan Mint's secure facility using Swiss-precision CNC dies. Each coin is individually numbered, sealed in a tamper-evident capsule, and accompanied by a Certificate of Authenticity bearing the Master Engraver's seal. Serial numbers 001-888.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- ════ COLLECTION 2: DRAGON 龍 ════ -->
+        <div class="coin-collection reveal">
+            <div class="coin-visual">
+                <div class="coin-img-wrap">
+                    <img src="/static/coins/dragon-front.webp" alt="Dragon Front">
+                    <div class="coin-side-label" data-i18n="obverse">OBVERSE</div>
+                </div>
+                <div class="coin-img-wrap">
+                    <img src="/static/coins/dragon-back.webp" alt="Dragon Back">
+                    <div class="coin-side-label" data-i18n="reverse">REVERSE</div>
+                </div>
+            </div>
+            <div class="coin-info">
+                <div class="coin-series-badge" data-i18n="seriesII">SERIES II</div>
+                <div class="coin-name" data-i18n="dragonName">龍珠寶鑑 Dragon's Pearl</div>
+                <div class="coin-subtitle" data-i18n="dragonSub">Year of the Dragon Commemorative</div>
+
+                <div class="coin-specs">
+                    <div class="spec-item">
+                        <span class="spec-label" data-i18n="specWeight">Weight</span>
+                        <span class="spec-val">1/2 Troy Oz (15.55g)</span>
+                    </div>
+                    <div class="spec-item">
+                        <span class="spec-label" data-i18n="specPurity">Purity</span>
+                        <span class="spec-val">Au 999.9</span>
+                    </div>
+                    <div class="spec-item">
+                        <span class="spec-label" data-i18n="specDiameter">Diameter</span>
+                        <span class="spec-val">27.0 mm</span>
+                    </div>
+                    <div class="spec-item">
+                        <span class="spec-label" data-i18n="specThickness">Thickness</span>
+                        <span class="spec-val">2.15 mm</span>
+                    </div>
+                    <div class="spec-item">
+                        <span class="spec-label" data-i18n="specMintage">Mintage</span>
+                        <span class="spec-val">2,024</span>
+                    </div>
+                    <div class="spec-item">
+                        <span class="spec-label" data-i18n="specEdge">Edge</span>
+                        <span class="spec-val" data-i18n="edgeReeded">Reeded, 200 serrations</span>
+                    </div>
+                    <div class="spec-item">
+                        <span class="spec-label" data-i18n="specFinish">Finish</span>
+                        <span class="spec-val" data-i18n="finishProof">Mirror Proof</span>
+                    </div>
+                    <div class="spec-item">
+                        <span class="spec-label" data-i18n="specYear">Year</span>
+                        <span class="spec-val">2025</span>
+                    </div>
+                </div>
+
+                <div class="coin-pricing">
+                    <div class="price-breakdown">
+                        <div class="price-line">
+                            <span class="price-line-label" data-i18n="priceGoldHalf">Gold Value (1/2 oz @ $3,309)</span>
+                            <span class="price-line-val">NT$ 49,838</span>
+                        </div>
+                        <div class="price-line">
+                            <span class="price-line-label" data-i18n="priceMint">Minting & Certification</span>
+                            <span class="price-line-val">NT$ 6,600</span>
+                        </div>
+                        <div class="price-line">
+                            <span class="price-line-label" data-i18n="pricePremium">Collector's Premium</span>
+                            <span class="price-line-val">NT$ 8,888</span>
+                        </div>
+                    </div>
+                    <div class="price-total">
+                        <span class="price-total-label" data-i18n="totalPrice">Total Price</span>
+                        <span class="price-total-val">NT$ 65,326</span>
+                    </div>
+                </div>
+
+                <div class="coin-edition">
+                    <span class="edition-badge edition-limited" data-i18n="limitedEdition">LIMITED EDITION</span>
+                    <span class="edition-badge edition-proof" data-i18n="proofGrade">PROOF GRADE</span>
+                    <span class="edition-stock" data-i18n="dragonStock">Only 688 remaining</span>
+                </div>
+
+                <a href="/wallet" class="btn-buy" data-i18n="btnBuy">Purchase Now</a>
+
+                <div class="coin-description">
+                    <h4 data-i18n="aboutCoin">About This Coin</h4>
+                    <p data-i18n="dragonDesc">Commemorating the Year of the Dragon (2024-2025), this half-ounce masterpiece features a five-clawed imperial dragon clutching the Pearl of Wisdom — a traditional symbol of power, prosperity, and divine grace. Each scale is individually engraved using laser-assisted CNC technology achieving 0.02mm relief depth. The reverse showcases the guardian lion (石獅) of NumbahWan Mint in regal repose. Minted January 2025. Limited to 2,024 pieces honouring the lunar year. Each coin arrives in a lacquered mahogany presentation box with velvet lining, numbered certificate, and white cotton gloves.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- ════ COLLECTION 3: QILIN 麒麟 ════ -->
+        <div class="coin-collection reveal">
+            <div class="coin-visual">
+                <div class="coin-img-wrap">
+                    <img src="/static/coins/qilin-front.webp" alt="Qilin Front">
+                    <div class="coin-side-label" data-i18n="obverse">OBVERSE</div>
+                </div>
+                <div class="coin-img-wrap">
+                    <img src="/static/coins/qilin-back.webp" alt="Qilin Back">
+                    <div class="coin-side-label" data-i18n="reverse">REVERSE</div>
+                </div>
+            </div>
+            <div class="coin-info">
+                <div class="coin-series-badge" data-i18n="seriesIII">SERIES III</div>
+                <div class="coin-name" data-i18n="qilinName">麒麟獻瑞 Qilin Auspice</div>
+                <div class="coin-subtitle" data-i18n="qilinSub">The Benevolent Guardian Edition</div>
+
+                <div class="coin-specs">
+                    <div class="spec-item">
+                        <span class="spec-label" data-i18n="specWeight">Weight</span>
+                        <span class="spec-val">1/4 Troy Oz (7.78g)</span>
+                    </div>
+                    <div class="spec-item">
+                        <span class="spec-label" data-i18n="specPurity">Purity</span>
+                        <span class="spec-val">Au 999.9</span>
+                    </div>
+                    <div class="spec-item">
+                        <span class="spec-label" data-i18n="specDiameter">Diameter</span>
+                        <span class="spec-val">22.0 mm</span>
+                    </div>
+                    <div class="spec-item">
+                        <span class="spec-label" data-i18n="specThickness">Thickness</span>
+                        <span class="spec-val">1.80 mm</span>
+                    </div>
+                    <div class="spec-item">
+                        <span class="spec-label" data-i18n="specMintage">Mintage</span>
+                        <span class="spec-val">5,888</span>
+                    </div>
+                    <div class="spec-item">
+                        <span class="spec-label" data-i18n="specEdge">Edge</span>
+                        <span class="spec-val" data-i18n="edgeReeded">Reeded, 200 serrations</span>
+                    </div>
+                    <div class="spec-item">
+                        <span class="spec-label" data-i18n="specFinish">Finish</span>
+                        <span class="spec-val" data-i18n="finishSatin">Satin Proof</span>
+                    </div>
+                    <div class="spec-item">
+                        <span class="spec-label" data-i18n="specYear">Year</span>
+                        <span class="spec-val">2025</span>
+                    </div>
+                </div>
+
+                <div class="coin-pricing">
+                    <div class="price-breakdown">
+                        <div class="price-line">
+                            <span class="price-line-label" data-i18n="priceGoldQuarter">Gold Value (1/4 oz @ $3,309)</span>
+                            <span class="price-line-val">NT$ 24,919</span>
+                        </div>
+                        <div class="price-line">
+                            <span class="price-line-label" data-i18n="priceMint">Minting & Certification</span>
+                            <span class="price-line-val">NT$ 4,400</span>
+                        </div>
+                        <div class="price-line">
+                            <span class="price-line-label" data-i18n="pricePremium">Collector's Premium</span>
+                            <span class="price-line-val">NT$ 4,888</span>
+                        </div>
+                    </div>
+                    <div class="price-total">
+                        <span class="price-total-label" data-i18n="totalPrice">Total Price</span>
+                        <span class="price-total-val">NT$ 34,207</span>
+                    </div>
+                </div>
+
+                <div class="coin-edition">
+                    <span class="edition-badge edition-proof" data-i18n="proofGrade">PROOF GRADE</span>
+                    <span class="edition-stock" data-i18n="qilinStock">3,200+ available</span>
+                </div>
+
+                <a href="/wallet" class="btn-buy" data-i18n="btnBuy">Purchase Now</a>
+
+                <div class="coin-description">
+                    <h4 data-i18n="aboutCoin">About This Coin</h4>
+                    <p data-i18n="qilinDesc">The most accessible entry to the 親幣 Gold Collection. The qilin (麒麟) — the benevolent mythical creature said to appear only in times of great peace and prosperity — stands in a garden of auspicious clouds. The reverse features a serene lotus pond with koi, symbolizing abundance and perseverance. This quarter-ounce coin uses a unique satin proof finish combining frosted relief with a brushed-matte field, giving it a distinctly warm lustre. Minted July 2025 in the initial batch of 5,888 pieces. Supplied in a padded blue suede clamshell with numbered holographic certificate and assay card.</p>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<!-- Mint Footer -->
+<div class="mint-footer">
+    <div class="mint-footer-logo">NUMBAHWAN MINT</div>
+    <p data-i18n="mintFooter">All 親幣 Gold Collection coins are struck at NumbahWan Mint's secure facility. Each coin contains the stated weight of 999.9 fine gold and is accompanied by an individually numbered Certificate of Authenticity. Prices reflect current gold spot rates and are subject to market fluctuation.</p>
+    <p class="disclaimer" data-i18n="mintDisclaimer">Gold spot price as of July 2025. Exchange rate: 1 USD = 30.12 TWD. Prices include minting, certification, and collector's premium. Shipping and insurance quoted separately. NumbahWan Mint Registration #NW-MINT-2024. All weights guaranteed ±0.01g.</p>
+</div>
+
+<script>
+// ═══ i18n ═══
+const T = {
+en: {
+    navHome: 'Home', navBacking: 'Reserve', navCollections: 'Collections', navAI: 'AI Assets', navStaking: 'Staking',
+    heroBadgeMint: 'NUMBAHWAN MINT EST. 2024',
+    heroTitleMint: '親幣 Gold Collection',
+    heroSubMint: 'Exquisite 24K proof gold coins, minted exclusively by NumbahWan Mint. Each piece is a certified investment-grade collectible struck in 999.9 fine gold.',
+    spotGold: 'SPOT GOLD', goldPurity: 'PURITY', mintDate: 'MINT DATE',
+    collectionsTitle: "Collector's Series",
+    collectionsSub: 'Three legendary series celebrating Chinese mythology. Investment-grade 999.9 pure gold, individually numbered and certified.',
+    seriesI: 'SERIES I', seriesII: 'SERIES II', seriesIII: 'SERIES III',
+    obverse: 'OBVERSE', reverse: 'REVERSE',
+    phoenixName: '鳳凰涅槃 Phoenix Nirvana', phoenixSub: 'First Strike — Inaugural Edition',
+    dragonName: '龍珠寶鑑 Dragon\'s Pearl', dragonSub: 'Year of the Dragon Commemorative',
+    qilinName: '麒麟獻瑞 Qilin Auspice', qilinSub: 'The Benevolent Guardian Edition',
+    specWeight: 'Weight', specPurity: 'Purity', specDiameter: 'Diameter',
+    specThickness: 'Thickness', specMintage: 'Mintage', specEdge: 'Edge',
+    specFinish: 'Finish', specYear: 'Year',
+    edgeReeded: 'Reeded, 200 serrations', finishProof: 'Mirror Proof', finishSatin: 'Satin Proof',
+    priceGold: 'Gold Value (1 oz @ $3,309)', priceGoldHalf: 'Gold Value (1/2 oz @ $3,309)', priceGoldQuarter: 'Gold Value (1/4 oz @ $3,309)',
+    priceMint: 'Minting & Certification', pricePremium: "Collector's Premium",
+    totalPrice: 'Total Price',
+    limitedEdition: 'LIMITED EDITION', proofGrade: 'PROOF GRADE',
+    phoenixStock: 'Only 112 remaining', dragonStock: 'Only 688 remaining', qilinStock: '3,200+ available',
+    btnBuy: 'Purchase Now',
+    buyToastTitle: 'Easy there~ Take it slow', buyToastSub: 'The wallet is coming soon, stay tuned!',
+    aboutCoin: 'About This Coin',
+    phoenixDesc: 'The inaugural coin of the 親幣 Gold Collection. The obverse features a magnificent phoenix (鳳凰) rising from sacred flames, symbolizing renewal and eternal prosperity. Each feather is struck with micro-engraved detail visible only under magnification. The reverse depicts the Temple of Heaven beneath celestial clouds. Minted in July 2024 at NumbahWan Mint\'s secure facility using Swiss-precision CNC dies. Each coin is individually numbered, sealed in a tamper-evident capsule, and accompanied by a Certificate of Authenticity bearing the Master Engraver\'s seal. Serial numbers 001–888.',
+    dragonDesc: 'Commemorating the Year of the Dragon (2024–2025), this half-ounce masterpiece features a five-clawed imperial dragon clutching the Pearl of Wisdom — a traditional symbol of power, prosperity, and divine grace. Each scale is individually engraved using laser-assisted CNC technology achieving 0.02mm relief depth. The reverse showcases the guardian lion (石獅) of NumbahWan Mint in regal repose. Minted January 2025. Limited to 2,024 pieces honouring the lunar year. Each coin arrives in a lacquered mahogany presentation box with velvet lining, numbered certificate, and white cotton gloves.',
+    qilinDesc: 'The most accessible entry to the 親幣 Gold Collection. The qilin (麒麟) — the benevolent mythical creature said to appear only in times of great peace and prosperity — stands in a garden of auspicious clouds. The reverse features a serene lotus pond with koi, symbolizing abundance and perseverance. This quarter-ounce coin uses a unique satin proof finish combining frosted relief with a brushed-matte field, giving it a distinctly warm lustre. Minted July 2025 in the initial batch of 5,888 pieces. Supplied in a padded blue suede clamshell with numbered holographic certificate and assay card.',
+    mintFooter: 'All 親幣 Gold Collection coins are struck at NumbahWan Mint\'s secure facility. Each coin contains the stated weight of 999.9 fine gold and is accompanied by an individually numbered Certificate of Authenticity. Prices reflect current gold spot rates and are subject to market fluctuation.',
+    mintDisclaimer: 'Gold spot price as of July 2025. Exchange rate: 1 USD = 30.12 TWD. Prices include minting, certification, and collector\'s premium. Shipping and insurance quoted separately. NumbahWan Mint Registration #NW-MINT-2024. All weights guaranteed ±0.01g.',
+},
+zh: {
+    navHome: '首頁', navBacking: '儲備', navCollections: '典藏系列', navAI: 'AI 資產', navStaking: '質押',
+    heroBadgeMint: 'NUMBAHWAN 造幣廠 創立於 2024',
+    heroTitleMint: '親幣 黃金典藏',
+    heroSubMint: '精緻24K精鑄金幣，由NumbahWan造幣廠獨家鑄造。每枚均為經認證的投資級收藏品，以999.9純金打造。',
+    spotGold: '現貨金價', goldPurity: '純度', mintDate: '鑄造日期',
+    collectionsTitle: '典藏系列',
+    collectionsSub: '三大傳奇系列，致敬中華神話。投資級999.9純金，逐枚編號並附認證。',
+    seriesI: '第一系列', seriesII: '第二系列', seriesIII: '第三系列',
+    obverse: '正面', reverse: '背面',
+    phoenixName: '鳳凰涅槃', phoenixSub: '首鑄版 — 創始紀念',
+    dragonName: '龍珠寶鑑', dragonSub: '龍年紀念特鑄',
+    qilinName: '麒麟獻瑞', qilinSub: '仁獸守護典藏版',
+    specWeight: '重量', specPurity: '純度', specDiameter: '直徑',
+    specThickness: '厚度', specMintage: '鑄造量', specEdge: '邊齒',
+    specFinish: '工藝', specYear: '年份',
+    edgeReeded: '齒邊，200齒', finishProof: '鏡面精鑄', finishSatin: '緞面精鑄',
+    priceGold: '黃金價值 (1盎司 @ $3,309)', priceGoldHalf: '黃金價值 (1/2盎司 @ $3,309)', priceGoldQuarter: '黃金價值 (1/4盎司 @ $3,309)',
+    priceMint: '鑄造與認證費', pricePremium: '收藏家溢價',
+    totalPrice: '總價',
+    limitedEdition: '限量版', proofGrade: '精鑄級',
+    phoenixStock: '僅餘 112 枚', dragonStock: '僅餘 688 枚', qilinStock: '尚有 3,200+ 枚',
+    btnBuy: '立即購入',
+    buyToastTitle: '別急嘛～ 慢慢來', buyToastSub: '錢包即將上線，敬請期待！',
+    aboutCoin: '關於此幣',
+    phoenixDesc: '親幣黃金典藏創始之作。正面雕刻壯麗鳳凰自聖火中涅槃重生，象徵浴火重生與永恆繁榮。每根羽毛均採用微雕技術刻印，唯有放大鏡方可盡覽細節。背面呈現天壇矗立於祥雲之中。2024年7月於NumbahWan造幣廠安全設施以瑞士精密CNC模具鑄造。每枚金幣逐一編號，密封於防拆膠囊中，附有首席雕刻師加印的真品證書。序號001-888。',
+    dragonDesc: '紀念龍年(2024-2025)，這枚半盎司傑作呈現五爪金龍盤繞智慧之珠——權力、繁榮與神聖恩典的傳統象徵。每片龍鱗均以激光輔助CNC技術獨立雕刻，浮雕深度達0.02mm。背面展現NumbahWan造幣廠的守護石獅威嚴端坐。2025年1月鑄造，限量2,024枚以致敬農曆龍年。每枚金幣附漆面紅木展示盒、絲絨襯裡、編號證書及白棉手套。',
+    qilinDesc: '親幣黃金典藏最親民的入門之選。麒麟——傳說中只在太平盛世現身的仁獸——佇立於祥雲花園之中。背面呈現寧靜荷塘與錦鯉，象徵豐饒與堅毅。這枚四分之一盎司金幣採用獨特的緞面精鑄工藝，融合霜面浮雕與拉絲啞面底紋，賦予溫暖而獨特的光澤。2025年7月鑄造，首批5,888枚。附藍色麂皮翻蓋盒、全息編號證書及化驗卡。',
+    mintFooter: '所有親幣黃金典藏金幣均於NumbahWan造幣廠安全設施鑄造。每枚金幣含標示重量之999.9純金，並附逐枚編號的真品證書。價格反映當前金價行情，隨市場波動調整。',
+    mintDisclaimer: '金價截至2025年7月。匯率：1美元 = 30.12新台幣。價格包含鑄造、認證及收藏溢價。運費與保險另計。NumbahWan造幣廠登記編號 #NW-MINT-2024。所有重量保證±0.01g。',
+},
+jp: {
+    navHome: 'ホーム', navBacking: 'リザーブ', navCollections: 'コレクション', navAI: 'AI資産', navStaking: 'ステーキング',
+    heroBadgeMint: 'NUMBAHWAN造幣局 2024年創設',
+    heroTitleMint: '親幣 ゴールドコレクション',
+    heroSubMint: 'NumbahWan造幣局が独占鋳造する精巧な24Kプルーフ金貨。各作品は999.9純金で打刻された認定投資グレードのコレクターズアイテムです。',
+    spotGold: '金スポット', goldPurity: '純度', mintDate: '鋳造日',
+    collectionsTitle: 'コレクターズシリーズ',
+    collectionsSub: '中国神話を称える三つの伝説的シリーズ。投資グレード999.9純金、個別番号付き認定品。',
+    seriesI: 'シリーズ I', seriesII: 'シリーズ II', seriesIII: 'シリーズ III',
+    obverse: '表面', reverse: '裏面',
+    phoenixName: '鳳凰涅槃 フェニックス・ニルヴァーナ', phoenixSub: 'ファーストストライク — 創刊記念版',
+    dragonName: '龍珠宝鑑 ドラゴンズ・パール', dragonSub: '辰年記念鋳造',
+    qilinName: '麒麟献瑞 キリン・オースピス', qilinSub: '仁獣守護者エディション',
+    specWeight: '重量', specPurity: '純度', specDiameter: '直径',
+    specThickness: '厚さ', specMintage: '鋳造数', specEdge: 'エッジ',
+    specFinish: '仕上げ', specYear: '年',
+    edgeReeded: 'リーデッド、200刻', finishProof: 'ミラープルーフ', finishSatin: 'サテンプルーフ',
+    priceGold: '金価値 (1oz @ $3,309)', priceGoldHalf: '金価値 (1/2oz @ $3,309)', priceGoldQuarter: '金価値 (1/4oz @ $3,309)',
+    priceMint: '鋳造・認証費', pricePremium: 'コレクターズプレミアム',
+    totalPrice: '合計価格',
+    limitedEdition: '限定版', proofGrade: 'プルーフグレード',
+    phoenixStock: '残り112枚のみ', dragonStock: '残り688枚のみ', qilinStock: '3,200枚以上在庫あり',
+    btnBuy: '今すぐ購入',
+    buyToastTitle: '焦らないで～ ゆっくりね', buyToastSub: 'ウォレットは近日公開予定です！',
+    aboutCoin: 'このコインについて',
+    phoenixDesc: '親幣ゴールドコレクションの創刊作品。表面には聖なる炎から甦る壮麗な鳳凰が刻まれ、再生と永遠の繁栄を象徴します。各羽根はルーペでのみ確認できる微細彫刻技術で打刻。裏面には天壇が天上の雲の下に描かれています。2024年7月、NumbahWan造幣局のセキュア施設にてスイス精密CNCダイスで鋳造。各コインは個別番号付き、改ざん防止カプセルに封入され、マスター彫刻師の印を持つ真正証明書が付属。シリアル番号001-888。',
+    dragonDesc: '辰年(2024-2025)を記念し、この半オンスの傑作は智慧の珠を掴む五爪の帝龍を描きます——権力、繁栄、神聖な恩寵の伝統的象徴。各鱗はレーザー支援CNC技術で個別に彫刻され、0.02mmの浮彫深度を実現。裏面にはNumbahWan造幣局の守護石獅が威厳を持って佇みます。2025年1月鋳造。旧暦の辰年に敬意を表し2,024枚限定。漆塗りマホガニー展示箱、ベルベット裏地、番号付き証明書、白綿手袋付き。',
+    qilinDesc: '親幣ゴールドコレクションで最も手に取りやすいエントリーモデル。麒麟——太平の世にのみ姿を現すと伝えられる仁獣——が瑞雲の庭に佇んでいます。裏面には静謐な蓮池と鯉を描き、豊穣と忍耐を象徴。この1/4オンスコインは、霜面浮彫とブラッシュドマット地を組み合わせた独自のサテンプルーフ仕上げにより、温かく独特な光沢を持ちます。2025年7月鋳造、初回5,888枚。パッド付きブルースエードクラムシェル、ホログラム番号付き証明書、分析カード付き。',
+    mintFooter: 'すべての親幣ゴールドコレクション金貨はNumbahWan造幣局のセキュア施設で鋳造されます。各コインは表示重量の999.9純金を含み、個別番号付きの真正証明書が付属します。価格は現在の金スポットレートを反映し、市場変動の影響を受けます。',
+    mintDisclaimer: '金価格は2025年7月時点。為替レート：1米ドル = 30.12台湾ドル。価格には鋳造、認証、コレクターズプレミアムを含みます。送料・保険は別途。NumbahWan造幣局登録番号 #NW-MINT-2024。全重量±0.01g保証。',
+}
+};
+
+let currentLang = localStorage.getItem('qqb_lang') || 'en';
+
+function setLang(lang) {
+    currentLang = lang;
+    localStorage.setItem('qqb_lang', lang);
+    document.querySelectorAll('.lang-btn').forEach(b => b.classList.toggle('active', b.dataset.lang === lang));
+    document.querySelectorAll('[data-i18n]').forEach(el => {
+        const key = el.dataset.i18n;
+        if (T[lang] && T[lang][key]) el.textContent = T[lang][key];
+        else if (T.en[key]) el.textContent = T.en[key];
+    });
+}
+
+// Init
+const savedLang = localStorage.getItem('qqb_lang');
+if (savedLang && savedLang !== 'en') setLang(savedLang);
+
+// Scroll reveal
+const obs = new IntersectionObserver((entries) => {
+    entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); obs.unobserve(e.target); }});
+}, { threshold: 0.1 });
+document.querySelectorAll('.reveal').forEach(el => obs.observe(el));
+
+// Premium nav scroll effect
+window.addEventListener('scroll', () => {
+    const nav = document.getElementById('premiumNav');
+    if (nav) nav.classList.toggle('scrolled', window.scrollY > 60);
+});
+
+function toggleNav() {
+    const btn = document.getElementById('navHamburger');
+    const links = document.getElementById('navLinks');
+    if (btn && links) {
+        btn.classList.toggle('open');
+        links.classList.toggle('open');
+    }
+}
+(function() {
+    const btn = document.getElementById('navHamburger');
+    if (btn) {
+        btn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            toggleNav();
+        });
+        btn.addEventListener('touchend', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            toggleNav();
+        });
+    }
+})();
+document.addEventListener('click', (e) => {
+    const links = document.getElementById('navLinks');
+    const btn = document.getElementById('navHamburger');
+    if (!links || !btn) return;
+    if (e.target.closest('.nav-links a')) {
+        btn.classList.remove('open');
+        links.classList.remove('open');
+        return;
+    }
+    if (!e.target.closest('.premium-nav') && links.classList.contains('open')) {
+        btn.classList.remove('open');
+        links.classList.remove('open');
+    }
+});
+
+// ═══ Buy Toast (wallet not ready) ═══
+function showBuyToast() {
+    const toast = document.getElementById('buyToast');
+    const titleEl = document.getElementById('buyToastTitle');
+    const subEl = document.getElementById('buyToastSub');
+    if (!toast) return;
+    const lang = localStorage.getItem('qqb_lang') || 'en';
+    const tr = T[lang] || T.en;
+    titleEl.textContent = tr.buyToastTitle || 'Easy there~ Take it slow';
+    subEl.textContent = tr.buyToastSub || 'The wallet is coming soon, stay tuned!';
+    toast.classList.add('show');
+    setTimeout(() => toast.classList.remove('show'), 3500);
+}
+document.querySelectorAll('a[href="/wallet"], .btn-buy').forEach(link => {
+    link.addEventListener('click', (e) => { e.preventDefault(); showBuyToast(); });
+});
+</script>
+</body>
+</html>
