@@ -66,8 +66,8 @@ const S = {
   peakMomentum: 0,     // Highest momentum hit
   killsThisTurn: 0,    // Kills in current turn
   turnNumber: 0,
-  lastPlayerHP: 30,
-  lastEnemyHP: 30,
+  lastPlayerHP: 0,    // set from actual game state on game start
+  lastEnemyHP: 0,
   gameActive: false,
   autoWatching: false,  // Are we in auto-battle spectator mode?
   battleStreak: 0,      // Consecutive wins
@@ -406,26 +406,33 @@ const PostBattle = {
     const statsEl = $('gameOverStats');
     if (!statsEl) return;
 
-    // Build cascading reward items
+    // Build cascading reward items — only show stats that have actual values
+    // Use NW_I18N.t() for translated labels if available
+    const t = (key, fallback) => (typeof NW_I18N !== 'undefined' && NW_I18N.t) ? NW_I18N.t(key, fallback) : fallback;
     const items = [];
 
     if (won) {
-      items.push({ label: 'DAMAGE DEALT', value: stats.damageDealt, color: '#ff5252' });
-      items.push({ label: 'BIGGEST HIT', value: S.biggestHit, color: '#ffd700' });
-      items.push({ label: 'CARDS PLAYED', value: stats.cardsPlayed, color: '#42a5f5' });
-      items.push({ label: 'PEAK COMBO', value: S.peakMomentum, color: tier.color });
+      if (stats.damageDealt > 0) items.push({ label: t('damageDealt', 'DAMAGE DEALT'), value: stats.damageDealt, color: '#ff5252' });
+      if (S.biggestHit > 0) items.push({ label: t('biggestHit', 'BIGGEST HIT'), value: S.biggestHit, color: '#ffd700' });
+      if (stats.faceDamage > 0) items.push({ label: t('faceDamage', 'FACE DAMAGE'), value: stats.faceDamage, color: '#ff9800' });
+      if (stats.cardsPlayed > 0) items.push({ label: t('cardsPlayed', 'CARDS PLAYED'), value: stats.cardsPlayed, color: '#42a5f5' });
+      if (stats.critsLanded > 0) items.push({ label: t('crits', 'CRITS'), value: stats.critsLanded, color: '#e040fb' });
+      if (stats.abilitiesFired > 0) items.push({ label: t('abilities', 'ABILITIES'), value: stats.abilitiesFired, color: '#00e5ff' });
+      if (stats.synergiesActivated > 0) items.push({ label: t('synergies', 'SYNERGIES'), value: stats.synergiesActivated, color: '#76ff03' });
+      if (S.peakMomentum > 0) items.push({ label: t('peakCombo', 'PEAK COMBO'), value: S.peakMomentum, color: tier.color });
+      items.push({ label: t('turns', 'TURNS'), value: stats.turn || S.turnNumber, color: '#ccc' });
       if (S.peakMomentum >= 3) {
-        items.push({ label: 'MOMENTUM BONUS', value: `x${mult}`, color: '#ff00ff', isText: true });
+        items.push({ label: t('momentumBonus', 'MOMENTUM BONUS'), value: `x${mult}`, color: '#ff00ff', isText: true });
       }
       if (S.battleStreak >= 2) {
-        items.push({ label: 'WIN STREAK', value: S.battleStreak, color: '#ff9800' });
+        items.push({ label: t('winStreak', 'WIN STREAK'), value: S.battleStreak, color: '#ff9800' });
       }
     } else {
-      items.push({ label: 'DAMAGE DEALT', value: stats.damageDealt, color: '#ff5252' });
-      items.push({ label: 'SURVIVED', value: `${stats.turn || S.turnNumber} TURNS`, color: '#888', isText: true });
-      if (S.biggestHit > 0) {
-        items.push({ label: 'BIGGEST HIT', value: S.biggestHit, color: '#ffd700' });
-      }
+      if (stats.damageDealt > 0) items.push({ label: t('damageDealt', 'DAMAGE DEALT'), value: stats.damageDealt, color: '#ff5252' });
+      items.push({ label: t('survived', 'SURVIVED'), value: `${stats.turn || S.turnNumber} ${t('turns', 'TURNS')}`, color: '#888', isText: true });
+      if (S.biggestHit > 0) items.push({ label: t('biggestHit', 'BIGGEST HIT'), value: S.biggestHit, color: '#ffd700' });
+      if (stats.cardsPlayed > 0) items.push({ label: t('cardsPlayed', 'CARDS PLAYED'), value: stats.cardsPlayed, color: '#42a5f5' });
+      if (stats.critsLanded > 0) items.push({ label: t('crits', 'CRITS'), value: stats.critsLanded, color: '#e040fb' });
     }
 
     // Cascade animation — each item appears one by one with sound
@@ -443,19 +450,28 @@ const PostBattle = {
     const oneMoreHTML = won ? `
       <div class="bj-one-more" style="animation-delay: ${items.length * CFG.rewardCascadeDelay + 400}ms">
         <div class="bj-one-more-text">
-          ${S.battleStreak >= 3 ? `${S.battleStreak} WIN STREAK! Keep it alive?` : 'The momentum is yours!'}
+          ${S.battleStreak >= 3 ? `${S.battleStreak} ${t('streakKeepAlive', 'WIN STREAK! Keep it alive?')}` : t('momentumYours', 'The momentum is yours!')}
         </div>
       </div>` : `
       <div class="bj-one-more" style="animation-delay: ${items.length * CFG.rewardCascadeDelay + 400}ms">
         <div class="bj-one-more-text">
-          ${S.biggestHit >= 6 ? 'Your biggest hit was ' + S.biggestHit + ' — imagine with better cards!' : 'Try again? The enemy got lucky.'}
+          ${S.biggestHit >= 6 ? t('yourBiggestHit', 'Your biggest hit was') + ' ' + S.biggestHit + ' — ' + t('biggestHitTease', 'imagine with better cards!') : t('tryAgain', 'Try again? The enemy got lucky.')}
         </div>
       </div>`;
 
-    // Append after existing stats
-    const cascadeContainer = createEl('div', 'bj-cascade-wrap');
-    cascadeContainer.innerHTML = cascadeHTML + oneMoreHTML;
-    statsEl.appendChild(cascadeContainer);
+    // REPLACE v7's basic stat lines with the enhanced cascade,
+    // but PRESERVE any reward HTML (NW_WALLET gold/wood/streak).
+    // Also preserve hidden stat labels so history.js parseStatsFromDOM still works
+    // if it hasn't fired yet (it reads "Damage Dealt: 122" etc via regex).
+    const rewardEl = statsEl.querySelector('.battle-rewards');
+    const rewardHTML = rewardEl ? rewardEl.outerHTML : '';
+
+    // Hidden stats for history.js backward compat (same labels as v7 endGame)
+    const hiddenStats = `<div style="position:absolute;width:1px;height:1px;overflow:hidden;opacity:0" aria-hidden="true">
+      Damage Dealt: ${stats.damageDealt} Face Damage: ${stats.faceDamage} Cards Played: ${stats.cardsPlayed} Crits: ${stats.critsLanded} Abilities: ${stats.abilitiesFired || 0} Synergies: ${stats.synergiesActivated} Max Combo: ${stats.maxCombo} Turns: ${stats.turn}
+    </div>`;
+
+    statsEl.innerHTML = hiddenStats + rewardHTML + cascadeHTML + oneMoreHTML;
 
     // Play cascade sounds
     items.forEach((item, i) => {
@@ -583,8 +599,9 @@ const Observer = {
       return;
     }
 
-    // Detect game start
-    if (!S.gameActive && state.turn >= 1 && state.playerHand.length > 0 && !$('startScreen')?.classList.contains('hidden') === false) {
+    // Detect game start — init lastHP from actual state (not hardcoded)
+    const startScreen = $('startScreen');
+    if (!S.gameActive && state.turn >= 1 && state.playerHand.length > 0 && startScreen && startScreen.classList.contains('hidden')) {
       S.gameActive = true;
       S.momentum = 0;
       S.peakMomentum = 0;
@@ -604,12 +621,21 @@ const Observer = {
       }
     }
 
-    // Detect HP changes (enemy took damage)
+    // Detect HP changes (enemy took damage) — track biggest single hit
     if (state.enemyHP < prev.enemyHP) {
       const dmg = prev.enemyHP - state.enemyHP;
       S.totalDamageThisBattle += dmg;
       if (dmg > S.biggestHit) S.biggestHit = dmg;
       Moments.nearMiss(state.enemyHP, 'enemy');
+
+      // Auto-play narration for face/card damage
+      if (S.autoWatching && Math.random() < 0.6) {
+        if (dmg >= 6) {
+          AutoSpectacle.showCommentary('critAttack', { card: 'Our card', dmg: dmg });
+        } else {
+          AutoSpectacle.showCommentary('faceDmg', { dmg: dmg });
+        }
+      }
     }
 
     // Detect player took damage (momentum break)
@@ -636,18 +662,16 @@ const Observer = {
       }
     }
 
-    // Detect auto-play state
-    const autoBtn = $('autoPlayBtn');
+    // Detect auto-play state (check global flag set by assist.js)
     const wasAuto = S.autoWatching;
-    S.autoWatching = autoBtn && autoBtn.querySelector('.btn-text')?.textContent === 'THINKING...';
+    S.autoWatching = !!window._nwAutoPlaying;
 
-    // Situation commentary (periodic)
+    // Situation commentary (periodic) — higher chance during auto-play
     if (S.autoWatching && state.isPlayerTurn && state.playerHP > 0 && state.enemyHP > 0) {
-      if (state.playerHP > state.enemyHP + 10) {
-        // We're winning
-        if (Math.random() < 0.1) AutoSpectacle.showCommentary('winning');
-      } else if (state.enemyHP > state.playerHP + 10) {
-        if (Math.random() < 0.1) AutoSpectacle.showCommentary('losing');
+      if (state.playerHP > state.enemyHP + 5) {
+        if (Math.random() < 0.2) AutoSpectacle.showCommentary('winning');
+      } else if (state.enemyHP > state.playerHP + 5) {
+        if (Math.random() < 0.2) AutoSpectacle.showCommentary('losing');
       }
     }
 
@@ -701,14 +725,34 @@ const Observer = {
 
     S.gameActive = false;
     S.autoWatching = false;
+    window._nwAutoPlaying = false;
 
-    // Small delay to let the existing overlay render, then enhance it
+    // Use API stats if available (more reliable than DOM parsing),
+    // fall back to DOM for backward compat.
+    // Wait for v7 endGame() to render first, then REPLACE with enhanced cascade.
     setTimeout(() => {
-      PostBattle.showRewardCascade(won, {
-        damageDealt: S.totalDamageThisBattle,
-        cardsPlayed: 0, // We don't track this — let the original stats show
-        turn: S.turnNumber
-      });
+      const apiStats = state.stats || {};
+      const statsEl = $('gameOverStats');
+
+      // DOM fallback parser (same labels as v7.js endGame output)
+      const text = statsEl ? statsEl.textContent : '';
+      const num = (label) => {
+        const m = text.match(new RegExp(label + ':\\s*(\\d+)'));
+        return m ? parseInt(m[1], 10) : 0;
+      };
+
+      const stats = {
+        damageDealt: apiStats.damageDealt || num('Damage Dealt') || S.totalDamageThisBattle,
+        cardsPlayed: apiStats.cardsPlayed || num('Cards Played'),
+        critsLanded: apiStats.critsLanded || num('Crits'),
+        abilitiesFired: apiStats.abilitiesFired || num('Abilities'),
+        synergiesActivated: apiStats.synergiesActivated || num('Synergies'),
+        maxCombo: apiStats.maxCombo || num('Max Combo'),
+        faceDamage: apiStats.faceDamage || num('Face Damage'),
+        turn: state.turn || num('Turns') || S.turnNumber
+      };
+
+      PostBattle.showRewardCascade(won, stats);
     }, 300);
   }
 };

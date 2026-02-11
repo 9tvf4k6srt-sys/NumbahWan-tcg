@@ -4,32 +4,122 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
     <title>NumbahWan TCG | Mythic Forge</title>
+    <link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
+
+    <!-- CRITICAL: Preload hero BG so it starts downloading immediately -->
+    <link rel="preload" href="/static/forge-room.webp" as="image" type="image/webp">
+    <!-- Preload essential fonts with swap to prevent render blocking -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Inter:wght@400;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+    <noscript><link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Inter:wght@400;700&display=swap" rel="stylesheet"></noscript>
+
+    <!-- INLINE LOADING SCREEN CSS — renders instantly before any external CSS loads -->
+    <style>
+        /* Loading screen — shows immediately, hides when forge is ready */
+        #forgeLoader {
+            position: fixed; inset: 0; z-index: 99999;
+            background: #0a0a1a;
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            transition: opacity 0.4s ease-out;
+        }
+        #forgeLoader.hide { opacity: 0; pointer-events: none; }
+        .loader-flame {
+            width: 60px; height: 80px;
+            background: radial-gradient(ellipse at 50% 90%, #ff6b00 0%, #ff3300 40%, transparent 70%);
+            border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
+            animation: flame 0.6s ease-in-out infinite alternate;
+            filter: blur(2px);
+        }
+        @keyframes flame {
+            0% { transform: scaleX(1) scaleY(1); opacity: 1; }
+            100% { transform: scaleX(0.85) scaleY(1.1); opacity: 0.85; }
+        }
+        .loader-text {
+            margin-top: 18px;
+            font-family: 'Orbitron', 'Segoe UI', sans-serif;
+            font-size: 14px; font-weight: 700;
+            color: #ff6b00; letter-spacing: 3px;
+            text-transform: uppercase;
+        }
+        .loader-bar {
+            margin-top: 14px; width: 180px; height: 3px;
+            background: rgba(255,255,255,0.08); border-radius: 2px; overflow: hidden;
+        }
+        .loader-fill {
+            width: 0%; height: 100%;
+            background: linear-gradient(90deg, #ff6b00, #ffd700);
+            border-radius: 2px;
+            animation: loaderFill 2.5s ease-out forwards;
+        }
+        @keyframes loaderFill {
+            0% { width: 0%; }
+            30% { width: 40%; }
+            60% { width: 65%; }
+            80% { width: 80%; }
+            100% { width: 92%; }
+        }
+        .loader-tip {
+            margin-top: 24px;
+            font-family: 'Inter', sans-serif;
+            font-size: 11px; color: rgba(255,255,255,0.35);
+            max-width: 260px; text-align: center; line-height: 1.5;
+        }
+    </style>
+
+    <!-- CSS: only forge.css is critical path, rest can lazy-load -->
     <link rel="stylesheet" href="/static/nw-tokens.css">
-    <link rel="stylesheet" href="/static/nw-utilities.css">
-    <link rel="stylesheet" href="/static/nw-card-reveal.css">
-    <link rel="stylesheet" href="/static/nw-card-frames.css">
     <link rel="stylesheet" href="/static/forge.css">
-    <link rel="stylesheet" href="/static/nw-gacha-ultimate.css">
-    <!-- Essential Libraries -->
+    <!-- Non-critical CSS — load after paint -->
+    <link rel="stylesheet" href="/static/nw-utilities.css" media="print" onload="this.media='all'">
+    <link rel="stylesheet" href="/static/nw-card-reveal.css" media="print" onload="this.media='all'">
+    <link rel="stylesheet" href="/static/nw-card-frames.css" media="print" onload="this.media='all'">
+    <link rel="stylesheet" href="/static/nw-gacha-ultimate.css" media="print" onload="this.media='all'">
+
+    <!-- CRITICAL JS: cards + wallet + mint needed for forge init -->
+    <script defer src="/static/nw-cards.js"></script>
+    <script defer src="/static/nw-wallet.js"></script>
+    <script defer src="/static/nw-mint.js"></script>
     <script defer src="/static/nw-currency.js"></script>
+    <script defer src="/static/nw-sounds.js"></script>
+    <!-- SECONDARY JS: UI polish, loaded after critical path -->
     <script defer src="/static/nw-essentials.js"></script>
     <script defer src="/static/nw-components.js"></script>
     <script defer src="/static/nw-game-juice.js"></script>
-    <script defer src="/static/nw-cards.js"></script>
-    <script defer src="/static/nw-wallet.js"></script>
     <script defer src="/static/nw-user-data.js"></script>
-    <link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <script defer src="/static/nw-premium-fx.js"></script>
     <script defer src="/static/nw-icons-inline.js"></script>
     <script defer src="/static/nw-particles.js"></script>
     <script defer src="/static/nw-nav.js"></script>
-    <script src="/static/nw-sounds.js" defer></script>
-    <script src="/static/nw-guide.js" defer></script>
-    <script src="/static/nw-features.js" defer></script>
-    <script src="/static/nw-zone-bundle.js" defer></script>
+    <script defer src="/static/nw-guide.js"></script>
+    <script defer src="/static/nw-features.js"></script>
+    <script defer src="/static/nw-zone-bundle.js"></script>
 </head>
 <body data-page-id="forge">
+    <!-- LOADING SCREEN — shows instantly, hides when forge JS is ready -->
+    <div id="forgeLoader">
+        <div class="loader-flame"></div>
+        <div class="loader-text">IGNITING FORGE</div>
+        <div class="loader-bar"><div class="loader-fill"></div></div>
+        <div class="loader-tip" id="loaderTip">Heating the furnace...</div>
+    </div>
+    <script>
+        // Rotate loading tips for engagement while waiting
+        (function(){
+            var tips = [
+                'Heating the furnace...',
+                'Lower serial = stronger card...',
+                'Soft pity increases your odds...',
+                'GENESIS #1 cards get +20% ATK...',
+                'Preparing card pool...'
+            ];
+            var i = 0;
+            var el = document.getElementById('loaderTip');
+            setInterval(function(){ i = (i+1) % tips.length; if(el) el.textContent = tips[i]; }, 1800);
+        })();
+    </script>
+
     <!-- EPIC FORGE ROOM - HERO IMAGE -->
     <div class="forge-hero"></div>
     <div class="forge-overlay"></div>
@@ -287,7 +377,7 @@
                     </div>
                     <div class="card-face card-front" id="cardFront">
                         <div class="card-render-container" id="cardRenderContainer">
-                            <img loading="lazy" id="cardImg" src="" alt="" onerror="this.onerror=null;this.src='/static/images/cards/placeholder.png';">
+                            <img loading="lazy" id="cardImg" src="" alt="" onerror="this.onerror=null;this.src='/static/images/cards/placeholder.webp';">
                         </div>
                         <div class="card-holo" id="cardHolo"></div>
                         <div class="card-sparkle" id="cardSparkle"></div>
@@ -317,7 +407,7 @@
                 <span style="color:#ff00ff;font-weight:700;">0.5% BASE DROP RATE</span>
             </div>
             <div class="mythic-card-showcase">
-                <img loading="lazy" id="mythicImg" src="/static/images/cards/01-reggina-mythic.webp" alt="Mythic" onerror="this.onerror=null;this.src='/static/images/cards/placeholder.png';">
+                <img loading="lazy" id="mythicImg" src="/static/images/cards/01-reggina-mythic.webp" alt="Mythic" onerror="this.onerror=null;this.src='/static/images/cards/placeholder.webp';">
             </div>
             <div class="mythic-prize">
                 <div class="mythic-prize-label">Ultimate Blessing</div>
@@ -331,12 +421,17 @@
 
     <script defer src="/static/nw-gacha-ultimate.js"></script>
     <script defer src="/static/nw-forge-engine.js"></script>
+    <!-- Safety: if forge engine fails to dismiss loader, force hide after 8s -->
+    <script>setTimeout(function(){ var l=document.getElementById('forgeLoader'); if(l){l.classList.add('hide');setTimeout(function(){l.remove()},800);} },8000);</script>
 
 <!-- i18n Script -->
 <script defer src="/static/nw-i18n-core.js"></script>
 <script>
   // Full i18n support using NW_I18N.registerPage
-  NW_I18N.registerPage('forge', {
+  // Wait for deferred script to load before calling
+  function _registerForgeI18n() {
+    if (typeof NW_I18N === 'undefined') { setTimeout(_registerForgeI18n, 50); return; }
+    NW_I18N.registerPage('forge', {
     en: {
       pageTitle: 'MYTHIC FORGE',
       navMarket: 'Market',
@@ -410,6 +505,8 @@
       back: 'กลับ'
     }
   });
+  }
+  _registerForgeI18n();
   
   // Initialize Featured Card Banner
   setTimeout(() => {

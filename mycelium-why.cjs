@@ -189,6 +189,21 @@ function findLessons(data, filepath) {
     }
   }
 
+  // From watch.json commit insights (ALL commits, not just fixes)
+  for (const c of (data.watch.commits || [])) {
+    if (!c.insight) continue;
+    const cFiles = c.files || [];
+    if (cFiles.some(f => f.includes(basename))) {
+      results.push({
+        source: c.isFix ? 'fix-insight' : 'commit-insight',
+        date: c.date,
+        text: c.insight,
+        area: c.area || area,
+        tags: c.tags
+      });
+    }
+  }
+
   return results;
 }
 
@@ -346,9 +361,15 @@ function why(filepath, args) {
   // ── Lessons ───────────────────────────────────────────────────
   const lessons = findLessons(data, relPath);
   if (lessons.length > 0) {
-    console.log(`  ${B}${G}Lessons Learned${X} ${D}(${lessons.length} from past fixes)${X}`);
+    const fixLessons = lessons.filter(l => l.source !== 'commit-insight');
+    const insights = lessons.filter(l => l.source === 'commit-insight');
+    const displayLessons = fixLessons.length > 0 ? fixLessons : lessons;
+    const label = fixLessons.length > 0
+      ? `(${fixLessons.length} from fixes${insights.length ? `, ${insights.length} from commits` : ''})`
+      : `(${lessons.length} from past work)`;
+    console.log(`  ${B}${G}Lessons Learned${X} ${D}${label}${X}`);
     const seen = new Set();
-    for (const l of lessons.slice(0, 12)) {
+    for (const l of displayLessons.slice(0, 12)) {
       if (seen.has(l.text)) continue;
       seen.add(l.text);
       const date = l.date ? `${D}${l.date}${X} ` : '';

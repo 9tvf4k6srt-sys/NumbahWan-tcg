@@ -18,6 +18,8 @@
 const http = require('http');
 const https = require('https');
 const fs = require('fs');
+const TEST_PORT = process.env.TEST_PORT || process.env.PORT || 8788;
+const TEST_HOST = process.env.TEST_HOST || 'localhost';
 const path = require('path');
 
 // ============================================================================
@@ -70,7 +72,7 @@ function section(name) {
 
 async function fetchJson(urlPath) {
     return new Promise((resolve, reject) => {
-        const url = `http://localhost:3000${urlPath}`;
+        const url = `http://${TEST_HOST}:${TEST_PORT}${urlPath}`;
         http.get(url, (res) => {
             let data = '';
             res.on('data', chunk => data += chunk);
@@ -87,7 +89,7 @@ async function fetchJson(urlPath) {
 
 async function fetchStatus(urlPath) {
     return new Promise((resolve, reject) => {
-        http.get(`http://localhost:3000${urlPath}`, (res) => {
+        http.get(`http://${TEST_HOST}:${TEST_PORT}${urlPath}`, (res) => {
             let data = '';
             res.on('data', chunk => data += chunk);
             res.on('end', () => resolve({ status: res.statusCode, body: data }));
@@ -99,8 +101,8 @@ async function postJson(urlPath, body) {
     return new Promise((resolve, reject) => {
         const data = JSON.stringify(body);
         const options = {
-            hostname: 'localhost',
-            port: 3000,
+            hostname: TEST_HOST,
+            port: TEST_PORT,
             path: urlPath,
             method: 'POST',
             headers: {

@@ -29,13 +29,52 @@ type Bindings = {
   MARKET_CACHE: KVNamespace
 }
 
-// Pre-generated at build time by `node sentinel.cjs`
+// Pre-generated at build time by `node sentinel.cjs` and `node mycelium-eval.cjs --json`
 import sentinelReport from '../../public/static/data/sentinel-report.json'
 import sentinelHistory from '../../public/static/data/sentinel-history.json'
+import myceliumEval from '../../public/static/data/mycelium-eval.json'
 
 const router = new Hono<{ Bindings: Bindings }>()
 const r = sentinelReport as any;
+const mEval = myceliumEval as any;
 const ENGINE = 'nw-sentinel v2.5.0';
+
+// ─── Unified Project Health (single score combining both systems) ─
+router.get('/health', (c) => {
+  const sentinelScore = r?.summary?.healthScore || 0;
+  const myceliumScore = mEval?.overall || 0;
+  // Weighted: 60% code quality (Sentinel) + 40% learning effectiveness (Mycelium)
+  const unified = Math.round(sentinelScore * 0.6 + myceliumScore * 0.4);
+  const grade = unified >= 90 ? 'A' : unified >= 80 ? 'B+' : unified >= 70 ? 'B' : unified >= 60 ? 'C' : unified >= 50 ? 'D' : 'F';
+  
+  return c.json({
+    unified: { score: unified, grade, formula: '60% Sentinel + 40% Mycelium' },
+    sentinel: {
+      score: sentinelScore,
+      grade: r?.summary?.grade || '?',
+      modules: r?.summary?.moduleCount || 10,
+      critical: r?.summary?.critical || 0,
+      warnings: r?.summary?.warnings || 0,
+      weakest: Object.entries(r?.modules || {})
+        .map(([name, mod]: [string, any]) => ({ name, score: mod.score }))
+        .sort((a: any, b: any) => a.score - b.score)
+        .slice(0, 3)
+    },
+    mycelium: {
+      score: myceliumScore,
+      grade: mEval?.grade || '?',
+      commits: mEval?.data?.totalCommits || 0,
+      breakages: mEval?.data?.totalBreakages || 0,
+      learnings: mEval?.data?.totalLearnings || 0,
+      fixRate: mEval?.slidingWindow?.latestRealBugRate || 0,
+      weakest: (mEval?.categories || [])
+        .filter((cat: any) => cat.score < 50)
+        .map((cat: any) => ({ name: cat.name, score: cat.score }))
+        .slice(0, 3)
+    },
+    timestamp: new Date().toISOString()
+  });
+});
 
 // ─── Full Report ────────────────────────────────────────────────
 router.get('/sentinel', (c) => {

@@ -7,6 +7,79 @@
 ## !! IF YOU DON'T, THE PRE-COMMIT HOOK WILL BLOCK YOUR COMMIT.
 ## !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
+## ⛔ TOKEN BUDGET & COST OPTIMIZATION — HARD LIMIT 200K (MANDATORY)
+
+**Root cause of past failure**: Session hit 210,007 tokens > 200,000 max during a Write File.
+Multiple full-file Tool Results (~7 large code dumps back-to-back) accumulated with no budget
+tracking. The conversation context ballooned invisibly. This is a PERMANENT rule.
+
+### The Cost Equation
+Every AI interaction has cost = input_tokens + output_tokens. Both count toward the 200K cap
+AND toward monetary cost. **Minimize both. Always pick the cheapest operation that achieves
+the goal. Quality comes from precision, not volume.**
+
+### Operation Cost Tiers (ALWAYS pick lowest tier that works):
+
+| Tier | Operation | ~Tokens | When to use |
+|------|-----------|---------|-------------|
+| 1 (free) | `grep -n "pattern" file` | 5-50 | Finding a function, checking if something exists |
+| 1 (free) | `wc -l file`, `head -20 file` | 5-20 | Checking file size, reading headers |
+| 2 (cheap) | `Read file offset=X limit=100` | 500-1500 | Reading a specific function you located with grep |
+| 2 (cheap) | `node mycelium.cjs --premortem X` | 200-500 | Getting area-specific context |
+| 3 (medium) | `cat .mycelium-context` | ~5K | Session start only — do NOT re-read mid-session |
+| 3 (medium) | `cat CLAUDE.md` | ~3K | Session start only |
+| 4 (expensive) | `Read file` (whole, <50KB) | 5K-12K | Only when you need full file understanding |
+| 5 (DANGER) | `Read file` (whole, >50KB) | 12K-46K | NEVER do this. Use grep + chunk reads |
+| 6 (FATAL) | `Read .mycelium/memory.json` | ~186K | NEVER. Use --query or --status instead |
+
+### Hard Rules (violating = session crash or wasted money):
+1. **ALWAYS start at Tier 1**. Grep first, read second, read-whole never.
+2. **Max 2 full-file reads per session** for files >20KB. After that, grep-only.
+3. **NEVER read .mycelium/memory.json or watch.json** into conversation. Use CLI commands.
+4. **Write large files (>200 lines) in ONE Write File call** — don't accumulate code in chat.
+5. **After 4+ tool results**, assume 50%+ budget used. Switch to grep-only mode.
+6. **For multi-file refactors**: max 2 large files per session. Break work across commits.
+7. **Run `node mycelium.cjs --token-check`** before any session that will touch large files.
+8. **If a Tool Result returns >3K tokens of content**, summarize it mentally — don't request more.
+9. **Prefer `Edit` over `Read+Write`** — editing specific lines costs less than reading entire files.
+10. **cat .mycelium-context once at start** — if you need to re-check something, grep it.
+
+### Cost-Saving Patterns:
+```bash
+# BAD (46K tokens): Read entire mycelium.cjs to find the brief() function
+Read file_path=mycelium.cjs
+
+# GOOD (50 tokens): Find the function, then read just that section
+grep -n "function brief" mycelium.cjs          # → line 1759
+Read file_path=mycelium.cjs offset=1759 limit=80  # → 600 tokens
+
+# BAD (186K tokens — FATAL): Read memory to check constraints
+Read file_path=.mycelium/memory.json
+
+# GOOD (300 tokens): Use the CLI
+node mycelium.cjs --premortem battle            # → structured summary
+
+# BAD (10K tokens): Read file, modify, write back
+Read file_path=mycelium-engine.cjs  # 10K tokens in
+# ... then Write file back           # 10K tokens out = 20K total
+
+# GOOD (200 tokens): Edit specific lines
+Edit old_string="const X = 5" new_string="const X = 10"  # 200 tokens total
+```
+
+### File Cost Reference:
+| File | Size | ~Tokens | Strategy |
+|------|------|---------|----------|
+| .mycelium-context | ~20KB | ~5K | cat once at session start |
+| CLAUDE.md | ~12KB | ~3K | cat once at session start |
+| mycelium-engine.cjs | ~41KB | ~10K | grep + chunk read |
+| mycelium-eval.cjs | ~55KB | ~14K | grep + chunk read |
+| mycelium-fix.cjs | ~69KB | ~17K | grep only |
+| mycelium-watch.cjs | ~73KB | ~18K | grep only |
+| mycelium.cjs | ~175KB | ~44K | grep only, NEVER read whole |
+| .mycelium/memory.json | ~745KB | ~186K | --query/--status ONLY |
+| .mycelium/watch.json | ~267KB | ~67K | --status ONLY |
+
 ## Session Startup Checklist (MANDATORY — do ALL of these FIRST)
 ```bash
 # 1. Read the brain — this has rules, breakages, decisions, fragile files
@@ -74,11 +147,11 @@ This isn't optional. Every session produces knowledge. Record it.
 
 ## The Protocol
 ```
-1. cat .mycelium-context              ← read the brain (includes WIP if any)
+1. cat .mycelium-context              ← read the brain (includes CHECKPOINT if any)
 2. echo $(date +%s) > .mycelium-session  ← mark session started
-3. IF .mycelium-context has WIP section ← RESUME that work, do NOT re-plan
+3. IF .mycelium-context has !!RESUME!! section ← RESUME that work, do NOT re-plan
 4. premortem for your area      ← check what broke before
-5. --wip "what I'm doing now"   ← save task state to disk (survives compaction)
+5. --checkpoint '{...}'         ← save STRUCTURED task state (survives compaction)
 6. work                         ← build the thing
 7. record learnings             ← --decide, --constraint, or --broke
 8. git commit                   ← hooks handle the rest
@@ -102,18 +175,39 @@ Steps: [1] auto-commit → [2] validate (eval+tests) → [3] refresh auth → [4
 
 ## CRITICAL: Chat Compaction Survival
 Chat platforms compress history, which **destroys in-flight task state** (todo lists, progress).
-The fix: write your current task to disk with `--wip` BEFORE starting work.
-After compaction, `.mycelium-context` will show the WIP section and you can RESUME instead of re-planning.
+**Past failure**: After compaction, AI read .mycelium-context (which had no WIP), then started
+randomly reading files and doing unrelated work instead of resuming the interrupted task.
+
+### Checkpoint System (PREFERRED — structured, rich)
+For any task with 2+ steps, save a **checkpoint** BEFORE starting work:
 ```bash
-# Starting a multi-step task:
-node mycelium.cjs --wip "upgrading battle arena v8 — step 1: refactor CSS"
+# Save structured checkpoint (JSON with task, steps, pending items, file refs):
+node mycelium.cjs --checkpoint '{"task":"market fixes","steps":["stone->wood","lazy-load audit","NPC reseed","smoke+PR"],"completed":["stone->wood in market.html"],"pending":["audit other pages","NPC reseed test","smoke+PR"],"files":["public/market.html","public/static/nw-wallet.js","src/routes/market-trading.ts"],"context":{"pr":"#41","build":"395.91KB","commit":"c34cdbb"},"resumeHint":"Continue from first pending step. Do NOT re-read files already completed."}'
 
-# Progressed further:
-node mycelium.cjs --wip-append "step 2: JS rewrite done, testing remaining"
+# Read current checkpoint:
+node mycelium.cjs --checkpoint
 
-# Task complete:
+# Update checkpoint as steps complete (overwrite with new state):
+node mycelium.cjs --checkpoint '{"task":"market fixes","steps":[...],"completed":["step1","step2"],"pending":["step3"],...}'
+
+# Task complete — clear checkpoint + WIP:
 node mycelium.cjs --wip-done
 ```
+
+### WIP System (FALLBACK — simple text)
+For quick single-step tasks:
+```bash
+node mycelium.cjs --wip "upgrading battle arena v8 — step 1: refactor CSS"
+node mycelium.cjs --wip-append "step 2: JS rewrite done, testing remaining"
+node mycelium.cjs --wip-done
+```
+
+### MANDATORY RULES:
+1. **BEFORE starting any multi-step task** → save a --checkpoint
+2. **AFTER completing each step** → update the checkpoint with new completed/pending
+3. **After compaction** → .mycelium-context shows `# !!RESUME!!` section → follow it exactly
+4. **NEVER start reading random files after compaction** → read checkpoint first, resume from pending
+5. If .mycelium-context has `!!RESUME!!` section → do NOT re-plan, continue from pending steps
 
 ## Quick Reference
 | When | Do |
@@ -130,8 +224,9 @@ node mycelium.cjs --wip-done
 | Full history dump | `node mycelium.cjs --query` |
 | Health check | `node mycelium.cjs --health` |
 | Deep pattern analysis | `node mycelium.cjs --reflect` |
-| Starting a task (survives compaction) | `node mycelium.cjs --wip "what I'm doing"` |
-| Task progressed | `node mycelium.cjs --wip-append "next step done"` |
+| Starting a task (survives compaction) | `node mycelium.cjs --checkpoint '{"task":"...","pending":["..."]}'` |
+| Simple WIP (text only) | `node mycelium.cjs --wip "what I'm doing"` |
+| Task progressed | Update checkpoint with new completed/pending, or `--wip-append` |
 | Task finished | `node mycelium.cjs --wip-done` |
 | Auto-guard before editing files | `node mycelium.cjs --guard <file1> <file2>` |
 | Auto-guard (reads staged files) | `node mycelium.cjs --guard` (also runs in pre-commit hook) |
@@ -143,6 +238,8 @@ node mycelium.cjs --wip-done
 | Watcher warn on staged files | `node mycelium-watch.cjs --warn` |
 | Watcher reinstall (rescan history) | `node mycelium-watch.cjs --install` |
 | **Evaluate learning system** | `npx mycelium eval` (9 KPIs, cryptographic proof) |
+| **Token budget check** | `node mycelium.cjs --token-check` (file sizes vs 200K limit) |
+| **Cost plan for files** | `node mycelium.cjs --cost-plan file1 file2` (cheapest approach) |
 | **Diagnose root causes** | `npx mycelium diagnose` (friction → files → causes) |
 | **Auto-fix** | `npx mycelium fix --force` (diagnose → prescribe → execute → verify) |
 | **System status** | `npx mycelium status` (scores, pending prescriptions) |

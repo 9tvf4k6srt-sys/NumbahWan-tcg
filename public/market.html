@@ -8,6 +8,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script defer src="/static/nw-currency.js"></script>
     <script defer src="/static/nw-wallet.js"></script>
+    <script defer src="/static/nw-mint.js"></script>
     <script defer src="/static/nw-components.js"></script>
     <script defer src="/static/nw-cards.js"></script>
     <script defer src="/static/nw-card-value.js"></script>
@@ -68,14 +69,14 @@
         .main { display: flex; padding-top: 56px; min-height: 100vh; }
         .market-panel { flex: 1; padding: 16px; overflow-y: auto; max-height: calc(100vh - 56px); }
         
-        /* Chat FAB */
+        /* Chat FAB — sits above bottom bar (44px) + safe margin */
         .chat-fab {
-            position: fixed; bottom: 70px; right: 16px;
+            position: fixed; bottom: 56px; left: 16px;
             width: 56px; height: 56px; border-radius: 50%;
             background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
             border: 2px solid rgba(255,255,255,0.2);
             color: white; font-size: 24px; cursor: pointer;
-            z-index: 1000; box-shadow: 0 4px 20px rgba(34,197,94,0.4);
+            z-index: 9996; box-shadow: 0 4px 20px rgba(34,197,94,0.4);
             transition: all 0.3s; display: flex; align-items: center; justify-content: center;
         }
         .chat-fab:hover { transform: scale(1.1); }
@@ -87,9 +88,9 @@
             display: flex; align-items: center; justify-content: center;
         }
         
-        /* Chat Panel */
+        /* Chat Panel — above bottom bar, below nav panel */
         .chat-panel {
-            position: fixed; bottom: 70px; right: 16px;
+            position: fixed; bottom: 56px; left: 16px;
             width: 320px; max-height: 450px;
             background: rgba(15,15,20,0.98);
             border: 1px solid rgba(255,215,0,0.3);
@@ -98,6 +99,7 @@
             transition: all 0.3s ease;
         }
         .chat-panel.hidden { opacity: 0; transform: translateY(20px) scale(0.95); pointer-events: none; }
+        .chat-panel.open ~ .chat-fab { display: none; }
         .chat-header {
             padding: 12px 16px; background: rgba(0,0,0,0.4);
             border-bottom: 1px solid rgba(255,255,255,0.1);
@@ -158,7 +160,7 @@
         .sort-select { padding: 8px 12px; background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; color: #fff; font-size: 11px; margin-left: auto; }
         
         /* Listings Grid */
-        .listings-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 12px; }
+        .listings-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 12px; content-visibility: auto; }
         .listing-card {
             background: rgba(20,20,25,0.9); border: 1px solid rgba(255,255,255,0.1);
             border-radius: 12px; overflow: hidden; transition: all 0.3s; cursor: pointer;
@@ -168,7 +170,7 @@
         @keyframes newGlow { 0% { box-shadow: 0 0 30px rgba(34,197,94,0.6); } 100% { box-shadow: none; } }
         .listing-card.deal { border-color: var(--gold); }
         .listing-img-wrap { position: relative; padding-top: 130%; background: rgba(0,0,0,0.3); }
-        .listing-img { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; }
+        .listing-img { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; background: rgba(0,0,0,0.3); }
         .listing-badge { position: absolute; top: 8px; left: 8px; padding: 4px 8px; border-radius: 4px; font-size: 9px; font-weight: 700; text-transform: uppercase; }
         .listing-badge.deal { background: var(--gold); color: #000; }
         .listing-badge.new { background: var(--green); color: #fff; }
@@ -198,21 +200,133 @@
         .listing-buy-btn:hover { transform: scale(1.08); }
         .listing-buy-btn:disabled { opacity: 0.5; cursor: not-allowed; }
         
-        /* Empty State */
-        .empty-state { text-align: center; padding: 60px 20px; color: rgba(255,255,255,0.4); }
+        /* Tabs */
+        .market-tabs { display: flex; gap: 0; margin-bottom: 16px; border-bottom: 2px solid rgba(255,255,255,0.1); }
+        .market-tab {
+            padding: 10px 20px; background: none; border: none; color: rgba(255,255,255,0.5);
+            font-size: 13px; font-weight: 700; cursor: pointer; position: relative;
+            font-family: 'Orbitron', sans-serif; transition: all 0.2s;
+        }
+        .market-tab:hover { color: rgba(255,255,255,0.8); }
+        .market-tab.active { color: var(--green); }
+        .market-tab.active::after {
+            content: ''; position: absolute; bottom: -2px; left: 0; right: 0; height: 2px;
+            background: var(--green); border-radius: 1px;
+        }
+        .market-tab .tab-count {
+            display: inline-block; background: rgba(255,255,255,0.1); padding: 1px 6px;
+            border-radius: 8px; font-size: 10px; margin-left: 6px;
+        }
+        .market-tab.active .tab-count { background: rgba(34,197,94,0.2); color: var(--green); }
+        
+        /* My Cards Grid */
+        .my-cards-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 12px; }
+        .my-card {
+            background: rgba(20,20,25,0.9); border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 12px; overflow: hidden; transition: all 0.3s; position: relative;
+        }
+        .my-card:hover { border-color: rgba(255,255,255,0.3); }
+        .my-card.tradeable { border-color: rgba(34,197,94,0.3); cursor: pointer; }
+        .my-card.tradeable:hover { border-color: var(--green); transform: translateY(-3px); box-shadow: 0 8px 25px rgba(34,197,94,0.2); }
+        .my-card-img-wrap { position: relative; padding-top: 130%; background: rgba(0,0,0,0.3); }
+        .my-card-img { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; background: rgba(0,0,0,0.3); }
+        .my-card-count {
+            position: absolute; top: 8px; right: 8px; background: rgba(0,0,0,0.8);
+            padding: 3px 8px; border-radius: 6px; font-size: 11px; font-weight: 700;
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+        .my-card-count.dupe { background: rgba(34,197,94,0.2); border-color: var(--green); color: var(--green); }
+        .my-card-info { padding: 10px; }
+        .my-card-name { font-size: 12px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 4px; }
+        .my-card-rarity { font-size: 10px; font-weight: 700; text-transform: uppercase; }
+        .my-card-sell-btn {
+            width: 100%; padding: 8px; margin-top: 6px; background: linear-gradient(135deg, #22c55e, #16a34a);
+            border: none; border-radius: 6px; color: #fff; font-size: 11px; font-weight: 700;
+            cursor: pointer; transition: all 0.2s;
+        }
+        .my-card-sell-btn:hover { filter: brightness(1.15); }
+        .my-card-sell-btn:disabled { opacity: 0.3; cursor: not-allowed; filter: none; }
+        .my-card-serial { font-size: 9px; color: rgba(255,255,255,0.4); margin-top: 2px; }
+        
+        /* List Modal */
+        .list-modal {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 5000;
+            display: none; align-items: center; justify-content: center; padding: 20px;
+        }
+        .list-modal.show { display: flex; animation: fadeIn 0.2s; }
+        .list-modal-content {
+            background: rgba(20,20,28,0.98); border: 1px solid rgba(255,215,0,0.3);
+            border-radius: 16px; padding: 24px; max-width: 380px; width: 100%;
+            animation: scaleIn 0.3s ease-out;
+        }
+        .list-modal-title { font-family: 'Orbitron', sans-serif; font-size: 18px; color: var(--green); margin-bottom: 16px; text-align: center; }
+        .list-modal-card { display: flex; gap: 14px; align-items: center; margin-bottom: 16px; padding: 12px; background: rgba(0,0,0,0.3); border-radius: 10px; }
+        .list-modal-card img { width: 60px; height: 78px; object-fit: cover; border-radius: 6px; }
+        .list-modal-card-info { flex: 1; }
+        .list-modal-card-name { font-size: 14px; font-weight: 600; }
+        .list-modal-card-meta { font-size: 11px; color: rgba(255,255,255,0.5); margin-top: 3px; }
+        .price-input-group { margin-bottom: 16px; }
+        .price-input-group label { display: block; font-size: 12px; color: rgba(255,255,255,0.6); margin-bottom: 6px; }
+        .price-input-row { display: flex; gap: 8px; align-items: center; }
+        .price-input {
+            flex: 1; padding: 12px; background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.15);
+            border-radius: 8px; color: #fff; font-size: 16px; font-family: 'Orbitron', sans-serif; text-align: center;
+        }
+        .price-input:focus { border-color: var(--green); outline: none; }
+        .price-suggestion { font-size: 10px; color: rgba(255,255,255,0.4); margin-top: 4px; text-align: center; }
+        .gift-toggle { display: flex; align-items: center; gap: 8px; margin-bottom: 16px; padding: 10px; background: rgba(255,215,0,0.05); border-radius: 8px; cursor: pointer; }
+        .gift-toggle input { accent-color: var(--gold); }
+        .gift-toggle-label { font-size: 12px; color: var(--gold); }
+        .list-modal-actions { display: flex; gap: 10px; }
+        .list-modal-actions button { flex: 1; padding: 12px; border-radius: 8px; font-size: 13px; font-weight: 700; cursor: pointer; border: none; }
+        .btn-cancel { background: rgba(255,255,255,0.1); color: rgba(255,255,255,0.7); }
+        .btn-confirm-list { background: linear-gradient(135deg, #22c55e, #16a34a); color: #fff; box-shadow: 0 4px 12px rgba(34,197,94,0.3); }
+        .btn-confirm-list:disabled { opacity: 0.4; cursor: not-allowed; }
+        
+        /* Empty State — centered on screen */
+        .empty-state { text-align: center; padding: 20px; color: rgba(255,255,255,0.4); display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 50vh; }
         .empty-icon { font-size: 60px; margin-bottom: 16px; }
         .empty-text { font-size: 14px; margin-bottom: 8px; }
         
-        /* Mobile */
+        /* Mobile — phone-first layout, avoids bottom bar (44px) + nav FABs (right side) */
         @media (max-width: 768px) {
-            .chat-fab { bottom: 60px; right: 12px; width: 50px; height: 50px; font-size: 20px; }
-            .chat-panel { bottom: 60px; right: 8px; left: 8px; width: auto; max-height: 60vh; }
-            .market-panel { padding-bottom: 80px; }
-            .listings-grid { grid-template-columns: repeat(2, 1fr); }
+            .header { padding: 0 10px; height: 50px; }
+            .logo { font-size: 14px; }
+            .nav-links { gap: 2px; overflow-x: auto; -webkit-overflow-scrolling: touch; flex-wrap: nowrap; scrollbar-width: none; }
+            .nav-links::-webkit-scrollbar { display: none; }
+            .nav-links a { font-size: 11px; padding: 5px 8px; white-space: nowrap; flex-shrink: 0; }
+            .chat-fab { bottom: 56px; left: 12px; width: 48px; height: 48px; font-size: 20px; }
+            .chat-panel { bottom: 56px; left: 8px; right: 8px; width: auto; max-height: 50vh; }
+            .market-panel { padding: 12px; padding-bottom: 120px; }
+            .main { padding-top: 50px; }
+            .market-title { font-size: 16px; }
+            .market-stats-bar { gap: 8px; font-size: 11px; }
+            .market-header-bar { margin-bottom: 10px; }
+            .market-tabs { margin-bottom: 10px; }
+            .market-tab { padding: 8px 14px; font-size: 12px; }
+            .filters-bar { gap: 6px; margin-bottom: 10px; }
+            .filter-btn { padding: 6px 10px; font-size: 10px; }
+            .sort-select { font-size: 10px; padding: 6px 8px; }
+            .listings-grid { grid-template-columns: repeat(2, 1fr); gap: 8px; }
+            .listing-info { padding: 8px; }
+            .listing-name { font-size: 12px; }
+            .listing-price { font-size: 13px; }
+            .listing-buy-btn { padding: 8px 14px; font-size: 12px; }
+            .my-cards-grid { grid-template-columns: repeat(2, 1fr); gap: 8px; }
+            .list-modal-content { padding: 16px; max-width: 340px; }
+            .toast { bottom: 60px; font-size: 12px; padding: 10px 18px; }
+        }
+        @media (max-width: 380px) {
+            .listings-grid { grid-template-columns: repeat(2, 1fr); gap: 6px; }
+            .listing-info { padding: 6px; }
+            .listing-name { font-size: 11px; }
+            .listing-buy-btn { padding: 6px 10px; font-size: 11px; }
+            .nav-links a { font-size: 10px; padding: 4px 6px; }
+            .chat-fab { width: 44px; height: 44px; font-size: 18px; }
         }
         
         /* Toast & Overlays */
-        .toast { position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%) translateY(100px); padding: 12px 24px; background: rgba(10,10,12,0.95); border: 2px solid var(--gold); border-radius: 12px; font-size: 13px; font-weight: 600; z-index: 3000; opacity: 0; transition: all 0.3s; }
+        .toast { position: fixed; bottom: 60px; left: 50%; transform: translateX(-50%) translateY(100px); padding: 12px 24px; background: rgba(10,10,12,0.95); border: 2px solid var(--gold); border-radius: 12px; font-size: 13px; font-weight: 600; z-index: 9996; opacity: 0; transition: all 0.3s; pointer-events: none; }
         .toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
         .toast.success { border-color: var(--green); color: var(--green); }
         .toast.error { border-color: #ef4444; color: #ef4444; }
@@ -265,6 +379,12 @@
                 </div>
             </div>
             
+            <div class="market-tabs">
+                <button class="market-tab active" data-tab="browse" onclick="switchTab('browse')">BROWSE <span class="tab-count" id="browseCount">0</span></button>
+                <button class="market-tab" data-tab="mycards" onclick="switchTab('mycards')">MY CARDS <span class="tab-count" id="myCardsCount">0</span></button>
+            </div>
+            
+            <div id="browseTab">
             <div class="filters-bar">
                 <button class="filter-btn active" data-filter="all">All</button>
                 <button class="filter-btn mythic" data-filter="mythic" data-i18n="mythic">Mythic</button>
@@ -283,6 +403,21 @@
                 <div class="empty-state">
                     <div class="empty-icon"></div>
                     <div class="empty-text" data-i18n="connectingToMarket">Connecting to market...</div>
+                </div>
+            </div>
+            </div>
+            
+            <div id="myCardsTab" style="display:none">
+                <div class="filters-bar">
+                    <button class="filter-btn active" data-myfilter="tradeable" onclick="setMyFilter('tradeable')">Tradeable (2+ copies)</button>
+                    <button class="filter-btn" data-myfilter="all" onclick="setMyFilter('all')">All Cards</button>
+                </div>
+                <div class="my-cards-grid" id="myCardsGrid">
+                    <div class="empty-state">
+                        <div class="empty-icon">🃏</div>
+                        <div class="empty-text">No cards yet!</div>
+                        <div class="empty-hint">Pull cards at the <a href="/forge" style="color:#22c55e">Forge</a> to start your collection.</div>
+                    </div>
                 </div>
             </div>
         </section>
@@ -307,6 +442,29 @@
 
     <div class="toast" id="toast"></div>
     
+    <!-- List Card Modal -->
+    <div class="list-modal" id="listModal">
+        <div class="list-modal-content">
+            <div class="list-modal-title">LIST FOR SALE</div>
+            <div class="list-modal-card" id="listModalCard"></div>
+            <div class="price-input-group">
+                <label>Price (Sacred Logs)</label>
+                <div class="price-input-row">
+                    <input type="number" class="price-input" id="listPriceInput" min="0" max="9999" value="0" placeholder="0">
+                </div>
+                <div class="price-suggestion" id="priceSuggestion">Suggested: --</div>
+            </div>
+            <label class="gift-toggle" onclick="toggleGift()">
+                <input type="checkbox" id="giftCheckbox">
+                <span class="gift-toggle-label">🎁 List as FREE GIFT (price = 0)</span>
+            </label>
+            <div class="list-modal-actions">
+                <button class="btn-cancel" onclick="closeListModal()">Cancel</button>
+                <button class="btn-confirm-list" id="confirmListBtn" onclick="confirmList()">LIST FOR SALE</button>
+            </div>
+        </div>
+    </div>
+    
     <div class="success-overlay" id="successOverlay">
         <div class="success-content">
             <div class="success-icon"></div>
@@ -323,8 +481,21 @@
     // Supports thousands of concurrent users
     // ============================================
     
+    // Normalize card image path — all card images are .webp
+    function cardImg(img) {
+        if (!img) return '/static/images/cards/placeholder.webp';
+        // Replace any non-.webp extension with .webp
+        const normalized = img.replace(/\.(jpg|jpeg|png|gif)$/i, '.webp');
+        return '/static/images/cards/' + normalized;
+    }
+    // Thumbnail version for grid views — smaller, faster to load
+    function cardThumb(img) {
+        if (!img) return '/static/images/cards/thumbs/placeholder.webp';
+        const normalized = img.replace(/\.(jpg|jpeg|png|gif)$/i, '.webp');
+        return '/static/images/cards/thumbs/' + normalized;
+    }
+    
     const PRICE_GUIDE = {
-        mythic: { min: 200, suggested: 500 },
         legendary: { min: 50, suggested: 150 },
         epic: { min: 20, suggested: 50 },
         rare: { min: 10, suggested: 25 },
@@ -341,6 +512,9 @@
     let myUserName = '';
     let lastChatTimestamp = 0;
     let pollInterval = null;
+    let currentTab = 'browse';
+    let myCardFilter = 'tradeable';
+    let listingCard = null; // card being listed
     
     // ============================================
     // API FUNCTIONS
@@ -354,6 +528,7 @@
                 marketListings = data.listings;
                 renderListings();
                 document.getElementById('totalListings').textContent = data.count;
+                document.getElementById('browseCount').textContent = data.count;
             }
         } catch (err) {
             console.error('Failed to fetch listings:', err);
@@ -403,16 +578,22 @@
             return;
         }
         
-        const wallet = NW_WALLET?.getWalletInfo();
-        const myLogs = wallet?.currencies?.stone || 0;
+        // Don't buy your own listing
+        if (listing.sellerId === myUserId) {
+            toast("That's your own listing!", 'error');
+            return;
+        }
         
-        if (myLogs < listing.price) {
+        const myLogs = NW_WALLET?.getBalance?.('wood') || 0;
+        
+        if (listing.price > 0 && myLogs < listing.price) {
             toast(`Not enough Sacred Logs! Need ${listing.price - myLogs} more.`, 'error');
             return;
         }
         
         // Confirm purchase
-        const confirmMsg = `Buy ${listing.card.name} for ${listing.price} Sacred Logs?`;
+        const priceText = listing.price === 0 ? 'FREE (gift)' : `${listing.price} Sacred Logs`;
+        const confirmMsg = `${listing.price === 0 ? 'Claim' : 'Buy'} ${listing.card.name} for ${priceText}?`;
         if (!confirm(confirmMsg)) return;
         
         try {
@@ -433,23 +614,39 @@
                 return;
             }
             
-            // 2. Deduct sacred logs locally
-            NW_WALLET.spend('stone', listing.price, 'MARKET_BUY:' + listing.card.name);
+            // 2. Deduct sacred logs locally (if price > 0)
+            if (listing.price > 0) {
+                NW_WALLET.spend('wood', listing.price, 'MARKET_BUY:' + listing.card.name);
+            }
             
-            // 3. Add card to collection
-            NW_WALLET.addToCollection(listing.cardId);
+            // 3. Add card to collection (wallet tracks count for duplicates)
+            NW_WALLET.addToCollection(listing.cardId, listing.card.rarity);
             
-            // 4. Update UI
+            // 4. Add minted instance to NW_MINT inventory (preserves serial/tier)
+            if (typeof NW_MINT !== 'undefined' && data.instanceId) {
+                NW_MINT.addToInventory({
+                    instanceId: data.instanceId,
+                    cardId: listing.cardId,
+                    serial: data.serial || 0,
+                    tierName: data.tier || 'STANDARD',
+                    mintedAt: Date.now(),
+                    ownerId: myUserId
+                });
+                console.log('[MARKET] Received minted card:', data.instanceId, 'serial #' + data.serial);
+            }
+            
+            // 5. Update UI
             const newWallet = NW_WALLET.getWalletInfo();
-            const newLogs = newWallet?.currencies?.stone || 0;
+            const newLogs = NW_WALLET?.getBalance?.('wood') || 0;
             
             showSuccess(listing.card.name, listing.price, newLogs);
             updateBalance();
             if (window.updateFloatBalances) window.updateFloatBalances();
             
-            // 5. Refresh listings
+            // 6. Refresh both tabs
             await fetchListings();
             await fetchChat();
+            renderMyCards();
             
         } catch (err) {
             console.error('Buy error:', err);
@@ -520,7 +717,7 @@
             return `
                 <div class="listing-card ${isDeal ? 'deal' : ''} ${isNew ? 'new' : ''}" onclick="buyListing(${listing.id})">
                     <div class="listing-img-wrap">
-                        <img class="listing-img" src="/static/images/cards/${card.img}" alt="${card.name}" onerror="this.src='/static/images/cards/placeholder.webp'">
+                        <img class="listing-img" loading="lazy" decoding="async" src="${cardThumb(card.img)}" alt="${card.name}" onerror="this.onerror=null;this.src=cardImg(this.alt!=='placeholder'?'${card.img}':'placeholder.webp')">
                         ${isDeal ? '<div class="listing-badge deal">DEAL</div>' : ''}
                         ${isNew && !isDeal ? '<div class="listing-badge new">NEW</div>' : ''}
                         <div class="listing-rarity-bar ${card.rarity}"></div>
@@ -528,12 +725,12 @@
                     <div class="listing-info">
                         <div class="listing-name">${card.name}</div>
                         <div class="listing-meta">
-                            <span class="listing-rarity ${card.rarity}">${card.rarity}</span>
+                            <span class="listing-rarity ${card.rarity}">${card.rarity}${listing.serial ? ' #' + listing.serial : ''}</span>
                             <span class="listing-seller">by ${listing.seller}</span>
                         </div>
                         <div class="listing-price-row">
-                            <span class="listing-price">${listing.price} <img loading="lazy" src="/static/icons/sacred-log.webp" style="width:16px;height:16px;vertical-align:middle"></span>
-                            <button class="listing-buy-btn" onclick="event.stopPropagation(); buyListing(${listing.id})">BUY</button>
+                            <span class="listing-price">${listing.price === 0 ? '<span style="color:#ffd700">FREE</span>' : listing.price + ' <img loading="lazy" src="/static/icons/sacred-log.webp" style="width:16px;height:16px;vertical-align:middle">'}</span>
+                            <button class="listing-buy-btn" onclick="event.stopPropagation(); buyListing(${listing.id})">${listing.price === 0 ? 'CLAIM' : 'BUY'}</button>
                         </div>
                     </div>
                 </div>
@@ -581,7 +778,7 @@
     
     function updateBalance() {
         const wallet = NW_WALLET?.getWalletInfo();
-        document.getElementById('myBalance').textContent = wallet?.currencies?.stone || 0;
+        document.getElementById('myBalance').textContent = NW_WALLET?.getBalance?.('wood') || 0;
     }
     
     function showSuccess(cardName, price, newBalance) {
@@ -617,6 +814,241 @@
     }
     
     // ============================================
+    // TAB SYSTEM & MY CARDS
+    // ============================================
+    
+    function switchTab(tab) {
+        currentTab = tab;
+        document.querySelectorAll('.market-tab').forEach(t => t.classList.toggle('active', t.dataset.tab === tab));
+        document.getElementById('browseTab').style.display = tab === 'browse' ? '' : 'none';
+        document.getElementById('myCardsTab').style.display = tab === 'mycards' ? '' : 'none';
+        if (tab === 'mycards') renderMyCards();
+    }
+    
+    function setMyFilter(filter) {
+        myCardFilter = filter;
+        document.querySelectorAll('[data-myfilter]').forEach(b => b.classList.toggle('active', b.dataset.myfilter === filter));
+        renderMyCards();
+    }
+    
+    function getMyCards() {
+        // Use getFullCollection() — getWalletInfo() does NOT include collection
+        const collection = (typeof NW_WALLET !== 'undefined' && NW_WALLET.getFullCollection) 
+            ? NW_WALLET.getFullCollection() 
+            : {};
+        const allCards = typeof NW_CARDS !== 'undefined' ? NW_CARDS.getAll() : [];
+        
+        const results = [];
+        for (const [cardId, data] of Object.entries(collection)) {
+            if (!data || data.count <= 0) continue;
+            const cardInfo = allCards.find(c => String(c.id) === String(cardId));
+            if (!cardInfo) continue;
+            
+            // Get mint instances for this card
+            let instances = [];
+            if (typeof NW_MINT !== 'undefined') {
+                instances = NW_MINT.getPlayerInstances(cardId) || [];
+            }
+            
+            results.push({
+                cardId: Number(cardId),
+                card: cardInfo,
+                count: data.count || 1,
+                level: data.level || 1,
+                xp: data.xp || 0,
+                instances,
+                canTrade: data.count >= 2 // keep at least 1
+            });
+        }
+        
+        // Sort: tradeable first, then by rarity
+        const rarityOrder = { mythic: 0, legendary: 1, epic: 2, rare: 3, uncommon: 4, common: 5 };
+        results.sort((a, b) => {
+            if (a.canTrade !== b.canTrade) return a.canTrade ? -1 : 1;
+            return (rarityOrder[a.card.rarity] || 5) - (rarityOrder[b.card.rarity] || 5);
+        });
+        
+        return results;
+    }
+    
+    function renderMyCards() {
+        const grid = document.getElementById('myCardsGrid');
+        const cards = getMyCards();
+        
+        // Update tab count
+        const tradeableCount = cards.filter(c => c.canTrade).length;
+        document.getElementById('myCardsCount').textContent = cards.length;
+        
+        const filtered = myCardFilter === 'tradeable' ? cards.filter(c => c.canTrade) : cards;
+        
+        if (filtered.length === 0) {
+            if (myCardFilter === 'tradeable') {
+                grid.innerHTML = '<div class="empty-state"><div class="empty-icon">\ud83d\udd12</div><div class="empty-text">No tradeable cards</div><div class="empty-hint">You need 2+ copies of a card to trade.<br>Buy duplicates from the market or pull at the <a href="/forge" style="color:#22c55e">Forge</a>!</div></div>';
+            } else {
+                grid.innerHTML = '<div class="empty-state"><div class="empty-icon">\ud83c\udccf</div><div class="empty-text">No cards yet!</div><div class="empty-hint">Buy cards from the <span style="color:#22c55e;cursor:pointer" onclick="switchTab(\'browse\')">Market</span> or pull at the <a href="/forge" style="color:#22c55e">Forge</a> to start.</div></div>';
+            }
+            return;
+        }
+        
+        grid.innerHTML = filtered.map(c => {
+            const imgPath = c.card.img || 'placeholder.webp';
+            const bestInstance = c.instances[0]; // lowest serial
+            const serialText = bestInstance ? `Best: #${bestInstance.serial} (${bestInstance.tierName})` : '';
+            const tradeSerial = c.instances.length > 1 ? c.instances[c.instances.length - 1] : null; // sell worst serial
+            
+            return `
+                <div class="my-card ${c.canTrade ? 'tradeable' : ''}" ${c.canTrade ? `onclick="openListModal(${c.cardId})"` : ''}>
+                    <div class="my-card-img-wrap">
+                        <img class="my-card-img" loading="lazy" decoding="async" src="${cardThumb(imgPath)}" alt="${c.card.name?.en || c.card.name}" onerror="this.onerror=null;this.src=cardImg('${imgPath}')">
+                        <div class="my-card-count ${c.count >= 2 ? 'dupe' : ''}">\u00d7${c.count}</div>
+                    </div>
+                    <div class="my-card-info">
+                        <div class="my-card-name">${c.card.name?.en || c.card.name}</div>
+                        <div class="my-card-rarity ${c.card.rarity}">${c.card.rarity}</div>
+                        ${serialText ? `<div class="my-card-serial">${serialText}</div>` : ''}
+                        ${c.canTrade 
+                            ? `<button class="my-card-sell-btn" onclick="event.stopPropagation(); openListModal(${c.cardId})">LIST FOR SALE</button>`
+                            : `<button class="my-card-sell-btn" disabled>ONLY COPY</button>`
+                        }
+                    </div>
+                </div>
+            `;
+        }).join('');
+    }
+    
+    // ============================================
+    // LIST CARD MODAL
+    // ============================================
+    
+    function openListModal(cardId) {
+        const cards = getMyCards();
+        const myCard = cards.find(c => c.cardId === Number(cardId));
+        if (!myCard || !myCard.canTrade) {
+            toast("Can't sell your only copy!", 'error');
+            return;
+        }
+        
+        listingCard = myCard;
+        
+        // Pick the worst serial to sell (keep best for yourself)
+        const sellInstance = myCard.instances.length > 1 
+            ? myCard.instances[myCard.instances.length - 1] // worst (highest serial)
+            : null;
+        
+        const cardName = myCard.card.name?.en || myCard.card.name;
+        const imgPath = myCard.card.img || 'placeholder.webp';
+        const guide = PRICE_GUIDE[myCard.card.rarity] || PRICE_GUIDE.common;
+        
+        document.getElementById('listModalCard').innerHTML = `
+            <img loading="lazy" decoding="async" src="${cardImg(imgPath)}" alt="${cardName}" onerror="this.onerror=null;this.src='/static/images/cards/placeholder.webp'">
+            <div class="list-modal-card-info">
+                <div class="list-modal-card-name">${cardName}</div>
+                <div class="list-modal-card-meta">${myCard.card.rarity.toUpperCase()} \u2022 \u00d7${myCard.count} owned${sellInstance ? ' \u2022 Selling #' + sellInstance.serial + ' (' + sellInstance.tierName + ')' : ''}</div>
+                <div class="list-modal-card-meta" style="color:rgba(34,197,94,0.8)">Keeping ${myCard.count - 1} copy${myCard.count - 1 > 1 ? 'ies' : ''}</div>
+            </div>
+        `;
+        
+        document.getElementById('listPriceInput').value = guide.suggested;
+        document.getElementById('priceSuggestion').textContent = `Suggested: ${guide.suggested} \u2022 Min: ${guide.min} \u2022 Use 0 for free gift`;
+        document.getElementById('giftCheckbox').checked = false;
+        
+        document.getElementById('listModal').classList.add('show');
+    }
+    
+    function closeListModal() {
+        document.getElementById('listModal').classList.remove('show');
+        listingCard = null;
+    }
+    
+    function toggleGift() {
+        const cb = document.getElementById('giftCheckbox');
+        const input = document.getElementById('listPriceInput');
+        if (cb.checked) {
+            input.value = 0;
+            input.disabled = true;
+        } else {
+            input.disabled = false;
+            const guide = PRICE_GUIDE[listingCard?.card?.rarity] || PRICE_GUIDE.common;
+            input.value = guide.suggested;
+        }
+    }
+    
+    async function confirmList() {
+        if (!listingCard) return;
+        
+        const price = Math.max(0, Math.floor(Number(document.getElementById('listPriceInput').value) || 0));
+        const cardName = listingCard.card.name?.en || listingCard.card.name;
+        
+        // Pick the worst serial to sell
+        const sellInstance = listingCard.instances.length > 1 
+            ? listingCard.instances[listingCard.instances.length - 1]
+            : null;
+        
+        const btn = document.getElementById('confirmListBtn');
+        btn.disabled = true;
+        btn.textContent = 'LISTING...';
+        
+        try {
+            const res = await fetch('/api/market/list', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    cardId: listingCard.cardId,
+                    card: { 
+                        name: cardName,
+                        rarity: listingCard.card.rarity,
+                        img: listingCard.card.img || 'placeholder.webp'
+                    },
+                    price,
+                    sellerId: myUserId,
+                    sellerName: myUserName,
+                    serial: sellInstance?.serial || null,
+                    tier: sellInstance?.tierName || null,
+                    instanceId: sellInstance?.instanceId || null
+                })
+            });
+            
+            const data = await res.json();
+            if (!data.success) {
+                toast(data.error || 'Listing failed!', 'error');
+                return;
+            }
+            
+            // Remove from local inventory
+            // 1. Decrease count in wallet collection (access internal wallet directly)
+            const walletObj = NW_WALLET.wallet;
+            if (walletObj?.collection?.[listingCard.cardId]) {
+                walletObj.collection[listingCard.cardId].count--;
+                if (walletObj.collection[listingCard.cardId].count <= 0) {
+                    delete walletObj.collection[listingCard.cardId];
+                }
+                NW_WALLET.saveWallet();
+            }
+            
+            // 2. Remove mint instance
+            if (sellInstance && typeof NW_MINT !== 'undefined') {
+                NW_MINT.removeFromInventory(sellInstance.instanceId);
+            }
+            
+            closeListModal();
+            toast(`Listed ${cardName} for ${price === 0 ? 'FREE' : price + ' Sacred Logs'}!`, 'success');
+            
+            // Refresh everything
+            await fetchListings();
+            await fetchChat();
+            renderMyCards();
+            updateBalance();
+            
+        } catch (err) {
+            console.error('List error:', err);
+            toast('Failed to list card!', 'error');
+        } finally {
+            btn.disabled = false;
+            btn.textContent = 'LIST FOR SALE';
+        }
+    }
+    
+    // ============================================
     // FILTER & SORT HANDLERS
     // ============================================
     
@@ -648,6 +1080,7 @@
         myUserName = myUserId.substring(0, 8);
         
         updateBalance();
+        renderMyCards();
         
         // Initial fetch
         fetchListings();

@@ -848,6 +848,7 @@ let lang = 'en';
 let selectedPulls = 1;
 let currentIndex = 0;
 let cardsToReveal = [];
+let isPulling = false; // Lock: prevents buying during animation
 let forgeState = { 
     pityCounter: 0,  // Legacy - kept for backwards compatibility
     totalPulls: 0, 
@@ -2091,21 +2092,20 @@ async function tearOpenPack(packEl, cards, isBox) {
     console.log('[FORGE] Creating burst particles...');
     createPackParticles(highestRarityInPack);
     
-    // Cards fly out preview
-    console.log('[FORGE] Waiting 400ms before flying cards...');
-    await sleep(400);
+    // Cards fly out preview (reduced from 400ms)
     console.log('[FORGE] Showing cards flying...');
+    await sleep(150);
     await showCardsFlying(packEl, cards);
     
-    // Transition to reveal
-    console.log('[FORGE] Waiting 600ms before reveal...');
-    await sleep(600);
+    // Transition to reveal (reduced from 600ms)
+    console.log('[FORGE] Transitioning to reveal...');
+    await sleep(200);
     
     console.log('[FORGE] Removing pack overlay, showing reveal...');
     document.getElementById('packOverlay').classList.remove('show');
     document.getElementById('tearEffect').classList.remove('active', 'tearing');
     
-    await sleep(400);
+    await sleep(150); // Reduced from 400ms
     
     // Cleanup - reset all elements for next time
     const topHalf = packEl.querySelector('.pack-top');
@@ -2357,6 +2357,29 @@ function sleep(ms) {
 
 // Pull - SIMPLIFIED FOR MOBILE
 async function executePull() {
+    // ── PULL LOCK: prevent buying during animation ──
+    if (isPulling) {
+        console.log('[FORGE] executePull BLOCKED — animation in progress');
+        showToast('Pack opening... tap SKIP to speed up!');
+        // If NW_GACHA is animating, enable skip
+        if (typeof NW_GACHA !== 'undefined' && NW_GACHA.isAnimating) {
+            NW_GACHA.skipEnabled = true;
+        }
+        // If legacy packOpeningResolve exists, fast-resolve it
+        if (packOpeningResolve) {
+            packOpeningResolve();
+            packOpeningResolve = null;
+            const packOverlay = document.getElementById('packOverlay');
+            if (packOverlay) packOverlay.classList.remove('show');
+        }
+        return;
+    }
+    isPulling = true;
+
+    // Disable pack click immediately
+    const packEl = document.getElementById('pack');
+    if (packEl) packEl.style.pointerEvents = 'none';
+
     // Show immediate feedback
     showToast('Opening pack...');
     console.log('[FORGE] executePull CALLED!');
@@ -2394,6 +2417,16 @@ async function executePull() {
     for (let i = 0; i < actual; i++) {
         const rarity = rollRarity();
         const card = getCard(rarity);
+        
+        // ═══ MINT SERIAL: Assign unique serial number ═══
+        let mintInstance = null;
+        if (typeof NW_MINT !== 'undefined') {
+            mintInstance = NW_MINT.mint(card.id);
+            card._mintSerial = mintInstance.serial;
+            card._mintTier = mintInstance.tierName;
+            card._mintInstanceId = mintInstance.instanceId;
+        }
+        
         cardsToReveal.push(card);
         forgeState.totalPulls++;
         forgeState.collection.add(card.id);
@@ -2429,12 +2462,12 @@ async function executePull() {
             addLogs(100, 'MYTHIC_PULL_BONUS');  // Increased bonus!
             showToast('MYTHIC! +100 Sacred Logs Bonus!', 'mythic');
             // Announce to global chat!
-            announcePull(card.id, 'mythic', card.name);
+            announcePull(card.id, 'mythic', card.name, card._mintSerial);
         } else if (rarity === 'legendary') {
             gotLegendary = true;
             addLogs(20, 'LEGENDARY_PULL_BONUS');
             // Announce to global chat!
-            announcePull(card.id, 'legendary', card.name);
+            announcePull(card.id, 'legendary', card.name, card._mintSerial);
         } else if (rarity === 'epic') {
             gotEpic = true;
             addLogs(5, 'EPIC_PULL_BONUS');
@@ -2494,16 +2527,22 @@ async function executePull() {
         console.error('[FORGE] executePull ERROR:', error);
         console.error('[FORGE] Error details:', error.message, error.stack);
         showToast('Error: ' + error.message);
+    } finally {
+        // ── ALWAYS unlock, even on error ──
+        isPulling = false;
+        const packEl = document.getElementById('pack');
+        if (packEl) packEl.style.pointerEvents = '';
     }
 }
 
 // ===== GLOBAL PULL ANNOUNCEMENT =====
 // Announce legendary+ pulls to global market chat
-async function announcePull(cardId, rarity, cardName) {
+async function announcePull(cardId, rarity, cardName, mintSerial) {
     try {
         const wallet = NW_WALLET?.getWalletInfo();
         const userId = wallet?.guestId || 'Guest';
         const userName = userId.substring(0, 8);
+        const tierName = (typeof NW_MINT !== 'undefined' && mintSerial) ? NW_MINT.getTierName(mintSerial) : '';
         
         await fetch('/api/market/pull-announce', {
             method: 'POST',
@@ -2512,7 +2551,9 @@ async function announcePull(cardId, rarity, cardName) {
                 userId,
                 userName,
                 cardId,
-                rarity
+                rarity,
+                serial: mintSerial || null,
+                tier: tierName || null
             })
         });
         
@@ -2803,6 +2844,34 @@ function showRarityEffects(card) {
     
     // Show badge with animation
     document.getElementById('rarityBadge').classList.add('show');
+    
+    // ═══ MINT SERIAL REVEAL — Show serial number + tier badge ═══
+    if (typeof NW_MINT !== 'undefined' && card._mintSerial) {
+        const tier = NW_MINT.getTier(card._mintSerial);
+        const mintEl = document.getElementById('mintSerialReveal');
+        if (mintEl) {
+            mintEl.innerHTML = NW_MINT.getBadgeHTML(card._mintSerial, 'lg');
+            mintEl.classList.add('show');
+            // Special announcement for high-tier pulls
+            if (tier.name === 'GENESIS') {
+                setTimeout(() => showToast(`GENESIS #1 — THE FIRST EVER ${(card.name[lang]||card.name.en).toUpperCase()}!`, 'mythic'), 400);
+            } else if (tier.name === 'FOUNDERS') {
+                setTimeout(() => showToast(`FOUNDERS #${card._mintSerial} — Top 10 in the world!`, 'legendary'), 400);
+            } else if (tier.name === 'FIRST EDITION') {
+                setTimeout(() => showToast(`FIRST EDITION #${card._mintSerial}`, 'epic'), 400);
+            }
+        } else {
+            // Create mint reveal element dynamically if not in DOM
+            const cardInfo = document.getElementById('cardInfo');
+            if (cardInfo) {
+                const mintDiv = document.createElement('div');
+                mintDiv.id = 'mintSerialReveal';
+                mintDiv.className = 'mint-reveal show';
+                mintDiv.innerHTML = NW_MINT.getBadgeHTML(card._mintSerial, 'lg');
+                cardInfo.appendChild(mintDiv);
+            }
+        }
+    }
     
     // Show info
     document.getElementById('cardInfo').classList.add('show');
@@ -3295,8 +3364,19 @@ function showToast(msg, rarity = null) {
         }
         
         console.log('[FORGE] READY with', CARDS.length, 'pullable cards');
+        // ═══ DISMISS LOADING SCREEN ═══
+        const loader = document.getElementById('forgeLoader');
+        if (loader) {
+            const fill = loader.querySelector('.loader-fill');
+            if (fill) fill.style.width = '100%';
+            setTimeout(() => { loader.classList.add('hide'); }, 300);
+            setTimeout(() => { loader.remove(); }, 800);
+        }
     } catch (err) {
         console.error('[FORGE] Init error:', err);
+        // Still dismiss loader on error so page isn't stuck
+        const loader = document.getElementById('forgeLoader');
+        if (loader) { loader.classList.add('hide'); setTimeout(() => loader.remove(), 800); }
         // Still try to set up DEV MODE UI
         if (DEV_MODE) setupDevModeUI();
     }

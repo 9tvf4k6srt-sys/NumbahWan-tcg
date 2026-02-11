@@ -1260,5 +1260,10 @@ if (typeof window !== 'undefined') {
     window.NW_NAV = NW_NAV;
     document.addEventListener('DOMContentLoaded', () => {
         NW_NAV.init(document.body.dataset.pageId || 'index');
+        // Load runtime error tracker (non-blocking)
+        const et = document.createElement('script');
+        et.src = '/static/nw-error-tracker.js';
+        et.defer = true;
+        document.head.appendChild(et);
     });
 }

@@ -77,6 +77,7 @@ const NW_SOUNDS = {
             'profit', 'loss',            // Rewards (was lagging!)
             'draw', 'slam', 'flip',      // Cards
             'legendary', 'epic', 'rare', // Gacha reveals
+            'attack', 'critical', 'death', 'fightStart', 'turnEnd', // Battle (was missing!)
             'victory', 'defeat'          // Game end
         ];
         

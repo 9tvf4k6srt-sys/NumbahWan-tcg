@@ -326,7 +326,7 @@ function showStep(stepIdx) {
 
   // Build bubble content
   const arrowHTML = step.arrow ? `<div class="coach-arrow arrow-${step.arrow}"></div>` : '';
-  const tapHint = step.waitFor === 'acknowledge' ? 'TAP HERE TO CONTINUE' : '';
+  const tapHint = step.waitFor === 'acknowledge' ? 'TAP ANYWHERE TO CONTINUE' : 'TAP HERE TO SKIP';
   const totalSteps = STEPS.length;
   
   bubble.innerHTML = `
@@ -347,10 +347,21 @@ function showStep(stepIdx) {
   waitingFor = step.waitFor;
   
   if (step.waitFor === 'acknowledge') {
-    // Tap bubble to proceed
+    // Tap ANYWHERE on screen to proceed (bubble, dim background, or any touch)
     bubble.addEventListener('click', onAcknowledge, { once: true });
-    // Also allow tap on dim background
     overlay.querySelector('.coach-dim')?.addEventListener('click', onAcknowledge, { once: true });
+    // Full-screen touch handler — tap anywhere to advance
+    document.addEventListener('click', onAcknowledge, { once: true, capture: true });
+  } else {
+    // For action-based steps, also allow tap on bubble/overlay to skip to next
+    const skipForward = () => {
+      if (waitingFor && waitingFor !== 'acknowledge') {
+        waitingFor = null;
+        nextStep();
+      }
+    };
+    bubble.addEventListener('click', skipForward, { once: true });
+    overlay.querySelector('.coach-dim')?.addEventListener('click', skipForward, { once: true });
   }
   // Other waitFor types are handled by game event hooks
 }

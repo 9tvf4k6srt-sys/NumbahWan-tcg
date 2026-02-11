@@ -45,7 +45,7 @@ const NW_GACHA = {
             color: '#9ca3af',
             glow: 'rgba(156,163,175,0.5)',
             sound: 'revealCommon',
-            delay: 800, // Fast, boring
+            delay: 300, // Fast, boring — was 800
             particles: 5,
             screenEffect: null,
             orbCount: 3
@@ -54,7 +54,7 @@ const NW_GACHA = {
             color: '#22c55e',
             glow: 'rgba(34,197,94,0.6)',
             sound: 'revealCommon', // Same as common
-            delay: 1000,
+            delay: 400, // Was 1000
             particles: 8,
             screenEffect: null,
             orbCount: 4
@@ -63,7 +63,7 @@ const NW_GACHA = {
             color: '#3b82f6',
             glow: 'rgba(59,130,246,0.7)',
             sound: 'revealRare',
-            delay: 1500,
+            delay: 600, // Was 1500
             particles: 12,
             screenEffect: null,
             orbCount: 5
@@ -72,7 +72,7 @@ const NW_GACHA = {
             color: '#a855f7',
             glow: 'rgba(168,85,247,0.8)',
             sound: 'revealEpic',
-            delay: 2500, // Longer wait = more tension
+            delay: 900, // Was 2500 — still builds tension
             particles: 20,
             screenEffect: 'pulse_purple',
             orbCount: 6
@@ -81,7 +81,7 @@ const NW_GACHA = {
             color: '#ffd700',
             glow: 'rgba(255,215,0,0.9)',
             sound: 'revealLegendary',
-            delay: 3500, // Maximum suspense
+            delay: 1200, // Was 3500 — still suspenseful
             particles: 35,
             screenEffect: 'golden_flash',
             orbCount: 8
@@ -90,7 +90,7 @@ const NW_GACHA = {
             color: '#ff00ff',
             glow: 'rgba(255,0,255,1)',
             sound: 'revealMythic',
-            delay: 4500, // Heart-pounding wait
+            delay: 1500, // Was 4500 — still epic, not punishing
             particles: 50,
             screenEffect: 'rainbow_burst',
             orbCount: 12
@@ -130,7 +130,7 @@ const NW_GACHA = {
         const overlay = this._createOverlay();
         document.body.appendChild(overlay);
         
-        await this._sleep(100);
+        await this._sleep(50); // Was 100ms
         overlay.classList.add('active');
         
         return new Promise(async (resolve) => {
@@ -158,7 +158,7 @@ const NW_GACHA = {
             
             // Cleanup
             overlay.classList.remove('active');
-            await this._sleep(400);
+            await this._sleep(150); // Was 400ms
             overlay.remove();
             
             this.isAnimating = false;
@@ -205,7 +205,7 @@ const NW_GACHA = {
                 this._playSound('summonActivate');
                 this._haptic('impact');
                 
-                setTimeout(resolve, 800);
+                setTimeout(resolve, 300); // Was 800ms — snappy
             };
             
             // Pulse animation to encourage tap
@@ -216,7 +216,7 @@ const NW_GACHA = {
         
         // Circle activated - spin up
         circle.classList.add('active');
-        await this._sleep(500);
+        await this._sleep(200); // Was 500ms
     },
     
     /**
@@ -268,14 +268,14 @@ const NW_GACHA = {
         });
         
         // Wait for orbs to converge
-        await this._sleep(1200);
+        await this._sleep(500); // Was 1200ms
         
         // Orbs merge - flash
         this._screenFlash('#fff', 0.3);
         this._haptic('flip');
         orbs.forEach(orb => orb.classList.add('merged'));
         
-        await this._sleep(400);
+        await this._sleep(150); // Was 400ms
         
         // Remove orbs
         orbs.forEach(orb => orb.remove());
@@ -305,7 +305,7 @@ const NW_GACHA = {
         
         // VARIABLE DELAY - The psychology trick
         // Higher rarity = longer wait = more dopamine
-        const delay = config.delay + (Math.random() * 500); // Add randomness
+        const delay = config.delay + (Math.random() * 200); // Was +500ms random
         
         // During the wait, show "scanning" effects
         const scanInterval = setInterval(() => {
@@ -322,11 +322,9 @@ const NW_GACHA = {
             heartbeatSpeed = Math.max(200, heartbeatSpeed - 50);
         }, heartbeatSpeed);
         
-        // Show skip button after 2 seconds (creates anxiety about missing animation)
-        setTimeout(() => {
-            const skipBtn = overlay.querySelector('.nw-skip-btn');
-            if (skipBtn) skipBtn.classList.add('visible');
-        }, 2000);
+        // Show skip button IMMEDIATELY — snappy UX, no artificial delay
+        const skipBtn = overlay.querySelector('.nw-skip-btn');
+        if (skipBtn) skipBtn.classList.add('visible');
         
         await this._sleep(delay);
         
@@ -352,7 +350,7 @@ const NW_GACHA = {
         // Hide circle
         circle.classList.add('hidden');
         
-        await this._sleep(600);
+        await this._sleep(250); // Was 600ms
     },
     
     /**
@@ -394,7 +392,7 @@ const NW_GACHA = {
         this._screenFlash(config.color, rarity === 'mythic' ? 0.8 : 0.5);
         this._haptic(rarity === 'mythic' ? 'heavy' : 'impact');
         
-        await this._sleep(800);
+        await this._sleep(350); // Was 800ms
         
         // Remove orb
         resultOrb.remove();
@@ -426,7 +424,7 @@ const NW_GACHA = {
             `;
             cardPreview.appendChild(cardEl);
             
-            await this._sleep(150);
+            await this._sleep(80); // Was 150ms — snappier card reveal
             cardEl.classList.add('visible');
             this._playSound('cardFlip', { volume: 0.6 });
             this._haptic('tap');
@@ -440,7 +438,7 @@ const NW_GACHA = {
             cardPreview.appendChild(moreIndicator);
         }
         
-        await this._sleep(1000);
+        await this._sleep(400); // Was 1000ms
     },
     
     // ═══════════════════════════════════════════════════════════════════
