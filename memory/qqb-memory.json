@@ -1,0 +1,404 @@
+{
+  "_meta": {
+    "version": "2.0.0",
+    "created": "2026-02-11",
+    "updated": "2026-02-11",
+    "schema": "hybrid-ltm-v2",
+    "philosophy": "Manus AI LTM Report architecture: tiered memory (hot/warm/cold), entity extraction with slot filling, progressive summarization with importance scoring (RRI: Recency-Relevance-Importance), hybrid retrieval (keyword + semantic), user profiling with contradiction resolution. Memory survives context compaction. Single source of truth.",
+    "principles": [
+      "HOT = current context window (this session's active state)",
+      "WARM = structured facts that survive compaction (this file)",
+      "COLD = git history + session_history archive (searchable, not loaded)",
+      "Compress aggressively: if it can be derived from code, don't store it",
+      "Store DECISIONS and LESSONS, not descriptions of what the code does",
+      "Every memory entry has importance_score (0-1) for retrieval ranking",
+      "Contradictions resolve in favor of LATEST entry (user changed their mind)",
+      "Entity extraction: extract people, pages, components, patterns into slots",
+      "Anti-regression: lessons_learned entries are PERMANENT guards against repeating mistakes"
+    ],
+    "usage": "Load at session start. Read user_profile FIRST. Check active_state for WIP. Scan lessons_learned before touching any file. Update at session end.",
+    "compaction_protocol": "When context compresses: (1) read this file, (2) check active_state.checkpoint, (3) resume from pending steps, (4) do NOT re-read files already marked completed"
+  },
+
+  "user_profile": {
+    "identity": "NumbahWan Group founder/operator",
+    "name_hint": "Reviews on iPhone, bilingual EN/繁中, also uses JP",
+    "communication_style": {
+      "mode": "Direct, visual-first, action-oriented",
+      "language": "Bilingual EN/繁中, casual tone, uses 'plz' for urgency",
+      "review_method": "Screenshots from iPhone with annotations (green circles = problem areas)",
+      "approval_signal": "Silence or moving to next task = approved",
+      "frustration_signal": "Repeating same feedback = fix NOW with different approach, don't explain"
+    },
+    "decision_patterns": [
+      {"pattern": "Screenshots with green circles", "meaning": "These specific spots need fixing", "importance": 1.0},
+      {"pattern": "Says 'plz'", "meaning": "Wants immediate action, no discussion", "importance": 0.9},
+      {"pattern": "Repeats same feedback", "meaning": "Previous fix failed, try completely different approach", "importance": 1.0},
+      {"pattern": "'Too big' / 'revert'", "meaning": "Overshot — go subtle, 50% of what you just did", "importance": 0.95},
+      {"pattern": "Sends screenshot without comment", "meaning": "This is the problem, figure it out", "importance": 0.85},
+      {"pattern": "Asks for a file as 'philosophy'", "meaning": "Internalize deeply, build systems around it", "importance": 1.0}
+    ],
+    "preferences": {
+      "design": {
+        "aesthetic": "Premium dark fintech. Luxury gold meets tech. Not crypto-bro, more Swiss-bank-meets-silicon.",
+        "primary_colors": {"gold": "#c9a84c", "bg": "#06060c", "card": "#0e0e18"},
+        "accent_colors": {"cyan": "#00d4ff", "rose": "#e8a0bf", "green": "#00d26a", "purple": "#a855f7"},
+        "typography": {
+          "display": "Cormorant Garamond, Noto Serif TC, serif",
+          "body": "Inter, Noto Sans TC, Noto Sans JP, system-ui, sans-serif",
+          "mono": "JetBrains Mono, monospace",
+          "accent": "Orbitron, sans-serif"
+        },
+        "quality_bar": "No emoji as icons. No placeholder text. No amateur gradients. Real professional assets only."
+      },
+      "mobile_first": true,
+      "review_device": "iPhone (375px viewport), 5G connection, iOS Safari",
+      "languages": ["EN", "繁中", "JP"],
+      "language_storage_key": "qqb_lang"
+    },
+    "frustration_triggers": [
+      {"trigger": "Images overflowing mobile viewport", "severity": "critical", "fix": "Triple-layer overflow: html + body + container, all with max-width:100% and overflow-x:hidden"},
+      {"trigger": "Fonts too big breaking layout", "severity": "critical", "fix": "Subtle +15% on body text only. NEVER touch headings, stat values, or ticker prices"},
+      {"trigger": "Fonts too small to read", "severity": "high", "fix": "Bump 9-13px text to 11-15px range. Leave 16px+ alone"},
+      {"trigger": "Repeated failed approaches", "severity": "critical", "fix": "If method fails twice, abandon entirely. Try opposite approach"},
+      {"trigger": "Being asked obvious questions", "severity": "high", "fix": "Just do it. Ask forgiveness not permission"},
+      {"trigger": "Placeholder/emoji in production", "severity": "high", "fix": "Use professional SVG/WebP. Generate if missing"},
+      {"trigger": "GitHub auth failures burning time", "severity": "high", "fix": "setup_github_environment then IMMEDIATELY push. No diagnostics between"}
+    ]
+  },
+
+  "project": {
+    "name": "NumbahWan / QinQin Coin (QQB)",
+    "brand": "親幣 Q Coin",
+    "tagline_zh": "別急嘛～ 慢慢來",
+    "tagline_en": "Coming soon...",
+    "code_name": "flutter_app",
+    "repo": "https://github.com/9tvf4k6srt-sys/NumbahWan-tcg",
+    "base_path": "/home/user/flutter_app",
+    "public_path": "/home/user/flutter_app/public",
+    "static_path": "/home/user/flutter_app/public/static",
+    "server": {
+      "type": "Python SimpleHTTPServer",
+      "port": 5060,
+      "root": "public/",
+      "command": "cd /home/user/flutter_app/public && python3 -m http.server 5060 --bind 0.0.0.0"
+    },
+    "sandbox_host": "5060-i0086p3npyxmrzzh1l7ri-c07dda5e.sandbox.novita.ai",
+    "related_systems": {
+      "mycelium": "Self-improving codebase learning system. Uses .mycelium-context, CLAUDE.md, memory.json",
+      "sentinel": "Health check automation. scripts/qqb-sentinel.py. Run 29+, 12 catches, 0 current issues",
+      "nw_nav": "Universal nav in public/static/nw-nav.js. Tier-based progressive disclosure",
+      "nw_i18n": "i18n in public/static/nw-i18n-core.js. Event: nw-lang-change (NOT nw-language-change)",
+      "nw_wallet": "Economy system in public/static/nw-wallet.js. $1 = 100 NWG"
+    }
+  },
+
+  "pages": {
+    "qinqin.html": {
+      "path": "public/qinqin.html",
+      "role": "Main landing page for QQB token",
+      "importance": 1.0,
+      "sections": ["hero", "ticker", "reserve-pyramid", "asset-grid", "compare-table", "staking", "endorsements", "countdown", "treasury", "community"],
+      "features": ["Gold price ticker", "Asset allocation grid with SVG icons", "4-tier staking", "Buy toast interceptor", "Achievement system", "Particle effects"],
+      "i18n_keys": 49,
+      "scripts": 5,
+      "lines": 2051,
+      "mobile_overflow_guards": 9,
+      "font_scaling": "+15% body text only via @media(max-width:768px)"
+    },
+    "coin-shop.html": {
+      "path": "public/coin-shop.html",
+      "role": "Gold Collection shop - 3 collectible coins",
+      "importance": 0.95,
+      "sections": ["hero-banner", "collections", "coin-cards-x3", "mint-footer"],
+      "coins": [
+        {"name": "Phoenix Nirvana", "weight": "1 Troy Oz", "purity": "999.9", "minted": "2024-07", "mintage": 888, "remaining": 112, "price_ntd": 121363},
+        {"name": "Dragon's Pearl", "weight": "1/2 Oz", "purity": "999.9", "minted": "2025-01", "mintage": 2024, "remaining": 688, "price_ntd": 65326},
+        {"name": "Qilin Auspice", "weight": "1/4 Oz", "purity": "999.9", "minted": "2025-07", "mintage": 5888, "remaining": 3200, "price_ntd": 34207}
+      ],
+      "price_derivation": "July 2025 gold spot price → convert to NT$ → markup for mintage/collectibility",
+      "features": ["Coin flip animation (front/back)", "Buy toast interceptor", "Spot gold pricing"],
+      "i18n_keys": 53,
+      "scripts": 1,
+      "lines": 1124,
+      "mobile_overflow_guards": 3,
+      "font_scaling": "+15% body text only via @media(max-width:768px)"
+    },
+    "ai-assets.html": {
+      "path": "public/ai-assets.html",
+      "role": "AI Asset Manager product page (Beta)",
+      "importance": 0.9,
+      "sections": ["hero", "feature-1-portfolio", "feature-2-voting", "feature-3-coverage", "agents-tcg", "coverage-grid", "beta-metrics", "cta-banner"],
+      "agents": [
+        {"name": "Aurelius", "domain": "Gold & Commodities", "color": "gold", "art": "agents/aurelius.webp"},
+        {"name": "Sentinel", "domain": "Equities & ETFs", "color": "green", "art": "agents/sentinel.webp"},
+        {"name": "Cipher", "domain": "Crypto & DeFi", "color": "purple", "art": "agents/cipher.webp"},
+        {"name": "Bastion", "domain": "Fixed Income", "color": "cyan", "art": "agents/bastion.webp"},
+        {"name": "Nexus", "domain": "Macro Strategist", "color": "blue", "art": "agents/nexus.webp"},
+        {"name": "Oracle", "domain": "Risk & Allocation", "color": "rose", "art": "agents/oracle.webp"}
+      ],
+      "beta_metrics": {"90_day_return": "+42.6%", "sharpe_ratio": 0.87, "max_drawdown": "-8.2%", "consensus_accuracy": "96.1%"},
+      "features": ["TCG fullbleed agent cards", "Beta performance metrics", "Buy toast interceptor", "Feature image sections"],
+      "i18n_keys": 49,
+      "scripts": 1,
+      "lines": 866,
+      "mobile_overflow_guards": 16,
+      "font_scaling": "REMOVED conflicting readability block. Single mobile @media block handles all sizing."
+    }
+  },
+
+  "navigation": {
+    "unified": true,
+    "component": "Premium nav bar (inline per page, not nw-nav.js — these are QQB premium pages)",
+    "links": [
+      {"label": "Home", "href": "/qinqin.html", "i18n": "navHome"},
+      {"label": "Reserve", "href": "/qinqin.html#backing", "i18n": "navBacking"},
+      {"label": "Gold Collection", "href": "/coin-shop.html", "i18n": "ctaGold"},
+      {"label": "AI Assets", "href": "/ai-assets.html", "i18n": "navAI"},
+      {"label": "Staking", "href": "/qinqin.html#staking", "i18n": "navStaking"}
+    ],
+    "hamburger": true,
+    "language_toggle": ["EN", "繁中", "JP"],
+    "language_persistence": "localStorage key: qqb_lang",
+    "nav_style": {
+      "position": "fixed top, z-index 10000",
+      "background": "translucent backdrop blur",
+      "border_bottom": "1px solid rgba(201,168,76,0.25)",
+      "brand_image": "/static/icons/qqb-coin-front.webp",
+      "brand_text": "QINQIN COIN"
+    }
+  },
+
+  "design_tokens": {
+    "colors": {
+      "bg": "#06060c",
+      "card": "#0e0e18",
+      "card_hover": "#14142a",
+      "border": "#1e1e3a",
+      "border_glow": "rgba(201,168,76,0.25)",
+      "gold": "#c9a84c",
+      "gold_dark": "#8a6914",
+      "gold_glow": "0 0 40px rgba(201,168,76,0.2)",
+      "cyan": "#00d4ff",
+      "nwg_cyan": "#00d4ff",
+      "rose": "#e8a0bf",
+      "green": "#00d26a",
+      "red": "#ff4757",
+      "purple": "#a855f7",
+      "text": "#f0ece0",
+      "text_dim": "#8a8678"
+    },
+    "typography": {
+      "display": "Cormorant Garamond, Noto Serif TC, serif",
+      "body": "Inter, Noto Sans TC, Noto Sans JP, system-ui, sans-serif",
+      "mono": "JetBrains Mono, monospace",
+      "accent": "Orbitron, sans-serif"
+    },
+    "mobile_rules": {
+      "viewport_meta": "width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0",
+      "overflow_protection": [
+        "html, body { overflow-x: hidden; max-width: 100vw }",
+        "* { max-width: 100vw } as global catch-all",
+        ".section, .feature-row, .feature-img { max-width: 100%; overflow: hidden }",
+        "img { max-width: 100%; height: auto; display: block }"
+      ],
+      "word_safety": "word-break: keep-all; overflow-wrap: break-word",
+      "primary_breakpoint": "768px",
+      "secondary_breakpoints": ["600px", "560px", "900px"],
+      "font_scaling_rule": "Single @media(max-width:768px) block. NEVER add a second one — cascade will override."
+    }
+  },
+
+  "assets": {
+    "hero_images": [
+      {"file": "hero-bg-vault.webp", "usage": "qinqin.html hero background", "importance": 1.0},
+      {"file": "hero-coin-static.webp", "usage": "qinqin.html hero coin", "importance": 1.0},
+      {"file": "ai-hero-bg.webp", "usage": "ai-assets.html hero background", "size_kb": 80},
+      {"file": "ai-portfolio.webp", "usage": "ai-assets.html feature 1 (AI Portfolio)", "dimensions": "900x502", "size_kb": 42},
+      {"file": "ai-voting.webp", "usage": "ai-assets.html feature 2 (AI Voting)", "dimensions": "900x502", "size_kb": 59},
+      {"file": "ai-coverage.webp", "usage": "ai-assets.html feature 3 (Coverage)", "dimensions": "900x502", "size_kb": 35}
+    ],
+    "agent_tcg": [
+      {"file": "agents/aurelius.webp", "dimensions": "500x669", "size_kb": 64},
+      {"file": "agents/sentinel.webp", "dimensions": "500x669", "size_kb": 80},
+      {"file": "agents/cipher.webp", "dimensions": "500x669", "size_kb": 92},
+      {"file": "agents/bastion.webp", "dimensions": "500x669", "size_kb": 64},
+      {"file": "agents/nexus.webp", "dimensions": "500x669", "size_kb": 68},
+      {"file": "agents/oracle.webp", "dimensions": "500x669", "size_kb": 72}
+    ],
+    "svg_icons": ["apple.svg", "nvidia.svg", "berkshire.svg", "gold-bar.svg", "bonds.svg", "sp500.svg", "vault.svg"],
+    "coin_images": ["coins/phoenix-front.webp", "coins/phoenix-back.webp", "coins/dragon-front.webp", "coins/dragon-back.webp", "coins/qilin-front.webp", "coins/qilin-back.webp"],
+    "brand": ["icons/qqb-coin-front.webp", "icons/qqb-coin-back.webp", "icons/nwg.webp"],
+    "optimization_standard": "All images WebP. Largest hero 168KB. Agent cards 64-92KB. SVGs for icons. No PNGs in production."
+  },
+
+  "github": {
+    "repo": "9tvf4k6srt-sys/NumbahWan-tcg",
+    "branch": "main",
+    "last_commit": "13c3163",
+    "last_commit_msg": "feat(ai-assets+mobile): add AI Asset Manager page, TCG agent cards, mobile overflow hardening",
+    "push_protocol": "setup_github_environment → IMMEDIATELY git push (next command, no diagnostics). Token is ephemeral.",
+    "deployment": "Mycelium ship command handles: commit → validate → auth → sync → squash → push → PR → merge",
+    "ship_command": "node bin/mycelium.cjs ship \"feat: description\""
+  },
+
+  "active_state": {
+    "checkpoint": null,
+    "wip": null,
+    "last_action": "Built memory v2.0 system from comprehensive_report.md philosophy",
+    "server_running": true,
+    "server_pid_check": "lsof -i :5060",
+    "sentinel_run": 29,
+    "sentinel_issues": 0,
+    "uncommitted_files": 0,
+    "session_date": "2026-02-11"
+  },
+
+  "lessons_learned": [
+    {
+      "id": "L001",
+      "severity": "critical",
+      "category": "mobile",
+      "importance_score": 1.0,
+      "lesson": "Always set max-width: 100% on BOTH the image AND its container, plus overflow-x: hidden on html,body. Don't rely on parent constraints trickling down.",
+      "anti_pattern": ".feature-img has no max-width → 900px image escapes 375px viewport",
+      "fix_pattern": ".feature-img { max-width: 100%; overflow: hidden } AND img { max-width: 100%; height: auto; display: block }",
+      "date": "2026-02-11",
+      "recurrence_count": 3
+    },
+    {
+      "id": "L002",
+      "severity": "critical",
+      "category": "css",
+      "importance_score": 1.0,
+      "lesson": "Never have two competing @media blocks for the same breakpoint. The last one wins via CSS cascade and will override the first, causing unexpected size inflation.",
+      "anti_pattern": "MOBILE READABILITY block after MOBILE LAYOUT block → readability overrides layout sizes",
+      "fix_pattern": "Single @media(max-width:768px) block per page. Merge all mobile rules into one block.",
+      "date": "2026-02-11",
+      "recurrence_count": 1
+    },
+    {
+      "id": "L003",
+      "severity": "critical",
+      "category": "github",
+      "importance_score": 0.95,
+      "lesson": "setup_github_environment token is ephemeral. Call setup, then git push in the VERY NEXT command. No diagnostics in between. If first method fails twice, try completely different approach.",
+      "anti_pattern": "Running git config checks between setup and push → token expires → auth fails",
+      "fix_pattern": "setup_github_environment && cd /home/user/flutter_app && git push origin main",
+      "date": "2026-02-11",
+      "recurrence_count": 4
+    },
+    {
+      "id": "L004",
+      "severity": "high",
+      "category": "design",
+      "importance_score": 0.9,
+      "lesson": "User reviews on iPhone 375px. All images must be contained within viewport. Feature images need explicit max-width on container, not just on img tag.",
+      "anti_pattern": "Setting width:100% on img but parent .feature-img has no width constraint",
+      "fix_pattern": "Both container AND img get max-width: 100%. Container also gets overflow: hidden.",
+      "date": "2026-02-11",
+      "recurrence_count": 2
+    },
+    {
+      "id": "L005",
+      "severity": "high",
+      "category": "fonts",
+      "importance_score": 0.9,
+      "lesson": "Font scaling must be subtle (+15% on body text, leave headings alone). 30% was too aggressive and broke layout. Only bump the small hard-to-read text (9-13px range).",
+      "anti_pattern": "Applying 1.3x multiplier to ALL text including headings → layout explosion",
+      "fix_pattern": "Only bump: nav links, body paragraphs, labels, badges, toast text. Leave alone: h1, h2, stat values, ticker prices.",
+      "date": "2026-02-11",
+      "recurrence_count": 1
+    },
+    {
+      "id": "L006",
+      "severity": "high",
+      "category": "workflow",
+      "importance_score": 0.85,
+      "lesson": "When user repeats the same feedback, they're frustrated. Don't explain — just fix it differently. When a method fails twice, abandon it entirely.",
+      "anti_pattern": "Explaining why the fix should work while user sees it doesn't",
+      "fix_pattern": "Acknowledge → try completely different approach → show proof (screenshot/URL)",
+      "date": "2026-02-11",
+      "recurrence_count": 2
+    },
+    {
+      "id": "L007",
+      "severity": "medium",
+      "category": "assets",
+      "importance_score": 0.7,
+      "lesson": "Replace emoji with professional SVG/WebP icons. User expects premium quality throughout. No placeholders in production.",
+      "date": "2026-02-11",
+      "recurrence_count": 0
+    },
+    {
+      "id": "L008",
+      "severity": "medium",
+      "category": "i18n",
+      "importance_score": 0.75,
+      "lesson": "All 3 pages must have matching i18n coverage (EN/ZH-TW/JP). Language persists via localStorage key 'qqb_lang' across page navigation. Event name is nw-lang-change (NOT nw-language-change).",
+      "date": "2026-02-11",
+      "recurrence_count": 0
+    },
+    {
+      "id": "L009",
+      "severity": "critical",
+      "category": "mobile",
+      "importance_score": 1.0,
+      "lesson": "Global catch-all * { max-width: 100vw } prevents ANY element from escaping viewport. Apply on mobile breakpoint as nuclear option.",
+      "anti_pattern": "Fixing individual elements one by one while new ones overflow",
+      "fix_pattern": "@media(max-width:768px) { * { max-width: 100vw } html, body { overflow-x: hidden } }",
+      "date": "2026-02-11",
+      "recurrence_count": 0
+    },
+    {
+      "id": "L010",
+      "severity": "high",
+      "category": "css",
+      "importance_score": 0.85,
+      "lesson": "Desktop gap values (60px) bleed into mobile if not overridden. Feature-row gap: 60px on desktop must be explicitly reduced to 20px on mobile.",
+      "anti_pattern": ".feature-row { gap: 60px } without mobile override → pushes content off-screen",
+      "fix_pattern": "@media(max-width:768px) { .feature-row { gap: 20px } }",
+      "date": "2026-02-11",
+      "recurrence_count": 1
+    }
+  ],
+
+  "session_history": [
+    {
+      "id": "S001",
+      "date": "2026-02-11",
+      "importance_score": 0.9,
+      "summary": "Built ai-assets.html (AI Asset Manager beta page with 6 TCG agent cards, feature sections, coverage grid, beta metrics). Added SVG asset icons. Unified premium nav across qinqin/coin-shop/ai-assets. Implemented buy toast interceptor on all pages. Major mobile overflow hardening (triple-layer protection). Font scaling journey: 30% (too big) -> reverted -> 15% (still conflicting) -> single mobile block (final). Committed 43 files to GitHub.",
+      "commits": ["13c3163"],
+      "sentinel_runs": "22-29",
+      "files_changed": 43,
+      "insertions": 5323,
+      "key_decisions": [
+        "TCG cards use fullbleed art with gradient overlay for text legibility",
+        "Feature images 900x502 WebP, agent cards 500x669 WebP",
+        "Triple-layer overflow: html + body + container",
+        "Font scaling: +15% body text only, single @media block, headings untouched",
+        "Buy toast shows '別急嘛～ 慢慢來' on all wallet-linked CTAs",
+        "Removed conflicting MOBILE READABILITY block from ai-assets (was overriding layout sizes)",
+        "Added global * { max-width: 100vw } catch-all for mobile",
+        "Viewport locked: user-scalable=no, maximum-scale=1.0"
+      ],
+      "issues_resolved": [
+        "Feature images overflowing iPhone viewport",
+        "Competing @media blocks causing font inflation",
+        "GitHub push auth failures (ephemeral token lesson learned)",
+        "Hero h1 invisibility on mobile (gold on gold background)"
+      ]
+    }
+  ],
+
+  "retrieval_hints": {
+    "when_touching_mobile_css": ["L001", "L002", "L004", "L005", "L009", "L010"],
+    "when_touching_fonts": ["L002", "L005"],
+    "when_touching_images": ["L001", "L004", "L007", "L009"],
+    "when_pushing_github": ["L003"],
+    "when_touching_i18n": ["L008"],
+    "when_user_repeats_feedback": ["L006"],
+    "when_adding_new_page": ["L001", "L002", "L008", "L009"]
+  }
+}
