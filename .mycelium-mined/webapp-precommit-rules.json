@@ -1,9 +1,57 @@
 {
   "version": "2.0",
-  "generatedAt": "2026-02-10T16:09:34.239Z",
+  "generatedAt": "2026-02-11T01:28:30.742Z",
   "repo": "webapp",
-  "totalRules": 14,
+  "totalRules": 20,
   "rules": [
+    {
+      "id": "MCL-WRONG-CSS-VALUE",
+      "pattern": "wrong-css-value",
+      "category": "css-layout",
+      "severity": "low",
+      "frequency": 25,
+      "rule": "CSS value changes should be tested at multiple screen sizes. Check for inherited properties and specificity conflicts.",
+      "triggers": {
+        "filePatterns": [],
+        "diffPatterns": [
+          "css-value-change",
+          "z-index-change",
+          "removed-overflow-hidden",
+          "added-optional-chaining",
+          "added-guard-clause",
+          "hide-element",
+          "changed-condition",
+          "added-touch-handling"
+        ],
+        "keywords": []
+      }
+    },
+    {
+      "id": "MCL-OVERFLOW-HIDDEN-CLIPS-CHILDREN",
+      "pattern": "overflow-hidden-clips-children",
+      "category": "css-layout",
+      "severity": "high",
+      "frequency": 12,
+      "rule": "overflow:hidden on a parent silently clips children that extend beyond bounds. Check all child elements before adding it.",
+      "triggers": {
+        "filePatterns": [],
+        "diffPatterns": [
+          "added-overflow-hidden",
+          "css-value-change",
+          "added-scroll-behavior",
+          "added-touch-handling",
+          "added-media-query",
+          "removed-overflow-hidden",
+          "z-index-change",
+          "added-return",
+          "innerhtml-to-textcontent",
+          "hide-element"
+        ],
+        "keywords": [
+          "overflow"
+        ]
+      }
+    },
     {
       "id": "MCL-I18N-MISSING-TRANSLATION",
       "pattern": "i18n-missing-translation",
@@ -21,44 +69,48 @@
       }
     },
     {
-      "id": "MCL-WRONG-CSS-VALUE",
-      "pattern": "wrong-css-value",
-      "category": "css-layout",
-      "severity": "low",
-      "frequency": 9,
-      "rule": "CSS value changes should be tested at multiple screen sizes. Check for inherited properties and specificity conflicts.",
+      "id": "MCL-MISSING-PRECONDITION-CHECK",
+      "pattern": "missing-precondition-check",
+      "category": "null-reference",
+      "severity": "medium",
+      "frequency": 6,
+      "rule": "Validate prerequisites before executing logic. Check that DOM elements exist, APIs are loaded, and data is present before using them.",
       "triggers": {
         "filePatterns": [],
         "diffPatterns": [
-          "css-value-change",
-          "z-index-change",
-          "removed-overflow-hidden",
-          "added-optional-chaining",
           "added-guard-clause",
-          "hide-element"
+          "added-array-fallback",
+          "added-string-fallback"
         ],
         "keywords": []
       }
     },
     {
-      "id": "MCL-OVERFLOW-HIDDEN-CLIPS-CHILDREN",
-      "pattern": "overflow-hidden-clips-children",
-      "category": "css-layout",
+      "id": "MCL-SCRIPT-ORDER-DEPENDENCY",
+      "pattern": "script-order-dependency",
+      "category": "load-order",
       "severity": "high",
       "frequency": 6,
-      "rule": "overflow:hidden on a parent silently clips children that extend beyond bounds. Check all child elements before adding it.",
+      "rule": "Scripts that call each other's globals must load in dependency order. Document the dependency chain in a comment.",
       "triggers": {
         "filePatterns": [],
         "diffPatterns": [
-          "added-overflow-hidden",
-          "css-value-change",
+          "script-reorder",
+          "changed-condition",
+          "changed-asset-path",
+          "removed-await",
+          "added-promise-catch",
           "added-scroll-behavior",
           "added-touch-handling",
-          "added-media-query",
-          "removed-overflow-hidden"
+          "added-return",
+          "added-typeof-guard",
+          "added-await",
+          "added-try-catch",
+          "added-string-fallback"
         ],
         "keywords": [
-          "overflow"
+          "null",
+          "undefined"
         ]
       }
     },
@@ -88,43 +140,54 @@
       }
     },
     {
-      "id": "MCL-MISSING-PRECONDITION-CHECK",
-      "pattern": "missing-precondition-check",
-      "category": "null-reference",
+      "id": "MCL-CSS-LAYOUT-ISSUE",
+      "pattern": "css-layout-issue",
+      "category": "css-layout",
+      "severity": "medium",
+      "frequency": 6,
+      "rule": "JS errors: add missing helper scripts and resolve currentLang redeclaration. RULE: Test layout at 320px, 768px, 1024px after CSS changes.",
+      "triggers": {
+        "filePatterns": [],
+        "diffPatterns": [],
+        "keywords": []
+      }
+    },
+    {
+      "id": "MCL-UNHANDLED-EXCEPTION",
+      "pattern": "unhandled-exception",
+      "category": "error-handling",
       "severity": "medium",
       "frequency": 5,
-      "rule": "Validate prerequisites before executing logic. Check that DOM elements exist, APIs are loaded, and data is present before using them.",
+      "rule": "Wrap external calls (DOM, fetch, JSON.parse, localStorage) in try-catch. Unhandled exceptions crash the entire function.",
       "triggers": {
         "filePatterns": [],
         "diffPatterns": [
-          "added-guard-clause",
-          "added-array-fallback",
-          "added-string-fallback"
+          "added-try-catch",
+          "storage-safety",
+          "changed-condition"
         ],
         "keywords": []
       }
     },
     {
-      "id": "MCL-SCRIPT-ORDER-DEPENDENCY",
-      "pattern": "script-order-dependency",
-      "category": "load-order",
+      "id": "MCL-MISSING-RETURN-STATEMENT",
+      "pattern": "missing-return-statement",
+      "category": "logic-error",
       "severity": "high",
-      "frequency": 4,
-      "rule": "Scripts that call each other's globals must load in dependency order. Document the dependency chain in a comment.",
+      "frequency": 5,
+      "rule": "Functions that compute values must return them. Missing return causes undefined results and silent failures.",
       "triggers": {
         "filePatterns": [],
         "diffPatterns": [
-          "script-reorder",
-          "changed-condition",
-          "changed-asset-path",
-          "removed-await",
-          "added-promise-catch",
-          "added-scroll-behavior",
-          "added-touch-handling"
+          "added-return",
+          "added-optional-chaining",
+          "added-try-catch",
+          "added-string-fallback",
+          "css-value-change"
         ],
         "keywords": [
-          "touch",
-          "mobile"
+          "null",
+          "undefined"
         ]
       }
     },
@@ -132,8 +195,8 @@
       "id": "MCL-TEST-ISSUE",
       "pattern": "test-issue",
       "category": "test-failure",
-      "severity": "critical",
-      "frequency": 3,
+      "severity": "medium",
+      "frequency": 4,
       "rule": "make mycelium work on any repo — fix --init crash, strip NumbahWan refs, fix watch.cjs syntax errors, rename .nw-* to .mycelium-*, tested end-to-end o. RULE: Review carefully before committing.",
       "triggers": {
         "filePatterns": [],
@@ -146,7 +209,7 @@
       "pattern": "missing-responsive-breakpoint",
       "category": "mobile-compat",
       "severity": "medium",
-      "frequency": 3,
+      "frequency": 4,
       "rule": "Test every UI change at 320px, 768px, and 1024px. Add @media breakpoints for layouts that break at different screen sizes.",
       "triggers": {
         "filePatterns": [],
@@ -163,8 +226,8 @@
       "pattern": "api-contract-issue",
       "category": "api-contract",
       "severity": "medium",
-      "frequency": 3,
-      "rule": "images: Download and convert to local webp files. RULE: Validate API response shape before accessing fields.",
+      "frequency": 4,
+      "rule": "card carousel to use cards-v2.json and correct image path. RULE: Validate API response shape before accessing fields.",
       "triggers": {
         "filePatterns": [],
         "diffPatterns": [],
@@ -172,53 +235,18 @@
       }
     },
     {
-      "id": "MCL-CSS-LAYOUT-ISSUE",
-      "pattern": "css-layout-issue",
-      "category": "css-layout",
-      "severity": "medium",
+      "id": "MCL-WRONG-ASSET-PATH",
+      "pattern": "wrong-asset-path",
+      "category": "build-config",
+      "severity": "low",
       "frequency": 3,
-      "rule": "JS errors: add missing helper scripts and resolve currentLang redeclaration. RULE: Test layout at 320px, 768px, 1024px after CSS changes.",
-      "triggers": {
-        "filePatterns": [],
-        "diffPatterns": [],
-        "keywords": []
-      }
-    },
-    {
-      "id": "MCL-UNHANDLED-EXCEPTION",
-      "pattern": "unhandled-exception",
-      "category": "error-handling",
-      "severity": "medium",
-      "frequency": 2,
-      "rule": "Wrap external calls (DOM, fetch, JSON.parse, localStorage) in try-catch. Unhandled exceptions crash the entire function.",
+      "rule": "Use path constants or import for assets. Hardcoded paths break when files move or builds change output directories.",
       "triggers": {
         "filePatterns": [],
         "diffPatterns": [
-          "added-try-catch",
-          "storage-safety"
+          "changed-asset-path"
         ],
         "keywords": []
-      }
-    },
-    {
-      "id": "MCL-MISSING-RETURN-STATEMENT",
-      "pattern": "missing-return-statement",
-      "category": "logic-error",
-      "severity": "high",
-      "frequency": 2,
-      "rule": "Functions that compute values must return them. Missing return causes undefined results and silent failures.",
-      "triggers": {
-        "filePatterns": [],
-        "diffPatterns": [
-          "added-return",
-          "added-optional-chaining",
-          "added-try-catch",
-          "added-string-fallback"
-        ],
-        "keywords": [
-          "null",
-          "undefined"
-        ]
       }
     },
     {
@@ -226,7 +254,7 @@
       "pattern": "use-before-define",
       "category": "null-reference",
       "severity": "high",
-      "frequency": 2,
+      "frequency": 3,
       "rule": "Use typeof check before accessing globals that may not be loaded yet. This often indicates a load-order dependency.",
       "triggers": {
         "filePatterns": [],
@@ -235,7 +263,10 @@
           "added-return",
           "added-array-fallback",
           "added-optional-chaining",
-          "added-guard-clause"
+          "added-guard-clause",
+          "added-once-listener",
+          "changed-condition",
+          "added-touch-handling"
         ],
         "keywords": [
           "null",
@@ -247,8 +278,8 @@
       "id": "MCL-OBJECT-FIT-CROPS-CONTENT",
       "pattern": "object-fit-crops-content",
       "category": "css-layout",
-      "severity": "high",
-      "frequency": 2,
+      "severity": "medium",
+      "frequency": 3,
       "rule": "object-fit:cover crops images to fill container. Use contain if the full image must be visible (e.g., card art, logos).",
       "triggers": {
         "filePatterns": [],
@@ -259,13 +290,138 @@
         ],
         "keywords": []
       }
+    },
+    {
+      "id": "MCL-MISSING-AWAIT",
+      "pattern": "missing-await",
+      "category": "async-timing",
+      "severity": "high",
+      "frequency": 3,
+      "rule": "Every async function call that returns data you use must be awaited. Missing await causes race conditions where code uses stale/undefined values.",
+      "triggers": {
+        "filePatterns": [],
+        "diffPatterns": [
+          "added-await",
+          "added-return",
+          "added-optional-chaining",
+          "added-try-catch",
+          "changed-condition"
+        ],
+        "keywords": [
+          "async",
+          "await",
+          "null",
+          "undefined"
+        ]
+      }
+    },
+    {
+      "id": "MCL-INNERHTML-DESTROYS-HANDLERS",
+      "pattern": "innerhtml-destroys-handlers",
+      "category": "dom-mutation",
+      "severity": "high",
+      "frequency": 2,
+      "rule": "innerHTML = ... destroys all event handlers on child elements. Use textContent for text-only updates, or insertAdjacentHTML/replaceWith to preserve siblings.",
+      "triggers": {
+        "filePatterns": [],
+        "diffPatterns": [
+          "innerhtml-to-textcontent",
+          "added-return",
+          "css-value-change",
+          "added-string-fallback",
+          "hide-element",
+          "changed-condition"
+        ],
+        "keywords": [
+          "innerHTML",
+          "null",
+          "undefined"
+        ]
+      }
+    },
+    {
+      "id": "MCL-DEFER-BEFORE-DEPENDENCY",
+      "pattern": "defer-before-dependency",
+      "category": "load-order",
+      "severity": "high",
+      "frequency": 2,
+      "rule": "Never use defer on scripts that other scripts depend on at load time. If script B calls script A's globals, A must load synchronously before B.",
+      "triggers": {
+        "filePatterns": [],
+        "diffPatterns": [
+          "removed-defer",
+          "css-value-change",
+          "unhide-element",
+          "removed-overflow-hidden"
+        ],
+        "keywords": [
+          "defer",
+          "overflow"
+        ]
+      }
+    },
+    {
+      "id": "MCL-MISSING-TOUCH-SUPPORT",
+      "pattern": "missing-touch-support",
+      "category": "mobile-compat",
+      "severity": "medium",
+      "frequency": 2,
+      "rule": "Desktop-only event handlers (click, hover) don't work on mobile. Always test touch interactions and add touch/pointer event handlers.",
+      "triggers": {
+        "filePatterns": [],
+        "diffPatterns": [
+          "added-touch-handling",
+          "changed-condition",
+          "css-value-change",
+          "z-index-change"
+        ],
+        "keywords": [
+          "addEventListener",
+          "removeEventListener",
+          "touch",
+          "mobile"
+        ]
+      }
+    },
+    {
+      "id": "MCL-RACE-CONDITION-NEEDS-DELAY",
+      "pattern": "race-condition-needs-delay",
+      "category": "async-timing",
+      "severity": "medium",
+      "frequency": 2,
+      "rule": "If you need setTimeout to fix a bug, you have a race condition. Find the root cause (missing callback, wrong event, load order) instead of papering over it with delays.",
+      "triggers": {
+        "filePatterns": [],
+        "diffPatterns": [
+          "added-timeout",
+          "added-string-fallback",
+          "changed-condition",
+          "css-value-change"
+        ],
+        "keywords": [
+          "null",
+          "undefined",
+          "setTimeout",
+          "setInterval"
+        ]
+      }
     }
   ],
   "hotspotWarnings": [
     {
+      "file": "public/forge.html",
+      "fixRate": 0.33,
+      "message": "⚠ public/forge.html has a 33% fix rate (30/91 changes are fixes). Extra review recommended."
+    },
+    {
+      "file": "public/battle.html",
+      "fixRate": 0.328,
+      "message": "⚠ public/battle.html has a 33% fix rate (19/58 changes are fixes). Extra review recommended."
+    },
+    {
       "file": "public/cards.html",
-      "fixRate": 0.381,
-      "message": "⚠ public/cards.html has a 38% fix rate (8/21 changes are fixes). Extra review recommended."
+      "fixRate": 0.324,
+      "message": "⚠ public/cards.html has a 32% fix rate (12/37 changes are fixes). Extra review recommended."
     },
     {
       "file": "CLAUDE.md",
@@ -291,16 +447,28 @@
       "message": "public/static/data/sentinel-history.json and public/static/data/sentinel-report.json change together 22x. If you modify one, check the other."
     },
     {
+      "fileA": ".ai-files-auto.txt",
+      "fileB": "src/index.tsx",
+      "coChangeCount": 17,
+      "message": ".ai-files-auto.txt and src/index.tsx change together 17x. If you modify one, check the other."
+    },
+    {
       "fileA": "public/static/nw-nav.js",
       "fileB": "src/index.tsx",
       "coChangeCount": 15,
       "message": "public/static/nw-nav.js and src/index.tsx change together 15x. If you modify one, check the other."
     },
     {
+      "fileA": "public/battle.html",
+      "fileB": "public/forge.html",
+      "coChangeCount": 12,
+      "message": "public/battle.html and public/forge.html change together 12x. If you modify one, check the other."
+    },
+    {
       "fileA": ".ai-files-auto.txt",
-      "fileB": "src/index.tsx",
-      "coChangeCount": 15,
-      "message": ".ai-files-auto.txt and src/index.tsx change together 15x. If you modify one, check the other."
+      "fileB": "public/static/nw-nav.js",
+      "coChangeCount": 11,
+      "message": ".ai-files-auto.txt and public/static/nw-nav.js change together 11x. If you modify one, check the other."
     },
     {
       "fileA": ".mycelium/eval.json",
@@ -321,16 +489,34 @@
       "message": "memory.json and public/static/data/sentinel-report.json change together 10x. If you modify one, check the other."
     },
     {
+      "fileA": ".ai-files-auto.txt",
+      "fileB": "public/forge.html",
+      "coChangeCount": 10,
+      "message": ".ai-files-auto.txt and public/forge.html change together 10x. If you modify one, check the other."
+    },
+    {
+      "fileA": ".ai-files-auto.txt",
+      "fileB": "public/battle.html",
+      "coChangeCount": 10,
+      "message": ".ai-files-auto.txt and public/battle.html change together 10x. If you modify one, check the other."
+    },
+    {
+      "fileA": "public/arcade.html",
+      "fileB": "public/wallet.html",
+      "coChangeCount": 10,
+      "message": "public/arcade.html and public/wallet.html change together 10x. If you modify one, check the other."
+    },
+    {
       "fileA": "public/arcade.html",
       "fileB": "public/forge.html",
       "coChangeCount": 9,
       "message": "public/arcade.html and public/forge.html change together 9x. If you modify one, check the other."
     },
     {
-      "fileA": ".ai-files-auto.txt",
-      "fileB": "public/static/nw-nav.js",
+      "fileA": "public/battle.html",
+      "fileB": "public/collection.html",
       "coChangeCount": 9,
-      "message": ".ai-files-auto.txt and public/static/nw-nav.js change together 9x. If you modify one, check the other."
+      "message": "public/battle.html and public/collection.html change together 9x. If you modify one, check the other."
     },
     {
       "fileA": ".mycelium/eval-history.json",
@@ -345,10 +531,10 @@
       "message": ".mycelium/eval-history.json and .mycelium/memory.json change together 8x. If you modify one, check the other."
     },
     {
-      "fileA": "public/arcade.html",
-      "fileB": "public/wallet.html",
+      "fileA": "public/battle.html",
+      "fileB": "public/deckbuilder.html",
       "coChangeCount": 8,
-      "message": "public/arcade.html and public/wallet.html change together 8x. If you modify one, check the other."
+      "message": "public/battle.html and public/deckbuilder.html change together 8x. If you modify one, check the other."
     },
     {
       "fileA": "public/static/data/sentinel-history.json",
@@ -385,6 +571,30 @@
       "fileB": "public/static/data/sentinel-report.json",
       "coChangeCount": 7,
       "message": "public/battle.html and public/static/data/sentinel-report.json change together 7x. If you modify one, check the other."
+    },
+    {
+      "fileA": "public/arcade.html",
+      "fileB": "public/battle.html",
+      "coChangeCount": 7,
+      "message": "public/arcade.html and public/battle.html change together 7x. If you modify one, check the other."
+    },
+    {
+      "fileA": "public/collection.html",
+      "fileB": "public/deckbuilder.html",
+      "coChangeCount": 7,
+      "message": "public/collection.html and public/deckbuilder.html change together 7x. If you modify one, check the other."
+    },
+    {
+      "fileA": "public/collection.html",
+      "fileB": "public/forge.html",
+      "coChangeCount": 7,
+      "message": "public/collection.html and public/forge.html change together 7x. If you modify one, check the other."
+    },
+    {
+      "fileA": "public/forge.html",
+      "fileB": "public/wallet.html",
+      "coChangeCount": 7,
+      "message": "public/forge.html and public/wallet.html change together 7x. If you modify one, check the other."
     },
     {
       "fileA": "public/static/data/sentinel-report.json",
@@ -429,28 +639,28 @@
       "message": "public/static/data/sentinel-report.json and public/static/nw-battle-engine.js change together 6x. If you modify one, check the other."
     },
     {
-      "fileA": "public/arcade.html",
-      "fileB": "public/battle.html",
+      "fileA": ".ai-files-auto.txt",
+      "fileB": "public/cards.html",
       "coChangeCount": 6,
-      "message": "public/arcade.html and public/battle.html change together 6x. If you modify one, check the other."
+      "message": ".ai-files-auto.txt and public/cards.html change together 6x. If you modify one, check the other."
     },
     {
-      "fileA": "public/battle.html",
+      "fileA": "public/cards.html",
       "fileB": "public/forge.html",
       "coChangeCount": 6,
-      "message": "public/battle.html and public/forge.html change together 6x. If you modify one, check the other."
+      "message": "public/cards.html and public/forge.html change together 6x. If you modify one, check the other."
     },
     {
-      "fileA": ".ai-files-auto.txt",
-      "fileB": "public/battle.html",
+      "fileA": "public/arcade.html",
+      "fileB": "public/collection.html",
       "coChangeCount": 6,
-      "message": ".ai-files-auto.txt and public/battle.html change together 6x. If you modify one, check the other."
+      "message": "public/arcade.html and public/collection.html change together 6x. If you modify one, check the other."
     },
     {
-      "fileA": "public/forge.html",
+      "fileA": "public/market.html",
       "fileB": "public/wallet.html",
       "coChangeCount": 6,
-      "message": "public/forge.html and public/wallet.html change together 6x. If you modify one, check the other."
+      "message": "public/market.html and public/wallet.html change together 6x. If you modify one, check the other."
     },
     {
       "fileA": ".mycelium/eval.json",
@@ -477,6 +687,18 @@
       "message": ".husky/post-commit and memory.json change together 5x. If you modify one, check the other."
     },
     {
+      "fileA": "public/battle.html",
+      "fileB": "public/cards.html",
+      "coChangeCount": 5,
+      "message": "public/battle.html and public/cards.html change together 5x. If you modify one, check the other."
+    },
+    {
+      "fileA": "public/battle.html",
+      "fileB": "src/index.tsx",
+      "coChangeCount": 5,
+      "message": "public/battle.html and src/index.tsx change together 5x. If you modify one, check the other."
+    },
+    {
       "fileA": "public/markets.html",
       "fileB": "src/index.tsx",
       "coChangeCount": 5,
@@ -489,16 +711,40 @@
       "message": "public/battle.html and public/static/nw-battle-engine.js change together 5x. If you modify one, check the other."
     },
     {
-      "fileA": "public/arcade.html",
-      "fileB": "public/collection.html",
+      "fileA": "public/collection.html",
+      "fileB": "public/wallet.html",
       "coChangeCount": 5,
-      "message": "public/arcade.html and public/collection.html change together 5x. If you modify one, check the other."
+      "message": "public/collection.html and public/wallet.html change together 5x. If you modify one, check the other."
     },
     {
-      "fileA": "public/battle.html",
-      "fileB": "public/collection.html",
+      "fileA": ".ai-files-auto.txt",
+      "fileB": "public/wallet.html",
       "coChangeCount": 5,
-      "message": "public/battle.html and public/collection.html change together 5x. If you modify one, check the other."
+      "message": ".ai-files-auto.txt and public/wallet.html change together 5x. If you modify one, check the other."
+    },
+    {
+      "fileA": "public/arcade.html",
+      "fileB": "public/index.html",
+      "coChangeCount": 5,
+      "message": "public/arcade.html and public/index.html change together 5x. If you modify one, check the other."
+    },
+    {
+      "fileA": "public/arcade.html",
+      "fileB": "public/market.html",
+      "coChangeCount": 5,
+      "message": "public/arcade.html and public/market.html change together 5x. If you modify one, check the other."
+    },
+    {
+      "fileA": "public/deckbuilder.html",
+      "fileB": "public/forge.html",
+      "coChangeCount": 5,
+      "message": "public/deckbuilder.html and public/forge.html change together 5x. If you modify one, check the other."
+    },
+    {
+      "fileA": "public/index.html",
+      "fileB": "public/wallet.html",
+      "coChangeCount": 5,
+      "message": "public/index.html and public/wallet.html change together 5x. If you modify one, check the other."
     },
     {
       "fileA": ".ai-context.md",
@@ -511,6 +757,12 @@
       "fileB": "public/wallet.html",
       "coChangeCount": 5,
       "message": "public/static/nw-wallet.js and public/wallet.html change together 5x. If you modify one, check the other."
+    },
+    {
+      "fileA": "public/cards.html",
+      "fileB": "public/collection.html",
+      "coChangeCount": 5,
+      "message": "public/cards.html and public/collection.html change together 5x. If you modify one, check the other."
     }
   ]
 }

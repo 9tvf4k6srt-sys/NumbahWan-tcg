@@ -1,12 +1,10 @@
 import { Hono } from 'hono'
-import { serveStatic } from 'hono/cloudflare-pages'
 import rosterData from '../data/roster.json'
 
 type Bindings = {
   GUILD_DB: D1Database
   MARKET_CACHE: KVNamespace
 }
-
 
 // Route helpers
 function jsonError(c: any, msg: string, status = 400) {
@@ -31,145 +29,131 @@ router.get('/api/members', (c) => {
   return c.json({ members, sortedMembers })
 })
 
-// Main page
-router.get('/', async (c) => {
+// ── Universal static file server ─────────────────────────────────
+// Works in both Cloudflare Pages (production) and Vite dev (local).
+// Production: uses ASSETS binding for optimal CDN delivery.
+// Dev: reads from disk via fs (Node.js) as fallback.
+async function serveHtml(c: any, filePath: string) {
+  // 1. Try Cloudflare ASSETS binding (production)
   try {
-    // @ts-ignore
-    const asset = await c.env?.ASSETS?.fetch(new Request('https://dummy/index.html'))
-    if (asset) {
+    const asset = await c.env?.ASSETS?.fetch(new Request(`https://dummy${filePath}`))
+    if (asset && asset.status === 200) {
       return new Response(asset.body, {
         headers: { 'Content-Type': 'text/html; charset=utf-8' }
       })
     }
-  } catch (e) {}
-  return c.redirect('/index.html')
-})
-router.get('/index.html', serveStatic({ path: './index.html' }))
+  } catch {}
 
-// AI-friendly & crawler files (all served from public/ static files)
+  // 2. Fallback: read from disk (Vite dev mode)
+  try {
+    const fs = await import('node:fs')
+    const path = await import('node:path')
+    const publicDir = path.resolve(process.cwd(), 'public')
+    const fullPath = path.join(publicDir, filePath)
+    
+    // Security: prevent path traversal
+    if (!fullPath.startsWith(publicDir)) {
+      return c.text('Forbidden', 403)
+    }
+    
+    if (fs.existsSync(fullPath)) {
+      const content = fs.readFileSync(fullPath, 'utf-8')
+      return c.html(content)
+    }
+  } catch {}
+  
+  return c.text('Not found', 404)
+}
+
+async function serveFile(c: any, filePath: string, contentType: string) {
+  try {
+    const asset = await c.env?.ASSETS?.fetch(new Request(`https://dummy${filePath}`))
+    if (asset && asset.status === 200) {
+      return new Response(asset.body, { headers: { 'Content-Type': contentType } })
+    }
+  } catch {}
+
+  try {
+    const fs = await import('node:fs')
+    const path = await import('node:path')
+    const publicDir = path.resolve(process.cwd(), 'public')
+    const fullPath = path.join(publicDir, filePath)
+    if (!fullPath.startsWith(publicDir)) return c.text('Forbidden', 403)
+    if (fs.existsSync(fullPath)) {
+      const content = fs.readFileSync(fullPath, 'utf-8')
+      return new Response(content, { headers: { 'Content-Type': contentType } })
+    }
+  } catch {}
+  
+  return c.text('Not found', 404)
+}
+
+// ── Main page ────────────────────────────────────────────────────
+router.get('/', (c) => serveHtml(c, '/index.html'))
+router.get('/index.html', (c) => serveHtml(c, '/index.html'))
+
+// AI-friendly & crawler files
 const textFiles = ['llms.txt', 'llms-full.txt', 'robots.txt']
 textFiles.forEach(file => {
-  router.get(`/${file}`, async (c) => {
-    try {
-      // @ts-ignore
-      const asset = await c.env?.ASSETS?.fetch(new Request(`https://dummy/${file}`))
-      if (asset) {
-        return new Response(asset.body, {
-          headers: { 'Content-Type': 'text/plain; charset=utf-8', 'Cache-Control': 'public, max-age=3600' }
-        })
-      }
-    } catch (e) {}
-    return c.text(`${file} not found`, 404)
-  })
+  router.get(`/${file}`, (c) => serveFile(c, `/${file}`, 'text/plain; charset=utf-8'))
 })
 
 // Sitemap XML
-router.get('/sitemap.xml', async (c) => {
-  try {
-    // @ts-ignore
-    const asset = await c.env?.ASSETS?.fetch(new Request('https://dummy/sitemap.xml'))
-    if (asset) {
-      return new Response(asset.body, {
-        headers: { 'Content-Type': 'application/xml; charset=utf-8', 'Cache-Control': 'public, max-age=3600' }
-      })
-    }
-  } catch (e) {}
-  return c.text('sitemap.xml not found', 404)
-})
+router.get('/sitemap.xml', (c) => serveFile(c, '/sitemap.xml', 'application/xml; charset=utf-8'))
 
-// Named page routes (regina, pvp)
-const namedPages = ['regina', 'pvp']
-namedPages.forEach(page => {
-  router.get(`/${page}`, async (c) => {
-    try {
-      // @ts-ignore
-      const asset = await c.env?.ASSETS?.fetch(new Request(`https://dummy/${page}.html`))
-      if (asset) {
-        return new Response(asset.body, {
-          headers: { 'Content-Type': 'text/html; charset=utf-8' }
-        })
-      }
-    } catch (e) {}
-    return c.redirect(`/${page}.html`)
-  })
-})
-
-// Static pages served via route factory
-const staticPages = ['fashion', 'merch', 'fortune', 'arcade', 'memes', 'apply', 'wallet', 'forge', 'tcg', 'market', 'cards', 'guide', 'battle', 'pvp-battle', 'card-bridge', 'collection', 'deckbuilder', 'zakum', 'tournament', 'academy', 'vault', 'museum', 'research', 'historical-society', 'menu-demo', 'exchange', 'ai-lounge', 'court', 'therapy', 'hr', 'conspiracy', 'updates', 'about', 'treasury', 'intelligence', 'citizenship', 'invest', 'markets', 'buy', 'business', 'supermarket', 'restaurants', 'services', 'crafts', 'realestate', 'jobs', 'my-business', 'cafeteria', 'lost-found', 'parking', 'maintenance', 'breakroom', 'basement', 'nwg-shop', 'card-print-template', 'wyckoff', 'matchalatte', 'embassy', 'profile-card', 'achievements', 'lore', 'restaurant', 'card-lab', 'avatar-builder', 'tavern-tales', 'leaderboard', 'research-library', 'auction-house', 'system-dashboard', 'card-utility', 'shrine', 'card-audit', 'oracle', 'showcase', 'tools', 'admin-physical', 'battle-legacy', 'battle-old', 'battle-simple']
+// ── All static pages — clean URL + .html ────────────────────────
+const staticPages = [
+  'regina', 'pvp', 'fashion', 'merch', 'fortune', 'arcade', 'memes',
+  'apply', 'wallet', 'forge', 'tcg', 'market', 'cards', 'guide',
+  'battle', 'pvp-battle', 'card-bridge', 'collection', 'deckbuilder',
+  'zakum', 'tournament', 'academy', 'vault', 'museum', 'research',
+  'historical-society', 'menu-demo', 'exchange', 'ai-lounge', 'court',
+  'therapy', 'hr', 'conspiracy', 'updates', 'about', 'treasury',
+  'intelligence', 'citizenship', 'invest', 'markets', 'buy', 'business',
+  'supermarket', 'restaurants', 'services', 'crafts', 'realestate',
+  'jobs', 'my-business', 'cafeteria', 'lost-found', 'parking',
+  'maintenance', 'breakroom', 'basement', 'nwg-shop', 'card-print-template',
+  'wyckoff', 'matchalatte', 'embassy', 'profile-card', 'achievements',
+  'lore', 'restaurant', 'card-lab', 'avatar-builder', 'tavern-tales',
+  'leaderboard', 'research-library', 'auction-house', 'system-dashboard',
+  'card-utility', 'shrine', 'card-audit', 'oracle', 'showcase', 'tools',
+  'admin-physical', 'battle-legacy', 'battle-old', 'battle-simple',
+  'what-is-nwg', 'staking', 'fusion', 'claim', 'events', 'confessional',
+  'avatar-studio', 'efficiency', 'tabletop', 'collection-stats', 'dashboard',
+  'cipher'
+]
 
 staticPages.forEach(page => {
-  router.get(`/${page}`, async (c) => {
-    try {
-      // @ts-ignore
-      const asset = await c.env?.ASSETS?.fetch(new Request(`https://dummy/${page}.html`))
-      if (asset) {
-        return new Response(asset.body, {
-          headers: { 'Content-Type': 'text/html; charset=utf-8' }
-        })
-      }
-    } catch (e) {}
-    return c.redirect(`/${page}.html`)
-  })
+  router.get(`/${page}`, (c) => serveHtml(c, `/${page}.html`))
+  router.get(`/${page}.html`, (c) => serveHtml(c, `/${page}.html`))
 })
 
 // Museum exhibits
 const museumExhibits = ['exhibit-001', 'exhibit-002', 'exhibit-003', 'exhibit-004', 'exhibit-005', 'exhibit-006', 'exhibit-007', 'exhibit-008', 'exhibit-009', 'exhibit-010']
 museumExhibits.forEach(exhibit => {
-  router.get(`/museum/${exhibit}`, async (c) => {
-    try {
-      // @ts-ignore
-      const asset = await c.env?.ASSETS?.fetch(new Request(`https://dummy/museum/${exhibit}.html`))
-      if (asset) {
-        return new Response(asset.body, { headers: { 'Content-Type': 'text/html; charset=utf-8' } })
-      }
-    } catch (e) {}
-    return c.redirect(`/museum/${exhibit}.html`)
-  })
+  router.get(`/museum/${exhibit}`, (c) => serveHtml(c, `/museum/${exhibit}.html`))
+  router.get(`/museum/${exhibit}.html`, (c) => serveHtml(c, `/museum/${exhibit}.html`))
 })
 
 // Vault floors
 const vaultFloors = ['b3-decontamination', 'b7-hall-of-failures', 'b12-antechamber']
 vaultFloors.forEach(floor => {
-  router.get(`/vault/${floor}`, async (c) => {
-    try {
-      // @ts-ignore
-      const asset = await c.env?.ASSETS?.fetch(new Request(`https://dummy/vault/${floor}.html`))
-      if (asset) {
-        return new Response(asset.body, { headers: { 'Content-Type': 'text/html; charset=utf-8' } })
-      }
-    } catch (e) {}
-    return c.redirect(`/vault/${floor}.html`)
-  })
+  router.get(`/vault/${floor}`, (c) => serveHtml(c, `/vault/${floor}.html`))
+  router.get(`/vault/${floor}.html`, (c) => serveHtml(c, `/vault/${floor}.html`))
 })
 
 // Research papers
 const researchPapers = ['work-gloves-economic-impact', 'zakum-helmet-spectral-analysis', 'reggina-misprint-forensic-examination', 'vault-security-analysis', 'nx-fashion-revolution', 'transparent-set-psychology']
 researchPapers.forEach(paper => {
-  router.get(`/research/${paper}`, async (c) => {
-    try {
-      // @ts-ignore
-      const asset = await c.env?.ASSETS?.fetch(new Request(`https://dummy/research/${paper}.html`))
-      if (asset) {
-        return new Response(asset.body, { headers: { 'Content-Type': 'text/html; charset=utf-8' } })
-      }
-    } catch (e) {}
-    return c.redirect(`/research/${paper}.html`)
-  })
+  router.get(`/research/${paper}`, (c) => serveHtml(c, `/research/${paper}.html`))
+  router.get(`/research/${paper}.html`, (c) => serveHtml(c, `/research/${paper}.html`))
 })
 
 // Lore pages
-const lorePages = ['reggina-origin']
+const lorePages = ['reggina-origin', 'sacred-log', 'whale-wars']
 lorePages.forEach(page => {
-  router.get(`/lore/${page}`, async (c) => {
-    try {
-      // @ts-ignore
-      const asset = await c.env?.ASSETS?.fetch(new Request(`https://dummy/lore/${page}.html`))
-      if (asset) {
-        return new Response(asset.body, { headers: { 'Content-Type': 'text/html; charset=utf-8' } })
-      }
-    } catch (e) {}
-    return c.redirect(`/lore/${page}.html`)
-  })
+  router.get(`/lore/${page}`, (c) => serveHtml(c, `/lore/${page}.html`))
+  router.get(`/lore/${page}.html`, (c) => serveHtml(c, `/lore/${page}.html`))
 })
 
 export default router

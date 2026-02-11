@@ -251,7 +251,8 @@ const NW_NAV = {
                 { id: 'wallet', name: { en: 'Wallet', zh: '錢包', th: 'กระเป๋า' }, icon: 'wallet', href: '/wallet' },
                 { id: 'profile-card', name: { en: 'Profile Card', zh: '個人卡片', th: 'การ์ดโปรไฟล์' }, icon: 'form', href: '/profile-card', isNew: true },
                 { id: 'achievements', name: { en: 'Achievements', zh: '成就', th: 'ความสำเร็จ' }, icon: 'trophy', href: '/achievements', isNew: true },
-                { id: 'shrine', name: { en: '\ud83d\udd25 Summoning Shrine', zh: '\ud83d\udd25 召喚神殿', th: '\ud83d\udd25 ศาลเรียกวิญญาณ' }, icon: 'fire', href: '/shrine', isNew: true, isHot: true }
+                { id: 'shrine', name: { en: '\ud83d\udd25 Summoning Shrine', zh: '\ud83d\udd25 召喚神殿', th: '\ud83d\udd25 ศาลเรียกวิญญาณ' }, icon: 'fire', href: '/shrine', isNew: true, isHot: true },
+                { id: 'what-is-nwg', name: { en: 'What is NWG?', zh: '什麼是NWG？', th: 'NWG คืออะไร?' }, icon: 'coins', href: '/what-is-nwg', isNew: true }
             ]
         },
         cards: {
@@ -1203,8 +1204,18 @@ const NW_NAV = {
                 this.currentLang = lang;
                 this.setStoredLang(lang);
                 
+                // Update button active states IN-PLACE (don't destroy nav with injectNav)
+                document.querySelectorAll('.nw-lang-btn').forEach(b => {
+                    b.classList.toggle('active', b.dataset.lang === lang);
+                });
+                
+                // Update nav section/page names for new language
+                const navLinks = document.querySelectorAll('.nw-nav-link .nw-nav-text');
+                const sectionHeaders = document.querySelectorAll('.nw-section-title');
+                // Re-render nav text only (preserving open state)
+                const wasOpen = this.isOpen;
                 requestAnimationFrame(() => {
-                    this.injectNav();
+                    // Dispatch events so NW_I18N and page-level code react
                     ['nw-lang-change', 'languageChanged'].forEach(evtName => {
                         document.dispatchEvent(new CustomEvent(evtName, { detail: { lang } }));
                         if (evtName === 'nw-lang-change') window.dispatchEvent(new CustomEvent(evtName, { detail: { lang } }));
@@ -1247,8 +1258,11 @@ const NW_NAV = {
         if (lang === this.currentLang) return;
         this.currentLang = lang;
         this.setStoredLang(lang);
+        // Update button states in-place
+        document.querySelectorAll('.nw-lang-btn').forEach(b => {
+            b.classList.toggle('active', b.dataset.lang === lang);
+        });
         requestAnimationFrame(() => {
-            this.injectNav();
             ['nw-lang-change', 'languageChanged'].forEach(evtName => {
                 document.dispatchEvent(new CustomEvent(evtName, { detail: { lang } }));
             });

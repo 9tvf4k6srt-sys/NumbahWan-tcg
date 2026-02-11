@@ -27,7 +27,24 @@ fi
 
 # ─── STEP 4: AUTO-MINE (incremental breakage pattern mining) ───
 if [ -f "tools/mycelium-auto-mine.cjs" ]; then
-  node "tools/mycelium-auto-mine.cjs" >/dev/null 2>&1 || true
+  node "tools/mycelium-auto-mine.cjs" >/dev/null 2>&1
+  MINE_EXIT=$?
+  if [ "$MINE_EXIT" -ne 0 ]; then
+    echo "  [mycelium] Mining failed (exit $MINE_EXIT) — run: node tools/mycelium-auto-mine.cjs --stats" >&2
+  fi
+fi
+
+# ─── STEP 5: DATA QUALITY GATE (validate mined data stays premium) ───
+# Silent on success. Alerts you on degradation or failure.
+if [ -f "tools/validate-mined-data.cjs" ]; then
+  node "tools/validate-mined-data.cjs" --fix 2>&1 | grep -i "\[MYCELIUM" >&2 || true
+fi
+
+# ─── STEP 6: SURFACE ALERTS (show .mycelium-alert if it exists) ───
+if [ -f ".mycelium-alert" ]; then
+  echo "" >&2
+  cat ".mycelium-alert" >&2
+  echo "" >&2
 fi
 
 # ─── BONUS: Fix commit? Also run postfix analysis ───

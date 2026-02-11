@@ -85,8 +85,9 @@ function writeJSON(file, data) {
 function writeCSV(file, headers, rows) {
   ensureDir(path.dirname(file));
   const escape = v => {
-    const s = String(v ?? '');
-    return s.includes(',') || s.includes('"') || s.includes('\n') ? `"${s.replace(/"/g, '""')}"` : s;
+    // Replace newlines with spaces to prevent row-splitting, then quote if needed
+    const s = String(v ?? '').replace(/[\r\n]+/g, ' ').trim();
+    return s.includes(',') || s.includes('"') ? `"${s.replace(/"/g, '""')}"` : s;
   };
   const lines = [headers.join(','), ...rows.map(r => headers.map(h => escape(r[h])).join(','))];
   fs.writeFileSync(file, lines.join('\n') + '\n');
@@ -296,6 +297,17 @@ function exportAll() {
   state.lastExportDate = new Date().toISOString();
   saveState(state);
   
+  // Auto-validate: run quality gate after export
+  try {
+    const validatePath = path.join(__dirname, 'validate-mined-data.cjs');
+    if (fs.existsSync(validatePath)) {
+      execSync(`node "${validatePath}" --fix --json`, { encoding: 'utf8', timeout: 15000, stdio: 'pipe' });
+      log('Quality gate: PASSED');
+    }
+  } catch (e) {
+    log('Quality gate: validation ran (check report for details)');
+  }
+  
   log('All exports complete');
 }
 
@@ -417,8 +429,11 @@ function exportCSVFormat(data) {
   );
   log(`  → patterns.csv (${patternRows.length} rows)`);
   
-  // Hotspots CSV
-  const hotspotRows = (data.hotspots || []).map(h => ({
+  // Hotspots CSV — filter deleted files
+  const hotspotRows = (data.hotspots || []).filter(h => {
+    // Filter out files that no longer exist
+    try { return fs.existsSync(h.file); } catch { return true; }
+  }).map(h => ({
     file: h.file,
     totalChanges: h.changes,
     fixCount: h.fixCount,
@@ -463,19 +478,45 @@ function exportCSVFormat(data) {
   );
   log(`  → categories.csv (${catRows.length} rows)`);
   
-  // Fix chains CSV
-  const chainRows = (data.fixChains || []).map(fc => ({
-    breakCommit: fc.breakCommit?.slice(0, 8),
-    breakMessage: fc.breakMsg?.slice(0, 80),
-    fixCommit: fc.fixCommit?.slice(0, 8),
-    fixMessage: fc.fixMsg?.slice(0, 80),
-    overlappingFiles: fc.overlappingFiles?.join('; '),
-    hoursToFix: fc.hoursToFix?.toFixed(1),
-  }));
+  // Fix chains CSV — derive real lessons from enriched data, not just commit msgs
+  const enrichedLookup = {};
+  try {
+    const enrichedData = readJSON('.mycelium-mined/webapp-enriched.json');
+    for (const fc of (enrichedData?.fixCommits || [])) {
+      enrichedLookup[fc.hash] = fc;
+    }
+  } catch {}
+  
+  const chainRows = (data.fixChains || []).map(fc => {
+    const enriched = enrichedLookup[fc.fixCommit] || {};
+    const rootCause = enriched.rootCause || enriched.enrichment?.rootCause || '';
+    const category = enriched.category || enriched.enrichment?.category || '';
+    const prevention = enriched.prevention || enriched.enrichment?.prevention || '';
+    // Build a real lesson: what broke + how to prevent
+    let lesson = '';
+    if (rootCause && rootCause.length > 15) {
+      lesson = rootCause.slice(0, 150);
+      if (prevention && prevention.length > 15 && !prevention.startsWith('Review ')) {
+        lesson += ' → ' + prevention.slice(0, 100);
+      }
+    } else {
+      // Fallback: extract meaningful part of fix message
+      lesson = (fc.fixMsg || '').replace(/^(?:fix|bug|hotfix|patch|revert)\s*\([^)]*\)\s*:?\s*/i, '').slice(0, 150);
+    }
+    return {
+      breakCommit: fc.breakCommit?.slice(0, 8),
+      fixCommit: fc.fixCommit?.slice(0, 8),
+      primaryFile: (fc.overlappingFiles || []).filter(f => !f.includes('.mycelium') && !f.includes('memory.json'))[0] || fc.overlappingFiles?.[0] || '',
+      category: category || 'unknown',
+      lesson,
+      hoursToFix: fc.hoursToFix?.toFixed(1),
+      fileCount: fc.overlappingFiles?.length || 0,
+    };
+  });
   
   writeCSV(
     path.join(DB_DIR, 'fix-chains.csv'),
-    ['breakCommit', 'breakMessage', 'fixCommit', 'fixMessage', 'overlappingFiles', 'hoursToFix'],
+    ['breakCommit', 'fixCommit', 'primaryFile', 'category', 'lesson', 'hoursToFix', 'fileCount'],
     chainRows
   );
   log(`  → fix-chains.csv (${chainRows.length} rows)`);
@@ -629,6 +670,18 @@ function exportSQLiteFormat(data) {
   }
   lines.push('');
   
+  // Insert fix commits with enrichment data
+  const enrichedData2 = readJSON('.mycelium-mined/webapp-enriched.json');
+  for (const fc of (enrichedData2?.fixCommits || []).slice(0, 200)) {
+    const rc = fc.rootCause || fc.enrichment?.rootCause || '';
+    const cat = fc.category || fc.enrichment?.category || '';
+    const pat = fc.pattern || fc.enrichment?.pattern || '';
+    const sev = fc.severity || fc.enrichment?.severity || 'medium';
+    const conf = fc.confidence || fc.enrichment?.confidence || 0;
+    lines.push(`INSERT INTO fix_commits (repo_id, commit_hash, commit_date, author, message, category, pattern, severity, root_cause, file_count, confidence) VALUES ('${esc(repoId)}', '${esc(fc.hash?.slice(0, 12))}', '${esc(fc.date)}', '${esc(fc.author)}', '${esc(fc.msg?.slice(0, 200))}', '${esc(cat)}', '${esc(pat)}', '${esc(sev)}', '${esc(rc?.slice(0, 300))}', ${fc.fileCount || 0}, ${conf});`);
+  }
+  lines.push('');
+
   // Insert fix chains
   for (const fc of (data.fixChains || [])) {
     lines.push(`INSERT INTO fix_chains (repo_id, break_hash, break_message, fix_hash, fix_message, hours_to_fix) VALUES ('${esc(repoId)}', '${esc(fc.breakCommit?.slice(0, 8))}', '${esc(fc.breakMsg?.slice(0, 100))}', '${esc(fc.fixCommit?.slice(0, 8))}', '${esc(fc.fixMsg?.slice(0, 100))}', ${fc.hoursToFix || 0});`);
@@ -836,6 +889,67 @@ function showStats() {
 }
 
 // ============================================================================
+// HEALTH STATUS — one-line "is the miner working?" check
+// ============================================================================
+
+function showHealthStatus() {
+  const state = loadState();
+  const healthFile = path.join('.mycelium-mined', 'health-status');
+  const alertFile = '.mycelium-alert';
+  const validationReport = readJSON('.mycelium-mined/validation-report.json');
+  
+  // Mining health
+  const lastMined = state.lastMinedDate || 'never';
+  const commitsMined = state.totalCommitsMined || 0;
+  const fixCommits = state.totalFixCommits || 0;
+  const lastExport = state.lastExportDate?.slice(0, 10) || 'never';
+  
+  // Quality health
+  let qualityScore = 'unknown';
+  let qualityGrade = '?';
+  let checksPassed = '?/?';
+  if (validationReport) {
+    qualityScore = validationReport.score;
+    qualityGrade = validationReport.grade;
+    checksPassed = `${validationReport.passed}/${validationReport.total}`;
+  }
+  
+  // Alert status
+  const hasAlert = fs.existsSync(alertFile);
+  
+  // Health file
+  let healthLine = '';
+  try { healthLine = fs.readFileSync(healthFile, 'utf8').trim().split('\n')[0]; } catch {}
+  
+  // Color the output
+  const status = hasAlert ? 'DEGRADED' : qualityScore >= 80 ? 'HEALTHY' : qualityScore >= 50 ? 'WARNING' : 'CRITICAL';
+  const emoji = status === 'HEALTHY' ? 'OK' : status === 'DEGRADED' ? '!!' : status === 'WARNING' ? '??' : 'XX';
+  
+  console.log('');
+  console.log(`  [${emoji}] Mycelium Mining Health: ${status}`);
+  console.log(`  Quality: ${qualityScore}/100 (${qualityGrade}) | Checks: ${checksPassed}`);
+  console.log(`  Commits mined: ${commitsMined} | Fix commits: ${fixCommits}`);
+  console.log(`  Last mined: ${lastMined} | Last export: ${lastExport}`);
+  
+  if (hasAlert) {
+    console.log('');
+    console.log('  ACTIVE ALERT:');
+    try {
+      const alert = fs.readFileSync(alertFile, 'utf8').trim();
+      alert.split('\n').forEach(l => console.log(`    ${l}`));
+    } catch {}
+    console.log('');
+    console.log('  Fix: node tools/validate-mined-data.cjs --fix');
+  }
+  
+  if (healthLine) {
+    console.log(`  Status: ${healthLine}`);
+  }
+  
+  console.log('');
+}
+
+// ============================================================================
 // CLI
 // ============================================================================
 
@@ -878,6 +992,11 @@ Output directory: ${DB_DIR}/
   
   if (args.includes('--stats')) {
     showStats();
+    return;
+  }
+  
+  if (args.includes('--health')) {
+    showHealthStatus();
     return;
   }
   

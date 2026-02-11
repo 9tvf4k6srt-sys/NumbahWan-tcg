@@ -702,14 +702,21 @@ function extract(repoPath, limit = 500) {
     .map(([pair, count]) => ({ pair, count }));
   console.log(`  Found ${significantCoChanges.length} significant co-change pairs`);
   
-  // Hotspots
+  // Hotspots — filter out deleted/nonexistent files
   const hotspots = Object.entries(allFileChanges)
-    .filter(([_, count]) => count >= CONFIG.hotspotMinChanges)
+    .filter(([file, count]) => {
+      if (count < CONFIG.hotspotMinChanges) return false;
+      // Filter out files that no longer exist (deleted, renamed, archived)
+      try { return fs.existsSync(path.resolve(workDir, file)); } catch { return true; }
+    })
     .sort((a, b) => b[1] - a[1])
     .slice(0, 50)
     .map(([file, changes]) => {
       const fixCount = fixCommits.filter(fc => fc.files.includes(file)).length;
-      return { file, changes, fixCount, fixRatio: +(fixCount / changes).toFixed(3) };
+      const affectedPatterns = fixCommits
+        .filter(fc => fc.files.includes(file))
+        .map(fc => fc.msg?.replace(/^(?:fix|bug|hotfix)\s*\([^)]*\)\s*:?\s*/i, '').slice(0, 60));
+      return { file, changes, fixCount, fixRatio: +(fixCount / changes).toFixed(3), topIssues: [...new Set(affectedPatterns)].slice(0, 3) };
     });
   console.log(`  Found ${hotspots.length} hotspot files`);
   
@@ -797,7 +804,15 @@ async function enrich(extractedPath, options = {}) {
       fileCount: fc.fileCount,
       technologies: fc.technologies,
       areas: fc.areas,
-      enrichment,
+      // Flatten enrichment to top-level for queryability
+      rootCause: enrichment.rootCause || null,
+      category: enrichment.category || null,
+      severity: enrichment.severity || null,
+      pattern: enrichment.pattern || null,
+      prevention: enrichment.prevention || null,
+      technology: enrichment.technology || fc.technologies?.[0] || null,
+      confidence: enrichment.confidence || 0,
+      atoms: (enrichment.atoms || []).slice(0, 5),
       enrichedBy,
     });
     
@@ -889,7 +904,8 @@ function aggregate(enrichedPath, options = {}) {
   const patternGroups = {};
   
   for (const fc of commits) {
-    const e = fc.enrichment || {};
+    // Support both flattened (v3) and nested (v2) enrichment
+    const e = fc.rootCause ? fc : (fc.enrichment || {});
     const patternKey = normalizePattern(e.pattern || 'unknown-fix');
     
     if (!patternGroups[patternKey]) {
@@ -948,6 +964,14 @@ function aggregate(enrichedPath, options = {}) {
       // Generate the actionable rule
       const rule = generateActionableRule(group, bestRootCause, bestPrevention, primaryCategory, primaryTechnology);
       
+      // Collect affected files from example commits
+      const affectedFiles = [...new Set(
+        group.commits.flatMap(c => {
+          const commit = commits.find(fc => fc.hash === c.hash);
+          return (commit?.files || []).filter(f => !f.includes('.mycelium') && !f.includes('memory.json'));
+        })
+      )].slice(0, 20);
+
       return {
         id: `MCL-${group.pattern.toUpperCase().replace(/[^A-Z0-9]/g, '-').slice(0, 30)}`,
         pattern: group.pattern,
@@ -958,6 +982,7 @@ function aggregate(enrichedPath, options = {}) {
         rootCause: bestRootCause,
         prevention: bestPrevention,
         rule,
+        affectedFiles,
         exampleCommits: group.commits.slice(0, 5),
         allCategories: group.categories,
         allTechnologies: group.technologies,
@@ -987,10 +1012,10 @@ function aggregate(enrichedPath, options = {}) {
   // ── Category breakdown ──
   const categoryBreakdown = {};
   for (const fc of commits) {
-    const cat = fc.enrichment?.category || 'other';
+    const cat = fc.category || fc.enrichment?.category || 'other';
     if (!categoryBreakdown[cat]) categoryBreakdown[cat] = { count: 0, patterns: {} };
     categoryBreakdown[cat].count++;
-    const pat = fc.enrichment?.pattern || 'unknown';
+    const pat = fc.pattern || fc.enrichment?.pattern || 'unknown';
     categoryBreakdown[cat].patterns[pat] = (categoryBreakdown[cat].patterns[pat] || 0) + 1;
   }
   for (const cat of Object.values(categoryBreakdown)) {

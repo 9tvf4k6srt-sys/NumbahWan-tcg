@@ -1,0 +1,754 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>What is NWG? | NumbahWan Guild Currency</title>
+    <link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/nw-tokens.css">
+    <style>
+        :root {
+            --gold: #ffd700;
+            --green: #22c55e;
+            --red: #ef4444;
+            --purple: #a855f7;
+            --blue: #3b82f6;
+            --dark: #0a0a12;
+            --card: #12121c;
+            --border: #1e1e2e;
+            --muted: #888;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Inter', system-ui, sans-serif;
+            background: var(--dark);
+            color: #e0e0e0;
+            min-height: 100vh;
+            line-height: 1.7;
+        }
+
+        .page-wrap {
+            max-width: 760px;
+            margin: 0 auto;
+            padding: 2rem 1.25rem 6rem;
+        }
+
+        /* Header */
+        .page-header {
+            margin-bottom: 3rem;
+        }
+
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            color: var(--muted);
+            text-decoration: none;
+            font-size: 0.85rem;
+            margin-bottom: 1.5rem;
+        }
+        .back-link:hover { color: #fff; }
+
+        h1 {
+            font-size: clamp(1.8rem, 5vw, 2.5rem);
+            font-weight: 800;
+            color: #fff;
+            margin-bottom: 0.75rem;
+        }
+
+        .page-intro {
+            font-size: 1.1rem;
+            color: var(--muted);
+            max-width: 600px;
+        }
+
+        /* Section */
+        section {
+            margin-bottom: 3rem;
+        }
+
+        h2 {
+            font-size: 1.35rem;
+            font-weight: 700;
+            color: #fff;
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        p {
+            margin-bottom: 1rem;
+            color: #c8c8d0;
+        }
+
+        strong { color: #fff; font-weight: 600; }
+
+        /* Simple table */
+        .info-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1rem 0 1.5rem;
+            font-size: 0.95rem;
+        }
+
+        .info-table th,
+        .info-table td {
+            padding: 0.75rem 1rem;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .info-table th {
+            color: var(--muted);
+            font-weight: 500;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .info-table td { color: #d0d0d8; }
+
+        .info-table .val {
+            font-weight: 600;
+            color: #fff;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .info-table .currency-gold { color: var(--gold); }
+        .info-table .currency-green { color: var(--green); }
+        .info-table .currency-purple { color: var(--purple); }
+
+        /* Card-style callouts */
+        .callout {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1.25rem 1.5rem;
+            margin: 1.5rem 0;
+        }
+
+        .callout-label {
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            margin-bottom: 0.5rem;
+        }
+
+        .callout-label.how { color: var(--green); }
+        .callout-label.note { color: var(--gold); }
+        .callout-label.risk { color: var(--red); }
+
+        .callout p:last-child { margin-bottom: 0; }
+
+        /* Simple list */
+        ul {
+            margin: 0.75rem 0 1.25rem 1.5rem;
+            color: #c8c8d0;
+        }
+
+        ul li {
+            margin-bottom: 0.5rem;
+        }
+
+        ul li::marker {
+            color: var(--muted);
+        }
+
+        /* 3-column currency cards */
+        .currency-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin: 1.5rem 0;
+        }
+
+        .currency-card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1.25rem;
+            text-align: center;
+        }
+
+        .currency-card .cc-icon {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .currency-card .cc-name {
+            font-size: 1rem;
+            font-weight: 700;
+            color: #fff;
+            margin-bottom: 0.25rem;
+        }
+
+        .currency-card .cc-tier {
+            font-size: 0.75rem;
+            color: var(--muted);
+            margin-bottom: 0.75rem;
+        }
+
+        .currency-card .cc-desc {
+            font-size: 0.85rem;
+            color: #aaa;
+            line-height: 1.5;
+        }
+
+        .currency-card.nwg { border-color: rgba(255, 215, 0, 0.25); }
+        .currency-card.gold { border-color: rgba(34, 197, 94, 0.25); }
+        .currency-card.log { border-color: rgba(168, 85, 247, 0.25); }
+
+        .currency-card.nwg .cc-name { color: var(--gold); }
+        .currency-card.gold .cc-name { color: var(--green); }
+        .currency-card.log .cc-name { color: var(--purple); }
+
+        /* Flow diagram */
+        .flow {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.75rem;
+            margin: 1.5rem 0;
+            flex-wrap: wrap;
+            font-size: 0.95rem;
+        }
+
+        .flow-step {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 0.5rem 1rem;
+            font-weight: 600;
+            color: #fff;
+        }
+
+        .flow-arrow { color: var(--muted); font-size: 1.2rem; }
+
+        /* FAQ */
+        .faq-item {
+            margin-bottom: 1.5rem;
+        }
+
+        .faq-item h3 {
+            font-size: 1rem;
+            font-weight: 600;
+            color: #fff;
+            margin-bottom: 0.4rem;
+        }
+
+        .faq-item p {
+            font-size: 0.95rem;
+            color: #aaa;
+            margin-bottom: 0;
+        }
+
+        /* CTA */
+        .cta-area {
+            text-align: center;
+            padding: 2.5rem 1.5rem;
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            margin-top: 2rem;
+        }
+
+        .cta-area h2 {
+            border-bottom: none;
+            padding-bottom: 0;
+            margin-bottom: 0.75rem;
+        }
+
+        .cta-area p {
+            color: var(--muted);
+            max-width: 480px;
+            margin: 0 auto 1.5rem;
+        }
+
+        .cta-buttons {
+            display: flex;
+            gap: 0.75rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.2s;
+            border: none;
+            cursor: pointer;
+        }
+
+        .btn-primary {
+            background: var(--gold);
+            color: #000;
+        }
+        .btn-primary:hover {
+            filter: brightness(1.1);
+            transform: translateY(-1px);
+        }
+
+        .btn-secondary {
+            background: rgba(255,255,255,0.08);
+            color: #fff;
+            border: 1px solid var(--border);
+        }
+        .btn-secondary:hover {
+            background: rgba(255,255,255,0.12);
+        }
+
+        /* Responsive */
+        @media (max-width: 600px) {
+            .page-wrap { padding: 1.5rem 1rem 6rem; }
+            .info-table th, .info-table td { padding: 0.6rem 0.6rem; font-size: 0.85rem; }
+            .currency-cards { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body data-page-id="what-is-nwg">
+
+<div class="page-wrap">
+
+    <div class="page-header">
+        <a href="/" class="back-link">&larr; Back to Home</a>
+        <h1>What is NWG?</h1>
+        <p class="page-intro">A plain-language guide to NumbahWan's in-game currency — what it does, how it works, and what to know before you spend money on it.</p>
+    </div>
+
+    <!-- ========== THE SHORT VERSION ========== -->
+    <section>
+        <h2>The Short Version</h2>
+        <p><strong>NWG</strong> (NumbahWan Gold) is the premium currency inside the NumbahWan guild. You use it to open card packs, buy merch, stake for rewards, and trade with other members. Think of it like credits in a game — except with a few extra mechanics built in.</p>
+        <p>The fixed exchange rate is <strong>$1 USD = 100 NWG</strong>. There will only ever be 1 billion NWG. No more can be created.</p>
+    </section>
+
+    <!-- ========== THE 3 CURRENCIES ========== -->
+    <section>
+        <h2>Three Currencies, One Economy</h2>
+        <p>NumbahWan uses three currencies that each serve a different role. Here's how they fit together:</p>
+
+        <div class="currency-cards">
+            <div class="currency-card nwg">
+                <div class="cc-icon">&#9733;</div>
+                <div class="cc-name">NWG</div>
+                <div class="cc-tier">Premium Currency</div>
+                <div class="cc-desc">The main currency. Buy it with USD or earn through staking, daily logins, and referrals. Used for card packs, premium merch, and staking.</div>
+            </div>
+            <div class="currency-card gold">
+                <div class="cc-icon">&#9673;</div>
+                <div class="cc-name">Gold</div>
+                <div class="cc-tier">Earned Currency</div>
+                <div class="cc-desc">Earned by playing — arcade games, quests, battles, or by converting NWG. Used for standard pulls, card upgrades, and basic purchases. <em>Cannot be bought directly.</em></div>
+            </div>
+            <div class="currency-card log">
+                <div class="cc-icon">&#10070;</div>
+                <div class="cc-name">Sacred Log</div>
+                <div class="cc-tier">Prestige Currency</div>
+                <div class="cc-desc">Rare. Earned only through mythic pulls, leaderboard placement, 7-day login streaks, or set completion. Used for guaranteed mythic pulls and exclusive items. <em>Cannot be bought or sold.</em></div>
+            </div>
+        </div>
+
+        <div class="flow">
+            <span class="flow-step">USD</span>
+            <span class="flow-arrow">&rarr;</span>
+            <span class="flow-step" style="color:var(--gold)">NWG</span>
+            <span class="flow-arrow">&rarr;</span>
+            <span class="flow-step" style="color:var(--green)">Gold</span>
+        </div>
+        <p style="text-align:center; color:var(--muted); font-size:0.85rem;">
+            1 NWG = 10 Gold (one-way conversion). Sacred Logs are earned only — never purchased.
+        </p>
+    </section>
+
+    <!-- ========== WHAT GOLD ACTUALLY BUYS ========== -->
+    <section>
+        <h2>What Can Gold Actually Buy?</h2>
+        <p>Gold is the <strong>gameplay currency</strong> — the stuff you spend inside the game loop. Here's every confirmed use from the current codebase:</p>
+
+        <table class="info-table">
+            <thead>
+                <tr>
+                    <th>Feature</th>
+                    <th>Gold Cost</th>
+                    <th>What You Get</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Card Fusion (Basic)</td>
+                    <td class="val currency-green">50</td>
+                    <td>Combine 2 cards into a stronger one</td>
+                </tr>
+                <tr>
+                    <td>Card Fusion (Uncommon)</td>
+                    <td class="val currency-green">200</td>
+                    <td>Fuse into uncommon-tier cards</td>
+                </tr>
+                <tr>
+                    <td>Card Fusion (Rare)</td>
+                    <td class="val currency-green">500</td>
+                    <td>Fuse into rare-tier cards</td>
+                </tr>
+                <tr>
+                    <td>Card Fusion (Epic)</td>
+                    <td class="val currency-green">2,000</td>
+                    <td>Fuse into epic-tier cards</td>
+                </tr>
+                <tr>
+                    <td>Card Fusion (Legendary)</td>
+                    <td class="val currency-green">10,000</td>
+                    <td>Fuse into legendary-tier cards</td>
+                </tr>
+                <tr>
+                    <td>Guaranteed Common Pull</td>
+                    <td class="val currency-green">500</td>
+                    <td>Skip RNG &mdash; pick a guaranteed common card</td>
+                </tr>
+                <tr>
+                    <td>Guaranteed Uncommon Pull</td>
+                    <td class="val currency-green">2,000</td>
+                    <td>Guaranteed uncommon card</td>
+                </tr>
+                <tr>
+                    <td>Guaranteed Rare Pull</td>
+                    <td class="val currency-green">8,000</td>
+                    <td>Guaranteed rare card</td>
+                </tr>
+                <tr>
+                    <td>Arcade &mdash; Golden Reels</td>
+                    <td class="val currency-green">Varies</td>
+                    <td>Slot machine &mdash; win Gold + Sacred Logs</td>
+                </tr>
+                <tr>
+                    <td>Arcade &mdash; Oracle's Gambit</td>
+                    <td class="val currency-green">Varies</td>
+                    <td>Number guessing &mdash; up to 10x payout</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="callout">
+            <div class="callout-label how">Ways to earn Gold without spending NWG</div>
+            <p>You don't have to convert NWG to get Gold. You can also earn it from:</p>
+            <ul style="margin-top:0.5rem">
+                <li>Winning arcade games (Golden Reels, Oracle's Gambit)</li>
+                <li>Daily quests and login streaks</li>
+                <li>Card battles and tournament rewards</li>
+                <li>Staking cards (higher rarity = more Gold/day)</li>
+                <li>Achievement milestones</li>
+            </ul>
+        </div>
+    </section>
+
+    <!-- ========== WHY CONVERT NWG TO GOLD ========== -->
+    <section>
+        <h2>Why Convert NWG to Gold?</h2>
+        <p>The exchange rate is <strong>10 NWG = 1 Gold</strong>. Here's the honest breakdown of when it makes sense and when it doesn't:</p>
+
+        <div class="callout">
+            <div class="callout-label how">When it makes sense</div>
+            <ul style="margin-top:0.5rem">
+                <li><strong>You want guaranteed cards.</strong> Gold pulls let you bypass RNG. If you need a specific rarity to complete a set, it's the fastest path.</li>
+                <li><strong>You're building through fusion.</strong> Legendary fusion costs 10,000 Gold. Earning that amount purely from gameplay takes time &mdash; converting NWG shortcuts it.</li>
+                <li><strong>You're an active arcade player.</strong> If you're good at the games, Gold spent in the arcade can multiply &mdash; including into Sacred Logs.</li>
+            </ul>
+        </div>
+
+        <div class="callout">
+            <div class="callout-label risk">When it doesn't make sense</div>
+            <ul style="margin-top:0.5rem">
+                <li><strong>It's one-way.</strong> Once you convert NWG to Gold, you can never convert Gold back. This is a permanent decision.</li>
+                <li><strong>NWG has direct uses.</strong> The NWG Shop, premium merch, staking, and marketplace all use NWG directly. Converting too much to Gold leaves you short for those features.</li>
+                <li><strong>2% burn penalty.</strong> Converting 100 NWG to Gold costs 2 NWG in burns. So 100 NWG only gets you 980 Gold, not 1,000.</li>
+                <li><strong>Gold can be earned for free.</strong> If you're patient, you can accumulate Gold through daily play without spending NWG at all.</li>
+            </ul>
+        </div>
+
+        <div class="callout">
+            <div class="callout-label note">The real incentive</div>
+            <p>Gold's purpose is to be the <strong>gameplay loop currency</strong>. NWG is the economy backbone. Think of it this way: NWG is your savings account, Gold is your spending cash for the game itself. The system is designed so that active players earn Gold naturally, while NWG conversion is a shortcut for people who value time over grinding.</p>
+            <p style="margin-top:0.75rem">The honest answer: <strong>you don't <em>need</em> to buy NWG to get Gold</strong>. But if you want to skip the grind for fusions and guaranteed pulls, converting NWG is the fast lane. That's the real trade-off.</p>
+        </div>
+    </section>
+
+    <!-- ========== NWG vs GOLD SPENDING MAP ========== -->
+    <section>
+        <h2>Where Each Currency Is Actually Spent</h2>
+        <p>Not everything uses Gold. Here's the real map of what requires what:</p>
+
+        <table class="info-table">
+            <thead>
+                <tr>
+                    <th>Feature</th>
+                    <th>Currency Used</th>
+                    <th>Notes</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Card Packs (Forge)</td>
+                    <td class="val"><span class="currency-purple">Sacred Logs</span></td>
+                    <td>1 / 5 / 10 Logs per pull tier</td>
+                </tr>
+                <tr>
+                    <td>Guaranteed Pulls</td>
+                    <td class="val currency-green">Gold</td>
+                    <td>500 &ndash; 8,000 Gold by rarity</td>
+                </tr>
+                <tr>
+                    <td>Card Fusion</td>
+                    <td class="val currency-green">Gold</td>
+                    <td>50 &ndash; 10,000 Gold by tier</td>
+                </tr>
+                <tr>
+                    <td>Arcade Games</td>
+                    <td class="val currency-green">Gold</td>
+                    <td>Play to win more Gold + Logs</td>
+                </tr>
+                <tr>
+                    <td>NWG Shop (Boosts)</td>
+                    <td class="val currency-gold">NWG</td>
+                    <td>500 &ndash; 5,000 NWG</td>
+                </tr>
+                <tr>
+                    <td>NWG Shop (Cosmetics)</td>
+                    <td class="val currency-gold">NWG</td>
+                    <td>20,000 NWG for Gold Card Border</td>
+                </tr>
+                <tr>
+                    <td>NWG Shop (Mystery Box)</td>
+                    <td class="val currency-gold">NWG</td>
+                    <td>2,500 NWG &mdash; random 500&ndash;10,000 NWG</td>
+                </tr>
+                <tr>
+                    <td>Premium Merch</td>
+                    <td class="val currency-gold">NWG</td>
+                    <td>Physical goods purchased with NWG</td>
+                </tr>
+                <tr>
+                    <td>Staking</td>
+                    <td class="val currency-gold">NWG</td>
+                    <td>Lock NWG for APY rewards</td>
+                </tr>
+                <tr>
+                    <td>Card Market (trading)</td>
+                    <td class="val"><span class="currency-purple">Sacred Logs</span></td>
+                    <td>Buy/sell cards from other players</td>
+                </tr>
+                <tr>
+                    <td>Streak Protection</td>
+                    <td class="val currency-gold">NWG</td>
+                    <td>Protect daily login streak</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="callout">
+            <div class="callout-label note">The pattern</div>
+            <p><strong>NWG</strong> is used for premium features, meta-upgrades, and anything involving real economic value (shop, merch, staking). <strong>Gold</strong> is used for gameplay mechanics (fusion, pulls, arcade). <strong>Sacred Logs</strong> are for card-specific activities (packs, trading). Each currency has its own lane.</p>
+        </div>
+    </section>
+
+    <!-- ========== HOW BURNS WORK ========== -->
+    <section>
+        <h2>How Burns Work</h2>
+        <p>Every time NWG changes hands, a small percentage is permanently destroyed ("burned"). This means the total supply slowly shrinks over time.</p>
+
+        <table class="info-table">
+            <thead>
+                <tr>
+                    <th>Action</th>
+                    <th>Burn Rate</th>
+                    <th>What It Means</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Any NWG Transaction</td>
+                    <td class="val">1%</td>
+                    <td>Spend 100 NWG, 1 is burned</td>
+                </tr>
+                <tr>
+                    <td>NWG &rarr; Gold Exchange</td>
+                    <td class="val">2%</td>
+                    <td>Higher burn for converting out</td>
+                </tr>
+                <tr>
+                    <td>Transfers Between Users</td>
+                    <td class="val">0.5%</td>
+                    <td>Small cost to send NWG to others</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="callout">
+            <div class="callout-label note">Why it matters</div>
+            <p>Burns are deflationary — the more the economy is used, the fewer NWG exist. In theory, this creates scarcity over time. But it only matters if people actually use and want NWG. Activity drives the effect, not just the mechanic.</p>
+        </div>
+    </section>
+
+    <!-- ========== STAKING ========== -->
+    <section>
+        <h2>Staking</h2>
+        <p>You can lock up NWG for a set period and earn rewards. The longer the lock, the higher the annual yield. Here are the current tiers:</p>
+
+        <table class="info-table">
+            <thead>
+                <tr>
+                    <th>Tier</th>
+                    <th>Lock Period</th>
+                    <th>APY</th>
+                    <th>Minimum</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Flexible</td>
+                    <td>None</td>
+                    <td class="val currency-green">3%</td>
+                    <td>No minimum</td>
+                </tr>
+                <tr>
+                    <td>Bronze</td>
+                    <td>7 days</td>
+                    <td class="val currency-green">8%</td>
+                    <td>500 NWG</td>
+                </tr>
+                <tr>
+                    <td>Silver</td>
+                    <td>30 days</td>
+                    <td class="val currency-green">15%</td>
+                    <td>2,000 NWG</td>
+                </tr>
+                <tr>
+                    <td>Gold</td>
+                    <td>90 days</td>
+                    <td class="val currency-green">25%</td>
+                    <td>10,000 NWG</td>
+                </tr>
+                <tr>
+                    <td>Diamond</td>
+                    <td>180 days</td>
+                    <td class="val currency-green">40%</td>
+                    <td>50,000 NWG</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="callout">
+            <div class="callout-label how">How staking rewards are paid</div>
+            <p>Rewards come from the rewards pool (30% of total supply set aside for this). When you stake, your NWG is locked — you can't spend or transfer it until the period ends. Early unstaking incurs a 10% penalty.</p>
+        </div>
+
+        <p>You can also stake <strong>cards</strong> (up to 5 at a time). Cards earn NWG daily based on their rarity and star level. Higher-rarity cards generate more, but they're also harder to pull.</p>
+    </section>
+
+    <!-- ========== WHAT BACKS NWG ========== -->
+    <section>
+        <h2>What Backs NWG?</h2>
+        <p>NWG's value comes from a few different sources. None of these are a guarantee — they're the mechanics the system is built on:</p>
+
+        <ul>
+            <li><strong>Fixed supply:</strong> 1 billion NWG max. No new tokens can be created. Burns reduce this over time.</li>
+            <li><strong>Utility:</strong> NWG is needed for card packs, premium merch, staking, and trading. It has uses inside the guild.</li>
+            <li><strong>Revenue backing:</strong> 10% of merch revenue is used to buy back NWG, supporting the price floor.</li>
+            <li><strong>Asset tracking:</strong> The NWG price on our /markets page tracks a basket of real-world assets (Silver, Gold, Bitcoin, Palantir, Broadcom) to give it a reference value.</li>
+        </ul>
+
+        <div class="callout">
+            <div class="callout-label note">Being honest about this</div>
+            <p>NWG is <em>not</em> a traditional cryptocurrency on a public blockchain. It's an internal guild currency. Its value is tied to the guild's activity and growth. There is currently no external exchange where you can sell NWG for USD. This may change in the future, but right now, NWG has value <em>within</em> the NumbahWan ecosystem.</p>
+        </div>
+    </section>
+
+    <!-- ========== THINGS TO KNOW ========== -->
+    <section>
+        <h2>Things To Know Before Buying</h2>
+
+        <div class="callout">
+            <div class="callout-label risk">Risks &amp; Limitations</div>
+            <ul style="margin-top:0.5rem">
+                <li><strong>No external marketplace yet.</strong> You can't currently sell NWG back to USD on an exchange. Liquidity is limited to in-game uses.</li>
+                <li><strong>Early-stage project.</strong> NumbahWan is new. The economy, staking rates, and mechanics may change as the project evolves.</li>
+                <li><strong>Value depends on adoption.</strong> Burns and scarcity only help if there's real demand. If fewer people use NWG, the mechanics alone don't create value.</li>
+                <li><strong>Staking locks your funds.</strong> Locked NWG can't be used until the period ends. Early withdrawal costs 10%.</li>
+                <li><strong>This is not financial advice.</strong> We're sharing how the system works so you can make your own decision.</li>
+            </ul>
+        </div>
+    </section>
+
+    <!-- ========== FAQ ========== -->
+    <section>
+        <h2>Common Questions</h2>
+
+        <div class="faq-item">
+            <h3>Is NWG a cryptocurrency?</h3>
+            <p>Not in the traditional sense. It's an internal digital currency for the NumbahWan guild. It uses some crypto-inspired mechanics (fixed supply, burns, staking) but it's not on a public blockchain.</p>
+        </div>
+
+        <div class="faq-item">
+            <h3>Can I lose money?</h3>
+            <p>If you buy NWG expecting to sell it for more USD later — there's no guarantee of that. Right now there's no external market. Only buy what you're comfortable spending on in-game items and experiences.</p>
+        </div>
+
+        <div class="faq-item">
+            <h3>What happens to burned NWG?</h3>
+            <p>It's gone permanently. Burned NWG is subtracted from the total supply and can never be recovered. You can see the current burn total on the <a href="/invest" style="color:var(--gold)">invest page</a>.</p>
+        </div>
+
+        <div class="faq-item">
+            <h3>Can I earn NWG for free?</h3>
+            <p>Yes. You get 100 NWG when you sign up as a citizen, plus daily login rewards (up to 70 NWG/day on a 7-day streak), referral bonuses (100 NWG each), and staking yields. Many members never buy NWG directly.</p>
+        </div>
+
+        <div class="faq-item">
+            <h3>What makes NWG different from other game currencies?</h3>
+            <p>Two things: the supply actually decreases over time (burns), and there are staking mechanics that reward holding. Most game currencies inflate — NWG is designed to do the opposite. Whether that makes it a good deal depends on how the guild grows.</p>
+        </div>
+
+        <div class="faq-item">
+            <h3>Should I convert all my NWG to Gold?</h3>
+            <p>No. Gold is only useful for fusion, guaranteed pulls, and arcade. NWG is needed for the shop, merch, staking, and premium features. Convert only what you plan to use in gameplay. Think of Gold as spending cash and NWG as your long-term balance.</p>
+        </div>
+
+        <div class="faq-item">
+            <h3>Can I convert Gold back to NWG?</h3>
+            <p>No. The NWG &rarr; Gold conversion is one-way and permanent. Once converted, that Gold can only be spent on gameplay features. This is by design to preserve NWG scarcity.</p>
+        </div>
+
+        <div class="faq-item">
+            <h3>Where can I see live stats?</h3>
+            <p>The <a href="/invest" style="color:var(--gold)">invest page</a> has a live burn tracker and supply dashboard. The <a href="/markets" style="color:var(--green)">/markets</a> page shows real-time backing asset prices.</p>
+        </div>
+    </section>
+
+    <!-- ========== CTA ========== -->
+    <div class="cta-area">
+        <h2>Ready to try it?</h2>
+        <p>You can get started with free NWG — no purchase required. Sign up as a citizen and explore the guild first.</p>
+        <div class="cta-buttons">
+            <a href="/citizenship" class="btn btn-primary">Get Free 100 NWG</a>
+            <a href="/buy" class="btn btn-secondary">Buy NWG</a>
+            <a href="/invest" class="btn btn-secondary">See Live Stats</a>
+        </div>
+    </div>
+
+</div>
+
+<script defer src="/static/nw-wallet.js"></script>
+<script defer src="/static/nw-nav.js"></script>
+<script defer src="/static/nw-i18n-core.js"></script>
+<script defer src="/static/nw-sounds.js"></script>
+<script defer src="/static/nw-guide.js"></script>
+</body>
+</html>
