@@ -28,15 +28,17 @@ const { execSync } = require('child_process');
 
 const WATCH_DIR = path.join(findGitRoot(), '.mycelium');
 const MEMORY_FILE = path.join(WATCH_DIR, 'watch.json');
-const MAX_MEMORY_KB = 200;
-const MAX_ENTRIES = 300;
+const MAX_MEMORY_KB = 400;   // Watch can be bigger since it's deep analysis
+const MAX_ENTRIES = 150;     // Reduced from 300 — old commits add noise not signal
+const MAX_RISK_LESSONS = 3;  // Max lessons per risky file
+const MAX_LESSON_CHARS = 80; // Concise actionable lessons
 
 // Noise — files that change often but teach nothing
 const NOISE = [
   'package-lock.json', 'yarn.lock', 'pnpm-lock.yaml',
   'node_modules/', 'dist/', 'build/', 'out/', '.next/',
   'coverage/', '__pycache__/', '.pytest_cache/', '.nyc_output/',
-  '.mycelium/', '.DS_Store', 'Thumbs.db',
+  '.mycelium/', '.mycelium-mined/', '.DS_Store', 'Thumbs.db',
   '.ai-files-auto', 'sentinel-report', 'sentinel-history'
 ];
 
@@ -105,14 +107,53 @@ function save(mem) {
   if (hotspotEntries.length > 100) {
     mem.hotspots = Object.fromEntries(hotspotEntries.slice(0, 100));
   }
+  
+  // ── NEW: Compress risk lessons to MAX_RISK_LESSONS per file, truncate to MAX_LESSON_CHARS ──
+  for (const [file, risk] of Object.entries(mem.risks || {})) {
+    if (risk.lessons && risk.lessons.length > MAX_RISK_LESSONS) {
+      // Dedup by text, keep most recent
+      const seen = new Set();
+      risk.lessons = risk.lessons
+        .reverse()
+        .filter(l => {
+          const text = (typeof l === 'string' ? l : (l.lesson || '')).slice(0, MAX_LESSON_CHARS);
+          if (seen.has(text)) return false;
+          seen.add(text);
+          return true;
+        })
+        .slice(0, MAX_RISK_LESSONS)
+        .reverse();
+    }
+    // Truncate remaining
+    risk.lessons = (risk.lessons || []).map(l => {
+      if (typeof l === 'string') return l.slice(0, MAX_LESSON_CHARS);
+      if (l.lesson) l.lesson = l.lesson.slice(0, MAX_LESSON_CHARS);
+      return l;
+    });
+  }
+  
+  // ── NEW: Compress commit file lists → keep only top 5 non-noise files ──
+  for (const c of (mem.commits || [])) {
+    if (c.files && c.files.length > 5) {
+      c.fileCount = c.files.length;
+      c.files = c.files.filter(f => !NOISE.some(n => f.includes(n))).slice(0, 5);
+    }
+  }
 
   const json = JSON.stringify(mem, null, 2);
 
   // Auto-compact if too large
   if (Buffer.byteLength(json) > MAX_MEMORY_KB * 1024) {
+    console.log(`[mycelium-watch] Auto-trim: ${Math.round(Buffer.byteLength(json)/1024)}KB > ${MAX_MEMORY_KB}KB`);
     mem.commits = mem.commits.slice(-Math.floor(MAX_ENTRIES / 2));
     mem.breakages = mem.breakages.slice(-50);
     mem.patterns = mem.patterns.slice(-25);
+    // Aggressive risk trim: cap at 2 lessons per file
+    for (const risk of Object.values(mem.risks || {})) {
+      if (risk.lessons && risk.lessons.length > 2) {
+        risk.lessons = risk.lessons.slice(-2);
+      }
+    }
     fs.writeFileSync(MEMORY_FILE, JSON.stringify(mem, null, 2));
   } else {
     fs.writeFileSync(MEMORY_FILE, json);
@@ -289,6 +330,132 @@ function extractLesson(fixHash, fixMsg, fixFiles, prevCommits) {
 }
 
 /**
+ * Extract an insight from ANY commit — not just fixes.
+ * This gives every commit a "what and why" summary for future sessions.
+ * Priority: 1) commit body (explicit reasoning), 2) structured bullet points, 3) message parsing
+ * Returns { summary, area, tags[] } or null if nothing useful.
+ */
+function extractInsight(hash, msg, files) {
+  const body = getCommitBody(hash);
+  const lower = msg.toLowerCase();
+
+  // 1. Auto-detect area from conventional prefix or file paths
+  let area = '';
+  const conventional = lower.match(/^(?:feat|fix|refactor|chore|perf|style|test|docs|ci)\(([^)]+)\)/);
+  if (conventional) {
+    area = conventional[1];
+  } else {
+    area = classifyAreaFromFiles(files);
+  }
+
+  // 2. Extract summary from commit body
+  let summary = '';
+  let tags = [];
+
+  if (body && body.length > 20) {
+    const bodyLines = body.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+
+    // Look for structured sections (e.g., IDENTIFIER FIXES:, PERFORMANCE:, etc.)
+    const sections = [];
+    let currentSection = '';
+    for (const line of bodyLines) {
+      if (line.match(/^[A-Z][A-Z\s/(),.\w-]*:/) && line.length < 60 && !line.match(/^(Signed-off|Co-authored|Change-Id|Reviewed)/i)) {
+        currentSection = line.replace(/:.*/, '').trim();
+        sections.push(currentSection);
+        continue;
+      }
+      // Bullet point under a section
+      if (currentSection && line.startsWith('-') && line.length > 10) {
+        tags.push(line.slice(1).trim().slice(0, 80));
+      }
+    }
+
+    // If we found structured sections, summarize them
+    if (sections.length > 0) {
+      summary = sections.slice(0, 4).join(', ');
+      // Keep only the most informative tags (first 5)
+      tags = tags.slice(0, 5);
+    } else {
+      // No sections — look for explicit reasoning lines
+      for (const line of bodyLines) {
+        const ll = line.toLowerCase();
+        if (ll.includes('because') || ll.includes('root cause') || ll.includes('the problem') ||
+            ll.includes('the issue') || ll.includes('caused by') || ll.includes('this fixes') ||
+            ll.includes('this adds') || ll.includes('this removes') || ll.includes('replaced by')) {
+          summary = line.replace(/^[\s*-]+/, '').trim().slice(0, 150);
+          break;
+        }
+      }
+      // Fallback: first substantive body line
+      if (!summary) {
+        const substantive = bodyLines.find(l =>
+          l.length > 20 && !l.startsWith('#') &&
+          !l.match(/^(signed-off|co-authored|change-id|reviewed|verified)/i)
+        );
+        if (substantive) summary = substantive.slice(0, 150);
+      }
+    }
+  }
+
+  // 3. If no body, parse the message itself
+  if (!summary) {
+    const cleaned = msg
+      .replace(/^(?:feat|fix|refactor|chore|perf|style|test|docs|ci)\([^)]*\):\s*/i, '')
+      .replace(/^(?:feat|fix|refactor|chore|perf|style|test|docs|ci):\s*/i, '')
+      .trim();
+    if (cleaned.length > 15) {
+      summary = cleaned.slice(0, 150);
+    }
+  }
+
+  // 4. Auto-tag from commit type + file patterns
+  const commitType = lower.match(/^(feat|fix|refactor|chore|perf|style|test|docs|ci)/);
+  if (commitType) tags.unshift(commitType[1]);
+
+  // Tag by file patterns
+  const fileStr = files.join(' ');
+  if (fileStr.includes('.html')) tags.push('html');
+  if (fileStr.includes('.css')) tags.push('css');
+  if (fileStr.includes('.ts') || fileStr.includes('.js')) tags.push('code');
+  if (fileStr.includes('test')) tags.push('testing');
+
+  tags = [...new Set(tags)].slice(0, 6);
+
+  if (!summary && tags.length === 0) return null;
+
+  return { summary: summary || msg.slice(0, 100), area, tags };
+}
+
+/**
+ * Classify area from file paths when conventional commit area is missing.
+ * Uses directory patterns to guess the domain.
+ */
+function classifyAreaFromFiles(files) {
+  if (!files || files.length === 0) return '';
+
+  // Count directory occurrences
+  const dirs = {};
+  for (const f of files) {
+    // First meaningful directory
+    if (f.includes('battle')) { dirs.battle = (dirs.battle || 0) + 1; continue; }
+    if (f.includes('card')) { dirs.cards = (dirs.cards || 0) + 1; continue; }
+    if (f.includes('market') || f.includes('merch') || f.includes('economy')) { dirs.economy = (dirs.economy || 0) + 1; continue; }
+    if (f.includes('i18n') || f.includes('translate')) { dirs.i18n = (dirs.i18n || 0) + 1; continue; }
+    if (f.includes('mycelium') || f.includes('.husky')) { dirs.tooling = (dirs.tooling || 0) + 1; continue; }
+    if (f.includes('route') || f.includes('index.tsx')) { dirs.api = (dirs.api || 0) + 1; continue; }
+    if (f.includes('test')) { dirs.testing = (dirs.testing || 0) + 1; continue; }
+    if (f.includes('static/nw-')) { dirs.modules = (dirs.modules || 0) + 1; continue; }
+    if (f.endsWith('.html')) { dirs.pages = (dirs.pages || 0) + 1; continue; }
+    if (f.endsWith('.css')) { dirs.styles = (dirs.styles || 0) + 1; continue; }
+  }
+
+  if (Object.keys(dirs).length === 0) return '';
+
+  // Return the most-touched area
+  return Object.entries(dirs).sort((a, b) => b[1] - a[1])[0][0];
+}
+
+/**
  * Calculate a danger score for a file based on compound risk factors.
  * Higher = more dangerous to edit.
  */
@@ -446,6 +613,13 @@ function sync() {
 
   let fixCount = 0;
   for (const c of newCommits) {
+    // Extract insight for ALL commits (depth without complexity)
+    const insight = extractInsight(c.hash, c.msg, c.files);
+    if (insight) {
+      c.insight = insight.summary;
+      if (insight.area) c.area = insight.area;
+      if (insight.tags?.length) c.tags = insight.tags;
+    }
     mem.commits.push(c);
     mem.stats.totalCommits++;
 
@@ -517,8 +691,14 @@ function learn() {
   // Detect if this is a fix
   const { isFix, area, hint } = detectFix(msg);
 
-  // Record commit
+  // Record commit (with insight for ALL commits, not just fixes)
+  const insight = extractInsight(hash, msg, files);
   const commit = { hash, msg: msg.slice(0, 120), date, files, isFix };
+  if (insight) {
+    commit.insight = insight.summary;
+    if (insight.area) commit.area = insight.area;
+    if (insight.tags?.length) commit.tags = insight.tags;
+  }
   mem.commits.push(commit);
   mem.stats.totalCommits++;
 
@@ -689,6 +869,87 @@ function warn() {
       });
     }
   }
+
+  // 7. NEW FILE OVERLAP DETECTION — catches duplication before it wastes time
+  //    If a new file is being added, check if a similar file already exists
+  try {
+    const addedRaw = git('diff --cached --diff-filter=A --name-only');
+    const added = addedRaw ? addedRaw.split('\n').filter(f => f && !isNoise(f)) : [];
+    for (const newFile of added) {
+      const dir = path.dirname(newFile);
+      const ext = path.extname(newFile);
+      const base = path.basename(newFile, ext).toLowerCase();
+
+      // Only check meaningful file types (html, js, cjs, ts, css, json)
+      if (!['.html','.js','.cjs','.ts','.tsx','.css','.json'].includes(ext)) continue;
+
+      // Split the new filename into keywords (split on hyphens, dots, underscores, camelCase)
+      const newWords = new Set(base.replace(/([a-z])([A-Z])/g, '$1-$2').toLowerCase()
+        .split(/[-_.\s]+/).filter(w => w.length > 2));
+      if (newWords.size === 0) continue;
+
+      // Find existing files in the same directory with the same extension
+      const dirPath = path.join(findGitRoot(), dir);
+      if (!fs.existsSync(dirPath)) continue;
+
+      const existing = fs.readdirSync(dirPath)
+        .filter(f => path.extname(f) === ext && f !== path.basename(newFile));
+
+      for (const existFile of existing) {
+        const existBase = path.basename(existFile, ext).toLowerCase();
+        const existWords = new Set(existBase.replace(/([a-z])([A-Z])/g, '$1-$2').toLowerCase()
+          .split(/[-_.\s]+/).filter(w => w.length > 2));
+        if (existWords.size === 0) continue;
+
+        // Calculate keyword overlap
+        const overlap = [...newWords].filter(w => existWords.has(w));
+        const overlapPct = overlap.length / Math.min(newWords.size, existWords.size);
+
+        // Shared-root check (catches showroom/showcase)
+        let sharedPfx = 0;
+        for (let i = 0; i < Math.min(base.length, existBase.length); i++) {
+          if (base[i] === existBase[i]) sharedPfx++; else break;
+        }
+        const hasSharedRoot = sharedPfx >= 4;
+
+        if (overlapPct >= 0.5 || overlap.length >= 2 || hasSharedRoot) {
+          // Also check: does Mycelium have data about the existing file?
+          const existPath = path.join(dir, existFile);
+          const hasRisk = mem.risks && mem.risks[existPath];
+          const hotspot = mem.hotspots && mem.hotspots[existPath];
+          const memNote = hasRisk ? ` (${hasRisk.breakCount}x broke, ${(hasRisk.lessons||[]).length} lessons)`
+            : hotspot ? ` (${hotspot}x changed)` : '';
+
+          const reasons = [];
+          if (overlap.length > 0) reasons.push(`shared keywords: [${overlap.join(', ')}]`);
+          if (hasSharedRoot) reasons.push(`shared root "${base.slice(0, sharedPfx)}"`);
+
+          warnings.push({
+            severity: 'high',
+            msg: `NEW FILE "${path.basename(newFile)}" overlaps with EXISTING "${existFile}"${memNote} — is this a duplicate?`
+              + `\n       \x1b[2m↳ ${reasons.join(', ')}. Check if ${existFile} already does what you need.\x1b[0m`
+          });
+        }
+      }
+
+      // Also check: does the memory/watch have ANY reference to this file concept?
+      const conceptHits = [];
+      for (const w of newWords) {
+        if (w.length < 4) continue;
+        for (const c of (mem.commits || []).slice(-50)) {
+          if (c.msg && c.msg.toLowerCase().includes(w) && !conceptHits.includes(c.hash)) {
+            conceptHits.push(c.hash);
+          }
+        }
+      }
+      if (conceptHits.length >= 3) {
+        warnings.push({
+          severity: 'medium',
+          msg: `NEW FILE "${path.basename(newFile)}" matches ${conceptHits.length} commit messages — existing code may already handle this concept`
+        });
+      }
+    }
+  } catch (e) { /* Non-fatal — don't break commit flow */ }
 
   // Print warnings (compact, non-intrusive)
   if (warnings.length === 0) return;

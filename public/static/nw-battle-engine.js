@@ -12,13 +12,18 @@ window.selectDifficulty = function(diff) {
     const avatars = { casual:'', ranked:'', boss:'' };
     const subs = { casual:'Plays random cards, vibes only', ranked:'Uses synergies, targets smart', boss:'Mythic cards, boss HP, no mercy' };
     const n = names[diff] || names.casual;
-    document.getElementById('enemyAvatar').textContent = avatars[diff] || '';
-    document.getElementById('enemyName').textContent = n[Math.floor(Math.random()*n.length)];
-    document.getElementById('enemySubtitle').textContent = subs[diff] || '';
+    const el = id => document.getElementById(id);
+    if (el('enemyAvatar')) el('enemyAvatar').textContent = avatars[diff] || '';
+    if (el('enemyName')) el('enemyName').textContent = n[Math.floor(Math.random()*n.length)];
+    if (el('enemySubtitle')) el('enemySubtitle').textContent = subs[diff] || '';
 };
 
 (function() {
     'use strict';
+
+    // Safe DOM helper — prevents null-reference crashes (5x breakage pattern)
+    const _noop = new Proxy({}, { get: () => () => {}, set: () => true });
+    const $el = id => document.getElementById(id) || _noop;
 
     // ═══════════════════════════════════════════════════════════════════
     // NW HELPER INTEGRATION
@@ -478,17 +483,17 @@ window.selectDifficulty = function(diff) {
         const maxHP = gameState.difficulty === 'boss' ? BOSS_CONFIG.hp : CONFIG.MAX_GUILD_HP;
         const pPct = Math.max(0, gameState.playerHP / CONFIG.MAX_GUILD_HP * 100);
         const ePct = Math.max(0, gameState.enemyHP / maxHP * 100);
-        document.getElementById('playerHpFill').style.width = pPct+'%';
-        document.getElementById('enemyHpFill').style.width = ePct+'%';
-        document.getElementById('playerHpValue').textContent = Math.max(0, gameState.playerHP);
-        document.getElementById('enemyHpValue').textContent = Math.max(0, gameState.enemyHP);
-        ['playerHpFill','playerHpValue'].forEach(id => { const e=document.getElementById(id); e.classList.toggle('low',pPct<=30); e.classList.toggle('mid',pPct>30&&pPct<=60); });
-        ['enemyHpFill','enemyHpValue'].forEach(id => { const e=document.getElementById(id); e.classList.toggle('low',ePct<=30); e.classList.toggle('mid',ePct>30&&ePct<=60); });
+        $el('playerHpFill').style.width = pPct+'%';
+        $el('enemyHpFill').style.width = ePct+'%';
+        $el('playerHpValue').textContent = Math.max(0, gameState.playerHP);
+        $el('enemyHpValue').textContent = Math.max(0, gameState.enemyHP);
+        ['playerHpFill','playerHpValue'].forEach(id => { const e=document.getElementById(id); if(e){e.classList.toggle('low',pPct<=30); e.classList.toggle('mid',pPct>30&&pPct<=60);} });
+        ['enemyHpFill','enemyHpValue'].forEach(id => { const e=document.getElementById(id); if(e){e.classList.toggle('low',ePct<=30); e.classList.toggle('mid',ePct>30&&ePct<=60);} });
         if (pPct <= 20 && pPct > 0) addLog(announce('lowHP'), 'ability');
     }
 
     function renderEnergy() {
-        const c = document.getElementById('energyCrystals'); c.innerHTML = '';
+        const c = document.getElementById('energyCrystals'); if (!c) return; c.innerHTML = '';
         for (let i = 0; i < gameState.maxEnergy; i++) {
             const cr = document.createElement('div');
             cr.className = 'energy-crystal' + (i >= gameState.energy ? ' spent' : '');
@@ -498,6 +503,7 @@ window.selectDifficulty = function(diff) {
 
     function renderTurnIndicator() {
         const i = document.getElementById('turnIndicator');
+        if (!i) return;
         i.textContent = gameState.isPlayerTurn ? 'YOUR TURN' : 'ENEMY TURN';
         i.className = 'turn-indicator ' + (gameState.isPlayerTurn ? 'your-turn' : 'enemy-turn');
     }
@@ -525,12 +531,12 @@ window.selectDifficulty = function(diff) {
             el.addEventListener('mouseleave', hideTooltip);
             container.appendChild(el);
         });
-        document.getElementById('handCount').textContent = `${gameState.playerHand.length}/${CONFIG.MAX_HAND}`;
+        $el('handCount').textContent = `${gameState.playerHand.length}/${CONFIG.MAX_HAND}`;
     }
 
     function renderBoards() {
-        document.getElementById('playerBoard').querySelectorAll('.board-slot').forEach((slot, idx) => renderBoardSlot(slot, gameState.playerBoard[idx], idx, false));
-        document.getElementById('enemyBoard').querySelectorAll('.board-slot').forEach((slot, idx) => renderBoardSlot(slot, gameState.enemyBoard[idx], idx, true));
+        const pb = document.getElementById('playerBoard'); if(pb) pb.querySelectorAll('.board-slot').forEach((slot, idx) => renderBoardSlot(slot, gameState.playerBoard[idx], idx, false));
+        const eb = document.getElementById('enemyBoard'); if(eb) eb.querySelectorAll('.board-slot').forEach((slot, idx) => renderBoardSlot(slot, gameState.enemyBoard[idx], idx, true));
         updateFaceAttackZone();
     }
 
@@ -580,21 +586,22 @@ window.selectDifficulty = function(diff) {
 
     function showTooltip(card, event) {
         const t = document.getElementById('cardTooltip');
-        document.getElementById('tooltipName').textContent = card.name;
-        const re = document.getElementById('tooltipRarity'); re.textContent = (card.rarity||'common').toUpperCase(); re.className = 'tooltip-rarity '+(card.rarity||'common');
-        document.getElementById('tooltipAtk').textContent = card.currentAtk != null ? getEffectiveAtk(card) : card.gameStats.atk;
-        document.getElementById('tooltipHp').textContent = card.currentHp ?? card.gameStats.hp;
-        document.getElementById('tooltipCost').textContent = card.gameStats.cost;
+        if (!t) return;
+        $el('tooltipName').textContent = card.name;
+        const re = document.getElementById('tooltipRarity'); if(re){ re.textContent = (card.rarity||'common').toUpperCase(); re.className = 'tooltip-rarity '+(card.rarity||'common'); }
+        $el('tooltipAtk').textContent = card.currentAtk != null ? getEffectiveAtk(card) : card.gameStats.atk;
+        $el('tooltipHp').textContent = card.currentHp ?? card.gameStats.hp;
+        $el('tooltipCost').textContent = card.gameStats.cost;
         const ae = document.getElementById('tooltipAbilities');
         const ab = card.gameStats?.abilities || card.abilities || [];
-        ae.innerHTML = ab.length ? ab.map(a => { const d = typeof NW_ABILITIES!=='undefined'?NW_ABILITIES[a]:null; return `<span class="tooltip-ability">${d?d.icon+' ':''}${a}${d?': '+d.desc:''}</span>`; }).join('') : '<em style="opacity:0.5">No abilities</em>';
+        if(ae) ae.innerHTML = ab.length ? ab.map(a => { const d = typeof NW_ABILITIES!=='undefined'?NW_ABILITIES[a]:null; return `<span class="tooltip-ability">${d?d.icon+' ':''}${a}${d?': '+d.desc:''}</span>`; }).join('') : '<em style="opacity:0.5">No abilities</em>';
         const rect = event.target.getBoundingClientRect();
         let left = rect.right+10, top = rect.top;
         if (left+280 > window.innerWidth) left = rect.left-290;
         if (top+200 > window.innerHeight) top = window.innerHeight-210;
         t.style.left = left+'px'; t.style.top = top+'px'; t.classList.add('show');
     }
-    function hideTooltip() { document.getElementById('cardTooltip').classList.remove('show'); }
+    function hideTooltip() { const tt = document.getElementById('cardTooltip'); if(tt) tt.classList.remove('show'); }
 
     function showCardDetailModal(card, index, source) {
         modalCard=card; modalCardIndex=index; modalCardSource=source;

@@ -446,6 +446,36 @@ switch (cmd) {
     run(`node "${SCRIPTS.serve}" ${rest}`);
     break;
 
+  // ── Check: pre-creation file overlap detection ─────────────────
+  case 'check':
+    if (!exists(SCRIPTS.core)) { console.error('mycelium.cjs not found'); process.exit(1); }
+    if (!rest) { console.error('Usage: mycelium check <filepath>'); process.exit(1); }
+    run(`node "${SCRIPTS.core}" --check ${rest}`);
+    break;
+
+  // ── Autopsy: trace commit damage chain ─────────────────────────
+  case 'autopsy':
+    if (!exists(SCRIPTS.core)) { console.error('mycelium.cjs not found'); process.exit(1); }
+    if (!rest) { console.error('Usage: mycelium autopsy <commit-hash>'); process.exit(1); }
+    run(`node "${SCRIPTS.core}" --autopsy ${rest}`);
+    break;
+
+  // ── Danger Zone: risk heatmap ──────────────────────────────────
+  case 'danger-zone':
+  case 'dangerzone':
+  case 'heatmap':
+    if (!exists(SCRIPTS.core)) { console.error('mycelium.cjs not found'); process.exit(1); }
+    run(`node "${SCRIPTS.core}" --danger-zone`);
+    break;
+
+  // ── Test Gap: breakage vs test coverage analysis ───────────────
+  case 'test-gap':
+  case 'testgap':
+  case 'gaps':
+    if (!exists(SCRIPTS.core)) { console.error('mycelium.cjs not found'); process.exit(1); }
+    run(`node "${SCRIPTS.core}" --test-gap`);
+    break;
+
   // ── Init: zero-config project setup ─────────────────────────────
   case 'init':
     if (!exists(SCRIPTS.core)) { console.error('mycelium.cjs not found'); process.exit(1); }
@@ -482,6 +512,10 @@ switch (cmd) {
     console.log(`    mycelium upgrade       Preview auto-generated defenses`);
     console.log(`    mycelium upgrade --apply Apply all upgrades`);
     console.log(`    mycelium serve         Start local preview server (0.0.0.0:8788)`);
+    console.log(`    mycelium check <file>  Pre-creation check: find duplicates before you build`);
+    console.log(`    mycelium autopsy <hash> Trace downstream damage from any commit`);
+    console.log(`    mycelium danger-zone   Generate HTML risk heatmap (danger-zone.html)`);
+    console.log(`    mycelium test-gap      Find breakage patterns with no test coverage`);
     console.log(`    mycelium init          Zero-config project setup`);
     console.log(`    mycelium version       Show component status`);
     console.log();

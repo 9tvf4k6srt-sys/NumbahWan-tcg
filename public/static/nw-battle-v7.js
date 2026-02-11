@@ -9,9 +9,9 @@
 
 // ═══ CONFIG ═══
 const CFG = {
-    MAX_HP: 30, MAX_BOARD: 5, MAX_HAND: 7, START_HAND: 4,
-    MAX_ENERGY: 10, DECK_SIZE: 15,
-    BOSS: { hp: 45, extraCards: 3, bonusAtk: 3, bonusHp: 5 }
+    MAX_HP: 20, MAX_BOARD: 5, MAX_HAND: 7, START_HAND: 4,
+    MAX_ENERGY: 10, DECK_SIZE: 12,
+    BOSS: { hp: 35, extraCards: 3, bonusAtk: 3, bonusHp: 5 }
 };
 
 // ═══ ANNOUNCER LINES ═══
@@ -59,8 +59,18 @@ const G = {
 };
 
 // ═══ UTILITY ═══
-const $ = id => document.getElementById(id);
-const sleep = ms => new Promise(r => setTimeout(r, ms));
+// Safe DOM helper: returns element or no-op proxy to prevent null-reference crashes (10x breakage pattern)
+const _noop = new Proxy({}, { get: () => () => {}, set: () => true });
+const $ = id => document.getElementById(id) || _noop;
+// i18n helper — falls back to English if NW_I18N not loaded
+const t = (key, fallback) => (typeof NW_I18N !== 'undefined' && NW_I18N.t) ? NW_I18N.t(key, fallback) : fallback;
+// Speed-aware sleep: auto-play and speed button can reduce delays
+const sleep = ms => {
+    const speed = (window.NW_BATTLE_JUICE && window.NW_BATTLE_JUICE.getSpeed) ? window.NW_BATTLE_JUICE.getSpeed() : 1;
+    const autoSpeed = (window._nwAutoPlaying) ? 5 : 1; // 5x faster during auto-play
+    const effectiveSpeed = Math.max(speed, autoSpeed);
+    return new Promise(r => setTimeout(r, Math.max(30, Math.round(ms / effectiveSpeed))));
+};
 function shuffle(arr) { for(let i=arr.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[arr[i],arr[j]]=[arr[j],arr[i]];} return arr; }
 function getImg(card) { return `/static/images/cards/thumbs/${card.img||'placeholder.webp'}`; }
 function getAbilityIcons(abilities, size) {
@@ -77,11 +87,17 @@ function getAbilityIcons(abilities, size) {
 function initBoardCard(card) {
     const gs = card.gameStats;
     const ab = gs.abilities || [];
+    // ═══ SERIAL TIER BONUS: lower serial = stronger card ═══
+    const mint = (typeof NW_MINT !== 'undefined') ? NW_MINT.getBattleBonus(card.id) : { atkMult: 1, hpMult: 1, critBonus: 0, dodgeBonus: 0, tier: { name: 'STANDARD' }, serial: 0 };
+    const mintAtk = Math.round(gs.atk * mint.atkMult);
+    const mintHp = Math.round(gs.hp * mint.hpMult);
     return {
         id: card.id, name: card.name, img: card.img, rarity: card.rarity,
         role: card.role, set: card.set, category: card.category,
-        baseAtk: gs.atk, baseHp: gs.hp, currentAtk: gs.atk, currentHp: gs.hp, maxHp: gs.hp,
+        baseAtk: mintAtk, baseHp: mintHp, currentAtk: mintAtk, currentHp: mintHp, maxHp: mintHp,
         baseCrit: gs.crit||0, baseDodge: gs.dodge||0,
+        mintSerial: mint.serial || 0, mintTier: mint.tier?.name || 'STANDARD',
+        mintCritBonus: mint.critBonus || 0, mintDodgeBonus: mint.dodgeBonus || 0,
         abilities: ab,
         // All 12 abilities
         hasRush: ab.includes('RUSH'), hasTaunt: ab.includes('TAUNT'),
@@ -99,10 +115,10 @@ function initBoardCard(card) {
     };
 }
 
-// ═══ EFFECTIVE STATS ═══
+// ═══ EFFECTIVE STATS (includes serial tier bonuses) ═══
 function getEffAtk(c) { return Math.max(1, c.currentAtk + c.synergyAtkBonus); }
-function getEffCrit(c) { return (c.baseCrit*100) + (c.hasCritBoost?15:0) + (c.synergyCritBonus*100); }
-function getEffDodge(c) { return (c.baseDodge*100) + (c.hasDodge?25:0) + (c.synergyDodgeBonus*100); }
+function getEffCrit(c) { return (c.baseCrit*100) + (c.hasCritBoost?15:0) + (c.synergyCritBonus*100) + (c.mintCritBonus||0); }
+function getEffDodge(c) { return (c.baseDodge*100) + (c.hasDodge?25:0) + (c.synergyDodgeBonus*100) + (c.mintDodgeBonus||0); }
 
 // ═══ DECK BUILDING ═══
 function createDeck(forPlayer) {
@@ -220,7 +236,8 @@ function renderHP() {
 
 function renderEnergy() { $('energyText').textContent = `${G.energy}/${G.maxEnergy}`; }
 function renderTurn() {
-    $('turnBadge').textContent = `TURN ${G.turn}`;
+    const turnLabel = t('turn', 'TURN');
+    $('turnBadge').textContent = `${turnLabel} ${G.turn}`;
     $('turnBadge').style.color = G.isPlayerTurn ? '#ffd700' : '#ff5252';
 }
 
@@ -241,7 +258,7 @@ function renderHand() {
         const roleDisplay = card.role ? card.role.replace(/_/g, ' ') : '';
 
         el.innerHTML = `
-            <img class="hc-art" src="${getImg(card)}" alt="${card.name}" loading="lazy" onerror="this.src='/static/images/cards/placeholder.webp'">
+            <img class="hc-art" src="${getImg(card)}" alt="${card.name}" loading="eager" decoding="async" onerror="this.src='/static/images/cards/placeholder.webp'">
             <div class="hc-cost">${gs.cost}</div>
             <div class="hc-abilities">${getAbilityIcons(gs.abilities)}</div>
             <div class="hc-info">
@@ -304,11 +321,15 @@ const SVG_EXPLOSION_SM = '<svg viewBox="0 0 24 24" width="14" height="14" fill="
 function renderBoardCard(card, isEnemy) {
     if (!card) return '';
     const icons = getAbilityIcons(card.abilities, 12);
-    return `<div class="board-card ${card.rarity || ''} ${card.hasTaunt ? 'has-taunt' : ''} ${card.stealthTurns > 0 ? 'has-stealth' : ''} ${card.hasShield ? 'has-shield' : ''} ${!isEnemy && card.canAttackThisTurn && !card.hasAttacked && G.isPlayerTurn ? 'can-attack' : ''}" data-name="${card.name}">
+    const mintClass = (typeof NW_MINT !== 'undefined' && card.mintSerial) ? NW_MINT.getTierClass(card.mintSerial) : '';
+    const mintBadge = (typeof NW_MINT !== 'undefined' && card.mintSerial) ? NW_MINT.getBadgeHTML(card.mintSerial) : '';
+    return `<div class="board-card ${card.rarity || ''} ${mintClass} ${card.hasTaunt ? 'has-taunt' : ''} ${card.stealthTurns > 0 ? 'has-stealth' : ''} ${card.hasShield ? 'has-shield' : ''} ${!isEnemy && card.canAttackThisTurn && !card.hasAttacked && G.isPlayerTurn ? 'can-attack' : ''}" data-name="${card.name}" data-serial="${card.mintSerial||''}">
         <div class="bc-name">${card.name}</div>
-        <img class="bc-art" src="${getImg(card)}" onerror="this.src='/static/images/cards/placeholder.webp'" loading="lazy" decoding="async">
+        <img class="bc-art" src="${getImg(card)}" onerror="this.src='/static/images/cards/placeholder.webp'" loading="eager" decoding="async">
         <div class="bc-icons">${icons}</div>
         ${card.hasTaunt ? '<div class="bc-taunt-tag">TAUNT</div>' : ''}
+        ${mintBadge ? `<div class="bc-mint">${mintBadge}</div>` : ''}
+        ${card.mintSerial === 1 ? '<div class="mint-hof-stamp">I</div>' : ''}
         <div class="bc-stats">
             <span class="bc-stat bc-atk">${getEffAtk(card)}${SVG_ATK}</span>
             <span class="bc-stat bc-hp">${card.currentHp}${SVG_HP}</span>
@@ -376,15 +397,15 @@ function renderSynergies() {
 
 function updateAttackBtn() {
     const btn = $('attackBtn');
-    if (!G.isPlayerTurn || G.isAnimating) { btn.disabled = true; btn.querySelector('.btn-text').textContent = 'ATTACK'; btn.classList.remove('face-mode'); return; }
+    if (!G.isPlayerTurn || G.isAnimating) { btn.disabled = true; btn.querySelector('.btn-text').textContent = t('attack', 'ATTACK'); btn.classList.remove('face-mode'); return; }
     const hasAttacker = G.playerBoard.some(c => c && c.canAttackThisTurn && !c.hasAttacked && c.stealthTurns <= 0);
-    if (!hasAttacker) { btn.disabled = true; btn.querySelector('.btn-text').textContent = 'ATTACK'; btn.classList.remove('face-mode'); return; }
+    if (!hasAttacker) { btn.disabled = true; btn.querySelector('.btn-text').textContent = t('attack', 'ATTACK'); btn.classList.remove('face-mode'); return; }
     const hasTaunt = G.enemyBoard.some(c => c && c.hasTaunt && c.stealthTurns <= 0);
     const hasEnemyCards = G.enemyBoard.some(c => c);
     if (!hasEnemyCards || (!hasTaunt && selectedAttacker !== null)) {
-        btn.disabled = false; btn.querySelector('.btn-text').textContent = 'GO FACE'; btn.querySelector('.btn-icon').innerHTML = SVG_EXPLOSION_SM; btn.classList.add('face-mode');
+        btn.disabled = false; btn.querySelector('.btn-text').textContent = t('goFace', 'GO FACE'); btn.querySelector('.btn-icon').innerHTML = SVG_EXPLOSION_SM; btn.classList.add('face-mode');
     } else {
-        btn.disabled = false; btn.querySelector('.btn-text').textContent = 'ATTACK'; btn.querySelector('.btn-icon').innerHTML = SVG_SWORDS_SM; btn.classList.remove('face-mode');
+        btn.disabled = false; btn.querySelector('.btn-text').textContent = t('attack', 'ATTACK'); btn.querySelector('.btn-icon').innerHTML = SVG_SWORDS_SM; btn.classList.remove('face-mode');
     }
 }
 
@@ -606,7 +627,7 @@ async function processEndTurn(board, boardId) {
 
 // ═══ ENEMY AI ═══
 async function enemyTurn() {
-    addLog('--- ENEMY TURN ---', '');
+    addLog(`--- ${t('enemyTurn', 'ENEMY TURN')} ---`, '');
     if (G.enemyDeck.length > 0 && G.enemyHand.length < CFG.MAX_HAND) G.enemyHand.push(G.enemyDeck.pop());
     if (difficulty === 'boss' && G.enemyDeck.length > 0 && G.enemyHand.length < CFG.MAX_HAND) G.enemyHand.push(G.enemyDeck.pop());
     const eEnergy = Math.min(G.turn, CFG.MAX_ENERGY);
@@ -735,7 +756,7 @@ function checkGameOver() {
 function endGame(won) {
     const el = $('gameOver'); el.classList.remove('hidden');
     const title = $('gameOverTitle');
-    title.textContent = won ? 'VICTORY!' : 'DEFEAT';
+    title.textContent = won ? t('victory', 'VICTORY!') : t('defeat', 'DEFEAT');
     title.className = 'overlay-title ' + (won ? 'victory' : 'defeat');
     showAnnounce(announce(won ? 'victory' : 'defeat'));
     
@@ -746,12 +767,12 @@ function endGame(won) {
         if (typeof NW_WALLET !== 'undefined' && NW_WALLET.recordBattle) {
             reward = NW_WALLET.recordBattle(won);
             const parts = [];
-            if (reward.gold > 0) parts.push(`<span style="color:#ffd700">+${reward.gold} Gold</span>`);
-            if (reward.wood > 0) parts.push(`<span style="color:#00ff88">+${reward.wood} Sacred Log!</span>`);
-            if (won && reward.streak >= 3) parts.push(`<span style="color:#ff6b00">${reward.streak} Win Streak!</span>`);
+            if (reward.gold > 0) parts.push(`<span style="color:#ffd700">+${reward.gold} ${t('gold', 'Gold')}</span>`);
+            if (reward.wood > 0) parts.push(`<span style="color:#00ff88">+${reward.wood} ${t('sacredLog', 'Sacred Log')}!</span>`);
+            if (won && reward.streak >= 3) parts.push(`<span style="color:#ff6b00">${reward.streak} ${t('winStreak', 'Win Streak')}!</span>`);
             if (parts.length > 0) {
                 rewardHTML = `<div class="battle-rewards" style="margin-top:12px;padding:10px;background:rgba(255,215,0,0.1);border:1px solid rgba(255,215,0,0.3);border-radius:10px;text-align:center">
-                    <div style="font-size:11px;opacity:0.7;margin-bottom:4px">REWARDS</div>
+                    <div style="font-size:11px;opacity:0.7;margin-bottom:4px">${t('rewards', 'REWARDS')}</div>
                     <div style="font-size:16px;font-weight:700;display:flex;gap:12px;justify-content:center">${parts.join('')}</div>
                 </div>`;
             }
@@ -759,14 +780,14 @@ function endGame(won) {
     } catch (e) { console.warn('[BATTLE] Reward error:', e); }
     
     $('gameOverStats').innerHTML = `
-        <div>Damage Dealt: <strong>${G.stats.damageDealt}</strong></div>
-        <div>Face Damage: <strong>${G.stats.faceDamage}</strong></div>
-        <div>Cards Played: <strong>${G.stats.cardsPlayed}</strong></div>
-        <div>Crits: <strong>${G.stats.critsLanded}</strong></div>
-        <div>Abilities: <strong>${G.stats.abilitiesFired}</strong></div>
-        <div>Synergies: <strong>${G.stats.synergiesActivated}</strong></div>
-        <div>Max Combo: <strong>${G.stats.maxCombo}</strong></div>
-        <div>Turns: <strong>${G.turn}</strong></div>
+        <div>${t('damageDealt', 'Damage Dealt')}: <strong>${G.stats.damageDealt}</strong></div>
+        <div>${t('faceDamage', 'Face Damage')}: <strong>${G.stats.faceDamage}</strong></div>
+        <div>${t('cardsPlayed', 'Cards Played')}: <strong>${G.stats.cardsPlayed}</strong></div>
+        <div>${t('crits', 'Crits')}: <strong>${G.stats.critsLanded}</strong></div>
+        <div>${t('abilities', 'Abilities')}: <strong>${G.stats.abilitiesFired}</strong></div>
+        <div>${t('synergies', 'Synergies')}: <strong>${G.stats.synergiesActivated}</strong></div>
+        <div>${t('peakCombo', 'Max Combo')}: <strong>${G.stats.maxCombo}</strong></div>
+        <div>${t('turns', 'Turns')}: <strong>${G.turn}</strong></div>
         ${rewardHTML}`;
     try {
         const p = JSON.parse(localStorage.getItem('nw_profile') || '{}');
@@ -825,6 +846,11 @@ window.selectDiff = function(diff) {
 // ═══ INIT ═══
 async function init() {
     console.log('[Battle v7.0] Init...');
+    // Fix script-order-dependency (4x pattern): defer scripts may not be ready at DOMContentLoaded
+    // Retry up to 500ms waiting for NW_CARDS to be defined by deferred nw-cards.js
+    for (let i = 0; i < 10 && typeof NW_CARDS === 'undefined'; i++) {
+        await new Promise(r => setTimeout(r, 50));
+    }
     try {
         if (typeof NW_CARDS !== 'undefined') {
             await NW_CARDS.init();
@@ -841,24 +867,48 @@ async function init() {
     console.log(`[Battle v7.0] ${CARDS.length} cards loaded`);
     if (!CARDS.length) { alert('No cards loaded!'); return; }
 
+    // Preload ALL card images + sounds before battle starts
+    async function preloadBattleAssets(deck1, deck2) {
+        const promises = [];
+        const allCards = [...deck1, ...deck2];
+        for (const card of allCards) {
+            if (card.img) {
+                const src = `/static/images/cards/thumbs/${card.img}`;
+                promises.push(new Promise(resolve => {
+                    const img = new Image();
+                    img.onload = resolve;
+                    img.onerror = resolve;
+                    img.src = src;
+                }));
+            }
+        }
+        // Also preload battle sounds via NW_SOUNDS if not already done
+        if (window.NW_SOUNDS && NW_SOUNDS.preloadWebAudio) {
+            promises.push(NW_SOUNDS.preloadWebAudio(['attack','critical','death','fightStart','slam','draw','turnEnd','victory','defeat']));
+        }
+        await Promise.all(promises);
+    }
+
     $('startBtn').addEventListener('click', async () => {
         $('startBtn').disabled = true;
-        $('startBtn').textContent = 'LOADING...';
+        $('startBtn').textContent = t('loading', 'LOADING...');
         if (difficulty === 'boss') G.enemyHP = CFG.BOSS.hp;
         G.playerDeck = createDeck(true);
         G.enemyDeck = createDeck(false);
         if (!G.playerDeck.length) G.playerDeck = shuffle(CARDS.slice(0, CFG.DECK_SIZE));
         if (!G.enemyDeck.length) G.enemyDeck = shuffle(CARDS.slice(0, CFG.DECK_SIZE));
+        // PRELOAD GATE: all images + sounds cached before countdown
+        await preloadBattleAssets(G.playerDeck, G.enemyDeck);
         G.playerHand = []; G.enemyHand = [];
         for (let i = 0; i < CFG.START_HAND; i++) {
             if (G.playerDeck.length) G.playerHand.push(G.playerDeck.pop());
             if (G.enemyDeck.length) G.enemyHand.push(G.enemyDeck.pop());
         }
         $('startScreen').classList.add('hidden');
-        showAnnounce('3'); await sleep(600);
-        showAnnounce('2'); await sleep(600);
-        showAnnounce('1'); await sleep(600);
-        showAnnounce(announce('battleStart')); await sleep(800);
+        showAnnounce('3'); await sleep(400);
+        showAnnounce('2'); await sleep(400);
+        showAnnounce('1'); await sleep(400);
+        showAnnounce(announce('battleStart')); await sleep(500);
         renderAll();
         addLog(announce('battleStart'), '');
     });
@@ -914,6 +964,13 @@ window.closeCardZoom = function(e) {
 if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
 else init();
 
+// ═══ LIVE I18N: update dynamic text when language toggles mid-battle ═══
+if (typeof NW_I18N !== 'undefined' && NW_I18N.onChange) {
+    NW_I18N.onChange(() => {
+        try { renderTurn(); updateAttackBtn(); } catch (e) {}
+    });
+}
+
 // ═══ MINIMAL API for assist systems (coach, smart-glow, auto-play) ═══
 // Read-only state + action triggers. Battle logic stays in this IIFE.
 window.NW_BATTLE = {
@@ -927,7 +984,8 @@ window.NW_BATTLE = {
     enemyBoard: G.enemyBoard,
     selectedCard: G.selectedCard,
     selectedAttacker: selectedAttacker,
-    difficulty: difficulty
+    difficulty: difficulty,
+    stats: { ...G.stats } // expose stats copy for observer modules
   }),
   getEffAtk, getEffCrit, getEffDodge,
   // Actions — same as clicking the UI elements

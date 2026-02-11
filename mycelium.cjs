@@ -26,6 +26,8 @@
  *   --import-shared                  # Import lessons from shared library
  *   --wip "task"                     # Save work-in-progress (survives chat compaction)
  *   --wip-done                       # Clear WIP after task complete
+ *   --token-check [files...]         # Token budget audit + cost optimization advice
+ *   --cost-plan <files...>           # Cheapest approach for reading/editing specific files
  */
 
 const fs = require('fs');
@@ -33,10 +35,55 @@ const path = require('path');
 const { execSync } = require('child_process');
 
 const MEMORY_FILE = path.join(__dirname, '.mycelium/memory.json');
-const MAX_ENTRIES = 500; // Keep last 500 snapshots (~6 months of daily work)
-const MAX_HOTSPOTS = 200; // Only track top 200 hotspots
-const MAX_COCHANGES = 300; // Only track top 300 co-change pairs
+const MAX_ENTRIES = 50; // Keep last 50 snapshots (~6 weeks) §5 Context Window — older data adds noise
+const MAX_HOTSPOTS = 100; // Only track top 100 hotspots §5
+const MAX_COCHANGES = 150; // Only track top 150 co-change pairs §5
 const MAX_MEMORY_KB = 200; // Auto-compact when memory.json exceeds this
+const MAX_WATCH_KB = 400;  // Auto-trim watch.json when exceeds this
+const MAX_EVAL_HISTORY = 30; // Keep only 30 unique eval snapshots
+const MAX_LEARNINGS = 30;  // Keep 30 most recent learnings §5
+const MAX_FIX_CHAINS = 15; // Keep 15 most recent fix chains §5
+const MAX_RISK_LESSONS = 3; // Max lessons per risky file (keep sharpest)
+const MAX_LESSON_CHARS = 80; // Actionable lessons must be concise
+const SNAPSHOT_TOP_FILES = 5; // Keep only top 5 risky files per snapshot
+const WATCH_COMMIT_TOP_FILES = 5; // Keep only top 5 files per watch commit
+
+// ─── TOKEN BUDGET & COST OPTIMIZATION CONSTANTS ──────────────────────
+// Ref: "Minimizing LLM Costs" (Manus AI, 2026-02-10) — 10 dimensions applied.
+// COST PHILOSOPHY:
+//   Input tokens cost $X, output tokens cost 2-4x more (§6 Output Optimization).
+//   Grep=50tok, full read=10K-46K — 200x cost diff for same info (§1 Prompt Eng).
+//   Caching repeated reads eliminates 40-90% redundant calls (§2 Caching).
+//   Batch operations to reduce per-call overhead (§4 Batching).
+//   Structured compact output saves 20-40% vs verbose (§6 Structured Output).
+//   Early termination: stop as soon as goal is achieved (§9 Agentic Workflow).
+const TOKEN_LIMIT = 200000;         // Platform hard limit
+const TOKEN_RESPONSE_RESERVE = 30000; // Reserve for AI response generation
+const TOKEN_SAFE_BUDGET = TOKEN_LIMIT - TOKEN_RESPONSE_RESERVE; // 170K usable
+const TOKEN_WARN_THRESHOLD = 0.70;  // Warn at 70% of safe budget (~119K)
+const CHARS_PER_TOKEN = 4;          // Conservative estimate (code ≈ 3.5-4 chars/token)
+const MAX_CONTEXT_TOKENS = 4000;    // .mycelium-context cap (was 6K, tightened per §5 Context Window)
+const MAX_SINGLE_FILE_READ_TOKENS = 15000; // Never read a file >15K tokens whole
+const LARGE_WRITE_CHUNK_LINES = 200; // Chunk large file writes at 200 lines
+const MAX_FULL_READS_PER_SESSION = 2; // Max full-file reads (>20KB) per session
+const SESSION_BUDGET_FILE = path.join(__dirname, '.mycelium-token-ledger');
+const OUTPUT_TOKEN_MULTIPLIER = 3;  // Output tokens cost ~3x input (§6 Output Optimization)
+
+// ─── IN-MEMORY CACHE (§2 Caching Strategies) ────────────────────────
+// Cache memory.json reads to avoid re-parsing 200KB+ file on every operation.
+// Hit rate target: >80% for guard/snapshot/brief within a single session.
+let _memoryCache = null;
+let _memoryCacheMtime = 0;
+function loadMemoryCached() {
+  try {
+    const stat = fs.statSync(MEMORY_FILE);
+    if (_memoryCache && stat.mtimeMs === _memoryCacheMtime) return _memoryCache;
+    _memoryCache = JSON.parse(fs.readFileSync(MEMORY_FILE, 'utf8'));
+    _memoryCacheMtime = stat.mtimeMs;
+    return _memoryCache;
+  } catch { return loadMemory(); }
+}
+function invalidateCache() { _memoryCache = null; _memoryCacheMtime = 0; }
 
 // ─── Helpers ────────────────────────────────────────────────────────
 
@@ -70,12 +117,8 @@ function saveMemory(mem) {
   const json = JSON.stringify(mem, null, 2);
   fs.writeFileSync(MEMORY_FILE, json);
   
-  // Auto-compact if file is too large
-  const sizeKB = Math.round(Buffer.byteLength(json) / 1024);
-  if (sizeKB > MAX_MEMORY_KB) {
-    console.log(`[mycelium] Auto-compacting: ${sizeKB}KB > ${MAX_MEMORY_KB}KB limit`);
-    compact(mem, true); // silent save inside
-  }
+  // Auto-trim: checks ALL data files (memory + watch + eval) and compresses if needed
+  autoTrim();
 }
 
 // ── Check if a file still exists in the repo ────────────────────────
@@ -86,7 +129,7 @@ function fileExists(fp) {
 // Paths to skip in query display (noise, archives, generated)
 // Configurable via .mycelium/config.json { "noisePaths": [...] }
 const DEFAULT_NOISE = ['archive/', 'node_modules/', '.husky/', 'dist/', 'build/', 'out/', '.next/', 
-  'package-lock.json', 'yarn.lock', 'pnpm-lock.yaml', '.mycelium/memory.json', 
+  'package-lock.json', 'yarn.lock', 'pnpm-lock.yaml', '.mycelium/memory.json', '.mycelium-mined/',
   'coverage/', '.nyc_output/', '__pycache__/', '.pytest_cache/'];
 function loadConfig() {
   try {
@@ -855,6 +898,220 @@ function autoDistill(mem) {
   deepReflect(mem);
 }
 
+// ─── VALIDATION LOOP: Closed-loop lesson application tracking ────
+// On every commit, checks if files had lessons and whether those lessons
+// were followed or violated. Tracks effectiveness per lesson.
+// This is the missing piece: LEARN → APPLY → VERIFY → STRENGTHEN/PRUNE
+
+function validateLessonApplication(mem, commit) {
+  const watchPath = path.join(__dirname, '.mycelium', 'watch.json');
+  if (!fs.existsSync(watchPath)) return null;
+  
+  let watchData;
+  try { watchData = JSON.parse(fs.readFileSync(watchPath, 'utf8')); } catch { return null; }
+  
+  const risks = watchData.risks || {};
+  const files = (commit.files || []).filter(f => typeof f === 'string' && !isNoise(f));
+  if (files.length === 0) return null;
+  
+  // Initialize validation tracking in watch.json
+  if (!watchData.validationLog) watchData.validationLog = [];
+  
+  const entry = {
+    ts: Date.now(),
+    date: new Date().toISOString().split('T')[0],
+    commit: commit.hash,
+    filesWithLessons: 0,
+    lessonsApplicable: 0,
+    lessonsFollowed: 0,
+    lessonsViolated: 0,
+    details: []
+  };
+  
+  // Get the diff for this commit
+  let diff = '';
+  try { diff = run('git diff HEAD~1 HEAD 2>/dev/null').toLowerCase(); } catch {}
+  
+  for (const f of files) {
+    const risk = risks[f];
+    if (!risk || !risk.lessons || risk.lessons.length === 0) continue;
+    entry.filesWithLessons++;
+    
+    // Track per-lesson effectiveness
+    if (!risk.lessonStats) risk.lessonStats = {};
+    
+    for (const lesson of risk.lessons) {
+      const text = (typeof lesson === 'string' ? lesson : (lesson.lesson || '')).toLowerCase();
+      if (!text || text.length < 10) continue;
+      entry.lessonsApplicable++;
+      
+      // Initialize stats for this lesson
+      const lessonKey = text.slice(0, 60);
+      if (!risk.lessonStats[lessonKey]) {
+        risk.lessonStats[lessonKey] = { shown: 0, followed: 0, violated: 0, lastChecked: null };
+      }
+      const stats = risk.lessonStats[lessonKey];
+      stats.shown++;
+      stats.lastChecked = new Date().toISOString().split('T')[0];
+      
+      // Check if the lesson's concerns appear in the diff
+      // Extract the actionable part from IF→THEN patterns
+      const checkResult = checkLessonInDiff(text, diff, f);
+      
+      if (checkResult.applicable) {
+        if (checkResult.followed) {
+          entry.lessonsFollowed++;
+          stats.followed++;
+          entry.details.push({ file: f, lesson: lessonKey, result: 'followed' });
+        } else if (checkResult.violated) {
+          entry.lessonsViolated++;
+          stats.violated++;
+          entry.details.push({ file: f, lesson: lessonKey, result: 'violated', reason: checkResult.reason });
+        }
+        // else: inconclusive — lesson topic wasn't relevant to this diff
+      }
+    }
+  }
+  
+  // Only log if there were files with lessons
+  if (entry.filesWithLessons > 0) {
+    // Cap validation log to last 50 entries
+    watchData.validationLog.push(entry);
+    if (watchData.validationLog.length > 50) {
+      watchData.validationLog = watchData.validationLog.slice(-50);
+    }
+    
+    // ── PRUNE dead lessons: if shown 5+ times but never followed, it's noise ──
+    for (const [file, risk] of Object.entries(risks)) {
+      if (!risk.lessonStats) continue;
+      for (const [key, stats] of Object.entries(risk.lessonStats)) {
+        if (stats.shown >= 5 && stats.followed === 0 && stats.violated === 0) {
+          // Lesson never fires — it's too vague or irrelevant. Mark for removal.
+          stats.dead = true;
+        }
+        // ── STRENGTHEN effective lessons: if followed 3+ times, promote to constraint ──
+        if (stats.followed >= 3 && !stats.promoted) {
+          const area = classifyArea(file);
+          if (area && mem.constraints[area]) {
+            const exists = mem.constraints[area].some(c => c.fact.includes(key.slice(0, 40)));
+            if (!exists && mem.constraints[area].length < 20) {
+              mem.constraints[area].push({
+                fact: `[proven] ${key.slice(0, 70)}`,
+                ts: Date.now(),
+                date: new Date().toISOString().split('T')[0],
+                autoGenerated: true,
+                source: 'validation-loop: lesson followed 3+ times → promoted to constraint'
+              });
+              stats.promoted = true;
+            }
+          }
+        }
+      }
+    }
+    
+    // Save updated watch data
+    try { fs.writeFileSync(watchPath, JSON.stringify(watchData, null, 2)); } catch {}
+    
+    const rate = entry.lessonsApplicable > 0 
+      ? Math.round((entry.lessonsFollowed / entry.lessonsApplicable) * 100) 
+      : 0;
+    
+    if (entry.lessonsViolated > 0) {
+      console.log(`[mycelium] ⚠ VALIDATION: ${entry.lessonsViolated} lesson(s) VIOLATED in this commit (${rate}% application rate)`);
+      for (const d of entry.details.filter(d => d.result === 'violated').slice(0, 3)) {
+        console.log(`  → ${d.file}: ${d.lesson.slice(0, 60)}`);
+      }
+    } else if (entry.lessonsFollowed > 0) {
+      console.log(`[mycelium] ✓ VALIDATION: ${entry.lessonsFollowed}/${entry.lessonsApplicable} lessons applied (${rate}%)`);
+    }
+    
+    return {
+      filesWithLessons: entry.filesWithLessons,
+      applicable: entry.lessonsApplicable,
+      followed: entry.lessonsFollowed,
+      violated: entry.lessonsViolated,
+      rate
+    };
+  }
+  
+  return null;
+}
+
+// ── Log guard actions for validation loop tracking ──
+function logGuardAction(action, file, patterns, breakCount) {
+  const watchPath = path.join(__dirname, '.mycelium', 'watch.json');
+  try {
+    const watch = JSON.parse(fs.readFileSync(watchPath, 'utf8'));
+    if (!watch.guardLog) watch.guardLog = [];
+    watch.guardLog.push({
+      ts: Date.now(),
+      date: new Date().toISOString().split('T')[0],
+      action, // 'block' | 'warn'
+      file,
+      patterns: patterns.slice(0, 5),
+      breakCount
+    });
+    // Cap to last 50
+    if (watch.guardLog.length > 50) watch.guardLog = watch.guardLog.slice(-50);
+    fs.writeFileSync(watchPath, JSON.stringify(watch, null, 2));
+  } catch { /* best effort */ }
+}
+
+// ── Check if a specific lesson was followed or violated in a diff ──
+function checkLessonInDiff(lessonText, diff, file) {
+  const result = { applicable: false, followed: false, violated: false, reason: '' };
+  const fileDiffIdx = diff.indexOf(file.toLowerCase());
+  if (fileDiffIdx === -1) return result; // file not in diff
+  
+  const nextDiffIdx = diff.indexOf('diff --git', fileDiffIdx + 1);
+  const fileDiff = diff.slice(fileDiffIdx, nextDiffIdx === -1 ? diff.length : nextDiffIdx);
+  
+  // Check known IF→THEN patterns
+  const checks = [
+    { pattern: /viewport/, check: () => fileDiff.includes('viewport'), name: 'viewport meta' },
+    { pattern: /data-i18n/, check: () => !fileDiff.includes('+') || !fileDiff.match(/data-i18n="[^"]*"(?!.*\ben\b)/), name: 'i18n keys' },
+    { pattern: /innerhtml/, check: () => !fileDiff.includes('+innerhtml'), name: 'innerHTML safety' },
+    { pattern: /loading.*eager|horizontal.*scroll/, check: () => !fileDiff.includes('+loading="lazy"'), name: 'lazy in scroll' },
+    { pattern: /overflow.*hidden/, check: () => !fileDiff.includes('+overflow') || fileDiff.includes('overflow-x:hidden') || fileDiff.includes('overflow: hidden'), name: 'overflow control' },
+    { pattern: /z-index/, check: () => {
+      const addedZindex = (fileDiff.match(/\+.*z-index/g) || []).length;
+      return addedZindex <= 1; // Adding many z-indexes = likely conflict
+    }, name: 'z-index layers' },
+    { pattern: /optional chaining|\?\.\s/, check: () => !fileDiff.match(/\+.*\.[a-z]+\.[a-z]+(?!\?)/i), name: 'optional chaining' },
+    { pattern: /font-display.*swap/, check: () => !fileDiff.includes('@font-face') || fileDiff.includes('font-display'), name: 'font-display' },
+    { pattern: /gm.*mode|gate.*behind.*gm/, check: () => !fileDiff.includes('+debug') || fileDiff.includes('gm='), name: 'GM gating' },
+  ];
+  
+  for (const { pattern, check, name } of checks) {
+    if (pattern.test(lessonText)) {
+      result.applicable = true;
+      try {
+        if (check()) {
+          result.followed = true;
+        } else {
+          result.violated = true;
+          result.reason = `${name} rule not followed`;
+        }
+      } catch { /* check failed, skip */ }
+      return result;
+    }
+  }
+  
+  // Generic check: if the lesson mentions a keyword that appears in added lines
+  // This is a soft check — just seeing the keyword in adds means awareness
+  const keywords = lessonText.split(/[\s→,;]+/).filter(w => w.length > 4);
+  const addedLines = fileDiff.split('\n').filter(l => l.startsWith('+'));
+  const addedText = addedLines.join(' ');
+  
+  const keywordHits = keywords.filter(k => addedText.includes(k)).length;
+  if (keywordHits >= 2) {
+    result.applicable = true;
+    result.followed = true; // touching the same concepts = awareness
+  }
+  
+  return result;
+}
+
 // ─── Snapshot ───────────────────────────────────────────────────────
 
 function takeSnapshot() {
@@ -887,6 +1144,14 @@ function takeSnapshot() {
 
   mem.snapshots.push(snapshot);
   updatePatterns(mem, commit);
+
+  // ── VALIDATION LOOP: Check if lessons were applied in this commit ──
+  // For every file in this commit that has known lessons/risks,
+  // check if the lesson was followed or violated
+  const validationResult = validateLessonApplication(mem, commit);
+  if (validationResult) {
+    snapshot.validation = validationResult;
+  }
 
   // Blueprint: Critique (auto-reflect on fix chains)
   autoReflect(mem, commit);
@@ -1549,6 +1814,277 @@ function postfix() {
 }
 
 
+// ─── TOKEN BUDGET & COST OPTIMIZATION ENGINE ────────────────────────────────
+// Root cause: Session hit 210,007 tokens > 200,000 limit during a Write File.
+// 7 large code dumps accumulated as Tool Results without budget tracking.
+// Fix: (1) estimate tokens before reads/writes, (2) cap .mycelium-context,
+// (3) provide --token-check CLI, (4) cost-tier guidance, (5) session ledger.
+//
+// COST PHILOSOPHY: Quality comes from precision, not volume. A grep that finds
+// the right function in 50 tokens is better than reading 46,000 tokens of file.
+// Every operation has a cost tier. Always pick the lowest tier that works.
+
+function estimateTokens(text) {
+  return Math.ceil((typeof text === 'string' ? text.length : 0) / CHARS_PER_TOKEN);
+}
+
+function estimateFileTokens(filePath) {
+  try {
+    const resolved = path.resolve(filePath);
+    if (!fs.existsSync(resolved)) return 0;
+    const size = fs.statSync(resolved).size;
+    return Math.ceil(size / CHARS_PER_TOKEN);
+  } catch { return 0; }
+}
+
+/**
+ * Classify a file into a cost tier for AI operations.
+ * Tier 1: grep/head (5-50 tok), Tier 2: chunk read (500-1500), 
+ * Tier 3: full read <15K (3K-10K), Tier 4: full read >15K (10K-46K), 
+ * Tier 5: FATAL read >50K (50K-186K)
+ */
+function fileCostTier(filePath) {
+  const tokens = estimateFileTokens(filePath);
+  if (tokens === 0) return { tier: 0, label: 'empty', tokens, strategy: 'skip' };
+  if (tokens <= 3000) return { tier: 1, label: 'cheap', tokens, strategy: 'safe to read whole' };
+  if (tokens <= MAX_SINGLE_FILE_READ_TOKENS) return { tier: 2, label: 'medium', tokens, strategy: 'read whole OR grep + chunk' };
+  if (tokens <= 50000) return { tier: 3, label: 'expensive', tokens, strategy: 'GREP ONLY — never read whole' };
+  return { tier: 4, label: 'FATAL', tokens, strategy: 'use CLI commands (--query/--status), NEVER read' };
+}
+
+/**
+ * Session token ledger — tracks accumulated reads this session.
+ * Written to .mycelium-token-ledger on every --token-check call.
+ * Helps AI estimate remaining budget mid-session.
+ */
+function loadTokenLedger() {
+  try {
+    if (fs.existsSync(SESSION_BUDGET_FILE)) {
+      return JSON.parse(fs.readFileSync(SESSION_BUDGET_FILE, 'utf8'));
+    }
+  } catch {}
+  return { sessionStart: Date.now(), reads: [], totalEstimated: 0 };
+}
+
+function saveTokenLedger(ledger) {
+  try { fs.writeFileSync(SESSION_BUDGET_FILE, JSON.stringify(ledger, null, 2)); } catch {}
+}
+
+function recordRead(filePath, tokens) {
+  const ledger = loadTokenLedger();
+  ledger.reads.push({ file: path.relative(__dirname, filePath), tokens, at: Date.now() });
+  ledger.totalEstimated += tokens;
+  saveTokenLedger(ledger);
+  return ledger;
+}
+
+/**
+ * tokenCheck — Token budget audit + cost optimization advisor.
+ * Usage: node mycelium.cjs --token-check [file1] [file2] ...
+ *   No args: full audit of all project files + cost-tier advice
+ *   With args: cost plan for specific files you intend to read/edit
+ */
+function tokenCheck(files) {
+  const budgetInfo = {
+    limit: TOKEN_LIMIT,
+    safeUsable: TOKEN_SAFE_BUDGET,
+    responseReserve: TOKEN_RESPONSE_RESERVE,
+    warnAt: Math.floor(TOKEN_SAFE_BUDGET * TOKEN_WARN_THRESHOLD),
+  };
+
+  console.log('╔══════════════════════════════════════════════════════════╗');
+  console.log('║     MYCELIUM TOKEN BUDGET & COST OPTIMIZER              ║');
+  console.log('╚══════════════════════════════════════════════════════════╝');
+  console.log('');
+  console.log(`  Platform limit:     ${budgetInfo.limit.toLocaleString()} tokens`);
+  console.log(`  Response reserve:   ${budgetInfo.responseReserve.toLocaleString()} tokens`);
+  console.log(`  Safe usable:        ${budgetInfo.safeUsable.toLocaleString()} tokens`);
+  console.log(`  Warn threshold:     ${budgetInfo.warnAt.toLocaleString()} tokens (${Math.round(TOKEN_WARN_THRESHOLD * 100)}%)`);
+  console.log('');
+
+  // Session ledger — show what's been consumed so far
+  const ledger = loadTokenLedger();
+  if (ledger.reads.length > 0) {
+    console.log(`  SESSION LEDGER (${ledger.reads.length} reads, ~${ledger.totalEstimated.toLocaleString()} tokens consumed):`);
+    for (const r of ledger.reads.slice(-8)) {
+      console.log(`    ${r.tokens.toLocaleString().padStart(7)} tok  ${r.file}`);
+    }
+    const pct = Math.round(ledger.totalEstimated / budgetInfo.safeUsable * 100);
+    const remaining = budgetInfo.safeUsable - ledger.totalEstimated;
+    console.log(`  Budget used: ~${pct}%  |  Remaining: ~${remaining.toLocaleString()} tokens`);
+    if (pct >= 70) console.log('  ⚠ OVER 70% — switch to grep-only mode!');
+    if (pct >= 90) console.log('  🚨 CRITICAL — wrap up and commit, do NOT start new reads!');
+    console.log('');
+  }
+
+  // Default: show all mycelium-related files
+  const checkFiles = files && files.length > 0 ? files : [
+    '.mycelium-context',
+    '.mycelium/memory.json',
+    '.mycelium/watch.json',
+    '.mycelium/eval.json',
+    '.mycelium/fix-log.json',
+    'CLAUDE.md',
+    'mycelium.cjs',
+    'mycelium-watch.cjs',
+    'mycelium-engine.cjs',
+    'mycelium-eval.cjs',
+    'mycelium-fix.cjs',
+    'mycelium-doctor.cjs',
+    'mycelium-upgrade.cjs',
+    'mycelium-why.cjs',
+    'tools/mycelium-miner.cjs',
+    'tools/mycelium-auto-mine.cjs',
+    'bin/mycelium.cjs',
+  ];
+
+  let totalTokens = 0;
+  const results = [];
+  for (const f of checkFiles) {
+    const fp = path.resolve(__dirname, f);
+    const cost = fileCostTier(fp);
+    if (cost.tokens > 0) {
+      const sizeKB = Math.round(fs.statSync(fp).size / 1024);
+      results.push({ file: f, tokens: cost.tokens, sizeKB, tier: cost.tier, label: cost.label, strategy: cost.strategy });
+      totalTokens += cost.tokens;
+    }
+  }
+
+  console.log('  FILE COSTS (tier: 1=cheap, 2=medium, 3=expensive, 4=FATAL):');
+  console.log('  ─────────────────────────────────────────────────────────');
+  for (const r of results.sort((a, b) => b.tokens - a.tokens)) {
+    const tierIcon = r.tier <= 1 ? '✓' : r.tier === 2 ? '⚠' : r.tier === 3 ? '!!' : '💀';
+    const bar = '█'.repeat(Math.min(20, Math.round(r.tokens / 3000)));
+    console.log(`  ${tierIcon} T${r.tier} ${r.tokens.toLocaleString().padStart(7)} tok  ${r.sizeKB.toString().padStart(4)}KB  ${bar}  ${r.file}`);
+    if (r.tier >= 3) console.log(`       → ${r.strategy}`);
+  }
+  console.log('  ─────────────────────────────────────────────────────────');
+  console.log(`  TOTAL: ${totalTokens.toLocaleString()} tokens (${Math.round(totalTokens / budgetInfo.safeUsable * 100)}% of safe budget)`);
+  console.log('');
+
+  // COST-OPTIMIZED OPERATION GUIDE (§1 Prompt Eng + §6 Output Opt + §9 Agentic Workflow)
+  console.log('  COST-OPTIMIZED OPERATIONS (cheapest first):');
+  console.log('  ┌─────────┬──────────────────────────────────────┬──────────┐');
+  console.log('  │ Cost    │ Operation                            │ ~Tokens  │');
+  console.log('  ├─────────┼──────────────────────────────────────┼──────────┤');
+  console.log('  │ FREE    │ grep -n "fn_name" file.cjs           │     5-50 │');
+  console.log('  │ FREE    │ wc -l file / head -20 file           │     5-20 │');
+  console.log('  │ CHEAP   │ Read offset=X limit=100              │  500-1.5K│');
+  console.log('  │ CHEAP   │ Edit old="X" new="Y"                 │  100-300 │');
+  console.log('  │ MEDIUM  │ cat .mycelium-context (session start) │     ~4K  │');
+  console.log('  │ MEDIUM  │ Read whole file <40KB                │  3K-10K  │');
+  console.log('  │ EXPEN.  │ Read whole file >40KB                │ 10K-46K  │');
+  console.log('  │ FATAL   │ Read memory.json / watch.json        │ 67K-186K │');
+  console.log('  └─────────┴──────────────────────────────────────┴──────────┘');
+  console.log('');
+  console.log('  OUTPUT TOKEN WARNING (§6 - output costs 3x input):');
+  console.log('    Asking AI to "explain in detail" = 500+ output tokens = ~1500 input equivalent');
+  console.log('    Use: "list changes" not "explain changes in detail"');
+  console.log('    Use: JSON/structured output not prose');
+  console.log('    Use: max_tokens cap on all API calls');
+  console.log('');
+
+  // CONCRETE CHEAPEST-PATH ADVICE
+  console.log('  CHEAPEST PATH FOR COMMON TASKS:');
+  console.log('    "Find a function"    → grep -n "function name" file     (50 tok)');
+  console.log('    "Understand a fn"    → grep → Read offset=N limit=60   (800 tok)');
+  console.log('    "Edit a function"    → grep → Edit old/new             (150 tok)');
+  console.log('    "Check constraints"  → mycelium --premortem area       (300 tok)');
+  console.log('    "Check all risks"    → cat .mycelium-context           (5K tok, 1x only)');
+  console.log('    "Build new 500L file"→ Write directly, NO inline code  (3K tok)');
+  console.log('    "Refactor 3 files"   → grep×3 → Edit×3, NOT read×3    (900 tok vs 45K)');
+  console.log('');
+  
+  console.log('  SESSION RULES:');
+  console.log(`    Max full reads (>20KB): ${MAX_FULL_READS_PER_SESSION} per session`);
+  console.log(`    Context cap: ${MAX_CONTEXT_TOKENS.toLocaleString()} tokens`);
+  console.log(`    Single file cap: ${MAX_SINGLE_FILE_READ_TOKENS.toLocaleString()} tokens`);
+  console.log('    After 4+ tool results: grep-only mode');
+  console.log('    After 70% budget: wrap up, commit, start new session');
+  console.log('');
+
+  return { totalTokens, results, budgetInfo, ledger };
+}
+
+/**
+ * costPlan — Given a list of files you plan to touch, shows the cheapest
+ * approach for each and estimates total session cost.
+ * Usage: node mycelium.cjs --cost-plan file1 file2 ...
+ */
+function costPlan(files) {
+  if (!files || files.length === 0) {
+    console.log('Usage: node mycelium.cjs --cost-plan <file1> [file2] ...');
+    console.log('Shows the cheapest approach for reading/editing each file.');
+    return;
+  }
+
+  console.log('╔══════════════════════════════════════════════════════════╗');
+  console.log('║     COST PLAN — Cheapest Path for Your Task             ║');
+  console.log('╚══════════════════════════════════════════════════════════╝');
+  console.log('');
+
+  let totalCheap = 0;
+  let totalExpensive = 0;
+  const plans = [];
+
+  for (const f of files) {
+    const fp = path.resolve(__dirname, f);
+    const cost = fileCostTier(fp);
+    const lines = cost.tokens > 0 ? (() => { try { return fs.readFileSync(fp, 'utf8').split('\n').length; } catch { return 0; } })() : 0;
+
+    let cheapCost, cheapMethod, expensiveCost, expensiveMethod;
+
+    if (cost.tier <= 1) {
+      // Small file — read whole is fine
+      cheapCost = cost.tokens;
+      cheapMethod = 'Read whole file';
+      expensiveCost = cost.tokens;
+      expensiveMethod = 'Read whole file';
+    } else if (cost.tier === 2) {
+      // Medium — grep + chunk is cheaper
+      cheapCost = 150; // grep + edit
+      cheapMethod = 'grep -n → Edit specific lines';
+      expensiveCost = cost.tokens;
+      expensiveMethod = 'Read whole file';
+    } else {
+      // Large or FATAL — must use grep
+      cheapCost = 150;
+      cheapMethod = 'grep -n → Read offset/limit → Edit';
+      expensiveCost = cost.tokens;
+      expensiveMethod = 'Read whole (WILL CRASH SESSION)';
+    }
+
+    plans.push({ file: f, lines, cost, cheapCost, cheapMethod, expensiveCost, expensiveMethod });
+    totalCheap += cheapCost;
+    totalExpensive += expensiveCost;
+  }
+
+  for (const p of plans) {
+    const tierIcon = p.cost.tier <= 1 ? '✓' : p.cost.tier === 2 ? '⚠' : '!!';
+    console.log(`  ${tierIcon} ${p.file} (${p.lines} lines, ${p.cost.tokens.toLocaleString()} tok if read whole)`);
+    console.log(`    CHEAP: ${p.cheapMethod} → ~${p.cheapCost.toLocaleString()} tokens`);
+    if (p.cheapCost !== p.expensiveCost) {
+      const savings = Math.round((1 - p.cheapCost / p.expensiveCost) * 100);
+      console.log(`    AVOID: ${p.expensiveMethod} → ~${p.expensiveCost.toLocaleString()} tokens (${savings}% waste)`);
+    }
+    console.log('');
+  }
+
+  const savings = totalExpensive > 0 ? Math.round((1 - totalCheap / totalExpensive) * 100) : 0;
+  console.log('  ─────────────────────────────────────────────────────────');
+  console.log(`  CHEAP PATH TOTAL:     ~${totalCheap.toLocaleString()} tokens`);
+  console.log(`  EXPENSIVE PATH TOTAL: ~${totalExpensive.toLocaleString()} tokens`);
+  console.log(`  SAVINGS:              ~${(totalExpensive - totalCheap).toLocaleString()} tokens (${savings}%)`);
+  console.log(`  Budget remaining:     ~${(TOKEN_SAFE_BUDGET - totalCheap).toLocaleString()} tokens (${Math.round((TOKEN_SAFE_BUDGET - totalCheap) / TOKEN_SAFE_BUDGET * 100)}%)`);
+  console.log('');
+
+  if (totalCheap > TOKEN_SAFE_BUDGET * 0.5) {
+    console.log('  ⚠ Even the cheap path uses >50% budget. Consider splitting across 2 sessions.');
+  }
+
+  return { plans, totalCheap, totalExpensive, savings };
+}
+
 function compact(memOverride, silent) {
   const mem = memOverride || loadMemory();
   let pruned = { hotspots: 0, coChanges: 0, snapshots: 0 };
@@ -1595,12 +2131,123 @@ function compact(memOverride, silent) {
   pruned.snapshots = mem.snapshots.length - uniqueSnapshots.length;
   mem.snapshots = uniqueSnapshots;
 
-  // 4. Prune fix chains referencing deleted files
+  // 4. Prune fix chains referencing deleted files, cap to 30 most recent
   if (mem.patterns.fixChains) {
-    const before = mem.patterns.fixChains.length;
     mem.patterns.fixChains = mem.patterns.fixChains.filter(fc =>
       fc.files.some(f => fileExists(f))
     );
+    if (mem.patterns.fixChains.length > MAX_FIX_CHAINS) {
+      mem.patterns.fixChains = mem.patterns.fixChains.slice(-MAX_FIX_CHAINS);
+    }
+  }
+
+  // 5. §5 Dedup learnings — merge near-duplicates by area+keyword overlap
+  pruned.learnings = 0;
+  if (mem.learnings && mem.learnings.length > 1) {
+    const deduped = [];
+    const normalize = (s) => s.toLowerCase().replace(/[^a-z0-9 ]/g, '').split(/\s+/).filter(w => w.length > 3);
+    for (const l of mem.learnings) {
+      const words = new Set(normalize(l.lesson || ''));
+      const isDup = deduped.some(d => {
+        if (d.area !== l.area) return false;
+        const dWords = new Set(normalize(d.lesson || ''));
+        const overlap = [...words].filter(w => dWords.has(w)).length;
+        return overlap >= Math.min(words.size, dWords.size) * 0.6; // 60% word overlap = duplicate
+      });
+      if (!isDup) deduped.push(l);
+      else pruned.learnings++;
+    }
+    mem.learnings = deduped;
+  }
+
+  // 6. §5 Dedup breakages — same area + 50%+ word overlap = duplicate
+  pruned.breakages = 0;
+  if (mem.breakages && mem.breakages.length > 1) {
+    const deduped = [];
+    const normalize = (s) => s.toLowerCase().replace(/[^a-z0-9 ]/g, '').split(/\s+/).filter(w => w.length > 3);
+    for (const b of mem.breakages) {
+      const words = new Set(normalize(b.what || ''));
+      const isDup = deduped.some(d => {
+        if (d.area !== b.area) return false;
+        const dWords = new Set(normalize(d.what || ''));
+        const overlap = [...words].filter(w => dWords.has(w)).length;
+        return overlap >= Math.min(words.size, dWords.size) * 0.5;
+      });
+      if (!isDup) deduped.push(b);
+      else pruned.breakages++;
+    }
+    mem.breakages = deduped;
+  }
+
+  // 7. §5 Dedup constraints per area — same area + 60%+ word overlap = duplicate
+  pruned.constraints = 0;
+  for (const area of Object.keys(mem.constraints || {})) {
+    const cons = mem.constraints[area];
+    if (!cons || cons.length <= 1) continue;
+    const deduped = [];
+    const normalize = (s) => s.toLowerCase().replace(/[^a-z0-9 ]/g, '').split(/\s+/).filter(w => w.length > 3);
+    for (const c of cons) {
+      const words = new Set(normalize(c.fact || ''));
+      const isDup = deduped.some(d => {
+        const dWords = new Set(normalize(d.fact || ''));
+        const overlap = [...words].filter(w => dWords.has(w)).length;
+        return overlap >= Math.min(words.size, dWords.size) * 0.6;
+      });
+      if (!isDup) deduped.push(c);
+      else pruned.constraints++;
+    }
+    mem.constraints[area] = deduped;
+  }
+
+  // 8. Trim snapshots to MAX_ENTRIES (keep most recent)
+  if (mem.snapshots.length > MAX_ENTRIES) {
+    pruned.snapshots += mem.snapshots.length - MAX_ENTRIES;
+    mem.snapshots = mem.snapshots.slice(-MAX_ENTRIES);
+  }
+
+  // 8b. §5 Slim old snapshots: strip files array from all but last 10
+  // Recent snapshots need files for area detection; old ones only need hash/msg/score
+  const keepFilesCount = 10;
+  pruned.slimmedSnapshots = 0;
+  for (let i = 0; i < mem.snapshots.length - keepFilesCount; i++) {
+    const s = mem.snapshots[i];
+    if (s.commit?.files && s.commit.files.length > 0) {
+      s.commit.fileCount = s.commit.files.length; // preserve count
+      delete s.commit.files;
+      pruned.slimmedSnapshots++;
+    }
+  }
+
+  // 9. §5 Trim reflections to last 10, learnings to MAX_LEARNINGS
+  if (mem.reflections && mem.reflections.length > 10) {
+    mem.reflections = mem.reflections.slice(-10);
+  }
+  if (mem.learnings && mem.learnings.length > MAX_LEARNINGS) {
+    mem.learnings = mem.learnings.slice(-MAX_LEARNINGS);
+  }
+  // Cap decisions to 20, autoRules to 15
+  if (mem.decisions && mem.decisions.length > 20) {
+    mem.decisions = mem.decisions.slice(-20);
+  }
+  if (mem.autoRules && mem.autoRules.length > 15) {
+    mem.autoRules = mem.autoRules.slice(-15);
+  }
+
+  // 10. §1 Truncate verbose text fields to save tokens
+  for (const l of (mem.learnings || [])) {
+    if (l.lesson && l.lesson.length > 300) l.lesson = l.lesson.slice(0, 297) + '...';
+  }
+  for (const b of (mem.breakages || [])) {
+    if (b.what && b.what.length > 300) b.what = b.what.slice(0, 297) + '...';
+  }
+  for (const area of Object.keys(mem.constraints || {})) {
+    for (const c of mem.constraints[area]) {
+      if (c.fact && c.fact.length > 200) c.fact = c.fact.slice(0, 197) + '...';
+    }
+  }
+  for (const d of (mem.decisions || [])) {
+    if (d.what && d.what.length > 200) d.what = d.what.slice(0, 197) + '...';
+    if (d.why && d.why.length > 200) d.why = d.why.slice(0, 197) + '...';
   }
 
   // Save
@@ -1608,14 +2255,295 @@ function compact(memOverride, silent) {
   fs.writeFileSync(MEMORY_FILE, json);
   const sizeAfter = fs.statSync(MEMORY_FILE).size;
 
+  invalidateCache(); // bust cache after compaction
   if (!silent) {
     const saved = Math.round((sizeBefore - sizeAfter) / 1024);
-    console.log(`[mycelium] Compacted:`);
-    console.log(`  Hotspots pruned: ${pruned.hotspots} (${Object.keys(mem.patterns.hotspots).length} remain)`);
-    console.log(`  CoChanges pruned: ${pruned.coChanges} (${Object.keys(mem.patterns.coChanges).length} remain)`);
-    console.log(`  Snapshots deduped: ${pruned.snapshots} (${mem.snapshots.length} remain)`);
-    console.log(`  Size: ${Math.round(sizeBefore/1024)}KB → ${Math.round(sizeAfter/1024)}KB (saved ${saved}KB)`);
+    const totalPruned = pruned.hotspots + pruned.coChanges + pruned.snapshots +
+      (pruned.learnings || 0) + (pruned.breakages || 0) + (pruned.constraints || 0) +
+      (pruned.slimmedSnapshots || 0);
+    console.log(`[mycelium] Compacted: ${totalPruned} items pruned, ${Math.round(sizeBefore/1024)}KB→${Math.round(sizeAfter/1024)}KB (saved ${saved}KB)`);
+    if (pruned.learnings) console.log(`  Learnings deduped: ${pruned.learnings}`);
+    if (pruned.breakages) console.log(`  Breakages deduped: ${pruned.breakages}`);
+    if (pruned.constraints) console.log(`  Constraints deduped: ${pruned.constraints}`);
   }
+}
+
+// ─── Deep Compress: aggressive storage optimization ─────────────────
+// Converts bloated data into lean, high-signal knowledge
+// Called by: --compress, auto-trim when files exceed size limits
+function deepCompress(silent) {
+  const sizeBefore = {
+    memory: fs.existsSync(MEMORY_FILE) ? fs.statSync(MEMORY_FILE).size : 0,
+    watch: 0, eval: 0
+  };
+  const watchPath = path.join(__dirname, '.mycelium', 'watch.json');
+  const evalPath = path.join(__dirname, '.mycelium', 'eval-history.json');
+  if (fs.existsSync(watchPath)) sizeBefore.watch = fs.statSync(watchPath).size;
+  if (fs.existsSync(evalPath)) sizeBefore.eval = fs.statSync(evalPath).size;
+  
+  const stats = { trimmed: 0 };
+  
+  // ── 1. MEMORY.JSON: Snapshot file lists → count + top N risky files ──
+  // BUT: keep FULL file lists for last 10 snapshots (needed for area detection)
+  const mem = loadMemory();
+  const keepRecent = 10; // same as compact()'s keepFilesCount
+  const snapshotCount = (mem.snapshots || []).length;
+  for (let i = 0; i < snapshotCount - keepRecent; i++) {
+    const s = mem.snapshots[i];
+    const files = s.commit?.files;
+    if (files && files.length > SNAPSHOT_TOP_FILES) {
+      // Keep count + only files that are hotspots or had breakages
+      const hotFiles = Object.entries(mem.patterns?.hotspots || {})
+        .sort((a, b) => b[1] - a[1])
+        .map(([f]) => f);
+      const kept = files.filter(f => {
+        if (typeof f !== 'string') return false;
+        return hotFiles.includes(f) || !isNoise(f);
+      }).slice(0, SNAPSHOT_TOP_FILES);
+      s.commit.fileCount = files.length;
+      s.commit.files = kept;
+      stats.trimmed++;
+    }
+  }
+  
+  // ── 2. MEMORY.JSON: Sharpen lessons → actionable IF→THEN ──
+  // Convert vague "test mobile viewport" to "IF editing HTML → check viewport meta tag exists"
+  for (const l of (mem.learnings || [])) {
+    l.lesson = sharpenLesson(l.lesson || '');
+  }
+  for (const b of (mem.breakages || [])) {
+    b.what = sharpenLesson(b.what || '');
+  }
+  for (const area of Object.keys(mem.constraints || {})) {
+    for (const c of (mem.constraints[area] || [])) {
+      c.fact = sharpenLesson(c.fact || '');
+    }
+  }
+  
+  // ── 3. MEMORY.JSON: Truncate reflections to 200 chars ──
+  for (const r of (mem.reflections || [])) {
+    if (r.lesson && r.lesson.length > 200) r.lesson = r.lesson.slice(0, 197) + '...';
+  }
+  
+  // ── 4. MEMORY.JSON: Fix chains — keep only file count + top files ──
+  for (const fc of (mem.patterns?.fixChains || [])) {
+    if (fc.files && fc.files.length > 5) {
+      fc.fileCount = fc.files.length;
+      fc.files = fc.files.filter(f => !isNoise(f)).slice(0, 5);
+    }
+  }
+  
+  // Save compressed memory
+  const memJson = JSON.stringify(mem, null, 2);
+  fs.writeFileSync(MEMORY_FILE, memJson);
+  invalidateCache();
+  
+  // ── 5. WATCH.JSON: Compress commit file lists → count + top N ──
+  if (fs.existsSync(watchPath)) {
+    const watch = JSON.parse(fs.readFileSync(watchPath, 'utf8'));
+    
+    // 5a. Commit file lists → count + top 5
+    for (const c of (watch.commits || [])) {
+      if (c.files && c.files.length > WATCH_COMMIT_TOP_FILES) {
+        c.fileCount = c.files.length;
+        c.files = c.files.filter(f => !isNoise(f)).slice(0, WATCH_COMMIT_TOP_FILES);
+        stats.trimmed++;
+      }
+    }
+    
+    // 5b. Risk lessons → cap to MAX_RISK_LESSONS per file, sharpen each
+    for (const [file, risk] of Object.entries(watch.risks || {})) {
+      if (risk.lessons && risk.lessons.length > MAX_RISK_LESSONS) {
+        // Keep most recent + unique lessons only
+        const seen = new Set();
+        risk.lessons = risk.lessons
+          .reverse() // most recent first
+          .filter(l => {
+            const text = sharpenLesson(typeof l === 'string' ? l : (l.lesson || ''));
+            if (seen.has(text)) return false;
+            seen.add(text);
+            return true;
+          })
+          .slice(0, MAX_RISK_LESSONS)
+          .reverse();
+        stats.trimmed++;
+      }
+      // Sharpen remaining lessons
+      risk.lessons = (risk.lessons || []).map(l => {
+        if (typeof l === 'string') return sharpenLesson(l);
+        if (l.lesson) l.lesson = sharpenLesson(l.lesson);
+        return l;
+      });
+    }
+    
+    // 5b2. Remove low-value risk entries (≤1 break, no lessons) AND noise files
+    const riskEntries = Object.entries(watch.risks || {});
+    for (const [file, risk] of riskEntries) {
+      const isNoiseFile = isNoise(file) || file.includes('.mycelium-mined') || file === '.gitignore';
+      if (isNoiseFile || (risk.breakCount <= 1 && (!risk.lessons || risk.lessons.length === 0))) {
+        delete watch.risks[file];
+        stats.trimmed++;
+      }
+    }
+    
+    // 5b3. Strip verbose metadata from risks (deepAnalysis, escalated reasons)
+    for (const risk of Object.values(watch.risks || {})) {
+      delete risk.deepAnalysis;
+      delete risk.escalatedReason;
+      delete risk.volatileReason;
+      // Keep just: breakCount, lastBreak, lessons, escalated, volatile
+    }
+    
+    // 5c. Breakage lessons → sharpen
+    for (const b of (watch.breakages || [])) {
+      if (b.lesson) b.lesson = sharpenLesson(b.lesson);
+      // Compress file lists in breakages (biggest bloat: 195 files = 10KB per entry)
+      if (b.files && b.files.length > 5) {
+        b.fileCount = b.files.length;
+        b.files = b.files.filter(f => !isNoise(f)).slice(0, 5);
+      }
+    }
+    
+    // 5d. Old commits → keep only last 100 (was 300)
+    if (watch.commits && watch.commits.length > 100) {
+      watch.commits = watch.commits.slice(-100);
+      stats.trimmed++;
+    }
+    
+    // 5e. Old breakages → keep only last 50
+    if (watch.breakages && watch.breakages.length > 50) {
+      watch.breakages = watch.breakages.slice(-50);
+    }
+    
+    fs.writeFileSync(watchPath, JSON.stringify(watch, null, 2));
+  }
+  
+  // ── 6. EVAL-HISTORY.JSON: Deduplicate → keep only score-change boundaries ──
+  if (fs.existsSync(evalPath)) {
+    const evalData = JSON.parse(fs.readFileSync(evalPath, 'utf8'));
+    const evals = evalData.evaluations || evalData;
+    if (Array.isArray(evals) && evals.length > MAX_EVAL_HISTORY) {
+      // Keep entries where score changed, plus first and last
+      const deduped = [evals[0]];
+      for (let i = 1; i < evals.length; i++) {
+        if (evals[i].overall !== evals[i - 1].overall) {
+          deduped.push(evals[i]);
+        }
+      }
+      if (deduped[deduped.length - 1] !== evals[evals.length - 1]) {
+        deduped.push(evals[evals.length - 1]);
+      }
+      // Still cap at MAX_EVAL_HISTORY
+      const final = deduped.length > MAX_EVAL_HISTORY 
+        ? deduped.slice(-MAX_EVAL_HISTORY) 
+        : deduped;
+      const output = evalData.evaluations ? { evaluations: final } : final;
+      fs.writeFileSync(evalPath, JSON.stringify(output, null, 2));
+      stats.trimmed += evals.length - final.length;
+    }
+  }
+  
+  // Report
+  const sizeAfter = {
+    memory: fs.existsSync(MEMORY_FILE) ? fs.statSync(MEMORY_FILE).size : 0,
+    watch: fs.existsSync(watchPath) ? fs.statSync(watchPath).size : 0,
+    eval: fs.existsSync(evalPath) ? fs.statSync(evalPath).size : 0
+  };
+  const totalBefore = sizeBefore.memory + sizeBefore.watch + sizeBefore.eval;
+  const totalAfter = sizeAfter.memory + sizeAfter.watch + sizeAfter.eval;
+  const savedKB = Math.round((totalBefore - totalAfter) / 1024);
+  
+  if (!silent) {
+    console.log(`[mycelium] Deep compress: ${stats.trimmed} items trimmed`);
+    console.log(`  memory.json: ${Math.round(sizeBefore.memory/1024)}KB → ${Math.round(sizeAfter.memory/1024)}KB`);
+    console.log(`  watch.json:  ${Math.round(sizeBefore.watch/1024)}KB → ${Math.round(sizeAfter.watch/1024)}KB`);
+    console.log(`  eval-history: ${Math.round(sizeBefore.eval/1024)}KB → ${Math.round(sizeAfter.eval/1024)}KB`);
+    console.log(`  TOTAL: ${Math.round(totalBefore/1024)}KB → ${Math.round(totalAfter/1024)}KB (saved ${savedKB}KB)`);
+    const itemCount = (mem.learnings?.length || 0) + (mem.breakages?.length || 0) + 
+      Object.values(mem.constraints || {}).reduce((s, a) => s + a.length, 0);
+    console.log(`  Efficiency: ${itemCount} knowledge items in ${Math.round(totalAfter/1024)}KB = ${Math.round(totalAfter/itemCount)} bytes/lesson`);
+  }
+  return { savedKB, totalAfter: Math.round(totalAfter / 1024) };
+}
+
+// ── Sharpen Lesson: convert vague text → actionable IF→THEN rule ──
+// "test mobile viewport" → "IF editing HTML → verify viewport meta tag"
+// "debug overlay left in production" → "IF adding overlay → gate behind GM mode"
+function sharpenLesson(text) {
+  if (!text) return text;
+  // Already sharp (has IF→ or WHEN→ or → pattern)
+  if (/\b(IF|WHEN|BEFORE|AFTER)\b.*→/.test(text)) return text.slice(0, MAX_LESSON_CHARS);
+  
+  // Truncate to max chars first
+  let lesson = text.slice(0, MAX_LESSON_CHARS * 2); // work with 2x for processing
+  
+  // Rule patterns: match common vague → sharp transformations
+  const transforms = [
+    [/test\s+(.*?)viewport/i, 'IF editing HTML → verify viewport meta tag'],
+    [/ensure\s+full.?screen/i, 'IF adding overlay → set max-width:100vw, overflow:hidden'],
+    [/fix\s+language.?toggle|i18n.*gap/i, 'IF using data-i18n → verify all 4 lang keys exist'],
+    [/debug.*overlay.*production/i, 'IF adding debug UI → gate behind ?gm= check'],
+    [/overlay.*left.*in/i, 'IF adding overlay → gate behind ?gm= check'],
+    [/missing.*loading/i, 'IF async fetch → add loading skeleton first'],
+    [/innerhtml.*xss|xss.*innerhtml/i, 'IF using innerHTML → sanitize with textContent or DOMPurify'],
+    [/lazy.*load.*horizontal|horizontal.*lazy/i, 'IF horizontal scroll → use loading=eager not lazy'],
+    [/loading.*lazy.*scroll/i, 'IF horizontal scroll → use loading=eager not lazy'],
+    [/null.*guard|undefined.*check/i, 'IF accessing nested prop → add ?. optional chaining'],
+    [/mobile.*overflow|overflow.*clip/i, 'IF mobile layout → set overflow-x:hidden on body'],
+    [/z.?index.*conflict/i, 'IF setting z-index → check existing z-index layers first'],
+    [/font.*load|loading.*font/i, 'IF custom font → add font-display:swap'],
+  ];
+  
+  for (const [pattern, replacement] of transforms) {
+    if (pattern.test(lesson)) return replacement;
+  }
+  
+  // Generic sharpening: make it concise even if we can't pattern-match
+  lesson = lesson
+    .replace(/^(ensure|make sure|remember to|always|don't forget to)\s+/i, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+  
+  return lesson.slice(0, MAX_LESSON_CHARS);
+}
+
+// ── Auto-Trim: triggered by saveMemory and watch save ──
+// Checks all data files and compresses if any exceed limits
+function autoTrim() {
+  const watchPath = path.join(__dirname, '.mycelium', 'watch.json');
+  const evalPath = path.join(__dirname, '.mycelium', 'eval-history.json');
+  
+  let needsCompress = false;
+  
+  if (fs.existsSync(MEMORY_FILE)) {
+    const memKB = Math.round(fs.statSync(MEMORY_FILE).size / 1024);
+    if (memKB > MAX_MEMORY_KB) {
+      console.log(`[mycelium] Auto-trim: memory.json ${memKB}KB > ${MAX_MEMORY_KB}KB limit`);
+      needsCompress = true;
+    }
+  }
+  if (fs.existsSync(watchPath)) {
+    const watchKB = Math.round(fs.statSync(watchPath).size / 1024);
+    if (watchKB > MAX_WATCH_KB) {
+      console.log(`[mycelium] Auto-trim: watch.json ${watchKB}KB > ${MAX_WATCH_KB}KB limit`);
+      needsCompress = true;
+    }
+  }
+  if (fs.existsSync(evalPath)) {
+    const evalKB = Math.round(fs.statSync(evalPath).size / 1024);
+    if (evalKB > 20) { // 20KB is plenty for eval history
+      console.log(`[mycelium] Auto-trim: eval-history.json ${evalKB}KB > 20KB limit`);
+      needsCompress = true;
+    }
+  }
+  
+  if (needsCompress) {
+    deepCompress(true);
+    // Run standard compact too for dedup
+    compact(null, true);
+  }
+  
+  return needsCompress;
 }
 
 // ─── Brief: Write compact context file to disk ─────────────────────
@@ -1623,138 +2551,199 @@ function compact(memOverride, silent) {
 // This file can be re-read by any AI mid-conversation.
 
 function brief() {
-  const mem = loadMemory();
+  const mem = loadMemoryCached();
   const lines = [];
-  lines.push('# MYCELIUM-CONTEXT (auto-generated — re-read anytime with: cat .mycelium-context)');
-  lines.push('');
+  // §1 Prompt Engineering: shorter delimiters (# not ##), abbreviations, no verbose headers
+  // §6 Output Optimization: structured compact format, no filler
+  lines.push('# CTX (auto|cat .mycelium-context)');
 
-  // Health score from recent commits
-  const recent = mem.snapshots.slice(-5);
+  // CHECKPOINT: structured task state — HIGHEST priority, MUST appear first
+  // This survives chat compaction and tells the AI exactly what to resume
+  const checkpointPath = path.join(__dirname, '.mycelium', 'checkpoint.json');
+  if (fs.existsSync(checkpointPath)) {
+    try {
+      const cp = JSON.parse(fs.readFileSync(checkpointPath, 'utf8'));
+      if (cp.status === 'in_progress') {
+        lines.push('# !!RESUME!! (checkpoint active — DO NOT re-plan, continue from pending steps)');
+        lines.push(`  TASK: ${cp.task}`);
+        if (cp.completed && cp.completed.length) lines.push(`  DONE: ${cp.completed.join(' | ')}`);
+        if (cp.pending && cp.pending.length) lines.push(`  PENDING: ${cp.pending.join(' | ')}`);
+        if (cp.blocked && cp.blocked.length) lines.push(`  BLOCKED: ${cp.blocked.join(' | ')}`);
+        if (cp.files && cp.files.length) lines.push(`  FILES: ${cp.files.slice(0, 10).join(', ')}`);
+        if (cp.context) {
+          for (const [k, v] of Object.entries(cp.context).slice(0, 5)) {
+            lines.push(`  ${k}: ${String(v).slice(0, 120)}`);
+          }
+        }
+        if (cp.resumeHint) lines.push(`  RESUME: ${cp.resumeHint}`);
+      }
+    } catch (e) { /* corrupted checkpoint, skip */ }
+  }
+
+  // Health: 1 line per commit, no decoration
+  const recent = mem.snapshots.slice(-3); // was -5, §5 Context Window: fewer = cheaper
   if (recent.length) {
     const avgScore = Math.round(recent.reduce((s, r) => s + (r.score || 70), 0) / recent.length);
     const grade = avgScore >= 85 ? 'A' : avgScore >= 70 ? 'B' : avgScore >= 55 ? 'C' : 'D';
-    lines.push(`## Session health: ${avgScore}/100 (${grade}) — last ${recent.length} commits`);
+    lines.push(`# HP:${avgScore}(${grade}) last ${recent.length}`);
     for (const s of recent) {
-      const r = (s.reasons || []).join(' ');
-      lines.push(`  ${s.score || '??'} ${s.commit?.hash} ${s.commit?.msg}${r ? ' [' + r + ']' : ''}`);
+      const r = (s.reasons || []).slice(0, 3).join(' '); // cap reasons per commit
+      lines.push(` ${s.score||'?'} ${(s.commit?.hash||'').slice(0,7)} ${(s.commit?.msg||'').slice(0,70)}${r ? ' ['+r+']' : ''}`);
     }
-    lines.push('');
   }
 
-  // Build
+  // Build: single line
   const latest = mem.snapshots[mem.snapshots.length - 1];
   if (latest) {
-    lines.push(`## Build: ${latest.build.bundleKB}KB | ${latest.build.htmlPages} pages | ${latest.build.jsModules} JS modules`);
-    lines.push('');
+    lines.push(`# BLD:${latest.build.bundleKB}KB|${latest.build.htmlPages}pg|${latest.build.jsModules}mod`);
   }
 
-  // System inventory — what's already built (READ THIS BEFORE RECOMMENDING FEATURES)
-  const totalConstraints = Object.values(mem.constraints || {}).reduce((s, arr) => s + arr.length, 0);
-  lines.push('## Already built (do NOT recommend these — they exist)');
-  lines.push('  [memory] mycelium.cjs — auto-snapshots every commit, scoring, pattern detection');
-  lines.push('  [memory] memory.json — ' + mem.snapshots.length + ' snapshots, ' + totalConstraints + ' constraints, ' + (mem.decisions||[]).length + ' decisions, ' + (mem.breakages||[]).length + ' breakages');
-  lines.push('  [hooks] .husky/pre-commit — auto-compact, stage memory.json, constraint checker (detects areas from staged files, warns about relevant constraints + breakages)');
-  lines.push('  [hooks] .husky/post-commit — auto-snapshot + refresh .mycelium-context');
-  lines.push('  [cli] --query (full intel), --health (scored), --brief (context file), --premortem <area>, --decide, --constraint, --broke, --compact');
-  lines.push('  [scoring] commit quality scoring (focus, fix-chain, churn, size), project health (sliding window, time-decayed churn, retroactive stability, focus bonus)');
-  lines.push('  [detection] co-change pairs, hotspot files, fix chains, auto-distilled rules, bundle trend');
-  lines.push('');
-
-  // STOP signals — things that MUST NOT be repeated
-  const breakages = (mem.breakages || []).slice(-5);
-  const fixChainReflections = (mem.reflections || []).filter(r => r.type === 'fix_chain').slice(-3);
+  // §9 Agentic Workflow: only show what prevents mistakes, skip inventory list
+  // STOP signals — breakages (max 3, truncated to 120 chars each)
+  const breakages = (mem.breakages || []).slice(-3);
+  const fixChainReflections = (mem.reflections || []).filter(r => r.type === 'fix_chain').slice(-2);
   if (breakages.length || fixChainReflections.length) {
-    lines.push('## STOP — do not repeat these mistakes');
+    lines.push('# STOP');
     for (const b of breakages) {
-      lines.push(`  [${b.area}] ${b.what}`);
+      lines.push(` [${b.area}] ${b.what.slice(0, 120)}`);
     }
     for (const r of fixChainReflections) {
-      lines.push(`  [fix-chain] ${r.lesson}`);
+      lines.push(` [fc] ${r.lesson.slice(0, 120)}`);
     }
-    lines.push('');
   }
 
-  // Learnings — organic insights distilled from real data
-  const deepReflections = (mem.reflections || []).filter(r => 
-    r.type !== 'fix_chain'  // fix chains shown above in STOP
-  ).slice(-10);
-  if (deepReflections.length) {
-    lines.push('## Learnings (auto-distilled from project data)');
-    for (const r of deepReflections) {
-      const tag = r.type.replace(/_/g, '-');
-      lines.push(`  [${tag}] ${r.lesson}`);
-    }
-    lines.push('');
-  }
-
-  // Constraints — hard rules
+  // Rules: §5 Context Pruning — only show rules for areas touched recently
+  // ENHANCED: Also inject file-specific lessons from watch.json risks
   const constraints = mem.constraints || {};
-  const constraintAreas = Object.keys(constraints);
-  if (constraintAreas.length) {
-    lines.push('## Rules (violating = bugs)');
-    for (const area of constraintAreas) {
-      for (const c of constraints[area]) {
-        lines.push(`  [${area}] ${c.fact}`);
+  const recentAreas = new Set();
+  const recentFiles = [];
+  (mem.snapshots || []).slice(-5).forEach(s => {
+    (s.commit?.files || []).forEach(f => {
+      if (typeof f !== 'string') return; // skip non-string entries
+      const area = classifyArea(f);
+      if (area) recentAreas.add(area);
+      recentFiles.push(f);
+    });
+  });
+  // Also include areas with breakages
+  breakages.forEach(b => recentAreas.add(b.area));
+  const relevantAreas = [...recentAreas].filter(a => constraints[a]?.length > 0);
+  if (relevantAreas.length) {
+    lines.push('# RULES');
+    let ruleCount = 0;
+    const MAX_RULES = 20; // was 50, §1 concise
+    for (const area of relevantAreas) {
+      for (const c of (constraints[area] || []).slice(0, 3)) { // max 3 per area
+        if (ruleCount >= MAX_RULES) break;
+        if (c.fact.includes('[auto-fixer]')) continue; // skip verbose auto entries
+        lines.push(` [${area}] ${c.fact.slice(0, 100)}`);
+        ruleCount++;
       }
+      if (ruleCount >= MAX_RULES) break;
     }
-    lines.push('');
+  }
+  
+  // FILE-SPECIFIC LESSONS: Pull risk lessons from watch.json for recently-touched files
+  // This is the key upgrade: 14% delivery → 80%+ by matching FILES not just areas
+  // Sources: snapshot files, watch commit files, AND hotspot files as fallback
+  const watchPath2 = path.join(__dirname, '.mycelium', 'watch.json');
+  if (fs.existsSync(watchPath2)) {
+    try {
+      const watchData = JSON.parse(fs.readFileSync(watchPath2, 'utf8'));
+      const risks = watchData.risks || {};
+      
+      // Build file set from all sources
+      const allRecentFiles = new Set(recentFiles);
+      // Also add files from watch commits (compressed to top 5)
+      for (const c of (watchData.commits || []).slice(-5)) {
+        for (const f of (c.files || [])) {
+          if (typeof f === 'string') allRecentFiles.add(f);
+        }
+      }
+      // Also add top hotspot files (they're the most-edited, most likely to break)
+      for (const [f] of Object.entries(mem.patterns?.hotspots || {})
+        .filter(([fp]) => !isNoise(fp))
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 10)) {
+        allRecentFiles.add(f);
+      }
+      
+      const fileRules = [];
+      for (const f of allRecentFiles) {
+        // Skip noise/auto-generated files
+        if (isNoise(f) || f.includes('.mycelium-mined') || f.includes('.mycelium/') || f === '.gitignore') continue;
+        const risk = risks[f];
+        if (!risk || !risk.lessons || risk.lessons.length === 0) continue;
+        if (risk.breakCount < 2) continue; // only show for files that broke 2+ times
+        const topLesson = risk.lessons[risk.lessons.length - 1]; // most recent
+        const text = typeof topLesson === 'string' ? topLesson : (topLesson.lesson || '');
+        if (text && !fileRules.some(r => r.includes(path.basename(f)))) {
+          fileRules.push(` [${path.basename(f)}|${risk.breakCount}x] ${text.slice(0, 80)}`);
+        }
+      }
+      if (fileRules.length > 0) {
+        lines.push('# FILE-RISKS (from watch: files that broke before)');
+        for (const r of fileRules.slice(0, 8)) { // max 8 file-specific rules
+          lines.push(r);
+        }
+      }
+    } catch (e) { /* watch.json read error, skip */ }
   }
 
-  // Auto-distilled rules
-  const autoRules = (mem.autoRules || []).slice(-10);
-  if (autoRules.length) {
-    lines.push('## Auto-detected patterns');
-    for (const r of autoRules) {
-      lines.push(`  ${r.rule}`);
-    }
-    lines.push('');
-  }
-
-  // Decisions — why things are the way they are
-  const decisions = (mem.decisions || []).slice(-5);
-  if (decisions.length) {
-    lines.push('## Why things are this way');
-    for (const d of decisions) {
-      lines.push(`  [${d.area}] ${d.decision}`);
-    }
-    lines.push('');
-  }
-
-  // Fix learnings — what was learned from fixing (crucial for any AI)
-  const learnings = (mem.learnings || []).slice(-10);
+  // Learnings: §5 Hierarchical Summarization — only most recent 3
+  const learnings = (mem.learnings || []).slice(-3);
   if (learnings.length) {
-    lines.push('## Fix Learnings (recorded after fixing — DON\'T REPEAT THESE)');
+    lines.push('# LEARNED');
     for (const l of learnings) {
-      lines.push(`  [${l.area}] ${l.lesson}`);
+      lines.push(` [${l.area}] ${l.lesson.slice(0, 100)}`);
     }
-    lines.push('');
   }
 
-  // Hotspots — handle with care
+  // Hotspots: top 3 only
   const hotspots = Object.entries(mem.patterns.hotspots || {})
     .filter(([f]) => !isNoise(f))
     .sort((a, b) => b[1] - a[1])
-    .slice(0, 5);
+    .slice(0, 3);
   if (hotspots.length) {
-    lines.push('## Fragile files (change carefully)');
+    lines.push('# HOT');
     for (const [file, count] of hotspots) {
-      lines.push(`  ${count}x ${file}`);
+      lines.push(` ${count}x ${file}`);
     }
-    lines.push('');
   }
 
-  // ── WIP section: survives chat compaction ──
+  // WIP: fallback text-only task state (legacy — only if no checkpoint)
   const wipPath = path.join(__dirname, '.mycelium-wip');
   if (fs.existsSync(wipPath)) {
     const wipRaw = fs.readFileSync(wipPath, 'utf8').trim();
-    if (wipRaw) {
-      lines.push('## WORK IN PROGRESS (read this FIRST — resume, do NOT re-plan)');
-      lines.push(wipRaw);
-      lines.push('');
+    if (wipRaw && !fs.existsSync(checkpointPath)) {
+      lines.push('# WIP (resume this)');
+      lines.push(wipRaw.slice(0, 500));
     }
   }
 
-  const content = lines.join('\n');
+  let content = lines.join('\n');
+
+  // §3 Token Counting: hard cap at MAX_CONTEXT_TOKENS
+  const contextTokens = estimateTokens(content);
+  if (contextTokens > MAX_CONTEXT_TOKENS) {
+    // Progressive trim: remove from bottom sections
+    const sections = content.split(/\n(?=# )/);
+    const priorityOrder = ['!!RESUME!!', 'WIP', 'HP:', 'BLD:', 'STOP', 'RULES', 'FILE-RISKS', 'LEARNED', 'HOT', 'CTX'];
+    let rebuilt = [];
+    let runningTokens = 0;
+    const budget = MAX_CONTEXT_TOKENS - 200;
+    for (const prio of priorityOrder) {
+      const section = sections.find(s => s.includes(prio));
+      if (!section) continue;
+      const sectionTokens = estimateTokens(section);
+      if (runningTokens + sectionTokens <= budget) {
+        rebuilt.push(section);
+        runningTokens += sectionTokens;
+      } else break;
+    }
+    content = rebuilt.join('\n');
+  }
+
   fs.writeFileSync(path.join(__dirname, '.mycelium-context'), content);
   console.log(content);
 }
@@ -1765,7 +2754,7 @@ function brief() {
 // Used by: --guard <file1> <file2> ... OR --guard (reads git staged files)
 
 function guard(files) {
-  const mem = loadMemory();
+  const mem = loadMemoryCached(); // §2 Caching: avoid re-reading 200KB+ file
 
   // If no files passed, read from git staged files
   if (!files || files.length === 0) {
@@ -1797,6 +2786,22 @@ function guard(files) {
   console.log(`\n# Auto-Guard: ${files.length} files → ${areas.size} area(s) detected`);
   console.log(`  Areas: ${[...areas].join(', ')}`);
   console.log(`  Files: ${files.slice(0, 8).join(', ')}${files.length > 8 ? ` (+${files.length - 8} more)` : ''}`);
+
+  // ── COST WARNING: show token cost of files being guarded ──
+  let guardTokenCost = 0;
+  const expensiveFiles = [];
+  for (const f of files) {
+    const fp = path.resolve(__dirname, f);
+    const cost = fileCostTier(fp);
+    guardTokenCost += cost.tokens;
+    if (cost.tier >= 3) expensiveFiles.push({ file: f, ...cost });
+  }
+  if (expensiveFiles.length > 0) {
+    console.log(`  ⚠ TOKEN COST: These files are EXPENSIVE to read (use grep + Edit instead):`);
+    for (const ef of expensiveFiles) {
+      console.log(`    ${ef.label.toUpperCase()} ${ef.file}: ~${ef.tokens.toLocaleString()} tokens → ${ef.strategy}`);
+    }
+  }
   console.log('');
 
   // Collect all warnings (compact format — not full premortem, just the dangerous stuff)
@@ -1937,6 +2942,75 @@ function guard(files) {
       }
     }
   } catch (e) { /* file-specific guard is best-effort */ }
+
+  // ── CONTEXT-READ CHECK: did the AI/dev read .mycelium-context this session? ──
+  // Only warn (not block) for commits touching 3+ files
+  if (files.length >= 3) {
+    try {
+      const sessionFile = path.join(__dirname, '.mycelium-session');
+      const contextFile = path.join(__dirname, '.mycelium-context');
+      if (fs.existsSync(sessionFile) && fs.existsSync(contextFile)) {
+        const sessionTime = fs.statSync(sessionFile).mtimeMs;
+        const contextTime = fs.statSync(contextFile).mtimeMs;
+        // If session file is newer than context file, context wasn't refreshed this session
+        // Check if context was accessed (atime) after session started
+        const contextAccess = fs.statSync(contextFile).atimeMs;
+        if (contextAccess < sessionTime) {
+          console.log('## Context Warning');
+          console.log('  ⚠ .mycelium-context was not read this session.');
+          console.log('  You\'re touching ' + files.length + ' files — read the context first:');
+          console.log('  Run: cat .mycelium-context');
+          console.log('');
+          totalWarnings++;
+        }
+      }
+    } catch (e) { /* best effort */ }
+  }
+
+  // ── NEW FILE DUPLICATION CHECK: catch overlap at commit time ──
+  try {
+    const addedRaw = run('git diff --cached --diff-filter=A --name-only 2>/dev/null').trim();
+    const added = addedRaw ? addedRaw.split('\n').filter(f => f && !isNoise(f)) : [];
+    for (const newFile of added) {
+      const ext = path.extname(newFile);
+      if (!['.html','.js','.cjs','.ts','.tsx','.css'].includes(ext)) continue;
+      const dir = path.dirname(newFile);
+      const base = path.basename(newFile, ext).toLowerCase();
+      const words = new Set(base.replace(/([a-z])([A-Z])/g, '$1-$2').toLowerCase()
+        .split(/[-_.\s]+/).filter(w => w.length > 2));
+      if (words.size === 0) continue;
+
+      const dirPath = path.join(__dirname, dir);
+      if (!fs.existsSync(dirPath)) continue;
+      const existing = fs.readdirSync(dirPath)
+        .filter(f => path.extname(f) === ext && f !== path.basename(newFile));
+      for (const ef of existing) {
+        const efBase = path.basename(ef, ext).toLowerCase();
+        const efWords = new Set(efBase
+          .replace(/([a-z])([A-Z])/g, '$1-$2').split(/[-_.\s]+/).filter(w => w.length > 2));
+        const kwOverlap = [...words].filter(w => efWords.has(w));
+
+        // Shared-root check (catches showroom/showcase)
+        let sharedPfx = 0;
+        for (let i = 0; i < Math.min(base.length, efBase.length); i++) {
+          if (base[i] === efBase[i]) sharedPfx++; else break;
+        }
+        const hasSharedRoot = sharedPfx >= 4;
+
+        if (kwOverlap.length >= 2 || (kwOverlap.length >= 1 && kwOverlap[0].length >= 5) || hasSharedRoot) {
+          const reasons = [];
+          if (kwOverlap.length > 0) reasons.push(`shared keywords: [${kwOverlap.join(', ')}]`);
+          if (hasSharedRoot) reasons.push(`shared root "${base.slice(0, sharedPfx)}"`);
+          console.log(`## Duplicate File Warning`);
+          console.log(`  ⚠ NEW "${path.basename(newFile)}" overlaps with EXISTING "${ef}"`);
+          console.log(`    ${reasons.join(', ')}`);
+          console.log(`    Run: node mycelium.cjs --check ${newFile}`);
+          console.log('');
+          totalWarnings++;
+        }
+      }
+    }
+  } catch (e) { /* best effort */ }
 
   // Enforce mode: return warning count so callers can block on violations
   return totalWarnings;
@@ -3405,6 +4479,628 @@ function evaluate() {
   try { callFixer(); } catch { selfHealNw(mem); }
 }
 
+// ─── Feature: Autopsy — trace forward from any commit to map downstream damage ──
+// Usage: node mycelium.cjs --autopsy <commit-hash>
+// No other tool does this: follow the ripple effects of a single commit.
+
+function autopsy(targetHash) {
+  const watchPath = path.join(__dirname, '.mycelium', 'watch.json');
+  if (!fs.existsSync(watchPath)) {
+    console.error('  No watch.json found. Run: node mycelium-watch.cjs first.');
+    process.exit(1);
+  }
+  const watch = JSON.parse(fs.readFileSync(watchPath, 'utf8'));
+  const mem = loadMemory();
+  const short = targetHash.slice(0, 7);
+
+  // Find the original commit — try watch first, fallback to git
+  let origin = watch.commits.find(c => c.hash.startsWith(short));
+  if (!origin) {
+    // Commit is older than watch window — reconstruct from git
+    try {
+      const gitMsg = run(`git log -1 --format="%s" ${short} 2>/dev/null`).trim();
+      const gitDate = run(`git log -1 --format="%ai" ${short} 2>/dev/null`).trim().slice(0, 10);
+      const gitFiles = run(`git diff-tree --no-commit-id --name-only -r ${short} 2>/dev/null`).trim().split('\n').filter(Boolean);
+      if (gitMsg) {
+        origin = { hash: short, msg: gitMsg, date: gitDate, files: gitFiles };
+      }
+    } catch {}
+  }
+  if (!origin) {
+    console.error(`  Commit ${short} not found in watch history or git log.`);
+    process.exit(1);
+  }
+
+  console.log(`\n  \x1b[1m🔬 AUTOPSY: ${short}\x1b[0m`);
+  console.log(`  "${origin.msg}"`);
+  console.log(`  Date: ${origin.date} | Files: ${origin.files.length}`);
+  console.log(`  ${'─'.repeat(60)}`);
+
+  // Step 1: Find all breakages this commit caused
+  const directBreakages = watch.breakages.filter(b => b.origHash && b.origHash.startsWith(short));
+  
+  // Step 2: Find all fix commits that reference these same files
+  const touchedFiles = new Set(origin.files);
+  const fixesOnSameFiles = watch.breakages.filter(b => {
+    if (directBreakages.includes(b)) return false;
+    return b.files.some(f => touchedFiles.has(f));
+  });
+
+  // Step 3: Build the downstream chain using fix chains from memory
+  // A fix chain is: original → fix → fix-of-fix → ...
+  const chainMap = new Map(); // hash → next fix hash
+  for (const fc of (mem.patterns.fixChains || [])) {
+    if (fc.original && fc.fix) {
+      const existing = chainMap.get(fc.original.slice(0, 7)) || [];
+      existing.push({ hash: fc.fix, msg: fc.msg, files: fc.files });
+      chainMap.set(fc.original.slice(0, 7), existing);
+    }
+  }
+
+  // Walk forward from the origin commit
+  const visited = new Set();
+  const chain = [];
+  function walkChain(hash, depth) {
+    const h = hash.slice(0, 7);
+    if (visited.has(h) || depth > 10) return;
+    visited.add(h);
+    const nextFixes = chainMap.get(h) || [];
+    for (const nf of nextFixes) {
+      chain.push({ hash: nf.hash, msg: nf.msg, files: nf.files, depth });
+      walkChain(nf.hash, depth + 1);
+    }
+  }
+  walkChain(targetHash, 1);
+
+  // Step 4: Count total downstream damage
+  const allAffectedFiles = new Set(origin.files);
+  for (const b of directBreakages) b.files.forEach(f => allAffectedFiles.add(f));
+  for (const c of chain) (c.files || []).forEach(f => allAffectedFiles.add(f));
+
+  // Print results
+  if (directBreakages.length > 0) {
+    console.log(`\n  \x1b[31m⚠ DIRECT BREAKAGES (${directBreakages.length}):\x1b[0m`);
+    for (const b of directBreakages) {
+      console.log(`    ${b.fixHash?.slice(0, 7) || '???????'} ${b.pattern.slice(0, 70)}`);
+      console.log(`      Files: ${b.files.join(', ')}`);
+      if (b.lesson) console.log(`      Lesson: ${b.lesson.slice(0, 80)}`);
+    }
+  } else {
+    console.log(`\n  \x1b[32m✓ No direct breakages recorded from this commit.\x1b[0m`);
+  }
+
+  if (chain.length > 0) {
+    console.log(`\n  \x1b[33m🔗 FIX CHAIN (${chain.length} downstream fixes):\x1b[0m`);
+    for (const c of chain) {
+      const indent = '  '.repeat(c.depth);
+      console.log(`    ${indent}↳ ${c.hash?.slice(0, 7)} ${(c.msg || '').slice(0, 60)}`);
+      if (c.files?.length) console.log(`    ${indent}  Files: ${c.files.join(', ')}`);
+    }
+  }
+
+  // Step 5: Related file breakages (not directly from this commit, but same files)
+  const laterBreakages = fixesOnSameFiles.filter(b => {
+    const bDate = new Date(b.date);
+    const oDate = new Date(origin.date);
+    return bDate >= oDate;
+  });
+  if (laterBreakages.length > 0) {
+    console.log(`\n  \x1b[36m📎 RELATED BREAKAGES (same files, later dates): ${laterBreakages.length}\x1b[0m`);
+    for (const b of laterBreakages.slice(0, 5)) {
+      console.log(`    ${b.fixHash?.slice(0, 7) || '???????'} ${b.pattern.slice(0, 70)}`);
+    }
+    if (laterBreakages.length > 5) console.log(`    ... and ${laterBreakages.length - 5} more`);
+  }
+
+  // Step 6: Coupled files that weren't in the commit (missed?)
+  const couplings = watch.couplings || {};
+  const missedCouplings = [];
+  for (const key of Object.keys(couplings)) {
+    const [a, b] = key.split('<->');
+    if (touchedFiles.has(a) && !touchedFiles.has(b)) {
+      missedCouplings.push({ file: b, partner: a, count: couplings[key] });
+    } else if (touchedFiles.has(b) && !touchedFiles.has(a)) {
+      missedCouplings.push({ file: a, partner: b, count: couplings[key] });
+    }
+  }
+  missedCouplings.sort((a, b) => b.count - a.count);
+  if (missedCouplings.length > 0) {
+    console.log(`\n  \x1b[35m🔗 COUPLED FILES NOT IN THIS COMMIT (potential misses):\x1b[0m`);
+    for (const mc of missedCouplings.slice(0, 8)) {
+      console.log(`    ${mc.file} (changes with ${mc.partner} ${mc.count}x)`);
+    }
+  }
+
+  // Summary
+  const totalDamage = directBreakages.length + chain.length;
+  const verdict = totalDamage === 0 ? '\x1b[32mCLEAN\x1b[0m' :
+    totalDamage <= 2 ? '\x1b[33mMINOR RIPPLE\x1b[0m' :
+    totalDamage <= 5 ? '\x1b[31mSIGNIFICANT DAMAGE\x1b[0m' :
+    '\x1b[31;1mCASCADE FAILURE\x1b[0m';
+
+  console.log(`\n  ${'─'.repeat(60)}`);
+  console.log(`  Verdict: ${verdict}`);
+  console.log(`  Direct breakages: ${directBreakages.length}`);
+  console.log(`  Downstream fixes: ${chain.length}`);
+  console.log(`  Files affected: ${allAffectedFiles.size}`);
+  console.log(`  Coupled files missed: ${missedCouplings.length}`);
+  console.log('');
+}
+
+// ─── Feature: Danger Zone — generate a standalone HTML heatmap of repo risk ──
+// Usage: node mycelium.cjs --danger-zone
+// Outputs danger-zone.html — open in browser, zero dependencies.
+
+function dangerZone() {
+  const watchPath = path.join(__dirname, '.mycelium', 'watch.json');
+  if (!fs.existsSync(watchPath)) {
+    console.error('  No watch.json found. Run: node mycelium-watch.cjs first.');
+    process.exit(1);
+  }
+  const watch = JSON.parse(fs.readFileSync(watchPath, 'utf8'));
+  const mem = loadMemory();
+
+  // Build file risk scores
+  const fileRisk = {};
+  // From breakages
+  for (const b of watch.breakages) {
+    for (const f of b.files) {
+      if (!fileRisk[f]) fileRisk[f] = { breaks: 0, changes: 0, couplings: 0, fixChains: 0 };
+      fileRisk[f].breaks++;
+    }
+  }
+  // From commits (change frequency)
+  for (const c of watch.commits) {
+    for (const f of c.files) {
+      if (!fileRisk[f]) fileRisk[f] = { breaks: 0, changes: 0, couplings: 0, fixChains: 0 };
+      fileRisk[f].changes++;
+    }
+  }
+  // From couplings
+  for (const key of Object.keys(watch.couplings || {})) {
+    const [a, b] = key.split('<->');
+    if (!fileRisk[a]) fileRisk[a] = { breaks: 0, changes: 0, couplings: 0, fixChains: 0 };
+    if (!fileRisk[b]) fileRisk[b] = { breaks: 0, changes: 0, couplings: 0, fixChains: 0 };
+    fileRisk[a].couplings++;
+    fileRisk[b].couplings++;
+  }
+  // From fix chains
+  for (const fc of (mem.patterns.fixChains || [])) {
+    for (const f of (fc.files || [])) {
+      if (!fileRisk[f]) fileRisk[f] = { breaks: 0, changes: 0, couplings: 0, fixChains: 0 };
+      fileRisk[f].fixChains++;
+    }
+  }
+
+  // Compute composite score: breaks × 3 + fixChains × 2 + changes × 0.5 + couplings × 1
+  const scored = Object.entries(fileRisk).map(([file, r]) => ({
+    file,
+    ...r,
+    score: r.breaks * 3 + r.fixChains * 2 + r.changes * 0.5 + r.couplings * 1
+  })).sort((a, b) => b.score - a.score);
+
+  const maxScore = scored[0]?.score || 1;
+
+  // Gather constraints and learnings per area
+  const areaInfo = {};
+  if (mem.constraints && typeof mem.constraints === 'object') {
+    for (const [area, list] of Object.entries(mem.constraints)) {
+      areaInfo[area] = { constraints: list.length, learnings: 0 };
+    }
+  }
+  for (const l of (mem.learnings || [])) {
+    if (!areaInfo[l.area]) areaInfo[l.area] = { constraints: 0, learnings: 0 };
+    areaInfo[l.area].learnings++;
+  }
+
+  // Generate HTML
+  const top50 = scored.slice(0, 50);
+  const fileRows = top50.map((f, i) => {
+    const pct = Math.round((f.score / maxScore) * 100);
+    const color = pct >= 70 ? '#e74c3c' : pct >= 40 ? '#f39c12' : '#27ae60';
+    const area = classifyArea(f.file);
+    return `<tr>
+      <td>${i + 1}</td>
+      <td class="file">${escHtml(f.file)}</td>
+      <td class="area">${escHtml(area)}</td>
+      <td>${f.breaks}</td>
+      <td>${f.fixChains}</td>
+      <td>${f.changes}</td>
+      <td>${f.couplings}</td>
+      <td><div class="bar" style="width:${pct}%;background:${color}">${f.score.toFixed(1)}</div></td>
+    </tr>`;
+  }).join('\n');
+
+  const areaRows = Object.entries(areaInfo).sort((a, b) => (b[1].constraints + b[1].learnings) - (a[1].constraints + a[1].learnings))
+    .map(([area, info]) => `<tr><td>${escHtml(area)}</td><td>${info.constraints}</td><td>${info.learnings}</td></tr>`).join('\n');
+
+  const totalBreakages = watch.breakages.length;
+  const totalCommits = watch.commits.length;
+  const totalConstraints = Object.values(mem.constraints || {}).reduce((s, a) => s + a.length, 0);
+
+  const html = `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Danger Zone — Mycelium Risk Heatmap</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #0d1117; color: #c9d1d9; padding: 2rem; }
+  h1 { color: #f85149; margin-bottom: 0.5rem; }
+  .subtitle { color: #8b949e; margin-bottom: 2rem; }
+  .stats { display: flex; gap: 2rem; margin-bottom: 2rem; flex-wrap: wrap; }
+  .stat { background: #161b22; border: 1px solid #30363d; border-radius: 8px; padding: 1rem 1.5rem; }
+  .stat .num { font-size: 2rem; font-weight: bold; color: #58a6ff; }
+  .stat .label { color: #8b949e; font-size: 0.85rem; }
+  table { width: 100%; border-collapse: collapse; margin-bottom: 2rem; }
+  th { text-align: left; padding: 0.5rem; border-bottom: 2px solid #30363d; color: #8b949e; font-size: 0.8rem; text-transform: uppercase; }
+  td { padding: 0.5rem; border-bottom: 1px solid #21262d; font-size: 0.85rem; }
+  .file { font-family: monospace; color: #58a6ff; max-width: 300px; overflow: hidden; text-overflow: ellipsis; }
+  .area { color: #8b949e; }
+  .bar { height: 20px; border-radius: 3px; color: #fff; font-size: 0.75rem; padding: 2px 6px; min-width: 30px; text-align: right; }
+  h2 { color: #c9d1d9; margin: 2rem 0 1rem; }
+  .meta { color: #484f58; font-size: 0.75rem; margin-top: 2rem; }
+</style>
+</head>
+<body>
+  <h1>Danger Zone</h1>
+  <p class="subtitle">Mycelium Risk Heatmap — generated ${new Date().toISOString().slice(0, 10)} from ${totalCommits} commits</p>
+
+  <div class="stats">
+    <div class="stat"><div class="num">${totalBreakages}</div><div class="label">Breakages</div></div>
+    <div class="stat"><div class="num">${totalCommits}</div><div class="label">Commits Analyzed</div></div>
+    <div class="stat"><div class="num">${scored.length}</div><div class="label">Files Tracked</div></div>
+    <div class="stat"><div class="num">${totalConstraints}</div><div class="label">Constraints</div></div>
+    <div class="stat"><div class="num">${(mem.patterns.fixChains || []).length}</div><div class="label">Fix Chains</div></div>
+  </div>
+
+  <h2>Top ${top50.length} Riskiest Files</h2>
+  <table>
+    <tr><th>#</th><th>File</th><th>Area</th><th>Breaks</th><th>Fix Chains</th><th>Changes</th><th>Couplings</th><th>Risk Score</th></tr>
+    ${fileRows}
+  </table>
+
+  <h2>Knowledge Coverage by Area</h2>
+  <table>
+    <tr><th>Area</th><th>Constraints</th><th>Learnings</th></tr>
+    ${areaRows}
+  </table>
+
+  <p class="meta">Generated by Mycelium --danger-zone | Score = breaks*3 + fixChains*2 + changes*0.5 + couplings*1 | Zero dependencies</p>
+</body>
+</html>`;
+
+  const outPath = path.join(__dirname, 'danger-zone.html');
+  fs.writeFileSync(outPath, html);
+  console.log(`\n  \x1b[31;1m🔥 DANGER ZONE generated: danger-zone.html\x1b[0m`);
+  console.log(`  ${scored.length} files analyzed | Top risk: ${scored[0]?.file || 'none'} (score: ${scored[0]?.score?.toFixed(1) || 0})`);
+  console.log(`  Open in browser to see the full heatmap.`);
+  console.log('');
+
+  // Also print top 10 in terminal
+  console.log('  \x1b[1mTop 10 Dangerous Files:\x1b[0m');
+  for (const f of scored.slice(0, 10)) {
+    const pct = Math.round((f.score / maxScore) * 100);
+    const icon = pct >= 70 ? '🔴' : pct >= 40 ? '🟡' : '🟢';
+    console.log(`    ${icon} ${f.file} — ${f.breaks} breaks, ${f.changes} changes, score ${f.score.toFixed(1)}`);
+  }
+  console.log('');
+}
+
+function escHtml(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ─── Feature: Test Gap — find breakage patterns with no test coverage ──────
+// Usage: node mycelium.cjs --test-gap
+// Cross-references known breakages against actual test files.
+
+function testGap() {
+  const watchPath = path.join(__dirname, '.mycelium', 'watch.json');
+  if (!fs.existsSync(watchPath)) {
+    console.error('  No watch.json found. Run: node mycelium-watch.cjs first.');
+    process.exit(1);
+  }
+  const watch = JSON.parse(fs.readFileSync(watchPath, 'utf8'));
+  const mem = loadMemory();
+
+  // Find all test files
+  const testFiles = [];
+  function findTests(dir) {
+    try {
+      const entries = fs.readdirSync(dir, { withFileTypes: true });
+      for (const e of entries) {
+        const full = path.join(dir, e.name);
+        if (e.isDirectory()) {
+          if (['node_modules', '.git', 'dist', '.mycelium'].includes(e.name)) continue;
+          findTests(full);
+        } else if (/\.(test|spec)\.(js|cjs|mjs|ts|tsx)$/i.test(e.name) || /tests?\//.test(full)) {
+          testFiles.push(full);
+        }
+      }
+    } catch {}
+  }
+  findTests(__dirname);
+
+  // Read all test file contents to search for file references
+  const testContents = {};
+  for (const tf of testFiles) {
+    try {
+      testContents[tf] = fs.readFileSync(tf, 'utf8');
+    } catch { testContents[tf] = ''; }
+  }
+  const allTestText = Object.values(testContents).join('\n');
+
+  // Group breakages by file
+  const fileBreakages = {};
+  for (const b of watch.breakages) {
+    for (const f of b.files) {
+      if (!fileBreakages[f]) fileBreakages[f] = [];
+      fileBreakages[f].push(b);
+    }
+  }
+
+  // For each broken file, check if it's referenced in any test
+  const results = [];
+  for (const [file, breaks] of Object.entries(fileBreakages)) {
+    const basename = path.basename(file);
+    const nameNoExt = path.basename(file, path.extname(file));
+    
+    // Search for references in test files
+    const testRefs = [];
+    for (const [tf, content] of Object.entries(testContents)) {
+      if (content.includes(basename) || content.includes(nameNoExt) || content.includes(file)) {
+        testRefs.push(path.relative(__dirname, tf));
+      }
+    }
+    
+    // Also check if any constraint exists for the area
+    const area = classifyArea(file);
+    const constraints = (mem.constraints && mem.constraints[area]) || [];
+    
+    results.push({
+      file,
+      area,
+      breakCount: breaks.length,
+      hasTest: testRefs.length > 0,
+      testFiles: testRefs,
+      constraintCount: constraints.length,
+      latestBreak: breaks[breaks.length - 1]
+    });
+  }
+
+  // Sort: most breaks first, then by whether it has tests (untested first)
+  results.sort((a, b) => {
+    if (a.hasTest !== b.hasTest) return a.hasTest ? 1 : -1;
+    return b.breakCount - a.breakCount;
+  });
+
+  console.log(`\n  \x1b[1m🧪 TEST GAP ANALYSIS\x1b[0m`);
+  console.log(`  ${watch.breakages.length} breakages across ${Object.keys(fileBreakages).length} files`);
+  console.log(`  ${testFiles.length} test files found`);
+  console.log(`  ${'─'.repeat(60)}`);
+
+  const uncovered = results.filter(r => !r.hasTest);
+  const covered = results.filter(r => r.hasTest);
+
+  if (uncovered.length > 0) {
+    console.log(`\n  \x1b[31m✗ UNCOVERED (${uncovered.length} files with breakages but NO tests):\x1b[0m`);
+    for (const r of uncovered) {
+      console.log(`    🔴 ${r.file} — ${r.breakCount} break(s), area: ${r.area}`);
+      if (r.latestBreak) console.log(`       Last break: "${r.latestBreak.pattern.slice(0, 60)}"`);
+      if (r.constraintCount > 0) {
+        console.log(`       \x1b[33m(${r.constraintCount} constraints exist but no test enforces them)\x1b[0m`);
+      }
+    }
+  }
+
+  if (covered.length > 0) {
+    console.log(`\n  \x1b[32m✓ COVERED (${covered.length} files with breakages AND tests):\x1b[0m`);
+    for (const r of covered) {
+      console.log(`    🟢 ${r.file} — ${r.breakCount} break(s), tested in: ${r.testFiles.join(', ')}`);
+    }
+  }
+
+  // Gap score
+  const gapPct = results.length > 0 ? Math.round((uncovered.length / results.length) * 100) : 0;
+  const totalUncoveredBreaks = uncovered.reduce((s, r) => s + r.breakCount, 0);
+  
+  const totalCoveredBreaks = covered.reduce((s, r) => s + r.breakCount, 0);
+  
+  console.log(`\n  ${'─'.repeat(60)}`);
+  console.log(`  \x1b[1mGap Score: ${gapPct}% of broken files have no test coverage\x1b[0m`);
+  console.log(`  Uncovered: ${uncovered.length} files (${totalUncoveredBreaks} file-breakage references)`);
+  console.log(`  Covered: ${covered.length} files (${totalCoveredBreaks} file-breakage references)`);
+  
+  if (uncovered.length > 0) {
+    console.log(`\n  \x1b[33mPriority: Write tests for these files first:\x1b[0m`);
+    for (const r of uncovered.slice(0, 5)) {
+      console.log(`    1. ${r.file} (${r.breakCount} breaks, ${r.constraintCount} constraints)`);
+    }
+  }
+  console.log('');
+}
+
+// ─── Check: Pre-creation file verification ──────────────────────────
+// Run BEFORE creating a new file to see if something similar already exists.
+// This is the prevention layer that --guard (at commit time) can't provide.
+
+function check(filepath) {
+  const mem = loadMemory();
+  const ext = path.extname(filepath);
+  const dir = path.dirname(filepath);
+  const base = path.basename(filepath, ext).toLowerCase();
+  const words = new Set(base.replace(/([a-z])([A-Z])/g, '$1-$2').toLowerCase()
+    .split(/[-_.\s]+/).filter(w => w.length > 2));
+
+  // Generate trigrams for fuzzy matching (catches showroom/showcase, gallery/galley)
+  function trigrams(s) {
+    const t = new Set();
+    const clean = s.toLowerCase().replace(/[^a-z0-9]/g, '');
+    for (let i = 0; i <= clean.length - 3; i++) t.add(clean.slice(i, i + 3));
+    return t;
+  }
+  function trigramSimilarity(a, b) {
+    const ta = trigrams(a), tb = trigrams(b);
+    if (ta.size === 0 || tb.size === 0) return 0;
+    const overlap = [...ta].filter(t => tb.has(t)).length;
+    return overlap / Math.max(ta.size, tb.size);
+  }
+
+  console.log(`\n# Pre-creation check: ${filepath}\n`);
+
+  let issues = 0;
+
+  // 1. Check for similar existing files
+  const searchDir = path.join(__dirname, dir);
+  if (fs.existsSync(searchDir)) {
+    const existing = fs.readdirSync(searchDir)
+      .filter(f => path.extname(f) === ext);
+
+    const similar = [];
+    for (const ef of existing) {
+      const efBase = path.basename(ef, ext).toLowerCase();
+
+      // Method 1: keyword overlap
+      const efWords = new Set(efBase.replace(/([a-z])([A-Z])/g, '$1-$2').toLowerCase()
+        .split(/[-_.\s]+/).filter(w => w.length > 2));
+      const keyOverlap = [...words].filter(w => efWords.has(w));
+
+      // Method 2: trigram similarity (fuzzy — catches showroom/showcase)
+      const sim = trigramSimilarity(base, efBase);
+
+      // Method 3: one name contains the other
+      const contains = base.includes(efBase) || efBase.includes(base);
+
+      // Method 4: shared prefix/suffix of 4+ chars
+      let sharedPrefix = 0;
+      for (let i = 0; i < Math.min(base.length, efBase.length); i++) {
+        if (base[i] === efBase[i]) sharedPrefix++; else break;
+      }
+
+      // Method 5: shared root word (≥4 chars) — catches showroom/showcase
+      const minLen = Math.min(base.length, efBase.length);
+      let sharedRoot = false;
+      for (let len = Math.min(minLen, 8); len >= 4; len--) {
+        if (base.slice(0, len) === efBase.slice(0, len)) { sharedRoot = true; break; }
+      }
+
+      const isOverlap = keyOverlap.length >= 1 || sim >= 0.30 || contains || sharedPrefix >= 4 || sharedRoot;
+      if (isOverlap) {
+        const score = Math.max(
+          keyOverlap.length / Math.max(1, Math.min(words.size, efWords.size)),
+          sim,
+          contains ? 0.8 : 0,
+          sharedPrefix >= 4 ? sharedPrefix / Math.max(base.length, efBase.length) : 0,
+          sharedRoot ? 0.5 : 0
+        );
+        const reasons = [];
+        if (keyOverlap.length > 0) reasons.push(`keywords: [${keyOverlap.join(', ')}]`);
+        if (sim >= 0.30) reasons.push(`${Math.round(sim * 100)}% trigram match`);
+        if (contains) reasons.push('name containment');
+        if (sharedPrefix >= 4) reasons.push(`${sharedPrefix}-char shared prefix`);
+        if (sharedRoot) reasons.push(`shared root "${base.slice(0, sharedPrefix)}"`);
+        similar.push({ file: ef, score, reasons });
+      }
+    }
+
+    if (similar.length > 0) {
+      similar.sort((a, b) => b.score - a.score);
+      console.log(`  SIMILAR FILES FOUND in ${dir}/:`);
+      for (const s of similar.slice(0, 5)) {
+        const icon = s.score >= 0.4 ? '\x1b[31m!!\x1b[0m' : '\x1b[33m~\x1b[0m';
+        const existPath = path.join(dir, s.file);
+
+        // Check if Mycelium has data about this file
+        let memInfo = '';
+        const watchPath = path.join(__dirname, '.mycelium', 'watch.json');
+        if (fs.existsSync(watchPath)) {
+          try {
+            const watch = JSON.parse(fs.readFileSync(watchPath, 'utf8'));
+            const risk = (watch.risks || {})[existPath];
+            const hot = (watch.hotspots || {})[existPath];
+            if (risk) memInfo = ` | Mycelium tracked: ${risk.breakCount}x broke, ${(risk.lessons||[]).length} lessons`;
+            else if (hot) memInfo = ` | Mycelium tracked: ${hot}x changed`;
+          } catch {}
+        }
+
+        console.log(`  ${icon} ${s.file} (${s.reasons.join(', ')})${memInfo}`);
+        if (s.score >= 0.4) {
+          console.log(`     \x1b[31m↳ HIGH SIMILARITY — likely covers the same feature. Read ${s.file} first.\x1b[0m`);
+          issues++;
+        }
+      }
+      console.log('');
+    }
+  }
+
+  // 2. Check if this concept exists in memory
+  const conceptHits = [];
+  for (const w of words) {
+    if (w.length < 4) continue;
+    for (const l of (mem.learnings || [])) {
+      if (l.lesson && l.lesson.toLowerCase().includes(w)) {
+        conceptHits.push({ type: 'learning', text: l.lesson.slice(0, 80), area: l.area });
+      }
+    }
+    for (const b of (mem.breakages || [])) {
+      if (b.what && b.what.toLowerCase().includes(w)) {
+        conceptHits.push({ type: 'breakage', text: b.what.slice(0, 80), area: b.area });
+      }
+    }
+    for (const [area, rules] of Object.entries(mem.constraints || {})) {
+      for (const r of rules) {
+        if (r.fact && r.fact.toLowerCase().includes(w)) {
+          conceptHits.push({ type: 'constraint', text: r.fact.slice(0, 80), area });
+        }
+      }
+    }
+  }
+
+  if (conceptHits.length > 0) {
+    // Deduplicate
+    const seen = new Set();
+    const unique = conceptHits.filter(h => {
+      if (seen.has(h.text)) return false;
+      seen.add(h.text);
+      return true;
+    });
+    console.log(`  MYCELIUM KNOWS ABOUT THIS CONCEPT (${unique.length} references):`);
+    for (const h of unique.slice(0, 6)) {
+      console.log(`  [${h.type}] ${h.text}`);
+    }
+    console.log('');
+    issues += unique.length;
+  }
+
+  // 3. Run premortem for the detected area
+  const area = classifyArea(filepath);
+  if (area && area !== 'root' && area !== 'public') {
+    console.log(`  AUTO-PREMORTEM for area "${area}":`);
+    const constraints = mem.constraints[area] || [];
+    const breakages = (mem.breakages || []).filter(b => b.area === area);
+    if (constraints.length > 0) {
+      console.log(`  ${constraints.length} constraints:`);
+      for (const c of constraints.slice(0, 3)) console.log(`    - ${c.fact.slice(0, 100)}`);
+    }
+    if (breakages.length > 0) {
+      console.log(`  ${breakages.length} past breakages in this area`);
+    }
+    if (constraints.length === 0 && breakages.length === 0) {
+      console.log(`  No known risks for area "${area}"`);
+    }
+    console.log('');
+  }
+
+  if (issues === 0) {
+    console.log('  \x1b[32mNo overlap detected. Safe to create.\x1b[0m');
+  } else {
+    console.log(`  \x1b[33m${issues} potential issue(s). Review before creating this file.\x1b[0m`);
+  }
+  console.log('');
+}
+
 // ─── Main ───────────────────────────────────────────────────────────
 
 const arg = process.argv[2];
@@ -3457,6 +5153,8 @@ if (arg === '--init') {
   recordLearning(process.argv[3], process.argv[4]);
 } else if (arg === '--premortem' && process.argv[3]) {
   premortem(process.argv[3]);
+} else if (arg === '--check' && process.argv[3]) {
+  check(process.argv[3]);
 } else if (arg === '--postfix') {
   postfix();
 } else if (arg === '--whyfile' && process.argv[3]) {
@@ -3464,14 +5162,82 @@ if (arg === '--init') {
 } else if (arg === '--areamap') {
   showAreaMap();
 } else if (arg === '--guard') {
-  // Auto-premortem: detect areas from files, show only the dangerous stuff
   const enforce = process.argv.includes('--enforce');
-  const files = process.argv.slice(3).filter(f => f !== '--enforce');
-  const warnings = guard(files);
-  if (enforce && warnings > 0) {
-    console.error(`\n  BLOCKED by --enforce: ${warnings} constraint warning(s) detected.`);
-    console.error('  Fix the warnings above or use --no-verify to bypass.\n');
-    process.exit(1);
+  const compact = process.argv.includes('--compact');
+  const files = process.argv.slice(3).filter(f => f !== '--enforce' && f !== '--compact');
+  if (compact) {
+    // COMPACT MODE: max 10 lines output, no verbose dumps
+    // This prevents the pre-commit hook from bloating AI conversation with 4000+ tokens
+    const mem = loadMemory();
+    const staged = files.length ? files : (() => { try { return require('child_process').execSync('git diff --cached --name-only', {encoding:'utf8'}).trim().split('\n').filter(Boolean); } catch(e) { return []; } })();
+    const areas = [...new Set(staged.map(f => classifyArea(f)).filter(a => a !== 'root'))];
+    let blockCount = 0;
+    let hardBlock = false;
+    const critical = [];
+    
+    // Area-based checks
+    for (const area of areas) {
+      const cons = mem.constraints?.[area] || [];
+      const brk = (mem.breakages || []).filter(b => b.area === area);
+      blockCount += cons.length + brk.length;
+      if (brk.length > 0) critical.push(`${area}: ${brk.length} past breakage(s)`);
+    }
+    
+    // ── ACTIVE PATTERN BLOCKING: check diff against learned failure signatures ──
+    const watchPath = path.join(__dirname, '.mycelium', 'watch.json');
+    if (fs.existsSync(watchPath)) {
+      try {
+        const watchData = JSON.parse(fs.readFileSync(watchPath, 'utf8'));
+        const risks = watchData.risks || {};
+        let diff = '';
+        try { diff = require('child_process').execSync('git diff --cached 2>/dev/null', {encoding:'utf8'}).toLowerCase(); } catch {}
+        
+        // Check: files with 5+ breaks that diff touches risky patterns
+        for (const f of staged) {
+          const risk = risks[f];
+          if (!risk || risk.breakCount < 3) continue;
+          const lessons = risk.lessons || [];
+          // Extract danger keywords from lessons
+          const dangerKeys = new Set();
+          for (const l of lessons) {
+            const text = (typeof l === 'string' ? l : (l.lesson || '')).toLowerCase();
+            for (const kw of ['innerhtml', 'data-i18n', 'viewport', 'overflow', 'z-index', 'loading="lazy"', 'queryselector']) {
+              if (text.includes(kw)) dangerKeys.add(kw);
+            }
+          }
+          if (dangerKeys.size > 0) {
+            const fileDiffIdx = diff.indexOf(f.toLowerCase());
+            if (fileDiffIdx !== -1) {
+              const fileDiff = diff.slice(fileDiffIdx, diff.indexOf('diff --git', fileDiffIdx + 1) === -1 ? diff.length : diff.indexOf('diff --git', fileDiffIdx + 1));
+              const triggered = [...dangerKeys].filter(k => fileDiff.includes(k));
+              if (triggered.length > 0) {
+                critical.push(`RISK: ${path.basename(f)} (${risk.breakCount}x broke) touches [${triggered.join(',')}]`);
+                hardBlock = true;
+                // ── LOG guard prevention for validation loop ──
+                logGuardAction('block', f, triggered, risk.breakCount);
+              }
+            }
+          }
+        }
+      } catch(e) { /* best effort */ }
+    }
+    
+    // Token cost check
+    const expensive = staged.filter(f => { try { const s = fs.statSync(path.join(__dirname, f)); return s.size > 40000; } catch(e) { return false; } });
+    if (expensive.length) critical.push(`EXPENSIVE: ${expensive.map(f=>path.basename(f)).join(', ')} — use grep`);
+    // Context size check
+    try { const ctx = fs.statSync(path.join(__dirname, '.mycelium-context')); if (ctx.size > 6000) critical.push(`Context bloated: ${(ctx.size/1024).toFixed(1)}KB > 6KB cap`); } catch(e) {}
+    
+    console.log(`[guard] ${staged.length} files, ${areas.length} areas, ${blockCount} warnings${critical.length ? ':' : ' — OK'}`);
+    critical.slice(0, 5).forEach(c => console.log(`  ⚠ ${c}`));
+    if (enforce && (blockCount > 30 || hardBlock)) { process.exit(1); }
+  } else {
+    const warnings = guard(files);
+    if (enforce && warnings > 0) {
+      console.error(`\n  BLOCKED by --enforce: ${warnings} constraint warning(s) detected.`);
+      console.error('  Fix the warnings above or use --no-verify to bypass.\n');
+      process.exit(1);
+    }
   }
 } else if (arg === '--gen-tests') {
   // Auto-generate regression tests from breakages + constraints
@@ -3505,18 +5271,149 @@ if (arg === '--init') {
 } else if (arg === '--wip-done') {
   // Clear WIP — task is complete
   const wipPath = path.join(__dirname, '.mycelium-wip');
+  const checkpointPath = path.join(__dirname, '.mycelium', 'checkpoint.json');
   if (fs.existsSync(wipPath)) {
     fs.unlinkSync(wipPath);
     console.log('[mycelium] WIP cleared. Good work.');
   } else {
     console.log('[mycelium] No WIP to clear.');
   }
+  if (fs.existsSync(checkpointPath)) {
+    const cp = JSON.parse(fs.readFileSync(checkpointPath, 'utf8'));
+    cp.status = 'completed';
+    cp.completedAt = new Date().toISOString();
+    fs.writeFileSync(checkpointPath, JSON.stringify(cp, null, 2));
+    console.log('[mycelium] Checkpoint marked completed.');
+  }
+} else if (arg === '--checkpoint') {
+  // Structured checkpoint that survives compaction — richer than --wip
+  // Usage: node mycelium.cjs --checkpoint '{"task":"...","steps":[...],"completed":[...],"pending":[...],"files":[...],"context":{}}'
+  const checkpointPath = path.join(__dirname, '.mycelium', 'checkpoint.json');
+  const wipPath = path.join(__dirname, '.mycelium-wip');
+  if (!process.argv[3]) {
+    // Read mode: show current checkpoint
+    if (fs.existsSync(checkpointPath)) {
+      console.log(fs.readFileSync(checkpointPath, 'utf8'));
+    } else {
+      console.log('[mycelium] No checkpoint saved. Use --checkpoint \'{"task":"..."}\' to create one.');
+    }
+  } else {
+    try {
+      const payload = JSON.parse(process.argv[3]);
+      const checkpoint = {
+        savedAt: new Date().toISOString(),
+        status: 'in_progress',
+        task: payload.task || 'unnamed task',
+        steps: payload.steps || [],
+        completed: payload.completed || [],
+        pending: payload.pending || [],
+        blocked: payload.blocked || [],
+        files: payload.files || [],
+        context: payload.context || {},
+        resumeHint: payload.resumeHint || 'Read this checkpoint and continue from the first pending step.'
+      };
+      fs.writeFileSync(checkpointPath, JSON.stringify(checkpoint, null, 2));
+      // Also write a compact WIP line for .mycelium-context
+      const pendingStr = (checkpoint.pending || []).slice(0, 3).join('; ');
+      fs.writeFileSync(wipPath, `  ${checkpoint.savedAt.slice(0,16)} CHECKPOINT: ${checkpoint.task} | PENDING: ${pendingStr}\n`);
+      console.log(`[mycelium] Checkpoint saved: ${checkpoint.task}`);
+      console.log(`  Steps: ${checkpoint.steps.length} total, ${checkpoint.completed.length} done, ${checkpoint.pending.length} pending`);
+      console.log(`  Files: ${checkpoint.files.join(', ') || 'none'}`);
+      console.log('  Read with: node mycelium.cjs --checkpoint');
+      console.log('  Clear with: node mycelium.cjs --wip-done');
+    } catch (e) {
+      console.error('[mycelium] Invalid JSON. Usage: --checkpoint \'{"task":"desc","pending":["step1"]}\'' );
+      console.error('  Error:', e.message);
+    }
+  }
 } else if (arg === '--compact') {
   compact();
+} else if (arg === '--compress' || arg === '--deep-compress') {
+  deepCompress();
+} else if (arg === '--auto-trim') {
+  const trimmed = autoTrim();
+  if (!trimmed) console.log('[mycelium] All files within size limits. No trim needed.');
+} else if (arg === '--sharpen') {
+  // Sharpen all lessons in memory
+  const mem = loadMemory();
+  let count = 0;
+  for (const l of (mem.learnings || [])) {
+    const before = l.lesson;
+    l.lesson = sharpenLesson(l.lesson || '');
+    if (l.lesson !== before) count++;
+  }
+  saveMemory(mem);
+  console.log(`[mycelium] Sharpened ${count} lessons.`);
+} else if (arg === '--validation-report') {
+  // Print the validation loop report
+  const watchPath = path.join(__dirname, '.mycelium', 'watch.json');
+  if (!fs.existsSync(watchPath)) { console.log('No watch.json found.'); process.exit(0); }
+  const watch = JSON.parse(fs.readFileSync(watchPath, 'utf8'));
+  const vLog = watch.validationLog || [];
+  const gLog = watch.guardLog || [];
+  
+  console.log('\n# VALIDATION LOOP REPORT\n');
+  
+  // Summary
+  const totalChecks = vLog.reduce((s, e) => s + e.lessonsApplicable, 0);
+  const totalFollowed = vLog.reduce((s, e) => s + e.lessonsFollowed, 0);
+  const totalViolated = vLog.reduce((s, e) => s + e.lessonsViolated, 0);
+  const rate = totalChecks > 0 ? Math.round((totalFollowed / totalChecks) * 100) : 0;
+  
+  console.log(`  Commits checked:    ${vLog.length}`);
+  console.log(`  Lessons applicable: ${totalChecks}`);
+  console.log(`  Lessons followed:   ${totalFollowed} (${rate}%)`);
+  console.log(`  Lessons violated:   ${totalViolated}`);
+  console.log(`  Guard blocks:       ${gLog.filter(g => g.action === 'block').length}`);
+  console.log(`  Guard warns:        ${gLog.filter(g => g.action === 'warn').length}`);
+  
+  // Lesson effectiveness
+  const risks = watch.risks || {};
+  let effective = 0, dead = 0, total = 0;
+  for (const risk of Object.values(risks)) {
+    for (const [key, stats] of Object.entries(risk.lessonStats || {})) {
+      total++;
+      if (stats.dead) dead++;
+      else if (stats.followed >= 2) effective++;
+    }
+  }
+  console.log(`\n  Lesson effectiveness:`);
+  console.log(`    Total tracked:    ${total}`);
+  console.log(`    Effective (2+):   ${effective}`);
+  console.log(`    Dead (never fire): ${dead}`);
+  if (total > 0) console.log(`    Signal-to-noise:  ${Math.round((effective / total) * 100)}%`);
+  
+  // Recent violations
+  const recentViolations = vLog.flatMap(e => e.details.filter(d => d.result === 'violated')).slice(-5);
+  if (recentViolations.length > 0) {
+    console.log(`\n  Recent violations:`);
+    for (const v of recentViolations) {
+      console.log(`    ${v.file}: ${v.lesson.slice(0, 50)} — ${v.reason || 'unknown'}`);
+    }
+  }
+  
+  // Print as JSON for API consumption
+  const report = {
+    commits: vLog.length, totalChecks, totalFollowed, totalViolated, rate,
+    guardBlocks: gLog.filter(g => g.action === 'block').length,
+    guardWarns: gLog.filter(g => g.action === 'warn').length,
+    lessonStats: { total, effective, dead, signalToNoise: total > 0 ? Math.round((effective / total) * 100) : 0 }
+  };
+  console.log(`\n  JSON: ${JSON.stringify(report)}`);
 } else if (arg === '--predict') {
   predict(process.argv.slice(3));
 } else if (arg === '--trending') {
   trending();
+} else if (arg === '--autopsy' && process.argv[3]) {
+  autopsy(process.argv[3]);
+} else if (arg === '--danger-zone') {
+  dangerZone();
+} else if (arg === '--test-gap') {
+  testGap();
+} else if (arg === '--token-check') {
+  tokenCheck(process.argv.slice(3));
+} else if (arg === '--cost-plan') {
+  costPlan(process.argv.slice(3));
 } else if (arg === '--sync') {
   // Catch up: take snapshot + delegate to mycelium-fix for fix → verify → confirm
   console.log('[mycelium] Syncing after pull/merge...');

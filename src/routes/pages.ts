@@ -32,7 +32,18 @@ router.get('/api/members', (c) => {
 })
 
 // Main page
-router.get('/', serveStatic({ path: './index.html' }))
+router.get('/', async (c) => {
+  try {
+    // @ts-ignore
+    const asset = await c.env?.ASSETS?.fetch(new Request('https://dummy/index.html'))
+    if (asset) {
+      return new Response(asset.body, {
+        headers: { 'Content-Type': 'text/html; charset=utf-8' }
+      })
+    }
+  } catch (e) {}
+  return c.redirect('/index.html')
+})
 router.get('/index.html', serveStatic({ path: './index.html' }))
 
 // AI-friendly & crawler files (all served from public/ static files)
@@ -84,7 +95,7 @@ namedPages.forEach(page => {
 })
 
 // Static pages served via route factory
-const staticPages = ['fashion', 'merch', 'fortune', 'arcade', 'memes', 'apply', 'wallet', 'forge', 'tcg', 'market', 'cards', 'guide', 'battle', 'pvp-battle', 'card-bridge', 'collection', 'deckbuilder', 'zakum', 'tournament', 'academy', 'vault', 'museum', 'research', 'historical-society', 'menu-demo', 'exchange', 'ai-lounge', 'court', 'therapy', 'hr', 'conspiracy', 'updates', 'about', 'treasury', 'intelligence', 'citizenship', 'invest', 'markets', 'buy', 'business', 'supermarket', 'restaurants', 'services', 'crafts', 'realestate', 'jobs', 'my-business', 'cafeteria', 'lost-found', 'parking', 'maintenance', 'breakroom', 'basement', 'nwg-shop', 'card-print-template', 'wyckoff', 'matchalatte', 'embassy', 'profile-card', 'achievements', 'lore', 'restaurant', 'card-lab', 'avatar-builder', 'tavern-tales', 'leaderboard', 'research-library', 'auction-house', 'system-dashboard', 'card-utility', 'shrine', 'card-audit', 'oracle', 'showcase', 'tools']
+const staticPages = ['fashion', 'merch', 'fortune', 'arcade', 'memes', 'apply', 'wallet', 'forge', 'tcg', 'market', 'cards', 'guide', 'battle', 'pvp-battle', 'card-bridge', 'collection', 'deckbuilder', 'zakum', 'tournament', 'academy', 'vault', 'museum', 'research', 'historical-society', 'menu-demo', 'exchange', 'ai-lounge', 'court', 'therapy', 'hr', 'conspiracy', 'updates', 'about', 'treasury', 'intelligence', 'citizenship', 'invest', 'markets', 'buy', 'business', 'supermarket', 'restaurants', 'services', 'crafts', 'realestate', 'jobs', 'my-business', 'cafeteria', 'lost-found', 'parking', 'maintenance', 'breakroom', 'basement', 'nwg-shop', 'card-print-template', 'wyckoff', 'matchalatte', 'embassy', 'profile-card', 'achievements', 'lore', 'restaurant', 'card-lab', 'avatar-builder', 'tavern-tales', 'leaderboard', 'research-library', 'auction-house', 'system-dashboard', 'card-utility', 'shrine', 'card-audit', 'oracle', 'showcase', 'tools', 'admin-physical', 'battle-legacy', 'battle-old', 'battle-simple']
 
 staticPages.forEach(page => {
   router.get(`/${page}`, async (c) => {

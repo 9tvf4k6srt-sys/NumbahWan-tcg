@@ -1817,9 +1817,14 @@ const NW_WALLET = {
                 return { success: false, error: 'Invalid transfer code format' };
             }
             
-            // Decode
+            // Decode — wrap in try-catch for corrupted transfer codes (unhandled-exception pattern)
             const encoded = code.substring(6);
-            const transferData = JSON.parse(decodeURIComponent(escape(atob(encoded))));
+            let transferData;
+            try {
+                transferData = JSON.parse(decodeURIComponent(escape(atob(encoded))));
+            } catch (e) {
+                return { success: false, error: 'Transfer code is corrupted or invalid' };
+            }
             
             // Check expiry
             if (Date.now() > transferData.expiresAt) {

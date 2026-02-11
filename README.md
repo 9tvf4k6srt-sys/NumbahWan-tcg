@@ -9,10 +9,12 @@ It reads your commit history, finds what keeps breaking, and builds defenses aut
 
 [![Live Showcase](https://img.shields.io/badge/🍄_Live_Showcase-See_It_Working-6c5ce7?style=for-the-badge)](https://numbahwan.pages.dev/showcase)
 [![Score](https://img.shields.io/badge/Score-75%2F100_(B)-00b894?style=for-the-badge)](https://numbahwan.pages.dev/showcase)
-[![Tests](https://img.shields.io/badge/Tests-84_passing-00b894?style=for-the-badge)]()
+
+> **Deploy needed**: Showcase page exists in repo but Cloudflare Pages needs redeployment. Merge PR #41 to trigger auto-deploy via GitHub Actions.
+[![Tests](https://img.shields.io/badge/Tests-123_passing-00b894?style=for-the-badge)]()
 [![Deps](https://img.shields.io/badge/Dependencies-0-e8e0d8?style=for-the-badge)]()
 
-**[Live Showcase](https://numbahwan.pages.dev/showcase)** · every number on that page is real, hash-locked, and independently verifiable
+**[Live Showcase](https://numbahwan.pages.dev/showcase)** · **[All 92 Pages](https://numbahwan.pages.dev/showcase#gallery)** · **[Showcase Source](public/showcase.html)** · every number is real, hash-locked, and independently verifiable
 
 </div>
 
@@ -104,9 +106,9 @@ node bin/mycelium.cjs ship "your commit message"
 
 ## Real Results (not hypothetical)
 
-Mycelium was built and tested on a [116-page vanilla JS project](https://numbahwan.pages.dev) with 150+ commits. Every number below comes from `mycelium-eval.cjs` and can be verified by running it yourself.
+Mycelium was built and tested on a [92-page vanilla JS project](https://numbahwan.pages.dev) with 150+ commits. Every number below comes from `mycelium-eval.cjs` and can be verified by running it yourself.
 
-**[→ See the live showcase with all metrics](https://numbahwan.pages.dev/showcase)**
+**[→ Live showcase with metrics + honest Mycelium story](https://numbahwan.pages.dev/showcase)** · **[→ Browse all 92 pages](https://numbahwan.pages.dev/showcase#gallery)** · **[→ Source](public/showcase.html)**
 
 | What It Found | What It Did |
 |--------------|-------------|

@@ -7,8 +7,8 @@
   },
   "scripts": {
     "dev": "node mycelium.cjs --brief && vite",
-    "build": "node scripts/generate-showcase-data.cjs 2>/dev/null; vite build",
-    "preview": "node serve.cjs",
+    "build": "node scripts/generate-showcase-data.cjs 2>/dev/null; node mycelium-eval.cjs --json > public/static/data/mycelium-eval.json 2>/dev/null; vite build",
+    "preview": "node scripts/preview-deploy.cjs",
     "deploy": "npm run build && wrangler pages deploy",
     "cf-typegen": "wrangler types --env-interface CloudflareBindings",
     "dev:d1": "wrangler pages dev dist --d1=GUILD_DB --local --persist-to=.wrangler/state --ip 0.0.0.0 --port 3000",
@@ -47,15 +47,26 @@
     "mycelium:status": "node bin/mycelium.cjs status",
     "mycelium:health": "node bin/mycelium.cjs health",
     "mycelium:watch": "node bin/mycelium.cjs watch",
-    "mycelium:ship": "node bin/mycelium.cjs ship"
+    "mycelium:ship": "node bin/mycelium.cjs ship",
+    "visual:test": "backstop test --config=backstop.config.cjs",
+    "visual:approve": "backstop approve --config=backstop.config.cjs",
+    "visual:reference": "backstop reference --config=backstop.config.cjs",
+    "preview:branch": "node scripts/preview-deploy.cjs",
+    "test:smoke": "node tests/smoke-test.cjs",
+    "test:smoke:verbose": "node tests/smoke-test.cjs --verbose",
+    "perf:audit": "node scripts/perf-budget.cjs",
+    "perf:json": "node scripts/perf-budget.cjs --json",
+    "perf:check": "node scripts/perf-budget.cjs --fail"
   },
   "dependencies": {
     "hono": "^4.11.5",
-    "js-yaml": "^4.1.1"
+    "js-yaml": "^4.1.1",
+    "playwright": "^1.58.2"
   },
   "devDependencies": {
     "@hono/vite-build": "^1.2.0",
     "@hono/vite-dev-server": "^0.18.2",
+    "backstopjs": "^6.3.25",
     "qrcode": "^1.5.4",
     "vite": "^6.3.5",
     "wrangler": "^4.4.0"

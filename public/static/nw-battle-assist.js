@@ -22,6 +22,9 @@ function waitForAPI(cb, retries) {
 
 const B = () => window.NW_BATTLE;
 
+// ═══ I18N HELPER ═══
+const t = (key, fallback) => (typeof NW_I18N !== 'undefined' && NW_I18N.t) ? NW_I18N.t(key, fallback) : fallback;
+
 // Don't show recommendations while coach tutorial is running
 function coachActive() {
   return !!document.getElementById('coachOverlay');
@@ -32,13 +35,17 @@ function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
 
 async function waitIdle(maxMs) {
   maxMs = maxMs || 5000;
+  // During auto-play, check faster and give up sooner
+  const isAuto = autoModeActive;
+  const effectiveMax = isAuto ? Math.min(maxMs, 1200) : maxMs;
+  const pollInterval = isAuto ? 50 : 100;
   const start = Date.now();
-  while (Date.now() - start < maxMs) {
+  while (Date.now() - start < effectiveMax) {
     const api = B();
     if (!api) return;
     const s = api.getState();
     if (!s.isAnimating) return;
-    await sleep(100);
+    await sleep(pollInterval);
   }
 }
 
@@ -360,10 +367,36 @@ function enhanceAttackButton() {
 }
 
 // ═══════════════════════════════════════════════════════════════════════
-// 3. AUTO PLAY — One-tap optimal turn
+// 3. AUTO PLAY — Continuous auto-battle until game ends
+//    Toggle ON: plays every turn automatically with visual narration
+//    Toggle OFF: stops after current action completes
 // ═══════════════════════════════════════════════════════════════════════
 
 let autoPlaying = false;
+let autoModeActive = false; // persistent toggle — runs every turn until game ends
+let autoStatusEl = null;
+
+function showAutoStatus(text) {
+  if (!autoStatusEl) {
+    autoStatusEl = document.createElement('div');
+    autoStatusEl.id = 'autoStatus';
+    document.body.appendChild(autoStatusEl);
+  }
+  autoStatusEl.textContent = text;
+  autoStatusEl.classList.add('visible');
+  // Also push to commentary ticker if available
+  const ticker = document.getElementById('bjCommentary');
+  if (ticker) {
+    ticker.textContent = text;
+    ticker.classList.add('show');
+    clearTimeout(ticker._hideTimer);
+    ticker._hideTimer = setTimeout(() => ticker.classList.remove('show'), 2000);
+  }
+}
+
+function hideAutoStatus() {
+  if (autoStatusEl) autoStatusEl.classList.remove('visible');
+}
 
 function createAutoPlayButton() {
   const actionBar = document.getElementById('actionBar');
@@ -372,7 +405,7 @@ function createAutoPlayButton() {
   const btn = document.createElement('button');
   btn.className = 'action-btn auto-btn';
   btn.id = 'autoPlayBtn';
-  btn.setAttribute('aria-label', 'Auto play this turn');
+  btn.setAttribute('aria-label', 'Toggle auto-play until battle ends');
   btn.innerHTML = `
     <span class="btn-icon"><svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14.5v-9l6 4.5-6 4.5z"/></svg></span>
     <span class="btn-text">AUTO</span>
@@ -383,53 +416,103 @@ function createAutoPlayButton() {
   if (endBtn) actionBar.insertBefore(btn, endBtn);
   else actionBar.appendChild(btn);
 
-  btn.addEventListener('click', executeAutoTurn);
+  btn.addEventListener('click', toggleAutoMode);
 
-  // Disable during enemy turn, animations, or coach tutorial
+  // Update button state — check frequently for faster auto-play response
   setInterval(() => {
     const api = B();
     if (!api) return;
     const s = api.getState();
-    btn.disabled = !s.isPlayerTurn || s.isAnimating || autoPlaying || coachActive();
-  }, 300);
+
+    if (autoModeActive) {
+      btn.disabled = false;
+      btn.classList.add('auto-active');
+      btn.querySelector('.btn-text').textContent = autoPlaying ? t('playing', 'PLAYING') + '...' : t('stop', 'STOP');
+      // Swap icon to pause
+      btn.querySelector('.btn-icon').innerHTML = '<svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>';
+    } else {
+      btn.disabled = coachActive() || (s.isAnimating && !autoPlaying);
+      btn.classList.remove('auto-active');
+      btn.querySelector('.btn-text').textContent = 'AUTO';
+      btn.querySelector('.btn-icon').innerHTML = '<svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14.5v-9l6 4.5-6 4.5z"/></svg>';
+    }
+
+    // Auto-trigger when it's player's turn and autoMode is ON
+    if (autoModeActive && !autoPlaying && s.isPlayerTurn && !s.isAnimating && s.playerHP > 0 && s.enemyHP > 0 && !coachActive()) {
+      executeAutoTurn();
+    }
+  }, 200);
+}
+
+function toggleAutoMode() {
+  if (autoModeActive) {
+    // Stop auto-play
+    autoModeActive = false;
+    hideAutoStatus();
+    console.log('[ASSIST] Auto-play OFF');
+  } else {
+    if (coachActive()) return;
+    // Start auto-play
+    autoModeActive = true;
+    showAutoStatus(t('autoPlayOn', 'AUTO-PLAY ON'));
+    console.log('[ASSIST] Auto-play ON — will play every turn until battle ends');
+    // Immediately trigger if it's player's turn
+    const api = B();
+    if (api) {
+      const s = api.getState();
+      if (s.isPlayerTurn && !s.isAnimating && !autoPlaying && s.playerHP > 0 && s.enemyHP > 0) {
+        executeAutoTurn();
+      }
+    }
+  }
 }
 
 async function executeAutoTurn() {
-  if (coachActive()) return; // Gap 4: never auto-play during tutorial
+  if (coachActive()) return;
   const api = B();
   if (!api || autoPlaying) return;
   const state = api.getState();
   if (!state.isPlayerTurn || state.isAnimating) return;
-
-  autoPlaying = true;
-  const btn = document.getElementById('autoPlayBtn');
-  if (btn) {
-    btn.disabled = true;
-    btn.querySelector('.btn-text').textContent = 'THINKING...';
+  if (state.playerHP <= 0 || state.enemyHP <= 0) {
+    autoModeActive = false;
+    hideAutoStatus();
+    return;
   }
 
+  autoPlaying = true;
+  window._nwAutoPlaying = true; // signal battle engine to speed up sleep()
+
   try {
-    // Phase 1: Play cards (best first, until out of energy or board full)
+    // Phase 1: Play cards
+    showAutoStatus(t('playingCards', 'PLAYING CARDS...'));
     await autoPlayCards();
 
-    // Phase 2: Attack with all available minions
+    // Phase 2: Attack
+    showAutoStatus(t('attacking', 'ATTACKING...'));
     await autoAttack();
 
     // Phase 3: End turn
-    await waitIdle(3000);
-    await sleep(300);
+    await waitIdle(1200);
+    await sleep(80);
     const finalState = api.getState();
-    if (finalState.playerHP > 0 && finalState.enemyHP > 0 && finalState.isPlayerTurn) {
+    if (finalState.playerHP <= 0 || finalState.enemyHP <= 0) {
+      autoModeActive = false;
+      hideAutoStatus();
+    } else if (finalState.isPlayerTurn) {
+      showAutoStatus(t('endingTurn', 'ENDING TURN...'));
       api.endTurn();
+      // After endTurn, the interval will detect the next player turn and re-trigger
     }
   } catch (e) {
     console.warn('[ASSIST] Auto-play error:', e);
   }
 
   autoPlaying = false;
-  if (btn) {
-    btn.disabled = false;
-    btn.querySelector('.btn-text').textContent = 'AUTO';
+  window._nwAutoPlaying = false; // restore normal speed
+  if (autoModeActive) {
+    showAutoStatus(t('waiting', 'WAITING...'));
+  } else {
+    hideAutoStatus();
   }
 }
 
@@ -438,8 +521,8 @@ async function autoPlayCards() {
   let safety = 10;
 
   while (safety-- > 0) {
-    if (coachActive()) break; // respect coach overlay
-    await waitIdle(3000);
+    if (coachActive()) break;
+    await waitIdle(1200);
     const state = api.getState();
     if (!state.isPlayerTurn) break;
     if (state.playerHP <= 0 || state.enemyHP <= 0) break;
@@ -455,14 +538,17 @@ async function autoPlayCards() {
     const slotIdx = bestEmptySlot(state.playerBoard);
     if (slotIdx === -1) break;
 
+    // Narrate the play
+    showAutoStatus(`${t('playing', 'PLAYING')} ${best.card.name || t('card', 'CARD')}...`);
+
     // Select card
     api.selectCard(best.idx);
-    await sleep(150);
+    await sleep(50);
     // Play to slot
     api.playToSlot(slotIdx);
     // Wait for slam animation + battlecry + synergy checks
-    await sleep(600);
-    await waitIdle(3000);
+    await sleep(200);
+    await waitIdle(1200);
   }
 }
 
@@ -471,8 +557,8 @@ async function autoAttack() {
   let safety = 10;
 
   while (safety-- > 0) {
-    if (coachActive()) break; // respect coach overlay
-    await waitIdle(3000);
+    if (coachActive()) break;
+    await waitIdle(1200);
     const state = api.getState();
     if (!state.isPlayerTurn) break;
     if (state.playerHP <= 0 || state.enemyHP <= 0) break;
@@ -502,7 +588,7 @@ async function autoAttack() {
       if (hasTaunt && !enemy.card.hasTaunt) continue;
       if (enemy.card.stealthTurns > 0) continue;
       const s = scoreAttackTarget(bestAtk.card, enemy.card, state);
-      if (s > bestScore) { bestScore = s; bestTarget = { type: 'minion', idx: enemy.idx }; }
+      if (s > bestScore) { bestScore = s; bestTarget = { type: 'minion', idx: enemy.idx, name: enemy.card.name }; }
     }
 
     if (!hasTaunt) {
@@ -512,9 +598,17 @@ async function autoAttack() {
 
     if (!bestTarget) break;
 
+    // Narrate the attack
+    const atkName = bestAtk.card.name || t('card', 'Card');
+    if (bestTarget.type === 'face') {
+      showAutoStatus(`${atkName} → ${t('face', 'FACE')}!`);
+    } else {
+      showAutoStatus(`${atkName} → ${bestTarget.name || t('enemy', 'enemy')}`);
+    }
+
     // Execute
     api.selectAttacker(bestAtk.idx);
-    await sleep(150);
+    await sleep(50);
 
     if (bestTarget.type === 'face') {
       api.attackFace();
@@ -523,8 +617,8 @@ async function autoAttack() {
     }
 
     // Wait for attack animation + death handling
-    await sleep(500);
-    await waitIdle(3000);
+    await sleep(200);
+    await waitIdle(1200);
   }
 }
 
@@ -655,6 +749,50 @@ function injectStyles() {
     .auto-btn .btn-text {
       color: var(--cyan, #00e5ff);
     }
+
+    /* ═══ AUTO-PLAY ACTIVE state ═══ */
+    .auto-btn.auto-active {
+      background: linear-gradient(135deg, #0a2a1a, #1a4a2a) !important;
+      border-color: #00e676 !important;
+      box-shadow: 0 0 20px rgba(0, 230, 118, 0.4), inset 0 0 10px rgba(0, 230, 118, 0.1) !important;
+      animation: autoActivePulse 1.5s ease-in-out infinite;
+    }
+    .auto-btn.auto-active .btn-icon svg {
+      fill: #00e676;
+    }
+    .auto-btn.auto-active .btn-text {
+      color: #00e676;
+    }
+    @keyframes autoActivePulse {
+      0%, 100% { box-shadow: 0 0 14px rgba(0, 230, 118, 0.3), inset 0 0 8px rgba(0, 230, 118, 0.05); }
+      50% { box-shadow: 0 0 28px rgba(0, 230, 118, 0.5), inset 0 0 14px rgba(0, 230, 118, 0.1); }
+    }
+
+    /* ═══ AUTO STATUS BANNER ═══ */
+    #autoStatus {
+      position: fixed;
+      top: 50px;
+      left: 50%;
+      transform: translateX(-50%) translateY(-20px);
+      background: linear-gradient(135deg, rgba(0,30,20,0.95), rgba(0,50,30,0.9));
+      border: 1px solid rgba(0, 230, 118, 0.5);
+      color: #00e676;
+      font-family: 'Orbitron', 'Inter', system-ui, sans-serif;
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 1.5px;
+      padding: 6px 18px;
+      border-radius: 20px;
+      z-index: 9000;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s, transform 0.3s;
+      box-shadow: 0 4px 20px rgba(0, 230, 118, 0.2);
+    }
+    #autoStatus.visible {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
   `;
   document.head.appendChild(style);
 }
@@ -668,7 +806,7 @@ function init() {
   startSmartGlow();
   enhanceAttackButton();
   createAutoPlayButton();
-  console.log('[ASSIST v3] Battle assist loaded: Smart Glow + Auto-Target + One-Tap Turn');
+  console.log('[ASSIST v4] Battle assist loaded: Smart Glow + Auto-Target + Continuous Auto-Play');
 }
 
 waitForAPI(() => {
