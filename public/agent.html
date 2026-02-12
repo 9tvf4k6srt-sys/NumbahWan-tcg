@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NW-AGENT Command Center | NumbahWan</title>
+    <link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
+    <style>
+        :root {
+            --bg: #0a0a0f;
+            --bg2: #12121a;
+            --card: #0e0e18;
+            --card-hover: #14142a;
+            --border: #1e1e3a;
+            --primary: #ff6b00;
+            --gold: #ffd700;
+            --cyan: #00d4ff;
+            --green: #00d26a;
+            --red: #ff4757;
+            --purple: #a855f7;
+            --text: #f0ece0;
+            --text-dim: #8a8678;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Inter', -apple-system, system-ui, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            overflow-x: hidden;
+            max-width: 100vw;
+        }
+
+        /* Header */
+        .agent-header {
+            position: sticky; top: 0; z-index: 100;
+            background: rgba(10, 10, 15, 0.95);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border);
+            padding: 12px 16px;
+        }
+        .agent-header-inner {
+            max-width: 900px; margin: 0 auto;
+            display: flex; align-items: center; justify-content: space-between; gap: 12px;
+        }
+        .agent-title { display: flex; align-items: center; gap: 10px; }
+        .agent-icon {
+            width: 32px; height: 32px; border-radius: 8px;
+            background: linear-gradient(135deg, var(--cyan), var(--purple));
+            display: flex; align-items: center; justify-content: center;
+            font-size: 16px; font-weight: 900; color: #fff;
+        }
+        .agent-name { font-size: 16px; font-weight: 700; color: var(--cyan); }
+        .agent-version { font-size: 11px; color: var(--text-dim); }
+        .pulse-indicator { display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--text-dim); }
+        .pulse-dot {
+            width: 8px; height: 8px; border-radius: 50%; background: var(--green);
+            animation: pulse 2s infinite;
+        }
+        .pulse-dot.warning { background: var(--primary); }
+        .pulse-dot.critical { background: var(--red); }
+        @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.5;transform:scale(.8)} }
+
+        /* Layout */
+        .agent-body { max-width: 900px; margin: 0 auto; padding: 16px; display: flex; flex-direction: column; gap: 16px; }
+
+        /* Status Banner */
+        .status-banner {
+            background: var(--card); border: 1px solid var(--border); border-radius: 12px;
+            padding: 16px; display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 12px;
+        }
+        .status-cell { text-align: center; }
+        .status-cell .value { font-size: 28px; font-weight: 800; line-height: 1.1; }
+        .status-cell .label { font-size: 10px; text-transform: uppercase; letter-spacing: .05em; color: var(--text-dim); margin-top: 2px; }
+        .grade-A { color: var(--green); } .grade-B { color: var(--cyan); }
+        .grade-C { color: var(--primary); } .grade-D,.grade-F { color: var(--red); }
+
+        /* Cards */
+        .section-card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
+        .section-header {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 12px 16px; border-bottom: 1px solid var(--border); cursor: pointer; user-select: none;
+        }
+        .section-header:hover { background: var(--card-hover); }
+        .section-title { font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: var(--cyan); }
+        .section-badge { font-size: 11px; padding: 2px 8px; border-radius: 10px; background: rgba(0,212,255,.1); color: var(--cyan); font-weight: 600; }
+        .section-body { padding: 12px 16px; }
+
+        /* Module Grid */
+        .module-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 8px; }
+        .module-tile {
+            background: var(--bg2); border: 1px solid var(--border); border-radius: 8px;
+            padding: 10px; text-align: center; transition: border-color .2s;
+        }
+        .module-tile:hover { border-color: var(--cyan); }
+        .module-tile .mod-name { font-size: 10px; text-transform: uppercase; color: var(--text-dim); margin-bottom: 4px; }
+        .module-tile .mod-score { font-size: 22px; font-weight: 800; }
+        .module-tile .mod-grade { font-size: 11px; font-weight: 700; margin-top: 2px; }
+        .module-tile .mod-issues { font-size: 10px; color: var(--text-dim); margin-top: 4px; }
+
+        /* Task List */
+        .task-item { display: flex; align-items: flex-start; gap: 10px; padding: 10px 0; border-bottom: 1px solid rgba(30,30,58,.5); }
+        .task-item:last-child { border-bottom: none; }
+        .task-priority { width: 6px; height: 6px; border-radius: 50%; margin-top: 6px; flex-shrink: 0; }
+        .task-priority.high { background: var(--red); } .task-priority.medium { background: var(--primary); } .task-priority.low { background: var(--text-dim); }
+        .task-desc { font-size: 13px; flex: 1; }
+        .task-meta { font-size: 10px; color: var(--text-dim); }
+        .task-source { font-size: 10px; color: var(--purple); padding: 1px 6px; border: 1px solid var(--purple); border-radius: 8px; }
+
+        /* Memory */
+        .memory-item { padding: 8px 0; border-bottom: 1px solid rgba(30,30,58,.3); }
+        .memory-item:last-child { border-bottom: none; }
+        .memory-item .area { font-size: 10px; text-transform: uppercase; color: var(--purple); font-weight: 700; }
+        .memory-item .lesson { font-size: 12px; color: var(--text); margin-top: 2px; }
+        .memory-item .time { font-size: 10px; color: var(--text-dim); margin-top: 2px; }
+
+        /* Log */
+        .log-entry { display: flex; gap: 8px; padding: 6px 0; font-size: 11px; font-family: monospace; border-bottom: 1px solid rgba(30,30,58,.2); }
+        .log-entry:last-child { border-bottom: none; }
+        .log-time { color: var(--text-dim); flex-shrink: 0; } .log-type { color: var(--cyan); font-weight: 600; flex-shrink: 0; min-width: 100px; }
+        .log-detail { color: var(--text); flex: 1; word-break: break-word; }
+
+        /* Alerts */
+        .alert-item { display: flex; align-items: flex-start; gap: 10px; padding: 10px; background: var(--bg2); border-radius: 8px; margin-bottom: 8px; border-left: 3px solid var(--primary); }
+        .alert-item.critical { border-left-color: var(--red); } .alert-item.info { border-left-color: var(--cyan); }
+        .alert-msg { font-size: 12px; flex: 1; } .alert-time { font-size: 10px; color: var(--text-dim); flex-shrink: 0; }
+        .alert-ack { background: none; border: 1px solid var(--text-dim); color: var(--text-dim); padding: 2px 8px; border-radius: 6px; font-size: 10px; cursor: pointer; flex-shrink: 0; }
+        .alert-ack:hover { color: var(--cyan); border-color: var(--cyan); }
+
+        /* Actions */
+        .actions-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 8px; }
+        .action-btn {
+            background: var(--bg2); border: 1px solid var(--border); border-radius: 8px;
+            padding: 12px; color: var(--text); cursor: pointer; text-align: left; transition: all .2s;
+        }
+        .action-btn:hover { border-color: var(--cyan); background: var(--card-hover); }
+        .action-btn .act-name { font-size: 12px; font-weight: 700; color: var(--cyan); }
+        .action-btn .act-desc { font-size: 10px; color: var(--text-dim); margin-top: 4px; }
+        .action-btn .act-cmd { font-size: 10px; color: var(--purple); font-family: monospace; margin-top: 6px; }
+
+        /* Endpoints */
+        .endpoint-grid { display: grid; grid-template-columns: 1fr; gap: 4px; }
+        .endpoint-row { display: flex; align-items: center; gap: 8px; padding: 6px 10px; background: var(--bg2); border-radius: 6px; font-size: 12px; cursor: pointer; transition: background .15s; }
+        .endpoint-row:hover { background: var(--card-hover); }
+        .endpoint-method { font-size: 10px; font-weight: 700; padding: 1px 6px; border-radius: 4px; flex-shrink: 0; }
+        .endpoint-method.get { background: rgba(0,210,106,.15); color: var(--green); }
+        .endpoint-method.post { background: rgba(255,107,0,.15); color: var(--primary); }
+        .endpoint-path { font-family: monospace; color: var(--text); flex: 1; }
+        .endpoint-tokens { font-size: 10px; color: var(--text-dim); }
+
+        /* Config */
+        .config-row { display: flex; align-items: center; gap: 8px; padding: 8px 0; border-bottom: 1px solid rgba(30,30,58,.3); }
+        .config-row:last-child { border-bottom: none; }
+        .config-label { font-size: 11px; color: var(--text-dim); min-width: 100px; }
+        .config-value { font-family: monospace; font-size: 11px; color: var(--cyan); background: var(--bg2); padding: 4px 8px; border-radius: 4px; flex: 1; overflow-x: auto; user-select: all; }
+        .config-copy { font-size: 10px; color: var(--text-dim); background: var(--bg2); border: 1px solid var(--border); padding: 4px 8px; border-radius: 4px; cursor: pointer; }
+        .config-copy:hover { color: var(--cyan); border-color: var(--cyan); }
+
+        .empty-state { text-align: center; padding: 24px; color: var(--text-dim); font-size: 12px; }
+        .agent-footer { text-align: center; padding: 24px 16px; font-size: 10px; color: var(--text-dim); }
+        .agent-footer a { color: var(--cyan); text-decoration: none; }
+        .agent-footer a:hover { text-decoration: underline; }
+
+        @media (max-width: 500px) {
+            .status-banner { grid-template-columns: repeat(2, 1fr); }
+            .module-grid { grid-template-columns: repeat(2, 1fr); }
+            .actions-grid { grid-template-columns: 1fr; }
+            .status-cell .value { font-size: 22px; }
+        }
+    </style>
+</head>
+<body>
+    <header class="agent-header">
+        <div class="agent-header-inner">
+            <div class="agent-title">
+                <div class="agent-icon">A</div>
+                <div>
+                    <div class="agent-name">NW-AGENT</div>
+                    <div class="agent-version">v2.0.0 &middot; PCP Command Center</div>
+                </div>
+            </div>
+            <div class="pulse-indicator" id="pulseIndicator">
+                <div class="pulse-dot" id="pulseDot"></div>
+                <span id="pulseLabel">connecting...</span>
+            </div>
+        </div>
+    </header>
+
+    <div class="agent-body">
+        <!-- Status Banner -->
+        <div class="status-banner" id="statusBanner">
+            <div class="status-cell"><div class="value" id="healthScore">--</div><div class="label">Health</div></div>
+            <div class="status-cell"><div class="value" id="healthGrade">?</div><div class="label">Grade</div></div>
+            <div class="status-cell"><div class="value" id="pendingTasks">0</div><div class="label">Tasks</div></div>
+            <div class="status-cell"><div class="value" id="activeBlockers">0</div><div class="label">Blockers</div></div>
+            <div class="status-cell"><div class="value" id="unackedAlerts">0</div><div class="label">Alerts</div></div>
+            <div class="status-cell"><div class="value" id="agentStatus">--</div><div class="label">Status</div></div>
+        </div>
+
+        <!-- Health Modules -->
+        <div class="section-card">
+            <div class="section-header" onclick="toggleSection('modules')">
+                <span class="section-title">Guardian Modules</span>
+                <span class="section-badge" id="modulesCount">0 modules</span>
+            </div>
+            <div class="section-body" id="modulesBody"><div class="module-grid" id="moduleGrid"></div></div>
+        </div>
+
+        <!-- Alerts -->
+        <div class="section-card" id="alertsCard" style="display:none">
+            <div class="section-header" onclick="toggleSection('alerts')">
+                <span class="section-title">Active Alerts</span>
+                <span class="section-badge" id="alertsCount">0</span>
+            </div>
+            <div class="section-body" id="alertsBody"></div>
+        </div>
+
+        <!-- Tasks -->
+        <div class="section-card">
+            <div class="section-header" onclick="toggleSection('tasks')">
+                <span class="section-title">Task Queue</span>
+                <span class="section-badge" id="tasksCount">0 pending</span>
+            </div>
+            <div class="section-body" id="tasksBody"><div class="empty-state">No tasks in queue</div></div>
+        </div>
+
+        <!-- Memory -->
+        <div class="section-card">
+            <div class="section-header" onclick="toggleSection('memory')">
+                <span class="section-title">Agent Memory</span>
+                <span class="section-badge" id="memoryCount">0 learnings</span>
+            </div>
+            <div class="section-body" id="memoryBody"><div class="empty-state">No memories stored yet</div></div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="section-card">
+            <div class="section-header" onclick="toggleSection('actions')">
+                <span class="section-title">Quick Actions</span>
+                <span class="section-badge">commands</span>
+            </div>
+            <div class="section-body" id="actionsBody"><div class="actions-grid" id="actionsGrid"></div></div>
+        </div>
+
+        <!-- API Endpoints -->
+        <div class="section-card">
+            <div class="section-header" onclick="toggleSection('endpoints')">
+                <span class="section-title">Agent API</span>
+                <span class="section-badge">endpoints</span>
+            </div>
+            <div class="section-body" id="endpointsBody"><div class="endpoint-grid" id="endpointGrid"></div></div>
+        </div>
+
+        <!-- Webhook Setup -->
+        <div class="section-card">
+            <div class="section-header" onclick="toggleSection('webhooks')">
+                <span class="section-title">Webhook Config</span>
+                <span class="section-badge">github + discord</span>
+            </div>
+            <div class="section-body" id="webhooksBody">
+                <div class="config-row">
+                    <span class="config-label">GitHub URL</span>
+                    <span class="config-value" id="webhookUrl">loading...</span>
+                    <button class="config-copy" onclick="copyConfig('webhookUrl')">copy</button>
+                </div>
+                <div class="config-row">
+                    <span class="config-label">Events</span>
+                    <span class="config-value">push, pull_request, issues</span>
+                </div>
+                <div class="config-row">
+                    <span class="config-label">Content Type</span>
+                    <span class="config-value">application/json</span>
+                </div>
+                <div style="padding:8px 0;font-size:11px;color:var(--text-dim)">
+                    Add this webhook URL in GitHub Settings &rarr; Webhooks.
+                    The agent auto-creates tasks for PRs, pushes, and issues.
+                </div>
+            </div>
+        </div>
+
+        <!-- Activity Log -->
+        <div class="section-card">
+            <div class="section-header" onclick="toggleSection('log')">
+                <span class="section-title">Activity Log</span>
+                <span class="section-badge" id="logCount">0 entries</span>
+            </div>
+            <div class="section-body" id="logBody"><div class="empty-state">No activity recorded yet</div></div>
+        </div>
+    </div>
+
+    <footer class="agent-footer">
+        NW-AGENT v2.0.0 &middot; Project Context Protocol (PCP v0.1) &middot;
+        <a href="/api/pcp/brief">Brief</a> &middot;
+        <a href="/api/pcp/status">Status</a> &middot;
+        <a href="/.well-known/pcp.json">Discovery</a> &middot;
+        <a href="/">Home</a>
+    </footer>
+
+    <script defer src="/static/nw-icons-inline.js"></script>
+    <script defer src="/static/nw-nav.js"></script>
+    <script defer src="/static/nw-i18n-core.js"></script>
+
+    <script>
+    (() => {
+        'use strict';
+        const API = '/api/pcp';
+        const collapsed = new Set();
+
+        async function init() {
+            renderEndpoints();
+            renderActions();
+            setWebhookUrl();
+            await refresh();
+            setInterval(refresh, 30000);
+        }
+
+        async function refresh() {
+            try {
+                const [status, tasks, memory, log, alerts] = await Promise.all([
+                    f(`${API}/status`), f(`${API}/tasks`), f(`${API}/memory`),
+                    f(`${API}/log?limit=30`), f(`${API}/alerts`)
+                ]);
+                renderStatus(status);
+                renderModules(status);
+                renderTasks(tasks);
+                renderMemory(memory);
+                renderLog(log);
+                renderAlerts(alerts);
+                updatePulse('ok', status?.status || 'idle');
+            } catch(e) {
+                console.error('NW-AGENT refresh:', e);
+                updatePulse('error', 'offline');
+            }
+        }
+
+        async function f(url) { const r = await fetch(url); if (!r.ok) throw new Error(r.status); return r.json(); }
+        function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+        function timeAgo(ts) {
+            if (!ts) return '';
+            const d = Date.now() - ts;
+            if (d < 60000) return 'just now';
+            if (d < 3600000) return Math.floor(d/60000) + 'm ago';
+            if (d < 86400000) return Math.floor(d/3600000) + 'h ago';
+            return Math.floor(d/86400000) + 'd ago';
+        }
+        function timeShort(ts) { return ts ? new Date(ts).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}) : ''; }
+
+        function renderStatus(d) {
+            if (!d) return;
+            const score = d.health?.score||0, grade = d.health?.grade||'?';
+            document.getElementById('healthScore').textContent = score;
+            const g = document.getElementById('healthGrade');
+            g.textContent = grade; g.className = 'value grade-' + grade.charAt(0);
+            document.getElementById('pendingTasks').textContent = d.tasks?.pending||0;
+            document.getElementById('activeBlockers').textContent = d.blockers?.length||0;
+            document.getElementById('unackedAlerts').textContent = d.alerts?.length||0;
+            const s = document.getElementById('agentStatus'); const st = d.status||'idle';
+            s.textContent = st.replace('_',' ');
+            s.style.color = st==='blocked'?'var(--red)':st==='has_work'?'var(--primary)':'var(--green)';
+        }
+
+        function renderModules(status) {
+            f(`${API}/health`).then(h => {
+                if (h && h._pcp) { /* PCP wrapper is fine, data is at top level */ }
+
+                if (!h?.modules) return;
+                const entries = Object.entries(h.modules);
+                document.getElementById('modulesCount').textContent = entries.length + ' modules';
+                document.getElementById('moduleGrid').innerHTML = entries.map(([name,m]) => {
+                    const sc = m.score>=85?'var(--green)':m.score>=65?'var(--cyan)':m.score>=45?'var(--primary)':'var(--red)';
+                    const gc = (m.grade||'').startsWith('A')?'var(--green)':(m.grade||'').startsWith('B')?'var(--cyan)':(m.grade||'').startsWith('C')?'var(--primary)':'var(--red)';
+                    return `<div class="module-tile"><div class="mod-name">${name}</div><div class="mod-score" style="color:${sc}">${m.score}</div><div class="mod-grade" style="color:${gc}">${m.grade}</div><div class="mod-issues">${m.issues} issue${m.issues!==1?'s':''}</div></div>`;
+                }).join('');
+            }).catch(()=>{});
+        }
+
+        function renderTasks(d) {
+            if (!d) return;
+            const all = [...(d.in_progress||[]),...(d.pending||[])];
+            document.getElementById('tasksCount').textContent = (d.summary?.pending||0) + ' pending';
+            const body = document.getElementById('tasksBody');
+            if (!all.length && !(d.suggestions||[]).length) { body.innerHTML = '<div class="empty-state">No tasks. Agent is idle.</div>'; return; }
+            let h = all.map(t => `<div class="task-item"><div class="task-priority ${t.priority||'medium'}"></div><div style="flex:1"><div class="task-desc">${esc(t.desc)}${t.status==='in_progress'?' (active)':''}</div><div class="task-meta">${timeAgo(t.created_at)}${t.source?` &middot; <span class="task-source">${t.source}</span>`:''}</div></div></div>`).join('');
+            if (d.suggestions?.length) {
+                h += '<div style="margin-top:12px;padding-top:8px;border-top:1px solid var(--border)"><div style="font-size:10px;text-transform:uppercase;color:var(--text-dim);margin-bottom:8px">Auto-Suggestions</div>';
+                h += d.suggestions.map(s => `<div class="task-item"><div class="task-priority ${s.priority||'medium'}"></div><div style="flex:1"><div class="task-desc" style="color:var(--text-dim)">${esc(s.desc)}</div></div></div>`).join('');
+                h += '</div>';
+            }
+            body.innerHTML = h;
+        }
+
+        function renderMemory(d) {
+            if (!d) return;
+            const body = document.getElementById('memoryBody');
+            const total = (d.stats?.total_learnings||d.stats?.totalLearnings||0) + (d.stats?.total_decisions||d.stats?.totalDecisions||0);
+            document.getElementById('memoryCount').textContent = total + ' memories';
+            const L = d.learnings||[], D = d.decisions||[], B = d.blockers||[];
+            if (!L.length && !D.length && !B.length) { body.innerHTML = '<div class="empty-state">No memories yet. Agent learns over time.</div>'; return; }
+            let h = '';
+            if (B.length) { h += '<div style="font-size:10px;text-transform:uppercase;color:var(--red);font-weight:700;margin-bottom:6px">Active Blockers</div>'; B.forEach(b => { h += `<div class="memory-item"><div class="area" style="color:var(--red)">${esc(b.area||'unknown')}</div><div class="lesson">${esc(b.desc)}</div><div class="time">${timeAgo(b.ts)}</div></div>`; }); }
+            if (L.length) { h += '<div style="font-size:10px;text-transform:uppercase;color:var(--purple);font-weight:700;margin:8px 0 6px">Learnings</div>'; L.slice(0,10).forEach(l => { h += `<div class="memory-item"><div class="area">${esc(l.area||'general')}</div><div class="lesson">${esc(l.lesson)}</div><div class="time">${timeAgo(l.ts)}</div></div>`; }); }
+            if (D.length) { h += '<div style="font-size:10px;text-transform:uppercase;color:var(--cyan);font-weight:700;margin:8px 0 6px">Decisions</div>'; D.slice(0,5).forEach(d => { h += `<div class="memory-item"><div class="area" style="color:var(--cyan)">${esc(d.context||'general')}</div><div class="lesson">${esc(d.decision)}</div><div class="time">${timeAgo(d.ts)}</div></div>`; }); }
+            body.innerHTML = h;
+        }
+
+        function renderAlerts(d) {
+            if (!d) return;
+            const card = document.getElementById('alertsCard'), body = document.getElementById('alertsBody');
+            const un = d.unacknowledged||[];
+            document.getElementById('alertsCount').textContent = un.length;
+            if (!un.length) { card.style.display = 'none'; return; }
+            card.style.display = 'block';
+            body.innerHTML = un.slice(0,10).map(a => `<div class="alert-item ${a.type||'info'}"><div class="alert-msg">${esc(a.message)}</div><div class="alert-time">${timeAgo(a.ts)}</div><button class="alert-ack" onclick="ackAlert('${a.id}')">ack</button></div>`).join('');
+        }
+
+        function renderLog(d) {
+            if (!d) return;
+            document.getElementById('logCount').textContent = (d.total||0) + ' entries';
+            const entries = d.entries||[];
+            if (!entries.length) { document.getElementById('logBody').innerHTML = '<div class="empty-state">No activity recorded yet.</div>'; return; }
+            document.getElementById('logBody').innerHTML = entries.slice(0,20).map(e => {
+                const detail = e.desc||e.message||e.command||e.area||e.status||JSON.stringify(e).substring(0,80);
+                return `<div class="log-entry"><span class="log-time">${timeShort(e.ts)}</span><span class="log-type">${e.type||'event'}</span><span class="log-detail">${esc(detail)}</span></div>`;
+            }).join('');
+        }
+
+        function renderEndpoints() {
+            const eps = [
+                {m:'GET',p:'/api/pcp/brief',t:'~500',d:'Project brief (L0)'},
+                {m:'GET',p:'/api/pcp/rules',t:'~1K',d:'Hard constraints (L0)'},
+                {m:'GET',p:'/api/pcp/context',t:'~3K',d:'Full context (L1)'},
+                {m:'GET',p:'/api/pcp/health',t:'~2K',d:'Health modules (L1)'},
+                {m:'GET',p:'/api/pcp/files',t:'~1K',d:'File map (L1)'},
+                {m:'GET',p:'/api/pcp/tasks',t:'~1K',d:'Task queue (L2)'},
+                {m:'POST',p:'/api/pcp/tasks',t:'-',d:'Add/update tasks (L2)'},
+                {m:'GET',p:'/api/pcp/memory',t:'~2K',d:'Cross-session memory (L2)'},
+                {m:'POST',p:'/api/pcp/memory',t:'-',d:'Store learnings (L2)'},
+                {m:'POST',p:'/api/pcp/onboard',t:'~6K',d:'Session bootstrap (L2)'},
+                {m:'GET',p:'/api/pcp/status',t:'~3K',d:'Full status (L2)'},
+                {m:'GET',p:'/api/pcp/pulse',t:'<200B',d:'Heartbeat (L2)'},
+                {m:'GET',p:'/api/pcp/log',t:'~2K',d:'Activity log (L2)'},
+                {m:'GET',p:'/api/pcp/alerts',t:'~1K',d:'Alert feed (L2)'},
+                {m:'POST',p:'/api/pcp/actions',t:'~1K',d:'Structured commands (L3)'},
+                {m:'POST',p:'/api/pcp/notify',t:'-',d:'Send alerts (L3)'},
+                {m:'POST',p:'/api/pcp/webhooks/github',t:'-',d:'GitHub events (L3)'},
+                {m:'GET',p:'/.well-known/pcp.json',t:'<500B',d:'PCP discovery'}
+            ];
+            document.getElementById('endpointGrid').innerHTML = eps.map(e => `<div class="endpoint-row" onclick="window.open('${e.p}','_blank')"><span class="endpoint-method ${e.m.toLowerCase()}">${e.m}</span><span class="endpoint-path">${e.p}</span><span class="endpoint-tokens">${e.t}</span></div>`).join('');
+        }
+
+        function renderActions() {
+            const acts = [
+                {n:'health.check',d:'Full health scan',c:'node sentinel.cjs'},
+                {n:'health.heal',d:'Auto-heal issues',c:'node sentinel.cjs --heal'},
+                {n:'health.guard',d:'Design + i18n guard',c:'node sentinel.cjs --guard'},
+                {n:'i18n.check',d:'Deep i18n validation',c:'node tests/nw-i18n-guard.cjs'},
+                {n:'test.smoke',d:'HTTP smoke all pages',c:'node tests/smoke-test.cjs'},
+                {n:'test.full',d:'Full test suite',c:'node tests/run-tests.cjs'},
+                {n:'build',d:'Production build',c:'npx vite build'},
+                {n:'context.refresh',d:'Regen health data',c:'node sentinel.cjs --json'}
+            ];
+            document.getElementById('actionsGrid').innerHTML = acts.map(a => `<button class="action-btn" onclick="triggerAction('${a.n}')"><div class="act-name">${a.n}</div><div class="act-desc">${a.d}</div><div class="act-cmd">${a.c}</div></button>`).join('');
+        }
+
+        window.triggerAction = async function(cmd) {
+            try {
+                const r = await (await fetch(`${API}/actions`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({command:cmd,agent:'dashboard'})})).json();
+                if (r.run) alert('Run in terminal:\n\n' + r.run);
+                setTimeout(refresh, 1000);
+            } catch(e) { console.error('Action error:', e); }
+        };
+        window.ackAlert = async function(id) {
+            try { await fetch(`${API}/alerts/ack`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id})}); setTimeout(refresh,500); } catch(e) { console.error(e); }
+        };
+        window.toggleSection = function(name) {
+            const body = document.getElementById(name+'Body');
+            if (!body) return;
+            if (collapsed.has(name)) { collapsed.delete(name); body.style.display = ''; }
+            else { collapsed.add(name); body.style.display = 'none'; }
+        };
+        window.copyConfig = function(id) {
+            const el = document.getElementById(id);
+            if (el) navigator.clipboard.writeText(el.textContent).then(()=>{const b=el.nextElementSibling;if(b){b.textContent='copied';setTimeout(()=>b.textContent='copy',1500);}}).catch(()=>{});
+        };
+
+        function updatePulse(state, label) {
+            document.getElementById('pulseDot').className = 'pulse-dot' + (state==='error'?' critical':'');
+            document.getElementById('pulseLabel').textContent = label;
+        }
+        function setWebhookUrl() { document.getElementById('webhookUrl').textContent = location.origin + '/api/pcp/webhooks/github'; }
+
+        init();
+    })();
+    </script>
+</body>
+</html>

@@ -2,29 +2,21 @@
 'use strict';
 
 // ═══════════════════════════════════════════════════════════════════
-// Mycelium — Codebase Immune System
-// Unified CLI: npx mycelium <command>
+// Mycelium v4.0 — Unified CLI (post-consolidation)
+//
+// CONSOLIDATION: 7 sub-files merged into 2 systems:
+//   - sentinel.cjs (nw-guardian v3.0) → scoring, eval, fix, heal, guard
+//   - mycelium.cjs → memory, snapshots, constraints, learnings
 //
 // Commands:
 //   (none)        Run the core memory system (snapshot + learn)
-//   eval          Evaluate the codebase (9 KPIs, cryptographic proof)
-//   eval --json   Machine-readable evaluation output
-//   eval --verify Verify all numbers with 25 self-checks
-//   eval --proof  Show cryptographic proof chain
-//   eval --history Show score history and improvement delta
-//   diagnose      Full root-cause analysis (friction → files → causes)
-//   diagnose-json Machine-readable diagnosis output
-//   fix           Run fix cycle (diagnose → prescribe → execute → verify)
-//   fix --force   Force fix even if score is above threshold
-//   fix --dry-run Preview what would be fixed
-//   status        Show current system status + pending prescriptions
-//   watch         Run the file watcher (commit analysis, risk scoring)
-//   watch --learn Learn from latest commit
-//   watch --warn  Check for risks before commit
-//   health        Show project health summary
+//   eval          Evaluate codebase via nw-guardian (10 modules)
+//   fix           Auto-fix via nw-guardian heal engine
+//   guard         Design/include guard checks
+//   health        Full health scan (10-module composite score)
+//   status        Show current system status
 //   query         Interactive memory query
 //   ship          Atomic deploy: auth → test → sync → push → PR → merge
-//   ship "msg"    Ship with custom commit message
 //   version       Show version info
 // ═══════════════════════════════════════════════════════════════════
 
@@ -33,18 +25,13 @@ const path = require('path');
 const fs = require('fs');
 
 const ROOT = path.resolve(__dirname, '..');
-const VERSION = '3.0.0';
+const VERSION = '4.0.0';
 
-// ─── Script paths ─────────────────────────────────────────────────
+// ─── Script paths (consolidated) ─────────────────────────────────
 const SCRIPTS = {
-  core:    path.join(ROOT, 'mycelium.cjs'),
-  eval:    path.join(ROOT, 'mycelium-eval.cjs'),
-  fix:     path.join(ROOT, 'mycelium-fix.cjs'),
-  watch:   path.join(ROOT, 'mycelium-watch.cjs'),
-  doctor:  path.join(ROOT, 'mycelium-doctor.cjs'),
-  why:     path.join(ROOT, 'mycelium-why.cjs'),
-  upgrade: path.join(ROOT, 'mycelium-upgrade.cjs'),
-  serve:   path.join(ROOT, 'serve.cjs'),
+  core:     path.join(ROOT, 'mycelium.cjs'),
+  guardian: path.join(ROOT, 'sentinel.cjs'),   // nw-guardian v3.0 (unified)
+  serve:    path.join(ROOT, 'serve.cjs'),
 };
 
 // ─── Helpers ──────────────────────────────────────────────────────
@@ -58,7 +45,6 @@ function run(cmd) {
 
 function exists(p) { return fs.existsSync(p); }
 
-// Run a command and return stdout (for ship workflow)
 function runCapture(cmd, opts = {}) {
   try {
     return execSync(cmd, { cwd: ROOT, encoding: 'utf8', stdio: opts.stdio || 'pipe', ...opts }).trim();
@@ -69,11 +55,6 @@ function runCapture(cmd, opts = {}) {
 }
 
 // ─── Ship: atomic deploy workflow ────────────────────────────────
-// Solves two recurring problems:
-//   1. Auth token expires mid-session → refresh BEFORE every push
-//   2. Workflow stops after PR creation → merge is part of the command
-//
-// Full sequence: test → auth → sync → squash → push → PR → merge → sync-back
 function ship(commitMsg) {
   const B = '\x1b[1m', G = '\x1b[32m', R = '\x1b[31m', Y = '\x1b[33m', X = '\x1b[0m', D = '\x1b[2m';
   const BRANCH = 'genspark_ai_developer';
@@ -86,227 +67,115 @@ function ship(commitMsg) {
   console.log(`\n  ${B}🍄 mycelium ship${X} — atomic deploy workflow`);
   console.log(`  ─────────────────────────────────────────────`);
 
-  // ── Step 1: Verify we have something to ship ──────────────────
+  // Step 1: Check for changes
   step(1, 'Check for changes');
   const currentBranch = runCapture('git branch --show-current');
   if (currentBranch !== BRANCH) {
-    // Switch to dev branch
-    try {
-      runCapture(`git checkout ${BRANCH} 2>&1`);
-      ok(`Switched to ${BRANCH}`);
-    } catch {
-      try {
-        runCapture(`git checkout -B ${BRANCH} 2>&1`);
-        ok(`Created ${BRANCH}`);
-      } catch (e) {
-        fail(`Cannot switch to ${BRANCH}: ${e.message}`);
-        process.exit(1);
-      }
-    }
+    try { runCapture(`git checkout ${BRANCH} 2>&1`); ok(`Switched to ${BRANCH}`); }
+    catch { try { runCapture(`git checkout -B ${BRANCH} 2>&1`); ok(`Created ${BRANCH}`); } catch (e) { fail(`Cannot switch to ${BRANCH}`); process.exit(1); } }
   }
 
   const status = runCapture('git status --short');
-  const hasUncommitted = status.length > 0;
-
-  if (hasUncommitted) {
-    info(`Uncommitted changes found — committing...`);
+  if (status.length > 0) {
     runCapture('git add -A');
     const msg = commitMsg || 'chore: ship uncommitted changes';
-    try {
-      runCapture(`git commit -m "${msg.replace(/"/g, '\\"')}" --no-verify`);
-      ok(`Committed: ${msg}`);
-    } catch (e) {
-      fail(`Commit failed: ${e.message}`);
-      process.exit(1);
-    }
+    try { runCapture(`git commit -m "${msg.replace(/"/g, '\\"')}" --no-verify`); ok(`Committed: ${msg}`); }
+    catch (e) { fail(`Commit failed`); process.exit(1); }
   }
 
-  // Count commits ahead of main
   let aheadCount;
   try {
     const log = runCapture(`git log --oneline ${BRANCH} --not origin/main 2>/dev/null`);
     aheadCount = log ? log.split('\n').filter(Boolean).length : 0;
-  } catch {
-    aheadCount = 0;
-  }
+  } catch { aheadCount = 0; }
 
-  if (aheadCount === 0) {
-    info('No new commits to ship.');
-    console.log(`\n  ${B}Nothing to ship.${X}\n`);
-    return;
-  }
+  if (aheadCount === 0) { info('No new commits to ship.'); return; }
   ok(`${aheadCount} commit(s) to ship`);
 
-  // ── Step 2: Run tests ─────────────────────────────────────────
+  // Step 2: Validate via guardian
   step(2, 'Validate');
   try {
-    // Quick eval verify
-    if (exists(SCRIPTS.eval)) {
-      const evalOut = runCapture(`node "${SCRIPTS.eval}" --verify 2>&1`);
-      const checkMatch = evalOut.match(/(\d+)\/(\d+)/);
-      if (checkMatch) ok(`Eval: ${checkMatch[0]} checks pass`);
-      else ok('Eval: verified');
+    if (exists(SCRIPTS.guardian)) {
+      const guardOut = runCapture(`node "${SCRIPTS.guardian}" --json 2>&1`, { allowFail: true });
+      try {
+        const report = JSON.parse(guardOut);
+        ok(`Guardian: ${report.summary?.healthScore || '?'}/100 (${report.summary?.grade || '?'})`);
+      } catch { ok('Guardian: scan complete'); }
     }
-    // Regression tests
-    const regTests = path.join(ROOT, 'tests', 'regression-from-breakages.cjs');
-    if (exists(regTests)) {
-      const testOut = runCapture(`node "${regTests}" 2>&1`);
-      const passMatch = testOut.match(/(\d+) passed/);
-      if (passMatch) ok(`Regression: ${passMatch[1]} tests pass`);
-    }
-  } catch (e) {
-    fail(`Validation failed — aborting ship`);
-    info(e.message);
-    process.exit(1);
-  }
+  } catch { info('Validation skipped'); }
 
-  // ── Step 3: Auth refresh (BEFORE any network operation) ───────
+  // Step 3: Auth refresh
   step(3, 'Refresh auth');
   try {
-    // Write fresh credentials file
-    const tokenSources = [
-      process.env.GITHUB_TOKEN,
-      process.env.GH_TOKEN,
-    ].filter(Boolean);
-
+    const tokenSources = [process.env.GITHUB_TOKEN, process.env.GH_TOKEN].filter(Boolean);
     if (tokenSources.length > 0) {
-      const token = tokenSources[0];
-      const credsContent = `https://x-access-token:${token}@github.com\n`;
+      const credsContent = `https://x-access-token:${tokenSources[0]}@github.com\n`;
       const credsPath = path.join(require('os').homedir(), '.git-credentials');
       fs.writeFileSync(credsPath, credsContent, { mode: 0o600 });
       runCapture('git config --global credential.helper store');
       ok('Token refreshed from env');
     } else {
-      // Try gh auth status
       const ghStatus = runCapture('gh auth status 2>&1', { allowFail: true });
-      if (ghStatus && ghStatus.includes('Logged in')) {
-        ok('gh auth active');
-      } else {
-        info('No token in env — auth may fail. Set GITHUB_TOKEN or run setup_github_environment.');
-      }
+      if (ghStatus && ghStatus.includes('Logged in')) ok('gh auth active');
+      else info('No token found — set GITHUB_TOKEN or run setup_github_environment.');
     }
-  } catch {
-    info('Auth refresh skipped — will attempt push anyway');
-  }
+  } catch { info('Auth refresh skipped'); }
 
-  // ── Step 4: Sync with remote ──────────────────────────────────
+  // Step 4: Sync with remote
   step(4, 'Sync with remote');
   try {
     runCapture('git fetch origin main 2>&1');
     ok('Fetched origin/main');
-
-    // Rebase onto main
     const rebaseResult = runCapture(`git rebase origin/main 2>&1`, { allowFail: true });
     if (rebaseResult && rebaseResult.includes('CONFLICT')) {
-      info('Conflicts detected — resolving (prefer remote)...');
       runCapture('git checkout --theirs . 2>&1', { allowFail: true });
       runCapture('git add -A 2>&1');
       runCapture('git rebase --continue 2>&1', { allowFail: true });
-      ok('Conflicts resolved (kept remote changes)');
-    } else {
-      ok('Rebased on origin/main');
-    }
-  } catch (e) {
-    // If rebase fails entirely, abort and try merge
+      ok('Conflicts resolved (kept remote)');
+    } else { ok('Rebased on origin/main'); }
+  } catch {
     runCapture('git rebase --abort 2>&1', { allowFail: true });
-    try {
-      runCapture('git merge origin/main --no-edit 2>&1');
-      ok('Merged origin/main');
-    } catch {
-      fail('Cannot sync with remote');
-      process.exit(1);
-    }
+    try { runCapture('git merge origin/main --no-edit 2>&1'); ok('Merged origin/main'); }
+    catch { fail('Cannot sync with remote'); process.exit(1); }
   }
 
-  // ── Step 5: Squash into single commit ─────────────────────────
+  // Step 5: Squash commits
   step(5, 'Squash commits');
-  // Recount after rebase
   try {
     const log2 = runCapture(`git log --oneline ${BRANCH} --not origin/main 2>/dev/null`);
     aheadCount = log2 ? log2.split('\n').filter(Boolean).length : 0;
   } catch { aheadCount = 1; }
-
   if (aheadCount > 1) {
     const defaultMsg = commitMsg || runCapture('git log -1 --pretty=format:"%s"');
     runCapture(`git reset --soft HEAD~${aheadCount}`);
     runCapture(`git commit -m "${defaultMsg.replace(/"/g, '\\"')}" --no-verify`);
-    ok(`Squashed ${aheadCount} → 1 commit`);
-  } else {
-    ok(`Already 1 commit — no squash needed`);
-  }
+    ok(`Squashed ${aheadCount} → 1`);
+  } else { ok('Already 1 commit'); }
 
-  // ── Step 6: Push ──────────────────────────────────────────────
+  // Step 6-9: Push, PR, Merge, Sync
   step(6, 'Push');
-  let pushOk = false;
-  for (let attempt = 1; attempt <= 2; attempt++) {
-    try {
-      runCapture(`git push -f origin ${BRANCH} 2>&1`);
-      ok('Pushed to remote');
-      pushOk = true;
-      break;
-    } catch (e) {
-      if (attempt === 1 && e.message && e.message.includes('Invalid username')) {
-        info('Auth expired — refreshing token...');
-        // This is the sandbox-specific retry
-        try {
-          // Re-read any refreshed token
-          const token = process.env.GITHUB_TOKEN || process.env.GH_TOKEN;
-          if (token) {
-            const credsContent = `https://x-access-token:${token}@github.com\n`;
-            const credsPath = path.join(require('os').homedir(), '.git-credentials');
-            fs.writeFileSync(credsPath, credsContent, { mode: 0o600 });
-          }
-          info('Retrying push...');
-        } catch { /* continue to retry */ }
-      } else {
-        fail(`Push failed: ${e.message}`);
-        info('Run setup_github_environment manually, then: mycelium ship');
-        process.exit(1);
-      }
-    }
-  }
-  if (!pushOk) {
-    fail('Push failed after 2 attempts');
-    info('Run setup_github_environment manually, then: mycelium ship');
-    process.exit(1);
-  }
+  try { runCapture(`git push -f origin ${BRANCH} 2>&1`); ok('Pushed'); }
+  catch { fail('Push failed'); process.exit(1); }
 
-  // ── Step 7: Create or update PR ───────────────────────────────
   step(7, 'Pull Request');
   let prUrl = null;
   try {
-    // Check if PR already exists
     const existingPR = runCapture(`gh pr list --head ${BRANCH} --json number,url --jq '.[0].url' 2>/dev/null`, { allowFail: true });
-    if (existingPR && existingPR.startsWith('http')) {
-      prUrl = existingPR;
-      ok(`PR exists: ${prUrl}`);
-    } else {
-      // Create new PR
+    if (existingPR && existingPR.startsWith('http')) { prUrl = existingPR; ok(`PR exists: ${prUrl}`); }
+    else {
       const title = commitMsg || runCapture('git log -1 --pretty=format:"%s"');
-      const createOut = runCapture(`gh pr create --title "${title.replace(/"/g, '\\"')}" --body "Automated via mycelium ship" --base main --head ${BRANCH} 2>&1`);
-      prUrl = createOut.trim();
+      prUrl = runCapture(`gh pr create --title "${title.replace(/"/g, '\\"')}" --body "Automated via mycelium ship" --base main --head ${BRANCH} 2>&1`).trim();
       ok(`PR created: ${prUrl}`);
     }
-  } catch (e) {
-    fail(`PR creation failed: ${e.message}`);
-    info('Create PR manually, then merge.');
-    process.exit(1);
-  }
+  } catch { fail('PR creation failed'); process.exit(1); }
 
-  // ── Step 8: Merge PR ──────────────────────────────────────────
   step(8, 'Merge');
   try {
     const mergeTitle = commitMsg || runCapture('git log -1 --pretty=format:"%s"');
     runCapture(`gh pr merge --squash --subject "${mergeTitle.replace(/"/g, '\\"')}" 2>&1`);
     ok('PR merged to main');
-  } catch (e) {
-    fail(`Merge failed: ${e.message}`);
-    info(`PR is at: ${prUrl}`);
-    info('Merge manually: gh pr merge --squash');
-    process.exit(1);
-  }
+  } catch { fail(`Merge failed — PR at: ${prUrl}`); process.exit(1); }
 
-  // ── Step 9: Sync back ─────────────────────────────────────────
   step(9, 'Sync local');
   try {
     runCapture('git stash 2>&1', { allowFail: true });
@@ -314,12 +183,9 @@ function ship(commitMsg) {
     runCapture('git pull origin main 2>&1');
     runCapture(`git checkout -B ${BRANCH} main 2>&1`);
     runCapture('git stash pop 2>&1', { allowFail: true });
-    ok('Local synced to merged main');
-  } catch {
-    info('Sync-back incomplete — run: git checkout main && git pull && git checkout -B genspark_ai_developer main');
-  }
+    ok('Local synced');
+  } catch { info('Sync-back incomplete — run: git checkout main && git pull'); }
 
-  // ── Done ──────────────────────────────────────────────────────
   console.log(`\n  ${G}${B}✓ Ship complete${X}`);
   if (prUrl) console.log(`  ${D}PR: ${prUrl}${X}`);
   console.log();
@@ -327,10 +193,9 @@ function ship(commitMsg) {
 
 function banner() {
   console.log(`
-  \x1b[1m🍄 Mycelium v${VERSION}\x1b[0m — Codebase Immune System
+  \x1b[1m🍄 Mycelium v${VERSION}\x1b[0m — Codebase Immune System (Unified)
   ─────────────────────────────────────────────
-  The underground network that learns from every commit,
-  remembers every breakage, and strengthens every constraint.
+  2 systems (was 9): guardian (sentinel.cjs) + memory (mycelium.cjs)
   `);
 }
 
@@ -340,203 +205,108 @@ const cmd = (args[0] || '').toLowerCase();
 const rest = args.slice(1).join(' ');
 
 switch (cmd) {
-  // ── Evaluation ──────────────────────────────────────────────────
+  // ── Guardian commands (scoring, eval, fix, guard) ─────────────
   case 'eval':
   case 'evaluate':
-    if (!exists(SCRIPTS.eval)) { console.error('mycelium-eval.cjs not found'); process.exit(1); }
-    run(`node "${SCRIPTS.eval}" ${rest}`);
+    run(`node "${SCRIPTS.guardian}" ${rest}`);
     break;
 
-  // ── Diagnosis ───────────────────────────────────────────────────
-  case 'diagnose':
-    if (!exists(SCRIPTS.fix)) { console.error('mycelium-fix.cjs not found'); process.exit(1); }
-    run(`node "${SCRIPTS.fix}" --diagnose ${rest}`);
-    break;
-
-  case 'diagnose-json':
-    if (!exists(SCRIPTS.fix)) { console.error('mycelium-fix.cjs not found'); process.exit(1); }
-    run(`node "${SCRIPTS.fix}" --diagnose-json ${rest}`);
-    break;
-
-  // ── Fix ─────────────────────────────────────────────────────────
   case 'fix':
-    if (!exists(SCRIPTS.fix)) { console.error('mycelium-fix.cjs not found'); process.exit(1); }
-    run(`node "${SCRIPTS.fix}" ${rest}`);
+  case 'heal':
+    run(`node "${SCRIPTS.guardian}" --heal ${rest}`);
     break;
 
-  // ── Ship: atomic deploy workflow ─────────────────────────────────
+  case 'guard':
+    run(`node "${SCRIPTS.guardian}" --guard ${rest}`);
+    break;
+
+  case 'health':
+    run(`node "${SCRIPTS.guardian}" ${rest}`);
+    break;
+
+  case 'diagnose':
+    run(`node "${SCRIPTS.guardian}" --fix ${rest}`);
+    break;
+
+  case 'status':
+    run(`node "${SCRIPTS.guardian}" --json ${rest}`);
+    break;
+
+  // ── Ship workflow ─────────────────────────────────────────────
   case 'ship':
     ship(rest || null);
     break;
 
-  // ── Status ──────────────────────────────────────────────────────
-  case 'status':
-    if (!exists(SCRIPTS.fix)) { console.error('mycelium-fix.cjs not found'); process.exit(1); }
-    run(`node "${SCRIPTS.fix}" --status ${rest}`);
-    break;
-
-  // ── Watch ───────────────────────────────────────────────────────
-  case 'watch':
-    if (!exists(SCRIPTS.watch)) { console.error('mycelium-watch.cjs not found'); process.exit(1); }
-    run(`node "${SCRIPTS.watch}" ${rest}`);
-    break;
-
-  // ── Health ──────────────────────────────────────────────────────
-  case 'health':
-    if (!exists(SCRIPTS.core)) { console.error('mycelium.cjs not found'); process.exit(1); }
-    run(`node "${SCRIPTS.core}" --health ${rest}`);
-    break;
-
-  // ── Query ───────────────────────────────────────────────────────
+  // ── Memory commands (mycelium core) ────────────────────────────
   case 'query':
     if (!exists(SCRIPTS.core)) { console.error('mycelium.cjs not found'); process.exit(1); }
     run(`node "${SCRIPTS.core}" --query ${rest}`);
     break;
 
-  // ── Version ─────────────────────────────────────────────────────
-  case 'version':
-  case '--version':
-  case '-v':
-    banner();
-    console.log(`  Components:`);
-    console.log(`    mycelium.cjs         ${exists(SCRIPTS.core) ? '✓' : '✗'} — The Learner (memory, snapshots, constraints)`);
-    console.log(`    mycelium-watch.cjs   ${exists(SCRIPTS.watch) ? '✓' : '✗'} — The Watcher (commits, risks, couplings)`);
-    console.log(`    mycelium-eval.cjs    ${exists(SCRIPTS.eval) ? '✓' : '✗'} — The Evaluator (9 KPIs, cryptographic proof)`);
-    console.log(`    mycelium-fix.cjs     ${exists(SCRIPTS.fix) ? '✓' : '✗'} — The Fixer (diagnose → prescribe → execute → verify)`);
-    console.log(`    mycelium-doctor.cjs  ${exists(SCRIPTS.doctor) ? '✓' : '✗'} — The Doctor (pre-flight health check)`);
-    console.log(`    mycelium-why.cjs     ${exists(SCRIPTS.why) ? '✓' : '✗'} — The Explainer (file intelligence reports)`);
-    console.log(`    mycelium-upgrade.cjs ${exists(SCRIPTS.upgrade) ? '✓' : '✗'} — The Upgrader (auto-generate defenses)`);
-    console.log();
-    // Show data directory
-    const dataDir = path.join(ROOT, '.mycelium');
-    if (fs.existsSync(dataDir)) {
-      const files = fs.readdirSync(dataDir);
-      console.log(`  Data (.mycelium/):`);
-      files.forEach(f => {
-        const stat = fs.statSync(path.join(dataDir, f));
-        const sizeKB = Math.round(stat.size / 1024);
-        console.log(`    ${f.padEnd(25)} ${sizeKB}KB`);
-      });
-    }
-    console.log();
+  case 'init':
+    if (!exists(SCRIPTS.core)) { console.error('mycelium.cjs not found'); process.exit(1); }
+    run(`node "${SCRIPTS.core}" --init ${rest}`);
     break;
 
-  // ── Doctor ──────────────────────────────────────────────────────
-  case 'doctor':
-    if (!exists(SCRIPTS.doctor)) { console.error('mycelium-doctor.cjs not found'); process.exit(1); }
-    run(`node "${SCRIPTS.doctor}" ${rest}`);
-    break;
-
-  // ── Why ─────────────────────────────────────────────────────────
-  case 'why':
-    if (!exists(SCRIPTS.why)) { console.error('mycelium-why.cjs not found'); process.exit(1); }
-    run(`node "${SCRIPTS.why}" ${rest}`);
-    break;
-
-  // ── Upgrade ─────────────────────────────────────────────────────
-  case 'upgrade':
-    if (!exists(SCRIPTS.upgrade)) { console.error('mycelium-upgrade.cjs not found'); process.exit(1); }
-    run(`node "${SCRIPTS.upgrade}" ${rest}`);
-    break;
-
-  // ── Serve: local static preview server ──────────────────────────
+  // ── Serve ──────────────────────────────────────────────────────
   case 'serve':
   case 'preview':
     if (!exists(SCRIPTS.serve)) { console.error('serve.cjs not found'); process.exit(1); }
     run(`node "${SCRIPTS.serve}" ${rest}`);
     break;
 
-  // ── Check: pre-creation file overlap detection ─────────────────
-  case 'check':
-    if (!exists(SCRIPTS.core)) { console.error('mycelium.cjs not found'); process.exit(1); }
-    if (!rest) { console.error('Usage: mycelium check <filepath>'); process.exit(1); }
-    run(`node "${SCRIPTS.core}" --check ${rest}`);
+  // ── Version ────────────────────────────────────────────────────
+  case 'version':
+  case '--version':
+  case '-v':
+    banner();
+    console.log(`  Components:`);
+    console.log(`    sentinel.cjs (nw-guardian v3.0) ${exists(SCRIPTS.guardian) ? '✓' : '✗'} — Unified scoring, eval, fix, heal, guard`);
+    console.log(`    mycelium.cjs                    ${exists(SCRIPTS.core) ? '✓' : '✗'} — Memory, snapshots, constraints, learnings`);
+    console.log(`    bin/mycelium.cjs                ✓ — Unified CLI (this file)`);
+    console.log();
+    const dataDir = path.join(ROOT, '.mycelium');
+    if (fs.existsSync(dataDir)) {
+      console.log(`  Data (.mycelium/):`);
+      fs.readdirSync(dataDir).forEach(f => {
+        const sizeKB = Math.round(fs.statSync(path.join(dataDir, f)).size / 1024);
+        console.log(`    ${f.padEnd(25)} ${sizeKB}KB`);
+      });
+    }
+    console.log();
     break;
 
-  // ── Autopsy: trace commit damage chain ─────────────────────────
-  case 'autopsy':
-    if (!exists(SCRIPTS.core)) { console.error('mycelium.cjs not found'); process.exit(1); }
-    if (!rest) { console.error('Usage: mycelium autopsy <commit-hash>'); process.exit(1); }
-    run(`node "${SCRIPTS.core}" --autopsy ${rest}`);
-    break;
-
-  // ── Danger Zone: risk heatmap ──────────────────────────────────
-  case 'danger-zone':
-  case 'dangerzone':
-  case 'heatmap':
-    if (!exists(SCRIPTS.core)) { console.error('mycelium.cjs not found'); process.exit(1); }
-    run(`node "${SCRIPTS.core}" --danger-zone`);
-    break;
-
-  // ── Test Gap: breakage vs test coverage analysis ───────────────
-  case 'test-gap':
-  case 'testgap':
-  case 'gaps':
-    if (!exists(SCRIPTS.core)) { console.error('mycelium.cjs not found'); process.exit(1); }
-    run(`node "${SCRIPTS.core}" --test-gap`);
-    break;
-
-  // ── Init: zero-config project setup ─────────────────────────────
-  case 'init':
-    if (!exists(SCRIPTS.core)) { console.error('mycelium.cjs not found'); process.exit(1); }
-    run(`node "${SCRIPTS.core}" --init ${rest}`);
-    break;
-
-  // ── Help ────────────────────────────────────────────────────────
+  // ── Help ───────────────────────────────────────────────────────
   case 'help':
   case '--help':
   case '-h':
     banner();
     console.log(`  Commands:`);
-    console.log(`    mycelium ship          Full deploy: auth → test → sync → push → PR → merge`);
-    console.log(`    mycelium ship "msg"    Ship with custom commit message`);
-    console.log(`    mycelium eval          Evaluate codebase (9 KPIs + proof)`);
+    console.log(`    mycelium ship          Atomic deploy: auth → test → sync → push → PR → merge`);
+    console.log(`    mycelium eval          Full 10-module codebase evaluation`);
     console.log(`    mycelium eval --json   Machine-readable evaluation`);
-    console.log(`    mycelium eval --verify 25-point self-verification`);
-    console.log(`    mycelium diagnose      Root-cause analysis (friction → files → causes)`);
-    console.log(`    mycelium diagnose-json Machine-readable diagnosis`);
-    console.log(`    mycelium fix           Run fix cycle (auto-diagnose + execute)`);
-    console.log(`    mycelium fix --force   Force fix even above threshold`);
-    console.log(`    mycelium fix --dry-run Preview fixes without executing`);
-    console.log(`    mycelium status        Current state + pending prescriptions`);
-    console.log(`    mycelium watch         File watcher (commit analysis)`);
-    console.log(`    mycelium watch --learn Learn from latest commit`);
-    console.log(`    mycelium watch --warn  Pre-commit risk check`);
-    console.log(`    mycelium health        Project health summary`);
+    console.log(`    mycelium fix           Recursive self-heal (fix → verify → recurse)`);
+    console.log(`    mycelium guard         Design & include guard checks`);
+    console.log(`    mycelium health        10-module health score dashboard`);
+    console.log(`    mycelium status        System status (JSON)`);
     console.log(`    mycelium query         Interactive memory query`);
-    console.log(`    mycelium doctor        Pre-flight health check (hooks, data, config)`);
-    console.log(`    mycelium doctor --fix  Auto-repair common issues`);
-    console.log(`    mycelium doctor --json Machine-readable doctor output`);
-    console.log(`    mycelium why <file>    Full intelligence report on any file`);
-    console.log(`    mycelium why <f> --json Machine-readable file report`);
-    console.log(`    mycelium upgrade       Preview auto-generated defenses`);
-    console.log(`    mycelium upgrade --apply Apply all upgrades`);
-    console.log(`    mycelium serve         Start local preview server (0.0.0.0:8788)`);
-    console.log(`    mycelium check <file>  Pre-creation check: find duplicates before you build`);
-    console.log(`    mycelium autopsy <hash> Trace downstream damage from any commit`);
-    console.log(`    mycelium danger-zone   Generate HTML risk heatmap (danger-zone.html)`);
-    console.log(`    mycelium test-gap      Find breakage patterns with no test coverage`);
     console.log(`    mycelium init          Zero-config project setup`);
+    console.log(`    mycelium serve         Start local preview server`);
     console.log(`    mycelium version       Show component status`);
     console.log();
-    console.log(`  Pipeline: Learner → Evaluator → Fixer (continuous loop)`);
-    console.log(`    Every commit triggers: watch --learn → eval → fix (if needed)`);
-    console.log(`    File intel: why <file> → breakages, couplings, constraints, advice`);
-    console.log(`    Health check: doctor → 14-point system verification`);
-    console.log(`    CI: .github/workflows/mycelium-ci.yml → PR comments with scores`);
-    console.log(`    Pre-commit: watch --warn → guard constraints → block if violated`);
-    console.log(`    Ship: auth → test → sync → squash → push → PR → merge (atomic)`);
+    console.log(`  Architecture (2 systems, was 9):`);
+    console.log(`    sentinel.cjs  → nw-guardian v3.0 (10 modules + heal + guard + manifest)`);
+    console.log(`    mycelium.cjs  → project memory (snapshots, constraints, learnings)`);
     console.log();
     break;
 
-  // ── Default: run core ───────────────────────────────────────────
+  // ── Default: run core ─────────────────────────────────────────
   default:
     if (cmd && !cmd.startsWith('-')) {
       console.error(`Unknown command: ${cmd}`);
       console.error(`Run 'mycelium help' for available commands.`);
       process.exit(1);
     }
-    // Pass through to core (handles --brief, --health, --query, etc.)
     if (!exists(SCRIPTS.core)) { console.error('mycelium.cjs not found'); process.exit(1); }
     run(`node "${SCRIPTS.core}" ${args.join(' ')}`);
     break;

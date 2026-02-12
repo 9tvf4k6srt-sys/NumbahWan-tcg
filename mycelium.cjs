@@ -1926,15 +1926,7 @@ function tokenCheck(files) {
     '.mycelium/fix-log.json',
     'CLAUDE.md',
     'mycelium.cjs',
-    'mycelium-watch.cjs',
-    'mycelium-engine.cjs',
-    'mycelium-eval.cjs',
-    'mycelium-fix.cjs',
-    'mycelium-doctor.cjs',
-    'mycelium-upgrade.cjs',
-    'mycelium-why.cjs',
-    'tools/mycelium-miner.cjs',
-    'tools/mycelium-auto-mine.cjs',
+    'sentinel.cjs',
     'bin/mycelium.cjs',
   ];
 
@@ -3790,18 +3782,8 @@ Run \`node mycelium.cjs --onboard\` for a complete guide.
     console.log('  · .mycelium/config.json already exists');
   }
 
-  // 7. Install watcher (if mycelium-watch.cjs exists alongside)
-  const watchScript = path.join(__dirname, 'mycelium-watch.cjs');
-  if (fs.existsSync(watchScript)) {
-    try {
-      execSync(`node "${watchScript}" --install`, { cwd: __dirname, timeout: 30000, stdio: 'pipe' });
-      console.log('  ✓ Installed mycelium-watch (scanned git history, set up hooks)');
-    } catch (e) {
-      console.log('  · mycelium-watch install skipped (run manually: node mycelium-watch.cjs --install)');
-    }
-  } else {
-    console.log('  · mycelium-watch.cjs not found — watch system skipped');
-  }
+  // 7. Watch system consolidated into guardian (sentinel.cjs)
+  console.log('  ✓ Watch/eval/fix consolidated into sentinel.cjs (nw-guardian v3.0)');
 
   // 8. Ensure watch.json exists inside .mycelium/
   const watchFile = path.join(myceliumDir, 'watch.json');
@@ -3825,14 +3807,14 @@ Run \`node mycelium.cjs --onboard\` for a complete guide.
     console.log('  ✓ Created .mycelium-session (first commit unblocked)');
   }
 
-  // 11. Run doctor to validate everything
-  const doctorPath = path.join(__dirname, 'mycelium-doctor.cjs');
-  if (fs.existsSync(doctorPath)) {
+  // 11. Run guardian to validate everything
+  const guardianPath = path.join(__dirname, 'sentinel.cjs');
+  if (fs.existsSync(guardianPath)) {
     try {
-      const out = execSync(`node "${doctorPath}" --json`, { cwd: __dirname, timeout: 15000, encoding: 'utf8' });
-      const doc = JSON.parse(out);
-      console.log(`  ✓ Doctor: ${doc.passed}/${doc.total} checks passed (${doc.score})`);
-    } catch { console.log('  · Doctor check skipped'); }
+      const out = execSync(`node "${guardianPath}" --json`, { cwd: __dirname, timeout: 30000, encoding: 'utf8' });
+      const report = JSON.parse(out);
+      console.log(`  ✓ Guardian: ${report.summary.healthScore}/100 (${report.summary.grade})`);
+    } catch { console.log('  · Guardian check skipped'); }
   }
 
   console.log('\n  Setup complete! Start your first session:');
@@ -4195,14 +4177,14 @@ function runNwEval(mem) {
   };
 }
 
-// ─── Delegate to mycelium-fix: unified fix → verify → confirm system ────
-// selfHealNw kept as fallback when mycelium-fix.cjs is not present.
+// ─── Delegate to nw-guardian (sentinel.cjs): unified fix → heal system ────
+// selfHealNw kept as fallback when sentinel.cjs is not present.
 
 function callFixer(force) {
-  const fixerPath = path.join(__dirname, 'mycelium-fix.cjs');
-  if (!fs.existsSync(fixerPath)) return false;
-  const flag = force ? '--force' : '--silent';
-  require('child_process').execSync(`node "${fixerPath}" ${flag}`, {
+  const guardianPath = path.join(__dirname, 'sentinel.cjs');
+  if (!fs.existsSync(guardianPath)) return false;
+  const flag = force ? '--heal' : '--json';
+  require('child_process').execSync(`node "${guardianPath}" ${flag}`, {
     cwd: __dirname, stdio: force ? 'inherit' : 'pipe', timeout: 30000
   });
   return true;

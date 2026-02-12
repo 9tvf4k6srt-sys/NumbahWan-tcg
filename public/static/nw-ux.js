@@ -117,6 +117,18 @@ const NW_UX = {
         fab.innerHTML = this.generateFABHTML();
         document.body.appendChild(fab);
 
+        // Resolve data-nw-icon inside the FAB (icons system may have already run)
+        if (typeof NWIconsInline !== 'undefined') {
+            fab.querySelectorAll('[data-nw-icon]').forEach(el => {
+                const name = el.getAttribute('data-nw-icon');
+                const size = el.getAttribute('data-size') || 24;
+                if (NWIconsInline.icons[name]) {
+                    el.innerHTML = NWIconsInline.render(name, { size, class: el.className });
+                    el.className = '';
+                }
+            });
+        }
+
         // Bind events
         this.bindFABEvents();
         
@@ -217,6 +229,18 @@ const NW_UX = {
         this.onboardingSteps = steps;
         this.bindOnboardingEvents();
 
+        // Resolve icons in onboarding
+        if (typeof NWIconsInline !== 'undefined') {
+            modal.querySelectorAll('[data-nw-icon]').forEach(el => {
+                const name = el.getAttribute('data-nw-icon');
+                const size = el.getAttribute('data-size') || 24;
+                if (NWIconsInline.icons[name]) {
+                    el.innerHTML = NWIconsInline.render(name, { size, class: el.className });
+                    el.className = '';
+                }
+            });
+        }
+
         // Animate in
         requestAnimationFrame(() => modal.classList.add('visible'));
     },
@@ -300,6 +324,18 @@ const NW_UX = {
                 ${actionHTML}
             `;
             
+            // Resolve icons in updated content
+            if (typeof NWIconsInline !== 'undefined') {
+                content.querySelectorAll('[data-nw-icon]').forEach(el => {
+                    const iconName = el.getAttribute('data-nw-icon');
+                    const iconSize = el.getAttribute('data-size') || 24;
+                    if (NWIconsInline.icons[iconName]) {
+                        el.innerHTML = NWIconsInline.render(iconName, { size: iconSize, class: el.className });
+                        el.className = '';
+                    }
+                });
+            }
+
             content.style.opacity = '1';
             content.style.transform = 'translateX(0)';
         }, 200);
@@ -424,6 +460,18 @@ const NW_UX = {
             header.insertAdjacentElement('afterend', breadcrumb);
         } else {
             document.body.insertAdjacentElement('afterbegin', breadcrumb);
+        }
+
+        // Resolve icons in breadcrumb
+        if (typeof NWIconsInline !== 'undefined') {
+            breadcrumb.querySelectorAll('[data-nw-icon]').forEach(el => {
+                const name = el.getAttribute('data-nw-icon');
+                const size = el.getAttribute('data-size') || 24;
+                if (NWIconsInline.icons[name]) {
+                    el.innerHTML = NWIconsInline.render(name, { size, class: el.className });
+                    el.className = '';
+                }
+            });
         }
     },
 

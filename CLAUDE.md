@@ -60,7 +60,7 @@ Read file_path=.mycelium/memory.json
 node mycelium.cjs --premortem battle            # → structured summary
 
 # BAD (10K tokens): Read file, modify, write back
-Read file_path=mycelium-engine.cjs  # 10K tokens in
+Read file_path=sentinel.cjs  # Use grep to find sections
 # ... then Write file back           # 10K tokens out = 20K total
 
 # GOOD (200 tokens): Edit specific lines
@@ -72,10 +72,8 @@ Edit old_string="const X = 5" new_string="const X = 10"  # 200 tokens total
 |------|------|---------|----------|
 | .mycelium-context | ~20KB | ~5K | cat once at session start |
 | CLAUDE.md | ~12KB | ~3K | cat once at session start |
-| mycelium-engine.cjs | ~41KB | ~10K | grep + chunk read |
-| mycelium-eval.cjs | ~55KB | ~14K | grep + chunk read |
-| mycelium-fix.cjs | ~69KB | ~17K | grep only |
-| mycelium-watch.cjs | ~73KB | ~18K | grep only |
+| sentinel.cjs | ~97KB | ~24K | grep only, NEVER read whole |
+| mycelium.cjs | ~230KB | ~58K | grep only, NEVER read whole |
 | mycelium.cjs | ~175KB | ~44K | grep only, NEVER read whole |
 | .mycelium/memory.json | ~745KB | ~186K | --query/--status ONLY |
 | .mycelium/watch.json | ~267KB | ~67K | --status ONLY |
@@ -234,9 +232,9 @@ node mycelium.cjs --wip-done
 | Export learnings to shared library | `node mycelium.cjs --export-shared` |
 | Import learnings from shared library | `node mycelium.cjs --import-shared` |
 | View shared library | `node mycelium.cjs --shared` |
-| Watcher dashboard (danger scores, risks) | `node mycelium-watch.cjs --status` |
-| Watcher warn on staged files | `node mycelium-watch.cjs --warn` |
-| Watcher reinstall (rescan history) | `node mycelium-watch.cjs --install` |
+| Project health dashboard | `node sentinel.cjs` |
+| Self-heal issues | `node sentinel.cjs --heal` |
+| Design + i18n guard | `node sentinel.cjs --guard` |
 | **Evaluate learning system** | `npx mycelium eval` (9 KPIs, cryptographic proof) |
 | **Token budget check** | `node mycelium.cjs --token-check` (file sizes vs 200K limit) |
 | **Cost plan for files** | `node mycelium.cjs --cost-plan file1 file2` (cheapest approach) |
@@ -249,9 +247,8 @@ node mycelium.cjs --wip-done
 The Mycelium system auto-evaluates and auto-fixes itself:
 - **Every 10 commits/snapshots**: silently runs eval, detects weak scores, takes corrective action
 - **Learner (mycelium.cjs)**: auto-creates constraints from breakage lessons, enriches constraints with watcher deep lessons, promotes breakages to learnings, triggers deep reflection, marks fix-chain hotspots
-- **Watcher (mycelium-watch.cjs)**: escalates repeat offenders, lowers coupling threshold, re-extracts weak lessons, tags volatile files in active fix-chains, backfills missing risk entries
-- **Evaluator (mycelium-eval.cjs)**: 9 KPIs, cryptographic SHA-256 proof, 28 self-checks (including 4 anti-gaming), hash-locked scoring rules
-- **Fixer (mycelium-fix.cjs)**: diagnoses root causes, prescribes 6 fix types, executes automatically, verifies improvement
+- **Guardian (sentinel.cjs)**: unified validation, scoring, self-heal, design guard, manifest, CI gate
+- **Memory (mycelium.cjs)**: project learning, breakage tracking, context delivery
 - **No human intervention needed**: the system improves itself after every learning event
 
 ### EVAL ANTI-GAMING RULES (MANDATORY)
@@ -269,9 +266,9 @@ The Mycelium system auto-evaluates and auto-fixes itself:
 The watcher monitors every commit and warns before you repeat a mistake. You don't run it.
 - **Post-commit hook**: auto-learns breakages, file couplings, risk patterns
 - **Pre-commit hook**: auto-warns if staged files have broken before or are missing coupled files
-- **Dashboard**: `node mycelium-watch.cjs --status` (danger scores, riskiest files, couplings)
-- **Manual warn**: `node mycelium-watch.cjs --warn` (test what warnings staged files would get)
-- **Install on any repo**: `node mycelium-watch.cjs --install` (scans history, sets up hooks)
+- **Dashboard**: `node sentinel.cjs` (health scores, issues, trend)
+- **Quick context**: `node bin/agent-brief.cjs --quick` (instant project state)
+- **Validate**: `node sentinel.cjs --guard` (design + i18n + include checks)
 
 ### Mycelium Core (active — discipline-based power tool)
 The learner stores constraints, decisions, breakages, and learnings you explicitly record.

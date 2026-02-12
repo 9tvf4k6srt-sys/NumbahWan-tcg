@@ -1,33 +1,36 @@
 const fs = require('fs');
 const path = require('path');
 
-// Cloudflare has a 100 rule limit, so we use wildcards for directories
+// Cloudflare has a 100 rule limit — use wildcards, never enumerate HTML files
 const routes = {
   version: 1,
   include: ["/*"],
   exclude: [
-    // Root level HTML files that should bypass worker
-    "/index.html",
-    "/efficiency.html",
-    "/lore.html",
-    "/favicon.svg",
-    "/manifest.json",
-    // Static assets
     "/static/*",
-    // Subdirectory wildcards
     "/lore/*",
     "/museum/*",
     "/vault/*",
     "/research/*",
     "/tabletop/*",
-    "/tabletop.html",
-    "/.well-known/*"
+    "/.well-known/*",
+    "/_headers",
+    "/favicon.ico",
+    "/favicon.svg",
+    "/robots.txt",
+    "/sitemap.xml",
+    "/llms.txt",
+    "/llms-full.txt"
   ]
 };
 
 // Write routes
-fs.writeFileSync(
-  path.join(__dirname, 'dist', '_routes.json'),
-  JSON.stringify(routes)
-);
-console.log('Created _routes.json with', routes.exclude.length, 'excludes');
+const distDir = path.join(__dirname, 'dist');
+if (fs.existsSync(distDir)) {
+  fs.writeFileSync(
+    path.join(distDir, '_routes.json'),
+    JSON.stringify(routes, null, 2)
+  );
+  console.log(`Created _routes.json (${routes.include.length} include, ${routes.exclude.length} exclude)`);
+} else {
+  console.warn('dist/ not found — skipping _routes.json');
+}

@@ -269,7 +269,51 @@ The siege page implements five pillars from golden_age_mmorpg_analysis.pdf:
 
 ---
 
-## 8. Memory & Tooling
+## 8. Agent-First Infrastructure
+
+### API Endpoints (Runtime — for programmatic access)
+
+| Endpoint | Tokens | Purpose |
+|----------|--------|---------|
+| `GET /api/agent/brief` | ~2K | Minimum viable context to start working |
+| `GET /api/agent/context` | ~8K | Full structured context for deep sessions |
+| `GET /api/agent/rules` | ~1K | Hard constraints that prevent regressions |
+| `GET /api/agent/health` | ~3K | Unified health scores across all systems |
+| `GET /api/agent/files` | ~2K | File map with sizes and hot paths |
+| `GET /api/agent/task` | ~1K | Work queue + auto-generated suggestions |
+| `GET /api/agent/diff` | ~1K | Recent changes for context |
+
+### CLI Tools (Local — for agents with shell access)
+
+```bash
+node bin/agent-brief.cjs --quick      # ~500 tokens, instant state
+node bin/agent-brief.cjs --onboard    # Full first-time context
+node bin/agent-brief.cjs --rules      # Hard constraints
+node bin/agent-brief.cjs --health     # Health scores
+node bin/agent-brief.cjs --workflow   # Git workflow steps
+```
+
+### Discovery Files
+
+| File | Purpose |
+|------|---------|
+| `/.well-known/ai-plugin.json` | OpenAI plugin spec + agent endpoint registry |
+| `/llms.txt` | Human-readable AI visitor guide |
+| `/llms-full.txt` | Deep technical details |
+| `AGENT-CONTEXT.md` | This file — full onboarding |
+| `CLAUDE.md` | Claude-specific session protocol |
+
+### Recommended Agent Workflow
+
+1. `GET /api/agent/brief` (or `node bin/agent-brief.cjs --quick`)
+2. `GET /api/agent/rules` (know what NOT to break)
+3. Make changes
+4. `node sentinel.cjs --guard` (validate)
+5. Commit + PR
+
+---
+
+## 9. Memory & Tooling
 
 ### Mycelium System
 
@@ -294,7 +338,7 @@ COLD  = git history (archival)
 
 ---
 
-## 9. Deployment
+## 10. Deployment
 
 ```bash
 # Dev server
@@ -306,7 +350,7 @@ git add . && git commit -m "feat: description" && git push origin main
 
 ---
 
-## 10. Lessons Learned (Anti-Regression)
+## 11. Lessons Learned (Anti-Regression)
 
 | ID | Severity | Category | Lesson |
 |----|----------|----------|--------|
@@ -327,7 +371,7 @@ git add . && git commit -m "feat: description" && git push origin main
 
 ---
 
-## 11. What NOT to Do
+## 12. What NOT to Do
 
 - Do not use emoji as UI icons in production
 - Do not add a second @media block for the same breakpoint
@@ -342,5 +386,6 @@ git add . && git commit -m "feat: description" && git push origin main
 
 ---
 
-*NumbahWan TCG Agent Context v3.1 | Updated: 2026-02-11*
+*NumbahWan TCG Agent Context v4.0 | Updated: 2026-02-12*
 *Two brands: NumbahWan (Guild/TCG) + KINTSUGI (Premium/Gold). Never merge aesthetics.*
+*Agent-first: /api/agent/* endpoints + bin/agent-brief.cjs CLI*
