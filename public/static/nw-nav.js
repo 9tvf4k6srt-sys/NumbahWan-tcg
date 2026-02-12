@@ -1,9 +1,15 @@
 /**
- * NumbahWan TCG - Unified Navigation System v9.0
+ * NumbahWan TCG - Unified Navigation System v9.1
  * 60FPS BUTTERY SMOOTH EDITION - Mobile Optimized
- * Progressive Disclosure — show 4 pages Day 1, unlock rest as you play
+ * Progressive Disclosure — BYPASSED (all content visible)
+ * Gate logic preserved for future revert: set PROGRESSIVE_DISCLOSURE_ENABLED = true
  * 
- * NEW in v9.0:
+ * v9.1:
+ * - Progressive Disclosure DISABLED — all sections/pages visible to everyone
+ * - Gate logic fully preserved (sectionUnlockTier, pageUnlockTier, getPlayerTier)
+ * - To re-enable: set PROGRESSIVE_DISCLOSURE_ENABLED = true below
+ * 
+ * v9.0 (preserved):
  * - Progressive Disclosure: sections unlock based on play stats
  * - Unlock notifications with toast animation
  * - Existing players auto-detected, see everything immediately
@@ -71,6 +77,9 @@ const NW_NAV = {
     },
 
     // ===== PROGRESSIVE DISCLOSURE =====
+    // Set to true to re-enable tier-gated content visibility
+    PROGRESSIVE_DISCLOSURE_ENABLED: false,
+    //
     // Tier thresholds — what stat unlocks what
     // Tier 0: brand new (pullsMade=0, gamesPlayed=0)
     // Tier 1: first pull (pullsMade >= 1)
@@ -115,7 +124,9 @@ const NW_NAV = {
     _unlockedSectionsKey: 'nw_unlocked_sections',
 
     // Calculate player tier from wallet stats — no new localStorage keys needed
+    // When PROGRESSIVE_DISCLOSURE_ENABLED is false, always returns max tier (5)
     getPlayerTier() {
+        if (!this.PROGRESSIVE_DISCLOSURE_ENABLED) { this._playerTier = 5; return 5; }
         if (this._playerTier !== null) return this._playerTier;
 
         // GM mode = max tier (all content visible)
@@ -304,6 +315,7 @@ const NW_NAV = {
             color: '#ffd700',
             collapsed: true,
             pages: [
+                { id: 'guild-siege', name: { en: 'Guild Siege', zh: '公會攻城戰', th: 'การล้อมกิลด์' }, icon: 'swords', href: '/guild-siege', isNew: true, isHot: true },
                 { id: 'tournament', name: { en: 'Tournament', zh: '錦標賽', th: 'ทัวร์นาเมนต์' }, icon: 'trophy', href: '/tournament' },
                 { id: 'pvp', name: { en: 'PVP Diary', zh: 'PVP日記', th: 'บันทึก PVP' }, icon: 'swords', href: '/pvp' },
                 { id: 'regina', name: { en: 'SS Regina', zh: 'Regina號', th: 'เรือ Regina' }, icon: 'anchor', href: '/regina' },
@@ -446,6 +458,7 @@ const NW_NAV = {
         'services': '/business',
         'my-business': '/business',
         // Guild pages -> Home
+        'guild-siege': '/',
         'tournament': '/',
         'pvp': '/',
         'regina': '/',
@@ -757,7 +770,7 @@ const NW_NAV = {
                 <div class="nw-quick-access">${quickHTML}</div>
                 <div class="nw-nav-lang">${langButtons}</div>
                 <div class="nw-nav-scroll">${sectionsHTML}${tierHintHTML}</div>
-                <div class="nw-nav-footer"><div class="nw-nav-version">v9.0 • Progressive</div></div>
+                <div class="nw-nav-footer"><div class="nw-nav-version">v9.1 • Open</div></div>
             </nav>
             <button id="nwNavToggle" class="nw-nav-toggle">${this.iconSvg('menu', 22)}</button>
             ${this.shouldShowBackButton() ? `<button id="nwNavBack" class="nw-nav-back" title="Back">${this.iconSvg('arrow-right', 22)}</button>` : ''}
