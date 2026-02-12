@@ -1,0 +1,1738 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Guild Siege | NumbahWan TCG</title>
+    <link rel="icon" type="image/png" sizes="32x32" href="/static/icons/favicon-32x32.webp">
+    <link rel="stylesheet" href="/static/nw-utilities.css">
+    <link rel="stylesheet" href="/static/nw-tokens.css">
+    <link rel="stylesheet" href="/static/nw-core.css">
+    <script defer src="/static/nw-icons-inline.js"></script>
+    <script src="/static/click-juice.js" defer></script>
+    <style>
+        /* ============================================
+           GUILD SIEGE — Golden Age MMORPG Card Warfare
+           NumbahWan Guild Style (Ember/Gold/Mystic)
+           ============================================ */
+        @font-face{font-family:'NumbahWan';src:url('/static/fonts/NumbahWan-Regular.woff2') format('woff2'),url('/static/fonts/NumbahWan-Regular.ttf') format('truetype');font-weight:400;font-style:normal;font-display:swap}
+        @font-face{font-family:'Orbitron';src:url('/static/fonts/orbitron-variable.woff2') format('woff2');font-weight:400 900;font-style:normal;font-display:swap}
+        @font-face{font-family:'Inter';src:url('/static/fonts/inter-variable.woff2') format('woff2');font-weight:400 700;font-style:normal;font-display:swap}
+
+        :root {
+            --bg: #0a0a0f;
+            --bg2: #0f0f1a;
+            --card-bg: #111122;
+            --border: #1e1e35;
+            --primary: #ff6b00;
+            --primary-light: #ff9d4d;
+            --primary-dark: #cc5500;
+            --gold: #ffd700;
+            --gold-dim: #a16207;
+            --gold-glow: rgba(255,215,0,0.25);
+            --ember-glow: rgba(255,107,0,0.25);
+            --cyan: #00d4ff;
+            --cyan-dim: rgba(0,212,255,0.12);
+            --green: #22c55e;
+            --green-dim: rgba(34,197,94,0.12);
+            --red: #ef4444;
+            --red-dim: rgba(239,68,68,0.12);
+            --purple: #a855f7;
+            --purple-dim: rgba(168,85,247,0.12);
+            --text: #fff;
+            --text-dim: #94a3b8;
+            --text-muted: #64748b;
+            /* Class colors */
+            --tank-color: #3b82f6;
+            --healer-color: #22c55e;
+            --dps-color: #ef4444;
+            --support-color: #f59e0b;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; max-width: 100vw; }
+        html, body { overflow-x: hidden; max-width: 100vw; background: var(--bg); }
+        body {
+            font-family: 'Inter', system-ui, sans-serif;
+            color: var(--text);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .pixel-font { font-family: 'NumbahWan', 'Press Start 2P', monospace; }
+
+        /* AURORA BACKGROUND */
+        .siege-aurora {
+            position: fixed; inset: 0; z-index: 0; pointer-events: none;
+            background:
+                radial-gradient(ellipse at 15% 15%, rgba(255,107,0,0.1) 0%, transparent 50%),
+                radial-gradient(ellipse at 85% 85%, rgba(239,68,68,0.06) 0%, transparent 50%),
+                radial-gradient(ellipse at 50% 50%, rgba(168,85,247,0.04) 0%, transparent 60%);
+            animation: auroraShift 30s ease-in-out infinite;
+        }
+        @keyframes auroraShift {
+            0%, 100% { opacity: 0.8; }
+            50% { opacity: 1; transform: scale(1.05); }
+        }
+
+        .siege-container {
+            position: relative; z-index: 1;
+            max-width: 480px; margin: 0 auto;
+            padding: 0 16px 100px;
+        }
+
+        /* HEADER */
+        .siege-header {
+            text-align: center; padding: 20px 0 10px;
+        }
+        .siege-header h1 {
+            font-family: 'NumbahWan', 'Orbitron', sans-serif;
+            font-size: clamp(1.4rem, 5vw, 1.8rem); font-weight: 900;
+            background: linear-gradient(180deg, #fff 0%, var(--gold) 50%, var(--primary) 100%);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            background-clip: text;
+            letter-spacing: 0.1em;
+            filter: drop-shadow(0 2px 8px rgba(255,107,0,0.4));
+        }
+        .siege-subtitle {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.875rem; color: var(--primary-light);
+            letter-spacing: 0.15em; text-transform: uppercase;
+            margin-top: 4px;
+        }
+        .siege-lore-quote {
+            font-style: italic; font-size: 0.95rem; color: var(--text-dim);
+            margin: 10px 0 16px; padding: 0 12px; line-height: 1.6;
+        }
+
+        /* TAB BAR */
+        .siege-tabs {
+            display: flex; gap: 2px; margin-bottom: 16px;
+            background: var(--bg2); border-radius: 12px;
+            padding: 3px; border: 1px solid var(--border);
+            overflow-x: auto; -webkit-overflow-scrolling: touch;
+            scrollbar-width: none;
+        }
+        .siege-tabs::-webkit-scrollbar { display: none; }
+        .siege-tab {
+            flex: 0 0 auto; padding: 8px 12px;
+            font-size: 0.95rem; font-weight: 700;
+            text-transform: uppercase; letter-spacing: 0.05em;
+            color: var(--text-dim); cursor: pointer;
+            border-radius: 10px; transition: all 0.3s;
+            white-space: nowrap; text-align: center;
+            border: none; background: transparent;
+            font-family: 'Orbitron', sans-serif;
+        }
+        .siege-tab.active {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: #fff; box-shadow: 0 2px 12px var(--ember-glow);
+        }
+        .siege-tab:not(.active):hover { color: var(--primary); background: rgba(255,107,0,0.08); }
+
+        /* PANEL */
+        .siege-panel { display: none; }
+        .siege-panel.active { display: block; animation: panelIn 0.3s ease; }
+        @keyframes panelIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+
+        /* SECTION CARD */
+        .s-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 16px;
+            margin-bottom: 12px;
+            position: relative;
+            overflow: hidden;
+        }
+        .s-card::before {
+            content: ''; position: absolute; top: 0; left: 0; right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, var(--primary), transparent);
+            opacity: 0.5;
+        }
+        .s-card-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.95rem; font-weight: 700;
+            color: var(--primary); margin-bottom: 10px;
+            display: flex; align-items: center; gap: 8px;
+        }
+        .s-card-title svg { width: 18px; height: 18px; fill: var(--primary); }
+
+        /* STATUS BAR */
+        .status-bar {
+            display: flex; gap: 6px; margin-bottom: 12px;
+            flex-wrap: wrap;
+        }
+        .status-pill {
+            display: flex; align-items: center; gap: 4px;
+            padding: 5px 10px; border-radius: 20px;
+            font-size: 0.95rem; font-weight: 700;
+            background: rgba(255,255,255,0.04);
+            border: 1px solid rgba(255,255,255,0.08);
+        }
+        .status-pill .val { font-family: 'Orbitron', monospace; }
+        .status-pill.gold { color: var(--gold); border-color: rgba(255,215,0,0.2); }
+        .status-pill.fire { color: var(--primary); border-color: rgba(255,107,0,0.2); }
+        .status-pill.cyan { color: var(--cyan); border-color: rgba(0,212,255,0.2); }
+        .status-pill.green { color: var(--green); border-color: rgba(34,197,94,0.2); }
+        .status-pill.red { color: var(--red); border-color: rgba(239,68,68,0.2); }
+        .status-pill.purple { color: var(--purple); border-color: rgba(168,85,247,0.2); }
+
+        /* CASTLE MAP */
+        .castle-map {
+            position: relative;
+            width: 100%;
+            aspect-ratio: 16/10;
+            background: linear-gradient(135deg, #0a0a1a 0%, #12122a 50%, #0a0a1a 100%);
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            overflow: hidden;
+            margin-bottom: 12px;
+        }
+        .castle-map .grid-overlay {
+            position: absolute; inset: 0;
+            background-image:
+                linear-gradient(rgba(255,107,0,0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255,107,0,0.03) 1px, transparent 1px);
+            background-size: 40px 40px;
+        }
+        .castle-tower {
+            position: absolute;
+            width: 48px; height: 48px;
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 0.85rem; font-weight: 900;
+            cursor: pointer; transition: all 0.3s;
+            border: 2px solid;
+            font-family: 'Orbitron', monospace;
+        }
+        .castle-tower:hover { transform: scale(1.15); z-index: 10; }
+        .castle-tower.ally {
+            background: var(--cyan-dim); border-color: var(--cyan);
+            color: var(--cyan); box-shadow: 0 0 15px rgba(0,212,255,0.3);
+        }
+        .castle-tower.enemy {
+            background: var(--red-dim); border-color: var(--red);
+            color: var(--red); box-shadow: 0 0 15px rgba(239,68,68,0.3);
+        }
+        .castle-tower.neutral {
+            background: rgba(255,255,255,0.05); border-color: var(--text-dim);
+            color: var(--text-dim);
+        }
+        .castle-tower.throne {
+            width: 60px; height: 60px; font-size: 0.9rem;
+            background: var(--ember-glow); border-color: var(--primary);
+            color: var(--primary); box-shadow: 0 0 25px rgba(255,107,0,0.4);
+            animation: throneGlow 3s ease-in-out infinite;
+        }
+        @keyframes throneGlow {
+            0%, 100% { box-shadow: 0 0 20px rgba(255,107,0,0.3); }
+            50% { box-shadow: 0 0 35px rgba(255,107,0,0.6); }
+        }
+        .tower-label {
+            position: absolute; bottom: -16px; left: 50%; transform: translateX(-50%);
+            font-size: 0.8rem; color: var(--text-dim); white-space: nowrap;
+            font-family: 'Inter', sans-serif; font-weight: 600;
+        }
+        .castle-path {
+            position: absolute;
+            background: linear-gradient(90deg, rgba(255,107,0,0.08), rgba(255,107,0,0.15), rgba(255,107,0,0.08));
+            height: 2px;
+        }
+
+        /* TIMER */
+        .siege-timer {
+            text-align: center; padding: 14px;
+            background: linear-gradient(135deg, rgba(255,107,0,0.1), rgba(239,68,68,0.08));
+            border-radius: 12px; border: 1px solid rgba(255,107,0,0.2);
+            margin-bottom: 12px;
+        }
+        .siege-timer .label { font-size: 0.95rem; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.08em; }
+        .siege-timer .time {
+            font-family: 'Orbitron', monospace;
+            font-size: 2rem; font-weight: 900;
+            color: var(--primary);
+            text-shadow: 0 0 20px rgba(255,107,0,0.5);
+            margin: 4px 0;
+        }
+
+        /* PARTY GRID */
+        .party-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 6px; margin-bottom: 10px;
+        }
+        .party-slot {
+            aspect-ratio: 3/4;
+            background: var(--bg2);
+            border: 1px dashed var(--border);
+            border-radius: 8px;
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            cursor: pointer; transition: all 0.3s;
+            position: relative; overflow: hidden;
+        }
+        .party-slot:hover { border-color: var(--primary); background: rgba(255,107,0,0.05); }
+        .party-slot.filled { border-style: solid; }
+        .party-slot.tank { border-color: var(--tank-color); }
+        .party-slot.healer { border-color: var(--healer-color); }
+        .party-slot.dps { border-color: var(--dps-color); }
+        .party-slot.support { border-color: var(--support-color); }
+        .party-slot .role-tag {
+            font-size: 0.8rem; font-weight: 800;
+            text-transform: uppercase; letter-spacing: 0.05em;
+            padding: 2px 5px; border-radius: 3px;
+            position: absolute; top: 3px; left: 3px;
+        }
+        .party-slot .role-tag.tank-tag { background: var(--tank-color); color: #fff; }
+        .party-slot .role-tag.healer-tag { background: var(--healer-color); color: #000; }
+        .party-slot .role-tag.dps-tag { background: var(--dps-color); color: #fff; }
+        .party-slot .role-tag.support-tag { background: var(--support-color); color: #000; }
+        .party-slot .card-mini-name {
+            font-size: 0.95rem; font-weight: 700;
+            color: var(--text); text-align: center;
+            margin-top: auto; padding: 2px 3px;
+            width: 100%; overflow: hidden;
+            text-overflow: ellipsis; white-space: nowrap;
+        }
+        .party-slot .card-mini-stats {
+            font-size: 0.95rem; color: var(--text-dim);
+            font-family: 'Orbitron', monospace;
+        }
+        .party-slot .empty-icon { width: 20px; height: 20px; opacity: 0.2; }
+
+        /* ROLE BAR */
+        .role-bar {
+            display: flex; justify-content: center; gap: 6px;
+            margin-bottom: 10px; flex-wrap: wrap;
+        }
+        .role-chip {
+            display: flex; align-items: center; gap: 4px;
+            padding: 5px 10px; border-radius: 6px;
+            font-size: 0.875rem; font-weight: 700;
+            cursor: pointer; transition: all 0.2s;
+            border: 1px solid;
+        }
+        .role-chip.tank-chip { background: rgba(59,130,246,0.1); border-color: rgba(59,130,246,0.3); color: var(--tank-color); }
+        .role-chip.healer-chip { background: rgba(34,197,94,0.1); border-color: rgba(34,197,94,0.3); color: var(--healer-color); }
+        .role-chip.dps-chip { background: rgba(239,68,68,0.1); border-color: rgba(239,68,68,0.3); color: var(--dps-color); }
+        .role-chip.support-chip { background: rgba(245,158,11,0.1); border-color: rgba(245,158,11,0.3); color: var(--support-color); }
+        .role-chip .count { font-family: 'Orbitron', monospace; }
+
+        /* CARD SLOT SYSTEM */
+        .slot-grid {
+            display: grid; grid-template-columns: repeat(4, 1fr);
+            gap: 6px; margin-bottom: 10px;
+        }
+        .card-slot-item {
+            background: var(--bg2);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 10px 6px;
+            text-align: center;
+            cursor: pointer; transition: all 0.3s;
+        }
+        .card-slot-item:hover { border-color: var(--primary); }
+        .card-slot-item.equipped { border-color: var(--primary); background: rgba(255,107,0,0.06); }
+        .card-slot-item .slot-type {
+            font-size: 0.95rem; text-transform: uppercase;
+            color: var(--text-dim); letter-spacing: 0.08em;
+            margin-bottom: 4px; font-weight: 600;
+        }
+        .card-slot-item .slot-icon {
+            width: 26px; height: 26px; margin: 0 auto 4px;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .card-slot-item .slot-icon svg { width: 22px; height: 22px; fill: var(--text-dim); }
+        .card-slot-item.equipped .slot-icon svg { fill: var(--primary); }
+        .card-slot-item .slot-bonus {
+            font-size: 0.95rem; font-weight: 700; color: var(--green);
+            font-family: 'Orbitron', monospace;
+        }
+
+        /* BATTLE LOG */
+        .battle-log {
+            max-height: 220px;
+            overflow-y: auto; overflow-x: hidden;
+            padding: 10px;
+            background: rgba(0,0,0,0.3);
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            font-size: 0.95rem;
+            font-family: 'Inter', system-ui, monospace;
+            scrollbar-width: thin;
+            scrollbar-color: var(--primary-dark) transparent;
+        }
+        .battle-log::-webkit-scrollbar { width: 4px; }
+        .battle-log::-webkit-scrollbar-track { background: transparent; }
+        .battle-log::-webkit-scrollbar-thumb { background: var(--primary-dark); border-radius: 2px; }
+        .log-entry { padding: 4px 0; border-bottom: 1px solid rgba(255,255,255,0.03); line-height: 1.5; }
+        .log-entry .log-time { color: var(--text-muted); }
+        .log-entry .log-dmg { color: var(--red); }
+        .log-entry .log-heal { color: var(--green); }
+        .log-entry .log-gold { color: var(--gold); }
+        .log-entry .log-crit { color: var(--primary); font-weight: 700; }
+        .log-entry .log-sys { color: var(--purple); font-style: italic; }
+
+        /* SIEGE ACTION BUTTONS */
+        .siege-actions {
+            display: grid; grid-template-columns: 1fr 1fr;
+            gap: 8px; margin: 12px 0;
+        }
+        .siege-btn {
+            padding: 12px 8px;
+            border-radius: 10px;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.95rem; font-weight: 700;
+            cursor: pointer; transition: all 0.3s;
+            text-transform: uppercase; letter-spacing: 0.04em;
+            border: 1px solid;
+            display: flex; align-items: center; justify-content: center; gap: 6px;
+        }
+        .siege-btn svg { width: 16px; height: 16px; }
+        .siege-btn.primary {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            border-color: var(--primary); color: #fff;
+        }
+        .siege-btn.primary:hover { box-shadow: 0 0 20px var(--ember-glow); transform: translateY(-1px); }
+        .siege-btn.danger { background: var(--red-dim); border-color: rgba(239,68,68,0.3); color: var(--red); }
+        .siege-btn.danger:hover { background: rgba(239,68,68,0.18); }
+        .siege-btn.info { background: var(--cyan-dim); border-color: rgba(0,212,255,0.3); color: var(--cyan); }
+        .siege-btn.success { background: var(--green-dim); border-color: rgba(34,197,94,0.3); color: var(--green); }
+        .siege-btn.full { grid-column: 1 / -1; }
+        .siege-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+        /* MVP BOSS */
+        .mvp-card {
+            background: linear-gradient(135deg, rgba(168,85,247,0.1) 0%, rgba(239,68,68,0.08) 100%);
+            border: 1px solid rgba(168,85,247,0.3);
+            border-radius: 14px; padding: 16px;
+            text-align: center; margin-bottom: 12px;
+            position: relative; overflow: hidden;
+        }
+        .mvp-card::after {
+            content: ''; position: absolute; inset: 0;
+            background: linear-gradient(45deg, transparent 48%, rgba(168,85,247,0.08) 50%, transparent 52%);
+            background-size: 20px 20px; pointer-events: none;
+        }
+        .mvp-name {
+            font-family: 'NumbahWan', 'Orbitron', sans-serif;
+            font-size: clamp(1.1rem, 4vw, 1.4rem); font-weight: 900;
+            color: var(--purple);
+            text-shadow: 0 0 20px rgba(168,85,247,0.5);
+            margin-bottom: 2px;
+        }
+        .mvp-title { font-size: 0.95rem; color: var(--text-dim); margin-bottom: 10px; }
+        .mvp-hp-bar {
+            width: 100%; height: 22px;
+            background: rgba(0,0,0,0.4);
+            border-radius: 11px; overflow: hidden;
+            border: 1px solid rgba(168,85,247,0.3);
+            position: relative;
+        }
+        .mvp-hp-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--red), var(--primary));
+            border-radius: 11px; transition: width 0.8s ease;
+            position: relative;
+        }
+        .mvp-hp-fill::after {
+            content: ''; position: absolute; inset: 0;
+            background: linear-gradient(180deg, rgba(255,255,255,0.2) 0%, transparent 50%);
+            border-radius: 11px;
+        }
+        .mvp-hp-text {
+            position: absolute; top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            font-family: 'Orbitron', monospace;
+            font-size: 0.875rem; font-weight: 900; color: #fff;
+            text-shadow: 0 1px 3px rgba(0,0,0,0.8);
+        }
+
+        /* DEATH PENALTY BANNER */
+        .death-banner {
+            display: none;
+            background: linear-gradient(135deg, rgba(239,68,68,0.12), rgba(0,0,0,0.3));
+            border: 1px solid rgba(239,68,68,0.3);
+            border-radius: 10px; padding: 14px;
+            text-align: center; margin-bottom: 12px;
+            animation: deathShake 0.5s ease;
+        }
+        .death-banner.show { display: block; }
+        @keyframes deathShake {
+            0%, 100% { transform: translateX(0); }
+            20% { transform: translateX(-4px); }
+            40% { transform: translateX(4px); }
+            60% { transform: translateX(-2px); }
+            80% { transform: translateX(2px); }
+        }
+        .death-banner .death-title {
+            font-family: 'NumbahWan', 'Orbitron', sans-serif;
+            font-size: 1rem; color: var(--red); font-weight: 900;
+        }
+        .death-banner .death-penalty { font-size: 0.95rem; color: var(--text-dim); margin-top: 4px; }
+
+        /* KARMA METER */
+        .karma-meter {
+            display: flex; align-items: center; gap: 8px;
+            padding: 10px 12px; border-radius: 8px;
+            background: rgba(0,0,0,0.2);
+            border: 1px solid var(--border);
+            margin-bottom: 10px;
+        }
+        .karma-meter .label {
+            font-size: 0.95rem; color: var(--text-dim);
+            text-transform: uppercase; letter-spacing: 0.08em;
+            white-space: nowrap; font-weight: 600;
+        }
+        .karma-track {
+            flex: 1; height: 8px;
+            background: linear-gradient(90deg, var(--red), var(--gold) 50%, var(--cyan));
+            border-radius: 4px; position: relative;
+        }
+        .karma-thumb {
+            position: absolute; top: 50%; transform: translate(-50%, -50%);
+            width: 14px; height: 14px;
+            background: #fff; border-radius: 50%;
+            border: 2px solid var(--primary);
+            box-shadow: 0 0 8px var(--ember-glow);
+            transition: left 0.5s ease;
+        }
+        .karma-value {
+            font-family: 'Orbitron', monospace;
+            font-size: 0.95rem; font-weight: 700;
+            min-width: 40px; text-align: right;
+        }
+
+        /* LOOT TABLE */
+        .loot-grid {
+            display: grid; grid-template-columns: repeat(3, 1fr);
+            gap: 6px; margin-bottom: 10px;
+        }
+        .loot-item {
+            background: var(--bg2);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 10px 6px;
+            text-align: center;
+            transition: all 0.3s;
+        }
+        .loot-item.legendary { border-color: var(--gold); background: rgba(255,215,0,0.06); }
+        .loot-item.epic { border-color: var(--purple); background: rgba(168,85,247,0.06); }
+        .loot-item.rare { border-color: var(--cyan); background: rgba(0,212,255,0.06); }
+        .loot-item .loot-icon { font-size: 1.3rem; margin-bottom: 4px; }
+        .loot-item .loot-name { font-size: 0.875rem; font-weight: 700; color: var(--text); }
+        .loot-item .loot-rate {
+            font-size: 0.95rem; color: var(--text-dim);
+            font-family: 'Orbitron', monospace; margin-top: 2px;
+        }
+
+        /* XP BAR */
+        .xp-section {
+            display: flex; align-items: center; gap: 8px;
+            margin-bottom: 10px;
+        }
+        .xp-label {
+            font-size: 0.95rem; color: var(--text-dim);
+            font-weight: 700; min-width: 55px;
+        }
+        .xp-track {
+            flex: 1; height: 10px;
+            background: rgba(0,0,0,0.4);
+            border-radius: 5px; overflow: hidden;
+            border: 1px solid var(--border);
+        }
+        .xp-fill {
+            height: 100%; border-radius: 5px;
+            background: linear-gradient(90deg, var(--primary-dark), var(--primary));
+            transition: width 0.8s ease;
+        }
+        .xp-text {
+            font-family: 'Orbitron', monospace;
+            font-size: 0.875rem; color: var(--primary);
+            min-width: 65px; text-align: right;
+        }
+
+        /* GUILD STANDINGS */
+        .guild-row {
+            display: flex; align-items: center;
+            padding: 10px;
+            border-radius: 8px;
+            margin-bottom: 4px;
+            transition: all 0.2s;
+        }
+        .guild-row:nth-child(odd) { background: rgba(255,255,255,0.02); }
+        .guild-row:hover { background: rgba(255,107,0,0.05); }
+        .guild-rank {
+            font-family: 'Orbitron', monospace;
+            font-size: 0.95rem; font-weight: 900;
+            width: 28px; color: var(--text-dim);
+        }
+        .guild-rank.top { color: var(--gold); }
+        .guild-name-col { flex: 1; margin-left: 8px; }
+        .guild-name-text { font-size: 0.95rem; font-weight: 700; }
+        .guild-members { font-size: 0.875rem; color: var(--text-dim); }
+        .guild-castles {
+            font-family: 'Orbitron', monospace;
+            font-size: 0.95rem; font-weight: 700;
+            color: var(--primary);
+        }
+        .guild-row.ours { background: rgba(255,107,0,0.08); border: 1px solid rgba(255,107,0,0.2); }
+
+        /* PROGRESS SECTION */
+        .progress-card {
+            background: linear-gradient(135deg, rgba(255,107,0,0.05), rgba(0,0,0,0.2));
+            border: 1px solid rgba(255,107,0,0.15);
+            border-radius: 12px; padding: 14px;
+            margin-bottom: 10px;
+        }
+        .progress-title {
+            font-size: 0.95rem; font-weight: 700;
+            color: var(--primary); margin-bottom: 8px;
+            font-family: 'Orbitron', sans-serif;
+        }
+        .milestone-list { list-style: none; }
+        .milestone-list li {
+            display: flex; align-items: center; gap: 8px;
+            padding: 7px 0; font-size: 0.95rem;
+            border-bottom: 1px solid rgba(255,255,255,0.03);
+        }
+        .milestone-list li:last-child { border-bottom: none; }
+        .milestone-check {
+            width: 18px; height: 18px; border-radius: 50%;
+            border: 2px solid var(--border);
+            display: flex; align-items: center; justify-content: center;
+            flex-shrink: 0;
+        }
+        .milestone-check.done { border-color: var(--green); background: var(--green-dim); }
+        .milestone-check.done svg { width: 10px; height: 10px; stroke: var(--green); }
+
+        /* DESC TEXT — legible on mobile */
+        .desc-text {
+            font-size: 0.95rem;
+            color: var(--text-dim);
+            line-height: 1.6;
+            margin-bottom: 10px;
+        }
+        .hint-text {
+            text-align: center;
+            font-size: 0.95rem;
+            color: var(--text-muted);
+        }
+
+        /* KARMA EFFECTS GRID */
+        .effects-grid {
+            display: grid; grid-template-columns: 1fr 1fr;
+            gap: 6px; margin-bottom: 10px;
+        }
+        .effect-box {
+            padding: 10px; border-radius: 8px;
+        }
+        .effect-box .effect-title {
+            font-size: 0.95rem; font-weight: 700; margin-bottom: 4px;
+        }
+        .effect-box ul {
+            font-size: 0.95rem; color: var(--text-dim); line-height: 1.7; list-style: none;
+        }
+
+        /* DEATH PENALTY LIST */
+        .penalty-list {
+            font-size: 0.95rem; line-height: 2;
+        }
+        .penalty-list div {
+            display: flex; align-items: center; gap: 6px;
+        }
+        .penalty-list .label-bold { font-weight: 700; }
+
+        /* TOAST */
+        .siege-toast {
+            position: fixed; bottom: 80px; left: 50%;
+            transform: translateX(-50%) translateY(20px);
+            background: var(--card-bg);
+            border: 1px solid var(--primary);
+            border-radius: 10px;
+            padding: 10px 20px;
+            font-size: 0.95rem; font-weight: 700;
+            color: var(--primary);
+            box-shadow: 0 8px 32px rgba(0,0,0,0.6);
+            z-index: 10000;
+            opacity: 0; pointer-events: none;
+            transition: all 0.4s ease;
+        }
+        .siege-toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+        /* RESPONSIVE — single mobile block (min font ~13px / 0.85rem) */
+        @media (max-width: 768px) {
+            .siege-container { padding: 0 10px 100px; }
+            .party-grid { grid-template-columns: repeat(5, 1fr); gap: 4px; }
+            .slot-grid { grid-template-columns: repeat(4, 1fr); gap: 4px; }
+            .loot-grid { grid-template-columns: repeat(3, 1fr); gap: 4px; }
+            .castle-tower { width: 44px; height: 44px; font-size: 0.85rem; }
+            .castle-tower.throne { width: 54px; height: 54px; font-size: 0.9rem; }
+            .tower-label { font-size: 0.85rem; }
+            .party-slot .role-tag { font-size: 0.8rem; padding: 2px 5px; }
+            .party-slot .card-mini-name { font-size: 0.85rem; }
+            .party-slot .card-mini-stats { font-size: 0.85rem; }
+            .card-slot-item .slot-type { font-size: 0.85rem; }
+            .card-slot-item .slot-bonus { font-size: 0.9rem; }
+            .mvp-hp-text { font-size: 0.85rem; }
+            .siege-tab { padding: 8px 10px; font-size: 0.85rem; }
+            .s-card { padding: 14px 12px; }
+            .s-card-title { font-size: 0.9rem; }
+            .status-pill { font-size: 0.85rem; padding: 4px 8px; }
+            .role-chip { font-size: 0.85rem; padding: 4px 8px; }
+            .loot-item .loot-name { font-size: 0.85rem; }
+            .guild-name-text { font-size: 0.9rem; }
+            .guild-members { font-size: 0.85rem; }
+            .siege-btn { font-size: 0.85rem; padding: 11px 8px; }
+        }
+
+        /* SCROLLBAR */
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: var(--primary-dark); border-radius: 2px; }
+    </style>
+</head>
+<body data-page-id="guild-siege">
+
+<div class="siege-aurora"></div>
+
+<div class="siege-container">
+    <!-- HEADER -->
+    <header class="siege-header">
+        <h1 data-i18n="siege_title">GUILD SIEGE</h1>
+        <div class="siege-subtitle" data-i18n="siege_subtitle">War of Emperium : Golden Age Protocol</div>
+        <p class="siege-lore-quote" data-i18n="siege_quote">"In the Golden Age, guilds didn't just play together -- they bled together. The castle walls remember every oath, every betrayal, every last stand."</p>
+    </header>
+
+    <!-- STATUS BAR -->
+    <div class="status-bar" id="statusBar">
+        <div class="status-pill gold"><span data-i18n="stat_rank">Guild Rank</span> <span class="val" id="guildRankDisplay">#3</span></div>
+        <div class="status-pill fire"><span data-i18n="stat_castles">Castles</span> <span class="val" id="castleCount">1</span></div>
+        <div class="status-pill fire"><span data-i18n="stat_power">Power</span> <span class="val" id="guildPower">2,847</span></div>
+        <div class="status-pill green"><span data-i18n="stat_members">Members</span> <span class="val" id="memberCount">18</span></div>
+        <div class="status-pill purple"><span data-i18n="stat_season">Season</span> <span class="val">III</span></div>
+    </div>
+
+    <!-- TAB NAVIGATION -->
+    <div class="siege-tabs" id="siegeTabs">
+        <button class="siege-tab active" data-tab="siege" data-i18n="tab_siege">Siege</button>
+        <button class="siege-tab" data-tab="party" data-i18n="tab_party">Party</button>
+        <button class="siege-tab" data-tab="cards" data-i18n="tab_cards">Card Slots</button>
+        <button class="siege-tab" data-tab="mvp" data-i18n="tab_mvp">MVP Hunt</button>
+        <button class="siege-tab" data-tab="karma" data-i18n="tab_karma">Karma PvP</button>
+        <button class="siege-tab" data-tab="standings" data-i18n="tab_standings">Standings</button>
+    </div>
+
+    <!-- DEATH PENALTY BANNER -->
+    <div class="death-banner" id="deathBanner">
+        <div class="death-title" data-i18n="death_title">YOU HAVE FALLEN</div>
+        <div class="death-penalty" id="deathPenaltyText" data-i18n="death_penalty">-15% XP lost. Retrieve your drops within 5:00 or they are gone forever.</div>
+    </div>
+
+    <!-- ========== TAB: SIEGE ========== -->
+    <div class="siege-panel active" id="panel-siege">
+        <div class="siege-timer">
+            <div class="label" data-i18n="siege_timer_label">Next Siege Begins</div>
+            <div class="time" id="siegeTimer">02:47:33</div>
+            <div class="label" style="color:var(--primary)" data-i18n="siege_timer_day">Saturday 20:00 -- War of Emperium</div>
+        </div>
+
+        <div class="s-card">
+            <div class="s-card-title">
+                <svg viewBox="0 0 24 24"><path d="M12 2l3 7h7l-5.5 4 2 7L12 16l-6.5 4 2-7L2 9h7z"/></svg>
+                <span data-i18n="castle_map_title">Castle Battleground</span>
+            </div>
+            <div class="castle-map" id="castleMap">
+                <div class="grid-overlay"></div>
+                <div class="castle-path" style="top:47%;left:18%;width:20%"></div>
+                <div class="castle-path" style="top:47%;left:62%;width:20%"></div>
+                <div class="castle-path" style="top:27%;left:38%;width:24%;transform:rotate(25deg)"></div>
+                <div class="castle-path" style="top:67%;left:38%;width:24%;transform:rotate(-25deg)"></div>
+                <div class="castle-tower ally" style="top:40%;left:6%" onclick="SIEGE.towerAction(0)">T1<span class="tower-label" data-i18n="tower_gate">Gate</span></div>
+                <div class="castle-tower enemy" style="top:15%;left:30%" onclick="SIEGE.towerAction(1)">T2<span class="tower-label" data-i18n="tower_north">North</span></div>
+                <div class="castle-tower ally" style="top:65%;left:30%" onclick="SIEGE.towerAction(2)">T3<span class="tower-label" data-i18n="tower_south">South</span></div>
+                <div class="castle-tower neutral" style="top:40%;left:55%" onclick="SIEGE.towerAction(3)">T4<span class="tower-label" data-i18n="tower_inner">Inner</span></div>
+                <div class="castle-tower throne" style="top:35%;left:78%" onclick="SIEGE.towerAction(4)">
+                    <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><path d="M5 16L3 5l5.5 5L12 4l3.5 6L21 5l-2 11H5zm14 3c0 .6-.4 1-1 1H6c-.6 0-1-.4-1-1v-1h14v1z"/></svg>
+                    <span class="tower-label" data-i18n="tower_throne">Throne</span>
+                </div>
+            </div>
+            <div class="hint-text" data-i18n="castle_tap_hint">Tap a tower to attack or defend</div>
+        </div>
+
+        <div class="siege-actions">
+            <button class="siege-btn primary" onclick="SIEGE.deploy()" id="deployBtn">
+                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M14.5 3.5L21 10l-2 2-2-2-5 5 2 2-2 2-6.5-6.5L2 15l2-2 2 2 5-5-2-2 2-2z"/></svg>
+                <span data-i18n="btn_deploy">Deploy</span>
+            </button>
+            <button class="siege-btn danger" onclick="SIEGE.retreat()">
+                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>
+                <span data-i18n="btn_retreat">Retreat</span>
+            </button>
+            <button class="siege-btn info" onclick="SIEGE.callAllies()">
+                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
+                <span data-i18n="btn_rally">Rally</span>
+            </button>
+            <button class="siege-btn success" onclick="SIEGE.fortify()">
+                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z"/></svg>
+                <span data-i18n="btn_fortify">Fortify</span>
+            </button>
+        </div>
+
+        <div class="s-card">
+            <div class="s-card-title">
+                <svg viewBox="0 0 24 24"><path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6z"/></svg>
+                <span data-i18n="log_title">Battle Chronicle</span>
+            </div>
+            <div class="battle-log" id="battleLog"></div>
+        </div>
+    </div>
+
+    <!-- ========== TAB: PARTY ========== -->
+    <div class="siege-panel" id="panel-party">
+        <div class="s-card">
+            <div class="s-card-title">
+                <svg viewBox="0 0 24 24"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5s-3 1.34-3 3 1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>
+                <span data-i18n="party_title">War Party -- The Holy Trinity</span>
+            </div>
+            <p class="desc-text" data-i18n="party_desc">In the Golden Age, no adventurer survived alone. Assign your cards to roles -- Tanks absorb damage, Healers sustain, DPS deals the killing blow, and Support controls the battlefield.</p>
+            <div class="role-bar">
+                <div class="role-chip tank-chip"><svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z"/></svg> <span data-i18n="role_tank">Tank</span> <span class="count" id="tankCount">1/1</span></div>
+                <div class="role-chip healer-chip"><svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-2 10h-4v4h-2v-4H7v-2h4V7h2v4h4v2z"/></svg> <span data-i18n="role_healer">Healer</span> <span class="count" id="healerCount">1/1</span></div>
+                <div class="role-chip dps-chip"><svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg> <span data-i18n="role_dps">DPS</span> <span class="count" id="dpsCount">2/2</span></div>
+                <div class="role-chip support-chip"><svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><path d="M12 2l3 7h7l-5.5 4 2 7L12 16l-6.5 4 2-7L2 9h7z"/></svg> <span data-i18n="role_support">Support</span> <span class="count" id="supportCount">1/1</span></div>
+            </div>
+            <div class="party-grid" id="partyGrid"></div>
+            <div class="hint-text" data-i18n="party_hint">Tap a slot to assign a card from your collection</div>
+
+            <div class="progress-card" style="margin-top:12px">
+                <div class="progress-title" data-i18n="synergy_title">Party Synergy Bonuses</div>
+                <ul class="milestone-list" id="synergyList">
+                    <li><div class="milestone-check done"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg></div><span data-i18n="syn_trinity">Holy Trinity Complete: +20% all stats</span></li>
+                    <li><div class="milestone-check done"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg></div><span data-i18n="syn_guild_set">Same Guild Set: +15% HP</span></li>
+                    <li><div class="milestone-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg></div><span data-i18n="syn_legendary">All Legendary: +25% ATK (need 3 more)</span></li>
+                    <li><div class="milestone-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg></div><span data-i18n="syn_master">Class Master: Fill all roles with 5-star cards</span></li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="s-card" style="border-color: rgba(239,68,68,0.3);">
+            <div class="s-card-title" style="color: var(--red);">
+                <svg viewBox="0 0 24 24" fill="var(--red)"><path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/></svg>
+                <span data-i18n="interdepdence_title">Social Interdependence Warning</span>
+            </div>
+            <p class="desc-text" data-i18n="interdependence_desc">This content is MATHEMATICALLY IMPOSSIBLE to solo. Just like EverQuest's forced grouping, you need a balanced party. No tank? You'll be one-shot. No healer? Attrition kills you. No DPS? The timer runs out. This is the Golden Age way.</p>
+        </div>
+    </div>
+
+    <!-- ========== TAB: CARD SLOTS ========== -->
+    <div class="siege-panel" id="panel-cards">
+        <div class="s-card">
+            <div class="s-card-title">
+                <svg viewBox="0 0 24 24"><path d="M19 5v14H5V5h14m0-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2z"/></svg>
+                <span data-i18n="slots_title">Card Slot System (Ragnarok-Style)</span>
+            </div>
+            <p class="desc-text" data-i18n="slots_desc">Socket monster cards into your equipment for powerful bonuses. Like Ragnarok Online's card system, each slot amplifies your build. Rare card combinations unlock hidden synergies.</p>
+            <div class="slot-grid" id="slotGrid"></div>
+
+            <div class="progress-card">
+                <div class="progress-title" data-i18n="active_bonuses_title">Active Card Bonuses</div>
+                <ul class="milestone-list" id="cardBonusList">
+                    <li><div class="milestone-check done"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg></div><span><span style="color:var(--primary)">Helm:</span> RegginA's Wisdom -- +10% XP gain</span></li>
+                    <li><div class="milestone-check done"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg></div><span><span style="color:var(--red)">Weapon:</span> Sacred Log Fragment -- +15% ATK in siege</span></li>
+                    <li><div class="milestone-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg></div><span><span style="color:var(--cyan)">Armor:</span> Empty -- Slot a card for defense</span></li>
+                    <li><div class="milestone-check done"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg></div><span><span style="color:var(--green)">Boots:</span> AFK King's Patience -- +8% dodge</span></li>
+                </ul>
+            </div>
+
+            <div class="s-card" style="border-color:rgba(168,85,247,0.3);background:linear-gradient(135deg,rgba(168,85,247,0.05),var(--card-bg))">
+                <div class="s-card-title" style="color:var(--purple)">
+                    <svg viewBox="0 0 24 24" fill="var(--purple)"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
+                    <span data-i18n="mystery_title">Hidden Synergies: The Unknown</span>
+                </div>
+                <p class="desc-text" data-i18n="mystery_desc">Some card combinations unlock secret bonuses not listed anywhere. No wiki. No datamine. Discovery only. This is Pillar 4: Recapture The Unknown.</p>
+                <div style="text-align:center;padding:12px;font-size:0.9rem;color:var(--purple);font-family:'NumbahWan','Orbitron',sans-serif;font-weight:700" data-i18n="mystery_count">??? / 12 Synergies Discovered</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========== TAB: MVP HUNT ========== -->
+    <div class="siege-panel" id="panel-mvp">
+        <div class="mvp-card">
+            <div class="mvp-name" id="mvpName">ZAKUM, the Infernal</div>
+            <div class="mvp-title" data-i18n="mvp_subtitle">World Boss -- Requires Full Party</div>
+            <div style="position:relative;margin:12px 0">
+                <div class="mvp-hp-bar">
+                    <div class="mvp-hp-fill" id="mvpHpFill" style="width:73%"></div>
+                    <span class="mvp-hp-text" id="mvpHpText">731,408 / 1,000,000</span>
+                </div>
+            </div>
+            <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:8px">
+                <div class="status-pill red"><span>ATK</span> <span class="val">4,500</span></div>
+                <div class="status-pill purple"><span>DEF</span> <span class="val">2,800</span></div>
+                <div class="status-pill fire"><span>Phase</span> <span class="val" id="mvpPhase">2/3</span></div>
+            </div>
+        </div>
+
+        <div class="siege-actions">
+            <button class="siege-btn primary full" onclick="SIEGE.attackMVP()">
+                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M14.5 3.5L21 10l-2 2-2-2-5 5 2 2-2 2-6.5-6.5L2 15l2-2 2 2 5-5-2-2 2-2z"/></svg>
+                <span data-i18n="btn_attack_mvp">Attack MVP with Party</span>
+            </button>
+        </div>
+
+        <div class="s-card">
+            <div class="s-card-title">
+                <svg viewBox="0 0 24 24"><path d="M20 6h-2.18c.11-.31.18-.65.18-1 0-1.66-1.34-3-3-3-1.05 0-1.96.54-2.5 1.35l-.5.67-.5-.68C10.96 2.54 10.05 2 9 2 7.34 2 6 3.34 6 5c0 .35.07.69.18 1H4c-1.11 0-1.99.89-1.99 2L2 19c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V8c0-1.11-.89-2-2-2z"/></svg>
+                <span data-i18n="loot_title">MVP Loot Table (Variable-Ratio Drops)</span>
+            </div>
+            <p class="desc-text" data-i18n="loot_desc">Genuine scarcity drives value. Drop rates follow variable-ratio reinforcement -- the same dopamine loop that kept Ragnarok hunters grinding MVPs for months.</p>
+            <div class="loot-grid">
+                <div class="loot-item legendary">
+                    <div class="loot-icon"><svg viewBox="0 0 24 24" width="26" height="26" fill="var(--gold)"><path d="M12 2l3 7h7l-5.5 4 2 7L12 16l-6.5 4 2-7L2 9h7z"/></svg></div>
+                    <div class="loot-name">Zakum's Card</div>
+                    <div class="loot-rate">0.01%</div>
+                </div>
+                <div class="loot-item epic">
+                    <div class="loot-icon"><svg viewBox="0 0 24 24" width="26" height="26" fill="var(--purple)"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg></div>
+                    <div class="loot-name">Infernal Shard</div>
+                    <div class="loot-rate">2.5%</div>
+                </div>
+                <div class="loot-item rare">
+                    <div class="loot-icon"><svg viewBox="0 0 24 24" width="26" height="26" fill="var(--cyan)"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z"/></svg></div>
+                    <div class="loot-name">Sacred Essence</div>
+                    <div class="loot-rate">8%</div>
+                </div>
+                <div class="loot-item">
+                    <div class="loot-icon"><svg viewBox="0 0 24 24" width="26" height="26" fill="var(--gold)"><circle cx="12" cy="12" r="8"/></svg></div>
+                    <div class="loot-name">5,000 Gold</div>
+                    <div class="loot-rate">45%</div>
+                </div>
+                <div class="loot-item">
+                    <div class="loot-icon"><svg viewBox="0 0 24 24" width="26" height="26" fill="var(--text-dim)"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2z"/></svg></div>
+                    <div class="loot-name">XP Orb (500)</div>
+                    <div class="loot-rate">60%</div>
+                </div>
+                <div class="loot-item">
+                    <div class="loot-icon"><svg viewBox="0 0 24 24" width="26" height="26" fill="#c97f3d"><path d="M12 2L4 5v6.09c0 5.05 3.41 9.76 8 10.91 4.59-1.15 8-5.86 8-10.91V5l-8-3z"/></svg></div>
+                    <div class="loot-name">Sacred Log</div>
+                    <div class="loot-rate">15%</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="s-card">
+            <div class="s-card-title">
+                <svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 14l-5-5 1.41-1.41L12 14.17l7.59-7.59L21 8l-9 9z"/></svg>
+                <span data-i18n="dps_title">Damage Contribution</span>
+            </div>
+            <div id="dpsMeter"></div>
+        </div>
+    </div>
+
+    <!-- ========== TAB: KARMA PVP ========== -->
+    <div class="siege-panel" id="panel-karma">
+        <div class="s-card">
+            <div class="s-card-title">
+                <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z"/></svg>
+                <span data-i18n="karma_title">Karma System (Lineage-Style Open World PvP)</span>
+            </div>
+            <p class="desc-text" data-i18n="karma_desc">Every action has consequences that persist. Attack innocent players and your karma drops. Low karma means guards attack you on sight, shops charge double, and death drops your best card.</p>
+
+            <div class="karma-meter">
+                <div class="label" data-i18n="karma_label">Karma</div>
+                <div class="karma-track">
+                    <div class="karma-thumb" id="karmaThumb" style="left:72%"></div>
+                </div>
+                <div class="karma-value" id="karmaValue" style="color:var(--cyan)">+72</div>
+            </div>
+
+            <div class="effects-grid">
+                <div class="effect-box" style="background:rgba(0,212,255,0.05);border:1px solid rgba(0,212,255,0.15);border-radius:8px">
+                    <div class="effect-title" style="color:var(--cyan)" data-i18n="karma_heroic">HEROIC (+50 to +100)</div>
+                    <ul>
+                        <li data-i18n="heroic_1">+10% shop discount</li>
+                        <li data-i18n="heroic_2">+5% XP from quests</li>
+                        <li data-i18n="heroic_3">Guard protection aura</li>
+                        <li data-i18n="heroic_4">Golden name in chat</li>
+                    </ul>
+                </div>
+                <div class="effect-box" style="background:rgba(239,68,68,0.05);border:1px solid rgba(239,68,68,0.15);border-radius:8px">
+                    <div class="effect-title" style="color:var(--red)" data-i18n="karma_villain">VILLAIN (-50 to -100)</div>
+                    <ul>
+                        <li data-i18n="villain_1">Guards attack on sight</li>
+                        <li data-i18n="villain_2">2x shop prices</li>
+                        <li data-i18n="villain_3">Death drops best card</li>
+                        <li data-i18n="villain_4">Red skull name tag</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="s-card">
+            <div class="s-card-title" style="color:var(--red)">
+                <svg viewBox="0 0 24 24" fill="var(--red)"><path d="M12 2C6.47 2 2 6.47 2 12s4.47 10 10 10 10-4.47 10-10S17.53 2 12 2zm5 13.59L15.59 17 12 13.41 8.41 17 7 15.59 10.59 12 7 8.41 8.41 7 12 10.59 15.59 7 17 8.41 13.41 12 17 15.59z"/></svg>
+                <span data-i18n="death_penalty_title">Death Penalties (Loss Aversion)</span>
+            </div>
+            <p class="desc-text" data-i18n="death_penalty_desc">Like EverQuest's legendary corpse runs: death is not trivial. You LOSE things. This makes every battle meaningful and every survival a triumph.</p>
+            <div class="penalty-list">
+                <div style="color:var(--red)"><span class="label-bold" data-i18n="pen_pve">PvE Death:</span> <span data-i18n="pen_pve_val">-15% current XP</span></div>
+                <div style="color:var(--red)"><span class="label-bold" data-i18n="pen_pvp">PvP Death:</span> <span data-i18n="pen_pvp_val">-10% XP + random card drop</span></div>
+                <div style="color:var(--red)"><span class="label-bold" data-i18n="pen_siege">Siege Death:</span> <span data-i18n="pen_siege_val">-5% XP (reduced in war)</span></div>
+                <div style="color:var(--primary)"><span class="label-bold" data-i18n="pen_corpse">Corpse Run:</span> <span data-i18n="pen_corpse_val">5 min to recover drops</span></div>
+                <div style="color:var(--purple)"><span class="label-bold" data-i18n="pen_villain">Villain Death:</span> <span data-i18n="pen_villain_val">-25% XP + best card drops</span></div>
+            </div>
+        </div>
+
+        <div class="siege-actions">
+            <button class="siege-btn danger" onclick="SIEGE.openWorldPvP()">
+                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M14.5 3.5L21 10l-2 2-2-2-5 5 2 2-2 2-6.5-6.5L2 15l2-2 2 2 5-5-2-2 2-2z"/></svg>
+                <span data-i18n="btn_pvp_hunt">Hunt Players</span>
+            </button>
+            <button class="siege-btn info" onclick="SIEGE.defendTerritory()">
+                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z"/></svg>
+                <span data-i18n="btn_defend">Defend Territory</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- ========== TAB: STANDINGS ========== -->
+    <div class="siege-panel" id="panel-standings">
+        <div class="s-card">
+            <div class="s-card-title">
+                <svg viewBox="0 0 24 24"><path d="M12 2l3 7h7l-5.5 4 2 7L12 16l-6.5 4 2-7L2 9h7z"/></svg>
+                <span data-i18n="standings_title">Guild Power Rankings -- Season III</span>
+            </div>
+            <div id="guildStandings"></div>
+        </div>
+
+        <div class="s-card">
+            <div class="s-card-title">
+                <svg viewBox="0 0 24 24"><path d="M13 3c-4.97 0-9 4.03-9 9H1l3.89 3.89.07.14L9 12H6c0-3.87 3.13-7 7-7s7 3.13 7 7-3.13 7-7 7c-1.93 0-3.68-.79-4.94-2.06l-1.42 1.42C8.27 19.99 10.51 21 13 21c4.97 0 9-4.03 9-9s-4.03-9-9-9zm-1 5v5l4.28 2.54.72-1.21-3.5-2.08V8H12z"/></svg>
+                <span data-i18n="history_title">Siege History</span>
+            </div>
+            <div id="siegeHistory"></div>
+        </div>
+
+        <div class="s-card">
+            <div class="s-card-title">
+                <svg viewBox="0 0 24 24"><path d="M16 6l2.29 2.29-4.88 4.88-4-4L2 16.59 3.41 18l6-6 4 4 6.3-6.29L22 12V6z"/></svg>
+                <span data-i18n="progress_title">Siege Rank Progression</span>
+            </div>
+            <p class="desc-text" data-i18n="progress_desc">Progression is slow and deliberate. Every rank feels earned. This is not a checklist -- it's a journey.</p>
+            <div class="xp-section">
+                <div class="xp-label" data-i18n="xp_rank">Rank 7</div>
+                <div class="xp-track"><div class="xp-fill" id="rankXpFill" style="width:64%"></div></div>
+                <div class="xp-text" id="rankXpText">6,420 / 10,000</div>
+            </div>
+            <div class="xp-section">
+                <div class="xp-label" data-i18n="xp_guild">Guild XP</div>
+                <div class="xp-track"><div class="xp-fill" style="width:42%;background:linear-gradient(90deg,rgba(0,212,255,0.5),var(--cyan))"></div></div>
+                <div class="xp-text" style="color:var(--cyan)">42,100 / 100K</div>
+            </div>
+
+            <div class="progress-card" style="margin-top:10px">
+                <div class="progress-title" data-i18n="milestones_title">Season III Milestones</div>
+                <ul class="milestone-list">
+                    <li><div class="milestone-check done"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg></div><span data-i18n="ms_first_siege">Win your first siege battle</span></li>
+                    <li><div class="milestone-check done"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg></div><span data-i18n="ms_hold_castle">Hold a castle for 3 consecutive sieges</span></li>
+                    <li><div class="milestone-check done"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg></div><span data-i18n="ms_defeat_mvp">Defeat an MVP with full party</span></li>
+                    <li><div class="milestone-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg></div><span data-i18n="ms_throne">Conquer the Throne Room (0/1)</span></li>
+                    <li><div class="milestone-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg></div><span data-i18n="ms_rank10">Achieve Rank 10 in siege (0/10)</span></li>
+                    <li><div class="milestone-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg></div><span data-i18n="ms_synergies">Discover all 12 hidden card synergies (???/12)</span></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<div class="siege-toast" id="siegeToast"></div>
+
+<!-- SCRIPTS -->
+<script src="/static/nw-i18n-core.js"></script>
+<script src="/static/nw-nav.js"></script>
+<script src="/static/nw-wallet.js"></script>
+<script src="/static/nw-sounds.js"></script>
+<script>
+// ============================================
+// GUILD SIEGE ENGINE
+// Golden Age MMORPG Protocol v1.0
+// ============================================
+const t = (k, fb) => (typeof NW_I18N !== 'undefined' && NW_I18N.t) ? NW_I18N.t(k, fb) : fb || k;
+
+const SIEGE = (() => {
+    const state = {
+        karma: 72,
+        siegeRank: 7,
+        siegeXP: 6420,
+        siegeXPMax: 10000,
+        guildCastles: 1,
+        guildPower: 2847,
+        mvpHP: 731408,
+        mvpHPMax: 1000000,
+        mvpPhase: 2,
+        deathPenalty: false,
+        corpseTimer: 0,
+        party: [
+            { slot: 0, role: 'tank', name: 'RegginA', atk: 45, hp: 280, rarity: 'mythic', filled: true },
+            { slot: 1, role: 'healer', name: 'QinQin', atk: 20, hp: 180, rarity: 'legendary', filled: true },
+            { slot: 2, role: 'dps', name: 'Zakum Slayer', atk: 120, hp: 90, rarity: 'legendary', filled: true },
+            { slot: 3, role: 'dps', name: 'WhaleKing', atk: 95, hp: 110, rarity: 'epic', filled: true },
+            { slot: 4, role: 'support', name: 'Oracle', atk: 35, hp: 150, rarity: 'rare', filled: true }
+        ],
+        cardSlots: [
+            { type: 'Helm', icon: 'crown', equipped: true, bonus: '+10% XP', card: "RegginA's Wisdom" },
+            { type: 'Weapon', icon: 'swords', equipped: true, bonus: '+15% ATK', card: 'Sacred Log Shard' },
+            { type: 'Armor', icon: 'shield', equipped: false, bonus: '', card: null },
+            { type: 'Boots', icon: 'footprints', equipped: true, bonus: '+8% Dodge', card: "AFK King's Patience" },
+            { type: 'Ring', icon: 'ring', equipped: false, bonus: '', card: null },
+            { type: 'Cape', icon: 'cape', equipped: false, bonus: '', card: null },
+            { type: 'Amulet', icon: 'gem', equipped: true, bonus: '+5% Crit', card: "Lurker's Eye" },
+            { type: 'Relic', icon: 'fire', equipped: false, bonus: '', card: null }
+        ],
+        guilds: [
+            { name: 'DragonSlayers', members: 32, castles: 3, power: 8420, ours: false },
+            { name: 'ShadowRealm', members: 28, castles: 2, power: 5190, ours: false },
+            { name: 'NumbahWan', members: 18, castles: 1, power: 2847, ours: true },
+            { name: 'MatchaLatte', members: 24, castles: 1, power: 2650, ours: false },
+            { name: 'AFK Warriors', members: 15, castles: 0, power: 1820, ours: false },
+            { name: 'WhaleGuild', members: 8, castles: 0, power: 1540, ours: false }
+        ],
+        siegeHistory: [
+            { date: 'Feb 8', result: 'Victory', enemy: 'AFK Warriors', castle: 'South Tower', xp: 450 },
+            { date: 'Feb 1', result: 'Defeat', enemy: 'DragonSlayers', castle: 'Throne Room', xp: -120 },
+            { date: 'Jan 25', result: 'Victory', enemy: 'WhaleGuild', castle: 'Gate Tower', xp: 380 },
+            { date: 'Jan 18', result: 'Defeat', enemy: 'ShadowRealm', castle: 'Inner Wall', xp: -95 },
+            { date: 'Jan 11', result: 'Victory', enemy: 'MatchaLatte', castle: 'North Tower', xp: 520 }
+        ]
+    };
+
+    function init() {
+        renderPartyGrid();
+        renderSlotGrid();
+        renderGuildStandings();
+        renderSiegeHistory();
+        renderDPSMeter();
+        initBattleLog();
+        initTabs();
+        startSiegeTimer();
+        loadState();
+    }
+
+    function initTabs() {
+        // ?showcase mode: open ALL panels at once for full-picture viewing
+        const isShowcase = new URLSearchParams(window.location.search).has('showcase');
+        if (isShowcase) {
+            document.querySelectorAll('.siege-tab').forEach(t => t.classList.add('active'));
+            document.querySelectorAll('.siege-panel').forEach(p => {
+                p.classList.add('active');
+                p.style.display = 'block';
+            });
+            // Add visual separator between panels
+            document.querySelectorAll('.siege-panel').forEach(p => {
+                p.style.borderTop = '2px solid var(--primary)';
+                p.style.marginTop = '24px';
+                p.style.paddingTop = '16px';
+            });
+            return; // No tab click handling needed in showcase mode
+        }
+        document.querySelectorAll('.siege-tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                document.querySelectorAll('.siege-tab').forEach(t => t.classList.remove('active'));
+                document.querySelectorAll('.siege-panel').forEach(p => p.classList.remove('active'));
+                tab.classList.add('active');
+                const panel = document.getElementById('panel-' + tab.dataset.tab);
+                if (panel) panel.classList.add('active');
+            });
+        });
+    }
+
+    function renderPartyGrid() {
+        const grid = document.getElementById('partyGrid');
+        if (!grid) return;
+        const roleTags = { tank: t('tag_tank','TANK'), healer: t('tag_heal','HEAL'), dps: t('tag_dps','DPS'), support: t('tag_sup','SUP') };
+        const rarityBg = { mythic: 'linear-gradient(135deg,rgba(255,107,0,0.2),rgba(255,215,0,0.15))', legendary: 'linear-gradient(135deg,rgba(255,215,0,0.12),rgba(255,215,0,0.04))', epic: 'linear-gradient(135deg,rgba(168,85,247,0.12),rgba(168,85,247,0.04))', rare: 'linear-gradient(135deg,rgba(0,212,255,0.1),rgba(0,212,255,0.04))' };
+        grid.innerHTML = state.party.map((p, i) => {
+            if (p.filled) {
+                return `<div class="party-slot filled ${p.role}" style="background:${rarityBg[p.rarity] || 'var(--bg2)'}" onclick="SIEGE.editSlot(${i})">
+                    <span class="role-tag ${p.role}-tag">${roleTags[p.role]}</span>
+                    <div class="card-mini-name" style="margin-top:auto;padding-top:20px">${p.name}</div>
+                    <div class="card-mini-stats">${p.atk}/${p.hp}</div>
+                </div>`;
+            }
+            return `<div class="party-slot" onclick="SIEGE.editSlot(${i})">
+                <svg class="empty-icon" viewBox="0 0 24 24" fill="var(--text-muted)"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
+            </div>`;
+        }).join('');
+    }
+
+    function renderSlotGrid() {
+        const grid = document.getElementById('slotGrid');
+        if (!grid) return;
+        const icons = {
+            crown: '<svg viewBox="0 0 24 24"><path d="M5 16L3 5l5.5 5L12 4l3.5 6L21 5l-2 11H5z"/></svg>',
+            swords: '<svg viewBox="0 0 24 24"><path d="M14.5 3.5L21 10l-2 2-2-2-5 5 2 2-2 2-6.5-6.5L2 15l2-2 2 2 5-5-2-2 2-2z"/></svg>',
+            shield: '<svg viewBox="0 0 24 24"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z"/></svg>',
+            footprints: '<svg viewBox="0 0 24 24"><path d="M13.5 5.5c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zM9.8 8.9L7 23h2.1l1.8-8 2.1 2v6h2v-7.5l-2.1-2 .6-3C14.8 12 16.8 13 19 13v-2c-1.9 0-3.5-1-4.3-2.4l-1-1.6c-.4-.6-1-1-1.7-1-.3 0-.5.1-.8.1L6 8.3V13h2V9.6l1.8-.7"/></svg>',
+            ring: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="7" r="2"/></svg>',
+            cape: '<svg viewBox="0 0 24 24"><path d="M12 2L6 7v15l6-4 6 4V7z"/></svg>',
+            gem: '<svg viewBox="0 0 24 24"><path d="M12 2l-5.5 9L12 22l5.5-11z"/></svg>',
+            fire: '<svg viewBox="0 0 24 24"><path d="M13.5 0.67s.74 2.65.74 4.8c0 2.06-1.35 3.73-3.41 3.73-2.07 0-3.63-1.67-3.63-3.73l.03-.36C5.21 7.51 4 10.62 4 14c0 4.42 3.58 8 8 8s8-3.58 8-8C20 8.61 17.41 3.8 13.5.67z"/></svg>'
+        };
+        grid.innerHTML = state.cardSlots.map((s, i) => {
+            return `<div class="card-slot-item ${s.equipped ? 'equipped' : ''}" onclick="SIEGE.equipCard(${i})">
+                <div class="slot-type">${s.type}</div>
+                <div class="slot-icon">${icons[s.icon] || icons.gem}</div>
+                ${s.equipped ? `<div class="slot-bonus">${s.bonus}</div>` : `<div style="font-size:0.85rem;color:var(--text-muted)">${t('slot_empty','Empty')}</div>`}
+            </div>`;
+        }).join('');
+    }
+
+    function renderGuildStandings() {
+        const el = document.getElementById('guildStandings');
+        if (!el) return;
+        const sorted = [...state.guilds].sort((a, b) => b.power - a.power);
+        el.innerHTML = sorted.map((g, i) => {
+            return `<div class="guild-row ${g.ours ? 'ours' : ''}">
+                <div class="guild-rank ${i < 3 ? 'top' : ''}">${i + 1}</div>
+                <div class="guild-name-col">
+                    <div class="guild-name-text">${g.name}${g.ours ? ` (${t('guild_you','You')})` : ''}</div>
+                    <div class="guild-members">${g.members} ${t('guild_members','members')}</div>
+                </div>
+                <div class="guild-castles">${g.castles} ${t('guild_castles_unit','castles')}</div>
+            </div>`;
+        }).join('');
+    }
+
+    function renderSiegeHistory() {
+        const el = document.getElementById('siegeHistory');
+        if (!el) return;
+        el.innerHTML = state.siegeHistory.map(h => {
+            const isWin = h.result === 'Victory';
+            const resultText = isWin ? t('hist_victory','Victory') : t('hist_defeat','Defeat');
+            return `<div class="guild-row">
+                <div style="font-size:0.9rem;color:var(--text-dim);width:50px">${h.date}</div>
+                <div style="flex:1">
+                    <div style="font-size:0.9rem;font-weight:700;color:${isWin ? 'var(--green)' : 'var(--red)'}">${resultText} vs ${h.enemy}</div>
+                    <div style="font-size:0.85rem;color:var(--text-dim)">${h.castle}</div>
+                </div>
+                <div style="font-family:'Orbitron',monospace;font-size:0.9rem;font-weight:700;color:${isWin ? 'var(--green)' : 'var(--red)'}">
+                    ${h.xp > 0 ? '+' : ''}${h.xp} XP
+                </div>
+            </div>`;
+        }).join('');
+    }
+
+    function renderDPSMeter() {
+        const el = document.getElementById('dpsMeter');
+        if (!el) return;
+        const dps = [
+            { name: 'Zakum Slayer', dmg: 128400, pct: 100 },
+            { name: 'WhaleKing', dmg: 95200, pct: 74 },
+            { name: 'RegginA', dmg: 42800, pct: 33 },
+            { name: 'Oracle', dmg: 31200, pct: 24 },
+            { name: 'QinQin', dmg: 12600, pct: 10 }
+        ];
+        const colors = ['var(--red)', 'var(--primary)', 'var(--cyan)', 'var(--purple)', 'var(--green)'];
+        el.innerHTML = dps.map((d, i) => {
+            return `<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+                <div style="width:80px;font-size:0.9rem;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${d.name}</div>
+                <div style="flex:1;height:14px;background:rgba(0,0,0,0.3);border-radius:7px;overflow:hidden">
+                    <div style="height:100%;width:${d.pct}%;background:${colors[i]};border-radius:7px;transition:width 1s"></div>
+                </div>
+                <div style="font-family:'Orbitron',monospace;font-size:0.85rem;color:var(--text-dim);min-width:50px;text-align:right">${(d.dmg/1000).toFixed(1)}K</div>
+            </div>`;
+        }).join('');
+    }
+
+    function initBattleLog() {
+        const log = document.getElementById('battleLog');
+        if (!log) return;
+        const entries = [
+            { time: '20:42', type: 'sys', text: t('log_siege_begun','Siege of North Tower has begun! NumbahWan vs ShadowRealm') },
+            { time: '20:43', type: 'dmg', text: t('log_taunt','RegginA uses [Taunt] -- all enemy attacks redirected for 3 turns') },
+            { time: '20:43', type: 'heal', text: t('log_sacred_heal','QinQin casts [Sacred Heal] -- Party healed for 450 HP') },
+            { time: '20:44', type: 'crit', text: t('log_crit_hit','Zakum Slayer lands CRITICAL HIT! 2,340 damage to enemy tank!') },
+            { time: '20:44', type: 'dmg', text: t('log_whale_atk','WhaleKing attacks enemy healer for 890 damage') },
+            { time: '20:45', type: 'gold', text: t('log_gold_aura','Oracle activates [Gold Aura] -- +15% party damage for 5 turns') },
+            { time: '20:45', type: 'sys', text: t('log_tower_hp65','Enemy tower HP: 65% -- Keep pushing!') },
+            { time: '20:46', type: 'dmg', text: t('log_reinforcements','ShadowRealm deploys reinforcements: 3 Legendary cards') },
+            { time: '20:46', type: 'crit', text: t('log_block','RegginA BLOCKS incoming lethal with [Unbreakable Will]!') },
+            { time: '20:47', type: 'heal', text: t('log_emergency_heal','QinQin emergency heal: RegginA restored to 80% HP') },
+            { time: '20:48', type: 'crit', text: t('log_combo','COMBO: Zakum Slayer + WhaleKing synergy attack -- 4,200 damage!') },
+            { time: '20:48', type: 'sys', text: t('log_tower_hp32','Enemy tower HP: 32% -- Victory is close!') },
+            { time: '20:49', type: 'gold', text: t('log_tower_captured_xp','Tower captured! +450 XP, +2,000 Gold awarded to all party members') },
+            { time: '20:49', type: 'sys', text: t('log_2towers','NumbahWan now controls 2 towers. Throne room unlocked!') }
+        ];
+        log.innerHTML = entries.map(e => {
+            return `<div class="log-entry"><span class="log-time">[${e.time}]</span> <span class="log-${e.type}">${e.text}</span></div>`;
+        }).join('');
+        log.scrollTop = log.scrollHeight;
+    }
+
+    function startSiegeTimer() {
+        let total = 2 * 3600 + 47 * 60 + 33;
+        const el = document.getElementById('siegeTimer');
+        if (!el) return;
+        setInterval(() => {
+            if (total <= 0) total = 7 * 24 * 3600;
+            total--;
+            const h = String(Math.floor(total / 3600)).padStart(2, '0');
+            const m = String(Math.floor((total % 3600) / 60)).padStart(2, '0');
+            const s = String(total % 60).padStart(2, '0');
+            el.textContent = `${h}:${m}:${s}`;
+        }, 1000);
+    }
+
+    function deploy() {
+        const hasAllRoles = state.party.every(p => p.filled);
+        if (!hasAllRoles) { showToast(t('toast_fill_party','Fill all party slots before deploying!')); return; }
+        addLogEntry('sys', t('log_deployed','NumbahWan forces deployed to the battlefield!'));
+        addLogEntry('gold', t('log_synergy_active','Party synergy bonus active: Holy Trinity +20% stats'));
+        showToast(t('toast_deployed','Forces deployed! Battle will begin shortly...'));
+        if (typeof NW_SOUNDS !== 'undefined') NW_SOUNDS.play('click');
+    }
+    function retreat() {
+        addLogEntry('sys', t('log_retreating','NumbahWan forces retreating... -50 Guild Power'));
+        state.guildPower = Math.max(0, state.guildPower - 50);
+        document.getElementById('guildPower').textContent = state.guildPower.toLocaleString();
+        showToast(t('toast_retreat','Tactical retreat! -50 Guild Power'));
+    }
+    function callAllies() {
+        addLogEntry('gold', t('log_rally','Rally call sent to all NumbahWan members! +10% reinforcement bonus'));
+        showToast(t('toast_rally','Rally call sent to 18 guild members!'));
+    }
+    function fortify() {
+        addLogEntry('heal', t('log_fortify','Walls fortified: +500 HP to all controlled towers'));
+        showToast(t('toast_fortify','Castle walls reinforced!'));
+    }
+    function attackMVP() {
+        const dmg = Math.floor(Math.random() * 15000) + 5000;
+        state.mvpHP = Math.max(0, state.mvpHP - dmg);
+        const pct = (state.mvpHP / state.mvpHPMax * 100).toFixed(1);
+        document.getElementById('mvpHpFill').style.width = pct + '%';
+        document.getElementById('mvpHpText').textContent = `${state.mvpHP.toLocaleString()} / ${state.mvpHPMax.toLocaleString()}`;
+        addLogEntry('crit', t('log_party_atk','Party attacks Zakum for') + ` ${dmg.toLocaleString()} ` + t('log_damage','damage!'));
+        if (state.mvpHP < state.mvpHPMax * 0.3 && state.mvpPhase === 2) {
+            state.mvpPhase = 3;
+            document.getElementById('mvpPhase').textContent = '3/3';
+            addLogEntry('sys', t('log_phase3','ZAKUM enters PHASE 3 -- Enrage mode! +50% ATK!'));
+            showToast(t('toast_phase3','ZAKUM ENRAGED! Phase 3!'));
+        }
+        if (state.mvpHP <= 0) {
+            state.mvpHP = 0;
+            addLogEntry('gold', t('log_mvp_defeated','ZAKUM HAS BEEN DEFEATED! Rolling loot...'));
+            const roll = Math.random();
+            if (roll < 0.0001) { addLogEntry('gold', t('log_drop_legendary',"LEGENDARY DROP: Zakum's Card! (0.01% chance!)")); showToast(t('toast_legendary',"LEGENDARY: Zakum's Card dropped!")); }
+            else if (roll < 0.025) { addLogEntry('crit', t('log_drop_epic','EPIC DROP: Infernal Shard!')); showToast(t('toast_epic','Epic loot: Infernal Shard!')); }
+            else { addLogEntry('heal', t('log_drop_normal','Loot: 5,000 Gold + 500 XP + Sacred Log')); showToast(t('toast_mvp_done','MVP defeated! Loot distributed.')); }
+            state.siegeXP = Math.min(state.siegeXPMax, state.siegeXP + 500);
+            updateXPBar();
+            setTimeout(() => {
+                state.mvpHP = state.mvpHPMax; state.mvpPhase = 2;
+                document.getElementById('mvpHpFill').style.width = '100%';
+                document.getElementById('mvpHpText').textContent = `${state.mvpHPMax.toLocaleString()} / ${state.mvpHPMax.toLocaleString()}`;
+                document.getElementById('mvpPhase').textContent = '2/3';
+                addLogEntry('sys', t('log_mvp_respawn','Zakum has respawned! The hunt begins again...'));
+            }, 5000);
+        }
+        if (Math.random() < 0.08) triggerDeath('PvE');
+    }
+    function openWorldPvP() {
+        const karmaLoss = Math.floor(Math.random() * 10) + 3;
+        state.karma = Math.max(-100, state.karma - karmaLoss);
+        updateKarma();
+        addLogEntry('dmg', t('log_pvp_attack','You attacked a player in the open world!') + ` Karma -${karmaLoss}`);
+        if (Math.random() < 0.3) { addLogEntry('crit', t('log_pvp_win','You defeated the player! +150 Gold looted')); showToast(t('toast_pvp_win','Player defeated! Karma dropped.')); }
+        else triggerDeath('PvP');
+    }
+    function defendTerritory() {
+        const karmaGain = Math.floor(Math.random() * 5) + 2;
+        state.karma = Math.min(100, state.karma + karmaGain);
+        updateKarma();
+        addLogEntry('heal', t('log_defend','You defended guild territory!') + ` Karma +${karmaGain}`);
+        showToast(t('toast_defend','Territory defended! Karma increased.'));
+    }
+    function towerAction(index) {
+        const towers = document.querySelectorAll('.castle-tower');
+        const tower = towers[index];
+        if (!tower) return;
+        if (tower.classList.contains('throne')) { addLogEntry('sys', t('log_throne_locked','The Throne Room is heavily guarded. You need all towers first!')); showToast(t('toast_throne_locked','Capture all towers to unlock the Throne!')); }
+        else if (tower.classList.contains('enemy')) {
+            addLogEntry('dmg', t('log_atk_tower','Attacking enemy tower... Your party engages!'));
+            if (Math.random() > 0.4) {
+                tower.classList.remove('enemy'); tower.classList.add('ally');
+                addLogEntry('gold', t('log_tower_cap','Tower captured! +200 XP'));
+                state.siegeXP = Math.min(state.siegeXPMax, state.siegeXP + 200);
+                updateXPBar(); showToast(t('toast_tower_cap','Tower captured!'));
+            } else { addLogEntry('dmg', t('log_atk_repelled','Attack repelled! Enemy reinforcements arrived.')); if (Math.random() < 0.15) triggerDeath('Siege'); }
+        } else if (tower.classList.contains('ally')) { addLogEntry('heal', t('log_fortify_tower','Fortifying allied tower... +200 HP')); showToast(t('toast_fortified','Tower fortified!')); }
+        else { tower.classList.add('ally'); addLogEntry('gold', t('log_neutral_claim','Neutral tower claimed for NumbahWan!')); showToast(t('toast_claimed','Tower claimed!')); }
+    }
+    function editSlot(index) { showToast(t('toast_assign_card','Assign a card from your collection to slot') + ` ${index + 1}`); }
+    function equipCard(index) {
+        const slot = state.cardSlots[index];
+        if (slot.equipped) showToast(`${slot.type}: ${slot.card} (${slot.bonus})`);
+        else showToast(t('toast_slot_empty','Slot a card into your') + ` ${slot.type} ` + t('toast_slot_from','slot from your collection'));
+    }
+    function triggerDeath(type) {
+        state.deathPenalty = true;
+        const banner = document.getElementById('deathBanner');
+        const penaltyText = document.getElementById('deathPenaltyText');
+        let xpLoss = 0;
+        if (type === 'PvE') xpLoss = Math.floor(state.siegeXP * 0.15);
+        else if (type === 'PvP') xpLoss = Math.floor(state.siegeXP * 0.10);
+        else if (type === 'Siege') xpLoss = Math.floor(state.siegeXP * 0.05);
+        state.siegeXP = Math.max(0, state.siegeXP - xpLoss); updateXPBar();
+        penaltyText.textContent = type === 'PvP' ? `-${xpLoss} ${t('death_xp_lost','XP lost.')} ${t('death_card_drop','Random card dropped!')} ${t('death_retrieve','Retrieve within 5:00.')}` : `-${xpLoss} ${t('death_xp_lost','XP lost.')} ${t('death_retrieve_full','Retrieve your drops within 5:00 or they are gone forever.')}`;
+        banner.classList.add('show');
+        addLogEntry('sys', `${t('log_you_died','YOU DIED!')} (${type}) ${t('log_lost','Lost')} ${xpLoss} XP`);
+        setTimeout(() => { banner.classList.remove('show'); state.deathPenalty = false; }, 8000);
+    }
+    function updateKarma() {
+        const thumb = document.getElementById('karmaThumb');
+        const val = document.getElementById('karmaValue');
+        const pct = ((state.karma + 100) / 200) * 100;
+        thumb.style.left = pct + '%';
+        val.textContent = (state.karma >= 0 ? '+' : '') + state.karma;
+        val.style.color = state.karma >= 50 ? 'var(--cyan)' : state.karma >= 0 ? 'var(--gold)' : state.karma >= -50 ? 'var(--primary)' : 'var(--red)';
+    }
+    function updateXPBar() {
+        const fill = document.getElementById('rankXpFill');
+        const text = document.getElementById('rankXpText');
+        if (fill) fill.style.width = (state.siegeXP / state.siegeXPMax * 100) + '%';
+        if (text) text.textContent = `${state.siegeXP.toLocaleString()} / ${state.siegeXPMax.toLocaleString()}`;
+    }
+    function addLogEntry(type, text) {
+        const log = document.getElementById('battleLog');
+        if (!log) return;
+        const now = new Date();
+        const time = `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
+        const entry = document.createElement('div');
+        entry.className = 'log-entry';
+        entry.innerHTML = `<span class="log-time">[${time}]</span> <span class="log-${type}">${text}</span>`;
+        log.appendChild(entry);
+        log.scrollTop = log.scrollHeight;
+    }
+    function showToast(msg) {
+        const el = document.getElementById('siegeToast');
+        if (!el) return;
+        el.textContent = msg;
+        el.classList.add('show');
+        setTimeout(() => el.classList.remove('show'), 3000);
+    }
+    function saveState() { try { localStorage.setItem('nw_siege_state', JSON.stringify({ karma: state.karma, siegeXP: state.siegeXP, siegeRank: state.siegeRank })); } catch(e) {} }
+    function loadState() {
+        try {
+            const saved = JSON.parse(localStorage.getItem('nw_siege_state'));
+            if (saved) { state.karma = saved.karma || 72; state.siegeXP = saved.siegeXP || 6420; state.siegeRank = saved.siegeRank || 7; updateKarma(); updateXPBar(); }
+        } catch(e) {}
+    }
+    setInterval(saveState, 5000);
+    return { init, deploy, retreat, callAllies, fortify, attackMVP, openWorldPvP, defendTerritory, towerAction, editSlot, equipCard };
+})();
+
+NW_I18N.register({
+    en: {
+        siege_title: 'GUILD SIEGE', siege_subtitle: 'War of Emperium : Golden Age Protocol',
+        siege_quote: '"In the Golden Age, guilds didn\'t just play together -- they bled together. The castle walls remember every oath, every betrayal, every last stand."',
+        tab_siege: 'Siege', tab_party: 'Party', tab_cards: 'Card Slots', tab_mvp: 'MVP Hunt', tab_karma: 'Karma PvP', tab_standings: 'Standings',
+        stat_rank: 'Guild Rank', stat_castles: 'Castles', stat_power: 'Power', stat_members: 'Members', stat_season: 'Season',
+        tower_gate: 'Gate', tower_north: 'North', tower_south: 'South', tower_inner: 'Inner', tower_throne: 'Throne',
+        castle_map_title: 'Castle Battleground', castle_tap_hint: 'Tap a tower to attack or defend',
+        siege_timer_label: 'Next Siege Begins', siege_timer_day: 'Saturday 20:00 -- War of Emperium',
+        btn_deploy: 'Deploy', btn_retreat: 'Retreat', btn_rally: 'Rally', btn_fortify: 'Fortify',
+        log_title: 'Battle Chronicle', party_title: 'War Party -- The Holy Trinity',
+        party_desc: 'In the Golden Age, no adventurer survived alone. Assign your cards to roles -- Tanks absorb damage, Healers sustain, DPS deals the killing blow, and Support controls the battlefield.',
+        party_hint: 'Tap a slot to assign a card from your collection',
+        role_tank: 'Tank', role_healer: 'Healer', role_dps: 'DPS', role_support: 'Support',
+        tag_tank: 'TANK', tag_heal: 'HEAL', tag_dps: 'DPS', tag_sup: 'SUP',
+        synergy_title: 'Party Synergy Bonuses',
+        syn_trinity: 'Holy Trinity Complete: +20% all stats', syn_guild_set: 'Same Guild Set: +15% HP',
+        syn_legendary: 'All Legendary: +25% ATK (need 3 more)', syn_master: 'Class Master: Fill all roles with 5-star cards',
+        interdepdence_title: 'Social Interdependence Warning',
+        interdependence_desc: 'This content is MATHEMATICALLY IMPOSSIBLE to solo. Just like EverQuest\'s forced grouping, you need a balanced party. No tank? You\'ll be one-shot. No healer? Attrition kills you. No DPS? The timer runs out.',
+        slots_title: 'Card Slot System (Ragnarok-Style)',
+        slots_desc: 'Socket monster cards into your equipment for powerful bonuses. Like Ragnarok Online\'s card system, each slot amplifies your build. Rare card combinations unlock hidden synergies.',
+        slot_empty: 'Empty',
+        mystery_title: 'Hidden Synergies: The Unknown', mystery_desc: 'Some card combinations unlock secret bonuses not listed anywhere. No wiki. No datamine. Discovery only.',
+        mystery_count: '??? / 12 Synergies Discovered',
+        active_bonuses_title: 'Active Card Bonuses', mvp_subtitle: 'World Boss -- Requires Full Party',
+        loot_title: 'MVP Loot Table (Variable-Ratio Drops)', loot_desc: 'Genuine scarcity drives value. Drop rates follow variable-ratio reinforcement.',
+        dps_title: 'Damage Contribution', karma_title: 'Karma System (Lineage-Style Open World PvP)',
+        karma_desc: 'Every action has consequences that persist. Attack innocent players and your karma drops. Low karma means guards attack you on sight, shops charge double, and death drops your best card.',
+        karma_label: 'Karma',
+        karma_heroic: 'HEROIC (+50 to +100)', karma_villain: 'VILLAIN (-50 to -100)',
+        heroic_1: '+10% shop discount', heroic_2: '+5% XP from quests', heroic_3: 'Guard protection aura', heroic_4: 'Golden name in chat',
+        villain_1: 'Guards attack on sight', villain_2: '2x shop prices', villain_3: 'Death drops best card', villain_4: 'Red skull name tag',
+        death_title: 'YOU HAVE FALLEN', death_penalty: 'XP lost. Retrieve your drops within 5:00 or they are gone forever.',
+        death_penalty_title: 'Death Penalties (Loss Aversion)', death_penalty_desc: 'Like EverQuest\'s legendary corpse runs: death is not trivial. You LOSE things. This makes every battle meaningful.',
+        pen_pve: 'PvE Death:', pen_pve_val: '-15% current XP', pen_pvp: 'PvP Death:', pen_pvp_val: '-10% XP + random card drop',
+        pen_siege: 'Siege Death:', pen_siege_val: '-5% XP (reduced in war)', pen_corpse: 'Corpse Run:', pen_corpse_val: '5 min to recover drops',
+        pen_villain: 'Villain Death:', pen_villain_val: '-25% XP + best card drops',
+        btn_pvp_hunt: 'Hunt Players', btn_defend: 'Defend Territory', btn_attack_mvp: 'Attack MVP with Party',
+        standings_title: 'Guild Power Rankings -- Season III', history_title: 'Siege History',
+        progress_title: 'Siege Rank Progression', progress_desc: 'Progression is slow and deliberate. Every rank feels earned.',
+        xp_rank: 'Rank 7', xp_guild: 'Guild XP',
+        milestones_title: 'Season III Milestones',
+        ms_first_siege: 'Win your first siege battle', ms_hold_castle: 'Hold a castle for 3 consecutive sieges',
+        ms_defeat_mvp: 'Defeat an MVP with full party', ms_throne: 'Conquer the Throne Room (0/1)',
+        ms_rank10: 'Achieve Rank 10 in siege (0/10)', ms_synergies: 'Discover all 12 hidden card synergies (???/12)',
+        guild_you: 'You', guild_members: 'members', guild_castles_unit: 'castles',
+        hist_victory: 'Victory', hist_defeat: 'Defeat',
+        // Battle log & toasts
+        log_siege_begun: 'Siege of North Tower has begun! NumbahWan vs ShadowRealm',
+        log_taunt: 'RegginA uses [Taunt] -- all enemy attacks redirected for 3 turns',
+        log_sacred_heal: 'QinQin casts [Sacred Heal] -- Party healed for 450 HP',
+        log_crit_hit: 'Zakum Slayer lands CRITICAL HIT! 2,340 damage to enemy tank!',
+        log_whale_atk: 'WhaleKing attacks enemy healer for 890 damage',
+        log_gold_aura: 'Oracle activates [Gold Aura] -- +15% party damage for 5 turns',
+        log_tower_hp65: 'Enemy tower HP: 65% -- Keep pushing!',
+        log_reinforcements: 'ShadowRealm deploys reinforcements: 3 Legendary cards',
+        log_block: 'RegginA BLOCKS incoming lethal with [Unbreakable Will]!',
+        log_emergency_heal: 'QinQin emergency heal: RegginA restored to 80% HP',
+        log_combo: 'COMBO: Zakum Slayer + WhaleKing synergy attack -- 4,200 damage!',
+        log_tower_hp32: 'Enemy tower HP: 32% -- Victory is close!',
+        log_tower_captured_xp: 'Tower captured! +450 XP, +2,000 Gold awarded to all party members',
+        log_2towers: 'NumbahWan now controls 2 towers. Throne room unlocked!',
+        log_deployed: 'NumbahWan forces deployed to the battlefield!',
+        log_synergy_active: 'Party synergy bonus active: Holy Trinity +20% stats',
+        log_retreating: 'NumbahWan forces retreating... -50 Guild Power',
+        log_rally: 'Rally call sent to all NumbahWan members! +10% reinforcement bonus',
+        log_fortify: 'Walls fortified: +500 HP to all controlled towers',
+        log_party_atk: 'Party attacks Zakum for', log_damage: 'damage!',
+        log_phase3: 'ZAKUM enters PHASE 3 -- Enrage mode! +50% ATK!',
+        log_mvp_defeated: 'ZAKUM HAS BEEN DEFEATED! Rolling loot...',
+        log_drop_legendary: "LEGENDARY DROP: Zakum's Card! (0.01% chance!)",
+        log_drop_epic: 'EPIC DROP: Infernal Shard!', log_drop_normal: 'Loot: 5,000 Gold + 500 XP + Sacred Log',
+        log_mvp_respawn: 'Zakum has respawned! The hunt begins again...',
+        log_pvp_attack: 'You attacked a player in the open world!',
+        log_pvp_win: 'You defeated the player! +150 Gold looted',
+        log_defend: 'You defended guild territory!',
+        log_throne_locked: 'The Throne Room is heavily guarded. You need all towers first!',
+        log_atk_tower: 'Attacking enemy tower... Your party engages!',
+        log_tower_cap: 'Tower captured! +200 XP', log_atk_repelled: 'Attack repelled! Enemy reinforcements arrived.',
+        log_fortify_tower: 'Fortifying allied tower... +200 HP',
+        log_neutral_claim: 'Neutral tower claimed for NumbahWan!',
+        log_you_died: 'YOU DIED!', log_lost: 'Lost',
+        death_xp_lost: 'XP lost.', death_card_drop: 'Random card dropped!', death_retrieve: 'Retrieve within 5:00.',
+        death_retrieve_full: 'Retrieve your drops within 5:00 or they are gone forever.',
+        toast_fill_party: 'Fill all party slots before deploying!',
+        toast_deployed: 'Forces deployed! Battle will begin shortly...',
+        toast_retreat: 'Tactical retreat! -50 Guild Power',
+        toast_rally: 'Rally call sent to 18 guild members!',
+        toast_fortify: 'Castle walls reinforced!',
+        toast_phase3: 'ZAKUM ENRAGED! Phase 3!',
+        toast_legendary: "LEGENDARY: Zakum's Card dropped!",
+        toast_epic: 'Epic loot: Infernal Shard!', toast_mvp_done: 'MVP defeated! Loot distributed.',
+        toast_pvp_win: 'Player defeated! Karma dropped.',
+        toast_defend: 'Territory defended! Karma increased.',
+        toast_throne_locked: 'Capture all towers to unlock the Throne!',
+        toast_tower_cap: 'Tower captured!', toast_fortified: 'Tower fortified!', toast_claimed: 'Tower claimed!',
+        toast_assign_card: 'Assign a card from your collection to slot',
+        toast_slot_empty: 'Slot a card into your', toast_slot_from: 'slot from your collection'
+    },
+    zh: {
+        siege_title: '公會攻城戰', siege_subtitle: '皇城之戰 : 黃金時代協定',
+        siege_quote: '"在黃金時代，公會不只是一起遊戲——他們一起流血。城牆記得每一個誓言、每一次背叛、每一次最後的抵抗。"',
+        tab_siege: '攻城', tab_party: '隊伍', tab_cards: '卡片插槽', tab_mvp: 'MVP狩獵', tab_karma: '因果PvP', tab_standings: '排名',
+        stat_rank: '公會排名', stat_castles: '城堡', stat_power: '戰力', stat_members: '成員', stat_season: '賽季',
+        tower_gate: '城門', tower_north: '北塔', tower_south: '南塔', tower_inner: '內牆', tower_throne: '王座',
+        castle_map_title: '城堡戰場', castle_tap_hint: '點擊塔樓進行攻擊或防守',
+        siege_timer_label: '下次攻城開始', siege_timer_day: '週六 20:00 — 皇城之戰',
+        btn_deploy: '部署', btn_retreat: '撤退', btn_rally: '召集', btn_fortify: '加固',
+        log_title: '戰鬥紀事', party_title: '戰鬥隊伍 — 神聖三位一體',
+        party_desc: '在黃金時代，沒有冒險者能獨自生存。為你的卡牌分配角色——坦克吸收傷害，治療者維持生命，DPS致命一擊，輔助控制戰場。',
+        party_hint: '點擊槽位從收藏中分配卡牌',
+        role_tank: '坦克', role_healer: '治療', role_dps: 'DPS', role_support: '輔助',
+        tag_tank: '坦克', tag_heal: '治療', tag_dps: 'DPS', tag_sup: '輔助',
+        synergy_title: '隊伍協同加成',
+        syn_trinity: '神聖三位一體完成：全屬性+20%', syn_guild_set: '同公會套裝：HP+15%',
+        syn_legendary: '全傳說：ATK+25%（還需3張）', syn_master: '職業大師：用5星卡填滿所有角色',
+        interdepdence_title: '社會相互依存警告',
+        interdependence_desc: '此內容在數學上不可能單人完成。就像EQ的強制組隊一樣，你需要一個平衡的隊伍。沒有坦克？你會被秒殺。沒有治療？消耗會殺死你。沒有DPS？計時器會跑完。',
+        slots_title: '卡片插槽系統（RO風格）',
+        slots_desc: '將怪物卡片插入裝備中獲得強大加成。像仙境傳說的卡片系統一樣，每個插槽都能強化你的構築。稀有卡片組合可解鎖隱藏協同效果。',
+        slot_empty: '空的',
+        mystery_title: '隱藏協同：未知領域', mystery_desc: '某些卡片組合會觸發任何地方都沒有記載的秘密加成。沒有維基。沒有數據挖掘。只能靠發現。',
+        mystery_count: '??? / 12 已發現的協同效果',
+        active_bonuses_title: '啟用的卡片加成', mvp_subtitle: '世界BOSS — 需要完整隊伍',
+        loot_title: 'MVP掉落表（變比率掉落）', loot_desc: '真正的稀缺性驅動價值。掉落率遵循變比率強化機制。',
+        dps_title: '傷害貢獻', karma_title: '因果系統（天堂風格開放PvP）',
+        karma_desc: '每個行動都有持久的後果。攻擊無辜玩家會降低你的因果值。低因果值意味著衛兵會攻擊你，商店收雙倍價格，死亡時掉落最好的卡。',
+        karma_label: '因果',
+        karma_heroic: '英雄（+50至+100）', karma_villain: '惡人（-50至-100）',
+        heroic_1: '商店折扣+10%', heroic_2: '任務經驗+5%', heroic_3: '衛兵保護光環', heroic_4: '聊天金色名字',
+        villain_1: '衛兵見面就攻擊', villain_2: '商店價格2倍', villain_3: '死亡掉落最好的卡', villain_4: '紅骷髏名牌',
+        death_title: '你已陣亡', death_penalty: '損失經驗值。在5:00內找回你的掉落物，否則永遠消失。',
+        death_penalty_title: '死亡懲罰（損失厭惡）', death_penalty_desc: '像EQ傳奇的屍體奔跑一樣：死亡不是小事。你會失去東西。這讓每場戰鬥都有意義。',
+        pen_pve: 'PvE死亡：', pen_pve_val: '-15% 當前經驗', pen_pvp: 'PvP死亡：', pen_pvp_val: '-10% 經驗 + 隨機掉卡',
+        pen_siege: '攻城死亡：', pen_siege_val: '-5% 經驗（戰爭中減少）', pen_corpse: '屍體奔跑：', pen_corpse_val: '5分鐘找回掉落物',
+        pen_villain: '惡人死亡：', pen_villain_val: '-25% 經驗 + 掉落最好的卡',
+        btn_pvp_hunt: '獵殺玩家', btn_defend: '防守領地', btn_attack_mvp: '全隊攻擊MVP',
+        standings_title: '公會實力排名 — 第三賽季', history_title: '攻城歷史',
+        progress_title: '攻城等級進度', progress_desc: '進度緩慢而有意義。每個等級都讓人感到是靠自己努力獲得的。',
+        xp_rank: '等級 7', xp_guild: '公會經驗',
+        milestones_title: '第三賽季里程碑',
+        ms_first_siege: '贏得你的第一場攻城戰', ms_hold_castle: '連續3次攻城保持城堡',
+        ms_defeat_mvp: '全隊擊敗MVP', ms_throne: '征服王座室（0/1）',
+        ms_rank10: '攻城達到等級10（0/10）', ms_synergies: '發現所有12個隱藏卡片協同（???/12）',
+        guild_you: '你', guild_members: '名成員', guild_castles_unit: '座城堡',
+        hist_victory: '勝利', hist_defeat: '戰敗',
+        log_siege_begun: '北塔攻城戰開始了！NumbahWan 對 ShadowRealm',
+        log_taunt: 'RegginA 使用 [嘲諷] — 所有敵方攻擊轉向3回合',
+        log_sacred_heal: 'QinQin 施放 [神聖治療] — 隊伍恢復450 HP',
+        log_crit_hit: 'Zakum Slayer 暴擊！對敵方坦克造成2,340傷害！',
+        log_whale_atk: 'WhaleKing 攻擊敵方治療者造成890傷害',
+        log_gold_aura: 'Oracle 啟動 [黃金光環] — 隊伍傷害+15%持續5回合',
+        log_tower_hp65: '敵方塔樓HP：65% — 繼續推進！',
+        log_reinforcements: 'ShadowRealm 部署增援：3張傳說卡',
+        log_block: 'RegginA 用 [不屈意志] 擋住了致命攻擊！',
+        log_emergency_heal: 'QinQin 緊急治療：RegginA 恢復至80% HP',
+        log_combo: '連擊：Zakum Slayer + WhaleKing 協同攻擊 — 4,200傷害！',
+        log_tower_hp32: '敵方塔樓HP：32% — 勝利在望！',
+        log_tower_captured_xp: '塔樓佔領！+450經驗，+2,000金幣發放給所有隊員',
+        log_2towers: 'NumbahWan 現在控制2座塔樓。王座室已解鎖！',
+        log_deployed: 'NumbahWan 部隊已部署到戰場！',
+        log_synergy_active: '隊伍協同加成啟動：神聖三位一體 全屬性+20%',
+        log_retreating: 'NumbahWan 部隊撤退中... -50公會戰力',
+        log_rally: '集結號已發送給所有NumbahWan成員！增援加成+10%',
+        log_fortify: '城牆加固：所有控制的塔樓+500 HP',
+        log_party_atk: '隊伍攻擊Zakum造成', log_damage: '傷害！',
+        log_phase3: 'ZAKUM 進入第3階段 — 狂暴模式！ATK+50%！',
+        log_mvp_defeated: 'ZAKUM 已被擊敗！正在擲骰掉落...',
+        log_drop_legendary: '傳說掉落：Zakum之卡！（0.01%機率！）',
+        log_drop_epic: '史詩掉落：煉獄碎片！', log_drop_normal: '掉落：5,000金幣 + 500經驗 + 聖木',
+        log_mvp_respawn: 'Zakum 已重生！狩獵重新開始...',
+        log_pvp_attack: '你在開放世界攻擊了一個玩家！',
+        log_pvp_win: '你擊敗了玩家！+150金幣掠奪',
+        log_defend: '你防守了公會領地！',
+        log_throne_locked: '王座室防守嚴密。你需要先佔領所有塔樓！',
+        log_atk_tower: '正在攻擊敵方塔樓... 你的隊伍交戰中！',
+        log_tower_cap: '塔樓佔領！+200經驗', log_atk_repelled: '攻擊被擊退！敵方增援到達。',
+        log_fortify_tower: '加固盟友塔樓... +200 HP',
+        log_neutral_claim: '中立塔樓已被NumbahWan佔領！',
+        log_you_died: '你死了！', log_lost: '失去了',
+        death_xp_lost: '經驗損失。', death_card_drop: '隨機掉落一張卡！', death_retrieve: '5:00內找回。',
+        death_retrieve_full: '在5:00內找回你的掉落物，否則永遠消失。',
+        toast_fill_party: '部署前請填滿所有隊伍槽位！',
+        toast_deployed: '部隊已部署！戰鬥即將開始...',
+        toast_retreat: '戰術撤退！-50公會戰力',
+        toast_rally: '集結號已發送給18名公會成員！',
+        toast_fortify: '城牆已加固！',
+        toast_phase3: 'ZAKUM 狂暴了！第3階段！',
+        toast_legendary: '傳說掉落：Zakum之卡！',
+        toast_epic: '史詩掉落：煉獄碎片！', toast_mvp_done: 'MVP已擊敗！掉落已分配。',
+        toast_pvp_win: '玩家已擊敗！因果值下降。',
+        toast_defend: '領地已防守！因果值提升。',
+        toast_throne_locked: '佔領所有塔樓才能解鎖王座！',
+        toast_tower_cap: '塔樓已佔領！', toast_fortified: '塔樓已加固！', toast_claimed: '塔樓已佔領！',
+        toast_assign_card: '從收藏中分配一張卡到槽位',
+        toast_slot_empty: '將卡片插入你的', toast_slot_from: '槽位'
+    },
+    th: {
+        siege_title: 'การล้อมกิลด์', siege_subtitle: 'สงครามจักรพรรดิ : พิธีสารยุคทอง',
+        siege_quote: '"ในยุคทอง กิลด์ไม่ได้แค่เล่นด้วยกัน -- พวกเขาเลือดตกยางออกด้วยกัน กำแพงปราสาทจำทุกคำสาบาน ทุกการทรยศ ทุกการยืนหยัดครั้งสุดท้าย"',
+        tab_siege: 'ล้อมเมือง', tab_party: 'ปาร์ตี้', tab_cards: 'สล็อตการ์ด', tab_mvp: 'ล่า MVP', tab_karma: 'กรรม PvP', tab_standings: 'อันดับ',
+        stat_rank: 'อันดับกิลด์', stat_castles: 'ปราสาท', stat_power: 'พลัง', stat_members: 'สมาชิก', stat_season: 'ซีซั่น',
+        tower_gate: 'ประตู', tower_north: 'เหนือ', tower_south: 'ใต้', tower_inner: 'ด้านใน', tower_throne: 'บัลลังก์',
+        castle_map_title: 'สนามรบปราสาท', castle_tap_hint: 'แตะหอคอยเพื่อโจมตีหรือป้องกัน',
+        siege_timer_label: 'การล้อมครั้งต่อไป', siege_timer_day: 'วันเสาร์ 20:00 — สงครามจักรพรรดิ',
+        btn_deploy: 'ส่งกำลัง', btn_retreat: 'ถอยทัพ', btn_rally: 'เรียกพันธมิตร', btn_fortify: 'เสริมกำแพง',
+        log_title: 'บันทึกสมรภูมิ', party_title: 'กองทัพ — ตรีเอกานุภาพ',
+        party_desc: 'ในยุคทอง ไม่มีนักผจญภัยคนใดรอดชีวิตได้เพียงลำพัง กำหนดการ์ดของคุณให้บทบาท — แทงค์รับดาเมจ ฮีลเลอร์ช่วยรักษา DPS โจมตีสังหาร ซัพพอร์ตควบคุมสนามรบ',
+        party_hint: 'แตะช่องเพื่อกำหนดการ์ดจากคอลเลกชัน',
+        role_tank: 'แทงค์', role_healer: 'ฮีลเลอร์', role_dps: 'DPS', role_support: 'ซัพพอร์ต',
+        tag_tank: 'แทงค์', tag_heal: 'ฮีล', tag_dps: 'DPS', tag_sup: 'ซัพ',
+        synergy_title: 'โบนัสซินเนอร์จีปาร์ตี้',
+        syn_trinity: 'ตรีเอกานุภาพสมบูรณ์: สถานะทั้งหมด +20%', syn_guild_set: 'ชุดกิลด์เดียวกัน: HP+15%',
+        syn_legendary: 'เลเจนดารีทั้งหมด: ATK+25% (ต้องการอีก 3)', syn_master: 'ปรมาจารย์คลาส: เติมทุกบทบาทด้วยการ์ด 5 ดาว',
+        interdepdence_title: 'คำเตือนการพึ่งพาทางสังคม',
+        interdependence_desc: 'เนื้อหานี้ไม่สามารถทำคนเดียวได้ เหมือนกับการบังคับจัดกลุ่มใน EQ คุณต้องการปาร์ตี้ที่สมดุล ไม่มีแทงค์? ถูกฆ่าทันที ไม่มีฮีลเลอร์? ตายเพราะสึกหรอ ไม่มี DPS? หมดเวลา',
+        slots_title: 'ระบบสล็อตการ์ด (แบบ RO)',
+        slots_desc: 'ใส่การ์ดมอนสเตอร์ลงในอุปกรณ์เพื่อโบนัสทรงพลัง เหมือนระบบการ์ด Ragnarok Online แต่ละสล็อตเสริมบิวด์ของคุณ',
+        slot_empty: 'ว่าง',
+        mystery_title: 'ซินเนอร์จีลับ: สิ่งที่ไม่รู้', mystery_desc: 'การ์ดบางชุดจะปลดล็อกโบนัสลับที่ไม่มีที่ไหนบอก ไม่มีวิกิ ไม่มี datamine ค้นพบเท่านั้น',
+        mystery_count: '??? / 12 ซินเนอร์จีที่ค้นพบ',
+        active_bonuses_title: 'โบนัสการ์ดที่ใช้งาน', mvp_subtitle: 'บอสโลก — ต้องการปาร์ตี้เต็ม',
+        loot_title: 'ตารางลูท MVP (อัตราดรอปแบบแปรผัน)', loot_desc: 'ความหายากที่แท้จริงสร้างมูลค่า อัตราดรอปเป็นแบบ variable-ratio',
+        dps_title: 'การมีส่วนร่วมความเสียหาย', karma_title: 'ระบบกรรม (PvP แบบ Lineage)',
+        karma_desc: 'ทุกการกระทำมีผลที่ตามมาอย่างถาวร โจมตีผู้เล่นผู้บริสุทธิ์จะลดกรรม กรรมต่ำหมายถึงยามจะโจมตีคุณ ร้านค้าราคาสองเท่า ตายแล้วดรอปการ์ดที่ดีที่สุด',
+        karma_label: 'กรรม',
+        karma_heroic: 'วีรบุรุษ (+50 ถึง +100)', karma_villain: 'ผู้ร้าย (-50 ถึง -100)',
+        heroic_1: 'ส่วนลดร้านค้า +10%', heroic_2: 'XP จากเควส +5%', heroic_3: 'ออร่าคุ้มครองจากยาม', heroic_4: 'ชื่อสีทองในแชท',
+        villain_1: 'ยามโจมตีเมื่อเห็น', villain_2: 'ราคาร้านค้า 2 เท่า', villain_3: 'ตายดรอปการ์ดที่ดีที่สุด', villain_4: 'แท็กชื่อหัวกะโหลกแดง',
+        death_title: 'คุณล้มลงแล้ว', death_penalty: 'เสีย XP เก็บของที่ดรอปภายใน 5:00 ไม่งั้นหายไปตลอดกาล',
+        death_penalty_title: 'บทลงโทษการตาย (การหลีกเลี่ยงการสูญเสีย)', death_penalty_desc: 'เหมือนการวิ่งเก็บศพใน EQ: ความตายไม่ใช่เรื่องเล็ก คุณจะสูญเสียของ ทำให้ทุกการต่อสู้มีความหมาย',
+        pen_pve: 'ตาย PvE:', pen_pve_val: '-15% XP ปัจจุบัน', pen_pvp: 'ตาย PvP:', pen_pvp_val: '-10% XP + ดรอปการ์ดสุ่ม',
+        pen_siege: 'ตายล้อมเมือง:', pen_siege_val: '-5% XP (ลดในสงคราม)', pen_corpse: 'วิ่งเก็บศพ:', pen_corpse_val: '5 นาทีเก็บของดรอป',
+        pen_villain: 'ผู้ร้ายตาย:', pen_villain_val: '-25% XP + ดรอปการ์ดที่ดีที่สุด',
+        btn_pvp_hunt: 'ล่าผู้เล่น', btn_defend: 'ป้องกันดินแดน', btn_attack_mvp: 'โจมตี MVP กับปาร์ตี้',
+        standings_title: 'อันดับพลังกิลด์ — ซีซั่น III', history_title: 'ประวัติการล้อม',
+        progress_title: 'ความก้าวหน้าอันดับการล้อม', progress_desc: 'ทุกอันดับรู้สึกว่าได้มาอย่างยากลำบาก ช้าแต่มีความหมาย',
+        xp_rank: 'อันดับ 7', xp_guild: 'XP กิลด์',
+        milestones_title: 'เป้าหมายซีซั่น III',
+        ms_first_siege: 'ชนะการล้อมครั้งแรก', ms_hold_castle: 'ถือปราสาท 3 การล้อมติดต่อกัน',
+        ms_defeat_mvp: 'ปราบ MVP ด้วยปาร์ตี้เต็ม', ms_throne: 'ยึดห้องบัลลังก์ (0/1)',
+        ms_rank10: 'อันดับการล้อมถึง 10 (0/10)', ms_synergies: 'ค้นพบซินเนอร์จีลับทั้ง 12 (???/12)',
+        guild_you: 'คุณ', guild_members: 'สมาชิก', guild_castles_unit: 'ปราสาท',
+        hist_victory: 'ชัยชนะ', hist_defeat: 'พ่ายแพ้',
+        log_siege_begun: 'การล้อมหอคอยเหนือเริ่มแล้ว! NumbahWan vs ShadowRealm',
+        log_taunt: 'RegginA ใช้ [ยั่วยุ] — การโจมตีศัตรูทั้งหมดเปลี่ยนเป้า 3 เทิร์น',
+        log_sacred_heal: 'QinQin ร่าย [การรักษาศักดิ์สิทธิ์] — ปาร์ตี้ฟื้นฟู 450 HP',
+        log_crit_hit: 'Zakum Slayer คริติคัลฮิต! 2,340 ดาเมจต่อแทงค์ศัตรู!',
+        log_whale_atk: 'WhaleKing โจมตีฮีลเลอร์ศัตรู 890 ดาเมจ',
+        log_gold_aura: 'Oracle เปิดใช้ [ออร่าทอง] — ดาเมจปาร์ตี้ +15% เป็นเวลา 5 เทิร์น',
+        log_tower_hp65: 'HP หอคอยศัตรู: 65% — เดินหน้าต่อ!',
+        log_reinforcements: 'ShadowRealm ส่งกำลังเสริม: 3 การ์ดเลเจนดารี',
+        log_block: 'RegginA บล็อกการโจมตีร้ายแรงด้วย [เจตจำนงไม่แตกหัก]!',
+        log_emergency_heal: 'QinQin รักษาฉุกเฉิน: RegginA ฟื้นฟูเป็น 80% HP',
+        log_combo: 'คอมโบ: Zakum Slayer + WhaleKing ซินเนอร์จี — 4,200 ดาเมจ!',
+        log_tower_hp32: 'HP หอคอยศัตรู: 32% — ใกล้ชนะแล้ว!',
+        log_tower_captured_xp: 'ยึดหอคอยสำเร็จ! +450 XP, +2,000 ทองแจกทุกคนในปาร์ตี้',
+        log_2towers: 'NumbahWan ควบคุม 2 หอคอยแล้ว ห้องบัลลังก์ปลดล็อก!',
+        log_deployed: 'กำลัง NumbahWan ถูกส่งไปสนามรบ!',
+        log_synergy_active: 'โบนัสซินเนอร์จีปาร์ตี้เปิดใช้: ตรีเอกานุภาพ สถานะ+20%',
+        log_retreating: 'กำลัง NumbahWan กำลังถอยทัพ... -50 พลังกิลด์',
+        log_rally: 'ส่งสัญญาณเรียกรวมพลให้สมาชิก NumbahWan ทุกคน! โบนัสกำลังเสริม +10%',
+        log_fortify: 'เสริมกำแพง: หอคอยที่ควบคุมทั้งหมด +500 HP',
+        log_party_atk: 'ปาร์ตี้โจมตี Zakum', log_damage: 'ดาเมจ!',
+        log_phase3: 'ZAKUM เข้าสู่เฟส 3 — โหมดคลั่ง! ATK+50%!',
+        log_mvp_defeated: 'ZAKUM ถูกปราบแล้ว! กำลังสุ่มลูท...',
+        log_drop_legendary: 'ดรอปเลเจนดารี: การ์ด Zakum! (โอกาส 0.01%!)',
+        log_drop_epic: 'ดรอปเอพิค: เศษนรก!', log_drop_normal: 'ลูท: 5,000 ทอง + 500 XP + ท่อนไม้ศักดิ์สิทธิ์',
+        log_mvp_respawn: 'Zakum เกิดใหม่แล้ว! การล่าเริ่มใหม่...',
+        log_pvp_attack: 'คุณโจมตีผู้เล่นในโลกเปิด!',
+        log_pvp_win: 'คุณปราบผู้เล่นแล้ว! +150 ทองที่ปล้นมา',
+        log_defend: 'คุณป้องกันดินแดนกิลด์!',
+        log_throne_locked: 'ห้องบัลลังก์มีการป้องกันอย่างแน่นหนา ต้องยึดหอคอยทั้งหมดก่อน!',
+        log_atk_tower: 'กำลังโจมตีหอคอยศัตรู... ปาร์ตี้เข้าต่อสู้!',
+        log_tower_cap: 'ยึดหอคอยสำเร็จ! +200 XP', log_atk_repelled: 'การโจมตีถูกตีกลับ! กำลังเสริมศัตรูมาถึง',
+        log_fortify_tower: 'เสริมหอคอยพันธมิตร... +200 HP',
+        log_neutral_claim: 'หอคอยกลางถูกยึดโดย NumbahWan!',
+        log_you_died: 'คุณตายแล้ว!', log_lost: 'เสีย',
+        death_xp_lost: 'เสีย XP', death_card_drop: 'ดรอปการ์ดสุ่ม!', death_retrieve: 'เก็บภายใน 5:00',
+        death_retrieve_full: 'เก็บของที่ดรอปภายใน 5:00 ไม่งั้นหายไปตลอดกาล',
+        toast_fill_party: 'กรุณาเติมช่องปาร์ตี้ทั้งหมดก่อนส่งกำลัง!',
+        toast_deployed: 'ส่งกำลังแล้ว! การต่อสู้จะเริ่มในไม่ช้า...',
+        toast_retreat: 'ถอยทัพเชิงยุทธ! -50 พลังกิลด์',
+        toast_rally: 'ส่งสัญญาณเรียกรวมพลให้สมาชิก 18 คน!',
+        toast_fortify: 'กำแพงเสริมแล้ว!',
+        toast_phase3: 'ZAKUM คลั่ง! เฟส 3!',
+        toast_legendary: 'เลเจนดารี: การ์ด Zakum ดรอป!',
+        toast_epic: 'เอพิค: เศษนรก!', toast_mvp_done: 'ปราบ MVP แล้ว! แจกลูทแล้ว',
+        toast_pvp_win: 'ปราบผู้เล่นแล้ว! กรรมลด',
+        toast_defend: 'ป้องกันดินแดนสำเร็จ! กรรมเพิ่ม',
+        toast_throne_locked: 'ยึดหอคอยทั้งหมดเพื่อปลดล็อกบัลลังก์!',
+        toast_tower_cap: 'ยึดหอคอยแล้ว!', toast_fortified: 'เสริมหอคอยแล้ว!', toast_claimed: 'ยึดหอคอยแล้ว!',
+        toast_assign_card: 'กำหนดการ์ดจากคอลเลกชันไปยังช่อง',
+        toast_slot_empty: 'ใส่การ์ดลงใน', toast_slot_from: 'สล็อตจากคอลเลกชัน'
+    }
+});
+
+document.addEventListener('DOMContentLoaded', () => SIEGE.init());
+</script>
+</body>
+</html>

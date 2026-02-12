@@ -1075,7 +1075,7 @@
         
         /* Mobile adjustments */
         @media (max-width: 768px) {
-            .deck-card {
+.deck-card {
                 width: 260px;
                 height: 360px;
             }
@@ -1099,7 +1099,19 @@
             .card-deck {
                 height: 420px;
             }
-        }
+
+.photo-card {
+                flex: 0 0 280px;
+                height: 380px;
+            }
+            .photo-carousel {
+                padding-left: calc(50% - 140px);
+                padding-right: calc(50% - 140px);
+            }
+            .carousel-arrow {
+                display: none;
+            }
+}
         
         /* Gradient overlay for text readability */
         .photo-card .card-overlay {
@@ -1222,19 +1234,6 @@
         .carousel-arrow.prev { left: 16px; }
         .carousel-arrow.next { right: 16px; }
         
-        @media (max-width: 768px) {
-            .photo-card {
-                flex: 0 0 280px;
-                height: 380px;
-            }
-            .photo-carousel {
-                padding-left: calc(50% - 140px);
-                padding-right: calc(50% - 140px);
-            }
-            .carousel-arrow {
-                display: none;
-            }
-        }
         
         /* Scroll animations */
         .reveal {
@@ -1681,12 +1680,12 @@
             <div class="glass-card p-4 md:p-6" style="border: 1px solid rgba(255,165,0,0.2); display:flex; flex-wrap:wrap; align-items:center; justify-content:center; gap:1.5rem; text-align:center;">
                 <div style="display:flex; align-items:center; gap:8px;">
                     <span style="width:10px;height:10px;background:#00ff88;border-radius:50%;display:inline-block;animation:livePulse 2s infinite;"></span>
-                    <span class="text-orange-200 font-bold" id="playersOnline">0 Guild Members Playing</span>
+                    <span class="text-orange-200 font-bold" id="playersOnline" data-i18n="livePlayers">0 Guild Members Playing</span>
                 </div>
                 <div style="color:rgba(255,255,255,0.5);">|</div>
                 <div style="display:flex; align-items:center; gap:8px;">
                     <span style="font-size:1.1rem;">&#127183;</span>
-                    <span class="text-orange-300" id="totalPullsToday">0 cards pulled today</span>
+                    <span class="text-orange-300" id="totalPullsToday" data-i18n="livePulls">0 cards pulled today</span>
                 </div>
                 <div style="color:rgba(255,255,255,0.5);">|</div>
                 <div id="latestPullFeed" style="display:flex; align-items:center; gap:8px; min-width:180px;">
@@ -1726,16 +1725,23 @@
                 latest: document.getElementById('latestPullText')
             };
             
-            if (el.players) el.players.textContent = basePlayers + ' Guild Members Playing';
-            if (el.pulls) el.pulls.textContent = (basePulls + realPulls) + ' cards pulled today';
-            if (el.latest) el.latest.textContent = randomName() + ' pulled a ' + randomRarity() + '!';
+            // i18n helpers for live activity
+            const _t = (key, fallback) => (typeof NW_I18N !== 'undefined' && NW_I18N.t) ? NW_I18N.t(key, fallback) : fallback;
+            const playersLabel = (n) => n + ' ' + _t('livePlayersLabel', 'Guild Members Playing');
+            const pullsLabel = (n) => n + ' ' + _t('livePullsLabel', 'cards pulled today');
+            const pulledLabel = (name, rarity) => name + ' ' + _t('livePulled', 'pulled a') + ' ' + rarity + '!';
+            const youPulledLabel = (rarity) => _t('liveYouPulled', 'You pulled a') + ' ' + rarity + '!';
+
+            if (el.players) el.players.textContent = playersLabel(basePlayers);
+            if (el.pulls) el.pulls.textContent = pullsLabel(basePulls + realPulls);
+            if (el.latest) el.latest.textContent = pulledLabel(randomName(), randomRarity());
             
             // Update latest pull feed every 8-15 seconds
             setInterval(() => {
                 if (el.latest) {
                     el.latest.style.opacity = '0';
                     setTimeout(() => {
-                        el.latest.textContent = randomName() + ' pulled a ' + randomRarity() + '!';
+                        el.latest.textContent = pulledLabel(randomName(), randomRarity());
                         el.latest.style.opacity = '1';
                     }, 300);
                 }
@@ -1744,18 +1750,18 @@
                     const drift = Math.floor(Math.random() * 3) - 1;
                     const current = parseInt(el.players.textContent) || basePlayers;
                     const newCount = Math.max(3, Math.min(current + drift, 30));
-                    el.players.textContent = newCount + ' Guild Members Playing';
+                    el.players.textContent = playersLabel(newCount);
                 }
             }, 8000 + Math.random() * 7000);
             
             // Listen for real pulls to inject into feed
             document.addEventListener('card-pulled', (e) => {
                 if (el.latest && e.detail) {
-                    el.latest.textContent = 'You pulled a ' + (e.detail.rarity || 'card') + '!';
+                    el.latest.textContent = youPulledLabel(e.detail.rarity || _t('liveCard', 'card'));
                 }
                 if (el.pulls) {
                     const n = parseInt(el.pulls.textContent) || basePulls;
-                    el.pulls.textContent = (n + 1) + ' cards pulled today';
+                    el.pulls.textContent = pullsLabel(n + 1);
                 }
             });
         })();
@@ -3966,8 +3972,17 @@ const INDEX_I18N = {
   en: {
     numbahwan: 'NumbahWan',
     numbahwan2: 'NumbahWan',
+    openFirstPack: 'Open Your First Pack',
+    battleNow: 'Battle Now',
+    livePlayers: '0 Guild Members Playing',
+    livePlayersLabel: 'Guild Members Playing',
+    livePulls: '0 cards pulled today',
+    livePullsLabel: 'cards pulled today',
+    livePulled: 'pulled a',
+    liveYouPulled: 'You pulled a',
+    liveCard: 'card',
     reggina: 'RegginA',
-    level78Cp3b521m: 'Level 78 • CP: 3B 521M',
+    level82Cp9B811M: 'Level 82 • CP: 9B 811M',
     reggina2: 'RegginA',
     lv78: 'Lv. 78',
     contrib: 'Contrib',
@@ -3998,13 +4013,16 @@ const INDEX_I18N = {
     lv52: 'Lv. 52',
     contrib9: 'Contrib',
     guildMember5: 'Guild Member',
+    first77bCpMember: 'First 7.7B CP Member!',
+    memberCount14: '14 Active Members',
+    familyGrowing: 'The family keeps growing!',
     swipeOrClickCards: '← Swipe or click cards →',
     natehouoho2: 'Natehouoho',
     loading: 'Loading...',
     loadingCpRaceData: 'Loading CP Race data...',
     level1550: 'Level 15 / 50',
-    wereClimbing: 'We\'re climbing!',
-    first3bCpMember: 'First 3B CP Member! ',
+    wereClimbing: "We're climbing!",
+    first3bCpMember: 'First 3B CP Member!',
     nineActiveMembers: '9 Active Members',
     qualityOverQuantityTheGrinders: 'Quality over quantity - the grinders stay!',
     top10ServerRanking: 'Top 10 Server Ranking',
@@ -4020,110 +4038,134 @@ const INDEX_I18N = {
   zh: {
     numbahwan: 'NumbahWan',
     numbahwan2: 'NumbahWan',
+    openFirstPack: '開啟你的第一包',
+    battleNow: '立即戰鬥',
+    livePlayers: '0 位公會成員在線',
+    livePlayersLabel: '位公會成員在線',
+    livePulls: '0 張卡片今日已抽',
+    livePullsLabel: '張卡片今日已抽',
+    livePulled: '抽到了',
+    liveYouPulled: '你抽到了',
+    liveCard: '卡片',
     reggina: 'RegginA',
-    level78Cp3b521m: 'Level 78 • CP: 3B 521M',
+    level82Cp9B811M: 'Level 82 • 戰力: 9B 811M',
     reggina2: 'RegginA',
     lv78: 'Lv. 78',
-    contrib: 'Contrib',
-    master: 'Master',
+    contrib: '貢獻',
+    master: '會長',
     yuluner: 'Yuluner晴',
     lv76: 'Lv. 76',
-    contrib2: 'Contrib',
-    guildMember: 'Guild Member',
+    contrib2: '貢獻',
+    guildMember: '公會成員',
     natehouoho: 'Natehouoho',
     lv75: 'Lv. 75',
-    contrib3: 'Contrib',
-    guildMember2: 'Guild Member',
+    contrib3: '貢獻',
+    guildMember2: '公會成員',
     reggino: 'RegginO',
     lv74: 'Lv. 74',
-    contrib4: 'Contrib',
-    viceMaster: 'Vice Master',
+    contrib4: '貢獻',
+    viceMaster: '副會長',
     lv71: 'Lv. 71',
-    contrib5: 'Contrib',
+    contrib5: '貢獻',
     lv72: 'Lv. 72',
-    contrib6: 'Contrib',
+    contrib6: '貢獻',
     yo: '阿光Yo',
     lv68: 'Lv. 68',
-    contrib7: 'Contrib',
-    guildMember3: 'Guild Member',
+    contrib7: '貢獻',
+    guildMember3: '公會成員',
     lv62: 'Lv. 62',
-    contrib8: 'Contrib',
-    guildMember4: 'Guild Member',
+    contrib8: '貢獻',
+    guildMember4: '公會成員',
     lv52: 'Lv. 52',
-    contrib9: 'Contrib',
-    guildMember5: 'Guild Member',
-    swipeOrClickCards: '← Swipe or click cards →',
+    contrib9: '貢獻',
+    guildMember5: '公會成員',
+    first77bCpMember: '首位 7.7B 戰力成員！',
+    memberCount14: '14 位活躍成員',
+    familyGrowing: '家族持續壯大！',
+    swipeOrClickCards: '← 滑動或點擊卡片 →',
     natehouoho2: 'Natehouoho',
-    loading: 'Loading...',
-    loadingCpRaceData: 'Loading CP Race data...',
-    level1550: 'Level 15 / 50',
-    wereClimbing: 'We\'re climbing!',
-    first3bCpMember: 'First 3B CP Member! ',
-    nineActiveMembers: '9 Active Members',
-    qualityOverQuantityTheGrinders: 'Quality over quantity - the grinders stay!',
-    top10ServerRanking: 'Top 10 Server Ranking',
-    comingSoon: 'Coming soon...',
-    numbahwan1Guild: 'NumbahWan - #1 Guild',
-    theUltimateGoal: 'The ultimate goal!',
-    swipeOrClickCards2: '← Swipe or click cards →',
-    numbahwanGuild: 'NumbahWan Guild',
-    maplestoryIdleRpg: 'MapleStory Idle RPG |',
-    copyrightGuild: '© 2024 NumbahWan Guild.',
-    failedToLoadData: 'Failed to load data'
+    loading: '載入中...',
+    loadingCpRaceData: '載入戰力排行資料...',
+    level1550: '等級 15 / 50',
+    wereClimbing: '我們正在向上爬！',
+    first3bCpMember: '首位 3B 戰力成員！',
+    nineActiveMembers: '9 位活躍成員',
+    qualityOverQuantityTheGrinders: '質量勝過數量 — 能打的留下來！',
+    top10ServerRanking: '伺服器前10名',
+    comingSoon: '即將推出...',
+    numbahwan1Guild: 'NumbahWan - 第一公會',
+    theUltimateGoal: '終極目標！',
+    swipeOrClickCards2: '← 滑動或點擊卡片 →',
+    numbahwanGuild: 'NumbahWan 公會',
+    maplestoryIdleRpg: '楓之谷放置RPG |',
+    copyrightGuild: '© 2024 NumbahWan 公會',
+    failedToLoadData: '資料載入失敗'
   },
   th: {
     numbahwan: 'NumbahWan',
     numbahwan2: 'NumbahWan',
+    openFirstPack: 'เปิดแพ็คแรกของคุณ',
+    battleNow: 'ต่อสู้เลย',
+    livePlayers: '0 สมาชิกกิลด์ออนไลน์',
+    livePlayersLabel: 'สมาชิกกิลด์ออนไลน์',
+    livePulls: '0 การ์ดที่ดึงวันนี้',
+    livePullsLabel: 'การ์ดที่ดึงวันนี้',
+    livePulled: 'ดึงได้',
+    liveYouPulled: 'คุณดึงได้',
+    liveCard: 'การ์ด',
     reggina: 'RegginA',
-    level78Cp3b521m: 'Level 78 • CP: 3B 521M',
+    level82Cp9B811M: 'ระดับ 82 • CP: 9B 811M',
     reggina2: 'RegginA',
     lv78: 'Lv. 78',
-    contrib: 'Contrib',
-    master: 'Master',
+    contrib: 'ผลงาน',
+    master: 'หัวหน้ากิลด์',
     yuluner: 'Yuluner晴',
     lv76: 'Lv. 76',
-    contrib2: 'Contrib',
-    guildMember: 'Guild Member',
+    contrib2: 'ผลงาน',
+    guildMember: 'สมาชิกกิลด์',
     natehouoho: 'Natehouoho',
     lv75: 'Lv. 75',
-    contrib3: 'Contrib',
-    guildMember2: 'Guild Member',
+    contrib3: 'ผลงาน',
+    guildMember2: 'สมาชิกกิลด์',
     reggino: 'RegginO',
     lv74: 'Lv. 74',
-    contrib4: 'Contrib',
-    viceMaster: 'Vice Master',
+    contrib4: 'ผลงาน',
+    viceMaster: 'รองหัวหน้า',
     lv71: 'Lv. 71',
-    contrib5: 'Contrib',
+    contrib5: 'ผลงาน',
     lv72: 'Lv. 72',
-    contrib6: 'Contrib',
+    contrib6: 'ผลงาน',
     yo: '阿光Yo',
     lv68: 'Lv. 68',
-    contrib7: 'Contrib',
-    guildMember3: 'Guild Member',
+    contrib7: 'ผลงาน',
+    guildMember3: 'สมาชิกกิลด์',
     lv62: 'Lv. 62',
-    contrib8: 'Contrib',
-    guildMember4: 'Guild Member',
+    contrib8: 'ผลงาน',
+    guildMember4: 'สมาชิกกิลด์',
     lv52: 'Lv. 52',
-    contrib9: 'Contrib',
-    guildMember5: 'Guild Member',
-    swipeOrClickCards: '← Swipe or click cards →',
+    contrib9: 'ผลงาน',
+    guildMember5: 'สมาชิกกิลด์',
+    first77bCpMember: 'สมาชิก 7.7B CP คนแรก!',
+    memberCount14: '14 สมาชิกที่แอคทีฟ',
+    familyGrowing: 'ครอบครัวเติบโตต่อเนื่อง!',
+    swipeOrClickCards: '← ปัดหรือแตะการ์ด →',
     natehouoho2: 'Natehouoho',
-    loading: 'Loading...',
-    loadingCpRaceData: 'Loading CP Race data...',
-    level1550: 'Level 15 / 50',
-    wereClimbing: 'We\'re climbing!',
-    first3bCpMember: 'First 3B CP Member! ',
-    nineActiveMembers: '9 Active Members',
-    qualityOverQuantityTheGrinders: 'Quality over quantity - the grinders stay!',
-    top10ServerRanking: 'Top 10 Server Ranking',
-    comingSoon: 'Coming soon...',
-    numbahwan1Guild: 'NumbahWan - #1 Guild',
-    theUltimateGoal: 'The ultimate goal!',
-    swipeOrClickCards2: '← Swipe or click cards →',
-    numbahwanGuild: 'NumbahWan Guild',
+    loading: 'กำลังโหลด...',
+    loadingCpRaceData: 'กำลังโหลดข้อมูลอันดับ CP...',
+    level1550: 'เลเวล 15 / 50',
+    wereClimbing: 'เรากำลังปีน!',
+    first3bCpMember: 'สมาชิก 3B CP คนแรก!',
+    nineActiveMembers: '9 สมาชิกที่แอคทีฟ',
+    qualityOverQuantityTheGrinders: 'คุณภาพสำคัญกว่าปริมาณ — คนที่ขยันยังอยู่!',
+    top10ServerRanking: 'อันดับเซิร์ฟเวอร์ติด 10',
+    comingSoon: 'เร็วๆ นี้...',
+    numbahwan1Guild: 'NumbahWan - กิลด์อันดับ 1',
+    theUltimateGoal: 'เป้าหมายสูงสุด!',
+    swipeOrClickCards2: '← ปัดหรือแตะการ์ด →',
+    numbahwanGuild: 'NumbahWan กิลด์',
     maplestoryIdleRpg: 'MapleStory Idle RPG |',
-    copyrightGuild: '© 2024 NumbahWan Guild.',
-    failedToLoadData: 'Failed to load data'
+    copyrightGuild: '© 2024 NumbahWan กิลด์',
+    failedToLoadData: 'โหลดข้อมูลล้มเหลว'
   }
 };
 if (typeof NW_I18N !== 'undefined') NW_I18N.register(INDEX_I18N);

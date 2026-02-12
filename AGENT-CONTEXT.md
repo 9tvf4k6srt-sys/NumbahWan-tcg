@@ -1,60 +1,115 @@
-# AGENT-CONTEXT.md — Premium AI Setup for NumbahWan / KINTSUGI
+# AGENT-CONTEXT.md — NumbahWan TCG AI Agent Onboarding
 
-> **Purpose**: Any AI agent (Claude, Cursor, Copilot, ChatGPT, Genspark) cloning this repo
-> gets full project context, design rules, and operational knowledge in one read.
-> This file replaces hours of onboarding. Read it FIRST before touching any code.
+> **Purpose**: Any AI agent cloning this repo gets full project context, design rules,
+> and operational knowledge in one read. Read FIRST before touching code.
+>
+> **CRITICAL**: This repo contains **two brand surfaces** that coexist. The owner
+> switches between them. Read Section 1 carefully before touching any page.
 
 ---
 
-## 1. Project Identity
+## 1. Project Identity — Two Brands, One Repo
+
+This repo serves **two distinct brands** under the NumbahWan Group umbrella.
+The owner actively works on both. **Never merge their aesthetics.**
 
 | Key | Value |
 |-----|-------|
-| **Brand** | KINTSUGI (金繕) |
-| **Tagline EN** | Beauty in Imperfection. Strength in Gold. |
-| **Tagline ZH** | 不完美之美。黃金之力。 |
-| **Tagline JP** | 不完全の美。金の力。 |
-| **Ticker** | $KIN |
 | **Parent** | NumbahWan Group |
 | **Repo** | `9tvf4k6srt-sys/NumbahWan-tcg` |
-| **Stack** | Static HTML/CSS/JS + Python SimpleHTTPServer (port 5060) |
-| **Philosophy** | Japanese art of repairing broken pottery with gold. What is broken becomes more beautiful. |
+| **Stack** | Hono (Cloudflare Workers) + Static HTML/CSS/JS (port 3000) |
+
+### Brand A: NumbahWan (NW) — Guild / TCG / Game Pages
+
+| Key | Value |
+|-----|-------|
+| **Identity** | NumbahWan TCG — Trading Card Game + Guild Warfare |
+| **Design Theme** | Golden Age MMORPG Protocol (EverQuest/RO/Lineage inspired) |
+| **Ticker** | $NWG (NumbahWan Gold) |
+| **Primary Color** | Ember orange `#ff6b00` |
+| **Background** | `#0a0a0f` |
+| **Fonts** | NumbahWan (brand), Orbitron (headings), Inter (body) |
+| **Languages** | EN, Traditional Chinese (繁中), Thai (TH) |
+| **Pages** | `guild-siege.html`, `wallet.html`, and future guild/game pages |
+| **Nav** | `nw-nav.js` (universal NW nav with hamburger + lang toggle) |
+| **i18n storage** | `nw_lang` |
+
+### Brand B: KINTSUGI (金繕) — Premium Gold / Token Pages
+
+| Key | Value |
+|-----|-------|
+| **Identity** | KINTSUGI — Beauty in Imperfection. Strength in Gold. 不完美之美。黃金之力。 |
+| **Philosophy** | Japanese art of repairing broken pottery with gold |
+| **Ticker** | $KIN |
+| **Primary Color** | KINTSUGI gold `#c9a84c` |
+| **Background** | `#06060c` |
+| **Fonts** | Cormorant Garamond / Noto Serif TC (display), Inter (body), Orbitron (accent) |
+| **Languages** | EN, Traditional Chinese (繁中), Japanese (JP) |
+| **Pages** | `kintsugi.html`, `coin-shop.html`, `ai-assets.html`, `buy.html` |
+| **Nav** | Inline premium nav (separate from nw-nav.js) |
+| **i18n storage** | `kintsugi_lang` (kintsugi.html), `kin_lang` (coin-shop, ai-assets) |
+
+### Which Brand Am I Working On?
+
+| If the owner mentions... | Brand | Design system to use |
+|--------------------------|-------|---------------------|
+| Guild, siege, TCG, party, cards, NW | **NumbahWan** | Ember #ff6b00, NumbahWan/Orbitron/Inter fonts, nw-tokens.css |
+| KINTSUGI, $KIN, coins, gold collection, ai-assets | **KINTSUGI** | Gold #c9a84c, Cormorant Garamond/Noto Serif TC, luxury fintech |
+| wallet, buy | Check context | Could be either — look at which nav system the page uses |
 
 ---
 
 ## 2. Owner Profile
 
 - **Role**: NumbahWan Group founder/operator
-- **Communication**: Direct, visual-first, action-oriented. Bilingual EN/Traditional Chinese.
+- **Communication**: Direct, visual-first, action-oriented
 - **Review Device**: iPhone (375px viewport), iOS Safari
-- **Languages**: EN, Traditional Chinese (繁中), Japanese (JP)
-- **Quality Bar**: No emoji as icons. No placeholder text. No amateur gradients. Real professional assets only.
-
-### Decision Pattern Decoder
-
-| Signal | Meaning | Action |
-|--------|---------|--------|
-| Screenshot with green circles | These spots need fixing | Fix exactly those spots |
-| Says "plz" | Wants immediate action | Do it now, no discussion |
-| Repeats same feedback | Previous fix failed | Try completely different approach |
-| "Too big" / "revert" | Overshot | Go subtle, 50% of what you did |
-| Screenshot without comment | This is the problem | Figure it out, don't ask |
-| Silence or next task | Approved | Move on |
+- **Languages**: EN, Traditional Chinese, Thai
+- **Quality Bar**: No emoji as icons. No placeholder text. No amateur gradients. Professional assets only.
+- **Work Style**: "plz" = act now. Screenshot = fix what you see. Silence = approved. Repeated feedback = try opposite approach.
 
 ### Critical Frustration Triggers
 
-1. **Images overflowing mobile viewport** — Fix: Triple-layer overflow (html + body + container, all max-width:100%)
-2. **Fonts too big breaking layout** — Fix: Only bump 9-13px text to 11-15px. NEVER touch headings/stat values/ticker prices
-3. **Repeated failed approaches** — Fix: If method fails twice, abandon entirely. Try opposite approach
-4. **Being asked obvious questions** — Fix: Just do it. Ask forgiveness not permission
-5. **Placeholder/emoji in production** — Fix: Use professional SVG/WebP. Generate if missing
-6. **GitHub auth burning time** — Fix: `setup_github_environment` then IMMEDIATELY push. No diagnostics between
+1. **Images overflowing mobile viewport** — Triple-layer overflow protection required
+2. **Fonts too small/big on mobile** — Only bump 9-13px to 11-15px. Never touch headings/stat values
+3. **Repeated failed approaches** — If method fails twice, abandon. Try opposite
+4. **Being asked obvious questions** — Just do it
+5. **Placeholder/emoji in production** — Use professional SVG/WebP
+6. **GitHub auth delays** — `setup_github_environment` then IMMEDIATELY push
 
 ---
 
-## 3. Design System
+## 3. Design Systems (Two Brands)
 
-### Colors
+### NumbahWan (NW) Design Tokens — Guild/TCG Pages
+
+```css
+:root {
+  --bg:        #0a0a0f;   /* NW dark background */
+  --bg2:       #12121a;
+  --card-bg:   #0e0e18;
+  --border:    #1e1e3a;
+  --primary:   #ff6b00;   /* Ember orange — NW signature */
+  --gold:      #ffd700;
+  --gold-dim:  #b8860b;
+  --cyan:      #00d4ff;
+  --green:     #00d26a;
+  --red:       #ff4757;
+  --purple:    #a855f7;
+  --text:      #f0ece0;
+  --text-dim:  #8a8678;
+}
+```
+
+| Role | Font | Source |
+|------|------|--------|
+| **Brand/Display** | `NumbahWan` | `/static/fonts/NumbahWan-Regular.woff2`, `.ttf` |
+| **Headings/Data** | `Orbitron` (variable) | `/static/fonts/orbitron-variable.woff2` |
+| **Body** | `Inter` (variable) | `/static/fonts/inter-variable.woff2` |
+
+CSS source: `nw-tokens.css`, `nw-core.css`, `nw-utilities.css`. Use `clamp()` for headings.
+
+### KINTSUGI Design Tokens — Premium/Gold Pages
 
 ```css
 :root {
@@ -63,7 +118,7 @@
   --card-hover:  #14142a;
   --border:      #1e1e3a;
   --border-glow: rgba(201,168,76,0.25);
-  --gold:        #c9a84c;
+  --gold:        #c9a84c;   /* KINTSUGI signature gold */
   --gold-dark:   #8a6914;
   --cyan:        #00d4ff;
   --rose:        #e8a0bf;
@@ -75,24 +130,24 @@
 }
 ```
 
-### Typography
+| Role | Font |
+|------|------|
+| **Display** | `Cormorant Garamond, Noto Serif TC, serif` |
+| **Body** | `Inter, Noto Sans TC, Noto Sans JP, system-ui, sans-serif` |
+| **Accent** | `Orbitron, sans-serif` |
+| **Mono** | `JetBrains Mono, monospace` |
 
-| Role | Stack |
-|------|-------|
-| Display | `Cormorant Garamond, Noto Serif TC, serif` |
-| Body | `Inter, Noto Sans TC, Noto Sans JP, system-ui, sans-serif` |
-| Mono | `JetBrains Mono, monospace` |
-| Accent | `Orbitron, sans-serif` |
+Aesthetic: Premium dark fintech. Luxury gold meets tech. Swiss-bank-meets-silicon.
 
-### Aesthetic
+### DO NOT Cross-Contaminate
 
-Premium dark fintech. Luxury gold meets tech. Not crypto-bro, more Swiss-bank-meets-silicon.
+- **NW pages**: Never use Cinzel, Cormorant Garamond, or KINTSUGI gold `#c9a84c`
+- **KINTSUGI pages**: Never use NumbahWan font, ember `#ff6b00`, or MMORPG UI patterns
+- Both share: Inter (body), Orbitron (accent), dark backgrounds, mobile overflow rules
 
 ---
 
 ## 4. Mobile Rules (CRITICAL)
-
-Every mobile bug the owner has flagged comes down to these rules. Violate them and you will be asked to revert.
 
 ```css
 /* VIEWPORT LOCK */
@@ -100,235 +155,192 @@ Every mobile bug the owner has flagged comes down to these rules. Violate them a
 
 /* TRIPLE-LAYER OVERFLOW PROTECTION */
 html, body { overflow-x: hidden; max-width: 100vw; }
-* { max-width: 100vw; }  /* nuclear catch-all */
-.section, .feature-row, .feature-img { max-width: 100%; overflow: hidden; }
+* { max-width: 100vw; }
 img { max-width: 100%; height: auto; display: block; }
 
-/* WORD SAFETY */
-* { word-break: keep-all; overflow-wrap: break-word; }
-
-/* SINGLE MOBILE BLOCK — never add a second one for the same breakpoint */
-@media (max-width: 768px) {
-  /* ALL mobile rules go here. Second block will override first via cascade. */
-}
+/* SINGLE MOBILE BLOCK per breakpoint */
+@media (max-width: 768px) { /* ALL mobile rules here */ }
 
 /* FONT SCALING */
-/* Only bump 9-13px text to 11-15px. Leave 16px+ alone. */
-/* NEVER touch h1, h2, stat values, or ticker prices. */
+/* Bump 9-13px to 11-15px. Leave 16px+ alone. */
+/* NEVER touch h1, h2, stat values, timer, or ticker prices. */
 ```
 
-**Breakpoints**: Primary 768px. Secondary: 600px, 560px, 900px.
+**Breakpoints**: Primary `768px`. Secondary: `600px`, `560px`.
 
 ---
 
 ## 5. Architecture
 
-### Page Structure
+### Server
 
-| Page | Role | Lines | Features |
-|------|------|-------|----------|
-| `kintsugi.html` | Main landing ($KIN token) | ~1894 | Ticker, asset grid, staking tiers, endorsements, gold drift particles |
-| `coin-shop.html` | Gold Collection shop | ~1096 | 3 coin cards (Phoenix/Dragon/Qilin), spot pricing, circular pre-cropped images |
-| `ai-assets.html` | AI Asset Manager (Beta) | ~844 | 6 TCG agent cards, coverage grid, beta metrics |
+| Component | Tech | Details |
+|-----------|------|---------|
+| **Runtime** | Hono on Cloudflare Workers | `src/index.ts` |
+| **Dev** | `npm run dev` | Port 3000 (wrangler pages dev) |
+| **Routing** | `src/routes/pages.ts` | Static pages map + redirects |
+| **Static** | `public/` | All HTML/CSS/JS/assets served from here |
+
+### Pages
+
+| Page | Route | Role |
+|------|-------|------|
+| `guild-siege.html` | `/guild-siege` | Guild Siege — Golden Age MMORPG card warfare |
+| `kintsugi.html` | `/kintsugi` | KINTSUGI landing (legacy $KIN token) |
+| `coin-shop.html` | `/coin-shop` | Gold Collection shop |
+| `ai-assets.html` | `/ai-assets` | AI Asset Manager (Beta) |
+| `wallet.html` | `/wallet` | NW Wallet / Economy |
+| `buy.html` | `/buy` | Purchase flow |
 
 ### Navigation
 
-- Inline premium nav bar per page (not nw-nav.js — these are KINTSUGI premium pages)
-- Fixed top, z-10000, translucent backdrop-blur, gold border
-- Hamburger on mobile
-- Language toggle: EN / 繁中 / JP
-- Brand: KINTSUGI + 金繕 (bilingual, always visible)
+| Page type | Nav system | Lang toggle |
+|-----------|-----------|-------------|
+| NW / Guild pages | `nw-nav.js` (universal, hamburger) | EN / 繁中 / TH |
+| KINTSUGI pages | Inline premium nav (per-page) | EN / 繁中 / JP |
 
 ### i18n System
 
-- **kintsugi.html** uses localStorage key `kintsugi_lang`
-- **coin-shop.html** and **ai-assets.html** use localStorage key `kin_lang`
-- All pages: EN/ZH-TW/JP coverage
-- Event name: `nw-lang-change` (NOT `nw-language-change`)
-- Every user-visible string needs all 3 locale translations
+- **Core**: `public/static/nw-i18n-core.js` — `NW_I18N.register({ en, zh, th })` or `{ en, zh, jp }`
+- **Usage**: HTML `data-i18n="key"` + JS `NW_I18N.t('key', 'fallback')`
+- **Event**: `nw-lang-change` (NOT `nw-language-change`)
+- **Rule**: Every user-visible string needs all locale translations for that page's brand
 
-### Buy Flow
+| Page type | localStorage key | Languages |
+|-----------|-----------------|----------|
+| NW / Guild | `nw_lang` | EN / ZH-TW / TH |
+| kintsugi.html | `kintsugi_lang` | EN / ZH-TW / JP |
+| coin-shop, ai-assets | `kin_lang` | EN / ZH-TW / JP |
 
-- No toast popups, no "Coming Soon" text
-- Buy buttons redirect directly to `/buy.html`
-- `showBuyToast()` function = `window.location.href = '/buy.html'`
+### NW Core Systems
 
----
-
-## 6. Assets
-
-### Coin Images (pre-cropped circular, transparent alpha)
-
-| Coin | Front | Back | Weight | Purity |
-|------|-------|------|--------|--------|
-| Phoenix Rebirth / 鳳凰重生 | `coins/phoenix-front.webp` | `coins/phoenix-back.webp` | 1 Troy Oz | 999.9 |
-| Dragon's Mend / 龍脈金繕 | `coins/dragon-front.webp` | `coins/dragon-back.webp` | 1/2 Oz | 999.9 |
-| Qilin's Grace / 麒麟祥瑞 | `coins/qilin-front.webp` | `coins/qilin-back.webp` | 1/4 Oz | 999.9 |
-
-### AI Agents (TCG cards, 500x669)
-
-Aurelius (Gold), Sentinel (Green), Cipher (Purple), Bastion (Cyan), Nexus (Blue), Oracle (Rose)
-
-### All paths relative to `public/static/`
+| System | File | Purpose |
+|--------|------|---------|
+| **NW Tokens** | `public/static/nw-tokens.css` | Design tokens, clamp() typography, color vars |
+| **NW Core** | `public/static/nw-core.css` | Base component styles |
+| **NW Utilities** | `public/static/nw-utilities.css` | Utility classes |
+| **NW Nav** | `public/static/nw-nav.js` | Universal navigation |
+| **NW i18n** | `public/static/nw-i18n-core.js` | Internationalization |
+| **NW Wallet** | `public/static/nw-wallet.js` | Economy ($1 = 100 NWG) |
+| **NW Icons** | `public/static/nw-icons-inline.js` | Premium SVG icon system |
+| **Click Juice** | `public/static/click-juice.js` | Micro-interactions |
 
 ---
 
-## 7. Memory System — How It Works
+## 6. Guild Siege — Golden Age MMORPG Protocol
 
-### Quick Start
+The siege page implements five pillars from golden_age_mmorpg_analysis.pdf:
+
+| Pillar | Implementation |
+|--------|---------------|
+| **Forced Grouping** | Holy Trinity party (Tank/Healer/DPS/Support) — mathematically impossible solo |
+| **Harsh Death Penalties** | PvE: -15% XP, PvP: -10% XP + card drop, Corpse run: 5 min |
+| **Variable-Ratio Loot** | MVP Zakum: 0.01% legendary, 2.5% epic, standard otherwise |
+| **Slow Progression** | Rank 7/10, Season III milestones, 12 hidden synergies |
+| **Social Interdependence** | Card slot system (8 sockets), guild standings, karma PvP |
+
+### Siege UI Tabs
+
+1. **Siege** — Castle map (5 towers + throne), siege timer, battle log, actions
+2. **Party** — Holy Trinity assignment, synergy bonuses, role chips
+3. **Card Slots** — 8 equipment sockets (RO-style), hidden synergies
+4. **MVP Hunt** — Zakum boss (1M HP, 3 phases), DPS meter, loot table
+5. **Karma PvP** — Lineage-style karma meter, death penalties, PvP actions
+6. **Standings** — Guild rankings, siege history, rank progression, milestones
+
+---
+
+## 7. Assets
+
+### Fonts (public/static/fonts/)
+
+| Font | Files |
+|------|-------|
+| NumbahWan | `NumbahWan-Regular.woff2`, `NumbahWan-Regular.ttf` |
+| Orbitron | `orbitron-variable.woff2` |
+| Inter | `inter-variable.woff2` |
+
+### Icons & Images
+
+- Favicon: `/static/icons/favicon-32x32.webp`
+- Coin images: `coins/phoenix-front.webp`, `dragon-front.webp`, `qilin-front.webp` (+ backs)
+- AI Agent cards: Aurelius, Sentinel, Cipher, Bastion, Nexus, Oracle (500x669)
+- All paths relative to `public/static/`
+
+---
+
+## 8. Memory & Tooling
+
+### Mycelium System
+
+```
+HOT   = Current session context (your context window)
+WARM  = .mycelium/memory.json (structured facts — DO NOT read directly, ~190KB)
+COLD  = git history (archival)
+```
+
+| Tool | Purpose |
+|------|---------|
+| `.mycelium/` | Self-improving codebase learning |
+| `scripts/qqb-sentinel.py` | Health check automation |
+| `memory/memory-ops.py` | CLI: bootstrap, validate, sync, lessons |
+
+### Token Budget Rule
+
+- Hard 200K token budget per session (input + output)
+- Never read `.mycelium/memory.json` directly (~186K tokens)
+- Prefer `Edit` over `Read+Write` for large files
+- After 4+ tool results, assume 50% budget used
+
+---
+
+## 9. Deployment
 
 ```bash
-# Session bootstrap (read this first)
-python3 memory/memory-ops.py --load
+# Dev server
+npm run dev  # Hono + Wrangler on port 3000
 
-# Check health
-python3 memory/memory-ops.py --status
-
-# Deep validation (catches drift before it becomes a bug)
-python3 memory/memory-ops.py --validate
-
-# Before touching mobile CSS
-python3 memory/memory-ops.py --lessons mobile
-
-# Before pushing to GitHub
-python3 memory/memory-ops.py --lessons github
-
-# After making changes, sync line counts
-python3 memory/memory-ops.py --sync-lines
-
-# After committing, sync git state
-python3 memory/memory-ops.py --sync-git
-
-# End of session
-python3 memory/memory-ops.py --session-end "Summary of what you did"
-```
-
-### Memory Architecture
-
-```
-HOT   = Current session context (in your context window)
-WARM  = memory/qqb-memory.json (structured facts, survives compaction)
-COLD  = git history + .mycelium/ (archival, queried on demand)
-```
-
-### Key Files
-
-| File | Purpose | Size |
-|------|---------|------|
-| `memory/qqb-memory.json` | Core memory: user profile, project state, lessons, sessions | ~29KB |
-| `memory/memory-ops.py` | CLI tool: bootstrap, validate, sync, lesson management | ~7KB |
-| `.mycelium/memory.json` | Mycelium learning system memory | ~190KB |
-| `.mycelium/config.json` | Mycelium configuration | ~1KB |
-| `.mycelium-mined/` | Deep intelligence: patterns, risk profiles, rules | ~2MB |
-| `scripts/qqb-sentinel.py` | Health check automation (legacy name) | ~33KB |
-
-### Validation Commands
-
-```bash
-# Run before every push — catches 8 types of drift:
-python3 memory/memory-ops.py --validate
-
-# Checks:
-# 1. Session ID uniqueness (no duplicates)
-# 2. Lesson text/lesson field sync
-# 3. Lesson ID uniqueness
-# 4. Asset path validation (all referenced files exist)
-# 5. Page line count accuracy
-# 6. Dead feature detection (removed features still in metadata)
-# 7. localStorage key consistency (no stale references)
-# 8. Git state sync (stored hash matches actual HEAD)
-```
-
----
-
-## 8. Lessons Learned (Anti-Regression Guards)
-
-These are PERMANENT. Every lesson was learned from a real production bug. Check them before touching related code.
-
-| ID | Severity | Category | Lesson |
-|----|----------|----------|--------|
-| L001 | CRITICAL | mobile | Always set max-width:100% on BOTH image AND container. html/body overflow-x:hidden. |
-| L002 | CRITICAL | css | Never two @media blocks for same breakpoint. Last one wins via cascade. |
-| L003 | CRITICAL | github | setup_github_environment token is ephemeral. Push IMMEDIATELY after. No diagnostics between. |
-| L004 | HIGH | design | User reviews on iPhone 375px. Both container AND img need max-width:100% + overflow:hidden. |
-| L005 | HIGH | fonts | Font scaling +15% body text only. NEVER touch headings, stat values, ticker prices. |
-| L006 | HIGH | workflow | When user repeats feedback: acknowledge, try completely different approach, show proof. |
-| L007 | MEDIUM | assets | Replace emoji with professional SVG/WebP. Generate if missing. |
-| L008 | MEDIUM | i18n | All pages need matching EN/ZH-TW/JP coverage. Language keys: kintsugi_lang or kin_lang. |
-| L009 | CRITICAL | mobile | Global * { max-width:100vw } prevents ANY element from escaping viewport. |
-| L010 | HIGH | css | Desktop gap:60px bleeds into mobile. Explicitly reduce to 20px in mobile block. |
-| L011 | HIGH | workflow | Use nano-banana-pro for all image generation. |
-
----
-
-## 9. Related Systems
-
-| System | Purpose | Key File |
-|--------|---------|----------|
-| **Mycelium** | Self-improving codebase learning | `.mycelium/`, `mycelium.cjs` |
-| **Sentinel** | Health check automation | `scripts/qqb-sentinel.py` |
-| **NW Nav** | Universal navigation (Guild pages) | `public/static/nw-nav.js` |
-| **NW i18n** | Internationalization (Guild pages) | `public/static/nw-i18n-core.js` |
-| **NW Wallet** | Economy system ($1 = 100 NWG) | `public/static/nw-wallet.js` |
-
----
-
-## 10. Server & Deployment
-
-```bash
-# Start local server
-cd public && python3 -m http.server 5060 --bind 0.0.0.0
-
-# Ship to GitHub (uses Mycelium)
-node bin/mycelium.cjs ship "feat: description"
-
-# Or manual push
+# Ship
 git add . && git commit -m "feat: description" && git push origin main
 ```
 
 ---
 
-## 11. Progressive Improvement Protocol
+## 10. Lessons Learned (Anti-Regression)
 
-This system gets smarter over time. Here's how to feed it:
-
-### After Fixing a Bug
-```bash
-python3 memory/memory-ops.py --lesson L012 critical mobile "Description of what went wrong and the fix"
-```
-
-### After a Session
-```bash
-python3 memory/memory-ops.py --session-end "Built X, fixed Y, decided Z"
-```
-
-### Before Any Code Change
-```bash
-# Check if there's a lesson about what you're about to touch
-python3 memory/memory-ops.py --lessons mobile   # or css, fonts, images, github, i18n
-```
-
-### After Committing
-```bash
-python3 memory/memory-ops.py --sync-git
-python3 memory/memory-ops.py --sync-lines
-```
+| ID | Severity | Category | Lesson |
+|----|----------|----------|--------|
+| L001 | CRITICAL | mobile | max-width:100% on BOTH image AND container. html/body overflow-x:hidden. |
+| L002 | CRITICAL | css | Never two @media blocks for same breakpoint. Last one wins. |
+| L003 | CRITICAL | github | setup_github_environment token is ephemeral. Push IMMEDIATELY. |
+| L004 | HIGH | design | Owner reviews on iPhone 375px. Container + img need max-width:100%. |
+| L005 | HIGH | fonts | Font scaling +15% body only. NEVER touch headings/stat/ticker. |
+| L006 | HIGH | workflow | Repeated feedback = try completely different approach. |
+| L007 | MEDIUM | assets | Replace emoji with professional SVG/WebP. |
+| L008 | MEDIUM | i18n | All pages need EN/ZH-TW/TH (or JP for KINTSUGI). Use NW_I18N.register(). |
+| L009 | CRITICAL | mobile | Global * { max-width:100vw } prevents viewport escape. |
+| L010 | HIGH | css | Desktop gap:60px bleeds mobile. Reduce to 20px in mobile block. |
+| L011 | HIGH | workflow | Use nano-banana-pro for all image generation. |
+| L012 | HIGH | branding | NW pages use NumbahWan/Orbitron/Inter. KINTSUGI pages use Cormorant Garamond/Noto Serif TC. Never cross. |
+| L013 | HIGH | i18n | Use t() wrapper for all JS-generated strings: `const t = (k,fb) => NW_I18N.t(k,fb) || fb` |
+| L014 | CRITICAL | branding | Two brands coexist in one repo. Check which brand a page belongs to BEFORE editing. See Section 1. |
 
 ---
 
-## 12. What NOT to Do
+## 11. What NOT to Do
 
 - Do not use emoji as UI icons in production
 - Do not add a second @media block for the same breakpoint
-- Do not explain why a fix should work — just show the result
+- Do not use Cinzel/Cormorant/KINTSUGI gold (#c9a84c) on NW/Guild pages
+- Do not use NumbahWan font/ember #ff6b00/MMORPG patterns on KINTSUGI pages
+- Do not explain why a fix should work — show the result
 - Do not ask obvious questions — make decisions and show proof
-- Do not use placeholder text or Lorem Ipsum
 - Do not update font sizes for headings, stat values, or ticker prices
-- Do not use `qqb_lang` — it's been replaced with `kintsugi_lang` / `kin_lang`
+- Do not use Python SimpleHTTPServer — the stack is Hono/Cloudflare (port 3000)
+- Do not read `.mycelium/memory.json` directly (186K tokens)
 - Do not add "Coming Soon" or toast popups for unavailable features
-- Do not run git diagnostics between `setup_github_environment` and `git push`
 
 ---
 
-*Generated by KINTSUGI Memory System v2.1 | Last updated: 2026-02-11*
-*Run `python3 memory/memory-ops.py --validate` to verify system integrity.*
+*NumbahWan TCG Agent Context v3.1 | Updated: 2026-02-11*
+*Two brands: NumbahWan (Guild/TCG) + KINTSUGI (Premium/Gold). Never merge aesthetics.*
