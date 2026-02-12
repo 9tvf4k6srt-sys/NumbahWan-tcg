@@ -2,7 +2,7 @@ import { Hono } from 'hono'
 import { serveStatic } from 'hono/cloudflare-pages'
 import pvpMatchmaking from './services/pvp-matchmaking'
 import {
-  healthRoutes, dataRoutes, sentinelRoutes, pagesRoutes,
+  healthRoutes, dataRoutes, sentinelRoutes, agentRoutes, pagesRoutes,
   databaseRoutes, marketTradingRoutes, cardDbRoutes,
   adminCardsRoutes, walletEconomyRoutes, auctionRoutes,
   marketPricesRoutes, gamificationRoutes,
@@ -37,6 +37,7 @@ app.use('*', async (c, next) => {
 })
 
 // Static file serving
+app.use('/.well-known/*', serveStatic())
 app.use('/static/*', serveStatic())
 app.use('/lore/*', serveStatic())
 app.use('/museum/*', serveStatic())
@@ -50,6 +51,8 @@ app.use('/tabletop/*', serveStatic())
 app.route('/api', healthRoutes)
 app.route('/api', dataRoutes)
 app.route('/api/system', sentinelRoutes)
+app.route('/api/pcp', agentRoutes)    // PCP standard routes
+app.route('/api/agent', agentRoutes)  // Legacy alias (backward compat)
 app.route('/api/db', databaseRoutes)
 app.route('/api/market', marketTradingRoutes)
 app.route('/api/cards', cardDbRoutes)

@@ -9,6 +9,7 @@
 import healthRoutes from './health'
 import dataRoutes from './data'
 import sentinelRoutes from './sentinel'
+import agentRoutes from './agent'
 
 // Page serving routes
 import pagesRoutes from './pages'
@@ -42,6 +43,7 @@ export {
   healthRoutes,
   dataRoutes,
   sentinelRoutes,
+  agentRoutes,
   pagesRoutes,
   databaseRoutes,
   marketTradingRoutes,

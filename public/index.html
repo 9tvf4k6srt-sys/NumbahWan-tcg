@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <!-- FIRST PAINT LOADER - renders before anything else, even before charset -->
-    <style>*{margin:0;padding:0}html,body{background:#0a0a0f}#fp{position:fixed;inset:0;background:#0a0a0f;z-index:999999;display:flex;align-items:center;justify-content:center}#fp svg{width:80px;height:80px;filter:drop-shadow(0 0 20px #ff6b00)}.fp-hide{display:none!important}</style>
+    <!-- Loading screen styles (instant-loader is the single canonical loader) -->
+    <style>*{margin:0;padding:0}html,body{background:#0a0a0f}</style>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=5.0, user-scalable=yes">
     <title>NumbahWan Guild | MapleStory Idle RPG</title>
@@ -100,7 +100,6 @@
       .il-dot:nth-child(2){animation-delay:.2s;background:#ffd700;box-shadow:0 0 10px #ffd700}
       .il-dot:nth-child(3){animation-delay:.4s;background:#ff9500;box-shadow:0 0 10px #ff9500}
       @keyframes ilBounce{0%,80%,100%{transform:scale(0)}40%{transform:scale(1)}}
-      #fp{display:none}
     </style>
     <script src="https://cdn.tailwindcss.com" defer></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
@@ -1446,9 +1445,7 @@
     <script defer src="/static/helpers/nw-guild.js"></script>
 </head>
 <body data-nw-progress data-nw-backtop data-page-id="index" data-testid="index-body">
-    <!-- FIRST PAINT LOADER - ultra minimal, shows in first bytes -->
-    <div id="fp"><svg viewBox="0 0 100 100"><defs><linearGradient id="ng" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#ffcc70"/><stop offset="50%" stop-color="#ff6b00"/><stop offset="100%" stop-color="#8B4513"/></linearGradient></defs><rect x="10" y="8" width="24" height="84" rx="3" fill="url(#ng)"/><rect x="66" y="8" width="24" height="84" rx="3" fill="url(#ng)"/><polygon points="10,8 34,8 90,92 66,92" fill="url(#ng)"/></svg></div>
-    <!-- FULL LOADING SCREEN - replaces first paint once styles load -->
+    <!-- LOADING SCREEN - single canonical loader -->
     <div id="instant-loader">
         <div class="il-aurora"></div>
         <div style="position:relative;display:flex;flex-direction:column;align-items:center;z-index:10">
@@ -1469,8 +1466,7 @@
         </div>
     </div>
     <script>
-        // Hide first-paint loader immediately (full loader takes over)
-        var fp=document.getElementById('fp');if(fp)fp.style.display='none';
+
         // FUNCTIONAL LOADER: tracks real resource loading progress
         (function(){
             var startTime = Date.now();
@@ -1564,7 +1560,7 @@
                     var args = arguments;
                     var url = typeof args[0] === 'string' ? args[0] : (args[0] && args[0].url) || '';
                     var promise = origFetch.apply(this, args);
-                    if (url.indexOf('/api/roster') !== -1) {
+                    if (url.indexOf('/roster') !== -1) {
                         promise.then(function() { markStep('api'); }).catch(function() { markStep('api'); });
                     }
                     return promise;
@@ -1583,8 +1579,7 @@
                         loader.classList.add('hidden');
                         setTimeout(function() { loader.remove(); }, 600);
                     }
-                    var fpEl = document.getElementById('fp');
-                    if (fpEl) fpEl.remove();
+
                     // Restore fetch
                     if (origFetch) window.fetch = origFetch;
                 }, remaining);
@@ -3860,7 +3855,7 @@
         // ========== CP RACE DYNAMIC LOADER ==========
         async function loadCPRaceData() {
             try {
-                const res = await fetch('/api/roster');
+                const res = await fetch('/static/data/roster.json');
                 const data = await res.json();
                 renderCPRace(data);
             } catch (e) {

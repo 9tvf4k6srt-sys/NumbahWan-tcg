@@ -120,7 +120,7 @@ const staticPages = [
   'admin-physical', 'battle-legacy', 'battle-old', 'battle-simple',
   'what-is-nwg', 'staking', 'fusion', 'claim', 'events', 'confessional',
   'avatar-studio', 'efficiency', 'tabletop', 'collection-stats', 'dashboard',
-  'cipher', 'guild-siege'
+  'cipher', 'guild-siege', 'agent'
 ]
 
 staticPages.forEach(page => {

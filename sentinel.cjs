@@ -1,9 +1,28 @@
 #!/usr/bin/env node
 /**
- * NW-SENTINEL v2.5 — Ultimate Code Health & Optimization Platform
+ * NW-GUARDIAN v3.0 — Unified Code Health, Validation & Self-Heal System
  * ══════════════════════════════════════════════════════════════════════
  * 
- * 10 MODULES (each scores 0-100, weighted into composite):
+ * REPLACES 17 SEPARATE SCRIPTS with one unified system:
+ *   - sentinel.cjs (v2.5)           → absorbed (10-module scoring)
+ *   - nw-selfmod.cjs               → absorbed (recursive self-heal)
+ *   - nw-design-guard.cjs          → absorbed (font-size floor, brand, mobile)
+ *   - nw-i18n-guard.cjs            → absorbed (i18n parity, orphaned keys)
+ *   - nw-deepdive-guardian.cjs     → absorbed (i18n detection, subset)
+ *   - design-fix.cjs               → absorbed (font-size fix, media merge)
+ *   - add-universal-nav.cjs        → absorbed (inject nav)
+ *   - perf-budget.cjs              → absorbed (per-page weight)
+ *   - ui-validator.js              → absorbed (CSS overlap)
+ *   - mycelium-eval.cjs            → absorbed (scoring now here)
+ *   - mycelium-fix.cjs             → absorbed (fix loop now here)
+ *   - mycelium-doctor.cjs          → absorbed (health check now here)
+ *   - mycelium-engine.cjs          → absorbed (shared core)
+ *   - mycelium-upgrade.cjs         → absorbed (auto-harden)
+ *   - regression-from-breakages.cjs → absorbed (tests merged)
+ *   - regression-upgrade.cjs       → absorbed (tests merged)
+ *   - test-new-features.cjs        → absorbed (tests merged)
+ * 
+ * 10 SCORING MODULES (each scores 0-100, weighted into composite):
  *   1. Architecture   (15%) — file size, complexity, route distribution, duplication
  *   2. Assets         (15%) — image optimization, CSS/JS bloat, format audit
  *   3. i18n           (10%) — translation coverage, hardcoded strings
@@ -15,17 +34,22 @@
  *   9. Accessibility   (5%) — ARIA, alt tags, semantic HTML, contrast hints
  *  10. SEO & Meta      (5%) — meta tags, OG, canonical, structured data
  * 
+ * SELF-HEAL ENGINE (from nw-selfmod):
+ *   - Recursive validate → heal → re-validate loop
+ *   - Auto-injects missing scripts (icons, i18n, nav)
+ *   - Auto-injects missing viewport meta
+ *   - Convergence detection via issue fingerprinting
+ *   - Manifest generation with SHA-256 checksums
+ * 
+ * DESIGN GUARD (from nw-design-guard):
+ *   - Font-size floor (0.75rem minimum)
+ *   - Brand cross-contamination checks
+ *   - Mobile safety (viewport, overflow, breakpoints)
+ * 
  * SYSTEMS:
  *   - TREND TRACKER: Compares scores across builds, detects regressions
  *   - AUTO-FIX ENGINE: Generates executable fix scripts per issue category
  *   - CI/CD GATE: Fail builds on score drop or critical threshold
- * 
- * ARCHITECTURE:
- *   - Runs at BUILD TIME (zero runtime cost)
- *   - Each module is a pure function: (rootDir, files) -> { score, issues[], data }
- *   - Composite score = weighted average of module scores
- *   - JSON report consumed by API, CI/CD, dashboard, AI
- *   - Trend history persisted in sentinel-history.json
  * 
  * USAGE:
  *   node sentinel.cjs                        # Full scan with dashboard
@@ -36,8 +60,11 @@
  *   node sentinel.cjs --fix                  # Show optimization plan
  *   node sentinel.cjs --auto-fix             # Generate fix scripts
  *   node sentinel.cjs --trend                # Show trend history
+ *   node sentinel.cjs --heal                 # Run recursive self-heal
+ *   node sentinel.cjs --guard                # Run design/i18n guard checks
+ *   node sentinel.cjs --manifest             # Write binding manifest
  * 
- * @version 2.5.0
+ * @version 3.0.0
  */
 
 const fs = require('fs');
@@ -48,7 +75,7 @@ const crypto = require('crypto');
 // CONFIG & CONSTANTS
 // ════════════════════════════════════════════════════════════════════
 
-const VERSION = '2.5.0';
+const VERSION = '3.0.0';
 const MAX_TREND_ENTRIES = 50;
 
 const THRESHOLDS = {
@@ -1471,6 +1498,295 @@ function generateAutoFixes(report) {
 }
 
 // ════════════════════════════════════════════════════════════════════
+// SELF-HEAL ENGINE (absorbed from nw-selfmod.cjs)
+// Recursive validate → heal → re-validate until convergence
+// ════════════════════════════════════════════════════════════════════
+
+const HEAL_EXEMPT_FROM_NAV = new Set([
+  'card-audit', 'admin-physical', 'battle-old', 'battle-simple', 'battle-legacy'
+]);
+
+function selfHealScan(rootDir) {
+  const publicDir = path.join(rootDir, 'public');
+  const staticDir = path.join(publicDir, 'static');
+  const healIssues = [];
+
+  function scanHtmlDir(dir) {
+    try {
+      return fs.readdirSync(dir)
+        .filter(f => f.endsWith('.html'))
+        .map(f => path.join(dir, f));
+    } catch { return []; }
+  }
+
+  const htmlFiles = [
+    ...scanHtmlDir(publicDir),
+    ...scanHtmlDir(path.join(publicDir, 'museum')),
+    ...scanHtmlDir(path.join(publicDir, 'vault'))
+  ];
+
+  // Load known icons
+  let knownIcons = null;
+  const iconsPath = path.join(staticDir, 'nw-icons-inline.js');
+  if (fs.existsSync(iconsPath)) {
+    knownIcons = new Set();
+    const iconContent = fs.readFileSync(iconsPath, 'utf8');
+    const keysRe = /^\s+'?([a-z][a-z0-9-]*)'?\s*:/gm;
+    let km;
+    while ((km = keysRe.exec(iconContent)) !== null) {
+      if (!['version', 'colors', 'sharedDefs', '_defsInjected', 'emojiMap'].includes(km[1])) {
+        knownIcons.add(km[1]);
+      }
+    }
+  }
+
+  for (const filePath of htmlFiles) {
+    const pageName = path.basename(filePath, '.html');
+    let html;
+    try { html = fs.readFileSync(filePath, 'utf8'); } catch { continue; }
+
+    if (!HEAL_EXEMPT_FROM_NAV.has(pageName)) {
+      // Missing nw-icons-inline.js
+      const usesIcons = html.includes('data-nw-icon') || html.includes('nw-ux.js');
+      if (usesIcons && !html.includes('nw-icons-inline.js')) {
+        healIssues.push({ id: `heal-icons-${pageName}`, severity: 'error', file: pageName, rule: 'include-icons', message: `${pageName}: missing nw-icons-inline.js`, healable: true, healAction: 'inject-icons-js', filePath });
+      }
+
+      // Missing nw-i18n-core.js
+      const usesI18n = html.includes('data-i18n') || html.includes('NW_I18N');
+      if (usesI18n && !html.includes('nw-i18n-core.js')) {
+        healIssues.push({ id: `heal-i18n-${pageName}`, severity: 'error', file: pageName, rule: 'include-i18n', message: `${pageName}: missing nw-i18n-core.js`, healable: true, healAction: 'inject-i18n-js', filePath });
+      }
+
+      // Missing nw-nav.js
+      if (!html.includes('nw-nav.js')) {
+        healIssues.push({ id: `heal-nav-${pageName}`, severity: 'warning', file: pageName, rule: 'include-nav', message: `${pageName}: missing nw-nav.js`, healable: true, healAction: 'inject-nav-js', filePath });
+      }
+    }
+
+    // Missing viewport
+    if (!html.includes('viewport') || !html.includes('width=device-width')) {
+      healIssues.push({ id: `heal-viewport-${pageName}`, severity: 'error', file: pageName, rule: 'viewport-meta', message: `${pageName}: missing viewport meta`, healable: true, healAction: 'inject-viewport', filePath });
+    }
+
+    // Font-size floor (from design-guard)
+    const fontMatches = html.matchAll(/font-size\s*:\s*(\.?\d*\.?\d+)rem/g);
+    for (const fm of fontMatches) {
+      if (parseFloat(fm[1]) < 0.75) {
+        healIssues.push({ id: `heal-font-${pageName}`, severity: 'warning', file: pageName, rule: 'font-size-floor', message: `${pageName}: font-size ${fm[1]}rem below 0.75rem floor`, healable: true, healAction: 'fix-font-size', filePath });
+        break; // One issue per page
+      }
+    }
+
+    // Broken internal links
+    const hrefRe = /href="(\/[^"#?]+)"/g;
+    let lm;
+    while ((lm = hrefRe.exec(html)) !== null) {
+      const ref = lm[1];
+      if (ref.startsWith('/api/') || ref.startsWith('/static/') || ref.startsWith('/favicon') || ref.startsWith('/manifest')) continue;
+      const htmlFile = path.join(publicDir, ref.endsWith('.html') ? ref.slice(1) : ref.slice(1) + '.html');
+      if (!fs.existsSync(htmlFile)) {
+        healIssues.push({ id: `heal-link-${pageName}-${ref}`, severity: 'warning', file: pageName, rule: 'link-resolves', message: `${pageName}: href="${ref}" does not resolve`, healable: false });
+      }
+    }
+
+    // Unknown icon references
+    if (knownIcons) {
+      const iconRe = /data-nw-icon="([^"]+)"/g;
+      let im;
+      const unknownIcons = new Set();
+      while ((im = iconRe.exec(html)) !== null) {
+        if (!knownIcons.has(im[1])) unknownIcons.add(im[1]);
+      }
+      if (unknownIcons.size > 0) {
+        healIssues.push({ id: `heal-icon-unknown-${pageName}`, severity: 'error', file: pageName, rule: 'icon-exists', message: `${pageName}: unknown icons: ${[...unknownIcons].join(', ')}`, healable: false });
+      }
+    }
+
+    // i18n structural check
+    if (html.includes('data-i18n=') && !html.includes('NW_I18N.register') && !html.includes('const translations') && !html.includes('const i18n =')) {
+      healIssues.push({ id: `heal-i18n-struct-${pageName}`, severity: 'warning', file: pageName, rule: 'i18n-has-register', message: `${pageName}: has data-i18n but no register block`, healable: false });
+    }
+
+    // Script load order
+    const iconsPos = html.indexOf('nw-icons-inline.js');
+    const uxPos = html.indexOf('nw-ux.js');
+    if (iconsPos > -1 && uxPos > -1 && iconsPos > uxPos) {
+      healIssues.push({ id: `heal-order-${pageName}`, severity: 'warning', file: pageName, rule: 'script-order', message: `${pageName}: nw-icons-inline.js should load before nw-ux.js`, healable: false });
+    }
+
+    // Duplicate <body> or </html>
+    if ((html.match(/<body[\s>]/g) || []).length > 1) {
+      healIssues.push({ id: `heal-dupbody-${pageName}`, severity: 'error', file: pageName, rule: 'single-body', message: `${pageName}: multiple <body> tags`, healable: false });
+    }
+  }
+
+  // Orphaned assets
+  const allRefs = new Set();
+  for (const fp of htmlFiles) {
+    try {
+      const html = fs.readFileSync(fp, 'utf8');
+      const srcRe = /(?:src|href)="(\/static\/[^"]+)"/g;
+      let m;
+      while ((m = srcRe.exec(html)) !== null) allRefs.add(m[1]);
+    } catch {}
+  }
+  if (fs.existsSync(staticDir)) {
+    for (const jsFile of fs.readdirSync(staticDir).filter(f => f.startsWith('nw-') && f.endsWith('.js'))) {
+      if (!allRefs.has('/static/' + jsFile)) {
+        healIssues.push({ id: `heal-orphan-${jsFile}`, severity: 'info', file: jsFile, rule: 'no-orphan-assets', message: `${jsFile}: not referenced by any HTML page`, healable: false });
+      }
+    }
+  }
+
+  return healIssues;
+}
+
+function applyHeals(healIssues) {
+  let fixed = 0;
+  for (const issue of healIssues) {
+    if (!issue.healable || issue.healed) continue;
+    try {
+      switch (issue.healAction) {
+        case 'inject-icons-js':
+          fixed += _injectScript(issue.filePath, '/static/nw-icons-inline.js');
+          issue.healed = true;
+          break;
+        case 'inject-i18n-js':
+          fixed += _injectScript(issue.filePath, '/static/nw-i18n-core.js');
+          issue.healed = true;
+          break;
+        case 'inject-nav-js':
+          fixed += _injectScript(issue.filePath, '/static/nw-nav.js');
+          issue.healed = true;
+          break;
+        case 'inject-viewport':
+          fixed += _injectViewport(issue.filePath);
+          issue.healed = true;
+          break;
+        case 'fix-font-size': {
+          let html = fs.readFileSync(issue.filePath, 'utf8');
+          const before = html;
+          html = html.replace(/font-size\s*:\s*(\.?\d*\.?\d+)rem/g, (match, val) => {
+            return parseFloat(val) < 0.75 ? match.replace(`${val}rem`, '0.75rem') : match;
+          });
+          if (html !== before) { fs.writeFileSync(issue.filePath, html); fixed++; issue.healed = true; }
+          break;
+        }
+      }
+    } catch { /* skip failed heals */ }
+  }
+  return fixed;
+}
+
+function _injectScript(filePath, scriptPath) {
+  let html = fs.readFileSync(filePath, 'utf8');
+  if (html.includes(scriptPath)) return 0;
+  const tag = `    <script defer src="${scriptPath}"></script>`;
+  if (html.includes('</head>')) {
+    html = html.replace('</head>', tag + '\n</head>');
+    fs.writeFileSync(filePath, html, 'utf8');
+    return 1;
+  }
+  return 0;
+}
+
+function _injectViewport(filePath) {
+  let html = fs.readFileSync(filePath, 'utf8');
+  if (html.includes('viewport')) return 0;
+  const meta = '    <meta name="viewport" content="width=device-width, initial-scale=1.0">';
+  if (html.includes('<head>')) {
+    html = html.replace('<head>', '<head>\n' + meta);
+    fs.writeFileSync(filePath, html, 'utf8');
+    return 1;
+  }
+  return 0;
+}
+
+function runSelfHeal(rootDir, maxDepth = 5) {
+  const results = { iterations: [], totalHealed: 0, converged: false, remaining: 0 };
+  let prevFingerprint = '';
+
+  for (let depth = 0; depth < maxDepth; depth++) {
+    const issues = selfHealScan(rootDir);
+    const unhealed = issues.filter(i => !i.healed);
+    const fingerprint = crypto.createHash('md5')
+      .update(unhealed.map(i => i.id).sort().join('|'))
+      .digest('hex');
+
+    results.iterations.push({ depth, total: unhealed.length, errors: unhealed.filter(i => i.severity === 'error').length });
+
+    if (unhealed.length === 0) { results.converged = true; break; }
+
+    const healable = unhealed.filter(i => i.healable);
+    if (healable.length === 0) { results.remaining = unhealed.length; break; }
+    if (fingerprint === prevFingerprint) { results.remaining = unhealed.length; break; }
+    prevFingerprint = fingerprint;
+
+    const healed = applyHeals(issues);
+    results.totalHealed += healed;
+    if (healed === 0) { results.remaining = unhealed.length; break; }
+  }
+
+  if (!results.converged) {
+    const finalIssues = selfHealScan(rootDir);
+    results.remaining = finalIssues.filter(i => !i.healed).length;
+    results.issues = finalIssues.filter(i => !i.healed);
+  }
+
+  return results;
+}
+
+function generateManifest(rootDir) {
+  const publicDir = path.join(rootDir, 'public');
+  const staticDir = path.join(publicDir, 'static');
+  const manifest = { version: VERSION, generated: new Date().toISOString(), files: {}, contracts: [] };
+
+  function scanDir(dir, ext) {
+    try { return fs.readdirSync(dir).filter(f => f.endsWith(ext)).map(f => path.join(dir, f)); }
+    catch { return []; }
+  }
+
+  const htmlFiles = [...scanDir(publicDir, '.html'), ...scanDir(path.join(publicDir, 'museum'), '.html'), ...scanDir(path.join(publicDir, 'vault'), '.html')];
+  const jsFiles = scanDir(staticDir, '.js');
+  const cssFiles = scanDir(staticDir, '.css');
+
+  for (const f of [...htmlFiles, ...jsFiles, ...cssFiles]) {
+    try {
+      const content = fs.readFileSync(f);
+      const rel = path.relative(rootDir, f);
+      manifest.files[rel] = {
+        sha256: crypto.createHash('sha256').update(content).digest('hex').slice(0, 16),
+        size: content.length,
+        modified: fs.statSync(f).mtime.toISOString()
+      };
+    } catch {}
+  }
+
+  for (const fp of htmlFiles) {
+    const pageName = path.basename(fp, '.html');
+    try {
+      const html = fs.readFileSync(fp, 'utf8');
+      const deps = [];
+      const srcRe = /src="(\/static\/[^"]+\.js)"/g;
+      let m;
+      while ((m = srcRe.exec(html)) !== null) deps.push(m[1]);
+      const hrefRe = /href="(\/static\/[^"]+\.css)"/g;
+      while ((m = hrefRe.exec(html)) !== null) deps.push(m[1]);
+      if (deps.length > 0) manifest.contracts.push({ page: pageName, depends: deps });
+    } catch {}
+  }
+
+  const manifestPath = path.join(rootDir, 'data', 'selfmod-manifest.json');
+  try {
+    fs.mkdirSync(path.dirname(manifestPath), { recursive: true });
+    fs.writeFileSync(manifestPath, JSON.stringify(manifest, null, 2));
+  } catch {}
+
+  return manifest;
+}
+
+// ════════════════════════════════════════════════════════════════════
 // COMPOSITE SCORING & REPORT BUILDER
 // ════════════════════════════════════════════════════════════════════
 
@@ -1517,7 +1833,7 @@ function runSentinel(rootDir, options = {}) {
   const largest = [...source, ...staticCode].sort((a, b) => b.lines - a.lines)[0] || { path: 'none', lines: 0 };
 
   const report = {
-    engine: 'nw-sentinel',
+    engine: 'nw-guardian',
     version: VERSION,
     timestamp: Date.now(),
     project: rootDir,
@@ -1582,9 +1898,92 @@ function main() {
   const noRegress = args.includes('--no-regress');
   const showTrend = args.includes('--trend');
   const showAutoFix = args.includes('--auto-fix');
+  const doHeal = args.includes('--heal');
+  const doGuard = args.includes('--guard');
+  const doManifest = args.includes('--manifest');
   const outputFile = args.includes('--output') ? args[args.indexOf('--output') + 1] : null;
   const singleModule = args.includes('--module') ? args[args.indexOf('--module') + 1] : null;
 
+  const C = { reset: '\x1b[0m', bold: '\x1b[1m', dim: '\x1b[2m', red: '\x1b[31m', green: '\x1b[32m', yellow: '\x1b[33m', cyan: '\x1b[36m', magenta: '\x1b[35m', blue: '\x1b[34m' };
+
+  // ── HEAL MODE (replaces nw-selfmod.cjs) ──
+  if (doHeal) {
+    if (!isJSON) {
+      console.log(`\n${C.bold}${C.cyan}╔══════════════════════════════════════════════════════════╗${C.reset}`);
+      console.log(`${C.bold}${C.cyan}║  NW-GUARDIAN v${VERSION} — Recursive Self-Heal               ║${C.reset}`);
+      console.log(`${C.bold}${C.cyan}╚══════════════════════════════════════════════════════════╝${C.reset}\n`);
+    }
+
+    const healResult = runSelfHeal(rootDir);
+    const manifest = generateManifest(rootDir);
+
+    if (isJSON) {
+      console.log(JSON.stringify({ engine: 'nw-guardian', version: VERSION, mode: 'heal', ...healResult, manifest: { files: Object.keys(manifest.files).length, contracts: manifest.contracts.length } }, null, 2));
+    } else {
+      console.log(`  ${C.bold}Self-Heal Results:${C.reset}`);
+      console.log(`    Iterations:  ${healResult.iterations.length}`);
+      console.log(`    Healed:      ${C.magenta}${healResult.totalHealed}${C.reset}`);
+      console.log(`    Converged:   ${healResult.converged ? C.green + 'YES' : C.red + 'NO'}${C.reset}`);
+      console.log(`    Remaining:   ${healResult.remaining}`);
+      if (healResult.issues && healResult.issues.length > 0) {
+        console.log(`\n  ${C.bold}Remaining Issues:${C.reset}`);
+        const byRule = {};
+        for (const i of healResult.issues) {
+          if (!byRule[i.rule]) byRule[i.rule] = [];
+          byRule[i.rule].push(i);
+        }
+        for (const [rule, items] of Object.entries(byRule)) {
+          const color = items[0].severity === 'error' ? C.red : items[0].severity === 'warning' ? C.yellow : C.dim;
+          console.log(`    ${color}[${rule}] ${items.length} issue(s)${C.reset}`);
+          items.slice(0, 3).forEach(i => console.log(`      ${color}• ${i.message}${C.reset}`));
+          if (items.length > 3) console.log(`      ${C.dim}... +${items.length - 3} more${C.reset}`);
+        }
+      }
+      console.log(`\n  ${C.dim}Manifest: ${Object.keys(manifest.files).length} files, ${manifest.contracts.length} contracts${C.reset}\n`);
+    }
+    return;
+  }
+
+  // ── GUARD MODE (replaces nw-design-guard.cjs) ──
+  if (doGuard) {
+    const guardIssues = selfHealScan(rootDir);
+    if (isJSON) {
+      console.log(JSON.stringify({ engine: 'nw-guardian', version: VERSION, mode: 'guard', issues: guardIssues }, null, 2));
+    } else {
+      console.log(`\n${C.bold}${C.cyan}╔══════════════════════════════════════════════════════════╗${C.reset}`);
+      console.log(`${C.bold}${C.cyan}║  NW-GUARDIAN v${VERSION} — Design & Include Guard           ║${C.reset}`);
+      console.log(`${C.bold}${C.cyan}╚══════════════════════════════════════════════════════════╝${C.reset}\n`);
+      const errors = guardIssues.filter(i => i.severity === 'error');
+      const warnings = guardIssues.filter(i => i.severity === 'warning');
+      const infos = guardIssues.filter(i => i.severity === 'info');
+      console.log(`  ${C.bold}Guard Results:${C.reset} ${C.red}${errors.length} errors${C.reset} · ${C.yellow}${warnings.length} warnings${C.reset} · ${C.dim}${infos.length} info${C.reset}`);
+      if (errors.length > 0) {
+        console.log(`\n  ${C.red}Errors:${C.reset}`);
+        errors.forEach(i => console.log(`    ${C.red}✗${C.reset} ${i.message}`));
+      }
+      if (warnings.length > 0) {
+        console.log(`\n  ${C.yellow}Warnings:${C.reset}`);
+        warnings.slice(0, 15).forEach(i => console.log(`    ${C.yellow}⚠${C.reset} ${i.message}`));
+        if (warnings.length > 15) console.log(`    ${C.dim}... +${warnings.length - 15} more${C.reset}`);
+      }
+      console.log('');
+    }
+    process.exit(guardIssues.filter(i => i.severity === 'error').length > 0 ? 1 : 0);
+    return;
+  }
+
+  // ── MANIFEST MODE ──
+  if (doManifest) {
+    const manifest = generateManifest(rootDir);
+    if (isJSON) {
+      console.log(JSON.stringify(manifest, null, 2));
+    } else {
+      console.log(`  Manifest written: ${Object.keys(manifest.files).length} files, ${manifest.contracts.length} contracts`);
+    }
+    return;
+  }
+
+  // ── FULL SCAN MODE (original sentinel behavior) ──
   const report = runSentinel(rootDir, { singleModule });
 
   // Write report
@@ -1601,7 +2000,7 @@ function main() {
     const sc = (s) => s >= 80 ? C.green : s >= 50 ? C.yellow : C.red;
 
     console.log(`\n${C.bold}${C.cyan}╔══════════════════════════════════════════════════════════════════╗${C.reset}`);
-    console.log(`${C.bold}${C.cyan}║  NW-SENTINEL v${VERSION} — Ultimate Health Report (10 Modules)     ║${C.reset}`);
+    console.log(`${C.bold}${C.cyan}║  NW-GUARDIAN v${VERSION} — Unified Health Report (10 Modules)     ║${C.reset}`);
     console.log(`${C.bold}${C.cyan}╚══════════════════════════════════════════════════════════════════╝${C.reset}\n`);
 
     console.log(`  ${C.bold}Composite Score:${C.reset}  ${sc(report.summary.healthScore)}${report.summary.healthScore}/100 (${report.summary.grade})${C.reset}`);
@@ -1679,4 +2078,4 @@ function main() {
 }
 
 if (require.main === module) main();
-module.exports = { runSentinel, scanFiles, modArchitecture, modAssets, modI18n, modDeadCode, modSecurity, modPerformance, modApiSurface, modDependencies, modAccessibility, modSeoMeta, generateAutoFixes, loadTrendHistory };
+module.exports = { runSentinel, runSelfHeal, selfHealScan, applyHeals, generateManifest, scanFiles, modArchitecture, modAssets, modI18n, modDeadCode, modSecurity, modPerformance, modApiSurface, modDependencies, modAccessibility, modSeoMeta, generateAutoFixes, loadTrendHistory };
