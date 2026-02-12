@@ -1,26 +1,89 @@
 <div align="center">
 
-# 🍄 Mycelium
+# NumbahWan TCG
 
-### Your codebase learns from its own mistakes
+### AI-native project infrastructure: self-healing code + the protocol that teaches AI your codebase
 
-**Five scripts. Zero dependencies. Drop into any git repo.**<br>
-It reads your commit history, finds what keeps breaking, and builds defenses automatically.
-
-[![Live Showcase](https://img.shields.io/badge/🍄_Live_Showcase-See_It_Working-6c5ce7?style=for-the-badge)](https://numbahwan.pages.dev/showcase)
-[![Score](https://img.shields.io/badge/Score-75%2F100_(B)-00b894?style=for-the-badge)](https://numbahwan.pages.dev/showcase)
-
-> **Deploy needed**: Showcase page exists in repo but Cloudflare Pages needs redeployment. Merge PR #41 to trigger auto-deploy via GitHub Actions.
-[![Tests](https://img.shields.io/badge/Tests-123_passing-00b894?style=for-the-badge)]()
+[![PCP](https://img.shields.io/badge/PCP_v0.1-Level_3_(Grade_A)-00d4ff?style=for-the-badge)](https://numbahwan.pages.dev/.well-known/pcp.json)
+[![PCP Tests](https://img.shields.io/badge/PCP_Tests-125%2F125_passing-00b894?style=for-the-badge)]()
+[![Mycelium](https://img.shields.io/badge/Mycelium-75%2F100_(B)-6c5ce7?style=for-the-badge)](https://numbahwan.pages.dev/showcase)
 [![Deps](https://img.shields.io/badge/Dependencies-0-e8e0d8?style=for-the-badge)]()
 
-**[Live Showcase](https://numbahwan.pages.dev/showcase)** · **[All 92 Pages](https://numbahwan.pages.dev/showcase#gallery)** · **[Showcase Source](public/showcase.html)** · every number is real, hash-locked, and independently verifiable
+**Two open standards. Zero dependencies. One repo.**
+
+**[PCP Spec](PCP-SPEC.md)** | **[Agent Dashboard](https://numbahwan.pages.dev/agent)** | **[Live Showcase](https://numbahwan.pages.dev/showcase)** | **[Discovery](https://numbahwan.pages.dev/.well-known/pcp.json)**
 
 </div>
 
 ---
 
-## The Problem
+## Project Context Protocol (PCP) v0.1 — Reference Implementation
+
+**PCP is a new open standard for exposing structured project context to AI agents via HTTP.**
+
+MCP (Anthropic) connects tools to models. A2A (Google) connects agents to agents. **PCP connects projects to agents.** It fills a gap no existing protocol addresses: *how does an AI agent instantly understand a codebase it's never seen before?*
+
+```bash
+# Any AI agent can onboard to your project in one HTTP call:
+curl https://yourproject.dev/.well-known/pcp.json     # Discover PCP support
+curl https://yourproject.dev/api/pcp/brief             # 209 tokens — instant understanding
+curl -X POST https://yourproject.dev/api/pcp/onboard \ # Full session bootstrap
+  -d '{"agent":"claude","goals":["fix i18n"]}'         # 6K tokens — rules, tasks, memory, tools
+```
+
+### Why PCP Exists
+
+When an AI agent starts working on a codebase, it faces a cold-start problem:
+- **No project understanding** — doesn't know the stack, conventions, or architecture
+- **No design rules** — will break things the team already learned not to break
+- **No health awareness** — can't prioritize what needs fixing
+- **No memory continuity** — learnings from the last AI session are lost
+- **Token waste** — dumping an entire README burns 50K+ tokens for context deliverable in 209
+
+### PCP vs Everything Else
+
+| Standard | Connects | PCP relationship |
+|----------|----------|------------------|
+| **MCP** (Anthropic) | Tools to Models | Complementary. MCP provides tool access; PCP provides project context. |
+| **A2A** (Google) | Agent to Agent | Complementary. A2A coordinates agents; PCP gives them project understanding. |
+| **agents.json** | Discovery | Complementary. agents.json discovers agents; PCP discovers project state. |
+| **llms.txt** | Website to LLM | Similar intent but static markdown. PCP is dynamic JSON with token budgets. |
+
+### Compliance Levels
+
+| Level | Endpoints | Token Cost | What It Gives an Agent |
+|-------|-----------|------------|----------------------|
+| **L0** (required) | `/.well-known/pcp.json` + `/brief` + `/rules` | ~500 | "What is this project and what can't I break?" |
+| **L1** (core) | + `/context` + `/health` + `/files` | ~3K | Full architecture, health scores, file map |
+| **L2** (memory) | + `/tasks` + `/memory` + `/onboard` + `/status` + `/pulse` | ~6K | Cross-session memory, task queue, session bootstrap |
+| **L3** (actions) | + `/actions` + `/webhooks` + `/notify` | ~6K | Trigger commands, GitHub auto-tasks, alert channels |
+
+### This Implementation: 125/125 Tests, Level 3, Grade A
+
+```bash
+# Run the compliance validator yourself
+node tests/pcp-validator.cjs
+# 125 tests | 125 PASS | 0 FAIL | 0 WARN
+# PCP Compliance Level: Level 3
+# Grade: A
+```
+
+Key metrics from this reference implementation:
+- **Brief**: 209 tokens, 5ms response — an agent understands the project in one call
+- **Pulse**: 68 bytes, 5ms — lightest possible heartbeat for dashboard auto-refresh
+- **17 endpoints** at `/api/pcp/*` with full `/api/agent/*` backward compatibility
+- **KV-backed memory** — learnings, decisions, blockers persist across AI sessions
+- **Token-budget metadata** — every response declares its cost so agents can budget
+
+Full spec: **[PCP-SPEC.md](PCP-SPEC.md)** (505 lines, self-contained, no dependencies on this repo)
+
+---
+
+## Mycelium — Your Codebase Learns From Its Own Mistakes
+
+**Five scripts. Zero dependencies. Drop into any git repo.** It reads your commit history, finds what keeps breaking, and builds defenses automatically.
+
+### The Problem
 
 You fix a bug. Two weeks later, the same file breaks the same way. Your team has 50 "lessons learned" docs that nobody reads. Your pre-commit hooks check formatting, not whether you're about to repeat a mistake from 3 months ago.
 
@@ -233,20 +296,24 @@ This system does the same thing for your codebase. When one file breaks, every c
 ## Project Structure
 
 ```
-├── mycelium.cjs              # The Learner
-├── mycelium-watch.cjs        # The Watcher
-├── mycelium-eval.cjs         # The Evaluator
-├── mycelium-fix.cjs          # The Fixer
-├── mycelium-upgrade.cjs      # The Upgrader (NEW)
-├── sentinel.cjs              # Health scanner (standalone)
-├── bin/mycelium.cjs          # Unified CLI
-├── .mycelium/                # All runtime data
-│   ├── memory.json           # Learner state (snapshots, constraints, breakages)
-│   ├── watch.json            # Watcher state (commits, risks, couplings)
-│   └── config.json           # Configuration
+├── PCP-SPEC.md                  # Project Context Protocol specification
+├── src/routes/agent.ts          # PCP reference implementation (488 lines)
+├── public/agent.html            # Agent command center dashboard
+├── public/.well-known/pcp.json  # PCP discovery manifest
+├── tests/pcp-validator.cjs      # 125-check compliance validator
+├── tests/pcp-compliance.cjs     # 68-check core compliance validator
+├── bin/agent-brief.cjs          # CLI agent brief (7 modes)
+├── mycelium.cjs                 # The Learner
+├── sentinel.cjs                 # Health scanner (standalone)
+├── bin/mycelium.cjs             # Unified CLI
+├── .mycelium/                   # All runtime data
+│   ├── memory.json              # Learner state (snapshots, constraints, breakages)
+│   ├── watch.json               # Watcher state (commits, risks, couplings)
+│   └── config.json              # Configuration
 └── tests/
-    ├── regression-from-breakages.cjs  # 32 tests from real breakages
-    └── regression-upgrade.cjs         # 52 tests auto-generated by upgrader
+    ├── run-tests.cjs            # Full test suite
+    ├── smoke-test.cjs           # HTTP smoke tests
+    └── nw-i18n-guard.cjs        # i18n validation
 ```
 
 ## Contributing
@@ -262,8 +329,10 @@ Good first contributions:
 
 <div align="center">
 
-**🍄 Mycelium** — your codebase remembers so you don't have to
+**NumbahWan TCG** — AI-native project infrastructure
 
-**[Live Showcase](https://numbahwan.pages.dev/showcase)** · **[Get Started](#quick-start)** · **[How It Works](#the-five-brains)**
+**[PCP Spec](PCP-SPEC.md)** | **[Agent Dashboard](https://numbahwan.pages.dev/agent)** | **[Live Showcase](https://numbahwan.pages.dev/showcase)** | **[Get Started](#quick-start)** | **[How It Works](#the-five-brains)**
+
+*PCP is an open specification. MCP connects tools. A2A connects agents. PCP connects projects.*
 
 </div>
