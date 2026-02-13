@@ -12,6 +12,8 @@ const routes = {
     "/vault/*",
     "/research/*",
     "/tabletop/*",
+    "/world/img/*",
+    "/world/*.html",
     "/.well-known/*",
     "/_headers",
     "/favicon.ico",

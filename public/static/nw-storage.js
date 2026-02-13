@@ -1,3 +1,4 @@
+/* @deprecated - Orphaned global. Export not used by any page. Candidate for removal. */
 /**
  * NumbahWan Storage System v1.0
  * =============================

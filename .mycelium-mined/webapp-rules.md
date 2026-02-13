@@ -1,30 +1,30 @@
 # Mycelium Mined Rules — webapp
-> Generated 2026-02-11T01:28:30.734Z | 135 fix commits analyzed | v2.0
+> Generated 2026-02-12T11:27:34.492Z | 142 fix commits analyzed | v2.0
 
 ## Quick Stats
 | Metric | Value |
 |--------|-------|
-| Fix commits analyzed | 135 |
+| Fix commits analyzed | 142 |
 | Recurring patterns | 20 |
-| Singleton insights | 5 |
-| Fix chains detected | 97 |
+| Singleton insights | 6 |
+| Fix chains detected | 105 |
 | Hotspot files | 50 |
 
 ## Bug Categories
 
-- **css-layout** ███████ 49 (36.3%)
-- **other** ███ 17 (12.6%)
-- **null-reference** ██ 15 (11.1%)
-- **i18n** █ 9 (6.7%)
-- **load-order** █ 8 (5.9%)
-- **logic-error** █ 7 (5.2%)
-- **mobile-compat** █ 6 (4.4%)
-- **error-handling** █ 5 (3.7%)
-- **async-timing** █ 5 (3.7%)
-- **test-failure** █ 4 (3%)
-- **build-config** █ 4 (3%)
-- **api-contract** █ 4 (3%)
-- **dom-mutation** █ 2 (1.5%)
+- **css-layout** ███████ 49 (34.5%)
+- **other** ███ 19 (13.4%)
+- **null-reference** ██ 15 (10.6%)
+- **i18n** ██ 11 (7.7%)
+- **mobile-compat** █ 8 (5.6%)
+- **load-order** █ 8 (5.6%)
+- **logic-error** █ 7 (4.9%)
+- **async-timing** █ 6 (4.2%)
+- **error-handling** █ 5 (3.5%)
+- **test-failure** █ 4 (2.8%)
+- **build-config** █ 4 (2.8%)
+- **api-contract** █ 4 (2.8%)
+- **dom-mutation** █ 2 (1.4%)
 
 ## Prevention Rules
 
@@ -61,16 +61,30 @@ Example commits:
 ---
 
 ### MCL-I18N-MISSING-TRANSLATION
-**i18n-missing-translation** — 9 occurrences | medium severity | i18n
+**i18n-missing-translation** — 11 occurrences | medium severity | i18n
 
 > feat(regression): 12 real regression tests targeting actual breakage patterns — caught and fixed digit-starting i18n key bug in index.html. RULE: Ensure all user-visible strings go through the translation system.
 
 Root cause: feat(regression): 12 real regression tests targeting actual breakage patterns — caught and fixed digit-starting i18n key bug in index.html
 
 Example commits:
+- `4e6d427` fix: nuke buy-toast entirely — direct redirect to /buy.html, no popup (2026-02-11)
+- `f71797d` fix(cleanup): remove Qing/卿 personalization, emoji animations, streak/achievemen (2026-02-11)
 - `1998cc9` feat(regression): 12 real regression tests targeting actual breakage patterns —  (2026-02-09)
-- `98b541b` feat(sentinel): Upgrade to v2.5 — 10-module health platform with trend tracking  (2026-02-07)
-- `a3046c0` Fix: use data-i18n-html for HTML content in wyckoff intro (2026-02-05)
+
+---
+
+### MCL-MISSING-RESPONSIVE-BREAKPOINT
+**missing-responsive-breakpoint** — 6 occurrences | medium severity | mobile-compat
+
+> Test every UI change at 320px, 768px, and 1024px. Add @media breakpoints for layouts that break at different screen sizes.
+
+Root cause: Added responsive breakpoint — was broken on different screen sizes. Also: Changed width: min(320px, 80vw) → min(340px, 85vw); Changed height: calc(min(320px, 80vw) * 1.4) → calc(min(340px, 85vw) * 1.4)
+
+Example commits:
+- `d6ae78e` feat(system): AGENT-CONTEXT.md + full audit fixes (2026-02-11)
+- `f07a577` fix(rebrand): add kintsugi.html landing page + update memory to v2 KINTSUGI bran (2026-02-11)
+- `e231b1a` Fix iOS mobile overlap on Profile Card (2026-02-04)
 
 ---
 
@@ -169,20 +183,6 @@ Example commits:
 - `f965e84` fix(portable): make mycelium work on any repo — fix --init crash, strip NumbahWa (2026-02-09)
 - `847fe08` fix(honesty): record underselling breakage + add HONESTY GATE to CLAUDE.md — nev (2026-02-09)
 - `adf49f1` fix(showcase): strip fake impact metrics (hours/money/pts saved) — replace with  (2026-02-09)
-
----
-
-### MCL-MISSING-RESPONSIVE-BREAKPOINT
-**missing-responsive-breakpoint** — 4 occurrences | medium severity | mobile-compat
-
-> Test every UI change at 320px, 768px, and 1024px. Add @media breakpoints for layouts that break at different screen sizes.
-
-Root cause: Added responsive breakpoint — was broken on different screen sizes. Also: Changed width: min(320px, 80vw) → min(340px, 85vw); Changed height: calc(min(320px, 80vw) * 1.4) → calc(min(340px, 85vw) * 1.4)
-
-Example commits:
-- `e231b1a` Fix iOS mobile overlap on Profile Card (2026-02-04)
-- `d8f5715` Fix UX: Remove blocking back buttons, add NW_NAV integration, improve scroll beh (2026-02-02)
-- `0efeaa3` Fix mobile layout - horizontal scroll watchlist, proper sizing (2026-02-01)
 
 ---
 
@@ -319,6 +319,8 @@ Example commits:
   → display:none removes elements from layout entirely. Use visibility:hidden or opacity:0 if the element's space should be 
 - **missing-display-none** (css-layout): Added display:none — element was incorrectly visible. Also: Changed resource path; Added string fallback — was showing u
   → Elements visible when they shouldn't be — check initial state and conditional rendering logic.
+- **wrong-timing-value** (async-timing): Changed timeout: 3500ms → 1200ms
+  → Hardcoded timeout values break on slow devices. Prefer requestAnimationFrame, MutationObserver, or event-based triggers 
 - **wrong-conditional-logic** (logic-error): Modified conditional logic
   → Changed conditional logic — verify all branches are correct and edge cases are handled.
 - **string-concatenation-bug** (logic-error): Switched from string concat to template literal — concatenation bug
@@ -328,26 +330,26 @@ Example commits:
 
 | File | Changes | Fixes | Fix Rate |
 |------|---------|-------|----------|
-| 🟢 src/index.tsx | 101 | 15 | 15% |
-| 🟡 public/forge.html | 91 | 30 | 33% |
-| 🟡 public/battle.html | 58 | 19 | 33% |
-| 🟢 public/static/nw-nav.js | 52 | 10 | 19% |
-| 🟢 public/index.html | 39 | 7 | 18% |
-| 🟢 public/wallet.html | 38 | 7 | 18% |
-| 🟡 public/cards.html | 37 | 12 | 32% |
-| 🟡 public/static/data/sentinel-report.json | 33 | 9 | 27% |
-| 🟡 public/static/data/sentinel-history.json | 31 | 9 | 29% |
-| 🟢 public/merch.html | 24 | 3 | 13% |
-| 🟢 public/collection.html | 23 | 3 | 13% |
-| 🟡 public/markets.html | 20 | 4 | 20% |
-| 🟢 public/market.html | 19 | 1 | 5% |
-| 🟡 public/static/data/showcase-live.json | 19 | 4 | 21% |
-| 🟢 public/guide.html | 19 | 1 | 5% |
-| 🟢 package.json | 18 | 1 | 6% |
-| 🟢 public/wyckoff.html | 18 | 3 | 17% |
-| 🟡 public/static/nw-guide.js | 18 | 5 | 28% |
-| 🟢 public/academy.html | 17 | 2 | 12% |
-| 🟢 public/deckbuilder.html | 17 | 3 | 18% |
+| 🟢 src/index.tsx | 94 | 15 | 16% |
+| 🟡 public/forge.html | 92 | 30 | 33% |
+| 🟡 public/battle.html | 60 | 19 | 32% |
+| 🟢 public/static/nw-nav.js | 54 | 10 | 19% |
+| 🟢 public/index.html | 41 | 7 | 17% |
+| 🟢 public/wallet.html | 40 | 7 | 18% |
+| 🟡 public/cards.html | 39 | 12 | 31% |
+| 🟡 public/static/data/sentinel-report.json | 37 | 9 | 24% |
+| 🟡 public/static/data/sentinel-history.json | 35 | 9 | 26% |
+| 🟢 public/merch.html | 26 | 3 | 12% |
+| 🟢 public/collection.html | 24 | 3 | 13% |
+| 🟢 public/static/data/showcase-live.json | 22 | 4 | 18% |
+| 🟢 public/markets.html | 22 | 4 | 18% |
+| 🟢 package.json | 21 | 1 | 5% |
+| 🟢 public/wyckoff.html | 21 | 3 | 14% |
+| 🟢 public/guide.html | 21 | 1 | 5% |
+| 🟢 public/market.html | 20 | 1 | 5% |
+| 🟢 public/pvp.html | 19 | 3 | 16% |
+| 🟢 public/academy.html | 19 | 2 | 11% |
+| 🟢 public/regina.html | 18 | 2 | 11% |
 
 ## Coupling Map (Files That Break Together)
 

@@ -710,6 +710,105 @@ const NW_NAV = {
 
     t(obj) { return typeof obj === 'string' ? obj : (obj[this.currentLang] || obj.en || ''); },
 
+    _updateNavText(lang) {
+        const sections = this.getVisibleSections();
+        Object.entries(sections).forEach(([key, section]) => {
+            // Update section header text
+            const header = document.querySelector(`.nw-nav-section-header[data-section="${key}"]`);
+            if (header) {
+                const spans = header.querySelectorAll(':scope > span');
+                if (spans.length > 0) spans[0].textContent = this.t(section.name);
+                const descSpan = header.querySelector('.nw-nav-desc');
+                if (descSpan && section.desc) descSpan.textContent = this.t(section.desc);
+            }
+            // Update page link text
+            section.pages.forEach(page => {
+                const link = document.querySelector(`.nw-nav-link[href="${page.href}"]`);
+                if (link) {
+                    const textSpan = link.querySelector('.nw-nav-text');
+                    if (textSpan) textSpan.textContent = this.t(page.name);
+                }
+            });
+        });
+        // Also update the version/status text at bottom if present
+        const versionEl = document.querySelector('.nw-nav-version');
+        if (versionEl) {
+            const parts = versionEl.textContent.split('•');
+            if (parts.length > 1) {
+                const statusMap = { en: 'Open', zh: '開放', th: 'เปิด' };
+                versionEl.textContent = parts[0].trim() + ' • ' + (statusMap[lang] || 'Open');
+            }
+        }
+    },
+
+    _refreshNavLanguage() {
+        // Strategy: replace just the nav pages container innerHTML while keeping panel open
+        const panel = document.getElementById('nwNavPanel');
+        if (!panel) return;
+        
+        // Find the scrollable content area and rebuild just the sections
+        const sectionsContainer = panel.querySelector('.nw-nav-scroll');
+        if (sectionsContainer) {
+            // Save scroll position
+            const scrollTop = sectionsContainer.scrollTop;
+            
+            // Regenerate sections HTML only
+            const visibleSections = this.getVisibleSections();
+            const tier = this.getPlayerTier();
+            const sectionsHTML = Object.entries(visibleSections).map(([key, section]) => {
+                const isCollapsible = section.collapsed !== false;
+                const isCollapsed = isCollapsible && (this.collapsedSections[key] ?? section.collapsed);
+                const hasActivePage = section.pages.some(p => p.id === this.currentPage);
+                const showCollapsed = isCollapsible && isCollapsed && !hasActivePage;
+                
+                const pagesHTML = section.pages.map(page => {
+                    const isActive = page.id === this.currentPage;
+                    return `<a href="${page.href}" class="nw-nav-link ${isActive ? 'active' : ''}">${this.iconSvg(page.icon, 16)}<span class="nw-nav-text">${this.t(page.name)}</span>${page.isHot ? '<span class="nw-hot-badge">HOT</span>' : ''}${page.isNew ? '<span class="nw-new-badge">NEW</span>' : ''}</a>`;
+                }).join('');
+
+                const visibleCount = section.pages.length;
+                const chevron = isCollapsible ? `<span class="nw-nav-chevron ${showCollapsed ? '' : 'open'}">${this.iconSvg('arrow-right', 12)}</span>` : '';
+                return `
+                    <div class="nw-nav-section ${showCollapsed ? 'collapsed' : ''}" data-section="${key}">
+                        <div class="nw-nav-section-header ${isCollapsible ? 'collapsible' : ''}" style="--section-color: ${section.color}" data-section="${key}">
+                            ${this.iconSvg(section.icon, 16)}
+                            <span>${this.t(section.name)}</span>
+                            ${section.desc ? `<span class="nw-nav-desc">${this.t(section.desc)}</span>` : ''}
+                            ${isCollapsible ? `<span class="nw-nav-count">${visibleCount}</span>` : ''}
+                            ${chevron}
+                        </div>
+                        <div class="nw-nav-pages ${showCollapsed ? 'collapsed' : ''}">${pagesHTML}</div>
+                    </div>`;
+            }).join('');
+            
+            sectionsContainer.innerHTML = sectionsHTML;
+            sectionsContainer.scrollTop = scrollTop;
+            
+            // Re-bind collapsible section headers
+            sectionsContainer.querySelectorAll('.nw-nav-section-header.collapsible').forEach(header => {
+                header.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const section = header.dataset.section;
+                    const sectionEl = header.closest('.nw-nav-section');
+                    const pages = sectionEl.querySelector('.nw-nav-pages');
+                    const chevronEl = header.querySelector('.nw-nav-chevron');
+                    const isCollapsed = pages.classList.contains('collapsed');
+                    requestAnimationFrame(() => {
+                        pages.classList.toggle('collapsed', !isCollapsed);
+                        chevronEl?.classList.toggle('open', isCollapsed);
+                        sectionEl.classList.toggle('collapsed', !isCollapsed);
+                        this.setCollapsedState(section, !isCollapsed);
+                    });
+                }, { passive: true });
+            });
+        }
+        
+        // Update lang buttons (they're outside sections)
+        document.querySelectorAll('.nw-lang-btn').forEach(b => {
+            b.classList.toggle('active', b.dataset.lang === this.currentLang);
+        });
+    },
+
     generateNavHTML() {
         // Use progressive disclosure — only show sections/pages the player has earned
         const visibleSections = this.getVisibleSections();
@@ -1206,46 +1305,43 @@ const NW_NAV = {
             }, { passive: true });
         });
 
-        // Language buttons - iOS Safari fix: use both click and touchend
-        document.querySelectorAll('.nw-lang-btn').forEach(btn => {
-            const handleLangChange = (e) => {
+        // Language buttons — event delegation for reliability on iOS/mobile
+        // Using delegation on the panel means it survives DOM rebuilds
+        const panel = document.getElementById('nwNavPanel');
+        if (panel) {
+            const langHandler = (e) => {
+                const btn = e.target.closest('.nw-lang-btn');
+                if (!btn) return;
                 e.preventDefault();
                 e.stopPropagation();
                 const lang = btn.dataset.lang;
                 if (lang === this.currentLang) return;
-                
+
                 this.currentLang = lang;
                 this.setStoredLang(lang);
-                
-                // Update button active states IN-PLACE (don't destroy nav with injectNav)
-                document.querySelectorAll('.nw-lang-btn').forEach(b => {
+
+                // Update button active states
+                panel.querySelectorAll('.nw-lang-btn').forEach(b => {
                     b.classList.toggle('active', b.dataset.lang === lang);
                 });
-                
-                // Update nav section/page names for new language
-                const navLinks = document.querySelectorAll('.nw-nav-link .nw-nav-text');
-                const sectionHeaders = document.querySelectorAll('.nw-section-title');
-                // Re-render nav text only (preserving open state)
-                const wasOpen = this.isOpen;
-                requestAnimationFrame(() => {
-                    // Dispatch events so NW_I18N and page-level code react
-                    ['nw-lang-change', 'languageChanged'].forEach(evtName => {
-                        document.dispatchEvent(new CustomEvent(evtName, { detail: { lang } }));
-                        if (evtName === 'nw-lang-change') window.dispatchEvent(new CustomEvent(evtName, { detail: { lang } }));
-                    });
-                    if (typeof NW_I18N !== 'undefined' && NW_I18N.setLang) NW_I18N.setLang(lang);
+
+                // Re-render nav sections text in-place
+                this._refreshNavLanguage();
+
+                // Notify i18n core + page scripts synchronously (no RAF delay)
+                ['nw-lang-change', 'languageChanged'].forEach(evtName => {
+                    document.dispatchEvent(new CustomEvent(evtName, { detail: { lang } }));
+                    window.dispatchEvent(new CustomEvent(evtName, { detail: { lang } }));
                 });
-                
+                if (typeof NW_I18N !== 'undefined' && NW_I18N.setLang) NW_I18N.setLang(lang);
                 if (typeof NW_SOUNDS !== 'undefined') NW_SOUNDS.play('click');
             };
-            
-            // iOS Safari needs explicit touchend handler, not passive
-            btn.addEventListener('click', handleLangChange);
-            btn.addEventListener('touchend', (e) => {
-                e.preventDefault(); // Prevent ghost click on iOS
-                handleLangChange(e);
+            panel.addEventListener('click', langHandler);
+            // touchend for iOS Safari — fire immediately, block ghost click
+            panel.addEventListener('touchend', (e) => {
+                if (e.target.closest('.nw-lang-btn')) langHandler(e);
             });
-        });
+        }
     },
 
     open() {
@@ -1271,14 +1367,14 @@ const NW_NAV = {
         if (lang === this.currentLang) return;
         this.currentLang = lang;
         this.setStoredLang(lang);
-        // Update button states in-place
+        // Update button states + nav text
         document.querySelectorAll('.nw-lang-btn').forEach(b => {
             b.classList.toggle('active', b.dataset.lang === lang);
         });
-        requestAnimationFrame(() => {
-            ['nw-lang-change', 'languageChanged'].forEach(evtName => {
-                document.dispatchEvent(new CustomEvent(evtName, { detail: { lang } }));
-            });
+        this._refreshNavLanguage();
+        ['nw-lang-change', 'languageChanged'].forEach(evtName => {
+            document.dispatchEvent(new CustomEvent(evtName, { detail: { lang } }));
+            window.dispatchEvent(new CustomEvent(evtName, { detail: { lang } }));
         });
     }
 };

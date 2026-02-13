@@ -47,7 +47,24 @@ if [ -f ".mycelium-alert" ]; then
   echo "" >&2
 fi
 
-# ─── BONUS: Fix commit? Also run postfix analysis ───
+# ─── STEP 7: TELEMETRY (commit-level time-series data collection) ───
+if [ -f "tools/commit-telemetry.cjs" ]; then
+  node "tools/commit-telemetry.cjs" --silent 2>/dev/null || true
+fi
+
+# ─── STEP 8: TEST TELEMETRY (correlate test results with commit) ───
+if [ -f "tools/test-telemetry.cjs" ]; then
+  node "tools/test-telemetry.cjs" --silent 2>/dev/null || true
+fi
+
+# ─── STEP 9: DEPENDENCY GRAPH (rebuild import graph on structural changes) ───
+# Only rebuild if HTML or JS files changed (skip for docs/config-only commits)
+CHANGED_EXTS=$(git diff-tree --no-commit-id --name-only -r HEAD 2>/dev/null | grep -E '\.(html|js|css|ts|tsx)$' | head -1)
+if [ -n "$CHANGED_EXTS" ] && [ -f "tools/dependency-graph.cjs" ]; then
+  node "tools/dependency-graph.cjs" --silent 2>/dev/null || true
+fi
+
+# ─── BONUS: Fix commit? Also run postfix analysis + blame linking ───
 COMMIT_MSG=$(git log -1 --pretty=format:"%s" 2>/dev/null)
 case "$COMMIT_MSG" in
   fix*|Fix*|hotfix*|Hotfix*)
@@ -56,6 +73,10 @@ case "$COMMIT_MSG" in
     fi
     if [ -f "mycelium.cjs" ]; then
       node mycelium.cjs --postfix >/dev/null 2>&1 || true
+    fi
+    # Incremental blame-link for this fix commit
+    if [ -f "tools/blame-linker.cjs" ]; then
+      node "tools/blame-linker.cjs" --recent 1 --silent 2>/dev/null || true
     fi
     # Compact: just 1 line instead of 4
     echo "  [mycelium] Fix detected — run: node mycelium.cjs --learned area lesson" >&2

@@ -1,6 +1,11 @@
 // =====================================================================
 // MYTHIC FORGE - ULTRA PREMIUM CARD PULL EXPERIENCE
 // Inspired by South Park: Phone Destroyer with NumbahWan Twist
+// 3419 lines — REFACTOR NOTE: Candidate for splitting into:
+//   nw-forge-audio.js    (lines 1-280)   - Audio/haptic system
+//   nw-forge-cards.js    (lines 541-810) - Card loading/display
+//   nw-forge-gacha.js    (lines 813-960) - Pull rates/GM mode
+//   nw-forge-engine.js   (rest)          - Core forge logic
 // =====================================================================
 
 // DEV_MODE flag - set to false for production

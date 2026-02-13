@@ -433,6 +433,131 @@ router.get('/diff', (c) => c.json(pcp('diff', {
 })))
 
 // ═══════════════════════════════════════════════════════════════
+// PCP TELEMETRY — Commit-level time-series data for mining
+// ═══════════════════════════════════════════════════════════════
+
+router.get('/telemetry', async (c) => {
+  // Serve telemetry data from KV (populated by commit-telemetry.cjs + build pipeline)
+  // Falls back to static file data if KV is unavailable
+  const kv = c.env?.MARKET_CACHE
+  const limit = Math.min(parseInt(c.req.query('limit') || '20'), 100)
+  const mode = c.req.query('mode') || 'summary' // summary | full | trend | latest
+  
+  // Try KV first for live data
+  let records = await kvGet(kv, 'telemetry', null)
+  
+  // Fallback: read from sentinel history for trend data
+  const sentinelHistory = (r as any)?.trend || null
+  
+  if (mode === 'latest') {
+    const latest = records ? records[records.length - 1] : null
+    return c.json(pcp('telemetry', {
+      mode: 'latest',
+      record: latest,
+      sentinel: {
+        composite: healthScore(),
+        grade: healthGrade(),
+        modules: Object.entries(r?.modules || {}).reduce((acc: any, [n, m]: [string, any]) => {
+          acc[n] = { score: m.score, issues: m.issues?.length || 0 }
+          return acc
+        }, {})
+      }
+    }))
+  }
+  
+  if (mode === 'trend') {
+    // Lightweight trend: scores + bundle sizes over time
+    const trendData = (records || []).slice(-limit).map((rec: any) => ({
+      ts: rec.timestamp,
+      hash: rec.commit?.hash,
+      type: rec.commit?.parsed?.type,
+      score: rec.sentinel?.composite,
+      bundle: rec.build?.bundleSizeKB,
+      files: rec.commit?.diff?.filesChanged,
+      net: rec.commit?.diff?.netLines,
+      delta: rec.delta?.scoreDelta
+    }))
+    return c.json(pcp('telemetry', {
+      mode: 'trend',
+      points: trendData.length,
+      data: trendData,
+      sentinelTrend: sentinelHistory
+    }))
+  }
+  
+  if (mode === 'full') {
+    return c.json(pcp('telemetry', {
+      mode: 'full',
+      total: records?.length || 0,
+      records: (records || []).slice(-limit)
+    }))
+  }
+  
+  // Default: summary
+  const allRecords = records || []
+  const recent = allRecords.slice(-limit)
+  
+  // Compute aggregates
+  const types: Record<string, number> = {}
+  let totalFiles = 0, totalInsertions = 0, totalDeletions = 0
+  const scores = allRecords.map((r: any) => r.sentinel?.composite).filter((s: any) => s != null)
+  
+  for (const rec of allRecords) {
+    const t = rec.commit?.parsed?.type || 'other'
+    types[t] = (types[t] || 0) + 1
+    totalFiles += rec.commit?.diff?.filesChanged || 0
+    totalInsertions += rec.commit?.diff?.insertions || 0
+    totalDeletions += rec.commit?.diff?.deletions || 0
+  }
+  
+  return c.json(pcp('telemetry', {
+    mode: 'summary',
+    total_records: allRecords.length,
+    current_health: { score: healthScore(), grade: healthGrade() },
+    aggregates: {
+      commit_types: types,
+      total_files_changed: totalFiles,
+      total_insertions: totalInsertions,
+      total_deletions: totalDeletions,
+      score_range: scores.length > 0 ? {
+        min: Math.min(...scores),
+        max: Math.max(...scores),
+        avg: Math.round(scores.reduce((a: number, b: number) => a + b, 0) / scores.length)
+      } : null
+    },
+    recent: recent.slice(-5).map((rec: any) => ({
+      hash: rec.commit?.hash,
+      type: rec.commit?.parsed?.type,
+      score: rec.sentinel?.composite,
+      files: rec.commit?.diff?.filesChanged,
+      delta: rec.delta?.scoreDelta,
+      date: rec.date
+    }))
+  }))
+})
+
+// POST telemetry — allows external tools to push telemetry records
+router.post('/telemetry', async (c) => {
+  const kv = c.env?.MARKET_CACHE
+  if (!kv) return c.json({ ok: false, error: 'KV not available — telemetry stored locally only' }, 503)
+  
+  const body = await c.req.json().catch(() => null)
+  if (!body) return c.json({ ok: false, error: 'Invalid JSON body' }, 400)
+  
+  // Append to KV telemetry store
+  const records = await kvGet(kv, 'telemetry', [])
+  records.push({ ...body, received_at: Date.now() })
+  
+  // Cap at 500 records in KV
+  if (records.length > 500) records.splice(0, records.length - 500)
+  
+  await kvSet(kv, 'telemetry', records, 86400 * 90) // 90 day TTL
+  await appendLog(kv, { type: 'telemetry_push', records_total: records.length })
+  
+  return c.json({ ok: true, stored: records.length })
+})
+
+// ═══════════════════════════════════════════════════════════════
 // LEGACY ALIASES — /api/agent/* backward compatibility
 // ═══════════════════════════════════════════════════════════════
 // The dashboard and older integrations use /api/agent/* paths.

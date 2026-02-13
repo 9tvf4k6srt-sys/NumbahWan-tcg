@@ -195,6 +195,27 @@ async function checkCriticalAssets() {
     { path: '/static/nw-mint.js', expectType: 'javascript' },
     { path: '/static/nw-nav.js', expectType: 'javascript' },
     { path: '/static/favicon.svg', expectType: 'image/' },
+    // Castle world images (20 WebP pixel-art scenes)
+    { path: '/world/img/aerial.webp', expectType: 'image/' },
+    { path: '/world/img/exterior.webp', expectType: 'image/' },
+    { path: '/world/img/gates.webp', expectType: 'image/' },
+    { path: '/world/img/courtyard.webp', expectType: 'image/' },
+    { path: '/world/img/mountain.webp', expectType: 'image/' },
+    { path: '/world/img/market.webp', expectType: 'image/' },
+    { path: '/world/img/tavern.webp', expectType: 'image/' },
+    { path: '/world/img/barracks.webp', expectType: 'image/' },
+    { path: '/world/img/quarters.webp', expectType: 'image/' },
+    { path: '/world/img/warroom.webp', expectType: 'image/' },
+    { path: '/world/img/forge.webp', expectType: 'image/' },
+    { path: '/world/img/officers.webp', expectType: 'image/' },
+    { path: '/world/img/library.webp', expectType: 'image/' },
+    { path: '/world/img/gmsuite.webp', expectType: 'image/' },
+    { path: '/world/img/shrine.webp', expectType: 'image/' },
+    { path: '/world/img/observatory.webp', expectType: 'image/' },
+    { path: '/world/img/dungeon.webp', expectType: 'image/' },
+    { path: '/world/img/maids.webp', expectType: 'image/' },
+    { path: '/world/img/afk.webp', expectType: 'image/' },
+    { path: '/world/img/drama.webp', expectType: 'image/' },
   ];
 
   for (const asset of assets) {
@@ -209,6 +230,117 @@ async function checkCriticalAssets() {
       });
     }
   }
+  return results;
+}
+
+// ═══════════════════════════════════════════
+// PHASE 5: Castle world page validation
+// Check images referenced in HTML actually serve,
+// and that all data-i18n keys have ZH + TH translations
+// ═══════════════════════════════════════════
+async function checkCastlePage() {
+  const results = [];
+  
+  // 1. Fetch castle page
+  const res = await httpGetFollow(`${BASE}/world/castle`);
+  if (res.status !== 200) {
+    results.push({ path: '/world/castle', pass: false, error: `HTTP ${res.status}` });
+    return results;
+  }
+  
+  const html = res.body;
+  
+  // 2. Check all <img src="/world/img/..."> tags serve correctly
+  const imgMatches = html.match(/src=["']([^"']*\/world\/img\/[^"']+)["']/g) || [];
+  const checkedImgs = new Set();
+  for (const match of imgMatches) {
+    const src = match.replace(/src=["']/, '').replace(/["']$/, '');
+    if (checkedImgs.has(src)) continue;
+    checkedImgs.add(src);
+    const imgRes = await httpGet(`${BASE}${src}`, { headOnly: true });
+    const ct = imgRes.headers['content-type'] || '';
+    const ok = imgRes.status === 200 && ct.startsWith('image/');
+    results.push({
+      path: `/world/castle → ${src}`,
+      pass: ok,
+      error: ok ? undefined : `${imgRes.status} ${ct || 'no content-type'}`,
+    });
+  }
+  
+  // 3. Check that all data-i18n attributes have matching PAGE_I18N keys
+  // Extract all data-i18n key names from HTML
+  const i18nKeys = new Set();
+  const i18nMatches = html.match(/data-i18n="([^"]+)"/g) || [];
+  i18nMatches.forEach(m => {
+    i18nKeys.add(m.replace('data-i18n="', '').replace('"', ''));
+  });
+  
+  // Extract PAGE_I18N block
+  const pageI18nMatch = html.match(/const PAGE_I18N\s*=\s*\{([\s\S]*?)\n\};/);
+  if (!pageI18nMatch) {
+    results.push({ path: '/world/castle i18n', pass: false, error: 'PAGE_I18N not found' });
+    return results;
+  }
+  
+  // Check for each language
+  const i18nBlock = pageI18nMatch[1];
+  for (const lang of ['en', 'zh', 'th']) {
+    const langBlock = i18nBlock.match(new RegExp(`${lang}:\\s*\\{([\\s\\S]*?)\\}`, 'm'));
+    if (!langBlock) {
+      results.push({ path: `/world/castle i18n:${lang}`, pass: false, error: `${lang} block missing` });
+      continue;
+    }
+    const langKeys = new Set();
+    const keyMatches = langBlock[1].match(/'([^']+)':\s*'/g) || [];
+    keyMatches.forEach(m => langKeys.add(m.match(/'([^']+)'/)[1]));
+    
+    const missing = [...i18nKeys].filter(k => !langKeys.has(k));
+    if (missing.length > 0) {
+      results.push({
+        path: `/world/castle i18n:${lang}`,
+        pass: false,
+        error: `${missing.length} keys missing: ${missing.slice(0, 5).join(', ')}${missing.length > 5 ? '...' : ''}`,
+      });
+    } else {
+      results.push({ path: `/world/castle i18n:${lang}`, pass: true, detail: `${langKeys.size} keys` });
+    }
+  }
+  
+  // 4. Check that ALL visible text elements have data-i18n
+  // Strip script blocks to only check actual HTML
+  const htmlBody = html.replace(/<script[\s\S]*?<\/script>/gi, '');
+  
+  // Paragraphs in the body should have data-i18n
+  const pWithout = (htmlBody.match(/<p>(?![\s]*<)[^<]{30,}/g) || []).length;
+  if (pWithout > 0) {
+    results.push({
+      path: '/world/castle untranslated-p',
+      pass: false,
+      error: `${pWithout} <p> tags without data-i18n`,
+    });
+  } else {
+    results.push({ path: '/world/castle untranslated-p', pass: true, detail: 'all paragraphs translated' });
+  }
+  
+  // Detail item spans should have data-i18n
+  const spanWithout = (htmlBody.match(/<strong[^>]*data-i18n[^>]*>[^<]*<\/strong><span>(?![\s]*data-i18n)/g) || []).length;
+  if (spanWithout > 0) {
+    results.push({
+      path: '/world/castle untranslated-spans',
+      pass: false,
+      error: `${spanWithout} detail spans without data-i18n`,
+    });
+  } else {
+    results.push({ path: '/world/castle untranslated-spans', pass: true, detail: 'all spans translated' });
+  }
+  
+  // Summary
+  results.push({
+    path: '/world/castle summary',
+    pass: true,
+    detail: `${checkedImgs.size} images, ${i18nKeys.size} i18n keys`,
+  });
+  
   return results;
 }
 
@@ -262,10 +394,17 @@ async function main() {
   const assetFailed = assetResults.filter(r => !r.pass);
   console.log(`  ${assetFailed.length === 0 ? '✓' : '✗'} ${assetFailed.length} broken`);
 
+  // ── PHASE 5: Castle world page ──
+  process.stdout.write('  Phase 5: Castle world page...');
+  const castleResults = await checkCastlePage();
+  const castleFailed = castleResults.filter(r => !r.pass);
+  const castlePassed = castleResults.filter(r => r.pass);
+  console.log(`  ${castleFailed.length === 0 ? '✓' : '✗'} ${castlePassed.length}/${castleResults.length} (${castleFailed.length} failures)`);
+
   console.log('');
 
   // ── Collect all failures ──
-  const allFailed = [...pageFailed, ...apiFailed, ...imgFailed, ...assetFailed];
+  const allFailed = [...pageFailed, ...apiFailed, ...imgFailed, ...assetFailed, ...castleFailed];
 
   if (allFailed.length > 0) {
     console.log('❌ FAILURES:');
@@ -287,7 +426,7 @@ async function main() {
   }
 
   // ── Summary ──
-  const totalChecks = pages.length + apiResults.length + imgResults.length + assetResults.length;
+  const totalChecks = pages.length + apiResults.length + imgResults.length + assetResults.length + castleResults.length;
   const totalPassed = totalChecks - allFailed.length;
 
   console.log('┌───────────────────────────────────────────────┐');
@@ -296,6 +435,7 @@ async function main() {
   console.log(`│   API/images:   ${String(apiResults.length - apiFailed.length).padStart(4)}/${String(apiResults.length).padEnd(4)}                      │`);
   console.log(`│   Page images:  ${String(imgResults.length - imgFailed.length).padStart(4)}/${String(imgResults.length).padEnd(4)} checked                 │`);
   console.log(`│   Assets:       ${String(assetResults.length - assetFailed.length).padStart(4)}/${String(assetResults.length).padEnd(4)}                      │`);
+  console.log(`│   Castle:       ${String(castlePassed.length).padStart(4)}/${String(castleResults.length).padEnd(4)}                      │`);
   console.log(`│   Warnings:     ${String(noPageId.length).padStart(4)} (no page-id)              │`);
   console.log('└───────────────────────────────────────────────┘');
 
@@ -311,6 +451,7 @@ async function main() {
       api: { total: apiResults.length, passed: apiResults.length - apiFailed.length, failed: apiFailed.length },
       images: { total: imgResults.length, broken: imgFailed.length },
       assets: { total: assetResults.length, broken: assetFailed.length },
+      castle: { total: castleResults.length, passed: castlePassed.length, failed: castleFailed.length },
     },
     failures: allFailed.map(r => ({ path: r.path, error: r.error || `HTTP ${r.status}` })),
     warnings: { noPageId: noPageId.length, noViewport: noViewport.length, noTitle: noTitle.length },

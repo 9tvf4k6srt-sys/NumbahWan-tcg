@@ -1,0 +1,2046 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Castle NumbahWan — 3D World Atlas | NWG</title>
+<link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --gold:#e8a922;--amber:#d4881c;--dark:#0c0a08;--stone:#2a2318;
+  --warm:#1a1510;--text:#f5e6c8;--dim:#8a7a60;--green:#3a6b35;
+  --blue:#1a3a5c;--purple:#4a2a6a;--red:#6a2222;
+}
+html{scroll-behavior:smooth}
+body{
+  font-family:'Inter',sans-serif;background:var(--dark);color:var(--text);
+  line-height:1.7;overflow-x:hidden;
+}
+/* === PIXEL SCANLINE OVERLAY === */
+body::after{
+  content:'';position:fixed;inset:0;pointer-events:none;z-index:9999;
+  background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,.03) 2px,rgba(0,0,0,.03) 4px);
+}
+/* === HERO === */
+.hero{
+  position:relative;min-height:100vh;display:flex;align-items:center;
+  justify-content:center;text-align:center;overflow:hidden;
+}
+.hero-bg{
+  position:absolute;inset:0;
+  background:url('/static/world/hero-banner.webp') center bottom / cover no-repeat;
+}
+.hero-bg::after{
+  content:'';position:absolute;inset:0;
+  background:linear-gradient(180deg,rgba(12,10,8,.55) 0%,rgba(12,10,8,.35) 40%,rgba(12,10,8,.45) 70%,rgba(12,10,8,.85) 100%);
+}
+.hero-bg::before{
+  content:'';position:absolute;inset:0;z-index:1;
+  background:radial-gradient(ellipse at 50% 40%,rgba(232,169,34,.1) 0%,transparent 60%);
+}
+.hero-content{position:relative;z-index:2;padding:2rem}
+.hero h1{
+  font-family:'Press Start 2P',monospace;font-size:clamp(1.4rem,4vw,3rem);
+  color:var(--gold);text-shadow:0 0 30px rgba(232,169,34,.5),0 2px 8px rgba(0,0,0,.8);
+  margin-bottom:1rem;line-height:1.4;
+}
+.hero .subtitle{font-size:1.25rem;color:#f5e6c8;max-width:600px;margin:0 auto 2rem;text-shadow:0 1px 6px rgba(0,0,0,.7)}
+.hero .scroll-hint{
+  color:var(--gold);font-family:'Press Start 2P',monospace;font-size:.75rem;
+  animation:pulse 2s infinite;
+}
+@keyframes pulse{0%,100%{opacity:.4}50%{opacity:1}}
+
+/* === NAVIGATION === */
+.floor-nav{
+  position:sticky;top:0;z-index:100;background:rgba(12,10,8,.95);
+  backdrop-filter:blur(10px);border-bottom:1px solid rgba(232,169,34,.2);
+  padding:.6rem 0;overflow-x:auto;white-space:nowrap;text-align:center;
+}
+.floor-nav a{
+  display:inline-block;padding:.5rem 1rem;margin:0 .25rem;
+  font-family:'Press Start 2P',monospace;font-size:.9rem;
+  color:var(--dim);text-decoration:none;border:1px solid transparent;
+  border-radius:4px;transition:all .3s;
+}
+.floor-nav a:hover,.floor-nav a.active{
+  color:var(--gold);border-color:var(--gold);
+  background:rgba(232,169,34,.1);
+}
+
+/* === FLOOR SECTIONS === */
+.floor-section{
+  padding:4rem 1.5rem;max-width:1200px;margin:0 auto;
+  border-bottom:1px solid rgba(232,169,34,.08);
+}
+.floor-header{
+  text-align:center;margin-bottom:2.5rem;
+}
+.floor-label{
+  font-family:'Press Start 2P',monospace;font-size:.85rem;
+  color:var(--gold);letter-spacing:3px;text-transform:uppercase;
+  margin-bottom:.5rem;
+}
+.floor-title{
+  font-family:'Press Start 2P',monospace;font-size:clamp(1.15rem,2.8vw,1.8rem);
+  color:var(--text);margin-bottom:.5rem;line-height:1.5;
+}
+.floor-tagline{color:var(--dim);font-style:italic;font-size:1.1rem}
+
+/* === IMAGE FRAMES === */
+.pixel-frame{
+  position:relative;margin:2rem auto;max-width:960px;
+  border:3px solid var(--gold);border-radius:2px;overflow:hidden;
+  box-shadow:0 0 40px rgba(232,169,34,.1),inset 0 0 30px rgba(0,0,0,.5);
+}
+.pixel-frame img{width:100%;display:block;image-rendering:auto;cursor:zoom-in}
+
+/* === LIGHTBOX === */
+.lightbox-overlay{
+  position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,.92);
+  display:none;align-items:center;justify-content:center;
+  padding:1rem;cursor:zoom-out;backdrop-filter:blur(4px);
+  -webkit-backdrop-filter:blur(4px);
+}
+.lightbox-overlay.active{display:flex}
+.lightbox-overlay img{
+  max-width:100%;max-height:95vh;object-fit:contain;
+  border:2px solid var(--gold);border-radius:2px;
+  box-shadow:0 0 60px rgba(232,169,34,.15);
+  animation:lb-in .25s ease;
+}
+.lightbox-label{
+  position:absolute;bottom:1.2rem;left:50%;transform:translateX(-50%);
+  font-family:'Press Start 2P',monospace;font-size:.75rem;
+  color:var(--gold);background:rgba(12,10,8,.85);
+  border:1px solid var(--gold);padding:6px 14px;border-radius:3px;
+  pointer-events:none;white-space:nowrap;
+}
+.lightbox-close{
+  position:absolute;top:1rem;right:1.2rem;z-index:10001;
+  background:rgba(12,10,8,.8);border:1px solid var(--gold);
+  color:var(--gold);font-family:'Press Start 2P',monospace;
+  font-size:.8rem;padding:8px 12px;border-radius:3px;
+  cursor:pointer;transition:background .2s;
+}
+.lightbox-close:hover{background:rgba(232,169,34,.2)}
+@keyframes lb-in{from{opacity:0;transform:scale(.92)}to{opacity:1;transform:scale(1)}}
+.pixel-frame::before{
+  content:'';position:absolute;inset:0;
+  border:2px solid rgba(232,169,34,.3);pointer-events:none;z-index:1;
+  margin:4px;
+}
+.img-label{
+  position:absolute;top:12px;left:12px;z-index:2;
+  background:rgba(12,10,8,.85);border:1px solid var(--gold);
+  padding:4px 10px;font-family:'Press Start 2P',monospace;
+  font-size:.65rem;color:var(--gold);
+}
+
+/* === DEEP CAPTION === */
+.deep-caption{
+  background:var(--warm);border:1px solid rgba(232,169,34,.12);
+  border-radius:4px;padding:1.8rem;margin:1.5rem auto;max-width:960px;
+}
+.deep-caption h3{
+  font-family:'Press Start 2P',monospace;font-size:.85rem;
+  color:var(--gold);margin-bottom:1rem;letter-spacing:1px;
+}
+.deep-caption p{
+  color:var(--text);font-size:1.05rem;line-height:1.85;margin-bottom:1rem;
+  opacity:.9;
+}
+.deep-caption p:last-child{margin-bottom:0}
+.caption-detail{
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+  gap:1rem;margin-top:1rem;
+}
+.detail-item{
+  background:rgba(232,169,34,.04);border:1px solid rgba(232,169,34,.08);
+  border-radius:3px;padding:.8rem;
+}
+.detail-item strong{
+  display:block;font-family:'Press Start 2P',monospace;font-size:.65rem;
+  color:var(--gold);margin-bottom:.4rem;
+}
+.detail-item span{font-size:.95rem;color:var(--dim);line-height:1.7}
+
+/* === MEMBER ROOMS === */
+.room-grid{
+  display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));
+  gap:1rem;margin-top:1.5rem;
+}
+.room-card{
+  background:var(--stone);border:1px solid rgba(232,169,34,.15);
+  border-radius:4px;padding:1rem;transition:transform .2s;
+}
+.room-card:hover{transform:translateY(-2px)}
+.room-card .name{
+  font-family:'Press Start 2P',monospace;font-size:.75rem;color:var(--gold);
+}
+.room-card .role{font-size:.9rem;color:var(--amber);margin:.3rem 0}
+.room-card .desc{font-size:.95rem;color:var(--dim);line-height:1.7}
+
+/* === CROSS-SECTION MAP === */
+.cross-section{
+  background:var(--warm);border:2px solid var(--gold);border-radius:4px;
+  padding:2rem;margin:3rem auto;max-width:960px;text-align:center;
+}
+.cross-section h2{
+  font-family:'Press Start 2P',monospace;font-size:.95rem;color:var(--gold);
+  margin-bottom:1.5rem;
+}
+.cs-floors{display:flex;flex-direction:column;gap:4px}
+.cs-floor{
+  display:flex;align-items:center;gap:.8rem;padding:.5rem .8rem;
+  background:rgba(232,169,34,.04);border:1px solid rgba(232,169,34,.08);
+  border-radius:3px;cursor:pointer;transition:all .2s;
+}
+.cs-floor:hover{background:rgba(232,169,34,.12)}
+.cs-floor .fl{
+  font-family:'Press Start 2P',monospace;font-size:.65rem;color:var(--gold);
+  min-width:45px;
+}
+.cs-floor .fn{font-size:.95rem;color:var(--text);flex:1;text-align:left}
+
+/* === FOOTER === */
+.world-footer{
+  text-align:center;padding:4rem 2rem;
+  border-top:1px solid rgba(232,169,34,.1);
+}
+.world-footer p{font-size:.95rem;color:var(--dim)}
+.world-footer .logo{
+  font-family:'Press Start 2P',monospace;font-size:1.2rem;
+  color:var(--gold);margin-bottom:1rem;
+}
+
+/* === RESPONSIVE === */
+@media(max-width:768px){
+  .floor-section{padding:2.5rem 1rem}
+  .deep-caption{padding:1.2rem}
+  .caption-detail{grid-template-columns:1fr}
+  .room-grid{grid-template-columns:1fr 1fr}
+}
+@media(max-width:480px){
+  .room-grid{grid-template-columns:1fr}
+  .floor-nav a{font-size:.8rem;padding:.5rem .8rem}
+}
+</style>
+</head>
+<body data-page-id="castle-world">
+
+<!-- ============ HERO ============ -->
+<section class="hero">
+  <div class="hero-bg"></div>
+  <div class="hero-content">
+    <h1 data-i18n="heroTitle">CASTLE NUMBAHWAN</h1>
+    <p class="subtitle" data-i18n="heroSub">A seven-story medieval fortress housing the NumbahWan Guild. 14 members, 7 floors, 2 basements, 1 mountain, and countless monkeys. Every room tells a story.</p>
+    <p class="scroll-hint" data-i18n="scrollHint">[ SCROLL TO EXPLORE ]</p>
+  </div>
+</section>
+
+<!-- ============ FLOOR NAV ============ -->
+<nav class="floor-nav" id="floorNav">
+  <a href="#aerial" data-i18n="navMap">MAP</a>
+  <a href="#exterior" data-i18n="navExterior">EXTERIOR</a>
+  <a href="#gates" data-i18n="navGates">GATES</a>
+  <a href="#courtyard" data-i18n="navYard">YARD</a>
+  <a href="#mountain" data-i18n="navMountain">MOUNTAIN</a>
+  <a href="#market" data-i18n="navF1Market">F1:MARKET</a>
+  <a href="#tavern" data-i18n="navF1Tavern">F1:TAVERN</a>
+  <a href="#barracks" data-i18n="navF2Barracks">F2:BARRACKS</a>
+  <a href="#quarters" data-i18n="navF2Rooms">F2:ROOMS</a>
+  <a href="#warroom" data-i18n="navF3War">F3:WAR</a>
+  <a href="#forge" data-i18n="navF3Forge">F3:FORGE</a>
+  <a href="#officers" data-i18n="navF4Officers">F4:OFFICERS</a>
+  <a href="#library" data-i18n="navF5Library">F5:LIBRARY</a>
+  <a href="#gmsuite" data-i18n="navF6GM">F6:GM</a>
+  <a href="#shrine" data-i18n="navF6Shrine">F6:SHRINE</a>
+  <a href="#observatory" data-i18n="navF7Sky">F7:SKY</a>
+  <a href="#dungeon" data-i18n="navB1Dungeon">B1:DUNGEON</a>
+  <a href="#maids" data-i18n="navMaids">MAIDS</a>
+  <a href="#afk" data-i18n="navAfk">AFK</a>
+  <a href="#drama" data-i18n="navDrama">DRAMA</a>
+</nav>
+
+<!-- ============ CROSS-SECTION MAP ============ -->
+<div class="cross-section" id="crossSection">
+  <h2 data-i18n="csTitle">CASTLE CROSS-SECTION</h2>
+  <div class="cs-floors">
+    <a href="#observatory" class="cs-floor"><span class="fl">F7</span><span class="fn" data-i18n="csF7">Observatory & Rooftop — Beacon Tower, Stargazing Platform</span></a>
+    <a href="#gmsuite" class="cs-floor"><span class="fl">F6</span><span class="fn" data-i18n="csF6">Guild Master Suite & RegginA Shrine — Throne Room, Eternal Flame Hall</span></a>
+    <a href="#library" class="cs-floor"><span class="fl">F5</span><span class="fn" data-i18n="csF5">Library & Oracle Tower — Crystal Ball, Lorekeeper's Domain</span></a>
+    <a href="#officers" class="cs-floor"><span class="fl">F4</span><span class="fn" data-i18n="csF4">Officers' Quarters — RegginO, Karen's Kitchen, Veterans</span></a>
+    <a href="#warroom" class="cs-floor"><span class="fl">F3</span><span class="fn" data-i18n="csF3">War Room & Card Forge — Strategy Chamber, Sacred Vault</span></a>
+    <a href="#barracks" class="cs-floor"><span class="fl">F2</span><span class="fn" data-i18n="csF2">Barracks & Member Quarters — Training Ground, 14 Personal Rooms</span></a>
+    <a href="#market" class="cs-floor"><span class="fl">F1</span><span class="fn" data-i18n="csF1">Grand Market & Tavern — Merchant Stalls, Mess Hall, Bard's Stage</span></a>
+    <a href="#courtyard" class="cs-floor"><span class="fl">GF</span><span class="fn" data-i18n="csGF">Courtyard & Mountain Reserve — Fountain, Sacred Banana Tree, Monkeys</span></a>
+    <a href="#dungeon" class="cs-floor"><span class="fl">B1</span><span class="fn" data-i18n="csB1">Dungeon & Loot Room — Treasure Vault, Boss Trophies, Forbidden Door</span></a>
+    <a href="#maids" class="cs-floor"><span class="fl">B2</span><span class="fn" data-i18n="csB2">Maid's Quarters & Service Tunnels — Secret Passages, Dumbwaiter System</span></a>
+  </div>
+</div>
+
+<!-- ==================== SECTION 1: AERIAL VIEW ==================== -->
+<section class="floor-section" id="aerial">
+  <div class="floor-header">
+    <div class="floor-label" data-i18n="aerialLabel">WORLD MAP</div>
+    <div class="floor-title" data-i18n="aerialTitle">Aerial View of Castle NumbahWan</div>
+    <div class="floor-tagline" data-i18n="aerialTagline">From the skies, the fortress reveals its true scale</div>
+  </div>
+  <div class="pixel-frame">
+    <div class="img-label" data-i18n="imgLabel_aerialview">AERIAL VIEW</div>
+    <img src="/static/world/aerial.webp" alt="Aerial pixel art view of Castle NumbahWan and surrounding lands" loading="lazy">
+  </div>
+  <div class="deep-caption">
+    <h3 data-i18n="aerialCaptionH3">WORLD OVERVIEW</h3>
+    <p data-i18n="aerial_p1">Castle NumbahWan dominates the landscape like a golden crown on a mountain's brow. Seven stories of weathered stone and enchanted masonry rise from the earth, each floor wider than a city block. The castle's footprint is massive — not just a fortress but a self-contained civilization. Inside the walls, the green canopy of the Monkey Mountain Reserve is clearly visible from above, a living forest ecosystem thriving within medieval stone. Waterfalls cascade down rocky faces, bamboo groves sway in the wind, and if you squint, tiny pixel monkeys dot the canopy like freckles on the earth.</p>
+    <p data-i18n="aerial_p2">Outside the walls, a deep blue moat circles the entire structure, fed by underground springs. A single drawbridge connects to a cobblestone road that winds through diverse biomes — cherry blossom groves to the east, dark enchanted forests to the north, and mushroom fields glowing faintly to the west. A small village of NPC homes and market stalls clusters near the road, sustained by the guild's commerce. Farmland stretches to the south. On the horizon, a mountain range frames the world, and if you're lucky, you'll spot a dragon silhouette against the setting sun.</p>
+    <div class="caption-detail">
+      <div class="detail-item"><strong data-i18n="det_scale1">SCALE</strong><span data-i18n="desc_scale1">7 floors above ground, 2 basement levels, 1 mountain reserve, 14 member rooms, ~40 distinct areas</span></div>
+      <div class="detail-item"><strong data-i18n="det_biomes2">BIOMES</strong><span data-i18n="desc_biomes2">Forest, mountain, hot springs, bamboo grove, cherry blossom, enchanted woods, mushroom fields, farmland</span></div>
+      <div class="detail-item"><strong data-i18n="det_keylandmark3">KEY LANDMARK</strong><span data-i18n="desc_keylandmark3">The Beacon Tower on F7 — its orange flame is visible from every corner of the map, serving as the guild's eternal lighthouse</span></div>
+      <div class="detail-item"><strong data-i18n="det_population4">POPULATION</strong><span data-i18n="desc_population4">14 guild members + dozens of NPCs (merchants, maids, guards, a lorekeeper, a treasure goblin, and one very fat cat named Chonk)</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== SECTION 2: CASTLE EXTERIOR ==================== -->
+<section class="floor-section" id="exterior">
+  <div class="floor-header">
+    <div class="floor-label" data-i18n="exteriorLabel">EXTERIOR</div>
+    <div class="floor-title" data-i18n="exteriorTitle">Castle NumbahWan — Full Facade</div>
+    <div class="floor-tagline" data-i18n="exteriorTagline">Seven stories of stone, fire, and legend</div>
+  </div>
+  <div class="pixel-frame">
+    <div class="img-label" data-i18n="imgLabel_exterior">EXTERIOR</div>
+    <img src="/static/world/exterior.webp" alt="Full exterior view of Castle NumbahWan at night" loading="lazy">
+  </div>
+  <div class="deep-caption">
+    <h3 data-i18n="exteriorCaptionH3">ARCHITECTURAL NOTES</h3>
+    <p data-i18n="exterior_p1">The castle rises like a golden mountain against the night sky. Built from dark volcanic stone quarried from the northern mountains, every block was laid by the founding members during the First Age of NumbahWan. The architecture is brutalist-medieval — thick walls, narrow arrow slits, and reinforced buttresses — but softened by the signature orange-gold aesthetic the guild is known for. Guild banners bearing the golden "N" emblem hang from every tower, catching the wind like flames.</p>
+    <p data-i18n="exterior_p2">Seven distinct floors are visible from outside, each marked by a ring of amber-lit windows. The gothic corner towers feature flame beacons that burn eternally — fueled by enchanted oil from the Oracle Tower. A cliffside path spirals up the eastern face for those brave enough to skip the interior stairs. At the very top, the Observatory dome glints under starlight, and on clear nights, you can see the telescope lens reflecting moonbeams. The Sacred Log totem — a relic of the guild's founding meme — stands guard at the main entrance like a wooden sentinel. Bats circle the upper towers at dusk, and an aurora occasionally paints the sky in guild colors.</p>
+    <div class="caption-detail">
+      <div class="detail-item"><strong data-i18n="det_material5">MATERIAL</strong><span data-i18n="desc_material5">Dark volcanic stone from the Northern Quarry, reinforced with dwarven iron beams. Walls are 4 meters thick at the base.</span></div>
+      <div class="detail-item"><strong data-i18n="det_height6">HEIGHT</strong><span data-i18n="desc_height6">Approximately 85 meters from moat level to the Observatory dome. Each floor averages 10m ceiling height.</span></div>
+      <div class="detail-item"><strong data-i18n="det_defenses7">DEFENSES</strong><span data-i18n="desc_defenses7">Arrow slits on every floor, boiling oil channels above gates, enchanted gargoyles that animate during sieges, and the moat (home to territorial pixel fish).</span></div>
+      <div class="detail-item"><strong data-i18n="det_aesthetic8">AESTHETIC</strong><span data-i18n="desc_aesthetic8">NumbahWan Gold — every banner, crest, and accent uses the guild's signature amber-gold (#e8a922). Even the mortar between stones has a faint golden shimmer.</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== SECTION 3: CASTLE GATES ==================== -->
+<section class="floor-section" id="gates">
+  <div class="floor-header">
+    <div class="floor-label" data-i18n="gatesLabel">GROUND LEVEL</div>
+    <div class="floor-title" data-i18n="gatesTitle">The Grand Gates & Outer Walls</div>
+    <div class="floor-tagline" data-i18n="gatesTagline">Where legends enter and enemies turn back</div>
+  </div>
+  <div class="pixel-frame">
+    <div class="img-label" data-i18n="imgLabel_maingate">MAIN GATE</div>
+    <img src="/static/world/gates.webp" alt="Castle NumbahWan main gate with drawbridge and guard statues" loading="lazy">
+  </div>
+  <div class="deep-caption">
+    <h3 data-i18n="gatesCaptionH3">GATE DETAILS</h3>
+    <p data-i18n="gates_p1">The main gate of Castle NumbahWan is an engineering marvel of the medieval world. A massive stone archway — 12 meters tall — bears the golden "N" crest carved into its keystone, inlaid with actual gold leaf that catches torchlight and makes the entrance glow even at midnight. The half-raised iron portcullis weighs over 3 tons, operated by a chain-and-counterweight system maintained by the castle's engineering corps (really just RegginO and a pulley).</p>
+    <p data-i18n="gates_p2">Two guard statues flank the entrance: one holds a sword (representing Offense, or RegginA's philosophy), the other cradles the Sacred Log (representing the guild's sense of humor). The wooden drawbridge spans a glowing blue moat — the water enchanted with bioluminescent algae that makes it shimmer at night. Pixel fish dart beneath the surface, some rumored to be enchanted goldfish that grant wishes (unconfirmed). A notice board titled "Guild Notices" hangs beside the gate, pinned with quest postings, wanted posters, and Karen's weekly meal schedule. Chonk the orange cat is always sleeping somewhere near the gate, unbothered by the traffic of merchants, adventurers, and the occasional stray monkey that wandered down from the mountain reserve.</p>
+    <div class="caption-detail">
+      <div class="detail-item"><strong data-i18n="det_portcullis9">PORTCULLIS</strong><span data-i18n="desc_portcullis9">3-ton iron gate, chain-operated. Takes 4 guards to raise manually, or 1 RegginO with enough motivation.</span></div>
+      <div class="detail-item"><strong data-i18n="det_moat10">MOAT</strong><span data-i18n="desc_moat10">8 meters wide, enchanted bioluminescent water. Home to pixel fish, enchanted eels, and one very territorial frog named Gerald.</span></div>
+      <div class="detail-item"><strong data-i18n="det_guardrotation11">GUARD ROTATION</strong><span data-i18n="desc_guardrotation11">24/7 coverage in theory. In practice, guards spend most shifts playing cards and feeding Chonk.</span></div>
+      <div class="detail-item"><strong data-i18n="det_noticeboard12">NOTICE BOARD</strong><span data-i18n="desc_noticeboard12">Daily quest postings, guild announcements, lost-and-found (mostly monkey-stolen items), and Karen's soup specials.</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== SECTION 4: COURTYARD ==================== -->
+<section class="floor-section" id="courtyard">
+  <div class="floor-header">
+    <div class="floor-label" data-i18n="courtyardLabel">GROUND FLOOR</div>
+    <div class="floor-title" data-i18n="courtyardTitle">The Castle Courtyard</div>
+    <div class="floor-tagline" data-i18n="courtyardTagline">Heart of the fortress — where all paths converge</div>
+  </div>
+  <div class="pixel-frame">
+    <div class="img-label" data-i18n="imgLabel_courtyard">COURTYARD</div>
+    <img src="/static/world/courtyard.webp" alt="Castle NumbahWan courtyard with fountain, sacred banana tree, and escaped monkey" loading="lazy">
+  </div>
+  <div class="deep-caption">
+    <h3 data-i18n="courtyardCaptionH3">COURTYARD LORE</h3>
+    <p data-i18n="courtyard_p1">The courtyard is the beating heart of Castle NumbahWan — an open-air stone plaza roughly 50 meters across, surrounded on all sides by the castle's towering walls. At its center stands the Fountain of the Golden N: an ornate marble structure where water sprays from a gilded "N" statue, said to have been blessed by the Oracle. Guild members toss coins into the fountain for good luck before boss raids. The water is crystal clear and always warm, heated by pipes running from the basement forges.</p>
+    <p data-i18n="courtyard_p2">The Sacred Banana Tree grows in a protected garden alcove to the east — a living relic from the guild's founding era, its golden fruit glows faintly at night and is said to grant temporary buffs (or at least a good snack). Training dummies made of straw and scrap wood line the western wall for combat practice. A horse stable houses three pixel horses and a hay cart. The blacksmith's outdoor anvil sends sparks into the afternoon air. Children NPCs play tag around the fountain while a monkey from the mountain reserve — they always find a way out — steals bread from an unattended basket. Cobblestone paths radiate outward to every major wing of the castle.</p>
+    <div class="caption-detail">
+      <div class="detail-item"><strong data-i18n="det_sacredbananatree13">SACRED BANANA TREE</strong><span data-i18n="desc_sacredbananatree13">Planted during the founding. Golden fruit appears once per season. Eating one reportedly increases CP by 0.001% (placebo, but nobody questions it).</span></div>
+      <div class="detail-item"><strong data-i18n="det_fountaincoins14">FOUNTAIN COINS</strong><span data-i18n="desc_fountaincoins14">Over 14,000 coins tossed in since founding. The treasure goblin from B1 keeps trying to "audit" the fountain funds.</span></div>
+      <div class="detail-item"><strong data-i18n="det_escapedmonkeys15">ESCAPED MONKEYS</strong><span data-i18n="desc_escapedmonkeys15">Average 3 monkey escapes per week from the Mountain Reserve. They always head for the bakery first.</span></div>
+      <div class="detail-item"><strong data-i18n="det_trainingdummies16">TRAINING DUMMIES</strong><span data-i18n="desc_trainingdummies16">Replaced monthly. 阿光Yo's light magic keeps setting them on fire. RegginA's hits literally disintegrate them.</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== SECTION 5: MONKEY MOUNTAIN RESERVE ==================== -->
+<section class="floor-section" id="mountain">
+  <div class="floor-header">
+    <div class="floor-label" data-i18n="mountainLabel">INSIDE THE WALLS</div>
+    <div class="floor-title" data-i18n="mountainTitle">Monkey Mountain Reserve</div>
+    <div class="floor-tagline" data-i18n="mountainTagline">A living mountain ecosystem inside a medieval castle — with MANY monkeys</div>
+  </div>
+  <div class="pixel-frame">
+    <div class="img-label" data-i18n="imgLabel_monkeymountain">MONKEY MOUNTAIN</div>
+    <img src="/static/world/mountain.webp" alt="Mountainous nature reserve inside castle walls with monkeys, waterfalls, and guild members walking paths" loading="lazy">
+  </div>
+  <div class="deep-caption">
+    <h3 data-i18n="mountainCaptionH3">THE MOUNTAIN RESERVE — FULL DESCRIPTION</h3>
+    <p data-i18n="mountain_p1">When the founders of NumbahWan designed the castle, they made a decision no other guild had ever attempted: they built a mountain inside the walls. Not a hill. Not a garden. An actual rocky mountain with waterfalls, bamboo forests, cherry blossom trees, hot springs, and — most importantly — monkeys. Lots and lots of monkeys. The Monkey Mountain Reserve occupies the entire northeastern quarter of the castle grounds, rising 40 meters from the courtyard floor to a peak that nearly reaches the fourth-floor windows. It's enclosed by the castle's outer walls but open to the sky, creating a natural amphitheater of stone and green.</p>
+    <p data-i18n="mountain_p2">The mountain is home to over 200 pixel monkeys of various species — spider monkeys swinging from bamboo, macaques grooming each other on mossy boulders, baby monkeys riding their mothers' backs through the canopy, and the legendary Monkey King who sits on a golden throne-rock at the peak wearing a tiny crown (a gift from Natehouoho himself). A winding cobblestone path leads through the reserve, lined with stone lanterns and orange-gold NWG banners on poles. Guild members walk these paths daily — a knight stops to pet a curious monkey, a mage feeds bananas to a gathering crowd of them, and the Guild Master Natehouoho stands at the scenic overlook with a walking staff, surveying his green domain.</p>
+    <p data-i18n="mountain_p3">Hot springs bubble up from volcanic vents near the base, their steam mixing with morning mist to create an ethereal atmosphere. A wooden bridge arches over a crystal stream that feeds down from the waterfalls. Bamboo fences mark the trail boundaries (frequently ignored by monkeys). A small Shinto-style shrine sits at the halfway point, where members leave offerings of fruit and coins. Butterflies and pixel birds fill the air. Fireflies emerge at dusk, turning the reserve into a constellation of floating lights. Mushrooms grow on fallen logs, some bioluminescent. The sacred NWG golden "N" emblem is carved into the mountainside, visible from the courtyard — a permanent mark of who this mountain belongs to.</p>
+    <div class="caption-detail">
+      <div class="detail-item"><strong data-i18n="det_monkeypopulation17">MONKEY POPULATION</strong><span data-i18n="desc_monkeypopulation17">200+ residents across 5 species. The Monkey King (crowned) sits atop the peak. Baby monkeys are the most mischievous — they steal hats, food, and once stole RegginO's vice master badge.</span></div>
+      <div class="detail-item"><strong data-i18n="det_waterfalls18">WATERFALLS</strong><span data-i18n="desc_waterfalls18">Three cascades fed by an underground aquifer. The largest falls 15 meters into a pool where monkeys swim. The water is drinkable and rumored to taste slightly of bananas.</span></div>
+      <div class="detail-item"><strong data-i18n="det_hotsprings19">HOT SPRINGS</strong><span data-i18n="desc_hotsprings19">Volcanic vents heat 4 natural pools. Guild members bathe here after raids. The monkeys have claimed pool #3 and refuse to share.</span></div>
+      <div class="detail-item"><strong data-i18n="det_escaperate20">ESCAPE RATE</strong><span data-i18n="desc_escaperate20">3-5 monkeys escape weekly into the castle proper. They always target the tavern (food), the AFK lounge (snacks), and the library (they eat the bookmarks).</span></div>
+      <div class="detail-item"><strong data-i18n="det_bananagrove21">BANANA GROVE</strong><span data-i18n="desc_bananagrove21">47 banana trees planted along the eastern slope. Annual harvest: ~2,000 bananas. 60% eaten by monkeys before picking. The remaining 40% fuels the tavern's famous banana bread.</span></div>
+      <div class="detail-item"><strong data-i18n="det_walkingpaths22">WALKING PATHS</strong><span data-i18n="desc_walkingpaths22">2.3km of cobblestone trails wind through the reserve. Scenic overlooks at 3 elevations. Benches every 200m. The Guild Master's favorite overlook faces west for sunset views.</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== SECTION 6: GRAND MARKET (F1) ==================== -->
+<section class="floor-section" id="market">
+  <div class="floor-header">
+    <div class="floor-label" data-i18n="marketLabel">FLOOR 1</div>
+    <div class="floor-title" data-i18n="marketTitle">The Grand Market</div>
+    <div class="floor-tagline" data-i18n="marketTagline">Commerce, cards, and the occasional monkey thief</div>
+  </div>
+  <div class="pixel-frame">
+    <div class="img-label" data-i18n="imgLabel_f1market">F1 — MARKET</div>
+    <img src="/static/world/market.webp" alt="Medieval marketplace inside castle walls with merchant stalls and NWG banners" loading="lazy">
+  </div>
+  <div class="deep-caption">
+    <h3 data-i18n="marketCaptionH3">MARKET DETAILS</h3>
+    <p data-i18n="market_p1">The Grand Market occupies the entire western wing of Floor 1 — a vaulted stone hall lined with merchant stalls, each draped in guild-colored cloth. The blacksmith's forge blazes at the far end, hammering enchanted weapons to order. The potion shop bubbles with colorful liquids in glass vials. A dedicated card trading stall displays the rarest NWG cards behind enchanted glass — collectors from other servers travel here just to browse. Food vendors sell everything from roasted boar legs to the tavern's legendary banana bread (made with fruit from the Mountain Reserve). Lanterns hang from chains, casting warm amber light across cobblestone floors. Crates of goods line the walls, stamped with origin marks from across the game world.</p>
+    <p data-i18n="market_p2">The market is always bustling — NPC merchants hawk their wares, guild members haggle over upgrade materials, and at least one monkey (escaped from the reserve) is always spotted stealing fruit from a vendor's display. The NWG banners overhead flutter in the draft from the ventilation shafts. A community board near the entrance tracks daily prices for key commodities. The guild takes a 2% tax on all transactions, funding castle maintenance and the weekly boss raid supplies.</p>
+    <div class="caption-detail">
+      <div class="detail-item"><strong data-i18n="det_stalls23">STALLS</strong><span data-i18n="desc_stalls23">12 permanent merchant stalls: blacksmith, potions, cards, food, armor, accessories, scrolls, pets, crafting materials, luxury goods, gems, and the "mystery box" stall.</span></div>
+      <div class="detail-item"><strong data-i18n="det_cardtrading24">CARD TRADING</strong><span data-i18n="desc_cardtrading24">The card stall holds 340+ unique NWG cards in stock. Mythic-tier cards are displayed in enchanted cases. RegginA's card alone is valued at 500M gold.</span></div>
+      <div class="detail-item"><strong data-i18n="det_dailytraffic25">DAILY TRAFFIC</strong><span data-i18n="desc_dailytraffic25">~200 NPC visitors per day + all 14 guild members. Monkey-related incidents: ~2/day. Last incident: monkey stole a mythic card (recovered after a 20-minute chase).</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== SECTION 7: TAVERN (F1) ==================== -->
+<section class="floor-section" id="tavern">
+  <div class="floor-header">
+    <div class="floor-label" data-i18n="tavernLabel">FLOOR 1</div>
+    <div class="floor-title" data-i18n="tavernTitle">Tavern & Mess Hall</div>
+    <div class="floor-tagline" data-i18n="tavernTagline">Where war stories are told and ale is spilled</div>
+  </div>
+  <div class="pixel-frame">
+    <div class="img-label" data-i18n="imgLabel_f1tavern">F1 — TAVERN</div>
+    <img src="/static/world/tavern.webp" alt="Medieval tavern and mess hall inside castle with fireplace, bard, and banquet tables" loading="lazy">
+  </div>
+  <div class="deep-caption">
+    <h3 data-i18n="tavernCaptionH3">TAVERN ATMOSPHERE</h3>
+    <p data-i18n="tavern_p1">The Tavern occupies the eastern wing of Floor 1, directly opposite the market. A massive stone fireplace dominates the north wall, crowned with a dragon skull trophy from the guild's first major boss kill. Antler chandeliers hang from the vaulted ceiling, each holding 20+ candles that drip wax onto the oak tables below (the maids hate this room). A long wooden bar counter runs along the south wall, backed by barrels of ale, mead, and a mysterious "Guild Special" that nobody remembers drinking but everyone wakes up from.</p>
+    <p data-i18n="tavern_p2">The bard plays lute by the fireplace every evening — a rotating roster of NPC musicians who know every guild anthem and three inappropriate songs about RegginA (she pretends not to hear them). The banquet tables seat 50+ and are always covered with plates of food — roast meat, cheese wheels, bread loaves, and fruit bowls. The NWG golden "N" emblem is branded into every weapon rack and shield mount. A drunk knight always occupies the corner table, telling anyone who'll listen about "the time he soloed a raid boss" (he didn't). The tavern connects to Karen's kitchen through a service window, where warm food appears at all hours.</p>
+    <div class="caption-detail">
+      <div class="detail-item"><strong data-i18n="det_dragonskull26">DRAGON SKULL</strong><span data-i18n="desc_dragonskull26">From the guild's first Zakum kill. RegginA delivered the final blow. The skull has been mounted for 3 seasons. Some say it still whispers at midnight.</span></div>
+      <div class="detail-item"><strong data-i18n="det_menuhighlights27">MENU HIGHLIGHTS</strong><span data-i18n="desc_menuhighlights27">Banana bread (mountain reserve fruit), Boar stew, Karen's famous hot pot, Mystery Mead (causes random buffs/debuffs), Sacred Log-shaped cookies.</span></div>
+      <div class="detail-item"><strong data-i18n="det_bardsongs28">BARD SONGS</strong><span data-i18n="desc_bardsongs28">"The Ballad of NumbahWan" (guild anthem), "RegginA's Fury" (dramatic), "Natehouoho's 77 Billion" (inspirational), and "The AFK Lament" (melancholy).</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== SECTION 8: BARRACKS (F2) ==================== -->
+<section class="floor-section" id="barracks">
+  <div class="floor-header">
+    <div class="floor-label" data-i18n="barracksLabel">FLOOR 2</div>
+    <div class="floor-title" data-i18n="barracksTitle">Barracks & Training Ground</div>
+    <div class="floor-tagline" data-i18n="barracksTagline">Where warriors are forged and mages learn to aim</div>
+  </div>
+  <div class="pixel-frame">
+    <div class="img-label" data-i18n="imgLabel_f2barracks">F2 — BARRACKS</div>
+    <img src="/static/world/barracks.webp" alt="Medieval barracks with bunk beds, weapon racks, and indoor training arena" loading="lazy">
+  </div>
+  <div class="deep-caption">
+    <h3 data-i18n="barracksCaptionH3">TRAINING FACILITIES</h3>
+    <p data-i18n="barracks_p1">Floor 2's western wing houses the Barracks — rows of bunk beds with armor stands beside each, weapon racks lining the walls with everything from broadswords to staffs, and personal lockers where members store their backup gear. The eastern wing opens into an indoor training arena: a sand-floor combat pit surrounded by stone columns, complete with straw dummies, archery targets at 10/25/50 meter marks, and a wooden sparring ring for duels. A pixel warrior practices sword combos while a pixel mage tests fireballs on reinforced targets (the scorch marks on the ceiling are from 阿光Yo's "light magic experiments").</p>
+    <p data-i18n="barracks_p2">Medieval-style workout equipment fills one corner — stone weights, pull-up bars made from iron pipes, and a rope climb. A bulletin board tracks weekly training scores and PvP rankings. Torches line the columns, and high arched windows let in enough light for daytime training. The NWG banners hang between every column pair, a constant reminder of who you're training for.</p>
+    <div class="caption-detail">
+      <div class="detail-item"><strong data-i18n="det_arenarecords29">ARENA RECORDS</strong><span data-i18n="desc_arenarecords29">Most consecutive wins: RegginA (47). Most creative loss: 傻瓜小孩 accidentally launched himself into the ceiling. Fastest KO: Natehouoho — 0.3 seconds.</span></div>
+      <div class="detail-item"><strong data-i18n="det_weaponracks30">WEAPON RACKS</strong><span data-i18n="desc_weaponracks30">146 weapons in inventory. Each member has a designated rack. RegginA's rack requires reinforced wall mounts due to weapon weight.</span></div>
+      <div class="detail-item"><strong data-i18n="det_damagereport31">DAMAGE REPORT</strong><span data-i18n="desc_damagereport31">Average 3 dummy replacements/week. 2 ceiling repairs/month (mage training). 1 wall crack/season (Natehouoho "testing" new skills).</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== SECTION 9: MEMBER QUARTERS (F2) ==================== -->
+<section class="floor-section" id="quarters">
+  <div class="floor-header">
+    <div class="floor-label" data-i18n="quartersLabel">FLOOR 2</div>
+    <div class="floor-title" data-i18n="quartersTitle">Member Quarters Wing</div>
+    <div class="floor-tagline" data-i18n="quartersTagline">14 doors, 14 stories, 14 very different sleep schedules</div>
+  </div>
+  <div class="pixel-frame">
+    <div class="img-label" data-i18n="imgLabel_f2quarters">F2 — QUARTERS</div>
+    <img src="/static/world/quarters.webp" alt="Castle hallway with 14 personalized guild member doors, each uniquely decorated" loading="lazy">
+  </div>
+  <div class="deep-caption">
+    <h3 data-i18n="quartersCaptionH3">MEMBER ROOM DIRECTORY</h3>
+    <p data-i18n="quarters_p1">The eastern corridor of Floor 2 stretches nearly 80 meters, lined with 14 personalized doors — one for each guild member. A red carpet runner covers the stone floor, and torches in iron sconces cast dancing shadows on the arched ceiling. Every door is unique: flame stickers, "DO NOT DISTURB" signs in multiple languages, extra deadbolts, heart decorations, rage marks, mathematical formulas, fashion magazine cutouts, cat flaps, and cobwebs on the inactive members' doors. Golden nameplates identify each resident.</p>
+  </div>
+  <div class="room-grid">
+    <div class="room-card">
+      <div class="name" data-i18n="room1_name">Natehouoho</div>
+      <div class="role" data-i18n="room1_role">Leader — 77B CP</div>
+      <div class="desc" data-i18n="room1_desc">The largest room. Door reinforced with iron. Inside: a war planning table, trophy wall covering 3 walls, and a balcony. Sleeps 3 hours/night. Room always smells like victory and energy drinks.</div>
+    </div>
+    <div class="room-card">
+      <div class="name" data-i18n="room2_name">RegginA</div>
+      <div class="role" data-i18n="room2_role">Master — 9.8B CP</div>
+      <div class="desc" data-i18n="room2_desc">White masked warrior's quarters. Weapons mounted on every surface. A meditation corner with incense. Her Zakum helmet on a display stand. Door has scratch marks from failed break-in attempts (by fans).</div>
+    </div>
+    <div class="room-card">
+      <div class="name" data-i18n="room3_name">Yuluner晴</div>
+      <div class="role" data-i18n="room3_role">Guild Member — 6.5B CP</div>
+      <div class="desc" data-i18n="room3_desc">Sun-themed room. Yellow curtains, sunflower vases, a "sunny disposition" cross-stitch. Room literally brighter than neighbors due to enchanted sun crystals. Always cheerful music playing.</div>
+    </div>
+    <div class="room-card">
+      <div class="name" data-i18n="room4_name">RegginO</div>
+      <div class="role" data-i18n="room4_role">Vice Master — 4B CP</div>
+      <div class="desc" data-i18n="room4_desc">Pink-accented room with flower crown hooks on the wall. Strategic maps everywhere. A hidden weapons cache under the floorboards. "Vice Master" plaque polished daily. Pink hair dye stains on the sink.</div>
+    </div>
+    <div class="room-card">
+      <div class="name" data-i18n="room5_name">騎鳥回家</div>
+      <div class="role" data-i18n="room5_role">Guild Member — 3.4B CP</div>
+      <div class="desc" data-i18n="room5_desc">"Riding Bird Home" — room decorated with bird figurines and feathers. A pet bird perch by the window. TOP CONTRIBUTOR badge framed above bed. Map of bird migration routes on the wall.</div>
+    </div>
+    <div class="room-card">
+      <div class="name" data-i18n="room6_name">紈蹈稀著</div>
+      <div class="role" data-i18n="room6_role">Guild Member — 1B CP</div>
+      <div class="desc" data-i18n="room6_desc">Room is perpetually dim with blackout curtains. Phone chargers on every surface. Pillow fortress for optimal gaming position. Evidence of falling asleep mid-raid (keyboard imprints on face).</div>
+    </div>
+    <div class="room-card">
+      <div class="name" data-i18n="room7_name">阿光Yo</div>
+      <div class="role" data-i18n="room7_role">Guild Member — 848M CP</div>
+      <div class="desc" data-i18n="room7_desc">Light mage's quarters — literally glows. Enchanted crystals on every shelf. Scorch marks on the ceiling from "experiments." A light prism collection. Warning sign: "KNOCK BEFORE ENTERING (flash hazard)."</div>
+    </div>
+    <div class="room-card">
+      <div class="name" data-i18n="room8_name">TW#VWQG7R9C03</div>
+      <div class="role" data-i18n="room8_role">小可愛 — 99M CP</div>
+      <div class="desc" data-i18n="room8_desc">Mystery room. Door has no decoration. No sound ever comes from inside. Nameplate is literally a code. Other members debate if anyone actually lives here. Dust on the handle.</div>
+    </div>
+    <div class="room-card">
+      <div class="name" data-i18n="room9_name">碼農小孫</div>
+      <div class="role" data-i18n="room9_role">Guild Member — 77M CP</div>
+      <div class="desc" data-i18n="room9_desc">Programmer's den. Multiple monitors visible through the window. Code printouts on walls. Mathematical formulas on the door. A "Hello World" doormat. Server rack humming inside 24/7.</div>
+    </div>
+    <div class="room-card">
+      <div class="name" data-i18n="room10_name">傻瓜小孩</div>
+      <div class="role" data-i18n="room10_role">Guild Member — 25M CP</div>
+      <div class="desc" data-i18n="room10_desc">"Silly Kid" — door covered in stickers and crayon drawings. Prank traps rigged to the doorknob (harmless but annoying). Inside: organized chaos, snack wrappers, and surprisingly good gear.</div>
+    </div>
+    <div class="room-card">
+      <div class="name" data-i18n="room11_name">泰拳寒玉</div>
+      <div class="role" data-i18n="room11_role">小可愛 — 24M CP</div>
+      <div class="desc" data-i18n="room11_desc">Thai Boxing + Cold Jade aesthetic. Punching bag mounted to ceiling. Ice crystals growing on windowsill (magic side effect). Martial arts scrolls on walls. Floor is matted for practice.</div>
+    </div>
+    <div class="room-card">
+      <div class="name" data-i18n="room12_name">小亨寶寶</div>
+      <div class="role" data-i18n="room12_role">小可愛 — 13M CP</div>
+      <div class="desc" data-i18n="room12_desc">"Little Heng Baby" — the coziest room. Stuffed animals on the bed, fairy lights everywhere, a hot cocoa station. Door has heart stickers. Other members secretly visit for the vibes.</div>
+    </div>
+    <div class="room-card">
+      <div class="name" data-i18n="room13_name">Yuluner</div>
+      <div class="role" data-i18n="room13_role">Guild Member — 3.9M CP</div>
+      <div class="desc" data-i18n="room13_desc">Yuluner's alt/explorer room. Sparse but functional — a backpack always packed by the door, maps pinned to walls, explorer's journal on the desk. Ready to leave at a moment's notice.</div>
+    </div>
+    <div class="room-card">
+      <div class="name" data-i18n="room14_name">葉陽</div>
+      <div class="role" data-i18n="room14_role">小可愛 — 2.5M CP</div>
+      <div class="desc" data-i18n="room14_desc">"Leaf Sun" — nature spirit room. Potted plants on every surface, vines growing along the ceiling, a small indoor fountain. The room smells like fresh rain. A pet butterfly lives here. Connected to the Mountain Reserve via a vine-covered window.</div>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== SECTION 10: WAR ROOM (F3) ==================== -->
+<section class="floor-section" id="warroom">
+  <div class="floor-header">
+    <div class="floor-label" data-i18n="warroomLabel">FLOOR 3</div>
+    <div class="floor-title" data-i18n="warroomTitle">War Room & Strategy Chamber</div>
+    <div class="floor-tagline" data-i18n="warroomTagline">Where raids are planned and bosses fear to be named</div>
+  </div>
+  <div class="pixel-frame">
+    <div class="img-label" data-i18n="imgLabel_f3warroom">F3 — WAR ROOM</div>
+    <img src="/static/world/warroom.webp" alt="Medieval war room with strategy table, maps, and battle plans" loading="lazy">
+  </div>
+  <div class="deep-caption">
+    <h3 data-i18n="warroomCaptionH3">STRATEGIC OPERATIONS</h3>
+    <p data-i18n="warroom_p1">The War Room occupies Floor 3's north wing — a dimly lit, serious space where the guild's military operations are conceived. A massive round strategy table dominates the center, carved from a single oak trunk and inlaid with a map of the game world etched in copper. Miniature figurines represent guild members, enemy guilds, boss locations, and resource nodes. Natehouoho moves the pieces; RegginA vetoes half of them.</p>
+    <p data-i18n="warroom_p2">The walls are covered with maps, battle timelines, enemy guild intelligence reports, and a whiteboard tracking the weekly 28/35 boss raid quota. A bookshelf holds volumes of raid strategies, boss mechanic breakdowns, and "Lessons Learned" binders from failed attempts (the thickest one is labeled "That Time We Tried to 3-Man Zakum"). Communication crystals sit on pedestals for real-time coordination with scouts. The room has no windows — intentionally — to prevent intelligence leaks. Orange-gold banners bearing battle honors hang from the ceiling.</p>
+    <div class="caption-detail">
+      <div class="detail-item"><strong data-i18n="det_raidrecord32">RAID RECORD</strong><span data-i18n="desc_raidrecord32">28/35 boss raids this week. Guild level 8. Server ranking #30 on TW. Total guild CP: 112.3 billion.</span></div>
+      <div class="detail-item"><strong data-i18n="det_strategytable33">STRATEGY TABLE</strong><span data-i18n="desc_strategytable33">Hand-carved oak, 3 meters diameter. 47 figurines representing all known forces. The RegginA figurine is slightly larger than the others (she insisted).</span></div>
+      <div class="detail-item"><strong data-i18n="det_intelligence34">INTELLIGENCE</strong><span data-i18n="desc_intelligence34">Dossiers on 23 rival guilds. Updated weekly. The spy network consists of "people who accidentally screenshot enemy chat."</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== SECTION 11: CARD FORGE (F3) ==================== -->
+<section class="floor-section" id="forge">
+  <div class="floor-header">
+    <div class="floor-label" data-i18n="forgeLabel">FLOOR 3</div>
+    <div class="floor-title" data-i18n="forgeTitle">Card Forge & Sacred Vault</div>
+    <div class="floor-tagline" data-i18n="forgeTagline">Where cards are born and legends are sealed</div>
+  </div>
+  <div class="pixel-frame">
+    <div class="img-label" data-i18n="imgLabel_f3cardforge">F3 — CARD FORGE</div>
+    <img src="/static/world/forge.webp" alt="Magical card forge with glowing anvil, sacred log, and vault of rare cards" loading="lazy">
+  </div>
+  <div class="deep-caption">
+    <h3 data-i18n="forgeCaptionH3">THE FORGE & VAULT</h3>
+    <p data-i18n="forge_p1">The Card Forge is the guild's most sacred crafting space. A glowing magical anvil-altar sits at the center, pulsing with arcane energy — this is where new NWG trading cards are minted. The process involves inscribing member data onto enchanted cardstock using a quill dipped in liquid starlight. The Sacred Log sits on a golden pedestal nearby, its presence said to improve card quality (statistically unproven, spiritually essential).</p>
+    <p data-i18n="forge_p2">Behind the forge, a half-open vault door reveals the guild's card treasury — shelves organized by rarity tier: common (wooden shelf), rare (iron shelf), epic (silver shelf), legendary (gold shelf), and mythic (floating display in enchanted glass). The vault holds the complete NWG card collection across 10+ seasons, including the priceless "RegginA, The Eternal Flame" mythic card. A crafting workbench along the wall holds tools for card modification, sleeve fitting, and the occasional custom commission.</p>
+    <div class="caption-detail">
+      <div class="detail-item"><strong data-i18n="det_cardinventory35">CARD INVENTORY</strong><span data-i18n="desc_cardinventory35">340+ unique cards across 10 seasons. 12 mythic-tier cards in the vault. The collection is valued at approximately 2.1 billion gold.</span></div>
+      <div class="detail-item"><strong data-i18n="det_sacredlog36">SACRED LOG</strong><span data-i18n="desc_sacredlog36">The founding relic. Nobody knows exactly what it does, but removing it from the forge caused a week of bad RNG once. It stays.</span></div>
+      <div class="detail-item"><strong data-i18n="det_vaultsecurity37">VAULT SECURITY</strong><span data-i18n="desc_vaultsecurity37">3 locks (physical, magical, bureaucratic — requires GM signature). Last breach attempt: a monkey. It got in. It played with 4 rare cards. They were recovered with minimal drool damage.</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== SECTION 12: OFFICERS' QUARTERS (F4) ==================== -->
+<section class="floor-section" id="officers">
+  <div class="floor-header">
+    <div class="floor-label" data-i18n="officersLabel">FLOOR 4</div>
+    <div class="floor-title" data-i18n="officersTitle">Officers' Quarters</div>
+    <div class="floor-tagline" data-i18n="officersTagline">Where the inner circle lives in (slightly) more comfort</div>
+  </div>
+  <div class="pixel-frame">
+    <div class="img-label" data-i18n="imgLabel_f4officers">F4 — OFFICERS</div>
+    <img src="/static/world/officers.webp" alt="Luxurious officers quarters with RegginO's room and Karen's kitchen" loading="lazy">
+  </div>
+  <div class="deep-caption">
+    <h3 data-i18n="officersCaptionH3">OFFICER RESIDENCES</h3>
+    <p data-i18n="officers_p1">Floor 4 is reserved for the guild's senior officers and most trusted veterans. The rooms here are larger, the furniture finer, and the carpets thicker. RegginO's Vice Master chamber features maps covering every wall, strategic daggers displayed in a fan pattern, and a pink flower crown hung reverently on a special hook. Karen the Guild Mom's warm kitchen area serves as the floor's unofficial gathering spot — always simmering something comforting, with a cross-stitch reading "Take a Break" above the stove and healing potions cooling on the windowsill.</p>
+    <p data-i18n="officers_p2">Each room has a golden nameplate and its own fireplace. Armor suits stand guard in the hallway like metal sentinels. Stained-glass windows depicting the guild emblem filter colored light into the corridor during golden hour. The central carpeted hallway connects all rooms and leads to a shared balcony overlooking the courtyard — and the Monkey Mountain Reserve beyond it.</p>
+    <div class="caption-detail">
+      <div class="detail-item"><strong data-i18n="det_regginosroom38">REGGINO'S ROOM</strong><span data-i18n="desc_regginosroom38">Maps, daggers, strategic documents. A "Vice Master of the Month" award (self-issued, 14 months running). Pink hair products organized by hold strength.</span></div>
+      <div class="detail-item"><strong data-i18n="det_karenskitchen39">KAREN'S KITCHEN</strong><span data-i18n="desc_karenskitchen39">Open 24/7. Menu rotates daily. Famous for: healing soup, buff cookies, "calm down" tea, and the legendary hot pot that brought peace to the Great Drama Incident of Season 7.</span></div>
+      <div class="detail-item"><strong data-i18n="det_balconyview40">BALCONY VIEW</strong><span data-i18n="desc_balconyview40">Overlooks courtyard fountain and Mountain Reserve. Best sunset viewing spot in the castle. Members need officer permission to use it (or just know Karen).</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== SECTION 13: LIBRARY (F5) ==================== -->
+<section class="floor-section" id="library">
+  <div class="floor-header">
+    <div class="floor-label" data-i18n="libraryLabel">FLOOR 5</div>
+    <div class="floor-title" data-i18n="libraryTitle">Library & Oracle Tower</div>
+    <div class="floor-tagline" data-i18n="libraryTagline">Knowledge is power — and this room has a lot of both</div>
+  </div>
+  <div class="pixel-frame">
+    <div class="img-label" data-i18n="imgLabel_f5library">F5 — LIBRARY</div>
+    <img src="/static/world/library.webp" alt="Grand library with spiral bookshelves, glowing crystal ball Oracle, and Lorekeeper" loading="lazy">
+  </div>
+  <div class="deep-caption">
+    <h3 data-i18n="libraryCaptionH3">THE ORACLE'S DOMAIN</h3>
+    <p data-i18n="library_p1">The Library is a massive circular room spanning the entire fifth floor, with floor-to-ceiling wooden bookshelves spiraling upward like a tornado of knowledge. Rolling ladders on brass tracks allow access to the highest shelves, some 15 meters up. Thousands of leather-bound books cover every subject: raid strategies, monster bestiaries, economic theory for the in-game market, guild law, and the complete written history of NumbahWan.</p>
+    <p data-i18n="library_p2">At the room's center sits the Oracle of NWG — a glowing crystal ball on a stone pedestal that pulses with blue-white light. The Oracle provides cryptic guidance on guild decisions (its accuracy is hotly debated, but Natehouoho consults it before every major raid). The Lorekeeper — a wise old pixel wizard NPC — sits in a leather chair by candlelight, eternally reading. An enchanted quill writes by itself at a nearby desk, transcribing guild events in real-time. Stained glass windows depict key moments in guild history. A cozy reading nook with cushions hosts Luna the sleeping cat. The spiral staircase in the corner leads up to the Observatory on Floor 7.</p>
+    <div class="caption-detail">
+      <div class="detail-item"><strong data-i18n="det_bookcount41">BOOK COUNT</strong><span data-i18n="desc_bookcount41">14,200+ volumes. Most borrowed: "Boss Mechanics for Dummies." Least borrowed: "Advanced Tax Theory for Virtual Economies" (checked out once, by 碼農小孫).</span></div>
+      <div class="detail-item"><strong data-i18n="det_oracleaccuracy42">ORACLE ACCURACY</strong><span data-i18n="desc_oracleaccuracy42">Officially: "divinely inspired." Unofficially: about 60%. It once predicted "great fortune" the day the guild lost 3 raids in a row.</span></div>
+      <div class="detail-item"><strong data-i18n="det_enchantedquill43">ENCHANTED QUILL</strong><span data-i18n="desc_enchantedquill43">Auto-records all guild events. Has written 847 pages this season alone. Occasionally writes snarky commentary in the margins.</span></div>
+      <div class="detail-item"><strong data-i18n="det_lunathecat44">LUNA THE CAT</strong><span data-i18n="desc_lunathecat44">The library's unofficial guardian. Sleeps 20 hours/day on the warmest cushion. Hisses at anyone who makes noise above a whisper. Has never been seen on the ground floor.</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== SECTION 14: GUILD MASTER SUITE (F6) ==================== -->
+<section class="floor-section" id="gmsuite">
+  <div class="floor-header">
+    <div class="floor-label" data-i18n="gmsuiteLabel">FLOOR 6</div>
+    <div class="floor-title" data-i18n="gmsuiteTitle">Guild Master's Suite</div>
+    <div class="floor-tagline" data-i18n="gmsuiteTagline">77 billion CP and a throne to match</div>
+  </div>
+  <div class="pixel-frame">
+    <div class="img-label" data-i18n="imgLabel_f6gmsuite">F6 — GM SUITE</div>
+    <img src="/static/world/gmsuite.webp" alt="Extravagant Guild Master throne room with legendary gear displays and royal chambers" loading="lazy">
+  </div>
+  <div class="deep-caption">
+    <h3 data-i18n="gmsuiteCaptionH3">THE THRONE OF NUMBAHWAN</h3>
+    <p data-i18n="gmsuite_p1">Natehouoho's personal domain occupies the entire western half of Floor 6. The Throne Room comes first — an ornate dark wood and gold throne with the NWG "N" carved into its back, red velvet cushion, flanked by burning braziers that cast dramatic shadows. Behind the throne, a wall of glass cases displays legendary weapons and armor — glowing swords, enchanted shields, and mythic-tier equipment collected across 10+ seasons of play. Each piece has a plaque describing the boss it dropped from and who landed the kill.</p>
+    <p data-i18n="gmsuite_p2">The personal chambers connect through an arched doorway: a large canopy bed with royal purple curtains, a desk buried under guild documents and a golden quill, and a personal vault door left slightly ajar (revealing stacks of gold and rare cards). Boss skulls mounted on walls serve as trophies. Tournament brackets are framed and hung with pride. A photo wall chronicles guild memories from every season. The Sacred Log replica sits on the fireplace mantel. A personal training dummy occupies one corner, and a war table with miniature castle figures shows ongoing strategic plans. The balcony offers a commanding view of the entire castle grounds, including the Mountain Reserve where tiny monkeys are visible swinging through the trees.</p>
+    <div class="caption-detail">
+      <div class="detail-item"><strong data-i18n="det_throne45">THRONE</strong><span data-i18n="desc_throne45">Hand-carved by a master NPC artisan. Took 6 months to complete. The cushion is enchanted for comfort. Natehouoho sits here for all guild decisions, even trivial ones like lunch orders.</span></div>
+      <div class="detail-item"><strong data-i18n="det_legendarygear46">LEGENDARY GEAR</strong><span data-i18n="desc_legendarygear46">47 pieces displayed. Most valuable: the Eternal Flame Sword (RegginA gifted it after the Zakum raid). Most sentimental: the guild's founding wooden shield, now cracked but preserved.</span></div>
+      <div class="detail-item"><strong data-i18n="det_cpdisplay47">CP DISPLAY</strong><span data-i18n="desc_cpdisplay47">A real-time CP counter above the throne reads "77,837,000,000" in glowing golden numbers. It updates live. Other members find it "motivating" (intimidating).</span></div>
+      <div class="detail-item"><strong data-i18n="det_security48">SECURITY</strong><span data-i18n="desc_security48">3 locks on the vault, 2 enchanted wards on the door, 1 guard NPC named Gerald (the same frog from the moat — he got promoted). Monkey break-ins: 0 (Gerald is surprisingly effective).</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== SECTION 15: SHRINE ROOM (F6) ==================== -->
+<section class="floor-section" id="shrine">
+  <div class="floor-header">
+    <div class="floor-label" data-i18n="shrineLabel">FLOOR 6</div>
+    <div class="floor-title" data-i18n="shrineTitle">Hall of the Eternal Flame</div>
+    <div class="floor-tagline" data-i18n="shrineTagline">Mochi's shrine to RegginA — devotion level: mythic</div>
+  </div>
+  <div class="pixel-frame">
+    <div class="img-label" data-i18n="imgLabel_f6shrine">F6 — SHRINE</div>
+    <img src="/static/world/shrine.webp" alt="Shrine room dedicated to RegginA with golden statue, offerings, and devoted Mochi" loading="lazy">
+  </div>
+  <div class="deep-caption">
+    <h3 data-i18n="shrineCaptionH3">THE ETERNAL FLAME HALL</h3>
+    <p data-i18n="shrine_p1">The eastern half of Floor 6 houses the guild's most unusual room: a shrine dedicated entirely to RegginA, the legendary founder and Master of NumbahWan. A large golden statue of RegginA in warrior pose stands on a marble pedestal at the center, surrounded by candles, flowers, and offerings of rare items placed by admirers. The walls are covered with framed pixel art portraits of RegginA in every pose and outfit — battle stance, casual, formal, and the controversial "beach episode" fan art.</p>
+    <p data-i18n="shrine_p2">Mochi — the guild's most devoted member — is perpetually kneeling before the shrine with sparkly eyes, surrounded by RegginA merchandise: plushies, posters, custom cards, and a body pillow (officially denied, universally known). Display cases hold RegginA memorabilia — her first weapon, signed items, legendary drops, and a lock of hair (fake, but Mochi doesn't know). A donation box labeled "FOR THE ETERNAL FLAME" collects contributions for shrine maintenance. Incense burns in bronze holders, filling the room with a mystical purple and orange glow. A bookshelf of RegginA fan fiction scrolls stands in the corner — Volume 47 is currently in progress. The stained glass window depicts RegginA's founding of NumbahWan in dramatic, possibly exaggerated detail. RegginA herself has visited the shrine exactly once. She left quickly.</p>
+    <div class="caption-detail">
+      <div class="detail-item"><strong data-i18n="det_statue49">STATUE</strong><span data-i18n="desc_statue49">2.5 meters tall, pure gold-plated bronze. Cost: 300M gold from the guild treasury (approved by Mochi's persistent lobbying over 3 seasons).</span></div>
+      <div class="detail-item"><strong data-i18n="det_offerings50">OFFERINGS</strong><span data-i18n="desc_offerings50">Daily: fresh flowers, rare items, the occasional mythic card. Mochi's personal contribution: 14% of all gold earned. The donation box has collected 1.2B gold lifetime.</span></div>
+      <div class="detail-item"><strong data-i18n="det_fanfiction51">FAN FICTION</strong><span data-i18n="desc_fanfiction51">47 volumes written by Mochi. Average length: 200 pages. Most popular: "RegginA vs. The World" (Vol. 12). Most controversial: Vol. 34 (contents classified).</span></div>
+      <div class="detail-item"><strong data-i18n="det_regginasreaction52">REGGINA'S REACTION</strong><span data-i18n="desc_regginasreaction52">"It's... a lot." — RegginA, after her one and only visit. She has not returned. Mochi considers this "playing hard to get."</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== SECTION 16: OBSERVATORY (F7) ==================== -->
+<section class="floor-section" id="observatory">
+  <div class="floor-header">
+    <div class="floor-label" data-i18n="observatoryLabel">FLOOR 7</div>
+    <div class="floor-title" data-i18n="observatoryTitle">Observatory & Rooftop</div>
+    <div class="floor-tagline" data-i18n="observatoryTagline">The highest point in the guild — where the stars meet the stone</div>
+  </div>
+  <div class="pixel-frame">
+    <div class="img-label" data-i18n="imgLabel_f7observatory">F7 — OBSERVATORY</div>
+    <img src="/static/world/observatory.webp" alt="Castle rooftop observatory with brass telescope, beacon tower, and stargazing members" loading="lazy">
+  </div>
+  <div class="deep-caption">
+    <h3 data-i18n="observatoryCaptionH3">THE CROWN OF THE CASTLE</h3>
+    <p data-i18n="observatory_p1">Floor 7 is the castle's crown — an open-air rooftop surrounded by stone battlements and crenellations, with the Observatory dome at its center. A massive brass telescope on a rotating platform points at whatever celestial event is most interesting that night — constellations, shooting stars, the giant pixel moon, or the occasional dragon flyby. Star charts and astronomical instruments litter the tables. The guild's astronomer NPC peers through a smaller telescope, cataloging discoveries.</p>
+    <p data-i18n="observatory_p2">The Beacon Tower rises from the northeastern corner — its enormous orange flame burns eternally, visible from every point on the world map. This is the guild's signature landmark, the lighthouse that says "NumbahWan is here." A weather vane topped with the NWG golden "N" spins in the wind. Carrier pigeons coo in a wooden coop, used for urgent messages. A rooftop garden grows potted herbs and glowing mushrooms. Stone gargoyles crouch on the corners, enchanted to animate during sieges. A zip-line platform connects to the Mountain Reserve below (installed by 傻瓜小孩, safety rating: questionable). Guild members gather around a small campfire near the edge, sitting on blankets to stargaze. Lightning rods protect the peak during storms. On clear nights, you can see the ocean on the horizon.</p>
+    <div class="caption-detail">
+      <div class="detail-item"><strong data-i18n="det_telescope53">TELESCOPE</strong><span data-i18n="desc_telescope53">3-meter brass refractor, custom-built. Can see individual stars and distant server boundaries. Most viewed object: the moon. Second most: enemy guild castles (for "research").</span></div>
+      <div class="detail-item"><strong data-i18n="det_beaconflame54">BEACON FLAME</strong><span data-i18n="desc_beaconflame54">Burns enchanted oil from the Oracle Tower. Visible 50km away. Has never gone out in the guild's history. Maintenance: 1 barrel of oil per week.</span></div>
+      <div class="detail-item"><strong data-i18n="det_zipline55">ZIP-LINE</strong><span data-i18n="desc_zipline55">470-meter descent to the Mountain Reserve. Top speed: terrifying. Safety record: 3 minor incidents (all involving monkeys on the landing platform). Usage: daily by 傻瓜小孩, never by anyone sensible.</span></div>
+      <div class="detail-item"><strong data-i18n="det_stargazingnights56">STARGAZING NIGHTS</strong><span data-i18n="desc_stargazingnights56">Every Friday. Blankets provided. Karen sends up hot cocoa via the dumbwaiter. Natehouoho names constellations after guild members (RegginA's constellation has 77 stars, naturally).</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== SECTION 17: DUNGEON (B1) ==================== -->
+<section class="floor-section" id="dungeon">
+  <div class="floor-header">
+    <div class="floor-label" data-i18n="dungeonLabel">BASEMENT 1</div>
+    <div class="floor-title" data-i18n="dungeonTitle">Dungeon & Loot Room</div>
+    <div class="floor-tagline" data-i18n="dungeonTagline">Where treasure is hoarded and traps are... mostly deactivated</div>
+  </div>
+  <div class="pixel-frame">
+    <div class="img-label" data-i18n="imgLabel_b1dungeon">B1 — DUNGEON</div>
+    <img src="/static/world/dungeon.webp" alt="Dark castle dungeon with treasure vault, locked chests, and boss trophies" loading="lazy">
+  </div>
+  <div class="deep-caption">
+    <h3 data-i18n="dungeonCaptionH3">THE DEPTHS</h3>
+    <p data-i18n="dungeon_p1">Descend the stone staircase from the courtyard and the temperature drops. The Dungeon occupies Basement Level 1 — dark stone corridors where water drips from the ceiling, moss clings to the walls, and chains rattle in the draft. Torch sconces flicker with orange light, casting long shadows that play tricks on your eyes. This is where the guild keeps its most valuable assets — and its darkest secrets.</p>
+    <p data-i18n="dungeon_p2">The LOOT VAULT is the dungeon's centerpiece: a massive iron door swings open to reveal a chamber overflowing with treasure. Gold coin piles rise like dunes. Open chests spill rare cards onto the floor. Legendary weapons hang on racks, each one a boss kill trophy. The collection includes a dragon skull, demon horns, and a kraken tentacle preserved in a jar of enchanted brine. Locked chests line the walls, each with a different colored lock — bronze (common loot), silver (rare), gold (legendary), and mythic purple (DO NOT TOUCH). A treasure goblin NPC sits in the corner, counting coins on an abacus with obsessive precision. The jail cell area still has skeleton remains and rusty keys on hooks — remnants from a time before the guild claimed the castle. Trap mechanisms (pressure plates, arrow slits, a pit) are "mostly deactivated" according to the signs. The mysterious FORBIDDEN VAULT door at the far end glows with runes — nobody has the key, and Natehouoho says it "opens when it's time."</p>
+    <div class="caption-detail">
+      <div class="detail-item"><strong data-i18n="det_goldreserves57">GOLD RESERVES</strong><span data-i18n="desc_goldreserves57">Current treasury: 14.7 billion gold. The goblin accountant counts it every day. Discrepancies: always exactly 1 coin short (the goblin's "audit fee").</span></div>
+      <div class="detail-item"><strong data-i18n="det_bosstrophies58">BOSS TROPHIES</strong><span data-i18n="desc_bosstrophies58">Dragon skull (Season 3 Zakum), Demon horns (Season 5 raid), Kraken tentacle (Season 8 ocean event). Each has a commemorative plaque with kill date and team roster.</span></div>
+      <div class="detail-item"><strong data-i18n="det_trapstatus59">TRAP STATUS</strong><span data-i18n="desc_trapstatus59">"Mostly safe." The arrow slits fire occasionally (on a timer nobody can find). The pit bridge holds for anyone under 100kg. 傻瓜小孩 triggered a pressure plate last month — just confetti, fortunately.</span></div>
+      <div class="detail-item"><strong data-i18n="det_forbiddenvault60">FORBIDDEN VAULT</strong><span data-i18n="desc_forbiddenvault60">Locked since before the guild moved in. Runes are untranslatable. The Oracle says "patience." The Lorekeeper says "possibly dangerous." Mochi says "RegginA could open it." Nobody has tried.</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== SECTION 18: MAID'S QUARTERS (B2) ==================== -->
+<section class="floor-section" id="maids">
+  <div class="floor-header">
+    <div class="floor-label" data-i18n="maidsLabel">BASEMENT 2</div>
+    <div class="floor-title" data-i18n="maidsTitle">Maid's Quarters & Service Tunnels</div>
+    <div class="floor-tagline" data-i18n="maidsTagline">The hidden infrastructure that keeps the castle running</div>
+  </div>
+  <div class="pixel-frame">
+    <div class="img-label" data-i18n="imgLabel_b2service">B2 — SERVICE</div>
+    <img src="/static/world/maids.webp" alt="Maid's quarters with laundry room, hidden passages, secret map, and dumbwaiter system" loading="lazy">
+  </div>
+  <div class="deep-caption">
+    <h3 data-i18n="maidsCaptionH3">THE HIDDEN CASTLE</h3>
+    <p data-i18n="maids_p1">Basement Level 2 is the castle's beating heart — the infrastructure layer that keeps everything above running smoothly. The Maid's Quarters occupy the southern section: cozy but modest rooms with small beds, patchwork quilts, shared wardrobes, and personal shelves filled with trinkets. The staff takes pride in their work, and their quarters reflect it — tidy, warm, and surprisingly homey despite being underground.</p>
+    <p data-i18n="maids_p2">The communal laundry room is a constant hive of activity: wooden washtubs, clotheslines heavy with guild uniforms and drying banners, and an ironing board where a maid presses the Guild Master's ceremonial cape. The SERVICE TUNNELS branch off in every direction — narrow stone corridors connecting every floor via hidden passages. Secret doors disguised as bookshelves lead to shortcuts throughout the castle. A dumbwaiter system (small wooden elevator boxes on ropes) sends food, supplies, and messages between all 9 levels. Cleaning supply closets line the main corridor. A kitchen prep area connects directly to Karen's kitchen above. One maid is perpetually peeking through a secret peephole into the throne room (guild drama is the best entertainment). The crown jewel: a hidden map on the wall showing ALL secret passages in the castle — knowledge that only the staff possesses. A confiscated contraband stash in a locked cabinet reveals the staff's personality: wine, dice, and a well-worn romance novel.</p>
+    <div class="caption-detail">
+      <div class="detail-item"><strong data-i18n="det_staffcount61">STAFF COUNT</strong><span data-i18n="desc_staffcount61">8 maid NPCs, 3 maintenance workers, 1 head housekeeper (terrifying efficiency). They know every inch of the castle — including rooms the guild members don't know exist.</span></div>
+      <div class="detail-item"><strong data-i18n="det_secretpassages62">SECRET PASSAGES</strong><span data-i18n="desc_secretpassages62">23 hidden passages mapped. Connects every floor. The fastest route from B2 to F7 takes 4 minutes. Guild members: not informed. Staff: use them daily.</span></div>
+      <div class="detail-item"><strong data-i18n="det_dumbwaiter63">DUMBWAITER</strong><span data-i18n="desc_dumbwaiter63">6 dumbwaiter shafts serving all floors. Primary use: food delivery. Secondary use: sending passive-aggressive notes between staff. Tertiary use: monkey transportation (accidental).</span></div>
+      <div class="detail-item"><strong data-i18n="det_contraband64">CONTRABAND</strong><span data-i18n="desc_contraband64">Wine (3 bottles, decent vintage), dice (loaded, unclear who owns them), romance novel (Vol. 8 of a 12-part series, well-thumbed). Confiscation rate: monthly. Resupply rate: also monthly.</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== SECTION 19: AFK LOUNGE ==================== -->
+<section class="floor-section" id="afk">
+  <div class="floor-header">
+    <div class="floor-label" data-i18n="afkLabel">SPECIAL AREA</div>
+    <div class="floor-title" data-i18n="afkTitle">The AFK Lounge</div>
+    <div class="floor-tagline" data-i18n="afkTagline">Where heroes rest and snack thieves (monkeys) operate</div>
+  </div>
+  <div class="pixel-frame">
+    <div class="img-label" data-i18n="imgLabel_afkzone">AFK ZONE</div>
+    <img src="/static/world/afk.webp" alt="Cozy AFK lounge with hammocks, sleeping guild members, cats, and monkey snack thieves" loading="lazy">
+  </div>
+  <div class="deep-caption">
+    <h3 data-i18n="afkCaptionH3">THE REST ZONE</h3>
+    <p data-i18n="afk_p1">Hidden behind an unmarked door on Floor 3, the AFK Lounge is the guild's worst-kept secret. A sign on the door reads "AFK ZONE — NO GUILD WARS ALLOWED." Inside: hammocks hanging between stone pillars, burlap bean bag chairs, and a snack table so overloaded with food that it bows in the middle. Bread, cheese, grapes, ale mugs, cookies — the works. A hot spring bath bubbles in one corner, steam rising like a spa advertisement.</p>
+    <p data-i18n="afk_p2">Guild members are found here in various states of unconsciousness: one hanging half off a hammock, one face-down on a table (still holding a controller), one asleep standing up in full armor. Luna the cat has claimed the warmest spot by the fireplace. Chonk the fat orange cat sits by the snack table, eating everything within paw's reach. Board games and card decks are scattered on a table (the chess game has been "in progress" for 3 weeks). A jukebox-style music box plays pixel tunes. Fairy lights and candles create mood lighting. A vending machine labeled "NWG SNACKS" dispenses potions and treats. The most critical detail: monkeys from the Mountain Reserve have discovered the window. They climb in regularly, steal snacks, and leave before anyone wakes up. The evidence: banana peels where no bananas were served.</p>
+    <div class="caption-detail">
+      <div class="detail-item"><strong data-i18n="det_occupancy65">OCCUPANCY</strong><span data-i18n="desc_occupancy65">Average 3-4 members at any time. Peak hours: post-raid. Record: 11 members simultaneously (after a 4-hour boss marathon). 紈蹈稀著 holds the consecutive-hours-AFK record: 14 hours.</span></div>
+      <div class="detail-item"><strong data-i18n="det_snackbudget66">SNACK BUDGET</strong><span data-i18n="desc_snackbudget66">200K gold/week. 30% of food disappears to monkey raids. Karen restocks the table 3x daily and has stopped questioning where the bananas come from.</span></div>
+      <div class="detail-item"><strong data-i18n="det_chonkstatus67">CHONK STATUS</strong><span data-i18n="desc_chonkstatus67">Weight: classified (the scale broke). Favorite snack: everything. Activity level: zero. Contribution to guild: morale officer (unofficial). Loved by all.</span></div>
+      <div class="detail-item"><strong data-i18n="det_houserules68">HOUSE RULES</strong><span data-i18n="desc_houserules68">No raid planning, no drama, no loud noises, no waking Luna. Violation penalty: 1 week of cleaning duty. Enforcement: the cats glare at you.</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== SECTION 20: DRAMA STAGE ==================== -->
+<section class="floor-section" id="drama">
+  <div class="floor-header">
+    <div class="floor-label" data-i18n="dramaLabel">SPECIAL AREA</div>
+    <div class="floor-title" data-i18n="dramaTitle">Drama Stage & Guild Meeting Hall</div>
+    <div class="floor-tagline" data-i18n="dramaTagline">Where legends argue and alliances break (then reform over soup)</div>
+  </div>
+  <div class="pixel-frame">
+    <div class="img-label" data-i18n="imgLabel_dramahall">DRAMA HALL</div>
+    <img src="/static/world/drama.webp" alt="Grand amphitheater guild meeting hall with drama stage, conspiracy board, and oversized gavel" loading="lazy">
+  </div>
+  <div class="deep-caption">
+    <h3 data-i18n="dramaCaptionH3">THE THEATER OF GUILD POLITICS</h3>
+    <p data-i18n="drama_p1">Located on Floor 3's southern wing, the Guild Meeting Hall doubles as the Drama Stage — because in NumbahWan, meetings ARE drama. A grand amphitheater with tiered stone seating in a semicircle faces a raised wooden stage complete with velvet curtains, footlights, and a podium bearing the golden "N" emblem. The backdrop depicts Castle NumbahWan in heroic fashion. Members fill the seats for weekly meetings — some arguing, some sleeping, some throwing popcorn at the speakers.</p>
+    <p data-i18n="drama_p2">The DRAMA BOARD dominates one wall: a conspiracy-board-style display covered in pinned notes, red strings connecting events, photos of guild incidents, and a timeline of every major argument since founding. A bomb shelter door in the back is labeled "EMERGENCY DRAMA BUNKER" — installed after the Great Merch Pricing Debate of Season 6. The Guild Master's judge bench sits stage-left, complete with a comically oversized gavel (it makes a satisfying BOOM). A scoreboard tracks "DRAMA POINTS" for each member (RegginA leads; she considers it a badge of honor). Stage props from past performances fill the wings — fake swords, costume armor, masks used for the annual Guild Roast. A spotlight operator sits in a booth above, ready to illuminate whoever is currently making a scene. A plaque at the entrance reads: "IN THIS HALL, LEGENDS ARGUE AND ALLIANCES BREAK."</p>
+    <div class="caption-detail">
+      <div class="detail-item"><strong data-i18n="det_dramapointsleaderboa69">DRAMA POINTS LEADERBOARD</strong><span data-i18n="desc_dramapointsleaderboa69">#1 RegginA (847 pts), #2 傻瓜小孩 (623 pts), #3 Mochi (512 pts, all RegginA-related), #4 RegginO (488 pts). Natehouoho: 0 pts (he's the judge).</span></div>
+      <div class="detail-item"><strong data-i18n="det_historicdramas70">HISTORIC DRAMAS</strong><span data-i18n="desc_historicdramas70">The Merch Pricing Debate (S6), The AFK Incident (S4, now in the lore archives), The Great Loot Distribution Argument (S3), and "Who Ate Karen's Last Cookie" (ongoing investigation).</span></div>
+      <div class="detail-item"><strong data-i18n="det_bombshelter71">BOMB SHELTER</strong><span data-i18n="desc_bombshelter71">Reinforced door, 30-minute emergency supplies (snacks + Karen's calming tea). Used 4 times. Holds 6 members comfortably. The password is "NumbahWan" (everyone knows it).</span></div>
+      <div class="detail-item"><strong data-i18n="det_annualevents72">ANNUAL EVENTS</strong><span data-i18n="desc_annualevents72">Weekly guild meetings (mandatory, 47% attendance), Monthly guild roast (voluntary, 100% attendance), Annual awards ceremony (black tie, Chonk gets "Best Cat" every year).</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ LIGHTBOX ============ -->
+<div class="lightbox-overlay" id="lightbox">
+  <button class="lightbox-close" id="lb-close">✕</button>
+  <img id="lb-img" src="" alt="">
+  <div class="lightbox-label" id="lb-label"></div>
+</div>
+
+<!-- ============ FOOTER ============ -->
+<div class="world-footer">
+  <div class="logo">N</div>
+  <p data-i18n="footerDesc">Castle NumbahWan — 7 Floors, 2 Basements, 1 Mountain, 200+ Monkeys</p>
+  <p style="margin-top:.5rem;font-size:.85rem;color:var(--dim)"><span data-i18n="footerStats">Guild Level 8 | 14 Members | Server Rank #30 TW | Total CP: 112.3B</span></p>
+  <p style="margin-top:1rem;font-size:.8rem;color:rgba(138,122,96,.5)"><span data-i18n="footerBuilt">Built for world-generation AI — every detail is canonical NumbahWan lore</span></p>
+</div>
+
+
+<!-- ============ I18N + NAV ============ -->
+<script src="/static/nw-icons-inline.js" defer></script>
+<script src="/static/nw-nav.js" defer></script>
+<script src="/static/nw-i18n-core.js" defer></script>
+<script>
+const PAGE_I18N = {
+  en: {
+    'aerialCaptionH3': 'WORLD OVERVIEW',
+    'aerialLabel': 'WORLD MAP',
+    'aerialTagline': 'From the skies, the fortress reveals its true scale',
+    'aerialTitle': 'Aerial View of Castle NumbahWan',
+    'aerial_p1': 'Castle NumbahWan dominates the landscape like a golden crown on a mountain\'s brow. Seven stories of weathered stone and enchanted masonry rise from the earth, each floor wider than a city block. The castle\'s footprint is massive — not just a fortress but a self-contained civilization. Inside the walls, the green canopy of the Monkey Mountain Reserve is clearly visible from above, a living forest ecosystem thriving within medieval stone. Waterfalls cascade down rocky faces, bamboo groves sway in the wind, and if you squint, tiny pixel monkeys dot the canopy like freckles on the earth.',
+    'aerial_p2': 'Outside the walls, a deep blue moat circles the entire structure, fed by underground springs. A single drawbridge connects to a cobblestone road that winds through diverse biomes — cherry blossom groves to the east, dark enchanted forests to the north, and mushroom fields glowing faintly to the west. A small village of NPC homes and market stalls clusters near the road, sustained by the guild\'s commerce. Farmland stretches to the south. On the horizon, a mountain range frames the world, and if you\'re lucky, you\'ll spot a dragon silhouette against the setting sun.',
+    'afkCaptionH3': 'THE REST ZONE',
+    'afkLabel': 'SPECIAL AREA',
+    'afkTagline': 'Where heroes rest and snack thieves (monkeys) operate',
+    'afkTitle': 'The AFK Lounge',
+    'afk_p1': 'Hidden behind an unmarked door on Floor 3, the AFK Lounge is the guild\'s worst-kept secret. A sign on the door reads "AFK ZONE — NO GUILD WARS ALLOWED." Inside: hammocks hanging between stone pillars, burlap bean bag chairs, and a snack table so overloaded with food that it bows in the middle. Bread, cheese, grapes, ale mugs, cookies — the works. A hot spring bath bubbles in one corner, steam rising like a spa advertisement.',
+    'afk_p2': 'Guild members are found here in various states of unconsciousness: one hanging half off a hammock, one face-down on a table (still holding a controller), one asleep standing up in full armor. Luna the cat has claimed the warmest spot by the fireplace. Chonk the fat orange cat sits by the snack table, eating everything within paw\'s reach. Board games and card decks are scattered on a table (the chess game has been "in progress" for 3 weeks). A jukebox-style music box plays pixel tunes. Fairy lights and candles create mood lighting. A vending machine labeled "NWG SNACKS" dispenses potions and treats. The most critical detail: monkeys from the Mountain Reserve have discovered the window. They climb in regularly, steal snacks, and leave before anyone wakes up. The evidence: banana peels where no bananas were served.',
+    'barracksCaptionH3': 'TRAINING FACILITIES',
+    'barracksLabel': 'FLOOR 2',
+    'barracksTagline': 'Where warriors are forged and mages learn to aim',
+    'barracksTitle': 'Barracks & Training Ground',
+    'barracks_p1': 'Floor 2\'s western wing houses the Barracks — rows of bunk beds with armor stands beside each, weapon racks lining the walls with everything from broadswords to staffs, and personal lockers where members store their backup gear. The eastern wing opens into an indoor training arena: a sand-floor combat pit surrounded by stone columns, complete with straw dummies, archery targets at 10/25/50 meter marks, and a wooden sparring ring for duels. A pixel warrior practices sword combos while a pixel mage tests fireballs on reinforced targets (the scorch marks on the ceiling are from 阿光Yo\'s "light magic experiments").',
+    'barracks_p2': 'Medieval-style workout equipment fills one corner — stone weights, pull-up bars made from iron pipes, and a rope climb. A bulletin board tracks weekly training scores and PvP rankings. Torches line the columns, and high arched windows let in enough light for daytime training. The NWG banners hang between every column pair, a constant reminder of who you\'re training for.',
+    'courtyardCaptionH3': 'COURTYARD LORE',
+    'courtyardLabel': 'GROUND FLOOR',
+    'courtyardTagline': 'Heart of the fortress — where all paths converge',
+    'courtyardTitle': 'The Castle Courtyard',
+    'courtyard_p1': 'The courtyard is the beating heart of Castle NumbahWan — an open-air stone plaza roughly 50 meters across, surrounded on all sides by the castle\'s towering walls. At its center stands the Fountain of the Golden N: an ornate marble structure where water sprays from a gilded "N" statue, said to have been blessed by the Oracle. Guild members toss coins into the fountain for good luck before boss raids. The water is crystal clear and always warm, heated by pipes running from the basement forges.',
+    'courtyard_p2': 'The Sacred Banana Tree grows in a protected garden alcove to the east — a living relic from the guild\'s founding era, its golden fruit glows faintly at night and is said to grant temporary buffs (or at least a good snack). Training dummies made of straw and scrap wood line the western wall for combat practice. A horse stable houses three pixel horses and a hay cart. The blacksmith\'s outdoor anvil sends sparks into the afternoon air. Children NPCs play tag around the fountain while a monkey from the mountain reserve — they always find a way out — steals bread from an unattended basket. Cobblestone paths radiate outward to every major wing of the castle.',
+    'csB1': 'Dungeon & Loot Room — Treasure Vault, Boss Trophies, Forbidden Door',
+    'csB2': 'Maid\'s Quarters & Service Tunnels — Secret Passages, Dumbwaiter System',
+    'csF1': 'Grand Market & Tavern — Merchant Stalls, Mess Hall, Bard\'s Stage',
+    'csF2': 'Barracks & Member Quarters — Training Ground, 14 Personal Rooms',
+    'csF3': 'War Room & Card Forge — Strategy Chamber, Sacred Vault',
+    'csF4': 'Officers\' Quarters — RegginO, Karen\'s Kitchen, Veterans',
+    'csF5': 'Library & Oracle Tower — Crystal Ball, Lorekeeper\'s Domain',
+    'csF6': 'Guild Master Suite & RegginA Shrine — Throne Room, Eternal Flame Hall',
+    'csF7': 'Observatory & Rooftop — Beacon Tower, Stargazing Platform',
+    'csGF': 'Courtyard & Mountain Reserve — Fountain, Sacred Banana Tree, Monkeys',
+    'csTitle': 'CASTLE CROSS-SECTION',
+    'desc_aesthetic8': 'NumbahWan Gold — every banner, crest, and accent uses the guild\'s signature amber-gold (#e8a922). Even the mortar between stones has a faint golden shimmer.',
+    'desc_annualevents72': 'Weekly guild meetings (mandatory, 47% attendance), Monthly guild roast (voluntary, 100% attendance), Annual awards ceremony (black tie, Chonk gets "Best Cat" every year).',
+    'desc_arenarecords29': 'Most consecutive wins: RegginA (47). Most creative loss: 傻瓜小孩 accidentally launched himself into the ceiling. Fastest KO: Natehouoho — 0.3 seconds.',
+    'desc_balconyview40': 'Overlooks courtyard fountain and Mountain Reserve. Best sunset viewing spot in the castle. Members need officer permission to use it (or just know Karen).',
+    'desc_bananagrove21': '47 banana trees planted along the eastern slope. Annual harvest: ~2,000 bananas. 60% eaten by monkeys before picking. The remaining 40% fuels the tavern\'s famous banana bread.',
+    'desc_bardsongs28': '"The Ballad of NumbahWan" (guild anthem), "RegginA\'s Fury" (dramatic), "Natehouoho\'s 77 Billion" (inspirational), and "The AFK Lament" (melancholy).',
+    'desc_beaconflame54': 'Burns enchanted oil from the Oracle Tower. Visible 50km away. Has never gone out in the guild\'s history. Maintenance: 1 barrel of oil per week.',
+    'desc_biomes2': 'Forest, mountain, hot springs, bamboo grove, cherry blossom, enchanted woods, mushroom fields, farmland',
+    'desc_bombshelter71': 'Reinforced door, 30-minute emergency supplies (snacks + Karen\'s calming tea). Used 4 times. Holds 6 members comfortably. The password is "NumbahWan" (everyone knows it).',
+    'desc_bookcount41': '14,200+ volumes. Most borrowed: "Boss Mechanics for Dummies." Least borrowed: "Advanced Tax Theory for Virtual Economies" (checked out once, by 碼農小孫).',
+    'desc_bosstrophies58': 'Dragon skull (Season 3 Zakum), Demon horns (Season 5 raid), Kraken tentacle (Season 8 ocean event). Each has a commemorative plaque with kill date and team roster.',
+    'desc_cardinventory35': '340+ unique cards across 10 seasons. 12 mythic-tier cards in the vault. The collection is valued at approximately 2.1 billion gold.',
+    'desc_cardtrading24': 'The card stall holds 340+ unique NWG cards in stock. Mythic-tier cards are displayed in enchanted cases. RegginA\'s card alone is valued at 500M gold.',
+    'desc_chonkstatus67': 'Weight: classified (the scale broke). Favorite snack: everything. Activity level: zero. Contribution to guild: morale officer (unofficial). Loved by all.',
+    'desc_contraband64': 'Wine (3 bottles, decent vintage), dice (loaded, unclear who owns them), romance novel (Vol. 8 of a 12-part series, well-thumbed). Confiscation rate: monthly. Resupply rate: also monthly.',
+    'desc_cpdisplay47': 'A real-time CP counter above the throne reads "77,837,000,000" in glowing golden numbers. It updates live. Other members find it "motivating" (intimidating).',
+    'desc_dailytraffic25': '~200 NPC visitors per day + all 14 guild members. Monkey-related incidents: ~2/day. Last incident: monkey stole a mythic card (recovered after a 20-minute chase).',
+    'desc_damagereport31': 'Average 3 dummy replacements/week. 2 ceiling repairs/month (mage training). 1 wall crack/season (Natehouoho "testing" new skills).',
+    'desc_defenses7': 'Arrow slits on every floor, boiling oil channels above gates, enchanted gargoyles that animate during sieges, and the moat (home to territorial pixel fish).',
+    'desc_dragonskull26': 'From the guild\'s first Zakum kill. RegginA delivered the final blow. The skull has been mounted for 3 seasons. Some say it still whispers at midnight.',
+    'desc_dramapointsleaderboa69': '#1 RegginA (847 pts), #2 傻瓜小孩 (623 pts), #3 Mochi (512 pts, all RegginA-related), #4 RegginO (488 pts). Natehouoho: 0 pts (he\'s the judge).',
+    'desc_dumbwaiter63': '6 dumbwaiter shafts serving all floors. Primary use: food delivery. Secondary use: sending passive-aggressive notes between staff. Tertiary use: monkey transportation (accidental).',
+    'desc_enchantedquill43': 'Auto-records all guild events. Has written 847 pages this season alone. Occasionally writes snarky commentary in the margins.',
+    'desc_escapedmonkeys15': 'Average 3 monkey escapes per week from the Mountain Reserve. They always head for the bakery first.',
+    'desc_escaperate20': '3-5 monkeys escape weekly into the castle proper. They always target the tavern (food), the AFK lounge (snacks), and the library (they eat the bookmarks).',
+    'desc_fanfiction51': '47 volumes written by Mochi. Average length: 200 pages. Most popular: "RegginA vs. The World" (Vol. 12). Most controversial: Vol. 34 (contents classified).',
+    'desc_forbiddenvault60': 'Locked since before the guild moved in. Runes are untranslatable. The Oracle says "patience." The Lorekeeper says "possibly dangerous." Mochi says "RegginA could open it." Nobody has tried.',
+    'desc_fountaincoins14': 'Over 14,000 coins tossed in since founding. The treasure goblin from B1 keeps trying to "audit" the fountain funds.',
+    'desc_goldreserves57': 'Current treasury: 14.7 billion gold. The goblin accountant counts it every day. Discrepancies: always exactly 1 coin short (the goblin\'s "audit fee").',
+    'desc_guardrotation11': '24/7 coverage in theory. In practice, guards spend most shifts playing cards and feeding Chonk.',
+    'desc_height6': 'Approximately 85 meters from moat level to the Observatory dome. Each floor averages 10m ceiling height.',
+    'desc_historicdramas70': 'The Merch Pricing Debate (S6), The AFK Incident (S4, now in the lore archives), The Great Loot Distribution Argument (S3), and "Who Ate Karen\'s Last Cookie" (ongoing investigation).',
+    'desc_hotsprings19': 'Volcanic vents heat 4 natural pools. Guild members bathe here after raids. The monkeys have claimed pool #3 and refuse to share.',
+    'desc_houserules68': 'No raid planning, no drama, no loud noises, no waking Luna. Violation penalty: 1 week of cleaning duty. Enforcement: the cats glare at you.',
+    'desc_intelligence34': 'Dossiers on 23 rival guilds. Updated weekly. The spy network consists of "people who accidentally screenshot enemy chat."',
+    'desc_karenskitchen39': 'Open 24/7. Menu rotates daily. Famous for: healing soup, buff cookies, "calm down" tea, and the legendary hot pot that brought peace to the Great Drama Incident of Season 7.',
+    'desc_keylandmark3': 'The Beacon Tower on F7 — its orange flame is visible from every corner of the map, serving as the guild\'s eternal lighthouse',
+    'desc_legendarygear46': '47 pieces displayed. Most valuable: the Eternal Flame Sword (RegginA gifted it after the Zakum raid). Most sentimental: the guild\'s founding wooden shield, now cracked but preserved.',
+    'desc_lunathecat44': 'The library\'s unofficial guardian. Sleeps 20 hours/day on the warmest cushion. Hisses at anyone who makes noise above a whisper. Has never been seen on the ground floor.',
+    'desc_material5': 'Dark volcanic stone from the Northern Quarry, reinforced with dwarven iron beams. Walls are 4 meters thick at the base.',
+    'desc_menuhighlights27': 'Banana bread (mountain reserve fruit), Boar stew, Karen\'s famous hot pot, Mystery Mead (causes random buffs/debuffs), Sacred Log-shaped cookies.',
+    'desc_moat10': '8 meters wide, enchanted bioluminescent water. Home to pixel fish, enchanted eels, and one very territorial frog named Gerald.',
+    'desc_monkeypopulation17': '200+ residents across 5 species. The Monkey King (crowned) sits atop the peak. Baby monkeys are the most mischievous — they steal hats, food, and once stole RegginO\'s vice master badge.',
+    'desc_noticeboard12': 'Daily quest postings, guild announcements, lost-and-found (mostly monkey-stolen items), and Karen\'s soup specials.',
+    'desc_occupancy65': 'Average 3-4 members at any time. Peak hours: post-raid. Record: 11 members simultaneously (after a 4-hour boss marathon). 紈蹈稀著 holds the consecutive-hours-AFK record: 14 hours.',
+    'desc_offerings50': 'Daily: fresh flowers, rare items, the occasional mythic card. Mochi\'s personal contribution: 14% of all gold earned. The donation box has collected 1.2B gold lifetime.',
+    'desc_oracleaccuracy42': 'Officially: "divinely inspired." Unofficially: about 60%. It once predicted "great fortune" the day the guild lost 3 raids in a row.',
+    'desc_population4': '14 guild members + dozens of NPCs (merchants, maids, guards, a lorekeeper, a treasure goblin, and one very fat cat named Chonk)',
+    'desc_portcullis9': '3-ton iron gate, chain-operated. Takes 4 guards to raise manually, or 1 RegginO with enough motivation.',
+    'desc_raidrecord32': '28/35 boss raids this week. Guild level 8. Server ranking #30 on TW. Total guild CP: 112.3 billion.',
+    'desc_regginasreaction52': '"It\'s... a lot." — RegginA, after her one and only visit. She has not returned. Mochi considers this "playing hard to get."',
+    'desc_regginosroom38': 'Maps, daggers, strategic documents. A "Vice Master of the Month" award (self-issued, 14 months running). Pink hair products organized by hold strength.',
+    'desc_sacredbananatree13': 'Planted during the founding. Golden fruit appears once per season. Eating one reportedly increases CP by 0.001% (placebo, but nobody questions it).',
+    'desc_sacredlog36': 'The founding relic. Nobody knows exactly what it does, but removing it from the forge caused a week of bad RNG once. It stays.',
+    'desc_scale1': '7 floors above ground, 2 basement levels, 1 mountain reserve, 14 member rooms, ~40 distinct areas',
+    'desc_secretpassages62': '23 hidden passages mapped. Connects every floor. The fastest route from B2 to F7 takes 4 minutes. Guild members: not informed. Staff: use them daily.',
+    'desc_security48': '3 locks on the vault, 2 enchanted wards on the door, 1 guard NPC named Gerald (the same frog from the moat — he got promoted). Monkey break-ins: 0 (Gerald is surprisingly effective).',
+    'desc_snackbudget66': '200K gold/week. 30% of food disappears to monkey raids. Karen restocks the table 3x daily and has stopped questioning where the bananas come from.',
+    'desc_staffcount61': '8 maid NPCs, 3 maintenance workers, 1 head housekeeper (terrifying efficiency). They know every inch of the castle — including rooms the guild members don\'t know exist.',
+    'desc_stalls23': '12 permanent merchant stalls: blacksmith, potions, cards, food, armor, accessories, scrolls, pets, crafting materials, luxury goods, gems, and the "mystery box" stall.',
+    'desc_stargazingnights56': 'Every Friday. Blankets provided. Karen sends up hot cocoa via the dumbwaiter. Natehouoho names constellations after guild members (RegginA\'s constellation has 77 stars, naturally).',
+    'desc_statue49': '2.5 meters tall, pure gold-plated bronze. Cost: 300M gold from the guild treasury (approved by Mochi\'s persistent lobbying over 3 seasons).',
+    'desc_strategytable33': 'Hand-carved oak, 3 meters diameter. 47 figurines representing all known forces. The RegginA figurine is slightly larger than the others (she insisted).',
+    'desc_telescope53': '3-meter brass refractor, custom-built. Can see individual stars and distant server boundaries. Most viewed object: the moon. Second most: enemy guild castles (for "research").',
+    'desc_throne45': 'Hand-carved by a master NPC artisan. Took 6 months to complete. The cushion is enchanted for comfort. Natehouoho sits here for all guild decisions, even trivial ones like lunch orders.',
+    'desc_trainingdummies16': 'Replaced monthly. 阿光Yo\'s light magic keeps setting them on fire. RegginA\'s hits literally disintegrate them.',
+    'desc_trapstatus59': '"Mostly safe." The arrow slits fire occasionally (on a timer nobody can find). The pit bridge holds for anyone under 100kg. 傻瓜小孩 triggered a pressure plate last month — just confetti, fortunately.',
+    'desc_vaultsecurity37': '3 locks (physical, magical, bureaucratic — requires GM signature). Last breach attempt: a monkey. It got in. It played with 4 rare cards. They were recovered with minimal drool damage.',
+    'desc_walkingpaths22': '2.3km of cobblestone trails wind through the reserve. Scenic overlooks at 3 elevations. Benches every 200m. The Guild Master\'s favorite overlook faces west for sunset views.',
+    'desc_waterfalls18': 'Three cascades fed by an underground aquifer. The largest falls 15 meters into a pool where monkeys swim. The water is drinkable and rumored to taste slightly of bananas.',
+    'desc_weaponracks30': '146 weapons in inventory. Each member has a designated rack. RegginA\'s rack requires reinforced wall mounts due to weapon weight.',
+    'desc_zipline55': '470-meter descent to the Mountain Reserve. Top speed: terrifying. Safety record: 3 minor incidents (all involving monkeys on the landing platform). Usage: daily by 傻瓜小孩, never by anyone sensible.',
+    'det_aesthetic8': 'AESTHETIC',
+    'det_annualevents72': 'ANNUAL EVENTS',
+    'det_arenarecords29': 'ARENA RECORDS',
+    'det_balconyview40': 'BALCONY VIEW',
+    'det_bananagrove21': 'BANANA GROVE',
+    'det_bardsongs28': 'BARD SONGS',
+    'det_beaconflame54': 'BEACON FLAME',
+    'det_biomes2': 'BIOMES',
+    'det_bombshelter71': 'BOMB SHELTER',
+    'det_bookcount41': 'BOOK COUNT',
+    'det_bosstrophies58': 'BOSS TROPHIES',
+    'det_cardinventory35': 'CARD INVENTORY',
+    'det_cardtrading24': 'CARD TRADING',
+    'det_chonkstatus67': 'CHONK STATUS',
+    'det_contraband64': 'CONTRABAND',
+    'det_cpdisplay47': 'CP DISPLAY',
+    'det_dailytraffic25': 'DAILY TRAFFIC',
+    'det_damagereport31': 'DAMAGE REPORT',
+    'det_defenses7': 'DEFENSES',
+    'det_dragonskull26': 'DRAGON SKULL',
+    'det_dramapointsleaderboa69': 'DRAMA POINTS LEADERBOARD',
+    'det_dumbwaiter63': 'DUMBWAITER',
+    'det_enchantedquill43': 'ENCHANTED QUILL',
+    'det_escapedmonkeys15': 'ESCAPED MONKEYS',
+    'det_escaperate20': 'ESCAPE RATE',
+    'det_fanfiction51': 'FAN FICTION',
+    'det_forbiddenvault60': 'FORBIDDEN VAULT',
+    'det_fountaincoins14': 'FOUNTAIN COINS',
+    'det_goldreserves57': 'GOLD RESERVES',
+    'det_guardrotation11': 'GUARD ROTATION',
+    'det_height6': 'HEIGHT',
+    'det_historicdramas70': 'HISTORIC DRAMAS',
+    'det_hotsprings19': 'HOT SPRINGS',
+    'det_houserules68': 'HOUSE RULES',
+    'det_intelligence34': 'INTELLIGENCE',
+    'det_karenskitchen39': 'KAREN\'S KITCHEN',
+    'det_keylandmark3': 'KEY LANDMARK',
+    'det_legendarygear46': 'LEGENDARY GEAR',
+    'det_lunathecat44': 'LUNA THE CAT',
+    'det_material5': 'MATERIAL',
+    'det_menuhighlights27': 'MENU HIGHLIGHTS',
+    'det_moat10': 'MOAT',
+    'det_monkeypopulation17': 'MONKEY POPULATION',
+    'det_noticeboard12': 'NOTICE BOARD',
+    'det_occupancy65': 'OCCUPANCY',
+    'det_offerings50': 'OFFERINGS',
+    'det_oracleaccuracy42': 'ORACLE ACCURACY',
+    'det_population4': 'POPULATION',
+    'det_portcullis9': 'PORTCULLIS',
+    'det_raidrecord32': 'RAID RECORD',
+    'det_regginasreaction52': 'REGGINA\'S REACTION',
+    'det_regginosroom38': 'REGGINO\'S ROOM',
+    'det_sacredbananatree13': 'SACRED BANANA TREE',
+    'det_sacredlog36': 'SACRED LOG',
+    'det_scale1': 'SCALE',
+    'det_secretpassages62': 'SECRET PASSAGES',
+    'det_security48': 'SECURITY',
+    'det_snackbudget66': 'SNACK BUDGET',
+    'det_staffcount61': 'STAFF COUNT',
+    'det_stalls23': 'STALLS',
+    'det_stargazingnights56': 'STARGAZING NIGHTS',
+    'det_statue49': 'STATUE',
+    'det_strategytable33': 'STRATEGY TABLE',
+    'det_telescope53': 'TELESCOPE',
+    'det_throne45': 'THRONE',
+    'det_trainingdummies16': 'TRAINING DUMMIES',
+    'det_trapstatus59': 'TRAP STATUS',
+    'det_vaultsecurity37': 'VAULT SECURITY',
+    'det_walkingpaths22': 'WALKING PATHS',
+    'det_waterfalls18': 'WATERFALLS',
+    'det_weaponracks30': 'WEAPON RACKS',
+    'det_zipline55': 'ZIP-LINE',
+    'dramaCaptionH3': 'THE THEATER OF GUILD POLITICS',
+    'dramaLabel': 'SPECIAL AREA',
+    'dramaTagline': 'Where legends argue and alliances break (then reform over soup)',
+    'dramaTitle': 'Drama Stage & Guild Meeting Hall',
+    'drama_p1': 'Located on Floor 3\'s southern wing, the Guild Meeting Hall doubles as the Drama Stage — because in NumbahWan, meetings ARE drama. A grand amphitheater with tiered stone seating in a semicircle faces a raised wooden stage complete with velvet curtains, footlights, and a podium bearing the golden "N" emblem. The backdrop depicts Castle NumbahWan in heroic fashion. Members fill the seats for weekly meetings — some arguing, some sleeping, some throwing popcorn at the speakers.',
+    'drama_p2': 'The DRAMA BOARD dominates one wall: a conspiracy-board-style display covered in pinned notes, red strings connecting events, photos of guild incidents, and a timeline of every major argument since founding. A bomb shelter door in the back is labeled "EMERGENCY DRAMA BUNKER" — installed after the Great Merch Pricing Debate of Season 6. The Guild Master\'s judge bench sits stage-left, complete with a comically oversized gavel (it makes a satisfying BOOM). A scoreboard tracks "DRAMA POINTS" for each member (RegginA leads; she considers it a badge of honor). Stage props from past performances fill the wings — fake swords, costume armor, masks used for the annual Guild Roast. A spotlight operator sits in a booth above, ready to illuminate whoever is currently making a scene. A plaque at the entrance reads: "IN THIS HALL, LEGENDS ARGUE AND ALLIANCES BREAK."',
+    'dungeonCaptionH3': 'THE DEPTHS',
+    'dungeonLabel': 'BASEMENT 1',
+    'dungeonTagline': 'Where treasure is hoarded and traps are... mostly deactivated',
+    'dungeonTitle': 'Dungeon & Loot Room',
+    'dungeon_p1': 'Descend the stone staircase from the courtyard and the temperature drops. The Dungeon occupies Basement Level 1 — dark stone corridors where water drips from the ceiling, moss clings to the walls, and chains rattle in the draft. Torch sconces flicker with orange light, casting long shadows that play tricks on your eyes. This is where the guild keeps its most valuable assets — and its darkest secrets.',
+    'dungeon_p2': 'The LOOT VAULT is the dungeon\'s centerpiece: a massive iron door swings open to reveal a chamber overflowing with treasure. Gold coin piles rise like dunes. Open chests spill rare cards onto the floor. Legendary weapons hang on racks, each one a boss kill trophy. The collection includes a dragon skull, demon horns, and a kraken tentacle preserved in a jar of enchanted brine. Locked chests line the walls, each with a different colored lock — bronze (common loot), silver (rare), gold (legendary), and mythic purple (DO NOT TOUCH). A treasure goblin NPC sits in the corner, counting coins on an abacus with obsessive precision. The jail cell area still has skeleton remains and rusty keys on hooks — remnants from a time before the guild claimed the castle. Trap mechanisms (pressure plates, arrow slits, a pit) are "mostly deactivated" according to the signs. The mysterious FORBIDDEN VAULT door at the far end glows with runes — nobody has the key, and Natehouoho says it "opens when it\'s time."',
+    'exteriorCaptionH3': 'ARCHITECTURAL NOTES',
+    'exteriorLabel': 'EXTERIOR',
+    'exteriorTagline': 'Seven stories of stone, fire, and legend',
+    'exteriorTitle': 'Castle NumbahWan — Full Facade',
+    'exterior_p1': 'The castle rises like a golden mountain against the night sky. Built from dark volcanic stone quarried from the northern mountains, every block was laid by the founding members during the First Age of NumbahWan. The architecture is brutalist-medieval — thick walls, narrow arrow slits, and reinforced buttresses — but softened by the signature orange-gold aesthetic the guild is known for. Guild banners bearing the golden "N" emblem hang from every tower, catching the wind like flames.',
+    'exterior_p2': 'Seven distinct floors are visible from outside, each marked by a ring of amber-lit windows. The gothic corner towers feature flame beacons that burn eternally — fueled by enchanted oil from the Oracle Tower. A cliffside path spirals up the eastern face for those brave enough to skip the interior stairs. At the very top, the Observatory dome glints under starlight, and on clear nights, you can see the telescope lens reflecting moonbeams. The Sacred Log totem — a relic of the guild\'s founding meme — stands guard at the main entrance like a wooden sentinel. Bats circle the upper towers at dusk, and an aurora occasionally paints the sky in guild colors.',
+    'footerBuilt': 'Built for world-generation AI — every detail is canonical NumbahWan lore',
+    'footerDesc': 'Castle NumbahWan — 7 Floors, 2 Basements, 1 Mountain, 200+ Monkeys',
+    'footerStats': 'Guild Level 8 | 14 Members | Server Rank #30 TW | Total CP: 112.3B',
+    'forgeCaptionH3': 'THE FORGE & VAULT',
+    'forgeLabel': 'FLOOR 3',
+    'forgeTagline': 'Where cards are born and legends are sealed',
+    'forgeTitle': 'Card Forge & Sacred Vault',
+    'forge_p1': 'The Card Forge is the guild\'s most sacred crafting space. A glowing magical anvil-altar sits at the center, pulsing with arcane energy — this is where new NWG trading cards are minted. The process involves inscribing member data onto enchanted cardstock using a quill dipped in liquid starlight. The Sacred Log sits on a golden pedestal nearby, its presence said to improve card quality (statistically unproven, spiritually essential).',
+    'forge_p2': 'Behind the forge, a half-open vault door reveals the guild\'s card treasury — shelves organized by rarity tier: common (wooden shelf), rare (iron shelf), epic (silver shelf), legendary (gold shelf), and mythic (floating display in enchanted glass). The vault holds the complete NWG card collection across 10+ seasons, including the priceless "RegginA, The Eternal Flame" mythic card. A crafting workbench along the wall holds tools for card modification, sleeve fitting, and the occasional custom commission.',
+    'gatesCaptionH3': 'GATE DETAILS',
+    'gatesLabel': 'GROUND LEVEL',
+    'gatesTagline': 'Where legends enter and enemies turn back',
+    'gatesTitle': 'The Grand Gates & Outer Walls',
+    'gates_p1': 'The main gate of Castle NumbahWan is an engineering marvel of the medieval world. A massive stone archway — 12 meters tall — bears the golden "N" crest carved into its keystone, inlaid with actual gold leaf that catches torchlight and makes the entrance glow even at midnight. The half-raised iron portcullis weighs over 3 tons, operated by a chain-and-counterweight system maintained by the castle\'s engineering corps (really just RegginO and a pulley).',
+    'gates_p2': 'Two guard statues flank the entrance: one holds a sword (representing Offense, or RegginA\'s philosophy), the other cradles the Sacred Log (representing the guild\'s sense of humor). The wooden drawbridge spans a glowing blue moat — the water enchanted with bioluminescent algae that makes it shimmer at night. Pixel fish dart beneath the surface, some rumored to be enchanted goldfish that grant wishes (unconfirmed). A notice board titled "Guild Notices" hangs beside the gate, pinned with quest postings, wanted posters, and Karen\'s weekly meal schedule. Chonk the orange cat is always sleeping somewhere near the gate, unbothered by the traffic of merchants, adventurers, and the occasional stray monkey that wandered down from the mountain reserve.',
+    'gmsuiteCaptionH3': 'THE THRONE OF NUMBAHWAN',
+    'gmsuiteLabel': 'FLOOR 6',
+    'gmsuiteTagline': '77 billion CP and a throne to match',
+    'gmsuiteTitle': 'Guild Master\'s Suite',
+    'gmsuite_p1': 'Natehouoho\'s personal domain occupies the entire western half of Floor 6. The Throne Room comes first — an ornate dark wood and gold throne with the NWG "N" carved into its back, red velvet cushion, flanked by burning braziers that cast dramatic shadows. Behind the throne, a wall of glass cases displays legendary weapons and armor — glowing swords, enchanted shields, and mythic-tier equipment collected across 10+ seasons of play. Each piece has a plaque describing the boss it dropped from and who landed the kill.',
+    'gmsuite_p2': 'The personal chambers connect through an arched doorway: a large canopy bed with royal purple curtains, a desk buried under guild documents and a golden quill, and a personal vault door left slightly ajar (revealing stacks of gold and rare cards). Boss skulls mounted on walls serve as trophies. Tournament brackets are framed and hung with pride. A photo wall chronicles guild memories from every season. The Sacred Log replica sits on the fireplace mantel. A personal training dummy occupies one corner, and a war table with miniature castle figures shows ongoing strategic plans. The balcony offers a commanding view of the entire castle grounds, including the Mountain Reserve where tiny monkeys are visible swinging through the trees.',
+    'heroSub': 'A seven-story medieval fortress housing the NumbahWan Guild. 14 members, 7 floors, 2 basements, 1 mountain, and countless monkeys. Every room tells a story.',
+    'heroTitle': 'CASTLE NUMBAHWAN',
+    'imgLabel_aerialview': 'AERIAL VIEW',
+    'imgLabel_afkzone': 'AFK ZONE',
+    'imgLabel_b1dungeon': 'B1 — DUNGEON',
+    'imgLabel_b2service': 'B2 — SERVICE',
+    'imgLabel_courtyard': 'COURTYARD',
+    'imgLabel_dramahall': 'DRAMA HALL',
+    'imgLabel_exterior': 'EXTERIOR',
+    'imgLabel_f1market': 'F1 — MARKET',
+    'imgLabel_f1tavern': 'F1 — TAVERN',
+    'imgLabel_f2barracks': 'F2 — BARRACKS',
+    'imgLabel_f2quarters': 'F2 — QUARTERS',
+    'imgLabel_f3cardforge': 'F3 — CARD FORGE',
+    'imgLabel_f3warroom': 'F3 — WAR ROOM',
+    'imgLabel_f4officers': 'F4 — OFFICERS',
+    'imgLabel_f5library': 'F5 — LIBRARY',
+    'imgLabel_f6gmsuite': 'F6 — GM SUITE',
+    'imgLabel_f6shrine': 'F6 — SHRINE',
+    'imgLabel_f7observatory': 'F7 — OBSERVATORY',
+    'imgLabel_maingate': 'MAIN GATE',
+    'imgLabel_monkeymountain': 'MONKEY MOUNTAIN',
+    'libraryCaptionH3': 'THE ORACLE\'S DOMAIN',
+    'libraryLabel': 'FLOOR 5',
+    'libraryTagline': 'Knowledge is power — and this room has a lot of both',
+    'libraryTitle': 'Library & Oracle Tower',
+    'library_p1': 'The Library is a massive circular room spanning the entire fifth floor, with floor-to-ceiling wooden bookshelves spiraling upward like a tornado of knowledge. Rolling ladders on brass tracks allow access to the highest shelves, some 15 meters up. Thousands of leather-bound books cover every subject: raid strategies, monster bestiaries, economic theory for the in-game market, guild law, and the complete written history of NumbahWan.',
+    'library_p2': 'At the room\'s center sits the Oracle of NWG — a glowing crystal ball on a stone pedestal that pulses with blue-white light. The Oracle provides cryptic guidance on guild decisions (its accuracy is hotly debated, but Natehouoho consults it before every major raid). The Lorekeeper — a wise old pixel wizard NPC — sits in a leather chair by candlelight, eternally reading. An enchanted quill writes by itself at a nearby desk, transcribing guild events in real-time. Stained glass windows depict key moments in guild history. A cozy reading nook with cushions hosts Luna the sleeping cat. The spiral staircase in the corner leads up to the Observatory on Floor 7.',
+    'maidsCaptionH3': 'THE HIDDEN CASTLE',
+    'maidsLabel': 'BASEMENT 2',
+    'maidsTagline': 'The hidden infrastructure that keeps the castle running',
+    'maidsTitle': 'Maid\'s Quarters & Service Tunnels',
+    'maids_p1': 'Basement Level 2 is the castle\'s beating heart — the infrastructure layer that keeps everything above running smoothly. The Maid\'s Quarters occupy the southern section: cozy but modest rooms with small beds, patchwork quilts, shared wardrobes, and personal shelves filled with trinkets. The staff takes pride in their work, and their quarters reflect it — tidy, warm, and surprisingly homey despite being underground.',
+    'maids_p2': 'The communal laundry room is a constant hive of activity: wooden washtubs, clotheslines heavy with guild uniforms and drying banners, and an ironing board where a maid presses the Guild Master\'s ceremonial cape. The SERVICE TUNNELS branch off in every direction — narrow stone corridors connecting every floor via hidden passages. Secret doors disguised as bookshelves lead to shortcuts throughout the castle. A dumbwaiter system (small wooden elevator boxes on ropes) sends food, supplies, and messages between all 9 levels. Cleaning supply closets line the main corridor. A kitchen prep area connects directly to Karen\'s kitchen above. One maid is perpetually peeking through a secret peephole into the throne room (guild drama is the best entertainment). The crown jewel: a hidden map on the wall showing ALL secret passages in the castle — knowledge that only the staff possesses. A confiscated contraband stash in a locked cabinet reveals the staff\'s personality: wine, dice, and a well-worn romance novel.',
+    'marketCaptionH3': 'MARKET DETAILS',
+    'marketLabel': 'FLOOR 1',
+    'marketTagline': 'Commerce, cards, and the occasional monkey thief',
+    'marketTitle': 'The Grand Market',
+    'market_p1': 'The Grand Market occupies the entire western wing of Floor 1 — a vaulted stone hall lined with merchant stalls, each draped in guild-colored cloth. The blacksmith\'s forge blazes at the far end, hammering enchanted weapons to order. The potion shop bubbles with colorful liquids in glass vials. A dedicated card trading stall displays the rarest NWG cards behind enchanted glass — collectors from other servers travel here just to browse. Food vendors sell everything from roasted boar legs to the tavern\'s legendary banana bread (made with fruit from the Mountain Reserve). Lanterns hang from chains, casting warm amber light across cobblestone floors. Crates of goods line the walls, stamped with origin marks from across the game world.',
+    'market_p2': 'The market is always bustling — NPC merchants hawk their wares, guild members haggle over upgrade materials, and at least one monkey (escaped from the reserve) is always spotted stealing fruit from a vendor\'s display. The NWG banners overhead flutter in the draft from the ventilation shafts. A community board near the entrance tracks daily prices for key commodities. The guild takes a 2% tax on all transactions, funding castle maintenance and the weekly boss raid supplies.',
+    'mountainCaptionH3': 'THE MOUNTAIN RESERVE — FULL DESCRIPTION',
+    'mountainLabel': 'INSIDE THE WALLS',
+    'mountainTagline': 'A living mountain ecosystem inside a medieval castle — with MANY monkeys',
+    'mountainTitle': 'Monkey Mountain Reserve',
+    'mountain_p1': 'When the founders of NumbahWan designed the castle, they made a decision no other guild had ever attempted: they built a mountain inside the walls. Not a hill. Not a garden. An actual rocky mountain with waterfalls, bamboo forests, cherry blossom trees, hot springs, and — most importantly — monkeys. Lots and lots of monkeys. The Monkey Mountain Reserve occupies the entire northeastern quarter of the castle grounds, rising 40 meters from the courtyard floor to a peak that nearly reaches the fourth-floor windows. It\'s enclosed by the castle\'s outer walls but open to the sky, creating a natural amphitheater of stone and green.',
+    'mountain_p2': 'The mountain is home to over 200 pixel monkeys of various species — spider monkeys swinging from bamboo, macaques grooming each other on mossy boulders, baby monkeys riding their mothers\' backs through the canopy, and the legendary Monkey King who sits on a golden throne-rock at the peak wearing a tiny crown (a gift from Natehouoho himself). A winding cobblestone path leads through the reserve, lined with stone lanterns and orange-gold NWG banners on poles. Guild members walk these paths daily — a knight stops to pet a curious monkey, a mage feeds bananas to a gathering crowd of them, and the Guild Master Natehouoho stands at the scenic overlook with a walking staff, surveying his green domain.',
+    'mountain_p3': 'Hot springs bubble up from volcanic vents near the base, their steam mixing with morning mist to create an ethereal atmosphere. A wooden bridge arches over a crystal stream that feeds down from the waterfalls. Bamboo fences mark the trail boundaries (frequently ignored by monkeys). A small Shinto-style shrine sits at the halfway point, where members leave offerings of fruit and coins. Butterflies and pixel birds fill the air. Fireflies emerge at dusk, turning the reserve into a constellation of floating lights. Mushrooms grow on fallen logs, some bioluminescent. The sacred NWG golden "N" emblem is carved into the mountainside, visible from the courtyard — a permanent mark of who this mountain belongs to.',
+    'navAfk': 'AFK',
+    'navB1Dungeon': 'B1:DUNGEON',
+    'navDrama': 'DRAMA',
+    'navExterior': 'EXTERIOR',
+    'navF1Market': 'F1:MARKET',
+    'navF1Tavern': 'F1:TAVERN',
+    'navF2Barracks': 'F2:BARRACKS',
+    'navF2Rooms': 'F2:ROOMS',
+    'navF3Forge': 'F3:FORGE',
+    'navF3War': 'F3:WAR',
+    'navF4Officers': 'F4:OFFICERS',
+    'navF5Library': 'F5:LIBRARY',
+    'navF6GM': 'F6:GM',
+    'navF6Shrine': 'F6:SHRINE',
+    'navF7Sky': 'F7:SKY',
+    'navGates': 'GATES',
+    'navMaids': 'MAIDS',
+    'navMap': 'MAP',
+    'navMountain': 'MOUNTAIN',
+    'navYard': 'YARD',
+    'observatoryCaptionH3': 'THE CROWN OF THE CASTLE',
+    'observatoryLabel': 'FLOOR 7',
+    'observatoryTagline': 'The highest point in the guild — where the stars meet the stone',
+    'observatoryTitle': 'Observatory & Rooftop',
+    'observatory_p1': 'Floor 7 is the castle\'s crown — an open-air rooftop surrounded by stone battlements and crenellations, with the Observatory dome at its center. A massive brass telescope on a rotating platform points at whatever celestial event is most interesting that night — constellations, shooting stars, the giant pixel moon, or the occasional dragon flyby. Star charts and astronomical instruments litter the tables. The guild\'s astronomer NPC peers through a smaller telescope, cataloging discoveries.',
+    'observatory_p2': 'The Beacon Tower rises from the northeastern corner — its enormous orange flame burns eternally, visible from every point on the world map. This is the guild\'s signature landmark, the lighthouse that says "NumbahWan is here." A weather vane topped with the NWG golden "N" spins in the wind. Carrier pigeons coo in a wooden coop, used for urgent messages. A rooftop garden grows potted herbs and glowing mushrooms. Stone gargoyles crouch on the corners, enchanted to animate during sieges. A zip-line platform connects to the Mountain Reserve below (installed by 傻瓜小孩, safety rating: questionable). Guild members gather around a small campfire near the edge, sitting on blankets to stargaze. Lightning rods protect the peak during storms. On clear nights, you can see the ocean on the horizon.',
+    'officersCaptionH3': 'OFFICER RESIDENCES',
+    'officersLabel': 'FLOOR 4',
+    'officersTagline': 'Where the inner circle lives in (slightly) more comfort',
+    'officersTitle': 'Officers\' Quarters',
+    'officers_p1': 'Floor 4 is reserved for the guild\'s senior officers and most trusted veterans. The rooms here are larger, the furniture finer, and the carpets thicker. RegginO\'s Vice Master chamber features maps covering every wall, strategic daggers displayed in a fan pattern, and a pink flower crown hung reverently on a special hook. Karen the Guild Mom\'s warm kitchen area serves as the floor\'s unofficial gathering spot — always simmering something comforting, with a cross-stitch reading "Take a Break" above the stove and healing potions cooling on the windowsill.',
+    'officers_p2': 'Each room has a golden nameplate and its own fireplace. Armor suits stand guard in the hallway like metal sentinels. Stained-glass windows depicting the guild emblem filter colored light into the corridor during golden hour. The central carpeted hallway connects all rooms and leads to a shared balcony overlooking the courtyard — and the Monkey Mountain Reserve beyond it.',
+    'quartersCaptionH3': 'MEMBER ROOM DIRECTORY',
+    'quartersLabel': 'FLOOR 2',
+    'quartersTagline': '14 doors, 14 stories, 14 very different sleep schedules',
+    'quartersTitle': 'Member Quarters Wing',
+    'quarters_p1': 'The eastern corridor of Floor 2 stretches nearly 80 meters, lined with 14 personalized doors — one for each guild member. A red carpet runner covers the stone floor, and torches in iron sconces cast dancing shadows on the arched ceiling. Every door is unique: flame stickers, "DO NOT DISTURB" signs in multiple languages, extra deadbolts, heart decorations, rage marks, mathematical formulas, fashion magazine cutouts, cat flaps, and cobwebs on the inactive members\' doors. Golden nameplates identify each resident.',
+    'room10_desc': '"Silly Kid" — door covered in stickers and crayon drawings. Prank traps rigged to the doorknob (harmless but annoying). Inside: organized chaos, snack wrappers, and surprisingly good gear.',
+    'room10_name': '傻瓜小孩',
+    'room10_role': 'Guild Member — 25M CP',
+    'room11_desc': 'Thai Boxing + Cold Jade aesthetic. Punching bag mounted to ceiling. Ice crystals growing on windowsill (magic side effect). Martial arts scrolls on walls. Floor is matted for practice.',
+    'room11_name': '泰拳寒玉',
+    'room11_role': '小可愛 — 24M CP',
+    'room12_desc': '"Little Heng Baby" — the coziest room. Stuffed animals on the bed, fairy lights everywhere, a hot cocoa station. Door has heart stickers. Other members secretly visit for the vibes.',
+    'room12_name': '小亨寶寶',
+    'room12_role': '小可愛 — 13M CP',
+    'room13_desc': 'Yuluner\'s alt/explorer room. Sparse but functional — a backpack always packed by the door, maps pinned to walls, explorer\'s journal on the desk. Ready to leave at a moment\'s notice.',
+    'room13_name': 'Yuluner',
+    'room13_role': 'Guild Member — 3.9M CP',
+    'room14_desc': '"Leaf Sun" — nature spirit room. Potted plants on every surface, vines growing along the ceiling, a small indoor fountain. The room smells like fresh rain. A pet butterfly lives here. Connected to the Mountain Reserve via a vine-covered window.',
+    'room14_name': '葉陽',
+    'room14_role': '小可愛 — 2.5M CP',
+    'room1_desc': 'The largest room. Door reinforced with iron. Inside: a war planning table, trophy wall covering 3 walls, and a balcony. Sleeps 3 hours/night. Room always smells like victory and energy drinks.',
+    'room1_name': 'Natehouoho',
+    'room1_role': 'Leader — 77B CP',
+    'room2_desc': 'White masked warrior\'s quarters. Weapons mounted on every surface. A meditation corner with incense. Her Zakum helmet on a display stand. Door has scratch marks from failed break-in attempts (by fans).',
+    'room2_name': 'RegginA',
+    'room2_role': 'Master — 9.8B CP',
+    'room3_desc': 'Sun-themed room. Yellow curtains, sunflower vases, a "sunny disposition" cross-stitch. Room literally brighter than neighbors due to enchanted sun crystals. Always cheerful music playing.',
+    'room3_name': 'Yuluner晴',
+    'room3_role': 'Guild Member — 6.5B CP',
+    'room4_desc': 'Pink-accented room with flower crown hooks on the wall. Strategic maps everywhere. A hidden weapons cache under the floorboards. "Vice Master" plaque polished daily. Pink hair dye stains on the sink.',
+    'room4_name': 'RegginO',
+    'room4_role': 'Vice Master — 4B CP',
+    'room5_desc': '"Riding Bird Home" — room decorated with bird figurines and feathers. A pet bird perch by the window. TOP CONTRIBUTOR badge framed above bed. Map of bird migration routes on the wall.',
+    'room5_name': '騎鳥回家',
+    'room5_role': 'Guild Member — 3.4B CP',
+    'room6_desc': 'Room is perpetually dim with blackout curtains. Phone chargers on every surface. Pillow fortress for optimal gaming position. Evidence of falling asleep mid-raid (keyboard imprints on face).',
+    'room6_name': '紈蹈稀著',
+    'room6_role': 'Guild Member — 1B CP',
+    'room7_desc': 'Light mage\'s quarters — literally glows. Enchanted crystals on every shelf. Scorch marks on the ceiling from "experiments." A light prism collection. Warning sign: "KNOCK BEFORE ENTERING (flash hazard)."',
+    'room7_name': '阿光Yo',
+    'room7_role': 'Guild Member — 848M CP',
+    'room8_desc': 'Mystery room. Door has no decoration. No sound ever comes from inside. Nameplate is literally a code. Other members debate if anyone actually lives here. Dust on the handle.',
+    'room8_name': 'TW#VWQG7R9C03',
+    'room8_role': '小可愛 — 99M CP',
+    'room9_desc': 'Programmer\'s den. Multiple monitors visible through the window. Code printouts on walls. Mathematical formulas on the door. A "Hello World" doormat. Server rack humming inside 24/7.',
+    'room9_name': '碼農小孫',
+    'room9_role': 'Guild Member — 77M CP',
+    'scrollHint': '[ SCROLL TO EXPLORE ]',
+    'shrineCaptionH3': 'THE ETERNAL FLAME HALL',
+    'shrineLabel': 'FLOOR 6',
+    'shrineTagline': 'Mochi\'s shrine to RegginA — devotion level: mythic',
+    'shrineTitle': 'Hall of the Eternal Flame',
+    'shrine_p1': 'The eastern half of Floor 6 houses the guild\'s most unusual room: a shrine dedicated entirely to RegginA, the legendary founder and Master of NumbahWan. A large golden statue of RegginA in warrior pose stands on a marble pedestal at the center, surrounded by candles, flowers, and offerings of rare items placed by admirers. The walls are covered with framed pixel art portraits of RegginA in every pose and outfit — battle stance, casual, formal, and the controversial "beach episode" fan art.',
+    'shrine_p2': 'Mochi — the guild\'s most devoted member — is perpetually kneeling before the shrine with sparkly eyes, surrounded by RegginA merchandise: plushies, posters, custom cards, and a body pillow (officially denied, universally known). Display cases hold RegginA memorabilia — her first weapon, signed items, legendary drops, and a lock of hair (fake, but Mochi doesn\'t know). A donation box labeled "FOR THE ETERNAL FLAME" collects contributions for shrine maintenance. Incense burns in bronze holders, filling the room with a mystical purple and orange glow. A bookshelf of RegginA fan fiction scrolls stands in the corner — Volume 47 is currently in progress. The stained glass window depicts RegginA\'s founding of NumbahWan in dramatic, possibly exaggerated detail. RegginA herself has visited the shrine exactly once. She left quickly.',
+    'tavernCaptionH3': 'TAVERN ATMOSPHERE',
+    'tavernLabel': 'FLOOR 1',
+    'tavernTagline': 'Where war stories are told and ale is spilled',
+    'tavernTitle': 'Tavern & Mess Hall',
+    'tavern_p1': 'The Tavern occupies the eastern wing of Floor 1, directly opposite the market. A massive stone fireplace dominates the north wall, crowned with a dragon skull trophy from the guild\'s first major boss kill. Antler chandeliers hang from the vaulted ceiling, each holding 20+ candles that drip wax onto the oak tables below (the maids hate this room). A long wooden bar counter runs along the south wall, backed by barrels of ale, mead, and a mysterious "Guild Special" that nobody remembers drinking but everyone wakes up from.',
+    'tavern_p2': 'The bard plays lute by the fireplace every evening — a rotating roster of NPC musicians who know every guild anthem and three inappropriate songs about RegginA (she pretends not to hear them). The banquet tables seat 50+ and are always covered with plates of food — roast meat, cheese wheels, bread loaves, and fruit bowls. The NWG golden "N" emblem is branded into every weapon rack and shield mount. A drunk knight always occupies the corner table, telling anyone who\'ll listen about "the time he soloed a raid boss" (he didn\'t). The tavern connects to Karen\'s kitchen through a service window, where warm food appears at all hours.',
+    'warroomCaptionH3': 'STRATEGIC OPERATIONS',
+    'warroomLabel': 'FLOOR 3',
+    'warroomTagline': 'Where raids are planned and bosses fear to be named',
+    'warroomTitle': 'War Room & Strategy Chamber',
+    'warroom_p1': 'The War Room occupies Floor 3\'s north wing — a dimly lit, serious space where the guild\'s military operations are conceived. A massive round strategy table dominates the center, carved from a single oak trunk and inlaid with a map of the game world etched in copper. Miniature figurines represent guild members, enemy guilds, boss locations, and resource nodes. Natehouoho moves the pieces; RegginA vetoes half of them.',
+    'warroom_p2': 'The walls are covered with maps, battle timelines, enemy guild intelligence reports, and a whiteboard tracking the weekly 28/35 boss raid quota. A bookshelf holds volumes of raid strategies, boss mechanic breakdowns, and "Lessons Learned" binders from failed attempts (the thickest one is labeled "That Time We Tried to 3-Man Zakum"). Communication crystals sit on pedestals for real-time coordination with scouts. The room has no windows — intentionally — to prevent intelligence leaks. Orange-gold banners bearing battle honors hang from the ceiling.'
+  },
+  zh: {
+    'aerialCaptionH3': '世界總覽',
+    'aerialLabel': '世界地圖',
+    'aerialTagline': '從天空俯瞰，城堡展現其真正的規模',
+    'aerialTitle': '城堡NumbahWan鳥瞰圖',
+    'aerial_p1': 'NumbahWan城堡如同山巔上的金冠，主宰著整片大地。七層風化的石頭與魔法砌築從大地拔起，每一層都比城市街區還寬。城堡的佔地面積龐大——不僅是一座堡壘，更是一個自給自足的文明。在城牆內，猴山保護區的綠色樹冠從高空清晰可見，一個活生生的森林生態系統在中世紀石牆內繁榮生長。瀑布從岩壁傾瀉而下，竹林在風中搖曳，如果你瞇眼細看，微小的像素猴子如雀斑般點綴在樹冠上。',
+    'aerial_p2': '城牆外，一條深藍色護城河環繞整座建築，由地下泉水供給。一座獨木吊橋連接到一條蜿蜒穿越各種生態群落的鵝卵石道路——東邊是櫻花林，北邊是黑暗的魔法森林，西邊是微微發光的蘑菇田。一個NPC住宅和市場攤位的小村莊聚集在路邊，靠公會的商業維持。農田向南延伸。在地平線上，山脈勾勒出世界的輪廓，如果幸運的話，你會在落日餘暉中看到一條龍的剪影。',
+    'afkCaptionH3': '休息區',
+    'afkLabel': '特殊區域',
+    'afkTagline': '英雄休息和零食小偷（猴子）活動的地方',
+    'afkTitle': '掛機休息室',
+    'afk_p1': 'AFK休息室位於城堡的中央區域——一個專門用來放鬆、掛機和小憩的舒適空間。吊床、豆袋椅、柔軟的地毯和永遠在播放的輕音樂創造了一個完美的休息環境。數隻貓（包括著名的Chonk）在角落打盹。一張零食桌永遠有食物供應——但30%的食物消失在猴子突襲中。',
+    'afk_p2': '紈蹈稀著保持著連續AFK紀錄：14小時。高峰時段是Boss戰後。紀錄同時在線：11名成員（在一場4小時Boss馬拉松之後）。房間規則：不許討論副本策略、不許戲劇化、不許大聲喧嘩、不許吵醒Luna。違規處罰：一週清掃值日。執行者：貓們用眼神瞪你。',
+    'barracksCaptionH3': '訓練設施',
+    'barracksLabel': '二樓',
+    'barracksTagline': '戰士在此鍛造，法師在此學習瞄準',
+    'barracksTitle': '軍營與訓練場',
+    'barracks_p1': '軍營是新成員訓練和戰鬥練習的場所。一個巨大的室內訓練場佔據了樓層的一半——沙地板、武器架、練習用假人和一圈觀眾席。RegginA在這裡每週舉行「技術審查」（更像是「看我有多強」的展示）。',
+    'barracks_p2': '上下舖床排列在東翼——每張都配有個人物品箱、一把小桌燈和牆上的徽章掛鉤。雖然軍營的設計是實用的，但每個成員都按照自己的風格個性化了他們的區域。一個公告板張貼著訓練時間表、對打排名和「每月最佳進步」獎勵。武器架展示著訓練用武器——木劍、練習弓和緩衝槍。洗浴設施在走廊盡頭，永遠有人在排隊（通常是因為阿光Yo的「光魔法護膚程序」佔了太長時間）。',
+    'courtyardCaptionH3': '庭院傳說',
+    'courtyardLabel': '一樓',
+    'courtyardTagline': '城堡的心臟 — 所有道路匯聚之處',
+    'courtyardTitle': '城堡庭院',
+    'courtyard_p1': '庭院是NumbahWan城堡跳動的心臟——一個約50米寬的露天石廣場，四面被城堡高聳的城牆包圍。中央矗立著金色N噴泉：一座華麗的大理石結構，水從鍍金的"N"雕像噴出，據說已受到神諭的祝福。公會成員在Boss戰前會向噴泉投幣祈求好運。噴泉水清澈透明且常年溫暖，由地下鍛造室的管道加熱。',
+    'courtyard_p2': '神聖香蕉樹生長在東側的一個受保護花園凹室中——這是公會創始時代的活遺物，它的金色果實在夜間微微發光，據說能賦予臨時增益（或至少是一份好零食）。西牆邊排列著用稻草和廢木料製成的訓練假人供戰鬥練習。一個馬廄養著三匹像素馬和一輛乾草車。鐵匠的室外鐵砧在午後的空氣中迸出火花。NPC兒童在噴泉周圍玩捉迷藏，而一隻從山區保護區逃出的猴子——牠們總能找到路——正從無人看管的籃子裡偷麵包。鵝卵石小路從中心向城堡的每個主要翼樓輻射。',
+    'csB1': '地牢與戰利品室 — 寶庫、Boss獎杯、禁忌之門',
+    'csB2': '女僕宿舍與服務通道 — 秘密通道、升降機系統',
+    'csF1': '大市場與酒館 — 商人攤位、食堂、吟遊詩人舞台',
+    'csF2': '軍營與成員宿舍 — 訓練場、14間個人房間',
+    'csF3': '戰爭室與卡牌鍛造所 — 戰略室、神聖金庫',
+    'csF4': '軍官宿舍 — RegginO、Karen的廚房、老兵',
+    'csF5': '圖書館與神諭塔 — 水晶球、知識守護者的領域',
+    'csF6': '會長套房與RegginA神殿 — 王座室、永恆之焰大廳',
+    'csF7': '天文台與屋頂 — 燈塔、觀星平台',
+    'csGF': '庭院與山區保護區 — 噴泉、神聖香蕉樹、猴子',
+    'csTitle': '城堡剖面圖',
+    'desc_aesthetic8': 'NumbahWan金——每面旗幟、紋章和裝飾都使用公會標誌性的琥珀金色(#e8a922)。甚至石頭之間的灰泥都隱約閃著金光。',
+    'desc_annualevents72': '每週公會會議（必參加，出席率47%）、每月公會吐槽大會（自願，出席率100%）、年度頒獎典禮（正裝，Chonk每年獲「最佳貓」獎）。',
+    'desc_arenarecords29': '最多連勝：RegginA（47場）。最有創意的敗北：傻瓜小孩不小心把自己彈出了場外。',
+    'desc_balconyview40': '俯瞰庭院噴泉和猴山保護區。城堡裡最佳日落觀景點。RegginO和Karen在這裡喝茶。',
+    'desc_bananagrove21': '47棵香蕉樹沿東坡種植。年收成：約2,000根香蕉。30%被猴子在成熟前吃掉。',
+    'desc_bardsongs28': '「NumbahWan之歌」（公會聖歌）、「RegginA之怒」（戲劇性）、「Natehouoho的會計歌」（助眠）。',
+    'desc_beaconflame54': '燃燒神諭塔的魔法油。50公里外可見。從未熄滅。維護：每週添加魔法油。',
+    'desc_biomes2': '森林、山脈、溫泉、竹林、櫻花、魔法森林、蘑菇田、農田',
+    'desc_bombshelter71': '加固門、30分鐘緊急物資（零食+Karen的安神茶）。已使用4次。可舒適容納6名成員。密碼是「NumbahWan」（所有人都知道）。',
+    'desc_bookcount41': '14,200+冊。最常借閱：「Boss機制傻瓜指南」。最少借閱：「高級公會會計學」（只有Natehouoho借過）。',
+    'desc_bosstrophies58': '龍骨頭（S3 Zakum）、惡魔角（S5副本）、海怪觸手（S7）。每個都有銘牌記錄擊殺故事。',
+    'desc_cardinventory35': '跨10個賽季340+張獨特卡牌。金庫中有12張神話級卡牌。收藏估值約21億金幣。',
+    'desc_cardtrading24': '卡牌攤位存有340+張NWG獨特卡牌。神話級卡牌放在魔法展示櫃中。可交易和購買。',
+    'desc_chonkstatus67': '體重：機密（秤壞了）。最愛零食：所有食物。活動量：零。對公會的貢獻：士氣官（非官方）。深受所有人喜愛。',
+    'desc_contraband64': '酒（3瓶，不錯年份）、骰子（灌鉛，不知道誰的）、言情小說（第8卷/共12卷，翻閱痕跡嚴重）。沒收頻率：每月。補貨頻率：也是每月。',
+    'desc_cpdisplay47': '王座上方的即時CP計數器顯示「77,837,000,000」金色數字。每次Boss擊殺後更新。公會成員最愛看數字跳動。',
+    'desc_dailytraffic25': '每天約200名NPC訪客+全部14名公會成員。猴子相關事件：每天約2次。',
+    'desc_damagereport31': '平均每週更換3個假人。每月修補天花板2次（法師訓練）。上個月1面牆被拆（RegginA）。',
+    'desc_defenses7': '每層都有箭窗、城門上方的滾油通道、圍城時會動的魔法石像鬼、護城河（住著領地意識很強的像素魚）。',
+    'desc_dragonskull26': '來自公會首次Zakum擊殺。RegginA發出致命一擊。頭骨有燒焦和劍痕。',
+    'desc_dramapointsleaderboa69': '#1 RegginA（847分）、#2 傻瓜小孩（623分）、#3 Mochi（512分，全部與RegginA相關）、#4 RegginO（488分）。Natehouoho：0分（他是裁判）。',
+    'desc_dumbwaiter63': '6條餐梯井服務所有樓層。主要用途：食物配送。次要用途：傳遞被動攻擊性便條。第三用途：猴子運輸（意外的）。',
+    'desc_enchantedquill43': '自動記錄所有公會事件。本賽季已寫847頁。偶爾會自己寫出批評性旁白。',
+    'desc_escapedmonkeys15': '平均每週3次猴子逃脫。牠們總是先去麵包店。',
+    'desc_escaperate20': '每週3-5隻猴子逃進城堡。牠們總是先去酒館的食物，然後是市場的水果。',
+    'desc_fanfiction51': 'Mochi寫了47卷。平均長度：200頁。最受歡迎：「RegginA vs 世界」。RegginA從未閱讀過（官方說法）。',
+    'desc_forbiddenvault60': '自公會入住前就被鎖住。符文無法翻譯。Oracle說「耐心」。知識守護者說「可能危險」。Mochi說「RegginA能打開它」。沒人試過。',
+    'desc_fountaincoins14': '自創立以來超過14,000枚硬幣被投入。B1的寶藏哥布林一直試圖「審計」噴泉基金。',
+    'desc_goldreserves57': '目前金庫：147億金幣。哥布林會計每天數一遍。Natehouoho每月審計。差額永遠是「記帳錯誤」。',
+    'desc_guardrotation11': '理論上24/7全天候值班。實際上守衛大多數時間在打牌和餵Chonk。',
+    'desc_height6': '從護城河面到天文台穹頂約85米。每層平均淨高10米。',
+    'desc_historicdramas70': '商品定價辯論（S6）、AFK事件（S4，現已歸入lore檔案）、大戰利品分配爭論（S3）、「誰吃了Karen最後一塊餅乾」（調查中）。',
+    'desc_hotsprings19': '3個天然溫泉池。水溫32-42°C。猴子優先使用權是非官方政策。成員需在猴群不注意時使用。',
+    'desc_houserules68': '不准計劃副本、不准演戲、不准大聲喧嘩、不准吵醒Luna。違規處罰：一週清掃值日。執行者：貓們瞪你。',
+    'desc_intelligence34': '23個敵對公會的檔案。每週更新。間諜網絡由「不小心截圖了敵方聊天的人」組成。',
+    'desc_karenskitchen39': 'Karen的廚房：城堡最好聞的地方。一鍋永遠在燉的湯。香草掛滿天花板。一塊寫著「我的廚房我的規矩」的牌子。零食預算：機密。',
+    'desc_keylandmark3': 'F7的信標塔——其橙色火焰從地圖每個角落都可見，是公會永恆的燈塔',
+    'desc_legendarygear46': '展示47件裝備。最有價值：永恆之焰劍（RegginA退役後贈送）。每件都有銘牌說明故事。',
+    'desc_lunathecat44': '圖書館非官方守護者。每天睡20小時在最暖的靠墊上。曾對Mochi嗯了一聲——被視為神聖認可。',
+    'desc_material5': '來自北方礦場的深色火山岩，以矮人鐵樑加固。底部牆壁厚4米。',
+    'desc_menuhighlights27': '香蕉麵包（山區保護區的水果）、野豬燉肉、Karen的招牌火鍋、神秘每日特餐。',
+    'desc_moat10': '8米寬，生物發光魔法水。住著像素魚、魔法電鰻和一隻非常有領地意識的青蛙Gerald。',
+    'desc_monkeypopulation17': '200+隻猴子，分為3個派系。竹林猴（和平）、瀑布猴（好戰）和溫泉猴（懶散）。偶爾跨派系衝突。',
+    'desc_noticeboard12': '每日任務張貼、公會公告、失物招領（大多是被猴子偷的東西）和Karen的湯品特餐。',
+    'desc_occupancy65': '任何時候平均3-4名成員。高峰：副本後。紀錄：11人同時（4小時Boss馬拉松後）。紈蹈稀著保持連續AFK紀錄：14小時。',
+    'desc_offerings50': '每日：鮮花、稀有物品、偶爾的神話卡。Mochi的個人貢獻佔供品的80%。',
+    'desc_oracleaccuracy42': '神諭水晶球回答準確率：73%（但大多數回答是謎語，所以「準確」是主觀的）。最常問的問題：「下次更新什麼時候？」',
+    'desc_population4': '14名公會成員 + 數十名NPC（商人、女僕、守衛、知識守護者、寶藏哥布林，和一隻叫Chonk的超胖貓）',
+    'desc_portcullis9': '3噸重鐵門，鏈條操作。需要4名守衛手動升起，或1個有足夠動力的RegginO。',
+    'desc_raidrecord32': '本週28/35次Boss戰。公會等級8。TW伺服器排名第30。公會總CP：1123億。',
+    'desc_regginasreaction52': '「太…過了。」——RegginA，在她唯一一次參觀之後。她再也沒回來過。Mochi視此為「害羞的讚美」。',
+    'desc_regginosroom38': '地圖、匕首、戰略文件。一個「本月副會長」獎（自己頒的）。花冠掛在武器架旁。',
+    'desc_sacredbananatree13': '創立時種植。金色果實每季出現一次。吃一個據說能增加CP 0.001%（安慰劑效應，但沒人質疑）。',
+    'desc_sacredlog36': '創始遺物。沒人確切知道它有什麼用，但把它從鍛造所移走後卡牌品質下降了。巧合？沒人敢測試。',
+    'desc_scale1': '地上7層、地下2層、1個山區保護區、14間成員房間、約40個獨立區域',
+    'desc_secretpassages62': '已繪製23條秘密通道。連接每一層。從B2到F7最快路線需4分鐘。公會成員：未告知。員工：每天使用。',
+    'desc_security48': '金庫3把鎖、門上2道魔法結界、1個名叫Gerald的守衛NPC（也是那隻青蛙的守衛）。',
+    'desc_snackbudget66': '每週200K金幣。30%食物被猴子突襲搶走。Karen每天補貨3次，已不再追問香蕉從哪來。',
+    'desc_staffcount61': '8名女僕NPC、3名維護工人、1名總管家（效率驚人）。他們了解城堡的每一寸——包括成員不知道的房間。',
+    'desc_stalls23': '12個永久商人攤位：鐵匠、藥水、卡牌、食物、盔甲、配件等。週末有流動攤販。',
+    'desc_stargazingnights56': '每週五。提供毛毯。Karen通過餐梯送熱可可。Natehouoho講星座故事（大多是編的）。',
+    'desc_statue49': '2.5米高，純金鍍青銅。花費：公會金庫3億金幣。Mochi堅持「這是必要投資」。',
+    'desc_strategytable33': '手工雕刻橡木，直徑3米。47個代表所有已知勢力的人偶。RegginA的人偶比其他的稍大（她堅持的）。',
+    'desc_telescope53': '3米黃銅折射望遠鏡，定制建造。能看到個別星星和遠處的伺服器。碼農小孫用它追蹤衛星。',
+    'desc_throne45': '由大師NPC工匠手工雕刻。歷時6個月完成。座墊是魔法加持的——永遠保持完美溫度。',
+    'desc_trainingdummies16': '每月更換。阿光Yo的光魔法一直把它們點著。RegginA的攻擊直接讓它們化為灰燼。',
+    'desc_trapstatus59': '「基本上安全。」箭窗偶爾會射（有個沒人能找到的計時器）。地板橋能承受100公斤以下的人。傻瓜小孩上個月觸發了一個壓力板——幸好只是彩紙。',
+    'desc_vaultsecurity37': '3把鎖（物理、魔法、行政——需要公會長簽名）。上次試圖闖入：未遂（寶藏哥布林）。',
+    'desc_walkingpaths22': '2.3公里鵝卵石小路蜿蜒穿過保護區。3個海拔觀景點。步行全程約45分鐘。',
+    'desc_waterfalls18': '3個主要瀑布（最高的15米），匯入一個天然池。水來自地下含水層。鎮靜效果+15（未經證實）。',
+    'desc_weaponracks30': '庫存146件武器。每位成員有指定的武器架。RegginA的架子需要加固牆壁支撐。',
+    'desc_zipline55': '470米滑索直達猴山保護區。最高速度：可怕。安全紀錄：「大致完好」。傻瓜小孩最愛。',
+    'det_aesthetic8': '美學',
+    'det_annualevents72': '年度活動',
+    'det_arenarecords29': '競技場記錄',
+    'det_balconyview40': '陽台景觀',
+    'det_bananagrove21': '香蕉園',
+    'det_bardsongs28': '吟遊詩人的歌',
+    'det_beaconflame54': '燈塔之焰',
+    'det_biomes2': '生態群落',
+    'det_bombshelter71': '防空洞',
+    'det_bookcount41': '藏書量',
+    'det_bosstrophies58': 'Boss獎杯',
+    'det_cardinventory35': '卡牌庫存',
+    'det_cardtrading24': '卡牌交易',
+    'det_chonkstatus67': 'Chonk狀態',
+    'det_contraband64': '走私品',
+    'det_cpdisplay47': 'CP顯示',
+    'det_dailytraffic25': '每日流量',
+    'det_damagereport31': '損壞報告',
+    'det_defenses7': '防禦',
+    'det_dragonskull26': '龍頭骨',
+    'det_dramapointsleaderboa69': '八卦積分排行榜',
+    'det_dumbwaiter63': '升降機',
+    'det_enchantedquill43': '魔法羽毛筆',
+    'det_escapedmonkeys15': '逃跑的猴子',
+    'det_escaperate20': '逃跑率',
+    'det_fanfiction51': '同人小說',
+    'det_forbiddenvault60': '禁忌金庫',
+    'det_fountaincoins14': '噴泉硬幣',
+    'det_goldreserves57': '黃金儲備',
+    'det_guardrotation11': '守衛輪班',
+    'det_height6': '高度',
+    'det_historicdramas70': '歷史八卦事件',
+    'det_hotsprings19': '溫泉',
+    'det_houserules68': '室內規則',
+    'det_intelligence34': '情報',
+    'det_karenskitchen39': 'Karen的廚房',
+    'det_keylandmark3': '主要地標',
+    'det_legendarygear46': '傳說裝備',
+    'det_lunathecat44': '貓咪Luna',
+    'det_material5': '材料',
+    'det_menuhighlights27': '菜單精選',
+    'det_moat10': '護城河',
+    'det_monkeypopulation17': '猴子數量',
+    'det_noticeboard12': '公告板',
+    'det_occupancy65': '使用率',
+    'det_offerings50': '供品',
+    'det_oracleaccuracy42': '神諭準確度',
+    'det_population4': '人口',
+    'det_portcullis9': '吊閘',
+    'det_raidrecord32': '突襲記錄',
+    'det_regginasreaction52': 'RegginA的反應',
+    'det_regginosroom38': 'RegginO的房間',
+    'det_sacredbananatree13': '神聖香蕉樹',
+    'det_sacredlog36': '神聖之木',
+    'det_scale1': '規模',
+    'det_secretpassages62': '秘密通道',
+    'det_security48': '安全',
+    'det_snackbudget66': '零食預算',
+    'det_staffcount61': '工作人員數量',
+    'det_stalls23': '攤位',
+    'det_stargazingnights56': '觀星夜',
+    'det_statue49': '雕像',
+    'det_strategytable33': '戰略桌',
+    'det_telescope53': '望遠鏡',
+    'det_throne45': '王座',
+    'det_trainingdummies16': '訓練假人',
+    'det_trapstatus59': '陷阱狀態',
+    'det_vaultsecurity37': '金庫安全',
+    'det_walkingpaths22': '步道',
+    'det_waterfalls18': '瀑布',
+    'det_weaponracks30': '武器架',
+    'det_zipline55': '滑索',
+    'dramaCaptionH3': '公會政治劇場',
+    'dramaLabel': '特殊區域',
+    'dramaTagline': '傳說在此爭論，聯盟在此破裂（然後喝湯和好）',
+    'dramaTitle': '劇場與公會會議廳',
+    'drama_p1': '劇場和公會會議廳佔據了特別區域——一個巨大的圓形劇場式空間，有分層座位、一個中央舞台和一塊陰謀板。這是公會政治發生的地方：爭論、投票、控訴、戲劇性的演講和偶爾的「推翻公會長」動議（都失敗了）。一把超大的法槌用於維持秩序（主要是砸桌子用的）。',
+    'drama_p2': '戲劇積分排行榜：#1 RegginA（847分）、#2 傻瓜小孩（623分）、#3 Mochi（512分，全部與RegginA相關）、#4 RegginO（488分）。Natehouoho：0分（他是裁判）。一個防空洞（加固門、30分鐘緊急物資）已使用4次。每週公會會議（出席率47%）、每月公會吐槽大會（出席率100%）和年度頒獎典禮（正裝，Chonk每年獲得「最佳貓」獎）。',
+    'dungeonCaptionH3': '深處',
+    'dungeonLabel': '地下一層',
+    'dungeonTagline': '囤積寶藏和陷阱...大部分已停用',
+    'dungeonTitle': '地牢與戰利品室',
+    'dungeon_p1': '地牢佔據了地下一層——一個黑暗、潮濕、充滿回聲的迷宮。石牆上掛著鐵火炬架，火焰忽明忽暗。寶庫是主要吸引力：一個巨大的圓形金庫，存放著公會的集體戰利品——黃金、稀有材料、Boss獎杯和從未有人敢打開的「禁忌箱子」。一個NPC寶藏哥布林守護著金庫（他更多的是在「審計」而非「守護」）。',
+    'dungeon_p2': '地牢的其他區域包括：一個關押「戰俘」的牢房（主要是被抓的間諜NPC，但有時公會成員因為賭注輸了也會被關一晚）、一個酒窖（備用，不如RegginO管理的那個好）和一扇被詛咒的門。禁忌之門位於地牢最深處——一扇厚重的黑鐵門，上面刻著無法翻譯的符文。沒有人知道門後面是什麼。Oracle說「耐心」。知識守護者說「可能危險」。Mochi說「RegginA能打開它」。但沒人試過。',
+    'exteriorCaptionH3': '建築筆記',
+    'exteriorLabel': '外觀',
+    'exteriorTagline': '七層石頭、火焰與傳奇',
+    'exteriorTitle': '城堡NumbahWan — 全景外觀',
+    'exterior_p1': '城堡如同金色山峰般矗立在夜空中。由北方山脈開採的深色火山岩建造，每一塊石頭都由NumbahWan第一紀元的創始成員親手鋪設。建築風格是野蠻主義中世紀——厚牆、窄箭窗、加固的扶壁——但被公會標誌性的橙金色美學所柔化。懸掛著金色"N"徽章的公會旗幟從每座塔樓飄揚，在風中如火焰般飛舞。',
+    'exterior_p2': '從外部可以看到七個獨立的樓層，每層都有一圈琥珀色照明的窗戶。哥德式角塔上的火焰信標永恆燃燒——由神諭塔的魔法油供給。一條懸崖邊的小路沿東面盤旋而上，供那些勇於跳過室內樓梯的人使用。在最頂層，天文台穹頂在星光下閃爍。神聖圓木圖騰——公會創始迷因的遺物——像木製哨兵般守護在正門口。蝙蝠在黃昏時盤旋在上層塔樓，偶爾會有極光以公會顏色繪製天空。',
+    'footerBuilt': '為世界生成AI而建 — 每個細節都是NumbahWan的正典傳說',
+    'footerDesc': '城堡NumbahWan — 7層、2個地下室、1座山、200+猴子',
+    'footerStats': '公會等級 8 | 14名成員 | 伺服器排名 #30 TW | 總CP: 112.3B',
+    'forgeCaptionH3': '鍛造所與金庫',
+    'forgeLabel': '三樓',
+    'forgeTagline': '卡牌在此誕生，傳說在此封印',
+    'forgeTitle': '卡牌鍛造所與神聖金庫',
+    'forge_p1': '卡牌鍛造所是公會最神聖的製作空間。一個發光的魔法鐵砧祭壇坐落在中央，脈動著奧術能量——這裡是新NWG交易卡牌被鑄造的地方。過程涉及使用蘸了液態星光的羽毛筆在魔法卡紙上刻寫成員數據。神聖圓木放在附近的金色基座上，據說它的存在能提升卡牌品質（統計上未經證實，但在精神上是必要的）。',
+    'forge_p2': '鍛造所後面，一扇半開的金庫門展示了公會的卡牌寶庫——架子按稀有度分類：普通（木架）、稀有（鐵架）、史詩（銀架）、傳說（金架）和神話（魔法玻璃懸浮展示）。金庫保存了跨越10多個賽季的完整NWG卡牌收藏，包括無價的「RegginA，永恆之焰」神話卡。',
+    'gatesCaptionH3': '大門詳情',
+    'gatesLabel': '地面層',
+    'gatesTagline': '傳說從這裡進入，敵人在此退卻',
+    'gatesTitle': '大門與外牆',
+    'gates_p1': 'NumbahWan城堡的正門是中世紀世界的工程奇蹟。一個巨大的石拱門——12米高——其拱心石上雕刻著金色的"N"紋章，鑲嵌著真正的金箔，即使在午夜也能捕捉火炬光使入口發光。半升起的鐵閘門重超過3噸，由鏈條和配重系統操作（實際上就是RegginO和一個滑輪）。',
+    'gates_p2': '兩座守衛雕像守護著入口：一座持劍（代表進攻，或RegginA的哲學），另一座懷抱神聖圓木（代表公會的幽默感）。木製吊橋橫跨發光的藍色護城河——水中灌注了生物發光藻類，使其在夜間閃爍。像素魚在水面下穿梭，有些據說是能實現願望的魔法金魚（未經證實）。一塊名為「公會公告」的告示牌掛在門旁，釘著任務張貼、通緝令和Karen的每週餐單。橙色胖貓Chonk總是在門附近某處睡覺，對商人、冒險者和偶爾從山區保護區溜出來的猴子毫不在意。',
+    'gmsuiteCaptionH3': 'NUMBAHWAN的王座',
+    'gmsuiteLabel': '六樓',
+    'gmsuiteTagline': '770億CP和與之匹配的王座',
+    'gmsuiteTitle': '會長套房',
+    'gmsuite_p1': '公會長套房佔據了六樓的整個西翼——毫無疑問是城堡中最奢華的空間。Natehouoho的王座室是中心——一把巨大的金色王座坐落在高台上，面對著一面展示公會歷史上每個重要時刻的壁畫牆。傳說級裝備展示在玻璃櫃中，像博物館一樣精心策劃。',
+    'gmsuite_p2': '私人寢室在後面——一張帝王尺寸的床，配有金色床帷和公會紋章的床頭板。一個陽台俯瞰著整個庭院和猴山保護區。一個私人金庫存放著公會的最高機密文件和財務記錄。一間專屬浴室有一個金色浴缸（RegginA認為這很過分，但Natehouoho堅持這是「激勵措施」）。房間的一角有一張桌子，上面永遠堆著未完成的文書工作和空能量飲料罐。',
+    'heroSub': '一座七層中世紀城堡，是NumbahWan公會的家。14名成員、7層樓、2個地下室、1座山，還有數不清的猴子。每個房間都有故事。',
+    'heroTitle': '城堡 NUMBAHWAN',
+    'imgLabel_aerialview': '鳥瞰圖',
+    'imgLabel_afkzone': '掛機區',
+    'imgLabel_b1dungeon': 'B1 — 地牢',
+    'imgLabel_b2service': 'B2 — 服務區',
+    'imgLabel_courtyard': '庭院',
+    'imgLabel_dramahall': '劇場大廳',
+    'imgLabel_exterior': '外觀',
+    'imgLabel_f1market': 'F1 — 市場',
+    'imgLabel_f1tavern': 'F1 — 酒館',
+    'imgLabel_f2barracks': 'F2 — 軍營',
+    'imgLabel_f2quarters': 'F2 — 宿舍',
+    'imgLabel_f3cardforge': 'F3 — 卡牌鍛造',
+    'imgLabel_f3warroom': 'F3 — 戰爭室',
+    'imgLabel_f4officers': 'F4 — 軍官',
+    'imgLabel_f5library': 'F5 — 圖書館',
+    'imgLabel_f6gmsuite': 'F6 — 會長套房',
+    'imgLabel_f6shrine': 'F6 — 神殿',
+    'imgLabel_f7observatory': 'F7 — 天文台',
+    'imgLabel_maingate': '正門',
+    'imgLabel_monkeymountain': '猴山',
+    'libraryCaptionH3': '神諭之域',
+    'libraryLabel': '五樓',
+    'libraryTagline': '知識就是力量 — 這個房間兩者兼具',
+    'libraryTitle': '圖書館與神諭塔',
+    'library_p1': '圖書館橫跨整個五樓——一個令人嘆為觀止的知識殿堂，螺旋書架從地板升到天花板。超過12,000冊書籍、卷軸和手稿涵蓋了從遊戲策略到世界歷史的一切。中央是神諭水晶球——一個發光的球體，漂浮在基座上，據說能回答任何問題（但回答通常是謎語式的）。知識守護者NPC管理著收藏，他有著驚人的記憶力和對逾期不還書的零容忍態度。',
+    'library_p2': '一個閱讀區佔據了窗邊——舒適的扶手椅、壁爐和永遠有人留下的半喝完的茶。Yuluner晴經常在這裡度過整個下午，研究lore和記錄公會歷史。一個「禁忌區」被鐵鏈鎖住——據說裡面存放著被詛咒的文本和被禁止的魔法知識。Oracle塔通過一個螺旋樓梯與圖書館相連——只有知識守護者和公會長有鑰匙。',
+    'maidsCaptionH3': '隱藏的城堡',
+    'maidsLabel': '地下二層',
+    'maidsTagline': '維持城堡運轉的隱藏基礎設施',
+    'maidsTitle': '女僕宿舍與服務通道',
+    'maids_p1': '女僕宿舍和服務通道佔據了地下二層——城堡的隱藏基礎設施。8名女僕NPC、3名維護工人和1名總管家（效率驚人）在這裡工作和生活。他們了解城堡的每一寸——包括公會成員不知道存在的房間。23條秘密通道連接城堡的每一層。',
+    'maids_p2': '6條餐梯井服務所有樓層。主要用途：食物配送。次要用途：在員工之間傳遞被動攻擊性便條。第三用途：猴子運輸（意外的）。洗衣房、儲藏室和員工休息室也在這一層。一個被沒收物品的箱子裡有：酒（3瓶，不錯的年份）、骰子（灌了鉛，不清楚是誰的）、言情小說（12部系列中的第8卷，翻閱痕跡嚴重）。沒收頻率：每月。補貨頻率：同樣是每月。',
+    'marketCaptionH3': '市場詳情',
+    'marketLabel': '一樓',
+    'marketTagline': '商業、卡牌，偶爾還有猴子小偷',
+    'marketTitle': '大市場',
+    'market_p1': '大市場佔據了一樓的整個南翼——一個巨大的、拱頂的大廳，迴盪著叫賣聲、錢幣叮噹聲和某處一隻被偷走的雞的聲音。十二個NPC商人攤位排列在中央走道兩側，每個都專門經營不同的商品：藥水、卷軸、武器升級、裝甲修理、稀有材料、食物（Karen的分店）和「可疑物品」（沒人問，店主也不說）。',
+    'market_p2': 'NumbahWan金色旗幟從天花板的木樑上垂下，橘色的燈籠照亮了一切，散發出溫暖的色調。一位NPC拍賣師在每天中午對著市場廣場進行現場拍賣——大多是Boss掉落的物品和二手裝備。在後面的角落，一個黑市商人在暗處交易，據說能搞到「任何東西，不問來源」。市場的味道是皮革、香料、鐵和Karen的湯的混合。中央廣場的一個小噴泉供顧客解渴——水裡經常漂著猴子偷來的水果。',
+    'mountainCaptionH3': '山區保護區 — 完整描述',
+    'mountainLabel': '城牆內部',
+    'mountainTagline': '中世紀城堡內的活生生山脈生態系統 — 有很多猴子',
+    'mountainTitle': '猴山自然保護區',
+    'mountain_p1': '當NumbahWan的創始人設計城堡時，他們做出了一個從未有其他公會嘗試過的決定：他們在城牆內建造了一座山。不是小丘。不是花園。一座真正的岩石山，有瀑布、竹林、櫻花樹、溫泉——最重要的是——猴子。很多很多猴子。猴山保護區佔據了城堡東北區的整個四分之一，從庭院地面升起40米，幾乎達到四樓窗戶的高度。它被城堡的外牆環繞，但向天空開放，形成一個天然的石頭與綠色圓形劇場。',
+    'mountain_p2': '保護區分為六個不同的區域，每個都有自己的生態系統。底部的竹林入口——濃密的竹桿形成天然走廊——是遊客看到的第一件事。彎曲的石階沿著主要的猴徑攀升，經過三個瀑布。中坡是森林核心：高大的常綠樹、藤蔓和蕨類植物形成茂密的樹冠，猴群在其中穿梭如跑酷高手。東面的溫泉自然池被精靈蘭花和蒸汽環繞——據說成員們在此恢復HP，但更可能只是泡澡。西面的櫻花谷季節性開花，花瓣在風中飄散形成粉色雪景。山頂是觀景平台，能看到下方的城堡和外面的世界。',
+    'mountain_p3': '猴子是保護區無可爭議的明星。200多隻像素猴子分佈在整個山區，從頑皮的幼猴到威嚴的銀背猴王。猴群分為三個派系：竹林猴（和平素食者）、瀑布猴（好鬥的游泳者）和溫泉猴（嬌生慣養的泡湯愛好者）。猴群的逃脫是城堡生活的固定節目——平均每週3次。牠們總是先去麵包店。管理員說「圍欄是安全的」，但猴子們似乎不同意。',
+    'navAfk': '掛機',
+    'navB1Dungeon': 'B1:地牢',
+    'navDrama': '劇場',
+    'navExterior': '外觀',
+    'navF1Market': 'F1:市場',
+    'navF1Tavern': 'F1:酒館',
+    'navF2Barracks': 'F2:軍營',
+    'navF2Rooms': 'F2:房間',
+    'navF3Forge': 'F3:鍛造',
+    'navF3War': 'F3:戰爭',
+    'navF4Officers': 'F4:軍官',
+    'navF5Library': 'F5:圖書館',
+    'navF6GM': 'F6:會長',
+    'navF6Shrine': 'F6:神殿',
+    'navF7Sky': 'F7:天空',
+    'navGates': '城門',
+    'navMaids': '女僕',
+    'navMap': '地圖',
+    'navMountain': '猴山',
+    'navYard': '庭院',
+    'observatoryCaptionH3': '城堡之冠',
+    'observatoryLabel': '七樓',
+    'observatoryTagline': '公會的最高點 — 星星與石頭相遇之處',
+    'observatoryTitle': '天文台與屋頂',
+    'observatory_p1': '天文台和屋頂區域佔據了城堡的最高層——七樓。一個巨大的黃銅望遠鏡指向天空，安裝在一個可旋轉的平台上。信標塔的橙色火焰從城堡的每個角落都可見——作為公會的永恆燈塔。在晴朗的夜晚，成員們在這裡觀星，鋪著毯子和熱飲。',
+    'observatory_p2': '觀星平台是一個開放的屋頂區域，鋪著石板，邊緣有低矮的女牆。公會旗幟在角落的旗桿上飄揚。一個小花園種著夜間開花的植物——月光花、星塵蘭和發光苔蘚。一架風琴式音樂盒播放著柔和的旋律，據說能吸引流星。在新年和公會紀念日，成員們會在這裡放煙火——從城堡外面看，整個頂層像一頂發光的皇冠。',
+    'officersCaptionH3': '軍官住所',
+    'officersLabel': '四樓',
+    'officersTagline': '核心成員住在這裡（稍微）舒適一些',
+    'officersTitle': '軍官宿舍',
+    'officers_p1': '四樓是軍官宿舍——高級成員和資深成員的專屬區域。房間更大、家具更好、而且有真正的門鎖（不像軍營的布簾）。RegginO的房間是最精緻的——粉色點綴配上隱藏武器，完美反映了他的雙重性格。Karen的廚房佔據了樓層的一角，既是實驗廚房也是社交中心。',
+    'officers_p2': '老兵大廳展示著公會歷史上最偉大的戰鬥紀念品——刻在牆上的名字、退役武器的展示和一面「榮譽戰績」牆。每位達到特定CP里程碑的成員都會在此獲得一塊銘牌。大廳盡頭是一張長會議桌，供軍官開會使用——比戰爭室的氣氛輕鬆，但決策同樣重要。牆角的一台自動販賣機（Karen堅持要裝的）提供茶和零食。',
+    'quartersCaptionH3': '成員房間目錄',
+    'quartersLabel': '二樓',
+    'quartersTagline': '14扇門、14個故事、14種完全不同的作息時間',
+    'quartersTitle': '成員宿舍區',
+    'quarters_p1': '二樓東走廊延伸近80米，排列著14扇個性化的門——每個公會成員一扇。紅色地毯覆蓋著石地板，鐵壁燈架上的火炬在拱形天花板上投射出跳動的影子。每扇門都是獨特的：火焰貼紙、多語言的「請勿打擾」標誌、額外的門栓、心形裝飾、憤怒的痕跡、數學公式、時尚雜誌剪報、貓門和不活躍成員門上的蜘蛛網。金色銘牌標識著每位居民。',
+    'room10_desc': '「傻瓜小孩」——門上貼滿貼紙和蠟筆畫。門把上設有惡作劇機關（無害但惱人）。裡面：有組織的混亂、零食包裝紙和出人意料的好裝備。',
+    'room10_name': '傻瓜小孩',
+    'room10_role': '公會成員 — 25M CP',
+    'room11_desc': '泰拳加寒玉美學。天花板掛著沙包。窗台上生長著冰晶（魔法副作用）。牆上掛著武術卷軸。地板鋪有練習墊。',
+    'room11_name': '泰拳寒玉',
+    'room11_role': '小可愛 — 24M CP',
+    'room12_desc': '「小亨寶寶」——最溫馨的房間。床上有毛絨玩具，到處都是童話燈飾，還有熱可可站。門上有心形貼紙。其他成員偷偷來享受氛圍。',
+    'room12_name': '小亨寶寶',
+    'room12_role': '小可愛 — 13M CP',
+    'room13_desc': 'Yuluner的分身/探險家房間。簡潔但實用——門邊永遠放著打包好的背包，牆上釘著地圖，桌上有探險家日誌。隨時準備出發。',
+    'room13_name': 'Yuluner',
+    'room13_role': '公會成員 — 3.9M CP',
+    'room14_desc': '「葉陽」——自然精靈房間。每個表面都有盆栽，藤蔓沿天花板生長，有一個小室內噴泉。房間聞起來像清新的雨。一隻寵物蝴蝶住在這裡。通過藤蔓覆蓋的窗戶連接猴山保護區。',
+    'room14_name': '葉陽',
+    'room14_role': '小可愛 — 2.5M CP',
+    'room1_desc': '最大的房間。鐵加固的門。裡面：戰爭規劃桌、佔滿3面牆的獎杯、一個陽台。每晚只睡3小時。房間裡永遠聞起來像勝利和能量飲料。',
+    'room1_name': 'Natehouoho',
+    'room1_role': '會長 — 77B CP',
+    'room2_desc': '白面具戰士的房間。每個表面都掛著武器。帶香的冥想角落。Zakum頭盔放在展示架上。門上有闖入失敗的抓痕（粉絲留下的）。',
+    'room2_name': 'RegginA',
+    'room2_role': '高手 — 9.8B CP',
+    'room3_desc': '太陽主題房間。黃色窗簾、向日葵花瓶、「陽光性格」十字繡。因為魔法太陽水晶，房間比鄰居的都亮。永遠在播放歡快的音樂。',
+    'room3_name': 'Yuluner晴',
+    'room3_role': '公會成員 — 6.5B CP',
+    'room4_desc': '粉色點綴的房間，牆上有花冠掛鉤。到處都是戰略地圖。地板下有隱藏武器庫。每天擦亮「副會長」銘牌。洗手台上有粉色染髮劑痕跡。',
+    'room4_name': 'RegginO',
+    'room4_role': '副會長 — 4B CP',
+    'room5_desc': '「騎鳥回家」——房間裝飾著鳥類雕像和羽毛。窗邊有鳥架。床頭掛著裱框的「最佳貢獻者」徽章。牆上有鳥類遷徙路線圖。',
+    'room5_name': '騎鳥回家',
+    'room5_role': '公會成員 — 3.4B CP',
+    'room6_desc': '房間永遠昏暗，拉著遮光窗簾。每個表面都有手機充電線。枕頭堡壘打造最佳遊戲姿勢。有副本中睡著的證據（臉上有鍵盤印痕）。',
+    'room6_name': '紈蹈稀著',
+    'room6_role': '公會成員 — 1B CP',
+    'room7_desc': '光法師的房間——真的會發光。每個架子上都有魔法水晶。天花板上有「實驗」留下的燒焦痕跡。光棱收藏。警告牌：「進門前請敲門（閃光危險）。」',
+    'room7_name': '阿光Yo',
+    'room7_role': '公會成員 — 848M CP',
+    'room8_desc': '神秘房間。門上沒有裝飾。裡面從來沒有聲音傳出。銘牌就是一串代碼。其他成員爭論是否真的有人住在這裡。門把上有灰塵。',
+    'room8_name': 'TW#VWQG7R9C03',
+    'room8_role': '小可愛 — 99M CP',
+    'room9_desc': '程式設計師的洞穴。透過窗戶可看到多台螢幕。牆上貼著程式碼印出的紙。門上有數學公式。門口有「Hello World」門墊。伺服器機架24/7嗡嗡作響。',
+    'room9_name': '碼農小孫',
+    'room9_role': '公會成員 — 77M CP',
+    'scrollHint': '[ 向下滾動探索 ]',
+    'shrineCaptionH3': '永恆之焰大廳',
+    'shrineLabel': '六樓',
+    'shrineTagline': 'Mochi的RegginA神殿 — 虔誠等級：神話',
+    'shrineTitle': '永恆之焰大廳',
+    'shrine_p1': 'RegginA神殿佔據了六樓的東翼——一個莊嚴的空間，專門紀念公會最強的戰士。一座等身大的RegginA金色雕像矗立在中央，她的Zakum頭盔在魔法光芒中閃爍。永恆之焰在雕像前燃燒——自公會創立以來從未熄滅。供品堆放在祭壇上：花、稀有材料和偶爾的情書（全部來自Mochi）。',
+    'shrine_p2': 'Mochi的「RegginA角」佔據了神殿的整個側翼——一面牆壁上貼滿了RegginA的畫像、收集的物品和手寫的讚美詩。一個枕頭堆成的「冥想區」是Mochi最常待的地方。其他成員覺得這很「有奉獻精神」（也有人覺得有點過頭）。一塊石板上刻著RegginA的戰績：Boss擊殺數、PVP勝率、連勝紀錄和「令敵人投降的次數」。',
+    'tavernCaptionH3': '酒館氣氛',
+    'tavernLabel': '一樓',
+    'tavernTagline': '講述戰爭故事和灑酒的地方',
+    'tavernTitle': '酒館與食堂',
+    'tavern_p1': '酒館與食堂佔據了一樓的北翼——一個溫暖、嘈雜的空間，充滿了笑聲、碗碟碰撞聲和吟遊詩人的旋律。長木桌可容納整個公會同時用餐，每張桌子都有被刻字、刻痕和灼傷痕跡所裝飾。一個巨大的壁爐佔據了整面牆，火焰從不熄滅——由鍛造室的魔法餘燼保持。Karen在這裡經營她的主廚房，供應從「不錯的燉菜」到「驚人的五道菜大餐」的所有食物。',
+    'tavern_p2': '一個舞台佔據了西端，用於吟遊詩人表演、公會慶祝和「那次RegginA單挑了整張桌子的臂力比賽」（她贏了）。吟遊詩人NPC每晚表演，演唱公會傳奇的歌謠——大部分在歷史上是準確的，有些被「藝術性地」誇大。一個獎盃櫃展示著飲酒比賽的冠軍——目前的紀錄保持者是Natehouoho（12杯）。後面的儲藏室存放著公會的酒窖——由RegginO親自管理，沒有人（甚至RegginA）能未經許可進入。',
+    'warroomCaptionH3': '戰略行動',
+    'warroomLabel': '三樓',
+    'warroomTagline': '在此策劃突襲，Boss們恐懼被點名',
+    'warroomTitle': '戰爭室與戰略室',
+    'warroom_p1': '戰爭室佔據了三樓的北翼——一個燈光昏暗的嚴肅空間，公會的軍事行動在此策劃。一張巨大的圓形戰略桌佔據中央，由單一橡木樹幹雕刻而成，鑲嵌著銅蝕刻的遊戲世界地圖。微型人偶代表公會成員、敵對公會、Boss位置和資源節點。Natehouoho移動棋子；RegginA否決了其中一半。',
+    'warroom_p2': '牆壁上覆蓋著地圖、戰鬥時間線、敵對公會情報報告和一塊追蹤每週28/35 Boss戰配額的白板。書架上存放著副本策略、Boss機制分析和「經驗教訓」活頁夾。通訊水晶放在基座上用於與偵察員的即時協調。房間沒有窗戶——故意的——以防止情報洩露。橙金色旗幟懸掛著戰鬥榮譽。'
+  },
+  th: {
+    'aerialCaptionH3': 'ภาพรวมโลก',
+    'aerialLabel': 'แผนที่โลก',
+    'aerialTagline': 'จากท้องฟ้า ป้อมปราการเผยให้เห็นขนาดที่แท้จริง',
+    'aerialTitle': 'มุมมองทางอากาศของปราสาท NumbahWan',
+    'aerial_p1': 'ปราสาท NumbahWan ครองภูมิทัศน์เหมือนมงกุฎทองคำบนยอดเขา หินผุกร่อนและก่ออิฐมนตร์เจ็ดชั้นตระหง่านขึ้นจากพื้นดิน แต่ละชั้นกว้างกว่าบล็อกเมือง พื้นที่ปราสาทมหึมา — ไม่ใช่แค่ป้อมปราการแต่เป็นอารยธรรมที่พึ่งพาตนเองได้ ภายในกำแพง เรือนยอดสีเขียวของเขตอนุรักษ์ภูเขาลิงมองเห็นได้ชัดจากด้านบน ระบบนิเวศป่าที่มีชีวิตเจริญเติบโตภายในกำแพงหินยุคกลาง น้ำตกไหลลงจากหน้าผาหิน ป่าไผ่ไหวในสายลม และถ้าเพ่งมอง ลิงพิกเซลจิ๋วกระจายอยู่บนเรือนยอดเหมือนกระจุดบนผิวโลก',
+    'aerial_p2': 'ภายนอกกำแพง คูน้ำสีน้ำเงินเข้มล้อมรอบโครงสร้างทั้งหมด เติมน้ำจากน้ำพุใต้ดิน สะพานชักเดียวเชื่อมต่อถนนหินกรวดที่คดเคี้ยวผ่านไบโอมหลากหลาย — สวนซากุระทางตะวันออก ป่ามนต์สะกดมืดทางเหนือ และทุ่งเห็ดเรืองแสงทางตะวัน หมู่บ้าน NPC เล็กๆ และแผงตลาดอยู่ใกล้ถนน ดำรงอยู่ด้วยการค้าของกิลด์ พื้นที่เกษตรทอดยาวไปทางใต้ บนขอบฟ้า เทือกเขาเป็นกรอบของโลก และถ้าโชคดี จะเห็นเงามังกรตัดกับพระอาทิตย์ตก',
+    'afkCaptionH3': 'โซนพักผ่อน',
+    'afkLabel': 'พื้นที่พิเศษ',
+    'afkTagline': 'ที่ที่ฮีโร่พักผ่อนและขโมยขนม (ลิง) ปฏิบัติการ',
+    'afkTitle': 'ห้องพักผ่อน AFK',
+    'afk_p1': 'ห้อง AFK อยู่ตรงกลางปราสาท — พื้นที่สบายสำหรับพักผ่อน แฮงค์เปล บีนแบ็ก พรมนุ่ม และเพลงเบาๆ สร้างสภาพแวดล้อมพักผ่อนสมบูรณ์แบบ แมวหลายตัว (รวม Chonk ตัวดัง) งีบในมุม โต๊ะขนมมีอาหารเสมอ — แต่ 30% หายไปกับการบุกของลิง',
+    'afk_p2': '紈蹈稀著 ถือสถิติ AFK ติดต่อกัน: 14 ชั่วโมง ชั่วโมงเร่งด่วนหลังเรดบอส สถิติออนไลน์พร้อมกัน: 11 สมาชิก กฎห้อง: ห้ามวางแผนเรด ห้ามดราม่า ห้ามเสียงดัง ห้ามปลุก Luna โทษฝ่าฝืน: เวรทำความสะอาด 1 สัปดาห์ ผู้บังคับ: แมวจ้องคุณ',
+    'barracksCaptionH3': 'สิ่งอำนวยความสะดวกฝึกซ้อม',
+    'barracksLabel': 'ชั้น 2',
+    'barracksTagline': 'ที่ที่นักรบถูกหล่อหลอมและจอมเวทย์เรียนรู้การเล็ง',
+    'barracksTitle': 'ค่ายทหารและสนามฝึก',
+    'barracks_p1': 'ค่ายทหารเป็นที่ฝึกสมาชิกใหม่และฝึกซ้อมรบ สนามฝึกในร่มขนาดใหญ่ครอบครองครึ่งชั้น — พื้นทราย ชั้นอาวุธ หุ่นฝึก และที่นั่งผู้ชม RegginA จัดการ "ตรวจสอบเทคนิค" ทุกสัปดาห์ที่นี่',
+    'barracks_p2': 'เตียงสองชั้นเรียงในปีกตะวันออก — แต่ละเตียงมีตู้เก็บของ โคมไฟ และที่แขวนเหรียญตรา สมาชิกแต่ละคนตกแต่งพื้นที่ตามสไตล์ตัวเอง กระดานประกาศแสดงตารางฝึก อันดับสปาร์ริง และรางวัล "ผู้พัฒนาดีที่สุดประจำเดือน" ชั้นอาวุธแสดงอาวุธฝึก ห้องอาบน้ำปลายทางเดินมีคิวเสมอ',
+    'courtyardCaptionH3': 'ตำนานลาน',
+    'courtyardLabel': 'ชั้นล่าง',
+    'courtyardTagline': 'หัวใจของป้อมปราการ — จุดบรรจบของทุกเส้นทาง',
+    'courtyardTitle': 'ลานปราสาท',
+    'courtyard_p1': 'ลานเป็นหัวใจของปราสาท NumbahWan — ลานหินกลางแจ้งกว้างประมาณ 50 เมตร ล้อมรอบด้วยกำแพงสูงของปราสาท ตรงกลางตั้งน้ำพุ N ทองคำ: โครงสร้างหินอ่อนประดับประดา น้ำพุ่งจากรูปปั้น "N" ปิดทอง สมาชิกกิลด์โยนเหรียญลงน้ำพุเพื่อขอพรก่อนเรดบอส น้ำใสและอุ่นตลอดเวลา อุ่นจากท่อที่ต่อจากโรงตีเหล็กใต้ดิน',
+    'courtyard_p2': 'ต้นกล้วยศักดิ์สิทธิ์เติบโตในซุ้มสวนทางตะวันออก — โบราณวัตถุจากยุคก่อตั้งกิลด์ ผลสีทองเรืองแสงในตอนกลางคืน หุ่นฝึกซ้อมจากฟางและไม้เรียงตามกำแพงตะวันตก คอกม้ามีม้าพิกเซลสามตัว ทั่งตีเหล็กกลางแจ้งกระเด็นประกายไฟ เด็ก NPC เล่นไล่จับรอบน้ำพุ ขณะที่ลิงหนีจากเขตอนุรักษ์กำลังขโมยขนมปังจากตะกร้า ทางเดินหินกรวดแผ่ออกไปทุกปีกของปราสาท',
+    'csB1': 'คุกใต้ดินและห้องสมบัติ — ห้องนิรภัย ถ้วยรางวัลบอส ประตูต้องห้าม',
+    'csB2': 'ที่พักแม่บ้านและอุโมงค์บริการ — ทางลับ ระบบลิฟต์อาหาร',
+    'csF1': 'ตลาดใหญ่และโรงเตี๊ยม — แผงค้า โรงอาหาร เวทีนักร้อง',
+    'csF2': 'ค่ายทหารและที่พักสมาชิก — สนามฝึก ห้องส่วนตัว 14 ห้อง',
+    'csF3': 'ห้องสงครามและโรงตีการ์ด — ห้องยุทธศาสตร์ ห้องนิรภัยศักดิ์สิทธิ์',
+    'csF4': 'ที่พักนายทหาร — RegginO ครัวของ Karen ทหารผ่านศึก',
+    'csF5': 'ห้องสมุดและหอคำทำนาย — ลูกแก้ว อาณาจักรผู้รักษาตำนาน',
+    'csF6': 'ห้องชุดหัวหน้ากิลด์และศาลเจ้า RegginA — ห้องบัลลังก์ ห้องเปลวไฟนิรันดร์',
+    'csF7': 'หอดูดาวและดาดฟ้า — หอประภาคาร แท่นชมดาว',
+    'csGF': 'ลานและเขตอนุรักษ์ภูเขา — น้ำพุ ต้นกล้วยศักดิ์สิทธิ์ ลิง',
+    'csTitle': 'ภาพตัดขวางปราสาท',
+    'desc_aesthetic8': 'สีทอง NumbahWan — ทุกธง ตรา และส่วนตกแต่งใช้สีอำพัน-ทองเอกลักษณ์ของกิลด์ (#e8a922) แม้แต่ปูนระหว่างหินก็เหลือบทอง',
+    'desc_annualevents72': 'ประชุมกิลด์รายสัปดาห์ (บังคับ เข้า 47%) งานล้อเลียนรายเดือน (สมัครใจ เข้า 100%) พิธีมอบรางวัลปี (ชุดทางการ Chonk ได้ "แมวยอดเยี่ยม" ทุกปี)',
+    'desc_arenarecords29': 'ชนะติดต่อกันมากสุด: RegginA (47) แพ้สร้างสรรค์ที่สุด: 傻瓜小孩 บังเอิญเด้งตัวเองออกนอกสนาม',
+    'desc_balconyview40': 'มองเห็นน้ำพุลานและเขตอนุรักษ์ภูเขาลิง จุดชมพระอาทิตย์ตกดีที่สุด RegginO และ Karen ดื่มชาที่นี่',
+    'desc_bananagrove21': 'ต้นกล้วย 47 ต้นปลูกตลอดเนินตะวันออก เก็บเกี่ยวปีละ ~2,000 ลูก 30% ถูกลิงกินก่อนสุก',
+    'desc_bardsongs28': '"บทเพลง NumbahWan" (เพลงกิลด์) "ความโกรธของ RegginA" (ดราม่า) "เพลงบัญชีของ Natehouoho" (ช่วยนอนหลับ)',
+    'desc_beaconflame54': 'เผาน้ำมันมนตร์จากหอคำทำนาย มองเห็นได้ 50 กม. ไม่เคยดับ บำรุง: เติมน้ำมันมนตร์ทุกสัปดาห์',
+    'desc_biomes2': 'ป่า ภูเขา บ่อน้ำร้อน ป่าไผ่ ซากุระ ป่ามนต์สะกด ทุ่งเห็ด พื้นที่เกษตร',
+    'desc_bombshelter71': 'ประตูเสริม เสบียงฉุกเฉิน 30 นาที (ขนม + ชาสงบใจของ Karen) ใช้ 4 ครั้ง จุ 6 สมาชิกสบาย รหัส "NumbahWan" (ทุกคนรู้)',
+    'desc_bookcount41': '14,200+ เล่ม ยืมบ่อยสุด: "กลไกบอสฉบับมือใหม่" ยืมน้อยสุด: "การบัญชีกิลด์ขั้นสูง" (Natehouoho คนเดียวที่ยืม)',
+    'desc_bosstrophies58': 'กะโหลกมังกร (S3 Zakum) เขาปีศาจ (S5 เรด) หนวดกระเบนยักษ์ (S7) แต่ละชิ้นมีป้ายเล่าเรื่องการสังหาร',
+    'desc_cardinventory35': 'การ์ดเฉพาะ 340+ ใบ 10 ฤดูกาล การ์ดปกรณัม 12 ใบในห้องนิรภัย คอลเลกชันมูลค่า ~2.1 พันล้านทอง',
+    'desc_cardtrading24': 'แผงการ์ดมี NWG การ์ดเฉพาะ 340+ ใบ การ์ดปกรณัมในตู้แสดงมนตร์ แลกเปลี่ยนและซื้อได้',
+    'desc_chonkstatus67': 'น้ำหนัก: ลับ (เครื่องชั่งพัง) ขนมโปรด: ทุกอย่าง กิจกรรม: ศูนย์ ผลงานต่อกิลด์: เจ้าหน้าที่ขวัญกำลังใจ (ไม่เป็นทางการ) ทุกคนรัก',
+    'desc_contraband64': 'ไวน์ (3 ขวด พอใช้ได้) ลูกเต๋า (ถ่วง ไม่รู้เจ้าของ) นิยายรัก (เล่ม 8/12 อ่านเยอะ) ริบ: ทุกเดือน เติม: ทุกเดือน',
+    'desc_cpdisplay47': 'เครื่องนับ CP เหนือบัลลังก์แสดง "77,837,000,000" ตัวเลขทอง อัพเดตหลังฆ่าบอสทุกครั้ง สมาชิกชอบดูตัวเลขกระโดด',
+    'desc_dailytraffic25': '~200 NPC ต่อวัน + สมาชิกกิลด์ 14 คน เหตุการณ์เกี่ยวกับลิง: ~2 ครั้ง/วัน',
+    'desc_damagereport31': 'เปลี่ยนหุ่นเฉลี่ย 3/สัปดาห์ ซ่อมเพดาน 2/เดือน (ฝึกจอมเวทย์) กำแพงพัง 1 ผนังเมื่อเดือนก่อน (RegginA)',
+    'desc_defenses7': 'ช่องยิงธนูทุกชั้น ช่องเทน้ำมันร้อนเหนือประตู การ์กอยล์มนตร์ที่มีชีวิตเมื่อถูกล้อม และคูน้ำ (มีปลาพิกเซลหวงถิ่น)',
+    'desc_dragonskull26': 'จากการฆ่า Zakum ครั้งแรก RegginA ลงดาบสุดท้าย กะโหลกมีรอยไหม้และรอยดาบ',
+    'desc_dramapointsleaderboa69': '#1 RegginA (847) #2 傻瓜小孩 (623) #3 Mochi (512 ทั้งหมดเกี่ยวกับ RegginA) #4 RegginO (488) Natehouoho: 0 (เป็นกรรมการ)',
+    'desc_dumbwaiter63': 'ปล่องลิฟต์อาหาร 6 ช่อง บริการทุกชั้น หลัก: ส่งอาหาร รอง: ส่งจดหมายประชด สาม: ขนส่งลิง (โดยไม่ตั้งใจ)',
+    'desc_enchantedquill43': 'บันทึกเหตุการณ์กิลด์อัตโนมัติ เขียนไป 847 หน้าฤดูกาลนี้ บางครั้งเขียนคำวิจารณ์เอง',
+    'desc_escapedmonkeys15': 'ลิงหนีเฉลี่ยสัปดาห์ละ 3 ครั้ง ไปร้านขนมปังก่อนเสมอ',
+    'desc_escaperate20': 'ลิง 3-5 ตัวหนีเข้าปราสาทต่อสัปดาห์ ไปที่อาหารโรงเตี๊ยมก่อน แล้วค่อยไปผลไม้ตลาด',
+    'desc_fanfiction51': 'Mochi เขียน 47 เล่ม ยาวเฉลี่ย: 200 หน้า ยอดนิยม: "RegginA vs โลก" RegginA ไม่เคยอ่าน (อย่างเป็นทางการ)',
+    'desc_forbiddenvault60': 'ล็อกตั้งแต่ก่อนกิลด์ย้ายเข้า รูนแปลไม่ได้ Oracle บอก "อดทน" ผู้รักษาตำนานบอก "อาจอันตราย" Mochi บอก "RegginA เปิดได้" ไม่มีใครลอง',
+    'desc_fountaincoins14': 'โยนเหรียญมากกว่า 14,000 เหรียญตั้งแต่ก่อตั้ง ก็อบลินสมบัติจาก B1 พยายาม "ตรวจสอบ" เงินน้ำพุเสมอ',
+    'desc_goldreserves57': 'คลังปัจจุบัน: 14.7 พันล้านทอง ก็อบลินบัญชีนับทุกวัน Natehouoho ตรวจสอบทุกเดือน ส่วนต่างเป็น "ข้อผิดพลาดในการบันทึก" เสมอ',
+    'desc_guardrotation11': 'ทฤษฎี 24/7 ในทางปฏิบัติ ทหารยามใช้เวลาเล่นไพ่และให้อาหาร Chonk',
+    'desc_height6': 'สูงประมาณ 85 เมตร จากระดับคูน้ำถึงโดมหอดูดาว แต่ละชั้นสูงเฉลี่ย 10 เมตร',
+    'desc_historicdramas70': 'การถกเรื่องราคาสินค้า (S6) เหตุการณ์ AFK (S4 เข้าคลังตำนานแล้ว) การโต้เรื่องแบ่งของ (S3) "ใครกินคุกกี้ชิ้นสุดท้ายของ Karen" (สอบสวนอยู่)',
+    'desc_hotsprings19': 'บ่อน้ำร้อนธรรมชาติ 3 บ่อ อุณหภูมิ 32-42°C ลิงมีสิทธิ์ใช้ก่อนโดยไม่เป็นทางการ สมาชิกต้องใช้ตอนลิงไม่สนใจ',
+    'desc_houserules68': 'ห้ามวางแผนเรด ห้ามดราม่า ห้ามเสียงดัง ห้ามปลุก Luna โทษ: เวรทำความสะอาด 1 สัปดาห์ บังคับ: แมวจ้องคุณ',
+    'desc_intelligence34': 'แฟ้มกิลด์ศัตรู 23 กิลด์ อัพเดตรายสัปดาห์ เครือข่ายสายลับคือ "คนที่บังเอิญแคปแชทศัตรู"',
+    'desc_karenskitchen39': 'ครัว Karen: ที่หอมที่สุดในปราสาท หม้อซุปตุ๋นตลอดเวลา สมุนไพรแขวนเต็มเพดาน ป้าย "ครัวฉัน กฎฉัน" งบขนม: ลับสุดยอด',
+    'desc_keylandmark3': 'หอประภาคารที่ F7 — เปลวไฟสีส้มมองเห็นได้จากทุกมุมแผนที่ เป็นประภาคารนิรันดร์ของกิลด์',
+    'desc_legendarygear46': 'จัดแสดง 47 ชิ้น มีค่าที่สุด: ดาบเปลวไฟนิรันดร์ (RegginA มอบให้หลังเกษียณ) ทุกชิ้นมีป้ายเล่าเรื่อง',
+    'desc_lunathecat44': 'ผู้พิทักษ์ห้องสมุดไม่เป็นทางการ นอน 20 ชม./วัน บนเบาะอุ่นที่สุด เคยส่งเสียงใส่ Mochi — ถือว่าเป็นการยอมรับศักดิ์สิทธิ์',
+    'desc_material5': 'หินภูเขาไฟสีเข้มจากเหมืองเหนือ เสริมคานเหล็กแคระ กำแพงหนา 4 เมตรที่ฐาน',
+    'desc_menuhighlights27': 'ขนมปังกล้วย (ผลไม้จากเขตอนุรักษ์) สตูว์หมูป่า หม้อไฟเด็ดของ Karen อาหารพิเศษลึกลับประจำวัน',
+    'desc_moat10': 'กว้าง 8 เมตร น้ำเรืองแสงชีวภาพ มีปลาพิกเซล ปลาไหลมนตร์ และกบหวงถิ่นชื่อ Gerald',
+    'desc_monkeypopulation17': 'ลิง 200+ ตัว แบ่ง 3 ฝูง ลิงป่าไผ่ (สันติ) ลิงน้ำตก (นักสู้) และลิงบ่อน้ำร้อน (ขี้เกียจ) มีปะทะข้ามฝูงบ้าง',
+    'desc_noticeboard12': 'ประกาศเควสรายวัน ข่าวกิลด์ ของหาย (ส่วนใหญ่ลิงขโมย) และซุปพิเศษของ Karen',
+    'desc_occupancy65': 'เฉลี่ย 3-4 สมาชิก ชั่วโมงเร่ง: หลังเรด สถิติ: 11 คนพร้อมกัน (หลังมาราธอนบอส 4 ชม.) 紈蹈稀著 สถิติ AFK ติดต่อกัน: 14 ชม.',
+    'desc_offerings50': 'ประจำวัน: ดอกไม้สด ของหายาก การ์ดปกรณัมบ้าง Mochi บริจาคส่วนตัว 80% ของเครื่องบูชา',
+    'desc_oracleaccuracy42': 'ความแม่นยำลูกแก้ว: 73% (แต่คำตอบส่วนใหญ่เป็นปริศนา "แม่นยำ" จึงเป็นอัตนัย) คำถามยอดนิยม: "อัพเดตครั้งหน้าเมื่อไหร่?"',
+    'desc_population4': 'สมาชิกกิลด์ 14 คน + NPC หลายสิบคน (พ่อค้า แม่บ้าน ทหาร ผู้รักษาตำนาน ก็อบลินสมบัติ และแมวอ้วนชื่อ Chonk)',
+    'desc_portcullis9': 'ประตูเหล็ก 3 ตัน ใช้โซ่ ต้องการทหารยาม 4 คนยกด้วยมือ หรือ RegginO 1 คนที่มีแรงจูงใจพอ',
+    'desc_raidrecord32': 'เรดบอส 28/35 สัปดาห์นี้ กิลด์เลเวล 8 อันดับเซิร์ฟเวอร์ TW #30 CP รวมกิลด์: 112.3 พันล้าน',
+    'desc_regginasreaction52': '"มัน... เยอะ" — RegginA หลังเยือนครั้งเดียว เธอไม่กลับมาอีก Mochi ถือว่าเป็น "คำชมแบบขี้อาย"',
+    'desc_regginosroom38': 'แผนที่ มีด เอกสารยุทธศาสตร์ รางวัล "รองหัวหน้าประจำเดือน" (มอบเอง) มงกุฎดอกไม้แขวนข้างชั้นอาวุธ',
+    'desc_sacredbananatree13': 'ปลูกตั้งแต่ก่อตั้ง ผลสีทองออกฤดูละครั้ง กินแล้วเพิ่ม CP 0.001% (ยาหลอก แต่ไม่มีใครตั้งคำถาม)',
+    'desc_sacredlog36': 'โบราณวัตถุก่อตั้ง ไม่มีใครรู้แน่ว่าทำอะไร แต่เอาออกจากโรงตีแล้วคุณภาพการ์ดลดลง บังเอิญ? ไม่มีใครกล้าทดสอบ',
+    'desc_scale1': '7 ชั้นเหนือดิน 2 ชั้นใต้ดิน 1 เขตอนุรักษ์ภูเขา 14 ห้องสมาชิก ~40 พื้นที่แยก',
+    'desc_secretpassages62': 'ทางลับ 23 ทาง เชื่อมทุกชั้น เส้นทางเร็วสุดจาก B2 ถึง F7 ใช้ 4 นาที สมาชิกกิลด์: ไม่ได้บอก พนักงาน: ใช้ทุกวัน',
+    'desc_security48': 'ล็อก 3 ชั้น ผนึกมนตร์ 2 ชั้น ทหารยาม NPC ชื่อ Gerald 1 คน (เป็นทหารยามกบด้วย)',
+    'desc_snackbudget66': '200K ทองต่อสัปดาห์ 30% หายไปกับลิงบุก Karen เติมโต๊ะ 3 ครั้ง/วัน หยุดถามแล้วว่ากล้วยมาจากไหน',
+    'desc_staffcount61': 'แม่บ้าน NPC 8 คน ช่างบำรุง 3 คน หัวหน้าแม่บ้าน 1 คน (มีประสิทธิภาพน่ากลัว) รู้จักทุกตารางนิ้ว — รวมห้องที่สมาชิกไม่รู้',
+    'desc_stalls23': '12 แผงค้าถาวร: ช่างตีเหล็ก ยา การ์ด อาหาร เกราะ เครื่องประดับ ฯลฯ วันหยุดมีแผงเร่',
+    'desc_stargazingnights56': 'ทุกวันศุกร์ มีผ้าห่มให้ Karen ส่งโกโก้ร้อนขึ้นมาทางลิฟต์อาหาร Natehouoho เล่าเรื่องกลุ่มดาว (แต่งขึ้นเป็นส่วนใหญ่)',
+    'desc_statue49': 'สูง 2.5 เมตร ทองแดงชุบทองคำแท้ ค่าใช้จ่าย: 300M ทองจากคลังกิลด์ Mochi ยืนยัน "เป็นการลงทุนที่จำเป็น"',
+    'desc_strategytable33': 'โอ๊กแกะมือ เส้นผ่าศูนย์กลาง 3 เมตร หุ่น 47 ตัวแทนทุกกองกำลัง หุ่น RegginA ใหญ่กว่าตัวอื่นเล็กน้อย (เธอยืนยัน)',
+    'desc_telescope53': 'กล้องหักเหทองเหลือง 3 เมตร สั่งทำ มองเห็นดาวแต่ละดวงและเซิร์ฟเวอร์ไกลๆ 碼農小孫 ใช้ติดตามดาวเทียม',
+    'desc_throne45': 'แกะมือโดยช่าง NPC ระดับปรมาจารย์ ใช้เวลา 6 เดือน เบาะเสกมนตร์ — อุณหภูมิสมบูรณ์แบบเสมอ',
+    'desc_trainingdummies16': 'เปลี่ยนทุกเดือน เวทย์แสงของ 阿光Yo ทำให้ติดไฟตลอด การโจมตีของ RegginA ทำลายเป็นผุยผง',
+    'desc_trapstatus59': '"ค่อนข้างปลอดภัย" ช่องยิงธนูยิงเป็นระยะ (ตั้งเวลาที่ไม่มีใครหาเจอ) สะพานรับน้ำหนักได้ต่ำกว่า 100 กก. 傻瓜小孩 กดแผ่นกดเมื่อเดือนก่อน — โชคดีแค่กระดาษสี',
+    'desc_vaultsecurity37': 'ล็อก 3 ชั้น (กายภาพ มนตร์ ราชการ — ต้องลายเซ็นหัวหน้ากิลด์) การบุกรุกล่าสุด: ไม่สำเร็จ (ก็อบลินสมบัติ)',
+    'desc_walkingpaths22': 'เส้นทางหินกรวด 2.3 กม. วนผ่านเขตอนุรักษ์ จุดชมวิว 3 ระดับ เดินทั้งหมดประมาณ 45 นาที',
+    'desc_waterfalls18': 'น้ำตก 3 แห่ง (สูงสุด 15 เมตร) ไหลลงสระธรรมชาติ น้ำจากชั้นน้ำใต้ดิน เอฟเฟกต์สงบ +15 (ไม่ยืนยัน)',
+    'desc_weaponracks30': 'อาวุธในคลัง 146 ชิ้น สมาชิกแต่ละคนมีชั้นวางเฉพาะ ชั้นของ RegginA ต้องเสริมผนังรับน้ำหนัก',
+    'desc_zipline55': 'ซิปไลน์ 470 เมตร ลงสู่เขตอนุรักษ์ ความเร็วสูงสุด: น่ากลัว สถิติความปลอดภัย: "พอใช้ได้" 傻瓜小孩 ชอบที่สุด',
+    'det_aesthetic8': 'สุนทรียศาสตร์',
+    'det_annualevents72': 'กิจกรรมประจำปี',
+    'det_arenarecords29': 'สถิติสนามประลอง',
+    'det_balconyview40': 'วิวระเบียง',
+    'det_bananagrove21': 'สวนกล้วย',
+    'det_bardsongs28': 'เพลงนักร้อง',
+    'det_beaconflame54': 'เปลวไฟประภาคาร',
+    'det_biomes2': 'ไบโอม',
+    'det_bombshelter71': 'ที่หลบภัย',
+    'det_bookcount41': 'จำนวนหนังสือ',
+    'det_bosstrophies58': 'ถ้วยรางวัลบอส',
+    'det_cardinventory35': 'คลังการ์ด',
+    'det_cardtrading24': 'การค้าการ์ด',
+    'det_chonkstatus67': 'สถานะ Chonk',
+    'det_contraband64': 'ของผิดกฎหมาย',
+    'det_cpdisplay47': 'จอแสดง CP',
+    'det_dailytraffic25': 'ปริมาณคนต่อวัน',
+    'det_damagereport31': 'รายงานความเสียหาย',
+    'det_defenses7': 'การป้องกัน',
+    'det_dragonskull26': 'กะโหลกมังกร',
+    'det_dramapointsleaderboa69': 'กระดานคะแนนดราม่า',
+    'det_dumbwaiter63': 'ลิฟต์อาหาร',
+    'det_enchantedquill43': 'ปากกาขนนกวิเศษ',
+    'det_escapedmonkeys15': 'ลิงหนี',
+    'det_escaperate20': 'อัตราหลบหนี',
+    'det_fanfiction51': 'แฟนฟิคชั่น',
+    'det_forbiddenvault60': 'ห้องนิรภัยต้องห้าม',
+    'det_fountaincoins14': 'เหรียญน้ำพุ',
+    'det_goldreserves57': 'ทองคำสำรอง',
+    'det_guardrotation11': 'กะเวรยาม',
+    'det_height6': 'ความสูง',
+    'det_historicdramas70': 'ดราม่าประวัติศาสตร์',
+    'det_hotsprings19': 'บ่อน้ำร้อน',
+    'det_houserules68': 'กฎบ้าน',
+    'det_intelligence34': 'ข่าวกรอง',
+    'det_karenskitchen39': 'ครัวของ Karen',
+    'det_keylandmark3': 'สถานที่สำคัญ',
+    'det_legendarygear46': 'อุปกรณ์ตำนาน',
+    'det_lunathecat44': 'แมว Luna',
+    'det_material5': 'วัสดุ',
+    'det_menuhighlights27': 'เมนูแนะนำ',
+    'det_moat10': 'คูน้ำ',
+    'det_monkeypopulation17': 'จำนวนลิง',
+    'det_noticeboard12': 'กระดานประกาศ',
+    'det_occupancy65': 'อัตราการใช้',
+    'det_offerings50': 'เครื่องบูชา',
+    'det_oracleaccuracy42': 'ความแม่นยำคำทำนาย',
+    'det_population4': 'ประชากร',
+    'det_portcullis9': 'ประตูเหล็กหล่น',
+    'det_raidrecord32': 'สถิติเรด',
+    'det_regginasreaction52': 'ปฏิกิริยาของ RegginA',
+    'det_regginosroom38': 'ห้องของ RegginO',
+    'det_sacredbananatree13': 'ต้นกล้วยศักดิ์สิทธิ์',
+    'det_sacredlog36': 'ท่อนไม้ศักดิ์สิทธิ์',
+    'det_scale1': 'ขนาด',
+    'det_secretpassages62': 'ทางลับ',
+    'det_security48': 'ความปลอดภัย',
+    'det_snackbudget66': 'งบขนม',
+    'det_staffcount61': 'จำนวนพนักงาน',
+    'det_stalls23': 'แผงลอย',
+    'det_stargazingnights56': 'คืนชมดาว',
+    'det_statue49': 'รูปปั้น',
+    'det_strategytable33': 'โต๊ะยุทธศาสตร์',
+    'det_telescope53': 'กล้องโทรทรรศน์',
+    'det_throne45': 'บัลลังก์',
+    'det_trainingdummies16': 'หุ่นฝึกซ้อม',
+    'det_trapstatus59': 'สถานะกับดัก',
+    'det_vaultsecurity37': 'ความปลอดภัยห้องนิรภัย',
+    'det_walkingpaths22': 'ทางเดิน',
+    'det_waterfalls18': 'น้ำตก',
+    'det_weaponracks30': 'ชั้นวางอาวุธ',
+    'det_zipline55': 'สไลเดอร์',
+    'dramaCaptionH3': 'โรงละครการเมืองกิลด์',
+    'dramaLabel': 'พื้นที่พิเศษ',
+    'dramaTagline': 'ที่ที่ตำนานโต้เถียงและพันธมิตรแตกหัก (แล้วกลับมาดีกันด้วยซุป)',
+    'dramaTitle': 'เวทีละครและห้องประชุมกิลด์',
+    'drama_p1': 'โรงละครและห้องประชุมกิลด์ครอบคลุมพื้นที่พิเศษ — โรงละครกลมขนาดใหญ่มีที่นั่งแบบขั้นบันได เวทีกลาง และกระดานสมคบคิด ที่นี่คือที่เกิดการเมืองกิลด์: ถกเถียง โหวต กล่าวหา สุนทรพจน์ดราม่า และญัตติ "ถอดถอนหัวหน้ากิลด์" (ล้มเหลวทุกครั้ง) ค้อนไม้ใหญ่เกินสำหรับรักษาความสงบ',
+    'drama_p2': 'กระดานคะแนนดราม่า: #1 RegginA (847 คะแนน) #2 傻瓜小孩 (623) #3 Mochi (512 ทั้งหมดเกี่ยวกับ RegginA) #4 RegginO (488) Natehouoho: 0 (เขาเป็นกรรมการ) บังเกอร์หลบภัยใช้ 4 ครั้ง ประชุมกิลด์รายสัปดาห์ (เข้า 47%) งานล้อเลียนรายเดือน (เข้า 100%) พิธีมอบรางวัลปี (ชุดทางการ Chonk ได้ "แมวยอดเยี่ยม" ทุกปี)',
+    'dungeonCaptionH3': 'ส่วนลึก',
+    'dungeonLabel': 'ชั้นใต้ดิน 1',
+    'dungeonTagline': 'ที่ที่สมบัติถูกสะสมและกับดักถูก... ปิดใช้งานส่วนใหญ่',
+    'dungeonTitle': 'คุกใต้ดินและห้องสมบัติ',
+    'dungeon_p1': 'คุกใต้ดินครอบคลุมชั้นใต้ดิน 1 — เขาวงกตมืด ชื้น และสะท้อนเสียง ห้องนิรภัยสมบัติเป็นจุดดึงดูดหลัก: ห้องนิรภัยทรงกลมขนาดใหญ่เก็บของรางวัลรวมกิลด์ — ทองคำ วัสดุหายาก ถ้วยรางวัลบอส และ "หีบต้องห้าม" ก็อบลินสมบัติ NPC เฝ้าห้องนิรภัย',
+    'dungeon_p2': 'พื้นที่อื่นๆ ของคุกใต้ดิน: ห้องขังเชลย (ส่วนใหญ่เป็นสายลับ NPC บางครั้งสมาชิกที่แพ้พนัน) ห้องไวน์สำรอง และประตูต้องสาป ประตูต้องห้ามอยู่ลึกสุด — ประตูเหล็กดำหนักสลักอักษรรูนแปลไม่ได้ ไม่มีใครรู้ว่ามีอะไรอยู่ข้างหลัง Oracle บอก "อดทน" ผู้รักษาตำนานบอก "อาจอันตราย" Mochi บอก "RegginA เปิดได้"',
+    'exteriorCaptionH3': 'บันทึกสถาปัตยกรรม',
+    'exteriorLabel': 'ภายนอก',
+    'exteriorTagline': 'เจ็ดชั้นของหิน ไฟ และตำนาน',
+    'exteriorTitle': 'ปราสาท NumbahWan — ด้านหน้าทั้งหมด',
+    'exterior_p1': 'ปราสาทตระหง่านเหมือนภูเขาทองคำท่ามกลางท้องฟ้ายามค่ำคืน สร้างจากหินภูเขาไฟสีเข้มจากเหมืองเหนือ ทุกก้อนถูกวางโดยสมาชิกผู้ก่อตั้งในยุคแรกของ NumbahWan สถาปัตยกรรมเป็นแบบบรูทัลลิสต์-ยุคกลาง — กำแพงหนา ช่องยิงธนูแคบ และค้ำยันเสริม — แต่ถูกทำให้อ่อนโยนด้วยสีส้ม-ทองอันเป็นเอกลักษณ์ของกิลด์ ธงกิลด์ที่มีตรา "N" สีทองแขวนจากทุกหอคอย ปลิวในลมเหมือนเปลวไฟ',
+    'exterior_p2': 'เจ็ดชั้นที่แตกต่างมองเห็นได้จากภายนอก แต่ละชั้นมีวงแหวนหน้าต่างสว่างสีอำพัน หอคอยมุมสไตล์กอทิกมีกองไฟที่ลุกไหม้ชั่วนิรันดร์ — เติมเชื้อเพลิงด้วยน้ำมันมนตร์จากหอคำทำนาย ทางเดินหน้าผาเวียนขึ้นด้านตะวันออก ที่ยอดสุด โดมหอดูดาวเปล่งประกายใต้แสงดาว ท่อนไม้ศักดิ์สิทธิ์ — โบราณวัตถุจากมีมก่อตั้งกิลด์ — ยืนเฝ้าหน้าทางเข้าหลักเหมือนทหารรักษาการณ์ไม้ ค้างคาวบินวนรอบหอคอยชั้นบนยามพลบค่ำ',
+    'footerBuilt': 'สร้างสำหรับ AI สร้างโลก — ทุกรายละเอียดเป็นตำนานดั้งเดิมของ NumbahWan',
+    'footerDesc': 'ปราสาท NumbahWan — 7 ชั้น 2 ชั้นใต้ดิน 1 ภูเขา 200+ ลิง',
+    'footerStats': 'กิลด์เลเวล 8 | สมาชิก 14 คน | อันดับเซิร์ฟเวอร์ #30 TW | CP รวม: 112.3B',
+    'forgeCaptionH3': 'โรงตีเหล็กและห้องนิรภัย',
+    'forgeLabel': 'ชั้น 3',
+    'forgeTagline': 'ที่ที่การ์ดถือกำเนิดและตำนานถูกผนึก',
+    'forgeTitle': 'โรงตีการ์ดและห้องนิรภัยศักดิ์สิทธิ์',
+    'forge_p1': 'โรงตีการ์ดเป็นพื้นที่สร้างสรรค์ศักดิ์สิทธิ์ที่สุดของกิลด์ ทั่งมนตร์เรืองแสงตรงกลาง เต้นเป็นจังหวะด้วยพลังอาถรรพ์ — ที่นี่คือที่สร้างการ์ด NWG ใหม่ ท่อนไม้ศักดิ์สิทธิ์อยู่บนแท่นทองใกล้ๆ กล่าวกันว่าช่วยเพิ่มคุณภาพการ์ด',
+    'forge_p2': 'ด้านหลังโรงตี ประตูห้องนิรภัยเปิดครึ่งหนึ่งเผยให้เห็นคลังการ์ด — ชั้นจัดตามความหายาก: ทั่วไป (ชั้นไม้) หายาก (ชั้นเหล็ก) มหากาพย์ (ชั้นเงิน) ตำนาน (ชั้นทอง) และปกรณัม (แสดงลอยในกระจกมนตร์) ห้องนิรภัยเก็บคอลเลกชัน NWG ครบ 10+ ฤดูกาล รวมถึงการ์ดปกรณัม "RegginA, The Eternal Flame"',
+    'gatesCaptionH3': 'รายละเอียดประตู',
+    'gatesLabel': 'ชั้นพื้นดิน',
+    'gatesTagline': 'ที่ที่ตำนานเข้ามาและศัตรูหันกลับ',
+    'gatesTitle': 'ประตูใหญ่และกำแพงนอก',
+    'gates_p1': 'ประตูหลักของปราสาท NumbahWan เป็นสิ่งมหัศจรรย์ทางวิศวกรรมของโลกยุคกลาง ซุ้มหินขนาดใหญ่ — สูง 12 เมตร — มีตรา "N" สีทองแกะสลักบนหินกุญแจ ฝังด้วยแผ่นทองคำแท้ที่จับแสงคบเพลิง ประตูเหล็กหนักกว่า 3 ตัน ทำงานด้วยระบบโซ่และน้ำหนักถ่วง (จริงๆ ก็แค่ RegginO กับรอก)',
+    'gates_p2': 'รูปปั้นทหารยามสองตัวขนาบทางเข้า: ตัวหนึ่งถือดาบ (แทนการรุก หรือปรัชญาของ RegginA) อีกตัวอุ้มท่อนไม้ศักดิ์สิทธิ์ (แทนอารมณ์ขันของกิลด์) สะพานชักไม้ข้ามคูน้ำเรืองแสงสีน้ำเงิน — น้ำเสกด้วยสาหร่ายเรืองแสงชีวภาพ ปลาพิกเซลว่ายอยู่ใต้ผิวน้ำ กระดานประกาศ "ข่าวกิลด์" แขวนอยู่ข้างประตู ปักด้วยใบงาน ใบจับ และตารางอาหารของ Karen แมวส้มอ้วน Chonk นอนอยู่ที่ไหนสักแห่งใกล้ประตูเสมอ',
+    'gmsuiteCaptionH3': 'บัลลังก์ของ NUMBAHWAN',
+    'gmsuiteLabel': 'ชั้น 6',
+    'gmsuiteTagline': '77 พันล้าน CP และบัลลังก์ที่คู่ควร',
+    'gmsuiteTitle': 'ห้องชุดหัวหน้ากิลด์',
+    'gmsuite_p1': 'ห้องชุดหัวหน้ากิลด์ครอบคลุมปีกตะวันตกทั้งหมดของชั้น 6 — พื้นที่หรูหราที่สุดในปราสาท ห้องบัลลังก์ของ Natehouoho เป็นศูนย์กลาง — บัลลังก์ทองคำขนาดใหญ่บนแท่นสูง หันหน้าเข้าจิตรกรรมฝาผนังแสดงประวัติกิลด์ อุปกรณ์ตำนานจัดแสดงในตู้กระจก',
+    'gmsuite_p2': 'ห้องนอนส่วนตัวด้านหลัง — เตียงขนาดจักรพรรดิ ม่านทอง หัวเตียงสลักตรากิลด์ ระเบียงมองเห็นลานและภูเขาลิง ห้องนิรภัยเก็บเอกสารลับสุดยอดและบัญชีการเงิน ห้องน้ำส่วนตัวมีอ่างทองคำ มุมห้องมีโต๊ะกองเอกสารค้างและกระป๋องเครื่องดื่มชูกำลังเปล่า',
+    'heroSub': 'ป้อมปราการยุคกลางเจ็ดชั้นที่เป็นบ้านของกิลด์ NumbahWan สมาชิก 14 คน 7 ชั้น 2 ชั้นใต้ดิน 1 ภูเขา และลิงนับไม่ถ้วน ทุกห้องมีเรื่องเล่า',
+    'heroTitle': 'ปราสาท NUMBAHWAN',
+    'imgLabel_aerialview': 'มุมมองทางอากาศ',
+    'imgLabel_afkzone': 'โซน AFK',
+    'imgLabel_b1dungeon': 'B1 — คุกใต้ดิน',
+    'imgLabel_b2service': 'B2 — พื้นที่บริการ',
+    'imgLabel_courtyard': 'ลาน',
+    'imgLabel_dramahall': 'ห้องละคร',
+    'imgLabel_exterior': 'ภายนอก',
+    'imgLabel_f1market': 'F1 — ตลาด',
+    'imgLabel_f1tavern': 'F1 — โรงเตี๊ยม',
+    'imgLabel_f2barracks': 'F2 — ค่ายทหาร',
+    'imgLabel_f2quarters': 'F2 — ที่พัก',
+    'imgLabel_f3cardforge': 'F3 — โรงตีการ์ด',
+    'imgLabel_f3warroom': 'F3 — ห้องสงคราม',
+    'imgLabel_f4officers': 'F4 — นายทหาร',
+    'imgLabel_f5library': 'F5 — ห้องสมุด',
+    'imgLabel_f6gmsuite': 'F6 — ห้องหัวหน้า',
+    'imgLabel_f6shrine': 'F6 — ศาลเจ้า',
+    'imgLabel_f7observatory': 'F7 — หอดูดาว',
+    'imgLabel_maingate': 'ประตูหลัก',
+    'imgLabel_monkeymountain': 'ภูเขาลิง',
+    'libraryCaptionH3': 'อาณาจักรนักพยากรณ์',
+    'libraryLabel': 'ชั้น 5',
+    'libraryTagline': 'ความรู้คือพลัง — และห้องนี้มีทั้งสองอย่างมากมาย',
+    'libraryTitle': 'ห้องสมุดและหอคำทำนาย',
+    'library_p1': 'ห้องสมุดครอบคลุมทั้งชั้น 5 — วิหารแห่งความรู้อันน่าทึ่ง ชั้นหนังสือเกลียวจากพื้นถึงเพดาน หนังสือ ม้วนกระดาษ และต้นฉบับกว่า 12,000 เล่มครอบคลุมทุกอย่างตั้งแต่กลยุทธ์เกมถึงประวัติศาสตร์โลก ตรงกลางคือลูกแก้วคำทำนาย — ทรงกลมเรืองแสงลอยบนแท่น ผู้รักษาตำนาน NPC ดูแลคอลเลกชัน',
+    'library_p2': 'มุมอ่านหนังสือริมหน้าต่าง — เก้าอี้นวม เตาผิง และชาที่มีคนลืมทิ้งเสมอ Yuluner晴 มักใช้เวลาที่นี่ทั้งบ่าย ค้นคว้าตำนานและบันทึกประวัติกิลด์ "เขตต้องห้าม" ถูกล็อกด้วยโซ่ — เก็บตำราต้องห้าม หอคำทำนายเชื่อมกับห้องสมุดผ่านบันไดเวียน',
+    'maidsCaptionH3': 'ปราสาทที่ซ่อนอยู่',
+    'maidsLabel': 'ชั้นใต้ดิน 2',
+    'maidsTagline': 'โครงสร้างพื้นฐานที่ซ่อนอยู่ที่ทำให้ปราสาทดำเนินต่อไป',
+    'maidsTitle': 'ที่พักแม่บ้านและอุโมงค์บริการ',
+    'maids_p1': 'ที่พักแม่บ้านและอุโมงค์บริการครอบคลุมชั้นใต้ดิน 2 — โครงสร้างพื้นฐานที่ซ่อนอยู่ แม่บ้าน NPC 8 คน ช่างบำรุง 3 คน และหัวหน้าแม่บ้าน 1 คน (มีประสิทธิภาพน่ากลัว) ทำงานและอาศัยที่นี่ พวกเขารู้จักทุกตารางนิ้วของปราสาท ทางลับ 23 ทาง',
+    'maids_p2': 'ปล่องลิฟต์อาหาร 6 ช่องบริการทุกชั้น ใช้หลัก: ส่งอาหาร รอง: ส่งจดหมายประชดระหว่างพนักงาน สาม: ขนส่งลิง (โดยไม่ตั้งใจ) ห้องซักผ้า ห้องเก็บของ และห้องพักพนักงานอยู่ชั้นนี้ กล่องของริบมี: ไวน์ 3 ขวด ลูกเต๋าถ่วง นิยายรัก (เล่ม 8 จาก 12) ริบทุกเดือน เติมทุกเดือน',
+    'marketCaptionH3': 'รายละเอียดตลาด',
+    'marketLabel': 'ชั้น 1',
+    'marketTagline': 'การค้า การ์ด และลิงขโมยเป็นครั้งคราว',
+    'marketTitle': 'ตลาดใหญ่',
+    'market_p1': 'ตลาดใหญ่ครอบคลุมปีกใต้ทั้งหมดของชั้น 1 — ห้องโถงโค้งขนาดใหญ่ที่สะท้อนเสียงตะโกนขาย เสียงเหรียญ และเสียงไก่ที่ถูกขโมย แผงค้า NPC สิบสองแผงเรียงตลอดทางเดินกลาง แต่ละแผงขายสินค้าต่างกัน: ยา ม้วนกระดาษ อัพเกรดอาวุธ ซ่อมเกราะ วัสดุหายาก อาหาร (สาขาของ Karen) และ "ของน่าสงสัย"',
+    'market_p2': 'ธง NumbahWan สีทองห้อยจากคานเพดาน โคมสีส้มให้แสงอบอุ่น ผู้ประมูล NPC ขายของสดทุกเที่ยงวัน — ส่วนใหญ่เป็นของดรอปจากบอสและอุปกรณ์มือสอง พ่อค้าตลาดมืดซ่อนอยู่มุมหลัง ขาย "ทุกอย่าง ไม่ถามที่มา" กลิ่นตลาดผสมระหว่างหนัง เครื่องเทศ เหล็ก และซุปของ Karen น้ำพุเล็กๆ กลางลานมีผลไม้ที่ลิงขโมยมาลอยอยู่บ่อยๆ',
+    'mountainCaptionH3': 'เขตอนุรักษ์ภูเขา — คำอธิบายฉบับเต็ม',
+    'mountainLabel': 'ภายในกำแพง',
+    'mountainTagline': 'ระบบนิเวศภูเขาที่มีชีวิตภายในปราสาทยุคกลาง — พร้อมลิงมากมาย',
+    'mountainTitle': 'เขตอนุรักษ์ภูเขาลิง',
+    'mountain_p1': 'เมื่อผู้ก่อตั้ง NumbahWan ออกแบบปราสาท พวกเขาตัดสินใจในสิ่งที่ไม่มีกิลด์ใดเคยทำ: สร้างภูเขาจริงๆ ภายในกำแพง ไม่ใช่เนินเขา ไม่ใช่สวน แต่เป็นภูเขาหินจริงๆ มีน้ำตก ป่าไผ่ ต้นซากุระ บ่อน้ำร้อน — และที่สำคัญที่สุด — ลิง ลิงเยอะมากๆ เขตอนุรักษ์ภูเขาลิงครอบคลุมพื้นที่หนึ่งในสี่ของปราสาท สูงจากพื้นลาน 40 เมตร ล้อมด้วยกำแพงแต่เปิดสู่ท้องฟ้า',
+    'mountain_p2': 'เขตอนุรักษ์แบ่งเป็นหกโซนที่แตกต่างกัน ทางเข้าป่าไผ่ด้านล่างเป็นสิ่งแรกที่ผู้เข้าชมเห็น บันไดหินคดเคี้ยวไต่ขึ้นตามทางลิง ผ่านน้ำตกสามแห่ง กลางเนินเป็นแกนป่า: ต้นไม้สูง เถาวัลย์ และเฟิร์นสร้างเรือนยอดหนาแน่น ฝูงลิงวิ่งผ่านเหมือนนักปาร์กัวร์ บ่อน้ำร้อนธรรมชาติทางตะวันออกล้อมด้วยกล้วยไม้เอลฟ์และไอน้ำ หุบเขาซากุระทางตะวันตกบานตามฤดูกาล ยอดเขาเป็นจุดชมวิวเหนือปราสาทและโลกภายนอก',
+    'mountain_p3': 'ลิงเป็นดาราของเขตอนุรักษ์ ลิงพิกเซลกว่า 200 ตัวกระจายทั่วภูเขา ตั้งแต่ลูกลิงซนจนถึงราชาลิงหลังเงิน แบ่งเป็นสามฝูง: ลิงป่าไผ่ (สายสันติ) ลิงน้ำตก (สายนักสู้ว่ายน้ำเก่ง) และลิงบ่อน้ำร้อน (สายเอ็นจอย) ลิงหนีเป็นเรื่องปกติ — เฉลี่ยสัปดาห์ละ 3 ครั้ง ไปร้านขนมปังก่อนเสมอ',
+    'navAfk': 'พักผ่อน',
+    'navB1Dungeon': 'B1:คุกใต้ดิน',
+    'navDrama': 'ละคร',
+    'navExterior': 'ภายนอก',
+    'navF1Market': 'F1:ตลาด',
+    'navF1Tavern': 'F1:โรงเตี๊ยม',
+    'navF2Barracks': 'F2:ค่ายทหาร',
+    'navF2Rooms': 'F2:ห้องพัก',
+    'navF3Forge': 'F3:โรงตีเหล็ก',
+    'navF3War': 'F3:สงคราม',
+    'navF4Officers': 'F4:นายทหาร',
+    'navF5Library': 'F5:ห้องสมุด',
+    'navF6GM': 'F6:หัวหน้า',
+    'navF6Shrine': 'F6:ศาลเจ้า',
+    'navF7Sky': 'F7:ท้องฟ้า',
+    'navGates': 'ประตู',
+    'navMaids': 'แม่บ้าน',
+    'navMap': 'แผนที่',
+    'navMountain': 'ภูเขาลิง',
+    'navYard': 'ลาน',
+    'observatoryCaptionH3': 'มงกุฎของปราสาท',
+    'observatoryLabel': 'ชั้น 7',
+    'observatoryTagline': 'จุดสูงสุดของกิลด์ — ที่ที่ดวงดาวพบกับหิน',
+    'observatoryTitle': 'หอดูดาวและดาดฟ้า',
+    'observatory_p1': 'หอดูดาวและดาดฟ้าครอบคลุมชั้นสูงสุด — ชั้น 7 กล้องโทรทรรศน์ทองเหลืองขนาดใหญ่ชี้ไปท้องฟ้า ติดตั้งบนแท่นหมุนได้ เปลวไฟหอประภาคารสีส้มมองเห็นได้จากทุกมุมปราสาท คืนสดใส สมาชิกชมดาวที่นี่กับผ้าห่มและเครื่องดื่มร้อน',
+    'observatory_p2': 'แท่นชมดาวเป็นพื้นที่ดาดฟ้าเปิดโล่ง ปูหินชนวน ขอบมีกำแพงเตี้ย ธงกิลด์ปลิวบนเสาธงมุม สวนเล็กปลูกพืชบานกลางคืน — ดอกจันทร์ กล้วยไม้สตาร์ดัสต์ และมอสเรืองแสง กล่องดนตรีเล่นทำนองอ่อนโยน วันปีใหม่และวันครบรอบกิลด์ สมาชิกจุดพลุที่นี่ — มองจากนอกปราสาท ชั้นบนสุดเหมือนมงกุฎเรืองแสง',
+    'officersCaptionH3': 'ที่พักนายทหาร',
+    'officersLabel': 'ชั้น 4',
+    'officersTagline': 'ที่ที่วงในอาศัยอยู่อย่าง(ค่อนข้าง)สบาย',
+    'officersTitle': 'ที่พักนายทหาร',
+    'officers_p1': 'ชั้น 4 เป็นที่พักนายทหาร — พื้นที่พิเศษสำหรับสมาชิกอาวุโส ห้องใหญ่กว่า เฟอร์นิเจอร์ดีกว่า และมีกุญแจจริง ห้องของ RegginO สวยงามที่สุด — สีชมพูกับอาวุธซ่อน ครัวของ Karen อยู่มุมหนึ่งของชั้น ทั้งเป็นครัวทดลองและศูนย์สังสรรค์',
+    'officers_p2': 'ห้องทหารผ่านศึกแสดงของที่ระลึกจากการรบครั้งยิ่งใหญ่ — ชื่อสลักบนผนัง อาวุธเกษียณ และกำแพง "เกียรติยศ" สมาชิกที่ถึง CP ที่กำหนดจะได้ป้ายที่นี่ โต๊ะประชุมยาวสำหรับประชุมนายทหาร — สบายกว่าห้องสงครามแต่การตัดสินใจสำคัญเท่ากัน ตู้ขายของอัตโนมัติมุมห้องมีชาและขนม',
+    'quartersCaptionH3': 'สารบัญห้องสมาชิก',
+    'quartersLabel': 'ชั้น 2',
+    'quartersTagline': '14 ประตู 14 เรื่องราว 14 ตารางนอนที่ต่างกันสิ้นเชิง',
+    'quartersTitle': 'ปีกที่พักสมาชิก',
+    'quarters_p1': 'ทางเดินตะวันออกของชั้น 2 ยาวเกือบ 80 เมตร เรียงด้วยประตู 14 บาน — ประตูสำหรับสมาชิกแต่ละคน พรมแดงปูพื้นหิน คบเพลิงทอเงาเต้นรำบนเพดานโค้ง ประตูแต่ละบานไม่เหมือนกัน: สติ๊กเกอร์ไฟ ป้าย "ห้ามรบกวน" หลายภาษา กลอนเพิ่ม ตกแต่งหัวใจ รอยขีดข่วน สูตรคณิตศาสตร์ ใยแมงมุมบนประตูสมาชิกที่ไม่ได้เข้าใช้งาน ป้ายชื่อทองระบุผู้อยู่อาศัย',
+    'room10_desc': '"傻瓜小孩" — ประตูเต็มสติ๊กเกอร์และรูปวาดสีเทียน กับดักแกล้งที่ลูกบิด (ไม่อันตรายแต่น่ารำคาญ) ข้างใน: ความวุ่นวายที่มีระเบียบ ห่อขนม และอุปกรณ์ดีเกินคาด',
+    'room10_name': '傻瓜小孩',
+    'room10_role': 'สมาชิกกิลด์ — 25M CP',
+    'room11_desc': 'สไตล์มวยไทย + หยกเย็น กระสอบทรายแขวนเพดาน คริสตัลน้ำแข็งงอกบนขอบหน้าต่าง (ผลข้างเคียงมนตร์) ม้วนศิลปะการต่อสู้บนผนัง พื้นปูเสื่อฝึก',
+    'room11_name': '泰拳寒玉',
+    'room11_role': '小可愛 — 24M CP',
+    'room12_desc': '"小亨寶寶" — ห้องอบอุ่นที่สุด ตุ๊กตาบนเตียง ไฟ fairy ทุกที่ สถานีโกโก้ร้อน ประตูมีสติ๊กเกอร์หัวใจ สมาชิกอื่นแอบมาเสพบรรยากาศ',
+    'room12_name': '小亨寶寶',
+    'room12_role': '小可愛 — 13M CP',
+    'room13_desc': 'ห้องตัวรอง/นักสำรวจของ Yuluner เรียบแต่ใช้งานได้ — เป้สะพายพร้อมไว้ข้างประตูเสมอ แผนที่ปักผนัง สมุดนักสำรวจบนโต๊ะ พร้อมออกเดินทางทุกเมื่อ',
+    'room13_name': 'Yuluner',
+    'room13_role': 'สมาชิกกิลด์ — 3.9M CP',
+    'room14_desc': '"葉陽" — ห้องวิญญาณธรรมชาติ ต้นไม้ในกระถางทุกที่ เถาวัลย์เลื้อยตามเพดาน น้ำพุในร่มเล็กๆ ห้องมีกลิ่นฝนสด ผีเสื้อเลี้ยงอาศัยอยู่ เชื่อมกับเขตอนุรักษ์ภูเขาผ่านหน้าต่างปกคลุมเถาวัลย์',
+    'room14_name': '葉陽',
+    'room14_role': '小可愛 — 2.5M CP',
+    'room1_desc': 'ห้องใหญ่ที่สุด ประตูเสริมเหล็ก ข้างใน: โต๊ะวางแผนรบ กำแพงถ้วยรางวัล 3 ด้าน และระเบียง นอน 3 ชม./คืน ห้องมีกลิ่นชัยชนะและเครื่องดื่มชูกำลังเสมอ',
+    'room1_name': 'Natehouoho',
+    'room1_role': 'หัวหน้ากิลด์ — 77B CP',
+    'room2_desc': 'ห้องนักรบหน้ากากขาว อาวุธติดทุกผิวหน้า มุมทำสมาธิมีธูป หมวก Zakum บนแท่นแสดง ประตูมีรอยขีดจากการพยายามบุกเข้า (โดยแฟนคลับ)',
+    'room2_name': 'RegginA',
+    'room2_role': 'ปรมาจารย์ — 9.8B CP',
+    'room3_desc': 'ห้องธีมพระอาทิตย์ ผ้าม่านเหลือง แจกันดอกทานตะวัน คริสตัลดวงอาทิตย์มนตร์ทำให้ห้องสว่างกว่าห้องอื่น เพลงสนุกเปิดตลอด',
+    'room3_name': 'Yuluner晴',
+    'room3_role': 'สมาชิกกิลด์ — 6.5B CP',
+    'room4_desc': 'ห้องแต่งสีชมพู ที่แขวนมงกุฎดอกไม้ แผนที่ยุทธศาสตร์ทุกที่ คลังอาวุธซ่อนใต้พื้น ขัดป้าย "รองหัวหน้า" ทุกวัน อ่างล้างหน้ามีคราบย้อมผมชมพู',
+    'room4_name': 'RegginO',
+    'room4_role': 'รองหัวหน้า — 4B CP',
+    'room5_desc': '"騎鳥回家" — ห้องตกแต่งด้วยรูปปั้นนกและขนนก ราวเกาะนกริมหน้าต่าง เหรียญ "ผู้มีส่วนร่วมสูงสุด" ใส่กรอบเหนือเตียง แผนที่เส้นทางอพยพนกบนผนัง',
+    'room5_name': '騎鳥回家',
+    'room5_role': 'สมาชิกกิลด์ — 3.4B CP',
+    'room6_desc': 'ห้องมืดตลอดเวลา ม่านบังแสง สายชาร์จทุกที่ ป้อมหมอนสำหรับท่าเล่นเกมที่ดีที่สุด มีหลักฐานหลับกลางเรด (รอยคีย์บอร์ดบนหน้า)',
+    'room6_name': '紈蹈稀著',
+    'room6_role': 'สมาชิกกิลด์ — 1B CP',
+    'room7_desc': 'ห้องจอมเวทย์แสง — เรืองแสงจริงๆ คริสตัลมนตร์ทุกชั้นวาง รอยไหม้บนเพดานจาก "การทดลอง" คอลเลกชันปริซึมแสง ป้ายเตือน: "เคาะก่อนเข้า (อันตรายจากแสง)"',
+    'room7_name': '阿光Yo',
+    'room7_role': 'สมาชิกกิลด์ — 848M CP',
+    'room8_desc': 'ห้องลึกลับ ประตูไม่มีตกแต่ง ไม่เคยมีเสียงจากข้างใน ป้ายชื่อเป็นรหัส สมาชิกอื่นถกกันว่ามีคนอยู่จริงไหม ลูกบิดมีฝุ่น',
+    'room8_name': 'TW#VWQG7R9C03',
+    'room8_role': '小可愛 — 99M CP',
+    'room9_desc': 'ถ้ำโปรแกรมเมอร์ มอนิเตอร์หลายจอมองเห็นจากหน้าต่าง โค้ดปริ้นติดผนัง สูตรคณิตศาสตร์บนประตู พรมเช็ดเท้า "Hello World" เซิร์ฟเวอร์หึ่งตลอด 24/7',
+    'room9_name': '碼農小孫',
+    'room9_role': 'สมาชิกกิลด์ — 77M CP',
+    'scrollHint': '[ เลื่อนเพื่อสำรวจ ]',
+    'shrineCaptionH3': 'ห้องเปลวไฟนิรันดร์',
+    'shrineLabel': 'ชั้น 6',
+    'shrineTagline': 'ศาลเจ้าของ Mochi สำหรับ RegginA — ระดับศรัทธา: ตำนาน',
+    'shrineTitle': 'ห้องเปลวไฟนิรันดร์',
+    'shrine_p1': 'ศาลเจ้า RegginA ครอบคลุมปีกตะวันออกของชั้น 6 — พื้นที่ศักดิ์สิทธิ์เพื่อเป็นเกียรติแก่นักรบที่แข็งแกร่งที่สุด รูปปั้นทอง RegginA ขนาดเท่าตัวจริงตรงกลาง หมวก Zakum เปล่งประกายในแสงมนตร์ เปลวไฟนิรันดร์ลุกอยู่หน้ารูปปั้น ไม่เคยดับตั้งแต่ก่อตั้งกิลด์ เครื่องบูชากองบนแท่น',
+    'shrine_p2': 'มุม "RegginA" ของ Mochi ครอบคลุมปีกด้านข้าง — ผนังเต็มไปด้วยรูปวาด ของสะสม และบทสรรเสริญ มุมนั่งสมาธิบนกองหมอนเป็นที่ประจำของ Mochi แผ่นหินสลักสถิติการรบของ RegginA: จำนวนบอสที่ฆ่า อัตราชนะ PVP สถิติชนะติดต่อกัน และ "จำนวนครั้งที่ศัตรูยอมแพ้"',
+    'tavernCaptionH3': 'บรรยากาศโรงเตี๊ยม',
+    'tavernLabel': 'ชั้น 1',
+    'tavernTagline': 'ที่ที่เล่าเรื่องสงครามและหกเบียร์',
+    'tavernTitle': 'โรงเตี๊ยมและโรงอาหาร',
+    'tavern_p1': 'โรงเตี๊ยมและโรงอาหารครอบคลุมปีกเหนือของชั้น 1 — พื้นที่อบอุ่นและอึกทึก เต็มไปด้วยเสียงหัวเราะ เสียงจาน และทำนองของนักร้องเร่ โต๊ะไม้ยาวจุสมาชิกกิลด์ทั้งหมด เตาผิงขนาดใหญ่กินพื้นที่ทั้งผนัง ไฟไม่เคยดับ Karen ทำอาหารที่นี่ ตั้งแต่สตูว์ธรรมดาจนถึงอาหารห้าจานสุดอลังการ',
+    'tavern_p2': 'เวทีอยู่ทางตะวันตกสำหรับการแสดงของนักร้อง งานเฉลิมฉลอง และ "ครั้งที่ RegginA ท้าชิงแขนทั้งโต๊ะ" (เธอชนะ) นักร้อง NPC แสดงทุกคืน ร้องเพลงตำนานกิลด์ ตู้ถ้วยรางวัลแข่งดื่ม — แชมป์ปัจจุบัน Natehouoho (12 แก้ว) ห้องเก็บของด้านหลังเป็นห้องไวน์ — ดูแลโดย RegginO ไม่มีใครเข้าได้โดยไม่ได้รับอนุญาต',
+    'warroomCaptionH3': 'ปฏิบัติการยุทธศาสตร์',
+    'warroomLabel': 'ชั้น 3',
+    'warroomTagline': 'ที่ที่วางแผนเรด และบอสกลัวถูกเอ่ยชื่อ',
+    'warroomTitle': 'ห้องสงครามและห้องยุทธศาสตร์',
+    'warroom_p1': 'ห้องสงครามครอบคลุมปีกเหนือของชั้น 3 — พื้นที่มืดและจริงจัง ที่วางแผนปฏิบัติการทางทหาร โต๊ะยุทธศาสตร์กลมขนาดใหญ่ตรงกลาง แกะสลักจากต้นโอ๊กเดียว ฝังแผนที่โลกเกมด้วยทองแดง หุ่นจำลองแทนสมาชิกกิลด์ กิลด์ศัตรู ตำแหน่งบอส Natehouoho เลื่อนตัวหมาก RegginA คัดค้านครึ่งหนึ่ง',
+    'warroom_p2': 'ผนังเต็มไปด้วยแผนที่ ไทม์ไลน์การรบ รายงานข่าวกรองกิลด์ศัตรู และไวท์บอร์ดติดตามโควตาเรดบอส 28/35 ตู้หนังสือเก็บกลยุทธ์เรด คู่มือกลไกบอส และแฟ้ม "บทเรียนที่ได้" คริสตัลสื่อสารบนแท่นสำหรับประสานงานกับหน่วยลาดตระเวน ห้องไม่มีหน้าต่าง — ตั้งใจ — เพื่อป้องกันข่าวกรองรั่วไหล'
+  }
+};
+
+function getLang() {
+  if (typeof NW_I18N !== 'undefined' && NW_I18N.lang) return NW_I18N.lang;
+  if (typeof NW_NAV !== 'undefined' && NW_NAV.currentLang) return NW_NAV.currentLang;
+  return localStorage.getItem('nw_lang') || 'en';
+}
+
+function applyPageI18n(lang) {
+  const t = PAGE_I18N[lang] || PAGE_I18N.en;
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    const key = el.getAttribute('data-i18n');
+    if (t[key]) el.textContent = t[key];
+  });
+}
+
+// Register with NW_I18N core when available
+function registerWithCore() {
+  if (typeof NW_I18N !== 'undefined' && NW_I18N.register) {
+    NW_I18N.register(PAGE_I18N);
+    NW_I18N.onChange(lang => applyPageI18n(lang));
+  }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  registerWithCore();
+  applyPageI18n(getLang());
+});
+
+// Listen on DOCUMENT (nav dispatches on document, not window)
+document.addEventListener('languageChanged', (e) => {
+  applyPageI18n(e.detail?.lang || getLang());
+});
+document.addEventListener('nw-lang-change', (e) => {
+  applyPageI18n(e.detail?.lang || getLang());
+});
+// Also listen on window just in case
+window.addEventListener('nw-lang-change', (e) => {
+  applyPageI18n(e.detail?.lang || getLang());
+});
+// localStorage fallback (other tabs)
+window.addEventListener('storage', (e) => {
+  if (e.key === 'nw_lang' && e.newValue) applyPageI18n(e.newValue);
+});
+</script>
+
+<!-- ============ SCROLL SPY ============ -->
+<script>
+document.addEventListener('DOMContentLoaded',()=>{
+  const nav=document.getElementById('floorNav');
+  const links=nav.querySelectorAll('a');
+  const sections=document.querySelectorAll('.floor-section,.cross-section');
+  const io=new IntersectionObserver(entries=>{
+    entries.forEach(e=>{
+      if(e.isIntersecting){
+        const id=e.target.id;
+        links.forEach(l=>{
+          l.classList.toggle('active',l.getAttribute('href')==='#'+id);
+        });
+      }
+    });
+  },{threshold:0.3});
+  sections.forEach(s=>io.observe(s));
+});
+</script>
+
+<!-- ============ LIGHTBOX SCRIPT ============ -->
+<script>
+(function(){
+  const overlay=document.getElementById('lightbox');
+  const lbImg=document.getElementById('lb-img');
+  const lbLabel=document.getElementById('lb-label');
+  const lbClose=document.getElementById('lb-close');
+
+  // Click any pixel-frame image to open lightbox
+  document.querySelectorAll('.pixel-frame img').forEach(img=>{
+    img.addEventListener('click',function(e){
+      e.stopPropagation();
+      lbImg.src=this.src;
+      lbImg.alt=this.alt;
+      // Find sibling label text
+      const frame=this.closest('.pixel-frame');
+      const label=frame?frame.querySelector('.img-label'):null;
+      lbLabel.textContent=label?label.textContent:'';
+      overlay.classList.add('active');
+      document.body.style.overflow='hidden';
+    });
+  });
+
+  // Close on overlay click, close button, or Escape
+  function closeLb(){
+    overlay.classList.remove('active');
+    document.body.style.overflow='';
+    lbImg.src='';
+  }
+  overlay.addEventListener('click',closeLb);
+  lbClose.addEventListener('click',function(e){e.stopPropagation();closeLb();});
+  lbImg.addEventListener('click',function(e){e.stopPropagation();}); // don't close when clicking image itself
+  document.addEventListener('keydown',function(e){if(e.key==='Escape')closeLb();});
+})();
+</script>
+</body>
+</html>
