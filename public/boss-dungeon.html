@@ -1,0 +1,1060 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>DLC 7: The Eternal Throne — 2000-Player Boss Raid | NWG The Game</title>
+    <link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="/static/nw-utilities.css" rel="stylesheet">
+    <style>
+        :root {
+            --nw-fire: #ff4500;
+            --nw-gold: #ffd700;
+            --nw-orange: #ff6b00;
+            --nw-purple: #6b21a8;
+            --nw-pink: #ec4899;
+            --nw-dark: #0a0a0a;
+            --nw-ember: #ff9d4d;
+            --nw-crimson: #dc2626;
+            --nw-cyan: #00d4ff;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Inter', sans-serif; background: var(--nw-dark); color: #fff; overflow-x: hidden; }
+
+        /* === FIRE BACKGROUND === */
+        .fire-bg { position: fixed; inset: 0; z-index: -1;
+            background: radial-gradient(ellipse at 30% 20%, rgba(255,69,0,0.12) 0%, transparent 50%),
+                        radial-gradient(ellipse at 70% 80%, rgba(255,107,0,0.1) 0%, transparent 50%),
+                        radial-gradient(ellipse at 50% 50%, rgba(107,33,168,0.08) 0%, transparent 60%), var(--nw-dark); }
+        .fire-bg::before { content:''; position:absolute; inset:0;
+            background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23ff6b00' fill-opacity='0.02'%3E%3Cpolygon points='30,5 55,50 5,50'/%3E%3C/g%3E%3C/svg%3E");
+            animation: drift 80s linear infinite; }
+        @keyframes drift { from{transform:translate(0,0)} to{transform:translate(-60px,-60px)} }
+
+        /* === DLC LABEL === */
+        .dlc-label { display:inline-flex; align-items:center; gap:8px; padding:8px 20px;
+            background:linear-gradient(135deg, rgba(255,69,0,0.3), rgba(220,38,38,0.2));
+            border:1px solid rgba(255,69,0,0.5); border-radius:999px;
+            font-size:0.7rem; font-weight:800; letter-spacing:0.25em; text-transform:uppercase;
+            color:var(--nw-ember); backdrop-filter:blur(8px); }
+
+        /* === HERO === */
+        .boss-hero { position:relative; min-height:85vh; display:flex; align-items:center; justify-content:center; overflow:hidden; }
+        .boss-hero-img { position:absolute; inset:0; background-size:cover; background-position:center; filter:brightness(0.35); transition:transform 15s ease-out; }
+        .boss-hero:hover .boss-hero-img { transform:scale(1.05); }
+        .boss-hero-overlay { position:absolute; inset:0;
+            background:linear-gradient(to bottom, rgba(10,10,10,0.2) 0%, rgba(10,10,10,0.6) 60%, rgba(10,10,10,1) 100%); }
+        .boss-hero-content { position:relative; z-index:10; text-align:center; padding:2rem; max-width:1000px; }
+        .boss-title { font-family:'Orbitron',sans-serif; font-size:clamp(2.5rem,8vw,5rem); font-weight:900; line-height:1.05;
+            background:linear-gradient(135deg, #ff4500 0%, #ffd700 40%, #ff6b00 70%, #dc2626 100%);
+            -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;
+            text-shadow:none; filter:drop-shadow(0 0 40px rgba(255,69,0,0.5)); margin-bottom:1rem; }
+        .boss-subtitle { font-size:clamp(1rem,3vw,1.5rem); color:rgba(255,255,255,0.7); font-style:italic; margin-bottom:2rem; max-width:700px; margin-inline:auto; }
+        .boss-stats-row { display:flex; justify-content:center; gap:2rem; flex-wrap:wrap; margin-top:1.5rem; }
+        .boss-stat { display:flex; flex-direction:column; align-items:center; gap:4px; }
+        .boss-stat-val { font-family:'Orbitron',sans-serif; font-size:1.5rem; font-weight:900; color:var(--nw-gold); }
+        .boss-stat-label { font-size:0.7rem; color:rgba(255,255,255,0.5); letter-spacing:0.15em; text-transform:uppercase; }
+
+        /* === SECTION STYLES === */
+        .bd-container { max-width:1100px; margin:0 auto; padding:0 1.5rem 6rem; }
+        .bd-section { margin-bottom:5rem; }
+        .bd-section-tag { display:inline-block; padding:4px 14px; border-radius:999px; font-size:0.65rem; font-weight:700;
+            letter-spacing:0.2em; text-transform:uppercase; margin-bottom:1rem;
+            background:linear-gradient(135deg, rgba(255,107,0,0.2), rgba(255,215,0,0.1));
+            border:1px solid rgba(255,107,0,0.3); color:var(--nw-ember); }
+        .bd-h2 { font-family:'Orbitron',sans-serif; font-size:clamp(1.5rem,4vw,2.25rem); font-weight:900;
+            background:linear-gradient(135deg, #ffd700, #ff6b00);
+            -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;
+            margin-bottom:1rem; }
+        .bd-h3 { font-family:'Orbitron',sans-serif; font-size:1.1rem; font-weight:700; color:var(--nw-gold); margin-bottom:0.75rem; }
+        .bd-text { font-size:1.05rem; line-height:1.85; color:rgba(255,255,255,0.85); margin-bottom:1.25rem; }
+        .bd-text strong { color:var(--nw-gold); }
+
+        /* === IMAGE CARDS === */
+        .bd-img-card { position:relative; border-radius:16px; overflow:hidden; margin:2rem 0;
+            border:1px solid rgba(255,107,0,0.2); }
+        .bd-img-card img { width:100%; display:block; transition:transform 0.6s ease; }
+        .bd-img-card:hover img { transform:scale(1.03); }
+        .bd-img-caption { position:absolute; bottom:0; left:0; right:0; padding:1.25rem 1.5rem;
+            background:linear-gradient(to top, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.5) 60%, transparent 100%); }
+        .bd-img-caption-num { font-family:'Orbitron',sans-serif; font-size:0.65rem; font-weight:700;
+            color:var(--nw-orange); letter-spacing:0.15em; margin-bottom:4px; }
+        .bd-img-caption-text { font-size:0.9rem; color:rgba(255,255,255,0.9); font-weight:500; }
+
+        /* === PHASE CARDS === */
+        .phase-card { background:rgba(255,255,255,0.03); border:1px solid rgba(255,107,0,0.15);
+            border-radius:20px; padding:2rem; margin-bottom:2.5rem; transition:border-color 0.3s; }
+        .phase-card:hover { border-color:rgba(255,107,0,0.4); }
+        .phase-num { font-family:'Orbitron',sans-serif; font-size:0.7rem; font-weight:900;
+            color:var(--nw-fire); letter-spacing:0.2em; margin-bottom:0.5rem; }
+        .phase-title { font-family:'Orbitron',sans-serif; font-size:1.3rem; font-weight:900;
+            color:#fff; margin-bottom:0.75rem; }
+        .phase-mechanic { display:inline-flex; align-items:center; gap:6px; padding:4px 12px;
+            background:rgba(255,69,0,0.15); border:1px solid rgba(255,69,0,0.3); border-radius:8px;
+            font-size:0.75rem; font-weight:600; color:var(--nw-ember); margin-bottom:1rem; margin-right:6px; }
+
+        /* === QUOTE === */
+        .bd-quote { position:relative; padding:2rem 2.5rem; margin:2rem 0;
+            background:linear-gradient(135deg, rgba(107,33,168,0.15), rgba(236,72,153,0.08));
+            border-left:4px solid var(--nw-purple); border-radius:0 16px 16px 0;
+            font-size:1.15rem; font-style:italic; color:rgba(255,255,255,0.9); }
+        .bd-quote-author { display:block; margin-top:0.75rem; font-size:0.8rem; color:var(--nw-pink); font-style:normal; }
+
+        /* === ROLE GRID === */
+        .role-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(220px,1fr)); gap:1.25rem; margin:2rem 0; }
+        .role-card { background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.08);
+            border-radius:16px; padding:1.5rem; text-align:center; transition:all 0.3s; }
+        .role-card:hover { transform:translateY(-4px); border-color:rgba(255,107,0,0.3); }
+        .role-icon { font-size:2.5rem; margin-bottom:0.75rem; }
+        .role-name { font-family:'Orbitron',sans-serif; font-size:0.85rem; font-weight:700; margin-bottom:0.5rem; }
+        .role-count { font-size:0.75rem; color:rgba(255,255,255,0.5); }
+        .role-desc { font-size:0.8rem; color:rgba(255,255,255,0.65); margin-top:0.5rem; line-height:1.5; }
+
+        /* === SCHEDULE TABLE === */
+        .schedule-table { width:100%; border-collapse:collapse; margin:1.5rem 0; border-radius:12px; overflow:hidden; }
+        .schedule-table th { background:rgba(255,107,0,0.2); padding:12px 16px; font-family:'Orbitron',sans-serif;
+            font-size:0.7rem; font-weight:700; letter-spacing:0.1em; text-align:left; color:var(--nw-gold); }
+        .schedule-table td { padding:12px 16px; border-bottom:1px solid rgba(255,255,255,0.05);
+            font-size:0.9rem; color:rgba(255,255,255,0.8); }
+        .schedule-table tr:hover td { background:rgba(255,107,0,0.05); }
+
+        /* === LOOT GRID === */
+        .loot-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(250px,1fr)); gap:1.25rem; margin:2rem 0; }
+        .loot-card { background:rgba(255,255,255,0.03); border-radius:16px; padding:1.5rem;
+            border:1px solid rgba(255,215,0,0.15); transition:all 0.3s; }
+        .loot-card:hover { border-color:var(--nw-gold); box-shadow:0 0 30px rgba(255,215,0,0.15); transform:translateY(-4px); }
+        .loot-rarity { font-size:0.65rem; font-weight:800; letter-spacing:0.15em; text-transform:uppercase; margin-bottom:0.5rem; }
+        .loot-rarity.mythic { color:#ff6b00; } .loot-rarity.legendary { color:#ffd700; }
+        .loot-rarity.epic { color:#a855f7; } .loot-rarity.rare { color:#3b82f6; }
+        .loot-name { font-family:'Orbitron',sans-serif; font-size:1rem; font-weight:700; color:#fff; margin-bottom:0.5rem; }
+        .loot-desc { font-size:0.8rem; color:rgba(255,255,255,0.6); line-height:1.5; }
+
+        /* === IMAGE PAIR === */
+        .img-pair { display:grid; grid-template-columns:1fr 1fr; gap:1.25rem; margin:2rem 0; }
+        @media(max-width:700px) { .img-pair { grid-template-columns:1fr; } }
+
+        /* === FUNNY ASIDE === */
+        .bd-aside { background:linear-gradient(135deg, rgba(255,69,0,0.08), rgba(255,215,0,0.04));
+            border-radius:12px; padding:1rem 1.5rem; margin:1.5rem 0;
+            font-size:0.9rem; color:rgba(255,255,255,0.75); border-left:3px solid var(--nw-orange); line-height:1.7; }
+
+        /* === NAV PILL === */
+        .bd-nav-pills { display:flex; flex-wrap:wrap; gap:8px; margin:2rem 0; justify-content:center; }
+        .bd-nav-pill { padding:8px 16px; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1);
+            border-radius:999px; font-size:0.75rem; font-weight:600; color:rgba(255,255,255,0.7);
+            text-decoration:none; transition:all 0.2s; cursor:pointer; }
+        .bd-nav-pill:hover { background:rgba(255,107,0,0.15); border-color:var(--nw-orange); color:#fff; }
+
+        /* === RESPONSIVE === */
+        @media(max-width:768px) {
+            .boss-hero { min-height:65vh; }
+            .boss-stats-row { gap:1rem; }
+            .boss-stat-val { font-size:1.2rem; }
+            .bd-quote { padding:1.5rem; }
+            .phase-card { padding:1.5rem; }
+        }
+    </style>
+</head>
+<body data-page-id="boss-dungeon">
+    <div class="fire-bg"></div>
+
+    <!-- ====== HERO ====== -->
+    <section class="boss-hero">
+        <div class="boss-hero-img" style="background-image:url('/static/game/boss-dungeon/01-dungeon-entrance.webp'), linear-gradient(135deg, #ff4500, #6b21a8);"></div>
+        <div class="boss-hero-overlay"></div>
+        <div class="boss-hero-content">
+            <div class="dlc-label" data-i18n="dlcLabel"><i class="fas fa-fire"></i> DLC 7 — THE ETERNAL THRONE</div>
+            <h1 class="boss-title" data-i18n="heroTitle">RegginA, The Eternal Flame</h1>
+            <p class="boss-subtitle" data-i18n="heroSub">The guild master has fallen to corruption. 2,000 players must unite for the greatest boss raid in MMORPG history. This fight will take weeks. Bring coffee.</p>
+            <div class="boss-stats-row">
+                <div class="boss-stat"><span class="boss-stat-val" data-i18n="statPlayers">2,000</span><span class="boss-stat-label" data-i18n="statPlayersL">Players Required</span></div>
+                <div class="boss-stat"><span class="boss-stat-val" data-i18n="statHP">2B</span><span class="boss-stat-label" data-i18n="statHPL">Boss HP</span></div>
+                <div class="boss-stat"><span class="boss-stat-val" data-i18n="statPhases">7</span><span class="boss-stat-label" data-i18n="statPhasesL">Phases</span></div>
+                <div class="boss-stat"><span class="boss-stat-val" data-i18n="statDuration">7–14</span><span class="boss-stat-label" data-i18n="statDurationL">Days to Complete</span></div>
+                <div class="boss-stat"><span class="boss-stat-val" data-i18n="statShifts">3</span><span class="boss-stat-label" data-i18n="statShiftsL">Daily Shifts</span></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ====== MAIN CONTENT ====== -->
+    <main class="bd-container">
+
+        <!-- ====== THE STORY ====== -->
+        <section class="bd-section" id="story">
+            <span class="bd-section-tag" data-i18n="tagLore">LORE</span>
+            <h2 class="bd-h2" data-i18n="storyTitle">The Fall of the Guild Master</h2>
+            <p class="bd-text" data-i18n="storyP1">Nobody saw it coming. <strong>RegginA</strong> — the benevolent dictator who read one chapter of a leadership book and got distracted by a gacha banner — had always been chaotic. But corruption? The guild master who once kept 200 people in a boss fight for 6 hours because she was "sure we could get it next try" had finally snapped.</p>
+            <p class="bd-text" data-i18n="storyP2">The trigger was simple: <strong>someone out-whaled her.</strong> A rival guild leader spent $51,000 on a single banner — exactly $1,000 more than RegginA's legendary Whale Wars spending spree. The humiliation was total. The corruption was immediate. The credit card bill? Catastrophic.</p>
+
+            <div class="bd-img-card">
+                <img src="/static/game/boss-dungeon/04-corruption-throne.webp" alt="RegginA's corruption" loading="lazy">
+                <div class="bd-img-caption">
+                    <div class="bd-img-caption-num" data-i18n="imgNum01">CINEMATIC 01</div>
+                    <div class="bd-img-caption-text" data-i18n="imgCap01">The moment RegginA's throne absorbed the Corrupted Crown — her spending power made manifest as raw destructive energy</div>
+                </div>
+            </div>
+
+            <p class="bd-text" data-i18n="storyP3">Consumed by the <strong>Corrupted Crown of Infinite Spending</strong>, RegginA transformed into a colossal fire deity — The Eternal Flame. Her power scales with every dollar ever spent on gacha. That's approximately <strong>2 billion HP worth of poor financial decisions.</strong></p>
+
+            <div class="bd-quote">
+                <span data-i18n="storyQuote1">"I just wanted to be Number One. Now I AM the number one threat to server stability. Honestly? This still tracks."</span>
+                <span class="bd-quote-author" data-i18n="storyQuoteA1">— RegginA, during Phase 1 boss dialogue</span>
+            </div>
+
+            <div class="bd-img-card">
+                <img src="/static/game/boss-dungeon/02-boss-transformation.webp" alt="Boss transformation" loading="lazy">
+                <div class="bd-img-caption">
+                    <div class="bd-img-caption-num" data-i18n="imgNum02">CINEMATIC 02</div>
+                    <div class="bd-img-caption-text" data-i18n="imgCap02">RegginA's transformation — half guild master, half fire deity. Gold coins orbit her form like a wallet-powered solar system</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ====== THE DUNGEON ====== -->
+        <section class="bd-section" id="dungeon">
+            <span class="bd-section-tag" data-i18n="tagDungeon">THE DUNGEON</span>
+            <h2 class="bd-h2" data-i18n="dungeonTitle">The Eternal Throne: 7 Floors of Chaos</h2>
+            <p class="bd-text" data-i18n="dungeonP1">The dungeon descends <strong>7 floors beneath Castle NumbahWan</strong>, each themed after a chapter of RegginA's reign. From the Gauntlet of Flame at the entrance to The Eternal Throne room at the deepest level, every floor introduces new mechanics that require all 2,000 players to work in perfect sync.</p>
+
+            <div class="bd-img-card">
+                <img src="/static/game/boss-dungeon/06-dungeon-cross-section.webp" alt="Dungeon cross-section" loading="lazy">
+                <div class="bd-img-caption">
+                    <div class="bd-img-caption-num" data-i18n="imgNum03">CONCEPT ART 01</div>
+                    <div class="bd-img-caption-text" data-i18n="imgCap03">Cross-section of the 7-floor dungeon — each floor themed differently, connected by challenge corridors</div>
+                </div>
+            </div>
+
+            <div class="bd-img-card">
+                <img src="/static/game/boss-dungeon/03-boss-stat-sheet.webp" alt="Boss stat sheet" loading="lazy">
+                <div class="bd-img-caption">
+                    <div class="bd-img-caption-num" data-i18n="imgNum04">UI PREVIEW</div>
+                    <div class="bd-img-caption-text" data-i18n="imgCap04">The boss information panel — 2 billion HP, 5-skull difficulty rating, and a loot table that will make you cry</div>
+                </div>
+            </div>
+
+            <div class="bd-aside" data-i18n="dungeonAside">Dev Note: We originally designed this boss with 500 million HP. Playtesters said it was "too easy." We asked how many players were in the test. They said 47. We multiplied the HP by 4 and added 3 more phases out of spite.</div>
+        </section>
+
+        <!-- ====== RAID FORMATION ====== -->
+        <section class="bd-section" id="formation">
+            <span class="bd-section-tag" data-i18n="tagFormation">RAID FORMATION</span>
+            <h2 class="bd-h2" data-i18n="formTitle">2,000 Players. 8 Battalions. One Brain Cell.</h2>
+            <p class="bd-text" data-i18n="formP1">The raid is divided into <strong>8 color-coded battalions of 250 players each</strong>, arranged in a circular formation around the boss. Each battalion has a dedicated role, and every player matters. Yes, even the person who's AFK in the back pretending to DPS.</p>
+
+            <div class="bd-img-card">
+                <img src="/static/game/boss-dungeon/05-raid-formation.webp" alt="Raid formation" loading="lazy">
+                <div class="bd-img-caption">
+                    <div class="bd-img-caption-num" data-i18n="imgNum05">TACTICAL VIEW</div>
+                    <div class="bd-img-caption-text" data-i18n="imgCap05">Aerial view of the 8-battalion formation — each sector color-coded by role, the boss in the center</div>
+                </div>
+            </div>
+
+            <div class="role-grid">
+                <div class="role-card" style="border-color:rgba(59,130,246,0.3)">
+                    <div class="role-icon">🛡️</div>
+                    <div class="role-name" style="color:#3b82f6" data-i18n="roleTank">VANGUARD TANKS</div>
+                    <div class="role-count" data-i18n="roleTankN">400 Players (2 Battalions)</div>
+                    <div class="role-desc" data-i18n="roleTankD">The wall between the boss and everyone else. Rotate aggro every 90 seconds or suffer the "Whale's Judgment" one-shot.</div>
+                </div>
+                <div class="role-card" style="border-color:rgba(34,197,94,0.3)">
+                    <div class="role-icon">💚</div>
+                    <div class="role-name" style="color:#22c55e" data-i18n="roleHeal">HEALER CORPS</div>
+                    <div class="role-count" data-i18n="roleHealN">500 Players (2 Battalions)</div>
+                    <div class="role-desc" data-i18n="roleHealD">Form concentric healing rings. Chain-heal the tanks while dodging fire. The most stressful job since RegginA's accountant at tax time.</div>
+                </div>
+                <div class="role-card" style="border-color:rgba(239,68,68,0.3)">
+                    <div class="role-icon">⚔️</div>
+                    <div class="role-name" style="color:#ef4444" data-i18n="roleDPS">DAMAGE DEALERS</div>
+                    <div class="role-count" data-i18n="roleDPSN">800 Players (3 Battalions)</div>
+                    <div class="role-desc" data-i18n="roleDPSD">Hit the boss. Hit her hard. When the DPS check window opens, unleash everything or the enrage timer wins. Simple. (It's not simple.)</div>
+                </div>
+                <div class="role-card" style="border-color:rgba(245,158,11,0.3)">
+                    <div class="role-icon">📋</div>
+                    <div class="role-name" style="color:#f59e0b" data-i18n="roleSupport">SUPPORT & LOGISTICS</div>
+                    <div class="role-count" data-i18n="roleSupportN">300 Players (1 Battalion)</div>
+                    <div class="role-desc" data-i18n="roleSupportD">Buffers, debuffers, supply runners, and the resurrection squad. Also responsible for keeping morale up during 3 AM shifts.</div>
+                </div>
+            </div>
+
+            <div class="bd-img-card">
+                <img src="/static/game/boss-dungeon/14-command-center.webp" alt="Command center" loading="lazy">
+                <div class="bd-img-caption">
+                    <div class="bd-img-caption-num" data-i18n="imgNum06">GAMEPLAY 01</div>
+                    <div class="bd-img-caption-text" data-i18n="imgCap06">The Raid Command Center — battalion leaders coordinate via holographic tactical displays in real-time</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ====== THE 7 PHASES ====== -->
+        <section class="bd-section" id="phases">
+            <span class="bd-section-tag" data-i18n="tagPhases">BOSS PHASES</span>
+            <h2 class="bd-h2" data-i18n="phasesTitle">7 Phases of Absolute Madness</h2>
+            <p class="bd-text" data-i18n="phasesP1">Each phase unlocks after the previous one is cleared. The boss <strong>heals between phases during rest periods</strong>, so every shift must push progress. The raid takes 7–14 real-world days because this boss doesn't believe in speed runs — and neither did RegginA.</p>
+
+            <!-- PHASE 1 -->
+            <div class="phase-card">
+                <div class="phase-num" data-i18n="p1Num">PHASE 1 — FLOOR 1</div>
+                <div class="phase-title" data-i18n="p1Title">The Gauntlet of Flame</div>
+                <span class="phase-mechanic"><i class="fas fa-shield-alt"></i> <span data-i18n="p1M1">Tank Rotation</span></span>
+                <span class="phase-mechanic"><i class="fas fa-fire"></i> <span data-i18n="p1M2">Fire Wave Dodge</span></span>
+                <span class="phase-mechanic"><i class="fas fa-sync"></i> <span data-i18n="p1M3">Shield Wall Sync</span></span>
+                <p class="bd-text" data-i18n="p1Desc">The boss opens with massive sweeping flame attacks. All 400 tanks must form a rotating shield wall — <strong>groups of 50 swap every 90 seconds</strong>. If one group is late, the entire front line gets one-shot by "Whale's Judgment." Meanwhile DPS must dodge fire waves that sweep in patterns.</p>
+                <div class="bd-img-card">
+                    <img src="/static/game/boss-dungeon/07-phase1-gauntlet.webp" alt="Phase 1" loading="lazy">
+                    <div class="bd-img-caption"><div class="bd-img-caption-num" data-i18n="imgNum07">PHASE 1</div><div class="bd-img-caption-text" data-i18n="imgCap07">The tank wall holds as flame waves sweep across the arena — one missed rotation means a wipe</div></div>
+                </div>
+                <div class="img-pair">
+                    <div class="bd-img-card">
+                        <img src="/static/game/boss-dungeon/20-tank-swap.webp" alt="Tank swap" loading="lazy">
+                        <div class="bd-img-caption"><div class="bd-img-caption-num" data-i18n="imgNum08">MECHANIC</div><div class="bd-img-caption-text" data-i18n="imgCap08">Tank swap — the critical 90-second aggro rotation</div></div>
+                    </div>
+                    <div class="bd-img-card">
+                        <img src="/static/game/boss-dungeon/18-healer-battalion.webp" alt="Healers" loading="lazy">
+                        <div class="bd-img-caption"><div class="bd-img-caption-num" data-i18n="imgNum09">HEALERS</div><div class="bd-img-caption-text" data-i18n="imgCap09">The Healer Corps forming concentric healing rings behind the tanks</div></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- PHASE 2 -->
+            <div class="phase-card">
+                <div class="phase-num" data-i18n="p2Num">PHASE 2 — FLOOR 2</div>
+                <div class="phase-title" data-i18n="p2Title">The Wallet Check</div>
+                <span class="phase-mechanic"><i class="fas fa-coins"></i> <span data-i18n="p2M1">Node Destruction</span></span>
+                <span class="phase-mechanic"><i class="fas fa-users"></i> <span data-i18n="p2M2">Coordinated Burst</span></span>
+                <span class="phase-mechanic"><i class="fas fa-clock"></i> <span data-i18n="p2M3">DPS Check Window</span></span>
+                <p class="bd-text" data-i18n="p2Desc">RegginA summons <strong>8 Golden Barrier Nodes</strong> — one for each battalion. All 8 must be destroyed within 30 seconds of each other or they regenerate. It's like a synchronized DPS test where 2,000 people must hit their damage window at the exact same time. Gold coins rain from the ceiling as the boss taunts your spending habits.</p>
+                <div class="bd-img-card">
+                    <img src="/static/game/boss-dungeon/08-phase2-wallet-check.webp" alt="Phase 2" loading="lazy">
+                    <div class="bd-img-caption"><div class="bd-img-caption-num" data-i18n="imgNum10">PHASE 2</div><div class="bd-img-caption-text" data-i18n="imgCap10">The Wallet Check — 8 battalions must break golden barrier nodes simultaneously</div></div>
+                </div>
+                <div class="bd-img-card">
+                    <img src="/static/game/boss-dungeon/19-dps-check.webp" alt="DPS check" loading="lazy">
+                    <div class="bd-img-caption"><div class="bd-img-caption-num" data-i18n="imgNum11">BURST WINDOW</div><div class="bd-img-caption-text" data-i18n="imgCap11">DPS unleashing ultimate abilities simultaneously — damage numbers everywhere</div></div>
+                </div>
+            </div>
+
+            <!-- PHASE 3 -->
+            <div class="phase-card">
+                <div class="phase-num" data-i18n="p3Num">PHASE 3 — FLOOR 3</div>
+                <div class="phase-title" data-i18n="p3Title">The Shadow Realm</div>
+                <span class="phase-mechanic"><i class="fas fa-puzzle-piece"></i> <span data-i18n="p3M1">Position Puzzle</span></span>
+                <span class="phase-mechanic"><i class="fas fa-eye"></i> <span data-i18n="p3M2">Rune Formation</span></span>
+                <span class="phase-mechanic"><i class="fas fa-brain"></i> <span data-i18n="p3M3">2000-Player Sync</span></span>
+                <p class="bd-text" data-i18n="p3Desc">The arena splits into light and dark halves. Players must stand on specific nodes to form a <strong>giant rune pattern visible only from above</strong>. Each of the 2,000 players has an assigned position. One person in the wrong spot breaks the entire rune. It's essentially a 2,000-piece human jigsaw puzzle where the pieces have opinions.</p>
+                <div class="bd-img-card">
+                    <img src="/static/game/boss-dungeon/09-phase3-shadow-realm.webp" alt="Phase 3" loading="lazy">
+                    <div class="bd-img-caption"><div class="bd-img-caption-num" data-i18n="imgNum12">PHASE 3</div><div class="bd-img-caption-text" data-i18n="imgCap12">Aerial view of 2,000 players forming the Sacred Rune — one wrong position breaks the seal</div></div>
+                </div>
+                <div class="bd-quote">
+                    <span data-i18n="p3Quote">"Someone asked 'which node is mine?' in raid chat. 1,999 people answered at the same time. The chat crashed. We wiped."</span>
+                    <span class="bd-quote-author" data-i18n="p3QuoteA">— Raid Leader, attempt #23</span>
+                </div>
+            </div>
+
+            <!-- PHASE 4 -->
+            <div class="phase-card">
+                <div class="phase-num" data-i18n="p4Num">PHASE 4 — FLOOR 4</div>
+                <div class="phase-title" data-i18n="p4Title">The Crystal Gauntlet</div>
+                <span class="phase-mechanic"><i class="fas fa-running"></i> <span data-i18n="p4M1">Relay Race</span></span>
+                <span class="phase-mechanic"><i class="fas fa-snowflake"></i> <span data-i18n="p4M2">Ice Corridor</span></span>
+                <span class="phase-mechanic"><i class="fas fa-stopwatch"></i> <span data-i18n="p4M3">Timed Activation</span></span>
+                <p class="bd-text" data-i18n="p4Desc">The boss freezes temporarily in a crystal prison. Players split into <strong>40 relay squads of 50</strong> that must race through frozen obstacle corridors to activate pillars before the boss breaks free. Each squad has 4 minutes. The corridors have sliding ice platforms, frost traps, and a mini-boss — the <strong>Crystal Sentinel</strong> — guarding the final pillar.</p>
+                <div class="bd-img-card">
+                    <img src="/static/game/boss-dungeon/10-phase4-crystal-gauntlet.webp" alt="Phase 4" loading="lazy">
+                    <div class="bd-img-caption"><div class="bd-img-caption-num" data-i18n="imgNum13">PHASE 4</div><div class="bd-img-caption-text" data-i18n="imgCap13">The Crystal Gauntlet — relay squads racing through frozen corridors while the boss is imprisoned</div></div>
+                </div>
+                <div class="bd-img-card">
+                    <img src="/static/game/boss-dungeon/21-supply-line.webp" alt="Supply line" loading="lazy">
+                    <div class="bd-img-caption"><div class="bd-img-caption-num" data-i18n="imgNum14">LOGISTICS</div><div class="bd-img-caption-text" data-i18n="imgCap14">The Supply Line — resource relay chain keeping the front line stocked during extended combat</div></div>
+                </div>
+            </div>
+
+            <!-- PHASE 5 -->
+            <div class="phase-card">
+                <div class="phase-num" data-i18n="p5Num">PHASE 5 — FLOOR 5</div>
+                <div class="phase-title" data-i18n="p5Title">Storm of the Eternal</div>
+                <span class="phase-mechanic"><i class="fas fa-wind"></i> <span data-i18n="p5M1">Rotating Formation</span></span>
+                <span class="phase-mechanic"><i class="fas fa-bolt"></i> <span data-i18n="p5M2">Lightning Dodge</span></span>
+                <span class="phase-mechanic"><i class="fas fa-dragon"></i> <span data-i18n="p5M3">Aerial Boss</span></span>
+                <p class="bd-text" data-i18n="p5Desc">RegginA sprouts <strong>wings of pure flame</strong> and takes flight. The arena fills with a fire tornado. All 8 battalions must rotate clockwise around the arena in synchronized waves, dodging lightning strikes and fire rain. The boss dive-bombs random sectors — if you're not moving with your battalion, you're dead. It's a 2,000-person dance routine choreographed by chaos.</p>
+                <div class="bd-img-card">
+                    <img src="/static/game/boss-dungeon/11-phase5-storm-eternal.webp" alt="Phase 5" loading="lazy">
+                    <div class="bd-img-caption"><div class="bd-img-caption-num" data-i18n="imgNum15">PHASE 5</div><div class="bd-img-caption-text" data-i18n="imgCap15">The Storm of the Eternal — battalions rotate in synchronized waves as fire rains from above</div></div>
+                </div>
+            </div>
+
+            <!-- PHASE 6 -->
+            <div class="phase-card">
+                <div class="phase-num" data-i18n="p6Num">PHASE 6 — FLOOR 6</div>
+                <div class="phase-title" data-i18n="p6Title">The Whale's Vault</div>
+                <span class="phase-mechanic"><i class="fas fa-search"></i> <span data-i18n="p6M1">Identify Real Boss</span></span>
+                <span class="phase-mechanic"><i class="fas fa-clone"></i> <span data-i18n="p6M2">8 Golden Clones</span></span>
+                <span class="phase-mechanic"><i class="fas fa-gem"></i> <span data-i18n="p6M3">Treasure Traps</span></span>
+                <p class="bd-text" data-i18n="p6Desc">The arena transforms into RegginA's personal treasure vault — <strong>mountains of gold coins form the terrain</strong>. She creates 8 identical golden clones. Each battalion must test their clone with specific attacks to determine which is real. Attack the wrong one? The gold explodes. The real RegginA also spawns the <strong>Golden Lion Guardian</strong> mini-boss to guard her while players investigate.</p>
+                <div class="img-pair">
+                    <div class="bd-img-card">
+                        <img src="/static/game/boss-dungeon/12-phase6-whales-vault.webp" alt="Phase 6" loading="lazy">
+                        <div class="bd-img-caption"><div class="bd-img-caption-num" data-i18n="imgNum16">PHASE 6</div><div class="bd-img-caption-text" data-i18n="imgCap16">The Whale's Vault — 8 golden clones, one is real. Choose wisely.</div></div>
+                    </div>
+                    <div class="bd-img-card">
+                        <img src="/static/game/boss-dungeon/24-mini-boss-lion.webp" alt="Mini-boss" loading="lazy">
+                        <div class="bd-img-caption"><div class="bd-img-caption-num" data-i18n="imgNum17">MINI-BOSS</div><div class="bd-img-caption-text" data-i18n="imgCap17">The Golden Lion Guardian — a treasure-made beast blocking the path to the real RegginA</div></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- PHASE 7 -->
+            <div class="phase-card" style="border-color:rgba(255,69,0,0.4); background:rgba(255,69,0,0.03);">
+                <div class="phase-num" style="color:#ffd700" data-i18n="p7Num">PHASE 7 — THE ETERNAL THRONE</div>
+                <div class="phase-title" data-i18n="p7Title">The Final Stand</div>
+                <span class="phase-mechanic"><i class="fas fa-sun"></i> <span data-i18n="p7M1">Unity Beam</span></span>
+                <span class="phase-mechanic"><i class="fas fa-skull-crossbones"></i> <span data-i18n="p7M2">Enrage Timer</span></span>
+                <span class="phase-mechanic"><i class="fas fa-heart"></i> <span data-i18n="p7M3">Redemption Window</span></span>
+                <p class="bd-text" data-i18n="p7Desc">The arena floats in a void of stars. RegginA reaches her ultimate form — a <strong>six-winged flame seraph</strong>. All 2,000 players must channel a Unity Beam simultaneously — everyone presses their ultimate at the exact same second. The enrage timer gives you <strong>exactly 10 minutes</strong>. If the beam isn't synchronized within 0.5 seconds across all 2,000 players, it fails. You get 3 attempts. This is the moment that will be talked about for years.</p>
+                <div class="bd-img-card">
+                    <img src="/static/game/boss-dungeon/13-phase7-final-stand.webp" alt="Phase 7" loading="lazy">
+                    <div class="bd-img-caption"><div class="bd-img-caption-num" data-i18n="imgNum18">FINAL PHASE</div><div class="bd-img-caption-text" data-i18n="imgCap18">The Final Stand — 2,000 beams of light converge on the six-winged flame seraph in the void of stars</div></div>
+                </div>
+                <div class="bd-img-card">
+                    <img src="/static/game/boss-dungeon/22-enrage-timer.webp" alt="Enrage timer" loading="lazy">
+                    <div class="bd-img-caption"><div class="bd-img-caption-num" data-i18n="imgNum19">ENRAGE</div><div class="bd-img-caption-text" data-i18n="imgCap19">The Enrage Timer — the boss grows larger as time runs out, the arena crumbles at the edges</div></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ====== RAID MECHANICS GALLERY ====== -->
+        <section class="bd-section" id="mechanics">
+            <span class="bd-section-tag" data-i18n="tagMechanics">MECHANICS</span>
+            <h2 class="bd-h2" data-i18n="mechTitle">Signature Raid Mechanics</h2>
+            <p class="bd-text" data-i18n="mechP1">Beyond the 7 phases, the dungeon features <strong>persistent mechanics</strong> that run throughout the entire multi-week raid. Master these or perish — there are no shortcuts when fighting someone who spent $50,000 on a mobile game.</p>
+
+            <!-- THE 3AM TEST -->
+            <div class="phase-card">
+                <div class="bd-h3" data-i18n="mech3amTitle">🌙 The 3 AM Test</div>
+                <p class="bd-text" data-i18n="mech3amDesc">Twice per raid, the boss enters a special "Nocturnal Rage" mode that can <strong>only be triggered between 2:00–4:00 AM server time</strong>. During this window, she becomes 40% weaker — but only the bravest (or most sleep-deprived) players can take advantage. This is a direct callback to RegginA's infamous 3 AM raid call that 147 guild members actually showed up for.</p>
+                <div class="bd-img-card">
+                    <img src="/static/game/boss-dungeon/17-3am-test.webp" alt="The 3 AM Test" loading="lazy">
+                    <div class="bd-img-caption"><div class="bd-img-caption-num" data-i18n="imgNum20">MECHANIC</div><div class="bd-img-caption-text" data-i18n="imgCap20">The 3 AM Test — exhausted players with coffee emotes, Zzz effects, and a boss who taunts sleepy raiders</div></div>
+                </div>
+                <div class="bd-aside" data-i18n="mech3amAside">Fun Fact: During playtesting, developers actually scheduled the 3 AM test at 3 AM. 80% of the QA team slept through it. The bug report read: "Feature working as intended."</div>
+            </div>
+
+            <!-- RAID WIPE -->
+            <div class="phase-card">
+                <div class="bd-h3" data-i18n="mechWipeTitle">💀 The Wipe Protocol</div>
+                <p class="bd-text" data-i18n="mechWipeDesc">When a raid wipe occurs, all 2,000 players die simultaneously in a spectacular cascade of explosions. The boss performs a <strong>victory emote</strong> — she pulls out a credit card and swipes it dramatically. Players respawn at the last save beacon and must reorganize all 8 battalions before the next attempt. Average reorganization time: <strong>45 minutes of controlled chaos.</strong></p>
+                <div class="bd-img-card">
+                    <img src="/static/game/boss-dungeon/16-the-wipe.webp" alt="Raid wipe" loading="lazy">
+                    <div class="bd-img-caption"><div class="bd-img-caption-num" data-i18n="imgNum21">WIPE SCREEN</div><div class="bd-img-caption-text" data-i18n="imgCap21">Total raid wipe — the aftermath of a failed Unity Beam, all 2,000 players down simultaneously</div></div>
+                </div>
+            </div>
+
+            <!-- RESURRECTION SQUAD -->
+            <div class="phase-card">
+                <div class="bd-h3" data-i18n="mechResTitle">✨ The Resurrection Engine</div>
+                <p class="bd-text" data-i18n="mechResDesc">A dedicated resurrection squad of 60 holy priests operates in rotating pairs behind the battle lines. When players fall, the res squad has <strong>15 seconds to revive them</strong> before the soul dissipates. With 2,000 players, death happens constantly — the resurrection squad processes an average of <strong>200 revives per hour</strong>. It's basically an ER ward powered by prayer and energy drinks.</p>
+                <div class="bd-img-card">
+                    <img src="/static/game/boss-dungeon/23-resurrection-squad.webp" alt="Resurrection squad" loading="lazy">
+                    <div class="bd-img-caption"><div class="bd-img-caption-num" data-i18n="imgNum22">HEALERS</div><div class="bd-img-caption-text" data-i18n="imgCap22">The Resurrection Engine — holy priests channeling golden light to revive fallen comrades mid-combat</div></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ====== THE REST SYSTEM ====== -->
+        <section class="bd-section" id="rest">
+            <span class="bd-section-tag" data-i18n="tagRest">REST SYSTEM</span>
+            <h2 class="bd-h2" data-i18n="restTitle">Designed for Real Life: The Shift System</h2>
+            <p class="bd-text" data-i18n="restP1">We know what you're thinking: "A raid that lasts WEEKS? I have a job." Don't worry — the dungeon is designed with <strong>real-world sustainability</strong> in mind. The Eternal Throne features a mandatory shift system that ensures no player needs to sacrifice their life, job, or sanity. Well, maybe a little sanity.</p>
+
+            <div class="bd-img-card">
+                <img src="/static/game/boss-dungeon/15-rest-camp.webp" alt="Rest camp" loading="lazy">
+                <div class="bd-img-caption"><div class="bd-img-caption-num" data-i18n="imgNum23">SAFE ZONE</div><div class="bd-img-caption-text" data-i18n="imgCap23">The Rest Camp — cozy safe zone inside the dungeon with shift schedule board, campfire, food buffs, and bedrolls</div></div>
+            </div>
+
+            <table class="schedule-table">
+                <thead>
+                    <tr>
+                        <th data-i18n="schedShift">SHIFT</th>
+                        <th data-i18n="schedTime">TIME (SERVER)</th>
+                        <th data-i18n="schedPlayers">ACTIVE PLAYERS</th>
+                        <th data-i18n="schedNotes">NOTES</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td data-i18n="schedMorning">☀️ Morning</td>
+                        <td>06:00 – 14:00</td>
+                        <td data-i18n="schedMorningP">~700 players</td>
+                        <td data-i18n="schedMorningN">Focus on phase progression & steady damage</td>
+                    </tr>
+                    <tr>
+                        <td data-i18n="schedAfternoon">🌅 Afternoon</td>
+                        <td>14:00 – 22:00</td>
+                        <td data-i18n="schedAfternoonP">~800 players (peak)</td>
+                        <td data-i18n="schedAfternoonN">Prime time — most phase transitions happen here</td>
+                    </tr>
+                    <tr>
+                        <td data-i18n="schedNight">🌙 Night</td>
+                        <td>22:00 – 06:00</td>
+                        <td data-i18n="schedNightP">~500 players</td>
+                        <td data-i18n="schedNightN">Maintenance & chip damage. 3 AM Test window opens here.</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div class="bd-text" data-i18n="restP2"><strong>Key Design Principles:</strong></div>
+            <ul style="list-style:none; padding:0; margin:0 0 2rem 0;">
+                <li class="bd-text" style="padding-left:1.5rem; position:relative;" data-i18n="restRule1">🔄 <strong>Rotating Roster:</strong> Each player commits to 2–3 shifts per week (4–8 hours each). Nobody needs to be online 24/7.</li>
+                <li class="bd-text" style="padding-left:1.5rem; position:relative;" data-i18n="restRule2">💾 <strong>Progress Saves:</strong> Boss HP doesn't reset between shifts. Every point of damage counts, no matter when it's dealt.</li>
+                <li class="bd-text" style="padding-left:1.5rem; position:relative;" data-i18n="restRule3">🛏️ <strong>AFK Protection:</strong> If your shift replacement arrives, you can log off guilt-free. The boss isn't going anywhere. She lives here now.</li>
+                <li class="bd-text" style="padding-left:1.5rem; position:relative;" data-i18n="restRule4">⏰ <strong>Catch-Up Buffs:</strong> Players who missed a day get a temporary damage boost so they're never permanently behind. RegginA hated AFK members, but we don't.</li>
+                <li class="bd-text" style="padding-left:1.5rem; position:relative;" data-i18n="restRule5">🏕️ <strong>Rest Camps:</strong> Safe zones inside the dungeon with campfires that grant food buffs, repair stations, and a cozy atmosphere. You can chill here between shifts.</li>
+            </ul>
+
+            <div class="bd-quote">
+                <span data-i18n="restQuote">"The dungeon may take weeks, but YOUR commitment is just a few hours at a time. Think of it like a really intense book club where the book fights back."</span>
+                <span class="bd-quote-author" data-i18n="restQuoteA">— Lead Game Designer</span>
+            </div>
+        </section>
+
+        <!-- ====== REWARDS ====== -->
+        <section class="bd-section" id="rewards">
+            <span class="bd-section-tag" data-i18n="tagRewards">LOOT & REWARDS</span>
+            <h2 class="bd-h2" data-i18n="rewardTitle">The Spoils of War</h2>
+            <p class="bd-text" data-i18n="rewardP1">Defeating the Eternal Flame unlocks the <strong>most prestigious loot table</strong> in NWG The Game. Every participant receives rewards based on contribution — damage dealt, heals given, mechanics completed, and shifts attended. Nobody who fights walks away empty-handed.</p>
+
+            <div class="bd-img-card">
+                <img src="/static/game/boss-dungeon/26-loot-explosion.webp" alt="Loot explosion" loading="lazy">
+                <div class="bd-img-caption"><div class="bd-img-caption-num" data-i18n="imgNum24">LOOT</div><div class="bd-img-caption-text" data-i18n="imgCap24">The Loot Explosion — legendary and mythic items bursting from the defeated boss in beams of colored light</div></div>
+            </div>
+
+            <div class="loot-grid">
+                <div class="loot-card" style="border-color:rgba(255,107,0,0.4); box-shadow:0 0 20px rgba(255,107,0,0.1);">
+                    <div class="loot-rarity mythic" data-i18n="lootMythic">MYTHIC</div>
+                    <div class="loot-name" data-i18n="loot1Name">Eternal Flame Greatsword</div>
+                    <div class="loot-desc" data-i18n="loot1Desc">A living flame forged from RegginA's crown. The blade whispers credit card numbers in your dreams. +500 ATK, +200 FIRE DMG, passive: "Wallet Drain" — enemies drop 3x gold.</div>
+                </div>
+                <div class="loot-card" style="border-color:rgba(255,107,0,0.4); box-shadow:0 0 20px rgba(255,107,0,0.1);">
+                    <div class="loot-rarity mythic" data-i18n="lootMythic2">MYTHIC</div>
+                    <div class="loot-name" data-i18n="loot2Name">Crown of the Benevolent Dictator</div>
+                    <div class="loot-desc" data-i18n="loot2Desc">RegginA's restored crown. Grants the wearer the title "Guild Master's Chosen." +300 DEF, passive: "Benevolent Aura" — nearby allies gain 15% all stats.</div>
+                </div>
+                <div class="loot-card">
+                    <div class="loot-rarity legendary" data-i18n="lootLegendary">LEGENDARY</div>
+                    <div class="loot-name" data-i18n="loot3Name">Wings of the Eternal</div>
+                    <div class="loot-desc" data-i18n="loot3Desc">Cosmetic back piece — six wings of golden flame. Only 200 drop per raid. The ultimate flex for fashion-conscious raiders.</div>
+                </div>
+                <div class="loot-card">
+                    <div class="loot-rarity legendary" data-i18n="lootLegendary2">LEGENDARY</div>
+                    <div class="loot-name" data-i18n="loot4Name">Whale's Signet Ring</div>
+                    <div class="loot-desc" data-i18n="loot4Desc">A ring that glows brighter based on how much gold you own. +200 ATK, passive: "Big Spender" — shop prices reduced by 20%.</div>
+                </div>
+                <div class="loot-card">
+                    <div class="loot-rarity epic" data-i18n="lootEpic">EPIC</div>
+                    <div class="loot-name" data-i18n="loot5Name">Throne Room Tabard</div>
+                    <div class="loot-desc" data-i18n="loot5Desc">Guild tabard with animated flame effects. All 2,000 participants receive this. "I Survived the Eternal Throne" flex piece.</div>
+                </div>
+                <div class="loot-card">
+                    <div class="loot-rarity rare" data-i18n="lootRare">RARE</div>
+                    <div class="loot-name" data-i18n="loot6Name">RegginA's Coffee Mug</div>
+                    <div class="loot-desc" data-i18n="loot6Desc">Cosmetic item. Reads "World's #847 Best Fighter." Grants a +5% XP buff and a permanent coffee-sipping idle animation.</div>
+                </div>
+            </div>
+
+            <div class="bd-img-card">
+                <img src="/static/game/boss-dungeon/28-mythic-weapon.webp" alt="Mythic weapon" loading="lazy">
+                <div class="bd-img-caption"><div class="bd-img-caption-num" data-i18n="imgNum25">REWARD</div><div class="bd-img-caption-text" data-i18n="imgCap25">The Eternal Flame Greatsword — a living blade of fire with a golden crown hilt, the ultimate mythic reward</div></div>
+            </div>
+
+            <div class="bd-aside" data-i18n="rewardAside">Drop Rate Advisory: The Mythic items have a 0.5% drop rate per player per kill. With 2,000 players, that means roughly 10 mythic items per raid completion. May the RNG gods have mercy on your soul — because RegginA certainly won't.</div>
+        </section>
+
+        <!-- ====== VICTORY ====== -->
+        <section class="bd-section" id="victory">
+            <span class="bd-section-tag" data-i18n="tagVictory">VICTORY</span>
+            <h2 class="bd-h2" data-i18n="victoryTitle">The Moment of Triumph</h2>
+            <p class="bd-text" data-i18n="victoryP1">When the Unity Beam finally connects and the Eternal Flame collapses, the game enters a <strong>5-minute celebration cinematic</strong> that no raid member can skip. You earned this. Every wipe, every 3 AM shift, every "who's in the wrong position?" — all of it led to this moment.</p>
+
+            <div class="bd-img-card">
+                <img src="/static/game/boss-dungeon/25-boss-defeat.webp" alt="Boss defeat" loading="lazy">
+                <div class="bd-img-caption"><div class="bd-img-caption-num" data-i18n="imgNum26">CLIMAX</div><div class="bd-img-caption-text" data-i18n="imgCap26">The Eternal Flame falls — golden particles scatter as 2,000 players watch the boss dissolve into light</div></div>
+            </div>
+
+            <p class="bd-text" data-i18n="victoryP2">As RegginA's corrupted form shatters, the <strong>real RegginA</strong> emerges from the shattered crown — confused, grateful, and immediately asking "so who outspent me while I was gone?" The guild master is restored, but the scars of the battle remain etched in the dungeon walls forever.</p>
+
+            <div class="bd-img-card">
+                <img src="/static/game/boss-dungeon/29-redemption-cutscene.webp" alt="RegginA restored" loading="lazy">
+                <div class="bd-img-caption"><div class="bd-img-caption-num" data-i18n="imgNum27">EPILOGUE</div><div class="bd-img-caption-text" data-i18n="imgCap27">RegginA restored — the guild master freed from corruption, crown shattered, surrounded by guild members</div></div>
+            </div>
+
+            <div class="bd-quote">
+                <span data-i18n="victoryQuote">"Well that was dramatic. Did anyone record that? Also, I'm going to need my credit card back. The corruption took it and I have… outstanding transactions."</span>
+                <span class="bd-quote-author" data-i18n="victoryQuoteA">— RegginA, upon being freed from corruption</span>
+            </div>
+
+            <div class="img-pair">
+                <div class="bd-img-card">
+                    <img src="/static/game/boss-dungeon/27-victory-celebration.webp" alt="Victory celebration" loading="lazy">
+                    <div class="bd-img-caption"><div class="bd-img-caption-num" data-i18n="imgNum28">CELEBRATION</div><div class="bd-img-caption-text" data-i18n="imgCap28">Victory celebration in the guild hall — fireworks, feasts, and 2,000 players partying</div></div>
+                </div>
+                <div class="bd-img-card">
+                    <img src="/static/game/boss-dungeon/30-raid-group-photo.webp" alt="Raid group photo" loading="lazy">
+                    <div class="bd-img-caption"><div class="bd-img-caption-num" data-i18n="imgNum29">GROUP PHOTO</div><div class="bd-img-caption-text" data-i18n="imgCap29">The 2,000-player raid group photo — every participant immortalized in the Hall of Legends</div></div>
+                </div>
+            </div>
+
+            <p class="bd-text" data-i18n="victoryP3">Every player who participated in the kill receives a permanent <strong>"Flame Breaker"</strong> title, an entry in the <strong>Hall of Legends</strong> (viewable on the guild site), and a commemorative screenshot automatically captured at the moment of victory. Your name. Your contribution. Immortalized forever.</p>
+        </section>
+
+        <!-- ====== FULL GALLERY ====== -->
+        <section class="bd-section" id="gallery">
+            <span class="bd-section-tag" data-i18n="tagGallery">GALLERY</span>
+            <h2 class="bd-h2" data-i18n="galleryTitle">DLC 7 Preview Gallery — 30 Screenshots</h2>
+            <p class="bd-text" data-i18n="galleryP1">Every image tells a story. Browse all 30 preview screenshots from the Eternal Throne boss dungeon — from the entrance gates to the final victory celebration. Click any image to view it full-size.</p>
+
+            <style>
+                .gallery-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(320px,1fr)); gap:1rem; margin:2rem 0; }
+                .gallery-item { position:relative; border-radius:12px; overflow:hidden; cursor:pointer;
+                    border:1px solid rgba(255,107,0,0.15); transition:all 0.3s; aspect-ratio:16/9; }
+                .gallery-item:hover { border-color:var(--nw-gold); transform:translateY(-4px); box-shadow:0 8px 30px rgba(255,107,0,0.2); }
+                .gallery-item img { width:100%; height:100%; object-fit:cover; transition:transform 0.5s; }
+                .gallery-item:hover img { transform:scale(1.08); }
+                .gallery-item .gi-overlay { position:absolute; inset:0; background:linear-gradient(to top, rgba(0,0,0,0.85) 0%, transparent 50%);
+                    display:flex; flex-direction:column; justify-content:flex-end; padding:1rem; opacity:0.7; transition:opacity 0.3s; }
+                .gallery-item:hover .gi-overlay { opacity:1; }
+                .gi-num { font-family:'Orbitron',sans-serif; font-size:0.6rem; font-weight:700; color:var(--nw-orange); letter-spacing:0.15em; }
+                .gi-title { font-size:0.8rem; color:#fff; font-weight:600; margin-top:2px; line-height:1.3; }
+
+                /* Lightbox */
+                .lightbox { display:none; position:fixed; inset:0; z-index:9999; background:rgba(0,0,0,0.95);
+                    align-items:center; justify-content:center; padding:2rem; cursor:pointer; }
+                .lightbox.active { display:flex; }
+                .lightbox img { max-width:100%; max-height:90vh; border-radius:12px; box-shadow:0 0 60px rgba(255,107,0,0.3); }
+                .lightbox-close { position:absolute; top:1.5rem; right:1.5rem; font-size:2rem; color:#fff; cursor:pointer;
+                    width:48px; height:48px; display:flex; align-items:center; justify-content:center;
+                    border-radius:50%; background:rgba(255,255,255,0.1); transition:background 0.2s; }
+                .lightbox-close:hover { background:rgba(255,69,0,0.3); }
+                .lightbox-caption { position:absolute; bottom:2rem; left:50%; transform:translateX(-50%);
+                    text-align:center; color:rgba(255,255,255,0.8); font-size:0.9rem; max-width:700px; }
+            </style>
+
+            <div class="gallery-grid">
+                <div class="gallery-item" onclick="openLightbox(this)">
+                    <img src="/static/game/boss-dungeon/01-dungeon-entrance.webp" alt="Dungeon Entrance" loading="lazy">
+                    <div class="gi-overlay"><span class="gi-num">01</span><span class="gi-title" data-i18n="g01">The Eternal Throne — Dungeon Entrance</span></div>
+                </div>
+                <div class="gallery-item" onclick="openLightbox(this)">
+                    <img src="/static/game/boss-dungeon/02-boss-transformation.webp" alt="Boss Transformation" loading="lazy">
+                    <div class="gi-overlay"><span class="gi-num">02</span><span class="gi-title" data-i18n="g02">RegginA's Transformation — Fire Deity Reveal</span></div>
+                </div>
+                <div class="gallery-item" onclick="openLightbox(this)">
+                    <img src="/static/game/boss-dungeon/03-boss-stat-sheet.webp" alt="Boss Stat Sheet" loading="lazy">
+                    <div class="gi-overlay"><span class="gi-num">03</span><span class="gi-title" data-i18n="g03">Boss Information Panel — 2B HP, 5-Skull Difficulty</span></div>
+                </div>
+                <div class="gallery-item" onclick="openLightbox(this)">
+                    <img src="/static/game/boss-dungeon/04-corruption-throne.webp" alt="Corruption Throne" loading="lazy">
+                    <div class="gi-overlay"><span class="gi-num">04</span><span class="gi-title" data-i18n="g04">The Corruption — Throne Room Transformation</span></div>
+                </div>
+                <div class="gallery-item" onclick="openLightbox(this)">
+                    <img src="/static/game/boss-dungeon/05-raid-formation.webp" alt="Raid Formation" loading="lazy">
+                    <div class="gi-overlay"><span class="gi-num">05</span><span class="gi-title" data-i18n="g05">8-Battalion Raid Formation — Aerial View</span></div>
+                </div>
+                <div class="gallery-item" onclick="openLightbox(this)">
+                    <img src="/static/game/boss-dungeon/06-dungeon-cross-section.webp" alt="Dungeon Cross-Section" loading="lazy">
+                    <div class="gi-overlay"><span class="gi-num">06</span><span class="gi-title" data-i18n="g06">7-Floor Dungeon Cross-Section Blueprint</span></div>
+                </div>
+                <div class="gallery-item" onclick="openLightbox(this)">
+                    <img src="/static/game/boss-dungeon/07-phase1-gauntlet.webp" alt="Phase 1" loading="lazy">
+                    <div class="gi-overlay"><span class="gi-num">07</span><span class="gi-title" data-i18n="g07">Phase 1 — The Gauntlet of Flame</span></div>
+                </div>
+                <div class="gallery-item" onclick="openLightbox(this)">
+                    <img src="/static/game/boss-dungeon/08-phase2-wallet-check.webp" alt="Phase 2" loading="lazy">
+                    <div class="gi-overlay"><span class="gi-num">08</span><span class="gi-title" data-i18n="g08">Phase 2 — The Wallet Check (Golden Barriers)</span></div>
+                </div>
+                <div class="gallery-item" onclick="openLightbox(this)">
+                    <img src="/static/game/boss-dungeon/09-phase3-shadow-realm.webp" alt="Phase 3" loading="lazy">
+                    <div class="gi-overlay"><span class="gi-num">09</span><span class="gi-title" data-i18n="g09">Phase 3 — The Shadow Realm (Rune Formation)</span></div>
+                </div>
+                <div class="gallery-item" onclick="openLightbox(this)">
+                    <img src="/static/game/boss-dungeon/10-phase4-crystal-gauntlet.webp" alt="Phase 4" loading="lazy">
+                    <div class="gi-overlay"><span class="gi-num">10</span><span class="gi-title" data-i18n="g10">Phase 4 — The Crystal Gauntlet (Relay Race)</span></div>
+                </div>
+                <div class="gallery-item" onclick="openLightbox(this)">
+                    <img src="/static/game/boss-dungeon/11-phase5-storm-eternal.webp" alt="Phase 5" loading="lazy">
+                    <div class="gi-overlay"><span class="gi-num">11</span><span class="gi-title" data-i18n="g11">Phase 5 — Storm of the Eternal (Aerial Boss)</span></div>
+                </div>
+                <div class="gallery-item" onclick="openLightbox(this)">
+                    <img src="/static/game/boss-dungeon/12-phase6-whales-vault.webp" alt="Phase 6" loading="lazy">
+                    <div class="gi-overlay"><span class="gi-num">12</span><span class="gi-title" data-i18n="g12">Phase 6 — The Whale's Vault (Golden Clones)</span></div>
+                </div>
+                <div class="gallery-item" onclick="openLightbox(this)">
+                    <img src="/static/game/boss-dungeon/13-phase7-final-stand.webp" alt="Phase 7" loading="lazy">
+                    <div class="gi-overlay"><span class="gi-num">13</span><span class="gi-title" data-i18n="g13">Phase 7 — The Final Stand (Unity Beam)</span></div>
+                </div>
+                <div class="gallery-item" onclick="openLightbox(this)">
+                    <img src="/static/game/boss-dungeon/14-command-center.webp" alt="Command Center" loading="lazy">
+                    <div class="gi-overlay"><span class="gi-num">14</span><span class="gi-title" data-i18n="g14">Raid Command Center — Tactical War Room</span></div>
+                </div>
+                <div class="gallery-item" onclick="openLightbox(this)">
+                    <img src="/static/game/boss-dungeon/15-rest-camp.webp" alt="Rest Camp" loading="lazy">
+                    <div class="gi-overlay"><span class="gi-num">15</span><span class="gi-title" data-i18n="g15">Rest Camp — Shift Rotation Safe Zone</span></div>
+                </div>
+                <div class="gallery-item" onclick="openLightbox(this)">
+                    <img src="/static/game/boss-dungeon/17-3am-test.webp" alt="3 AM Test" loading="lazy">
+                    <div class="gi-overlay"><span class="gi-num">16</span><span class="gi-title" data-i18n="g16">The 3 AM Test — Nocturnal Rage Mechanic</span></div>
+                </div>
+                <div class="gallery-item" onclick="openLightbox(this)">
+                    <img src="/static/game/boss-dungeon/16-the-wipe.webp" alt="Raid Wipe" loading="lazy">
+                    <div class="gi-overlay"><span class="gi-num">17</span><span class="gi-title" data-i18n="g17">Total Raid Wipe — 2,000 Players Down</span></div>
+                </div>
+                <div class="gallery-item" onclick="openLightbox(this)">
+                    <img src="/static/game/boss-dungeon/18-healer-battalion.webp" alt="Healer Battalion" loading="lazy">
+                    <div class="gi-overlay"><span class="gi-num">18</span><span class="gi-title" data-i18n="g18">Healer Corps — Concentric Healing Rings</span></div>
+                </div>
+                <div class="gallery-item" onclick="openLightbox(this)">
+                    <img src="/static/game/boss-dungeon/19-dps-check.webp" alt="DPS Check" loading="lazy">
+                    <div class="gi-overlay"><span class="gi-num">19</span><span class="gi-title" data-i18n="g19">DPS Burst Window — Maximum Damage Output</span></div>
+                </div>
+                <div class="gallery-item" onclick="openLightbox(this)">
+                    <img src="/static/game/boss-dungeon/20-tank-swap.webp" alt="Tank Swap" loading="lazy">
+                    <div class="gi-overlay"><span class="gi-num">20</span><span class="gi-title" data-i18n="g20">Tank Swap Mechanic — Aggro Rotation</span></div>
+                </div>
+                <div class="gallery-item" onclick="openLightbox(this)">
+                    <img src="/static/game/boss-dungeon/21-supply-line.webp" alt="Supply Line" loading="lazy">
+                    <div class="gi-overlay"><span class="gi-num">21</span><span class="gi-title" data-i18n="g21">Supply Line — Resource Relay Chain</span></div>
+                </div>
+                <div class="gallery-item" onclick="openLightbox(this)">
+                    <img src="/static/game/boss-dungeon/22-enrage-timer.webp" alt="Enrage Timer" loading="lazy">
+                    <div class="gi-overlay"><span class="gi-num">22</span><span class="gi-title" data-i18n="g22">Enrage Timer — The Boss Grows Desperate</span></div>
+                </div>
+                <div class="gallery-item" onclick="openLightbox(this)">
+                    <img src="/static/game/boss-dungeon/23-resurrection-squad.webp" alt="Resurrection Squad" loading="lazy">
+                    <div class="gi-overlay"><span class="gi-num">23</span><span class="gi-title" data-i18n="g23">Resurrection Engine — Holy Priests at Work</span></div>
+                </div>
+                <div class="gallery-item" onclick="openLightbox(this)">
+                    <img src="/static/game/boss-dungeon/24-mini-boss-lion.webp" alt="Mini-Boss Lion" loading="lazy">
+                    <div class="gi-overlay"><span class="gi-num">24</span><span class="gi-title" data-i18n="g24">Golden Lion Guardian — Mini-Boss Encounter</span></div>
+                </div>
+                <div class="gallery-item" onclick="openLightbox(this)">
+                    <img src="/static/game/boss-dungeon/25-boss-defeat.webp" alt="Boss Defeat" loading="lazy">
+                    <div class="gi-overlay"><span class="gi-num">25</span><span class="gi-title" data-i18n="g25">The Eternal Flame Falls — Victory Moment</span></div>
+                </div>
+                <div class="gallery-item" onclick="openLightbox(this)">
+                    <img src="/static/game/boss-dungeon/26-loot-explosion.webp" alt="Loot Explosion" loading="lazy">
+                    <div class="gi-overlay"><span class="gi-num">26</span><span class="gi-title" data-i18n="g26">Loot Explosion — Mythic & Legendary Drops</span></div>
+                </div>
+                <div class="gallery-item" onclick="openLightbox(this)">
+                    <img src="/static/game/boss-dungeon/27-victory-celebration.webp" alt="Victory Celebration" loading="lazy">
+                    <div class="gi-overlay"><span class="gi-num">27</span><span class="gi-title" data-i18n="g27">Victory Celebration — Guild Hall Party</span></div>
+                </div>
+                <div class="gallery-item" onclick="openLightbox(this)">
+                    <img src="/static/game/boss-dungeon/28-mythic-weapon.webp" alt="Mythic Weapon" loading="lazy">
+                    <div class="gi-overlay"><span class="gi-num">28</span><span class="gi-title" data-i18n="g28">Eternal Flame Greatsword — Mythic Reward</span></div>
+                </div>
+                <div class="gallery-item" onclick="openLightbox(this)">
+                    <img src="/static/game/boss-dungeon/29-redemption-cutscene.webp" alt="RegginA Restored" loading="lazy">
+                    <div class="gi-overlay"><span class="gi-num">29</span><span class="gi-title" data-i18n="g29">RegginA Restored — Guild Master Freed</span></div>
+                </div>
+                <div class="gallery-item" onclick="openLightbox(this)">
+                    <img src="/static/game/boss-dungeon/30-raid-group-photo.webp" alt="Raid Group Photo" loading="lazy">
+                    <div class="gi-overlay"><span class="gi-num">30</span><span class="gi-title" data-i18n="g30">2,000-Player Raid Group Photo</span></div>
+                </div>
+            </div>
+        </section>
+
+    </main><!-- /bd-container -->
+
+    <!-- LIGHTBOX -->
+    <div class="lightbox" id="lightbox" onclick="closeLightbox()">
+        <div class="lightbox-close" onclick="closeLightbox()"><i class="fas fa-times"></i></div>
+        <img id="lightbox-img" src="" alt="">
+        <div class="lightbox-caption" id="lightbox-cap"></div>
+    </div>
+
+    <!-- ====== NAVIGATION & SCRIPTS ====== -->
+    <script src="/static/nw-nav.js"></script>
+    <script src="/static/nw-i18n.js"></script>
+
+
+    <script>
+    /* === LIGHTBOX === */
+    function openLightbox(el) {
+        const img = el.querySelector('img');
+        const title = el.querySelector('.gi-title')?.textContent || el.querySelector('.bd-img-caption-text')?.textContent || '';
+        document.getElementById('lightbox-img').src = img.src;
+        document.getElementById('lightbox-cap').textContent = title;
+        document.getElementById('lightbox').classList.add('active');
+        document.body.style.overflow = 'hidden';
+    }
+    function closeLightbox() {
+        document.getElementById('lightbox').classList.remove('active');
+        document.body.style.overflow = '';
+    }
+    document.addEventListener('keydown', e => { if(e.key==='Escape') closeLightbox(); });
+
+    /* === I18N === */
+    const BOSS_DUNGEON_I18N = {
+        zh: {
+            dlcLabel: "DLC 7 — 永恒王座",
+            heroTitle: "RegginA·永恒之焰",
+            heroSub: "公会会长堕入腐化。2000名玩家必须团结一致，发起MMORPG史上最宏大的Boss突袭。这场战斗将持续数周。请备好咖啡。",
+            statPlayers: "2,000", statPlayersL: "所需玩家", statHP: "20亿", statHPL: "Boss血量",
+            statPhases: "7", statPhasesL: "阶段数", statDuration: "7–14", statDurationL: "预计天数",
+            statShifts: "3", statShiftsL: "每日班次",
+            tagLore: "传说", storyTitle: "公会会长的堕落",
+            storyP1: "没人预料到这一天。<strong>RegginA</strong>——那位只读了领导力书籍一章就被抽卡横幅分散注意力的仁慈独裁者——一直都很混乱。但堕落？那个曾经把200人留在Boss战中6小时、因为「下一次一定能打过」而不肯放弃的公会会长，终于崩溃了。",
+            storyP2: "导火索很简单：<strong>有人在充值上超过了她。</strong>一个敌对公会的会长在一个横幅上花了51000美元——恰好比RegginA传奇的鲸鱼大战多花了1000美元。屈辱是彻底的。堕落是瞬间的。信用卡账单？灾难性的。",
+            storyP3: "被<strong>无尽消费的堕落王冠</strong>吞噬，RegginA变成了一尊巨大的火焰神——永恒之焰。她的力量与每一美元的抽卡消费成正比。大约相当于<strong>20亿血量的糟糕财务决定。</strong>",
+            storyQuote1: "我只想成为第一名。现在我成了服务器稳定性的头号威胁。说实话？这还挺符合我风格的。",
+            storyQuoteA1: "——RegginA，第一阶段Boss对话",
+            imgNum01: "过场 01", imgCap01: "RegginA的王座吸收堕落王冠的瞬间——她的消费力化为纯粹的毁灭能量",
+            imgNum02: "过场 02", imgCap02: "RegginA的变身——半公会会长、半火焰神。金币如钱包驱动的太阳系般环绕其身",
+            tagDungeon: "副本", dungeonTitle: "永恒王座：七层混沌",
+            dungeonP1: "副本深入<strong>城堡NumbahWan地下7层</strong>，每一层都以RegginA统治的一个篇章为主题。从入口处的烈焰挑战到最深处的永恒王座室，每一层都引入新机制，要求所有2000名玩家完美配合。",
+            imgNum03: "概念图 01", imgCap03: "7层副本剖面图——每层主题各异，由挑战走廊连接",
+            imgNum04: "UI预览", imgCap04: "Boss信息面板——20亿血量、5骷髅难度、让你泪流满面的掉落表",
+            dungeonAside: "开发者笔记：我们原本设计这个Boss只有5亿血量。测试玩家说「太简单了」。我们问了测试人数。他们说47人。我们出于报复把血量乘了4倍，还多加了3个阶段。",
+            tagFormation: "战阵编制", formTitle: "2000人。8个营。一个脑细胞。",
+            formP1: "突袭分为<strong>8个颜色编码的营，每营250人</strong>，围绕Boss呈环形排列。每个营有专属职责，每个玩家都很重要。是的，包括那个躲在后面假装输出的挂机者。",
+            imgNum05: "战术视图", imgCap05: "8营编制俯瞰——每个区域按职责颜色编码，Boss居中",
+            roleTank: "先锋坦克", roleTankN: "400人（2个营）", roleTankD: "Boss与所有人之间的钢铁之墙。每90秒轮换仇恨，否则被「鲸鱼审判」秒杀。",
+            roleHeal: "治疗军团", roleHealN: "500人（2个营）", roleHealD: "组成同心治疗环。为坦克链式治疗同时躲避火焰。自RegginA的会计报税以来最高压的工作。",
+            roleDPS: "输出人员", roleDPSN: "800人（3个营）", roleDPSD: "打Boss。使劲打。DPS窗口开启时倾尽全力，否则狂暴计时器获胜。简单。（并不简单。）",
+            roleSupport: "后勤支援", roleSupportN: "300人（1个营）", roleSupportD: "增益者、减益者、物资运送者和复活小队。也负责在凌晨3点班次保持士气。",
+            imgNum06: "战斗 01", imgCap06: "突袭指挥中心——各营指挥官通过全息战术显示屏实时协调",
+            tagPhases: "Boss阶段", phasesTitle: "七个绝对疯狂的阶段",
+            phasesP1: "每个阶段在前一个通关后解锁。Boss在<strong>休息期间会恢复生命值</strong>，因此每个班次都必须推进进度。突袭需要7-14个现实日，因为这个Boss不相信速通——RegginA也不信。",
+            p1Num: "阶段1 —— 第1层", p1Title: "烈焰挑战", p1M1: "坦克轮换", p1M2: "火浪闪避", p1M3: "盾墙同步",
+            p1Desc: "Boss以大范围横扫火焰攻击开场。所有400名坦克必须组成轮换盾墙——<strong>每组50人每90秒换防</strong>。如果一组迟到，整个前线被「鲸鱼审判」秒杀。同时DPS必须躲避有规律扫过的火浪。",
+            imgNum07: "阶段1", imgCap07: "坦克墙在火浪席卷竞技场时坚守——一次轮换失误就意味着团灭",
+            imgNum08: "机制", imgCap08: "坦克换位——关键的90秒仇恨轮换",
+            imgNum09: "治疗", imgCap09: "治疗军团在坦克身后组成同心治疗环",
+            p2Num: "阶段2 —— 第2层", p2Title: "钱包检查", p2M1: "节点破坏", p2M2: "协调爆发", p2M3: "DPS窗口",
+            p2Desc: "RegginA召唤<strong>8个黄金屏障节点</strong>——每营一个。所有8个必须在30秒内同时摧毁，否则它们会重生。这是2000人必须在完全相同时刻打出伤害窗口的协同DPS测试。金币从天花板倾泻而下，Boss嘲讽你的消费习惯。",
+            imgNum10: "阶段2", imgCap10: "钱包检查——8个营必须同时击碎黄金屏障节点",
+            imgNum11: "爆发窗口", imgCap11: "DPS同时释放终极技能——伤害数字铺天盖地",
+            p3Num: "阶段3 —— 第3层", p3Title: "暗影领域", p3M1: "站位谜题", p3M2: "符文阵型", p3M3: "2000人同步",
+            p3Desc: "竞技场分裂为光暗两半。玩家必须站在特定节点上形成<strong>只有从上方才能看见的巨型符文图案</strong>。2000名玩家各有指定位置。一个人站错位置就会破坏整个符文。本质上是一个2000片的人形拼图，其中每片都有自己的意见。",
+            imgNum12: "阶段3", imgCap12: "2000名玩家组成神圣符文的俯瞰——一个位置错误就会打破封印",
+            p3Quote: "有人在团队频道问'我的节点在哪？'1999个人同时回答。频道崩溃了。我们团灭了。",
+            p3QuoteA: "——突袭指挥，第23次尝试",
+            p4Num: "阶段4 —— 第4层", p4Title: "水晶挑战", p4M1: "接力赛", p4M2: "冰霜走廊", p4M3: "限时激活",
+            p4Desc: "Boss暂时被冻结在水晶牢笼中。玩家分成<strong>40个接力小队、每队50人</strong>，必须在Boss破茧前穿越冰冻障碍走廊激活石柱。每队有4分钟。走廊有滑冰平台、寒霜陷阱和一个小Boss——<strong>水晶哨兵</strong>——守卫最终石柱。",
+            imgNum13: "阶段4", imgCap13: "水晶挑战——接力小队在Boss被囚禁时穿越冰冻走廊",
+            imgNum14: "后勤", imgCap14: "补给线——资源接力链保持前线物资充足",
+            p5Num: "阶段5 —— 第5层", p5Title: "永恒风暴", p5M1: "旋转阵型", p5M2: "闪电闪避", p5M3: "空中Boss",
+            p5Desc: "RegginA展开<strong>纯粹火焰之翼</strong>升空。竞技场充满火焰龙卷风。所有8个营必须顺时针同步绕竞技场旋转，躲避闪电和火雨。Boss随机俯冲轰炸某个区域——如果你没有跟随你的营移动，你就死定了。这是一场2000人的舞蹈表演，编舞者是混沌。",
+            imgNum15: "阶段5", imgCap15: "永恒风暴——各营在火雨中同步旋转推进",
+            p6Num: "阶段6 —— 第6层", p6Title: "鲸鱼金库", p6M1: "辨别真Boss", p6M2: "8个黄金分身", p6M3: "宝藏陷阱",
+            p6Desc: "竞技场变成RegginA的私人宝库——<strong>金币堆积如山构成地形</strong>。她创造8个完全相同的黄金分身。每个营必须用特定攻击测试分身以确定哪个是真的。攻击错误的？黄金爆炸。真正的RegginA还会召唤<strong>黄金狮王守卫</strong>小Boss来保护自己。",
+            imgNum16: "阶段6", imgCap16: "鲸鱼金库——8个黄金分身，只有一个是真的。明智选择。",
+            imgNum17: "小Boss", imgCap17: "黄金狮王守卫——由宝藏构成的巨兽挡住通往真RegginA的道路",
+            p7Num: "阶段7 —— 永恒王座", p7Title: "最终决战", p7M1: "团结光束", p7M2: "狂暴计时器", p7M3: "救赎窗口",
+            p7Desc: "竞技场漂浮在星空虚空中。RegginA达到终极形态——<strong>六翼火焰天使</strong>。所有2000名玩家必须同时引导团结光束——每个人在完全相同的一秒按下终极技能。狂暴计时器给你<strong>恰好10分钟</strong>。如果光束在2000名玩家间的同步误差超过0.5秒，就会失败。你有3次机会。这将是被铭记多年的时刻。",
+            imgNum18: "最终阶段", imgCap18: "最终决战——2000道光束汇聚于星空虚空中的六翼火焰天使",
+            imgNum19: "狂暴", imgCap19: "狂暴计时器——时间流逝Boss愈加膨胀，竞技场边缘崩碎",
+            tagMechanics: "机制", mechTitle: "标志性突袭机制",
+            mechP1: "除了7个阶段之外，副本还有<strong>贯穿整个多周突袭的持续性机制</strong>。掌握它们否则灭亡——与一个在手游上花了5万美元的人战斗没有捷径。",
+            mech3amTitle: "凌晨3点测试", mech3amDesc: "每次突袭中两次，Boss会进入只在<strong>服务器时间凌晨2:00-4:00之间</strong>才能触发的特殊「夜间狂暴」模式。在此窗口内，她的防御力降低40%——但只有最勇敢（或最缺觉）的玩家才能利用。这直接致敬RegginA那次臭名昭著的凌晨3点突袭召集，147名公会成员竟然真的到了。",
+            imgNum20: "机制", imgCap20: "凌晨3点测试——疲惫的玩家顶着咖啡表情和Zzz特效，Boss嘲讽着困倦的突袭者",
+            mech3amAside: "趣闻：测试期间，开发者真的在凌晨3点安排了这个测试。80%的QA团队睡过头了。Bug报告写道：\"功能按预期工作。\"",
+            mechWipeTitle: "团灭协议", mechWipeDesc: "当团灭发生时，所有2000名玩家同时在壮观的连锁爆炸中阵亡。Boss会做一个<strong>胜利表情</strong>——她掏出信用卡戏剧性地一刷。玩家在最后的存档信标处重生，必须在下次尝试前重新组织8个营。平均重组时间：<strong>45分钟的有序混乱。</strong>",
+            imgNum21: "团灭画面", imgCap21: "全军覆没——团结光束失败后的惨状，2000名玩家全部倒下",
+            mechResTitle: "复活引擎", mechResDesc: "一支60名圣牧师组成的专职复活小队在战线后方轮换运作。当玩家阵亡时，复活小队有<strong>15秒的时间复活他们</strong>，否则灵魂消散。2000名玩家意味着死亡时刻在发生——复活小队平均每小时处理<strong>200次复活</strong>。基本上就是靠祈祷和能量饮料驱动的急诊室。",
+            imgNum22: "治疗", imgCap22: "复活引擎——圣牧师引导金光在战斗中复活阵亡战友",
+            tagRest: "休息系统", restTitle: "为现实生活设计：轮班系统",
+            restP1: "我们知道你在想什么：「持续数周的突袭？我还有工作。」别担心——副本设计考虑了<strong>现实世界的可持续性</strong>。永恒王座采用强制轮班系统，确保没有玩家需要牺牲生活、工作或理智。好吧，也许理智会少一点。",
+            imgNum23: "安全区", imgCap23: "休息营地——副本内的温馨安全区，有轮班告示板、篝火、食物增益和睡袋",
+            schedShift: "班次", schedTime: "时间（服务器）", schedPlayers: "在线玩家", schedNotes: "备注",
+            schedMorning: "☀️ 早班", schedMorningP: "约700人", schedMorningN: "专注阶段推进与稳定输出",
+            schedAfternoon: "🌅 午班", schedAfternoonP: "约800人（高峰）", schedAfternoonN: "黄金时段——大多数阶段转换在此发生",
+            schedNight: "🌙 夜班", schedNightP: "约500人", schedNightN: "维护与消耗伤害。凌晨3点测试窗口在此开启。",
+            restP2: "<strong>核心设计原则：</strong>",
+            restRule1: "🔄 <strong>轮换花名册：</strong>每位玩家每周参加2-3个班次（每次4-8小时）。无需24/7在线。",
+            restRule2: "💾 <strong>进度保存：</strong>Boss血量不会在班次间重置。每一点伤害都有意义，无论何时造成。",
+            restRule3: "🛏️ <strong>AFK保护：</strong>当你的换班替补到达后，你可以无负罪感地下线。Boss哪也不去。她现在住这里了。",
+            restRule4: "⏰ <strong>追赶增益：</strong>缺席一天的玩家获得临时伤害提升，确保永远不会永久落后。RegginA讨厌挂机成员，但我们不讨厌。",
+            restRule5: "🏕️ <strong>休息营地：</strong>副本内的安全区，有篝火提供食物增益、修理站和温馨的氛围。可以在班次间在此放松。",
+            restQuote: "副本可能持续数周，但你的承诺只是每次几小时。把它想象成一个特别激烈的读书会，只不过书会反击。",
+            restQuoteA: "——首席游戏设计师",
+            tagRewards: "战利品与奖励", rewardTitle: "战争的战利品",
+            rewardP1: "击败永恒之焰解锁NWG游戏中<strong>最具声望的掉落表</strong>。每位参与者根据贡献获得奖励——造成的伤害、治疗量、完成的机制和参加的班次。没有一个战斗过的人会空手而归。",
+            imgNum24: "掉落", imgCap24: "掉落爆炸——传说级和神话级物品以彩色光束从击败的Boss身上迸发",
+            lootMythic: "神话", loot1Name: "永恒之焰巨剑", loot1Desc: "由RegginA王冠锻造的活体火焰。刀刃会在你梦中低语信用卡号。+500攻击，+200火伤，被动：\"钱包吸取\"——敌人掉落3倍金币。",
+            lootMythic2: "神话", loot2Name: "仁慈独裁者之冠", loot2Desc: "RegginA修复后的王冠。授予佩戴者\"公会会长之选\"称号。+300防御，被动：\"仁慈光环\"——附近盟友全属性提升15%。",
+            lootLegendary: "传说", loot3Name: "永恒之翼", loot3Desc: "外观披风——六翼金色火焰。每次突袭仅掉落200件。时尚突袭者的终极炫耀。",
+            lootLegendary2: "传说", loot4Name: "鲸鱼印戒", loot4Desc: "根据你拥有的金币数量发光的戒指。+200攻击，被动：\"大手笔\"——商店价格降低20%。",
+            lootEpic: "史诗", loot5Name: "王座厅战袍", loot5Desc: "带有动画火焰效果的公会战袍。所有2000名参与者都会获得。\"我活过了永恒王座\"的炫耀装。",
+            lootRare: "稀有", loot6Name: "RegginA的咖啡杯", loot6Desc: "外观物品。写着\"世界第847位最佳战士\"。+5%经验加成和永久啜咖啡待机动画。",
+            imgNum25: "奖励", imgCap25: "永恒之焰巨剑——金色王冠剑柄的活体火焰之刃，终极神话奖励",
+            rewardAside: "掉落率提示：神话物品每位玩家每次击杀有0.5%掉落率。2000名玩家意味着每次突袭完成约掉落10件神话物品。愿RNG之神怜悯你的灵魂——因为RegginA肯定不会。",
+            tagVictory: "胜利", victoryTitle: "凯旋时刻",
+            victoryP1: "当团结光束终于连接、永恒之焰倒塌时，游戏进入<strong>5分钟的庆祝过场动画</strong>，任何突袭成员都无法跳过。你赢得了这一切。每次团灭、每次凌晨3点的班次、每次\"谁站错位置了？\"——一切都指向这一刻。",
+            imgNum26: "高潮", imgCap26: "永恒之焰倒下——金色粒子飘散，2000名玩家目睹Boss化为光芒",
+            victoryP2: "当RegginA的堕落形态粉碎，<strong>真正的RegginA</strong>从破碎的王冠中浮现——困惑、感激，然后立刻问\"我不在的时候谁的充值超过我了？\"公会会长回归了，但战斗的伤痕永远铭刻在副本墙壁上。",
+            imgNum27: "尾声", imgCap27: "RegginA回归——公会会长从堕落中解放，王冠破碎，被公会成员围绕",
+            victoryQuote: "好吧那挺戏剧化的。有人录下来了吗？还有，我需要拿回我的信用卡。堕落把它拿走了，我还有……未完成的交易。",
+            victoryQuoteA: "——RegginA，被从堕落中解放时",
+            imgNum28: "庆祝", imgCap28: "公会大厅的胜利庆祝——烟花、盛宴和2000名玩家的狂欢",
+            imgNum29: "合影", imgCap29: "2000人突袭合影——每位参与者在传奇殿堂中永垂不朽",
+            victoryP3: "每位参与击杀的玩家都会获得永久的<strong>\"碎焰者\"</strong>称号、<strong>传奇殿堂</strong>条目（可在公会网站上查看），以及在胜利瞬间自动截取的纪念截图。你的名字。你的贡献。永远铭记。",
+            tagGallery: "图库", galleryTitle: "DLC 7 预览图库 — 30张截图", galleryP1: "每张图都讲述一个故事。浏览永恒王座Boss副本的全部30张预览截图——从入口大门到最终胜利庆典。点击任意图片查看全尺寸。",
+            g01: "永恒王座——副本入口", g02: "RegginA变身——火焰神揭示", g03: "Boss信息面板——20亿血量", g04: "堕落——王座室变异", g05: "8营突袭编制——俯瞰",
+            g06: "7层副本剖面蓝图", g07: "阶段1——烈焰挑战", g08: "阶段2——钱包检查", g09: "阶段3——暗影领域", g10: "阶段4——水晶挑战",
+            g11: "阶段5——永恒风暴", g12: "阶段6——鲸鱼金库", g13: "阶段7——最终决战", g14: "突袭指挥中心", g15: "休息营地——轮班安全区",
+            g16: "凌晨3点测试", g17: "全军覆没", g18: "治疗军团", g19: "DPS爆发窗口", g20: "坦克换位机制",
+            g21: "补给线", g22: "狂暴计时器", g23: "复活引擎", g24: "黄金狮王——小Boss", g25: "永恒之焰倒下",
+            g26: "掉落爆炸", g27: "胜利庆典", g28: "永恒之焰巨剑", g29: "RegginA回归", g30: "2000人合影"
+        },
+        th: {
+            dlcLabel: "DLC 7 — บัลลังก์นิรันดร์",
+            heroTitle: "RegginA ไฟนิรันดร์",
+            heroSub: "หัวหน้ากิลด์ตกอยู่ใต้พลังมืด ผู้เล่น 2,000 คนต้องรวมพลังเพื่อเรดบอสที่ยิ่งใหญ่ที่สุดในประวัติศาสตร์ MMORPG การต่อสู้นี้จะกินเวลาหลายสัปดาห์ เตรียมกาแฟมาด้วย",
+            statPlayers: "2,000", statPlayersL: "ผู้เล่นที่ต้องการ", statHP: "2 พันล้าน", statHPL: "HP บอส",
+            statPhases: "7", statPhasesL: "เฟส", statDuration: "7-14", statDurationL: "วันที่ต้องใช้",
+            statShifts: "3", statShiftsL: "กะต่อวัน",
+            tagLore: "ตำนาน", storyTitle: "การล่มสลายของหัวหน้ากิลด์",
+            storyP1: "ไม่มีใครคาดคิดว่าจะเกิดขึ้น <strong>RegginA</strong> — เผด็จการใจดีที่อ่านหนังสือผู้นำแค่บทเดียวแล้วไปสนใจแบนเนอร์กาชาแทน — มันวุ่นวายมาตลอด แต่ตกอยู่ใต้พลังมืด? หัวหน้ากิลด์ที่เคยจับ 200 คนติดอยู่ในบอสไฟท์ 6 ชั่วโมงเพราะ \"รอบหน้าต้องได้แน่\" ในที่สุดก็พังทลาย",
+            storyP2: "ชนวนเหตุง่ายมาก: <strong>มีคนใช้เงินมากกว่าเธอ</strong> หัวหน้ากิลด์คู่แข่งใช้เงิน $51,000 บนแบนเนอร์เดียว — มากกว่า RegginA พอดี $1,000 ความอับอายนั้นสมบูรณ์แบบ การตกอยู่ใต้พลังมืดเกิดขึ้นทันที บิลบัตรเครดิต? หายนะ",
+            storyP3: "ถูกกลืนกินโดย<strong>มงกุฎเสื่อมของการใช้จ่ายไร้ขีดจำกัด</strong> RegginA กลายเป็นเทพเพลิงขนาดมหึมา — ไฟนิรันดร์ พลังของเธอเพิ่มขึ้นตามทุกดอลลาร์ที่เคยใช้ในกาชา นั่นคือ HP ประมาณ <strong>2 พันล้านจากการตัดสินใจทางการเงินที่แย่มาก</strong>",
+            storyQuote1: "ฉันแค่อยากเป็นที่หนึ่ง ตอนนี้ฉันเป็นภัยคุกคามอันดับหนึ่งต่อความเสถียรของเซิร์ฟเวอร์ จริงๆ นะ? ก็ยังตรงกับสไตล์ฉันอยู่ดี",
+            storyQuoteA1: "— RegginA ระหว่างบทสนทนาบอสเฟส 1",
+            imgNum01: "ฉากคัท 01", imgCap01: "ช่วงเวลาที่บัลลังก์ของ RegginA ดูดซับมงกุฎเสื่อม — พลังการใช้จ่ายกลายเป็นพลังทำลายล้าง",
+            imgNum02: "ฉากคัท 02", imgCap02: "การแปลงร่างของ RegginA — ครึ่งหัวหน้ากิลด์ ครึ่งเทพเพลิง เหรียญทองโคจรรอบร่างเธอ",
+            tagDungeon: "ดันเจี้ยน", dungeonTitle: "บัลลังก์นิรันดร์: 7 ชั้นแห่งความวุ่นวาย",
+            dungeonP1: "ดันเจี้ยนลึกลงไป<strong>7 ชั้นใต้ปราสาท NumbahWan</strong> แต่ละชั้นมีธีมตามบทของการปกครองของ RegginA ตั้งแต่ Gauntlet of Flame ที่ทางเข้าจนถึงห้องบัลลังก์นิรันดร์ที่ชั้นลึกสุด ทุกชั้นมีกลไกใหม่ที่ต้องการผู้เล่น 2,000 คนทำงานร่วมกันอย่างสมบูรณ์แบบ",
+            imgNum03: "ภาพคอนเซ็ปต์ 01", imgCap03: "ภาพตัดขวาง 7 ชั้น — แต่ละชั้นธีมต่างกัน เชื่อมด้วยทางเดินท้าทาย",
+            imgNum04: "ตัวอย่าง UI", imgCap04: "แผงข้อมูลบอส — HP 2 พันล้าน ความยาก 5 หัวกะโหลก และตารางดรอปที่จะทำให้คุณร้องไห้",
+            dungeonAside: "หมายเหตุนักพัฒนา: ตอนแรกเราออกแบบบอสนี้ให้มี HP 500 ล้าน ผู้ทดสอบบอกว่า \"ง่ายเกินไป\" เราถามว่ามีผู้เล่นกี่คนในการทดสอบ พวกเขาบอก 47 คน เราคูณ HP ด้วย 4 และเพิ่มอีก 3 เฟสด้วยความแค้น",
+            tagFormation: "รูปแบบเรด", formTitle: "2,000 คน 8 กองพัน สมองเซลล์เดียว",
+            formP1: "เรดแบ่งเป็น<strong>8 กองพันแบ่งสี กองพันละ 250 คน</strong> จัดเรียงเป็นวงกลมรอบบอส แต่ละกองพันมีบทบาทเฉพาะ และผู้เล่นทุกคนมีความสำคัญ ใช่ รวมถึงคนที่ AFK อยู่ด้านหลังแกล้งทำเป็น DPS",
+            imgNum05: "มุมมองยุทธวิธี", imgCap05: "มุมมองด้านบนของ 8 กองพัน — แต่ละเซกเตอร์แบ่งสีตามบทบาท บอสอยู่ตรงกลาง",
+            roleTank: "แทงค์แนวหน้า", roleTankN: "400 คน (2 กองพัน)", roleTankD: "กำแพงระหว่างบอสกับทุกคน สลับแอ็กโกรทุก 90 วินาที ไม่งั้นโดน Whale's Judgment วันฮิต",
+            roleHeal: "กองทัพฮีลเลอร์", roleHealN: "500 คน (2 กองพัน)", roleHealD: "สร้างวงฮีลซ้อนกัน เชนฮีลแทงค์ขณะหลบไฟ งานเครียดที่สุดตั้งแต่นักบัญชีของ RegginA ยื่นภาษี",
+            roleDPS: "ดีลเลอร์", roleDPSN: "800 คน (3 กองพัน)", roleDPSD: "ตีบอส ตีให้แรง เมื่อหน้าต่าง DPS เปิด ปล่อยทุกอย่าง ไม่งั้นจะแพ้ enrage timer ง่ายๆ (ไม่ง่ายเลย)",
+            roleSupport: "ซัพพอร์ตและลอจิสติกส์", roleSupportN: "300 คน (1 กองพัน)", roleSupportD: "บัฟเฟอร์ ดีบัฟเฟอร์ ผู้ส่งเสบียง และทีมชุบชีวิต รับผิดชอบรักษาขวัญกำลังใจในกะตี 3",
+            imgNum06: "เกมเพลย์ 01", imgCap06: "ศูนย์บัญชาการเรด — ผู้นำกองพันประสานงานผ่านจอโฮโลแกรมแบบเรียลไทม์",
+            tagPhases: "เฟสบอส", phasesTitle: "7 เฟสแห่งความบ้าคลั่งสุดขีด",
+            phasesP1: "แต่ละเฟสจะปลดล็อกหลังจากเคลียร์เฟสก่อนหน้า บอส<strong>จะฟื้น HP ระหว่างช่วงพัก</strong> ดังนั้นทุกกะต้องผลักดันความคืบหน้า เรดใช้เวลา 7-14 วันจริงเพราะบอสนี้ไม่เชื่อในการ speedrun — RegginA ก็ไม่เชื่อเหมือนกัน",
+            p1Num: "เฟส 1 — ชั้น 1", p1Title: "กำแพงเพลิง", p1M1: "สลับแทงค์", p1M2: "หลบคลื่นไฟ", p1M3: "ซิงค์กำแพงโล่",
+            p1Desc: "บอสเปิดด้วยการโจมตีเพลิงกว้าง แทงค์ทั้ง 400 คนต้องสร้างกำแพงโล่สลับ — <strong>กลุ่มละ 50 คนสลับทุก 90 วินาที</strong> ถ้ากลุ่มไหนสลับช้า แนวหน้าทั้งหมดจะโดน Whale's Judgment วันฮิต ขณะเดียวกัน DPS ต้องหลบคลื่นไฟที่กวาดเป็นรูปแบบ",
+            imgNum07: "เฟส 1", imgCap07: "กำแพงแทงค์ยืนหยัดขณะคลื่นไฟกวาดอารีน่า — สลับพลาดครั้งเดียวคือไวป์",
+            imgNum08: "กลไก", imgCap08: "สลับแทงค์ — การสลับแอ็กโกร 90 วินาทีที่สำคัญ",
+            imgNum09: "ฮีลเลอร์", imgCap09: "กองทัพฮีลเลอร์สร้างวงฮีลซ้อนกันหลังแทงค์",
+            p2Num: "เฟส 2 — ชั้น 2", p2Title: "ตรวจกระเป๋าตังค์", p2M1: "ทำลายโหนด", p2M2: "ระเบิดประสาน", p2M3: "หน้าต่าง DPS",
+            p2Desc: "RegginA เรียก<strong>โหนดกำแพงทอง 8 อัน</strong> — กองพันละหนึ่ง ทั้ง 8 ต้องถูกทำลายภายใน 30 วินาทีของกัน ไม่งั้นจะฟื้นใหม่ มันเป็นการทดสอบ DPS แบบประสานที่ 2,000 คนต้องตีหน้าต่างดาเมจพร้อมกัน เหรียญทองตกจากเพดานขณะบอสเยาะเย้ยนิสัยการใช้จ่ายของคุณ",
+            imgNum10: "เฟส 2", imgCap10: "ตรวจกระเป๋าตังค์ — 8 กองพันต้องทำลายโหนดกำแพงทองพร้อมกัน",
+            imgNum11: "หน้าต่างระเบิด", imgCap11: "DPS ปล่อยอัลติเมทพร้อมกัน — ตัวเลขดาเมจเต็มจอ",
+            p3Num: "เฟส 3 — ชั้น 3", p3Title: "อาณาจักรเงามืด", p3M1: "ปริศนาตำแหน่ง", p3M2: "รูนฟอร์เมชั่น", p3M3: "ซิงค์ 2000 คน",
+            p3Desc: "อารีน่าแยกเป็นครึ่งสว่างและมืด ผู้เล่นต้องยืนบนโหนดเฉพาะเพื่อสร้าง<strong>รูปรูนขนาดยักษ์ที่มองเห็นได้จากด้านบนเท่านั้น</strong> ผู้เล่น 2,000 คนแต่ละคนมีตำแหน่งที่กำหนด คนเดียวยืนผิดที่ก็ทำลายรูนทั้งหมด มันเป็นจิ๊กซอว์มนุษย์ 2,000 ชิ้นที่ทุกชิ้นมีความคิดเห็นของตัวเอง",
+            imgNum12: "เฟส 3", imgCap12: "มุมมองด้านบนของ 2,000 คนสร้างรูนศักดิ์สิทธิ์ — ตำแหน่งผิดหนึ่งก็ทำลายผนึก",
+            p3Quote: "มีคนถามใน raid chat ว่า 'โหนดของฉันอยู่ไหน?' 1,999 คนตอบพร้อมกัน แชทล่ม เราไวป์",
+            p3QuoteA: "— Raid Leader ครั้งที่ 23",
+            p4Num: "เฟส 4 — ชั้น 4", p4Title: "ทางเดินคริสตัล", p4M1: "วิ่งผลัด", p4M2: "ทางเดินน้ำแข็ง", p4M3: "เปิดใช้งานจับเวลา",
+            p4Desc: "บอสถูกแช่แข็งชั่วคราวในคุกคริสตัล ผู้เล่นแบ่งเป็น<strong>40 ทีมผลัด ทีมละ 50 คน</strong> ต้องวิ่งผ่านทางเดินน้ำแข็งมีสิ่งกีดขวางเพื่อเปิดเสา แต่ละทีมมี 4 นาที ทางเดินมีแท่นน้ำแข็งลื่น กับดักน้ำแข็ง และมินิบอส — <strong>Crystal Sentinel</strong> — เฝ้าเสาสุดท้าย",
+            imgNum13: "เฟส 4", imgCap13: "ทางเดินคริสตัล — ทีมผลัดวิ่งผ่านทางเดินน้ำแข็งขณะบอสถูกขัง",
+            imgNum14: "ลอจิสติกส์", imgCap14: "สายเสบียง — โซ่ส่งทรัพยากรรักษาแนวหน้าให้พร้อม",
+            p5Num: "เฟส 5 — ชั้น 5", p5Title: "พายุนิรันดร์", p5M1: "ฟอร์เมชั่นหมุน", p5M2: "หลบสายฟ้า", p5M3: "บอสบนฟ้า",
+            p5Desc: "RegginA กาง<strong>ปีกเพลิงบริสุทธิ์</strong>แล้วบินขึ้น อารีน่าเต็มไปด้วยทอร์นาโดไฟ 8 กองพันต้องหมุนตามเข็มนาฬิการอบอารีน่าแบบประสานคลื่น หลบสายฟ้าและฝนไฟ บอสดิ่งโจมตีเซกเตอร์สุ่ม — ถ้าคุณไม่เคลื่อนที่ตามกองพัน คุณตาย มันเป็นท่าเต้น 2,000 คนที่ออกแบบโดยความวุ่นวาย",
+            imgNum15: "เฟส 5", imgCap15: "พายุนิรันดร์ — กองพันหมุนประสานขณะฝนไฟตกจากฟ้า",
+            p6Num: "เฟส 6 — ชั้น 6", p6Title: "ห้องนิรภัยวาฬ", p6M1: "หาบอสตัวจริง", p6M2: "8 ร่างทองคำ", p6M3: "กับดักสมบัติ",
+            p6Desc: "อารีน่ากลายเป็นห้องนิรภัยสมบัติส่วนตัวของ RegginA — <strong>ภูเขาเหรียญทองเป็นภูมิประเทศ</strong> เธอสร้าง 8 ร่างทองคำเหมือนกันทุกอย่าง แต่ละกองพันต้องทดสอบร่างด้วยการโจมตีเฉพาะเพื่อหาตัวจริง โจมตีตัวผิด? ทองระเบิด RegginA ตัวจริงยังเรียก<strong>สิงโตทองผู้พิทักษ์</strong>มินิบอสมาปกป้องอีกด้วย",
+            imgNum16: "เฟส 6", imgCap16: "ห้องนิรภัยวาฬ — 8 ร่างทองคำ มีตัวจริงแค่หนึ่ง เลือกให้ดี",
+            imgNum17: "มินิบอส", imgCap17: "สิงโตทองผู้พิทักษ์ — สัตว์ร้ายจากสมบัติขวางทางสู่ RegginA ตัวจริง",
+            p7Num: "เฟส 7 — บัลลังก์นิรันดร์", p7Title: "ศึกสุดท้าย", p7M1: "ลำแสงสามัคคี", p7M2: "ตัวจับเวลาบ้าคลั่ง", p7M3: "หน้าต่างไถ่บาป",
+            p7Desc: "อารีน่าลอยอยู่ในความว่างเปล่าของดวงดาว RegginA ถึงร่างสุดท้าย — <strong>เซราฟเพลิง 6 ปีก</strong> ผู้เล่นทั้ง 2,000 คนต้องชาร์จลำแสงสามัคคีพร้อมกัน — ทุกคนกดอัลติเมทในวินาทีเดียวกัน ตัวจับเวลาให้<strong>เวลา 10 นาทีพอดี</strong> ถ้าลำแสงไม่ซิงค์กันภายใน 0.5 วินาทีจาก 2,000 คน จะล้มเหลว คุณมี 3 ครั้ง นี่คือช่วงเวลาที่จะถูกพูดถึงเป็นปีๆ",
+            imgNum18: "เฟสสุดท้าย", imgCap18: "ศึกสุดท้าย — 2,000 ลำแสงรวมตัวที่เซราฟเพลิง 6 ปีกในความว่างเปล่าแห่งดวงดาว",
+            imgNum19: "บ้าคลั่ง", imgCap19: "ตัวจับเวลา enrage — บอสโตขึ้นเรื่อยๆ ขณะเวลาหมด ขอบอารีน่าพังทลาย",
+            tagMechanics: "กลไก", mechTitle: "กลไกเรดเอกลักษณ์",
+            mechP1: "นอกจาก 7 เฟสแล้ว ดันเจี้ยนยังมี<strong>กลไกถาวรที่ทำงานตลอดเรดหลายสัปดาห์</strong> เชี่ยวชาญมันหรือตาย — ไม่มีทางลัดเมื่อสู้กับคนที่ใช้เงิน $50,000 ในเกมมือถือ",
+            mech3amTitle: "บททดสอบตี 3", mech3amDesc: "สองครั้งต่อเรด บอสจะเข้าโหมด \"ตื่นราตรี\" พิเศษที่<strong>ทริกเกอร์ได้ระหว่างตี 2-4 เวลาเซิร์ฟเวอร์เท่านั้น</strong> ในช่วงนี้เธอจะอ่อนลง 40% — แต่เฉพาะผู้เล่นที่กล้าหาญ (หรือนอนไม่หลับ) ที่สุดเท่านั้นถึงจะใช้ประโยชน์ได้ นี่เป็นการอ้างอิงโดยตรงจากการเรียกเรดตี 3 อันโด่งดังของ RegginA ที่สมาชิกกิลด์ 147 คนมาจริงๆ",
+            imgNum20: "กลไก", imgCap20: "บททดสอบตี 3 — ผู้เล่นเหนื่อยล้าพร้อมอิโมจิกาแฟ เอฟเฟ็กต์ Zzz และบอสที่เยาะเย้ยคนง่วง",
+            mech3amAside: "เกร็ดสนุก: ระหว่างทดสอบ นักพัฒนาจัดตี 3 จริงๆ 80% ของทีม QA หลับหมด รายงานบั๊กเขียนว่า: \"ฟีเจอร์ทำงานตามที่ออกแบบ\"",
+            mechWipeTitle: "โปรโตคอลไวป์", mechWipeDesc: "เมื่อไวป์เกิดขึ้น ผู้เล่นทั้ง 2,000 คนตายพร้อมกันในระเบิดลูกโซ่สุดอลังการ บอสทำ<strong>ท่าเต้นชัยชนะ</strong> — เธอหยิบบัตรเครดิตออกมารูดอย่างดราม่า ผู้เล่นเกิดใหม่ที่จุดบันทึกสุดท้ายและต้องจัดกองพัน 8 กองใหม่ เวลาจัดเฉลี่ย: <strong>45 นาทีของความวุ่นวายอย่างเป็นระเบียบ</strong>",
+            imgNum21: "หน้าจอไวป์", imgCap21: "ไวป์ทั้งเรด — หลังลำแสงสามัคคีล้มเหลว ผู้เล่น 2,000 คนนอนราบ",
+            mechResTitle: "เครื่องยนต์ชุบชีวิต", mechResDesc: "ทีมชุบชีวิตเฉพาะกิจ 60 คนพระนักบุญทำงานสลับคู่หลังแนวรบ เมื่อผู้เล่นล้ม ทีมมี<strong>15 วินาทีในการชุบ</strong>ก่อนวิญญาณจะหาย ผู้เล่น 2,000 คนหมายถึงมีคนตายตลอดเวลา — ทีมชุบเฉลี่ย<strong>200 ครั้งต่อชั่วโมง</strong> เหมือนห้อง ER ที่ขับเคลื่อนด้วยคำอธิษฐานและเครื่องดื่มชูกำลัง",
+            imgNum22: "ฮีลเลอร์", imgCap22: "เครื่องยนต์ชุบชีวิต — พระนักบุญส่องแสงทองชุบเพื่อนร่วมทีมกลางสนามรบ",
+            tagRest: "ระบบพักผ่อน", restTitle: "ออกแบบเพื่อชีวิตจริง: ระบบกะ",
+            restP1: "เรารู้ว่าคุณคิดอะไร: \"เรดที่ใช้เวลาหลายสัปดาห์? ฉันมีงานทำ\" ไม่ต้องห่วง — ดันเจี้ยนออกแบบด้วย<strong>ความยั่งยืนในโลกจริง</strong>ในใจ บัลลังก์นิรันดร์มีระบบกะบังคับเพื่อให้ไม่มีผู้เล่นต้องเสียสละชีวิต งาน หรือสุขภาพจิต อาจจะสุขภาพจิตนิดหน่อย",
+            imgNum23: "เขตปลอดภัย", imgCap23: "แค้มป์พัก — เขตปลอดภัยอบอุ่นในดันเจี้ยน มีกระดานตารางกะ แคมป์ไฟ บัฟอาหาร และถุงนอน",
+            schedShift: "กะ", schedTime: "เวลา (เซิร์ฟเวอร์)", schedPlayers: "ผู้เล่นออนไลน์", schedNotes: "หมายเหตุ",
+            schedMorning: "☀️ เช้า", schedMorningP: "~700 คน", schedMorningN: "เน้นดันเฟสและดาเมจสม่ำเสมอ",
+            schedAfternoon: "🌅 บ่าย", schedAfternoonP: "~800 คน (พีค)", schedAfternoonN: "ช่วงไพรม์ไทม์ — เปลี่ยนเฟสส่วนใหญ่เกิดที่นี่",
+            schedNight: "🌙 กลางคืน", schedNightP: "~500 คน", schedNightN: "ซ่อมบำรุงและ chip damage หน้าต่างตี 3 เปิดที่นี่",
+            restP2: "<strong>หลักการออกแบบหลัก:</strong>",
+            restRule1: "🔄 <strong>รายชื่อหมุนเวียน:</strong> ผู้เล่นแต่ละคนรับ 2-3 กะต่อสัปดาห์ (4-8 ชม.) ไม่ต้องออนไลน์ 24/7",
+            restRule2: "💾 <strong>บันทึกความคืบหน้า:</strong> HP บอสไม่รีเซ็ตระหว่างกะ ทุกดาเมจนับไม่ว่าจะทำเมื่อไหร่",
+            restRule3: "🛏️ <strong>ป้องกัน AFK:</strong> เมื่อคนสลับกะมาถึง คุณออฟไลน์ได้โดยไม่ต้องรู้สึกผิด บอสไม่ไปไหน เธออยู่ที่นี่แล้ว",
+            restRule4: "⏰ <strong>บัฟตามทัน:</strong> ผู้เล่นที่ขาดวันหนึ่งจะได้รับบัฟดาเมจชั่วคราว ไม่ตกหล่นถาวร RegginA เกลียดคน AFK แต่เราไม่เกลียด",
+            restRule5: "🏕️ <strong>แค้มป์พัก:</strong> เขตปลอดภัยในดันเจี้ยนพร้อมแคมป์ไฟให้บัฟอาหาร สถานีซ่อม และบรรยากาศอบอุ่น พักผ่อนได้ระหว่างกะ",
+            restQuote: "ดันเจี้ยนอาจใช้เวลาหลายสัปดาห์ แต่ความมุ่งมั่นของคุณแค่ไม่กี่ชั่วโมงต่อครั้ง คิดว่ามันเป็นชมรมอ่านหนังสือที่เข้มข้นมากซึ่งหนังสือสู้กลับ",
+            restQuoteA: "— หัวหน้าทีมออกแบบเกม",
+            tagRewards: "ของรางวัล", rewardTitle: "ผลแห่งสงคราม",
+            rewardP1: "เอาชนะไฟนิรันดร์ปลดล็อก<strong>ตารางดรอปที่ทรงเกียรติที่สุด</strong>ใน NWG ผู้เข้าร่วมทุกคนได้รับรางวัลตามผลงาน — ดาเมจ ฮีล กลไก และกะที่เข้าร่วม ไม่มีใครที่สู้แล้วกลับมือเปล่า",
+            imgNum24: "ดรอป", imgCap24: "ดรอประเบิด — ไอเทมตำนานและเทพจากบอสที่พ่ายในลำแสงสี",
+            lootMythic: "เทพ", loot1Name: "ดาบเพลิงนิรันดร์", loot1Desc: "เปลวไฟมีชีวิตที่หลอมจากมงกุฎ RegginA ใบมีดกระซิบเลขบัตรเครดิตในฝัน +500 ATK +200 FIRE DMG พาสซีฟ: \"Wallet Drain\" — ศัตรูดรอปทอง 3 เท่า",
+            lootMythic2: "เทพ", loot2Name: "มงกุฎเผด็จการใจดี", loot2Desc: "มงกุฎที่ฟื้นฟูของ RegginA ผู้สวมใส่ได้ตำแหน่ง \"ผู้ถูกเลือกของหัวหน้ากิลด์\" +300 DEF พาสซีฟ: \"ออร่าใจดี\" — พันธมิตรใกล้เคียง +15% สเตตัส",
+            lootLegendary: "ตำนาน", loot3Name: "ปีกนิรันดร์", loot3Desc: "ชิ้นหลังเครื่องสำอาง — 6 ปีกเพลิงทอง ดรอปแค่ 200 ต่อเรด เฟล็กซ์สูงสุดสำหรับคนรักแฟชั่น",
+            lootLegendary2: "ตำนาน", loot4Name: "แหวนตราวาฬ", loot4Desc: "แหวนที่เรืองแสงตามจำนวนทองที่มี +200 ATK พาสซีฟ: \"ใจใหญ่\" — ราคาร้านค้าลด 20%",
+            lootEpic: "เอพิค", loot5Name: "เสื้อคลุมห้องบัลลังก์", loot5Desc: "เสื้อคลุมกิลด์เอฟเฟ็กต์ไฟ ผู้เข้าร่วม 2,000 คนทุกคนได้รับ ชิ้นเฟล็กซ์ \"ฉันรอดจากบัลลังก์นิรันดร์\"",
+            lootRare: "แรร์", loot6Name: "แก้วกาแฟ RegginA", loot6Desc: "ไอเทมเครื่องสำอาง เขียนว่า \"นักสู้อันดับ 847 ของโลก\" +5% XP และแอนิเมชันจิบกาแฟถาวร",
+            imgNum25: "รางวัล", imgCap25: "ดาบเพลิงนิรันดร์ — ใบมีดไฟมีชีวิตด้ามมงกุฎทอง รางวัลเทพสูงสุด",
+            rewardAside: "อัตราดรอป: ไอเทมเทพมีอัตรา 0.5% ต่อคนต่อคิล 2,000 คนหมายถึงประมาณ 10 ชิ้นเทพต่อเรด ขอให้เทพ RNG เมตตาวิญญาณของคุณ — เพราะ RegginA ไม่เมตตาแน่",
+            tagVictory: "ชัยชนะ", victoryTitle: "ช่วงเวลาแห่งชัยชนะ",
+            victoryP1: "เมื่อลำแสงสามัคคีเชื่อมต่อและไฟนิรันดร์ล่มสลาย เกมเข้าสู่<strong>ซีนฉลอง 5 นาที</strong>ที่ไม่มีใครข้ามได้ คุณสมควรได้รับ ทุกไวป์ ทุกกะตี 3 ทุก \"ใครยืนผิดที่?\" — ทั้งหมดนำมาสู่ช่วงเวลานี้",
+            imgNum26: "ไคลแม็กซ์", imgCap26: "ไฟนิรันดร์ล่มสลาย — อนุภาคทองกระจาย 2,000 คนมองบอสละลายเป็นแสง",
+            victoryP2: "เมื่อร่างเสื่อมของ RegginA แตกสลาย <strong>RegginA ตัวจริง</strong>ปรากฏจากมงกุฎที่แตก — สับสน ขอบคุณ แล้วถามทันทีว่า \"ใครใช้เงินมากกว่าฉันตอนฉันไม่อยู่?\" หัวหน้ากิลด์กลับมาแล้ว แต่รอยแผลจากการต่อสู้จะสลักบนผนังดันเจี้ยนตลอดกาล",
+            imgNum27: "ตอนจบ", imgCap27: "RegginA กลับมา — หัวหน้ากิลด์ปลดปล่อยจากพลังมืด มงกุฎแตก สมาชิกกิลด์ล้อมรอบ",
+            victoryQuote: "โอเค นั่นดราม่ามาก มีใครอัดวิดีโอไว้ไหม? แล้วก็ ฉันต้องเอาบัตรเครดิตคืน พลังมืดเอาไปแล้วฉันยัง... มีรายการที่ยังไม่จ่าย",
+            victoryQuoteA: "— RegginA เมื่อถูกปลดปล่อยจากพลังมืด",
+            imgNum28: "ฉลอง", imgCap28: "ฉลองชัยชนะในฮอลล์กิลด์ — พลุ งานเลี้ยง และ 2,000 คนปาร์ตี้",
+            imgNum29: "ภาพหมู่", imgCap29: "ภาพหมู่เรด 2,000 คน — ผู้เข้าร่วมทุกคนถูกบันทึกใน Hall of Legends",
+            victoryP3: "ผู้เล่นทุกคนที่เข้าร่วมการคิลจะได้รับตำแหน่งถาวร<strong>\"ผู้ทำลายเปลวไฟ\"</strong> รายการใน<strong>Hall of Legends</strong> (ดูได้บนเว็บไซต์กิลด์) และภาพหน้าจอที่ระลึกที่ถ่ายอัตโนมัติในช่วงเวลาแห่งชัยชนะ ชื่อคุณ ผลงานคุณ จดจำตลอดกาล",
+            tagGallery: "แกลเลอรี", galleryTitle: "แกลเลอรีตัวอย่าง DLC 7 — 30 ภาพ", galleryP1: "ทุกภาพเล่าเรื่อง ดูภาพตัวอย่างทั้ง 30 ภาพจากดันเจี้ยนบอสบัลลังก์นิรันดร์ — ตั้งแต่ประตูทางเข้าจนถึงงานฉลองชัยชนะ คลิกที่ภาพเพื่อดูขนาดเต็ม",
+            g01: "บัลลังก์นิรันดร์ — ทางเข้าดันเจี้ยน", g02: "การแปลงร่าง RegginA", g03: "แผงข้อมูลบอส", g04: "การเสื่อม — ห้องบัลลังก์", g05: "รูปแบบ 8 กองพัน",
+            g06: "พิมพ์เขียว 7 ชั้น", g07: "เฟส 1 — กำแพงเพลิง", g08: "เฟส 2 — ตรวจกระเป๋าตังค์", g09: "เฟส 3 — อาณาจักรเงามืด", g10: "เฟส 4 — ทางเดินคริสตัล",
+            g11: "เฟส 5 — พายุนิรันดร์", g12: "เฟส 6 — ห้องนิรภัยวาฬ", g13: "เฟส 7 — ศึกสุดท้าย", g14: "ศูนย์บัญชาการเรด", g15: "แค้มป์พัก",
+            g16: "บททดสอบตี 3", g17: "ไวป์ทั้งเรด", g18: "กองทัพฮีลเลอร์", g19: "หน้าต่างระเบิด DPS", g20: "กลไกสลับแทงค์",
+            g21: "สายเสบียง", g22: "ตัวจับเวลา enrage", g23: "เครื่องยนต์ชุบชีวิต", g24: "สิงโตทอง — มินิบอส", g25: "ไฟนิรันดร์ล่มสลาย",
+            g26: "ดรอประเบิด", g27: "ฉลองชัยชนะ", g28: "ดาบเพลิงนิรันดร์", g29: "RegginA กลับมา", g30: "ภาพหมู่ 2,000 คน"
+        }
+    };
+    /* Register translations with NW_I18N so the centralized system handles them */
+    if (typeof NW_I18N !== 'undefined' && NW_I18N.registerPage) {
+        NW_I18N.registerPage('boss-dungeon', BOSS_DUNGEON_I18N);
+    }
+
+    /* Apply translations when language changes (nw-lang-change from nav/i18n system) */
+    function applyBossDungeonI18n(lang) {
+        const t = BOSS_DUNGEON_I18N[lang];
+        if (!t) return;
+        document.querySelectorAll('[data-i18n]').forEach(el => {
+            const key = el.getAttribute('data-i18n');
+            if (t[key]) el.innerHTML = t[key];
+        });
+    }
+
+    /* Listen for ALL possible language change events */
+    ['nw-lang-change', 'nw-language-changed', 'languageChanged'].forEach(evtName => {
+        document.addEventListener(evtName, (e) => {
+            applyBossDungeonI18n(e.detail?.lang || 'en');
+        });
+        window.addEventListener(evtName, (e) => {
+            applyBossDungeonI18n(e.detail?.lang || 'en');
+        });
+    });
+
+    /* Apply stored language on page load */
+    (function() {
+        const storedLang = localStorage.getItem('nw_lang') || localStorage.getItem('lang') || 'en';
+        if (storedLang !== 'en') {
+            applyBossDungeonI18n(storedLang);
+        }
+    })();
+    </script>
+</body>
+</html>

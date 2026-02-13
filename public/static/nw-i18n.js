@@ -197,6 +197,8 @@ const NW_I18N = (() => {
     let currentLang = 'en';
     let debugMode = false;
     let missingKeys = new Set();
+    const _onChangeCallbacks = [];
+    let _applyInProgress = false;
     
     // ===========================================
     // CORE FUNCTIONS
@@ -263,6 +265,8 @@ const NW_I18N = (() => {
      * Apply translations to all elements with data-i18n attribute
      */
     function apply(lang = currentLang) {
+        if (_applyInProgress) return; // prevent circular calls
+        _applyInProgress = true;
         setLang(lang);
         
         document.querySelectorAll('[data-i18n]').forEach(el => {
@@ -301,6 +305,8 @@ const NW_I18N = (() => {
         if (debugMode) {
             console.log(`[NW_I18N] Applied ${lang} translations. Missing keys: ${missingKeys.size}`);
         }
+        _fireOnChange(lang);
+        _applyInProgress = false;
     }
     
     /**
@@ -311,6 +317,39 @@ const NW_I18N = (() => {
         if (debugMode) {
             console.log(`[NW_I18N] Registered translations for page: ${pageId}`);
         }
+    }
+
+    /**
+     * Register translations for the current page (auto-detects page ID).
+     * Accepts either: register(pageId, translations) or register(translations)
+     * Compatible with all existing pages that call NW_I18N.register(TRANSLATIONS)
+     */
+    function register(pageIdOrTranslations, translations) {
+        if (typeof pageIdOrTranslations === 'string') {
+            registerPage(pageIdOrTranslations, translations);
+        } else {
+            // Auto-detect page ID from body data attribute
+            const pageId = document.body?.dataset?.pageId || 'default';
+            registerPage(pageId, pageIdOrTranslations);
+        }
+    }
+
+    /**
+     * Register a callback for language changes.
+     * Called after translations are applied.
+     */
+    function onChange(callback) {
+        if (typeof callback === 'function') {
+            _onChangeCallbacks.push(callback);
+        }
+    }
+
+    function _fireOnChange(lang) {
+        _onChangeCallbacks.forEach(cb => { try { cb(lang); } catch(e) { console.error('[NW_I18N] onChange error:', e); } });
+        // Also fire DOM events for pages listening via addEventListener
+        ['nw-language-changed', 'nw-lang-change'].forEach(evtName => {
+            document.dispatchEvent(new CustomEvent(evtName, { detail: { lang } }));
+        });
     }
     
     /**
@@ -397,7 +436,9 @@ const NW_I18N = (() => {
         apply,          // Apply all translations: NW_I18N.apply('zh')
         setLang,        // Set language: NW_I18N.setLang('th')
         getLang: () => currentLang,
+        register,       // Register translations: NW_I18N.register(translations) or NW_I18N.register(pageId, translations)
         registerPage,   // Register page translations: NW_I18N.registerPage('academy', {...})
+        onChange,        // Register language change callback: NW_I18N.onChange((lang) => { ... })
         enableDebug,    // Enable debug logging: NW_I18N.enableDebug()
         getMissingKeys, // Get missing keys: NW_I18N.getMissingKeys()
         audit,          // Audit page: NW_I18N.audit('zh')
