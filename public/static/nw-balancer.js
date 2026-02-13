@@ -1,3 +1,4 @@
+/* @deprecated - Orphaned global. Export not used by any page. Candidate for removal. */
 /**
  * NumbahWan Auto-Balancer v1.0
  * Monitors economy and auto-adjusts to prevent inflation/deflation

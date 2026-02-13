@@ -1,3 +1,4 @@
+/* @deprecated - Orphaned global. Export not used by any page. Candidate for removal. */
 /**
  * ═══════════════════════════════════════════════════════════════════════════
  * NW_STATE - Global State Management

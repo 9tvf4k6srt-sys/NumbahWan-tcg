@@ -1,3 +1,4 @@
+/* @deprecated - Orphaned global. Export not used by any page. Candidate for removal. */
 /**
  * NumbahWan Micro-Interactions v2.0
  * GPU-accelerated, mobile-optimized, learning-enhanced UI

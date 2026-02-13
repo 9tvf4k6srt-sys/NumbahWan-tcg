@@ -80,6 +80,14 @@ async function serveFile(c: any, filePath: string, contentType: string) {
     const fullPath = path.join(publicDir, filePath)
     if (!fullPath.startsWith(publicDir)) return c.text('Forbidden', 403)
     if (fs.existsSync(fullPath)) {
+      // Binary-safe: read as buffer for images/fonts, utf-8 for text
+      const isBinary = /\.(webp|png|jpg|jpeg|gif|ico|woff2?|ttf|eot|svg|avif)$/i.test(filePath)
+      if (isBinary) {
+        const buf = fs.readFileSync(fullPath)
+        return new Response(buf, {
+          headers: { 'Content-Type': contentType, 'Cache-Control': 'public, max-age=86400' }
+        })
+      }
       const content = fs.readFileSync(fullPath, 'utf-8')
       return new Response(content, { headers: { 'Content-Type': contentType } })
     }
@@ -154,6 +162,13 @@ const lorePages = ['reggina-origin', 'sacred-log', 'whale-wars']
 lorePages.forEach(page => {
   router.get(`/lore/${page}`, (c) => serveHtml(c, `/lore/${page}.html`))
   router.get(`/lore/${page}.html`, (c) => serveHtml(c, `/lore/${page}.html`))
+})
+
+// World pages
+const worldPages = ['castle']
+worldPages.forEach(page => {
+  router.get(`/world/${page}`, (c) => serveHtml(c, `/world/${page}.html`))
+  router.get(`/world/${page}.html`, (c) => serveHtml(c, `/world/${page}.html`))
 })
 
 export default router

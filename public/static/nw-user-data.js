@@ -1,3 +1,4 @@
+/* @deprecated - Orphaned global. Export not used by any page. Candidate for removal. */
 /**
  * NW_USER_DATA - Unified user data layer
  * Connects wallet, collection, decks, and progression across all pages

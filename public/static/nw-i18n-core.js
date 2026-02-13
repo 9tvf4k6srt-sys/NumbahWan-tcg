@@ -359,22 +359,22 @@
   // ============================================================================
   
   // Alias for old initI18n function - maps to NW_I18N.register()
-  window.initI18n = function(translations) {
+  if (!window.initI18n) window.initI18n = function(translations) {
     return NW_I18N.register(translations);
   };
   
-  // Alias for old setLanguage function
-  window.setLanguage = function(lang) {
+  // Alias for old setLanguage function (only if page hasn't defined its own)
+  if (!window.setLanguage) window.setLanguage = function(lang) {
     return NW_I18N.setLang(lang);
   };
   
   // Alias for old getTranslation function
-  window.getTranslation = function(key, fallback) {
+  if (!window.getTranslation) window.getTranslation = function(key, fallback) {
     return NW_I18N.t(key, fallback);
   };
   
   // Alias for old getCurrentLang function
-  window.getCurrentLang = function() {
+  if (!window.getCurrentLang) window.getCurrentLang = function() {
     return NW_I18N.lang;
   };
 

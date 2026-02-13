@@ -45,7 +45,8 @@ export default defineConfig({
         '/lore/*',
         '/museum/*',
         '/vault/*',
-        '/research/*'
+        '/research/*',
+        '/world/*'
       ]
     }),
     devServer({
