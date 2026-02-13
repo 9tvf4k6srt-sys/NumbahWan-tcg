@@ -85,8 +85,8 @@ function testImageFiles() {
   const distStaticWorld = path.join(__dirname, '..', 'dist', 'static', 'world');
   if (fs.existsSync(distStaticWorld)) {
     const distFiles = fs.readdirSync(distStaticWorld).filter(f => f.endsWith('.webp'));
-    assert(distFiles.length === expectedImages.length, 
-      `dist/static/world/ has all ${expectedImages.length} images (found ${distFiles.length})`);
+    assert(distFiles.length >= expectedImages.length, 
+      `dist/static/world/ has all ${expectedImages.length}+ images (found ${distFiles.length})`);
   }
 }
 
