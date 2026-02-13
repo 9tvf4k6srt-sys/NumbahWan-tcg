@@ -1297,12 +1297,12 @@ const NW_NAV = {
                 const lang = btn.dataset.lang;
                 if (!lang || lang === this.currentLang) return;
                 
-                // NW_I18N.setLang is the SINGLE AUTHORITY.
-                // It updates internal state → calls _applyTranslations (page) → fires onChange callbacks.
+                // NW_I18N.apply is the SINGLE AUTHORITY.
+                // It sets lang → applies translations to all data-i18n elements → fires onChange callbacks.
                 // Our onChange callback (registered in init) calls _refreshNavLanguage (menu).
                 // This guarantees BOTH page AND menu update from ONE call.
-                if (typeof NW_I18N !== 'undefined' && NW_I18N.setLang) {
-                    NW_I18N.setLang(lang);
+                if (typeof NW_I18N !== 'undefined' && NW_I18N.apply) {
+                    NW_I18N.apply(lang);
                 } else {
                     // Fallback if NW_I18N not loaded (shouldn't happen)
                     this.currentLang = lang;
