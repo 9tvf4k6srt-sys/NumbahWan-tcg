@@ -115,9 +115,28 @@
   }
 
   /**
+   * Store original English text from the HTML (first-paint defaults)
+   * This lets us restore English when PAGE_I18N.en is empty/missing keys
+   */
+  let _originalDefaults = {};
+  let _defaultsCaptured = false;
+
+  function _captureDefaults() {
+    if (_defaultsCaptured) return;
+    document.querySelectorAll('[data-i18n]').forEach(el => {
+      const key = el.getAttribute('data-i18n');
+      if (key && !_originalDefaults[key]) {
+        _originalDefaults[key] = el.textContent;
+      }
+    });
+    _defaultsCaptured = true;
+  }
+
+  /**
    * Apply translations to DOM elements
    */
   function _applyTranslations() {
+    _captureDefaults();
     const translations = _getMergedTranslations();
     
     // data-i18n for text content
@@ -126,6 +145,9 @@
       const translation = _getNestedValue(translations, key);
       if (translation) {
         el.textContent = translation;
+      } else if (_currentLang === 'en' && _originalDefaults[key]) {
+        // Restore original English text if no translation found
+        el.textContent = _originalDefaults[key];
       }
     });
 
@@ -278,9 +300,19 @@
       _syncAllKeys(lang);
       _applyTranslations();
       
-      // Notify callbacks
+      // Notify onChange callbacks (NW_NAV subscribes here to update menu)
       _onChangeCallbacks.forEach(cb => {
         try { cb(lang); } catch (e) { console.error('[NW_I18N] Callback error:', e); }
+      });
+      
+      // Dispatch DOM events for pages that use event listeners (legacy compatibility)
+      // Many pages listen for 'nw-lang-change' and 'languageChanged' on document/window
+      const detail = { detail: { lang } };
+      ['nw-lang-change', 'languageChanged'].forEach(evtName => {
+        try {
+          document.dispatchEvent(new CustomEvent(evtName, detail));
+          window.dispatchEvent(new CustomEvent(evtName, detail));
+        } catch (e) {}
       });
       
       return this;
