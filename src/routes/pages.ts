@@ -165,7 +165,7 @@ lorePages.forEach(page => {
 })
 
 // World pages
-const worldPages = ['castle']
+const worldPages = ['castle', 'nwg-the-game']
 worldPages.forEach(page => {
   router.get(`/world/${page}`, (c) => serveHtml(c, `/world/${page}.html`))
   router.get(`/world/${page}.html`, (c) => serveHtml(c, `/world/${page}.html`))

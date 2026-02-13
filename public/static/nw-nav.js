@@ -506,7 +506,11 @@ const NW_NAV = {
         'card-lab': '/efficiency',
         // Alliance
         'embassy': '/',
-        'matchalatte': '/embassy'
+        'matchalatte': '/embassy',
+        // World pages
+        'castle': '/',
+        'nwg-the-game': '/',
+        'regina-dlc': '/world/nwg-the-game.html'
     },
 
     // Navigation history tracking
@@ -599,6 +603,10 @@ const NW_NAV = {
         }
         if (cleaned.startsWith('lore/')) {
             return cleaned.replace('/', '-').replace('.html', '');
+        }
+        if (cleaned.startsWith('world/')) {
+            const sub = cleaned.split('/')[1];
+            return sub || 'castle';
         }
         return cleaned || 'index';
     },
@@ -706,107 +714,79 @@ const NW_NAV = {
                 });
             });
         }
+
+        // SINGLE AUTHORITY: NW_I18N.onChange is the ONLY trigger for nav language refresh
+        // This eliminates all race conditions — no matter who calls NW_I18N.setLang(),
+        // the nav will always update. No duplicate event listeners, no timing issues.
+        if (typeof NW_I18N !== 'undefined' && NW_I18N.onChange) {
+            NW_I18N.onChange((lang) => {
+                this.currentLang = lang;
+                this.setStoredLang(lang);
+                this._refreshNavLanguage();
+            });
+        }
     },
 
     t(obj) { return typeof obj === 'string' ? obj : (obj[this.currentLang] || obj.en || ''); },
 
-    _updateNavText(lang) {
-        const sections = this.getVisibleSections();
-        Object.entries(sections).forEach(([key, section]) => {
-            // Update section header text
-            const header = document.querySelector(`.nw-nav-section-header[data-section="${key}"]`);
-            if (header) {
-                const spans = header.querySelectorAll(':scope > span');
-                if (spans.length > 0) spans[0].textContent = this.t(section.name);
-                const descSpan = header.querySelector('.nw-nav-desc');
-                if (descSpan && section.desc) descSpan.textContent = this.t(section.desc);
-            }
-            // Update page link text
-            section.pages.forEach(page => {
-                const link = document.querySelector(`.nw-nav-link[href="${page.href}"]`);
-                if (link) {
-                    const textSpan = link.querySelector('.nw-nav-text');
-                    if (textSpan) textSpan.textContent = this.t(page.name);
-                }
-            });
-        });
-        // Also update the version/status text at bottom if present
-        const versionEl = document.querySelector('.nw-nav-version');
-        if (versionEl) {
-            const parts = versionEl.textContent.split('•');
-            if (parts.length > 1) {
-                const statusMap = { en: 'Open', zh: '開放', th: 'เปิด' };
-                versionEl.textContent = parts[0].trim() + ' • ' + (statusMap[lang] || 'Open');
-            }
-        }
-    },
-
     _refreshNavLanguage() {
-        // Strategy: replace just the nav pages container innerHTML while keeping panel open
+        // STRATEGY: Walk existing DOM and update text nodes in-place.
+        // No innerHTML rebuild = no DOM destruction, no re-binding, no mobile timing bugs.
+        // This is O(n) where n = number of nav links (~90), runs in <1ms.
         const panel = document.getElementById('nwNavPanel');
         if (!panel) return;
         
-        // Find the scrollable content area and rebuild just the sections
-        const sectionsContainer = panel.querySelector('.nw-nav-scroll');
-        if (sectionsContainer) {
-            // Save scroll position
-            const scrollTop = sectionsContainer.scrollTop;
-            
-            // Regenerate sections HTML only
-            const visibleSections = this.getVisibleSections();
-            const tier = this.getPlayerTier();
-            const sectionsHTML = Object.entries(visibleSections).map(([key, section]) => {
-                const isCollapsible = section.collapsed !== false;
-                const isCollapsed = isCollapsible && (this.collapsedSections[key] ?? section.collapsed);
-                const hasActivePage = section.pages.some(p => p.id === this.currentPage);
-                const showCollapsed = isCollapsible && isCollapsed && !hasActivePage;
-                
-                const pagesHTML = section.pages.map(page => {
-                    const isActive = page.id === this.currentPage;
-                    return `<a href="${page.href}" class="nw-nav-link ${isActive ? 'active' : ''}">${this.iconSvg(page.icon, 16)}<span class="nw-nav-text">${this.t(page.name)}</span>${page.isHot ? '<span class="nw-hot-badge">HOT</span>' : ''}${page.isNew ? '<span class="nw-new-badge">NEW</span>' : ''}</a>`;
-                }).join('');
-
-                const visibleCount = section.pages.length;
-                const chevron = isCollapsible ? `<span class="nw-nav-chevron ${showCollapsed ? '' : 'open'}">${this.iconSvg('arrow-right', 12)}</span>` : '';
-                return `
-                    <div class="nw-nav-section ${showCollapsed ? 'collapsed' : ''}" data-section="${key}">
-                        <div class="nw-nav-section-header ${isCollapsible ? 'collapsible' : ''}" style="--section-color: ${section.color}" data-section="${key}">
-                            ${this.iconSvg(section.icon, 16)}
-                            <span>${this.t(section.name)}</span>
-                            ${section.desc ? `<span class="nw-nav-desc">${this.t(section.desc)}</span>` : ''}
-                            ${isCollapsible ? `<span class="nw-nav-count">${visibleCount}</span>` : ''}
-                            ${chevron}
-                        </div>
-                        <div class="nw-nav-pages ${showCollapsed ? 'collapsed' : ''}">${pagesHTML}</div>
-                    </div>`;
-            }).join('');
-            
-            sectionsContainer.innerHTML = sectionsHTML;
-            sectionsContainer.scrollTop = scrollTop;
-            
-            // Re-bind collapsible section headers
-            sectionsContainer.querySelectorAll('.nw-nav-section-header.collapsible').forEach(header => {
-                header.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    const section = header.dataset.section;
-                    const sectionEl = header.closest('.nw-nav-section');
-                    const pages = sectionEl.querySelector('.nw-nav-pages');
-                    const chevronEl = header.querySelector('.nw-nav-chevron');
-                    const isCollapsed = pages.classList.contains('collapsed');
-                    requestAnimationFrame(() => {
-                        pages.classList.toggle('collapsed', !isCollapsed);
-                        chevronEl?.classList.toggle('open', isCollapsed);
-                        sectionEl.classList.toggle('collapsed', !isCollapsed);
-                        this.setCollapsedState(section, !isCollapsed);
-                    });
-                }, { passive: true });
-            });
+        const lang = this.currentLang;
+        const sections = this.getVisibleSections();
+        
+        // 1. Update section headers: name + description
+        panel.querySelectorAll('.nw-nav-section-header[data-section]').forEach(header => {
+            const key = header.dataset.section;
+            const section = sections[key];
+            if (!section) return;
+            // First <span> child = section name
+            const nameSpan = header.querySelector(':scope > span:not(.nw-nav-desc):not(.nw-nav-count):not(.nw-nav-chevron)');
+            if (nameSpan) nameSpan.textContent = this.t(section.name);
+            // Description span
+            const descSpan = header.querySelector('.nw-nav-desc');
+            if (descSpan && section.desc) descSpan.textContent = this.t(section.desc);
+        });
+        
+        // 2. Update page links: match by href
+        const allPages = {};
+        Object.values(sections).forEach(section => {
+            section.pages.forEach(p => { allPages[p.href] = p; });
+        });
+        panel.querySelectorAll('.nw-nav-link').forEach(link => {
+            const href = link.getAttribute('href');
+            const page = allPages[href];
+            if (!page) return;
+            const textSpan = link.querySelector('.nw-nav-text');
+            if (textSpan) textSpan.textContent = this.t(page.name);
+        });
+        
+        // 3. Update tier hint
+        const tierHint = panel.querySelector('.nw-tier-hint');
+        if (tierHint) {
+            // Keep the icon SVG, just update the text node after it
+            const textNode = [...tierHint.childNodes].find(n => n.nodeType === 3 && n.textContent.trim());
+            const hintText = this.t({ en: 'Keep playing to unlock more!', zh: '\u7e7c\u7e8c\u904a\u73a9\u89e3\u9396\u66f4\u591a\uff01', th: '\u0e40\u0e25\u0e48\u0e19\u0e15\u0e48\u0e2d\u0e40\u0e1e\u0e37\u0e48\u0e2d\u0e1b\u0e25\u0e14\u0e25\u0e47\u0e2d\u0e01\u0e40\u0e1e\u0e34\u0e48\u0e21\u0e40\u0e15\u0e34\u0e21!' });
+            if (textNode) textNode.textContent = ' ' + hintText;
         }
         
-        // Update lang buttons (they're outside sections)
-        document.querySelectorAll('.nw-lang-btn').forEach(b => {
-            b.classList.toggle('active', b.dataset.lang === this.currentLang);
+        // 4. Update lang button active state
+        panel.querySelectorAll('.nw-lang-btn').forEach(b => {
+            b.classList.toggle('active', b.dataset.lang === lang);
         });
+        
+        // 5. Update footer version text
+        const versionEl = panel.querySelector('.nw-nav-version');
+        if (versionEl) {
+            const statusMap = { en: 'Open', zh: '\u958b\u653e', th: '\u0e40\u0e1b\u0e34\u0e14' };
+            versionEl.textContent = 'v9.1 \u2022 ' + (statusMap[lang] || 'Open');
+        }
+        
+        console.log('[NW_NAV] Menu language refreshed to:', lang);
     },
 
     generateNavHTML() {
@@ -1305,47 +1285,45 @@ const NW_NAV = {
             }, { passive: true });
         });
 
-        // Language buttons — event delegation for reliability on iOS/mobile
-        // Using delegation on the panel means it survives DOM rebuilds
+        // Language buttons — SINGLE click handler, delegates through NW_I18N as sole authority
+        // No touchend handler needed: modern mobile browsers fire click reliably.
+        // NW_I18N.setLang() is the ONLY trigger → fires onChange → _refreshNavLanguage().
+        // This eliminates all race conditions, ghost-click bugs, and mobile timing issues.
         const panel = document.getElementById('nwNavPanel');
         if (panel) {
-            const langHandler = (e) => {
+            panel.addEventListener('click', (e) => {
                 const btn = e.target.closest('.nw-lang-btn');
                 if (!btn) return;
-                e.preventDefault();
-                e.stopPropagation();
                 const lang = btn.dataset.lang;
-                if (lang === this.currentLang) return;
-
-                this.currentLang = lang;
-                this.setStoredLang(lang);
-
-                // Update button active states
-                panel.querySelectorAll('.nw-lang-btn').forEach(b => {
-                    b.classList.toggle('active', b.dataset.lang === lang);
-                });
-
-                // Re-render nav sections text in-place
-                this._refreshNavLanguage();
-
-                // Notify i18n core + page scripts synchronously (no RAF delay)
-                ['nw-lang-change', 'languageChanged'].forEach(evtName => {
-                    document.dispatchEvent(new CustomEvent(evtName, { detail: { lang } }));
-                    window.dispatchEvent(new CustomEvent(evtName, { detail: { lang } }));
-                });
-                if (typeof NW_I18N !== 'undefined' && NW_I18N.setLang) NW_I18N.setLang(lang);
+                if (!lang || lang === this.currentLang) return;
+                
+                // NW_I18N.setLang is the SINGLE AUTHORITY.
+                // It updates internal state → calls _applyTranslations (page) → fires onChange callbacks.
+                // Our onChange callback (registered in init) calls _refreshNavLanguage (menu).
+                // This guarantees BOTH page AND menu update from ONE call.
+                if (typeof NW_I18N !== 'undefined' && NW_I18N.setLang) {
+                    NW_I18N.setLang(lang);
+                } else {
+                    // Fallback if NW_I18N not loaded (shouldn't happen)
+                    this.currentLang = lang;
+                    this.setStoredLang(lang);
+                    this._refreshNavLanguage();
+                }
                 if (typeof NW_SOUNDS !== 'undefined') NW_SOUNDS.play('click');
-            };
-            panel.addEventListener('click', langHandler);
-            // touchend for iOS Safari — fire immediately, block ghost click
-            panel.addEventListener('touchend', (e) => {
-                if (e.target.closest('.nw-lang-btn')) langHandler(e);
-            });
+            }, { passive: true });
         }
     },
 
     open() {
         this.isOpen = true;
+        // Sync language every time panel opens — guarantees fresh text
+        // even if language was changed by another system while panel was closed
+        const storedLang = this.getStoredLang();
+        if (storedLang !== this.currentLang) {
+            this.currentLang = storedLang;
+        }
+        // Always refresh text when opening — cheap O(n) walk, guarantees correctness
+        this._refreshNavLanguage();
         requestAnimationFrame(() => {
             document.getElementById('nwNavPanel')?.classList.add('open');
             document.getElementById('nwNavOverlay')?.classList.add('open');

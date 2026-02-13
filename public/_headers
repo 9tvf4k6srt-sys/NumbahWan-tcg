@@ -1,4 +1,42 @@
-# Static assets — aggressive cache (images, fonts, icons)
+# ============================================================================
+#   C L O U D F L A R E   H E A D E R S
+#   ~~~ The Caching Philosophy of Castle NumbahWan ~~~
+# ============================================================================
+#
+#   "Time stays long enough for anyone who will use it."
+#                                      — Leonardo da Vinci
+#
+#   These headers govern how the world's edge servers remember our assets.
+#   Each rule is a contract between the castle and the CDN — a promise
+#   about how long a resource remains valid before it must be re-fetched
+#   from the origin, like a messenger returning to the castle gates.
+#
+#   Three Tiers of Memory:
+#
+#     ETERNAL (immutable)   — Images, icons, fonts. Carved in stone.
+#                             max-age=31536000 (1 year). The CDN will
+#                             never re-ask. Use fingerprinted filenames
+#                             or accept that changes require new URLs.
+#
+#     SEASONAL (revalidate) — JavaScript, CSS. Like the castle's banners,
+#                             they change with the season. max-age=86400
+#                             (1 day), with a week of stale-while-revalidate
+#                             for graceful transitions.
+#
+#     EPHEMERAL (no-cache)  — HTML pages and data. Like the notice board
+#                             by the castle gate — always fresh, always
+#                             checked. The CDN stores them but asks
+#                             "has this changed?" on every request.
+#
+# ============================================================================
+
+
+# ── ETERNAL: Visual Assets ─────────────────────────────────────────
+#
+#   Images are immutable artifacts — pixel art rendered once, compressed
+#   once, deployed once. Like the dragon skull trophy in the tavern,
+#   they don't change. The CDN may cache them forever.
+
 /static/images/*
   Cache-Control: public, max-age=31536000, immutable
 
@@ -11,17 +49,42 @@
 /static/icons/*
   Cache-Control: public, max-age=31536000, immutable
 
-# JS/CSS — cache but allow revalidation
+# World Atlas — 21 pixel-art rooms of Castle NumbahWan
+/static/world/*
+  Cache-Control: public, max-age=31536000, immutable
+
+# NWG The Game — 15 UE5 concept renders
+/static/game/*
+  Cache-Control: public, max-age=31536000, immutable
+
+
+# ── SEASONAL: Code Assets ──────────────────────────────────────────
+#
+#   Scripts and styles evolve — new features, bug fixes, refinements.
+#   A day of confident caching with a week-long grace period where
+#   the CDN may serve stale content while fetching fresh copies.
+
 /static/*.js
   Cache-Control: public, max-age=86400, stale-while-revalidate=604800
 
 /static/*.css
   Cache-Control: public, max-age=86400, stale-while-revalidate=604800
 
-# HTML pages — no cache (always fresh)
+
+# ── EPHEMERAL: Living Documents ────────────────────────────────────
+#
+#   HTML pages are the castle's notice board — always checked for
+#   updates. Karen's soup specials change daily. So do our pages.
+
 /*.html
   Cache-Control: no-cache
 
-# Data files — short cache
+
+# ── EPHEMERAL: Data Feeds ──────────────────────────────────────────
+#
+#   Sentinel reports, market prices, showcase data — the war room's
+#   intelligence reports. Fresh within 5 minutes, with an hour of
+#   stale-while-revalidate for when the scouts are delayed.
+
 /static/data/*
   Cache-Control: public, max-age=300, stale-while-revalidate=3600

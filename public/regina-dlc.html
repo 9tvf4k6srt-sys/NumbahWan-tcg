@@ -1,0 +1,1380 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
+    <title>R.M.S. REGINA DLC | The Floating Empire | NumbahWan Guild</title>
+    <meta name="description" content="Board the world's largest mega-ship. 47 decks, 27 zones, 500+ interactions. The biggest DLC in gaming history.">
+    <link rel="stylesheet" href="/static/nw-tokens.css">
+    <style>
+/* ═══════════════════════════════════════════════════════════
+   R.M.S. REGINA DLC — AAA GAME WEBSITE
+   The Floating Empire Experience
+   ═══════════════════════════════════════════════════════════ */
+
+:root {
+    --gold: #d4af37;
+    --gold-light: #f4d03f;
+    --gold-dark: #b8860b;
+    --abyss: #020810;
+    --deep-sea: #0a1628;
+    --ocean: #0f2744;
+    --ocean-light: #1a3a5f;
+    --coral: #ff6b6b;
+    --neon-blue: #00d4ff;
+    --neon-purple: #a855f7;
+    --neon-green: #22c55e;
+    --glass: rgba(255,255,255,0.04);
+    --glass-border: rgba(255,255,255,0.08);
+    --glass-hover: rgba(255,255,255,0.08);
+    --text-primary: #ffffff;
+    --text-secondary: #94a3b8;
+    --text-muted: #64748b;
+    --zone-adventure: #ff6b35;
+    --zone-dining: #f59e0b;
+    --zone-entertainment: #a855f7;
+    --zone-pools: #3b82f6;
+    --zone-sports: #22c55e;
+    --zone-nature: #10b981;
+    --zone-services: #14b8a6;
+    --zone-suites: #d4af37;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+html { scroll-behavior: smooth; }
+
+body {
+    background: var(--abyss);
+    color: var(--text-primary);
+    font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
+    overflow-x: hidden;
+    line-height: 1.6;
+}
+
+.cinzel { font-family: var(--nw-font-serif, 'Georgia'), serif; }
+
+/* ── PRELOADER ── */
+#preloader {
+    position: fixed; inset: 0; z-index: 9999;
+    background: var(--abyss);
+    display: flex; flex-direction: column;
+    justify-content: center; align-items: center;
+    transition: opacity 0.8s ease, visibility 0.8s ease;
+}
+#preloader.fade-out { opacity: 0; visibility: hidden; pointer-events: none; }
+.preloader-logo {
+    font-family: var(--nw-font-serif, 'Georgia'), serif;
+    font-size: clamp(2rem, 8vw, 5rem);
+    font-weight: 900; letter-spacing: 0.2em;
+    background: linear-gradient(180deg, #fff, var(--gold), var(--gold-dark));
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    background-clip: text;
+    animation: preloader-glow 2s ease-in-out infinite alternate;
+}
+.preloader-bar {
+    width: 200px; height: 2px; background: rgba(255,255,255,0.1);
+    margin-top: 2rem; border-radius: 1px; overflow: hidden;
+}
+.preloader-fill {
+    height: 100%; background: var(--gold);
+    animation: preloader-scan 1.5s ease-in-out infinite;
+}
+@keyframes preloader-glow {
+    from { filter: drop-shadow(0 0 20px rgba(212,175,55,0.2)); }
+    to { filter: drop-shadow(0 0 60px rgba(212,175,55,0.5)); }
+}
+@keyframes preloader-scan {
+    0% { width: 0; margin-left: 0; }
+    50% { width: 100%; margin-left: 0; }
+    100% { width: 0; margin-left: 100%; }
+}
+
+/* ── PARTICLES CANVAS ── */
+#particles-canvas {
+    position: fixed; inset: 0; z-index: 0; pointer-events: none;
+}
+
+/* ── NAVIGATION: handled by universal NW_NAV (nw-nav.js) ── */
+
+/* ── HERO ── */
+.hero {
+    position: relative; min-height: 100vh;
+    display: flex; flex-direction: column;
+    justify-content: center; align-items: center;
+    text-align: center; overflow: hidden;
+}
+.hero-bg {
+    position: absolute; inset: 0;
+    background: url('/static/regina/ship/ship-bow-view.webp') center/cover no-repeat;
+    opacity: 0.25; filter: blur(1px);
+    animation: hero-zoom 30s ease-in-out infinite alternate;
+}
+@keyframes hero-zoom {
+    from { transform: scale(1); }
+    to { transform: scale(1.1); }
+}
+.hero-overlay {
+    position: absolute; inset: 0;
+    background: linear-gradient(180deg,
+        rgba(2,8,16,0.8) 0%,
+        rgba(2,8,16,0.4) 40%,
+        rgba(2,8,16,0.6) 70%,
+        var(--abyss) 100%
+    );
+}
+.hero-content {
+    position: relative; z-index: 10;
+    max-width: 1000px; padding: 2rem;
+}
+.hero-badge {
+    display: inline-block; font-size: 0.7rem;
+    letter-spacing: 0.4em; text-transform: uppercase;
+    color: var(--gold); padding: 0.5rem 1.5rem;
+    border: 1px solid rgba(212,175,55,0.3); border-radius: 50px;
+    margin-bottom: 2rem;
+    animation: badge-pulse 3s ease-in-out infinite;
+}
+@keyframes badge-pulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(212,175,55,0.2); }
+    50% { box-shadow: 0 0 0 15px rgba(212,175,55,0); }
+}
+.hero-title {
+    font-family: var(--nw-font-serif, 'Georgia'), serif;
+    font-size: clamp(3.5rem, 14vw, 11rem);
+    font-weight: 900; letter-spacing: 0.1em; line-height: 0.9;
+    background: linear-gradient(180deg, #fff 0%, var(--gold) 45%, var(--gold-dark) 100%);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    background-clip: text;
+    animation: title-glow 4s ease-in-out infinite alternate;
+    margin-bottom: 0.5rem;
+}
+@keyframes title-glow {
+    from { filter: drop-shadow(0 0 30px rgba(212,175,55,0.2)); }
+    to { filter: drop-shadow(0 0 60px rgba(212,175,55,0.5)); }
+}
+.hero-subtitle {
+    font-size: clamp(0.9rem, 2.5vw, 1.4rem);
+    color: var(--gold-light); letter-spacing: 0.3em;
+    text-transform: uppercase; margin-bottom: 1rem;
+}
+.hero-desc {
+    font-size: 1.05rem; color: var(--text-secondary);
+    max-width: 650px; margin: 1.5rem auto 2.5rem;
+    line-height: 1.8;
+}
+
+/* Hero Stats Row */
+.hero-stats {
+    display: flex; justify-content: center; gap: 2rem;
+    flex-wrap: wrap; margin-bottom: 2.5rem;
+}
+.hero-stat {
+    text-align: center; padding: 1rem 1.5rem;
+    background: var(--glass); border: 1px solid var(--glass-border);
+    border-radius: 12px; min-width: 110px;
+    transition: transform 0.3s, border-color 0.3s;
+}
+.hero-stat:hover { transform: translateY(-3px); border-color: var(--gold); }
+.hero-stat-value {
+    font-family: var(--nw-font-serif, 'Georgia'), serif;
+    font-size: 1.8rem; font-weight: 900;
+    background: linear-gradient(135deg, var(--gold-light), var(--gold));
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+.hero-stat-label {
+    font-size: 0.65rem; color: var(--text-muted);
+    letter-spacing: 0.15em; text-transform: uppercase; margin-top: 0.25rem;
+}
+
+/* CTA Buttons */
+.hero-cta {
+    display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;
+}
+.btn-primary {
+    display: inline-flex; align-items: center; gap: 0.5rem;
+    padding: 0.9rem 2.5rem; border: none; border-radius: 50px;
+    font-size: 0.85rem; font-weight: 700; letter-spacing: 0.1em;
+    text-transform: uppercase; cursor: pointer; text-decoration: none;
+    background: linear-gradient(135deg, var(--gold-dark), var(--gold), var(--gold-light));
+    color: #000; transition: all 0.3s;
+    box-shadow: 0 4px 30px rgba(212,175,55,0.3);
+}
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 40px rgba(212,175,55,0.5);
+}
+.btn-secondary {
+    display: inline-flex; align-items: center; gap: 0.5rem;
+    padding: 0.9rem 2.5rem; border: 1px solid var(--gold);
+    border-radius: 50px; font-size: 0.85rem; font-weight: 600;
+    letter-spacing: 0.1em; text-transform: uppercase;
+    cursor: pointer; text-decoration: none;
+    background: transparent; color: var(--gold); transition: all 0.3s;
+}
+.btn-secondary:hover {
+    background: rgba(212,175,55,0.1);
+    box-shadow: 0 0 30px rgba(212,175,55,0.2);
+}
+
+/* Scroll indicator */
+.scroll-down {
+    position: absolute; bottom: 2rem; left: 50%;
+    transform: translateX(-50%); z-index: 10;
+    animation: float-bounce 2.5s ease-in-out infinite;
+    color: var(--text-muted); font-size: 0.7rem;
+    letter-spacing: 0.2em; text-transform: uppercase;
+    display: flex; flex-direction: column; align-items: center; gap: 0.5rem;
+}
+.scroll-arrow { font-size: 1.2rem; }
+@keyframes float-bounce {
+    0%, 100% { transform: translateX(-50%) translateY(0); opacity: 1; }
+    50% { transform: translateX(-50%) translateY(8px); opacity: 0.6; }
+}
+
+/* ── SECTION GLOBAL ── */
+.section {
+    position: relative; padding: 6rem 2rem;
+}
+.section-inner {
+    max-width: 1400px; margin: 0 auto;
+}
+.section-header {
+    text-align: center; margin-bottom: 4rem;
+}
+.section-badge {
+    display: inline-block; font-size: 0.65rem;
+    letter-spacing: 0.4em; text-transform: uppercase;
+    color: var(--gold); padding: 0.4rem 1.2rem;
+    border: 1px solid rgba(212,175,55,0.2); border-radius: 50px;
+    margin-bottom: 1rem;
+}
+.section-title {
+    font-family: var(--nw-font-serif, 'Georgia'), serif;
+    font-size: clamp(2rem, 5vw, 3.5rem); font-weight: 800;
+    background: linear-gradient(135deg, #fff 30%, var(--gold));
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    background-clip: text; margin-bottom: 1rem;
+}
+.section-desc {
+    font-size: 1.05rem; color: var(--text-secondary);
+    max-width: 700px; margin: 0 auto; line-height: 1.8;
+}
+
+/* ── ZONE EXPLORER (TABS) ── */
+#zones { background: linear-gradient(180deg, var(--abyss), var(--deep-sea)); }
+
+.zone-tabs {
+    display: flex; justify-content: center; gap: 0.5rem;
+    flex-wrap: wrap; margin-bottom: 3rem;
+}
+.zone-tab {
+    padding: 0.6rem 1.4rem; border-radius: 50px;
+    border: 1px solid var(--glass-border); background: var(--glass);
+    color: var(--text-secondary); font-size: 0.78rem;
+    font-weight: 600; cursor: pointer; transition: all 0.3s;
+    letter-spacing: 0.05em; text-transform: uppercase;
+}
+.zone-tab:hover { border-color: var(--gold); color: var(--gold); }
+.zone-tab.active {
+    background: linear-gradient(135deg, var(--gold-dark), var(--gold));
+    color: #000; border-color: var(--gold);
+    box-shadow: 0 4px 20px rgba(212,175,55,0.3);
+}
+
+/* Zone Content Area */
+.zone-content { display: none; animation: zone-fade 0.5s ease; }
+.zone-content.active { display: block; }
+@keyframes zone-fade {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.zone-header-card {
+    display: flex; align-items: center; gap: 2rem;
+    padding: 2rem; border-radius: 20px;
+    background: var(--glass); border: 1px solid var(--glass-border);
+    margin-bottom: 3rem;
+}
+.zone-icon-lg {
+    width: 80px; height: 80px; border-radius: 20px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 2rem; flex-shrink: 0;
+}
+.zone-header-text h2 {
+    font-family: var(--nw-font-serif, 'Georgia'), serif;
+    font-size: 1.8rem; font-weight: 800; margin-bottom: 0.3rem;
+}
+.zone-header-text p {
+    color: var(--text-secondary); font-size: 0.95rem;
+}
+.zone-deck-badge {
+    display: inline-block; font-size: 0.7rem; padding: 0.25rem 0.75rem;
+    border-radius: 50px; background: rgba(255,255,255,0.05);
+    color: var(--text-muted); letter-spacing: 0.1em; margin-top: 0.5rem;
+}
+
+/* Location Cards Grid */
+.locations-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+    gap: 1.5rem;
+}
+.location-card {
+    position: relative; border-radius: 20px; overflow: hidden;
+    background: var(--glass); border: 1px solid var(--glass-border);
+    transition: all 0.4s ease; cursor: pointer;
+}
+.location-card:hover {
+    transform: translateY(-5px);
+    border-color: rgba(212,175,55,0.3);
+    box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+}
+.location-img-wrap {
+    position: relative; aspect-ratio: 16/9; overflow: hidden;
+}
+.location-img-wrap img {
+    width: 100%; height: 100%; object-fit: cover;
+    transition: transform 0.6s ease;
+}
+.location-card:hover .location-img-wrap img {
+    transform: scale(1.08);
+}
+.location-img-overlay {
+    position: absolute; inset: 0;
+    background: linear-gradient(180deg, transparent 40%, rgba(0,0,0,0.85) 100%);
+}
+.location-img-badge {
+    position: absolute; top: 1rem; right: 1rem;
+    font-size: 0.6rem; padding: 0.3rem 0.8rem;
+    border-radius: 50px; color: #fff; font-weight: 700;
+    letter-spacing: 0.1em; text-transform: uppercase;
+    backdrop-filter: blur(8px);
+}
+.location-body { padding: 1.5rem; }
+.location-name {
+    font-family: var(--nw-font-serif, 'Georgia'), serif;
+    font-size: 1.25rem; font-weight: 800; margin-bottom: 0.25rem;
+}
+.location-subtitle {
+    font-size: 0.8rem; color: var(--text-muted);
+    margin-bottom: 0.75rem;
+}
+.location-desc {
+    font-size: 0.85rem; color: var(--text-secondary);
+    line-height: 1.6; margin-bottom: 1rem;
+}
+
+/* Stats mini-bar */
+.location-stats {
+    display: flex; gap: 1rem; flex-wrap: wrap; margin-bottom: 1rem;
+}
+.location-stats span {
+    font-size: 0.7rem; color: var(--text-muted);
+    display: flex; align-items: center; gap: 0.3rem;
+}
+.location-stats .stat-val {
+    color: var(--gold); font-weight: 700;
+}
+
+/* Interactions list */
+.location-interactions {
+    list-style: none; padding: 0; margin-bottom: 1rem;
+}
+.location-interactions li {
+    font-size: 0.78rem; color: var(--text-secondary);
+    padding: 0.3rem 0; padding-left: 1.2rem;
+    position: relative; line-height: 1.5;
+}
+.location-interactions li::before {
+    content: ''; position: absolute; left: 0; top: 0.55rem;
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--gold);
+}
+
+/* Quest badge */
+.location-quest {
+    display: flex; align-items: flex-start; gap: 0.75rem;
+    padding: 0.75rem; border-radius: 12px;
+    background: rgba(212,175,55,0.05);
+    border: 1px solid rgba(212,175,55,0.15);
+}
+.quest-icon { font-size: 1.2rem; flex-shrink: 0; }
+.quest-text { font-size: 0.75rem; }
+.quest-title { color: var(--gold); font-weight: 700; }
+.quest-reward { color: var(--text-muted); margin-top: 0.15rem; }
+
+/* ── DECK MAP ── */
+#deckmap {
+    background: linear-gradient(180deg, var(--deep-sea), var(--abyss));
+}
+.deck-visual {
+    display: flex; flex-direction: column; gap: 0;
+    max-width: 900px; margin: 0 auto;
+    position: relative;
+}
+.deck-row {
+    display: flex; align-items: stretch;
+    border-left: 3px solid var(--glass-border);
+    transition: all 0.3s; position: relative;
+}
+.deck-row:hover { border-left-color: var(--gold); }
+.deck-row:hover .deck-label { color: var(--gold); }
+.deck-label {
+    width: 80px; flex-shrink: 0; padding: 0.6rem;
+    font-size: 0.65rem; font-weight: 700; color: var(--text-muted);
+    letter-spacing: 0.1em; text-transform: uppercase;
+    display: flex; align-items: center; justify-content: center;
+    border-bottom: 1px solid var(--glass-border);
+    transition: color 0.3s;
+}
+.deck-info {
+    flex: 1; padding: 0.6rem 1rem;
+    border-bottom: 1px solid var(--glass-border);
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 1rem;
+}
+.deck-name { font-size: 0.85rem; font-weight: 600; }
+.deck-feature {
+    font-size: 0.75rem; color: var(--text-muted);
+    text-align: right;
+}
+.deck-zone-dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    flex-shrink: 0;
+}
+
+/* ── SUITES ── */
+#suites {
+    background: linear-gradient(180deg, var(--abyss), var(--deep-sea), var(--abyss));
+}
+.suites-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+    gap: 2rem;
+}
+.suite-card {
+    position: relative; border-radius: 24px; overflow: hidden;
+    background: var(--glass); border: 1px solid var(--glass-border);
+    transition: all 0.5s;
+}
+.suite-card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 30px 80px rgba(212,175,55,0.15);
+    border-color: var(--gold);
+}
+.suite-img-wrap { position: relative; aspect-ratio: 16/10; overflow: hidden; }
+.suite-img-wrap img {
+    width: 100%; height: 100%; object-fit: cover;
+    transition: transform 0.8s ease;
+}
+.suite-card:hover .suite-img-wrap img { transform: scale(1.05); }
+.suite-tier {
+    position: absolute; top: 1rem; left: 1rem;
+    padding: 0.3rem 1rem; border-radius: 50px;
+    font-size: 0.65rem; font-weight: 800;
+    letter-spacing: 0.15em; text-transform: uppercase;
+}
+.tier-legendary { background: linear-gradient(135deg, #f59e0b, #d97706); color: #000; }
+.tier-epic { background: linear-gradient(135deg, #8b5cf6, #6d28d9); color: #fff; }
+.tier-mythic {
+    background: linear-gradient(135deg, #ef4444, #dc2626);
+    color: #fff; animation: mythic-pulse 2s infinite;
+}
+@keyframes mythic-pulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(239,68,68,0.4); }
+    50% { box-shadow: 0 0 0 8px rgba(239,68,68,0); }
+}
+.suite-price-tag {
+    position: absolute; bottom: 1rem; right: 1rem;
+    padding: 0.4rem 1rem; border-radius: 10px;
+    background: rgba(0,0,0,0.7); backdrop-filter: blur(8px);
+    font-size: 0.85rem; font-weight: 800; color: var(--gold);
+}
+.suite-body { padding: 1.5rem; }
+.suite-name {
+    font-family: var(--nw-font-serif, 'Georgia'), serif;
+    font-size: 1.3rem; font-weight: 800; margin-bottom: 0.25rem;
+}
+.suite-deck { font-size: 0.75rem; color: var(--text-muted); margin-bottom: 0.75rem; }
+.suite-features {
+    display: flex; flex-wrap: wrap; gap: 0.4rem; margin-bottom: 1rem;
+}
+.suite-feature {
+    font-size: 0.68rem; padding: 0.25rem 0.6rem;
+    border-radius: 50px; background: rgba(212,175,55,0.08);
+    color: var(--gold); border: 1px solid rgba(212,175,55,0.15);
+}
+.suite-interactions { list-style: none; padding: 0; margin-bottom: 1rem; }
+.suite-interactions li {
+    font-size: 0.78rem; color: var(--text-secondary);
+    padding: 0.25rem 0 0.25rem 1.2rem; position: relative;
+}
+.suite-interactions li::before {
+    content: ''; position: absolute; left: 0; top: 0.5rem;
+    width: 6px; height: 6px; border-radius: 50%; background: var(--neon-blue);
+}
+.suite-secret {
+    padding: 0.6rem 1rem; border-radius: 12px;
+    background: rgba(239,68,68,0.08);
+    border: 1px solid rgba(239,68,68,0.2);
+    font-size: 0.75rem; color: #fca5a5;
+    display: flex; align-items: center; gap: 0.5rem;
+}
+
+/* ── STATS SECTION ── */
+#stats {
+    background: linear-gradient(180deg, var(--abyss), var(--deep-sea));
+}
+.stats-mega-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 1rem; max-width: 1000px; margin: 0 auto;
+}
+.stat-card {
+    text-align: center; padding: 1.5rem 1rem;
+    border-radius: 16px; background: var(--glass);
+    border: 1px solid var(--glass-border);
+    transition: all 0.3s;
+}
+.stat-card:hover {
+    border-color: var(--gold);
+    transform: translateY(-3px);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+}
+.stat-number {
+    font-family: var(--nw-font-serif, 'Georgia'), serif;
+    font-size: 2rem; font-weight: 900;
+    background: linear-gradient(135deg, var(--gold-light), var(--gold));
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+.stat-label {
+    font-size: 0.7rem; color: var(--text-muted);
+    letter-spacing: 0.1em; text-transform: uppercase; margin-top: 0.25rem;
+}
+
+/* ── CTA SECTION ── */
+#cta-section {
+    background: linear-gradient(180deg, var(--deep-sea), var(--abyss));
+    text-align: center; padding: 8rem 2rem;
+}
+.cta-title {
+    font-family: var(--nw-font-serif, 'Georgia'), serif;
+    font-size: clamp(2rem, 6vw, 4rem); font-weight: 900;
+    background: linear-gradient(135deg, #fff, var(--gold));
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    background-clip: text; margin-bottom: 1rem;
+}
+.cta-desc {
+    color: var(--text-secondary); font-size: 1.1rem;
+    max-width: 600px; margin: 0 auto 2.5rem;
+}
+
+/* ── FOOTER ── */
+.dlc-footer {
+    padding: 3rem 2rem; text-align: center;
+    border-top: 1px solid var(--glass-border);
+    background: var(--abyss);
+}
+.footer-logo {
+    font-family: var(--nw-font-serif, 'Georgia'), serif;
+    font-size: 1.5rem; color: var(--gold); letter-spacing: 0.15em;
+    margin-bottom: 0.5rem;
+}
+.footer-text {
+    color: var(--text-muted); font-size: 0.8rem;
+    max-width: 500px; margin: 0 auto;
+}
+.footer-links {
+    display: flex; justify-content: center; gap: 1.5rem;
+    margin-top: 1.5rem;
+}
+.footer-links a {
+    color: var(--text-secondary); text-decoration: none;
+    font-size: 0.75rem; transition: color 0.2s;
+}
+.footer-links a:hover { color: var(--gold); }
+
+/* ── SCROLL ANIMATIONS ── */
+.reveal {
+    opacity: 0; transform: translateY(40px);
+    transition: opacity 0.8s ease, transform 0.8s ease;
+}
+.reveal.visible { opacity: 1; transform: translateY(0); }
+
+/* ── MODAL ── */
+.modal-overlay {
+    position: fixed; inset: 0; z-index: 1000;
+    background: rgba(0,0,0,0.85);
+    backdrop-filter: blur(10px);
+    display: none; justify-content: center; align-items: center;
+    padding: 2rem; overflow-y: auto;
+}
+.modal-overlay.open { display: flex; }
+.modal-content {
+    background: var(--deep-sea); border: 1px solid var(--glass-border);
+    border-radius: 24px; max-width: 700px; width: 100%;
+    max-height: 90vh; overflow-y: auto; position: relative;
+}
+.modal-close {
+    position: absolute; top: 1rem; right: 1rem;
+    width: 36px; height: 36px; border-radius: 50%;
+    border: 1px solid var(--glass-border); background: rgba(0,0,0,0.5);
+    color: #fff; font-size: 1.2rem; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    z-index: 10; transition: all 0.2s;
+}
+.modal-close:hover { background: rgba(255,255,255,0.1); border-color: var(--gold); }
+.modal-img { width: 100%; aspect-ratio: 16/9; object-fit: cover; border-radius: 24px 24px 0 0; }
+.modal-body { padding: 2rem; }
+.modal-title {
+    font-family: var(--nw-font-serif, 'Georgia'), serif;
+    font-size: 1.8rem; font-weight: 800; margin-bottom: 0.5rem;
+}
+.modal-subtitle { color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1rem; }
+.modal-desc { color: var(--text-secondary); line-height: 1.8; margin-bottom: 1.5rem; }
+
+/* ── RESPONSIVE ── */
+@media (max-width: 768px) {
+    .hero-stats { gap: 0.75rem; }
+    .hero-stat { min-width: 85px; padding: 0.75rem; }
+    .hero-stat-value { font-size: 1.4rem; }
+    .zone-header-card { flex-direction: column; text-align: center; }
+    .locations-grid { grid-template-columns: 1fr; }
+    .suites-grid { grid-template-columns: 1fr; }
+    .stats-mega-grid { grid-template-columns: repeat(2, 1fr); }
+    .section { padding: 4rem 1.25rem; }
+    .deck-label { width: 55px; font-size: 0.55rem; }
+}
+
+@media (max-width: 480px) {
+    .hero-title { letter-spacing: 0.05em; }
+    .hero-cta { flex-direction: column; align-items: center; }
+    .stats-mega-grid { grid-template-columns: repeat(2, 1fr); }
+}
+    </style>
+</head>
+<body data-page-id="regina-dlc">
+
+<!-- PRELOADER -->
+<div id="preloader">
+    <div class="preloader-logo">REGINA</div>
+    <div style="color: var(--text-muted); font-size: 0.75rem; letter-spacing: 0.3em; text-transform: uppercase; margin-top: 0.5rem;" data-i18n="preloaderText">Loading The Floating Empire</div>
+    <div class="preloader-bar"><div class="preloader-fill"></div></div>
+</div>
+
+<!-- PARTICLES -->
+<canvas id="particles-canvas"></canvas>
+
+<!-- NAVIGATION: uses universal NW_NAV (nw-nav.js) — no custom nav needed -->
+
+<!-- ═══════════════ HERO ═══════════════ -->
+<section class="hero" id="hero">
+    <div class="hero-bg"></div>
+    <div class="hero-overlay"></div>
+    <div class="hero-content">
+        <div class="hero-badge" data-i18n="heroBadge">Expansion Pack 01 &mdash; Now Available</div>
+        <h1 class="hero-title cinzel" data-i18n="heroTitle">REGINA</h1>
+        <div class="hero-subtitle" data-i18n="heroSubtitle">The Floating Empire</div>
+        <p class="hero-desc" data-i18n="heroDesc">
+            Board the largest vessel ever built. 2.7 kilometers of explorable ship across 47 decks.
+            27 unique zones. 500+ player interactions. This isn't a DLC &mdash; it's a second game.
+        </p>
+        <div class="hero-stats">
+            <div class="hero-stat">
+                <div class="hero-stat-value" data-count="47">0</div>
+                <div class="hero-stat-label" data-i18n="statDecks">Decks</div>
+            </div>
+            <div class="hero-stat">
+                <div class="hero-stat-value" data-count="27">0</div>
+                <div class="hero-stat-label" data-i18n="statZones">Zones</div>
+            </div>
+            <div class="hero-stat">
+                <div class="hero-stat-value" data-count="500">0</div>
+                <div class="hero-stat-label" data-i18n="statInteractions">Interactions</div>
+            </div>
+            <div class="hero-stat">
+                <div class="hero-stat-value" data-count="200">0</div>
+                <div class="hero-stat-label" data-i18n="statHours">Hours+</div>
+            </div>
+            <div class="hero-stat">
+                <div class="hero-stat-value" data-count="1350">0</div>
+                <div class="hero-stat-label" data-i18n="statNPCs">NPCs</div>
+            </div>
+        </div>
+        <div class="hero-cta">
+            <a href="#zones" class="btn-primary" data-i18n="ctaExplore">Explore Zones</a>
+            <a href="#suites" class="btn-secondary" data-i18n="ctaSuites">Book A Suite</a>
+        </div>
+    </div>
+    <div class="scroll-down">
+        <span data-i18n="scrollHint">Scroll to Explore</span>
+        <span class="scroll-arrow">&#8964;</span>
+    </div>
+</section>
+
+<!-- ═══════════════ ZONES ═══════════════ -->
+<section class="section" id="zones">
+    <div class="section-inner">
+        <div class="section-header reveal">
+            <div class="section-badge" data-i18n="zonesBadge">7 Explorable Zones &bull; 27 Locations</div>
+            <h2 class="section-title" data-i18n="zonesTitle">Explore the Ship</h2>
+            <p class="section-desc" data-i18n="zonesDesc">
+                Every zone is a world unto itself. From thrill rides 140 meters above the ocean to
+                aquarium tunnels 25 meters below &mdash; R.M.S. Regina is the most detailed
+                open-world environment ever created.
+            </p>
+        </div>
+
+        <!-- Zone Tabs -->
+        <div class="zone-tabs reveal" id="zoneTabs">
+            <button class="zone-tab active" data-zone="adventure" style="--tab-color: var(--zone-adventure)" data-i18n="tabAdventure">Adventure</button>
+            <button class="zone-tab" data-zone="dining" style="--tab-color: var(--zone-dining)" data-i18n="tabDining">Dining</button>
+            <button class="zone-tab" data-zone="entertainment" style="--tab-color: var(--zone-entertainment)" data-i18n="tabEntertainment">Entertainment</button>
+            <button class="zone-tab" data-zone="pools" style="--tab-color: var(--zone-pools)" data-i18n="tabPools">Pools</button>
+            <button class="zone-tab" data-zone="sports" style="--tab-color: var(--zone-sports)" data-i18n="tabSports">Sports</button>
+            <button class="zone-tab" data-zone="nature" style="--tab-color: var(--zone-nature)" data-i18n="tabNature">Nature</button>
+            <button class="zone-tab" data-zone="services" style="--tab-color: var(--zone-services)" data-i18n="tabOperations">Operations</button>
+        </div>
+
+        <!-- Zone Content (populated by JS) -->
+        <div id="zoneContent"></div>
+    </div>
+</section>
+
+<!-- ═══════════════ DECK MAP ═══════════════ -->
+<section class="section" id="deckmap">
+    <div class="section-inner">
+        <div class="section-header reveal">
+            <div class="section-badge" data-i18n="deckBadge">47 Decks &bull; Sky to Abyss</div>
+            <h2 class="section-title" data-i18n="deckTitle">Deck Map</h2>
+            <p class="section-desc" data-i18n="deckDesc">
+                From the Sky Deck at 142 meters to the Abyss Chamber 80 meters below the waterline.
+                Every deck tells a story.
+            </p>
+        </div>
+        <div class="deck-visual reveal" id="deckMapContainer"></div>
+    </div>
+</section>
+
+<!-- ═══════════════ SUITES ═══════════════ -->
+<section class="section" id="suites">
+    <div class="section-inner">
+        <div class="section-header reveal">
+            <div class="section-badge" data-i18n="suitesBadge">Choose Your Cabin</div>
+            <h2 class="section-title" data-i18n="suitesTitle">Legendary Suites</h2>
+            <p class="section-desc" data-i18n="suitesDesc">
+                From the Royal Penthouse with its private infinity pool, to the Submarine Suite
+                15 meters underwater, to the Mythic Room 7777 &mdash; 80 meters deep in the abyss.
+            </p>
+        </div>
+        <div class="suites-grid reveal" id="suitesGrid"></div>
+    </div>
+</section>
+
+<!-- ═══════════════ STATS ═══════════════ -->
+<section class="section" id="stats">
+    <div class="section-inner">
+        <div class="section-header reveal">
+            <div class="section-badge" data-i18n="statsBadge">By The Numbers</div>
+            <h2 class="section-title" data-i18n="statsTitle">DLC Statistics</h2>
+        </div>
+        <div class="stats-mega-grid reveal" id="statsGrid"></div>
+    </div>
+</section>
+
+<!-- ═══════════════ CTA ═══════════════ -->
+<section id="cta-section">
+    <div class="reveal">
+        <div class="section-badge" data-i18n="ctaBadge">Ready, Captain?</div>
+        <h2 class="cta-title cinzel" data-i18n="ctaTitle">Board the Regina</h2>
+        <p class="cta-desc" data-i18n="ctaDesc">
+            The gates of the Grand Arrival Hall are open. 47 decks await.
+            200+ hours of content. Your voyage begins now.
+        </p>
+        <div class="hero-cta">
+            <a href="/world/nwg-the-game.html#rmsregina" class="btn-primary" data-i18n="ctaEnter">Back to NWG The Game</a>
+            <a href="#zones" class="btn-secondary" data-i18n="ctaExploreZones">Explore Zones</a>
+        </div>
+    </div>
+</section>
+
+<!-- FOOTER -->
+<footer class="dlc-footer">
+    <div class="footer-logo cinzel">R.M.S. REGINA</div>
+    <p class="footer-text" data-i18n="footerText">
+        The Floating Empire DLC &mdash; NumbahWan Guild &copy; 2026.
+        Built with Unreal Engine 5.4 &bull; Nanite &bull; Lumen &bull; MetaHuman
+    </p>
+    <div class="footer-links">
+        <a href="/world/nwg-the-game.html#rmsregina" data-i18n="footerGame">Back to Game</a>
+        <a href="/" data-i18n="footerHome">Guild Home</a>
+        <a href="/regina" data-i18n="footerRegina">SS Regina</a>
+    </div>
+</footer>
+
+<!-- LOCATION DETAIL MODAL -->
+<div class="modal-overlay" id="locationModal">
+    <div class="modal-content">
+        <button class="modal-close" id="modalClose">&times;</button>
+        <img class="modal-img" id="modalImg" src="" alt="">
+        <div class="modal-body">
+            <h3 class="modal-title" id="modalTitle"></h3>
+            <div class="modal-subtitle" id="modalSubtitle"></div>
+            <p class="modal-desc" id="modalDesc"></p>
+            <div id="modalStats" style="margin-bottom:1rem"></div>
+            <h4 style="font-size:0.85rem; color:var(--gold); margin-bottom:0.5rem; letter-spacing:0.1em; text-transform:uppercase;" data-i18n="modalInteractionsH">Player Interactions</h4>
+            <ul class="location-interactions" id="modalInteractions"></ul>
+            <div id="modalQuest"></div>
+        </div>
+    </div>
+</div>
+
+<script>
+/* ═══════════════════════════════════════════════════════════
+   REGINA DLC — ENGINE
+   ═══════════════════════════════════════════════════════════ */
+
+// ── DATA ──
+let DLC_DATA = null;
+
+// ── i18n HELPER for JS-rendered content ──
+// Delegates to NW_I18N.t() when available, falls back to default string.
+// This ensures ALL dynamic JS content respects the current language.
+function _t(key, fallback) {
+    if (typeof NW_I18N !== 'undefined') return NW_I18N.t(key, fallback);
+    return fallback;
+}
+
+async function loadManifest() {
+    try {
+        const res = await fetch('/static/data/regina-dlc-manifest.json');
+        DLC_DATA = await res.json();
+        init();
+    } catch(e) {
+        console.error('Failed to load DLC manifest:', e);
+        document.getElementById('preloader').classList.add('fade-out');
+    }
+}
+
+function init() {
+    renderZones();
+    renderDeckMap();
+    renderSuites();
+    renderStats();
+    setupTabs();
+    setupScrollAnimations();
+    setupCounters();
+    setupParticles();
+    setupModal();
+
+    // Re-apply i18n to dynamically rendered content (zone tabs, stats, etc.)
+    if (typeof NW_I18N !== 'undefined') NW_I18N.refresh();
+
+    // Re-render on language change so JS-rendered content updates
+    if (typeof NW_I18N !== 'undefined') {
+        NW_I18N.onChange(() => {
+            renderZones();
+            renderDeckMap();
+            renderSuites();
+            renderStats();
+            setupTabs();
+        });
+    }
+
+    // Preloader fade
+    setTimeout(() => {
+        document.getElementById('preloader').classList.add('fade-out');
+    }, 1200);
+}
+
+// ── ZONE RENDERER ──
+function renderZones() {
+    const container = document.getElementById('zoneContent');
+    const zones = DLC_DATA.zones;
+
+    container.innerHTML = zones.map((zone, zi) => `
+        <div class="zone-content ${zi === 0 ? 'active' : ''}" data-zone-id="${zone.id}">
+            <div class="zone-header-card">
+                <div class="zone-icon-lg" style="background:${zone.colorGlow}; color:${zone.color}">
+                    ${getZoneEmoji(zone.id)}
+                </div>
+                <div class="zone-header-text">
+                    <h2 style="color:${zone.color}">${zone.name}</h2>
+                    <p>${zone.description}</p>
+                    <span class="zone-deck-badge">${zone.deckRange} &bull; ${zone.locations.length} ${_t('labelLocations', 'Locations')}</span>
+                </div>
+            </div>
+            <div class="locations-grid">
+                ${zone.locations.map(loc => renderLocationCard(loc, zone.color)).join('')}
+            </div>
+        </div>
+    `).join('');
+}
+
+function renderLocationCard(loc, color) {
+    const statsHtml = loc.stats ? Object.entries(loc.stats).slice(0, 4).map(([k, v]) =>
+        `<span>${formatStatKey(k)}: <span class="stat-val">${v}</span></span>`
+    ).join('') : '';
+
+    return `
+        <div class="location-card" data-location-id="${loc.id}" onclick="openModal('${loc.id}')">
+            <div class="location-img-wrap">
+                <img src="${loc.image}" alt="${loc.name}" loading="lazy"
+                     onerror="this.src='/static/regina/ship/ship-bow-view.webp'">
+                <div class="location-img-overlay"></div>
+                <div class="location-img-badge" style="background:${color}">${loc.deck}</div>
+            </div>
+            <div class="location-body">
+                <div class="location-name">${loc.name}</div>
+                <div class="location-subtitle">${loc.subtitle}</div>
+                <div class="location-desc">${truncate(loc.description, 120)}</div>
+                <div class="location-stats">${statsHtml}</div>
+                <ul class="location-interactions">
+                    ${loc.interactions.slice(0, 3).map(i => `<li>${i}</li>`).join('')}
+                </ul>
+                <div class="location-quest">
+                    <span class="quest-icon">&#9876;</span>
+                    <div class="quest-text">
+                        <div class="quest-title">${loc.questLine}</div>
+                        <div class="quest-reward">${_t('labelReward', 'Reward')}: ${loc.unlockable}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+// ── DECK MAP ──
+function renderDeckMap() {
+    const container = document.getElementById('deckMapContainer');
+    const decks = DLC_DATA.deckMap.highlights;
+    const zoneColors = {};
+    DLC_DATA.zones.forEach(z => { zoneColors[z.id] = z.color; });
+    zoneColors['suites'] = 'var(--zone-suites)';
+
+    container.innerHTML = decks.map(d => `
+        <div class="deck-row">
+            <div class="deck-label">${typeof d.deck === 'number' || d.deck.toString().startsWith('-') ? _t('labelDeck', 'Deck') + ' ' + d.deck : d.deck}</div>
+            <div class="deck-info">
+                <div>
+                    <div class="deck-name">${d.name}</div>
+                </div>
+                <div style="display:flex; align-items:center; gap:0.75rem;">
+                    <div class="deck-feature">${d.feature}</div>
+                    <div class="deck-zone-dot" style="background:${zoneColors[d.zone] || '#666'}"></div>
+                </div>
+            </div>
+        </div>
+    `).join('');
+}
+
+// ── SUITES ──
+function renderSuites() {
+    const container = document.getElementById('suitesGrid');
+    const suites = DLC_DATA.suites;
+
+    container.innerHTML = suites.map(s => `
+        <div class="suite-card">
+            <div class="suite-img-wrap">
+                <img src="${s.image}" alt="${s.name}" loading="lazy"
+                     onerror="this.src='/static/regina/ship/ship-bow-view.webp'">
+                <div class="suite-tier tier-${s.tier.toLowerCase()}">${s.tier}</div>
+                <div class="suite-price-tag">${s.price}</div>
+            </div>
+            <div class="suite-body">
+                <div class="suite-name">${s.name}</div>
+                <div class="suite-deck">${s.deck} &bull; ${s.size}</div>
+                <div class="suite-features">
+                    ${s.features.map(f => `<span class="suite-feature">${f}</span>`).join('')}
+                </div>
+                <ul class="suite-interactions">
+                    ${s.interactions.map(i => `<li>${i}</li>`).join('')}
+                </ul>
+                <div class="suite-secret">
+                    <span>&#128274;</span>
+                    <span>${_t('labelSecret', 'Secret')}: ${s.secretItem}</span>
+                </div>
+            </div>
+        </div>
+    `).join('');
+}
+
+// ── STATS ──
+function renderStats() {
+    const container = document.getElementById('statsGrid');
+    const gs = DLC_DATA.globalStats;
+    const meta = DLC_DATA.meta;
+
+    const items = [
+        { n: meta.ship.decks, l: _t('sDecks', 'Decks') },
+        { n: gs.totalNPCs, l: _t('sNPCs', 'NPCs') },
+        { n: gs.totalQuestLines, l: _t('sQuestLines', 'Quest Lines') },
+        { n: gs.totalInteractions, l: _t('sInteractions', 'Interactions') },
+        { n: gs.mainStoryMissions, l: _t('sMainMissions', 'Main Missions') },
+        { n: gs.sideQuests, l: _t('sSideQuests', 'Side Quests') },
+        { n: gs.hiddenAreas, l: _t('sHiddenAreas', 'Hidden Areas') },
+        { n: gs.easterEggs, l: _t('sEasterEggs', 'Easter Eggs') },
+        { n: gs.achievementCount, l: _t('sAchievements', 'Achievements') },
+        { n: gs.totalUnlockables, l: _t('sUnlockables', 'Unlockables') },
+        { n: meta.ship.rooms, l: _t('sRooms', 'Rooms') },
+        { n: meta.ship.restaurants, l: _t('sRestaurants', 'Restaurants') },
+    ];
+
+    container.innerHTML = items.map(i => `
+        <div class="stat-card">
+            <div class="stat-number">${typeof i.n === 'number' ? i.n.toLocaleString() : i.n}</div>
+            <div class="stat-label">${i.l}</div>
+        </div>
+    `).join('');
+}
+
+// ── TABS ──
+function setupTabs() {
+    document.querySelectorAll('.zone-tab').forEach(tab => {
+        tab.addEventListener('click', () => {
+            document.querySelectorAll('.zone-tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.zone-content').forEach(c => c.classList.remove('active'));
+            tab.classList.add('active');
+            const zone = tab.dataset.zone;
+            const content = document.querySelector(`[data-zone-id="${zone}"]`);
+            if (content) content.classList.add('active');
+        });
+    });
+}
+
+// ── SCROLL ANIMATIONS ──
+function setupScrollAnimations() {
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(e => {
+            if (e.isIntersecting) {
+                e.target.classList.add('visible');
+                observer.unobserve(e.target);
+            }
+        });
+    }, { threshold: 0.1 });
+
+    document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+}
+
+// ── NAVBAR: handled by universal NW_NAV ──
+
+// ── COUNTER ANIMATION ──
+function setupCounters() {
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(e => {
+            if (e.isIntersecting) {
+                animateCount(e.target);
+                observer.unobserve(e.target);
+            }
+        });
+    }, { threshold: 0.5 });
+
+    document.querySelectorAll('[data-count]').forEach(el => observer.observe(el));
+}
+
+function animateCount(el) {
+    const target = parseInt(el.dataset.count);
+    const duration = 2000;
+    const start = performance.now();
+
+    function tick(now) {
+        const progress = Math.min((now - start) / duration, 1);
+        const eased = 1 - Math.pow(1 - progress, 3); // ease-out cubic
+        const val = Math.round(eased * target);
+        el.textContent = val >= 1000 ? val.toLocaleString() : val;
+        if (progress < 1) requestAnimationFrame(tick);
+        else el.textContent = target >= 1000 ? target.toLocaleString() + '+' : target;
+    }
+    requestAnimationFrame(tick);
+}
+
+// ── PARTICLES ──
+function setupParticles() {
+    const canvas = document.getElementById('particles-canvas');
+    const ctx = canvas.getContext('2d');
+    let particles = [];
+    let w, h;
+
+    function resize() {
+        w = canvas.width = window.innerWidth;
+        h = canvas.height = window.innerHeight;
+    }
+    resize();
+    window.addEventListener('resize', resize);
+
+    class Particle {
+        constructor() { this.reset(); }
+        reset() {
+            this.x = Math.random() * w;
+            this.y = Math.random() * h;
+            this.size = Math.random() * 1.5 + 0.5;
+            this.speedY = -(Math.random() * 0.3 + 0.1);
+            this.speedX = (Math.random() - 0.5) * 0.2;
+            this.opacity = Math.random() * 0.4 + 0.1;
+            this.life = Math.random() * 300 + 100;
+        }
+        update() {
+            this.y += this.speedY;
+            this.x += this.speedX;
+            this.life--;
+            if (this.life <= 0 || this.y < -10) this.reset();
+        }
+        draw() {
+            ctx.beginPath();
+            ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+            ctx.fillStyle = `rgba(212, 175, 55, ${this.opacity * (this.life / 300)})`;
+            ctx.fill();
+        }
+    }
+
+    for (let i = 0; i < 60; i++) particles.push(new Particle());
+
+    function animate() {
+        ctx.clearRect(0, 0, w, h);
+        particles.forEach(p => { p.update(); p.draw(); });
+        requestAnimationFrame(animate);
+    }
+    animate();
+}
+
+// ── MODAL ──
+function setupModal() {
+    document.getElementById('modalClose').onclick = closeModal;
+    document.getElementById('locationModal').onclick = (e) => {
+        if (e.target === e.currentTarget) closeModal();
+    };
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeModal(); });
+}
+
+function openModal(locationId) {
+    let loc = null;
+    let zoneColor = '#fff';
+    for (const zone of DLC_DATA.zones) {
+        const found = zone.locations.find(l => l.id === locationId);
+        if (found) { loc = found; zoneColor = zone.color; break; }
+    }
+    if (!loc) return;
+
+    document.getElementById('modalImg').src = loc.image;
+    document.getElementById('modalTitle').textContent = loc.name;
+    document.getElementById('modalSubtitle').textContent = loc.subtitle + ' — ' + loc.deck;
+    document.getElementById('modalDesc').textContent = loc.description;
+
+    // Stats
+    const statsEl = document.getElementById('modalStats');
+    if (loc.stats) {
+        statsEl.innerHTML = '<div class="location-stats">' +
+            Object.entries(loc.stats).map(([k,v]) =>
+                `<span>${formatStatKey(k)}: <span class="stat-val">${v}</span></span>`
+            ).join('') + '</div>';
+    }
+
+    // Interactions
+    const intEl = document.getElementById('modalInteractions');
+    intEl.innerHTML = loc.interactions.map(i => `<li>${i}</li>`).join('');
+
+    // Quest
+    const questEl = document.getElementById('modalQuest');
+    questEl.innerHTML = `
+        <div class="location-quest" style="margin-top:1rem">
+            <span class="quest-icon">&#9876;</span>
+            <div class="quest-text">
+                <div class="quest-title">${loc.questLine}</div>
+                <div class="quest-reward">${_t('labelReward', 'Reward')}: ${loc.unlockable}</div>
+            </div>
+        </div>`;
+
+    document.getElementById('locationModal').classList.add('open');
+    document.body.style.overflow = 'hidden';
+}
+
+function closeModal() {
+    document.getElementById('locationModal').classList.remove('open');
+    document.body.style.overflow = '';
+}
+
+// ── HELPERS ──
+function getZoneEmoji(id) {
+    const map = {
+        adventure: '&#9978;', dining: '&#127860;', entertainment: '&#127917;',
+        pools: '&#127754;', sports: '&#9971;', nature: '&#127793;', services: '&#9875;'
+    };
+    return map[id] || '&#9733;';
+}
+
+function formatStatKey(key) {
+    return key.replace(/([A-Z])/g, ' $1').replace(/^./, s => s.toUpperCase());
+}
+
+function truncate(str, max) {
+    return str.length > max ? str.substring(0, max) + '...' : str;
+}
+
+// ── BOOT ──
+loadManifest();
+</script>
+
+<!-- ============ UNIVERSAL SCRIPTS ============ -->
+<!-- Core scripts: icons, nav, i18n (same as all NumbahWan pages) -->
+<script src="/static/nw-icons-inline.js" defer></script>
+<script src="/static/nw-nav.js" defer></script>
+<script src="/static/nw-i18n-core.js" defer></script>
+
+<!-- Page i18n translations (same pattern as nwg-the-game.html) -->
+<script>
+const PAGE_I18N = {
+  en: {},
+  zh: {
+    // Preloader
+    preloaderText: '正在載入浮空帝國',
+    // Hero
+    heroBadge: '擴展包 01 — 現已推出',
+    heroTitle: 'REGINA',
+    heroSubtitle: '浮空帝國',
+    heroDesc: '登上有史以來建造的最大船隻。2.7公里的可探索船體，橫跨47層甲板。27個獨特區域。500+玩家互動。這不是DLC——這是第二款遊戲。',
+    statDecks: '甲板',
+    statZones: '區域',
+    statInteractions: '互動',
+    statHours: '小時+',
+    statNPCs: 'NPC',
+    ctaExplore: '探索區域',
+    ctaSuites: '預訂套房',
+    scrollHint: '向下滾動探索',
+    // Zone tabs
+    tabAdventure: '冒險',
+    tabDining: '餐飲',
+    tabEntertainment: '娛樂',
+    tabPools: '泳池',
+    tabSports: '運動',
+    tabNature: '自然',
+    tabOperations: '營運',
+    // Zones section
+    zonesBadge: '7個可探索區域 • 27個地點',
+    zonesTitle: '探索船艦',
+    zonesDesc: '每個區域都是一個獨立的世界。從海平面上方140米的刺激遊樂設施到下方25米的水族館隧道——R.M.S. Regina是有史以來最精細的開放世界環境。',
+    // Deck map
+    deckBadge: '47層甲板 • 從天空到深淵',
+    deckTitle: '甲板地圖',
+    deckDesc: '從142米高的天空甲板到水線以下80米的深淵密室。每層甲板都講述一個故事。',
+    // Suites
+    suitesBadge: '選擇您的艙房',
+    suitesTitle: '傳奇套房',
+    suitesDesc: '從擁有私人無邊泳池的皇家頂層套房，到水下15米的潛艇套房，再到深淵80米處的神話7777號房。',
+    // Stats
+    statsBadge: '數據一覽',
+    statsTitle: 'DLC統計數據',
+    // CTA
+    ctaBadge: '準備好了嗎，船長？',
+    ctaTitle: '登上Regina',
+    ctaDesc: '大迎賓廳的大門已經打開。47層甲板等待著你。200+小時的內容。你的航程現在開始。',
+    ctaEnter: '返回NWG遊戲',
+    ctaExploreZones: '探索區域',
+    // Footer
+    footerText: '浮空帝國DLC — NumbahWan公會 © 2026。使用Unreal Engine 5.4 • Nanite • Lumen • MetaHuman打造',
+    footerGame: '返回遊戲',
+    footerHome: '公會首頁',
+    footerRegina: 'SS Regina號',
+    // Modal
+    modalInteractionsH: '玩家互動',
+    // JS-rendered labels
+    labelLocations: '個地點',
+    labelReward: '獎勵',
+    labelSecret: '秘密',
+    labelDeck: '甲板',
+    // Stats section labels
+    sDecks: '甲板',
+    sNPCs: 'NPC',
+    sQuestLines: '任務線',
+    sInteractions: '互動',
+    sMainMissions: '主線任務',
+    sSideQuests: '支線任務',
+    sHiddenAreas: '隱藏區域',
+    sEasterEggs: '彩蛋',
+    sAchievements: '成就',
+    sUnlockables: '可解鎖物品',
+    sRooms: '房間',
+    sRestaurants: '餐廳'
+  },
+  th: {
+    // Preloader
+    preloaderText: 'กำลังโหลดจักรวรรดิลอยน้ำ',
+    // Hero
+    heroBadge: 'แพ็คเสริม 01 — พร้อมให้เล่นแล้ว',
+    heroTitle: 'REGINA',
+    heroSubtitle: 'จักรวรรดิลอยน้ำ',
+    heroDesc: 'ขึ้นเรือลำใหญ่ที่สุดที่เคยสร้างมา เรือสำรวจยาว 2.7 กิโลเมตร 47 ชั้นดาดฟ้า 27 โซนที่ไม่ซ้ำกัน 500+ ปฏิสัมพันธ์ นี่ไม่ใช่ DLC — นี่คือเกมที่สอง',
+    statDecks: 'ดาดฟ้า',
+    statZones: 'โซน',
+    statInteractions: 'ปฏิสัมพันธ์',
+    statHours: 'ชั่วโมง+',
+    statNPCs: 'NPC',
+    ctaExplore: 'สำรวจโซน',
+    ctaSuites: 'จองห้องสวีท',
+    scrollHint: 'เลื่อนลงเพื่อสำรวจ',
+    // Zone tabs
+    tabAdventure: 'ผจญภัย',
+    tabDining: 'ร้านอาหาร',
+    tabEntertainment: 'บันเทิง',
+    tabPools: 'สระว่ายน้ำ',
+    tabSports: 'กีฬา',
+    tabNature: 'ธรรมชาติ',
+    tabOperations: 'ปฏิบัติการ',
+    // Zones section
+    zonesBadge: '7 โซนสำรวจ • 27 สถานที่',
+    zonesTitle: 'สำรวจเรือ',
+    zonesDesc: 'ทุกโซนคือโลกในตัวมันเอง ตั้งแต่เครื่องเล่นสุดมันส์สูง 140 เมตรเหนือมหาสมุทร ไปจนถึงอุโมงค์พิพิธภัณฑ์สัตว์น้ำลึก 25 เมตร — R.M.S. Regina คือสภาพแวดล้อมโลกเปิดที่ละเอียดที่สุดเท่าที่เคยสร้างมา',
+    // Deck map
+    deckBadge: '47 ดาดฟ้า • จากท้องฟ้าสู่ก้นทะเล',
+    deckTitle: 'แผนที่ดาดฟ้า',
+    deckDesc: 'จากดาดฟ้าท้องฟ้าที่ 142 เมตร ถึงห้องเหวลึก 80 เมตรใต้แนวน้ำ ทุกดาดฟ้าเล่าเรื่องราว',
+    // Suites
+    suitesBadge: 'เลือกห้องของคุณ',
+    suitesTitle: 'ห้องสวีทตำนาน',
+    suitesDesc: 'ตั้งแต่ห้องเพนท์เฮาส์รอยัลที่มีสระว่ายน้ำอินฟินิตี้ส่วนตัว ไปจนถึงห้องสวีทเรือดำน้ำใต้น้ำ 15 เมตร และห้อง 7777 ในเหวลึก 80 เมตร',
+    // Stats
+    statsBadge: 'ตัวเลข',
+    statsTitle: 'สถิติ DLC',
+    // CTA
+    ctaBadge: 'พร้อมแล้วหรือยัง กัปตัน?',
+    ctaTitle: 'ขึ้นเรือ Regina',
+    ctaDesc: 'ประตูห้องต้อนรับใหญ่เปิดแล้ว 47 ดาดฟ้ารอคุณอยู่ เนื้อหามากกว่า 200 ชั่วโมง การเดินทางของคุณเริ่มต้นแล้ว',
+    ctaEnter: 'กลับไปเกม NWG',
+    ctaExploreZones: 'สำรวจโซน',
+    // Footer
+    footerText: 'จักรวรรดิลอยน้ำ DLC — NumbahWan Guild © 2026 สร้างด้วย Unreal Engine 5.4 • Nanite • Lumen • MetaHuman',
+    footerGame: 'กลับไปเกม',
+    footerHome: 'หน้าแรกกิลด์',
+    footerRegina: 'เรือ SS Regina',
+    // Modal
+    modalInteractionsH: 'ปฏิสัมพันธ์ของผู้เล่น',
+    // JS-rendered labels
+    labelLocations: 'สถานที่',
+    labelReward: 'รางวัล',
+    labelSecret: 'ความลับ',
+    labelDeck: 'ดาดฟ้า',
+    // Stats section labels
+    sDecks: 'ดาดฟ้า',
+    sNPCs: 'NPC',
+    sQuestLines: 'สายเควส',
+    sInteractions: 'ปฏิสัมพันธ์',
+    sMainMissions: 'ภารกิจหลัก',
+    sSideQuests: 'เควสย่อย',
+    sHiddenAreas: 'พื้นที่ซ่อน',
+    sEasterEggs: 'อีสเตอร์เอ้ก',
+    sAchievements: 'ความสำเร็จ',
+    sUnlockables: 'ปลดล็อค',
+    sRooms: 'ห้อง',
+    sRestaurants: 'ร้านอาหาร'
+  }
+};
+
+/* Register with NW_I18N (same pattern as nwg-the-game.html) */
+if (typeof NW_I18N !== 'undefined') { NW_I18N.register(PAGE_I18N); }
+else { document.addEventListener('DOMContentLoaded', () => { if (typeof NW_I18N !== 'undefined') NW_I18N.register(PAGE_I18N); }); }
+</script>
+</body>
+</html>
