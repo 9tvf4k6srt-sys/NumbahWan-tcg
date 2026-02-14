@@ -352,9 +352,11 @@
     <script defer src="/static/helpers/nw-audio.js"></script>
     <script defer src="/static/helpers/nw-state.js"></script>
     <script defer src="/static/helpers/nw-guild.js"></script>
+    <script src="/static/nw-i18n-shim.js"></script>
+
     <script src="/static/nw-nav.js" defer></script>
-<script src="/static/nw-sounds.js" defer></script>
-<script src="/static/nw-guide.js" defer></script>
+<script data-lazy-src="/static/nw-sounds.js"></script>
+<script data-lazy-src="/static/nw-guide.js"></script>
     <script src="/static/nw-zone-bundle.js" defer></script>
 </head>
 <body data-page-id="market">
@@ -717,7 +719,7 @@
             return `
                 <div class="listing-card ${isDeal ? 'deal' : ''} ${isNew ? 'new' : ''}" onclick="buyListing(${listing.id})">
                     <div class="listing-img-wrap">
-                        <img class="listing-img" loading="lazy" decoding="async" src="${cardThumb(card.img)}" alt="${card.name}" onerror="this.onerror=null;this.src=cardImg(this.alt!=='placeholder'?'${card.img}':'placeholder.webp')">
+                        <img class="listing-img" loading="eager" decoding="async" src="${cardThumb(card.img)}" alt="${card.name}" onerror="this.onerror=null;this.src=cardImg(this.alt!=='placeholder'?'${card.img}':'placeholder.webp')" fetchpriority="high">
                         ${isDeal ? '<div class="listing-badge deal">DEAL</div>' : ''}
                         ${isNew && !isDeal ? '<div class="listing-badge new">NEW</div>' : ''}
                         <div class="listing-rarity-bar ${card.rarity}"></div>
@@ -729,7 +731,7 @@
                             <span class="listing-seller">by ${listing.seller}</span>
                         </div>
                         <div class="listing-price-row">
-                            <span class="listing-price">${listing.price === 0 ? '<span style="color:#ffd700">FREE</span>' : listing.price + ' <img loading="lazy" src="/static/icons/sacred-log.webp" style="width:16px;height:16px;vertical-align:middle">'}</span>
+                            <span class="listing-price">${listing.price === 0 ? '<span style="color:#ffd700">FREE</span>' : listing.price + ' <img loading="eager" src="/static/icons/sacred-log.webp" style="width:16px;height:16px;vertical-align:middle" fetchpriority="high">'}</span>
                             <button class="listing-buy-btn" onclick="event.stopPropagation(); buyListing(${listing.id})">${listing.price === 0 ? 'CLAIM' : 'BUY'}</button>
                         </div>
                     </div>
@@ -1203,5 +1205,6 @@ const MARKET_I18N = {
 };
 if (typeof NW_I18N !== 'undefined') NW_I18N.register(MARKET_I18N);
 </script>
+  <script src="/static/nw-lazy.js" defer></script>
 </body>
 </html>

@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Icon Review Dashboard — NWG</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=Inter:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a12;
+    --card-bg: #12121e;
+    --border: #2a2a3a;
+    --gold: #ffd700;
+    --text: #e0e0e0;
+    --muted: #888;
+    --accent: #00d4ff;
+    --fire: #ff6600;
+    --section-bg: #0e0e18;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { background:var(--bg); color:var(--text); font-family:'Inter',sans-serif; padding:1.5rem; }
+  
+  h1 { font-family:'Orbitron',sans-serif; color:var(--gold); font-size:1.8rem; text-align:center; margin-bottom:.5rem; }
+  .subtitle { text-align:center; color:var(--muted); margin-bottom:2rem; font-size:.9rem; }
+  .subtitle a { color:var(--accent); text-decoration:none; }
+  
+  .stats-bar {
+    display:flex; justify-content:center; gap:2rem; margin-bottom:2rem;
+    padding:1rem; background:var(--card-bg); border-radius:12px; border:1px solid var(--border);
+  }
+  .stat { text-align:center; }
+  .stat-num { font-family:'Orbitron',sans-serif; color:var(--gold); font-size:1.5rem; }
+  .stat-label { font-size:.75rem; color:var(--muted); }
+
+  .section-group {
+    margin-bottom:2.5rem; background:var(--section-bg); border-radius:16px;
+    border:1px solid var(--border); overflow:hidden;
+  }
+  .section-header {
+    padding:1rem 1.5rem; background:rgba(255,215,0,.05);
+    border-bottom:1px solid var(--border); cursor:pointer;
+    display:flex; align-items:center; gap:1rem;
+  }
+  .section-header:hover { background:rgba(255,215,0,.1); }
+  .section-header h2 { font-family:'Orbitron',sans-serif; color:var(--gold); font-size:1.1rem; flex:1; }
+  .section-header .count { color:var(--muted); font-size:.8rem; }
+  .section-header .toggle { color:var(--gold); font-size:1.2rem; transition:transform .3s; }
+  .section-header.collapsed .toggle { transform:rotate(-90deg); }
+
+  .icon-grid {
+    display:grid; grid-template-columns:repeat(auto-fill, minmax(280px, 1fr));
+    gap:1.5rem; padding:1.5rem;
+  }
+  .icon-grid.hidden { display:none; }
+
+  .icon-card {
+    background:var(--card-bg); border:1px solid var(--border); border-radius:12px;
+    padding:1.5rem; text-align:center; transition:border-color .3s;
+  }
+  .icon-card:hover { border-color:var(--gold); }
+  .icon-card.flagged { border-color:var(--fire); box-shadow:0 0 12px rgba(255,102,0,.3); }
+
+  .icon-name { font-family:'Orbitron',sans-serif; color:var(--gold); font-size:.85rem; margin-bottom:.3rem; }
+  .icon-key { color:var(--muted); font-size:.7rem; margin-bottom:1rem; }
+
+  .icon-compare {
+    display:flex; align-items:center; justify-content:center; gap:1.5rem; margin-bottom:1rem;
+  }
+  .icon-box { text-align:center; }
+  .icon-box-label { font-size:.65rem; color:var(--muted); margin-bottom:.5rem; text-transform:uppercase; letter-spacing:1px; }
+
+  .emoji-preview {
+    width:64px; height:64px; display:flex; align-items:center; justify-content:center;
+    font-size:2.5rem; background:rgba(255,255,255,.05); border-radius:8px;
+  }
+  .svg-preview {
+    width:120px; height:120px; display:flex; align-items:center; justify-content:center;
+    background:rgba(255,215,0,.03); border-radius:8px; border:1px solid rgba(255,215,0,.1);
+  }
+  .svg-preview svg, .svg-preview .nw-icon { width:96px; height:96px; }
+
+  .arrow { color:var(--gold); font-size:1.5rem; }
+
+  .icon-actions { display:flex; gap:.5rem; justify-content:center; margin-top:.8rem; }
+  .btn {
+    padding:.4rem .8rem; border-radius:6px; border:1px solid var(--border);
+    background:transparent; color:var(--text); font-size:.7rem; cursor:pointer;
+    transition:all .2s;
+  }
+  .btn:hover { background:rgba(255,255,255,.1); }
+  .btn-flag { border-color:var(--fire); color:var(--fire); }
+  .btn-flag:hover { background:rgba(255,102,0,.2); }
+  .btn-flag.active { background:rgba(255,102,0,.3); border-color:var(--fire); }
+  .btn-approve { border-color:#00cc66; color:#00cc66; }
+  .btn-approve:hover { background:rgba(0,204,102,.2); }
+  .btn-approve.active { background:rgba(0,204,102,.3); }
+
+  .feedback-summary {
+    position:fixed; bottom:0; left:0; right:0; z-index:100;
+    background:var(--card-bg); border-top:2px solid var(--gold);
+    padding:1rem 2rem; display:flex; align-items:center; justify-content:space-between;
+  }
+  .feedback-summary .info { font-size:.85rem; }
+  .feedback-summary .info span { color:var(--gold); font-family:'Orbitron',sans-serif; }
+  .btn-export {
+    padding:.6rem 1.5rem; background:var(--gold); color:#000; font-weight:700;
+    border:none; border-radius:8px; cursor:pointer; font-family:'Orbitron',sans-serif;
+    font-size:.8rem;
+  }
+  .btn-export:hover { background:#ffee80; }
+
+  body { padding-bottom:5rem; }
+
+  @media (max-width: 600px) {
+    .icon-grid { grid-template-columns:1fr; }
+    .icon-compare { flex-direction:column; }
+  }
+</style>
+</head>
+<body>
+
+<h1>⚔️ Icon Review Dashboard</h1>
+<p class="subtitle">All 42 icons at large scale — flag icons that need redesign, approve ones you like<br>
+<a href="/world/nwg-the-game.html" target="_blank">↗ Open live page</a></p>
+
+<div class="stats-bar">
+  <div class="stat"><div class="stat-num" id="total-count">42</div><div class="stat-label">Total Icons</div></div>
+  <div class="stat"><div class="stat-num" id="approved-count">0</div><div class="stat-label">Approved</div></div>
+  <div class="stat"><div class="stat-num" id="flagged-count">0</div><div class="stat-label">Needs Redo</div></div>
+  <div class="stat"><div class="stat-num" id="pending-count">42</div><div class="stat-label">Pending</div></div>
+</div>
+
+<div id="sections-container"></div>
+
+<div class="feedback-summary">
+  <div class="info">
+    <span id="summary-approved">0</span> approved &nbsp;•&nbsp; 
+    <span id="summary-flagged">0</span> flagged &nbsp;•&nbsp;
+    <span id="summary-pending">42</span> pending
+  </div>
+  <button class="btn-export" onclick="exportFeedback()">📋 Copy Feedback</button>
+</div>
+
+<script src="/static/nw-game-icons.js"></script>
+<script>
+(function() {
+  const ICON_DATA = [
+    // [section, iconKey, i18nKey, featureName, emoji]
+    ["World", "biomes", "feat_biomes", "Dynamic Biomes", "🏔️"],
+    ["World", "monkeys", "feat_monkeys", "200+ Monkey AI", "🐒"],
+    ["World", "day-night", "feat_cycle", "Day-Night Cycle", "🌅"],
+    ["Combat", "action-rpg", "feat_action", "Action RPG Core", "⚔️"],
+    ["Combat", "tcg", "feat_tcg", "TCG Card System", "🃏"],
+    ["Combat", "pvp", "feat_pvp", "PvP Arena", "🏟️"],
+    ["Social", "feast", "feat_feast", "Guild Feast System", "🍽️"],
+    ["Social", "concert", "feat_concert", "Live Concerts", "🎵"],
+    ["Social", "photo", "feat_photo", "Photo Mode", "📸"],
+    ["Crafting", "forge", "feat_forge", "Card Minting", "🔨"],
+    ["Crafting", "market", "feat_market", "Grand Market", "🏪"],
+    ["Crafting", "vault", "feat_vault", "Sacred Vault", "🏆"],
+    ["Endgame", "bosses", "feat_bosses", "Boss Encounters", "💀"],
+    ["Endgame", "forbidden", "feat_forbidden", "The Forbidden Vault", "🗝️"],
+    ["Endgame", "seasons", "feat_seasons", "Seasonal Content", "👑"],
+    ["DLC: Flex", "skins", "feat_skins", "Legendary Skins", "👑"],
+    ["DLC: Flex", "mounts", "feat_mounts", "Exotic Mounts", "🐴"],
+    ["DLC: Flex", "decor", "feat_decor", "Room Decor Sets", "🏠"],
+    ["DLC: Flex", "emotes", "feat_emotes", "Premium Emotes", "🎉"],
+    ["DLC: Activities", "hotsprings", "feat_hotsprings", "Hot Springs Resort", "♨️"],
+    ["DLC: Activities", "pets", "feat_pets", "Pet Breeding", "🐣"],
+    ["DLC: Activities", "arcade", "feat_arcade", "Castle Arcade", "🎮"],
+    ["DLC: Activities", "festivals", "feat_festival", "Seasonal Festivals", "🎆"],
+    ["DLC: Duel System", "duel-table", "feat_portable", "Portable Duel Table", "🃏"],
+    ["DLC: Duel System", "holographic", "feat_holo", "Holographic Projection", "💫"],
+    ["DLC: Duel System", "challenge", "feat_challenge", "Challenge Protocol", "🎯"],
+    ["DLC: Spectator", "replay", "feat_replay", "Instant Replay Crystals", "📺"],
+    ["DLC: Spectator", "crowd", "feat_crowdsurge", "Crowd Surge Mechanic", "📣"],
+    ["DLC: Spectator", "streetcred", "feat_streaks", "Street Cred & Win Streaks", "🏆"],
+    ["DLC: Spectator", "spectator-kit", "feat_spectatorkit", "Spectator Survival Kit", "🍿"],
+    ["DLC: Exotic Biomes", "griffin", "feat_griffins", "Griffin Breeding", "🦅"],
+    ["DLC: Exotic Biomes", "cloud-fishing", "feat_cloudfish", "Cloud Fishing", "☁️"],
+    ["DLC: Exotic Biomes", "parliament", "feat_skyparliament", "Monkey Parliament", "🏰"],
+    ["DLC: Time Rift", "sporemite", "feat_sporemites", "Sporemite Companions", "🍄"],
+    ["DLC: Time Rift", "timeloop", "feat_timeloops", "Time-Loop Puzzles", "⏳"],
+    ["DLC: Time Rift", "archaeology", "feat_archaeology", "Archaeology System", "🔬"],
+    ["DLC: Regina", "ship", "feat_explore_ship", "Full Ship Exploration", "🚢"],
+    ["DLC: Regina", "history", "feat_regina_history", "Living History Mode", "📜"],
+    ["DLC: Regina", "dive", "feat_regina_dive", "Dive the Wreck", "🤿"],
+    ["DLC: RMS Extra", "adventure", "feat_rms_adventure", "Adventure Zone", "🎢"],
+    ["DLC: RMS Extra", "dining", "feat_rms_dining", "Dining & Entertainment", "🍽️"],
+    ["DLC: RMS Extra", "suites", "feat_rms_suites", "Legendary Suites", "🏨"]
+  ];
+
+  // State
+  const state = {};
+  ICON_DATA.forEach(d => { state[d[1]] = 'pending'; }); // pending | approved | flagged
+
+  // Group by section
+  const sections = {};
+  ICON_DATA.forEach(d => {
+    if (!sections[d[0]]) sections[d[0]] = [];
+    sections[d[0]].push(d);
+  });
+
+  const icons = window.NW_GAME_ICONS ? window.NW_GAME_ICONS.icons : {};
+  const container = document.getElementById('sections-container');
+
+  Object.entries(sections).forEach(([sectionName, items]) => {
+    const group = document.createElement('div');
+    group.className = 'section-group';
+
+    const header = document.createElement('div');
+    header.className = 'section-header';
+    header.innerHTML = `
+      <span class="toggle">▼</span>
+      <h2>${sectionName}</h2>
+      <span class="count">${items.length} icons</span>
+    `;
+    header.addEventListener('click', () => {
+      const grid = group.querySelector('.icon-grid');
+      grid.classList.toggle('hidden');
+      header.classList.toggle('collapsed');
+    });
+    group.appendChild(header);
+
+    const grid = document.createElement('div');
+    grid.className = 'icon-grid';
+
+    items.forEach(([sec, iconKey, i18nKey, name, emoji]) => {
+      const card = document.createElement('div');
+      card.className = 'icon-card';
+      card.id = `card-${iconKey}`;
+
+      const svgHtml = icons[iconKey] || '<span style="color:#ff4444">MISSING</span>';
+
+      card.innerHTML = `
+        <div class="icon-name">${name}</div>
+        <div class="icon-key">${iconKey} → ${i18nKey}</div>
+        <div class="icon-compare">
+          <div class="icon-box">
+            <div class="icon-box-label">Before</div>
+            <div class="emoji-preview">${emoji}</div>
+          </div>
+          <div class="arrow">→</div>
+          <div class="icon-box">
+            <div class="icon-box-label">After (SVG)</div>
+            <div class="svg-preview">${svgHtml}</div>
+          </div>
+        </div>
+        <div class="icon-actions">
+          <button class="btn btn-approve" data-key="${iconKey}" onclick="setStatus('${iconKey}','approved',this)">✓ Approve</button>
+          <button class="btn btn-flag" data-key="${iconKey}" onclick="setStatus('${iconKey}','flagged',this)">✗ Needs Redo</button>
+        </div>
+      `;
+      grid.appendChild(card);
+    });
+
+    group.appendChild(grid);
+    container.appendChild(group);
+  });
+
+  window.setStatus = function(key, status, btn) {
+    // Toggle if clicking same status
+    if (state[key] === status) {
+      state[key] = 'pending';
+    } else {
+      state[key] = status;
+    }
+    
+    const card = document.getElementById(`card-${key}`);
+    card.classList.remove('flagged');
+    card.querySelectorAll('.btn').forEach(b => b.classList.remove('active'));
+    
+    if (state[key] === 'flagged') {
+      card.classList.add('flagged');
+      card.querySelector('.btn-flag').classList.add('active');
+    } else if (state[key] === 'approved') {
+      card.querySelector('.btn-approve').classList.add('active');
+    }
+    
+    updateCounts();
+  };
+
+  function updateCounts() {
+    const vals = Object.values(state);
+    const approved = vals.filter(v => v === 'approved').length;
+    const flagged = vals.filter(v => v === 'flagged').length;
+    const pending = vals.filter(v => v === 'pending').length;
+
+    document.getElementById('approved-count').textContent = approved;
+    document.getElementById('flagged-count').textContent = flagged;
+    document.getElementById('pending-count').textContent = pending;
+    document.getElementById('summary-approved').textContent = approved;
+    document.getElementById('summary-flagged').textContent = flagged;
+    document.getElementById('summary-pending').textContent = pending;
+  }
+
+  window.exportFeedback = function() {
+    const lines = ['# Icon Review Feedback\n'];
+    const flagged = [];
+    const approved = [];
+    
+    ICON_DATA.forEach(([sec, key, i18n, name]) => {
+      if (state[key] === 'flagged') flagged.push(`- ✗ **${name}** (${key}) — NEEDS REDO`);
+      else if (state[key] === 'approved') approved.push(`- ✓ ${name} (${key})`);
+    });
+
+    if (flagged.length) {
+      lines.push('## Needs Redo (' + flagged.length + ')\n');
+      lines.push(...flagged);
+      lines.push('');
+    }
+    if (approved.length) {
+      lines.push('## Approved (' + approved.length + ')\n');
+      lines.push(...approved);
+    }
+
+    const text = lines.join('\n');
+    navigator.clipboard.writeText(text).then(() => {
+      alert('Feedback copied to clipboard! Paste it in our chat.');
+    }).catch(() => {
+      // Fallback
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand('copy');
+      document.body.removeChild(ta);
+      alert('Feedback copied! Paste it in our chat.');
+    });
+  };
+
+  updateCounts();
+})();
+</script>
+</body>
+</html>

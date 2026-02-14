@@ -373,6 +373,36 @@ for p in markets treasury buy restaurant services; do
 done
 ```
 
+### 🧠 User Preferences & Workflow (auto-learned, session-persistent)
+**Updated**: 2026-02-14
+
+#### Design Preferences
+- **Quality bar**: "AAA-looking" — not flat/minimal. Game-icons.net level detail but more premium
+- **SVG icons**: Must be "full-on beautiful drawings using SVG", intricate, detailed, comparable to professional game UI
+- **Style**: Fantasy RPG, golden gradients, glow effects, premium feel
+- **Acceptable**: AI-generated WebP backgrounds behind feature cards
+- **Unacceptable**: Simple/flat emoji-style SVGs, minimalist line icons
+
+#### Communication Preferences
+- **Proactive links**: Always share live URLs without being asked
+- **Batch review > drip-feed**: Show everything at once (dashboard), not one screenshot at a time
+- **Decision style**: "Let me see it first, then I'll tell you what to fix"
+- **Efficiency-first**: Minimize back-and-forth messages; build tools to reduce friction
+- **Self-improving**: Compound knowledge across sessions; auto-detect and fix workflow friction
+
+#### Workflow Preferences
+- **Review Dashboard**: `/dev/icon-review.html` — all icons at large scale with approve/flag buttons
+- **Screenshot Helper**: `dev-screenshot.cjs` — quick section screenshots (`node dev-screenshot.cjs [section]`)
+- **Batch feedback**: User flags icons on dashboard → pastes feedback → AI fixes all at once
+- **Auto-commit**: Background watcher for change batching
+
+#### Friction Points Identified (keep reducing these)
+1. ~~Screenshot round-tripping~~ → SOLVED: Review Dashboard
+2. ~~"Give me the link"~~ → SOLVED: Proactive URL sharing
+3. ~~Section-by-section review~~ → SOLVED: All-in-one dashboard
+4. ~~No old vs new comparison~~ → SOLVED: Before/after on dashboard
+5. Icon quality iteration loop → PARTIALLY SOLVED: Large 96px previews help, but SVG detail level needs upgrading
+
 ### GitHub Workflow
 - Branch: `genspark_ai_developer`
 - PR: #42 (feat(nwg): What is NWG? intro + economy + fixes)

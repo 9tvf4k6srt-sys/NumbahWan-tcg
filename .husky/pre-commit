@@ -189,4 +189,17 @@ if [ "$BLOCK" -ne 0 ]; then
   exit 1
 fi
 
+
+# ─── NW Pattern Linter: mined rules enforcement (staged files only) ───
+# Reads 20 rules from .mycelium-mined/db/rules-api.json
+# HIGH severity → blocks commit, MEDIUM → warns, LOW → info
+# Run `node scripts/nw-lint.cjs --all --verbose` for full audit
+if [ -f "scripts/nw-lint.cjs" ]; then
+  node "scripts/nw-lint.cjs" 2>&1 >&2
+  LINT_EXIT=$?
+  if [ "$LINT_EXIT" -ne 0 ]; then
+    exit 1
+  fi
+fi
+
 exit 0

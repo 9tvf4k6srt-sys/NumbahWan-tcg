@@ -40,7 +40,7 @@ import {
   confessionalRoutes, shrineRoutes, cardEngineRoutes,
   cardEngineExtraRoutes, walletExtraRoutes,
   physicalRoutes, avatarRoutes, guideRoutes, translateRoutes,
-  gmRoutes, cipherRoutes, oracleRoutes
+  gmRoutes, cipherRoutes, oracleRoutes, npcChatRoutes
 } from './routes'
 
 // ── Type Bindings ─────────────────────────────────────────────────
@@ -281,6 +281,7 @@ app.route('/api', translateRoutes)                    // Translation service
 app.route('/api/gm', gmRoutes)                        // Game Master tools
 app.route('/api/cipher', cipherRoutes)                // Cipher & encoding system
 app.route('/api/oracle', oracleRoutes)                // Oracle prophecy engine
+app.route('/api/npc', npcChatRoutes)                   // AI NPC chat system
 
 
 // ════════════════════════════════════════════════════════════════════

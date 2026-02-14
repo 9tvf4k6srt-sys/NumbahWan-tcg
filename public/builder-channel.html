@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Builder Channel | NumbahWan Guild</title>
+<meta name="description" content="Submit ideas, suggest features, and help shape the future of NumbahWan Guild. Every great idea starts here.">
+<link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
+<link rel="preload" href="/static/fonts/inter-variable.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/static/fonts/orbitron-variable.woff2" as="font" type="font/woff2" crossorigin>
+<style>
+  @font-face{font-family:'Orbitron';src:url('/static/fonts/orbitron-variable.woff2') format('woff2');font-weight:400 900;font-style:normal;font-display:swap}
+  @font-face{font-family:'Inter';src:url('/static/fonts/inter-variable.woff2') format('woff2');font-weight:400 700;font-style:normal;font-display:swap}
+</style>
+<link rel="stylesheet" href="/static/nw-core.css">
+<script src="/static/nw-i18n-shim.js"></script>
+<script src="/static/nw-nav.js" defer></script>
+<script src="/static/nw-i18n-core.js" defer></script>
+<style>
+:root {
+  --bc-gold: #ffd700;
+  --bc-amber: #ff9500;
+  --bc-dark: #0a0a14;
+  --bc-surface: #111120;
+  --bc-border: #222238;
+  --bc-text: #e0ddd5;
+  --bc-muted: #888;
+  --bc-accent: #00d4ff;
+  --bc-success: #00cc66;
+  --bc-fire: #ff6600;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family:'Inter',system-ui,sans-serif; background:var(--bc-dark); color:var(--bc-text); min-height:100vh; }
+
+/* ── Hero ── */
+.bc-hero {
+  text-align:center; padding:4rem 1.5rem 2rem;
+  background: radial-gradient(ellipse at 50% 0%, rgba(255,215,0,.06) 0%, transparent 60%);
+}
+.bc-hero h1 {
+  font-family:'Orbitron',sans-serif; font-size:clamp(1.6rem,4vw,2.4rem);
+  color:var(--bc-gold); margin-bottom:.5rem;
+  text-shadow: 0 0 30px rgba(255,215,0,.2);
+}
+.bc-hero p { color:var(--bc-muted); max-width:600px; margin:0 auto; font-size:.9rem; line-height:1.6; }
+
+/* ── Stats Bar ── */
+.bc-stats {
+  display:flex; justify-content:center; gap:2rem; padding:1.2rem;
+  max-width:700px; margin:1.5rem auto;
+  background:var(--bc-surface); border-radius:12px; border:1px solid var(--bc-border);
+}
+.bc-stat { text-align:center; }
+.bc-stat-num { font-family:'Orbitron',sans-serif; color:var(--bc-gold); font-size:1.4rem; }
+.bc-stat-label { font-size:.7rem; color:var(--bc-muted); }
+
+/* ── Submit Form ── */
+.bc-form-wrap {
+  max-width:640px; margin:2rem auto; padding:0 1.5rem;
+}
+.bc-form {
+  background:var(--bc-surface); border:1px solid var(--bc-border);
+  border-radius:16px; padding:2rem; position:relative; overflow:hidden;
+}
+.bc-form::before {
+  content:''; position:absolute; top:0; left:0; right:0; height:3px;
+  background: linear-gradient(90deg, var(--bc-gold), var(--bc-amber), var(--bc-accent));
+}
+.bc-form h2 {
+  font-family:'Orbitron',sans-serif; color:var(--bc-gold);
+  font-size:1.1rem; margin-bottom:1.5rem;
+}
+.bc-field { margin-bottom:1.2rem; }
+.bc-field label {
+  display:block; font-size:.78rem; color:var(--bc-muted);
+  margin-bottom:.4rem; font-weight:600; text-transform:uppercase;
+  letter-spacing:.5px;
+}
+.bc-field input, .bc-field textarea, .bc-field select {
+  width:100%; padding:.7rem 1rem;
+  background:rgba(255,255,255,.04); border:1px solid var(--bc-border);
+  border-radius:10px; color:var(--bc-text); font-size:.85rem;
+  font-family:inherit; outline:none; transition:border-color .2s;
+}
+.bc-field input:focus, .bc-field textarea:focus, .bc-field select:focus {
+  border-color:var(--bc-gold);
+}
+.bc-field textarea { min-height:120px; resize:vertical; line-height:1.6; }
+.bc-field select { cursor:pointer; -webkit-appearance:none; }
+.bc-field select option { background:var(--bc-dark); }
+
+.bc-tags {
+  display:flex; flex-wrap:wrap; gap:.4rem; margin-top:.5rem;
+}
+.bc-tag {
+  padding:.3rem .7rem; border-radius:20px; font-size:.72rem;
+  border:1px solid var(--bc-border); color:var(--bc-muted);
+  cursor:pointer; transition:all .2s; background:transparent;
+}
+.bc-tag:hover, .bc-tag.active {
+  border-color:var(--bc-gold); color:var(--bc-gold);
+  background:rgba(255,215,0,.08);
+}
+
+.bc-submit {
+  width:100%; padding:.8rem; border:none; border-radius:10px;
+  background:linear-gradient(135deg, var(--bc-gold), var(--bc-amber));
+  color:#000; font-family:'Orbitron',sans-serif; font-size:.85rem;
+  font-weight:700; cursor:pointer; transition:all .3s;
+  text-transform:uppercase; letter-spacing:1px;
+}
+.bc-submit:hover { transform:translateY(-2px); box-shadow:0 4px 20px rgba(255,215,0,.3); }
+.bc-submit:active { transform:translateY(0); }
+.bc-submit:disabled { opacity:.5; cursor:not-allowed; transform:none; }
+
+/* Success state */
+.bc-success {
+  text-align:center; padding:2rem; display:none;
+}
+.bc-success.show { display:block; }
+.bc-success-icon { font-size:3rem; margin-bottom:1rem; }
+.bc-success h3 { font-family:'Orbitron',sans-serif; color:var(--bc-success); margin-bottom:.5rem; }
+.bc-success p { color:var(--bc-muted); font-size:.85rem; }
+
+/* ── Ideas Feed ── */
+.bc-feed-wrap {
+  max-width:640px; margin:2.5rem auto 4rem; padding:0 1.5rem;
+}
+.bc-feed-header {
+  display:flex; align-items:center; justify-content:space-between;
+  margin-bottom:1rem;
+}
+.bc-feed-header h2 {
+  font-family:'Orbitron',sans-serif; color:var(--bc-gold); font-size:1rem;
+}
+.bc-feed-filter {
+  display:flex; gap:.3rem;
+}
+.bc-filter-btn {
+  padding:.3rem .6rem; border-radius:6px; font-size:.7rem;
+  border:1px solid var(--bc-border); background:transparent;
+  color:var(--bc-muted); cursor:pointer; transition:all .2s;
+}
+.bc-filter-btn:hover, .bc-filter-btn.active {
+  border-color:var(--bc-gold); color:var(--bc-gold);
+  background:rgba(255,215,0,.06);
+}
+
+.bc-idea-card {
+  background:var(--bc-surface); border:1px solid var(--bc-border);
+  border-radius:12px; padding:1.2rem; margin-bottom:.8rem;
+  transition:border-color .3s;
+}
+.bc-idea-card:hover { border-color:rgba(255,215,0,.2); }
+
+.bc-idea-top {
+  display:flex; align-items:center; gap:.6rem; margin-bottom:.6rem;
+}
+.bc-idea-category {
+  font-size:.65rem; padding:.2rem .5rem; border-radius:4px;
+  font-weight:700; text-transform:uppercase; letter-spacing:.5px;
+}
+.bc-idea-category[data-cat="feature"] { background:rgba(0,212,255,.12); color:var(--bc-accent); }
+.bc-idea-category[data-cat="gameplay"] { background:rgba(255,102,0,.12); color:var(--bc-fire); }
+.bc-idea-category[data-cat="ui"] { background:rgba(0,204,102,.12); color:var(--bc-success); }
+.bc-idea-category[data-cat="lore"] { background:rgba(180,74,255,.12); color:#b44aff; }
+.bc-idea-category[data-cat="economy"] { background:rgba(255,215,0,.12); color:var(--bc-gold); }
+.bc-idea-category[data-cat="other"] { background:rgba(150,150,150,.12); color:#aaa; }
+
+.bc-idea-time { font-size:.65rem; color:var(--bc-muted); margin-left:auto; }
+.bc-idea-title { font-weight:700; font-size:.9rem; margin-bottom:.4rem; color:#eee; }
+.bc-idea-desc { font-size:.8rem; color:var(--bc-muted); line-height:1.5; }
+
+.bc-idea-footer {
+  display:flex; align-items:center; gap:.8rem; margin-top:.8rem; padding-top:.6rem;
+  border-top:1px solid rgba(255,255,255,.04);
+}
+.bc-vote-btn {
+  display:flex; align-items:center; gap:.3rem; padding:.3rem .6rem;
+  border-radius:6px; border:1px solid var(--bc-border); background:transparent;
+  color:var(--bc-muted); font-size:.75rem; cursor:pointer; transition:all .2s;
+}
+.bc-vote-btn:hover { border-color:var(--bc-gold); color:var(--bc-gold); }
+.bc-vote-btn.voted { border-color:var(--bc-gold); color:var(--bc-gold); background:rgba(255,215,0,.08); }
+.bc-idea-author { font-size:.7rem; color:var(--bc-muted); margin-left:auto; }
+.bc-idea-status {
+  font-size:.6rem; padding:.15rem .4rem; border-radius:3px;
+  font-weight:700; text-transform:uppercase;
+}
+.bc-idea-status[data-status="new"] { background:rgba(0,212,255,.12); color:var(--bc-accent); }
+.bc-idea-status[data-status="planned"] { background:rgba(255,215,0,.12); color:var(--bc-gold); }
+.bc-idea-status[data-status="building"] { background:rgba(255,102,0,.12); color:var(--bc-fire); }
+.bc-idea-status[data-status="shipped"] { background:rgba(0,204,102,.12); color:var(--bc-success); }
+
+/* ── Empty state ── */
+.bc-empty { text-align:center; padding:2rem; color:var(--bc-muted); font-size:.85rem; }
+
+/* ── Footer ── */
+.bc-footer {
+  text-align:center; padding:2rem; border-top:1px solid var(--bc-border);
+  color:var(--bc-muted); font-size:.75rem;
+}
+
+@media(max-width:600px) {
+  .bc-stats { gap:1rem; flex-wrap:wrap; }
+  .bc-form { padding:1.2rem; }
+}
+</style>
+</head>
+<body data-page-id="builder-channel">
+
+<div class="bc-hero">
+  <h1>⚒️ Builder Channel</h1>
+  <p>Got an idea that'll make NWG legendary? Drop it here. Every great feature started as someone saying "what if..." — this is where those moments live. Your idea could be the next Karen's Kitchen.</p>
+</div>
+
+<div class="bc-stats">
+  <div class="bc-stat">
+    <div class="bc-stat-num" id="bc-total">0</div>
+    <div class="bc-stat-label">Ideas Submitted</div>
+  </div>
+  <div class="bc-stat">
+    <div class="bc-stat-num" id="bc-planned">0</div>
+    <div class="bc-stat-label">Planned</div>
+  </div>
+  <div class="bc-stat">
+    <div class="bc-stat-num" id="bc-building">0</div>
+    <div class="bc-stat-label">Building Now</div>
+  </div>
+  <div class="bc-stat">
+    <div class="bc-stat-num" id="bc-shipped">0</div>
+    <div class="bc-stat-label">Shipped</div>
+  </div>
+</div>
+
+<div class="bc-form-wrap">
+  <div class="bc-form" id="bc-form">
+    <h2>💡 Submit an Idea</h2>
+
+    <div class="bc-field">
+      <label>What's your idea?</label>
+      <input type="text" id="bc-title" placeholder="e.g. Let players duel NPCs for rare recipes" maxlength="120">
+    </div>
+
+    <div class="bc-field">
+      <label>Tell us more (optional)</label>
+      <textarea id="bc-desc" placeholder="How would it work? Why would it be awesome? Paint the picture..."></textarea>
+    </div>
+
+    <div class="bc-field">
+      <label>Category</label>
+      <div class="bc-tags" id="bc-tags">
+        <button class="bc-tag" data-cat="feature">🚀 Feature</button>
+        <button class="bc-tag" data-cat="gameplay">⚔️ Gameplay</button>
+        <button class="bc-tag" data-cat="ui">🎨 UI/UX</button>
+        <button class="bc-tag" data-cat="lore">📖 Lore & Story</button>
+        <button class="bc-tag" data-cat="economy">💰 Economy</button>
+        <button class="bc-tag" data-cat="other">✨ Other</button>
+      </div>
+    </div>
+
+    <div class="bc-field">
+      <label>Your name (optional — anonymous is fine)</label>
+      <input type="text" id="bc-author" placeholder="Builder #47" maxlength="40">
+    </div>
+
+    <button class="bc-submit" id="bc-submit" onclick="submitIdea()">
+      🚀 Submit Idea
+    </button>
+
+    <div class="bc-success" id="bc-success">
+      <div class="bc-success-icon">✨</div>
+      <h3>Idea Received!</h3>
+      <p>Your idea has been logged into the NWG backlog. The guild thanks you for your contribution, builder.</p>
+      <button class="bc-submit" style="margin-top:1rem;background:transparent;border:1px solid var(--bc-gold);color:var(--bc-gold)" onclick="resetForm()">Submit Another</button>
+    </div>
+  </div>
+</div>
+
+<div class="bc-feed-wrap">
+  <div class="bc-feed-header">
+    <h2>📋 Ideas Board</h2>
+    <div class="bc-feed-filter">
+      <button class="bc-filter-btn active" data-filter="all">All</button>
+      <button class="bc-filter-btn" data-filter="new">New</button>
+      <button class="bc-filter-btn" data-filter="planned">Planned</button>
+      <button class="bc-filter-btn" data-filter="building">Building</button>
+      <button class="bc-filter-btn" data-filter="shipped">Shipped</button>
+    </div>
+  </div>
+  <div id="bc-feed"></div>
+</div>
+
+<div class="bc-footer">
+  Built with ❤️ by NumbahWan Guild · Ideas stored locally — your creativity is yours
+</div>
+
+<script>
+(function() {
+  'use strict';
+
+  var STORAGE_KEY = 'nwg_builder_ideas';
+  var ideas = [];
+
+  // Load from localStorage
+  function loadIdeas() {
+    try {
+      var raw = localStorage.getItem(STORAGE_KEY);
+      if (raw) ideas = JSON.parse(raw);
+    } catch(e) {}
+
+    // Seed with example ideas if empty
+    if (ideas.length === 0) {
+      ideas = [
+        { id: 's1', title: 'AI-powered Karen NPC you can actually argue with', desc: 'Imagine walking up to Karen on the game page and having a REAL conversation. She remembers your complaints. She judges your card deck. She recommends curry based on your playstyle.', cat: 'feature', author: 'NWG Team', votes: 47, time: Date.now() - 86400000, status: 'building' },
+        { id: 's2', title: 'Living world stats that change daily', desc: 'Gerald\'s incident count updates every day. The Monkey King\'s mood changes. Weather affects the page. Visiting at 3:33 AM triggers the ghostly monkey.', cat: 'feature', author: 'NWG Team', votes: 38, time: Date.now() - 172800000, status: 'building' },
+        { id: 's3', title: 'Voice-acted NPC lines using AI TTS', desc: 'Click Karen\'s portrait and HEAR her complain. The Oracle speaks prophecy. Boss intros get dramatic narration. Turns the website into an experience.', cat: 'feature', author: 'NWG Team', votes: 32, time: Date.now() - 259200000, status: 'planned' },
+        { id: 's4', title: 'Player-designed card art pipeline', desc: 'Players describe a card concept → AI generates art in NWG style → community votes → winning cards enter the game. The card game that designs itself.', cat: 'gameplay', author: 'Builder #12', votes: 29, time: Date.now() - 345600000, status: 'new' },
+        { id: 's5', title: 'Monkey Parliament simulator mini-game', desc: 'A political sim where you try to pass banana tariff legislation. The monkeys have factions. There are filibusters. It\'s parliamentary chaos.', cat: 'gameplay', author: 'Anonymous Monkey', votes: 24, time: Date.now() - 432000000, status: 'new' },
+        { id: 's6', title: 'Gerald Jr. crime tracker across all pages', desc: 'A persistent counter showing Gerald Jr.\'s theft count that follows you across every page. He steals from different locations. You can try to catch him. You never will.', cat: 'lore', author: 'FrogGuardFan', votes: 21, time: Date.now() - 518400000, status: 'planned' },
+        { id: 's7', title: 'Open-source the NWG economy simulator', desc: 'Let devs fork the NWG economy as a template for their own projects. Complete with staking, NWG-to-Gold conversion, burn mechanics.', cat: 'economy', author: 'Builder #33', votes: 18, time: Date.now() - 604800000, status: 'new' },
+        { id: 's8', title: 'Achievement system for site exploration', desc: 'Hidden achievements for visiting pages at certain times, finding easter eggs, reading all Karen dialogue. Shareable badges.', cat: 'feature', author: 'AchievementHunter', votes: 15, time: Date.now() - 691200000, status: 'new' }
+      ];
+      saveIdeas();
+    }
+  }
+
+  function saveIdeas() {
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(ideas)); } catch(e) {}
+  }
+
+  // Render
+  function render(filter) {
+    filter = filter || 'all';
+    var feed = document.getElementById('bc-feed');
+    var filtered = filter === 'all' ? ideas : ideas.filter(function(i) { return i.status === filter; });
+    filtered.sort(function(a, b) { return b.votes - a.votes; });
+
+    var votedSet = getVoted();
+
+    if (filtered.length === 0) {
+      feed.innerHTML = '<div class="bc-empty">No ideas here yet. Be the first! 🚀</div>';
+    } else {
+      feed.innerHTML = filtered.map(function(idea) {
+        var voted = votedSet[idea.id] ? ' voted' : '';
+        return '<div class="bc-idea-card" data-id="' + idea.id + '">' +
+          '<div class="bc-idea-top">' +
+            '<span class="bc-idea-category" data-cat="' + idea.cat + '">' + idea.cat + '</span>' +
+            '<span class="bc-idea-status" data-status="' + idea.status + '">' + idea.status + '</span>' +
+            '<span class="bc-idea-time">' + timeAgo(idea.time) + '</span>' +
+          '</div>' +
+          '<div class="bc-idea-title">' + escHtml(idea.title) + '</div>' +
+          (idea.desc ? '<div class="bc-idea-desc">' + escHtml(idea.desc).substring(0, 200) + (idea.desc.length > 200 ? '...' : '') + '</div>' : '') +
+          '<div class="bc-idea-footer">' +
+            '<button class="bc-vote-btn' + voted + '" data-id="' + idea.id + '">▲ ' + idea.votes + '</button>' +
+            '<span class="bc-idea-author">by ' + escHtml(idea.author || 'Anonymous') + '</span>' +
+          '</div>' +
+        '</div>';
+      }).join('');
+    }
+
+    // Update stats
+    document.getElementById('bc-total').textContent = ideas.length;
+    document.getElementById('bc-planned').textContent = ideas.filter(function(i){return i.status==='planned';}).length;
+    document.getElementById('bc-building').textContent = ideas.filter(function(i){return i.status==='building';}).length;
+    document.getElementById('bc-shipped').textContent = ideas.filter(function(i){return i.status==='shipped';}).length;
+  }
+
+  // Voting
+  function getVoted() {
+    try { return JSON.parse(localStorage.getItem('nwg_builder_voted') || '{}'); } catch(e) { return {}; }
+  }
+  function setVoted(id) {
+    var v = getVoted(); v[id] = true;
+    localStorage.setItem('nwg_builder_voted', JSON.stringify(v));
+  }
+
+  // Helpers
+  function timeAgo(ts) {
+    var diff = Date.now() - ts;
+    var mins = Math.floor(diff / 60000);
+    if (mins < 60) return mins + 'm ago';
+    var hrs = Math.floor(mins / 60);
+    if (hrs < 24) return hrs + 'h ago';
+    var days = Math.floor(hrs / 24);
+    return days + 'd ago';
+  }
+  function escHtml(s) {
+    var d = document.createElement('div'); d.textContent = s; return d.innerHTML;
+  }
+
+  // Category selection
+  var selectedCat = null;
+  document.getElementById('bc-tags').addEventListener('click', function(e) {
+    var tag = e.target.closest('.bc-tag');
+    if (!tag) return;
+    document.querySelectorAll('.bc-tag').forEach(function(t) { t.classList.remove('active'); });
+    tag.classList.add('active');
+    selectedCat = tag.dataset.cat;
+  });
+
+  // Filter
+  document.querySelector('.bc-feed-filter').addEventListener('click', function(e) {
+    var btn = e.target.closest('.bc-filter-btn');
+    if (!btn) return;
+    document.querySelectorAll('.bc-filter-btn').forEach(function(b) { b.classList.remove('active'); });
+    btn.classList.add('active');
+    render(btn.dataset.filter);
+  });
+
+  // Vote
+  document.getElementById('bc-feed').addEventListener('click', function(e) {
+    var btn = e.target.closest('.bc-vote-btn');
+    if (!btn) return;
+    var id = btn.dataset.id;
+    var voted = getVoted();
+    if (voted[id]) return; // already voted
+    var idea = ideas.find(function(i) { return i.id === id; });
+    if (idea) {
+      idea.votes++;
+      setVoted(id);
+      saveIdeas();
+      render(document.querySelector('.bc-filter-btn.active').dataset.filter);
+    }
+  });
+
+  // Submit
+  window.submitIdea = function() {
+    var title = document.getElementById('bc-title').value.trim();
+    if (!title) { document.getElementById('bc-title').focus(); return; }
+
+    var desc = document.getElementById('bc-desc').value.trim();
+    var author = document.getElementById('bc-author').value.trim() || 'Anonymous Builder';
+
+    var idea = {
+      id: 'u' + Date.now(),
+      title: title,
+      desc: desc,
+      cat: selectedCat || 'other',
+      author: author,
+      votes: 1,
+      time: Date.now(),
+      status: 'new'
+    };
+
+    ideas.push(idea);
+    setVoted(idea.id);
+    saveIdeas();
+
+    // Show success
+    document.getElementById('bc-form').querySelector('h2').style.display = 'none';
+    document.querySelectorAll('.bc-field').forEach(function(f) { f.style.display = 'none'; });
+    document.querySelector('.bc-submit').style.display = 'none';
+    document.getElementById('bc-success').classList.add('show');
+
+    render('all');
+  };
+
+  window.resetForm = function() {
+    document.getElementById('bc-title').value = '';
+    document.getElementById('bc-desc').value = '';
+    document.getElementById('bc-author').value = '';
+    document.querySelectorAll('.bc-tag').forEach(function(t) { t.classList.remove('active'); });
+    selectedCat = null;
+
+    document.getElementById('bc-form').querySelector('h2').style.display = '';
+    document.querySelectorAll('.bc-field').forEach(function(f) { f.style.display = ''; });
+    document.querySelector('.bc-submit').style.display = '';
+    document.getElementById('bc-success').classList.remove('show');
+  };
+
+  // Init
+  loadIdeas();
+  render('all');
+})();
+</script>
+</body>
+</html>
