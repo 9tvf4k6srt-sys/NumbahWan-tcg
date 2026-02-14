@@ -347,28 +347,35 @@ body{
 
 <!-- ============ CINEMATIC INTRO ============ -->
 <!--
-  ARCHITECTURE: The cinematic uses TWO layers to avoid mobile touch issues:
-  1. #nwg-cinematic — visual-only layer (pointer-events:none on everything)
-  2. #nwg-cine-touch — invisible tap target on top (catches play/unmute taps)
-  3. Buttons are OUTSIDE both layers with the highest z-index (200000+)
-
-  This prevents the classic mobile bug where a fixed overlay eats touch events
-  before they reach buttons, even when buttons have a higher z-index.
+  ARCHITECTURE v4 — iOS Safari fix:
+  On iOS Safari, position:fixed + pointer-events:none causes the overlay to
+  NOT paint above page content (WebKit compositing bug). Fix:
+  1. #nwg-cinematic gets pointer-events:auto when active (JS-controlled)
+  2. The wrapper itself catches taps (no separate touch overlay needed)
+  3. -webkit-transform:translateZ(0) forces GPU layer for correct stacking
+  4. Buttons sit OUTSIDE at z-index 200001+ (always above wrapper)
 -->
 <style>
   @keyframes nwgSpin{to{transform:rotate(360deg)}}
   @keyframes nwgPulse{0%,100%{opacity:.6}50%{opacity:1}}
   @keyframes nwgBtnPop{0%{transform:translateX(-50%) scale(1)}50%{transform:translateX(-50%) scale(.92)}100%{transform:translateX(-50%) scale(1)}}
-  /* Visual layer — NO pointer events at all */
-  #nwg-cinematic{position:fixed;inset:0;z-index:99999;background:#000;display:flex;align-items:center;justify-content:center;pointer-events:none}
-  #nwg-cinematic *{pointer-events:none}
+  /*
+    Cinematic overlay: pointer-events controlled by JS.
+    -webkit-transform:translateZ(0) forces a compositing layer on iOS Safari
+    so the overlay actually paints ABOVE page content.
+  */
+  #nwg-cinematic{
+    position:fixed;inset:0;z-index:99999;background:#000;
+    display:flex;align-items:center;justify-content:center;
+    pointer-events:none;
+    -webkit-transform:translateZ(0);transform:translateZ(0);
+    -webkit-tap-highlight-color:transparent;
+  }
   #nwg-cine-poster{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:1;transition:opacity .6s ease}
   #nwg-cine-video{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;z-index:2;opacity:0;transition:opacity .6s ease}
   #nwg-cine-loader{position:absolute;z-index:3;display:flex;flex-direction:column;align-items:center;gap:16px}
   #nwg-cine-ending{position:absolute;inset:0;z-index:10;display:flex;flex-direction:column;align-items:center;justify-content:center;background:linear-gradient(180deg,rgba(0,0,0,.3) 0%,rgba(0,0,0,.85) 60%,rgba(139,0,0,.4) 100%);opacity:0;transition:opacity 1.5s ease;padding:2rem;text-align:center}
   #nwg-cine-status{position:absolute;z-index:4;bottom:100px;left:50%;transform:translateX(-50%);color:rgba(255,215,0,.9);font-family:'Rajdhani','Inter',sans-serif;font-size:.8rem;font-weight:600;letter-spacing:3px;text-transform:uppercase;animation:nwgPulse 1.5s ease infinite;white-space:nowrap}
-  /* Invisible tap overlay — sits between visuals and buttons */
-  #nwg-cine-touch{position:fixed;inset:0;z-index:100000;cursor:pointer;-webkit-tap-highlight-color:transparent}
   /* Buttons — highest z-index, completely independent stacking context */
   #nwg-cine-skip,#nwg-cine-pause{
     position:fixed;z-index:200001;display:none;align-items:center;justify-content:center;gap:8px;
@@ -390,7 +397,7 @@ body{
   }
 </style>
 
-<!-- Visual-only layer — pointer-events:none on everything inside -->
+<!-- Cinematic overlay — pointer-events toggled by JS; no separate touch layer needed -->
 <div id="nwg-cinematic">
   <img id="nwg-cine-poster" src="/static/game/01-title-cinematic.webp" alt="">
   <video id="nwg-cine-video" playsinline webkit-playsinline preload="auto">
@@ -413,8 +420,6 @@ body{
     </div>
   </div>
 </div>
-<!-- Invisible tap target — catches play/unmute taps; sits between visuals and buttons -->
-<div id="nwg-cine-touch" style="display:none"></div>
 <!-- Buttons — completely outside all wrappers, highest z-index -->
 <button id="nwg-cine-skip" type="button">SKIP INTRO</button>
 <button id="nwg-cine-pause" type="button">PAUSE</button>
@@ -433,17 +438,35 @@ body{
   var replayBtn = $('nwg-cine-replay');
   var endCard   = $('nwg-cine-ending');
   var statusEl  = $('nwg-cine-status');
-  var touchArea = $('nwg-cine-touch');
   var SEEN      = 'nwg_cine_seen';
   var dismissed = true;  /* start dismissed — first visit flow will set false */
   var endingShown = false;
   var isPlaying = false;
+  var videoStartedMuted = false; /* tracks if current session started muted */
   var safetyTmr = null;
 
   /* ═══════════════════════════════════════════
      SHARED FUNCTIONS — defined before early return
      so replay works even when "already seen"
      ═══════════════════════════════════════════ */
+
+  /* Activate wrapper: pointer-events:auto so iOS Safari
+     composites it above page content (the real fix). */
+  function activateWrap(){
+    wrap.style.pointerEvents = 'auto';
+    wrap.style.transition = 'none';
+    wrap.style.display = 'flex';
+    wrap.offsetHeight; /* FORCE REFLOW — critical for iOS Safari */
+    wrap.style.opacity = '1';
+  }
+
+  /* Deactivate wrapper: hide + pointer-events:none */
+  function deactivateWrap(){
+    wrap.style.pointerEvents = 'none';
+    wrap.style.display = 'none';
+    wrap.style.opacity = '0';
+    wrap.style.transition = 'none';
+  }
 
   function setStatus(msg){
     statusEl.textContent = msg;
@@ -457,10 +480,7 @@ body{
   }
   function hideLoader(){ loader.style.display = 'none'; }
   function hideAll(){
-    wrap.style.display = 'none';
-    wrap.style.opacity = '0';
-    wrap.style.transition = 'none';
-    touchArea.style.display = 'none';
+    deactivateWrap();
     skipBtn.style.display = 'none';
     pauseBtn.style.display = 'none';
   }
@@ -472,33 +492,47 @@ body{
     vid.style.opacity = '1';
     poster.style.opacity = '0';
     hideLoader();
-    setStatus('');
+    /* If started muted, keep "TAP TO UNMUTE" visible; otherwise clear */
+    if(!videoStartedMuted) setStatus('');
     pauseBtn.style.display = 'flex';
-    touchArea.style.display = 'none';
   }
 
-  /* ── Tap-to-play / unmute ── */
-  function tapToPlay(){
-    touchArea.style.display = 'none';
-    vid.muted = false;
-    try{ vid.removeAttribute('muted'); }catch(e){}
-    setStatus('');
+  /* ── Tap-to-play / unmute (handler on the wrapper itself) ── */
+  function handleWrapTap(){
+    if(dismissed) return;
+    /* If video is playing muted → unmute */
+    if(!vid.paused && vid.muted){
+      vid.muted = false;
+      try{ vid.removeAttribute('muted'); }catch(e){}
+      videoStartedMuted = false;
+      setStatus('');
+      return;
+    }
+    /* If video is paused → try to play unmuted, fallback to muted */
     if(vid.paused){
+      vid.muted = false;
+      try{ vid.removeAttribute('muted'); }catch(e){}
       showLoader('STARTING PLAYBACK');
+      setStatus('');
       var p = vid.play();
       if(p && typeof p.then === 'function'){
-        p.then(function(){ confirmPlaying(); })
+        p.then(function(){ videoStartedMuted = false; confirmPlaying(); })
          .catch(function(){
+          /* Unmuted play blocked → fall back to muted */
           vid.muted = true;
-          vid.play().then(function(){ confirmPlaying(); }).catch(function(){
+          videoStartedMuted = true;
+          vid.play().then(function(){
+            confirmPlaying();
+            setStatus('TAP TO UNMUTE');
+          }).catch(function(){
             hideLoader();
             setStatus('TAP SKIP TO CONTINUE');
           });
         });
       }
-    } else {
-      confirmPlaying();
+      return;
     }
+    /* Video playing unmuted — ignore tap */
   }
 
   /* ── Pause / Resume ── */
@@ -506,7 +540,7 @@ body{
     if(vid.paused){
       vid.play().catch(function(){});
       pauseBtn.textContent = 'PAUSE';
-      setStatus('');
+      setStatus(vid.muted ? 'TAP TO UNMUTE' : '');
     } else {
       vid.pause();
       pauseBtn.textContent = 'PLAY';
@@ -523,14 +557,13 @@ body{
     localStorage.setItem(SEEN, '1');
     vid.pause();
     document.body.style.overflow = '';
-    touchArea.style.display = 'none';
     skipBtn.style.display = 'none';
     pauseBtn.style.display = 'none';
+    wrap.style.pointerEvents = 'none';
     wrap.style.transition = 'opacity .5s ease';
     wrap.style.opacity = '0';
     setTimeout(function(){
-      wrap.style.display = 'none';
-      wrap.style.transition = 'none';
+      deactivateWrap();
       replayBtn.style.display = 'flex';
     }, 600);
   }
@@ -544,15 +577,13 @@ body{
     dismissed = false;
     endingShown = false;
     isPlaying = false;
+    videoStartedMuted = false;
     if(safetyTmr){ clearTimeout(safetyTmr); safetyTmr = null; }
 
     replayBtn.style.display = 'none';
 
-    /* Make wrapper visible with FORCED reflow (critical for iOS Safari) */
-    wrap.style.transition = 'none';
-    wrap.style.display = 'flex';
-    wrap.offsetHeight; /* FORCE REFLOW */
-    wrap.style.opacity = '1';
+    /* Show wrapper with pointer-events:auto (iOS Safari fix) */
+    activateWrap();
 
     endCard.style.opacity = '0';
     poster.style.opacity = '0';
@@ -570,13 +601,12 @@ body{
     vid.currentTime = 0;
     vid.muted = true;
     vid.setAttribute('muted','');
-    touchArea.style.display = 'block';
+    videoStartedMuted = true;
 
     var rp = vid.play();
     if(rp && typeof rp.then === 'function'){
       rp.then(function(){
         confirmPlaying();
-        touchArea.style.display = 'block';
         setStatus('TAP TO UNMUTE');
       }).catch(function(){
         hideLoader();
@@ -593,15 +623,16 @@ body{
   }
 
   /* ═══════════════════════════════════════════
-     BIND ALL BUTTON LISTENERS — before early return
+     BIND ALL LISTENERS — before early return
      so buttons work in "already seen" state too
      ═══════════════════════════════════════════ */
 
   vid.addEventListener('playing', confirmPlaying);
 
-  touchArea.addEventListener('click', tapToPlay, false);
-  touchArea.addEventListener('touchstart', function(e){
-    e.preventDefault(); tapToPlay();
+  /* The wrapper itself is the tap target (no separate overlay) */
+  wrap.addEventListener('click', function(e){ e.preventDefault(); handleWrapTap(); }, false);
+  wrap.addEventListener('touchstart', function(e){
+    e.preventDefault(); handleWrapTap();
   }, {passive:false});
 
   pauseBtn.addEventListener('click', function(e){ e.preventDefault(); e.stopPropagation(); togglePause(); }, false);
@@ -631,14 +662,15 @@ body{
      FIRST VISIT FLOW
      ═══════════════════════════════════════════ */
   dismissed = false;
+  activateWrap();
   document.body.style.overflow = 'hidden';
   skipBtn.style.display = 'flex';
-  touchArea.style.display = 'block';
   showLoader('LOADING CINEMATIC');
   setStatus('');
 
   vid.muted = true;
   vid.setAttribute('muted','');
+  videoStartedMuted = true;
   vid.load();
 
   function onBuffered(){
@@ -652,8 +684,10 @@ body{
   try{
     var autoP = vid.play();
     if(autoP && typeof autoP.then === 'function'){
-      autoP.then(function(){ confirmPlaying(); })
-           .catch(function(){});
+      autoP.then(function(){
+        confirmPlaying();
+        setStatus('TAP TO UNMUTE');
+      }).catch(function(){});
     }
   }catch(e){}
 
