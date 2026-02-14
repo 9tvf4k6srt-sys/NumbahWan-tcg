@@ -437,15 +437,24 @@ body{
   var SEEN      = 'nwg_cine_seen';
   var dismissed = false;
   var endingShown = false;
-  var videoStarted = false;
+  var isPlaying = false;
+  var safetyTmr = null;
 
   /* ── Helpers ── */
   function setStatus(msg){
     statusEl.textContent = msg;
     statusEl.style.display = msg ? 'block' : 'none';
+    if(msg) statusEl.style.animation = 'nwgPulse 1.5s ease infinite';
   }
-  function hideEverything(){
+  function showLoader(msg){
+    loader.style.display = 'flex';
+    var span = loader.querySelector('span');
+    if(span) span.textContent = msg || 'LOADING CINEMATIC';
+  }
+  function hideLoader(){ loader.style.display = 'none'; }
+  function hideAll(){
     wrap.style.display = 'none';
+    wrap.style.opacity = '0';
     touchArea.style.display = 'none';
     skipBtn.style.display = 'none';
     pauseBtn.style.display = 'none';
@@ -453,73 +462,79 @@ body{
 
   /* ── Already seen → skip entirely ── */
   if(localStorage.getItem(SEEN)){
-    hideEverything();
+    hideAll();
     replayBtn.style.display = 'flex';
     return;
   }
 
-  /* ── Show cinematic ── */
+  /* ─────────── FIRST VISIT FLOW ─────────── */
   document.body.style.overflow = 'hidden';
   skipBtn.style.display = 'flex';
   touchArea.style.display = 'block';
-  setStatus('LOADING VIDEO\u2026');
+  showLoader('LOADING CINEMATIC');
+  setStatus('');
 
-  /* ── Load video (muted for autoplay policy) ── */
   vid.muted = true;
   vid.setAttribute('muted','');
   vid.load();
 
-  /* ── Video ready states ── */
-  function onVideoReady(){
-    if(vid.readyState < 2) return; /* need at least HAVE_CURRENT_DATA */
-    loader.style.display = 'none';
-    if(!videoStarted){
-      setStatus('TAP ANYWHERE TO PLAY');
-    }
+  /* When enough data is buffered */
+  function onBuffered(){
+    if(vid.readyState < 2) return;
+    hideLoader();
+    if(!isPlaying) setStatus('TAP ANYWHERE TO PLAY');
   }
-  vid.addEventListener('canplay', onVideoReady);
-  vid.addEventListener('loadeddata', onVideoReady);
+  vid.addEventListener('canplay', onBuffered);
+  vid.addEventListener('loadeddata', onBuffered);
 
-  /* ── Attempt autoplay (works on desktop, blocked on mobile) ── */
+  /* Try muted autoplay (works on desktop, blocked on most mobile) */
   try{
     var autoP = vid.play();
     if(autoP && typeof autoP.then === 'function'){
-      autoP.then(function(){ onVideoPlaying(); })
-           .catch(function(){ /* autoplay blocked — tap-to-play handles it */ });
+      autoP.then(function(){ confirmPlaying(); })
+           .catch(function(){});
     }
   }catch(e){}
 
-  /* ── When video actually starts playing ── */
-  function onVideoPlaying(){
-    if(videoStarted) return;
-    videoStarted = true;
+  /* ── Confirmed playing — show video, hide poster ── */
+  function confirmPlaying(){
+    if(isPlaying) return;
+    isPlaying = true;
     vid.style.opacity = '1';
     poster.style.opacity = '0';
-    loader.style.display = 'none';
+    hideLoader();
     setStatus('');
     pauseBtn.style.display = 'flex';
+    touchArea.style.display = 'none';
   }
-  vid.addEventListener('playing', onVideoPlaying);
+  vid.addEventListener('playing', confirmPlaying);
 
-  /* ── Tap-to-play / unmute (on the invisible overlay) ── */
+  /* ── Tap-to-play / unmute (invisible overlay) ── */
   function tapToPlay(){
-    touchArea.style.display = 'none'; /* remove overlay so it can't interfere anymore */
+    touchArea.style.display = 'none';
     vid.muted = false;
     try{ vid.removeAttribute('muted'); }catch(e){}
+    setStatus('');
     if(vid.paused){
+      showLoader('STARTING PLAYBACK');
       var p = vid.play();
       if(p && typeof p.then === 'function'){
-        p.catch(function(){
+        p.then(function(){ confirmPlaying(); })
+         .catch(function(){
           vid.muted = true;
-          vid.play().catch(function(){});
+          vid.play().then(function(){ confirmPlaying(); }).catch(function(){
+            hideLoader();
+            setStatus('TAP SKIP TO CONTINUE');
+          });
         });
       }
+    } else {
+      confirmPlaying();
     }
   }
   touchArea.addEventListener('click', tapToPlay, false);
   touchArea.addEventListener('touchstart', function(e){
-    e.preventDefault();
-    tapToPlay();
+    e.preventDefault(); tapToPlay();
   }, {passive:false});
 
   /* ── Ending card at last 8 seconds ── */
@@ -530,20 +545,20 @@ body{
     }
   });
   vid.addEventListener('ended', function(){
-    if(!endingShown){ endCard.style.opacity = '1'; }
+    if(!endingShown) endCard.style.opacity = '1';
     setTimeout(dismiss, 5000);
   });
 
   /* ── Safety timeout ── */
-  setTimeout(function(){
-    if(!videoStarted && !dismissed){
+  safetyTmr = setTimeout(function(){
+    if(!isPlaying && !dismissed){
+      hideLoader();
       setStatus('TAP SKIP OR TAP SCREEN TO PLAY');
     }
   }, 12000);
 
   /* ── Pause / Resume ── */
-  function togglePause(e){
-    if(e){ e.preventDefault(); e.stopPropagation(); }
+  function togglePause(){
     if(vid.paused){
       vid.play().catch(function(){});
       pauseBtn.textContent = 'PAUSE';
@@ -555,16 +570,14 @@ body{
       statusEl.style.animation = 'none';
     }
   }
-  pauseBtn.addEventListener('click', togglePause, false);
-  pauseBtn.addEventListener('touchstart', function(e){
-    e.preventDefault(); e.stopPropagation();
-    togglePause();
-  }, {passive:false});
+  pauseBtn.addEventListener('click', function(e){ e.preventDefault(); e.stopPropagation(); togglePause(); }, false);
+  pauseBtn.addEventListener('touchstart', function(e){ e.preventDefault(); e.stopPropagation(); togglePause(); }, {passive:false});
 
   /* ── Skip / Dismiss ── */
   function dismiss(){
     if(dismissed) return;
     dismissed = true;
+    if(safetyTmr){ clearTimeout(safetyTmr); safetyTmr = null; }
     localStorage.setItem(SEEN, '1');
     vid.pause();
     document.body.style.overflow = '';
@@ -578,50 +591,65 @@ body{
       replayBtn.style.display = 'flex';
     }, 600);
   }
-  /* SKIP button: use touchstart (fires instantly on mobile, no 300ms delay) */
-  skipBtn.addEventListener('click', function(e){
-    e.preventDefault(); e.stopPropagation();
-    dismiss();
-  }, false);
+  skipBtn.addEventListener('click', function(e){ e.preventDefault(); e.stopPropagation(); dismiss(); }, false);
   skipBtn.addEventListener('touchstart', function(e){
     e.preventDefault(); e.stopPropagation();
-    /* Visual feedback */
     skipBtn.style.background = 'rgba(255,215,0,.35)';
     dismiss();
   }, {passive:false});
 
   /* ── Replay ── */
-  replayBtn.addEventListener('click', function(){
+  function doReplay(){
     dismissed = false;
     endingShown = false;
-    videoStarted = false;
+    isPlaying = false;
+
     replayBtn.style.display = 'none';
     wrap.style.display = 'flex';
     wrap.style.opacity = '1';
     wrap.style.transition = '';
-    vid.style.opacity = '1';
-    poster.style.opacity = '0';
-    loader.style.display = 'none';
     endCard.style.opacity = '0';
-    setStatus('');
-    vid.currentTime = 0;
-    vid.muted = false;
-    try{ vid.removeAttribute('muted'); }catch(e){}
-    var p = vid.play();
-    if(p && typeof p.then === 'function'){
-      p.catch(function(){ vid.muted=true; vid.play().catch(function(){}); });
-    }
+    poster.style.opacity = '0';
     document.body.style.overflow = 'hidden';
+
+    /* Show loading state immediately — user sees feedback right away */
+    showLoader('LOADING CINEMATIC');
+    setStatus('');
+    vid.style.opacity = '0';
+
     skipBtn.style.display = 'flex';
     skipBtn.style.background = '';
-    pauseBtn.style.display = 'flex';
-    pauseBtn.textContent = 'PAUSE';
-    /* Don't show touch overlay during replay — video is already unmuted */
-  }, false);
-  replayBtn.addEventListener('touchstart', function(e){
-    e.preventDefault();
-    replayBtn.click();
-  }, {passive:false});
+    pauseBtn.style.display = 'none';
+
+    /* On mobile, unmuted play is blocked by autoplay policy.
+       Strategy: start MUTED (guaranteed), then user taps overlay to unmute. */
+    vid.currentTime = 0;
+    vid.muted = true;
+    vid.setAttribute('muted','');
+    touchArea.style.display = 'block';
+
+    var rp = vid.play();
+    if(rp && typeof rp.then === 'function'){
+      rp.then(function(){
+        confirmPlaying();
+        /* Re-show touch overlay so user can tap to unmute */
+        touchArea.style.display = 'block';
+        setStatus('TAP TO UNMUTE');
+      }).catch(function(){
+        hideLoader();
+        setStatus('TAP ANYWHERE TO PLAY');
+      });
+    }
+
+    safetyTmr = setTimeout(function(){
+      if(!isPlaying && !dismissed){
+        hideLoader();
+        setStatus('TAP SKIP OR TAP SCREEN TO PLAY');
+      }
+    }, 10000);
+  }
+  replayBtn.addEventListener('click', function(e){ e.preventDefault(); doReplay(); }, false);
+  replayBtn.addEventListener('touchstart', function(e){ e.preventDefault(); doReplay(); }, {passive:false});
 })();
 </script>
 
