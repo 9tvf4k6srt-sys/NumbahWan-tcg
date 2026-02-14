@@ -346,237 +346,282 @@ body{
 <body data-page-id="nwg-the-game">
 
 <!-- ============ CINEMATIC INTRO ============ -->
-<div id="nwg-cinematic" style="
-  position:fixed;inset:0;z-index:99999;background:#000;
-  display:flex;align-items:center;justify-content:center;
-  opacity:1;transition:opacity .6s ease;
-">
-  <!-- Poster image shows instantly while video loads -->
-  <img id="nwg-cine-poster" src="/static/game/01-title-cinematic.webp" alt="" style="
-    position:absolute;inset:0;width:100%;height:100%;object-fit:cover;
-    z-index:1;transition:opacity .5s ease;pointer-events:none;
-  ">
-  <video id="nwg-cine-video" playsinline preload="metadata" style="
-    position:absolute;inset:0;width:100%;height:100%;object-fit:contain;
-    z-index:2;opacity:0;transition:opacity .5s ease;pointer-events:none;
-  ">
+<!--
+  ARCHITECTURE: The cinematic uses TWO layers to avoid mobile touch issues:
+  1. #nwg-cinematic — visual-only layer (pointer-events:none on everything)
+  2. #nwg-cine-touch — invisible tap target on top (catches play/unmute taps)
+  3. Buttons are OUTSIDE both layers with the highest z-index (200000+)
+
+  This prevents the classic mobile bug where a fixed overlay eats touch events
+  before they reach buttons, even when buttons have a higher z-index.
+-->
+<style>
+  @keyframes nwgSpin{to{transform:rotate(360deg)}}
+  @keyframes nwgPulse{0%,100%{opacity:.6}50%{opacity:1}}
+  @keyframes nwgBtnPop{0%{transform:translateX(-50%) scale(1)}50%{transform:translateX(-50%) scale(.92)}100%{transform:translateX(-50%) scale(1)}}
+  /* Visual layer — NO pointer events at all */
+  #nwg-cinematic{position:fixed;inset:0;z-index:99999;background:#000;display:flex;align-items:center;justify-content:center;pointer-events:none}
+  #nwg-cinematic *{pointer-events:none}
+  #nwg-cine-poster{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:1;transition:opacity .6s ease}
+  #nwg-cine-video{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;z-index:2;opacity:0;transition:opacity .6s ease}
+  #nwg-cine-loader{position:absolute;z-index:3;display:flex;flex-direction:column;align-items:center;gap:16px}
+  #nwg-cine-ending{position:absolute;inset:0;z-index:10;display:flex;flex-direction:column;align-items:center;justify-content:center;background:linear-gradient(180deg,rgba(0,0,0,.3) 0%,rgba(0,0,0,.85) 60%,rgba(139,0,0,.4) 100%);opacity:0;transition:opacity 1.5s ease;padding:2rem;text-align:center}
+  #nwg-cine-status{position:absolute;z-index:4;bottom:100px;left:50%;transform:translateX(-50%);color:rgba(255,215,0,.9);font-family:'Rajdhani','Inter',sans-serif;font-size:.8rem;font-weight:600;letter-spacing:3px;text-transform:uppercase;animation:nwgPulse 1.5s ease infinite;white-space:nowrap}
+  /* Invisible tap overlay — sits between visuals and buttons */
+  #nwg-cine-touch{position:fixed;inset:0;z-index:100000;cursor:pointer;-webkit-tap-highlight-color:transparent}
+  /* Buttons — highest z-index, completely independent stacking context */
+  #nwg-cine-skip,#nwg-cine-pause{
+    position:fixed;z-index:200001;display:none;align-items:center;justify-content:center;gap:8px;
+    border:1px solid rgba(255,215,0,.5);border-radius:30px;background:rgba(0,0,0,.9);color:#ffd700;
+    font-family:'Rajdhani','Inter',sans-serif;font-weight:700;letter-spacing:2px;text-transform:uppercase;
+    cursor:pointer;-webkit-tap-highlight-color:rgba(255,215,0,.3);touch-action:manipulation;
+    -webkit-user-select:none;user-select:none;-webkit-appearance:none;appearance:none;outline:none;
+  }
+  #nwg-cine-skip{bottom:max(32px,env(safe-area-inset-bottom,32px));left:50%;transform:translateX(-50%);padding:18px 40px;font-size:1rem;min-height:56px;min-width:180px}
+  #nwg-cine-skip:active{animation:nwgBtnPop .2s ease}
+  #nwg-cine-pause{top:max(16px,env(safe-area-inset-top,16px));right:16px;transform:none;padding:10px 18px;font-size:.72rem;border-radius:22px}
+  #nwg-cine-pause:active{opacity:.7}
+  #nwg-cine-replay{
+    position:fixed;top:max(12px,env(safe-area-inset-top,12px));right:12px;z-index:9990;display:none;
+    align-items:center;gap:5px;padding:6px 14px;border:1px solid rgba(255,215,0,.2);border-radius:16px;
+    background:rgba(0,0,0,.5);color:rgba(255,215,0,.7);font-family:'Rajdhani','Inter',sans-serif;
+    font-size:.65rem;font-weight:600;letter-spacing:1px;text-transform:uppercase;cursor:pointer;white-space:nowrap;
+    -webkit-tap-highlight-color:rgba(255,215,0,.3);touch-action:manipulation;-webkit-appearance:none;appearance:none;outline:none
+  }
+</style>
+
+<!-- Visual-only layer — pointer-events:none on everything inside -->
+<div id="nwg-cinematic">
+  <img id="nwg-cine-poster" src="/static/game/01-title-cinematic.webp" alt="">
+  <video id="nwg-cine-video" playsinline webkit-playsinline preload="auto">
     <source src="/static/video/nwg-cinematic-final.mp4" type="video/mp4">
   </video>
-
-  <!-- Loading spinner — visible while buffering -->
-  <div id="nwg-cine-loader" style="
-    position:absolute;z-index:3;display:flex;flex-direction:column;
-    align-items:center;gap:16px;pointer-events:none;
-  ">
-    <div style="
-      width:48px;height:48px;border:3px solid rgba(255,215,0,.15);
-      border-top-color:#ffd700;border-radius:50%;
-      animation:nwgSpin .8s linear infinite;
-    "></div>
-    <span style="
-      color:rgba(255,215,0,.8);font-family:'Rajdhani','Inter',sans-serif;
-      font-size:.8rem;font-weight:600;letter-spacing:3px;text-transform:uppercase;
-    ">LOADING CINEMATIC</span>
+  <div id="nwg-cine-loader">
+    <div style="width:48px;height:48px;border:3px solid rgba(255,215,0,.15);border-top-color:#ffd700;border-radius:50%;animation:nwgSpin .8s linear infinite"></div>
+    <span style="color:rgba(255,215,0,.8);font-family:'Rajdhani',sans-serif;font-size:.8rem;font-weight:600;letter-spacing:3px;text-transform:uppercase">LOADING CINEMATIC</span>
   </div>
-  <style>@keyframes nwgSpin{to{transform:rotate(360deg)}}</style>
-
-  <!-- Cinematic ending card — fades in at the end of the video -->
-  <div id="nwg-cine-ending" style="
-    position:absolute;inset:0;z-index:10;
-    display:flex;flex-direction:column;align-items:center;justify-content:center;
-    background:linear-gradient(180deg,rgba(0,0,0,.3) 0%,rgba(0,0,0,.85) 60%,rgba(139,0,0,.4) 100%);
-    opacity:0;transition:opacity 1.5s ease;pointer-events:none;
-    padding:2rem;text-align:center;
-  ">
+  <div id="nwg-cine-status"></div>
+  <div id="nwg-cine-ending">
     <div style="max-width:600px;">
-      <p style="
-        color:rgba(255,80,80,.9);font-family:'Rajdhani',sans-serif;font-size:.7rem;
-        font-weight:700;letter-spacing:6px;text-transform:uppercase;margin-bottom:.5rem;
-      " data-i18n="cineWarning">WARNING SYSTEM ACTIVATED</p>
-      <h2 style="
-        font-family:'Orbitron',sans-serif;font-size:clamp(1.2rem,4vw,2.2rem);font-weight:900;
-        color:#ffd700;text-shadow:0 0 30px rgba(255,215,0,.5),0 0 60px rgba(255,0,0,.3);
-        margin-bottom:.8rem;line-height:1.3;
-      " data-i18n="cineSoul">EVERY CREATURE HAS A SOUL</h2>
-      <p style="
-        color:rgba(255,255,255,.8);font-family:'Rajdhani',sans-serif;font-size:clamp(.8rem,2.5vw,1.1rem);
-        line-height:1.6;letter-spacing:1px;margin-bottom:1.2rem;
-      " data-i18n="cinePhilosophy">In this world, we don't kill animals. We tame them. We earn their loyalty. We build an army of companions who fight beside us &mdash; not because they have to, but because they choose to.</p>
-      <p style="
-        color:rgba(255,60,60,.9);font-family:'Rajdhani',sans-serif;font-size:clamp(.75rem,2vw,.95rem);
-        font-weight:600;letter-spacing:2px;line-height:1.5;
-      " data-i18n-html="cineSamsara">Kill too many creatures and the wheel of Samsara turns.<br>
-      You will be sent to the Hell Dimension.<br>
-      Good deeds are your only way back.</p>
-      <div style="
-        margin-top:1.5rem;padding:12px 28px;
-        border:1px solid rgba(255,215,0,.3);border-radius:8px;
-        background:rgba(255,215,0,.08);display:inline-block;
-      ">
-        <span style="
-          font-family:'Orbitron',sans-serif;font-size:clamp(.6rem,1.8vw,.8rem);
-          color:#ffd700;letter-spacing:4px;font-weight:700;
-        " data-i18n="cineCycle">THE CYCLE CONTINUES...</span>
+      <p style="color:rgba(255,80,80,.9);font-family:'Rajdhani',sans-serif;font-size:.7rem;font-weight:700;letter-spacing:6px;text-transform:uppercase;margin-bottom:.5rem" data-i18n="cineWarning">WARNING SYSTEM ACTIVATED</p>
+      <h2 style="font-family:'Orbitron',sans-serif;font-size:clamp(1.2rem,4vw,2.2rem);font-weight:900;color:#ffd700;text-shadow:0 0 30px rgba(255,215,0,.5),0 0 60px rgba(255,0,0,.3);margin-bottom:.8rem;line-height:1.3" data-i18n="cineSoul">EVERY CREATURE HAS A SOUL</h2>
+      <p style="color:rgba(255,255,255,.8);font-family:'Rajdhani',sans-serif;font-size:clamp(.8rem,2.5vw,1.1rem);line-height:1.6;letter-spacing:1px;margin-bottom:1.2rem" data-i18n="cinePhilosophy">In this world, we don't kill animals. We tame them. We earn their loyalty. We build an army of companions who fight beside us &mdash; not because they have to, but because they choose to.</p>
+      <p style="color:rgba(255,60,60,.9);font-family:'Rajdhani',sans-serif;font-size:clamp(.75rem,2vw,.95rem);font-weight:600;letter-spacing:2px;line-height:1.5" data-i18n-html="cineSamsara">Kill too many creatures and the wheel of Samsara turns.<br>You will be sent to the Hell Dimension.<br>Good deeds are your only way back.</p>
+      <div style="margin-top:1.5rem;padding:12px 28px;border:1px solid rgba(255,215,0,.3);border-radius:8px;background:rgba(255,215,0,.08);display:inline-block">
+        <span style="font-family:'Orbitron',sans-serif;font-size:clamp(.6rem,1.8vw,.8rem);color:#ffd700;letter-spacing:4px;font-weight:700" data-i18n="cineCycle">THE CYCLE CONTINUES...</span>
       </div>
     </div>
   </div>
-
 </div>
-<!-- Skip button lives OUTSIDE cinematic wrapper to avoid stacking context issues on mobile -->
-<button id="nwg-cine-skip" style="
-  position:fixed;bottom:max(28px,env(safe-area-inset-bottom,28px));
-  left:50%;transform:translateX(-50%);z-index:100001;
-  display:flex;align-items:center;gap:8px;
-  padding:14px 32px;border:1px solid rgba(255,215,0,.4);
-  border-radius:30px;background:rgba(0,0,0,.85);
-  color:#ffd700;font-family:'Rajdhani','Inter',sans-serif;
-  font-size:.9rem;font-weight:600;letter-spacing:2px;
-  text-transform:uppercase;cursor:pointer;
-  -webkit-tap-highlight-color:transparent;touch-action:manipulation;
-">
-  <span id="nwg-cine-timer" style="
-    display:inline-flex;align-items:center;justify-content:center;
-    width:26px;height:26px;border-radius:50%;
-    border:2px solid rgba(255,215,0,.5);font-size:.7rem;
-  "></span>
-  SKIP INTRO
-</button>
-<!-- Replay button lives OUTSIDE the cinematic wrapper so it's visible when wrapper is hidden -->
-<button id="nwg-cine-replay" style="
-  position:fixed;top:max(12px,env(safe-area-inset-top,12px));right:12px;
-  z-index:9990;
-  display:none;align-items:center;gap:5px;
-  padding:6px 14px;border:1px solid rgba(255,215,0,.2);
-  border-radius:16px;background:rgba(0,0,0,.5);
-  backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
-  color:rgba(255,215,0,.7);font-family:'Rajdhani','Inter',sans-serif;
-  font-size:.65rem;font-weight:600;letter-spacing:1px;
-  text-transform:uppercase;cursor:pointer;
-  transition:all .3s ease;white-space:nowrap;
-">
-  ▶ REWATCH
-</button>
+<!-- Invisible tap target — catches play/unmute taps; sits between visuals and buttons -->
+<div id="nwg-cine-touch" style="display:none"></div>
+<!-- Buttons — completely outside all wrappers, highest z-index -->
+<button id="nwg-cine-skip" type="button">SKIP INTRO</button>
+<button id="nwg-cine-pause" type="button">PAUSE</button>
+<button id="nwg-cine-replay" type="button">REWATCH</button>
 
 <script>
 (function(){
-  var wrap = document.getElementById('nwg-cinematic');
-  var vid = document.getElementById('nwg-cine-video');
-  var poster = document.getElementById('nwg-cine-poster');
-  var loader = document.getElementById('nwg-cine-loader');
-  var skipBtn = document.getElementById('nwg-cine-skip');
-  var timerEl = document.getElementById('nwg-cine-timer');
-  var replayBtn = document.getElementById('nwg-cine-replay');
-  var endingCard = document.getElementById('nwg-cine-ending');
-  var SEEN_KEY = 'nwg_cine_seen';
-  var MAX_LOAD_MS = 12000;
-  var countdownId, loadTimeout, videoPlaying = false, endingShown = false;
+  'use strict';
+  var $ = function(id){ return document.getElementById(id); };
+  var wrap      = $('nwg-cinematic');
+  var vid       = $('nwg-cine-video');
+  var poster    = $('nwg-cine-poster');
+  var loader    = $('nwg-cine-loader');
+  var skipBtn   = $('nwg-cine-skip');
+  var pauseBtn  = $('nwg-cine-pause');
+  var replayBtn = $('nwg-cine-replay');
+  var endCard   = $('nwg-cine-ending');
+  var statusEl  = $('nwg-cine-status');
+  var touchArea = $('nwg-cine-touch');
+  var SEEN      = 'nwg_cine_seen';
+  var dismissed = false;
+  var endingShown = false;
+  var videoStarted = false;
 
-  /* If already seen, hide cinematic, show replay button */
-  if(localStorage.getItem(SEEN_KEY)){
-    wrap.style.display='none';
-    skipBtn.style.display='none';
-    replayBtn.style.display='flex';
-    initReplay();
+  /* ── Helpers ── */
+  function setStatus(msg){
+    statusEl.textContent = msg;
+    statusEl.style.display = msg ? 'block' : 'none';
+  }
+  function hideEverything(){
+    wrap.style.display = 'none';
+    touchArea.style.display = 'none';
+    skipBtn.style.display = 'none';
+    pauseBtn.style.display = 'none';
+  }
+
+  /* ── Already seen → skip entirely ── */
+  if(localStorage.getItem(SEEN)){
+    hideEverything();
+    replayBtn.style.display = 'flex';
     return;
   }
 
-  /* Lock scroll during cinematic */
-  document.body.style.overflow='hidden';
+  /* ── Show cinematic ── */
+  document.body.style.overflow = 'hidden';
+  skipBtn.style.display = 'flex';
+  touchArea.style.display = 'block';
+  setStatus('LOADING VIDEO\u2026');
 
-  /* Skip button starts enabled immediately */
-  timerEl.innerHTML='&#10005;';
-  skipBtn.style.pointerEvents='auto';
-  skipBtn.style.opacity='1';
-
-  /* Try to play video — muted for autoplay policy */
+  /* ── Load video (muted for autoplay policy) ── */
   vid.muted = true;
+  vid.setAttribute('muted','');
   vid.load();
 
-  /* When video can actually play, show it and hide poster+loader */
-  function onCanPlay(){
-    vid.removeEventListener('canplay', onCanPlay);
-    vid.removeEventListener('playing', onCanPlay);
-    clearTimeout(loadTimeout);
-    videoPlaying = true;
-    vid.style.opacity='1';
-    loader.style.display='none';
-    setTimeout(function(){ poster.style.opacity='0'; }, 300);
-    vid.play().catch(function(){});
+  /* ── Video ready states ── */
+  function onVideoReady(){
+    if(vid.readyState < 2) return; /* need at least HAVE_CURRENT_DATA */
+    loader.style.display = 'none';
+    if(!videoStarted){
+      setStatus('TAP ANYWHERE TO PLAY');
+    }
   }
-  vid.addEventListener('canplay', onCanPlay);
-  vid.addEventListener('playing', onCanPlay);
+  vid.addEventListener('canplay', onVideoReady);
+  vid.addEventListener('loadeddata', onVideoReady);
 
-  /* Show ending card when video nears the end (last 8 seconds) */
+  /* ── Attempt autoplay (works on desktop, blocked on mobile) ── */
+  try{
+    var autoP = vid.play();
+    if(autoP && typeof autoP.then === 'function'){
+      autoP.then(function(){ onVideoPlaying(); })
+           .catch(function(){ /* autoplay blocked — tap-to-play handles it */ });
+    }
+  }catch(e){}
+
+  /* ── When video actually starts playing ── */
+  function onVideoPlaying(){
+    if(videoStarted) return;
+    videoStarted = true;
+    vid.style.opacity = '1';
+    poster.style.opacity = '0';
+    loader.style.display = 'none';
+    setStatus('');
+    pauseBtn.style.display = 'flex';
+  }
+  vid.addEventListener('playing', onVideoPlaying);
+
+  /* ── Tap-to-play / unmute (on the invisible overlay) ── */
+  function tapToPlay(){
+    touchArea.style.display = 'none'; /* remove overlay so it can't interfere anymore */
+    vid.muted = false;
+    try{ vid.removeAttribute('muted'); }catch(e){}
+    if(vid.paused){
+      var p = vid.play();
+      if(p && typeof p.then === 'function'){
+        p.catch(function(){
+          vid.muted = true;
+          vid.play().catch(function(){});
+        });
+      }
+    }
+  }
+  touchArea.addEventListener('click', tapToPlay, false);
+  touchArea.addEventListener('touchstart', function(e){
+    e.preventDefault();
+    tapToPlay();
+  }, {passive:false});
+
+  /* ── Ending card at last 8 seconds ── */
   vid.addEventListener('timeupdate', function(){
     if(!endingShown && vid.duration && vid.currentTime >= vid.duration - 8){
       endingShown = true;
-      endingCard.style.opacity='1';
+      endCard.style.opacity = '1';
     }
   });
-
-  /* Start play attempt */
-  var playP = vid.play();
-  if(playP && playP.catch) playP.catch(function(){});
-
-  /* Safety timeout */
-  loadTimeout = setTimeout(function(){
-    if(!videoPlaying) dismiss();
-  }, MAX_LOAD_MS);
-
-  /* Unmute on first user tap */
-  function tryUnmute(){
-    vid.muted=false;
-    document.removeEventListener('click',tryUnmute);
-    document.removeEventListener('touchstart',tryUnmute);
-  }
-  document.addEventListener('click',tryUnmute,{once:true,passive:true});
-  document.addEventListener('touchstart',tryUnmute,{once:true,passive:true});
-
-  /* Dismiss cinematic */
-  function dismiss(){
-    clearTimeout(loadTimeout);
-    clearInterval(countdownId);
-    localStorage.setItem(SEEN_KEY,'1');
-    wrap.style.opacity='0';
-    skipBtn.style.display='none';
-    vid.pause();
-    document.body.style.overflow='';
-    setTimeout(function(){
-      wrap.style.display='none';
-      replayBtn.style.display='flex';
-      initReplay();
-    },600);
-  }
-
-  skipBtn.addEventListener('click', dismiss);
-  skipBtn.addEventListener('touchend', function(e){ e.preventDefault(); dismiss(); });
-
-  /* When video ends naturally, show ending for 5s then dismiss */
   vid.addEventListener('ended', function(){
-    if(!endingShown){
-      endingCard.style.opacity='1';
-    }
+    if(!endingShown){ endCard.style.opacity = '1'; }
     setTimeout(dismiss, 5000);
   });
 
-  /* Replay functionality */
-  function initReplay(){
-    replayBtn.addEventListener('click',function(){
-      wrap.style.display='flex';
-      wrap.style.opacity='1';
-      vid.style.opacity='1';
-      poster.style.opacity='0';
-      loader.style.display='none';
-      endingCard.style.opacity='0';
-      endingShown = false;
-      vid.currentTime=0;
-      vid.muted=false;
-      vid.play().catch(function(){ vid.muted=true; vid.play(); });
-      document.body.style.overflow='hidden';
-      skipBtn.style.display='flex';
-      replayBtn.style.display='none';
-    });
+  /* ── Safety timeout ── */
+  setTimeout(function(){
+    if(!videoStarted && !dismissed){
+      setStatus('TAP SKIP OR TAP SCREEN TO PLAY');
+    }
+  }, 12000);
+
+  /* ── Pause / Resume ── */
+  function togglePause(e){
+    if(e){ e.preventDefault(); e.stopPropagation(); }
+    if(vid.paused){
+      vid.play().catch(function(){});
+      pauseBtn.textContent = 'PAUSE';
+      setStatus('');
+    } else {
+      vid.pause();
+      pauseBtn.textContent = 'PLAY';
+      setStatus('PAUSED');
+      statusEl.style.animation = 'none';
+    }
   }
+  pauseBtn.addEventListener('click', togglePause, false);
+  pauseBtn.addEventListener('touchstart', function(e){
+    e.preventDefault(); e.stopPropagation();
+    togglePause();
+  }, {passive:false});
+
+  /* ── Skip / Dismiss ── */
+  function dismiss(){
+    if(dismissed) return;
+    dismissed = true;
+    localStorage.setItem(SEEN, '1');
+    vid.pause();
+    document.body.style.overflow = '';
+    wrap.style.transition = 'opacity .5s ease';
+    wrap.style.opacity = '0';
+    touchArea.style.display = 'none';
+    skipBtn.style.display = 'none';
+    pauseBtn.style.display = 'none';
+    setTimeout(function(){
+      wrap.style.display = 'none';
+      replayBtn.style.display = 'flex';
+    }, 600);
+  }
+  /* SKIP button: use touchstart (fires instantly on mobile, no 300ms delay) */
+  skipBtn.addEventListener('click', function(e){
+    e.preventDefault(); e.stopPropagation();
+    dismiss();
+  }, false);
+  skipBtn.addEventListener('touchstart', function(e){
+    e.preventDefault(); e.stopPropagation();
+    /* Visual feedback */
+    skipBtn.style.background = 'rgba(255,215,0,.35)';
+    dismiss();
+  }, {passive:false});
+
+  /* ── Replay ── */
+  replayBtn.addEventListener('click', function(){
+    dismissed = false;
+    endingShown = false;
+    videoStarted = false;
+    replayBtn.style.display = 'none';
+    wrap.style.display = 'flex';
+    wrap.style.opacity = '1';
+    wrap.style.transition = '';
+    vid.style.opacity = '1';
+    poster.style.opacity = '0';
+    loader.style.display = 'none';
+    endCard.style.opacity = '0';
+    setStatus('');
+    vid.currentTime = 0;
+    vid.muted = false;
+    try{ vid.removeAttribute('muted'); }catch(e){}
+    var p = vid.play();
+    if(p && typeof p.then === 'function'){
+      p.catch(function(){ vid.muted=true; vid.play().catch(function(){}); });
+    }
+    document.body.style.overflow = 'hidden';
+    skipBtn.style.display = 'flex';
+    skipBtn.style.background = '';
+    pauseBtn.style.display = 'flex';
+    pauseBtn.textContent = 'PAUSE';
+    /* Don't show touch overlay during replay — video is already unmuted */
+  }, false);
+  replayBtn.addEventListener('touchstart', function(e){
+    e.preventDefault();
+    replayBtn.click();
+  }, {passive:false});
 })();
 </script>
 
