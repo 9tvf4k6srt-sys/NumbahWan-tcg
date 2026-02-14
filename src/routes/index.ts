@@ -38,6 +38,7 @@ import translateRoutes from './translate'
 import gmRoutes from './gm'
 import cipherRoutes from './cipher'
 import oracleRoutes from './oracle'
+import npcChatRoutes from './npc-chat'
 
 export {
   healthRoutes,
@@ -67,5 +68,6 @@ export {
   translateRoutes,
   gmRoutes,
   cipherRoutes,
-  oracleRoutes
+  oracleRoutes,
+  npcChatRoutes
 }

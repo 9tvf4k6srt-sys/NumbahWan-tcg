@@ -715,9 +715,9 @@ const NW_NAV = {
             });
         }
 
-        // SINGLE AUTHORITY: NW_I18N.onChange is the ONLY trigger for nav language refresh
-        // This eliminates all race conditions — no matter who calls NW_I18N.setLang(),
-        // the nav will always update. No duplicate event listeners, no timing issues.
+        // SINGLE AUTHORITY: NW_I18N.onChange is the ONLY trigger for nav language refresh.
+        // v3 shim guarantees window.NW_I18N exists even before the deferred script loads,
+        // so this call always works — the shim queues it, real script processes the queue.
         if (typeof NW_I18N !== 'undefined' && NW_I18N.onChange) {
             NW_I18N.onChange((lang) => {
                 this.currentLang = lang;
@@ -1167,10 +1167,10 @@ const NW_NAV = {
 
 @media (max-width: 480px) {
     .nw-nav-panel { width: 100vw; max-width: 100vw; }
-    .nw-nav-toggle, .nw-nav-home, .nw-nav-back { width: 52px; height: 52px; }
-    .nw-nav-toggle { bottom: 80px; right: 14px; }
-    .nw-nav-home { bottom: 140px; right: 14px; }
-    .nw-nav-back { bottom: 200px; right: 14px; }
+    .nw-nav-toggle, .nw-nav-home, .nw-nav-back { width: 48px; height: 48px; font-size: 18px; }
+    .nw-nav-toggle { bottom: 72px; right: 12px; }
+    .nw-nav-home { bottom: 130px; right: 12px; }
+    .nw-nav-back { bottom: 188px; right: 12px; }
     .nw-nav-link { padding: 12px 14px; font-size: 15px; }
     .nw-nav-section-header { padding: 12px 14px; font-size: 15px; }
     .nw-lang-btn { padding: 8px 14px; font-size: 14px; }

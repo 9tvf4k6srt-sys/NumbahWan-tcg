@@ -191,7 +191,7 @@
             <p class="bd-text" data-i18n="storyP2">The trigger was simple: <strong>someone out-whaled her.</strong> A rival guild leader spent $51,000 on a single banner — exactly $1,000 more than RegginA's legendary Whale Wars spending spree. The humiliation was total. The corruption was immediate. The credit card bill? Catastrophic.</p>
 
             <div class="bd-img-card">
-                <img src="/static/game/boss-dungeon/04-corruption-throne.webp" alt="RegginA's corruption" loading="lazy">
+                <img src="/static/game/boss-dungeon/04-corruption-throne.webp" alt="RegginA's corruption" loading="eager" fetchpriority="high">
                 <div class="bd-img-caption">
                     <div class="bd-img-caption-num" data-i18n="imgNum01">CINEMATIC 01</div>
                     <div class="bd-img-caption-text" data-i18n="imgCap01">The moment RegginA's throne absorbed the Corrupted Crown — her spending power made manifest as raw destructive energy</div>
@@ -206,7 +206,7 @@
             </div>
 
             <div class="bd-img-card">
-                <img src="/static/game/boss-dungeon/02-boss-transformation.webp" alt="Boss transformation" loading="lazy">
+                <img src="/static/game/boss-dungeon/02-boss-transformation.webp" alt="Boss transformation" loading="eager" fetchpriority="high">
                 <div class="bd-img-caption">
                     <div class="bd-img-caption-num" data-i18n="imgNum02">CINEMATIC 02</div>
                     <div class="bd-img-caption-text" data-i18n="imgCap02">RegginA's transformation — half guild master, half fire deity. Gold coins orbit her form like a wallet-powered solar system</div>
@@ -776,8 +776,10 @@
     </div>
 
     <!-- ====== NAVIGATION & SCRIPTS ====== -->
+    <script src="/static/nw-i18n-shim.js"></script>
+
     <script src="/static/nw-nav.js"></script>
-    <script src="/static/nw-i18n.js"></script>
+    <script src="/static/nw-i18n-core.js" defer></script>
 
 
     <script>
@@ -1023,38 +1025,13 @@
             g26: "ดรอประเบิด", g27: "ฉลองชัยชนะ", g28: "ดาบเพลิงนิรันดร์", g29: "RegginA กลับมา", g30: "ภาพหมู่ 2,000 คน"
         }
     };
-    /* Register translations with NW_I18N so the centralized system handles them */
+    /* Register translations with NW_I18N — the centralized system handles
+       all apply/restore logic including English original caching.
+       No duplicate event listeners needed — NW_I18N.apply() is the SINGLE AUTHORITY. */
     if (typeof NW_I18N !== 'undefined' && NW_I18N.registerPage) {
         NW_I18N.registerPage('boss-dungeon', BOSS_DUNGEON_I18N);
     }
-
-    /* Apply translations when language changes (nw-lang-change from nav/i18n system) */
-    function applyBossDungeonI18n(lang) {
-        const t = BOSS_DUNGEON_I18N[lang];
-        if (!t) return;
-        document.querySelectorAll('[data-i18n]').forEach(el => {
-            const key = el.getAttribute('data-i18n');
-            if (t[key]) el.innerHTML = t[key];
-        });
-    }
-
-    /* Listen for ALL possible language change events */
-    ['nw-lang-change', 'nw-language-changed', 'languageChanged'].forEach(evtName => {
-        document.addEventListener(evtName, (e) => {
-            applyBossDungeonI18n(e.detail?.lang || 'en');
-        });
-        window.addEventListener(evtName, (e) => {
-            applyBossDungeonI18n(e.detail?.lang || 'en');
-        });
-    });
-
-    /* Apply stored language on page load */
-    (function() {
-        const storedLang = localStorage.getItem('nw_lang') || localStorage.getItem('lang') || 'en';
-        if (storedLang !== 'en') {
-            applyBossDungeonI18n(storedLang);
-        }
-    })();
     </script>
+  <script src="/static/nw-lazy.js" defer></script>
 </body>
 </html>

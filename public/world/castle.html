@@ -343,7 +343,7 @@ body::after{
   </div>
   <div class="pixel-frame">
     <div class="img-label" data-i18n="imgLabel_aerialview">AERIAL VIEW</div>
-    <img src="/static/world/aerial.webp" alt="Aerial pixel art view of Castle NumbahWan and surrounding lands" loading="lazy">
+    <img src="/static/world/aerial.webp" alt="Aerial pixel art view of Castle NumbahWan and surrounding lands" loading="eager" fetchpriority="high">
   </div>
   <div class="deep-caption">
     <h3 data-i18n="aerialCaptionH3">WORLD OVERVIEW</h3>
@@ -367,7 +367,7 @@ body::after{
   </div>
   <div class="pixel-frame">
     <div class="img-label" data-i18n="imgLabel_exterior">EXTERIOR</div>
-    <img src="/static/world/exterior.webp" alt="Full exterior view of Castle NumbahWan at night" loading="lazy">
+    <img src="/static/world/exterior.webp" alt="Full exterior view of Castle NumbahWan at night" loading="eager" fetchpriority="high">
   </div>
   <div class="deep-caption">
     <h3 data-i18n="exteriorCaptionH3">ARCHITECTURAL NOTES</h3>
@@ -906,7 +906,9 @@ body::after{
 
 
 <!-- ============ I18N + NAV ============ -->
-<script src="/static/nw-icons-inline.js" defer></script>
+<script data-lazy-src="/static/nw-icons-inline.js"></script>
+<script src="/static/nw-i18n-shim.js"></script>
+
 <script src="/static/nw-nav.js" defer></script>
 <script src="/static/nw-i18n-core.js" defer></script>
 <script>
@@ -2038,46 +2040,21 @@ function captureEnglishDefaults() {
   _enTextCaptured = true;
 }
 
-function applyPageI18n(lang) {
-  captureEnglishDefaults();
-  const t = PAGE_I18N[lang] || PAGE_I18N.en;
-  document.querySelectorAll('[data-i18n]').forEach(el => {
-    const key = el.getAttribute('data-i18n');
-    if (!key) return;
-    // Use translated text, fall back to original English text
-    const translated = t[key] || (lang === 'en' ? _originalEnText[key] : null);
-    if (translated) el.textContent = translated;
-  });
-}
-
-// Register with NW_I18N core when available
+// Register with NW_I18N core — the centralized system handles all apply/restore.
+// No duplicate event listeners needed — NW_I18N.apply() is the SINGLE AUTHORITY.
 function registerWithCore() {
   if (typeof NW_I18N !== 'undefined' && NW_I18N.register) {
     NW_I18N.register(PAGE_I18N);
-    NW_I18N.onChange(lang => applyPageI18n(lang));
   }
 }
 
 document.addEventListener('DOMContentLoaded', () => {
+  captureEnglishDefaults();
   registerWithCore();
-  applyPageI18n(getLang());
 });
 
-// Listen on DOCUMENT (nav dispatches on document, not window)
-document.addEventListener('languageChanged', (e) => {
-  applyPageI18n(e.detail?.lang || getLang());
-});
-document.addEventListener('nw-lang-change', (e) => {
-  applyPageI18n(e.detail?.lang || getLang());
-});
-// Also listen on window just in case
-window.addEventListener('nw-lang-change', (e) => {
-  applyPageI18n(e.detail?.lang || getLang());
-});
-// localStorage fallback (other tabs)
-window.addEventListener('storage', (e) => {
-  if (e.key === 'nw_lang' && e.newValue) applyPageI18n(e.newValue);
-});
+// Language changes handled by NW_I18N centralized system — no duplicate listeners needed.
+// NW_I18N.apply() is the SINGLE AUTHORITY for all language switching.
 </script>
 
 <!-- ============ SCROLL SPY ============ -->
@@ -2135,5 +2112,6 @@ document.addEventListener('DOMContentLoaded',()=>{
   document.addEventListener('keydown',function(e){if(e.key==='Escape')closeLb();});
 })();
 </script>
+  <script src="/static/nw-lazy.js" defer></script>
 </body>
 </html>
