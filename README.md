@@ -28,7 +28,7 @@ We built three systems to solve problems we kept hitting during AI-assisted deve
 |--------|-------------------|--------|
 | **[Project Context Protocol](#project-context-protocol)** | AI agents waste 50K tokens re-reading READMEs | 17 endpoints, 125/125 tests, Level 3 Grade A |
 | **[Mycelium](#mycelium--self-healing-codebase)** | Same files keep breaking the same way | 5 scripts, 84 regression tests, 75/100 eval score |
-| **[Cinematic Trailer Pipeline](#cinematic-trailer-pipeline)** | AI-generated assets need verification loops | 12 scenes, 32 iterations, 8 characters + 1 raid boss, 4-level checklist |
+| **[Cinematic Trailer Pipeline](#cinematic-trailer-pipeline)** | AI-generated assets need verification loops | 12 scenes, 37 iterations, 8 characters + 1 raid boss, 4-level checklist |
 
 All three are production systems running in this repo. None of them require external dependencies.
 
@@ -148,7 +148,7 @@ pipeline/
 ├── keyframes/
 │   ├── keyframe-manifest.json        # Scene registry — versions, source URLs, verification notes, revision log
 │   ├── review.html                   # Interactive review dashboard — approve/flag per scene, export feedback JSON
-│   └── scene-{01..12}-*.png          # Generated keyframe images (32 total iterations across 12 scenes)
+│   └── scene-{01..12}-*.png          # Generated keyframe images (37 total iterations across 12 scenes)
 ├── ref-sheets/
 │   └── {character}-ue5-refsheet-*.png # UE5 photorealistic reference sheets per character (versioned)
 ├── verification/
