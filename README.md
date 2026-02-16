@@ -1,338 +1,368 @@
 <div align="center">
 
-# NumbahWan TCG
+# NumbahWan
 
-### AI-native project infrastructure: self-healing code + the protocol that teaches AI your codebase
+**A fantasy TCG built with AI-first architecture — 583 cards, 92 pages, 7 DLCs, a cinematic trailer pipeline, and the tooling that proves it works.**
 
-[![PCP](https://img.shields.io/badge/PCP_v0.1-Level_3_(Grade_A)-00d4ff?style=for-the-badge)](https://numbahwan.pages.dev/.well-known/pcp.json)
-[![PCP Tests](https://img.shields.io/badge/PCP_Tests-125%2F125_passing-00b894?style=for-the-badge)]()
-[![Mycelium](https://img.shields.io/badge/Mycelium-75%2F100_(B)-6c5ce7?style=for-the-badge)](https://numbahwan.pages.dev/showcase)
-[![Deps](https://img.shields.io/badge/Dependencies-0-e8e0d8?style=for-the-badge)]()
+[![PCP v0.1](https://img.shields.io/badge/PCP_v0.1-Level_3_(Grade_A)-00d4ff?style=for-the-badge)](https://numbahwan.pages.dev/.well-known/pcp.json)
+[![Tests](https://img.shields.io/badge/Tests-125%2F125-00b894?style=for-the-badge)]()
+[![Cards](https://img.shields.io/badge/Cards-583-e17055?style=for-the-badge)]()
+[![Pages](https://img.shields.io/badge/Pages-92-6c5ce7?style=for-the-badge)]()
+[![Deps](https://img.shields.io/badge/Ext_Dependencies-0-e8e0d8?style=for-the-badge)]()
 
-**Two open standards. Zero dependencies. One repo.**
-
-**[PCP Spec](PCP-SPEC.md)** | **[Agent Dashboard](https://numbahwan.pages.dev/agent)** | **[Live Showcase](https://numbahwan.pages.dev/showcase)** | **[Discovery](https://numbahwan.pages.dev/.well-known/pcp.json)**
+**[Play the Game](https://numbahwan.pages.dev)** · **[Agent Dashboard](https://numbahwan.pages.dev/agent)** · **[PCP Spec](PCP-SPEC.md)** · **[Trailer Pipeline](#cinematic-trailer-pipeline)**
 
 </div>
 
 ---
 
-## Project Context Protocol (PCP) v0.1 — Reference Implementation
+## What This Is
 
-**PCP is a new open standard for exposing structured project context to AI agents via HTTP.**
+NumbahWan is a full-scale trading card game — 10 seasons of cards, a real-time battle engine, a card forge, wallet system, Oracle advisor, guild mechanics, and 7 DLC story campaigns — built almost entirely through AI-assisted development.
 
-MCP (Anthropic) connects tools to models. A2A (Google) connects agents to agents. **PCP connects projects to agents.** It fills a gap no existing protocol addresses: *how does an AI agent instantly understand a codebase it's never seen before?*
+But the game isn't the interesting part. The infrastructure is.
 
-```bash
-# Any AI agent can onboard to your project in one HTTP call:
-curl https://yourproject.dev/.well-known/pcp.json     # Discover PCP support
-curl https://yourproject.dev/api/pcp/brief             # 209 tokens — instant understanding
-curl -X POST https://yourproject.dev/api/pcp/onboard \ # Full session bootstrap
-  -d '{"agent":"claude","goals":["fix i18n"]}'         # 6K tokens — rules, tasks, memory, tools
-```
+We built three systems to solve problems we kept hitting during AI-assisted development. Each one is open, portable, and zero-dependency:
 
-### Why PCP Exists
+| System | Problem It Solves | Status |
+|--------|-------------------|--------|
+| **[Project Context Protocol](#project-context-protocol)** | AI agents waste 50K tokens re-reading READMEs | 17 endpoints, 125/125 tests, Level 3 Grade A |
+| **[Mycelium](#mycelium--self-healing-codebase)** | Same files keep breaking the same way | 5 scripts, 84 regression tests, 75/100 eval score |
+| **[Cinematic Trailer Pipeline](#cinematic-trailer-pipeline)** | AI-generated assets need verification loops | 11 scenes, 31 iterations, 7 characters, 4-level checklist |
 
-When an AI agent starts working on a codebase, it faces a cold-start problem:
-- **No project understanding** — doesn't know the stack, conventions, or architecture
-- **No design rules** — will break things the team already learned not to break
-- **No health awareness** — can't prioritize what needs fixing
-- **No memory continuity** — learnings from the last AI session are lost
-- **Token waste** — dumping an entire README burns 50K+ tokens for context deliverable in 209
-
-### PCP vs Everything Else
-
-| Standard | Connects | PCP relationship |
-|----------|----------|------------------|
-| **MCP** (Anthropic) | Tools to Models | Complementary. MCP provides tool access; PCP provides project context. |
-| **A2A** (Google) | Agent to Agent | Complementary. A2A coordinates agents; PCP gives them project understanding. |
-| **agents.json** | Discovery | Complementary. agents.json discovers agents; PCP discovers project state. |
-| **llms.txt** | Website to LLM | Similar intent but static markdown. PCP is dynamic JSON with token budgets. |
-
-### Compliance Levels
-
-| Level | Endpoints | Token Cost | What It Gives an Agent |
-|-------|-----------|------------|----------------------|
-| **L0** (required) | `/.well-known/pcp.json` + `/brief` + `/rules` | ~500 | "What is this project and what can't I break?" |
-| **L1** (core) | + `/context` + `/health` + `/files` | ~3K | Full architecture, health scores, file map |
-| **L2** (memory) | + `/tasks` + `/memory` + `/onboard` + `/status` + `/pulse` | ~6K | Cross-session memory, task queue, session bootstrap |
-| **L3** (actions) | + `/actions` + `/webhooks` + `/notify` | ~6K | Trigger commands, GitHub auto-tasks, alert channels |
-
-### This Implementation: 125/125 Tests, Level 3, Grade A
-
-```bash
-# Run the compliance validator yourself
-node tests/pcp-validator.cjs
-# 125 tests | 125 PASS | 0 FAIL | 0 WARN
-# PCP Compliance Level: Level 3
-# Grade: A
-```
-
-Key metrics from this reference implementation:
-- **Brief**: 209 tokens, 5ms response — an agent understands the project in one call
-- **Pulse**: 68 bytes, 5ms — lightest possible heartbeat for dashboard auto-refresh
-- **17 endpoints** at `/api/pcp/*` with full `/api/agent/*` backward compatibility
-- **KV-backed memory** — learnings, decisions, blockers persist across AI sessions
-- **Token-budget metadata** — every response declares its cost so agents can budget
-
-Full spec: **[PCP-SPEC.md](PCP-SPEC.md)** (505 lines, self-contained, no dependencies on this repo)
+All three are production systems running in this repo. None of them require external dependencies.
 
 ---
 
-## Mycelium — Your Codebase Learns From Its Own Mistakes
+## Project Context Protocol (PCP)
 
-**Five scripts. Zero dependencies. Drop into any git repo.** It reads your commit history, finds what keeps breaking, and builds defenses automatically.
+> *MCP connects tools to models. A2A connects agents to agents. PCP connects projects to agents.*
 
-### The Problem
-
-You fix a bug. Two weeks later, the same file breaks the same way. Your team has 50 "lessons learned" docs that nobody reads. Your pre-commit hooks check formatting, not whether you're about to repeat a mistake from 3 months ago.
-
-## The Solution
+PCP is an open standard for exposing structured project context to AI agents via HTTP. It solves the cold-start problem: when an AI agent starts working on a codebase it's never seen, it has no understanding of the architecture, no awareness of design rules, and no memory of previous sessions.
 
 ```bash
-# Add to any project — takes 30 seconds, zero npm install
+# An agent onboards to your project in one HTTP call:
+curl https://yourproject.dev/.well-known/pcp.json     # Discover PCP support
+curl https://yourproject.dev/api/pcp/brief             # 209 tokens — instant project understanding
+curl -X POST https://yourproject.dev/api/pcp/onboard \ # Full session bootstrap
+  -d '{"agent":"claude","goals":["fix i18n"]}'         # ~6K tokens — rules, tasks, memory, tools
+```
+
+### How It Works
+
+Every endpoint is token-budget-aware. The response header tells the agent exactly how many tokens it just consumed, so it can decide whether to go deeper or stop.
+
+| Level | What It Gives an Agent | Token Cost |
+|-------|----------------------|------------|
+| **L0** — Discovery | "What is this project and what can't I break?" | ~500 |
+| **L1** — Core | Full architecture map, health scores, file tree | ~3K |
+| **L2** — Memory | Cross-session learnings, task queue, session bootstrap | ~6K |
+| **L3** — Actions | Trigger builds, GitHub auto-tasks, alert webhooks | ~6K |
+
+This implementation passes all 125 compliance checks at Level 3. Brief responds in 5ms with 209 tokens. Pulse (heartbeat) is 68 bytes. Memory is KV-backed and persists across AI sessions.
+
+**Full spec: [PCP-SPEC.md](PCP-SPEC.md)** — 505 lines, self-contained, zero dependency on this repo.
+
+---
+
+## Mycelium — Self-Healing Codebase
+
+Five scripts. Zero dependencies. Drop into any git repo.
+
+Mycelium reads your commit history, finds what keeps breaking, and builds defenses automatically. Every bug you fix teaches it. Every pattern it detects becomes an enforced constraint.
+
+```bash
+# Add to any project — 30 seconds, zero npm install
 cp mycelium*.cjs your-project/
 cd your-project && node mycelium.cjs --init
-
-# It reads your entire git history and immediately knows:
-# - Which files break the most (and why)
-# - Which files always change together
-# - What patterns cause the most fix chains
-# - What your pre-commit hook should actually be checking
 ```
 
-**After init, every commit makes it smarter.** Every bug you fix teaches it. Every pattern it detects gets enforced.
-
----
-
-## What Makes It Different
-
-| Feature | Mycelium | ESLint / Prettier | SonarQube | Custom Scripts |
-|---------|----------|-------------------|-----------|----------------|
-| Learns from YOUR history | ✅ reads git log | ❌ generic rules | ❌ generic rules | ❌ manual rules |
-| Knows which files break together | ✅ coupling detection | ❌ | ❌ | ❌ |
-| Blocks repeated mistakes | ✅ constraint enforcement | ❌ | ⚠️ some | ❌ |
-| Auto-generates tests from breakages | ✅ mycelium-upgrade | ❌ | ❌ | ❌ |
-| Cryptographic proof of scores | ✅ SHA-256 hash-locked | ❌ | ❌ | ❌ |
-| Zero dependencies | ✅ just Node.js | ❌ plugins | ❌ Java/Docker | ⚠️ depends |
-| Works on any repo | ✅ reads git | ⚠️ config needed | ⚠️ config needed | ❌ custom per project |
-
----
-
-## The Five Brains
+### The Five Components
 
 ```
 Every commit triggers:
-  Watcher --learn → Learner --snapshot → Evaluator --score → Fixer --heal
+  Watcher → Learner → Evaluator → Fixer
 
 Pre-commit hook:
-  Watcher --warn → Guard --enforce → BLOCK if pattern violation detected
-
-On demand:
-  Upgrader --apply → read breakages → generate tests + harden files + strengthen guards
+  Watcher → Guard → BLOCK if pattern violation detected
 ```
 
-| Script | Role | One-liner |
-|--------|------|-----------|
-| `mycelium.cjs` | **The Learner** | Snapshots every commit, tracks constraints, detects couplings |
-| `mycelium-watch.cjs` | **The Watcher** | Scores file risk, maps breakage patterns, warns before you repeat |
-| `mycelium-eval.cjs` | **The Evaluator** | 9 KPIs, SHA-256 proof, 28 self-checks including 4 anti-gaming |
-| `mycelium-fix.cjs` | **The Fixer** | Diagnoses friction → prescribes → executes → verifies improvement |
-| `mycelium-upgrade.cjs` | **The Upgrader** | Reads breakage history → auto-generates regression tests + guards |
+| Script | Role | What It Does |
+|--------|------|-------------|
+| `mycelium.cjs` | Learner | Snapshots every commit, tracks constraints, detects file couplings |
+| `mycelium-watch.cjs` | Watcher | Scores file risk, maps breakage patterns, warns before you repeat mistakes |
+| `mycelium-eval.cjs` | Evaluator | 9 KPIs, SHA-256 cryptographic proof, 28 self-checks including 4 anti-gaming |
+| `mycelium-fix.cjs` | Fixer | Diagnoses friction → prescribes → executes → verifies improvement |
+| `mycelium-upgrade.cjs` | Upgrader | Reads breakage history → auto-generates regression tests + guard rules |
 
----
+### Real Numbers
 
-## Quick Start
-
-```bash
-# 1. Copy the scripts (that's literally the install)
-cp mycelium.cjs mycelium-watch.cjs mycelium-eval.cjs mycelium-fix.cjs mycelium-upgrade.cjs your-project/
-cd your-project
-
-# 2. Initialize (reads your git history, installs hooks, creates memory)
-node mycelium.cjs --init
-
-# 3. See what it learned about your codebase
-node mycelium.cjs --status       # health score, risk areas, hottest files
-node mycelium-eval.cjs           # 9 KPIs with cryptographic proof
-node mycelium-watch.cjs --status # riskiest files, couplings, patterns
-
-# 4. Auto-fix the weakest areas
-node mycelium-fix.cjs --force    # diagnose → prescribe → execute
-node mycelium-upgrade.cjs --apply # generate tests from breakage history
-
-# 5. Ship (atomic: commit → test → sync → PR → merge)
-node bin/mycelium.cjs ship "your commit message"
-```
-
----
-
-## Real Results (not hypothetical)
-
-Mycelium was built and tested on a [92-page vanilla JS project](https://numbahwan.pages.dev) with 150+ commits. Every number below comes from `mycelium-eval.cjs` and can be verified by running it yourself.
-
-**[→ Live showcase with metrics + honest Mycelium story](https://numbahwan.pages.dev/showcase)** · **[→ Browse all 92 pages](https://numbahwan.pages.dev/showcase#gallery)** · **[→ Source](public/showcase.html)**
+These come from `mycelium-eval.cjs` running against this repo. You can verify them yourself.
 
 | What It Found | What It Did |
 |--------------|-------------|
-| `cards.html` broke **10 times** from the same pattern | Auto-generated i18n key validation test — caught 24 invalid keys on first run |
-| `battle.html` + `nw-battle-engine.js` always change together (28x) | Added coupling enforcement — pre-commit warns if you change one without the other |
-| 3 files kept breaking after fix (30% repeat rate) | Classified failure modes (i18n, mobile, layout) and generated targeted regression tests |
-| `nw-battle-engine-old.js` was an exact duplicate (identical md5) | Detected by sentinel, deleted 97KB of dead weight |
-| 50 total breakages across the project lifetime | Each one became a lesson, constraint, or test — **84 regression tests** now run on every commit |
+| `cards.html` broke **10 times** from the same pattern | Generated i18n key validation test — caught 24 invalid keys on first run |
+| `battle.html` + `nw-battle-engine.js` always co-change (28x) | Added coupling enforcement in pre-commit |
+| 3 files had 30% repeat-break rate | Classified failure modes, generated targeted regression tests |
+| 50 breakages across project lifetime | Each became a lesson, constraint, or test — 84 regression tests now run on every commit |
 
 <details>
-<summary><b>See the full evaluation scorecard</b></summary>
+<summary><b>Evaluation scorecard — 75/100 (B)</b></summary>
 
 ```
-Mycelium-Eval v4.0 — Foolproof Learning System Evaluation
+Mycelium-Eval v4.0
 
   Overall: 75/100 (B) [proof: 6bc6c35005d35e8c]
-  Data: 150 commits | 50 breakages | 49 learnings | 75 constraints
 
   Scorecard:
-    █████░░░░░   50  Fix Rate Trend       (15%)  Real bug fix rate: 15%→16%
-    ████░░░░░░   35  Repeat Prevention    (15%)  3/10 files still repeat (30%)
-    ██████████  100  Constraint Coverage  (15%)  7/7 breakage areas covered
-    ██████████  100  Lesson Quality       (15%)  50/50 lessons are specific
-    ████░░░░░░   40  Fix Chain Speed      (10%)  3 chains, avg length 4.0
-    ██████████  100  Knowledge Density    (10%)  141/141 risky files documented
-    █████████░   90  Warning Coverage     (10%)  63% warning, 82% coupling
-    ██████████  100  Bundle Health         (5%)  390KB under 400KB target
-    █████████░   90  Fixer Effectiveness   (5%)  17 fixes, 13 hardened, guard enforced
+    Fix Rate Trend         50/100 (15%)  Real bug fix rate: 15%→16%
+    Repeat Prevention      35/100 (15%)  3/10 files still repeat (30%)
+    Constraint Coverage   100/100 (15%)  7/7 breakage areas covered
+    Lesson Quality        100/100 (15%)  50/50 lessons are specific
+    Fix Chain Speed        40/100 (10%)  3 chains, avg length 4.0
+    Knowledge Density     100/100 (10%)  141/141 risky files documented
+    Warning Coverage       90/100 (10%)  63% warning, 82% coupling
+    Bundle Health         100/100  (5%)  390KB under 400KB target
+    Fixer Effectiveness    90/100  (5%)  17 fixes, 13 hardened
 
   Verification: 28/28 self-checks passed (4 anti-gaming checks included)
-  Sliding Window: real bug rate improved 13% (earliest 40 vs latest 40 commits)
 ```
 
-The score is **75, not 95** — because Mycelium is honest. Repeat Prevention is 35/100 because 3 files still repeat. The only way to improve is to actually stop those files from breaking.
-
-</details>
-
-<details>
-<summary><b>See the diagnosis engine output</b></summary>
-
-```
-mycelium-fix — Friction Analysis Engine
-
-  ▸ Fix Rate Trend: 50/100 (weight 15%)
-    Root Causes:
-      ! cards.html — fixed 6x after learning system installed
-      ! nw-battle-engine.js — fixed 5x after learning system installed
-      ! battle.html — fixed 4x after learning system installed
-    Prescription: PREVENT_NEW_BUGS → add guards to top 5 offenders
-    Expected: +15-30 points
-
-  ▸ Repeat Prevention: 35/100 (weight 15%)
-    Root Causes:
-      ✗ cards.html — broke 10x, dominant failure: ui/layout (4x)
-      ✗ markets.html — broke 7x, dominant failure: i18n (3x)
-      ✗ battle.html — broke 7x, dominant failure: ios (2x)
-    Prescriptions:
-      STRENGTHEN_CONSTRAINTS → preventive rules for 7 repeat files
-      ENFORCE_CO_CHANGES → make coupling violations blocking
-    Expected: +20-40 points
-
-  Summary: 3 friction points, 5 prescriptions, +24 pts potential
-```
-
-</details>
-
-<details>
-<summary><b>See the upgrade tool output</b></summary>
-
-```
-mycelium-upgrade — The Immune Booster
-
-  Analysis:
-    Breakages analyzed:  50
-    Repeat offenders:    15
-    File couplings:      8 (≥5x co-changed)
-    Constraint areas:    20
-
-  Top repeat offenders:
-    10x  public/cards.html       [i18n:2, mobile:1, layout:1]
-     7x  public/markets.html     [i18n:3, mobile:2]
-     7x  public/battle.html      [layout:1, mobile:2]
-
-  [1] Harden HTML files with data-testid markers
-    ✓ Applied 3 files
-
-  [2] Generate targeted regression tests
-    Tests generated: 52 (i18n:20, mobile:9, layout:3, structure:11, runtime:9)
-    ✓ Written to tests/regression-upgrade.cjs
-
-  [3] Strengthen pre-commit guard
-    Coupling checks: 7 | File-specific checks: 5
-    ✓ Written to .husky/pre-commit
-```
+The score is 75, not 95 — because Mycelium is honest. Repeat Prevention is 35/100 because 3 files still repeat. The only way to improve that number is to actually stop those files from breaking.
 
 </details>
 
 ---
 
-## Also Included: `sentinel.cjs`
+## Cinematic Trailer Pipeline
 
-> Zero-dependency codebase health scanner. One file. Works on any JS/TS project.
+The trailer pipeline is where three concerns converge: AI asset generation, recursive verification, and structured iteration management. It produces a 2:45 cinematic trailer with 11 keyframe scenes, 7 playable characters, and 4 narrative acts.
 
-```bash
-# Try it on your project right now
-curl -O https://raw.githubusercontent.com/9tvf4k6srt-sys/NumbahWan-tcg/main/sentinel.cjs
-node sentinel.cjs
+### Architecture
+
+```
+pipeline/
+├── characters/
+│   └── character-bible.json          # Single source of truth for all 7 character visual specs
+│                                     # — hex colors, prompt keywords, negative prompts, verification checklists
+├── keyframes/
+│   ├── keyframe-manifest.json        # Scene registry — versions, source URLs, verification notes, revision log
+│   ├── review.html                   # Interactive review dashboard — approve/flag per scene, export feedback JSON
+│   └── scene-{01..11}-*.png          # Generated keyframe images (31 total iterations across 11 scenes)
+├── ref-sheets/
+│   └── {character}-ue5-refsheet-*.png # UE5 photorealistic reference sheets per character (versioned)
+├── verification/
+│   └── verification-report.json      # 4-level automated checklist results per scene per version
+└── verify.cjs                        # Verification runner — checks images against character bible specs
 ```
 
-Scores 10 modules: architecture, assets, i18n, dead code, security, performance, API surface, dependencies, accessibility, SEO meta. Includes auto-fix commands.
+### The Verification Loop
+
+Every generated image passes through a 4-level checklist before it's accepted:
+
+| Level | What It Checks | Example |
+|-------|---------------|---------|
+| **L1 — Silhouette** | Recognizable shape at thumbnail size | Wing type matches, hair volume correct |
+| **L2 — Color** | Hex values within 15% tolerance | Hair #CC0000, skin #D4A574, wings #1A237E |
+| **L3 — Detail** | Facial features, accessories, weapon type | Glasses present, headband shape correct, hammer ornate |
+| **L4 — Consistency** | Art style, lighting, proportions across scenes | UE5 realistic (not anime), consistent scale |
+
+When a check fails, the system logs the specific deviation, adjusts the prompt (adding negatives or emphasizing missed features), regenerates, and compares against the previous best. Maximum 3 iterations per check level before escalating to manual review.
+
+### What The Pipeline Learned
+
+The character bible contains `CRITICAL_NOTE` fields — permanent annotations born from repeated failures:
+
+```json
+{
+  "headwear": {
+    "CRITICAL_NOTE": "This headband has TWO LARGE sharp matte-black leaf/petal-shaped prongs
+     rising upward from the headband. NOT horns, NOT antlers, NOT crown, NOT cat ears.
+     Reference: reggina-ue5-refsheet-v5.png"
+  }
+}
+```
+
+These notes exist because the headband was rendered wrong 5+ times across different iterations before being corrected. Each failure became a more specific prompt constraint. The pipeline documents every correction in the revision log — not to hide mistakes, but to prevent recurrence.
+
+### Current State
+
+| Metric | Value |
+|--------|-------|
+| Scenes | 11/11 verified |
+| Characters | 7/7 accounted for |
+| Trailer duration | 2:45 (4 acts) |
+| Total iterations | 31 across all scenes |
+| Critical issues | 5 logged, 5 resolved |
+| Pipeline version | v6.0 |
+
+**Review dashboard**: [`pipeline/keyframes/review.html`](pipeline/keyframes/review.html)
 
 ---
 
-## Why "Mycelium"?
+## The Game
 
-In nature, [mycelium](https://en.wikipedia.org/wiki/Mycelium) is the underground fungal network that connects trees in a forest. When one tree is attacked, the network warns the others. When one tree has excess nutrients, the network shares them.
+NumbahWan TCG is a browser-based fantasy trading card game with 583 cards across 10 seasons, each with unique mechanics:
 
-This system does the same thing for your codebase. When one file breaks, every connected file learns. When you fix a bug, the pattern becomes a constraint that prevents recurrence.
+| Season | Theme | Cards |
+|--------|-------|-------|
+| S1: Origins | Foundation set | 110 |
+| S2: Hounds of War | Military strategy | 57 |
+| S3: Cyber Siege | Tech warfare | 68 |
+| S4: Realm of Shadows | Dark magic | 68 |
+| S5: Tournament of Champions | Competitive | 67 |
+| S6: Whale Wars | Economic | 68 |
+| S7: Rage Quit Rebellion | Chaos | 68 |
+| S8: Legends Reborn | Legacy | 28 |
+| S9: Multiverse Mayhem | Dimensional | 25 |
+| S10: Final Dawn | Conclusion | 24 |
+
+The game has a real-time battle engine, card forging system, player wallet, guild mechanics, an Oracle advisor (with Buddhist, Taoist, Biblical, and Quranic wisdom), internationalization across 3 languages (EN, ZH, TH), and 7 DLC campaigns that expand the world from castle life to sky islands to the philosophical depths of Samsara.
+
+### The Guild
+
+Seven characters, each with a fully spec'd visual identity locked in the [character bible](pipeline/characters/character-bible.json):
+
+| Character | Role | Archetype |
+|-----------|------|-----------|
+| **RegginA** | Guild Master | Holy Paladin / Hammer Warrior |
+| **Natehouoho** | Leader | Dual-Blade Rogue / Shadow Assassin |
+| **RegginO** | Vice Master | Enchantress / Support Mage |
+| **Panthera** | Top Contributor | Seraphim / Divine Templar |
+| **Sweetiez** | Guild Member | Enchantress / Mystic Mage |
+| **Santaboy** | Festive Warrior | Holiday Warrior / Divine Angel |
+| **CIA** | Companion | Tactical French Bulldog |
+
+---
+
+## Technical Stack
+
+```
+Frontend:     92 HTML pages, vanilla JS (no framework), 62 shared modules
+Backend:      Hono + TypeScript on Cloudflare Workers
+Database:     Cloudflare D1 (SQLite) + KV for memory/caching
+Hosting:      Cloudflare Pages + Workers
+Testing:      125 PCP compliance tests + 84 Mycelium regression tests
+CI/CD:        GitHub Actions → Cloudflare deploy
+Health:       sentinel.cjs (10-module codebase scanner, standalone)
+AI Pipeline:  Character bible → keyframe generation → 4-level verification → dashboard review
+```
+
+Zero external runtime dependencies. No React, no Vue, no Tailwind, no Webpack. The entire frontend is vanilla HTML/CSS/JS with shared modules. This is intentional — it keeps bundle sizes small (390KB under 400KB target), eliminates build complexity, and makes every page independently deployable.
 
 ---
 
 ## Project Structure
 
 ```
-├── PCP-SPEC.md                  # Project Context Protocol specification
-├── src/routes/agent.ts          # PCP reference implementation (488 lines)
-├── public/agent.html            # Agent command center dashboard
-├── public/.well-known/pcp.json  # PCP discovery manifest
-├── tests/pcp-validator.cjs      # 125-check compliance validator
-├── tests/pcp-compliance.cjs     # 68-check core compliance validator
-├── bin/agent-brief.cjs          # CLI agent brief (7 modes)
-├── mycelium.cjs                 # The Learner
-├── sentinel.cjs                 # Health scanner (standalone)
-├── bin/mycelium.cjs             # Unified CLI
-├── .mycelium/                   # All runtime data
-│   ├── memory.json              # Learner state (snapshots, constraints, breakages)
-│   ├── watch.json               # Watcher state (commits, risks, couplings)
-│   └── config.json              # Configuration
-└── tests/
-    ├── run-tests.cjs            # Full test suite
-    ├── smoke-test.cjs           # HTTP smoke tests
-    └── nw-i18n-guard.cjs        # i18n validation
+├── PCP-SPEC.md                      # Project Context Protocol specification (505 lines)
+├── src/
+│   └── routes/agent.ts              # PCP reference implementation (17 endpoints)
+├── public/
+│   ├── .well-known/pcp.json         # PCP discovery manifest
+│   ├── agent.html                   # Agent command center dashboard
+│   ├── index.html                   # Game landing page
+│   ├── battle.html                  # Battle engine
+│   ├── cards.html                   # Card browser (10 seasons)
+│   ├── forge.html                   # Card forging
+│   ├── wallet.html                  # Inventory
+│   ├── showcase.html                # Mycelium metrics + honest story
+│   └── static/                      # JS modules, CSS, card data, images
+├── pipeline/
+│   ├── characters/character-bible.json  # Visual DNA for all 7 characters
+│   ├── keyframes/                   # 11 scene keyframes + manifest + review dashboard
+│   ├── ref-sheets/                  # UE5 character reference sheets (versioned)
+│   └── verification/                # 4-level verification reports
+├── mycelium.cjs                     # The Learner
+├── mycelium-watch.cjs               # The Watcher
+├── mycelium-eval.cjs                # The Evaluator (SHA-256 proof)
+├── mycelium-fix.cjs                 # The Fixer
+├── mycelium-upgrade.cjs             # The Upgrader
+├── sentinel.cjs                     # Health scanner (standalone, zero-dep)
+├── tests/
+│   ├── pcp-validator.cjs            # 125-check PCP compliance validator
+│   ├── pcp-compliance.cjs           # 68-check core compliance
+│   └── run-tests.cjs               # Full test suite
+├── scripts/                         # 29 build, audit, and content tools
+├── tools/                           # Mycelium mining, telemetry, dependency graphing
+└── docs/                            # Architecture, workflows, specs
 ```
+
+---
+
+## Running Locally
+
+```bash
+git clone https://github.com/9tvf4k6srt-sys/NumbahWan-tcg.git
+cd NumbahWan-tcg
+npm install
+npm run build
+npx wrangler pages dev dist --port 3000
+```
+
+### Validate
+
+```bash
+# PCP compliance (125 checks)
+node tests/pcp-validator.cjs
+
+# Mycelium evaluation (9 KPIs + cryptographic proof)
+node mycelium-eval.cjs
+
+# Sentinel health scan (10 modules)
+node sentinel.cjs
+
+# Full test suite
+node tests/run-tests.cjs
+```
+
+### Mycelium Quick Start (any repo)
+
+```bash
+cp mycelium*.cjs your-project/
+cd your-project
+node mycelium.cjs --init          # Reads git history, installs hooks
+node mycelium-eval.cjs            # See your score
+node mycelium-fix.cjs --force     # Auto-fix the weakest areas
+node mycelium-upgrade.cjs --apply # Generate tests from breakage history
+```
+
+---
+
+## Design Decisions
+
+**Why vanilla JS instead of React/Vue?**
+Each of the 92 pages is self-contained. No build step means no build failures. No framework version conflicts. Every page loads independently under 400KB. When a page breaks, the blast radius is one file.
+
+**Why zero external dependencies?**
+Mycelium, sentinel, and PCP run on Node.js and nothing else. Copy the files into any project. No `npm install`, no version conflicts, no supply chain risk.
+
+**Why 4-level verification for AI-generated images?**
+Because AI image generation is non-deterministic. A prompt that produces correct output once will produce wrong output the next time. The checklist catches regressions that visual review misses — a hex color drifting 20% doesn't look wrong to a human reviewer but breaks character consistency across scenes.
+
+**Why does Mycelium score itself honestly?**
+Because inflated scores hide real problems. Repeat Prevention is 35/100 because 3 files still break repeatedly. That number only improves when those files actually stop breaking — not when the scoring formula changes.
+
+---
 
 ## Contributing
 
-See [CONTRIBUTING.md](CONTRIBUTING.md). If you find something useful — take it. MIT license.
+See [CONTRIBUTING.md](CONTRIBUTING.md).
 
-Good first contributions:
+Good starting points:
 - Run `node mycelium.cjs --init` on your own project and share what it finds
-- Run `node sentinel.cjs` on any JS project and open a PR with improvements
-- Add an [issue](../../issues) if a breakage pattern isn't caught
+- Run `node sentinel.cjs` on any JS project
+- Open an [issue](../../issues) if a breakage pattern isn't caught
+- Add an Oracle wisdom (see CONTRIBUTING.md for the 5-part format)
 
 ---
 
 <div align="center">
 
-**NumbahWan TCG** — AI-native project infrastructure
+**NumbahWan** — AI-native game infrastructure
 
-**[PCP Spec](PCP-SPEC.md)** | **[Agent Dashboard](https://numbahwan.pages.dev/agent)** | **[Live Showcase](https://numbahwan.pages.dev/showcase)** | **[Get Started](#quick-start)** | **[How It Works](#the-five-brains)**
+**[Play](https://numbahwan.pages.dev)** · **[PCP Spec](PCP-SPEC.md)** · **[Agent Dashboard](https://numbahwan.pages.dev/agent)** · **[Mycelium Showcase](https://numbahwan.pages.dev/showcase)**
 
-*PCP is an open specification. MCP connects tools. A2A connects agents. PCP connects projects.*
+*Built by the NumbahWan Guild. MIT License.*
 
 </div>

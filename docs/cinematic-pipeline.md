@@ -1,142 +1,171 @@
-# NWG Cinematic Trailer Pipeline
+# Cinematic Trailer Pipeline
 
-## Current Pipeline (v1)
+## Overview
 
-### Overview
-Scene-based compositing workflow: individual AI-generated video clips are concatenated
-with crossfades, scored with generated music, and encoded for mobile delivery.
+The NWG cinematic trailer pipeline is a structured system for generating, verifying, and iterating on AI-produced visual assets. It manages the production of a 2:45 trailer with 11 keyframe scenes across 4 narrative acts, 7 distinct characters, and multiple verification passes per scene.
 
-### Step-by-Step
+The pipeline has completed 31 iterations across all scenes and is currently at version 6.0.
+
+## Pipeline Phases
 
 ```
-1. CONCEPT ART (existing)
-   └─ Our game artwork (webp images in /static/game/)
-   └─ These define the visual style and content of each scene
-
-2. IMAGE → VIDEO (Seedance v1.5 Pro)
-   └─ Input: reference image from our artwork
-   └─ Output: 5-8s clip at 1280×720 24fps
-   └─ Model: fal-ai/bytedance/seedance/v1.5/pro
-   └─ Tips:
-      - Use EXISTING game art as reference frames (mandatory)
-      - Keep prompts focused: describe motion, camera, lighting
-      - Avoid walking characters facing camera (backwards-head glitch)
-      - Back-facing / side-profile compositions work best
-      - Specify "camera behind character" for march/walk scenes
-      - Battle scenes with static poses → animate VFX, not characters
-
-3. QUALITY CHECK
-   └─ Review each clip for:
-      • Anatomical glitches (backwards heads, extra limbs)
-      • Art style consistency with reference image
-      • Camera motion smoothness
-   └─ Regenerate failed clips with adjusted prompts
-
-4. SCENE ASSEMBLY (ffmpeg)
-   └─ Concat list ordering scenes by narrative arc
-   └─ Scale all to 854×480 (mobile target)
-   └─ Add 3s fade-to-black ending via tpad + fade filter
-
-5. MUSIC GENERATION
-   └─ Model: elevenlabs/music
-   └─ Duration: match video length + 3s buffer
-   └─ Style: epic orchestral, cinematic
-   └─ Keep prompts clean and generic (avoid brand names)
-
-6. AUDIO-VIDEO MERGE (ffmpeg)
-   └─ Trim music to video length
-   └─ Apply 5-6s audio fade-out aligned to visual fade-out
-   └─ -shortest flag to match durations
-
-7. FINAL ENCODE (ffmpeg)
-   └─ H.264 Constrained Baseline, Level 3.1
-   └─ 800kbps target / 1200kbps max / 1600kbps buffer
-   └─ Keyframes every 2s (g=48 at 24fps)
-   └─ -movflags +faststart for progressive download
-   └─ AAC audio 96kbps stereo
-   └─ Target: <10MB for mobile
+Phase 1: Character Design     ← COMPLETE (7 characters locked in bible)
+Phase 2: Keyframe Generation  ← COMPLETE (11/11 scenes verified)
+Phase 3: Video Generation     ← NEXT (keyframe → 5-10s video clips)
+Phase 4: Assembly & Scoring   ← PENDING (concatenation, music, final encode)
 ```
 
-### Scene Inventory (v3 trailer)
-| # | File | Duration | Content | Source Image |
-|---|------|----------|---------|-------------|
-| 1 | scene1-castle-reveal | 8s | Kingdom establishing shot | 03-castle-gate.webp |
-| 2 | scene7-taming-v2 | 5s | Wolf bonding in forest | companions/wolf-taming.webp |
-| 3 | scene3-sky-islands | 8s | Floating islands + gryphon | 55-sky-islands.webp |
-| 4 | scene8-companion-battle-v2 | 5s | Companion army in battle | companions/companion-battle.webp |
-| 5 | scene2-card-duel | 8s | TCG holographic battle | 05-card-battle.webp |
-| 6 | scene4-monkey-king | 8s | Monkey King boss | 17-monkey-king-boss.webp |
-| 7 | scene5-regina-storm | 8s | Sea tempest voyage | 72-regina-storm.webp |
-| 8 | scene6-shadow-titan | 8s | Chained dungeon boss | 31-shadow-titan.webp |
-| 9 | scene9-samsara-v2 | 5s | Hell dimension | samsara/hell-dimension.webp |
-| 10 | scene10-ending-v2 | 5s | Cliff cliffhanger + vortex | samsara/cinematic-ending.webp |
+## Phase 1 — Character Design
+
+### Character Bible (`pipeline/characters/character-bible.json`)
+
+Single source of truth for all character visual specifications. Every image generation request references this file. The bible defines:
+
+- **Physical traits**: Skin hex, height, build, age range
+- **Hair**: Color hex, highlight hex, style keywords, volume descriptors
+- **Face**: Eye color, shape, expression, distinguishing features
+- **Headwear**: Type, description, color, prompt keywords, negative prompts
+- **Outfit**: Top, bottom, inner layer, material, colors (primary/secondary/accent)
+- **Wings**: Type, colors (inner/outer/mechanical), span, prompt keywords
+- **Weapon**: Type, description, colors
+- **Accessories**: Ordered list with PRIMARY identifiers marked
+- **Color palette**: Dominant, secondary, accent hex arrays
+- **UE5 prompt**: Full generation prompt incorporating all specs
+- **CRITICAL_NOTEs**: Permanent annotations from repeated generation failures
+
+### Verification Checklist (4 Levels)
+
+Every generated image — reference sheets and keyframes — is checked against:
+
+| Level | Purpose | Checks |
+|-------|---------|--------|
+| L1: Silhouette | Shape recognition at thumbnail size | Wing type, hair volume, weapon shape |
+| L2: Color | Hex value matching within tolerance | Hair, outfit, wings, skin — all ±15% |
+| L3: Detail | Feature accuracy | Glasses, headband shape, specific accessories, text on vest |
+| L4: Consistency | Cross-scene coherence | Art style (UE5, not anime), lighting, proportions |
+
+### Recursive Refinement
+
+```
+Step 1: Generate using ue5Prompt + reference image
+Step 2: Verify against checklist levels 1–4
+Step 3: Log specific deviations
+Step 4: Adjust prompt (add negatives, emphasize missed features)
+Step 5: Regenerate with adjusted prompt + previous best as reference
+Step 6: Compare new vs previous — keep the better one
+Step 7: If L1–L3 checks still fail, recurse (max 3 iterations)
+Step 8: When all checks pass AND owner approves → LOCK
+```
+
+## Phase 2 — Keyframe Generation
+
+### Scene Manifest (`pipeline/keyframes/keyframe-manifest.json`)
+
+Tracks every scene with:
+- Scene ID, name, narrative act, timecode
+- Current file name and version number
+- `previousFiles[]` — full ancestry of all prior versions
+- Source URL of the generation output
+- Character references used
+- Verification notes per version
+- Revision log documenting every change across all versions
+
+### The 11 Scenes
+
+| # | Scene | Act | Duration | Characters | Version |
+|---|-------|-----|----------|-----------|---------|
+| 01 | Birth — Castle Reveal | 1 | 8s | — | v2 |
+| 02 | The Living World — 8 Biomes | 1 | 22s | — | v2 |
+| 03 | Companions — Player Meets CIA | 2 | 22s | CIA | v2 |
+| 04 | Cards & Combat — Card Deck | 2 | 20s | Natehouoho | v4 |
+| 05 | Castle Life — Tavern Strategy | 2 | 18s | RegginA, CIA | v3 |
+| 06 | DLC 1: The Abyss — Frost Wyrm | 3 | 12s | RegginA | v4 |
+| 07 | DLC 2&3: Sky Islands | 3 | 13s | Panthera, Santaboy | v3 |
+| 08 | DLC 4: Forgotten Floor | 3 | 8s | RegginO, Sweetiez | v2 |
+| 09 | DLC 5: SS Regina — The Storm | 3 | 12s | RegginA, Natehouoho | v2 |
+| 10 | Samsara — Wheel of Rebirth | 4 | 20s | Panthera, RegginA, RegginO | v4 |
+| 11 | Guild Assembles | 4 | 10s | All 7 | v3 |
+
+### Iteration History
+
+Total: 31 iterations across 11 scenes. Key corrections:
+
+| Issue | Affected | Resolution |
+|-------|----------|------------|
+| Castle architecture inconsistency | Scenes 01, 02 | Regenerated using shared reference image |
+| Wolf instead of French Bulldog | Scene 03 | Character bible corrected, CIA breed locked |
+| RegginA skin/hair/outfit wrong | Scenes 05, 06, 11 | Reference sheet v5 created, all scenes regenerated |
+| RegginA headband wrong shape | Scenes 05, 06, 10 | CRITICAL_NOTE added to bible, 5+ iterations |
+| Panthera wings gold instead of dark | Scene 07 | Explicit color emphasis in prompt, wings now #1A237E/#4A0066 |
+| Card scene showed dragon summon | Scene 04 | Replaced with character checking card deck from pocket |
+| Scenes 09/10 had no guild characters | Scenes 09, 10 | Regenerated with characters to show game depth |
+
+### Review Dashboard (`pipeline/keyframes/review.html`)
+
+Interactive HTML page for scene-by-scene review:
+- Visual timeline showing all 11 scenes across 4 acts
+- Character roster with scene presence tracking
+- Per-scene cards with: image, metadata, version tag, emotion summary, verification checks
+- Approve / Flag buttons per scene
+- Export feedback as JSON for pipeline integration
+
+## Phase 3 — Video Generation (Next)
+
+### Plan
+
+```
+For each verified keyframe:
+  1. Use keyframe PNG as first-frame reference
+  2. Generate 5–10s video clip with camera motion + VFX
+  3. Model: Seedance v1.5 Pro or equivalent
+  4. Resolution: 1280×720 → scale to 854×480 (mobile target)
+  5. Verify anatomical consistency + art style match
+  6. Use last frame of Scene N as first frame of Scene N+1 for continuity
+```
+
+### Known Limitations
+
+- Walking characters facing camera produce backwards-head glitches
+- Back-facing / side-profile compositions work best
+- Battle scenes: animate VFX, not character bodies
+- Multi-character scenes lose identity at >3 characters
+
+## Phase 4 — Assembly (Planned)
+
+```
+1. Scene concatenation with crossfades (ffmpeg)
+2. Music generation (elevenlabs/music, epic orchestral)
+3. Audio-video merge with fade alignment
+4. Final encode: H.264 Constrained Baseline, Level 3.1
+   - 800kbps target / 1200kbps max
+   - Keyframes every 2s
+   - movflags +faststart
+   - AAC 96kbps stereo
+   - Target: <10MB for mobile delivery
+```
+
+## File Structure
+
+```
+pipeline/
+├── characters/
+│   └── character-bible.json              # 7 characters, full visual specs
+├── keyframes/
+│   ├── keyframe-manifest.json            # Scene registry, versions, revision log
+│   ├── review.html                       # Interactive review dashboard
+│   ├── scene-{01..11}-*.png              # Keyframe images (all versions kept)
+│   └── verify-scene-*.jpg                # 800px verification thumbnails
+├── ref-sheets/
+│   ├── reggina-ue5-refsheet-v{1..5}.png  # RegginA evolution (5 versions)
+│   ├── {character}-ue5-refsheet-v1.png   # Other character sheets
+│   └── {character}-original-reference.png # MapleStory source references
+├── verification/
+│   └── verification-report.json          # 4-level check results per scene
+├── verify.cjs                            # Verification runner
+├── ASSEMBLER-SPEC.md                     # Phase 4 encoding spec
+└── TODO.md                               # Pipeline task tracker
+```
 
 ---
 
-## Quality Improvement Roadmap
-
-### Short-term (current tech)
-- **Reference-frame chaining**: Use last frame of Scene N as first frame of Scene N+1
-  for visual continuity (Seedance supports first+last frame mode)
-- **Upscaling pass**: Run ByteDance Video Upscaler on each clip before assembly
-- **Cross-dissolve transitions**: Add 0.5s crossfade between scenes instead of hard cuts
-- **Color grading**: Apply uniform LUT/color grade across all clips for consistency
-- **Sound design layers**: Layer SFX (sword clashes, roars, wind) over the music
-
-### Medium-term (pipeline v2)
-- **Style replication**: Use `video_style_replication` analysis on a AAA trailer reference
-  to extract cinematography guidelines, then apply those to prompts
-- **Multi-angle generation**: Generate 3 variants of each scene, pick the best
-- **Storyboard system**: Pre-plan camera angles and motion in a JSON manifest
-  before generation, ensuring no duplicate compositions
-- **Character consistency**: Use ideogram or character-reference models to maintain
-  the same protagonist across all scenes
-- **Motion interpolation**: Use frame interpolation to smooth 24fps → 60fps
-
-### Long-term (pipeline v3)
-- **Real-time engine capture**: When game engine exists, capture scenes directly
-  from Unreal/Unity with cinematic cameras — AI only for concept/previz
-- **Professional scoring**: Commission original music or license trailer-quality tracks
-- **Voiceover narration**: Add dramatic narration with TTS over key moments
-- **Multi-resolution delivery**: Encode 480p mobile + 720p tablet + 1080p desktop
-  with adaptive streaming (HLS/DASH)
-
----
-
-## ffmpeg Cheat Sheet
-
-```bash
-# Concatenate scenes (video-only, scaled)
-ffmpeg -f concat -safe 0 -i concat-list.txt \
-  -vf "scale=854:480:flags=lanczos" \
-  -c:v libx264 -profile:v baseline -crf 22 -an output.mp4
-
-# Add fade-to-black ending (3s pad + 6s fade starting 3s before end)
-ffmpeg -i input.mp4 \
-  -vf "tpad=stop_mode=clone:stop_duration=3,fade=t=out:st=SECONDS:d=6" \
-  -c:v libx264 -an output.mp4
-
-# Merge video + music with audio fade-out
-ffmpeg -i video.mp4 -i music.mp3 \
-  -filter_complex "[1:a]atrim=0:VDUR,afade=t=out:st=FADE_START:d=FADE_LEN[m]" \
-  -map 0:v -map "[m]" -c:v copy -c:a aac -b:a 128k -shortest output.mp4
-
-# Final mobile encode
-ffmpeg -i input.mp4 \
-  -c:v libx264 -profile:v baseline -level 3.1 \
-  -b:v 800k -maxrate 1200k -bufsize 1600k \
-  -g 48 -keyint_min 48 -pix_fmt yuv420p \
-  -c:a aac -b:a 96k -ar 44100 \
-  -movflags +faststart -preset medium output.mp4
-
-# Cross-dissolve between two clips (0.5s overlap)
-ffmpeg -i clip1.mp4 -i clip2.mp4 \
-  -filter_complex "xfade=transition=fade:duration=0.5:offset=SECONDS" output.mp4
-```
-
-## Known Seedance Limitations
-- Walking characters facing camera → head rotation glitch (backwards head)
-- Complex multi-character motion → limb clipping, floating/skating
-- Fine details (fingers, chain physics) → morphing/shimmer artifacts
-- Workarounds: Use static poses with VFX animation, back-facing compositions,
-  close-ups of objects rather than full-body character motion
+Last updated: 2026-02-16 · Pipeline version: 6.0
