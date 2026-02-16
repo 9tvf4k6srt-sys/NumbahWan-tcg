@@ -28,7 +28,7 @@ We built three systems to solve problems we kept hitting during AI-assisted deve
 |--------|-------------------|--------|
 | **[Project Context Protocol](#project-context-protocol)** | AI agents waste 50K tokens re-reading READMEs | 17 endpoints, 125/125 tests, Level 3 Grade A |
 | **[Mycelium](#mycelium--self-healing-codebase)** | Same files keep breaking the same way | 5 scripts, 84 regression tests, 75/100 eval score |
-| **[Cinematic Trailer Pipeline](#cinematic-trailer-pipeline)** | AI-generated assets need verification loops | 11 scenes, 31 iterations, 7 characters, 4-level checklist |
+| **[Cinematic Trailer Pipeline](#cinematic-trailer-pipeline)** | AI-generated assets need verification loops | 12 scenes, 32 iterations, 8 characters + 1 raid boss, 4-level checklist |
 
 All three are production systems running in this repo. None of them require external dependencies.
 
@@ -136,19 +136,19 @@ The score is 75, not 95 — because Mycelium is honest. Repeat Prevention is 35/
 
 ## Cinematic Trailer Pipeline
 
-The trailer pipeline is where three concerns converge: AI asset generation, recursive verification, and structured iteration management. It produces a 2:45 cinematic trailer with 11 keyframe scenes, 7 playable characters, and 4 narrative acts.
+The trailer pipeline is where three concerns converge: AI asset generation, recursive verification, and structured iteration management. It produces a 2:45 cinematic trailer with 12 keyframe scenes (11 narrative + 1 raid boss), 8 characters (7 guild members + 1 raid boss), and 4 narrative acts.
 
 ### Architecture
 
 ```
 pipeline/
 ├── characters/
-│   └── character-bible.json          # Single source of truth for all 7 character visual specs
+│   └── character-bible.json          # Single source of truth for all 8 character visual specs (7 guild + 1 raid boss)
 │                                     # — hex colors, prompt keywords, negative prompts, verification checklists
 ├── keyframes/
 │   ├── keyframe-manifest.json        # Scene registry — versions, source URLs, verification notes, revision log
 │   ├── review.html                   # Interactive review dashboard — approve/flag per scene, export feedback JSON
-│   └── scene-{01..11}-*.png          # Generated keyframe images (31 total iterations across 11 scenes)
+│   └── scene-{01..12}-*.png          # Generated keyframe images (32 total iterations across 12 scenes)
 ├── ref-sheets/
 │   └── {character}-ue5-refsheet-*.png # UE5 photorealistic reference sheets per character (versioned)
 ├── verification/
@@ -164,7 +164,7 @@ Every generated image passes through a 4-level checklist before it's accepted:
 |-------|---------------|---------|
 | **L1 — Silhouette** | Recognizable shape at thumbnail size | Wing type matches, hair volume correct |
 | **L2 — Color** | Hex values within 15% tolerance | Hair #CC0000, skin #D4A574, wings #1A237E |
-| **L3 — Detail** | Facial features, accessories, weapon type | Glasses present, headband shape correct, hammer ornate |
+| **L3 — Detail** | Facial features, accessories, weapon type | Glasses present, headband shape correct, hammer ornate, shutter shades on seal boss |
 | **L4 — Consistency** | Art style, lighting, proportions across scenes | UE5 realistic (not anime), consistent scale |
 
 When a check fails, the system logs the specific deviation, adjusts the prompt (adding negatives or emphasizing missed features), regenerates, and compares against the previous best. Maximum 3 iterations per check level before escalating to manual review.
@@ -189,12 +189,13 @@ These notes exist because the headband was rendered wrong 5+ times across differ
 
 | Metric | Value |
 |--------|-------|
-| Scenes | 11/11 verified |
-| Characters | 7/7 accounted for |
-| Trailer duration | 2:45 (4 acts) |
-| Total iterations | 31 across all scenes |
+| Scenes | 12/12 verified (11 trailer + 1 raid boss) |
+| Characters | 8/8 accounted for (7 guild + 1 raid boss) |
+| Trailer duration | 2:45 (4 acts) + bonus boss scene |
+| Total iterations | 32 across all scenes |
 | Critical issues | 5 logged, 5 resolved |
-| Pipeline version | v6.0 |
+| Pipeline version | v7.0 |
+| Raid boss | Harpseal Zakum RegginA — locked (v3 ref sheet, all checks passed) |
 
 **Review dashboard**: [`pipeline/keyframes/review.html`](pipeline/keyframes/review.html)
 
@@ -232,6 +233,7 @@ Seven characters, each with a fully spec'd visual identity locked in the [charac
 | **Sweetiez** | Guild Member | Enchantress / Mystic Mage |
 | **Santaboy** | Festive Warrior | Holiday Warrior / Divine Angel |
 | **CIA** | Companion | Tactical French Bulldog |
+| **Harpseal Zakum RegginA** | Raid Boss | Ancient Seal God / Comical Boss Monster |
 
 ---
 
@@ -245,7 +247,7 @@ Hosting:      Cloudflare Pages + Workers
 Testing:      125 PCP compliance tests + 84 Mycelium regression tests
 CI/CD:        GitHub Actions → Cloudflare deploy
 Health:       sentinel.cjs (10-module codebase scanner, standalone)
-AI Pipeline:  Character bible → keyframe generation → 4-level verification → dashboard review
+AI Pipeline:  Character bible → keyframe generation → 4-level verification → dashboard review → boss encounters
 ```
 
 Zero external runtime dependencies. No React, no Vue, no Tailwind, no Webpack. The entire frontend is vanilla HTML/CSS/JS with shared modules. This is intentional — it keeps bundle sizes small (390KB under 400KB target), eliminates build complexity, and makes every page independently deployable.
@@ -270,7 +272,7 @@ Zero external runtime dependencies. No React, no Vue, no Tailwind, no Webpack. T
 │   └── static/                      # JS modules, CSS, card data, images
 ├── pipeline/
 │   ├── characters/character-bible.json  # Visual DNA for all 7 characters
-│   ├── keyframes/                   # 11 scene keyframes + manifest + review dashboard
+│   ├── keyframes/                   # 12 scene keyframes + manifest + review dashboard
 │   ├── ref-sheets/                  # UE5 character reference sheets (versioned)
 │   └── verification/                # 4-level verification reports
 ├── mycelium.cjs                     # The Learner
@@ -361,7 +363,7 @@ Good starting points:
 
 **NumbahWan** — AI-native game infrastructure
 
-**[Play](https://numbahwan.pages.dev)** · **[PCP Spec](PCP-SPEC.md)** · **[Agent Dashboard](https://numbahwan.pages.dev/agent)** · **[Mycelium Showcase](https://numbahwan.pages.dev/showcase)**
+**[Play](https://numbahwan.pages.dev)** · **[PCP Spec](PCP-SPEC.md)** · **[Agent Dashboard](https://numbahwan.pages.dev/agent)** · **[Mycelium Showcase](https://numbahwan.pages.dev/showcase)** · **[Harpseal Zakum Raid Boss](https://numbahwan.pages.dev/harpseal-zakum)**
 
 *Built by the NumbahWan Guild. MIT License.*
 

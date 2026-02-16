@@ -70,7 +70,7 @@ Tracks every scene with:
 - Verification notes per version
 - Revision log documenting every change across all versions
 
-### The 11 Scenes
+### The 12 Scenes
 
 | # | Scene | Act | Duration | Characters | Version |
 |---|-------|-----|----------|-----------|---------|
@@ -85,10 +85,11 @@ Tracks every scene with:
 | 09 | DLC 5: SS Regina — The Storm | 3 | 12s | RegginA, Natehouoho | v2 |
 | 10 | Samsara — Wheel of Rebirth | 4 | 20s | Panthera, RegginA, RegginO | v4 |
 | 11 | Guild Assembles | 4 | 10s | All 7 | v3 |
+| 12 | Raid Boss — Harpseal Zakum | Bonus | Boss | Harpseal Zakum, RegginA, Natehouoho | v1 |
 
 ### Iteration History
 
-Total: 31 iterations across 11 scenes. Key corrections:
+Total: 32 iterations across 12 scenes. Key corrections:
 
 | Issue | Affected | Resolution |
 |-------|----------|------------|
@@ -99,6 +100,7 @@ Total: 31 iterations across 11 scenes. Key corrections:
 | Panthera wings gold instead of dark | Scene 07 | Explicit color emphasis in prompt, wings now #1A237E/#4A0066 |
 | Card scene showed dragon summon | Scene 04 | Replaced with character checking card deck from pocket |
 | Scenes 09/10 had no guild characters | Scenes 09, 10 | Regenerated with characters to show game depth |
+| Raid boss ref sheet missing elements | Harpseal Zakum v1–v2 | Iterated 3 times: v1 missing shades/beard/armor; v2 added shades+beard; v3 all checks passed. Locked. |
 
 ### Review Dashboard (`pipeline/keyframes/review.html`)
 
@@ -149,14 +151,15 @@ For each verified keyframe:
 ```
 pipeline/
 ├── characters/
-│   └── character-bible.json              # 7 characters, full visual specs
+│   └── character-bible.json              # 8 characters, full visual specs (7 guild + 1 raid boss)
 ├── keyframes/
 │   ├── keyframe-manifest.json            # Scene registry, versions, revision log
 │   ├── review.html                       # Interactive review dashboard
-│   ├── scene-{01..11}-*.png              # Keyframe images (all versions kept)
+│   ├── scene-{01..12}-*.png              # Keyframe images (all versions kept)
 │   └── verify-scene-*.jpg                # 800px verification thumbnails
 ├── ref-sheets/
 │   ├── reggina-ue5-refsheet-v{1..5}.png  # RegginA evolution (5 versions)
+│   ├── harpseal-zakum-reggina-refsheet-v{1..3}.png  # Raid boss (3 versions, v3 locked)
 │   ├── {character}-ue5-refsheet-v1.png   # Other character sheets
 │   └── {character}-original-reference.png # MapleStory source references
 ├── verification/
@@ -168,4 +171,4 @@ pipeline/
 
 ---
 
-Last updated: 2026-02-16 · Pipeline version: 6.0
+Last updated: 2026-02-16 · Pipeline version: 7.0

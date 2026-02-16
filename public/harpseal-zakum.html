@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Raid Boss: Harpseal Zakum RegginA | NWG The Game</title>
+    <link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="/static/nw-utilities.css" rel="stylesheet">
+    <style>
+        :root {
+            --seal-cyan: #00E5FF;
+            --seal-gold: #FFD700;
+            --seal-bronze: #B8860B;
+            --seal-white: #FFFFF0;
+            --seal-dark: #0a0a0f;
+            --seal-teal: #00BCD4;
+            --seal-steak: #8B4513;
+            --seal-fat: #FF6B9D;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Inter', sans-serif; background: var(--seal-dark); color: #fff; overflow-x: hidden; }
+
+        /* === ICY AURA BACKGROUND === */
+        .aura-bg { position: fixed; inset: 0; z-index: -1;
+            background: radial-gradient(ellipse at 50% 30%, rgba(0,229,255,0.08) 0%, transparent 50%),
+                        radial-gradient(ellipse at 30% 70%, rgba(255,215,0,0.06) 0%, transparent 50%),
+                        radial-gradient(ellipse at 70% 60%, rgba(0,188,212,0.05) 0%, transparent 50%), var(--seal-dark); }
+        .aura-bg::before { content:''; position:absolute; inset:0;
+            background-image: url("data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Ccircle cx='20' cy='20' r='2' fill='%2300E5FF' fill-opacity='0.03'/%3E%3C/svg%3E");
+            animation: drift 60s linear infinite; }
+        @keyframes drift { from{transform:translate(0,0)} to{transform:translate(-40px,-40px)} }
+
+        /* === BOSS LABEL === */
+        .boss-label { display:inline-flex; align-items:center; gap:8px; padding:8px 20px;
+            background:linear-gradient(135deg, rgba(0,229,255,0.25), rgba(255,215,0,0.15));
+            border:1px solid rgba(0,229,255,0.5); border-radius:999px;
+            font-size:0.7rem; font-weight:800; letter-spacing:0.25em; text-transform:uppercase;
+            color:var(--seal-cyan); backdrop-filter:blur(8px); }
+
+        /* === HERO === */
+        .boss-hero { position:relative; min-height:90vh; display:flex; align-items:center; justify-content:center; overflow:hidden; }
+        .boss-hero-img { position:absolute; inset:0; background-size:cover; background-position:center top; filter:brightness(0.4); transition:transform 15s ease-out; }
+        .boss-hero:hover .boss-hero-img { transform:scale(1.05); }
+        .boss-hero-overlay { position:absolute; inset:0;
+            background:linear-gradient(to bottom, rgba(10,10,15,0.1) 0%, rgba(10,10,15,0.5) 50%, rgba(10,10,15,1) 100%); }
+        .boss-hero-content { position:relative; z-index:10; text-align:center; padding:2rem; max-width:1000px; }
+        .boss-title { font-family:'Orbitron',sans-serif; font-size:clamp(2rem,7vw,4.5rem); font-weight:900; line-height:1.05;
+            background:linear-gradient(135deg, #00E5FF 0%, #FFD700 40%, #00BCD4 70%, #FFD700 100%);
+            -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;
+            filter:drop-shadow(0 0 40px rgba(0,229,255,0.5)); margin-bottom:0.5rem; }
+        .boss-subtitle { font-size:clamp(1rem,2.5vw,1.4rem); color:rgba(255,255,255,0.7); font-style:italic; margin-bottom:2rem; max-width:700px; margin-inline:auto; }
+        .boss-flavor { font-size:0.9rem; color:rgba(255,255,255,0.5); margin-bottom:2rem; max-width:600px; margin-inline:auto; }
+
+        .boss-stats-row { display:flex; justify-content:center; gap:2rem; flex-wrap:wrap; margin-top:1.5rem; }
+        .boss-stat { display:flex; flex-direction:column; align-items:center; gap:4px; }
+        .boss-stat-val { font-family:'Orbitron',sans-serif; font-size:1.5rem; font-weight:900; color:var(--seal-gold); }
+        .boss-stat-val.cyan { color:var(--seal-cyan); }
+        .boss-stat-val.pink { color:var(--seal-fat); }
+        .boss-stat-label { font-size:0.7rem; color:rgba(255,255,255,0.5); letter-spacing:0.15em; text-transform:uppercase; }
+
+        /* === CONTAINER === */
+        .container { max-width:1100px; margin:0 auto; padding:0 1.5rem 6rem; }
+        section { margin-bottom:5rem; }
+
+        .section-tag { display:inline-block; padding:4px 14px; border-radius:999px; font-size:0.65rem; font-weight:700;
+            letter-spacing:0.2em; text-transform:uppercase; margin-bottom:1rem;
+            background:linear-gradient(135deg, rgba(0,229,255,0.2), rgba(255,215,0,0.1));
+            border:1px solid rgba(0,229,255,0.3); color:var(--seal-cyan); }
+
+        h2 { font-family:'Orbitron',sans-serif; font-size:clamp(1.5rem,4vw,2.25rem); font-weight:900;
+            background:linear-gradient(135deg, #FFD700, #00E5FF);
+            -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;
+            margin-bottom:1rem; }
+        h3 { font-family:'Orbitron',sans-serif; font-size:1.1rem; font-weight:700; color:var(--seal-gold); margin-bottom:0.75rem; }
+        .text { font-size:1.05rem; line-height:1.85; color:rgba(255,255,255,0.85); margin-bottom:1.25rem; }
+        .text strong { color:var(--seal-gold); }
+
+        /* === IMAGE CARD === */
+        .img-card { position:relative; border-radius:16px; overflow:hidden; margin:2rem 0;
+            border:1px solid rgba(0,229,255,0.2); }
+        .img-card img { width:100%; display:block; transition:transform 0.6s ease; cursor:zoom-in; }
+        .img-card:hover img { transform:scale(1.03); }
+        .img-card img.zoomed { position:fixed; top:0; left:0; width:100vw; height:100vh;
+            object-fit:contain; background:#000; z-index:1000; cursor:zoom-out; border-radius:0; transform:none !important; }
+        .img-caption { position:absolute; bottom:0; left:0; right:0; padding:1.25rem 1.5rem;
+            background:linear-gradient(to top, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.5) 60%, transparent 100%); }
+        .img-caption-label { font-family:'Orbitron',sans-serif; font-size:0.65rem; font-weight:700;
+            color:var(--seal-cyan); letter-spacing:0.15em; margin-bottom:4px; }
+        .img-caption-text { font-size:0.9rem; color:rgba(255,255,255,0.9); font-weight:500; }
+
+        /* === PHASE CARDS === */
+        .phase-card { background:rgba(255,255,255,0.03); border:1px solid rgba(0,229,255,0.15);
+            border-radius:20px; padding:2rem; margin-bottom:2rem; transition:border-color 0.3s; }
+        .phase-card:hover { border-color:rgba(0,229,255,0.4); }
+        .phase-num { font-family:'Orbitron',sans-serif; font-size:0.7rem; font-weight:900;
+            color:var(--seal-cyan); letter-spacing:0.2em; margin-bottom:0.5rem; }
+        .phase-title { font-family:'Orbitron',sans-serif; font-size:1.3rem; font-weight:900;
+            color:#fff; margin-bottom:0.75rem; }
+        .mechanic-tag { display:inline-flex; align-items:center; gap:6px; padding:4px 12px;
+            background:rgba(0,229,255,0.12); border:1px solid rgba(0,229,255,0.3); border-radius:8px;
+            font-size:0.75rem; font-weight:600; color:var(--seal-cyan); margin-bottom:1rem; margin-right:6px; }
+        .mechanic-tag.steak { background:rgba(139,69,19,0.2); border-color:rgba(139,69,19,0.5); color:#DEB887; }
+        .mechanic-tag.fat { background:rgba(255,107,157,0.15); border-color:rgba(255,107,157,0.4); color:var(--seal-fat); }
+
+        /* === QUOTE === */
+        .quote { position:relative; padding:2rem 2.5rem; margin:2rem 0;
+            background:linear-gradient(135deg, rgba(0,229,255,0.1), rgba(255,215,0,0.05));
+            border-left:4px solid var(--seal-cyan); border-radius:0 16px 16px 0;
+            font-size:1.15rem; font-style:italic; color:rgba(255,255,255,0.9); }
+        .quote-author { display:block; margin-top:0.75rem; font-size:0.8rem; color:var(--seal-teal); font-style:normal; }
+
+        /* === TRAIT GRID === */
+        .trait-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(220px,1fr)); gap:1.25rem; margin:2rem 0; }
+        .trait-card { background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.08);
+            border-radius:16px; padding:1.5rem; text-align:center; transition:all 0.3s; }
+        .trait-card:hover { transform:translateY(-4px); border-color:rgba(0,229,255,0.3); }
+        .trait-icon { font-size:2.5rem; margin-bottom:0.75rem; }
+        .trait-name { font-family:'Orbitron',sans-serif; font-size:0.85rem; font-weight:700; margin-bottom:0.5rem; color:var(--seal-gold); }
+        .trait-desc { font-size:0.8rem; color:rgba(255,255,255,0.65); line-height:1.5; }
+
+        /* === LOOT GRID === */
+        .loot-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(250px,1fr)); gap:1.25rem; margin:2rem 0; }
+        .loot-card { background:rgba(255,255,255,0.03); border-radius:16px; padding:1.5rem;
+            border:1px solid rgba(255,215,0,0.15); transition:all 0.3s; }
+        .loot-card:hover { border-color:var(--seal-gold); box-shadow:0 0 30px rgba(255,215,0,0.15); transform:translateY(-4px); }
+        .loot-rarity { font-size:0.65rem; font-weight:800; letter-spacing:0.15em; text-transform:uppercase; margin-bottom:0.5rem; }
+        .loot-rarity.mythic { color:#ff6b00; } .loot-rarity.legendary { color:#ffd700; }
+        .loot-rarity.epic { color:#a855f7; } .loot-rarity.rare { color:#3b82f6; }
+        .loot-name { font-family:'Orbitron',sans-serif; font-size:1rem; font-weight:700; color:#fff; margin-bottom:0.5rem; }
+        .loot-desc { font-size:0.8rem; color:rgba(255,255,255,0.6); line-height:1.5; }
+
+        /* === DEBUFF TABLE === */
+        .debuff-table { width:100%; border-collapse:collapse; margin:1.5rem 0; border-radius:12px; overflow:hidden; }
+        .debuff-table th { background:rgba(0,229,255,0.15); padding:12px 16px; font-family:'Orbitron',sans-serif;
+            font-size:0.7rem; font-weight:700; letter-spacing:0.1em; text-align:left; color:var(--seal-cyan); }
+        .debuff-table td { padding:12px 16px; border-bottom:1px solid rgba(255,255,255,0.05);
+            font-size:0.9rem; color:rgba(255,255,255,0.8); }
+        .debuff-table tr:hover td { background:rgba(0,229,255,0.03); }
+
+        /* === CTA === */
+        .cta-section { text-align:center; padding:4rem 2rem;
+            background:linear-gradient(135deg, rgba(0,229,255,0.08), rgba(255,215,0,0.05));
+            border-radius:24px; border:1px solid rgba(0,229,255,0.15); }
+        .cta-btn { display:inline-block; padding:14px 36px; background:linear-gradient(135deg, #00E5FF, #FFD700);
+            color:#000; font-family:'Orbitron',sans-serif; font-weight:800; font-size:0.9rem; text-decoration:none;
+            border-radius:999px; letter-spacing:0.1em; transition:all 0.3s; border:none; cursor:pointer; }
+        .cta-btn:hover { transform:translateY(-2px); box-shadow:0 8px 30px rgba(0,229,255,0.3); }
+
+        /* === REF SHEET PANEL === */
+        .ref-panel { display:grid; grid-template-columns:1fr 1fr; gap:2rem; margin:2rem 0; align-items:start; }
+        .ref-panel .ref-img { border-radius:16px; overflow:hidden; border:1px solid rgba(0,229,255,0.2); }
+        .ref-panel .ref-img img { width:100%; display:block; }
+        .ref-panel .ref-specs { padding:1rem 0; }
+        .spec-row { display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid rgba(255,255,255,0.06); }
+        .spec-label { font-size:0.8rem; color:rgba(255,255,255,0.5); }
+        .spec-value { font-size:0.8rem; font-weight:600; color:var(--seal-gold); }
+
+        /* === ASIDE === */
+        .aside { background:linear-gradient(135deg, rgba(0,229,255,0.06), rgba(255,215,0,0.03));
+            border-radius:12px; padding:1rem 1.5rem; margin:1.5rem 0;
+            font-size:0.9rem; color:rgba(255,255,255,0.75); border-left:3px solid var(--seal-cyan); line-height:1.7; }
+
+        /* === FOOTER === */
+        .page-footer { text-align:center; padding:3rem 2rem; border-top:1px solid rgba(255,255,255,0.06); }
+        .page-footer a { color:var(--seal-cyan); text-decoration:none; }
+        .page-footer a:hover { text-decoration:underline; }
+        .footer-links { display:flex; justify-content:center; gap:2rem; flex-wrap:wrap; margin-top:1rem; }
+        .footer-links a { font-size:0.8rem; color:rgba(255,255,255,0.5); }
+
+        @media(max-width:768px) {
+            .boss-hero { min-height:70vh; }
+            .boss-stats-row { gap:1rem; }
+            .boss-stat-val { font-size:1.2rem; }
+            .ref-panel { grid-template-columns:1fr; }
+            .quote { padding:1.5rem; }
+        }
+    </style>
+</head>
+<body data-page-id="harpseal-zakum">
+    <div class="aura-bg"></div>
+
+    <!-- ====== HERO ====== -->
+    <section class="boss-hero">
+        <div class="boss-hero-img" style="background-image:url('/pipeline/keyframes/scene-12-harpseal-zakum-boss-fight.png'), linear-gradient(135deg, #00E5FF, #FFD700);"></div>
+        <div class="boss-hero-overlay"></div>
+        <div class="boss-hero-content">
+            <div class="boss-label">RAID BOSS ENCOUNTER</div>
+            <h1 class="boss-title">Harpseal Zakum RegginA</h1>
+            <p class="boss-subtitle">The Ancient Seal God Has Awakened. Bring Your Appetite.</p>
+            <p class="boss-flavor">A baby harp seal wearing the forbidden Zakum helmet. Nobody knows how it got in there. Nobody knows how to get it out. All we know is that it hits really, really hard for something with flippers.</p>
+            <div class="boss-stats-row">
+                <div class="boss-stat"><span class="boss-stat-val">800M</span><span class="boss-stat-label">Hit Points</span></div>
+                <div class="boss-stat"><span class="boss-stat-val cyan">4</span><span class="boss-stat-label">Combat Phases</span></div>
+                <div class="boss-stat"><span class="boss-stat-val">164M</span><span class="boss-stat-label">Hammer Flop DMG</span></div>
+                <div class="boss-stat"><span class="boss-stat-val pink">CHUBBY</span><span class="boss-stat-label">Preferred Build</span></div>
+            </div>
+        </div>
+    </section>
+
+    <div class="container">
+
+        <!-- ====== WHAT IS THIS BOSS ====== -->
+        <section>
+            <span class="section-tag">THE ENCOUNTER</span>
+            <h2>An Impossibly Cute Abomination</h2>
+            <p class="text">
+                Deep beneath the NumbahWan castle, in the <strong>Ancient Seal Chamber</strong>, lies a creature that defies all logic. An extremely chubby baby harp seal has somehow bonded with the legendary <strong>Zakum Helmet</strong> — the golden-bronze crown of an ancient boss god. The helmet is comically oversized. The seal is comically round. Together, they are the most terrifying thing you will ever fight while also going "awww."
+            </p>
+            <p class="text">
+                <strong>Harpseal Zakum RegginA</strong> wields an ornate golden war hammer that's three times its body size. It wears white shutter-shade sunglasses. It has a tiny white beard. It has golden armor on its flippers. And behind it, a <strong>cyan-turquoise divine aura</strong> pulses with ancient power, proving that yes, this is a real boss encounter and yes, it will end you.
+            </p>
+
+            <div class="aside">
+                Developer note: This boss was designed through the NWG cinematic pipeline. The character went through 3 iterations of reference sheet generation with a 4-level verification checklist (silhouette, color, detail, consistency) before being locked. Every element — the Zakum sun-ray crest, the shutter shades, the flipper armor, the beard — was individually verified against the character bible. The boss fight scene was generated as Scene 12 in the trailer keyframe manifest.
+            </div>
+        </section>
+
+        <!-- ====== BOSS VISUAL IDENTITY ====== -->
+        <section>
+            <span class="section-tag">VISUAL IDENTITY</span>
+            <h2>Character Reference Sheet</h2>
+            <p class="text">Locked in the <strong>NWG Character Bible v3.0</strong> — the single source of truth for all character visual specs.</p>
+
+            <div class="ref-panel">
+                <div class="ref-img">
+                    <img src="/pipeline/ref-sheets/harpseal-zakum-reggina-refsheet-v3.png" alt="Harpseal Zakum RegginA Reference Sheet v3" onclick="toggleZoom(this)">
+                </div>
+                <div class="ref-specs">
+                    <h3>Spec Sheet</h3>
+                    <div class="spec-row"><span class="spec-label">Species</span><span class="spec-value">Baby Harp Seal</span></div>
+                    <div class="spec-row"><span class="spec-label">Body</span><span class="spec-value">Extremely Round & Chubby</span></div>
+                    <div class="spec-row"><span class="spec-label">Fur Color</span><span class="spec-value">#FFFFF0 (Ivory White)</span></div>
+                    <div class="spec-row"><span class="spec-label">Eye Color</span><span class="spec-value">#1A1A1A (Dark Glossy)</span></div>
+                    <div class="spec-row"><span class="spec-label">Helmet</span><span class="spec-value">Zakum Golden-Bronze</span></div>
+                    <div class="spec-row"><span class="spec-label">Helmet Crest</span><span class="spec-value">Sun-Ray Flame Spikes</span></div>
+                    <div class="spec-row"><span class="spec-label">Helmet Emblem</span><span class="spec-value">Circular D-Glyph</span></div>
+                    <div class="spec-row"><span class="spec-label">Sunglasses</span><span class="spec-value">White Shutter Shades</span></div>
+                    <div class="spec-row"><span class="spec-label">Beard</span><span class="spec-value">White Fluffy (Elder God)</span></div>
+                    <div class="spec-row"><span class="spec-label">Flipper Armor</span><span class="spec-value">Golden Segmented Pauldrons</span></div>
+                    <div class="spec-row"><span class="spec-label">Weapon</span><span class="spec-value">Ornate Golden War Hammer</span></div>
+                    <div class="spec-row"><span class="spec-label">Aura</span><span class="spec-value">#00E5FF Cyan-Turquoise</span></div>
+                    <div class="spec-row"><span class="spec-label">Render Style</span><span class="spec-value">UE5 Photorealistic</span></div>
+                    <div class="spec-row"><span class="spec-label">Ref Sheet Version</span><span class="spec-value">v3 (LOCKED)</span></div>
+                    <div class="spec-row"><span class="spec-label">Pipeline Iterations</span><span class="spec-value">3 rounds, all checks passed</span></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ====== BOSS FIGHT SCENE ====== -->
+        <section>
+            <span class="section-tag">SCENE 12 &mdash; BOSS ARENA</span>
+            <h2>The Hammer Flop</h2>
+
+            <div class="img-card">
+                <img src="/pipeline/keyframes/scene-12-harpseal-zakum-boss-fight.png" alt="Harpseal Zakum Boss Fight Arena" onclick="toggleZoom(this)">
+                <div class="img-caption">
+                    <span class="img-caption-label">SCENE 12 &middot; RAID BOSS ENCOUNTER</span>
+                    <span class="img-caption-text">The Hammer Flop attack sends a golden crescent energy slash across the arena. T-bone steaks materialize on the floor. RegginA and Natehouoho brace for impact.</span>
+                </div>
+            </div>
+
+            <p class="text">
+                When the seal flops forward, the golden hammer creates a <strong>massive crescent energy slash</strong> that covers half the arena. The VFX are absurd. The damage is real. Players have approximately 1.2 seconds to dodge, and the seal's innocent eyes never stop staring at you the entire time.
+            </p>
+        </section>
+
+        <!-- ====== COMBAT MECHANICS ====== -->
+        <section>
+            <span class="section-tag">COMBAT MECHANICS</span>
+            <h2>Four Phases of Adorable Destruction</h2>
+
+            <div class="phase-card">
+                <span class="phase-num">PHASE 1 &mdash; THE AWAKENING</span>
+                <h3 class="phase-title">Hammer Flop Assault</h3>
+                <span class="mechanic-tag">Golden Crescent Slash</span>
+                <span class="mechanic-tag">Seal Roll AoE</span>
+                <span class="mechanic-tag">Flipper Slam</span>
+                <p class="text">The seal uses its tiny flippers to swing the comically oversized golden hammer. Each <strong>Hammer Flop</strong> sends a golden crescent energy slash across the arena floor. The seal also rolls its spherical body at players for AoE damage. Somehow, a creature with no legs is faster than your entire raid party.</p>
+            </div>
+
+            <div class="phase-card">
+                <span class="phase-num">PHASE 2 &mdash; T-BONE TRANSFORMATION</span>
+                <h3 class="phase-title">The Steak Phase</h3>
+                <span class="mechanic-tag steak">T-Bone Steak Spawn</span>
+                <span class="mechanic-tag fat">Fat Avatar Bonus</span>
+                <span class="mechanic-tag steak">Eat Timer: 30s</span>
+                <p class="text">At 60% HP, the boss <strong>transforms into a giant T-bone steak</strong>. Yes, really. Magical T-bone steaks appear scattered across the arena floor. Players must eat them. <strong>Whoever eats the most steaks gains a powerful debuff</strong> that actually helps the party deal more damage to the boss.</p>
+                <p class="text">The catch: the eating experience is intentionally awful. Your screen shakes, your character makes terrible chewing sounds, and your UI gets covered in steak grease effects. It's a sacrifice play. But it works.</p>
+                <div class="aside">
+                    The twist: <strong>chubby/fat player avatars can eat more steak per second.</strong> This is the one fight in the entire game where being the biggest, roundest character is a genuine competitive advantage. Build wide, eat well, save the party.
+                </div>
+            </div>
+
+            <div class="phase-card">
+                <span class="phase-num">PHASE 3 &mdash; DIVINE SEAL RAGE</span>
+                <h3 class="phase-title">Aura Overload</h3>
+                <span class="mechanic-tag">Cyan Pulse Wave</span>
+                <span class="mechanic-tag">Helmet Beam</span>
+                <span class="mechanic-tag">Zakum Sun Burst</span>
+                <p class="text">The seal reforms from its steak phase, now glowing with intensified <strong>cyan-turquoise energy</strong>. The Zakum helmet's sun-ray crest fires concentrated beams. The divine aura expands into pulse waves that push players toward the arena edges. The seal whiskers twitch menacingly.</p>
+            </div>
+
+            <div class="phase-card">
+                <span class="phase-num">PHASE 4 &mdash; FINAL FLOP</span>
+                <h3 class="phase-title">Desperate Measures</h3>
+                <span class="mechanic-tag">Mega Hammer Flop</span>
+                <span class="mechanic-tag steak">Emergency Steak Phase</span>
+                <span class="mechanic-tag fat">Chubby MVP Vote</span>
+                <p class="text">Below 15% HP, the seal enters a <strong>frenzy</strong>. Hammer Flops come every 3 seconds. T-bone steaks rain from the ceiling. The player who ate the most steak total becomes the <strong>"Chubby MVP"</strong> — gaining a massive damage buff for the final push. The raid lives or dies by the fattest player.</p>
+            </div>
+        </section>
+
+        <!-- ====== STEAK MECHANIC DEEP DIVE ====== -->
+        <section>
+            <span class="section-tag">UNIQUE MECHANIC</span>
+            <h2>The T-Bone Steak Economy</h2>
+            <p class="text">This is the first boss in NumbahWan where your <strong>avatar body type directly affects combat performance</strong>. The steak mechanic isn't just comedy — it's a legitimate party optimization puzzle.</p>
+
+            <table class="debuff-table">
+                <thead>
+                    <tr>
+                        <th>Avatar Size</th>
+                        <th>Eat Rate</th>
+                        <th>Max Steaks</th>
+                        <th>Debuff Strength</th>
+                        <th>Screen Effects</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Slim</td>
+                        <td>1 steak / 4s</td>
+                        <td>3</td>
+                        <td>+10% party DMG</td>
+                        <td>Mild screen shake</td>
+                    </tr>
+                    <tr>
+                        <td>Average</td>
+                        <td>1 steak / 3s</td>
+                        <td>5</td>
+                        <td>+20% party DMG</td>
+                        <td>Moderate shake + grease splatter</td>
+                    </tr>
+                    <tr>
+                        <td>Chunky</td>
+                        <td>1 steak / 2s</td>
+                        <td>8</td>
+                        <td>+35% party DMG</td>
+                        <td>Heavy shake + grease + chewing SFX</td>
+                    </tr>
+                    <tr>
+                        <td style="color:var(--seal-fat); font-weight:700">CHUBBY</td>
+                        <td style="color:var(--seal-fat)">1 steak / 1s</td>
+                        <td style="color:var(--seal-fat)">12</td>
+                        <td style="color:var(--seal-fat)">+55% party DMG</td>
+                        <td style="color:var(--seal-fat)">FULL grease screen, constant SFX, camera wobble</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div class="quote">
+                "I rerolled my entire character build to maximum chubby just for this one fight. Best decision I ever made. My party literally depends on me eating faster than everyone else."
+                <span class="quote-author">-- Anonymous NumbahWan Player</span>
+            </div>
+        </section>
+
+        <!-- ====== BOSS TRAITS ====== -->
+        <section>
+            <span class="section-tag">BOSS TRAITS</span>
+            <h2>Know Your Enemy</h2>
+
+            <div class="trait-grid">
+                <div class="trait-card">
+                    <div class="trait-icon">🦭</div>
+                    <div class="trait-name">Baby Harp Seal</div>
+                    <div class="trait-desc">Extremely round. Extremely fluffy. Extremely deadly. Accurate harp seal anatomy with stubby flippers and split rear tail.</div>
+                </div>
+                <div class="trait-card">
+                    <div class="trait-icon">👑</div>
+                    <div class="trait-name">Zakum Helmet</div>
+                    <div class="trait-desc">Golden-bronze with sun-ray crest, circular D-glyph emblem, wing-horn protrusions, and riveted panels. Comically oversized on the tiny seal.</div>
+                </div>
+                <div class="trait-card">
+                    <div class="trait-icon">🔨</div>
+                    <div class="trait-name">Golden Hammer</div>
+                    <div class="trait-desc">Ornate war hammer with sun engravings. Three times the seal's body size. The Hammer Flop is its signature move.</div>
+                </div>
+                <div class="trait-card">
+                    <div class="trait-icon">🕶️</div>
+                    <div class="trait-name">Shutter Shades</div>
+                    <div class="trait-desc">White horizontal slat sunglasses. The seal looks unbothered. It is not unbothered. It is calculating your HP.</div>
+                </div>
+                <div class="trait-card">
+                    <div class="trait-icon">🥩</div>
+                    <div class="trait-name">T-Bone Phase</div>
+                    <div class="trait-desc">Transforms into a steak at 60% HP. Eat the steaks. Fat avatars eat faster. Suffering is mandatory. Victory follows.</div>
+                </div>
+                <div class="trait-card">
+                    <div class="trait-icon">✨</div>
+                    <div class="trait-name">Divine Aura</div>
+                    <div class="trait-desc">Cyan-turquoise concentric rings with sparkle particles. Proves this is a real god, not just a seal who found a helmet in a cave.</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ====== LOOT TABLE ====== -->
+        <section>
+            <span class="section-tag">LOOT TABLE</span>
+            <h2>Spoils of the Seal</h2>
+
+            <div class="loot-grid">
+                <div class="loot-card">
+                    <div class="loot-rarity mythic">MYTHIC</div>
+                    <div class="loot-name">Zakum's Sealed Crown</div>
+                    <div class="loot-desc">Helmet transmog. Your character wears the golden sun-ray Zakum helmet. Other players can hear faint seal barking when you walk past them.</div>
+                </div>
+                <div class="loot-card">
+                    <div class="loot-rarity legendary">LEGENDARY</div>
+                    <div class="loot-name">Flipper of the Ancient Seal</div>
+                    <div class="loot-desc">Off-hand weapon. Occasionally makes your character flop forward during combat for bonus damage. Cannot be controlled. Feature, not a bug.</div>
+                </div>
+                <div class="loot-card">
+                    <div class="loot-rarity epic">EPIC</div>
+                    <div class="loot-name">T-Bone Scepter</div>
+                    <div class="loot-desc">Staff weapon shaped like a massive T-bone steak. +15% steak eating speed in all future encounters. Yes, there will be more steak encounters.</div>
+                </div>
+                <div class="loot-card">
+                    <div class="loot-rarity rare">RARE</div>
+                    <div class="loot-name">Chubby MVP Trophy</div>
+                    <div class="loot-desc">Awarded to the player who ate the most steaks. Displays your steak count on your profile. A badge of honor. And indigestion.</div>
+                </div>
+                <div class="loot-card">
+                    <div class="loot-rarity legendary">LEGENDARY</div>
+                    <div class="loot-name">Seal Pup Companion</div>
+                    <div class="loot-desc">A miniature version of the boss follows you around. Does no damage. Does no healing. Just vibes. Occasionally barks at your French Bulldog CIA.</div>
+                </div>
+                <div class="loot-card">
+                    <div class="loot-rarity epic">EPIC</div>
+                    <div class="loot-name">White Shutter Shades</div>
+                    <div class="loot-desc">Face cosmetic. Your character looks exactly as unbothered as the seal. +5% cool factor (verified by community vote).</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ====== PIPELINE CREDITS ====== -->
+        <section>
+            <span class="section-tag">BEHIND THE SCENES</span>
+            <h2>How This Boss Was Built</h2>
+            <p class="text">
+                The Harpseal Zakum RegginA was created through the NWG <strong>cinematic trailer pipeline</strong> — the same system that produced all 11 trailer scenes and 7 character reference sheets. Here's what that process looked like for a single raid boss:
+            </p>
+
+            <table class="debuff-table">
+                <thead>
+                    <tr>
+                        <th>Step</th>
+                        <th>What Happened</th>
+                        <th>Output</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>1. Concept</td>
+                        <td>Owner provided two MapleStory reference images + gameplay screenshot</td>
+                        <td>Visual DNA extracted: Zakum helmet, seal body, hammer, sunglasses</td>
+                    </tr>
+                    <tr>
+                        <td>2. Bible Entry</td>
+                        <td>Full spec written to character-bible.json with hex colors, prompt keywords, negative prompts</td>
+                        <td>Canonical visual spec (v3.0.0)</td>
+                    </tr>
+                    <tr>
+                        <td>3. Ref Sheet v1</td>
+                        <td>Generated UE5 photorealistic reference sheet</td>
+                        <td>PASS: Body, helmet. MISSING: shutter shades, beard, armor, hammer, aura</td>
+                    </tr>
+                    <tr>
+                        <td>4. Ref Sheet v2</td>
+                        <td>Adjusted prompt, emphasized missing elements</td>
+                        <td>PASS: +shutter shades, +beard. MISSING: aura, flipper armor, hammer</td>
+                    </tr>
+                    <tr>
+                        <td>5. Ref Sheet v3</td>
+                        <td>Further prompt refinement, all elements emphasized</td>
+                        <td>ALL CHECKS PASSED. Locked by owner.</td>
+                    </tr>
+                    <tr>
+                        <td>6. Boss Scene</td>
+                        <td>Generated cinematic arena scene with boss + guild characters</td>
+                        <td>Scene 12 added to keyframe manifest</td>
+                    </tr>
+                    <tr>
+                        <td>7. Game Page</td>
+                        <td>Created dedicated boss encounter page with full mechanics</td>
+                        <td>harpseal-zakum.html (this page)</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <p class="text">
+                Total pipeline time: <strong>3 reference sheet iterations + 1 boss scene + 1 game page</strong>. Every image was checked against the 4-level verification checklist (silhouette, color, detail, consistency) before being accepted.
+            </p>
+        </section>
+
+        <!-- ====== CTA ====== -->
+        <div class="cta-section">
+            <h2>Ready to Fight the Seal?</h2>
+            <p class="text" style="max-width:600px; margin:1rem auto;">Build your chubby avatar. Stock up on antacids. The Ancient Seal Chamber awaits.</p>
+            <div style="display:flex; gap:1rem; justify-content:center; flex-wrap:wrap; margin-top:1.5rem;">
+                <a href="/boss-dungeon.html" class="cta-btn">All Boss Raids</a>
+                <a href="/zakum.html" class="cta-btn" style="background:linear-gradient(135deg, #FFD700, #B8860B);">Zakum Lore</a>
+                <a href="/avatar-builder.html" class="cta-btn" style="background:linear-gradient(135deg, #FF6B9D, #FF69B4);">Build Chubby Avatar</a>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- ====== FOOTER ====== -->
+    <footer class="page-footer">
+        <p style="color:rgba(255,255,255,0.3); font-size:0.8rem;">Harpseal Zakum RegginA &mdash; Raid Boss Encounter &mdash; NumbahWan TCG</p>
+        <div class="footer-links">
+            <a href="/">Home</a>
+            <a href="/boss-dungeon.html">Boss Dungeons</a>
+            <a href="/zakum.html">Zakum Lore</a>
+            <a href="/battle.html">Battle</a>
+            <a href="/cards.html">Cards</a>
+            <a href="/pipeline/keyframes/review.html">Trailer Pipeline</a>
+        </div>
+    </footer>
+
+    <script>
+    function toggleZoom(img) { img.classList.toggle('zoomed'); }
+    document.addEventListener('keydown', e => {
+        if (e.key === 'Escape') document.querySelectorAll('img.zoomed').forEach(i => i.classList.remove('zoomed'));
+    });
+    </script>
+</body>
+</html>
