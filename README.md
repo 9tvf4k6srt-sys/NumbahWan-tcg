@@ -28,7 +28,7 @@ We built three systems to solve problems we kept hitting during AI-assisted deve
 |--------|-------------------|--------|
 | **[Project Context Protocol](#project-context-protocol)** | AI agents waste 50K tokens re-reading READMEs | 17 endpoints, 125/125 tests, Level 3 Grade A |
 | **[Mycelium](#mycelium--self-healing-codebase)** | Same files keep breaking the same way | 5 scripts, 84 regression tests, 75/100 eval score |
-| **[Cinematic Trailer Pipeline](#cinematic-trailer-pipeline)** | AI-generated assets need verification loops | 12 scenes, 39 iterations, 8 characters + 1 raid boss, 4-level checklist |
+| **[Cinematic Trailer Pipeline](#cinematic-trailer-pipeline)** | AI-generated assets need verification loops | 12 scenes, 43 iterations, 8 characters + 1 raid boss, 4-level checklist |
 
 All three are production systems running in this repo. None of them require external dependencies.
 
@@ -148,7 +148,7 @@ pipeline/
 ├── keyframes/
 │   ├── keyframe-manifest.json        # Scene registry — versions, source URLs, verification notes, revision log
 │   ├── review.html                   # Interactive review dashboard — approve/flag per scene, export feedback JSON
-│   └── scene-{01..12}-*.png          # Generated keyframe images (39 total iterations across 12 scenes)
+│   └── scene-{01..12}-*.png          # Generated keyframe images (43 total iterations across 12 scenes)
 ├── ref-sheets/
 │   └── {character}-ue5-refsheet-*.png # UE5 photorealistic reference sheets per character (versioned)
 ├── verification/
@@ -163,7 +163,7 @@ Every generated image passes through a 4-level checklist before it's accepted:
 | Level | What It Checks | Example |
 |-------|---------------|---------|
 | **L1 — Silhouette** | Recognizable shape at thumbnail size | Wing type matches, hair volume correct |
-| **L2 — Color** | Hex values within 15% tolerance | Hair #CC0000, skin #6B4226/#5C3A1E (DARK BROWN), wings #1A237E |
+| **L2 — Color** | Hex values within 15% tolerance | Hair #CC0000, skin #B8875A (warm golden-brown caramel), wings #1A237E |
 | **L3 — Detail** | Facial features, accessories, weapon type | Glasses present, headband shape correct, hammer ornate, shutter shades on seal boss |
 | **L4 — Consistency** | Art style, lighting, proportions across scenes | UE5 realistic (not anime), consistent scale |
 
@@ -192,7 +192,7 @@ These notes exist because the headband was rendered wrong 5+ times across differ
 | Scenes | 12/12 verified (11 trailer + 1 raid boss) |
 | Characters | 8/8 accounted for (7 guild + 1 raid boss) |
 | Trailer duration | 2:45 (4 acts) + bonus boss scene |
-| Total iterations | 39 across all scenes |
+| Total iterations | 43 across all scenes |
 | Critical issues | 5 logged, 5 resolved |
 | Pipeline version | v7.0 |
 | Raid boss | Harpseal Zakum RegginA — locked (v3 ref sheet, all checks passed) |

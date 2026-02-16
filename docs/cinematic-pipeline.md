@@ -89,7 +89,7 @@ Tracks every scene with:
 
 ### Iteration History
 
-Total: 39 iterations across 12 scenes. Key corrections:
+Total: 43 iterations across 12 scenes. Key corrections:
 
 | Issue | Affected | Resolution |
 |-------|----------|------------|
