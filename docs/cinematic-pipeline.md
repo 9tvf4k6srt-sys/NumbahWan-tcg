@@ -82,14 +82,14 @@ Tracks every scene with:
 | 06 | DLC 1: The Abyss — Frost Wyrm | 3 | 12s | RegginA | v4 |
 | 07 | DLC 2&3: Sky Islands | 3 | 13s | Panthera, Santaboy | v3 |
 | 08 | DLC 4: Forgotten Floor | 3 | 8s | RegginO, Sweetiez | v2 |
-| 09 | DLC 5: R.M.S. REGINA — Luxury Amenities | 3 | 12s | RegginA, Natehouoho, RegginO | v9 |
+| 09 | DLC 5: R.M.S. REGINA — Luxury Amenities | 3 | 12s | RegginA, Natehouoho, RegginO, CIA | v8 |
 | 10 | Samsara — Wheel of Rebirth | 4 | 20s | Panthera, RegginA, RegginO | v4 |
 | 11 | Guild Assembles | 4 | 10s | All 7 | v3 |
 | 12 | Raid Boss — Harpseal Zakum | Bonus | Boss | Harpseal Zakum, RegginA, Natehouoho | v1 |
 
 ### Iteration History
 
-Total: 37 iterations across 12 scenes. Key corrections:
+Total: 39 iterations across 12 scenes. Key corrections:
 
 | Issue | Affected | Resolution |
 |-------|----------|------------|
@@ -101,7 +101,7 @@ Total: 37 iterations across 12 scenes. Key corrections:
 | Card scene showed dragon summon | Scene 04 | Replaced with character checking card deck from pocket |
 | Scenes 09/10 had no guild characters | Scenes 09, 10 | Regenerated with characters to show game depth |
 | Raid boss ref sheet missing elements | Harpseal Zakum v1–v2 | Iterated 3 times: v1 missing shades/beard/armor; v2 added shades+beard; v3 all checks passed. Locked. |
-| RegginA/RegginO shown with light skin | Scene 09 | Owner directive: both have DARK BROWN skin. Bible updated #6B4226/#5C3A1E. Scene 09 regenerated 9 times. |
+| RegginA/RegginO shown with light skin | Scene 09 | Owner directive: both have DARK BROWN skin. Bible updated #6B4226/#5C3A1E. Scene 09 regenerated 8 times. |
 | Natehouoho wings protruding through slide | Scene 09 | Wing-folding rule added: wings retracted in enclosed spaces, spread in open air only |
 | Scene 09 used historical SS Regina | Scene 09 | Replaced with luxury R.M.S. Regina matching regina.json specs (transparent slides, pools, modern mega-ship) |
 
