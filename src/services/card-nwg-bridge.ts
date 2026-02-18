@@ -1,7 +1,34 @@
+import type { CardRarity } from '../types'
 import type { PhysicalCard, CardStake, CardListing, CardTransfer, FusionRecipe, CardCollection } from './card-nwg-bridge-types';
 import { CARD_NWG_VALUES, CARD_YIELD_RATES, CARD_PRINT_RUNS, FUSION_RECIPES, STAKING_BOOSTS, CARD_CACHE_KEYS, generateCardId, generateClaimCode, hashClaimCode, generateQRCodeData, calculatePendingYield, calculateBoostMultiplier } from './card-nwg-bridge-types';
 export type { PhysicalCard, CardStake, CardListing, CardTransfer, FusionRecipe, CardCollection };
 export { CARD_NWG_VALUES, CARD_YIELD_RATES, CARD_PRINT_RUNS, FUSION_RECIPES, STAKING_BOOSTS, CARD_CACHE_KEYS, generateCardId, generateClaimCode, hashClaimCode, generateQRCodeData, calculatePendingYield, calculateBoostMultiplier };
+
+// ── KV Cache Helpers ──────────────────────────────────────────
+async function getCards(cache: KVNamespace): Promise<PhysicalCard[]> {
+  const raw = await cache.get(CARD_CACHE_KEYS.PHYSICAL_CARDS);
+  return raw ? JSON.parse(raw) : [];
+}
+
+async function saveCards(cache: KVNamespace, cards: PhysicalCard[]): Promise<void> {
+  await cache.put(CARD_CACHE_KEYS.PHYSICAL_CARDS, JSON.stringify(cards));
+}
+
+async function getStakes(cache: KVNamespace): Promise<CardStake[]> {
+  const raw = await cache.get(CARD_CACHE_KEYS.CARD_STAKES);
+  return raw ? JSON.parse(raw) : [];
+}
+
+async function getTransfers(cache: KVNamespace): Promise<any[]> {
+  const raw = await cache.get(CARD_CACHE_KEYS.CARD_TRANSFERS);
+  return raw ? JSON.parse(raw) : [];
+}
+
+async function getCollection(cache: KVNamespace, walletAddress: string): Promise<any> {
+  const cards = await getCards(cache);
+  const ownedCards = cards.filter((c: PhysicalCard) => c.ownerId === walletAddress).map((c: PhysicalCard) => c.id);
+  return { ownedCards };
+}
 
 // CARD GENERATION (For Minting Physical Cards)
 

@@ -1,9 +1,7 @@
+import { calcCardPower, TIER_RULES, SHRINE_PENALTY } from '../types'
+import type { Bindings, CardBase } from '../types'
 import { Hono } from 'hono'
 
-type Bindings = {
-  GUILD_DB: D1Database
-  MARKET_CACHE: KVNamespace
-}
 
 
 // Route helpers - reduce repetitive error handling patterns
@@ -90,9 +88,9 @@ router.post('/rebalance', async (c) => {
     const fixes: any[] = [];
     for (const card of cards) {
       const gs = (card as any).gameStats || {};
-      const rules = TIER_RULES[(card as any).rarity];
+      const rules = (TIER_RULES as Record<string, any>)[(card as any).rarity];
       if (!rules) continue;
-      const power = calcCardPower(card);
+      const power = calcCardPower(card as unknown as CardBase);
       const isShrine = (card as any).set === 'shrine';
       const effectiveMax = isShrine ? rules.maxPower * SHRINE_PENALTY : rules.maxPower;
       const cardFixes: any[] = [];

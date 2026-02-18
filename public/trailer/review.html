@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>NWG Trailer — Keyframe Review</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #0a0a0f;
+    color: #e0e0e0;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    padding: 16px;
+    padding-bottom: 80px;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* Header */
+  h1 {
+    text-align: center;
+    font-size: 1.6rem;
+    background: linear-gradient(135deg, #ffd700, #ff8c00);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 4px;
+  }
+  .subtitle { text-align: center; color: #888; margin-bottom: 6px; font-size: 0.85rem; }
+  .phase-badge { text-align: center; margin-bottom: 20px; }
+  .phase-badge span {
+    display: inline-block;
+    background: linear-gradient(135deg, #ffd70022, #ff8c0022);
+    border: 1px solid #ffd70044;
+    color: #ffd700;
+    padding: 5px 16px;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 600;
+  }
+
+  /* Stats */
+  .stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    max-width: 700px;
+    margin: 0 auto 16px;
+  }
+  .stat { background: #14141f; border: 1px solid #2a2a3a; border-radius: 10px; padding: 10px; text-align: center; }
+  .stat .v { font-size: 1.4rem; font-weight: 800; color: #ffd700; }
+  .stat .v.g { color: #22c55e; }
+  .stat .l { font-size: 0.6rem; color: #888; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 2px; }
+
+  /* Roster */
+  .roster { display: flex; justify-content: center; flex-wrap: wrap; gap: 6px; max-width: 700px; margin: 0 auto 16px; }
+  .chip {
+    display: flex; align-items: center; gap: 5px;
+    background: #14141f; border: 1px solid #2a2a3a; border-radius: 16px;
+    padding: 4px 10px 4px 6px; font-size: 0.7rem;
+  }
+  .chip .dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  .chip .cn { font-weight: 600; color: #fff; }
+  .chip .cs { color: #666; font-size: 0.6rem; }
+
+  /* Timeline */
+  .timeline { display: flex; gap: 2px; border-radius: 6px; overflow: hidden; max-width: 700px; margin: 0 auto 4px; }
+  .tl-seg { flex: 1; height: 6px; cursor: pointer; transition: height 0.2s; }
+  .tl-seg:hover { height: 14px; }
+  .tl-seg.a1 { background: #4a9eff; } .tl-seg.a2 { background: #ff6b35; }
+  .tl-seg.a3 { background: #9b59b6; } .tl-seg.a4 { background: #ffd700; }
+  .tl-seg.bonus { background: #00E5FF; }
+  .tl-labels { display: flex; gap: 2px; max-width: 700px; margin: 0 auto 4px; }
+  .tl-labels span { flex: 1; text-align: center; font-size: 0.5rem; color: #555; font-family: monospace; }
+  .acts { display: flex; justify-content: center; gap: 12px; font-size: 0.65rem; margin: 0 auto 20px; flex-wrap: wrap; }
+  .acts span { display: flex; align-items: center; gap: 4px; }
+  .acts .d { width: 8px; height: 8px; border-radius: 50%; }
+
+  /* Scene cards */
+  .grid { display: flex; flex-direction: column; gap: 20px; max-width: 700px; margin: 0 auto; }
+  .card {
+    background: #14141f; border: 1px solid #2a2a3a; border-radius: 12px;
+    overflow: hidden; transition: transform 0.2s, box-shadow 0.2s;
+  }
+  .card:hover { transform: translateY(-1px); box-shadow: 0 4px 20px rgba(255,215,0,0.08); }
+  .card.approved { border-color: #22c55e55; }
+  .card.flagged { border-color: #ef444455; }
+  .card img { width: 100%; display: block; cursor: pointer; }
+  .card .info { padding: 12px 14px; }
+  .card .hdr { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; flex-wrap: wrap; gap: 4px; }
+  .badges { display: flex; align-items: center; gap: 4px; flex-wrap: wrap; }
+  .sid {
+    font-size: 0.65rem; font-weight: 700; padding: 2px 7px; border-radius: 4px; text-transform: uppercase;
+  }
+  .a1 .sid { background: #4a9eff22; color: #4a9eff; border: 1px solid #4a9eff44; }
+  .a2 .sid { background: #ff6b3522; color: #ff6b35; border: 1px solid #ff6b3544; }
+  .a3 .sid { background: #9b59b622; color: #9b59b6; border: 1px solid #9b59b644; }
+  .a4 .sid { background: #ffd70022; color: #ffd700; border: 1px solid #ffd70044; }
+  .bonus .sid { background: #00E5FF22; color: #00E5FF; border: 1px solid #00E5FF44; }
+  .badge { font-size: 0.6rem; font-weight: 600; padding: 2px 6px; border-radius: 3px; }
+  .b-ver { background: #ffd70033; color: #ffd700; }
+  .b-ok { background: #22c55e22; color: #22c55e; }
+  .b-ch { background: #9b59b622; color: #c084fc; }
+  .time { font-size: 0.7rem; color: #888; font-family: monospace; }
+  .sname { font-size: 1.05rem; font-weight: 600; margin-bottom: 4px; color: #fff; }
+  .emo { font-size: 0.8rem; color: #aaa; font-style: italic; margin-bottom: 6px; }
+  .desc { font-size: 0.8rem; color: #999; line-height: 1.5; }
+  .checks { font-size: 0.7rem; color: #666; margin-top: 6px; font-style: italic; border-left: 2px solid #2a2a3a; padding-left: 8px; }
+  .fb-row { display: flex; gap: 8px; margin-top: 10px; padding-top: 10px; border-top: 1px solid #2a2a3a; align-items: center; }
+  .btn {
+    padding: 8px 16px; border: none; border-radius: 6px; cursor: pointer;
+    font-size: 0.8rem; font-weight: 600; transition: all 0.15s;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .btn-ok { background: #22c55e22; color: #22c55e; border: 1px solid #22c55e44; }
+  .btn-ok:active { background: #22c55e44; }
+  .btn-ok.on { background: #22c55e; color: #000; }
+  .btn-fl { background: #ef444422; color: #ef4444; border: 1px solid #ef444444; }
+  .btn-fl:active { background: #ef444444; }
+  .btn-fl.on { background: #ef4444; color: #fff; }
+  .fb-note { flex: 1; font-size: 0.65rem; color: #555; text-align: right; }
+
+  /* Lightbox */
+  .lightbox {
+    display: none; position: fixed; inset: 0; background: #000e; z-index: 1000;
+    justify-content: center; align-items: center;
+  }
+  .lightbox.open { display: flex; }
+  .lightbox img { max-width: 100%; max-height: 100%; object-fit: contain; }
+
+  /* Sticky bottom bar */
+  .bar {
+    position: fixed; bottom: 0; left: 0; right: 0;
+    background: #14141fee; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+    border-top: 1px solid #ffd70044;
+    padding: 10px 16px; display: flex; justify-content: space-between; align-items: center;
+    font-size: 0.8rem; z-index: 100;
+  }
+  .bar-left { display: flex; gap: 12px; }
+  .bar .cnt { color: #ffd700; font-weight: 700; }
+  .bar .cnt-r { color: #ef4444; font-weight: 700; }
+  .bar-btns { display: flex; gap: 8px; align-items: center; }
+  .btn-exp {
+    background: #3b82f622; color: #3b82f6; border: 1px solid #3b82f644;
+    padding: 6px 12px; border-radius: 6px; font-weight: 600; font-size: 0.7rem; cursor: pointer;
+  }
+  .btn-lock {
+    background: linear-gradient(135deg, #ffd700, #ff8c00); color: #000; border: none;
+    padding: 8px 16px; border-radius: 8px; font-weight: 700; font-size: 0.75rem; cursor: pointer;
+    opacity: 0.4; pointer-events: none; transition: all 0.2s;
+  }
+  .btn-lock.ready { opacity: 1; pointer-events: auto; }
+  .btn-lock.ready:active { transform: scale(0.97); }
+  .btn-lock.locked { background: #22c55e; color: #000; opacity: 1; pointer-events: none; }
+
+  @media (min-width: 900px) {
+    .grid { max-width: 1200px; display: grid; grid-template-columns: 1fr 1fr; }
+    .stats { grid-template-columns: repeat(6, 1fr); max-width: 1200px; }
+    h1 { font-size: 2rem; }
+  }
+</style>
+</head>
+<body>
+
+<h1>NWG Cinematic Trailer</h1>
+<p class="subtitle">Keyframe Review — Anchor-Verified Generation v2</p>
+<div class="phase-badge"><span>PHASE 2 v2 — Reference-anchored regeneration, auto-verified</span></div>
+
+<div class="stats">
+  <div class="stat"><div class="v g">12/12</div><div class="l">Scenes</div></div>
+  <div class="stat"><div class="v">8</div><div class="l">Characters</div></div>
+  <div class="stat"><div class="v">2:45</div><div class="l">Duration</div></div>
+  <div class="stat"><div class="v">4</div><div class="l">Acts</div></div>
+  <div class="stat"><div class="v">47</div><div class="l">Iterations</div></div>
+  <div class="stat"><div class="v g">v9</div><div class="l">Version</div></div>
+</div>
+
+<div class="roster">
+  <div class="chip"><span class="dot" style="background:#FFD700"></span><span class="cn">RegginA</span><span class="cs">05,06,09,10,11</span></div>
+  <div class="chip"><span class="dot" style="background:#00CED1"></span><span class="cn">Natehouoho</span><span class="cs">04,09,11</span></div>
+  <div class="chip"><span class="dot" style="background:#FF69B4"></span><span class="cn">RegginO</span><span class="cs">08,09,10,11</span></div>
+  <div class="chip"><span class="dot" style="background:#DC143C"></span><span class="cn">Panthera</span><span class="cs">07,10,11</span></div>
+  <div class="chip"><span class="dot" style="background:#FFB6C1"></span><span class="cn">Sweetiez</span><span class="cs">08,11</span></div>
+  <div class="chip"><span class="dot" style="background:#FF0000"></span><span class="cn">Santaboy</span><span class="cs">07,11</span></div>
+  <div class="chip"><span class="dot" style="background:#8B4513"></span><span class="cn">CIA</span><span class="cs">03,05,09,11</span></div>
+  <div class="chip"><span class="dot" style="background:#00E5FF"></span><span class="cn">Harpseal Zakum</span><span class="cs">12</span></div>
+</div>
+
+<div class="timeline" id="tl"></div>
+<div class="tl-labels" id="tlLabels"></div>
+<div class="acts">
+  <span><span class="d" style="background:#4a9eff"></span>ACT 1: Birth</span>
+  <span><span class="d" style="background:#ff6b35"></span>ACT 2: Wonder</span>
+  <span><span class="d" style="background:#9b59b6"></span>ACT 3: Depth</span>
+  <span><span class="d" style="background:#ffd700"></span>ACT 4: Soul</span>
+  <span><span class="d" style="background:#00E5FF"></span>BONUS</span>
+</div>
+
+<div class="grid" id="grid"></div>
+
+<!-- Lightbox -->
+<div class="lightbox" id="lb" onclick="this.classList.remove('open')">
+  <img id="lbImg" src="" alt="">
+</div>
+
+<!-- Bottom bar -->
+<div class="bar">
+  <div class="bar-left">
+    <span>Approved: <span class="cnt" id="ac">0</span>/12</span>
+    <span>Flagged: <span class="cnt-r" id="fc">0</span></span>
+  </div>
+  <div class="bar-btns">
+    <button class="btn-exp" onclick="exportFB()">Export</button>
+    <button class="btn-lock" id="lockBtn" onclick="lockAll()">Approve all to unlock</button>
+  </div>
+</div>
+
+<script>
+const S = [
+  { id:"scene-01", act:"a1", name:"BIRTH — Black. Then Light.", time:"0:00–0:08", dur:"8s", ver:"v2",
+    emo:"Mystery → wonder",
+    desc:"POV first-person — new player opens eyes. Castle NumbahWan revealed in golden hour. Cherry blossoms, beacon tower flame, volumetric god rays.",
+    img:"keyframes/scene-01.png", chars:[],
+    checks:"Castle architecture, golden hour, cherry blossoms, beacon tower" },
+  { id:"scene-02", act:"a1", name:"THE LIVING WORLD — 8 Biomes", time:"0:08–0:30", dur:"22s", ver:"v2",
+    emo:"Awe, scale, beauty",
+    desc:"Aerial sweep: same castle surrounded by 8 biomes — bioluminescent mushrooms, cherry blossoms, wheat fields, mountains, market stalls.",
+    img:"keyframes/scene-02.png", chars:[],
+    checks:"Castle consistency with scene-01, biome variety, mushroom forest" },
+  { id:"scene-03", act:"a2", name:"COMPANIONS — RegginA Meets CIA", time:"0:30–0:52", dur:"22s", ver:"v2",
+    emo:"Tenderness → trust → love",
+    desc:"Enchanted forest clearing. RegginA (DARK BROWN skin, golden blonde hair, black headband with angular prongs, white fur coat) kneels to bond with CIA the French Bulldog (black/tan, bat ears, CIA tactical vest). TRUST: 12% holographic meter.",
+    img:"keyframes/scene-03.png", chars:["RegginA","CIA"],
+    checks:"RegginA DARK skin + headband, CIA breed + vest, trust meter, forest setting" },
+  { id:"scene-04", act:"a2", name:"CARDS & COMBAT — Card Deck Check", time:"0:52–1:12", dur:"20s", ver:"v4",
+    emo:"Excitement → spectacle",
+    desc:"Natehouoho (grey beanie, teal-cyan/purple butterfly wings, dark tactical jacket) pulls holographic TCG cards from pocket. One card glows. Volcanic colosseum arena.",
+    img:"keyframes/scene-04.png", chars:["Natehouoho"],
+    checks:"Beanie + butterfly wings, card deck, volcanic arena" },
+  { id:"scene-05", act:"a2", name:"CASTLE LIFE — Tavern Strategy", time:"1:12–1:30", dur:"18s", ver:"v3",
+    emo:"Warmth, belonging — HOME",
+    desc:"RegginA v5 (tanned skin, golden hair, BLACK headband prongs, white fur coat, golden hammer) at holographic war table. CIA Frenchie at her feet.",
+    img:"keyframes/scene-05.png", chars:["RegginA","CIA"],
+    checks:"RegginA v5 headband + coat, CIA vest, holo map, tavern" },
+  { id:"scene-06", act:"a3", name:"DLC 1: THE ABYSS — Frost Wyrm", time:"1:30–1:42", dur:"12s", ver:"v4",
+    emo:"Danger, adrenaline",
+    desc:"RegginA v5 swings golden hammer at CHUBBY cute Frost Wyrm (round belly, tiny wings, icy scales, goofy smirk yet massive). Ice crystal cavern.",
+    img:"keyframes/scene-06.png", chars:["RegginA"],
+    checks:"RegginA v5, Frost Wyrm cute/fat, ice cavern, boss scale" },
+  { id:"scene-07", act:"a3", name:"DLC 2&3: Sky Islands", time:"1:42–1:55", dur:"13s", ver:"v3",
+    emo:"Spectacle, vertigo, freedom",
+    desc:"Panthera (crimson red hair, DARK NAVY-BLUE/PURPLE feathered wings, red/gold armor, holy orb) and Santaboy (Santa hat, glasses, rose, GOLDEN wings, candy cane). Sky islands, griffins, airship.",
+    img:"keyframes/scene-07.png", chars:["Panthera","Santaboy"],
+    checks:"Panthera DARK wings, Santaboy traits, sky islands + griffins" },
+  { id:"scene-08", act:"a3", name:"DLC 4: THE FORGOTTEN FLOOR", time:"1:55–2:03", dur:"8s", ver:"v2",
+    emo:"Mystery, ancient wonder",
+    desc:"RegginO (DARK BROWN skin, pink-magenta hair, floral crown, navy tunic, teal orb) and Sweetiez (golden blonde twin-tails, purple dress, staff). 20m bioluminescent mushroom cavern, clockwork ruins.",
+    img:"keyframes/scene-08.png", chars:["RegginO","Sweetiez"],
+    checks:"RegginO pink hair + orb, Sweetiez twin-tails, mushrooms, gears" },
+  { id:"scene-09", act:"a3", name:"DLC 5: R.M.S. REGINA", time:"2:03–2:15", dur:"12s", ver:"v8",
+    emo:"Joy → luxury → fun",
+    desc:"R.M.S. REGINA mega cruise pool deck. RegginO (DARK skin, pink hair, cocktail). RegginA (DARK skin, lounger). Natehouoho (butterfly wings OPEN AIR). CIA Frenchie on deck. Transparent tube slides, glass biodome.",
+    img:"keyframes/scene-09.png", chars:["RegginA","Natehouoho","RegginO","CIA"],
+    checks:"DARK skin PASS, butterfly wings open air PASS, modern R.M.S. Regina PASS" },
+  { id:"scene-10", act:"a4", name:"SAMSARA — Every Creature Has a Soul", time:"2:15–2:35", dur:"20s", ver:"v4",
+    emo:"Dread → redemption → hope",
+    desc:"Golden Dharma Wheel with yin-yang. Hellfire LEFT / cherry blossoms RIGHT. Panthera (DARK wings), RegginA center (BLACK prong headband), RegginO (blossom side). Strongest composition.",
+    img:"keyframes/scene-10.png", chars:["RegginA","Panthera","RegginO"],
+    checks:"Dharma wheel, duality, Panthera DARK wings, RegginA headband" },
+  { id:"scene-11", act:"a4", name:"GUILD ASSEMBLES — NumbahWan United", time:"2:35–2:45", dur:"10s", ver:"v3",
+    emo:"Belonging, epic finality",
+    desc:"All 7 characters around holographic war table: RegginA, Natehouoho, RegginO, Sweetiez, Panthera, Santaboy, CIA. Grand guild hall.",
+    img:"keyframes/scene-11.png", chars:["RegginA","Natehouoho","RegginO","Sweetiez","Panthera","Santaboy","CIA"],
+    checks:"All 7 characters present, grand hall" },
+  { id:"scene-12", act:"bonus", name:"RAID BOSS — Harpseal Zakum RegginA", time:"BONUS", dur:"Boss", ver:"v1",
+    emo:"Comedy → danger → triumph",
+    desc:"Chubby baby harp seal in golden Zakum helmet, shutter shades, white beard, golden flipper armor, huge golden hammer. Cyan boss aura. Hammer Flop VFX. T-bone steaks on arena floor. RegginA + Natehouoho in foreground.",
+    img:"keyframes/scene-12.png", chars:["Harpseal Zakum","RegginA","Natehouoho"],
+    checks:"Seal body, Zakum helmet, shutter shades, T-bone steaks, Hammer Flop" }
+];
+
+const fb = JSON.parse(localStorage.getItem('nwg_trailer_fb') || '{}');
+
+// Timeline
+const tl = document.getElementById('tl');
+const tlL = document.getElementById('tlLabels');
+S.forEach(s => {
+  const seg = document.createElement('div');
+  seg.className = 'tl-seg ' + s.act;
+  seg.title = s.id + ': ' + s.name;
+  seg.onclick = () => document.getElementById(s.id).scrollIntoView({ behavior:'smooth', block:'center' });
+  tl.appendChild(seg);
+  const l = document.createElement('span');
+  l.textContent = s.time.split('–')[0];
+  tlL.appendChild(l);
+});
+
+// Grid
+const grid = document.getElementById('grid');
+S.forEach(s => {
+  const c = document.createElement('div');
+  c.className = 'card ' + s.act;
+  c.id = s.id;
+
+  const vb = s.ver !== 'v1' ? `<span class="badge b-ver">${s.ver}</span>` : '';
+  const cb = s.chars.length ? `<span class="badge b-ch">${s.chars.join(' + ')}</span>` : '';
+
+  c.innerHTML = `
+    <img src="${s.img}" alt="${s.name}" loading="lazy" onclick="openLB(this.src)">
+    <div class="info">
+      <div class="hdr">
+        <div class="badges">
+          <span class="sid">${s.id} · ${s.dur}</span>
+          ${vb}<span class="badge b-ok">VERIFIED</span>${cb}
+        </div>
+        <span class="time">${s.time}</span>
+      </div>
+      <div class="sname">${s.name}</div>
+      <div class="emo">${s.emo}</div>
+      <div class="desc">${s.desc}</div>
+      <div class="checks">Checks: ${s.checks}</div>
+      <div class="fb-row">
+        <button class="btn btn-ok${fb[s.id]==='approve'?' on':''}" onclick="setFB('${s.id}','approve',this)">Approve</button>
+        <button class="btn btn-fl${fb[s.id]==='flag'?' on':''}" onclick="setFB('${s.id}','flag',this)">Flag for Redo</button>
+        <span class="fb-note">Tap image to zoom</span>
+      </div>
+    </div>`;
+  grid.appendChild(c);
+
+  // Restore state
+  if (fb[s.id]) {
+    c.classList.add(fb[s.id] === 'approve' ? 'approved' : 'flagged');
+  }
+});
+
+function openLB(src) {
+  document.getElementById('lbImg').src = src;
+  document.getElementById('lb').classList.add('open');
+}
+document.addEventListener('keydown', e => { if (e.key === 'Escape') document.getElementById('lb').classList.remove('open'); });
+
+function setFB(id, type, btn) {
+  const card = document.getElementById(id);
+  card.querySelectorAll('.btn-ok,.btn-fl').forEach(b => b.classList.remove('on'));
+  btn.classList.add('on');
+  fb[id] = type;
+  localStorage.setItem('nwg_trailer_fb', JSON.stringify(fb));
+  card.classList.remove('approved','flagged');
+  card.classList.add(type === 'approve' ? 'approved' : 'flagged');
+  updateBar();
+}
+
+function updateBar() {
+  const vals = Object.values(fb);
+  const a = vals.filter(v => v === 'approve').length;
+  const f = vals.filter(v => v === 'flag').length;
+  document.getElementById('ac').textContent = a;
+  document.getElementById('fc').textContent = f;
+  const lb = document.getElementById('lockBtn');
+  if (a === 12 && f === 0) { lb.classList.add('ready'); lb.textContent = 'LOCK & START TRAILER'; }
+  else if (f > 0) { lb.classList.remove('ready'); lb.textContent = f + ' flagged — fix first'; }
+  else { lb.classList.remove('ready'); lb.textContent = 'Approve all to unlock'; }
+}
+updateBar();
+
+function lockAll() {
+  const lb = document.getElementById('lockBtn');
+  lb.classList.remove('ready'); lb.classList.add('locked');
+  lb.textContent = 'LOCKED — Phase 3 Ready';
+  document.querySelectorAll('.btn-ok,.btn-fl').forEach(b => { b.style.opacity='0.3'; b.style.pointerEvents='none'; });
+}
+
+function exportFB() {
+  const data = JSON.stringify({ feedback: fb, timestamp: new Date().toISOString(), flagged: Object.keys(fb).filter(k => fb[k]==='flag') }, null, 2);
+  if (navigator.clipboard) navigator.clipboard.writeText(data).then(() => alert('Copied!'));
+  else { const t = document.createElement('textarea'); t.value = data; document.body.appendChild(t); t.select(); document.execCommand('copy'); document.body.removeChild(t); alert('Copied!'); }
+}
+</script>
+</body>
+</html>

@@ -3,6 +3,16 @@ import { AVAILABLE_ACTIONS } from './ai-guide-types';
 export type { Message, ActionType, GuideAction, GuideRequest, GuideResponse };
 export { AVAILABLE_ACTIONS };
 
+function buildSystemPrompt(language: string, currentPage?: string, userContext?: Record<string, any>): string {
+  const langMap: Record<string, string> = {
+    en: 'English',
+    zh: 'Traditional Chinese',
+    th: 'Thai',
+  };
+  const langName = langMap[language] || 'English';
+  return `You are the NumbahWan Guild AI Guide. Respond in ${langName}. Current page: ${currentPage || 'unknown'}. Help users navigate the guild site, explain features, and provide guidance. Be concise and helpful.`;
+}
+
 export function parseActionsFromResponse(text: string): { cleanText: string; actions: GuideAction[] } {
   const actions: GuideAction[] = [];
   const actionRegex = /<<<ACTION:(\{[^>]+\})>>>/g;
@@ -78,7 +88,7 @@ export async function chat(
       };
     }
 
-    const data = await response.json();
+    const data: any = await response.json();
     const rawMessage = data.choices[0]?.message?.content || 'Sorry, I could not generate a response.';
     
     // Parse actions from response
@@ -190,3 +200,5 @@ export function getQuickResponse(type: keyof typeof QUICK_RESPONSES, language: s
 }
 
 
+
+export default { parseActionsFromResponse, AVAILABLE_ACTIONS };

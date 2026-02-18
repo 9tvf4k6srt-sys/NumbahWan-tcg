@@ -1,9 +1,11 @@
+import type { Bindings } from '../types'
 import { Hono } from 'hono'
 
-type Bindings = {
-  GUILD_DB: D1Database
-  MARKET_CACHE: KVNamespace
+function generateTxHash(): string {
+  return 'TX-' + Date.now().toString(36).toUpperCase() + '-' +
+    Math.random().toString(36).substring(2, 8).toUpperCase();
 }
+
 
 const router = new Hono<{ Bindings: Bindings }>()
 
@@ -27,7 +29,11 @@ router.get('/api/treasury', async (c) => {
       });
     }
 
-    const treasury = await db.prepare('SELECT * FROM treasury WHERE id = 1').first();
+    const treasury = await db.prepare('SELECT * FROM treasury WHERE id = 1').first() as Record<string, any> | null;
+
+    if (!treasury) {
+      return c.json({ success: false, error: 'Treasury not found' }, 404);
+    }
 
     return c.json({
       success: true,
@@ -66,7 +72,7 @@ router.post('/daily-reward', async (c) => {
     // Get citizen
     const citizen = await db.prepare(
       'SELECT c.id, w.id as wallet_id, w.balance_nwg, w.balance_nwx FROM citizens c JOIN wallets w ON c.id = w.citizen_id WHERE c.device_uuid = ?'
-    ).bind(deviceUUID).first();
+    ).bind(deviceUUID).first() as Record<string, any> | null;
 
     if (!citizen) {
       return c.json({ success: false, error: 'Citizen not found' }, 404);
@@ -87,9 +93,9 @@ router.post('/daily-reward', async (c) => {
     const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0];
     const yesterdayReward = await db.prepare(
       'SELECT streak_day FROM daily_rewards WHERE citizen_id = ? AND reward_date = ?'
-    ).bind(citizen.id, yesterday).first();
+    ).bind(citizen.id, yesterday).first() as Record<string, any> | null;
 
-    const streakDay = yesterdayReward ? (yesterdayReward.streak_day + 1) : 1;
+    const streakDay = yesterdayReward ? (Number(yesterdayReward.streak_day) + 1) : 1;
 
     // Calculate rewards (increases with streak, caps at day 7)
     const baseNWG = 10;

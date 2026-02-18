@@ -1,16 +1,13 @@
+import type { Bindings } from '../types'
 import { Hono } from 'hono'
 import {
   mintPhysicalCards, claimCard, stakeCard, unstakeCard,
   claimStakingRewards, listCardForSale, buyCard, cancelListing,
   fuseCards, getCollection, getMarketplaceStats, generateQRCodeData,
   CARD_NWG_VALUES, CARD_YIELD_RATES, CARD_PRINT_RUNS,
-  FUSION_RECIPES, STAKING_BOOSTS
+  FUSION_RECIPES, STAKING_BOOSTS, generateClaimCode, calculateBoostMultiplier
 } from '../services/card-nwg-bridge'
 
-type Bindings = {
-  GUILD_DB: D1Database
-  MARKET_CACHE: KVNamespace
-}
 
 
 // Route helpers - reduce repetitive error handling patterns
@@ -130,7 +127,7 @@ router.get('/collection/:wallet', async (c) => {
 
   try {
     const collection = await getCollection(env.MARKET_CACHE, walletAddress);
-    const boostMultiplier = CardBridge.calculateBoostMultiplier(collection);
+    const boostMultiplier = calculateBoostMultiplier(collection as any);
     return c.json({
       success: true,
       collection,
@@ -381,7 +378,7 @@ router.get('/marketplace', async (c) => {
 // GET /api/card-bridge/qr/:cardId - Generate QR code data for a card
 router.get('/qr/:cardId', (c) => {
   const cardId = c.req.param('cardId');
-  const claimCode = CardBridge.generateClaimCode();
+  const claimCode = generateClaimCode();
   const qrData = generateQRCodeData(cardId, claimCode);
 
   return c.json({

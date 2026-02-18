@@ -42,14 +42,47 @@ import {
   physicalRoutes, avatarRoutes, guideRoutes, translateRoutes,
   gmRoutes, cipherRoutes, oracleRoutes, npcChatRoutes
 } from './routes'
+import { logger } from './logger'
+import { AppError, toErrorResponse } from './errors'
 
 // ── Type Bindings ─────────────────────────────────────────────────
-type Bindings = {
-  GUILD_DB: D1Database
-  MARKET_CACHE: KVNamespace
-}
+import type { Bindings } from './types'
 
 const app = new Hono<{ Bindings: Bindings }>()
+
+
+// ════════════════════════════════════════════════════════════════════
+//   F8 — THE WATCHTOWER: Request Logging & Global Error Handler
+// ════════════════════════════════════════════════════════════════════
+//
+//   Every request is observed. Every error is caught and returned
+//   as structured JSON — no stack traces leak to the client.
+//
+
+// Request logging middleware — records method, path, status, duration
+app.use('*', async (c, next) => {
+  const correlationId = logger.correlationId()
+  c.set('correlationId' as never, correlationId as never)
+  const start = Date.now()
+  await next()
+  const duration = Date.now() - start
+  // Skip logging static asset requests to reduce noise
+  if (!c.req.path.startsWith('/static/')) {
+    logger.request(c.req.method, c.req.path, c.res.status, duration, correlationId)
+  }
+})
+
+// Global error handler — catches unhandled errors from any route
+app.onError((err, c) => {
+  const { body, status } = toErrorResponse(err)
+  if (status >= 500) {
+    logger.error(`Unhandled error: ${err instanceof Error ? err.message : String(err)}`, err, {
+      route: c.req.path,
+      method: c.req.method,
+    })
+  }
+  return c.json(body, status as any)
+})
 
 
 // ════════════════════════════════════════════════════════════════════

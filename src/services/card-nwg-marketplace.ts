@@ -1,5 +1,18 @@
+import type { CardRarity } from '../types'
 import type { PhysicalCard, CardStake, CardListing } from './card-nwg-bridge-types';
-import { CARD_NWG_VALUES, CARD_CACHE_KEYS, calculatePendingYield, calculateBoostMultiplier } from './card-nwg-bridge-types';
+import { CARD_NWG_VALUES, CARD_CACHE_KEYS, calculatePendingYield, calculateBoostMultiplier, FUSION_RECIPES } from './card-nwg-bridge-types';
+import { mintPhysicalCards } from './card-nwg-bridge';
+
+interface MarketTransfer {
+  id: string;
+  physicalCardId: string;
+  fromWallet: string;
+  toWallet: string;
+  transferType: string;
+  nwgAmount: number;
+  timestamp: number;
+  txHash: string;
+}
 
 export async function listCardForSale(
   cache: KVNamespace,
@@ -259,7 +272,7 @@ export async function fuseCards(
 
 // COLLECTION & STATS
 
-export async function getCollection(cache: KVNamespace, walletAddress: string): Promise<CardCollection> {
+export async function getCollection(cache: KVNamespace, walletAddress: string): Promise<any> {
   const cards = await getCards(cache);
   const stakes = await getStakes(cache);
 
@@ -366,7 +379,7 @@ async function getListings(cache: KVNamespace): Promise<CardListing[]> {
   return data ? JSON.parse(data) : [];
 }
 
-async function getTransfers(cache: KVNamespace): Promise<CardTransfer[]> {
+async function getTransfers(cache: KVNamespace): Promise<MarketTransfer[]> {
   const data = await cache.get(CARD_CACHE_KEYS.CARD_TRANSFERS);
   return data ? JSON.parse(data) : [];
 }

@@ -1,9 +1,9 @@
+import type { Bindings } from '../types'
 import { Hono } from 'hono'
+import { IdentifySchema, TransactionSchema, formatZodError } from '../validation'
+import { logger } from '../logger'
+import { toErrorResponse } from '../errors'
 
-type Bindings = {
-  GUILD_DB: D1Database
-  MARKET_CACHE: KVNamespace
-}
 
 const router = new Hono<{ Bindings: Bindings }>()
 
@@ -52,7 +52,7 @@ router.post('/register', async (c) => {
     // Check if citizen already exists
     const existing = await db.prepare(
       'SELECT c.*, w.wallet_address, w.balance_nwg, w.balance_nwx FROM citizens c LEFT JOIN wallets w ON c.id = w.citizen_id WHERE c.device_uuid = ?'
-    ).bind(deviceUUID).first();
+    ).bind(deviceUUID).first() as Record<string, any> | null;
 
     if (existing) {
       // Update last seen and visit count
@@ -105,7 +105,11 @@ router.post('/register', async (c) => {
     // Get wallet info
     const wallet = await db.prepare(
       'SELECT * FROM wallets WHERE citizen_id = ?'
-    ).bind(citizenId).first();
+    ).bind(citizenId).first() as Record<string, any> | null;
+
+    if (!wallet) {
+      return c.json({ success: false, error: 'Wallet creation failed' }, 500);
+    }
 
     // Record signup bonus transaction
     const txHash = generateTxHash();
@@ -173,7 +177,7 @@ router.get('/:deviceUUID', async (c) => {
       SELECT c.*, w.* FROM citizens c
       LEFT JOIN wallets w ON c.id = w.citizen_id
       WHERE c.device_uuid = ?
-    `).bind(deviceUUID).first();
+    `).bind(deviceUUID).first() as Record<string, any> | null;
 
     if (!result) {
       return c.json({ success: false, error: 'Citizen not found' }, 404);
@@ -234,7 +238,7 @@ router.post('/transaction', async (c) => {
     // Get citizen and wallet
     const citizen = await db.prepare(
       'SELECT c.id, w.id as wallet_id, w.balance_nwg, w.balance_nwx, w.balance_diamond, w.balance_gold, w.balance_iron, w.balance_stone, w.balance_wood FROM citizens c JOIN wallets w ON c.id = w.citizen_id WHERE c.device_uuid = ?'
-    ).bind(deviceUUID).first();
+    ).bind(deviceUUID).first() as Record<string, any> | null;
 
     if (!citizen) {
       return c.json({ success: false, error: 'Citizen not found' }, 404);
@@ -253,7 +257,7 @@ router.post('/transaction', async (c) => {
       return c.json({ success: false, error: 'Invalid currency' }, 400);
     }
 
-    const currentBalance = citizen[balanceColumn] || 0;
+    const currentBalance = Number(citizen[balanceColumn]) || 0;
     const isSpend = txType.includes('SPEND') || txType.includes('PURCHASE') || txType.includes('TRANSFER_OUT');
     const newBalance = isSpend ? currentBalance - Math.abs(amount) : currentBalance + Math.abs(amount);
 
@@ -320,7 +324,7 @@ router.get('/transactions/:deviceUUID', async (c) => {
 
     const citizen = await db.prepare(
       'SELECT id FROM citizens WHERE device_uuid = ?'
-    ).bind(deviceUUID).first();
+    ).bind(deviceUUID).first() as Record<string, any> | null;
 
     if (!citizen) {
       return c.json({ success: false, error: 'Citizen not found' }, 404);

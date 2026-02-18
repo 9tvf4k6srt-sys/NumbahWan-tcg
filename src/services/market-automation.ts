@@ -50,7 +50,7 @@ async function fetchCoinbasePrices(): Promise<{ btc?: number; paxg?: number }> {
     const response = await fetch('https://api.coinbase.com/v2/exchange-rates?currency=USD');
     if (!response.ok) return {};
 
-    const data = await response.json();
+    const data: any = await response.json();
     const rates = data?.data?.rates || {};
 
     return {
@@ -67,7 +67,7 @@ async function fetchCoinGeckoBTC(): Promise<{ price?: number; change?: number }>
     const response = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd&include_24hr_change=true');
     if (!response.ok) return {};
 
-    const data = await response.json();
+    const data: any = await response.json();
     const btc = data?.bitcoin;
 
     return {

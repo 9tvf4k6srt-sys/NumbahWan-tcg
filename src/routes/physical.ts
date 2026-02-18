@@ -1,9 +1,6 @@
+import type { Bindings } from '../types'
 import { Hono } from 'hono'
 
-type Bindings = {
-  GUILD_DB: D1Database
-  MARKET_CACHE: KVNamespace
-}
 
 
 // Route helpers
@@ -63,7 +60,7 @@ router.post('/verify', async (c) => {
     // Production mode with D1
     const claimCode = await db.prepare(
       'SELECT * FROM physical_claim_codes WHERE code = ?'
-    ).bind(code.toUpperCase()).first();
+    ).bind(code.toUpperCase()).first() as Record<string, any> | null;
     
     if (!claimCode) {
       return c.json({ success: false, error: 'NOT_FOUND', message: 'Code not found' }, 404);
@@ -141,7 +138,7 @@ router.post('/claim', async (c) => {
     // Production mode with D1
     const claimCode = await db.prepare(
       'SELECT * FROM physical_claim_codes WHERE code = ?'
-    ).bind(code.toUpperCase()).first();
+    ).bind(code.toUpperCase()).first() as Record<string, any> | null;
     
     if (!claimCode) {
       return c.json({ success: false, error: 'Code not found' }, 404);

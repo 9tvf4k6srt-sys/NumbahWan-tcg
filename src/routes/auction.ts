@@ -1,16 +1,13 @@
+import type { Bindings } from '../types'
 import { Hono } from 'hono'
 import {
-  Auction, auctions, notifications, traderStats, priceHistory,
+  Auction, AuctionBid, auctions, notifications, traderStats, priceHistory,
   auctionIdCounter, DURATION_MS, BID_INCREMENT, LISTING_FEE_PCT,
   SNIPE_PROTECTION_MS, SNIPE_EXTENSION_MS,
   getMinIncrement, generateAuctionId, addNotification,
   updateTraderStats, initSampleAuctions
 } from './auction-data'
 
-type Bindings = {
-  GUILD_DB: D1Database
-  MARKET_CACHE: KVNamespace
-}
 
 
 // Route helpers - reduce repetitive error handling patterns
