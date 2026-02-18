@@ -1,9 +1,6 @@
+import type { Bindings } from '../types'
 import { Hono } from 'hono'
 
-type Bindings = {
-  GUILD_DB: D1Database
-  MARKET_CACHE: KVNamespace
-}
 
 const router = new Hono<{ Bindings: Bindings }>()
 
@@ -17,7 +14,7 @@ const router = new Hono<{ Bindings: Bindings }>()
 import cardDatabase from '../../public/static/data/cards-v2.json'
 
 // In-memory card state (initialized from JSON)
-let cardData = { ...cardDatabase }
+let cardData = { ...cardDatabase } as any
 
 // GET /api/cards - Get all cards with optional filtering
 router.get('/', (c) => {
@@ -60,7 +57,7 @@ router.get('/', (c) => {
     count: cards.length,
     offset,
     cards,
-    rarities: cardData.rarities
+    rarities: cardData.rarityInfo
   })
 })
 
@@ -72,20 +69,20 @@ router.get('/stats', (c) => {
     lastUpdated: cardData.lastUpdated,
     byRarity: {} as Record<string, { count: number; rate: number }>,
     sets: {} as Record<string, number>,
-    reserved: cardData.cards.filter(c => c.reserved).length
+    reserved: cardData.cards.filter((c: any) => c.reserved).length
   }
   
   // Count by rarity
-  Object.keys(cardData.rarities).forEach(rarity => {
-    const count = cardData.cards.filter(c => c.rarity === rarity).length
+  Object.keys(cardData.rarityInfo).forEach(rarity => {
+    const count = cardData.cards.filter((c: any) => c.rarity === rarity).length
     stats.byRarity[rarity] = {
       count,
-      rate: cardData.rarities[rarity].rate
+      rate: cardData.rarityInfo[rarity].rate
     }
   })
   
   // Count by set
-  cardData.cards.forEach(card => {
+  cardData.cards.forEach((card: any) => {
     const set = card.set || 'unknown'
     stats.sets[set] = (stats.sets[set] || 0) + 1
   })
@@ -97,8 +94,8 @@ router.get('/stats', (c) => {
 // GET /api/cards/rarity/:rarity - Get all cards of a rarity (MUST be before :id route)
 router.get('/rarity/:rarity', (c) => {
   const rarity = c.req.param('rarity')
-  const cards = cardData.cards.filter(card => card.rarity === rarity)
-  const rarityInfo = cardData.rarities[rarity]
+  const cards = cardData.cards.filter((card: any) => card.rarity === rarity)
+  const rarityInfo = cardData.rarityInfo[rarity]
   
   if (!rarityInfo) {
     return c.json({ success: false, error: 'Invalid rarity' }, 400)
@@ -117,7 +114,7 @@ router.get('/rarity/:rarity', (c) => {
 // GET /api/cards/:id - Get single card by ID (MUST be after specific routes)
 router.get('/:id', (c) => {
   const id = parseInt(c.req.param('id'))
-  const card = cardData.cards.find(card => card.id === id)
+  const card = cardData.cards.find((card: any) => card.id === id)
   
   if (!card) {
     return c.json({ success: false, error: 'Card not found' }, 404)
@@ -127,7 +124,7 @@ router.get('/:id', (c) => {
   return c.json({
     success: true,
     card,
-    rarityInfo: cardData.rarities[card.rarity]
+    rarityInfo: cardData.rarityInfo[card.rarity]
   })
 })
 
@@ -159,7 +156,7 @@ router.post('/pull', async (c) => {
 
 // Helper function for gacha pull
 function pullSingleCard(pity: { mythic: number; legendary: number; epic: number }) {
-  const rarities = cardData.rarities
+  const rarities = cardData.rarityInfo
   let pulledRarity = 'common'
   const roll = Math.random() * 100
   
@@ -196,7 +193,7 @@ function pullSingleCard(pity: { mythic: number; legendary: number; epic: number 
   }
   
   // Get random card of that rarity
-  const cardsOfRarity = cardData.cards.filter(c => c.rarity === pulledRarity)
+  const cardsOfRarity = cardData.cards.filter((c: any) => c.rarity === pulledRarity)
   const card = cardsOfRarity.length > 0 
     ? cardsOfRarity[Math.floor(Math.random() * cardsOfRarity.length)]
     : cardData.cards[Math.floor(Math.random() * cardData.cards.length)]

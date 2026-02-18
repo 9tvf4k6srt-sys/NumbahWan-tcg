@@ -1,9 +1,6 @@
+import type { Bindings } from '../types'
 import { Hono } from 'hono'
 
-type Bindings = {
-  GUILD_DB: D1Database
-  MARKET_CACHE: KVNamespace
-}
 
 import * as fs from 'fs'
 import * as path from 'path'

@@ -1,3 +1,4 @@
+import type { Bindings } from '../types'
 import { Hono } from 'hono'
 
 import * as fs from 'fs'
@@ -15,10 +16,6 @@ try {
   }
 } catch (e) {}
 
-type Bindings = {
-  GUILD_DB: D1Database
-  MARKET_CACHE: KVNamespace
-}
 
 const router = new Hono<{ Bindings: Bindings }>()
 

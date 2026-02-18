@@ -1,11 +1,11 @@
+import type { Bindings } from '../types'
 import { Hono } from 'hono'
 import cardDatabase from '../../public/static/data/cards-v2.json'
+import { CreateCardSchema, BatchCreateCardsSchema, formatZodError } from '../validation'
+import { logger } from '../logger'
+import { UnauthorizedError, ValidationError, NotFoundError, toErrorResponse } from '../errors'
 
-type Bindings = {
-  GUILD_DB: D1Database
-  MARKET_CACHE: KVNamespace
-}
-
+const GM_KEY = 'numbahwan-gm-2026'
 
 // Route helpers - reduce repetitive error handling patterns
 function jsonError(c: any, msg: string, status = 400) {
@@ -38,39 +38,43 @@ let cardData = { ...cardDatabase } as any
 
 // ADMIN CARD API - For card management (GM mode)
 
-// POST /api/admin/cards - Add new card
+// POST /api/admin/cards - Add new card (Zod-validated)
 router.post('/cards', async (c) => {
   try {
     const body = await c.req.json()
-    const { name, rarity, img, set, reserved, description, gmKey } = body
+    const parsed = CreateCardSchema.safeParse(body)
 
-    // Simple GM key check (in production, use proper auth)
-    if (gmKey !== 'numbahwan-gm-2026') {
-      return c.json({ success: false, error: 'Unauthorized' }, 401)
+    if (!parsed.success) {
+      logger.warn('Card creation validation failed', { errors: formatZodError(parsed.error) })
+      return c.json({ success: false, error: formatZodError(parsed.error), code: 'VALIDATION_ERROR' }, 400)
     }
 
-    if (!name || !rarity || !img) {
-      return c.json({ success: false, error: 'name, rarity, and img required' }, 400)
+    const { name, rarity, img, set, reserved, description, gmKey } = parsed.data
+
+    if (gmKey !== GM_KEY) {
+      return c.json({ success: false, error: 'Unauthorized', code: 'UNAUTHORIZED' }, 401)
     }
 
     // Generate new ID (max + 1)
-    const maxId = Math.max(...cardData.cards.map(c => c.id))
+    const maxId = Math.max(...cardData.cards.map((c: any) => c.id))
     const newCard = {
       id: maxId + 1,
       name,
       rarity,
       img,
-      set: set || 'custom',
-      reserved: reserved || false,
-      description: description || ''
+      set,
+      reserved,
+      description
     }
 
     cardData.cards.push(newCard)
     cardData.totalCards = cardData.cards.length
 
+    logger.info('Card created', { cardId: newCard.id, name, rarity })
     return c.json({ success: true, card: newCard })
   } catch (e) {
-    return c.json({ success: false, error: String(e) }, 500)
+    const { body, status } = toErrorResponse(e)
+    return c.json(body, status as any)
   }
 })
 
@@ -81,21 +85,23 @@ router.put('/cards/:id', async (c) => {
     const body = await c.req.json()
     const { gmKey, ...updates } = body
 
-    if (gmKey !== 'numbahwan-gm-2026') {
-      return c.json({ success: false, error: 'Unauthorized' }, 401)
+    if (gmKey !== GM_KEY) {
+      return c.json({ success: false, error: 'Unauthorized', code: 'UNAUTHORIZED' }, 401)
     }
 
-    const cardIndex = cardData.cards.findIndex(c => c.id === id)
+    const cardIndex = cardData.cards.findIndex((card: any) => card.id === id)
     if (cardIndex === -1) {
-      return c.json({ success: false, error: 'Card not found' }, 404)
+      return c.json({ success: false, error: 'Card not found', code: 'NOT_FOUND' }, 404)
     }
 
     // Update card properties
     Object.assign(cardData.cards[cardIndex], updates)
 
+    logger.info('Card updated', { cardId: id })
     return c.json({ success: true, card: cardData.cards[cardIndex] })
   } catch (e) {
-    return c.json({ success: false, error: String(e) }, 500)
+    const { body, status } = toErrorResponse(e)
+    return c.json(body, status as any)
   }
 })
 
@@ -105,21 +111,23 @@ router.delete('/cards/:id', async (c) => {
     const id = parseInt(c.req.param('id'))
     const gmKey = c.req.query('gmKey')
 
-    if (gmKey !== 'numbahwan-gm-2026') {
-      return c.json({ success: false, error: 'Unauthorized' }, 401)
+    if (gmKey !== GM_KEY) {
+      return c.json({ success: false, error: 'Unauthorized', code: 'UNAUTHORIZED' }, 401)
     }
 
-    const cardIndex = cardData.cards.findIndex(c => c.id === id)
+    const cardIndex = cardData.cards.findIndex((card: any) => card.id === id)
     if (cardIndex === -1) {
-      return c.json({ success: false, error: 'Card not found' }, 404)
+      return c.json({ success: false, error: 'Card not found', code: 'NOT_FOUND' }, 404)
     }
 
     const deletedCard = cardData.cards.splice(cardIndex, 1)[0]
     cardData.totalCards = cardData.cards.length
 
+    logger.info('Card deleted', { cardId: id, name: deletedCard.name })
     return c.json({ success: true, deleted: deletedCard })
   } catch (e) {
-    return c.json({ success: false, error: String(e) }, 500)
+    const { body, status } = toErrorResponse(e)
+    return c.json(body, status as any)
   }
 })
 
@@ -127,8 +135,8 @@ router.delete('/cards/:id', async (c) => {
 router.get('/cards/export', (c) => {
   const gmKey = c.req.query('gmKey')
 
-  if (gmKey !== 'numbahwan-gm-2026') {
-    return c.json({ success: false, error: 'Unauthorized' }, 401)
+  if (gmKey !== GM_KEY) {
+    return c.json({ success: false, error: 'Unauthorized', code: 'UNAUTHORIZED' }, 401)
   }
 
   c.header('Content-Type', 'application/json')
@@ -136,18 +144,21 @@ router.get('/cards/export', (c) => {
   return c.json(cardData)
 })
 
-// POST /api/admin/cards/batch - Add multiple cards at once
+// POST /api/admin/cards/batch - Add multiple cards at once (Zod-validated)
 router.post('/cards/batch', async (c) => {
   try {
     const body = await c.req.json()
-    const { cards, gmKey } = body
+    const parsed = BatchCreateCardsSchema.safeParse(body)
 
-    if (gmKey !== 'numbahwan-gm-2026') {
-      return c.json({ success: false, error: 'Unauthorized' }, 401)
+    if (!parsed.success) {
+      logger.warn('Batch card creation validation failed', { errors: formatZodError(parsed.error) })
+      return c.json({ success: false, error: formatZodError(parsed.error), code: 'VALIDATION_ERROR' }, 400)
     }
 
-    if (!Array.isArray(cards) || cards.length === 0) {
-      return c.json({ success: false, error: 'cards array required' }, 400)
+    const { cards, gmKey } = parsed.data
+
+    if (gmKey !== GM_KEY) {
+      return c.json({ success: false, error: 'Unauthorized', code: 'UNAUTHORIZED' }, 401)
     }
 
     // ID ranges by rarity for auto-assignment
@@ -161,7 +172,7 @@ router.post('/cards/batch', async (c) => {
     }
 
     // Find next available IDs
-    cardData.cards.forEach(card => {
+    cardData.cards.forEach((card: any) => {
       const range = idRanges[card.rarity]
       if (range && card.id >= range) {
         idRanges[card.rarity] = Math.max(idRanges[card.rarity], card.id + 1)
@@ -200,6 +211,7 @@ router.post('/cards/batch', async (c) => {
 
     cardData.totalCards = cardData.cards.length
 
+    logger.info('Batch cards created', { count: addedCards.length, errorCount: errors.length })
     return c.json({
       success: true,
       added: addedCards.length,
@@ -208,7 +220,8 @@ router.post('/cards/batch', async (c) => {
       total: cardData.totalCards
     })
   } catch (e) {
-    return c.json({ success: false, error: String(e) }, 500)
+    const { body, status } = toErrorResponse(e)
+    return c.json(body, status as any)
   }
 })
 
@@ -216,8 +229,8 @@ router.post('/cards/batch', async (c) => {
 router.get('/cards/next-ids', (c) => {
   const gmKey = c.req.query('gmKey')
 
-  if (gmKey !== 'numbahwan-gm-2026') {
-    return c.json({ success: false, error: 'Unauthorized' }, 401)
+  if (gmKey !== GM_KEY) {
+    return c.json({ success: false, error: 'Unauthorized', code: 'UNAUTHORIZED' }, 401)
   }
 
   // Base ID ranges
@@ -231,7 +244,7 @@ router.get('/cards/next-ids', (c) => {
   }
 
   // Find next available IDs
-  cardData.cards.forEach(card => {
+  cardData.cards.forEach((card: any) => {
     const range = idRanges[card.rarity]
     if (range && card.id >= range) {
       idRanges[card.rarity] = Math.max(idRanges[card.rarity], card.id + 1)
@@ -242,12 +255,12 @@ router.get('/cards/next-ids', (c) => {
     success: true,
     nextIds: idRanges,
     counts: {
-      mythic: cardData.cards.filter(c => c.rarity === 'mythic').length,
-      legendary: cardData.cards.filter(c => c.rarity === 'legendary').length,
-      epic: cardData.cards.filter(c => c.rarity === 'epic').length,
-      rare: cardData.cards.filter(c => c.rarity === 'rare').length,
-      uncommon: cardData.cards.filter(c => c.rarity === 'uncommon').length,
-      common: cardData.cards.filter(c => c.rarity === 'common').length
+      mythic: cardData.cards.filter((cd: any) => cd.rarity === 'mythic').length,
+      legendary: cardData.cards.filter((cd: any) => cd.rarity === 'legendary').length,
+      epic: cardData.cards.filter((cd: any) => cd.rarity === 'epic').length,
+      rare: cardData.cards.filter((cd: any) => cd.rarity === 'rare').length,
+      uncommon: cardData.cards.filter((cd: any) => cd.rarity === 'uncommon').length,
+      common: cardData.cards.filter((cd: any) => cd.rarity === 'common').length
     }
   })
 })
@@ -308,7 +321,7 @@ router.get('/api/card-factory', (c) => {
 
     nextIds: (() => {
       const ranges: Record<string, number> = { mythic: 106, legendary: 209, epic: 309, rare: 409, uncommon: 531, common: 641 }
-      cardData.cards.forEach(c => { if (c.id >= ranges[c.rarity]) ranges[c.rarity] = c.id + 1 })
+      cardData.cards.forEach((cd: any) => { if (cd.id >= ranges[cd.rarity]) ranges[cd.rarity] = cd.id + 1 })
       return ranges
     })(),
 

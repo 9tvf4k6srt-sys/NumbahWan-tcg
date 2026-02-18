@@ -5,6 +5,7 @@
  *   Each NPC has a unique personality, memories, and quirks.
  * ══════════════════════════════════════════════════════════════════
  */
+import type { Bindings } from '../types'
 import { Hono } from 'hono'
 import * as fs from 'fs'
 import * as path from 'path'
@@ -21,7 +22,6 @@ try {
   }
 } catch (e) {}
 
-type Bindings = { GUILD_DB: D1Database; MARKET_CACHE: KVNamespace }
 
 const router = new Hono<{ Bindings: Bindings }>()
 

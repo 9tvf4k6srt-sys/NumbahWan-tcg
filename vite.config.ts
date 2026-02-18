@@ -132,7 +132,7 @@ export default defineConfig({
         ...discoverPages(),
         ...STATIC_REALMS,
       ],
-    }),
+    } as any),
 
     // Dev Server Plugin — The Alchemist
     //   In development, this bridges Vite's dev server with the Hono

@@ -1,9 +1,6 @@
+import type { Bindings } from '../types'
 import { Hono } from 'hono'
 
-type Bindings = {
-  GUILD_DB: D1Database
-  MARKET_CACHE: KVNamespace
-}
 
 const router = new Hono<{ Bindings: Bindings }>()
 
@@ -14,7 +11,7 @@ const router = new Hono<{ Bindings: Bindings }>()
 // ============================================================================
 
 // GM Whitelist - Add Guest IDs here
-const GM_WHITELIST = [
+const GM_WHITELIST: string[] = [
   // Owner/Admin accounts - These IDs get auto-GM status
   // Add your Guest ID here (visible on /wallet page)
 ];

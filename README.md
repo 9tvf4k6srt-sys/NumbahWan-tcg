@@ -2,13 +2,15 @@
 
 # NumbahWan
 
-**A fantasy TCG built with AI-first architecture — 583 cards, 92 pages, 7 DLCs, a cinematic trailer pipeline, and the tooling that proves it works.**
+**A fantasy TCG built with AI-first architecture — 590 cards, 137 pages, 7 DLCs, a cinematic trailer pipeline, and the tooling that proves it works.**
 
 [![PCP v0.1](https://img.shields.io/badge/PCP_v0.1-Level_3_(Grade_A)-00d4ff?style=for-the-badge)](https://numbahwan.pages.dev/.well-known/pcp.json)
-[![Tests](https://img.shields.io/badge/Tests-125%2F125-00b894?style=for-the-badge)]()
-[![Cards](https://img.shields.io/badge/Cards-583-e17055?style=for-the-badge)]()
-[![Pages](https://img.shields.io/badge/Pages-92-6c5ce7?style=for-the-badge)]()
-[![Deps](https://img.shields.io/badge/Ext_Dependencies-0-e8e0d8?style=for-the-badge)]()
+[![Tests](https://img.shields.io/badge/Tests-125%2F125_PCP_%2B_54_Unit-00b894?style=for-the-badge)]()
+[![Cards](https://img.shields.io/badge/Cards-590-e17055?style=for-the-badge)]()
+[![Pages](https://img.shields.io/badge/Pages-137-6c5ce7?style=for-the-badge)]()
+[![Deps](https://img.shields.io/badge/Runtime_Deps-4-e8e0d8?style=for-the-badge)]()
+[![TypeScript](https://img.shields.io/badge/TSC-0_Errors-3178C6?style=for-the-badge)]()
+[![CI](https://img.shields.io/badge/CI-GitHub_Actions-2088FF?style=for-the-badge)]()
 
 **[Play the Game](https://numbahwan.pages.dev)** · **[Agent Dashboard](https://numbahwan.pages.dev/agent)** · **[PCP Spec](PCP-SPEC.md)** · **[Trailer Pipeline](#cinematic-trailer-pipeline)**
 
@@ -27,8 +29,8 @@ We built three systems to solve problems we kept hitting during AI-assisted deve
 | System | Problem It Solves | Status |
 |--------|-------------------|--------|
 | **[Project Context Protocol](#project-context-protocol)** | AI agents waste 50K tokens re-reading READMEs | 17 endpoints, 125/125 tests, Level 3 Grade A |
-| **[Mycelium](#mycelium--self-healing-codebase)** | Same files keep breaking the same way | 5 scripts, 84 regression tests, 75/100 eval score |
-| **[Cinematic Trailer Pipeline](#cinematic-trailer-pipeline)** | AI-generated assets need verification loops | 12 scenes, 43 iterations, 8 characters + 1 raid boss, 4-level checklist |
+| **[Mycelium](#mycelium--self-healing-codebase)** | Same files keep breaking the same way | 5 scripts (1 core + 4 wrappers), 54 unit tests + pre-commit guards, 60/100 eval score |
+| **[Cinematic Trailer Pipeline](#cinematic-trailer-pipeline)** | AI-generated assets need verification loops | 12 scenes, 39 iterations, 8 characters + 1 raid boss, 4-level checklist |
 
 All three are production systems running in this repo. None of them require external dependencies.
 
@@ -104,15 +106,15 @@ These come from `mycelium-eval.cjs` running against this repo. You can verify th
 | `cards.html` broke **10 times** from the same pattern | Generated i18n key validation test — caught 24 invalid keys on first run |
 | `battle.html` + `nw-battle-engine.js` always co-change (28x) | Added coupling enforcement in pre-commit |
 | 3 files had 30% repeat-break rate | Classified failure modes, generated targeted regression tests |
-| 50 breakages across project lifetime | Each became a lesson, constraint, or test — 84 regression tests now run on every commit |
+| 50 breakages across project lifetime | Each became a lesson, constraint, or test — pre-commit guards + 54 unit tests run on every commit |
 
 <details>
-<summary><b>Evaluation scorecard — 75/100 (B)</b></summary>
+<summary><b>Evaluation scorecard — 60/100 (C)</b></summary>
 
 ```
 Mycelium-Eval v4.0
 
-  Overall: 75/100 (B) [proof: 6bc6c35005d35e8c]
+  Overall: 60/100 (C)
 
   Scorecard:
     Fix Rate Trend         50/100 (15%)  Real bug fix rate: 15%→16%
@@ -148,7 +150,7 @@ pipeline/
 ├── keyframes/
 │   ├── keyframe-manifest.json        # Scene registry — versions, source URLs, verification notes, revision log
 │   ├── review.html                   # Interactive review dashboard — approve/flag per scene, export feedback JSON
-│   └── scene-{01..12}-*.png          # Generated keyframe images (43 total iterations across 12 scenes)
+│   └── scene-{01..12}-*.png          # Generated keyframe images (39 total iterations across 12 scenes)
 ├── ref-sheets/
 │   └── {character}-ue5-refsheet-*.png # UE5 photorealistic reference sheets per character (versioned)
 ├── verification/
@@ -163,7 +165,7 @@ Every generated image passes through a 4-level checklist before it's accepted:
 | Level | What It Checks | Example |
 |-------|---------------|---------|
 | **L1 — Silhouette** | Recognizable shape at thumbnail size | Wing type matches, hair volume correct |
-| **L2 — Color** | Hex values within 15% tolerance | Hair #CC0000, skin #B8875A (warm golden-brown caramel), wings #1A237E |
+| **L2 — Color** | Hex values within 15% tolerance | Hair #CC0000, skin #6B4226/#5C3A1E (DARK BROWN), wings #1A237E |
 | **L3 — Detail** | Facial features, accessories, weapon type | Glasses present, headband shape correct, hammer ornate, shutter shades on seal boss |
 | **L4 — Consistency** | Art style, lighting, proportions across scenes | UE5 realistic (not anime), consistent scale |
 
@@ -192,7 +194,7 @@ These notes exist because the headband was rendered wrong 5+ times across differ
 | Scenes | 12/12 verified (11 trailer + 1 raid boss) |
 | Characters | 8/8 accounted for (7 guild + 1 raid boss) |
 | Trailer duration | 2:45 (4 acts) + bonus boss scene |
-| Total iterations | 43 across all scenes |
+| Total iterations | 39 across all scenes |
 | Critical issues | 5 logged, 5 resolved |
 | Pipeline version | v7.0 |
 | Raid boss | Harpseal Zakum RegginA — locked (v3 ref sheet, all checks passed) |

@@ -128,7 +128,9 @@ const staticPages = [
   'admin-physical', 'battle-legacy', 'battle-old', 'battle-simple',
   'what-is-nwg', 'staking', 'fusion', 'claim', 'events', 'confessional',
   'avatar-studio', 'efficiency', 'tabletop', 'collection-stats', 'dashboard',
-  'cipher', 'guild-siege', 'agent'
+  'cipher', 'guild-siege', 'agent',
+  'ai-assets', 'boss-dungeon', 'builder-channel', 'coin-shop', 'coin-test',
+  'harpseal-zakum', 'item-drops', 'kintsugi', 'qinqin', 'regina-dlc'
 ]
 
 staticPages.forEach(page => {
@@ -158,7 +160,7 @@ researchPapers.forEach(paper => {
 })
 
 // Lore pages
-const lorePages = ['reggina-origin', 'sacred-log', 'whale-wars']
+const lorePages = ['reggina-origin', 'sacred-log', 'whale-wars', 'afk-incident', 'conspiracy-board']
 lorePages.forEach(page => {
   router.get(`/lore/${page}`, (c) => serveHtml(c, `/lore/${page}.html`))
   router.get(`/lore/${page}.html`, (c) => serveHtml(c, `/lore/${page}.html`))
@@ -170,5 +172,9 @@ worldPages.forEach(page => {
   router.get(`/world/${page}`, (c) => serveHtml(c, `/world/${page}.html`))
   router.get(`/world/${page}.html`, (c) => serveHtml(c, `/world/${page}.html`))
 })
+
+// Trailer pages
+router.get('/trailer/review', (c) => serveHtml(c, '/trailer/review.html'))
+router.get('/trailer/review.html', (c) => serveHtml(c, '/trailer/review.html'))
 
 export default router
