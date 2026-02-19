@@ -1,17 +1,17 @@
 /**
  * Tests for src/errors.ts — Custom Error Types
  */
-import { describe, it, expect } from 'vitest'
+import { describe, expect, it } from 'vitest'
 import {
   AppError,
-  ValidationError,
-  UnauthorizedError,
+  ConflictError,
   ForbiddenError,
   NotFoundError,
-  ConflictError,
   RateLimitError,
   ServiceUnavailableError,
   toErrorResponse,
+  UnauthorizedError,
+  ValidationError,
 } from '../errors'
 
 describe('AppError', () => {

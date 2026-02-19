@@ -1,5 +1,4 @@
-import type { WhaleAlert, FearGreedData, MarketAnalysis } from './gamification-types';
-import { GAME_CACHE_KEYS } from './gamification-types';
+import type { FearGreedData, MarketAnalysis, WhaleAlert } from './gamification-types'
 
 export function calculateFearGreed(marketData: any): FearGreedData {
   // Calculate based on price changes and volatility
@@ -8,34 +7,27 @@ export function calculateFearGreed(marketData: any): FearGreedData {
     marketData.assets.gold.change,
     marketData.assets.silver.change,
     marketData.assets.pltr.change,
-    marketData.assets.avgo.change
-  ];
+    marketData.assets.avgo.change,
+  ]
 
-  const avgChange = changes.reduce((a, b) => a + b, 0) / changes.length;
-  const volatility = Math.sqrt(
-    changes.reduce((sum, c) => sum + Math.pow(c - avgChange, 2), 0) / changes.length
-  );
+  const avgChange = changes.reduce((a, b) => a + b, 0) / changes.length
+  const volatility = Math.sqrt(changes.reduce((sum, c) => sum + (c - avgChange) ** 2, 0) / changes.length)
 
   // Factors (0-100)
-  const momentum = Math.min(100, Math.max(0, 50 + avgChange * 10));
-  const volatilityScore = Math.min(100, Math.max(0, 100 - volatility * 20));
-  const volume = 50 + Math.random() * 20; // Simulated
-  const socialSentiment = 50 + avgChange * 5 + Math.random() * 10;
+  const momentum = Math.min(100, Math.max(0, 50 + avgChange * 10))
+  const volatilityScore = Math.min(100, Math.max(0, 100 - volatility * 20))
+  const volume = 50 + Math.random() * 20 // Simulated
+  const socialSentiment = 50 + avgChange * 5 + Math.random() * 10
 
   // Weighted average
-  const value = Math.round(
-    momentum * 0.35 +
-    volatilityScore * 0.25 +
-    volume * 0.20 +
-    socialSentiment * 0.20
-  );
+  const value = Math.round(momentum * 0.35 + volatilityScore * 0.25 + volume * 0.2 + socialSentiment * 0.2)
 
-  let label: FearGreedData['label'];
-  if (value <= 20) label = 'Extreme Fear';
-  else if (value <= 40) label = 'Fear';
-  else if (value <= 60) label = 'Neutral';
-  else if (value <= 80) label = 'Greed';
-  else label = 'Extreme Greed';
+  let label: FearGreedData['label']
+  if (value <= 20) label = 'Extreme Fear'
+  else if (value <= 40) label = 'Fear'
+  else if (value <= 60) label = 'Neutral'
+  else if (value <= 80) label = 'Greed'
+  else label = 'Extreme Greed'
 
   return {
     value,
@@ -44,24 +36,24 @@ export function calculateFearGreed(marketData: any): FearGreedData {
       volatility: Math.round(volatilityScore),
       momentum: Math.round(momentum),
       volume: Math.round(volume),
-      socialSentiment: Math.round(socialSentiment)
+      socialSentiment: Math.round(socialSentiment),
     },
-    history: [] // Would be populated from cache
-  };
+    history: [], // Would be populated from cache
+  }
 }
 
 // WHALE TRACKER
 
 export function generateWhaleAlerts(marketData: any): WhaleAlert[] {
-  const alerts: WhaleAlert[] = [];
-  const now = Date.now();
+  const alerts: WhaleAlert[] = []
+  const now = Date.now()
 
   // Generate simulated whale activity based on price movements
   for (const [asset, data] of Object.entries(marketData.assets) as [string, any][]) {
     if (Math.abs(data.change) > 2) {
       // Big move = whale activity
-      const isBuy = data.change > 0;
-      const amount = Math.floor(Math.random() * 1000000) + 100000;
+      const isBuy = data.change > 0
+      const amount = Math.floor(Math.random() * 1000000) + 100000
 
       alerts.push({
         id: `whale_${now}_${asset}`,
@@ -70,78 +62,79 @@ export function generateWhaleAlerts(marketData: any): WhaleAlert[] {
         amount,
         usdValue: amount * (asset === 'btc' ? data.price / 100000 : data.price / 100),
         timestamp: now - Math.floor(Math.random() * 3600000), // Within last hour
-      });
+      })
     }
   }
 
-  return alerts.sort((a, b) => b.timestamp - a.timestamp);
+  return alerts.sort((a, b) => b.timestamp - a.timestamp)
 }
 
 // AI MARKET ANALYST
 
 export function generateMarketAnalysis(marketData: any, fearGreed: FearGreedData): MarketAnalysis {
-  const assets = marketData.assets;
-  const nwg = marketData.nwg;
+  const assets = marketData.assets
+  const nwg = marketData.nwg
 
   // Find top mover
-  let topMover = { asset: 'BTC', change: 0, reason: '' };
+  let topMover = { asset: 'BTC', change: 0, reason: '' }
   for (const [asset, data] of Object.entries(assets) as [string, any][]) {
     if (Math.abs(data.change) > Math.abs(topMover.change)) {
       topMover = {
         asset: asset.toUpperCase(),
         change: data.change,
-        reason: data.change > 0
-          ? `Strong buying pressure in ${asset.toUpperCase()}`
-          : `Selling pressure in ${asset.toUpperCase()}`
-      };
+        reason:
+          data.change > 0
+            ? `Strong buying pressure in ${asset.toUpperCase()}`
+            : `Selling pressure in ${asset.toUpperCase()}`,
+      }
     }
   }
 
   // Determine overall sentiment
-  const avgChange = nwg.change24h;
-  let sentiment: 'bullish' | 'bearish' | 'neutral';
-  if (avgChange > 1.5) sentiment = 'bullish';
-  else if (avgChange < -1.5) sentiment = 'bearish';
-  else sentiment = 'neutral';
+  const avgChange = nwg.change24h
+  let sentiment: 'bullish' | 'bearish' | 'neutral'
+  if (avgChange > 1.5) sentiment = 'bullish'
+  else if (avgChange < -1.5) sentiment = 'bearish'
+  else sentiment = 'neutral'
 
   // Generate key factors
-  const keyFactors: string[] = [];
+  const keyFactors: string[] = []
 
-  if (assets.btc.change > 2) keyFactors.push('🚀 Bitcoin leading the charge');
-  if (assets.btc.change < -2) keyFactors.push('📉 Bitcoin weakness dragging market');
-  if (assets.gold.change > 1) keyFactors.push('🥇 Gold showing safe-haven demand');
-  if (assets.pltr.change > 3) keyFactors.push('🤖 AI stocks (PLTR) surging');
-  if (assets.avgo.change > 2) keyFactors.push('💾 Semiconductor strength (AVGO)');
-  if (fearGreed.value < 30) keyFactors.push('😱 Fear in the market - potential opportunity');
-  if (fearGreed.value > 70) keyFactors.push('🎉 Greed rising - consider taking profits');
+  if (assets.btc.change > 2) keyFactors.push('🚀 Bitcoin leading the charge')
+  if (assets.btc.change < -2) keyFactors.push('📉 Bitcoin weakness dragging market')
+  if (assets.gold.change > 1) keyFactors.push('🥇 Gold showing safe-haven demand')
+  if (assets.pltr.change > 3) keyFactors.push('🤖 AI stocks (PLTR) surging')
+  if (assets.avgo.change > 2) keyFactors.push('💾 Semiconductor strength (AVGO)')
+  if (fearGreed.value < 30) keyFactors.push('😱 Fear in the market - potential opportunity')
+  if (fearGreed.value > 70) keyFactors.push('🎉 Greed rising - consider taking profits')
 
   if (keyFactors.length === 0) {
-    keyFactors.push('📊 Markets consolidating');
+    keyFactors.push('📊 Markets consolidating')
   }
 
   // Generate recommendation
-  let recommendation: string;
-  let confidence: number;
+  let recommendation: string
+  let confidence: number
 
   if (sentiment === 'bullish' && fearGreed.value < 70) {
-    recommendation = 'Consider adding to positions. Momentum is positive without excessive greed.';
-    confidence = 75;
+    recommendation = 'Consider adding to positions. Momentum is positive without excessive greed.'
+    confidence = 75
   } else if (sentiment === 'bearish' && fearGreed.value < 30) {
-    recommendation = 'Potential buying opportunity. Fear is elevated but fundamentals remain strong.';
-    confidence = 65;
+    recommendation = 'Potential buying opportunity. Fear is elevated but fundamentals remain strong.'
+    confidence = 65
   } else if (sentiment === 'bullish' && fearGreed.value > 70) {
-    recommendation = 'Caution advised. Markets are greedy - consider taking some profits.';
-    confidence = 60;
+    recommendation = 'Caution advised. Markets are greedy - consider taking some profits.'
+    confidence = 60
   } else if (sentiment === 'bearish' && fearGreed.value > 50) {
-    recommendation = 'Hold current positions. Wait for clearer signals before acting.';
-    confidence = 55;
+    recommendation = 'Hold current positions. Wait for clearer signals before acting.'
+    confidence = 55
   } else {
-    recommendation = 'Market is neutral. DCA (Dollar Cost Average) approach recommended.';
-    confidence = 70;
+    recommendation = 'Market is neutral. DCA (Dollar Cost Average) approach recommended.'
+    confidence = 70
   }
 
   // Generate summary
-  const summary = `NWG is ${sentiment === 'bullish' ? 'up' : sentiment === 'bearish' ? 'down' : 'flat'} ${Math.abs(nwg.change24h).toFixed(2)}% in the last 24 hours. ${topMover.asset} is the top mover at ${topMover.change > 0 ? '+' : ''}${topMover.change.toFixed(2)}%. The Fear & Greed Index shows "${fearGreed.label}" at ${fearGreed.value}/100.`;
+  const summary = `NWG is ${sentiment === 'bullish' ? 'up' : sentiment === 'bearish' ? 'down' : 'flat'} ${Math.abs(nwg.change24h).toFixed(2)}% in the last 24 hours. ${topMover.asset} is the top mover at ${topMover.change > 0 ? '+' : ''}${topMover.change.toFixed(2)}%. The Fear & Greed Index shows "${fearGreed.label}" at ${fearGreed.value}/100.`
 
   return {
     summary,
@@ -149,23 +142,23 @@ export function generateMarketAnalysis(marketData: any, fearGreed: FearGreedData
     keyFactors,
     topMover,
     recommendation,
-    confidence
-  };
+    confidence,
+  }
 }
 
 // PORTFOLIO CARD GENERATOR
 
 export interface PortfolioCard {
-  id: string;
-  odenom: string;
-  balance: number;
-  value: number;
-  rank: string;
-  rarity: 'bronze' | 'silver' | 'gold' | 'platinum' | 'diamond';
-  mood: 'bear' | 'neutral' | 'bull' | 'moon';
-  achievements: string[];
-  generatedAt: number;
-  shareUrl: string;
+  id: string
+  odenom: string
+  balance: number
+  value: number
+  rank: string
+  rarity: 'bronze' | 'silver' | 'gold' | 'platinum' | 'diamond'
+  mood: 'bear' | 'neutral' | 'bull' | 'moon'
+  achievements: string[]
+  generatedAt: number
+  shareUrl: string
 }
 
 export function generatePortfolioCard(
@@ -173,26 +166,37 @@ export function generatePortfolioCard(
   balance: number,
   nwgPrice: number,
   change24h: number,
-  achievements: string[]
+  achievements: string[],
 ): PortfolioCard {
-  const value = balance * nwgPrice;
+  const value = balance * nwgPrice
 
   // Determine rarity based on value
-  let rarity: PortfolioCard['rarity'];
-  let rank: string;
+  let rarity: PortfolioCard['rarity']
+  let rank: string
 
-  if (value >= 100000) { rarity = 'diamond'; rank = 'Diamond Holder'; }
-  else if (value >= 10000) { rarity = 'platinum'; rank = 'Platinum Holder'; }
-  else if (value >= 1000) { rarity = 'gold'; rank = 'Gold Holder'; }
-  else if (value >= 100) { rarity = 'silver'; rank = 'Silver Holder'; }
-  else { rarity = 'bronze'; rank = 'Bronze Holder'; }
+  if (value >= 100000) {
+    rarity = 'diamond'
+    rank = 'Diamond Holder'
+  } else if (value >= 10000) {
+    rarity = 'platinum'
+    rank = 'Platinum Holder'
+  } else if (value >= 1000) {
+    rarity = 'gold'
+    rank = 'Gold Holder'
+  } else if (value >= 100) {
+    rarity = 'silver'
+    rank = 'Silver Holder'
+  } else {
+    rarity = 'bronze'
+    rank = 'Bronze Holder'
+  }
 
   // Determine mood based on 24h change
-  let mood: PortfolioCard['mood'];
-  if (change24h > 5) mood = 'moon';
-  else if (change24h > 1) mood = 'bull';
-  else if (change24h < -1) mood = 'bear';
-  else mood = 'neutral';
+  let mood: PortfolioCard['mood']
+  if (change24h > 5) mood = 'moon'
+  else if (change24h > 1) mood = 'bull'
+  else if (change24h < -1) mood = 'bear'
+  else mood = 'neutral'
 
   const card: PortfolioCard = {
     id: `card_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
@@ -204,10 +208,10 @@ export function generatePortfolioCard(
     mood,
     achievements: achievements.slice(0, 5),
     generatedAt: Date.now(),
-    shareUrl: '' // Would be generated
-  };
+    shareUrl: '', // Would be generated
+  }
 
-  return card;
+  return card
 }
 
 // AI CHATBOT - Interactive Market Analyst
@@ -283,156 +287,174 @@ const MARKET_INSIGHTS = {
       'Tech rotation hitting chip stocks.',
     ],
   },
-};
+}
 
 const FUN_FACTS = [
   '💡 NWG combines 5 of the hottest assets of 2025 in one token!',
   '🏆 The NWG formula was designed for maximum diversification.',
   '🌍 Silver is used in every smartphone, EV, and solar panel.',
   '🏦 Central banks bought more gold in 2025 than any year since 1967.',
-  '🤖 Palantir\'s AI platform is used by 50+ government agencies.',
+  "🤖 Palantir's AI platform is used by 50+ government agencies.",
   '💾 Broadcom chips power the AI revolution behind the scenes.',
-  '₿ Bitcoin is now a $2 trillion asset class - bigger than most countries\' GDP.',
+  "₿ Bitcoin is now a $2 trillion asset class - bigger than most countries' GDP.",
   '🪙 NWG has a fixed supply of 1 billion - deflationary by design.',
   '📈 The NWG portfolio returned 85%+ in 2025 backtesting.',
   '🎯 $1 = 100 NWG - simple, transparent, no-brainer.',
-];
+]
 
 export interface ChatResponse {
-  message: string;
-  sentiment: 'bullish' | 'bearish' | 'neutral';
-  emoji: string;
-  funFact?: string;
+  message: string
+  sentiment: 'bullish' | 'bearish' | 'neutral'
+  emoji: string
+  funFact?: string
 }
 
 export function chatWithAnalyst(question: string, marketData: any, fearGreed: FearGreedData): ChatResponse {
-  const questionLower = question.toLowerCase();
-  const assets = marketData.assets;
-  const nwg = marketData.nwg;
+  const questionLower = question.toLowerCase()
+  const assets = marketData.assets
+  const nwg = marketData.nwg
 
   // Determine overall sentiment
-  const avgChange = nwg.change24h;
-  const sentiment = avgChange > 1 ? 'bullish' : avgChange < -1 ? 'bearish' : 'neutral';
-  const emoji = sentiment === 'bullish' ? '🚀🔥' : sentiment === 'bearish' ? '🐻📉' : '😐📊';
+  const avgChange = nwg.change24h
+  const sentiment = avgChange > 1 ? 'bullish' : avgChange < -1 ? 'bearish' : 'neutral'
+  const emoji = sentiment === 'bullish' ? '🚀🔥' : sentiment === 'bearish' ? '🐻📉' : '😐📊'
 
-  let message = '';
+  let message = ''
 
   // Pattern matching for common questions
-  if (questionLower.includes('why') && (questionLower.includes('up') || questionLower.includes('down') || questionLower.includes('move'))) {
+  if (
+    questionLower.includes('why') &&
+    (questionLower.includes('up') || questionLower.includes('down') || questionLower.includes('move'))
+  ) {
     // Find top mover
-    let topMover = { asset: 'BTC', change: 0 };
+    let topMover = { asset: 'BTC', change: 0 }
     for (const [asset, data] of Object.entries(assets) as [string, any][]) {
       if (Math.abs(data.change) > Math.abs(topMover.change)) {
-        topMover = { asset: asset.toUpperCase(), change: data.change };
+        topMover = { asset: asset.toUpperCase(), change: data.change }
       }
     }
 
-    const assetKey = topMover.asset.toLowerCase() as keyof typeof MARKET_INSIGHTS;
-    const insights = MARKET_INSIGHTS[assetKey] || MARKET_INSIGHTS.btc;
-    const insight = topMover.change > 0
-      ? insights.up[Math.floor(Math.random() * insights.up.length)]
-      : insights.down[Math.floor(Math.random() * insights.down.length)];
+    const assetKey = topMover.asset.toLowerCase() as keyof typeof MARKET_INSIGHTS
+    const insights = MARKET_INSIGHTS[assetKey] || MARKET_INSIGHTS.btc
+    const insight =
+      topMover.change > 0
+        ? insights.up[Math.floor(Math.random() * insights.up.length)]
+        : insights.down[Math.floor(Math.random() * insights.down.length)]
 
-    message = `Great question! NWG is ${avgChange > 0 ? 'up' : 'down'} ${Math.abs(avgChange).toFixed(2)}% today.\n\n` +
+    message =
+      `Great question! NWG is ${avgChange > 0 ? 'up' : 'down'} ${Math.abs(avgChange).toFixed(2)}% today.\n\n` +
       `📈 Top performer: ${topMover.asset} (${topMover.change > 0 ? '+' : ''}${topMover.change.toFixed(2)}%)\n` +
-      `${insight}`;
-  }
-  else if (questionLower.includes('buy') || questionLower.includes('sell') || questionLower.includes('should i')) {
-    const analysis = generateMarketAnalysis(marketData, fearGreed);
-    message = `I can't give financial advice, but here's the data:\n\n` +
+      `${insight}`
+  } else if (questionLower.includes('buy') || questionLower.includes('sell') || questionLower.includes('should i')) {
+    const analysis = generateMarketAnalysis(marketData, fearGreed)
+    message =
+      `I can't give financial advice, but here's the data:\n\n` +
       `📊 NWG Price: $${nwg.price.toFixed(6)}\n` +
       `📈 24h Change: ${nwg.change24h > 0 ? '+' : ''}${nwg.change24h.toFixed(2)}%\n` +
       `😱 Fear & Greed: ${fearGreed.value}/100 (${fearGreed.label})\n\n` +
       `💡 ${analysis.recommendation}\n\n` +
-      `Remember: DYOR and never invest more than you can afford to lose! 🎯`;
-  }
-  else if (questionLower.includes('price') || questionLower.includes('worth') || questionLower.includes('value')) {
-    message = `📊 Current NWG Portfolio:\n\n` +
+      `Remember: DYOR and never invest more than you can afford to lose! 🎯`
+  } else if (questionLower.includes('price') || questionLower.includes('worth') || questionLower.includes('value')) {
+    message =
+      `📊 Current NWG Portfolio:\n\n` +
       `💰 NWG Price: $${nwg.price.toFixed(6)}\n` +
       `📈 24h Change: ${nwg.change24h > 0 ? '+' : ''}${nwg.change24h.toFixed(2)}%\n` +
       `🏦 Market Cap: $${(nwg.marketCap / 1000000).toFixed(2)}M\n\n` +
       `Asset Breakdown:\n` +
-      Object.entries(assets).map(([name, info]: [string, any]) =>
-        `• ${name.toUpperCase()}: $${info.price.toLocaleString()} (${info.change > 0 ? '+' : ''}${info.change.toFixed(2)}%)`
-      ).join('\n');
-  }
-  else if (questionLower.includes('btc') || questionLower.includes('bitcoin')) {
-    const btc = assets.btc;
-    const insights = btc.change > 0 ? MARKET_INSIGHTS.btc.up : MARKET_INSIGHTS.btc.down;
-    message = `₿ Bitcoin Analysis:\n\n` +
+      Object.entries(assets)
+        .map(
+          ([name, info]: [string, any]) =>
+            `• ${name.toUpperCase()}: $${info.price.toLocaleString()} (${info.change > 0 ? '+' : ''}${info.change.toFixed(2)}%)`,
+        )
+        .join('\n')
+  } else if (questionLower.includes('btc') || questionLower.includes('bitcoin')) {
+    const btc = assets.btc
+    const insights = btc.change > 0 ? MARKET_INSIGHTS.btc.up : MARKET_INSIGHTS.btc.down
+    message =
+      `₿ Bitcoin Analysis:\n\n` +
       `Price: $${btc.price.toLocaleString()}\n` +
       `24h Change: ${btc.change > 0 ? '+' : ''}${btc.change.toFixed(2)}%\n` +
       `24h Range: $${btc.low24h.toLocaleString()} - $${btc.high24h.toLocaleString()}\n\n` +
       `${insights[Math.floor(Math.random() * insights.length)]}\n\n` +
-      `BTC makes up 20% of NWG - the digital gold component! 🪙`;
-  }
-  else if (questionLower.includes('gold') || questionLower.includes('silver') || questionLower.includes('metal')) {
-    const gold = assets.gold;
-    const silver = assets.silver;
-    message = `🥇 Precious Metals Analysis:\n\n` +
+      `BTC makes up 20% of NWG - the digital gold component! 🪙`
+  } else if (questionLower.includes('gold') || questionLower.includes('silver') || questionLower.includes('metal')) {
+    const gold = assets.gold
+    const silver = assets.silver
+    message =
+      `🥇 Precious Metals Analysis:\n\n` +
       `Gold: $${gold.price.toLocaleString()}/oz (${gold.change > 0 ? '+' : ''}${gold.change.toFixed(2)}%)\n` +
       `Silver: $${silver.price.toFixed(2)}/oz (${silver.change > 0 ? '+' : ''}${silver.change.toFixed(2)}%)\n\n` +
       `Gold/Silver Ratio: ${(gold.price / silver.price).toFixed(1)}:1\n\n` +
       `Combined weight in NWG: 45% (25% Silver + 20% Gold)\n` +
-      `These are your inflation hedges and safe-haven assets! 🛡️`;
-  }
-  else if (questionLower.includes('pltr') || questionLower.includes('palantir') || questionLower.includes('avgo') || questionLower.includes('broadcom') || questionLower.includes('tech') || questionLower.includes('ai')) {
-    const pltr = assets.pltr;
-    const avgo = assets.avgo;
-    message = `🤖 AI/Tech Holdings:\n\n` +
+      `These are your inflation hedges and safe-haven assets! 🛡️`
+  } else if (
+    questionLower.includes('pltr') ||
+    questionLower.includes('palantir') ||
+    questionLower.includes('avgo') ||
+    questionLower.includes('broadcom') ||
+    questionLower.includes('tech') ||
+    questionLower.includes('ai')
+  ) {
+    const pltr = assets.pltr
+    const avgo = assets.avgo
+    message =
+      `🤖 AI/Tech Holdings:\n\n` +
       `Palantir (PLTR): $${pltr.price.toFixed(2)} (${pltr.change > 0 ? '+' : ''}${pltr.change.toFixed(2)}%)\n` +
       `Broadcom (AVGO): $${avgo.price.toFixed(2)} (${avgo.change > 0 ? '+' : ''}${avgo.change.toFixed(2)}%)\n\n` +
       `Combined weight in NWG: 35%\n\n` +
       `These are your AI revolution plays! 🚀\n` +
-      `PLTR = AI software | AVGO = AI hardware`;
-  }
-  else if (questionLower.includes('predict') || questionLower.includes('future') || questionLower.includes('moon') || questionLower.includes('when')) {
-    message = `🔮 Prediction time? Let's be real:\n\n` +
+      `PLTR = AI software | AVGO = AI hardware`
+  } else if (
+    questionLower.includes('predict') ||
+    questionLower.includes('future') ||
+    questionLower.includes('moon') ||
+    questionLower.includes('when')
+  ) {
+    message =
+      `🔮 Prediction time? Let's be real:\n\n` +
       `Nobody can predict the future with certainty!\n\n` +
       `But here's what we know:\n` +
       `• NWG is backed by 5 explosive growth assets\n` +
       `• Silver & Gold: Inflation hedges ✓\n` +
       `• BTC: Digital gold ✓\n` +
       `• PLTR & AVGO: AI revolution ✓\n\n` +
-      `Want to test your prediction skills? Try our Price Prediction Game! 🎰`;
-  }
-  else if (questionLower.includes('fear') || questionLower.includes('greed') || questionLower.includes('sentiment')) {
-    message = `😱 Fear & Greed Index: ${fearGreed.value}/100\n\n` +
+      `Want to test your prediction skills? Try our Price Prediction Game! 🎰`
+  } else if (questionLower.includes('fear') || questionLower.includes('greed') || questionLower.includes('sentiment')) {
+    message =
+      `😱 Fear & Greed Index: ${fearGreed.value}/100\n\n` +
       `Current Sentiment: ${fearGreed.label} ${fearGreed.value < 40 ? '😰' : fearGreed.value > 60 ? '🤑' : '😐'}\n\n` +
       `Factors:\n` +
       `• Momentum: ${fearGreed.factors.momentum}/100\n` +
       `• Volatility: ${fearGreed.factors.volatility}/100\n` +
       `• Volume: ${fearGreed.factors.volume}/100\n` +
       `• Social: ${fearGreed.factors.socialSentiment}/100\n\n` +
-      `${fearGreed.value < 30 ? '💡 Low fear = potential buying opportunity!' : fearGreed.value > 70 ? '⚠️ High greed = be cautious!' : '📊 Balanced market conditions.'}`;
-  }
-  else if (questionLower.includes('hello') || questionLower.includes('hi') || questionLower.includes('hey')) {
-    message = `Hey there! 👋 I'm your NWG AI Analyst!\n\n` +
+      `${fearGreed.value < 30 ? '💡 Low fear = potential buying opportunity!' : fearGreed.value > 70 ? '⚠️ High greed = be cautious!' : '📊 Balanced market conditions.'}`
+  } else if (questionLower.includes('hello') || questionLower.includes('hi') || questionLower.includes('hey')) {
+    message =
+      `Hey there! 👋 I'm your NWG AI Analyst!\n\n` +
       `I can help you understand:\n` +
       `• Why prices are moving 📈📉\n` +
       `• Individual asset analysis (BTC, Gold, PLTR...)\n` +
       `• Fear & Greed sentiment 😱🤑\n` +
       `• Current NWG portfolio value 💰\n\n` +
-      `Just ask me anything about the markets!`;
-  }
-  else {
+      `Just ask me anything about the markets!`
+  } else {
     // Default response with overview
-    const analysis = generateMarketAnalysis(marketData, fearGreed);
-    message = `${emoji} Here's your market briefing:\n\n` +
+    const analysis = generateMarketAnalysis(marketData, fearGreed)
+    message =
+      `${emoji} Here's your market briefing:\n\n` +
       `${analysis.summary}\n\n` +
       `💡 ${analysis.recommendation}\n\n` +
-      `Ask me about specific assets (BTC, Gold, PLTR) or "Why is NWG up/down?" 💬`;
+      `Ask me about specific assets (BTC, Gold, PLTR) or "Why is NWG up/down?" 💬`
   }
 
   // Add fun fact sometimes
-  const funFact = Math.random() > 0.7
-    ? FUN_FACTS[Math.floor(Math.random() * FUN_FACTS.length)]
-    : undefined;
+  const funFact = Math.random() > 0.7 ? FUN_FACTS[Math.floor(Math.random() * FUN_FACTS.length)] : undefined
 
   return {
     message,
     sentiment,
     emoji,
-    funFact
-  };
+    funFact,
+  }
 }

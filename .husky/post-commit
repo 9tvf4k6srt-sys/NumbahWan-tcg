@@ -82,4 +82,17 @@ case "$COMMIT_MSG" in
     echo "  [mycelium] Fix detected — run: node mycelium.cjs --learned area lesson" >&2
     ;;
 esac
+
+# ─── STEP 10: EVENT BUS (process cross-system events into learnings) ───
+if [ -f "tools/event-bus.cjs" ]; then
+  node "tools/event-bus.cjs" process 2>/dev/null || true
+fi
+
+# ─── STEP 11: MEMORY TRIM (prevent unbounded growth) ───
+# Only trim if memory.json > 200KB
+MEM_SIZE=$(wc -c < .mycelium/memory.json 2>/dev/null || echo 0)
+if [ "$MEM_SIZE" -gt 204800 ] && [ -f "tools/memory-trimmer.cjs" ]; then
+  node "tools/memory-trimmer.cjs" 2>/dev/null || true
+fi
+
 exit 0

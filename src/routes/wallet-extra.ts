@@ -1,17 +1,15 @@
-import type { Bindings } from '../types'
 import { Hono } from 'hono'
+import type { Bindings } from '../types'
 
 function generateTxHash(): string {
-  return 'TX-' + Date.now().toString(36).toUpperCase() + '-' +
-    Math.random().toString(36).substring(2, 8).toUpperCase();
+  return `TX-${Date.now().toString(36).toUpperCase()}-${Math.random().toString(36).substring(2, 8).toUpperCase()}`
 }
-
 
 const router = new Hono<{ Bindings: Bindings }>()
 
 router.get('/api/treasury', async (c) => {
   try {
-    const db = c.env?.GUILD_DB;
+    const db = c.env?.GUILD_DB
 
     if (!db) {
       // Fallback mock data for local dev
@@ -24,15 +22,15 @@ router.get('/api/treasury', async (c) => {
           reserveNWG: 500000000,
           rewardsPoolNWG: 299995000,
           totalCitizens: 50,
-          totalTransactions: 500
-        }
-      });
+          totalTransactions: 500,
+        },
+      })
     }
 
-    const treasury = await db.prepare('SELECT * FROM treasury WHERE id = 1').first() as Record<string, any> | null;
+    const treasury = (await db.prepare('SELECT * FROM treasury WHERE id = 1').first()) as Record<string, any> | null
 
     if (!treasury) {
-      return c.json({ success: false, error: 'Treasury not found' }, 404);
+      return c.json({ success: false, error: 'Treasury not found' }, 404)
     }
 
     return c.json({
@@ -50,68 +48,81 @@ router.get('/api/treasury', async (c) => {
         totalTransactions: treasury.total_transactions,
         totalVolumeNWG: treasury.total_volume_nwg,
         totalVolumeNWX: treasury.total_volume_nwx,
-        lastUpdated: treasury.updated_at
-      }
-    });
+        lastUpdated: treasury.updated_at,
+      },
+    })
   } catch (e) {
-    return c.json({ success: false, error: String(e) }, 500);
+    return c.json({ success: false, error: String(e) }, 500)
   }
-});
+})
 
 // POST /api/wallet/daily-reward - Claim daily login reward
 router.post('/daily-reward', async (c) => {
   try {
-    const db = c.env?.GUILD_DB;
-    const body = await c.req.json();
-    const { deviceUUID } = body;
+    const db = c.env?.GUILD_DB
+    const body = await c.req.json()
+    const { deviceUUID } = body
 
     if (!db) {
-      return c.json({ success: true, message: 'Local dev mode', reward: { nwg: 10, nwx: 50 } });
+      return c.json({ success: true, message: 'Local dev mode', reward: { nwg: 10, nwx: 50 } })
     }
 
     // Get citizen
-    const citizen = await db.prepare(
-      'SELECT c.id, w.id as wallet_id, w.balance_nwg, w.balance_nwx FROM citizens c JOIN wallets w ON c.id = w.citizen_id WHERE c.device_uuid = ?'
-    ).bind(deviceUUID).first() as Record<string, any> | null;
+    const citizen = (await db
+      .prepare(
+        'SELECT c.id, w.id as wallet_id, w.balance_nwg, w.balance_nwx FROM citizens c JOIN wallets w ON c.id = w.citizen_id WHERE c.device_uuid = ?',
+      )
+      .bind(deviceUUID)
+      .first()) as Record<string, any> | null
 
     if (!citizen) {
-      return c.json({ success: false, error: 'Citizen not found' }, 404);
+      return c.json({ success: false, error: 'Citizen not found' }, 404)
     }
 
-    const today = new Date().toISOString().split('T')[0];
+    const today = new Date().toISOString().split('T')[0]
 
     // Check if already claimed today
-    const existing = await db.prepare(
-      'SELECT * FROM daily_rewards WHERE citizen_id = ? AND reward_date = ?'
-    ).bind(citizen.id, today).first();
+    const existing = await db
+      .prepare('SELECT * FROM daily_rewards WHERE citizen_id = ? AND reward_date = ?')
+      .bind(citizen.id, today)
+      .first()
 
     if (existing) {
-      return c.json({ success: false, error: 'Already claimed today', nextClaimAt: new Date(Date.now() + 86400000).toISOString() });
+      return c.json({
+        success: false,
+        error: 'Already claimed today',
+        nextClaimAt: new Date(Date.now() + 86400000).toISOString(),
+      })
     }
 
     // Get streak
-    const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0];
-    const yesterdayReward = await db.prepare(
-      'SELECT streak_day FROM daily_rewards WHERE citizen_id = ? AND reward_date = ?'
-    ).bind(citizen.id, yesterday).first() as Record<string, any> | null;
+    const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0]
+    const yesterdayReward = (await db
+      .prepare('SELECT streak_day FROM daily_rewards WHERE citizen_id = ? AND reward_date = ?')
+      .bind(citizen.id, yesterday)
+      .first()) as Record<string, any> | null
 
-    const streakDay = yesterdayReward ? (Number(yesterdayReward.streak_day) + 1) : 1;
+    const streakDay = yesterdayReward ? Number(yesterdayReward.streak_day) + 1 : 1
 
     // Calculate rewards (increases with streak, caps at day 7)
-    const baseNWG = 10;
-    const baseNWX = 50;
-    const multiplier = Math.min(streakDay, 7);
-    const rewardNWG = baseNWG * multiplier;
-    const rewardNWX = baseNWX * multiplier;
+    const baseNWG = 10
+    const baseNWX = 50
+    const multiplier = Math.min(streakDay, 7)
+    const rewardNWG = baseNWG * multiplier
+    const rewardNWX = baseNWX * multiplier
 
     // Record daily reward
-    await db.prepare(`
+    await db
+      .prepare(`
       INSERT INTO daily_rewards (citizen_id, reward_date, streak_day, reward_nwg, reward_nwx)
       VALUES (?, ?, ?, ?, ?)
-    `).bind(citizen.id, today, streakDay, rewardNWG, rewardNWX).run();
+    `)
+      .bind(citizen.id, today, streakDay, rewardNWG, rewardNWX)
+      .run()
 
     // Update wallet
-    await db.prepare(`
+    await db
+      .prepare(`
       UPDATE wallets SET
         balance_nwg = balance_nwg + ?,
         balance_nwx = balance_nwx + ?,
@@ -119,60 +130,73 @@ router.post('/daily-reward', async (c) => {
         total_earned_nwx = total_earned_nwx + ?,
         updated_at = CURRENT_TIMESTAMP
       WHERE id = ?
-    `).bind(rewardNWG, rewardNWX, rewardNWG, rewardNWX, citizen.wallet_id).run();
+    `)
+      .bind(rewardNWG, rewardNWX, rewardNWG, rewardNWX, citizen.wallet_id)
+      .run()
 
     // Record transaction
-    await db.prepare(`
+    await db
+      .prepare(`
       INSERT INTO transactions (tx_hash, wallet_id, citizen_id, tx_type, currency, amount, balance_before, balance_after, description, source, device_uuid)
       VALUES (?, ?, ?, 'DAILY_LOGIN', 'NWG', ?, ?, ?, ?, 'SYSTEM', ?)
-    `).bind(
-      generateTxHash(), citizen.wallet_id, citizen.id, rewardNWG,
-      citizen.balance_nwg, citizen.balance_nwg + rewardNWG,
-      `Day ${streakDay} login bonus`, deviceUUID
-    ).run();
+    `)
+      .bind(
+        generateTxHash(),
+        citizen.wallet_id,
+        citizen.id,
+        rewardNWG,
+        citizen.balance_nwg,
+        citizen.balance_nwg + rewardNWG,
+        `Day ${streakDay} login bonus`,
+        deviceUUID,
+      )
+      .run()
 
     return c.json({
       success: true,
       reward: {
         nwg: rewardNWG,
-        nwx: rewardNWX
+        nwx: rewardNWX,
       },
       streak: {
         day: streakDay,
-        multiplier
+        multiplier,
       },
       newBalance: {
         nwg: citizen.balance_nwg + rewardNWG,
-        nwx: citizen.balance_nwx + rewardNWX
-      }
-    });
+        nwx: citizen.balance_nwx + rewardNWX,
+      },
+    })
   } catch (e) {
-    console.error('Daily reward error:', e);
-    return c.json({ success: false, error: String(e) }, 500);
+    console.error('Daily reward error:', e)
+    return c.json({ success: false, error: String(e) }, 500)
   }
-});
+})
 
 // POST /api/wallet/sync - Sync client wallet with server
 router.post('/sync', async (c) => {
   try {
-    const db = c.env?.GUILD_DB;
-    const body = await c.req.json();
-    const { deviceUUID, clientWallet, clientVersion } = body;
+    const db = c.env?.GUILD_DB
+    const body = await c.req.json()
+    const { deviceUUID, clientWallet: _clientWallet, clientVersion: _clientVersion } = body
 
     if (!db) {
-      return c.json({ success: true, message: 'Local dev mode', action: 'use_client' });
+      return c.json({ success: true, message: 'Local dev mode', action: 'use_client' })
     }
 
     // Get server wallet
-    const result = await db.prepare(`
+    const result = await db
+      .prepare(`
       SELECT w.*, c.trust_score, c.visit_count FROM wallets w
       JOIN citizens c ON w.citizen_id = c.id
       WHERE c.device_uuid = ?
-    `).bind(deviceUUID).first();
+    `)
+      .bind(deviceUUID)
+      .first()
 
     if (!result) {
       // No server wallet - client should register
-      return c.json({ success: true, action: 'register', message: 'No server wallet found' });
+      return c.json({ success: true, action: 'register', message: 'No server wallet found' })
     }
 
     // Server is authoritative - return server state
@@ -189,15 +213,13 @@ router.post('/sync', async (c) => {
         balance_stone: result.balance_stone,
         balance_wood: result.balance_wood,
         lastSync: result.last_sync,
-        version: result.version
+        version: result.version,
       },
       trustScore: result.trust_score,
-      visitCount: result.visit_count
-    });
+      visitCount: result.visit_count,
+    })
   } catch (e) {
-    return c.json({ success: false, error: String(e) }, 500);
+    return c.json({ success: false, error: String(e) }, 500)
   }
-});
+})
 export default router
-
-

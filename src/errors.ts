@@ -101,7 +101,10 @@ export class ServiceUnavailableError extends AppError {
  * Convert any caught error into a structured JSON response object.
  * Safe for returning directly from Hono route handlers.
  */
-export function toErrorResponse(err: unknown): { body: { success: false; error: string; code: string }; status: number } {
+export function toErrorResponse(err: unknown): {
+  body: { success: false; error: string; code: string }
+  status: number
+} {
   if (err instanceof AppError) {
     return {
       body: { success: false, error: err.message, code: err.code },

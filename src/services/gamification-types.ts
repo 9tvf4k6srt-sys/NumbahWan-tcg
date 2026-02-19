@@ -1,6 +1,6 @@
 /**
  * NWG Gamification System
- * 
+ *
  * Features:
  * - Price Prediction Game (bet on price direction)
  * - Achievement System with badges
@@ -16,103 +16,103 @@
 // ============================================================================
 
 export interface Prediction {
-  id: string;
-  odenom: string; // wallet address
-  direction: 'up' | 'down';
-  targetPrice?: number;
-  betAmount: number;
-  timeframe: '1h' | '24h' | '7d';
-  startPrice: number;
-  startTime: number;
-  endTime: number;
-  status: 'active' | 'won' | 'lost' | 'expired';
-  payout?: number;
-  actualPrice?: number;
+  id: string
+  odenom: string // wallet address
+  direction: 'up' | 'down'
+  targetPrice?: number
+  betAmount: number
+  timeframe: '1h' | '24h' | '7d'
+  startPrice: number
+  startTime: number
+  endTime: number
+  status: 'active' | 'won' | 'lost' | 'expired'
+  payout?: number
+  actualPrice?: number
 }
 
 export interface Achievement {
-  id: string;
-  name: string;
-  description: string;
-  icon: string;
-  category: 'trading' | 'holding' | 'social' | 'explorer' | 'whale';
+  id: string
+  name: string
+  description: string
+  icon: string
+  category: 'trading' | 'holding' | 'social' | 'explorer' | 'whale'
   requirement: {
-    type: string;
-    value: number;
-  };
+    type: string
+    value: number
+  }
   reward: {
-    nwg?: number;
-    nwx?: number;
-    badge?: string;
-  };
-  rarity: 'common' | 'rare' | 'epic' | 'legendary' | 'mythic';
+    nwg?: number
+    nwx?: number
+    badge?: string
+  }
+  rarity: 'common' | 'rare' | 'epic' | 'legendary' | 'mythic'
 }
 
 export interface UserAchievement {
-  odenom: string;
-  achievementId: string;
-  unlockedAt: number;
-  progress: number;
+  odenom: string
+  achievementId: string
+  unlockedAt: number
+  progress: number
 }
 
 export interface Quest {
-  id: string;
-  title: string;
-  description: string;
-  type: 'daily' | 'weekly' | 'special';
+  id: string
+  title: string
+  description: string
+  type: 'daily' | 'weekly' | 'special'
   requirement: {
-    action: string;
-    count: number;
-  };
+    action: string
+    count: number
+  }
   reward: {
-    nwg?: number;
-    nwx?: number;
-    xp?: number;
-  };
-  expiresAt: number;
+    nwg?: number
+    nwx?: number
+    xp?: number
+  }
+  expiresAt: number
 }
 
 export interface LeaderboardEntry {
-  odenom: string;
-  displayName: string;
-  score: number;
-  wins: number;
-  totalBets: number;
-  winRate: number;
-  totalProfit: number;
-  rank?: number;
+  odenom: string
+  displayName: string
+  score: number
+  wins: number
+  totalBets: number
+  winRate: number
+  totalProfit: number
+  rank?: number
 }
 
 export interface WhaleAlert {
-  id: string;
-  type: 'buy' | 'sell' | 'transfer';
-  asset: string;
-  amount: number;
-  usdValue: number;
-  timestamp: number;
-  from?: string;
-  to?: string;
+  id: string
+  type: 'buy' | 'sell' | 'transfer'
+  asset: string
+  amount: number
+  usdValue: number
+  timestamp: number
+  from?: string
+  to?: string
 }
 
 export interface FearGreedData {
-  value: number; // 0-100
-  label: 'Extreme Fear' | 'Fear' | 'Neutral' | 'Greed' | 'Extreme Greed';
+  value: number // 0-100
+  label: 'Extreme Fear' | 'Fear' | 'Neutral' | 'Greed' | 'Extreme Greed'
   factors: {
-    volatility: number;
-    momentum: number;
-    volume: number;
-    socialSentiment: number;
-  };
-  history: { timestamp: number; value: number }[];
+    volatility: number
+    momentum: number
+    volume: number
+    socialSentiment: number
+  }
+  history: { timestamp: number; value: number }[]
 }
 
 export interface MarketAnalysis {
-  summary: string;
-  sentiment: 'bullish' | 'bearish' | 'neutral';
-  keyFactors: string[];
-  topMover: { asset: string; change: number; reason: string };
-  recommendation: string;
-  confidence: number;
+  summary: string
+  sentiment: 'bullish' | 'bearish' | 'neutral'
+  keyFactors: string[]
+  topMover: { asset: string; change: number; reason: string }
+  recommendation: string
+  confidence: number
 }
 
 // ============================================================================
@@ -129,7 +129,7 @@ export const GAME_CACHE_KEYS = {
   WHALE_ALERTS: 'game:whales',
   FEAR_GREED: 'game:feargreed',
   PREDICTION_POOL: 'game:pool',
-} as const;
+} as const
 
 // ============================================================================
 // ACHIEVEMENTS DEFINITIONS
@@ -145,7 +145,7 @@ export const ACHIEVEMENTS: Achievement[] = [
     category: 'trading',
     requirement: { type: 'predictions', value: 1 },
     reward: { nwg: 10, badge: 'fortune-teller' },
-    rarity: 'common'
+    rarity: 'common',
   },
   {
     id: 'winning-streak-3',
@@ -155,7 +155,7 @@ export const ACHIEVEMENTS: Achievement[] = [
     category: 'trading',
     requirement: { type: 'win_streak', value: 3 },
     reward: { nwg: 50, badge: 'hot-hand' },
-    rarity: 'rare'
+    rarity: 'rare',
   },
   {
     id: 'winning-streak-10',
@@ -165,7 +165,7 @@ export const ACHIEVEMENTS: Achievement[] = [
     category: 'trading',
     requirement: { type: 'win_streak', value: 10 },
     reward: { nwg: 500, badge: 'oracle' },
-    rarity: 'legendary'
+    rarity: 'legendary',
   },
   {
     id: 'total-wins-50',
@@ -175,9 +175,9 @@ export const ACHIEVEMENTS: Achievement[] = [
     category: 'trading',
     requirement: { type: 'total_wins', value: 50 },
     reward: { nwg: 200, badge: 'market-master' },
-    rarity: 'epic'
+    rarity: 'epic',
   },
-  
+
   // Holding Achievements
   {
     id: 'diamond-hands-7',
@@ -187,7 +187,7 @@ export const ACHIEVEMENTS: Achievement[] = [
     category: 'holding',
     requirement: { type: 'hold_days', value: 7 },
     reward: { nwg: 25, badge: 'paper-never' },
-    rarity: 'common'
+    rarity: 'common',
   },
   {
     id: 'diamond-hands-30',
@@ -197,7 +197,7 @@ export const ACHIEVEMENTS: Achievement[] = [
     category: 'holding',
     requirement: { type: 'hold_days', value: 30 },
     reward: { nwg: 100, badge: 'diamond-hands' },
-    rarity: 'rare'
+    rarity: 'rare',
   },
   {
     id: 'diamond-hands-365',
@@ -207,9 +207,9 @@ export const ACHIEVEMENTS: Achievement[] = [
     category: 'holding',
     requirement: { type: 'hold_days', value: 365 },
     reward: { nwg: 1000, badge: 'true-believer' },
-    rarity: 'mythic'
+    rarity: 'mythic',
   },
-  
+
   // Whale Achievements
   {
     id: 'whale-100',
@@ -219,7 +219,7 @@ export const ACHIEVEMENTS: Achievement[] = [
     category: 'whale',
     requirement: { type: 'balance', value: 100 },
     reward: { badge: 'baby-whale' },
-    rarity: 'common'
+    rarity: 'common',
   },
   {
     id: 'whale-10000',
@@ -229,7 +229,7 @@ export const ACHIEVEMENTS: Achievement[] = [
     category: 'whale',
     requirement: { type: 'balance', value: 10000 },
     reward: { nwg: 100, badge: 'whale' },
-    rarity: 'epic'
+    rarity: 'epic',
   },
   {
     id: 'whale-1000000',
@@ -239,9 +239,9 @@ export const ACHIEVEMENTS: Achievement[] = [
     category: 'whale',
     requirement: { type: 'balance', value: 1000000 },
     reward: { nwg: 10000, badge: 'mega-whale' },
-    rarity: 'mythic'
+    rarity: 'mythic',
   },
-  
+
   // Explorer Achievements
   {
     id: 'early-bird',
@@ -251,7 +251,7 @@ export const ACHIEVEMENTS: Achievement[] = [
     category: 'explorer',
     requirement: { type: 'login_streak', value: 7 },
     reward: { nwg: 50, badge: 'early-bird' },
-    rarity: 'rare'
+    rarity: 'rare',
   },
   {
     id: 'night-owl',
@@ -261,7 +261,7 @@ export const ACHIEVEMENTS: Achievement[] = [
     category: 'explorer',
     requirement: { type: 'night_prediction', value: 1 },
     reward: { nwg: 25, badge: 'night-owl' },
-    rarity: 'rare'
+    rarity: 'rare',
   },
   {
     id: 'explorer-all-pages',
@@ -271,10 +271,10 @@ export const ACHIEVEMENTS: Achievement[] = [
     category: 'explorer',
     requirement: { type: 'pages_visited', value: 20 },
     reward: { nwg: 30, badge: 'explorer' },
-    rarity: 'common'
+    rarity: 'common',
   },
-  
-  // Social Achievements  
+
+  // Social Achievements
   {
     id: 'social-share',
     name: 'Influencer',
@@ -283,7 +283,7 @@ export const ACHIEVEMENTS: Achievement[] = [
     category: 'social',
     requirement: { type: 'shares', value: 5 },
     reward: { nwg: 25, badge: 'influencer' },
-    rarity: 'common'
+    rarity: 'common',
   },
   {
     id: 'top-10',
@@ -293,6 +293,6 @@ export const ACHIEVEMENTS: Achievement[] = [
     category: 'social',
     requirement: { type: 'leaderboard_rank', value: 10 },
     reward: { nwg: 500, badge: 'elite-trader' },
-    rarity: 'legendary'
+    rarity: 'legendary',
   },
-];
+]

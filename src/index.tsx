@@ -30,26 +30,45 @@
 
 import { Hono } from 'hono'
 import { serveStatic } from 'hono/cloudflare-pages'
-import pvpMatchmaking from './services/pvp-matchmaking'
-import {
-  healthRoutes, dataRoutes, sentinelRoutes, agentRoutes, pagesRoutes,
-  databaseRoutes, marketTradingRoutes, cardDbRoutes,
-  adminCardsRoutes, walletEconomyRoutes, auctionRoutes,
-  marketPricesRoutes, gamificationRoutes,
-  cardBridgeRoutes, purchaseRoutes, eventsMerchRoutes,
-  confessionalRoutes, shrineRoutes, cardEngineRoutes,
-  cardEngineExtraRoutes, walletExtraRoutes,
-  physicalRoutes, avatarRoutes, guideRoutes, translateRoutes,
-  gmRoutes, cipherRoutes, oracleRoutes, npcChatRoutes
-} from './routes'
+import { toErrorResponse } from './errors'
 import { logger } from './logger'
-import { AppError, toErrorResponse } from './errors'
+import {
+  adminCardsRoutes,
+  agentRoutes,
+  auctionRoutes,
+  avatarRoutes,
+  cardBridgeRoutes,
+  cardDbRoutes,
+  cardEngineExtraRoutes,
+  cardEngineRoutes,
+  cipherRoutes,
+  confessionalRoutes,
+  databaseRoutes,
+  dataRoutes,
+  eventsMerchRoutes,
+  gamificationRoutes,
+  gmRoutes,
+  guideRoutes,
+  healthRoutes,
+  marketPricesRoutes,
+  marketTradingRoutes,
+  npcChatRoutes,
+  oracleRoutes,
+  pagesRoutes,
+  physicalRoutes,
+  purchaseRoutes,
+  sentinelRoutes,
+  shrineRoutes,
+  translateRoutes,
+  walletEconomyRoutes,
+  walletExtraRoutes,
+} from './routes'
+import pvpMatchmaking from './services/pvp-matchmaking'
 
 // ── Type Bindings ─────────────────────────────────────────────────
 import type { Bindings } from './types'
 
 const app = new Hono<{ Bindings: Bindings }>()
-
 
 // ════════════════════════════════════════════════════════════════════
 //   F8 — THE WATCHTOWER: Request Logging & Global Error Handler
@@ -84,7 +103,6 @@ app.onError((err, c) => {
   return c.json(body, status as any)
 })
 
-
 // ════════════════════════════════════════════════════════════════════
 //   F7 — THE OUTER WALLS: Security Headers
 // ════════════════════════════════════════════════════════════════════
@@ -110,16 +128,18 @@ app.use('*', async (c, next) => {
   c.header('Permissions-Policy', 'camera=(), microphone=(), geolocation=()')
 
   // The Content Security Policy — our most detailed fortification
-  c.header('Content-Security-Policy', [
-    "default-src 'self'",
-    "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.tailwindcss.com https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://unpkg.com",
-    "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.tailwindcss.com https://cdnjs.cloudflare.com",
-    "font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com",
-    "img-src 'self' data: https:",
-    "connect-src 'self' https:",
-  ].join('; '))
+  c.header(
+    'Content-Security-Policy',
+    [
+      "default-src 'self'",
+      "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.tailwindcss.com https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://unpkg.com",
+      "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.tailwindcss.com https://cdnjs.cloudflare.com",
+      "font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com",
+      "img-src 'self' data: https:",
+      "connect-src 'self' https:",
+    ].join('; '),
+  )
 })
-
 
 // ════════════════════════════════════════════════════════════════════
 //   F6 — THE IMAGE GALLERIES: World & Game Asset Serving
@@ -139,10 +159,14 @@ app.use('*', async (c, next) => {
 //
 
 const IMAGE_CODEX: Record<string, string> = {
-  webp: 'image/webp',    png:  'image/png',
-  jpg:  'image/jpeg',    jpeg: 'image/jpeg',
-  gif:  'image/gif',     svg:  'image/svg+xml',
-  avif: 'image/avif',    ico:  'image/x-icon',
+  webp: 'image/webp',
+  png: 'image/png',
+  jpg: 'image/jpeg',
+  jpeg: 'image/jpeg',
+  gif: 'image/gif',
+  svg: 'image/svg+xml',
+  avif: 'image/avif',
+  ico: 'image/x-icon',
 }
 
 /**
@@ -155,11 +179,11 @@ const IMAGE_CODEX: Record<string, string> = {
  * Security: path traversal is blocked. Only known extensions are served.
  */
 function createGalleryHandler(gallery: string) {
-  return async function (c: any) {
+  return async (c: any) => {
     const file = c.req.param('file')
 
     // Guard: reject traversal attempts and missing filenames
-    if (!file || /[\/\\]/.test(file) || file.includes('..')) {
+    if (!file || /[/\\]/.test(file) || file.includes('..')) {
       return c.text('Forbidden', 403)
     }
 
@@ -181,7 +205,9 @@ function createGalleryHandler(gallery: string) {
           },
         })
       }
-    } catch { /* Production binding unavailable — fall through */ }
+    } catch {
+      /* Production binding unavailable — fall through */
+    }
 
     // Path 2: The Secret Tunnel — Local filesystem (development)
     try {
@@ -202,7 +228,9 @@ function createGalleryHandler(gallery: string) {
           },
         })
       }
-    } catch { /* Filesystem unavailable in production — expected */ }
+    } catch {
+      /* Filesystem unavailable in production — expected */
+    }
 
     return c.text('Not found', 404)
   }
@@ -211,7 +239,6 @@ function createGalleryHandler(gallery: string) {
 // Register the two galleries
 app.get('/static/world/:file', createGalleryHandler('world'))
 app.get('/static/game/:file', createGalleryHandler('game'))
-
 
 // ════════════════════════════════════════════════════════════════════
 //   F5 — THE GREAT HALL: Static File Serving + Performance Caching
@@ -233,7 +260,7 @@ app.use('/static/*', async (c, next) => {
   await next()
   const path = c.req.path
   const ext = path.split('.').pop()?.toLowerCase() || ''
-  if (['webp','png','jpg','jpeg','gif','svg','avif','ico','woff2','woff','ttf'].includes(ext)) {
+  if (['webp', 'png', 'jpg', 'jpeg', 'gif', 'svg', 'avif', 'ico', 'woff2', 'woff', 'ttf'].includes(ext)) {
     c.header('Cache-Control', 'public, max-age=31536000, immutable')
   } else if (ext === 'js' || ext === 'css') {
     c.header('Cache-Control', 'public, max-age=31536000, immutable')
@@ -242,14 +269,13 @@ app.use('/static/*', async (c, next) => {
   }
 })
 
-app.use('/.well-known/*', serveStatic())   // Web standards & verification
-app.use('/static/*', serveStatic())         // All static assets (CSS, JS, images, data)
-app.use('/lore/*', serveStatic())           // Guild lore & narrative archives
-app.use('/museum/*', serveStatic())         // Card museum & collection displays
-app.use('/vault/*', serveStatic())          // Vault research documents
-app.use('/research/*', serveStatic())       // Research papers & analysis
-app.use('/tabletop/*', serveStatic())       // Tabletop game sub-application
-
+app.use('/.well-known/*', serveStatic()) // Web standards & verification
+app.use('/static/*', serveStatic()) // All static assets (CSS, JS, images, data)
+app.use('/lore/*', serveStatic()) // Guild lore & narrative archives
+app.use('/museum/*', serveStatic()) // Card museum & collection displays
+app.use('/vault/*', serveStatic()) // Vault research documents
+app.use('/research/*', serveStatic()) // Research papers & analysis
+app.use('/tabletop/*', serveStatic()) // Tabletop game sub-application
 
 // ════════════════════════════════════════════════════════════════════
 //   F4 — THE WAR ROOM: Core API Routes
@@ -263,24 +289,23 @@ app.use('/tabletop/*', serveStatic())       // Tabletop game sub-application
 //
 
 // Infrastructure & Monitoring
-app.route('/api', healthRoutes)                    // Health checks & ping
-app.route('/api', dataRoutes)                      // Static data endpoints
-app.route('/api/system', sentinelRoutes)            // Sentinel monitoring system
-app.route('/api/pcp', agentRoutes)                  // PCP standard routes
-app.route('/api/agent', agentRoutes)                // Legacy alias (backward compat)
+app.route('/api', healthRoutes) // Health checks & ping
+app.route('/api', dataRoutes) // Static data endpoints
+app.route('/api/system', sentinelRoutes) // Sentinel monitoring system
+app.route('/api/pcp', agentRoutes) // PCP standard routes
+app.route('/api/agent', agentRoutes) // Legacy alias (backward compat)
 
 // Database & Core Systems
-app.route('/api/db', databaseRoutes)                // D1 database operations
+app.route('/api/db', databaseRoutes) // D1 database operations
 
 // Economy & Trading
-app.route('/api/market', marketTradingRoutes)        // Market trading engine
-app.route('/api', marketPricesRoutes)                // Price feeds & history
-app.route('/api/auction', auctionRoutes)             // Auction house
-app.route('/api/wallet', walletEconomyRoutes)        // Wallet & economy core
-app.route('/api/wallet', walletExtraRoutes)          // Wallet extensions
-app.route('/api/purchase', purchaseRoutes)            // Purchase processing
-app.route('/api', eventsMerchRoutes)                 // Events & merchandise
-
+app.route('/api/market', marketTradingRoutes) // Market trading engine
+app.route('/api', marketPricesRoutes) // Price feeds & history
+app.route('/api/auction', auctionRoutes) // Auction house
+app.route('/api/wallet', walletEconomyRoutes) // Wallet & economy core
+app.route('/api/wallet', walletExtraRoutes) // Wallet extensions
+app.route('/api/purchase', purchaseRoutes) // Purchase processing
+app.route('/api', eventsMerchRoutes) // Events & merchandise
 
 // ════════════════════════════════════════════════════════════════════
 //   F3 — THE CARD FORGE: Game System Routes
@@ -289,14 +314,13 @@ app.route('/api', eventsMerchRoutes)                 // Events & merchandise
 //   "Where cards are born and legends are sealed."
 //
 
-app.route('/api/cards', cardDbRoutes)                // Card database & queries
-app.route('/api/admin', adminCardsRoutes)             // Admin card management
-app.route('/api/card-bridge', cardBridgeRoutes)       // Cross-system card bridge
-app.route('/api/card-engine', cardEngineRoutes)       // Card battle engine core
-app.route('/api/card-engine', cardEngineExtraRoutes)  // Card engine extensions
-app.route('/api/game', gamificationRoutes)            // Gamification & achievements
-app.route('/api/pvp', pvpMatchmaking)                 // PvP matchmaking service
-
+app.route('/api/cards', cardDbRoutes) // Card database & queries
+app.route('/api/admin', adminCardsRoutes) // Admin card management
+app.route('/api/card-bridge', cardBridgeRoutes) // Cross-system card bridge
+app.route('/api/card-engine', cardEngineRoutes) // Card battle engine core
+app.route('/api/card-engine', cardEngineExtraRoutes) // Card engine extensions
+app.route('/api/game', gamificationRoutes) // Gamification & achievements
+app.route('/api/pvp', pvpMatchmaking) // PvP matchmaking service
 
 // ════════════════════════════════════════════════════════════════════
 //   F2 — THE LIBRARY: Utility & Knowledge Routes
@@ -305,17 +329,16 @@ app.route('/api/pvp', pvpMatchmaking)                 // PvP matchmaking service
 //   "Knowledge is power — and this room has a lot of both."
 //
 
-app.route('/api', confessionalRoutes)                // Confessional system
-app.route('/api/shrine', shrineRoutes)               // Shrine of the Eternal Flame
-app.route('/api/physical', physicalRoutes)            // Physical card system
-app.route('/api/avatar', avatarRoutes)                // Avatar & profile system
-app.route('/api/guide', guideRoutes)                  // Guide & tutorial system
-app.route('/api', translateRoutes)                    // Translation service
-app.route('/api/gm', gmRoutes)                        // Game Master tools
-app.route('/api/cipher', cipherRoutes)                // Cipher & encoding system
-app.route('/api/oracle', oracleRoutes)                // Oracle prophecy engine
-app.route('/api/npc', npcChatRoutes)                   // AI NPC chat system
-
+app.route('/api', confessionalRoutes) // Confessional system
+app.route('/api/shrine', shrineRoutes) // Shrine of the Eternal Flame
+app.route('/api/physical', physicalRoutes) // Physical card system
+app.route('/api/avatar', avatarRoutes) // Avatar & profile system
+app.route('/api/guide', guideRoutes) // Guide & tutorial system
+app.route('/api', translateRoutes) // Translation service
+app.route('/api/gm', gmRoutes) // Game Master tools
+app.route('/api/cipher', cipherRoutes) // Cipher & encoding system
+app.route('/api/oracle', oracleRoutes) // Oracle prophecy engine
+app.route('/api/npc', npcChatRoutes) // AI NPC chat system
 
 // ════════════════════════════════════════════════════════════════════
 //   F1 — THE GRAND MARKET: Page Routes
@@ -326,7 +349,6 @@ app.route('/api/npc', npcChatRoutes)                   // AI NPC chat system
 //   public face of Castle NumbahWan.
 //
 app.route('', pagesRoutes)
-
 
 // ════════════════════════════════════════════════════════════════════
 //   EXPORT — The Castle Stands

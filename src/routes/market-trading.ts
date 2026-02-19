@@ -5,17 +5,16 @@ type Bindings = {
   MARKET_CACHE: KVNamespace
 }
 
-
 // Route helpers
-function jsonError(c: any, msg: string, status = 400) {
-  return c.json({ success: false, error: msg }, status);
+function _jsonError(c: any, msg: string, status = 400) {
+  return c.json({ success: false, error: msg }, status)
 }
-function jsonSuccess(c: any, data: any) {
-  return c.json({ success: true, ...data });
+function _jsonSuccess(c: any, data: any) {
+  return c.json({ success: true, ...data })
 }
-function parseIntParam(val: string | undefined, fallback: number): number {
-  const n = parseInt(val || '');
-  return isNaN(n) ? fallback : n;
+function _parseIntParam(val: string | undefined, fallback: number): number {
+  const n = parseInt(val || '', 10)
+  return Number.isNaN(n) ? fallback : n
 }
 
 const router = new Hono<{ Bindings: Bindings }>()
@@ -27,52 +26,57 @@ const router = new Hono<{ Bindings: Bindings }>()
 // In-memory storage for market data (serverless-friendly)
 // For production, use Cloudflare KV or D1 for persistence
 interface MarketListing {
-  id: number;
-  cardId: number;
-  card: { name: string; rarity: string; img: string };
-  price: number;
-  seller: string;
-  sellerId: string;
-  listed: number;
+  id: number
+  cardId: number
+  card: { name: string; rarity: string; img: string }
+  price: number
+  seller: string
+  sellerId: string
+  listed: number
   // Serial number system
-  serial?: number;
-  tier?: string;
-  instanceId?: string;
+  serial?: number
+  tier?: string
+  instanceId?: string
 }
 
 interface ChatMessage {
-  id: number;
-  user_id: string;
-  user_name: string;
-  message: string;
-  msg_type: string;
-  created_at: number;
+  id: number
+  user_id: string
+  user_name: string
+  message: string
+  msg_type: string
+  created_at: number
 }
 
 interface HeartbeatUser {
-  id: string;
-  name: string;
-  lastSeen: number;
+  id: string
+  name: string
+  lastSeen: number
 }
 
 // Market state (in-memory - for demo/development)
 let marketListings: MarketListing[] = []
 let chatMessages: ChatMessage[] = []
-let heartbeatUsers: Map<string, HeartbeatUser> = new Map()
+const heartbeatUsers: Map<string, HeartbeatUser> = new Map()
 let listingIdCounter = 1
 let chatIdCounter = 1
 let lastRefreshDate = '' // tracks YYYY-MM-DD of last 4:20 refresh
-let marketStats = { totalSales: 0, totalVolume: 0, refreshCount: 0 }
+const marketStats = { totalSales: 0, totalVolume: 0, refreshCount: 0 }
 
 // ═══════════════════════════════════════════════════════════════
 // GACHA-RATE CARD POOL — same rates as Forge
 // mythic 0.5% | legendary 2% | epic 8% | rare 19.5% | uncommon 33% | common 37%
 // ═══════════════════════════════════════════════════════════════
 const GACHA_RATES: Record<string, number> = {
-  mythic: 0.005, legendary: 0.02, epic: 0.08, rare: 0.195, uncommon: 0.33, common: 0.37
+  mythic: 0.005,
+  legendary: 0.02,
+  epic: 0.08,
+  rare: 0.195,
+  uncommon: 0.33,
+  common: 0.37,
 }
 
-const CARD_POOL: Record<string, Array<{id: number, name: string, img: string}>> = {
+const CARD_POOL: Record<string, Array<{ id: number; name: string; img: string }>> = {
   mythic: [
     { id: 1, name: 'RegginA, The Eternal Flame', img: 'reggina-eternal-flame-mythic-v3.webp' },
     { id: 2, name: 'Harlay, Dog of War', img: 'harlay-dog-of-war-mythic.webp' },
@@ -126,18 +130,18 @@ const CARD_POOL: Record<string, Array<{id: number, name: string, img: string}>> 
     { id: 506, name: 'Cracked Phone', img: 'common-cracked-phone.webp' },
     { id: 507, name: 'Skip Button', img: 'common-skip-button.webp' },
     { id: 508, name: 'Salt Shaker', img: 'common-salt-shaker.webp' },
-  ]
+  ],
 }
 
 const NPC_SELLERS = ['RegginA', 'Reggino', 'OnCa', 'Panthera', 'AFK Luna', 'Capslock', 'Whaleford', 'Fenneko']
 
-const PRICE_TABLE: Record<string, {min: number, max: number}> = {
+const PRICE_TABLE: Record<string, { min: number; max: number }> = {
   mythic: { min: 300, max: 888 },
   legendary: { min: 80, max: 250 },
   epic: { min: 25, max: 80 },
   rare: { min: 10, max: 30 },
   uncommon: { min: 3, max: 12 },
-  common: { min: 0, max: 5 }  // 0 = free gift
+  common: { min: 0, max: 5 }, // 0 = free gift
 }
 
 // Roll a rarity using gacha rates (weighted random)
@@ -154,14 +158,14 @@ function rollRarity(): string {
 // Generate a fresh set of NPC market listings using gacha rates
 function generateDailyListings(count: number = 8): void {
   const npcListings: MarketListing[] = []
-  
+
   for (let i = 0; i < count; i++) {
     const rarity = rollRarity()
     const pool = CARD_POOL[rarity] || CARD_POOL.common
     const card = pool[Math.floor(Math.random() * pool.length)]
     const priceRange = PRICE_TABLE[rarity]
     const price = Math.floor(priceRange.min + Math.random() * (priceRange.max - priceRange.min))
-    
+
     npcListings.push({
       id: listingIdCounter++,
       cardId: card.id,
@@ -169,12 +173,12 @@ function generateDailyListings(count: number = 8): void {
       price,
       seller: NPC_SELLERS[Math.floor(Math.random() * NPC_SELLERS.length)],
       sellerId: `npc-daily-${i}`,
-      listed: Date.now() - Math.floor(Math.random() * 3600000) // stagger within last hour
+      listed: Date.now() - Math.floor(Math.random() * 3600000), // stagger within last hour
     })
   }
-  
+
   // Keep user-listed cards, replace only NPC listings
-  marketListings = marketListings.filter(l => !l.sellerId.startsWith('npc-'))
+  marketListings = marketListings.filter((l) => !l.sellerId.startsWith('npc-'))
   marketListings.push(...npcListings)
   marketStats.refreshCount++
 }
@@ -182,10 +186,10 @@ function generateDailyListings(count: number = 8): void {
 // Check if it's time for the daily 4:20 refresh
 function checkDailyRefresh(): void {
   const now = new Date()
-  const today = now.toISOString().slice(0, 10)      // YYYY-MM-DD
+  const today = now.toISOString().slice(0, 10) // YYYY-MM-DD
   const hours = now.getUTCHours()
   const minutes = now.getUTCMinutes()
-  
+
   // 4:20 UTC daily refresh (or on first request of the day)
   if (today !== lastRefreshDate && (hours > 4 || (hours === 4 && minutes >= 20))) {
     generateDailyListings(8)
@@ -196,7 +200,7 @@ function checkDailyRefresh(): void {
       user_name: 'Market',
       message: '🔄 Daily 4:20 Market Refresh! Fresh cards available — same gacha rates apply!',
       msg_type: 'system',
-      created_at: Date.now()
+      created_at: Date.now(),
     })
   }
 }
@@ -211,7 +215,7 @@ function seedMarketIfEmpty() {
     user_name: 'System',
     message: '🎉 Welcome to NumbahWan Free Market! Fresh cards daily at 4:20!',
     msg_type: 'system',
-    created_at: Date.now() - 300000
+    created_at: Date.now() - 300000,
   })
 }
 
@@ -224,14 +228,14 @@ router.get('/listings', (c) => {
     listings: marketListings,
     count: marketListings.length,
     nextRefresh: '04:20 UTC daily',
-    lastRefreshDate
+    lastRefreshDate,
   })
 })
 
 // GET /api/market/status - Dashboard data for the market
 router.get('/status', (c) => {
   const rarityBreakdown: Record<string, number> = {}
-  marketListings.forEach(l => {
+  marketListings.forEach((l) => {
     const r = l.card?.rarity || 'unknown'
     rarityBreakdown[r] = (rarityBreakdown[r] || 0) + 1
   })
@@ -244,7 +248,7 @@ router.get('/status', (c) => {
     rarityBreakdown,
     gachaRates: GACHA_RATES,
     lastRefreshDate,
-    nextRefresh: '04:20 UTC daily'
+    nextRefresh: '04:20 UTC daily',
   })
 })
 
@@ -252,39 +256,39 @@ router.get('/status', (c) => {
 router.post('/buy', async (c) => {
   try {
     const body = await c.req.json()
-    const { listingId, buyerId, buyerName } = body
-    
-    const listingIndex = marketListings.findIndex(l => l.id === listingId)
+    const { listingId, buyerId: _buyerId, buyerName } = body
+
+    const listingIndex = marketListings.findIndex((l) => l.id === listingId)
     if (listingIndex === -1) {
       return c.json({ success: false, error: 'Listing not found or already sold' }, 404)
     }
-    
+
     const listing = marketListings[listingIndex]
-    
+
     // Remove from listings and track stats
     marketListings.splice(listingIndex, 1)
     marketStats.totalSales++
     marketStats.totalVolume += listing.price
-    
+
     // Add sale announcement to chat
-    const buyPriceText = listing.price === 0 ? 'FREE' : `${listing.price} Sacred Logs`;
+    const buyPriceText = listing.price === 0 ? 'FREE' : `${listing.price} Sacred Logs`
     chatMessages.push({
       id: chatIdCounter++,
       user_id: 'system',
       user_name: 'Market',
       message: `💰 ${buyerName || 'Someone'} ${listing.price === 0 ? 'claimed' : 'bought'} ${listing.card.name} for ${buyPriceText}!`,
       msg_type: 'sale',
-      created_at: Date.now()
+      created_at: Date.now(),
     })
-    
-    return c.json({ 
-      success: true, 
+
+    return c.json({
+      success: true,
       message: 'Purchase successful',
       card: listing.card,
       price: listing.price,
       serial: listing.serial || null,
       tier: listing.tier || null,
-      instanceId: listing.instanceId || null
+      instanceId: listing.instanceId || null,
     })
   } catch (e) {
     return c.json({ success: false, error: String(e) }, 500)
@@ -296,11 +300,11 @@ router.post('/list', async (c) => {
   try {
     const body = await c.req.json()
     const { cardId, card, price, sellerId, sellerName } = body
-    
+
     if (!card) {
       return c.json({ success: false, error: 'Card data required' }, 400)
     }
-    
+
     const newListing: MarketListing = {
       id: listingIdCounter++,
       cardId: cardId || 0,
@@ -311,23 +315,23 @@ router.post('/list', async (c) => {
       listed: Date.now(),
       serial: body.serial || undefined,
       tier: body.tier || undefined,
-      instanceId: body.instanceId || undefined
+      instanceId: body.instanceId || undefined,
     }
-    
+
     marketListings.unshift(newListing)
-    
+
     // Announce new listing with serial info
-    const serialTag = newListing.serial ? ` #${newListing.serial}${newListing.tier ? ` (${newListing.tier})` : ''}` : '';
-    const listPriceText = newListing.price === 0 ? 'FREE 🎁' : `${newListing.price} Sacred Logs`;
+    const serialTag = newListing.serial ? ` #${newListing.serial}${newListing.tier ? ` (${newListing.tier})` : ''}` : ''
+    const listPriceText = newListing.price === 0 ? 'FREE 🎁' : `${newListing.price} Sacred Logs`
     chatMessages.push({
       id: chatIdCounter++,
       user_id: 'system',
       user_name: 'Market',
       message: `📦 ${newListing.seller} listed ${card.name}${serialTag} for ${listPriceText}!`,
       msg_type: 'sale',
-      created_at: Date.now()
+      created_at: Date.now(),
     })
-    
+
     return c.json({ success: true, listing: newListing })
   } catch (e) {
     return c.json({ success: false, error: String(e) }, 500)
@@ -336,13 +340,13 @@ router.post('/list', async (c) => {
 
 // GET /api/market/chat - Get chat messages
 router.get('/chat', (c) => {
-  const since = parseInt(c.req.query('since') || '0')
-  const newMessages = chatMessages.filter(m => m.created_at > since)
-  
+  const since = parseInt(c.req.query('since') || '0', 10)
+  const newMessages = chatMessages.filter((m) => m.created_at > since)
+
   return c.json({
     success: true,
     messages: newMessages.slice(-50), // Last 50 messages
-    total: chatMessages.length
+    total: chatMessages.length,
   })
 })
 
@@ -351,30 +355,30 @@ router.post('/chat', async (c) => {
   try {
     const body = await c.req.json()
     const { userId, userName, message } = body
-    
+
     if (!message || message.trim().length === 0) {
       return c.json({ success: false, error: 'Message required' }, 400)
     }
-    
+
     // Sanitize message (basic XSS prevention)
     const cleanMessage = message.trim().substring(0, 200)
-    
+
     const newMessage: ChatMessage = {
       id: chatIdCounter++,
       user_id: userId || 'guest',
       user_name: userName || 'Guest',
       message: cleanMessage,
       msg_type: 'chat',
-      created_at: Date.now()
+      created_at: Date.now(),
     }
-    
+
     chatMessages.push(newMessage)
-    
+
     // Keep only last 100 messages
     if (chatMessages.length > 100) {
       chatMessages = chatMessages.slice(-100)
     }
-    
+
     return c.json({ success: true, message: newMessage })
   } catch (e) {
     return c.json({ success: false, error: String(e) }, 500)
@@ -385,28 +389,28 @@ router.post('/chat', async (c) => {
 router.post('/pull-announce', async (c) => {
   try {
     const body = await c.req.json()
-    const { userId, userName, cardId, rarity, serial, tier } = body
-    
-    const serialTag = serial ? ` #${serial}${tier ? ` (${tier})` : ''}` : '';
-    const rarityEmoji: Record<string, string> = { mythic: '\u2728\ud83d\udd25', legendary: '\u2b50' };
-    const emoji = rarityEmoji[rarity] || '\ud83c\udfb4';
-    
+    const { userId: _userId, userName, cardId: _cardId, rarity, serial, tier } = body
+
+    const serialTag = serial ? ` #${serial}${tier ? ` (${tier})` : ''}` : ''
+    const rarityEmoji: Record<string, string> = { mythic: '\u2728\ud83d\udd25', legendary: '\u2b50' }
+    const emoji = rarityEmoji[rarity] || '\ud83c\udfb4'
+
     chatMessages.push({
       id: chatIdCounter++,
       user_id: 'system',
       user_name: 'World',
       message: `${emoji} ${userName || 'Someone'} pulled a ${rarity.toUpperCase()} card${serialTag}!`,
       msg_type: 'pull',
-      created_at: Date.now()
+      created_at: Date.now(),
     })
-    
+
     // Keep only last 100 messages
     if (chatMessages.length > 100) {
       chatMessages = chatMessages.slice(-100)
     }
-    
+
     return c.json({ success: true })
-  } catch (e) {
+  } catch (_e) {
     return c.json({ success: true }) // Non-critical, always succeed
   }
 })
@@ -416,15 +420,15 @@ router.post('/heartbeat', async (c) => {
   try {
     const body = await c.req.json()
     const { userId, userName } = body
-    
+
     if (userId) {
       heartbeatUsers.set(userId, {
         id: userId,
         name: userName || 'Guest',
-        lastSeen: Date.now()
+        lastSeen: Date.now(),
       })
     }
-    
+
     // Clean up old users (inactive > 30 seconds)
     const now = Date.now()
     heartbeatUsers.forEach((user, id) => {
@@ -432,12 +436,12 @@ router.post('/heartbeat', async (c) => {
         heartbeatUsers.delete(id)
       }
     })
-    
+
     return c.json({
       success: true,
-      onlineCount: heartbeatUsers.size
+      onlineCount: heartbeatUsers.size,
     })
-  } catch (e) {
+  } catch (_e) {
     return c.json({ success: true, onlineCount: 1 })
   }
 })

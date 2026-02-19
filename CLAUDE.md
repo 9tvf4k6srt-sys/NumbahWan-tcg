@@ -7,6 +7,61 @@
 ## !! IF YOU DON'T, THE PRE-COMMIT HOOK WILL BLOCK YOUR COMMIT.
 ## !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
+## ⛔ ANTI-STALL PROTOCOL — NEVER MAKE THE USER HIT "CONTINUE" (MANDATORY)
+
+**Root cause**: The AI repeatedly exhausts output tokens mid-task, forcing the user to
+press "Continue" to resume. This wastes tokens (re-reading context), breaks flow, and
+is the #1 user complaint. Three specific failure modes have been identified:
+
+### Failure Mode 1: Large File Writes
+**Symptom**: Writing a file with 200+ lines exhausts the output buffer mid-write.
+**Fix**: Use the `Write` tool for large files — it streams content without consuming
+output tokens for display. NEVER build up code in chat messages then write it.
+```
+BAD:  "Here's the manifest generator:" [300 lines of code in chat] → Write File
+GOOD: Write File directly (tool output is minimal) → "Done, created manifest.cjs"
+```
+
+### Failure Mode 2: Sequential Multi-File Edit Chains
+**Symptom**: Edit file A → long description → Edit file B → long description → STALL.
+**Fix**: Batch all related edits. Use MultiEdit for same-file changes. For cross-file
+changes, issue multiple Edit/Write tool calls simultaneously (parallel tool calls).
+Minimize narration between edits — describe the BATCH result once at the end.
+```
+BAD:  Edit A → "I updated the header..." → Edit B → "Now for the footer..." → STALL
+GOOD: [Edit A + Edit B + Edit C in parallel] → "Updated header, footer, and nav in 3 files."
+```
+
+### Failure Mode 3: Verbose Command Output
+**Symptom**: Running `sentinel.cjs` or `grep` dumps 50+ lines into context, burning tokens.
+**Fix**: Always pipe through `tail`, `head`, or `wc -l`. Capture to temp file if needed.
+```
+BAD:  node sentinel.cjs                    # 200+ lines of output
+GOOD: node sentinel.cjs 2>&1 | tail -5     # just the summary
+GOOD: node sentinel.cjs > /tmp/report.txt && tail -5 /tmp/report.txt
+```
+
+### Failure Mode 4: No Continuation State
+**Symptom**: After "Continue", AI re-reads files and loses track of progress.
+**Fix**: Before ANY multi-step task, save a checkpoint:
+```bash
+node mycelium.cjs --checkpoint '{"task":"...","pending":["step1","step2"]}'
+```
+Update after each step. If compacted/resumed, read checkpoint FIRST.
+
+### Failure Mode 5: Auth Failures Break Deploy
+**Symptom**: `git push` fails → manual intervention → wasted tokens retrying.
+**Fix**: ALWAYS use `node bin/mycelium.cjs ship "msg"` — it handles auth refresh.
+
+### The Golden Rules (memorize these):
+1. **ONE narration per batch** — don't describe each edit, describe the result
+2. **Parallel tool calls** — if edits are independent, issue them simultaneously
+3. **Write > Edit+Describe** for new files over 100 lines
+4. **Pipe all commands** — `| tail -5` or `| head -20` on any command that might be verbose
+5. **Checkpoint before multi-step** — save state so "Continue" doesn't lose progress
+6. **Test THEN narrate** — don't describe what you'll test, just test it and report results
+7. **NEVER echo large JSON** — use `jq '.key'` or `wc -l` instead of dumping contents
+
 ## ⛔ TOKEN BUDGET & COST OPTIMIZATION — HARD LIMIT 200K (MANDATORY)
 
 **Root cause of past failure**: Session hit 210,007 tokens > 200,000 max during a Write File.

@@ -1,7 +1,7 @@
 /**
  * Unit tests for src/logger.ts — Structured logging
  */
-import { describe, it, expect, vi } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import { logger } from '../logger'
 
 describe('logger', () => {

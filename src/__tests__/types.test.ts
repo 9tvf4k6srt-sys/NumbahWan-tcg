@@ -2,11 +2,16 @@
  * Unit tests for src/types.ts — Card engine helpers
  * Tests calcCardPower, TIER_RULES, SHRINE_PENALTY, type exports
  */
-import { describe, it, expect } from 'vitest'
+import { describe, expect, it } from 'vitest'
 import {
-  calcCardPower, TIER_RULES, SHRINE_PENALTY, FUSION_RECIPES,
-  type CardBase, type CardRarity, type Bindings, type AuctionBid,
-  type CardCollection, type CardTransfer, type CardBridge,
+  type AuctionBid,
+  type Bindings,
+  type CardBase,
+  type CardRarity,
+  calcCardPower,
+  FUSION_RECIPES,
+  SHRINE_PENALTY,
+  TIER_RULES,
 } from '../types'
 
 describe('calcCardPower', () => {

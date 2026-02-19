@@ -5,12 +5,22 @@
 // GET  /history      — Past solved ciphers
 
 import { Hono } from 'hono'
-import { CIPHER_CONFIG, DIFFICULTY_SETTINGS } from '../services/cipher-types'
 import {
-  calculatePot, getRevealedHints, getLockedHints, validateAttempt,
-  createVault, getActiveVault, saveActiveVault, getLeaderboard,
-  addWinner, getHistory, archiveVault, checkRateLimit, recordAttempt
+  addWinner,
+  archiveVault,
+  calculatePot,
+  checkRateLimit,
+  createVault,
+  getActiveVault,
+  getHistory,
+  getLeaderboard,
+  getLockedHints,
+  getRevealedHints,
+  recordAttempt,
+  saveActiveVault,
+  validateAttempt,
 } from '../services/cipher-engine'
+import { CIPHER_CONFIG, DIFFICULTY_SETTINGS } from '../services/cipher-types'
 
 type Bindings = { GUILD_DB: D1Database; MARKET_CACHE: KVNamespace }
 
@@ -22,8 +32,12 @@ function jsonError(c: any, msg: string, status = 400) {
 const memStore = new Map<string, string>()
 const memKV: KVNamespace = {
   get: async (key: string) => memStore.get(key) ?? null,
-  put: async (key: string, value: string) => { memStore.set(key, value) },
-  delete: async (key: string) => { memStore.delete(key) },
+  put: async (key: string, value: string) => {
+    memStore.set(key, value)
+  },
+  delete: async (key: string) => {
+    memStore.delete(key)
+  },
   list: async () => ({ keys: [], list_complete: true, cacheStatus: null }),
   getWithMetadata: async () => ({ value: null, metadata: null, cacheStatus: null }),
 } as any
@@ -75,14 +89,14 @@ router.get('/active', async (c) => {
         },
         hints: {
           revealed,
-          locked: locked.map(h => ({ daysUntil: h.daysUntil })),
+          locked: locked.map((h) => ({ daysUntil: h.daysUntil })),
           totalHints: vault.hints.length,
         },
         stats: {
           totalAttempts: vault.totalAttempts,
           uniqueAttempters: vault.uniqueAttempters.length,
         },
-      }
+      },
     })
   } catch (e) {
     return jsonError(c, String(e), 500)
@@ -107,11 +121,14 @@ router.post('/attempt', async (c) => {
     const rateCheck = await checkRateLimit(cache, wallet)
     if (!rateCheck.allowed) {
       const minutes = Math.ceil(rateCheck.retryAfterMs / 60_000)
-      return c.json({
-        success: false,
-        error: `Rate limited. Try again in ${minutes} minute${minutes > 1 ? 's' : ''}.`,
-        retryAfterMs: rateCheck.retryAfterMs,
-      }, 429)
+      return c.json(
+        {
+          success: false,
+          error: `Rate limited. Try again in ${minutes} minute${minutes > 1 ? 's' : ''}.`,
+          retryAfterMs: rateCheck.retryAfterMs,
+        },
+        429,
+      )
     }
 
     let vault = await getActiveVault(cache)
@@ -137,7 +154,10 @@ router.post('/attempt', async (c) => {
         success: false,
         correct: false,
         message: 'Incorrect. The cipher remains unsolved.',
-        attemptsRemaining: Math.max(0, CIPHER_CONFIG.MAX_ATTEMPTS_PER_HOUR - (vault.totalAttempts % CIPHER_CONFIG.MAX_ATTEMPTS_PER_HOUR)),
+        attemptsRemaining: Math.max(
+          0,
+          CIPHER_CONFIG.MAX_ATTEMPTS_PER_HOUR - (vault.totalAttempts % CIPHER_CONFIG.MAX_ATTEMPTS_PER_HOUR),
+        ),
       })
     }
 
@@ -158,7 +178,7 @@ router.post('/attempt', async (c) => {
     await addWinner(cache, {
       vaultId: vault.id,
       wallet,
-      name: name || wallet.slice(0, 8) + '...',
+      name: name || `${wallet.slice(0, 8)}...`,
       amount: pot,
       daysElapsed: Math.floor(daysElapsed * 100) / 100,
       difficulty: vault.difficulty,
@@ -167,7 +187,7 @@ router.post('/attempt', async (c) => {
     })
 
     // Spawn next vault (next difficulty level, wraps around)
-    const nextDifficulty = (vault.difficulty % 5)
+    const nextDifficulty = vault.difficulty % 5
     const nextVault = await createVault(nextDifficulty)
     await saveActiveVault(cache, nextVault)
 
@@ -187,7 +207,7 @@ router.post('/attempt', async (c) => {
         difficulty: nextVault.difficulty,
         flavorTitle: nextVault.flavorTitle,
         message: 'A new cipher has appeared...',
-      }
+      },
     })
   } catch (e) {
     return jsonError(c, String(e), 500)
@@ -221,7 +241,7 @@ router.get('/history', async (c) => {
 
     return c.json({
       success: true,
-      history: history.map(v => ({
+      history: history.map((v) => ({
         id: v.id,
         cipherType: v.cipherType,
         difficulty: v.difficulty,

@@ -361,7 +361,12 @@ const NW_NAV = {
                 { id: 'maintenance', name: { en: 'Maintenance', zh: '維護室', th: 'ห้องซ่อม' }, icon: 'scroll', href: '/maintenance' },
                 { id: 'breakroom', name: { en: 'Break Room', zh: '休息室', th: 'ห้องพัก' }, icon: 'meme', href: '/breakroom' },
                 { id: 'basement', name: { en: 'The Basement', zh: '地下室', th: 'ห้องใต้ดิน' }, icon: 'skull', href: '/basement' },
-                { id: 'zakum', name: { en: 'Zakum Lore', zh: '扎昆傳說', th: 'ตำนานซาคุม' }, icon: 'dragon', href: '/zakum' }
+                { id: 'zakum', name: { en: 'Zakum Lore', zh: '扎昆傳說', th: 'ตำนานซาคุม' }, icon: 'dragon', href: '/zakum' },
+                { id: 'the-veil', name: { en: '\ud83d\udc41 The Veil', zh: '\ud83d\udc41 黑幕', th: '\ud83d\udc41 ม่านมืด' }, icon: 'eye', href: '/world/nwg-the-game.html#theveil', isNew: true, isHot: true },
+                { id: 'dlc8-veil-torn', name: { en: 'DLC 8: Veil Torn', zh: 'DLC 8: 黑幕撕裂', th: 'DLC 8: ม่านมืดฉีก' }, icon: 'lightning', href: '/world/nwg-the-game.html#dlc8', isNew: true },
+                { id: 'dlc9-brazen', name: { en: 'DLC 9: Brazen Depths', zh: 'DLC 9: 青銅深淵', th: 'DLC 9: ห้วงลึกทองสัมฤทธิ์' }, icon: 'fire', href: '/world/nwg-the-game.html#dlc9', isNew: true },
+                { id: 'dlc10-reaping', name: { en: 'DLC 10: The Reaping', zh: 'DLC 10: 收割', th: 'DLC 10: การเก็บเกี่ยว' }, icon: 'skull', href: '/world/nwg-the-game.html#dlc10', isNew: true },
+                { id: 'dlc11-anima', name: { en: 'DLC 11: ANIMA', zh: 'DLC 11: 靈魂', th: 'DLC 11: วิญญาณ' }, icon: 'sparkles', href: '/world/nwg-the-game.html#dlc11', isNew: true }
             ]
         },
         tabletop: {

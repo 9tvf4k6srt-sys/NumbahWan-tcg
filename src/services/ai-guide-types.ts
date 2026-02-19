@@ -1,25 +1,25 @@
 /**
  * NumbahWan AI Guide Service v3.0 - FULL ACTION SUPPORT!
  * Real LLM-powered assistant that can DO things, not just talk
- * 
+ *
  * LEARNING POINTS:
  * 1. System prompts - How to give AI personality and knowledge
  * 2. Streaming - Real-time response delivery
  * 3. Context management - Conversation memory
  * 4. Token optimization - Keeping costs down
  * 5. AI ACTIONS - Making AI execute real functions!
- * 
+ *
  * HOW ACTIONS WORK:
  * The AI returns a special JSON block in its response when it wants to perform an action.
  * Format: <<<ACTION:{"type":"navigate","target":"/forge"}>>>
- * 
+ *
  * The frontend parses these action tags and executes them.
  * Multiple actions can be included in a single response.
- * 
+ *
  * SUPPORTED ACTIONS:
  * - navigate: Go to a page (target: path)
  * - showBalance: Display wallet popup
- * - claimDaily: Claim daily login reward  
+ * - claimDaily: Claim daily login reward
  * - openForge: Open card forge modal
  * - showCards: Show card collection
  * - playSound: Play a sound effect (target: sound name)
@@ -34,60 +34,60 @@
 // ============================================================================
 
 export interface Message {
-  role: 'system' | 'user' | 'assistant';
-  content: string;
+  role: 'system' | 'user' | 'assistant'
+  content: string
 }
 
 // ============================================================================
 // ACTION TYPES - What the AI can DO
 // ============================================================================
-// 
+//
 // LEARNING: This is like giving your AI superpowers!
 // Each action type defines what the AI can make happen in the real world.
 // ============================================================================
 
-export type ActionType = 
-  | 'navigate'      // Go to a page
-  | 'showBalance'   // Display wallet popup
-  | 'claimDaily'    // Claim daily reward
-  | 'openForge'     // Open card forge
-  | 'showCards'     // Show card collection
-  | 'playSound'     // Play a sound effect
-  | 'showToast'     // Show a notification
-  | 'toggleTheme'   // Toggle dark/light mode
-  | 'shareDiscord'  // Share to Discord
-  | 'copyText';     // Copy text to clipboard
+export type ActionType =
+  | 'navigate' // Go to a page
+  | 'showBalance' // Display wallet popup
+  | 'claimDaily' // Claim daily reward
+  | 'openForge' // Open card forge
+  | 'showCards' // Show card collection
+  | 'playSound' // Play a sound effect
+  | 'showToast' // Show a notification
+  | 'toggleTheme' // Toggle dark/light mode
+  | 'shareDiscord' // Share to Discord
+  | 'copyText' // Copy text to clipboard
 
 export interface GuideAction {
-  type: ActionType;
-  target?: string;      // For navigate: the path. For playSound: sound name
-  data?: any;           // Additional data for the action
-  message?: string;     // Optional message to show with action
+  type: ActionType
+  target?: string // For navigate: the path. For playSound: sound name
+  data?: any // Additional data for the action
+  message?: string // Optional message to show with action
 }
 
 export interface GuideRequest {
-  message: string;
-  conversationHistory?: Message[];
-  language?: 'en' | 'zh' | 'th';
-  currentPage?: string;
+  message: string
+  conversationHistory?: Message[]
+  language?: 'en' | 'zh' | 'th'
+  currentPage?: string
   userContext?: {
-    viewingHistory?: string[];
-    currencies?: Record<string, number>;
-    cardCount?: number;
-    cards?: { name: string; rarity: string; stars: number }[];
-  };
+    viewingHistory?: string[]
+    currencies?: Record<string, number>
+    cardCount?: number
+    cards?: { name: string; rarity: string; stars: number }[]
+  }
 }
 
 export interface GuideResponse {
-  success: boolean;
-  message?: string;
-  actions?: GuideAction[];  // NEW: Actions to execute!
-  error?: string;
+  success: boolean
+  message?: string
+  actions?: GuideAction[] // NEW: Actions to execute!
+  error?: string
   usage?: {
-    promptTokens: number;
-    completionTokens: number;
-    totalTokens: number;
-  };
+    promptTokens: number
+    completionTokens: number
+    totalTokens: number
+  }
 }
 
 // ============================================================================
@@ -114,40 +114,40 @@ export const AVAILABLE_ACTIONS = {
       '/conspiracy': 'Conspiracy Board - connect the dots',
       '/fortune': 'Fortune Teller - daily fortunes',
       '/museum': 'Museum - guild history',
-      '/updates': 'Patch Notes - latest changes'
-    }
+      '/updates': 'Patch Notes - latest changes',
+    },
   },
   showBalance: {
     description: 'Show the user their current currency balances',
-    examples: ['how much gold do I have', 'check my balance', 'show my currencies']
+    examples: ['how much gold do I have', 'check my balance', 'show my currencies'],
   },
   claimDaily: {
     description: 'Claim daily login reward',
-    examples: ['claim my daily', 'get daily reward', 'claim login bonus']
+    examples: ['claim my daily', 'get daily reward', 'claim login bonus'],
   },
   openForge: {
     description: 'Open the card forge to pull cards',
-    examples: ['open a pack', 'pull cards', 'use my sacred logs']
+    examples: ['open a pack', 'pull cards', 'use my sacred logs'],
   },
   showCards: {
     description: 'Show cards from collection',
-    examples: ['show my cards', 'what cards do I have', 'my collection']
+    examples: ['show my cards', 'what cards do I have', 'my collection'],
   },
   playSound: {
     description: 'Play a sound effect',
     examples: ['play a sound', 'make a noise'],
-    sounds: ['click', 'success', 'error', 'coin', 'card', 'fanfare']
+    sounds: ['click', 'success', 'error', 'coin', 'card', 'fanfare'],
   },
   showToast: {
     description: 'Show a notification message',
-    examples: ['notify me', 'show alert']
-  }
-};
+    examples: ['notify me', 'show alert'],
+  },
+}
 
 // ============================================================================
 // SYSTEM PROMPT - THE BRAIN OF YOUR AI
 // ============================================================================
-// 
+//
 // This is the most important part! The system prompt defines:
 // - WHO the AI is (personality)
 // - WHAT it knows (knowledge base)
@@ -270,7 +270,7 @@ NumbahWan is a MapleStory guild with a satirical/comedic twist. Our motto: "If y
 ## Sacred Items
 - **The Sacred Log** (⧫) - Mystical wood that summons legendary cards. Smells faintly of banana.
 - **The Golden Banana** (🍌) - Currently MISSING. Reward for return: 1000 Diamonds!
-`;
+`
 
 // ============================================================================
 // ACTION INSTRUCTIONS - Teach AI how to trigger actions
@@ -344,35 +344,35 @@ Your balance should pop up now - Diamonds 💎, Gold 🪙, and more!"
 User: "I want to see my cards"
 You: "Opening your card collection! 📚 Here you can upgrade stars, burn duplicates, and admire your pulls.
 <<<ACTION:{"type":"navigate","target":"/collection"}>>><<<ACTION:{"type":"showCards"}>>>"
-`;
+`
 
 function getLanguageInstruction(lang: string): string {
   const instructions: Record<string, string> = {
     en: 'Respond in English.',
     zh: 'Respond in Traditional Chinese (繁體中文). Use natural, conversational Chinese.',
-    th: 'Respond in Thai (ภาษาไทย). Use natural, conversational Thai.'
-  };
-  return instructions[lang] || instructions.en;
+    th: 'Respond in Thai (ภาษาไทย). Use natural, conversational Thai.',
+  }
+  return instructions[lang] || instructions.en
 }
 
 function buildUserContext(userContext: any): string {
-  if (!userContext) return '';
-  let str = '';
+  if (!userContext) return ''
+  let str = ''
   if (userContext.currencies) {
-    str += `\nUser's currencies: ${userContext.currencies.diamond || 0}💎 Diamonds, ${userContext.currencies.gold || 0}🪙 Gold, ${userContext.currencies.iron || 0}⚙️ Iron, ${userContext.currencies.stone || 0}🪨 Stone, ${userContext.currencies.sacredLog || 0}⧫ Sacred Logs`;
+    str += `\nUser's currencies: ${userContext.currencies.diamond || 0}💎 Diamonds, ${userContext.currencies.gold || 0}🪙 Gold, ${userContext.currencies.iron || 0}⚙️ Iron, ${userContext.currencies.stone || 0}🪨 Stone, ${userContext.currencies.sacredLog || 0}⧫ Sacred Logs`
   }
   if (userContext.cardCount) {
-    str += `\nUser has ${userContext.cardCount} cards in their collection.`;
+    str += `\nUser has ${userContext.cardCount} cards in their collection.`
   }
   if (userContext.viewingHistory?.length) {
-    str += `\nRecently visited: ${userContext.viewingHistory.slice(-3).join(', ')}`;
+    str += `\nRecently visited: ${userContext.viewingHistory.slice(-3).join(', ')}`
   }
-  return str;
+  return str
 }
 
 export function buildSystemPrompt(language: string = 'en', currentPage?: string, userContext?: any): string {
-  const pageContext = currentPage ? `\nThe user is currently on: ${currentPage}` : '';
-  const userContextStr = buildUserContext(userContext);
+  const pageContext = currentPage ? `\nThe user is currently on: ${currentPage}` : ''
+  const userContextStr = buildUserContext(userContext)
 
   return `You are the NumbahWan AI Guide, a helpful and entertaining assistant for the NumbahWan MapleStory guild website.
 
@@ -410,7 +410,7 @@ ${pageContext}
 ${userContextStr}
 
 Remember: You're not just answering questions - you're welcoming people to our guild family! 🍌
-And you can DO things to help them, not just talk about it!`;
+And you can DO things to help them, not just talk about it!`
 }
 
 // ============================================================================
@@ -420,4 +420,3 @@ And you can DO things to help them, not just talk about it!`;
 // ============================================================================
 // ACTION PARSING - Extract actions from AI response
 // ============================================================================
-

@@ -1,11 +1,14 @@
 /**
  * Unit tests for market-automation.ts — Market status and price helpers
  */
-import { describe, it, expect } from 'vitest'
+import { describe, expect, it } from 'vitest'
 import {
+  CACHE_KEYS,
+  CACHE_TTL,
   getMarketStatus,
-  NWG_WEIGHTS, NWG_TOTAL_SUPPLY, NWG_BASE_MULTIPLIER,
-  CACHE_KEYS, CACHE_TTL,
+  NWG_BASE_MULTIPLIER,
+  NWG_TOTAL_SUPPLY,
+  NWG_WEIGHTS,
 } from '../services/market-automation'
 
 describe('getMarketStatus', () => {

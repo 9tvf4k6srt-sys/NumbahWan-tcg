@@ -1,6 +1,5 @@
-import type { Bindings } from '../types'
 import { Hono } from 'hono'
-
+import type { Bindings } from '../types'
 
 const router = new Hono<{ Bindings: Bindings }>()
 
@@ -14,47 +13,53 @@ const router = new Hono<{ Bindings: Bindings }>()
 const GM_WHITELIST: string[] = [
   // Owner/Admin accounts - These IDs get auto-GM status
   // Add your Guest ID here (visible on /wallet page)
-];
+]
 
 // GM Key for activation
-const GM_ACTIVATION_KEY = 'numbahwan-gm-2026';
+const GM_ACTIVATION_KEY = 'numbahwan-gm-2026'
 
 router.get('/verify/:guestId', async (c) => {
-  const guestId = c.req.param('guestId');
-  const gmKey = c.req.query('key');
-  
+  const guestId = c.req.param('guestId')
+  const gmKey = c.req.query('key')
+
   // Check whitelist
-  const inWhitelist = GM_WHITELIST.includes(guestId);
-  
+  const inWhitelist = GM_WHITELIST.includes(guestId)
+
   // Check if valid GM key provided
-  const hasValidKey = gmKey === GM_ACTIVATION_KEY;
-  
+  const hasValidKey = gmKey === GM_ACTIVATION_KEY
+
   return c.json({
     success: true,
     guestId,
     isGM: inWhitelist || hasValidKey,
     method: inWhitelist ? 'whitelist' : hasValidKey ? 'key' : 'none',
-    features: inWhitelist || hasValidKey ? {
-      infiniteResources: true,
-      adminPanel: true,
-      testMode: true
-    } : null
-  });
-});
+    features:
+      inWhitelist || hasValidKey
+        ? {
+            infiniteResources: true,
+            adminPanel: true,
+            testMode: true,
+          }
+        : null,
+  })
+})
 
 // Activate GM via API
 router.post('/activate', async (c) => {
   try {
-    const body = await c.req.json();
-    const { guestId, key } = body;
-    
+    const body = await c.req.json()
+    const { guestId, key } = body
+
     if (key !== GM_ACTIVATION_KEY) {
-      return c.json({
-        success: false,
-        error: 'Invalid activation key'
-      }, 401);
+      return c.json(
+        {
+          success: false,
+          error: 'Invalid activation key',
+        },
+        401,
+      )
     }
-    
+
     return c.json({
       success: true,
       guestId,
@@ -63,12 +68,12 @@ router.post('/activate', async (c) => {
       features: {
         infiniteResources: true,
         adminPanel: true,
-        testMode: true
-      }
-    });
+        testMode: true,
+      },
+    })
   } catch (e) {
-    return c.json({ success: false, error: String(e) }, 500);
+    return c.json({ success: false, error: String(e) }, 500)
   }
-});
+})
 
 export default router

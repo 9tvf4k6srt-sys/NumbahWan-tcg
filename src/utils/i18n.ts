@@ -1,7 +1,7 @@
 /**
  * Internationalization (i18n) Utility
  * Based on AI Training Guide: Single Source of Truth pattern
- * 
+ *
  * Features:
  * - Centralized translations in JSON
  * - Type-safe translation keys
@@ -27,7 +27,7 @@ export function getTranslations(lang: Language): Record<string, string> {
 // Get photo translations
 export function getPhotoTranslation(photoId: string | number, field: 'title' | 'description', lang: Language): string {
   const photo = translations.photoTranslations[String(photoId) as keyof typeof translations.photoTranslations]
-  if (photo && photo[field]) {
+  if (photo?.[field]) {
     return photo[field][lang] || photo[field].en
   }
   return ''
