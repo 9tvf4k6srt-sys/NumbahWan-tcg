@@ -1,21 +1,19 @@
-import type { Bindings } from '../types'
+import * as fs from 'node:fs'
+import * as os from 'node:os'
+import * as path from 'node:path'
 import { Hono } from 'hono'
-
-import * as fs from 'fs'
-import * as path from 'path'
 import * as yaml from 'js-yaml'
-import * as os from 'os'
+import type { Bindings } from '../types'
 
-let llmConfig: { openai?: { api_key?: string; base_url?: string } } = {};
+let llmConfig: { openai?: { api_key?: string; base_url?: string } } = {}
 try {
-  const configPath = path.join(os.homedir(), '.genspark_llm.yaml');
+  const configPath = path.join(os.homedir(), '.genspark_llm.yaml')
   if (fs.existsSync(configPath)) {
-    let fileContents = fs.readFileSync(configPath, 'utf8');
-    fileContents = fileContents.replace(/\$\{(\w+)\}/g, (_, varName) => process.env[varName] || '');
-    llmConfig = yaml.load(fileContents) as typeof llmConfig;
+    let fileContents = fs.readFileSync(configPath, 'utf8')
+    fileContents = fileContents.replace(/\$\{(\w+)\}/g, (_, varName) => process.env[varName] || '')
+    llmConfig = yaml.load(fileContents) as typeof llmConfig
   }
-} catch (e) {}
-
+} catch (_e) {}
 
 const router = new Hono<{ Bindings: Bindings }>()
 
@@ -23,8 +21,8 @@ function buildSystemPrompt(lang: string): string {
   const langInstructions: Record<string, string> = {
     en: 'Respond ENTIRELY in English.',
     zh: 'Respond ENTIRELY in Traditional Chinese (繁體中文). All text, headings, humor, examples, and the Oracle Seal MUST be in Chinese. Only scripture names may remain in their original language.',
-    th: 'Respond ENTIRELY in Thai (ภาษาไทย). All text, headings, humor, examples, and the Oracle Seal MUST be in Thai. Only scripture names may remain in their original language.'
-  };
+    th: 'Respond ENTIRELY in Thai (ภาษาไทย). All text, headings, humor, examples, and the Oracle Seal MUST be in Thai. Only scripture names may remain in their original language.',
+  }
 
   return `You are the NumbahWan Oracle — an ancient, wise, and surprisingly funny spiritual advisor who has studied ALL major wisdom traditions deeply. You synthesize teachings from:
 
@@ -57,7 +55,7 @@ RULES:
 - Treat ALL four traditions with genuine respect while being funny ABOUT life, not about the traditions
 - Keep responses under 400 words — dense wisdom, no filler
 - If someone is in genuine crisis (suicidal, abuse, etc.), drop the humor, be compassionate, and suggest professional help resources
-- You are NOT a therapist — you're a wise friend who reads too much ancient scripture and watches too much comedy`;
+- You are NOT a therapist — you're a wise friend who reads too much ancient scripture and watches too much comedy`
 }
 
 // ══════════════════════════════════════════════
@@ -67,34 +65,35 @@ RULES:
 // ══════════════════════════════════════════════
 
 interface WisdomEntry {
-  tags: string[];
-  tagsZh?: string[];
-  tagsTh?: string[];
-  text: string;
-  zh?: string;
-  th?: string;
+  tags: string[]
+  tagsZh?: string[]
+  tagsTh?: string[]
+  text: string
+  zh?: string
+  th?: string
 }
 
 // Lazy-loaded cache — fetched once on first request
-let _wisdomCache: WisdomEntry[] | null = null;
+let _wisdomCache: WisdomEntry[] | null = null
 
 async function loadWisdomPool(origin: string): Promise<WisdomEntry[]> {
-  if (_wisdomCache) return _wisdomCache;
+  if (_wisdomCache) return _wisdomCache
   try {
     // In Cloudflare Workers, fetch from origin to get static asset
-    const url = `${origin}/static/data/oracle-wisdom.json`;
-    const resp = await fetch(url);
+    const url = `${origin}/static/data/oracle-wisdom.json`
+    const resp = await fetch(url)
     if (resp.ok) {
-      _wisdomCache = await resp.json() as WisdomEntry[];
-      return _wisdomCache;
+      _wisdomCache = (await resp.json()) as WisdomEntry[]
+      return _wisdomCache
     }
-  } catch (e) {
+  } catch (_e) {
     // Fallback: return a minimal default
   }
   // Minimal fallback if static file unavailable
-  _wisdomCache = [{
-    tags: ['life', 'general', 'purpose', 'meaning'],
-    text: `**I hear you.** The big questions hit different at 3am.
+  _wisdomCache = [
+    {
+      tags: ['life', 'general', 'purpose', 'meaning'],
+      text: `**I hear you.** The big questions hit different at 3am.
 
 **The Ancient Consensus:**
 - **Buddhism**: Life's purpose isn't a destination — it's awareness itself. The Dhammapada says "Your work is to discover your work, and then give your heart to it."
@@ -106,74 +105,79 @@ async function loadWisdomPool(origin: string): Promise<WisdomEntry[]> {
 
 **Do This Today:** Help one person with zero expectation of return. Notice how it feels. That feeling is the GPS signal.
 
-*The Oracle's Seal: Your purpose isn't hiding from you. You're hiding from it — behind productivity apps.*`
-  }];
-  return _wisdomCache;
+*The Oracle's Seal: Your purpose isn't hiding from you. You're hiding from it — behind productivity apps.*`,
+    },
+  ]
+  return _wisdomCache
 }
 
 // Keyword matching for relevant fallback selection — supports EN/ZH/TH tags
 function getRelevantWisdom(pool: WisdomEntry[], question: string, lang: string = 'en'): string {
-  const q = question.toLowerCase();
-  
+  const q = question.toLowerCase()
+
   // Score each wisdom by tag matches across ALL language tags
   const scored = pool.map((w, i) => {
-    let score = 0;
+    let score = 0
     for (const tag of w.tags) {
-      if (q.includes(tag)) score += tag.length;
+      if (q.includes(tag)) score += tag.length
     }
     if (w.tagsZh) {
       for (const tag of w.tagsZh) {
-        if (q.includes(tag)) score += tag.length * 2;
+        if (q.includes(tag)) score += tag.length * 2
       }
     }
     if (w.tagsTh) {
       for (const tag of w.tagsTh) {
-        if (q.includes(tag)) score += tag.length * 2;
+        if (q.includes(tag)) score += tag.length * 2
       }
     }
-    return { index: i, score };
-  });
+    return { index: i, score }
+  })
 
-  const matched = scored.filter(s => s.score > 0).sort((a, b) => b.score - a.score);
+  const matched = scored.filter((s) => s.score > 0).sort((a, b) => b.score - a.score)
 
   if (matched.length > 0) {
     if (lang !== 'en') {
-      const withTranslation = matched.filter(m => {
-        const w = pool[m.index];
-        return (lang === 'zh' && w.zh) || (lang === 'th' && w.th);
-      });
+      const withTranslation = matched.filter((m) => {
+        const w = pool[m.index]
+        return (lang === 'zh' && w.zh) || (lang === 'th' && w.th)
+      })
       if (withTranslation.length > 0) {
-        const top = withTranslation.slice(0, 3);
-        const pick = top[Math.floor(Math.random() * top.length)];
-        const w = pool[pick.index];
-        return (lang === 'zh' ? w.zh : w.th) || w.text;
+        const top = withTranslation.slice(0, 3)
+        const pick = top[Math.floor(Math.random() * top.length)]
+        const w = pool[pick.index]
+        return (lang === 'zh' ? w.zh : w.th) || w.text
       }
     }
-    const top = matched.slice(0, 3);
-    const pick = top[Math.floor(Math.random() * top.length)];
-    return getLocalizedText(pool[pick.index], lang);
+    const top = matched.slice(0, 3)
+    const pick = top[Math.floor(Math.random() * top.length)]
+    return getLocalizedText(pool[pick.index], lang)
   }
 
-  const generalPool = pool.filter(w => w.tags.includes('general') || w.tags.includes('life'));
+  const generalPool = pool.filter((w) => w.tags.includes('general') || w.tags.includes('life'))
   if (generalPool.length > 0) {
-    const w = generalPool[Math.floor(Math.random() * generalPool.length)];
-    return getLocalizedText(w, lang);
+    const w = generalPool[Math.floor(Math.random() * generalPool.length)]
+    return getLocalizedText(w, lang)
   }
 
-  const w = pool[Math.floor(Math.random() * pool.length)];
-  return getLocalizedText(w, lang);
+  const w = pool[Math.floor(Math.random() * pool.length)]
+  return getLocalizedText(w, lang)
 }
 
 function getLocalizedText(w: WisdomEntry, lang: string): string {
-  if (lang === 'zh' && w.zh) return w.zh;
-  if (lang === 'th' && w.th) return w.th;
-  return w.text;
+  if (lang === 'zh' && w.zh) return w.zh
+  if (lang === 'th' && w.th) return w.th
+  return w.text
 }
 
 // POST /api/oracle/ask
 router.post('/ask', async (c) => {
   try {
-    const body = await c.req.json() as { question: string; history?: Array<{role: string; content: string}>; language?: string }
+    const body = (await c.req.json()) as {
+      question: string
+      history?: Array<{ role: string; content: string }>
+      language?: string
+    }
     const { question, history, language } = body
 
     if (!question || question.trim().length === 0) {
@@ -185,13 +189,17 @@ router.post('/ask', async (c) => {
     }
 
     const apiKey = c.env?.OPENAI_API_KEY || process.env.OPENAI_API_KEY || llmConfig?.openai?.api_key
-    const baseUrl = c.env?.OPENAI_BASE_URL || process.env.OPENAI_BASE_URL || llmConfig?.openai?.base_url || 'https://www.genspark.ai/api/llm_proxy/v1'
+    const baseUrl =
+      c.env?.OPENAI_BASE_URL ||
+      process.env.OPENAI_BASE_URL ||
+      llmConfig?.openai?.base_url ||
+      'https://www.genspark.ai/api/llm_proxy/v1'
 
     // Try LLM first
     if (apiKey) {
       try {
-        const messages: Array<{role: string; content: string}> = [
-          { role: 'system', content: buildSystemPrompt(language || 'en') }
+        const messages: Array<{ role: string; content: string }> = [
+          { role: 'system', content: buildSystemPrompt(language || 'en') },
         ]
 
         if (history && Array.isArray(history)) {
@@ -209,24 +217,24 @@ router.post('/ask', async (c) => {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${apiKey}`
+            Authorization: `Bearer ${apiKey}`,
           },
           body: JSON.stringify({
             model: 'gpt-5-mini',
             messages,
             max_tokens: 800,
             temperature: 0.85,
-          })
+          }),
         })
 
         if (response.ok) {
-          const data = await response.json() as any
+          const data = (await response.json()) as any
           const reply = data.choices?.[0]?.message?.content
           if (reply) {
             return c.json({ success: true, message: reply, source: 'oracle' })
           }
         }
-      } catch (err) {
+      } catch (_err) {
         // Fall through to curated wisdom
       }
     }
@@ -237,9 +245,8 @@ router.post('/ask', async (c) => {
     return c.json({
       success: true,
       message: getRelevantWisdom(pool, question, language || 'en'),
-      source: 'curated'
+      source: 'curated',
     })
-
   } catch (err: any) {
     console.error('[Oracle] Error:', err.message)
     const origin = new URL(c.req.url).origin
@@ -247,7 +254,7 @@ router.post('/ask', async (c) => {
     return c.json({
       success: true,
       message: getRelevantWisdom(pool, 'life', 'en'),
-      source: 'curated'
+      source: 'curated',
     })
   }
 })
@@ -262,7 +269,7 @@ router.get('/random', async (c) => {
     success: true,
     message: getLocalizedText(wisdom, lang),
     tags: wisdom.tags,
-    source: 'curated'
+    source: 'curated',
   })
 })
 

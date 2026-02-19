@@ -1,7 +1,7 @@
 /**
  * Lazy Loading Utility
  * Based on AI Training Guide: Chapter 4 - Media Asset Management
- * 
+ *
  * Implements:
  * - Progressive image loading (low-quality placeholder → full)
  * - Intersection Observer for lazy loading
@@ -110,14 +110,10 @@ img.loaded {
  * Generate lazy-load image HTML
  * Uses low-quality placeholder (blur-up) pattern
  */
-export function lazyImage(
-  src: string, 
-  alt: string, 
-  className: string = '',
-  placeholder?: string
-): string {
-  const placeholderSrc = placeholder || `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1 1'%3E%3C/svg%3E`
-  
+export function lazyImage(src: string, alt: string, className: string = '', placeholder?: string): string {
+  const placeholderSrc =
+    placeholder || `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1 1'%3E%3C/svg%3E`
+
   return `<img 
     src="${placeholderSrc}" 
     data-src="${src}" 
@@ -135,13 +131,13 @@ export function responsiveImage(
   src: string,
   alt: string,
   sizes: string = '(max-width: 768px) 100vw, 50vw',
-  className: string = ''
+  className: string = '',
 ): string {
   // Generate srcset for common breakpoints
   // Assumes images follow naming: image.jpg -> image-400w.jpg, image-800w.jpg etc
   const baseName = src.replace(/\.(jpg|png|webp)$/, '')
   const ext = src.match(/\.(jpg|png|webp)$/)?.[0] || '.jpg'
-  
+
   return `<img 
     src="${src}" 
     srcset="${baseName}-400w${ext} 400w, ${baseName}-800w${ext} 800w, ${src} 1200w"

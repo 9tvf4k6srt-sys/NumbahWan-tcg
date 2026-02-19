@@ -1,40 +1,42 @@
-import type { Bindings } from '../types'
 import { Hono } from 'hono'
 import cardDatabase from '../../public/static/data/cards-v2.json'
-import { CreateCardSchema, BatchCreateCardsSchema, formatZodError } from '../validation'
+import { toErrorResponse } from '../errors'
 import { logger } from '../logger'
-import { UnauthorizedError, ValidationError, NotFoundError, toErrorResponse } from '../errors'
+import type { Bindings } from '../types'
+import { BatchCreateCardsSchema, CreateCardSchema, formatZodError } from '../validation'
 
 const GM_KEY = 'numbahwan-gm-2026'
 
 // Route helpers - reduce repetitive error handling patterns
-function jsonError(c: any, msg: string, status = 400) {
-  return c.json({ success: false, error: msg }, status);
+function _jsonError(c: any, msg: string, status = 400) {
+  return c.json({ success: false, error: msg }, status)
 }
 
-function jsonSuccess(c: any, data: any) {
-  return c.json({ success: true, ...data });
+function _jsonSuccess(c: any, data: any) {
+  return c.json({ success: true, ...data })
 }
 
-function parseIntParam(val: string | undefined, fallback: number): number {
-  const n = parseInt(val || '');
-  return isNaN(n) ? fallback : n;
+function _parseIntParam(val: string | undefined, fallback: number): number {
+  const n = parseInt(val || '', 10)
+  return Number.isNaN(n) ? fallback : n
 }
 
-function requireFields(body: any, fields: string[]): string | null {
+function _requireFields(body: any, fields: string[]): string | null {
   for (const f of fields) {
-    if (body[f] === undefined || body[f] === null || body[f] === '') return f;
+    if (body[f] === undefined || body[f] === null || body[f] === '') return f
   }
-  return null;
+  return null
 }
 
-function safeString(val: any, maxLen = 200): string {
-  return String(val || '').trim().slice(0, maxLen);
+function _safeString(val: any, maxLen = 200): string {
+  return String(val || '')
+    .trim()
+    .slice(0, maxLen)
 }
 
 const router = new Hono<{ Bindings: Bindings }>()
 
-let cardData = { ...cardDatabase } as any
+const cardData = { ...cardDatabase } as any
 
 // ADMIN CARD API - For card management (GM mode)
 
@@ -64,7 +66,7 @@ router.post('/cards', async (c) => {
       img,
       set,
       reserved,
-      description
+      description,
     }
 
     cardData.cards.push(newCard)
@@ -81,7 +83,7 @@ router.post('/cards', async (c) => {
 // PUT /api/admin/cards/:id - Update card
 router.put('/cards/:id', async (c) => {
   try {
-    const id = parseInt(c.req.param('id'))
+    const id = parseInt(c.req.param('id'), 10)
     const body = await c.req.json()
     const { gmKey, ...updates } = body
 
@@ -108,7 +110,7 @@ router.put('/cards/:id', async (c) => {
 // DELETE /api/admin/cards/:id - Delete card
 router.delete('/cards/:id', async (c) => {
   try {
-    const id = parseInt(c.req.param('id'))
+    const id = parseInt(c.req.param('id'), 10)
     const gmKey = c.req.query('gmKey')
 
     if (gmKey !== GM_KEY) {
@@ -168,7 +170,7 @@ router.post('/cards/batch', async (c) => {
       epic: 309,
       rare: 409,
       uncommon: 531,
-      common: 641
+      common: 641,
     }
 
     // Find next available IDs
@@ -192,7 +194,11 @@ router.post('/cards/batch', async (c) => {
       const id = card.id || idRanges[card.rarity]++
 
       // Auto-generate image filename if not provided
-      const slug = card.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '')
+      const slug = card.name
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/-+/g, '-')
+        .replace(/^-|-$/g, '')
       const img = card.img || `${card.rarity}-${id}-${slug}.jpg`
 
       const newCard = {
@@ -202,7 +208,7 @@ router.post('/cards/batch', async (c) => {
         img,
         set: card.set || 'custom',
         reserved: card.reserved || false,
-        description: card.description || ''
+        description: card.description || '',
       }
 
       cardData.cards.push(newCard)
@@ -217,7 +223,7 @@ router.post('/cards/batch', async (c) => {
       added: addedCards.length,
       cards: addedCards,
       errors: errors.length > 0 ? errors : undefined,
-      total: cardData.totalCards
+      total: cardData.totalCards,
     })
   } catch (e) {
     const { body, status } = toErrorResponse(e)
@@ -240,7 +246,7 @@ router.get('/cards/next-ids', (c) => {
     epic: 309,
     rare: 409,
     uncommon: 531,
-    common: 641
+    common: 641,
   }
 
   // Find next available IDs
@@ -260,8 +266,8 @@ router.get('/cards/next-ids', (c) => {
       epic: cardData.cards.filter((cd: any) => cd.rarity === 'epic').length,
       rare: cardData.cards.filter((cd: any) => cd.rarity === 'rare').length,
       uncommon: cardData.cards.filter((cd: any) => cd.rarity === 'uncommon').length,
-      common: cardData.cards.filter((cd: any) => cd.rarity === 'common').length
-    }
+      common: cardData.cards.filter((cd: any) => cd.rarity === 'common').length,
+    },
   })
 })
 
@@ -275,53 +281,66 @@ router.get('/api/card-factory', (c) => {
       endpoint: 'POST /api/admin/cards/batch',
       body: {
         gmKey: 'numbahwan-gm-2026',
-        cards: [
-          { name: 'Card Name', rarity: 'epic', description: 'Optional desc' }
-        ]
+        cards: [{ name: 'Card Name', rarity: 'epic', description: 'Optional desc' }],
       },
-      note: 'ID and image filename auto-generated if not provided'
+      note: 'ID and image filename auto-generated if not provided',
     },
 
     imageSettings: {
       model: 'nano-banana-pro',
       aspectRatio: '3:4',
       size: '768x1024',
-      fullBleed: true
+      fullBleed: true,
     },
 
     promptStructure: {
-      template: '[SUBJECT with exact likeness details], [RARITY STYLE], full bleed trading card artwork, edge-to-edge composition, no borders, no card frame, [BACKGROUND], dramatic lighting, ultra detailed, professional TCG illustration',
+      template:
+        '[SUBJECT with exact likeness details], [RARITY STYLE], full bleed trading card artwork, edge-to-edge composition, no borders, no card frame, [BACKGROUND], dramatic lighting, ultra detailed, professional TCG illustration',
       likenessCapture: [
         'Exact facial features (eyes, nose, mouth, skin tone)',
         'Exact hair (style, color, length)',
         'Exact outfit (all clothing, colors, patterns)',
         'Exact accessories (weapons, jewelry, armor)',
-        'Distinguishing marks (scars, tattoos, glasses, beard)'
+        'Distinguishing marks (scars, tattoos, glasses, beard)',
       ],
       alwaysInclude: ['full bleed', 'edge-to-edge', 'no borders', 'no card frame'],
-      neverInclude: ['card border', 'card frame', 'text overlay', 'white borders']
+      neverInclude: ['card border', 'card frame', 'text overlay', 'white borders'],
     },
 
     rarityPrompts: {
-      mythic: '[SUBJECT exact likeness], legendary mythic hero radiating divine power, golden aura and holy light, full bleed TCG artwork edge-to-edge, no borders no frame, epic cosmic purple void with golden swirling energy, dramatic divine backlighting, masterpiece ultra detailed 4k',
-      legendary: '[SUBJECT exact likeness], powerful legendary warrior with intense elemental aura, full bleed TCG artwork edge-to-edge, no borders no frame, dark gradient with [ELEMENT] energy effects filling frame, dramatic side lighting, professional TCG art 4k',
+      mythic:
+        '[SUBJECT exact likeness], legendary mythic hero radiating divine power, golden aura and holy light, full bleed TCG artwork edge-to-edge, no borders no frame, epic cosmic purple void with golden swirling energy, dramatic divine backlighting, masterpiece ultra detailed 4k',
+      legendary:
+        '[SUBJECT exact likeness], powerful legendary warrior with intense elemental aura, full bleed TCG artwork edge-to-edge, no borders no frame, dark gradient with [ELEMENT] energy effects filling frame, dramatic side lighting, professional TCG art 4k',
       epic: '[SUBJECT exact likeness], elite champion in dynamic action with magical energy, full bleed TCG artwork edge-to-edge, no borders no frame, purple gradient with magical particles to all edges, dramatic action lighting, detailed TCG art',
       rare: '[SUBJECT exact likeness], skilled adventurer confident pose with subtle magic, full bleed TCG artwork edge-to-edge, no borders no frame, blue gradient with particles filling frame, balanced lighting',
-      uncommon: '[SUBJECT exact likeness], capable warrior ready stance, full bleed TCG artwork edge-to-edge, no borders no frame, green gradient filling entire frame, clean lighting',
-      common: '[SUBJECT exact likeness], basic character, full bleed TCG artwork edge-to-edge, no borders no frame, gray gradient background, standard lighting'
+      uncommon:
+        '[SUBJECT exact likeness], capable warrior ready stance, full bleed TCG artwork edge-to-edge, no borders no frame, green gradient filling entire frame, clean lighting',
+      common:
+        '[SUBJECT exact likeness], basic character, full bleed TCG artwork edge-to-edge, no borders no frame, gray gradient background, standard lighting',
     },
 
     exampleWithReference: {
       scenario: 'User provides image of character with white beard, sunglasses, brown armor, golden hammer',
-      prompt: 'Character with white beard, cool pixel sunglasses, brown leather armor with golden trim and buckles, wielding large golden glowing hammer with yellow energy aura, stocky heroic build, legendary mythic hero radiating divine power, golden aura and holy light, full bleed trading card artwork edge-to-edge, no borders no card frame, epic cosmic purple void background with golden swirling energy and particles, dramatic divine backlighting with golden rim light, masterpiece TCG illustration ultra detailed 4k'
+      prompt:
+        'Character with white beard, cool pixel sunglasses, brown leather armor with golden trim and buckles, wielding large golden glowing hammer with yellow energy aura, stocky heroic build, legendary mythic hero radiating divine power, golden aura and holy light, full bleed trading card artwork edge-to-edge, no borders no card frame, epic cosmic purple void background with golden swirling energy and particles, dramatic divine backlighting with golden rim light, masterpiece TCG illustration ultra detailed 4k',
     },
 
     imageNaming: '{rarity}-{id}-{slug}.jpg',
     imagePath: '/public/static/cards/',
 
     nextIds: (() => {
-      const ranges: Record<string, number> = { mythic: 106, legendary: 209, epic: 309, rare: 409, uncommon: 531, common: 641 }
-      cardData.cards.forEach((cd: any) => { if (cd.id >= ranges[cd.rarity]) ranges[cd.rarity] = cd.id + 1 })
+      const ranges: Record<string, number> = {
+        mythic: 106,
+        legendary: 209,
+        epic: 309,
+        rare: 409,
+        uncommon: 531,
+        common: 641,
+      }
+      cardData.cards.forEach((cd: any) => {
+        if (cd.id >= ranges[cd.rarity]) ranges[cd.rarity] = cd.id + 1
+      })
       return ranges
     })(),
 
@@ -331,8 +350,8 @@ router.get('/api/card-factory', (c) => {
       '3. Generate image (nano-banana-pro, 3:4 aspect)',
       '4. Save to /public/static/cards/{rarity}-{id}-{slug}.jpg',
       '5. POST to /api/admin/cards/batch',
-      '6. npm run build && pm2 restart numbahwan-guild'
-    ]
+      '6. npm run build && pm2 restart numbahwan-guild',
+    ],
   })
 })
 export default router

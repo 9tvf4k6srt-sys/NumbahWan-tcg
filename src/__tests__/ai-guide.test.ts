@@ -1,8 +1,8 @@
 /**
  * Unit tests for ai-guide.ts — Action parser and exports
  */
-import { describe, it, expect } from 'vitest'
-import { parseActionsFromResponse, AVAILABLE_ACTIONS } from '../services/ai-guide'
+import { describe, expect, it } from 'vitest'
+import { AVAILABLE_ACTIONS, parseActionsFromResponse } from '../services/ai-guide'
 
 describe('parseActionsFromResponse', () => {
   it('should return clean text when no actions are present', () => {
@@ -22,7 +22,8 @@ describe('parseActionsFromResponse', () => {
   })
 
   it('should handle multiple actions', () => {
-    const input = 'First <<<ACTION:{"type":"navigate","target":"/cards"}>>> then <<<ACTION:{"type":"navigate","target":"/forge"}>>>'
+    const input =
+      'First <<<ACTION:{"type":"navigate","target":"/cards"}>>> then <<<ACTION:{"type":"navigate","target":"/forge"}>>>'
     const result = parseActionsFromResponse(input)
 
     expect(result.cleanText).not.toContain('<<<')

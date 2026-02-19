@@ -2,6 +2,30 @@
 # Mycelium: Pre-commit — enforce protocol, auto-guard, compact, warn
 # The underground network protects before every commit
 
+# ─── TypeScript Gate: never let TS errors slip through again ───
+# Root cause: 202 errors accumulated silently over 3 weeks (Jan 26 – Feb 18)
+# because Vite strips types without checking them. This gate catches it early.
+if git diff --cached --name-only | grep -qE '\.(ts|tsx)$'; then
+  echo "  [tsc] Checking TypeScript..." >&2
+  TSC_OUTPUT=$(npx tsc --noEmit --skipLibCheck 2>&1)
+  TSC_EXIT=$?
+  if [ "$TSC_EXIT" -ne 0 ]; then
+    ERROR_COUNT=$(echo "$TSC_OUTPUT" | grep -c "error TS" || true)
+    echo "" >&2
+    echo "  PRE-COMMIT BLOCKED: $ERROR_COUNT TypeScript error(s) found." >&2
+    echo "$TSC_OUTPUT" | grep "error TS" | head -10 >&2
+    if [ "$ERROR_COUNT" -gt 10 ]; then
+      echo "  ... and $((ERROR_COUNT - 10)) more (run: npx tsc --noEmit)" >&2
+    fi
+    echo "" >&2
+    echo "  Fix the errors above, or bypass: git commit --no-verify" >&2
+    echo "" >&2
+    exit 1
+  else
+    echo "  [tsc] Clean — 0 errors" >&2
+  fi
+fi
+
 # ─── Mycelium Watch: warn about known risks (zero config, always runs) ───
 if [ -f "mycelium-watch.cjs" ]; then
   node "mycelium-watch.cjs" --warn 2>/dev/null >&2 || true

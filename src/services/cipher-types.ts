@@ -53,7 +53,7 @@ export const CIPHER_CONFIG = {
   MAX_ANSWER_LENGTH: 100,
 } as const
 
-export const DIFFICULTY_SETTINGS: Record<number, { nwgPerDay: number, label: string }> = {
+export const DIFFICULTY_SETTINGS: Record<number, { nwgPerDay: number; label: string }> = {
   1: { nwgPerDay: 25, label: 'Novice' },
   2: { nwgPerDay: 50, label: 'Apprentice' },
   3: { nwgPerDay: 100, label: 'Adept' },

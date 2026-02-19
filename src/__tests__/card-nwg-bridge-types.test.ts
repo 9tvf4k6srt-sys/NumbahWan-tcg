@@ -1,12 +1,19 @@
 /**
  * Unit tests for card-nwg-bridge-types.ts — Card bridge constants & helpers
  */
-import { describe, it, expect } from 'vitest'
+import { describe, expect, it } from 'vitest'
 import {
-  CARD_NWG_VALUES, CARD_YIELD_RATES, CARD_PRINT_RUNS,
-  FUSION_RECIPES, STAKING_BOOSTS, CARD_CACHE_KEYS,
-  generateCardId, generateClaimCode, hashClaimCode,
-  generateQRCodeData, calculatePendingYield, calculateBoostMultiplier,
+  CARD_CACHE_KEYS,
+  CARD_NWG_VALUES,
+  CARD_PRINT_RUNS,
+  CARD_YIELD_RATES,
+  calculatePendingYield,
+  FUSION_RECIPES,
+  generateCardId,
+  generateClaimCode,
+  generateQRCodeData,
+  hashClaimCode,
+  STAKING_BOOSTS,
 } from '../services/card-nwg-bridge-types'
 
 describe('CARD_NWG_VALUES', () => {
@@ -65,7 +72,7 @@ describe('STAKING_BOOSTS', () => {
   it('should have boost tiers for collection milestones', () => {
     expect(Object.keys(STAKING_BOOSTS).length).toBeGreaterThan(0)
     // Each boost should be >= 1.0
-    for (const [key, value] of Object.entries(STAKING_BOOSTS)) {
+    for (const [_key, value] of Object.entries(STAKING_BOOSTS)) {
       expect(value).toBeGreaterThanOrEqual(1)
     }
   })

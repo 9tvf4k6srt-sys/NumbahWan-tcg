@@ -1,12 +1,17 @@
 /**
  * Unit tests for src/validation.ts — Zod schemas
  */
-import { describe, it, expect } from 'vitest'
+import { describe, expect, it } from 'vitest'
 import {
-  CreateCardSchema, BatchCreateCardsSchema, IdentifySchema,
-  TransactionSchema, PlaceBidSchema, MintRequestSchema,
-  ClaimCardSchema, ChatRequestSchema, CardRaritySchema,
+  BatchCreateCardsSchema,
+  CardRaritySchema,
+  ChatRequestSchema,
+  CreateCardSchema,
   formatZodError,
+  IdentifySchema,
+  MintRequestSchema,
+  PlaceBidSchema,
+  TransactionSchema,
 } from '../validation'
 
 describe('CardRaritySchema', () => {
@@ -145,9 +150,14 @@ describe('MintRequestSchema', () => {
   })
 
   it('should reject zero quantity', () => {
-    expect(MintRequestSchema.safeParse({
-      cardId: 1, rarity: 'common', quantity: 0, set: 'core',
-    }).success).toBe(false)
+    expect(
+      MintRequestSchema.safeParse({
+        cardId: 1,
+        rarity: 'common',
+        quantity: 0,
+        set: 'core',
+      }).success,
+    ).toBe(false)
   })
 })
 

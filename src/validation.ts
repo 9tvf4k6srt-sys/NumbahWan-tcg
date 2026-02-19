@@ -7,9 +7,7 @@
 import { z } from 'zod'
 
 // ── Card Rarities ──────────────────────────────────────────────
-export const CardRaritySchema = z.enum([
-  'common', 'uncommon', 'rare', 'epic', 'legendary', 'mythic',
-])
+export const CardRaritySchema = z.enum(['common', 'uncommon', 'rare', 'epic', 'legendary', 'mythic'])
 
 // ── Admin Card Endpoints ───────────────────────────────────────
 export const CreateCardSchema = z.object({
@@ -24,15 +22,20 @@ export const CreateCardSchema = z.object({
 
 export const BatchCreateCardsSchema = z.object({
   gmKey: z.string(),
-  cards: z.array(z.object({
-    name: z.string().min(1).max(100),
-    rarity: CardRaritySchema,
-    img: z.string().max(200).optional(),
-    set: z.string().max(50).optional(),
-    reserved: z.boolean().optional(),
-    description: z.string().max(500).optional(),
-    id: z.number().int().positive().optional(),
-  })).min(1).max(100),
+  cards: z
+    .array(
+      z.object({
+        name: z.string().min(1).max(100),
+        rarity: CardRaritySchema,
+        img: z.string().max(200).optional(),
+        set: z.string().max(50).optional(),
+        reserved: z.boolean().optional(),
+        description: z.string().max(500).optional(),
+        id: z.number().int().positive().optional(),
+      }),
+    )
+    .min(1)
+    .max(100),
 })
 
 // ── Wallet / Economy ───────────────────────────────────────────
@@ -78,13 +81,18 @@ export const ChatRequestSchema = z.object({
   message: z.string().min(1).max(2000),
   npcId: z.string().min(1).max(32).optional(),
   language: z.enum(['en', 'zh', 'th']).optional().default('en'),
-  conversationHistory: z.array(z.object({
-    role: z.enum(['user', 'assistant', 'system']),
-    content: z.string(),
-  })).max(20).optional(),
+  conversationHistory: z
+    .array(
+      z.object({
+        role: z.enum(['user', 'assistant', 'system']),
+        content: z.string(),
+      }),
+    )
+    .max(20)
+    .optional(),
 })
 
 // ── Utility: Zod Error Formatter ───────────────────────────────
 export function formatZodError(error: z.ZodError): string {
-  return error.issues.map(i => `${i.path.join('.')}: ${i.message}`).join('; ')
+  return error.issues.map((i) => `${i.path.join('.')}: ${i.message}`).join('; ')
 }

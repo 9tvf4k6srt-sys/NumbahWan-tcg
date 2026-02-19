@@ -1,7 +1,7 @@
 /**
  * Data Routes - Static JSON data APIs
  * Split from monolithic index.tsx
- * 
+ *
  * v2: Data files moved to /static/data/ — loaded via fetch instead of import
  * This cuts ~27KB from the worker bundle (translations, roster, performance, photos)
  * Data is cached on first request per isolate lifetime
@@ -16,7 +16,7 @@ type Bindings = {
 const router = new Hono<{ Bindings: Bindings }>()
 
 // ── Lazy-load cache for static data ──────────────────────────
-let _dataCache: Record<string, any> = {}
+const _dataCache: Record<string, any> = {}
 
 async function loadStaticData(origin: string, name: string): Promise<any> {
   if (_dataCache[name]) return _dataCache[name]
@@ -26,7 +26,7 @@ async function loadStaticData(origin: string, name: string): Promise<any> {
       _dataCache[name] = await resp.json()
       return _dataCache[name]
     }
-  } catch (e) {
+  } catch (_e) {
     // Fallback: return empty
   }
   return {}

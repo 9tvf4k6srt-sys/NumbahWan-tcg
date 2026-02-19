@@ -1,8 +1,8 @@
 /**
  * Unit tests for card-nwg-bridge.ts — Minting and claim system
  */
-import { describe, it, expect } from 'vitest'
-import { mintPhysicalCards, type MintRequest } from '../services/card-nwg-bridge'
+import { describe, expect, it } from 'vitest'
+import { type MintRequest, mintPhysicalCards } from '../services/card-nwg-bridge'
 import { CARD_NWG_VALUES, CARD_PRINT_RUNS } from '../services/card-nwg-bridge-types'
 
 describe('mintPhysicalCards', () => {
@@ -53,7 +53,7 @@ describe('mintPhysicalCards', () => {
     const request: MintRequest = { cardId: 1, rarity: 'uncommon', quantity: 10, set: 'core' }
     const result = mintPhysicalCards(request, baseMeta)
 
-    const codes = result.claimCodes.map(c => c.code)
+    const codes = result.claimCodes.map((c) => c.code)
     const unique = new Set(codes)
     expect(unique.size).toBe(codes.length)
   })

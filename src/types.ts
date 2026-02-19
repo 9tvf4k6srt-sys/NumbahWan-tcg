@@ -70,7 +70,7 @@ export interface AuctionBid {
 // ── Card Engine Helpers ──────────────────────────────────────────
 export function calcCardPower(card: CardBase): number {
   const stats = card.gameStats
-  return stats.attack + stats.defense + stats.speed + stats.hp + (stats.cost * 2)
+  return stats.attack + stats.defense + stats.speed + stats.hp + stats.cost * 2
 }
 
 export const TIER_RULES = {

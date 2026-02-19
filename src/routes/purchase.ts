@@ -14,12 +14,12 @@ const router = new Hono<{ Bindings: Bindings }>()
 // POST /api/purchase/create-checkout - Create checkout session (Demo)
 router.post('/create-checkout', async (c) => {
   try {
-    const body = await c.req.json();
-    const { package: pkgName, usd, nwg, walletId } = body;
-    
+    const body = await c.req.json()
+    const { package: pkgName, usd, nwg, walletId } = body
+
     // In demo mode, we just return a flag indicating demo
     // In production, this would create a Stripe checkout session
-    
+
     // For now, demo mode - will be replaced with real Stripe integration
     return c.json({
       success: true,
@@ -27,9 +27,9 @@ router.post('/create-checkout', async (c) => {
       message: 'Demo mode active. In production, this redirects to Stripe.',
       package: pkgName,
       amount: { usd, nwg },
-      walletId
-    });
-    
+      walletId,
+    })
+
     /* Production code (uncomment when Stripe is configured):
     const stripe = new Stripe(c.env?.STRIPE_SECRET_KEY);
     const session = await stripe.checkout.sessions.create({
@@ -53,21 +53,21 @@ router.post('/create-checkout', async (c) => {
     return c.json({ success: true, checkoutUrl: session.url });
     */
   } catch (e) {
-    console.error('Purchase error:', e);
-    return c.json({ success: false, error: String(e) }, 500);
+    console.error('Purchase error:', e)
+    return c.json({ success: false, error: String(e) }, 500)
   }
-});
+})
 
 // GET /api/purchase/verify - Verify purchase after Stripe webhook
 router.get('/verify', async (c) => {
-  const sessionId = c.req.query('session_id');
-  
+  const sessionId = c.req.query('session_id')
+
   // Demo mode - always succeed
   return c.json({
     success: true,
     demo: true,
     message: 'Payment verification (demo mode)',
-    sessionId
-  });
-});
+    sessionId,
+  })
+})
 export default router

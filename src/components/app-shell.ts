@@ -1,14 +1,14 @@
 /**
  * App Shell Component
  * Based on AI Training Guide: Chapter 8 - Frontend Architecture
- * 
+ *
  * The App Shell pattern:
  * - Minimal HTML/CSS/JS for instant first paint
  * - Cacheable shell that loads instantly
  * - Content loaded progressively
  */
 
-import { lazyLoadStyles, lazyLoadScript } from '../utils/lazyload'
+import { lazyLoadScript, lazyLoadStyles } from '../utils/lazyload'
 
 // Critical CSS that renders the shell instantly
 export const criticalCSS = `
@@ -75,12 +75,7 @@ if (performance && performance.mark) {
 /**
  * Generate complete App Shell HTML wrapper
  */
-export function appShell(options: {
-  title: string
-  content: string
-  scripts?: string
-  styles?: string
-}): string {
+export function appShell(options: { title: string; content: string; scripts?: string; styles?: string }): string {
   return `<!DOCTYPE html>
 <html lang="en">
 <head>

@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dark Factory — Recursive Learning Dashboard</title>
+    <link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
+    <style>
+        :root { --bg: #0a0a0f; --card: rgba(255,255,255,0.04); --border: rgba(255,255,255,0.08); --gold: #ffd700; --green: #22c55e; --red: #ef4444; --orange: #ff6b00; --blue: #3b82f6; --purple: #a855f7; --text: #e4e4e7; --dim: rgba(255,255,255,0.5); }
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body { font-family: 'Inter',system-ui,sans-serif; background:var(--bg); color:var(--text); min-height:100vh; }
+        .dash { max-width:1400px; margin:0 auto; padding:20px; }
+        h1 { font-family:'Orbitron',monospace; font-size:1.5rem; color:var(--gold); margin-bottom:4px; }
+        .subtitle { color:var(--dim); font-size:0.85rem; margin-bottom:24px; }
+        .hero-tagline { color:var(--purple); font-size:0.95rem; font-weight:600; margin-bottom:20px; letter-spacing:0.5px; }
+        .grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(320px,1fr)); gap:16px; margin-bottom:24px; }
+        .card { background:var(--card); border:1px solid var(--border); border-radius:12px; padding:16px; }
+        .card h2 { font-size:0.9rem; color:var(--dim); margin-bottom:12px; text-transform:uppercase; letter-spacing:1px; }
+        .card.highlight { border-color: rgba(168,85,247,0.3); background: rgba(168,85,247,0.04); }
+        .metric { font-size:2rem; font-weight:800; line-height:1; }
+        .metric-label { font-size:0.75rem; color:var(--dim); margin-top:4px; }
+        .metric-row { display:flex; gap:24px; margin-top:12px; }
+        .metric-item { text-align:center; }
+        .metric-item .val { font-size:1.4rem; font-weight:700; }
+        .bar { height:8px; border-radius:4px; background:rgba(255,255,255,0.06); margin-top:8px; overflow:hidden; }
+        .bar-fill { height:100%; border-radius:4px; transition:width 0.5s; }
+        .grade-A { color:var(--green); } .grade-B { color:var(--blue); } .grade-C { color:var(--orange); } .grade-F { color:var(--red); }
+        .status-ok { color:var(--green); } .status-warn { color:var(--orange); } .status-error { color:var(--red); } .status-info { color:var(--blue); }
+        .pipeline-step { display:flex; align-items:center; gap:8px; padding:8px 0; border-bottom:1px solid var(--border); font-size:0.85rem; }
+        .pipeline-step:last-child { border:none; }
+        .step-icon { width:24px; text-align:center; }
+        .step-name { flex:1; }
+        .step-status { font-size:0.75rem; padding:2px 8px; border-radius:6px; }
+        .step-status.done { background:rgba(34,197,94,0.15); color:var(--green); }
+        .step-status.pending { background:rgba(255,255,255,0.06); color:var(--dim); }
+        .step-status.running { background:rgba(59,130,246,0.15); color:var(--blue); }
+        .step-status.failed { background:rgba(239,68,68,0.15); color:var(--red); }
+        .defect-row { display:flex; align-items:center; gap:8px; padding:8px 0; font-size:0.82rem; border-bottom:1px solid var(--border); }
+        .defect-row:last-child { border:none; }
+        .defect-id { font-family:'Fira Code',monospace; font-size:0.72rem; color:var(--purple); min-width:45px; }
+        .defect-cat { font-size:0.68rem; padding:2px 6px; border-radius:4px; background:rgba(255,255,255,0.06); color:var(--dim); }
+        .defect-desc { flex:1; }
+        .defect-fixed { color:var(--green); font-weight:700; font-size:0.72rem; }
+        .defect-open { color:var(--red); font-weight:700; font-size:0.72rem; }
+        .lesson-row { padding:6px 0; font-size:0.82rem; border-bottom:1px solid var(--border); }
+        .lesson-row:last-child { border:none; }
+        .lesson-type { font-family:'Fira Code',monospace; font-size:0.68rem; padding:1px 5px; border-radius:3px; background:rgba(168,85,247,0.15); color:var(--purple); }
+        .dna-gen { font-family:'Orbitron',monospace; font-size:3rem; font-weight:900; color:var(--purple); }
+        .mutation-item { font-size:0.8rem; padding:4px 0; color:var(--dim); }
+        .mutation-item strong { color:var(--text); }
+        .tool-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(180px,1fr)); gap:8px; }
+        .tool-btn { background:rgba(255,255,255,0.04); border:1px solid var(--border); border-radius:8px; padding:10px; font-size:0.8rem; color:var(--text); cursor:pointer; text-align:left; transition:all 0.2s; }
+        .tool-btn:hover { border-color:var(--gold); background:rgba(255,215,0,0.05); }
+        .tool-btn .tool-name { font-weight:600; color:var(--gold); font-size:0.85rem; }
+        .tool-btn .tool-desc { color:var(--dim); font-size:0.7rem; margin-top:2px; }
+        .log-area { background:rgba(0,0,0,0.3); border-radius:8px; padding:12px; font-family:'Fira Code',monospace; font-size:0.75rem; max-height:300px; overflow-y:auto; white-space:pre-wrap; color:var(--dim); }
+        .btn { display:inline-flex; align-items:center; gap:6px; padding:8px 16px; border-radius:8px; font-size:0.85rem; font-weight:600; cursor:pointer; border:none; transition:all 0.2s; }
+        .btn-gold { background:linear-gradient(135deg,var(--orange),var(--gold)); color:#000; }
+        .btn-purple { background:linear-gradient(135deg,#7c3aed,var(--purple)); color:#fff; }
+        .btn-ghost { background:transparent; border:1px solid var(--border); color:var(--text); }
+        .btn:hover { transform:translateY(-1px); }
+        .actions { display:flex; gap:8px; margin-bottom:16px; flex-wrap:wrap; }
+        .refresh-badge { font-size:0.7rem; color:var(--dim); }
+        .section-title { font-family:'Orbitron',monospace; font-size:1.1rem; color:var(--purple); margin:24px 0 12px; }
+        .loop-diagram { font-family:'Fira Code',monospace; font-size:0.75rem; color:var(--dim); background:rgba(168,85,247,0.05); border:1px solid rgba(168,85,247,0.15); border-radius:8px; padding:16px; margin:12px 0; line-height:1.6; white-space:pre; overflow-x:auto; }
+        .loop-diagram .highlight-text { color:var(--purple); font-weight:700; }
+        @media(max-width:640px) { .grid { grid-template-columns:1fr; } .tool-grid { grid-template-columns:1fr 1fr; } .loop-diagram { font-size:0.6rem; } }
+    </style>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;800;900&family=Inter:wght@400;500;600;700;800&family=Fira+Code:wght@400&display=swap" rel="stylesheet">
+</head>
+<body>
+<div class="dash">
+    <h1>🧠 Dark Factory</h1>
+    <p class="hero-tagline">A factory that learns. Every defect becomes a lesson. Every lesson becomes a gate.</p>
+    <p class="subtitle">Recursive Learning Dashboard <span class="refresh-badge" id="lastRefresh"></span></p>
+
+    <div class="actions">
+        <button class="btn btn-purple" onclick="runTool('factory.learn')">🧬 Evolve</button>
+        <button class="btn btn-gold" onclick="runTool('factory.validate')">▶ Validate</button>
+        <button class="btn btn-gold" onclick="runTool('factory.heal')">🔧 Heal</button>
+        <button class="btn btn-ghost" onclick="runTool('factory.memory')">🧠 Memory</button>
+        <button class="btn btn-ghost" onclick="runTool('scorecard')">📊 Scorecard</button>
+        <button class="btn btn-ghost" onclick="runTool('factory.checklist')">📋 Checklist</button>
+        <button class="btn btn-ghost" onclick="refresh()">🔄 Refresh</button>
+    </div>
+
+    <div class="grid">
+        <!-- Template DNA -->
+        <div class="card highlight">
+            <h2>🧬 Template DNA</h2>
+            <div class="dna-gen" id="dnaGen">Gen 2</div>
+            <div class="metric-label">Current template generation</div>
+            <div class="metric-row">
+                <div class="metric-item"><div class="val" style="color:var(--purple)" id="totalLessons">7</div><div class="metric-label">Lessons</div></div>
+                <div class="metric-item"><div class="val" style="color:var(--green)" id="totalDefectsFixed">3</div><div class="metric-label">Defects Fixed</div></div>
+                <div class="metric-item"><div class="val" style="color:var(--orange)" id="totalMutations">5</div><div class="metric-label">Mutations</div></div>
+                <div class="metric-item"><div class="val" style="color:var(--blue)" id="cleanStreak">1</div><div class="metric-label">Clean Streak</div></div>
+            </div>
+        </div>
+
+        <!-- Scorecard Summary -->
+        <div class="card">
+            <h2>📊 Quality Scorecard</h2>
+            <div class="metric grade-A" id="avgScore">93/100</div>
+            <div class="metric-label">Average Score</div>
+            <div class="bar"><div class="bar-fill" id="scoreBar" style="width:93%;background:var(--green)"></div></div>
+            <div class="metric-row">
+                <div class="metric-item"><div class="val grade-A" id="gradeA">100</div><div class="metric-label">A Grade</div></div>
+                <div class="metric-item"><div class="val grade-F" id="gradeFail">0</div><div class="metric-label">Failing</div></div>
+                <div class="metric-item"><div class="val" id="totalPages">139</div><div class="metric-label">Pages</div></div>
+                <div class="metric-item"><div class="val" style="color:var(--purple)" id="factoryPages">1</div><div class="metric-label">Factory Built</div></div>
+            </div>
+        </div>
+
+        <!-- Learning Loop -->
+        <div class="card highlight">
+            <h2>🔄 The Learning Loop</h2>
+            <div class="loop-diagram"><span class="highlight-text">Defect</span> → Lesson → Pattern → <span class="highlight-text">Gate</span> → Prevention
+
+Build N:   Bug ships. Human fixes it.
+           Memory records the fix.
+
+Build N+1: Pre-build checklist catches it.
+           Bug can never ship again.
+
+Build N+2: Evolution promotes to permanent gate.
+           <span class="highlight-text">Entire class of bug is blocked.</span></div>
+        </div>
+
+        <!-- Pipeline Status -->
+        <div class="card">
+            <h2>⚡ Pipeline</h2>
+            <div id="pipelineSteps">
+                <div class="pipeline-step"><span class="step-icon">📋</span><span class="step-name">Memory Checklist</span><span class="step-status done">auto</span></div>
+                <div class="pipeline-step"><span class="step-icon">1</span><span class="step-name">Validate (i18n + sentinel)</span><span class="step-status done">pass</span></div>
+                <div class="pipeline-step"><span class="step-icon">2</span><span class="step-name">Translate</span><span class="step-status pending">idle</span></div>
+                <div class="pipeline-step"><span class="step-icon">3</span><span class="step-name">Inject PAGE_I18N</span><span class="step-status pending">idle</span></div>
+                <div class="pipeline-step"><span class="step-icon">4</span><span class="step-name">Test</span><span class="step-status pending">idle</span></div>
+                <div class="pipeline-step"><span class="step-icon">5</span><span class="step-name">Scorecard</span><span class="step-status done">93 avg</span></div>
+                <div class="pipeline-step"><span class="step-icon">6</span><span class="step-name">Deploy Gate</span><span class="step-status done">5/5</span></div>
+                <div class="pipeline-step"><span class="step-icon">📝</span><span class="step-name">Record to Memory</span><span class="step-status done">auto</span></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Defects & Lessons -->
+    <h3 class="section-title">Defect History</h3>
+    <div class="grid">
+        <div class="card">
+            <h2>🐛 Defects Tracked</h2>
+            <div id="defectsList">
+                <div class="defect-row"><span class="defect-id">D0001</span><span class="defect-cat">i18n</span><span class="defect-desc">PAGE_I18N inline translations empty</span><span class="defect-fixed">FIXED</span></div>
+                <div class="defect-row"><span class="defect-id">D0002</span><span class="defect-cat">i18n</span><span class="defect-desc">Sidecar lost zh/th on regeneration</span><span class="defect-fixed">FIXED</span></div>
+                <div class="defect-row"><span class="defect-id">D0003</span><span class="defect-cat">layout</span><span class="defect-desc">REWATCH button blocks nav tabs</span><span class="defect-fixed">FIXED</span></div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>📚 Lessons Learned</h2>
+            <div id="lessonsList">
+                <div class="lesson-row"><span class="lesson-type">defect</span> PAGE_I18N must contain all 3 languages (en/zh/th)</div>
+                <div class="lesson-row"><span class="lesson-type">defect</span> Never overwrite .i18n.json — always merge existing translations</div>
+                <div class="lesson-row"><span class="lesson-type">defect</span> Validation must check HTML inline, not just sidecar file</div>
+                <div class="lesson-row"><span class="lesson-type">layout</span> Fixed elements must not overlap sticky nav or FAB buttons</div>
+                <div class="lesson-row"><span class="lesson-type">manual</span> Fragment pages need preview banner linking to parent page</div>
+                <div class="lesson-row"><span class="lesson-type">build</span> Generated dlc-12-abyssal-temple (14.4KB, 21 i18n keys)</div>
+                <div class="lesson-row"><span class="lesson-type">build</span> Pipeline validation passed (i18n + sentinel)</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Template Evolution -->
+    <h3 class="section-title">Template Evolution</h3>
+    <div class="card" style="margin-bottom:16px">
+        <h2>🧬 Mutation History</h2>
+        <div id="mutationsList">
+            <div style="margin-bottom:12px">
+                <div style="color:var(--purple);font-weight:700;font-size:0.9rem">Generation 1 <span style="color:var(--dim);font-weight:400;font-size:0.75rem">(2026-02-19)</span></div>
+                <div class="mutation-item">→ <strong>add_gate:</strong> Block builds with i18n defects (seen 2 times)</div>
+                <div class="mutation-item">→ <strong>automate:</strong> Fragment pages need preview banner</div>
+                <div class="mutation-item">→ <strong>consolidate:</strong> i18n inline + sidecar rules merged</div>
+            </div>
+            <div>
+                <div style="color:var(--purple);font-weight:700;font-size:0.9rem">Generation 2 <span style="color:var(--dim);font-weight:400;font-size:0.75rem">(2026-02-19)</span></div>
+                <div class="mutation-item">→ <strong>add_gate:</strong> i18n defect prevention strengthened</div>
+                <div class="mutation-item">→ <strong>consolidate:</strong> i18n rules merged into permanent checklist</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MCP Tools -->
+    <h3 class="section-title">Factory Tools</h3>
+    <div class="card" style="margin-bottom:16px">
+        <h2>MCP Tools (27 endpoints)</h2>
+        <div class="tool-grid" id="toolGrid"></div>
+    </div>
+
+    <!-- Command Log -->
+    <div class="card">
+        <h2>Command Log</h2>
+        <div class="log-area" id="logArea">Dark Factory — Recursive Learning Dashboard loaded.
+The factory learns from every build. Click a tool to begin.
+Template Generation: 2 | Lessons: 7 | Defects: 3 (all fixed)
+</div>
+    </div>
+</div>
+
+<script>
+const LOG = document.getElementById('logArea');
+const MCP_TOOLS = [
+    { name:'factory.learn', desc:'Run evolution engine', cat:'learning' },
+    { name:'factory.memory', desc:'Learning report', cat:'learning' },
+    { name:'factory.checklist', desc:'Pre-build checklist', cat:'learning' },
+    { name:'factory.validate', desc:'Validate all', cat:'build' },
+    { name:'factory.heal', desc:'Auto-heal', cat:'build' },
+    { name:'factory.status', desc:'Pipeline status', cat:'build' },
+    { name:'scorecard', desc:'Quality scores', cat:'quality' },
+    { name:'scorecard.json', desc:'Scores as JSON', cat:'quality' },
+    { name:'guardian.status', desc:'Sentinel health', cat:'quality' },
+    { name:'guardian.heal', desc:'Guardian heal', cat:'quality' },
+    { name:'i18n.check', desc:'i18n coverage', cat:'i18n' },
+    { name:'i18n.inject', desc:'Inject translations', cat:'i18n' },
+    { name:'test.smoke', desc:'Smoke tests', cat:'test' },
+    { name:'mycelium.brief', desc:'Project state', cat:'mycelium' },
+    { name:'context.gen', desc:'Regen context', cat:'context' },
+    { name:'git.status', desc:'Git status', cat:'git' },
+];
+
+const tg = document.getElementById('toolGrid');
+MCP_TOOLS.forEach(t => {
+    const btn = document.createElement('button');
+    btn.className = 'tool-btn';
+    const catColor = t.cat === 'learning' ? 'var(--purple)' : 'var(--gold)';
+    btn.innerHTML = `<div class="tool-name" style="color:${catColor}">${t.name}</div><div class="tool-desc">${t.desc}</div>`;
+    btn.onclick = () => runTool(t.name);
+    tg.appendChild(btn);
+});
+
+function log(msg) {
+    LOG.textContent += `[${new Date().toLocaleTimeString()}] ${msg}\n`;
+    LOG.scrollTop = LOG.scrollHeight;
+}
+
+async function runTool(name) {
+    log(`▶ Running ${name}...`);
+    try {
+        const r = await fetch(`/api/factory/tool/${name}`, { method:'POST' });
+        const data = await r.json();
+        if (data.result) log(`✓ ${name}:\n${data.result}`);
+        else if (data.error) log(`✗ ${name}: ${data.error}\n${data.stdout||''}`);
+        else log(`✓ ${name}: done`);
+    } catch(e) {
+        log(`⚠ API not available — run locally:\n  npm run factory:${name.replace('factory.','').replace('.',':')}`);
+    }
+}
+
+function refresh() {
+    document.getElementById('lastRefresh').textContent = `Last: ${new Date().toLocaleTimeString()}`;
+    log('🔄 Dashboard refreshed');
+}
+
+refresh();
+</script>
+</body>
+</html>
