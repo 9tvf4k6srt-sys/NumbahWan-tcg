@@ -1,0 +1,1257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NWGE Game Factory — Mobile Games from Pictures & Prompts</title>
+<link rel="icon" type="image/png" href="/favicon.png">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #08080c;
+    --surface: #111118;
+    --surface2: #1a1a24;
+    --surface3: #222232;
+    --border: #2a2a3d;
+    --border-hover: #3d3d55;
+    --accent: #7c6cf0;
+    --accent2: #a594fd;
+    --accent-glow: rgba(124,108,240,0.15);
+    --green: #34d399;
+    --green-dim: rgba(52,211,153,0.12);
+    --orange: #fbbf24;
+    --red: #f87171;
+    --cyan: #22d3ee;
+    --text: #e8e8f0;
+    --text2: #b0b0c8;
+    --muted: #6b6b88;
+    --radius: 14px;
+    --radius-sm: 8px;
+    --shadow: 0 4px 24px rgba(0,0,0,0.4);
+    --shadow-glow: 0 0 40px rgba(124,108,240,0.15);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Inter', -apple-system, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ─── Header ─────────────────────────────── */
+  .header {
+    background: linear-gradient(180deg, #0e0e18 0%, var(--bg) 100%);
+    border-bottom: 1px solid var(--border);
+    padding: 2rem 2rem 1.5rem;
+    text-align: center;
+    position: relative;
+  }
+  .header::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, var(--accent), var(--green), var(--accent), transparent);
+  }
+  .header h1 {
+    font-size: 1.8rem;
+    font-weight: 900;
+    letter-spacing: -0.02em;
+    background: linear-gradient(135deg, #a594fd 0%, #7c6cf0 40%, #34d399 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin-bottom: 0.25rem;
+  }
+  .header p {
+    color: var(--muted);
+    font-size: 0.9rem;
+    font-weight: 500;
+  }
+  .header .badge {
+    display: inline-block;
+    background: var(--green-dim);
+    color: var(--green);
+    font-size: 0.65rem;
+    font-weight: 700;
+    padding: 0.2rem 0.6rem;
+    border-radius: 20px;
+    margin-top: 0.5rem;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+
+  /* ─── Main Layout ────────────────────────── */
+  .main {
+    max-width: 1440px;
+    margin: 0 auto;
+    padding: 1.5rem;
+    display: grid;
+    grid-template-columns: 420px 1fr;
+    gap: 1.5rem;
+    min-height: calc(100vh - 160px);
+  }
+  @media (max-width: 960px) {
+    .main { grid-template-columns: 1fr; }
+  }
+
+  /* ─── Panels ─────────────────────────────── */
+  .panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+  }
+  .panel-head {
+    padding: 1rem 1.25rem;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    font-weight: 700;
+    font-size: 0.95rem;
+  }
+  .panel-head .dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--accent);
+    box-shadow: 0 0 8px var(--accent);
+  }
+  .panel-body {
+    padding: 1.25rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.2rem;
+  }
+
+  /* ─── Form Elements ──────────────────────── */
+  .field-label {
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-bottom: 0.4rem;
+  }
+
+  textarea {
+    width: 100%;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    color: var(--text);
+    padding: 0.9rem 1rem;
+    font-size: 0.92rem;
+    font-family: inherit;
+    resize: vertical;
+    min-height: 100px;
+    line-height: 1.5;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  textarea:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-glow);
+  }
+  textarea::placeholder { color: var(--muted); opacity: 0.5; }
+
+  /* ─── Quick Ideas ────────────────────────── */
+  .ideas {
+    display: flex;
+    gap: 0.4rem;
+    flex-wrap: wrap;
+  }
+  .idea-chip {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 0.3rem 0.7rem;
+    font-size: 0.72rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s;
+    color: var(--text2);
+    white-space: nowrap;
+  }
+  .idea-chip:hover {
+    border-color: var(--accent);
+    color: var(--accent2);
+    background: var(--accent-glow);
+  }
+  .idea-chip.featured {
+    background: linear-gradient(135deg, rgba(124,108,240,0.15), rgba(52,211,153,0.1));
+    border-color: var(--accent);
+    color: var(--accent2);
+    font-weight: 700;
+    font-size: 0.76rem;
+    padding: 0.35rem 0.85rem;
+  }
+  .idea-chip.featured:hover {
+    background: linear-gradient(135deg, rgba(124,108,240,0.3), rgba(52,211,153,0.2));
+    border-color: var(--accent2);
+    box-shadow: 0 0 12px rgba(124,108,240,0.2);
+  }
+
+  /* ─── Mode Toggle ────────────────────────── */
+  .toggle-row {
+    display: flex;
+    gap: 0.4rem;
+  }
+  .toggle-btn {
+    flex: 1;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 0.55rem 0.5rem;
+    color: var(--muted);
+    font-size: 0.78rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.15s;
+    text-align: center;
+  }
+  .toggle-btn:hover { border-color: var(--border-hover); color: var(--text2); }
+  .toggle-btn.active {
+    border-color: var(--accent);
+    background: var(--accent-glow);
+    color: var(--accent2);
+    box-shadow: 0 0 12px var(--accent-glow);
+  }
+
+  /* ─── Genre Grid ─────────────────────────── */
+  .genre-scroll {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+    max-height: 140px;
+    overflow-y: auto;
+    padding-right: 4px;
+  }
+  .genre-scroll::-webkit-scrollbar { width: 4px; }
+  .genre-scroll::-webkit-scrollbar-track { background: transparent; }
+  .genre-scroll::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+  .genre-chip {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 0.3rem 0.6rem;
+    cursor: pointer;
+    transition: all 0.15s;
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: var(--text2);
+    white-space: nowrap;
+  }
+  .genre-chip:hover { border-color: var(--accent); }
+  .genre-chip.active {
+    border-color: var(--accent);
+    background: var(--accent-glow);
+    color: var(--accent2);
+  }
+  .genre-chip .dim {
+    font-size: 0.55rem;
+    color: var(--muted);
+    margin-left: 3px;
+    font-weight: 500;
+  }
+
+  /* ─── Generate Button ────────────────────── */
+  .btn-gen {
+    width: 100%;
+    background: linear-gradient(135deg, #7c6cf0 0%, #5b4cd4 100%);
+    border: none;
+    border-radius: 10px;
+    color: white;
+    padding: 0.9rem;
+    font-size: 1rem;
+    font-weight: 800;
+    cursor: pointer;
+    transition: all 0.25s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    letter-spacing: -0.01em;
+    position: relative;
+    overflow: hidden;
+  }
+  .btn-gen::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, transparent, rgba(255,255,255,0.08), transparent);
+    transform: translateX(-100%);
+    transition: transform 0.5s;
+  }
+  .btn-gen:hover:not(:disabled)::before { transform: translateX(100%); }
+  .btn-gen:hover:not(:disabled) {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 30px rgba(124,108,240,0.35);
+  }
+  .btn-gen:active:not(:disabled) { transform: translateY(0); }
+  .btn-gen:disabled { opacity: 0.4; cursor: not-allowed; }
+  .btn-gen.loading {
+    background: linear-gradient(135deg, #2a2a40, #3a3a55);
+    animation: pulseLoad 1.2s ease-in-out infinite;
+  }
+  @keyframes pulseLoad {
+    0%, 100% { opacity: 0.7; }
+    50% { opacity: 1; }
+  }
+
+  .btn-gen .key-hint {
+    font-size: 0.6rem;
+    opacity: 0.5;
+    font-weight: 500;
+    margin-left: 0.3rem;
+  }
+
+  /* ─── Status Bar ─────────────────────────── */
+  .status-bar {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 0.7rem 0.9rem;
+    font-size: 0.8rem;
+    display: none;
+    transition: all 0.3s;
+    line-height: 1.4;
+  }
+  .status-bar.show { display: block; }
+  .status-bar.error { border-left: 3px solid var(--red); color: var(--red); }
+  .status-bar.success { border-left: 3px solid var(--green); color: var(--green); }
+  .status-bar.info { border-left: 3px solid var(--accent); color: var(--text2); }
+
+  .progress {
+    height: 2px;
+    background: var(--border);
+    border-radius: 2px;
+    overflow: hidden;
+    margin-top: 0.5rem;
+    display: none;
+  }
+  .progress.show { display: block; }
+  .progress .bar {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent), var(--green));
+    border-radius: 2px;
+    transition: width 0.4s ease;
+    width: 0%;
+  }
+  .progress.indeterminate .bar {
+    width: 30%;
+    animation: indeterminate 1.5s ease-in-out infinite;
+  }
+  @keyframes indeterminate {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(400%); }
+  }
+
+  /* ─── Output Panel ───────────────────────── */
+  .output-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 4rem 2rem;
+    text-align: center;
+    color: var(--muted);
+    min-height: 400px;
+  }
+  .output-empty .big-icon {
+    font-size: 4rem;
+    margin-bottom: 1rem;
+    opacity: 0.3;
+  }
+  .output-empty h3 { font-size: 1.1rem; margin-bottom: 0.3rem; color: var(--text2); }
+  .output-empty p { font-size: 0.85rem; max-width: 320px; line-height: 1.5; }
+
+  .result-area { display: none; }
+  .result-area.show { display: block; }
+
+  /* ─── Feedback UI ────────────────────────── */
+  .feedback-bar {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.8rem 1.25rem;
+    border-top: 1px solid var(--border);
+    background: var(--surface);
+  }
+  .feedback-bar .label { font-size: 0.72rem; color: var(--muted); font-weight: 600; }
+  .fb-btn {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 0.4rem 0.7rem;
+    cursor: pointer;
+    font-size: 1.1rem;
+    transition: all 0.15s;
+    line-height: 1;
+  }
+  .fb-btn:hover { border-color: var(--accent); transform: scale(1.1); }
+  .fb-btn.active { border-color: var(--green); background: rgba(52,211,153,0.12); transform: scale(1.15); }
+  .fb-btn.active-down { border-color: var(--red); background: rgba(248,113,113,0.12); transform: scale(1.15); }
+  .fb-stars { display: flex; gap: 0.15rem; }
+  .fb-star {
+    font-size: 1.1rem;
+    cursor: pointer;
+    transition: all 0.1s;
+    opacity: 0.3;
+  }
+  .fb-star:hover, .fb-star.lit { opacity: 1; }
+  .fb-comment-row {
+    display: none;
+    padding: 0 1.25rem 0.8rem;
+    background: var(--surface);
+    gap: 0.5rem;
+  }
+  .fb-comment-row.show { display: flex; }
+  .fb-comment-input {
+    flex: 1;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--text);
+    padding: 0.4rem 0.6rem;
+    font-size: 0.75rem;
+    font-family: inherit;
+  }
+  .fb-comment-input:focus { outline: none; border-color: var(--accent); }
+  .fb-submit {
+    background: var(--green);
+    color: #000;
+    border: none;
+    border-radius: 6px;
+    padding: 0.4rem 0.8rem;
+    font-size: 0.72rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: opacity 0.15s;
+  }
+  .fb-submit:hover { opacity: 0.85; }
+  .fb-thanks {
+    font-size: 0.75rem;
+    color: var(--green);
+    font-weight: 600;
+    display: none;
+  }
+  .fb-thanks.show { display: block; }
+
+  /* Info tags */
+  .info-row {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    padding: 0.8rem 1.25rem;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface);
+  }
+  .info-tag {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 0.25rem 0.6rem;
+    font-size: 0.7rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+    color: var(--text2);
+  }
+  .info-tag .v { color: var(--accent2); }
+  .info-tag.green .v { color: var(--green); }
+  .info-tag.cyan { border-color: rgba(34,211,238,0.2); background: rgba(34,211,238,0.06); }
+  .info-tag.cyan .v, .info-tag.cyan { color: var(--cyan); }
+
+  /* Tabs */
+  .tabs {
+    display: flex;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface);
+  }
+  .tab-btn {
+    padding: 0.65rem 1.2rem;
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: var(--muted);
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    transition: all 0.15s;
+    background: none;
+    border-top: none; border-left: none; border-right: none;
+  }
+  .tab-btn:hover { color: var(--text2); }
+  .tab-btn.active { color: var(--accent2); border-bottom-color: var(--accent); }
+  .tab-pane { display: none; padding: 1.25rem; }
+  .tab-pane.active { display: block; }
+
+  /* Preview images */
+  .preview-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+  .preview-img {
+    width: 100%;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border);
+    cursor: pointer;
+    transition: all 0.2s;
+    display: block;
+  }
+  .preview-img:hover {
+    border-color: var(--accent);
+    box-shadow: var(--shadow-glow);
+  }
+  .preview-actions {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 0.8rem;
+  }
+  .small-btn {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--text2);
+    padding: 0.4rem 0.8rem;
+    font-size: 0.72rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s;
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+  }
+  .small-btn:hover { border-color: var(--accent); color: var(--accent2); }
+  .small-btn.green { border-color: var(--green); color: var(--green); }
+  .small-btn.green:hover { background: var(--green-dim); }
+
+  /* YAML view */
+  .yaml-view {
+    background: #0b0d12;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 1rem;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.72rem;
+    line-height: 1.6;
+    max-height: 500px;
+    overflow-y: auto;
+    white-space: pre-wrap;
+    word-break: break-word;
+    color: #c9d1d9;
+    position: relative;
+  }
+  .yaml-view .line-key { color: #7ee787; }
+  .yaml-view .line-str { color: #a5d6ff; }
+  .yaml-view .line-num { color: #ffa657; }
+
+  .logs-view {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 1rem;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.7rem;
+    line-height: 1.5;
+    max-height: 400px;
+    overflow-y: auto;
+    white-space: pre-wrap;
+    color: var(--green);
+  }
+
+  /* ─── Gallery ────────────────────────────── */
+  .gallery-section {
+    max-width: 1440px;
+    margin: 0 auto;
+    padding: 1rem 1.5rem 3rem;
+  }
+  .gallery-header {
+    text-align: center;
+    margin-bottom: 1.2rem;
+  }
+  .gallery-header h2 {
+    font-size: 1.1rem;
+    font-weight: 800;
+    color: var(--text2);
+    margin-bottom: 0.2rem;
+  }
+  .gallery-header p { font-size: 0.8rem; color: var(--muted); }
+
+  .gallery-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 1rem;
+  }
+  .gallery-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    cursor: pointer;
+    transition: all 0.25s;
+  }
+  .gallery-card:hover {
+    border-color: var(--accent);
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-glow);
+  }
+  .gallery-card img {
+    width: 100%;
+    height: 140px;
+    object-fit: cover;
+    display: block;
+  }
+  .gallery-card .card-info {
+    padding: 0.7rem 0.8rem;
+  }
+  .gallery-card .card-info h3 { font-size: 0.82rem; font-weight: 700; margin-bottom: 0.15rem; }
+  .gallery-card .card-info p { font-size: 0.68rem; color: var(--muted); line-height: 1.3; }
+  .gallery-card .card-badge {
+    display: inline-block;
+    background: var(--accent-glow);
+    color: var(--accent2);
+    font-size: 0.58rem;
+    font-weight: 700;
+    padding: 0.1rem 0.45rem;
+    border-radius: 4px;
+    margin-top: 0.3rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  /* ─── Lightbox ───────────────────────────── */
+  .lightbox {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.92);
+    z-index: 1000;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    backdrop-filter: blur(8px);
+  }
+  .lightbox.show { display: flex; }
+  .lightbox img {
+    max-width: 94vw;
+    max-height: 92vh;
+    border-radius: var(--radius);
+    box-shadow: 0 0 80px rgba(124,108,240,0.25);
+  }
+  .lightbox .close-hint {
+    position: absolute;
+    top: 1.5rem;
+    right: 1.5rem;
+    color: rgba(255,255,255,0.4);
+    font-size: 0.75rem;
+    font-weight: 600;
+  }
+
+  /* ─── Footer ─────────────────────────────── */
+  .footer {
+    text-align: center;
+    padding: 1.5rem;
+    color: var(--muted);
+    font-size: 0.7rem;
+    border-top: 1px solid var(--border);
+  }
+  .footer a { color: var(--accent2); text-decoration: none; }
+
+  /* ─── Animations ─────────────────────────── */
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .fade-in { animation: fadeIn 0.3s ease forwards; }
+  
+  @keyframes slideUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 6px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--border-hover); }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>NWGE Game Factory</h1>
+  <p>Picture to Game. Prompt to Game. Mobile-first instant generation.</p>
+  <div class="badge" id="engineBadge">Loading engine...</div>
+  <div style="margin-top:0.6rem;">
+    <a href="/mobile-factory.html" style="display:inline-flex;align-items:center;gap:0.4rem;background:linear-gradient(135deg,#7c6cf0,#34d399);color:#fff;text-decoration:none;padding:0.5rem 1.2rem;border-radius:8px;font-size:0.82rem;font-weight:700;transition:all 0.2s;">
+      &#128241; Mobile Game Factory
+      <span style="font-size:0.6rem;opacity:0.8;font-weight:500;">5 Templates &bull; Touch Controls &bull; Picture-to-Game</span>
+    </a>
+  </div>
+</div>
+
+<div class="main">
+  <!-- ─── LEFT: Input ──────────────────────── -->
+  <div class="panel">
+    <div class="panel-head">
+      <div class="dot"></div>
+      Create Your Game
+    </div>
+    <div class="panel-body">
+      <!-- Prompt -->
+      <div>
+        <div class="field-label">Describe your game</div>
+        <textarea id="prompt" placeholder="Try 'World of Warcraft', 'Minecraft', 'Stardew Valley' — or describe any mobile game world..."></textarea>
+        <div style="margin-top:0.5rem;padding:0.5rem;background:var(--surface2);border:1px dashed var(--border);border-radius:8px;text-align:center;cursor:pointer;font-size:0.75rem;color:var(--muted);transition:all 0.2s;" onclick="window.location.href='/mobile-factory.html?mode=picture'" onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent2)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--muted)'">
+          &#128247; <strong>Have a reference image?</strong> Try Picture-to-Game in the Mobile Factory &#8594;
+        </div>
+      </div>
+
+      <!-- Quick Ideas -->
+      <div>
+        <div class="field-label">Quick Ideas <span style="color:var(--muted);font-weight:400;font-size:0.7rem">click any to fill prompt</span></div>
+        <div class="ideas">
+          <div class="idea-chip featured" data-p="World of Warcraft">World of Warcraft</div>
+          <div class="idea-chip featured" data-p="Minecraft">Minecraft</div>
+          <div class="idea-chip featured" data-p="Stardew Valley">Stardew Valley</div>
+          <div class="idea-chip" data-p="Skyrim">Skyrim</div>
+          <div class="idea-chip" data-p="Hades">Hades</div>
+          <div class="idea-chip" data-p="Hollow Knight">Hollow Knight</div>
+          <div class="idea-chip" data-p="Fortnite">Fortnite</div>
+          <div class="idea-chip" data-p="A beautiful sunset beach with palm trees, gentle waves, a wooden pier, and a lighthouse">Sunset Beach 3D</div>
+          <div class="idea-chip" data-p="A dark crystal cave with glowing purple amethyst crystals, underground lake, and mysterious light">Crystal Cave 3D</div>
+          <div class="idea-chip" data-p="A cozy farming RPG with chickens, a red barn, turnip crops, and a friendly village market">Farming RPG</div>
+          <div class="idea-chip" data-p="A volcanic island with lava rivers, obsidian rocks, ember particles, and a dark red sky">Volcano Island 3D</div>
+          <div class="idea-chip" data-p="Resident Evil">Resident Evil</div>
+          <div class="idea-chip featured" data-p="Endless runner ninja in a dark forest">Mobile Runner</div>
+          <div class="idea-chip" data-p="RPG adventure with a dragon knight in a dungeon">Mobile RPG</div>
+          <div class="idea-chip" data-p="Colorful match-3 puzzle game with gems">Mobile Puzzle</div>
+        </div>
+      </div>
+
+      <!-- Render Mode -->
+      <div>
+        <div class="field-label">Render Mode</div>
+        <div class="toggle-row">
+          <div class="toggle-btn active" data-mode="auto">Auto</div>
+          <div class="toggle-btn" data-mode="2d">2D Pixel Art</div>
+          <div class="toggle-btn" data-mode="3d">3D PBR</div>
+        </div>
+      </div>
+
+      <!-- Genre -->
+      <div>
+        <div class="field-label">Genre (optional)</div>
+        <div class="genre-scroll" id="genreGrid">
+          <div class="genre-chip active" data-genre="auto">Auto</div>
+        </div>
+      </div>
+
+      <!-- Generate -->
+      <button class="btn-gen" id="genBtn">
+        Generate Game
+        <span class="key-hint">Ctrl+Enter</span>
+      </button>
+
+      <div class="status-bar" id="status"></div>
+      <div class="progress" id="progress"><div class="bar" id="progressBar"></div></div>
+    </div>
+  </div>
+
+  <!-- ─── RIGHT: Output ────────────────────── -->
+  <div class="panel" id="outputPanel">
+    <!-- Empty State -->
+    <div class="output-empty" id="emptyState">
+      <div class="big-icon">&#127918;</div>
+      <h3>Your game appears here</h3>
+      <p>Type a game name like <strong>World of Warcraft</strong> or describe a scene. Click Generate and the engine builds it in seconds.</p>
+    </div>
+
+    <!-- Result -->
+    <div class="result-area" id="resultArea">
+      <div class="info-row" id="infoRow"></div>
+      <div class="tabs">
+        <button class="tab-btn active" data-tab="preview">Preview</button>
+        <button class="tab-btn" data-tab="yaml">YAML</button>
+        <button class="tab-btn" data-tab="logs">Engine Logs</button>
+      </div>
+      <div class="tab-pane active" id="pane-preview">
+        <div class="preview-grid" id="previewGrid"></div>
+        <div class="preview-actions" id="previewActions"></div>
+      </div>
+      <div class="tab-pane" id="pane-yaml">
+        <div class="yaml-view" id="yamlView"></div>
+        <div style="display:flex;gap:0.5rem;margin-top:0.8rem;">
+          <button class="small-btn green" id="rerenderBtn">Re-render</button>
+          <button class="small-btn" id="copyBtn">Copy YAML</button>
+          <button class="small-btn" id="downloadBtn">Download .yaml</button>
+        </div>
+      </div>
+      <div class="tab-pane" id="pane-logs">
+        <div class="logs-view" id="logsView"></div>
+      </div>
+
+      <!-- Feedback -->
+      <div class="feedback-bar" id="feedbackBar">
+        <span class="label">How's this result?</span>
+        <button class="fb-btn" id="fbDown" onclick="submitFeedback(-1)">&#128078;</button>
+        <button class="fb-btn" id="fbUp" onclick="submitFeedback(1)">&#128077;</button>
+        <div class="fb-stars" id="fbStars">
+          <span class="fb-star" data-v="2" onclick="submitFeedback(2)">&#11088;</span>
+          <span class="fb-star" data-v="3" onclick="submitFeedback(3)">&#11088;</span>
+          <span class="fb-star" data-v="4" onclick="submitFeedback(4)">&#11088;</span>
+          <span class="fb-star" data-v="5" onclick="submitFeedback(5)">&#11088;</span>
+        </div>
+        <span class="fb-thanks" id="fbThanks">Thanks for the feedback!</span>
+      </div>
+      <div class="fb-comment-row" id="fbCommentRow">
+        <input class="fb-comment-input" id="fbComment" placeholder="What could be better? (optional)" maxlength="300">
+        <button class="fb-submit" onclick="sendComment()">Send</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ─── Gallery ──────────────────────────── -->
+<section class="gallery-section">
+  <div class="gallery-header">
+    <h2>Engine Showcase</h2>
+    <p>Pre-rendered examples showing what NWGE can generate</p>
+  </div>
+  <div class="gallery-row" id="galleryGrid"></div>
+</section>
+
+<div class="footer">
+  NWGE Game Factory &mdash; Powered by the NumbahWan Game Engine v0.4.0 &bull;
+  <a href="/mobile-factory.html" style="color:var(--accent2);text-decoration:none;">Mobile Game Factory</a> &bull;
+  <a href="/game.html" style="color:var(--accent2);text-decoration:none;">3D Game Engine</a>
+</div>
+
+<!-- ─── Lightbox ─────────────────────────── -->
+<div class="lightbox" id="lightbox">
+  <img id="lbImg" src="" alt="">
+  <canvas id="lbCanvas" style="display:none;max-width:95vw;max-height:90vh;border-radius:8px;"></canvas>
+  <div class="close-hint">ESC to close</div>
+</div>
+
+<script src="/wow-renderer.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/js-yaml@4.1.0/dist/js-yaml.min.js"></script>
+<script>
+// ════════════════════════════════════════════════════════
+//  STATE
+// ════════════════════════════════════════════════════════
+let genre = 'auto';
+let mode = 'auto';
+let currentYaml = '';
+let generating = false;
+
+const $ = s => document.querySelector(s);
+const $$ = s => document.querySelectorAll(s);
+
+// ════════════════════════════════════════════════════════
+//  INIT
+// ════════════════════════════════════════════════════════
+async function init() {
+  // Engine status
+  try {
+    const s = await (await fetch('/api/status')).json();
+    $('#engineBadge').textContent = `${s.engine} | ${s.genres} genres | ${s.ai ? 'AI Ready' : 'Template Mode'}`;
+    $('#engineBadge').style.background = s.ai ? 'rgba(52,211,153,0.12)' : 'rgba(251,191,36,0.12)';
+    $('#engineBadge').style.color = s.ai ? '#34d399' : '#fbbf24';
+  } catch { $('#engineBadge').textContent = 'Engine connected'; }
+
+  // Genres
+  try {
+    const data = await (await fetch('/api/genres')).json();
+    const grid = $('#genreGrid');
+    for (const g of data.genres) {
+      const el = document.createElement('div');
+      el.className = 'genre-chip';
+      el.dataset.genre = g.id;
+      el.innerHTML = `${g.name} <span class="dim">${g.dimension}</span>`;
+      grid.appendChild(el);
+    }
+  } catch {}
+
+  // Gallery
+  try {
+    const data = await (await fetch('/api/gallery')).json();
+    const grid = $('#galleryGrid');
+    for (const item of data.gallery) {
+      const card = document.createElement('div');
+      card.className = 'gallery-card';
+      card.onclick = () => openLightbox(item.image);
+      card.innerHTML = `
+        <img src="${item.image}" alt="${item.title}" loading="lazy">
+        <div class="card-info">
+          <h3>${item.title}</h3>
+          <p>${item.description}</p>
+          <span class="card-badge">${item.mode}</span>
+        </div>`;
+      grid.appendChild(card);
+    }
+  } catch {}
+
+  // Wire up events
+  wireEvents();
+}
+
+function wireEvents() {
+  // Quick ideas
+  $$('.idea-chip').forEach(el => {
+    el.onclick = () => { $('#prompt').value = el.dataset.p; $('#prompt').focus(); };
+  });
+
+  // Mode toggle
+  $$('.toggle-btn').forEach(btn => {
+    btn.onclick = () => {
+      $$('.toggle-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      mode = btn.dataset.mode;
+    };
+  });
+
+  // Genre chips (delegated)
+  $('#genreGrid').addEventListener('click', e => {
+    const chip = e.target.closest('.genre-chip');
+    if (!chip) return;
+    $$('.genre-chip').forEach(c => c.classList.remove('active'));
+    chip.classList.add('active');
+    genre = chip.dataset.genre;
+    // Auto-set 3D mode for 3D genres
+    if (genre === '3d-fps' || genre === '3d-exploration') {
+      $$('.toggle-btn').forEach(b => b.classList.remove('active'));
+      document.querySelector('.toggle-btn[data-mode="3d"]').classList.add('active');
+      mode = '3d';
+    }
+  });
+
+  // Generate
+  $('#genBtn').onclick = generate;
+
+  // Tabs
+  $$('.tab-btn').forEach(btn => {
+    btn.onclick = () => {
+      $$('.tab-btn').forEach(b => b.classList.remove('active'));
+      $$('.tab-pane').forEach(p => p.classList.remove('active'));
+      btn.classList.add('active');
+      $(`#pane-${btn.dataset.tab}`).classList.add('active');
+    };
+  });
+
+  // Utility buttons
+  $('#rerenderBtn').onclick = rerender;
+  $('#copyBtn').onclick = () => {
+    navigator.clipboard.writeText(currentYaml);
+    showStatus('Copied to clipboard!', 'success');
+  };
+  $('#downloadBtn').onclick = () => {
+    const blob = new Blob([currentYaml], { type: 'text/yaml' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'game.yaml';
+    a.click();
+  };
+
+  // Keyboard shortcuts
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') closeLightbox();
+    if (e.key === 'Enter' && (e.ctrlKey || e.metaKey) && !generating) generate();
+  });
+
+  // Lightbox
+  $('#lightbox').onclick = closeLightbox;
+}
+
+// ════════════════════════════════════════════════════════
+//  GENERATE
+// ════════════════════════════════════════════════════════
+async function generate() {
+  const prompt = $('#prompt').value.trim();
+  if (!prompt) { showStatus('Please describe the game you want.', 'error'); return; }
+  if (generating) return;
+
+  generating = true;
+  const btn = $('#genBtn');
+  btn.disabled = true;
+  btn.classList.add('loading');
+  btn.innerHTML = '<span class="spinner"></span> Generating...';
+
+  showStatus('Creating game definition and rendering...', 'info');
+  showProgress(true);
+
+  try {
+    const t0 = performance.now();
+    const res = await fetch('/api/generate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ prompt, genre: genre === 'auto' ? undefined : genre, renderMode: mode === 'auto' ? undefined : mode }),
+    });
+    const elapsed = ((performance.now() - t0) / 1000).toFixed(1);
+
+    if (!res.ok) {
+      const err = await res.json();
+      showStatus(`Error: ${err.error}`, 'error');
+      resetBtn();
+      return;
+    }
+
+    const data = await res.json();
+    showResult(data, elapsed);
+
+  } catch (err) {
+    showStatus('Network error: ' + err.message, 'error');
+  }
+
+  resetBtn();
+}
+
+function showResult(data, elapsed) {
+  currentYaml = data.yaml;
+  $('#emptyState').style.display = 'none';
+  const ra = $('#resultArea');
+  ra.classList.add('show');
+  ra.classList.add('fade-in');
+
+  // Parse YAML to get content depth stats
+  let statsHtml = '';
+  try {
+    const lines = data.yaml.split('\n');
+    const entityCount = lines.filter(l => /^  - name:/.test(l) || /^    - name:/.test(l)).length;
+    // Count items, scenes from validation output
+    const valMatch = data.validation?.match(/(\d+) entities?, (\d+) items?, (\d+) scenes?/);
+    if (valMatch) {
+      const [, ents, items, scenes] = valMatch;
+      if (parseInt(ents) > 3) {
+        statsHtml = `<div class="info-tag cyan">${ents} entities</div><div class="info-tag cyan">${items} items</div><div class="info-tag cyan">${scenes} scenes</div>`;
+      }
+    }
+  } catch {}
+
+  // Info row
+  $('#infoRow').innerHTML = `
+    <div class="info-tag"><span class="v">${(data.renderMode || '2d').toUpperCase()}</span></div>
+    <div class="info-tag">Genre <span class="v">${data.genre}</span></div>
+    <div class="info-tag green">Rendered in <span class="v">${elapsed}s</span></div>
+    <div class="info-tag">${data.method === 'ai' ? 'AI' : 'Template'} <span class="v">${data.tokens ? data.tokens + ' tok' : ''}</span></div>
+    <div class="info-tag">Images <span class="v">${data.images?.length || 0}</span></div>
+    ${statsHtml}
+  `;
+
+  // ─── Rich Preview (Canvas) ─────────────────────────────
+  const grid = $('#previewGrid');
+  grid.innerHTML = '';
+
+  // Parse YAML to get game data for rich renderer
+  let parsedGame = null;
+  try {
+    parsedGame = jsyaml.load(data.yaml);
+  } catch(e) { console.warn('YAML parse for preview:', e); }
+
+  // Rich canvas preview (WoW-grade)
+  if (parsedGame && typeof WowRenderer !== 'undefined') {
+    const richCanvas = document.createElement('canvas');
+    richCanvas.className = 'preview-img fade-in';
+    richCanvas.style.cursor = 'pointer';
+    richCanvas.style.width = '100%';
+    richCanvas.style.borderRadius = 'var(--radius-sm)';
+    richCanvas.style.border = '1px solid var(--border)';
+    try {
+      WowRenderer.render(richCanvas, parsedGame);
+      richCanvas.onclick = () => openCanvasLightbox(richCanvas);
+      grid.appendChild(richCanvas);
+
+      // Label
+      const label = document.createElement('div');
+      label.style.cssText = 'color:var(--green);font-size:0.7rem;font-weight:600;padding:0.3rem 0;display:flex;align-items:center;gap:0.3rem;';
+      label.innerHTML = '<span style="display:inline-block;width:6px;height:6px;background:var(--green);border-radius:50%;"></span> Rich Preview (Canvas Rendered)';
+      grid.appendChild(label);
+    } catch(e) { console.warn('Rich preview error:', e); }
+  }
+
+  // Engine-rendered images (secondary)
+  if (data.images?.length) {
+    if (parsedGame) {
+      const divider = document.createElement('div');
+      divider.style.cssText = 'color:var(--muted);font-size:0.65rem;font-weight:600;padding:0.5rem 0 0.2rem;border-top:1px solid var(--border);margin-top:0.5rem;';
+      divider.textContent = 'ENGINE RENDERS (320\u00d7240 upscaled)';
+      grid.appendChild(divider);
+    }
+    for (const src of data.images) {
+      const img = document.createElement('img');
+      img.className = 'preview-img fade-in';
+      img.src = src + '?t=' + Date.now();
+      img.alt = data.gameName || 'Game render';
+      img.onclick = () => openLightbox(img.src);
+      img.style.maxHeight = parsedGame ? '200px' : 'none';
+      img.style.objectFit = 'contain';
+      grid.appendChild(img);
+    }
+  } else if (!parsedGame) {
+    grid.innerHTML = '<div style="color:var(--muted);padding:2rem;text-align:center;">No images. Check Engine Logs.</div>';
+  }
+
+  // Action buttons
+  $('#previewActions').innerHTML = `
+    <button class="small-btn green" onclick="downloadRichPreview()">Download HD Preview</button>
+    ${data.images?.length ? `<button class="small-btn" onclick="downloadImage('${data.images[0]}')">Download Engine Render</button>` : ''}
+    <button class="small-btn" onclick="openCanvasLightbox(document.querySelector('#previewGrid canvas'))">Fullscreen</button>
+  `;
+
+  // YAML (syntax highlighted)
+  $('#yamlView').innerHTML = highlightYaml(data.yaml);
+
+  // Logs
+  $('#logsView').textContent =
+    (data.validation ? '--- VALIDATION ---\n' + data.validation + '\n\n' : '') +
+    '--- RENDER ---\n' + (data.renderOutput || 'No output') +
+    (data.gameInfo ? '\n\n--- INFO ---\n' + data.gameInfo : '');
+
+  showStatus(`"${data.gameName}" generated and rendered! ${data.images?.length || 0} image(s) in ${elapsed}s`, 'success');
+  hideProgress();
+
+  // Show preview tab
+  $$('.tab-btn').forEach(b => b.classList.remove('active'));
+  $$('.tab-pane').forEach(p => p.classList.remove('active'));
+  document.querySelector('.tab-btn[data-tab="preview"]').classList.add('active');
+  $('#pane-preview').classList.add('active');
+}
+
+// ════════════════════════════════════════════════════════
+//  RE-RENDER
+// ════════════════════════════════════════════════════════
+async function rerender() {
+  if (!currentYaml) return;
+  showStatus('Re-rendering...', 'info');
+  showProgress(true);
+  try {
+    const res = await fetch('/api/render', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ yaml: currentYaml }),
+    });
+    const data = await res.json();
+    if (!res.ok) { showStatus('Re-render failed: ' + data.error, 'error'); }
+    else {
+      const grid = $('#previewGrid');
+      grid.innerHTML = '';
+      for (const src of (data.images || [])) {
+        const img = document.createElement('img');
+        img.className = 'preview-img fade-in';
+        img.src = src + '?t=' + Date.now();
+        img.onclick = () => openLightbox(img.src);
+        grid.appendChild(img);
+      }
+      showStatus('Re-rendered! ' + (data.images?.length || 0) + ' images.', 'success');
+      // Switch to preview
+      $$('.tab-btn').forEach(b => b.classList.remove('active'));
+      $$('.tab-pane').forEach(p => p.classList.remove('active'));
+      document.querySelector('.tab-btn[data-tab="preview"]').classList.add('active');
+      $('#pane-preview').classList.add('active');
+    }
+  } catch (e) { showStatus('Error: ' + e.message, 'error'); }
+  hideProgress();
+}
+
+// ════════════════════════════════════════════════════════
+//  YAML SYNTAX HIGHLIGHTING
+// ════════════════════════════════════════════════════════
+function highlightYaml(yamlStr) {
+  return yamlStr.split('\n').map(line => {
+    // Comments
+    if (/^\s*#/.test(line)) return `<span style="color:#6b7280">${esc(line)}</span>`;
+    // Key-value
+    const kv = line.match(/^(\s*)([\w_-]+)(\s*:\s*)(.*)/);
+    if (kv) {
+      const [, indent, key, sep, val] = kv;
+      let valHtml = esc(val);
+      if (/^".*"$/.test(val) || /^'.*'$/.test(val)) valHtml = `<span style="color:#a5d6ff">${esc(val)}</span>`;
+      else if (/^-?\d+(\.\d+)?$/.test(val)) valHtml = `<span style="color:#ffa657">${esc(val)}</span>`;
+      else if (/^(true|false|null|none)$/i.test(val)) valHtml = `<span style="color:#ff7b72">${esc(val)}</span>`;
+      return `${esc(indent)}<span style="color:#7ee787">${esc(key)}</span>${esc(sep)}${valHtml}`;
+    }
+    // List items
+    const li = line.match(/^(\s*-\s+)(.*)/);
+    if (li) return `<span style="color:#8b949e">${esc(li[1])}</span>${esc(li[2])}`;
+    return esc(line);
+  }).join('\n');
+}
+
+function esc(s) {
+  return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+// ════════════════════════════════════════════════════════
+//  UTILITIES
+// ════════════════════════════════════════════════════════
+function showStatus(msg, type) {
+  const el = $('#status');
+  el.textContent = msg;
+  el.className = `status-bar show ${type || 'info'}`;
+}
+
+function showProgress(indeterminate) {
+  const p = $('#progress');
+  p.classList.add('show');
+  if (indeterminate) p.classList.add('indeterminate');
+  else p.classList.remove('indeterminate');
+}
+
+function hideProgress() {
+  const p = $('#progress');
+  p.classList.remove('show', 'indeterminate');
+}
+
+function resetBtn() {
+  generating = false;
+  const btn = $('#genBtn');
+  btn.disabled = false;
+  btn.classList.remove('loading');
+  btn.innerHTML = 'Generate Game <span class="key-hint">Ctrl+Enter</span>';
+}
+
+function openLightbox(src) {
+  if (!src) return;
+  $('#lbImg').style.display = 'block';
+  $('#lbCanvas').style.display = 'none';
+  $('#lbImg').src = src;
+  $('#lightbox').classList.add('show');
+}
+function openCanvasLightbox(sourceCanvas) {
+  if (!sourceCanvas) return;
+  const lbCanvas = $('#lbCanvas');
+  const lbImg = $('#lbImg');
+  lbImg.style.display = 'none';
+  lbCanvas.style.display = 'block';
+  lbCanvas.width = sourceCanvas.width;
+  lbCanvas.height = sourceCanvas.height;
+  lbCanvas.getContext('2d').drawImage(sourceCanvas, 0, 0);
+  $('#lightbox').classList.add('show');
+}
+function closeLightbox() { $('#lightbox').classList.remove('show'); }
+
+function downloadRichPreview() {
+  const canvas = document.querySelector('#previewGrid canvas');
+  if (!canvas) return;
+  const a = document.createElement('a');
+  a.href = canvas.toDataURL('image/png');
+  a.download = (currentYaml.match(/name:\s*"?([^"\n]+)/)?.[1] || 'game') + '_preview.png';
+  a.click();
+}
+
+function downloadImage(src) {
+  const a = document.createElement('a');
+  a.href = src;
+  a.download = src.split('/').pop() || 'render.png';
+  a.click();
+}
+
+init();
+</script>
+</body>
+</html>

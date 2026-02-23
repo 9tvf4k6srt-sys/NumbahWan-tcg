@@ -1,0 +1,733 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>NWGE Analysis Dashboard</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body { background:#08080f; color:#ccc; font-family:'Segoe UI',Arial,sans-serif; }
+.header { background:linear-gradient(180deg,#1a1420,#0e0e18); padding:16px 24px; border-bottom:2px solid #604a20; }
+.header h1 { color:#c8a040; font-size:24px; font-family:Georgia,serif; }
+.header .subtitle { color:#888; font-size:12px; margin-top:2px; }
+.controls { display:flex; gap:8px; margin-top:10px; flex-wrap:wrap; }
+.btn { padding:6px 16px; border:1px solid #604a20; background:linear-gradient(180deg,#2a2030,#1a1420); color:#c8a040; border-radius:3px; cursor:pointer; font-size:11px; font-weight:bold; transition:all 0.15s; }
+.btn:hover { background:linear-gradient(180deg,#3a3040,#2a2030); border-color:#c8a040; }
+.btn.active { background:linear-gradient(180deg,#4a3a20,#3a2a10); border-color:#ffd040; color:#ffd040; }
+.btn:disabled { opacity:0.4; cursor:default; }
+
+.main { display:flex; min-height:calc(100vh - 80px); }
+.sidebar { width:240px; background:#0e0e18; border-right:1px solid #222; padding:10px; overflow-y:auto; flex-shrink:0; }
+.sidebar h3 { color:#88b8e0; font-size:11px; text-transform:uppercase; letter-spacing:1px; margin:12px 0 6px; }
+.sidebar .nav-item { padding:5px 8px; font-size:12px; color:#999; border-radius:3px; cursor:pointer; margin:1px 0; }
+.sidebar .nav-item:hover { background:#1a1a28; color:#ccc; }
+.sidebar .nav-item.active { background:#1a1428; color:#c8a040; border-left:2px solid #c8a040; }
+.sidebar .status-badge { float:right; font-size:9px; padding:1px 5px; border-radius:8px; }
+.badge-pass { background:#1a3a1a; color:#4c4; }
+.badge-fail { background:#3a1a1a; color:#c44; }
+.badge-warn { background:#3a3a1a; color:#cc4; }
+.badge-info { background:#1a1a3a; color:#44c; }
+
+.content { flex:1; padding:16px; overflow-y:auto; }
+.section { display:none; }
+.section.active { display:block; }
+.section h2 { color:#c8a040; font-size:18px; margin-bottom:12px; border-bottom:1px solid #333; padding-bottom:6px; }
+
+/* Progress */
+#progress { background:#111; border:1px solid #333; border-radius:4px; padding:10px; margin:10px 0; font-family:monospace; font-size:10px; max-height:240px; overflow-y:auto; white-space:pre-wrap; line-height:1.6; }
+.progress-bar { height:4px; background:#222; border-radius:2px; margin:6px 0; }
+.progress-bar .fill { height:100%; background:linear-gradient(90deg,#604a20,#c8a040); border-radius:2px; transition:width 0.3s; }
+
+/* Metric Cards */
+.metrics-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(200px,1fr)); gap:8px; margin:10px 0; }
+.metric-card { background:#12121e; border:1px solid #2a2a3a; border-radius:4px; padding:10px; }
+.metric-card .label { color:#777; font-size:10px; text-transform:uppercase; letter-spacing:0.5px; }
+.metric-card .value { color:#e8c060; font-size:22px; font-weight:bold; margin:3px 0; }
+.metric-card .detail { color:#888; font-size:11px; }
+.metric-card.good .value { color:#4c4; }
+.metric-card.warn .value { color:#cc4; }
+.metric-card.bad .value { color:#c44; }
+
+/* Color Swatches */
+.swatch { display:inline-block; width:24px; height:24px; border:1px solid #444; border-radius:3px; vertical-align:middle; margin-right:6px; }
+.swatch-row { display:flex; align-items:center; gap:8px; margin:4px 0; font-size:12px; }
+.swatch-row .swatch { width:32px; height:32px; }
+
+/* HUD Checks */
+.hud-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(200px,1fr)); gap:6px; }
+.hud-item { padding:6px 10px; border-radius:3px; font-size:12px; display:flex; align-items:center; gap:6px; }
+.hud-item.pass { background:#0a2a0a; border:1px solid #1a4a1a; color:#4c4; }
+.hud-item.fail { background:#2a0a0a; border:1px solid #4a1a1a; color:#c44; }
+.hud-item .swatch { width:16px; height:16px; border-radius:2px; }
+
+/* Screenshots */
+.ss-tabs { display:flex; gap:4px; margin:8px 0; flex-wrap:wrap; }
+.ss-tab { padding:3px 10px; border:1px solid #333; border-radius:3px; font-size:10px; color:#888; cursor:pointer; }
+.ss-tab.active { border-color:#c8a040; color:#c8a040; background:#1a1420; }
+.ss-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(420px,1fr)); gap:8px; margin:8px 0; }
+.ss-card { background:#0e0e18; border:1px solid #2a2a3a; border-radius:4px; overflow:hidden; cursor:pointer; transition:border-color 0.15s; }
+.ss-card:hover { border-color:#604a20; }
+.ss-card img { width:100%; display:block; }
+.ss-card .caption { padding:5px 8px; font-size:11px; }
+.ss-card .caption b { color:#e8c060; }
+.ss-card .caption .coords { color:#666; font-size:10px; }
+
+/* Features */
+.feature-list { margin:8px 0; }
+.feature-row { display:flex; align-items:center; gap:10px; padding:6px 10px; border-bottom:1px solid #1a1a22; font-size:13px; }
+.feature-row .icon { font-size:18px; }
+.feature-row .name { flex:1; }
+.feature-row .detail { color:#888; font-size:11px; }
+
+/* Score */
+.score-display { text-align:center; padding:20px; }
+.score-circle { width:120px; height:120px; border-radius:50%; margin:0 auto 12px; display:flex; align-items:center; justify-content:center; font-size:40px; font-weight:bold; border:4px solid; }
+.grade-A { border-color:#4c4; color:#4c4; background:rgba(40,100,40,0.15); }
+.grade-B { border-color:#8c8; color:#8c8; background:rgba(40,100,40,0.1); }
+.grade-C { border-color:#cc4; color:#cc4; background:rgba(100,100,40,0.15); }
+.grade-D { border-color:#c84; color:#c84; background:rgba(100,60,40,0.15); }
+.grade-F { border-color:#c44; color:#c44; background:rgba(100,40,40,0.15); }
+.score-bars { max-width:500px; margin:0 auto; }
+.score-row { display:flex; align-items:center; gap:8px; margin:4px 0; font-size:12px; }
+.score-row .name { width:120px; text-align:right; color:#888; }
+.score-row .bar { flex:1; height:16px; background:#1a1a28; border-radius:2px; overflow:hidden; }
+.score-row .bar .fill { height:100%; border-radius:2px; transition:width 0.4s; }
+.score-row .val { width:40px; text-align:right; color:#e8c060; font-weight:bold; }
+
+/* Map */
+.ascii-map { background:#0a0a12; border:1px solid #2a2a3a; border-radius:4px; padding:10px; font-family:'Courier New',monospace; font-size:11px; line-height:1.3; color:#8a8; white-space:pre; overflow-x:auto; }
+
+/* Entity Table */
+.entity-table { width:100%; border-collapse:collapse; margin:8px 0; font-size:12px; }
+.entity-table th { background:#1a1428; color:#c8a040; padding:6px 10px; text-align:left; border-bottom:2px solid #333; font-size:11px; }
+.entity-table td { padding:5px 10px; border-bottom:1px solid #1a1a22; }
+
+/* Lightbox */
+.lightbox { position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.9); z-index:999; display:none; align-items:center; justify-content:center; cursor:pointer; }
+.lightbox.active { display:flex; }
+.lightbox img { max-width:95%; max-height:95%; border:2px solid #604a20; }
+
+#game-frame { display:none; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>NWGE Analysis Dashboard</h1>
+  <div class="subtitle">Comprehensive visual analysis toolkit for AI game understanding</div>
+  <div class="controls">
+    <button class="btn active" id="btnRun" onclick="startAnalysis()">Run Full Analysis</button>
+    <button class="btn" id="btnWalker" onclick="runTool('walker')" disabled>Screenshot Walker</button>
+    <button class="btn" id="btnFeatures" onclick="runTool('features')" disabled>Feature Tests</button>
+    <button class="btn" id="btnPixels" onclick="runTool('pixels')" disabled>Pixel Analysis</button>
+    <button class="btn" id="btnHUD" onclick="runTool('hud')" disabled>HUD Check</button>
+    <button class="btn" id="btnEntities" onclick="runTool('entities')" disabled>Entity Scan</button>
+    <button class="btn" id="btnMap" onclick="runTool('map')" disabled>Map Scan</button>
+    <button class="btn" onclick="exportReport()">Export JSON</button>
+  </div>
+  <div class="progress-bar"><div class="fill" id="progressFill" style="width:0%"></div></div>
+</div>
+
+<div class="main">
+  <div class="sidebar">
+    <h3>Overview</h3>
+    <div class="nav-item active" onclick="showSection('overview')">Summary</div>
+    <div class="nav-item" onclick="showSection('progress-log')">Progress Log</div>
+    <h3>Visual Analysis</h3>
+    <div class="nav-item" onclick="showSection('screenshots')">Screenshots <span class="status-badge badge-info" id="ssCountBadge">0</span></div>
+    <div class="nav-item" onclick="showSection('pixels')">Pixel Analysis</div>
+    <div class="nav-item" onclick="showSection('quality')">Quality Score</div>
+    <h3>Game Systems</h3>
+    <div class="nav-item" onclick="showSection('features')">Feature Tests <span class="status-badge" id="featBadge"></span></div>
+    <div class="nav-item" onclick="showSection('hud')">HUD Elements <span class="status-badge" id="hudBadge"></span></div>
+    <h3>World Data</h3>
+    <div class="nav-item" onclick="showSection('entities')">Entities</div>
+    <div class="nav-item" onclick="showSection('map')">World Map</div>
+    <div class="nav-item" onclick="showSection('player')">Player State</div>
+  </div>
+
+  <div class="content">
+    <!-- Overview -->
+    <div class="section active" id="sec-overview">
+      <h2>Analysis Overview</h2>
+      <div id="overviewContent">
+        <p style="color:#888;margin:20px 0;">Click <b>"Run Full Analysis"</b> to start. The game will load in a hidden iframe, and all 7 analysis tools will run automatically.</p>
+      </div>
+    </div>
+
+    <!-- Progress Log -->
+    <div class="section" id="sec-progress-log">
+      <h2>Progress Log</h2>
+      <div id="progress"></div>
+    </div>
+
+    <!-- Screenshots -->
+    <div class="section" id="sec-screenshots">
+      <h2>Screenshots</h2>
+      <div class="ss-tabs" id="ssTabs"></div>
+      <div class="ss-grid" id="ssGrid"></div>
+    </div>
+
+    <!-- Pixel Analysis -->
+    <div class="section" id="sec-pixels">
+      <h2>Pixel Analysis</h2>
+      <div id="pixelContent"></div>
+    </div>
+
+    <!-- Quality Score -->
+    <div class="section" id="sec-quality">
+      <h2>Visual Quality Score</h2>
+      <div id="qualityContent"></div>
+    </div>
+
+    <!-- Features -->
+    <div class="section" id="sec-features">
+      <h2>Feature Test Results</h2>
+      <div id="featureContent"></div>
+    </div>
+
+    <!-- HUD -->
+    <div class="section" id="sec-hud">
+      <h2>HUD Element Detection</h2>
+      <div id="hudContent"></div>
+    </div>
+
+    <!-- Entities -->
+    <div class="section" id="sec-entities">
+      <h2>Entity Inspector</h2>
+      <div id="entityContent"></div>
+    </div>
+
+    <!-- Map -->
+    <div class="section" id="sec-map">
+      <h2>World Map</h2>
+      <div id="mapContent"></div>
+    </div>
+
+    <!-- Player -->
+    <div class="section" id="sec-player">
+      <h2>Player State</h2>
+      <div id="playerContent"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Lightbox -->
+<div class="lightbox" id="lightbox" onclick="closeLightbox()">
+  <img id="lightboxImg" src="">
+</div>
+
+<!-- Hidden iframe for the game -->
+<iframe id="game-frame" src="game.html"></iframe>
+
+<script>
+// ═══════════════════════════════════════════════
+// Dashboard Controller
+// ═══════════════════════════════════════════════
+const logEl = document.getElementById('progress');
+const progressFill = document.getElementById('progressFill');
+let gw = null; // game window reference
+let analysisReport = null;
+let screenshots = [];
+
+function addLog(text) {
+  logEl.textContent += text + '\n';
+  logEl.scrollTop = logEl.scrollHeight;
+}
+
+function setProgress(pct) {
+  progressFill.style.width = pct + '%';
+}
+
+function showSection(name) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.sidebar .nav-item').forEach(n => n.classList.remove('active'));
+  const sec = document.getElementById('sec-' + name);
+  if (sec) sec.classList.add('active');
+  // Highlight nav
+  const navItems = document.querySelectorAll('.sidebar .nav-item');
+  navItems.forEach(n => { if (n.textContent.trim().toLowerCase().includes(name.substring(0,4))) n.classList.add('active'); });
+}
+
+function openLightbox(src) {
+  document.getElementById('lightboxImg').src = src;
+  document.getElementById('lightbox').classList.add('active');
+}
+function closeLightbox() {
+  document.getElementById('lightbox').classList.remove('active');
+}
+
+// ═══════════════════════════════════════════════
+// Analysis Runner
+// ═══════════════════════════════════════════════
+async function waitMs(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+function waitFrames(n) {
+  return new Promise(resolve => {
+    let c = 0;
+    function tick() { if (++c >= n) resolve(); else gw.requestAnimationFrame(tick); }
+    gw.requestAnimationFrame(tick);
+  });
+}
+
+async function startAnalysis() {
+  const btn = document.getElementById('btnRun');
+  btn.disabled = true;
+  btn.textContent = 'Running...';
+  addLog('[DASHBOARD] Starting full analysis...');
+  setProgress(2);
+
+  // Load game iframe
+  const iframe = document.getElementById('game-frame');
+  iframe.width = 1280;
+  iframe.height = 720;
+  
+  addLog('[1/8] Loading game in hidden iframe...');
+  await new Promise(resolve => {
+    iframe.addEventListener('load', resolve, { once: true });
+  });
+  addLog('  Game page loaded. Waiting for engine init...');
+  await waitMs(5000);
+
+  gw = iframe.contentWindow;
+
+  // Verify game objects
+  if (!gw.player || !gw.C) {
+    addLog('  ERROR: Game objects not found (player or C canvas)');
+    btn.textContent = 'FAILED';
+    return;
+  }
+  addLog('  Game objects accessible: player, C, ctx, enemies, npcs, pickups');
+  setProgress(8);
+
+  // Inject analyzer script
+  addLog('\n[2/8] Injecting analyzer...');
+  const script = gw.document.createElement('script');
+  script.src = 'game-analyzer.js';
+  gw.document.head.appendChild(script);
+  await waitMs(1500);
+
+  if (!gw.NWGE_ANALYZER) {
+    addLog('  ERROR: Analyzer failed to load');
+    btn.textContent = 'FAILED';
+    return;
+  }
+  addLog('  Analyzer injected successfully');
+  setProgress(12);
+
+  // Enable tool buttons
+  ['btnWalker','btnFeatures','btnPixels','btnHUD','btnEntities','btnMap'].forEach(id => {
+    document.getElementById(id).disabled = false;
+  });
+
+  // Run full analysis
+  addLog('\n[3/8] Running screenshot walker...');
+  const walkerResults = await gw.NWGE_ANALYZER.screenshotWalker();
+  screenshots = gw.NWGE_ANALYZER.getScreenshots();
+  addLog(`  Captured ${screenshots.length} screenshots`);
+  document.getElementById('ssCountBadge').textContent = screenshots.length;
+  setProgress(35);
+
+  addLog('\n[4/8] Running feature exerciser...');
+  const featureResults = await gw.NWGE_ANALYZER.featureExerciser();
+  screenshots = gw.NWGE_ANALYZER.getScreenshots(); // update with feature shots
+  document.getElementById('ssCountBadge').textContent = screenshots.length;
+  setProgress(55);
+
+  // Return to default view
+  gw.NWGE_ANALYZER.teleport(22.5, 34.5, 0, 0);
+  await waitFrames(10);
+
+  addLog('\n[5/8] Running pixel analyzer...');
+  const pixelResults = gw.NWGE_ANALYZER.pixelAnalyzer();
+  setProgress(65);
+
+  addLog('\n[6/8] Running HUD inspector...');
+  const hudResults = gw.NWGE_ANALYZER.hudInspector();
+  setProgress(72);
+
+  addLog('\n[7/8] Running entity & world scan...');
+  const entityResults = gw.NWGE_ANALYZER.entityInspector();
+  const worldResults = gw.NWGE_ANALYZER.worldMapScanner();
+  setProgress(82);
+
+  addLog('\n[8/8] Computing quality score...');
+  const qualityResults = gw.NWGE_ANALYZER.visualQualityScorer(pixelResults);
+  setProgress(90);
+
+  // Store report
+  analysisReport = {
+    timestamp: new Date().toISOString(),
+    walker: walkerResults,
+    features: featureResults,
+    pixels: pixelResults,
+    hud: hudResults,
+    entities: entityResults,
+    world: worldResults,
+    quality: qualityResults,
+    screenshotCount: screenshots.length,
+  };
+
+  // Build UI
+  addLog('\n[DASHBOARD] Building report UI...');
+  buildOverview();
+  buildScreenshotSection();
+  buildPixelSection(pixelResults);
+  buildQualitySection(qualityResults);
+  buildFeatureSection(featureResults);
+  buildHUDSection(hudResults);
+  buildEntitySection(entityResults);
+  buildMapSection(worldResults);
+  buildPlayerSection(featureResults.playerState);
+
+  setProgress(100);
+  btn.textContent = 'Analysis Complete';
+  addLog('\n═══ ANALYSIS COMPLETE ═══');
+  addLog(`Screenshots: ${screenshots.length}`);
+  addLog(`Quality Grade: ${qualityResults.grade} (${qualityResults.overallScore}/100)`);
+  addLog(`HUD: ${hudResults.coverage}`);
+  addLog(`Features: ${[featureResults.questDialog&&'Quest', featureResults.merchantDialog&&'Merchant', featureResults.combat?.tested&&'Combat'].filter(Boolean).join(', ')}`);
+}
+
+// ═══════════════════════════════════════════════
+// UI Builders
+// ═══════════════════════════════════════════════
+function buildOverview() {
+  const q = analysisReport.quality;
+  const f = analysisReport.features;
+  const h = analysisReport.hud;
+  const p = analysisReport.pixels;
+  const e = analysisReport.entities;
+
+  let html = `<div class="metrics-grid">`;
+  html += metricCard('Quality Grade', q.grade, `Score: ${q.overallScore}/100`, q.overallScore >= 70 ? 'good' : q.overallScore >= 50 ? 'warn' : 'bad');
+  html += metricCard('FPS', p.fps, p.fps >= 30 ? 'Smooth' : p.fps >= 15 ? 'Playable' : 'Needs work', p.fps >= 30 ? 'good' : p.fps >= 15 ? 'warn' : 'bad');
+  html += metricCard('Screenshots', screenshots.length, `${analysisReport.walker.length} locations`, 'good');
+  html += metricCard('HUD Coverage', h.coverage, `${h.visibleCount}/${h.totalElements} elements`, h.assessment === 'GOOD' ? 'good' : 'warn');
+  html += metricCard('Canvas', p.canvasSize.width + '×' + p.canvasSize.height, '', '');
+  html += metricCard('Color Temp', p.temperature.assessment, `Warm ${p.temperature.warmPct}% Cool ${p.temperature.coolPct}%`, p.temperature.assessment === 'warm' ? 'good' : 'warn');
+  html += metricCard('Avg Color', p.avgColor.hex, `<span class="swatch" style="background:${p.avgColor.hex}"></span> rgb(${p.avgColor.r},${p.avgColor.g},${p.avgColor.b})`, '');
+  html += metricCard('Color Variety', p.centerColorVariety + ' colors', 'Center 200×200', p.centerColorVariety > 120 ? 'good' : 'warn');
+
+  const featCount = [f.questDialog, f.merchantDialog, f.combat?.tested, f.pickup?.tested, f.chatSystem, f.movement].filter(Boolean).length;
+  html += metricCard('Features', `${featCount}/6`, 'Systems working', featCount >= 5 ? 'good' : featCount >= 3 ? 'warn' : 'bad');
+  html += metricCard('NPCs', e.npcs?.length || 0, (e.npcs || []).map(n => n.name).join(', '), '');
+  html += metricCard('Enemies Alive', f.entityCounts?.totalEnemiesAlive || 0, `${f.entityCounts?.wolves||0} wolves, ${f.entityCounts?.kobolds||0} kobolds`, '');
+  html += metricCard('Pickups', f.entityCounts?.pickups || 0, 'Uncollected items', '');
+  html += `</div>`;
+
+  document.getElementById('overviewContent').innerHTML = html;
+}
+
+function metricCard(label, value, detail, cls) {
+  return `<div class="metric-card ${cls}"><div class="label">${label}</div><div class="value">${value}</div><div class="detail">${detail}</div></div>`;
+}
+
+function buildScreenshotSection() {
+  // Category tabs
+  const cats = [...new Set(screenshots.map(s => s.category || 'other'))];
+  cats.unshift('all');
+  const tabsHtml = cats.map(c => `<div class="ss-tab ${c === 'all' ? 'active' : ''}" onclick="filterScreenshots('${c}')">${c} (${c === 'all' ? screenshots.length : screenshots.filter(s => (s.category||'other') === c).length})</div>`).join('');
+  document.getElementById('ssTabs').innerHTML = tabsHtml;
+
+  // Grid
+  renderScreenshotGrid('all');
+}
+
+function filterScreenshots(cat) {
+  document.querySelectorAll('.ss-tab').forEach(t => t.classList.remove('active'));
+  event.target.classList.add('active');
+  renderScreenshotGrid(cat);
+}
+
+function renderScreenshotGrid(cat) {
+  const filtered = cat === 'all' ? screenshots : screenshots.filter(s => (s.category || 'other') === cat);
+  const html = filtered.map((s, i) => `
+    <div class="ss-card" onclick="openLightbox('${s.url}')">
+      <img src="${s.url}" alt="${s.label}" loading="lazy">
+      <div class="caption">
+        <b>${s.label}</b><br>
+        <span class="coords">${s.description || ''}</span>
+      </div>
+    </div>
+  `).join('');
+  document.getElementById('ssGrid').innerHTML = html || '<p style="color:#666;padding:12px;">No screenshots in this category.</p>';
+}
+
+function buildPixelSection(px) {
+  let html = '<div class="metrics-grid">';
+  html += metricCard('Canvas', px.canvasSize.width + '×' + px.canvasSize.height, '', '');
+  html += metricCard('Avg Color', `<span class="swatch" style="background:${px.avgColor.hex}"></span> ${px.avgColor.hex}`, `rgb(${px.avgColor.r},${px.avgColor.g},${px.avgColor.b})`, '');
+  html += metricCard('Dark Pixels', px.luminance.darkPct + '%', 'Luminance < 40', '');
+  html += metricCard('Bright Pixels', px.luminance.brightPct + '%', 'Luminance > 200', '');
+  html += metricCard('Temperature', px.temperature.assessment, `Warm ${px.temperature.warmPct}% / Cool ${px.temperature.coolPct}%`, px.temperature.assessment === 'warm' ? 'good' : '');
+  html += metricCard('Color Variety', px.centerColorVariety, 'Unique colors (center)', '');
+  html += '</div>';
+
+  // Region colors
+  html += '<h3 style="color:#88b8e0;margin:12px 0 6px;">Region Colors</h3>';
+  for (const [region, color] of Object.entries(px.regionColors)) {
+    html += `<div class="swatch-row">
+      <span class="swatch" style="background:${color.hex}"></span>
+      <b>${region}</b>: ${color.hex} — rgb(${color.r},${color.g},${color.b}) — Dark ${color.darkPct}% / Bright ${color.brightPct}%
+    </div>`;
+  }
+
+  // Top histogram colors
+  html += '<h3 style="color:#88b8e0;margin:12px 0 6px;">Dominant Colors (Histogram)</h3>';
+  html += '<div style="display:flex;gap:6px;flex-wrap:wrap;">';
+  for (const c of px.topHistogramColors) {
+    const hex = '#' + [c.r, c.g, c.b].map(v => v.toString(16).padStart(2, '0')).join('');
+    html += `<div style="text-align:center;"><span class="swatch" style="background:${hex};width:40px;height:40px;display:block;"></span><div style="font-size:10px;color:#888;">${c.pct}%</div></div>`;
+  }
+  html += '</div>';
+
+  document.getElementById('pixelContent').innerHTML = html;
+}
+
+function buildQualitySection(q) {
+  const gradeClass = 'grade-' + q.grade;
+  let html = `<div class="score-display">
+    <div class="score-circle ${gradeClass}">${q.grade}</div>
+    <div style="font-size:24px;color:#e8c060;font-weight:bold;">${q.overallScore}/100</div>
+    <div style="color:#888;margin:6px 0;">Visual Quality Score vs WoW Reference</div>
+  </div>`;
+
+  html += '<div class="score-bars">';
+  const scores = [
+    ['Sky Color', q.skyColor, q.skyAssessment],
+    ['Horizon', q.horizonColor, ''],
+    ['Ground Color', q.groundColor, q.groundAssessment],
+    ['Warmth', q.warmth, ''],
+    ['Color Variety', q.colorVariety, ''],
+    ['Contrast', q.contrast, ''],
+    ['FPS', q.fps, q.fpsAssessment],
+  ];
+  for (const [name, val, detail] of scores) {
+    const color = val >= 70 ? '#4c4' : val >= 40 ? '#cc4' : '#c44';
+    html += `<div class="score-row">
+      <div class="name">${name}</div>
+      <div class="bar"><div class="fill" style="width:${val}%;background:${color};"></div></div>
+      <div class="val">${val}</div>
+    </div>`;
+    if (detail) html += `<div style="margin-left:128px;font-size:10px;color:#666;margin-bottom:4px;">${detail}</div>`;
+  }
+  html += '</div>';
+
+  // WoW targets
+  html += '<h3 style="color:#88b8e0;margin:16px 0 6px;">WoW Reference Targets</h3>';
+  html += `<div class="swatch-row"><span class="swatch" style="background:rgb(${q.wowTargets.sky.r},${q.wowTargets.sky.g},${q.wowTargets.sky.b})"></span> Sky target: rgb(${q.wowTargets.sky.r},${q.wowTargets.sky.g},${q.wowTargets.sky.b})</div>`;
+  html += `<div class="swatch-row"><span class="swatch" style="background:rgb(${q.wowTargets.horizon.r},${q.wowTargets.horizon.g},${q.wowTargets.horizon.b})"></span> Horizon target: rgb(${q.wowTargets.horizon.r},${q.wowTargets.horizon.g},${q.wowTargets.horizon.b})</div>`;
+  html += `<div class="swatch-row"><span class="swatch" style="background:rgb(${q.wowTargets.ground.r},${q.wowTargets.ground.g},${q.wowTargets.ground.b})"></span> Ground target: rgb(${q.wowTargets.ground.r},${q.wowTargets.ground.g},${q.wowTargets.ground.b})</div>`;
+
+  document.getElementById('qualityContent').innerHTML = html;
+}
+
+function buildFeatureSection(f) {
+  const features = [
+    ['Quest Dialog', f.questDialog, 'Opens quest UI from NPC interaction'],
+    ['Merchant Dialog', f.merchantDialog, 'Opens merchant/trading UI'],
+    ['Combat System', f.combat?.tested, f.combat?.tested ? `Hit ${f.combat.targetName} for ${f.combat.damageDealt} dmg (${f.combat.targetHP})` : 'No target found'],
+    ['Pickup Items', f.pickup?.tested, f.pickup?.tested ? `Found: ${f.pickup.itemName}` : 'No pickups nearby'],
+    ['Movement', f.movement, 'Player teleport works'],
+    ['Chat System', f.chatSystem, 'addChatMsg function works'],
+    ['Floating Text', f.floatingText, 'Combat text animation'],
+  ];
+
+  let html = '<div class="feature-list">';
+  let passCount = 0;
+  for (const [name, pass, detail] of features) {
+    if (pass) passCount++;
+    html += `<div class="feature-row">
+      <span class="icon">${pass ? '✅' : '❌'}</span>
+      <span class="name">${name}</span>
+      <span class="detail">${detail}</span>
+    </div>`;
+  }
+  html += '</div>';
+
+  const badge = document.getElementById('featBadge');
+  badge.textContent = `${passCount}/${features.length}`;
+  badge.className = 'status-badge ' + (passCount >= features.length - 1 ? 'badge-pass' : passCount >= 4 ? 'badge-warn' : 'badge-fail');
+
+  document.getElementById('featureContent').innerHTML = html;
+}
+
+function buildHUDSection(h) {
+  let html = `<p style="color:#888;margin-bottom:8px;">Detection: <b>${h.visibleCount}/${h.totalElements}</b> elements (${h.coverage}) — ${h.assessment}</p>`;
+  html += '<div class="hud-grid">';
+  for (const [name, data] of Object.entries(h.elements)) {
+    html += `<div class="hud-item ${data.visible ? 'pass' : 'fail'}">
+      <span class="swatch" style="background:${data.hex}"></span>
+      ${data.visible ? '✅' : '❌'} <b>${name}</b> ${data.hex} (${data.fillPct}% fill)
+    </div>`;
+  }
+  html += '</div>';
+
+  const badge = document.getElementById('hudBadge');
+  badge.textContent = h.coverage;
+  badge.className = 'status-badge ' + (h.assessment === 'GOOD' ? 'badge-pass' : h.assessment === 'PARTIAL' ? 'badge-warn' : 'badge-fail');
+
+  document.getElementById('hudContent').innerHTML = html;
+}
+
+function buildEntitySection(e) {
+  let html = '';
+
+  // NPCs
+  html += '<h3 style="color:#88b8e0;margin:8px 0;">NPCs</h3>';
+  if (e.npcs && e.npcs.length) {
+    html += '<table class="entity-table"><tr><th>Name</th><th>Position</th><th>Type</th><th>Quest/Stock</th></tr>';
+    for (const n of e.npcs) {
+      html += `<tr><td style="color:#ffd040;">${n.name}</td><td>(${n.x},${n.y})</td><td>${n.type}</td><td>${n.questName || (n.stock ? n.stock.join(', ') : '-')}</td></tr>`;
+    }
+    html += '</table>';
+  }
+
+  // Enemies
+  html += '<h3 style="color:#88b8e0;margin:12px 0;">Enemies</h3>';
+  if (e.enemies && e.enemies.length) {
+    html += '<table class="entity-table"><tr><th>Type</th><th>Status</th><th>Count</th><th>Level Range</th><th>Sample</th></tr>';
+    for (const g of e.enemies) {
+      html += `<tr><td style="color:${g.alive?'#c44':'#666'};">${g.type}</td><td>${g.alive?'Alive':'Dead'}</td><td>${g.count}</td><td>Lv ${g.levelRange} (avg ${g.avgLevel})</td><td>${g.samples[0]?.name||'-'}</td></tr>`;
+    }
+    html += '</table>';
+  }
+
+  // Pickups
+  html += '<h3 style="color:#88b8e0;margin:12px 0;">Pickups</h3>';
+  if (e.pickups) {
+    html += `<p style="font-size:12px;">Total: ${e.pickups.total} | Collected: ${e.pickups.collected} | Remaining: ${e.pickups.uncollected}</p>`;
+  }
+
+  // World Stats
+  html += '<h3 style="color:#88b8e0;margin:12px 0;">World Stats</h3>';
+  if (e.worldStats) {
+    html += `<p style="font-size:12px;">Map: ${e.worldStats.mapSize} (${e.worldStats.totalTiles} tiles)</p>`;
+    if (e.worldStats.tileDistribution) {
+      html += '<table class="entity-table"><tr><th>Tile ID</th><th>Name</th><th>Count</th><th>%</th></tr>';
+      for (const [id, count] of Object.entries(e.worldStats.tileDistribution).sort((a,b) => b[1]-a[1])) {
+        html += `<tr><td>${id}</td><td>${e.worldStats.tileTypes[id]||'unknown'}</td><td>${count}</td><td>${(count/e.worldStats.totalTiles*100).toFixed(1)}%</td></tr>`;
+      }
+      html += '</table>';
+    }
+  }
+
+  document.getElementById('entityContent').innerHTML = html;
+}
+
+function buildMapSection(w) {
+  if (!w) { document.getElementById('mapContent').innerHTML = '<p style="color:#666;">No map data.</p>'; return; }
+
+  let html = `<div class="metrics-grid">`;
+  html += metricCard('Map Size', w.mapSize, '', '');
+  html += metricCard('Buildings', w.buildings, '', '');
+  html += metricCard('Water Tiles', w.waterTiles, '', '');
+  html += metricCard('Road Tiles', w.roadTiles, '', '');
+  html += metricCard('Trees', w.treeTiles, '', '');
+  html += metricCard('Grass', w.totalGrass, 'Open grass area', '');
+  html += '</div>';
+
+  html += '<h3 style="color:#88b8e0;margin:12px 0;">ASCII Map Overview</h3>';
+  html += '<div style="font-size:10px;color:#666;margin-bottom:4px;">Legend: . grass | # stone | W wood | ~ water | = road | T tree | | fence | D door</div>';
+  html += `<div class="ascii-map">${w.asciiMap}</div>`;
+
+  if (w.buildingList && w.buildingList.length) {
+    html += '<h3 style="color:#88b8e0;margin:12px 0;">Buildings</h3>';
+    html += '<table class="entity-table"><tr><th>#</th><th>Center</th><th>Size</th><th>Type</th></tr>';
+    w.buildingList.forEach((b, i) => {
+      html += `<tr><td>${i+1}</td><td>(${b.center})</td><td>${b.w}×${b.h}</td><td>${b.type}</td></tr>`;
+    });
+    html += '</table>';
+  }
+
+  document.getElementById('mapContent').innerHTML = html;
+}
+
+function buildPlayerSection(ps) {
+  if (!ps) { document.getElementById('playerContent').innerHTML = '<p style="color:#666;">No player data.</p>'; return; }
+
+  let html = '<div class="metrics-grid">';
+  html += metricCard('Position', `(${ps.x}, ${ps.y})`, `Angle: ${ps.angle}`, '');
+  html += metricCard('Health', `${ps.health}/${ps.maxHealth}`, '', ps.health >= ps.maxHealth * 0.5 ? 'good' : 'bad');
+  html += metricCard('Mana', `${ps.mana}/${ps.maxMana}`, '', 'good');
+  html += metricCard('Gold', ps.gold + 'g', '', '');
+  html += metricCard('Level', ps.level, `XP: ${ps.xp}/${ps.xpNeeded}`, '');
+  html += metricCard('Inventory', ps.inventoryCount + ' items', '', '');
+  html += '</div>';
+
+  if (ps.inventory && ps.inventory.length) {
+    html += '<h3 style="color:#88b8e0;margin:12px 0;">Inventory</h3>';
+    html += '<ul style="font-size:12px;padding-left:20px;">';
+    ps.inventory.forEach(item => {
+      html += `<li style="color:#e8c060;margin:3px 0;">${typeof item === 'string' ? item : item.name || JSON.stringify(item)}</li>`;
+    });
+    html += '</ul>';
+  }
+
+  document.getElementById('playerContent').innerHTML = html;
+}
+
+// ═══════════════════════════════════════════════
+// Individual Tool Runners
+// ═══════════════════════════════════════════════
+async function runTool(tool) {
+  if (!gw || !gw.NWGE_ANALYZER) {
+    addLog('[ERROR] Game not loaded. Run full analysis first.');
+    return;
+  }
+  addLog(`\n[TOOL] Running ${tool}...`);
+  try {
+    switch (tool) {
+      case 'walker':
+        await gw.NWGE_ANALYZER.screenshotWalker();
+        screenshots = gw.NWGE_ANALYZER.getScreenshots();
+        buildScreenshotSection();
+        break;
+      case 'features':
+        const fr = await gw.NWGE_ANALYZER.featureExerciser();
+        buildFeatureSection(fr);
+        break;
+      case 'pixels':
+        gw.NWGE_ANALYZER.teleport(22.5, 34.5, 0, 0);
+        await waitFrames(10);
+        const px = gw.NWGE_ANALYZER.pixelAnalyzer();
+        buildPixelSection(px);
+        break;
+      case 'hud':
+        const hd = gw.NWGE_ANALYZER.hudInspector();
+        buildHUDSection(hd);
+        break;
+      case 'entities':
+        const en = gw.NWGE_ANALYZER.entityInspector();
+        buildEntitySection(en);
+        break;
+      case 'map':
+        const mp = gw.NWGE_ANALYZER.worldMapScanner();
+        buildMapSection(mp);
+        break;
+    }
+    addLog(`[TOOL] ${tool} complete`);
+  } catch (e) {
+    addLog(`[TOOL ERROR] ${e.message}`);
+  }
+}
+
+// ═══════════════════════════════════════════════
+// Export
+// ═══════════════════════════════════════════════
+function exportReport() {
+  if (!analysisReport) { alert('No report to export. Run analysis first.'); return; }
+  // Remove screenshot dataURLs to keep JSON manageable
+  const exportData = JSON.parse(JSON.stringify(analysisReport));
+  // Just keep labels and metadata, not the base64 data
+  exportData.screenshotList = screenshots.map(s => ({ label: s.label, description: s.description, category: s.category }));
+  const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = 'nwge-analysis-report.json';
+  a.click();
+  URL.revokeObjectURL(url);
+}
+</script>
+</body>
+</html>

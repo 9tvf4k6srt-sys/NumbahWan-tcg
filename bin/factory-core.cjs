@@ -320,6 +320,56 @@ const SPEC_TYPES = {
     template: 'world',
     i18nDefault: true,
   },
+  'game-page': {
+    name: 'Playable Game',
+    description: 'Self-contained playable HTML game with SVG art, audio, and telemetry',
+    requiredFields: ['type', 'slug', 'title', 'theme', 'game'],
+    optionalFields: ['difficulty', 'audio', 'i18n', 'community', 'art'],
+    outputDir: 'public/games',
+    template: 'game',
+    i18nDefault: false,
+    communityFramework: {
+      module: '../bin/community-framework.cjs',
+      systems: ['guild', 'trade', 'pvp', 'progression', 'art'],
+      description: 'Organic healthy community systems — guild base building, barter trade, forgiving PvP, horizontal progression illusion',
+    },
+    artPipeline: {
+      module: '../bin/art-forge.cjs',
+      description: 'Manifest-driven art generation, background removal, pixel cropping, and optional base64 embedding',
+      supportedCategories: ['character', 'enemy', 'weapon', 'item', 'background', 'effect', 'ui', 'costume'],
+    },
+  },
+
+  'game-page-3d': {
+    name: 'Playable Game (Enhanced)',
+    description: 'Single-HTML game with generated art pipeline — AI-generated sprites, auto-crop, sprite sheets, base64 embedding',
+    requiredFields: ['type', 'slug', 'title', 'theme', 'game', 'art'],
+    optionalFields: ['difficulty', 'audio', 'i18n', 'community', 'renderer'],
+    outputDir: 'public/games',
+    template: 'game-3d',
+    i18nDefault: false,
+    communityFramework: {
+      module: '../bin/community-framework.cjs',
+      systems: ['guild', 'trade', 'pvp', 'progression', 'art'],
+      description: 'Organic healthy community systems',
+    },
+    artPipeline: {
+      module: '../bin/art-forge.cjs',
+      description: 'Full art pipeline: batch generate → rmbg crop → pixel-perfect extract → resize → sprite sheet → base64 embed',
+      supportedCategories: ['character', 'enemy', 'weapon', 'item', 'background', 'effect', 'ui', 'costume'],
+      batchStrategy: 'sheet',  // Generate many small items on one sheet image, then extract individually
+      embedStrategy: 'base64', // Inline into single HTML file
+    },
+    renderer: {
+      tiers: {
+        canvas2d: { description: 'Canvas 2D — lightweight, procedural fallback', sizeTarget: '50-100KB' },
+        webgl2:   { description: 'WebGL2 — PBR, SSAO, bloom, shadows', sizeTarget: '400KB-1MB' },
+        webgpu:   { description: 'WebGPU — compute GI, massive particles', sizeTarget: '200-500KB' },
+      },
+      fallbackChain: ['webgpu', 'webgl2', 'canvas2d'],
+      postProcess: ['bloom', 'ssao', 'vignette', 'chromatic_aberration', 'screen_shake'],
+    },
+  },
 };
 
 /**

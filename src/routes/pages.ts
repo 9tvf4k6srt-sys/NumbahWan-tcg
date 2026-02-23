@@ -207,6 +207,7 @@ const staticPages = [
   'guild-siege',
   'agent',
   'ai-assets',
+  'bank',
   'boss-dungeon',
   'builder-channel',
   'coin-shop',

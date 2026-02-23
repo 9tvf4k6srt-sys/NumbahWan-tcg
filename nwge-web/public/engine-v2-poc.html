@@ -1,0 +1,883 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<title>NWGE v2 — Proof of Concept</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #111; color: #eee; font-family: -apple-system, sans-serif; display: flex; flex-direction: column; align-items: center; min-height: 100vh; padding: 20px; }
+  h1 { font-size: 18px; margin-bottom: 8px; color: #FFD700; }
+  .subtitle { font-size: 12px; color: #888; margin-bottom: 16px; }
+  .games { display: flex; flex-wrap: wrap; gap: 16px; justify-content: center; }
+  .game-card { background: #1a1a2e; border-radius: 12px; padding: 12px; border: 1px solid #333; }
+  .game-card h3 { font-size: 13px; color: #aaa; margin-bottom: 8px; text-align: center; }
+  canvas { display: block; border-radius: 8px; cursor: pointer; }
+</style>
+</head>
+<body>
+<h1>NWGE v2 Engine — Quality POC</h1>
+<p class="subtitle">SVG Sprites • Juice System • Improved Gameplay</p>
+<div class="games">
+  <div class="game-card">
+    <h3>Runner v2</h3>
+    <canvas id="runnerCanvas" width="460" height="460"></canvas>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════════
+//  NWGE v2 — SVG Sprite Rendering System
+//  Pre-renders SVG art to offscreen canvases for fast drawImage()
+// ═══════════════════════════════════════════════════════════════
+
+const SpriteEngine = (() => {
+  const cache = {};
+
+  // Render an SVG string to an offscreen canvas at given size
+  function renderSVG(svgString, w, h) {
+    const key = svgString + w + h;
+    if (cache[key]) return cache[key];
+
+    const canvas = document.createElement('canvas');
+    canvas.width = w;
+    canvas.height = h;
+    const ctx = canvas.getContext('2d');
+    const img = new Image();
+    const blob = new Blob([svgString], { type: 'image/svg+xml' });
+    const url = URL.createObjectURL(blob);
+
+    // Return a promise-like object that draws placeholder until loaded
+    const sprite = { canvas, ready: false, img };
+    img.onload = () => {
+      ctx.drawImage(img, 0, 0, w, h);
+      URL.revokeObjectURL(url);
+      sprite.ready = true;
+    };
+    img.src = url;
+    cache[key] = sprite;
+    return sprite;
+  }
+
+  // Draw a sprite (or colored fallback if not yet loaded)
+  function draw(ctx, sprite, x, y, w, h, opts = {}) {
+    if (!sprite) return;
+    ctx.save();
+    if (opts.flipX) {
+      ctx.translate(x + w, y);
+      ctx.scale(-1, 1);
+      x = 0; y = 0;
+    }
+    if (opts.rotation) {
+      ctx.translate(x + w/2, y + h/2);
+      ctx.rotate(opts.rotation);
+      x = -w/2; y = -h/2;
+    }
+    if (opts.alpha !== undefined) ctx.globalAlpha = opts.alpha;
+    if (sprite.ready) {
+      ctx.drawImage(sprite.canvas, x, y, w, h);
+    }
+    ctx.restore();
+  }
+
+  return { renderSVG, draw };
+})();
+
+// ═══════════════════════════════════════════════════════════════
+//  SVG SPRITE DEFINITIONS — Hand-crafted vector game art
+// ═══════════════════════════════════════════════════════════════
+const SVG_SPRITES = {
+  // ─── HERO: Chibi style, bold shapes, optimized for 64-80px ────────
+  hero: (accentColor = '#3498DB') => `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48">
+    <!-- Shadow -->
+    <ellipse cx="24" cy="46" rx="14" ry="3" fill="rgba(0,0,0,0.25)"/>
+    <!-- Feet -->
+    <ellipse cx="17" cy="44" rx="6" ry="3" fill="#C0392B"/>
+    <ellipse cx="31" cy="44" rx="6" ry="3" fill="#C0392B"/>
+    <!-- Body -->
+    <rect x="12" y="26" width="24" height="18" rx="6" fill="${accentColor}" stroke="#1a1a2e" stroke-width="2"/>
+    <!-- Belt -->
+    <rect x="14" y="36" width="20" height="3" rx="1" fill="#DAA520"/>
+    <rect x="22" y="35" width="4" height="5" rx="1" fill="#FFD700"/>
+    <!-- Head (big chibi head) -->
+    <circle cx="24" cy="18" r="16" fill="#FFE0BD" stroke="#D4A373" stroke-width="1.5"/>
+    <!-- Hair -->
+    <path d="M8 16 Q8 3 24 2 Q40 3 40 16 Q38 8 24 6 Q10 8 8 16Z" fill="#5C3317"/>
+    <!-- Eyes (big, expressive) -->
+    <ellipse cx="18" cy="18" rx="4" ry="5" fill="white"/>
+    <ellipse cx="30" cy="18" rx="4" ry="5" fill="white"/>
+    <circle cx="19.5" cy="19" r="3" fill="#2C1810"/>
+    <circle cx="31.5" cy="19" r="3" fill="#2C1810"/>
+    <circle cx="18.5" cy="17" r="1.5" fill="white"/>
+    <circle cx="30.5" cy="17" r="1.5" fill="white"/>
+    <!-- Blush -->
+    <ellipse cx="12" cy="22" rx="3" ry="2" fill="rgba(255,120,120,0.45)"/>
+    <ellipse cx="36" cy="22" rx="3" ry="2" fill="rgba(255,120,120,0.45)"/>
+    <!-- Smile -->
+    <path d="M20 24 Q24 28 28 24" fill="none" stroke="#A0522D" stroke-width="2" stroke-linecap="round"/>
+    <!-- Sword (bold, visible) -->
+    <rect x="38" y="6" width="4" height="22" rx="2" fill="#C0C0C0" stroke="#888" stroke-width="1"/>
+    <rect x="36" y="26" width="8" height="4" rx="1" fill="#DAA520"/>
+    <rect x="39" y="4" width="4" height="4" rx="1" fill="#E8E8E8"/>
+  </svg>`,
+
+  // ─── SPIKE: Bold danger crystal, high contrast ────────
+  spike: (color = '#8B4513') => `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 48">
+    <!-- Base -->
+    <ellipse cx="20" cy="46" rx="18" ry="4" fill="#444"/>
+    <!-- Three bold crystals -->
+    <polygon points="10,46 14,10 18,46" fill="#E04080" stroke="#B03060" stroke-width="2"/>
+    <polygon points="10,46 14,10 13,28" fill="rgba(255,255,255,0.3)"/>
+    <polygon points="16,46 22,2 28,46" fill="#FF5090" stroke="#D04070" stroke-width="2"/>
+    <polygon points="16,46 22,2 20,22" fill="rgba(255,255,255,0.35)"/>
+    <polygon points="24,46 28,14 32,46" fill="#E04080" stroke="#B03060" stroke-width="2"/>
+    <polygon points="24,46 28,14 27,30" fill="rgba(255,255,255,0.3)"/>
+    <!-- Bright tip sparkles -->
+    <circle cx="14" cy="10" r="3" fill="white" opacity="0.9"/>
+    <circle cx="22" cy="2" r="3.5" fill="white" opacity="0.95"/>
+    <circle cx="28" cy="14" r="2.5" fill="white" opacity="0.8"/>
+  </svg>`,
+
+  // ─── CRATE: Bold wooden box, thick outline ────────
+  crate: (color = '#8B6914') => `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40">
+    <!-- Shadow -->
+    <rect x="4" y="4" width="36" height="36" rx="4" fill="rgba(0,0,0,0.3)"/>
+    <!-- Main body -->
+    <rect x="2" y="2" width="36" height="36" rx="4" fill="#CD9B1D" stroke="#8B6914" stroke-width="3"/>
+    <!-- Cross planks -->
+    <line x1="2" y1="2" x2="38" y2="38" stroke="#A07818" stroke-width="3"/>
+    <line x1="38" y1="2" x2="2" y2="38" stroke="#A07818" stroke-width="3"/>
+    <!-- Metal band -->
+    <rect x="0" y="17" width="40" height="5" rx="1" fill="#888" stroke="#666" stroke-width="1"/>
+    <!-- Corner nails -->
+    <circle cx="6" cy="6" r="3" fill="#BBB"/>
+    <circle cx="34" cy="6" r="3" fill="#BBB"/>
+    <circle cx="6" cy="34" r="3" fill="#BBB"/>
+    <circle cx="34" cy="34" r="3" fill="#BBB"/>
+    <!-- Shine -->
+    <rect x="4" y="3" width="14" height="4" rx="2" fill="rgba(255,255,255,0.25)"/>
+  </svg>`,
+
+  // ─── GOLD COIN ────────
+  coin: () => `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+    <!-- Glow -->
+    <circle cx="16" cy="16" r="15" fill="rgba(255,215,0,0.3)"/>
+    <!-- Coin body -->
+    <circle cx="16" cy="16" r="12" fill="#FFD700"/>
+    <circle cx="16" cy="16" r="12" fill="none" stroke="#DAA520" stroke-width="2"/>
+    <circle cx="16" cy="16" r="9" fill="none" stroke="#DAA520" stroke-width="1"/>
+    <!-- Star emblem -->
+    <polygon points="16,7 18,13 24,13 19,17 21,23 16,19 11,23 13,17 8,13 14,13" fill="#FFF5CC"/>
+    <!-- Shine -->
+    <ellipse cx="12" cy="11" rx="3" ry="4" fill="rgba(255,255,255,0.4)" transform="rotate(-20 12 11)"/>
+  </svg>`,
+
+  // ─── HEART (life) ────────
+  heart: () => `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+    <path d="M16 28 Q2 18 2 10 Q2 4 8 4 Q14 4 16 10 Q18 4 24 4 Q30 4 30 10 Q30 18 16 28Z" fill="#E74C3C"/>
+    <path d="M16 28 Q2 18 2 10 Q2 4 8 4 Q14 4 16 10" fill="rgba(255,255,255,0.15)"/>
+    <ellipse cx="10" cy="10" rx="3" ry="2" fill="rgba(255,255,255,0.35)" transform="rotate(-30 10 10)"/>
+  </svg>`,
+
+  // ─── BACKGROUND: Layered city silhouette ────────
+  bgCity: (color = '#1a3a2a') => `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 460 200">
+    <rect x="0" y="120" width="30" height="80" fill="${color}"/>
+    <rect x="25" y="80" width="40" height="120" fill="${color}"/>
+    <rect x="35" y="70" width="8" height="10" fill="${color}"/>
+    <rect x="60" y="100" width="25" height="100" fill="${color}"/>
+    <rect x="80" y="60" width="50" height="140" fill="${color}"/>
+    <rect x="90" y="50" width="10" height="10" fill="${color}"/>
+    <rect x="125" y="90" width="35" height="110" fill="${color}"/>
+    <rect x="155" y="110" width="20" height="90" fill="${color}"/>
+    <rect x="170" y="70" width="45" height="130" fill="${color}"/>
+    <rect x="180" y="55" width="12" height="15" fill="${color}"/>
+    <rect x="210" y="95" width="30" height="105" fill="${color}"/>
+    <rect x="235" y="75" width="40" height="125" fill="${color}"/>
+    <rect x="270" y="105" width="25" height="95" fill="${color}"/>
+    <rect x="290" y="65" width="50" height="135" fill="${color}"/>
+    <rect x="300" y="50" width="15" height="15" fill="${color}"/>
+    <rect x="335" y="85" width="30" height="115" fill="${color}"/>
+    <rect x="360" y="100" width="20" height="100" fill="${color}"/>
+    <rect x="375" y="70" width="40" height="130" fill="${color}"/>
+    <rect x="410" y="90" width="25" height="110" fill="${color}"/>
+    <rect x="430" y="110" width="30" height="90" fill="${color}"/>
+    <!-- Windows (lit) -->
+    <rect x="30" y="90" width="4" height="5" fill="rgba(255,220,100,0.5)" rx="1"/>
+    <rect x="40" y="85" width="4" height="5" fill="rgba(255,220,100,0.4)" rx="1"/>
+    <rect x="85" y="70" width="5" height="6" fill="rgba(255,220,100,0.5)" rx="1"/>
+    <rect x="98" y="80" width="5" height="6" fill="rgba(255,220,100,0.3)" rx="1"/>
+    <rect x="85" y="95" width="5" height="6" fill="rgba(255,220,100,0.5)" rx="1"/>
+    <rect x="110" y="100" width="5" height="6" fill="rgba(255,220,100,0.4)" rx="1"/>
+    <rect x="175" y="80" width="5" height="6" fill="rgba(255,220,100,0.5)" rx="1"/>
+    <rect x="190" y="90" width="5" height="6" fill="rgba(255,220,100,0.3)" rx="1"/>
+    <rect x="240" y="85" width="5" height="6" fill="rgba(255,220,100,0.5)" rx="1"/>
+    <rect x="255" y="95" width="5" height="6" fill="rgba(255,220,100,0.4)" rx="1"/>
+    <rect x="295" y="75" width="5" height="6" fill="rgba(255,220,100,0.5)" rx="1"/>
+    <rect x="310" y="85" width="5" height="6" fill="rgba(255,220,100,0.3)" rx="1"/>
+    <rect x="380" y="80" width="5" height="6" fill="rgba(255,220,100,0.5)" rx="1"/>
+    <rect x="395" y="95" width="5" height="6" fill="rgba(255,220,100,0.4)" rx="1"/>
+  </svg>`,
+
+  // ─── BACKGROUND: Trees/forest layer ────────
+  bgTrees: (color = '#1B4332') => `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 460 180">
+    <circle cx="30" cy="120" r="40" fill="${color}"/>
+    <rect x="27" y="120" width="6" height="60" fill="#3D2817"/>
+    <circle cx="90" cy="100" r="50" fill="${color}"/>
+    <rect x="87" y="100" width="6" height="80" fill="#3D2817"/>
+    <circle cx="160" cy="110" r="45" fill="${color}"/>
+    <rect x="157" y="110" width="6" height="70" fill="#3D2817"/>
+    <circle cx="230" cy="105" r="48" fill="${color}"/>
+    <rect x="227" y="105" width="6" height="75" fill="#3D2817"/>
+    <circle cx="310" cy="115" r="42" fill="${color}"/>
+    <rect x="307" y="115" width="6" height="65" fill="#3D2817"/>
+    <circle cx="380" cy="100" r="50" fill="${color}"/>
+    <rect x="377" y="100" width="6" height="80" fill="#3D2817"/>
+    <circle cx="440" cy="110" r="45" fill="${color}"/>
+    <rect x="437" y="110" width="6" height="70" fill="#3D2817"/>
+  </svg>`,
+
+  // ─── CLOUD ────────
+  cloud: () => `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 40">
+    <ellipse cx="25" cy="28" rx="20" ry="12" fill="rgba(255,255,255,0.7)"/>
+    <ellipse cx="45" cy="22" rx="22" ry="15" fill="rgba(255,255,255,0.8)"/>
+    <ellipse cx="60" cy="28" rx="18" ry="11" fill="rgba(255,255,255,0.7)"/>
+    <ellipse cx="35" cy="15" rx="16" ry="12" fill="rgba(255,255,255,0.9)"/>
+  </svg>`,
+};
+
+// ═══════════════════════════════════════════════════════════════
+//  JUICE SYSTEM — Screen shake, popups, flash, tweens
+// ═══════════════════════════════════════════════════════════════
+class JuiceEngine {
+  constructor() {
+    this.shakeAmount = 0;
+    this.shakeDecay = 0.9;
+    this.popups = [];   // { text, x, y, life, color, size }
+    this.flashes = [];  // { alpha, decay, color }
+  }
+
+  shake(amount = 8) {
+    this.shakeAmount = Math.max(this.shakeAmount, amount);
+  }
+
+  popup(text, x, y, color = '#FFD700', size = 20) {
+    this.popups.push({ text, x, y, vy: -2.5, life: 1.0, color, size, scale: 1.5 });
+  }
+
+  flash(color = 'white', alpha = 0.4) {
+    this.flashes.push({ alpha, decay: 0.92, color });
+  }
+
+  update() {
+    // Shake decay
+    this.shakeAmount *= this.shakeDecay;
+    if (this.shakeAmount < 0.5) this.shakeAmount = 0;
+
+    // Update popups
+    this.popups = this.popups.filter(p => {
+      p.y += p.vy;
+      p.vy *= 0.96;
+      p.life -= 0.015;
+      p.scale = Math.max(1, p.scale * 0.95);
+      return p.life > 0;
+    });
+
+    // Update flashes
+    this.flashes = this.flashes.filter(f => {
+      f.alpha *= f.decay;
+      return f.alpha > 0.01;
+    });
+  }
+
+  applyShake(ctx) {
+    if (this.shakeAmount > 0) {
+      const dx = (Math.random() - 0.5) * this.shakeAmount;
+      const dy = (Math.random() - 0.5) * this.shakeAmount;
+      ctx.translate(dx, dy);
+      return { dx, dy };
+    }
+    return { dx: 0, dy: 0 };
+  }
+
+  renderPopups(ctx) {
+    for (const p of this.popups) {
+      ctx.save();
+      ctx.globalAlpha = p.life;
+      ctx.font = `bold ${p.size * p.scale | 0}px sans-serif`;
+      ctx.textAlign = 'center';
+      // Shadow
+      ctx.fillStyle = 'rgba(0,0,0,0.5)';
+      ctx.fillText(p.text, p.x + 2, p.y + 2);
+      // Main text
+      ctx.fillStyle = p.color;
+      ctx.fillText(p.text, p.x, p.y);
+      ctx.restore();
+    }
+  }
+
+  renderFlashes(ctx, W, H) {
+    for (const f of this.flashes) {
+      ctx.save();
+      ctx.globalAlpha = f.alpha;
+      ctx.fillStyle = f.color;
+      ctx.fillRect(0, 0, W, H);
+      ctx.restore();
+    }
+  }
+
+  getShakeOffset() {
+    if (this.shakeAmount > 0) {
+      return {
+        x: (Math.random() - 0.5) * this.shakeAmount,
+        y: (Math.random() - 0.5) * this.shakeAmount
+      };
+    }
+    return { x: 0, y: 0 };
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  RUNNER v2 — Complete rewrite with sprite system + juice
+// ═══════════════════════════════════════════════════════════════
+function createRunnerV2(canvas) {
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width, H = canvas.height;
+  const juice = new JuiceEngine();
+
+  // Pre-render all sprites
+  const sprites = {
+    hero: SpriteEngine.renderSVG(SVG_SPRITES.hero('#3498DB'), 80, 80),
+    heroJump: SpriteEngine.renderSVG(SVG_SPRITES.hero('#2471A3'), 80, 80),
+    spike: SpriteEngine.renderSVG(SVG_SPRITES.spike(), 56, 68),
+    crate: SpriteEngine.renderSVG(SVG_SPRITES.crate(), 52, 52),
+    coin: SpriteEngine.renderSVG(SVG_SPRITES.coin(), 36, 36),
+    heart: SpriteEngine.renderSVG(SVG_SPRITES.heart(), 24, 24),
+    cloud1: SpriteEngine.renderSVG(SVG_SPRITES.cloud(), 120, 60),
+    cloud2: SpriteEngine.renderSVG(SVG_SPRITES.cloud(), 80, 40),
+    bgFar: SpriteEngine.renderSVG(SVG_SPRITES.bgCity('rgba(30,60,40,0.3)'), 460, 200),
+    bgMid: SpriteEngine.renderSVG(SVG_SPRITES.bgTrees('#1B4332'), 460, 180),
+    bgNear: SpriteEngine.renderSVG(SVG_SPRITES.bgTrees('#2D5A27'), 460, 180),
+  };
+
+  // Game state
+  let state = 'ready'; // ready, playing, dead
+  let score = 0, highScore = 0, combo = 0, comboTimer = 0;
+  let speed = 5, frame = 0, distance = 0;
+  let lives = 3;
+
+  // Player
+  const GROUND_Y = H * 0.78;
+  const PLAYER_SIZE = 80;
+  let player = { x: W * 0.18, y: GROUND_Y - PLAYER_SIZE, vy: 0, jumping: false, squash: 1 };
+  const GRAVITY = 0.7, JUMP_FORCE = -14;
+
+  // Game objects
+  let obstacles = [], coins = [], particles = [];
+  let bgScroll = [0, 0, 0]; // far, mid, near parallax offsets
+
+  // Clouds
+  let clouds = [];
+  for (let i = 0; i < 5; i++) {
+    clouds.push({
+      x: Math.random() * W * 2,
+      y: 20 + Math.random() * 100,
+      speed: 0.2 + Math.random() * 0.3,
+      size: 0.5 + Math.random() * 0.8,
+      sprite: Math.random() > 0.5 ? 'cloud1' : 'cloud2',
+    });
+  }
+
+  // Spawn timers
+  let obstacleTimer = 0, coinTimer = 0;
+
+  function spawnObstacle() {
+    const type = Math.random() > 0.5 ? 'spike' : 'crate';
+    const h = type === 'spike' ? 68 : 52;
+    const w = type === 'spike' ? 56 : 52;
+    obstacles.push({
+      x: W + 20, y: GROUND_Y - h, w, h, type,
+      passed: false,
+    });
+  }
+
+  function spawnCoin() {
+    const count = 1 + Math.floor(Math.random() * 3);
+    const baseY = GROUND_Y - 60 - Math.random() * 80;
+    for (let i = 0; i < count; i++) {
+      coins.push({
+        x: W + 20 + i * 36,
+        y: baseY + Math.sin(i * 0.8) * 15,
+        collected: false,
+        bob: Math.random() * Math.PI * 2,
+      });
+    }
+  }
+
+  function addDeathParticles(x, y) {
+    for (let i = 0; i < 20; i++) {
+      const angle = Math.random() * Math.PI * 2;
+      const spd = 2 + Math.random() * 5;
+      particles.push({
+        x, y,
+        vx: Math.cos(angle) * spd,
+        vy: Math.sin(angle) * spd - 3,
+        life: 1,
+        color: ['#FFD700', '#3498DB', '#E74C3C', '#FFF'][Math.floor(Math.random() * 4)],
+        size: 3 + Math.random() * 5,
+      });
+    }
+  }
+
+  function addCoinParticles(x, y) {
+    for (let i = 0; i < 8; i++) {
+      const angle = Math.random() * Math.PI * 2;
+      const spd = 1 + Math.random() * 3;
+      particles.push({
+        x, y,
+        vx: Math.cos(angle) * spd,
+        vy: Math.sin(angle) * spd - 2,
+        life: 1,
+        color: '#FFD700',
+        size: 2 + Math.random() * 4,
+      });
+    }
+  }
+
+  // ─── UPDATE ─────────────────────────────────────
+  function update() {
+    if (state !== 'playing') return;
+    frame++;
+    distance += speed;
+
+    // Speed ramp
+    speed = Math.min(12, 5 + distance * 0.0001);
+
+    // Player physics
+    player.vy += GRAVITY;
+    player.y += player.vy;
+
+    // Ground collision
+    if (player.y >= GROUND_Y - PLAYER_SIZE) {
+      player.y = GROUND_Y - PLAYER_SIZE;
+      player.vy = 0;
+      if (player.jumping) {
+        player.jumping = false;
+        player.squash = 0.75; // squash on land
+      }
+    }
+
+    // Squash/stretch recovery
+    player.squash += (1 - player.squash) * 0.15;
+
+    // Combo timer
+    if (comboTimer > 0) {
+      comboTimer--;
+      if (comboTimer === 0) combo = 0;
+    }
+
+    // Spawn obstacles
+    obstacleTimer--;
+    if (obstacleTimer <= 0) {
+      spawnObstacle();
+      obstacleTimer = Math.floor(60 + Math.random() * 40 - speed * 2);
+      if (obstacleTimer < 30) obstacleTimer = 30;
+    }
+
+    // Spawn coins
+    coinTimer--;
+    if (coinTimer <= 0) {
+      spawnCoin();
+      coinTimer = Math.floor(45 + Math.random() * 30);
+    }
+
+    // Move obstacles
+    for (const obs of obstacles) {
+      obs.x -= speed;
+      // Score for passing
+      if (!obs.passed && obs.x + obs.w < player.x) {
+        obs.passed = true;
+        score += 10;
+      }
+    }
+    obstacles = obstacles.filter(o => o.x > -60);
+
+    // Move coins
+    for (const c of coins) {
+      if (c.collected) continue;
+      c.x -= speed;
+    }
+    coins = coins.filter(c => c.x > -40 || !c.collected);
+
+    // Collision: Player vs Obstacles
+    const px1 = player.x + 10, py1 = player.y + 8;
+    const px2 = player.x + PLAYER_SIZE - 10, py2 = player.y + PLAYER_SIZE - 4;
+    for (const obs of obstacles) {
+      const ox1 = obs.x + 6, oy1 = obs.y + 6;
+      const ox2 = obs.x + obs.w - 6, oy2 = obs.y + obs.h;
+      if (px2 > ox1 && px1 < ox2 && py2 > oy1 && py1 < oy2) {
+        // HIT!
+        lives--;
+        juice.shake(12);
+        juice.flash('#FF0000', 0.35);
+        addDeathParticles(player.x + PLAYER_SIZE/2, player.y + PLAYER_SIZE/2);
+        // Remove this obstacle so player can continue
+        obs.x = -100;
+        if (lives <= 0) {
+          state = 'dead';
+          if (score > highScore) highScore = score;
+          return;
+        }
+        break;
+      }
+    }
+
+    // Collision: Player vs Coins
+    for (const c of coins) {
+      if (c.collected) continue;
+      const cx = c.x + 16, cy = c.y + 16;
+      const pcx = player.x + PLAYER_SIZE/2, pcy = player.y + PLAYER_SIZE/2;
+      if (Math.abs(cx - pcx) < 28 && Math.abs(cy - pcy) < 28) {
+        c.collected = true;
+        combo++;
+        comboTimer = 90;
+        const points = 25 * Math.min(combo, 5);
+        score += points;
+        juice.popup(`+${points}`, cx, cy - 10, combo >= 3 ? '#FF6B6B' : '#FFD700', combo >= 3 ? 24 : 18);
+        if (combo >= 3) {
+          juice.popup(`${combo}x COMBO!`, W/2, H * 0.3, '#FF4444', 28);
+        }
+        addCoinParticles(cx, cy);
+        juice.shake(2);
+      }
+    }
+
+    // Parallax scroll
+    bgScroll[0] = (bgScroll[0] + speed * 0.15) % (W + 10);
+    bgScroll[1] = (bgScroll[1] + speed * 0.35) % (W + 10);
+    bgScroll[2] = (bgScroll[2] + speed * 0.6) % (W + 10);
+
+    // Clouds
+    for (const c of clouds) {
+      c.x -= c.speed + speed * 0.05;
+      if (c.x < -150) c.x = W + 100 + Math.random() * 200;
+    }
+
+    // Particles
+    particles = particles.filter(p => {
+      p.x += p.vx;
+      p.y += p.vy;
+      p.vy += 0.15;
+      p.life -= 0.02;
+      p.size *= 0.98;
+      return p.life > 0;
+    });
+
+    // Juice
+    juice.update();
+  }
+
+  // ─── RENDER ─────────────────────────────────────
+  function render() {
+    ctx.save();
+
+    // Apply screen shake
+    const shakeOff = juice.getShakeOffset();
+    ctx.translate(shakeOff.x, shakeOff.y);
+
+    ctx.clearRect(-10, -10, W + 20, H + 20);
+
+    // ── Sky gradient ──
+    const skyGrad = ctx.createLinearGradient(0, 0, 0, H);
+    skyGrad.addColorStop(0, '#5BAEE8');
+    skyGrad.addColorStop(0.4, '#88CCF0');
+    skyGrad.addColorStop(0.7, '#B8E0B0');
+    skyGrad.addColorStop(0.85, '#5AAF4B');
+    skyGrad.addColorStop(1, '#3D7A34');
+    ctx.fillStyle = skyGrad;
+    ctx.fillRect(-10, -10, W + 20, H + 20);
+
+    // ── Clouds ──
+    for (const c of clouds) {
+      const s = sprites[c.sprite];
+      if (s && s.ready) {
+        ctx.globalAlpha = 0.6;
+        const w = (c.sprite === 'cloud1' ? 120 : 80) * c.size;
+        const h = (c.sprite === 'cloud1' ? 60 : 40) * c.size;
+        ctx.drawImage(s.canvas, c.x, c.y, w, h);
+        ctx.globalAlpha = 1;
+      }
+    }
+
+    // ── Parallax backgrounds ──
+    if (sprites.bgFar.ready) {
+      ctx.globalAlpha = 0.25;
+      ctx.drawImage(sprites.bgFar.canvas, -bgScroll[0], H - 280, W, 200);
+      ctx.drawImage(sprites.bgFar.canvas, W - bgScroll[0], H - 280, W, 200);
+      ctx.globalAlpha = 1;
+    }
+    if (sprites.bgMid.ready) {
+      ctx.globalAlpha = 0.35;
+      ctx.drawImage(sprites.bgMid.canvas, -bgScroll[1], H - 240, W, 180);
+      ctx.drawImage(sprites.bgMid.canvas, W - bgScroll[1], H - 240, W, 180);
+      ctx.globalAlpha = 1;
+    }
+    if (sprites.bgNear.ready) {
+      ctx.globalAlpha = 0.5;
+      ctx.drawImage(sprites.bgNear.canvas, -bgScroll[2], H - 210, W, 180);
+      ctx.drawImage(sprites.bgNear.canvas, W - bgScroll[2], H - 210, W, 180);
+      ctx.globalAlpha = 1;
+    }
+
+    // ── Ground ──
+    const groundGrad = ctx.createLinearGradient(0, GROUND_Y, 0, H);
+    groundGrad.addColorStop(0, '#4A8C3F');
+    groundGrad.addColorStop(0.05, '#3D7A34');
+    groundGrad.addColorStop(0.3, '#2D5A27');
+    groundGrad.addColorStop(1, '#1B3B1A');
+    ctx.fillStyle = groundGrad;
+    ctx.fillRect(-10, GROUND_Y, W + 20, H - GROUND_Y + 10);
+    // Grass line
+    ctx.fillStyle = '#5AAF4B';
+    ctx.fillRect(-10, GROUND_Y, W + 20, 4);
+    // Grass tufts
+    ctx.fillStyle = '#6BC05B';
+    for (let i = 0; i < 30; i++) {
+      const gx = ((i * 47 + frame * speed * 0.5) % (W + 40)) - 20;
+      ctx.fillRect(gx, GROUND_Y - 3, 3, 6);
+      ctx.fillRect(gx + 4, GROUND_Y - 5, 2, 8);
+      ctx.fillRect(gx + 7, GROUND_Y - 2, 3, 5);
+    }
+
+    // ── Obstacles ──
+    for (const obs of obstacles) {
+      if (obs.x > W + 20 || obs.x < -60) continue;
+      const sp = obs.type === 'spike' ? sprites.spike : sprites.crate;
+      if (sp && sp.ready) {
+        ctx.drawImage(sp.canvas, obs.x, obs.y, obs.w, obs.h);
+      } else {
+        ctx.fillStyle = '#E74C3C';
+        ctx.fillRect(obs.x, obs.y, obs.w, obs.h);
+      }
+    }
+
+    // ── Coins ──
+    for (const c of coins) {
+      if (c.collected) continue;
+      if (c.x > W + 20 || c.x < -40) continue;
+      const bob = Math.sin(c.bob + frame * 0.08) * 6;
+      if (sprites.coin.ready) {
+        ctx.drawImage(sprites.coin.canvas, c.x, c.y + bob, 36, 36);
+      } else {
+        ctx.fillStyle = '#FFD700';
+        ctx.beginPath();
+        ctx.arc(c.x + 18, c.y + 18 + bob, 14, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+
+    // ── Player ──
+    const sp = player.jumping ? sprites.heroJump : sprites.hero;
+    if (sp && sp.ready) {
+      ctx.save();
+      const cx = player.x + PLAYER_SIZE/2;
+      const cy = player.y + PLAYER_SIZE/2;
+      ctx.translate(cx, cy);
+      // Squash/stretch
+      const sq = player.squash;
+      ctx.scale(1/sq, sq);
+      // Bob animation
+      const bob = state === 'playing' && !player.jumping ? Math.sin(frame * 0.15) * 2 : 0;
+      ctx.drawImage(sp.canvas, -PLAYER_SIZE/2, -PLAYER_SIZE/2 + bob, PLAYER_SIZE, PLAYER_SIZE);
+      ctx.restore();
+    } else {
+      // Fallback while sprites load
+      ctx.fillStyle = '#3498DB';
+      ctx.fillRect(player.x, player.y, PLAYER_SIZE, PLAYER_SIZE);
+    }
+
+    // ── Particles ──
+    for (const p of particles) {
+      ctx.save();
+      ctx.globalAlpha = p.life;
+      ctx.fillStyle = p.color;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    }
+
+    // ── HUD ──
+    // Score panel (top-left)
+    ctx.fillStyle = 'rgba(0,0,0,0.6)';
+    ctx.beginPath();
+    ctx.roundRect(10, 10, 130, 36, 8);
+    ctx.fill();
+    ctx.fillStyle = '#FFF';
+    ctx.font = 'bold 18px sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText(`Score: ${score}`, 20, 34);
+
+    // Speed badge (top-right)
+    ctx.fillStyle = 'rgba(0,0,0,0.6)';
+    ctx.beginPath();
+    ctx.roundRect(W - 110, 10, 100, 36, 8);
+    ctx.fill();
+    ctx.fillStyle = '#FFD700';
+    ctx.font = 'bold 14px sans-serif';
+    ctx.textAlign = 'right';
+    ctx.fillText(`Speed: ${speed.toFixed(1)}`, W - 20, 34);
+
+    // Lives (hearts, top center)
+    for (let i = 0; i < 3; i++) {
+      const hx = W/2 - 42 + i * 30;
+      if (i < lives) {
+        if (sprites.heart.ready) {
+          ctx.drawImage(sprites.heart.canvas, hx, 14, 24, 24);
+        } else {
+          ctx.fillStyle = '#E74C3C';
+          ctx.fillRect(hx, 14, 24, 24);
+        }
+      } else {
+        ctx.globalAlpha = 0.25;
+        if (sprites.heart.ready) {
+          ctx.drawImage(sprites.heart.canvas, hx, 14, 24, 24);
+        }
+        ctx.globalAlpha = 1;
+      }
+    }
+
+    // Combo indicator
+    if (combo >= 2) {
+      ctx.fillStyle = combo >= 5 ? '#FF4444' : combo >= 3 ? '#FF8800' : '#FFD700';
+      ctx.font = `bold ${14 + combo}px sans-serif`;
+      ctx.textAlign = 'center';
+      ctx.fillText(`${combo}x Combo!`, W/2, 64);
+    }
+
+    // ── Juice overlays ──
+    juice.renderFlashes(ctx, W + 20, H + 20);
+    juice.renderPopups(ctx);
+
+    // ── START SCREEN ──
+    if (state === 'ready') {
+      ctx.fillStyle = 'rgba(0,0,0,0.55)';
+      ctx.fillRect(-10, -10, W + 20, H + 20);
+
+      ctx.fillStyle = '#FFF';
+      ctx.font = 'bold 32px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('Forest Runner', W/2, H * 0.28);
+
+      ctx.fillStyle = '#A8D8A8';
+      ctx.font = '14px sans-serif';
+      ctx.fillText('HERO | FOREST', W/2, H * 0.35);
+
+      // Play button
+      ctx.fillStyle = '#27AE60';
+      ctx.beginPath();
+      ctx.roundRect(W/2 - 100, H * 0.45, 200, 56, 14);
+      ctx.fill();
+      ctx.strokeStyle = '#2ECC71';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+      ctx.fillStyle = '#FFF';
+      ctx.font = 'bold 20px sans-serif';
+      ctx.fillText('TAP TO PLAY', W/2, H * 0.45 + 36);
+
+      // Instructions
+      ctx.fillStyle = 'rgba(255,255,255,0.5)';
+      ctx.font = '13px sans-serif';
+      ctx.fillText('Tap / Space / ↑ to jump', W/2, H * 0.62);
+      ctx.fillText('Collect coins, dodge obstacles!', W/2, H * 0.68);
+
+      if (highScore > 0) {
+        ctx.fillStyle = '#FFD700';
+        ctx.font = 'bold 14px sans-serif';
+        ctx.fillText(`High Score: ${highScore}`, W/2, H * 0.78);
+      }
+    }
+
+    // ── DEATH SCREEN ──
+    if (state === 'dead') {
+      ctx.fillStyle = 'rgba(0,0,0,0.65)';
+      ctx.fillRect(-10, -10, W + 20, H + 20);
+
+      ctx.fillStyle = '#FF4444';
+      ctx.font = 'bold 32px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('GAME OVER', W/2, H * 0.25);
+
+      ctx.fillStyle = '#FFF';
+      ctx.font = '18px sans-serif';
+      ctx.fillText(`Score: ${score}`, W/2, H * 0.35);
+
+      if (score >= highScore && score > 0) {
+        ctx.fillStyle = '#FFD700';
+        ctx.font = 'bold 16px sans-serif';
+        ctx.fillText('NEW HIGH SCORE!', W/2, H * 0.42);
+      }
+
+      ctx.fillStyle = '#FFD700';
+      ctx.font = 'bold 14px sans-serif';
+      ctx.fillText(`Best: ${highScore}`, W/2, H * 0.48);
+
+      // Retry button
+      ctx.fillStyle = '#E74C3C';
+      ctx.beginPath();
+      ctx.roundRect(W/2 - 100, H * 0.56, 200, 56, 14);
+      ctx.fill();
+      ctx.strokeStyle = '#FF6B6B';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+      ctx.fillStyle = '#FFF';
+      ctx.font = 'bold 20px sans-serif';
+      ctx.fillText('TAP TO RETRY', W/2, H * 0.56 + 36);
+    }
+
+    ctx.restore();
+  }
+
+  // ─── INPUT ──────────────────────────────────────
+  function handleInput() {
+    if (state === 'ready') {
+      state = 'playing';
+      score = 0; combo = 0; comboTimer = 0;
+      speed = 5; frame = 0; distance = 0;
+      lives = 3;
+      obstacles = []; coins = []; particles = [];
+      player.y = GROUND_Y - PLAYER_SIZE;
+      player.vy = 0;
+      player.jumping = false;
+      return;
+    }
+    if (state === 'dead') {
+      state = 'ready';
+      return;
+    }
+    if (state === 'playing' && !player.jumping) {
+      player.vy = JUMP_FORCE;
+      player.jumping = true;
+      player.squash = 1.3; // stretch on jump
+    }
+  }
+
+  canvas.addEventListener('touchstart', (e) => { e.preventDefault(); handleInput(); }, { passive: false });
+  canvas.addEventListener('click', () => handleInput());
+  document.addEventListener('keydown', (e) => {
+    if (e.code === 'Space' || e.code === 'ArrowUp') { e.preventDefault(); handleInput(); }
+  });
+
+  // ─── GAME LOOP ──────────────────────────────────
+  function gameLoop() {
+    update();
+    render();
+    requestAnimationFrame(gameLoop);
+  }
+  gameLoop();
+}
+
+// ─── INIT ─────────────────────────────────────────
+createRunnerV2(document.getElementById('runnerCanvas'));
+</script>
+</body>
+</html>

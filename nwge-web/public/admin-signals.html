@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NWGE Signal — Live Analytics</title>
+<link rel="icon" type="image/png" href="/favicon.png">
+<style>
+  :root {
+    --bg: #06060a; --surface: #0e0e14; --surface2: #161620; --surface3: #1e1e2c;
+    --border: #252538; --accent: #7c6cf0; --accent2: #a594fd; --green: #34d399;
+    --red: #f87171; --orange: #fbbf24; --cyan: #22d3ee; --text: #e8e8f0;
+    --text2: #b0b0c8; --muted: #6b6b88;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+
+  .topbar {
+    background: var(--surface); border-bottom: 1px solid var(--border); padding: 1rem 1.5rem;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .topbar h1 { font-size: 1.1rem; font-weight: 800; color: var(--accent2); }
+  .topbar .live { display: flex; align-items: center; gap: 0.4rem; font-size: 0.75rem; color: var(--green); }
+  .topbar .live .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green); animation: pulse 2s infinite; }
+  @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.3; } }
+  .topbar .refresh-btn { background: var(--surface2); border: 1px solid var(--border); border-radius: 6px; color: var(--text2); padding: 0.35rem 0.7rem; font-size: 0.7rem; cursor: pointer; }
+  .topbar .refresh-btn:hover { border-color: var(--accent); }
+
+  .grid { max-width: 1500px; margin: 0 auto; padding: 1.2rem; display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1rem; }
+  .grid-wide { grid-column: span 2; }
+  .grid-full { grid-column: 1 / -1; }
+  @media (max-width: 700px) { .grid-wide, .grid-full { grid-column: span 1; } }
+
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
+  .card-head { padding: 0.7rem 1rem; border-bottom: 1px solid var(--border); font-size: 0.72rem; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; display: flex; align-items: center; gap: 0.4rem; }
+  .card-body { padding: 1rem; }
+
+  /* Big numbers */
+  .stat-row { display: flex; gap: 1.5rem; flex-wrap: wrap; }
+  .stat { text-align: center; flex: 1; min-width: 60px; }
+  .stat .num { font-size: 1.8rem; font-weight: 900; line-height: 1; }
+  .stat .label { font-size: 0.65rem; color: var(--muted); margin-top: 0.2rem; text-transform: uppercase; font-weight: 600; }
+  .stat .num.green { color: var(--green); }
+  .stat .num.accent { color: var(--accent2); }
+  .stat .num.orange { color: var(--orange); }
+  .stat .num.red { color: var(--red); }
+  .stat .num.cyan { color: var(--cyan); }
+
+  /* Bars */
+  .bar-list { display: flex; flex-direction: column; gap: 0.5rem; }
+  .bar-item { display: flex; align-items: center; gap: 0.6rem; font-size: 0.75rem; }
+  .bar-item .name { width: 100px; text-align: right; color: var(--text2); font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .bar-item .track { flex: 1; height: 18px; background: var(--surface2); border-radius: 4px; overflow: hidden; position: relative; }
+  .bar-item .fill { height: 100%; border-radius: 4px; transition: width 0.5s; min-width: 2px; }
+  .bar-item .fill.purple { background: linear-gradient(90deg, var(--accent), var(--accent2)); }
+  .bar-item .fill.green { background: linear-gradient(90deg, #059669, var(--green)); }
+  .bar-item .fill.orange { background: linear-gradient(90deg, #d97706, var(--orange)); }
+  .bar-item .fill.cyan { background: linear-gradient(90deg, #0891b2, var(--cyan)); }
+  .bar-item .val { font-size: 0.7rem; color: var(--muted); min-width: 35px; font-weight: 600; }
+
+  /* Table */
+  .table-wrap { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: 0.72rem; }
+  th { text-align: left; padding: 0.5rem 0.6rem; color: var(--muted); font-weight: 700; border-bottom: 1px solid var(--border); font-size: 0.65rem; text-transform: uppercase; }
+  td { padding: 0.45rem 0.6rem; border-bottom: 1px solid rgba(37,37,56,0.5); color: var(--text2); }
+  tr:hover td { background: rgba(124,108,240,0.03); }
+  .badge { display: inline-block; padding: 0.1rem 0.4rem; border-radius: 4px; font-size: 0.6rem; font-weight: 700; }
+  .badge.green { background: rgba(52,211,153,0.15); color: var(--green); }
+  .badge.red { background: rgba(248,113,113,0.15); color: var(--red); }
+  .badge.purple { background: rgba(124,108,240,0.15); color: var(--accent2); }
+  .badge.orange { background: rgba(251,191,36,0.15); color: var(--orange); }
+
+  .prompt-cell { max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .fill-meter { display: inline-block; width: 50px; height: 6px; background: var(--surface2); border-radius: 3px; overflow: hidden; vertical-align: middle; margin-right: 0.3rem; }
+  .fill-meter .inner { height: 100%; border-radius: 3px; }
+
+  /* Thumbs row */
+  .thumbs-row { display: flex; gap: 1.5rem; align-items: center; }
+  .thumb-stat { text-align: center; }
+  .thumb-stat .icon { font-size: 1.5rem; }
+  .thumb-stat .count { font-size: 1.3rem; font-weight: 900; }
+  .thumb-stat .label { font-size: 0.6rem; color: var(--muted); }
+
+  .empty { color: var(--muted); font-size: 0.8rem; text-align: center; padding: 2rem; }
+
+  /* Timeline chart */
+  .timeline { display: flex; align-items: flex-end; gap: 2px; height: 80px; padding-top: 0.5rem; }
+  .tbar { flex: 1; min-width: 8px; background: var(--accent); border-radius: 2px 2px 0 0; transition: height 0.3s; position: relative; }
+  .tbar:hover { background: var(--accent2); }
+  .tbar .tooltip { display: none; position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%); background: var(--surface3); border: 1px solid var(--border); border-radius: 4px; padding: 0.2rem 0.4rem; font-size: 0.6rem; white-space: nowrap; z-index: 10; }
+  .tbar:hover .tooltip { display: block; }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <h1>NWGE Signal</h1>
+  <div style="display:flex;gap:1rem;align-items:center;">
+    <div class="live"><div class="dot"></div> Live Analytics</div>
+    <span style="font-size:0.7rem;color:var(--muted)" id="lastUpdate"></span>
+    <button class="refresh-btn" onclick="refresh()">Refresh</button>
+  </div>
+</div>
+
+<div class="grid" id="dashboard"></div>
+
+<script>
+const $ = s => document.querySelector(s);
+let data = {};
+
+async function refresh() {
+  try {
+    const [overview, distros, recent, timeline] = await Promise.all([
+      fetch('/api/signal/overview').then(r => r.json()),
+      fetch('/api/signal/distributions').then(r => r.json()),
+      fetch('/api/signal/recent?limit=30').then(r => r.json()),
+      fetch('/api/signal/timeline').then(r => r.json()),
+    ]);
+    data = { overview, distros, recent, timeline };
+    render();
+    $('#lastUpdate').textContent = new Date().toLocaleTimeString();
+  } catch (e) {
+    console.error('Refresh failed:', e);
+  }
+}
+
+function render() {
+  const { overview: o, distros: d, recent: r, timeline: t } = data;
+  const dash = $('#dashboard');
+
+  // Helpers
+  const pct = (v, max) => max > 0 ? Math.round((v / max) * 100) : 0;
+  const n = v => v == null ? '-' : typeof v === 'number' ? (Number.isInteger(v) ? v : v.toFixed(1)) : v;
+
+  let html = '';
+
+  // ─── Overview Stats ───────────────────────
+  html += `
+  <div class="card grid-full">
+    <div class="card-head">Overview</div>
+    <div class="card-body">
+      <div class="stat-row">
+        <div class="stat"><div class="num accent">${n(o.totals.generations)}</div><div class="label">Total Generations</div></div>
+        <div class="stat"><div class="num green">${n(o.totals.today)}</div><div class="label">Today</div></div>
+        <div class="stat"><div class="num cyan">${n(o.totals.sessions)}</div><div class="label">Sessions</div></div>
+        <div class="stat"><div class="num orange">${n(o.returning)}</div><div class="label">Returning</div></div>
+        <div class="stat"><div class="num">${n(o.fillRate?.avg)}%</div><div class="label">Avg Fill Rate</div></div>
+        <div class="stat"><div class="num ${o.failRate?.rate > 10 ? 'red' : 'green'}">${n(o.failRate?.rate)}%</div><div class="label">Fail Rate</div></div>
+        <div class="stat"><div class="num accent">${n(o.rating?.avg)}</div><div class="label">Avg Rating (${o.rating?.count || 0})</div></div>
+        <div class="stat"><div class="num">${n(o.totals.feedback)}</div><div class="label">Feedback</div></div>
+      </div>
+    </div>
+  </div>`;
+
+  // ─── Thumbs ───────────────────────────────
+  const th = o.thumbs || {};
+  html += `
+  <div class="card">
+    <div class="card-head">User Sentiment</div>
+    <div class="card-body">
+      <div class="thumbs-row">
+        <div class="thumb-stat"><div class="icon">&#128077;</div><div class="count" style="color:var(--green)">${th.thumbs_up || 0}</div><div class="label">Thumbs Up</div></div>
+        <div class="thumb-stat"><div class="icon">&#128078;</div><div class="count" style="color:var(--red)">${th.thumbs_down || 0}</div><div class="label">Thumbs Down</div></div>
+        <div class="thumb-stat"><div class="icon">&#11088;</div><div class="count" style="color:var(--orange)">${th.starred || 0}</div><div class="label">Starred (2-5)</div></div>
+      </div>
+    </div>
+  </div>`;
+
+  // ─── Session Stats ────────────────────────
+  const ss = o.sessionStats || {};
+  html += `
+  <div class="card">
+    <div class="card-head">Session Behavior</div>
+    <div class="card-body">
+      <div class="stat-row">
+        <div class="stat"><div class="num accent">${n(ss.avg_gens)}</div><div class="label">Avg Gens/Session</div></div>
+        <div class="stat"><div class="num green">${n(ss.max_gens)}</div><div class="label">Max Gens</div></div>
+        <div class="stat"><div class="num cyan">${n(ss.sessions_with_feedback)}</div><div class="label">Gave Feedback</div></div>
+      </div>
+    </div>
+  </div>`;
+
+  // ─── Fill Rate Range ──────────────────────
+  html += `
+  <div class="card">
+    <div class="card-head">Render Quality</div>
+    <div class="card-body">
+      <div class="stat-row">
+        <div class="stat"><div class="num green">${n(o.fillRate?.max)}%</div><div class="label">Best</div></div>
+        <div class="stat"><div class="num">${n(o.fillRate?.avg)}%</div><div class="label">Average</div></div>
+        <div class="stat"><div class="num ${(o.fillRate?.min||0) < 50 ? 'red' : 'orange'}">${n(o.fillRate?.min)}%</div><div class="label">Worst</div></div>
+      </div>
+    </div>
+  </div>`;
+
+  // ─── Timeline ─────────────────────────────
+  const hours = t.hourly || [];
+  if (hours.length > 0) {
+    const maxCount = Math.max(...hours.map(h => h.count), 1);
+    const bars = hours.map(h => {
+      const height = Math.max(4, (h.count / maxCount) * 100);
+      const label = h.hour.split(' ')[1] || h.hour;
+      return \`<div class="tbar" style="height:\${height}%"><div class="tooltip">\${label}: \${h.count} gens, \${n(h.avg_fill)}% fill</div></div>\`;
+    }).join('');
+    html += \`
+    <div class="card grid-wide">
+      <div class="card-head">Activity (24h)</div>
+      <div class="card-body"><div class="timeline">\${bars}</div></div>
+    </div>\`;
+  }
+
+  // ─── Genre Distribution ───────────────────
+  const genres = d.genres || [];
+  if (genres.length > 0) {
+    const maxG = Math.max(...genres.map(g => g.count), 1);
+    const bars = genres.map(g => `
+      <div class="bar-item">
+        <div class="name">${g.genre || 'unknown'}</div>
+        <div class="track"><div class="fill purple" style="width:${pct(g.count, maxG)}%"></div></div>
+        <div class="val">${g.count}</div>
+      </div>
+    `).join('');
+    html += \`
+    <div class="card">
+      <div class="card-head">Genres</div>
+      <div class="card-body"><div class="bar-list">\${bars}</div></div>
+    </div>\`;
+  }
+
+  // ─── Top Keywords ─────────────────────────
+  const kws = d.topKeywords || [];
+  if (kws.length > 0) {
+    const maxK = Math.max(...kws.map(k => k.count), 1);
+    const bars = kws.slice(0, 15).map(k => `
+      <div class="bar-item">
+        <div class="name">${k.keyword}</div>
+        <div class="track"><div class="fill cyan" style="width:${pct(k.count, maxK)}%"></div></div>
+        <div class="val">${k.count}</div>
+      </div>
+    `).join('');
+    html += \`
+    <div class="card">
+      <div class="card-head">Top Keywords in Prompts</div>
+      <div class="card-body"><div class="bar-list">\${bars}</div></div>
+    </div>\`;
+  }
+
+  // ─── Mode + Method ────────────────────────
+  const modes = d.modes || [];
+  const methods = d.methods || [];
+  html += \`
+  <div class="card">
+    <div class="card-head">Render Mode & Method</div>
+    <div class="card-body">
+      <div style="margin-bottom:0.8rem">
+        <div style="font-size:0.65rem;color:var(--muted);font-weight:700;margin-bottom:0.3rem">MODE</div>
+        <div class="bar-list">\${modes.map(m => \`
+          <div class="bar-item">
+            <div class="name">\${m.render_mode}</div>
+            <div class="track"><div class="fill green" style="width:\${pct(m.count, Math.max(...modes.map(x=>x.count),1))}%"></div></div>
+            <div class="val">\${m.count}</div>
+          </div>
+        \`).join('')}</div>
+      </div>
+      <div>
+        <div style="font-size:0.65rem;color:var(--muted);font-weight:700;margin-bottom:0.3rem">METHOD</div>
+        <div class="bar-list">\${methods.map(m => \`
+          <div class="bar-item">
+            <div class="name">\${m.method}</div>
+            <div class="track"><div class="fill orange" style="width:\${pct(m.count, Math.max(...methods.map(x=>x.count),1))}%"></div></div>
+            <div class="val">\${m.count}</div>
+          </div>
+        \`).join('')}</div>
+      </div>
+    </div>
+  </div>\`;
+
+  // ─── Prompt Length Stats ───────────────────
+  const pl = d.promptLength || [];
+  if (pl.length > 0) {
+    const maxP = Math.max(...pl.map(p => p.count), 1);
+    html += \`
+    <div class="card">
+      <div class="card-head">Prompt Length vs Quality</div>
+      <div class="card-body"><div class="bar-list">\${pl.map(p => \`
+        <div class="bar-item">
+          <div class="name">\${p.bucket}</div>
+          <div class="track"><div class="fill purple" style="width:\${pct(p.count, maxP)}%"></div></div>
+          <div class="val">\${p.count} (\${n(p.avg_fill)}%)</div>
+        </div>
+      \`).join('')}</div></div>
+    </div>\`;
+  }
+
+  // ─── Recent Feedback ──────────────────────
+  const fb = r.feedback || [];
+  html += \`
+  <div class="card grid-wide">
+    <div class="card-head">Recent Feedback</div>
+    <div class="card-body">\${fb.length === 0 ? '<div class="empty">No feedback yet</div>' : \`
+      <div class="table-wrap"><table>
+        <tr><th>Rating</th><th>Prompt</th><th>Genre</th><th>Fill</th><th>Comment</th><th>Time</th></tr>
+        \${fb.map(f => \`<tr>
+          <td>\${f.rating === 1 ? '&#128077;' : f.rating === -1 ? '&#128078;' : '&#11088;'.repeat(Math.min(f.rating,5))}</td>
+          <td class="prompt-cell">\${esc(f.prompt || '')}</td>
+          <td><span class="badge purple">\${f.genre || '-'}</span></td>
+          <td>\${f.fill_rate != null ? \`<span class="fill-meter"><span class="inner" style="width:\${f.fill_rate}%;background:\${f.fill_rate>70?'var(--green)':f.fill_rate>40?'var(--orange)':'var(--red)'}"></span></span>\${n(f.fill_rate)}%\` : '-'}</td>
+          <td>\${esc(f.comment || '-')}</td>
+          <td style="font-size:0.6rem;color:var(--muted)">\${f.created_at || ''}</td>
+        </tr>\`).join('')}
+      </table></div>\`}
+    </div>
+  </div>\`;
+
+  // ─── Recent Generations ───────────────────
+  const gens = r.generations || [];
+  html += \`
+  <div class="card grid-full">
+    <div class="card-head">Recent Generations</div>
+    <div class="card-body">\${gens.length === 0 ? '<div class="empty">No generations yet</div>' : \`
+      <div class="table-wrap"><table>
+        <tr><th>Prompt</th><th>Genre</th><th>Mode</th><th>Method</th><th>Images</th><th>Fill Rate</th><th>Render</th><th>Rating</th><th>Time</th></tr>
+        \${gens.map(g => \`<tr>
+          <td class="prompt-cell" title="\${esc(g.prompt)}">\${esc(g.prompt?.substring(0,50) || '')}</td>
+          <td><span class="badge purple">\${g.genre || '-'}</span></td>
+          <td><span class="badge \${g.render_mode==='3d'?'green':'orange'}">\${g.render_mode || '-'}</span></td>
+          <td>\${g.method || '-'}</td>
+          <td>\${g.image_count}</td>
+          <td>\${g.fill_rate != null ? \`<span class="fill-meter"><span class="inner" style="width:\${g.fill_rate}%;background:\${g.fill_rate>70?'var(--green)':g.fill_rate>40?'var(--orange)':'var(--red)'}"></span></span>\${n(g.fill_rate)}%\` : '-'}</td>
+          <td>\${g.render_time != null ? n(g.render_time)+'s' : '-'}</td>
+          <td>\${g.user_rating === 1 ? '&#128077;' : g.user_rating === -1 ? '&#128078;' : g.user_rating > 1 ? '&#11088;'.repeat(Math.min(g.user_rating,5)) : '-'}</td>
+          <td style="font-size:0.6rem;color:var(--muted)">\${g.created_at || ''}</td>
+        </tr>\`).join('')}
+      </table></div>\`}
+    </div>
+  </div>\`;
+
+  // ─── Low Quality ──────────────────────────
+  const low = r.lowQuality || [];
+  if (low.length > 0) {
+    html += \`
+    <div class="card grid-full">
+      <div class="card-head" style="color:var(--red)">Low Quality / Failed Renders</div>
+      <div class="card-body">
+        <div class="table-wrap"><table>
+          <tr><th>Prompt</th><th>Genre</th><th>Mode</th><th>Fill</th><th>Error</th><th>Time</th></tr>
+          \${low.map(g => \`<tr>
+            <td class="prompt-cell">\${esc(g.prompt?.substring(0,60) || '')}</td>
+            <td><span class="badge purple">\${g.genre || '-'}</span></td>
+            <td>\${g.render_mode || '-'}</td>
+            <td>\${g.fill_rate != null ? \`<span class="badge \${g.fill_rate<30?'red':'orange'}">\${n(g.fill_rate)}%</span>\` : '<span class="badge red">FAIL</span>'}</td>
+            <td style="font-size:0.6rem;color:var(--red)">\${esc(g.error?.substring(0,80) || '-')}</td>
+            <td style="font-size:0.6rem;color:var(--muted)">\${g.created_at || ''}</td>
+          </tr>\`).join('')}
+        </table></div>
+      </div>
+    </div>\`;
+  }
+
+  dash.innerHTML = html;
+}
+
+function esc(s) { return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function n(v) { return v == null ? '-' : typeof v === 'number' ? (Number.isInteger(v) ? v : v.toFixed(1)) : v; }
+
+refresh();
+setInterval(refresh, 10000); // Auto-refresh every 10s
+</script>
+</body>
+</html>

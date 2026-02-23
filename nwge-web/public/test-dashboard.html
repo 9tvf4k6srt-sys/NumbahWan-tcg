@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>NWGE Visual Test Dashboard</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body { background:#0a0a15; color:#ccc; font-family:'Segoe UI',Arial,sans-serif; padding:16px; }
+h1 { color:#c8a040; font-size:22px; margin-bottom:8px; }
+h2 { color:#88b8e0; font-size:16px; margin:12px 0 6px; border-bottom:1px solid #333; padding-bottom:4px; }
+.status { font-size:13px; color:#80cc80; margin:6px 0; }
+.error { color:#ff4444; }
+#progress { background:#222; border:1px solid #444; border-radius:4px; padding:10px; margin:8px 0; font-family:monospace; font-size:11px; max-height:200px; overflow-y:auto; white-space:pre-wrap; }
+.metrics-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(250px,1fr)); gap:8px; margin:8px 0; }
+.metric-card { background:#1a1a28; border:1px solid #333; border-radius:4px; padding:8px; }
+.metric-card .label { color:#888; font-size:10px; text-transform:uppercase; }
+.metric-card .value { color:#e8c060; font-size:18px; font-weight:bold; margin-top:2px; }
+.metric-card .detail { color:#999; font-size:11px; }
+.color-swatch { display:inline-block; width:24px; height:24px; border:1px solid #555; border-radius:3px; vertical-align:middle; margin-right:6px; }
+.screenshots-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(380px,1fr)); gap:10px; margin:8px 0; }
+.ss-card { background:#151520; border:1px solid #333; border-radius:4px; overflow:hidden; }
+.ss-card img { width:100%; display:block; image-rendering:auto; }
+.ss-card .caption { padding:6px 8px; font-size:11px; }
+.ss-card .caption b { color:#e8c060; }
+.hud-check { display:inline-block; margin:4px 8px; padding:2px 8px; border-radius:3px; font-size:11px; }
+.hud-check.pass { background:#1a3a1a; color:#40cc40; border:1px solid #2a5a2a; }
+.hud-check.fail { background:#3a1a1a; color:#cc4040; border:1px solid #5a2a2a; }
+.feature-row { display:flex; align-items:center; gap:8px; padding:3px 0; font-size:12px; }
+.feature-row .icon { font-size:16px; }
+#game-frame { display:none; }
+.compare-pair { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin:8px 0; }
+.compare-pair img { width:100%; border:1px solid #444; border-radius:3px; }
+.compare-pair .label { text-align:center; font-size:10px; color:#888; padding:4px; }
+</style>
+</head>
+<body>
+<h1>NWGE Visual Test Dashboard</h1>
+<div class="status" id="statusLine">Initializing...</div>
+<div id="progress"></div>
+
+<div id="metricsSection" style="display:none;">
+  <h2>Canvas Metrics</h2>
+  <div class="metrics-grid" id="metricsGrid"></div>
+</div>
+
+<div id="hudSection" style="display:none;">
+  <h2>HUD Element Detection</h2>
+  <div id="hudChecks"></div>
+</div>
+
+<div id="featureSection" style="display:none;">
+  <h2>Feature Tests</h2>
+  <div id="featureResults"></div>
+</div>
+
+<div id="regionSection" style="display:none;">
+  <h2>Region Color Analysis</h2>
+  <div class="metrics-grid" id="regionGrid"></div>
+</div>
+
+<div id="ssSection" style="display:none;">
+  <h2>Screenshots (<span id="ssCount">0</span>)</h2>
+  <div class="screenshots-grid" id="ssGrid"></div>
+</div>
+
+<!-- Hidden iframe for the game -->
+<iframe id="game-frame" src="game.html" width="1280" height="720"></iframe>
+
+<script>
+const log = document.getElementById('progress');
+const statusLine = document.getElementById('statusLine');
+
+function addLog(text) {
+  log.textContent += text + '\n';
+  log.scrollTop = log.scrollHeight;
+}
+function setStatus(text, error) {
+  statusLine.textContent = text;
+  if (error) statusLine.classList.add('error');
+  else statusLine.classList.remove('error');
+}
+
+async function waitMs(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+async function runTests() {
+  const iframe = document.getElementById('game-frame');
+  setStatus('Loading game...');
+  addLog('[1/6] Loading game in hidden iframe...');
+
+  // Wait for iframe to load
+  await new Promise(resolve => {
+    iframe.addEventListener('load', resolve, { once: true });
+  });
+  addLog('  Game loaded. Waiting for rendering...');
+  await waitMs(4000); // Let several frames render
+
+  const gw = iframe.contentWindow;
+
+  // Check if game objects exist
+  if (!gw.player || !gw.ctx || !gw.enemies) {
+    addLog('  ERROR: Game objects not found!');
+    setStatus('FAILED: Game objects not available', true);
+    return;
+  }
+  addLog('  ✓ Game objects accessible');
+
+  // ─── Inject harness functions ───
+  addLog('\n[2/6] Injecting test harness...');
+
+  const screenshots = [];
+  const metrics = {};
+
+  function waitFrames(n) {
+    return new Promise(resolve => {
+      let count = 0;
+      function tick() {
+        if (++count >= n) resolve();
+        else gw.requestAnimationFrame(tick);
+      }
+      gw.requestAnimationFrame(tick);
+    });
+  }
+
+  function capture(label) {
+    const c = gw.document.getElementById('gameCanvas');
+    const url = c.toDataURL('image/png');
+    screenshots.push({ label, url });
+    return url;
+  }
+
+  function teleport(x, y, angle, pitch) {
+    gw.player.x = x;
+    gw.player.y = y;
+    if (angle !== undefined) gw.player.angle = angle;
+    if (pitch !== undefined) gw.player.pitch = pitch;
+  }
+
+  addLog('  ✓ Harness ready');
+
+  // ─── Screenshot Walker ───
+  addLog('\n[3/6] Screenshot walker - visiting key locations...');
+  const locations = [
+    ['spawn_default',    22.5, 34.5, 0, 0],
+    ['inn_entrance',     25.5, 35.5, -Math.PI/2, 0],
+    ['road_east',        35, 33, 0, 0],
+    ['road_west',        15, 33, Math.PI, 0],
+    ['crossroad_north',  24, 20, -Math.PI/2, 0],
+    ['guard_tower',      32, 33, -Math.PI*0.3, 0],
+    ['pond_overlook',    28, 42, -Math.PI/2, -10],
+    ['npc_marshal',      25.0, 34.5, -Math.PI/2, 0],
+    ['npc_merchant',     20.0, 33.0, -Math.PI*0.3, 0],
+    ['forest_nw_kobolds',10, 10, Math.PI*0.25, 0],
+    ['forest_ne_wolves', 45, 10, 0, 0],
+    ['wolf_grassland',   42, 32, 0, 0],
+    ['river_bank',       50, 30, 0, 0],
+    ['farm_barn',        42, 20, Math.PI, 0],
+    ['sky_lookup',       22.5, 34.5, 0, 80],
+    ['ground_lookdown',  22.5, 34.5, 0, -60],
+    ['chapel_view',      24, 26, Math.PI/2, 0],
+    ['smithy_view',      17, 28, 0, 0],
+  ];
+
+  for (const [label, x, y, angle, pitch] of locations) {
+    teleport(x, y, angle, pitch);
+    await waitFrames(8);
+    capture(label);
+    addLog(`  ✓ ${label} (${x}, ${y})`);
+  }
+
+  // ─── Feature Exerciser ───
+  addLog('\n[4/6] Feature exerciser...');
+  const featureResults = {};
+
+  // Quest dialog
+  teleport(25.2, 33.8, -Math.PI/2, 0);
+  await waitFrames(6);
+  if (gw.tryInteract) gw.tryInteract();
+  await waitFrames(4);
+  capture('feature_quest_dialog');
+  featureResults.questDialog = gw.document.getElementById('questOverlay').innerHTML.length > 10;
+  addLog(`  Quest dialog: ${featureResults.questDialog ? '✅' : '❌'}`);
+  if (gw.closeAllDialogs) gw.closeAllDialogs();
+  await waitFrames(3);
+
+  // Merchant dialog
+  teleport(20.2, 32.8, -Math.PI*0.3, 0);
+  await waitFrames(6);
+  if (gw.tryInteract) gw.tryInteract();
+  await waitFrames(4);
+  capture('feature_merchant_dialog');
+  featureResults.merchantDialog = gw.document.getElementById('merchantOverlay').innerHTML.length > 10;
+  addLog(`  Merchant dialog: ${featureResults.merchantDialog ? '✅' : '❌'}`);
+  if (gw.closeAllDialogs) gw.closeAllDialogs();
+  await waitFrames(3);
+
+  // Combat - find wolf, teleport near, attack
+  let wolf = null;
+  for (const e of gw.enemies) {
+    if (e.alive && e.type === 'wolf') { wolf = e; break; }
+  }
+  if (wolf) {
+    const ang = Math.atan2(wolf.y - 0, wolf.x - 0); // angle from origin
+    const faceAng = Math.atan2(wolf.y - (wolf.y - Math.sin(ang)*1.5), wolf.x - (wolf.x - Math.cos(ang)*1.5));
+    teleport(wolf.x - Math.cos(faceAng)*1.5, wolf.y - Math.sin(faceAng)*1.5, faceAng, 0);
+    await waitFrames(8);
+    capture('feature_facing_wolf');
+    gw.attackCooldown = 0;
+    if (gw.tryAttack) gw.tryAttack();
+    await waitFrames(4);
+    capture('feature_after_attack');
+    featureResults.combat = true;
+    addLog(`  Combat: ✅ (attacked wolf)`);
+  } else {
+    featureResults.combat = false;
+    addLog(`  Combat: ❌ (no wolf found)`);
+  }
+
+  // Pickup area
+  let pickup = null;
+  for (const p of gw.pickups) { if (!p.collected) { pickup = p; break; } }
+  if (pickup) {
+    teleport(pickup.x + 0.5, pickup.y + 0.5, Math.atan2(pickup.y - (pickup.y+0.5), pickup.x - (pickup.x+0.5)), -15);
+    await waitFrames(6);
+    capture('feature_pickup_nearby');
+    featureResults.pickupVisible = true;
+    addLog(`  Pickup: ✅ (candle at ${pickup.x.toFixed(1)}, ${pickup.y.toFixed(1)})`);
+  }
+
+  featureResults.playerState = {
+    health: gw.player.health, maxHealth: gw.player.maxHealth,
+    mana: gw.player.mana, gold: gw.player.gold,
+    level: gw.player.level, xp: gw.player.xp,
+    inventory: gw.player.inventory.length,
+  };
+  featureResults.aliveEnemies = gw.enemies.filter(e => e.alive).length;
+  featureResults.uncollectedPickups = gw.pickups.filter(p => !p.collected).length;
+  featureResults.npcCount = gw.npcs.length;
+  featureResults.activeQuests = gw.activeQuests.length;
+
+  // ─── Pixel Metrics ───
+  addLog('\n[5/6] Extracting canvas metrics...');
+  teleport(22.5, 34.5, 0, 0);
+  await waitFrames(8);
+
+  const c = gw.document.getElementById('gameCanvas');
+  const gtx = c.getContext('2d', { willReadFrequently: true });
+  const W = c.width, H = c.height;
+  const imgData = gtx.getImageData(0, 0, W, H);
+  const px = imgData.data;
+
+  let rS=0, gS=0, bS=0, samples=0, darkPx=0, brightPx=0;
+  const regions = {
+    sky:     { y0:0,       y1:H*0.35, r:0, g:0, b:0, n:0 },
+    horizon: { y0:H*0.35,  y1:H*0.55, r:0, g:0, b:0, n:0 },
+    ground:  { y0:H*0.55,  y1:H*0.82, r:0, g:0, b:0, n:0 },
+    hudArea: { y0:H*0.82,  y1:H,      r:0, g:0, b:0, n:0 },
+  };
+
+  for (let y=0; y<H; y+=2) {
+    for (let x=0; x<W; x+=2) {
+      const i = (y*W+x)*4;
+      const r=px[i], g=px[i+1], b=px[i+2];
+      rS+=r; gS+=g; bS+=b; samples++;
+      const lum = r*0.299 + g*0.587 + b*0.114;
+      if (lum < 40) darkPx++;
+      if (lum > 200) brightPx++;
+      for (const k in regions) {
+        const reg = regions[k];
+        if (y >= reg.y0 && y < reg.y1) { reg.r+=r; reg.g+=g; reg.b+=b; reg.n++; }
+      }
+    }
+  }
+
+  metrics.size = `${W}×${H}`;
+  metrics.avgColor = { r:Math.round(rS/samples), g:Math.round(gS/samples), b:Math.round(bS/samples) };
+  metrics.darkPct = Math.round(darkPx/samples*100);
+  metrics.brightPct = Math.round(brightPx/samples*100);
+  metrics.fps = gw.fps || 'N/A';
+  metrics.regionColors = {};
+  for (const k in regions) {
+    const reg = regions[k];
+    if (reg.n > 0) {
+      metrics.regionColors[k] = {
+        r: Math.round(reg.r/reg.n), g: Math.round(reg.g/reg.n), b: Math.round(reg.b/reg.n),
+      };
+      metrics.regionColors[k].hex = '#' + [metrics.regionColors[k].r, metrics.regionColors[k].g, metrics.regionColors[k].b]
+        .map(c => c.toString(16).padStart(2,'0')).join('');
+    }
+  }
+
+  // HUD element detection - sample specific pixel regions
+  function sampleArea(x0,y0,w,h) {
+    let r=0,g=0,b=0,n=0;
+    for (let y=Math.max(0,y0|0);y<Math.min(H,(y0+h)|0);y+=2)
+      for (let x=Math.max(0,x0|0);x<Math.min(W,(x0+w)|0);x+=2) {
+        const i=(y*W+x)*4; r+=px[i]; g+=px[i+1]; b+=px[i+2]; n++;
+      }
+    if(!n) return {r:0,g:0,b:0,hex:'#000',visible:false};
+    r=Math.round(r/n); g=Math.round(g/n); b=Math.round(b/n);
+    return { r, g, b, hex:'#'+[r,g,b].map(c=>c.toString(16).padStart(2,'0')).join(''), visible:(r+g+b)>30 };
+  }
+
+  metrics.hud = {
+    portrait:   sampleArea(12, 12, 52, 52),
+    healthBar:  sampleArea(72, 16, 180, 18),
+    manaBar:    sampleArea(72, 37, 180, 18),
+    minimap:    sampleArea(W-80-16, 16, 64*2, 64*2),
+    actionBar:  sampleArea((W-450)/2, H-60, 450, 42),
+    xpBar:      sampleArea(0, H-12, W, 10),
+    questTracker: sampleArea(W-230, 80+64+30, 218, 60),
+    chatBox:    sampleArea(10, H-60-40-120, 280, 120),
+  };
+
+  addLog(`  Canvas: ${metrics.size}`);
+  addLog(`  Avg color: rgb(${metrics.avgColor.r},${metrics.avgColor.g},${metrics.avgColor.b})`);
+  addLog(`  Dark: ${metrics.darkPct}% | Bright: ${metrics.brightPct}%`);
+  for (const [k,v] of Object.entries(metrics.regionColors))
+    addLog(`  ${k}: ${v.hex}`);
+  for (const [k,v] of Object.entries(metrics.hud))
+    addLog(`  HUD ${k}: ${v.visible?'✅':'❌'} ${v.hex}`);
+
+  // ─── Build UI ───
+  addLog('\n[6/6] Building report UI...');
+
+  // Metrics cards
+  const metricsGrid = document.getElementById('metricsGrid');
+  const metricsData = [
+    ['Canvas Size', metrics.size, ''],
+    ['FPS', metrics.fps, ''],
+    ['Avg Color', `rgb(${metrics.avgColor.r},${metrics.avgColor.g},${metrics.avgColor.b})`,
+      `<span class="color-swatch" style="background:rgb(${metrics.avgColor.r},${metrics.avgColor.g},${metrics.avgColor.b})"></span>`],
+    ['Dark Pixels', `${metrics.darkPct}%`, 'Luminance < 40'],
+    ['Bright Pixels', `${metrics.brightPct}%`, 'Luminance > 200'],
+    ['Color Variety', `${Object.keys(metrics.regionColors).length} regions analyzed`, ''],
+    ['Alive Enemies', featureResults.aliveEnemies, `${gw.enemies.filter(e=>e.alive&&e.type==='wolf').length} wolves, ${gw.enemies.filter(e=>e.alive&&e.type==='kobold').length} kobolds`],
+    ['NPCs', featureResults.npcCount, ''],
+    ['Pickups', featureResults.uncollectedPickups, 'kobold candles'],
+    ['Player Gold', featureResults.playerState.gold + 'g', ''],
+    ['Player Level', featureResults.playerState.level, `XP: ${featureResults.playerState.xp}/${gw.player.xpNeeded}`],
+    ['Inventory', featureResults.playerState.inventory + ' items', ''],
+  ];
+  metricsGrid.innerHTML = metricsData.map(([label, value, detail]) =>
+    `<div class="metric-card"><div class="label">${label}</div><div class="value">${value}</div><div class="detail">${detail}</div></div>`
+  ).join('');
+  document.getElementById('metricsSection').style.display = '';
+
+  // HUD checks
+  const hudDiv = document.getElementById('hudChecks');
+  hudDiv.innerHTML = Object.entries(metrics.hud).map(([name, data]) =>
+    `<span class="hud-check ${data.visible?'pass':'fail'}">${data.visible?'✅':'❌'} ${name} ${data.hex}</span>`
+  ).join('');
+  document.getElementById('hudSection').style.display = '';
+
+  // Features
+  const featureDiv = document.getElementById('featureResults');
+  const feats = [
+    ['Quest Dialog', featureResults.questDialog],
+    ['Merchant Dialog', featureResults.merchantDialog],
+    ['Combat System', featureResults.combat],
+    ['Pickups Visible', featureResults.pickupVisible],
+  ];
+  featureDiv.innerHTML = feats.map(([name, ok]) =>
+    `<div class="feature-row"><span class="icon">${ok?'✅':'❌'}</span> ${name}</div>`
+  ).join('');
+  document.getElementById('featureSection').style.display = '';
+
+  // Region colors
+  const regionGrid = document.getElementById('regionGrid');
+  regionGrid.innerHTML = Object.entries(metrics.regionColors).map(([name, c]) =>
+    `<div class="metric-card">
+      <div class="label">${name} Region</div>
+      <div class="value"><span class="color-swatch" style="background:${c.hex}"></span> ${c.hex}</div>
+      <div class="detail">rgb(${c.r}, ${c.g}, ${c.b})</div>
+    </div>`
+  ).join('');
+  document.getElementById('regionSection').style.display = '';
+
+  // Screenshots
+  document.getElementById('ssCount').textContent = screenshots.length;
+  const ssGrid = document.getElementById('ssGrid');
+  ssGrid.innerHTML = screenshots.map(s =>
+    `<div class="ss-card"><img src="${s.url}" alt="${s.label}"><div class="caption"><b>${s.label}</b></div></div>`
+  ).join('');
+  document.getElementById('ssSection').style.display = '';
+
+  setStatus(`✅ Complete: ${screenshots.length} screenshots, ${Object.keys(metrics.hud).filter(k=>metrics.hud[k].visible).length}/${Object.keys(metrics.hud).length} HUD elements visible`);
+  addLog(`\n═══ COMPLETE ═══`);
+  addLog(`Screenshots: ${screenshots.length}`);
+  addLog(`HUD visible: ${Object.keys(metrics.hud).filter(k=>metrics.hud[k].visible).length}/${Object.keys(metrics.hud).length}`);
+  addLog(`Features passed: ${feats.filter(f=>f[1]).length}/${feats.length}`);
+
+  // Store for external access
+  window.TEST_RESULTS = { screenshots, metrics, featureResults };
+}
+
+// Auto-run after page load
+window.addEventListener('load', () => {
+  setTimeout(runTests, 1000);
+});
+</script>
+</body>
+</html>

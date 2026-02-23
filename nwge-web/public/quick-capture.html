@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>NWGE Quick Capture</title>
+<style>
+body { margin:0; background:#000; }
+#out { position:fixed; top:0; left:0; right:0; background:rgba(0,0,0,0.9); color:#0f0; font:11px monospace; padding:8px; z-index:9999; max-height:100vh; overflow-y:auto; }
+</style>
+</head>
+<body>
+<div id="out">Loading game...</div>
+<iframe id="gf" src="game.html" width="1280" height="720" style="border:0;display:block;margin:0 auto;"></iframe>
+<script>
+const out = document.getElementById('out');
+function log(t) { out.textContent += '\n' + t; console.log('[QC] ' + t); }
+
+async function run() {
+  const iframe = document.getElementById('gf');
+  await new Promise(r => iframe.addEventListener('load', r, {once:true}));
+  log('Game loaded. Waiting 4s for rendering...');
+  await new Promise(r => setTimeout(r, 4000));
+
+  const gw = iframe.contentWindow;
+  if (!gw.player) { log('ERROR: No player object'); return; }
+
+  function waitF(n) {
+    return new Promise(r => { let c=0; function t(){if(++c>=n)r();else gw.requestAnimationFrame(t);} gw.requestAnimationFrame(t); });
+  }
+
+  // Capture location screenshots as JSON report
+  const shots = [];
+  const locs = [
+    ['spawn', 22.5, 34.5, 0, 0],
+    ['inn', 25.5, 35.5, -Math.PI/2, 0],
+    ['east_road', 35, 33, 0, 0],
+    ['npc_quest', 25.0, 34.5, -Math.PI/2, 0],
+    ['wolves', 45, 10, 0, 0],
+    ['sky', 22.5, 34.5, 0, 80],
+    ['ground', 22.5, 34.5, 0, -60],
+  ];
+
+  for (const [label, x, y, a, p] of locs) {
+    gw.player.x=x; gw.player.y=y; gw.player.angle=a; gw.player.pitch=p;
+    await waitF(8);
+    const url = gw.document.getElementById('gameCanvas').toDataURL('image/png');
+    shots.push({label, url});
+    log('✓ ' + label);
+  }
+
+  // Quick metrics
+  const c = gw.document.getElementById('gameCanvas');
+  const ctx = c.getContext('2d',{willReadFrequently:true});
+  const d = ctx.getImageData(0,0,c.width,c.height).data;
+  let rs=0,gs=0,bs=0,n=0;
+  for(let i=0;i<d.length;i+=16){rs+=d[i];gs+=d[i+1];bs+=d[i+2];n++;}
+  const avg = {r:Math.round(rs/n),g:Math.round(gs/n),b:Math.round(bs/n)};
+
+  const report = {
+    fps: gw.fps||'?',
+    avg_color: `rgb(${avg.r},${avg.g},${avg.b})`,
+    enemies: gw.enemies.filter(e=>e.alive).length,
+    npcs: gw.npcs.length,
+    pickups: gw.pickups.filter(p=>!p.collected).length,
+    player: `Lv${gw.player.level} HP:${gw.player.health}/${gw.player.maxHealth} Gold:${gw.player.gold}`,
+    screenshots: shots.length,
+  };
+
+  log('\n═══ REPORT ═══');
+  log(JSON.stringify(report, null, 2));
+
+  // Display screenshots
+  out.style.maxHeight = '150px';
+  for (const s of shots) {
+    const div = document.createElement('div');
+    div.style.cssText = 'display:inline-block;margin:4px;text-align:center;';
+    div.innerHTML = `<img src="${s.url}" style="width:300px;border:1px solid #444;display:block;"><span style="color:#e8c060;font:10px Arial;">${s.label}</span>`;
+    document.body.appendChild(div);
+  }
+
+  log('Done. ' + shots.length + ' screenshots displayed below.');
+  window.QC_REPORT = report;
+  window.QC_SHOTS = shots;
+}
+
+window.addEventListener('load', () => setTimeout(run, 500));
+</script>
+</body>
+</html>

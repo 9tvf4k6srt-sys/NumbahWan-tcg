@@ -1,0 +1,1796 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#08080c">
+<title>NWGE Mobile Game Factory</title>
+<link rel="icon" type="image/png" href="/favicon.png">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #08080c;
+  --surface: #111118;
+  --surface2: #1a1a24;
+  --surface3: #222232;
+  --border: #2a2a3d;
+  --accent: #7c6cf0;
+  --accent2: #a594fd;
+  --accent-glow: rgba(124,108,240,0.15);
+  --green: #34d399;
+  --green-dim: rgba(52,211,153,0.12);
+  --orange: #fbbf24;
+  --red: #f87171;
+  --cyan: #22d3ee;
+  --text: #e8e8f0;
+  --text2: #b0b0c8;
+  --muted: #6b6b88;
+  --radius: 14px;
+  --radius-sm: 8px;
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+  font-family: 'Inter', -apple-system, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  overflow-x: hidden;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* ─── Header ────────────────────────── */
+.header {
+  background: linear-gradient(180deg, #0e0e18 0%, var(--bg) 100%);
+  border-bottom: 1px solid var(--border);
+  padding: 1.2rem 1rem;
+  text-align: center;
+  position: relative;
+  position: sticky; top: 0; z-index: 100;
+}
+.header::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--accent), var(--green), var(--orange), var(--accent), transparent);
+}
+.header h1 {
+  font-size: 1.4rem;
+  font-weight: 900;
+  background: linear-gradient(135deg, #a594fd, #7c6cf0 40%, #34d399 70%, #fbbf24);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+.header p { color: var(--muted); font-size: 0.78rem; margin-top: 0.15rem; }
+.header .badge {
+  display: inline-block;
+  background: var(--green-dim);
+  color: var(--green);
+  font-size: 0.6rem;
+  font-weight: 700;
+  padding: 0.15rem 0.5rem;
+  border-radius: 20px;
+  margin-top: 0.3rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+/* ─── Mode Selector ─────────────────── */
+.mode-bar {
+  display: flex;
+  gap: 0;
+  padding: 0.6rem 0.8rem;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  position: sticky; top: 65px; z-index: 99;
+}
+.mode-tab {
+  flex: 1;
+  padding: 0.6rem 0.3rem;
+  text-align: center;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--muted);
+  cursor: pointer;
+  border: 1px solid var(--border);
+  background: var(--surface2);
+  transition: all 0.2s;
+  position: relative;
+}
+.mode-tab:first-child { border-radius: var(--radius-sm) 0 0 var(--radius-sm); }
+.mode-tab:last-child { border-radius: 0 var(--radius-sm) var(--radius-sm) 0; }
+.mode-tab:not(:first-child) { border-left: none; }
+.mode-tab.active {
+  background: var(--accent-glow);
+  color: var(--accent2);
+  border-color: var(--accent);
+  z-index: 1;
+}
+.mode-tab .mode-icon { font-size: 1.1rem; display: block; margin-bottom: 0.15rem; }
+.mode-tab .mode-label { display: block; font-size: 0.62rem; color: var(--muted); margin-top: 0.1rem; }
+.mode-tab.active .mode-label { color: var(--accent2); }
+
+/* ─── Main Content ──────────────────── */
+.main {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 0.8rem;
+}
+
+.input-section { display: none; }
+.input-section.active { display: block; }
+
+/* ─── Prompt Input ──────────────────── */
+.prompt-area {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1rem;
+  margin-bottom: 0.8rem;
+}
+.prompt-area label {
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  display: block;
+  margin-bottom: 0.4rem;
+}
+.prompt-area textarea {
+  width: 100%;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  padding: 0.75rem 0.85rem;
+  font-size: 0.88rem;
+  font-family: inherit;
+  resize: vertical;
+  min-height: 80px;
+  line-height: 1.5;
+  transition: border-color 0.2s;
+}
+.prompt-area textarea:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-glow);
+}
+.prompt-area textarea::placeholder { color: var(--muted); opacity: 0.6; }
+
+/* ─── Image Upload ──────────────────── */
+.upload-area {
+  background: var(--surface);
+  border: 2px dashed var(--border);
+  border-radius: var(--radius);
+  padding: 1.5rem 1rem;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.25s;
+  margin-bottom: 0.8rem;
+  position: relative;
+  overflow: hidden;
+}
+.upload-area:hover, .upload-area.drag-over {
+  border-color: var(--accent);
+  background: var(--accent-glow);
+}
+.upload-area .upload-icon { font-size: 2.5rem; opacity: 0.4; }
+.upload-area h3 { font-size: 0.9rem; margin-top: 0.5rem; }
+.upload-area p { font-size: 0.72rem; color: var(--muted); margin-top: 0.3rem; }
+.upload-area.has-image { border-style: solid; border-color: var(--green); padding: 0.5rem; }
+.upload-area .preview-img {
+  max-width: 100%;
+  max-height: 200px;
+  border-radius: var(--radius-sm);
+  display: none;
+}
+.upload-area.has-image .preview-img { display: block; margin: 0 auto; }
+.upload-area.has-image .upload-placeholder { display: none; }
+.upload-area .change-btn {
+  display: none;
+  position: absolute;
+  top: 8px; right: 8px;
+  background: rgba(0,0,0,0.7);
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  padding: 0.3rem 0.6rem;
+  font-size: 0.65rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+.upload-area.has-image .change-btn { display: block; }
+
+input[type="file"] { display: none; }
+
+/* ─── Image Analysis Panel ──────────── */
+.analysis-panel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 0.8rem;
+  margin-bottom: 0.8rem;
+  display: none;
+}
+.analysis-panel.show { display: block; }
+.analysis-panel h4 {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--muted);
+  text-transform: uppercase;
+  margin-bottom: 0.5rem;
+}
+.color-chips {
+  display: flex;
+  gap: 0.35rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.5rem;
+}
+.color-chip {
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  border: 2px solid var(--border);
+}
+.analysis-tags {
+  display: flex;
+  gap: 0.35rem;
+  flex-wrap: wrap;
+}
+.analysis-tag {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 0.2rem 0.6rem;
+  font-size: 0.65rem;
+  font-weight: 600;
+  color: var(--text2);
+}
+.analysis-tag.highlight {
+  border-color: var(--accent);
+  color: var(--accent2);
+  background: var(--accent-glow);
+}
+
+/* ─── Quick Ideas ───────────────────── */
+.quick-ideas {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 0.8rem;
+  margin-bottom: 0.8rem;
+}
+.quick-ideas h4 {
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: var(--muted);
+  text-transform: uppercase;
+  margin-bottom: 0.5rem;
+}
+.ideas-grid {
+  display: flex;
+  gap: 0.35rem;
+  flex-wrap: wrap;
+}
+.idea-btn {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 0.3rem 0.7rem;
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--text2);
+  cursor: pointer;
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+.idea-btn:hover {
+  border-color: var(--accent);
+  color: var(--accent2);
+  background: var(--accent-glow);
+}
+.idea-btn.featured {
+  background: linear-gradient(135deg, rgba(124,108,240,0.15), rgba(52,211,153,0.1));
+  border-color: var(--accent);
+  color: var(--accent2);
+  font-weight: 700;
+}
+
+/* ─── Game Type Selector ────────────── */
+.game-type-section {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 0.8rem;
+  margin-bottom: 0.8rem;
+}
+.game-type-section h4 {
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: var(--muted);
+  text-transform: uppercase;
+  margin-bottom: 0.5rem;
+}
+.type-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(95px, 1fr));
+  gap: 0.4rem;
+}
+.type-card {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 0.5rem 0.3rem;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.type-card:hover { border-color: var(--accent); }
+.type-card.active {
+  border-color: var(--accent);
+  background: var(--accent-glow);
+  box-shadow: 0 0 12px var(--accent-glow);
+}
+.type-card .type-icon { font-size: 1.3rem; }
+.type-card .type-name { font-size: 0.65rem; font-weight: 700; color: var(--text2); margin-top: 0.2rem; }
+.type-card.active .type-name { color: var(--accent2); }
+
+/* ─── Generate Button ───────────────── */
+.generate-section {
+  margin-bottom: 0.8rem;
+}
+.btn-generate {
+  width: 100%;
+  background: linear-gradient(135deg, #7c6cf0, #5b4cd4);
+  border: none;
+  border-radius: 12px;
+  color: white;
+  padding: 0.9rem;
+  font-size: 1rem;
+  font-weight: 800;
+  cursor: pointer;
+  transition: all 0.25s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  position: relative;
+  overflow: hidden;
+}
+.btn-generate:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 30px rgba(124,108,240,0.35);
+}
+.btn-generate:disabled { opacity: 0.4; cursor: not-allowed; }
+.btn-generate.loading {
+  background: linear-gradient(135deg, #2a2a40, #3a3a55);
+  animation: pulseLoad 1.2s ease infinite;
+}
+@keyframes pulseLoad { 0%,100% { opacity:0.7 } 50% { opacity:1 } }
+.btn-generate .key-hint {
+  font-size: 0.6rem;
+  opacity: 0.5;
+}
+
+.status-bar {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 0.6rem 0.8rem;
+  font-size: 0.78rem;
+  display: none;
+  margin-top: 0.5rem;
+  line-height: 1.4;
+}
+.status-bar.show { display: block; }
+.status-bar.error { border-left: 3px solid var(--red); color: var(--red); }
+.status-bar.success { border-left: 3px solid var(--green); color: var(--green); }
+.status-bar.info { border-left: 3px solid var(--accent); color: var(--text2); }
+
+.progress-bar {
+  height: 3px;
+  background: var(--border);
+  border-radius: 3px;
+  overflow: hidden;
+  margin-top: 0.5rem;
+  display: none;
+}
+.progress-bar.show { display: block; }
+.progress-bar .bar {
+  height: 100%;
+  background: linear-gradient(90deg, var(--accent), var(--green));
+  border-radius: 3px;
+  width: 30%;
+  animation: indeterminate 1.5s ease-in-out infinite;
+}
+@keyframes indeterminate { 0%{transform:translateX(-100%)} 100%{transform:translateX(400%)} }
+
+/* ─── Game Preview ──────────────────── */
+.game-preview {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  display: none;
+  margin-bottom: 1rem;
+}
+.game-preview.show { display: block; }
+
+.preview-header {
+  padding: 0.7rem 1rem;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.preview-header h3 { font-size: 0.88rem; font-weight: 700; }
+.preview-tags {
+  display: flex;
+  gap: 0.3rem;
+}
+.preview-tag {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 0.15rem 0.45rem;
+  font-size: 0.6rem;
+  font-weight: 600;
+}
+.preview-tag.accent { border-color: var(--accent); color: var(--accent2); }
+.preview-tag.green { border-color: var(--green); color: var(--green); }
+
+.canvas-wrapper {
+  background: #000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 200px;
+  position: relative;
+}
+.canvas-wrapper canvas {
+  display: block;
+  max-width: 100%;
+  touch-action: none;
+}
+.fullscreen-btn {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: rgba(0,0,0,0.6);
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  padding: 0.3rem 0.5rem;
+  font-size: 0.7rem;
+  cursor: pointer;
+  z-index: 10;
+}
+
+.preview-actions {
+  padding: 0.7rem 1rem;
+  border-top: 1px solid var(--border);
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+.action-btn {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--text2);
+  padding: 0.45rem 0.8rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+.action-btn:hover { border-color: var(--accent); color: var(--accent2); }
+.action-btn.green { border-color: var(--green); color: var(--green); }
+.action-btn.green:hover { background: var(--green-dim); }
+
+/* ─── Game Details / Config ─────────── */
+.game-details {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1rem;
+  display: none;
+  margin-bottom: 1rem;
+}
+.game-details.show { display: block; }
+.game-details h4 {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--muted);
+  text-transform: uppercase;
+  margin-bottom: 0.6rem;
+}
+.detail-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 0.5rem;
+}
+.detail-card {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 0.5rem 0.7rem;
+}
+.detail-card .label { font-size: 0.6rem; color: var(--muted); font-weight: 600; text-transform: uppercase; }
+.detail-card .value { font-size: 0.85rem; font-weight: 700; color: var(--text); margin-top: 0.15rem; }
+.detail-card .value.accent { color: var(--accent2); }
+.detail-card .value.green { color: var(--green); }
+
+/* ─── Palette Preview ───────────────── */
+.palette-row {
+  display: flex;
+  gap: 0.3rem;
+  margin-top: 0.6rem;
+}
+.palette-swatch {
+  flex: 1;
+  height: 32px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  position: relative;
+}
+.palette-swatch .pal-label {
+  position: absolute;
+  bottom: -14px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 0.5rem;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+/* ─── Template Gallery ──────────────── */
+.template-gallery {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 0.8rem;
+}
+.template-gallery h2 {
+  font-size: 1rem;
+  font-weight: 800;
+  color: var(--text2);
+  text-align: center;
+  margin-bottom: 0.3rem;
+}
+.template-gallery .subtitle {
+  font-size: 0.75rem;
+  color: var(--muted);
+  text-align: center;
+  margin-bottom: 0.8rem;
+}
+.gallery-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 0.7rem;
+}
+.gallery-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  cursor: pointer;
+  transition: all 0.25s;
+}
+.gallery-card:hover {
+  border-color: var(--accent);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 20px rgba(124,108,240,0.15);
+}
+.gallery-card .card-preview {
+  height: 100px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2.5rem;
+}
+.gallery-card .card-body {
+  padding: 0.5rem 0.7rem;
+  border-top: 1px solid var(--border);
+}
+.gallery-card .card-body h3 { font-size: 0.78rem; font-weight: 700; }
+.gallery-card .card-body p { font-size: 0.62rem; color: var(--muted); line-height: 1.3; margin-top: 0.15rem; }
+.gallery-card .card-badge {
+  display: inline-block;
+  background: var(--accent-glow);
+  color: var(--accent2);
+  font-size: 0.55rem;
+  font-weight: 700;
+  padding: 0.1rem 0.4rem;
+  border-radius: 4px;
+  margin-top: 0.25rem;
+  text-transform: uppercase;
+}
+
+/* ─── Footer ────────────────────────── */
+.footer {
+  text-align: center;
+  padding: 1.5rem;
+  color: var(--muted);
+  font-size: 0.65rem;
+  border-top: 1px solid var(--border);
+}
+
+/* ─── Responsive ────────────────────── */
+@media (max-width: 480px) {
+  .main { padding: 0.5rem; }
+  .type-grid { grid-template-columns: repeat(3, 1fr); }
+  .detail-grid { grid-template-columns: 1fr 1fr; }
+  .gallery-grid { grid-template-columns: repeat(2, 1fr); }
+}
+@media (min-width: 768px) {
+  .header h1 { font-size: 1.8rem; }
+  .main { padding: 1.2rem; }
+  .type-grid { grid-template-columns: repeat(5, 1fr); }
+}
+
+/* Fullscreen mode */
+.canvas-wrapper.fullscreen {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: #000;
+}
+.canvas-wrapper.fullscreen canvas { max-width: 100vw; max-height: 100vh; }
+
+::-webkit-scrollbar { width: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 5px; }
+</style>
+</head>
+<body>
+
+<!-- Header -->
+<div class="header">
+  <h1>NWGE Mobile Game Factory</h1>
+  <p>Image to 3D World. Picture to Game. Prompt to Game. Unreal-Quality Rendering.</p>
+  <div class="badge" id="engineBadge">5 TEMPLATES | 3D VOXELSPACE | WEBGL POSTFX | DEEP VISION | MOBILE-FIRST</div>
+</div>
+
+<!-- Mode Selector -->
+<div class="mode-bar">
+  <div class="mode-tab active" data-mode="prompt" onclick="switchMode('prompt')">
+    <span class="mode-icon">&#9997;</span>
+    Prompt
+    <span class="mode-label">Text to Game</span>
+  </div>
+  <div class="mode-tab" data-mode="picture" onclick="switchMode('picture')">
+    <span class="mode-icon">&#128247;</span>
+    Picture
+    <span class="mode-label">Image to Game</span>
+  </div>
+  <div class="mode-tab" data-mode="combined" onclick="switchMode('combined')">
+    <span class="mode-icon">&#10024;</span>
+    Combined
+    <span class="mode-label">Both to Game</span>
+  </div>
+</div>
+
+<div class="main">
+
+  <!-- ═══ PROMPT MODE ═══════════════════════ -->
+  <div class="input-section active" id="section-prompt">
+    <div class="prompt-area">
+      <label for="promptText">Describe your mobile game</label>
+      <textarea id="promptText" placeholder="e.g. 'An endless runner in a haunted forest with a ninja dodging ghosts'&#10;'A cute puzzle game with cats and gems in a candy world'&#10;'Epic RPG adventure with a dragon knight in a volcanic dungeon'"></textarea>
+    </div>
+
+    <div class="quick-ideas">
+      <h4>Quick Ideas</h4>
+      <div class="ideas-grid" id="promptIdeas">
+        <div class="idea-btn featured" data-prompt="Endless runner ninja in a dark forest dodging obstacles">Forest Runner</div>
+        <div class="idea-btn featured" data-prompt="RPG adventure with a warrior exploring dungeons and fighting dragons">Dungeon RPG</div>
+        <div class="idea-btn featured" data-prompt="Colorful match-3 puzzle game with gems and crystals">Gem Puzzle</div>
+        <div class="idea-btn" data-prompt="Tower defense in space with laser turrets and alien waves">Space TD</div>
+        <div class="idea-btn" data-prompt="Platformer with a robot jumping across floating islands in the sky">Sky Platformer</div>
+        <div class="idea-btn" data-prompt="Ocean runner with a mermaid dodging sharks and collecting pearls">Ocean Run</div>
+        <div class="idea-btn" data-prompt="Desert RPG with a mage exploring ancient pyramids">Desert Quest</div>
+        <div class="idea-btn" data-prompt="Cute cat runner in a candy world collecting fish">Cat Runner</div>
+        <div class="idea-btn" data-prompt="Snow platformer with an archer jumping across ice caves">Ice Jumper</div>
+        <div class="idea-btn" data-prompt="Volcanic tower defense with fire turrets against lava monsters">Lava Defense</div>
+        <div class="idea-btn" data-prompt="City endless runner with a rogue parkouring across rooftops">Urban Parkour</div>
+        <div class="idea-btn" data-prompt="Fantasy puzzle with magical runes and enchanted crystals">Magic Match</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ PICTURE MODE ══════════════════════ -->
+  <div class="input-section" id="section-picture">
+    <div class="upload-area" id="uploadArea" onclick="document.getElementById('fileInput').click()">
+      <div class="upload-placeholder">
+        <div class="upload-icon">&#128444;</div>
+        <h3>Upload a Reference Image</h3>
+        <p>Drop an image or tap to browse. We'll extract colors, theme, and mood to generate your game.</p>
+        <p style="margin-top:0.3rem;color:var(--accent2);font-size:0.68rem;">Supports: JPG, PNG, GIF, WebP</p>
+      </div>
+      <img class="preview-img" id="imagePreview" alt="Uploaded reference">
+      <button class="change-btn" onclick="event.stopPropagation(); clearImage();">Change</button>
+    </div>
+    <input type="file" id="fileInput" accept="image/*" onchange="handleFileSelect(event)">
+
+    <div class="analysis-panel" id="analysisPanel">
+      <h4>Deep Image Analysis <span id="analysisStatus" style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--green);font-size:0.6rem;"></span></h4>
+      <div class="color-chips" id="colorChips"></div>
+      <div class="analysis-tags" id="analysisTags"></div>
+      <div id="deepAnalysisDetails" style="display:none;margin-top:0.6rem;">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.4rem;margin-bottom:0.5rem;">
+          <div style="background:var(--surface2);border-radius:6px;padding:0.4rem 0.6rem;">
+            <div style="font-size:0.55rem;color:var(--muted);text-transform:uppercase;">Game Type</div>
+            <div id="detectedGameType" style="font-size:0.8rem;font-weight:700;color:var(--accent2);">-</div>
+          </div>
+          <div style="background:var(--surface2);border-radius:6px;padding:0.4rem 0.6rem;">
+            <div style="font-size:0.55rem;color:var(--muted);text-transform:uppercase;">Theme</div>
+            <div id="detectedTheme" style="font-size:0.8rem;font-weight:700;color:var(--green);">-</div>
+          </div>
+          <div style="background:var(--surface2);border-radius:6px;padding:0.4rem 0.6rem;">
+            <div style="font-size:0.55rem;color:var(--muted);text-transform:uppercase;">Mood</div>
+            <div id="detectedMood" style="font-size:0.8rem;font-weight:700;">-</div>
+          </div>
+          <div style="background:var(--surface2);border-radius:6px;padding:0.4rem 0.6rem;">
+            <div style="font-size:0.55rem;color:var(--muted);text-transform:uppercase;">Complexity</div>
+            <div id="detectedComplexity" style="font-size:0.8rem;font-weight:700;">-</div>
+          </div>
+          <div style="background:var(--surface2);border-radius:6px;padding:0.4rem 0.6rem;">
+            <div style="font-size:0.55rem;color:var(--muted);text-transform:uppercase;">Character</div>
+            <div id="detectedCharacter" style="font-size:0.8rem;font-weight:700;color:var(--orange);">-</div>
+          </div>
+          <div style="background:var(--surface2);border-radius:6px;padding:0.4rem 0.6rem;">
+            <div style="font-size:0.55rem;color:var(--muted);text-transform:uppercase;">Difficulty</div>
+            <div id="detectedDifficulty" style="font-size:0.8rem;font-weight:700;">-</div>
+          </div>
+        </div>
+        <div style="margin-bottom:0.4rem;">
+          <div style="font-size:0.55rem;color:var(--muted);text-transform:uppercase;margin-bottom:0.2rem;">Extracted Palette</div>
+          <div id="extractedPalette" style="display:flex;gap:2px;height:24px;"></div>
+        </div>
+        <div id="edgePreview" style="display:none;margin-bottom:0.4rem;">
+          <div style="font-size:0.55rem;color:var(--muted);text-transform:uppercase;margin-bottom:0.2rem;">Edge Map (Level Layout Source)</div>
+          <canvas id="edgeCanvas" style="width:100%;max-height:80px;border-radius:6px;border:1px solid var(--border);"></canvas>
+        </div>
+        <div id="compositionInfo" style="font-size:0.6rem;color:var(--text2);"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ COMBINED MODE ═════════════════════ -->
+  <div class="input-section" id="section-combined">
+    <div class="upload-area" id="uploadAreaCombined" onclick="document.getElementById('fileInputCombined').click()">
+      <div class="upload-placeholder">
+        <div class="upload-icon">&#128444;</div>
+        <h3>Upload Reference Image</h3>
+        <p>We'll combine your image's style with your text description</p>
+      </div>
+      <img class="preview-img" id="imagePreviewCombined" alt="Uploaded reference">
+      <button class="change-btn" onclick="event.stopPropagation(); clearImageCombined();">Change</button>
+    </div>
+    <input type="file" id="fileInputCombined" accept="image/*" onchange="handleFileSelectCombined(event)">
+
+    <div class="analysis-panel" id="analysisPanelCombined">
+      <h4>Deep Image Analysis <span id="analysisStatusCombined" style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--green);font-size:0.6rem;"></span></h4>
+      <div class="color-chips" id="colorChipsCombined"></div>
+      <div class="analysis-tags" id="analysisTagsCombined"></div>
+      <div id="deepAnalysisDetailsCombined" style="display:none;margin-top:0.6rem;">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.4rem;margin-bottom:0.5rem;">
+          <div style="background:var(--surface2);border-radius:6px;padding:0.4rem 0.6rem;">
+            <div style="font-size:0.55rem;color:var(--muted);text-transform:uppercase;">Game Type</div>
+            <div id="detectedGameTypeCombined" style="font-size:0.8rem;font-weight:700;color:var(--accent2);">-</div>
+          </div>
+          <div style="background:var(--surface2);border-radius:6px;padding:0.4rem 0.6rem;">
+            <div style="font-size:0.55rem;color:var(--muted);text-transform:uppercase;">Theme</div>
+            <div id="detectedThemeCombined" style="font-size:0.8rem;font-weight:700;color:var(--green);">-</div>
+          </div>
+          <div style="background:var(--surface2);border-radius:6px;padding:0.4rem 0.6rem;">
+            <div style="font-size:0.55rem;color:var(--muted);text-transform:uppercase;">Mood</div>
+            <div id="detectedMoodCombined" style="font-size:0.8rem;font-weight:700;">-</div>
+          </div>
+          <div style="background:var(--surface2);border-radius:6px;padding:0.4rem 0.6rem;">
+            <div style="font-size:0.55rem;color:var(--muted);text-transform:uppercase;">Character</div>
+            <div id="detectedCharacterCombined" style="font-size:0.8rem;font-weight:700;color:var(--orange);">-</div>
+          </div>
+        </div>
+        <div style="margin-bottom:0.4rem;">
+          <div style="font-size:0.55rem;color:var(--muted);text-transform:uppercase;margin-bottom:0.2rem;">Extracted Palette</div>
+          <div id="extractedPaletteCombined" style="display:flex;gap:2px;height:24px;"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="prompt-area" style="margin-top:0.6rem;">
+      <label for="promptTextCombined">Add your game description</label>
+      <textarea id="promptTextCombined" placeholder="Describe the gameplay: 'Make this into an endless runner with sword combat'"></textarea>
+    </div>
+  </div>
+
+  <!-- ═══ GAME TYPE (shared) ════════════════ -->
+  <div class="game-type-section">
+    <h4>Game Type <span style="font-weight:400;color:var(--muted);font-size:0.6rem;">(auto-detected or pick one)</span></h4>
+    <div class="type-grid" id="typeGrid">
+      <div class="type-card active" data-type="auto">
+        <div class="type-icon">&#129302;</div>
+        <div class="type-name">Auto</div>
+      </div>
+      <div class="type-card" data-type="runner">
+        <div class="type-icon">&#127939;</div>
+        <div class="type-name">Runner</div>
+      </div>
+      <div class="type-card" data-type="rpg">
+        <div class="type-icon">&#9876;</div>
+        <div class="type-name">RPG</div>
+      </div>
+      <div class="type-card" data-type="platformer">
+        <div class="type-icon">&#128640;</div>
+        <div class="type-name">Platformer</div>
+      </div>
+      <div class="type-card" data-type="puzzle">
+        <div class="type-icon">&#129513;</div>
+        <div class="type-name">Puzzle</div>
+      </div>
+      <div class="type-card" data-type="tower_defense">
+        <div class="type-icon">&#127984;</div>
+        <div class="type-name">Tower Defense</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ GENERATE ══════════════════════════ -->
+  <div class="generate-section">
+    <button class="btn-generate" id="genBtn" onclick="generateGame()">
+      Generate Mobile Game
+      <span class="key-hint">Ctrl+Enter</span>
+    </button>
+    <div class="status-bar" id="status"></div>
+    <div class="progress-bar" id="progress"><div class="bar"></div></div>
+  </div>
+
+  <!-- ═══ GAME PREVIEW ═════════════════════ -->
+  <div class="game-preview" id="gamePreview">
+    <div class="preview-header">
+      <h3 id="gameName">My Game</h3>
+      <div class="preview-tags" id="previewTags"></div>
+    </div>
+    <div class="canvas-wrapper" id="canvasWrapper">
+      <canvas id="gameCanvas"></canvas>
+      <button class="fullscreen-btn" onclick="toggleFullscreen()">&#x26F6; Fullscreen</button>
+    </div>
+    <div class="preview-actions">
+      <button class="action-btn green" onclick="downloadGame()">&#128190; Download</button>
+      <button class="action-btn" onclick="shareGame()">&#128279; Share</button>
+      <button class="action-btn" onclick="regenerateGame()">&#128260; Regenerate</button>
+      <button class="action-btn" onclick="captureScreenshot()">&#128247; Screenshot</button>
+    </div>
+  </div>
+
+  <!-- ═══ GAME DETAILS ═════════════════════ -->
+  <div class="game-details" id="gameDetails">
+    <h4>Game Configuration</h4>
+    <div class="detail-grid" id="detailGrid"></div>
+    <h4 style="margin-top:0.8rem;">Color Palette</h4>
+    <div class="palette-row" id="paletteRow"></div>
+  </div>
+
+  <!-- ═══ 3D CINEMATIC PREVIEW ═══════════════ -->
+  <div class="game-preview" id="cinematicPreview" style="display:none;">
+    <div class="preview-header">
+      <h3>3D World Preview <span style="font-size:0.65rem;color:var(--cyan);font-weight:400;margin-left:0.3rem;">VoxelSpace + PostFX</span></h3>
+      <div class="preview-tags">
+        <span class="preview-tag" style="border-color:var(--orange);color:var(--orange);">UE5-STYLE</span>
+        <span class="preview-tag" style="border-color:var(--cyan);color:var(--cyan);">IMAGE-DRIVEN</span>
+      </div>
+    </div>
+    <!-- Render Quality Indicator -->
+    <div style="padding:0.4rem 0.8rem;background:var(--surface2);border-bottom:1px solid var(--border);display:flex;gap:0.4rem;flex-wrap:wrap;align-items:center;">
+      <div style="font-size:0.55rem;color:var(--muted);text-transform:uppercase;margin-right:0.3rem;">Active Features:</div>
+      <div id="renderFeatures" style="display:flex;gap:0.25rem;flex-wrap:wrap;"></div>
+    </div>
+    <div class="canvas-wrapper" style="position:relative;">
+      <canvas id="cinematicCanvas" style="display:block;max-width:100%;"></canvas>
+      <div id="cinematicOverlay" style="position:absolute;bottom:8px;left:8px;right:8px;display:flex;gap:0.4rem;flex-wrap:wrap;">
+        <button class="action-btn" onclick="toggleCinematicPostFX()" id="postfxToggle" style="font-size:0.6rem;">PostFX: ON</button>
+        <button class="action-btn" onclick="rotateCinematicCamera()" style="font-size:0.6rem;">Rotate Camera</button>
+        <button class="action-btn" onclick="toggleRenderMode()" id="renderModeToggle" style="font-size:0.6rem;">Mode: HIGH-FI</button>
+        <button class="action-btn" onclick="saveCinematic()" style="font-size:0.6rem;">Save 3D</button>
+      </div>
+    </div>
+    <div style="padding:0.6rem 0.8rem;border-top:1px solid var(--border);">
+      <div style="font-size:0.6rem;color:var(--muted);margin-bottom:0.3rem;">RENDERING PIPELINE</div>
+      <div id="pipelineInfo" style="font-size:0.68rem;color:var(--text2);line-height:1.5;"></div>
+    </div>
+  </div>
+
+  <!-- ═══ IMAGE→GAME MAPPING PREVIEW ═════════ -->
+  <div class="game-preview" id="mappingPreview" style="display:none;">
+    <div class="preview-header">
+      <h3>Image → Game Mapping</h3>
+      <div class="preview-tags">
+        <span class="preview-tag accent">VISUAL</span>
+      </div>
+    </div>
+    <div style="padding:0.8rem;display:grid;grid-template-columns:1fr 1fr;gap:0.6rem;" id="mappingGrid">
+      <div>
+        <div style="font-size:0.55rem;color:var(--muted);text-transform:uppercase;margin-bottom:0.3rem;">Source Image</div>
+        <img id="mappingSource" style="width:100%;border-radius:8px;border:1px solid var(--border);" alt="">
+      </div>
+      <div>
+        <div style="font-size:0.55rem;color:var(--muted);text-transform:uppercase;margin-bottom:0.3rem;">Generated World</div>
+        <canvas id="mappingTarget" style="width:100%;border-radius:8px;border:1px solid var(--border);"></canvas>
+      </div>
+    </div>
+    <div style="padding:0.5rem 0.8rem;border-top:1px solid var(--border);">
+      <div style="font-size:0.55rem;color:var(--muted);text-transform:uppercase;margin-bottom:0.3rem;">Element Mapping</div>
+      <div id="mappingDetails" style="display:flex;gap:0.3rem;flex-wrap:wrap;"></div>
+    </div>
+    <div style="padding:0.5rem 0.8rem;border-top:1px solid var(--border);">
+      <div style="font-size:0.55rem;color:var(--muted);text-transform:uppercase;margin-bottom:0.3rem;">Extracted Sprites</div>
+      <div id="spritePreview" style="display:flex;gap:0.5rem;flex-wrap:wrap;"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ TEMPLATE GALLERY ═══════════════════ -->
+<section class="template-gallery">
+  <h2>Mobile Game Templates</h2>
+  <p class="subtitle">Pre-built templates optimized for touch controls</p>
+  <div class="gallery-grid" id="galleryGrid"></div>
+</section>
+
+<div class="footer">
+  NWGE Mobile Game Factory v3.1 &mdash; Image&rarr;3D World | All Templates Deep-Analysis | WebGL PostFX | VoxelSpace Terrain | Picture to Game | Prompt to Game
+</div>
+
+<script src="image-to-game-engine.js"></script>
+<script src="image-to-world-engine.js"></script>
+<script src="wow-renderer.js"></script>
+<script src="mobile-game-engine.js"></script>
+<script>
+'use strict';
+
+// ═══════════════════════════════════════════════════════
+//  STATE
+// ═══════════════════════════════════════════════════════
+let currentMode = 'prompt';
+let selectedType = 'auto';
+let uploadedImage = null; // HTMLImageElement
+let imageAnalysis = null; // legacy basic analysis
+let deepAnalysis = null; // new deep analysis
+let uploadedImageCombined = null;
+let imageAnalysisCombined = null;
+let deepAnalysisCombined = null;
+let currentGame = null;
+let generating = false;
+let visionAvailable = false;
+
+const $ = s => document.querySelector(s);
+const $$ = s => document.querySelectorAll(s);
+
+// Check server capabilities on load
+(async () => {
+  try {
+    const resp = await fetch('/api/mobile/status');
+    const data = await resp.json();
+    visionAvailable = data.visionAvailable;
+    if (visionAvailable) {
+      $('#engineBadge').textContent = '5 TEMPLATES | LLM VISION | DEEP ANALYSIS | MOBILE-FIRST';
+    }
+  } catch {}
+})();
+
+// ═══════════════════════════════════════════════════════
+//  MODE SWITCHING
+// ═══════════════════════════════════════════════════════
+function switchMode(mode) {
+  currentMode = mode;
+  $$('.mode-tab').forEach(t => t.classList.toggle('active', t.dataset.mode === mode));
+  $$('.input-section').forEach(s => s.classList.toggle('active', s.id === `section-${mode}`));
+}
+
+// ═══════════════════════════════════════════════════════
+//  GAME TYPE SELECTION
+// ═══════════════════════════════════════════════════════
+$$('.type-card').forEach(card => {
+  card.onclick = () => {
+    $$('.type-card').forEach(c => c.classList.remove('active'));
+    card.classList.add('active');
+    selectedType = card.dataset.type;
+  };
+});
+
+// ═══════════════════════════════════════════════════════
+//  QUICK IDEAS
+// ═══════════════════════════════════════════════════════
+$$('.idea-btn').forEach(btn => {
+  btn.onclick = () => {
+    const target = currentMode === 'combined' ? '#promptTextCombined' : '#promptText';
+    $(target).value = btn.dataset.prompt;
+    $(target).focus();
+  };
+});
+
+// ═══════════════════════════════════════════════════════
+//  IMAGE UPLOAD & DEEP ANALYSIS
+// ═══════════════════════════════════════════════════════
+function handleFileSelect(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  loadImageFile(file, 'main');
+}
+
+function handleFileSelectCombined(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  loadImageFile(file, 'combined');
+}
+
+async function loadImageFile(file, target) {
+  const reader = new FileReader();
+  reader.onload = async (e) => {
+    const img = new Image();
+    img.onload = async () => {
+      if (target === 'main') {
+        uploadedImage = img;
+        $('#imagePreview').src = e.target.result;
+        $('#uploadArea').classList.add('has-image');
+        $('#analysisStatus').textContent = 'Analyzing...';
+        $('#analysisPanel').classList.add('show');
+
+        // Phase 1: Quick basic analysis (instant)
+        imageAnalysis = MobileGameEngine.analyzeImage(img);
+        showBasicAnalysis(imageAnalysis, '#colorChips', '#analysisTags');
+
+        // Phase 2: Deep analysis (client-side, ~100ms)
+        deepAnalysis = ImageToGameEngine.analyzeImageDeep(img);
+        showDeepAnalysis(deepAnalysis, '', '#analysisStatus');
+
+        // Phase 3: LLM Vision boost (server-side, async)
+        if (visionAvailable) {
+          $('#analysisStatus').textContent = 'Basic done. Requesting LLM vision...';
+          try {
+            const visionResult = await ImageToGameEngine.analyzeWithVision(e.target.result);
+            if (visionResult) {
+              deepAnalysis = ImageToGameEngine.mergeAnalysis(deepAnalysis, visionResult);
+              showDeepAnalysis(deepAnalysis, '', '#analysisStatus');
+              $('#analysisStatus').textContent = 'LLM Vision + Deep Analysis complete';
+            }
+          } catch { /* vision failed, client analysis is still good */ }
+        }
+
+        // Auto-select game type from analysis
+        autoSelectGameType(deepAnalysis);
+
+      } else {
+        uploadedImageCombined = img;
+        $('#imagePreviewCombined').src = e.target.result;
+        $('#uploadAreaCombined').classList.add('has-image');
+        $('#analysisStatusCombined').textContent = 'Analyzing...';
+        $('#analysisPanelCombined').classList.add('show');
+
+        imageAnalysisCombined = MobileGameEngine.analyzeImage(img);
+        showBasicAnalysis(imageAnalysisCombined, '#colorChipsCombined', '#analysisTagsCombined');
+
+        deepAnalysisCombined = ImageToGameEngine.analyzeImageDeep(img);
+        showDeepAnalysis(deepAnalysisCombined, 'Combined', '#analysisStatusCombined');
+
+        if (visionAvailable) {
+          try {
+            const visionResult = await ImageToGameEngine.analyzeWithVision(e.target.result);
+            if (visionResult) {
+              deepAnalysisCombined = ImageToGameEngine.mergeAnalysis(deepAnalysisCombined, visionResult);
+              showDeepAnalysis(deepAnalysisCombined, 'Combined', '#analysisStatusCombined');
+            }
+          } catch {}
+        }
+      }
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+function showBasicAnalysis(analysis, chipsSel, tagsSel) {
+  // Color chips
+  $(chipsSel).innerHTML = analysis.dominantColors.slice(0, 6).map(c =>
+    `<div class="color-chip" style="background:rgb(${c.r},${c.g},${c.b})" title="rgb(${c.r},${c.g},${c.b})"></div>`
+  ).join('');
+
+  // Tags
+  const tags = [];
+  tags.push(`<span class="analysis-tag highlight">Theme: ${analysis.suggestedTheme}</span>`);
+  tags.push(`<span class="analysis-tag">Warmth: ${analysis.warmth}</span>`);
+  tags.push(`<span class="analysis-tag">Brightness: ${(analysis.brightness * 100).toFixed(0)}%</span>`);
+  if (analysis.features.hasBlue) tags.push(`<span class="analysis-tag">Water/Sky</span>`);
+  if (analysis.features.hasGreen) tags.push(`<span class="analysis-tag">Vegetation</span>`);
+  if (analysis.features.hasBrown) tags.push(`<span class="analysis-tag">Earth/Wood</span>`);
+  if (analysis.features.hasRed) tags.push(`<span class="analysis-tag">Fire/Lava</span>`);
+  if (analysis.isDark) tags.push(`<span class="analysis-tag">Dark mood</span>`);
+  if (analysis.isLight) tags.push(`<span class="analysis-tag">Bright mood</span>`);
+  $(tagsSel).innerHTML = tags.join('');
+}
+
+function showDeepAnalysis(deep, suffix, statusSel) {
+  const gc = deep.gameConfig;
+  const suf = suffix || '';
+  const detailsEl = $(`#deepAnalysisDetails${suf}`);
+  if (detailsEl) detailsEl.style.display = 'block';
+
+  // Game type
+  const typeEl = $(`#detectedGameType${suf}`);
+  if (typeEl) typeEl.textContent = (deep.suggestedGameType || 'runner').replace('_', ' ').toUpperCase();
+
+  // Theme
+  const themeEl = $(`#detectedTheme${suf}`);
+  if (themeEl) themeEl.textContent = (deep.suggestedTheme || 'fantasy').toUpperCase();
+
+  // Mood
+  const moodEl = $(`#detectedMood${suf}`);
+  if (moodEl) {
+    const moodColors = { epic:'#FFD700', calm:'#87CEEB', dark:'#8B0000', cute:'#FF69B4',
+      mysterious:'#9370DB', energetic:'#FF4500', melancholic:'#708090', adventurous:'#32CD32',
+      horror:'#DC143C', peaceful:'#90EE90' };
+    moodEl.textContent = (deep.mood?.primary || 'adventure').toUpperCase();
+    moodEl.style.color = moodColors[deep.mood?.primary] || 'var(--text)';
+  }
+
+  // Complexity
+  const complexEl = $(`#detectedComplexity${suf}`);
+  if (complexEl && deep.complexity) {
+    const pct = Math.round(deep.complexity.overall * 100);
+    complexEl.textContent = `${deep.complexity.level.toUpperCase()} (${pct}%)`;
+    complexEl.style.color = pct > 60 ? 'var(--red)' : pct > 35 ? 'var(--orange)' : 'var(--green)';
+  }
+
+  // Character
+  const charEl = $(`#detectedCharacter${suf}`);
+  if (charEl && gc?.character) {
+    charEl.textContent = `${gc.character.type} + ${gc.character.weapon}`;
+  }
+
+  // Difficulty
+  const diffEl = $(`#detectedDifficulty${suf}`);
+  if (diffEl && gc) {
+    diffEl.textContent = (gc.difficulty || 'medium').toUpperCase();
+    diffEl.style.color = gc.difficulty === 'hard' ? 'var(--red)' : gc.difficulty === 'easy' ? 'var(--green)' : 'var(--orange)';
+  }
+
+  // Extracted palette
+  const palEl = $(`#extractedPalette${suf}`);
+  if (palEl && deep.palette?.colors) {
+    palEl.innerHTML = deep.palette.colors.slice(0, 8).map(c =>
+      `<div style="flex:${Math.max(0.2, c.frequency)};height:24px;background:${c.hex};border-radius:3px;" title="${c.hex} (${Math.round(c.frequency*100)}%)"></div>`
+    ).join('');
+  }
+
+  // Edge map preview (only for main, not combined)
+  if (!suffix) {
+    const edgePreview = $('#edgePreview');
+    const edgeCanvas = $('#edgeCanvas');
+    if (edgePreview && edgeCanvas && deep.edges?.map) {
+      edgePreview.style.display = 'block';
+      renderEdgeMap(edgeCanvas, deep.edges, 128, 128);
+    }
+  }
+
+  // Composition info
+  const compEl = $(`#compositionInfo${suf || ''}`);
+  if (compEl && deep.composition) {
+    const parts = [];
+    parts.push(`Layout: ${deep.composition.layout}`);
+    if (deep.composition.isSymmetrical) parts.push('Symmetrical');
+    if (deep.composition.isCentered) parts.push('Center-focused');
+    if (deep.edges) {
+      parts.push(`Edges: ${deep.edges.dominantDirection}`);
+      parts.push(`Density: ${Math.round(deep.edges.density * 100)}%`);
+    }
+    if (deep.atmosphere) {
+      parts.push(`Time: ${deep.atmosphere.timeOfDay}`);
+    }
+    if (deep.detectedFeatures?.tags.length) {
+      parts.push(`Features: ${deep.detectedFeatures.tags.join(', ')}`);
+    }
+    compEl.textContent = parts.join(' | ');
+  }
+
+  // Update status
+  const statusEl = $(statusSel);
+  if (statusEl) statusEl.textContent = 'Deep analysis complete';
+}
+
+function renderEdgeMap(canvas, edges, W, H) {
+  canvas.width = W;
+  canvas.height = H;
+  const ctx = canvas.getContext('2d');
+  const imgData = ctx.createImageData(W, H);
+
+  for (let i = 0; i < W * H; i++) {
+    const v = Math.min(255, edges.map[i] * 2);
+    imgData.data[i * 4] = v;
+    imgData.data[i * 4 + 1] = v * 0.7;
+    imgData.data[i * 4 + 2] = v * 1.2;
+    imgData.data[i * 4 + 3] = 255;
+  }
+  ctx.putImageData(imgData, 0, 0);
+}
+
+function autoSelectGameType(deep) {
+  if (!deep || selectedType !== 'auto') return;
+  const suggested = deep.suggestedGameType;
+  if (suggested) {
+    // Visual highlight without changing selectedType (still auto)
+    $$('.type-card').forEach(c => {
+      if (c.dataset.type === suggested) {
+        c.style.boxShadow = `0 0 8px var(--green)`;
+        c.style.borderColor = 'var(--green)';
+      }
+    });
+  }
+}
+
+function clearImage() {
+  uploadedImage = null;
+  imageAnalysis = null;
+  deepAnalysis = null;
+  $('#imagePreview').src = '';
+  $('#uploadArea').classList.remove('has-image');
+  $('#analysisPanel').classList.remove('show');
+  $('#fileInput').value = '';
+  $$('.type-card').forEach(c => { c.style.boxShadow = ''; c.style.borderColor = ''; });
+}
+
+function clearImageCombined() {
+  uploadedImageCombined = null;
+  imageAnalysisCombined = null;
+  deepAnalysisCombined = null;
+  $('#imagePreviewCombined').src = '';
+  $('#uploadAreaCombined').classList.remove('has-image');
+  $('#analysisPanelCombined').classList.remove('show');
+  $('#fileInputCombined').value = '';
+}
+
+// Drag and drop
+['uploadArea', 'uploadAreaCombined'].forEach(id => {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.addEventListener('dragover', (e) => { e.preventDefault(); el.classList.add('drag-over'); });
+  el.addEventListener('dragleave', () => { el.classList.remove('drag-over'); });
+  el.addEventListener('drop', (e) => {
+    e.preventDefault();
+    el.classList.remove('drag-over');
+    const file = e.dataTransfer.files[0];
+    if (file && file.type.startsWith('image/')) {
+      loadImageFile(file, id === 'uploadArea' ? 'main' : 'combined');
+    }
+  });
+});
+
+// ═══════════════════════════════════════════════════════
+//  GENERATE GAME
+// ═══════════════════════════════════════════════════════
+async function generateGame() {
+  if (generating) return;
+
+  let prompt = '';
+  let imgElement = null;
+  let imgDeepAnalysis = null;
+
+  switch (currentMode) {
+    case 'prompt':
+      prompt = $('#promptText').value.trim();
+      if (!prompt) { showStatus('Please describe the game you want!', 'error'); return; }
+      break;
+    case 'picture':
+      if (!uploadedImage) { showStatus('Please upload a reference image!', 'error'); return; }
+      imgElement = uploadedImage;
+      imgDeepAnalysis = deepAnalysis;
+      // Build a descriptive prompt from the deep analysis
+      if (imgDeepAnalysis && imgDeepAnalysis.gameConfig) {
+        const gc = imgDeepAnalysis.gameConfig;
+        const parts = [];
+        parts.push(gc.theme || 'fantasy');
+        parts.push(gc.mood || 'adventure');
+        if (gc.character) parts.push(gc.character.type + ' with ' + gc.character.weapon);
+        parts.push((gc.gameType || 'runner').replace('_', ' '));
+        prompt = parts.join(' ') + ' game';
+      } else if (imageAnalysis) {
+        prompt = imageAnalysis.suggestedTheme + ' ' + imageAnalysis.warmth + ' ' + (imageAnalysis.isDark ? 'dark' : 'bright') + ' adventure';
+      } else {
+        prompt = 'fantasy adventure game';
+      }
+      break;
+    case 'combined':
+      if (!uploadedImageCombined && !$('#promptTextCombined').value.trim()) {
+        showStatus('Please add an image, a description, or both!', 'error');
+        return;
+      }
+      prompt = $('#promptTextCombined').value.trim() || 'adventure game';
+      if (uploadedImageCombined) {
+        imgElement = uploadedImageCombined;
+        imgDeepAnalysis = deepAnalysisCombined;
+      }
+      break;
+  }
+
+  // Override game type from prompt if not auto
+  if (selectedType !== 'auto') {
+    const typeKeywords = {
+      runner: 'endless runner', rpg: 'RPG adventure', platformer: 'platformer jumping',
+      puzzle: 'match puzzle', tower_defense: 'tower defense strategy',
+    };
+    if (typeKeywords[selectedType] && !prompt.toLowerCase().includes(selectedType.replace('_', ' '))) {
+      prompt = typeKeywords[selectedType] + ' ' + prompt;
+    }
+  }
+
+  generating = true;
+  const btn = $('#genBtn');
+  btn.disabled = true;
+  btn.classList.add('loading');
+  btn.innerHTML = '<span>Generating...</span>';
+  showStatus('Creating your mobile game from ' + (imgDeepAnalysis ? 'image analysis' : 'prompt') + '...', 'info');
+  showProgress(true);
+
+  await new Promise(r => setTimeout(r, 300));
+
+  try {
+    const canvas = $('#gameCanvas');
+    // Build game config overrides — force selectedType if user picked one
+    const gameConfig = imgDeepAnalysis ? { ...imgDeepAnalysis.gameConfig } : {};
+    if (selectedType !== 'auto') {
+      gameConfig.gameType = selectedType;
+    }
+    currentGame = MobileGameEngine.generateGame(canvas, {
+      prompt,
+      imageElement: imgElement,
+      deepAnalysis: imgDeepAnalysis,
+      imageGameConfig: Object.keys(gameConfig).length > 0 ? gameConfig : null,
+    });
+
+    showGameResult(currentGame);
+    const src = imgDeepAnalysis ? 'Deep image analysis' : 'Prompt analysis';
+    showStatus('"' + currentGame.gameName + '" generated via ' + src + '! Tap to play.', 'success');
+
+    // ─── 3D Cinematic Preview (image mode only) ──────────────
+    if (imgElement && imgDeepAnalysis && typeof ImageToWorldEngine !== 'undefined') {
+      try {
+        const cinematicCanvas = $('#cinematicCanvas');
+        const has3D = typeof WowRenderer !== 'undefined';
+        if (has3D) {
+          ImageToWorldEngine.render3DPreview(cinematicCanvas, imgElement, imgDeepAnalysis, {
+            gameName: currentGame.gameName,
+            width: 960,
+            height: 540,
+          });
+        } else {
+          ImageToWorldEngine.render2DPreview(cinematicCanvas, imgElement, imgDeepAnalysis, {
+            width: 960,
+            height: 540,
+          });
+        }
+        $('#cinematicPreview').style.display = 'block';
+        updateRenderFeatures(imgDeepAnalysis);
+        $('#pipelineInfo').innerHTML =
+          'Image → Deep Analysis (palette, edges, regions, mood) → ' +
+          (has3D ? '3D VoxelSpace Terrain (1024x1024 heightmap)' : '2D Cinematic') +
+          ' → PostFX (bloom, fog, vignette, color grading, film grain)' +
+          '<br>Zone: <b>' + (imgDeepAnalysis.suggestedTheme || 'custom').toUpperCase() + '</b> | ' +
+          'Mood: <b>' + (imgDeepAnalysis.mood?.primary || 'adventure') + '</b> | ' +
+          'Atmosphere: <b>' + (imgDeepAnalysis.atmosphere?.timeOfDay || 'day') + '</b>';
+      } catch (e) { console.warn('3D preview error:', e); }
+
+      // ─── Visual Mapping Preview ──────────────────────────────
+      try {
+        showMappingPreview(imgElement, imgDeepAnalysis, currentGame);
+      } catch (e) { console.warn('Mapping preview error:', e); }
+    } else {
+      $('#cinematicPreview').style.display = 'none';
+      $('#mappingPreview').style.display = 'none';
+    }
+
+  } catch (err) {
+    showStatus('Error: ' + err.message, 'error');
+    console.error(err);
+  }
+
+  generating = false;
+  btn.disabled = false;
+  btn.classList.remove('loading');
+  btn.innerHTML = 'Generate Mobile Game <span class="key-hint">Ctrl+Enter</span>';
+  showProgress(false);
+}
+
+function showGameResult(result) {
+  // Preview panel
+  $('#gamePreview').classList.add('show');
+  $('#gameName').textContent = result.gameName;
+
+  // Tags
+  const deepA = result.deepAnalysis;
+  let moodText = result.promptAnalysis.mood || 'adventure';
+  if (deepA && deepA.mood) moodText = deepA.mood.primary || moodText;
+
+  $('#previewTags').innerHTML = 
+    '<span class="preview-tag accent">' + result.gameType.replace('_', ' ').toUpperCase() + '</span>' +
+    '<span class="preview-tag green">' + result.theme.toUpperCase() + '</span>' +
+    '<span class="preview-tag">' + moodText + '</span>' +
+    (deepA ? '<span class="preview-tag" style="border-color:var(--cyan);color:var(--cyan);">DEEP ANALYSIS</span>' : '');
+
+  // Game details
+  $('#gameDetails').classList.add('show');
+  const chars = result.promptAnalysis.characters;
+  const pal = result.palette;
+
+  let detailHTML = 
+    '<div class="detail-card"><div class="label">Game Type</div><div class="value accent">' + result.gameType.replace('_', ' ') + '</div></div>' +
+    '<div class="detail-card"><div class="label">Theme</div><div class="value">' + result.theme + '</div></div>' +
+    '<div class="detail-card"><div class="label">Mood</div><div class="value">' + moodText + '</div></div>' +
+    '<div class="detail-card"><div class="label">Character</div><div class="value">' + (chars[0]?.type || 'hero') + '</div></div>' +
+    '<div class="detail-card"><div class="label">Weapon</div><div class="value">' + (chars[0]?.weapon || 'sword') + '</div></div>' +
+    '<div class="detail-card"><div class="label">Input Mode</div><div class="value green">' + currentMode.toUpperCase() + '</div></div>';
+
+  if (deepA) {
+    detailHTML +=
+      '<div class="detail-card"><div class="label">Complexity</div><div class="value">' + (deepA.complexity?.level || '-') + ' (' + Math.round((deepA.complexity?.overall || 0) * 100) + '%)</div></div>' +
+      '<div class="detail-card"><div class="label">Edge Density</div><div class="value">' + Math.round((deepA.edges?.density || 0) * 100) + '%</div></div>' +
+      '<div class="detail-card"><div class="label">Composition</div><div class="value">' + (deepA.composition?.layout || '-') + '</div></div>' +
+      '<div class="detail-card"><div class="label">Atmosphere</div><div class="value">' + (deepA.atmosphere?.timeOfDay || '-') + '</div></div>' +
+      '<div class="detail-card"><div class="label">Color Harmony</div><div class="value">' + (deepA.colorHarmony || '-') + '</div></div>' +
+      '<div class="detail-card"><div class="label">Features</div><div class="value" style="font-size:0.7rem;">' + (deepA.detectedFeatures?.tags?.join(', ') || 'none') + '</div></div>';
+  } else {
+    if (result.imageAnalysis) {
+      detailHTML +=
+        '<div class="detail-card"><div class="label">Image Theme</div><div class="value accent">' + result.imageAnalysis.suggestedTheme + '</div></div>' +
+        '<div class="detail-card"><div class="label">Warmth</div><div class="value">' + result.imageAnalysis.warmth + '</div></div>';
+    }
+  }
+
+  $('#detailGrid').innerHTML = detailHTML;
+
+  // Palette swatches
+  const palEntries = [
+    { label: 'Sky', color: pal.sky[0] },
+    { label: 'Ground', color: pal.ground[0] },
+    { label: 'Accent', color: pal.accent },
+    { label: 'Obstacle', color: pal.obstacle },
+    { label: 'Platform', color: pal.platform },
+    { label: 'Particle', color: pal.particle },
+  ];
+
+  $('#paletteRow').innerHTML = palEntries.map(function(e) {
+    return '<div class="palette-swatch" style="background:' + e.color + '"><span class="pal-label">' + e.label + '</span></div>';
+  }).join('');
+
+  // Scroll to game
+  setTimeout(function() {
+    $('#gamePreview').scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }, 100);
+}
+
+// ═══════════════════════════════════════════════════════
+//  ACTIONS
+// ═══════════════════════════════════════════════════════
+function regenerateGame() {
+  generateGame();
+}
+
+function toggleFullscreen() {
+  const wrapper = $('#canvasWrapper');
+  if (wrapper.classList.contains('fullscreen')) {
+    wrapper.classList.remove('fullscreen');
+    document.exitFullscreen?.();
+  } else {
+    wrapper.classList.add('fullscreen');
+    wrapper.requestFullscreen?.();
+  }
+}
+
+function captureScreenshot() {
+  const canvas = $('#gameCanvas');
+  const a = document.createElement('a');
+  a.href = canvas.toDataURL('image/png');
+  a.download = (currentGame?.gameName || 'game') + '_screenshot.png';
+  a.click();
+  showStatus('Screenshot saved!', 'success');
+}
+
+function downloadGame() {
+  if (!currentGame) return;
+  const canvas = $('#gameCanvas');
+  const gameHtml = `<!DOCTYPE html>
+<html><head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>${currentGame.gameName}</title>
+<style>*{margin:0;padding:0;box-sizing:border-box}body{background:#000;overflow:hidden;display:flex;align-items:center;justify-content:center;min-height:100vh}canvas{display:block;max-width:100vw;max-height:100vh;touch-action:none}</style>
+</head><body>
+<canvas id="gameCanvas"></canvas>
+<script src="mobile-game-engine.js"><\/script>
+<script>
+MobileGameEngine.generateGame(document.getElementById('gameCanvas'), {
+  prompt: ${JSON.stringify($('#promptText')?.value || currentGame.gameName)}
+});
+<\/script></body></html>`;
+
+  const blob = new Blob([gameHtml], { type: 'text/html' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = (currentGame.gameName.replace(/\s+/g, '-').toLowerCase() || 'game') + '.html';
+  a.click();
+  showStatus('Game downloaded! Open the HTML file to play.', 'success');
+}
+
+function shareGame() {
+  const text = `Check out "${currentGame?.gameName || 'my game'}" made with NWGE Mobile Game Factory!`;
+  if (navigator.share) {
+    navigator.share({ title: currentGame?.gameName, text, url: window.location.href });
+  } else {
+    navigator.clipboard?.writeText(text + ' ' + window.location.href);
+    showStatus('Link copied to clipboard!', 'success');
+  }
+}
+
+// ═══════════════════════════════════════════════════════
+//  UTILITIES
+// ═══════════════════════════════════════════════════════
+function showStatus(msg, type) {
+  const el = $('#status');
+  el.textContent = msg;
+  el.className = `status-bar show ${type}`;
+  if (type === 'success' || type === 'error') {
+    setTimeout(() => { el.classList.remove('show'); }, 5000);
+  }
+}
+
+function showProgress(show) {
+  $('#progress').classList.toggle('show', show);
+}
+
+// Keyboard shortcut
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter' && (e.ctrlKey || e.metaKey) && !generating) {
+    e.preventDefault();
+    generateGame();
+  }
+  if (e.key === 'Escape') {
+    const wrapper = $('#canvasWrapper');
+    if (wrapper.classList.contains('fullscreen')) wrapper.classList.remove('fullscreen');
+  }
+});
+
+// ═══════════════════════════════════════════════════════
+//  GALLERY
+// ═══════════════════════════════════════════════════════
+const GALLERY = [
+  { icon: '&#127939;', title: 'Forest Runner', desc: 'Endless dash through a haunted forest', type: 'Runner', prompt: 'Endless runner ninja in a dark forest dodging obstacles', bg: 'linear-gradient(135deg, #1B4332, #2D6A4F)' },
+  { icon: '&#9876;', title: 'Dungeon Quest', desc: 'RPG adventure with monsters and loot', type: 'RPG', prompt: 'RPG adventure with a warrior exploring dungeons and fighting dragons', bg: 'linear-gradient(135deg, #0F0E17, #2D2D44)' },
+  { icon: '&#128640;', title: 'Sky Islands', desc: 'Platform-hopping across the clouds', type: 'Platformer', prompt: 'Platformer with a robot jumping across floating islands in the sky', bg: 'linear-gradient(135deg, #87CEEB, #B0E0E6)' },
+  { icon: '&#129513;', title: 'Gem Crush', desc: 'Match-3 puzzle with colorful gems', type: 'Puzzle', prompt: 'Colorful match-3 puzzle game with gems and crystals', bg: 'linear-gradient(135deg, #2E1065, #6A5ACD)' },
+  { icon: '&#127984;', title: 'Space Defense', desc: 'Defend your base from alien waves', type: 'Tower Defense', prompt: 'Tower defense in space with laser turrets and alien waves', bg: 'linear-gradient(135deg, #0B0B2B, #1A1A4E)' },
+  { icon: '&#127754;', title: 'Ocean Runner', desc: 'Surf through tropical waters', type: 'Runner', prompt: 'Ocean runner with a mermaid dodging sharks and collecting pearls', bg: 'linear-gradient(135deg, #1B4965, #62B6CB)' },
+  { icon: '&#127755;', title: 'Lava Defense', desc: 'Tower defense on a volcano', type: 'Tower Defense', prompt: 'Volcanic tower defense with fire turrets against lava monsters', bg: 'linear-gradient(135deg, #3D0C02, #8B0000)' },
+  { icon: '&#10052;', title: 'Ice Jumper', desc: 'Frozen platformer adventure', type: 'Platformer', prompt: 'Snow platformer with an archer jumping across ice caves', bg: 'linear-gradient(135deg, #B0C4DE, #E0E7EE)' },
+];
+
+const grid = $('#galleryGrid');
+for (const item of GALLERY) {
+  const card = document.createElement('div');
+  card.className = 'gallery-card';
+  card.onclick = () => {
+    switchMode('prompt');
+    $('#promptText').value = item.prompt;
+    $('#promptText').focus();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+  card.innerHTML = `
+    <div class="card-preview" style="background:${item.bg}">${item.icon}</div>
+    <div class="card-body">
+      <h3>${item.title}</h3>
+      <p>${item.desc}</p>
+      <span class="card-badge">${item.type}</span>
+    </div>`;
+  grid.appendChild(card);
+}
+
+// ═══════════════════════════════════════════════════════
+//  3D CINEMATIC + MAPPING PREVIEW
+// ═══════════════════════════════════════════════════════
+let postfxEnabled = true;
+function toggleCinematicPostFX() {
+  postfxEnabled = !postfxEnabled;
+  $('#postfxToggle').textContent = 'PostFX: ' + (postfxEnabled ? 'ON' : 'OFF');
+  // Re-render
+  const imgEl = currentMode === 'picture' ? uploadedImage : uploadedImageCombined;
+  const deepA = currentMode === 'picture' ? deepAnalysis : deepAnalysisCombined;
+  if (imgEl && deepA && typeof ImageToWorldEngine !== 'undefined') {
+    const cinematicCanvas = $('#cinematicCanvas');
+    if (postfxEnabled) {
+      const has3D = typeof WowRenderer !== 'undefined';
+      if (has3D) {
+        ImageToWorldEngine.render3DPreview(cinematicCanvas, imgEl, deepA, { width: 960, height: 540 });
+      } else {
+        ImageToWorldEngine.render2DPreview(cinematicCanvas, imgEl, deepA, { width: 960, height: 540 });
+      }
+    } else {
+      // Raw image only
+      cinematicCanvas.width = 960; cinematicCanvas.height = 540;
+      cinematicCanvas.getContext('2d').drawImage(imgEl, 0, 0, 960, 540);
+    }
+  }
+}
+
+function saveCinematic() {
+  const canvas = $('#cinematicCanvas');
+  const a = document.createElement('a');
+  a.href = canvas.toDataURL('image/png');
+  a.download = (currentGame?.gameName || 'cinematic') + '_3d_preview.png';
+  a.click();
+  showStatus('3D cinematic preview saved!', 'success');
+}
+
+// Camera rotation angle for cinematic preview
+let cinematicAngle = 0;
+let renderMode = 'high-fi'; // 'high-fi' or 'pixel-art'
+
+function rotateCinematicCamera() {
+  cinematicAngle = (cinematicAngle + 45) % 360;
+  const imgEl = currentMode === 'picture' ? uploadedImage : uploadedImageCombined;
+  const deepA = currentMode === 'picture' ? deepAnalysis : deepAnalysisCombined;
+  if (imgEl && deepA && typeof ImageToWorldEngine !== 'undefined') {
+    const cinematicCanvas = $('#cinematicCanvas');
+    const has3D = typeof WowRenderer !== 'undefined';
+    if (has3D && postfxEnabled) {
+      ImageToWorldEngine.render3DPreview(cinematicCanvas, imgEl, deepA, {
+        width: 960, height: 540,
+        cameraAngle: cinematicAngle,
+        gameName: currentGame?.gameName,
+      });
+    } else {
+      ImageToWorldEngine.render2DPreview(cinematicCanvas, imgEl, deepA, {
+        width: 960, height: 540,
+        cameraAngle: cinematicAngle,
+      });
+    }
+  }
+  showStatus('Camera rotated to ' + cinematicAngle + ' degrees', 'info');
+}
+
+function toggleRenderMode() {
+  renderMode = renderMode === 'high-fi' ? 'pixel-art' : 'high-fi';
+  $('#renderModeToggle').textContent = 'Mode: ' + (renderMode === 'high-fi' ? 'HIGH-FI' : 'PIXEL ART');
+  const imgEl = currentMode === 'picture' ? uploadedImage : uploadedImageCombined;
+  const deepA = currentMode === 'picture' ? deepAnalysis : deepAnalysisCombined;
+  if (imgEl && deepA && typeof ImageToWorldEngine !== 'undefined') {
+    const cinematicCanvas = $('#cinematicCanvas');
+    if (renderMode === 'high-fi') {
+      const has3D = typeof WowRenderer !== 'undefined';
+      if (has3D) {
+        ImageToWorldEngine.render3DPreview(cinematicCanvas, imgEl, deepA, { width: 960, height: 540 });
+      } else {
+        ImageToWorldEngine.render2DPreview(cinematicCanvas, imgEl, deepA, { width: 960, height: 540 });
+      }
+    } else {
+      // Pixel-art mode: render at low res then scale up
+      ImageToWorldEngine.render2DPreview(cinematicCanvas, imgEl, deepA, {
+        width: 320, height: 180,
+        pixelArt: true,
+      });
+      // Scale up with nearest neighbor
+      const tmpCanvas = document.createElement('canvas');
+      tmpCanvas.width = 320; tmpCanvas.height = 180;
+      tmpCanvas.getContext('2d').drawImage(cinematicCanvas, 0, 0, 320, 180);
+      cinematicCanvas.width = 960; cinematicCanvas.height = 540;
+      const ctx = cinematicCanvas.getContext('2d');
+      ctx.imageSmoothingEnabled = false;
+      ctx.drawImage(tmpCanvas, 0, 0, 960, 540);
+    }
+  }
+}
+
+function updateRenderFeatures(deepA) {
+  const el = $('#renderFeatures');
+  if (!el) return;
+  const features = [];
+  const has3D = typeof WowRenderer !== 'undefined';
+  features.push({ name: has3D ? 'VoxelSpace 3D' : '2D Canvas', active: true, color: 'var(--green)' });
+  features.push({ name: 'PostFX', active: postfxEnabled, color: 'var(--cyan)' });
+  if (deepA) {
+    const env = deepA.gameConfig?.environment || {};
+    if (env.weatherEffect) features.push({ name: env.weatherEffect, active: true, color: 'var(--accent2)' });
+    if (env.fog) features.push({ name: 'Volumetric Fog', active: true, color: 'var(--muted)' });
+    if (env.timeOfDay && env.timeOfDay !== 'day') features.push({ name: env.timeOfDay, active: true, color: 'var(--orange)' });
+    if (deepA.palette?.colors?.length >= 5) features.push({ name: 'Image Palette', active: true, color: 'var(--accent)' });
+    if (deepA.edges?.density > 0.1) features.push({ name: 'Edge Detection', active: true, color: 'var(--text2)' });
+    if (deepA.focalPoints?.length > 0) features.push({ name: 'Focal Points', active: true, color: 'var(--orange)' });
+  }
+  el.innerHTML = features.map(function(f) {
+    return '<span style="font-size:0.5rem;padding:0.1rem 0.35rem;border-radius:4px;border:1px solid ' +
+      (f.active ? f.color : 'var(--border)') + ';color:' + (f.active ? f.color : 'var(--muted)') +
+      ';background:' + (f.active ? f.color.replace(')', ',0.08)').replace('var(', 'rgba(128,128,128,0.08') : 'transparent') +
+      ';">' + f.name + '</span>';
+  }).join('');
+}
+
+function showMappingPreview(imgElement, deepA, game) {
+  $('#mappingPreview').style.display = 'block';
+  $('#mappingSource').src = imgElement.src;
+
+  // Render a small 2D preview for comparison
+  const targetCanvas = $('#mappingTarget');
+  if (typeof ImageToWorldEngine !== 'undefined') {
+    ImageToWorldEngine.render2DPreview(targetCanvas, imgElement, deepA, { width: 320, height: 180 });
+  }
+
+  // Build mapping details
+  const gc = deepA.gameConfig || {};
+  const mappings = [];
+  // Sky mapping
+  const sc = deepA.regions?.skyColor;
+  if (sc) {
+    mappings.push({ from: `Sky (rgb ${sc.r},${sc.g},${sc.b})`, to: 'Game sky gradient', color: `rgb(${sc.r},${sc.g},${sc.b})` });
+  }
+  // Ground mapping
+  const gnc = deepA.regions?.groundColor;
+  if (gnc) {
+    mappings.push({ from: `Ground (rgb ${gnc.r},${gnc.g},${gnc.b})`, to: 'Terrain surface', color: `rgb(${gnc.r},${gnc.g},${gnc.b})` });
+  }
+  // Edge direction → game type
+  if (deepA.edges) {
+    mappings.push({ from: `Edges: ${deepA.edges.dominantDirection}`, to: `Game: ${(deepA.suggestedGameType || '?').replace('_',' ')}`, color: 'var(--accent)' });
+  }
+  // Mood → character
+  if (gc.character) {
+    mappings.push({ from: `Mood: ${deepA.mood?.primary || '?'}`, to: `Character: ${gc.character.type}`, color: 'var(--orange)' });
+  }
+  // Complexity → difficulty
+  if (gc.difficulty) {
+    mappings.push({ from: `Complexity: ${deepA.complexity?.level || '?'}`, to: `Difficulty: ${gc.difficulty}`, color: gc.difficulty === 'hard' ? 'var(--red)' : 'var(--green)' });
+  }
+  // Features
+  if (deepA.detectedFeatures?.tags.length) {
+    mappings.push({ from: `Features: ${deepA.detectedFeatures.tags.join(', ')}`, to: `Theme: ${deepA.suggestedTheme || '?'}`, color: 'var(--green)' });
+  }
+  // Weather
+  if (gc.environment?.weatherEffect) {
+    mappings.push({ from: `Atmosphere: ${deepA.atmosphere?.timeOfDay}`, to: `Weather: ${gc.environment.weatherEffect}`, color: 'var(--cyan)' });
+  }
+
+  $('#mappingDetails').innerHTML = mappings.map(function(m) {
+    return '<div style="background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:0.3rem 0.5rem;font-size:0.6rem;">' +
+      '<span style="color:var(--muted);">' + m.from + '</span>' +
+      ' <span style="color:' + m.color + ';">→</span> ' +
+      '<span style="color:var(--text);font-weight:600;">' + m.to + '</span></div>';
+  }).join('');
+
+  // Sprite preview
+  if (typeof ImageToWorldEngine !== 'undefined') {
+    try {
+      const sprites = ImageToWorldEngine.extractSprites(imgElement, deepA, { spriteSize: 32, pixelArt: true });
+      $('#spritePreview').innerHTML = sprites.map(function(s) {
+        return '<div style="text-align:center;">' +
+          '<img src="' + s.dataURL + '" style="width:48px;height:48px;image-rendering:pixelated;border:1px solid var(--border);border-radius:4px;background:var(--surface2);">' +
+          '<div style="font-size:0.5rem;color:var(--muted);margin-top:0.15rem;">' + s.label + '</div></div>';
+      }).join('');
+    } catch (e) { console.warn('Sprite extraction error:', e); }
+  }
+}
+
+// Auto-focus prompt on load
+setTimeout(() => { if (window.innerWidth > 600) $('#promptText').focus(); }, 300);
+
+console.log('[NWGE Mobile Game Factory] Ready. Templates:', MobileGameEngine.templates);
+console.log('[NWGE] Engines loaded:', {
+  ImageToGameEngine: typeof ImageToGameEngine !== 'undefined',
+  ImageToWorldEngine: typeof ImageToWorldEngine !== 'undefined',
+  WowRenderer: typeof WowRenderer !== 'undefined',
+});
+</script>
+</body>
+</html>

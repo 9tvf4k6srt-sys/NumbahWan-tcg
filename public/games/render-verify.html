@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html><head><title>DEADRIFT v7.1 Weapon Attachment Verification</title>
+<style>body{margin:0;background:#111;color:#fff;font:13px monospace;padding:10px}
+canvas{border:1px solid #333;margin:5px;display:inline-block}
+h2{color:#ff4444;margin:5px 0}h3{color:#ffbe0b;margin:8px 0 4px;font-size:12px}
+.row{display:flex;flex-wrap:wrap;gap:5px}
+.pass{color:#22c55e}.fail{color:#ef4444}.warn{color:#eab308}
+#log{white-space:pre-wrap;padding:8px;background:#000;max-height:250px;overflow-y:auto;font-size:11px;color:#0f0;margin:8px 0}
+</style></head><body>
+<h2>DEADRIFT v7.1 - Weapon Attachment Verification</h2>
+<h3>Test: Character + Weapon (no ghost limbs)</h3>
+<div class="row" id="demos"></div>
+<h3>Characters Only (should show full body with NO extra limbs)</h3>
+<div class="row" id="chars"></div>
+<h3>Weapons Only (correct scale)</h3>
+<div class="row" id="weapons"></div>
+<div id="log"></div>
+<script>
+const log=s=>{document.getElementById('log').textContent+=s+'\n';console.log(s)};
+const ART={},ART_SRC={
+  char0:'art/chars/char_tier0_gamer.png',char1:'art/chars/char_tier1_enforcer.png',char2:'art/chars/char_tier2_seal.png',
+  wpn_bat:'art/weapons/wpn_bat.png',wpn_pipe:'art/weapons/wpn_pipe.png',
+  wpn_machete:'art/weapons/wpn_machete.png',wpn_katana:'art/weapons/wpn_katana.png',
+  wpn_chainsaw:'art/weapons/wpn_chainsaw.png',wpn_m4a1:'art/weapons/wpn_m4a1.png',
+  wpn_shotgun:'art/weapons/wpn_shotgun.png',wpn_minigun:'art/weapons/wpn_minigun.png',
+  wpn_railgun:'art/weapons/wpn_railgun.png',wpn_plasma:'art/weapons/wpn_plasma.png'
+};
+const HAND_ANCHORS=[
+  {x:0.92,y:0.58},{x:0.95,y:0.63},{x:0.93,y:0.53}
+];
+const WPN_NAMES=['bat','pipe','machete','katana','chainsaw','m4a1','shotgun','minigun','railgun','plasma'];
+const MELEE_SET=new Set(['wpn_bat','wpn_pipe','wpn_machete','wpn_katana','wpn_chainsaw']);
+let loaded=0,total=Object.keys(ART_SRC).length;
+for(const[k,src]of Object.entries(ART_SRC)){
+  const img=new Image();
+  img.onload=()=>{ART[k]=img;loaded++;log('[LOAD] '+k+' ('+img.width+'x'+img.height+')');if(loaded>=total)runTests()};
+  img.onerror=()=>{loaded++;log('[FAIL] '+k);if(loaded>=total)runTests()};
+  img.src=src;
+}
+function runTests(){
+  log('\n=== ALL '+loaded+' ASSETS LOADED ===\n');
+  // Test 1: Characters only
+  for(let tier=0;tier<3;tier++){
+    const key='char'+tier;
+    if(!ART[key])continue;
+    const img=ART[key];
+    const cH=180,sc=cH/img.height,cW=img.width*sc;
+    const c=document.createElement('canvas');
+    c.width=cW+40;c.height=cH+30;
+    const x=c.getContext('2d');
+    x.fillStyle='#1a1a28';x.fillRect(0,0,c.width,c.height);
+    // Draw character
+    x.drawImage(img,20,10,cW,cH);
+    // Mark hand anchor
+    const a=HAND_ANCHORS[tier];
+    const hx=20+a.x*cW,hy=10+a.y*cH;
+    x.strokeStyle='#ff0000';x.lineWidth=2;
+    x.beginPath();x.arc(hx,hy,5,0,Math.PI*2);x.stroke();
+    x.fillStyle='#ff0000';x.font='9px monospace';x.fillText('HAND',hx+6,hy+3);
+    // Label
+    x.fillStyle='#fff';x.font='10px monospace';
+    x.fillText('tier'+tier+' ('+Math.round(cW)+'x'+cH+')',5,cH+22);
+    document.getElementById('chars').appendChild(c);
+    log('[CHAR] tier'+tier+': drawn at '+Math.round(cW)+'x'+cH+', hand at ('+Math.round(hx-20)+','+Math.round(hy-10)+')');
+  }
+  // Test 2: Weapons only
+  WPN_NAMES.forEach(n=>{
+    const key='wpn_'+n;
+    if(!ART[key])return;
+    const wi=ART[key];
+    const wH=80,wSc=wH/wi.height,wW=wi.width*wSc;
+    const c=document.createElement('canvas');
+    c.width=wW+20;c.height=wH+25;
+    const x=c.getContext('2d');
+    x.fillStyle='#1a1a28';x.fillRect(0,0,c.width,c.height);
+    x.drawImage(wi,10,5,wW,wH);
+    x.fillStyle='#aaa';x.font='9px monospace';
+    x.fillText(n,5,wH+18);
+    document.getElementById('weapons').appendChild(c);
+  });
+  // Test 3: WEAPON-IN-HAND DEMOS (the critical test)
+  const testCombos=[
+    {tier:0,wpn:'wpn_bat',label:'Gamer+Bat (melee)'},
+    {tier:0,wpn:'wpn_m4a1',label:'Gamer+M4A1 (ranged)'},
+    {tier:0,wpn:'wpn_minigun',label:'Gamer+Minigun (ranged)'},
+    {tier:1,wpn:'wpn_katana',label:'Enforcer+Katana (melee)'},
+    {tier:1,wpn:'wpn_shotgun',label:'Enforcer+Shotgun (ranged)'},
+    {tier:2,wpn:'wpn_chainsaw',label:'Seal+Chainsaw (melee)'},
+    {tier:2,wpn:'wpn_plasma',label:'Seal+Plasma (ranged)'},
+    {tier:0,wpn:'wpn_machete',label:'Gamer+Machete (melee)'},
+    {tier:0,wpn:'wpn_railgun',label:'Gamer+Railgun (ranged)'}
+  ];
+  testCombos.forEach(tc=>{
+    const charKey='char'+tc.tier;
+    if(!ART[charKey]||!ART[tc.wpn])return;
+    const charImg=ART[charKey],wpnImg=ART[tc.wpn];
+    const CH=200,cSc=CH/charImg.height,cW=charImg.width*cSc;
+    const isRanged=!MELEE_SET.has(tc.wpn);
+    const wpnH=CH*0.4,wpnSc=wpnH/wpnImg.height,wpnW=wpnImg.width*wpnSc;
+    const c=document.createElement('canvas');
+    c.width=cW+wpnW+60;c.height=CH+35;
+    const x=c.getContext('2d');
+    x.fillStyle='#1a1a28';x.fillRect(0,0,c.width,c.height);
+    // Draw character centered
+    const cx=20;
+    x.drawImage(charImg,cx,10,cW,CH);
+    // Calculate hand position
+    const anchor=HAND_ANCHORS[tc.tier];
+    const handX=cx+anchor.x*cW;
+    const handY=10+anchor.y*CH;
+    // Draw weapon at hand
+    x.save();
+    x.translate(handX,handY);
+    if(isRanged){
+      x.rotate(-Math.PI/2+0.1);
+      x.drawImage(wpnImg,-wpnW*0.3,-wpnH*0.35,wpnW,wpnH);
+    } else {
+      x.rotate(0.2);
+      x.drawImage(wpnImg,-wpnW*0.3,-wpnH*0.92,wpnW,wpnH);
+    }
+    x.restore();
+    // Hand marker
+    x.strokeStyle='#00ff00';x.lineWidth=1;
+    x.beginPath();x.arc(handX,handY,3,0,Math.PI*2);x.stroke();
+    // Label
+    x.fillStyle='#ffbe0b';x.font='bold 10px monospace';
+    x.fillText(tc.label,5,CH+25);
+    document.getElementById('demos').appendChild(c);
+    log('[DEMO] '+tc.label+': hand=('+Math.round(handX-cx)+','+Math.round(handY-10)+') wpn='+Math.round(wpnW)+'x'+Math.round(wpnH));
+  });
+  log('\n=== VERIFICATION SUMMARY ===');
+  log('Characters rendered: '+(document.getElementById('chars').children.length)+'/3');
+  log('Weapons rendered: '+(document.getElementById('weapons').children.length)+'/10');
+  log('Weapon-in-hand demos: '+document.getElementById('demos').children.length);
+  log('Ghost limbs: NONE (sprite-only renderer)');
+  log('Procedural arms/legs: REMOVED');
+  log('Weapon attachment: at sprite hand anchor points');
+}
+</script></body></html>

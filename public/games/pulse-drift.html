@@ -1,0 +1,800 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>Pulse Drift</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:100%;height:100%;overflow:hidden;background:#0a0a1a;font-family:'Segoe UI',system-ui,sans-serif;color:#e0e0e0;touch-action:none;user-select:none;-webkit-user-select:none}
+canvas{display:block;position:absolute;top:0;left:0;width:100%;height:100%}
+
+/* HUD */
+#hud{position:absolute;top:0;left:0;right:0;padding:12px 16px;display:flex;justify-content:space-between;align-items:flex-start;pointer-events:none;z-index:10}
+#hud *{pointer-events:none}
+.hud-left,.hud-right{display:flex;flex-direction:column;gap:4px}
+.hud-right{align-items:flex-end}
+.hud-score{font-size:2rem;font-weight:800;letter-spacing:2px;text-shadow:0 0 20px rgba(0,229,255,.5)}
+.hud-chain{font-size:.85rem;font-weight:600;color:#ffbe0b;opacity:0;transition:opacity .2s}
+.hud-chain.active{opacity:1}
+.hud-level{font-size:.75rem;text-transform:uppercase;letter-spacing:3px;color:rgba(255,255,255,.5)}
+.hud-bpm{font-size:.7rem;color:rgba(255,255,255,.3)}
+.energy-bar{width:80px;height:6px;background:rgba(255,255,255,.1);border-radius:3px;overflow:hidden;margin-top:4px}
+.energy-fill{height:100%;background:linear-gradient(90deg,#8338ec,#00e5ff);border-radius:3px;transition:width .1s}
+
+/* Screens */
+.screen{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:20;transition:opacity .4s}
+.screen.hidden{opacity:0;pointer-events:none}
+.screen h1{font-size:2.5rem;font-weight:900;letter-spacing:4px;margin-bottom:8px}
+.screen .subtitle{font-size:.9rem;color:rgba(255,255,255,.5);margin-bottom:32px}
+.screen .tap-prompt{font-size:1rem;color:rgba(0,229,255,.8);animation:pulse-text 1.5s ease-in-out infinite}
+@keyframes pulse-text{0%,100%{opacity:.5}50%{opacity:1}}
+.final-score{font-size:4rem;font-weight:900;background:linear-gradient(135deg,#00e5ff,#ff006e);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.stats-row{display:flex;gap:24px;margin:16px 0}
+.stat{text-align:center}
+.stat-val{font-size:1.4rem;font-weight:700;color:#ffbe0b}
+.stat-label{font-size:.65rem;text-transform:uppercase;letter-spacing:2px;color:rgba(255,255,255,.4)}
+.addiction-badge{margin-top:20px;padding:8px 20px;border-radius:20px;font-size:.75rem;font-weight:700;letter-spacing:2px;text-transform:uppercase}
+
+/* Debug overlay */
+#debug{position:absolute;bottom:8px;left:8px;background:rgba(0,0,0,.8);border:1px solid rgba(0,229,255,.3);border-radius:8px;padding:8px 12px;font-size:.6rem;font-family:monospace;color:rgba(255,255,255,.6);z-index:30;display:none;line-height:1.6}
+#debug.show{display:block}
+
+/* SVG title */
+.title-glow{filter:drop-shadow(0 0 30px rgba(0,229,255,.4))}
+</style>
+</head>
+<body>
+
+<!-- GAME CANVAS -->
+<canvas id="c"></canvas>
+
+<!-- HUD -->
+<div id="hud" class="hidden">
+  <div class="hud-left">
+    <div class="hud-score" id="score">0</div>
+    <div class="hud-chain" id="chain">CHAIN x1</div>
+    <div class="energy-bar"><div class="energy-fill" id="energy" style="width:100%"></div></div>
+  </div>
+  <div class="hud-right">
+    <div class="hud-level" id="level">LEVEL 1</div>
+    <div class="hud-bpm" id="bpm">80 BPM</div>
+  </div>
+</div>
+
+<!-- TITLE SCREEN -->
+<div class="screen" id="title-screen">
+  <svg width="280" height="80" viewBox="0 0 280 80" class="title-glow">
+    <defs>
+      <linearGradient id="tg" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stop-color="#00e5ff"/>
+        <stop offset="100%" stop-color="#ff006e"/>
+      </linearGradient>
+    </defs>
+    <text x="140" y="52" text-anchor="middle" font-family="'Segoe UI',system-ui,sans-serif" font-size="48" font-weight="900" fill="url(#tg)" letter-spacing="6">PULSE</text>
+    <text x="140" y="75" text-anchor="middle" font-family="'Segoe UI',system-ui,sans-serif" font-size="18" font-weight="400" fill="rgba(255,255,255,.4)" letter-spacing="12">D R I F T</text>
+  </svg>
+  <div class="subtitle">Match your color. Phase through walls.</div>
+  <div class="tap-prompt">TAP TO START</div>
+</div>
+
+<!-- DEATH SCREEN -->
+<div class="screen hidden" id="death-screen">
+  <div style="font-size:.75rem;letter-spacing:3px;color:rgba(255,255,255,.4);text-transform:uppercase;margin-bottom:8px">SESSION OVER</div>
+  <div class="final-score" id="final-score">0</div>
+  <div class="stats-row">
+    <div class="stat"><div class="stat-val" id="ds-chain">0</div><div class="stat-label">Best Chain</div></div>
+    <div class="stat"><div class="stat-val" id="ds-level">1</div><div class="stat-label">Level</div></div>
+    <div class="stat"><div class="stat-val" id="ds-time">0s</div><div class="stat-label">Time</div></div>
+    <div class="stat"><div class="stat-val" id="ds-walls">0</div><div class="stat-label">Walls</div></div>
+  </div>
+  <div class="addiction-badge" id="addiction-badge"></div>
+  <div class="tap-prompt" style="margin-top:24px">TAP TO RETRY</div>
+</div>
+
+<!-- DEBUG OVERLAY -->
+<div id="debug"></div>
+
+<script>
+// ═══════════════════════════════════════════════════════════════
+// PULSE DRIFT — Self-contained game engine
+// ═══════════════════════════════════════════════════════════════
+
+(function(){
+'use strict';
+
+// ── Config from spec ──
+const CFG = {
+  colors: ['#00e5ff','#ff006e','#ffbe0b','#8338ec','#3a86ff'],
+  bg: '#0a0a1a',
+  startBPM: 80,
+  maxBPM: 160,
+  bpmStep: 5,
+  gapStart: 0.45,
+  gapMin: 0.25,
+  colorsStart: 2,
+  colorsMax: 4,
+  colorsUnlock: [1,5,15],
+  scoreBase: 10,
+  maxChain: 50,
+  wallSpeed: 2.5,       // base pixels per frame at 60fps
+  playerRadius: 0.04,   // fraction of canvas width
+  beatTolerance: 0.15,  // seconds of tolerance for "on beat" bonus
+};
+
+// ── State ──
+const S = {
+  phase: 'title', // title | playing | dead
+  score: 0,
+  chain: 0,
+  bestChain: 0,
+  level: 1,
+  bpm: CFG.startBPM,
+  numColors: CFG.colorsStart,
+  colorIndex: 0,
+  energy: 1,
+  walls: [],
+  particles: [],
+  bgParticles: [],
+  wallsPassed: 0,
+  sessionStart: 0,
+  lastBeat: 0,
+  beatInterval: 60000 / CFG.startBPM,
+  onBeat: false,
+  slowmo: false,
+  deaths: [],
+  inputLog: [],
+  shakeTimer: 0,
+  flashTimer: 0,
+  flashColor: '',
+  pulsePhase: 0,
+};
+
+// ── DOM ──
+const canvas = document.getElementById('c');
+const ctx = canvas.getContext('2d');
+const $score = document.getElementById('score');
+const $chain = document.getElementById('chain');
+const $level = document.getElementById('level');
+const $bpm = document.getElementById('bpm');
+const $energy = document.getElementById('energy');
+const $hud = document.getElementById('hud');
+const $title = document.getElementById('title-screen');
+const $death = document.getElementById('death-screen');
+const $debug = document.getElementById('debug');
+
+let W, H, cx, cy, dpr, playerR;
+let lastTime = 0, dt = 0, accumBeat = 0;
+let audioCtx = null;
+
+// ── Resize ──
+function resize() {
+  dpr = Math.min(window.devicePixelRatio || 1, 2);
+  W = window.innerWidth;
+  H = window.innerHeight;
+  canvas.width = W * dpr;
+  canvas.height = H * dpr;
+  canvas.style.width = W + 'px';
+  canvas.style.height = H + 'px';
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  cx = W / 2;
+  cy = H * 0.75;
+  playerR = W * CFG.playerRadius;
+  initBgParticles();
+}
+
+// ── Background particles (ambient) ──
+function initBgParticles() {
+  S.bgParticles = [];
+  for (let i = 0; i < 40; i++) {
+    S.bgParticles.push({
+      x: Math.random() * W,
+      y: Math.random() * H,
+      r: Math.random() * 2 + 0.5,
+      vx: (Math.random() - 0.5) * 0.3,
+      vy: -Math.random() * 0.5 - 0.1,
+      a: Math.random() * 0.3 + 0.05,
+      color: CFG.colors[Math.floor(Math.random() * CFG.colors.length)],
+    });
+  }
+}
+
+// ── Web Audio synth ──
+function initAudio() {
+  if (audioCtx) return;
+  audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+}
+
+function playKick() {
+  if (!audioCtx) return;
+  const o = audioCtx.createOscillator();
+  const g = audioCtx.createGain();
+  o.type = 'sine';
+  o.frequency.setValueAtTime(150, audioCtx.currentTime);
+  o.frequency.exponentialRampToValueAtTime(30, audioCtx.currentTime + 0.12);
+  g.gain.setValueAtTime(0.4, audioCtx.currentTime);
+  g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.15);
+  o.connect(g).connect(audioCtx.destination);
+  o.start();
+  o.stop(audioCtx.currentTime + 0.15);
+}
+
+function playBlip(freq) {
+  if (!audioCtx) return;
+  const o = audioCtx.createOscillator();
+  const g = audioCtx.createGain();
+  o.type = 'triangle';
+  o.frequency.setValueAtTime(freq || 800, audioCtx.currentTime);
+  o.frequency.exponentialRampToValueAtTime((freq || 800) * 1.5, audioCtx.currentTime + 0.06);
+  g.gain.setValueAtTime(0.15, audioCtx.currentTime);
+  g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.08);
+  o.connect(g).connect(audioCtx.destination);
+  o.start();
+  o.stop(audioCtx.currentTime + 0.08);
+}
+
+function playDeath() {
+  if (!audioCtx) return;
+  const buf = audioCtx.createBuffer(1, audioCtx.sampleRate * 0.3, audioCtx.sampleRate);
+  const d = buf.getChannelData(0);
+  for (let i = 0; i < d.length; i++) d[i] = (Math.random() * 2 - 1) * (1 - i / d.length);
+  const src = audioCtx.createBufferSource();
+  const g = audioCtx.createGain();
+  src.buffer = buf;
+  g.gain.setValueAtTime(0.3, audioCtx.currentTime);
+  g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.3);
+  src.connect(g).connect(audioCtx.destination);
+  src.start();
+}
+
+function playChainBlip(chain) {
+  playBlip(400 + Math.min(chain, 30) * 20);
+}
+
+// ── Wall generation ──
+function spawnWall() {
+  const gap = CFG.gapStart - (S.level - 1) * 0.012;
+  const clampedGap = Math.max(gap, CFG.gapMin);
+  const gapW = W * clampedGap;
+  const gapX = Math.random() * (W - gapW - 40) + 20;
+  const ci = Math.floor(Math.random() * S.numColors);
+  S.walls.push({
+    y: -20,
+    gapX: gapX,
+    gapW: gapW,
+    colorIndex: ci,
+    color: CFG.colors[ci],
+    passed: false,
+    h: 8 + Math.random() * 6,
+  });
+}
+
+// ── Particle burst ──
+function burstAt(x, y, color, count) {
+  for (let i = 0; i < count; i++) {
+    const a = Math.random() * Math.PI * 2;
+    const sp = Math.random() * 4 + 1;
+    S.particles.push({
+      x, y,
+      vx: Math.cos(a) * sp,
+      vy: Math.sin(a) * sp,
+      life: 1,
+      decay: Math.random() * 0.03 + 0.02,
+      r: Math.random() * 3 + 1,
+      color: color,
+    });
+  }
+}
+
+// ── Phase shift ──
+function phaseShift() {
+  S.colorIndex = (S.colorIndex + 1) % S.numColors;
+  burstAt(cx, cy, CFG.colors[S.colorIndex], 8);
+  playBlip(600 + S.colorIndex * 200);
+  S.inputLog.push({ t: Date.now(), type: 'phase', color: S.colorIndex });
+}
+
+// ── Collision check ──
+function checkWallCollision(wall) {
+  if (wall.passed) return false;
+  const wy = wall.y;
+  if (wy < cy + playerR && wy + wall.h > cy - playerR) {
+    // Player is at cx — check if inside gap
+    const inGap = cx > wall.gapX && cx < wall.gapX + wall.gapW;
+    if (inGap) {
+      // Color check
+      if (S.colorIndex === wall.colorIndex) {
+        return false; // pass through — matched!
+      } else {
+        return true; // wrong color = death
+      }
+    } else {
+      return true; // hit solid wall
+    }
+  }
+  return false;
+}
+
+function wallPassed(wall) {
+  if (wall.passed) return;
+  if (wall.y > cy + playerR + wall.h) {
+    wall.passed = true;
+    S.wallsPassed++;
+    S.chain++;
+    if (S.chain > S.bestChain) S.bestChain = S.chain;
+
+    // Score with chain multiplier
+    const mult = Math.min(S.chain, CFG.maxChain);
+    const pts = CFG.scoreBase * (1 + mult * 0.1);
+    S.score += Math.round(pts);
+
+    // On-beat bonus
+    const now = Date.now();
+    const beatPhase = ((now - S.lastBeat) % S.beatInterval) / S.beatInterval;
+    if (beatPhase < CFG.beatTolerance || beatPhase > (1 - CFG.beatTolerance)) {
+      S.score += 5; // bonus
+      S.flashTimer = 0.1;
+      S.flashColor = '#ffbe0b';
+    }
+
+    playChainBlip(S.chain);
+    burstAt(cx, cy - playerR - 10, wall.color, 5);
+
+    // Level up every 8 walls
+    if (S.wallsPassed % 8 === 0) levelUp();
+
+    updateHUD();
+  }
+}
+
+function levelUp() {
+  S.level++;
+  if (S.bpm < CFG.maxBPM) S.bpm = Math.min(S.bpm + CFG.bpmStep, CFG.maxBPM);
+  S.beatInterval = 60000 / S.bpm;
+
+  // Unlock colors
+  for (let i = 0; i < CFG.colorsUnlock.length; i++) {
+    if (S.level >= CFG.colorsUnlock[i] && S.numColors < Math.min(i + 2, CFG.colorsMax)) {
+      S.numColors = Math.min(i + 2, CFG.colorsMax);
+    }
+  }
+
+  S.flashTimer = 0.3;
+  S.flashColor = '#8338ec';
+  updateHUD();
+}
+
+function die(wall) {
+  S.phase = 'dead';
+  playDeath();
+  S.shakeTimer = 0.4;
+  burstAt(cx, cy, CFG.colors[S.colorIndex], 25);
+  S.deaths.push({ t: Date.now(), score: S.score, level: S.level, wall: S.wallsPassed });
+
+  const elapsed = ((Date.now() - S.sessionStart) / 1000).toFixed(1);
+  document.getElementById('final-score').textContent = S.score;
+  document.getElementById('ds-chain').textContent = S.bestChain;
+  document.getElementById('ds-level').textContent = S.level;
+  document.getElementById('ds-time').textContent = elapsed + 's';
+  document.getElementById('ds-walls').textContent = S.wallsPassed;
+
+  // Compute addiction score for this session
+  const aScore = computeAddictionScore();
+  const badge = document.getElementById('addiction-badge');
+  if (aScore >= 80) { badge.textContent = 'HIGHLY ADDICTIVE'; badge.style.background = 'rgba(0,229,255,.2)'; badge.style.color = '#00e5ff'; }
+  else if (aScore >= 60) { badge.textContent = 'ENGAGING'; badge.style.background = 'rgba(255,190,11,.2)'; badge.style.color = '#ffbe0b'; }
+  else if (aScore >= 40) { badge.textContent = 'NEEDS TUNING'; badge.style.background = 'rgba(255,0,110,.2)'; badge.style.color = '#ff006e'; }
+  else { badge.textContent = 'PROTOTYPE'; badge.style.background = 'rgba(255,255,255,.1)'; badge.style.color = 'rgba(255,255,255,.4)'; }
+
+  $hud.classList.add('hidden');
+  $death.classList.remove('hidden');
+  saveTelemetry();
+}
+
+// ── Update HUD ──
+function updateHUD() {
+  $score.textContent = S.score;
+  $score.style.color = CFG.colors[S.colorIndex];
+  $score.style.textShadow = `0 0 20px ${CFG.colors[S.colorIndex]}50`;
+  $level.textContent = `LEVEL ${S.level}`;
+  $bpm.textContent = `${S.bpm} BPM`;
+  const $ch = $chain;
+  if (S.chain > 1) {
+    $ch.textContent = `CHAIN x${S.chain}`;
+    $ch.classList.add('active');
+  } else {
+    $ch.classList.remove('active');
+  }
+  $energy.style.width = (S.energy * 100) + '%';
+}
+
+// ── Game start / restart ──
+function startGame() {
+  initAudio();
+  S.phase = 'playing';
+  S.score = 0;
+  S.chain = 0;
+  S.bestChain = 0;
+  S.level = 1;
+  S.bpm = CFG.startBPM;
+  S.beatInterval = 60000 / S.bpm;
+  S.numColors = CFG.colorsStart;
+  S.colorIndex = 0;
+  S.energy = 1;
+  S.walls = [];
+  S.particles = [];
+  S.wallsPassed = 0;
+  S.sessionStart = Date.now();
+  S.lastBeat = Date.now();
+  S.inputLog = [];
+  S.slowmo = false;
+  accumBeat = 0;
+
+  $title.classList.add('hidden');
+  $death.classList.add('hidden');
+  $hud.classList.remove('hidden');
+  updateHUD();
+}
+
+// ══════════════════════════════════════════════════
+// RENDER
+// ══════════════════════════════════════════════════
+
+function render() {
+  // Clear
+  ctx.fillStyle = CFG.bg;
+  ctx.fillRect(0, 0, W, H);
+
+  // Screen shake
+  let shakeX = 0, shakeY = 0;
+  if (S.shakeTimer > 0) {
+    shakeX = (Math.random() - 0.5) * S.shakeTimer * 30;
+    shakeY = (Math.random() - 0.5) * S.shakeTimer * 30;
+    ctx.save();
+    ctx.translate(shakeX, shakeY);
+  }
+
+  // Background particles
+  ctx.globalAlpha = 1;
+  for (const p of S.bgParticles) {
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+    ctx.fillStyle = p.color;
+    ctx.globalAlpha = p.a;
+    ctx.fill();
+  }
+  ctx.globalAlpha = 1;
+
+  // Beat pulse ring (background effect)
+  if (S.phase === 'playing') {
+    const beatProg = ((Date.now() - S.lastBeat) % S.beatInterval) / S.beatInterval;
+    const ringR = playerR * 1.5 + beatProg * playerR * 3;
+    const ringA = (1 - beatProg) * 0.15;
+    ctx.beginPath();
+    ctx.arc(cx, cy, ringR, 0, Math.PI * 2);
+    ctx.strokeStyle = CFG.colors[S.colorIndex];
+    ctx.globalAlpha = ringA;
+    ctx.lineWidth = 2;
+    ctx.stroke();
+    ctx.globalAlpha = 1;
+  }
+
+  // Walls
+  for (const w of S.walls) {
+    ctx.globalAlpha = 0.9;
+    ctx.fillStyle = w.color;
+    // Left wall segment
+    ctx.fillRect(0, w.y, w.gapX, w.h);
+    // Right wall segment
+    ctx.fillRect(w.gapX + w.gapW, w.y, W - (w.gapX + w.gapW), w.h);
+
+    // Gap glow
+    ctx.globalAlpha = 0.15;
+    ctx.fillRect(w.gapX, w.y - 2, w.gapW, w.h + 4);
+    ctx.globalAlpha = 1;
+
+    // Color indicator dot in gap center
+    ctx.beginPath();
+    ctx.arc(w.gapX + w.gapW / 2, w.y + w.h / 2, 4, 0, Math.PI * 2);
+    ctx.fillStyle = w.color;
+    ctx.globalAlpha = 0.6;
+    ctx.fill();
+    ctx.globalAlpha = 1;
+  }
+
+  // Player orb
+  if (S.phase === 'playing' || S.phase === 'dead') {
+    const pc = CFG.colors[S.colorIndex];
+
+    // Glow
+    const grad = ctx.createRadialGradient(cx, cy, 0, cx, cy, playerR * 3);
+    grad.addColorStop(0, pc + '40');
+    grad.addColorStop(1, pc + '00');
+    ctx.fillStyle = grad;
+    ctx.fillRect(cx - playerR * 3, cy - playerR * 3, playerR * 6, playerR * 6);
+
+    // Pulse animation
+    S.pulsePhase += dt * 4;
+    const pScale = 1 + Math.sin(S.pulsePhase) * 0.08;
+    const r = playerR * pScale;
+
+    // Core
+    ctx.beginPath();
+    ctx.arc(cx, cy, r, 0, Math.PI * 2);
+    ctx.fillStyle = pc;
+    ctx.fill();
+
+    // Inner ring
+    ctx.beginPath();
+    ctx.arc(cx, cy, r * 0.6, 0, Math.PI * 2);
+    ctx.fillStyle = CFG.bg;
+    ctx.fill();
+
+    // Center dot
+    ctx.beginPath();
+    ctx.arc(cx, cy, r * 0.25, 0, Math.PI * 2);
+    ctx.fillStyle = pc;
+    ctx.fill();
+
+    // Color ring indicators (shows available colors)
+    if (S.numColors > 1) {
+      for (let i = 0; i < S.numColors; i++) {
+        const a = (i / S.numColors) * Math.PI * 2 - Math.PI / 2;
+        const dx = Math.cos(a) * (playerR * 1.8);
+        const dy = Math.sin(a) * (playerR * 1.8);
+        ctx.beginPath();
+        ctx.arc(cx + dx, cy + dy, i === S.colorIndex ? 5 : 3, 0, Math.PI * 2);
+        ctx.fillStyle = CFG.colors[i];
+        ctx.globalAlpha = i === S.colorIndex ? 1 : 0.3;
+        ctx.fill();
+      }
+      ctx.globalAlpha = 1;
+    }
+  }
+
+  // Particles
+  for (const p of S.particles) {
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+    ctx.fillStyle = p.color;
+    ctx.globalAlpha = p.life;
+    ctx.fill();
+  }
+  ctx.globalAlpha = 1;
+
+  // Flash effect
+  if (S.flashTimer > 0) {
+    ctx.fillStyle = S.flashColor;
+    ctx.globalAlpha = S.flashTimer * 0.3;
+    ctx.fillRect(0, 0, W, H);
+    ctx.globalAlpha = 1;
+  }
+
+  if (S.shakeTimer > 0) ctx.restore();
+}
+
+// ══════════════════════════════════════════════════
+// UPDATE
+// ══════════════════════════════════════════════════
+
+function update(timestamp) {
+  requestAnimationFrame(update);
+
+  if (!lastTime) { lastTime = timestamp; return; }
+  dt = Math.min((timestamp - lastTime) / 1000, 0.05); // cap at 50ms
+  lastTime = timestamp;
+
+  // Background particles always animate
+  for (const p of S.bgParticles) {
+    p.x += p.vx;
+    p.y += p.vy;
+    if (p.y < -5) { p.y = H + 5; p.x = Math.random() * W; }
+    if (p.x < -5) p.x = W + 5;
+    if (p.x > W + 5) p.x = -5;
+  }
+
+  if (S.phase === 'playing') {
+    const timeScale = S.slowmo ? 0.4 : 1;
+    const adt = dt * timeScale;
+
+    // Slowmo energy drain
+    if (S.slowmo) {
+      S.energy -= dt * 0.5;
+      if (S.energy <= 0) { S.energy = 0; S.slowmo = false; }
+    } else {
+      S.energy = Math.min(1, S.energy + dt * 0.15);
+    }
+
+    // Beat tracking
+    accumBeat += adt * 1000;
+    if (accumBeat >= S.beatInterval) {
+      accumBeat -= S.beatInterval;
+      S.lastBeat = Date.now();
+      S.onBeat = true;
+      playKick();
+      setTimeout(() => { S.onBeat = false; }, S.beatInterval * CFG.beatTolerance);
+    }
+
+    // Move walls
+    const speed = CFG.wallSpeed * (1 + (S.level - 1) * 0.08) * (H / 800) * timeScale;
+    for (const w of S.walls) {
+      w.y += speed;
+    }
+
+    // Check collisions & passing
+    for (const w of S.walls) {
+      if (!w.passed && checkWallCollision(w)) {
+        die(w);
+        break;
+      }
+      wallPassed(w);
+    }
+
+    // Remove off-screen walls
+    S.walls = S.walls.filter(w => w.y < H + 30);
+
+    // Spawn walls based on beat
+    const wallInterval = S.beatInterval * 2; // wall every 2 beats
+    if (S.walls.length === 0 || (S.walls.length > 0 && S.walls[S.walls.length - 1].y > wallInterval * speed / 1000 * 60)) {
+      // Keep a steady stream: spawn when last wall has traveled enough
+      if (S.walls.length < 6) spawnWall();
+    }
+    // Ensure minimum walls on screen
+    if (S.walls.filter(w => !w.passed).length < 2) spawnWall();
+
+    // Timers
+    if (S.flashTimer > 0) S.flashTimer -= dt;
+  }
+
+  // Always update particles & shake
+  for (const p of S.particles) {
+    p.x += p.vx;
+    p.y += p.vy;
+    p.vy += 2 * dt; // gravity
+    p.life -= p.decay;
+  }
+  S.particles = S.particles.filter(p => p.life > 0);
+  if (S.shakeTimer > 0) S.shakeTimer -= dt;
+
+  render();
+  updateDebug();
+}
+
+// ══════════════════════════════════════════════════
+// INPUT
+// ══════════════════════════════════════════════════
+
+function handleTap(e) {
+  e.preventDefault();
+  if (S.phase === 'title') { startGame(); return; }
+  if (S.phase === 'dead') { startGame(); return; }
+  if (S.phase === 'playing') phaseShift();
+}
+
+function handleHoldStart(e) {
+  if (S.phase === 'playing' && S.energy > 0.1) S.slowmo = true;
+}
+function handleHoldEnd(e) {
+  S.slowmo = false;
+}
+
+// Touch
+canvas.addEventListener('touchstart', (e) => { e.preventDefault(); handleTap(e); }, { passive: false });
+canvas.addEventListener('touchend', handleHoldEnd);
+document.addEventListener('touchstart', (e) => {
+  if (S.phase !== 'playing') handleTap(e);
+}, { passive: false });
+
+// Mouse
+canvas.addEventListener('mousedown', handleTap);
+canvas.addEventListener('mouseup', handleHoldEnd);
+document.addEventListener('click', (e) => {
+  if (S.phase !== 'playing') handleTap(e);
+});
+
+// Keyboard
+document.addEventListener('keydown', (e) => {
+  if (e.code === 'Space' || e.code === 'Enter') {
+    e.preventDefault();
+    handleTap(e);
+  }
+  if (e.code === 'ShiftLeft' || e.code === 'ShiftRight') handleHoldStart(e);
+  // Debug toggle
+  if (e.code === 'KeyD' && e.ctrlKey) $debug.classList.toggle('show');
+});
+document.addEventListener('keyup', (e) => {
+  if (e.code === 'ShiftLeft' || e.code === 'ShiftRight') handleHoldEnd(e);
+});
+
+// URL debug param
+if (location.search.includes('debug=1')) $debug.classList.add('show');
+
+// ══════════════════════════════════════════════════
+// TELEMETRY + ADDICTION SCORING
+// ══════════════════════════════════════════════════
+
+const TELE_KEY = 'pulsedrift_telemetry';
+
+function loadTelemetry() {
+  try { return JSON.parse(localStorage.getItem(TELE_KEY)) || { sessions: [], totalPlays: 0 }; }
+  catch { return { sessions: [], totalPlays: 0 }; }
+}
+
+function saveTelemetry() {
+  const t = loadTelemetry();
+  const session = {
+    ts: Date.now(),
+    score: S.score,
+    level: S.level,
+    chain: S.bestChain,
+    walls: S.wallsPassed,
+    duration: Date.now() - S.sessionStart,
+    inputs: S.inputLog.length,
+    deaths: S.deaths.length,
+    retried: t.sessions.length > 0, // was this a retry?
+  };
+  t.sessions.push(session);
+  t.totalPlays++;
+  // Keep last 50 sessions
+  if (t.sessions.length > 50) t.sessions = t.sessions.slice(-50);
+  localStorage.setItem(TELE_KEY, JSON.stringify(t));
+}
+
+function computeAddictionScore() {
+  const t = loadTelemetry();
+  const sessions = t.sessions;
+  if (sessions.length === 0) return 30; // not enough data
+
+  // 1. Session length score (0-20): avg duration in seconds
+  const avgDur = sessions.reduce((a, s) => a + s.duration, 0) / sessions.length / 1000;
+  const durScore = Math.min(20, avgDur / 60 * 20); // max at 60s avg
+
+  // 2. Retry rate (0-25): % of sessions that were retries
+  const retries = sessions.filter(s => s.retried).length;
+  const retryRate = sessions.length > 1 ? retries / (sessions.length - 1) : 0;
+  const retryScore = retryRate * 25;
+
+  // 3. Input frequency (0-15): inputs per second during play
+  const avgIPS = sessions.reduce((a, s) => a + (s.inputs / Math.max(1, s.duration / 1000)), 0) / sessions.length;
+  const ipsScore = Math.min(15, avgIPS / 3 * 15); // max at 3 inputs/sec
+
+  // 4. Score improvement (0-20): are scores trending up?
+  let improvement = 0;
+  if (sessions.length >= 3) {
+    const recent = sessions.slice(-3).reduce((a, s) => a + s.score, 0) / 3;
+    const earlier = sessions.slice(0, Math.min(3, sessions.length)).reduce((a, s) => a + s.score, 0) / Math.min(3, sessions.length);
+    improvement = earlier > 0 ? Math.min(20, ((recent / earlier) - 1) * 40) : 10;
+  } else {
+    improvement = 10; // neutral
+  }
+
+  // 5. Flow curve (0-20): deaths shouldn't all be at level 1 (too hard) or never (too easy)
+  const avgLevel = sessions.reduce((a, s) => a + s.level, 0) / sessions.length;
+  const flowScore = avgLevel <= 1 ? 5 : avgLevel >= 10 ? 20 : (avgLevel / 10) * 20;
+
+  const total = Math.round(Math.max(0, Math.min(100, durScore + retryScore + ipsScore + improvement + flowScore)));
+  return total;
+}
+
+// ── Debug overlay ──
+function updateDebug() {
+  if (!$debug.classList.contains('show')) return;
+  const t = loadTelemetry();
+  const aScore = S.phase === 'dead' ? computeAddictionScore() : '—';
+  const fps = dt > 0 ? Math.round(1 / dt) : 0;
+  $debug.innerHTML = `FPS: ${fps} | Walls: ${S.walls.length} | Particles: ${S.particles.length}<br>`
+    + `Sessions: ${t.totalPlays} | Phase: ${S.phase}<br>`
+    + `Colors: ${S.numColors}/${CFG.colorsMax} | BPM: ${S.bpm}<br>`
+    + `Chain: ${S.chain} | Energy: ${(S.energy*100).toFixed(0)}%<br>`
+    + `Addiction Score: ${aScore}/100`;
+}
+
+// ── Init ──
+resize();
+window.addEventListener('resize', resize);
+requestAnimationFrame(update);
+
+})();
+</script>
+</body>
+</html>

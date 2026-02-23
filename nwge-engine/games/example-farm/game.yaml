@@ -1,0 +1,498 @@
+# ═══════════════════════════════════════════════════════════════════
+# Sunny Harvest — A Stardew Valley-style farming RPG
+# Defined entirely in YAML — AI generated this in ~2000 tokens
+# ═══════════════════════════════════════════════════════════════════
+# 
+# This is a COMPLETE game definition that NWGE can run.
+# An AI assistant can generate files like this to create full games.
+# 
+# Token cost estimate for AI to generate this: ~1800 tokens ($0.005)
+# Compare: Equivalent Unity C# code would be ~15,000 tokens ($0.04)
+# That's 8x cheaper for AI game generation!
+# ═══════════════════════════════════════════════════════════════════
+
+game:
+  name: "Sunny Harvest"
+  genre: farming-rpg
+  resolution: [320, 240]
+  scale: 4
+  fps: 60
+  gravity: 0
+  start_scene: farm
+  title: "Sunny Harvest — An AI-Generated Farming RPG"
+  author: "NWGE AI"
+  version: "0.1.0"
+
+# ─── ENTITIES ─────────────────────────────────────────────────────
+
+entities:
+  - name: player
+    sprite: farmer
+    position: [160, 140]
+    speed: 80
+    size: [14, 14]
+    tags: [player]
+    body: dynamic
+    animations:
+      idle_down:  { frames: [0, 1], fps: 4 }
+      idle_up:    { frames: [2, 3], fps: 4 }
+      idle_right: { frames: [4, 5], fps: 4 }
+      walk_down:  { frames: [6, 7, 8, 9], fps: 8 }
+      walk_up:    { frames: [10, 11, 12, 13], fps: 8 }
+      walk_right: { frames: [14, 15, 16, 17], fps: 8 }
+      hoe:        { frames: [18, 19, 20], fps: 10, loop: false }
+      water:      { frames: [21, 22, 23], fps: 10, loop: false }
+      axe:        { frames: [24, 25, 26], fps: 10, loop: false }
+    inventory: 
+      slots: 24
+      starting_items:
+        - { item: hoe, count: 1 }
+        - { item: watering_can, count: 1 }
+        - { item: axe, count: 1 }
+        - { item: turnip_seeds, count: 15 }
+    props:
+      energy: 100
+      max_energy: 100
+      farming_level: 0
+      farming_xp: 0
+
+  - name: cat
+    sprite: cat
+    position: [180, 160]
+    speed: 20
+    tags: [npc, animal]
+    ai: wander
+    props:
+      name: "Whiskers"
+      friendship: 0
+    on_interact: pet_cat
+
+  - name: mayor
+    sprite: npc_mayor
+    position: [200, 100]
+    speed: 0
+    tags: [npc, interactable]
+    ai: idle
+    dialog:
+      - text: "Welcome to Sunflower Valley! This old farm has been waiting for someone like you."
+        choices:
+          - text: "I'll do my best!"
+            actions:
+              - action: set
+                var: met_mayor
+                value: true
+              - action: dialog
+                text: "That's the spirit! Here, take these extra seeds to get started."
+              - action: give_item
+                item: melon_seeds
+                count: 5
+          - text: "Seems like a lot of work..."
+            actions:
+              - action: dialog
+                text: "Don't worry, take it one day at a time. The land will reward your patience."
+
+  - name: shop_keeper
+    sprite: npc_shopkeeper
+    position: [150, 80]
+    tags: [npc, interactable]
+    ai: idle
+    props:
+      shop_name: "Pierre's Seeds"
+    on_interact: open_shop
+
+  - name: chicken
+    sprite: chicken
+    position: [60, 180]
+    speed: 15
+    size: [10, 10]
+    tags: [npc, animal]
+    ai: wander
+    props:
+      produces: egg
+      produce_interval: 120
+      friendship: 0
+
+  - name: shipping_bin
+    sprite: shipping_bin
+    position: [280, 200]
+    tags: [interactable, solid]
+    body: static
+    size: [24, 24]
+    on_interact: open_shipping
+
+# ─── ITEMS ────────────────────────────────────────────────────────
+
+items:
+  # Tools
+  - name: hoe
+    type: tool
+    tool_type: hoe
+    description: "Tills soil for planting"
+    stackable: false
+
+  - name: watering_can
+    type: tool
+    tool_type: watering_can
+    description: "Waters your crops"
+    stackable: false
+
+  - name: axe
+    type: tool
+    tool_type: axe
+    damage: 10
+    description: "Chops trees and wood"
+    stackable: false
+
+  - name: fishing_rod
+    type: tool
+    tool_type: fishing_rod
+    description: "Catch fish at any water tile"
+    stackable: false
+    buy_price: 500
+
+  # Seeds
+  - name: turnip_seeds
+    type: seed
+    crop: turnip
+    buy_price: 20
+    sell_price: 10
+    description: "Grows in 4 days. Spring crop."
+
+  - name: melon_seeds
+    type: seed
+    crop: melon
+    buy_price: 80
+    sell_price: 40
+    description: "Grows in 12 days. Summer delicacy."
+
+  - name: pumpkin_seeds
+    type: seed
+    crop: pumpkin
+    buy_price: 100
+    sell_price: 50
+    description: "Grows in 13 days. Fall harvest star."
+
+  - name: strawberry_seeds
+    type: seed
+    crop: strawberry
+    buy_price: 200
+    sell_price: 100
+    description: "Regrows every 4 days after first harvest!"
+
+  # Crops (harvested items)
+  - name: turnip
+    type: crop
+    sell_price: 60
+    description: "A fresh turnip!"
+    props:
+      energy_restore: 15
+
+  - name: melon
+    type: crop
+    sell_price: 250
+    rarity: uncommon
+    description: "Sweet summer melon"
+    props:
+      energy_restore: 30
+
+  - name: pumpkin
+    type: crop
+    sell_price: 320
+    rarity: uncommon
+    description: "A big orange pumpkin"
+    props:
+      energy_restore: 25
+
+  - name: strawberry
+    type: crop
+    sell_price: 120
+    description: "Juicy red strawberry"
+    props:
+      energy_restore: 20
+
+  # Cooked food
+  - name: turnip_soup
+    type: food
+    heal_amount: 30
+    energy: 40
+    sell_price: 100
+    description: "Warming turnip soup"
+    recipe:
+      turnip: 2
+
+  - name: fruit_salad
+    type: food
+    heal_amount: 50
+    energy: 60
+    sell_price: 300
+    rarity: rare
+    description: "A refreshing mix of fruits"
+    recipe:
+      melon: 1
+      strawberry: 2
+
+  # Animal products
+  - name: egg
+    type: crop
+    sell_price: 50
+    description: "A fresh egg from your chicken"
+
+  # Fish
+  - name: trout
+    type: food
+    sell_price: 45
+    heal_amount: 15
+    description: "Common river fish"
+
+  - name: salmon
+    type: food
+    sell_price: 120
+    heal_amount: 25
+    rarity: uncommon
+    description: "A pink-fleshed beauty"
+
+  - name: legendary_fish
+    type: food
+    sell_price: 2000
+    heal_amount: 100
+    rarity: legendary
+    description: "The stuff of legends"
+
+  # Equipment
+  - name: straw_hat
+    type: equipment
+    slot: head
+    buy_price: 200
+    stats:
+      sun_protection: 1
+
+  - name: work_boots
+    type: equipment
+    slot: feet
+    buy_price: 300
+    stats:
+      speed_bonus: 10
+
+# ─── SCENES ───────────────────────────────────────────────────────
+
+scenes:
+  - name: farm
+    size: [60, 45]
+    tile_size: 16
+    spawn_point: [10, 22]
+    lighting: day
+    music: farm_theme
+    ambience: [birds, wind_gentle]
+    entities:
+      - entity: player
+        at: [10, 22]
+      - entity: cat
+        at: [12, 24]
+      - entity: chicken
+        at: [6, 30]
+        name: henrietta
+      - entity: chicken
+        at: [8, 32]
+        name: clucky
+      - entity: shipping_bin
+        at: [18, 20]
+    exits:
+      - to: town
+        at: [59, 22]
+        direction: right
+        target_spawn: [1, 15]
+
+  - name: town
+    size: [80, 60]
+    tile_size: 16
+    spawn_point: [1, 15]
+    lighting: day
+    music: town_theme
+    ambience: [town_bustle]
+    entities:
+      - entity: mayor
+        at: [40, 20]
+      - entity: shop_keeper
+        at: [25, 15]
+    exits:
+      - to: farm
+        at: [0, 15]
+        direction: left
+        target_spawn: [57, 22]
+      - to: beach
+        at: [79, 40]
+        direction: right
+        target_spawn: [1, 10]
+
+  - name: beach
+    size: [50, 40]
+    tile_size: 16
+    spawn_point: [1, 10]
+    lighting: day
+    music: ocean_theme
+    ambience: [waves, seagulls]
+    exits:
+      - to: town
+        at: [0, 10]
+        direction: left
+        target_spawn: [77, 40]
+    on_enter:
+      - action: dialog
+        speaker: "Inner Voice"
+        text: "The ocean breeze feels nice. Maybe I should try fishing here."
+
+# ─── GAME SYSTEMS ─────────────────────────────────────────────────
+# (mostly auto-enabled by genre: "farming-rpg", but we can customize)
+
+systems:
+  - type: farming
+    config:
+      seasons_enabled: true
+      quality_stars: true
+      season_length: 28
+      seasons: ["spring", "summer", "fall", "winter"]
+
+  - type: day_night
+    config:
+      day_length: 600
+      wake_time: 6
+      sleep_time: 2
+      energy_drain_per_hour: 4
+
+  - type: fishing
+    config:
+      difficulty: medium
+      rare_chance: 0.05
+      legendary_chance: 0.005
+
+  - type: relationship
+    config:
+      max_hearts: 10
+      gift_bonus: 20
+      talk_bonus: 5
+
+  - type: shop
+    config: {}
+
+  - type: crafting
+    config: {}
+
+  - type: save
+    config:
+      auto_save: true
+      auto_interval: 300
+      slots: 3
+
+# ─── VARIABLES (initial game state) ──────────────────────────────
+
+variables:
+  gold: 500
+  day: 1
+  season: "spring"
+  year: 1
+  time_of_day: "morning"
+  weather: "sunny"
+  met_mayor: false
+  shipping_total: 0
+  total_crops_harvested: 0
+
+# ─── EVENTS (game logic as data!) ────────────────────────────────
+
+events:
+  game_start:
+    - action: dialog
+      speaker: "Narrator"
+      text: "You've inherited your grandfather's old farm. It's overgrown, but full of potential."
+    - action: music
+      track: intro_theme
+    - action: wait
+      seconds: 2
+    - action: dialog
+      speaker: "Narrator" 
+      text: "Water your crops, make friends, and build the farm of your dreams."
+    - action: music
+      track: farm_theme
+      loop: true
+
+  day_start:
+    - action: dialog
+      speaker: "System"
+      text: "Day {day}, {season} — {weather}"
+    - action: set
+      var: daily_energy_used
+      value: 0
+
+  pet_cat:
+    - action: emit
+      event: friendship_up
+      data:
+        target: cat
+        amount: 5
+    - action: dialog
+      speaker: "Whiskers"
+      text: "*purrs happily*"
+    - action: sfx
+      sound: cat_purr
+
+  crop_harvested:
+    - action: add
+      var: total_crops_harvested
+      amount: 1
+    - action: add
+      var: farming_xp
+      amount: 10
+    - action: sfx
+      sound: harvest
+    - action: if
+      condition: "total_crops_harvested >= 100"
+      then:
+        - action: dialog
+          speaker: "Achievement"
+          text: "🏆 Master Farmer — Harvested 100 crops!"
+
+  open_shop:
+    - action: dialog
+      speaker: "Pierre"
+      text: "Welcome! What can I get for you today?"
+      choices:
+        - text: "Buy seeds"
+          actions:
+            - action: emit
+              event: show_shop_ui
+              data:
+                shop: seeds
+        - text: "Just browsing"
+          actions:
+            - action: dialog
+              speaker: "Pierre"
+              text: "Take your time!"
+
+  open_shipping:
+    - action: emit
+      event: show_shipping_ui
+
+  end_of_day:
+    - action: emit
+      event: calculate_shipping
+    - action: sfx
+      sound: day_end_chime
+    - action: add
+      var: day
+      amount: 1
+    - action: if
+      condition: "day > 28"
+      then:
+        - action: emit
+          event: season_change
+    - action: emit
+      event: save_game
+
+  season_change:
+    - action: set
+      var: day
+      value: 1
+    - action: dialog
+      speaker: "System"
+      text: "A new season begins!"
+    - action: emit
+      event: update_season_crops
