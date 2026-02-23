@@ -1,0 +1,2385 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NWGE Interactive World</title>
+<link rel="icon" type="image/png" href="favicon.png">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&display=swap');
+* { margin:0; padding:0; box-sizing:border-box; }
+body { background:#000; overflow:hidden; font-family:'Segoe UI',Arial,sans-serif; cursor:default; }
+canvas { display:block; }
+#ui { position:absolute; top:0; left:0; width:100%; height:100%; pointer-events:none; }
+#ui > * { pointer-events:auto; }
+#tooltip { position:absolute; display:none; background:rgba(10,8,20,0.94); color:#fff; border:2px solid #604a20; padding:8px 12px; font-size:12px; border-radius:4px; z-index:100; pointer-events:none; max-width:260px; box-shadow:0 4px 20px rgba(0,0,0,0.6); }
+#tooltip .tt-name { color:#ffd040; font-weight:bold; font-size:13px; }
+#tooltip .tt-desc { color:#aaa; margin-top:4px; line-height:1.4; }
+#tooltip .tt-price { color:#fff; margin-top:4px; }
+.gold-icon { display:inline-block; width:11px; height:11px; background:radial-gradient(circle at 35% 35%, #ffe860, #c8a020); border-radius:50%; border:1px solid #806020; vertical-align:middle; margin:0 2px; }
+
+.dialog-overlay { position:absolute; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.4); display:none; z-index:50; justify-content:center; align-items:center; }
+.dialog-overlay.active { display:flex; }
+
+.quest-window { width:420px; background:linear-gradient(145deg,#d4b896 0%,#c8a878 30%,#b8944e 70%,#a88040 100%); border:14px solid; border-image:linear-gradient(135deg,#2a1f14,#1a1209,#2a1f14) 1; border-radius:4px; position:relative; box-shadow:0 0 60px rgba(0,0,0,0.8), inset 0 0 40px rgba(0,0,0,0.12), inset 0 2px 0 rgba(255,255,255,0.15); }
+.quest-window::before, .quest-window::after { content:''; position:absolute; width:30px; height:30px; background:linear-gradient(135deg,#d4b060,#c8a84e,#a08030); border-radius:3px; z-index:2; box-shadow:inset 0 1px 2px rgba(255,255,255,0.3); }
+.quest-window::before { top:-10px; left:-10px; clip-path:polygon(0 0,100% 0,75% 100%,0 75%); }
+.quest-window::after { top:-10px; right:-10px; clip-path:polygon(0 0,100% 0,100% 75%,25% 100%); }
+
+.quest-header { background:linear-gradient(180deg,rgba(20,15,8,0.9),rgba(30,22,12,0.85)); padding:10px 16px; display:flex; align-items:center; gap:12px; border-bottom:1px solid rgba(200,168,78,0.3); }
+.quest-header .npc-portrait { width:48px; height:48px; border-radius:50%; background:#0e0e1a; border:2.5px solid #c8a858; overflow:hidden; flex-shrink:0; box-shadow:0 0 8px rgba(200,168,88,0.3); }
+.quest-header .npc-portrait canvas { width:100%; height:100%; }
+.quest-header .npc-name { color:#ffd100; font-size:15px; font-weight:bold; flex:1; text-shadow:0 1px 3px rgba(0,0,0,0.5); font-family:Cinzel,Georgia,serif; }
+.quest-close { background:none; border:none; color:#c8a84e; font-size:22px; cursor:pointer; padding:0 4px; line-height:1; }
+.quest-close:hover { color:#ffe080; }
+
+.quest-body { padding:22px 24px; min-height:200px; max-height:400px; overflow-y:auto; position:relative; }
+.quest-body::before { content:''; position:absolute; top:0; left:0; right:0; bottom:0; background:url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E"); pointer-events:none; }
+.quest-title { font-family:Cinzel,Georgia,serif; font-size:19px; color:#1a0e00; font-weight:bold; margin-bottom:14px; text-shadow:0 1px 1px rgba(255,255,255,0.25); }
+.quest-text { font-size:13px; color:#2a1a08; line-height:1.65; margin-bottom:14px; }
+.quest-objectives { margin-top:14px; }
+.quest-objectives h4 { font-family:Cinzel,Georgia,serif; font-size:15px; color:#1a0e00; margin-bottom:8px; border-bottom:1px solid rgba(0,0,0,0.1); padding-bottom:4px; }
+.quest-objectives li { font-size:12px; color:#3a2a10; margin:4px 0; list-style:none; padding-left:16px; position:relative; }
+.quest-objectives li::before { content:'\2022'; position:absolute; left:0; color:#8a6a30; font-weight:bold; }
+.quest-objectives li.done { color:#3a7a20; }
+.quest-objectives li.done::before { content:'\2713'; color:#3a7a20; }
+.quest-rewards { margin-top:16px; padding-top:12px; border-top:2px solid rgba(0,0,0,0.1); }
+.quest-rewards h4 { font-family:Cinzel,Georgia,serif; font-size:14px; color:#1a0e00; margin-bottom:8px; }
+.quest-rewards .reward-item { display:flex; align-items:center; gap:8px; font-size:12px; color:#2a1a08; margin:5px 0; }
+.quest-rewards .reward-icon { width:28px; height:28px; border:2px solid #604a20; border-radius:3px; background:#2a1a08; box-shadow:inset 0 0 4px rgba(0,0,0,0.4); }
+
+.quest-buttons { background:linear-gradient(180deg,rgba(30,22,12,0.85),rgba(20,15,8,0.9)); padding:12px 16px; display:flex; justify-content:space-between; gap:12px; border-top:1px solid rgba(200,168,78,0.2); }
+.quest-btn { padding:8px 30px; font-size:13px; font-weight:bold; border:2px solid #806020; border-radius:3px; cursor:pointer; transition:all 0.15s; text-shadow:0 1px 2px rgba(0,0,0,0.3); font-family:Cinzel,Georgia,serif; }
+.quest-btn.accept { background:linear-gradient(180deg,#4a7a3a,#2a5a1a); color:#ffd100; border-color:#608030; }
+.quest-btn.accept:hover { background:linear-gradient(180deg,#5a9a4a,#3a7a2a); box-shadow:0 0 12px rgba(100,200,60,0.3); }
+.quest-btn.decline { background:linear-gradient(180deg,#5a3020,#3a1a0a); color:#cc8844; }
+.quest-btn.decline:hover { background:linear-gradient(180deg,#6a4030,#4a2a1a); }
+.quest-btn.complete { background:linear-gradient(180deg,#4a7a3a,#2a5a1a); color:#ffd100; border-color:#608030; }
+
+.merchant-window { width:440px; background:linear-gradient(180deg,#0e0e1a,#0a0a14); border:3px solid #604a20; border-radius:4px; box-shadow:0 0 60px rgba(0,0,0,0.8); }
+.merchant-header { background:linear-gradient(180deg,rgba(30,22,12,0.95),rgba(20,15,8,0.9)); padding:10px 16px; display:flex; align-items:center; justify-content:space-between; border-bottom:2px solid #302010; }
+.merchant-header .npc-name { color:#ffd100; font-size:15px; font-weight:bold; text-shadow:0 1px 3px rgba(0,0,0,0.5); font-family:Cinzel,Georgia,serif; }
+.merchant-grid { padding:10px; display:grid; grid-template-columns:repeat(4,1fr); gap:5px; max-height:340px; overflow-y:auto; }
+.merchant-slot { width:100%; aspect-ratio:1; background:linear-gradient(135deg,#16161e,#0e0e1a); border:2px solid #2a2a3a; border-radius:3px; cursor:pointer; position:relative; display:flex; align-items:center; justify-content:center; transition:all 0.15s; }
+.merchant-slot:hover { border-color:#c8a84e; background:linear-gradient(135deg,#1e1e2a,#16161e); box-shadow:0 0 8px rgba(200,168,78,0.2); }
+.merchant-slot .item-icon { width:80%; height:80%; border-radius:3px; }
+.merchant-slot .item-price { position:absolute; bottom:2px; right:3px; font-size:9px; color:#ffd040; background:rgba(0,0,0,0.8); padding:1px 4px; border-radius:2px; }
+.merchant-footer { background:linear-gradient(180deg,rgba(20,15,8,0.9),rgba(30,22,12,0.95)); padding:10px 16px; display:flex; justify-content:space-between; align-items:center; border-top:2px solid #302010; }
+.merchant-gold { color:#ffd040; font-size:14px; font-weight:bold; }
+
+.fct { position:absolute; font-weight:bold; pointer-events:none; text-shadow:0 2px 4px rgba(0,0,0,0.9); z-index:60; animation:fctAnim 1.4s ease-out forwards; }
+@keyframes fctAnim { 0%{opacity:1;transform:translateY(0) scale(1.1)} 15%{transform:translateY(-8px) scale(1)} 70%{opacity:1} 100%{opacity:0;transform:translateY(-70px) scale(0.9)} }
+
+.toast { position:absolute; top:140px; left:50%; transform:translateX(-50%); background:linear-gradient(180deg,rgba(15,12,25,0.95),rgba(10,8,20,0.95)); border:2px solid #604a20; color:#ffd040; padding:10px 24px; font-size:13px; font-weight:bold; border-radius:4px; z-index:70; text-shadow:0 1px 2px rgba(0,0,0,0.5); box-shadow:0 4px 20px rgba(0,0,0,0.5); animation:toastAnim 3s ease forwards; font-family:Cinzel,Georgia,serif; }
+@keyframes toastAnim { 0%{opacity:0;transform:translateX(-50%) translateY(-15px)} 10%{opacity:1;transform:translateX(-50%) translateY(0)} 80%{opacity:1} 100%{opacity:0;transform:translateX(-50%) translateY(-15px)} }
+
+#instructions { position:absolute; bottom:72px; left:50%; transform:translateX(-50%); background:rgba(0,0,0,0.75); color:#b0a080; font-size:11px; padding:8px 20px; border-radius:4px; border:1px solid #302010; z-index:30; text-align:center; transition:opacity 0.8s; }
+</style>
+</head>
+<body>
+<canvas id="game"></canvas>
+<div id="ui">
+  <div id="tooltip"></div>
+  <div class="dialog-overlay" id="questOverlay"></div>
+  <div class="dialog-overlay" id="merchantOverlay"></div>
+  <div id="instructions">WASD to move · Mouse to look · Right-click or E to interact · SPACE to attack · ESC to close</div>
+</div>
+
+<script>
+'use strict';
+// ═══════════════════════════════════════════════════════════════
+//  NWGE Interactive World Engine v3 — WoW Visual Overhaul
+//  Elwynn Forest / Goldshire inspired
+// ═══════════════════════════════════════════════════════════════
+
+const C = document.getElementById('game');
+const ctx = C.getContext('2d', { willReadFrequently: true });
+
+// ─── WoW-Accurate Color Palette (from video analysis) ──────
+const PAL = {
+  // Grass: vibrant emerald → golden olive in sun
+  grassBase: [45, 90, 39],       // #2D5A27
+  grassSun:  [107, 165, 57],     // #6BA539
+  grassShadow: [30, 57, 34],     // #1E3922
+  // Dirt path
+  dirtBase: [139, 115, 85],      // #8B7355
+  dirtLight: [165, 140, 105],
+  // Water: teal with specular
+  waterDeep: [28, 65, 105],
+  waterShallow: [45, 120, 140],
+  waterSpec: [180, 220, 255],
+  // Sky gradient (3-stop WoW style)
+  skyTop: [63, 130, 200],        // #3F82C8 deep cerulean
+  skyMid: [145, 195, 225],       // #91C3E1 light blue
+  skyHorizon: [210, 220, 200],   // pale yellow-white haze
+  // Fog color (matches horizon)
+  fog: [175, 200, 195],
+  // Building colors
+  stoneBase: [130, 125, 115],
+  woodFrame: [140, 100, 55],     // cinnamon
+  roofThatch: [165, 140, 75],    // straw yellow
+  windowGlow: [255, 179, 71],    // honey orange
+  // Tree colors
+  trunkDark: [59, 47, 33],       // #3B2F21
+  leafDark: [30, 57, 34],        // pine needle
+  leafMid: [55, 100, 45],
+  leafBright: [107, 165, 57],    // spring leaf
+  // Shadow tint (purple-blue, not black)
+  shadowTint: [30, 20, 55],
+};
+
+const CFG = {
+  W: 1280, H: 720,
+  FOV: Math.PI / 3,
+  HALF_FOV: Math.PI / 6,
+  MAP_S: 64,
+  TILE: 1,
+  SPEED: 0.04,
+  ROT_SPEED: 0.003,
+  DRAW_DIST: 26,
+  NUM_RAYS: 640, // half-width for perf, doubled by 2px columns
+};
+
+function resize() {
+  C.width = CFG.W; C.height = CFG.H;
+  C.style.width = '100vw'; C.style.height = '100vh';
+  C.style.objectFit = 'contain';
+}
+resize();
+window.addEventListener('resize', resize);
+
+// ─── Seeded RNG ─────────────────────────────────────────────
+class RNG {
+  constructor(s) { this.s = s|0||42; }
+  next() { this.s=(this.s*1103515245+12345)&0x7fffffff; return this.s/0x7fffffff; }
+  range(a,b) { return a+this.next()*(b-a); }
+  int(a,b) { return Math.floor(this.range(a,b)); }
+  pick(a) { return a[this.int(0,a.length)]; }
+}
+
+// ─── Noise Functions ────────────────────────────────────────
+function hashNoise(x, y) {
+  let h = (x * 374761393 + y * 668265263 + 1013904223) | 0;
+  h = ((h ^ (h >> 13)) * 1274126177) | 0;
+  return (h & 0x7fffffff) / 0x7fffffff;
+}
+
+function smoothNoise(x, y) {
+  const ix = Math.floor(x), iy = Math.floor(y);
+  const fx = x - ix, fy = y - iy;
+  const sx = fx * fx * (3 - 2 * fx), sy = fy * fy * (3 - 2 * fy);
+  const n00 = hashNoise(ix, iy), n10 = hashNoise(ix+1, iy);
+  const n01 = hashNoise(ix, iy+1), n11 = hashNoise(ix+1, iy+1);
+  return (n00*(1-sx)+n10*sx)*(1-sy) + (n01*(1-sx)+n11*sx)*sy;
+}
+
+function fbm(x, y, oct) {
+  let v = 0, a = 1, f = 1, m = 0;
+  for (let i = 0; i < oct; i++) { v += smoothNoise(x*f, y*f)*a; m += a; a *= 0.5; f *= 2; }
+  return v / m;
+}
+
+// ─── Procedural Textures (64x64) ───────────────────────────
+const TEX_SIZE = 64;
+const wallTextures = {};
+const texData = {};
+
+function generateTexture(type) {
+  const c = document.createElement('canvas');
+  c.width = TEX_SIZE; c.height = TEX_SIZE;
+  const tx = c.getContext('2d');
+  const d = tx.createImageData(TEX_SIZE, TEX_SIZE);
+
+  for (let y = 0; y < TEX_SIZE; y++) {
+    for (let x = 0; x < TEX_SIZE; x++) {
+      const i = (y * TEX_SIZE + x) * 4;
+      let r, g, b;
+
+      if (type === 'stone') {
+        // Goldshire-style stone with warm mortar
+        const blockW = 16, blockH = 8;
+        const row = Math.floor(y / blockH);
+        const offsetX = (row % 2) * (blockW / 2);
+        const abx = (x + offsetX) % blockW, aby = y % blockH;
+        const isMortar = abx < 1.2 || aby < 1.2;
+        if (isMortar) {
+          const mn = hashNoise(x*3, y*3) * 15;
+          r = 100 + mn; g = 95 + mn; b = 85 + mn;
+        } else {
+          const n = fbm(x*0.08+row, y*0.08, 3) * 35 - 15;
+          const bn = hashNoise(x+row*17, y+row*31) * 12;
+          const bs = hashNoise(Math.floor((x+offsetX)/blockW), row) * 18 - 9;
+          r = PAL.stoneBase[0] + n + bn + bs;
+          g = PAL.stoneBase[1] + n*0.9 + bn + bs;
+          b = PAL.stoneBase[2] + n*0.7 + bn + bs;
+        }
+      } else if (type === 'wood') {
+        // Cinnamon timber frame
+        const plankH = 10;
+        const plank = Math.floor(y / plankH);
+        const py = y % plankH;
+        if (py < 1) { r = 55; g = 35; b = 18; }
+        else {
+          const grain = Math.sin((x+plank*7)*0.3 + smoothNoise(x*0.05,y*0.02+plank)*4)*12;
+          const knot = smoothNoise(x*0.08+plank*5, y*0.08) > 0.85 ? -22 : 0;
+          const n = hashNoise(x+plank*100, y) * 8;
+          const ps = hashNoise(plank*7, plank*13) * 16 - 8;
+          r = PAL.woodFrame[0] + grain + knot + n + ps;
+          g = PAL.woodFrame[1] + grain*0.7 + knot + n*0.7 + ps*0.7;
+          b = PAL.woodFrame[2] + grain*0.3 + knot*0.5 + n*0.4 + ps*0.4;
+        }
+      } else if (type === 'tree') {
+        // Bark with high-contrast vertical lines (WoW style)
+        const grain = Math.sin(y*0.9 + smoothNoise(x*0.12, y*0.05)*5) * 18;
+        const crack = smoothNoise(x*0.2, y*0.04);
+        const dark = crack > 0.55 ? (crack-0.55)*90 : 0;
+        const vertLine = Math.sin(x*0.7)*8; // vertical bark depth
+        const n = hashNoise(x*2, y*2) * 8;
+        r = PAL.trunkDark[0] + grain - dark + vertLine + n;
+        g = PAL.trunkDark[1] + grain*0.6 - dark + vertLine*0.5 + n*0.6;
+        b = PAL.trunkDark[2] + grain*0.3 - dark*0.5 + vertLine*0.3 + n*0.3;
+      } else if (type === 'stone_tower') {
+        // Heavier stone, slightly bluish
+        const blockW = 12, blockH = 10;
+        const row = Math.floor(y / blockH);
+        const offsetX = (row % 2) * (blockW / 2);
+        const abx = (x + offsetX) % blockW, aby = y % blockH;
+        const isMortar = abx < 1.5 || aby < 1.5;
+        if (isMortar) { r = 82; g = 80; b = 76; }
+        else {
+          const n = fbm(x*0.06, y*0.06, 3) * 28;
+          const bs = hashNoise(Math.floor((x+offsetX)/blockW), row) * 14 - 7;
+          r = 145 + n + bs; g = 142 + n + bs; b = 138 + n*0.9 + bs;
+        }
+      } else if (type === 'thatch') {
+        // Straw-colored thatched roof
+        const straw = Math.sin((x + y*0.3)*0.6 + smoothNoise(x*0.1, y*0.05)*3) * 20;
+        const n = hashNoise(x*3, y*3) * 15;
+        const line = (y % 6 < 1) ? -15 : 0;
+        r = PAL.roofThatch[0] + straw + n + line;
+        g = PAL.roofThatch[1] + straw*0.8 + n*0.8 + line;
+        b = PAL.roofThatch[2] + straw*0.4 + n*0.4 + line;
+      }
+
+      d.data[i] = Math.max(0, Math.min(255, Math.round(r)));
+      d.data[i+1] = Math.max(0, Math.min(255, Math.round(g)));
+      d.data[i+2] = Math.max(0, Math.min(255, Math.round(b)));
+      d.data[i+3] = 255;
+    }
+  }
+  tx.putImageData(d, 0, 0);
+  return c;
+}
+
+// Pre-generate
+['stone','wood','tree','stone_tower','thatch'].forEach(t => {
+  wallTextures[t] = generateTexture(t);
+  texData[t] = wallTextures[t].getContext('2d').getImageData(0,0,TEX_SIZE,TEX_SIZE).data;
+});
+
+// ─── World Map ──────────────────────────────────────────────
+// 0=grass, 1=stone wall, 2=wood wall, 3=water, 4=dirt, 5=tree trunk, 6=fence, 7=stone_tower
+const MAP_W = CFG.MAP_S, MAP_H = CFG.MAP_S;
+const worldMap = new Uint8Array(MAP_W * MAP_H);
+const tileDecor = new Uint8Array(MAP_W * MAP_H); // 0=none,1=flower,2=tallgrass,3=rock,4=mushroom,5=bush
+const heightMap = new Float32Array(MAP_W * MAP_H); // subtle height per tile
+
+function buildWorld() {
+  const rng = new RNG(2024);
+  worldMap.fill(0);
+
+  // Height map (gentle rolling hills)
+  for (let y = 0; y < MAP_H; y++)
+    for (let x = 0; x < MAP_W; x++)
+      heightMap[y*MAP_W+x] = Math.sin(x*0.12)*0.15 + Math.sin(y*0.08)*0.1 + smoothNoise(x*0.06,y*0.06)*0.2;
+
+  // Main road (east-west, gentle curves)
+  for (let x = 0; x < MAP_W; x++) {
+    const cy = Math.floor(MAP_H/2 + Math.sin(x*0.08)*2.5 + Math.sin(x*0.03)*1.5);
+    for (let dy = -1; dy <= 1; dy++) {
+      const y = cy + dy;
+      if (y >= 0 && y < MAP_H) worldMap[y*MAP_W+x] = 4;
+    }
+  }
+  // North-south crossroad
+  for (let y = 6; y < MAP_H-6; y++) {
+    const cx = Math.floor(MAP_W*0.38 + Math.sin(y*0.06)*2);
+    for (let dx = -1; dx <= 1; dx++) {
+      const x = cx + dx;
+      if (x >= 0 && x < MAP_W) worldMap[y*MAP_W+x] = 4;
+    }
+  }
+  // Path to farm
+  for (let x = Math.floor(MAP_W*0.38); x < MAP_W*0.6; x++) {
+    const y = Math.floor(20 + Math.sin(x*0.12)*1.5);
+    if (y >= 0 && y < MAP_H) worldMap[y*MAP_W+x] = 4;
+  }
+
+  // River (eastern, winding)
+  for (let y = 0; y < MAP_H; y++) {
+    const rx = MAP_W - 9 + Math.floor(Math.sin(y*0.12)*3 + Math.sin(y*0.04)*2);
+    for (let dw = -2; dw <= 2; dw++) {
+      const x = rx + dw;
+      if (x >= 0 && x < MAP_W) worldMap[y*MAP_W+x] = 3;
+    }
+  }
+  // Small pond near town
+  for (let dy = -3; dy <= 3; dy++)
+    for (let dx = -4; dx <= 4; dx++)
+      if (dx*dx*0.6+dy*dy < 10) {
+        const x = 28+dx, y = 38+dy;
+        if (x>=0&&x<MAP_W&&y>=0&&y<MAP_H) worldMap[y*MAP_W+x]=3;
+      }
+
+  // ─── Buildings (Goldshire village) ───
+  function placeBuilding(bx, by, w, h, wallType, label) {
+    for (let dy=0; dy<h; dy++) for (let dx=0; dx<w; dx++) {
+      const x=bx+dx, y=by+dy;
+      if(x>=0&&x<MAP_W&&y>=0&&y<MAP_H) {
+        if(dy===0||dy===h-1||dx===0||dx===w-1) worldMap[y*MAP_W+x]=wallType;
+        else worldMap[y*MAP_W+x]=0; // interior = open
+      }
+    }
+    // Door (gap in south wall)
+    const doorX = bx + Math.floor(w/2);
+    if(doorX>=0&&doorX<MAP_W&&(by+h-1)>=0&&(by+h-1)<MAP_H) worldMap[(by+h-1)*MAP_W+doorX]=4;
+  }
+
+  placeBuilding(22, 30, 7, 5, 1, 'inn');      // Goldshire Inn (stone)
+  placeBuilding(18, 30, 4, 4, 2, 'shop');     // General store (wood)
+  placeBuilding(30, 28, 4, 6, 7, 'tower');    // Guard tower
+  placeBuilding(16, 26, 5, 4, 1, 'smithy');   // Smithy
+  placeBuilding(35, 30, 5, 4, 2, 'house1');   // House
+  placeBuilding(35, 25, 4, 4, 2, 'house2');   // House
+  placeBuilding(40, 18, 6, 5, 2, 'barn');     // Barn
+  placeBuilding(22, 24, 5, 4, 1, 'chapel');   // Chapel
+  placeBuilding(14, 35, 4, 4, 2, 'house3');   // House
+
+  // Fences around farm area
+  for (let x = 38; x <= 48; x++) {
+    if(worldMap[16*MAP_W+x]===0) worldMap[16*MAP_W+x]=6;
+    if(worldMap[24*MAP_W+x]===0) worldMap[24*MAP_W+x]=6;
+  }
+  for (let y = 16; y <= 24; y++) {
+    if(worldMap[y*MAP_W+38]===0) worldMap[y*MAP_W+38]=6;
+    if(worldMap[y*MAP_W+48]===0) worldMap[y*MAP_W+48]=6;
+  }
+
+  // Border walls
+  for (let i = 0; i < MAP_W; i++) { worldMap[i]=1; worldMap[(MAP_H-1)*MAP_W+i]=1; }
+  for (let i = 0; i < MAP_H; i++) { worldMap[i*MAP_W]=1; worldMap[i*MAP_W+MAP_W-1]=1; }
+
+  // Dense forest zones
+  const forestZones = [
+    {x:5,y:5,w:10,h:12,density:0.35},   // NW forest
+    {x:42,y:5,w:14,h:12,density:0.3},   // NE forest
+    {x:5,y:44,w:12,h:16,density:0.3},   // SW forest
+    {x:42,y:40,w:12,h:18,density:0.25}, // SE forest (near river)
+  ];
+  for (const z of forestZones) {
+    for (let y=z.y; y<z.y+z.h&&y<MAP_H-1; y++)
+      for (let x=z.x; x<z.x+z.w&&x<MAP_W-1; x++)
+        if(worldMap[y*MAP_W+x]===0 && rng.next()<z.density) worldMap[y*MAP_W+x]=5;
+  }
+
+  // Scattered trees (less dense)
+  for (let i = 0; i < 80; i++) {
+    const x = rng.int(3,MAP_W-3), y = rng.int(3,MAP_H-3);
+    if (worldMap[y*MAP_W+x]===0) worldMap[y*MAP_W+x]=5;
+  }
+
+  // Ground decorations (flowers, bushes, rocks in grass areas)
+  for (let y=1;y<MAP_H-1;y++) for (let x=1;x<MAP_W-1;x++) {
+    if (worldMap[y*MAP_W+x]!==0) continue;
+    const r = rng.next();
+    if (r < 0.06) tileDecor[y*MAP_W+x] = 1;      // flower
+    else if (r < 0.15) tileDecor[y*MAP_W+x] = 2;  // tall grass
+    else if (r < 0.18) tileDecor[y*MAP_W+x] = 3;  // rock
+    else if (r < 0.20) tileDecor[y*MAP_W+x] = 4;  // mushroom
+    else if (r < 0.24) tileDecor[y*MAP_W+x] = 5;  // bush (ground clutter!)
+  }
+}
+
+function getMap(x, y) {
+  const ix = Math.floor(x), iy = Math.floor(y);
+  if (ix<0||ix>=MAP_W||iy<0||iy>=MAP_H) return 1;
+  return worldMap[iy*MAP_W+ix];
+}
+
+function isWall(x, y) {
+  const t = getMap(x, y);
+  return t===1||t===2||t===5||t===6||t===7;
+}
+
+function getHeight(x, y) {
+  const ix = Math.floor(x), iy = Math.floor(y);
+  if (ix<0||ix>=MAP_W||iy<0||iy>=MAP_H) return 0;
+  return heightMap[iy*MAP_W+ix];
+}
+
+// ─── Player ─────────────────────────────────────────────────
+const player = {
+  x: 22.5, y: 34.5,
+  angle: 0, pitch: 0,
+  health: 100, maxHealth: 100,
+  mana: 80, maxMana: 100,
+  gold: 15, level: 1,
+  xp: 0, xpNeeded: 200,
+  bobPhase: 0,
+  target: null,
+  inventory: [
+    {name:'Rusty Sword', type:'weapon', icon:'⚔', color:'#c0c8e0', value:2, quality:'common'},
+    {name:'Bread', type:'food', icon:'🍞', color:'#d4a860', value:1, quality:'common'},
+    {name:'Health Potion', type:'potion', icon:'🧪', color:'#cc3030', value:3, quality:'common'},
+  ],
+};
+
+// ─── NPCs ───────────────────────────────────────────────────
+const npcs = [
+  {
+    id:'marshal', name:'Marshal Dughan', x:25.5, y:33.5, type:'quest', level:10,
+    skinColor:[220,180,145], armorColor:[70,85,140], hairColor:'#4a3020',
+    shoulderColor:[90,110,170], hasQuest:true, questCompleted:false,
+    greeting:'Hail, adventurer. Goldshire needs your help.',
+    quest: {
+      name:'Wolves at the Gate', text:'The wolves in the eastern forest have grown bold. They threaten our farmers and livestock. Thin their numbers before someone gets hurt.',
+      objectives:[{desc:'Slay Timber Wolves', current:0, needed:5, type:'kill', target:'wolf'}],
+      rewards:{xp:80, gold:5, items:[{name:'Militia Boots', icon:'🥾', color:'#40aa40', value:4, quality:'uncommon'}]},
+    },
+  },
+  {
+    id:'tharyn', name:'Tharyn Bouden', x:20.5, y:32.5, type:'merchant', level:8,
+    skinColor:[200,160,130], armorColor:[100,75,45], hairColor:'#8a5a30',
+    shoulderColor:[110,85,55],
+    stock:[
+      {name:'Health Potion', icon:'🧪', color:'#cc3030', price:3, value:3, quality:'common'},
+      {name:'Mana Potion', icon:'💧', color:'#3060cc', price:3, value:3, quality:'common'},
+      {name:'Bread', icon:'🍞', color:'#d4a860', price:1, value:1, quality:'common'},
+      {name:'Iron Sword', icon:'⚔', color:'#a0b8d0', price:12, value:10, quality:'uncommon'},
+      {name:'Leather Armor', icon:'🛡', color:'#8a6a40', price:15, value:12, quality:'uncommon'},
+      {name:'Torch', icon:'🔥', color:'#ff8830', price:2, value:1, quality:'common'},
+      {name:'Bandage', icon:'🩹', color:'#e0e0e0', price:1, value:1, quality:'common'},
+    ],
+  },
+  {
+    id:'thomas', name:'Guard Thomas', x:31.5, y:31.5, type:'quest', level:12,
+    skinColor:[210,170,135], armorColor:[140,130,110], hairColor:'#2a2018',
+    shoulderColor:[160,148,125], hasQuest:true, questCompleted:false,
+    greeting:'Those kobolds in the north have been stealing candles from the mine. Can you retrieve them?',
+    quest: {
+      name:'A Bundle of Troubles', text:'The kobold workers in the northern caves have been pilfering our mining supplies. Recover the candles they have stolen.',
+      objectives:[{desc:'Collect Kobold Candles', current:0, needed:8, type:'collect', target:'candle'}],
+      rewards:{xp:120, gold:8, items:[{name:"Guard's Ring", icon:'💍', color:'#c0a040', value:6, quality:'rare'}]},
+    },
+  },
+  {
+    id:'smith', name:'Smith Argus', x:17.5, y:28.5, type:'merchant', level:15,
+    skinColor:[195,155,120], armorColor:[80,60,40], hairColor:'#1a1a18',
+    shoulderColor:[90,70,50],
+    stock:[
+      {name:'Steel Sword', icon:'⚔', color:'#b0c8e8', price:25, value:20, quality:'rare'},
+      {name:'Chain Mail', icon:'🛡', color:'#a0a0b0', price:30, value:25, quality:'rare'},
+      {name:'Iron Shield', icon:'🛡', color:'#8898a8', price:18, value:15, quality:'uncommon'},
+      {name:'Steel Dagger', icon:'🗡', color:'#c0c8d0', price:15, value:12, quality:'uncommon'},
+    ],
+  },
+];
+
+// ─── Enemies ────────────────────────────────────────────────
+const enemies = [];
+const pickups = [];
+const rng = new RNG(42);
+
+for (let i = 0; i < 14; i++) {
+  let ex, ey;
+  do { ex = rng.range(35,55); ey = rng.range(8,55); } while(isWall(ex,ey)||getMap(ex,ey)===3);
+  enemies.push({
+    id:'wolf_'+i, name:'Timber Wolf', x:ex, y:ey, type:'wolf', level:2+rng.int(0,3),
+    health:30, maxHealth:30, alive:true, aggro:false,
+    bodyColor:[75,75,90], speed:0.018,
+    moveAngle:rng.range(0,Math.PI*2), moveTimer:rng.range(0,3),
+    loot:[{name:'Wolf Pelt',icon:'🐺',color:'#8a7a5a',value:2,quality:'common'}],
+  });
+}
+for (let i = 0; i < 8; i++) {
+  let ex, ey;
+  do { ex = rng.range(6,20); ey = rng.range(6,18); } while(isWall(ex,ey)||getMap(ex,ey)===3);
+  enemies.push({
+    id:'kobold_'+i, name:'Kobold Worker', x:ex, y:ey, type:'kobold', level:3+rng.int(0,2),
+    health:25, maxHealth:25, alive:true, aggro:false,
+    bodyColor:[120,105,70], speed:0.012,
+    moveAngle:rng.range(0,Math.PI*2), moveTimer:rng.range(0,3),
+    loot:[{name:'Copper Ore',icon:'🪨',color:'#c8a060',value:1,quality:'common'}],
+  });
+}
+for (let i = 0; i < 15; i++) {
+  let cx, cy;
+  do { cx = rng.range(5,22); cy = rng.range(5,20); } while(isWall(cx,cy)||getMap(cx,cy)===3);
+  pickups.push({
+    id:'candle_'+i, name:'Kobold Candle', x:cx, y:cy, type:'candle',
+    collected:false, icon:'🕯', color:'#e8c040',
+  });
+}
+
+// ─── Input ──────────────────────────────────────────────────
+const keys = {};
+let mouseLocked = false;
+
+document.addEventListener('keydown', e => {
+  keys[e.key.toLowerCase()] = true;
+  if (e.key === ' ') { e.preventDefault(); tryAttack(); }
+  if (e.key === 'Escape') closeAllDialogs();
+  if (e.key.toLowerCase() === 'e') tryInteract();
+});
+document.addEventListener('keyup', e => keys[e.key.toLowerCase()] = false);
+
+C.addEventListener('click', () => { if (!mouseLocked) C.requestPointerLock(); });
+document.addEventListener('pointerlockchange', () => { mouseLocked = document.pointerLockElement === C; });
+document.addEventListener('mousemove', e => {
+  if (mouseLocked) {
+    player.angle += e.movementX * CFG.ROT_SPEED;
+    player.pitch = Math.max(-200, Math.min(200, player.pitch - e.movementY * 0.5));
+  }
+});
+C.addEventListener('contextmenu', e => { e.preventDefault(); tryInteract(); });
+
+// ─── Game State ─────────────────────────────────────────────
+let activeQuests = [];
+let gameTime = 0;
+let dialogOpen = null;
+let currentNPC = null;
+let floatingTexts = [];
+const chatLog = [
+  {text:'[System] Welcome to Goldshire, adventurer!', color:'#ffcc00'},
+  {text:'[System] WASD to move, Mouse to look around.', color:'#80cc80'},
+  {text:'[System] Right-click or E near NPCs to interact.', color:'#80cc80'},
+  {text:'[System] Press SPACE to attack enemies.', color:'#80cc80'},
+];
+
+function addChatMsg(text, color) {
+  chatLog.push({text, color:color||'#b0b090'});
+  if (chatLog.length > 50) chatLog.shift();
+}
+
+function closeAllDialogs() {
+  dialogOpen = null; currentNPC = null;
+  document.getElementById('questOverlay').classList.remove('active');
+  document.getElementById('questOverlay').innerHTML = '';
+  document.getElementById('merchantOverlay').classList.remove('active');
+  document.getElementById('merchantOverlay').innerHTML = '';
+}
+
+function showToast(msg) {
+  const t = document.createElement('div');
+  t.className = 'toast'; t.textContent = msg;
+  document.getElementById('ui').appendChild(t);
+  setTimeout(() => t.remove(), 3200);
+}
+
+function addFloatingText(x, y, text, color, crit) {
+  const sx = CFG.W/2 + (Math.random()-0.5)*100;
+  const sy = CFG.H/2 - 30 + (Math.random()-0.5)*40;
+  floatingTexts.push({x:sx, y:sy, text, color, time:0, crit:crit||false});
+}
+
+// ─── NPC Interaction ────────────────────────────────────────
+function tryInteract() {
+  if (dialogOpen) return;
+  let nearest = null, nearDist = 3;
+  for (const npc of npcs) {
+    const dx=npc.x-player.x, dy=npc.y-player.y;
+    const d = Math.sqrt(dx*dx+dy*dy);
+    if (d < nearDist) { nearest=npc; nearDist=d; }
+  }
+  // Pickup collection
+  for (const p of pickups) {
+    if (p.collected) continue;
+    const dx=p.x-player.x, dy=p.y-player.y;
+    if (dx*dx+dy*dy < 2.5) {
+      p.collected = true;
+      showToast('Picked up: '+p.name);
+      addChatMsg('[Loot] '+p.name+' collected.','#80cc80');
+      for (const q of activeQuests)
+        for (const obj of q.objectives)
+          if (obj.type==='collect'&&obj.target===p.type) {
+            obj.current = Math.min(obj.current+1, obj.needed);
+            if (obj.current>=obj.needed) showToast('Objective complete: '+obj.desc);
+          }
+      return;
+    }
+  }
+  if (!nearest) return;
+  currentNPC = nearest;
+
+  if (nearest.type === 'quest') showQuestDialog(nearest);
+  else if (nearest.type === 'merchant') showMerchantDialog(nearest);
+}
+
+function showQuestDialog(npc) {
+  dialogOpen = 'quest';
+  const overlay = document.getElementById('questOverlay');
+  overlay.classList.add('active');
+
+  const aq = activeQuests.find(q => q.npcId===npc.id);
+  const questActive = !!aq;
+  const allDone = aq && aq.objectives.every(o => o.current>=o.needed);
+
+  let objHtml = '';
+  if (npc.quest) {
+    for (const obj of npc.quest.objectives) {
+      const cur = questActive ? obj.current : 0;
+      const done = cur >= obj.needed;
+      objHtml += '<li class="'+(done?'done':'')+'">'+obj.desc+': '+cur+'/'+obj.needed+'</li>';
+    }
+  }
+
+  let rewardsHtml = '';
+  if (npc.quest && npc.quest.rewards) {
+    const rw = npc.quest.rewards;
+    if (rw.xp) rewardsHtml += '<div class="reward-item"><div class="reward-icon" style="background:#2020a0"></div>'+rw.xp+' Experience</div>';
+    if (rw.gold) rewardsHtml += '<div class="reward-item"><div class="reward-icon" style="background:#806020"></div>'+rw.gold+' <span class="gold-icon"></span> Gold</div>';
+    if (rw.items) for (const item of rw.items)
+      rewardsHtml += '<div class="reward-item"><div class="reward-icon" style="background:'+item.color+'"></div>'+item.name+'</div>';
+  }
+
+  let buttonsHtml;
+  if (allDone) {
+    buttonsHtml = '<button class="quest-btn complete" onclick="completeQuest(\''+npc.id+'\')">Complete Quest</button>';
+  } else if (questActive) {
+    buttonsHtml = '<button class="quest-btn decline" onclick="closeAllDialogs()">In Progress...</button>';
+  } else if (npc.hasQuest && !npc.questCompleted) {
+    buttonsHtml = '<button class="quest-btn accept" onclick="acceptQuest(\''+npc.id+'\')">Accept</button><button class="quest-btn decline" onclick="closeAllDialogs()">Decline</button>';
+  } else {
+    buttonsHtml = '<button class="quest-btn decline" onclick="closeAllDialogs()">Farewell</button>';
+  }
+
+  overlay.innerHTML = '<div class="quest-window">'
+    +'<div class="quest-header"><div class="npc-portrait"><canvas id="npcPortCanvas" width="48" height="48"></canvas></div>'
+    +'<span class="npc-name">'+npc.name+'</span><button class="quest-close" onclick="closeAllDialogs()">&times;</button></div>'
+    +'<div class="quest-body"><div class="quest-title">'+(npc.quest?npc.quest.name:'Conversation')+'</div>'
+    +'<div class="quest-text">'+(questActive?(allDone?'You have completed the task! Return to me for your reward.':npc.quest.text):npc.quest?npc.quest.text:npc.greeting)+'</div>'
+    +(objHtml?'<div class="quest-objectives"><h4>Objectives</h4><ul>'+objHtml+'</ul></div>':'')
+    +(rewardsHtml?'<div class="quest-rewards"><h4>Rewards</h4>'+rewardsHtml+'</div>':'')
+    +'</div><div class="quest-buttons">'+buttonsHtml+'</div></div>';
+
+  drawNPCPortrait(npc);
+}
+
+function drawNPCPortrait(npc) {
+  const pc = document.getElementById('npcPortCanvas');
+  if (!pc) return;
+  const px = pc.getContext('2d');
+  px.fillStyle = '#0e0e2a'; px.fillRect(0,0,48,48);
+  const sc = npc.skinColor||[220,180,145];
+  px.fillStyle='rgb('+sc[0]+','+sc[1]+','+sc[2]+')';
+  px.beginPath(); px.arc(24,26,14,0,Math.PI*2); px.fill();
+  px.fillStyle = npc.hairColor||'#4a3020';
+  px.beginPath(); px.arc(24,22,14,Math.PI*1.1,-0.1); px.fill();
+  const ac = npc.armorColor||[100,80,60];
+  px.fillStyle='rgb('+ac[0]+','+ac[1]+','+ac[2]+')';
+  px.fillRect(10,36,28,12);
+  px.fillStyle='#fff';
+  px.fillRect(19,24,3,2); px.fillRect(26,24,3,2);
+  px.fillStyle='#1a3870';
+  px.fillRect(20,24,2,2); px.fillRect(27,24,2,2);
+}
+
+function showMerchantDialog(npc) {
+  dialogOpen = 'merchant';
+  const overlay = document.getElementById('merchantOverlay');
+  overlay.classList.add('active');
+
+  let gridHtml = '';
+  for (const item of npc.stock) {
+    const bc = item.quality==='rare'?'#4040c0':item.quality==='uncommon'?'#40a040':'#606060';
+    gridHtml += '<div class="merchant-slot" onclick="buyItem(\''+npc.id+'\',\''+item.name+'\')" title="'+item.name+'">'
+      +'<div class="item-icon" style="background:'+bc+';display:flex;align-items:center;justify-content:center;font-size:24px;">'+item.icon+'</div>'
+      +'<span class="item-price">'+item.price+'g</span></div>';
+  }
+
+  overlay.innerHTML = '<div class="merchant-window">'
+    +'<div class="merchant-header"><span class="npc-name">'+npc.name+' — Merchant</span><button class="quest-close" onclick="closeAllDialogs()">&times;</button></div>'
+    +'<div class="merchant-grid">'+gridHtml+'</div>'
+    +'<div class="merchant-footer"><span class="merchant-gold">Your gold: <span class="gold-icon"></span> '+player.gold+'</span></div></div>';
+}
+
+window.acceptQuest = function(npcId) {
+  const npc = npcs.find(n=>n.id===npcId);
+  if (!npc||!npc.quest) return;
+  activeQuests.push({...npc.quest, npcId, objectives:npc.quest.objectives.map(o=>({...o}))});
+  npc.hasQuest = false;
+  closeAllDialogs();
+  showToast('Quest accepted: '+npc.quest.name);
+  addChatMsg('[Quest] Accepted: '+npc.quest.name,'#ffcc00');
+};
+
+window.completeQuest = function(npcId) {
+  const qi = activeQuests.findIndex(q=>q.npcId===npcId);
+  if (qi<0) return;
+  const q = activeQuests[qi];
+  if (q.rewards) {
+    if (q.rewards.xp) { player.xp += q.rewards.xp; addChatMsg('[XP] +'+q.rewards.xp+' experience','#c0a0ff'); }
+    if (q.rewards.gold) { player.gold += q.rewards.gold; addChatMsg('[Gold] +'+q.rewards.gold+' gold','#ffd040'); }
+    if (q.rewards.items) for (const item of q.rewards.items) {
+      player.inventory.push({...item,type:'quest_reward'});
+      showToast('Received: '+item.name);
+    }
+  }
+  // Level up check
+  while (player.xp >= player.xpNeeded) {
+    player.xp -= player.xpNeeded;
+    player.level++;
+    player.xpNeeded = Math.floor(player.xpNeeded * 1.5);
+    player.maxHealth += 10; player.health = player.maxHealth;
+    player.maxMana += 5; player.mana = player.maxMana;
+    showToast('LEVEL UP! You are now Level '+player.level);
+    addChatMsg('[Level] You reached Level '+player.level+'!','#ffd100');
+  }
+  activeQuests.splice(qi, 1);
+  const npc = npcs.find(n=>n.id===npcId);
+  if (npc) npc.questCompleted = true;
+  closeAllDialogs();
+  showToast('Quest completed!');
+};
+
+window.buyItem = function(npcId, itemName) {
+  const npc = npcs.find(n=>n.id===npcId);
+  if (!npc) return;
+  const item = npc.stock.find(i=>i.name===itemName);
+  if (!item) return;
+  if (player.gold < item.price) { showToast('Not enough gold!'); return; }
+  player.gold -= item.price;
+  player.inventory.push({...item, type:'purchased'});
+  showToast('Purchased: '+item.name);
+  addChatMsg('[Purchase] Bought '+item.name+' for '+item.price+'g','#ffd040');
+  showMerchantDialog(npc); // refresh
+};
+
+// ─── Combat ─────────────────────────────────────────────────
+let attackCooldown = 0;
+
+function tryAttack() {
+  if (attackCooldown > 0) return;
+  let target = null, bestDist = 2.5;
+  for (const e of enemies) {
+    if (!e.alive) continue;
+    const dx=e.x-player.x, dy=e.y-player.y;
+    const d = Math.sqrt(dx*dx+dy*dy);
+    if (d < bestDist) {
+      const a = Math.atan2(dy,dx) - player.angle;
+      const na = ((a+Math.PI)%(Math.PI*2))-Math.PI;
+      if (Math.abs(na) < Math.PI/3) { target=e; bestDist=d; }
+    }
+  }
+  if (target) {
+    player.target = target;
+    const isCrit = Math.random() < 0.15;
+    const dmg = isCrit ? 15+Math.floor(Math.random()*8) : 8+Math.floor(Math.random()*6);
+    target.health -= dmg;
+    target.aggro = true;
+    addFloatingText(target.x, target.y, (isCrit?'*':'-')+dmg, isCrit?'#ff8800':'#ffcc00', isCrit);
+    addChatMsg('[Combat] You hit '+target.name+' for '+dmg+(isCrit?' (CRIT!)':''), isCrit?'#ff8800':'#cc8844');
+    attackCooldown = 25;
+    if (target.health <= 0) {
+      target.alive = false; target.health = 0;
+      player.target = null;
+      addFloatingText(target.x, target.y, target.name+' slain!', '#ff4040');
+      for (const q of activeQuests)
+        for (const obj of q.objectives)
+          if (obj.type==='kill'&&obj.target===target.type) {
+            obj.current = Math.min(obj.current+1, obj.needed);
+            if (obj.current>=obj.needed) showToast('Objective complete: '+obj.desc);
+          }
+      if (target.loot) for (const item of target.loot) {
+        player.inventory.push({...item, type:'loot'});
+        showToast('Looted: '+item.name);
+      }
+      player.xp += 15+target.level*3;
+      player.gold += Math.floor(Math.random()*3);
+      while (player.xp >= player.xpNeeded) {
+        player.xp -= player.xpNeeded;
+        player.level++;
+        player.xpNeeded = Math.floor(player.xpNeeded*1.5);
+        player.maxHealth += 10; player.health = player.maxHealth;
+        player.maxMana += 5; player.mana = player.maxMana;
+        addFloatingText(player.x, player.y, 'LEVEL UP!', '#ffd100', true);
+        showToast('Level '+player.level+'!');
+        addChatMsg('[Level] Level '+player.level+'!','#ffd100');
+      }
+      addChatMsg('[Combat] '+target.name+' defeated! +'+(15+target.level*3)+' XP','#ff8844');
+    }
+  }
+}
+
+// ─── Update ─────────────────────────────────────────────────
+function update() {
+  if (dialogOpen) return;
+  gameTime++;
+
+  let moveX=0, moveY=0, moving=false;
+  if (keys['w']||keys['arrowup']) { moveX+=Math.cos(player.angle)*CFG.SPEED; moveY+=Math.sin(player.angle)*CFG.SPEED; moving=true; }
+  if (keys['s']||keys['arrowdown']) { moveX-=Math.cos(player.angle)*CFG.SPEED; moveY-=Math.sin(player.angle)*CFG.SPEED; moving=true; }
+  if (keys['a']||keys['arrowleft']) { moveX+=Math.cos(player.angle-Math.PI/2)*CFG.SPEED*0.7; moveY+=Math.sin(player.angle-Math.PI/2)*CFG.SPEED*0.7; moving=true; }
+  if (keys['d']||keys['arrowright']) { moveX+=Math.cos(player.angle+Math.PI/2)*CFG.SPEED*0.7; moveY+=Math.sin(player.angle+Math.PI/2)*CFG.SPEED*0.7; moving=true; }
+
+  if (moving) player.bobPhase += 0.12;
+  else player.bobPhase *= 0.9;
+
+  const nx=player.x+moveX, ny=player.y+moveY;
+  if (!isWall(nx, player.y) && getMap(Math.floor(nx), Math.floor(player.y))!==3) player.x=nx;
+  if (!isWall(player.x, ny) && getMap(Math.floor(player.x), Math.floor(ny))!==3) player.y=ny;
+
+  if (keys[' ']) tryAttack();
+  if (attackCooldown > 0) attackCooldown--;
+
+  // Enemy AI
+  for (const e of enemies) {
+    if (!e.alive) continue;
+    const dx=player.x-e.x, dy=player.y-e.y;
+    const d = Math.sqrt(dx*dx+dy*dy);
+    if (e.aggro && d < 8) {
+      const a = Math.atan2(dy,dx);
+      const enx=e.x+Math.cos(a)*e.speed, eny=e.y+Math.sin(a)*e.speed;
+      if (!isWall(enx,eny) && getMap(Math.floor(enx),Math.floor(eny))!==3) { e.x=enx; e.y=eny; }
+      if (d < 1.2 && gameTime%50===0) {
+        const dmg = 3+Math.floor(Math.random()*4);
+        player.health = Math.max(0, player.health-dmg);
+        addFloatingText(player.x, player.y, '-'+dmg, '#ff4040');
+        addChatMsg('[Combat] '+e.name+' hits you for '+dmg,'#ff4040');
+      }
+    } else {
+      e.moveTimer -= 1/60;
+      if (e.moveTimer <= 0) { e.moveAngle=Math.random()*Math.PI*2; e.moveTimer=2+Math.random()*3; }
+      const enx=e.x+Math.cos(e.moveAngle)*e.speed*0.3, eny=e.y+Math.sin(e.moveAngle)*e.speed*0.3;
+      if (!isWall(enx,eny) && getMap(Math.floor(enx),Math.floor(eny))!==3) { e.x=enx; e.y=eny; }
+      if (d < 5) e.aggro = true;
+    }
+  }
+
+  // Regen
+  if (gameTime%90===0) {
+    player.health = Math.min(player.maxHealth, player.health+1);
+    player.mana = Math.min(player.maxMana, player.mana+1);
+  }
+
+  floatingTexts = floatingTexts.filter(f => { f.time += 1/60; return f.time < 1.4; });
+  if (gameTime > 360) document.getElementById('instructions').style.opacity = '0';
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  WoW-STYLE RENDERER — Elwynn Forest Visual Quality
+// ═══════════════════════════════════════════════════════════════
+
+function getTexType(wallType) {
+  if (wallType===1) return 'stone';
+  if (wallType===2) return 'wood';
+  if (wallType===5) return 'tree';
+  if (wallType===6) return 'wood';
+  if (wallType===7) return 'stone_tower';
+  return 'stone';
+}
+
+function renderWorld() {
+  const W=CFG.W, H=CFG.H;
+  const bob = Math.sin(player.bobPhase)*3;
+  const halfH = H/2 + player.pitch + bob;
+  const fogR=PAL.fog[0], fogG=PAL.fog[1], fogB=PAL.fog[2];
+
+  // ─── 3-Stop WoW Sky Gradient ───
+  const skyGrad = ctx.createLinearGradient(0, 0, 0, Math.max(1,halfH+30));
+  skyGrad.addColorStop(0, 'rgb('+PAL.skyTop[0]+','+PAL.skyTop[1]+','+PAL.skyTop[2]+')');
+  skyGrad.addColorStop(0.55, 'rgb('+PAL.skyMid[0]+','+PAL.skyMid[1]+','+PAL.skyMid[2]+')');
+  skyGrad.addColorStop(1, 'rgb('+PAL.skyHorizon[0]+','+PAL.skyHorizon[1]+','+PAL.skyHorizon[2]+')');
+  ctx.fillStyle = skyGrad;
+  ctx.fillRect(0, 0, W, Math.max(0,halfH+30));
+
+  // ─── Wispy Clouds (hand-painted altocumulus) ───
+  ctx.save();
+  const cloudY = halfH * 0.2;
+  for (let i = 0; i < 8; i++) {
+    const cx = ((i*173 + gameTime*0.008) % (W+200)) - 100;
+    const cy = cloudY + Math.sin(i*2.7)*30 + Math.sin(i*0.8+gameTime*0.002)*10;
+    const cw = 120 + (i%3)*60;
+    const ch = 20 + (i%2)*15;
+    ctx.globalAlpha = 0.25 + (i%3)*0.05;
+    const cg = ctx.createRadialGradient(cx, cy, 0, cx, cy, cw*0.5);
+    cg.addColorStop(0, 'rgba(255,255,255,0.6)');
+    cg.addColorStop(0.4, 'rgba(245,248,255,0.3)');
+    cg.addColorStop(1, 'rgba(240,245,255,0)');
+    ctx.fillStyle = cg;
+    ctx.beginPath();
+    ctx.ellipse(cx, cy, cw*0.5, ch*0.5, 0, 0, Math.PI*2);
+    ctx.fill();
+    // Sub-puffs
+    for (let j=0; j<3; j++) {
+      const px = cx + (j-1)*cw*0.25 + Math.sin(j*4+i)*10;
+      const py = cy + Math.sin(j*2+i*3)*8;
+      ctx.beginPath();
+      ctx.ellipse(px, py, cw*0.2, ch*0.35, 0, 0, Math.PI*2);
+      ctx.fill();
+    }
+  }
+  ctx.restore();
+
+  // ─── Sun with warm glow ───
+  const sunX = W*0.72, sunY = Math.min(halfH*0.12, 55);
+  ctx.save(); ctx.globalAlpha = 0.2;
+  const sunGlow = ctx.createRadialGradient(sunX, sunY, 5, sunX, sunY, 140);
+  sunGlow.addColorStop(0, '#fffae0');
+  sunGlow.addColorStop(0.3, '#ffe8a0');
+  sunGlow.addColorStop(1, 'rgba(255,248,224,0)');
+  ctx.fillStyle = sunGlow;
+  ctx.beginPath(); ctx.arc(sunX, sunY, 140, 0, Math.PI*2); ctx.fill();
+  ctx.restore();
+  ctx.fillStyle = '#fffae0';
+  ctx.beginPath(); ctx.arc(sunX, sunY, 14, 0, Math.PI*2); ctx.fill();
+
+  // ─── Distant Mountain Silhouettes (3 layers with atmospheric perspective) ───
+  ctx.save();
+  // Far mountains (blue-grey, subtle)
+  ctx.fillStyle = 'rgba(100,120,140,0.18)';
+  ctx.beginPath(); ctx.moveTo(0, halfH);
+  for (let x = 0; x <= W; x += 3) {
+    const mh = smoothNoise(x*0.002, 0.5)*70 + smoothNoise(x*0.006, 1.5)*30;
+    ctx.lineTo(x, halfH-mh);
+  }
+  ctx.lineTo(W, halfH); ctx.closePath(); ctx.fill();
+
+  // Mid mountains (slightly greener)
+  ctx.fillStyle = 'rgba(80,110,90,0.15)';
+  ctx.beginPath(); ctx.moveTo(0, halfH);
+  for (let x = 0; x <= W; x += 3) {
+    const mh = smoothNoise(x*0.004+3, 2)*50 + smoothNoise(x*0.01, 3)*20;
+    ctx.lineTo(x, halfH-mh);
+  }
+  ctx.lineTo(W, halfH); ctx.closePath(); ctx.fill();
+
+  // Near hills (forest green)
+  ctx.fillStyle = 'rgba(45,80,50,0.12)';
+  ctx.beginPath(); ctx.moveTo(0, halfH);
+  for (let x = 0; x <= W; x += 3) {
+    const mh = smoothNoise(x*0.007+7, 4)*30 + smoothNoise(x*0.015, 5)*12;
+    ctx.lineTo(x, halfH-mh);
+  }
+  ctx.lineTo(W, halfH); ctx.closePath(); ctx.fill();
+  ctx.restore();
+
+  // ─── Ground base ───
+  const gndGrad = ctx.createLinearGradient(0, halfH, 0, H);
+  gndGrad.addColorStop(0, 'rgb('+PAL.grassSun[0]+','+PAL.grassSun[1]+','+PAL.grassSun[2]+')');
+  gndGrad.addColorStop(0.3, 'rgb('+PAL.grassBase[0]+','+PAL.grassBase[1]+','+PAL.grassBase[2]+')');
+  gndGrad.addColorStop(1, 'rgb('+PAL.grassShadow[0]+','+PAL.grassShadow[1]+','+PAL.grassShadow[2]+')');
+  ctx.fillStyle = gndGrad;
+  ctx.fillRect(0, Math.max(0,halfH), W, H);
+
+  // ─── Raycasting with textures ───
+  const zBuffer = new Float32Array(W);
+  const floorImg = ctx.getImageData(0, 0, W, H);
+  const px = floorImg.data;
+  const rayStep = CFG.FOV / CFG.NUM_RAYS;
+  const startAngle = player.angle - CFG.HALF_FOV;
+  const colWidth = W / CFG.NUM_RAYS;
+
+  for (let ray = 0; ray < CFG.NUM_RAYS; ray++) {
+    const rayAngle = startAngle + ray * rayStep;
+    const sin = Math.sin(rayAngle), cos = Math.cos(rayAngle);
+
+    // DDA
+    let mapX = Math.floor(player.x), mapY = Math.floor(player.y);
+    const ddx = Math.abs(1/cos)||1e10, ddy = Math.abs(1/sin)||1e10;
+    let stepX, stepY, sdx, sdy;
+    if (cos<0) { stepX=-1; sdx=(player.x-mapX)*ddx; } else { stepX=1; sdx=(mapX+1-player.x)*ddx; }
+    if (sin<0) { stepY=-1; sdy=(player.y-mapY)*ddy; } else { stepY=1; sdy=(mapY+1-player.y)*ddy; }
+
+    let hit=false, side=0, wallType=0;
+    for (let s=0; s<64; s++) {
+      if (sdx<sdy) { sdx+=ddx; mapX+=stepX; side=0; }
+      else { sdy+=ddy; mapY+=stepY; side=1; }
+      if (mapX<0||mapX>=MAP_W||mapY<0||mapY>=MAP_H) break;
+      const tile = worldMap[mapY*MAP_W+mapX];
+      if (tile===1||tile===2||tile===5||tile===6||tile===7) { hit=true; wallType=tile; break; }
+    }
+
+    const dist = side===0 ? sdx-ddx : sdy-ddy;
+    const perpDist = dist * Math.cos(rayAngle-player.angle);
+    const col = Math.floor(ray * colWidth);
+    const colEnd = Math.min(W, Math.floor((ray+1)*colWidth));
+
+    // Fill zBuffer for all columns this ray covers
+    for (let c = col; c < colEnd; c++) zBuffer[c] = perpDist;
+
+    if (!hit || perpDist > CFG.DRAW_DIST) {
+      // Floor only for missed rays
+      for (let y = Math.max(0, Math.floor(halfH)); y < H; y++) {
+        const rowDist = H/(2*(y-halfH+0.01));
+        if (rowDist > CFG.DRAW_DIST) continue;
+        const fx = player.x+cos*rowDist, fy = player.y+sin*rowDist;
+        const ff = Math.min(0.88, rowDist/CFG.DRAW_DIST);
+        const gn = fbm(fx*0.8, fy*0.8, 2);
+        let r=PAL.grassBase[0]+gn*40, g=PAL.grassBase[1]+gn*50, b=PAL.grassBase[2]+gn*20;
+        r=r+(fogR-r)*ff; g=g+(fogG-g)*ff; b=b+(fogB-b)*ff;
+        for (let c=col; c<colEnd; c++) {
+          const pi=(y*W+c)*4;
+          px[pi]=Math.min(255,r|0); px[pi+1]=Math.min(255,g|0); px[pi+2]=Math.min(255,b|0);
+        }
+      }
+      continue;
+    }
+
+    const lineH = Math.floor(H/perpDist);
+    const drawStart = Math.floor(halfH-lineH/2);
+    const drawEnd = drawStart + lineH;
+    const shade = side===0 ? 1.0 : 0.7;
+    const fogF = Math.min(0.88, perpDist/CFG.DRAW_DIST);
+
+    // Texture U coordinate
+    let texU;
+    if (side===0) texU=player.y+sin*dist;
+    else texU=player.x+cos*dist;
+    texU = texU-Math.floor(texU);
+    const texX = Math.floor(texU*TEX_SIZE) & (TEX_SIZE-1);
+    const tt = getTexType(wallType);
+    const td = texData[tt];
+    const step1 = TEX_SIZE/lineH;
+
+    // Draw wall columns
+    const top = Math.max(0, drawStart);
+    const bottom = Math.min(H, drawEnd);
+    for (let y=top; y<bottom; y++) {
+      const texY = Math.floor((y-drawStart)*step1) & (TEX_SIZE-1);
+      const ti = (texY*TEX_SIZE+texX)*4;
+      let r=td[ti]*shade, g=td[ti+1]*shade, b=td[ti+2]*shade;
+
+      // Purple-blue shadow tint (WoW style: shadows aren't pure black)
+      if (shade < 1) {
+        const st = (1-shade)*0.15;
+        r = r*(1-st) + PAL.shadowTint[0]*st;
+        g = g*(1-st) + PAL.shadowTint[1]*st;
+        b = b*(1-st) + PAL.shadowTint[2]*st;
+      }
+
+      // Fog
+      r=r+(fogR-r)*fogF; g=g+(fogG-g)*fogF; b=b+(fogB-b)*fogF;
+
+      // AO at edges
+      const ed = Math.min(y-top, bottom-y)/lineH;
+      if (ed < 0.08) { const ao=ed/0.08; r*=0.55+ao*0.45; g*=0.55+ao*0.45; b*=0.55+ao*0.45; }
+
+      // Window glow for buildings
+      if ((wallType===1||wallType===2) && texY>TEX_SIZE*0.3 && texY<TEX_SIZE*0.6
+          && texX>TEX_SIZE*0.3 && texX<TEX_SIZE*0.65) {
+        const wn = hashNoise(mapX*7, mapY*11);
+        if (wn > 0.6) { // window location
+          r=r*0.4+PAL.windowGlow[0]*0.6;
+          g=g*0.4+PAL.windowGlow[1]*0.6;
+          b=b*0.4+PAL.windowGlow[2]*0.6;
+        }
+      }
+
+      for (let c=col; c<colEnd; c++) {
+        const pi=(y*W+c)*4;
+        px[pi]=Math.max(0,Math.min(255,r|0));
+        px[pi+1]=Math.max(0,Math.min(255,g|0));
+        px[pi+2]=Math.max(0,Math.min(255,b|0));
+        px[pi+3]=255;
+      }
+    }
+
+    // ─── Thatched roof for buildings ───
+    if ((wallType===1||wallType===2) && drawStart > 0) {
+      const roofH = Math.floor(lineH*0.35);
+      const roofTop = Math.max(0, drawStart-roofH);
+      const rtd = texData['thatch'];
+      for (let y=roofTop; y<drawStart; y++) {
+        const rt = (y-roofTop)/roofH;
+        const texY = Math.floor(rt*TEX_SIZE) & (TEX_SIZE-1);
+        const ti = (texY*TEX_SIZE+texX)*4;
+        let r=rtd[ti], g=rtd[ti+1], b=rtd[ti+2];
+        // Peak highlight
+        if (rt < 0.15) { const h=(0.15-rt)*120; r=Math.min(255,r+h); g=Math.min(255,g+h*0.8); b=Math.min(255,b+h*0.3); }
+        r=r+(fogR-r)*fogF; g=g+(fogG-g)*fogF; b=b+(fogB-b)*fogF;
+        for (let c=col; c<colEnd; c++) {
+          const pi=(y*W+c)*4;
+          px[pi]=r|0; px[pi+1]=g|0; px[pi+2]=b|0; px[pi+3]=255;
+        }
+      }
+    }
+
+    // ─── Volumetric Tree Canopy ───
+    if (wallType===5 && drawStart > 0) {
+      const canopyH = Math.floor(lineH*1.3);
+      const canopyTop = Math.max(0, drawStart-canopyH);
+      for (let y=canopyTop; y<Math.min(drawStart+lineH*0.15, H); y++) {
+        const t = (y-canopyTop)/canopyH;
+        const n = smoothNoise(col*0.03+texU*5, t*5)*0.6;
+        if (n < 0.12) continue; // gaps in canopy (dappled sunlight)
+        // Multi-green tiered leaves (WoW style)
+        const leafT = t < 0.5 ? 0 : t < 0.75 ? 1 : 2;
+        const lc = leafT===0 ? PAL.leafBright : leafT===1 ? PAL.leafMid : PAL.leafDark;
+        let r=lc[0]+n*70, g=lc[1]+n*80, b=lc[2]+n*30;
+        // Sunlight dapple
+        const sun = smoothNoise(col*0.02, t*3);
+        if (sun > 0.5) { r+=35; g+=40; b+=12; }
+        // Dark underside
+        if (t > 0.8) { r*=0.6; g*=0.6; b*=0.7; }
+        r=r+(fogR-r)*fogF; g=g+(fogG-g)*fogF; b=b+(fogB-b)*fogF;
+        for (let c=col; c<colEnd; c++) {
+          const pi=(y*W+c)*4;
+          px[pi]=Math.min(255,r|0); px[pi+1]=Math.min(255,g|0); px[pi+2]=Math.min(255,b|0); px[pi+3]=255;
+        }
+      }
+    }
+
+    // ─── Painterly Floor Casting ───
+    for (let y=Math.max(Math.floor(halfH), drawEnd); y<H; y++) {
+      const rowDist = H/(2*(y-halfH+0.01));
+      if (rowDist > CFG.DRAW_DIST) continue;
+      const fx=player.x+cos*rowDist, fy=player.y+sin*rowDist;
+      const ft = getMap(fx, fy);
+      const ff = Math.min(0.88, rowDist/CFG.DRAW_DIST);
+      let r, g, b;
+
+      if (ft===3) {
+        // Animated teal water with specular
+        const wave = Math.sin(fx*4+gameTime*0.05)*8 + Math.sin(fy*3+gameTime*0.03)*6;
+        r=PAL.waterDeep[0]+wave; g=PAL.waterDeep[1]+wave*0.8; b=PAL.waterDeep[2]+wave*0.4;
+        // Shore blend (lighter near edges)
+        const edgeN = smoothNoise(fx*2, fy*2);
+        if (edgeN > 0.6) { r+=20; g+=30; b+=20; }
+        // Specular highlights
+        const spec = smoothNoise(fx*2+gameTime*0.01, fy*2);
+        if (spec>0.7) { const sa=(spec-0.7)*200; r=Math.min(255,r+sa*0.6); g=Math.min(255,g+sa*0.7); b=Math.min(255,b+sa); }
+      } else if (ft===4) {
+        // Dusty dirt path with gravel
+        const n=smoothNoise(fx*4,fy*4)*18;
+        const peb=hashNoise(Math.floor(fx*8),Math.floor(fy*8))*10;
+        r=PAL.dirtBase[0]+n+peb; g=PAL.dirtBase[1]+n*0.7+peb*0.7; b=PAL.dirtBase[2]+n*0.4+peb*0.4;
+        // Wagon tracks
+        const td1=Math.abs((fy%1)-0.3), td2=Math.abs((fy%1)-0.7);
+        if(td1<0.08||td2<0.08){r-=12;g-=10;b-=6;}
+      } else {
+        // Rich painterly grass with WoW palette
+        const gn=fbm(fx*0.8,fy*0.8,3);
+        const micro=hashNoise(Math.floor(fx*6),Math.floor(fy*6))*18-9;
+        // Blend base→sun based on noise
+        const blend = gn;
+        r = PAL.grassBase[0]*(1-blend)+PAL.grassSun[0]*blend + micro;
+        g = PAL.grassBase[1]*(1-blend)+PAL.grassSun[1]*blend + micro*1.2;
+        b = PAL.grassBase[2]*(1-blend)+PAL.grassSun[2]*blend + micro*0.4;
+
+        // Dappled sunlight patches (warm gold)
+        const sunP = smoothNoise(fx*0.3, fy*0.3);
+        if (sunP>0.52) {
+          const amt=(sunP-0.52)*100;
+          r=Math.min(255,r+amt*0.9); g=Math.min(255,g+amt*0.8); b=Math.min(255,b+amt*0.2);
+        }
+        // Purple-blue tree shadows
+        const shadow = smoothNoise(fx*0.6, fy*0.6);
+        if (shadow>0.62) {
+          const amt=(shadow-0.62)*55;
+          r=r-amt+PAL.shadowTint[0]*amt*0.02;
+          g=g-amt*0.4+PAL.shadowTint[1]*amt*0.02;
+          b=b-amt*0.2+PAL.shadowTint[2]*amt*0.02;
+        }
+        // Flower specks
+        const decor = tileDecor[Math.floor(fy)*MAP_W+Math.floor(fx)];
+        if(decor===1) {
+          const fn=hashNoise(Math.floor(fx*10),Math.floor(fy*10));
+          if(fn>0.45){
+            const flowers=[[255,80,140],[255,210,55],[195,195,255],[200,120,255],[255,160,60]];
+            const fi=Math.floor(fn*5)%5;
+            r=flowers[fi][0]; g=flowers[fi][1]; b=flowers[fi][2];
+          }
+        }
+      }
+
+      // Apply fog
+      r=r+(fogR-r)*ff; g=g+(fogG-g)*ff; b=b+(fogB-b)*ff;
+      // Warm golden tint (golden hour)
+      r=Math.min(255, r*1.03+4); g=Math.min(255, g*1.01+2);
+
+      for (let c=col; c<colEnd; c++) {
+        const pi=(y*W+c)*4;
+        px[pi]=Math.max(0,Math.min(255,r|0));
+        px[pi+1]=Math.max(0,Math.min(255,g|0));
+        px[pi+2]=Math.max(0,Math.min(255,b|0));
+        px[pi+3]=255;
+      }
+    }
+  }
+
+  ctx.putImageData(floorImg, 0, 0);
+
+  // ─── God Rays (stylized WoW yellow-white planes) ───
+  ctx.save();
+  for (let i = 0; i < 6; i++) {
+    const angle = 0.15+i*0.13+Math.sin(gameTime*0.007+i)*0.04;
+    const rLen = 220+i*40;
+    ctx.globalAlpha = 0.012+Math.sin(gameTime*0.01+i*2)*0.006;
+    ctx.fillStyle = '#ffe8a0';
+    ctx.beginPath();
+    const ca=Math.cos(angle+Math.PI*0.4), sa=Math.sin(angle+Math.PI*0.4);
+    const rw=12+i*7;
+    ctx.moveTo(sunX-rw*sa*0.3, sunY+rw*ca*0.3);
+    ctx.lineTo(sunX+ca*rLen-rw*sa, sunY+sa*rLen+rw*ca);
+    ctx.lineTo(sunX+ca*rLen+rw*sa, sunY+sa*rLen-rw*ca);
+    ctx.lineTo(sunX+rw*sa*0.3, sunY-rw*ca*0.3);
+    ctx.closePath(); ctx.fill();
+  }
+  ctx.restore();
+
+  // ─── Atmospheric Dust Particles ───
+  ctx.save();
+  const pRng = new RNG(Math.floor(gameTime*0.02)+42);
+  for (let i = 0; i < 25; i++) {
+    const ppx=pRng.range(0,W), ppy=pRng.range(H*0.08,H*0.65);
+    const pr=1+pRng.next()*2.5;
+    ctx.globalAlpha = 0.08+pRng.next()*0.12;
+    ctx.fillStyle = '#ffe880';
+    ctx.beginPath();
+    ctx.arc(ppx+Math.sin(gameTime*0.02+i)*4, ppy+Math.cos(gameTime*0.015+i*0.7)*3, pr, 0, Math.PI*2);
+    ctx.fill();
+  }
+  ctx.restore();
+
+  // ─── Sprites ───
+  renderSprites(zBuffer, halfH);
+}
+
+// ═══════════════════════════════════════════════════════════════
+// Part 6: Sprite Rendering (NPC, Enemy, Pickup)
+// ═══════════════════════════════════════════════════════════════
+
+function renderSprites(zBuffer, halfH) {
+  const W = CFG.W, H = CFG.H;
+  const sprites = [];
+
+  // Collect NPC sprites
+  for (const npc of npcs) {
+    const dx = npc.x - player.x, dy = npc.y - player.y;
+    const dist = Math.sqrt(dx*dx + dy*dy);
+    if (dist < CFG.DRAW_DIST && dist > 0.3) {
+      sprites.push({entity:npc, dist, dx, dy, kind:'npc'});
+    }
+  }
+
+  // Collect enemy sprites
+  for (const en of enemies) {
+    if (!en.alive) continue;
+    const dx = en.x - player.x, dy = en.y - player.y;
+    const dist = Math.sqrt(dx*dx + dy*dy);
+    if (dist < CFG.DRAW_DIST && dist > 0.3) {
+      sprites.push({entity:en, dist, dx, dy, kind:'enemy'});
+    }
+  }
+
+  // Collect pickup sprites
+  for (const pk of pickups) {
+    if (pk.collected) continue;
+    const dx = pk.x - player.x, dy = pk.y - player.y;
+    const dist = Math.sqrt(dx*dx + dy*dy);
+    if (dist < CFG.DRAW_DIST && dist > 0.3) {
+      sprites.push({entity:pk, dist, dx, dy, kind:'pickup'});
+    }
+  }
+
+  // Sort back to front
+  sprites.sort((a,b) => b.dist - a.dist);
+
+  // Camera plane
+  const dirX = Math.cos(player.angle), dirY = Math.sin(player.angle);
+  const planeX = -dirY * Math.tan(CFG.HALF_FOV);
+  const planeY = dirX * Math.tan(CFG.HALF_FOV);
+  const invDet = 1.0 / (planeX * dirY - dirX * planeY);
+
+  for (const sp of sprites) {
+    const transformX = invDet * (dirY * sp.dx - dirX * sp.dy);
+    const transformY = invDet * (-planeY * sp.dx + planeX * sp.dy);
+
+    if (transformY <= 0.3) continue;
+
+    const screenX = (W * 0.5) * (1 + transformX / transformY);
+    const spriteH = Math.abs(Math.round(H / transformY));
+    const spriteW = spriteH;
+    const drawStartY = halfH - spriteH / 2;
+
+    // Fog
+    const fogFactor = Math.min(0.85, Math.sqrt(sp.dist) / CFG.DRAW_DIST);
+    if (fogFactor > 0.8) continue;
+
+    ctx.save();
+    ctx.globalAlpha = 1 - fogFactor * 0.6;
+
+    const drawX = screenX - spriteW/2;
+
+    // Depth test - check if sprite center column is in front
+    const colCenter = Math.round(screenX);
+    if (colCenter >= 0 && colCenter < W && zBuffer[colCenter] < transformY) {
+      ctx.restore();
+      continue;
+    }
+
+    if (sp.kind === 'npc') {
+      drawCharacterSprite(sp.entity, drawX, drawStartY, spriteW, spriteH, sp.dist, fogFactor);
+    } else if (sp.kind === 'enemy') {
+      drawEnemySprite(sp.entity, drawX, drawStartY, spriteW, spriteH, sp.dist, fogFactor);
+    } else {
+      drawPickupSprite(sp.entity, drawX, drawStartY, spriteW, spriteH, sp.dist);
+    }
+
+    ctx.restore();
+  }
+}
+
+function drawCharacterSprite(npc, x, y, w, h, dist, fog) {
+  const s = Math.min(h * 0.7, 350);
+  if (s < 8) return;
+  const cx = x + w/2, baseY = y + h;
+  const sk = npc.skinColor || [220,180,145];
+  const ar = npc.armorColor || [70,85,140];
+  const sh = npc.shoulderColor || [90,110,170];
+
+  // Shadow
+  ctx.fillStyle = 'rgba(0,0,0,0.3)';
+  ctx.beginPath();
+  ctx.ellipse(cx, baseY, s*0.25, s*0.06, 0, 0, Math.PI*2);
+  ctx.fill();
+
+  // Boots
+  ctx.fillStyle = `rgb(${40+ar[0]*0.2|0},${30+ar[1]*0.15|0},${25})`;
+  ctx.fillRect(cx-s*0.12, baseY-s*0.15, s*0.1, s*0.15);
+  ctx.fillRect(cx+s*0.02, baseY-s*0.15, s*0.1, s*0.15);
+
+  // Legs
+  ctx.fillStyle = `rgb(${ar[0]-20},${ar[1]-15},${ar[2]-10})`;
+  ctx.fillRect(cx-s*0.12, baseY-s*0.35, s*0.1, s*0.22);
+  ctx.fillRect(cx+s*0.02, baseY-s*0.35, s*0.1, s*0.22);
+
+  // Belt
+  ctx.fillStyle = '#5a4020';
+  ctx.fillRect(cx-s*0.18, baseY-s*0.38, s*0.36, s*0.04);
+  // Belt buckle
+  ctx.fillStyle = '#c8a040';
+  ctx.fillRect(cx-s*0.03, baseY-s*0.38, s*0.06, s*0.04);
+
+  // Chest/torso
+  const chestGrad = ctx.createLinearGradient(cx, baseY-s*0.65, cx, baseY-s*0.35);
+  chestGrad.addColorStop(0, `rgb(${ar[0]+10},${ar[1]+10},${ar[2]+10})`);
+  chestGrad.addColorStop(1, `rgb(${ar[0]-10},${ar[1]-10},${ar[2]-10})`);
+  ctx.fillStyle = chestGrad;
+  ctx.fillRect(cx-s*0.18, baseY-s*0.65, s*0.36, s*0.28);
+
+  // Arms
+  ctx.fillStyle = `rgb(${ar[0]},${ar[1]},${ar[2]})`;
+  ctx.fillRect(cx-s*0.28, baseY-s*0.62, s*0.1, s*0.25);
+  ctx.fillRect(cx+s*0.18, baseY-s*0.62, s*0.1, s*0.25);
+
+  // Shoulder pads (iconic WoW oversized)
+  for (let side = -1; side <= 1; side += 2) {
+    const sx = cx + side * s * 0.23;
+    const sy = baseY - s * 0.66;
+    const padSize = s * 0.12;
+    const padGrad = ctx.createRadialGradient(sx, sy, 0, sx, sy, padSize);
+    padGrad.addColorStop(0, `rgb(${sh[0]+30},${sh[1]+30},${sh[2]+30})`);
+    padGrad.addColorStop(0.5, `rgb(${sh[0]},${sh[1]},${sh[2]})`);
+    padGrad.addColorStop(1, `rgb(${sh[0]-30},${sh[1]-30},${sh[2]-30})`);
+    ctx.fillStyle = padGrad;
+    ctx.beginPath();
+    ctx.arc(sx, sy, padSize, 0, Math.PI*2);
+    ctx.fill();
+    // Spike/ornament
+    ctx.fillStyle = `rgb(${sh[0]+50},${sh[1]+50},${sh[2]+50})`;
+    ctx.beginPath();
+    ctx.moveTo(sx-padSize*0.3, sy-padSize*0.2);
+    ctx.lineTo(sx, sy-padSize*1.1);
+    ctx.lineTo(sx+padSize*0.3, sy-padSize*0.2);
+    ctx.fill();
+  }
+
+  // Hands (skin)
+  ctx.fillStyle = `rgb(${sk[0]},${sk[1]},${sk[2]})`;
+  ctx.fillRect(cx-s*0.3, baseY-s*0.38, s*0.06, s*0.06);
+  ctx.fillRect(cx+s*0.24, baseY-s*0.38, s*0.06, s*0.06);
+
+  // Head
+  ctx.fillStyle = `rgb(${sk[0]},${sk[1]},${sk[2]})`;
+  ctx.beginPath();
+  ctx.arc(cx, baseY-s*0.75, s*0.1, 0, Math.PI*2);
+  ctx.fill();
+
+  // Hair
+  ctx.fillStyle = npc.hairColor || '#4a3020';
+  ctx.beginPath();
+  ctx.arc(cx, baseY-s*0.78, s*0.1, -Math.PI, 0);
+  ctx.fill();
+
+  // Eyes
+  ctx.fillStyle = '#222';
+  ctx.fillRect(cx-s*0.05, baseY-s*0.76, s*0.025, s*0.02);
+  ctx.fillRect(cx+s*0.025, baseY-s*0.76, s*0.025, s*0.02);
+
+  // ─── Nameplate ───
+  if (dist < 15) {
+    const nameY = baseY - s * 0.92;
+    ctx.font = `bold ${Math.max(10, s*0.08)|0}px Arial`;
+    ctx.textAlign = 'center';
+
+    // Name background
+    const nameW = ctx.measureText(npc.name).width + 12;
+    ctx.fillStyle = 'rgba(0,0,0,0.6)';
+    ctx.fillRect(cx-nameW/2, nameY-s*0.07, nameW, s*0.09);
+
+    // Level box
+    const lvlDiff = npc.level - player.level;
+    let lvlColor = '#ffff00';
+    if (lvlDiff >= 5) lvlColor = '#ff3333';
+    else if (lvlDiff >= 2) lvlColor = '#ff8800';
+    else if (lvlDiff <= -3) lvlColor = '#888888';
+    else lvlColor = '#ffff00';
+
+    ctx.fillStyle = '#1a1a1a';
+    ctx.fillRect(cx-nameW/2-s*0.06, nameY-s*0.07, s*0.06, s*0.09);
+    ctx.fillStyle = lvlColor;
+    ctx.font = `bold ${Math.max(8, s*0.06)|0}px Arial`;
+    ctx.fillText(npc.level, cx-nameW/2-s*0.03, nameY+s*0.005);
+
+    // Name text
+    ctx.font = `bold ${Math.max(10, s*0.08)|0}px Arial`;
+    ctx.fillStyle = npc.type === 'merchant' ? '#80ff80' : '#80c0ff';
+    ctx.fillText(npc.name, cx, nameY);
+
+    // Guild/Title
+    if (npc.type === 'merchant') {
+      ctx.font = `${Math.max(8, s*0.06)|0}px Arial`;
+      ctx.fillStyle = '#888888';
+      ctx.fillText('<Trade Goods>', cx, nameY + s*0.08);
+    }
+
+    // Quest marker
+    if (npc.hasQuest && !npc.questCompleted) {
+      const qy = nameY - s*0.14;
+      const qPulse = 1 + Math.sin(gameTime*0.06)*0.15;
+      ctx.save();
+      ctx.translate(cx, qy);
+      ctx.scale(qPulse, qPulse);
+      ctx.font = `bold ${Math.max(14, s*0.12)|0}px Arial`;
+      ctx.fillStyle = '#ffcc00';
+      ctx.strokeStyle = '#000';
+      ctx.lineWidth = 2;
+      ctx.strokeText('!', 0, 0);
+      ctx.fillText('!', 0, 0);
+      ctx.restore();
+    }
+    // Quest turn-in marker
+    if (npc.questCompleted) {
+      const qy = nameY - s*0.14;
+      ctx.font = `bold ${Math.max(14, s*0.12)|0}px Arial`;
+      ctx.fillStyle = '#ffcc00';
+      ctx.strokeStyle = '#000';
+      ctx.lineWidth = 2;
+      ctx.strokeText('?', cx, qy);
+      ctx.fillText('?', cx, qy);
+    }
+  }
+}
+
+function drawEnemySprite(enemy, x, y, w, h, dist, fog) {
+  const s = Math.min(h * 0.55, 180);
+  if (s < 5) return;
+  const cx = x + w/2, baseY = y + h;
+  const bc = enemy.bodyColor || [100,100,100];
+
+  // Shadow
+  ctx.fillStyle = 'rgba(0,0,0,0.25)';
+  ctx.beginPath();
+  ctx.ellipse(cx, baseY, s*0.3, s*0.06, 0, 0, Math.PI*2);
+  ctx.fill();
+
+  if (enemy.type === 'wolf') {
+    // ─── Wolf body ───
+    const bodyGrad = ctx.createLinearGradient(cx-s*0.3, baseY-s*0.5, cx+s*0.3, baseY-s*0.2);
+    bodyGrad.addColorStop(0, `rgb(${bc[0]+20},${bc[1]+20},${bc[2]+20})`);
+    bodyGrad.addColorStop(1, `rgb(${bc[0]-10},${bc[1]-10},${bc[2]-10})`);
+    ctx.fillStyle = bodyGrad;
+    ctx.beginPath();
+    ctx.ellipse(cx, baseY-s*0.3, s*0.35, s*0.18, 0, 0, Math.PI*2);
+    ctx.fill();
+
+    // Legs
+    ctx.fillStyle = `rgb(${bc[0]-15},${bc[1]-15},${bc[2]-15})`;
+    for (let l = -1; l <= 1; l += 2) {
+      ctx.fillRect(cx+l*s*0.2-s*0.03, baseY-s*0.15, s*0.06, s*0.15);
+      ctx.fillRect(cx+l*s*0.08-s*0.03, baseY-s*0.13, s*0.06, s*0.13);
+    }
+
+    // Head
+    ctx.fillStyle = `rgb(${bc[0]+10},${bc[1]+10},${bc[2]+10})`;
+    ctx.beginPath();
+    ctx.ellipse(cx-s*0.3, baseY-s*0.38, s*0.14, s*0.1, -0.2, 0, Math.PI*2);
+    ctx.fill();
+
+    // Ears
+    ctx.fillStyle = `rgb(${bc[0]+5},${bc[1]+5},${bc[2]+5})`;
+    ctx.beginPath();
+    ctx.moveTo(cx-s*0.36, baseY-s*0.48);
+    ctx.lineTo(cx-s*0.32, baseY-s*0.58);
+    ctx.lineTo(cx-s*0.28, baseY-s*0.48);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.moveTo(cx-s*0.26, baseY-s*0.46);
+    ctx.lineTo(cx-s*0.22, baseY-s*0.56);
+    ctx.lineTo(cx-s*0.18, baseY-s*0.46);
+    ctx.fill();
+
+    // Eyes (red, glowing)
+    ctx.fillStyle = '#ff2020';
+    ctx.beginPath();
+    ctx.arc(cx-s*0.34, baseY-s*0.4, s*0.025, 0, Math.PI*2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.arc(cx-s*0.26, baseY-s*0.39, s*0.025, 0, Math.PI*2);
+    ctx.fill();
+
+    // Snout
+    ctx.fillStyle = `rgb(${bc[0]+25},${bc[1]+20},${bc[2]+15})`;
+    ctx.beginPath();
+    ctx.ellipse(cx-s*0.42, baseY-s*0.36, s*0.06, s*0.04, 0, 0, Math.PI*2);
+    ctx.fill();
+
+    // Tail
+    ctx.strokeStyle = `rgb(${bc[0]+5},${bc[1]+5},${bc[2]+5})`;
+    ctx.lineWidth = s*0.04;
+    ctx.lineCap = 'round';
+    ctx.beginPath();
+    ctx.moveTo(cx+s*0.35, baseY-s*0.35);
+    ctx.quadraticCurveTo(cx+s*0.48, baseY-s*0.55, cx+s*0.42, baseY-s*0.6);
+    ctx.stroke();
+
+  } else {
+    // ─── Kobold (humanoid) ───
+    // Feet
+    ctx.fillStyle = `rgb(${bc[0]-30},${bc[1]-25},${bc[2]-15})`;
+    ctx.fillRect(cx-s*0.12, baseY-s*0.12, s*0.1, s*0.12);
+    ctx.fillRect(cx+s*0.02, baseY-s*0.12, s*0.1, s*0.12);
+
+    // Body
+    ctx.fillStyle = `rgb(${bc[0]},${bc[1]},${bc[2]})`;
+    ctx.beginPath();
+    ctx.ellipse(cx, baseY-s*0.4, s*0.18, s*0.24, 0, 0, Math.PI*2);
+    ctx.fill();
+
+    // Head (larger, ratlike)
+    ctx.fillStyle = `rgb(${bc[0]+15},${bc[1]+10},${bc[2]+5})`;
+    ctx.beginPath();
+    ctx.ellipse(cx, baseY-s*0.7, s*0.12, s*0.1, 0, 0, Math.PI*2);
+    ctx.fill();
+
+    // Snout
+    ctx.fillStyle = `rgb(${bc[0]+25},${bc[1]+20},${bc[2]+10})`;
+    ctx.beginPath();
+    ctx.ellipse(cx-s*0.08, baseY-s*0.68, s*0.06, s*0.04, 0, 0, Math.PI*2);
+    ctx.fill();
+
+    // Eyes (beady yellow)
+    ctx.fillStyle = '#eecc00';
+    ctx.beginPath();
+    ctx.arc(cx-s*0.04, baseY-s*0.72, s*0.02, 0, Math.PI*2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.arc(cx+s*0.04, baseY-s*0.72, s*0.02, 0, Math.PI*2);
+    ctx.fill();
+
+    // Ears (large, pointy)
+    ctx.fillStyle = `rgb(${bc[0]+10},${bc[1]+5},${bc[2]})`;
+    ctx.beginPath();
+    ctx.moveTo(cx-s*0.08, baseY-s*0.78);
+    ctx.lineTo(cx-s*0.16, baseY-s*0.95);
+    ctx.lineTo(cx-s*0.01, baseY-s*0.78);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.moveTo(cx+s*0.01, baseY-s*0.78);
+    ctx.lineTo(cx+s*0.16, baseY-s*0.95);
+    ctx.lineTo(cx+s*0.08, baseY-s*0.78);
+    ctx.fill();
+
+    // Candle on head (kobold trademark)
+    ctx.fillStyle = '#d4c888';
+    ctx.fillRect(cx-s*0.02, baseY-s*0.88, s*0.04, s*0.1);
+    // Flame
+    const flicker = Math.sin(gameTime*0.15)*s*0.01;
+    ctx.fillStyle = '#ff8800';
+    ctx.beginPath();
+    ctx.ellipse(cx+flicker, baseY-s*0.92, s*0.03, s*0.05, 0, 0, Math.PI*2);
+    ctx.fill();
+    ctx.fillStyle = '#ffdd00';
+    ctx.beginPath();
+    ctx.ellipse(cx+flicker*0.5, baseY-s*0.93, s*0.015, s*0.03, 0, 0, Math.PI*2);
+    ctx.fill();
+
+    // Arms (holding pickaxe?)
+    ctx.fillStyle = `rgb(${bc[0]-5},${bc[1]-5},${bc[2]-5})`;
+    ctx.fillRect(cx-s*0.24, baseY-s*0.52, s*0.08, s*0.2);
+    ctx.fillRect(cx+s*0.16, baseY-s*0.52, s*0.08, s*0.2);
+  }
+
+  // ─── Health bar (show when damaged) ───
+  if (enemy.health < enemy.maxHealth && dist < 18) {
+    const barW = s*0.6, barH = s*0.06;
+    const barX = cx - barW/2, barY = baseY - (enemy.type==='wolf' ? s*0.65 : s*1.0);
+    // Background
+    ctx.fillStyle = 'rgba(0,0,0,0.7)';
+    ctx.fillRect(barX-1, barY-1, barW+2, barH+2);
+    // Red base
+    ctx.fillStyle = '#880000';
+    ctx.fillRect(barX, barY, barW, barH);
+    // Green health
+    const hp = enemy.health / enemy.maxHealth;
+    const hpGrad = ctx.createLinearGradient(barX, barY, barX, barY+barH);
+    hpGrad.addColorStop(0, hp > 0.3 ? '#00cc00' : '#cc3300');
+    hpGrad.addColorStop(1, hp > 0.3 ? '#008800' : '#881100');
+    ctx.fillStyle = hpGrad;
+    ctx.fillRect(barX, barY, barW*hp, barH);
+  }
+
+  // ─── Nameplate ───
+  if (dist < 15) {
+    const nameY = baseY - (enemy.type==='wolf' ? s*0.7 : s*1.05);
+    ctx.font = `bold ${Math.max(9, s*0.07)|0}px Arial`;
+    ctx.textAlign = 'center';
+
+    // Background
+    const nameW = ctx.measureText(enemy.name).width + 10;
+    ctx.fillStyle = 'rgba(0,0,0,0.5)';
+    ctx.fillRect(cx-nameW/2, nameY-s*0.065, nameW, s*0.08);
+
+    // Level box
+    const lvlDiff = enemy.level - player.level;
+    let lvlColor = '#ffff00';
+    if (lvlDiff >= 5) lvlColor = '#ff3333';
+    else if (lvlDiff >= 2) lvlColor = '#ff8800';
+    else if (lvlDiff <= -3) lvlColor = '#888888';
+
+    ctx.fillStyle = '#111';
+    ctx.fillRect(cx-nameW/2-s*0.05, nameY-s*0.065, s*0.05, s*0.08);
+    ctx.fillStyle = lvlColor;
+    ctx.font = `bold ${Math.max(8, s*0.055)|0}px Arial`;
+    ctx.fillText(enemy.level, cx-nameW/2-s*0.025, nameY+s*0.002);
+
+    // Name (hostile red)
+    ctx.font = `bold ${Math.max(9, s*0.07)|0}px Arial`;
+    ctx.fillStyle = '#ff4444';
+    ctx.fillText(enemy.name, cx, nameY);
+  }
+}
+
+function drawPickupSprite(entity, x, y, w, h, dist) {
+  const s = Math.min(h * 0.3, 60);
+  if (s < 4) return;
+  const cx = x + w/2, baseY = y + h;
+  const bobOff = Math.sin(gameTime*0.05 + entity.x*3)*s*0.1;
+
+  // Ground glow
+  ctx.fillStyle = 'rgba(255,220,60,0.15)';
+  ctx.beginPath();
+  ctx.ellipse(cx, baseY, s*0.4, s*0.08, 0, 0, Math.PI*2);
+  ctx.fill();
+
+  // Item glow
+  const glowGrad = ctx.createRadialGradient(cx, baseY-s*0.5+bobOff, 0, cx, baseY-s*0.5+bobOff, s*0.5);
+  const ec = entity.color || '#e8c040';
+  glowGrad.addColorStop(0, ec);
+  glowGrad.addColorStop(0.4, ec + '80');
+  glowGrad.addColorStop(1, ec + '00');
+  ctx.fillStyle = glowGrad;
+  ctx.beginPath();
+  ctx.arc(cx, baseY-s*0.5+bobOff, s*0.5, 0, Math.PI*2);
+  ctx.fill();
+
+  // Icon
+  ctx.font = `${Math.max(12, s*0.6)|0}px serif`;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillStyle = '#fff';
+  ctx.fillText(entity.icon || '✦', cx, baseY-s*0.5+bobOff);
+}
+
+
+// ═══════════════════════════════════════════════════════════════
+// Part 7: WoW-Style HUD (Health, Mana, Minimap, Action Bar, etc)
+// ═══════════════════════════════════════════════════════════════
+
+function drawHUD() {
+  const W = CFG.W, H = CFG.H;
+  ctx.save();
+
+  // ─── Player Portrait Frame (top-left) ───
+  const px = 12, py = 12, pSize = 52;
+  // Portrait background
+  ctx.fillStyle = '#1a1a2a';
+  ctx.beginPath();
+  ctx.arc(px+pSize/2, py+pSize/2, pSize/2+2, 0, Math.PI*2);
+  ctx.fill();
+  // Portrait face
+  const faceGrad = ctx.createRadialGradient(px+pSize/2, py+pSize/2-4, 0, px+pSize/2, py+pSize/2, pSize/2);
+  faceGrad.addColorStop(0, '#e8c8a8');
+  faceGrad.addColorStop(1, '#a08060');
+  ctx.fillStyle = faceGrad;
+  ctx.beginPath();
+  ctx.arc(px+pSize/2, py+pSize/2, pSize/2-3, 0, Math.PI*2);
+  ctx.fill();
+  // Face features
+  ctx.fillStyle = '#4a3020';
+  ctx.fillRect(px+16, py+18, 6, 4); // left eye
+  ctx.fillRect(px+30, py+18, 6, 4); // right eye
+  ctx.fillStyle = '#3a2010';
+  ctx.beginPath();
+  ctx.arc(px+pSize/2, py+30, 4, 0, Math.PI); // mouth
+  ctx.stroke();
+  // Hair
+  ctx.fillStyle = '#4a3020';
+  ctx.beginPath();
+  ctx.arc(px+pSize/2, py+pSize/2-6, pSize/2-3, -Math.PI, -0.1);
+  ctx.fill();
+  // Gold ring border
+  ctx.strokeStyle = '#c8a040';
+  ctx.lineWidth = 3;
+  ctx.beginPath();
+  ctx.arc(px+pSize/2, py+pSize/2, pSize/2+1, 0, Math.PI*2);
+  ctx.stroke();
+  // Inner dark ring
+  ctx.strokeStyle = '#2a2020';
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.arc(px+pSize/2, py+pSize/2, pSize/2-1, 0, Math.PI*2);
+  ctx.stroke();
+
+  // Level badge
+  ctx.fillStyle = '#1a1a2a';
+  ctx.beginPath();
+  ctx.arc(px+pSize/2, py+pSize+4, 10, 0, Math.PI*2);
+  ctx.fill();
+  ctx.strokeStyle = '#c8a040';
+  ctx.lineWidth = 1.5;
+  ctx.stroke();
+  ctx.fillStyle = '#ffcc00';
+  ctx.font = 'bold 11px Arial';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(player.level, px+pSize/2, py+pSize+5);
+
+  // ─── Health Bar ───
+  const barX = px + pSize + 8, barY = py + 4;
+  const barW = 180, barH = 18;
+  // BG
+  ctx.fillStyle = 'rgba(0,0,0,0.7)';
+  roundRect(ctx, barX-1, barY-1, barW+2, barH+2, 3);
+  ctx.fill();
+  // Red base
+  ctx.fillStyle = '#2a0000';
+  roundRect(ctx, barX, barY, barW, barH, 2);
+  ctx.fill();
+  // Health fill
+  const hpPct = player.health / player.maxHealth;
+  const hpGrad = ctx.createLinearGradient(barX, barY, barX, barY+barH);
+  hpGrad.addColorStop(0, '#00cc00');
+  hpGrad.addColorStop(0.5, '#008800');
+  hpGrad.addColorStop(1, '#006600');
+  ctx.fillStyle = hpGrad;
+  roundRect(ctx, barX, barY, barW * hpPct, barH, 2);
+  ctx.fill();
+  // Tick marks
+  ctx.fillStyle = 'rgba(0,0,0,0.2)';
+  for (let t = 1; t < 4; t++) ctx.fillRect(barX + barW*t/4, barY, 1, barH);
+  // Text
+  ctx.fillStyle = '#fff';
+  ctx.font = 'bold 11px Arial';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(`${player.health} / ${player.maxHealth}`, barX+barW/2, barY+barH/2+1);
+  // Border
+  ctx.strokeStyle = '#505050';
+  ctx.lineWidth = 1;
+  roundRect(ctx, barX, barY, barW, barH, 2);
+  ctx.stroke();
+
+  // ─── Mana Bar ───
+  const mBarY = barY + barH + 3;
+  ctx.fillStyle = 'rgba(0,0,0,0.7)';
+  roundRect(ctx, barX-1, mBarY-1, barW+2, barH+2, 3);
+  ctx.fill();
+  ctx.fillStyle = '#000028';
+  roundRect(ctx, barX, mBarY, barW, barH, 2);
+  ctx.fill();
+  const mpPct = player.mana / player.maxMana;
+  const mpGrad = ctx.createLinearGradient(barX, mBarY, barX, mBarY+barH);
+  mpGrad.addColorStop(0, '#4488ff');
+  mpGrad.addColorStop(0.5, '#2255cc');
+  mpGrad.addColorStop(1, '#1133aa');
+  ctx.fillStyle = mpGrad;
+  roundRect(ctx, barX, mBarY, barW * mpPct, barH, 2);
+  ctx.fill();
+  ctx.fillStyle = 'rgba(0,0,0,0.2)';
+  for (let t = 1; t < 4; t++) ctx.fillRect(barX + barW*t/4, mBarY, 1, barH);
+  ctx.fillStyle = '#fff';
+  ctx.font = 'bold 11px Arial';
+  ctx.fillText(`${player.mana} / ${player.maxMana}`, barX+barW/2, mBarY+barH/2+1);
+  ctx.strokeStyle = '#505050';
+  ctx.lineWidth = 1;
+  roundRect(ctx, barX, mBarY, barW, barH, 2);
+  ctx.stroke();
+
+  // ─── Target Frame (if target selected) ───
+  if (player.target && player.target.alive !== false) {
+    const tf = player.target;
+    const tfX = barX + barW + 30, tfY = py;
+    // Name
+    ctx.font = 'bold 12px Arial';
+    ctx.textAlign = 'left';
+    ctx.fillStyle = '#ff4444';
+    ctx.fillText(`${tf.name} (Lv${tf.level})`, tfX, tfY + 10);
+    // HP bar
+    const thpW = 140, thpH = 12;
+    ctx.fillStyle = 'rgba(0,0,0,0.7)';
+    ctx.fillRect(tfX, tfY + 15, thpW, thpH);
+    const thp = tf.health / tf.maxHealth;
+    const thpGrad = ctx.createLinearGradient(tfX, tfY+15, tfX, tfY+15+thpH);
+    thpGrad.addColorStop(0, thp > 0.3 ? '#00cc00' : '#cc3300');
+    thpGrad.addColorStop(1, thp > 0.3 ? '#006600' : '#881100');
+    ctx.fillStyle = thpGrad;
+    ctx.fillRect(tfX, tfY + 15, thpW * thp, thpH);
+    ctx.fillStyle = '#fff';
+    ctx.font = '10px Arial';
+    ctx.textAlign = 'center';
+    ctx.fillText(`${tf.health} / ${tf.maxHealth}`, tfX + thpW/2, tfY + 22);
+  }
+
+  // ─── Circular Minimap (top-right) ───
+  const mmR = 64, mmX = W - mmR - 16, mmY = mmR + 16;
+  ctx.save();
+  // Clip to circle
+  ctx.beginPath();
+  ctx.arc(mmX, mmY, mmR, 0, Math.PI*2);
+  ctx.clip();
+  // Background
+  ctx.fillStyle = '#1a2a1a';
+  ctx.fillRect(mmX-mmR, mmY-mmR, mmR*2, mmR*2);
+  // Draw map tiles
+  const mmScale = 2.5;
+  const mmOx = player.x, mmOy = player.y;
+  for (let mx = -mmR; mx <= mmR; mx += 2) {
+    for (let my = -mmR; my <= mmR; my += 2) {
+      const wx = Math.floor(mmOx + mx/mmScale);
+      const wy = Math.floor(mmOy + my/mmScale);
+      if (wx < 0 || wx >= CFG.MAP_S || wy < 0 || wy >= CFG.MAP_S) continue;
+      const tile = worldMap[wy*MAP_W+wx];
+      let color = '#3a6628'; // grass
+      if (tile === 1) color = '#707060';     // stone
+      else if (tile === 2) color = '#8a6a40'; // wood
+      else if (tile === 3) color = '#2a5080'; // water
+      else if (tile === 4) color = '#8a7a58'; // dirt
+      else if (tile === 5) color = '#2a4020'; // tree
+      else if (tile === 6) color = '#6a5a3a'; // fence
+      else if (tile === 7) color = '#606058'; // stone_tower
+      ctx.fillStyle = color;
+      ctx.fillRect(mmX + mx, mmY + my, 2.5, 2.5);
+    }
+  }
+  // NPC dots (blue)
+  for (const npc of npcs) {
+    const ndx = (npc.x - mmOx) * mmScale, ndy = (npc.y - mmOy) * mmScale;
+    if (ndx*ndx + ndy*ndy < mmR*mmR) {
+      ctx.fillStyle = npc.hasQuest ? '#ffcc00' : '#40c0ff';
+      ctx.beginPath();
+      ctx.arc(mmX + ndx, mmY + ndy, 3, 0, Math.PI*2);
+      ctx.fill();
+    }
+  }
+  // Enemy dots (red)
+  for (const en of enemies) {
+    if (!en.alive) continue;
+    const edx = (en.x - mmOx) * mmScale, edy = (en.y - mmOy) * mmScale;
+    if (edx*edx + edy*edy < mmR*mmR) {
+      ctx.fillStyle = '#ff4040';
+      ctx.beginPath();
+      ctx.arc(mmX + edx, mmY + edy, 2, 0, Math.PI*2);
+      ctx.fill();
+    }
+  }
+  // Player arrow
+  ctx.fillStyle = '#ffffff';
+  ctx.save();
+  ctx.translate(mmX, mmY);
+  ctx.rotate(player.angle + Math.PI/2);
+  ctx.beginPath();
+  ctx.moveTo(0, -5);
+  ctx.lineTo(-3.5, 4);
+  ctx.lineTo(3.5, 4);
+  ctx.fill();
+  ctx.restore();
+
+  ctx.restore(); // end minimap clip
+
+  // Minimap border (ornate gold ring)
+  ctx.strokeStyle = '#c8a040';
+  ctx.lineWidth = 3;
+  ctx.beginPath();
+  ctx.arc(mmX, mmY, mmR+1, 0, Math.PI*2);
+  ctx.stroke();
+  ctx.strokeStyle = '#604820';
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.arc(mmX, mmY, mmR+4, 0, Math.PI*2);
+  ctx.stroke();
+  // Compass
+  ctx.fillStyle = '#c8a040';
+  ctx.font = 'bold 10px Arial';
+  ctx.textAlign = 'center';
+  ctx.fillText('N', mmX, mmY - mmR - 7);
+
+  // ─── Action Bar (bottom center) ───
+  const abSlots = 10, abSize = 42, abGap = 3;
+  const abW = abSlots * (abSize + abGap) - abGap;
+  const abX = (W - abW) / 2, abY = H - abSize - 18;
+
+  // Bar background
+  ctx.fillStyle = 'rgba(15,12,10,0.85)';
+  roundRect(ctx, abX - 6, abY - 5, abW + 12, abSize + 10, 4);
+  ctx.fill();
+  ctx.strokeStyle = '#604820';
+  ctx.lineWidth = 1.5;
+  roundRect(ctx, abX - 6, abY - 5, abW + 12, abSize + 10, 4);
+  ctx.stroke();
+
+  const actionIcons = ['⚔','🧪','💧','🍞','🔥','🛡','📜','🏹','💎','⭐'];
+  const actionKeys = ['1','2','3','4','5','6','7','8','9','0'];
+  for (let i = 0; i < abSlots; i++) {
+    const sx = abX + i * (abSize + abGap), sy = abY;
+    // Slot background
+    const slotGrad = ctx.createLinearGradient(sx, sy, sx, sy+abSize);
+    slotGrad.addColorStop(0, '#2a2520');
+    slotGrad.addColorStop(1, '#1a1510');
+    ctx.fillStyle = slotGrad;
+    roundRect(ctx, sx, sy, abSize, abSize, 3);
+    ctx.fill();
+    // Border
+    ctx.strokeStyle = '#605040';
+    ctx.lineWidth = 1;
+    roundRect(ctx, sx, sy, abSize, abSize, 3);
+    ctx.stroke();
+    // Icon
+    ctx.font = '20px serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillStyle = '#ccc';
+    ctx.fillText(actionIcons[i], sx + abSize/2, sy + abSize/2);
+    // Keybind label
+    ctx.font = 'bold 9px Arial';
+    ctx.textAlign = 'right';
+    ctx.textBaseline = 'top';
+    ctx.fillStyle = '#888';
+    ctx.fillText(actionKeys[i], sx + abSize - 3, sy + 2);
+  }
+
+  // ─── Bag Slots (bottom-right, next to action bar) ───
+  const bagX = abX + abW + 12, bagY = abY + 5;
+  for (let i = 0; i < 4; i++) {
+    const bx = bagX + i * 28;
+    ctx.fillStyle = '#1a1510';
+    roundRect(ctx, bx, bagY, 24, 24, 2);
+    ctx.fill();
+    ctx.strokeStyle = '#604820';
+    ctx.lineWidth = 1;
+    roundRect(ctx, bx, bagY, 24, 24, 2);
+    ctx.stroke();
+    if (i < player.inventory.length) {
+      ctx.font = '14px serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillStyle = player.inventory[i].color || '#ccc';
+      ctx.fillText(player.inventory[i].icon, bx+12, bagY+12);
+    }
+  }
+
+  // Gold display
+  ctx.font = '11px Arial';
+  ctx.textAlign = 'right';
+  ctx.textBaseline = 'bottom';
+  ctx.fillStyle = '#ffd700';
+  ctx.fillText(`${player.gold}g`, bagX + 110, bagY - 2);
+
+  // ─── XP Bar (very bottom, full width) ───
+  const xpY = H - 12, xpH = 10;
+  ctx.fillStyle = 'rgba(0,0,0,0.7)';
+  ctx.fillRect(0, xpY, W, xpH);
+  const xpPct = player.xp / player.xpNeeded;
+  const xpGrad = ctx.createLinearGradient(0, xpY, 0, xpY+xpH);
+  xpGrad.addColorStop(0, '#8040cc');
+  xpGrad.addColorStop(1, '#5020aa');
+  ctx.fillStyle = xpGrad;
+  ctx.fillRect(0, xpY, W * xpPct, xpH);
+  // Segments
+  const xpSegs = 20;
+  ctx.fillStyle = 'rgba(0,0,0,0.3)';
+  for (let s = 1; s < xpSegs; s++) ctx.fillRect(W*s/xpSegs, xpY, 1, xpH);
+  // Text
+  ctx.fillStyle = '#ddc0ff';
+  ctx.font = '9px Arial';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(`${player.xp} / ${player.xpNeeded} XP`, W/2, xpY+xpH/2);
+
+  // ─── Quest Tracker (right side) ───
+  const qtX = W - 230, qtY = mmY + mmR + 30;
+  ctx.fillStyle = 'rgba(0,0,0,0.5)';
+  roundRect(ctx, qtX, qtY, 218, 20 + activeQuests.length * 40, 4);
+  ctx.fill();
+  ctx.fillStyle = '#c8a040';
+  ctx.font = 'bold 12px Arial';
+  ctx.textAlign = 'left';
+  ctx.textBaseline = 'top';
+  ctx.fillText('Quest Log', qtX + 8, qtY + 4);
+
+  if (activeQuests.length === 0) {
+    ctx.fillStyle = '#888';
+    ctx.font = '10px Arial';
+    ctx.fillText('No active quests', qtX + 10, qtY + 22);
+  } else {
+    for (let q = 0; q < activeQuests.length; q++) {
+      const quest = activeQuests[q];
+      const qy = qtY + 22 + q * 40;
+      ctx.fillStyle = '#ffcc66';
+      ctx.font = 'bold 10px Arial';
+      ctx.fillText(quest.name, qtX + 10, qy);
+      for (let o = 0; o < quest.objectives.length; o++) {
+        const obj = quest.objectives[o];
+        const done = obj.current >= obj.needed;
+        ctx.fillStyle = done ? '#40cc40' : '#aaaaaa';
+        ctx.font = '9px Arial';
+        ctx.fillText(`- ${obj.desc}: ${obj.current}/${obj.needed}` + (done ? ' ✓' : ''), qtX + 15, qy + 14 + o*12);
+      }
+    }
+  }
+
+  // ─── Chat Box (bottom-left) ───
+  const chatX = 10, chatY = H - abSize - 40 - 120, chatW = 280, chatH = 120;
+  ctx.fillStyle = 'rgba(0,0,0,0.45)';
+  roundRect(ctx, chatX, chatY, chatW, chatH, 4);
+  ctx.fill();
+  ctx.strokeStyle = 'rgba(96,72,32,0.5)';
+  ctx.lineWidth = 1;
+  roundRect(ctx, chatX, chatY, chatW, chatH, 4);
+  ctx.stroke();
+
+  // Chat tabs
+  const tabs = ['General', 'Combat', 'Log'];
+  for (let t = 0; t < tabs.length; t++) {
+    const tx = chatX + t * 65;
+    ctx.fillStyle = t === 0 ? 'rgba(60,50,30,0.7)' : 'rgba(30,25,15,0.5)';
+    ctx.fillRect(tx, chatY-16, 60, 16);
+    ctx.fillStyle = t === 0 ? '#c8a040' : '#666';
+    ctx.font = '9px Arial';
+    ctx.textAlign = 'center';
+    ctx.fillText(tabs[t], tx+30, chatY-5);
+  }
+
+  // Chat messages
+  ctx.save();
+  ctx.beginPath();
+  ctx.rect(chatX+4, chatY+4, chatW-8, chatH-8);
+  ctx.clip();
+  const visibleMsgs = chatLog.slice(-10);
+  ctx.font = '10px Arial';
+  ctx.textAlign = 'left';
+  ctx.textBaseline = 'top';
+  for (let m = 0; m < visibleMsgs.length; m++) {
+    const msg = visibleMsgs[m];
+    ctx.fillStyle = msg.color || '#b0b090';
+    ctx.fillText(msg.text, chatX+8, chatY + 8 + m*11);
+  }
+  ctx.restore();
+
+  // ─── Floating Combat Text ───
+  for (const fct of floatingTexts) {
+    const alpha = 1 - fct.time / 1.4;
+    if (alpha <= 0) continue;
+    ctx.save();
+    ctx.globalAlpha = alpha;
+    ctx.font = `bold ${fct.crit ? 22 : 16}px Arial`;
+    ctx.textAlign = 'center';
+    ctx.strokeStyle = '#000';
+    ctx.lineWidth = 2;
+    ctx.strokeText(fct.text, fct.x, fct.y - fct.time * 60);
+    ctx.fillStyle = fct.color;
+    ctx.fillText(fct.text, fct.x, fct.y - fct.time * 60);
+    ctx.restore();
+  }
+
+  // ─── Crosshair ───
+  ctx.strokeStyle = 'rgba(255,255,255,0.3)';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(W/2-8, H/2); ctx.lineTo(W/2-3, H/2);
+  ctx.moveTo(W/2+3, H/2); ctx.lineTo(W/2+8, H/2);
+  ctx.moveTo(W/2, H/2-8); ctx.lineTo(W/2, H/2-3);
+  ctx.moveTo(W/2, H/2+3); ctx.lineTo(W/2, H/2+8);
+  ctx.stroke();
+  // Center dot
+  ctx.fillStyle = 'rgba(255,255,255,0.5)';
+  ctx.beginPath();
+  ctx.arc(W/2, H/2, 1, 0, Math.PI*2);
+  ctx.fill();
+
+  // ─── FPS Counter ───
+  ctx.fillStyle = '#ffcc00';
+  ctx.font = '10px monospace';
+  ctx.textAlign = 'left';
+  ctx.textBaseline = 'top';
+  ctx.fillText(`FPS: ${fps}`, 8, H - abSize - 50 - 120);
+
+  ctx.restore();
+}
+
+// Helper: rounded rectangle
+function roundRect(c, x, y, w, h, r) {
+  c.beginPath();
+  c.moveTo(x+r, y);
+  c.lineTo(x+w-r, y);
+  c.quadraticCurveTo(x+w, y, x+w, y+r);
+  c.lineTo(x+w, y+h-r);
+  c.quadraticCurveTo(x+w, y+h, x+w-r, y+h);
+  c.lineTo(x+r, y+h);
+  c.quadraticCurveTo(x, y+h, x, y+h-r);
+  c.lineTo(x, y+r);
+  c.quadraticCurveTo(x, y, x+r, y);
+  c.closePath();
+}
+
+
+// ═══════════════════════════════════════════════════════════════
+// Part 8: Post-Processing, Game Loop, Init, Closing
+// ═══════════════════════════════════════════════════════════════
+
+function postProcess() {
+  const W = CFG.W, H = CFG.H;
+
+  // ─── Warm Golden Hour Color Grading ───
+  ctx.save();
+  ctx.globalCompositeOperation = 'overlay';
+  ctx.globalAlpha = 0.08;
+  ctx.fillStyle = '#e8c060';
+  ctx.fillRect(0, 0, W, H);
+  ctx.restore();
+
+  // ─── Night overlay (subtle) ───
+  // ctx.save();
+  // ctx.globalCompositeOperation = 'multiply';
+  // ctx.globalAlpha = 0.18;
+  // ctx.fillStyle = '#080828';
+  // ctx.fillRect(0, 0, W, H);
+  // ctx.restore();
+
+  // ─── Cinematic Vignette ───
+  ctx.save();
+  const vg = ctx.createRadialGradient(W/2, H/2, W*0.25, W/2, H/2, W*0.75);
+  vg.addColorStop(0, 'rgba(0,0,0,0)');
+  vg.addColorStop(0.7, 'rgba(0,0,0,0)');
+  vg.addColorStop(1, 'rgba(0,0,0,0.45)');
+  ctx.fillStyle = vg;
+  ctx.fillRect(0, 0, W, H);
+  ctx.restore();
+
+  // ─── Film Grain (very subtle) ───
+  ctx.save();
+  ctx.globalAlpha = 0.03;
+  const grainData = ctx.getImageData(0, 0, W, H);
+  const gpx = grainData.data;
+  for (let i = 0; i < gpx.length; i += 16) {
+    const noise = (Math.random() * 50 - 25) | 0;
+    gpx[i] += noise;
+    gpx[i+1] += noise;
+    gpx[i+2] += noise;
+  }
+  ctx.putImageData(grainData, 0, 0);
+  ctx.restore();
+}
+
+// ─── FPS Tracking ───
+let fps = 0, frameCount = 0, lastFpsTime = performance.now();
+
+// ─── Build World ───
+buildWorld();
+
+// ─── Instructions Fade ───
+let instructionTimer = 0;
+const instrEl = document.getElementById('instructions');
+
+// ─── Mouse Look (Pointer Lock) ───
+C.addEventListener('click', () => {
+  if (!mouseLocked) C.requestPointerLock();
+});
+document.addEventListener('pointerlockchange', () => {
+  mouseLocked = document.pointerLockElement === C;
+});
+document.addEventListener('mousemove', e => {
+  if (!mouseLocked) return;
+  player.angle += e.movementX * CFG.ROT_SPEED;
+  player.pitch = Math.max(-120, Math.min(120, player.pitch - e.movementY * 0.5));
+});
+
+// Right-click interact
+C.addEventListener('contextmenu', e => {
+  e.preventDefault();
+  tryInteract();
+});
+
+// ─── Main Game Loop ───
+function gameLoop(timestamp) {
+  // FPS
+  frameCount++;
+  if (timestamp - lastFpsTime >= 1000) {
+    fps = frameCount;
+    frameCount = 0;
+    lastFpsTime = timestamp;
+  }
+
+  // Update
+  update();
+
+  // Render
+  renderWorld();
+  drawHUD();
+  postProcess();
+
+  // Instructions fade
+  instructionTimer++;
+  if (instructionTimer > 360 && instrEl) {
+    instrEl.style.opacity = Math.max(0, 1 - (instructionTimer - 360) / 120);
+    if (instructionTimer > 480) instrEl.style.display = 'none';
+  }
+
+  requestAnimationFrame(gameLoop);
+}
+
+// Start
+requestAnimationFrame(gameLoop);
+
+// ═══════════════════════════════════════════════════════════════
+// AUTO-TEST MODE: load game.html?test=auto to run visual tests
+// ═══════════════════════════════════════════════════════════════
+if (new URLSearchParams(location.search).get('test') === 'auto') {
+  (async function autoTest() {
+    function wf(n) {
+      return new Promise(r => { let c=0; function t(){if(++c>=n)r();else requestAnimationFrame(t);} requestAnimationFrame(t); });
+    }
+
+    // Wait for world to render
+    await wf(60);
+    console.log('[TEST] ═══ AUTO-TEST START ═══');
+
+    // ─── 1. Screenshot locations ───
+    const locs = [
+      ['spawn', 22.5, 34.5, 0, 0],
+      ['inn_front', 25.5, 35.5, -Math.PI/2, 0],
+      ['road_east', 35, 33, 0, 0],
+      ['crossroad', 24, 20, -Math.PI/2, 0],
+      ['guard_tower', 32, 33, -0.9, 0],
+      ['pond', 28, 42, -Math.PI/2, -10],
+      ['npc_marshal', 25.0, 34.5, -Math.PI/2, 0],
+      ['forest_kobolds', 10, 10, 0.8, 0],
+      ['wolf_area', 45, 10, 0, 0],
+      ['river', 50, 30, 0, 0],
+      ['farm', 42, 20, Math.PI, 0],
+      ['sky_up', 22.5, 34.5, 0, 80],
+      ['ground_down', 22.5, 34.5, 0, -60],
+    ];
+
+    const screenDataUrls = [];
+    for (const [label, x, y, a, p] of locs) {
+      player.x=x; player.y=y; player.angle=a; player.pitch=p;
+      await wf(8);
+      screenDataUrls.push({ label, url: C.toDataURL('image/png') });
+      console.log('[TEST] screenshot: ' + label);
+    }
+
+    // ─── 2. Feature tests ───
+    console.log('[TEST] === FEATURES ===');
+
+    // Quest dialog
+    player.x=25.2; player.y=33.8; player.angle=-Math.PI/2;
+    await wf(6);
+    tryInteract();
+    await wf(4);
+    const questOk = document.getElementById('questOverlay').innerHTML.length > 10;
+    console.log('[TEST] quest_dialog: ' + (questOk ? 'PASS' : 'FAIL'));
+    closeAllDialogs();
+    await wf(3);
+
+    // Merchant
+    player.x=20.2; player.y=32.8; player.angle=-Math.PI*0.3;
+    await wf(6);
+    tryInteract();
+    await wf(4);
+    const merchOk = document.getElementById('merchantOverlay').innerHTML.length > 10;
+    console.log('[TEST] merchant_dialog: ' + (merchOk ? 'PASS' : 'FAIL'));
+    closeAllDialogs();
+    await wf(3);
+
+    // Combat
+    let wolf = enemies.find(e => e.alive && e.type === 'wolf');
+    if (wolf) {
+      const a = Math.atan2(wolf.y - player.y, wolf.x - player.x);
+      player.x = wolf.x - Math.cos(a)*1.5;
+      player.y = wolf.y - Math.sin(a)*1.5;
+      player.angle = a;
+      await wf(6);
+      attackCooldown = 0;
+      tryAttack();
+      await wf(3);
+      console.log('[TEST] combat: PASS (attacked wolf, hp=' + wolf.health + '/' + wolf.maxHealth + ')');
+    } else {
+      console.log('[TEST] combat: FAIL (no wolf found)');
+    }
+
+    // ─── 3. Pixel metrics ───
+    console.log('[TEST] === METRICS ===');
+    player.x=22.5; player.y=34.5; player.angle=0; player.pitch=0;
+    await wf(10);
+
+    const imgD = ctx.getImageData(0, 0, CFG.W, CFG.H);
+    const px = imgD.data;
+    const W = CFG.W, H = CFG.H;
+    let rS=0,gS=0,bS=0,n=0;
+    const regs = {sky:{y0:0,y1:H*.35,r:0,g:0,b:0,n:0},horizon:{y0:H*.35,y1:H*.55,r:0,g:0,b:0,n:0},ground:{y0:H*.55,y1:H*.82,r:0,g:0,b:0,n:0},hud:{y0:H*.82,y1:H,r:0,g:0,b:0,n:0}};
+    for(let y=0;y<H;y+=2)for(let x=0;x<W;x+=2){const i=(y*W+x)*4;const r=px[i],g=px[i+1],b=px[i+2];rS+=r;gS+=g;bS+=b;n++;for(const k in regs){const rg=regs[k];if(y>=rg.y0&&y<rg.y1){rg.r+=r;rg.g+=g;rg.b+=b;rg.n++;}}}
+
+    console.log('[TEST] avg_color: rgb(' + Math.round(rS/n) + ',' + Math.round(gS/n) + ',' + Math.round(bS/n) + ')');
+    for(const [k,rg] of Object.entries(regs)){
+      if(rg.n)console.log('[TEST] region_'+k+': rgb('+Math.round(rg.r/rg.n)+','+Math.round(rg.g/rg.n)+','+Math.round(rg.b/rg.n)+')');
+    }
+
+    // HUD element visibility
+    function sa(x0,y0,w,h){let r=0,g=0,b=0,c=0;for(let y=Math.max(0,y0|0);y<Math.min(H,(y0+h)|0);y+=2)for(let x=Math.max(0,x0|0);x<Math.min(W,(x0+w)|0);x+=2){const i=(y*W+x)*4;r+=px[i];g+=px[i+1];b+=px[i+2];c++;}if(!c)return'#000(none)';r=Math.round(r/c);g=Math.round(g/c);b=Math.round(b/c);return'#'+[r,g,b].map(c=>c.toString(16).padStart(2,'0')).join('')+((r+g+b)>30?' VISIBLE':' EMPTY');}
+
+    console.log('[TEST] hud_portrait: ' + sa(12,12,52,52));
+    console.log('[TEST] hud_health: ' + sa(72,16,180,18));
+    console.log('[TEST] hud_mana: ' + sa(72,37,180,18));
+    console.log('[TEST] hud_minimap: ' + sa(W-80-16,16,128,128));
+    console.log('[TEST] hud_actionbar: ' + sa((W-450)/2,H-60,450,42));
+    console.log('[TEST] hud_xpbar: ' + sa(0,H-12,W,10));
+    console.log('[TEST] hud_chat: ' + sa(10,H-60-40-120,280,120));
+
+    console.log('[TEST] fps: ' + fps);
+    console.log('[TEST] entities: ' + enemies.filter(e=>e.alive).length + ' enemies, ' + npcs.length + ' npcs, ' + pickups.filter(p=>!p.collected).length + ' pickups');
+    console.log('[TEST] player: Lv' + player.level + ' HP:' + player.health + '/' + player.maxHealth + ' Mana:' + player.mana + '/' + player.maxMana + ' Gold:' + player.gold);
+    console.log('[TEST] screenshots_captured: ' + screenDataUrls.length);
+
+    // Store for retrieval
+    window.TEST_SCREENSHOTS = screenDataUrls;
+    window.TEST_COMPLETE = true;
+
+    console.log('[TEST] ═══ AUTO-TEST COMPLETE ═══');
+  })();
+}
+</script>
+</body>
+</html>

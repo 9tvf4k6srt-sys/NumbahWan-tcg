@@ -1,0 +1,104 @@
+<!DOCTYPE html><html><head><title>Render Test</title></head>
+<body style="background:#0c0c14;margin:0;overflow:hidden">
+<canvas id="C" style="width:100%;height:100%"></canvas>
+<div id="info" style="position:fixed;top:10px;left:10px;color:#0f0;font:12px monospace;z-index:100;background:rgba(0,0,0,.8);padding:10px;border-radius:8px"></div>
+<script>
+const C=document.getElementById('C');
+const X=C.getContext('2d');
+const info=document.getElementById('info');
+C.width=800;C.height=600;
+
+const ART={},ART_READY={};
+const ART_SRC={
+  char0:'art/chars/char_tier0_gamer.png',
+  wpn_bat:'art/weapons/wpn_bat.png',
+  wpn_m4a1:'art/weapons/wpn_m4a1.png',
+  enemy_walker:'art/enemies/enemy_walker.png',
+  enemy_gorelord:'art/enemies/enemy_gorelord.png',
+  fx_muzzle:'art/effects/fx_muzzle.png',
+  item_scrap:'art/items/item_scrap.png',
+  zone0:'art/zone0_ruined_city.jpg',
+};
+
+let loaded=0,total=Object.keys(ART_SRC).length;
+let log=[];
+for(const[k,src] of Object.entries(ART_SRC)){
+  const img=new Image();
+  img.onload=()=>{ART[k]=img;ART_READY[k]=true;loaded++;log.push('OK:'+k);if(loaded===total)render()};
+  img.onerror=()=>{loaded++;log.push('FAIL:'+k);if(loaded===total)render()};
+  img.src=src;
+}
+
+function render(){
+  // Clear
+  X.fillStyle='#0c0c14';X.fillRect(0,0,800,600);
+  
+  // Draw background
+  if(ART_READY.zone0){
+    X.drawImage(ART.zone0,0,0,800,600);
+    X.fillStyle='rgba(12,12,20,0.6)';X.fillRect(0,0,800,600);
+    log.push('Drew zone0 bg');
+  }
+  
+  // Draw character at 140px height
+  let charDrawn=false;
+  if(ART_READY.char0){
+    const img=ART.char0;
+    const h=140;const w=img.width*(h/img.height);
+    X.drawImage(img,200-w/2,400-h,w,h);
+    charDrawn=true;
+    log.push('Drew char0: '+Math.round(w)+'x'+h);
+  }
+  if(!charDrawn){
+    X.fillStyle='#555';X.fillRect(180,320,40,80);
+    log.push('FALLBACK: grey rect for char');
+  }
+  
+  // Draw weapon in hand
+  if(ART_READY.wpn_bat){
+    const img=ART.wpn_bat;
+    const h=100;const w=img.width*(h/img.height);
+    X.save();X.translate(225,340);X.rotate(-25*Math.PI/180);
+    X.drawImage(img,-w*0.15,-h*0.85,w,h);
+    X.restore();
+    log.push('Drew wpn_bat: '+Math.round(w)+'x'+h);
+  }
+  
+  // Draw enemies
+  let ex=500;
+  for(const ek of ['enemy_walker','enemy_gorelord']){
+    if(ART_READY[ek]){
+      const img=ART[ek];
+      const h=ek.includes('gorelord')?160:100;
+      const w=img.width*(h/img.height);
+      X.drawImage(img,ex-w/2,400-h,w,h);
+      log.push('Drew '+ek+': '+Math.round(w)+'x'+h);
+      ex+=120;
+    }
+  }
+  
+  // Draw items and effects
+  if(ART_READY.item_scrap){
+    const img=ART.item_scrap;
+    X.drawImage(img,50,450,40,40);
+    log.push('Drew item_scrap');
+  }
+  if(ART_READY.fx_muzzle){
+    const img=ART.fx_muzzle;
+    X.drawImage(img,260,320,30,30);
+    log.push('Drew fx_muzzle');
+  }
+
+  // Labels
+  X.fillStyle='#fff';X.font='bold 14px sans-serif';
+  X.fillText('Character + Bat',170,420);
+  X.fillText('Walker',480,420);
+  X.fillText('Gorelord',590,420);
+  X.fillText('Scrap',45,500);
+  X.fillText('Flash',255,360);
+  
+  // Info
+  info.textContent=log.join('\n');
+}
+</script>
+</body></html>

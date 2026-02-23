@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>NWGE Visual Gallery</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:#0a0a15;color:#ccc;font-family:'Segoe UI',Arial,sans-serif;padding:12px;}
+h1{color:#c8a040;font-size:20px;margin-bottom:8px;}
+.info{font-size:11px;color:#888;margin-bottom:12px;}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(620px,1fr));gap:10px;}
+.card{background:#111;border:1px solid #333;border-radius:4px;overflow:hidden;}
+.card canvas{display:block;width:100%;}
+.card .label{padding:5px 8px;font-size:11px;color:#aaa;}
+.card .label b{color:#e8c060;}
+#status{color:#80cc80;font-size:12px;margin:6px 0;}
+</style>
+</head>
+<body>
+<h1>NWGE Visual Gallery</h1>
+<div id="status">Loading game...</div>
+<div class="info" id="info"></div>
+<div class="grid" id="grid"></div>
+
+<canvas id="capture" width="1280" height="720" style="display:none;"></canvas>
+
+<script>
+const status = document.getElementById('status');
+const info = document.getElementById('info');
+const grid = document.getElementById('grid');
+const captureCanvas = document.getElementById('capture');
+const cCtx = captureCanvas.getContext('2d');
+
+// We'll load game.html in a hidden iframe, wait for it to render,
+// then copy its canvas data at various positions
+const iframe = document.createElement('iframe');
+iframe.src = 'game.html';
+iframe.width = 1280;
+iframe.height = 720;
+iframe.style.cssText = 'position:fixed;left:-9999px;top:0;border:0;';
+document.body.appendChild(iframe);
+
+function waitMs(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+async function run() {
+  await new Promise(r => iframe.addEventListener('load', r, {once:true}));
+  status.textContent = 'Game loaded. Waiting for render...';
+  await waitMs(4000);
+
+  const gw = iframe.contentWindow;
+  if (!gw.player || !gw.C) {
+    status.textContent = 'ERROR: Game not initialized properly';
+    return;
+  }
+
+  function wf(n) {
+    return new Promise(r => {let c=0;function t(){if(++c>=n)r();else gw.requestAnimationFrame(t);}gw.requestAnimationFrame(t);});
+  }
+
+  const views = [
+    {label:'Player Spawn - Goldshire Center', x:22.5, y:34.5, a:0, p:0},
+    {label:'Goldshire Inn Entrance', x:25.5, y:35.5, a:-Math.PI/2, p:0},
+    {label:'East Road (toward wolves)', x:35, y:33, a:0, p:0},
+    {label:'North Crossroad', x:24, y:20, a:-Math.PI/2, p:0},
+    {label:'Guard Tower', x:32, y:33, a:-0.9, p:0},
+    {label:'Pond Overlook', x:28, y:42, a:-Math.PI/2, p:-10},
+    {label:'Marshal Dughan (Quest NPC)', x:25.0, y:34.5, a:-Math.PI/2, p:0},
+    {label:'Kobold Forest (NW)', x:10, y:10, a:0.8, p:0},
+    {label:'Wolf Hunting Ground (NE)', x:45, y:10, a:0, p:0},
+    {label:'River Bank (East)', x:50, y:30, a:0, p:0},
+    {label:'Farm & Barn Area', x:42, y:20, a:Math.PI, p:0},
+    {label:'Sky View (clouds, sun, god rays)', x:22.5, y:34.5, a:0, p:80},
+    {label:'Ground Textures (grass, dirt)', x:22.5, y:34.5, a:0, p:-60},
+  ];
+
+  status.textContent = `Capturing ${views.length} views...`;
+
+  for (let i = 0; i < views.length; i++) {
+    const v = views[i];
+    gw.player.x = v.x; gw.player.y = v.y;
+    gw.player.angle = v.a; gw.player.pitch = v.p;
+    await wf(10); // let 10 frames render for stability
+
+    // Copy game canvas to our capture canvas
+    try {
+      cCtx.drawImage(gw.C, 0, 0);
+    } catch(e) {
+      // Fallback: try getImageData
+      const gCtx = gw.C.getContext('2d', {willReadFrequently:true});
+      const imgData = gCtx.getImageData(0, 0, 1280, 720);
+      cCtx.putImageData(imgData, 0, 0);
+    }
+
+    // Create card
+    const card = document.createElement('div');
+    card.className = 'card';
+    const img = document.createElement('img');
+    img.src = captureCanvas.toDataURL('image/png');
+    img.style.width = '100%';
+    card.appendChild(img);
+    const lbl = document.createElement('div');
+    lbl.className = 'label';
+    lbl.innerHTML = `<b>${i+1}. ${v.label}</b> | pos(${v.x}, ${v.y}) angle=${v.a.toFixed(2)} pitch=${v.p}`;
+    card.appendChild(lbl);
+    grid.appendChild(card);
+
+    status.textContent = `Captured ${i+1}/${views.length}: ${v.label}`;
+  }
+
+  // Get metrics
+  const m = {
+    fps: gw.fps,
+    enemies: gw.enemies.filter(e => e.alive).length,
+    npcs: gw.npcs.length,
+    player: `Lv${gw.player.level} HP:${gw.player.health}/${gw.player.maxHealth} Gold:${gw.player.gold}`,
+  };
+  info.textContent = `FPS: ${m.fps} | Enemies: ${m.enemies} | NPCs: ${m.npcs} | ${m.player}`;
+
+  status.textContent = `✅ Complete: ${views.length} views captured`;
+  iframe.remove(); // Clean up hidden iframe
+}
+
+window.addEventListener('load', () => setTimeout(run, 500));
+</script>
+</body>
+</html>

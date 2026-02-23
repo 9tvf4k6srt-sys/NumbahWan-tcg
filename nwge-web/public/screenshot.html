@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html><head><meta charset="UTF-8"><title>NWGE Screenshot Server</title></head>
+<body style="margin:0;background:#000;">
+<canvas id="gameCanvas" width="1280" height="720" style="display:none;"></canvas>
+<div id="output" style="color:#0f0;font:12px monospace;padding:10px;"></div>
+
+<script>
+// Minimal game engine bootstrap - copies from game.html but renders single frames
+// This page is called with ?view=spawn|inn|wolves|sky etc.
+// and displays the rendered frame as a visible image
+
+const params = new URLSearchParams(location.search);
+const viewName = params.get('view') || 'spawn';
+const outputDiv = document.getElementById('output');
+
+function log(msg) {
+  outputDiv.innerHTML += msg + '<br>';
+}
+
+// Load game.html in hidden iframe, capture specific view
+const iframe = document.createElement('iframe');
+iframe.src = 'game.html';
+iframe.width = 1280;
+iframe.height = 720;
+iframe.style.cssText = 'position:absolute;left:0;top:0;border:0;opacity:0;pointer-events:none;';
+document.body.appendChild(iframe);
+
+const views = {
+  spawn:     {x:22.5,y:34.5,a:0,p:0,desc:'Goldshire spawn point'},
+  inn:       {x:25.5,y:35.5,a:-Math.PI/2,p:0,desc:'Goldshire Inn entrance'},
+  road:      {x:35,y:33,a:0,p:0,desc:'East road toward forest'},
+  tower:     {x:32,y:33,a:-0.9,p:0,desc:'Guard tower'},
+  pond:      {x:28,y:42,a:-Math.PI/2,p:-10,desc:'Pond overlook'},
+  marshal:   {x:25.0,y:34.5,a:-Math.PI/2,p:0,desc:'Marshal Dughan NPC'},
+  merchant:  {x:20.0,y:33.0,a:-Math.PI*0.3,p:0,desc:'Merchant NPC'},
+  kobolds:   {x:10,y:10,a:0.8,p:0,desc:'Kobold forest'},
+  wolves:    {x:45,y:10,a:0,p:0,desc:'Wolf territory'},
+  river:     {x:50,y:30,a:0,p:0,desc:'River bank'},
+  farm:      {x:42,y:20,a:Math.PI,p:0,desc:'Farm area'},
+  sky:       {x:22.5,y:34.5,a:0,p:80,desc:'Looking up at sky'},
+  ground:    {x:22.5,y:34.5,a:0,p:-60,desc:'Ground textures'},
+  crossroad: {x:24,y:20,a:-Math.PI/2,p:0,desc:'North crossroad'},
+  chapel:    {x:24,y:26,a:Math.PI/2,p:0,desc:'Chapel building'},
+  smithy:    {x:17,y:28,a:0,p:0,desc:'Smithy building'},
+};
+
+const view = views[viewName] || views.spawn;
+
+log(`Loading view: ${viewName} - ${view.desc}`);
+log(`Position: (${view.x}, ${view.y}) angle=${view.a.toFixed(2)} pitch=${view.p}`);
+
+iframe.addEventListener('load', async () => {
+  log('Game loaded. Waiting for render...');
+  await new Promise(r => setTimeout(r, 3500));
+
+  const gw = iframe.contentWindow;
+  if (!gw.player || !gw.C) {
+    log('ERROR: Game objects not ready');
+    return;
+  }
+
+  function wf(n) {
+    return new Promise(r => {let c=0;function t(){if(++c>=n)r();else gw.requestAnimationFrame(t);}gw.requestAnimationFrame(t);});
+  }
+
+  // Set view
+  gw.player.x = view.x;
+  gw.player.y = view.y;
+  gw.player.angle = view.a;
+  gw.player.pitch = view.p;
+
+  // Render several frames for stability
+  await wf(15);
+
+  // Capture
+  const dataUrl = gw.C.toDataURL('image/png');
+
+  // Display as image
+  const img = document.createElement('img');
+  img.src = dataUrl;
+  img.style.cssText = 'width:100%;max-width:1280px;display:block;margin:10px auto;border:2px solid #333;';
+  img.id = 'screenshot';
+  document.body.appendChild(img);
+
+  // Hide iframe
+  iframe.style.display = 'none';
+
+  // Info
+  log(`✅ Screenshot ready: ${viewName}`);
+  log(`FPS: ${gw.fps} | Enemies: ${gw.enemies.filter(e=>e.alive).length} | NPCs: ${gw.npcs.length}`);
+
+  // Make output visible
+  outputDiv.style.background = 'rgba(0,0,0,0.8)';
+  outputDiv.style.position = 'fixed';
+  outputDiv.style.bottom = '0';
+  outputDiv.style.left = '0';
+  outputDiv.style.right = '0';
+  outputDiv.style.padding = '6px 10px';
+  outputDiv.style.fontSize = '10px';
+});
+</script>
+</body>
+</html>

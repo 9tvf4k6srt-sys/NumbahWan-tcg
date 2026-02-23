@@ -26,6 +26,10 @@ const yaml = require('js-yaml');
 const core = require('./factory-core.cjs');
 const { ROOT, ok, fail, info, warn, header, emit, timer, SPEC_TYPES, validateSpec: coreValidate, B, G, R, Y, C, X } = core;
 
+// Art Forge integration
+let artForge;
+try { artForge = require('./art-forge.cjs'); } catch (e) { artForge = null; }
+
 // Factory Memory integration
 let memory;
 try { memory = require('./factory-memory.cjs'); } catch (e) { memory = null; }
@@ -150,6 +154,8 @@ const TYPE_GENERATORS = {
   'landing-page': generateLandingHTML,
   'app-page': generateAppHTML,
   'docs-page': generateDocsHTML,
+  'game-page': generatePlayableGameHTML,
+  'game-page-3d': generatePlayableGameHTML,
 };
 
 // ── Landing Page Generator ──
@@ -390,6 +396,64 @@ ${sectionHTML}
 </script>
 </body>
 </html>`;
+}
+
+// ── Playable Game Page Generator (game-page, game-page-3d) ──
+function generatePlayableGameHTML(spec) {
+  const slug = spec.slug.replace(/-/g, '');
+  const c = spec.theme?.primary || '#ff4444';
+  const bg = spec.theme?.background || '#0c0c14';
+  const title = spec.title || 'Game';
+  const is3d = spec.type === 'game-page-3d';
+
+  let html = `<!-- ==================== GAME: ${title.toUpperCase()} ==================== -->\n`;
+
+  // Art pipeline integration
+  if (spec.art && artForge) {
+    const manifest = artForge.buildManifest(spec);
+    const plan = artForge.planGeneration(manifest, spec.art.outputDir || `./public/games/art/${spec.slug}`);
+
+    html += `<!--\n  ART FORGE v2.0 — Generation Plan\n`;
+    html += `  Total assets: ${plan.stats.total}\n`;
+    html += `  API calls needed: ${plan.stats.totalApiCalls} (${plan.stats.efficiency}% more efficient than naive)\n`;
+    html += `  Individual: ${plan.stats.individual} | Batched: ${plan.stats.batched} (${plan.stats.sheets} sheets)\n`;
+    html += `  Categories: ${Object.entries(plan.stats.categories).map(([k,v]) => `${k}:${v}`).join(', ')}\n`;
+    html += `-->\n\n`;
+
+    // Generate weapon binding comments
+    const weaponEntries = manifest.filter(e => e.category === 'weapon');
+    if (weaponEntries.length) {
+      html += `<!-- WEAPON BINDINGS:\n`;
+      weaponEntries.forEach(w => {
+        const binding = artForge.WEAPON_BINDING.getBindingConfig(w.id);
+        html += `  ${w.id}: type=${binding.type}, hold=(${binding.holdPoint.x},${binding.holdPoint.y})\n`;
+      });
+      html += `-->\n\n`;
+    }
+  }
+
+  // Game container
+  html += `<div class="game-container" id="${spec.slug}" style="--accent:${c};--bg:${bg}" data-game-type="${spec.type}">\n`;
+  html += `  <canvas id="game-canvas"></canvas>\n`;
+  html += `  <div id="game-hud"></div>\n`;
+  html += `  <div id="game-ui"></div>\n`;
+  html += `</div>\n`;
+
+  // Renderer tier info for 3D games
+  if (is3d) {
+    const renderer = SPEC_TYPES['game-page-3d']?.renderer;
+    if (renderer) {
+      html += `<!-- RENDERER CONFIG:\n`;
+      html += `  Fallback chain: ${renderer.fallbackChain.join(' → ')}\n`;
+      html += `  Post-process: ${renderer.postProcess.join(', ')}\n`;
+      Object.entries(renderer.tiers).forEach(([tier, info]) => {
+        html += `  ${tier}: ${info.description} (target: ${info.sizeTarget})\n`;
+      });
+      html += `-->\n`;
+    }
+  }
+
+  return html;
 }
 
 // ── Main ──

@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html><head><title>Cap</title></head>
+<body>
+<iframe id="gf" src="/game.html" width="1280" height="720" style="border:0;"></iframe>
+<script>
+const iframe = document.getElementById('gf');
+iframe.addEventListener('load', async () => {
+  await new Promise(r => setTimeout(r, 4000));
+  const gw = iframe.contentWindow;
+  if (!gw.player) return;
+  
+  function wf(n) {
+    return new Promise(r => {let c=0;function t(){if(++c>=n)r();else gw.requestAnimationFrame(t);}gw.requestAnimationFrame(t);});
+  }
+  
+  // Default view
+  await wf(10);
+  const url = gw.C.toDataURL('image/png');
+  
+  // Create downloadable link
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'game-screenshot.png';
+  document.body.appendChild(a);
+  
+  // Also set as img for viewing
+  const img = document.createElement('img');
+  img.src = url;
+  img.style.width = '100%';
+  document.body.appendChild(img);
+  
+  console.log('SCREENSHOT_READY');
+});
+</script>
+</body></html>
