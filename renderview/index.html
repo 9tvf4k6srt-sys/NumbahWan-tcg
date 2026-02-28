@@ -1,0 +1,1376 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RenderView — Snap. Place. Render. Close the deal.</title>
+    <meta name="description" content="Professional-grade renders from your phone, on-site with the client. The mobile app architects and interior designers have been waiting for.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0a0a0b;
+            --bg-card: #111114;
+            --bg-card-hover: #18181c;
+            --border: #222228;
+            --text: #f0f0f2;
+            --text-muted: #8888a0;
+            --text-dim: #555566;
+            --accent: #6c5ce7;
+            --accent-light: #a29bfe;
+            --accent-glow: rgba(108, 92, 231, 0.3);
+            --warm: #fd7e14;
+            --warm-glow: rgba(253, 126, 20, 0.2);
+            --success: #00d2a0;
+            --radius: 16px;
+            --radius-sm: 10px;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        html {
+            scroll-behavior: smooth;
+            font-size: 16px;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+            overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* ==================== NAVIGATION ==================== */
+        nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 100;
+            padding: 0 24px;
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            background: rgba(10, 10, 11, 0.8);
+            border-bottom: 1px solid rgba(34, 34, 40, 0.5);
+            transition: all 0.3s ease;
+        }
+
+        nav .nav-inner {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            height: 64px;
+        }
+
+        .logo {
+            font-family: 'Space Grotesk', sans-serif;
+            font-weight: 700;
+            font-size: 1.35rem;
+            letter-spacing: -0.02em;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            text-decoration: none;
+            color: var(--text);
+        }
+
+        .logo-icon {
+            width: 32px;
+            height: 32px;
+            background: linear-gradient(135deg, var(--accent), var(--warm));
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 32px;
+            align-items: center;
+            list-style: none;
+        }
+
+        .nav-links a {
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: color 0.2s;
+        }
+
+        .nav-links a:hover { color: var(--text); }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 10px 22px;
+            border-radius: 10px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            font-family: 'Inter', sans-serif;
+            cursor: pointer;
+            transition: all 0.25s ease;
+            border: none;
+            text-decoration: none;
+        }
+
+        .btn-primary {
+            background: var(--accent);
+            color: white;
+            box-shadow: 0 4px 20px var(--accent-glow);
+        }
+
+        .btn-primary:hover {
+            background: #7c6df7;
+            transform: translateY(-1px);
+            box-shadow: 0 6px 30px var(--accent-glow);
+        }
+
+        .btn-ghost {
+            background: transparent;
+            color: var(--text);
+            border: 1px solid var(--border);
+        }
+
+        .btn-ghost:hover {
+            background: var(--bg-card);
+            border-color: var(--text-dim);
+        }
+
+        .btn-warm {
+            background: var(--warm);
+            color: white;
+            box-shadow: 0 4px 20px var(--warm-glow);
+        }
+
+        .btn-warm:hover {
+            background: #e8700d;
+            transform: translateY(-1px);
+        }
+
+        .btn-lg {
+            padding: 14px 32px;
+            font-size: 1rem;
+            border-radius: 12px;
+        }
+
+        /* ==================== HERO ==================== */
+        .hero {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 120px 24px 80px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -20%;
+            width: 140%;
+            height: 200%;
+            background: radial-gradient(ellipse at 30% 20%, rgba(108, 92, 231, 0.08) 0%, transparent 50%),
+                        radial-gradient(ellipse at 70% 60%, rgba(253, 126, 20, 0.05) 0%, transparent 50%);
+            pointer-events: none;
+        }
+
+        .hero-content {
+            max-width: 800px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 16px;
+            background: rgba(108, 92, 231, 0.1);
+            border: 1px solid rgba(108, 92, 231, 0.25);
+            border-radius: 100px;
+            font-size: 0.82rem;
+            font-weight: 500;
+            color: var(--accent-light);
+            margin-bottom: 28px;
+        }
+
+        .badge .dot {
+            width: 6px;
+            height: 6px;
+            background: var(--success);
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.4; }
+        }
+
+        h1 {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: clamp(2.8rem, 6vw, 4.5rem);
+            font-weight: 800;
+            line-height: 1.08;
+            letter-spacing: -0.03em;
+            margin-bottom: 24px;
+        }
+
+        h1 .gradient {
+            background: linear-gradient(135deg, var(--accent-light), var(--warm));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .hero-sub {
+            font-size: 1.2rem;
+            color: var(--text-muted);
+            max-width: 600px;
+            margin: 0 auto 40px;
+            line-height: 1.7;
+        }
+
+        .hero-cta {
+            display: flex;
+            gap: 16px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-bottom: 48px;
+        }
+
+        .hero-stats {
+            display: flex;
+            gap: 48px;
+            justify-content: center;
+            flex-wrap: wrap;
+            padding-top: 48px;
+            border-top: 1px solid var(--border);
+        }
+
+        .hero-stat {
+            text-align: center;
+        }
+
+        .hero-stat .number {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--text);
+        }
+
+        .hero-stat .label {
+            font-size: 0.82rem;
+            color: var(--text-muted);
+            margin-top: 4px;
+        }
+
+        /* ==================== PHONE MOCKUP ==================== */
+        .phone-demo {
+            max-width: 1000px;
+            margin: -20px auto 0;
+            padding: 0 24px 80px;
+            position: relative;
+        }
+
+        .phone-frame {
+            max-width: 340px;
+            margin: 0 auto;
+            background: #1a1a20;
+            border-radius: 40px;
+            padding: 12px;
+            box-shadow: 0 40px 80px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.05);
+            position: relative;
+        }
+
+        .phone-screen {
+            width: 100%;
+            border-radius: 30px;
+            overflow: hidden;
+            background: #0d0d12;
+            aspect-ratio: 9/19.5;
+            position: relative;
+        }
+
+        .phone-notch {
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 120px;
+            height: 28px;
+            background: #1a1a20;
+            border-radius: 0 0 20px 20px;
+            z-index: 5;
+        }
+
+        .phone-ui {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+
+        .phone-header {
+            padding: 40px 20px 12px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 0.7rem;
+            color: var(--text-muted);
+        }
+
+        .phone-header .app-title {
+            font-weight: 700;
+            color: var(--text);
+            font-size: 0.85rem;
+        }
+
+        .phone-camera-view {
+            flex: 1;
+            margin: 8px;
+            border-radius: 16px;
+            overflow: hidden;
+            position: relative;
+            background: linear-gradient(160deg, #2a1f3d 0%, #1a1520 40%, #1d1a15 70%, #0f1018 100%);
+        }
+
+        /* Simulated room with furniture outlines */
+        .room-overlay {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            padding: 12px;
+        }
+
+        .ai-detection-box {
+            border: 1.5px solid var(--accent);
+            border-radius: 8px;
+            padding: 6px 10px;
+            margin-bottom: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 0.6rem;
+            background: rgba(108, 92, 231, 0.08);
+            animation: detectFade 3s infinite;
+        }
+
+        .ai-detection-box:nth-child(2) { animation-delay: 0.5s; border-color: var(--warm); background: rgba(253, 126, 20, 0.08); }
+        .ai-detection-box:nth-child(3) { animation-delay: 1s; border-color: var(--success); background: rgba(0, 210, 160, 0.08); }
+
+        @keyframes detectFade {
+            0%, 100% { opacity: 0.6; }
+            50% { opacity: 1; }
+        }
+
+        .ai-label { color: var(--accent-light); font-weight: 600; }
+        .ai-conf { color: var(--text-dim); }
+
+        .phone-bottom-bar {
+            padding: 10px 16px 20px;
+            display: flex;
+            gap: 8px;
+            justify-content: center;
+        }
+
+        .phone-action-btn {
+            padding: 8px 14px;
+            border-radius: 20px;
+            font-size: 0.65rem;
+            font-weight: 600;
+            border: none;
+            cursor: pointer;
+        }
+
+        .phone-action-btn.render {
+            background: var(--accent);
+            color: white;
+            flex: 1;
+        }
+
+        .phone-action-btn.catalog {
+            background: var(--bg-card);
+            color: var(--text-muted);
+            border: 1px solid var(--border);
+        }
+
+        /* Room elements inside the phone */
+        .room-elements {
+            position: absolute;
+            inset: 0;
+        }
+
+        .room-floor {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 40%;
+            background: linear-gradient(180deg, transparent, rgba(80, 60, 40, 0.15));
+        }
+
+        .room-wall-left {
+            position: absolute;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            width: 35%;
+            background: linear-gradient(90deg, rgba(50, 40, 60, 0.2), transparent);
+        }
+
+        .room-window {
+            position: absolute;
+            top: 15%;
+            right: 10%;
+            width: 35%;
+            height: 30%;
+            border: 1px solid rgba(150, 140, 180, 0.15);
+            border-radius: 4px;
+            background: linear-gradient(180deg, rgba(100, 120, 160, 0.1), rgba(80, 100, 140, 0.05));
+        }
+
+        .room-sofa {
+            position: absolute;
+            bottom: 18%;
+            left: 15%;
+            width: 50%;
+            height: 15%;
+            border-radius: 8px 8px 4px 4px;
+            background: linear-gradient(180deg, rgba(90, 70, 50, 0.3), rgba(70, 55, 40, 0.2));
+            border: 1px solid rgba(120, 100, 70, 0.15);
+        }
+
+        .room-table {
+            position: absolute;
+            bottom: 12%;
+            right: 15%;
+            width: 22%;
+            height: 10%;
+            border-radius: 4px;
+            background: rgba(60, 50, 40, 0.25);
+            border: 1px solid rgba(100, 80, 60, 0.15);
+        }
+
+        /* ==================== DEMO WORKFLOW ==================== */
+        .workflow {
+            padding: 80px 24px;
+            max-width: 1100px;
+            margin: 0 auto;
+        }
+
+        .workflow h2 {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 2.2rem;
+            font-weight: 700;
+            text-align: center;
+            margin-bottom: 16px;
+            letter-spacing: -0.02em;
+        }
+
+        .workflow .section-sub {
+            text-align: center;
+            color: var(--text-muted);
+            max-width: 500px;
+            margin: 0 auto 56px;
+        }
+
+        .steps {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+        }
+
+        .step {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 32px 24px;
+            text-align: center;
+            position: relative;
+            transition: all 0.3s ease;
+        }
+
+        .step:hover {
+            background: var(--bg-card-hover);
+            border-color: var(--text-dim);
+            transform: translateY(-4px);
+        }
+
+        .step-number {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 3rem;
+            font-weight: 700;
+            color: var(--accent);
+            opacity: 0.3;
+            line-height: 1;
+            margin-bottom: 16px;
+        }
+
+        .step-icon {
+            font-size: 2.2rem;
+            margin-bottom: 16px;
+        }
+
+        .step h3 {
+            font-size: 1.1rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .step p {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            line-height: 1.5;
+        }
+
+        .step-time {
+            display: inline-block;
+            margin-top: 12px;
+            padding: 4px 12px;
+            background: rgba(0, 210, 160, 0.1);
+            border: 1px solid rgba(0, 210, 160, 0.2);
+            border-radius: 100px;
+            font-size: 0.72rem;
+            font-weight: 600;
+            color: var(--success);
+        }
+
+        /* ==================== PAIN POINTS ==================== */
+        .pain-section {
+            padding: 80px 24px;
+            background: linear-gradient(180deg, var(--bg) 0%, #0d0d10 100%);
+        }
+
+        .pain-inner {
+            max-width: 1100px;
+            margin: 0 auto;
+        }
+
+        .pain-section h2 {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 2.2rem;
+            font-weight: 700;
+            text-align: center;
+            margin-bottom: 48px;
+            letter-spacing: -0.02em;
+        }
+
+        .pain-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+        }
+
+        .pain-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 28px 24px;
+            transition: all 0.3s ease;
+        }
+
+        .pain-card:hover {
+            border-color: var(--text-dim);
+            transform: translateY(-2px);
+        }
+
+        .pain-emoji {
+            font-size: 2rem;
+            margin-bottom: 16px;
+        }
+
+        .pain-card h3 {
+            font-size: 1rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+            color: var(--warm);
+        }
+
+        .pain-card p {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            line-height: 1.6;
+        }
+
+        .pain-card .solve {
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px solid var(--border);
+            font-size: 0.82rem;
+            color: var(--success);
+            font-weight: 500;
+        }
+
+        /* ==================== COMPARISON ==================== */
+        .comparison {
+            padding: 80px 24px;
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .comparison h2 {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 2.2rem;
+            font-weight: 700;
+            text-align: center;
+            margin-bottom: 48px;
+            letter-spacing: -0.02em;
+        }
+
+        .compare-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            background: var(--bg-card);
+            border-radius: var(--radius);
+            border: 1px solid var(--border);
+            overflow: hidden;
+        }
+
+        .compare-table th, .compare-table td {
+            padding: 14px 20px;
+            text-align: left;
+            font-size: 0.85rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .compare-table th {
+            background: rgba(108, 92, 231, 0.05);
+            font-weight: 600;
+            color: var(--text);
+            font-size: 0.82rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .compare-table td { color: var(--text-muted); }
+
+        .compare-table tr:last-child td { border-bottom: none; }
+
+        .compare-table tr.highlight td {
+            background: rgba(108, 92, 231, 0.04);
+            color: var(--text);
+            font-weight: 600;
+        }
+
+        .check { color: var(--success); }
+        .cross { color: #ff4757; }
+        .partial { color: var(--warm); }
+
+        /* ==================== PRICING ==================== */
+        .pricing {
+            padding: 80px 24px;
+            background: linear-gradient(180deg, transparent, rgba(108, 92, 231, 0.03));
+        }
+
+        .pricing-inner {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        .pricing h2 {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 2.2rem;
+            font-weight: 700;
+            text-align: center;
+            margin-bottom: 12px;
+            letter-spacing: -0.02em;
+        }
+
+        .pricing .section-sub {
+            text-align: center;
+            color: var(--text-muted);
+            margin-bottom: 48px;
+        }
+
+        .pricing-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            align-items: start;
+        }
+
+        .price-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 32px 28px;
+            position: relative;
+            transition: all 0.3s ease;
+        }
+
+        .price-card:hover {
+            transform: translateY(-4px);
+        }
+
+        .price-card.featured {
+            border-color: var(--accent);
+            box-shadow: 0 8px 40px var(--accent-glow);
+        }
+
+        .price-card .tag {
+            position: absolute;
+            top: -12px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--accent);
+            color: white;
+            padding: 4px 16px;
+            border-radius: 100px;
+            font-size: 0.72rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .price-card h3 {
+            font-size: 1.2rem;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        .price-card .desc {
+            font-size: 0.82rem;
+            color: var(--text-muted);
+            margin-bottom: 20px;
+        }
+
+        .price-amount {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 2.8rem;
+            font-weight: 800;
+            line-height: 1;
+            margin-bottom: 4px;
+        }
+
+        .price-amount span {
+            font-size: 1rem;
+            font-weight: 400;
+            color: var(--text-muted);
+        }
+
+        .price-features {
+            list-style: none;
+            margin: 24px 0;
+        }
+
+        .price-features li {
+            padding: 6px 0;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+        }
+
+        .price-features li::before {
+            content: '\2713';
+            color: var(--success);
+            font-weight: 700;
+            flex-shrink: 0;
+        }
+
+        /* ==================== WAITLIST CTA ==================== */
+        .waitlist {
+            padding: 100px 24px;
+            text-align: center;
+        }
+
+        .waitlist h2 {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 2.5rem;
+            font-weight: 800;
+            margin-bottom: 16px;
+            letter-spacing: -0.02em;
+        }
+
+        .waitlist p {
+            color: var(--text-muted);
+            max-width: 500px;
+            margin: 0 auto 36px;
+            font-size: 1.1rem;
+        }
+
+        .waitlist-form {
+            max-width: 480px;
+            margin: 0 auto;
+            display: flex;
+            gap: 10px;
+        }
+
+        .waitlist-form input {
+            flex: 1;
+            padding: 14px 20px;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            background: var(--bg-card);
+            color: var(--text);
+            font-size: 0.95rem;
+            font-family: 'Inter', sans-serif;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .waitlist-form input:focus {
+            border-color: var(--accent);
+        }
+
+        .waitlist-form input::placeholder {
+            color: var(--text-dim);
+        }
+
+        .waitlist-count {
+            margin-top: 20px;
+            font-size: 0.85rem;
+            color: var(--text-dim);
+        }
+
+        .waitlist-count strong {
+            color: var(--accent-light);
+        }
+
+        /* ==================== FOOTER ==================== */
+        footer {
+            padding: 40px 24px;
+            border-top: 1px solid var(--border);
+            text-align: center;
+        }
+
+        footer p {
+            font-size: 0.82rem;
+            color: var(--text-dim);
+        }
+
+        /* ==================== RESPONSIVE ==================== */
+        @media (max-width: 768px) {
+            .nav-links { display: none; }
+
+            .steps {
+                grid-template-columns: 1fr 1fr;
+            }
+
+            .pain-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .pricing-grid {
+                grid-template-columns: 1fr;
+                max-width: 400px;
+                margin: 0 auto;
+            }
+
+            .hero-stats {
+                gap: 32px;
+            }
+
+            .waitlist-form {
+                flex-direction: column;
+            }
+
+            .compare-table {
+                font-size: 0.75rem;
+            }
+
+            .compare-table th, .compare-table td {
+                padding: 10px 12px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .steps {
+                grid-template-columns: 1fr;
+            }
+
+            .hero-stats {
+                flex-direction: column;
+                gap: 20px;
+            }
+        }
+
+        /* ==================== ANIMATIONS ==================== */
+        .fade-up {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: opacity 0.6s ease, transform 0.6s ease;
+        }
+
+        .fade-up.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* Toast notification */
+        .toast {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            background: var(--success);
+            color: #0a0a0b;
+            padding: 14px 24px;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            transform: translateY(100px);
+            opacity: 0;
+            transition: all 0.4s ease;
+            z-index: 200;
+        }
+
+        .toast.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ==================== NAVIGATION ==================== -->
+    <nav>
+        <div class="nav-inner">
+            <a href="#" class="logo">
+                <div class="logo-icon">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/>
+                        <line x1="8" y1="21" x2="16" y2="21"/>
+                        <line x1="12" y1="17" x2="12" y2="21"/>
+                    </svg>
+                </div>
+                RenderView
+            </a>
+            <ul class="nav-links">
+                <li><a href="#workflow">How It Works</a></li>
+                <li><a href="#problems">Problems We Solve</a></li>
+                <li><a href="#pricing">Pricing</a></li>
+                <li><a href="#waitlist" class="btn btn-primary" style="padding: 8px 18px; font-size: 0.82rem;">Join Waitlist</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- ==================== HERO ==================== -->
+    <section class="hero" id="hero">
+        <div class="hero-content fade-up">
+            <div class="badge">
+                <span class="dot"></span>
+                Coming Spring 2026
+            </div>
+            <h1>
+                Professional renders<br>
+                <span class="gradient">from your pocket.</span>
+            </h1>
+            <p class="hero-sub">
+                Take a photo. Place real furniture. Get an ultra-realistic render in 60 seconds.
+                All from your phone, on-site with the client.
+            </p>
+            <div class="hero-cta">
+                <a href="#waitlist" class="btn btn-primary btn-lg">Join the Waitlist</a>
+                <a href="#workflow" class="btn btn-ghost btn-lg">See How It Works</a>
+            </div>
+            <div class="hero-stats">
+                <div class="hero-stat">
+                    <div class="number">60s</div>
+                    <div class="label">Photo to render</div>
+                </div>
+                <div class="hero-stat">
+                    <div class="number">$4K</div>
+                    <div class="label">Saved per render vs. outsourcing</div>
+                </div>
+                <div class="hero-stat">
+                    <div class="number">30%</div>
+                    <div class="label">Higher client conversion</div>
+                </div>
+                <div class="hero-stat">
+                    <div class="number">7 days</div>
+                    <div class="label">Compressed to 2 minutes</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ==================== PHONE MOCKUP ==================== -->
+    <section class="phone-demo fade-up">
+        <div class="phone-frame">
+            <div class="phone-screen">
+                <div class="phone-notch"></div>
+                <div class="phone-ui">
+                    <div class="phone-header">
+                        <span>9:41</span>
+                        <span class="app-title">RenderView</span>
+                        <span>Pro</span>
+                    </div>
+                    <div class="phone-camera-view">
+                        <div class="room-elements">
+                            <div class="room-floor"></div>
+                            <div class="room-wall-left"></div>
+                            <div class="room-window"></div>
+                            <div class="room-sofa"></div>
+                            <div class="room-table"></div>
+                        </div>
+                        <div class="room-overlay">
+                            <div class="ai-detection-box">
+                                <span class="ai-label">Wall Surface</span>
+                                <span class="ai-conf">98.2%</span>
+                            </div>
+                            <div class="ai-detection-box">
+                                <span class="ai-label" style="color: var(--warm);">Sofa - Remove?</span>
+                                <span class="ai-conf">95.7%</span>
+                            </div>
+                            <div class="ai-detection-box">
+                                <span class="ai-label" style="color: var(--success);">Floor: Hardwood</span>
+                                <span class="ai-conf">97.1%</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="phone-bottom-bar">
+                        <button class="phone-action-btn catalog">Catalog</button>
+                        <button class="phone-action-btn render">Render in 60s</button>
+                        <button class="phone-action-btn catalog">Share</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ==================== WORKFLOW ==================== -->
+    <section class="workflow fade-up" id="workflow">
+        <h2>From pocket to presentation in 4 steps</h2>
+        <p class="section-sub">No desktop required. No 3D modeling. No waiting days for renders.</p>
+        <div class="steps">
+            <div class="step">
+                <div class="step-number">01</div>
+                <div class="step-icon">
+                    <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="var(--accent-light)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+                        <circle cx="12" cy="13" r="4"/>
+                    </svg>
+                </div>
+                <h3>Snap</h3>
+                <p>Take a photo of any room. AI instantly maps depth, surfaces, and existing furniture.</p>
+                <span class="step-time">10 seconds</span>
+            </div>
+            <div class="step">
+                <div class="step-number">02</div>
+                <div class="step-icon">
+                    <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="var(--warm)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="1" y="4" width="22" height="16" rx="2" ry="2"/>
+                        <line x1="1" y1="10" x2="23" y2="10"/>
+                    </svg>
+                </div>
+                <h3>Place</h3>
+                <p>Browse real furniture catalogs. Drag items into the scene at correct scale and perspective.</p>
+                <span class="step-time">30 seconds</span>
+            </div>
+            <div class="step">
+                <div class="step-number">03</div>
+                <div class="step-icon">
+                    <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="var(--success)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                        <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+                    </svg>
+                </div>
+                <h3>Render</h3>
+                <p>Cloud AI generates an ultra-realistic render in under 60 seconds. Print-ready 4K quality.</p>
+                <span class="step-time">60 seconds</span>
+            </div>
+            <div class="step">
+                <div class="step-number">04</div>
+                <div class="step-icon">
+                    <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#ff6b9d" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/>
+                        <line x1="4" y1="22" x2="4" y2="15"/>
+                    </svg>
+                </div>
+                <h3>Close</h3>
+                <p>Show the client on-site. Iterate live. Share via link. Get approval on the spot.</p>
+                <span class="step-time">The deal</span>
+            </div>
+        </div>
+    </section>
+
+    <!-- ==================== PAIN POINTS ==================== -->
+    <section class="pain-section fade-up" id="problems">
+        <div class="pain-inner">
+            <h2>Built for the problems you actually have</h2>
+            <div class="pain-grid">
+                <div class="pain-card">
+                    <div class="pain-emoji">
+                        <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="var(--warm)" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path d="M16 16s-1.5-2-4-2-4 2-4 2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>
+                    </div>
+                    <h3>The $4,000 Render</h3>
+                    <p>Outsourced renders cost $250-$4,000 each and take 3-8 days. In-house rendering takes 40+ hours of skilled labor.</p>
+                    <div class="solve">RenderView: $0.40/render, 60 seconds.</div>
+                </div>
+                <div class="pain-card">
+                    <div class="pain-emoji">
+                        <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="var(--warm)" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                    </div>
+                    <h3>The 7-Day Gap</h3>
+                    <p>Between first site visit and presenting renders, you lose 40% of prospects. They cool off or pick another designer.</p>
+                    <div class="solve">RenderView: Show renders on-site, close same day.</div>
+                </div>
+                <div class="pain-card">
+                    <div class="pain-emoji">
+                        <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="var(--warm)" stroke-width="1.5"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+                    </div>
+                    <h3>The Desktop Prison</h3>
+                    <p>V-Ray, Enscape, Lumion all need powerful desktops + 3D software. You're chained to your desk to produce any visual.</p>
+                    <div class="solve">RenderView: Your phone is your render station.</div>
+                </div>
+                <div class="pain-card">
+                    <div class="pain-emoji">
+                        <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="var(--warm)" stroke-width="1.5"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><line x1="3.27" y1="6.96" x2="12" y2="12.01"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
+                    </div>
+                    <h3>The Furniture Fantasy</h3>
+                    <p>AI tools generate pretty images with furniture that doesn't exist. You can't spec it, price it, or buy it.</p>
+                    <div class="solve">RenderView: Real products, real prices, real specs.</div>
+                </div>
+                <div class="pain-card">
+                    <div class="pain-emoji">
+                        <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="var(--warm)" stroke-width="1.5"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                    </div>
+                    <h3>The Expectation Trap</h3>
+                    <p>Ultra-realistic renders set unrealistic expectations. But without renders, clients can't visualize anything.</p>
+                    <div class="solve">RenderView: Choose your fidelity - sketch, concept, or ultra.</div>
+                </div>
+                <div class="pain-card">
+                    <div class="pain-emoji">
+                        <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="var(--warm)" stroke-width="1.5"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                    </div>
+                    <h3>The Lost Client</h3>
+                    <p>No collaboration tools. Renders go via email. Client feedback gets lost. Approvals take forever.</p>
+                    <div class="solve">RenderView: Client portal with comments + 1-tap approval.</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ==================== COMPARISON ==================== -->
+    <section class="comparison fade-up" id="compare">
+        <h2>How we compare</h2>
+        <table class="compare-table">
+            <thead>
+                <tr>
+                    <th>Feature</th>
+                    <th>Traditional</th>
+                    <th>AI Tools</th>
+                    <th>RenderView</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Render from photo</td>
+                    <td class="cross">No - requires 3D model</td>
+                    <td class="check">Yes</td>
+                    <td class="check">Yes</td>
+                </tr>
+                <tr>
+                    <td>Mobile-native</td>
+                    <td class="cross">Desktop only</td>
+                    <td class="partial">Web only</td>
+                    <td class="check">Native iOS + Android</td>
+                </tr>
+                <tr>
+                    <td>On-site rendering</td>
+                    <td class="cross">No</td>
+                    <td class="cross">No</td>
+                    <td class="check">Yes - 60 seconds</td>
+                </tr>
+                <tr>
+                    <td>Real furniture catalog</td>
+                    <td class="partial">Manual import</td>
+                    <td class="cross">AI-generated (fake)</td>
+                    <td class="check">Real brands + pricing</td>
+                </tr>
+                <tr>
+                    <td>Render quality</td>
+                    <td class="check">Ultra (hours)</td>
+                    <td class="partial">Medium</td>
+                    <td class="check">Ultra (60 seconds)</td>
+                </tr>
+                <tr>
+                    <td>Material swapping</td>
+                    <td class="partial">Complex workflow</td>
+                    <td class="cross">No</td>
+                    <td class="check">Tap any surface</td>
+                </tr>
+                <tr>
+                    <td>Client collaboration</td>
+                    <td class="cross">Email PDFs</td>
+                    <td class="cross">Share links</td>
+                    <td class="check">Portal + approval</td>
+                </tr>
+                <tr>
+                    <td>Cost per render</td>
+                    <td>$250 - $4,000</td>
+                    <td>$0.30 - $2.00</td>
+                    <td><strong>$0.40</strong></td>
+                </tr>
+                <tr class="highlight">
+                    <td>Time to render</td>
+                    <td>3-8 days</td>
+                    <td>10-30 seconds</td>
+                    <td><strong>60 seconds (4K)</strong></td>
+                </tr>
+            </tbody>
+        </table>
+    </section>
+
+    <!-- ==================== PRICING ==================== -->
+    <section class="pricing fade-up" id="pricing">
+        <div class="pricing-inner">
+            <h2>Simple, honest pricing</h2>
+            <p class="section-sub">Every plan includes the full AI render pipeline. No hidden costs.</p>
+            <div class="pricing-grid">
+                <div class="price-card">
+                    <h3>Starter</h3>
+                    <p class="desc">For solo designers getting started</p>
+                    <div class="price-amount">$29<span>/mo</span></div>
+                    <ul class="price-features">
+                        <li>50 renders/month</li>
+                        <li>10 style presets</li>
+                        <li>Basic furniture catalog</li>
+                        <li>Share via link</li>
+                        <li>1 user</li>
+                    </ul>
+                    <a href="#waitlist" class="btn btn-ghost" style="width:100%;">Join Waitlist</a>
+                </div>
+                <div class="price-card featured">
+                    <div class="tag">Most Popular</div>
+                    <h3>Professional</h3>
+                    <p class="desc">For active designers and small firms</p>
+                    <div class="price-amount">$79<span>/mo</span></div>
+                    <ul class="price-features">
+                        <li>200 renders/month</li>
+                        <li>All styles + custom presets</li>
+                        <li>Full furniture catalog</li>
+                        <li>PDF proposal generation</li>
+                        <li>Client portal + approval</li>
+                        <li>Priority rendering queue</li>
+                        <li>3 team members</li>
+                    </ul>
+                    <a href="#waitlist" class="btn btn-primary" style="width:100%;">Join Waitlist</a>
+                </div>
+                <div class="price-card">
+                    <h3>Studio</h3>
+                    <p class="desc">For design firms and agencies</p>
+                    <div class="price-amount">$199<span>/mo</span></div>
+                    <ul class="price-features">
+                        <li>Unlimited renders</li>
+                        <li>White-label client portal</li>
+                        <li>Up to 15 team members</li>
+                        <li>API access</li>
+                        <li>Custom brand presets</li>
+                        <li>Priority support</li>
+                        <li>Analytics dashboard</li>
+                    </ul>
+                    <a href="#waitlist" class="btn btn-ghost" style="width:100%;">Join Waitlist</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ==================== WAITLIST ==================== -->
+    <section class="waitlist fade-up" id="waitlist">
+        <h2>Be first in line.</h2>
+        <p>Join the waitlist and get early access when we launch. Plus 50 free renders on us.</p>
+        <form class="waitlist-form" id="waitlistForm">
+            <input type="email" id="emailInput" placeholder="you@designfirm.com" required>
+            <button type="submit" class="btn btn-warm btn-lg">Get Early Access</button>
+        </form>
+        <p class="waitlist-count"><strong id="signupCount">247</strong> designers already on the list</p>
+    </section>
+
+    <!-- ==================== FOOTER ==================== -->
+    <footer>
+        <p>RenderView &mdash; Professional renders from your pocket. &copy; 2026</p>
+    </footer>
+
+    <!-- Toast notification -->
+    <div class="toast" id="toast"></div>
+
+    <script>
+        // Intersection observer for fade-up animations
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('visible');
+                }
+            });
+        }, { threshold: 0.1 });
+
+        document.querySelectorAll('.fade-up').forEach(el => observer.observe(el));
+
+        // Waitlist form
+        const form = document.getElementById('waitlistForm');
+        const emailInput = document.getElementById('emailInput');
+        const signupCount = document.getElementById('signupCount');
+        const toast = document.getElementById('toast');
+
+        form.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const email = emailInput.value.trim();
+            if (!email) return;
+
+            // Store in localStorage for now
+            const signups = JSON.parse(localStorage.getItem('rv_signups') || '[]');
+            if (signups.includes(email)) {
+                showToast("You're already on the list!");
+                return;
+            }
+            signups.push(email);
+            localStorage.setItem('rv_signups', JSON.stringify(signups));
+
+            // Update count
+            const currentCount = parseInt(signupCount.textContent);
+            signupCount.textContent = currentCount + 1;
+
+            // Show success
+            showToast("You're in! We'll email you when we launch.");
+            emailInput.value = '';
+
+            // Log for analytics
+            console.log('[RenderView] Waitlist signup:', email);
+        });
+
+        function showToast(msg) {
+            toast.textContent = msg;
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 3500);
+        }
+
+        // Smooth scroll for anchor links
+        document.querySelectorAll('a[href^="#"]').forEach(link => {
+            link.addEventListener('click', (e) => {
+                e.preventDefault();
+                const target = document.querySelector(link.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+            });
+        });
+
+        // Navbar scroll effect
+        let lastScroll = 0;
+        window.addEventListener('scroll', () => {
+            const nav = document.querySelector('nav');
+            const scrolled = window.scrollY > 50;
+            nav.style.borderBottomColor = scrolled ? 'rgba(34, 34, 40, 0.8)' : 'rgba(34, 34, 40, 0.5)';
+        });
+    </script>
+</body>
+</html>

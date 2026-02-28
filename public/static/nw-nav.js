@@ -397,7 +397,9 @@ const NW_NAV = {
                 { id: 'innovation', name: { en: 'Innovation Lab', zh: '創新實驗室', th: 'ห้องนวัตกรรม' }, icon: 'lightning', href: '/innovation', isNew: true },
                 { id: 'quality-metrics', name: { en: 'Quality Metrics', zh: '質量指標', th: 'ตัวชี้วัดคุณภาพ' }, icon: 'trophy', href: '/quality', isNew: true },
                 { id: 'learning-log', name: { en: 'Learning Log', zh: '學習日誌', th: 'บันทึกการเรียนรู้' }, icon: 'book', href: '/learning', isNew: true },
-                { id: 'card-lab', name: { en: 'Card Lab', zh: '卡片實驗室', th: 'ห้องแล็บการ์ด' }, icon: 'sparkles', href: '/card-lab', isNew: true }
+                { id: 'card-lab', name: { en: 'Card Lab', zh: '卡片實驗室', th: 'ห้องแล็บการ์ด' }, icon: 'sparkles', href: '/card-lab', isNew: true },
+                { id: 'archviz', name: { en: 'ArchViz Builder', zh: '建築視覺化', th: 'สร้างสถาปัตย์' }, icon: 'chart', href: '/archviz', isNew: true, isHot: true },
+                { id: 'world-builder', name: { en: 'World Builder', zh: '世界建造器', th: 'สร้างโลก' }, icon: 'globe', href: '/world-builder', isNew: true, isHot: true }
             ]
         },
         resources: {
@@ -509,6 +511,9 @@ const NW_NAV = {
         'quality-metrics': '/efficiency',
         'learning-log': '/efficiency',
         'card-lab': '/efficiency',
+        // Build Lab — Builders
+        'archviz': '/efficiency',
+        'world-builder': '/efficiency',
         // Alliance
         'embassy': '/',
         'matchalatte': '/embassy',

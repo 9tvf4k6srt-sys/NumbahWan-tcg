@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Wyckoff AI 台股操盤系統</title>
+<script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#0a0e17;--bg2:#111827;--bg3:#1e293b;--card:#1a2332;--border:rgba(148,163,184,.12);
+--accent:#3b82f6;--green:#22c55e;--red:#ef4444;--yellow:#eab308;--purple:#a855f7;
+--text:#e2e8f0;--text2:#94a3b8;--dim:#64748b;--font:'Segoe UI',system-ui,sans-serif;--mono:'Cascadia Code',monospace}
+body{background:var(--bg);color:var(--text);font-family:var(--font);min-height:100vh}
+/* ── Layout ── */
+.header{background:var(--bg2);border-bottom:1px solid var(--border);padding:12px 24px;display:flex;align-items:center;gap:16px;position:sticky;top:0;z-index:50}
+.header h1{font-size:1.1rem;font-weight:800;letter-spacing:-.03em}
+.header h1 span{color:var(--accent)}
+.header .tag{font-size:.55rem;padding:2px 8px;background:rgba(59,130,246,.15);border:1px solid rgba(59,130,246,.3);border-radius:4px;color:var(--accent);font-weight:700;text-transform:uppercase}
+.main{max-width:1400px;margin:0 auto;padding:20px}
+/* ── Controls ── */
+.controls{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:20px;padding:14px;background:var(--card);border:1px solid var(--border);border-radius:10px}
+.ctrl-group{display:flex;align-items:center;gap:6px}
+.ctrl-group label{font-size:.68rem;color:var(--dim);font-weight:600;text-transform:uppercase;letter-spacing:.04em}
+select,input[type=text],input[type=number]{padding:6px 10px;background:var(--bg3);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:.78rem;font-family:var(--font);outline:none}
+select:focus,input:focus{border-color:var(--accent)}
+.btn{padding:7px 18px;border:none;border-radius:8px;font-weight:700;font-size:.75rem;cursor:pointer;font-family:var(--font);transition:all .15s}
+.btn-primary{background:var(--accent);color:#fff}.btn-primary:hover{background:#2563eb}
+.btn-secondary{background:var(--bg3);color:var(--text2);border:1px solid var(--border)}.btn-secondary:hover{background:rgba(255,255,255,.06)}
+.btn-success{background:var(--green);color:#fff}.btn-success:hover{filter:brightness(1.1)}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.spacer{flex:1}
+/* ── Cards ── */
+.grid{display:grid;gap:16px;margin-bottom:20px}
+.grid-2{grid-template-columns:1fr 1fr}
+.grid-3{grid-template-columns:1fr 1fr 1fr}
+.grid-4{grid-template-columns:repeat(4,1fr)}
+@media(max-width:900px){.grid-2,.grid-3,.grid-4{grid-template-columns:1fr}}
+.card{background:var(--card);border:1px solid var(--border);border-radius:10px;overflow:hidden}
+.card-head{padding:10px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px}
+.card-head h3{font-size:.78rem;font-weight:700;flex:1}
+.card-body{padding:14px}
+/* ── Stats ── */
+.stat{text-align:center;padding:16px 10px}
+.stat-val{font-size:1.5rem;font-weight:800;letter-spacing:-.03em}
+.stat-label{font-size:.58rem;color:var(--dim);font-weight:600;text-transform:uppercase;margin-top:4px;letter-spacing:.06em}
+.stat-val.green{color:var(--green)}.stat-val.red{color:var(--red)}.stat-val.blue{color:var(--accent)}.stat-val.yellow{color:var(--yellow)}.stat-val.purple{color:var(--purple)}
+/* ── Phase badges ── */
+.phase-badge{display:inline-block;padding:3px 10px;border-radius:5px;font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em}
+.phase-accumulation{background:rgba(34,197,94,.15);color:var(--green);border:1px solid rgba(34,197,94,.3)}
+.phase-markup{background:rgba(59,130,246,.15);color:var(--accent);border:1px solid rgba(59,130,246,.3)}
+.phase-distribution{background:rgba(239,68,68,.15);color:var(--red);border:1px solid rgba(239,68,68,.3)}
+.phase-markdown{background:rgba(168,85,247,.15);color:var(--purple);border:1px solid rgba(168,85,247,.3)}
+.phase-unknown{background:rgba(100,116,139,.15);color:var(--dim);border:1px solid rgba(100,116,139,.3)}
+/* ── Trades table ── */
+.tbl{width:100%;border-collapse:collapse;font-size:.72rem}
+.tbl th{background:var(--bg3);padding:8px 10px;text-align:left;font-size:.6rem;text-transform:uppercase;letter-spacing:.06em;color:var(--dim);font-weight:700;position:sticky;top:0}
+.tbl td{padding:7px 10px;border-bottom:1px solid var(--border)}
+.tbl tr:hover td{background:rgba(255,255,255,.02)}
+.pnl-pos{color:var(--green);font-weight:700}.pnl-neg{color:var(--red);font-weight:700}
+/* ── Signal list ── */
+.signal{padding:10px 14px;border-bottom:1px solid var(--border);display:flex;gap:10px;align-items:flex-start}
+.signal:last-child{border-bottom:none}
+.signal-icon{font-size:1.2rem;flex-shrink:0;margin-top:2px}
+.signal-body{flex:1}.signal-body h4{font-size:.75rem;font-weight:700;margin-bottom:3px}
+.signal-body p{font-size:.65rem;color:var(--text2);line-height:1.4}
+.signal-strength{font-size:.6rem;font-weight:700;padding:2px 8px;border-radius:4px;white-space:nowrap}
+/* ── Loading ── */
+.loading{text-align:center;padding:40px;color:var(--dim)}
+.loading .spinner{display:inline-block;width:24px;height:24px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+/* ── Chart ── */
+.chart-container{width:100%;min-height:450px}
+#chart-main{width:100%;height:500px}
+#chart-volume{width:100%;height:180px}
+#chart-evr{width:100%;height:200px}
+#chart-equity{width:100%;height:300px}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1><span>Wyckoff</span> AI 台股操盤</h1>
+  <div class="tag">Alpha v0.1</div>
+  <div style="flex:1"></div>
+  <span style="font-size:.65rem;color:var(--dim)">Composite Man Tracker</span>
+</div>
+
+<div class="main">
+  <!-- Controls -->
+  <div class="controls" id="controls">
+    <div class="ctrl-group">
+      <label>股票代號</label>
+      <input type="text" id="stock-id" value="2330" style="width:80px" placeholder="e.g. 2330">
+    </div>
+    <div class="ctrl-group">
+      <label>月數</label>
+      <select id="months">
+        <option value="6">6個月</option>
+        <option value="12" selected>12個月</option>
+        <option value="18">18個月</option>
+        <option value="24">24個月</option>
+      </select>
+    </div>
+    <div class="ctrl-group">
+      <label>策略</label>
+      <select id="strategy">
+        <option value="composite_man">Composite Man (完整)</option>
+        <option value="spring_hunter">Spring Hunter (保守)</option>
+        <option value="phase_follower">Phase Follower (波段)</option>
+      </select>
+    </div>
+    <div class="ctrl-group">
+      <label>初始資金</label>
+      <input type="number" id="capital" value="1000000" step="100000" style="width:110px">
+    </div>
+    <div class="ctrl-group">
+      <label>停損%</label>
+      <input type="number" id="stop-loss" value="7" min="1" max="20" step="1" style="width:60px">
+    </div>
+    <div class="ctrl-group">
+      <label>停利%</label>
+      <input type="number" id="take-profit" value="20" min="5" max="50" step="1" style="width:60px">
+    </div>
+    <div class="ctrl-group">
+      <label>
+        <input type="checkbox" id="use-synthetic" checked> 測試資料
+      </label>
+    </div>
+    <div class="spacer"></div>
+    <button class="btn btn-primary" id="btn-analyze" onclick="runAnalysis()">🔍 分析</button>
+    <button class="btn btn-success" id="btn-backtest" onclick="runBacktest()">📊 回測</button>
+  </div>
+
+  <!-- Current Phase + Stats -->
+  <div class="grid grid-4" id="stats-row" style="display:none">
+    <div class="card">
+      <div class="stat">
+        <div class="stat-val blue" id="stat-phase">—</div>
+        <div class="stat-label">當前 Wyckoff 階段</div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="stat">
+        <div class="stat-val" id="stat-signal">—</div>
+        <div class="stat-label">訊號</div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="stat">
+        <div class="stat-val" id="stat-confidence">—</div>
+        <div class="stat-label">信心度</div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="stat">
+        <div class="stat-val" id="stat-bars">—</div>
+        <div class="stat-label">分析K棒數</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Charts -->
+  <div class="card" id="chart-card" style="display:none;margin-bottom:16px">
+    <div class="card-head"><h3>📈 Wyckoff 量價分析</h3></div>
+    <div class="card-body">
+      <div id="chart-main" class="chart-container"></div>
+      <div id="chart-volume" class="chart-container" style="margin-top:-30px"></div>
+      <div id="chart-evr" class="chart-container" style="margin-top:10px"></div>
+    </div>
+  </div>
+
+  <!-- Signals + Phases side by side -->
+  <div class="grid grid-2" id="analysis-row" style="display:none">
+    <div class="card">
+      <div class="card-head"><h3>🎯 交易訊號</h3></div>
+      <div class="card-body" id="signals-list" style="max-height:400px;overflow-y:auto">
+        <div class="loading">等待分析...</div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-head"><h3>🔄 Wyckoff 階段</h3></div>
+      <div class="card-body" id="phases-list" style="max-height:400px;overflow-y:auto">
+        <div class="loading">等待分析...</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Backtest Results -->
+  <div id="backtest-section" style="display:none;margin-top:16px">
+    <div class="grid grid-4" id="bt-stats">
+      <div class="card"><div class="stat"><div class="stat-val green" id="bt-return">—</div><div class="stat-label">總報酬</div></div></div>
+      <div class="card"><div class="stat"><div class="stat-val blue" id="bt-winrate">—</div><div class="stat-label">勝率</div></div></div>
+      <div class="card"><div class="stat"><div class="stat-val yellow" id="bt-pf">—</div><div class="stat-label">獲利因子</div></div></div>
+      <div class="card"><div class="stat"><div class="stat-val red" id="bt-mdd">—</div><div class="stat-label">最大回撤</div></div></div>
+    </div>
+    <div class="grid grid-2" style="margin-top:16px">
+      <div class="card">
+        <div class="card-head"><h3>💰 權益曲線</h3></div>
+        <div class="card-body"><div id="chart-equity" class="chart-container"></div></div>
+      </div>
+      <div class="card">
+        <div class="card-head"><h3>📋 交易紀錄</h3></div>
+        <div class="card-body" style="max-height:350px;overflow-y:auto" id="trades-table">
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const API = '';
+
+async function runAnalysis() {
+  const btn = document.getElementById('btn-analyze');
+  btn.disabled = true; btn.textContent = '⏳ 分析中...';
+
+  try {
+    const params = getParams();
+
+    // Fetch chart data + analysis
+    const [chartRes, analysisRes] = await Promise.all([
+      fetch(API + '/api/chart_data', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(params)}),
+      fetch(API + '/api/analyze', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(params)}),
+    ]);
+
+    const chartData = await chartRes.json();
+    const analysisData = await analysisRes.json();
+
+    if (chartData.status === 'ok') {
+      renderChart(chartData);
+    }
+    if (analysisData.status === 'ok') {
+      renderAnalysis(analysisData.data);
+    }
+
+    document.getElementById('stats-row').style.display = '';
+    document.getElementById('chart-card').style.display = '';
+    document.getElementById('analysis-row').style.display = '';
+
+  } catch(e) {
+    alert('分析失敗: ' + e.message);
+  } finally {
+    btn.disabled = false; btn.textContent = '🔍 分析';
+  }
+}
+
+async function runBacktest() {
+  const btn = document.getElementById('btn-backtest');
+  btn.disabled = true; btn.textContent = '⏳ 回測中...';
+
+  try {
+    const params = getParams();
+    params.capital = parseInt(document.getElementById('capital').value);
+    params.stop_loss = parseInt(document.getElementById('stop-loss').value) / 100;
+    params.take_profit = parseInt(document.getElementById('take-profit').value) / 100;
+
+    const res = await fetch(API + '/api/backtest', {
+      method: 'POST', headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify(params),
+    });
+    const data = await res.json();
+
+    if (data.status === 'ok') {
+      renderBacktest(data);
+      document.getElementById('backtest-section').style.display = '';
+    } else {
+      alert('回測失敗: ' + (data.message || 'unknown'));
+    }
+  } catch(e) {
+    alert('回測失敗: ' + e.message);
+  } finally {
+    btn.disabled = false; btn.textContent = '📊 回測';
+  }
+}
+
+function getParams() {
+  return {
+    stock_id: document.getElementById('stock-id').value || '2330',
+    months: parseInt(document.getElementById('months').value),
+    strategy: document.getElementById('strategy').value,
+    synthetic: document.getElementById('use-synthetic').checked,
+  };
+}
+
+function renderChart(data) {
+  const bars = data.bars;
+  const dates = bars.map(b => b.date);
+  const opens = bars.map(b => b.open);
+  const highs = bars.map(b => b.high);
+  const lows = bars.map(b => b.low);
+  const closes = bars.map(b => b.close);
+  const volumes = bars.map(b => b.volume);
+
+  // Phase background shapes
+  const shapes = [];
+  const phaseColors = {
+    accumulation: 'rgba(34,197,94,0.06)',
+    markup: 'rgba(59,130,246,0.06)',
+    distribution: 'rgba(239,68,68,0.06)',
+    markdown: 'rgba(168,85,247,0.06)',
+  };
+  (data.phases || []).forEach(p => {
+    shapes.push({
+      type: 'rect', xref: 'x', yref: 'paper',
+      x0: p.start_date, x1: p.end_date, y0: 0, y1: 1,
+      fillcolor: phaseColors[p.phase] || 'rgba(100,100,100,0.03)',
+      line: {width: 0}, layer: 'below',
+    });
+  });
+
+  // Event annotations
+  const annotations = [];
+  (data.events || []).forEach(e => {
+    if (e.type === 'spring') {
+      annotations.push({
+        x: e.date, y: e.level, xref: 'x', yref: 'y',
+        text: '🟢 Spring', showarrow: true, arrowhead: 2,
+        font: {size: 10, color: '#22c55e'}, bgcolor: 'rgba(34,197,94,0.15)',
+        bordercolor: '#22c55e', borderwidth: 1, borderpad: 3,
+      });
+    } else if (e.type === 'upthrust') {
+      annotations.push({
+        x: e.date, y: e.level, xref: 'x', yref: 'y',
+        text: '🔴 Upthrust', showarrow: true, arrowhead: 2, ay: -30,
+        font: {size: 10, color: '#ef4444'}, bgcolor: 'rgba(239,68,68,0.15)',
+        bordercolor: '#ef4444', borderwidth: 1, borderpad: 3,
+      });
+    }
+  });
+
+  // Main candlestick chart
+  const candlestick = {
+    x: dates, open: opens, high: highs, low: lows, close: closes,
+    type: 'candlestick', name: 'Price',
+    increasing: {line: {color: '#22c55e'}, fillcolor: '#22c55e'},
+    decreasing: {line: {color: '#ef4444'}, fillcolor: '#ef4444'},
+  };
+
+  const layoutMain = {
+    paper_bgcolor: 'transparent', plot_bgcolor: 'transparent',
+    font: {color: '#94a3b8', family: 'Segoe UI, sans-serif', size: 11},
+    xaxis: {gridcolor: 'rgba(148,163,184,0.06)', rangeslider: {visible: false}, type: 'date'},
+    yaxis: {gridcolor: 'rgba(148,163,184,0.06)', title: '價格'},
+    margin: {l: 50, r: 20, t: 10, b: 30},
+    shapes, annotations,
+    showlegend: false,
+  };
+
+  Plotly.newPlot('chart-main', [candlestick], layoutMain, {responsive: true, displayModeBar: false});
+
+  // Volume chart with color coding
+  const volColors = volumes.map((v, i) => {
+    if (i === 0) return '#475569';
+    return closes[i] >= closes[i-1] ? 'rgba(34,197,94,0.6)' : 'rgba(239,68,68,0.6)';
+  });
+
+  const volTrace = {
+    x: dates, y: volumes, type: 'bar', name: 'Volume',
+    marker: {color: volColors},
+  };
+
+  const layoutVol = {
+    paper_bgcolor: 'transparent', plot_bgcolor: 'transparent',
+    font: {color: '#94a3b8', size: 10},
+    xaxis: {gridcolor: 'rgba(148,163,184,0.04)', type: 'date'},
+    yaxis: {gridcolor: 'rgba(148,163,184,0.06)', title: '成交量'},
+    margin: {l: 50, r: 20, t: 5, b: 30},
+    showlegend: false, bargap: 0.3,
+  };
+
+  Plotly.newPlot('chart-volume', [volTrace], layoutVol, {responsive: true, displayModeBar: false});
+
+  // EVR chart
+  const evrData = data.evr || [];
+  if (evrData.length > 0) {
+    const evrColors = evrData.map(e => {
+      if (e.type.includes('bullish') || e.type === 'no_supply') return '#22c55e';
+      if (e.type.includes('bearish') || e.type === 'no_demand') return '#ef4444';
+      return '#64748b';
+    });
+
+    const evrTrace = {
+      x: evrData.map(e => e.date),
+      y: evrData.map(e => e.score),
+      type: 'bar', name: 'Effort vs Result',
+      marker: {color: evrColors},
+    };
+
+    const layoutEvr = {
+      paper_bgcolor: 'transparent', plot_bgcolor: 'transparent',
+      font: {color: '#94a3b8', size: 10},
+      title: {text: 'Effort vs Result (量價背離)', font: {size: 12, color: '#94a3b8'}},
+      xaxis: {gridcolor: 'rgba(148,163,184,0.04)', type: 'date'},
+      yaxis: {gridcolor: 'rgba(148,163,184,0.06)', zeroline: true, zerolinecolor: 'rgba(148,163,184,0.2)'},
+      margin: {l: 50, r: 20, t: 30, b: 30},
+      showlegend: false,
+    };
+
+    Plotly.newPlot('chart-evr', [evrTrace], layoutEvr, {responsive: true, displayModeBar: false});
+  }
+}
+
+function renderAnalysis(data) {
+  // Stats
+  const phaseMap = {accumulation:'吸籌期 Accumulation',markup:'上漲期 Markup',distribution:'出貨期 Distribution',markdown:'下跌期 Markdown',unknown:'未知'};
+  const phaseEl = document.getElementById('stat-phase');
+  phaseEl.textContent = phaseMap[data.current_phase] || data.current_phase;
+  phaseEl.className = 'stat-val ' + ({accumulation:'green',markup:'blue',distribution:'red',markdown:'purple'}[data.current_phase] || '');
+
+  const sig = data.current_signal;
+  const sigEl = document.getElementById('stat-signal');
+  if (sig) {
+    const actionMap = {buy:'🟢 買進',sell:'🔴 賣出',hold:'🟡 持有',watch:'👁 觀察'};
+    sigEl.textContent = actionMap[sig.action] || sig.action;
+    sigEl.className = 'stat-val ' + ({buy:'green',sell:'red',hold:'yellow',watch:'blue'}[sig.action] || '');
+  }
+
+  const phases = data.phases || [];
+  const lastPhase = phases[phases.length - 1];
+  document.getElementById('stat-confidence').textContent = lastPhase ? (lastPhase.confidence * 100).toFixed(0) + '%' : '—';
+  document.getElementById('stat-bars').textContent = data.bars_analyzed || '—';
+
+  // Signals list
+  const sigList = document.getElementById('signals-list');
+  const signals = data.signals || [];
+  if (signals.length === 0) {
+    sigList.innerHTML = '<div style="padding:20px;text-align:center;color:var(--dim)">目前無訊號</div>';
+  } else {
+    sigList.innerHTML = signals.map(s => {
+      const icons = {buy:'🟢',sell:'🔴',hold:'🟡',watch:'👁️'};
+      const colors = {buy:'var(--green)',sell:'var(--red)',hold:'var(--yellow)',watch:'var(--accent)'};
+      return `<div class="signal">
+        <div class="signal-icon">${icons[s.action]||'❓'}</div>
+        <div class="signal-body">
+          <h4 style="color:${colors[s.action]}">${s.action.toUpperCase()} — ${s.phase}</h4>
+          <p>${(s.reasons||[]).join('<br>')}</p>
+          ${s.entry_price?`<p style="margin-top:4px;font-family:var(--mono)">進場: $${s.entry_price} | 停損: $${s.stop_loss||'—'} | 目標: $${s.target_price||'—'}</p>`:''}
+        </div>
+        <div class="signal-strength" style="background:${colors[s.action]}22;color:${colors[s.action]}">${(s.strength*100).toFixed(0)}%</div>
+      </div>`;
+    }).join('');
+  }
+
+  // Phases list
+  const phasesList = document.getElementById('phases-list');
+  phasesList.innerHTML = phases.map(p => `
+    <div style="padding:8px 12px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px">
+      <span class="phase-badge phase-${p.phase}">${p.phase}</span>
+      <span style="font-size:.65rem;color:var(--dim);font-family:var(--mono)">${p.start_date} → ${p.end_date}</span>
+      <span style="font-size:.6rem;color:var(--text2)">${p.sub_phase}</span>
+      <span style="margin-left:auto;font-size:.6rem;font-weight:700;color:var(--accent)">${(p.confidence*100).toFixed(0)}%</span>
+    </div>
+  `).join('');
+}
+
+function renderBacktest(data) {
+  const s = data.summary;
+
+  // Stats
+  const retEl = document.getElementById('bt-return');
+  retEl.textContent = s.total_return;
+  retEl.className = 'stat-val ' + (parseFloat(s.total_return) >= 0 ? 'green' : 'red');
+
+  document.getElementById('bt-winrate').textContent = s.win_rate;
+  document.getElementById('bt-pf').textContent = s.profit_factor;
+  document.getElementById('bt-mdd').textContent = s.max_drawdown;
+
+  // Equity curve
+  const eq = data.equity_curve || [];
+  if (eq.length > 0) {
+    const eqTrace = {
+      x: eq.map(e => e.date), y: eq.map(e => e.equity),
+      type: 'scatter', mode: 'lines',
+      line: {color: '#3b82f6', width: 2},
+      fill: 'tozeroy', fillcolor: 'rgba(59,130,246,0.05)',
+    };
+    const layoutEq = {
+      paper_bgcolor: 'transparent', plot_bgcolor: 'transparent',
+      font: {color: '#94a3b8', size: 10},
+      xaxis: {gridcolor: 'rgba(148,163,184,0.06)', type: 'date'},
+      yaxis: {gridcolor: 'rgba(148,163,184,0.06)', title: '權益 (TWD)'},
+      margin: {l: 60, r: 20, t: 10, b: 30},
+      showlegend: false,
+    };
+    Plotly.newPlot('chart-equity', [eqTrace], layoutEq, {responsive: true, displayModeBar: false});
+  }
+
+  // Trades table
+  const trades = data.trades || [];
+  const tableEl = document.getElementById('trades-table');
+  if (trades.length === 0) {
+    tableEl.innerHTML = '<div style="padding:20px;text-align:center;color:var(--dim)">無交易紀錄</div>';
+  } else {
+    tableEl.innerHTML = `<table class="tbl">
+      <thead><tr><th>進場</th><th>出場</th><th>買價</th><th>賣價</th><th>張數</th><th>損益</th><th>損益%</th><th>天數</th><th>原因</th></tr></thead>
+      <tbody>${trades.map(t => {
+        const pnlClass = parseFloat(t.pnl) >= 0 ? 'pnl-pos' : 'pnl-neg';
+        return `<tr>
+          <td>${t.entry_date}</td><td>${t.exit_date}</td>
+          <td>$${t.entry_price}</td><td>$${t.exit_price}</td>
+          <td>${(t.shares/1000).toFixed(0)}張</td>
+          <td class="${pnlClass}">$${t.pnl.toLocaleString()}</td>
+          <td class="${pnlClass}">${t.pnl_pct}</td>
+          <td>${t.holding_days}天</td>
+          <td style="font-size:.6rem;max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${t.reason}">${t.reason}</td>
+        </tr>`;
+      }).join('')}</tbody>
+    </table>`;
+  }
+}
+
+// Auto-run with synthetic data on load
+window.addEventListener('load', () => {
+  setTimeout(() => { runAnalysis(); }, 300);
+});
+</script>
+</body>
+</html>
