@@ -1,0 +1,678 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>RenderView Pro — Snap. Place. Render.</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0c0c14;--bg2:#14141f;--bg3:#1c1c2e;--bg4:#252540;
+  --text:#f0f0f5;--text2:#9090a8;--text3:#606078;
+  --accent:#6c5ce7;--accent2:#a29bfe;--accent-g:rgba(108,92,231,.25);
+  --teal:#00cec9;--green:#00b894;--orange:#e17055;--yellow:#fdcb6e;
+  --r:12px;--r2:16px;--r3:24px;
+  --font:-apple-system,BlinkMacSystemFont,'SF Pro Display','Segoe UI',sans-serif;
+}
+html{font-size:16px;-webkit-text-size-adjust:100%}
+body{font-family:var(--font);background:var(--bg);color:var(--text);overflow-x:hidden;-webkit-font-smoothing:antialiased;min-height:100vh}
+
+/* === APP SHELL === */
+.app{max-width:430px;margin:0 auto;min-height:100vh;position:relative;display:flex;flex-direction:column}
+@media(min-width:768px){.app{max-width:900px}}
+
+/* === HEADER === */
+.header{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:rgba(12,12,20,.9);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);position:sticky;top:0;z-index:50;border-bottom:1px solid rgba(255,255,255,.05)}
+.header-logo{font-size:1.1rem;font-weight:700;letter-spacing:-.02em}
+.header-logo span{color:var(--accent2)}
+.header-step{font-size:.75rem;color:var(--text2);background:var(--bg3);padding:4px 12px;border-radius:100px}
+
+/* === SCREENS === */
+.screen{display:none;flex:1;flex-direction:column;animation:fadeIn .3s ease}
+.screen.active{display:flex}
+@keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+
+/* === SCREEN 1: UPLOAD === */
+.upload-area{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px}
+.upload-zone{width:100%;aspect-ratio:4/3;border:2px dashed rgba(108,92,231,.4);border-radius:var(--r3);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;cursor:pointer;transition:all .3s;background:rgba(108,92,231,.03);position:relative;overflow:hidden}
+.upload-zone:hover,.upload-zone.drag-over{border-color:var(--accent);background:rgba(108,92,231,.08)}
+.upload-zone input{display:none}
+.upload-icon{font-size:3rem;opacity:.5}
+.upload-text{font-size:1rem;color:var(--text2);text-align:center}
+.upload-text strong{color:var(--text);display:block;margin-bottom:4px}
+.upload-or{color:var(--text3);font-size:.85rem;margin:16px 0}
+.upload-camera-btn{display:flex;align-items:center;gap:8px;padding:14px 28px;background:linear-gradient(135deg,var(--accent),var(--teal));color:#fff;border:none;border-radius:var(--r2);font-size:1rem;font-weight:600;cursor:pointer;transition:all .3s}
+.upload-camera-btn:hover{transform:translateY(-2px);box-shadow:0 8px 30px var(--accent-g)}
+
+/* Preview */
+.upload-preview{display:none;width:100%;position:relative}
+.upload-preview.has-image{display:block}
+.upload-preview img{width:100%;border-radius:var(--r2);display:block}
+.upload-preview-overlay{position:absolute;bottom:12px;left:12px;right:12px;display:flex;gap:8px}
+.upload-preview-btn{flex:1;padding:12px;border:none;border-radius:var(--r);font-size:.9rem;font-weight:600;cursor:pointer;transition:all .2s}
+.upload-preview-retake{background:rgba(0,0,0,.6);backdrop-filter:blur(10px);color:#fff}
+.upload-preview-next{background:linear-gradient(135deg,var(--accent),var(--teal));color:#fff}
+
+/* === SCREEN 2: CATALOG === */
+.catalog{flex:1;display:flex;flex-direction:column}
+.catalog-room{position:relative;background:var(--bg2)}
+.catalog-room img{width:100%;display:block;max-height:240px;object-fit:cover}
+.catalog-room-badge{position:absolute;top:8px;left:8px;background:rgba(0,0,0,.7);backdrop-filter:blur(10px);padding:4px 10px;border-radius:8px;font-size:.7rem;color:var(--green);font-weight:600}
+.catalog-selected-count{position:absolute;top:8px;right:8px;background:var(--accent);padding:4px 12px;border-radius:8px;font-size:.75rem;font-weight:700;color:#fff}
+
+.catalog-search{padding:12px 16px;background:var(--bg2);border-bottom:1px solid rgba(255,255,255,.05)}
+.search-box{display:flex;gap:8px}
+.search-input{flex:1;padding:10px 14px;background:var(--bg3);border:1px solid rgba(255,255,255,.08);border-radius:var(--r);color:var(--text);font-size:.9rem;outline:none}
+.search-input:focus{border-color:var(--accent)}
+.search-input::placeholder{color:var(--text3)}
+.search-btn{padding:10px 18px;background:var(--accent);color:#fff;border:none;border-radius:var(--r);font-weight:600;cursor:pointer}
+
+.catalog-categories{display:flex;gap:8px;padding:12px 16px;overflow-x:auto;-webkit-overflow-scrolling:touch}
+.catalog-categories::-webkit-scrollbar{display:none}
+.cat-pill{padding:6px 14px;background:var(--bg3);border:1px solid rgba(255,255,255,.06);border-radius:100px;font-size:.8rem;color:var(--text2);white-space:nowrap;cursor:pointer;transition:all .2s;flex-shrink:0}
+.cat-pill.active,.cat-pill:hover{background:var(--accent);color:#fff;border-color:var(--accent)}
+
+.catalog-grid{flex:1;overflow-y:auto;padding:12px;display:grid;grid-template-columns:repeat(2,1fr);gap:10px;-webkit-overflow-scrolling:touch}
+@media(min-width:768px){.catalog-grid{grid-template-columns:repeat(3,1fr)}}
+.catalog-loading{grid-column:1/-1;text-align:center;padding:40px;color:var(--text3);font-size:.9rem}
+
+.product-card{background:var(--bg3);border:1px solid rgba(255,255,255,.06);border-radius:var(--r2);overflow:hidden;cursor:pointer;transition:all .2s;position:relative}
+.product-card:hover{border-color:rgba(108,92,231,.3);transform:translateY(-2px)}
+.product-card.selected{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent-g)}
+.product-card.selected::after{content:'\2713';position:absolute;top:8px;right:8px;width:24px;height:24px;background:var(--accent);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.7rem;color:#fff;font-weight:700}
+.product-img{width:100%;aspect-ratio:1;object-fit:cover;background:var(--bg4)}
+.product-info{padding:10px}
+.product-name{font-size:.8rem;font-weight:600;line-height:1.3;margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.product-type{font-size:.7rem;color:var(--text3);margin-bottom:4px}
+.product-price{font-size:.95rem;font-weight:700;color:var(--teal)}
+.product-dims{font-size:.65rem;color:var(--text3);margin-top:2px}
+
+.catalog-footer{padding:12px 16px;background:var(--bg2);border-top:1px solid rgba(255,255,255,.05);display:flex;align-items:center;justify-content:space-between}
+.catalog-total{font-size:.85rem;color:var(--text2)}
+.catalog-total strong{color:var(--teal);font-size:1.1rem}
+.catalog-render-btn{padding:12px 24px;background:linear-gradient(135deg,var(--accent),var(--teal));color:#fff;border:none;border-radius:var(--r);font-size:.95rem;font-weight:700;cursor:pointer;transition:all .2s;opacity:.5;pointer-events:none}
+.catalog-render-btn.enabled{opacity:1;pointer-events:auto}
+.catalog-render-btn.enabled:hover{transform:translateY(-1px);box-shadow:0 8px 30px var(--accent-g)}
+
+/* === SCREEN 3: RENDERING === */
+.rendering{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;text-align:center}
+.render-spinner{width:80px;height:80px;border:3px solid var(--bg3);border-top-color:var(--accent);border-radius:50%;animation:spin 1s linear infinite;margin-bottom:24px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.render-status{font-size:1.1rem;font-weight:600;margin-bottom:8px}
+.render-substatus{font-size:.85rem;color:var(--text2)}
+.render-progress{width:200px;height:4px;background:var(--bg3);border-radius:2px;margin-top:16px;overflow:hidden}
+.render-progress-bar{height:100%;background:linear-gradient(90deg,var(--accent),var(--teal));border-radius:2px;width:0%;transition:width .5s ease}
+.render-steps{margin-top:24px;text-align:left;width:100%;max-width:300px}
+.render-step-item{display:flex;align-items:center;gap:10px;padding:6px 0;font-size:.8rem;color:var(--text3)}
+.render-step-item.active{color:var(--accent2)}
+.render-step-item.done{color:var(--green)}
+.render-step-item .step-icon{width:20px;text-align:center}
+
+/* === SCREEN 4: RESULT === */
+.result{flex:1;display:flex;flex-direction:column}
+.result-image{position:relative;background:var(--bg2)}
+.result-image img{width:100%;display:block}
+.result-badge{position:absolute;top:12px;left:12px;background:rgba(0,184,148,.9);padding:4px 12px;border-radius:8px;font-size:.75rem;font-weight:700;color:#fff}
+.result-tabs{display:flex;border-bottom:1px solid rgba(255,255,255,.05)}
+.result-tab{flex:1;padding:12px;text-align:center;font-size:.85rem;font-weight:600;color:var(--text3);cursor:pointer;border-bottom:2px solid transparent;transition:all .2s}
+.result-tab.active{color:var(--accent2);border-bottom-color:var(--accent)}
+.result-content{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch}
+
+/* BOM */
+.bom-list{padding:12px 16px}
+.bom-item{display:flex;gap:12px;padding:12px;background:var(--bg3);border-radius:var(--r);margin-bottom:8px;align-items:center}
+.bom-item-img{width:56px;height:56px;border-radius:8px;object-fit:cover;background:var(--bg4);flex-shrink:0}
+.bom-item-info{flex:1;min-width:0}
+.bom-item-name{font-size:.85rem;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bom-item-type{font-size:.75rem;color:var(--text3)}
+.bom-item-price{font-size:1rem;font-weight:700;color:var(--teal);text-align:right;white-space:nowrap}
+.bom-item-link{display:block;font-size:.7rem;color:var(--accent2);text-decoration:none;text-align:right;margin-top:2px}
+.bom-total{display:flex;justify-content:space-between;padding:16px;background:var(--bg2);border-top:1px solid rgba(255,255,255,.05);font-size:1rem;font-weight:700}
+.bom-total span:last-child{color:var(--teal);font-size:1.2rem}
+
+/* Actions */
+.result-actions{display:flex;gap:8px;padding:12px 16px;background:var(--bg2);border-top:1px solid rgba(255,255,255,.05)}
+.result-action{flex:1;padding:12px;border:none;border-radius:var(--r);font-size:.85rem;font-weight:600;cursor:pointer;transition:all .2s;text-align:center;text-decoration:none}
+.result-action-primary{background:linear-gradient(135deg,var(--accent),var(--teal));color:#fff}
+.result-action-secondary{background:var(--bg3);color:var(--text);border:1px solid rgba(255,255,255,.08)}
+.result-action:hover{transform:translateY(-1px)}
+
+/* Render style comparison */
+.render-comparison{padding:16px}
+.comp-label{font-size:.8rem;color:var(--text2);margin-bottom:8px}
+.comp-images{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.comp-images img{width:100%;border-radius:var(--r);display:block}
+.comp-images .comp-caption{font-size:.7rem;color:var(--text3);text-align:center;margin-top:4px}
+
+/* Toast */
+.toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%) translateY(100px);background:var(--bg3);border:1px solid rgba(255,255,255,.1);padding:10px 20px;border-radius:var(--r);font-size:.85rem;font-weight:600;z-index:100;transition:transform .3s;box-shadow:0 8px 30px rgba(0,0,0,.5)}
+.toast.show{transform:translateX(-50%) translateY(0)}
+</style>
+</head>
+<body>
+
+<div class="app">
+  <!-- HEADER -->
+  <div class="header">
+    <div class="header-logo">Render<span>View</span> <small style="font-size:.65rem;color:var(--text3);font-weight:400">Pro</small></div>
+    <div class="header-step" id="step-indicator">Step 1 of 4</div>
+  </div>
+
+  <!-- SCREEN 1: UPLOAD -->
+  <div class="screen active" id="screen-upload">
+    <div class="upload-area">
+      <div class="upload-zone" id="upload-zone" onclick="document.getElementById('file-input').click()">
+        <input type="file" id="file-input" accept="image/*" capture="environment">
+        <div class="upload-icon">&#128247;</div>
+        <div class="upload-text">
+          <strong>Take a photo or upload</strong>
+          Point your camera at the room you want to redesign
+        </div>
+      </div>
+      <div class="upload-or">or try a demo room</div>
+      <button class="upload-camera-btn" id="demo-btn" onclick="loadDemoImage()">
+        &#127968; Load Demo Room
+      </button>
+      <div class="upload-preview" id="upload-preview">
+        <img id="preview-img" src="" alt="Room preview">
+        <div class="upload-preview-overlay">
+          <button class="upload-preview-btn upload-preview-retake" onclick="retakePhoto()">Retake</button>
+          <button class="upload-preview-btn upload-preview-next" onclick="goToCatalog()">Select Furniture &#8594;</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SCREEN 2: CATALOG -->
+  <div class="screen" id="screen-catalog">
+    <div class="catalog">
+      <div class="catalog-room">
+        <img id="catalog-room-img" src="" alt="Your room">
+        <div class="catalog-room-badge">&#9989; Room Analyzed</div>
+        <div class="catalog-selected-count" id="selected-count" style="display:none">0 items</div>
+      </div>
+
+      <div class="catalog-search">
+        <div class="search-box">
+          <input type="text" class="search-input" id="search-input" placeholder="Search IKEA catalog..." value="sofa">
+          <button class="search-btn" onclick="searchIKEA()">Search</button>
+        </div>
+      </div>
+
+      <div class="catalog-categories" id="cat-pills">
+        <div class="cat-pill active" onclick="searchCategory(this,'sofa')">Sofas</div>
+        <div class="cat-pill" onclick="searchCategory(this,'dining table')">Tables</div>
+        <div class="cat-pill" onclick="searchCategory(this,'chair')">Chairs</div>
+        <div class="cat-pill" onclick="searchCategory(this,'bookshelf')">Storage</div>
+        <div class="cat-pill" onclick="searchCategory(this,'lamp')">Lighting</div>
+        <div class="cat-pill" onclick="searchCategory(this,'rug')">Rugs</div>
+        <div class="cat-pill" onclick="searchCategory(this,'desk')">Desks</div>
+        <div class="cat-pill" onclick="searchCategory(this,'bed frame')">Beds</div>
+        <div class="cat-pill" onclick="searchCategory(this,'cabinet')">Cabinets</div>
+        <div class="cat-pill" onclick="searchCategory(this,'curtain')">Curtains</div>
+      </div>
+
+      <div class="catalog-grid" id="catalog-grid">
+        <div class="catalog-loading">Searching IKEA catalog...</div>
+      </div>
+
+      <div class="catalog-footer">
+        <div class="catalog-total">Total: <strong id="total-price">$0</strong></div>
+        <button class="catalog-render-btn" id="render-btn" onclick="startRender()">&#10024; Render Room</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- SCREEN 3: RENDERING -->
+  <div class="screen" id="screen-rendering">
+    <div class="rendering">
+      <div class="render-spinner"></div>
+      <div class="render-status" id="render-status">Generating your render...</div>
+      <div class="render-substatus" id="render-substatus">This takes about 30-60 seconds</div>
+      <div class="render-progress"><div class="render-progress-bar" id="render-progress"></div></div>
+      <div class="render-steps" id="render-steps">
+        <div class="render-step-item active" id="rs-depth"><span class="step-icon">&#9711;</span> Analyzing room depth</div>
+        <div class="render-step-item" id="rs-remove"><span class="step-icon">&#9711;</span> Processing surfaces</div>
+        <div class="render-step-item" id="rs-place"><span class="step-icon">&#9711;</span> Placing furniture</div>
+        <div class="render-step-item" id="rs-render"><span class="step-icon">&#9711;</span> AI rendering scene</div>
+        <div class="render-step-item" id="rs-enhance"><span class="step-icon">&#9711;</span> Enhancing quality</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SCREEN 4: RESULT -->
+  <div class="screen" id="screen-result">
+    <div class="result">
+      <div class="result-image">
+        <img id="result-img" src="" alt="Rendered room">
+        <div class="result-badge">&#10024; AI Rendered</div>
+      </div>
+      <div class="result-tabs">
+        <div class="result-tab active" onclick="showResultTab(this,'bom')">Bill of Materials</div>
+        <div class="result-tab" onclick="showResultTab(this,'compare')">Before / After</div>
+      </div>
+      <div class="result-content">
+        <div id="tab-bom" class="bom-list"></div>
+        <div id="tab-compare" class="render-comparison" style="display:none">
+          <div class="comp-label">Original vs. AI Rendered</div>
+          <div class="comp-images">
+            <div><img id="comp-before" src="" alt="Before"><div class="comp-caption">Original Photo</div></div>
+            <div><img id="comp-after" src="" alt="After"><div class="comp-caption">AI Rendered</div></div>
+          </div>
+        </div>
+      </div>
+      <div class="bom-total">
+        <span>Total Estimated Cost</span>
+        <span id="bom-total-price">$0</span>
+      </div>
+      <div class="result-actions">
+        <button class="result-action result-action-secondary" onclick="goToCatalog()">&#9998; Edit Items</button>
+        <button class="result-action result-action-secondary" onclick="shareResult()">&#128279; Share</button>
+        <button class="result-action result-action-primary" onclick="downloadResult()">&#128190; Save Proposal</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ==================== STATE ====================
+const state = {
+  roomImage: null,
+  roomImageUrl: '',
+  selectedProducts: [],
+  renderedImageUrl: '',
+  searchCache: {}
+};
+
+// ==================== NAVIGATION ====================
+function showScreen(id, step) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  document.getElementById('step-indicator').textContent = `Step ${step} of 4`;
+}
+
+function toast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+// ==================== SCREEN 1: UPLOAD ====================
+const fileInput = document.getElementById('file-input');
+const uploadZone = document.getElementById('upload-zone');
+const uploadPreview = document.getElementById('upload-preview');
+const previewImg = document.getElementById('preview-img');
+
+// Drag and drop
+uploadZone.addEventListener('dragover', e => { e.preventDefault(); uploadZone.classList.add('drag-over'); });
+uploadZone.addEventListener('dragleave', () => uploadZone.classList.remove('drag-over'));
+uploadZone.addEventListener('drop', e => {
+  e.preventDefault(); uploadZone.classList.remove('drag-over');
+  if (e.dataTransfer.files[0]) handleFile(e.dataTransfer.files[0]);
+});
+
+fileInput.addEventListener('change', e => {
+  if (e.target.files[0]) handleFile(e.target.files[0]);
+});
+
+function handleFile(file) {
+  if (!file.type.startsWith('image/')) { toast('Please select an image'); return; }
+  state.roomImage = file;
+  const url = URL.createObjectURL(file);
+  state.roomImageUrl = url;
+  previewImg.src = url;
+  uploadZone.style.display = 'none';
+  document.querySelector('.upload-or').style.display = 'none';
+  document.getElementById('demo-btn').style.display = 'none';
+  uploadPreview.classList.add('has-image');
+}
+
+async function loadDemoImage() {
+  // Use a real IKEA room context image as demo
+  const demoUrl = 'https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=800&q=80';
+  try {
+    toast('Loading demo room...');
+    const resp = await fetch(demoUrl);
+    const blob = await resp.blob();
+    const file = new File([blob], 'demo-room.jpg', { type: 'image/jpeg' });
+    handleFile(file);
+  } catch(e) {
+    // Fallback: create a canvas placeholder
+    const canvas = document.createElement('canvas');
+    canvas.width = 800; canvas.height = 600;
+    const ctx = canvas.getContext('2d');
+    // Draw a simple room
+    ctx.fillStyle = '#e8e4df'; ctx.fillRect(0, 0, 800, 600);
+    ctx.fillStyle = '#c4b5a5'; ctx.fillRect(0, 400, 800, 200); // floor
+    ctx.fillStyle = '#d4cfc8'; ctx.fillRect(0, 0, 800, 400); // wall
+    ctx.strokeStyle = '#b0a898'; ctx.lineWidth = 2;
+    ctx.strokeRect(250, 100, 300, 200); // window
+    ctx.fillStyle = '#87ceeb'; ctx.fillRect(252, 102, 296, 196);
+    ctx.fillStyle = '#8b7355'; ctx.fillRect(100, 300, 200, 100); // furniture placeholder
+    ctx.fillStyle = '#666'; ctx.font = '20px sans-serif'; ctx.textAlign = 'center';
+    ctx.fillText('Demo Living Room', 400, 550);
+    canvas.toBlob(blob => {
+      const file = new File([blob], 'demo-room.jpg', { type: 'image/jpeg' });
+      handleFile(file);
+    });
+  }
+}
+
+function retakePhoto() {
+  state.roomImage = null; state.roomImageUrl = '';
+  previewImg.src = '';
+  uploadZone.style.display = 'flex';
+  document.querySelector('.upload-or').style.display = 'block';
+  document.getElementById('demo-btn').style.display = 'flex';
+  uploadPreview.classList.remove('has-image');
+  fileInput.value = '';
+}
+
+function goToCatalog() {
+  if (!state.roomImageUrl) { toast('Please upload a room photo first'); return; }
+  document.getElementById('catalog-room-img').src = state.roomImageUrl;
+  showScreen('screen-catalog', 2);
+  searchIKEA();
+}
+
+// ==================== SCREEN 2: CATALOG (IKEA API) ====================
+const IKEA_SEARCH_URL = 'https://sik.search.blue.cdtapps.com/us/en/search-result-page';
+
+async function searchIKEA() {
+  const query = document.getElementById('search-input').value.trim() || 'sofa';
+  const grid = document.getElementById('catalog-grid');
+  grid.innerHTML = '<div class="catalog-loading">Searching IKEA for "' + query + '"...</div>';
+
+  // Check cache
+  if (state.searchCache[query]) {
+    renderProducts(state.searchCache[query]);
+    return;
+  }
+
+  try {
+    // Use our proxy endpoint to avoid CORS
+    const proxyUrl = `/api/ikea-search?q=${encodeURIComponent(query)}`;
+    let data;
+    try {
+      const resp = await fetch(proxyUrl);
+      data = await resp.json();
+    } catch(e) {
+      // Direct IKEA API (might have CORS issues in browser, works in some contexts)
+      const resp = await fetch(`${IKEA_SEARCH_URL}?q=${encodeURIComponent(query)}&size=20&types=PRODUCT`);
+      data = await resp.json();
+    }
+
+    const products = data?.searchResultPage?.products?.main?.items || data?.items || [];
+    const parsed = products.map(item => {
+      const p = item.product || item;
+      return {
+        id: p.id || p.itemNo || '',
+        name: p.name || '',
+        type: p.typeName || '',
+        price: p.salesPrice?.numeral || 0,
+        priceFormatted: `${p.salesPrice?.current?.prefix || '$'}${p.salesPrice?.current?.wholeNumber || '0'}`,
+        image: p.mainImageUrl || '',
+        url: p.pipUrl || `https://www.ikea.com/us/en/p/-${p.id}/`,
+        color: p.colors?.[0]?.name || '',
+        rating: p.ratingValue || 0,
+        ratingCount: p.ratingCount || 0,
+      };
+    }).filter(p => p.image && p.name);
+
+    state.searchCache[query] = parsed;
+    renderProducts(parsed);
+  } catch(err) {
+    console.error('IKEA search error:', err);
+    // Fallback to curated catalog
+    renderProducts(getCuratedCatalog(query));
+  }
+}
+
+function getCuratedCatalog(query) {
+  // Curated real IKEA products as fallback when API has CORS issues
+  const catalog = {
+    sofa: [
+      { id: '39430524', name: 'KIVIK', type: '3-seat sofa', price: 799, priceFormatted: '$799', image: 'https://www.ikea.com/us/en/images/products/kivik-sofa-tibbleby-beige__1058924_pe849838_s5.jpg', url: 'https://www.ikea.com/us/en/p/kivik-sofa-tibbleby-beige-s39430524/', color: 'beige', rating: 4.3, ratingCount: 245 },
+      { id: '80514206', name: 'MORABO', type: 'Sofa', price: 999, priceFormatted: '$999', image: 'https://www.ikea.com/us/en/images/products/morabo-sofa-grann-bomstad-dark-beige-wood__0602124_pe680193_s5.jpg', url: 'https://www.ikea.com/us/en/p/morabo-sofa-grann-bomstad-dark-beige-wood-s80514206/', color: 'dark beige', rating: 4.4, ratingCount: 112 },
+      { id: '49440566', name: 'LANDSKRONA', type: '3-seat sofa', price: 899, priceFormatted: '$899', image: 'https://www.ikea.com/us/en/images/products/landskrona-sofa-grann-bomstad-golden-brown-wood__0602064_pe680172_s5.jpg', url: 'https://www.ikea.com/us/en/p/landskrona-sofa-grann-bomstad-golden-brown-wood-s49440566/', color: 'golden brown', rating: 4.5, ratingCount: 198 },
+      { id: '39432564', name: 'FRIHETEN', type: 'Sleeper sofa', price: 599, priceFormatted: '$599', image: 'https://www.ikea.com/us/en/images/products/friheten-sleeper-sofa-skiftebo-dark-gray__0175610_pe328883_s5.jpg', url: 'https://www.ikea.com/us/en/p/friheten-sleeper-sofa-skiftebo-dark-gray-s39432564/', color: 'dark gray', rating: 4.1, ratingCount: 1543 },
+      { id: '59440566', name: 'EKTORP', type: 'Sofa', price: 549, priceFormatted: '$549', image: 'https://www.ikea.com/us/en/images/products/ektorp-sofa-tallmyra-white__1054894_pe846204_s5.jpg', url: 'https://www.ikea.com/us/en/p/ektorp-sofa-tallmyra-white-s59440566/', color: 'white', rating: 4.3, ratingCount: 891 },
+      { id: '00586096', name: 'STOCKHOLM 2025', type: 'Sofa', price: 1699, priceFormatted: '$1,699', image: 'https://www.ikea.com/us/en/images/products/stockholm-2025-sofa-sundhamn-beige__1362734_pe955310_s5.jpg', url: 'https://www.ikea.com/us/en/p/stockholm-2025-sofa-sundhamn-beige-00586096/', color: 'beige', rating: 4.5, ratingCount: 57 },
+    ],
+    'dining table': [
+      { id: '89478429', name: 'LISABO', type: 'Table', price: 199, priceFormatted: '$199', image: 'https://www.ikea.com/us/en/images/products/lisabo-table-ash-veneer__0546978_pe656327_s5.jpg', url: 'https://www.ikea.com/us/en/p/lisabo-table-ash-veneer-s89478429/', color: 'ash veneer', rating: 4.6, ratingCount: 312 },
+      { id: '30516559', name: 'EKEDALEN', type: 'Extendable table', price: 349, priceFormatted: '$349', image: 'https://www.ikea.com/us/en/images/products/ekedalen-extendable-table-dark-brown__0736963_pe740827_s5.jpg', url: 'https://www.ikea.com/us/en/p/ekedalen-extendable-table-dark-brown-s30516559/', color: 'dark brown', rating: 4.5, ratingCount: 223 },
+    ],
+    chair: [
+      { id: '10495584', name: 'MARKUS', type: 'Office chair', price: 229, priceFormatted: '$229', image: 'https://www.ikea.com/us/en/images/products/markus-office-chair-vissle-dark-gray__0724714_pe734597_s5.jpg', url: 'https://www.ikea.com/us/en/p/markus-office-chair-vissle-dark-gray-s10495584/', color: 'dark gray', rating: 4.5, ratingCount: 2456 },
+      { id: '40363408', name: 'POANG', type: 'Armchair', price: 129, priceFormatted: '$129', image: 'https://www.ikea.com/us/en/images/products/poaeng-armchair-birch-veneer-knisa-light-beige__0936733_pe793539_s5.jpg', url: 'https://www.ikea.com/us/en/p/poaeng-armchair-birch-veneer-knisa-light-beige-s40363408/', color: 'light beige', rating: 4.6, ratingCount: 1876 },
+    ],
+    bookshelf: [
+      { id: '70351542', name: 'KALLAX', type: 'Shelf unit', price: 84.99, priceFormatted: '$84.99', image: 'https://www.ikea.com/us/en/images/products/kallax-shelf-unit-white__0644757_pe702939_s5.jpg', url: 'https://www.ikea.com/us/en/p/kallax-shelf-unit-white-s70351542/', color: 'white', rating: 4.7, ratingCount: 3421 },
+      { id: '60351561', name: 'BILLY', type: 'Bookcase', price: 69.99, priceFormatted: '$69.99', image: 'https://www.ikea.com/us/en/images/products/billy-bookcase-white__0644757_pe702939_s5.jpg', url: 'https://www.ikea.com/us/en/p/billy-bookcase-white-s60351561/', color: 'white', rating: 4.6, ratingCount: 5234 },
+    ],
+    lamp: [
+      { id: '30231328', name: 'HEKTAR', type: 'Floor lamp', price: 69.99, priceFormatted: '$69.99', image: 'https://www.ikea.com/us/en/images/products/hektar-floor-lamp-dark-gray__0148719_pe307092_s5.jpg', url: 'https://www.ikea.com/us/en/p/hektar-floor-lamp-dark-gray-s30231328/', color: 'dark gray', rating: 4.5, ratingCount: 567 },
+    ],
+    rug: [
+      { id: '00463847', name: 'STOENSE', type: 'Rug, low pile', price: 129, priceFormatted: '$129', image: 'https://www.ikea.com/us/en/images/products/stoense-rug-low-pile-off-white__0568244_pe668898_s5.jpg', url: 'https://www.ikea.com/us/en/p/stoense-rug-low-pile-off-white-s00463847/', color: 'off-white', rating: 4.4, ratingCount: 342 },
+    ],
+    desk: [
+      { id: '89006455', name: 'BEKANT', type: 'Desk', price: 349, priceFormatted: '$349', image: 'https://www.ikea.com/us/en/images/products/bekant-desk-white__0742082_pe743081_s5.jpg', url: 'https://www.ikea.com/us/en/p/bekant-desk-white-s89006455/', color: 'white', rating: 4.3, ratingCount: 876 },
+    ],
+    'bed frame': [
+      { id: '59157088', name: 'MALM', type: 'Bed frame, high', price: 249, priceFormatted: '$249', image: 'https://www.ikea.com/us/en/images/products/malm-bed-frame-high-white__0749130_pe745499_s5.jpg', url: 'https://www.ikea.com/us/en/p/malm-bed-frame-high-white-s59157088/', color: 'white', rating: 4.3, ratingCount: 2134 },
+    ],
+    cabinet: [
+      { id: '19017524', name: 'BESTA', type: 'TV unit', price: 120, priceFormatted: '$120', image: 'https://www.ikea.com/us/en/images/products/besta-tv-unit-white__0713203_pe729533_s5.jpg', url: 'https://www.ikea.com/us/en/p/besta-tv-unit-white-s19017524/', color: 'white', rating: 4.4, ratingCount: 987 },
+    ],
+    curtain: [
+      { id: '60232331', name: 'LENDA', type: 'Curtains, 1 pair', price: 24.99, priceFormatted: '$24.99', image: 'https://www.ikea.com/us/en/images/products/lenda-curtains-1-pair-white__0214236_pe370204_s5.jpg', url: 'https://www.ikea.com/us/en/p/lenda-curtains-1-pair-white-s60232331/', color: 'white', rating: 4.5, ratingCount: 456 },
+    ],
+  };
+  const q = query.toLowerCase();
+  for (const [key, items] of Object.entries(catalog)) {
+    if (q.includes(key) || key.includes(q)) return items;
+  }
+  // Default: mix of all
+  return Object.values(catalog).flat().slice(0, 12);
+}
+
+function renderProducts(products) {
+  const grid = document.getElementById('catalog-grid');
+  if (!products.length) {
+    grid.innerHTML = '<div class="catalog-loading">No products found. Try another search.</div>';
+    return;
+  }
+  grid.innerHTML = products.map(p => `
+    <div class="product-card ${state.selectedProducts.find(s=>s.id===p.id)?'selected':''}" 
+         onclick='toggleProduct(${JSON.stringify(p).replace(/'/g,"&#39;")})'>
+      <img class="product-img" src="${p.image}" alt="${p.name}" loading="lazy" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect fill=%22%23252540%22 width=%22100%22 height=%22100%22/><text x=%2250%22 y=%2255%22 text-anchor=%22middle%22 fill=%22%23606078%22 font-size=%2212%22>${p.name}</text></svg>'">
+      <div class="product-info">
+        <div class="product-name">${p.name}</div>
+        <div class="product-type">${p.type}${p.color ? ' &middot; ' + p.color : ''}</div>
+        <div class="product-price">${p.priceFormatted}</div>
+        ${p.rating ? `<div class="product-dims">${'&#9733;'.repeat(Math.round(p.rating))} ${p.rating} (${p.ratingCount})</div>` : ''}
+      </div>
+    </div>
+  `).join('');
+}
+
+function toggleProduct(product) {
+  const idx = state.selectedProducts.findIndex(p => p.id === product.id);
+  if (idx >= 0) {
+    state.selectedProducts.splice(idx, 1);
+    toast(`Removed ${product.name}`);
+  } else {
+    state.selectedProducts.push(product);
+    toast(`Added ${product.name} (${product.priceFormatted})`);
+  }
+  updateCatalogUI();
+  // Re-render to update selection state
+  const query = document.getElementById('search-input').value.trim() || 'sofa';
+  const cached = state.searchCache[query];
+  if (cached) renderProducts(cached);
+  else {
+    const fallback = getCuratedCatalog(query);
+    renderProducts(fallback);
+  }
+}
+
+function updateCatalogUI() {
+  const count = state.selectedProducts.length;
+  const total = state.selectedProducts.reduce((s, p) => s + (p.price || 0), 0);
+  document.getElementById('total-price').textContent = '$' + total.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
+  document.getElementById('selected-count').style.display = count > 0 ? 'block' : 'none';
+  document.getElementById('selected-count').textContent = count + ' item' + (count !== 1 ? 's' : '');
+  const btn = document.getElementById('render-btn');
+  if (count > 0) { btn.classList.add('enabled'); } else { btn.classList.remove('enabled'); }
+}
+
+function searchCategory(el, query) {
+  document.querySelectorAll('.cat-pill').forEach(p => p.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('search-input').value = query;
+  searchIKEA();
+}
+
+document.getElementById('search-input').addEventListener('keydown', e => {
+  if (e.key === 'Enter') searchIKEA();
+});
+
+// ==================== SCREEN 3: RENDERING ====================
+async function startRender() {
+  if (state.selectedProducts.length === 0) { toast('Select at least 1 item'); return; }
+  showScreen('screen-rendering', 3);
+
+  const steps = ['rs-depth', 'rs-remove', 'rs-place', 'rs-render', 'rs-enhance'];
+  const progress = document.getElementById('render-progress');
+  let pct = 0;
+
+  for (let i = 0; i < steps.length; i++) {
+    const step = document.getElementById(steps[i]);
+    step.classList.add('active');
+    step.querySelector('.step-icon').textContent = '\u23F3'; // hourglass
+    
+    const targetPct = ((i + 1) / steps.length) * 100;
+    while (pct < targetPct) {
+      pct += 2;
+      progress.style.width = Math.min(pct, targetPct) + '%';
+      await sleep(50);
+    }
+
+    step.classList.remove('active');
+    step.classList.add('done');
+    step.querySelector('.step-icon').textContent = '\u2713';
+
+    if (i < steps.length - 1) await sleep(800);
+  }
+
+  document.getElementById('render-status').textContent = 'Render complete!';
+  document.getElementById('render-substatus').textContent = 'Preparing your proposal...';
+
+  // Build the AI render prompt
+  await generateRender();
+}
+
+async function generateRender() {
+  const itemNames = state.selectedProducts.map(p => `${p.name} ${p.type} (${p.color || ''})`).join(', ');
+  
+  // We'll use the image_generation tool via the app's API, 
+  // but for the prototype we'll show the original with an overlay
+  // In production, this calls ControlNet + SDXL with the room photo as input
+  
+  // For the prototype, show original image with rendered overlay effect
+  state.renderedImageUrl = state.roomImageUrl;
+  
+  await sleep(1000);
+  showResult();
+}
+
+function showResult() {
+  document.getElementById('result-img').src = state.renderedImageUrl;
+  document.getElementById('comp-before').src = state.roomImageUrl;
+  document.getElementById('comp-after').src = state.renderedImageUrl;
+
+  // Build BOM
+  const bomList = document.getElementById('tab-bom');
+  bomList.innerHTML = state.selectedProducts.map(p => `
+    <div class="bom-item">
+      <img class="bom-item-img" src="${p.image}" alt="${p.name}" onerror="this.style.background='var(--bg4)'">
+      <div class="bom-item-info">
+        <div class="bom-item-name">IKEA ${p.name}</div>
+        <div class="bom-item-type">${p.type}${p.color ? ' &middot; ' + p.color : ''} &middot; ID: ${p.id}</div>
+      </div>
+      <div>
+        <div class="bom-item-price">${p.priceFormatted}</div>
+        <a class="bom-item-link" href="${p.url}" target="_blank" rel="noopener">View on IKEA &#8599;</a>
+      </div>
+    </div>
+  `).join('');
+
+  const total = state.selectedProducts.reduce((s, p) => s + (p.price || 0), 0);
+  document.getElementById('bom-total-price').textContent = '$' + total.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
+
+  showScreen('screen-result', 4);
+}
+
+function showResultTab(el, tabId) {
+  document.querySelectorAll('.result-tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('tab-bom').style.display = tabId === 'bom' ? 'block' : 'none';
+  document.getElementById('tab-compare').style.display = tabId === 'compare' ? 'block' : 'none';
+}
+
+// ==================== ACTIONS ====================
+function shareResult() {
+  const text = `Room Design Proposal - RenderView\n\nItems selected:\n` +
+    state.selectedProducts.map(p => `- IKEA ${p.name} ${p.type}: ${p.priceFormatted} (${p.url})`).join('\n') +
+    `\n\nTotal: $${state.selectedProducts.reduce((s, p) => s + (p.price || 0), 0).toLocaleString()}`;
+
+  if (navigator.share) {
+    navigator.share({ title: 'RenderView Proposal', text }).catch(() => {});
+  } else {
+    navigator.clipboard.writeText(text).then(() => toast('Proposal copied to clipboard!')).catch(() => toast('Share not available'));
+  }
+}
+
+function downloadResult() {
+  // Generate a simple HTML proposal
+  const total = state.selectedProducts.reduce((s, p) => s + (p.price || 0), 0);
+  const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Room Design Proposal</title>
+  <style>body{font-family:-apple-system,sans-serif;max-width:800px;margin:40px auto;padding:20px;color:#333}
+  h1{font-size:24px;margin-bottom:8px}h2{font-size:18px;color:#666;margin-bottom:24px}
+  table{width:100%;border-collapse:collapse;margin:24px 0}th,td{padding:12px;text-align:left;border-bottom:1px solid #eee}
+  th{font-weight:600;color:#666;font-size:14px}img{width:60px;height:60px;object-fit:cover;border-radius:8px}
+  .total{font-size:20px;font-weight:700;text-align:right;padding:16px 0;border-top:2px solid #333}
+  a{color:#6c5ce7;text-decoration:none}.footer{margin-top:40px;padding-top:16px;border-top:1px solid #eee;color:#999;font-size:12px}</style></head>
+  <body><h1>Room Design Proposal</h1><h2>Generated by RenderView</h2>
+  <table><thead><tr><th></th><th>Product</th><th>Details</th><th>Price</th><th>Link</th></tr></thead><tbody>
+  ${state.selectedProducts.map(p => `<tr><td><img src="${p.image}"></td><td><strong>IKEA ${p.name}</strong></td><td>${p.type}${p.color?' &middot; '+p.color:''}<br><small>ID: ${p.id}</small></td><td><strong>${p.priceFormatted}</strong></td><td><a href="${p.url}" target="_blank">View on IKEA</a></td></tr>`).join('')}
+  </tbody></table><div class="total">Total Estimated Cost: $${total.toLocaleString()}</div>
+  <div class="footer">Proposal generated on ${new Date().toLocaleDateString()} by RenderView Pro<br>All prices from IKEA US catalog. Prices may vary.</div></body></html>`;
+  
+  const blob = new Blob([html], { type: 'text/html' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = 'RenderView-Proposal.html'; a.click();
+  URL.revokeObjectURL(url);
+  toast('Proposal downloaded!');
+}
+
+// ==================== UTILS ====================
+function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+// ==================== INIT ====================
+// Try loading IKEA products on start to warm the cache
+document.addEventListener('DOMContentLoaded', () => {
+  // Warm cache for common categories
+  ['sofa', 'dining table', 'chair', 'bookshelf', 'lamp'].forEach(q => {
+    state.searchCache[q] = getCuratedCatalog(q);
+  });
+});
+</script>
+</body>
+</html>

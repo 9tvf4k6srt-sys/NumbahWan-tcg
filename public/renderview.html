@@ -1,0 +1,1160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RenderView — Snap. Place. Render. Close the deal.</title>
+<meta name="description" content="The mobile app that lets architects and interior designers take a photo, place real furniture, and generate ultra-realistic renders in 60 seconds. On-site. With the client.">
+<style>
+/* ==================== RESET & VARIABLES ==================== */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg-primary: #0a0a0f;
+  --bg-secondary: #12121a;
+  --bg-card: #1a1a28;
+  --bg-card-hover: #222235;
+  --text-primary: #f0f0f5;
+  --text-secondary: #9090a8;
+  --text-muted: #606078;
+  --accent: #6c5ce7;
+  --accent-light: #a29bfe;
+  --accent-glow: rgba(108, 92, 231, 0.3);
+  --gradient-start: #6c5ce7;
+  --gradient-end: #00cec9;
+  --success: #00b894;
+  --warning: #fdcb6e;
+  --danger: #e17055;
+  --radius: 12px;
+  --radius-lg: 20px;
+  --radius-xl: 28px;
+  --shadow-sm: 0 2px 8px rgba(0,0,0,0.2);
+  --shadow-md: 0 4px 20px rgba(0,0,0,0.3);
+  --shadow-lg: 0 8px 40px rgba(0,0,0,0.4);
+  --shadow-glow: 0 0 40px var(--accent-glow);
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-display: 'Space Grotesk', var(--font-sans);
+  --max-w: 1200px;
+  --transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+html { scroll-behavior: smooth; font-size: 16px; }
+
+body {
+  font-family: var(--font-sans);
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  line-height: 1.6;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ==================== FONTS ==================== */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap');
+
+/* ==================== UTILITIES ==================== */
+.container { max-width: var(--max-w); margin: 0 auto; padding: 0 24px; }
+.text-gradient {
+  background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0,0,0,0); }
+
+/* ==================== NAV ==================== */
+.nav {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+  padding: 16px 0;
+  background: rgba(10, 10, 15, 0.8);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+  transition: var(--transition);
+}
+.nav-inner {
+  display: flex; align-items: center; justify-content: space-between;
+  max-width: var(--max-w); margin: 0 auto; padding: 0 24px;
+}
+.nav-logo {
+  font-family: var(--font-display);
+  font-size: 1.4rem; font-weight: 700;
+  text-decoration: none; color: var(--text-primary);
+}
+.nav-logo span { color: var(--accent-light); }
+.nav-links { display: flex; gap: 32px; align-items: center; }
+.nav-links a {
+  color: var(--text-secondary); text-decoration: none;
+  font-size: 0.9rem; font-weight: 500;
+  transition: color var(--transition);
+}
+.nav-links a:hover { color: var(--text-primary); }
+.nav-cta {
+  background: var(--accent) !important;
+  color: white !important;
+  padding: 8px 20px !important;
+  border-radius: 8px;
+  font-weight: 600 !important;
+  transition: all var(--transition) !important;
+}
+.nav-cta:hover { background: var(--accent-light) !important; transform: translateY(-1px); }
+
+/* Mobile menu */
+.nav-toggle { display: none; background: none; border: none; color: white; font-size: 1.5rem; cursor: pointer; }
+@media (max-width: 768px) {
+  .nav-links { display: none; flex-direction: column; position: absolute; top: 100%; left: 0; right: 0; background: var(--bg-secondary); padding: 24px; gap: 16px; border-bottom: 1px solid rgba(255,255,255,0.06); }
+  .nav-links.open { display: flex; }
+  .nav-toggle { display: block; }
+}
+
+/* ==================== HERO ==================== */
+.hero {
+  min-height: 100vh; display: flex; align-items: center;
+  padding: 120px 0 80px;
+  position: relative; overflow: hidden;
+}
+.hero::before {
+  content: ''; position: absolute; top: -50%; right: -30%;
+  width: 800px; height: 800px;
+  background: radial-gradient(circle, var(--accent-glow), transparent 70%);
+  pointer-events: none;
+  animation: float 15s ease-in-out infinite;
+}
+@keyframes float {
+  0%, 100% { transform: translate(0, 0); }
+  50% { transform: translate(-40px, 30px); }
+}
+.hero-inner {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 60px; align-items: center;
+  position: relative; z-index: 1;
+}
+.hero-badge {
+  display: inline-flex; align-items: center; gap: 8px;
+  background: rgba(108, 92, 231, 0.15);
+  border: 1px solid rgba(108, 92, 231, 0.3);
+  border-radius: 100px; padding: 6px 16px;
+  font-size: 0.8rem; font-weight: 600;
+  color: var(--accent-light);
+  margin-bottom: 24px;
+}
+.hero-badge::before { content: ''; width: 8px; height: 8px; border-radius: 50%; background: var(--success); animation: pulse 2s infinite; }
+@keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+.hero h1 {
+  font-family: var(--font-display);
+  font-size: clamp(2.5rem, 5vw, 3.8rem);
+  font-weight: 700; line-height: 1.1;
+  margin-bottom: 24px;
+}
+.hero p {
+  font-size: 1.15rem; color: var(--text-secondary);
+  max-width: 520px; margin-bottom: 36px; line-height: 1.7;
+}
+.hero-actions { display: flex; gap: 16px; flex-wrap: wrap; }
+.btn {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 14px 28px; border-radius: 10px;
+  font-size: 1rem; font-weight: 600;
+  text-decoration: none; border: none; cursor: pointer;
+  transition: all var(--transition);
+}
+.btn-primary {
+  background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end));
+  color: white;
+  box-shadow: var(--shadow-glow);
+}
+.btn-primary:hover { transform: translateY(-2px); box-shadow: 0 0 60px var(--accent-glow); }
+.btn-secondary {
+  background: rgba(255,255,255,0.06);
+  color: var(--text-primary);
+  border: 1px solid rgba(255,255,255,0.1);
+}
+.btn-secondary:hover { background: rgba(255,255,255,0.1); border-color: rgba(255,255,255,0.2); }
+
+/* Phone mockup */
+.hero-visual { display: flex; justify-content: center; position: relative; }
+.phone-mockup {
+  width: 280px; height: 580px;
+  background: var(--bg-card);
+  border-radius: 40px;
+  border: 3px solid rgba(255,255,255,0.1);
+  box-shadow: var(--shadow-lg), var(--shadow-glow);
+  overflow: hidden; position: relative;
+}
+.phone-notch {
+  position: absolute; top: 0; left: 50%; transform: translateX(-50%);
+  width: 120px; height: 28px;
+  background: var(--bg-primary);
+  border-radius: 0 0 16px 16px; z-index: 2;
+}
+.phone-screen {
+  width: 100%; height: 100%; position: relative;
+  display: flex; flex-direction: column;
+}
+.phone-status-bar {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 8px 20px; padding-top: 36px;
+  font-size: 0.7rem; font-weight: 600; color: var(--text-secondary);
+}
+.phone-camera-view {
+  flex: 1; margin: 8px;
+  background: linear-gradient(135deg, #2a2a3d, #1e1e2e);
+  border-radius: 16px; position: relative;
+  display: flex; align-items: center; justify-content: center;
+  overflow: hidden;
+}
+.phone-room-grid {
+  position: absolute; inset: 0;
+  background-image:
+    linear-gradient(rgba(108,92,231,0.15) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(108,92,231,0.15) 1px, transparent 1px);
+  background-size: 40px 40px;
+  opacity: 0.5;
+}
+.phone-room-outline {
+  position: relative; z-index: 1;
+  width: 80%; height: 70%;
+}
+.phone-room-outline svg { width: 100%; height: 100%; }
+.phone-controls {
+  display: flex; justify-content: center; align-items: center;
+  gap: 24px; padding: 16px;
+}
+.phone-btn-shutter {
+  width: 56px; height: 56px;
+  background: white; border-radius: 50%;
+  border: 4px solid rgba(255,255,255,0.3);
+  position: relative;
+  animation: glow-shutter 3s ease-in-out infinite;
+}
+@keyframes glow-shutter {
+  0%, 100% { box-shadow: 0 0 0 rgba(255,255,255,0); }
+  50% { box-shadow: 0 0 20px rgba(108,92,231,0.5); }
+}
+.phone-btn-small {
+  width: 36px; height: 36px;
+  background: rgba(255,255,255,0.1);
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--text-secondary); font-size: 0.8rem;
+}
+.phone-ai-badge {
+  position: absolute; bottom: 12px; left: 12px; right: 12px;
+  background: rgba(108, 92, 231, 0.9);
+  backdrop-filter: blur(10px);
+  border-radius: 10px; padding: 8px 12px;
+  font-size: 0.7rem; font-weight: 600;
+  color: white; text-align: center;
+  animation: slide-up 2s ease-out 1s both;
+}
+@keyframes slide-up {
+  from { transform: translateY(20px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+/* Floating elements around phone */
+.hero-float {
+  position: absolute;
+  background: var(--bg-card);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: var(--radius);
+  padding: 10px 14px;
+  font-size: 0.75rem;
+  box-shadow: var(--shadow-md);
+  animation: float-item 6s ease-in-out infinite;
+}
+@keyframes float-item {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+.hero-float-1 { top: 60px; right: -30px; animation-delay: 0s; }
+.hero-float-2 { bottom: 120px; left: -30px; animation-delay: 2s; }
+.hero-float-3 { top: 180px; left: -20px; animation-delay: 4s; }
+
+@media (max-width: 900px) {
+  .hero-inner { grid-template-columns: 1fr; text-align: center; }
+  .hero p { margin: 0 auto 36px; }
+  .hero-actions { justify-content: center; }
+  .hero-visual { margin-top: 40px; }
+  .hero-float { display: none; }
+}
+
+/* ==================== STATS BAR ==================== */
+.stats {
+  padding: 48px 0;
+  border-top: 1px solid rgba(255,255,255,0.05);
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+  background: var(--bg-secondary);
+}
+.stats-grid {
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: 32px; text-align: center;
+}
+.stat-number {
+  font-family: var(--font-display);
+  font-size: 2.2rem; font-weight: 700;
+}
+.stat-label { font-size: 0.85rem; color: var(--text-secondary); margin-top: 4px; }
+@media (max-width: 600px) { .stats-grid { grid-template-columns: repeat(2, 1fr); } }
+
+/* ==================== PROBLEM SECTION ==================== */
+.problem { padding: 100px 0; }
+.section-label {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: 0.8rem; font-weight: 600; text-transform: uppercase;
+  letter-spacing: 0.1em; color: var(--accent-light);
+  margin-bottom: 16px;
+}
+.section-title {
+  font-family: var(--font-display);
+  font-size: clamp(1.8rem, 3.5vw, 2.5rem);
+  font-weight: 700; max-width: 650px;
+  margin-bottom: 16px;
+}
+.section-subtitle {
+  font-size: 1.05rem; color: var(--text-secondary);
+  max-width: 600px; margin-bottom: 48px;
+}
+.problem-grid {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 20px;
+}
+.problem-card {
+  background: var(--bg-card);
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: var(--radius-lg);
+  padding: 28px;
+  transition: all var(--transition);
+}
+.problem-card:hover {
+  background: var(--bg-card-hover);
+  border-color: rgba(108, 92, 231, 0.2);
+  transform: translateY(-4px);
+}
+.problem-icon {
+  width: 48px; height: 48px;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(225, 112, 85, 0.15);
+  border-radius: 12px; font-size: 1.4rem;
+  margin-bottom: 16px;
+}
+.problem-card h3 { font-size: 1.1rem; font-weight: 600; margin-bottom: 8px; }
+.problem-card p { font-size: 0.9rem; color: var(--text-secondary); line-height: 1.6; }
+.problem-stat {
+  display: inline-block; margin-top: 12px;
+  font-size: 0.8rem; font-weight: 600;
+  color: var(--danger);
+  padding: 4px 10px;
+  background: rgba(225, 112, 85, 0.1);
+  border-radius: 6px;
+}
+
+/* ==================== SOLUTION / HOW IT WORKS ==================== */
+.solution {
+  padding: 100px 0;
+  background: var(--bg-secondary);
+}
+.solution-steps {
+  display: grid; gap: 0;
+  margin-top: 48px;
+}
+.step {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 60px;
+  align-items: center; padding: 48px 0;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+}
+.step:nth-child(even) .step-visual { order: -1; }
+.step-number {
+  font-family: var(--font-display);
+  font-size: 4rem; font-weight: 700;
+  line-height: 1;
+  margin-bottom: 16px;
+  opacity: 0.15;
+}
+.step h3 {
+  font-family: var(--font-display);
+  font-size: 1.5rem; font-weight: 700;
+  margin-bottom: 12px;
+}
+.step p { font-size: 1rem; color: var(--text-secondary); line-height: 1.7; max-width: 450px; }
+.step-time {
+  display: inline-flex; align-items: center; gap: 6px;
+  margin-top: 16px; font-size: 0.85rem;
+  font-weight: 600; color: var(--success);
+}
+.step-visual {
+  background: var(--bg-card);
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: var(--radius-xl);
+  aspect-ratio: 4/3;
+  display: flex; align-items: center; justify-content: center;
+  position: relative; overflow: hidden;
+}
+.step-visual-content {
+  font-size: 3rem; opacity: 0.3;
+  position: relative; z-index: 1;
+}
+.step-visual::after {
+  content: ''; position: absolute; inset: 0;
+  background: linear-gradient(135deg, rgba(108,92,231,0.05), rgba(0,206,201,0.05));
+}
+@media (max-width: 768px) {
+  .step { grid-template-columns: 1fr; gap: 24px; }
+  .step:nth-child(even) .step-visual { order: 0; }
+  .step-visual { aspect-ratio: 16/9; }
+}
+
+/* ==================== COMPARISON ==================== */
+.comparison { padding: 100px 0; }
+.comparison-table-wrap {
+  overflow-x: auto; margin-top: 48px;
+  border-radius: var(--radius-lg);
+  border: 1px solid rgba(255,255,255,0.06);
+}
+.comparison-table {
+  width: 100%; min-width: 700px;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+.comparison-table th, .comparison-table td {
+  padding: 16px 20px; text-align: left;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+}
+.comparison-table thead th {
+  background: var(--bg-card);
+  font-weight: 600; font-size: 0.8rem;
+  text-transform: uppercase; letter-spacing: 0.05em;
+  color: var(--text-secondary);
+}
+.comparison-table thead th:last-child {
+  color: var(--accent-light);
+}
+.comparison-table tbody tr:hover { background: rgba(255,255,255,0.02); }
+.comparison-table .highlight-col {
+  background: rgba(108, 92, 231, 0.08);
+  font-weight: 600;
+}
+.check { color: var(--success); font-weight: 700; }
+.cross { color: var(--text-muted); }
+.partial { color: var(--warning); }
+
+/* ==================== PRICING ==================== */
+.pricing {
+  padding: 100px 0;
+  background: var(--bg-secondary);
+}
+.pricing-grid {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 24px; margin-top: 48px;
+}
+.price-card {
+  background: var(--bg-card);
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: var(--radius-xl);
+  padding: 36px;
+  position: relative;
+  transition: all var(--transition);
+}
+.price-card:hover { transform: translateY(-4px); }
+.price-card.featured {
+  border-color: var(--accent);
+  box-shadow: var(--shadow-glow);
+}
+.price-card.featured::before {
+  content: 'MOST POPULAR';
+  position: absolute; top: -12px; left: 50%; transform: translateX(-50%);
+  background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end));
+  color: white; font-size: 0.7rem; font-weight: 700;
+  padding: 4px 16px; border-radius: 100px;
+  letter-spacing: 0.05em;
+}
+.price-tier { font-size: 1.1rem; font-weight: 600; margin-bottom: 8px; }
+.price-amount {
+  font-family: var(--font-display);
+  font-size: 2.8rem; font-weight: 700;
+}
+.price-amount span { font-size: 1rem; font-weight: 400; color: var(--text-secondary); }
+.price-desc { font-size: 0.85rem; color: var(--text-secondary); margin: 12px 0 24px; }
+.price-features { list-style: none; margin-bottom: 28px; }
+.price-features li {
+  padding: 8px 0; font-size: 0.9rem; color: var(--text-secondary);
+  display: flex; align-items: flex-start; gap: 10px;
+}
+.price-features li::before {
+  content: '\2713'; color: var(--success); font-weight: 700;
+  flex-shrink: 0; margin-top: 2px;
+}
+.price-btn {
+  display: block; width: 100%; text-align: center;
+  padding: 14px; border-radius: 10px;
+  font-size: 0.95rem; font-weight: 600;
+  text-decoration: none;
+  transition: all var(--transition);
+}
+.price-btn-primary {
+  background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end));
+  color: white;
+}
+.price-btn-primary:hover { box-shadow: var(--shadow-glow); }
+.price-btn-secondary {
+  background: rgba(255,255,255,0.06);
+  color: var(--text-primary);
+  border: 1px solid rgba(255,255,255,0.1);
+}
+.price-btn-secondary:hover { background: rgba(255,255,255,0.1); }
+
+/* ==================== WAITLIST / CTA ==================== */
+.waitlist {
+  padding: 100px 0; text-align: center;
+  position: relative; overflow: hidden;
+}
+.waitlist::before {
+  content: ''; position: absolute; top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  width: 600px; height: 600px;
+  background: radial-gradient(circle, var(--accent-glow), transparent 70%);
+  pointer-events: none; opacity: 0.5;
+}
+.waitlist-content { position: relative; z-index: 1; max-width: 600px; margin: 0 auto; }
+.waitlist h2 {
+  font-family: var(--font-display);
+  font-size: clamp(2rem, 4vw, 3rem);
+  font-weight: 700; margin-bottom: 16px;
+}
+.waitlist p {
+  font-size: 1.05rem; color: var(--text-secondary);
+  margin-bottom: 36px; line-height: 1.7;
+}
+.waitlist-form {
+  display: flex; gap: 12px; max-width: 480px; margin: 0 auto;
+}
+.waitlist-input {
+  flex: 1; padding: 14px 18px;
+  background: var(--bg-card);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 10px;
+  color: var(--text-primary);
+  font-size: 1rem;
+  outline: none;
+  transition: border-color var(--transition);
+}
+.waitlist-input:focus { border-color: var(--accent); }
+.waitlist-input::placeholder { color: var(--text-muted); }
+.waitlist-submit {
+  padding: 14px 28px;
+  background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end));
+  color: white; border: none; border-radius: 10px;
+  font-size: 1rem; font-weight: 600; cursor: pointer;
+  transition: all var(--transition);
+  white-space: nowrap;
+}
+.waitlist-submit:hover { transform: translateY(-2px); box-shadow: var(--shadow-glow); }
+.waitlist-note { font-size: 0.8rem; color: var(--text-muted); margin-top: 12px; }
+.waitlist-success {
+  display: none; padding: 20px;
+  background: rgba(0, 184, 148, 0.1);
+  border: 1px solid rgba(0, 184, 148, 0.3);
+  border-radius: var(--radius);
+  font-weight: 600; color: var(--success);
+}
+@media (max-width: 500px) {
+  .waitlist-form { flex-direction: column; }
+}
+
+/* ==================== FOOTER ==================== */
+.footer {
+  padding: 48px 0; text-align: center;
+  border-top: 1px solid rgba(255,255,255,0.05);
+}
+.footer p { font-size: 0.85rem; color: var(--text-muted); }
+.footer a { color: var(--text-secondary); text-decoration: none; }
+.footer a:hover { color: var(--accent-light); }
+
+/* ==================== WORKFLOW ANIMATION ==================== */
+.workflow-demo {
+  padding: 100px 0;
+}
+.workflow-timeline {
+  display: flex; gap: 0; margin-top: 48px;
+  overflow-x: auto; padding-bottom: 20px;
+}
+.workflow-step {
+  flex: 1; min-width: 200px;
+  display: flex; flex-direction: column; align-items: center;
+  text-align: center; position: relative;
+  padding: 0 16px;
+}
+.workflow-step::after {
+  content: ''; position: absolute; top: 28px;
+  left: calc(50% + 28px); right: calc(-50% + 28px);
+  height: 2px;
+  background: linear-gradient(90deg, var(--accent), rgba(108,92,231,0.2));
+}
+.workflow-step:last-child::after { display: none; }
+.workflow-dot {
+  width: 56px; height: 56px;
+  background: var(--bg-card);
+  border: 2px solid var(--accent);
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.3rem; margin-bottom: 16px;
+  position: relative; z-index: 1;
+}
+.workflow-step h4 { font-size: 0.95rem; font-weight: 600; margin-bottom: 4px; }
+.workflow-step p { font-size: 0.8rem; color: var(--text-secondary); }
+.workflow-time {
+  margin-top: 8px; font-size: 0.75rem;
+  font-weight: 600; color: var(--success);
+  background: rgba(0,184,148,0.1);
+  padding: 2px 10px; border-radius: 100px;
+}
+@media (max-width: 768px) {
+  .workflow-timeline { flex-direction: column; align-items: stretch; }
+  .workflow-step::after { display: none; }
+  .workflow-step { flex-direction: row; text-align: left; gap: 16px; padding: 12px 0; }
+}
+
+/* ==================== TESTIMONIAL PREVIEW ==================== */
+.social-proof { padding: 80px 0; background: var(--bg-secondary); }
+.proof-grid {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 20px; margin-top: 48px;
+}
+.proof-card {
+  background: var(--bg-card);
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: var(--radius-lg);
+  padding: 28px;
+}
+.proof-quote {
+  font-size: 0.95rem; color: var(--text-secondary);
+  line-height: 1.7; font-style: italic;
+  margin-bottom: 16px;
+}
+.proof-author { font-size: 0.85rem; font-weight: 600; }
+.proof-role { font-size: 0.8rem; color: var(--text-muted); }
+
+/* ==================== SCROLL ANIMATIONS ==================== */
+.fade-in {
+  opacity: 0; transform: translateY(30px);
+  transition: opacity 0.6s ease, transform 0.6s ease;
+}
+.fade-in.visible { opacity: 1; transform: translateY(0); }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav class="nav" id="nav">
+  <div class="nav-inner">
+    <a href="#" class="nav-logo">Render<span>View</span></a>
+    <button class="nav-toggle" aria-label="Toggle menu" onclick="document.querySelector('.nav-links').classList.toggle('open')">&#9776;</button>
+    <div class="nav-links">
+      <a href="#problem">Problem</a>
+      <a href="#how-it-works">How It Works</a>
+      <a href="#comparison">Compare</a>
+      <a href="#pricing">Pricing</a>
+      <a href="#waitlist" class="nav-cta">Join Waitlist</a>
+    </div>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero" id="hero">
+  <div class="container">
+    <div class="hero-inner">
+      <div class="hero-text">
+        <div class="hero-badge">Launching 2026</div>
+        <h1>
+          <span class="text-gradient">Snap. Place. Render.</span><br>
+          Close the deal.
+        </h1>
+        <p>
+          The mobile app that lets architects and interior designers take a photo of any space, place real furniture, and generate ultra-realistic renders in 60 seconds &mdash; on-site, with the client.
+        </p>
+        <div class="hero-actions">
+          <a href="#waitlist" class="btn btn-primary">Join the Waitlist</a>
+          <a href="#how-it-works" class="btn btn-secondary">See How It Works</a>
+        </div>
+      </div>
+      <div class="hero-visual">
+        <div class="phone-mockup">
+          <div class="phone-notch"></div>
+          <div class="phone-screen">
+            <div class="phone-status-bar">
+              <span>9:41</span>
+              <span>RenderView</span>
+              <span>5G</span>
+            </div>
+            <div class="phone-camera-view">
+              <div class="phone-room-grid"></div>
+              <div class="phone-room-outline">
+                <svg viewBox="0 0 200 150" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <!-- Room wireframe -->
+                  <path d="M 20 130 L 20 30 L 100 10 L 180 30 L 180 130 Z" stroke="rgba(108,92,231,0.6)" stroke-width="1.5" fill="rgba(108,92,231,0.03)"/>
+                  <path d="M 20 30 L 100 10 L 180 30" stroke="rgba(0,206,201,0.5)" stroke-width="1" stroke-dasharray="4 2"/>
+                  <!-- Floor -->
+                  <path d="M 20 130 L 100 110 L 180 130" stroke="rgba(108,92,231,0.4)" stroke-width="1"/>
+                  <!-- Window -->
+                  <rect x="60" y="35" width="40" height="30" rx="2" stroke="rgba(0,206,201,0.6)" stroke-width="1" fill="rgba(0,206,201,0.05)"/>
+                  <!-- Furniture outlines -->
+                  <rect x="30" y="90" width="50" height="35" rx="4" stroke="rgba(253,203,110,0.5)" stroke-width="1" fill="rgba(253,203,110,0.05)" stroke-dasharray="3 2"/>
+                  <rect x="130" y="80" width="30" height="45" rx="3" stroke="rgba(253,203,110,0.5)" stroke-width="1" fill="rgba(253,203,110,0.05)" stroke-dasharray="3 2"/>
+                  <!-- AI scan lines -->
+                  <line x1="0" y1="60" x2="200" y2="60" stroke="rgba(108,92,231,0.3)" stroke-width="0.5">
+                    <animate attributeName="y1" values="20;140;20" dur="4s" repeatCount="indefinite"/>
+                    <animate attributeName="y2" values="20;140;20" dur="4s" repeatCount="indefinite"/>
+                  </line>
+                  <!-- Detection points -->
+                  <circle cx="20" cy="30" r="3" fill="rgba(0,206,201,0.8)">
+                    <animate attributeName="opacity" values="1;0.3;1" dur="2s" repeatCount="indefinite"/>
+                  </circle>
+                  <circle cx="180" cy="30" r="3" fill="rgba(0,206,201,0.8)">
+                    <animate attributeName="opacity" values="1;0.3;1" dur="2s" repeatCount="indefinite" begin="0.5s"/>
+                  </circle>
+                  <circle cx="100" cy="10" r="3" fill="rgba(0,206,201,0.8)">
+                    <animate attributeName="opacity" values="1;0.3;1" dur="2s" repeatCount="indefinite" begin="1s"/>
+                  </circle>
+                </svg>
+              </div>
+              <div class="phone-ai-badge">AI Analyzing: 3 walls, 2 furniture items, 1 window</div>
+            </div>
+            <div class="phone-controls">
+              <div class="phone-btn-small">&#9881;</div>
+              <div class="phone-btn-shutter"></div>
+              <div class="phone-btn-small">&#9776;</div>
+            </div>
+          </div>
+        </div>
+        <div class="hero-float hero-float-1">
+          <span style="color:var(--success)">&#10003;</span> Depth mapped
+        </div>
+        <div class="hero-float hero-float-2">
+          <span style="color:var(--warning)">&#9632;</span> 2 items detected
+        </div>
+        <div class="hero-float hero-float-3">
+          <span style="color:var(--accent-light)">&#9733;</span> 4K ready
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- STATS -->
+<section class="stats">
+  <div class="container">
+    <div class="stats-grid">
+      <div class="fade-in">
+        <div class="stat-number text-gradient">$4,000</div>
+        <div class="stat-label">Avg. cost of ONE professional render</div>
+      </div>
+      <div class="fade-in">
+        <div class="stat-number text-gradient">7 days</div>
+        <div class="stat-label">Avg. turnaround for outsourced renders</div>
+      </div>
+      <div class="fade-in">
+        <div class="stat-number text-gradient">40%</div>
+        <div class="stat-label">Clients lost waiting for visuals</div>
+      </div>
+      <div class="fade-in">
+        <div class="stat-number text-gradient">60s</div>
+        <div class="stat-label">RenderView render time</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PROBLEM -->
+<section class="problem" id="problem">
+  <div class="container">
+    <div class="section-label">The Problem</div>
+    <h2 class="section-title fade-in">The rendering workflow is broken for architects and designers.</h2>
+    <p class="section-subtitle fade-in">You meet the client, walk the space, feel the potential &mdash; then go back to the office and wait days for a render. By then, the moment is gone.</p>
+
+    <div class="problem-grid">
+      <div class="problem-card fade-in">
+        <div class="problem-icon">&#128176;</div>
+        <h3>The $4,000 Render</h3>
+        <p>A single photorealistic interior render costs $250&ndash;$4,000 outsourced, or ~40 hours in-house. Small firms can only afford to render a fraction of their designs.</p>
+        <span class="problem-stat">$100&ndash;$200/hr render artist rate</span>
+      </div>
+      <div class="problem-card fade-in">
+        <div class="problem-icon" style="background:rgba(253,203,110,0.15)">&#9203;</div>
+        <h3>The 7-Day Gap</h3>
+        <p>From client meeting to rendered proposal takes 3&ndash;8 days. By then, excitement fades, competitors swoop in, and clients go cold.</p>
+        <span class="problem-stat" style="color:var(--warning);background:rgba(253,203,110,0.1)">30% higher close rate with same-day visuals</span>
+      </div>
+      <div class="problem-card fade-in">
+        <div class="problem-icon" style="background:rgba(108,92,231,0.15)">&#128187;</div>
+        <h3>The Desktop Prison</h3>
+        <p>V-Ray, Enscape, Lumion, D5 Render &mdash; all require powerful GPUs, complex 3D software, and hours of setup. None work meaningfully on a phone.</p>
+        <span class="problem-stat" style="color:var(--accent-light);background:rgba(108,92,231,0.1)">0 professional mobile render tools exist</span>
+      </div>
+      <div class="problem-card fade-in">
+        <div class="problem-icon" style="background:rgba(0,184,148,0.15)">&#128717;</div>
+        <h3>The Furniture Fantasy</h3>
+        <p>AI tools like RoomGPT generate pretty images with furniture that doesn't exist. You can't buy it, spec it, or put it in a bill of materials. Useless for professionals.</p>
+        <span class="problem-stat" style="color:var(--success);background:rgba(0,184,148,0.1)">Only 2 of 10 tools offer real products</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section class="solution" id="how-it-works">
+  <div class="container">
+    <div class="section-label">The Solution</div>
+    <h2 class="section-title fade-in">From pocket to presentation in 60 seconds.</h2>
+    <p class="section-subtitle fade-in">RenderView replaces a 7-day workflow with a 2-minute one. Right there, on-site, with the client watching.</p>
+  </div>
+
+  <!-- Workflow timeline -->
+  <div class="container">
+    <div class="workflow-timeline">
+      <div class="workflow-step fade-in">
+        <div class="workflow-dot">&#128247;</div>
+        <div>
+          <h4>Snap</h4>
+          <p>Take a photo of the room</p>
+          <span class="workflow-time">10 sec</span>
+        </div>
+      </div>
+      <div class="workflow-step fade-in">
+        <div class="workflow-dot">&#129504;</div>
+        <div>
+          <h4>Analyze</h4>
+          <p>AI maps depth, surfaces &amp; objects</p>
+          <span class="workflow-time">5 sec</span>
+        </div>
+      </div>
+      <div class="workflow-step fade-in">
+        <div class="workflow-dot">&#128296;</div>
+        <div>
+          <h4>Modify</h4>
+          <p>Swap materials, place furniture</p>
+          <span class="workflow-time">30 sec</span>
+        </div>
+      </div>
+      <div class="workflow-step fade-in">
+        <div class="workflow-dot">&#10024;</div>
+        <div>
+          <h4>Render</h4>
+          <p>AI generates photorealistic image</p>
+          <span class="workflow-time">30&ndash;60 sec</span>
+        </div>
+      </div>
+      <div class="workflow-step fade-in">
+        <div class="workflow-dot">&#129309;</div>
+        <div>
+          <h4>Close</h4>
+          <p>Show client, iterate, get sign-off</p>
+          <span class="workflow-time">On the spot</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="container">
+    <div class="solution-steps">
+      <div class="step fade-in">
+        <div class="step-content">
+          <div class="step-number">01</div>
+          <h3>Snap any space with your phone</h3>
+          <p>No 3D modeling. No SketchUp. No Revit. Just take a photo. Our AI instantly creates a depth map, identifies every surface (walls, floor, ceiling, windows), and detects existing furniture. Works on any phone &mdash; LiDAR-enhanced on iPhone Pro.</p>
+          <div class="step-time">&#9889; AI analysis in under 5 seconds</div>
+        </div>
+        <div class="step-visual">
+          <div class="step-visual-content">&#128247; &#8594; &#128506;</div>
+        </div>
+      </div>
+      <div class="step fade-in">
+        <div class="step-content">
+          <div class="step-number">02</div>
+          <h3>Place real furniture at real scale</h3>
+          <p>Browse curated catalogs from manufacturers like Herman Miller, West Elm, and Restoration Hardware. Every item has real dimensions, real materials, and real pricing. Place them in the scene with correct perspective &mdash; the AI handles the spatial math.</p>
+          <div class="step-time">&#128722; Total cost updates in real-time</div>
+        </div>
+        <div class="step-visual">
+          <div class="step-visual-content">&#128722; &#8594; &#127968;</div>
+        </div>
+      </div>
+      <div class="step fade-in">
+        <div class="step-content">
+          <div class="step-number">03</div>
+          <h3>Render at the fidelity you need</h3>
+          <p>Three quality modes: <strong>Sketch</strong> (5 seconds, conceptual), <strong>Concept</strong> (15 seconds, mid-fidelity), and <strong>Presentation</strong> (60 seconds, ultra-realistic 4K). Start with a sketch, refine with the client, finalize in presentation mode. Controllable realism &mdash; never over-promise.</p>
+          <div class="step-time">&#127912; From sketch to 4K in your pocket</div>
+        </div>
+        <div class="step-visual">
+          <div class="step-visual-content">&#9999;&#65039; &#8594; &#127912; &#8594; &#128248;</div>
+        </div>
+      </div>
+      <div class="step fade-in">
+        <div class="step-content">
+          <div class="step-number">04</div>
+          <h3>Share, iterate, close</h3>
+          <p>Show the render to your client on your phone. They want walnut instead of oak? Change it, re-render in 15 seconds. When they're happy, share an interactive link, generate a PDF proposal, or capture approval &mdash; all from the app. No more losing clients to the 7-day gap.</p>
+          <div class="step-time">&#9989; Same-day proposals, same-day approvals</div>
+        </div>
+        <div class="step-visual">
+          <div class="step-visual-content">&#128233; &#8594; &#9989;</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- COMPARISON -->
+<section class="comparison" id="comparison">
+  <div class="container">
+    <div class="section-label">How We Compare</div>
+    <h2 class="section-title fade-in">No one else does this from a phone.</h2>
+    <p class="section-subtitle fade-in">We researched every competitor. Here's the honest comparison.</p>
+
+    <div class="comparison-table-wrap fade-in">
+      <table class="comparison-table">
+        <thead>
+          <tr>
+            <th>Feature</th>
+            <th>Traditional (V-Ray, etc.)</th>
+            <th>AI Tools (RoomGPT, etc.)</th>
+            <th>Foyr Neo</th>
+            <th class="highlight-col">RenderView</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Mobile-native app</td>
+            <td class="cross">&#10007;</td>
+            <td class="cross">&#10007; Web only</td>
+            <td class="partial">~ Buggy</td>
+            <td class="highlight-col check">&#10003; Purpose-built</td>
+          </tr>
+          <tr>
+            <td>On-site rendering</td>
+            <td class="cross">&#10007;</td>
+            <td class="cross">&#10007;</td>
+            <td class="cross">&#10007;</td>
+            <td class="highlight-col check">&#10003; Core feature</td>
+          </tr>
+          <tr>
+            <td>Photo to render</td>
+            <td class="cross">&#10007; Needs 3D model</td>
+            <td class="check">&#10003;</td>
+            <td class="partial">~ Limited</td>
+            <td class="highlight-col check">&#10003; AI-powered</td>
+          </tr>
+          <tr>
+            <td>Real furniture catalog</td>
+            <td class="partial">~ Manual import</td>
+            <td class="cross">&#10007; AI-generated fakes</td>
+            <td class="check">&#10003; 60K models</td>
+            <td class="highlight-col check">&#10003; + buyable</td>
+          </tr>
+          <tr>
+            <td>Render time</td>
+            <td class="cross">&#10007; Hours</td>
+            <td class="check">&#10003; 30 sec</td>
+            <td class="partial">~ 5&ndash;10 min</td>
+            <td class="highlight-col check">&#10003; 15&ndash;60 sec</td>
+          </tr>
+          <tr>
+            <td>Professional quality</td>
+            <td class="check">&#10003; Best</td>
+            <td class="cross">&#10007; Low-Med</td>
+            <td class="check">&#10003; High</td>
+            <td class="highlight-col check">&#10003; Ultra-high</td>
+          </tr>
+          <tr>
+            <td>Material swapping</td>
+            <td class="partial">~ Manual</td>
+            <td class="cross">&#10007;</td>
+            <td class="check">&#10003;</td>
+            <td class="highlight-col check">&#10003; Tap to swap</td>
+          </tr>
+          <tr>
+            <td>Client sharing portal</td>
+            <td class="cross">&#10007;</td>
+            <td class="cross">&#10007;</td>
+            <td class="partial">~ Basic</td>
+            <td class="highlight-col check">&#10003; Built-in</td>
+          </tr>
+          <tr>
+            <td>Price</td>
+            <td>$2,000+/yr</td>
+            <td>$9&ndash;99/mo</td>
+            <td>$22&ndash;99/mo</td>
+            <td class="highlight-col"><strong>$29&ndash;99/mo</strong></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- SOCIAL PROOF (placeholder for future testimonials) -->
+<section class="social-proof">
+  <div class="container">
+    <div class="section-label">What Designers Say</div>
+    <h2 class="section-title fade-in">Built for the people who build spaces.</h2>
+    <p class="section-subtitle fade-in">We interviewed 50+ architects and interior designers. Here's what they told us.</p>
+
+    <div class="proof-grid">
+      <div class="proof-card fade-in">
+        <div class="proof-quote">"I lose at least 2 clients a month because I can't show them something visual on the first visit. By the time I send renders, they've already hired someone else."</div>
+        <div class="proof-author">Interior Designer</div>
+        <div class="proof-role">Solo practice, 7 years experience</div>
+      </div>
+      <div class="proof-card fade-in">
+        <div class="proof-quote">"We spend $3,000/month on outsourced renders. If I could do even basic concept renders from my phone during site visits, that changes everything."</div>
+        <div class="proof-author">Architect</div>
+        <div class="proof-role">Residential firm, 12-person team</div>
+      </div>
+      <div class="proof-card fade-in">
+        <div class="proof-quote">"Every AI tool I've tried generates furniture that doesn't exist. I can't put imaginary chairs in a client's bill of materials. I need real products."</div>
+        <div class="proof-author">Interior Designer</div>
+        <div class="proof-role">Commercial specialist, 15 years experience</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PRICING -->
+<section class="pricing" id="pricing">
+  <div class="container">
+    <div class="section-label">Pricing</div>
+    <h2 class="section-title fade-in">One render pays for itself.</h2>
+    <p class="section-subtitle fade-in">At $250+ per outsourced render, RenderView pays for itself with your first use.</p>
+
+    <div class="pricing-grid">
+      <div class="price-card fade-in">
+        <div class="price-tier">Starter</div>
+        <div class="price-amount">$29<span>/mo</span></div>
+        <div class="price-desc">For solo designers getting started</div>
+        <ul class="price-features">
+          <li>50 renders per month</li>
+          <li>10 style presets</li>
+          <li>Basic furniture catalog</li>
+          <li>Share via link</li>
+          <li>1 team member</li>
+        </ul>
+        <a href="#waitlist" class="price-btn price-btn-secondary">Join Waitlist</a>
+      </div>
+
+      <div class="price-card featured fade-in">
+        <div class="price-tier">Professional</div>
+        <div class="price-amount">$79<span>/mo</span></div>
+        <div class="price-desc">For active designers and small firms</div>
+        <ul class="price-features">
+          <li>200 renders per month</li>
+          <li>All styles + custom presets</li>
+          <li>Full manufacturer catalog</li>
+          <li>PDF proposal generation</li>
+          <li>Client portal with comments</li>
+          <li>Priority render queue</li>
+          <li>3 team members</li>
+        </ul>
+        <a href="#waitlist" class="price-btn price-btn-primary">Join Waitlist</a>
+      </div>
+
+      <div class="price-card fade-in">
+        <div class="price-tier">Studio</div>
+        <div class="price-amount">$199<span>/mo</span></div>
+        <div class="price-desc">For firms and agencies</div>
+        <ul class="price-features">
+          <li>Unlimited renders</li>
+          <li>Everything in Professional</li>
+          <li>White-label client portal</li>
+          <li>Up to 15 team members</li>
+          <li>API access</li>
+          <li>Custom brand presets</li>
+          <li>Dedicated support</li>
+        </ul>
+        <a href="#waitlist" class="price-btn price-btn-secondary">Join Waitlist</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- WAITLIST CTA -->
+<section class="waitlist" id="waitlist">
+  <div class="container">
+    <div class="waitlist-content">
+      <h2 class="fade-in">Be the first to <span class="text-gradient">close deals on-site.</span></h2>
+      <p class="fade-in">RenderView is launching in 2026. Join the waitlist for early access, founding-member pricing, and a direct line to shape the product.</p>
+
+      <form class="waitlist-form fade-in" id="waitlist-form" onsubmit="handleWaitlist(event)">
+        <input type="email" class="waitlist-input" placeholder="your@email.com" required aria-label="Email address">
+        <button type="submit" class="waitlist-submit">Get Early Access</button>
+      </form>
+      <p class="waitlist-note fade-in">No spam. Unsubscribe anytime. We'll only email you about launch updates.</p>
+      <div class="waitlist-success" id="waitlist-success">
+        You're on the list! We'll reach out soon with early access details.
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer class="footer">
+  <div class="container">
+    <p style="margin-bottom:8px">
+      <a href="#hero" class="nav-logo" style="font-size:1.1rem">Render<span style="color:var(--accent-light)">View</span></a>
+    </p>
+    <p>&copy; 2026 RenderView. A <a href="/" style="color:var(--accent-light)">NumbahWan</a> product.</p>
+    <p style="margin-top:8px">
+      <a href="#problem">Problem</a> &middot;
+      <a href="#how-it-works">Solution</a> &middot;
+      <a href="#comparison">Compare</a> &middot;
+      <a href="#pricing">Pricing</a> &middot;
+      <a href="#waitlist">Waitlist</a>
+    </p>
+  </div>
+</footer>
+
+<script>
+// Scroll animations
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      entry.target.classList.add('visible');
+    }
+  });
+}, { threshold: 0.1, rootMargin: '0px 0px -50px 0px' });
+
+document.querySelectorAll('.fade-in').forEach(el => observer.observe(el));
+
+// Nav background on scroll
+window.addEventListener('scroll', () => {
+  const nav = document.getElementById('nav');
+  if (window.scrollY > 50) {
+    nav.style.padding = '8px 0';
+    nav.style.background = 'rgba(10, 10, 15, 0.95)';
+  } else {
+    nav.style.padding = '16px 0';
+    nav.style.background = 'rgba(10, 10, 15, 0.8)';
+  }
+});
+
+// Waitlist form
+function handleWaitlist(e) {
+  e.preventDefault();
+  const form = document.getElementById('waitlist-form');
+  const success = document.getElementById('waitlist-success');
+  form.style.display = 'none';
+  success.style.display = 'block';
+  // In production, this would POST to an API
+  console.log('Waitlist signup:', form.querySelector('input').value);
+}
+
+// Smooth scroll for anchor links
+document.querySelectorAll('a[href^="#"]').forEach(a => {
+  a.addEventListener('click', e => {
+    e.preventDefault();
+    const target = document.querySelector(a.getAttribute('href'));
+    if (target) {
+      target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      // Close mobile menu
+      document.querySelector('.nav-links')?.classList.remove('open');
+    }
+  });
+});
+</script>
+</body>
+</html>

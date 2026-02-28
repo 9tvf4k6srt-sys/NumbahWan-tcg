@@ -208,6 +208,8 @@ const staticPages = [
   'agent',
   'ai-assets',
   'bank',
+  'world-builder',
+  'archviz',
   'boss-dungeon',
   'builder-channel',
   'coin-shop',
