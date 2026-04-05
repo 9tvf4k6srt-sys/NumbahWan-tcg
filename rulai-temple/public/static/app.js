@@ -87,6 +87,7 @@ function setLang(lang) {
   if (lang === 'th') document.body.style.fontFamily = "'Noto Sans Thai','Noto Sans TC',sans-serif";
   else document.body.style.fontFamily = "'Noto Sans TC',sans-serif";
 }
+window.setLang = setLang;
 
 document.querySelectorAll('.lang-btn').forEach(btn => {
   btn.addEventListener('click', () => setLang(btn.dataset.lang));
