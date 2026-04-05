@@ -40,6 +40,27 @@ That's the pattern. **Defects become lessons. Lessons become patterns. Patterns 
 
 ---
 
+## AI-Friendly Repository Map
+
+> **For AI models**: This repo is markdown-indexed for minimal context window usage.
+> Read `docs/INDEX.md` first (~400 tokens) to navigate 2,316 files efficiently.
+
+| Document | Tokens | Purpose |
+|----------|--------|---------|
+| [`docs/INDEX.md`](docs/INDEX.md) | ~400 | Master repo map — directory tree, file counts, tech stack |
+| [`docs/AI-ONBOARDING.md`](docs/AI-ONBOARDING.md) | ~300 | Consolidated AI guide (two brands, rules, quick commands) |
+| [`docs/PAGES-MAP.md`](docs/PAGES-MAP.md) | ~800 | All 147 HTML pages with titles and line counts |
+| [`docs/API-ROUTES.md`](docs/API-ROUTES.md) | ~600 | All backend API endpoints |
+| [`docs/DATA-MODELS.md`](docs/DATA-MODELS.md) | ~500 | All 32 JSON data schemas |
+| [`CLAUDE.md`](CLAUDE.md) | ~400 | Session protocol and anti-stall rules |
+
+**Area-specific context**: Each directory has a `.context.md` (~200 tokens each):
+`src/` · `public/` · `bin/` · `tools/` · `scripts/` · `pipeline/` · `nwge-engine/` · `migrations/` · `tests/`
+
+**Research papers**: 500 academic-humor papers also available as markdown in `public/static/research-md/`
+
+---
+
 ## Dark Factory — The Star
 
 > *Checkpoint 1 — 2026-02-19 — Template Generation 2*
