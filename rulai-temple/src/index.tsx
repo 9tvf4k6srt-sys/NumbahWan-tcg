@@ -251,6 +251,9 @@ ${d.visit.cards.map((card: any) => `      <div class="visit-card ${card.animatio
 <!-- FLOATING INCENSE -->
 <div id="incense-container"></div>
 
+<!-- MUSIC TOGGLE -->
+<div id="music-toggle" aria-label="Toggle background music"></div>
+
 ${d.site.scripts.map((s: any) => `<script src="${s.url}"></script>`).join('\n')}
 <script src="/static/app.js"></script>
 </body>

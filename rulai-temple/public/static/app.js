@@ -299,3 +299,56 @@ function initGSAP() {
     opacity: 0.6, scale: 1.05, duration: 2, repeat: -1, yoyo: true, ease: 'sine.inOut'
   });
 }
+
+/* === BACKGROUND MUSIC PLAYER === */
+(function initBgMusic() {
+  const toggle = document.getElementById('music-toggle');
+  if (!toggle) return;
+
+  // Create audio element
+  const audio = document.createElement('audio');
+  audio.id = 'bg-music';
+  audio.src = '/static/temple-ambient.mp3';
+  audio.loop = true;
+  audio.volume = 0.3;
+  audio.preload = 'auto';
+  document.body.appendChild(audio);
+
+  // Check localStorage for user preference
+  const savedPref = localStorage.getItem('temple-music-muted');
+  const startMuted = savedPref !== 'false'; // muted unless explicitly unmuted before
+
+  audio.muted = startMuted;
+
+  // SVG icons for speaker states
+  const icoOn = '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 010 14.14"/><path d="M15.54 8.46a5 5 0 010 7.07"/></svg>';
+  const icoOff = '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/></svg>';
+
+  function updateToggleUI() {
+    const muted = audio.muted;
+    toggle.innerHTML = muted ? icoOff : icoOn;
+    toggle.setAttribute('data-muted', muted ? 'true' : 'false');
+    toggle.style.cursor = 'pointer';
+    toggle.title = muted ? 'Play music' : 'Mute music';
+  }
+
+  updateToggleUI();
+
+  // Try to autoplay if user previously chose unmuted
+  if (!startMuted) {
+    audio.play().catch(function() {
+      // Autoplay blocked — stay muted until user clicks
+      audio.muted = true;
+      updateToggleUI();
+    });
+  }
+
+  toggle.addEventListener('click', function() {
+    audio.muted = !audio.muted;
+    localStorage.setItem('temple-music-muted', audio.muted ? 'true' : 'false');
+    updateToggleUI();
+    if (!audio.muted) {
+      audio.play().catch(function() {});
+    }
+  });
+})();
