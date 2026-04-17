@@ -1,3 +1,11 @@
+> ⚠️ **DEPRECATED — this file is kept for archival only.**
+> **Canonical AI entry point is now [`AI_PLAYBOOK.md`](../AI_PLAYBOOK.md)** at repo root.
+> CLI: `node bin/ai.cjs` · Audit: [`AUDIT-2026-04.md`](../AUDIT-2026-04.md)
+>
+> Content below may be stale. Trust the playbook.
+
+---
+
 # 🤖 NumbahWan Auto-Helper & Debugger System
 
 > Automatically creates helpers, debugs issues, and optimizes your project

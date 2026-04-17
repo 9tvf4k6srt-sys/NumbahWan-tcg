@@ -1892,6 +1892,33 @@ function runSentinel(rootDir, options = {}) {
 
 function main() {
   const args = process.argv.slice(2);
+
+  // ── Help surface ─────────────────────────────────────────────────
+  if (args.includes('--help') || args.includes('-h') || args[0] === 'help') {
+    const C = process.stdout.isTTY ? { r:'\x1b[0m', b:'\x1b[1m', dim:'\x1b[2m', cyan:'\x1b[36m', yellow:'\x1b[33m' } : { r:'',b:'',dim:'',cyan:'',yellow:'' };
+    console.log(`${C.b}sentinel.cjs${C.r} — project health guardian\n`);
+    console.log(`${C.yellow}Most users should start with:${C.r} ${C.cyan}node bin/ai.cjs health${C.r} or ${C.cyan}node bin/ai.cjs guard${C.r}`);
+    console.log(`${C.dim}See AI_PLAYBOOK.md §5 for the guardian overview.${C.r}\n`);
+    console.log(`${C.yellow}Flags:${C.r}`);
+    const flags = [
+      ['(no flags)',     'run full health dashboard'],
+      ['--ci',           'CI mode (exit codes, no colors)'],
+      ['--json',         'output JSON instead of pretty'],
+      ['--heal',         'auto-fix known issues (recursive self-heal)'],
+      ['--guard',        'design + i18n + include validation (for pre-commit)'],
+      ['--manifest',     'emit module manifest'],
+      ['--trend',        'show health trend over time'],
+      ['--auto-fix',     'list what --heal would change without doing it'],
+      ['--no-regress',   'skip regression check'],
+      ['--module <name>','score a single module'],
+      ['--output <file>','write output to file'],
+      ['--root <dir>',   'scan a different directory'],
+    ];
+    for (const [f, d] of flags) console.log(`  ${C.cyan}${f.padEnd(18)}${C.r} ${C.dim}${d}${C.r}`);
+    console.log(`\n${C.dim}Example: node sentinel.cjs --guard${C.r}`);
+    process.exit(0);
+  }
+
   const rootDir = args.includes('--root') ? args[args.indexOf('--root') + 1] : process.cwd();
   const isCI = args.includes('--ci');
   const isJSON = args.includes('--json');

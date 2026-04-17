@@ -5086,7 +5086,30 @@ function check(filepath) {
 // ─── Main ───────────────────────────────────────────────────────────
 
 const arg = process.argv[2];
-if (arg === '--init') {
+if (arg === '--help' || arg === '-h' || arg === 'help') {
+  // Unified help — routes to bin/ai.cjs for the curated surface, plus
+  // a full flag listing for power users.
+  const C = process.stdout.isTTY ? { r:'\x1b[0m', b:'\x1b[1m', dim:'\x1b[2m', cyan:'\x1b[36m', yellow:'\x1b[33m' } : { r:'',b:'',dim:'',cyan:'',yellow:'' };
+  console.log(`${C.b}mycelium.cjs${C.r} — memory, learning, evaluation, deployment\n`);
+  console.log(`${C.yellow}Most users should start with:${C.r} ${C.cyan}node bin/ai.cjs${C.r}`);
+  console.log(`${C.dim}That's the curated AI-friendly surface. See AI_PLAYBOOK.md for the session protocol.${C.r}\n`);
+  console.log(`${C.yellow}Full mycelium flags:${C.r}`);
+  const groups = [
+    ['Session',   [['--init','first-time setup'],['--onboard','session orientation'],['--status','session state'],['--brief','cat .nw-context']]],
+    ['Learning',  [['--decide "<area>" "<what>" "<why>"','record a choice'],['--constraint "<area>" "<fact>"','record a hard rule'],['--broke "<area>" "<what>"','record a breakage'],['--learned "<area>" "<lesson>"','record a fix-learning']]],
+    ['Query',     [['--query','full intel dump'],['--premortem <area>','what broke here'],['--whyfile <path>','file history + decisions'],['--areamap','file→area map']]],
+    ['Health',    [['--health','scored health'],['--eval','run mycelium eval'],['--reflect','deep pattern analysis'],['--sharpen','auto-tune']]],
+    ['Checkpoint',[['--checkpoint \'<json>\'','save multi-step task state'],['--checkpoint','read current'],['--wip "<text>"','quick WIP'],['--wip-done','clear checkpoint+WIP']]],
+    ['Self-care', [['--heal','auto-fix issues'],['--auto-trim','compact memory'],['--deep-compress','aggressive compact'],['--token-check','file-size audit']]],
+    ['Deploy',    [['ship "<msg>"','atomic deploy (use: node bin/mycelium.cjs ship)']]],
+  ];
+  for (const [g, flags] of groups) {
+    console.log(`  ${C.yellow}${g}${C.r}`);
+    for (const [flag, desc] of flags) console.log(`    ${C.cyan}${flag.padEnd(40)}${C.r} ${C.dim}${desc}${C.r}`);
+  }
+  console.log(`\n${C.dim}Legacy: all flags above still work. ${C.r}`);
+  process.exit(0);
+} else if (arg === '--init') {
   init();
 } else if (arg === '--onboard') {
   onboard();
