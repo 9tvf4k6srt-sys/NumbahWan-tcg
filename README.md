@@ -17,6 +17,15 @@
 
 ---
 
+## 🤖 For AI Agents — Start Here
+
+> **If you are an AI working on this repo, read [`AI_PLAYBOOK.md`](./AI_PLAYBOOK.md) first.**
+> Everything you need is in one file. Then run `node bin/ai.cjs` for the unified CLI.
+>
+> Latest refactor: [`AUDIT-2026-04.md`](./AUDIT-2026-04.md) · Session protocol: [`CLAUDE.md`](./CLAUDE.md)
+
+---
+
 ## The Core Idea
 
 We're building a factory that turns YAML specifications into production web pages — complete with trilingual translations, quality scoring, and deploy gates. The factory remembers every mistake it makes and every fix a human applies. Each build cycle feeds the next one. The goal: every page the factory produces should be better than the last.

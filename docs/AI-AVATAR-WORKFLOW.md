@@ -1,3 +1,11 @@
+> ⚠️ **DEPRECATED — this file is kept for archival only.**
+> **Canonical AI entry point is now [`AI_PLAYBOOK.md`](../AI_PLAYBOOK.md)** at repo root.
+> CLI: `node bin/ai.cjs` · Audit: [`AUDIT-2026-04.md`](../AUDIT-2026-04.md)
+>
+> Content below may be stale. Trust the playbook.
+
+---
+
 # AI Avatar Art Generation Workflow v2.0
 
 > **INTERNAL AI WORKFLOW** - How I generate pixel-perfect MapleStory card art
