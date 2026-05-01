@@ -72,10 +72,55 @@
 
         /* ---------- topbar — paper card, brass detail, seal-red CTA ---------- */
         .topbar{position:fixed;top:max(10px,env(safe-area-inset-top));left:50%;transform:translateX(-50%);z-index:50;width:min(1180px,calc(100% - 18px));display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 12px;border:1px solid rgba(139,111,58,.22);border-radius:6px;background:rgba(247,241,227,.86);backdrop-filter:blur(20px) saturate(1.1);-webkit-backdrop-filter:blur(20px) saturate(1.1);box-shadow:0 8px 28px rgba(74,56,32,.10),0 1px 0 rgba(255,255,255,.6) inset}
-        .brand{display:flex;align-items:center;gap:14px;letter-spacing:.04em;min-width:0}
-        .brand img{width:48px;height:48px;flex:0 0 auto;background:transparent;object-fit:contain;border:none;box-shadow:none;transition:transform .25s ease;filter:drop-shadow(0 2px 4px rgba(74,56,32,.18))}
-        .brand:hover img{transform:scale(1.04)}
+        .brand{display:flex;align-items:center;gap:14px;letter-spacing:.04em;min-width:0;background:none;border:none;padding:4px 6px 4px 4px;margin:0;cursor:pointer;border-radius:4px;position:relative;font-family:inherit;color:inherit;text-align:left}
+        .brand:hover{background:rgba(139,111,58,.06)}
+        .brand:focus-visible{outline:2px solid rgba(155,44,44,.45);outline-offset:2px}
+        .brand img{width:48px;height:48px;flex:0 0 auto;background:transparent;object-fit:contain;border:none;box-shadow:none;transition:transform .45s cubic-bezier(.4,1.6,.55,1),filter .3s ease;filter:drop-shadow(0 2px 4px rgba(74,56,32,.18))}
+        .brand:hover img{transform:scale(1.06) rotate(-4deg);filter:drop-shadow(0 3px 8px rgba(155,44,44,.32))}
+        .brand[aria-expanded="true"] img{transform:rotate(90deg) scale(1.08);filter:drop-shadow(0 4px 12px rgba(155,44,44,.45))}
+        /* tiny "menu" hint chevron beside the logo when nav is closed */
+        .brand-hint{position:absolute;left:46px;top:50%;width:14px;height:14px;border-radius:50%;background:var(--seal);color:var(--paper);font-size:.55rem;font-weight:700;display:flex;align-items:center;justify-content:center;transform:translateY(-50%) translateY(14px);box-shadow:0 2px 6px rgba(155,44,44,.35);font-family:var(--mono);line-height:1;pointer-events:none;animation:hintPulse 2.4s ease-in-out infinite;border:1.5px solid var(--paper)}
+        @keyframes hintPulse{0%,100%{transform:translateY(-50%) translateY(14px) scale(1)}50%{transform:translateY(-50%) translateY(14px) scale(1.15)}}
+        .brand[aria-expanded="true"] .brand-hint{opacity:0;transform:translateY(-50%) translateY(14px) scale(.5);transition:.2s}
         @keyframes brandPulse{0%,100%{filter:drop-shadow(0 2px 4px rgba(74,56,32,.18))}50%{filter:drop-shadow(0 3px 8px rgba(74,56,32,.28))}}
+
+        /* ---------- collapsing nav menu — paper scroll unfurling from behind logo ---------- */
+        .nav-scrim{position:fixed;inset:0;z-index:48;background:rgba(26,22,18,0);backdrop-filter:blur(0px);pointer-events:none;transition:background .35s ease,backdrop-filter .35s ease}
+        .nav-scrim.open{background:rgba(26,22,18,.32);backdrop-filter:blur(4px);pointer-events:auto}
+        .navmenu{position:fixed;top:max(72px,calc(env(safe-area-inset-top) + 62px));left:max(10px,calc((100% - 1180px)/2 + 8px));z-index:49;width:min(360px,calc(100% - 20px));max-height:calc(100svh - 100px);overflow-y:auto;background:linear-gradient(180deg,#F7F1E3 0%,#EFE7D6 100%);border:1px solid rgba(139,111,58,.32);border-radius:4px;box-shadow:0 30px 70px rgba(26,22,18,.32),0 6px 18px rgba(74,56,32,.18),0 0 0 1px rgba(255,255,255,.5) inset;transform-origin:8% top;transform:scaleY(.02) scaleX(.94) translateY(-12px);opacity:0;pointer-events:none;visibility:hidden;transition:transform .42s cubic-bezier(.32,1.5,.5,1),opacity .28s ease,visibility 0s linear .42s;padding:10px 0}
+        .navmenu.open{transform:scaleY(1) scaleX(1) translateY(0);opacity:1;pointer-events:auto;visibility:visible;transition:transform .55s cubic-bezier(.22,1.4,.36,1),opacity .25s ease .05s,visibility 0s linear 0s}
+        /* paper-scroll wax-seal accent + brass rule top */
+        .navmenu::before{content:"";position:absolute;left:0;right:0;top:0;height:3px;background:linear-gradient(90deg,var(--brass) 0%,var(--brass-2) 50%,var(--brass) 100%)}
+        .navmenu::after{content:"";position:absolute;left:18px;top:14px;width:8px;height:8px;border-radius:50%;background:var(--seal);box-shadow:0 0 0 2px rgba(247,241,227,1),0 1px 3px rgba(155,44,44,.5);opacity:.85}
+        .navmenu .nav-head{padding:14px 22px 10px 38px;font-family:var(--mono);font-size:.58rem;letter-spacing:.32em;text-transform:uppercase;color:var(--brass);font-weight:700;border-bottom:1px dashed rgba(139,111,58,.28);margin-bottom:6px}
+        .navmenu .nav-head em{font-style:normal;color:var(--ink-3);letter-spacing:.18em;display:block;font-size:.62rem;margin-top:3px;text-transform:none;font-family:var(--zh-display)}
+        .nav-item{display:flex;align-items:center;gap:14px;padding:13px 22px 13px 22px;color:var(--ink);font-family:var(--display);font-size:.95rem;font-weight:500;letter-spacing:.01em;border-left:3px solid transparent;cursor:pointer;text-decoration:none;position:relative;transform:translateX(-18px);opacity:0;transition:transform .35s cubic-bezier(.3,1.4,.5,1),opacity .25s ease,background .15s ease,border-left-color .15s ease,color .15s ease;will-change:transform,opacity}
+        .navmenu.open .nav-item{transform:translateX(0);opacity:1}
+        /* stagger each row using nth-child delay during open */
+        .navmenu.open .nav-item:nth-child(1){transition-delay:.06s}
+        .navmenu.open .nav-item:nth-child(2){transition-delay:.10s}
+        .navmenu.open .nav-item:nth-child(3){transition-delay:.14s}
+        .navmenu.open .nav-item:nth-child(4){transition-delay:.18s}
+        .navmenu.open .nav-item:nth-child(5){transition-delay:.22s}
+        .navmenu.open .nav-item:nth-child(6){transition-delay:.26s}
+        .navmenu.open .nav-item:nth-child(7){transition-delay:.30s}
+        .navmenu.open .nav-item:nth-child(8){transition-delay:.34s}
+        .navmenu.open .nav-item:nth-child(9){transition-delay:.38s}
+        .navmenu.open .nav-item:nth-child(10){transition-delay:.42s}
+        .navmenu.open .nav-item:nth-child(11){transition-delay:.46s}
+        .nav-item:hover{background:rgba(139,111,58,.08);border-left-color:var(--brass);color:var(--ink)}
+        .nav-item:active{background:rgba(155,44,44,.08);border-left-color:var(--seal)}
+        .nav-item .num{font-family:var(--mono);font-size:.62rem;color:var(--brass-3);letter-spacing:.18em;font-weight:600;min-width:26px;opacity:.7}
+        .nav-item .lbl{flex:1;line-height:1.2}
+        .nav-item .lbl small{display:block;font-family:var(--mono);font-size:.58rem;color:var(--ink-3);letter-spacing:.18em;text-transform:uppercase;font-weight:600;margin-top:3px}
+        .nav-item .arrow{font-family:var(--display);font-size:1rem;color:var(--brass);opacity:.55;transition:transform .25s ease,color .25s ease,opacity .25s ease}
+        .nav-item:hover .arrow{transform:translateX(4px);color:var(--seal);opacity:1}
+        .nav-item.nav-cta{margin:8px 14px 4px;padding:13px 16px;background:var(--seal);color:var(--paper);border-radius:2px;border-left:none;justify-content:center;font-family:var(--display);letter-spacing:.18em;text-transform:uppercase;font-size:.74rem;font-weight:700;box-shadow:0 4px 14px rgba(155,44,44,.28)}
+        .nav-item.nav-cta:hover{background:var(--seal-2);color:var(--paper);border-left:none}
+        .nav-item.nav-cta .arrow{color:var(--paper);opacity:.9}
+        .nav-foot{padding:12px 22px 16px;font-family:var(--mono);font-size:.56rem;letter-spacing:.22em;text-transform:uppercase;color:var(--ink-3);border-top:1px dashed rgba(139,111,58,.28);margin-top:6px;display:flex;justify-content:space-between;align-items:center;gap:10px}
+        .nav-foot .dot{width:6px;height:6px;border-radius:50%;background:var(--jade);box-shadow:0 0 0 3px rgba(92,130,117,.18);animation:pulseDot 2s ease-in-out infinite}
+        @keyframes pulseDot{0%,100%{opacity:1}50%{opacity:.5}}
         .brand-text{display:flex;flex-direction:column;line-height:1.05;min-width:0;overflow:hidden}
         .brand-text b{font-size:1.05rem;letter-spacing:.28em;white-space:nowrap;color:var(--ink);font-family:var(--display);font-weight:600}
         .brand-text .zh-name{font-size:.92rem;color:var(--ink);font-weight:600;letter-spacing:.18em;white-space:nowrap;margin-top:2px;font-family:var(--zh-display)}
@@ -282,18 +327,22 @@
         .holdings-photo .badge{position:absolute;left:14px;top:14px;padding:6px 12px;border-radius:1px;background:rgba(247,241,227,.94);backdrop-filter:blur(8px);border:1px solid rgba(92,130,117,.4);color:var(--jade);font-size:.66rem;font-weight:600;letter-spacing:.28em;text-transform:uppercase;z-index:3;font-family:var(--mono)}
         .holdings-photo .meta{position:absolute;left:14px;right:14px;bottom:14px;display:flex;justify-content:space-between;font-size:.76rem;color:rgba(247,241,227,.85);z-index:3;font-family:var(--mono);letter-spacing:.08em}
         .holdings-list{padding:22px;border-radius:4px;border:1px solid var(--line);background:var(--paper-3);display:flex;flex-direction:column;gap:8px;box-shadow:0 1px 2px rgba(74,56,32,.04)}
-        .stock{padding:14px 16px;border-radius:2px;border:1px solid rgba(74,56,32,.10);background:var(--paper);display:grid;grid-template-columns:auto 1fr auto auto;gap:12px;align-items:center;transition:.2s;text-decoration:none;color:inherit;cursor:pointer}
-        .stock:hover,.stock:active,.stock:focus-visible{border-color:rgba(155,44,44,.45);background:rgba(247,241,227,.85);outline:none;transform:translateX(2px)}
-        .stock:focus-visible{box-shadow:0 0 0 2px rgba(155,44,44,.18)}
+        .stock{padding:14px 16px;border-radius:3px;border:1px solid rgba(74,56,32,.14);background:var(--paper);display:grid;grid-template-columns:auto 1fr auto auto;gap:12px;align-items:center;transition:.2s;text-decoration:none;color:inherit;cursor:pointer;position:relative;box-shadow:0 1px 0 rgba(255,255,255,.6) inset,0 1px 2px rgba(74,56,32,.04)}
+        .stock::after{content:"";position:absolute;left:-1px;top:-1px;bottom:-1px;width:3px;background:var(--brass);opacity:0;border-radius:3px 0 0 3px;transition:opacity .2s ease}
+        .stock:hover::after,.stock:active::after,.stock:focus-visible::after{opacity:.85;background:var(--seal)}
+        .stock:hover,.stock:active,.stock:focus-visible{border-color:rgba(155,44,44,.45);background:rgba(247,241,227,.95);outline:none;transform:translateX(2px);box-shadow:0 4px 14px rgba(74,56,32,.12),0 1px 0 rgba(255,255,255,.6) inset}
+        .stock:focus-visible{box-shadow:0 0 0 2px rgba(155,44,44,.22),0 4px 14px rgba(74,56,32,.12)}
         .stock .tk{font-family:var(--mono);font-weight:700;font-size:.92rem;color:var(--brass-3);letter-spacing:.08em;min-width:78px}
         .stock .tk small{display:block;color:var(--ink);font-family:var(--display);font-size:.86rem;letter-spacing:0;font-weight:600;margin-top:2px}
         .stock .why{font-size:.86rem;color:var(--ink-2);line-height:1.5}
         .stock .why b{color:var(--ink);font-weight:600}
         .stock .tag{padding:4px 10px;border-radius:1px;font-size:.64rem;font-weight:600;letter-spacing:.22em;white-space:nowrap;text-transform:uppercase;font-family:var(--mono)}
-        .stock .stock-go{font-family:var(--display);font-size:1.2rem;color:var(--brass);font-weight:500;width:24px;text-align:center;transition:transform .2s ease,color .2s ease;flex-shrink:0}
-        .stock:hover .stock-go,.stock:focus-visible .stock-go{color:var(--seal);transform:translateX(3px)}
-        .stock-list-cta{margin-top:14px;padding:12px 16px;text-align:center;font-family:var(--mono);font-size:.66rem;letter-spacing:.22em;text-transform:uppercase;color:var(--ink-3);border-top:1px dashed var(--line)}
-        .stock-list-cta b{color:var(--brass);font-weight:600}
+        /* unmistakable VIEW THESIS pill — replaces the tiny arrow */
+        .stock .stock-go{display:inline-flex;align-items:center;gap:6px;padding:8px 12px;border-radius:2px;background:var(--ink);color:var(--paper);font-family:var(--mono);font-size:.6rem;font-weight:700;letter-spacing:.18em;text-transform:uppercase;white-space:nowrap;transition:background .2s ease,transform .2s ease,box-shadow .2s ease;box-shadow:0 2px 6px rgba(26,22,18,.18);flex-shrink:0;line-height:1}
+        .stock .stock-go::after{content:"→";font-family:var(--display);font-size:.95rem;font-weight:500;letter-spacing:0}
+        .stock:hover .stock-go,.stock:focus-visible .stock-go{background:var(--seal);transform:translateX(3px);box-shadow:0 4px 12px rgba(155,44,44,.32)}
+        .stock-list-cta{margin-top:16px;padding:14px 18px;text-align:center;font-family:var(--mono);font-size:.7rem;letter-spacing:.18em;text-transform:uppercase;color:var(--ink-2);border:1px dashed rgba(155,44,44,.28);border-radius:3px;background:rgba(247,241,227,.6)}
+        .stock-list-cta b{color:var(--seal);font-weight:700}
         .tag.buy{background:transparent;color:var(--jade);border:1px solid rgba(92,130,117,.45)}
         .tag.add{background:transparent;color:var(--brass-3);border:1px solid rgba(139,111,58,.4)}
         .holdings-foot{margin-top:6px;font-size:.78rem;color:var(--ink-3);line-height:1.55;padding:10px 4px 0;font-style:italic;font-family:var(--display)}
@@ -475,10 +524,11 @@
             section{padding:46px 16px}
             .pillars,.phil-grid{grid-template-columns:1fr}
             .phil-foot{font-size:.9rem;padding:16px 18px}
-            .stock{grid-template-columns:auto 1fr auto;gap:10px}
-            .stock .tag{grid-column:1/-1;justify-self:start;order:3}
-            .stock .why{grid-column:1/-1;order:2}
-            .stock .stock-go{order:1;align-self:start}
+            .stock{grid-template-columns:auto 1fr auto;gap:10px 12px;padding:14px}
+            .stock .tk{order:1}
+            .stock .tag{order:2;justify-self:end;align-self:start}
+            .stock .why{grid-column:1/-1;order:3}
+            .stock .stock-go{grid-column:1/-1;order:4;justify-self:stretch;justify-content:center;padding:11px 14px;font-size:.66rem;letter-spacing:.16em;margin-top:4px}
         }
         @media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.001ms!important;animation-iteration-count:1!important;transition:none!important}}
 
@@ -494,14 +544,15 @@
         <div class="vign"></div><div class="grain"></div>
 
         <header class="topbar">
-            <a class="brand" href="#top" aria-label="PINFORGE Wealth home">
+            <button class="brand" type="button" aria-label="Open navigation menu" aria-expanded="false" aria-controls="pinforge-nav" id="brand-toggle">
                 <img src="/static/images/invest/pinforge-emblem-brass.webp" alt="PINFORGE Wealth · 品峰財富管理 logomark">
                 <span class="brand-text">
                     <b>PINFORGE</b>
                     <span class="zh-name">品峰財富管理</span>
                     <small>Wealth · AI Alpha</small>
                 </span>
-            </a>
+                <span class="brand-hint" aria-hidden="true">≡</span>
+            </button>
             <div class="top-right">
                 <div class="lang" role="group" aria-label="Language">
                     <button data-set-lang="en" class="on">EN</button>
@@ -515,6 +566,94 @@
                 </button>
             </div>
         </header>
+
+        <!-- ============= COLLAPSING NAV MENU — paper scroll unfurling from the logo ============= -->
+        <div class="nav-scrim" id="nav-scrim" aria-hidden="true"></div>
+        <nav class="navmenu" id="pinforge-nav" aria-labelledby="brand-toggle" role="menu" aria-hidden="true">
+            <div class="nav-head">
+                <span data-lang="en">Navigate</span>
+                <span data-lang="zh">導覽</span>
+                <span data-lang="ja">目次</span>
+                <em>
+                    <span data-lang="en">PINFORGE Wealth · paper scroll</span>
+                    <span data-lang="zh">品峰財富管理 · 卷軸</span>
+                    <span data-lang="ja">品峰財富管理 · 巻物</span>
+                </em>
+            </div>
+
+            <a class="nav-item" href="#top" role="menuitem" data-nav-close>
+                <span class="num">01</span>
+                <span class="lbl"><span data-lang="en">Top</span><span data-lang="zh">回到頂部</span><span data-lang="ja">トップへ</span><small>HERO</small></span>
+                <span class="arrow">→</span>
+            </a>
+            <a class="nav-item" href="#thesis" role="menuitem" data-nav-close>
+                <span class="num">02</span>
+                <span class="lbl"><span data-lang="en">Thesis</span><span data-lang="zh">投資論述</span><span data-lang="ja">投資テーゼ</span><small>WHY · 1T USD CAPEX</small></span>
+                <span class="arrow">→</span>
+            </a>
+            <a class="nav-item" href="#holdings" role="menuitem" data-nav-close>
+                <span class="num">03</span>
+                <span class="lbl"><span data-lang="en">Holdings</span><span data-lang="zh">12 檔持股</span><span data-lang="ja">12銘柄</span><small>12 NAMES · TAP TO OPEN</small></span>
+                <span class="arrow">→</span>
+            </a>
+            <a class="nav-item" href="#ai" role="menuitem" data-nav-close>
+                <span class="num">04</span>
+                <span class="lbl"><span data-lang="en">AI Council</span><span data-lang="zh">AI 議會</span><span data-lang="ja">AI評議会</span><small>5 MODELS · 4-OF-5 GATE</small></span>
+                <span class="arrow">→</span>
+            </a>
+            <a class="nav-item" href="#philosophy" role="menuitem" data-nav-close>
+                <span class="num">05</span>
+                <span class="lbl"><span data-lang="en">House Philosophy</span><span data-lang="zh">本所方法論</span><span data-lang="ja">運用方針</span><small>HOW WE RUN THE MODELS</small></span>
+                <span class="arrow">→</span>
+            </a>
+            <a class="nav-item" href="#office" role="menuitem" data-nav-close>
+                <span class="num">06</span>
+                <span class="lbl"><span data-lang="en">The Office</span><span data-lang="zh">辦公室</span><span data-lang="ja">オフィス</span><small>TAIPEI · TEN FRAMES</small></span>
+                <span class="arrow">→</span>
+            </a>
+            <a class="nav-item" href="#selection" role="menuitem" data-nav-close>
+                <span class="num">07</span>
+                <span class="lbl"><span data-lang="en">Selection Rules</span><span data-lang="zh">選股規則</span><span data-lang="ja">銘柄選定</span><small>WHAT GETS IN · WHAT'S OUT</small></span>
+                <span class="arrow">→</span>
+            </a>
+            <a class="nav-item" href="#adaptive" role="menuitem" data-nav-close>
+                <span class="num">08</span>
+                <span class="lbl"><span data-lang="en">Adaptive Engine</span><span data-lang="zh">自適應引擎</span><span data-lang="ja">アダプティブ・エンジン</span><small>DAILY RE-TUNE</small></span>
+                <span class="arrow">→</span>
+            </a>
+            <a class="nav-item" href="#tiers" role="menuitem" data-nav-close>
+                <span class="num">09</span>
+                <span class="lbl"><span data-lang="en">Membership Tiers</span><span data-lang="zh">會員方案</span><span data-lang="ja">会員プラン</span><small>NT$ 19,800 · FOUNDER LOCK</small></span>
+                <span class="arrow">→</span>
+            </a>
+            <a class="nav-item" href="#merch" role="menuitem" data-nav-close>
+                <span class="num">10</span>
+                <span class="lbl"><span data-lang="en">House Merchandise</span><span data-lang="zh">所內小物</span><span data-lang="ja">ハウス・グッズ</span><small>SEAL · BRASS · LEATHER</small></span>
+                <span class="arrow">→</span>
+            </a>
+
+            <a class="nav-item nav-cta" href="#join" role="menuitem" data-nav-close>
+                <span class="lbl">
+                    <span data-lang="en">Become a Member</span>
+                    <span data-lang="zh">成為會員</span>
+                    <span data-lang="ja">メンバー登録</span>
+                </span>
+                <span class="arrow">→</span>
+            </a>
+
+            <div class="nav-foot">
+                <span><i class="dot"></i>&nbsp;
+                    <span data-lang="en">Live · TWSE</span>
+                    <span data-lang="zh">即時 · 台股</span>
+                    <span data-lang="ja">ライブ · 台湾</span>
+                </span>
+                <span>
+                    <span data-lang="en">Esc to close</span>
+                    <span data-lang="zh">Esc 關閉</span>
+                    <span data-lang="ja">Escで閉じる</span>
+                </span>
+            </div>
+        </nav>
 
         <!-- ============= HERO ============= -->
         <section class="hero" id="top">
@@ -1069,22 +1208,22 @@
                         </div>
                     </div>
                     <div class="holdings-list">
-                        <a class="stock stock-link" href="/stock/?t=3661" data-ticker="3661"><div class="tk">3661<small>世芯-KY</small></div><div class="why"><span data-lang="en"><b>ASIC design for AI accelerators.</b> Custom-silicon design wins for hyperscaler AI chips. Backlog &gt; 18 months.</span><span data-lang="zh"><b>AI 加速器 ASIC 設計。</b>大廠客製矽晶贏家,在手訂單能見度逾 18 個月。</span><span data-lang="ja"><b>AIアクセラレータ向けASIC設計。</b>ハイパースケーラ向けカスタム受注、受注残18ヶ月超。</span></div><span class="tag buy">大買</span><span class="stock-go" aria-hidden="true">→</span></a>
-                        <a class="stock stock-link" href="/stock/?t=3037" data-ticker="3037"><div class="tk">3037<small>欣興</small></div><div class="why"><span data-lang="en"><b>ABF substrate for AI GPUs.</b> Capacity-constrained supplier into NVIDIA/AMD packaging.</span><span data-lang="zh"><b>AI GPU 載板。</b>NVIDIA/AMD 封裝供應鏈,產能吃緊。</span><span data-lang="ja"><b>AI GPU向けABF基板。</b>NVIDIA/AMDパッケージへの供給、能力逼迫。</span></div><span class="tag buy">大買</span><span class="stock-go" aria-hidden="true">→</span></a>
-                        <a class="stock stock-link" href="/stock/?t=2383" data-ticker="2383"><div class="tk">2383<small>台光電</small></div><div class="why"><span data-lang="en"><b>High-speed CCL for AI servers.</b> Sole-source qualified on next-gen 800G+ AI switching boards.</span><span data-lang="zh"><b>AI 伺服器高速 CCL。</b>次世代 800G+ AI 交換器板認證獨供。</span><span data-lang="ja"><b>AIサーバー向け高速CCL。</b>次世代800G+ AIスイッチに単独認証。</span></div><span class="tag buy">大買</span><span class="stock-go" aria-hidden="true">→</span></a>
-                        <a class="stock stock-link" href="/stock/?t=3707" data-ticker="3707"><div class="tk">3707<small>漢磊</small></div><div class="why"><span data-lang="en"><b>SiC power semis.</b> SiC content per AI rack rising 5×; foundry capacity sold out through 2027.</span><span data-lang="zh"><b>SiC 功率半導體。</b>每櫃 AI 伺服器 SiC 含量提升 5 倍,代工產能至 2027 已售罄。</span><span data-lang="ja"><b>SiCパワー半導体。</b>AIラック当たりSiC含有量5倍、ファウンドリ能力2027年まで完売。</span></div><span class="tag buy">大買</span><span class="stock-go" aria-hidden="true">→</span></a>
-                        <a class="stock stock-link" href="/stock/?t=2449" data-ticker="2449"><div class="tk">2449<small>京元電子</small></div><div class="why"><span data-lang="en"><b>IC test bottleneck.</b> Every AI chip must be tested. Capacity is the moat.</span><span data-lang="zh"><b>IC 測試瓶頸。</b>每顆 AI 晶片都得測,產能即護城河。</span><span data-lang="ja"><b>ICテストのボトルネック。</b>あらゆるAIチップを試験、能力こそモート。</span></div><span class="tag buy">大買</span><span class="stock-go" aria-hidden="true">→</span></a>
-                        <a class="stock stock-link" href="/stock/?t=2345" data-ticker="2345"><div class="tk">2345<small>智邦</small></div><div class="why"><span data-lang="en"><b>800G AI fabric switches.</b> Shipping into Meta/Microsoft AI fabric build-outs.</span><span data-lang="zh"><b>800G AI 網路交換器。</b>出貨進入 Meta/Microsoft AI fabric 建置。</span><span data-lang="ja"><b>800G AIファブリック・スイッチ。</b>MetaやMicrosoftの AIファブリック構築案件へ出荷。</span></div><span class="tag buy">大買</span><span class="stock-go" aria-hidden="true">→</span></a>
-                        <a class="stock stock-link" href="/stock/?t=8996" data-ticker="8996"><div class="tk">8996<small>高力</small></div><div class="why"><span data-lang="en"><b>Liquid-cooling heat exchangers.</b> AI rack thermal density forced industry-wide migration.</span><span data-lang="zh"><b>液冷熱交換器。</b>AI 機櫃發熱密度推動全產業轉液冷。</span><span data-lang="ja"><b>液冷熱交換器。</b>AIラック発熱密度が業界全体の液冷移行を強制。</span></div><span class="tag buy">大買</span><span class="stock-go" aria-hidden="true">→</span></a>
-                        <a class="stock stock-link" href="/stock/?t=2049" data-ticker="2049"><div class="tk">2049<small>上銀</small></div><div class="why"><span data-lang="en"><b>Precision linear motion.</b> Robotics + automation backbone for fab tooling and humanoid robots.</span><span data-lang="zh"><b>精密直線運動。</b>晶圓設備與人形機器人之骨幹。</span><span data-lang="ja"><b>精密リニアモーション。</b>ファブ装置とヒューマノイドロボの基幹。</span></div><span class="tag add">小買</span><span class="stock-go" aria-hidden="true">→</span></a>
-                        <a class="stock stock-link" href="/stock/?t=6488" data-ticker="6488"><div class="tk">6488<small>環球晶</small></div><div class="why"><span data-lang="en"><b>300mm silicon wafers.</b> Structural undersupply through 2027; long-term contracts re-pricing.</span><span data-lang="zh"><b>300 公釐矽晶圓。</b>結構性短缺至 2027,長約陸續調漲。</span><span data-lang="ja"><b>300mmシリコンウェハー。</b>2027年まで構造的供給不足、長期契約は再値決め。</span></div><span class="tag buy">大買</span><span class="stock-go" aria-hidden="true">→</span></a>
-                        <a class="stock stock-link" href="/stock/?t=4958" data-ticker="4958"><div class="tk">4958<small>臻鼎-KY</small></div><div class="why"><span data-lang="en"><b>Flex-PCB & SLP.</b> Content win on AI smartphones and on-device inference hardware.</span><span data-lang="zh"><b>軟板與類載板。</b>AI 手機與裝置端推理硬體含量提升。</span><span data-lang="ja"><b>FPC・SLP。</b>AIスマホ・オンデバイス推論ハードで含有率上昇。</span></div><span class="tag buy">大買</span><span class="stock-go" aria-hidden="true">→</span></a>
-                        <a class="stock stock-link" href="/stock/?t=3680" data-ticker="3680"><div class="tk">3680<small>家登</small></div><div class="why"><span data-lang="en"><b>EUV photomask carriers.</b> Niche monopoly on the carriers ASML's customers cannot ship without.</span><span data-lang="zh"><b>EUV 光罩盒。</b>ASML 客戶非用不可的利基獨佔。</span><span data-lang="ja"><b>EUVマスクキャリア。</b>ASML顧客が必須とするニッチ独占。</span></div><span class="tag buy">大買</span><span class="stock-go" aria-hidden="true">→</span></a>
-                        <a class="stock stock-link" href="/stock/?t=2454" data-ticker="2454"><div class="tk">2454<small>聯發科</small></div><div class="why"><span data-lang="en"><b>Edge-AI SoC.</b> On-device generative AI in 2026 phones — every flagship Android needs this silicon.</span><span data-lang="zh"><b>邊緣 AI SoC。</b>2026 旗艦 Android 內建生成式 AI 必備矽。</span><span data-lang="ja"><b>エッジAI SoC。</b>2026年のフラッグシップAndroid必須シリコン。</span></div><span class="tag add">小買</span><span class="stock-go" aria-hidden="true">→</span></a>
+                        <a class="stock stock-link" href="/stock/?t=3661" data-ticker="3661"><div class="tk">3661<small>世芯-KY</small></div><div class="why"><span data-lang="en"><b>ASIC design for AI accelerators.</b> Custom-silicon design wins for hyperscaler AI chips. Backlog &gt; 18 months.</span><span data-lang="zh"><b>AI 加速器 ASIC 設計。</b>大廠客製矽晶贏家,在手訂單能見度逾 18 個月。</span><span data-lang="ja"><b>AIアクセラレータ向けASIC設計。</b>ハイパースケーラ向けカスタム受注、受注残18ヶ月超。</span></div><span class="tag buy">大買</span><span class="stock-go" aria-label="View full thesis"><span data-lang="en">View thesis</span><span data-lang="zh">查看論點</span><span data-lang="ja">テーゼを見る</span></span></a>
+                        <a class="stock stock-link" href="/stock/?t=3037" data-ticker="3037"><div class="tk">3037<small>欣興</small></div><div class="why"><span data-lang="en"><b>ABF substrate for AI GPUs.</b> Capacity-constrained supplier into NVIDIA/AMD packaging.</span><span data-lang="zh"><b>AI GPU 載板。</b>NVIDIA/AMD 封裝供應鏈,產能吃緊。</span><span data-lang="ja"><b>AI GPU向けABF基板。</b>NVIDIA/AMDパッケージへの供給、能力逼迫。</span></div><span class="tag buy">大買</span><span class="stock-go" aria-label="View full thesis"><span data-lang="en">View thesis</span><span data-lang="zh">查看論點</span><span data-lang="ja">テーゼを見る</span></span></a>
+                        <a class="stock stock-link" href="/stock/?t=2383" data-ticker="2383"><div class="tk">2383<small>台光電</small></div><div class="why"><span data-lang="en"><b>High-speed CCL for AI servers.</b> Sole-source qualified on next-gen 800G+ AI switching boards.</span><span data-lang="zh"><b>AI 伺服器高速 CCL。</b>次世代 800G+ AI 交換器板認證獨供。</span><span data-lang="ja"><b>AIサーバー向け高速CCL。</b>次世代800G+ AIスイッチに単独認証。</span></div><span class="tag buy">大買</span><span class="stock-go" aria-label="View full thesis"><span data-lang="en">View thesis</span><span data-lang="zh">查看論點</span><span data-lang="ja">テーゼを見る</span></span></a>
+                        <a class="stock stock-link" href="/stock/?t=3707" data-ticker="3707"><div class="tk">3707<small>漢磊</small></div><div class="why"><span data-lang="en"><b>SiC power semis.</b> SiC content per AI rack rising 5×; foundry capacity sold out through 2027.</span><span data-lang="zh"><b>SiC 功率半導體。</b>每櫃 AI 伺服器 SiC 含量提升 5 倍,代工產能至 2027 已售罄。</span><span data-lang="ja"><b>SiCパワー半導体。</b>AIラック当たりSiC含有量5倍、ファウンドリ能力2027年まで完売。</span></div><span class="tag buy">大買</span><span class="stock-go" aria-label="View full thesis"><span data-lang="en">View thesis</span><span data-lang="zh">查看論點</span><span data-lang="ja">テーゼを見る</span></span></a>
+                        <a class="stock stock-link" href="/stock/?t=2449" data-ticker="2449"><div class="tk">2449<small>京元電子</small></div><div class="why"><span data-lang="en"><b>IC test bottleneck.</b> Every AI chip must be tested. Capacity is the moat.</span><span data-lang="zh"><b>IC 測試瓶頸。</b>每顆 AI 晶片都得測,產能即護城河。</span><span data-lang="ja"><b>ICテストのボトルネック。</b>あらゆるAIチップを試験、能力こそモート。</span></div><span class="tag buy">大買</span><span class="stock-go" aria-label="View full thesis"><span data-lang="en">View thesis</span><span data-lang="zh">查看論點</span><span data-lang="ja">テーゼを見る</span></span></a>
+                        <a class="stock stock-link" href="/stock/?t=2345" data-ticker="2345"><div class="tk">2345<small>智邦</small></div><div class="why"><span data-lang="en"><b>800G AI fabric switches.</b> Shipping into Meta/Microsoft AI fabric build-outs.</span><span data-lang="zh"><b>800G AI 網路交換器。</b>出貨進入 Meta/Microsoft AI fabric 建置。</span><span data-lang="ja"><b>800G AIファブリック・スイッチ。</b>MetaやMicrosoftの AIファブリック構築案件へ出荷。</span></div><span class="tag buy">大買</span><span class="stock-go" aria-label="View full thesis"><span data-lang="en">View thesis</span><span data-lang="zh">查看論點</span><span data-lang="ja">テーゼを見る</span></span></a>
+                        <a class="stock stock-link" href="/stock/?t=8996" data-ticker="8996"><div class="tk">8996<small>高力</small></div><div class="why"><span data-lang="en"><b>Liquid-cooling heat exchangers.</b> AI rack thermal density forced industry-wide migration.</span><span data-lang="zh"><b>液冷熱交換器。</b>AI 機櫃發熱密度推動全產業轉液冷。</span><span data-lang="ja"><b>液冷熱交換器。</b>AIラック発熱密度が業界全体の液冷移行を強制。</span></div><span class="tag buy">大買</span><span class="stock-go" aria-label="View full thesis"><span data-lang="en">View thesis</span><span data-lang="zh">查看論點</span><span data-lang="ja">テーゼを見る</span></span></a>
+                        <a class="stock stock-link" href="/stock/?t=2049" data-ticker="2049"><div class="tk">2049<small>上銀</small></div><div class="why"><span data-lang="en"><b>Precision linear motion.</b> Robotics + automation backbone for fab tooling and humanoid robots.</span><span data-lang="zh"><b>精密直線運動。</b>晶圓設備與人形機器人之骨幹。</span><span data-lang="ja"><b>精密リニアモーション。</b>ファブ装置とヒューマノイドロボの基幹。</span></div><span class="tag add">小買</span><span class="stock-go" aria-label="View full thesis"><span data-lang="en">View thesis</span><span data-lang="zh">查看論點</span><span data-lang="ja">テーゼを見る</span></span></a>
+                        <a class="stock stock-link" href="/stock/?t=6488" data-ticker="6488"><div class="tk">6488<small>環球晶</small></div><div class="why"><span data-lang="en"><b>300mm silicon wafers.</b> Structural undersupply through 2027; long-term contracts re-pricing.</span><span data-lang="zh"><b>300 公釐矽晶圓。</b>結構性短缺至 2027,長約陸續調漲。</span><span data-lang="ja"><b>300mmシリコンウェハー。</b>2027年まで構造的供給不足、長期契約は再値決め。</span></div><span class="tag buy">大買</span><span class="stock-go" aria-label="View full thesis"><span data-lang="en">View thesis</span><span data-lang="zh">查看論點</span><span data-lang="ja">テーゼを見る</span></span></a>
+                        <a class="stock stock-link" href="/stock/?t=4958" data-ticker="4958"><div class="tk">4958<small>臻鼎-KY</small></div><div class="why"><span data-lang="en"><b>Flex-PCB & SLP.</b> Content win on AI smartphones and on-device inference hardware.</span><span data-lang="zh"><b>軟板與類載板。</b>AI 手機與裝置端推理硬體含量提升。</span><span data-lang="ja"><b>FPC・SLP。</b>AIスマホ・オンデバイス推論ハードで含有率上昇。</span></div><span class="tag buy">大買</span><span class="stock-go" aria-label="View full thesis"><span data-lang="en">View thesis</span><span data-lang="zh">查看論點</span><span data-lang="ja">テーゼを見る</span></span></a>
+                        <a class="stock stock-link" href="/stock/?t=3680" data-ticker="3680"><div class="tk">3680<small>家登</small></div><div class="why"><span data-lang="en"><b>EUV photomask carriers.</b> Niche monopoly on the carriers ASML's customers cannot ship without.</span><span data-lang="zh"><b>EUV 光罩盒。</b>ASML 客戶非用不可的利基獨佔。</span><span data-lang="ja"><b>EUVマスクキャリア。</b>ASML顧客が必須とするニッチ独占。</span></div><span class="tag buy">大買</span><span class="stock-go" aria-label="View full thesis"><span data-lang="en">View thesis</span><span data-lang="zh">查看論點</span><span data-lang="ja">テーゼを見る</span></span></a>
+                        <a class="stock stock-link" href="/stock/?t=2454" data-ticker="2454"><div class="tk">2454<small>聯發科</small></div><div class="why"><span data-lang="en"><b>Edge-AI SoC.</b> On-device generative AI in 2026 phones — every flagship Android needs this silicon.</span><span data-lang="zh"><b>邊緣 AI SoC。</b>2026 旗艦 Android 內建生成式 AI 必備矽。</span><span data-lang="ja"><b>エッジAI SoC。</b>2026年のフラッグシップAndroid必須シリコン。</span></div><span class="tag add">小買</span><span class="stock-go" aria-label="View full thesis"><span data-lang="en">View thesis</span><span data-lang="zh">查看論點</span><span data-lang="ja">テーゼを見る</span></span></a>
                         <div class="stock-list-cta">
-                            <span data-lang="en"><b>Tap any holding</b> · open the full investment thesis, AI-council vote &amp; 2026–2030 catalysts</span>
-                            <span data-lang="zh"><b>點選任一檔</b> · 開啟完整投資論點、AI 議會投票與 2026–2030 催化劑</span>
-                            <span data-lang="ja"><b>任意の銘柄をタップ</b> · 完全な投資論点、AI 評議会投票と 2026〜2030 カタリスト</span>
+                            <span data-lang="en"><b>Tap any row</b> — or the dark <b>“View thesis →”</b> button — to open the full investment thesis, AI-council vote &amp; 2026–2030 catalysts.</span>
+                            <span data-lang="zh"><b>點任一列</b> — 或右側深色 <b>「查看論點 →」</b> — 開啟完整投資論點、AI 議會投票與 2026–2030 催化劑。</span>
+                            <span data-lang="ja"><b>任意の行</b>、または右側のダーク <b>「テーゼを見る →」</b> をタップ。完全な投資テーゼ、AI評議会投票、2026〜2030 カタリストが開きます。</span>
                         </div>
                         <p class="holdings-foot">
                             <span data-lang="en">Hint list, not a copyable basket. The full live portfolio (weights, switches, risk overlays) sits inside the member app.</span>
@@ -1671,6 +1810,40 @@
             try{ localStorage.setItem(LANG_KEY, lang); }catch(e){}
         }
         document.querySelectorAll('[data-set-lang]').forEach(b => b.addEventListener('click', () => setLang(b.dataset.setLang)));
+
+        // ---------- Collapsing nav menu (logo as trigger) ----------
+        (function(){
+            const toggle = document.getElementById('brand-toggle');
+            const menu   = document.getElementById('pinforge-nav');
+            const scrim  = document.getElementById('nav-scrim');
+            if(!toggle || !menu || !scrim) return;
+            let isOpen = false;
+            function setOpen(open){
+                isOpen = open;
+                toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+                toggle.setAttribute('aria-label', open ? 'Close navigation menu' : 'Open navigation menu');
+                menu.classList.toggle('open', open);
+                scrim.classList.toggle('open', open);
+                menu.setAttribute('aria-hidden', open ? 'false' : 'true');
+                scrim.setAttribute('aria-hidden', open ? 'false' : 'true');
+                if(open){
+                    // a tiny brass "ping" via tactile transform on first open
+                    document.body.style.setProperty('--nav-open','1');
+                } else {
+                    document.body.style.setProperty('--nav-open','0');
+                }
+            }
+            toggle.addEventListener('click', (e) => { e.preventDefault(); setOpen(!isOpen); });
+            scrim.addEventListener('click', () => setOpen(false));
+            // close when an inner link is tapped (after smooth-scroll kicks in)
+            menu.querySelectorAll('[data-nav-close]').forEach(a => {
+                a.addEventListener('click', () => { setTimeout(() => setOpen(false), 80); });
+            });
+            // ESC key
+            document.addEventListener('keydown', (e) => { if(e.key === 'Escape' && isOpen) setOpen(false); });
+            // close on outside scroll-to-top via brand link rendered impossible now — make logo always toggle
+        })();
+
         // initial: localStorage > navigator
         let initial = 'en';
         try { initial = localStorage.getItem(LANG_KEY) || ''; } catch(e){}
