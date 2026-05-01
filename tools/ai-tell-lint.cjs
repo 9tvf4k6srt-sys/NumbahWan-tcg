@@ -102,18 +102,25 @@ function globMatch(rel, glob) {
   return false;
 }
 
-function isPerRuleExempt(perRule, ruleId, pattern, rel) {
-  // Look up by "RULE-ID:needle" where needle is matched as a substring of the
-  // raw regex source. This lets the corpus key 'AIT-EN-FILLER:synergy' match
-  // the flat-list pattern '\bsynergy\b'.
+function isPerRuleExempt(perRule, ruleId, pattern, rel, matchText) {
+  // Two-tier lookup:
+  //  1. "RULE-ID:needle"  → exact rule-id with substring needle
+  //     - needle matches against the regex source (legacy: 'synergy' in '\bsynergy\b')
+  //     - OR needle matches the actual matched text (covers regex groups
+  //       like '(?:represents|marks|is) a pivotal (?:moment|step)' where the
+  //       source doesn't literally contain 'represents a pivotal moment').
+  //  2. "RULE-ID"         → blanket exemption for the whole rule on this path
   for (const [key, cfg] of Object.entries(perRule)) {
     if (!cfg || !Array.isArray(cfg.exclude)) continue;
     const sep = key.indexOf(':');
-    if (sep < 0) continue;
-    const keyRule = key.slice(0, sep);
-    const needle = key.slice(sep + 1);
+    const keyRule = sep < 0 ? key : key.slice(0, sep);
     if (keyRule !== ruleId) continue;
-    if (!pattern.includes(needle)) continue;
+    if (sep >= 0) {
+      const needle = key.slice(sep + 1);
+      const inPattern = pattern.includes(needle);
+      const inMatch = matchText && matchText.toLowerCase().includes(needle.toLowerCase());
+      if (!inPattern && !inMatch) continue;
+    }
     if (cfg.exclude.some(g => globMatch(rel, g))) return true;
   }
   return false;
@@ -198,12 +205,20 @@ function scanFile(filePath, rules, perRule) {
 
   const violations = [];
   for (const rule of rules) {
-    if (perRule && isPerRuleExempt(perRule, rule.id, rule.pattern, rel)) continue;
+    // Cheap pre-check: blanket rule-level exemption (no needle).
+    if (perRule && isPerRuleExempt(perRule, rule.id, rule.pattern, rel, '')) continue;
     let re;
     try { re = new RegExp(rule.pattern, 'gi'); }
     catch { continue; } // bad regex in corpus — skip silently
     let m;
     while ((m = re.exec(scanned)) !== null) {
+      // Per-match exemption: lets us allowlist specific matched strings
+      // (e.g. "represents a pivotal moment") even when the rule's regex
+      // source uses a group like (?:represents|marks|is).
+      if (perRule && isPerRuleExempt(perRule, rule.id, rule.pattern, rel, m[0])) {
+        if (re.lastIndex === m.index) re.lastIndex++;
+        continue;
+      }
       const ln = lineNumberOf(scanned, m.index);
       violations.push({
         file: rel,

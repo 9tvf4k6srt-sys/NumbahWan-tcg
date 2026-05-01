@@ -1,6 +1,6 @@
 {
-  "version": "1.0.0",
-  "description": "Banned phrases that signal LLM-authored copy. Maintain by adding any phrase a reviewer flagged in PR review. Each entry is a regex (case-insensitive unless noted). Source column records why it's banned so future maintainers don't add a benign rewrite.",
+  "version": "1.1.0",
+  "description": "Banned phrases that signal LLM-authored copy. Maintain by adding any phrase a reviewer flagged in PR review. Each entry is a regex (case-insensitive unless noted). Source column records why it's banned so future maintainers don't add a benign rewrite. v1.1 expanded from the 2026 zero-trace guide.",
   "lastUpdated": "2026-05-01",
   "scope": {
     "include": ["public/**/*.html", "public/**/*.md"],
@@ -32,6 +32,20 @@
           "public/museum/**"
         ],
         "note": "卷軸 in lore/world pages is an in-game artifact (paper scroll), not the UI metaphor calque."
+      },
+      "AIT-EN-FILLER:represents a pivotal moment": {
+        "exclude": [
+          "public/museum/exhibit-001.html"
+        ],
+        "note": "Lives inside <quote-block> attributed expert-quotes — fictional in-world voices for the Zakum Helmet exhibit. Reviewer kept verbatim because rewriting changes the in-character voice."
+      },
+      "AIT-EN-EMDASH-FLOOD": {
+        "exclude": [
+          "public/boss-dungeon.html",
+          "public/world/castle.html",
+          "public/world/dlc-12-abyssal-temple.html"
+        ],
+        "note": "Thai (กำแพงเพลิง / เฟส) and game-lore phase markers use a hyphen-style separator that visually trips the em-dash flood pattern. These pages are vetted lore content."
       }
     },
     "note": "research-md is an auto-generated academic-paper corpus we do not author; legacy/old/audit pages are read-only history."
@@ -67,7 +81,21 @@
         "\\bbespoke solution\\b",
         "\\brobust (?:framework|solution|platform)\\b",
         "\\bcomprehensive (?:suite|framework|solution)\\b",
-        "\\bbrand in the wild\\b"
+        "\\bbrand in the wild\\b",
+        "\\b(?:represents|marks|is) a pivotal (?:moment|step)\\b",
+        "\\bpivotal (?:role|piece) in (?:our|the|its)\\b",
+        "\\bfurthermore,\\b",
+        "\\bmoreover,\\b",
+        "\\bin conclusion,\\b",
+        "\\bit is (?:important|worth|crucial) (?:to (?:note|remember|highlight)|noting)\\b",
+        "\\bunderscore(?:s|d)? the (?:importance|need|fact)\\b",
+        "\\bvibrant (?:community|ecosystem|tapestry|culture|world)\\b",
+        "\\bshowcase(?:s|d|ing)? (?:the|our|your) (?:best|finest|talent|capabilities)\\b",
+        "\\belevate (?:your|the) (?:experience|game|brand|journey)\\b",
+        "\\bcraft(?:ed|ing)? (?:meticulously|with care|with precision)\\b",
+        "\\bmeticulously (?:crafted|designed|curated)\\b",
+        "\\bresonate(?:s|d) with\\b",
+        "\\bstand(?:s)? as a (?:beacon|testament|hallmark)\\b"
       ],
       "note": "Generic LLM filler. Replace with concrete subject + verb."
     },
@@ -78,6 +106,7 @@
       "patterns": [
         "\\bjourney through\\b",
         "\\bembark on (?:a|the) journey\\b",
+        "\\bembark on this\\b",
         "\\bwhere art meets science\\b",
         "\\bbridge the gap between\\b",
         "\\btestament to\\b",
@@ -86,9 +115,21 @@
         "\\bfoster (?:innovation|collaboration|community)\\b",
         "\\bempower(?:s|ed|ing)? (?:individuals|users|creators)\\b",
         "\\bunwavering commitment\\b",
-        "\\bredefin(?:e|es|ing) (?:the|what)\\b"
+        "\\bredefin(?:e|es|ing) (?:the|what)\\b",
+        "\\ba (?:rich|fascinating|captivating) (?:tapestry|blend|fusion)\\b",
+        "\\binvite(?:s|d)? you to (?:explore|discover|join)\\b",
+        "\\bweav(?:e|es|ing) (?:a|the|together)\\b"
       ],
       "note": "Inspirational filler. Show the thing instead."
+    },
+    {
+      "id": "AIT-EN-EMDASH-FLOOD",
+      "lang": "en",
+      "severity": "low",
+      "patterns": [
+        "—[^—\\n<>]{1,40}—[^—\\n<>]{1,40}—[^—\\n<>]{1,40}—"
+      ],
+      "note": "Four or more em-dashes within ~120 characters with no HTML break = machine rhythm. Single or paired em-dashes in human writing are fine; cluster flooding is the tell."
     },
     {
       "id": "AIT-ZH-CALQUE",
