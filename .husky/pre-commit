@@ -226,4 +226,18 @@ if [ -f "scripts/nw-lint.cjs" ]; then
   fi
 fi
 
+# ─── AI-Tell Linter: catch LLM-authored copy before it ships (staged files) ───
+# Scans staged HTML/MD for banned phrases (cutting-edge, state-of-the-art,
+# delve into, 賦能, 巻物, etc.) and per-rule allowlists for game vocab.
+# HIGH severity → blocks commit, MEDIUM → warns, LOW → info
+# Bypass: git commit --no-verify
+# Full audit: npm run lint:ai-tell
+if [ -f "tools/ai-tell-lint.cjs" ]; then
+  node "tools/ai-tell-lint.cjs" 2>&1 >&2
+  AI_TELL_EXIT=$?
+  if [ "$AI_TELL_EXIT" -ne 0 ]; then
+    exit 1
+  fi
+fi
+
 exit 0
