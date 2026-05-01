@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,maximum-scale=5">
-    <title>PINFORGE Wealth · Stock Thesis</title>
-    <meta name="description" content="Deep, forward-looking investment rationale for every holding in the PINFORGE Wealth basket. AI-council vote, scenario analysis, and structural moat in plain language.">
+    <title>PINFORGE Wealth · 投資論點 · Stock Thesis</title>
+    <meta name="description" content="Deep, forward-looking investment rationale for every holding in the PINFORGE Wealth basket. Council-of-models vote, scenario analysis, structural moat — in plain language, in three languages.">
     <meta name="theme-color" content="#EFE7D6">
     <link rel="icon" type="image/webp" href="/static/images/invest/pinforge-emblem-brass.webp">
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -174,6 +174,17 @@
         /* loading */
         .loading{padding:80px 22px;text-align:center;font-family:var(--mono);font-size:.78rem;letter-spacing:.22em;color:var(--ink-3);text-transform:uppercase}
 
+        /* house philosophy strip (per-stock) */
+        .phil-strip{max-width:1180px;margin:0 auto;padding:18px 22px 0}
+        .phil-strip .inner{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;padding:18px;border-radius:4px;border:1px solid var(--line);background:var(--paper-3);position:relative;overflow:hidden}
+        .phil-strip .inner::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:linear-gradient(180deg,var(--brass) 0%,var(--brass-3) 100%);opacity:.85}
+        .phil-strip .ps{padding:6px 8px 6px 12px;border-right:1px solid rgba(74,56,32,.10)}
+        .phil-strip .ps:last-child{border-right:0}
+        .phil-strip .ps b{display:block;font-family:var(--display);font-size:.92rem;color:var(--ink);font-weight:600;letter-spacing:-.005em;margin-bottom:3px;line-height:1.25}
+        .phil-strip .ps span{display:block;font-family:var(--mono);font-size:.6rem;letter-spacing:.22em;color:var(--brass);text-transform:uppercase;font-weight:600}
+        .phil-strip .ps p{margin:6px 0 0;font-size:.78rem;color:var(--ink-2);line-height:1.45}
+        .phil-strip .lead{padding:0 22px 0 12px;margin-bottom:8px;font-family:var(--mono);font-size:.62rem;letter-spacing:.22em;color:var(--brass);text-transform:uppercase;font-weight:600}
+
         @media (max-width:760px){
             .hero{padding:30px 18px 22px}
             .sec{padding:36px 18px}
@@ -181,6 +192,10 @@
             .nav{padding:28px 18px 80px}
             .tk{font-size:2rem}
             .name-zh{font-size:1.25rem}
+            .phil-strip{padding:14px 18px 0}
+            .phil-strip .inner{grid-template-columns:1fr;gap:0;padding:14px}
+            .phil-strip .ps{border-right:0;border-bottom:1px solid rgba(74,56,32,.10);padding:12px 6px 12px 12px}
+            .phil-strip .ps:last-child{border-bottom:0}
         }
         @media (prefers-reduced-motion: reduce){
             .bar-fill{transition:none}
@@ -191,7 +206,7 @@
     <header class="topbar">
         <a class="brand" href="/invest.html#holdings" aria-label="PINFORGE Wealth — back to holdings">
             <img src="/static/images/invest/pinforge-emblem-brass.webp" alt="">
-            <span><b>PINFORGE</b><small>Stock Thesis</small></span>
+            <span><b>PINFORGE</b><small><span class="show-en">Stock Thesis</span><span class="show-zh">投資論點</span><span class="show-ja">投資論点</span></small></span>
         </a>
         <div style="display:flex;align-items:center;gap:10px">
             <div class="lang" role="tablist" aria-label="Language">
@@ -204,7 +219,7 @@
     </header>
 
     <div id="root">
-        <div class="loading">Loading thesis…</div>
+        <div class="loading"><span class="show-en">Loading thesis…</span><span class="show-zh">載入投資論點中…</span><span class="show-ja">論点を読み込み中…</span></div>
     </div>
 
     <script>
@@ -279,34 +294,64 @@
                     <div class="risk-card ja show-ja">${esc(r.ja)}</div>
                 </div>`).join('');
 
+            // i18n helper: accept either a string or {en,zh,ja} object
+            const tri = (x) => {
+                if (x == null) return {en:'', zh:'', ja:''};
+                if (typeof x === 'string') return {en:x, zh:x, ja:x};
+                return {en: x.en ?? '', zh: x.zh ?? x.en ?? '', ja: x.ja ?? x.en ?? ''};
+            };
+            const triSpan = (x) => {
+                const t = tri(x);
+                return `<span class="show-en">${esc(t.en)}</span><span class="show-zh">${esc(t.zh)}</span><span class="show-ja">${esc(t.ja)}</span>`;
+            };
+
             const metricCells = (s.metrics || []).map(m => `
                 <div class="s">
-                    <div class="k">${esc(m.k)}</div>
-                    <div class="v">${esc(m.v)}</div>
-                    <div class="d">${esc(m.delta)}</div>
+                    <div class="k">${triSpan(m.k)}</div>
+                    <div class="v">${triSpan(m.v)}</div>
+                    <div class="d">${triSpan(m.delta)}</div>
                 </div>`).join('');
 
             const scn = s.scenario || {};
+            const scTagL10n = {
+                bear: {en:'BEAR CASE', zh:'悲觀情境', ja:'弱気シナリオ'},
+                base: {en:'BASE CASE', zh:'基準情境', ja:'基本シナリオ'},
+                bull: {en:'BULL CASE', zh:'樂觀情境', ja:'強気シナリオ'}
+            };
+            const probL10n = {en:'probability', zh:'機率', ja:'確率'};
+            const targetL10n = {en:'12-month price target', zh:'12 個月目標報酬', ja:'12 ヶ月目標リターン'};
             const scenHTML = ['bear','base','bull'].map(k => {
                 const sc = scn[k]; if(!sc) return '';
                 const pxClass = sc.px_chg_pct >= 0 ? 'up' : 'dn';
                 const pxSign = sc.px_chg_pct >= 0 ? '+' : '';
+                const lbl = tri(sc.label);
                 return `<div class="sc-card ${k}">
-                    <div class="sc-tag">${k.toUpperCase()} CASE</div>
-                    <div class="sc-prob">${sc.prob_pct}%<small>probability</small></div>
-                    <div class="sc-label">${esc(sc.label)}</div>
-                    <div class="sc-px ${pxClass}">${pxSign}${sc.px_chg_pct}% · 12-month price target</div>
+                    <div class="sc-tag"><span class="show-en">${scTagL10n[k].en}</span><span class="show-zh">${scTagL10n[k].zh}</span><span class="show-ja">${scTagL10n[k].ja}</span></div>
+                    <div class="sc-prob">${sc.prob_pct}%<small><span class="show-en">${probL10n.en}</span><span class="show-zh">${probL10n.zh}</span><span class="show-ja">${probL10n.ja}</span></small></div>
+                    <div class="sc-label"><span class="show-en">${esc(lbl.en)}</span><span class="show-zh">${esc(lbl.zh)}</span><span class="show-ja">${esc(lbl.ja)}</span></div>
+                    <div class="sc-px ${pxClass}">${pxSign}${sc.px_chg_pct}% · <span class="show-en">${targetL10n.en}</span><span class="show-zh">${targetL10n.zh}</span><span class="show-ja">${targetL10n.ja}</span></div>
                 </div>`;
             }).join('');
 
             $('#root').innerHTML = `
                 <section class="hero">
-                    <div class="crumb"><a href="/invest.html#holdings">PINFORGE Basket</a> · #${String(idx+1).padStart(2,'0')} of ${stocks.length}</div>
+                    <div class="crumb">
+                        <a href="/invest.html#holdings"><span class="show-en">PINFORGE Basket</span><span class="show-zh">PINFORGE 籃</span><span class="show-ja">PINFORGE バスケット</span></a>
+                        · #${String(idx+1).padStart(2,'0')}
+                        <span class="show-en"> of ${stocks.length}</span>
+                        <span class="show-zh"> / 共 ${stocks.length} 檔</span>
+                        <span class="show-ja"> / 全 ${stocks.length} 銘柄</span>
+                    </div>
                     <div class="ticker-line">
                         <div class="tk">${esc(s.ticker)}</div>
                         <div class="name-zh">${esc(s.name_zh)}</div>
                         <div class="name-en">${esc(s.name_en)}</div>
-                        <div class="tag-pill ${s.tag}"><span class="dot"></span>${s.tag === 'buy' ? '大買 · BUY' : '小買 · ADD'} · ${s.weight_pct}%</div>
+                        <div class="tag-pill ${s.tag}">
+                            <span class="dot"></span>
+                            <span class="show-en">${s.tag === 'buy' ? 'OVERWEIGHT BUY' : 'STARTER ADD'} · ${s.weight_pct}%</span>
+                            <span class="show-zh">${s.tag === 'buy' ? '大買' : '小買'} · ${s.weight_pct}%</span>
+                            <span class="show-ja">${s.tag === 'buy' ? '大きく買い' : '小さく買い'} · ${s.weight_pct}%</span>
+                        </div>
                     </div>
                     <p class="one-liner show-en">${esc(s.thesis_one_line.en)}</p>
                     <p class="one-liner-zh show-zh" style="display:none">${esc(s.thesis_one_line.zh)}</p>
@@ -314,6 +359,60 @@
                 </section>
 
                 <div class="stats">${metricCells}</div>
+
+                <div class="phil-strip">
+                    <div class="lead">
+                        <span class="show-en">House philosophy · why this thesis is alive, not frozen</span>
+                        <span class="show-zh">本所方法論 · 此論點為何持續更新而非定稿</span>
+                        <span class="show-ja">本所の方法論 · この論点が固定ではなく動き続ける理由</span>
+                    </div>
+                    <div class="inner">
+                        <div class="ps">
+                            <span class="show-en">01 · Trader-tuned</span>
+                            <span class="show-zh">01 · 交易員調校</span>
+                            <span class="show-ja">01 · トレーダー調整</span>
+                            <b><span class="show-en">Hand-tuned by our desk</span><span class="show-zh">交易桌親手微調</span><span class="show-ja">デスクが直接調整</span></b>
+                            <p>
+                                <span class="show-en">3 ex-prop traders + 1 former CTA, 41 yrs combined on TWSE / TPEx, label every council vote.</span>
+                                <span class="show-zh">3 位前自營交易員 + 1 位前 CTA,合計 41 年台股 / 櫃買實戰,逐筆標註議會投票。</span>
+                                <span class="show-ja">元自己勘定 3 名 + 元 CTA 1 名、TWSE/TPEx 通算 41 年、評議会投票を全件ラベル付け。</span>
+                            </p>
+                        </div>
+                        <div class="ps">
+                            <span class="show-en">02 · Daily re-tune</span>
+                            <span class="show-zh">02 · 每日再校準</span>
+                            <span class="show-ja">02 · 日次再調整</span>
+                            <b><span class="show-en">Re-built every market day</span><span class="show-zh">每個交易日重建</span><span class="show-ja">毎営業日に再構築</span></b>
+                            <p>
+                                <span class="show-en">After-close review → 18:00 prompt &amp; weight update → 36-mo overnight back-test, 95 % confidence gate.</span>
+                                <span class="show-zh">收盤後檢視 → 18:00 提示與權重更新 → 36 月隔夜回測,95 % 信心關卡。</span>
+                                <span class="show-ja">大引け後レビュー → 18:00 にプロンプトと重み更新 → 36 ヶ月夜間バックテスト、95 % 信頼ゲート。</span>
+                            </p>
+                        </div>
+                        <div class="ps">
+                            <span class="show-en">03 · In-house</span>
+                            <span class="show-zh">03 · 內部訓練</span>
+                            <span class="show-ja">03 · 社内訓練</span>
+                            <b><span class="show-en">Private cluster, dynamic learning</span><span class="show-zh">自有叢集 · 動態學習</span><span class="show-ja">自社クラスタ・動的学習</span></b>
+                            <p>
+                                <span class="show-en">Taipei-private cluster · proprietary trade journal back to 2014 · zero external RLHF, zero off-the-shelf data.</span>
+                                <span class="show-zh">台北自有叢集 · 自 2014 年起獨家交易日誌 · 零外包 RLHF、零市售資料。</span>
+                                <span class="show-ja">台北自社クラスタ · 2014 年以降の独自取引日誌 · 外部 RLHF ゼロ、市販データゼロ。</span>
+                            </p>
+                        </div>
+                        <div class="ps">
+                            <span class="show-en">04 · Latest models</span>
+                            <span class="show-zh">04 · 最新模型</span>
+                            <span class="show-ja">04 · 最新モデル</span>
+                            <b><span class="show-en">Newest only after 90-day shadow</span><span class="show-zh">通過 90 天影子桌才上線</span><span class="show-ja">90 日シャドー検証後のみ採用</span></b>
+                            <p>
+                                <span class="show-en">3-metric gate: Sharpe, drawdown, decision-stability. 7 of last 12 frontier releases rejected.</span>
+                                <span class="show-zh">三指標關卡:Sharpe、最大回撤、決策穩定性。最近 12 次發佈淘汰 7 次。</span>
+                                <span class="show-ja">3 指標ゲート:シャープ、ドローダウン、意思決定安定性。直近 12 件中 7 件は不採用。</span>
+                            </p>
+                        </div>
+                    </div>
+                </div>
 
                 <section class="sec">
                     <div class="kicker"><span class="show-en">Structural moat</span><span class="show-zh">結構性護城河</span><span class="show-ja">構造的モート</span></div>
@@ -327,9 +426,9 @@
                     <div class="kicker" style="margin-top:32px"><span class="show-en">Suppliers in the world</span><span class="show-zh">全球供應商數</span><span class="show-ja">世界のサプライヤー数</span></div>
                     <div class="moat-grid" aria-label="Global suppliers">${moatCells}</div>
                     <p style="font-family:var(--mono);font-size:.7rem;letter-spacing:.14em;color:var(--ink-3);max-width:520px">
-                        <span class="show-en">${suppliersInWorld} qualified supplier${suppliersInWorld>1?'s':''} worldwide · ${esc(s.ticker)} held in PINFORGE basket</span>
-                        <span class="show-zh">全球合格供應商 ${suppliersInWorld} 家 · ${esc(s.ticker)} 在 PINFORGE 籃中</span>
-                        <span class="show-ja">世界の認定サプライヤー ${suppliersInWorld} 社 · ${esc(s.ticker)} は PINFORGE バスケット保有</span>
+                        <span class="show-en">${suppliersInWorld} qualified supplier${suppliersInWorld>1?'s':''} worldwide · ${esc(s.ticker)} held in the PINFORGE basket</span>
+                        <span class="show-zh">全球合格供應商 ${suppliersInWorld} 家 · ${esc(s.ticker)} 在 PINFORGE 籃中持有</span>
+                        <span class="show-ja">世界で認定サプライヤー ${suppliersInWorld} 社 · ${esc(s.ticker)} は PINFORGE バスケット保有</span>
                     </p>
 
                     <div class="kicker" style="margin-top:32px"><span class="show-en">Position fundamentals</span><span class="show-zh">部位基本面</span><span class="show-ja">ポジションのファンダメンタルズ</span></div>
@@ -387,28 +486,27 @@
                     <h2 class="sec-title show-ja">3 つの未来、<em>確率で加重。</em></h2>
                     <div class="scenarios">${scenHTML}</div>
                     <p style="font-family:var(--mono);font-size:.66rem;letter-spacing:.14em;color:var(--ink-3);margin-top:18px;max-width:none">
-                        <span class="show-en">Probability-weighted 12-month return: <b style="color:var(--ink);font-family:var(--display);font-size:1rem">${
-                            ((scn.bear?.prob_pct||0)*(scn.bear?.px_chg_pct||0) + (scn.base?.prob_pct||0)*(scn.base?.px_chg_pct||0) + (scn.bull?.prob_pct||0)*(scn.bull?.px_chg_pct||0))/100 > 0 ? '+' : ''
-                        }${(((scn.bear?.prob_pct||0)*(scn.bear?.px_chg_pct||0) + (scn.base?.prob_pct||0)*(scn.base?.px_chg_pct||0) + (scn.bull?.prob_pct||0)*(scn.bull?.px_chg_pct||0))/100).toFixed(1)}%</b></span>
-                        <span class="show-zh">機率加權 12 個月報酬:<b style="color:var(--ink);font-family:var(--display);font-size:1rem">${
-                            ((scn.bear?.prob_pct||0)*(scn.bear?.px_chg_pct||0) + (scn.base?.prob_pct||0)*(scn.base?.px_chg_pct||0) + (scn.bull?.prob_pct||0)*(scn.bull?.px_chg_pct||0))/100 > 0 ? '+' : ''
-                        }${(((scn.bear?.prob_pct||0)*(scn.bear?.px_chg_pct||0) + (scn.base?.prob_pct||0)*(scn.base?.px_chg_pct||0) + (scn.bull?.prob_pct||0)*(scn.bull?.px_chg_pct||0))/100).toFixed(1)}%</b></span>
-                        <span class="show-ja">確率加重の 12 ヶ月リターン:<b style="color:var(--ink);font-family:var(--display);font-size:1rem">${
-                            ((scn.bear?.prob_pct||0)*(scn.bear?.px_chg_pct||0) + (scn.base?.prob_pct||0)*(scn.base?.px_chg_pct||0) + (scn.bull?.prob_pct||0)*(scn.bull?.px_chg_pct||0))/100 > 0 ? '+' : ''
-                        }${(((scn.bear?.prob_pct||0)*(scn.bear?.px_chg_pct||0) + (scn.base?.prob_pct||0)*(scn.base?.px_chg_pct||0) + (scn.bull?.prob_pct||0)*(scn.bull?.px_chg_pct||0))/100).toFixed(1)}%</b></span>
+                        ${(()=>{
+                            const ev = ((scn.bear?.prob_pct||0)*(scn.bear?.px_chg_pct||0) + (scn.base?.prob_pct||0)*(scn.base?.px_chg_pct||0) + (scn.bull?.prob_pct||0)*(scn.bull?.px_chg_pct||0))/100;
+                            const sign = ev > 0 ? '+' : '';
+                            const val = `<b style="color:var(--ink);font-family:var(--display);font-size:1rem">${sign}${ev.toFixed(1)}%</b>`;
+                            return `<span class="show-en">Probability-weighted 12-month return: ${val}</span>
+                                <span class="show-zh">機率加權 12 個月報酬:${val}</span>
+                                <span class="show-ja">確率加重 12 ヶ月リターン:${val}</span>`;
+                        })()}
                     </p>
                 </section>
 
                 <section class="sec">
-                    <div class="kicker"><span class="show-en">AI council vote · 5-of-${totalVotes} required</span><span class="show-zh">AI 議會投票 · 至少 ${Math.ceil(totalVotes*0.8)}/${totalVotes} 同意</span><span class="show-ja">AI 評議会投票 · ${Math.ceil(totalVotes*0.8)}/${totalVotes} 必要</span></div>
+                    <div class="kicker"><span class="show-en">AI council vote · ${Math.ceil(totalVotes*0.8)}-of-${totalVotes} required</span><span class="show-zh">AI 議會投票 · 至少需 ${Math.ceil(totalVotes*0.8)}/${totalVotes} 同意</span><span class="show-ja">AI 評議会投票 · ${Math.ceil(totalVotes*0.8)}/${totalVotes} 賛成必須</span></div>
                     <h2 class="sec-title show-en">Why <em>this thesis cleared</em> the council.</h2>
                     <h2 class="sec-title show-zh">為何此論點<em>通過議會。</em></h2>
                     <h2 class="sec-title show-ja">なぜこの論点が<em>評議会を通過したか。</em></h2>
                     <div class="vote">
                         ${data.council_models.map((m, i) => {
                             const passed = i < v.buy ? 'buy' : i < v.buy + v.hold ? 'hold' : 'cut';
-                            const label = passed === 'buy' ? 'BUY' : passed === 'hold' ? 'HOLD' : 'CUT';
-                            return `<div class="vote-cell ${passed}"><div>${esc(m).split(' ')[0]}</div><b>${label}</b></div>`;
+                            const labels = passed === 'buy' ? {en:'BUY',zh:'買',ja:'買'} : passed === 'hold' ? {en:'HOLD',zh:'持',ja:'保有'} : {en:'CUT',zh:'減',ja:'削減'};
+                            return `<div class="vote-cell ${passed}"><div>${esc(m).split(' ')[0]}</div><b><span class="show-en">${labels.en}</span><span class="show-zh">${labels.zh}</span><span class="show-ja">${labels.ja}</span></b></div>`;
                         }).join('')}
                     </div>
                     <div class="closing">
@@ -423,11 +521,11 @@
 
                 <nav class="nav" aria-label="Other holdings">
                     <a href="?t=${prev.ticker}" class="prev">
-                        <span class="dir">← <span class="show-en">Prev holding</span><span class="show-zh">上一檔</span><span class="show-ja">前へ</span></span>
+                        <span class="dir"><span class="show-en">← Prev holding</span><span class="show-zh">← 上一檔</span><span class="show-ja">← 前の銘柄</span></span>
                         <span class="nav-tk">${esc(prev.ticker)} <small>${esc(prev.name_zh)}</small></span>
                     </a>
                     <a href="?t=${next.ticker}" class="next">
-                        <span class="dir"><span class="show-en">Next holding</span><span class="show-zh">下一檔</span><span class="show-ja">次へ</span> →</span>
+                        <span class="dir"><span class="show-en">Next holding →</span><span class="show-zh">下一檔 →</span><span class="show-ja">次の銘柄 →</span></span>
                         <span class="nav-tk">${esc(next.ticker)} <small>${esc(next.name_zh)}</small></span>
                     </a>
                 </nav>
