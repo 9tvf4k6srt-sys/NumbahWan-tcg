@@ -94,13 +94,17 @@
         .bar-num{font-family:var(--display);font-weight:600;font-size:1.45rem;color:var(--ink);min-width:80px;text-align:right;letter-spacing:.005em}
 
         /* council vote block */
-        .vote{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin:18px 0 10px;max-width:560px}
-        .vote-cell{padding:14px 10px;text-align:center;border:1px solid var(--line);background:var(--paper-3);font-family:var(--mono);font-size:.62rem;letter-spacing:.18em;text-transform:uppercase;color:var(--ink-3);position:relative}
+        .vote{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin:18px 0 10px;max-width:620px}
+        .vote-cell{padding:14px 8px 16px;text-align:center;border:1px solid var(--line);background:var(--paper-3);font-family:var(--mono);font-size:.6rem;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-3);position:relative;min-height:108px;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;gap:2px}
+        .vote-cell .vendor{display:block;font-family:var(--mono);font-size:.62rem;letter-spacing:.18em;line-height:1.15;height:1.15em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;width:100%}
+        .vote-cell .version{display:block;font-family:var(--mono);font-size:.54rem;letter-spacing:.12em;line-height:1.2;height:1.2em;color:var(--ink-3);opacity:.78;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;width:100%;text-transform:none}
         .vote-cell.buy{background:#F4EBDB;border-color:rgba(139,111,58,.4);color:var(--brass-3)}
         .vote-cell.buy::after{content:"";position:absolute;left:0;right:0;bottom:0;height:3px;background:var(--seal)}
         .vote-cell.hold{background:var(--paper-2);color:var(--ink-3)}
         .vote-cell.cut{background:#E8D5D5;color:var(--seal-2)}
-        .vote-cell b{display:block;font-family:var(--display);font-size:1.05rem;color:var(--ink);font-weight:600;margin-top:4px}
+        .vote-cell b{display:block;font-family:var(--display);font-size:1.55rem;color:var(--ink);font-weight:600;margin-top:auto;line-height:1}
+        .vote-note{font-family:var(--mono);font-size:.6rem;letter-spacing:.06em;color:var(--ink-3);max-width:620px;margin:6px 0 18px;line-height:1.55}
+        .vote-note b{font-weight:600;color:var(--ink-2)}
 
         /* timeline / catalysts */
         .timeline{position:relative;margin:24px 0;padding-left:24px}
@@ -510,9 +514,17 @@
                         ${data.council_models.map((m, i) => {
                             const passed = i < v.buy ? 'buy' : i < v.buy + v.hold ? 'hold' : 'cut';
                             const labels = passed === 'buy' ? {en:'BUY',zh:'買',ja:'買'} : passed === 'hold' ? {en:'HOLD',zh:'持',ja:'保有'} : {en:'CUT',zh:'減',ja:'削減'};
-                            return `<div class="vote-cell ${passed}"><div>${esc(m).split(' ')[0]}</div><b><span class="show-en">${labels.en}</span><span class="show-zh">${labels.zh}</span><span class="show-ja">${labels.ja}</span></b></div>`;
+                            // m may be {vendor, version} object or legacy flat string
+                            const vendor = (m && typeof m === 'object') ? esc(m.vendor) : esc(String(m).split(' ')[0]);
+                            const version = (m && typeof m === 'object') ? esc(m.version || '') : esc(String(m).split(' ').slice(1).join(' '));
+                            return `<div class="vote-cell ${passed}"><span class="vendor">${vendor}</span><span class="version">${version || '\u00A0'}</span><b><span class="show-en">${labels.en}</span><span class="show-zh">${labels.zh}</span><span class="show-ja">${labels.ja}</span></b></div>`;
                         }).join('')}
                     </div>
+                    <p class="vote-note">
+                        <span class="show-en"><b>The lineup rotates.</b> Each new frontier release is shadow-traded on our own PINFORGE harness for at least 30 TWSE sessions before it gets a real vote — so when a model is on this card, it has already earned the seat.</span>
+                        <span class="show-zh"><b>名單會換人。</b>每一代新模型上線前,先在我們自家的 PINFORGE 測試框架上影子交易至少 30 個交易日,通過了才上桌投票 — 所以這張卡上看到的名字,都是先驗證過的。</span>
+                        <span class="show-ja"><b>顔ぶれは入れ替わる。</b>新世代モデルは、PINFORGE 自社ハーネス上で最低 30 営業日のシャドー取引を経てから、初めて本番投票に加わる — このカードに名前が出ている時点で、すでに実地で通った機体だけです。</span>
+                    </p>
                     <div class="closing">
                         <p class="show-en">${esc(s.council_rationale.en)}</p>
                         <p class="zh show-zh">${esc(s.council_rationale.zh)}</p>
