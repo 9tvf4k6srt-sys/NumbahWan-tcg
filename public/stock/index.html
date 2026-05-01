@@ -1,0 +1,453 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,maximum-scale=5">
+    <title>PINFORGE Wealth · Stock Thesis</title>
+    <meta name="description" content="Deep, forward-looking investment rationale for every holding in the PINFORGE Wealth basket. AI-council vote, scenario analysis, and structural moat in plain language.">
+    <meta name="theme-color" content="#EFE7D6">
+    <link rel="icon" type="image/webp" href="/static/images/invest/pinforge-emblem-brass.webp">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Noto+Serif+TC:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root{
+            --paper:#EFE7D6; --paper-2:#E4D9C2; --paper-3:#F7F1E3;
+            --ink:#1A1612; --ink-2:#3D352D; --ink-3:#6B5E4F;
+            --brass:#8B6F3A; --brass-2:#A2864A; --brass-3:#4A3820;
+            --seal:#9B2C2C; --seal-2:#7A1F1F;
+            --jade:#5C8275; --bord:#6B2B2B;
+            --line:rgba(74,56,32,.18);
+            --display:"Cormorant Garamond","Times New Roman",Inter,serif;
+            --zh:"Noto Serif TC","Songti TC","PingFang TC",serif;
+            --mono:"JetBrains Mono",ui-monospace,Menlo,monospace;
+            --safe:env(safe-area-inset-bottom,0px);
+        }
+        *{box-sizing:border-box;margin:0;padding:0}
+        html{scroll-behavior:smooth;background:var(--paper)}
+        body{font-family:Inter,system-ui,-apple-system,sans-serif;color:var(--ink);background:var(--paper);min-height:100svh;-webkit-font-smoothing:antialiased;font-weight:400;line-height:1.6}
+        a{color:inherit;text-decoration:none}
+        button{font:inherit;background:none;border:none;cursor:pointer;color:inherit}
+
+        /* topbar */
+        .topbar{position:sticky;top:0;z-index:30;display:flex;align-items:center;justify-content:space-between;padding:14px 18px;background:rgba(239,231,214,.92);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+        .brand{display:flex;align-items:center;gap:10px}
+        .brand img{width:36px;height:36px;object-fit:contain;filter:drop-shadow(0 2px 4px rgba(74,56,32,.18))}
+        .brand b{font-family:var(--display);font-weight:600;letter-spacing:.22em;font-size:.88rem;display:block;color:var(--ink)}
+        .brand small{font-family:var(--mono);font-size:.58rem;letter-spacing:.28em;text-transform:uppercase;color:var(--brass)}
+        .back{font-family:var(--mono);font-size:.66rem;letter-spacing:.2em;text-transform:uppercase;color:var(--ink-2);padding:8px 14px;border:1px solid var(--line);border-radius:2px;display:inline-flex;align-items:center;gap:6px;background:var(--paper-3)}
+        .back:hover{border-color:var(--ink-2)}
+
+        /* hero */
+        .hero{padding:42px 22px 28px;max-width:920px;margin:0 auto;border-bottom:1px solid var(--line);position:relative}
+        .hero::after{content:"";position:absolute;left:22px;bottom:-1px;width:60px;height:3px;background:var(--seal)}
+        .crumb{font-family:var(--mono);font-size:.66rem;letter-spacing:.22em;text-transform:uppercase;color:var(--ink-3);margin-bottom:16px}
+        .crumb a{color:var(--brass)}
+        .ticker-line{display:flex;align-items:baseline;gap:16px;flex-wrap:wrap;margin-bottom:6px}
+        .tk{font-family:var(--mono);font-weight:600;font-size:2.4rem;color:var(--ink);letter-spacing:.04em;line-height:1}
+        .name-zh{font-family:var(--zh);font-weight:600;font-size:1.5rem;color:var(--ink);letter-spacing:.04em}
+        .name-en{font-family:var(--display);font-style:italic;font-size:1.05rem;color:var(--ink-3);font-weight:500}
+        .tag-pill{display:inline-flex;align-items:center;gap:6px;padding:5px 11px;border-radius:1px;font-family:var(--mono);font-size:.66rem;letter-spacing:.2em;text-transform:uppercase;border:1px solid currentColor}
+        .tag-pill.buy{color:var(--seal);background:rgba(155,44,44,.06)}
+        .tag-pill.add{color:var(--brass);background:rgba(139,111,58,.08)}
+        .tag-pill .dot{width:6px;height:6px;border-radius:999px;background:currentColor}
+        .one-liner{font-family:var(--display);font-size:clamp(1.3rem,2.6vw,1.7rem);line-height:1.35;color:var(--ink);margin:18px 0 4px;font-weight:500;letter-spacing:.005em}
+        .one-liner-zh{font-family:var(--zh);font-weight:500;font-size:clamp(1.05rem,2.2vw,1.25rem);line-height:1.6;color:var(--ink-2);margin-top:10px}
+        .one-liner-ja{font-family:var(--zh);font-weight:400;font-size:clamp(.95rem,2vw,1.05rem);line-height:1.6;color:var(--ink-3);margin-top:8px;display:none}
+
+        /* stat strip */
+        .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--line);border:1px solid var(--line);margin:28px 22px 0;max-width:920px;margin-left:auto;margin-right:auto}
+        .stats .s{background:var(--paper-3);padding:18px 16px;display:flex;flex-direction:column;gap:6px;min-width:0}
+        .stats .k{font-family:var(--mono);font-size:.6rem;letter-spacing:.22em;text-transform:uppercase;color:var(--ink-3)}
+        .stats .v{font-family:var(--display);font-size:1.4rem;font-weight:600;color:var(--ink);line-height:1.2;letter-spacing:.005em;word-break:break-word}
+        .stats .d{font-family:var(--mono);font-size:.66rem;color:var(--jade);letter-spacing:.04em}
+        @media (max-width:760px){
+            .stats{grid-template-columns:repeat(2,1fr)}
+            .stats .v{font-size:1.15rem}
+        }
+
+        /* section */
+        .sec{max-width:920px;margin:0 auto;padding:48px 22px;border-bottom:1px solid var(--line)}
+        .sec:last-of-type{border-bottom:0}
+        .kicker{font-family:var(--mono);font-size:.66rem;letter-spacing:.26em;text-transform:uppercase;color:var(--brass);margin-bottom:10px;display:flex;align-items:center;gap:10px}
+        .kicker::before{content:"";width:18px;height:1px;background:var(--brass)}
+        h2.sec-title{font-family:var(--display);font-weight:600;font-size:clamp(1.6rem,3vw,2.1rem);line-height:1.2;color:var(--ink);margin-bottom:6px;letter-spacing:.005em}
+        h2.sec-title em{color:var(--seal);font-style:italic;font-weight:500}
+        .sec p{font-family:Inter,sans-serif;font-size:1rem;line-height:1.75;color:var(--ink-2);margin-bottom:14px;max-width:68ch}
+        .sec p.zh,.sec p.ja{font-family:var(--zh);font-weight:400;font-size:.98rem;line-height:1.85;color:var(--ink-3)}
+        .sec p.ja{display:none}
+
+        /* infographic — moat (oligopoly grid) */
+        .moat-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin:24px 0;max-width:520px}
+        .moat-cell{aspect-ratio:1;border:1px solid var(--line);background:var(--paper-3);position:relative;display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:.62rem;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-3);text-align:center;padding:6px;line-height:1.3}
+        .moat-cell.us{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+        .moat-cell.us::after{content:"";position:absolute;top:-3px;right:-3px;width:9px;height:9px;background:var(--seal);border-radius:999px;box-shadow:0 0 0 2px var(--paper)}
+
+        /* infographic — bar with brass fill */
+        .bar-row{display:grid;grid-template-columns:1fr auto;gap:14px;align-items:center;padding:11px 0;border-bottom:1px dashed var(--line)}
+        .bar-row:last-child{border-bottom:0}
+        .bar-label{font-family:var(--mono);font-size:.7rem;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-2)}
+        .bar-track{position:relative;height:8px;background:var(--paper-2);border-radius:1px;overflow:hidden;margin-top:6px}
+        .bar-fill{position:absolute;inset:0 auto 0 0;background:linear-gradient(90deg,var(--brass-3) 0%,var(--brass) 60%,var(--brass-2) 100%);transition:width 1.2s cubic-bezier(.2,.7,.2,1)}
+        .bar-fill.seal{background:linear-gradient(90deg,var(--seal-2) 0%,var(--seal) 100%)}
+        .bar-fill.jade{background:linear-gradient(90deg,#3F5E54 0%,var(--jade) 100%)}
+        .bar-num{font-family:var(--display);font-weight:600;font-size:1.45rem;color:var(--ink);min-width:80px;text-align:right;letter-spacing:.005em}
+
+        /* council vote block */
+        .vote{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin:18px 0 10px;max-width:560px}
+        .vote-cell{padding:14px 10px;text-align:center;border:1px solid var(--line);background:var(--paper-3);font-family:var(--mono);font-size:.62rem;letter-spacing:.18em;text-transform:uppercase;color:var(--ink-3);position:relative}
+        .vote-cell.buy{background:#F4EBDB;border-color:rgba(139,111,58,.4);color:var(--brass-3)}
+        .vote-cell.buy::after{content:"";position:absolute;left:0;right:0;bottom:0;height:3px;background:var(--seal)}
+        .vote-cell.hold{background:var(--paper-2);color:var(--ink-3)}
+        .vote-cell.cut{background:#E8D5D5;color:var(--seal-2)}
+        .vote-cell b{display:block;font-family:var(--display);font-size:1.05rem;color:var(--ink);font-weight:600;margin-top:4px}
+
+        /* timeline / catalysts */
+        .timeline{position:relative;margin:24px 0;padding-left:24px}
+        .timeline::before{content:"";position:absolute;left:6px;top:8px;bottom:8px;width:1px;background:var(--brass)}
+        .t-item{position:relative;padding:12px 0 18px}
+        .t-item::before{content:"";position:absolute;left:-22px;top:16px;width:11px;height:11px;border-radius:999px;background:var(--paper);border:2px solid var(--brass);box-shadow:0 0 0 3px var(--paper)}
+        .t-item.first::before{background:var(--seal);border-color:var(--seal)}
+        .t-year{font-family:var(--mono);font-size:.7rem;letter-spacing:.22em;text-transform:uppercase;color:var(--seal);font-weight:600;margin-bottom:6px}
+        .t-body{font-family:Inter,sans-serif;font-size:.98rem;color:var(--ink-2);line-height:1.7}
+        .t-body.zh,.t-body.ja{font-family:var(--zh);color:var(--ink-3);font-size:.94rem}
+        .t-body.ja{display:none}
+
+        /* risk list */
+        .risk-list{display:grid;gap:14px;margin-top:18px}
+        .risk-card{padding:18px 20px;border:1px solid var(--line);border-left:3px solid var(--seal);background:var(--paper-3);font-size:.95rem;line-height:1.65;color:var(--ink-2)}
+        .risk-card.zh,.risk-card.ja{font-family:var(--zh);color:var(--ink-3)}
+        .risk-card.ja{display:none}
+
+        /* scenario fan */
+        .scenarios{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:24px}
+        .sc-card{padding:18px 16px;border:1px solid var(--line);background:var(--paper-3);position:relative;display:flex;flex-direction:column;gap:8px;min-height:180px}
+        .sc-card.bear{border-top:3px solid var(--bord)}
+        .sc-card.base{border-top:3px solid var(--ink-2)}
+        .sc-card.bull{border-top:3px solid var(--jade)}
+        .sc-tag{font-family:var(--mono);font-size:.62rem;letter-spacing:.22em;text-transform:uppercase;color:var(--ink-3)}
+        .sc-card.bear .sc-tag{color:var(--bord)}
+        .sc-card.bull .sc-tag{color:var(--jade)}
+        .sc-prob{font-family:var(--display);font-size:2.2rem;font-weight:600;color:var(--ink);line-height:1;letter-spacing:.005em}
+        .sc-prob small{font-family:var(--mono);font-size:.65rem;color:var(--ink-3);letter-spacing:.14em;font-weight:400;display:block;margin-top:4px;text-transform:uppercase}
+        .sc-label{font-family:var(--display);font-style:italic;font-size:1.02rem;color:var(--ink-2);font-weight:500;line-height:1.4}
+        .sc-px{font-family:var(--mono);font-size:.78rem;color:var(--ink);letter-spacing:.04em;font-weight:600;margin-top:auto;padding-top:8px;border-top:1px dashed var(--line)}
+        .sc-px.up{color:var(--jade)}
+        .sc-px.dn{color:var(--bord)}
+        @media (max-width:760px){
+            .scenarios{grid-template-columns:1fr}
+        }
+
+        /* council rationale closing block */
+        .closing{padding:32px 26px;background:var(--paper-3);border:1px solid var(--line);border-left:3px solid var(--brass);margin-top:18px;position:relative}
+        .closing::before{content:"\201C";position:absolute;top:-12px;left:18px;font-family:var(--display);font-size:5rem;line-height:1;color:var(--brass);background:var(--paper-3);padding:0 8px}
+        .closing p{font-family:var(--display);font-size:1.15rem;line-height:1.55;color:var(--ink);max-width:none;font-weight:500;letter-spacing:.005em}
+        .closing p.zh,.closing p.ja{font-family:var(--zh);font-size:1.02rem;color:var(--ink-2);font-weight:400}
+        .closing p.ja{display:none}
+        .closing-foot{font-family:var(--mono);font-size:.62rem;letter-spacing:.24em;text-transform:uppercase;color:var(--brass);margin-top:18px}
+
+        /* lang controls */
+        .lang{display:inline-flex;gap:1px;border:1px solid var(--line);background:var(--paper-3)}
+        .lang button{padding:6px 10px;font-family:var(--mono);font-size:.64rem;font-weight:600;color:var(--ink-3);letter-spacing:.16em;text-transform:uppercase;min-width:32px}
+        .lang button.on{background:var(--ink);color:var(--paper)}
+
+        /* nav prev/next */
+        .nav{max-width:920px;margin:0 auto;padding:36px 22px 80px;display:flex;justify-content:space-between;gap:14px;flex-wrap:wrap}
+        .nav a{flex:1;min-width:240px;display:flex;flex-direction:column;gap:4px;padding:18px 22px;border:1px solid var(--line);background:var(--paper-3);transition:border-color .2s}
+        .nav a:hover{border-color:var(--ink-2)}
+        .nav .dir{font-family:var(--mono);font-size:.6rem;letter-spacing:.24em;text-transform:uppercase;color:var(--brass)}
+        .nav .nav-tk{font-family:var(--display);font-size:1.05rem;color:var(--ink);font-weight:600;letter-spacing:.04em}
+        .nav .nav-tk small{font-family:var(--zh);font-weight:500;color:var(--ink-2);margin-left:8px;letter-spacing:0;font-size:.92rem}
+        .nav .next{text-align:right}
+
+        /* legal foot */
+        .foot{max-width:920px;margin:0 auto;padding:28px 22px;border-top:1px solid var(--line);font-family:var(--mono);font-size:.62rem;letter-spacing:.16em;color:var(--ink-3);text-transform:uppercase;text-align:center}
+
+        /* lang body class controls visibility */
+        body[data-lang="en"] .show-zh,body[data-lang="en"] .show-ja{display:none}
+        body[data-lang="zh"] .show-en,body[data-lang="zh"] .show-ja{display:none}
+        body[data-lang="ja"] .show-en,body[data-lang="ja"] .show-zh{display:none}
+        body[data-lang="zh"] .one-liner-zh,body[data-lang="zh"] p.zh,body[data-lang="zh"] .t-body.zh,body[data-lang="zh"] .risk-card.zh,body[data-lang="zh"] .closing p.zh{display:block}
+        body[data-lang="ja"] .one-liner-ja,body[data-lang="ja"] p.ja,body[data-lang="ja"] .t-body.ja,body[data-lang="ja"] .risk-card.ja,body[data-lang="ja"] .closing p.ja{display:block}
+        body[data-lang="en"] .one-liner-zh,body[data-lang="en"] p.zh,body[data-lang="en"] .t-body.zh,body[data-lang="en"] .risk-card.zh,body[data-lang="en"] .closing p.zh{display:none}
+
+        /* loading */
+        .loading{padding:80px 22px;text-align:center;font-family:var(--mono);font-size:.78rem;letter-spacing:.22em;color:var(--ink-3);text-transform:uppercase}
+
+        @media (max-width:760px){
+            .hero{padding:30px 18px 22px}
+            .sec{padding:36px 18px}
+            .stats{margin:22px 18px 0}
+            .nav{padding:28px 18px 80px}
+            .tk{font-size:2rem}
+            .name-zh{font-size:1.25rem}
+        }
+        @media (prefers-reduced-motion: reduce){
+            .bar-fill{transition:none}
+        }
+    </style>
+</head>
+<body data-lang="en">
+    <header class="topbar">
+        <a class="brand" href="/invest.html#holdings" aria-label="PINFORGE Wealth — back to holdings">
+            <img src="/static/images/invest/pinforge-emblem-brass.webp" alt="">
+            <span><b>PINFORGE</b><small>Stock Thesis</small></span>
+        </a>
+        <div style="display:flex;align-items:center;gap:10px">
+            <div class="lang" role="tablist" aria-label="Language">
+                <button data-l="en" class="on">EN</button>
+                <button data-l="zh">繁中</button>
+                <button data-l="ja">日本語</button>
+            </div>
+            <a class="back" href="/invest.html#holdings"><span>←</span><span class="show-en">Back</span><span class="show-zh">回</span><span class="show-ja">戻る</span></a>
+        </div>
+    </header>
+
+    <div id="root">
+        <div class="loading">Loading thesis…</div>
+    </div>
+
+    <script>
+        /* ---------- helpers ---------- */
+        const $ = (sel,root=document) => root.querySelector(sel);
+        const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+        const params = new URLSearchParams(location.search);
+        const ticker = params.get('t') || params.get('ticker') || location.hash.replace('#','') || '3661';
+
+        /* ---------- language toggle ---------- */
+        const setLang = (l) => {
+            document.body.setAttribute('data-lang', l);
+            document.querySelectorAll('.lang button').forEach(b => b.classList.toggle('on', b.dataset.l === l));
+            try { localStorage.setItem('pinforge.lang', l); } catch(e){}
+        };
+        document.querySelectorAll('.lang button').forEach(b => b.addEventListener('click', () => setLang(b.dataset.l)));
+        const stored = (()=>{ try{return localStorage.getItem('pinforge.lang')}catch(e){return null} })();
+        setLang(stored || (navigator.language.startsWith('zh') ? 'zh' : navigator.language.startsWith('ja') ? 'ja' : 'en'));
+
+        /* ---------- render ---------- */
+        async function render(){
+            let data;
+            try {
+                const r = await fetch('/static/data/pinforge-stocks.json', {cache:'force-cache'});
+                data = await r.json();
+            } catch(e){
+                $('#root').innerHTML = '<div class="loading">Could not load thesis data.</div>';
+                return;
+            }
+            const stocks = data.stocks;
+            const idx = Math.max(0, stocks.findIndex(s => s.ticker === ticker));
+            const s = stocks[idx];
+            if(!s){ $('#root').innerHTML = '<div class="loading">Ticker not found.</div>'; return; }
+
+            const prev = stocks[(idx - 1 + stocks.length) % stocks.length];
+            const next = stocks[(idx + 1) % stocks.length];
+
+            document.title = `${s.ticker} ${s.name_zh} · ${s.name_en} — PINFORGE Thesis`;
+            const meta = document.querySelector('meta[name="description"]');
+            if(meta) meta.content = (s.thesis_one_line.en || '').slice(0,180);
+
+            const aiPct = s.ai_revenue_pct || 0;
+            const utilPct = s.capacity_util_pct || 0;
+            const backlog = s.backlog_months || 0;
+            const backlogPct = Math.min(100, Math.round(backlog/24*100));
+            const v = s.council_votes || {buy:0,hold:0,cut:0};
+            const totalVotes = v.buy + v.hold + v.cut || 5;
+
+            // moat oligopoly grid: 5 cells, "us" cells = number of suppliers (mark Pinforge's pick as us)
+            // Use a generic depiction: highlight 1-3 cells based on heuristic on AI rev exposure.
+            const suppliersInWorld = (() => {
+                const t = s.ticker;
+                const map = {'3661':3,'3037':3,'2383':2,'3707':4,'2449':2,'2345':3,'8996':3,'2049':2,'6488':5,'4958':3,'3680':1,'2454':2};
+                return map[t] || 3;
+            })();
+            const moatCells = Array.from({length:5}, (_,i) => i < suppliersInWorld
+                ? `<div class="moat-cell ${i===0?'us':''}">${i===0?(s.ticker):'·'}</div>`
+                : `<div class="moat-cell" style="opacity:.35">—</div>`).join('');
+
+            const catalystsHTML = (s.forward_catalysts || []).map((c,i) => `
+                <div class="t-item ${i===0?'first':''}">
+                    <div class="t-year">${esc(c.year)}</div>
+                    <div class="t-body show-en">${esc(c.en)}</div>
+                    <div class="t-body zh show-zh">${esc(c.zh)}</div>
+                    <div class="t-body ja show-ja">${esc(c.ja)}</div>
+                </div>`).join('');
+
+            const risksHTML = (s.risks || []).map(r => `
+                <div>
+                    <div class="risk-card show-en">${esc(r.en)}</div>
+                    <div class="risk-card zh show-zh">${esc(r.zh)}</div>
+                    <div class="risk-card ja show-ja">${esc(r.ja)}</div>
+                </div>`).join('');
+
+            const metricCells = (s.metrics || []).map(m => `
+                <div class="s">
+                    <div class="k">${esc(m.k)}</div>
+                    <div class="v">${esc(m.v)}</div>
+                    <div class="d">${esc(m.delta)}</div>
+                </div>`).join('');
+
+            const scn = s.scenario || {};
+            const scenHTML = ['bear','base','bull'].map(k => {
+                const sc = scn[k]; if(!sc) return '';
+                const pxClass = sc.px_chg_pct >= 0 ? 'up' : 'dn';
+                const pxSign = sc.px_chg_pct >= 0 ? '+' : '';
+                return `<div class="sc-card ${k}">
+                    <div class="sc-tag">${k.toUpperCase()} CASE</div>
+                    <div class="sc-prob">${sc.prob_pct}%<small>probability</small></div>
+                    <div class="sc-label">${esc(sc.label)}</div>
+                    <div class="sc-px ${pxClass}">${pxSign}${sc.px_chg_pct}% · 12-month price target</div>
+                </div>`;
+            }).join('');
+
+            $('#root').innerHTML = `
+                <section class="hero">
+                    <div class="crumb"><a href="/invest.html#holdings">PINFORGE Basket</a> · #${String(idx+1).padStart(2,'0')} of ${stocks.length}</div>
+                    <div class="ticker-line">
+                        <div class="tk">${esc(s.ticker)}</div>
+                        <div class="name-zh">${esc(s.name_zh)}</div>
+                        <div class="name-en">${esc(s.name_en)}</div>
+                        <div class="tag-pill ${s.tag}"><span class="dot"></span>${s.tag === 'buy' ? '大買 · BUY' : '小買 · ADD'} · ${s.weight_pct}%</div>
+                    </div>
+                    <p class="one-liner show-en">${esc(s.thesis_one_line.en)}</p>
+                    <p class="one-liner-zh show-zh" style="display:none">${esc(s.thesis_one_line.zh)}</p>
+                    <p class="one-liner-ja show-ja" style="display:none">${esc(s.thesis_one_line.ja)}</p>
+                </section>
+
+                <div class="stats">${metricCells}</div>
+
+                <section class="sec">
+                    <div class="kicker"><span class="show-en">Structural moat</span><span class="show-zh">結構性護城河</span><span class="show-ja">構造的モート</span></div>
+                    <h2 class="sec-title show-en">Why this business <em>cannot easily be replaced.</em></h2>
+                    <h2 class="sec-title show-zh">這家公司<em>為何難以替代。</em></h2>
+                    <h2 class="sec-title show-ja">なぜこの事業は<em>容易に代替できないのか。</em></h2>
+                    <p class="show-en">${esc(s.moat.en)}</p>
+                    <p class="zh show-zh">${esc(s.moat.zh)}</p>
+                    <p class="ja show-ja">${esc(s.moat.ja)}</p>
+
+                    <div class="kicker" style="margin-top:32px"><span class="show-en">Suppliers in the world</span><span class="show-zh">全球供應商數</span><span class="show-ja">世界のサプライヤー数</span></div>
+                    <div class="moat-grid" aria-label="Global suppliers">${moatCells}</div>
+                    <p style="font-family:var(--mono);font-size:.7rem;letter-spacing:.14em;color:var(--ink-3);max-width:520px">
+                        <span class="show-en">${suppliersInWorld} qualified supplier${suppliersInWorld>1?'s':''} worldwide · ${esc(s.ticker)} held in PINFORGE basket</span>
+                        <span class="show-zh">全球合格供應商 ${suppliersInWorld} 家 · ${esc(s.ticker)} 在 PINFORGE 籃中</span>
+                        <span class="show-ja">世界の認定サプライヤー ${suppliersInWorld} 社 · ${esc(s.ticker)} は PINFORGE バスケット保有</span>
+                    </p>
+
+                    <div class="kicker" style="margin-top:32px"><span class="show-en">Position fundamentals</span><span class="show-zh">部位基本面</span><span class="show-ja">ポジションのファンダメンタルズ</span></div>
+                    <div style="margin-top:14px">
+                        <div class="bar-row">
+                            <div>
+                                <div class="bar-label show-en">AI-revenue exposure (TTM)</div>
+                                <div class="bar-label show-zh">AI 營收占比(過去 12 月)</div>
+                                <div class="bar-label show-ja">AI 売上比率(TTM)</div>
+                                <div class="bar-track"><div class="bar-fill jade" data-w="${aiPct}"></div></div>
+                            </div>
+                            <div class="bar-num">${aiPct}%</div>
+                        </div>
+                        <div class="bar-row">
+                            <div>
+                                <div class="bar-label show-en">Backlog visibility · ${backlog} months</div>
+                                <div class="bar-label show-zh">在手訂單能見度 · ${backlog} 個月</div>
+                                <div class="bar-label show-ja">受注残見通し · ${backlog} ヶ月</div>
+                                <div class="bar-track"><div class="bar-fill" data-w="${backlogPct}"></div></div>
+                            </div>
+                            <div class="bar-num">${backlog}<span style="font-family:var(--mono);font-size:.66rem;color:var(--ink-3);font-weight:400;margin-left:4px">mo</span></div>
+                        </div>
+                        <div class="bar-row">
+                            <div>
+                                <div class="bar-label show-en">Capacity utilisation</div>
+                                <div class="bar-label show-zh">產能利用率</div>
+                                <div class="bar-label show-ja">設備稼働率</div>
+                                <div class="bar-track"><div class="bar-fill seal" data-w="${utilPct}"></div></div>
+                            </div>
+                            <div class="bar-num">${utilPct}%</div>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="sec">
+                    <div class="kicker"><span class="show-en">Forward catalysts · 2026 → 2030</span><span class="show-zh">未來催化劑 · 2026 → 2030</span><span class="show-ja">前向きカタリスト · 2026 → 2030</span></div>
+                    <h2 class="sec-title show-en">What <em>has to be true</em> for the thesis to compound.</h2>
+                    <h2 class="sec-title show-zh">論點要持續複利,<em>什麼必須成真。</em></h2>
+                    <h2 class="sec-title show-ja">この論点が複利で増えるために <em>何が真であるべきか。</em></h2>
+                    <div class="timeline">${catalystsHTML}</div>
+                </section>
+
+                <section class="sec">
+                    <div class="kicker"><span class="show-en">Risks we are watching</span><span class="show-zh">我們在盯的風險</span><span class="show-ja">監視しているリスク</span></div>
+                    <h2 class="sec-title show-en">Where the thesis <em>could break.</em></h2>
+                    <h2 class="sec-title show-zh">論點可能<em>在哪裡破裂。</em></h2>
+                    <h2 class="sec-title show-ja">論点が <em>崩れうる場所。</em></h2>
+                    <div class="risk-list">${risksHTML}</div>
+                </section>
+
+                <section class="sec">
+                    <div class="kicker"><span class="show-en">Scenario fan · 12-month price targets</span><span class="show-zh">情境分析 · 12 個月目標價</span><span class="show-ja">シナリオファン · 12 ヶ月ターゲット</span></div>
+                    <h2 class="sec-title show-en">Three futures, <em>weighted by probability.</em></h2>
+                    <h2 class="sec-title show-zh">三種未來,<em>機率加權。</em></h2>
+                    <h2 class="sec-title show-ja">3 つの未来、<em>確率で加重。</em></h2>
+                    <div class="scenarios">${scenHTML}</div>
+                    <p style="font-family:var(--mono);font-size:.66rem;letter-spacing:.14em;color:var(--ink-3);margin-top:18px;max-width:none">
+                        <span class="show-en">Probability-weighted 12-month return: <b style="color:var(--ink);font-family:var(--display);font-size:1rem">${
+                            ((scn.bear?.prob_pct||0)*(scn.bear?.px_chg_pct||0) + (scn.base?.prob_pct||0)*(scn.base?.px_chg_pct||0) + (scn.bull?.prob_pct||0)*(scn.bull?.px_chg_pct||0))/100 > 0 ? '+' : ''
+                        }${(((scn.bear?.prob_pct||0)*(scn.bear?.px_chg_pct||0) + (scn.base?.prob_pct||0)*(scn.base?.px_chg_pct||0) + (scn.bull?.prob_pct||0)*(scn.bull?.px_chg_pct||0))/100).toFixed(1)}%</b></span>
+                        <span class="show-zh">機率加權 12 個月報酬:<b style="color:var(--ink);font-family:var(--display);font-size:1rem">${
+                            ((scn.bear?.prob_pct||0)*(scn.bear?.px_chg_pct||0) + (scn.base?.prob_pct||0)*(scn.base?.px_chg_pct||0) + (scn.bull?.prob_pct||0)*(scn.bull?.px_chg_pct||0))/100 > 0 ? '+' : ''
+                        }${(((scn.bear?.prob_pct||0)*(scn.bear?.px_chg_pct||0) + (scn.base?.prob_pct||0)*(scn.base?.px_chg_pct||0) + (scn.bull?.prob_pct||0)*(scn.bull?.px_chg_pct||0))/100).toFixed(1)}%</b></span>
+                        <span class="show-ja">確率加重の 12 ヶ月リターン:<b style="color:var(--ink);font-family:var(--display);font-size:1rem">${
+                            ((scn.bear?.prob_pct||0)*(scn.bear?.px_chg_pct||0) + (scn.base?.prob_pct||0)*(scn.base?.px_chg_pct||0) + (scn.bull?.prob_pct||0)*(scn.bull?.px_chg_pct||0))/100 > 0 ? '+' : ''
+                        }${(((scn.bear?.prob_pct||0)*(scn.bear?.px_chg_pct||0) + (scn.base?.prob_pct||0)*(scn.base?.px_chg_pct||0) + (scn.bull?.prob_pct||0)*(scn.bull?.px_chg_pct||0))/100).toFixed(1)}%</b></span>
+                    </p>
+                </section>
+
+                <section class="sec">
+                    <div class="kicker"><span class="show-en">AI council vote · 5-of-${totalVotes} required</span><span class="show-zh">AI 議會投票 · 至少 ${Math.ceil(totalVotes*0.8)}/${totalVotes} 同意</span><span class="show-ja">AI 評議会投票 · ${Math.ceil(totalVotes*0.8)}/${totalVotes} 必要</span></div>
+                    <h2 class="sec-title show-en">Why <em>this thesis cleared</em> the council.</h2>
+                    <h2 class="sec-title show-zh">為何此論點<em>通過議會。</em></h2>
+                    <h2 class="sec-title show-ja">なぜこの論点が<em>評議会を通過したか。</em></h2>
+                    <div class="vote">
+                        ${data.council_models.map((m, i) => {
+                            const passed = i < v.buy ? 'buy' : i < v.buy + v.hold ? 'hold' : 'cut';
+                            const label = passed === 'buy' ? 'BUY' : passed === 'hold' ? 'HOLD' : 'CUT';
+                            return `<div class="vote-cell ${passed}"><div>${esc(m).split(' ')[0]}</div><b>${label}</b></div>`;
+                        }).join('')}
+                    </div>
+                    <div class="closing">
+                        <p class="show-en">${esc(s.council_rationale.en)}</p>
+                        <p class="zh show-zh">${esc(s.council_rationale.zh)}</p>
+                        <p class="ja show-ja">${esc(s.council_rationale.ja)}</p>
+                        <div class="closing-foot show-en">— PINFORGE AI council, vote of record · ${data.as_of}</div>
+                        <div class="closing-foot show-zh">— PINFORGE AI 議會,正式投票紀錄 · ${data.as_of}</div>
+                        <div class="closing-foot show-ja">— PINFORGE AI 評議会、正式投票記録 · ${data.as_of}</div>
+                    </div>
+                </section>
+
+                <nav class="nav" aria-label="Other holdings">
+                    <a href="?t=${prev.ticker}" class="prev">
+                        <span class="dir">← <span class="show-en">Prev holding</span><span class="show-zh">上一檔</span><span class="show-ja">前へ</span></span>
+                        <span class="nav-tk">${esc(prev.ticker)} <small>${esc(prev.name_zh)}</small></span>
+                    </a>
+                    <a href="?t=${next.ticker}" class="next">
+                        <span class="dir"><span class="show-en">Next holding</span><span class="show-zh">下一檔</span><span class="show-ja">次へ</span> →</span>
+                        <span class="nav-tk">${esc(next.ticker)} <small>${esc(next.name_zh)}</small></span>
+                    </a>
+                </nav>
+
+                <div class="foot">
+                    <span class="show-en">Forward-looking statements. Not investment advice. Live weights inside the member app. · PINFORGE Wealth · 品峰財富管理</span>
+                    <span class="show-zh">前瞻性敘述,僅供參考,非投資建議。即時權重於會員 App。 · PINFORGE Wealth · 品峰財富管理</span>
+                    <span class="show-ja">前向きな記述、投資助言ではない。リアルタイム配分は会員アプリ内。 · PINFORGE Wealth · 品峰財富管理</span>
+                </div>
+            `;
+
+            // animate bar fills after paint
+            requestAnimationFrame(() => {
+                document.querySelectorAll('.bar-fill').forEach(el => { el.style.width = el.dataset.w + '%'; });
+            });
+
+            // re-apply lang to dynamically rendered nodes
+            setLang(document.body.dataset.lang);
+        }
+        render();
+    </script>
+</body>
+</html>
