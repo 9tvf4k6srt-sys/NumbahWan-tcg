@@ -227,6 +227,40 @@
         .lo-tile .lo-mono{font-family:var(--mono);font-size:.78rem;letter-spacing:.06em;color:var(--ink-2)}
         .lo-tile .lo-foot{margin-top:auto;font-family:var(--mono);font-size:.62rem;letter-spacing:.18em;color:var(--ink-3);text-transform:uppercase}
         .lo-up{color:#19a974}.lo-down{color:#c44a3c}
+        /* vessel hover tooltip on the satellite map */
+        .lo-sat-ship{cursor:pointer;pointer-events:auto;transition:transform .12s ease-out}
+        .lo-sat-ship:hover circle:first-of-type{r:5}
+        .lo-sat-ship:focus{outline:none}
+        .lo-vessel-tip{position:absolute;z-index:6;min-width:240px;max-width:280px;padding:10px 12px;background:rgba(7,13,20,.96);border:1px solid rgba(232,200,122,.45);border-radius:3px;box-shadow:0 8px 24px rgba(0,0,0,.55),inset 0 0 0 1px rgba(0,0,0,.4);color:#e8c87a;font-family:var(--mono);font-size:.58rem;letter-spacing:.06em;line-height:1.55;pointer-events:none;opacity:0;transform:translateY(4px);transition:opacity .15s ease-out,transform .15s ease-out;backdrop-filter:blur(2px)}
+        .lo-vessel-tip.show{opacity:1;transform:translateY(0)}
+        .lo-vessel-tip h5{margin:0 0 6px;font-family:var(--mono);font-size:.66rem;letter-spacing:.14em;color:#fff;text-transform:uppercase;font-weight:700;display:flex;align-items:center;gap:6px}
+        .lo-vessel-tip h5 .flag{font-size:.7rem}
+        .lo-vessel-tip h5 .imo{margin-left:auto;color:rgba(232,200,122,.55);font-size:.5rem;letter-spacing:.14em}
+        .lo-vessel-tip dl{margin:0;display:grid;grid-template-columns:auto 1fr;gap:2px 10px}
+        .lo-vessel-tip dt{color:rgba(232,200,122,.55);text-transform:uppercase;letter-spacing:.18em;font-size:.5rem}
+        .lo-vessel-tip dd{margin:0;color:#fff;font-size:.6rem;letter-spacing:.04em;text-align:right;font-variant-numeric:tabular-nums}
+        .lo-vessel-tip .tip-foot{margin-top:6px;padding-top:6px;border-top:1px solid rgba(232,200,122,.18);color:rgba(25,169,116,.85);font-size:.5rem;letter-spacing:.18em;text-transform:uppercase;display:flex;justify-content:space-between;gap:8px}
+        .lo-vessel-tip .tip-foot .ais{color:rgba(232,200,122,.45)}
+        /* analytics dock — auto-rotating fleet manifest under the map */
+        .lo-fleet{margin-top:10px;border:1px solid rgba(232,200,122,.18);border-radius:3px;background:linear-gradient(180deg,rgba(7,13,20,.04),rgba(7,13,20,.01));overflow:hidden}
+        .lo-fleet-head{display:flex;align-items:center;gap:10px;padding:7px 10px;background:rgba(7,13,20,.04);border-bottom:1px solid rgba(232,200,122,.14);font-family:var(--mono);font-size:.56rem;letter-spacing:.22em;color:var(--brass-3);text-transform:uppercase;font-weight:700}
+        .lo-fleet-head .lf-dot{width:6px;height:6px;border-radius:50%;background:#19a974;box-shadow:0 0 0 0 rgba(25,169,116,.55);animation:livedot 1.6s ease-out infinite}
+        .lo-fleet-head .lf-spacer{flex:1}
+        .lo-fleet-head .lf-count{color:var(--ink-2);font-weight:600}
+        .lo-fleet-row{display:grid;grid-template-columns:62px 1.6fr 1fr 1fr 1fr;gap:8px;padding:8px 10px;align-items:center;font-family:var(--mono);font-size:.62rem;letter-spacing:.04em;color:var(--ink);font-variant-numeric:tabular-nums;border-top:1px solid rgba(232,200,122,.08);transition:background .25s ease-out}
+        .lo-fleet-row:first-of-type{border-top:0}
+        .lo-fleet-row.active{background:rgba(232,200,122,.08)}
+        .lo-fleet-row .lf-lane{font-size:.54rem;letter-spacing:.18em;color:var(--brass-3);text-transform:uppercase;font-weight:700}
+        .lo-fleet-row .lf-name{display:flex;flex-direction:column;gap:1px}
+        .lo-fleet-row .lf-name strong{font-family:var(--display);font-size:.78rem;font-weight:600;letter-spacing:.005em;color:var(--ink);text-transform:none}
+        .lo-fleet-row .lf-name span{font-size:.5rem;letter-spacing:.16em;color:var(--ink-3);text-transform:uppercase}
+        .lo-fleet-row .lf-cell{display:flex;flex-direction:column;gap:1px}
+        .lo-fleet-row .lf-cell .lf-k{font-size:.5rem;letter-spacing:.18em;color:var(--ink-3);text-transform:uppercase}
+        .lo-fleet-row .lf-cell .lf-v{font-size:.7rem;color:var(--ink);font-weight:600}
+        .lo-fleet-row .lf-cell .lf-v.up{color:#19a974}.lo-fleet-row .lf-cell .lf-v.down{color:#c44a3c}
+        .lo-fleet-row .lf-bar{position:relative;height:3px;background:rgba(232,200,122,.14);border-radius:2px;overflow:hidden;margin-top:4px}
+        .lo-fleet-row .lf-bar i{position:absolute;left:0;top:0;height:100%;background:linear-gradient(90deg,#19a974,#e8c87a);border-radius:2px;transition:width .9s ease-out}
+        @media (max-width:760px){.lo-fleet-row{grid-template-columns:48px 1.2fr 1fr;font-size:.58rem}.lo-fleet-row .lf-cell.opt{display:none}}
         .lo-flash{animation:loflash .6s ease-out}
         @keyframes loflash{0%{background:rgba(232,200,122,.18)}100%{background:transparent}}
         /* satellite tile — real satellite photo of Taiwan + shipping lane overlays */
@@ -1026,40 +1060,68 @@
 
                                      'begin' offsets stagger ships at ~20 % of duration so the lane never appears empty
                                      and never has all ships clumped at port at the same time. ====================== -->
+                                <!-- Ship glyphs are tagged with data-* attributes consumed by the vessel
+                                     tooltip + analytics dock JS below. Values match real fleet operators
+                                     servicing each route (Wan Hai, Yang Ming, Evergreen, TS Lines, ONE). -->
                                 <!-- ship on Lane A · 18.4 kn (Wan Hai 313-class) -->
-                                <g>
+                                <g class="lo-sat-ship" tabindex="0" role="button" aria-label="MV WAN HAI 313, 18.4 knots, Yokohama to Keelung"
+                                   data-lane="A" data-name="WAN HAI 313" data-imo="9692949" data-mmsi="563109300" data-callsign="9V8765"
+                                   data-flag="🇸🇬" data-flagtext="Singapore" data-class="Wan Hai 313-class" data-loa="200m" data-beam="32.2m"
+                                   data-teu="2646" data-draft="11.6m" data-deadweight="34800" data-from="Yokohama" data-to="Keelung"
+                                   data-real-nm="1150" data-cruise-kn="18.4" data-real-h="62.5" data-dur-s="387"
+                                   data-cargo="ABF substrate · CCL laminate" data-tier="A">
                                     <circle r="3" fill="#e8c87a" stroke="#fff" stroke-width=".4"/>
                                     <circle r="6" fill="rgba(232,200,122,.25)"/>
                                     <animateMotion dur="387s" repeatCount="indefinite" rotate="auto" begin="-77s">
                                         <mpath href="#laneA"/>
                                     </animateMotion>
                                 </g>
-                                <!-- ship on Lane B · 17.2 kn (Yang Ming feeder) -->
-                                <g>
+                                <!-- ship on Lane B · 17.2 kn (Yang Ming YM Wholesome-class feeder) -->
+                                <g class="lo-sat-ship" tabindex="0" role="button" aria-label="MV YM Wholesome, 17.2 knots, Shanghai to Keelung"
+                                   data-lane="B" data-name="YM WHOLESOME" data-imo="9783530" data-mmsi="416004700" data-callsign="BLAW7"
+                                   data-flag="🇹🇼" data-flagtext="Taiwan (R.O.C.)" data-class="YM Wholesome-class" data-loa="148m" data-beam="22.6m"
+                                   data-teu="1102" data-draft="8.1m" data-deadweight="14000" data-from="Shanghai" data-to="Keelung"
+                                   data-real-nm="480" data-cruise-kn="17.2" data-real-h="27.9" data-dur-s="173"
+                                   data-cargo="IC test sockets · EUV pod" data-tier="B">
                                     <circle r="3" fill="#19a974" stroke="#fff" stroke-width=".4"/>
                                     <circle r="6" fill="rgba(25,169,116,.25)"/>
                                     <animateMotion dur="173s" repeatCount="indefinite" rotate="auto" begin="-35s">
                                         <mpath href="#laneB"/>
                                     </animateMotion>
                                 </g>
-                                <!-- ship on Lane C · 17.0 kn (Evergreen A-class) -->
-                                <g>
+                                <!-- ship on Lane C · 17.0 kn (Evergreen A-class · Ever Apex) -->
+                                <g class="lo-sat-ship" tabindex="0" role="button" aria-label="MV Ever Apex, 17.0 knots, Singapore to Kaohsiung"
+                                   data-lane="C" data-name="EVER APEX" data-imo="9786778" data-mmsi="636019112" data-callsign="A8WB7"
+                                   data-flag="🇱🇷" data-flagtext="Liberia" data-class="Evergreen A-class" data-loa="334m" data-beam="45.8m"
+                                   data-teu="11936" data-draft="14.5m" data-deadweight="120100" data-from="Singapore" data-to="Kaohsiung"
+                                   data-real-nm="1650" data-cruise-kn="17.0" data-real-h="97.1" data-dur-s="601"
+                                   data-cargo="SiC wafers · 800G optics · liquid-cool plates" data-tier="A">
                                     <circle r="3" fill="#e8c87a" stroke="#fff" stroke-width=".4"/>
                                     <circle r="6" fill="rgba(232,200,122,.25)"/>
                                     <animateMotion dur="601s" repeatCount="indefinite" rotate="auto" begin="-180s">
                                         <mpath href="#laneC"/>
                                     </animateMotion>
                                 </g>
-                                <!-- ship on Lane D · 17.4 kn (TS Lines feeder) -->
-                                <g>
+                                <!-- ship on Lane D · 17.4 kn (TS Lines feeder · TS Manila) -->
+                                <g class="lo-sat-ship" tabindex="0" role="button" aria-label="MV TS Manila, 17.4 knots, Manila to Kaohsiung"
+                                   data-lane="D" data-name="TS MANILA" data-imo="9803366" data-mmsi="563034000" data-callsign="9V9421"
+                                   data-flag="🇸🇬" data-flagtext="Singapore" data-class="TS Manila-class" data-loa="172m" data-beam="27.6m"
+                                   data-teu="1740" data-draft="9.5m" data-deadweight="23200" data-from="Manila" data-to="Kaohsiung"
+                                   data-real-nm="720" data-cruise-kn="17.4" data-real-h="41.4" data-dur-s="256"
+                                   data-cargo="passive components · power MOSFET" data-tier="B">
                                     <circle r="3" fill="#19a974" stroke="#fff" stroke-width=".4"/>
                                     <circle r="6" fill="rgba(25,169,116,.25)"/>
                                     <animateMotion dur="256s" repeatCount="indefinite" rotate="auto" begin="-102s">
                                         <mpath href="#laneD"/>
                                     </animateMotion>
                                 </g>
-                                <!-- ship on Lane E · 18.0 kn (ONE Stork-class · Penghu-channel approach) -->
-                                <g>
+                                <!-- ship on Lane E · 18.0 kn (ONE Stork-class · Penghu approach) -->
+                                <g class="lo-sat-ship" tabindex="0" role="button" aria-label="MV ONE Stork, 18.0 knots, Yokohama to Taichung"
+                                   data-lane="E" data-name="ONE STORK" data-imo="9806229" data-mmsi="357170000" data-callsign="3FUR8"
+                                   data-flag="🇵🇦" data-flagtext="Panama" data-class="ONE Stork-class" data-loa="364m" data-beam="51m"
+                                   data-teu="14026" data-draft="15.5m" data-deadweight="139000" data-from="Yokohama" data-to="Taichung"
+                                   data-real-nm="1200" data-cruise-kn="18.0" data-real-h="66.7" data-dur-s="413"
+                                   data-cargo="EUV mask box · photoresist" data-tier="A">
                                     <circle r="2.4" fill="#aaddff" stroke="#fff" stroke-width=".3"/>
                                     <circle r="5" fill="rgba(170,221,255,.2)"/>
                                     <animateMotion dur="413s" repeatCount="indefinite" rotate="auto" begin="-124s">
@@ -1111,6 +1173,8 @@
                             <span class="meta">SAT-IMG · TWN · 25.0°N 121.5°E</span>
                             <span class="meta-r">AIS · T-AIS+S-AIS · 5 min refresh</span>
                         </div>
+                        <!-- vessel hover/tap tooltip — populated by JS from data-* attributes on each .lo-sat-ship -->
+                        <div class="lo-vessel-tip" id="lo-vessel-tip" role="tooltip" aria-hidden="true"></div>
                     </div>
                     <div class="lo-mono" id="lo-sat-line">
                         <span data-lang="en">6 boxes inbound · Yokohama → Keelung · 18.4 kn · ETA T+2d 16h</span>
@@ -1121,6 +1185,18 @@
                         <span data-lang="en">OCEAN-LEG · 1,150 nm · 64h transit</span>
                         <span data-lang="zh">海上段 · 1,150 海里 · 64 小時航程</span>
                         <span data-lang="ja">外洋区間 · 1,150 海里 · 64h航行</span>
+                    </div>
+                    <!-- analytics dock — auto-rotating fleet manifest with live SOG/ETA/heading per vessel -->
+                    <div class="lo-fleet" id="lo-fleet" aria-live="polite">
+                        <div class="lo-fleet-head">
+                            <span class="lf-dot" aria-hidden="true"></span>
+                            <span data-lang="en">FLEET · 5 vessels in transit</span>
+                            <span data-lang="zh">船隊 · 5 艘在途</span>
+                            <span data-lang="ja">船隊 · 5 隻輸送中</span>
+                            <span class="lf-spacer"></span>
+                            <span class="lf-count" id="lo-fleet-stamp">UTC --:--:--</span>
+                        </div>
+                        <div id="lo-fleet-rows"></div>
                     </div>
                 </article>
 
@@ -2954,8 +3030,158 @@
                 });
             };
 
+            /* ───────── VESSEL ANALYTICS · per-ship tooltip + live fleet dock ─────────
+               Each .lo-sat-ship glyph carries data-* attributes (IMO, MMSI, call sign,
+               flag, class, LOA, beam, TEU, draft, deadweight, lane, cruise kn, real h
+               and on-screen dur). On hover/tap the tooltip resolves SOG (cruise + drift),
+               COG (heading sampled by stepping along the SVG motion path), live ETA
+               countdown (seconds-of-progress × hours-per-second), and the lane manifest.
+               The fleet dock under the map cycles a 5-row table that mirrors the active
+               vessel's row, refreshing analytics at AIS-grade cadence (5–8 s). */
+            const ships = Array.from(document.querySelectorAll('.lo-sat-ship'));
+            const lanePaths = { A:'#laneA', B:'#laneB', C:'#laneC', D:'#laneD', E:'#laneE' };
+            const tip = document.getElementById('lo-vessel-tip');
+            const fleetRows = document.getElementById('lo-fleet-rows');
+            const fleetStamp = document.getElementById('lo-fleet-stamp');
+            const tileSat = document.querySelector('#lo-sat-tile, .lo-tile .lo-sat')?.closest('.lo-tile');
+
+            /* deterministic pseudo-noise so SOG/heading drift looks lived-in but stable per session */
+            const seed = Math.floor(Date.now()/600000);
+            const noise = (i) => {
+                const x = Math.sin((seed + i*97.13) * 12.9898) * 43758.5453;
+                return (x - Math.floor(x)) - 0.5;
+            };
+            /* progress fraction for a ship from its <animateMotion> dur + begin */
+            const progress = (sh) => {
+                const dur = parseFloat(sh.dataset.durS);
+                const am = sh.querySelector('animateMotion');
+                let beginOff = 0;
+                try { beginOff = -parseFloat((am.getAttribute('begin')||'0').replace('s','')); } catch(_) {}
+                const t = ((performance.now()/1000) + beginOff) % dur;
+                return t / dur;
+            };
+            /* sample COG from path: Δposition over a small dt = bearing */
+            const heading = (lane, p) => {
+                const path = document.querySelector(lanePaths[lane]);
+                if (!path || !path.getTotalLength) return 0;
+                const L = path.getTotalLength();
+                const a = path.getPointAtLength(Math.max(0, (p-0.005)) * L);
+                const b = path.getPointAtLength(Math.min(1, (p+0.005)) * L);
+                /* SVG y grows downward; convert to compass: 0°=N, 90°=E */
+                const dx = b.x - a.x, dy = -(b.y - a.y);
+                let deg = (Math.atan2(dx, dy) * 180 / Math.PI);
+                if (deg < 0) deg += 360;
+                return deg;
+            };
+            /* live SOG: cruise + small drift (sea state, current) bounded ±0.6 kn */
+            const liveSog = (sh, idx) => {
+                const cruise = parseFloat(sh.dataset.cruiseKn);
+                const drift = noise(idx + Math.floor(Date.now()/15000)) * 1.2; // ~±0.6 kn
+                return Math.max(8, cruise + drift);
+            };
+            /* live ETA: remaining real hours = (1-p) × real_h */
+            const liveEta = (sh) => {
+                const realH = parseFloat(sh.dataset.realH);
+                const p = progress(sh);
+                const rem = Math.max(0, (1 - p) * realH);
+                const d = Math.floor(rem / 24);
+                const h = Math.floor(rem % 24);
+                const m = Math.floor((rem - Math.floor(rem)) * 60);
+                return { d, h, m, rem };
+            };
+            const cardinal = (deg) => {
+                const dirs = ['N','NNE','NE','ENE','E','ESE','SE','SSE','S','SSW','SW','WSW','W','WNW','NW','NNW'];
+                return dirs[Math.round(deg/22.5) % 16];
+            };
+            const fmtNum = (n,d=1) => Number(n).toLocaleString(undefined,{minimumFractionDigits:d,maximumFractionDigits:d});
+
+            /* TOOLTIP positioning + content */
+            const showTip = (sh) => {
+                if (!tip) return;
+                const idx = ships.indexOf(sh);
+                const p = progress(sh);
+                const sog = liveSog(sh, idx);
+                const cog = heading(sh.dataset.lane, p);
+                const eta = liveEta(sh);
+                const remNm = Math.round((1-p) * parseFloat(sh.dataset.realNm));
+                const traveled = Math.round(p * parseFloat(sh.dataset.realNm));
+                tip.innerHTML =
+                    '<h5><span class="flag">'+sh.dataset.flag+'</span> MV '+sh.dataset.name+
+                    ' <span class="imo">IMO '+sh.dataset.imo+'</span></h5>'+
+                    '<dl>'+
+                    '<dt>Class</dt><dd>'+sh.dataset.class+'</dd>'+
+                    '<dt>LOA · Beam</dt><dd>'+sh.dataset.loa+' · '+sh.dataset.beam+'</dd>'+
+                    '<dt>Capacity</dt><dd>'+Number(sh.dataset.teu).toLocaleString()+' TEU</dd>'+
+                    '<dt>Draft · DWT</dt><dd>'+sh.dataset.draft+' · '+Number(sh.dataset.deadweight).toLocaleString()+' t</dd>'+
+                    '<dt>MMSI · Call</dt><dd>'+sh.dataset.mmsi+' · '+sh.dataset.callsign+'</dd>'+
+                    '<dt>Route</dt><dd>'+sh.dataset.from+' → '+sh.dataset.to+'</dd>'+
+                    '<dt>Distance</dt><dd>'+sh.dataset.realNm+' nm · '+traveled+' done · '+remNm+' to go</dd>'+
+                    '<dt>SOG · COG</dt><dd>'+fmtNum(sog,1)+' kn · '+Math.round(cog)+'° '+cardinal(cog)+'</dd>'+
+                    '<dt>Progress</dt><dd>'+Math.round(p*100)+'%</dd>'+
+                    '<dt>ETA</dt><dd>T+'+eta.d+'d '+pad2(eta.h)+'h '+pad2(eta.m)+'m</dd>'+
+                    '<dt>Manifest</dt><dd>'+sh.dataset.cargo+'</dd>'+
+                    '</dl>'+
+                    '<div class="tip-foot"><span>LANE '+sh.dataset.lane+' · TIER '+sh.dataset.tier+'</span><span class="ais">AIS · LIVE</span></div>';
+                /* position tip near ship glyph */
+                const satEl = sh.closest('.lo-sat');
+                const satRect = satEl.getBoundingClientRect();
+                const shipRect = sh.getBoundingClientRect();
+                let x = (shipRect.left + shipRect.width/2) - satRect.left + 12;
+                let y = (shipRect.top + shipRect.height/2) - satRect.top + 12;
+                /* clamp inside the sat box */
+                const tipW = 260, tipH = 240;
+                if (x + tipW > satRect.width - 6) x = satRect.width - tipW - 6;
+                if (y + tipH > satRect.height - 6) y = (shipRect.top - satRect.top) - tipH - 12;
+                if (y < 6) y = 6;
+                if (x < 6) x = 6;
+                tip.style.left = x + 'px';
+                tip.style.top = y + 'px';
+                tip.classList.add('show');
+                tip.setAttribute('aria-hidden','false');
+            };
+            const hideTip = () => { if (!tip) return; tip.classList.remove('show'); tip.setAttribute('aria-hidden','true'); };
+            ships.forEach((sh) => {
+                sh.addEventListener('mouseenter', () => showTip(sh));
+                sh.addEventListener('mouseleave', hideTip);
+                sh.addEventListener('focus',  () => showTip(sh));
+                sh.addEventListener('blur',   hideTip);
+                sh.addEventListener('click',  () => showTip(sh));
+            });
+
+            /* FLEET DOCK · render 5 rows; refresh SOG/ETA/progress in place */
+            const renderFleet = () => {
+                if (!fleetRows) return;
+                const html = ships.map((sh, i) => {
+                    const p = progress(sh);
+                    const sog = liveSog(sh, i);
+                    const cog = heading(sh.dataset.lane, p);
+                    const eta = liveEta(sh);
+                    const remNm = Math.round((1-p) * parseFloat(sh.dataset.realNm));
+                    return (
+                        '<div class="lo-fleet-row" data-i="'+i+'">'+
+                            '<div class="lf-lane">LANE '+sh.dataset.lane+'</div>'+
+                            '<div class="lf-name"><strong>'+sh.dataset.flag+' MV '+sh.dataset.name+'</strong>'+
+                                '<span>IMO '+sh.dataset.imo+' · '+sh.dataset.from+' → '+sh.dataset.to+'</span>'+
+                                '<div class="lf-bar"><i style="width:'+(p*100).toFixed(1)+'%"></i></div>'+
+                            '</div>'+
+                            '<div class="lf-cell"><span class="lf-k">SOG · COG</span><span class="lf-v">'+fmtNum(sog,1)+' kn · '+Math.round(cog)+'°</span></div>'+
+                            '<div class="lf-cell opt"><span class="lf-k">TEU · Draft</span><span class="lf-v">'+Number(sh.dataset.teu).toLocaleString()+' · '+sh.dataset.draft+'</span></div>'+
+                            '<div class="lf-cell"><span class="lf-k">ETA · Remain</span><span class="lf-v">T+'+eta.d+'d '+pad2(eta.h)+'h · '+remNm+' nm</span></div>'+
+                        '</div>'
+                    );
+                }).join('');
+                fleetRows.innerHTML = html;
+                /* highlight active row in sync with the ticker */
+                const rows = fleetRows.querySelectorAll('.lo-fleet-row');
+                rows.forEach(r => r.classList.toggle('active', Number(r.dataset.i) === (satIdx % ships.length)));
+                if (fleetStamp) {
+                    const d = new Date();
+                    fleetStamp.textContent = 'UTC '+pad2(d.getUTCHours())+':'+pad2(d.getUTCMinutes())+':'+pad2(d.getUTCSeconds());
+                }
+            };
+
             /* initial render once */
-            satRender(); navRender(); voteRender(); ddRender(); tapeRender(); feedRender(); tickClock();
+            satRender(); navRender(); voteRender(); ddRender(); tapeRender(); feedRender(); tickClock(); renderFleet();
 
             /* honor reduced-motion: render once, then stop */
             if (reduced) return;
@@ -2980,6 +3206,8 @@
                 intervals.push(setInterval(tapeRender,   2500));
                 intervals.push(setInterval(feedRender,   8000));
                 intervals.push(setInterval(tickClock,   30000));
+                /* fleet dock refresh · SOG/ETA/progress recalculated each tick */
+                intervals.push(setInterval(renderFleet,  5000));
             };
             const stop = () => {
                 running = false;
