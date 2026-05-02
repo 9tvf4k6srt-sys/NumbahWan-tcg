@@ -196,6 +196,65 @@ function collectErrors() {
   }
 }
 
+/* ─── Freshness — every system has a TTL; how many are stale? ── */
+function collectFreshness() {
+  /* Lazy require so system-health stays usable even if the keeper
+     was deleted. Reuses the same RULES table the keeper publishes.
+     Explicit .cjs extension because Node ESM resolution can refuse a
+     bare './freshness-keeper' under some package.json type settings. */
+  let rules = []
+  try {
+    const keeper = require('./freshness-keeper.cjs')
+    rules = keeper.check()
+  } catch (err) {
+    return { status: 'missing', score: 0, detail: `freshness-keeper not loadable: ${err.message.split('\n')[0]}` }
+  }
+  if (!rules.length) return { status: 'missing', score: 0, detail: 'no freshness rules' }
+  const stale = rules.filter((r) => r.stale)
+  const fresh = rules.length - stale.length
+  /* Each stale rule is a 100/n point penalty so partial staleness
+     still scores meaningful info instead of bottoming out. */
+  return {
+    status: stale.length === 0 ? 'ok' : stale.length > rules.length / 2 ? 'failing' : 'watch',
+    score: Math.round((fresh / rules.length) * 100),
+    detail: `${fresh}/${rules.length} fresh · ${stale.length ? `stale: ${stale.map((s) => s.id).join(', ')}` : 'all within TTL'}`,
+  }
+}
+
+/* ─── Trends — surface the highest-severity signal as the score. */
+function collectTrends() {
+  const t = safeJSON(path.join(MYC, 'trends.json'))
+  if (!t) return { status: 'missing', score: 0, detail: 'no trend report yet' }
+  const signals = t.signals || []
+  if (!signals.length) return { status: 'ok', score: 100, detail: 'no regressions detected' }
+  const high = signals.filter((s) => s.severity === 'high').length
+  const med  = signals.filter((s) => s.severity === 'medium').length
+  const low  = signals.filter((s) => s.severity === 'low').length
+  /* Score: -25 per high, -10 per medium, -3 per low (clamped). */
+  const score = Math.max(0, 100 - high * 25 - med * 10 - low * 3)
+  const top = signals.find((s) => s.severity === 'high') || signals.find((s) => s.severity === 'medium') || signals[0]
+  return {
+    status: high > 0 ? 'failing' : med > 0 ? 'watch' : 'ok',
+    score,
+    detail: `${high}!! ${med}!  ${low}·  · top: ${(top.summary || '').slice(0, 60)}`,
+  }
+}
+
+/* ─── Learning — how productive is the loop? */
+function collectLearning() {
+  const l = safeJSON(path.join(MYC, 'learning-run.json'))
+  if (!l) return { status: 'missing', score: 0, detail: 'no learning run yet' }
+  const days = ageDays(new Date(l.ranAt).getTime())
+  const stale = days !== null && days > 7
+  /* High score when the loop is producing real new constraints. */
+  const productivity = Math.min(100, 50 + (l.added || 0) * 10 + (l.derived || 0) * 5)
+  return {
+    status: stale ? 'stale' : 'ok',
+    score: stale ? 40 : productivity,
+    detail: `${l.derived || 0} derived · ${l.added || 0} added · ${l.eventsConsidered || 0} events seen${days !== null ? ` · ${days}d ago` : ''}`,
+  }
+}
+
 /* ─── Public API ──────────────────────────────────────── */
 function snapshot() {
   const systems = {
@@ -208,9 +267,15 @@ function snapshot() {
     gates:     collectGates(),
     events:    collectEvents(),
     errors:    collectErrors(),
+    freshness: collectFreshness(),
+    trends:    collectTrends(),
+    learning:  collectLearning(),
   }
-  /* Composite is a weighted average of the systems that actually have data. */
-  const weights = { mycelium: 1.5, watch: 1.0, sentinel: 1.5, factory: 0.8, mining: 1.0, observers: 1.2, gates: 1.5, events: 1.0, errors: 1.5 }
+  /* Composite is a weighted average of the systems that actually have data.
+     Freshness + trends + learning carry real weight — they are the new
+     dynamic signals; if they degrade, the codebase is going stale or
+     regressing whether or not any single subsystem is failing. */
+  const weights = { mycelium: 1.5, watch: 1.0, sentinel: 1.5, factory: 0.8, mining: 1.0, observers: 1.2, gates: 1.5, events: 1.0, errors: 1.5, freshness: 1.5, trends: 1.5, learning: 1.0 }
   let sum = 0, w = 0
   for (const [k, v] of Object.entries(systems)) {
     if (v.status === 'missing') continue
@@ -240,10 +305,11 @@ function pretty(snap) {
   lines.push('')
   lines.push(`  ${bold('System Health')}  ${cyan(snap.composite + '/' + snap.grade)}  ${dim(snap.runAt)}`)
   lines.push(`  ${dim('─'.repeat(58))}`)
-  const order = ['mycelium', 'watch', 'sentinel', 'factory', 'mining', 'observers', 'gates', 'events', 'errors']
-  const labels = { mycelium: 'mycelium ', watch: 'watch    ', sentinel: 'sentinel ', factory: 'factory  ', mining: 'mining   ', observers: 'observers', gates: 'gates    ', events: 'events   ', errors: 'errors   ' }
+  const order = ['mycelium', 'watch', 'sentinel', 'factory', 'mining', 'observers', 'gates', 'events', 'errors', 'freshness', 'trends', 'learning']
+  const labels = { mycelium: 'mycelium ', watch: 'watch    ', sentinel: 'sentinel ', factory: 'factory  ', mining: 'mining   ', observers: 'observers', gates: 'gates    ', events: 'events   ', errors: 'errors   ', freshness: 'freshness', trends: 'trends   ', learning: 'learning ' }
   for (const k of order) {
     const v = snap.systems[k]
+    if (!v) continue
     const score = String(v.score).padStart(3)
     lines.push(`  ${statusIcon(v.status)} ${labels[k]}  ${score}  ${dim(v.detail)}`)
   }
@@ -269,4 +335,4 @@ if (require.main === module) {
   }
 }
 
-module.exports = { snapshot, pretty, collectMycelium, collectWatch, collectEval, collectFactory, collectMining, collectObservers, collectGates, collectEvents, collectErrors }
+module.exports = { snapshot, pretty, collectMycelium, collectWatch, collectEval, collectFactory, collectMining, collectObservers, collectGates, collectEvents, collectErrors, collectFreshness, collectTrends, collectLearning }

@@ -49,14 +49,25 @@ const REGISTRY = {
   tsc:          { cmd: 'node', args: ['tools/tsc-bridge.cjs'],                      optional: true,  timeoutMs: 45000 },
   vitest:       { cmd: 'node', args: ['tools/vitest-bridge.cjs'],                   optional: true,  timeoutMs: 90000 },
   lint:         { cmd: 'node', args: ['tools/ai-tell-lint.cjs', '--all'],           optional: true,  timeoutMs: 15000 },
+  /* ── Dynamic-learning trio: run on every commit, but cheaply.
+        keeper only refreshes data that's actually past TTL,
+        learn only writes when it derives something new,
+        trends only emit signals when slope is significant. */
+  keeper:       { cmd: 'node', args: ['tools/freshness-keeper.cjs', '--quiet'],     optional: false, timeoutMs: 90000 },
+  learn:        { cmd: 'node', args: ['tools/learning-loop.cjs', '--quiet'],        optional: false, timeoutMs: 10000 },
+  trends:       { cmd: 'node', args: ['tools/trend-detector.cjs', '--quiet'],       optional: false, timeoutMs: 10000 },
 }
 
 /* ─── Profiles ─────────────────────────────────────────────── */
 const PROFILES = {
-  'post-commit': ['watch', 'mycelium', 'fix', 'mine', 'validate', 'telemetry', 'testTel', 'depGraph', 'events', 'trim'],
-  'post-merge':  ['mine', 'validate', 'events', 'trim'],
-  'ci':          ['tsc', 'vitest', 'lint'],
-  'factory':     ['events', 'lint'],
+  /* post-commit: fast feedback. learn + trends are cheap and produce
+     the new "smart" signal we want on every commit. keeper goes in
+     post-merge because TTL refreshes are heavier. */
+  'post-commit': ['watch', 'mycelium', 'fix', 'mine', 'validate', 'telemetry', 'testTel', 'depGraph', 'events', 'trim', 'learn', 'trends'],
+  'post-merge':  ['mine', 'validate', 'events', 'trim', 'keeper', 'learn', 'trends'],
+  'ci':          ['tsc', 'vitest', 'lint', 'trends'],
+  'factory':     ['events', 'lint', 'learn'],
+  'keeper':      ['keeper', 'events', 'learn', 'trends'],
   'health':      [],
 }
 
