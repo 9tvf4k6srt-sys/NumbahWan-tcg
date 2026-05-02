@@ -20,7 +20,7 @@ function findPages(dir, prefix = '') {
     if (entry.isFile() && entry.name.endsWith('.html')) {
       const route = prefix + entry.name.replace('.html', '');
       pages.push(route === 'index' ? '/' : `/${route}`);
-    } else if (entry.isDirectory() && !entry.name.startsWith('.') && entry.name !== 'static' && entry.name !== 'images' && entry.name !== 'data') {
+    } else if (entry.isDirectory() && !entry.name.startsWith('.') && entry.name !== 'static' && entry.name !== 'images' && entry.name !== 'data' && entry.name !== 'dev') {
       pages.push(...findPages(path.join(dir, entry.name), prefix + entry.name + '/'));
     }
   }

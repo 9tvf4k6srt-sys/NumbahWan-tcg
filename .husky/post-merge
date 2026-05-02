@@ -1,23 +1,28 @@
 #!/bin/sh
 # ═══════════════════════════════════════════════════════════════════
-# Mycelium Pipeline: post-merge — WATCH + LEARN + FIX for merged commits
+# Post-merge hook — runs the post-merge observer profile.
 # ═══════════════════════════════════════════════════════════════════
 #
-# Without this, commits arriving via PR merge are invisible to learning.
-# Fires after: git pull, git merge, PR merge-back
+# Without this, commits arriving via PR merge are invisible to
+# learning. Fires after: git pull, git merge, PR merge-back.
+#
+# Reuses tools/observer-runner.cjs so adding a new observer in one
+# place picks up here, in post-commit, in CI, and in the factory
+# runner — no copy-paste.
 # ═══════════════════════════════════════════════════════════════════
 
-# ─── STEP 1: WATCH + LEARN (sync all new commits) ───
-if [ -f "mycelium-watch.cjs" ]; then
-  node "mycelium-watch.cjs" --sync 2>/dev/null || true
-fi
-if [ -f "mycelium.cjs" ]; then
-  node mycelium.cjs --sync 2>/dev/null || true
+if [ -f "tools/observer-runner.cjs" ]; then
+  node tools/observer-runner.cjs --hook=post-merge
 fi
 
-# ─── STEP 2+3: FIX + VERIFY ───
-if [ -f "mycelium-fix.cjs" ]; then
-  node "mycelium-fix.cjs" --silent 2>/dev/null || true
+# Sync mycelium memory + watch with newly arrived commits
+if [ -f "mycelium-watch.cjs" ]; then
+  node mycelium-watch.cjs --sync 2>>.mycelium/last-error.log || \
+    echo "  [mycelium-watch --sync] failed — see .mycelium/last-error.log" >&2
+fi
+if [ -f "mycelium.cjs" ]; then
+  node mycelium.cjs --sync 2>>.mycelium/last-error.log || \
+    echo "  [mycelium --sync] failed — see .mycelium/last-error.log" >&2
 fi
 
 exit 0

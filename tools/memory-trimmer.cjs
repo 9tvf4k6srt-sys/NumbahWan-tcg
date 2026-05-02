@@ -40,9 +40,9 @@ const LIMITS = AGGRESSIVE ? {
   healHistory: 5,
   watchCommits: 50,
   watchBreakages: 30,
-  watchCouplings: 20,
-  watchHotspots: 30,
-  watchRisks: 20,
+  watchCouplings: 60,
+  watchHotspots: 60,
+  watchRisks: 80,
   watchPatterns: 20,
   watchEvaluations: 10,
 } : {
@@ -55,9 +55,9 @@ const LIMITS = AGGRESSIVE ? {
   healHistory: 10,
   watchCommits: 100,
   watchBreakages: 50,
-  watchCouplings: 30,
-  watchHotspots: 50,
-  watchRisks: 30,
+  watchCouplings: 120,
+  watchHotspots: 120,
+  watchRisks: 150,
   watchPatterns: 30,
   watchEvaluations: 20,
 }
@@ -72,6 +72,30 @@ function trimArray(arr, limit, key = 'ts') {
   if (!Array.isArray(arr) || arr.length <= limit) return { kept: arr || [], removed: [] }
   const sorted = [...arr].sort((a, b) => (b[key] || 0) - (a[key] || 0))
   return { kept: sorted.slice(0, limit), removed: sorted.slice(limit) }
+}
+
+/* Trim a keyed map (e.g. watch.risks) by a numeric weight + recency.
+   Reusable: any system can call trimKeyedMap(obj, limit, weighFn) for the
+   same memory hygiene pass. Returns { kept, removed }. */
+function trimKeyedMap(obj, limit, weighFn) {
+  if (!obj || typeof obj !== 'object' || Array.isArray(obj)) return { kept: obj || {}, removed: {} }
+  const entries = Object.entries(obj)
+  if (entries.length <= limit) return { kept: obj, removed: {} }
+  const sorted = entries.sort((a, b) => weighFn(b[1], b[0]) - weighFn(a[1], a[0]))
+  const kept = Object.fromEntries(sorted.slice(0, limit))
+  const removed = Object.fromEntries(sorted.slice(limit))
+  return { kept, removed }
+}
+
+/* Recency score: 0..100 based on days since the given ISO/ms timestamp.
+   Reusable across any keyed-map weigh function. Missing dates score 0. */
+function dateWeight(iso) {
+  if (!iso) return 0
+  const t = typeof iso === 'number' ? iso : Date.parse(iso)
+  if (!t) return 0
+  const days = (Date.now() - t) / 86400000
+  if (days < 0) return 100
+  return Math.max(0, 100 - days * 0.5)
 }
 
 function dedup(arr, keyFn) {
@@ -183,9 +207,6 @@ function trimWatch() {
   const watchCollections = {
     commits: LIMITS.watchCommits,
     breakages: LIMITS.watchBreakages,
-    couplings: LIMITS.watchCouplings,
-    hotspots: LIMITS.watchHotspots,
-    risks: LIMITS.watchRisks,
     evaluations: LIMITS.watchEvaluations,
     healHistory: LIMITS.healHistory,
   }
@@ -197,6 +218,27 @@ function trimWatch() {
       watch[key] = watch[key].slice(-limit)
       totalRemoved += before - limit
       console.log(`  ${key}: ${before} → ${limit} (${before - limit} removed)`)
+    }
+  }
+
+  /* ─── Keyed-map trimming (the real bloat lives here) ──
+     watch.risks holds 313 file-keyed records (≈211KB). Couplings and
+     hotspots are similarly shaped. Score each entry by recency × weight
+     so we keep the most informative ones. */
+  const keyedMaps = [
+    { key: 'risks',     limit: LIMITS.watchRisks,     weigh: (v) => (v.breakCount || 0) * 10 + (v.escalated ? 50 : 0) + (v.volatile ? 25 : 0) + dateWeight(v.lastBreak) },
+    { key: 'hotspots',  limit: LIMITS.watchHotspots,  weigh: (v) => (v.changes || v.count || 0) + dateWeight(v.lastChange || v.lastSeen) },
+    { key: 'couplings', limit: LIMITS.watchCouplings, weigh: (v) => (v.together || v.count || 0) + dateWeight(v.lastSeen) },
+  ]
+  for (const { key, limit, weigh } of keyedMaps) {
+    if (!watch[key] || typeof watch[key] !== 'object' || Array.isArray(watch[key])) continue
+    const before = Object.keys(watch[key]).length
+    const { kept, removed } = trimKeyedMap(watch[key], limit, weigh)
+    const removedCount = Object.keys(removed).length
+    if (removedCount > 0) {
+      watch[key] = kept
+      totalRemoved += removedCount
+      console.log(`  ${key}: ${before} → ${Object.keys(kept).length} (${removedCount} removed)`)
     }
   }
 
