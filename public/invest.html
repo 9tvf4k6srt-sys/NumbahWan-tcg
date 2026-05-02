@@ -229,17 +229,37 @@
         .lo-up{color:#19a974}.lo-down{color:#c44a3c}
         .lo-flash{animation:loflash .6s ease-out}
         @keyframes loflash{0%{background:rgba(232,200,122,.18)}100%{background:transparent}}
-        /* satellite tile — radar sweep over a stylised ocean grid */
-        .lo-sat{position:relative;width:100%;height:88px;border-radius:3px;background:linear-gradient(180deg,#1a2530 0%,#0e1620 100%);overflow:hidden;border:1px solid rgba(232,200,122,.18)}
-        .lo-sat-grid{position:absolute;inset:0;background-image:linear-gradient(rgba(232,200,122,.12) 1px,transparent 1px),linear-gradient(90deg,rgba(232,200,122,.12) 1px,transparent 1px);background-size:20px 20px}
-        .lo-sat-sweep{position:absolute;top:50%;left:50%;width:140%;height:140%;transform:translate(-50%,-50%);background:conic-gradient(from 0deg,rgba(25,169,116,.45) 0deg,rgba(25,169,116,0) 60deg,rgba(25,169,116,0) 360deg);animation:losweep 4s linear infinite;mix-blend-mode:screen}
-        @keyframes losweep{to{transform:translate(-50%,-50%) rotate(360deg)}}
-        .lo-sat-dot{position:absolute;width:6px;height:6px;border-radius:50%;background:#e8c87a;box-shadow:0 0 8px rgba(232,200,122,.8)}
-        .lo-sat-dot.s1{top:32%;left:24%}.lo-sat-dot.s2{top:58%;left:46%}.lo-sat-dot.s3{top:42%;left:68%}.lo-sat-dot.s4{top:70%;left:82%}
-        .lo-sat-dot.s5{top:22%;left:58%}.lo-sat-dot.s6{top:62%;left:14%}
-        .lo-sat-dot.s2{animation:lopulse 2s ease-in-out infinite}
-        .lo-sat-dot.s3{animation:lopulse 2.4s ease-in-out .4s infinite}
-        @keyframes lopulse{0%,100%{opacity:.5}50%{opacity:1}}
+        /* satellite tile — mock satellite view of Taiwan with shipping lanes */
+        .lo-sat{position:relative;width:100%;height:240px;border-radius:3px;background:radial-gradient(ellipse 120% 90% at 50% 30%,#1d3a52 0%,#0d1a26 60%,#070d14 100%);overflow:hidden;border:1px solid rgba(232,200,122,.22);box-shadow:inset 0 0 40px rgba(0,0,0,.55)}
+        .lo-sat svg.taiwan-map{position:absolute;inset:0;width:100%;height:100%;display:block}
+        /* atmospheric noise + cloud wisps */
+        .lo-sat::before{content:"";position:absolute;inset:0;background:
+            radial-gradient(ellipse 30% 12% at 22% 28%,rgba(255,255,255,.06),transparent 70%),
+            radial-gradient(ellipse 22% 9% at 78% 62%,rgba(255,255,255,.05),transparent 70%),
+            radial-gradient(ellipse 18% 7% at 48% 80%,rgba(255,255,255,.04),transparent 70%);
+            pointer-events:none;mix-blend-mode:screen;animation:locloud 24s linear infinite}
+        @keyframes locloud{0%{transform:translateX(0)}100%{transform:translateX(-12px)}}
+        /* satellite scanline */
+        .lo-sat::after{content:"";position:absolute;left:0;right:0;height:1px;top:0;background:linear-gradient(90deg,transparent,rgba(25,169,116,.45),transparent);box-shadow:0 0 6px rgba(25,169,116,.5);animation:loscan 5s ease-in-out infinite;pointer-events:none}
+        @keyframes loscan{0%,100%{top:8%;opacity:.0}10%{opacity:.85}50%{top:92%;opacity:.85}60%{opacity:0}}
+        /* port label chips */
+        .lo-sat-label{position:absolute;font-family:var(--mono);font-size:.52rem;letter-spacing:.18em;color:#e8c87a;text-transform:uppercase;font-weight:700;text-shadow:0 0 6px rgba(0,0,0,.8);pointer-events:none;white-space:nowrap}
+        .lo-sat-label.keelung{top:18%;left:62%}
+        .lo-sat-label.taichung{top:42%;left:14%}
+        .lo-sat-label.kaohsiung{top:74%;left:30%}
+        .lo-sat-label.tpe-hq{top:14%;left:46%;color:#19a974}
+        /* hud corner ticks */
+        .lo-sat-hud{position:absolute;inset:6px;pointer-events:none}
+        .lo-sat-hud i{position:absolute;width:10px;height:10px;border-color:rgba(232,200,122,.5);border-style:solid;border-width:0}
+        .lo-sat-hud i.tl{top:0;left:0;border-top-width:1px;border-left-width:1px}
+        .lo-sat-hud i.tr{top:0;right:0;border-top-width:1px;border-right-width:1px}
+        .lo-sat-hud i.bl{bottom:0;left:0;border-bottom-width:1px;border-left-width:1px}
+        .lo-sat-hud i.br{bottom:0;right:0;border-bottom-width:1px;border-right-width:1px}
+        .lo-sat-hud .meta{position:absolute;top:4px;left:50%;transform:translateX(-50%);font-family:var(--mono);font-size:.5rem;letter-spacing:.22em;color:rgba(232,200,122,.7);text-transform:uppercase;white-space:nowrap}
+        .lo-sat-hud .meta-r{position:absolute;bottom:4px;right:6px;font-family:var(--mono);font-size:.5rem;letter-spacing:.22em;color:rgba(25,169,116,.75);text-transform:uppercase;white-space:nowrap}
+        /* ship pulse */
+        @keyframes loshippulse{0%,100%{opacity:.7}50%{opacity:1}}
+        @keyframes lodash{to{stroke-dashoffset:-60}}
         /* mini sparkline svg */
         .lo-spark{display:block;width:100%;height:36px}
         .lo-spark path{fill:none;stroke:#19a974;stroke-width:1.4}
@@ -968,14 +988,195 @@
                         <span data-lang="ja">サプライチェーン · 衛星</span>
                     </h4>
                     <div class="lo-sat" aria-hidden="true">
-                        <div class="lo-sat-grid"></div>
-                        <div class="lo-sat-sweep"></div>
-                        <span class="lo-sat-dot s1"></span>
-                        <span class="lo-sat-dot s2"></span>
-                        <span class="lo-sat-dot s3"></span>
-                        <span class="lo-sat-dot s4"></span>
-                        <span class="lo-sat-dot s5"></span>
-                        <span class="lo-sat-dot s6"></span>
+                        <svg class="taiwan-map" viewBox="0 0 600 360" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
+                            <defs>
+                                <!-- ocean depth gradient -->
+                                <radialGradient id="seaGrad" cx="50%" cy="35%" r="70%">
+                                    <stop offset="0%" stop-color="#1f4866" stop-opacity=".55"/>
+                                    <stop offset="55%" stop-color="#0d2030" stop-opacity=".25"/>
+                                    <stop offset="100%" stop-color="#050a12" stop-opacity="0"/>
+                                </radialGradient>
+                                <!-- bathymetry stripes -->
+                                <pattern id="bathy" x="0" y="0" width="42" height="42" patternUnits="userSpaceOnUse" patternTransform="rotate(18)">
+                                    <line x1="0" y1="0" x2="0" y2="42" stroke="rgba(120,180,220,.05)" stroke-width="1"/>
+                                </pattern>
+                                <!-- Taiwan landmass glow + fill -->
+                                <radialGradient id="landGlow" cx="50%" cy="50%" r="60%">
+                                    <stop offset="0%" stop-color="#3a5440" stop-opacity=".95"/>
+                                    <stop offset="60%" stop-color="#1f3326" stop-opacity=".95"/>
+                                    <stop offset="100%" stop-color="#0e1a13" stop-opacity=".9"/>
+                                </radialGradient>
+                                <!-- mountain ridge stripe -->
+                                <linearGradient id="ridge" x1="0%" y1="0%" x2="0%" y2="100%">
+                                    <stop offset="0%" stop-color="rgba(232,200,122,.35)"/>
+                                    <stop offset="100%" stop-color="rgba(232,200,122,0)"/>
+                                </linearGradient>
+                                <!-- coastline glow -->
+                                <filter id="coastGlow" x="-30%" y="-30%" width="160%" height="160%">
+                                    <feGaussianBlur stdDeviation="1.4" result="b"/>
+                                    <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+                                </filter>
+                                <!-- cloud wisp -->
+                                <radialGradient id="cloud" cx="50%" cy="50%" r="50%">
+                                    <stop offset="0%" stop-color="rgba(255,255,255,.18)"/>
+                                    <stop offset="100%" stop-color="rgba(255,255,255,0)"/>
+                                </radialGradient>
+                            </defs>
+
+                            <!-- ocean base -->
+                            <rect width="600" height="360" fill="url(#seaGrad)"/>
+                            <rect width="600" height="360" fill="url(#bathy)"/>
+
+                            <!-- subtle latitude/longitude graticule -->
+                            <g stroke="rgba(232,200,122,.07)" stroke-width=".5">
+                                <line x1="0" y1="60" x2="600" y2="60"/>
+                                <line x1="0" y1="120" x2="600" y2="120"/>
+                                <line x1="0" y1="180" x2="600" y2="180"/>
+                                <line x1="0" y1="240" x2="600" y2="240"/>
+                                <line x1="0" y1="300" x2="600" y2="300"/>
+                                <line x1="100" y1="0" x2="100" y2="360"/>
+                                <line x1="200" y1="0" x2="200" y2="360"/>
+                                <line x1="300" y1="0" x2="300" y2="360"/>
+                                <line x1="400" y1="0" x2="400" y2="360"/>
+                                <line x1="500" y1="0" x2="500" y2="360"/>
+                            </g>
+
+                            <!-- mainland China silhouette far west (faint, atmospheric) -->
+                            <path d="M0,80 L40,72 L70,90 L80,140 L60,180 L40,210 L20,250 L0,270 Z" fill="rgba(58,84,64,.35)" stroke="rgba(232,200,122,.08)" stroke-width=".5"/>
+
+                            <!-- TAIWAN — geographically shaped silhouette (sweet-potato) -->
+                            <g filter="url(#coastGlow)">
+                                <path d="
+                                    M348,72
+                                    C355,68 366,70 372,76
+                                    C380,84 384,96 386,108
+                                    C390,128 393,150 396,170
+                                    C399,192 401,214 398,234
+                                    C394,254 386,272 376,288
+                                    C366,302 354,312 340,316
+                                    C326,318 314,312 308,300
+                                    C302,286 304,270 308,256
+                                    C302,240 296,222 294,202
+                                    C292,182 296,162 304,144
+                                    C310,130 318,114 326,100
+                                    C332,88 340,76 348,72 Z"
+                                    fill="url(#landGlow)"
+                                    stroke="rgba(232,200,122,.55)"
+                                    stroke-width="1"/>
+                                <!-- central mountain range — Yushan ridge -->
+                                <path d="M340,108 C346,140 352,170 354,200 C356,230 350,260 342,282"
+                                    stroke="url(#ridge)" stroke-width="3" fill="none" opacity=".75" stroke-linecap="round"/>
+                                <!-- western plain shading -->
+                                <path d="M308,160 C306,200 308,236 318,272" stroke="rgba(232,200,122,.18)" stroke-width="1.2" fill="none"/>
+                                <!-- Penghu islands (offshore west) -->
+                                <circle cx="272" cy="232" r="2.2" fill="rgba(232,200,122,.6)"/>
+                                <circle cx="266" cy="240" r="1.5" fill="rgba(232,200,122,.5)"/>
+                                <circle cx="278" cy="244" r="1.2" fill="rgba(232,200,122,.45)"/>
+                            </g>
+
+                            <!-- cloud wisp over north Taiwan -->
+                            <ellipse cx="370" cy="92" rx="38" ry="11" fill="url(#cloud)" opacity=".75"/>
+                            <ellipse cx="316" cy="220" rx="48" ry="9" fill="url(#cloud)" opacity=".55"/>
+
+                            <!-- ============= SHIPPING LANES with animated dashed wakes ============= -->
+                            <!-- LANE A · Yokohama (NE off-screen) → Keelung -->
+                            <path id="laneA" d="M598,30 C520,40 460,55 400,72 Q386,86 372,98" fill="none" stroke="rgba(25,169,116,.85)" stroke-width="1.4" stroke-linecap="round" stroke-dasharray="4 4" style="animation:lodash 3s linear infinite"/>
+                            <!-- LANE B · Shanghai (NW off-screen) → Keelung -->
+                            <path id="laneB" d="M2,40 C90,55 200,68 300,82 Q336,90 372,100" fill="none" stroke="rgba(232,200,122,.85)" stroke-width="1.4" stroke-linecap="round" stroke-dasharray="5 5" style="animation:lodash 4s linear infinite"/>
+                            <!-- LANE C · Singapore (SW off-screen) → Kaohsiung -->
+                            <path id="laneC" d="M2,340 C120,310 220,290 290,278 Q316,278 336,282" fill="none" stroke="rgba(25,169,116,.85)" stroke-width="1.4" stroke-linecap="round" stroke-dasharray="4 4" style="animation:lodash 3.6s linear infinite"/>
+                            <!-- LANE D · Manila (SE off-screen) → Kaohsiung -->
+                            <path id="laneD" d="M598,330 C520,310 440,294 380,288 Q360,286 340,284" fill="none" stroke="rgba(232,200,122,.85)" stroke-width="1.4" stroke-linecap="round" stroke-dasharray="5 5" style="animation:lodash 4.4s linear infinite"/>
+                            <!-- LANE E · Yokohama → Taichung (offshore approach via Penghu channel) -->
+                            <path id="laneE" d="M598,90 C480,120 380,150 320,200 Q300,212 286,222" fill="none" stroke="rgba(120,200,255,.6)" stroke-width="1" stroke-linecap="round" stroke-dasharray="3 4" style="animation:lodash 5s linear infinite"/>
+
+                            <!-- moving ships (motionPath via animateMotion) -->
+                            <g>
+                                <!-- ship on Lane A -->
+                                <g>
+                                    <circle r="3" fill="#e8c87a" stroke="#fff" stroke-width=".4"/>
+                                    <circle r="6" fill="rgba(232,200,122,.25)"/>
+                                    <animateMotion dur="14s" repeatCount="indefinite" rotate="auto">
+                                        <mpath href="#laneA"/>
+                                    </animateMotion>
+                                </g>
+                                <!-- ship on Lane B -->
+                                <g>
+                                    <circle r="3" fill="#19a974" stroke="#fff" stroke-width=".4"/>
+                                    <circle r="6" fill="rgba(25,169,116,.25)"/>
+                                    <animateMotion dur="18s" repeatCount="indefinite" rotate="auto" begin="-3s">
+                                        <mpath href="#laneB"/>
+                                    </animateMotion>
+                                </g>
+                                <!-- ship on Lane C -->
+                                <g>
+                                    <circle r="3" fill="#e8c87a" stroke="#fff" stroke-width=".4"/>
+                                    <circle r="6" fill="rgba(232,200,122,.25)"/>
+                                    <animateMotion dur="16s" repeatCount="indefinite" rotate="auto" begin="-6s">
+                                        <mpath href="#laneC"/>
+                                    </animateMotion>
+                                </g>
+                                <!-- ship on Lane D -->
+                                <g>
+                                    <circle r="3" fill="#19a974" stroke="#fff" stroke-width=".4"/>
+                                    <circle r="6" fill="rgba(25,169,116,.25)"/>
+                                    <animateMotion dur="20s" repeatCount="indefinite" rotate="auto" begin="-10s">
+                                        <mpath href="#laneD"/>
+                                    </animateMotion>
+                                </g>
+                                <!-- ship on Lane E -->
+                                <g>
+                                    <circle r="2.4" fill="#aaddff" stroke="#fff" stroke-width=".3"/>
+                                    <circle r="5" fill="rgba(170,221,255,.2)"/>
+                                    <animateMotion dur="22s" repeatCount="indefinite" rotate="auto" begin="-7s">
+                                        <mpath href="#laneE"/>
+                                    </animateMotion>
+                                </g>
+                            </g>
+
+                            <!-- PORT MARKERS -->
+                            <!-- Keelung (north) -->
+                            <g transform="translate(372,98)">
+                                <circle r="9" fill="none" stroke="rgba(232,200,122,.45)" stroke-width=".8">
+                                    <animate attributeName="r" values="6;14;6" dur="2.4s" repeatCount="indefinite"/>
+                                    <animate attributeName="opacity" values="1;0;1" dur="2.4s" repeatCount="indefinite"/>
+                                </circle>
+                                <circle r="4" fill="#e8c87a" stroke="#fff" stroke-width=".5"/>
+                                <line x1="0" y1="-12" x2="0" y2="-22" stroke="rgba(232,200,122,.5)" stroke-width=".5"/>
+                            </g>
+                            <!-- Taichung (mid-west) -->
+                            <g transform="translate(298,210)">
+                                <circle r="9" fill="none" stroke="rgba(232,200,122,.45)" stroke-width=".8">
+                                    <animate attributeName="r" values="6;14;6" dur="2.8s" repeatCount="indefinite"/>
+                                    <animate attributeName="opacity" values="1;0;1" dur="2.8s" repeatCount="indefinite"/>
+                                </circle>
+                                <circle r="4" fill="#e8c87a" stroke="#fff" stroke-width=".5"/>
+                                <line x1="-12" y1="0" x2="-22" y2="0" stroke="rgba(232,200,122,.5)" stroke-width=".5"/>
+                            </g>
+                            <!-- Kaohsiung (south-west) -->
+                            <g transform="translate(330,290)">
+                                <circle r="9" fill="none" stroke="rgba(25,169,116,.55)" stroke-width=".9">
+                                    <animate attributeName="r" values="6;16;6" dur="2.2s" repeatCount="indefinite"/>
+                                    <animate attributeName="opacity" values="1;0;1" dur="2.2s" repeatCount="indefinite"/>
+                                </circle>
+                                <circle r="5" fill="#19a974" stroke="#fff" stroke-width=".5"/>
+                                <line x1="-12" y1="6" x2="-22" y2="14" stroke="rgba(25,169,116,.5)" stroke-width=".5"/>
+                            </g>
+                            <!-- Taipei HQ marker (next to Keelung, slightly inland) -->
+                            <g transform="translate(360,108)">
+                                <rect x="-4" y="-4" width="8" height="8" fill="none" stroke="#19a974" stroke-width="1"/>
+                                <circle r="1.6" fill="#19a974"/>
+                            </g>
+                        </svg>
+                        <span class="lo-sat-label tpe-hq">◇ TPE · HQ</span>
+                        <span class="lo-sat-label keelung">◉ KEELUNG · 基隆</span>
+                        <span class="lo-sat-label taichung">◉ TAICHUNG · 台中</span>
+                        <span class="lo-sat-label kaohsiung">◉ KAOHSIUNG · 高雄</span>
+                        <div class="lo-sat-hud">
+                            <i class="tl"></i><i class="tr"></i><i class="bl"></i><i class="br"></i>
+                            <span class="meta">SAT-IMG · TWN · 25.0°N 121.5°E</span>
+                            <span class="meta-r">FEED · LIVE · 1.6s</span>
+                        </div>
                     </div>
                     <div class="lo-mono" id="lo-sat-line">
                         <span data-lang="en">12 containers in transit · Kaohsiung Port · ETA 14:32</span>
