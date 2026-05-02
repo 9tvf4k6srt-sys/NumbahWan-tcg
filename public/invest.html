@@ -993,63 +993,76 @@
                         <svg class="taiwan-map" viewBox="0 0 600 360" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
                             <!-- ============= SHIPPING LANES with animated dashed wakes (overlaid on real satellite photo) ============= -->
                             <!-- Wake-dash animation slowed to match real cruise (~18kn). Long lanes flow slowly, short lane B faster. -->
-                            <!-- LANE A · Yokohama → Keelung (323,63) — ~1,150nm / 64h transit -->
-                            <path id="laneA" d="M598,12 C520,28 440,44 380,55 Q352,60 323,63" fill="none" stroke="rgba(25,169,116,.85)" stroke-width="1.4" stroke-linecap="round" stroke-dasharray="4 4" style="animation:lodash 22s linear infinite"/>
-                            <!-- LANE B · Shanghai → Keelung (323,63) — ~480nm / 28h transit -->
-                            <path id="laneB" d="M2,30 C90,40 180,50 250,56 Q286,60 323,63" fill="none" stroke="rgba(232,200,122,.85)" stroke-width="1.4" stroke-linecap="round" stroke-dasharray="5 5" style="animation:lodash 14s linear infinite"/>
-                            <!-- LANE C · Singapore → Kaohsiung (297,298) — ~1,650nm / 97h transit -->
-                            <path id="laneC" d="M2,348 C90,330 180,316 240,308 Q270,302 297,298" fill="none" stroke="rgba(25,169,116,.85)" stroke-width="1.4" stroke-linecap="round" stroke-dasharray="4 4" style="animation:lodash 30s linear infinite"/>
-                            <!-- LANE D · Manila → Kaohsiung (297,298) — ~720nm / 42h transit -->
-                            <path id="laneD" d="M598,348 C500,332 420,318 360,310 Q330,304 297,298" fill="none" stroke="rgba(232,200,122,.85)" stroke-width="1.4" stroke-linecap="round" stroke-dasharray="5 5" style="animation:lodash 18s linear infinite"/>
-                            <!-- LANE E · Yokohama → Taichung (287,159) — ~1,200nm / 67h via Penghu channel -->
-                            <path id="laneE" d="M598,80 C480,108 380,138 320,160 Q300,160 287,159" fill="none" stroke="rgba(120,200,255,.6)" stroke-width="1" stroke-linecap="round" stroke-dasharray="3 4" style="animation:lodash 26s linear infinite"/>
+                            <!-- ============= PROPORTIONAL CALIBRATION =============
+                                 Photo viewBox 600x360.  Keelung(323,63)->Kaohsiung(297,298) = 236.4 vBox-units = 213 nm.
+                                 So 1 vBox-unit = 0.901 nm.
+                                 Shared compression: 1 on-screen second = 9.7 real sea-minutes.
+                                 Therefore animation duration = (real_nm / cruise_kn) * 6.19s.
+                                 Wake-dash flow rates are tuned to match each lane's real cruise so the dashed
+                                 trail and the ship glyph move at the same scaled speed. ====================== -->
+                            <!-- LANE A · Yokohama → Keelung — 1,150 nm @ 18.4 kn = 62.5 h real → 387 s on-screen -->
+                            <path id="laneA" d="M598,12 C520,28 440,44 380,55 Q352,60 323,63" fill="none" stroke="rgba(25,169,116,.85)" stroke-width="1.4" stroke-linecap="round" stroke-dasharray="4 4" style="animation:lodash 64s linear infinite"/>
+                            <!-- LANE B · Shanghai → Keelung —   480 nm @ 17.2 kn = 27.9 h real → 173 s on-screen -->
+                            <path id="laneB" d="M2,30 C90,40 180,50 250,56 Q286,60 323,63" fill="none" stroke="rgba(232,200,122,.85)" stroke-width="1.4" stroke-linecap="round" stroke-dasharray="5 5" style="animation:lodash 29s linear infinite"/>
+                            <!-- LANE C · Singapore → Kaohsiung — 1,650 nm @ 17.0 kn = 97.1 h real → 601 s on-screen -->
+                            <path id="laneC" d="M2,348 C90,330 180,316 240,308 Q270,302 297,298" fill="none" stroke="rgba(25,169,116,.85)" stroke-width="1.4" stroke-linecap="round" stroke-dasharray="4 4" style="animation:lodash 100s linear infinite"/>
+                            <!-- LANE D · Manila → Kaohsiung —    720 nm @ 17.4 kn = 41.4 h real → 256 s on-screen -->
+                            <path id="laneD" d="M598,348 C500,332 420,318 360,310 Q330,304 297,298" fill="none" stroke="rgba(232,200,122,.85)" stroke-width="1.4" stroke-linecap="round" stroke-dasharray="5 5" style="animation:lodash 43s linear infinite"/>
+                            <!-- LANE E · Yokohama → Taichung —  1,200 nm @ 18.0 kn = 66.7 h real → 413 s on-screen (Penghu-channel approach) -->
+                            <path id="laneE" d="M598,80 C480,108 380,138 320,160 Q300,160 287,159" fill="none" stroke="rgba(120,200,255,.6)" stroke-width="1" stroke-linecap="round" stroke-dasharray="3 4" style="animation:lodash 69s linear infinite"/>
 
                             <!-- moving ships (motionPath via animateMotion) -->
                             <g>
-                                <!-- Ship animation timings reflect real container-ship cruising (~18kn).
-                                     Compressed time: 1 simulated second on-screen ≈ ~20 minutes real sea-time.
-                                     Lane A · Yokohama→Keelung 1,150nm @ 18kn ≈ 64h ≈ 220s on-screen
-                                     Lane B · Shanghai→Keelung   480nm @ 17kn ≈ 28h ≈ 120s on-screen
-                                     Lane C · Singapore→Kaohsiung 1,650nm @ 17kn ≈ 97h ≈ 300s on-screen
-                                     Lane D · Manila→Kaohsiung    720nm @ 17kn ≈ 42h ≈ 150s on-screen
-                                     Lane E · Yokohama→Taichung 1,200nm @ 18kn ≈ 67h ≈ 240s on-screen -->
-                                <!-- ship on Lane A · 18.4kn -->
+                                <!-- ============= SHIP TIMING · CALIBRATED TO PHOTO GEOMETRY =============
+                                     Calibration: 1 vBox-unit = 0.901 nm (Keelung↔Kaohsiung 213 nm = 236.4 units).
+                                     Shared compression: 1 on-screen second = 9.7 real sea-minutes.
+                                     Therefore dur = (real_nm / cruise_kn) × 6.19 s.
+
+                                     Lane A · Yokohama→Keelung    1,150 nm @ 18.4 kn (Wan Hai 313-class)  · 62.5 h real · 387 s on-screen
+                                     Lane B · Shanghai→Keelung      480 nm @ 17.2 kn (Yang Ming feeder)   · 27.9 h real · 173 s on-screen
+                                     Lane C · Singapore→Kaohsiung 1,650 nm @ 17.0 kn (Evergreen A-class)  · 97.1 h real · 601 s on-screen
+                                     Lane D · Manila→Kaohsiung      720 nm @ 17.4 kn (TS Lines feeder)    · 41.4 h real · 256 s on-screen
+                                     Lane E · Yokohama→Taichung   1,200 nm @ 18.0 kn (ONE Stork-class)    · 66.7 h real · 413 s on-screen
+
+                                     'begin' offsets stagger ships at ~20 % of duration so the lane never appears empty
+                                     and never has all ships clumped at port at the same time. ====================== -->
+                                <!-- ship on Lane A · 18.4 kn (Wan Hai 313-class) -->
                                 <g>
                                     <circle r="3" fill="#e8c87a" stroke="#fff" stroke-width=".4"/>
                                     <circle r="6" fill="rgba(232,200,122,.25)"/>
-                                    <animateMotion dur="220s" repeatCount="indefinite" rotate="auto" begin="-44s">
+                                    <animateMotion dur="387s" repeatCount="indefinite" rotate="auto" begin="-77s">
                                         <mpath href="#laneA"/>
                                     </animateMotion>
                                 </g>
-                                <!-- ship on Lane B · 17.2kn -->
+                                <!-- ship on Lane B · 17.2 kn (Yang Ming feeder) -->
                                 <g>
                                     <circle r="3" fill="#19a974" stroke="#fff" stroke-width=".4"/>
                                     <circle r="6" fill="rgba(25,169,116,.25)"/>
-                                    <animateMotion dur="120s" repeatCount="indefinite" rotate="auto" begin="-30s">
+                                    <animateMotion dur="173s" repeatCount="indefinite" rotate="auto" begin="-35s">
                                         <mpath href="#laneB"/>
                                     </animateMotion>
                                 </g>
-                                <!-- ship on Lane C · 17.0kn -->
+                                <!-- ship on Lane C · 17.0 kn (Evergreen A-class) -->
                                 <g>
                                     <circle r="3" fill="#e8c87a" stroke="#fff" stroke-width=".4"/>
                                     <circle r="6" fill="rgba(232,200,122,.25)"/>
-                                    <animateMotion dur="300s" repeatCount="indefinite" rotate="auto" begin="-90s">
+                                    <animateMotion dur="601s" repeatCount="indefinite" rotate="auto" begin="-180s">
                                         <mpath href="#laneC"/>
                                     </animateMotion>
                                 </g>
-                                <!-- ship on Lane D · 17.4kn -->
+                                <!-- ship on Lane D · 17.4 kn (TS Lines feeder) -->
                                 <g>
                                     <circle r="3" fill="#19a974" stroke="#fff" stroke-width=".4"/>
                                     <circle r="6" fill="rgba(25,169,116,.25)"/>
-                                    <animateMotion dur="150s" repeatCount="indefinite" rotate="auto" begin="-60s">
+                                    <animateMotion dur="256s" repeatCount="indefinite" rotate="auto" begin="-102s">
                                         <mpath href="#laneD"/>
                                     </animateMotion>
                                 </g>
-                                <!-- ship on Lane E · 18.0kn (Penghu-channel approach) -->
+                                <!-- ship on Lane E · 18.0 kn (ONE Stork-class · Penghu-channel approach) -->
                                 <g>
                                     <circle r="2.4" fill="#aaddff" stroke="#fff" stroke-width=".3"/>
                                     <circle r="5" fill="rgba(170,221,255,.2)"/>
-                                    <animateMotion dur="240s" repeatCount="indefinite" rotate="auto" begin="-72s">
+                                    <animateMotion dur="413s" repeatCount="indefinite" rotate="auto" begin="-124s">
                                         <mpath href="#laneE"/>
                                     </animateMotion>
                                 </g>
