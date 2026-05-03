@@ -115,11 +115,13 @@
     (function(){
         'use strict';
         try{
-            var KEY = 'pf_splash_seen_v1';
-            var TTL_DAYS = 365;
-            var MIN_HOLD_MS = 3200;   // minimum airtime once shown (so it never blinks)
-            var MAX_HOLD_MS = 12000;  // safety ceiling
-            var SLOW_MS     = 1800;   // load slower than this → re-fire on repeat visits
+            // ----- Tunables --------------------------------------------------
+            var SLOW_MS     = 1000;   // ONLY trigger if load hasn't completed by this time
+            var MIN_HOLD_MS = 1800;   // once shown, hold at least this long so it never blinks
+            var MAX_HOLD_MS = 12000;  // safety ceiling — never trap the user
+            // -----------------------------------------------------------------
+
+            // QA overrides: ?splash=1 forces, ?splash=0 disables
             var FORCE = false, SKIP = false;
             try{
                 var u = new URL(window.location.href);
@@ -127,39 +129,27 @@
                 if(u.searchParams.get('splash') === '0') SKIP  = true;
             }catch(e){}
 
-            // decide if this load qualifies as "first visit"
-            var firstVisit = false;
-            try{
-                var raw = localStorage.getItem(KEY);
-                if(!raw){ firstVisit = true; }
-                else{
-                    var ts = parseInt(raw, 10);
-                    if(!ts || isNaN(ts)) firstVisit = true;
-                    else if(Date.now() - ts > TTL_DAYS*24*3600*1000) firstVisit = true;
-                }
-            }catch(e){ firstVisit = true; }
-
-            // skip on bot UAs and on print
+            // skip on bots & headless tools
             var ua = (navigator.userAgent || '').toLowerCase();
             var isBot = /bot|crawler|spider|crawling|lighthouse|headless/.test(ua);
             if(isBot && !FORCE) return;
             if(SKIP) return;
 
-            // Always show on first visit; on repeat visits, show as a "slow load curtain"
-            // by painting it pre-emptively and lifting fast if load comes quick.
-            // This satisfies trigger (B): if load is slow, the splash stays; if fast, it disappears almost instantly.
-            var shouldShow = firstVisit || FORCE;
-
-            // For repeat visits, we still paint a 0-opacity placeholder for a moment,
-            // and only fade it IN if window.load hasn't fired by SLOW_MS.
+            // We never paint the splash on fast loads. The element is created up-front
+            // at opacity 0 so the fade-in is instant when needed; if the page is
+            // ready before SLOW_MS we just remove it without ever revealing.
             var html = document.documentElement;
-            html.classList.add('pf-splash-on');
+            var startedAt = Date.now();
+            var revealedAt = 0;
+            var revealed = FORCE; // forced QA paths show immediately
+            var lifted = false;
 
-            var shownAt = Date.now();
             var splashEl = document.createElement('div');
             splashEl.id = 'pf-splash';
             splashEl.setAttribute('role','status');
             splashEl.setAttribute('aria-label','Loading PINFORGE Wealth');
+            splashEl.style.opacity = revealed ? '1' : '0';
+            splashEl.style.transition = 'opacity .35s ease';
             splashEl.innerHTML =
                 '<div class="pf-seal" aria-hidden="true">' +
                   '<div class="pf-ring"><svg viewBox="0 0 100 100" preserveAspectRatio="xMidYMid meet"><circle cx="50" cy="50" r="49"/></svg></div>' +
@@ -168,59 +158,68 @@
                 '</div>' +
                 '<div class="pf-mark">PINFORGE WEALTH</div>';
 
-            if(shouldShow){
-                // first-visit / forced — show immediately
+            // only lock scroll once we actually reveal
+            function reveal(){
+                if(revealed || lifted) return;
+                revealed = true;
+                revealedAt = Date.now();
+                html.classList.add('pf-splash-on');
                 splashEl.style.opacity = '1';
-            } else {
-                // repeat visit — start invisible, only reveal if load is slow
-                splashEl.style.opacity = '0';
-                splashEl.style.transition = 'opacity .35s ease';
+                // re-trigger the keyframe animations from this exact moment so
+                // the ring + bloom always start fresh when the user first sees them
+                var seal  = splashEl.querySelector('.pf-seal img');
+                var ring  = splashEl.querySelector('.pf-ring circle');
+                var pulse = splashEl.querySelector('.pf-pulse');
+                var mark  = splashEl.querySelector('.pf-mark');
+                [seal, ring, pulse, mark].forEach(function(el){
+                    if(!el) return;
+                    el.style.animation = 'none';
+                    void el.offsetWidth;
+                    el.style.animation = '';
+                });
             }
 
-            // attach as soon as possible
             function attach(){
                 if(document.body){
                     document.body.insertBefore(splashEl, document.body.firstChild);
+                    if(revealed){
+                        html.classList.add('pf-splash-on');
+                        startedAt = revealedAt = Date.now();
+                    }
                     return true;
                 }
                 return false;
             }
             if(!attach()){
                 document.addEventListener('DOMContentLoaded', attach, {once:true});
-                // also try a microtask in case body isn't ready yet
                 queueMicrotask && queueMicrotask(attach);
             }
 
-            // slow-load reveal for repeat visitors
-            var slowTimer = null;
-            if(!shouldShow){
-                slowTimer = setTimeout(function(){
-                    if(!document.getElementById('pf-splash')) attach();
-                    var el = document.getElementById('pf-splash');
-                    if(el && !el.classList.contains('pf-out')){
-                        el.style.opacity = '1';
-                        shownAt = Date.now(); // reset so MIN_HOLD applies from reveal
-                        shouldShow = true;
-                    }
-                }, SLOW_MS);
-            }
+            // schedule the slow-load reveal — only fires if window.load hasn't
+            var slowTimer = setTimeout(function(){
+                if(lifted) return;
+                if(document.readyState === 'complete') return; // already done, no reveal
+                if(!document.getElementById('pf-splash')) attach();
+                reveal();
+            }, SLOW_MS);
 
-            // lift the splash
-            var lifted = false;
+            // lift logic — removes / fades the splash and unlocks scroll
             function lift(){
                 if(lifted) return;
                 lifted = true;
                 if(slowTimer){ clearTimeout(slowTimer); slowTimer = null; }
                 var el = document.getElementById('pf-splash');
                 if(!el){ html.classList.remove('pf-splash-on'); return; }
-                if(!shouldShow){
-                    // load was fast on a repeat visit — never revealed, just remove
+
+                if(!revealed){
+                    // fast load — splash was never shown, just remove the element
                     el.parentNode && el.parentNode.removeChild(el);
                     html.classList.remove('pf-splash-on');
                     return;
                 }
-                // honour a minimum hold so it never blinks
-                var elapsed = Date.now() - shownAt;
+
+                // shown — honour a minimum hold so it never blinks at the user
+                var elapsed = Date.now() - revealedAt;
                 var wait = Math.max(0, MIN_HOLD_MS - elapsed);
                 setTimeout(function(){
                     el.classList.add('pf-out');
@@ -229,27 +228,22 @@
                         html.classList.remove('pf-splash-on');
                     }, 600);
                 }, wait);
-
-                // mark as seen so next visit qualifies as repeat
-                try{ localStorage.setItem(KEY, String(Date.now())); }catch(e){}
             }
 
             // primary lift signal: window.load
-            if(document.readyState === 'complete') {
-                // already loaded somehow — wait a tick
+            if(document.readyState === 'complete'){
                 setTimeout(lift, 50);
             } else {
                 window.addEventListener('load', function(){
-                    // small delay so the first paint of /invest is ready behind the curtain
                     setTimeout(lift, 80);
                 });
             }
             // safety ceiling
             setTimeout(lift, MAX_HOLD_MS);
 
-            // user can dismiss with a tap once shown (anti-frustration)
+            // tap-to-dismiss once visible (anti-frustration)
             splashEl.addEventListener('click', function(){
-                if(splashEl.style.opacity === '1') lift();
+                if(revealed) lift();
             });
 
         }catch(e){ /* never block the page */ }
