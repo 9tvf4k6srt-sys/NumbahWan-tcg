@@ -14,6 +14,248 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@400;500;600;700;900&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=JetBrains+Mono:wght@500;700&display=swap">
+
+    <!-- ============================================================
+         PINFORGE splash overlay — paints synchronously in <head>.
+         Triggers:
+           (A) First visit only — localStorage-gated, ~365 days
+           (B) Slow load — if window 'load' hasn't fired by SLOW_MS,
+               the splash re-shows even on repeat visits
+         Lifts when: window 'load' fires OR MAX_HOLD_MS elapses,
+         whichever comes first. No flash, no extra hop.
+    ============================================================ -->
+    <style id="pf-splash-css">
+        html.pf-splash-on,
+        html.pf-splash-on body { overflow:hidden !important; }
+        #pf-splash{
+            position:fixed; inset:0; z-index:99999;
+            background:#EFE7D6;
+            display:flex; flex-direction:column; align-items:center; justify-content:center;
+            opacity:1;
+            transition: opacity .55s ease;
+            pointer-events:auto;
+        }
+        #pf-splash.pf-out { opacity:0; pointer-events:none; }
+        #pf-splash::before{
+            content:""; position:absolute; inset:0; pointer-events:none;
+            background:
+                radial-gradient(circle at 50% 50%, rgba(216,179,106,.18) 0%, transparent 50%),
+                radial-gradient(ellipse at center, transparent 60%, rgba(42,33,24,.16) 100%);
+        }
+        #pf-splash::after{
+            content:""; position:absolute; inset:0; pointer-events:none;
+            background-image:
+                radial-gradient(rgba(74,56,32,.04) 1px, transparent 1.5px),
+                radial-gradient(rgba(168,133,74,.03) 1px, transparent 2px);
+            background-size: 3px 3px, 7px 7px;
+            background-position: 0 0, 1.5px 1.5px;
+            opacity:.5;
+            mix-blend-mode:multiply;
+        }
+        #pf-splash .pf-seal{
+            position:relative;
+            width:clamp(140px,28vmin,200px);
+            height:clamp(140px,28vmin,200px);
+            display:flex;align-items:center;justify-content:center;
+        }
+        #pf-splash .pf-seal img{
+            position:relative; width:62%; height:62%; object-fit:contain; z-index:2;
+            opacity:0; transform:scale(.92);
+            filter: drop-shadow(0 2px 8px rgba(74,56,32,.18)) drop-shadow(0 0 0 rgba(216,179,106,0));
+            animation: pf-bloom 2.8s ease-out forwards;
+        }
+        @keyframes pf-bloom{
+            0%   { opacity:0; transform:scale(.92); filter: drop-shadow(0 2px 8px rgba(74,56,32,.18)) drop-shadow(0 0 0 rgba(216,179,106,0)); }
+            20%  { opacity:1; transform:scale(1.0); }
+            85%  { opacity:1; transform:scale(1.0); filter: drop-shadow(0 4px 14px rgba(74,56,32,.22)) drop-shadow(0 0 32px rgba(216,179,106,.65)); }
+            100% { opacity:1; transform:scale(1.02); filter: drop-shadow(0 4px 14px rgba(74,56,32,.22)) drop-shadow(0 0 18px rgba(216,179,106,.4)); }
+        }
+        #pf-splash .pf-ring{ position:absolute; inset:0; z-index:1; }
+        #pf-splash .pf-ring svg{ width:100%; height:100%; transform:rotate(-90deg); overflow:visible; }
+        #pf-splash .pf-ring circle{
+            fill:none; stroke:#A8854A; stroke-width:1.6; stroke-linecap:round;
+            stroke-dasharray:307.876; stroke-dashoffset:307.876; opacity:.85;
+            animation: pf-trace 2.8s cubic-bezier(.55,.05,.25,1) forwards;
+        }
+        @keyframes pf-trace{
+            0%   { stroke-dashoffset:307.876; opacity:.85; stroke:#A8854A; }
+            85%  { stroke-dashoffset:0; opacity:.95; stroke:#C9A867; }
+            100% { stroke-dashoffset:0; opacity:0; stroke:#C9A867; }
+        }
+        #pf-splash .pf-pulse{
+            position:absolute; inset:0; z-index:1; border-radius:50%;
+            border:1.5px solid #C9A867; opacity:0; transform:scale(.85);
+            animation: pf-pulse 1.4s ease-out 2.4s forwards;
+        }
+        @keyframes pf-pulse{
+            0%   { opacity:.7; transform:scale(.85); border-color:#C9A867; }
+            60%  { opacity:.25; }
+            100% { opacity:0; transform:scale(1.55); border-color:#D8B36A; }
+        }
+        #pf-splash .pf-mark{
+            text-align:center; margin-top:clamp(20px,4vmin,32px);
+            opacity:0; animation: pf-mark-in 1.4s ease-out .6s forwards;
+            font-family:"JetBrains Mono", ui-monospace, monospace;
+            font-size:clamp(.66rem,.58rem + .4vw,.8rem);
+            letter-spacing:.42em; color:#866637;
+            text-transform:uppercase; font-weight:700; padding-left:.42em;
+        }
+        @keyframes pf-mark-in{
+            0%   { opacity:0; transform:translateY(6px); }
+            100% { opacity:1; transform:translateY(0); }
+        }
+        @media (prefers-reduced-motion: reduce){
+            #pf-splash .pf-seal img{ animation:none; opacity:1; transform:scale(1); }
+            #pf-splash .pf-ring circle{ animation:none; stroke-dashoffset:0; opacity:0; }
+            #pf-splash .pf-pulse{ animation:none; opacity:0; }
+            #pf-splash .pf-mark{ animation:none; opacity:1; }
+        }
+    </style>
+    <script>
+    (function(){
+        'use strict';
+        try{
+            var KEY = 'pf_splash_seen_v1';
+            var TTL_DAYS = 365;
+            var MIN_HOLD_MS = 3200;   // minimum airtime once shown (so it never blinks)
+            var MAX_HOLD_MS = 12000;  // safety ceiling
+            var SLOW_MS     = 1800;   // load slower than this → re-fire on repeat visits
+            var FORCE = false, SKIP = false;
+            try{
+                var u = new URL(window.location.href);
+                if(u.searchParams.get('splash') === '1') FORCE = true;
+                if(u.searchParams.get('splash') === '0') SKIP  = true;
+            }catch(e){}
+
+            // decide if this load qualifies as "first visit"
+            var firstVisit = false;
+            try{
+                var raw = localStorage.getItem(KEY);
+                if(!raw){ firstVisit = true; }
+                else{
+                    var ts = parseInt(raw, 10);
+                    if(!ts || isNaN(ts)) firstVisit = true;
+                    else if(Date.now() - ts > TTL_DAYS*24*3600*1000) firstVisit = true;
+                }
+            }catch(e){ firstVisit = true; }
+
+            // skip on bot UAs and on print
+            var ua = (navigator.userAgent || '').toLowerCase();
+            var isBot = /bot|crawler|spider|crawling|lighthouse|headless/.test(ua);
+            if(isBot && !FORCE) return;
+            if(SKIP) return;
+
+            // Always show on first visit; on repeat visits, show as a "slow load curtain"
+            // by painting it pre-emptively and lifting fast if load comes quick.
+            // This satisfies trigger (B): if load is slow, the splash stays; if fast, it disappears almost instantly.
+            var shouldShow = firstVisit || FORCE;
+
+            // For repeat visits, we still paint a 0-opacity placeholder for a moment,
+            // and only fade it IN if window.load hasn't fired by SLOW_MS.
+            var html = document.documentElement;
+            html.classList.add('pf-splash-on');
+
+            var shownAt = Date.now();
+            var splashEl = document.createElement('div');
+            splashEl.id = 'pf-splash';
+            splashEl.setAttribute('role','status');
+            splashEl.setAttribute('aria-label','Loading PINFORGE Wealth');
+            splashEl.innerHTML =
+                '<div class="pf-seal" aria-hidden="true">' +
+                  '<div class="pf-ring"><svg viewBox="0 0 100 100" preserveAspectRatio="xMidYMid meet"><circle cx="50" cy="50" r="49"/></svg></div>' +
+                  '<div class="pf-pulse"></div>' +
+                  '<img src="/static/images/invest/pinforge-emblem-brass.webp" alt="" loading="eager" decoding="async">' +
+                '</div>' +
+                '<div class="pf-mark">PINFORGE WEALTH</div>';
+
+            if(shouldShow){
+                // first-visit / forced — show immediately
+                splashEl.style.opacity = '1';
+            } else {
+                // repeat visit — start invisible, only reveal if load is slow
+                splashEl.style.opacity = '0';
+                splashEl.style.transition = 'opacity .35s ease';
+            }
+
+            // attach as soon as possible
+            function attach(){
+                if(document.body){
+                    document.body.insertBefore(splashEl, document.body.firstChild);
+                    return true;
+                }
+                return false;
+            }
+            if(!attach()){
+                document.addEventListener('DOMContentLoaded', attach, {once:true});
+                // also try a microtask in case body isn't ready yet
+                queueMicrotask && queueMicrotask(attach);
+            }
+
+            // slow-load reveal for repeat visitors
+            var slowTimer = null;
+            if(!shouldShow){
+                slowTimer = setTimeout(function(){
+                    if(!document.getElementById('pf-splash')) attach();
+                    var el = document.getElementById('pf-splash');
+                    if(el && !el.classList.contains('pf-out')){
+                        el.style.opacity = '1';
+                        shownAt = Date.now(); // reset so MIN_HOLD applies from reveal
+                        shouldShow = true;
+                    }
+                }, SLOW_MS);
+            }
+
+            // lift the splash
+            var lifted = false;
+            function lift(){
+                if(lifted) return;
+                lifted = true;
+                if(slowTimer){ clearTimeout(slowTimer); slowTimer = null; }
+                var el = document.getElementById('pf-splash');
+                if(!el){ html.classList.remove('pf-splash-on'); return; }
+                if(!shouldShow){
+                    // load was fast on a repeat visit — never revealed, just remove
+                    el.parentNode && el.parentNode.removeChild(el);
+                    html.classList.remove('pf-splash-on');
+                    return;
+                }
+                // honour a minimum hold so it never blinks
+                var elapsed = Date.now() - shownAt;
+                var wait = Math.max(0, MIN_HOLD_MS - elapsed);
+                setTimeout(function(){
+                    el.classList.add('pf-out');
+                    setTimeout(function(){
+                        el.parentNode && el.parentNode.removeChild(el);
+                        html.classList.remove('pf-splash-on');
+                    }, 600);
+                }, wait);
+
+                // mark as seen so next visit qualifies as repeat
+                try{ localStorage.setItem(KEY, String(Date.now())); }catch(e){}
+            }
+
+            // primary lift signal: window.load
+            if(document.readyState === 'complete') {
+                // already loaded somehow — wait a tick
+                setTimeout(lift, 50);
+            } else {
+                window.addEventListener('load', function(){
+                    // small delay so the first paint of /invest is ready behind the curtain
+                    setTimeout(lift, 80);
+                });
+            }
+            // safety ceiling
+            setTimeout(lift, MAX_HOLD_MS);
+
+            // user can dismiss with a tap once shown (anti-frustration)
+            splashEl.addEventListener('click', function(){
+                if(splashEl.style.opacity === '1') lift();
+            });
+
+        }catch(e){ /* never block the page */ }
+    })();
+    </script>
+
     <style>
         @font-face{font-family:Inter;src:url('/static/fonts/inter-variable.woff2') format('woff2');font-weight:100 900;font-display:swap}
         @font-face{font-family:Orbitron;src:url('/static/fonts/orbitron-variable.woff2') format('woff2');font-weight:400 900;font-display:swap}
