@@ -109,6 +109,25 @@ const server = http.createServer((req, res) => {
         return res.end(fs.readFileSync(f));
       }
     }
+    // Playbook routes — /playbooks, /playbooks/, /playbooks/<slug>(.html)
+    if (p === '/playbooks' || p === '/playbooks/') {
+      // landing index — list available volumes
+      const dir = path.join(ROOT, 'public/playbooks');
+      const files = fs.existsSync(dir) ? fs.readdirSync(dir).filter(f => f.endsWith('.html')) : [];
+      const links = files.map(f => `<li><a href="/playbooks/${f.replace(/\.html$/,'')}">${f.replace(/\.html$/,'')}</a></li>`).join('');
+      res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
+      return res.end(`<!doctype html><meta charset=utf-8><title>PINFORGE Playbooks</title><body style="font-family:Georgia,serif;background:#f5efe1;color:#241a10;padding:40px;max-width:640px;margin:0 auto"><h1 style="font-weight:500;letter-spacing:.04em">PINFORGE Member Playbooks</h1><ul style="line-height:2;font-size:1.1rem">${links || '<li>(empty)</li>'}</ul></body>`);
+    }
+    if (p.startsWith('/playbooks/')) {
+      const slug = p.replace(/^\/playbooks\//, '').replace(/\.html$/, '').replace(/\/+$/, '');
+      if (slug && /^[a-z0-9-]+$/i.test(slug)) {
+        const f = path.join(ROOT, 'public/playbooks', slug + '.html');
+        if (fs.existsSync(f)) {
+          res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
+          return res.end(fs.readFileSync(f));
+        }
+      }
+    }
     if (p === '/anchors') {
       res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
       return res.end(indexHtml());
