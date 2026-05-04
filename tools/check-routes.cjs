@@ -26,7 +26,6 @@ const REPORT = args.includes('--report');
 const ALLOWED_ROUTES = new Set([
   '/', '/index.html',
   '/invest', '/invest.html',
-  '/loading', '/loading.html',
   '/stock', '/stock/', '/stock/index.html',
   '/playbooks', '/playbooks/',
   '/anchors', '/lock', '/branch-sg', '/tells', '/sources',

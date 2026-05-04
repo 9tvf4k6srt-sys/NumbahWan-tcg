@@ -17,7 +17,7 @@ Always paste the live link AND the commit hash after a push. Non-negotiable.
 
 ## 2 · Routes (allowlist lives in `tools/anchor-preview.cjs`)
 
-`/` `/invest` `/loading` `/stock` `/stock/?t=…` `/playbooks` `/playbooks/<slug>`
+`/` `/invest` `/stock` `/stock/?t=…` `/playbooks` `/playbooks/<slug>`
 `/anchors` `/lock` `/branch-sg` `/tells` `/sources`
 
 When you add a route, edit `tools/anchor-preview.cjs` AND register it in

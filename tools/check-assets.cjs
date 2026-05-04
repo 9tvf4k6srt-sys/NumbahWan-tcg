@@ -32,7 +32,6 @@ const SNAPSHOT = path.join(ROOT, '.pinforge-weight.json');
 
 const PAGES = [
   'public/invest.html',
-  'public/loading.html',
   'public/playbooks/dumpling-shop-tw.html',
 ];
 

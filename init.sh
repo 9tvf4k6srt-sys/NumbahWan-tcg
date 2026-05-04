@@ -66,7 +66,6 @@ smoke() {
 }
 
 smoke "/invest"                      400000  "like our own"
-smoke "/loading"                       4000  "pinforge-emblem-brass"
 smoke "/playbooks/dumpling-shop-tw"   100000  "What we'd refuse to risk for them"
 
 # ─── 3. Sensors (advisory; pre-commit enforces) ───────────────────────────

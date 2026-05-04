@@ -100,14 +100,6 @@ const server = http.createServer((req, res) => {
         return res.end(fs.readFileSync(f));
       }
     }
-    // Loading screen — /loading, /loading.html (also acts as splash via ?next=&hold=)
-    if (p === '/loading' || p === '/loading.html') {
-      const f = path.join(ROOT, 'public/loading.html');
-      if (fs.existsSync(f)) {
-        res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
-        return res.end(fs.readFileSync(f));
-      }
-    }
     // Stock thesis route — /stock, /stock/, /stock/index.html, /stock/?t=NNNN
     // all serve public/stock/index.html (the page reads ?t= client-side).
     if (p === '/stock' || p === '/stock/' || p === '/stock/index.html') {
