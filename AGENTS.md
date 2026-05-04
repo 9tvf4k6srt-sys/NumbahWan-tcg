@@ -90,6 +90,20 @@ Wired into `.husky/pre-commit`:
 - `tools/check-routes.cjs` — anchor links resolve to a real route
 - `tools/check-assets.cjs` — single asset >500 KB OR page weight regression >10 %
 - `tools/check-motto.cjs` — canonical motto strings present and unchanged on `/invest`
+- `tools/self-review.cjs` — staged-diff rules:
+  - R1 i18n parity (new `<section>` on `/invest` covers en+zh+ja)
+  - R2 asset-on-disk (new src/href points at a real file)
+  - R3 route-allowlist (new internal href matches a known route)
+  - R4 hero brevity (new hero copy ≤ 30 words, Latin-only count)
+  - R5 motto guard (changes to `/invest` re-run check-motto)
+
+Advisory tools (run manually):
+
+- `tools/gc-drift.cjs` — dead routes / orphan assets / stale tasks. Dry-run
+  by default; `--prune` deletes (interactive unless `--yes`). Never auto-pruned.
+- `tools/task.cjs` — resumable task queue (see `tasks/SCHEMA.md`).
+  `new | list | start | note | evidence | check | done | block | show`.
+  Every mutation rewrites `tasks/INDEX.md`.
 
 Run any sensor manually with `--all` to scan the whole repo, `--report` for JSON.
 

@@ -242,7 +242,7 @@ fi
 
 # ─── PINFORGE Sensors: routes / assets / motto (Tier 2 harness) ──────
 # Documented in AGENTS.md §8. Each sensor scans the PINFORGE surfaces
-# (invest / loading / playbooks). Failures BLOCK the commit.
+# (invest / playbooks). Failures BLOCK the commit.
 # Bypass: git commit --no-verify
 PINFORGE_FAIL=0
 if [ -f "tools/check-routes.cjs" ]; then
@@ -254,6 +254,15 @@ fi
 if [ -f "tools/check-motto.cjs" ]; then
   node "tools/check-motto.cjs" 2>&1 >&2 || PINFORGE_FAIL=1
 fi
+
+# ─── PINFORGE Self-Review (Tier 3): staged-diff rules ────────────────
+# R1 i18n parity · R2 asset-on-disk · R3 route allowlist
+# R4 hero brevity (≤30 words) · R5 motto unchanged
+# Documented in AGENTS.md §8 + tools/self-review.cjs. Blocks on fail.
+if [ -f "tools/self-review.cjs" ]; then
+  node "tools/self-review.cjs" 2>&1 >&2 || PINFORGE_FAIL=1
+fi
+
 if [ "$PINFORGE_FAIL" -ne 0 ]; then
   echo "" >&2
   echo "  PRE-COMMIT BLOCKED: PINFORGE sensor(s) failed." >&2
