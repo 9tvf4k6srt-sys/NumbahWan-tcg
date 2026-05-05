@@ -27,6 +27,7 @@ const ALLOWED_ROUTES = new Set([
   '/', '/index.html',
   '/invest', '/invest.html',
   '/stock', '/stock/', '/stock/index.html',
+  '/desk', '/desk/', '/desk/index.html',
   '/playbooks', '/playbooks/',
   '/anchors', '/lock', '/branch-sg', '/tells', '/sources',
 ]);

@@ -109,6 +109,39 @@ const server = http.createServer((req, res) => {
         return res.end(fs.readFileSync(f));
       }
     }
+    // Desk routes — Taiwan AI Hardware desk
+    //   /desk, /desk/                  → universe board (public/desk/index.html)
+    //   /desk/<ticker>                 → single-name page (public/desk/ticker.html, reads ?t= or path)
+    //   /data/desk/<ticker>.json       → ledger (public/data/desk/<ticker>.json)
+    if (p === '/desk' || p === '/desk/' || p === '/desk/index.html') {
+      const f = path.join(ROOT, 'public/desk/index.html');
+      if (fs.existsSync(f)) {
+        res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
+        return res.end(fs.readFileSync(f));
+      }
+    }
+    {
+      const m = p.match(/^\/desk\/([0-9]{3,5})\/?$/);
+      if (m) {
+        const f = path.join(ROOT, 'public/desk/ticker.html');
+        if (fs.existsSync(f)) {
+          res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
+          return res.end(fs.readFileSync(f));
+        }
+      }
+    }
+    {
+      const m = p.match(/^\/data\/desk\/([0-9A-Za-z_-]+\.json)$/);
+      if (m) {
+        const f = path.join(ROOT, 'public/data/desk', m[1]);
+        if (fs.existsSync(f)) {
+          res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+          return res.end(fs.readFileSync(f));
+        }
+        res.writeHead(404, { 'Content-Type': 'application/json' });
+        return res.end('{"error":"no ledger"}');
+      }
+    }
     // Playbook routes — /playbooks, /playbooks/, /playbooks/<slug>(.html)
     if (p === '/playbooks' || p === '/playbooks/') {
       // landing index — list available volumes
