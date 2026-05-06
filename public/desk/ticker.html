@@ -133,6 +133,36 @@ html[lang^=ja] [data-lang=ja]{display:initial}
 .receipt .vb.draft{background:rgba(168,133,74,.18); color:var(--brass)}
 .receipt .vb.confirmed{background:rgba(60,120,70,.18); color:#3c7846}
 
+/* contract_disclosure block under each receipt */
+.cd{margin-top:10px; padding-top:10px; border-top:1px dashed var(--rule);
+  font-size:13px; color:var(--ink-2)}
+.cd details{margin:0}
+.cd summary{font-family:var(--mono); font-size:10px; letter-spacing:.18em;
+  text-transform:uppercase; color:var(--ink-3); cursor:pointer; padding:2px 0;
+  list-style:none; outline:none}
+.cd summary::-webkit-details-marker{display:none}
+.cd summary::before{content:"▸ "; color:var(--brass); font-family:var(--mono)}
+.cd[open] summary::before, .cd details[open] summary::before{content:"▾ "}
+.cd .cd-grid{margin-top:10px; display:grid; grid-template-columns:1fr 1fr; gap:14px 22px}
+.cd .cd-grid h4{margin:0 0 4px; font-family:var(--mono); font-size:10px;
+  letter-spacing:.18em; text-transform:uppercase; color:var(--brass); font-weight:700}
+.cd .cd-grid ul{margin:0; padding-left:18px; font-size:13px; line-height:1.5}
+.cd .cd-grid ul li{margin:2px 0}
+.cd .cd-grid .cant li{color:var(--seal); font-style:italic}
+.cd .verbatim{margin:8px 0; padding:10px 12px; background:rgba(26,22,18,.04);
+  border-left:2px solid var(--ink-3); font-family:var(--zh-display);
+  font-size:13.5px; line-height:1.6; color:var(--ink); white-space:pre-wrap}
+.cd .pt-impact{margin-top:10px; padding:10px 12px; background:rgba(168,133,74,.07);
+  border-left:2px solid var(--brass); font-size:13px}
+.cd .pt-impact b{font-family:var(--mono); font-size:10px; letter-spacing:.18em;
+  text-transform:uppercase; color:var(--brass); display:block; margin-bottom:4px}
+.cd .pt-impact .row{display:flex; justify-content:space-between; gap:14px;
+  padding:3px 0; border-top:1px dotted var(--rule)}
+.cd .pt-impact .row:first-of-type{border-top:none}
+.cd .pt-impact .row .k{color:var(--ink-3); font-family:var(--mono); font-size:11px}
+.cd .pt-impact .row .v{color:var(--ink-2)}
+@media (max-width:680px){.cd .cd-grid{grid-template-columns:1fr}}
+
 /* PT compute hint */
 .pt-hint{font-family:var(--mono); font-size:10px; letter-spacing:.18em;
   text-transform:uppercase; color:var(--ink-3); margin-top:6px}
@@ -390,16 +420,81 @@ html[lang^=ja] [data-lang=ja]{display:initial}
 
     var rcWrap = document.getElementById('ov-receipts');
     rcWrap.innerHTML = '';
+    function esc(s){ return String(s==null?'':s).replace(/[&<>]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;'}[c];}); }
+    function isPlaceholder(v){
+      if(v==null) return true;
+      if(typeof v!=='string') return false;
+      return /^\[(draft|paste|analyst|e\.g\.|feed|TBD|PENDING)/i.test(v);
+    }
+    function renderContractDisclosure(cd){
+      if(!cd) return '';
+      var rows = [];
+      // verbatim
+      var vb = cd.verbatim_zh || cd.verbatim_en_translation || '';
+      if(vb && !isPlaceholder(vb)){
+        rows.push('<div class="verbatim">'+esc(vb)+'</div>');
+      } else if (vb){
+        rows.push('<div class="verbatim" style="opacity:.55">'+esc(vb)+'</div>');
+      }
+      // what_it_says (left) + what_we_cannot_know (right)
+      var ws = cd.what_it_says || {};
+      var cantArr = cd.what_we_cannot_know || [];
+      var saysHTML = '<ul>';
+      Object.keys(ws).forEach(function(k){
+        var val = ws[k];
+        var disp = (val==null || val==='') ? '<span style="color:var(--ink-3);font-style:italic">—</span>' :
+                   (typeof val==='boolean' ? (val?'yes':'no') :
+                   (Array.isArray(val) ? (val.length?val.map(esc).join(', '):'<span style="color:var(--ink-3)">—</span>') :
+                   esc(val)));
+        saysHTML += '<li><span style="font-family:var(--mono);font-size:11px;color:var(--ink-3)">'+esc(k)+'</span>: '+disp+'</li>';
+      });
+      saysHTML += '</ul>';
+      var cantHTML = '<ul>';
+      if(cantArr.length){
+        cantArr.forEach(function(s){ cantHTML += '<li>'+esc(s)+'</li>'; });
+      } else {
+        cantHTML += '<li style="color:var(--ink-3);font-style:italic">—</li>';
+      }
+      cantHTML += '</ul>';
+      rows.push(
+        '<div class="cd-grid">' +
+        '<div><h4>What it says (public)</h4>'+saysHTML+'</div>' +
+        '<div class="cant"><h4>What we cannot know</h4>'+cantHTML+'</div>' +
+        '</div>'
+      );
+      // implied_revisions
+      var ir = cd.implied_revisions || {};
+      if(Object.keys(ir).length){
+        var rev = '<div class="pt-impact"><b>'+
+          ({en:'Implied PT-input revision',zh:'隱含的目標價輸入調整',ja:'目標株価インプット示唆'}[lang]||'Implied PT-input revision')+
+          '</b>';
+        Object.keys(ir).forEach(function(k){
+          var v = ir[k];
+          var disp = (v==null || v==='') ? '<span style="color:var(--ink-3);font-style:italic">— pending</span>' :
+                     (typeof v==='number' ? esc(v) : esc(v));
+          rev += '<div class="row"><span class="k">'+esc(k)+'</span><span class="v">'+disp+'</span></div>';
+        });
+        rev += '</div>';
+        rows.push(rev);
+      }
+      var summaryLab = ({en:'Contract disclosure (verbatim · what it says · what we cannot know · implied revision)',
+                        zh:'契約揭露 (逐字 · 公開揭露內容 · 不可得資訊 · 隱含調整)',
+                        ja:'契約開示 (逐語 · 公開内容 · 知り得ない事項 · 示唆される修正)'}[lang])||'Contract disclosure';
+      return '<div class="cd"><details><summary>'+esc(summaryLab)+'</summary>'+rows.join('')+'</details></div>';
+    }
     (ov.receipts||[]).forEach(function(r){
       var div = document.createElement('div'); div.className = 'receipt';
       var summary = lang==='zh' ? (r.summary_zh||r.summary_en||'') : (r.summary_en||'');
       var vstat = (r.verify_status||'draft').toLowerCase();
-      var srcLink = r.source_url ? ('<a href="'+r.source_url+'" target="_blank" rel="noopener" style="color:var(--brass)">'+(r.source||'source')+'</a>') : (r.source||'—');
+      var srcLink = r.source_url ? ('<a href="'+esc(r.source_url)+'" target="_blank" rel="noopener" style="color:var(--brass)">'+esc(r.source||'source')+'</a>') : esc(r.source||'—');
       div.innerHTML =
-        '<div class="rt">T' + (r.tier||'?') + ' · ' + (r.tier_label||'') +
-          '<span class="vb '+vstat+'">'+vstat+'</span></div>' +
-        '<div class="rs">' + (summary||'—') + '</div>' +
-        '<div class="rsrc">' + srcLink + (r.dated? ' · ' + r.dated : '') + (r.expires? ' · ' + r.expires : '') + '</div>';
+        '<div class="rt">T' + (r.tier||'?') + ' · ' + esc(r.tier_label||'') +
+          '<span class="vb '+vstat+'">'+vstat+'</span>' +
+          (r.id? ' <span style="font-family:var(--mono);font-size:9px;color:var(--ink-3);letter-spacing:.06em;margin-left:6px">'+esc(r.id)+'</span>' : '') +
+          '</div>' +
+        '<div class="rs">' + esc(summary||'—') + '</div>' +
+        '<div class="rsrc">' + srcLink + (r.dated? ' · ' + esc(r.dated) : '') + (r.expires? ' · ' + esc(r.expires) : '') + '</div>' +
+        renderContractDisclosure(r.contract_disclosure);
       rcWrap.appendChild(div);
     });
     document.querySelector('#ov-kill span').textContent = ov.kill || '—';
