@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Scan · Taiwan AI Hardware — PINFORGE Wealth</title>
+<meta name="description" content="Five-method fair-value scan against live TWSE prices. Verdict: BUY ZONE / WATCH / WAIT. Earnings, moat, contract receipts surfaced per ticker.">
+<meta name="theme-color" content="#EFE7D6">
+<link rel="icon" href="/static/images/invest/pinforge-emblem-brass.webp" type="image/webp">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@400;500;600;700&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400&family=JetBrains+Mono:wght@400;500;700&display=swap">
+<style>
+:root{
+  --paper:#EFE7D6; --paper-2:#E4D9C2; --paper-3:#F7F1E3;
+  --ink:#1A1612; --ink-2:#3D352D; --ink-3:#6B5E4F;
+  --muted:rgba(26,22,18,.62);
+  --brass:#8B6F3A; --brass-2:#A2864A; --brass-3:#C9A867;
+  --seal:#7B2A1E; --seal-soft:#9C3A2A;
+  --green:#3c7846; --green-soft:#5e9968;
+  --rule:rgba(26,22,18,.14);
+  --display:"Cormorant Garamond","Times New Roman",Georgia,serif;
+  --zh-display:"Noto Serif TC","Songti TC","PingFang TC",serif;
+  --mono:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;background:var(--paper);color:var(--ink);
+  font-family:var(--display); font-size:17px; line-height:1.55;
+  -webkit-font-smoothing:antialiased}
+a{color:inherit;text-decoration:none}
+[data-lang]{display:none}
+html[lang^=en] [data-lang=en],
+html[lang^=zh] [data-lang=zh],
+html[lang^=ja] [data-lang=ja]{display:initial}
+
+.wrap{max-width:1180px;margin:0 auto;padding:32px 24px 96px}
+
+.head{display:flex;align-items:flex-start;gap:18px;padding-bottom:22px;
+  border-bottom:1px solid var(--rule);margin-bottom:24px}
+.head img{width:38px;height:38px}
+.head h1{margin:0;font-size:26px;letter-spacing:.01em;font-weight:600}
+.head .sub{margin-top:4px;color:var(--ink-3);font-size:13px;
+  font-family:var(--mono);letter-spacing:.18em;text-transform:uppercase}
+.head .right{margin-left:auto;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.lang{font-family:var(--mono);font-size:11px;letter-spacing:.2em;
+  color:var(--ink-3);cursor:pointer;text-transform:uppercase;
+  border:1px solid var(--rule);padding:6px 10px;border-radius:2px;background:transparent}
+.lang.on{color:var(--ink);border-color:var(--brass-2)}
+.head a.back{font-family:var(--mono);font-size:11px;letter-spacing:.2em;
+  color:var(--brass);text-transform:uppercase;border:1px solid var(--brass-2);
+  padding:6px 10px;border-radius:2px}
+.head a.back:hover{background:rgba(168,133,74,.08)}
+
+/* run-bar — primary action */
+.run-bar{display:flex;align-items:center;gap:18px;flex-wrap:wrap;
+  padding:18px 22px;background:var(--paper-3);border-left:3px solid var(--brass-2);
+  margin-bottom:30px}
+.run-bar button{font-family:var(--display);font-size:18px;letter-spacing:.04em;
+  background:var(--ink);color:var(--paper);border:none;padding:12px 22px;
+  border-radius:2px;cursor:pointer;font-weight:600}
+.run-bar button:hover{background:var(--seal)}
+.run-bar button:active{transform:translateY(1px)}
+.run-bar .gen{font-family:var(--mono);font-size:11px;color:var(--ink-3);letter-spacing:.08em}
+.run-bar .gen b{color:var(--ink-2)}
+.run-bar .meta{margin-left:auto;font-family:var(--mono);font-size:11px;color:var(--ink-3);letter-spacing:.06em}
+
+/* methodology card */
+.method{margin:0 0 32px;padding:16px 22px;border:1px solid var(--rule);background:transparent;border-radius:2px}
+.method h2{margin:0 0 6px;font-size:11px;letter-spacing:.24em;text-transform:uppercase;
+  font-family:var(--mono);color:var(--ink-3);font-weight:700}
+.method p{margin:0;font-size:13.5px;color:var(--ink-2);line-height:1.6}
+.method b{color:var(--brass)}
+.method .weights{margin-top:8px;font-family:var(--mono);font-size:11.5px;color:var(--ink-3);letter-spacing:.04em}
+
+/* ticker card */
+.cards{display:grid;grid-template-columns:1fr;gap:24px}
+.card{padding:22px 24px;background:var(--paper-3);border:1px solid var(--rule);border-radius:2px;
+  border-left:4px solid var(--brass-2)}
+.card.buy{border-left-color:var(--green)}
+.card.watch{border-left-color:var(--brass)}
+.card.wait{border-left-color:var(--seal)}
+
+.card .top{display:flex;align-items:flex-start;gap:18px;flex-wrap:wrap;margin-bottom:14px}
+.card .ident{flex:1;min-width:220px}
+.card .tk{font-family:var(--mono);color:var(--brass);font-weight:700;font-size:18px;letter-spacing:.04em}
+.card .nm{display:block;font-weight:600;color:var(--ink);font-size:21px;margin-top:2px}
+.card .nm-sub{display:block;font-family:var(--mono);font-size:11px;color:var(--ink-3);
+  letter-spacing:.16em;text-transform:uppercase;margin-top:3px}
+
+.verdict{padding:8px 14px;font-family:var(--mono);font-size:12px;letter-spacing:.22em;
+  text-transform:uppercase;font-weight:700;border-radius:2px;align-self:flex-start;white-space:nowrap}
+.verdict.buy{background:rgba(60,120,70,.16);color:var(--green)}
+.verdict.watch{background:rgba(168,133,74,.18);color:var(--brass)}
+.verdict.wait{background:rgba(123,42,30,.14);color:var(--seal)}
+
+/* price stripe */
+.price-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px;
+  padding:14px 0;border-top:1px solid var(--rule);border-bottom:1px solid var(--rule);margin-bottom:16px}
+.price-row .cell{display:flex;flex-direction:column;gap:3px}
+.price-row .lab{font-family:var(--mono);font-size:10px;color:var(--ink-3);letter-spacing:.18em;text-transform:uppercase}
+.price-row .val{font-family:var(--mono);font-size:17px;color:var(--ink);font-weight:700}
+.price-row .val.fair{color:var(--brass)}
+.price-row .val.live{color:var(--ink)}
+.price-row .val.zone-full{color:var(--green)}
+.price-row .val.zone-starter{color:var(--green-soft)}
+.price-row .val.gap-pos{color:var(--green)}
+.price-row .val.gap-neg{color:var(--seal)}
+.price-row .sub{font-family:var(--mono);font-size:10px;color:var(--ink-3);letter-spacing:.04em}
+
+/* methods grid */
+.methods{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin:8px 0 16px}
+.methods .m{padding:10px 12px;background:var(--paper);border:1px solid var(--rule);border-radius:2px}
+.methods .m .lab{font-family:var(--mono);font-size:9.5px;color:var(--ink-3);letter-spacing:.16em;text-transform:uppercase;display:block;margin-bottom:4px}
+.methods .m .v{font-family:var(--mono);font-size:14px;color:var(--ink);font-weight:700}
+.methods .m .x{font-family:var(--mono);font-size:10.5px;color:var(--ink-3);margin-top:3px;display:block}
+.methods .m.high{outline:1px solid var(--brass-2)}
+.methods .m.low{opacity:.78}
+@media (max-width:760px){.methods{grid-template-columns:repeat(2,1fr)}}
+
+/* why bullets */
+.why{margin:14px 0 0;padding:14px 16px;background:var(--paper);border:1px solid var(--rule);border-radius:2px}
+.why h4{margin:0 0 6px;font-family:var(--mono);font-size:10.5px;letter-spacing:.2em;
+  text-transform:uppercase;color:var(--ink-3);font-weight:700}
+.why ul{list-style:none;padding:0;margin:0}
+.why li{padding:6px 0;border-top:1px dashed var(--rule);font-size:14px;color:var(--ink-2);line-height:1.5}
+.why li:first-child{border-top:none}
+.why li b{color:var(--ink);font-weight:700}
+.why li a{color:var(--brass);font-weight:600}
+.why.notgo{background:rgba(123,42,30,.04);border-color:rgba(123,42,30,.18)}
+.why.notgo h4{color:var(--seal)}
+
+/* receipts strip */
+.recstrip{margin-top:10px;font-family:var(--mono);font-size:11px;letter-spacing:.06em;color:var(--ink-3)}
+.recstrip b{color:var(--ink)}
+.recstrip .pass{color:var(--green)}
+.recstrip .fail{color:var(--seal)}
+
+/* honesty notice */
+.notice{margin-top:24px;padding:14px 18px;border:1px dashed var(--rule);background:transparent;border-radius:2px;font-size:12.5px;color:var(--ink-3);line-height:1.6;font-style:italic}
+.notice b{color:var(--ink-2);font-style:normal}
+
+@media (max-width:680px){
+  .wrap{padding:22px 16px 80px}
+  .head h1{font-size:22px}
+  .card{padding:18px 16px}
+  .card .nm{font-size:18px}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="head">
+  <img src="/static/images/invest/pinforge-emblem-brass.webp" alt="PINFORGE">
+  <div>
+    <h1>
+      <span data-lang="en">Scan · Taiwan AI Hardware</span>
+      <span data-lang="zh">掃描 · 台灣 AI 硬體</span>
+      <span data-lang="ja">スキャン · 台湾 AI ハードウェア</span>
+    </h1>
+    <div class="sub">
+      <span data-lang="en">five-method fair value · live TWSE quote · receipts spine</span>
+      <span data-lang="zh">五法估值 · 證交所即時 · 受用證據主軸</span>
+      <span data-lang="ja">5 手法評価 · TWSE 速報 · 受領証拠</span>
+    </div>
+  </div>
+  <div class="right">
+    <a class="back" href="/desk">← desk</a>
+    <button class="lang on" data-set="en">EN</button>
+    <button class="lang" data-set="zh">繁中</button>
+    <button class="lang" data-set="ja">日本語</button>
+  </div>
+</header>
+
+<div class="run-bar">
+  <button id="run">
+    <span data-lang="en">▸ Run scan (all 5)</span>
+    <span data-lang="zh">▸ 執行掃描 (全部五檔)</span>
+    <span data-lang="ja">▸ スキャン実行 (5 銘柄)</span>
+  </button>
+  <div class="gen">
+    <div data-lang="en">refreshes <b>scan.json</b> from disk · pulls live TWSE if you ran <code>node tools/live-fetch.cjs --refresh</code></div>
+    <div data-lang="zh">從硬碟重整 <b>scan.json</b> · 跑 <code>--refresh</code> 才會更新 TWSE 即時報價</div>
+    <div data-lang="ja"><b>scan.json</b> を更新 · TWSE 速報は <code>--refresh</code> で取得</div>
+  </div>
+  <div class="meta" id="genmeta">— · —</div>
+</div>
+
+<section class="method">
+  <h2>methodology</h2>
+  <p data-lang="en">Five fair-value methods, weighted average. <b>PE multiple</b> from our ledger inputs (FY rev × OP margin + non-AI op profit) × multiple. <b>EV/EBITDA</b> on a peer-derived multiple. <b>Five-year DCF</b> with WACC 10%, terminal g 3%, layer-aware growth. <b>Peer-group median PE</b> from <code>peers.json</code>. <b>Historical 5-yr median PE</b> from <code>historical_bands.json</code>. Spread = (max − min) ÷ avg surfaces conviction. Cycle-stage multiplier from <code>cycle.json</code> applied on top. <b>Verdict</b> compares live price to fair-value ceiling: BUY ZONE ≤ 0.85×, WATCH ≤ 1.00×, WAIT > 1.00×. WAIT also if confirmed receipts < 4 (the contract-receipt gate).</p>
+  <p data-lang="zh">五種估值法加權平均。<b>本益比</b> 取分類帳輸入 (年營收 × 營益率 + 非 AI 業外) × 倍數。<b>EV/EBITDA</b> 套同業中位數。<b>五年 DCF</b> 折現率 10% · 永續成長 3% · 依層別調整。<b>同業 PE 中位數</b> 取自 <code>peers.json</code>。<b>歷史五年 PE 中位</b> 取自 <code>historical_bands.json</code>。離散度 (高 − 低) ÷ 均值 = 信心指標。再套 <code>cycle.json</code> 的週期倍數。<b>判讀</b>:即時價 ≤ 公允價上緣 0.85× = 進場區間;≤ 1.00× = 觀察;> 1.00× = 等。受用證據確認 < 4 也判等。</p>
+  <p data-lang="ja">5 手法の加重平均。<b>PE</b> は元帳 (売上 × 営業利益率 + 非 AI 利益) × 倍率。<b>EV/EBITDA</b> は業界中央値。<b>5 年 DCF</b> は WACC 10%・終価 g 3%・レイヤー別成長。<b>同業 PE 中央値</b> · <b>5 年履歴 PE 中央値</b>。スプレッド = (高 − 低)÷平均。サイクル倍率を最後に乗算。<b>判定</b> = 株価 ≤ 公正価上限 × 0.85 → BUY、≤ 1.00 → WATCH、それ以外 → WAIT。受領証拠 < 4 でも WAIT。</p>
+  <p class="weights">weights · pe 25% · ev/ebitda 20% · dcf 25% · peer 15% · historical 15%</p>
+</section>
+
+<div id="cards" class="cards"></div>
+
+<div class="notice">
+  <span data-lang="en"><b>Honest limits.</b> TWSE feed is 20-min delayed. Outside market hours we use yesterday's close — flagged on each card. <b>"BUY ZONE"</b> is a discipline, not advice. <b>"Confirmed receipts"</b> means an analyst (CL or HW) flipped the receipt from <code>draft</code> via <code>tools/verify.cjs</code>; raw MOPS scrapes do not auto-count. The page will not say "buy NT$X" — it shows zones. Margin terms inside contracts are never public; we never claim to read them. To refresh prices: <code>node tools/live-fetch.cjs --refresh</code>.</span>
+  <span data-lang="zh"><b>誠實邊界。</b>TWSE 為延遲 20 分鐘報價。盤後或開盤前以昨收為準 — 每張卡片會註明。<b>「進場區間」</b> 是紀律,不是建議。<b>「已確認證據」</b> = 分析師 (CL/HW) 用 <code>tools/verify.cjs</code> 把 receipt 由 draft 翻為 confirmed;MOPS 自動爬蟲不計入。本頁不會給「買在 NT$X」這種數字 — 只給區間。合約內的價格、毛利條款不會公開;我們不假裝看得到。重整即時報價:<code>node tools/live-fetch.cjs --refresh</code>。</span>
+  <span data-lang="ja"><b>誠実な限界。</b>TWSE は 20 分遅延。場外時は前日終値、各カードに表示。<b>BUY ZONE</b> は規律であり推奨ではない。<b>確認済受領証拠</b> はアナリスト (CL/HW) が <code>verify.cjs</code> で draft → confirmed に翻したもののみ。MOPS スクレイプは自動加算しない。本ページは「NT$X で買え」とは言わない、区間のみ。契約内の価格条項は非公開、読めるとは主張しない。価格更新:<code>node tools/live-fetch.cjs --refresh</code>。</span>
+</div>
+
+</div>
+
+<script>
+(function(){
+  // language toggle
+  var lang = (location.hash || '').replace('#','') || 'en';
+  function setLang(l){
+    if(!/^(en|zh|ja)$/.test(l)) l='en';
+    document.documentElement.lang = l;
+    document.querySelectorAll('.lang').forEach(function(b){
+      b.classList.toggle('on', b.dataset.set === l);
+    });
+    lang = l;
+  }
+  document.querySelectorAll('.lang').forEach(function(b){
+    b.addEventListener('click', function(){ setLang(b.dataset.set); location.hash='#'+b.dataset.set; });
+  });
+  setLang(lang);
+
+  function fmt(n){ return (n==null) ? '—' : 'NT$' + (Math.round(n*10)/10).toFixed(1).replace(/\.0$/,''); }
+  function pct(n){ return (n==null) ? '—' : (n>0?'+':'') + n.toFixed(1) + '%'; }
+  function esc(s){ return String(s||'').replace(/[<>&"']/g, function(c){ return ({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;',"'":'&#39;'})[c]; }); }
+
+  function verdictOf(t){
+    var lp = t.live_price && t.live_price.value;
+    var fc = t.fair_value_ceiling;
+    var conf = t.confirmed_receipts || 0;
+    var tgt  = t.receipts_target || 4;
+    if(lp == null || fc == null) return { v:'wait', why:'no live price or fair value' };
+    var ratio = lp / fc;
+    // Receipt gate: under 4 confirmed = WAIT regardless of price
+    if(conf < tgt) return { v:'wait', why:'receipts ' + conf + '/' + tgt };
+    if(ratio <= 0.85) return { v:'buy', why:'price ≤ 0.85× fair' };
+    if(ratio <= 1.00) return { v:'watch', why:'price within fair band' };
+    return { v:'wait', why:'price > fair' };
+  }
+
+  function whyLines(t, ld){
+    // ld = ledger object (loaded async per ticker)
+    var lines = [];
+    var inputs = (ld && ld.price_target && ld.price_target.inputs) || {};
+    var fyR = inputs.fy_revenue && inputs.fy_revenue.value;
+    var opM = inputs.operating_margin && inputs.operating_margin.value;
+    var nAI = inputs.non_ai_contribution && inputs.non_ai_contribution.value;
+    if(fyR != null && opM != null && nAI != null){
+      var earn = fyR * (opM/100) + nAI;
+      lines.push({k:'earnings', t:'<b>Earnings ability:</b> FY revenue NT$' + fyR + 'B × OP margin ' + opM + '% + non-AI op profit NT$' + nAI + 'B = <b>NT$' + (Math.round(earn*10)/10).toFixed(1) + 'B operating profit</b>.'});
+    } else {
+      lines.push({k:'earnings', t:'<b>Earnings ability:</b> inputs incomplete — verify ledger.'});
+    }
+    // Moat line — pull from rationale.moat_widening or screen.E
+    var rat = (ld && ld.rationale) || {};
+    var moatTxt = (rat.moat_widening && (rat.moat_widening.en || rat.moat_widening.zh)) || '';
+    var screenE = (ld && ld.screen && ld.screen.E_increasing_moat) || {};
+    var moatNote = screenE.note || '';
+    var moatStars = screenE.stars;
+    var moatHead = '<b>Deep moat:</b>' + (moatStars ? ' ★'+moatStars+'/5 · ' : ' ');
+    var moatPick = moatTxt ? moatTxt.replace(/^\[DRAFT\]\s*/,'').slice(0, 220) + '…' : (moatNote || 'rationale draft pending');
+    lines.push({k:'moat', t:moatHead + esc(moatPick)});
+    // Latest confirmed receipt
+    var receipts = ((ld && ld.order_visibility && ld.order_visibility.receipts) || []).slice();
+    var confirmed = receipts.filter(function(r){ return (r.verify_status||'').toLowerCase()==='confirmed'; });
+    confirmed.sort(function(a,b){ return (b.dated||'').localeCompare(a.dated||''); });
+    if(confirmed.length){
+      var r = confirmed[0];
+      var sum = r.summary_en || r.summary_zh || '';
+      lines.push({k:'receipt', t:'<b>Latest contract receipt (confirmed):</b> T'+(r.tier||'?')+' · ' + esc(r.tier_label||'') + ' · ' + esc(r.dated||'—') + ' — ' + esc(sum.slice(0,180)) + (r.source_url ? ' · <a href="'+esc(r.source_url)+'" target="_blank" rel="noopener">source</a>' : '')});
+    } else {
+      lines.push({k:'receipt', t:'<b>Latest contract receipt:</b> none confirmed yet · use <code>node tools/verify.cjs '+t.ticker+' &lt;receipt-id&gt;</code> to flip a draft after sourcing.'});
+    }
+    // MOPS contracts (auto-scraped, unverified) — surface count + note
+    var ctr = (ld && ld.contracts) || [];
+    if(ctr.length){
+      lines.push({k:'mops', t:'<b>Auto-scraped MOPS hits:</b> '+ctr.length+' raw entries (unverified) · open <a href="https://mops.twse.com.tw/mops/web/t146sb05?step=1&firstin=true&TYPEK=&co_id='+t.ticker+'" target="_blank" rel="noopener">公開資訊觀測站</a> to verify.'});
+    }
+    return lines;
+  }
+
+  function render(scan){
+    var meta = document.getElementById('genmeta');
+    var gen = scan.generated ? new Date(scan.generated) : null;
+    meta.innerHTML = gen ? ('generated ' + gen.toISOString().slice(0,16).replace('T',' ') + ' UTC') : '—';
+
+    var wrap = document.getElementById('cards');
+    wrap.innerHTML = '';
+
+    // For each ticker, also fetch the ledger to derive why-lines
+    var tickers = scan.tickers || [];
+    var pending = tickers.length;
+    if(pending === 0){ wrap.innerHTML = '<div class="notice">No tickers in scan.json</div>'; return; }
+
+    tickers.forEach(function(t, idx){
+      // Placeholder card immediately
+      var ph = document.createElement('div');
+      ph.className = 'card';
+      ph.id = 'card-' + t.ticker;
+      ph.innerHTML = '<div class="top"><div class="ident"><span class="tk">' + t.ticker + '</span><span class="nm">' + esc(t.name_en||'') + ' · ' + esc(t.name_zh||'') + '</span><span class="nm-sub">' + esc(t.layer_label_en||t.layer||'') + '</span></div></div><div class="recstrip">loading ledger…</div>';
+      wrap.appendChild(ph);
+
+      fetch('/data/desk/' + t.ticker + '.json', { cache:'no-store' })
+        .then(function(r){ return r.json(); })
+        .then(function(ld){
+          drawCard(t, ld, ph);
+        })
+        .catch(function(e){
+          ph.innerHTML += '<div class="recstrip fail">ledger load failed: ' + esc(e.message||e) + '</div>';
+        });
+    });
+  }
+
+  function drawCard(t, ld, host){
+    var v = verdictOf(t);
+    host.classList.add(v.v);
+    var lp = (t.live_price && t.live_price.value) || null;
+    var fc = t.fair_value_ceiling;
+    var lpDate = (t.live_price && (t.live_price.market_date || '')).replace(/(\d{4})(\d{2})(\d{2})/, '$1-$2-$3');
+    var lpTime = (t.live_price && t.live_price.market_time) || '';
+    var ycFlag = (t.live_price && t.live_price.using_yesterday_close) ? ' <span class="sub">[y-close]</span>' : '';
+    var gap = (lp != null && fc != null) ? ((lp - fc) / fc * 100) : null;
+    var gapCls = gap == null ? '' : (gap < 0 ? 'gap-pos' : 'gap-neg');
+
+    // method values
+    var m = t.methods || {};
+    var vals = [];
+    Object.keys(m).forEach(function(k){ if(m[k] && m[k].ok) vals.push(m[k].value); });
+    var mhi = vals.length ? Math.max.apply(null, vals) : null;
+    var mlo = vals.length ? Math.min.apply(null, vals) : null;
+
+    function methodCell(key, label, sub){
+      var x = m[key] || {};
+      if(!x.ok) return '<div class="m"><span class="lab">'+label+'</span><span class="v">—</span><span class="x">'+esc(x.why||'skip')+'</span></div>';
+      var cls = (x.value === mhi ? 'high' : (x.value === mlo ? 'low' : ''));
+      return '<div class="m '+cls+'"><span class="lab">'+label+'</span><span class="v">'+fmt(x.value)+'</span><span class="x">'+esc(sub(x))+'</span></div>';
+    }
+
+    var methodsHTML =
+      methodCell('pe',         'PE',         function(x){ return (x.multiple||'')+'× · earn '+(x.earnings_NTB||'?')+'B'; }) +
+      methodCell('ev_ebitda',  'EV/EBITDA',  function(x){ return (x.peer_multiple||'')+'× · ebitda '+(x.ebitda_NTB||'?')+'B'; }) +
+      methodCell('dcf',        'DCF',        function(x){ return 'g '+(x.growth_pct||'?')+'% · wacc '+(x.wacc_pct||'?')+'%'; }) +
+      methodCell('peer',       'Peer PE',    function(x){ return (x.peer_pe||'')+'× median'; }) +
+      methodCell('historical', '5y Hist PE', function(x){ return (x.band_median_pe||'')+'× median'; });
+
+    var lines = whyLines(t, ld);
+
+    var notgo = '';
+    if(v.v === 'wait' || v.v === 'watch'){
+      var failNotes = [];
+      if((t.confirmed_receipts||0) < (t.receipts_target||4)) failNotes.push('Receipt gate: only <b>'+t.confirmed_receipts+'/'+t.receipts_target+'</b> confirmed — need ≥ 4 confirmed contract receipts before BUY.');
+      if(lp != null && fc != null && (lp/fc) > 1.00) failNotes.push('Price gate: live <b>'+fmt(lp)+'</b> > fair-value ceiling <b>'+fmt(fc)+'</b> ('+pct(gap)+').');
+      if(t.spread_pct != null && t.spread_pct > 50) failNotes.push('Conviction gate: method spread <b>'+t.spread_pct.toFixed(1)+'%</b> > 50% — five methods disagree, thesis rests on one or two.');
+      if(failNotes.length){
+        notgo = '<div class="why notgo"><h4>why not buy yet</h4><ul>' + failNotes.map(function(f){ return '<li>'+f+'</li>'; }).join('') + '</ul></div>';
+      }
+    }
+
+    var verdictLabel = { buy:'BUY ZONE', watch:'WATCH', wait:'WAIT' }[v.v];
+
+    host.innerHTML =
+      '<div class="top">' +
+        '<div class="ident">' +
+          '<span class="tk">' + t.ticker + '</span>' +
+          '<span class="nm">' + esc(t.name_en||'') + ' · ' + esc(t.name_zh||'') + '</span>' +
+          '<span class="nm-sub">' + esc(t.layer_label_en||t.layer||'') + '</span>' +
+        '</div>' +
+        '<span class="verdict ' + v.v + '">' + verdictLabel + '</span>' +
+      '</div>' +
+
+      '<div class="price-row">' +
+        '<div class="cell"><span class="lab">live (TWSE)</span><span class="val live">' + fmt(lp) + ycFlag + '</span><span class="sub">' + esc(lpDate) + ' ' + esc(lpTime) + '</span></div>' +
+        '<div class="cell"><span class="lab">5-method avg</span><span class="val fair">' + fmt(t.weighted_avg) + '</span><span class="sub">range ' + fmt(t.range_low) + '–' + fmt(t.range_high) + ' · spread ' + (t.spread_pct||'—') + '%</span></div>' +
+        '<div class="cell"><span class="lab">fair-value ceiling</span><span class="val fair">' + fmt(fc) + '</span><span class="sub">cycle ' + (t.cycle_stage||'—') + ' × ' + (t.cycle_mult||1) + '</span></div>' +
+        '<div class="cell"><span class="lab">buy zone (full)</span><span class="val zone-full">≤ ' + fmt(t.buy_zone_full_size) + '</span><span class="sub">0.85× ceiling</span></div>' +
+        '<div class="cell"><span class="lab">starter zone</span><span class="val zone-starter">≤ ' + fmt(t.buy_zone_starter) + '</span><span class="sub">0.92× ceiling</span></div>' +
+        '<div class="cell"><span class="lab">price vs fair</span><span class="val ' + gapCls + '">' + pct(gap) + '</span><span class="sub">' + (gap == null ? '' : (gap < 0 ? 'below ceiling' : 'above ceiling')) + '</span></div>' +
+      '</div>' +
+
+      '<div class="methods">' + methodsHTML + '</div>' +
+
+      '<div class="why">' +
+        '<h4>why this name</h4>' +
+        '<ul>' + lines.map(function(l){ return '<li>'+l.t+'</li>'; }).join('') + '</ul>' +
+      '</div>' +
+
+      notgo +
+
+      '<div class="recstrip">' +
+        '<b>receipts</b>: <span class="' + ((t.confirmed_receipts||0) >= (t.receipts_target||4) ? 'pass' : 'fail') + '">' + (t.confirmed_receipts||0) + '/' + (t.receipts_target||4) + ' confirmed</span> · ' +
+        '<a href="/desk/' + t.ticker + '">open ledger →</a>' +
+      '</div>';
+  }
+
+  function load(){
+    document.getElementById('genmeta').textContent = 'loading…';
+    fetch('/data/desk/scan.json?_=' + Date.now(), { cache:'no-store' })
+      .then(function(r){ if(!r.ok) throw new Error('scan.json HTTP '+r.status); return r.json(); })
+      .then(render)
+      .catch(function(e){
+        document.getElementById('cards').innerHTML = '<div class="notice">scan.json not available · run <code>node tools/valuation.cjs --write</code> to generate. error: '+esc(e.message||e)+'</div>';
+        document.getElementById('genmeta').textContent = 'error';
+      });
+  }
+
+  document.getElementById('run').addEventListener('click', load);
+  load();
+})();
+</script>
+</body>
+</html>

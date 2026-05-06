@@ -120,6 +120,14 @@ const server = http.createServer((req, res) => {
         return res.end(fs.readFileSync(f));
       }
     }
+    // /desk/scan — five-method valuation scan board
+    if (p === '/desk/scan' || p === '/desk/scan/' || p === '/desk/scan.html') {
+      const f = path.join(ROOT, 'public/desk/scan.html');
+      if (fs.existsSync(f)) {
+        res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
+        return res.end(fs.readFileSync(f));
+      }
+    }
     {
       const m = p.match(/^\/desk\/([0-9]{3,5})\/?$/);
       if (m) {
