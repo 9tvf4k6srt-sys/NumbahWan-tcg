@@ -113,12 +113,30 @@ html[lang^=ja] [data-lang=ja]{display:initial}
 /* 6-box screen */
 .boxes{margin-top:28px; display:grid; grid-template-columns:repeat(3,1fr); gap:14px}
 .box{padding:14px 16px; border:1px solid var(--rule); border-radius:2px;
-  background:var(--paper-3)}
+  background:var(--paper-3); position:relative}
 .box .h{font-family:var(--mono); font-size:11px; letter-spacing:.2em;
   text-transform:uppercase; color:var(--brass); font-weight:700}
 .box .h b{color:var(--ink); margin-right:6px}
 .box .v{margin-top:6px; font-size:14px; color:var(--ink-2); line-height:1.5}
 .box.pending .v{color:var(--ink-3); font-style:italic}
+/* Box D dynamic colour per cycle stage */
+.box.fv-pass{border-color:rgba(60,120,70,.45); background:linear-gradient(180deg, rgba(60,120,70,.06) 0%, var(--paper-3) 100%)}
+.box.fv-watch{border-color:rgba(168,133,74,.45); background:linear-gradient(180deg, rgba(168,133,74,.08) 0%, var(--paper-3) 100%)}
+.box.fv-fail{border-color:rgba(123,42,30,.45); background:linear-gradient(180deg, rgba(123,42,30,.06) 0%, var(--paper-3) 100%)}
+.box .fv-num{font-family:var(--mono); font-size:13px; color:var(--ink); display:block; margin-top:4px; letter-spacing:.04em}
+.box .fv-tag{font-family:var(--mono); font-size:10px; letter-spacing:.18em; text-transform:uppercase; color:var(--brass); margin-top:4px; display:inline-block; border:1px solid var(--rule); padding:2px 6px; border-radius:1px}
+
+/* receipt verify badge */
+.receipt .vb{font-family:var(--mono); font-size:9px; letter-spacing:.2em;
+  text-transform:uppercase; padding:2px 5px; border-radius:1px;
+  margin-left:6px; vertical-align:1px; font-weight:700}
+.receipt .vb.draft{background:rgba(168,133,74,.18); color:var(--brass)}
+.receipt .vb.confirmed{background:rgba(60,120,70,.18); color:#3c7846}
+
+/* PT compute hint */
+.pt-hint{font-family:var(--mono); font-size:10px; letter-spacing:.18em;
+  text-transform:uppercase; color:var(--ink-3); margin-top:6px}
+.pt-hint b{color:var(--brass); font-weight:700}
 
 /* rationale sections */
 .rat{margin-top:36px}
@@ -223,6 +241,11 @@ html[lang^=ja] [data-lang=ja]{display:initial}
       <span data-lang="ja">当方の目標株価 · 4 つの入力を開示</span>
     </h2>
     <div class="pt-num"><span id="pt-val" class="pending">PENDING</span><span class="ccy" id="pt-ccy">NTD</span></div>
+    <div class="pt-hint" id="pt-hint">
+      <span data-lang="en">PT = (FY rev × OP margin + non-AI op profit) × multiple ÷ shares out</span>
+      <span data-lang="zh" style="font-family:var(--zh-display)">目標價 = (FY 營收 × OP 利潤率 + 非AI營業利益) × 本益比 ÷ 在外股數</span>
+      <span data-lang="ja">目標株価 = (FY 売上 × OP マージン + 非AI 営業利益) × マルチプル ÷ 発行株式数</span>
+    </div>
     <table>
       <tbody id="pt-rows"></tbody>
     </table>
@@ -336,10 +359,12 @@ html[lang^=ja] [data-lang=ja]{display:initial}
   function star(n){ if(!n) return ''; var s=''; for(var i=0;i<n;i++) s+='★'; for(var j=n;j<5;j++) s+='☆'; return s; }
   function tlangPick(o){ if(!o) return ''; return o[lang] || o.en || ''; }
 
-  fetch('/data/desk/' + tk + '.json').then(function(r){
-    if(!r.ok) throw new Error('no ledger');
-    return r.json();
-  }).then(function(d){
+  // Fetch ticker ledger AND cycle.json in parallel — cycle drives Box D fair-value band.
+  Promise.all([
+    fetch('/data/desk/' + tk + '.json').then(function(r){ if(!r.ok) throw new Error('no ledger'); return r.json(); }),
+    fetch('/data/desk/cycle.json').then(function(r){ return r.ok ? r.json() : null; }).catch(function(){ return null; })
+  ]).then(function(arr){
+    var d = arr[0], cycle = arr[1];
     document.title = 'The Desk · ' + tk + ' ' + (d.name_en||'') + ' — PINFORGE Wealth';
     txt('bc-tk', tk + ' · ' + (d.name_en||''));
     txt('tk', tk);
@@ -368,55 +393,107 @@ html[lang^=ja] [data-lang=ja]{display:initial}
     (ov.receipts||[]).forEach(function(r){
       var div = document.createElement('div'); div.className = 'receipt';
       var summary = lang==='zh' ? (r.summary_zh||r.summary_en||'') : (r.summary_en||'');
+      var vstat = (r.verify_status||'draft').toLowerCase();
+      var srcLink = r.source_url ? ('<a href="'+r.source_url+'" target="_blank" rel="noopener" style="color:var(--brass)">'+(r.source||'source')+'</a>') : (r.source||'—');
       div.innerHTML =
-        '<div class="rt">T' + (r.tier||'?') + ' · ' + (r.tier_label||'') + '</div>' +
+        '<div class="rt">T' + (r.tier||'?') + ' · ' + (r.tier_label||'') +
+          '<span class="vb '+vstat+'">'+vstat+'</span></div>' +
         '<div class="rs">' + (summary||'—') + '</div>' +
-        '<div class="rsrc">' + (r.source||'—') + (r.dated? ' · ' + r.dated : '') + (r.expires? ' · expires ' + r.expires : '') + '</div>';
+        '<div class="rsrc">' + srcLink + (r.dated? ' · ' + r.dated : '') + (r.expires? ' · ' + r.expires : '') + '</div>';
       rcWrap.appendChild(div);
     });
     document.querySelector('#ov-kill span').textContent = ov.kill || '—';
 
-    // PT
+    // PT — live compute from four inputs, gated by cycle stage multiplier.
+    // Formula: PT = (FY_rev × OP_margin + non_AI_op_profit) × multiple ÷ shares_out
+    // Units: FY_rev in NT$B; OP_margin in %; non_AI in NT$B; multiple unitless;
+    //        shares_out_m in millions. Result = NT$ per share.
     var pt = d.price_target || {};
-    var ptEl = document.getElementById('pt-val');
-    if(pt.value!=null){ ptEl.classList.remove('pending'); ptEl.textContent = pt.value; }
-    else { ptEl.classList.add('pending'); ptEl.textContent = 'PENDING'; }
-    document.getElementById('pt-ccy').textContent = (d.currency||'NTD');
-    var rows = document.getElementById('pt-rows');
-    rows.innerHTML = '';
     var inputs = pt.inputs || {};
+    function inum(k){ var v=inputs[k]; return (v && typeof v.value==='number') ? v.value : null; }
+    var fyR = inum('fy_revenue');
+    var opM = inum('operating_margin');
+    var nAI = inum('non_ai_contribution');
+    var mlt = inum('multiple');
+    var sho = (typeof d.shares_out_m==='number' && d.shares_out_m>0) ? d.shares_out_m : null;
+    var canCompute = pt.compute && fyR!=null && opM!=null && nAI!=null && mlt!=null && sho!=null;
+    var ptComputed = null;
+    if(canCompute){
+      // Earnings (NT$B) = FY_rev × OP_margin% + non_AI_op_profit
+      var earningsB = fyR * (opM/100) + nAI;
+      // Market cap (NT$B) = earnings × multiple
+      var mktCapB = earningsB * mlt;
+      // Per share NT$ = mkt_cap_NT$B × 1000 (→ NT$M) ÷ shares_m
+      ptComputed = mktCapB * 1000 / sho;
+    }
+    var ptShown = (pt.value!=null) ? pt.value : ptComputed;
+    var ptEl = document.getElementById('pt-val');
+    if(ptShown!=null){
+      ptEl.classList.remove('pending');
+      ptEl.textContent = (Math.round(ptShown*10)/10).toFixed(1);
+    } else {
+      ptEl.classList.add('pending');
+      ptEl.textContent = 'PENDING';
+    }
+    document.getElementById('pt-ccy').textContent = (d.currency||'NTD');
+
+    // Hint line: show formula + compute breakdown when live
+    var hintEl = document.getElementById('pt-hint');
+    if(canCompute){
+      var earnB = fyR * (opM/100) + nAI;
+      var dbg = ' · live: ('+fyR+' × '+opM+'% + '+nAI+') × '+mlt+' ÷ '+sho+'M = NT$'+(Math.round(ptComputed*10)/10).toFixed(1);
+      hintEl.insertAdjacentHTML('beforeend', '<b style="display:block;margin-top:4px">'+dbg+'</b>');
+    }
+
+    var rows = document.getElementById('pt-rows');
     var labels = {
       fy_revenue: 'FY revenue',
       operating_margin: 'Operating margin',
-      non_ai_contribution: 'Non-AI contribution',
+      non_ai_contribution: 'Non-AI op profit',
       multiple: 'Multiple'
     };
-    Object.keys(labels).forEach(function(k){
-      var v = inputs[k] || {};
-      var disp = (v.value==null) ? 'PENDING' : (v.value + (v.unit?(' '+v.unit):''));
-      var cmp  = v.vs_street || v.vs_history || v.note || '';
-      var tr = document.createElement('tr');
-      tr.innerHTML = '<td>'+labels[k]+'</td><td>'+disp+'</td><td>'+cmp+'</td>';
-      rows.appendChild(tr.firstElementChild ? tr : tr);
-      // safer:
-    });
-    // simpler rebuild:
     rows.innerHTML = Object.keys(labels).map(function(k){
       var v = inputs[k] || {};
       var disp = (v.value==null) ? '<i style="color:var(--ink-3)">PENDING</i>' : (v.value + (v.unit?(' '+v.unit):''));
       var cmp  = v.vs_street || v.vs_history || v.note || '';
-      return '<tr><td>'+labels[k]+'</td><td>'+disp+'</td><td>'+cmp+'</td></tr>';
+      var vstat = (v.verify_status||'').toLowerCase();
+      var badge = vstat ? ' <span style="font-family:var(--mono);font-size:9px;letter-spacing:.18em;text-transform:uppercase;padding:2px 5px;border-radius:1px;margin-left:4px;background:'+(vstat==='confirmed'?'rgba(60,120,70,.18);color:#3c7846':'rgba(168,133,74,.18);color:var(--brass)')+'">'+vstat+'</span>' : '';
+      return '<tr><td>'+labels[k]+'</td><td>'+disp+badge+'</td><td>'+cmp+'</td></tr>';
     }).join('');
 
     txt('pt-kill', pt.kill_condition || '—');
 
-    // 6-box screen
+    // 6-box screen — Box D auto-computed from cycle stage × PT
     var sc = d.screen || {};
+    var stage = (cycle && cycle.stage) || 'mid';
+    var fvBand = cycle && cycle.fair_value_band && cycle.fair_value_band[stage];
+    var stageMult = (fvBand && typeof fvBand.mult === 'number') ? fvBand.mult : 1.0;
+    var stageLabel = (fvBand && fvBand.label_en) || stage;
+    // Build Box D content from cycle multiplier
+    var boxD;
+    if(ptShown!=null){
+      var fairUpper = ptShown * stageMult;
+      var fairLower = ptShown * stageMult * 0.85;  // 15% buffer below band ceiling = "cheap to fair"
+      boxD = {
+        note:
+          'Stage: <b>'+stage.toUpperCase()+'</b> · band ' + stageMult.toFixed(2) + '× PT (' + stageLabel + '). ' +
+          'Fair-value ceiling: NT$' + (Math.round(fairUpper*10)/10).toFixed(1) +
+          '. Cheap-to-fair zone: ≤ NT$' + (Math.round(fairUpper*10)/10).toFixed(1) +
+          ' · cheap if ≤ NT$' + (Math.round(fairLower*10)/10).toFixed(1) + '.',
+        ptForBox: ptShown,
+        fairUpper: fairUpper,
+        fairLower: fairLower,
+        stage: stage,
+        verdict: 'compute'  // page does not know live price; analyst confirms
+      };
+    } else {
+      boxD = { note: '[draft — needs PT compute] cycle stage = <b>'+stage.toUpperCase()+'</b> · multiplier '+stageMult.toFixed(2)+'×.', verdict: 'pending' };
+    }
     var defs = [
       ['A', 'AI exposure',     sc.A_ai_exposure],
       ['B', '訂單能見度',       sc.B_order_visibility],
       ['C', 'Growth potential',sc.C_growth_potential],
-      ['D', 'Cheap to fair',   sc.D_cheap_to_fair],
+      ['D', 'Cheap to fair',   boxD],
       ['E', 'Increasing moat', sc.E_increasing_moat],
       ['F', '價值重估',         sc.F_revaluation]
     ];
@@ -426,8 +503,23 @@ html[lang^=ja] [data-lang=ja]{display:initial}
       var stars = obj.stars;
       var head = stars ? (' · ' + star(stars)) : '';
       var v = obj.note || obj.score || '—';
-      var pendingCls = (obj.score==='PENDING' || obj.score==null) && !stars ? ' pending' : '';
-      return '<div class="box'+pendingCls+'"><div class="h"><b>'+key+'</b>'+lab+head+'</div><div class="v">'+v+'</div></div>';
+      var pendingCls = (obj.score==='PENDING' || obj.score==null) && !stars && key!=='D' ? ' pending' : '';
+      // Box D fair-value tinting
+      var fvCls = '';
+      var fvNum = '';
+      var fvTag = '';
+      if(key==='D'){
+        if(obj.verdict==='compute'){
+          fvCls = ' fv-watch';  // default tint: analyst must confirm vs live price
+          fvNum = '<span class="fv-num">PT NT$'+ (Math.round(obj.ptForBox*10)/10).toFixed(1) +
+                  ' · ceiling NT$'+ (Math.round(obj.fairUpper*10)/10).toFixed(1) +'</span>';
+          fvTag = '<span class="fv-tag">cycle: '+(obj.stage||'mid').toUpperCase()+' · '+stageMult.toFixed(2)+'×</span>';
+        } else {
+          pendingCls = ' pending';
+        }
+      }
+      return '<div class="box'+pendingCls+fvCls+'"><div class="h"><b>'+key+'</b>'+lab+head+'</div>'+
+             '<div class="v">'+v+fvNum+'</div>'+fvTag+'</div>';
     }).join('');
 
     // Rationale

@@ -1,21 +1,71 @@
 {
   "as_of": "2026-05-04",
-  "stage": "[PENDING — CL/HW first call]",
+  "stage": "mid",
+  "stage_label_zh": "週期中段 · capex 仍在加碼,但 H2 出現分化",
+  "stage_label_ja": "サイクル中盤",
   "stage_options": ["early", "mid", "late", "digestion"],
   "fair_value_band": {
-    "early":     "1.10× our PT (room to expand)",
-    "mid":       "1.00× our PT",
-    "late":      "0.85× our PT (trim risk)",
-    "digestion": "0.70× our PT (wait it out)"
+    "early":     { "mult": 1.10, "label_en": "room to expand",  "label_zh": "上修空間"   },
+    "mid":       { "mult": 1.00, "label_en": "fair",            "label_zh": "合理"       },
+    "late":      { "mult": 0.85, "label_en": "trim risk",       "label_zh": "減碼風險"   },
+    "digestion": { "mult": 0.70, "label_en": "wait it out",     "label_zh": "等週期過去" }
   },
   "inputs": {
-    "tsmc_monthly_yoy": { "value": null, "as_of": "", "source": "TSMC IR monthly release" },
-    "hyperscaler_capex_2026e": { "value": null, "unit": "USD bn", "as_of": "", "source": "MSFT + META + GOOG + AMZN guidance aggregated" },
-    "semi_book_to_bill": { "value": null, "as_of": "", "source": "SEMI quarterly report" },
-    "hbm_contract_pricing": { "value": null, "trend": "", "as_of": "", "source": "TrendForce / DRAMeXchange" },
-    "abf_lead_times": { "value": null, "unit": "weeks", "as_of": "", "source": "DigiTimes / 工商時報 channel checks" },
-    "bis_export_control_delta": { "value": null, "as_of": "", "source": "BIS Federal Register + Reuters" }
+    "tsmc_monthly_yoy": {
+      "value": null, "unit": "%", "as_of": "[draft — pull from monthly release]",
+      "verify_status": "draft",
+      "source": "TSMC IR monthly revenue release",
+      "source_url": "https://investor.tsmc.com/english/monthly-revenue",
+      "threshold_note": "early ≥ +30%, mid +15–30%, late +0–15%, digestion < 0%"
+    },
+    "hyperscaler_capex_2026e": {
+      "value": null, "unit": "USD bn", "as_of": "[draft — last guidance round]",
+      "verify_status": "draft",
+      "source": "MSFT + META + GOOG + AMZN guidance aggregated, latest earnings",
+      "source_url": "https://www.microsoft.com/en-us/investor/earnings",
+      "threshold_note": "early ≥ +35% YoY, mid +15–35%, late +0–15%, digestion < 0%. 2025 aggregate ≈ $300B reference."
+    },
+    "semi_book_to_bill": {
+      "value": null, "unit": "ratio", "as_of": "[draft — latest quarterly]",
+      "verify_status": "draft",
+      "source": "SEMI quarterly equipment book-to-bill",
+      "source_url": "https://www.semi.org/en/products-services/market-data",
+      "threshold_note": "early > 1.20, mid 1.00–1.20, late 0.90–1.00, digestion < 0.90"
+    },
+    "hbm_contract_pricing": {
+      "value": null, "trend": "flat", "as_of": "[draft]",
+      "verify_status": "draft",
+      "source": "TrendForce HBM contract tracker",
+      "source_url": "https://www.trendforce.com/research/dram",
+      "threshold_note": "rising = early/mid bias, flat = mid, falling = late bias"
+    },
+    "abf_lead_times": {
+      "value": null, "unit": "weeks", "as_of": "[draft — channel checks]",
+      "verify_status": "draft",
+      "source": "DigiTimes / 工商時報 substrate channel checks",
+      "source_url": "https://www.digitimes.com/news/",
+      "threshold_note": "> 30wk = early, 20–30wk = mid, 10–20wk = late, < 10wk = digestion"
+    },
+    "bis_export_control_delta": {
+      "value": null, "as_of": "[draft]",
+      "verify_status": "draft",
+      "source": "US BIS Federal Register + Reuters",
+      "source_url": "https://www.federalregister.gov/agencies/industry-and-security-bureau",
+      "threshold_note": "tightening this quarter = headwind shift; no change = neutral"
+    }
   },
-  "rule": "Stage flips when 4 of 6 inputs cross thresholds simultaneously. tools/desk-tag.cjs is the engine.",
-  "history": []
+  "current_call": {
+    "rationale_en": "Mid-cycle assumption is the working draft until 4 of 6 inputs are confirmed. Hyperscaler capex still rising into 2026 supports mid; HBM pricing flattening and substrate lead times shortening would shift to late. Override only after analyst confirms inputs.",
+    "rationale_zh": "中段為暫定假設,待 6 項輸入中至少 4 項分析師確認後再翻牌。Hyperscaler capex 仍在加碼利多中段;HBM 報價走平 + ABF 交期縮短若同時出現則翻向後段。",
+    "next_review": "2026-05-15"
+  },
+  "rule": "Stage flips when 4 of 6 inputs cross thresholds simultaneously. Currently 0/6 confirmed — stage label is a draft anchor only.",
+  "history": [
+    {
+      "as_of": "2026-05-04",
+      "stage": "mid",
+      "verify_status": "draft",
+      "note": "Initial scaffold. All inputs draft pending analyst sign-off."
+    }
+  ]
 }
