@@ -99,19 +99,34 @@ function flipReceipt(d, id, to, by, note) {
   return true;
 }
 
-function flipPTInput(d, key, to, by, note) {
+function flipPTInput(d, key, to, by, note, newValue) {
   const inputs = (d.price_target && d.price_target.inputs) || {};
   if (!inputs[key]) die('no PT input ' + key);
-  const before = (inputs[key].verify_status || 'draft').toLowerCase();
-  if (before === to) { console.log('  [verify] PT input ' + key + ' already ' + to); return false; }
+  const beforeStatus = (inputs[key].verify_status || 'draft').toLowerCase();
+  const valueChange = (typeof newValue === 'number');
+  if (beforeStatus === to && !valueChange) { console.log('  [verify] PT input ' + key + ' already ' + to); return false; }
   const ptBefore = computePT(d);
+  const valueBefore = inputs[key].value;
   inputs[key].verify_status = to;
-  inputs[key].last_revision = { date: today(), by: by, from: before, to: to };
+  if (valueChange) inputs[key].value = newValue;
+  inputs[key].last_revision = {
+    date: today(), by: by,
+    from: beforeStatus, to: to,
+    value_before: valueBefore,
+    value_after: inputs[key].value
+  };
   const ptAfter = computePT(d);
   appendLog(d, {
-    as_of: today(), by: by, action: to === 'confirmed' ? 'confirm PT input' : 'unverify PT input',
+    as_of: today(), by: by,
+    action: valueChange
+      ? ('revise PT input · ' + key + ' ' + valueBefore + ' → ' + newValue)
+      : (to === 'confirmed' ? 'confirm PT input' : 'unverify PT input'),
     receipts_confirmed: [],
-    pt_revisions: [{ key: key, from: before, to: to, pt_before: ptBefore, pt_after: ptAfter }],
+    pt_revisions: [{
+      key: key, from: beforeStatus, to: to,
+      value_before: valueBefore, value_after: inputs[key].value,
+      pt_before: ptBefore, pt_after: ptAfter
+    }],
     note: note || ''
   });
   return true;
@@ -133,8 +148,10 @@ function recomputeStars(d) {
     console.log('Usage:');
     console.log('  node tools/verify.cjs <ticker>');
     console.log('  node tools/verify.cjs <ticker> <receipt-id> [--by NAME] [--note "..."]');
-    console.log('  node tools/verify.cjs <ticker> pt:<input-key> [--by NAME] [--note "..."]');
+    console.log('  node tools/verify.cjs <ticker> pt:<input-key> [--set <number>] [--by NAME] [--note "..."]');
     console.log('  node tools/verify.cjs <ticker> --unverify <id-or-pt:key>');
+    console.log('');
+    console.log('  --set <number>  Revise the PT input value (logs PT-before vs PT-after).');
     process.exit(0);
   }
 
@@ -150,10 +167,17 @@ function recomputeStars(d) {
   let unverify = false;
   let by = process.env.USER || 'CL';
   let note = '';
+  let setValue = null;
   for (let i = 1; i < argv.length; i++) {
     const a = argv[i];
     if (a === '--by') { by = argv[++i] || by; }
     else if (a === '--note') { note = argv[++i] || ''; }
+    else if (a === '--set') {
+      const raw = argv[++i];
+      const num = Number(raw);
+      if (Number.isFinite(num)) setValue = num;
+      else die('--set expects a number, got: ' + raw);
+    }
     else if (a === '--unverify') { unverify = true; target = argv[++i]; }
     else if (!target) { target = a; }
   }
@@ -163,8 +187,9 @@ function recomputeStars(d) {
   let changed = false;
 
   if (target.startsWith('pt:')) {
-    changed = flipPTInput(d, target.slice(3), to, by, note);
+    changed = flipPTInput(d, target.slice(3), to, by, note, setValue);
   } else {
+    if (setValue != null) die('--set only valid with pt:<key>');
     changed = flipReceipt(d, target, to, by, note);
   }
 

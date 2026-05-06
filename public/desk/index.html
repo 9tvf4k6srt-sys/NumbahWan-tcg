@@ -102,6 +102,44 @@ table.universe a.tk-link{display:inline-flex; align-items:baseline; gap:6px}
 table.universe a.tk-link:hover .tk{color:var(--seal)}
 table.universe .arrow{color:var(--brass-2); font-family:var(--mono); font-size:13px}
 
+/* contract-delta panel — what the receipts moved this week */
+.cdp{margin:32px 0 8px; padding:22px 24px; border:1.5px solid var(--brass-2);
+  border-radius:2px; background:linear-gradient(180deg, rgba(168,133,74,.06) 0%, transparent 100%)}
+.cdp h2{margin:0 0 4px; font-size:13px; letter-spacing:.24em; text-transform:uppercase;
+  font-family:var(--mono); color:var(--brass); font-weight:700}
+.cdp .sub{margin:0 0 16px; font-size:13px; color:var(--ink-3); font-family:var(--mono);
+  letter-spacing:.06em}
+.cdp .empty{padding:18px 4px; color:var(--ink-3); font-style:italic; font-size:14.5px}
+.cdp ul{list-style:none; margin:0; padding:0}
+.cdp li{padding:12px 0; border-top:1px solid var(--rule); display:grid;
+  grid-template-columns:74px 1fr auto; gap:14px; align-items:start}
+.cdp li:first-child{border-top:none}
+.cdp .when{font-family:var(--mono); font-size:11px; color:var(--ink-3);
+  letter-spacing:.1em; padding-top:3px}
+.cdp .what{font-size:14.5px; color:var(--ink-2); line-height:1.5}
+.cdp .what a{color:var(--brass); font-weight:600}
+.cdp .what .who{font-family:var(--mono); font-size:11px; color:var(--ink-3);
+  letter-spacing:.06em; margin-top:2px; display:block}
+.cdp .what .note{font-size:13px; color:var(--ink-3); margin-top:3px;
+  font-style:italic}
+.cdp .delta{font-family:var(--mono); font-weight:700; font-size:14px;
+  letter-spacing:.04em; padding:6px 10px; border-radius:2px; white-space:nowrap;
+  align-self:start}
+.cdp .delta.up{background:rgba(60,120,70,.12); color:#3c7846}
+.cdp .delta.down{background:rgba(123,42,30,.12); color:var(--seal)}
+.cdp .delta.flat{background:rgba(26,22,18,.05); color:var(--ink-3)}
+.cdp .delta small{display:block; font-size:10px; font-weight:400; letter-spacing:.16em;
+  text-transform:uppercase; margin-top:2px; opacity:.75}
+.cdp .legend{margin-top:14px; padding-top:14px; border-top:1px dashed var(--rule);
+  font-family:var(--mono); font-size:10.5px; color:var(--ink-3); letter-spacing:.06em;
+  line-height:1.6}
+.cdp .legend b{color:var(--brass); font-weight:700}
+@media (max-width:680px){
+  .cdp li{grid-template-columns:1fr; gap:6px}
+  .cdp .when{padding-top:0}
+  .cdp .delta{justify-self:start}
+}
+
 /* notes / footer */
 .notes{margin-top:32px; padding:20px 22px; background:var(--paper-3);
   border-left:3px solid var(--seal); font-size:14.5px; color:var(--ink-2)}
@@ -186,6 +224,32 @@ table.universe .arrow{color:var(--brass-2); font-family:var(--mono); font-size:1
     </ul>
   </div>
 
+  <!-- Contract-delta panel — last 7 days of verification_log[] across the desk -->
+  <section class="cdp" aria-labelledby="cdp-h">
+    <h2 id="cdp-h">
+      <span data-lang="en">Contract delta · last 7 days</span>
+      <span data-lang="zh" style="font-family:var(--zh-display)">契約變動 · 近 7 日</span>
+      <span data-lang="ja">契約デルタ · 直近 7 日</span>
+    </h2>
+    <p class="sub">
+      <span data-lang="en">PT-before vs PT-after, sourced from each ticker's verification_log.</span>
+      <span data-lang="zh">目標價變動,來源:每檔 verification_log。</span>
+      <span data-lang="ja">目標株価の変動 — 各銘柄の verification_log より。</span>
+    </p>
+    <div id="cdp-body">
+      <div class="empty">
+        <span data-lang="en">Loading verification logs…</span>
+        <span data-lang="zh">載入驗證日誌…</span>
+        <span data-lang="ja">検証ログを読み込み中…</span>
+      </div>
+    </div>
+    <div class="legend">
+      <span data-lang="en"><b>Delta</b> = our-PT-after − our-PT-before · this is a change to <b>our</b> target, not a forecast of the stock price (consensus revision, multiple re-rating and flow are not modelled).</span>
+      <span data-lang="zh"><b>Delta</b> = 我們的目標價變動,不是股價預測(共識修正、評價變動、籌碼流向皆不在模型內)。</span>
+      <span data-lang="ja"><b>デルタ</b> = 当方目標株価の変動。株価予測ではない(コンセンサス修正・マルチプル再評価・フローは未モデル化)。</span>
+    </div>
+  </section>
+
   <h2 style="margin:32px 0 4px; font-size:21px; font-weight:600; letter-spacing:.01em">
     <span data-lang="en">First five names</span>
     <span data-lang="zh" style="font-family:var(--zh-display)">首批五檔</span>
@@ -208,77 +272,14 @@ table.universe .arrow{color:var(--brass-2); font-family:var(--mono); font-size:1
         <th>&nbsp;</th>
       </tr>
     </thead>
-    <tbody>
-      <tr>
-        <td>01</td>
-        <td><a class="tk-link" href="/desk/3037"><span class="tk">3037</span></a></td>
-        <td>
-          <a href="/desk/3037">
-            <span class="nm">Unimicron · 欣興</span>
-            <span class="nm-sub">ABF substrate · CoWoS bottleneck</span>
-          </a>
-        </td>
-        <td class="colhide"><span class="layer">substrate</span></td>
-        <td><span class="stars pending">★ pending</span></td>
-        <td class="colhide" style="font-family:var(--mono); font-size:12px; color:var(--ink-3); letter-spacing:.18em">— — — — — —</td>
-        <td><a href="/desk/3037" class="arrow">open →</a></td>
-      </tr>
-      <tr>
-        <td>02</td>
-        <td><a class="tk-link" href="/desk/2449"><span class="tk">2449</span></a></td>
-        <td>
-          <a href="/desk/2449">
-            <span class="nm">KYEC · 京元電子</span>
-            <span class="nm-sub">IC test · advanced AI silicon</span>
-          </a>
-        </td>
-        <td class="colhide"><span class="layer">test</span></td>
-        <td><span class="stars pending">★ pending</span></td>
-        <td class="colhide" style="font-family:var(--mono); font-size:12px; color:var(--ink-3); letter-spacing:.18em">— — — — — —</td>
-        <td><a href="/desk/2449" class="arrow">open →</a></td>
-      </tr>
-      <tr>
-        <td>03</td>
-        <td><a class="tk-link" href="/desk/3017"><span class="tk">3017</span></a></td>
-        <td>
-          <a href="/desk/3017">
-            <span class="nm">AVC · 奇鋐</span>
-            <span class="nm-sub">Liquid cooling · AI server thermal</span>
-          </a>
-        </td>
-        <td class="colhide"><span class="layer">thermal</span></td>
-        <td><span class="stars pending">★ pending</span></td>
-        <td class="colhide" style="font-family:var(--mono); font-size:12px; color:var(--ink-3); letter-spacing:.18em">— — — — — —</td>
-        <td><a href="/desk/3017" class="arrow">open →</a></td>
-      </tr>
-      <tr>
-        <td>04</td>
-        <td><a class="tk-link" href="/desk/2308"><span class="tk">2308</span></a></td>
-        <td>
-          <a href="/desk/2308">
-            <span class="nm">Delta Electronics · 台達電</span>
-            <span class="nm-sub">AI server PSU · 800V architecture</span>
-          </a>
-        </td>
-        <td class="colhide"><span class="layer">power</span></td>
-        <td><span class="stars pending">★ pending</span></td>
-        <td class="colhide" style="font-family:var(--mono); font-size:12px; color:var(--ink-3); letter-spacing:.18em">— — — — — —</td>
-        <td><a href="/desk/2308" class="arrow">open →</a></td>
-      </tr>
-      <tr>
-        <td>05</td>
-        <td><a class="tk-link" href="/desk/3443"><span class="tk">3443</span></a></td>
-        <td>
-          <a href="/desk/3443">
-            <span class="nm">GUC · 創意電子</span>
-            <span class="nm-sub">ASIC design service · TSMC-backed</span>
-          </a>
-        </td>
-        <td class="colhide"><span class="layer">asic</span></td>
-        <td><span class="stars pending">★ pending</span></td>
-        <td class="colhide" style="font-family:var(--mono); font-size:12px; color:var(--ink-3); letter-spacing:.18em">— — — — — —</td>
-        <td><a href="/desk/3443" class="arrow">open →</a></td>
-      </tr>
+    <tbody id="universe-body">
+      <!-- rows rendered from /data/desk/<ticker>.json — see <script> below.
+           Static fallback (no-JS) preserves links for the routes sensor: -->
+      <tr><td>01</td><td><a href="/desk/3037" class="tk-link"><span class="tk">3037</span></a></td><td><a href="/desk/3037">Unimicron · 欣興</a></td><td class="colhide"><span class="layer">substrate</span></td><td><span class="stars pending">★ pending</span></td><td class="colhide">— — — — — —</td><td><a href="/desk/3037" class="arrow">open →</a></td></tr>
+      <tr><td>02</td><td><a href="/desk/2449" class="tk-link"><span class="tk">2449</span></a></td><td><a href="/desk/2449">KYEC · 京元電子</a></td><td class="colhide"><span class="layer">test</span></td><td><span class="stars pending">★ pending</span></td><td class="colhide">— — — — — —</td><td><a href="/desk/2449" class="arrow">open →</a></td></tr>
+      <tr><td>03</td><td><a href="/desk/3017" class="tk-link"><span class="tk">3017</span></a></td><td><a href="/desk/3017">AVC · 奇鋐</a></td><td class="colhide"><span class="layer">thermal</span></td><td><span class="stars pending">★ pending</span></td><td class="colhide">— — — — — —</td><td><a href="/desk/3017" class="arrow">open →</a></td></tr>
+      <tr><td>04</td><td><a href="/desk/2308" class="tk-link"><span class="tk">2308</span></a></td><td><a href="/desk/2308">Delta · 台達電</a></td><td class="colhide"><span class="layer">power</span></td><td><span class="stars pending">★ pending</span></td><td class="colhide">— — — — — —</td><td><a href="/desk/2308" class="arrow">open →</a></td></tr>
+      <tr><td>05</td><td><a href="/desk/3443" class="tk-link"><span class="tk">3443</span></a></td><td><a href="/desk/3443">GUC · 創意電子</a></td><td class="colhide"><span class="layer">asic</span></td><td><span class="stars pending">★ pending</span></td><td class="colhide">— — — — — —</td><td><a href="/desk/3443" class="arrow">open →</a></td></tr>
     </tbody>
   </table>
 
@@ -315,6 +316,8 @@ table.universe .arrow{color:var(--brass-2); font-family:var(--mono); font-size:1
 <script>
 (function(){
   'use strict';
+
+  // ── language toggle (shared shape with ticker.html)
   var stored = null;
   try{ stored = localStorage.getItem('pf_lang'); }catch(e){}
   var lang = stored || (navigator.language||'en').slice(0,2).toLowerCase();
@@ -329,6 +332,174 @@ table.universe .arrow{color:var(--brass-2); font-family:var(--mono); font-size:1
       try{ localStorage.setItem('pf_lang', v); }catch(e){}
       btns.forEach(function(x){ x.classList.toggle('on', x.dataset.set===v); });
     });
+  });
+
+  // ── universe + contract-delta hydration
+  var TICKERS = ['3037','2449','3017','2308','3443'];
+  var ROW_NUM = { '3037':'01','2449':'02','3017':'03','2308':'04','3443':'05' };
+
+  function esc(s){
+    return String(s==null?'':s).replace(/[&<>"]/g, function(c){
+      return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];
+    });
+  }
+  function star(n){
+    if(!n || n<1) return '';
+    var s=''; for(var i=0;i<n;i++) s+='★'; for(var j=n;j<5;j++) s+='☆';
+    return s;
+  }
+  function computePT(d){
+    if(!d || !d.price_target || !d.price_target.compute) return null;
+    var i = d.price_target.inputs || {};
+    var fyR = i.fy_revenue && i.fy_revenue.value;
+    var opM = i.operating_margin && i.operating_margin.value;
+    var nAI = i.non_ai_contribution && i.non_ai_contribution.value;
+    var mlt = i.multiple && i.multiple.value;
+    var sho = d.shares_out_m;
+    if([fyR,opM,nAI,mlt,sho].some(function(v){return typeof v!=='number';})) return null;
+    return (fyR*(opM/100)+nAI) * mlt * 1000 / sho;
+  }
+  function fmtPT(v){
+    if(v==null) return '—';
+    return 'NT$' + (Math.round(v*10)/10).toFixed(1);
+  }
+  function daysAgo(iso){
+    if(!iso) return Infinity;
+    var t = Date.parse(iso); if(isNaN(t)) return Infinity;
+    return Math.floor((Date.now()-t)/86400000);
+  }
+
+  Promise.all(TICKERS.map(function(tk){
+    return fetch('/data/desk/'+tk+'.json')
+      .then(function(r){ return r.ok ? r.json() : null; })
+      .then(function(d){ return { tk: tk, d: d }; })
+      .catch(function(){ return { tk: tk, d: null }; });
+  })).then(function(arr){
+    // ── render universe table
+    var tbody = document.getElementById('universe-body');
+    if(tbody){
+      tbody.innerHTML = arr.map(function(x){
+        var tk = x.tk, d = x.d;
+        var num = ROW_NUM[tk] || '—';
+        if(!d){
+          return '<tr><td>'+num+'</td><td><a href="/desk/'+tk+'" class="tk-link"><span class="tk">'+tk+'</span></a></td><td><a href="/desk/'+tk+'">—</a></td><td class="colhide">—</td><td><span class="stars pending">no ledger</span></td><td class="colhide">— — — — — —</td><td><a href="/desk/'+tk+'" class="arrow">open →</a></td></tr>';
+        }
+        var nm = (d.name_en||tk) + (d.name_zh? ' · '+d.name_zh : '');
+        var subRaw = (lang==='zh' && d.layer_label_zh) ? d.layer_label_zh : (d.layer_label_en||d.layer||'');
+        var ov = d.order_visibility || {};
+        var stars = ov.stars;
+        var starsHTML = (stars && stars>=1)
+          ? '<span class="stars">'+star(stars)+'</span>'
+          : '<span class="stars pending">★ pending · '+(ov.stars_confirmed||0)+'/'+(ov.stars_draft_target||4)+'</span>';
+        // 6-box compact: confirmed = filled, draft-pass = brass dot, compute = compute glyph, pending = dash
+        var sc = d.screen || {};
+        var keys = ['A_ai_exposure','B_order_visibility','C_growth_potential','D_cheap_to_fair','E_increasing_moat','F_revaluation'];
+        var glyphs = keys.map(function(k){
+          var b = sc[k] || {};
+          if(b.score==='compute') return '<span title="compute">∑</span>';
+          if(b.stars && b.stars>=4) return '<span style="color:var(--brass-2)" title="draft-pass ★'+b.stars+'">●</span>';
+          if(b.stars && b.stars>=1) return '<span style="color:var(--brass-3)" title="draft ★'+b.stars+'">○</span>';
+          if(b.score==='draft-pass' || b.score==='confirmed') return '<span style="color:var(--brass-2)">●</span>';
+          return '<span style="color:var(--ink-3)">—</span>';
+        }).join(' ');
+        return '<tr>'+
+          '<td>'+num+'</td>'+
+          '<td><a class="tk-link" href="/desk/'+tk+'"><span class="tk">'+tk+'</span></a></td>'+
+          '<td><a href="/desk/'+tk+'">'+
+            '<span class="nm">'+esc(nm)+'</span>'+
+            '<span class="nm-sub">'+esc(subRaw)+'</span></a></td>'+
+          '<td class="colhide"><span class="layer">'+esc(d.layer||'—')+'</span></td>'+
+          '<td>'+starsHTML+'</td>'+
+          '<td class="colhide" style="font-family:var(--mono); font-size:13px; color:var(--ink-3); letter-spacing:.18em">'+glyphs+'</td>'+
+          '<td><a href="/desk/'+tk+'" class="arrow">open →</a></td>'+
+          '</tr>';
+      }).join('');
+    }
+
+    // ── harvest verification_log[] entries from last 7 days
+    var events = [];
+    arr.forEach(function(x){
+      var tk = x.tk, d = x.d;
+      if(!d || !Array.isArray(d.verification_log)) return;
+      d.verification_log.forEach(function(entry){
+        if(daysAgo(entry.as_of) > 7) return;
+        // Skip the bare scaffold entry (no receipts confirmed, no PT revisions)
+        var hasReceipts = entry.receipts_confirmed && entry.receipts_confirmed.length;
+        var hasRevisions = entry.pt_revisions && entry.pt_revisions.length;
+        var isScaffold = !hasReceipts && !hasRevisions;
+        if(isScaffold && /scaffold/i.test(entry.action||'')) return;
+        events.push({
+          tk: tk,
+          name_en: d.name_en || tk,
+          name_zh: d.name_zh || '',
+          as_of: entry.as_of,
+          by: entry.by,
+          action: entry.action || '',
+          receipts: entry.receipts_confirmed || [],
+          revisions: entry.pt_revisions || [],
+          note: entry.note || '',
+          dAgo: daysAgo(entry.as_of)
+        });
+      });
+    });
+    // sort newest first
+    events.sort(function(a,b){ return a.dAgo - b.dAgo; });
+
+    var cdpBody = document.getElementById('cdp-body');
+    if(!cdpBody) return;
+    if(events.length === 0){
+      cdpBody.innerHTML =
+        '<div class="empty">'+
+        '<span data-lang="en">No contract activity in the last 7 days. All five ledgers are in <b>draft</b> — analyst must confirm receipts via <code>node tools/verify.cjs &lt;ticker&gt; &lt;receipt-id&gt;</code> before deltas appear here.</span>'+
+        '<span data-lang="zh" style="font-family:var(--zh-display)">近 7 日無契約活動。五檔皆為<b>草稿</b>狀態 — 分析師需以 <code>node tools/verify.cjs &lt;ticker&gt; &lt;receipt-id&gt;</code> 確認收據,變動才會出現於此。</span>'+
+        '<span data-lang="ja">直近 7 日の契約活動なし。5 銘柄すべて<b>ドラフト</b>状態 — 分析師が <code>node tools/verify.cjs</code> で受領証を確認後に表示されます。</span>'+
+        '</div>';
+      return;
+    }
+    cdpBody.innerHTML = '<ul>' + events.map(function(e){
+      // compute the largest PT delta if any pt_revisions present
+      var bestDelta = null;
+      var bestRow = null;
+      e.revisions.forEach(function(r){
+        if(typeof r.pt_before==='number' && typeof r.pt_after==='number'){
+          var d = r.pt_after - r.pt_before;
+          if(bestDelta===null || Math.abs(d) > Math.abs(bestDelta)){ bestDelta = d; bestRow = r; }
+        }
+      });
+      var deltaHTML = '';
+      if(bestRow){
+        var pct = bestRow.pt_before ? (bestDelta/bestRow.pt_before*100) : 0;
+        var cls = Math.abs(bestDelta) < 0.05 ? 'flat' : (bestDelta > 0 ? 'up' : 'down');
+        var sign = bestDelta > 0 ? '+' : '';
+        deltaHTML = '<span class="delta '+cls+'">'+
+          sign + (Math.round(bestDelta*10)/10).toFixed(1) + ' NT$' +
+          '<small>'+ sign + pct.toFixed(1) +'% · '+ esc(bestRow.key||'') +'</small>'+
+          '</span>';
+      } else if(e.receipts.length){
+        deltaHTML = '<span class="delta flat"><small>'+e.receipts.length+' receipt'+(e.receipts.length>1?'s':'')+' confirmed</small></span>';
+      } else {
+        deltaHTML = '<span class="delta flat"><small>note</small></span>';
+      }
+      var when = e.dAgo === 0 ? 'today' : (e.dAgo === 1 ? '1d ago' : (e.dAgo+'d ago'));
+      var whatLine = '<a href="/desk/'+e.tk+'">'+esc(e.tk+' · '+e.name_en)+'</a> — ' + esc(e.action);
+      if(e.receipts.length){
+        whatLine += ' <span class="who">' + e.receipts.map(esc).join(' · ') + '</span>';
+      }
+      if(bestRow){
+        whatLine += ' <span class="who">' + esc(bestRow.key) + ': ' + fmtPT(bestRow.pt_before) + ' → ' + fmtPT(bestRow.pt_after) + '</span>';
+      }
+      if(e.by){
+        whatLine += ' <span class="who">by '+esc(e.by)+'</span>';
+      }
+      if(e.note){
+        whatLine += '<span class="note">'+esc(e.note)+'</span>';
+      }
+      return '<li>'+
+        '<span class="when">'+esc(when)+'<br>'+esc(e.as_of||'')+'</span>'+
+        '<span class="what">'+whatLine+'</span>'+
+        deltaHTML+
+        '</li>';
+    }).join('') + '</ul>';
   });
 })();
 </script>
