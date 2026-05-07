@@ -240,6 +240,39 @@ if [ -f "tools/ai-tell-lint.cjs" ]; then
   fi
 fi
 
+# ─── Doctrine Health Check: /doctrine/ files exist + non-stale ───
+# Authoritative source for AI agents: VOICE.md / REJECTIONS.md / PATTERNS.md
+# / LESSONS.jsonl / CHECKLISTS / MEDIA. If a doctrine file is missing or
+# >30 days without review, this surfaces it. Blocks commit if missing
+# (not on stale-only — stale just warns).
+# Bypass: git commit --no-verify
+if [ -f "tools/doctrine-check.cjs" ]; then
+  node "tools/doctrine-check.cjs" 2>&1 >&2
+  DOCTRINE_EXIT=$?
+  if [ "$DOCTRINE_EXIT" -ne 0 ]; then
+    echo "" >&2
+    echo "  PRE-COMMIT BLOCKED: doctrine/ has missing/empty file(s)." >&2
+    echo "  Run: node tools/doctrine-check.cjs" >&2
+    echo "  Bypass: git commit --no-verify" >&2
+    echo "" >&2
+    exit 1
+  fi
+fi
+
+# ─── Burstiness Lint: sentence-length variance (advisory until 2026-06-06) ───
+# Catches AI flatlined cadence. After 2026-06-06 or with --strict = blocking.
+# See doctrine/REJECTIONS.md "STRUCTURAL rejections" section.
+if [ -f "tools/burstiness-lint.cjs" ]; then
+  node "tools/burstiness-lint.cjs" --staged 2>&1 >&2 || true
+fi
+
+# ─── Structural Lint: hero CTA count, paragraph variance, header ratio ───
+# Advisory until 2026-06-06. After that = blocking.
+# See doctrine/REJECTIONS.md "STRUCTURAL rejections" section.
+if [ -f "tools/structural-lint.cjs" ]; then
+  node "tools/structural-lint.cjs" --staged 2>&1 >&2 || true
+fi
+
 # ─── PINFORGE Sensors: routes / assets / motto (Tier 2 harness) ──────
 # Documented in AGENTS.md §8. Each sensor scans the PINFORGE surfaces
 # (invest / playbooks). Failures BLOCK the commit.
