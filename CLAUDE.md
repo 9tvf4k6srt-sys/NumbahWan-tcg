@@ -150,6 +150,13 @@ If you skip steps 1-2, the pre-commit hook will reject your commit with:
 
 ## CRITICAL: Mobile-First iOS Development
 
+## 🎨 TASTE — Read Before Building Anything a Human Will See
+Before making any UI, page, image, or product surface, read [`TASTE.md`](./TASTE.md) —
+the group's taste constitution (one line: **precision you feel but can't see**;
+the feeling: multi-billion-dollar production value as craft, not bling; the blend:
+blockbuster + keynote). It links to the medium playbook you need (motion, visuals,
+copy). Two enemies it bans: hollow polish and cheap-looking.
+
 ## ⛔ VALUE GATE — Read Before Building ANYTHING
 Before ANY multi-file change, answer these three questions OUT LOUD:
 1. **What metric does this improve?** (eval score, test count, bundle size)

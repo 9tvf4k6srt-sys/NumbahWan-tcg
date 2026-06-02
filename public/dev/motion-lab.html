@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Motion Lab · scroll replay &amp; unwind patterns</title>
+<link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
+<!-- Motion stack. See references/MOTION-CRAFT.md -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.13.0/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.13.0/ScrollTrigger.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/lenis@1.1.13/dist/lenis.min.js"></script>
+<style>
+  :root{
+    --ink:#0c0a14; --paper:#f6f3ec;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html,body{overflow-x:hidden;max-width:100vw}
+  body{background:var(--ink);color:var(--paper);font-family:Inter,system-ui,-apple-system,sans-serif;line-height:1.45;-webkit-font-smoothing:antialiased}
+
+  .wrap{max-width:760px;margin:0 auto;padding:0 26px;width:100%}
+  h1{font-family:Orbitron,system-ui,sans-serif;font-weight:800;font-size:clamp(2rem,9vw,3.6rem);letter-spacing:-.01em;line-height:1.02}
+  h2{font-family:Orbitron,system-ui,sans-serif;font-weight:800;font-size:clamp(1.6rem,7vw,2.6rem);line-height:1.05;margin-bottom:14px}
+  .lead{font-size:clamp(1.05rem,4.4vw,1.3rem);opacity:.92;max-width:30ch}
+  .num{font-family:Orbitron,system-ui,sans-serif;font-weight:800}
+  .tag{display:inline-block;font-size:.72rem;letter-spacing:.22em;text-transform:uppercase;font-weight:700;border:2px solid currentColor;border-radius:999px;padding:7px 15px;margin-bottom:20px}
+
+  /* full-bleed colour sections — the 'juicy' look from the reference video */
+  section{min-height:100svh;display:flex;flex-direction:column;justify-content:center;position:relative;padding:48px 0}
+  .s-intro{background:radial-gradient(120% 90% at 50% 0%,#241a3a,#0c0a14)}
+  .s1{background:linear-gradient(160deg,#ff5e3a,#ff2d75);color:#fff}
+  .s2{background:linear-gradient(160deg,#00c2a8,#0a8f7a);color:#04201b}
+  .s3{background:linear-gradient(160deg,#ffd23f,#ff8a00);color:#3a1d00}
+  .s4{background:linear-gradient(160deg,#6a5cff,#9b2cff);color:#fff}
+  .s5{background:linear-gradient(160deg,#0aa2ff,#0050d8);color:#fff}
+  .s-end{background:radial-gradient(120% 90% at 50% 100%,#241a3a,#0c0a14)}
+
+  .hint{position:absolute;left:0;right:0;bottom:max(22px,env(safe-area-inset-bottom));text-align:center;font-size:.78rem;font-weight:600;letter-spacing:.06em;opacity:.65;pointer-events:none}
+
+  /* demo 1 — fat scrub bar + huge % */
+  .scrub-num{font-size:clamp(4rem,26vw,9rem);line-height:.9;margin:8px 0 18px}
+  .scrub-track{height:18px;background:rgba(0,0,0,.18);border-radius:99px;overflow:hidden}
+  .scrub-fill{height:100%;width:100%;transform:scaleX(0);transform-origin:left;background:#fff;border-radius:99px}
+
+  /* demo 2 — big replay cards */
+  .row{display:flex;gap:14px;margin-top:26px;flex-wrap:wrap}
+  .card{flex:1 1 140px;min-height:130px;background:rgba(255,255,255,.16);border:2px solid rgba(255,255,255,.5);border-radius:18px;padding:18px;display:flex;align-items:flex-end;font-weight:800;font-size:1.15rem;text-transform:uppercase;letter-spacing:.04em}
+
+  /* demo 3 — vertical reveal stack (mobile-safe; pinned horizontal only wide/desktop) */
+  .stack{display:flex;flex-direction:column;gap:16px;margin-top:24px}
+  .panel{border-radius:20px;padding:26px;min-height:34vh;display:flex;align-items:flex-end;font-weight:800;font-size:clamp(1.3rem,6vw,2rem);background:rgba(0,0,0,.15);border:2px solid rgba(255,255,255,.35);will-change:transform,opacity}
+
+  /* demo 4 — draw line */
+  .draw-line{height:10px;border-radius:99px;background:#fff;transform:scaleX(0);transform-origin:left;margin-top:30px}
+
+  /* demo 5 — counter + drifting word */
+  .big-word{font-size:clamp(3rem,18vw,7rem);line-height:.9;opacity:.5;will-change:transform;margin-top:10px}
+
+  .reduced-note{position:fixed;top:max(10px,env(safe-area-inset-top));right:10px;font-size:.7rem;background:rgba(0,0,0,.6);border-radius:8px;padding:6px 10px;z-index:50;display:none}
+  .boot{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:var(--ink);z-index:40;font-size:.8rem;letter-spacing:.2em;opacity:.6;transition:opacity .4s}
+  .boot.gone{opacity:0;pointer-events:none}
+</style>
+</head>
+<body>
+<div class="reduced-note" id="rnote">reduced-motion on: animations collapsed</div>
+
+<section class="s-intro">
+  <div class="wrap">
+    <span class="tag">Motion Lab</span>
+    <h1>Scroll replay<br>&amp; unwind</h1>
+    <p class="lead" style="margin-top:18px">Scroll down to play each pattern, then scroll back up to watch it run in reverse. Every section is built to wind and unwind.</p>
+  </div>
+  <div class="hint">scroll ↓ then reverse ↑</div>
+</section>
+
+<!-- DEMO 1 · SCRUB — progress welded to the wheel -->
+<section class="s1" id="d1">
+  <div class="wrap">
+    <span class="tag">1 / scrub</span>
+    <h2>Welded to the wheel</h2>
+    <div class="scrub-num num" id="scrubNum">0%</div>
+    <div class="scrub-track"><div class="scrub-fill" id="scrubFill"></div></div>
+    <p class="lead" style="margin-top:18px">The bar fills as you scroll and empties as you scroll back.</p>
+  </div>
+  <div class="hint">scroll up to drain it</div>
+</section>
+
+<!-- DEMO 2 · toggleActions REPLAY -->
+<section class="s2" id="d2">
+  <div class="wrap">
+    <span class="tag">2 / replay</span>
+    <h2>Replays on re-entry</h2>
+    <p class="lead">Leave this section and come back: the cards play again. Leave upward: they reverse out.</p>
+    <div class="row">
+      <div class="card rcard">play</div>
+      <div class="card rcard">reverse</div>
+      <div class="card rcard">play</div>
+      <div class="card rcard">reverse</div>
+    </div>
+  </div>
+  <div class="hint">scroll past, then back ↑</div>
+</section>
+
+<!-- DEMO 3 · reveal stack (mobile) / pinned horizontal (desktop) -->
+<section class="s3" id="d3">
+  <div class="wrap">
+    <span class="tag">3 / stagger</span>
+    <h2>Panels arrive in turn</h2>
+    <div class="stack" id="pinStack">
+      <div class="panel">panel one</div>
+      <div class="panel">panel two</div>
+      <div class="panel">panel three</div>
+    </div>
+  </div>
+  <div class="hint">scroll up to send them back</div>
+</section>
+
+<!-- DEMO 4 · DRAW line, scrubbed -->
+<section class="s4" id="d4">
+  <div class="wrap">
+    <span class="tag">4 / draw</span>
+    <h2>A line that draws and undraws</h2>
+    <p class="lead">The white rule tracks your scroll through this section.</p>
+    <div class="draw-line" id="drawLine"></div>
+  </div>
+  <div class="hint">reverse to erase it</div>
+</section>
+
+<!-- DEMO 5 · COUNTER + word parallax -->
+<section class="s5" id="d5">
+  <div class="wrap">
+    <span class="tag">5 / count</span>
+    <h2>Count up, count back</h2>
+    <div class="scrub-num num" id="counter">0</div>
+    <div class="big-word num" id="bigWord">ALPHA</div>
+    <p class="lead" style="margin-top:18px">Counts to 1,742 going down, counts back going up. The word drifts slower than the page.</p>
+  </div>
+  <div class="hint">all reversible</div>
+</section>
+
+<section class="s-end">
+  <div class="wrap">
+    <h2>That is the toolkit</h2>
+    <p class="lead" style="max-width:38ch">Scrub welds motion to the wheel. Replay greets you on re-entry. Stagger brings things in one at a time. Every one of them reverses for free.</p>
+  </div>
+</section>
+
+<div class="boot" id="boot">LOADING MOTION…</div>
+
+<script>
+/* Motion Lab. Governed by references/MOTION-CRAFT.md.
+   iOS-correct: normalizeScroll tames Safari's address-bar resize, Lenis runs
+   on touch too, every scrub recomputes on refresh, and we refresh after the
+   chrome + fonts settle. Content stays visible if GSAP fails or reduced-motion
+   is set; only the motion is skipped. */
+(function(){
+  var boot = document.getElementById('boot');
+  function hideBoot(){ if(boot){ boot.classList.add('gone'); setTimeout(function(){ boot.remove(); }, 450); } }
+
+  var reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (reduce) document.getElementById('rnote').style.display = 'block';
+
+  if (typeof gsap === 'undefined' || typeof ScrollTrigger === 'undefined' || reduce) {
+    hideBoot();           // no motion: show the page as-is, fully readable
+    return;
+  }
+  hideBoot();
+  gsap.registerPlugin(ScrollTrigger);
+
+  /* iOS: hand scrolling to ScrollTrigger so the disappearing toolbar stops
+     shifting every trigger position. */
+  ScrollTrigger.normalizeScroll(true);
+  ScrollTrigger.config({ ignoreMobileResize: true });
+
+  if (window.Lenis) {
+    var lenis = new Lenis({ duration: 1.05, smoothWheel: true, smoothTouch: false });
+    lenis.on('scroll', ScrollTrigger.update);
+    gsap.ticker.add(function(t){ lenis.raf(t * 1000); });
+    gsap.ticker.lagSmoothing(0);
+  }
+
+  /* 1 — scrub bar + live % */
+  gsap.to('#scrubFill', {
+    scaleX: 1, ease: 'none',
+    scrollTrigger: { trigger: '#d1', start: 'top 85%', end: 'bottom 45%', scrub: 1, invalidateOnRefresh: true,
+      onUpdate: function(self){ document.getElementById('scrubNum').textContent = Math.round(self.progress * 100) + '%'; } }
+  });
+
+  /* 2 — toggleActions replay/reverse */
+  gsap.utils.toArray('#d2 .rcard').forEach(function(card, i){
+    gsap.from(card, { y: 50, autoAlpha: 0, duration: 0.7, ease: 'power3.out', delay: i * 0.08,
+      scrollTrigger: { trigger: '#d2', start: 'top 80%', end: 'bottom 25%', toggleActions: 'play reverse play reverse' } });
+  });
+
+  /* 3 — panels stagger in, reversible; obvious on every device */
+  gsap.utils.toArray('#pinStack .panel').forEach(function(p, i){
+    gsap.from(p, { y: 60, autoAlpha: 0, scale: 0.94, duration: 0.8, ease: 'power3.out', delay: i * 0.12,
+      scrollTrigger: { trigger: '#d3', start: 'top 75%', end: 'bottom 30%', toggleActions: 'play reverse play reverse' } });
+  });
+
+  /* 4 — draw / undraw line on scrub */
+  gsap.to('#drawLine', { scaleX: 1, ease: 'none',
+    scrollTrigger: { trigger: '#d4', start: 'top 80%', end: 'bottom 45%', scrub: 1, invalidateOnRefresh: true } });
+
+  /* 5 — counter (reversible) + word parallax */
+  var c = { v: 0 };
+  gsap.to(c, { v: 1742, ease: 'none',
+    scrollTrigger: { trigger: '#d5', start: 'top 85%', end: 'bottom 45%', scrub: 1, invalidateOnRefresh: true,
+      onUpdate: function(){ document.getElementById('counter').textContent = Math.round(c.v).toLocaleString(); } } });
+  gsap.to('#bigWord', { yPercent: -45, ease: 'none',
+    scrollTrigger: { trigger: '#d5', start: 'top bottom', end: 'bottom top', scrub: 1 } });
+
+  /* recompute after chrome + fonts settle on iOS */
+  window.addEventListener('load', function(){ ScrollTrigger.refresh(); });
+  setTimeout(function(){ ScrollTrigger.refresh(); }, 700);
+})();
+</script>
+</body>
+</html>
