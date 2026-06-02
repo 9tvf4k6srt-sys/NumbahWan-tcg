@@ -148,6 +148,11 @@ const COMMANDS = {
     usage: 'layout [--all|<file.html>...] [--json]',
     run: () => runNode('tools/ai-layout-lint.cjs', REST),
   },
+  pagesize: {
+    desc: 'Monolith guardrail: flag oversized pages + heavy inline JS/CSS (advisory). Keeps future edits cheap.',
+    usage: 'pagesize [--all|--baseline|<file.html>...] [--json]',
+    run: () => runNode('tools/page-size-lint.cjs', REST),
+  },
   taste: {
     desc: 'Print the taste constitution path + one-line spine (read TASTE.md)',
     run: () => {
@@ -278,7 +283,7 @@ function help() {
   const groups = {
     'Onboarding':   ['brief', 'context', 'rules', 'health', 'playbook', 'taste', 'efficiency'],
     'Memory':       ['premortem', 'whyfile', 'memory'],
-    'Guardian':     ['guard', 'heal', 'aitell', 'layout'],
+    'Guardian':     ['guard', 'heal', 'aitell', 'layout', 'pagesize'],
     'Deploy':       ['ship'],
     'Learn from repo': ['examples', 'learn'],
     'Dev':          ['dev', 'test', 'audit'],
