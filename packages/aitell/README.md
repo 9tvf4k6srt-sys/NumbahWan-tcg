@@ -26,6 +26,15 @@ form we could find.
 npm install aitell
 ```
 
+Until the package lands on the public registry, install it straight from the
+repo subfolder or run it from a local checkout:
+
+```bash
+npm install github:9tvf4k6srt-sys/NumbahWan-tcg#main --prefix packages/aitell
+# or, inside a clone:
+cd packages/aitell && npm link
+```
+
 ## Quick start
 
 ```js
