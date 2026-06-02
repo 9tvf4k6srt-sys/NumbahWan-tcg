@@ -159,6 +159,7 @@ const EXEMPT_PREFIXES = [
   'docs/archive/',
   'public/trailer/review.html',  // internal review tool, not user copy
   'docs/aitell/',                // the aitell deep-dive necessarily catalogs the tells it bans
+  'packages/aitell/',            // the linter package source + docs catalog the tells it detects
 ];
 
 function isExemptPath(rel) {
