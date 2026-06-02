@@ -37,6 +37,11 @@ const path = require('path');
 const DB_DIR = '.mycelium-mined/db';
 const STATE_FILE = '.mycelium-mined/auto-mine-state.json';
 const MINER_PATH = 'tools/mycelium-miner.cjs';
+const UPGRADE_PATH = 'tools/upgrade-mined-data.cjs';
+// Cheap, capable model for continuous enrichment. gpt-4o-mini is no longer
+// accepted by the proxy; this is the current cheapest model that returns
+// well-formed causal analysis. Keep in sync with miner CONFIG.llmModel.
+const LLM_MODEL = process.env.MYCELIUM_LLM_MODEL || 'claude-haiku-4-5';
 
 const CONFIG = {
   // How often to do a full re-mine (every N commits)
@@ -233,15 +238,32 @@ function loadAllCommits() {
 function triggerAggregation(state) {
   log('Re-aggregating patterns from accumulated data...');
   
-  // Use the full miner pipeline for best results
+  // Use the full miner pipeline for best results.
+  // Continuous mining must not DEGRADE quality. When an LLM key is available
+  // we pass it through so new fix commits get real causal analysis (and the
+  // pipeline re-confirms existing ones). When no key is present we still
+  // re-aggregate, but a deep-diff-only run would overwrite good LLM rootCauses
+  // with raw diff dumps, so we skip the re-mine and only refresh lessons.
   if (fs.existsSync(MINER_PATH)) {
+    const hasLLM = !!process.env.OPENAI_API_KEY;
     try {
-      const limit = Math.max(300, state.totalCommitsMined);
-      execSync(`node ${MINER_PATH} pipeline . --limit ${limit}`, {
-        encoding: 'utf8', timeout: 60000, stdio: 'pipe',
-      });
-      log('Aggregation complete via miner pipeline');
-      
+      if (hasLLM) {
+        const limit = Math.max(300, state.totalCommitsMined);
+        // LLM enrichment is slow (~2s/commit); give it room and never block.
+        execSync(`node ${MINER_PATH} pipeline . --limit ${limit} --model ${LLM_MODEL}`, {
+          encoding: 'utf8', timeout: 15 * 60 * 1000, stdio: 'pipe',
+          env: { ...process.env, OPENAI_BASE_URL: process.env.OPENAI_BASE_URL || 'https://www.genspark.ai/api/llm_proxy/v1' },
+        });
+        log('Aggregation complete via miner pipeline (LLM-enriched)');
+      } else {
+        log('No OPENAI_API_KEY — skipping re-mine to preserve LLM rootCauses; refreshing lessons only');
+      }
+      // Always age out stale lessons + rebuild the sellable dataset.
+      if (fs.existsSync(UPGRADE_PATH)) {
+        try {
+          execSync(`node ${UPGRADE_PATH} --silent`, { encoding: 'utf8', timeout: 60000, stdio: 'pipe' });
+        } catch (e) { log(`Lesson refresh failed: ${e.message?.slice(0, 80)}`); }
+      }
       // Auto-export after aggregation
       exportAll();
     } catch (e) {
