@@ -51,6 +51,7 @@ const EXEMPT_FILES = new Set([
   'tools/ai-tell-lint.cjs',
   'TASTE.md',
   'PRODUCTION-PIPELINE.md',
+  'EFFICIENCY.md',
   'BUILD-DOCTRINE.md',
   'references/MOTION-CRAFT.md',
   'references/PINFORGE-VISUAL-LOCK.md',

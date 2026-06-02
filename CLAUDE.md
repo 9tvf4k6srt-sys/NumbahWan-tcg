@@ -157,6 +157,15 @@ the feeling: multi-billion-dollar production value as craft, not bling; the blen
 blockbuster + keynote). It links to the medium playbook you need (motion, visuals,
 copy). Two enemies it bans: hollow polish and cheap-looking.
 
+## 💸 EFFICIENCY: Build Lean (tokens are the budget)
+Read [`EFFICIENCY.md`](./EFFICIENCY.md) once per session. The short version:
+**read less to know more, write once, verify once.** Never `Read` a big file
+(invest.html, this file, the miners) whole; `grep -n` the anchor then `Read` with
+`offset`/`limit`. Batch independent lookups in one turn. Do not re-verify what
+already passed clean this session. After a slice, `node bin/ai.cjs efficiency log
+"<task>"`; when a slice runs heavy, record the cheaper move as a mycelium
+`constraint "efficiency"`. The harness is model-agnostic and improves over time.
+
 ## ⛔ VALUE GATE — Read Before Building ANYTHING
 Before ANY multi-file change, answer these three questions OUT LOUD:
 1. **What metric does this improve?** (eval score, test count, bundle size)
