@@ -1,0 +1,87 @@
+name: CI
+
+# Two intentions, kept separate and honest:
+#
+#   test  — the HARD gate. The reusable dev tooling (the AI-tell linters, the
+#           mined-data quality detectors, the page-size guardrail) has a real
+#           vitest suite with a coverage floor. A red test or a coverage drop
+#           fails the build. This is the contract that must not regress.
+#
+#   audit — ADVISORY signal only (continue-on-error). The AI-tell linters and
+#           the typecheck run across the whole repo, which still carries a
+#           pre-existing backlog. We surface that signal on every PR without
+#           pretending the backlog is already clean. As the backlog is paid
+#           down, individual steps here can graduate into the hard gate.
+
+on:
+  push:
+    branches: [main, genspark_ai_developer]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: tests + coverage (hard gate)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Unit tests with coverage
+        run: npm run test:unit:coverage
+
+      - name: Upload coverage report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage
+          path: coverage/
+          retention-days: 7
+
+  audit:
+    name: linters + typecheck (advisory)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: AI-tell text linter
+        continue-on-error: true
+        run: npm run lint:ai-tell
+
+      - name: AI-tell layout linter
+        continue-on-error: true
+        run: npm run aitell:layout:all
+
+      - name: Typecheck
+        continue-on-error: true
+        run: npm run typecheck
+
+      - name: Integration tests (TSC bridge + build budget)
+        continue-on-error: true
+        env:
+          RUN_INTEGRATION: '1'
+        run: npx vitest run src/__tests__/learning-tools.test.ts

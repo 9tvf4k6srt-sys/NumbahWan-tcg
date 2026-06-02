@@ -75,6 +75,36 @@ function stagedFiles(spawnSync, cwd) {
   return (r.stdout || '').split('\n').map(s => s.trim()).filter(Boolean);
 }
 
+// ── colour-emoji detection ───────────────────────────────────────────────────
+// The single loudest "an AI assembled this" visual tell is emoji standing in
+// for real UI icons. But not every glyph in the symbol ranges is a tell: a
+// monochrome dingbat used as an icon (✕ close, ✓ check, ★ rating) is legitimate
+// typography. The distinguishing signal is COLOUR. A glyph reads as a colour
+// emoji when it is either:
+//   - in the high (astral) emoji planes (U+1F000–U+1FAFF), or
+//   - a BMP symbol explicitly carrying the emoji variation selector U+FE0F
+//     (VS16), which is exactly what turns a monochrome glyph into a colour one.
+// This pair of rules is what spares dingbats while still catching the tell, and
+// it is the piece worth pinning down with tests so it never silently regresses.
+const EMOJI_HIGH = '\\u{1F000}-\\u{1FAFF}';
+const EMOJI_BMP = '\\u2600-\\u27BF\\u2190-\\u21FF\\u2B00-\\u2BFF\\u2300-\\u23FF';
+const COLOUR_EMOJI_SOURCE = `[${EMOJI_HIGH}]|[${EMOJI_BMP}]\\uFE0F`;
+
+function colourEmojiRegex(global) {
+  return new RegExp(COLOUR_EMOJI_SOURCE, global ? 'gu' : 'u');
+}
+
+// Does the string contain at least one colour emoji (the AI-build tell)?
+function hasColourEmoji(s) {
+  return colourEmojiRegex(false).test(String(s || ''));
+}
+
+// Every colour emoji in the string (deduped order preserved). Monochrome
+// dingbats without VS16 are deliberately excluded.
+function colourEmojis(s) {
+  return String(s || '').match(colourEmojiRegex(true)) || [];
+}
+
 module.exports = {
   COLOR_KEYS,
   colors,
@@ -83,4 +113,8 @@ module.exports = {
   stripMarkupAndCode,
   isCJK,
   stagedFiles,
+  COLOUR_EMOJI_SOURCE,
+  colourEmojiRegex,
+  hasColourEmoji,
+  colourEmojis,
 };

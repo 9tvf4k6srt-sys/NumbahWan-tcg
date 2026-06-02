@@ -144,58 +144,68 @@ function resolveTargets() {
 }
 
 // ── run ─────────────────────────────────────────────────────────────────────
-const targets = resolveTargets();
-const results = [];
-let noteCount = 0;
+function main() {
+  const targets = resolveTargets();
+  const results = [];
+  let noteCount = 0;
 
-for (const t of targets) {
-  try {
-    const src = fs.readFileSync(t, 'utf8');
-    const cur = measure(src);
-    let prev = null;
-    if (BASELINE) {
-      const committed = committedSource(rel(t));
-      if (committed) prev = measure(committed);
+  for (const t of targets) {
+    try {
+      const src = fs.readFileSync(t, 'utf8');
+      const cur = measure(src);
+      let prev = null;
+      if (BASELINE) {
+        const committed = committedSource(rel(t));
+        if (committed) prev = measure(committed);
+      }
+      const findings = findingsFor(t, cur, prev);
+      if (findings.length) {
+        results.push({ file: rel(t), metrics: cur, findings });
+        noteCount += findings.length;
+      }
+    } catch (e) {
+      console.error(`  [page-size] error on ${rel(t)}: ${e.message}`);
     }
-    const findings = findingsFor(t, cur, prev);
-    if (findings.length) {
-      results.push({ file: rel(t), metrics: cur, findings });
-      noteCount += findings.length;
-    }
-  } catch (e) {
-    console.error(`  [page-size] error on ${rel(t)}: ${e.message}`);
   }
-}
 
-if (JSON_OUT) {
-  console.log(JSON.stringify({ scanned: targets.length, noteCount, limits: LIMITS, results }, null, 2));
+  if (JSON_OUT) {
+    console.log(JSON.stringify({ scanned: targets.length, noteCount, limits: LIMITS, results }, null, 2));
+    process.exit(0);
+  }
+
+  if (QUIET && noteCount === 0) process.exit(0);
+
+  console.log('');
+  console.log(`${C.b}  PAGE SIZE${C.r}  ${C.dim}— monolith guardrail (advisory, never blocks)${C.r}`);
+  console.log('  ═══════════════════════════════════════════════════════════');
+
+  if (results.length === 0) {
+    console.log(`  ${C.green}✓ lean${C.r}  ${targets.length} file${targets.length === 1 ? '' : 's'} scanned · nothing over the soft caps`);
+  } else {
+    // heaviest first
+    results.sort((a, b) => b.metrics.total - a.metrics.total);
+    for (const r of results) {
+      console.log(`\n  ${C.b}${r.file}${C.r}  ${C.dim}(${r.metrics.total} lines · ${r.metrics.inlineJS} inline JS · ${r.metrics.inlineCSS} inline CSS)${C.r}`);
+      for (const f of r.findings) {
+        console.log(`    ${C.yellow}· note${C.r}  ${C.b}${f.id}${C.r}  ${f.detail}`);
+        console.log(`           ${C.dim}fix:${C.r} ${f.fix}`);
+      }
+    }
+  }
+
+  console.log('');
+  console.log(`  ${targets.length} scanned · ${C.yellow}${noteCount} note${noteCount === 1 ? '' : 's'}${C.r}`);
+  console.log(`  ${C.dim}Advisory: these never block. The win is not editing existing monoliths,`);
+  console.log(`  ${C.dim}it is keeping new pages lean so future edits stay cheap.${C.r}`);
+  console.log('');
+
   process.exit(0);
 }
 
-if (QUIET && noteCount === 0) process.exit(0);
-
-console.log('');
-console.log(`${C.b}  PAGE SIZE${C.r}  ${C.dim}— monolith guardrail (advisory, never blocks)${C.r}`);
-console.log('  ═══════════════════════════════════════════════════════════');
-
-if (results.length === 0) {
-  console.log(`  ${C.green}✓ lean${C.r}  ${targets.length} file${targets.length === 1 ? '' : 's'} scanned · nothing over the soft caps`);
+// Run only as a CLI. When required (tests), expose the pure detectors instead
+// of executing, so the measurement logic can be pinned down without spawning.
+if (require.main === module) {
+  main();
 } else {
-  // heaviest first
-  results.sort((a, b) => b.metrics.total - a.metrics.total);
-  for (const r of results) {
-    console.log(`\n  ${C.b}${r.file}${C.r}  ${C.dim}(${r.metrics.total} lines · ${r.metrics.inlineJS} inline JS · ${r.metrics.inlineCSS} inline CSS)${C.r}`);
-    for (const f of r.findings) {
-      console.log(`    ${C.yellow}· note${C.r}  ${C.b}${f.id}${C.r}  ${f.detail}`);
-      console.log(`           ${C.dim}fix:${C.r} ${f.fix}`);
-    }
-  }
+  module.exports = { measure, findingsFor, LIMITS };
 }
-
-console.log('');
-console.log(`  ${targets.length} scanned · ${C.yellow}${noteCount} note${noteCount === 1 ? '' : 's'}${C.r}`);
-console.log(`  ${C.dim}Advisory: these never block. The win is not editing existing monoliths,`);
-console.log(`  ${C.dim}it is keeping new pages lean so future edits stay cheap.${C.r}`);
-console.log('');
-
-process.exit(0);
