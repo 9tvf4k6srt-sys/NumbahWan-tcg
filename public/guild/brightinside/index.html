@@ -157,6 +157,29 @@
     pointer-events: none;
   }
   .hero__inner { padding: 0 22px; }
+  .hero__testbadge {
+    display: inline-flex; align-items: center; gap: 8px;
+    font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase; font-weight: 700;
+    color: #ffe9a8;
+    background: rgba(91,63,176,0.4); border: 1px solid rgba(243,201,105,0.45);
+    padding: 6px 12px; border-radius: 999px; margin-bottom: 14px;
+    box-shadow: 0 6px 18px rgba(0,0,0,0.4);
+  }
+  .hero__testdot {
+    width: 8px; height: 8px; border-radius: 50%; background: #5be08a;
+    box-shadow: 0 0 10px #5be08a; animation: pulse 1.8s ease-in-out infinite;
+  }
+  @keyframes pulse { 0%,100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.5; transform: scale(0.7); } }
+  .hero__emblemwrap { margin-bottom: 16px; }
+  .hero__emblem {
+    width: 116px; height: auto;
+    filter: drop-shadow(0 10px 26px rgba(0,0,0,0.6)) drop-shadow(0 0 26px rgba(243,201,105,0.32));
+    animation: emblemfloat 5.5s ease-in-out infinite;
+  }
+  @keyframes emblemfloat {
+    0%, 100% { transform: translateY(0) rotate(-1.5deg); }
+    50% { transform: translateY(-9px) rotate(1.5deg); }
+  }
   .hero__kicker {
     display: inline-block; font-size: 11.5px; letter-spacing: 0.28em;
     text-transform: uppercase; color: var(--gold);
@@ -241,6 +264,47 @@
   @keyframes slide { from { transform: translateX(0); } to { transform: translateX(-50%); } }
 
   /* ============================================================
+     HERO BANNER (guild banner with dark to bright transition)
+     ============================================================ */
+  .bannerwrap { padding: 56px 18px 36px; }
+  .banner {
+    position: relative; max-width: 720px; margin: 0 auto;
+    border-radius: 20px; overflow: hidden;
+    border: 1px solid var(--glass-line); box-shadow: var(--shadow);
+    aspect-ratio: 16 / 9;
+  }
+  .banner__img {
+    position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover;
+    will-change: transform;
+  }
+  /* a sliding light wipe that sweeps dark to bright on scroll */
+  .banner__dark {
+    position: absolute; inset: 0; z-index: 2; pointer-events: none;
+    background: linear-gradient(90deg, rgba(8,5,16,0.92) 0%, rgba(8,5,16,0.7) 32%, rgba(8,5,16,0) 60%);
+    transition: opacity 0.6s var(--ease);
+  }
+  .banner.lit .banner__dark { opacity: 0.25; }
+  .banner__emblem {
+    position: absolute; z-index: 3; left: 16px; top: 50%; transform: translateY(-50%);
+    width: 74px; height: auto;
+    filter: drop-shadow(0 6px 16px rgba(0,0,0,0.7));
+    opacity: 0; transition: opacity 0.8s var(--ease) 0.2s, transform 0.8s var(--ease) 0.2s;
+  }
+  .banner.lit .banner__emblem { opacity: 1; }
+  .banner__text {
+    position: absolute; z-index: 3; right: 18px; bottom: 16px; left: 100px; text-align: right;
+  }
+  .banner__text b {
+    display: block; font-family: var(--serif); font-size: clamp(20px, 5.6vw, 30px);
+    color: #fff8ea; line-height: 1.05; text-shadow: 0 2px 12px rgba(0,0,0,0.9);
+  }
+  .banner__text span {
+    display: block; margin-top: 4px; font-size: 12px; letter-spacing: 0.14em;
+    text-transform: uppercase; color: var(--gold); text-shadow: 0 1px 6px rgba(0,0,0,0.9);
+  }
+  .banner__cap { text-align: center; color: var(--ink-dim); font-size: 12.5px; margin-top: 14px; }
+
+  /* ============================================================
      ORIGIN STORY (from dark inside)
      ============================================================ */
   .origin { padding-top: 64px; }
@@ -319,6 +383,43 @@
     width: auto; max-height: 350px;
     filter: drop-shadow(0 22px 30px rgba(0,0,0,0.55)); will-change: transform;
   }
+  /* pay-to-reveal: shadow shown, full art hidden until "paid" */
+  .reveal { position: relative; display: inline-grid; }
+  .reveal .member__portrait { grid-area: 1 / 1; transition: opacity 0.7s var(--ease), filter 0.7s var(--ease); }
+  .reveal .full { opacity: 0; filter: brightness(1.4) blur(8px); pointer-events: none; }
+  .reveal.paid .shadow { opacity: 0; }
+  .reveal.paid .full { opacity: 1; filter: none; }
+  .reveal__btn {
+    position: absolute; left: 50%; bottom: 6px; transform: translateX(-50%);
+    z-index: 4; display: flex; flex-direction: column; align-items: center; gap: 1px;
+    border: 1px solid var(--glass-line); border-radius: 14px; cursor: pointer;
+    background: linear-gradient(135deg, var(--gold), var(--gold-deep)); color: #2a1c05;
+    font-family: var(--sans); font-weight: 700; padding: 9px 18px;
+    box-shadow: 0 10px 24px rgba(0,0,0,0.5); white-space: nowrap;
+    transition: transform 0.18s var(--ease), opacity 0.5s var(--ease);
+  }
+  .reveal__btn:active { transform: translateX(-50%) scale(0.94); }
+  .reveal__lock { font-size: 15px; }
+  .reveal__label { font-size: 14px; letter-spacing: 0.01em; }
+  .reveal__price { font-size: 11px; opacity: 0.8; }
+  .reveal__btn.charging { animation: shake 0.5s ease; }
+  @keyframes shake {
+    0%,100% { transform: translateX(-50%); }
+    20% { transform: translateX(-54%) rotate(-2deg); }
+    40% { transform: translateX(-46%) rotate(2deg); }
+    60% { transform: translateX(-53%) rotate(-1deg); }
+    80% { transform: translateX(-47%) rotate(1deg); }
+  }
+  .reveal.paid .reveal__btn { opacity: 0; pointer-events: none; }
+  .reveal__toast {
+    position: absolute; left: 50%; top: 12px; transform: translateX(-50%) translateY(-8px);
+    z-index: 5; background: var(--panel-solid); color: var(--ink);
+    border: 1px solid var(--glass-line); border-radius: 12px;
+    padding: 8px 14px; font-size: 13px; font-weight: 600; white-space: nowrap;
+    opacity: 0; transition: opacity 0.3s var(--ease), transform 0.3s var(--ease);
+    box-shadow: 0 8px 22px rgba(0,0,0,0.5); pointer-events: none; max-width: 88%;
+  }
+  .reveal__toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
   /* dark gradient under the portrait so the name text below always reads */
   .member__body {
     position: relative; z-index: 2; padding: 12px 22px 26px;
@@ -518,7 +619,14 @@
     <div class="hero__scrim"></div>
     <img class="hero__poring" src="assets/poring.webp" alt="A friendly pink Poring slime bobbing in the air">
     <div class="hero__inner wrap">
-      <span class="hero__kicker" data-i18n="hero.kicker">Rune-Midgard · Prontera Quarter</span>
+      <span class="hero__testbadge" data-anim="zoom">
+        <span class="hero__testdot"></span>
+        <span data-i18n="hero.test">Test Server · live now</span>
+      </span>
+      <div class="hero__emblemwrap" data-anim="zoom">
+        <img class="hero__emblem" src="assets/emblem.webp" alt="BrightInside guild emblem: a lantern flame breaking through cracked dark stone">
+      </div>
+      <span class="hero__kicker" data-i18n="hero.kicker">Guild of Ragnarok: The New World</span>
       <h1 class="hero__title reveal-words">
         <span data-words>Bright</span>
         <span class="accent" data-words>Inside</span>
@@ -546,6 +654,20 @@
       </div>
     </div>
   </div>
+
+  <!-- ============ HERO BANNER ============ -->
+  <section class="bannerwrap">
+    <div class="banner" id="banner" data-anim="up">
+      <img class="banner__img" id="bannerImg" src="assets/banner.webp" alt="Guild banner showing dark cracked stone on the left turning into a bright golden Prontera skyline on the right">
+      <div class="banner__dark"></div>
+      <img class="banner__emblem" src="assets/emblem.webp" alt="">
+      <div class="banner__text">
+        <b>BrightInside</b>
+        <span data-i18n="banner.tag">Ragnarok: The New World · Test Server</span>
+      </div>
+    </div>
+    <p class="banner__cap" data-i18n="banner.cap">Scroll the banner past the middle to light it up.</p>
+  </section>
 
   <!-- ============ ORIGIN STORY ============ -->
   <section class="origin" id="origin">
@@ -591,7 +713,15 @@
     <article class="member member--reg" data-anim="up">
       <div class="member__aura"></div>
       <div class="member__stage">
-        <img class="member__portrait" data-tilt src="assets/regginam.webp" alt="Regginam, a flamboyant mage in a purple and gold robe, a huge sword on his back and a sparkling rainbow staff in hand">
+        <div class="reveal" data-reveal data-cost="999,999" data-currency="zeny">
+          <img class="member__portrait shadow" data-tilt src="assets/reg-shadow.webp" alt="A shadowy hidden silhouette with a faint rainbow aura and sparkling eyes">
+          <img class="member__portrait full" data-tilt src="assets/reg-reveal.webp" alt="Regginam, a fabulous mage in purple and gold robes with a giant sword on his back and a glowing rainbow staff" loading="lazy">
+          <button class="reveal__btn" type="button">
+            <span class="reveal__lock">🔒</span>
+            <span class="reveal__label" data-i18n="reveal.pay">Pay to reveal</span>
+            <span class="reveal__price"><span data-i18n="reveal.cost">999,999</span> <span data-i18n="reveal.zeny">zeny</span></span>
+          </button>
+        </div>
       </div>
       <div class="member__body">
         <h3 class="member__name">Regginam</h3>
@@ -625,7 +755,15 @@
     <article class="member member--md" data-anim="up">
       <div class="member__aura"></div>
       <div class="member__stage">
-        <img class="member__portrait" data-tilt src="assets/md3mon.webp" alt="MD3mon, a panther-demon champion in dark armor with glowing violet runes and a tiny winged mini-demon companion">
+        <div class="reveal" data-reveal data-cost="1 billion" data-currency="zeny">
+          <img class="member__portrait shadow" data-tilt src="assets/md-shadow.webp" alt="A shadowy hidden silhouette of a horned warrior with glowing yellow eyes">
+          <img class="member__portrait full" data-tilt src="assets/md-reveal.webp" alt="MD3mon, a ferocious panther-demon champion in dark armor with glowing runes and a tiny winged mini-demon companion" loading="lazy">
+          <button class="reveal__btn" type="button">
+            <span class="reveal__lock">🔒</span>
+            <span class="reveal__label" data-i18n="reveal.pay">Pay to reveal</span>
+            <span class="reveal__price"><span data-i18n="reveal.cost2">1 billion</span> <span data-i18n="reveal.zeny">zeny</span></span>
+          </button>
+        </div>
       </div>
       <div class="member__body">
         <h3 class="member__name">MD3mon</h3>
@@ -769,9 +907,13 @@
   /* ---------- TRANSLATIONS (EN / TH / JA) ---------- */
   var I18N = {
     en: {
-      "hero.kicker": "Rune-Midgard · Prontera Quarter",
+      "hero.test": "Test Server · live now",
+      "hero.kicker": "Guild of Ragnarok: The New World",
       "hero.sub": "We climbed out of the dark inside and kept the warmth. The lanterns are lit, the kettle is on, and the bench by the fire has your name on it.",
       "hero.cta1": "Pull up a chair", "hero.cta2": "Meet the crew", "hero.scroll": "Scroll to wander in",
+      "banner.tag": "Ragnarok: The New World · Test Server",
+      "banner.cap": "Scroll the banner past the middle to light it up.",
+      "reveal.pay": "Pay to reveal", "reveal.cost": "999,999", "reveal.cost2": "1 billion", "reveal.zeny": "zeny",
       "mq.1": "good vibes only", "mq.2": "bells of Prontera", "mq.3": "warm fire, cold drinks",
       "mq.4": "from the dark inside", "mq.5": "poring approved", "mq.6": "show up as you are",
       "origin.eyebrow": "Where we came from", "origin.title": "Out of the dark inside",
@@ -809,7 +951,11 @@
       "foot.2": "From the dark inside, to 4th place, to the warm room. Bring a friend."
     },
     th: {
-      "hero.kicker": "รูนมิดการ์ด · ย่านพรอนเทอรา",
+      "hero.test": "เซิร์ฟเวอร์ทดสอบ · เปิดแล้ว",
+      "hero.kicker": "กิลด์แห่ง Ragnarok: The New World",
+      "banner.tag": "Ragnarok: The New World · เซิร์ฟเวอร์ทดสอบ",
+      "banner.cap": "เลื่อนแบนเนอร์ให้พ้นช่วงกลางเพื่อจุดไฟให้สว่าง",
+      "reveal.pay": "จ่ายเพื่อเปิดเผย", "reveal.cost": "999,999", "reveal.cost2": "1 พันล้าน", "reveal.zeny": "เซนี่",
       "hero.sub": "เราไต่ขึ้นมาจากความมืดข้างใน แล้วเก็บความอบอุ่นเอาไว้ ตะเกียงจุดแล้ว กาน้ำร้อนพร้อม และม้านั่งข้างกองไฟมีชื่อของคุณอยู่",
       "hero.cta1": "หาที่นั่งสิ", "hero.cta2": "ทำความรู้จักทีม", "hero.scroll": "เลื่อนลงมาเดินเล่นกัน",
       "mq.1": "มีแต่บรรยากาศดี ๆ", "mq.2": "เสียงระฆังพรอนเทอรา", "mq.3": "ไฟอุ่น เครื่องดื่มเย็น",
@@ -849,7 +995,11 @@
       "foot.2": "จากความมืดข้างใน สู่อันดับ 4 สู่ห้องอันอบอุ่น ชวนเพื่อนมาด้วยสิ"
     },
     ja: {
-      "hero.kicker": "ルーンミッドガルド · プロンテラ地区",
+      "hero.test": "テストサーバー · 稼働中",
+      "hero.kicker": "Ragnarok: The New World ギルド",
+      "banner.tag": "Ragnarok: The New World · テストサーバー",
+      "banner.cap": "バナーを真ん中より下までスクロールすると光ります。",
+      "reveal.pay": "課金して公開", "reveal.cost": "999,999", "reveal.cost2": "10億", "reveal.zeny": "ゼニー",
       "hero.sub": "暗い内側からはい上がり、その温もりだけは手放さなかった。ランタンはともり、やかんは沸き、暖炉のそばのベンチには君の名前が書いてある。",
       "hero.cta1": "椅子を引いて", "hero.cta2": "仲間に会う", "hero.scroll": "スクロールして入っておいで",
       "mq.1": "いい空気だけ", "mq.2": "プロンテラの鐘", "mq.3": "暖かい火と冷たい飲み物",
@@ -982,6 +1132,8 @@
   var progress = document.getElementById("progress");
   var heroBg = document.getElementById("heroBg");
   var hallBg = document.getElementById("hallBg");
+  var banner = document.getElementById("banner");
+  var bannerImg = document.getElementById("bannerImg");
   var ticking = false;
   function onScroll() {
     if (ticking) return;
@@ -995,6 +1147,16 @@
         if (hallBg) {
           var rect = hallBg.parentElement.getBoundingClientRect();
           hallBg.style.transform = "translateY(" + (rect.top * -0.12) + "px) scale(1.12)";
+        }
+      }
+      // banner: light up the dark side once it scrolls past the middle of the viewport
+      if (banner) {
+        var br = banner.getBoundingClientRect();
+        var center = br.top + br.height / 2;
+        if (center < window.innerHeight * 0.62) banner.classList.add("lit");
+        if (!reduce && bannerImg) {
+          var shift = Math.max(-14, Math.min(14, (window.innerHeight / 2 - center) / 26));
+          bannerImg.style.transform = "scale(1.08) translateX(" + shift + "px)";
         }
       }
       ticking = false;
@@ -1110,6 +1272,36 @@
       }, 560);
     });
   }
+
+  /* ---------- pay-to-reveal (a joke paywall, no real money) ---------- */
+  var payToasts = {
+    en: ["card declined. you broke. revealing anyway 😏", "transaction failed. the guild treasury laughed. here you go.", "nice try paying. we accept hugs only. unlocked.", "zeny not found. friendship accepted instead. revealed!"],
+    th: ["บัตรถูกปฏิเสธ ถังแตกนี่นา เปิดให้ดูเลยละกัน 😏", "ทำรายการไม่สำเร็จ คลังกิลด์หัวเราะเลย เอ้า ดูไป", "พยายามจ่ายได้น่ารักดี แต่เรารับแค่กอด ปลดล็อกให้แล้ว", "ไม่เจอเซนี่ รับเป็นมิตรภาพแทน เปิดเผยแล้ว!"],
+    ja: ["カード拒否。お金ないでしょ。まあ見せるけど 😏", "決済失敗。ギルドの金庫が笑った。はいどうぞ。", "支払う気概は good。でもハグしか受け取らない。解除。", "ゼニーが見つからない。友情で代用。公開！"]
+  };
+  document.querySelectorAll("[data-reveal]").forEach(function (wrap) {
+    var btn = wrap.querySelector(".reveal__btn");
+    if (!btn) return;
+    btn.addEventListener("click", function () {
+      if (wrap.classList.contains("paid")) return;
+      btn.classList.add("charging");
+      // fake toast
+      var toast = document.createElement("div");
+      toast.className = "reveal__toast";
+      var pool = payToasts[lang] || payToasts.en;
+      toast.textContent = pool[Math.floor(Math.random() * pool.length)];
+      wrap.appendChild(toast);
+      requestAnimationFrame(function () { toast.classList.add("show"); });
+      setTimeout(function () {
+        btn.classList.remove("charging");
+        wrap.classList.add("paid");
+      }, 900);
+      setTimeout(function () {
+        toast.classList.remove("show");
+        setTimeout(function () { toast.remove(); }, 400);
+      }, 2600);
+    });
+  });
 })();
 </script>
 </body>
