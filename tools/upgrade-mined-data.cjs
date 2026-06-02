@@ -285,7 +285,7 @@ function buildLessonsDataset(enriched) {
   }
   
   // Build final deduplicated array
-  const lessons = [...lessonMap.values()]
+  let lessons = [...lessonMap.values()]
     .sort((a, b) => b.files.size - a.files.size || b.lesson.length - a.lesson.length)
     .map(entry => ({
       lesson: entry.lesson.slice(0, 400),
@@ -295,6 +295,27 @@ function buildLessonsDataset(enriched) {
       fileCount: entry.files.size,
       files: [...entry.files].slice(0, 10),
     }));
+  
+  // ── AGE-OUT ──
+  // A lesson is stale when the thing it describes no longer exists. Two signals:
+  //   1. Every file it references has been deleted (the code path is gone, so
+  //      the warning can never fire again). Human and constraint lessons carry
+  //      no files and are always kept — they are timeless rules.
+  //   2. The lesson text is a raw diff dump, not a real lesson.
+  // Dropping these keeps the dataset something a buyer trusts: live, not archival.
+  const before = lessons.length;
+  const aged = [];
+  lessons = lessons.filter(l => {
+    if (isDiffDumpLesson(l.lesson)) { aged.push(l); return false; }
+    const hasFiles = (l.files || []).length > 0;
+    if (hasFiles && l.files.every(f => !fileExists(path.resolve(__dirname, '..', f)))) {
+      aged.push(l); return false;
+    }
+    return true;
+  });
+  if (aged.length > 0) {
+    log(`  Aged out ${aged.length} stale lessons (dead code paths / diff dumps), ${before} → ${lessons.length}`);
+  }
   
   // Validate
   const v = validateLessons(lessons);
@@ -312,6 +333,21 @@ function buildLessonsDataset(enriched) {
   }
   
   return { lessons, validation: v };
+}
+
+// A lesson that is really a raw diff dump teaches nothing. Same bar the miner
+// and validator use, applied to the combined "<rootCause> RULE: <prevention>"
+// lesson text.
+function isDiffDumpLesson(text) {
+  if (!text) return true;
+  const t = String(text).trim();
+  if (t.length < 20) return true;
+  if (/(→|->)/.test(t)) return true;
+  if (/changed\s+[\w-]+\s*:/i.test(t)) return true;
+  if (/\.\s*Also:\s*Changed/i.test(t)) return true;
+  if (/^reordered scripts:/i.test(t)) return true;
+  if (/^\s*-\s/.test(t) && t.length < 60) return true; // bare bullet fragment
+  return false;
 }
 
 function addLesson(map, lesson, files, category, source, severity) {

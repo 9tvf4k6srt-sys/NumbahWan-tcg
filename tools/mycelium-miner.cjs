@@ -12,7 +12,7 @@
  * Usage:
  *   node mycelium-miner.cjs pipeline <repo-path-or-url> [--limit 500]
  *   node mycelium-miner.cjs extract <repo-path-or-url> [--limit 500]
- *   node mycelium-miner.cjs enrich <extracted.json> [--model gpt-4o-mini]
+ *   node mycelium-miner.cjs enrich <extracted.json> [--model claude-haiku-4-5]
  *   node mycelium-miner.cjs aggregate <enriched.json> [--min-frequency 2]
  * 
  * Output: .mycelium-mined/ directory with JSON files per stage
@@ -58,8 +58,9 @@ const CONFIG = {
   fixChainWindowHours: 72,
   coChangeMinCount: 3,
   hotspotMinChanges: 5,
-  llmMaxTokens: 500,
+  llmMaxTokens: 600,
   llmTemperature: 0.1,
+  llmModel: 'claude-haiku-4-5',
   outputDir: '.mycelium-mined',
 };
 
@@ -744,6 +745,34 @@ function extract(repoPath, limit = 500) {
 // STAGE 2: ENRICH — Deep diff analysis + optional LLM
 // ============================================================================
 
+// A rootCause is LOW-QUALITY when it is a raw diff dump or a pasted commit
+// message rather than an analysis. These are the records a data buyer would
+// reject. We send these to the LLM even when the local "confidence" is high,
+// because confidence here only measures how many diff atoms were found, not
+// whether the resulting sentence explains anything.
+function isLowQualityRootCause(rootCause, commitMsg) {
+  if (!rootCause) return true;
+  const rc = String(rootCause).trim();
+  if (rc.length < 15) return true;
+  // raw diff dump: "Changed X → Y" or contains code-ish arrows / CSS values
+  if (/changed\s+[\w-]+\s*:/i.test(rc) && /(→|->)/.test(rc)) return true;
+  if (/(→|->)/.test(rc) && /(px|rem|%|0deg|rgba?\(|gradient|clamp\(|calc\()/i.test(rc)) return true;
+  // pasted commit message: rootCause is basically the commit subject verbatim
+  if (commitMsg) {
+    const norm = s => String(s).toLowerCase().replace(/^(?:fix|feat|bug|hotfix|patch|revert|chore|refactor)\s*\([^)]*\)\s*:?\s*/i, '').replace(/[^a-z0-9 ]/g, '').trim();
+    if (norm(rc) && norm(rc) === norm(commitMsg)) return true;
+    if (norm(rc).length > 10 && norm(commitMsg).startsWith(norm(rc).slice(0, 40))) return true;
+  }
+  // "Also: ..." chains are atom dumps, not causes
+  if (/\.\s*Also:\s*Changed/i.test(rc)) return true;
+  // Fragments: starts with an open paren, or ends with a colon (a label, not a cause)
+  if (/^\s*\(/.test(rc)) return true;
+  if (/:\s*$/.test(rc)) return true;
+  // Too few words to be a causal explanation
+  if (rc.split(/\s+/).filter(Boolean).length < 4) return true;
+  return false;
+}
+
 async function enrich(extractedPath, options = {}) {
   console.log(`\n═══ STAGE 2: ENRICH ═══`);
   
@@ -752,7 +781,7 @@ async function enrich(extractedPath, options = {}) {
   
   const apiKey = process.env.OPENAI_API_KEY;
   const baseUrl = process.env.OPENAI_BASE_URL || 'https://api.openai.com/v1';
-  const model = options.model || 'gpt-4o-mini';
+  const model = options.model || CONFIG.llmModel;
   const useLLM = !!apiKey;
   
   if (!useLLM) {
@@ -763,6 +792,7 @@ async function enrich(extractedPath, options = {}) {
   
   const enriched = [];
   let llmCount = 0, localCount = 0, deepCount = 0;
+  let llmAttempts = 0, llmErrors = 0, firstLlmError = null;
   
   for (let i = 0; i < data.fixCommits.length; i++) {
     const fc = data.fixCommits[i];
@@ -778,17 +808,27 @@ async function enrich(extractedPath, options = {}) {
       deepCount++;
     }
     
-    // Use LLM only if local analysis is low-confidence AND LLM is available
-    if (useLLM && localResult.confidence < 0.5 && fc.diff) {
+    // Use the LLM when local analysis is low-confidence OR when the local
+    // rootCause is low-QUALITY (a raw diff dump / pasted commit message).
+    // Confidence alone misses the quality problem: a diff-atom sentence scores
+    // high confidence but explains nothing. This is what a data buyer cares about.
+    const lowQuality = isLowQualityRootCause(localResult.rootCause, fc.msg);
+    if (useLLM && fc.diff && (localResult.confidence < 0.5 || lowQuality)) {
+      llmAttempts++;
       try {
         const llmResult = await callLLM(apiKey, baseUrl, model, buildEnrichmentPrompt(fc));
-        if (llmResult && llmResult.rootCause && llmResult.rootCause.length > 10) {
+        if (llmResult && llmResult.rootCause && llmResult.rootCause.length > 10 &&
+            !isLowQualityRootCause(llmResult.rootCause, fc.msg)) {
           enrichment = { ...llmResult, atoms: localResult.atoms };
           enrichedBy = 'llm';
           llmCount++;
         }
       } catch (e) {
-        // Fall through to local result
+        // Track the failure loudly. A misconfigured model silently degrades
+        // every rootCause to a raw diff dump, which is exactly what a data
+        // buyer rejects. Surface it instead of hiding it.
+        llmErrors++;
+        if (!firstLlmError) firstLlmError = e.message;
       }
     }
     
@@ -817,11 +857,21 @@ async function enrich(extractedPath, options = {}) {
     });
     
     if ((i + 1) % 10 === 0 || i === data.fixCommits.length - 1) {
-      process.stdout.write(`  [${i + 1}/${data.fixCommits.length}] deep-diff: ${deepCount}, llm: ${llmCount}, msg-only: ${localCount - deepCount}\r`);
+      const msgOnly = Math.max(0, localCount - deepCount);
+      process.stdout.write(`  [${i + 1}/${data.fixCommits.length}] deep-diff: ${deepCount}, llm: ${llmCount}, msg-only: ${msgOnly}\r`);
     }
   }
   
-  console.log(`\n  Enrichment complete: ${deepCount} deep-diff, ${llmCount} LLM, ${localCount - deepCount} message-only`);
+  console.log(`\n  Enrichment complete: ${deepCount} deep-diff, ${llmCount} LLM, ${Math.max(0, localCount - deepCount)} message-only`);
+  if (useLLM && llmAttempts > 0 && llmCount === 0) {
+    console.log(`  \x1b[31m⚠ LLM was needed ${llmAttempts}x but enriched 0 commits.\x1b[0m`);
+    if (llmErrors > 0) {
+      console.log(`  \x1b[31m  ${llmErrors} LLM call(s) failed. First error: ${firstLlmError}\x1b[0m`);
+      console.log(`  \x1b[31m  rootCauses fell back to raw diff dumps — DATA QUALITY DEGRADED.\x1b[0m`);
+    }
+  } else if (useLLM && llmErrors > 0) {
+    console.log(`  \x1b[33m  Note: ${llmErrors}/${llmAttempts} LLM calls failed (${firstLlmError}).\x1b[0m`);
+  }
   
   const result = {
     ...data,
@@ -1421,7 +1471,7 @@ Mycelium Miner v2.0 — Turn git history into "don't do this" knowledge
 Usage:
   node mycelium-miner.cjs pipeline <repo-path-or-url> [--limit 500]
   node mycelium-miner.cjs extract <repo-path-or-url> [--limit 500]
-  node mycelium-miner.cjs enrich <extracted.json> [--model gpt-4o-mini]
+  node mycelium-miner.cjs enrich <extracted.json> [--model claude-haiku-4-5]
   node mycelium-miner.cjs aggregate <enriched.json> [--min-frequency 2]
 
 Examples:
@@ -1433,7 +1483,7 @@ Examples:
 
   # Step by step for large repos
   node mycelium-miner.cjs extract https://github.com/vercel/next.js --limit 1000
-  node mycelium-miner.cjs enrich .mycelium-mined/next.js-extracted.json --model gpt-4o-mini
+  node mycelium-miner.cjs enrich .mycelium-mined/next.js-extracted.json --model claude-haiku-4-5
   node mycelium-miner.cjs aggregate .mycelium-mined/next.js-enriched.json --min-frequency 3
 
 Output formats:

@@ -121,7 +121,48 @@ function checkEnrichment() {
     fix('enrichment.noFiller', `Nullified ${emptyRC.length} filler rootCauses`);
   }
   
-  return Math.round(rcRate * 35 + catRate * 35 + sevRate * 30);
+  // ── MEANING GATE ──
+  // Completeness is not quality. A field can be filled with a raw diff dump
+  // ("Changed height: 120px → 100%") or a pasted commit subject and still pass
+  // every completeness check above. A data buyer pays for causal analysis, not
+  // filled cells. This gate measures whether rootCauses actually EXPLAIN.
+  const meaningful = commits.filter(c => c.rootCause && isMeaningfulRootCause(c.rootCause, c.msg));
+  const meaningRate = commits.length > 0 ? meaningful.length / commits.length : 0;
+  const dumps = commits.filter(c => c.rootCause && !isMeaningfulRootCause(c.rootCause, c.msg));
+  check('enrichment.meaningful', meaningRate >= 0.7,
+    `${meaningful.length}/${commits.length} (${(meaningRate * 100).toFixed(0)}%) rootCauses read as causal analysis, not diff dumps (need 70%+)`);
+  if (dumps.length > 0 && !JSON_OUT) {
+    process.stderr.write(`     ${dumps.length} low-meaning rootCauses. Sample: "${String(dumps[0].rootCause).slice(0, 70)}..."\n`);
+  }
+  
+  return Math.round(rcRate * 25 + catRate * 25 + sevRate * 20 + meaningRate * 30);
+}
+
+// Does a rootCause actually explain a cause, or is it a raw diff dump / pasted
+// commit subject? Mirrors the miner's isLowQualityRootCause so the validator
+// holds the data to the same bar the miner aims for.
+function isMeaningfulRootCause(rootCause, commitMsg) {
+  if (!rootCause) return false;
+  const rc = String(rootCause).trim();
+  if (rc.length < 25) return false;
+  // raw diff dump signatures
+  if (/(→|->)/.test(rc)) return false;
+  if (/changed\s+[\w-]+\s*:/i.test(rc)) return false;
+  if (/\.\s*Also:\s*Changed/i.test(rc)) return false;
+  if (/^\s*\(/.test(rc)) return false;
+  if (/:\s*$/.test(rc)) return false;
+  // pasted commit subject verbatim
+  if (commitMsg) {
+    const norm = s => String(s).toLowerCase()
+      .replace(/^(?:fix|feat|bug|hotfix|patch|revert|chore|refactor)\s*\([^)]*\)\s*:?\s*/i, '')
+      .replace(/[^a-z0-9 ]/g, '').trim();
+    if (norm(rc) && norm(rc) === norm(commitMsg)) return false;
+    if (norm(rc).length > 10 && norm(commitMsg).startsWith(norm(rc).slice(0, 40))) return false;
+  }
+  // a causal explanation tends to have a verb of causation or consequence
+  const hasCausalLanguage = /\b(caus|because|due to|result|led to|broke|fail|missing|incorrect|not |overflow|conflict|race|persist|prevent|expand|clip|overlap|destroy|unhandl|invalid|stale|mismatch)/i.test(rc);
+  if (!hasCausalLanguage && rc.split(/\s+/).filter(Boolean).length < 8) return false;
+  return true;
 }
 
 // ════════════════════════════════════════════════════════════════════
