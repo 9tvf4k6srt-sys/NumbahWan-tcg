@@ -1,0 +1,334 @@
+{
+  "version": "1.2.0",
+  "description": "Banned phrases that signal LLM-authored copy. Maintain by adding any phrase a reviewer flagged in PR review. Each entry is a regex (case-insensitive unless noted). Source column records why it's banned so future maintainers don't add a benign rewrite. v1.1 expanded from the 2026 zero-trace guide. v1.2 deepens ZH/JA, adds Thai (NW ships TH) and EN structural tells; pairs with the optional --naturalness LLM scorer for tells no regex can name.",
+  "lastUpdated": "2026-06-01",
+  "scope": {
+    "include": ["public/**/*.html", "public/**/*.md"],
+    "exclude": [
+      "public/static/research-md/**",
+      "public/research/**",
+      "public/*-legacy.html",
+      "public/*-old.html",
+      "public/card-audit.html",
+      "public/trailer/review.html",
+      "public/**/*.bak",
+      "public/**/*-backup-*"
+    ],
+    "perRule": {
+      "AIT-EN-FILLER:synergy": {
+        "exclude": [
+          "public/battle.html",
+          "public/guild-siege.html",
+          "public/games/**",
+          "public/world/castle.html"
+        ],
+        "note": "TCG card synergy is real game-mechanics terminology, not LLM filler."
+      },
+      "AIT-ZH-CALQUE:卷軸": {
+        "exclude": [
+          "public/research.html",
+          "public/research/**",
+          "public/world/**",
+          "public/museum/**"
+        ],
+        "note": "卷軸 in lore/world pages is an in-game artifact (paper scroll), not the UI metaphor calque."
+      },
+      "AIT-EN-FILLER:represents a pivotal moment": {
+        "exclude": [
+          "public/museum/exhibit-001.html"
+        ],
+        "note": "Lives inside <quote-block> attributed expert-quotes — fictional in-world voices for the Zakum Helmet exhibit. Reviewer kept verbatim because rewriting changes the in-character voice."
+      },
+      "AIT-EN-EMDASH-FLOOD": {
+        "exclude": [
+          "public/boss-dungeon.html",
+          "public/world/castle.html",
+          "public/world/dlc-12-abyssal-temple.html"
+        ],
+        "note": "Thai (กำแพงเพลิง / เฟส) and game-lore phase markers use a hyphen-style separator that visually trips the em-dash flood pattern. These pages are vetted lore content."
+      }
+    },
+    "note": "research-md is an auto-generated academic-paper corpus we do not author; legacy/old/audit pages are read-only history."
+  },
+  "rules": [
+    {
+      "id": "AIT-EN-FILLER",
+      "lang": "en",
+      "severity": "high",
+      "patterns": [
+        "\\bdelve into\\b",
+        "\\bdive deep into\\b",
+        "\\bever-evolving\\b",
+        "\\bever-changing landscape\\b",
+        "\\bin (?:today's|the modern) (?:fast-paced |digital )?world\\b",
+        "\\btapestry of\\b",
+        "\\bnavigate the complexities\\b",
+        "\\bcutting-edge\\b",
+        "\\bstate-of-the-art\\b",
+        "\\bgame-changer\\b",
+        "\\bgame[ -]changing\\b",
+        "\\bunlock the (?:potential|power) of\\b",
+        "\\bharness the power of\\b",
+        "\\bleverage(?:s|d|ing)? (?:the|our|your) (?:power|capabilities|strengths)\\b",
+        "\\bseamlessly integrat(?:e|ed|es|ing)\\b",
+        "\\bin a world where\\b",
+        "\\bat the forefront of\\b",
+        "\\brevolutionize (?:the way|how) (?:we|you)\\b",
+        "\\bparadigm shift\\b",
+        "\\bsynergize\\b",
+        "\\bsynergy\\b",
+        "\\bholistic approach\\b",
+        "\\bbespoke solution\\b",
+        "\\brobust (?:framework|solution|platform)\\b",
+        "\\bcomprehensive (?:suite|framework|solution)\\b",
+        "\\bbrand in the wild\\b",
+        "\\b(?:represents|marks|is) a pivotal (?:moment|step)\\b",
+        "\\bpivotal (?:role|piece) in (?:our|the|its)\\b",
+        "\\bfurthermore,\\b",
+        "\\bmoreover,\\b",
+        "\\bin conclusion,\\b",
+        "\\bit is (?:important|worth|crucial) (?:to (?:note|remember|highlight)|noting)\\b",
+        "\\bunderscore(?:s|d)? the (?:importance|need|fact)\\b",
+        "\\bvibrant (?:community|ecosystem|tapestry|culture|world)\\b",
+        "\\bshowcase(?:s|d|ing)? (?:the|our|your) (?:best|finest|talent|capabilities)\\b",
+        "\\belevate (?:your|the) (?:experience|game|brand|journey)\\b",
+        "\\bcraft(?:ed|ing)? (?:meticulously|with care|with precision)\\b",
+        "\\bmeticulously (?:crafted|designed|curated)\\b",
+        "\\bresonate(?:s|d) with\\b",
+        "\\bstand(?:s)? as a (?:beacon|testament|hallmark)\\b",
+        "\\bwhen it comes to\\b",
+        "\\bin order to\\b",
+        "\\bneedless to say\\b",
+        "\\bit goes without saying\\b",
+        "\\bat the end of the day\\b",
+        "\\bplays? a (?:crucial|vital|key|pivotal|significant) role\\b",
+        "\\bwhether you're a [\\w'-]+ or (?:a |an )?[\\w'-]+\\b",
+        "\\bfrom [\\w'-]+ to [\\w'-]+,? (?:we|our|you)\\b",
+        "\\bthat said,\\b",
+        "\\brest assured\\b",
+        "\\blook no further\\b"
+      ],
+      "note": "Generic LLM filler and structural scaffolding (hedged openers, 'in order to', 'whether you're a X or a Y'). Replace with concrete subject + verb."
+    },
+    {
+      "id": "AIT-EN-EXALTATION",
+      "lang": "en",
+      "severity": "medium",
+      "patterns": [
+        "\\bjourney through\\b",
+        "\\bembark on (?:a|the) journey\\b",
+        "\\bembark on this\\b",
+        "\\bwhere art meets science\\b",
+        "\\bbridge the gap between\\b",
+        "\\btestament to\\b",
+        "\\ba symphony of\\b",
+        "\\bbreathe new life into\\b",
+        "\\bfoster (?:innovation|collaboration|community)\\b",
+        "\\bempower(?:s|ed|ing)? (?:individuals|users|creators)\\b",
+        "\\bunwavering commitment\\b",
+        "\\bredefin(?:e|es|ing) (?:the|what)\\b",
+        "\\ba (?:rich|fascinating|captivating) (?:tapestry|blend|fusion)\\b",
+        "\\binvite(?:s|d)? you to (?:explore|discover|join)\\b",
+        "\\bweav(?:e|es|ing) (?:a|the|together)\\b"
+      ],
+      "note": "Inspirational filler. Show the thing instead."
+    },
+    {
+      "id": "AIT-EN-EMDASH-FLOOD",
+      "lang": "en",
+      "severity": "low",
+      "patterns": [
+        "—[^—\\n<>]{1,40}—[^—\\n<>]{1,40}—[^—\\n<>]{1,40}—"
+      ],
+      "note": "Four or more em-dashes within ~120 characters with no HTML break = machine rhythm. Single or paired em-dashes in human writing are fine; cluster flooding is the tell."
+    },
+    {
+      "id": "AIT-EN-EMDASH-BAN",
+      "lang": "en",
+      "severity": "medium",
+      "patterns": [
+        "[a-z]\\s—\\s[a-z]"
+      ],
+      "note": "House rule: no em-dashes in authored prose. Rewrite as two sentences, a colon, a comma, or parentheses. Numeric/date ranges use an en-dash or the word 'to'. Lowercase-bounded only so headings, ASCII flags, and code separators do not false-trip; promote to high once legacy copy is clean."
+    },
+    {
+      "id": "AIT-EN-NOT-X-BUT-Y",
+      "lang": "en",
+      "severity": "high",
+      "patterns": [
+        "\\bnot (?:just |only |merely |simply )?(?:a |an |the )?[\\w'-]+(?:[^.!?\\n]{0,40}?)(?:,| but| it's| it is| but rather| so much as)\\s+(?:a |an |the |it's |it is )",
+        "\\bit's not (?:about|just|only)\\b[^.!?\\n]{0,50}\\bit's\\b",
+        "\\bisn't (?:about |just |only )?[^.!?\\n]{0,40}\\bit's\\b"
+      ],
+      "note": "The 'not X, it's Y' / 'not just X but Y' reframe is the single loudest AI cadence. State Y directly. Cut the negated setup."
+    },
+    {
+      "id": "AIT-EN-HEDGE-VOCAB",
+      "lang": "en",
+      "severity": "high",
+      "patterns": [
+        "\\bnuanced\\b",
+        "\\bnuance(?:s)?\\b",
+        "\\bmultifaceted\\b",
+        "\\bintricate(?:ly)?\\b",
+        "\\bunderpin(?:s|ned|ning)?\\b",
+        "\\bdelve(?:s|d)?\\b"
+      ],
+      "note": "Hedge/seminar vocab that signals machine authorship. Say the specific thing instead of calling it nuanced or intricate."
+    },
+    {
+      "id": "AIT-EN-TRICOLON",
+      "lang": "en",
+      "severity": "low",
+      "patterns": [
+        "\\b[\\w'-]+,\\s+[\\w'-]+,\\s+and\\s+[\\w'-]+\\b"
+      ],
+      "note": "Rule-of-three rhythm (x, y, and z) is a strong AI tell when stacked. Info-only because real lists are sometimes correct; reviewer should vary to two or four+ items when the rhythm repeats within a section."
+    },
+    {
+      "id": "AIT-ZH-CALQUE",
+      "lang": "zh",
+      "severity": "high",
+      "patterns": [
+        "投資論述",
+        "投資テーゼ",
+        "卷軸",
+        "用數字,不用敘事",
+        "用数字,不用叙事",
+        "在法規軌道上跑",
+        "經不起陽光的流程",
+        "经不起阳光的流程",
+        "你的會計師會喜歡的數學",
+        "你的会计师会喜欢的数学",
+        "我們最後吃",
+        "我们最后吃",
+        "鎖定終身(?!\\s*[A-Za-z0-9])",
+        "锁定终身(?!\\s*[A-Za-z0-9])",
+        "急がない午後",
+        "行く先のない時間",
+        "經得起陽光",
+        "经得起阳光"
+      ],
+      "note": "Direct English-to-Chinese calques. Rewrite in idiomatic 繁中 / 简中."
+    },
+    {
+      "id": "AIT-ZH-AI-BUZZ",
+      "lang": "zh",
+      "severity": "medium",
+      "patterns": [
+        "賦能",
+        "赋能",
+        "閉環",
+        "闭环",
+        "顆粒度",
+        "颗粒度",
+        "對齊一下",
+        "对齐一下",
+        "底層邏輯",
+        "底层逻辑",
+        "拉齊認知",
+        "拉齐认知",
+        "落地實踐",
+        "落地实践",
+        "打造一個生態",
+        "打造一个生态",
+        "深度賦能",
+        "深度赋能",
+        "全鏈路",
+        "全链路",
+        "新物種",
+        "新物种"
+      ],
+      "note": "Internet-MBA Chinese. Speak like a person."
+    },
+    {
+      "id": "AIT-JA-CALQUE",
+      "lang": "ja",
+      "severity": "high",
+      "patterns": [
+        "投資テーゼ",
+        "巻物",
+        "数字、ナラティブではなく",
+        "ナラティブではなく",
+        "暗号の空気感ではなく",
+        "我々は最後に食べる",
+        "我々は最後に食べる",
+        "日光に耐えぬプロセス",
+        "会計士が頷く算数",
+        "アイデンティティはスライド",
+        "ブランド・イン・ザ・ワイルド",
+        "急がない午後、行く先のない時間",
+        "試作条件への同意",
+        "ドローダウンは工学、希望ではない"
+      ],
+      "note": "Direct English-to-Japanese calques and over-poetic translation-ese."
+    },
+    {
+      "id": "AIT-JA-OVERFORMAL",
+      "lang": "ja",
+      "severity": "medium",
+      "patterns": [
+        "〜ものだ",
+        "〜である\\s*$",
+        "〜と言えるでしょう",
+        "〜ではないでしょうか",
+        "〜と考えられます",
+        "言わば",
+        "謂わば",
+        "畢竟",
+        "蓋し"
+      ],
+      "note": "Old-formal closing patterns. Modern editorial Japanese prefers です/ます or assertive plain."
+    },
+    {
+      "id": "AIT-JA-MACHINE-CADENCE",
+      "lang": "ja",
+      "severity": "high",
+      "patterns": [
+        "単なる[^、。!?\\n]{0,18}ではなく",
+        "ただの[^、。!?\\n]{0,18}ではなく",
+        "だけでなく[^、。!?\\n]{0,18}も",
+        "今日の[^、。!?\\n]{0,10}(?:世界|時代|社会)",
+        "〜してみませんか",
+        "一緒に[^、。!?\\n]{0,12}しましょう",
+        "重要なのは",
+        "言うまでもなく",
+        "まず[^。!?\\n]{0,40}次に[^。!?\\n]{0,40}最後に"
+      ],
+      "note": "Japanese versions of the AI cadence: 単なるXではなく reframe, だけでなく…も inclusivity hedge, 今日の世界 opener, まず/次に/最後に enumeration, 重要なのは throat-clearing. Make a direct statement."
+    },
+    {
+      "id": "AIT-TH-CALQUE",
+      "lang": "th",
+      "severity": "high",
+      "patterns": [
+        "ในโลกที่",
+        "ในยุคที่[^\\n]{0,18}เปลี่ยนแปลง",
+        "ไม่ใช่แค่[^\\n]{0,24}แต่(?:เป็น|คือ)",
+        "ไม่เพียงแต่[^\\n]{0,24}แต่ยัง",
+        "ไม่ว่าคุณจะ[^\\n]{0,24}หรือ",
+        "ปลดล็อก(?:ศักยภาพ|พลัง)",
+        "ยกระดับ(?:ประสบการณ์|ธุรกิจ|แบรนด์)",
+        "อย่างไร้รอยต่อ",
+        "โซลูชันแบบครบวงจร",
+        "ก้าวสู่อีกระดับ",
+        "สิ่งสำคัญคือ"
+      ],
+      "note": "Thai AI-tells: ในโลกที่ ('in a world where'), ไม่ใช่แค่...แต่เป็น (not just X but Y), ไม่ว่าคุณจะ...หรือ (whether you...or), ปลดล็อกศักยภาพ (unlock potential), อย่างไร้รอยต่อ (seamlessly). Rewrite as plain spoken Thai a person would say."
+    },
+    {
+      "id": "AIT-TH-OVERFORMAL",
+      "lang": "th",
+      "severity": "medium",
+      "patterns": [
+        "กล่าวได้ว่า",
+        "อาจกล่าวได้ว่า",
+        "เป็นที่น่าสังเกตว่า",
+        "ดังนั้นจึงกล่าวได้ว่า",
+        "ทั้งนี้และทั้งนั้น",
+        "โดยสรุปแล้ว"
+      ],
+      "note": "Over-formal Thai connective scaffolding common in machine translation. Trim to the claim."
+    }
+  ]
+}
