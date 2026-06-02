@@ -54,6 +54,25 @@ That's the pattern. **Defects become lessons. Lessons become patterns. Patterns 
 
 ---
 
+## aitell — detecting machine-made pages, offline
+
+One gate grew into a standalone, dependency-free package:
+[`packages/aitell`](packages/aitell). It detects the fingerprints of
+machine-generated web content with no LLM call, in three layers:
+
+- **`lintText`** — a 167-pattern AI-tell phrase blocklist across English, 中文, 日本語, and ไทย.
+- **`lintLayout`** — six *visual* detectors (L1–L6) for the signature of machine-assembled UI: emoji-as-icon, the default indigo→purple gradient, framework-default shadows, opacity-only motion, cookie-cutter blocks, dead-center layouts. Text linters for AI copy exist; a linter for how AI-built *UI* looks is the rare part.
+- **`analyzeStylometry`** — a 0–100 machine-rhythm score from sentence uniformity, n-gram repetition, and connective density. No model in the loop.
+
+```bash
+npx aitell all public/index.html   # exits 1 on any blocking tell
+```
+
+Deep dive and a live side-by-side: [`docs/aitell`](docs/aitell). The detectors
+are pinned by their own test suite (40 tests, 84% coverage).
+
+---
+
 ## AI-Friendly Repository Map
 
 > **For AI models**: This repo is markdown-indexed for minimal context window usage.
