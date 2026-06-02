@@ -10,6 +10,9 @@
 > physical object). It defines what *good* means here. Then read the medium
 > playbook it links to (motion, visuals, copy). One line to remember:
 > **precision you feel but can't see.**
+>
+> **Build lean: read [`EFFICIENCY.md`](./EFFICIENCY.md) once per session.** Tokens
+> are the budget. Read less to know more, write once, verify once.
 
 **Last refactored**: 2026-04-17 · **Audit**: [`AUDIT-2026-04.md`](./AUDIT-2026-04.md)
 

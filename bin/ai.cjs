@@ -160,6 +160,11 @@ const COMMANDS = {
       } else { println(`${C.red}TASTE.md missing${C.r}`); process.exit(1); }
     },
   },
+  efficiency: {
+    desc: 'Build lean: log a slice cost-proxy or show the leanness trend (read EFFICIENCY.md)',
+    usage: 'efficiency log "<task>" [--reads=N --calls=N] | efficiency trend',
+    run: () => runNode('tools/efficiency-ledger.cjs', REST),
+  },
 
   // ── deploy ────────────────────────────────────────────────────────
   ship: {
@@ -271,7 +276,7 @@ function help() {
   println(`${C.dim}Read AI_PLAYBOOK.md first. Everything routes through here.${C.r}\n`);
 
   const groups = {
-    'Onboarding':   ['brief', 'context', 'rules', 'health', 'playbook', 'taste'],
+    'Onboarding':   ['brief', 'context', 'rules', 'health', 'playbook', 'taste', 'efficiency'],
     'Memory':       ['premortem', 'whyfile', 'memory'],
     'Guardian':     ['guard', 'heal', 'aitell', 'layout'],
     'Deploy':       ['ship'],
