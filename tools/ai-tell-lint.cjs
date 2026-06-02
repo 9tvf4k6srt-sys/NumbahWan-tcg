@@ -158,6 +158,7 @@ const EXEMPT_PREFIXES = [
   'public/battle-old.html',      // legacy page kept for archive
   'docs/archive/',
   'public/trailer/review.html',  // internal review tool, not user copy
+  'docs/aitell/',                // the aitell deep-dive necessarily catalogs the tells it bans
 ];
 
 function isExemptPath(rel) {
