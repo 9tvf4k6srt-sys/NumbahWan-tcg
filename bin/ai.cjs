@@ -137,6 +137,30 @@ const COMMANDS = {
     run: () => runNode('sentinel.cjs', ['--heal']),
   },
 
+  // ── anti-AI-tell pipeline ─────────────────────────────────────────
+  aitell: {
+    desc: 'Inspect every production step for AI-tell (deterministic block + stylometry + LLM judge)',
+    usage: 'aitell [--all|<file>...] [--judge] [--json]',
+    run: () => runNode('tools/aitell-pipeline.cjs', REST),
+  },
+  layout: {
+    desc: 'Lint the BUILD for visual AI-tell (emoji-as-icon, stock gradients, default shadows)',
+    usage: 'layout [--all|<file.html>...] [--json]',
+    run: () => runNode('tools/ai-layout-lint.cjs', REST),
+  },
+  taste: {
+    desc: 'Print the taste constitution path + one-line spine (read TASTE.md)',
+    run: () => {
+      if (exists('TASTE.md')) {
+        println(`${C.cyan}TASTE.md${C.r} → ${path.join(ROOT, 'TASTE.md')}`);
+        println(`${C.b}Precision you feel but can't see.${C.r}`);
+        println(`${C.dim}Feeling: multi-billion-dollar production value as craft, not bling.${C.r}`);
+        println(`${C.dim}North star: blockbuster + keynote. Enemies: hollow polish, cheap-looking.${C.r}`);
+        println(`${C.dim}cat TASTE.md  ·  then the medium playbook it links to${C.r}`);
+      } else { println(`${C.red}TASTE.md missing${C.r}`); process.exit(1); }
+    },
+  },
+
   // ── deploy ────────────────────────────────────────────────────────
   ship: {
     desc: 'Atomic deploy: auth → test → sync → squash → push → PR → merge',
@@ -247,9 +271,9 @@ function help() {
   println(`${C.dim}Read AI_PLAYBOOK.md first. Everything routes through here.${C.r}\n`);
 
   const groups = {
-    'Onboarding':   ['brief', 'context', 'rules', 'health', 'playbook'],
+    'Onboarding':   ['brief', 'context', 'rules', 'health', 'playbook', 'taste'],
     'Memory':       ['premortem', 'whyfile', 'memory'],
-    'Guardian':     ['guard', 'heal'],
+    'Guardian':     ['guard', 'heal', 'aitell', 'layout'],
     'Deploy':       ['ship'],
     'Learn from repo': ['examples', 'learn'],
     'Dev':          ['dev', 'test', 'audit'],

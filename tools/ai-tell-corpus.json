@@ -1,7 +1,7 @@
 {
-  "version": "1.1.0",
-  "description": "Banned phrases that signal LLM-authored copy. Maintain by adding any phrase a reviewer flagged in PR review. Each entry is a regex (case-insensitive unless noted). Source column records why it's banned so future maintainers don't add a benign rewrite. v1.1 expanded from the 2026 zero-trace guide.",
-  "lastUpdated": "2026-05-01",
+  "version": "1.2.0",
+  "description": "Banned phrases that signal LLM-authored copy. Maintain by adding any phrase a reviewer flagged in PR review. Each entry is a regex (case-insensitive unless noted). Source column records why it's banned so future maintainers don't add a benign rewrite. v1.1 expanded from the 2026 zero-trace guide. v1.2 deepens ZH/JA, adds Thai (NW ships TH) and EN structural tells; pairs with the optional --naturalness LLM scorer for tells no regex can name.",
+  "lastUpdated": "2026-06-01",
   "scope": {
     "include": ["public/**/*.html", "public/**/*.md"],
     "exclude": [
@@ -95,9 +95,20 @@
         "\\bcraft(?:ed|ing)? (?:meticulously|with care|with precision)\\b",
         "\\bmeticulously (?:crafted|designed|curated)\\b",
         "\\bresonate(?:s|d) with\\b",
-        "\\bstand(?:s)? as a (?:beacon|testament|hallmark)\\b"
+        "\\bstand(?:s)? as a (?:beacon|testament|hallmark)\\b",
+        "\\bwhen it comes to\\b",
+        "\\bin order to\\b",
+        "\\bneedless to say\\b",
+        "\\bit goes without saying\\b",
+        "\\bat the end of the day\\b",
+        "\\bplays? a (?:crucial|vital|key|pivotal|significant) role\\b",
+        "\\bwhether you're a [\\w'-]+ or (?:a |an )?[\\w'-]+\\b",
+        "\\bfrom [\\w'-]+ to [\\w'-]+,? (?:we|our|you)\\b",
+        "\\bthat said,\\b",
+        "\\brest assured\\b",
+        "\\blook no further\\b"
       ],
-      "note": "Generic LLM filler. Replace with concrete subject + verb."
+      "note": "Generic LLM filler and structural scaffolding (hedged openers, 'in order to', 'whether you're a X or a Y'). Replace with concrete subject + verb."
     },
     {
       "id": "AIT-EN-EXALTATION",
@@ -130,6 +141,49 @@
         "—[^—\\n<>]{1,40}—[^—\\n<>]{1,40}—[^—\\n<>]{1,40}—"
       ],
       "note": "Four or more em-dashes within ~120 characters with no HTML break = machine rhythm. Single or paired em-dashes in human writing are fine; cluster flooding is the tell."
+    },
+    {
+      "id": "AIT-EN-EMDASH-BAN",
+      "lang": "en",
+      "severity": "medium",
+      "patterns": [
+        "[a-z]\\s—\\s[a-z]"
+      ],
+      "note": "House rule: no em-dashes in authored prose. Rewrite as two sentences, a colon, a comma, or parentheses. Numeric/date ranges use an en-dash or the word 'to'. Lowercase-bounded only so headings, ASCII flags, and code separators do not false-trip; promote to high once legacy copy is clean."
+    },
+    {
+      "id": "AIT-EN-NOT-X-BUT-Y",
+      "lang": "en",
+      "severity": "high",
+      "patterns": [
+        "\\bnot (?:just |only |merely |simply )?(?:a |an |the )?[\\w'-]+(?:[^.!?\\n]{0,40}?)(?:,| but| it's| it is| but rather| so much as)\\s+(?:a |an |the |it's |it is )",
+        "\\bit's not (?:about|just|only)\\b[^.!?\\n]{0,50}\\bit's\\b",
+        "\\bisn't (?:about |just |only )?[^.!?\\n]{0,40}\\bit's\\b"
+      ],
+      "note": "The 'not X, it's Y' / 'not just X but Y' reframe is the single loudest AI cadence. State Y directly. Cut the negated setup."
+    },
+    {
+      "id": "AIT-EN-HEDGE-VOCAB",
+      "lang": "en",
+      "severity": "high",
+      "patterns": [
+        "\\bnuanced\\b",
+        "\\bnuance(?:s)?\\b",
+        "\\bmultifaceted\\b",
+        "\\bintricate(?:ly)?\\b",
+        "\\bunderpin(?:s|ned|ning)?\\b",
+        "\\bdelve(?:s|d)?\\b"
+      ],
+      "note": "Hedge/seminar vocab that signals machine authorship. Say the specific thing instead of calling it nuanced or intricate."
+    },
+    {
+      "id": "AIT-EN-TRICOLON",
+      "lang": "en",
+      "severity": "low",
+      "patterns": [
+        "\\b[\\w'-]+,\\s+[\\w'-]+,\\s+and\\s+[\\w'-]+\\b"
+      ],
+      "note": "Rule-of-three rhythm (x, y, and z) is a strong AI tell when stacked. Info-only because real lists are sometimes correct; reviewer should vary to two or four+ items when the rhythm repeats within a section."
     },
     {
       "id": "AIT-ZH-CALQUE",
@@ -225,6 +279,56 @@
         "蓋し"
       ],
       "note": "Old-formal closing patterns. Modern editorial Japanese prefers です/ます or assertive plain."
+    },
+    {
+      "id": "AIT-JA-MACHINE-CADENCE",
+      "lang": "ja",
+      "severity": "high",
+      "patterns": [
+        "単なる[^、。!?\\n]{0,18}ではなく",
+        "ただの[^、。!?\\n]{0,18}ではなく",
+        "だけでなく[^、。!?\\n]{0,18}も",
+        "今日の[^、。!?\\n]{0,10}(?:世界|時代|社会)",
+        "〜してみませんか",
+        "一緒に[^、。!?\\n]{0,12}しましょう",
+        "重要なのは",
+        "言うまでもなく",
+        "まず[^。!?\\n]{0,40}次に[^。!?\\n]{0,40}最後に"
+      ],
+      "note": "Japanese versions of the AI cadence: 単なるXではなく reframe, だけでなく…も inclusivity hedge, 今日の世界 opener, まず/次に/最後に enumeration, 重要なのは throat-clearing. Make a direct statement."
+    },
+    {
+      "id": "AIT-TH-CALQUE",
+      "lang": "th",
+      "severity": "high",
+      "patterns": [
+        "ในโลกที่",
+        "ในยุคที่[^\\n]{0,18}เปลี่ยนแปลง",
+        "ไม่ใช่แค่[^\\n]{0,24}แต่(?:เป็น|คือ)",
+        "ไม่เพียงแต่[^\\n]{0,24}แต่ยัง",
+        "ไม่ว่าคุณจะ[^\\n]{0,24}หรือ",
+        "ปลดล็อก(?:ศักยภาพ|พลัง)",
+        "ยกระดับ(?:ประสบการณ์|ธุรกิจ|แบรนด์)",
+        "อย่างไร้รอยต่อ",
+        "โซลูชันแบบครบวงจร",
+        "ก้าวสู่อีกระดับ",
+        "สิ่งสำคัญคือ"
+      ],
+      "note": "Thai AI-tells: ในโลกที่ ('in a world where'), ไม่ใช่แค่...แต่เป็น (not just X but Y), ไม่ว่าคุณจะ...หรือ (whether you...or), ปลดล็อกศักยภาพ (unlock potential), อย่างไร้รอยต่อ (seamlessly). Rewrite as plain spoken Thai a person would say."
+    },
+    {
+      "id": "AIT-TH-OVERFORMAL",
+      "lang": "th",
+      "severity": "medium",
+      "patterns": [
+        "กล่าวได้ว่า",
+        "อาจกล่าวได้ว่า",
+        "เป็นที่น่าสังเกตว่า",
+        "ดังนั้นจึงกล่าวได้ว่า",
+        "ทั้งนี้และทั้งนั้น",
+        "โดยสรุปแล้ว"
+      ],
+      "note": "Over-formal Thai connective scaffolding common in machine translation. Trim to the claim."
     }
   ]
 }

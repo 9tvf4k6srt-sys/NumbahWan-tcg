@@ -17,6 +17,14 @@
  *   node tools/ai-tell-lint.cjs --json
  *   node tools/ai-tell-lint.cjs --report
  *   node tools/ai-tell-lint.cjs --verbose
+ *   node tools/ai-tell-lint.cjs --naturalness      # + LLM deep read (gpt-5.1)
+ *   node tools/ai-tell-lint.cjs --naturalness --min=80
+ *
+ * Two stages:
+ *   stage 1 (always)        regex blocklist from the corpus. fast, offline.
+ *   stage 2 (--naturalness) an LLM reads the prose and scores how human it
+ *                           sounds in its own language, catching tells no
+ *                           regex can name. Delegates to ai-naturalness.cjs.
  *
  * Exemptions:
  *   - HTML comments are skipped.
@@ -41,7 +49,11 @@ const CORPUS_PATH = path.join(__dirname, 'ai-tell-corpus.json');
 const EXEMPT_FILES = new Set([
   'tools/ai-tell-corpus.json',
   'tools/ai-tell-lint.cjs',
+  'TASTE.md',
+  'PRODUCTION-PIPELINE.md',
   'BUILD-DOCTRINE.md',
+  'references/MOTION-CRAFT.md',
+  'references/PINFORGE-VISUAL-LOCK.md',
   'AGENT-CONTEXT.md',
   'AI_PLAYBOOK.md',
   'CLAUDE.md',
@@ -62,6 +74,8 @@ const FILE_ARG = args.find(a => a.startsWith('--file='));
 const JSON_OUT = args.includes('--json');
 const REPORT_OUT = args.includes('--report');
 const VERBOSE = args.includes('--verbose');
+const NATURALNESS = args.includes('--naturalness');
+const MIN_ARG = args.find(a => a.startsWith('--min='));
 
 function loadCorpus() {
   if (!fs.existsSync(CORPUS_PATH)) {
@@ -315,9 +329,47 @@ function printReport(result) {
   console.log(md.join('\n'));
 }
 
+// Stage 2: optional LLM naturalness pass over the same file set.
+// Spawns ai-naturalness.cjs so the network/LLM concern stays isolated.
+// Its exit code is folded into ours: a low naturalness score blocks too.
+function runNaturalness() {
+  let files;
+  if (FILE_ARG) files = [FILE_ARG.split('=')[1]];
+  else if (CHECK_ALL) files = getAllScannableFiles();
+  else files = getStagedFiles().filter(f => /\.(html|md)$/.test(f));
+  files = files.filter(f => !isExemptPath(f));
+  if (files.length === 0) return 0;
+
+  const scorer = path.join(__dirname, 'ai-naturalness.cjs');
+  if (!fs.existsSync(scorer)) {
+    console.error('  [ai-tell] --naturalness needs tools/ai-naturalness.cjs (missing)');
+    return 0; // do not block a commit just because the optional stage is absent
+  }
+  const passthru = [scorer, ...files];
+  if (MIN_ARG) passthru.push(MIN_ARG);
+  if (JSON_OUT) passthru.push('--json');
+  try {
+    const out = execSync(`node ${passthru.map(a => JSON.stringify(a)).join(' ')}`, {
+      cwd: ROOT, encoding: 'utf8', stdio: ['ignore', 'pipe', 'inherit']
+    });
+    process.stdout.write(out);
+    return 0;
+  } catch (e) {
+    // execSync throws on non-zero exit; the scorer's own report already
+    // printed. Surface its exit code so the gate stays honest.
+    if (e.stdout) process.stdout.write(e.stdout);
+    return e.status || 1;
+  }
+}
+
 const result = run();
 if (JSON_OUT) console.log(JSON.stringify(result, null, 2));
 else if (REPORT_OUT) printReport(result);
 else printHuman(result);
 
-process.exit(result.blocked > 0 ? 1 : 0);
+let exitCode = result.blocked > 0 ? 1 : 0;
+if (NATURALNESS) {
+  const nat = runNaturalness();
+  if (nat !== 0) exitCode = 1;
+}
+process.exit(exitCode);

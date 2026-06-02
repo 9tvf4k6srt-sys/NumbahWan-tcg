@@ -4,6 +4,12 @@
 > It replaces: `docs/AI-*.md` (7 files), `PROJECT.md`, and most of `README.md`.
 > Those files are kept for archival — they all point back here now.
 > Companion files (short, focused): `AGENT-CONTEXT.md` (brand rules) and `CLAUDE.md` (session protocol).
+>
+> **Before you make anything a human will look at, read [`TASTE.md`](./TASTE.md)** —
+> the taste constitution for every product we ship (software, app, page, image,
+> physical object). It defines what *good* means here. Then read the medium
+> playbook it links to (motion, visuals, copy). One line to remember:
+> **precision you feel but can't see.**
 
 **Last refactored**: 2026-04-17 · **Audit**: [`AUDIT-2026-04.md`](./AUDIT-2026-04.md)
 

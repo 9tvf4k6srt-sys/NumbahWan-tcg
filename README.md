@@ -22,6 +22,9 @@
 > **If you are an AI working on this repo, read [`AI_PLAYBOOK.md`](./AI_PLAYBOOK.md) first.**
 > Everything you need is in one file. Then run `node bin/ai.cjs` for the unified CLI.
 >
+> **For *how good should it be*, read [`TASTE.md`](./TASTE.md)** — the taste constitution
+> for every product we make. One line: *precision you feel but can't see.*
+>
 > Latest refactor: [`AUDIT-2026-04.md`](./AUDIT-2026-04.md) · Session protocol: [`CLAUDE.md`](./CLAUDE.md)
 
 ---

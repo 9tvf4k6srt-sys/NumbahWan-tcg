@@ -827,8 +827,33 @@
            so the rule above wins, but layout type is preserved per element. */
         :where(p,div,li,h1,h2,h3,h4,h5,h6,section,article,figcaption,blockquote,td,th)[data-lang]{display:none}
     </style>
+
+    <!-- Motion layer · GSAP + Lenis over CDN · governed by references/MOTION-CRAFT.md
+         Progressive enhancement only: if these fail to load, the page renders
+         and reads exactly as before (CSS keeps everything visible). -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.13.0/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.13.0/ScrollTrigger.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/lenis@1.1.13/dist/lenis.min.js"></script>
+    <style>
+        /* Scroll-progress hairline: a thin brass reading line across the very
+           top, the way a fine report shows how far through you are. */
+        .read-line{position:fixed;top:0;left:0;height:2px;width:100%;transform:scaleX(0);transform-origin:left center;background:linear-gradient(90deg,rgba(139,111,58,.2),var(--brass,#8B6F3A));z-index:9999;pointer-events:none}
+        /* Reveal start-state. Only applied once JS confirms motion is on, via
+           the .fx-on flag on <html>, so a no-JS / reduced-motion visit never
+           hides content. */
+        html.fx-on [data-rise]{opacity:0}
+
+        /* Flying emblem: a fixed clone of the brass mark that travels down the
+           page as you scroll and docks near key sections. Pointer-events off so
+           it never blocks taps. Hidden until JS builds it. */
+        .fly-mark{position:fixed;top:0;left:0;width:88px;height:88px;z-index:60;pointer-events:none;opacity:0;will-change:transform,opacity;
+                  filter:drop-shadow(0 10px 24px rgba(0,0,0,.35))}
+        .fly-mark img{width:100%;height:100%;object-fit:contain;border-radius:50%}
+        @media (max-width:640px){ .fly-mark{width:62px;height:62px} }
+    </style>
 </head>
 <body class="lang-en">
+    <div class="read-line" id="read-line" aria-hidden="true"></div>
     <div class="shell">
         <div class="vign"></div><div class="grain"></div>
 
@@ -4039,6 +4064,236 @@
                 entries.forEach(e => e.isIntersecting ? start() : stop());
             }, { rootMargin: '120px' });
             io.observe(tile);
+        })();
+
+        /* ====================================================================
+           PINFORGE MOTION LAYER
+           Governed by references/MOTION-CRAFT.md
+           Timeline structure:
+             intro:    hero overture (bg settle, emblem rise, title wipe, nav drop)
+             readline: brass hairline across the top scrubbed to page progress
+             sections: head + body revealed via ScrollTrigger.batch (reversible
+                       on leave-back) — ONE observer per batch, not one trigger
+                       per element, so the page stays light
+             rules:    first dozen brass dividers draw on scrub (capped)
+             counts:   [data-count] figures tween up on scrub, down on exit
+             flymark:  a fixed clone of the brass emblem falls down the page and
+                       hops left/right between section docks, shrinking as it
+                       goes (desktop/fine-pointer only; one scrubbed tween)
+             pointer:  magnetic primary buttons
+           PERFORMANCE: normalizeScroll is intentionally OFF (it fights Lenis and
+                        was the lag); batch() + fastScrollEnd + per-section caps
+                        keep concurrent triggers to a handful. Heavy extras are
+                        skipped on mobile.
+           Easing voice: slow weighted settle (expo/power3), never bouncy.
+           Defensive: bails out cleanly if GSAP is absent or reduced-motion is
+                      on; reveal start-state is gated behind html.fx-on so a
+                      no-JS visit never hides a single line of content.
+           ==================================================================== */
+        (function pinforgeMotion(){
+            const has = typeof window.gsap !== 'undefined';
+            const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+            if (!has || reduce) return;   // page already reads fine without motion
+
+            const gsap = window.gsap;
+            const ST = window.ScrollTrigger;
+            if (ST) gsap.registerPlugin(ST);
+
+            const q = (s) => document.querySelector(s);
+            const qa = (s) => Array.from(document.querySelectorAll(s));
+            const finePointer = window.matchMedia('(pointer:fine)').matches;
+            const isMobile = window.matchMedia('(max-width:640px)').matches;
+            /* Touch covers phones AND tablets in any orientation, where Lenis is
+               not driving the scroll. ScrollTrigger must be fed natively there. */
+            const isTouch = window.matchMedia('(pointer:coarse)').matches
+                || ('ontouchstart' in window) || navigator.maxTouchPoints > 0;
+
+            /* PERFORMANCE NOTE — why this version is light.
+               The previous build made one ScrollTrigger per element across 22
+               sections (200+ triggers) AND ran normalizeScroll, which fights
+               Lenis for the scroll stream. That was the lag. This build:
+                 - drops normalizeScroll (Lenis already smooths scroll)
+                 - uses ScrollTrigger.batch() so one observer handles a whole
+                   section's children instead of N triggers
+                 - throttles with fastScrollEnd + a single shared config
+                 - skips the heaviest extras on mobile. */
+            if (ST) {
+                ST.config({ ignoreMobileResize: true, fastScrollEnd: true });
+            }
+
+            /* Smooth scroll + keeping ScrollTrigger in sync.
+               On desktop, Lenis owns the wheel and fires its own 'scroll' so we
+               update ScrollTrigger from there. On a phone we keep native touch
+               scrolling (smoothTouch:false) so it stays buttery — BUT Lenis does
+               not emit 'scroll' for scrolls it does not control, so on touch the
+               scrubbed effects (the flying emblem) would never advance. Fix:
+               drive ScrollTrigger.update straight off the native scroll stream
+               on touch, and also tick it every frame as a safety net. */
+            if (window.Lenis && !isTouch) {
+                const lenis = new window.Lenis({ duration: 1.0, smoothWheel: true, smoothTouch: false });
+                lenis.on('scroll', () => ST && ST.update());
+                gsap.ticker.add((t) => lenis.raf(t * 1000));
+                gsap.ticker.lagSmoothing(0);
+            } else {
+                /* Touch / phones: native scroll. Keep ScrollTrigger fed directly. */
+                if (ST) {
+                    window.addEventListener('scroll', () => ST.update(), { passive: true });
+                    gsap.ticker.add(() => ST.update());
+                    gsap.ticker.lagSmoothing(0);
+                }
+            }
+
+            /* ---- 1. Hero overture ---------------------------------------- */
+            const intro = gsap.timeline({ defaults: { ease: 'expo.out' } });
+            const heroImg = q('.hero-bg img');
+            if (heroImg) intro.fromTo(heroImg, { scale: 1.08 }, { scale: 1, duration: 1.8 }, 0);
+            const lockup = q('.hero-lockup');
+            if (lockup) intro.from(lockup, { y: 26, autoAlpha: 0, duration: 1.2 }, 0.15);
+            const heroBits = ['.hero-title', '.motto', '.hero-sub', '.hero-trust', '.hero-actions']
+                .map(q).filter(Boolean);
+            if (heroBits.length) intro.from(heroBits, { y: 22, autoAlpha: 0, duration: 0.9, stagger: 0.12 }, 0.5);
+            const eyebrow = q('.hero-inner .eyebrow');
+            if (eyebrow) intro.from(eyebrow, { y: 14, autoAlpha: 0, duration: 0.7 }, 0.4);
+            const topbar = q('.topbar');
+            if (topbar) intro.from(topbar, { y: -18, autoAlpha: 0, duration: 0.8 }, 0.2);
+
+            if (!ST) return;  // everything below is scroll-driven
+            document.documentElement.classList.add('fx-on');
+
+            /* ---- 2. Reading-progress hairline ---------------------------- */
+            const readLine = q('#read-line');
+            if (readLine) {
+                gsap.to(readLine, { scaleX: 1, ease: 'none',
+                    scrollTrigger: { start: 0, end: 'max', scrub: 0.3 } });
+            }
+
+            /* ---- 3. Section reveals via batch (cheap, reversible) -------- */
+            /* One IntersectionObserver-backed batch per call handles many
+               elements at once. Reveal on enter, reverse on leave-back, so
+               scrolling up and down still replays and unwinds, but at a
+               fraction of the cost of one-trigger-per-element. */
+            const revealEls = [];
+            qa('section').forEach((sec) => {
+                if (sec.classList.contains('hero')) return;
+                const head = sec.querySelector('.section-head, .section-title, h2, h3');
+                if (head) revealEls.push(head);
+                const body = Array.from(sec.querySelectorAll(
+                    '.section-note, .lo-tile, .tier, .card, .holding, .faq-item, figure, blockquote'))
+                    .filter(el => el.offsetParent !== null)
+                    .slice(0, isMobile ? 4 : 8);
+                revealEls.push(...body);
+            });
+            revealEls.forEach(el => el.setAttribute('data-rise', ''));
+            gsap.set(revealEls, { y: 26, autoAlpha: 0 });
+
+            ST.batch(revealEls, {
+                start: 'top 86%',
+                onEnter:    (b) => gsap.to(b, { y: 0, autoAlpha: 1, duration: 0.8, ease: 'power3.out', stagger: 0.06, overwrite: true }),
+                onLeaveBack:(b) => gsap.to(b, { y: 26, autoAlpha: 0, duration: 0.4, ease: 'power2.in', stagger: 0.03, overwrite: true })
+            });
+
+            /* ---- 4. Brass rules draw on scrub (real dividers only) ------- */
+            /* Cap to the first dividers so we never run dozens of scrubs at
+               once; the rest just appear with their section. */
+            qa('.section-rule, .ledger-rule').slice(0, 12).forEach((rule) => {
+                gsap.fromTo(rule,
+                    { scaleX: 0, transformOrigin: 'left center' },
+                    { scaleX: 1, ease: 'none',
+                      scrollTrigger: { trigger: rule, start: 'top 92%', end: 'top 60%', scrub: 1 } });
+            });
+
+            /* ---- 5. Opt-in figure counters ------------------------------ */
+            qa('[data-count]').forEach((el) => {
+                const target = parseFloat(el.getAttribute('data-count')) || 0;
+                const dp = parseInt(el.getAttribute('data-count-dp') || '0', 10);
+                const suffix = el.getAttribute('data-count-suffix') || '';
+                const obj = { v: 0 };
+                gsap.to(obj, { v: target, ease: 'none',
+                    scrollTrigger: { trigger: el, start: 'top 88%', end: 'top 55%', scrub: 1,
+                        onUpdate: () => { el.textContent = obj.v.toLocaleString(undefined, { minimumFractionDigits: dp, maximumFractionDigits: dp }) + suffix; } } });
+            });
+
+            /* ---- 6. The flying emblem (works on iPhone too) ------------- */
+            /* A fixed clone of the brass mark detaches from the hero and falls
+               down the page as you scroll, hopping between screen sides and
+               shrinking. ONE scrubbed tween drives it via a state object, so it
+               is a single trigger. On phones we use a lighter profile: fewer
+               hops, a smaller mark, tighter margins, and translate3d only, so it
+               stays smooth on a narrow viewport. */
+            const srcImg = q('.hero-lockup .logo-img');
+            const firstDock = document.getElementById('thesis');
+            const lastDock  = document.getElementById('join');
+            if (srcImg && firstDock && lastDock) {
+                const fly = document.createElement('div');
+                fly.className = 'fly-mark';
+                fly.setAttribute('aria-hidden', 'true');
+                const fImg = document.createElement('img');
+                fImg.src = srcImg.currentSrc || srcImg.src;
+                fImg.decoding = 'async';
+                fly.appendChild(fImg);
+                document.body.appendChild(fly);
+
+                /* Phone-tuned vs desktop-tuned parameters. */
+                const markW   = isMobile ? 62 : 88;
+                const stops   = isMobile ? 3 : 6;          // fewer side hops on a phone
+                const margin  = isMobile ? markW + 14 : 116;
+                const leftX   = isMobile ? 14 : 32;
+                const startScale = isMobile ? 1.15 : 1.4;
+                const endScale   = isMobile ? 0.62 : 0.7;
+
+                const state = { p: 0 };
+                const easeInOut = (f) => f < 0.5 ? 2*f*f : 1 - (-2*f+2)*(-2*f+2)/2;
+
+                const render = () => {
+                    const vw = window.innerWidth, vh = window.innerHeight;
+                    const p = state.p;                       // 0..1 down the run
+                    const y = vh * 0.15 + p * vh * 0.62;     // falls down the screen
+                    const hop = Math.min(Math.floor(p * stops), stops - 1);
+                    const onRight = hop % 2 === 0;
+                    const targetX = onRight ? vw - margin : leftX;
+                    const frac = (p * stops) - hop;
+                    const eased = easeInOut(frac < 0 ? 0 : frac > 1 ? 1 : frac);
+                    const prevRight = (hop - 1) % 2 === 0;
+                    const prevX = hop === 0 ? (vw / 2 - markW / 2) : (prevRight ? vw - margin : leftX);
+                    const x = prevX + (targetX - prevX) * eased;
+                    const scale = startScale - p * (startScale - endScale);
+                    gsap.set(fly, { x: x, y: y, scale: scale, force3D: true });
+                };
+
+                gsap.set(fly, { autoAlpha: 0 });
+                gsap.to(state, {
+                    p: 1, ease: 'none',
+                    scrollTrigger: {
+                        trigger: '#thesis', start: 'top 70%',
+                        endTrigger: '#join', end: 'top 45%',
+                        scrub: isMobile ? 0.4 : 0.6, invalidateOnRefresh: true,
+                        onUpdate: render,
+                        onEnter:    () => gsap.to(fly, { autoAlpha: 1, duration: 0.5 }),
+                        onLeave:    () => gsap.to(fly, { autoAlpha: 0, duration: 0.4 }),
+                        onEnterBack:() => gsap.to(fly, { autoAlpha: 1, duration: 0.5 }),
+                        onLeaveBack:() => gsap.to(fly, { autoAlpha: 0, duration: 0.4 })
+                    }
+                });
+                render();
+            }
+
+            /* ---- 7. Cursor responses (fine pointer only) ---------------- */
+            if (finePointer) {
+                qa('.btn-primary').forEach((btn) => {
+                    btn.addEventListener('pointermove', (e) => {
+                        const r = btn.getBoundingClientRect();
+                        const x = (e.clientX - r.left) / r.width - 0.5;
+                        const y = (e.clientY - r.top) / r.height - 0.5;
+                        gsap.to(btn, { x: x * 10, y: y * 6, duration: 0.4, ease: 'power2.out' });
+                    });
+                    btn.addEventListener('pointerleave', () =>
+                        gsap.to(btn, { x: 0, y: 0, duration: 0.6, ease: 'power3.out' }));
+                });
+            }
+
+            /* Recompute after chrome + fonts settle. */
+            window.addEventListener('load', () => ST.refresh());
+            setTimeout(() => ST.refresh(), 700);
         })();
 
     </script>
