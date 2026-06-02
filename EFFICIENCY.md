@@ -49,6 +49,38 @@ The rule of thumb: **read less to know more, write once, verify once.**
 - Re-running a full `--all` sweep when you only touched one file.
 - Long "let me explain my plan" prose when a 2-line plan + the action is enough.
 - Generating images/audio/video without confirming. Those cost far more than text.
+- Editing a monolith page to change three lines. The whole file gets read first.
+  See below.
+
+---
+
+## The monolith tax (the repo's biggest structural cost)
+
+The single most expensive thing to work on here is a giant HTML page with big
+inline `<script>` and `<style>` blocks. `invest.html` is ~4,300 lines;
+`index.html` carries ~1,200 lines of inline JS. To change three lines on one of
+these, the whole file is read first, and that cost is paid on every edit.
+
+Guardrail (advisory, never blocks):
+
+```bash
+node bin/ai.cjs pagesize --all        # which pages are over the soft caps
+node bin/ai.cjs pagesize --baseline   # did a staged change balloon a page?
+```
+
+The pre-commit hook runs `--baseline --quiet`, so a page ballooning in one
+change gets a nudge before it becomes the next monolith.
+
+When you DO touch a flagged page for real work, extract its inline JS to
+`public/static/<page>.js` while you are there. Pay the cost once, on a page that
+already has your attention, and every future edit there is cheap. Do not do a
+mass extraction up front, because that diff costs more than it saves.
+
+Note on design tokens: a tempting "shared `:root` tokens" refactor is NOT safe
+here. 79 token names (`--gold`, `--bg`, `--accent`, ...) carry *conflicting*
+values across pages. `--gold` is `#ffd700` on some pages and `#d4af37` on
+others. Forcing one shared file would silently recolour dozens of pages. Per-page
+palettes are intentional; leave them.
 
 ---
 
