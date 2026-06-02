@@ -696,4 +696,11 @@ function main() {
   if (overall < 40) process.exit(1);
 }
 
-main();
+// Run as CLI; expose the meaning gate when required (tests). This detector is
+// what makes an A+ grade mean "the rootCauses actually explain", so it is the
+// one most worth locking down with tests.
+if (require.main === module) {
+  main();
+} else {
+  module.exports = { isMeaningfulRootCause };
+}

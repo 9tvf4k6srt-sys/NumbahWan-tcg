@@ -4,6 +4,8 @@
 
 ### A factory that builds web pages from YAML specs — and gets smarter every time it runs.
 
+[![CI](https://github.com/9tvf4k6srt-sys/NumbahWan-tcg/actions/workflows/ci.yml/badge.svg)](https://github.com/9tvf4k6srt-sys/NumbahWan-tcg/actions/workflows/ci.yml)
+[![Tests](https://img.shields.io/badge/tests-145_passing-2ea043?style=for-the-badge)](https://github.com/9tvf4k6srt-sys/NumbahWan-tcg/actions/workflows/ci.yml)
 [![Dark Factory](https://img.shields.io/badge/Dark_Factory-Gen_2-ff6b6b?style=for-the-badge)]()
 [![Memory](https://img.shields.io/badge/Factory_Memory-7_Lessons-a855f7?style=for-the-badge)]()
 [![Pages](https://img.shields.io/badge/Pages-139_(1_Factory_Built)-6c5ce7?style=for-the-badge)]()

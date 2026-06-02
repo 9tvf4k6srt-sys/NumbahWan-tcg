@@ -71,18 +71,11 @@ const EMOJI_EXEMPT = new Set([
 // ── small helpers ─────────────────────────────────────────────────────────
 function rel(file) { return path.relative(ROOT, file).replace(/\\/g, '/'); }
 
-// Emoji that read as UI icons when dropped into chrome. We match:
-//   - high-plane emoji (U+1F000+): always emoji, the loud tell.
-//   - BMP symbols (U+2600–U+27BF, U+2190–U+21FF, U+2B00–U+2BFF) ONLY when
-//     carried with an emoji variation selector (U+FE0F) — that VS16 is what
-//     turns a monochrome glyph into a colour emoji. This deliberately spares
-//     legitimate typographic dingbats used as icons: ✕ ✓ ✗ ✦ ★ → etc.
-const EMOJI_HIGH = '\\u{1F000}-\\u{1FAFF}';
-const EMOJI_BMP = '\\u2600-\\u27BF\\u2190-\\u21FF\\u2B00-\\u2BFF\\u2300-\\u23FF';
-const EMOJI_RE = new RegExp(
-  `[${EMOJI_HIGH}]|[${EMOJI_BMP}]\\uFE0F`, 'u');
-const EMOJI_RE_G = new RegExp(
-  `[${EMOJI_HIGH}]|[${EMOJI_BMP}]\\uFE0F`, 'gu');
+// Emoji that read as UI icons when dropped into chrome. The colour-emoji rule
+// (high-plane glyphs, or BMP symbols carrying VS16) lives in aitell-common so
+// it can be unit-tested and cannot drift away from what we test against.
+const EMOJI_RE = common.colourEmojiRegex(false);
+const EMOJI_RE_G = common.colourEmojiRegex(true);
 
 // strip <style>/<script> CONTENTS so we lint the body markup, but KEEP the
 // inline style attributes (we need them for shadow/gradient/motion checks).

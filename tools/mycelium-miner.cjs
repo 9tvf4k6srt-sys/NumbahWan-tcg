@@ -1494,4 +1494,9 @@ Output formats:
   }
 }
 
-main().catch(e => { console.error(e); process.exit(1); });
+// Run as CLI; expose the pure data-quality detector when required (tests).
+if (require.main === module) {
+  main().catch(e => { console.error(e); process.exit(1); });
+} else {
+  module.exports = { isLowQualityRootCause };
+}
