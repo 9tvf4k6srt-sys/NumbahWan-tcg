@@ -30,6 +30,21 @@ The rule of thumb: **read less to know more, write once, verify once.**
 5. **Spend output tokens like money.** Commit bodies, PR descriptions, and
    explanations cost too. Be complete but tight. No restating the diff in prose.
 
+6. **Kill the re-see loop (the biggest hidden cost for visual work).**
+   Screenshots are impossible here (chromium can't launch). So a visual bug
+   that ships is the most expensive thing that happens: the user notices it on
+   their phone, sends a screenshot, you re-fix, you re-ship. The guild headline
+   alone cost 3 full PR round-trips this way (#84→#85→#86); the emblem cost 5.
+   Each round-trip is a whole PR + your context + the user's turn. Before
+   shipping ANY visual change, run the static eye:
+   ```bash
+   node bin/ai.cjs render <file.html>     # advisory
+   node bin/ai.cjs render --strict <file> # what preship enforces for HTML
+   ```
+   It catches the bug classes that actually recurred: words fusing
+   (`ontheroster`), mid-word breaks (`ROS / TER`), fixed widths past 375px, and
+   oversized headline clamps. `preship` runs it `--strict` on any HTML in scope.
+
 ---
 
 ## Start-of-task checklist (cheap, saves the most)
@@ -53,6 +68,25 @@ The rule of thumb: **read less to know more, write once, verify once.**
   See below.
 
 ---
+
+## Verifying visual work without a screenshot (stop rediscovering this)
+
+You cannot screenshot in this sandbox — chromium is missing system libs and
+there is no apt. Do not spend turns trying to make it work. The verification
+ladder that actually exists, cheapest first:
+
+1. `node bin/ai.cjs render --strict <file>` — static catch for the recurring
+   visual bug classes (word-fuse, mid-word break, mobile overflow, big headline).
+2. `node bin/ai.cjs preship <file>` — render-risk + layout + copy + asset gates
+   in one call. If it's green, ship.
+3. `PlaywrightConsoleCapture` (the tool) — this DOES work; use it to confirm
+   zero JS console errors after a change. It is not a screenshot, but it proves
+   the page loads and the JS runs.
+4. For transparent art: `node bin/ai.cjs assets <file>` + PIL alpha/corner
+   checks (see PROJECT_STATE.md image pipeline).
+5. `understand_images` on the generated/processed asset itself (not the page).
+
+The point: trust the gates, not your eyes. A green `preship` is the eye.
 
 ## The monolith tax (the repo's biggest structural cost)
 
