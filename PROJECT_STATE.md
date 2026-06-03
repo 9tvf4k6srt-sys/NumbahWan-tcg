@@ -38,8 +38,12 @@ Creed → Roster → Hall → Lounge → Join. **No "BrightInside" anywhere** (r
 
 ## Decisions + rationale (the part git can't tell you)
 - Emblem = **MiniDemon demon-P** (the letter P forged into a horned demon: snarl + curling
-  tail), stark B&W. `assets/paradox-emblem.webp` (transparent) + `paradox-lockup.webp`
-  (emblem over PARADOX wordmark). Reflects leader Poj = MiniDemon. Don't revert to old orb.
+  tail), off-white + ember-red accents. An **Ohm/Omega (Ω) monogram is carved into the P
+  counter** as an intentional negative-space seal (the bowl kept rendering an irregular
+  white shape, so we turned it into a deliberate glyph). `assets/paradox-emblem.webp`
+  (transparent) + `paradox-lockup.webp` (emblem over PARADOX wordmark). Because the Ω is a
+  deliberate dark interior glyph, both assets are in `asset-alpha-lint.py` GLYPH_ALLOW
+  (skip embedded-island, tolerate the one monogram badge). Don't revert to old orb.
 - Brand = **one paradox, two truths**: "Ruthless on the boss. Family in the hall." Visual
   spine: near-black + ONE ember-red accent (`--ember #e0566a`); condensed display fonts
   (Barlow Condensed headings, Rajdhani tech labels) for esports feel.

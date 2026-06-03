@@ -29,6 +29,11 @@ R_MARGIN = 24      # skip a border margin when scanning for embedded islands (ri
 # Assets that are intentionally full-bleed / opaque — skip the corner check for these.
 OPAQUE_ALLOW = {"banner.webp", "guildhall.webp", "hero-prontera.webp", "paradox-seam.webp"}
 
+# Assets that intentionally carry a dark glyph/monogram INSIDE a letter (a designed seal,
+# not an artifact). Skip the embedded-island check for these; corners + counter-fill checks
+# still apply. paradox-emblem has an Ohm/Omega (Ω) monogram carved into the P counter.
+GLYPH_ALLOW = {"paradox-emblem.webp", "paradox-lockup.webp"}
+
 
 def lum(r, g, b):
     return 0.2126 * r + 0.7152 * g + 0.0722 * b
@@ -123,23 +128,30 @@ def scan(path):
         return bright >= 15  # almost fully ringed by bright/transparent
 
     island_px = 0
-    step = 3 if total <= 600 * 600 else 5
-    for y in range(R_MARGIN, h - R_MARGIN, step):
-        for x in range(R_MARGIN, w - R_MARGIN, step):
-            p = px[x, y]
-            if p[3] > 40 and lum_p(p) <= DARK and embedded(x, y):
-                island_px += step * step
+    if name not in GLYPH_ALLOW:  # assets with an intentional interior monogram skip this
+        step = 3 if total <= 600 * 600 else 5
+        for y in range(R_MARGIN, h - R_MARGIN, step):
+            for x in range(R_MARGIN, w - R_MARGIN, step):
+                p = px[x, y]
+                if p[3] > 40 and lum_p(p) <= DARK and embedded(x, y):
+                    island_px += step * step
     embedded_island = island_px >= 300  # a meaningful dark patch inside a letter
 
     # Decision: flag if a flat-fill block, an embedded island, or 2+ enclosed holes.
     # A single organic cavity (one demon mouth) is allowed.
-    if suspicious_fills or embedded_island or holes >= 2:
-        if embedded_island:
+    # GLYPH_ALLOW assets carry an intentional interior monogram (a dark badge/seal): allow
+    # ONE flat fill and skip the embedded-island check, but still catch corners / 2+ fills.
+    fill_limit = 1 if name in GLYPH_ALLOW else 0
+    hole_limit = 2 if name in GLYPH_ALLOW else 1  # glyph asset: mouth + monogram badge ok
+    flag_fill = suspicious_fills > fill_limit
+    flag_island = embedded_island and name not in GLYPH_ALLOW
+    if flag_fill or flag_island or holes > hole_limit:
+        if flag_island:
             kind = f"dark island embedded inside the letter (~{island_px}px)"
-        elif suspicious_fills:
+        elif flag_fill:
             kind = f"{suspicious_fills} flat counter-fill block(s)"
         else:
-            kind = f"{holes} enclosed dark holes"
+            kind = f"{holes} enclosed dark holes (limit {hole_limit})"
         issues.append(f"{kind} — likely unremoved counter fill "
                       f"(run: python3 tools/emblem-clean.py SRC {name})")
     return issues
