@@ -13,9 +13,10 @@ Prune resolved items. If this file grows past ~60 lines, it's rotting, so cut it
 ---
 
 ## Project
-BrightInside guild landing page for **Ragnarok: The New World** (Gravity MMORPG, Rune-Midgard
-setting). Single page at `public/guild/brightinside/index.html`. Currently framed as on a
-**Test Server**.
+**PARADOX** competitive guild landing page for **Ragnarok: The New World** (Gravity MMORPG,
+Rune-Midgard setting). Single page at `public/guild/brightinside/index.html` (path kept;
+brand is PARADOX). Recruitment-funnel page: Hero (centered emblem + wordmark) → Proof →
+Creed → Roster → Hall → Lounge → Join. **No "BrightInside" anywhere** (retired Jun 2026).
 
 ## Permanent rules (constraints, not state)
 - **No AI-tell phrases** in page copy. Enforced by `tools/ai-tell-lint.cjs` (pre-commit hook).
@@ -30,19 +31,24 @@ setting). Single page at `public/guild/brightinside/index.html`. Currently frame
   PIL trim/resize/webp q82-88 method 6.
 
 ## Decisions + rationale (the part git can't tell you)
-- Guild HAS an emblem now. This **reverses** an earlier "no emblem" choice, so don't undo it.
-- Emblem concept = "default": lantern flame breaking through cracked dark stone, gold+violet.
-- Member portraits: user **dislikes the old ones**, so reveal art must be **NEW**, never reuse
-  the deleted regginam/md3mon originals. Members shown as shadows first (cliffhanger).
+- Emblem = **MiniDemon demon-P** (the letter P forged into a horned demon: snarl + curling
+  tail), stark B&W. `assets/paradox-emblem.webp` (transparent) + `paradox-lockup.webp`
+  (emblem over PARADOX wordmark). Reflects leader Poj = MiniDemon. Don't revert to old orb.
+- Brand = **one paradox, two truths**: "Ruthless on the boss. Family in the hall." Visual
+  spine: near-black + ONE ember-red accent (`--ember #e0566a`); condensed display fonts
+  (Barlow Condensed headings, Rajdhani tech labels) for esports feel.
+- Member portraits: user **dislikes the old ones**, so reveal art stays **NEW** (current
+  reg-/md- shadow+reveal webp). Members shown as shadows first (cliffhanger). KEEP Regginam + MD3mon.
 - Pay-to-reveal = a **joke** paywall (fake decline toast → reveal). No real payment. Keep it funny.
-- "Dark inside" transformation is shown two ways: banner that lights up on scroll-past-middle,
-  and the dark-to-bright origin story.
-- Tone: playful/funny over corporate.
+- Tone: competitive + warm. Recruitment-driven, but playful (not corporate).
+- Scroll motion is a feature: IO reveals, per-letter headline, ember scan-line on h2s,
+  count-up proof stats, scroll-scrub hero ring, banner light-wipe, parallax, ambient ember canvas.
 
 ## Lore (drives copy, not in any file)
-- Guild came "out of the dark inside"; placed 4th in Ragnarok Origin under MiniDemon.
+- PARADOX placed **4th in Ragnarok Origin** under **MiniDemon** (= Poj = MD3mon = Panthera,
+  panther-demon champion who led the climb). The 4th-place rank is the core social proof.
 - Regginam: rainbow mage who insists he's a Swordsman, giant unused blade.
-- MD3mon / MiniDemon / Panthera: panther-demon champion who led the 4th-place climb.
+- The name PARADOX = two opposite truths held at once (ruthless competitor / warm family).
 
 ## Open gotchas (rediscovering these costs real time)
 - **No screenshots possible**: Playwright chromium missing `libnspr4.so`, no apt access.
