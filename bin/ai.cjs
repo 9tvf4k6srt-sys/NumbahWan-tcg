@@ -39,6 +39,12 @@ function run(bin, args, opts = {}) {
   process.exit(r.status || 0);
 }
 function runNode(script, args) { return run('node', [script, ...args]); }
+// Like runNode but does NOT exit the process — returns the status so callers can
+// chain several gates and aggregate the result (used by `preship`).
+function runStep(script, args) {
+  const r = spawnSync('node', [script, ...args], { stdio: 'inherit', cwd: ROOT });
+  return r.status || 0;
+}
 function exists(p) { try { fs.accessSync(path.join(ROOT, p)); return true; } catch { return false; } }
 function println(...a) { process.stdout.write(a.join(' ') + '\n'); }
 
@@ -170,6 +176,28 @@ const COMMANDS = {
     usage: 'efficiency log "<task>" [--reads=N --calls=N] | efficiency trend',
     run: () => runNode('tools/efficiency-ledger.cjs', REST),
   },
+  preship: {
+    desc: 'Run the full pre-ship gate in one call: ai-tell + visual layout + page-size (staged or files)',
+    usage: 'preship [<file>...]   (no args = staged files, same scope as pre-commit)',
+    run: () => {
+      const files = REST.length ? REST : [];
+      const steps = [
+        ['ai-tell copy',     'tools/ai-tell-lint.cjs',  files],
+        ['visual layout',    'tools/ai-layout-lint.cjs', files],
+        ['page-size baseline','tools/page-size-lint.cjs', files.length ? files : ['--baseline']],
+      ];
+      let failed = 0;
+      for (const [label, script, args] of steps) {
+        println(`\n${C.b}── ${label} ──${C.r}`);
+        const status = runStep(script, args);
+        if (status !== 0) { failed++; println(`${C.red}✗ ${label} failed (exit ${status})${C.r}`); }
+      }
+      println('');
+      if (failed) { println(`${C.red}preship: ${failed} gate(s) failed — fix before shipping.${C.r}`); process.exit(1); }
+      println(`${C.cyan}preship: all gates clean — ready to ship.${C.r}`);
+      process.exit(0);
+    },
+  },
 
   // ── deploy ────────────────────────────────────────────────────────
   ship: {
@@ -283,7 +311,7 @@ function help() {
   const groups = {
     'Onboarding':   ['brief', 'context', 'rules', 'health', 'playbook', 'taste', 'efficiency'],
     'Memory':       ['premortem', 'whyfile', 'memory'],
-    'Guardian':     ['guard', 'heal', 'aitell', 'layout', 'pagesize'],
+    'Guardian':     ['guard', 'heal', 'aitell', 'layout', 'pagesize', 'preship'],
     'Deploy':       ['ship'],
     'Learn from repo': ['examples', 'learn'],
     'Dev':          ['dev', 'test', 'audit'],

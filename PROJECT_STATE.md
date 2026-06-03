@@ -1,5 +1,9 @@
 # PROJECT_STATE
 
+> Discoverable from [`AI_PLAYBOOK.md`](./AI_PLAYBOOK.md) §0 (the read-budget ladder).
+> Read this when resuming a tracked project instead of reconstructing context from scratch.
+> This is the **template pattern** for any resumable build: one short file, durable why only.
+
 Durable, non-derivable context only. **Do NOT put here anything `git log`, `ls`, or a lint
 run can tell you.** No asset lists, no file sizes, no per-file ledgers, no finished-task
 checklists. Those are re-derived on demand. This file holds *why* and *rules*, not *what*.
