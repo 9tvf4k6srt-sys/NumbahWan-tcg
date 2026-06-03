@@ -62,6 +62,28 @@
     line-height: 1.62;
     -webkit-font-smoothing: antialiased;
   }
+  /* Page-wide ambient nature layer: the whole landing page sits inside a quiet
+     painterly forest. Fixed so it drifts behind content as you scroll; heavily
+     darkened so every panel stays readable. Trees + nature, no characters. */
+  body::before {
+    content: ""; position: fixed; inset: -4% -4% -4% -4%; z-index: -10; pointer-events: none;
+    background-image: url("assets/ambient-grove.webp");
+    background-size: cover; background-position: center;
+    filter: saturate(0.78) brightness(0.4) contrast(1.04);
+    opacity: 0.5;
+    animation: grovedrift 46s ease-in-out infinite alternate;
+  }
+  @keyframes grovedrift {
+    0%   { transform: scale(1.06) translate3d(0, 0, 0); }
+    100% { transform: scale(1.12) translate3d(-2.2%, -1.4%, 0); }
+  }
+  /* dark wash + soft top/bottom vignette so copy never washes out over the art */
+  body::after {
+    content: ""; position: fixed; inset: 0; z-index: -9; pointer-events: none;
+    background:
+      radial-gradient(140% 100% at 50% 30%, rgba(10,7,16,0.35) 0%, rgba(8,5,14,0.72) 70%, rgba(6,4,10,0.92) 100%),
+      linear-gradient(180deg, var(--px-dark) 0%, rgba(8,5,14,0.55) 12%, rgba(8,5,14,0.5) 88%, var(--px-dark) 100%);
+  }
   img { display: block; max-width: 100%; }
 
   /* language-specific font tweaks */
@@ -188,17 +210,18 @@
   }
   .hero__bg {
     position: absolute; inset: -6% 0 0 0; z-index: -3;
-    background-image: url("assets/hero-prontera.webp");
-    background-size: cover; background-position: 60% center;
+    background-image: url("assets/hero-forest.webp");
+    background-size: cover; background-position: 50% center;
     will-change: transform; transform: scale(1.08);
-    filter: grayscale(0.5) brightness(0.5) contrast(1.08);
+    /* let the painterly forest read in colour, just tamed so text stays clean */
+    filter: saturate(0.92) brightness(0.62) contrast(1.05);
   }
   /* deep cinematic veil — emblem owns the frame, skyline recedes */
   .hero__veil {
     position: absolute; inset: 0; z-index: -2;
     background:
-      radial-gradient(110% 80% at 50% 42%, rgba(10,7,16,0) 0%, rgba(8,5,14,0.55) 58%, var(--px-dark) 100%),
-      linear-gradient(180deg, rgba(8,5,14,0.7) 0%, rgba(8,5,14,0.18) 30%, rgba(8,5,14,0.72) 72%, var(--px-dark) 100%);
+      radial-gradient(120% 86% at 50% 40%, rgba(10,7,16,0) 0%, rgba(8,5,14,0.42) 56%, rgba(8,5,14,0.9) 92%, var(--px-dark) 100%),
+      linear-gradient(180deg, rgba(8,5,14,0.62) 0%, rgba(8,5,14,0.1) 32%, rgba(8,5,14,0.6) 74%, var(--px-dark) 100%);
   }
   /* ember halo that breathes behind the emblem */
   .hero__scrim {

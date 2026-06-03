@@ -47,6 +47,13 @@ Creed → Roster → Hall → Lounge → Join. **No "BrightInside" anywhere** (r
 - Brand = **one paradox, two truths**: "Ruthless on the boss. Family in the hall." Visual
   spine: near-black + ONE ember-red accent (`--ember #e0566a`); condensed display fonts
   (Barlow Condensed headings, Rajdhani tech labels) for esports feel.
+- **Ambient art = painterly Ragnarok/Zenonia FOREST, trees + nature, NO characters** (guild
+  leader's call, for all-around landing ambience). Three layers: hero = `assets/hero-forest.webp`
+  (enchanted clearing, center kept open for the emblem), page-wide = `body::before` fixed
+  `assets/ambient-grove.webp` (heavy dark wash via `body::after` so panels stay readable, slow
+  `grovedrift` keyframe), hall = `guildhall.webp` (kept). Old `hero-prontera.webp` retired
+  (orphan asset, left in repo). Backgrounds are darkened/desaturated so the ember brand + white
+  copy read clean on top. Generated art only (licensing).
 - Member portraits: user **dislikes the old ones**, so reveal art stays **NEW** (current
   reg-/md- shadow+reveal webp). Members shown as shadows first (cliffhanger). KEEP Regginam + MD3mon.
 - Pay-to-reveal = a **joke** paywall (fake decline toast → reveal). No real payment. Keep it funny.
