@@ -45,6 +45,11 @@ function runStep(script, args) {
   const r = spawnSync('node', [script, ...args], { stdio: 'inherit', cwd: ROOT });
   return r.status || 0;
 }
+// Same as runStep but for a Python gate.
+function runPyStep(script, args) {
+  const r = spawnSync('python3', [script, ...args], { stdio: 'inherit', cwd: ROOT });
+  return r.status || 0;
+}
 function exists(p) { try { fs.accessSync(path.join(ROOT, p)); return true; } catch { return false; } }
 function println(...a) { process.stdout.write(a.join(' ') + '\n'); }
 
@@ -159,6 +164,11 @@ const COMMANDS = {
     usage: 'pagesize [--all|--baseline|<file.html>...] [--json]',
     run: () => runNode('tools/page-size-lint.cjs', REST),
   },
+  assets: {
+    desc: 'Transparency artifact gate: flag opaque corners + enclosed dark holes in logo/emblem assets',
+    usage: 'assets [<asset.webp|png>...]   (no args = scan guild assets dir)',
+    run: () => run('python3', ['tools/asset-alpha-lint.py', ...REST]),
+  },
   taste: {
     desc: 'Print the taste constitution path + one-line spine (read TASTE.md)',
     run: () => {
@@ -191,6 +201,15 @@ const COMMANDS = {
         println(`\n${C.b}── ${label} ──${C.r}`);
         const status = runStep(script, args);
         if (status !== 0) { failed++; println(`${C.red}✗ ${label} failed (exit ${status})${C.r}`); }
+      }
+      // Asset transparency gate: only when a guild page (which embeds the emblem) is in scope.
+      const touchesGuild = files.some(f => f.includes('guild/'));
+      if (!files.length || touchesGuild) {
+        println(`\n${C.b}── asset alpha ──${C.r}`);
+        const status = runPyStep('tools/asset-alpha-lint.py',
+          ['public/guild/brightinside/assets/paradox-emblem.webp',
+           'public/guild/brightinside/assets/paradox-lockup.webp']);
+        if (status !== 0) { failed++; println(`${C.red}✗ asset alpha failed (exit ${status})${C.r}`); }
       }
       println('');
       if (failed) { println(`${C.red}preship: ${failed} gate(s) failed — fix before shipping.${C.r}`); process.exit(1); }
@@ -311,7 +330,7 @@ function help() {
   const groups = {
     'Onboarding':   ['brief', 'context', 'rules', 'health', 'playbook', 'taste', 'efficiency'],
     'Memory':       ['premortem', 'whyfile', 'memory'],
-    'Guardian':     ['guard', 'heal', 'aitell', 'layout', 'pagesize', 'preship'],
+    'Guardian':     ['guard', 'heal', 'aitell', 'layout', 'pagesize', 'assets', 'preship'],
     'Deploy':       ['ship'],
     'Learn from repo': ['examples', 'learn'],
     'Dev':          ['dev', 'test', 'audit'],
