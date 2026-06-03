@@ -169,6 +169,11 @@ const COMMANDS = {
     usage: 'assets [<asset.webp|png>...]   (no args = scan guild assets dir)',
     run: () => run('python3', ['tools/asset-alpha-lint.py', ...REST]),
   },
+  render: {
+    desc: 'Render-risk lint: catch visual bugs statically (word-fuse, mid-word break, mobile overflow, oversized headline) since screenshots are impossible here',
+    usage: 'render [--strict|--all|<file.html>...] [--json]',
+    run: () => runNode('tools/render-risk-lint.cjs', REST),
+  },
   taste: {
     desc: 'Print the taste constitution path + one-line spine (read TASTE.md)',
     run: () => {
@@ -187,7 +192,7 @@ const COMMANDS = {
     run: () => runNode('tools/efficiency-ledger.cjs', REST),
   },
   preship: {
-    desc: 'Run the full pre-ship gate in one call: ai-tell + visual layout + page-size (staged or files)',
+    desc: 'Run the full pre-ship gate in one call: ai-tell + visual layout + page-size + render-risk + asset alpha (staged or files)',
     usage: 'preship [<file>...]   (no args = staged files, same scope as pre-commit)',
     run: () => {
       const files = REST.length ? REST : [];
@@ -201,6 +206,16 @@ const COMMANDS = {
         println(`\n${C.b}── ${label} ──${C.r}`);
         const status = runStep(script, args);
         if (status !== 0) { failed++; println(`${C.red}✗ ${label} failed (exit ${status})${C.r}`); }
+      }
+      // Render-risk gate: static catch for the visual bugs that cause re-see
+      // loops (word-fuse, mid-word break, mobile overflow, oversized headline).
+      // Screenshots are impossible in this sandbox, so this is our pre-ship eye.
+      // Strict (blocks) when actual HTML files are in scope.
+      const htmlFiles = files.filter(f => f.endsWith('.html'));
+      if (htmlFiles.length) {
+        println(`\n${C.b}── render risk ──${C.r}`);
+        const status = runStep('tools/render-risk-lint.cjs', ['--strict', ...htmlFiles]);
+        if (status !== 0) { failed++; println(`${C.red}✗ render risk failed (exit ${status})${C.r}`); }
       }
       // Asset transparency gate: only when a guild page (which embeds the emblem) is in scope.
       const touchesGuild = files.some(f => f.includes('guild/'));
@@ -330,7 +345,7 @@ function help() {
   const groups = {
     'Onboarding':   ['brief', 'context', 'rules', 'health', 'playbook', 'taste', 'efficiency'],
     'Memory':       ['premortem', 'whyfile', 'memory'],
-    'Guardian':     ['guard', 'heal', 'aitell', 'layout', 'pagesize', 'assets', 'preship'],
+    'Guardian':     ['guard', 'heal', 'aitell', 'layout', 'pagesize', 'assets', 'render', 'preship'],
     'Deploy':       ['ship'],
     'Learn from repo': ['examples', 'learn'],
     'Dev':          ['dev', 'test', 'audit'],
