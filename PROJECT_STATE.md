@@ -45,15 +45,20 @@ Creed → Roster → Hall → Lounge → Join. **No "BrightInside" anywhere** (r
   deliberate dark interior glyph, both assets are in `asset-alpha-lint.py` GLYPH_ALLOW
   (skip embedded-island, tolerate the one monogram badge). Don't revert to old orb.
 - Brand = **one paradox, two truths**: "Ruthless on the boss. Family in the hall." Visual
-  spine: near-black + ONE ember-red accent (`--ember #e0566a`); condensed display fonts
-  (Barlow Condensed headings, Rajdhani tech labels) for esports feel.
-- **Ambient art = painterly Ragnarok/Zenonia FOREST, trees + nature, NO characters** (guild
-  leader's call, for all-around landing ambience). Three layers: hero = `assets/hero-forest.webp`
-  (enchanted clearing, center kept open for the emblem), page-wide = `body::before` fixed
-  `assets/ambient-grove.webp` (heavy dark wash via `body::after` so panels stay readable, slow
-  `grovedrift` keyframe), hall = `guildhall.webp` (kept). Old `hero-prontera.webp` retired
-  (orphan asset, left in repo). Backgrounds are darkened/desaturated so the ember brand + white
-  copy read clean on top. Generated art only (licensing).
+  spine: **forest-green base + ONE ember-red accent (`--ember #e0566a`, kept EXACT for emblem
+  branding)**; condensed display fonts (Barlow Condensed headings, Rajdhani tech labels).
+- **Ambient art = BRIGHT painterly Ragnarok/Zenonia OPEN-WORLD FOREST, trees + nature, NO
+  characters** (guild leader: "chill nature forest open-world vibes", "see through page").
+  Jun 2026 v2 overhaul shifted from the dark-dusk v1 to a **lush daylight** look and
+  repaletted `:root` from near-black+ember (esports) → **forest-green base** while keeping
+  `--ember` exact. **4-asset forest set**: hero = `forest-hero.webp` (bright clearing, center
+  kept open for emblem), page-wide = `body::before` fixed `forest-canopy.webp` (opacity ~0.82,
+  green `body::after` wash, slow `grovedrift`), mid = `.origin__panel::before` `forest-meadow.webp`
+  (opacity ~0.2, sunlit meadow behind origin story), hall = `forest-golden.webp` (golden-hour edge).
+  **"See through page" = translucent dark-green glass panels** (`--panel`/`--panel-solid`/`--glass`
+  + `backdrop-filter: blur()`) so the forest art reads behind content. Old v1 assets
+  `hero-forest.webp` + `ambient-grove.webp` + `guildhall.webp` + `hero-prontera.webp` now
+  orphaned (left in repo, harmless). Generated art only (licensing).
 - Member portraits: user **dislikes the old ones**, so reveal art stays **NEW** (current
   reg-/md- shadow+reveal webp). Members shown as shadows first (cliffhanger). KEEP Regginam + MD3mon.
 - Pay-to-reveal = a **joke** paywall (fake decline toast → reveal). No real payment. Keep it funny.
