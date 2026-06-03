@@ -18,6 +18,25 @@
 
 ---
 
+## 0. Read budget ladder (do NOT read every doc — read by task)
+
+"Read only this file first" is real. The other docs are **pull on demand**, not
+push on arrival. Reading all 8 core docs costs ~30K tokens; most tasks need ~3K.
+Match the read to the job:
+
+| You are about to... | Read (in order) | Skip |
+|---|---|---|
+| Anything | `node bin/ai.cjs brief` (500 tok) + this §0–§3 | the rest until needed |
+| Touch user-facing copy or visuals | + [`TASTE.md`](./TASTE.md) + the one medium playbook it links | other playbooks |
+| Edit an existing page | + `node bin/ai.cjs whyfile <path>` + `premortem <area>` | full doc reads |
+| Resume a known project | + the project's own state file (e.g. [`PROJECT_STATE.md`](./PROJECT_STATE.md) for the guild work) | re-deriving from scratch |
+| Worry about build cost | + [`EFFICIENCY.md`](./EFFICIENCY.md) once | — |
+
+Rule: if a fact is in `git log`, `ls`, a lint run, or `bin/ai.cjs`, **query it,
+don't read a doc that restates it.** Docs hold *why*; the repo holds *what*.
+
+---
+
 ## 1. The 30-Second Brief
 
 | | |
