@@ -28,7 +28,13 @@ Creed → Roster → Hall → Lounge → Join. **No "BrightInside" anywhere** (r
 - **Git workflow**: commit → fetch origin main → squash via `git reset --soft origin/main` →
   `setup_github_environment` → `git push -f` → PR → merge → share PR URL.
 - **Images**: generated art only (licensing). Pipeline: nano-banana-pro → fal-bria-rmbg →
-  PIL trim/resize/webp q82-88 method 6.
+  **`tools/emblem-clean.py`** (punches enclosed dark holes / counter-fills to transparent,
+  then trim/square/resize/webp). NEVER paste a raw rmbg logo straight into a page. bria only
+  removes border-connected background, so letter counters (P/D/O loops) keep a dark fill.
+  Asset gate: **`node bin/ai.cjs assets <file>`** (also auto-runs inside `preship` for guild
+  pages). It flags opaque corners + flat enclosed counter-fills, but ALLOWS one organic dark
+  cavity (a demon mouth). When the gate fires: re-run emblem-clean on the source, rebuild any
+  lockup from the cleaned emblem, re-lint.
 
 ## Decisions + rationale (the part git can't tell you)
 - Emblem = **MiniDemon demon-P** (the letter P forged into a horned demon: snarl + curling
