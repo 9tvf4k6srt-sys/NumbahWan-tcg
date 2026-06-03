@@ -63,6 +63,20 @@ defect. That is the single largest avoidable spend of the whole build.
 - **No screenshots** (chromium missing libnspr4.so). Standing workaround: console-capture +
   curl + lints + programmatic checks. (Documented in PROJECT_STATE open gotchas.)
 
+## Follow-up (round 4): embedded dark island
+
+A 4th round surfaced a subtler variant: a dark patch inside the P bowl that was
+**fused to the demon body by a thin dark bridge**. The connected-component pass
+saw it as one giant low-fill blob (≈15% of the image) and let it through; the
+lint's "one organic cavity" allowance also passed it. Fix:
+- `emblem-clean.py` gained a SECOND pass `clear_embedded_islands()` — it finds dark
+  pixels ringed by bright/transparent (a dark island inside the light letter) and
+  floods them out, contained by the bright letter wall even when a bridge exists.
+- `asset-alpha-lint.py` gained an embedded-island detector (ring test) so the gate
+  fails a dark patch sitting inside a letter regardless of whether it's a clean blob.
+- Proven: lint FAILS a synthetic in-letter patch, cleaner removes it, lint then PASSES.
+
 ## Net effect
-The recurring, user-caught visual bug is now (a) auto-fixable in one command and
-(b) auto-caught by `preship`. Future logo work should cost one pass, not three.
+The recurring, user-caught visual bug (in all its variants: enclosed counter-fill,
+flat block, AND island-fused-to-body) is now (a) auto-fixable in one command and
+(b) auto-caught by `preship`. Future logo work should cost one pass, not four.

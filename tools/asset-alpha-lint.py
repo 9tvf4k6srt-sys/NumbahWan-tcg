@@ -16,7 +16,7 @@ Exit code 1 if any asset fails (so it can block a ship). Pass paths as args; wit
 args it scans the guild assets dir. Honors a small allowlist for assets that legitimately
 have opaque content (e.g. full-bleed banners).
 """
-import sys, os, glob
+import sys, os, glob, math
 from collections import deque
 from PIL import Image
 
@@ -24,6 +24,7 @@ DARK = 70          # luminance <= this is "dark"
 MIN_HOLE = 80      # ignore tiny specks (compression noise) below this px count
 MAX_HOLE_FRAC = 0.06  # enclosed dark blob up to this frac of image = suspicious "hole"
 CORNER_ALPHA = 40  # corner alpha above this = "not transparent"
+R_MARGIN = 24      # skip a border margin when scanning for embedded islands (ring radius)
 
 # Assets that are intentionally full-bleed / opaque — skip the corner check for these.
 OPAQUE_ALLOW = {"banner.webp", "guildhall.webp", "hero-prontera.webp", "paradox-seam.webp"}
@@ -103,11 +104,43 @@ def scan(path):
             if fill_ratio >= FILL_RATIO:
                 suspicious_fills += 1
 
-    # Decision: flag if a flat-fill block is present, or if there are 2+ enclosed holes
-    # (single organic cavity like one mouth is allowed).
-    if suspicious_fills or holes >= 2:
-        kind = "flat counter-fill block(s)" if suspicious_fills else "enclosed dark holes"
-        issues.append(f"{max(suspicious_fills, holes)} {kind} — likely unremoved counter fill "
+    # 3) embedded dark island: a dark patch sitting INSIDE a light letter body (surrounded
+    # by bright/transparent on all sides). This is the case where a dark blob is fused to
+    # other art by a thin bridge, so the component check above sees one big low-fill blob
+    # and lets it pass — but visually it's a dirty patch inside the letter.
+    def lum_p(p):
+        return lum(p[0], p[1], p[2])
+
+    def embedded(x, y, R=22):
+        bright = 0
+        for ang in range(0, 360, 20):
+            nx = x + int(R * math.cos(math.radians(ang)))
+            ny = y + int(R * math.sin(math.radians(ang)))
+            if 0 <= nx < w and 0 <= ny < h:
+                p = px[nx, ny]
+                if p[3] < 40 or lum_p(p) >= 150:
+                    bright += 1
+        return bright >= 15  # almost fully ringed by bright/transparent
+
+    island_px = 0
+    step = 3 if total <= 600 * 600 else 5
+    for y in range(R_MARGIN, h - R_MARGIN, step):
+        for x in range(R_MARGIN, w - R_MARGIN, step):
+            p = px[x, y]
+            if p[3] > 40 and lum_p(p) <= DARK and embedded(x, y):
+                island_px += step * step
+    embedded_island = island_px >= 300  # a meaningful dark patch inside a letter
+
+    # Decision: flag if a flat-fill block, an embedded island, or 2+ enclosed holes.
+    # A single organic cavity (one demon mouth) is allowed.
+    if suspicious_fills or embedded_island or holes >= 2:
+        if embedded_island:
+            kind = f"dark island embedded inside the letter (~{island_px}px)"
+        elif suspicious_fills:
+            kind = f"{suspicious_fills} flat counter-fill block(s)"
+        else:
+            kind = f"{holes} enclosed dark holes"
+        issues.append(f"{kind} — likely unremoved counter fill "
                       f"(run: python3 tools/emblem-clean.py SRC {name})")
     return issues
 
