@@ -20,13 +20,63 @@ Usage:
 
 Verification counters are printed so the caller can assert "holes punched > 0" when expected.
 """
-import argparse, sys
+import argparse, math, sys
 from collections import deque
 from PIL import Image
 
 
 def luminance(r, g, b):
     return 0.2126 * r + 0.7152 * g + 0.0722 * b
+
+
+def clear_embedded_islands(px, w, h, dark_thresh, ring_r=26, surround=18):
+    """Clear dark blobs that sit INSIDE a light letter body (a dark island embedded in
+    white), even when a thin dark bridge fuses them to other dark art. The connected-
+    component pass misses these because the bridge makes them part of one huge blob.
+
+    A pixel is an island seed if a ring of samples around it is overwhelmingly
+    bright/transparent (i.e. it's surrounded by the white letter, not by more art).
+    We then flood out from the seeds through dark pixels, but the flood is naturally
+    contained because it can't cross the bright letter wall.
+    """
+    def lum_p(p):
+        return luminance(p[0], p[1], p[2])
+
+    def embedded(x, y):
+        bright = 0
+        for ang in range(0, 360, 15):
+            nx = x + int(ring_r * math.cos(math.radians(ang)))
+            ny = y + int(ring_r * math.sin(math.radians(ang)))
+            if 0 <= nx < w and 0 <= ny < h:
+                p = px[nx, ny]
+                if p[3] < 40 or lum_p(p) >= 150:
+                    bright += 1
+        return bright >= surround
+
+    seeds = []
+    for y in range(0, h, 3):
+        for x in range(0, w, 3):
+            p = px[x, y]
+            if p[3] > 40 and lum_p(p) <= dark_thresh and embedded(x, y):
+                seeds.append((x, y))
+    if not seeds:
+        return 0
+    vis = set(seeds)
+    q = deque(seeds)
+    cleared = 0
+    while q:
+        x, y = q.popleft()
+        p = px[x, y]
+        px[x, y] = (p[0], p[1], p[2], 0)
+        cleared += 1
+        for dx, dy in ((1, 0), (-1, 0), (0, 1), (0, -1)):
+            nx, ny = x + dx, y + dy
+            if 0 <= nx < w and 0 <= ny < h and (nx, ny) not in vis:
+                np = px[nx, ny]
+                if np[3] > 40 and lum_p(np) <= dark_thresh + 20:
+                    vis.add((nx, ny))
+                    q.append((nx, ny))
+    return cleared
 
 
 def clean(inp, outp, size, pad, dark_thresh, max_hole_frac, quality):
@@ -75,6 +125,13 @@ def clean(inp, outp, size, pad, dark_thresh, max_hole_frac, quality):
                     px[x, y] = (r, g, b, 0)
                 holes_punched += 1
                 px_cleared += len(comp)
+
+    # Second pass: clear dark islands embedded inside the light letter body (e.g. a dark
+    # patch fused to the demon via a thin bridge, which the component pass can't isolate).
+    island_px = clear_embedded_islands(px, w, h, dark_thresh)
+    if island_px:
+        px_cleared += island_px
+        print(f"emblem-clean: embedded_island_px={island_px}")
 
     # Trim to alpha bbox, square-pad, resize
     bbox = im.getbbox()
