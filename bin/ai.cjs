@@ -168,8 +168,8 @@ const COMMANDS = {
       if (REST[0] === 'doctrine' || REST.length === 0) {
         if (exists('FORGE-DOCTRINE.md')) {
           println(`${C.cyan}FORGE-DOCTRINE.md${C.r} → ${path.join(ROOT, 'FORGE-DOCTRINE.md')}`);
-          println(`${C.b}Make it: specific, uneven, imperfect.${C.r}`);
-          println(`${C.dim}The AI look is a prompt problem: light from nowhere, perfection, no camera physics.${C.r}`);
+          println(`${C.b}Make it: specific, uneven, believable.${C.r}`);
+          println(`${C.dim}Natural != messy: production spaces are tidy + well-styled. The tell is physics failure (light from nowhere, plastic/AI-smooth surfaces), not cleanliness.${C.r}`);
           println(`${C.dim}Generator: forge kit "<company> <industry>"  → start at PINFORGE's finish line.${C.r}`);
           println(`${C.dim}Judge output: forge check <url> --prompt="..."  → the one fix to feed back.${C.r}`);
           if (REST.length === 0) { println(''); runNode('tools/forge.cjs', []); }

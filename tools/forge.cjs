@@ -59,12 +59,39 @@ const CAMERAS = placeAgnostic((SHEEN && SHEEN.good_camera_language), [
   'Fujifilm GFX 100S 63mm f/2.8',
   'Kodak Portra 400 medium format',
 ]);
-const FLAWS = placeAgnostic((SHEEN && SHEEN.good_photographic_language), [
-  'fine grain from ISO 800 push', 'slight chromatic aberration on highlight edges',
-  'natural roll-off in highlights', 'honest dust on the windowsill',
-  'hand-held minor motion blur on people in background', 'scuffed flooring near the doorway',
-  'fingerprints on the glass', 'cable management imperfect',
-]);
+
+// IMPORTANT (founder, 2026-06): natural != messy. For production-level work,
+// real spaces are TIDIED, well-decorated, clean — people clean up before a
+// shoot. The AI tell is PHYSICS FAILURE (light from nowhere, plastic surfaces,
+// impossible symmetry, AI smoothness), NOT cleanliness. So the DEFAULT is a
+// clean, intentionally styled space with believable physics; we add at most ONE
+// subtle lived-in touch, never a stack of scuffs.
+
+// PHOTOGRAPH authenticity — about the camera/film, not the room. Always on; a
+// clean room shot on real gear still has grain, roll-off, real depth of field.
+const PHOTO_TRUTH = [
+  'fine natural grain', 'slight chromatic aberration on highlight edges',
+  'natural highlight roll-off', 'real lens depth of field, gentle background fall-off',
+  'subtle vignetting', 'true-to-life color from the light source',
+];
+
+// STYLING — the new default. A space a stylist arranged: tidy, considered,
+// well-decorated, deliberately composed. This is what reads "production-level".
+const STYLING = [
+  'tidy and well-styled, every object placed with intent',
+  'clean surfaces, considered decor, nothing cluttered',
+  'styled like a magazine interior shoot: neat, warm, lived-in but spotless',
+  'carefully arranged props, balanced and uncluttered',
+  'a clean, well-decorated space that looks cared-for',
+];
+
+// LIVED-IN — used SPARINGLY (one subtle touch, optional). Honest small signs of
+// real use, NOT grime. Keeps a clean room from looking like a sterile render.
+const LIVED_IN = [
+  'one book left slightly open on the side table', 'a single coffee cup in use',
+  'a chair turned a few degrees as if just used', 'a soft throw not perfectly squared',
+  'one plant leaf reaching out of line', 'a hand-written note on the counter',
+];
 
 // The full ban list, pulled from every sheen-corpus group (so a forged prompt
 // never contains a term our own pre-prompt lint would flag).
@@ -97,7 +124,8 @@ const INDUSTRIES = {
   retail:      { palette: ['#23211E ink', '#EDE7DC paper', '#A8743A tan', '#5C6B70 slate'], props: ['a price gun left on a shelf', 'a folded stack slightly uneven', 'a worn fitting-room curtain', 'a receipt roll', 'a fingerprint on the glass counter'], scenes: ['a shop interior from the door, no customers', 'a folded display table shot at an angle', 'the counter with a real card reader'] },
   fitness:     { palette: ['#1A1C1E ink', '#D7DBDF chalk', '#C2452D effort red', '#3E4A4F steel'], props: ['chalk dust on the floor', 'a water bottle ring on the bench', 'a slightly torn grip pad', 'a clock on the wall reading an odd time', 'sweat on a dumbbell handle'], scenes: ['an empty rack in morning light', 'one person resting between sets, candid', 'the floor from a low angle, weights uneven'] },
   realestate:  { palette: ['#211E1A ink', '#EFE9DD paper', '#94774A oak', '#7C8A86 stone'], props: ['a lockbox on the door', 'a slightly bent business card', 'sunlight hitting real dust in the air', 'a tape measure on the counter', 'a scuff on the hardwood'], scenes: ['an empty room with afternoon light from the left', 'a kitchen shot from the doorway, off-center', 'the front step with the door ajar'] },
-  generic:     { palette: ['#1F1D1A ink', '#ECE6DA paper', '#8B6F3A brass', '#6B7A75 slate'], props: ['one worn edge', 'honest dust', 'a slightly crooked object', 'a real cable', 'a fingerprint on glass'], scenes: ['the main space from the doorway, off-center', 'a working detail shot at an angle', 'a person mid-task, candid, slight motion blur'] },
+  hospitality: { palette: ['#2A241D walnut', '#E9E1D2 limestone', '#B79256 brass', '#5E6B63 eucalyptus'], props: ['fresh-cut stems in a ceramic vase', 'a stack of design books squared on the table', 'a folded throw over the armrest', 'a tray of glassware catching the window light', 'a key card on the polished counter'], scenes: ['the lobby from the entrance, warm afternoon light from tall windows', 'a styled lounge seating group, off-center', 'the reception desk with fresh flowers and morning light'] },
+  generic:     { palette: ['#1F1D1A ink', '#ECE6DA paper', '#8B6F3A brass', '#6B7A75 slate'], props: ['a considered detail in the frame', 'real texture on a surface', 'an object placed with intent', 'a real cable run neatly', 'soft daylight across a clean surface'], scenes: ['the main space from the doorway, off-center', 'a working detail shot at an angle', 'a person mid-task, candid, slight motion blur'] },
 };
 
 function pickIndustry(brief) {
@@ -107,6 +135,7 @@ function pickIndustry(brief) {
     dental: ['dental', 'dentist', 'orthodont', 'clinic', 'teeth'],
     saas: ['saas', 'software', 'app', 'startup', 'platform', 'dashboard', 'b2b'],
     restaurant: ['restaurant', 'kitchen', 'bistro', 'eatery', 'diner', 'chef'],
+    hospitality: ['hotel', 'hospitality', 'resort', 'lobby', 'suite', 'spa', 'lounge', 'inn'],
     retail: ['retail', 'shop', 'store', 'boutique', 'apparel'],
     fitness: ['fitness', 'gym', 'crossfit', 'studio', 'training', 'yoga'],
     realestate: ['real estate', 'realtor', 'property', 'realty', 'homes', 'listing'],
@@ -127,24 +156,36 @@ function pickN(arr, seed, n) {
 }
 
 // ── The core: assemble ONE sheen-proof prompt from a scene + light + camera. ─
-function forgePrompt(scene, ind, seed) {
-  const light = LIGHT_PRESETS[seed % LIGHT_PRESETS.length];
+function forgePrompt(scene, ind, seed, opts = {}) {
+  // Light: pick from the daylight presets by default; only let the office/desk
+  // fluorescent recipe through when the scene actually reads like an office.
+  // A daylight scene with fluorescent light from nowhere is exactly the tell.
+  const OFFICE_LIGHT = 2; // index of the "mixed office light" preset
+  const isOffice = /\boffice\b|\bdesk\b|\bworkstation\b|\bcubicle\b/i.test(scene);
+  const lightPool = isOffice
+    ? LIGHT_PRESETS
+    : LIGHT_PRESETS.filter((_, i) => i !== OFFICE_LIGHT);
+  const light = lightPool[seed % lightPool.length];
   const cam = CAMERAS[seed % CAMERAS.length];
-  // Drop people-specific flaws when the scene declares no people, so we never
-  // ask for "motion blur on people" in an empty room.
-  const noPeople = /\bno people\b|\bempty\b|\bunoccupied\b/i.test(scene);
-  const flawPool = noPeople ? FLAWS.filter(f => !/people|figures|grooming|name tag/i.test(f)) : FLAWS;
-  const flaws = pickN(flawPool, seed, 3);
+  const styling = STYLING[seed % STYLING.length];
+  // PHOTO_TRUTH is about the photograph (always on). Two are plenty.
+  const photo = pickN(PHOTO_TRUTH, seed, 2);
+  // Lived-in is ONE subtle, optional touch — and only when the scene isn't
+  // explicitly clinical/sterile. opts.livedIn=false forces a fully clean space.
+  const wantLivedIn = opts.livedIn !== false && !/\bclinical\b|\bsterile\b/i.test(scene);
+  const lived = wantLivedIn ? LIVED_IN[seed % LIVED_IN.length] : '';
   const prop = ind.props[seed % ind.props.length];
   return [
     `${scene}.`,
+    `Styling: ${styling}.`,
     `Light: ${light}.`,
-    `Camera: ${cam}; shallow but honest depth of field.`,
+    `Camera: ${cam}; real depth of field.`,
     `Real-world detail in frame: ${prop}.`,
-    `Imperfection (the model needs explicit permission): ${flaws.join('; ')}; slight asymmetry; nothing pristine.`,
-    `Mood: documentary, candid, like a working photographer caught it — not posed, not a hero shot.`,
-    `Shot as real photography, not a render. Off-center composition.`,
-  ].join(' ');
+    lived ? `One subtle lived-in touch: ${lived}.` : '',
+    `Photograph: ${photo.join('; ')}; surfaces are clean but read as real materials, never plastic or AI-smooth.`,
+    `Composition: composed and intentional, slightly off-center — not a dead-centered AI hero shot.`,
+    `Shot as a real interior photograph, not a render. Clean and well-decorated, with believable physics.`,
+  ].filter(Boolean).join(' ');
 }
 
 // ════════════════════════════════════════════════════════════════════════════
@@ -231,11 +272,11 @@ function recordKit(kit) {
 //     (JSON on stdin)     score an understand_images reply → verdict + fix
 // ════════════════════════════════════════════════════════════════════════════
 const RUBRIC = [
-  { id: 'photo_realism',     w: 2.0, q: 'Does this look like a real photograph on real gear, or an AI render? 10 = indistinguishable from professional photography, 1 = obviously AI.' },
-  { id: 'no_render_gloss',   w: 1.6, q: 'CGI/render tells — plastic skin, too-clean surfaces, glowing edges, AI shimmer, impossible reflections? 10 = none, 1 = many.' },
+  { id: 'photo_realism',     w: 2.0, q: 'Does this look like a real photograph on real gear, or an AI render? 10 = indistinguishable from professional photography, 1 = obviously AI. NOTE: a clean, tidy, well-decorated space is NOT a tell — real interiors are styled and cleaned before a shoot. Judge physics, not tidiness.' },
+  { id: 'no_render_gloss',   w: 1.6, q: 'CGI/render tells — PLASTIC or AI-smooth surfaces, glowing edges, AI shimmer, impossible reflections, gradients that are too perfect? 10 = none (surfaces read as real materials even if clean), 1 = many. Clean is fine; plastic-looking is the tell.' },
   { id: 'light_has_source',  w: 1.6, q: 'Does the light come from ONE believable named source with a direction and color temperature, casting consistent shadows — NOT even glow from everywhere? 10 = clear single source, 1 = light from nowhere.' },
-  { id: 'imperfection',      w: 1.4, q: 'Count honest defects — grain, dust, scuffs, fingerprints, wear, slight asymmetry, candid motion blur. 10 = several visible, 1 = unnaturally pristine.' },
-  { id: 'composition',       w: 1.0, q: 'Shot like a working photographer (slightly off-center, foreground intrusion, imperfect framing) or an AI default (centered, symmetric, hero)? 10 = working-photographer, 1 = AI default.' },
+  { id: 'styling_natural',   w: 1.4, q: 'Does the space look like a real, well-styled interior a person arranged and cleaned — tidy, decorated, cared-for, but not eerily flawless? 10 = believable production-level styling (clean yet real), 1 = either a sterile/impossible AI-perfect set OR random grime. Both extremes are wrong; the target is clean and intentional with believable physics.' },
+  { id: 'composition',       w: 1.0, q: 'Composed and intentional, slightly off-center like a real interior photographer, or a dead-centered symmetric AI hero shot? 10 = real-photographer framing, 1 = AI default.' },
   { id: 'people_authentic',  w: 1.0, q: 'If people are visible: real varied bodies/ages, candid posture, imperfect grooming — or AI stock-photo people (symmetric faces, perfect skin, hero pose)? 10 = real, 1 = AI stock. If no people, score 10.' },
   { id: 'depth_and_grain',   w: 1.0, q: 'Natural film grain / sensor noise / real depth of field, or the AI smooth-gradient look? 10 = natural grain, 1 = AI smoothness.' },
   { id: 'material_truth',    w: 0.9, q: 'Are materials (wood, metal, fabric, glass) consistent and real-scale, or do they have AI hallmarks (wrong grain scale, plastic look)? 10 = real, 1 = AI.' },
