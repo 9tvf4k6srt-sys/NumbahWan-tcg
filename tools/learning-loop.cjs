@@ -242,6 +242,36 @@ const DERIVATIONS = [
       return out
     },
   },
+
+  /* RULE 8: Trend signals → constraints. The trend-detector emits
+     `trend_signal` events but nothing turned them into rules — the loop
+     was deaf to its own early-warning system. Convert any high/medium
+     signal seen in the last 14d into a constraint so a real regression
+     trajectory becomes enforceable guidance, not a one-off log line.
+     Low-severity and heartbeat noise are ignored. */
+  {
+    id: 'trend-signal-ingest',
+    description: 'High/medium trend_signal in 14d → constraint',
+    derive(events) {
+      const signals = within(events, 14).filter(
+        (e) => e.event === 'trend_signal' && (e.severity === 'high' || e.severity === 'medium')
+      )
+      if (!signals.length) return []
+      // Keep only the most recent signal per id — trends supersede themselves.
+      const latest = {}
+      for (const e of signals) {
+        const id = e.data?.id || 'trend'
+        if (!latest[id] || e.ts > latest[id].ts) latest[id] = e
+      }
+      return Object.values(latest).map((e) => ({
+        type: 'trend',
+        target: e.data?.id || 'trend',
+        rule: e.data?.summary || `Trend signal (${e.severity}) — investigate`,
+        confidence: e.severity === 'high' ? 0.85 : 0.65,
+        source: 'learning-loop:trend-signal-ingest',
+      }))
+    },
+  },
 ]
 
 /* ─── Run every derivation, dedup by (type,target,source) ── */

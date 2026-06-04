@@ -44,6 +44,13 @@ if [ -f "tools/collab-observer.cjs" ]; then
   node tools/collab-observer.cjs --silent 2>>.mycelium/last-error.log || true
 fi
 
+# Efficiency ledger: auto-log this commit's churn as one slice (token/efficiency
+# proxy). Idempotent — dedups by commit hash. This is what keeps the efficiency
+# series alive instead of relying on a one-off manual log. Never blocks.
+if [ -f "tools/efficiency-ledger.cjs" ]; then
+  node tools/efficiency-ledger.cjs log --auto >/dev/null 2>>.mycelium/last-error.log || true
+fi
+
 # Surface mycelium alerts (existing convention)
 if [ -f ".mycelium-alert" ]; then
   echo "" >&2

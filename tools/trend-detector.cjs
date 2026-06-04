@@ -37,7 +37,10 @@ const ROOT = path.resolve(__dirname, '..')
 const MYC = path.join(ROOT, '.mycelium')
 const EVENTS_FILE = path.join(MYC, 'events.jsonl')
 const MEMORY_FILE = path.join(MYC, 'memory.json')
+const TELEMETRY_FILE = path.join(MYC, 'telemetry.json')
 const TRENDS_FILE = path.join(MYC, 'trends.json')
+
+const STALE_DAYS = 21 // a score series older than this is dead, not a trend
 
 /* ─── I/O ──────────────────────────────────────────────────── */
 function readEvents() {
@@ -49,6 +52,32 @@ function readEvents() {
 }
 function readMemory() {
   try { return JSON.parse(fs.readFileSync(MEMORY_FILE, 'utf8')) } catch { return null }
+}
+
+/* The LIVE quality series. The sentinel composite written into
+   telemetry.json on every commit is the real, current signal — unlike
+   memory.snapshots, which can freeze for months. Returns the most recent
+   N composite points if (and only if) the series is fresh. */
+function liveScoreSeries(n = 15) {
+  try {
+    const t = JSON.parse(fs.readFileSync(TELEMETRY_FILE, 'utf8'))
+    const recs = (t.records || [])
+      .filter((r) => r && r.sentinel && typeof r.sentinel.composite === 'number')
+      .slice(-n)
+    if (recs.length < 5) return null
+    const lastTs = Date.parse(recs[recs.length - 1].date || recs[recs.length - 1].timestamp || 0)
+    if (!lastTs || (Date.now() - lastTs) / 86400000 > STALE_DAYS) return null // stale → not a trend
+    return recs.map((r) => ({ score: r.sentinel.composite, date: r.date }))
+  } catch { return null }
+}
+
+/* Snapshot series guarded by freshness — never alarm on a dead series. */
+function freshSnapshots(memory, n = 15) {
+  const snaps = (memory?.snapshots || []).slice(-n)
+  if (snaps.length < 5) return null
+  const lastTs = Date.parse(snaps[snaps.length - 1].date || snaps[snaps.length - 1].ts || 0)
+  if (!lastTs || (Date.now() - lastTs) / 86400000 > STALE_DAYS) return null
+  return snaps
 }
 
 /* ─── Math helpers (pure) ────────────────────────────────────
@@ -72,12 +101,17 @@ function stdev(arr) {
    Each returns null OR a signal:
      { id, severity, direction, magnitude, summary, data } */
 const DETECTORS = [
-  /* SCORE TRAJECTORY: snapshot scores trending down. */
+  /* SCORE TRAJECTORY: quality score trending down.
+     Prefers the LIVE sentinel composite (telemetry.json); falls back to
+     memory.snapshots only when fresh. A stale series yields no signal —
+     "old and unchanging" is not a trend, it's a frozen file. */
   {
     id: 'snapshot-score-decline',
     analyze(events, memory) {
-      const snaps = (memory?.snapshots || []).slice(-15)
-      if (snaps.length < 5) return null
+      const live = liveScoreSeries(15)
+      const snaps = live || freshSnapshots(memory, 15)
+      if (!snaps) return null
+      const source = live ? 'sentinel-composite' : 'memory-snapshot'
       const points = snaps.map((s, i) => ({ x: i, y: s.score || 0 }))
       const m = slope(points)
       const recent = mean(points.slice(-3).map((p) => p.y))
@@ -88,8 +122,8 @@ const DETECTORS = [
           severity: m < -1.5 ? 'high' : 'medium',
           direction: 'falling',
           magnitude: Math.round(-delta),
-          summary: `Snapshot score trending down: ${earlier.toFixed(0)} → ${recent.toFixed(0)} over ${snaps.length} commits (slope ${m.toFixed(2)}/commit)`,
-          data: { slope: m, recent, earlier, sampleSize: snaps.length },
+          summary: `Quality score trending down: ${earlier.toFixed(0)} → ${recent.toFixed(0)} over ${snaps.length} commits (slope ${m.toFixed(2)}/commit) [${source}]`,
+          data: { slope: m, recent, earlier, sampleSize: snaps.length, source },
         }
       }
       return null
@@ -242,8 +276,8 @@ const DETECTORS = [
   {
     id: 'score-oscillation',
     analyze(events, memory) {
-      const snaps = (memory?.snapshots || []).slice(-15)
-      if (snaps.length < 8) return null
+      const snaps = liveScoreSeries(15) || freshSnapshots(memory, 15)
+      if (!snaps || snaps.length < 8) return null
       const scores = snaps.map((s) => s.score || 0)
       const sd = stdev(scores)
       const m = mean(scores)
