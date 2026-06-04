@@ -161,15 +161,22 @@ const COMMANDS = {
 
   // ── PRODUCE natural content (FORGE-DOCTRINE.md) ───────────────────
   forge: {
-    desc: 'Print the production doctrine path + the one rule (read FORGE-DOCTRINE.md before you make anything)',
+    desc: 'Spin up a PINFORGE-grade visual kit for ANY industry, fast: sheen-proof prompts + a whole locked kit + judge the sheen FOR you',
+    usage: 'forge prompt "<scene>" | forge kit "<company> <industry>" | forge check <url> [--prompt=...] | forge doctrine',
     run: () => {
-      if (exists('FORGE-DOCTRINE.md')) {
-        println(`${C.cyan}FORGE-DOCTRINE.md${C.r} → ${path.join(ROOT, 'FORGE-DOCTRINE.md')}`);
-        println(`${C.b}Make it: specific, uneven, imperfect.${C.r}`);
-        println(`${C.dim}AI defaults to the statistical average. A person is specific, uneven, willing to be flawed.${C.r}`);
-        println(`${C.dim}Three questions before you ship: Specific? Uneven? Imperfect?${C.r}`);
-        println(`${C.dim}Builder: node bin/ai.cjs voice <words|visual|audio> "<brief>" [--world=paradox|kintsugi|nw]${C.r}`);
-      } else { println(`${C.red}FORGE-DOCTRINE.md missing${C.r}`); process.exit(1); }
+      // `forge doctrine` (or no args) prints the doctrine; everything else is the generator.
+      if (REST[0] === 'doctrine' || REST.length === 0) {
+        if (exists('FORGE-DOCTRINE.md')) {
+          println(`${C.cyan}FORGE-DOCTRINE.md${C.r} → ${path.join(ROOT, 'FORGE-DOCTRINE.md')}`);
+          println(`${C.b}Make it: specific, uneven, imperfect.${C.r}`);
+          println(`${C.dim}The AI look is a prompt problem: light from nowhere, perfection, no camera physics.${C.r}`);
+          println(`${C.dim}Generator: forge kit "<company> <industry>"  → start at PINFORGE's finish line.${C.r}`);
+          println(`${C.dim}Judge output: forge check <url> --prompt="..."  → the one fix to feed back.${C.r}`);
+          if (REST.length === 0) { println(''); runNode('tools/forge.cjs', []); }
+        } else { println(`${C.red}FORGE-DOCTRINE.md missing${C.r}`); process.exit(1); }
+        return;
+      }
+      runNode('tools/forge.cjs', REST);
     },
   },
   voice: {
@@ -398,8 +405,8 @@ function help() {
   println(`${C.dim}Read AI_PLAYBOOK.md first. Everything routes through here.${C.r}\n`);
 
   const groups = {
-    'Onboarding':   ['brief', 'context', 'rules', 'health', 'playbook', 'taste', 'forge', 'efficiency', 'collab', 'pulse', 'hooks'],
-    'Produce':      ['voice', 'naturalness', 'sheen'],
+    'Onboarding':   ['brief', 'context', 'rules', 'health', 'playbook', 'taste', 'efficiency', 'collab', 'pulse', 'hooks'],
+    'Produce':      ['forge', 'voice', 'naturalness', 'sheen'],
     'Memory':       ['premortem', 'whyfile', 'memory'],
     'Guardian':     ['guard', 'heal', 'aitell', 'layout', 'pagesize', 'assets', 'render', 'preship'],
     'Deploy':       ['ship'],

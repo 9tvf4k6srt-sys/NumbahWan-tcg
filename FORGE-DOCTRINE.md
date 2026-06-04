@@ -1,15 +1,58 @@
-# FORGE-DOCTRINE.md: how we PRODUCE content that has a voice
+# FORGE-DOCTRINE.md: spin up PINFORGE-grade content fast, for any world
 
-> `TASTE.md` says what *good* is. The corpus files (`tools/ai-tell-corpus.json`,
-> `tools/sheen-corpus.json`) say what to *avoid*. Both are detection: they catch a
-> tell after it exists. This file is the missing half. It is the **production**
-> doctrine: how to make words, images, and audio that read as *made by a specific
-> person* in the first place, so the gate has almost nothing to catch.
+> PINFORGE proved it: people see those frames and think a real photographer shot
+> them, a real person wrote the words. That is the bar. But PINFORGE took weeks of
+> hand-tuning a lock for ONE world, and most of those weeks went into **iterating
+> to kill AI sheen** one regeneration at a time.
 >
-> Read this BEFORE you generate anything a human will read, look at, or hear.
-> Then read the corpus for your medium to check your work.
+> This file + the `forge` generator collapse that loop. The goal is to start every
+> new world at PINFORGE's *finish* line: a sheen-proof prompt that's right the
+> first try, and a judge that tells you the one fix when it isn't, so you spend 1-2
+> passes instead of 20.
+>
+> `TASTE.md` says what *good* is. The corpus files say what to *avoid* (detection,
+> after the fact). This file + `tools/forge.cjs` are the **production** half: make
+> it read human in the first place.
 
 Last updated: 2026-06-04
+
+---
+
+## The generator (start here — this is the time-saver)
+
+The AI look is a **prompt problem**, not a model limit: light from nowhere,
+everything too perfect, no camera physics. `forge` bakes the physics in *before*
+you spend a generation, and judges the output *for* you so pass 2 is targeted.
+
+```
+node bin/ai.cjs forge prompt "<scene>"            one sheen-proof prompt, right first try
+node bin/ai.cjs forge kit "<company> <industry>"  a whole mini visual-lock:
+                                                  palette + camera + 4-6 scene prompts + voice
+node bin/ai.cjs forge check <image-url> --prompt="..."   judge the sheen FOR you + the one fix
+node bin/ai.cjs forge check --rubric --prompt="..."      the vision rubric to hand understand_images
+```
+
+**The fast loop (1-2 passes, not 20):**
+1. `forge kit "BrightSmile dental clinic"` → palette + 4-6 coherent, physics-locked prompts.
+2. Generate each prompt (nano-banana-pro). The prompt already names the light
+   source, the camera/film stock, and explicit imperfections, so sheen rarely
+   appears.
+3. `forge check` each output: it calls `understand_images` with a fixed rubric and
+   returns a pass/fail + **the single biggest fix**. No slow eyeball step.
+4. Only the frames that fail get a pass 2 — and you know exactly what to change.
+
+`prompt` and `kit` are offline/free (assembled from `tools/sheen-corpus.json`, so
+a forged prompt never contains a term our own pre-prompt lint would flag). `kit`
+is reproducible: the same brief always forges the same kit. New industry? Add a
+row to `INDUSTRIES` in `tools/forge.cjs` (palette + insider props + scene types).
+
+Proven on first run: a forged "artisan coffee roaster" prompt scored ~7/10 across
+the rubric with the verdict *"a viewer would entirely believe this was shot by a
+human photographer"* — zero iteration.
+
+---
+
+## The doctrine under the generator
 
 ---
 
