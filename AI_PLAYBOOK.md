@@ -50,12 +50,19 @@ don't read a doc that restates it.** Docs hold *why*; the repo holds *what*.
 | **Target device** | iPhone Safari, 375×812 viewport — **mobile-first, always** |
 | **Languages** | NW pages: EN/ZH/TH · KINTSUGI pages: EN/ZH/JP |
 
-**First three commands every session:**
+**First commands every session:**
 ```bash
 echo $(date +%s) > .mycelium-session          # 1. mark session (required for commits)
-node bin/ai.cjs brief                          # 2. current state in ~500 tokens
-node bin/ai.cjs premortem <area>               # 3. what broke last time in this area
+node bin/ai.cjs hooks                          # 2. activate git hooks (keeps learning systems alive; idempotent)
+node bin/ai.cjs brief                          # 3. current state ~500 tok (auto-fires the heartbeat)
+node bin/ai.cjs premortem <area>               # 4. what broke last time in this area
 ```
+
+> **Why `hooks`:** a fresh clone has `core.hooksPath` unset, so the tracked
+> `.husky` hooks are dormant and the post-commit heartbeat never fires. That is
+> why learning systems read as "silent" in new chat windows. `node bin/ai.cjs hooks`
+> wires them (no Husky needed). After that, every commit keeps the systems alive.
+> Check anytime with `node bin/ai.cjs pulse --check`.
 
 Replace `<area>` with one of: `battle forge i18n nav economy collection wallet cards tabletop emoji dom ios modules font memory workflow oracle sentinel lore`.
 

@@ -30,6 +30,13 @@ if [ -f "tools/observer-runner.cjs" ]; then
   node tools/observer-runner.cjs --hook=post-commit
 fi
 
+# Heartbeat: keep the learning systems alive. Every commit re-pings each
+# tracked system so they never read as "silent" across chat windows.
+# Best-effort, never blocks the commit.
+if [ -f "tools/heartbeat.cjs" ]; then
+  node tools/heartbeat.cjs --silent >/dev/null 2>>.mycelium/last-error.log || true
+fi
+
 # Surface mycelium alerts (existing convention)
 if [ -f ".mycelium-alert" ]; then
   echo "" >&2
