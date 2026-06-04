@@ -51,14 +51,18 @@ Creed → Roster → Hall → Lounge → Join. **No "BrightInside" anywhere** (r
   characters** (guild leader: "chill nature forest open-world vibes", "see through page").
   Jun 2026 v2 overhaul shifted from the dark-dusk v1 to a **lush daylight** look and
   repaletted `:root` from near-black+ember (esports) → **forest-green base** while keeping
-  `--ember` exact. **4-asset forest set**: hero = `forest-hero.webp` (bright clearing, center
-  kept open for emblem), page-wide = `body::before` fixed `forest-canopy.webp` (opacity ~0.82,
-  green `body::after` wash, slow `grovedrift`), mid = `.origin__panel::before` `forest-meadow.webp`
-  (opacity ~0.2, sunlit meadow behind origin story), hall = `forest-golden.webp` (golden-hour edge).
-  **"See through page" = translucent dark-green glass panels** (`--panel`/`--panel-solid`/`--glass`
-  + `backdrop-filter: blur()`) so the forest art reads behind content. Old v1 assets
-  `hero-forest.webp` + `ambient-grove.webp` + `guildhall.webp` + `hero-prontera.webp` now
-  orphaned (left in repo, harmless). Generated art only (licensing).
+  `--ember` exact. **6 ambience layers, one per section** (use ALL the art we generated):
+  hero = `forest-hero.webp`, page-wide `body::before` = `forest-canopy.webp`, creed/welcome =
+  `ambient-grove.webp`, origin `.origin__panel::before` = `forest-meadow.webp`, hall =
+  `forest-golden.webp`, closing `.join` = `hero-forest.webp`. **"See through page" =
+  translucent dark-green glass panels** (`--panel`/`--panel-solid`/`--glass` + `backdrop-filter`).
+  **iOS ZOOM RULE (learned):** `background-size: cover` over-zooms wide (1.79) art on a tall
+  375px viewport — it fills the SHORT side and crops to a center slice. Fix: page-wide canopy
+  uses `background-size: 130% auto` + top anchor (`50% 6%`); section bgs use `cover` with a
+  high `background-position` (`50% 18-35%`) + a `--night` background-color fallback so any
+  uncovered area is dark forest, not white. Parallax JS scales kept LOW (hero 1.04, hall 1.06)
+  so scroll doesn't re-zoom. Only `guildhall.webp` + `hero-prontera.webp` remain orphaned.
+  Generated art only (licensing).
 - Member portraits: user **dislikes the old ones**, so reveal art stays **NEW** (current
   reg-/md- shadow+reveal webp). Members shown as shadows first (cliffhanger). KEEP Regginam + MD3mon.
 - Pay-to-reveal = a **joke** paywall (fake decline toast → reveal). No real payment. Keep it funny.
