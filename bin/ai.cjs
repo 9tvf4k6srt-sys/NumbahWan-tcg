@@ -39,6 +39,12 @@ function run(bin, args, opts = {}) {
   process.exit(r.status || 0);
 }
 function runNode(script, args) { return run('node', [script, ...args]); }
+// Fire-and-forget: run a node script without exiting or surfacing output/errors.
+// Used to keep the learning systems alive at session start without ever blocking.
+function runQuiet(script, args = []) {
+  try { spawnSync('node', [script, ...args], { stdio: 'ignore', cwd: ROOT, timeout: 8000 }); }
+  catch { /* never block the caller */ }
+}
 // Like runNode but does NOT exit the process — returns the status so callers can
 // chain several gates and aggregate the result (used by `preship`).
 function runStep(script, args) {
@@ -59,7 +65,12 @@ const COMMANDS = {
   // ── onboarding / context ──────────────────────────────────────────
   brief: {
     desc: 'Project snapshot (~500 tokens, JSON) — run at session start',
-    run: () => runNode('bin/agent-brief.cjs', ['--quick']),
+    run: () => {
+      // Session-start heartbeat: revive any learning systems that went silent
+      // across chat windows. Silent + best-effort, never blocks the brief.
+      runQuiet('tools/heartbeat.cjs', ['--silent']);
+      runNode('bin/agent-brief.cjs', ['--quick']);
+    },
   },
   context: {
     desc: 'Deep context (~5K tokens) — structured state for agents',
@@ -195,6 +206,16 @@ const COMMANDS = {
     desc: 'The human+AI operating contract, runnable: first-principles, discernment, delegation boundary, reflection (read COLLAB-PROTOCOL.md)',
     usage: 'collab <fp|discern|boundary|reflect|audit> [args...]',
     run: () => runNode('tools/collab.cjs', REST),
+  },
+  pulse: {
+    desc: 'Heartbeat: keep the learning systems alive across chat windows (revives silent systems). Run at session start; auto-runs in `brief`.',
+    usage: 'pulse [--check|--silent|--json]',
+    run: () => runNode('tools/heartbeat.cjs', REST),
+  },
+  hooks: {
+    desc: 'Activate the tracked git hooks (.husky) so post-commit fires the heartbeat — even without Husky installed. Idempotent.',
+    usage: 'hooks [--check]',
+    run: () => runNode('tools/install-hooks.cjs', REST),
   },
   preship: {
     desc: 'Run the full pre-ship gate in one call: ai-tell + visual layout + page-size + render-risk + asset alpha (staged or files)',
@@ -348,7 +369,7 @@ function help() {
   println(`${C.dim}Read AI_PLAYBOOK.md first. Everything routes through here.${C.r}\n`);
 
   const groups = {
-    'Onboarding':   ['brief', 'context', 'rules', 'health', 'playbook', 'taste', 'efficiency', 'collab'],
+    'Onboarding':   ['brief', 'context', 'rules', 'health', 'playbook', 'taste', 'efficiency', 'collab', 'pulse', 'hooks'],
     'Memory':       ['premortem', 'whyfile', 'memory'],
     'Guardian':     ['guard', 'heal', 'aitell', 'layout', 'pagesize', 'assets', 'render', 'preship'],
     'Deploy':       ['ship'],
