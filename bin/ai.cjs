@@ -191,6 +191,11 @@ const COMMANDS = {
     usage: 'efficiency log "<task>" [--reads=N --calls=N] | efficiency trend',
     run: () => runNode('tools/efficiency-ledger.cjs', REST),
   },
+  collab: {
+    desc: 'The human+AI operating contract, runnable: first-principles, discernment, delegation boundary, reflection (read COLLAB-PROTOCOL.md)',
+    usage: 'collab <fp|discern|boundary|reflect|audit> [args...]',
+    run: () => runNode('tools/collab.cjs', REST),
+  },
   preship: {
     desc: 'Run the full pre-ship gate in one call: ai-tell + visual layout + page-size + render-risk + asset alpha (staged or files)',
     usage: 'preship [<file>...]   (no args = staged files, same scope as pre-commit)',
@@ -343,7 +348,7 @@ function help() {
   println(`${C.dim}Read AI_PLAYBOOK.md first. Everything routes through here.${C.r}\n`);
 
   const groups = {
-    'Onboarding':   ['brief', 'context', 'rules', 'health', 'playbook', 'taste', 'efficiency'],
+    'Onboarding':   ['brief', 'context', 'rules', 'health', 'playbook', 'taste', 'efficiency', 'collab'],
     'Memory':       ['premortem', 'whyfile', 'memory'],
     'Guardian':     ['guard', 'heal', 'aitell', 'layout', 'pagesize', 'assets', 'render', 'preship'],
     'Deploy':       ['ship'],
