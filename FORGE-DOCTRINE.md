@@ -35,8 +35,8 @@ node bin/ai.cjs forge check --rubric --prompt="..."      the vision rubric to ha
 **The fast loop (1-2 passes, not 20):**
 1. `forge kit "BrightSmile dental clinic"` → palette + 4-6 coherent, physics-locked prompts.
 2. Generate each prompt (nano-banana-pro). The prompt already names the light
-   source, the camera/film stock, and explicit imperfections, so sheen rarely
-   appears.
+   source, the camera/film stock, and the styling (tidy, well-decorated, real
+   materials), so sheen rarely appears.
 3. `forge check` each output: it calls `understand_images` with a fixed rubric and
    returns a pass/fail + **the single biggest fix**. No slow eyeball step.
 4. Only the frames that fail get a pass 2 — and you know exactly what to change.
@@ -72,11 +72,13 @@ The 2026 research (writing editors, photographers, voice engineers) all land on
 one law:
 
 > **AI defaults to the statistical average. A human is specific, uneven, and
-> willing to be imperfect.** Naturalness is not the absence of tells. It is the
-> presence of a point of view.
+> believable.** Naturalness is not the absence of tells, and it is not mess. It is
+> the presence of a point of view and a world whose physics holds up.
 
 So this doctrine is built around three moves, the same three in every medium:
-**be specific, be uneven, allow imperfection.**
+**be specific, be uneven, be believable** (real physics — which for visual means
+clean, well-styled, *and* physically true; a flaw is an occasional seasoning, not
+the goal).
 
 ---
 
@@ -127,50 +129,79 @@ then `node bin/ai.cjs aitell <file>` (the hard tell block).
 
 ---
 
-## 2. VISUAL — direct the physics, not the subject
+## 2. VISUAL — direct the physics, not the mess
 
 This generalizes `references/PINFORGE-VISUAL-LOCK.md` from one world to all of
 them. PINFORGE locks a *specific* palette/camera; this is the *method* under it.
 
-### The tell
-The prompt describes *what* is in frame, never *the physical reality* it lives
-in. Result: light from nowhere, surfaces too smooth, perfect symmetry, zero
-grain. The brain flags "wrong" before conscious thought, because reality is
-never that clean.
+### The tell is physics, not tidiness
+**Natural does not mean messy.** This is the single most important correction in
+this whole file. Production-level spaces are *tidied* — people clean up, style
+the room, and arrange the props before a shoot. A clean, well-decorated, tidy
+room is completely natural. A magazine interior is spotless and reads 100% human.
+
+So the AI tell is **not** that a space is too clean. The tell is **physics
+failure**: light coming from nowhere, surfaces too smooth (plastic / AI-smooth),
+impossible symmetry, no camera physics, no real material reads. The brain flags
+*"wrong"* before conscious thought because the *physics* is wrong — not because
+the room is neat.
+
+> Target: a space a stylist arranged and cleaned — tidy, decorated, cared-for —
+> shot on real gear with real light. Clean **and** believable, not clean **or**
+> real.
 
 ### The move
 1. **Name the light.** Source + direction + color temperature + shadow direction.
    "Late afternoon sun from the left window, ~4500K, long shadows falling right."
-   Light from a specific place is the #1 fix.
+   Light from a specific place is the #1 fix. This is what kills "light from
+   nowhere" — not adding clutter.
 2. **Use the camera formula.** `[body], [lens mm], [aperture], [film stock]`. The
    model reads these as physical constraints and obeys them. "Shot on Leica Q3,
    35mm, f/2, Portra 400 grain." (Our `sheen-corpus.json` already lists good
    camera language — use it.)
-3. **Ask for imperfection explicitly.** The model needs *permission* to be
-   imperfect: "natural grain, slight chromatic aberration on highlight edges,
-   asymmetry, dust on the sill, one worn edge." Perfection is the AI default;
-   flaws are the human signal.
-4. **Multi-pass, human cut.** Generate variants, pick the one with the most
-   genuine imperfection, edit-mode regenerate to add one controlled flaw, then
-   hand-finish (grade one channel, micro-rotate crop, strip metadata).
-5. **Ban the sheen vocab.** No "8k, cinematic, ultra-detailed, dramatic lighting,
+3. **Style the space, don't trash it.** Describe a *well-styled* interior: tidy,
+   considered decor, props placed with intent, nothing cluttered — "styled like a
+   magazine interior shoot: neat, warm, lived-in but spotless." Clean is the
+   default; the goal is *believable*, not *messy*.
+4. **Ask for photograph truth, not flaws.** What sells a photo as real lives in
+   the *camera*, not the room: "fine natural grain, slight chromatic aberration on
+   highlight edges, natural highlight roll-off, real lens depth of field, gentle
+   background fall-off, surfaces that read as real materials — never plastic or
+   AI-smooth." That is what makes a clean room read as a *real* clean room.
+5. **Lived-in is a sometimes seasoning — one subtle touch, optional.** Occasionally
+   a single human trace helps: "one book left slightly open," "a chair turned a few
+   degrees as if just used," "a soft throw not perfectly squared." **One**, subtle,
+   and only when it fits. Never stack imperfections frame after frame — stacked
+   flaws look as fake as plastic perfection. Skip it entirely for clinical/sterile
+   scenes (a dental surgery should be spotless).
+6. **Compose with intent.** Slightly off-center and considered beats a
+   dead-centered AI hero shot. Asymmetry of *framing* is a composition choice, not
+   a flaw quota.
+7. **Ban the sheen vocab.** No "8k, cinematic, ultra-detailed, dramatic lighting,
    masterpiece." These are Midjourney signatures that *summon* the AI look. The
    `sheen-corpus.json` blocks them.
 
 ### Recipe (the complete anti-sheen prompt structure)
 ```
 [subject + action + environment]
++ [styling: tidy, well-decorated, considered, lived-in but spotless]
 + [light source + direction + color temp + shadow direction]
 + [camera body + lens + aperture + film stock]   ← from sheen-corpus good_camera_language
-+ [explicit imperfections: grain, asymmetry, wear, dust, slight motion blur]
++ [photograph truth: natural grain, gentle roll-off, real DoF, real materials —
+   never plastic / AI-smooth]
++ [optional: ONE subtle lived-in touch, only if it fits — never stacked]
++ [composition: composed, slightly off-center, not a dead-centered hero shot]
 + [one mood word, not a stack of adjectives]
 NO: 8k, 4k, cinematic, ultra/hyper-detailed, dramatic lighting, masterpiece,
-    octane, unreal engine, perfect, pristine, symmetrical hero composition.
+    octane, unreal engine, plastic surfaces, AI-smooth, symmetrical hero composition.
 ```
+`forge prompt`/`forge kit` already assemble this for you — this is what's under it.
 
 ### Check your work
 `node bin/ai.cjs sheen <prompt-or-file>` advisory before generating, then
-`understand_images` on the output to confirm the flaws actually landed.
+`forge check <url>` (or `understand_images`) on the output — it judges the
+*physics* (light source, materials, camera truth), **not** the tidiness, and
+returns the one fix.
 
 ---
 
@@ -226,11 +257,23 @@ the three questions:
    or is it the statistical average of the internet?
 2. **Uneven?** Does the rhythm vary (sentence length / pause length / composition
    asymmetry), or is it a smooth rectangle?
-3. **Imperfect?** Did I give it permission to have a flaw (a stance that risks 10%,
-   grain on the image, a breath in the audio), or did I sand it to a beige sheen?
+3. **Believable?** Does the *physics* hold up?
+   - *Words:* does someone take a real stance (risk 10% to make 90% care), or is it
+     beige both-sides hedging?
+   - *Visual:* does the light come from a named source, do surfaces read as real
+     materials on real glass — **not** "is the room messy enough." A clean,
+     well-styled room with believable physics passes; a cluttered room with light
+     from nowhere fails.
+   - *Audio:* is there one live breath / real prosody, or is it a sign being read?
 
 Three yeses and it has a voice. Any no and it will still read as AI, even if every
 gate passes.
+
+> **On imperfection** (the easy thing to over-do): a flaw is a *seasoning*, not the
+> dish. For visual especially, **clean and tidy is the production default** — people
+> clean up before a shoot. Use a lived-in touch *sometimes*, *once*, when it fits;
+> never reach for mess as a shortcut to "natural." The believable-physics half is
+> what does the work.
 
 ---
 
