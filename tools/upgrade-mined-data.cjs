@@ -277,8 +277,10 @@ function buildLessonsDataset(enriched) {
       const lessonTexts = risk.lessons.map(l => typeof l === 'string' ? l : l?.text || String(l));
       const combined = joinMultiLineLessons(lessonTexts);
       for (const lesson of combined) {
-        if (lesson.length > 20) {
-          addLesson(lessonMap, lesson, [file], 'unknown', 'watch', 'medium');
+        // Only keep complete insights, and classify them so they are sellable
+        // rather than defaulting to the near-worthless "unknown" bucket.
+        if (lesson.length > 20 && !isFragmentLesson(lesson)) {
+          addLesson(lessonMap, lesson, [file], classifyLesson(lesson), 'watch', 'medium');
         }
       }
     }
@@ -307,14 +309,25 @@ function buildLessonsDataset(enriched) {
   const aged = [];
   lessons = lessons.filter(l => {
     if (isDiffDumpLesson(l.lesson)) { aged.push(l); return false; }
+    // Drop truncated fragments — the #1 value leak. A buyer trusts the dataset
+    // only if every record is a complete insight. Human/constraint lessons are
+    // authored and exempt; we only gate the machine-extracted ones.
+    if (l.source !== 'human' && l.source !== 'constraint' && isFragmentLesson(l.lesson)) {
+      aged.push(l); return false;
+    }
     const hasFiles = (l.files || []).length > 0;
     if (hasFiles && l.files.every(f => !fileExists(path.resolve(__dirname, '..', f)))) {
       aged.push(l); return false;
     }
     return true;
   });
+  // Backfill: any lesson still tagged "unknown" gets a best-effort category so
+  // the dataset has no dead-weight records.
+  for (const l of lessons) {
+    if (!l.category || l.category === 'unknown') l.category = classifyLesson(l.lesson);
+  }
   if (aged.length > 0) {
-    log(`  Aged out ${aged.length} stale lessons (dead code paths / diff dumps), ${before} → ${lessons.length}`);
+    log(`  Aged out ${aged.length} stale/fragment lessons, ${before} → ${lessons.length}`);
   }
   
   // Validate
@@ -348,6 +361,71 @@ function isDiffDumpLesson(text) {
   if (/^reordered scripts:/i.test(t)) return true;
   if (/^\s*-\s/.test(t) && t.length < 60) return true; // bare bullet fragment
   return false;
+}
+
+/**
+ * A lesson is worthless to a data buyer if it is a TRUNCATED FRAGMENT rather
+ * than a complete, generalizable insight. Half of the watch-sourced lessons
+ * were raw commit snippets chopped mid-word ("...getF"). A buyer pays for the
+ * insight, not a half-sentence. This is the single biggest value leak in the
+ * dataset, so we gate on it.
+ *
+ * Reject when the text:
+ *   - ends mid-word (last token is a bare camelCase/identifier with no
+ *     terminal punctuation and no trailing space-separated word boundary),
+ *   - is a single run-on clause with no verb-like structure and no punctuation,
+ *   - is dominated by code tokens (parens/brackets/dots) rather than prose.
+ */
+function isFragmentLesson(text) {
+  const t = String(text || '').trim();
+  if (t.length < 25) return true;
+  // Ends mid-identifier: last "word" is camelCase or has an open paren/dot and
+  // the whole thing has no sentence-terminating punctuation.
+  const last = t.split(/\s+/).pop() || '';
+  const endsMidToken = /[a-z][A-Z]/.test(last) || /[a-zA-Z]\($/.test(last) || /\.[a-zA-Z]+$/.test(last);
+  const hasTerminalPunct = /[.!?)\]]$/.test(t);
+  if (endsMidToken && !hasTerminalPunct) return true;
+  // Code-token density: too many of these means it is a diff/identifier soup,
+  // not an explained lesson.
+  const codeTokens = (t.match(/[(){}\[\]=;]|=>|\.\w+\(/g) || []).length;
+  const words = t.split(/\s+/).length;
+  if (words > 0 && codeTokens / words > 0.4) return true;
+  // A complete lesson reads as prose: needs at least a few real words and a
+  // space (single-token "lessons" are labels, not insights).
+  if (!/\s/.test(t)) return true;
+  return false;
+}
+
+/**
+ * Classify a lesson into a sellable category from its text, so watch-sourced
+ * lessons stop defaulting to "unknown" (10% of the dataset, near-zero resale
+ * value). Mirrors the categories already present in the corpus. Returns
+ * 'general' only when nothing matches — never 'unknown'.
+ */
+const CATEGORY_RULES = [
+  ['css-layout',       /\b(css|layout|flex|grid|margin|padding|overflow|z-index|gap|width|height|responsive|375px|mobile)\b/i],
+  ['i18n',             /\b(i18n|translat|locale|th\/ja\/en|trilingual|language)\b/i],
+  ['load-order',       /\b(load order|script order|reorder|init(?:ial)?ize|before .* read|race|cold start|reseed)\b/i],
+  ['null-reference',   /\b(null|undefined|cannot read|not defined|missing reference)\b/i],
+  ['state-management', /\b(state|wallet|balance|store|cache|persist|localstorage)\b/i],
+  ['api-contract',     /\b(api|endpoint|payload|schema|contract|response shape|field)\b/i],
+  ['mobile-compat',    /\b(mobile|ios|safari|touch|viewport|fab|bottom bar)\b/i],
+  ['async-timing',     /\b(async|await|timing|timeout|debounce|promise|defer)\b/i],
+  ['dom-mutation',     /\b(dom|innerhtml|appendchild|mutation|render|inject)\b/i],
+  ['build-config',     /\b(build|config|wrangler|bundle|webpack|vite|deploy)\b/i],
+  ['ai-tell',          /\b(ai-tell|ai tell|em-dash|stylometr|sheen|naturalness)\b/i],
+  ['economy',          /\b(econom|zeny|currency|price|reward|payout|gacha)\b/i],
+  ['battle',           /\b(battle|combat|damage|turn|skill|hp|enemy)\b/i],
+  ['workflow',         /\b(workflow|commit|pr |squash|hook|rebase|merge)\b/i],
+  ['performance',      /\b(performance|slow|lag|optimi|memory leak|fps|weight)\b/i],
+  ['error-handling',   /\b(error handling|try\/catch|catch|throw|graceful)\b/i],
+];
+function classifyLesson(text) {
+  const t = String(text || '');
+  for (const [cat, re] of CATEGORY_RULES) {
+    if (re.test(t)) return cat;
+  }
+  return 'general';
 }
 
 function addLesson(map, lesson, files, category, source, severity) {
