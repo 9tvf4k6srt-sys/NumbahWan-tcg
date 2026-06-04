@@ -69,16 +69,22 @@
      (chill open-world, not gloomy); the wash below keeps copy readable while you
      still SEE THROUGH the page to the forest. Trees + nature, no characters. */
   body::before {
-    content: ""; position: fixed; inset: -4% -4% -4% -4%; z-index: -10; pointer-events: none;
+    content: ""; position: fixed; inset: 0; z-index: -10; pointer-events: none;
     background-image: url("assets/forest-canopy.webp");
-    background-size: cover; background-position: center;
+    /* contain on the wide canopy art so the WHOLE scene is visible on a tall,
+       narrow iOS viewport (cover was blowing a 1.79-ratio image up ~2x and
+       showing only a tiny center slice). top-anchored so the canopy reads. */
+    background-size: 130% auto;
+    background-position: 50% 6%;
+    background-repeat: no-repeat;
+    background-color: var(--night);
     filter: saturate(1.02) brightness(0.74) contrast(1.02);
     opacity: 0.82;
     animation: grovedrift 46s ease-in-out infinite alternate;
   }
   @keyframes grovedrift {
-    0%   { transform: scale(1.06) translate3d(0, 0, 0); }
-    100% { transform: scale(1.12) translate3d(-2.2%, -1.4%, 0); }
+    0%   { transform: translate3d(0, 0, 0) scale(1.0); }
+    100% { transform: translate3d(-1.4%, -0.8%, 0) scale(1.03); }
   }
   /* gentle green wash + soft vignette: tames the art just enough for copy,
      light enough that the forest stays visible through the whole page. */
@@ -214,10 +220,13 @@
     text-align: center; padding: 96px 0 60px; overflow: hidden;
   }
   .hero__bg {
-    position: absolute; inset: -6% 0 0 0; z-index: -3;
+    position: absolute; inset: 0; z-index: -3;
     background-image: url("assets/forest-hero.webp");
-    background-size: cover; background-position: 50% center;
-    will-change: transform; transform: scale(1.08);
+    /* portrait clearing (0.56 ratio): cover + scale was cropping the treeline
+       and the distant castle. cover with NO extra scale + top anchor keeps the
+       full open-world clearing in frame on iOS. */
+    background-size: cover; background-position: 50% 22%;
+    background-color: var(--night);
     /* bright open-world clearing reads in full colour; only lightly tamed */
     filter: saturate(1.04) brightness(0.86) contrast(1.02);
   }
@@ -452,7 +461,20 @@
   /* ============================================================
      WELCOME
      ============================================================ */
-  .welcome { padding-top: 56px; }
+  .welcome { padding-top: 56px; position: relative; overflow: hidden; }
+  /* misty grove ambience behind the creed — wide art, top-anchored so the
+     treeline shows rather than a zoomed-in center crop on iOS. */
+  .welcome__bg {
+    position: absolute; inset: 0; z-index: -3;
+    background-image: url("assets/ambient-grove.webp");
+    background-size: cover; background-position: 50% 18%;
+    background-color: var(--night);
+    filter: saturate(1.02) brightness(0.7) contrast(1.02);
+  }
+  .welcome__veil {
+    position: absolute; inset: 0; z-index: -2;
+    background: linear-gradient(180deg, var(--night) 0%, rgba(8,18,12,0.58) 30%, rgba(8,18,12,0.6) 70%, var(--night) 100%);
+  }
   .lantern-row { display: flex; justify-content: center; gap: 24px; margin-bottom: 26px; }
   .lantern {
     width: 9px; height: 9px; border-radius: 50%; background: var(--gold);
@@ -589,7 +611,8 @@
   .hall__bg {
     position: absolute; inset: 0; z-index: -3;
     background-image: url("assets/forest-golden.webp");
-    background-size: cover; background-position: center; will-change: transform;
+    background-size: cover; background-position: 50% 35%; will-change: transform;
+    background-color: var(--night);
     filter: saturate(1.02) brightness(0.8);
   }
   .hall__veil {
@@ -710,6 +733,21 @@
      JOIN
      ============================================================ */
   .join { position: relative; text-align: center; overflow: hidden; padding-bottom: 96px; }
+  /* closing vista: the enchanted forest clearing as a send-off. portrait art,
+     anchored high so the full clearing reads on a tall iOS screen. */
+  .join__bg {
+    position: absolute; inset: 0; z-index: -3;
+    background-image: url("assets/hero-forest.webp");
+    background-size: cover; background-position: 50% 28%;
+    background-color: var(--night);
+    filter: saturate(1.03) brightness(0.74) contrast(1.02);
+  }
+  .join__veil {
+    position: absolute; inset: 0; z-index: -2;
+    background:
+      radial-gradient(120% 80% at 50% 30%, rgba(8,16,11,0) 0%, rgba(8,16,11,0.4) 60%, rgba(7,14,9,0.82) 96%),
+      linear-gradient(180deg, var(--night) 0%, rgba(8,16,11,0.28) 32%, rgba(8,16,11,0.5) 72%, var(--night) 100%);
+  }
   .join__glow {
     position: absolute; left: 50%; top: 20%; width: 620px; height: 620px;
     transform: translateX(-50%); pointer-events: none; z-index: 0;
@@ -909,6 +947,8 @@
 
   <!-- ============ CREED ============ -->
   <section class="welcome" id="creed">
+    <div class="welcome__bg" aria-hidden="true"></div>
+    <div class="welcome__veil" aria-hidden="true"></div>
     <div class="wrap">
       <div class="lantern-row" data-anim="zoom">
         <span class="lantern"></span><span class="lantern"></span>
@@ -1113,6 +1153,8 @@
 
   <!-- ============ JOIN ============ -->
   <section class="join" id="join">
+    <div class="join__bg" aria-hidden="true"></div>
+    <div class="join__veil" aria-hidden="true"></div>
     <div class="join__glow" aria-hidden="true"></div>
     <div class="wrap">
       <div class="join__emblemwrap" data-anim="zoom">
@@ -1458,14 +1500,14 @@
       var h = document.documentElement.scrollHeight - window.innerHeight;
       progress.style.width = (h > 0 ? (y / h) * 100 : 0) + "%";
       if (!reduce) {
-        if (heroBg) heroBg.style.transform = "scale(1.08) translateY(" + (y * 0.18) + "px)";
+        if (heroBg) heroBg.style.transform = "scale(1.04) translateY(" + (y * 0.12) + "px)";
         var ring = document.querySelector(".hero__ring");
         if (ring) ring.style.transform = "translate(-50%,-50%) rotate(" + (y * 0.24) + "deg)";
         var hwrap = document.querySelector(".hero__emblemwrap");
         if (hwrap && y < window.innerHeight) { hwrap.style.opacity = (1 - y / window.innerHeight * 0.9); }
         if (hallBg) {
           var rect = hallBg.parentElement.getBoundingClientRect();
-          hallBg.style.transform = "translateY(" + (rect.top * -0.12) + "px) scale(1.12)";
+          hallBg.style.transform = "translateY(" + (rect.top * -0.08) + "px) scale(1.06)";
         }
       }
       // banner: light up the dark side once it scrolls past the middle of the viewport
