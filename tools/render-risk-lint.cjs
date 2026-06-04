@@ -242,6 +242,40 @@ function analyze(file) {
     }
   }
 
+  /* RR5 — iOS background / viewport-unit traps.
+     The visual bug class that slips past RR1-RR4 and bounces back as a phone
+     screenshot (empirically: the #93 "zoom out the forest backgrounds on iOS"
+     lap). iOS Safari does NOT honor `background-attachment: fixed`, and `100vh`
+     includes the dynamic toolbar so it overshoots — both make a hero/background
+     render wrong ONLY on the device we cannot see. Catch them statically. */
+  // RR5a: background-attachment: fixed — broken on iOS Safari (renders zoomed /
+  // jumps). Only flag when paired with a background image (the case that breaks
+  // visibly); a fixed color attachment is harmless.
+  const bgFixedRe = /([^{}]+)\{([^}]*background-attachment:\s*fixed[^}]*)\}/g;
+  let rr5;
+  while ((rr5 = bgFixedRe.exec(css))) {
+    const block = rr5[2];
+    if (!/background(?:-image)?:\s*[^;]*url\(/.test(block) && !/background:\s*[^;]*(?:gradient|url)/.test(block)) continue;
+    add('RR5',
+      `"${rr5[1].trim().slice(0, 40)}" uses background-attachment: fixed with an image — iOS Safari ignores this and renders the background zoomed/misaligned. This is invisible on desktop and only shows on the phone.`,
+      'Drop background-attachment: fixed for image backgrounds; use background-size: cover on a normally-scrolling element, or a fixed-position layer behind the content.');
+  }
+  // RR5b: full-viewport height via 100vh on a hero/background container — iOS
+  // counts the address bar in vh, so it overshoots and pushes/zooms content.
+  const vhRe = /([^{}]+)\{([^}]*height:\s*100vh[^}]*)\}/g;
+  while ((rr5 = vhRe.exec(css))) {
+    const sel = rr5[1].trim();
+    const block = rr5[2];
+    // Only flag containers that carry a background or are heroes (the visible
+    // case). A guarded dvh/min-height fallback or max-height is fine.
+    const isVisual = /background/.test(block) || /\b(hero|cover|backdrop|forest|banner|splash)\b/i.test(sel);
+    const guarded = /100dvh|min-height|max-height|svh/.test(block);
+    if (!isVisual || guarded) continue;
+    add('RR5',
+      `"${sel.slice(0, 40)}" sets height: 100vh on a visual/hero container — on iOS, 100vh includes the toolbar, so it overshoots the screen and shifts/zooms the background. Desktop looks fine; the phone does not.`,
+      'Use 100dvh (dynamic viewport) with a 100vh fallback, or min-height instead of a hard 100vh.');
+  }
+
   return findings;
 }
 
