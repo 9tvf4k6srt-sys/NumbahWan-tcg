@@ -273,6 +273,53 @@ const COMMANDS = {
       println('');
     },
   },
+  datavalue: {
+    desc: 'What the mined dataset is worth to data buyers: records, buyer-type coverage, $/record efficiency, fragment rate. Run after a build to see if mining produced sellable value.',
+    usage: 'datavalue',
+    run: () => {
+      // Refresh the validator (cheap, reads the DB exports) and read its JSON.
+      let v = null;
+      try {
+        const out = require('child_process').execFileSync('node',
+          ['tools/validate-mined-data.cjs', '--json'], { cwd: ROOT, encoding: 'utf8' });
+        v = JSON.parse(out);
+      } catch { /* fall through */ }
+      const s = v && v.summary ? v.summary : null;
+      println(`\n${C.b}DATA VALUE — what the mine is worth to buyers${C.r}`);
+      println('═'.repeat(58));
+      if (!s) { println(`  ${C.yellow}no validation summary — run a build/commit first${C.r}\n`); return; }
+      const buyers = s.buyerCoverage || {};
+      const covered = Object.values(buyers).filter(Boolean).length;
+      const buyerLine = Object.entries(buyers)
+        .map(([k, ok]) => `${ok ? C.green + '✓' : C.red + '✗'}${C.r} ${k}`).join('   ');
+      // Fragment rate on the highest-volume sold record type (lessons).
+      let frag = null, lessons = 0;
+      try {
+        const lines = fs.readFileSync(path.join(ROOT, '.mycelium-mined/db/lessons.jsonl'), 'utf8')
+          .trim().split('\n').filter(Boolean);
+        lessons = lines.length;
+        const isFrag = (t) => {
+          t = String(t || '').trim(); if (t.length < 25) return true;
+          const last = t.split(/\s+/).pop() || '';
+          const mid = /[a-z][A-Z]/.test(last) || /[a-zA-Z]\($/.test(last) || /\.[a-zA-Z]+$/.test(last);
+          return mid && !/[.!?)\]]$/.test(t);
+        };
+        const f = lines.reduce((n, l) => { try { return n + (isFrag(JSON.parse(l).lesson) ? 1 : 0); } catch { return n; } }, 0);
+        frag = lessons ? Math.round((f / lessons) * 100) : 0;
+      } catch { /* no lessons file */ }
+      println(`  ${C.b}saleable records${C.r}   ${s.totalRecords}   ${C.dim}across ${s.dataProducts} products · ${s.totalSizeKB}KB${C.r}`);
+      println(`  ${C.b}efficiency${C.r}         ${s.bytesPerRecord} bytes/record   ${C.dim}(lean = denser value)${C.r}`);
+      println(`  ${C.b}buyer coverage${C.r}     ${covered}/4`);
+      println(`     ${buyerLine}`);
+      println(`  ${C.b}formats${C.r}            ${Object.entries(s.formats || {}).filter(([, n]) => n > 0).map(([k, n]) => `${k}:${n}`).join(' · ')}`);
+      if (frag != null) {
+        const fc = frag <= 5 ? C.green : frag <= 20 ? C.yellow : C.red;
+        println(`  ${C.b}lesson quality${C.r}     ${fc}${100 - frag}% complete${C.r}   ${C.dim}(${frag}% fragments, ${lessons} lessons)${C.r}`);
+      }
+      println(`\n  ${C.dim}buyers: aiTools=rule engines · engineering=dashboards · cicd=gates · research=ML training${C.r}`);
+      println('');
+    },
+  },
   hooks: {
     desc: 'Activate the tracked git hooks (.husky) so post-commit fires the heartbeat — even without Husky installed. Idempotent.',
     usage: 'hooks [--check]',

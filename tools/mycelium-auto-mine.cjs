@@ -44,8 +44,15 @@ const UPGRADE_PATH = 'tools/upgrade-mined-data.cjs';
 const LLM_MODEL = process.env.MYCELIUM_LLM_MODEL || 'claude-haiku-4-5';
 
 const CONFIG = {
-  // How often to do a full re-mine (every N commits)
+  // How often to do a full re-mine (every N commits). This is the EXPENSIVE
+  // path — it re-runs LLM causal enrichment, so it stays infrequent.
   fullRemineInterval: 50,
+
+  // How often to do a LIGHT refresh (every N commits): rebuild the sellable
+  // lessons dataset + re-export the DB. No LLM, pure local processing (<1s), so
+  // it can run often. This keeps the buyer-facing DB fresh between the costly
+  // LLM remines instead of letting it go stale for up to 50 commits.
+  lightRefreshInterval: 5,
   
   // Fix-commit detection (same as miner)
   fixPatterns: [
@@ -114,7 +121,9 @@ function loadState() {
     totalCommitsMined: 0,
     totalFixCommits: 0,
     commitsSinceFullMine: 0,
+    commitsSinceLightRefresh: 0,
     lastFullMineDate: null,
+    lastLightRefreshDate: null,
     lastExportDate: null,
     version: '1.0',
   };
@@ -158,6 +167,7 @@ function mineLatestCommit() {
   state.lastMinedDate = date;
   state.totalCommitsMined++;
   state.commitsSinceFullMine++;
+  state.commitsSinceLightRefresh++;
   
   if (isFix) {
     state.totalFixCommits++;
@@ -187,16 +197,38 @@ function mineLatestCommit() {
   // Track all commits for hotspot/co-change analysis
   appendCommitRecord({ hash, date, author, msg, files, isFix });
   
-  // Full re-mine every N commits
+  // Full re-mine every N commits (EXPENSIVE — LLM causal enrichment).
   if (state.commitsSinceFullMine >= CONFIG.fullRemineInterval) {
     log(`Full re-mine triggered (${state.commitsSinceFullMine} commits since last)`);
     triggerFullMine(state);
     state.commitsSinceFullMine = 0;
+    state.commitsSinceLightRefresh = 0; // full mine already refreshed everything
     state.lastFullMineDate = new Date().toISOString();
+    state.lastLightRefreshDate = new Date().toISOString();
+  } else if (state.commitsSinceLightRefresh >= CONFIG.lightRefreshInterval) {
+    // LIGHT refresh (CHEAP — no LLM): rebuild the sellable lessons dataset and
+    // re-export the DB so the buyer-facing data never goes stale between the
+    // costly full remines. This is the "mine while you build, spend no extra
+    // tokens" path — pure local processing, runs in well under a second.
+    triggerLightRefresh(state);
+    state.commitsSinceLightRefresh = 0;
+    state.lastLightRefreshDate = new Date().toISOString();
   }
   
   saveState(state);
   return { hash, msg, isFix, files: files.length };
+}
+
+// LIGHT refresh: rebuild lessons + re-export the sellable DB. No LLM. Cheap
+// enough to run every few commits so the dataset a buyer sees is always live.
+function triggerLightRefresh(state) {
+  log(`Light refresh (${state.commitsSinceLightRefresh} commits since last) — rebuild lessons + export`);
+  if (fs.existsSync(UPGRADE_PATH)) {
+    try {
+      execSync(`node ${UPGRADE_PATH} --silent`, { encoding: 'utf8', timeout: 60000, stdio: 'pipe' });
+    } catch (e) { log(`Light lesson refresh failed: ${e.message?.slice(0, 80)}`); }
+  }
+  try { exportAll(); } catch (e) { log(`Light export failed: ${e.message?.slice(0, 80)}`); }
 }
 
 // ============================================================================
