@@ -194,9 +194,9 @@ When you build, read the one for your medium **after** this file.
 
 | Medium | Playbook | Governs |
 |---|---|---|
-| **Producing natural content (all media)** | [`FORGE-DOCTRINE.md`](FORGE-DOCTRINE.md) | How to make words/visual/audio that have a voice: specific, uneven, imperfect. The production half; the corpus files are the detection half. Builder: `node bin/ai.cjs voice` |
+| **Producing natural content (all media)** | [`FORGE-DOCTRINE.md`](FORGE-DOCTRINE.md) + `node bin/ai.cjs forge` | The production half (corpus files are detection). `forge kit "<company> <industry>"` spins up a PINFORGE-grade visual kit for ANY industry, fast; `forge check <url>` judges the sheen FOR you + the one fix. Specific, uneven, imperfect. |
 | Motion / interaction | [`references/MOTION-CRAFT.md`](references/MOTION-CRAFT.md) | How things move and feel; GSAP/Lenis stack; iOS; reversible scroll |
-| Still imagery (PINFORGE) | [`references/PINFORGE-VISUAL-LOCK.md`](references/PINFORGE-VISUAL-LOCK.md) | Palette, camera language, real-photo anchors, banned visual signals |
+| Still imagery (PINFORGE) | [`references/PINFORGE-VISUAL-LOCK.md`](references/PINFORGE-VISUAL-LOCK.md) | The hand-built lock for ONE world (Taipei). For a NEW world, `forge` generalizes its method (camera physics + imperfection) so you start at PINFORGE's finish line. |
 | Geographic/render truth | [`references/AI-TELLS-GEOGRAPHY.md`](references/AI-TELLS-GEOGRAPHY.md) | Location/altitude/architecture tells to negate |
 | Copy / language | [`tools/ai-tell-corpus.json`](tools/ai-tell-corpus.json) + [`BUILD-DOCTRINE.md`](BUILD-DOCTRINE.md) §4 | Words that sound machine-written, in EN/ZH/JA/TH |
 | Build process | [`BUILD-DOCTRINE.md`](BUILD-DOCTRINE.md) | How we ship; friction we've already solved |

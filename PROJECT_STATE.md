@@ -26,10 +26,16 @@ Creed → Roster → Hall → Lounge → Join. **No "BrightInside" anywhere** (r
   symphony, "aims to", hook-transitions). Read that file for the exact set.
 - **Produce natural content, don't just pass the gate.** The corpus DETECTS tells; copy that
   passes can still read AI (the guild copy scored 8/100 "natural" yet felt AI). The fix is the
-  PRODUCTION doctrine: **`FORGE-DOCTRINE.md`** (specific, uneven, imperfect — across words/visual/
-  audio). Before writing/rendering/recording, build a voice-locked prompt: `node bin/ai.cjs voice
-  <words|visual|audio> "<brief>" --world=paradox`. Visual: direct the physics (name the light,
-  camera formula, explicit imperfection), never "8k/cinematic/perfect" (summons the AI look).
+  PRODUCTION doctrine: **`FORGE-DOCTRINE.md`** (specific, uneven, imperfect — words/visual/audio).
+- **Spinning up a demo page for any company? Use `forge` — it collapses the sheen-iteration loop.**
+  PINFORGE-grade images took weeks of regenerating to kill AI sheen; `forge` front-loads that:
+  `node bin/ai.cjs forge kit "<company> <industry>"` emits a locked kit (palette + camera + 4-6
+  physics-locked scene prompts + voice) so you start at PINFORGE's finish line. Generate, then
+  `forge check <url> --prompt="..."` judges the sheen FOR you (via understand_images) and returns
+  the ONE biggest fix, so pass 2 is targeted not guessed. Proven: a forged "coffee roaster" prompt
+  read as a real human photo on the FIRST generation. Add new industries to `INDUSTRIES` in
+  `tools/forge.cjs`. The AI look is a prompt problem (light from nowhere, perfection, no camera
+  physics) — never "8k/cinematic/perfect". For words, `node bin/ai.cjs voice words "<brief>"`.
 - **Mobile-first iOS**, iPhone 375px is the primary viewport.
 - **Trilingual TH/JA/EN**: every visible string needs a `data-i18n` key present in all 3 langs.
 - **Git workflow**: commit → fetch origin main → squash via `git reset --soft origin/main` →
