@@ -59,6 +59,11 @@ function quickBrief() {
     brands: 'NW=#ff6b00 | KINTSUGI=#c9a84c — never merge',
     mobile: 'iPhone 375px — always test mobile first',
     i18n: 'EN/ZH/TH (NW) | EN/ZH/JP (KINTSUGI)',
+    // Reflexive efficiency nudge. Data: 34% of all fix-chains are css-layout +
+    // mobile-compat — the visual re-see loop (ship green, user sees bug on
+    // phone, re-fix). It is the #1 token sink in this repo. The cheapest
+    // prevention is one command before any visual ship.
+    efficiency: 'before shipping ANY visual/CSS change: node bin/ai.cjs preship — catches the iOS render bugs we cannot see (the #1 token waste)',
     api: '/api/agent/brief | /api/agent/context | /api/agent/rules'
   };
 }
