@@ -194,6 +194,7 @@ When you build, read the one for your medium **after** this file.
 
 | Medium | Playbook | Governs |
 |---|---|---|
+| **Producing natural content (all media)** | [`FORGE-DOCTRINE.md`](FORGE-DOCTRINE.md) | How to make words/visual/audio that have a voice: specific, uneven, imperfect. The production half; the corpus files are the detection half. Builder: `node bin/ai.cjs voice` |
 | Motion / interaction | [`references/MOTION-CRAFT.md`](references/MOTION-CRAFT.md) | How things move and feel; GSAP/Lenis stack; iOS; reversible scroll |
 | Still imagery (PINFORGE) | [`references/PINFORGE-VISUAL-LOCK.md`](references/PINFORGE-VISUAL-LOCK.md) | Palette, camera language, real-photo anchors, banned visual signals |
 | Geographic/render truth | [`references/AI-TELLS-GEOGRAPHY.md`](references/AI-TELLS-GEOGRAPHY.md) | Location/altitude/architecture tells to negate |

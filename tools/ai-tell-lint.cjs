@@ -48,7 +48,9 @@ const CORPUS_PATH = path.join(__dirname, 'ai-tell-corpus.json');
 // document the very phrases we're banning, and historical audits).
 const EXEMPT_FILES = new Set([
   'tools/ai-tell-corpus.json',
+  'tools/naturalness-corpus.json',
   'tools/ai-tell-lint.cjs',
+  'FORGE-DOCTRINE.md',
   'TASTE.md',
   'PRODUCTION-PIPELINE.md',
   'EFFICIENCY.md',

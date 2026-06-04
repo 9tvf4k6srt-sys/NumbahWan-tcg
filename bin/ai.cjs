@@ -159,11 +159,40 @@ const COMMANDS = {
     run: () => runNode('sentinel.cjs', ['--heal']),
   },
 
+  // ── PRODUCE natural content (FORGE-DOCTRINE.md) ───────────────────
+  forge: {
+    desc: 'Print the production doctrine path + the one rule (read FORGE-DOCTRINE.md before you make anything)',
+    run: () => {
+      if (exists('FORGE-DOCTRINE.md')) {
+        println(`${C.cyan}FORGE-DOCTRINE.md${C.r} → ${path.join(ROOT, 'FORGE-DOCTRINE.md')}`);
+        println(`${C.b}Make it: specific, uneven, imperfect.${C.r}`);
+        println(`${C.dim}AI defaults to the statistical average. A person is specific, uneven, willing to be flawed.${C.r}`);
+        println(`${C.dim}Three questions before you ship: Specific? Uneven? Imperfect?${C.r}`);
+        println(`${C.dim}Builder: node bin/ai.cjs voice <words|visual|audio> "<brief>" [--world=paradox|kintsugi|nw]${C.r}`);
+      } else { println(`${C.red}FORGE-DOCTRINE.md missing${C.r}`); process.exit(1); }
+    },
+  },
+  voice: {
+    desc: 'Build a voice-locked generation prompt BEFORE you write/render/record (production-side, free, offline)',
+    usage: 'voice <words|visual|audio> "<brief>" [--world=paradox|kintsugi|nw] [--json]',
+    run: () => runNode('tools/voice-prep.cjs', REST),
+  },
+
   // ── anti-AI-tell pipeline ─────────────────────────────────────────
   aitell: {
     desc: 'Inspect every production step for AI-tell (deterministic block + stylometry + LLM judge)',
     usage: 'aitell [--all|<file>...] [--judge] [--json]',
     run: () => runNode('tools/aitell-pipeline.cjs', REST),
+  },
+  naturalness: {
+    desc: 'Score prose for human voice (burstiness/stance as positive targets, advisory; LLM read of naturalness)',
+    usage: 'naturalness <file>... [--min=70] [--json]',
+    run: () => runNode('tools/ai-naturalness.cjs', REST),
+  },
+  sheen: {
+    desc: 'Check an image PROMPT for AI-sheen vocab before you generate (8k/cinematic/perfect summon the AI look)',
+    usage: 'sheen "<prompt>" | sheen <file>',
+    run: () => runNode('tools/ai-sheen-lint.cjs', REST),
   },
   layout: {
     desc: 'Lint the BUILD for visual AI-tell (emoji-as-icon, stock gradients, default shadows)',
@@ -369,7 +398,8 @@ function help() {
   println(`${C.dim}Read AI_PLAYBOOK.md first. Everything routes through here.${C.r}\n`);
 
   const groups = {
-    'Onboarding':   ['brief', 'context', 'rules', 'health', 'playbook', 'taste', 'efficiency', 'collab', 'pulse', 'hooks'],
+    'Onboarding':   ['brief', 'context', 'rules', 'health', 'playbook', 'taste', 'forge', 'efficiency', 'collab', 'pulse', 'hooks'],
+    'Produce':      ['voice', 'naturalness', 'sheen'],
     'Memory':       ['premortem', 'whyfile', 'memory'],
     'Guardian':     ['guard', 'heal', 'aitell', 'layout', 'pagesize', 'assets', 'render', 'preship'],
     'Deploy':       ['ship'],

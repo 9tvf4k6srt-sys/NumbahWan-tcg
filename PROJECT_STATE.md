@@ -22,7 +22,14 @@ Creed → Roster → Hall → Lounge → Join. **No "BrightInside" anywhere** (r
 - **No AI-tell phrases** in page copy. Enforced by `tools/ai-tell-lint.cjs` (pre-commit hook).
   Run: `node tools/ai-tell-lint.cjs --file=<path>`. Guild page is NOT exempt; must pass clean.
   Banned tokens are listed in `tools/ai-tell-corpus.json` (filler vocab, em-dash between
-  lowercase words, "not X but Y", rhetorical lists-of-three). Read that file for the exact set.
+  lowercase words, "not X but Y", rhetorical lists-of-three, + 2026 blacklist: beacon/realm/
+  symphony, "aims to", hook-transitions). Read that file for the exact set.
+- **Produce natural content, don't just pass the gate.** The corpus DETECTS tells; copy that
+  passes can still read AI (the guild copy scored 8/100 "natural" yet felt AI). The fix is the
+  PRODUCTION doctrine: **`FORGE-DOCTRINE.md`** (specific, uneven, imperfect — across words/visual/
+  audio). Before writing/rendering/recording, build a voice-locked prompt: `node bin/ai.cjs voice
+  <words|visual|audio> "<brief>" --world=paradox`. Visual: direct the physics (name the light,
+  camera formula, explicit imperfection), never "8k/cinematic/perfect" (summons the AI look).
 - **Mobile-first iOS**, iPhone 375px is the primary viewport.
 - **Trilingual TH/JA/EN**: every visible string needs a `data-i18n` key present in all 3 langs.
 - **Git workflow**: commit → fetch origin main → squash via `git reset --soft origin/main` →
