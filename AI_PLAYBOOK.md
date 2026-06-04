@@ -31,6 +31,7 @@ Match the read to the job:
 | Edit an existing page | + `node bin/ai.cjs whyfile <path>` + `premortem <area>` | full doc reads |
 | Resume a known project | + the project's own state file (e.g. [`PROJECT_STATE.md`](./PROJECT_STATE.md) for the guild work) | re-deriving from scratch |
 | Worry about build cost | + [`EFFICIENCY.md`](./EFFICIENCY.md) once | — |
+| High-stakes / ambiguous / "ultra" / irreversible work | + [`COLLAB-PROTOCOL.md`](./COLLAB-PROTOCOL.md) — run `node bin/ai.cjs collab` (fp / discern / boundary / reflect) | for a typo or asset swap |
 
 Rule: if a fact is in `git log`, `ls`, a lint run, or `bin/ai.cjs`, **query it,
 don't read a doc that restates it.** Docs hold *why*; the repo holds *what*.
