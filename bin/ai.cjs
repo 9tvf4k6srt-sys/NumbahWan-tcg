@@ -248,6 +248,31 @@ const COMMANDS = {
     usage: 'pulse [--check|--silent|--json]',
     run: () => runNode('tools/heartbeat.cjs', REST),
   },
+  sysaudit: {
+    desc: 'One-shot health of the self-improvement stack: heartbeat liveness, hooks, trend signals, learning derivation, efficiency series, mining quality.',
+    usage: 'sysaudit',
+    run: () => {
+      println(`\n${C.b}SELF-IMPROVEMENT STACK AUDIT${C.r}`);
+      println('═'.repeat(58));
+      println(`\n${C.b}1 · Heartbeat (systems alive across sessions)${C.r}`);
+      runStep('tools/heartbeat.cjs', ['--check']);
+      println(`\n${C.b}2 · Git hooks (post-commit fires the loop)${C.r}`);
+      runStep('tools/install-hooks.cjs', ['--check']);
+      println(`\n${C.b}3 · Trend detector (early-warning, live signal)${C.r}`);
+      runStep('tools/trend-detector.cjs', []);
+      println(`\n${C.b}4 · Learning loop (trends → enforceable rules)${C.r}`);
+      runStep('tools/learning-loop.cjs', []);
+      println(`\n${C.b}5 · Efficiency series (token / leanness over time)${C.r}`);
+      runStep('tools/efficiency-ledger.cjs', ['trend', '--n=8']);
+      println(`\n${C.b}6 · Mining quality${C.r}`);
+      try {
+        const q = JSON.parse(fs.readFileSync(path.join(ROOT, '.mycelium-mined/quality-report.json'), 'utf8'));
+        println(`  overall ${q.overall}/100 (${q.grade}) — ` +
+          Object.entries(q.results).map(([k, r]) => `${k}:${r.score}`).join(' · '));
+      } catch { println(`  ${C.yellow}quality-report.json not found${C.r}`); }
+      println('');
+    },
+  },
   hooks: {
     desc: 'Activate the tracked git hooks (.husky) so post-commit fires the heartbeat — even without Husky installed. Idempotent.',
     usage: 'hooks [--check]',

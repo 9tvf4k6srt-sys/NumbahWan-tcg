@@ -172,15 +172,37 @@ function save(data) {
 
 // ── commands ───────────────────────────────────────────────────────────────────
 function cmdLog() {
-  const task = args.find(a => !a.startsWith('--') && a !== 'log') || '(unnamed slice)';
+  // --auto: unattended per-commit logging (wired into the post-commit hook).
+  // Measures the just-made commit's own churn (HEAD~1...HEAD), names the slice
+  // from the commit subject, and dedups by commit hash so the same commit is
+  // never logged twice. This is what turns the ledger from a one-off manual
+  // tool into a continuous token/efficiency series.
+  const auto = args.includes('--auto');
+  let autoBase = null, autoTask = null, commitHash = null;
+  if (auto) {
+    commitHash = sh(['git', 'rev-parse', '--short', 'HEAD']);
+    if (commitHash) {
+      const data0 = load();
+      if (data0.entries.some(e => e.commit === commitHash)) {
+        if (!JSON_OUT) { /* already logged this commit — no-op */ }
+        return; // idempotent
+      }
+    }
+    autoBase = sh(['git', 'rev-parse', '--verify', '--quiet', 'HEAD~1']) ? 'HEAD~1' : null;
+    autoTask = sh(['git', 'log', '-1', '--pretty=format:%s']) || '(commit)';
+  }
+
+  const task = auto ? autoTask
+    : (args.find(a => !a.startsWith('--') && a !== 'log') || '(unnamed slice)');
   const reads = flag('reads') != null ? parseInt(flag('reads'), 10) : null;
   const calls = flag('calls') != null ? parseInt(flag('calls'), 10) : null;
-  const stat = sliceStats(flag('base'));
+  const stat = sliceStats(auto ? autoBase : flag('base'));
   const score = leanness(stat, reads, calls);
   const entry = {
     ts: Date.now(),
     date: new Date().toISOString().slice(0, 10),
     task: task.slice(0, 120),
+    ...(commitHash ? { commit: commitHash } : {}),
     ...stat,
     reads, calls,
     leanness: score,
@@ -189,6 +211,7 @@ function cmdLog() {
   data.entries.push(entry);
   save(data);
 
+  if (auto && !JSON_OUT) return; // silent in hook context
   if (JSON_OUT) { console.log(JSON.stringify(entry, null, 2)); return; }
   const b = band(score);
   console.log('');
