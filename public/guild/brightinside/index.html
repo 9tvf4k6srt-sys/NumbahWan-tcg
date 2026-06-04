@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<meta name="theme-color" content="#0a0710">
+<meta name="theme-color" content="#0e1410">
 <title>PARADOX · The Guild of MiniDemon</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -30,18 +30,22 @@
     --violet-deep: #5b3fb0;
     --rune-red: #e0566a;
     --panther: #9a6ff0;
-    --sky-top: #16271c;
-    --night: #0c1610;
+    /* Forest-night base: all greens share the ember's WARM undertone so the
+       emblem and the background belong to the same world (no cold/muddy cast). */
+    --sky-top: #1b2a1d;
+    --night: #0e1410;
     /* see-through forest glass: panels are dark-GREEN + translucent so the art
        behind the page reads through them (guild leader: "see through page"). */
-    --panel: rgba(13, 26, 18, 0.62);
-    --panel-solid: rgba(11, 22, 16, 0.8);
-    --glass: rgba(16, 32, 22, 0.55);
+    --panel: rgba(18, 28, 20, 0.62);
+    --panel-solid: rgba(15, 23, 16, 0.8);
+    --glass: rgba(22, 34, 23, 0.55);
     --glass-line: rgba(224, 86, 106, 0.30);
     --shadow: 0 16px 44px rgba(4, 12, 7, 0.6);
     --ease: cubic-bezier(0.22, 0.61, 0.36, 1);
-    /* PARADOX brand spine — emblem stays true: ONE ember-red accent on a forest base. */
-    --px-dark: #081109;
+    /* PARADOX brand spine — emblem stays true: ONE ember-red accent on a forest base.
+       --px-dark unified into the warm forest-night family (was a cold purple-black
+       #081109 that bled against the greens). */
+    --px-dark: #0d130e;
     --px-light: #f4f6ee;
     --px-line: rgba(244, 246, 238, 0.16);
     --px-line-strong: rgba(244, 246, 238, 0.34);
@@ -91,8 +95,8 @@
   body::after {
     content: ""; position: fixed; inset: 0; z-index: -9; pointer-events: none;
     background:
-      radial-gradient(150% 105% at 50% 26%, rgba(10,22,15,0) 0%, rgba(8,18,12,0.34) 64%, rgba(6,14,9,0.62) 100%),
-      linear-gradient(180deg, rgba(8,16,11,0.62) 0%, rgba(8,16,11,0.12) 26%, rgba(8,16,11,0.3) 74%, rgba(7,14,9,0.7) 100%);
+      radial-gradient(150% 105% at 50% 26%, rgba(10,22,15,0) 0%, rgba(15,22,15,0.34) 64%, rgba(6,14,9,0.62) 100%),
+      linear-gradient(180deg, rgba(14,20,14,0.62) 0%, rgba(14,20,14,0.12) 26%, rgba(14,20,14,0.3) 74%, rgba(11,17,11,0.7) 100%);
   }
   img { display: block; max-width: 100%; }
 
@@ -108,9 +112,35 @@
     background:
       radial-gradient(1100px 680px at 82% -12%, rgba(224, 86, 106, 0.16), transparent 60%),
       radial-gradient(900px 620px at 8% 112%, rgba(168, 39, 58, 0.12), transparent 55%),
-      linear-gradient(180deg, #06040c 0%, #0a0712 46%, #0d0916 100%);
+      linear-gradient(180deg, #0c1310 0%, #10160f 46%, #0e1410 100%);
   }
   .skyfield canvas { width: 100%; height: 100%; display: block; }
+
+  /* ---------- ambient music toggle ---------- */
+  .music-toggle {
+    position: fixed; top: 12px; right: 12px; z-index: 40;
+    width: 40px; height: 40px; border-radius: 50%;
+    display: grid; place-items: center;
+    font-size: 19px; color: var(--ink-soft);
+    background: var(--panel-solid);
+    border: 1px solid var(--glass-line);
+    box-shadow: 0 6px 18px rgba(0,0,0,0.5);
+    cursor: pointer; -webkit-tap-highlight-color: transparent;
+    transition: color 0.2s var(--ease), border-color 0.2s var(--ease), transform 0.2s var(--ease);
+  }
+  .music-toggle:hover { color: var(--ember); border-color: var(--ember); }
+  .music-toggle:active { transform: scale(0.92); }
+  .music-toggle__on { display: none; }
+  .music-toggle__off { display: block; }
+  .music-toggle[aria-pressed="true"] { color: var(--ember); border-color: var(--ember); }
+  .music-toggle[aria-pressed="true"] .music-toggle__on { display: block; }
+  .music-toggle[aria-pressed="true"] .music-toggle__off { display: none; }
+  /* gentle pulse only while playing, signalling live audio without being loud */
+  .music-toggle[aria-pressed="true"] .music-toggle__on path { animation: eq 1.4s ease-in-out infinite; }
+  @keyframes eq { 0%,100% { opacity: 0.85; } 50% { opacity: 0.45; } }
+  @media (prefers-reduced-motion: reduce) {
+    .music-toggle[aria-pressed="true"] .music-toggle__on path { animation: none; }
+  }
   main { position: relative; z-index: 1; }
 
   /* ---------- PARADOX brand: emblem section divider ---------- */
@@ -234,8 +264,8 @@
   .hero__veil {
     position: absolute; inset: 0; z-index: -2;
     background:
-      radial-gradient(120% 86% at 50% 40%, rgba(8,16,11,0) 0%, rgba(8,16,11,0.32) 58%, rgba(7,14,9,0.74) 94%, var(--px-dark) 100%),
-      linear-gradient(180deg, rgba(8,16,11,0.5) 0%, rgba(8,16,11,0.06) 34%, rgba(8,16,11,0.48) 76%, var(--px-dark) 100%);
+      radial-gradient(120% 86% at 50% 40%, rgba(14,20,14,0) 0%, rgba(14,20,14,0.32) 58%, rgba(11,17,11,0.74) 94%, var(--px-dark) 100%),
+      linear-gradient(180deg, rgba(14,20,14,0.5) 0%, rgba(14,20,14,0.06) 34%, rgba(14,20,14,0.48) 76%, var(--px-dark) 100%);
   }
   /* ember halo that breathes behind the emblem */
   .hero__scrim {
@@ -349,7 +379,7 @@
   /* marquee = the brand spine: a literal dark-to-light run */
   .strip {
     padding: 0;
-    background: linear-gradient(90deg, var(--px-dark) 0%, #2a2333 50%, var(--px-light) 100%);
+    background: linear-gradient(90deg, var(--px-dark) 0%, #1e2a1c 50%, var(--px-light) 100%);
     border-top: 1px solid var(--px-line-strong); border-bottom: 1px solid rgba(0,0,0,0.45);
     overflow: hidden;
   }
@@ -381,7 +411,7 @@
   /* a sliding light wipe that sweeps dark to bright on scroll */
   .banner__dark {
     position: absolute; inset: 0; z-index: 2; pointer-events: none;
-    background: linear-gradient(90deg, rgba(8,5,16,0.92) 0%, rgba(8,5,16,0.7) 32%, rgba(8,5,16,0) 60%);
+    background: linear-gradient(90deg, rgba(11,17,11,0.92) 0%, rgba(11,17,11,0.7) 32%, rgba(11,17,11,0) 60%);
     transition: opacity 0.6s var(--ease);
   }
   .banner.lit .banner__dark { opacity: 0.25; }
@@ -473,7 +503,7 @@
   }
   .welcome__veil {
     position: absolute; inset: 0; z-index: -2;
-    background: linear-gradient(180deg, var(--night) 0%, rgba(8,18,12,0.58) 30%, rgba(8,18,12,0.6) 70%, var(--night) 100%);
+    background: linear-gradient(180deg, var(--night) 0%, rgba(15,22,15,0.58) 30%, rgba(15,22,15,0.6) 70%, var(--night) 100%);
   }
   .lantern-row { display: flex; justify-content: center; gap: 24px; margin-bottom: 26px; }
   .lantern {
@@ -573,7 +603,7 @@
   /* dark gradient under the portrait so the name text below always reads */
   .member__body {
     position: relative; z-index: 2; padding: 12px 22px 26px;
-    background: linear-gradient(180deg, rgba(12,7,20,0) 0%, rgba(12,7,20,0.85) 22%, rgba(12,7,20,0.95) 100%);
+    background: linear-gradient(180deg, rgba(12,18,12,0) 0%, rgba(12,18,12,0.85) 22%, rgba(12,18,12,0.95) 100%);
   }
   .member__name {
     font-family: var(--disp); font-weight: 800; text-transform: uppercase;
@@ -617,7 +647,7 @@
   }
   .hall__veil {
     position: absolute; inset: 0; z-index: -2;
-    background: linear-gradient(180deg, var(--night) 0%, rgba(8,18,12,0.6) 26%, rgba(8,18,12,0.62) 72%, var(--night) 100%);
+    background: linear-gradient(180deg, var(--night) 0%, rgba(15,22,15,0.6) 26%, rgba(15,22,15,0.62) 72%, var(--night) 100%);
   }
   .hall__card {
     background: var(--panel-solid); border: 1px solid var(--glass-line);
@@ -745,8 +775,8 @@
   .join__veil {
     position: absolute; inset: 0; z-index: -2;
     background:
-      radial-gradient(120% 80% at 50% 30%, rgba(8,16,11,0) 0%, rgba(8,16,11,0.4) 60%, rgba(7,14,9,0.82) 96%),
-      linear-gradient(180deg, var(--night) 0%, rgba(8,16,11,0.28) 32%, rgba(8,16,11,0.5) 72%, var(--night) 100%);
+      radial-gradient(120% 80% at 50% 30%, rgba(14,20,14,0) 0%, rgba(14,20,14,0.4) 60%, rgba(11,17,11,0.82) 96%),
+      linear-gradient(180deg, var(--night) 0%, rgba(14,20,14,0.28) 32%, rgba(14,20,14,0.5) 72%, var(--night) 100%);
   }
   .join__glow {
     position: absolute; left: 50%; top: 20%; width: 620px; height: 620px;
@@ -855,6 +885,19 @@
   <button data-lang="th" aria-pressed="false">ไทย</button>
   <button data-lang="ja" aria-pressed="false">日本語</button>
 </nav>
+
+<!-- Ambient music toggle. Starts OFF (browsers block autoplay-with-sound and we
+     never blast audio on load). One tap fades the forest ambience in. -->
+<button id="musicToggle" class="music-toggle" aria-label="Play ambient music" aria-pressed="false">
+  <svg class="music-toggle__on" viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+    <path d="M4 10v4M8 7v10M12 4v16M16 8v8M20 11v2"/>
+  </svg>
+  <svg class="music-toggle__off" viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+    <path d="M4 11v2M8 9v6M12 11v2M16 9v6M20 11v2"/>
+    <path d="M3 3l18 18"/>
+  </svg>
+</button>
+<audio id="ambientAudio" src="assets/paradox-forest-ambient.mp3" loop preload="none"></audio>
 
 <main>
 
@@ -1663,6 +1706,63 @@
       }, 2600);
     });
   });
+})();
+</script>
+
+<!-- Ambient music: tap-to-play, smooth fade, remembers choice for the session. -->
+<script>
+(function () {
+  var btn = document.getElementById("musicToggle");
+  var audio = document.getElementById("ambientAudio");
+  if (!btn || !audio) return;
+
+  var TARGET = 0.42;          // gentle, never intrusive
+  var fadeTimer = null;
+  audio.volume = 0;
+
+  function fadeTo(target, done) {
+    clearInterval(fadeTimer);
+    fadeTimer = setInterval(function () {
+      var step = 0.04;
+      if (Math.abs(audio.volume - target) <= step) {
+        audio.volume = target; clearInterval(fadeTimer);
+        if (done) done();
+      } else {
+        audio.volume += audio.volume < target ? step : -step;
+      }
+    }, 40);
+  }
+
+  function play() {
+    audio.play().then(function () {
+      btn.setAttribute("aria-pressed", "true");
+      btn.setAttribute("aria-label", "Mute ambient music");
+      fadeTo(TARGET);
+      try { sessionStorage.setItem("paradox-music", "on"); } catch (e) {}
+    }).catch(function () { /* autoplay blocked until a gesture; ignore */ });
+  }
+
+  function stop() {
+    fadeTo(0, function () { audio.pause(); });
+    btn.setAttribute("aria-pressed", "false");
+    btn.setAttribute("aria-label", "Play ambient music");
+    try { sessionStorage.setItem("paradox-music", "off"); } catch (e) {}
+  }
+
+  btn.addEventListener("click", function () {
+    if (btn.getAttribute("aria-pressed") === "true") stop(); else play();
+  });
+
+  // If the visitor had it on earlier this session, resume on their first tap.
+  var pref;
+  try { pref = sessionStorage.getItem("paradox-music"); } catch (e) {}
+  if (pref === "on") {
+    var resume = function () {
+      play();
+      document.removeEventListener("pointerdown", resume);
+    };
+    document.addEventListener("pointerdown", resume, { once: true });
+  }
 })();
 </script>
 </body>
