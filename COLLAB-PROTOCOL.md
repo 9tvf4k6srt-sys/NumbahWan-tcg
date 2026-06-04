@@ -91,18 +91,29 @@ runs this as a self-challenge checklist before I commit to a recommendation.
 ## 4. The reflection / compounding loop (this is what makes us better over time)
 
 The manual (§2 "Compounding via Reflection"): *treat AI interactions as training data
-for both the system and the human.* We already log code lessons (`memory learned`).
-This adds **collaboration-quality** logging:
+for both the system and the human.* The first version of this asked the AI to write a
+reflection per task. The human rejected it, correctly: an AI grading its own work is a
+mirror, not a feedback loop, and nobody wants to answer prompts per task.
 
-- After a meaningful task: `node bin/ai.cjs collab reflect` captures, in one line each:
-  - what the human did that only a human could do (protect it),
-  - what I did that was pure leverage (keep delegating it),
-  - one thing to change in the *collaboration* next time,
-  - a verdict: did this **strengthen** or **weaken** the human's independent capability?
-- These persist into the same mycelium memory store (no orphan loop; the manual warns
-  against disconnected loops). `collab audit` surfaces the trend.
+**The real design: observe, don't ask.** `tools/collab-observer.cjs` reads the objective
+traces our work already leaves and derives improvements mechanically. Zero prompts.
 
-The point is not the log. The point is that the weekly question gets *asked*.
+- **Signal (all free, already on disk):** git history (clusters of `fix(<area>)` commits =
+  a *re-fix loop*; one area dominating recent commits = *churn*), and `events.jsonl`
+  (repeated rejections / breakage on one target).
+- **Improvement:** each known friction pattern maps to a concrete remedy already in the
+  repo (e.g. re-fix loops in `guild` → run `preship` before re-shipping guild). Recorded
+  once into the same memory store (de-duped, no spam, no orphan loop).
+- **Automatic execution:** the observer runs in the **post-commit hook** every commit, and
+  the derived auto-gate command is what I run before touching that area again.
+- **You read, never write:** `node bin/ai.cjs collab improvements` shows what it learned.
+
+> Proof it works on real data: it detected our actual `fix(guild)` re-fix loop (#79–#86)
+> from commit messages alone and recorded "run preship before shipping guild" — with no
+> input from anyone. That is the loop the manual wanted: the system improves itself.
+
+The point is not the log. The point is that friction gets caught and fixed without anyone
+having to notice it.
 
 ---
 

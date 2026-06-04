@@ -213,18 +213,54 @@ function cmdAudit() {
   });
 }
 
+// ── automatic, observation-driven (no prompts to the human) ──────────────────
+function cmdObserve(args) {
+  // delegate to the observer; pass through flags like --json/--silent
+  const { spawnSync } = require('child_process');
+  const r = spawnSync('node', [path.join(__dirname, 'collab-observer.cjs'), ...args],
+    { cwd: ROOT, stdio: 'inherit' });
+  process.exit(r.status || 0);
+}
+
+function cmdImprovements() {
+  const STATE = path.join(ROOT, '.mycelium', 'collab-observer.json');
+  header('COLLAB IMPROVEMENTS — what the observer learned from our work');
+  let state = null;
+  try { state = JSON.parse(fs.readFileSync(STATE, 'utf8')); } catch { /* none yet */ }
+  const seen = state && state.seen ? Object.keys(state.seen) : [];
+  if (!seen.length) {
+    out('  Nothing learned yet. The observer runs on every commit and after');
+    out('  meaningful work. Force a scan now with:');
+    out(`    ${C.cyan}node bin/ai.cjs collab observe${C.r}`);
+    return;
+  }
+  out(`  ${seen.length} friction pattern${seen.length === 1 ? '' : 's'} recorded (de-duped):`);
+  out('');
+  for (const k of seen) {
+    const [pattern, area, sev] = k.split(':');
+    const col = sev === 'high' ? C.red : sev === 'medium' ? C.yellow : C.dim;
+    out(`  ${col}● ${pattern}${C.r}  ${C.dim}[${area} · ${sev}]  since ${String(state.seen[k]).slice(0,10)}${C.r}`);
+  }
+  out('');
+  out(`  ${C.dim}Full improvement text + auto-gate commands:${C.r} node bin/ai.cjs memory query | grep collab-observer`);
+  out(`  ${C.dim}These are applied automatically: the auto-gate is run before re-shipping the area.${C.r}`);
+}
+
 function menu() {
   out('');
   out(`  ${C.b}collab — the human+AI operating contract, made runnable${C.r}`);
   out(`  ${C.dim}Read COLLAB-PROTOCOL.md once. These commands keep the discipline cheap.${C.r}`);
   rule();
+  out(`  ${C.b}Automatic (zero prompts to you — this is the real feedback loop):${C.r}`);
+  bullet('observe            ', 'watch our git/event traces, derive + record improvements');
+  bullet('improvements       ', 'what the observer learned (friction patterns + auto-gates)');
+  out('');
+  out(`  ${C.b}On-demand thinking aids:${C.r}`);
   bullet('fp "<problem>"     ', 'first-principles decomposition before delegating');
   bullet('discern "<claim>"  ', 'discernment checklist (source/reasoning/falsify/cross-check)');
   bullet('boundary "<task>"  ', 'mechanical vs judgment — what to hand back to the human');
-  bullet('reflect --verdict… ', 'log a collaboration lesson (strengthen/weaken/neutral)');
-  bullet('audit              ', 'trend: are our interactions strengthening the human?');
   out('');
-  out(`  ${C.dim}Roles in every non-trivial task: Researcher → Critic → Synthesizer → Reflector.${C.r}`);
+  out(`  ${C.dim}observe runs on every commit (post-commit hook). You never have to answer anything.${C.r}`);
 }
 
 // ── dispatch ──────────────────────────────────────────────────────────────
@@ -233,7 +269,9 @@ switch (sub) {
   case 'fp':       cmdFp(rest.join(' ')); break;
   case 'discern':  cmdDiscern(rest.join(' ')); break;
   case 'boundary': cmdBoundary(rest.join(' ')); break;
-  case 'reflect':  cmdReflect(rest); break;
+  case 'observe':      cmdObserve(rest); break;
+  case 'improvements': cmdImprovements(); break;
+  case 'reflect':  cmdReflect(rest); break;   // kept for manual notes; not required
   case 'audit':    cmdAudit(); break;
   case undefined:
   case 'help':     menu(); break;
