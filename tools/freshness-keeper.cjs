@@ -41,7 +41,10 @@ const RULES = [
     id: 'sentinel-eval',
     file: path.join(MYC, 'eval.json'),
     ttlDays: 7,
-    refreshCmd: { cmd: 'node', args: ['sentinel.cjs', '--quick'], timeoutMs: 60000 },
+    // Root cause fix: `sentinel.cjs --quick` never wrote eval.json (it writes
+    // sentinel-report.json), so this rule was a no-op heal — eval.json sat
+    // 119 days stale. The bridge projects the sentinel summary into eval.json.
+    refreshCmd: { cmd: 'node', args: ['tools/sentinel-eval-bridge.cjs', '--quiet'], timeoutMs: 120000 },
     optional: true,
     description: 'Health score (10 modules, weighted)',
   },

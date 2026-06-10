@@ -280,7 +280,47 @@ function trimWatch() {
   }
 }
 
+// ── Rotate last-error.log ──────────────────────────────────
+// Failures older than 30 days are archive material, not live signal.
+// Without rotation the log grows forever and stale `fatal:` lines keep
+// resurfacing in health reports long after the root cause is fixed.
+function rotateErrorLog() {
+  const ERROR_LOG = path.join(ROOT, '.mycelium', 'last-error.log')
+  if (!fs.existsSync(ERROR_LOG)) return
+
+  const raw = fs.readFileSync(ERROR_LOG, 'utf8')
+  const blocks = raw.split(/\n(?=\[)/).filter(Boolean)
+  const cutoff = Date.now() - 30 * 86400000
+
+  const keep = []
+  const archive = []
+  for (const b of blocks) {
+    const m = b.match(/^\[([^\]]+)\]/)
+    const ts = m ? Date.parse(m[1]) : NaN
+    // Untimestamped (legacy) blocks are archived: no date means no way to age them out later.
+    if (Number.isFinite(ts) && ts >= cutoff) keep.push(b)
+    else archive.push(b)
+  }
+
+  if (archive.length === 0) return
+
+  console.log(`\n  Error Log Rotation`)
+  console.log(`  ─────────────────────────────`)
+  if (DRY_RUN) {
+    console.log(`  [DRY RUN] Would archive ${archive.length} old block(s), keep ${keep.length}`)
+    return
+  }
+
+  if (!fs.existsSync(ARCHIVE_DIR)) fs.mkdirSync(ARCHIVE_DIR, { recursive: true })
+  const archiveFile = path.join(ARCHIVE_DIR, 'error-log-archive.log')
+  fs.appendFileSync(archiveFile, archive.join('\n') + '\n')
+  fs.writeFileSync(ERROR_LOG, keep.length ? keep.join('\n') + '\n' : '')
+  console.log(`  Archived ${archive.length} old block(s) → .mycelium/archive/error-log-archive.log`)
+  console.log(`  Kept ${keep.length} recent block(s)`)
+}
+
 // ── Main ───────────────────────────────────────────────────
 trimMemory()
 trimWatch()
+rotateErrorLog()
 console.log()
