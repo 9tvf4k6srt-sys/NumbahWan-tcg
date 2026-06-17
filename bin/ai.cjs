@@ -84,6 +84,10 @@ const COMMANDS = {
     desc: 'Project health score (sentinel dashboard)',
     run: () => runNode('bin/agent-brief.cjs', ['--health']),
   },
+  scorecard: {
+    desc: 'Session Scorecard — efficiency, waste, catch-rate & learning trend (proof you are improving)',
+    run: () => runNode('bin/session-scorecard.cjs', REST),
+  },
   playbook: {
     desc: 'Print path to AI_PLAYBOOK.md — read this file first',
     run: () => {
