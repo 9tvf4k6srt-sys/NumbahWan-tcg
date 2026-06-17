@@ -7,6 +7,11 @@
 
 Last verified: **2026-06-17**
 
+> **These checks run in CI on every push and PR** via
+> [`.github/workflows/ci.yml`](.github/workflows/ci.yml). The live CI badge at
+> the top of the README turns red the moment any claim below stops being true —
+> so this audit can't silently rot. A green badge *is* the proof.
+
 ---
 
 ## Why this file exists
