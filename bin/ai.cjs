@@ -88,6 +88,10 @@ const COMMANDS = {
     desc: 'Session Scorecard — efficiency, waste, catch-rate & learning trend (proof you are improving)',
     run: () => runNode('bin/session-scorecard.cjs', REST),
   },
+  budget: {
+    desc: 'Active token budget — declare/check/spend/status/close a per-task token contract',
+    run: () => runNode('bin/token-budget.cjs', REST),
+  },
   playbook: {
     desc: 'Print path to AI_PLAYBOOK.md — read this file first',
     run: () => {
@@ -481,7 +485,7 @@ function help() {
   println(`${C.dim}Read AI_PLAYBOOK.md first. Everything routes through here.${C.r}\n`);
 
   const groups = {
-    'Onboarding':   ['brief', 'context', 'rules', 'health', 'playbook', 'taste', 'efficiency', 'collab', 'pulse', 'hooks'],
+    'Onboarding':   ['brief', 'context', 'rules', 'health', 'scorecard', 'budget', 'playbook', 'taste', 'efficiency', 'collab', 'pulse', 'hooks'],
     'Produce':      ['forge', 'voice', 'naturalness', 'sheen'],
     'Memory':       ['premortem', 'whyfile', 'memory'],
     'Guardian':     ['guard', 'heal', 'aitell', 'layout', 'pagesize', 'assets', 'render', 'preship'],

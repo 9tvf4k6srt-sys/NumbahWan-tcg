@@ -43,6 +43,7 @@ const EFFICIENCY = path.join(MY, 'efficiency.json');
 const EFFICIENCY_ARCHIVE = path.join(MY, 'efficiency-archive.json');
 const EVENTS = path.join(MY, 'events.jsonl');
 const EVAL_HISTORY = path.join(MY, 'eval-history.json');
+const BUDGET_WASTE = path.join(MY, 'budget-waste.jsonl');
 
 const args = process.argv.slice(2);
 const JSON_OUT = args.includes('--json');
@@ -114,6 +115,15 @@ function efficiencyAndWaste() {
       (typeof e.churnRatio === 'number' && e.churnRatio > 200)
   ).length;
 
+  // Budget overruns — the strongest waste signal: the engineer DECLARED a token
+  // budget for a slice (via token-budget.cjs) and blew past it. Self-reported,
+  // intent-relative waste, fed in from .mycelium/budget-waste.jsonl.
+  const budgetRecords = readJSONL(BUDGET_WASTE).slice(-WINDOW);
+  const budgetClosed = budgetRecords.length;
+  const budgetOverruns = budgetRecords.filter((r) => r && r.overBudget).length;
+  const tokensWasted = budgetRecords.reduce((s, r) => s + (r && r.wastedTokens ? r.wastedTokens : 0), 0);
+  const budgetOverrunRate = budgetClosed ? +(budgetOverruns / budgetClosed).toFixed(2) : null;
+
   // Trend: median of the older half vs. the newer half of the window.
   let trend = null;
   if (leanScores.length >= 4) {
@@ -133,6 +143,11 @@ function efficiencyAndWaste() {
       heavyReadSlices,
       sprawlSlices,
       highChurnSlices,
+      // budget-contract signals (null when no budgets have been closed yet)
+      budgetClosed,
+      budgetOverruns,
+      budgetOverrunRate,
+      tokensWasted,
     },
   };
 }
@@ -192,7 +207,17 @@ function magnification(eff, ctch, learn) {
   if (eff.medianLeanness != null) parts.push({ v: eff.medianLeanness, w: 0.35 });
   // Waste only counts as a signal once there are slices to judge — otherwise a
   // brand-new repo with zero data would score a misleading 100 on "no waste".
-  if (eff.slicesConsidered > 0) parts.push({ v: (1 - eff.waste.wasteRate) * 100, w: 0.2 });
+  // When token budgets have been declared+closed, fold their overrun rate into
+  // the waste sub-score (50/50) so self-declared budget discipline counts too.
+  if (eff.slicesConsidered > 0 || eff.waste.budgetOverrunRate != null) {
+    const sliceClean = eff.slicesConsidered > 0 ? (1 - eff.waste.wasteRate) : null;
+    const budgetClean = eff.waste.budgetOverrunRate != null ? (1 - eff.waste.budgetOverrunRate) : null;
+    const cleans = [sliceClean, budgetClean].filter((x) => x != null);
+    if (cleans.length) {
+      const avgClean = cleans.reduce((s, x) => s + x, 0) / cleans.length;
+      parts.push({ v: avgClean * 100, w: 0.2 });
+    }
+  }
   if (ctch.catchRate != null) parts.push({ v: ctch.catchRate * 100, w: 0.3 });
   if (learn.recentAvg != null) parts.push({ v: learn.recentAvg, w: 0.15 });
   // No real signals → no honest composite. Return null, not a fake perfect score.
@@ -250,6 +275,14 @@ function render(r) {
   const w = e.waste;
   lines.push(`  ${C.b}2 · Waste${C.r}  ${C.dim}(avoidable spend in window)${C.r}`);
   lines.push(`      ${w.wasteSlices} of ${e.slicesConsidered} slices flagged  ${C.dim}·${C.r}  re-reads:${w.heavyReadSlices} sprawl:${w.sprawlSlices} churn:${w.highChurnSlices}`);
+  if (w.budgetClosed > 0) {
+    const bcol = w.budgetOverruns ? C.yellow : C.green;
+    lines.push(
+      `      ${bcol}token budgets: ${w.budgetOverruns}/${w.budgetClosed} over${C.r}  ${C.dim}·${C.r}  ${w.tokensWasted.toLocaleString()} tok over budget`
+    );
+  } else {
+    lines.push(`      ${C.dim}token budgets: none declared yet — run "ai budget declare" before a slice${C.r}`);
+  }
   lines.push('');
 
   const c = r.catch;

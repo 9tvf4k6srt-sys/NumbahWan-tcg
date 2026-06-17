@@ -59,4 +59,30 @@ describe('magnification — honesty rules', () => {
     expect(r).toBeLessThanOrEqual(100);
     expect(r).toBeGreaterThanOrEqual(0);
   });
+
+  it('folds token-budget overruns into the waste sub-score', () => {
+    // Same slice waste, but one repo blew every declared budget. It must score
+    // strictly lower, because budget discipline is a real, self-reported signal.
+    const disciplined = {
+      medianLeanness: 90,
+      slicesConsidered: 10,
+      waste: { wasteRate: 0, budgetOverrunRate: 0 },
+    };
+    const overspent = {
+      medianLeanness: 90,
+      slicesConsidered: 10,
+      waste: { wasteRate: 0, budgetOverrunRate: 1 },
+    };
+    const a = magnification(disciplined, { catchRate: 0.9 }, { recentAvg: 80 });
+    const b = magnification(overspent, { catchRate: 0.9 }, { recentAvg: 80 });
+    expect(b).toBeLessThan(a);
+  });
+
+  it('counts budget discipline even when no efficiency slices exist', () => {
+    // No slices logged, but the user declared+closed budgets without overrunning.
+    // That clean budget signal must register (not be ignored like empty waste).
+    const eff = { medianLeanness: null, slicesConsidered: 0, waste: { wasteRate: 0, budgetOverrunRate: 0 } };
+    const r = magnification(eff, { catchRate: null }, { recentAvg: null });
+    expect(r).toBe(100); // only real signal is a perfectly-clean budget record
+  });
 });
