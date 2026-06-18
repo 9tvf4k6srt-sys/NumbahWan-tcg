@@ -92,6 +92,15 @@ const COMMANDS = {
     desc: 'Active token budget — declare/check/spend/status/close a per-task token contract',
     run: () => runNode('bin/token-budget.cjs', REST),
   },
+  loop: {
+    desc: 'Learning loop — capture/recurring/status; turns repeated escapes into permanent gates',
+    run: () => runNode('bin/learn-loop.cjs', REST),
+  },
+  task: {
+    desc: 'Context firewall — task-scoped brief (gates + past defects + files) so you skip reading the whole repo',
+    usage: 'task "<what you are about to do>"',
+    run: () => runNode('bin/task-brief.cjs', REST),
+  },
   playbook: {
     desc: 'Print path to AI_PLAYBOOK.md — read this file first',
     run: () => {
@@ -344,10 +353,11 @@ const COMMANDS = {
         ['page-size baseline','tools/page-size-lint.cjs', files.length ? files : ['--baseline']],
       ];
       let failed = 0;
+      const failedGates = [];
       for (const [label, script, args] of steps) {
         println(`\n${C.b}── ${label} ──${C.r}`);
         const status = runStep(script, args);
-        if (status !== 0) { failed++; println(`${C.red}✗ ${label} failed (exit ${status})${C.r}`); }
+        if (status !== 0) { failed++; failedGates.push(label); println(`${C.red}✗ ${label} failed (exit ${status})${C.r}`); }
       }
       // Render-risk gate: static catch for the visual bugs that cause re-see
       // loops (word-fuse, mid-word break, mobile overflow, oversized headline).
@@ -357,7 +367,7 @@ const COMMANDS = {
       if (htmlFiles.length) {
         println(`\n${C.b}── render risk ──${C.r}`);
         const status = runStep('tools/render-risk-lint.cjs', ['--strict', ...htmlFiles]);
-        if (status !== 0) { failed++; println(`${C.red}✗ render risk failed (exit ${status})${C.r}`); }
+        if (status !== 0) { failed++; failedGates.push('render risk'); println(`${C.red}✗ render risk failed (exit ${status})${C.r}`); }
       }
       // Asset transparency gate: only when a guild page (which embeds the emblem) is in scope.
       const touchesGuild = files.some(f => f.includes('guild/'));
@@ -366,10 +376,24 @@ const COMMANDS = {
         const status = runPyStep('tools/asset-alpha-lint.py',
           ['public/guild/brightinside/assets/paradox-emblem.webp',
            'public/guild/brightinside/assets/paradox-lockup.webp']);
-        if (status !== 0) { failed++; println(`${C.red}✗ asset alpha failed (exit ${status})${C.r}`); }
+        if (status !== 0) { failed++; failedGates.push('asset alpha'); println(`${C.red}✗ asset alpha failed (exit ${status})${C.r}`); }
       }
       println('');
-      if (failed) { println(`${C.red}preship: ${failed} gate(s) failed — fix before shipping.${C.r}`); process.exit(1); }
+      if (failed) {
+        // Close the learning loop: every gate that caught something becomes a
+        // logged defect. The SECOND time the same thing slips, learn-loop
+        // auto-promotes it to a permanent gate. This is what makes the repo get
+        // better as you build instead of catching the same tells forever.
+        // Skipped with --no-learn (e.g. in CI where memory shouldn't mutate).
+        if (!REST.includes('--no-learn')) {
+          for (const g of failedGates) {
+            runStep('bin/learn-loop.cjs', ['capture', g.split(' ')[0], `${g} gate flagged something pre-ship`, '--severity=high']);
+          }
+          println(`${C.dim}↳ ${failedGates.length} failure(s) captured to the learning loop (repeats become permanent gates).${C.r}`);
+        }
+        println(`${C.red}preship: ${failed} gate(s) failed — fix before shipping.${C.r}`);
+        process.exit(1);
+      }
       println(`${C.cyan}preship: all gates clean — ready to ship.${C.r}`);
       process.exit(0);
     },
@@ -485,9 +509,9 @@ function help() {
   println(`${C.dim}Read AI_PLAYBOOK.md first. Everything routes through here.${C.r}\n`);
 
   const groups = {
-    'Onboarding':   ['brief', 'context', 'rules', 'health', 'scorecard', 'budget', 'playbook', 'taste', 'efficiency', 'collab', 'pulse', 'hooks'],
+    'Onboarding':   ['brief', 'context', 'rules', 'health', 'task', 'scorecard', 'budget', 'playbook', 'taste', 'efficiency', 'collab', 'pulse', 'hooks'],
     'Produce':      ['forge', 'voice', 'naturalness', 'sheen'],
-    'Memory':       ['premortem', 'whyfile', 'memory'],
+    'Memory':       ['premortem', 'whyfile', 'memory', 'loop'],
     'Guardian':     ['guard', 'heal', 'aitell', 'layout', 'pagesize', 'assets', 'render', 'preship'],
     'Deploy':       ['ship'],
     'Learn from repo': ['examples', 'learn'],
