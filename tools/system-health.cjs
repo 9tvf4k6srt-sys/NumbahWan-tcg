@@ -134,12 +134,22 @@ function collectObservers() {
 function collectGates() {
   const tsc    = safeJSON(path.join(MYC, 'tsc-results.json'))
   const vit    = safeJSON(path.join(MYC, 'vitest-results.json'))
-  const smoke  = safeJSON(path.join(MYC, 'smoke-report.json'))
+  let smoke    = safeJSON(path.join(MYC, 'smoke-report.json'))
 
   const parts = []
   let scoreSum = 0
   let scoreN = 0
   let worst = 'ok'
+
+  // Stale gate guard: a smoke report from months ago is not a live gate.
+  // (A Feb-18 "1 failed" was dragging gates down in June — old news, not signal.)
+  if (smoke && smoke.timestamp) {
+    const age = Date.now() - Date.parse(smoke.timestamp)
+    if (Number.isFinite(age) && age > 14 * 86400000) {
+      parts.push(`smoke:stale(${Math.round(age / 86400000)}d)`)
+      smoke = null
+    }
+  }
 
   if (tsc) {
     const ok = tsc.total === 0
@@ -188,11 +198,32 @@ function collectErrors() {
   const log = safeRead(path.join(MYC, 'last-error.log'))
   if (!log) return { status: 'ok', score: 100, detail: 'no recorded failures' }
   const blocks = log.split(/\n(?=\[)/).filter(Boolean)
-  const recent = blocks.slice(-3).map((b) => b.split('\n')[0].trim())
+
+  // Recency-aware: a fixed failure should stop hurting the score.
+  // Blocks carry a `[ISO-stamp]` header; only the last 14 days count.
+  // (Previously every block ever logged subtracted 10 points forever,
+  // so the health grade never recovered after a root-cause fix.)
+  const cutoff = Date.now() - 14 * 86400000
+  const recentBlocks = blocks.filter((b) => {
+    const m = b.match(/^\[([^\]]+)\]/)
+    if (!m) return false // legacy/untimestamped content — informational only
+    const ts = Date.parse(m[1])
+    return Number.isFinite(ts) && ts >= cutoff
+  })
+
+  if (recentBlocks.length === 0) {
+    return {
+      status: 'ok',
+      score: 100,
+      detail: `no failures in 14d (${blocks.length} older block${blocks.length === 1 ? '' : 's'} on file)`,
+    }
+  }
+
+  const last = recentBlocks[recentBlocks.length - 1].split('\n')[0].trim()
   return {
-    status: blocks.length > 5 ? 'failing' : 'watch',
-    score: Math.max(0, 100 - blocks.length * 10),
-    detail: `${blocks.length} failure blocks · last: ${recent[recent.length - 1] || 'none'}`,
+    status: recentBlocks.length > 5 ? 'failing' : 'watch',
+    score: Math.max(0, 100 - recentBlocks.length * 10),
+    detail: `${recentBlocks.length} failure block(s) in 14d · last: ${last}`,
   }
 }
 

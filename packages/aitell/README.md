@@ -42,7 +42,7 @@ const aitell = require('aitell');
 
 // 1. Phrase blocklist
 const text = aitell.lintText('Let us delve into a rich tapestry of features.', aitell.defaultCorpus);
-console.log(text.blocked);            // 2
+console.log(text.blocked);            // 3
 console.log(text.violations[0].match); // "delve into"
 
 // 2. Visual tells

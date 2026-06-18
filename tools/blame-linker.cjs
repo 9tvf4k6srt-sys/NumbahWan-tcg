@@ -33,7 +33,16 @@ const ENRICHED = path.join(ROOT, '.mycelium-mined', 'webapp-enriched.json');
 const EXTRACTED = path.join(ROOT, '.mycelium-mined', 'webapp-extracted.json');
 
 function run(cmd, fallback = '') {
-  try { return execSync(cmd, { cwd: ROOT, encoding: 'utf8', timeout: 10000 }).trim(); } catch { return fallback; }
+  try { return execSync(cmd, { cwd: ROOT, encoding: 'utf8', timeout: 10000, stdio: ['pipe', 'pipe', 'ignore'] }).trim(); } catch { return fallback; }
+}
+
+// Root cause guard: this repo squash-merges every PR, so hashes recorded in
+// mined data (b855259, dc5ae0d, …) routinely stop existing. Blaming them
+// sprayed `fatal: bad revision` into .mycelium/last-error.log on every
+// post-commit run. Verify the revision exists before any blame/diff call.
+function revExists(hash) {
+  if (!hash) return false;
+  return run(`git rev-parse --verify --quiet ${hash}^{commit}`, '') !== '';
 }
 
 function readJSON(f) {
@@ -149,6 +158,8 @@ function linkAll(limit) {
     if (!hash || fileNames.length === 0) { noBlame++; continue; }
 
     const shortHash = hash.slice(0, 12);
+    // Squash-merge rewrote history — the mined hash may no longer resolve.
+    if (!revExists(shortHash)) { noBlame++; continue; }
     const intro = blameFixCommit(shortHash, fileNames);
 
     const link = {

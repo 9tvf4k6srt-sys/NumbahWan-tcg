@@ -50,6 +50,13 @@ The rule of thumb: **read less to know more, write once, verify once.**
 ## Start-of-task checklist (cheap, saves the most)
 
 - `node bin/ai.cjs memory query` once for project intel instead of re-reading docs.
+- `node bin/ai.cjs budget declare "<task>" --budget=8000` to open a token
+  contract, then `budget check <files>` *before* each read — it blocks plans
+  that would blow the budget and hands you the cheaper grep pattern
+  (see `docs/TOKEN-BUDGET.md`).
+- `node bin/ai.cjs scorecard` to see your efficiency/waste/catch-rate trend —
+  the one number that proves whether you're actually getting leaner over time
+  (see `docs/SESSION-SCORECARD.md`).
 - Find the anchor (`grep -n`) before opening any file > ~400 lines.
 - Plan the edits, then make them. Avoid read → edit → re-read → edit churn on the
   same file; `MultiEdit` batches changes to one file in one pass.

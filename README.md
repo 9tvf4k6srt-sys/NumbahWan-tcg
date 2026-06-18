@@ -4,6 +4,7 @@
 
 ### A factory that builds web pages from YAML specs — and gets smarter every time it runs.
 
+[![CI](https://github.com/9tvf4k6srt-sys/NumbahWan-tcg/actions/workflows/ci.yml/badge.svg)](https://github.com/9tvf4k6srt-sys/NumbahWan-tcg/actions/workflows/ci.yml)
 [![Tests](https://img.shields.io/badge/tests-145_passing-2ea043?style=for-the-badge)](src/__tests__)
 [![aitell](https://img.shields.io/badge/aitell-AI--tell_linter-00d4ff?style=for-the-badge)](packages/aitell)
 [![Dark Factory](https://img.shields.io/badge/Dark_Factory-Gen_2-ff6b6b?style=for-the-badge)]()
@@ -28,6 +29,9 @@
 > for every product we make. One line: *precision you feel but can't see.*
 >
 > Latest refactor: [`AUDIT-2026-04.md`](./AUDIT-2026-04.md) · Session protocol: [`CLAUDE.md`](./CLAUDE.md)
+>
+> **Every badge above is reproducible.** See [`CREDIBILITY.md`](./CREDIBILITY.md)
+> for the exact command behind each number and the date it was last measured.
 
 ---
 
@@ -454,7 +458,7 @@ Database:     Cloudflare D1 (SQLite) + KV for memory/caching
 Hosting:      Cloudflare Pages + Workers
 Factory:      12 Node.js tools in bin/, YAML specs in specs/
 Memory:       .mycelium/factory-memory.json (lessons, patterns, DNA)
-Testing:      125 PCP tests + 94 Vitest + 54 Mycelium regression tests
+Testing:      125 PCP tests + 145 Vitest (147 incl. skipped) + 54 Mycelium regression tests
 CI/CD:        GitHub Actions → Cloudflare deploy
 ```
 
