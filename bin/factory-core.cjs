@@ -31,14 +31,17 @@ const LOG_DIR = path.join(MYCELIUM_DIR, 'factory-logs');
 // ═══════════════════════════════════════════════════════════════
 // 1. CONSOLE COLORS & LOGGING
 // ═══════════════════════════════════════════════════════════════
-const B = '\x1b[1m';
-const G = '\x1b[32m';
-const R = '\x1b[31m';
-const Y = '\x1b[33m';
-const C = '\x1b[36m';
-const M = '\x1b[35m';
-const D = '\x1b[2m';
-const X = '\x1b[0m';
+const { colors } = require('../tools/lib/aitell-common.cjs');
+// TTY-aware palette (no-ops when piped / NO_COLOR); names kept so call sites are unchanged.
+const _c = colors(process.stdout);
+const B = _c.b;
+const G = _c.green;
+const R = _c.red;
+const Y = _c.yellow;
+const C = _c.cyan;
+const M = _c.mag;
+const D = _c.dim;
+const X = _c.r;
 
 const ok    = m => console.log(`  ${G}\u2713${X} ${m}`);
 const fail  = m => console.log(`  ${R}\u2717${X} ${m}`);

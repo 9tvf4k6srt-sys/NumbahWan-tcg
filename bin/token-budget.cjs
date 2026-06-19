@@ -25,11 +25,15 @@
 const fs = require('fs');
 const path = require('path');
 
-let colors;
+let colors, argFlag;
 try {
-  ({ colors } = require('../tools/lib/aitell-common.cjs'));
+  ({ colors, argFlag } = require('../tools/lib/aitell-common.cjs'));
 } catch {
   colors = () => new Proxy({}, { get: () => '' });
+  argFlag = (name, dflt, argv) => {
+    const a = (argv || process.argv.slice(2)).find((x) => x.startsWith(`--${name}=`));
+    return a ? a.slice(name.length + 3) : dflt;
+  };
 }
 
 const ROOT = path.resolve(__dirname, '..');
@@ -46,10 +50,8 @@ const args = process.argv.slice(2);
 const cmd = args[0];
 const JSON_OUT = args.includes('--json');
 
-function flag(name, dflt) {
-  const a = args.find((x) => x.startsWith(`--${name}=`));
-  return a ? a.split('=')[1] : dflt;
-}
+// thin wrapper so existing call sites (flag('budget', ...)) stay unchanged
+const flag = (name, dflt) => argFlag(name, dflt, args);
 
 // ── estimation (matches mycelium fileCostTier) ───────────────────────────────
 function estimateFileTokens(fp) {

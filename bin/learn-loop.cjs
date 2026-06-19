@@ -24,11 +24,15 @@
 const path = require('path');
 const fm = require('./factory-memory.cjs');
 
-let colors;
+let colors, argFlag;
 try {
-  ({ colors } = require('../tools/lib/aitell-common.cjs'));
+  ({ colors, argFlag } = require('../tools/lib/aitell-common.cjs'));
 } catch {
   colors = () => new Proxy({}, { get: () => '' });
+  argFlag = (name, dflt, argv) => {
+    const a = (argv || process.argv.slice(2)).find((x) => x.startsWith(`--${name}=`));
+    return a ? a.slice(name.length + 3) : dflt;
+  };
 }
 const C = colors(process.stdout);
 
@@ -36,10 +40,8 @@ const args = process.argv.slice(2);
 const cmd = args[0];
 const JSON_OUT = args.includes('--json');
 
-function flag(name, dflt) {
-  const a = args.find((x) => x.startsWith(`--${name}=`));
-  return a ? a.split('=')[1] : dflt;
-}
+// thin wrapper so existing call sites (flag('gate', ...)) stay unchanged
+const flag = (name, dflt) => argFlag(name, dflt, args);
 
 // ── map a gate/tool to a defect category + a prevention rule ─────────────────
 // Categories line up with factory-memory's buckets and evolve()'s grouping so
