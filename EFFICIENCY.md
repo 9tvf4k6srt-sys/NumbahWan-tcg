@@ -61,6 +61,11 @@ The rule of thumb: **read less to know more, write once, verify once.**
 - `node bin/ai.cjs scorecard` to see your efficiency/waste/catch-rate trend —
   the one number that proves whether you're actually getting leaner over time
   (see `docs/SESSION-SCORECARD.md`).
+- `node bin/ai.cjs optimize status` periodically — it scores the standing rules
+  by real defect recurrence and flags the **weak** ones (rules that exist but
+  still let defects through); `optimize propose` hands you sharper replacements
+  (see `docs/OPTIMIZE-LOOP.md`). This is how the rule set gets better, not just
+  bigger.
 - Find the anchor (`grep -n`) before opening any file > ~400 lines.
 - Plan the edits, then make them. Avoid read → edit → re-read → edit churn on the
   same file; `MultiEdit` batches changes to one file in one pass.

@@ -96,6 +96,11 @@ const COMMANDS = {
     desc: 'Learning loop — capture/recurring/status; turns repeated escapes into permanent gates',
     run: () => runNode('bin/learn-loop.cjs', REST),
   },
+  optimize: {
+    desc: 'Evaluator-optimizer — score standing rules by real recurrence, propose/apply sharper ones',
+    usage: 'optimize evaluate|propose|apply|status [--json]',
+    run: () => runNode('bin/optimize-loop.cjs', REST),
+  },
   task: {
     desc: 'Context firewall — task-scoped brief (gates + past defects + files) so you skip reading the whole repo',
     usage: 'task "<what you are about to do>"',
@@ -395,6 +400,17 @@ const COMMANDS = {
         process.exit(1);
       }
       println(`${C.cyan}preship: all gates clean — ready to ship.${C.r}`);
+      // Read-only nudge: if any standing rule keeps letting defects recur in its
+      // category, the rule is weak — surface it so you can sharpen it with
+      // `ai optimize propose`. Never mutates memory mid-build; just reports.
+      try {
+        const { categoryStats, scoreRule } = require('./optimize-loop.cjs');
+        const fmem = require('./factory-memory.cjs').loadMemory();
+        const stats = categoryStats(fmem);
+        const checks = (fmem.patterns && fmem.patterns.required_checks) || [];
+        const weak = checks.map((r) => scoreRule(r, stats)).filter((s) => s.verdict === 'weak').length;
+        if (weak) println(`${C.dim}↳ ${weak} standing rule(s) still let defects recur — run \`ai optimize propose\` to sharpen them.${C.r}`);
+      } catch { /* optimizer optional; never block a clean ship */ }
       process.exit(0);
     },
   },
@@ -511,7 +527,7 @@ function help() {
   const groups = {
     'Onboarding':   ['brief', 'context', 'rules', 'health', 'task', 'scorecard', 'budget', 'playbook', 'taste', 'efficiency', 'collab', 'pulse', 'hooks'],
     'Produce':      ['forge', 'voice', 'naturalness', 'sheen'],
-    'Memory':       ['premortem', 'whyfile', 'memory', 'loop'],
+    'Memory':       ['premortem', 'whyfile', 'memory', 'loop', 'optimize'],
     'Guardian':     ['guard', 'heal', 'aitell', 'layout', 'pagesize', 'assets', 'render', 'preship'],
     'Deploy':       ['ship'],
     'Learn from repo': ['examples', 'learn'],
