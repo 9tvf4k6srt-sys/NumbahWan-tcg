@@ -346,7 +346,9 @@ Asset: ${assetId}, Category: ${category}`;
 
 if (require.main === module) {
   const args = process.argv.slice(2);
-  const B = '\x1b[1m', G = '\x1b[32m', R = '\x1b[31m', Y = '\x1b[33m', C = '\x1b[36m', X = '\x1b[0m';
+  // TTY-aware palette (no-ops when piped / NO_COLOR); names kept so call sites are unchanged.
+  const _c = require('../tools/lib/aitell-common.cjs').colors(process.stdout);
+  const B = _c.b, G = _c.green, R = _c.red, Y = _c.yellow, C = _c.cyan, X = _c.r;
 
   if (args.includes('--status')) {
     console.log(`\n  ${B}Art Pipeline v3.0 — Status Report${X}\n  ${'═'.repeat(50)}`);

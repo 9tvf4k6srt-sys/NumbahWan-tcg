@@ -26,7 +26,10 @@ const path = require('path');
 
 const ROOT = path.resolve(__dirname, '..');
 const LOG = path.join(ROOT, '.mycelium', 'agent-log.jsonl');
-const B = '\x1b[1m', G = '\x1b[32m', R = '\x1b[31m', Y = '\x1b[33m', C = '\x1b[36m', X = '\x1b[0m';
+const { colors } = require('../tools/lib/aitell-common.cjs');
+// TTY-aware palette (no-ops when piped / NO_COLOR); names kept so call sites are unchanged.
+const _c = colors(process.stdout);
+const B = _c.b, G = _c.green, R = _c.red, Y = _c.yellow, C = _c.cyan, X = _c.r;
 const ok = m => console.log(`  ${G}✓${X} ${m}`);
 const fail = m => console.log(`  ${R}✗${X} ${m}`);
 const info = m => console.log(`  ${C}ℹ${X} ${m}`);

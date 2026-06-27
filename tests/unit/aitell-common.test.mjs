@@ -5,7 +5,7 @@
 import { describe, it, expect } from 'vitest';
 import { createRequire } from 'node:module';
 const require = createRequire(import.meta.url);
-const { stripMarkupAndCode, isCJK, tryParseJSON } = require('../../tools/lib/aitell-common.cjs');
+const { stripMarkupAndCode, isCJK, tryParseJSON, colors, argFlag, hasFlag, repoRoot } = require('../../tools/lib/aitell-common.cjs');
 
 describe('stripMarkupAndCode — keeps prose, drops machine text', () => {
   it('removes <style> blocks and their contents', () => {
@@ -82,5 +82,83 @@ describe('tryParseJSON — parses or returns null, never throws', () => {
 
   it('returns null on empty input', () => {
     expect(tryParseJSON('')).toBeNull();
+  });
+});
+
+// This is the regression guard for a real bug: ~18 tools used to hardcode ANSI
+// escapes that were NOT TTY-aware, so piping their output (CI, scripts, JSON
+// consumers) got corrupted with raw `\x1b[` codes. colors() is the one home for
+// the palette; these tests pin its contract so the leak can't come back.
+describe('colors — TTY-aware palette (no raw escapes in pipes)', () => {
+  const SAVED = { NO_COLOR: process.env.NO_COLOR, FORCE_COLOR: process.env.FORCE_COLOR };
+  const clearEnv = () => { delete process.env.NO_COLOR; delete process.env.FORCE_COLOR; };
+  const restore = () => {
+    if (SAVED.NO_COLOR === undefined) delete process.env.NO_COLOR; else process.env.NO_COLOR = SAVED.NO_COLOR;
+    if (SAVED.FORCE_COLOR === undefined) delete process.env.FORCE_COLOR; else process.env.FORCE_COLOR = SAVED.FORCE_COLOR;
+  };
+
+  it('returns empty strings for a non-TTY stream (clean pipes)', () => {
+    clearEnv();
+    const c = colors({ isTTY: false });
+    expect(c.red).toBe('');
+    expect(c.b).toBe('');
+    restore();
+  });
+
+  it('returns real escape codes for a TTY stream', () => {
+    clearEnv();
+    const c = colors({ isTTY: true });
+    expect(c.red).toContain('[31m');
+    expect(c.r).toContain('[0m');
+    restore();
+  });
+
+  it('NO_COLOR wins even on a TTY', () => {
+    clearEnv();
+    process.env.NO_COLOR = '1';
+    expect(colors({ isTTY: true }).red).toBe('');
+    restore();
+  });
+
+  it('FORCE_COLOR colors even a non-TTY (for CI logs that want color)', () => {
+    clearEnv();
+    process.env.FORCE_COLOR = '1';
+    expect(colors({ isTTY: false }).green).toContain('[32m');
+    restore();
+  });
+
+  it('exposes all 8 documented color keys', () => {
+    clearEnv();
+    const c = colors({ isTTY: true });
+    for (const k of ['r', 'b', 'dim', 'cyan', 'green', 'yellow', 'red', 'mag']) {
+      expect(typeof c[k]).toBe('string');
+      expect(c[k].length).toBeGreaterThan(0);
+    }
+    restore();
+  });
+});
+
+describe('argFlag / hasFlag — the arg parser 3+ tools had copy-pasted', () => {
+  it('reads --name=value from a supplied argv', () => {
+    expect(argFlag('budget', null, ['--budget=8000'])).toBe('8000');
+  });
+  it('returns the default when the flag is absent', () => {
+    expect(argFlag('budget', '500', ['--other=1'])).toBe('500');
+  });
+  it('handles values containing = signs (only splits on the first)', () => {
+    expect(argFlag('q', null, ['--q=a=b=c'])).toBe('a=b=c');
+  });
+  it('hasFlag detects a bare switch and a valued one', () => {
+    expect(hasFlag('json', ['--json'])).toBe(true);
+    expect(hasFlag('budget', ['--budget=1'])).toBe(true);
+    expect(hasFlag('json', ['--other'])).toBe(false);
+  });
+});
+
+describe('repoRoot — single source of truth for the repo root', () => {
+  it('resolves to a directory that contains package.json', () => {
+    const fs = require('node:fs');
+    const path = require('node:path');
+    expect(fs.existsSync(path.join(repoRoot(), 'package.json'))).toBe(true);
   });
 });

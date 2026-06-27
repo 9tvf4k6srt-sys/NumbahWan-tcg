@@ -24,14 +24,37 @@ const fs = require('fs');
 
 // ── terminal color palette (no-ops when not a TTY) ─────────────────────────
 const COLOR_KEYS = ['r', 'b', 'dim', 'cyan', 'green', 'yellow', 'red', 'mag'];
+const ANSI = {
+  r: '\x1b[0m', b: '\x1b[1m', dim: '\x1b[2m',
+  cyan: '\x1b[36m', green: '\x1b[32m', yellow: '\x1b[33m',
+  red: '\x1b[31m', mag: '\x1b[35m',
+};
 function colors(stream) {
-  const tty = stream && stream.isTTY;
+  // Respect the de-facto standards: NO_COLOR disables, FORCE_COLOR forces on.
+  // Otherwise emit codes only to a real TTY — so piped/captured output is clean
+  // (raw escape codes in a pipe corrupt logs, JSON consumers, and `grep`).
+  if (process.env.NO_COLOR) return Object.fromEntries(COLOR_KEYS.map(k => [k, '']));
+  const tty = (stream && stream.isTTY) || !!process.env.FORCE_COLOR;
   if (!tty) return Object.fromEntries(COLOR_KEYS.map(k => [k, '']));
-  return {
-    r: '\x1b[0m', b: '\x1b[1m', dim: '\x1b[2m',
-    cyan: '\x1b[36m', green: '\x1b[32m', yellow: '\x1b[33m',
-    red: '\x1b[31m', mag: '\x1b[35m',
-  };
+  return { ...ANSI };
+}
+
+// ── arg parsing: --name=value (the helper 3+ tools had copy-pasted) ─────────
+// Returns the value of `--<name>=...` from argv (default `dflt` if absent).
+function argFlag(name, dflt = null, argv = process.argv.slice(2)) {
+  const a = argv.find((x) => x.startsWith(`--${name}=`));
+  return a ? a.slice(name.length + 3) : dflt; // +3 for the leading `--` and `=`
+}
+// True if a bare `--<name>` switch is present.
+function hasFlag(name, argv = process.argv.slice(2)) {
+  return argv.includes(`--${name}`) || argv.some((x) => x.startsWith(`--${name}=`));
+}
+
+// ── repo root: resolve once instead of path.resolve(__dirname, '..') per file ─
+const path = require('path');
+function repoRoot() {
+  // This file lives at <root>/tools/lib/ — go up two levels.
+  return path.resolve(__dirname, '..', '..');
 }
 
 // ── safe wrappers ───────────────────────────────────────────────────────────
@@ -107,7 +130,11 @@ function colourEmojis(s) {
 
 module.exports = {
   COLOR_KEYS,
+  ANSI,
   colors,
+  argFlag,
+  hasFlag,
+  repoRoot,
   tryParseJSON,
   readUtf8,
   stripMarkupAndCode,

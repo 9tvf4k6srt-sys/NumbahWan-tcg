@@ -49,6 +49,10 @@ The rule of thumb: **read less to know more, write once, verify once.**
 
 ## Start-of-task checklist (cheap, saves the most)
 
+- `node bin/ai.cjs task "<what you're about to do>"` FIRST — the context
+  firewall hands you the gates, past defects, and the few files that matter in
+  ~200 tokens, so you don't read the whole repo and lose the thread
+  (see `docs/LEARNING-LOOP.md`).
 - `node bin/ai.cjs memory query` once for project intel instead of re-reading docs.
 - `node bin/ai.cjs budget declare "<task>" --budget=8000` to open a token
   contract, then `budget check <files>` *before* each read — it blocks plans

@@ -188,13 +188,30 @@ function learningTrend() {
   const last = scores[scores.length - 1];
   const recent = scores.slice(-Math.min(5, scores.length));
   const recentAvg = Math.round(recent.reduce((a, b) => a + b, 0) / recent.length);
+  // Prefer the REAL repeat-rate computed by the learning loop from actual
+  // defect recurrence (defect → lesson → gate). Fall back to the engine eval's
+  // self-reported value only when the loop has no data yet.
+  let repeatRate = evals[evals.length - 1].repeatRate ?? null;
+  let repeatSource = 'eval';
+  try {
+    const { recurrenceStats } = require('./learn-loop.cjs');
+    const fm = require('./factory-memory.cjs');
+    const s = recurrenceStats(fm.loadMemory());
+    if (s.repeatRate != null) {
+      repeatRate = s.repeatRate;
+      repeatSource = 'defects';
+    }
+  } catch {
+    /* learn-loop unavailable — keep the eval fallback */
+  }
   return {
     points: scores.length,
     firstScore: first,
     latestScore: last,
     recentAvg,
     delta: last != null && first != null ? last - first : null,
-    repeatRate: evals[evals.length - 1].repeatRate ?? null,
+    repeatRate,
+    repeatSource,
   };
 }
 
@@ -294,7 +311,9 @@ function render(r) {
   const l = r.learning;
   lines.push(`  ${C.b}4 · Learning${C.r}  ${C.dim}(engine score over ${l.points} evals)${C.r}`);
   if (l.points) {
-    lines.push(`      ${gradeColor(l.recentAvg) + l.recentAvg + '/100' + C.r} recent avg   since first: ${arrow(l.delta)}   ${C.dim}repeat-rate:${l.repeatRate ?? '?'}${C.r}`);
+    const rr = l.repeatRate == null ? '?' : `${Math.round(l.repeatRate * 100)}%`;
+    const rrSrc = l.repeatSource === 'defects' ? 'real defects' : 'eval';
+    lines.push(`      ${gradeColor(l.recentAvg) + l.recentAvg + '/100' + C.r} recent avg   since first: ${arrow(l.delta)}   ${C.dim}repeat-rate:${rr} (${rrSrc})${C.r}`);
   } else {
     lines.push(`      ${C.dim}no eval history — run: node mycelium.cjs --eval${C.r}`);
   }
