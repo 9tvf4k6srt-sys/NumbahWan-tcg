@@ -5,7 +5,7 @@
 import { describe, it, expect } from 'vitest';
 import { createRequire } from 'node:module';
 const require = createRequire(import.meta.url);
-const { build, categoriesFor } = require('../../bin/task-brief.cjs');
+const { build, categoriesFor, scaffold } = require('../../bin/task-brief.cjs');
 
 describe('categoriesFor — task language → memory categories', () => {
   it('routes layout language to the layout category', () => {
@@ -49,5 +49,42 @@ describe('build — the brief shape (reads live memory, must not throw)', () => 
     // With real memory present this should hold; with empty memory it is [] and
     // that is still valid. Just assert it is an array (shape contract).
     expect(Array.isArray(b.gates)).toBe(true);
+  });
+
+  it('emits the Role + Format + Constraints scaffold (Foundational Structure)', () => {
+    expect(typeof b.role).toBe('string');
+    expect(b.role.length).toBeGreaterThan(0);
+    expect(typeof b.format).toBe('string');
+    expect(b.format.length).toBeGreaterThan(0);
+    expect(Array.isArray(b.constraints)).toBe(true);
+  });
+});
+
+describe('scaffold — Role + Format + Constraints, derived not boilerplate', () => {
+  it('picks a category-specific role when the task hits a known area', () => {
+    const sc = scaffold(new Set(['layout']), []);
+    expect(sc.role).toMatch(/front-end/i);
+  });
+
+  it('picks a category-specific format when the task hits a known area', () => {
+    const sc = scaffold(new Set(['i18n']), []);
+    expect(sc.format).toMatch(/locale/i);
+  });
+
+  it('falls back to a sane default role/format for an unrouted task', () => {
+    const sc = scaffold(new Set(), []);
+    expect(sc.role).toMatch(/senior engineer/i);
+    expect(sc.format.length).toBeGreaterThan(0);
+  });
+
+  it('always includes the standing honesty constraint (outlives any gate)', () => {
+    const sc = scaffold(new Set(['types']), []);
+    expect(sc.constraints.some((c) => /honesty/i.test(c) && /unverified/i.test(c))).toBe(true);
+  });
+
+  it('turns real gates into do-not constraints (traceable, not invented)', () => {
+    const gates = [{ category: 'layout', rule: 'never ship CSS without preship', auto: true }];
+    const sc = scaffold(new Set(['layout']), gates);
+    expect(sc.constraints.some((c) => /preship/.test(c))).toBe(true);
   });
 });

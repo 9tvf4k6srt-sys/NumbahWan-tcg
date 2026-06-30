@@ -62,6 +62,59 @@ function tokenEstimate(text) {
   return Math.ceil(text.length / 4);
 }
 
+// ── Role + Format + Constraints scaffold ─────────────────────────────────────
+// The trainer cheat sheet's "Foundational Structure": Role + Task + Context +
+// Format + Constraints. The brief already gives Task (the string) + Context
+// (gates/defects/files). This adds the three missing legs — but DERIVED from the
+// task's own categories, never generic boilerplate. A scaffold the agent can
+// paste into a sub-prompt: who to be, what to emit, what not to do.
+//
+// Honesty rule: every constraint here traces to a real category the task hit or
+// a permanent gate the loop earned. We don't invent rules to look thorough.
+const ROLE_BY_CATEGORY = {
+  layout: 'senior front-end engineer who treats every visual change as a re-see-before-ship gate',
+  render: 'senior front-end engineer who treats every visual change as a re-see-before-ship gate',
+  i18n: 'localization engineer fluent in the trilingual surface (en/es/zh)',
+  'ai-tell': 'editor who strips buzzwords and AI-tell, writing in a plain human voice',
+  perf: 'performance engineer who tracks bundle weight and token cost religiously',
+  types: 'TypeScript engineer who keeps `tsc --noEmit` at zero errors',
+  logic: 'test-driven engineer who pins behaviour with a failing test first',
+  asset: 'asset pipeline engineer careful with alpha/transparency and file weight',
+};
+const DEFAULT_ROLE = 'senior engineer on this repo who works evidence-first and ships only what passes the gates';
+
+// Format = how the answer should come back, by the dominant category.
+const FORMAT_BY_CATEGORY = {
+  layout: 'a diff plus the exact `ai preship <files>` command run before any visual ship',
+  render: 'a diff plus the exact `ai preship <files>` command run before any visual ship',
+  i18n: 'parallel changes across all locales, listed per-locale so none is missed',
+  types: 'a diff that leaves `tsc --noEmit` clean — show the type, not just the value',
+  logic: 'the failing test first, then the change that makes it pass',
+};
+const DEFAULT_FORMAT = 'a focused diff + the one verification command that proves it (no prose victory laps)';
+
+function scaffold(cats, gates) {
+  const catList = [...cats];
+  // Role: first category with a specific role wins; else the default.
+  const roleCat = catList.find((c) => ROLE_BY_CATEGORY[c]);
+  const role = roleCat ? ROLE_BY_CATEGORY[roleCat] : DEFAULT_ROLE;
+
+  // Format: first category with a specific format wins; else the default.
+  const fmtCat = catList.find((c) => FORMAT_BY_CATEGORY[c]);
+  const format = fmtCat ? FORMAT_BY_CATEGORY[fmtCat] : DEFAULT_FORMAT;
+
+  // Constraints: the permanent gates that apply, phrased as do-not rules, plus
+  // the universal honesty brake. Each one traces to a real gate or the contract.
+  const constraints = [];
+  for (const g of gates.slice(0, 4)) {
+    constraints.push(`${g.category}: ${g.rule}`);
+  }
+  // the standing constraint that outlives any single gate
+  constraints.push('honesty: every claim of "done"/"passing" must cite the check that proves it, else say "unverified"');
+
+  return { role, format, constraints };
+}
+
 function build(task) {
   const mem = fm.loadMemory();
   const cats = categoriesFor(task);
@@ -105,9 +158,16 @@ function build(task) {
   // 4 · token budget suggestion — focused slices should stay small.
   const suggestedBudget = cats.has('layout') || cats.has('render') ? 12000 : 8000;
 
+  // 5 · Role + Format + Constraints scaffold (Foundational Structure) — derived
+  // from THIS task's categories + gates, not generic boilerplate.
+  const sc = scaffold(cats, gates);
+
   return {
     task,
     categories: [...cats],
+    role: sc.role,
+    format: sc.format,
+    constraints: sc.constraints,
     gates,
     pastDefects: defects,
     relevantFiles: [...fileHints],
@@ -122,6 +182,14 @@ function render(b) {
   L.push(`  ${C.b}Task Brief${C.r}  ${C.dim}${b.task || '(no task given)'}${C.r}`);
   L.push(`  ${C.dim}context firewall — hold THIS, not the whole repo${C.r}`);
   if (b.categories.length) L.push(`  ${C.dim}areas: ${b.categories.join(', ')}${C.r}`);
+  L.push('');
+
+  // 0 · the scaffold to paste into a sub-prompt (Role + Format + Constraints).
+  L.push(`  ${C.b}0 · Prompt scaffold${C.r}  ${C.dim}(Role + Task + Context + Format + Constraints)${C.r}`);
+  L.push(`     ${C.yellow}Role${C.r}     Act as a ${b.role}.`);
+  L.push(`     ${C.yellow}Format${C.r}   Return ${b.format}.`);
+  L.push(`     ${C.yellow}Don't${C.r}`);
+  for (const c of b.constraints) L.push(`        ${C.red}·${C.r} ${c}`);
   L.push('');
 
   L.push(`  ${C.b}1 · Gates you must satisfy${C.r}`);
@@ -161,4 +229,4 @@ if (require.main === module) {
   else process.stdout.write(render(b));
 }
 
-module.exports = { build, categoriesFor, KEYWORD_CATEGORY };
+module.exports = { build, categoriesFor, scaffold, KEYWORD_CATEGORY, ROLE_BY_CATEGORY, FORMAT_BY_CATEGORY };

@@ -97,9 +97,19 @@ const COMMANDS = {
     run: () => runNode('bin/learn-loop.cjs', REST),
   },
   optimize: {
-    desc: 'Evaluator-optimizer — score standing rules by real recurrence, propose/apply sharper ones',
-    usage: 'optimize evaluate|propose|apply|status [--json]',
+    desc: 'Evaluator-optimizer — score standing rules by real recurrence, propose/apply sharper ones (audit/rollback)',
+    usage: 'optimize evaluate|propose|apply|status|audit|rollback [--json]',
     run: () => runNode('bin/optimize-loop.cjs', REST),
+  },
+  route: {
+    desc: 'Complexity-aware routing — classify a task, score complexity, pick fast-path vs full-reasoning + technique + budget',
+    usage: 'route "<task>" [--json]',
+    run: () => runNode('bin/route-task.cjs', REST),
+  },
+  distill: {
+    desc: 'Distill proven rules/lessons/technique-evidence into a versioned, loadable playbook artifact (honesty-braked)',
+    usage: 'distill [--write] | distill show | distill verify <file>',
+    run: () => runNode('bin/playbook.cjs', REST),
   },
   protocol: {
     desc: 'Print the Response Protocol — the checkable per-answer operating checklist (honesty-braked)',
@@ -539,9 +549,9 @@ function help() {
   println(`${C.dim}Read AI_PLAYBOOK.md first. Everything routes through here.${C.r}\n`);
 
   const groups = {
-    'Onboarding':   ['brief', 'context', 'rules', 'health', 'task', 'protocol', 'scorecard', 'budget', 'playbook', 'taste', 'efficiency', 'collab', 'pulse', 'hooks'],
+    'Onboarding':   ['brief', 'context', 'rules', 'health', 'task', 'route', 'protocol', 'scorecard', 'budget', 'playbook', 'taste', 'efficiency', 'collab', 'pulse', 'hooks'],
     'Produce':      ['forge', 'voice', 'naturalness', 'sheen'],
-    'Memory':       ['premortem', 'whyfile', 'memory', 'loop', 'optimize', 'technique'],
+    'Memory':       ['premortem', 'whyfile', 'memory', 'loop', 'optimize', 'technique', 'distill'],
     'Guardian':     ['guard', 'heal', 'aitell', 'layout', 'pagesize', 'assets', 'render', 'preship'],
     'Deploy':       ['ship'],
     'Learn from repo': ['examples', 'learn'],
