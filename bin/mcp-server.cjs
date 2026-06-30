@@ -18,8 +18,20 @@ const fs = require('fs');
 const path = require('path');
 const readline = require('readline');
 
-const ROOT = path.resolve(__dirname, '..');
-const B = '\x1b[1m', G = '\x1b[32m', R = '\x1b[31m', X = '\x1b[0m';
+// Shared, TTY-aware plumbing: repoRoot() is the single source of truth for the
+// repo root, and colors() returns empty strings for non-TTY / NO_COLOR so the
+// --list / --call output never leaks raw escapes into a pipe (this is an MCP
+// stdio server — clean output matters). Falls back safely if the lib is absent.
+let repoRoot, colors;
+try {
+  ({ repoRoot, colors } = require('../tools/lib/aitell-common.cjs'));
+} catch {
+  repoRoot = () => path.resolve(__dirname, '..');
+  colors = () => new Proxy({}, { get: () => '' });
+}
+const ROOT = repoRoot();
+const _c = colors(process.stdout);
+const B = _c.b, G = _c.green, R = _c.red, X = _c.r;
 
 // ── Tool Registry ──
 const TOOLS = {

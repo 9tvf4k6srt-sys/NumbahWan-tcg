@@ -24,7 +24,17 @@ const { execSync } = require('child_process');
 const path = require('path');
 const fs = require('fs');
 
-const ROOT = path.resolve(__dirname, '..');
+// Shared, TTY-aware plumbing: repoRoot() is the single source of truth for the
+// repo root; colors() returns empty strings for non-TTY / NO_COLOR so piped
+// output (ship logs, CI) never leaks raw ANSI escapes. Safe fallback if absent.
+let repoRoot, colors;
+try {
+  ({ repoRoot, colors } = require('../tools/lib/aitell-common.cjs'));
+} catch {
+  repoRoot = () => path.resolve(__dirname, '..');
+  colors = () => new Proxy({}, { get: () => '' });
+}
+const ROOT = repoRoot();
 const VERSION = '4.0.0';
 
 // ─── Script paths (consolidated) ─────────────────────────────────
@@ -56,7 +66,8 @@ function runCapture(cmd, opts = {}) {
 
 // ─── Ship: atomic deploy workflow ────────────────────────────────
 function ship(commitMsg) {
-  const B = '\x1b[1m', G = '\x1b[32m', R = '\x1b[31m', Y = '\x1b[33m', X = '\x1b[0m', D = '\x1b[2m';
+  const _c = colors(process.stdout);
+  const B = _c.b, G = _c.green, R = _c.red, Y = _c.yellow, X = _c.r, D = _c.dim;
   const BRANCH = 'genspark_ai_developer';
 
   function step(n, label) { console.log(`\n  ${B}[${n}]${X} ${label}`); }
@@ -192,8 +203,9 @@ function ship(commitMsg) {
 }
 
 function banner() {
+  const _c = colors(process.stdout);
   console.log(`
-  \x1b[1m🍄 Mycelium v${VERSION}\x1b[0m — Codebase Immune System (Unified)
+  ${_c.b}🍄 Mycelium v${VERSION}${_c.r} — Codebase Immune System (Unified)
   ─────────────────────────────────────────────
   2 systems (was 9): guardian (sentinel.cjs) + memory (mycelium.cjs)
   `);
