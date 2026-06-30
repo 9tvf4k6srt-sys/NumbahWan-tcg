@@ -18,9 +18,9 @@
 const fs = require('fs');
 const path = require('path');
 
-const { colors } = require('../tools/lib/aitell-common.cjs');
+const { colors, repoRoot } = require('../tools/lib/aitell-common.cjs');
 
-const ROOT = path.resolve(__dirname, '..');
+const ROOT = repoRoot();
 const PUBLIC = path.join(ROOT, 'public');
 // TTY-aware palette (no-ops when piped / NO_COLOR) — keeps the original short
 // names so every call site is unchanged, but stops leaking raw escape codes
