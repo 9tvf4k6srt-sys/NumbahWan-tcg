@@ -101,6 +101,11 @@ const COMMANDS = {
     usage: 'optimize evaluate|propose|apply|status [--json]',
     run: () => runNode('bin/optimize-loop.cjs', REST),
   },
+  route: {
+    desc: 'Complexity-aware routing — classify a task, score complexity, pick fast-path vs full-reasoning + technique + budget',
+    usage: 'route "<task>" [--json]',
+    run: () => runNode('bin/route-task.cjs', REST),
+  },
   protocol: {
     desc: 'Print the Response Protocol — the checkable per-answer operating checklist (honesty-braked)',
     run: () => {
@@ -539,7 +544,7 @@ function help() {
   println(`${C.dim}Read AI_PLAYBOOK.md first. Everything routes through here.${C.r}\n`);
 
   const groups = {
-    'Onboarding':   ['brief', 'context', 'rules', 'health', 'task', 'protocol', 'scorecard', 'budget', 'playbook', 'taste', 'efficiency', 'collab', 'pulse', 'hooks'],
+    'Onboarding':   ['brief', 'context', 'rules', 'health', 'task', 'route', 'protocol', 'scorecard', 'budget', 'playbook', 'taste', 'efficiency', 'collab', 'pulse', 'hooks'],
     'Produce':      ['forge', 'voice', 'naturalness', 'sheen'],
     'Memory':       ['premortem', 'whyfile', 'memory', 'loop', 'optimize', 'technique'],
     'Guardian':     ['guard', 'heal', 'aitell', 'layout', 'pagesize', 'assets', 'render', 'preship'],
