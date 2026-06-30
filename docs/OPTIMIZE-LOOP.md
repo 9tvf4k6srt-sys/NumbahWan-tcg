@@ -124,3 +124,32 @@ accumulating rules that read well but don't bite.
 | `ai optimize apply` | **yes** | promote winners into `required_checks` (backs up first) |
 
 All commands accept `--json` for scripting/CI.
+
+---
+
+## technique-scoring — which reasoning approach actually works
+
+`optimize-loop` sharpens the *rules*. Its sibling `bin/technique-log.cjs`
+applies the same honest-evidence idea to *how you reason* — the meta-learning
+step of the response protocol (`docs/RESPONSE-PROTOCOL.md`). Instead of "ToT
+felt better for design," log it and let the numbers decide:
+
+```bash
+ai technique log design tot clean    # a design task done with ToT shipped clean
+ai technique log reasoning cot rework
+ai technique score                   # success-rate per task-class × technique
+```
+
+- **task-class:** `lookup | reasoning | design | action | synthesis`
+- **technique:** `direct | cot | tot | react | self-consistency`
+- **outcome:** `clean` (shipped, no rework) | `rework` | `fail`
+
+`score` reports the clean-rate for each `class × technique` cell — but only once
+a cell has **≥ 3 observations** (`MIN_EVIDENCE`). Below that it prints
+`insufficient (n=…, need 3)` rather than a fake "100% off one data point" — the
+exact same honesty rule the evaluator uses (`null` until there's evidence). Over
+time, `best so far:` per task-class becomes an **evidence-backed** default for
+which technique to reach for — folklore turned into data.
+
+Storage is append-only at `.mycelium/technique-log.jsonl` (gitignored, like the
+other runtime ledgers). Accepts `--json`.

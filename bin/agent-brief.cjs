@@ -64,6 +64,7 @@ function quickBrief() {
     // phone, re-fix). It is the #1 token sink in this repo. The cheapest
     // prevention is one command before any visual ship.
     efficiency: 'before shipping ANY visual/CSS change: node bin/ai.cjs preship — catches the iOS render bugs we cannot see (the #1 token waste)',
+    protocol: 'how to answer: node bin/ai.cjs protocol — classify → verify by running not asserting → critique on checkable axes → land the lesson on disk. Self-scores must cite a check or be "unverified".',
     api: '/api/agent/brief | /api/agent/context | /api/agent/rules'
   };
 }
