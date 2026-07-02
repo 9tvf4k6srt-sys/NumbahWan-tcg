@@ -194,12 +194,12 @@ We have **three layers of memory**, each with a narrow job:
 ```
 HOT  = your conversation context (200K token cap)
 WARM = .mycelium/memory.json (~186K — NEVER read directly; use CLI)
-COLD = git history + .nw-context (auto-compacted summary of WARM)
+COLD = git history + .mycelium-context (auto-compacted summary of WARM)
 ```
 
 ### `mycelium.cjs` — the learning system
 Stores **constraints** (facts), **decisions** (choices), **breakages** (what broke + lesson).
-After every commit it auto-snapshots, scores the change, and updates `.nw-context`.
+After every commit it auto-snapshots, scores the change, and updates `.mycelium-context`.
 
 **Your duty**: Record at least ONE learning per session or the pre-commit hook blocks you.
 

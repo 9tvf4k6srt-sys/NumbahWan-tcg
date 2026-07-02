@@ -125,13 +125,14 @@ Edit old_string="const X = 5" new_string="const X = 10"  # 200 tokens total
 ### File Cost Reference:
 | File | Size | ~Tokens | Strategy |
 |------|------|---------|----------|
-| .mycelium-context | ~20KB | ~5K | cat once at session start |
-| CLAUDE.md | ~12KB | ~3K | cat once at session start |
-| sentinel.cjs | ~97KB | ~24K | grep only, NEVER read whole |
-| mycelium.cjs | ~230KB | ~58K | grep only, NEVER read whole |
-| mycelium.cjs | ~175KB | ~44K | grep only, NEVER read whole |
-| .mycelium/memory.json | ~745KB | ~186K | --query/--status ONLY |
-| .mycelium/watch.json | ~267KB | ~67K | --status ONLY |
+| .mycelium-context | ~3KB | ~1K | cat once at session start |
+| CLAUDE.md | ~26KB | ~7K | cat once at session start |
+| sentinel.cjs | ~97KB | ~25K | grep only, NEVER read whole |
+| mycelium.cjs | ~227KB | ~58K | grep only, NEVER read whole |
+| .mycelium/memory.json | ~158KB | ~41K | --query/--status ONLY |
+| .mycelium/watch.json | ~240KB | ~61K | --status ONLY |
+
+(Live numbers anytime: `node mycelium.cjs --token-check`)
 
 ## Session Startup Checklist (MANDATORY — do ALL of these FIRST)
 ```bash
@@ -147,8 +148,6 @@ node mycelium.cjs --premortem <area>
 
 If you skip steps 1-2, the pre-commit hook will reject your commit with:
 `BLOCKED: No .mycelium-session file. Read CLAUDE.md and run the startup checklist.`
-
-## CRITICAL: Mobile-First iOS Development
 
 ## 🎨 TASTE — Read Before Building Anything a Human Will See
 Before making any UI, page, image, or product surface, read [`TASTE.md`](./TASTE.md) —

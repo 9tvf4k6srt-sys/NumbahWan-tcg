@@ -5095,7 +5095,7 @@ if (arg === '--help' || arg === '-h' || arg === 'help') {
   console.log(`${C.dim}That's the curated AI-friendly surface. See AI_PLAYBOOK.md for the session protocol.${C.r}\n`);
   console.log(`${C.yellow}Full mycelium flags:${C.r}`);
   const groups = [
-    ['Session',   [['--init','first-time setup'],['--onboard','session orientation'],['--status','session state'],['--brief','cat .nw-context']]],
+    ['Session',   [['--init','first-time setup'],['--onboard','session orientation'],['--status','session state'],['--brief','cat .mycelium-context']]],
     ['Learning',  [['--decide "<area>" "<what>" "<why>"','record a choice'],['--constraint "<area>" "<fact>"','record a hard rule'],['--broke "<area>" "<what>"','record a breakage'],['--learned "<area>" "<lesson>"','record a fix-learning']]],
     ['Query',     [['--query','full intel dump'],['--premortem <area>','what broke here'],['--whyfile <path>','file history + decisions'],['--areamap','file→area map']]],
     ['Health',    [['--health','scored health'],['--eval','run mycelium eval'],['--reflect','deep pattern analysis'],['--sharpen','auto-tune']]],
