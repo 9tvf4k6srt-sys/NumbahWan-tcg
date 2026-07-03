@@ -73,7 +73,7 @@ npx vitest && node tests/run-tests.cjs
 
 ## 4. Critical Rules
 
-**From .nw-context (enforced by pre-commit hooks):**
+**From .mycelium-context (enforced by pre-commit hooks):**
 
 - All 3 languages required in every i18n call
 - Cloudflare Workers: 10ms CPU limit, no fs/path

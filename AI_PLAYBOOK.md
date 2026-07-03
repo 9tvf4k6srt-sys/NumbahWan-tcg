@@ -193,13 +193,13 @@ We have **three layers of memory**, each with a narrow job:
 
 ```
 HOT  = your conversation context (200K token cap)
-WARM = .mycelium/memory.json (~186K — NEVER read directly; use CLI)
-COLD = git history + .nw-context (auto-compacted summary of WARM)
+WARM = .mycelium/memory.json (NEVER read directly; use CLI — live cost in .mycelium-context # COSTS)
+COLD = git history + .mycelium-context (auto-compacted summary of WARM)
 ```
 
 ### `mycelium.cjs` — the learning system
 Stores **constraints** (facts), **decisions** (choices), **breakages** (what broke + lesson).
-After every commit it auto-snapshots, scores the change, and updates `.nw-context`.
+After every commit it auto-snapshots, scores the change, and updates `.mycelium-context`.
 
 **Your duty**: Record at least ONE learning per session or the pre-commit hook blocks you.
 
@@ -221,12 +221,8 @@ node sentinel.cjs --ci             # CI mode (exit codes)
 ```
 
 ### Token budget — the hard rule
-200K tokens per session (input + output). The three expensive mistakes:
-| Don't | Do instead |
-|---|---|
-| `Read file_path=mycelium.cjs` (~58K tokens) | `grep -n "function X" mycelium.cjs` (~20) → `Read offset=N limit=60` |
-| `Read file_path=.mycelium/memory.json` (~186K — **FATAL**) | `node bin/ai.cjs memory query` |
-| Echo a large JSON in chat | `node bin/ai.cjs ... > /tmp/out && head -20 /tmp/out` |
+Canonical rules live in **CLAUDE.md § TOKEN BUDGET** (single source — do not restate here).
+Live per-file costs: `.mycelium-context` `# COSTS` section or `node mycelium.cjs --token-check`.
 
 ---
 

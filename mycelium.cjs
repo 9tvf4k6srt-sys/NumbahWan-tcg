@@ -2703,6 +2703,21 @@ function brief() {
     }
   }
 
+  // COSTS: auto-generated file cost table — single source of truth.
+  // Replaces the hand-written table that drifted 4.5x off reality in CLAUDE.md.
+  const costFiles = ['CLAUDE.md', 'mycelium.cjs', 'sentinel.cjs', '.mycelium/memory.json', '.mycelium/watch.json'];
+  const costLines = [];
+  for (const f of costFiles) {
+    try {
+      const c = fileCostTier(path.join(__dirname, f));
+      if (c.tokens > 0) costLines.push(` T${c.tier} ${Math.round(c.tokens / 1000)}K ${f} → ${c.strategy}`);
+    } catch (e) { /* file may not exist */ }
+  }
+  if (costLines.length) {
+    lines.push('# COSTS (auto — live: --token-check)');
+    lines.push(...costLines);
+  }
+
   // WIP: fallback text-only task state (legacy — only if no checkpoint)
   const wipPath = path.join(__dirname, '.mycelium-wip');
   if (fs.existsSync(wipPath)) {
@@ -2720,7 +2735,7 @@ function brief() {
   if (contextTokens > MAX_CONTEXT_TOKENS) {
     // Progressive trim: remove from bottom sections
     const sections = content.split(/\n(?=# )/);
-    const priorityOrder = ['!!RESUME!!', 'WIP', 'HP:', 'BLD:', 'STOP', 'RULES', 'FILE-RISKS', 'LEARNED', 'HOT', 'CTX'];
+    const priorityOrder = ['!!RESUME!!', 'WIP', 'HP:', 'BLD:', 'STOP', 'RULES', 'FILE-RISKS', 'LEARNED', 'COSTS', 'HOT', 'CTX'];
     let rebuilt = [];
     let runningTokens = 0;
     const budget = MAX_CONTEXT_TOKENS - 200;
@@ -5095,7 +5110,7 @@ if (arg === '--help' || arg === '-h' || arg === 'help') {
   console.log(`${C.dim}That's the curated AI-friendly surface. See AI_PLAYBOOK.md for the session protocol.${C.r}\n`);
   console.log(`${C.yellow}Full mycelium flags:${C.r}`);
   const groups = [
-    ['Session',   [['--init','first-time setup'],['--onboard','session orientation'],['--status','session state'],['--brief','cat .nw-context']]],
+    ['Session',   [['--init','first-time setup'],['--onboard','session orientation'],['--status','session state'],['--brief','cat .mycelium-context']]],
     ['Learning',  [['--decide "<area>" "<what>" "<why>"','record a choice'],['--constraint "<area>" "<fact>"','record a hard rule'],['--broke "<area>" "<what>"','record a breakage'],['--learned "<area>" "<lesson>"','record a fix-learning']]],
     ['Query',     [['--query','full intel dump'],['--premortem <area>','what broke here'],['--whyfile <path>','file history + decisions'],['--areamap','file→area map']]],
     ['Health',    [['--health','scored health'],['--eval','run mycelium eval'],['--reflect','deep pattern analysis'],['--sharpen','auto-tune']]],

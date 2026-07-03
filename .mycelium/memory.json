@@ -2704,6 +2704,13 @@
       "area": "battle",
       "decision": "Smart Glow + Auto-Target + Auto-Play as separate file nw-battle-assist.js",
       "why": "Keeps battle engine untouched; coach pattern proven; reads via NW_BATTLE API; skips visuals when coach is active"
+    },
+    {
+      "ts": 1783012452257,
+      "date": "2026-07-02",
+      "area": "workflow",
+      "decision": "CLAUDE.md dieted 27.3KB→6.7KB: gates kept verbatim-in-spirit but compressed, project arch moved to docs/ARCHITECTURE.md appendix, task-brief/route-task wired into startup as the front door, cost table replaced by auto-generated # COSTS section in .mycelium-context",
+      "why": "Every session paid ~7K tokens to read rules+arch it mostly didn't need; hand-written cost numbers drifted 4.5x; the context-firewall tools existed but no protocol pointed at them"
     }
   ],
   "constraints": {
@@ -3093,6 +3100,11 @@
         "fact": "Run 'node bin/ai.cjs preship <file>' before shipping any page — basic ai-tell-lint alone misses visual tells (emoji-as-icon blocked the guild page) and page-size.",
         "ts": 1780454824024,
         "date": "2026-06-03"
+      },
+      {
+        "fact": "Renaming memory/context artifacts (e.g. .nw-* → .mycelium-*) must in the SAME commit: git rm the old files, add old names to .gitignore, and grep-update every doc/CLI reference — otherwise stale twins survive and poison future AI sessions with outdated intel",
+        "ts": 1783011365311,
+        "date": "2026-07-02"
       }
     ],
     "oracle": [
@@ -3282,6 +3294,13 @@
         "ts": 1780490108337,
         "date": "2026-06-03"
       }
+    ],
+    "memory": [
+      {
+        "fact": "File-cost numbers must never be hand-written in docs — brief() auto-generates # COSTS in .mycelium-context from fileCostTier(); docs may only POINT to it or --token-check",
+        "ts": 1783012452382,
+        "date": "2026-07-02"
+      }
     ]
   },
   "breakages": [
@@ -3412,6 +3431,12 @@
       "date": "2026-06-01",
       "area": "i18n",
       "what": "page i18n guard scaffolded zh/th blocks as English prefixed with [ZH]/[TH] marke"
+    },
+    {
+      "ts": 1783011326247,
+      "date": "2026-07-02",
+      "area": "workflow",
+      "what": "Stale .nw-context (last updated Feb 2026, 20KB) stayed tracked in git and referenced by AI_PLAYBOOK/AI-ONBOARDING after rename to .mycelium-context — new AI sessions could read a 5-month-old brain and burn ~5K tokens on outdated intel. Root cause: rename commit f965e84 renamed the writers but never git-rm'd the old artifacts or updated doc references."
     }
   ],
   "reflections": [
