@@ -27,12 +27,24 @@ CORNER_ALPHA = 40  # corner alpha above this = "not transparent"
 R_MARGIN = 24      # skip a border margin when scanning for embedded islands (ring radius)
 
 # Assets that are intentionally full-bleed / opaque — skip the corner check for these.
-OPAQUE_ALLOW = {"banner.webp", "guildhall.webp", "hero-prontera.webp", "paradox-seam.webp"}
+OPAQUE_ALLOW = {"banner.webp", "guildhall.webp", "hero-prontera.webp", "paradox-seam.webp",
+                "hero-bg.webp"}  # ganachaiboyz full-bleed painted hero landscape
 
 # Assets that intentionally carry a dark glyph/monogram INSIDE a letter (a designed seal,
 # not an artifact). Skip the embedded-island check for these; corners + counter-fill checks
 # still apply. paradox-emblem has an Ohm/Omega (Ω) monogram carved into the P counter.
 GLYPH_ALLOW = {"paradox-emblem.webp", "paradox-lockup.webp"}
+
+# Cel-shaded CHARACTER ILLUSTRATIONS (not flat logos): black bean eyes, open mouths,
+# ink outlines and painted shading are the art style, so the counter-fill / dark-hole
+# heuristics misfire by design. Skip those checks entirely; the corner-transparency
+# check still applies (a cutout must still have clean transparent corners).
+# ganachaiboyz cabbage-poring mascot + chibi class cards + emperium item art.
+ILLUSTRATION_ALLOW = {"emblem.webp", "knight.webp", "mage.webp", "merchant.webp",
+                      "emperium.webp",
+                      # full-bleed painted landscape: dark windows/shadows are paint,
+                      # not counter fills (also in OPAQUE_ALLOW for the corner check)
+                      "hero-bg.webp"}
 
 
 def lum(r, g, b):
@@ -59,6 +71,10 @@ def scan(path):
         opaque_corners = [k for k, a in corners.items() if a > CORNER_ALPHA]
         if opaque_corners:
             issues.append(f"opaque corners {opaque_corners} (background not removed)")
+
+    # Illustrations: outline/eye/mouth ink is intentional; only the corner check applies.
+    if name in ILLUSTRATION_ALLOW:
+        return issues
 
     # 2) enclosed dark holes (sampled stride for speed on big images)
     stride = 1 if total <= 600 * 600 else 2
