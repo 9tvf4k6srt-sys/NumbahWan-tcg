@@ -26,12 +26,12 @@
  * ============================================================================
  */
 
+import { readdirSync, statSync } from 'node:fs'
+import { join } from 'node:path'
 import build from '@hono/vite-build/cloudflare-pages'
 import devServer from '@hono/vite-dev-server'
 import adapter from '@hono/vite-dev-server/cloudflare'
 import { defineConfig } from 'vite'
-import { readdirSync, statSync } from 'fs'
-import { join } from 'path'
 
 // ── Page Discovery ─────────────────────────────────────────────────
 //
@@ -90,7 +90,6 @@ const STATIC_REALMS = [
 // ============================================================================
 
 export default defineConfig({
-
   // ── Server: The Open Gates ──────────────────────────────────────
   //
   //   "The gates of Castle NumbahWan are an engineering marvel."
@@ -122,16 +121,12 @@ export default defineConfig({
 
   // ── Plugins: The Twin Engines ───────────────────────────────────
   plugins: [
-
     // Build Plugin — The Stonemason
     //   Compiles the Hono server into _worker.js for Cloudflare Pages.
     //   excludeRoutes tells the worker: "These paths are not yours."
     build({
       outputDir: 'dist',
-      excludeRoutes: [
-        ...discoverPages(),
-        ...STATIC_REALMS,
-      ],
+      excludeRoutes: [...discoverPages(), ...STATIC_REALMS],
     } as any),
 
     // Dev Server Plugin — The Alchemist
