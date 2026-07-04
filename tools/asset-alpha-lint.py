@@ -30,6 +30,11 @@ R_MARGIN = 24      # skip a border margin when scanning for embedded islands (ri
 OPAQUE_ALLOW = {"banner.webp", "guildhall.webp", "hero-prontera.webp", "paradox-seam.webp",
                 "hero-bg.webp"}  # ganachaiboyz full-bleed painted hero landscape
 
+# Video poster frames (extracted stills used as <video poster>) are full-bleed
+# photographic frames: opaque corners and dark regions are the footage itself,
+# not cutout artifacts. Match by suffix so every chapter poster is covered.
+VIDEO_POSTER_SUFFIX = "_poster.webp"
+
 # Assets that intentionally carry a dark glyph/monogram INSIDE a letter (a designed seal,
 # not an artifact). Skip the embedded-island check for these; corners + counter-fill checks
 # still apply. paradox-emblem has an Ohm/Omega (Ω) monogram carved into the P counter.
@@ -51,6 +56,10 @@ def lum(r, g, b):
     return 0.2126 * r + 0.7152 * g + 0.0722 * b
 
 
+def is_video_poster(name):
+    return name.endswith(VIDEO_POSTER_SUFFIX)
+
+
 def scan(path):
     issues = []
     try:
@@ -61,6 +70,10 @@ def scan(path):
     px = im.load()
     total = w * h
     name = os.path.basename(path)
+
+    # Video poster stills: full-bleed footage frames, nothing to gate.
+    if is_video_poster(name):
+        return issues
 
     # 1) corners
     if name not in OPAQUE_ALLOW:

@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>กานาฉ่าย Boyz | Ganachai Boyz - Ragnarok: The New World</title>
+<meta name="description" content="กานาฉ่าย Boyz guild, Ragnarok: The New World (SEA). Slow-stewed since day one. Scroll to cook the dish.">
+<link rel="icon" type="image/png" href="./favicon.png">
+<link rel="preload" as="image" href="./media/ch1_poster.webp">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Chonburi&family=IBM+Plex+Sans+Thai:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --lacquer:#0c120d;
+  --pot:#131c14;
+  --amber:#d9a441;
+  --amber-hi:#f0c264;
+  --caramel:#8a5a2b;
+  --steam:#efe8d8;
+  --dim:#9a927f;
+  --olive:#4a5c3a;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:auto}
+html.lenis,html.lenis body{height:auto}
+.lenis.lenis-smooth{scroll-behavior:auto!important}
+body{
+  background:var(--lacquer);
+  color:var(--steam);
+  font-family:'IBM Plex Sans Thai',sans-serif;
+  font-weight:300;
+  overflow-x:hidden;
+  -webkit-font-smoothing:antialiased;
+}
+::selection{background:var(--amber);color:var(--lacquer)}
+h1,h2,h3,.display{font-family:'Chonburi',serif;font-weight:400}
+
+/* ---------- loader ---------- */
+#loader{
+  position:fixed;inset:0;z-index:100;background:var(--lacquer);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:22px;
+  transition:opacity .8s ease,visibility .8s;
+}
+#loader.done{opacity:0;visibility:hidden}
+#loader .flame{font-size:2rem;animation:flick .5s infinite alternate}
+@keyframes flick{from{transform:scale(1) rotate(-3deg);opacity:.85}to{transform:scale(1.12) rotate(3deg);opacity:1}}
+#loader .lbl{font-size:.8rem;letter-spacing:.35em;text-transform:uppercase;color:var(--dim)}
+#loader .bar{width:180px;height:2px;background:#2a2417;overflow:hidden}
+#loader .bar i{display:block;height:100%;width:0;background:var(--amber);transition:width .3s}
+
+/* ---------- fixed cinema stage ---------- */
+#stage{position:fixed;inset:0;z-index:0;background:var(--lacquer)}
+#stage .layer{
+  position:absolute;inset:0;opacity:0;will-change:opacity;
+}
+#stage .layer.on{opacity:1}
+#stage video,#stage img.poster{
+  width:100%;height:100%;object-fit:cover;display:block;
+}
+#stage::after{ /* vignette */
+  content:"";position:absolute;inset:0;pointer-events:none;
+  background:radial-gradient(ellipse at center,transparent 42%,rgba(5,8,5,.72) 100%);
+}
+#veil{position:fixed;inset:0;z-index:1;background:var(--lacquer);opacity:0;pointer-events:none;will-change:opacity}
+
+/* film grain kills the AI sheen */
+#grain{position:fixed;inset:-100px;z-index:40;pointer-events:none;opacity:.07;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='240' height='240' filter='url(%23n)'/%3E%3C/svg%3E");
+  animation:grain 7s steps(9) infinite}
+@keyframes grain{
+  0%,100%{transform:translate(0,0)}12%{transform:translate(-40px,20px)}
+  25%{transform:translate(30px,-35px)}37%{transform:translate(-25px,-20px)}
+  50%{transform:translate(40px,30px)}62%{transform:translate(-35px,10px)}
+  75%{transform:translate(20px,-40px)}87%{transform:translate(-15px,35px)}
+}
+/* letterbox bars */
+.bar-cine{position:fixed;left:0;right:0;height:0;background:#050805;z-index:30;will-change:height}
+#barTop{top:0}#barBot{bottom:0}
+
+/* ---------- recipe rail ---------- */
+#rail{
+  position:fixed;right:26px;top:50%;transform:translateY(-50%);z-index:35;
+  display:flex;flex-direction:column;gap:0;align-items:center;
+  opacity:0;transition:opacity .6s;
+}
+#rail.show{opacity:1}
+#rail .step{display:flex;align-items:center;gap:10px;position:relative}
+#rail .dot{
+  width:9px;height:9px;border-radius:50%;border:1px solid var(--dim);
+  background:transparent;transition:all .4s;
+}
+#rail .step.active .dot{background:var(--amber);border-color:var(--amber);box-shadow:0 0 12px rgba(217,164,65,.8)}
+#rail .step.cooked .dot{background:var(--olive);border-color:var(--olive)}
+#rail .lbl{
+  position:absolute;right:22px;white-space:nowrap;font-size:.68rem;letter-spacing:.18em;
+  text-transform:uppercase;color:var(--dim);opacity:0;transform:translateX(6px);transition:all .4s;
+}
+#rail .step.active .lbl{opacity:1;transform:translateX(0);color:var(--amber)}
+#rail .line{width:1px;height:34px;background:#3a3527;margin:4px 0}
+
+/* heat gauge */
+#heat{
+  position:fixed;left:26px;bottom:26px;z-index:35;display:flex;align-items:center;gap:10px;
+  opacity:0;transition:opacity .6s;
+}
+#heat.show{opacity:1}
+#heat .therm{width:70px;height:4px;background:#2a2417;border-radius:2px;overflow:hidden}
+#heat .therm i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--olive),var(--amber),#e06a2b)}
+#heat span{font-size:.66rem;letter-spacing:.22em;text-transform:uppercase;color:var(--dim)}
+
+/* ---------- scroll content ---------- */
+main{position:relative;z-index:10}
+.chapter{
+  min-height:100vh;display:flex;flex-direction:column;justify-content:center;
+  padding:0 8vw;position:relative;
+}
+.spacer{height:60vh}
+.kicker{
+  font-size:.72rem;letter-spacing:.42em;text-transform:uppercase;color:var(--amber);
+  margin-bottom:18px;display:flex;align-items:center;gap:14px;
+}
+.kicker::before{content:"";width:34px;height:1px;background:var(--amber)}
+.chapter h2{font-size:clamp(2.2rem,6vw,4.6rem);line-height:1.12;text-shadow:0 4px 30px rgba(0,0,0,.8)}
+.chapter h2 .en{display:block;font-family:'IBM Plex Sans Thai',sans-serif;font-weight:600;font-size:.34em;letter-spacing:.3em;text-transform:uppercase;color:var(--dim);margin-top:10px}
+.chapter p.lede{max-width:430px;margin-top:22px;font-size:1.02rem;line-height:1.85;color:#d8d2c2;text-shadow:0 2px 14px rgba(0,0,0,.9)}
+.chapter p.lede em{font-style:normal;color:var(--amber-hi)}
+.chapter .en-sub{max-width:430px;margin-top:10px;font-size:.82rem;line-height:1.7;color:var(--dim)}
+.reveal{opacity:0;transform:translateY(46px)}
+
+/* hero */
+#hero{align-items:center;text-align:center;min-height:100svh}
+#hero .kicker{justify-content:center}
+#hero .kicker::after{content:"";width:34px;height:1px;background:var(--amber)}
+#hero h1{font-size:clamp(2.6rem,8.5vw,6.4rem);line-height:1.1;text-shadow:0 6px 40px rgba(0,0,0,.85)}
+#hero h1 span{display:block;font-size:.36em;letter-spacing:.42em;color:var(--amber);margin-top:14px;font-family:'IBM Plex Sans Thai',sans-serif;font-weight:500}
+#hero .tag{margin-top:26px;color:#cfc8b6;font-size:1rem;max-width:520px;line-height:1.8;text-shadow:0 2px 12px rgba(0,0,0,.9)}
+#scrollcue{
+  position:absolute;bottom:5vh;left:50%;transform:translateX(-50%);
+  display:flex;flex-direction:column;align-items:center;gap:10px;color:var(--dim);
+  font-size:.7rem;letter-spacing:.3em;text-transform:uppercase;
+}
+#scrollcue .ladle{font-size:1.3rem;animation:stir 2.4s ease-in-out infinite}
+@keyframes stir{0%,100%{transform:rotate(-14deg) translateY(0)}50%{transform:rotate(14deg) translateY(6px)}}
+#scrollcue .wheel{width:1px;height:44px;background:linear-gradient(var(--amber),transparent);animation:drip 1.8s ease-in infinite}
+@keyframes drip{from{transform:scaleY(0);transform-origin:top}60%{transform:scaleY(1)}to{transform:scaleY(1);opacity:0}}
+
+/* ingredient loot cards */
+#loot{display:flex;gap:16px;margin-top:38px;flex-wrap:wrap}
+.card{
+  background:rgba(10,14,10,.66);border:1px solid rgba(217,164,65,.28);
+  backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
+  padding:16px 18px;min-width:150px;border-radius:4px;position:relative;
+}
+.card::before{content:"";position:absolute;top:-1px;left:-1px;width:10px;height:10px;border-top:2px solid var(--amber);border-left:2px solid var(--amber)}
+.card::after{content:"";position:absolute;bottom:-1px;right:-1px;width:10px;height:10px;border-bottom:2px solid var(--amber);border-right:2px solid var(--amber)}
+.card .ico{font-size:1.5rem}
+.card .nm{font-weight:600;font-size:.9rem;margin-top:8px}
+.card .rar{font-size:.64rem;letter-spacing:.2em;text-transform:uppercase;margin-top:4px}
+.rar.common{color:#9aa79a}.rar.rare{color:#7fb0e0}.rar.epic{color:#c08ae0}.rar.leg{color:var(--amber-hi)}
+
+/* patience counter */
+#hours{
+  font-family:'Chonburi',serif;font-size:clamp(4rem,14vw,10rem);color:var(--amber);
+  line-height:1;text-shadow:0 0 60px rgba(217,164,65,.35);
+}
+#hours small{font-size:.22em;color:var(--dim);font-family:'IBM Plex Sans Thai',sans-serif;letter-spacing:.3em;text-transform:uppercase}
+
+/* ---------- finale ---------- */
+#finale{min-height:130vh;text-align:center;align-items:center;justify-content:flex-start;padding-top:22vh}
+#sealwrap{position:relative;width:min(340px,62vw);margin:0 auto}
+#emblem{
+  width:100%;height:auto;display:block;transform:scale(3.4);opacity:0;
+  filter:drop-shadow(0 18px 40px rgba(0,0,0,.65));will-change:transform,opacity;
+}
+#shock{
+  position:absolute;inset:-18%;border-radius:50%;border:2px solid var(--amber);
+  opacity:0;transform:scale(.4);pointer-events:none;
+}
+#finale h2{margin-top:34px;font-size:clamp(2rem,6vw,4rem)}
+#finale .served{color:var(--amber);font-size:.78rem;letter-spacing:.4em;text-transform:uppercase;margin-top:12px}
+#finale .creed{max-width:520px;margin:26px auto 0;line-height:1.9;color:#d8d2c2;font-size:1rem}
+#ctas{display:flex;gap:14px;justify-content:center;margin-top:40px;flex-wrap:wrap}
+.btn{
+  font-family:'IBM Plex Sans Thai',sans-serif;font-weight:600;font-size:.86rem;letter-spacing:.14em;
+  padding:15px 34px;border:1px solid var(--amber);color:var(--amber);background:transparent;
+  cursor:pointer;text-transform:uppercase;transition:all .3s;border-radius:2px;
+}
+.btn.solid{background:var(--amber);color:var(--lacquer)}
+.btn:hover{background:var(--amber-hi);border-color:var(--amber-hi);color:var(--lacquer);box-shadow:0 0 30px rgba(217,164,65,.4)}
+#roster{display:flex;gap:26px;justify-content:center;margin-top:52px;flex-wrap:wrap}
+#roster .r{text-align:center}
+#roster .num{font-family:'Chonburi',serif;font-size:1.9rem;color:var(--amber)}
+#roster .cap{font-size:.66rem;letter-spacing:.24em;text-transform:uppercase;color:var(--dim);margin-top:4px}
+footer{position:relative;z-index:10;text-align:center;padding:40px 8vw 60px;color:#6d6757;font-size:.72rem;letter-spacing:.14em;line-height:2}
+footer a{color:var(--dim);text-decoration:none}
+
+/* toast */
+#toast{
+  position:fixed;bottom:30px;left:50%;transform:translate(-50%,80px);z-index:90;
+  background:var(--pot);border:1px solid var(--amber);color:var(--steam);
+  padding:13px 26px;font-size:.85rem;border-radius:3px;opacity:0;transition:all .45s;
+  pointer-events:none;max-width:86vw;text-align:center;
+}
+#toast.show{opacity:1;transform:translate(-50%,0)}
+
+@media (max-width:720px){
+  #rail{right:12px}
+  #rail .lbl{display:none}
+  .chapter{padding:0 7vw}
+  #heat{left:14px;bottom:14px}
+  #loot{gap:10px}
+  .card{min-width:calc(50% - 5px);padding:12px 14px}
+}
+@media (prefers-reduced-motion:reduce){
+  #grain,#scrollcue .ladle,#scrollcue .wheel,#loader .flame{animation:none}
+}
+</style>
+</head>
+<body>
+
+<div id="loader">
+  <div class="flame">🔥</div>
+  <div class="lbl">จุดไฟ · Lighting the hearth</div>
+  <div class="bar"><i id="loadbar"></i></div>
+</div>
+
+<!-- fixed cinema -->
+<div id="stage">
+  <div class="layer on" data-ch="1"><video muted loop playsinline preload="auto" poster="./media/ch1_poster.webp"></video></div>
+  <div class="layer" data-ch="2"><video muted loop playsinline preload="metadata" poster="./media/ch2_poster.webp"></video></div>
+  <div class="layer" data-ch="3"><video muted loop playsinline preload="metadata" poster="./media/ch3_poster.webp"></video></div>
+  <div class="layer" data-ch="4"><video muted loop playsinline preload="metadata" poster="./media/ch4_poster.webp"></video></div>
+</div>
+<div id="veil"></div>
+<div id="grain"></div>
+<div class="bar-cine" id="barTop"></div>
+<div class="bar-cine" id="barBot"></div>
+
+<!-- recipe rail -->
+<nav id="rail" aria-label="recipe progress">
+  <div class="step" data-s="0"><span class="lbl">วัตถุดิบ · Loot</span><span class="dot"></span></div>
+  <div class="line"></div>
+  <div class="step" data-s="1"><span class="lbl">หั่น · Prep</span><span class="dot"></span></div>
+  <div class="line"></div>
+  <div class="step" data-s="2"><span class="lbl">เคี่ยว · Stew</span><span class="dot"></span></div>
+  <div class="line"></div>
+  <div class="step" data-s="3"><span class="lbl">รอ · Patience</span><span class="dot"></span></div>
+  <div class="line"></div>
+  <div class="step" data-s="4"><span class="lbl">เสิร์ฟ · Served</span><span class="dot"></span></div>
+</nav>
+
+<div id="heat"><span>ไฟ / heat</span><div class="therm"><i id="heatbar"></i></div></div>
+
+<main>
+  <!-- HERO / CH1 -->
+  <section class="chapter" id="hero">
+    <div class="kicker">Ragnarok: The New World · SEA</div>
+    <h1>กานาฉ่าย Boyz<span>GANACHAI BOYZ</span></h1>
+    <p class="tag">กิลด์ที่เคี่ยวมานาน เหมือนกานาฉ่ายหม้อโต ยิ่งนานยิ่งเข้มข้น<br>
+    Slow-stewed since day one. Scroll down to cook the dish.</p>
+    <div id="scrollcue"><span class="ladle">🥄</span>เลื่อนเพื่อเริ่มปรุง · scroll to cook<span class="wheel"></span></div>
+  </section>
+
+  <div class="spacer"></div>
+
+  <!-- CH1 INGREDIENTS -->
+  <section class="chapter" id="ch-ing">
+    <div class="reveal">
+      <div class="kicker">ขั้นที่ 1 · Chapter I</div>
+      <h2>วัตถุดิบหล่นแล้ว<span class="en">The ingredient drop</span></h2>
+      <p class="lede">ทุกตำนานเริ่มจากของดรอป ผักกาดดอง ลูกกานา เห็ดหอม น้ำมันงา <em>เก็บให้ครบก่อนเข้าดัน</em></p>
+      <p class="en-sub">Every legend starts with a loot drop. Pickled mustard greens, kana olives, shiitake, sesame oil. Collect the full set before the run.</p>
+    </div>
+    <div id="loot" class="reveal">
+      <div class="card"><div class="ico">🥬</div><div class="nm">ผักกาดดอง</div><div class="rar common">Common · x99</div></div>
+      <div class="card"><div class="ico">🫒</div><div class="nm">ลูกกานา</div><div class="rar epic">Epic · ตัวจริงของชื่อกิลด์</div></div>
+      <div class="card"><div class="ico">🍄</div><div class="nm">เห็ดหอม</div><div class="rar rare">Rare · +10 Umami</div></div>
+      <div class="card"><div class="ico">🫗</div><div class="nm">น้ำมันงา</div><div class="rar leg">Legendary · Glossy Aura</div></div>
+    </div>
+  </section>
+
+  <div class="spacer"></div>
+
+  <!-- CH2 PREP -->
+  <section class="chapter" id="ch-prep">
+    <div class="reveal">
+      <div class="kicker">ขั้นที่ 2 · Chapter II</div>
+      <h2>หั่นให้ละเอียด<span class="en">The prep</span></h2>
+      <p class="lede">มีดลงจังหวะเดียวกับปาร์ตี้ตี MVP ทุกชิ้นต้องเท่ากัน <em>ความละเอียดคือวินัยของกิลด์</em></p>
+      <p class="en-sub">The cleaver keeps rhythm like a party on an MVP. Every cut equal. Precision is guild discipline.</p>
+    </div>
+  </section>
+
+  <div class="spacer"></div>
+
+  <!-- CH3 STEW -->
+  <section class="chapter" id="ch-stew">
+    <div class="reveal">
+      <div class="kicker">ขั้นที่ 3 · Chapter III</div>
+      <h2>ลงหม้อ เคี่ยวด้วยไฟอ่อน<span class="en">Into the cauldron</span></h2>
+      <p class="lede">น้ำมันงาเงาวับเหมือนบัฟใหม่ ฟองเดือดช้าๆ เหมือนค่าประสบการณ์ที่ค่อยๆ ขึ้น <em>ห้ามเร่งไฟ ห้ามเร่งเลเวล</em></p>
+      <p class="en-sub">Sesame oil gleams like a fresh buff. Slow bubbles rise like slow EXP. Never rush the fire, never rush the level.</p>
+    </div>
+  </section>
+
+  <div class="spacer"></div>
+  <div class="spacer"></div>
+
+  <!-- CH4 PATIENCE -->
+  <section class="chapter" id="ch-wait" style="align-items:center;text-align:center">
+    <div class="reveal">
+      <div class="kicker" style="justify-content:center">ขั้นที่ 4 · Chapter IV</div>
+      <div id="hours">0 <small>ชั่วโมงแห่งการเคี่ยว · hours of stew</small></div>
+      <p class="lede" style="margin-left:auto;margin-right:auto">กานาฉ่ายแท้ใช้เวลาเป็นชั่วโมง กิลด์แท้ใช้เวลาเป็นปี <em>เราเคี่ยวทั้งสองอย่าง</em></p>
+      <p class="en-sub" style="margin-left:auto;margin-right:auto">Real ganachai takes hours in the pot. A real guild takes years. We stew both.</p>
+    </div>
+  </section>
+
+  <div class="spacer"></div>
+
+  <!-- FINALE -->
+  <section class="chapter" id="finale">
+    <div class="reveal">
+      <div class="kicker" style="justify-content:center">จานเสร็จแล้ว · Dish complete</div>
+    </div>
+    <div id="sealwrap">
+      <img id="emblem" src="./media/emblem.webp" alt="Ganachai Boyz emblem: a stew-glossed green blob wearing a kana olive hat" width="1200" height="1330">
+      <div id="shock"></div>
+    </div>
+    <div class="reveal">
+      <h2>กานาฉ่าย Boyz</h2>
+      <div class="served">Served hot · Ragnarok: The New World</div>
+      <p class="creed">หอม เข้มข้น ติดหม้อ ติดใจ รับสมาชิกที่ใจเย็นตอนเคี่ยว และใจร้อนตอน WoE<br>
+      Fragrant, dense, stuck to the pot and to your heart. Recruiting players who are patient at the stove and fearless at WoE.</p>
+      <div id="ctas">
+        <button class="btn solid" id="joinBtn">เข้าร่วม Discord</button>
+        <button class="btn" id="whisBtn">Whisper in game</button>
+      </div>
+      <div id="roster">
+        <div class="r"><div class="num">56</div><div class="cap">สมาชิก · Members</div></div>
+        <div class="r"><div class="num">12</div><div class="cap">MVP / สัปดาห์</div></div>
+        <div class="r"><div class="num">∞</div><div class="cap">ข้าวต้ม · Congee bowls</div></div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  กานาฉ่าย Boyz · แฟนกิลด์ Ragnarok: The New World, ไม่ใช่เพจทางการของ Gravity<br>
+  Fan guild page. Not affiliated with Gravity Co., Ltd. · <a href="../ganachaiboyz/">พี่น้องกิลด์ 甘藍菜Boyz →</a>
+</footer>
+
+<div id="toast"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/ScrollTrigger.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/lenis@1.1.14/dist/lenis.min.js"></script>
+<script>
+(function(){
+"use strict";
+gsap.registerPlugin(ScrollTrigger);
+
+/* ---- responsive video sources ---- */
+var mobile = window.matchMedia("(max-width:720px)").matches;
+var suffix = mobile ? "_540.mp4" : "_1080.mp4";
+var layers = Array.prototype.slice.call(document.querySelectorAll("#stage .layer"));
+layers.forEach(function(l){
+  var v = l.querySelector("video");
+  v.src = "./media/ch" + l.dataset.ch + suffix;
+});
+
+/* ---- loader ---- */
+var loadbar = document.getElementById("loadbar");
+var loader = document.getElementById("loader");
+var firstV = layers[0].querySelector("video");
+var pct = 0;
+var fake = setInterval(function(){ pct = Math.min(pct + 9, 88); loadbar.style.width = pct + "%"; }, 120);
+function ready(){
+  clearInterval(fake);
+  loadbar.style.width = "100%";
+  setTimeout(function(){
+    loader.classList.add("done");
+    document.getElementById("rail").classList.add("show");
+    document.getElementById("heat").classList.add("show");
+    firstV.play().catch(function(){});
+  }, 350);
+}
+if (firstV.readyState >= 3) ready();
+else {
+  firstV.addEventListener("canplay", ready, {once:true});
+  setTimeout(ready, 4500); /* never trap the user */
+}
+
+/* ---- Lenis smooth scroll ---- */
+var reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+if (!reduced && window.Lenis) {
+  var lenis = new Lenis({ lerp: 0.09, wheelMultiplier: 0.95 });
+  lenis.on("scroll", ScrollTrigger.update);
+  gsap.ticker.add(function(t){ lenis.raf(t * 1000); });
+  gsap.ticker.lagSmoothing(0);
+}
+
+/* ---- chapter switching on the fixed stage ---- */
+var current = 0;
+function showLayer(i){
+  if (i === current) return;
+  var oldL = layers[current], newL = layers[i];
+  current = i;
+  gsap.to(oldL, {opacity:0, duration:0.9, ease:"power2.inOut", onComplete:function(){
+    var ov = oldL.querySelector("video"); if (ov) ov.pause();
+  }});
+  gsap.to(newL, {opacity:1, duration:0.9, ease:"power2.inOut"});
+  var nv = newL.querySelector("video");
+  if (nv) { nv.play().catch(function(){}); }
+}
+var steps = Array.prototype.slice.call(document.querySelectorAll("#rail .step"));
+function setRail(i){
+  steps.forEach(function(s,k){
+    s.classList.toggle("active", k === i);
+    s.classList.toggle("cooked", k < i);
+  });
+}
+setRail(0);
+
+var map = [
+  {sel:"#hero",   layer:0, step:0, heat:8},
+  {sel:"#ch-ing", layer:0, step:0, heat:15},
+  {sel:"#ch-prep",layer:1, step:1, heat:35},
+  {sel:"#ch-stew",layer:2, step:2, heat:78},
+  {sel:"#ch-wait",layer:2, step:3, heat:92},
+  {sel:"#finale", layer:3, step:4, heat:100}
+];
+var heatbar = document.getElementById("heatbar");
+map.forEach(function(m){
+  ScrollTrigger.create({
+    trigger:m.sel, start:"top 55%", end:"bottom 45%",
+    onEnter:function(){ showLayer(m.layer); setRail(m.step); heatbar.style.width = m.heat + "%"; },
+    onEnterBack:function(){ showLayer(m.layer); setRail(m.step); heatbar.style.width = m.heat + "%"; }
+  });
+});
+
+/* ---- letterbox bars breathe in on chapters, out on hero/finale ---- */
+var bt = document.getElementById("barTop"), bb = document.getElementById("barBot");
+ScrollTrigger.create({
+  trigger:"#ch-ing", start:"top 80%", endTrigger:"#ch-wait", end:"bottom 20%",
+  onEnter:function(){ gsap.to([bt,bb],{height:"6vh",duration:1,ease:"power2.out"}); },
+  onLeave:function(){ gsap.to([bt,bb],{height:0,duration:1,ease:"power2.out"}); },
+  onEnterBack:function(){ gsap.to([bt,bb],{height:"6vh",duration:1,ease:"power2.out"}); },
+  onLeaveBack:function(){ gsap.to([bt,bb],{height:0,duration:1,ease:"power2.out"}); }
+});
+
+/* ---- reveals ---- */
+gsap.utils.toArray(".reveal").forEach(function(el){
+  gsap.to(el, {
+    opacity:1, y:0, duration:1.1, ease:"power3.out",
+    scrollTrigger:{trigger:el, start:"top 78%"}
+  });
+});
+
+/* ---- veil darkens between stew and patience (the deep simmer) ---- */
+gsap.to("#veil", {
+  opacity:0.45, ease:"none",
+  scrollTrigger:{trigger:"#ch-stew", start:"bottom 90%", end:"bottom 20%", scrub:true}
+});
+gsap.to("#veil", {
+  opacity:0, ease:"none",
+  scrollTrigger:{trigger:"#ch-wait", start:"top 60%", end:"top 10%", scrub:true}
+});
+
+/* ---- patience hour counter, scroll-scrubbed ---- */
+var hoursEl = document.getElementById("hours");
+var hoursObj = {h:0};
+gsap.to(hoursObj, {
+  h:6, ease:"none",
+  scrollTrigger:{trigger:"#ch-wait", start:"top 90%", end:"center 40%", scrub:0.4},
+  onUpdate:function(){
+    hoursEl.firstChild.textContent = hoursObj.h.toFixed(1) + " ";
+  }
+});
+
+/* ---- finale wax stamp ---- */
+var stampTl = gsap.timeline({
+  scrollTrigger:{trigger:"#finale", start:"top 65%"}
+});
+stampTl
+ .to("#emblem", {opacity:1, scale:1, duration:0.7, ease:"power4.in"})
+ .to("#shock", {opacity:0.9, scale:1, duration:0.05}, ">-0.02")
+ .to("#shock", {opacity:0, scale:1.5, duration:0.8, ease:"power2.out"})
+ .fromTo("#sealwrap", {y:0},{y:-6, yoyo:true, repeat:1, duration:0.07}, "<");
+/* gentle idle float after landing */
+stampTl.to("#emblem", {y:-8, duration:2.4, yoyo:true, repeat:-1, ease:"sine.inOut"});
+
+/* ---- CTAs (placeholders until real links land) ---- */
+var toast = document.getElementById("toast");
+var tmr;
+function say(msg){
+  toast.textContent = msg;
+  toast.classList.add("show");
+  clearTimeout(tmr);
+  tmr = setTimeout(function(){ toast.classList.remove("show"); }, 3200);
+}
+document.getElementById("joinBtn").addEventListener("click", function(){
+  say("Discord กำลังตั้งหม้อ เคี่ยวอีกนิดเดียว 🍲 (link coming soon)");
+});
+document.getElementById("whisBtn").addEventListener("click", function(){
+  say('เปิดเกมแล้วพิมพ์ /whisper "GanachaiBoyz" ได้เลย');
+});
+
+/* ---- pause offscreen videos when tab hidden ---- */
+document.addEventListener("visibilitychange", function(){
+  var v = layers[current].querySelector("video");
+  if (!v) return;
+  if (document.hidden) v.pause(); else v.play().catch(function(){});
+});
+})();
+</script>
+</body>
+</html>
