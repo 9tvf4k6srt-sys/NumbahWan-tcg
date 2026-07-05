@@ -172,6 +172,58 @@ function trimMemory() {
     console.log(`  evaluations: trimmed ${removed}`)
   }
 
+  /* ── patterns maps (2026-07-05 ultra-audit fix #4) ──────────────
+     memory.patterns was the trimmer's blind spot: 34KB of keyed maps
+     (coChanges alone 22KB / 380+ pairs) that the array trimmer never
+     touched, leaving memory.json stuck at 161KB vs the 100KB target.
+     Reuse the same weigh-and-keep strategy watch.json already gets.
+     Weighing: co-change/hotspot counts ARE the signal — keep the
+     strongest pairs, archive the long tail of 1-2x coincidences. */
+  if (mem.patterns && typeof mem.patterns === 'object') {
+    const p = mem.patterns
+    const patternCaps = [
+      { key: 'coChanges', limit: AGGRESSIVE ? 80 : 120, weigh: (v) => (typeof v === 'number' ? v : v?.count || 0) },
+      { key: 'hotspots',  limit: AGGRESSIVE ? 60 : 80,  weigh: (v) => (typeof v === 'number' ? v : v?.count || 0) },
+    ]
+    for (const { key, limit, weigh } of patternCaps) {
+      if (!p[key] || Array.isArray(p[key])) continue
+      const before = Object.keys(p[key]).length
+      const { kept, removed } = trimKeyedMap(p[key], limit, weigh)
+      const removedN = Object.keys(removed).length
+      if (removedN > 0) {
+        archived.data[`patterns.${key}`] = removed
+        p[key] = kept
+        totalRemoved += removedN
+        console.log(`  patterns.${key}: ${before} → ${Object.keys(kept).length} (${removedN} removed)`)
+      }
+    }
+    const patternArrays = [
+      { key: 'fixChains',   limit: AGGRESSIVE ? 10 : 15 },
+      { key: 'bundleTrend', limit: AGGRESSIVE ? 40 : 60 },
+    ]
+    for (const { key, limit } of patternArrays) {
+      if (!Array.isArray(p[key]) || p[key].length <= limit) continue
+      const removed = p[key].length - limit
+      archived.data[`patterns.${key}`] = p[key].slice(0, -limit)
+      p[key] = p[key].slice(-limit) // keep most recent (arrays are append-order)
+      totalRemoved += removed
+      console.log(`  patterns.${key}: trimmed ${removed}`)
+    }
+  }
+
+  /* Archive rotation: one archive file per trim adds up. Keep the 20 newest. */
+  try {
+    if (!DRY_RUN && fs.existsSync(ARCHIVE_DIR)) {
+      const archives = fs.readdirSync(ARCHIVE_DIR).filter((f) => f.endsWith('.json')).sort()
+      if (archives.length > 20) {
+        for (const f of archives.slice(0, archives.length - 20)) {
+          fs.unlinkSync(path.join(ARCHIVE_DIR, f))
+        }
+        console.log(`  archive: rotated ${archives.length - 20} old file(s)`)
+      }
+    }
+  } catch { /* rotation is best-effort */ }
+
   if (!DRY_RUN && totalRemoved > 0) {
     // Archive removed data
     if (!fs.existsSync(ARCHIVE_DIR)) fs.mkdirSync(ARCHIVE_DIR, { recursive: true })

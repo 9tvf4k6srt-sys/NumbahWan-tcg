@@ -72,7 +72,11 @@ function fileExists(rel) {
   try { return fs.existsSync(path.join(ROOT, rel)); } catch { return false; }
 }
 
-/** Last-seen timestamp (ms) per system, from events.jsonl. */
+/** Last-seen timestamp (ms) per system, from events.jsonl.
+ *  HONESTY RULE (2026-07-05 ultra-audit fix #2): heartbeat pings do NOT
+ *  count as proof a system ran. Before this, the heartbeat's own pings
+ *  masked 25+ days of true silence — the alibi and the witness were the
+ *  same event. Only real events (non-heartbeat) attest to activity. */
 function lastSeen() {
   const seen = {};
   if (!fs.existsSync(EVENTS)) return seen;
@@ -82,6 +86,7 @@ function lastSeen() {
     if (!line) continue;
     let e; try { e = JSON.parse(line); } catch { continue; }
     if (!e.system || !e.ts) continue;
+    if (e.event === 'heartbeat') continue; // pings are not runs
     if (!seen[e.system] || e.ts > seen[e.system]) seen[e.system] = e.ts;
   }
   return seen;
@@ -109,7 +114,35 @@ function emit(system, event, data) {
   }
 }
 
+/* ── Hooks self-heal (root cause: dormant core.hooksPath = dead loop) ──
+   The entire post-commit learning loop dies silently in any fresh clone
+   because git's core.hooksPath is unset. Heartbeat runs at session start
+   and on every commit, so it is the perfect place to self-heal: check,
+   re-wire if dormant, and emit a WARNING event so recurrence is learnable.
+   Idempotent, <50ms, never throws. (2026-07-05 ultra-audit fix #1.) */
+function ensureHooksActive() {
+  try {
+    const current = execFileSync('git', ['config', '--local', 'core.hooksPath'],
+      { cwd: ROOT, encoding: 'utf8', timeout: 5000 }).trim();
+    if (current === '.husky') return { active: true, healed: false };
+  } catch { /* unset — fall through to heal */ }
+  try {
+    execFileSync('node', [path.join(__dirname, 'install-hooks.cjs'), '--silent'],
+      { cwd: ROOT, stdio: 'ignore', timeout: 10000 });
+    // Warning, not info: dormant hooks meant the loop was OFF. Make it signal.
+    try {
+      execFileSync('node', [BUS, 'emit', '--system=hooks', '--event=hooks_dormant',
+        '--severity=warning', '--data={"healed":true,"source":"heartbeat"}', '--silent'],
+        { cwd: ROOT, stdio: 'ignore', timeout: 8000 });
+    } catch { /* bus optional */ }
+    return { active: true, healed: true };
+  } catch {
+    return { active: false, healed: false };
+  }
+}
+
 // ── run ─────────────────────────────────────────────────────────────────────
+const hooksState = ensureHooksActive();
 const seen = lastSeen();
 const results = [];
 
@@ -130,7 +163,7 @@ for (const sys of SYSTEMS) {
 
 // ── report ────────────────────────────────────────────────────────────────
 if (JSON_OUT) {
-  process.stdout.write(JSON.stringify({ mode: CHECK ? 'check' : 'pulse', idleDays: IDLE_DAYS, results }, null, 2) + '\n');
+  process.stdout.write(JSON.stringify({ mode: CHECK ? 'check' : 'pulse', idleDays: IDLE_DAYS, hooks: hooksState, results }, null, 2) + '\n');
   process.exit(0);
 }
 
@@ -152,7 +185,7 @@ if (CHECK) {
   process.exit(silent.length ? 1 : 0);
 }
 
-const revived = results.filter((r) => r.revived);
+const idle = results.filter((r) => r.revived); // truly idle (pings no longer mask this)
 const degraded = results.filter((r) => !r.runnable);
 const failed = results.filter((r) => !r.emitted);
 
@@ -161,12 +194,17 @@ if (!SILENT) {
   log(`  ${C.b}HEARTBEAT${C.r}  ${C.dim}keeps learning systems alive across sessions${C.r}`);
   log('  ' + '─'.repeat(52));
 }
+if (hooksState.healed) {
+  log(`  ${C.yellow}⚡ hooks were DORMANT — re-wired core.hooksPath → .husky (loop restored)${C.r}`);
+} else if (!hooksState.active) {
+  log(`  ${C.red}✗ hooks could not be activated — run: node tools/install-hooks.cjs${C.r}`);
+}
 log(`  ${C.green}✓${C.r} pinged ${results.length} systems` +
-    (revived.length ? `  ${C.cyan}(revived ${revived.length} idle)${C.r}` : '') +
+    (idle.length ? `  ${C.yellow}(${idle.length} truly idle >14d)${C.r}` : '') +
     (degraded.length ? `  ${C.yellow}(${degraded.length} not runnable)${C.r}` : '') +
     (failed.length ? `  ${C.red}(${failed.length} emit failed)${C.r}` : ''));
-if (revived.length && !SILENT) {
-  log(`  ${C.dim}revived: ${revived.map((r) => r.system).join(', ')}${C.r}`);
+if (idle.length && !SILENT) {
+  log(`  ${C.dim}idle (no REAL run in 14d — pings don't count): ${idle.map((r) => r.system).join(', ')}${C.r}`);
 }
 if (degraded.length && !SILENT) {
   log(`  ${C.yellow}look at: ${degraded.map((r) => r.system).join(', ')} — file missing${C.r}`);

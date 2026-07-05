@@ -124,11 +124,38 @@ function collectObservers() {
   const days = ageDays(new Date(o.runAt).getTime())
   const failed = o.failures || 0
   const ok = o.total - failed
+  /* HONESTY (2026-07-05 ultra-audit fix #3): a perfect run from 64 days ago
+     is not a healthy observer pipeline. Score decays 5/day past 7d (floor 25)
+     so score and status can never disagree about staleness again. */
+  let score = o.total ? Math.round(100 * ok / o.total) : 0
+  if (days !== null && days > 7) score = Math.max(25, score - (days - 7) * 5)
   return {
     status: failed > 0 ? 'failing' : days !== null && days > 7 ? 'stale' : 'ok',
-    score: o.total ? Math.round(100 * ok / o.total) : 0,
+    score,
     detail: `${ok}/${o.total} ok · last run ${days !== null ? `${days}d ago` : 'unknown'} · ${o.profile || '?'}`,
   }
+}
+
+/* ─── Hooks — the loop's engine. Dormant hooks = every recursive system OFF.
+   (2026-07-05 ultra-audit fix #3: the dashboard showed 88/B while
+   core.hooksPath was unset and the whole post-commit loop was dead.) */
+function collectHooks() {
+  let hooksPath = ''
+  try {
+    hooksPath = require('child_process')
+      .execFileSync('git', ['config', '--local', 'core.hooksPath'], { cwd: ROOT, encoding: 'utf8', timeout: 5000 })
+      .trim()
+  } catch { /* unset */ }
+  const wired = hooksPath === '.husky'
+  const present = ['pre-commit', 'post-commit', 'post-merge']
+    .filter((h) => fs.existsSync(path.join(ROOT, '.husky', h)))
+  if (!wired) {
+    return { status: 'failing', score: 0, detail: `core.hooksPath UNSET — loop is OFF · fix: node bin/ai.cjs hooks` }
+  }
+  if (present.length < 3) {
+    return { status: 'watch', score: 60, detail: `wired but only ${present.length}/3 hooks present (${present.join(', ')})` }
+  }
+  return { status: 'ok', score: 100, detail: `core.hooksPath → .husky · 3/3 hooks present` }
 }
 
 function collectGates() {
@@ -143,11 +170,15 @@ function collectGates() {
 
   // Stale gate guard: a smoke report from months ago is not a live gate.
   // (A Feb-18 "1 failed" was dragging gates down in June — old news, not signal.)
+  // HONESTY (2026-07-05): staleness must COST points, not just vanish —
+  // otherwise "all gates stale" scores a perfect 100. Track and cap below.
+  let staleGates = 0
   if (smoke && smoke.timestamp) {
     const age = Date.now() - Date.parse(smoke.timestamp)
     if (Number.isFinite(age) && age > 14 * 86400000) {
       parts.push(`smoke:stale(${Math.round(age / 86400000)}d)`)
       smoke = null
+      staleGates++
     }
   }
 
@@ -170,9 +201,14 @@ function collectGates() {
     if (!ok && worst !== 'failing') worst = 'watch'
   }
 
+  let score = scoreN ? Math.round(scoreSum / scoreN) : 0
+  if (staleGates > 0) {
+    score = Math.min(score, 85 - (staleGates - 1) * 10) // each stale gate hurts
+    if (worst === 'ok') worst = 'watch'
+  }
   return {
     status: worst,
-    score: scoreN ? Math.round(scoreSum / scoreN) : 0,
+    score,
     detail: parts.join(' · ') || 'no gate data',
   }
 }
@@ -289,6 +325,7 @@ function collectLearning() {
 /* ─── Public API ──────────────────────────────────────── */
 function snapshot() {
   const systems = {
+    hooks:     collectHooks(),
     mycelium:  collectMycelium(),
     watch:     collectWatch(),
     sentinel:  collectEval(),
@@ -306,7 +343,7 @@ function snapshot() {
      Freshness + trends + learning carry real weight — they are the new
      dynamic signals; if they degrade, the codebase is going stale or
      regressing whether or not any single subsystem is failing. */
-  const weights = { mycelium: 1.5, watch: 1.0, sentinel: 1.5, factory: 0.8, mining: 1.0, observers: 1.2, gates: 1.5, events: 1.0, errors: 1.5, freshness: 1.5, trends: 1.5, learning: 1.0 }
+  const weights = { hooks: 1.5, mycelium: 1.5, watch: 1.0, sentinel: 1.5, factory: 0.8, mining: 1.0, observers: 1.2, gates: 1.5, events: 1.0, errors: 1.5, freshness: 1.5, trends: 1.5, learning: 1.0 }
   let sum = 0, w = 0
   for (const [k, v] of Object.entries(systems)) {
     if (v.status === 'missing') continue
@@ -336,8 +373,8 @@ function pretty(snap) {
   lines.push('')
   lines.push(`  ${bold('System Health')}  ${cyan(snap.composite + '/' + snap.grade)}  ${dim(snap.runAt)}`)
   lines.push(`  ${dim('─'.repeat(58))}`)
-  const order = ['mycelium', 'watch', 'sentinel', 'factory', 'mining', 'observers', 'gates', 'events', 'errors', 'freshness', 'trends', 'learning']
-  const labels = { mycelium: 'mycelium ', watch: 'watch    ', sentinel: 'sentinel ', factory: 'factory  ', mining: 'mining   ', observers: 'observers', gates: 'gates    ', events: 'events   ', errors: 'errors   ', freshness: 'freshness', trends: 'trends   ', learning: 'learning ' }
+  const order = ['hooks', 'mycelium', 'watch', 'sentinel', 'factory', 'mining', 'observers', 'gates', 'events', 'errors', 'freshness', 'trends', 'learning']
+  const labels = { hooks: 'hooks    ', mycelium: 'mycelium ', watch: 'watch    ', sentinel: 'sentinel ', factory: 'factory  ', mining: 'mining   ', observers: 'observers', gates: 'gates    ', events: 'events   ', errors: 'errors   ', freshness: 'freshness', trends: 'trends   ', learning: 'learning ' }
   for (const k of order) {
     const v = snap.systems[k]
     if (!v) continue
