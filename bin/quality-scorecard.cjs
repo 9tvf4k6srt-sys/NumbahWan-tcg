@@ -135,6 +135,35 @@ function scorePage(pagePath) {
     score -= Math.min(imgsNoAlt * 2, 10);
   }
 
+  // 6. Cinematic media discipline (LANDING-CINEMATIC.md — measurable subset)
+  const videoTags = content.match(/<video\b[^>]*>/gi) || [];
+  if (videoTags.length > 0) {
+    let mediaIssues = [];
+    videoTags.forEach(tag => {
+      const autoplay = /\bautoplay\b/i.test(tag);
+      if (autoplay && !/\bmuted\b/i.test(tag)) mediaIssues.push('autoplay without muted');
+      if (autoplay && !/\bplaysinline\b/i.test(tag)) mediaIssues.push('autoplay without playsinline');
+      if (autoplay && !/\bposter="/i.test(tag)) mediaIssues.push('autoplay without poster');
+      if (!/\bwidth=/.test(tag) || !/\bheight=/.test(tag)) mediaIssues.push('video missing width/height (CLS)');
+    });
+    const autoplays = videoTags.some(t => /\bautoplay\b/i.test(t));
+    if (autoplays && !/prefers-reduced-motion/.test(content) && !content.includes('nw-landing.css')) {
+      mediaIssues.push('autoplay video but no prefers-reduced-motion handling');
+    }
+    if (mediaIssues.length) {
+      checks.push({ name: 'media-cinematic', pass: false, msg: [...new Set(mediaIssues)].join('; ') });
+      score -= Math.min(mediaIssues.length * 3, 12);
+    } else {
+      checks.push({ name: 'media-cinematic', pass: true, msg: `${videoTags.length} video(s), fallback ladder OK` });
+    }
+  }
+  const canvasTags = content.match(/<canvas\b[^>]*>/gi) || [];
+  const canvasNoAria = canvasTags.filter(t => !/aria-label=|\brole=/.test(t)).length;
+  if (canvasNoAria > 0) {
+    checks.push({ name: 'a11y-canvas', pass: false, msg: `${canvasNoAria} canvas without aria-label/role`, warn: true });
+    score -= Math.min(canvasNoAria * 2, 6);
+  }
+
   // Cap score
   score = Math.max(0, Math.min(105, score));
 

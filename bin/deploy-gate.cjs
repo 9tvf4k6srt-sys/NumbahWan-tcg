@@ -129,6 +129,25 @@ if (budget.ok) {
   info('Bundle: no history available');
 }
 
+// 6. Landing Cinematic Gate (references/LANDING-CINEMATIC.md)
+info('Running landing cinematic lint...');
+const landing = run('node tools/landing-lint.cjs --all --json 2>/dev/null', 60000);
+if (landing.ok || landing.out) {
+  try {
+    const lr = JSON.parse(landing.out);
+    const pass = lr.blocks === 0;
+    checks.push({ name: 'landing', pass, msg: `${lr.pages.length} landing page(s), ${lr.blocks} blocking, ${lr.warns} warnings` });
+    if (pass) ok(`Landing: ${lr.pages.length} page(s) clean (${lr.warns} warnings)`);
+    else fail(`Landing: ${lr.blocks} blocking cinematic finding(s) — run node tools/landing-lint.cjs --all`);
+  } catch {
+    checks.push({ name: 'landing', pass: true, msg: 'No landing pages detected' });
+    info('Landing: no pages to lint');
+  }
+} else {
+  checks.push({ name: 'landing', pass: true, msg: 'Lint unavailable' });
+  info('Landing: lint unavailable (non-blocking)');
+}
+
 // ── Decision ──
 const blocking = checks.filter(c => !c.pass);
 const passed = blocking.length === 0;
