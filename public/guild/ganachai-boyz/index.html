@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GANACHAI BOYZ | กานาฉ่ายบอยซ์ · Ragnarok: The New World Guild</title>
+<meta name="description" content="Ganachai Boyz: five pickled mustard greens running Prontera like family. MVP hunts, WoE every Saturday, card night after. หมักมาดี ตีไม่แตก">
+<meta property="og:title" content="GANACHAI BOYZ · หมักมาดี ตีไม่แตก">
+<meta property="og:description" content="Five pickled mustard greens running Prontera like family. Ragnarok: The New World, SEA.">
+<meta property="og:image" content="/guild/ganachai-boyz/media/hero_poster.webp">
+<link rel="icon" href="/guild/ganachai-boyz/media/emblem_fav.png" type="image/png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Chonburi&family=Mitr:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="preload" as="image" href="/guild/ganachai-boyz/media/hero_poster.webp" fetchpriority="high">
+<link rel="preload" as="image" href="/guild/ganachai-boyz/media/emblem.webp">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.13.0/gsap.min.js" defer></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.13.0/ScrollTrigger.min.js" defer></script>
+<script src="https://cdn.jsdelivr.net/npm/lenis@1.1.13/dist/lenis.min.js" defer></script>
+<!-- standalone page by owner request: nw-nav.js / i18n chrome intentionally omitted, no links back to the NWG site -->
+<style>
+/* ══════════════════════════════════════════════════════════════
+   GANACHAI BOYZ — cinematic scroll landing
+   Doctrine: references/LANDING-CINEMATIC.md + references/MOTION-CRAFT.md
+   Arc: hook → chaos (scrubbed fight) → precision (WoE HP drain) → mastery (family)
+   Grade: one tint, pickled-brine amber over near-black. Grain 3%. Vignette 32%.
+   ══════════════════════════════════════════════════════════════ */
+:root{
+  --bg:#0a0e0a;
+  --bg2:#101710;
+  --leaf:#4caf50;
+  --leaf-deep:#2e7d32;
+  --rib:#dcedc8;
+  --amber:#d4a017;
+  --amber-hi:#ffc107;
+  --magenta:#e91e63;
+  --ink:#f2efe4;
+  --ink-dim:#b9b4a2;
+  --grade:rgba(60,42,8,0.22);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  background:var(--bg);color:var(--ink);
+  font-family:'Mitr',sans-serif;font-weight:300;
+  overflow-x:hidden;
+}
+.display{font-family:'Chonburi',serif}
+img,video{display:block;max-width:100%;height:auto}
+a{color:inherit}
+
+/* ── film layer: grain + vignette + grade. Post, not polygons. ── */
+.gb-film{position:fixed;inset:0;pointer-events:none;z-index:60}
+.gb-film::before{ /* grain */
+  content:"";position:absolute;inset:0;opacity:.035;mix-blend-mode:overlay;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+.gb-film::after{ /* vignette + amber grade */
+  content:"";position:absolute;inset:0;
+  background:
+    radial-gradient(ellipse at center, transparent 55%, rgba(0,0,0,.32) 100%),
+    var(--grade);
+  mix-blend-mode:multiply;
+}
+
+/* ── hero ── */
+.gb-hero{position:relative;min-height:100svh;display:grid;place-items:end center;overflow:hidden}
+.gb-hero-media{position:absolute;inset:0;background:var(--bg)}
+/* full scene visible: contain, letterbox melts into the night bg */
+.gb-hero-media video,.gb-hero-media img{width:100%;height:100%;object-fit:contain}
+/* tall portrait screens: a contained 16:9 clip becomes a tiny strip, so fill instead */
+@media(orientation:portrait) and (max-width:760px){
+  .gb-hero-media video,.gb-hero-media img{object-fit:cover}
+}
+.gb-hero-scrim{position:absolute;inset:0;background:linear-gradient(180deg,rgba(10,14,10,.25) 0%,rgba(10,14,10,.05) 40%,rgba(10,14,10,.88) 88%)}
+.gb-hero-inner{position:relative;z-index:2;text-align:center;padding:0 20px 12vh;max-width:900px}
+.gb-emblem{
+  width:clamp(84px,10vw,128px);height:auto;margin:0 auto 18px;display:block;
+  filter:drop-shadow(0 6px 24px rgba(0,0,0,.55));
+}
+.gb-kicker{
+  font-size:clamp(11px,1.4vw,14px);letter-spacing:.34em;text-transform:uppercase;
+  color:var(--amber-hi);margin-bottom:14px;font-weight:400;
+}
+.gb-title{
+  font-size:clamp(46px,9vw,118px);line-height:.95;color:var(--ink);
+  text-shadow:0 4px 40px rgba(0,0,0,.6);
+}
+.gb-title .row{display:block;overflow:hidden}
+.gb-title .row>span{display:inline-block}
+.gb-slogan{
+  margin-top:18px;font-size:clamp(20px,3vw,32px);font-weight:500;color:var(--rib);
+}
+.gb-sub{margin-top:10px;font-size:clamp(14px,1.6vw,17px);color:var(--ink-dim);max-width:560px;margin-inline:auto}
+.gb-cta{
+  display:inline-block;margin-top:28px;padding:14px 38px;border-radius:4px;
+  background:var(--amber);color:#171204;font-weight:600;font-size:17px;text-decoration:none;
+  box-shadow:0 6px 30px rgba(212,160,23,.35);
+  transition:transform .35s cubic-bezier(.22,1,.36,1),box-shadow .35s;
+}
+.gb-cta:hover{transform:translateY(-2px);box-shadow:0 10px 40px rgba(212,160,23,.5)}
+.gb-scroll-cue{
+  position:absolute;bottom:26px;left:50%;transform:translateX(-50%);z-index:3;
+  font-size:12px;letter-spacing:.22em;color:var(--ink-dim);text-transform:uppercase;
+  animation:gbFloat 2.6s ease-in-out infinite;
+}
+@keyframes gbFloat{0%,100%{transform:translate(-50%,0)}50%{transform:translate(-50%,7px)}}
+
+/* ── beats shared ── */
+.gb-beat{position:relative;padding:16vh 6vw}
+.gb-beat-head{max-width:760px;margin:0 auto 7vh;text-align:center}
+.gb-index{font-size:12px;letter-spacing:.3em;color:var(--amber-hi);text-transform:uppercase;margin-bottom:12px}
+.gb-h2{font-size:clamp(30px,4.6vw,56px);line-height:1.08}
+.gb-h2 .th{display:block;color:var(--rib)}
+.gb-h2 .en{display:block;font-size:.52em;color:var(--ink-dim);font-family:'Mitr';font-weight:400;margin-top:10px}
+.gb-body{margin-top:18px;color:var(--ink-dim);font-size:clamp(15px,1.7vw,18px);line-height:1.65}
+
+/* ── beat 2: pinned scrub theatre ── */
+.gb-theatre{position:relative}
+.gb-stage{position:relative;max-width:1200px;margin:0 auto;border-radius:8px;overflow:hidden;
+  box-shadow:0 30px 90px rgba(0,0,0,.55);aspect-ratio:16/9;background:#000}
+.gb-stage video,.gb-stage img{width:100%;height:100%;object-fit:cover}
+.gb-scrub-cue{
+  position:absolute;left:50%;bottom:14px;transform:translateX(-50%);z-index:4;
+  font-size:12px;letter-spacing:.18em;color:var(--rib);text-transform:uppercase;
+  background:rgba(10,14,10,.55);padding:7px 16px;border-radius:99px;backdrop-filter:blur(6px);
+  white-space:nowrap;
+}
+.gb-scrub-bar{position:absolute;left:0;bottom:0;height:3px;width:100%;transform-origin:left;
+  transform:scaleX(0);background:linear-gradient(90deg,var(--magenta),var(--amber-hi));z-index:5}
+
+/* ── beat 3: WoE + Emperium HP ── */
+.gb-woe-wrap{position:relative;max-width:1200px;margin:0 auto}
+.gb-hud{
+  position:relative;margin:-34px auto 0;max-width:640px;z-index:5;
+  background:rgba(12,16,12,.86);border:1px solid rgba(212,160,23,.35);border-radius:10px;
+  padding:18px 22px;backdrop-filter:blur(8px);
+}
+.gb-hud-top{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:9px}
+.gb-hud-name{font-size:13px;letter-spacing:.24em;text-transform:uppercase;color:var(--amber-hi)}
+.gb-hud-pct{font-size:15px;color:var(--rib);font-variant-numeric:tabular-nums;font-weight:500}
+.gb-hpbar{height:14px;border-radius:99px;background:#1c231c;overflow:hidden;border:1px solid rgba(255,255,255,.08)}
+.gb-hpfill{height:100%;width:100%;transform-origin:left;border-radius:99px;
+  background:linear-gradient(90deg,#e4557a,var(--amber-hi));}
+.gb-hud-line{margin-top:12px;font-size:15px;color:var(--ink-dim);min-height:1.6em;text-align:center}
+.gb-hud-line .on{color:var(--rib)}
+.gb-emperium-shatter{color:var(--amber-hi);font-weight:500}
+
+/* ── beat 4: family + roster ── */
+.gb-family{position:relative;max-width:1200px;margin:0 auto;border-radius:8px;overflow:hidden;aspect-ratio:1600/893}
+.gb-family img{width:100%;height:auto;transform:scale(1.06)}
+.gb-roster{display:grid;grid-template-columns:repeat(5,1fr);gap:14px;max-width:1200px;margin:7vh auto 0}
+.gb-card{
+  position:relative;border-radius:10px;overflow:hidden;background:var(--bg2);
+  border:1px solid rgba(220,237,200,.09);
+  transform-style:preserve-3d;will-change:transform;
+}
+.gb-card-art{
+  position:relative;aspect-ratio:460/640;
+  background:radial-gradient(ellipse at 50% 78%, rgba(212,160,23,.10) 0%, rgba(46,125,50,.06) 42%, transparent 72%), var(--bg2);
+}
+.gb-card-art img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain}
+.gb-card-meta{padding:12px 14px 16px}
+.gb-card-name{font-size:17px;color:var(--rib);font-weight:500}
+.gb-card-class{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--amber-hi);margin-top:2px}
+.gb-card-line{font-size:13px;color:var(--ink-dim);margin-top:8px;line-height:1.5}
+@media(max-width:900px){.gb-roster{grid-template-columns:repeat(2,1fr)}.gb-roster .gb-card:last-child{grid-column:1/-1;max-width:50%;margin:0 auto}}
+
+/* ── resolve / recruit ── */
+.gb-resolve{text-align:center;padding:18vh 6vw 12vh}
+.gb-facts{display:flex;gap:34px;justify-content:center;flex-wrap:wrap;margin-top:34px;color:var(--ink-dim);font-size:14px}
+.gb-facts b{display:block;color:var(--rib);font-size:19px;font-weight:500;margin-bottom:3px}
+.gb-foot{padding:26px 6vw 34px;text-align:center;color:#6d6a5c;font-size:12.5px;border-top:1px solid rgba(220,237,200,.07)}
+
+/* ── reveal defaults (JS enhances; without JS everything is visible) ── */
+.gb-reveal{opacity:1;transform:none}
+
+/* ── fallback ladder ── */
+@media (prefers-reduced-motion: reduce){
+  .gb-scroll-cue{animation:none}
+  .gb-film::before{display:none}
+  video[autoplay]{display:none}
+  .gb-hero-media .gb-poster-fallback{display:block !important}
+}
+@media (prefers-reduced-data: reduce){
+  .gb-film::before{display:none}
+}
+</style>
+</head>
+<body>
+
+<!-- ═══ BEAT 1 · HERO: the hook lands while the film plays ═══ -->
+<section class="gb-hero" id="top">
+  <div class="gb-hero-media" aria-hidden="false">
+    <video autoplay muted loop playsinline preload="metadata"
+      poster="/guild/ganachai-boyz/media/hero_poster.webp" width="1280" height="720"
+      aria-label="สามผักกาดเขียวปลีนักเลงเดินฝ่าสายฝนเข้าตรอกพรอนเทร่ายามค่ำ Three mustard green gangsters walk a rainy neon Prontera alley"
+      data-gb-hero-video>
+      <source src="/guild/ganachai-boyz/media/hero.webm" type="video/webm">
+      <source src="/guild/ganachai-boyz/media/hero.mp4" type="video/mp4">
+      <img src="/guild/ganachai-boyz/media/hero_poster.webp" alt="สามผักกาดเขียวปลีในตรอกพรอนเทร่า" width="1280" height="714" loading="lazy" decoding="async">
+    </video>
+    <img class="gb-poster-fallback" src="/guild/ganachai-boyz/media/hero_poster.webp"
+      alt="ภาพนิ่งตรอกพรอนเทร่า Prontera alley still" width="1280" height="714" loading="lazy" decoding="async" style="display:none;position:absolute;inset:0;width:100%;height:100%;object-fit:cover" aria-hidden="true">
+    <div class="gb-hero-scrim"></div>
+  </div>
+  <div class="gb-hero-inner">
+    <img class="gb-emblem gb-o0" src="/guild/ganachai-boyz/media/emblem.webp" width="512" height="512"
+      alt="ตรากิลด์กานาฉ่ายบอยซ์ Ganachai Boyz guild emblem" decoding="async" fetchpriority="high">
+    <div class="gb-kicker gb-o1">Ragnarok: The New World · SEA</div>
+    <h1 class="gb-title display" aria-label="GANACHAI BOYZ">
+      <span class="row"><span>GANACHAI</span></span>
+      <span class="row"><span>BOYZ</span></span>
+    </h1>
+    <div class="gb-slogan gb-o2">หมักมาดี ตีไม่แตก</div>
+    <p class="gb-sub gb-o3">Well pickled. Never breaks. Five mustard greens running Prontera like family.</p>
+    <a class="gb-cta gb-o4" href="#recruit">เข้าแก๊ง · Join the Family</a>
+  </div>
+  <div class="gb-scroll-cue" aria-hidden="true">เลื่อนลงดูพวกเรา · Scroll</div>
+</section>
+
+<!-- ═══ BEAT 2 · CHAOS: the hunt. Your wheel is the playhead. ═══ -->
+<section class="gb-beat gb-theatre" id="hunt">
+  <div class="gb-beat-head gb-reveal">
+    <div class="gb-index">02 · Chaos · ล่าบอส</div>
+    <h2 class="gb-h2 display">
+      <span class="th">บาโฟเมตเจอผิดแก๊ง</span>
+      <span class="en">Baphomet picked the wrong vegetables</span>
+    </h2>
+    <p class="gb-body">คืน MVP: บิ๊กปลียืนรับหน้า ลิลดองอ้อมหลัง ป้าเขียวคุมลมหายใจของทุกคน
+      MVP night. Big Plee holds the front, Lil' Dong takes the back, Auntie Kiew keeps everyone breathing.</p>
+  </div>
+  <div class="gb-stage gb-reveal" data-gb-scrub>
+    <video muted playsinline preload="none" width="960" height="540"
+      poster="/guild/ganachai-boyz/media/fight_poster.webp"
+      aria-label="แก๊งกานาฉ่ายสู้กับบาโฟเมต The boyz fight Baphomet with spell effects"
+      data-scrub-src="/guild/ganachai-boyz/media/fight_scrub.mp4"
+      data-play-src="/guild/ganachai-boyz/media/fight_play.mp4"></video>
+    <div class="gb-scrub-cue" data-gb-scrub-cue>เลื่อนเพื่อคุมการต่อสู้ · scroll runs the fight</div>
+    <div class="gb-scrub-bar" data-gb-scrub-bar></div>
+  </div>
+</section>
+
+<!-- ═══ BEAT 3 · PRECISION: WoE. Scroll drains the Emperium. ═══ -->
+<section class="gb-beat" id="woe">
+  <div class="gb-beat-head gb-reveal">
+    <div class="gb-index">03 · Precision · ตีป้อม</div>
+    <h2 class="gb-h2 display">
+      <span class="th">เสาร์ละสองชั่วโมง คริสตัลหนึ่งเม็ด</span>
+      <span class="en">Two hours every Saturday. One crystal.</span>
+    </h2>
+    <p class="gb-body">WoE คือธุรกิจครอบครัว เข้าพร้อมกัน ตีพร้อมกัน กลับบ้านพร้อมป้อม
+      WoE is the family business. Enter together, hit together, walk home with a castle.</p>
+  </div>
+  <div class="gb-woe-wrap gb-reveal">
+    <div class="gb-stage">
+      <video muted loop playsinline preload="none" width="1280" height="720"
+        poster="/guild/ganachai-boyz/media/woe_poster.webp"
+        aria-label="แก๊งพังประตูห้องเอมเพเรียม The boyz breach the Emperium room"
+        data-gb-lazy-video>
+        <source data-src="/guild/ganachai-boyz/media/woe.webm" type="video/webm">
+        <source data-src="/guild/ganachai-boyz/media/woe.mp4" type="video/mp4">
+      </video>
+    </div>
+    <div class="gb-hud" data-gb-hud>
+      <div class="gb-hud-top">
+        <span class="gb-hud-name">Emperium</span>
+        <span class="gb-hud-pct" data-gb-hp-pct>100%</span>
+      </div>
+      <div class="gb-hpbar"><div class="gb-hpfill" data-gb-hp-fill></div></div>
+      <div class="gb-hud-line" data-gb-hud-line>
+        <span data-line="0" class="on">พรีแคสต์ยังอยู่ · precast holds</span>
+        <span data-line="1" hidden>ประตูพัง · the door falls</span>
+        <span data-line="2" hidden class="gb-emperium-shatter">เอมเพเรียมแตก · the Emperium falls</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ BEAT 4 · MASTERY: gangster outside, family inside ═══ -->
+<section class="gb-beat" id="family">
+  <div class="gb-beat-head gb-reveal">
+    <div class="gb-index">04 · Family · ครอบครัว</div>
+    <h2 class="gb-h2 display">
+      <span class="th">โหดแค่ข้างนอก ข้างในคือครอบครัว</span>
+      <span class="en">Gangster outside. Family inside.</span>
+    </h2>
+    <p class="gb-body">หลังศึก: วงไพ่ ชาร้อนจากป้าเขียว ลิลดองหลับในโหลดอง
+      After the siege: card night, hot tea from Auntie, Lil' Dong asleep in the pickle jar. New members get a chair at this table.</p>
+  </div>
+  <div class="gb-family gb-reveal" data-gb-parallax>
+    <picture>
+      <source media="(max-width:760px)" srcset="/guild/ganachai-boyz/media/family_sm.webp">
+      <img src="/guild/ganachai-boyz/media/family.webp" width="1600" height="893" loading="lazy" decoding="async"
+        alt="แก๊งทั้งห้านั่งเล่นไพ่ในกิลด์ฮอลล์ The five boyz relax in the guild hall">
+    </picture>
+  </div>
+
+  <div class="gb-roster" data-gb-roster>
+    <article class="gb-card">
+      <div class="gb-card-art"><img src="/guild/ganachai-boyz/media/boy_plee.webp" width="460" height="640" loading="lazy" decoding="async" alt="บิ๊กปลี Big Plee, Lord Knight"></div>
+      <div class="gb-card-meta">
+        <div class="gb-card-name">บิ๊กปลี · Big Plee</div>
+        <div class="gb-card-class">Lord Knight · The Don</div>
+        <p class="gb-card-line">หมักนานสุด ใจนิ่งสุด รอยสักมังกรคุมตรอก<br>Oldest pickle in the jar. The dragon runs the alley.</p>
+      </div>
+    </article>
+    <article class="gb-card">
+      <div class="gb-card-art"><img src="/guild/ganachai-boyz/media/boy_dong.webp" width="460" height="640" loading="lazy" decoding="async" alt="ลิลดอง Lil' Dong, Assassin Cross"></div>
+      <div class="gb-card-meta">
+        <div class="gb-card-name">ลิลดอง · Lil' Dong</div>
+        <div class="gb-card-class">Assassin Cross · The Blade</div>
+        <p class="gb-card-line">พูดน้อย กรีดไว น้ำตาสักไว้กันลืม<br>Says little. Cuts fast. The teardrop remembers.</p>
+      </div>
+    </article>
+    <article class="gb-card">
+      <div class="gb-card-art"><img src="/guild/ganachai-boyz/media/boy_kiew.webp" width="460" height="640" loading="lazy" decoding="async" alt="ป้าเขียว Auntie Kiew, High Priest"></div>
+      <div class="gb-card-meta">
+        <div class="gb-card-name">ป้าเขียว · Auntie Kiew</div>
+        <div class="gb-card-class">High Priest · The Saint</div>
+        <p class="gb-card-line">อวยพรก่อนตี ดุสุดตอนใครลืมกินข้าว<br>Blesses the raid. Terrifying if you skip dinner.</p>
+      </div>
+    </article>
+    <article class="gb-card">
+      <div class="gb-card-art"><img src="/guild/ganachai-boyz/media/boy_choy.webp" width="460" height="640" loading="lazy" decoding="async" alt="ฟัตฉ่อย Fatt Choy, Whitesmith"></div>
+      <div class="gb-card-meta">
+        <div class="gb-card-name">ฟัตฉ่อย · Fatt Choy</div>
+        <div class="gb-card-class">Whitesmith · The Bank</div>
+        <p class="gb-card-line">ดูแลคลังกิลด์ สร้อยเอมเพเรียมของแท้<br>Runs the treasury. The Emperium chain is real.</p>
+      </div>
+    </article>
+    <article class="gb-card">
+      <div class="gb-card-art"><img src="/guild/ganachai-boyz/media/boy_snipe.webp" width="460" height="640" loading="lazy" decoding="async" alt="สไนป์บอย Snipe Boi, Sniper"></div>
+      <div class="gb-card-meta">
+        <div class="gb-card-name">สไนป์บอย · Snipe Boi</div>
+        <div class="gb-card-class">Sniper · The Eye</div>
+        <p class="gb-card-line">ตาเดียวก็พอ เหยี่ยวเห็นก่อนเสมอ<br>One eye is plenty. The falcon sees first.</p>
+      </div>
+    </article>
+  </div>
+</section>
+
+<!-- ═══ RESOLVE: the arc closes, the CTA repeats ═══ -->
+<section class="gb-resolve" id="recruit">
+  <div class="gb-beat-head gb-reveal" style="margin-bottom:0">
+    <div class="gb-index">เปิดรับสมาชิก · Recruiting</div>
+    <h2 class="gb-h2 display">
+      <span class="th">มาโดนดองด้วยกัน</span>
+      <span class="en">Get pickled with us</span>
+    </h2>
+    <p class="gb-body">รับสายบู๊ สายซัพ สายตลก ขอแค่มาตี WoE แล้วอยู่กินข้าวต่อ
+      Fighters, healers, comedians. Show up for WoE, stay for dinner.</p>
+    <a class="gb-cta" href="https://discord.gg/ganachaiboyz" rel="noopener" style="margin-top:30px">Discord · discord.gg/ganachaiboyz</a>
+    <div class="gb-facts">
+      <div><b>Valhalla · SEA</b>เซิร์ฟเวอร์ · server</div>
+      <div><b>เสาร์ 20:00 GMT+7</b>WoE ทุกสัปดาห์ · weekly</div>
+      <div><b>ครอบครัวเดียว</b>ไม่มีดราม่า · no drama</div>
+    </div>
+  </div>
+</section>
+
+<footer class="gb-foot">
+  GANACHAI BOYZ · กานาฉ่ายบอยซ์ · Ragnarok: The New World · หมักมาดี ตีไม่แตก
+</footer>
+
+<div class="gb-film" aria-hidden="true"></div>
+
+<script>
+/* ══════════════════════════════════════════════════════════════
+   MOTION SCORE (per MOTION-CRAFT §process: record the choreography)
+   overture  : hero video settles 1.06→1, title rows wipe up (expo.out,
+               stagger .1), kicker/slogan/sub/CTA follow. One timeline.
+   beat 2    : pinned scrub theatre, wheel = playhead of fight_scrub.mp4
+               (all-intra encode). Fine pointers only. Touch: play-on-enter.
+   beat 3    : woe video lazy-plays; scroll scrubs Emperium HP 100→0 with
+               copy line swaps at 45% / 80%. Reversible: scroll up heals.
+   beat 4    : family parallax (image scales/drifts), roster batch reveal,
+               pointer tilt ≤6deg on cards (desktop only).
+   easing    : expo.out entrances, none on scrubs (welded to wheel).
+   fallback  : reduced-motion collapses all; no JS = full pitch visible.
+   ══════════════════════════════════════════════════════════════ */
+(function(){
+'use strict';
+var prefersReduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+var isTouch = matchMedia('(pointer:coarse)').matches || 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+var fine = matchMedia('(pointer:fine)').matches && innerWidth > 900;
+
+/* lazy video loader (below-fold: sources carry data-src) */
+function armLazyVideos(){
+  document.querySelectorAll('[data-gb-lazy-video]').forEach(function(v){
+    new IntersectionObserver(function(entries,obs){
+      entries.forEach(function(e){
+        if(!e.isIntersecting) return;
+        obs.disconnect();
+        v.querySelectorAll('source[data-src]').forEach(function(s){ s.src = s.dataset.src; });
+        v.load();
+        if(!prefersReduced) v.play().catch(function(){});
+      });
+    },{rootMargin:'200px'}).observe(v);
+  });
+}
+
+function init(){
+  armLazyVideos();
+  if(prefersReduced || !window.gsap){ scrubFallback(); return; }
+  gsap.registerPlugin(ScrollTrigger);
+  ScrollTrigger.config({ ignoreMobileResize:true, fastScrollEnd:true });
+
+  /* scroll plumbing: Lenis owns the wheel on desktop, native on touch */
+  if(window.Lenis && !isTouch){
+    var lenis = new Lenis({ duration:1.0, smoothWheel:true, smoothTouch:false });
+    lenis.on('scroll', function(){ ScrollTrigger.update(); });
+    gsap.ticker.add(function(t){ lenis.raf(t*1000); });
+    gsap.ticker.lagSmoothing(0);
+  } else {
+    addEventListener('scroll', function(){ ScrollTrigger.update(); }, { passive:true });
+    gsap.ticker.add(function(){ ScrollTrigger.update(); });
+    gsap.ticker.lagSmoothing(0);
+  }
+
+  /* ── overture: one timeline, the first three seconds ── */
+  var intro = gsap.timeline({ defaults:{ ease:'expo.out' } });
+  intro.from('.gb-hero-media', { scale:1.06, duration:1.7 })
+       .from('.gb-emblem', { y:-14, autoAlpha:0, scale:.85, duration:1.0 }, '-=1.45')
+       .from('.gb-title .row>span', { yPercent:118, duration:1.05, stagger:0.1 }, '-=1.15')
+       .from('.gb-o1', { y:18, autoAlpha:0, duration:.8 }, '-=0.8')
+       .from('.gb-o2', { y:22, autoAlpha:0, duration:.8 }, '-=0.6')
+       .from('.gb-o3', { y:16, autoAlpha:0, duration:.7 }, '-=0.55')
+       .from('.gb-o4', { y:16, autoAlpha:0, duration:.7 }, '-=0.5');
+
+  /* hero exit: scroll deepens the grade, camera pushes in */
+  gsap.to('.gb-hero-media', {
+    scale:1.08, ease:'none',
+    scrollTrigger:{ trigger:'.gb-hero', start:'top top', end:'bottom top', scrub:1, invalidateOnRefresh:true }
+  });
+  gsap.to('.gb-hero-inner', {
+    yPercent:-14, autoAlpha:0, ease:'none',
+    scrollTrigger:{ trigger:'.gb-hero', start:'top top', end:'70% top', scrub:1, invalidateOnRefresh:true }
+  });
+
+  /* ── beat reveals: replay on re-entry, batched, no once:true ── */
+  ScrollTrigger.batch('.gb-reveal', {
+    start:'top 78%',
+    onEnter: function(els){ gsap.fromTo(els,{y:44,autoAlpha:0},{y:0,autoAlpha:1,duration:.85,ease:'expo.out',stagger:.09,overwrite:true}); },
+    onLeaveBack: function(els){ gsap.to(els,{y:44,autoAlpha:0,duration:.4,overwrite:true}); }
+  });
+
+  /* ── beat 2: the scrub theatre ── */
+  var stage = document.querySelector('[data-gb-scrub]');
+  var fightV = stage.querySelector('video');
+  var bar = stage.querySelector('[data-gb-scrub-bar]');
+  var cue = stage.querySelector('[data-gb-scrub-cue]');
+
+  if(fine){
+    fightV.src = fightV.dataset.scrubSrc;   /* all-intra encode: smooth seeks */
+    fightV.load();
+    var scrubState = { p:0 };
+    var applyFrame = function(){
+      if(fightV.duration) fightV.currentTime = scrubState.p * (fightV.duration - 0.05);
+    };
+    fightV.addEventListener('loadedmetadata', applyFrame);
+    gsap.to(scrubState, {
+      p:1, ease:'none',
+      scrollTrigger:{
+        trigger:stage, start:'center center', end:'+=1600',
+        pin:true, scrub:1, invalidateOnRefresh:true,
+        onUpdate:function(self){ scrubState.p = self.progress; applyFrame();
+          bar.style.transform = 'scaleX(' + self.progress + ')';
+          cue.style.opacity = self.progress > 0.04 ? 0 : 1;
+        }
+      }
+    });
+  } else {
+    /* touch rung: no pin (doctrine ban), clip plays on enter, rewinds on exit */
+    fightV.src = fightV.dataset.playSrc;
+    fightV.load(); fightV.loop = true;
+    cue.textContent = 'การต่อสู้เริ่มเมื่อเลื่อนถึง · plays as you arrive';
+    ScrollTrigger.create({
+      trigger:stage, start:'top 75%', end:'bottom 15%',
+      onEnter:function(){ fightV.play().catch(function(){}); },
+      onEnterBack:function(){ fightV.play().catch(function(){}); },
+      onLeave:function(){ fightV.pause(); },
+      onLeaveBack:function(){ fightV.pause(); fightV.currentTime = 0; }
+    });
+    gsap.to(bar, { scaleX:1, ease:'none',
+      scrollTrigger:{ trigger:stage, start:'top 75%', end:'bottom 40%', scrub:1, invalidateOnRefresh:true } });
+  }
+
+  /* ── beat 3: Emperium HP drains with scroll (reversible: up heals) ── */
+  var hud = document.querySelector('[data-gb-hud]');
+  var fill = hud.querySelector('[data-gb-hp-fill]');
+  var pct = hud.querySelector('[data-gb-hp-pct]');
+  var lines = hud.querySelectorAll('[data-gb-hud-line] span');
+  var hpState = { hp:1 };
+  var setLine = function(i){
+    lines.forEach(function(el,k){ el.hidden = k!==i; el.classList.toggle('on', k===i); });
+  };
+  gsap.to(hpState, {
+    hp:0, ease:'none',
+    scrollTrigger:{
+      trigger:'.gb-woe-wrap', start:'top 65%', end:'bottom 35%', scrub:1, invalidateOnRefresh:true,
+      onUpdate:function(self){
+        var hp = 1 - self.progress;
+        fill.style.transform = 'scaleX(' + hp + ')';
+        pct.textContent = Math.round(hp*100) + '%';
+        setLine(self.progress < 0.45 ? 0 : self.progress < 0.8 ? 1 : 2);
+        if(self.progress >= 0.995 && !hud.dataset.shattered){
+          hud.dataset.shattered = '1';
+          gsap.fromTo(hud, {x:-5},{x:5, duration:.06, repeat:6, yoyo:true, clearProps:'x'});
+        }
+        if(self.progress < 0.9) delete hud.dataset.shattered;
+      }
+    }
+  });
+
+  /* ── beat 4: family parallax + card tilt ── */
+  var fam = document.querySelector('[data-gb-parallax] img');
+  gsap.fromTo(fam, { yPercent:-5 }, { yPercent:5, ease:'none',
+    scrollTrigger:{ trigger:'[data-gb-parallax]', start:'top bottom', end:'bottom top', scrub:1, invalidateOnRefresh:true } });
+
+  if(fine){
+    document.querySelectorAll('.gb-card').forEach(function(card){
+      card.addEventListener('pointermove', function(e){
+        var r = card.getBoundingClientRect();
+        var x = (e.clientX - r.left)/r.width - .5, y = (e.clientY - r.top)/r.height - .5;
+        gsap.to(card, { rotateY:x*6, rotateX:-y*6, duration:.4, ease:'power2.out' });
+      });
+      card.addEventListener('pointerleave', function(){
+        gsap.to(card, { rotateY:0, rotateX:0, duration:.6, ease:'power3.out' });
+      });
+    });
+  }
+
+  addEventListener('load', function(){ ScrollTrigger.refresh(); });
+  setTimeout(function(){ ScrollTrigger.refresh(); }, 600);
+}
+
+/* reduced-motion / no-GSAP rung: still load the fight poster experience */
+function scrubFallback(){
+  var stage = document.querySelector('[data-gb-scrub]');
+  if(!stage) return;
+  var v = stage.querySelector('video');
+  var cue = stage.querySelector('[data-gb-scrub-cue]');
+  if(cue) cue.hidden = true;
+  /* leave the poster as the visual; no autoplay for reduced motion */
+}
+
+if(document.readyState === 'loading'){
+  document.addEventListener('DOMContentLoaded', function(){
+    /* defer until gsap CDN scripts (defer) have run */
+    setTimeout(init, 0);
+  });
+} else { setTimeout(init, 0); }
+})();
+</script>
+</body>
+</html>
