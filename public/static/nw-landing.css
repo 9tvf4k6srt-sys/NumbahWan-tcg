@@ -1,0 +1,315 @@
+/**
+ * NW Landing Cinematic v1.0
+ * =========================
+ * The structural + film layer for factory-built landing pages.
+ * Governed by references/LANDING-CINEMATIC.md; enforced by tools/landing-lint.cjs.
+ *
+ * Layers:
+ *   .nwl-hero      — full-viewport hero with video/poster + copy always visible
+ *   .nwl-beat      — one narrative beat (3–5 per page), alternating composition
+ *   .nwl-film      — grain + vignette + grade overlays ("shot, not computed")
+ *   .nwl-3d        — lazy interactive canvas stage with interaction cue
+ *
+ * Rules:
+ *   - Mobile-first (iPhone Safari is the primary target)
+ *   - Every animation gated behind prefers-reduced-motion
+ *   - No opacity-only entrances (aitell L4) — transforms carry the motion
+ */
+
+/* ── Page scaffold ── */
+.nwl-page {
+  --nwl-accent: #ff6b00;
+  --nwl-grade: rgba(20, 16, 40, 0.28);   /* one tint per page, from the brand world */
+  --nwl-ink: rgba(232, 230, 227, 0.92);
+  --nwl-ink-dim: rgba(232, 230, 227, 0.64);
+  color: var(--nwl-ink);
+  overflow-x: hidden;
+}
+
+/* ── Hero: the hook (beat 1) ── */
+.nwl-hero {
+  position: relative;
+  min-height: 100svh;
+  display: flex;
+  align-items: flex-end;
+  isolation: isolate;
+}
+
+.nwl-hero-media {
+  position: absolute;
+  inset: 0;
+  z-index: -2;
+  overflow: hidden;
+}
+
+.nwl-hero-media video,
+.nwl-hero-media img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* Legibility scrim — copy stays readable while the film plays */
+.nwl-hero::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: linear-gradient(
+    to top,
+    rgba(3, 3, 5, 0.88) 0%,
+    rgba(3, 3, 5, 0.42) 38%,
+    rgba(3, 3, 5, 0.12) 70%,
+    rgba(3, 3, 5, 0.30) 100%
+  );
+}
+
+.nwl-hero-inner {
+  width: 100%;
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: var(--nw-space-16, 64px) var(--nw-space-5, 20px) var(--nw-space-12, 48px);
+}
+
+.nwl-kicker {
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--nwl-accent);
+  margin-bottom: var(--nw-space-3, 12px);
+}
+
+.nwl-title {
+  font-size: clamp(2.1rem, 7vw, 4.4rem);
+  line-height: 1.04;
+  font-weight: 800;
+  letter-spacing: -0.015em;
+  margin: 0 0 var(--nw-space-4, 16px);
+}
+
+.nwl-sub {
+  font-size: clamp(1rem, 2.4vw, 1.25rem);
+  line-height: 1.5;
+  color: var(--nwl-ink-dim);
+  max-width: 34em;
+  margin: 0 0 var(--nw-space-8, 32px);
+}
+
+/* CTA — visible while the hero plays, thumb-reachable on mobile */
+.nwl-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6em;
+  min-height: 48px;
+  padding: 0.85em 1.9em;
+  border-radius: 6px;
+  background: var(--nwl-accent);
+  color: #0a0a0c;
+  font-weight: 700;
+  font-size: 1rem;
+  letter-spacing: 0.02em;
+  text-decoration: none;
+  transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1),
+              box-shadow 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.nwl-cta:hover,
+.nwl-cta:focus-visible {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 32px -12px var(--nwl-accent);
+}
+
+.nwl-cta:focus-visible {
+  outline: 2px solid var(--nwl-ink);
+  outline-offset: 3px;
+}
+
+/* Scroll cue — obvious invitation into the story */
+.nwl-scroll-cue {
+  position: absolute;
+  left: 50%;
+  bottom: var(--nw-space-4, 16px);
+  transform: translateX(-50%);
+  font-size: 0.7rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--nwl-ink-dim);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  pointer-events: none;
+}
+
+.nwl-scroll-cue::after {
+  content: '';
+  width: 1px;
+  height: 28px;
+  background: linear-gradient(to bottom, var(--nwl-ink-dim), transparent);
+  animation: nwl-cue-drop 2.2s cubic-bezier(0.16, 1, 0.3, 1) infinite;
+}
+
+@keyframes nwl-cue-drop {
+  0%   { transform: scaleY(0); transform-origin: top; }
+  45%  { transform: scaleY(1); transform-origin: top; }
+  55%  { transform: scaleY(1); transform-origin: bottom; }
+  100% { transform: scaleY(0); transform-origin: bottom; }
+}
+
+/* ── Beats: the story (beats 2..n) ── */
+.nwl-beat {
+  position: relative;
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: clamp(64px, 12vh, 140px) var(--nw-space-5, 20px);
+  display: grid;
+  gap: var(--nw-space-8, 32px);
+  align-items: center;
+}
+
+.nwl-beat-index {
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.2em;
+  color: var(--nwl-accent);
+  margin-bottom: var(--nw-space-2, 8px);
+}
+
+.nwl-beat h2 {
+  font-size: clamp(1.6rem, 4.5vw, 2.6rem);
+  line-height: 1.12;
+  letter-spacing: -0.01em;
+  margin: 0 0 var(--nw-space-4, 16px);
+}
+
+.nwl-beat p {
+  font-size: 1.05rem;
+  line-height: 1.65;
+  color: var(--nwl-ink-dim);
+  max-width: 38em;
+  margin: 0;
+}
+
+.nwl-beat-media img,
+.nwl-beat-media video {
+  width: 100%;
+  height: auto;
+  border-radius: 8px;
+  display: block;
+}
+
+/* Alternating composition gives the scroll rhythm on wide screens */
+@media (min-width: 820px) {
+  .nwl-beat { grid-template-columns: 1fr 1fr; }
+  .nwl-beat--flip .nwl-beat-media { order: -1; }
+  .nwl-beat--center { grid-template-columns: 1fr; text-align: center; }
+  .nwl-beat--center p { margin: 0 auto; }
+}
+
+/* Entrance state — JS motion layer animates FROM this via transforms.
+   Without JS the content is fully visible (no-JS rung of the ladder). */
+.nwl-reveal { will-change: transform; }
+
+/* ── Interactive 3D stage: the memorable core ── */
+.nwl-3d {
+  position: relative;
+  border-radius: 10px;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.nwl-3d canvas {
+  display: block;
+  width: 100%;
+  touch-action: pan-y; /* never trap vertical scroll on mobile */
+}
+
+.nwl-3d-cue {
+  position: absolute;
+  bottom: var(--nw-space-3, 12px);
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 6px 14px;
+  border-radius: 999px;
+  background: rgba(3, 3, 5, 0.66);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  font-size: 0.72rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--nwl-ink-dim);
+  pointer-events: none;
+}
+
+/* ── Film layer: grain + vignette + grade ── */
+.nwl-film {
+  position: fixed;
+  inset: 0;
+  z-index: var(--nw-z-overlay, 800);
+  pointer-events: none;
+}
+
+.nwl-film::before {
+  /* grain — SVG noise at whisper opacity */
+  content: '';
+  position: absolute;
+  inset: 0;
+  opacity: 0.035;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+.nwl-film::after {
+  /* vignette + grade in one paint */
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse at center, transparent 58%, rgba(0, 0, 0, 0.32) 100%),
+    var(--nwl-grade);
+}
+
+/* ── Sound toggle — visible, persistent, honest ── */
+.nwl-sound {
+  position: fixed;
+  right: var(--nw-space-4, 16px);
+  bottom: var(--nw-space-4, 16px);
+  z-index: var(--nw-z-toast, 900);
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(3, 3, 5, 0.7);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  color: var(--nwl-ink);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.nwl-sound:focus-visible {
+  outline: 2px solid var(--nwl-accent);
+  outline-offset: 2px;
+}
+
+/* ── The fallback ladder ── */
+@media (prefers-reduced-motion: reduce) {
+  .nwl-scroll-cue::after { animation: none; }
+  .nwl-cta { transition: none; }
+  .nwl-reveal { will-change: auto; }
+  /* JS layer must ALSO check matchMedia before autoplay / scrub — CSS alone
+     cannot stop a <video autoplay>; see nw-landing.js pattern in the playbook */
+}
+
+@media (prefers-reduced-data: reduce) {
+  .nwl-film::before { display: none; } /* skip grain paint on data saver */
+}
+
+/* Print / no-media contexts still deliver the pitch */
+@media print {
+  .nwl-film, .nwl-sound, .nwl-scroll-cue { display: none; }
+}

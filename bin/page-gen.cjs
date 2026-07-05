@@ -63,9 +63,36 @@ function validateSpec(spec) {
     });
   }
 
-  // Landing page checks
+  // Landing page checks — cinematic doctrine (references/LANDING-CINEMATIC.md)
   if (spec.type === 'landing-page') {
-    if (!spec.sections || !spec.sections.length) errors.push('Landing page requires at least one section');
+    const beats = spec.beats || spec.sections;
+    if (!beats || !beats.length) errors.push('Landing page requires beats (or legacy sections)');
+    if (beats && (beats.length < 2 || beats.length > 5)) {
+      warn(`Landing has ${beats.length} beats — cinematic arc wants 3–5 (hero counts as beat 1)`);
+    }
+    if (!spec.cta) errors.push('Landing page requires a cta — the hook must carry a visible CTA');
+    if (spec.hero?.video) {
+      const v = spec.hero.video;
+      if (!v.poster) errors.push('hero.video requires poster — it is the LCP, reduced-motion, and no-JS fallback');
+      if (!v.webm && !v.mp4) errors.push('hero.video requires at least one source (webm and/or mp4)');
+      if (v.webm && !v.mp4) warn('hero.video has webm only — add mp4 for Safari/H.264 fallback');
+      // Enforce the 4MB hero video budget when the file exists locally
+      for (const src of [v.webm, v.mp4]) {
+        if (!src) continue;
+        const local = path.join(ROOT, 'public', src.replace(/^\//, ''));
+        if (fs.existsSync(local)) {
+          const mb = fs.statSync(local).size / (1024 * 1024);
+          if (mb > 4) errors.push(`hero video ${src} is ${mb.toFixed(1)}MB — budget is 4MB (LANDING-CINEMATIC §5)`);
+        }
+      }
+    }
+    if (beats) {
+      beats.forEach((b, i) => {
+        if (b.media?.src && !b.media.alt && b.media.type !== 'video') {
+          warn(`Beat ${i} media has no alt text — a11y gate will flag it`);
+        }
+      });
+    }
   }
 
   // App page checks  
@@ -92,6 +119,20 @@ function extractI18nKeys(spec) {
 
   // CTA (landing pages)
   if (spec.cta?.text) keys[`${slug}CTA`] = { en: spec.cta.text };
+  if (spec.hero?.kicker) keys[`${slug}Kicker`] = { en: spec.hero.kicker };
+  if (spec.type === 'landing-page') {
+    keys[`${slug}ScrollCue`] = { en: spec.hero?.scroll_cue || 'Scroll to explore' };
+  }
+
+  // Beats (cinematic landing pages)
+  if (spec.beats) {
+    spec.beats.forEach((b, i) => {
+      if (b.title) keys[`${slug}Beat${i}Title`] = { en: b.title };
+      if (b.body) keys[`${slug}Beat${i}Body`] = { en: b.body };
+      if (b.kicker) keys[`${slug}Beat${i}Kicker`] = { en: b.kicker };
+      if (b.media?.cue) keys[`${slug}Beat${i}Cue`] = { en: b.media.cue };
+    });
+  }
   
   // Hero stats (game pages)
   if (spec.hero?.stats) {
@@ -158,30 +199,109 @@ const TYPE_GENERATORS = {
   'game-page-3d': generatePlayableGameHTML,
 };
 
-// ── Landing Page Generator ──
+// ── Landing Page Generator — cinematic (references/LANDING-CINEMATIC.md) ──
+// The page is a short film: hero = hook (beat 1), beats = the arc, film layer
+// = grain/vignette/grade, fallback ladder = poster / reduced-motion / no-JS.
 function generateLandingHTML(spec) {
   const slug = spec.slug.replace(/-/g, '');
   const c = spec.theme?.primary || '#ff6b00';
-  let html = `<!-- ==================== LANDING: ${spec.title.toUpperCase()} ==================== -->
-<section class="landing-hero" id="${spec.slug}" style="--accent:${c}">
-  <div class="landing-hero-inner">
-    <h1 class="landing-title" data-i18n="${slug}Title">${esc(spec.hero?.title || spec.title)}</h1>
-    <p class="landing-subtitle" data-i18n="${slug}Sub">${esc(spec.hero?.subtitle || '')}</p>`;
-  if (spec.cta) {
-    html += `\n    <a href="${esc(spec.cta.href || '#')}" class="landing-cta" data-i18n="${slug}CTA" style="background:${c}">${esc(spec.cta.text || 'Get Started')}</a>`;
-  }
-  html += `\n  </div>\n</section>\n`;
+  const grade = spec.theme?.grade || 'rgba(20,16,40,0.28)';
+  const hero = spec.hero || {};
 
-  // Sections
-  if (spec.sections) {
-    spec.sections.forEach((s, i) => {
-      const sKey = `${slug}Sec${i}`;
-      html += `\n<section class="landing-section${s.alt ? ' landing-alt' : ''}" id="${spec.slug}-section-${i}">
-  <h2 data-i18n="${sKey}Title">${esc(s.title || '')}</h2>
-  <p data-i18n="${sKey}Body">${esc(s.body || '')}</p>
-</section>\n`;
-    });
+  // ── Hero media: video (with full fallback ladder) > image > none ──
+  let heroMedia = '';
+  if (hero.video) {
+    const v = hero.video;
+    const sources = [
+      v.webm ? `      <source src="${esc(v.webm)}" type="video/webm">` : '',
+      v.mp4 ? `      <source src="${esc(v.mp4)}" type="video/mp4">` : '',
+    ].filter(Boolean).join('\n');
+    heroMedia = `  <div class="nwl-hero-media">
+    <video autoplay muted loop playsinline preload="metadata"
+      poster="${esc(v.poster)}" width="1920" height="1080"
+      aria-label="${esc(v.aria || hero.title || spec.title)}" data-nwl-hero-video>
+${sources}
+      <img src="${esc(v.poster)}" alt="${esc(v.aria || hero.title || spec.title)}" width="1920" height="1080">
+    </video>
+  </div>`;
+  } else if (hero.image) {
+    heroMedia = `  <div class="nwl-hero-media">
+    <img src="${esc(hero.image.src)}" alt="${esc(hero.image.alt || spec.title)}" width="1920" height="1080" fetchpriority="high" decoding="async">
+  </div>`;
   }
+
+  let html = `<!-- ==================== LANDING: ${spec.title.toUpperCase()} ==================== -->
+<div class="nwl-page" id="${spec.slug}" style="--nwl-accent:${c};--nwl-grade:${grade}">
+<section class="nwl-hero">
+${heroMedia}
+  <div class="nwl-hero-inner">`;
+  if (hero.kicker) {
+    html += `\n    <div class="nwl-kicker" data-i18n="${slug}Kicker">${esc(hero.kicker)}</div>`;
+  }
+  html += `
+    <h1 class="nwl-title" data-i18n="${slug}Title">${esc(hero.title || spec.title)}</h1>
+    <p class="nwl-sub" data-i18n="${slug}Sub">${esc(hero.subtitle || '')}</p>`;
+  if (spec.cta) {
+    html += `\n    <a href="${esc(spec.cta.href || '#')}" class="nwl-cta" data-i18n="${slug}CTA">${esc(spec.cta.text || 'Get Started')}</a>`;
+  }
+  html += `
+  </div>
+  <div class="nwl-scroll-cue" aria-hidden="true" data-i18n="${slug}ScrollCue">${esc(hero.scroll_cue || 'Scroll to explore')}</div>
+</section>\n`;
+
+  // ── Beats: the narrative arc (alternating composition = scroll rhythm) ──
+  const beats = spec.beats || (spec.sections || []).map(s => ({ title: s.title, body: s.body }));
+  beats.forEach((b, i) => {
+    const bKey = `${slug}Beat${i}`;
+    const flip = i % 2 === 1 ? ' nwl-beat--flip' : '';
+    const center = b.layout === 'center' ? ' nwl-beat--center' : '';
+    html += `\n<section class="nwl-beat${center || flip}" id="${spec.slug}-beat-${i + 1}">
+  <div class="nwl-beat-copy nwl-reveal">
+    <div class="nwl-beat-index">${String(i + 2).padStart(2, '0')}${b.kicker ? ` — <span data-i18n="${bKey}Kicker">${esc(b.kicker)}</span>` : ''}</div>
+    <h2 data-i18n="${bKey}Title">${esc(b.title || '')}</h2>
+    <p data-i18n="${bKey}Body">${esc(b.body || '')}</p>
+  </div>`;
+    if (b.media) {
+      const m = b.media;
+      if (m.type === '3d') {
+        // Interactive core: lazy canvas, keyboard/ARIA, explicit interaction cue
+        html += `
+  <div class="nwl-beat-media nwl-reveal">
+    <div class="nwl-3d" data-nwl-3d="${esc(m.module || '')}">
+      <canvas role="img" aria-label="${esc(m.alt || b.title || 'Interactive 3D scene')}" tabindex="0" width="1200" height="800"></canvas>
+      <div class="nwl-3d-cue" data-i18n="${bKey}Cue">${esc(m.cue || 'Drag to explore')}</div>
+    </div>
+  </div>`;
+      } else if (m.type === 'video') {
+        html += `
+  <div class="nwl-beat-media nwl-reveal">
+    <video muted loop playsinline preload="none" loading="lazy" poster="${esc(m.poster || '')}" width="1200" height="675" data-nwl-lazy-video>
+      ${m.webm ? `<source data-src="${esc(m.webm)}" type="video/webm">` : ''}${m.mp4 ? `<source data-src="${esc(m.mp4)}" type="video/mp4">` : ''}
+    </video>
+  </div>`;
+      } else if (m.src) {
+        html += `
+  <div class="nwl-beat-media nwl-reveal">
+    <img src="${esc(m.src)}" alt="${esc(m.alt || b.title || '')}" loading="lazy" decoding="async" width="1200" height="675">
+  </div>`;
+      }
+    }
+    html += `\n</section>\n`;
+  });
+
+  // ── Resolution: arc closes, CTA repeats ──
+  if (spec.cta) {
+    html += `\n<section class="nwl-beat nwl-beat--center" id="${spec.slug}-resolve">
+  <div class="nwl-beat-copy nwl-reveal">
+    <h2 data-i18n="${slug}Title">${esc(hero.title || spec.title)}</h2>
+    <p style="margin:0 auto var(--nw-space-8,32px)" data-i18n="${slug}Sub">${esc(hero.subtitle || '')}</p>
+    <a href="${esc(spec.cta.href || '#')}" class="nwl-cta" data-i18n="${slug}CTA">${esc(spec.cta.text || 'Get Started')}</a>
+  </div>
+</section>\n`;
+  }
+
+  // Film layer (grain + vignette + grade) — fixed, pointer-events none
+  html += `\n<div class="nwl-film" aria-hidden="true"></div>\n</div>\n`;
   return html;
 }
 
@@ -354,7 +474,82 @@ function generateFullPage(spec, sectionHTML, i18nJsonPath) {
   const slug = spec.slug;
   const title = spec.title;
   const pageI18n = buildPageI18n(spec, i18nJsonPath);
-  const i18nJson = JSON.stringify(pageI18n).replace(/<\//g, '<\\/');
+  // Serialize as a JS object literal with UNQUOTED identifier keys —
+  // tests/nw-i18n-guard.cjs parses `en: {` / `key:` shapes; JSON-quoted keys
+  // read as orphans and fail the i18n gate (factory memory: orphan STOP note).
+  const jsKey = k => /^[a-zA-Z_$][a-zA-Z0-9_$]*$/.test(k) ? k : JSON.stringify(k);
+  const jsObj = obj => '{' + Object.entries(obj).map(([k, v]) =>
+    `${jsKey(k)}:${typeof v === 'object' && v !== null ? jsObj(v) : JSON.stringify(v)}`
+  ).join(',') + '}';
+  const i18nJson = jsObj(pageI18n).replace(/<\//g, '<\\/');
+  const isLanding = spec.type === 'landing-page';
+
+  // Landing pages ship the cinematic layer; other types keep the game shell.
+  const landingHead = isLanding ? `
+    <meta name="description" content="${esc(spec.hero?.subtitle || title)}">
+    <link rel="stylesheet" href="/static/nw-landing.css">${spec.hero?.video?.poster ? `
+    <link rel="preload" as="image" href="${esc(spec.hero.video.poster)}" fetchpriority="high">` : ''}
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.13.0/gsap.min.js" defer></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.13.0/ScrollTrigger.min.js" defer></script>` : '';
+
+  // Motion layer: reduced-motion aware, lazy videos, transform entrances
+  // (never opacity-only — aitell L4). Without JS the page is fully readable.
+  const landingMotion = isLanding ? `
+<script>
+/* ── nwl motion layer — auto-generated by page-gen.cjs ── */
+window.addEventListener('DOMContentLoaded', function () {
+  var reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  // Fallback ladder rung 2: reduced motion → freeze hero video on its poster
+  if (reduced) {
+    document.querySelectorAll('[data-nwl-hero-video]').forEach(function (v) {
+      v.removeAttribute('autoplay'); v.pause();
+    });
+    return; // no scroll choreography either
+  }
+
+  // Lazy below-the-fold videos: attach sources only when near viewport
+  if ('IntersectionObserver' in window) {
+    var vio = new IntersectionObserver(function (entries) {
+      entries.forEach(function (e) {
+        if (!e.isIntersecting) return;
+        var v = e.target;
+        v.querySelectorAll('source[data-src]').forEach(function (s) {
+          s.src = s.dataset.src; s.removeAttribute('data-src');
+        });
+        v.load(); v.play().catch(function () {});
+        vio.unobserve(v);
+      });
+    }, { rootMargin: '200px' });
+    document.querySelectorAll('[data-nwl-lazy-video]').forEach(function (v) { vio.observe(v); });
+  }
+
+  // Beat entrances: transform + stagger (arrives, never pops)
+  if (window.gsap && window.ScrollTrigger) {
+    gsap.registerPlugin(ScrollTrigger);
+    document.querySelectorAll('.nwl-reveal').forEach(function (el) {
+      gsap.from(el, {
+        y: 48, autoAlpha: 0, duration: 1.0, ease: 'expo.out',
+        scrollTrigger: { trigger: el, start: 'top 82%', toggleActions: 'play none none reverse' }
+      });
+    });
+    gsap.from('.nwl-title, .nwl-sub, .nwl-cta', {
+      yPercent: 60, autoAlpha: 0, duration: 1.1, ease: 'expo.out', stagger: 0.08
+    });
+  }
+});
+</script>` : '';
+
+  const preview = isLanding ? '' : `
+<!-- Factory preview banner — this is a standalone fragment, not the full game page -->
+<div style="position:sticky;top:0;z-index:1000;background:linear-gradient(90deg,rgba(255,107,0,.15),rgba(0,119,204,.15));
+  backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);padding:8px 16px;text-align:center;
+  border-bottom:1px solid rgba(255,215,0,.2);font-family:'Rajdhani',sans-serif">
+  <span style="color:rgba(255,215,0,.9);font-size:.75rem;font-weight:600;letter-spacing:2px;text-transform:uppercase">
+    ⚡ FACTORY PREVIEW — <a href="/world/nwg-the-game.html#${slug}" style="color:#0af;text-decoration:underline">View in full game page →</a>
+  </span>
+</div>
+`;
 
   return `<!DOCTYPE html>
 <html lang="en">
@@ -366,23 +561,14 @@ function generateFullPage(spec, sectionHTML, i18nJsonPath) {
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/static/nw-design-system.css">
-    <link rel="stylesheet" href="/static/nw-game-common.css">
+    <link rel="stylesheet" href="/static/nw-game-common.css">${landingHead}
     <script src="/static/nw-i18n-shim.js"></script>
     <script src="/static/nw-nav.js" defer></script>
     <script src="/static/nw-i18n-core.js" defer></script>
 </head>
 <body>
 <div class="nw-bg"></div>
-
-<!-- Factory preview banner — this is a standalone fragment, not the full game page -->
-<div style="position:sticky;top:0;z-index:1000;background:linear-gradient(90deg,rgba(255,107,0,.15),rgba(0,119,204,.15));
-  backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);padding:8px 16px;text-align:center;
-  border-bottom:1px solid rgba(255,215,0,.2);font-family:'Rajdhani',sans-serif">
-  <span style="color:rgba(255,215,0,.9);font-size:.75rem;font-weight:600;letter-spacing:2px;text-transform:uppercase">
-    ⚡ FACTORY PREVIEW — <a href="/world/nwg-the-game.html#${slug}" style="color:#0af;text-decoration:underline">View in full game page →</a>
-  </span>
-</div>
-
+${preview}
 ${sectionHTML}
 
 <script>
@@ -393,7 +579,7 @@ ${sectionHTML}
   else if (typeof initI18n === 'function') initI18n(PAGE_I18N);
   else (window.__NW_I18N_QUEUE = window.__NW_I18N_QUEUE || []).push(['register', PAGE_I18N]);
 })();
-</script>
+</script>${landingMotion}
 </body>
 </html>`;
 }
@@ -540,7 +726,9 @@ if (memory) {
   const i18nMatch = fullPage.match(/PAGE_I18N\s*=\s*(\{[^;]+\})/);
   if (i18nMatch) {
     try {
-      const parsed = JSON.parse(i18nMatch[1]);
+      // PAGE_I18N is a JS object literal (unquoted keys for the i18n guard) —
+      // evaluate it in isolation rather than JSON.parse
+      const parsed = new Function(`return (${i18nMatch[1]})`)();
       const enKeys = Object.keys(parsed.en || {}).length;
       const zhKeys = Object.keys(parsed.zh || {}).length;
       const thKeys = Object.keys(parsed.th || {}).length;
