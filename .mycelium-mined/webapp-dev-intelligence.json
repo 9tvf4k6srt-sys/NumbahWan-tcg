@@ -1,14 +1,14 @@
 {
   "version": "2.0",
-  "exportedAt": "2026-06-02T11:35:06.227Z",
+  "exportedAt": "2026-07-05T09:05:11.491Z",
   "source": "memory.json",
   "summary": {
-    "learnings": 30,
-    "decisions": 26,
-    "constraintAreas": 24,
-    "constraints": 93,
+    "learnings": 42,
+    "decisions": 20,
+    "constraintAreas": 26,
+    "constraints": 99,
     "reflections": 10,
-    "breakages": 21
+    "breakages": 22
   },
   "learnings": [
     {
@@ -160,9 +160,123 @@
       "area": "workflow",
       "lesson": "grep/scan the project before suggesting features. User has 104+ HTML pages, full",
       "date": "2026-02-14"
+    },
+    {
+      "area": "mining",
+      "lesson": "LLM enrichment never fired because the proxy rejected gpt-4o-mini (400) and the error was silently caught, so all rootCauses were raw diff dumps. Fixed: default model claude-haiku-4-5, loud failure warning, meaning gate in validator, lesson age-out, and continuous mining now passes the LLM env. 127/192 commits now LLM-enriched, 95% meaningful.",
+      "date": "2026-06-02"
+    },
+    {
+      "area": "efficiency",
+      "lesson": "Repo's biggest token cost is monolith HTML pages (invest.html 4300 lines, index.html 1200 lines inline JS) - every edit reads the whole file. Built tools/page-size-lint.cjs (advisory guardrail, wired into pre-commit --baseline). A shared :root design-token refactor looked tempting but is UNSAFE: 79 token names carry conflicting values across pages (--gold is #ffd700 on 41 pages, #d4af37 on 15), so consolidation would silently recolour dozens of pages.",
+      "date": "2026-06-02"
+    },
+    {
+      "area": "efficiency",
+      "lesson": "Guild headline took 3 PRs (#84-86) and emblem 5 (#79-83) because visual bugs only surfaced on the user's phone. Fix = tools/render-risk-lint.cjs static gate, not more screenshot attempts.",
+      "date": "2026-06-03"
+    },
+    {
+      "area": "workflow",
+      "lesson": "Learning systems go 'silent' across chat windows NOT because they break, but because nothing re-invokes them in a fresh session (no git hooks installed; they only run on npm build/dev). Root cause = session-survival, not code. Fix = one idempotent heartbeat command that pings+exercises every tracked system, wired into session start so a cold session cannot forget it.",
+      "date": "2026-06-04"
+    },
+    {
+      "area": "workflow",
+      "lesson": "SOLVED: learning-system survival. Built tools/heartbeat.cjs (node bin/ai.cjs pulse) + tools/install-hooks.cjs (node bin/ai.cjs hooks). brief auto-pulses; post-commit hook re-pulses every commit; hooks installer points core.hooksPath at .husky so tracked hooks fire WITHOUT Husky. Result: learning-loop silent count 9->0, self-sustaining. Fresh sessions: run 'node bin/ai.cjs hooks' once (in playbook session-start).",
+      "date": "2026-06-04"
+    },
+    {
+      "area": "collab",
+      "lesson": "[collab/strengthen] on infra problems, check hook activation state first",
+      "date": "2026-06-04"
+    },
+    {
+      "area": "guild",
+      "lesson": "[collab-observer/re-fix-loop] Before shipping any \"guild\" change, run: node bin/ai.cjs preship public/guild/brightinside/index.html  (visual/render-risk + asset gates catch the bugs that caused the re-fix loops (#79-86)) (observed: 6 fix(guild) commits in last 60 — work shipped, broke, got re-fixed repeatedly)",
+      "date": "2026-06-04"
+    },
+    {
+      "area": "workflow",
+      "lesson": "Reflection redesign: replaced AI-self-grading reflect prompts with tools/collab-observer.cjs — reads git/events traces, detects friction (re-fix loops via fix() clusters, churn) and auto-records concrete remedies+auto-gates into memory. Runs in post-commit hook. Zero human prompts. 'node bin/ai.cjs collab improvements' to view. Validated: detected the real fix(guild) re-fix loop from history alone.",
+      "date": "2026-06-04"
+    },
+    {
+      "area": "sentinel",
+      "lesson": "Freshness heal cmds must WRITE the file they freshen: sentinel-eval rule ran sentinel --quick which never wrote eval.json, so the heal was a no-op for 119d. Fixed with tools/sentinel-eval-bridge.cjs. When adding a freshness rule, verify the refreshCmd actually touches rule.file.",
+      "date": "2026-06-10"
+    },
+    {
+      "area": "workflow",
+      "lesson": "Squash-merge rewrites history: hashes recorded in mined data (fix-log, enriched commits) stop resolving after PR merge. Any tool that git-blames/diffs a stored hash must guard with git rev-parse --verify --quiet first (blame-linker fixed). Error signature: fatal bad revision in last-error.log.",
+      "date": "2026-06-10"
+    },
+    {
+      "area": "workflow",
+      "lesson": "Health scores must age out fixed failures: last-error.log blocks and smoke-report.json counted forever, so grades never recovered after root-cause fixes. system-health now scores only 14d-recent failures and marks gate reports >14d as stale; memory-trimmer rotates error blocks >30d to archive.",
+      "date": "2026-06-10"
+    },
+    {
+      "area": "i18n",
+      "lesson": "page-gen PAGE_I18N must serialize with UNQUOTED JS identifier keys — nw-i18n-guard parses 'en: {' shapes; JSON.stringify quoted keys read as 15 orphaned keys and fail the gate",
+      "date": "2026-07-05"
     }
   ],
   "decisions": [
+    {
+      "area": "landing",
+      "what": "Landing pages are now cinematic short films: 3-5 beats, hero video<=4MB with poster+webm/mp4, film layer (grain/vignette/grade), 4-rung fallback ladder (full/reduced-motion/low-gpu/no-js)",
+      "why": "Research showed cinematic narrative + performance discipline is what separates premium landing pages from templates; doctrine in references/LANDING-CINEMATIC.md, enforced by tools/landing-lint.cjs",
+      "date": "2026-07-05"
+    },
+    {
+      "area": "workflow",
+      "what": "CLAUDE.md dieted 27.3KB→6.7KB: gates kept verbatim-in-spirit but compressed, project arch moved to docs/ARCHITECTURE.md appendix, task-brief/route-task wired into startup as the front door, cost table replaced by auto-generated # COSTS section in .mycelium-context",
+      "why": "Every session paid ~7K tokens to read rules+arch it mostly didn't need; hand-written cost numbers drifted 4.5x; the context-firewall tools existed but no protocol pointed at them",
+      "date": "2026-07-02"
+    },
+    {
+      "area": "mining",
+      "what": "Mine works but ran in LOCAL deep-diff mode (no LLM key at mine time), so rootCauses were raw diff dumps / pasted commit messages. Data 6 commits stale (last mine 2026-05-02, last full 2026-02-10). Plan: re-run with LLM enrichment (keys now available), add a meaning quality gate (not just completeness), age-out stale lessons, and wire continuous mining so it never goes stale.",
+      "why": "Validator graded A+ on field-completeness but actionRate was only 0.59; a data company values meaningful root-cause analysis, not filled fields.",
+      "date": "2026-06-02"
+    },
+    {
+      "area": "efficiency",
+      "what": "Building a token-efficiency harness: EFFICIENCY.md (tight repo-specific playbook) + tools/efficiency-ledger.cjs (cost-proxy ledger to .mycelium/efficiency.json). Tokens are NOT visible to the agent at runtime, only coarse post-task cost, so we measure the observable drivers of spend instead: files touched, full-file reads avoided, tool calls, lines changed, verification re-runs.",
+      "why": "User flagged credits-per-slice too high. Cannot improve what you cannot measure; the proxy makes lean vs bloated slices visible and learnings persist across any AI via mycelium.",
+      "date": "2026-06-02"
+    },
+    {
+      "area": "ai-tell",
+      "what": "Built #3 layout/visual AI-tell linter (tools/ai-layout-lint.cjs): 6 named visual tells (emoji-as-icon, stock indigo-purple gradient, default shadow ladder, opacity-only motion, cookie-cutter blocks, dead-center). Wired as Stage 1b BLOCKING into aitell orchestrator + ai layout cmd + npm scripts. Refactored shared helpers into tools/lib/aitell-common.cjs.",
+      "why": "Calibrated against taste-locked invest.html (clean). Key learning: monochrome dingbats (close button glyph, check marks) are NOT emoji-icons; only flag colour emoji (high-plane or BMP-symbol+VS16) to avoid false-positives on legit UI glyphs. 13 repo pages carry real layout debt.",
+      "date": "2026-06-02"
+    },
+    {
+      "area": "refactor",
+      "what": "Extracting shared tools/lib/aitell-common.cjs to dedupe ANSI colors, stripMarkupAndCode, readUtf8, isCJK, tryParseJSON across ai-stylometry/ai-naturalness/aitell-pipeline before adding a third copy in the new ai-layout-lint",
+      "why": "stripMarkupAndCode was copy-pasted in two detectors; the #3 layout linter would have been a third copy. Centralize now.",
+      "date": "2026-06-02"
+    },
+    {
+      "area": "ai-tell",
+      "what": "Built the aitell anti-AI-tell production pipeline: orchestrator (tools/aitell-pipeline.cjs) + new stylometry module (tools/ai-stylometry.cjs) + PRODUCTION-PIPELINE.md, wired into bin/ai.cjs (aitell + taste cmds) and npm scripts",
+      "why": "Unified the 4 separate anti-AI-tell tools behind one command that inspects every production step in 3 cheapest-first stages: (1) deterministic corpus = the ONLY blocking stage (ai-tell-lint for text, ai-sheen-lint for image prompts), (2) stylometry = advisory multi-signal score 0-100 (sentence/paragraph uniformity, n-gram repetition, connective+hedge density, list rigidity, opening repetition; language-aware en vs cjk), (3) LLM naturalness judge = advisory opt-in via --judge. Stylometry is advisory-only by design because perplexity/burstiness-style metrics false-positive on strong + non-native writing (would punish our zh/ja/th copy). Verified discrimination: AI-ish text scored 63-85/100, natural human text 0/100, TASTE.md 7/100 (proves it's human-voiced). Fixed a real bug: stylometry must strip <style>/<script>/<svg> CONTENTS for HTML or inline CSS poisons the n-gram signal. Exit code only changes on Stage 1 block; advisory stages never coerce. Both new docs added to ai-tell EXEMPT_FILES (they quote bans to teach) and written with zero em-dashes.",
+      "date": "2026-06-02"
+    },
+    {
+      "area": "taste",
+      "what": "Created TASTE.md as the group's medium-agnostic taste constitution and wired it into all three AI entry points (README, AI_PLAYBOOK, CLAUDE.md)",
+      "why": "Repo taught AI operations+correctness well but taste was undiscoverable (craft docs were orphans in references/, never linked from the front door). Brainstormed the spine with the founder: one line 'precision you feel but cant see'; feeling = multi-billion-dollar production value as craft not bling; north star = blend of blockbuster (Inception/King: alive, atmospheric, grounded) + keynote (Apple-level: clean, every element intentional); three principles from King (grounded specificity) / Inception (nothing wasted, load-bearing) / South Park (smarter than it looks, applies to visuals AND substance); two banned enemies = hollow polish and cheap-looking; meta-rule = coherence (never leak between brands/media); enforcement = aspirational bar by default, hard block only for unforgivable (ai-tell copy, brand leak, placeholder, emoji-as-icon). TASTE.md sits above CSS so it survives into future media (3D printing). Medium playbooks (MOTION-CRAFT, VISUAL-LOCK, ai-tell-corpus) are children that translate the constitution.",
+      "date": "2026-06-02"
+    },
+    {
+      "area": "motion",
+      "what": "adopted GSAP+Lenis over CDN as the house motion stack, governed by references/MOTION-CRAFT.md; first reference implementation is PINFORGE invest.html (hero overture timeline, scroll-scrubbed section lifts + brass-rule draw, magnetic primary buttons, emblem cursor parallax)",
+      "why": "page felt work-in-progress because the motion layer was CSS-only (4 IntersectionObservers, transitions); world-class feel comes from orchestrated entrances, scroll-as-timeline, and cursor response,...",
+      "date": "2026-06-01"
+    },
     {
       "area": "icons",
       "what": "Icon injection uses data-i18n key mapping, not hardcoded DOM positions",
@@ -228,96 +342,6 @@
       "what": "Use the conversation AI as the LLM-as-Judge instead of an external API",
       "why": "No free LLM API available. The AI assistant already running in the conversation IS the judge — it reads .nw-context, self-evaluates before committing, and records learnings. Pre-commit hook does de...",
       "date": "2026-02-08"
-    },
-    {
-      "area": "battle",
-      "what": "Attacker scoring: scoreAttacker() picks best board card to attack with; shows ATK tag on board",
-      "why": "Reduces decision paralysis — player just taps the green-glowing card",
-      "date": "2026-02-08"
-    },
-    {
-      "area": "battle",
-      "what": "Smart Glow + Auto-Target + Auto-Play as separate file nw-battle-assist.js",
-      "why": "Keeps battle engine untouched; coach pattern proven; reads via NW_BATTLE API; skips visuals when coach is active",
-      "date": "2026-02-08"
-    },
-    {
-      "area": "battle",
-      "what": "Coach is a separate file (nw-battle-coach.js) — does not touch nw-battle-v7.js",
-      "why": "Battle v7 has 5 fix chains in recent history. Touching it risks breakage. Coach uses MutationObservers and event listeners to detect game state without modifying battle code. If coach breaks, battl...",
-      "date": "2026-02-08"
-    },
-    {
-      "area": "battle",
-      "what": "Hearthstone-style contextual coach for first battle — just-in-time tooltips, not upfront reading",
-      "why": "Research: Hearthstone scripted tutorial limits actions to correct ones + shows one concept per battle. Marvel Snap first-time UX review highlights contextual hints. ACM CHI 2022 paper on 'just-in-t...",
-      "date": "2026-02-08"
-    },
-    {
-      "area": "workflow",
-      "what": "Pre-commit: auto-compact + stage memory.json only. Post-commit: full snapshot.",
-      "why": "Separation of concerns. Pre-commit is for preparation (clean/stage). Post-commit is for recording (snapshot). No infinite loops, no race conditions.",
-      "date": "2026-02-08"
-    },
-    {
-      "area": "workflow",
-      "what": "Move snapshot from pre-commit to post-commit hook",
-      "why": "Pre-commit runs BEFORE commit exists, so git rev-parse HEAD returns the previous commit hash. Post-commit has the real hash. memory.json is staged by the next commit's pre-commit hook — always one ...",
-      "date": "2026-02-08"
-    },
-    {
-      "area": "sentinel",
-      "what": "Rewrite sentinel i18n module to check [ZH]/[TH] placeholders, missing keys, and dual i18n systems",
-      "why": "Old module said 83/B+ when 3792 strings were untranslated. New module correctly shows 15/F. Sentinel must tell the truth.",
-      "date": "2026-02-08"
-    },
-    {
-      "area": "i18n",
-      "what": "Strip [ZH]/[TH] placeholder prefixes instead of adding real translations",
-      "why": "3792 placeholders across 69 pages. Real translation of all strings is a massive effort. Stripping prefixes shows English as fallback, which is functional. Real zh/th translations can be added incre...",
-      "date": "2026-02-08"
-    },
-    {
-      "area": "motion",
-      "what": "adopted GSAP+Lenis over CDN as the house motion stack, governed by references/MOTION-CRAFT.md; first reference implementation is PINFORGE invest.html (hero overture timeline, scroll-scrubbed section lifts + brass-rule draw, magnetic primary buttons, emblem cursor parallax)",
-      "why": "page felt work-in-progress because the motion layer was CSS-only (4 IntersectionObservers, transitions); world-class feel comes from orchestrated entrances, scroll-as-timeline, and cursor response,...",
-      "date": "2026-06-01"
-    },
-    {
-      "area": "taste",
-      "what": "Created TASTE.md as the group's medium-agnostic taste constitution and wired it into all three AI entry points (README, AI_PLAYBOOK, CLAUDE.md)",
-      "why": "Repo taught AI operations+correctness well but taste was undiscoverable (craft docs were orphans in references/, never linked from the front door). Brainstormed the spine with the founder: one line 'precision you feel but cant see'; feeling = multi-billion-dollar production value as craft not bling; north star = blend of blockbuster (Inception/King: alive, atmospheric, grounded) + keynote (Apple-level: clean, every element intentional); three principles from King (grounded specificity) / Inception (nothing wasted, load-bearing) / South Park (smarter than it looks, applies to visuals AND substance); two banned enemies = hollow polish and cheap-looking; meta-rule = coherence (never leak between brands/media); enforcement = aspirational bar by default, hard block only for unforgivable (ai-tell copy, brand leak, placeholder, emoji-as-icon). TASTE.md sits above CSS so it survives into future media (3D printing). Medium playbooks (MOTION-CRAFT, VISUAL-LOCK, ai-tell-corpus) are children that translate the constitution.",
-      "date": "2026-06-02"
-    },
-    {
-      "area": "ai-tell",
-      "what": "Built the aitell anti-AI-tell production pipeline: orchestrator (tools/aitell-pipeline.cjs) + new stylometry module (tools/ai-stylometry.cjs) + PRODUCTION-PIPELINE.md, wired into bin/ai.cjs (aitell + taste cmds) and npm scripts",
-      "why": "Unified the 4 separate anti-AI-tell tools behind one command that inspects every production step in 3 cheapest-first stages: (1) deterministic corpus = the ONLY blocking stage (ai-tell-lint for text, ai-sheen-lint for image prompts), (2) stylometry = advisory multi-signal score 0-100 (sentence/paragraph uniformity, n-gram repetition, connective+hedge density, list rigidity, opening repetition; language-aware en vs cjk), (3) LLM naturalness judge = advisory opt-in via --judge. Stylometry is advisory-only by design because perplexity/burstiness-style metrics false-positive on strong + non-native writing (would punish our zh/ja/th copy). Verified discrimination: AI-ish text scored 63-85/100, natural human text 0/100, TASTE.md 7/100 (proves it's human-voiced). Fixed a real bug: stylometry must strip <style>/<script>/<svg> CONTENTS for HTML or inline CSS poisons the n-gram signal. Exit code only changes on Stage 1 block; advisory stages never coerce. Both new docs added to ai-tell EXEMPT_FILES (they quote bans to teach) and written with zero em-dashes.",
-      "date": "2026-06-02"
-    },
-    {
-      "area": "refactor",
-      "what": "Extracting shared tools/lib/aitell-common.cjs to dedupe ANSI colors, stripMarkupAndCode, readUtf8, isCJK, tryParseJSON across ai-stylometry/ai-naturalness/aitell-pipeline before adding a third copy in the new ai-layout-lint",
-      "why": "stripMarkupAndCode was copy-pasted in two detectors; the #3 layout linter would have been a third copy. Centralize now.",
-      "date": "2026-06-02"
-    },
-    {
-      "area": "ai-tell",
-      "what": "Built #3 layout/visual AI-tell linter (tools/ai-layout-lint.cjs): 6 named visual tells (emoji-as-icon, stock indigo-purple gradient, default shadow ladder, opacity-only motion, cookie-cutter blocks, dead-center). Wired as Stage 1b BLOCKING into aitell orchestrator + ai layout cmd + npm scripts. Refactored shared helpers into tools/lib/aitell-common.cjs.",
-      "why": "Calibrated against taste-locked invest.html (clean). Key learning: monochrome dingbats (close button glyph, check marks) are NOT emoji-icons; only flag colour emoji (high-plane or BMP-symbol+VS16) to avoid false-positives on legit UI glyphs. 13 repo pages carry real layout debt.",
-      "date": "2026-06-02"
-    },
-    {
-      "area": "efficiency",
-      "what": "Building a token-efficiency harness: EFFICIENCY.md (tight repo-specific playbook) + tools/efficiency-ledger.cjs (cost-proxy ledger to .mycelium/efficiency.json). Tokens are NOT visible to the agent at runtime, only coarse post-task cost, so we measure the observable drivers of spend instead: files touched, full-file reads avoided, tool calls, lines changed, verification re-runs.",
-      "why": "User flagged credits-per-slice too high. Cannot improve what you cannot measure; the proxy makes lean vs bloated slices visible and learnings persist across any AI via mycelium.",
-      "date": "2026-06-02"
-    },
-    {
-      "area": "mining",
-      "what": "Mine works but ran in LOCAL deep-diff mode (no LLM key at mine time), so rootCauses were raw diff dumps / pasted commit messages. Data 6 commits stale (last mine 2026-05-02, last full 2026-02-10). Plan: re-run with LLM enrichment (keys now available), add a meaning quality gate (not just completeness), age-out stale lessons, and wire continuous mining so it never goes stale.",
-      "why": "Validator graded A+ on field-completeness but actionRate was only 0.59; a data company values meaningful root-cause analysis, not filled fields.",
-      "date": "2026-06-02"
     }
   ],
   "constraints": [
@@ -347,7 +371,8 @@
         "nw_lang localStorage key — never use a different key for language storage",
         "Never generate [ZH]/[TH] placeholder prefixes — use English fallback directly. P",
         "Guard lookupDictionary must check BOTH COMMON_TRANSLATIONS and SUPPLEMENT_DICT (",
-        "House copy bans enforced by tools/ai-tell-corpus.json: no em-dashes in prose (AI"
+        "House copy bans enforced by tools/ai-tell-corpus.json: no em-dashes in prose (AI",
+        "New standalone pages (e.g. public/guild/*) tend to roll their own i18n object instead of the repo data-i18n + i18n:inject pipeline. Prefer the pipeline so pages stay in the audit net."
       ]
     },
     {
@@ -444,7 +469,9 @@
         "User decision style is see-first-fix-later — show the work, let user flag what n",
         "Review Dashboard pattern: /dev/icon-review.html — reusable template for any futu",
         "Quick Screenshot pattern: dev-screenshot.cjs — node script with Playwright for i",
-        "User values compounding — every session must deposit knowledge into BOTH systems"
+        "User values compounding — every session must deposit knowledge into BOTH systems",
+        "Run 'node bin/ai.cjs preship <file>' before shipping any page — basic ai-tell-lint alone misses visual tells (emoji-as-icon blocked the guild page) and page-size.",
+        "Renaming memory/context artifacts (e.g. .nw-* → .mycelium-*) must in the SAME commit: git rm the old files, add old names to .gitignore, and grep-update every doc/CLI reference — otherwise stale twins survive and poison future AI sessions with outdated intel"
       ]
     },
     {
@@ -531,11 +558,34 @@
     {
       "area": "efficiency",
       "rules": [
-        "Never Read large files (invest.html 4000+ lines, CLAUDE.md 27KB) whole. grep -n for the anchor, then Read with offset/limit. Batch independent reads/greps in one turn. Do not re-verify what already syntax-checked clean in the same session."
+        "Never Read large files (invest.html 4000+ lines, CLAUDE.md 27KB) whole. grep -n for the anchor, then Read with offset/limit. Batch independent reads/greps in one turn. Do not re-verify what already syntax-checked clean in the same session.",
+        "Visual round-trips are the #1 token sink (no screenshots possible). Run 'node bin/ai.cjs render --strict <file>' before shipping ANY visual change; preship enforces it for HTML. Caught classes: word-fuse, mid-word break, mobile overflow, oversized headline."
+      ]
+    },
+    {
+      "area": "memory",
+      "rules": [
+        "File-cost numbers must never be hand-written in docs — brief() auto-generates # COSTS in .mycelium-context from fileCostTier(); docs may only POINT to it or --token-check"
+      ]
+    },
+    {
+      "area": "landing",
+      "rules": [
+        "Every landing page must pass tools/landing-lint.cjs (wired into deploy-gate check #6): poster on hero video, muted+playsinline on autoplay, width/height on media, aria-label on canvas, prefers-reduced-motion handling"
       ]
     }
   ],
   "reflections": [
+    {
+      "type": "fix_chain",
+      "lesson": "Root cause found: the entire post-commit learning loop was DORMANT",
+      "date": "2026-07-05"
+    },
+    {
+      "type": "fix_chain",
+      "lesson": "Root causes fixed (each one was rotting a learning system silently):",
+      "date": "2026-06-10"
+    },
     {
       "type": "fix_chain",
       "lesson": "Pages that were 404ing are now served correctly:",
@@ -574,16 +624,6 @@
     {
       "type": "fix_chain",
       "lesson": "PROBLEM: Forge page loaded 19 JS files (702KB) + 6 CSS files (187KB) + 168KB hero",
-      "date": "2026-02-10"
-    },
-    {
-      "type": "fix_chain",
-      "lesson": "post-commit must call --learn not bare command",
-      "date": "2026-02-10"
-    },
-    {
-      "type": "fix_chain",
-      "lesson": "wire post-commit learning — mycelium-watch was not running",
       "date": "2026-02-10"
     }
   ],
@@ -692,37 +732,14 @@
       "area": "i18n",
       "what": "page i18n guard scaffolded zh/th blocks as English prefixed with [ZH]/[TH] marke",
       "date": "2026-06-01"
+    },
+    {
+      "area": "workflow",
+      "what": "Stale .nw-context (last updated Feb 2026, 20KB) stayed tracked in git and referenced by AI_PLAYBOOK/AI-ONBOARDING after rename to .mycelium-context — new AI sessions could read a 5-month-old brain and burn ~5K tokens on outdated intel. Root cause: rename commit f965e84 renamed the writers but never git-rm'd the old artifacts or updated doc references.",
+      "date": "2026-07-02"
     }
   ],
   "bundleTrend": [
-    {
-      "ts": 1770718088310,
-      "kb": 383
-    },
-    {
-      "ts": 1770718107786,
-      "kb": 383
-    },
-    {
-      "ts": 1770720135870,
-      "kb": 385
-    },
-    {
-      "ts": 1770720189530,
-      "kb": 385
-    },
-    {
-      "ts": 1770720876226,
-      "kb": 385
-    },
-    {
-      "ts": 1770720957769,
-      "kb": 385
-    },
-    {
-      "ts": 1770721701234,
-      "kb": 385
-    },
     {
       "ts": 1770721957681,
       "kb": 385
@@ -894,6 +911,34 @@
     {
       "ts": 1780374114634,
       "kb": 0
+    },
+    {
+      "ts": 1780544928237,
+      "kb": 0
+    },
+    {
+      "ts": 1780544972081,
+      "kb": 0
+    },
+    {
+      "ts": 1780545001417,
+      "kb": 0
+    },
+    {
+      "ts": 1780546148849,
+      "kb": 0
+    },
+    {
+      "ts": 1780546203232,
+      "kb": 0
+    },
+    {
+      "ts": 1781089350356,
+      "kb": 0
+    },
+    {
+      "ts": 1783242298400,
+      "kb": 517
     }
   ]
 }

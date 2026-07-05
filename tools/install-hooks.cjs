@@ -13,8 +13,9 @@
  * executable. Idempotent — safe to run every session. No dependencies.
  *
  * Usage:
- *   node tools/install-hooks.cjs          # install + report
- *   node tools/install-hooks.cjs --check  # report only, exit 1 if not wired
+ *   node tools/install-hooks.cjs           # install + report
+ *   node tools/install-hooks.cjs --check   # report only, exit 1 if not wired
+ *   node tools/install-hooks.cjs --silent  # install, no output (for npm prepare / heartbeat)
  */
 'use strict';
 
@@ -25,11 +26,12 @@ const { execFileSync } = require('child_process');
 const ROOT = path.resolve(__dirname, '..');
 const HOOKS_DIR = '.husky';
 const CHECK = process.argv.includes('--check');
+const SILENT = process.argv.includes('--silent');
 
 const C = process.stdout.isTTY
   ? { r:'\x1b[0m', b:'\x1b[1m', dim:'\x1b[2m', green:'\x1b[32m', yellow:'\x1b[33m', red:'\x1b[31m' }
   : { r:'', b:'', dim:'', green:'', yellow:'', red:'' };
-const log = (s = '') => process.stdout.write(s + '\n');
+const log = (s = '') => { if (!SILENT) process.stdout.write(s + '\n'); };
 
 function git(args) {
   return execFileSync('git', args, { cwd: ROOT, encoding: 'utf8' }).trim();
@@ -63,7 +65,13 @@ if (!fs.existsSync(dirAbs)) {
 }
 
 // Point git at the tracked hooks dir (works without Husky installed).
-git(['config', '--local', 'core.hooksPath', HOOKS_DIR]);
+// Guarded: `npm install` from a tarball / non-git context must never fail.
+try {
+  git(['config', '--local', 'core.hooksPath', HOOKS_DIR]);
+} catch (err) {
+  log(`  ${C.yellow}✗ could not set core.hooksPath (not a git checkout?)${C.r}`);
+  process.exit(SILENT ? 0 : 1);
+}
 
 // Ensure each hook is executable.
 let fixed = 0;

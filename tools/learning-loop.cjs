@@ -217,12 +217,16 @@ const DERIVATIONS = [
   /* RULE 7: System idle → recommend a refresh */
   {
     id: 'system-idle',
-    description: 'No events from a system in 14d → it has gone silent',
+    description: 'No REAL events from a system in 14d → it has gone silent (heartbeat pings do not count)',
     derive(events) {
       const lastBySystem = {}
       for (const e of events) {
         const sys = e.system
         if (!sys) continue
+        /* HONESTY RULE (2026-07-05 ultra-audit): heartbeat pings are delivery
+           checks, not runs. Counting them here let 25d of true silence hide
+           behind a green dashboard. Only real activity attests to life. */
+        if (e.event === 'heartbeat') continue
         if (!lastBySystem[sys] || e.ts > lastBySystem[sys]) lastBySystem[sys] = e.ts
       }
       const out = []
