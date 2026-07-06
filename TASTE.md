@@ -185,6 +185,13 @@ Everything else is the bar: reach for it, review against it, and when a reviewer
 flags a new failure, **add it to the relevant playbook or corpus so the bar gets
 smarter.** The standard rises; we don't re-learn the same lesson twice.
 
+The hard blocks run in two places, same runner both times: `npm run ship`
+locally (`bin/ship-gate.cjs`, changed-file aware) and the **PR Gate** workflow
+(`ci/pr-gate.yml`) on every pull request. What passes on your machine is
+exactly what passes in CI. One-time setup (bot tokens cannot push workflow
+files): `npm run ship:install-ci`, then commit `.github/workflows/pr-gate.yml`
+with your own credentials.
+
 ---
 
 ## Medium playbooks: how the constitution becomes concrete
