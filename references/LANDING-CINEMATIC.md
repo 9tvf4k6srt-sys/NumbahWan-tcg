@@ -2,11 +2,12 @@
 
 The playbook for landing pages that read as a short film, not a template.
 Child of `TASTE.md` (what good is) and sibling of `references/MOTION-CRAFT.md`
-(how things move). This file governs the *structure and production discipline*
+(how things move) and `references/LANDING-3D.md` (when and how a page earns a
+WebGL canvas). This file governs the *structure and production discipline*
 of a landing page: narrative beats, hero media, performance budgets, and the
 fallback ladder. The enforcement half lives in `tools/landing-lint.cjs`.
 
-Last updated: 2026-07-05
+Last updated: 2026-07-06
 
 ---
 
@@ -56,7 +57,10 @@ composition so the scroll has rhythm.
 - Interactive 3D (`<canvas>`) is the memorable core, not the hook. It loads
   lazily after first paint, carries `role="img"` + `aria-label`, an on-screen
   interaction cue ("Scroll to explore the transformation"), and keyboard
-  access to whatever the pointer can do.
+  access to whatever the pointer can do. The full 3D doctrine (the three
+  patterns, the lifecycle contract, the device ladder) lives in
+  `references/LANDING-3D.md`; the runtime that enforces it is
+  `/static/nw-3d.js`, and `landing-lint` D-rules gate the failures.
 - Text content inside video must also exist as on-screen text or a
   `<track kind="captions">`. No information lives only in pixels.
 
@@ -68,6 +72,11 @@ prefers-reduced-motion  poster image, no autoplay, no scroll scrubbing
 low GPU / data-saver    poster or pre-rendered short video, no canvas
 no JS                   poster + copy + CTA still deliver the pitch
 ```
+
+For pages with a 3D beat, `nw-3d.js` walks the middle rungs automatically:
+its capability check (reduced motion, Save-Data, WebGL, device memory) runs
+before the Three.js library ever downloads, so a failed rung costs zero
+bytes. See LANDING-3D §6 for the per-device scene ladder.
 
 - `@media (prefers-reduced-motion: reduce)` must exist in CSS **and** the
   JS motion layer must check `matchMedia('(prefers-reduced-motion: reduce)')`
@@ -100,7 +109,8 @@ audio-only.
 | Hero video | ≤ 4 MB | `tools/landing-lint.cjs` (blocking) |
 | Page HTML | ≤ 200 KB | `bin/quality-scorecard.cjs` |
 | Total page weight | ≤ 2 MB | `tools/build-budget.cjs` |
-| 3D assets | Draco/meshopt compressed, lazy | `landing-lint` (warn) |
+| 3D assets | Draco/meshopt compressed, lazy | `landing-lint` (D5 warn) |
+| 3D lifecycle | guard, lazy import, dispose | `landing-lint` (D1–D3 block) |
 | Images | WebP, lazy below fold | scorecard + BUILD-DOCTRINE |
 
 Core Web Vitals targets: LCP ≤ 2.5 s (the poster, not the video), CLS < 0.1

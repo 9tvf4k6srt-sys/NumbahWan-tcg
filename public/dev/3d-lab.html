@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>3D Lab · the three landing patterns</title>
+<link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
+<!--
+  3D Lab — live reference for references/LANDING-3D.md
+  One demo per pattern. The code driving each demo sits in a comment
+  directly above it (same convention as motion-lab.html).
+
+  Stack: GSAP + ScrollTrigger + Lenis (MOTION-CRAFT), nw-3d.js runtime
+  (LANDING-3D). Three.js loads lazily via nw-3d only if the device
+  qualifies; on reduced-motion / Save-Data / no-WebGL every stage stays
+  inert and the poster gradient underneath carries the section.
+-->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.13.0/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.13.0/ScrollTrigger.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/lenis@1.1.13/dist/lenis.min.js"></script>
+<style>
+  :root{ --ink:#0c0a14; --paper:#f6f3ec; }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html,body{overflow-x:hidden;max-width:100vw}
+  body{background:var(--ink);color:var(--paper);font-family:Inter,system-ui,-apple-system,sans-serif;line-height:1.45;-webkit-font-smoothing:antialiased}
+
+  .wrap{max-width:820px;margin:0 auto;padding:0 26px;width:100%}
+  h1{font-family:Orbitron,system-ui,sans-serif;font-weight:800;font-size:clamp(2rem,9vw,3.6rem);letter-spacing:-.01em;line-height:1.02}
+  h2{font-family:Orbitron,system-ui,sans-serif;font-weight:800;font-size:clamp(1.5rem,6.5vw,2.4rem);line-height:1.05;margin-bottom:12px}
+  .lead{font-size:clamp(1rem,4.2vw,1.25rem);opacity:.92;max-width:44ch}
+  .tag{display:inline-block;font-size:.72rem;letter-spacing:.22em;text-transform:uppercase;font-weight:700;border:2px solid currentColor;border-radius:999px;padding:7px 15px;margin-bottom:18px}
+
+  section{position:relative;padding:48px 0}
+  .s-intro,.s-end{min-height:100svh;display:flex;flex-direction:column;justify-content:center;background:radial-gradient(120% 90% at 50% 0%,#241a3a,#0c0a14)}
+  .s-end{background:radial-gradient(120% 90% at 50% 100%,#241a3a,#0c0a14)}
+
+  /* each demo: a pinned viewport-tall stage; copy overlays the canvas */
+  .demo{min-height:100svh;display:flex;flex-direction:column;justify-content:center}
+  .d1{background:linear-gradient(160deg,#1a1030,#0c0a14)}
+  .d2{background:linear-gradient(160deg,#04201b,#0c0a14)}
+  .d3{background:linear-gradient(160deg,#160b2e,#0c0a14)}
+
+  .stage{position:relative;border-radius:16px;overflow:hidden;margin-top:22px;
+    aspect-ratio:3/2;max-height:62svh;
+    background:radial-gradient(90% 90% at 50% 40%,rgba(255,255,255,.07),rgba(255,255,255,.015));
+    border:1px solid rgba(255,255,255,.09)}
+  .stage canvas{display:block;width:100%;height:100%;touch-action:pan-y;opacity:0;transition:opacity .8s ease}
+  .stage.nwl-3d--live canvas{opacity:1}
+  .cue{position:absolute;bottom:12px;left:50%;transform:translateX(-50%);padding:6px 14px;border-radius:999px;
+    background:rgba(3,3,5,.66);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
+    font-size:.7rem;letter-spacing:.14em;text-transform:uppercase;opacity:.85;pointer-events:none;white-space:nowrap}
+
+  .beatcopy{position:absolute;left:22px;top:20px;max-width:34ch;pointer-events:none}
+  .beatcopy b{display:block;font-size:1.05rem;letter-spacing:.04em;text-transform:uppercase}
+  .beatcopy span{font-size:.85rem;opacity:.8}
+  .beat{position:absolute;inset:0;opacity:0;padding:0}
+
+  .bar{height:10px;background:rgba(255,255,255,.14);border-radius:99px;overflow:hidden;margin-top:16px}
+  .fill{height:100%;width:100%;transform:scaleX(0);transform-origin:left;background:#fff;border-radius:99px}
+
+  .hint{position:absolute;left:0;right:0;bottom:max(20px,env(safe-area-inset-bottom));text-align:center;font-size:.78rem;font-weight:600;letter-spacing:.06em;opacity:.6;pointer-events:none}
+  .reduced-note{position:fixed;top:max(10px,env(safe-area-inset-top));right:10px;font-size:.7rem;background:rgba(0,0,0,.6);border-radius:8px;padding:6px 10px;z-index:50;display:none}
+
+  code{font-family:ui-monospace,SFMono-Regular,monospace;font-size:.85em;background:rgba(255,255,255,.08);padding:2px 7px;border-radius:6px}
+
+  @media (prefers-reduced-motion: reduce){
+    .stage canvas{display:none} /* stages stay on their poster gradient */
+  }
+</style>
+</head>
+<body>
+<div class="reduced-note" id="rnote">reduced motion on: 3D never initializes, posters carry each section</div>
+
+<section class="s-intro">
+  <div class="wrap">
+    <span class="tag">3D Lab</span>
+    <h1>The three<br>landing patterns</h1>
+    <p class="lead" style="margin-top:18px">Live reference for <code>references/LANDING-3D.md</code>. Each section is one pattern, built on <code>nw-3d.js</code>: capability ladder, lazy Three.js, render on demand, pause off-screen, full dispose. Scroll down, then back up: every scrub unwinds.</p>
+  </div>
+  <div class="hint">scroll ↓</div>
+</section>
+
+<!--
+  DEMO 1 · Pattern 1 — scroll-scrubbed hero object
+  Scene module: /dev/scenes/lab-hero.js
+  Bridge (the whole integration, verbatim from the script below):
+
+    NW3D.get(stage1El).then(stage => {
+      gsap.timeline({
+        scrollTrigger: { trigger:'#p1', start:'top top', end:'+=150%',
+          pin:true, scrub:1, invalidateOnRefresh:true,
+          onUpdate(self){ stage.setProgress(self.progress); } }
+      });
+    });
+
+  The page owns scroll; the scene exposes setProgress(p) and maps p to
+  rotation + camera dolly internally. Pointer tilt is handled by nw-3d
+  (desktop only) via the scene's setPointer.
+-->
+<section class="demo d1" id="p1">
+  <div class="wrap">
+    <span class="tag">1 / hero object</span>
+    <h2>Scroll-scrubbed hero</h2>
+    <p class="lead">One object, one motion verb. The wheel is the playhead: down plays, up unwinds. Move the pointer over the stage for the tilt.</p>
+    <div class="stage" data-nwl-3d="/dev/scenes/lab-hero.js" id="stage1">
+      <canvas role="img" aria-label="A metallic knot rotating and approaching as you scroll" tabindex="0" width="1200" height="800"></canvas>
+      <div class="cue">Scroll to turn it · move pointer to tilt</div>
+    </div>
+    <div class="bar"><div class="fill" id="fill1"></div></div>
+  </div>
+</section>
+
+<!--
+  DEMO 2 · Pattern 2 — sequenced narrative scenes
+  Scene module: /dev/scenes/lab-narrative.js
+  One master scrubbed timeline drives BOTH the 3D playhead and the beat
+  copy, so they can never drift:
+
+    NW3D.get(stage2El).then(stage => {
+      const tl = gsap.timeline({
+        scrollTrigger: { trigger:'#p2', start:'top top', end:'+=300%',
+          pin:true, scrub:1, invalidateOnRefresh:true,
+          onUpdate(self){ stage.setProgress(self.progress); } }
+      });
+      tl.to('#b1',{autoAlpha:1,duration:.12}).to('#b1',{autoAlpha:0,duration:.12},.29)
+        .to('#b2',{autoAlpha:1,duration:.12},.37).to('#b2',{autoAlpha:0,duration:.12},.62)
+        .to('#b3',{autoAlpha:1,duration:.12},.70);
+    });
+
+  Inside the scene, progress windows 0–.33/.33–.66/.66–1 map to orbit,
+  assemble, resolve. Morphs use smoothstep so beats never snap.
+-->
+<section class="demo d2" id="p2">
+  <div class="wrap">
+    <span class="tag">2 / narrative</span>
+    <h2>Sequenced scenes</h2>
+    <p class="lead">Three beats on one playhead: the camera orbits a scattered field, the field assembles into a ring, the shot pulls back to resolve.</p>
+    <div class="stage" data-nwl-3d="/dev/scenes/lab-narrative.js" id="stage2">
+      <canvas role="img" aria-label="Scattered cubes assembling into a ring as the story advances" tabindex="0" width="1200" height="800"></canvas>
+      <div class="cue">Scroll through the three beats</div>
+      <div class="beat beatcopy" id="b1"><b>Beat 1 · chaos</b><span>Sixty pieces, no order. The camera circles, looking for the shape.</span></div>
+      <div class="beat beatcopy" id="b2"><b>Beat 2 · precision</b><span>Every piece finds its slot. The light warms as the ring closes.</span></div>
+      <div class="beat beatcopy" id="b3"><b>Beat 3 · mastery</b><span>Pull back. The ring holds. The story resolves where the CTA would live.</span></div>
+    </div>
+    <div class="bar"><div class="fill" id="fill2"></div></div>
+  </div>
+</section>
+
+<!--
+  DEMO 3 · Pattern 3 — scroll-revealed shader element
+  Scene module: /dev/scenes/lab-shader.js
+  Scroll touches exactly one uniform; the fragment shader does the rest.
+  The distortion term is p*(1-p): zero at both ends, so the effect always
+  resolves to a clean, legible state (the "settles" rule).
+
+    NW3D.get(stage3El).then(stage => {
+      gsap.timeline({
+        scrollTrigger: { trigger:'#p3', start:'top top', end:'+=150%',
+          pin:true, scrub:1, invalidateOnRefresh:true,
+          onUpdate(self){ stage.setProgress(self.progress); } }
+      });
+    });
+-->
+<section class="demo d3" id="p3">
+  <div class="wrap">
+    <span class="tag">3 / shader reveal</span>
+    <h2>Uniform on a wire</h2>
+    <p class="lead">A noisy sweep uncovers the gradient as you scroll. Mid-reveal it churns; at the ends it is perfectly still. Geometry never changes, only one uniform.</p>
+    <div class="stage" data-nwl-3d="/dev/scenes/lab-shader.js" id="stage3">
+      <canvas role="img" aria-label="A violet gradient revealed by a noisy sweep tied to scroll" tabindex="0" width="1200" height="800"></canvas>
+      <div class="cue">Scroll to sweep · pointer adds a glow</div>
+    </div>
+    <div class="bar"><div class="fill" id="fill3"></div></div>
+  </div>
+</section>
+
+<section class="s-end">
+  <div class="wrap">
+    <span class="tag">ship notes</span>
+    <h2>Before any of this merges</h2>
+    <p class="lead">Doctrine: <code>references/LANDING-3D.md</code>. Runtime: <code>/static/nw-3d.js</code>. Gates: <code>tools/landing-lint.cjs</code> D-rules, scorecard, aitell. The fallback is built first, the scene is layered on, and the page still sells with the canvas deleted.</p>
+  </div>
+  <div class="hint">scroll ↑ to unwind everything</div>
+</section>
+
+<script src="/static/nw-3d.js" defer></script>
+<script>
+/* ── 3D Lab motion layer ──
+   Timeline structure: three pinned scrub sections, each bridging one
+   ScrollTrigger progress into one nw-3d stage (LANDING-3D §5).
+   Easing: 'none' on scrubs (the wheel is the ease), expo.out entrances.
+   Scroll: Lenis desktop / native touch feed (MOTION-CRAFT). */
+window.addEventListener('load', function () {
+  var reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (reduced) {
+    document.getElementById('rnote').style.display = 'block';
+    return; // no scroll choreography, nw-3d.capable() already refused the canvases
+  }
+  if (!window.gsap || !window.ScrollTrigger) return;
+  gsap.registerPlugin(ScrollTrigger);
+  ScrollTrigger.config({ ignoreMobileResize: true, fastScrollEnd: true });
+
+  // Lenis on fine pointers; native scroll feeds ScrollTrigger on touch.
+  var isTouch = matchMedia('(pointer:coarse)').matches || 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+  if (window.Lenis && !isTouch) {
+    var lenis = new Lenis({ duration: 1.0, smoothWheel: true, smoothTouch: false });
+    lenis.on('scroll', function () { ScrollTrigger.update(); });
+    gsap.ticker.add(function (t) { lenis.raf(t * 1000); });
+    gsap.ticker.lagSmoothing(0);
+  } else {
+    addEventListener('scroll', function () { ScrollTrigger.update(); }, { passive: true });
+    gsap.ticker.add(function () { ScrollTrigger.update(); });
+    gsap.ticker.lagSmoothing(0);
+  }
+
+  // One bridge per stage: the pinned ScrollTrigger owns progress, the
+  // scene reads it. The timeline builds immediately (fill bars and beat
+  // copy work on every device); the 3D stage late-binds through a ref
+  // when its lazy mount resolves, and snaps to the current playhead so a
+  // scene arriving mid-scrub lands in the right frame. If the device
+  // failed the capability ladder, the ref just stays null.
+  function bridge(sectionSel, stageId, fillId, endPct, onTimeline) {
+    var ref = { stage: null };
+    var tl = gsap.timeline({
+      scrollTrigger: {
+        trigger: sectionSel, start: 'top top', end: '+=' + endPct + '%',
+        pin: true, scrub: 1, invalidateOnRefresh: true,
+        onUpdate: function (self) {
+          if (ref.stage) ref.stage.setProgress(self.progress);
+          gsap.set('#' + fillId, { scaleX: self.progress });
+        }
+      }
+    });
+    if (onTimeline) onTimeline(tl);
+    if (window.NW3D && NW3D.capable()) {
+      NW3D.get(document.getElementById(stageId)).then(function (stage) {
+        ref.stage = stage;
+        stage.setProgress(tl.scrollTrigger ? tl.scrollTrigger.progress : 0);
+      });
+    }
+  }
+
+  bridge('#p1', 'stage1', 'fill1', 150);
+  bridge('#p2', 'stage2', 'fill2', 300, function (tl) {
+    // beat copy rides the same playhead as the 3D: zero drift possible
+    tl.to('#b1', { autoAlpha: 1, duration: .12 }, .02)
+      .to('#b1', { autoAlpha: 0, duration: .12 }, .29)
+      .to('#b2', { autoAlpha: 1, duration: .12 }, .37)
+      .to('#b2', { autoAlpha: 0, duration: .12 }, .62)
+      .to('#b3', { autoAlpha: 1, duration: .12 }, .70);
+  });
+  bridge('#p3', 'stage3', 'fill3', 150);
+
+  /* recompute after chrome + fonts settle on iOS */
+  ScrollTrigger.refresh();
+  setTimeout(function () { ScrollTrigger.refresh(); }, 700);
+});
+</script>
+</body>
+</html>

@@ -1,6 +1,6 @@
 # Motion Craft
 
-The standard for how things move and feel on every page we ship. Companion to `PINFORGE-VISUAL-LOCK.md` (which governs still imagery) and `BUILD-DOCTRINE.md` (which governs build process). This file governs motion, interaction feel, and the difference between a page that looks finished and one that feels alive.
+The standard for how things move and feel on every page we ship. Companion to `PINFORGE-VISUAL-LOCK.md` (which governs still imagery), `BUILD-DOCTRINE.md` (which governs build process), and `references/LANDING-3D.md` (which governs the WebGL layer that rides on this scroll system). This file governs motion, interaction feel, and the difference between a page that looks finished and one that feels alive.
 
 Last updated: 2026-06-01
 
