@@ -1,0 +1,54 @@
+# NW PR Gate: runs the repo's own quality gates on every pull request.
+#
+# WHY THIS FILE LIVES IN ci/ AND NOT .github/workflows/:
+# bot tokens (GitHub App installations) cannot push workflow files without
+# the `workflows` permission, so the AI developer ships the source here.
+# A human enables it ONCE with their own credentials:
+#   npm run ship:install-ci
+#   git add .github/workflows/pr-gate.yml
+#   git commit -m "ci: enable PR Gate workflow" && git push
+#
+# The heavy lifting lives in bin/ship-gate.cjs (zero npm dependencies, Node
+# builtins only), so this workflow needs NO `npm ci`. It checks out the code,
+# diffs against the PR base branch, and judges only the files the PR touched:
+#   syntax        node --check on changed .cjs/.mjs           blocking
+#   landing-lint  D1-D6 + cinematic rules, repo-wide          blocking
+#   aitell        AI-tell prose lint on changed .html/.md     blocking
+#   scorecard     changed public pages must score >= 70       blocking
+#   i18n          changed top-level pages must pass guard     blocking
+#
+# Local equivalent: `npm run ship` (same runner, same verdict).
+# Doctrine: TASTE.md -> references/LANDING-CINEMATIC.md, references/LANDING-3D.md
+
+name: PR Gate
+
+on:
+  pull_request:
+    branches: [main]
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pr-gate-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  ship-gate:
+    name: Ship Gate
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout (full history for merge-base diff)
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Run ship gate (changed files vs base)
+        run: node bin/ship-gate.cjs --ci
