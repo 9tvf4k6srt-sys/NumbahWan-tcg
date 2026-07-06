@@ -483,6 +483,9 @@ function generateFullPage(spec, sectionHTML, i18nJsonPath) {
   ).join(',') + '}';
   const i18nJson = jsObj(pageI18n).replace(/<\//g, '<\\/');
   const isLanding = spec.type === 'landing-page';
+  // Any beat declaring media type '3d' pulls in the nw-3d runtime
+  // (capability ladder + lazy Three.js + dispose — references/LANDING-3D.md).
+  const has3dBeat = isLanding && (spec.beats || []).some(b => b.media?.type === '3d');
 
   // Landing pages ship the cinematic layer; other types keep the game shell.
   const landingHead = isLanding ? `
@@ -490,7 +493,8 @@ function generateFullPage(spec, sectionHTML, i18nJsonPath) {
     <link rel="stylesheet" href="/static/nw-landing.css">${spec.hero?.video?.poster ? `
     <link rel="preload" as="image" href="${esc(spec.hero.video.poster)}" fetchpriority="high">` : ''}
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.13.0/gsap.min.js" defer></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.13.0/ScrollTrigger.min.js" defer></script>` : '';
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.13.0/ScrollTrigger.min.js" defer></script>${has3dBeat ? `
+    <script src="/static/nw-3d.js" defer></script>` : ''}` : '';
 
   // Motion layer: reduced-motion aware, lazy videos, transform entrances
   // (never opacity-only — aitell L4). Without JS the page is fully readable.
@@ -536,7 +540,26 @@ window.addEventListener('DOMContentLoaded', function () {
     gsap.from('.nwl-title, .nwl-sub, .nwl-cta', {
       yPercent: 60, autoAlpha: 0, duration: 1.1, ease: 'expo.out', stagger: 0.08
     });
-  }
+  }${has3dBeat ? `
+
+  // 3D beats: bridge each stage's scroll progress into its scene
+  // (LANDING-3D §5 — the page owns scroll, the scene reads it). nw-3d
+  // auto-mounts qualifying stages after load; on devices that fail the
+  // capability ladder the stage stays inert and the beat reads as copy.
+  if (window.gsap && window.ScrollTrigger) {
+    document.querySelectorAll('[data-nwl-3d]').forEach(function (el) {
+      var ref = { stage: null };
+      var st = ScrollTrigger.create({
+        trigger: el, start: 'top 85%', end: 'bottom 15%', scrub: 1,
+        invalidateOnRefresh: true,
+        onUpdate: function (self) { if (ref.stage) ref.stage.setProgress(self.progress); }
+      });
+      el.addEventListener('nwl3d:ready', function (e) {
+        ref.stage = e.detail;
+        ref.stage.setProgress(st.progress);
+      });
+    });
+  }` : ''}
 });
 </script>` : '';
 

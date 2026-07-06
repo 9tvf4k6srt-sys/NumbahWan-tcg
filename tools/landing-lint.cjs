@@ -1,9 +1,10 @@
 #!/usr/bin/env node
 /**
- * NW Landing Lint v1.0 — the cinematic gate
+ * NW Landing Lint v1.1 — the cinematic gate
  *
- * Enforces the measurable half of references/LANDING-CINEMATIC.md on any
- * landing/marketing HTML page. The judgment half (does the arc land?) stays
+ * Enforces the measurable half of references/LANDING-CINEMATIC.md and the
+ * 3D lifecycle contract from references/LANDING-3D.md on any landing/
+ * marketing HTML page. The judgment half (does the arc land?) stays
  * human; this tool blocks the failures that make a page read as amateur:
  *
  *   BLOCKING
@@ -14,6 +15,9 @@
  *     M1  <img>/<video> without width/height or aspect-ratio (CLS)
  *     A1  <canvas> without aria-label/role (3D stage invisible to AT)
  *     A2  audio/sound toggle missing when page autoplays sound
+ *     D1  Three.js imported eagerly (blocking <script>, competes with LCP)
+ *     D2  hand-rolled WebGL page with no reduced-motion/capability guard
+ *     D3  hand-rolled Three.js page with no dispose path (memory leak)
  *
  *   WARN
  *     W1  video with a single source (no webm+mp4 pair)
@@ -21,6 +25,12 @@
  *     W3  canvas without a visible interaction cue element
  *     W4  no CTA link/button in the first <section>
  *     W5  more than 5 or fewer than 3 top-level story sections
+ *     D4  unconditional requestAnimationFrame loop (render-on-demand rule)
+ *     D5  GLB/GLTF referenced without a Draco/meshopt marker nearby
+ *     D6  Three.js version not pinned (floating latest breaks silently)
+ *
+ * Pages using /static/nw-3d.js get D2/D3/D4 for free: the runtime owns
+ * the capability ladder, dispose sweep, and demand-driven loop.
  *
  * Usage:
  *   node tools/landing-lint.cjs <page.html> [...more]     # lint specific pages
@@ -153,6 +163,45 @@ function lintPage(pagePath) {
     }
   });
 
+  // ── 3D lifecycle (LANDING-3D doctrine) ──
+  const usesNw3d = content.includes('nw-3d.js');
+  const threeRefs = [...content.matchAll(/['"](https?:\/\/[^'"]*\/three(?:@|\/|\.min\.js|\.module\.js)[^'"]*)['"]/gi)];
+  const mentionsThree = threeRefs.length > 0 || /\bTHREE\.\w+|WebGLRenderer/.test(content);
+
+  // D1: Three.js in a blocking <script src> in <head> competes with LCP
+  for (const s of content.matchAll(/<script\b[^>]*src="[^"]*three[^"]*"[^>]*>/gi)) {
+    const a = attrs(s[0]);
+    if (a.defer === undefined && a.async === undefined && a.type !== 'module') {
+      block('D1', 'Three.js loaded as a blocking script — import lazily after load (LANDING-3D §4.2)');
+    }
+  }
+
+  if (mentionsThree && !usesNw3d) {
+    // Hand-rolled scene: it must reimplement the lifecycle contract itself.
+    if (!/prefers-reduced-motion/.test(content) || !/(getContext\(\s*['"]webgl|NW3D\.capable|capable\s*\()/.test(content)) {
+      block('D2', 'hand-rolled 3D without a reduced-motion + WebGL capability guard — the ladder (LANDING-3D §6) is mandatory');
+    }
+    if (!/dispose\s*\(/.test(content)) {
+      block('D3', 'hand-rolled Three.js with no dispose() path — GPU memory leaks (LANDING-3D §4.5)');
+    }
+    if (/requestAnimationFrame\s*\(/.test(content) && !/(needsRender|invalidate|renderRequested|dirty)/i.test(content)) {
+      warn('D4', 'unconditional rAF render loop — render on demand and pause off-screen (LANDING-3D §4.3)');
+    }
+  }
+
+  // D5: models must ship compressed
+  const modelRefs = [...content.matchAll(/['"]([^'"]+\.(?:glb|gltf))['"]/gi)];
+  if (modelRefs.length && !/draco|meshopt|ktx2/i.test(content)) {
+    warn('D5', `${modelRefs.length} GLB/GLTF reference(s) with no Draco/meshopt marker — compress models (LANDING-3D §3)`);
+  }
+
+  // D6: pin the Three.js version
+  for (const r of threeRefs) {
+    if (!/three@\d+\.\d+\.\d+/.test(r[1])) {
+      warn('D6', `Three.js CDN URL not version-pinned: ${r[1]}`);
+    }
+  }
+
   // ── audio autoplay needs a visible toggle ──
   const audioAutoplay = /<audio\b[^>]*autoplay/i.test(content) ||
     /<video\b(?![^>]*muted)[^>]*autoplay/i.test(content);
@@ -189,7 +238,9 @@ if (allMode) {
       if (f.isDirectory()) { if (!['static', 'node_modules'].includes(f.name)) walk(full); }
       else if (f.name.endsWith('.html')) {
         const c = fs.readFileSync(full, 'utf-8');
-        if (c.includes('nw-landing.css') || c.includes('nwl-hero') || c.includes('landing-hero')) found.push(full);
+        // Landing pages: cinematic layer markers, or any page carrying a 3D stage
+        if (c.includes('nw-landing.css') || c.includes('nwl-hero') || c.includes('landing-hero')
+          || c.includes('data-nwl-3d') || c.includes('nw-3d.js')) found.push(full);
       }
     }
   }
@@ -214,7 +265,7 @@ const totalWarns = results.reduce((n, r) => n + r.findings.filter(f => f.level =
 if (jsonMode) {
   console.log(JSON.stringify({ pages: results, blocks: totalBlocks, warns: totalWarns }, null, 2));
 } else {
-  console.log(`\n${B}🎬 NW Landing Lint v1.0${X} — cinematic gate (${results.length} page${results.length > 1 ? 's' : ''})\n`);
+  console.log(`\n${B}🎬 NW Landing Lint v1.1${X} — cinematic gate (${results.length} page${results.length > 1 ? 's' : ''})\n`);
   results.forEach(r => {
     const blocks = r.findings.filter(f => f.level === 'block');
     const warns = r.findings.filter(f => f.level === 'warn');
@@ -224,7 +275,7 @@ if (jsonMode) {
     warns.forEach(f => console.log(`      ${Y}⚠ ${f.rule}${X} ${f.msg}`));
   });
   console.log(`\n  ${B}Result${X}: ${totalBlocks ? `${R}${totalBlocks} blocking finding(s)${X}` : `${G}clean${X}`}, ${totalWarns} warning(s)`);
-  console.log(`  Doctrine: references/LANDING-CINEMATIC.md\n`);
+  console.log(`  Doctrine: references/LANDING-CINEMATIC.md + references/LANDING-3D.md\n`);
 }
 
 process.exit(totalBlocks ? 1 : 0);

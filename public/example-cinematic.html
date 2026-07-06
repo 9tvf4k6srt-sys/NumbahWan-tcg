@@ -14,6 +14,7 @@
     <link rel="preload" as="image" href="/static/images/forge-hero-poster.webp" fetchpriority="high">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.13.0/gsap.min.js" defer></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.13.0/ScrollTrigger.min.js" defer></script>
+    <script src="/static/nw-3d.js" defer></script>
     <script src="/static/nw-i18n-shim.js"></script>
     <script src="/static/nw-nav.js" defer></script>
     <script src="/static/nw-i18n-core.js" defer></script>
@@ -141,6 +142,25 @@ window.addEventListener('DOMContentLoaded', function () {
     });
     gsap.from('.nwl-title, .nwl-sub, .nwl-cta', {
       yPercent: 60, autoAlpha: 0, duration: 1.1, ease: 'expo.out', stagger: 0.08
+    });
+  }
+
+  // 3D beats: bridge each stage's scroll progress into its scene
+  // (LANDING-3D §5 — the page owns scroll, the scene reads it). nw-3d
+  // auto-mounts qualifying stages after load; on devices that fail the
+  // capability ladder the stage stays inert and the beat reads as copy.
+  if (window.gsap && window.ScrollTrigger) {
+    document.querySelectorAll('[data-nwl-3d]').forEach(function (el) {
+      var ref = { stage: null };
+      var st = ScrollTrigger.create({
+        trigger: el, start: 'top 85%', end: 'bottom 15%', scrub: 1,
+        invalidateOnRefresh: true,
+        onUpdate: function (self) { if (ref.stage) ref.stage.setProgress(self.progress); }
+      });
+      el.addEventListener('nwl3d:ready', function (e) {
+        ref.stage = e.detail;
+        ref.stage.setProgress(st.progress);
+      });
     });
   }
 });

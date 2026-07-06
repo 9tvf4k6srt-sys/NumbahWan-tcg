@@ -23,6 +23,7 @@ const MIME = {
   '.woff2':'font/woff2',
   '.ttf':  'font/ttf',
   '.mp3':  'audio/mpeg',
+  '.mp4':  'video/mp4',
   '.wav':  'audio/wav',
   '.webm': 'video/webm',
   '.xml':  'application/xml',
@@ -43,14 +44,34 @@ const server = http.createServer((req, res) => {
 
   let filePath = path.join(PUBLIC, url);
 
-  // If file exists directly, serve it
+  // If file exists directly, serve it (with Range support so <video> can seek)
   if (fs.existsSync(filePath) && fs.statSync(filePath).isFile()) {
-    const content = fs.readFileSync(filePath);
-    res.writeHead(200, { 
+    const stat = fs.statSync(filePath);
+    const range = req.headers.range;
+    const baseHeaders = {
       'Content-Type': getMime(filePath),
-      'Access-Control-Allow-Origin': '*'
-    });
-    res.end(content);
+      'Access-Control-Allow-Origin': '*',
+      'Accept-Ranges': 'bytes'
+    };
+    if (range) {
+      const m = /bytes=(\d*)-(\d*)/.exec(range);
+      let start = m && m[1] ? parseInt(m[1], 10) : 0;
+      let end = m && m[2] ? parseInt(m[2], 10) : stat.size - 1;
+      if (isNaN(start) || isNaN(end) || start > end || start >= stat.size) {
+        res.writeHead(416, { 'Content-Range': `bytes */${stat.size}` });
+        res.end();
+        return;
+      }
+      end = Math.min(end, stat.size - 1);
+      res.writeHead(206, Object.assign({}, baseHeaders, {
+        'Content-Range': `bytes ${start}-${end}/${stat.size}`,
+        'Content-Length': end - start + 1
+      }));
+      fs.createReadStream(filePath, { start, end }).pipe(res);
+      return;
+    }
+    res.writeHead(200, Object.assign({}, baseHeaders, { 'Content-Length': stat.size }));
+    fs.createReadStream(filePath).pipe(res);
     return;
   }
 
