@@ -1,0 +1,30 @@
+{
+  "_comment": "Lighthouse CI config: enforces the performance budgets declared in references/LANDING-CINEMATIC.md section 5 on LANDING pages (the doctrine's subject). Game pages (index, battle, cards, market) are excluded for now: their window load event never fires (dangling asset requests, same root cause as the tavern-tales Backstop hang) and Lighthouse requires load. Fix the pages, then add them here. INP is field-only, so total-blocking-time stands in as the lab proxy. Run locally: npm run lh (server on :3000). CI: ci/page-quality.yml.",
+  "ci": {
+    "collect": {
+      "url": [
+        "http://localhost:3000/example-cinematic"
+      ],
+      "numberOfRuns": 1,
+      "settings": {
+        "preset": "desktop",
+        "chromeFlags": "--no-sandbox --disable-dev-shm-usage",
+        "skipAudits": ["uses-http2", "redirects-http", "is-on-https"],
+        "maxWaitForLoad": 45000,
+        "maxWaitForFcp": 30000
+      }
+    },
+    "assert": {
+      "assertions": {
+        "largest-contentful-paint": ["error", { "maxNumericValue": 2500 }],
+        "cumulative-layout-shift": ["error", { "maxNumericValue": 0.1 }],
+        "total-blocking-time": ["warn", { "maxNumericValue": 200 }],
+        "total-byte-weight": ["error", { "maxNumericValue": 2097152 }],
+        "resource-summary:document:size": ["error", { "maxNumericValue": 204800 }],
+        "viewport": "error",
+        "unsized-images": "warn"
+      }
+    },
+    "upload": { "target": "filesystem", "outputDir": ".lighthouseci" }
+  }
+}

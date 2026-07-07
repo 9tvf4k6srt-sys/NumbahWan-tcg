@@ -1,0 +1,90 @@
+# NW Page Quality: Lighthouse budgets + visual regression on every PR.
+#
+# INSTALL (same restriction as pr-gate.yml: bot tokens cannot push workflow
+# files). A human enables it once with their own credentials:
+#   npm run ship:install-ci        # copies every ci/*.yml into .github/workflows/
+#   git add .github/workflows/ && git commit -m "ci: enable page-quality workflow" && git push
+#
+# Job 1 lighthouse: enforces the Core Web Vitals + weight budgets declared in
+#   references/LANDING-CINEMATIC.md section 5 (LCP <= 2.5s, CLS < 0.1,
+#   total <= 2MB, HTML <= 200KB) on the landing template + critical pages.
+#   Config: lighthouserc.json.
+# Job 2 visual: BackstopJS gate config (backstop.gate.cjs): 16 critical pages
+#   x 2 viewports, animation frozen by gate-freeze.cjs so motion-heavy pages
+#   compare deterministically. Baselines are committed in
+#   backstop_data/gate_reference/. On diff: job fails and uploads the HTML
+#   report as an artifact. Bless intended changes locally with
+#   `npm run visual:gate:approve` and commit the updated baselines.
+
+name: Page Quality
+
+on:
+  pull_request:
+    branches: [main]
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+concurrency:
+  group: page-quality-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lighthouse:
+    name: Lighthouse budgets
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Start static server
+        run: |
+          node serve.cjs &
+          for i in $(seq 1 30); do
+            curl -sf http://localhost:3000/ > /dev/null && break
+            sleep 1
+          done
+      - name: Run Lighthouse CI
+        run: npx --yes @lhci/cli@0.15.x autorun --config=lighthouserc.json
+      - name: Upload Lighthouse reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: lighthouse-reports
+          path: .lighthouseci
+          retention-days: 14
+
+  visual:
+    name: Visual regression (gate)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Install deps (backstop + playwright live in devDependencies)
+        run: npm ci --no-audit --no-fund
+      - name: Install Playwright chromium
+        run: npx playwright install --with-deps chromium
+      - name: Start static server
+        run: |
+          node serve.cjs &
+          for i in $(seq 1 30); do
+            curl -sf http://localhost:3000/ > /dev/null && break
+            sleep 1
+          done
+      - name: Compare against committed baselines
+        run: npx backstop test --config=backstop.gate.cjs
+      - name: Upload diff report
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: backstop-diff-report
+          path: |
+            backstop_data/gate_html_report
+            backstop_data/gate_test
+          retention-days: 14

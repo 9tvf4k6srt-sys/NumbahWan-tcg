@@ -37,10 +37,10 @@
  *   node bin/ship-gate.cjs --ci                # plain output, base from GITHUB_BASE_REF
  *   node bin/ship-gate.cjs --smoke             # include smoke test (server on :8788)
  *   node bin/ship-gate.cjs --json              # machine-readable result
- *   node bin/ship-gate.cjs --install-ci        # copy ci/pr-gate.yml into
+ *   node bin/ship-gate.cjs --install-ci        # copy every ci/*.yml into
  *                                              # .github/workflows/ (the bot
  *                                              # token cannot push workflow
- *                                              # files; a human commits this
+ *                                              # files; a human commits them
  *                                              # once with their own creds)
  *
  * Exit code: 0 = ship it, 1 = blocked.
@@ -60,13 +60,16 @@ const SMOKE = args.includes('--smoke');
 const BASE_ARG = (args.find(a => a.startsWith('--base=')) || '').slice(7);
 
 if (args.includes('--install-ci')) {
-  const src = path.join(ROOT, 'ci', 'pr-gate.yml');
+  const srcDir = path.join(ROOT, 'ci');
   const dstDir = path.join(ROOT, '.github', 'workflows');
   fs.mkdirSync(dstDir, { recursive: true });
-  fs.copyFileSync(src, path.join(dstDir, 'pr-gate.yml'));
-  console.log('installed .github/workflows/pr-gate.yml');
-  console.log('commit it with YOUR credentials (bot tokens cannot push workflow files):');
-  console.log('  git add .github/workflows/pr-gate.yml && git commit -m "ci: enable PR Gate workflow" && git push');
+  const ymls = fs.readdirSync(srcDir).filter(f => f.endsWith('.yml') || f.endsWith('.yaml'));
+  for (const f of ymls) {
+    fs.copyFileSync(path.join(srcDir, f), path.join(dstDir, f));
+    console.log(`installed .github/workflows/${f}`);
+  }
+  console.log('commit with YOUR credentials (bot tokens cannot push workflow files):');
+  console.log('  git add .github/workflows/ && git commit -m "ci: install workflows" && git push');
   process.exit(0);
 }
 
