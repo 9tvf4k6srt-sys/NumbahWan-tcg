@@ -37,6 +37,18 @@ function findPlaywrightChrome() {
   return candidates.length ? candidates[0].bin : null;
 }
 
+// Preflight: leftover Chromium zombies from killed runs starve the 1GB
+// sandbox and make lighthouse hang forever. Kill them, wait for the OS to
+// settle, then proceed. Skipped in CI (fresh runners, and CI may run other
+// chrome-based jobs in parallel).
+if (!process.env.CI) {
+  try {
+    spawnSync('pkill', ['-9', '-f', 'chrome'], { stdio: 'ignore' });
+    spawnSync('sleep', ['3'], { stdio: 'ignore' });
+    console.log('[lh-run] preflight: killed stray chrome processes');
+  } catch (_) { /* pkill missing or nothing to kill: fine */ }
+}
+
 if (!process.env.CHROME_PATH) {
   const chrome = findPlaywrightChrome();
   if (chrome) {

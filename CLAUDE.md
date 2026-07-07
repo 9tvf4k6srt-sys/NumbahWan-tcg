@@ -27,6 +27,19 @@ Known failure modes and the ONLY acceptable patterns:
    update after each step. After compaction: read checkpoint, resume — do NOT re-plan.
 5. **Deploy**: ALWAYS `node bin/mycelium.cjs ship "msg"` — handles auth refresh atomically.
 6. **Never echo large JSON** — `jq '.key'` or `wc -l`, not dumps.
+7. **Browser/build commands that may run >60s** (backstop, lighthouse, big builds):
+   NEVER foreground. `run_in_background: true`, redirect to `/tmp/<name>.log`,
+   then poll with `sleep 30` + `tail`. Foreground runs hit tool timeouts
+   (420s backstop, 590s lighthouse) and killed whole turns.
+8. **Before ANY browser tooling** (Playwright/Lighthouse/Backstop):
+   `pkill -9 -f chrome 2>/dev/null; sleep 3` then `free -m`. Zombie Chromiums
+   OOM the 1GB sandbox (caused one full restart). The command right after
+   pkill may exit -1 — the sleep absorbs it; never chain pkill with real work.
+9. **Before every git push**: assume the token expired — run
+   setup_github_environment first, don't wait for the 403.
+10. **Expensive verification is an artifact, not a ritual**: run the suite ONCE
+    in background, save output to /tmp, re-read the file. Never re-run a
+    150s suite just to re-see its output.
 
 ## ⛔ TOKEN BUDGET — hard limit 200K, both directions cost money
 **Always pick the cheapest operation that works. Precision, not volume.**
