@@ -1,5 +1,10 @@
 # CLAUDE.md — Mycelium Session Protocol
 
+**Mission**: NumbahWan TCG is a hand-crafted static web game (cards, battles,
+economy) built by a recursive learning pipeline: YAML in, production page out,
+lessons permanent. Priorities: iteration speed > cost > perfection; verify,
+never assume; taste is law (`TASTE.md`).
+
 ## ⛔ STOP — run the startup checklist BEFORE writing any code
 ```bash
 cat .mycelium-context                          # the brain: rules, breakages, costs, RESUME state
@@ -52,6 +57,16 @@ NEVER modify eval thresholds, add bonus/credit/nudge systems, or secondary signa
 One raw number → frozen threshold → score. Improve raw data, not scoring.
 `--verify` fails = scoring was gamed = revert immediately.
 
+## ⛔ VERIFY BEFORE "DONE" — one command
+```bash
+npm run ship          # bin/ship-gate.cjs: syntax + landing-lint + aitell + scorecard + i18n, changed-file aware
+```
+Runs in ~1s, judges only YOUR diff (incl. uncommitted + untracked). Exit 1 = fix
+before claiming done. Same runner CI uses (`ci/pr-gate.yml`), same verdict.
+Variants: `ship:all` (repo-wide) · `ship:smoke` (needs server :8788) · `ship:install-ci`.
+This does NOT replace the HONESTY GATE: features still need a functional test
+(mobile viewport first), ship-gate proves quality floors only.
+
 ## CRITICAL: Mobile-First iOS
 - Primary target: iPhone Safari. Screenshots at 375x812/390x844, `is_mobile=True`, touch.
 - Test mobile viewport FIRST. Dismiss overlays before screenshots
@@ -88,12 +103,32 @@ Pre-commit hook requires ≥1 recorded learning per session — not optional.
 | Token costs (live) | `--token-check` · `--cost-plan f1 f2` |
 | Health / status / history | `--health` · `--status` · `--query` |
 | Guard staged files | `--guard` (also runs in pre-commit) |
+| Quality gates (before "done") | `npm run ship` · `ship:all` · `ship:smoke` |
 | Project dashboard / self-heal | `node sentinel.cjs` · `node sentinel.cjs --heal` |
 | Eval learning system | `npx mycelium eval` · `npx mycelium status` · `npx mycelium fix --force` |
 | Deploy | `node bin/mycelium.cjs ship "msg"` |
 Full CLI surface: `node mycelium.cjs --help` · `node bin/ai.cjs`
 
+## Style & architecture rules
+- **Follow existing patterns; do not invent new ones without discussion.**
+  Preserve architecture unless explicitly asked to refactor (see VALUE GATE).
+- Vanilla static pages, no build step for public/: `.cjs` tools with zero npm
+  deps where possible; pinned CDN versions (see `references/LANDING-3D.md` §3).
+- New failure class found in review → add it to the relevant corpus/playbook,
+  not to this file. The bar gets smarter; CLAUDE.md stays short.
+
+## Do / Do NOT
+- DO deploy only via `node bin/mycelium.cjs ship "msg"` (atomic auth refresh).
+- DO commit workflow YAML to `ci/` only; bot tokens CANNOT push
+  `.github/workflows/` (rejected by GitHub) — human installs via `ship:install-ci`.
+- Do NOT run recursive ops on `/mnt/aidrive` (remote, very slow) — tar first.
+- Do NOT read `.mycelium/memory.json` / `watch.json` (T4 files) — CLI only.
+- Do NOT `git push -f` to main. Force-push only `genspark_ai_developer` after rebase.
+
 ## Learning Systems (the short version)
+This file has NO manual "lab notes" section by design: session learnings go
+through the Learner (`--decide/--constraint/--broke/--learned`), which feeds
+premortem/guard/task-brief automatically. A hand-edited log here would rot.
 - **Watcher** (passive): post-commit auto-learns breakages/couplings; pre-commit warns on risky staged files. Zero commands.
 - **Learner** (active): stores what YOU record (`--decide/--constraint/--broke/--learned`); powers premortem/guard/task-brief.
 - Every 10 commits the system self-evaluates and self-corrects. Deep dive: `docs/LEARNING-LOOP.md`, `AI_PLAYBOOK.md` §5.
