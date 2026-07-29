@@ -25,8 +25,15 @@
  *       Opt-in with --judge (skipped in pre-commit to keep commits fast/free).
  *       text   → ai-naturalness.cjs
  *
- * Routing: a file is TEXT if .html/.md/.txt; an IMAGE-PROMPT file if its path
- * matches an image-prompt convention (--images flag forces sheen on a file).
+ *   CODE MEDIUM (ADVISORY, never blocks)
+ *       code   → code-slop-lint.cjs — the prose linter guards user-facing
+ *                copy; this guards the CODE ITSELF (narrative comments,
+ *                swallowed exceptions, as-any casts). Advisory-only: code
+ *                slop has too many legitimate uses to hard-block.
+ *
+ * Routing: a file is TEXT if .html/.md/.txt; CODE if .cjs/.js/.mjs/.ts/.tsx;
+ * an IMAGE-PROMPT file if its path matches an image-prompt convention
+ * (--images flag forces sheen on a file).
  *
  * Usage:
  *   node tools/aitell-pipeline.cjs                 # staged files (pre-commit mode)
@@ -74,6 +81,7 @@ function stagedFiles() {
 function mediumOf(file) {
   if (IMAGES) return 'image';
   if (/\.(html|md|txt)$/i.test(file)) return 'text';
+  if (/\.(cjs|js|mjs|ts|tsx)$/i.test(file)) return 'code';
   // image-prompt convention files (json prompt manifests live under prompts/)
   if (/prompt|sheen/i.test(file) && /\.json$/i.test(file)) return 'image';
   return null;
@@ -91,23 +99,27 @@ function summarizeStylometry(stdout, jsonMode) {
 function main() {
   let textFiles = [];
   let imageFiles = [];
+  let codeFiles = [];
 
   if (explicitFiles.length) {
     for (const f of explicitFiles) {
       const m = mediumOf(f);
       if (m === 'text') textFiles.push(f);
       else if (m === 'image') imageFiles.push(f);
+      else if (m === 'code') codeFiles.push(f);
     }
   } else if (ALL) {
     // ai-tell-lint --all and ai-sheen-lint already know their own corpora.
     textFiles = ['--all'];
     imageFiles = ['--all'];
+    codeFiles = ['--all'];
   } else {
     const staged = stagedFiles();
     for (const f of staged) {
       const m = mediumOf(f);
       if (m === 'text') textFiles.push(f);
       else if (m === 'image') imageFiles.push(f);
+      else if (m === 'code') codeFiles.push(f);
     }
   }
 
@@ -156,6 +168,15 @@ function main() {
     if (si.status !== 0) report.blocked = true;
   }
 
+  // ════════════════ CODE MEDIUM (ADVISORY) ════════════════
+  // Agent residue in code: narrative comments, swallowed exceptions, as-any
+  // casts. Never blocks — the report is a review prompt, not a gate.
+  const codeTargets = codeFiles.includes('--all') ? ['--all'] : codeFiles;
+  if (codeTargets.length && has('code-slop-lint.cjs')) {
+    const sc = runTool('code-slop-lint.cjs', codeTargets);
+    report.stages.code_slop = { status: 0, out: sc.stdout };
+  }
+
   return report;
 }
 
@@ -180,13 +201,14 @@ const STAGE_LABEL = {
   text_stylometry:     '② TEXT · stylometry signals     (advisory)',
   text_judge:          '③ TEXT · LLM naturalness judge  (advisory)',
   image_deterministic: '① IMAGE · sheen corpus          (BLOCKING)',
+  code_slop:           '② CODE · agent-residue lint      (advisory)',
 };
 
 // stages whose status can block a commit (used only for the ✓/✗ marker)
 const BLOCKING_STAGES = new Set(['text_deterministic', 'text_layout', 'image_deterministic']);
 
 if (!Object.keys(report.stages).length) {
-  console.log('  nothing to inspect (no text/image targets in scope)');
+  console.log('  nothing to inspect (no text/image/code targets in scope)');
 } else {
   for (const [key, st] of Object.entries(report.stages)) {
     const blocking = BLOCKING_STAGES.has(key);

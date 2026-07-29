@@ -1,4 +1,7 @@
 /**
+// ░░ LEGACY — preserved for history, NEVER run. Zero live references.
+// ░░ See legacy/README.md. Rules: ARCHITECTURE.md invariants 3 and 5.
+
  * NW CARD REBALANCER v2.0 — Automatic Card Mechanic Rebalancing & Audit
  * ══════════════════════════════════════════════════════════════════════
  * 

@@ -1,0 +1,197 @@
+{
+ "version": 1,
+ "description": "Golden verify-tasks: canonical constraints the harness encodes, checked mechanically against the repo. Each task = a doctrine rule + the check that proves it still holds. Failing tasks mean the doctrine and the repo have drifted apart — which is itself a finding worth surfacing.",
+ "tasks": [
+  {
+   "id": "hooks-installer-exists",
+   "doctrine": "AGENTS.md first-commands: `node bin/ai.cjs hooks` activates the tracked git hooks so the learning loop fires.",
+   "check": {
+    "type": "exists",
+    "paths": [
+     ".husky/post-commit",
+     ".husky/post-merge",
+     "tools/install-hooks.cjs"
+    ]
+   }
+  },
+  {
+   "id": "memory-cli-wired",
+   "doctrine": "AI_PLAYBOOK §5: learnings are recorded through the CLI (`node bin/ai.cjs memory ...`), never by hand-editing .mycelium/memory.json.",
+   "check": {
+    "type": "grep",
+    "file": "bin/ai.cjs",
+    "pattern": "memory"
+   }
+  },
+  {
+   "id": "mobile-rules-documented",
+   "doctrine": "AGENT-CONTEXT.md §4 owns the mobile CSS rules: viewport lock and triple-layer overflow protection.",
+   "check": {
+    "type": "grep",
+    "file": "AGENT-CONTEXT.md",
+    "pattern": "overflow-x: hidden"
+   }
+  },
+  {
+   "id": "brand-tokens-separated",
+   "doctrine": "Two brands never cross-contaminate: NW ember #ff6b00 and KINTSUGI gold #c9a84c each appear in their own doctrine tables.",
+   "check": {
+    "type": "grep",
+    "file": "AI_PLAYBOOK.md",
+    "pattern": "#ff6b00"
+   }
+  },
+  {
+   "id": "ship-command-live",
+   "doctrine": "AGENTS.md map: shipping goes through `node bin/mycelium.cjs ship \"msg\"`.",
+   "check": {
+    "type": "grep",
+    "file": "bin/mycelium.cjs",
+    "pattern": "ship"
+   }
+  },
+  {
+   "id": "eval-receipt-committed",
+   "doctrine": "The harness's claimed token savings are backed by a committed, regenerable receipt: evals/results/context-cost.json.",
+   "check": {
+    "type": "exists",
+    "paths": [
+     "evals/results/context-cost.json"
+    ]
+   }
+  },
+  {
+   "id": "architecture-map-exists",
+   "doctrine": "ARCHITECTURE.md is the definitive LIVE/GENERATED/LEGACY status map and AGENTS.md routes disoriented agents to it.",
+   "check": {
+    "type": "grep",
+    "file": "AGENTS.md",
+    "pattern": "ARCHITECTURE\\.md"
+   }
+  },
+  {
+   "id": "fossils-are-quarantined",
+   "doctrine": "No orphaned scripts or frozen audits live at the repo root — fossils are quarantined under legacy/ with a self-explaining README.",
+   "check": {
+    "type": "exists",
+    "paths": [
+     "legacy/README.md",
+     "legacy/audits/AUDIT-2026-04.md",
+     "legacy/scripts/ai-context.sh"
+    ]
+   }
+  },
+  {
+   "id": "legacy-scripts-carry-banners",
+   "doctrine": "Every archived script carries a LEGACY banner at the top so even a direct read cannot be mistaken for live code.",
+   "check": {
+    "type": "grep",
+    "file": "legacy/scripts/ai-context.sh",
+    "pattern": "LEGACY"
+   }
+  },
+  {
+   "id": "linter-exemption-paths-resolve",
+   "doctrine": "tools/ai-tell-lint.cjs exempts moved docs at their new paths (docs/PRODUCTION-PIPELINE.md, legacy/audits/*) — stale paths mean silent lint drift.",
+   "check": {
+    "type": "grep",
+    "file": "tools/ai-tell-lint.cjs",
+    "pattern": "legacy/audits/AUDIT-2026-04\\.md"
+   }
+  },
+  {
+   "id": "system-architecture-not-collided",
+   "doctrine": "The deep system reference is docs/SYSTEM-ARCHITECTURE.md. Root ARCHITECTURE.md is the LIVE/GENERATED/LEGACY status map. The two never share a name — a collision would disorient agents about which doc answers which question.",
+   "check": {
+    "type": "exists",
+    "paths": [
+     "ARCHITECTURE.md",
+     "docs/SYSTEM-ARCHITECTURE.md"
+    ]
+   }
+  },
+  {
+   "id": "no-broken-fossil-links",
+   "doctrine": "No live doc links to the old root AUDIT-2026-04.md path — fossils moved to legacy/audits/ and every pointer followed them.",
+   "check": {
+    "type": "no_grep",
+    "file": "docs/AI-README.md",
+    "pattern": "\\]\\(\\.\\./AUDIT-2026-04\\.md\\)"
+   }
+  },
+  {
+   "id": "pm2-stays-retired",
+   "doctrine": "ARCHITECTURE.md records the retired PM2 workflow as fossilized — the live dev server is `npm run dev` (Vite, 5173), never `pm2 start`.",
+   "check": {
+    "type": "grep",
+    "file": "ARCHITECTURE.md",
+    "pattern": "Retired workflows"
+   }
+  },
+  {
+   "id": "outcome-eval-exists",
+   "doctrine": "The harness's output-side proof (does memory actually help a live model) exists as evals/outcome-eval.cjs and is positioned in docs/POSITIONING.md.",
+   "check": {
+    "type": "exists",
+    "paths": [
+     "evals/outcome-eval.cjs",
+     "docs/POSITIONING.md"
+    ]
+   }
+  },
+  {
+   "id": "outcome-history-tracked",
+   "doctrine": "The outcome proof is a trend, not a snapshot: evals/outcome-eval.cjs appends every --write run to evals/results/outcome-history.jsonl, and tools/harness-report.cjs reads that history into outcomeTrend so the dashboard shows the series.",
+   "check": {
+    "type": "grep",
+    "file": "tools/harness-report.cjs",
+    "pattern": "outcome-history.jsonl"
+   }
+  },
+  {
+   "id": "failure-intake-wired",
+   "doctrine": "Real breakages become eval tasks: tools/add-failure-task.cjs appends to evals/tasks/failures.json and evals/outcome-eval.cjs loads them into the corpus (failure-authored).",
+   "check": {
+    "type": "grep",
+    "file": "evals/outcome-eval.cjs",
+    "pattern": "failures.json"
+   }
+  },
+  {
+   "id": "linter-eval-golden-fixtures",
+   "doctrine": "The anti-slop linters are graded, not trusted: evals/linter-eval.cjs runs the three linter layers (text/layout/code) against hand-authored golden fixtures (evals/linter-fixtures/manifest.json) with known correct verdicts — planted slop must fire (recall), clean and adversarial content must not (precision). Run with npm run eval:linter.",
+   "check": {
+    "type": "exists",
+    "paths": [
+     "evals/linter-eval.cjs",
+     "evals/linter-fixtures/manifest.json"
+    ]
+   }
+  },
+  {
+   "id": "style-contract-wired",
+   "doctrine": "Slop is prevented upstream, not only detected downstream: tools/style-contract.json is the single source of truth for what NumbahWan work looks like, and tools/generation-contract.cjs injects it into generation calls (prompt block + self-critique checklist + exemplar anchor per medium). The linters are the backstop, not the primary defense.",
+   "check": {
+    "type": "exists",
+    "paths": [
+     "tools/style-contract.json",
+     "tools/generation-contract.cjs"
+    ]
+   }
+  },
+  {
+   "id": "style-exemplars-golden",
+   "doctrine": "Exemplar anchoring beats prohibition: every medium has at least one golden exemplar (evals/style-exemplars/) that generation calls imitate few-shot. Each exemplar passes its medium's linter clean (gold standard, re-verified by the pre-commit gate on every edit).",
+   "check": {
+    "type": "exists",
+    "paths": [
+     "evals/style-exemplars/text/about-copy.md",
+     "evals/style-exemplars/text/patch-note.md",
+     "evals/style-exemplars/code/service-module.js",
+     "evals/style-exemplars/layout/landing-section.html",
+     "evals/style-exemplars/image/harbor-ward-card.md"
+    ]
+   }
+  }
+ ]
+}

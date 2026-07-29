@@ -14,7 +14,7 @@
 > **Build lean: read [`EFFICIENCY.md`](./EFFICIENCY.md) once per session.** Tokens
 > are the budget. Read less to know more, write once, verify once.
 
-**Last refactored**: 2026-04-17 · **Audit**: [`AUDIT-2026-04.md`](./AUDIT-2026-04.md)
+**Last refactored**: 2026-04-17 · **Audit**: [`AUDIT-2026-04.md`](./legacy/audits/AUDIT-2026-04.md)
 
 ---
 
@@ -394,7 +394,7 @@ Before you stop:
 
 ## 11. What Changed in This Refactor (2026-04-17)
 
-See [`AUDIT-2026-04.md`](./AUDIT-2026-04.md) for the full before/after. Highlights:
+See [`AUDIT-2026-04.md`](./legacy/audits/AUDIT-2026-04.md) for the full before/after. Highlights:
 
 - **New**: `AI_PLAYBOOK.md` (this file) — replaces 7 scattered docs with one canonical entry
 - **New**: `bin/ai.cjs` — unified CLI wrapping mycelium/sentinel/agent-brief

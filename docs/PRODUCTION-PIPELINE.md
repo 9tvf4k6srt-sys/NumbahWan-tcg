@@ -54,6 +54,52 @@ What actually works, and what we built:
 
 ---
 
+## Stage 0 · Upstream prevention (the style contract)
+
+Detection scales with output; prevention scales with the generator. Slop is
+born at generation time — the linter gate below is the backstop, not the
+primary defense. Two mechanisms push the doctrine *into* the model before a
+line is written:
+
+**1 · The style contract** — [`tools/style-contract.json`](../tools/style-contract.json)
+is the single source of truth for what NumbahWan work looks like, per medium
+(text / code / layout / image). Its governing principle: work passes as
+professional human work when it contains *visible evidence of decisions made
+under constraints* — specific numbers, named places, opinions with reasons.
+Slop is decision-avoidance. The contract forces the decisions upstream.
+
+**2 · Exemplar anchoring** — models imitate examples far better than they obey
+prohibitions. Each medium has golden exemplars in [`evals/style-exemplars/`](../evals/style-exemplars/)
+— hand-locked files that pass their linter clean (and get re-verified by the
+pre-commit gate on every edit, so a stale exemplar is itself a defect).
+
+Both are served to generation calls by
+[`tools/generation-contract.cjs`](../tools/generation-contract.cjs):
+
+```bash
+npm run contract:text     # style block + golden exemplar + self-critique checklist
+npm run contract:code     # same for code
+npm run contract:layout   # same for layout
+npm run contract:image    # same for image prompts
+node tools/generation-contract.cjs --check <file>   # contract-vs-output lint
+```
+
+The intended authoring loop for any agent producing user-facing work:
+
+```
+  brief → build prompt WITH contract block + exemplar anchor
+        → generate
+        → self-critique pass (checklist from the same contract)
+        → revise → commit → the gate below verifies
+```
+
+KPI that proves prevention works: **linter catch-rate on new work trends down
+over time** — the gate goes quiet on new commits and becomes a regression net,
+like a good test suite. The gate never goes away; even world-class human teams
+have editors.
+
+---
+
 ## The chain: three stages, cheapest first
 
 Each medium runs up to three stages, in order. Only Stage 1 can fail a commit.
@@ -65,7 +111,7 @@ exit code. This is where a commit gets blocked.
 
 | Medium | Tool | Corpus / rules |
 |---|---|---|
-| Text / copy | [`tools/ai-tell-lint.cjs`](tools/ai-tell-lint.cjs) | [`tools/ai-tell-corpus.json`](tools/ai-tell-corpus.json) (en/zh/ja/th, 14 rules) |
+| Text / copy | [`tools/ai-tell-lint.cjs`](tools/ai-tell-lint.cjs) | [`tools/ai-tell-corpus.json`](tools/ai-tell-corpus.json) (en/zh/ja/th, 21 rules) |
 | Layout / build | [`tools/ai-layout-lint.cjs`](tools/ai-layout-lint.cjs) | 6 named visual tells (see below) |
 | Image prompts | [`tools/ai-sheen-lint.cjs`](tools/ai-sheen-lint.cjs) | [`tools/sheen-corpus.json`](tools/sheen-corpus.json) (render/CGI/luxury-cliché vocab) |
 
@@ -111,6 +157,23 @@ rhythm, not as a failure.
 [`tools/ai-naturalness.cjs`](tools/ai-naturalness.cjs) sends prose to an LLM that
 scores naturalness per language and returns a SAME-VOICE rewrite. Opt in with
 `--judge`. Skipped in pre-commit so commits stay fast and free.
+
+### Code medium · agent-residue lint (free, fast, ADVISORY)
+
+The prose linter guards user-facing copy; [`tools/code-slop-lint.cjs`](tools/code-slop-lint.cjs)
+guards the CODE ITSELF. AI coding agents leave a recognizable residue humans
+rarely write (architecture adapted from scanaislop/aislop research, 2026-07):
+
+| ID | Tell |
+|---|---|
+| CS1 | Narrative comment — an imperative-verb comment that restates the line below it ("// increment the counter") |
+| CS2 | Swallowed exception — catch with an empty body or a log-only body (returns, rethrows, stderr, and documented silence are deliberate and pass) |
+| CS3 | As-any cast / type-silence — `as any`, or a leading `@ts-ignore` / `@ts-nocheck` / `@ts-expect-error` directive |
+
+Advisory-only — always exits 0. Code slop has too many legitimate uses
+(narrowing a third-party type, an intentional no-op catch) to hard-block; the
+report is a review prompt, not a gate. Wired into `aitell-pipeline.cjs` as the
+code medium alongside text and image (`npm run aitell:code` / `aitell:code:all`).
 
 ---
 

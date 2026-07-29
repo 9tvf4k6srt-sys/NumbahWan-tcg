@@ -1,4 +1,7 @@
 #!/usr/bin/env node
+// ░░ LEGACY — preserved for history, NEVER run. Zero live references.
+// ░░ See legacy/README.md. Rules: ARCHITECTURE.md invariants 3 and 5.
+
 /* ═══════════════════════════════════════════════════════════════
    NWG Quick Screenshot Helper
    Usage: node dev-screenshot.js [section-id] [output-name]

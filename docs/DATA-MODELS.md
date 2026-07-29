@@ -206,7 +206,7 @@ Gambling (50), Cross-Cultural Gaming (33), Cheating (10), and 15 more.
 | `wrangler.jsonc` | Cloudflare Workers config (D1, KV, R2 bindings) |
 | `biome.json` | Linter/formatter config |
 | `.nw-config.json` | NumbahWan project config |
-| `ecosystem.config.cjs` | PM2 process manager config |
+| `legacy/scripts/ecosystem.config.cjs` | RETIRED PM2 process config (historical — do not run) |
 | `public/manifest.json` | PWA manifest |
 | `public/.well-known/ai-plugin.json` | AI plugin discovery |
 | `public/.well-known/pcp.json` | PCP protocol config |

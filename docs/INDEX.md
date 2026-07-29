@@ -69,7 +69,7 @@ NumbahWan-tcg/
 │   ├── PAGES-MAP.md        # All 147 pages with titles and line counts
 │   ├── API-ROUTES.md       # All backend API endpoints
 │   ├── DATA-MODELS.md      # All 32 JSON data schemas
-│   ├── ARCHITECTURE.md     # System architecture overview
+│   ├── SYSTEM-ARCHITECTURE.md  # System architecture overview (deep reference)
 │   ├── AI-README.md        # AI workflow documentation
 │   ├── CARD_BIBLE.md       # Card system complete reference
 │   ├── UI-STANDARDS.md     # Design system and UI patterns
@@ -98,7 +98,7 @@ NumbahWan-tcg/
 1. **`CLAUDE.md`** (465 lines) — Session protocol, anti-stall rules, mandatory checklist
 2. **`.nw-context`** — Auto-generated health report, rules, patterns, learnings
 3. **`docs/INDEX.md`** — This file (repo map)
-4. **`docs/ARCHITECTURE.md`** — System architecture
+4. **`docs/SYSTEM-ARCHITECTURE.md`** — System architecture (deep reference; root `ARCHITECTURE.md` is the LIVE/LEGACY status map)
 5. **Area-specific `.context.md`** — Per-directory context (see below)
 
 ## Area Context Files

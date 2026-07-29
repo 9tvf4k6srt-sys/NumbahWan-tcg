@@ -49,13 +49,16 @@ node bin/ai.cjs premortem <area>       # what broke last time here
 
 | | |
 |---|---|
+| **Disoriented?** | `ARCHITECTURE.md` — every file/dir classified LIVE / GENERATED / LEGACY, with the wiring diagram. Read it when you don't know what something is. |
 | **Game engine** | `nwge-engine/` (TypeScript) |
 | **Game web** | `nwge-web/` |
 | **Static pages** | `public/` |
 | **Agent CLI** | `bin/ai.cjs` — everything routes through here |
 | **Learning state** | `.mycelium/` (append-only JSON; never hand-edit) |
-| **Observers/hooks** | `tools/observer-runner.cjs` (one registry, all profiles) |
+| **Observers/hooks** | `tools/observer-runner.cjs` (one registry, all profiles — add observers here only) |
 | **Ship** | `node bin/mycelium.cjs ship "msg"` — atomic test→sync→push→PR→merge |
+| **Never touch** | `legacy/` (fossils — nothing references them, reading them teaches outdated rules) |
+| **Never hand-edit** | `.mycelium/`, `.mycelium-mined/`, `dist/`, `public/static/data/` (generated) |
 
 ## How this repo improves itself (and how to feed it)
 
@@ -65,6 +68,12 @@ Sensors run on every commit/merge via husky hooks → observers write to
 **IMPROVED / STEADY / REGRESSED** verdict vs the previous merge. When a trend
 repeats, propose one doctrine edit in your PR — human approves, the repo gets
 smarter. One improvement per merge, max.
+
+**Failure intake:** when a `fix:` commit repairs a REAL breakage, record the
+lesson as an outcome-eval task in the same commit so reality keeps authoring
+the eval: `node tools/add-failure-task.cjs --id fr-<slug> --q "..." --require
+"..." --source "what broke"`. Reality-written tasks can't be taught-to. A
+commit-msg hook reminds you (advisory — judgment stays human).
 
 ## Hard rules (violate = rollback)
 

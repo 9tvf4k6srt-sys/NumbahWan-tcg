@@ -1,6 +1,6 @@
 > ⚠️ **DEPRECATED — this file is kept for archival only.**
 > **Canonical AI entry point is now [`AI_PLAYBOOK.md`](../AI_PLAYBOOK.md)** at repo root.
-> CLI: `node bin/ai.cjs` · Audit: [`AUDIT-2026-04.md`](../AUDIT-2026-04.md)
+> CLI: `node bin/ai.cjs` · Audit: [`AUDIT-2026-04.md`](../legacy/audits/AUDIT-2026-04.md)
 >
 > Content below may be stale. Trust the playbook.
 
@@ -182,9 +182,9 @@ Path: `/static/images/cards/{filename}`
 ## NEXT STEPS FOR AI
 
 1. **Update cards-v2.json** - Map `img` field to new PNG filenames
-2. **Build & Test** - `npm run build && pm2 start ecosystem.config.cjs`
-3. **Verify Display** - Check card rendering at `http://localhost:3000`
-4. **Deploy** - `npm run deploy:prod`
+2. **Build & Test** - `npm run build`, then `npm run dev` (Vite dev server on port 5173)
+3. **Verify Display** - Check card rendering at `http://localhost:5173`
+4. **Deploy** - `npm run deploy` (build + `wrangler pages deploy`)
 
 ---
 

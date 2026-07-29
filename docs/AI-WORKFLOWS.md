@@ -1,6 +1,6 @@
 > ⚠️ **DEPRECATED — this file is kept for archival only.**
 > **Canonical AI entry point is now [`AI_PLAYBOOK.md`](../AI_PLAYBOOK.md)** at repo root.
-> CLI: `node bin/ai.cjs` · Audit: [`AUDIT-2026-04.md`](../AUDIT-2026-04.md)
+> CLI: `node bin/ai.cjs` · Audit: [`AUDIT-2026-04.md`](../legacy/audits/AUDIT-2026-04.md)
 >
 > Content below may be stale. Trust the playbook.
 
@@ -120,7 +120,7 @@ npm run page:check public/[new-page].html
 ### After Creation
 1. Add to `staticPages` array in `src/index.tsx`
 2. Add to navigation in `public/static/nw-nav.js` (if user-facing)
-3. Run `npm run build && pm2 restart numbahwan-guild`
+3. Run `npm run build`, then refresh the `npm run dev` tab
 4. Run `npm run page:check public/[page].html`
 
 ---
@@ -261,7 +261,7 @@ npm run media:pipeline   # Run full pipeline
 ### Local Development
 ```bash
 npm run build
-pm2 restart numbahwan-guild
+npm run dev            # restart the dev server (Ctrl-C the old one first)
 # Test at http://localhost:3000
 ```
 
@@ -421,7 +421,7 @@ Currently most data is JSON-based for simplicity.
 ### Daily Development
 ```bash
 # Start dev server
-npm run build && pm2 restart numbahwan-guild
+npm run build   # then refresh the `npm run dev` tab
 
 # Check page compliance
 npm run page:check public/[page].html
@@ -450,11 +450,10 @@ git add . && git commit -m "message" && git push origin main
 # Kill stuck process
 fuser -k 3000/tcp
 
-# Check PM2 status
-pm2 list
+# Check dev server
+ps aux | grep vite
 
-# View logs
-pm2 logs numbahwan-guild --nostream
+# View logs — printed by the terminal running `npm run dev`
 
 # Full debug
 npm run debug:report

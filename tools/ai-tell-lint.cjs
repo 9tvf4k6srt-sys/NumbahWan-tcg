@@ -52,7 +52,7 @@ const EXEMPT_FILES = new Set([
   'tools/ai-tell-lint.cjs',
   'FORGE-DOCTRINE.md',
   'TASTE.md',
-  'PRODUCTION-PIPELINE.md',
+  'docs/PRODUCTION-PIPELINE.md',
   'EFFICIENCY.md',
   'BUILD-DOCTRINE.md',
   'references/MOTION-CRAFT.md',
@@ -60,14 +60,14 @@ const EXEMPT_FILES = new Set([
   'AGENT-CONTEXT.md',
   'AI_PLAYBOOK.md',
   'CLAUDE.md',
-  'AUDIT-2026-04.md',
-  'LEARNING-SYSTEMS-AUDIT.md',
+  'legacy/audits/AUDIT-2026-04.md',
+  'legacy/audits/LEARNING-SYSTEMS-AUDIT.md',
   'PCP-SPEC.md',
   'PROJECT.md',
   'README.md',
   'CONTRIBUTING.md',
   'SECURITY.md',
-  'SENTINEL-UPGRADE-PLAN.md',
+  'legacy/audits/SENTINEL-UPGRADE-PLAN.md',
 ]);
 
 // args
@@ -77,6 +77,7 @@ const FILE_ARG = args.find(a => a.startsWith('--file='));
 const JSON_OUT = args.includes('--json');
 const REPORT_OUT = args.includes('--report');
 const VERBOSE = args.includes('--verbose');
+const FORCE = args.includes('--force'); // bypass path exemptions (used by evals/linter-eval.cjs on golden fixtures)
 const NATURALNESS = args.includes('--naturalness');
 const MIN_ARG = args.find(a => a.startsWith('--min='));
 
@@ -162,6 +163,7 @@ const EXEMPT_PREFIXES = [
   'public/trailer/review.html',  // internal review tool, not user copy
   'docs/aitell/',                // the aitell deep-dive necessarily catalogs the tells it bans
   'packages/aitell/',            // the linter package source + docs catalog the tells it detects
+  'evals/linter-fixtures/',      // golden eval fixtures — planted slop BY DESIGN (like card-audit); linter-eval lints them via --force
 ];
 
 function isExemptPath(rel) {
@@ -210,7 +212,7 @@ function scanFile(filePath, rules, perRule) {
   if (!fs.existsSync(abs) || !fs.statSync(abs).isFile()) return null;
   const rel = path.relative(ROOT, abs);
 
-  if (isExemptPath(rel)) return null;
+  if (!FORCE && isExemptPath(rel)) return null;
 
   let raw;
   try { raw = fs.readFileSync(abs, 'utf8'); } catch { return null; }
@@ -342,7 +344,7 @@ function runNaturalness() {
   if (FILE_ARG) files = [FILE_ARG.split('=')[1]];
   else if (CHECK_ALL) files = getAllScannableFiles();
   else files = getStagedFiles().filter(f => /\.(html|md)$/.test(f));
-  files = files.filter(f => !isExemptPath(f));
+  if (!FORCE) files = files.filter(f => !isExemptPath(f));
   if (files.length === 0) return 0;
 
   const scorer = path.join(__dirname, 'ai-naturalness.cjs');

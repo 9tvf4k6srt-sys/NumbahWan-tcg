@@ -69,9 +69,9 @@ A browser-based trading card game featuring guild culture, gacha mechanics, and 
 - Future: D1 for user accounts
 
 ### Build
-- Vite for bundling
+- Vite for bundling (doubles as the local dev server, port 5173)
 - Wrangler for Cloudflare deployment
-- PM2 for local dev server
+- (PM2 sandbox workflow: retired — fossilized at `legacy/scripts/ecosystem.config.cjs`)
 
 ---
 
@@ -146,9 +146,8 @@ GET  /static/*      → Static assets
 
 ### Development
 ```bash
-npm run build
-pm2 start ecosystem.config.cjs
-# Access at localhost:3000
+npm run dev
+# Vite dev server at localhost:5173
 ```
 
 ### Production
