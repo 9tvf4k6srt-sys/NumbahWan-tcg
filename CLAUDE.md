@@ -84,7 +84,7 @@ This does NOT replace the HONESTY GATE: features still need a functional test
 - Primary target: iPhone Safari. Screenshots at 375x812/390x844, `is_mobile=True`, touch.
 - Test mobile viewport FIRST. Dismiss overlays before screenshots
   (`document.getElementById('nw-onboarding')?.remove()`; set `nw_onboarding_complete`).
-- `-webkit-` prefixes required; no hover-only interactions.
+- CSS rules (viewport lock, overflow protection, breakpoints) → single source: **AGENT-CONTEXT.md §4**. Do not restate here.
 
 ## 🎨 TASTE — before building anything a human will see
 Read `TASTE.md` (one line: **precision you feel but can't see**). Banned: hollow polish, cheap-looking.

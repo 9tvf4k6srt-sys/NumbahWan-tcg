@@ -7,47 +7,13 @@
 
 ## MANDATORY: Memory-Driven Workflow
 
-This project has a learning system (`mycelium.cjs` + `memory.json`). It only works if you use it. These steps are **not optional**.
+The memory workflow is **mandatory**: query before coding, premortem before
+touching an area, record `broke` / `decide` / `constraint` learnings as they
+happen, at least one per session (the pre-commit hook enforces this).
 
-### On Session Start (BEFORE writing any code)
-```bash
-node mycelium.cjs --query           # Read project intelligence first
-```
-This shows: recent commits, hotspot files, constraints, past breakages, decisions, debt signals. Read it. It prevents repeat mistakes.
-
-### Before Working on Any Area
-```bash
-node mycelium.cjs --premortem battle     # or: forge, i18n, nav, economy, etc.
-```
-This shows what broke last time, hard constraints, and past decisions for that area. If you skip this, you WILL repeat old bugs.
-
-### After Something Breaks or You Revert
-```bash
-node mycelium.cjs --broke "area" "what happened and why"
-```
-Example: `node mycelium.cjs --broke "emoji" "Regex cleanup pattern ate HTML attribute spaces — never use quote char in cleanup regex"`
-
-### After Making a Non-Obvious Decision
-```bash
-node mycelium.cjs --decide "area" "what you chose" "why you chose it"
-```
-Example: `node mycelium.cjs --decide "emoji" "Strip emojis instead of replacing with SVG spans" "4329 lines across 152 files — manual SVG replacement would be 10x the work and bloat HTML"`
-
-### After Discovering a Hard Platform Fact
-```bash
-node mycelium.cjs --constraint "area" "the fact"
-```
-Example: `node mycelium.cjs --constraint "regex" "Never include quote chars in post-strip cleanup patterns — they eat HTML attribute boundaries"`
-
-### On Commit (automatic)
-The pre-commit hook runs `node mycelium.cjs` automatically. It records the snapshot, detects fix chains, updates hotspots and co-change patterns. You don't need to do anything — just commit normally.
-
-### Why This Matters
-Each session starts cold. Without `--query`, you have zero context. Without `--premortem`, you repeat old bugs. Without `--broke` and `--decide`, the next session has zero context too. The loop is:
-
-```
-query → premortem → work → broke/decide/constraint → commit → (next session reads it)
-```
+The canonical commands, examples, and the HOT/WARM/COLD model live in
+**AI_PLAYBOOK.md §1 (session start) and §5 (memory systems)** — single
+source. Do not restate them here; read them there.
 
 Break the loop and the system is dead weight.
 
@@ -65,21 +31,13 @@ A browser-based trading card game / guild hub for the NumbahWan guild (MapleStor
 
 ## How To Build & Run
 
-```bash
-npm run build                          # Vite SSR build → dist/
-npx wrangler pages dev dist \
-  --d1=GUILD_DB --local \
-  --persist-to=.wrangler/state \
-  --ip 0.0.0.0 --port 3000            # Dev server on :3000
+Canonical commands live in **AGENT-CONTEXT.md §10** — single source, do not
+restate here. Quick reference (verify against §10 before relying on it):
 
-# Or the shortcut:
-npm run dev                            # Same thing
-```
-
-After changing files in `public/` or `src/`, rebuild:
 ```bash
-npm run build
-# Then restart dev server (kill old wrangler, start new)
+npm run build                          # Vite build → dist/
+npm run dev                            # Vite + Hono dev server
+node bin/mycelium.cjs ship "msg"       # atomic test→sync→push→PR→merge
 ```
 
 ---

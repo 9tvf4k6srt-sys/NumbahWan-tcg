@@ -315,26 +315,16 @@ node bin/agent-brief.cjs --workflow   # Git workflow steps
 
 ## 9. Memory & Tooling
 
-### Mycelium System
-
-```
-HOT   = Current session context (your context window)
-WARM  = .mycelium/memory.json (structured facts — DO NOT read directly, ~190KB)
-COLD  = git history (archival)
-```
+The HOT/WARM/COLD memory model, recording commands, and guardian usage are
+canonical in **AI_PLAYBOOK.md §5** — read it there; do not restate here.
+Token budget rules are canonical in **CLAUDE.md § TOKEN BUDGET** — single
+source, do not restate here.
 
 | Tool | Purpose |
 |------|---------|
 | `.mycelium/` | Self-improving codebase learning |
 | `scripts/qqb-sentinel.py` | Health check automation |
 | `memory/memory-ops.py` | CLI: bootstrap, validate, sync, lessons |
-
-### Token Budget Rule
-
-- Hard 200K token budget per session (input + output)
-- Never read `.mycelium/memory.json` directly (~186K tokens)
-- Prefer `Edit` over `Read+Write` for large files
-- After 4+ tool results, assume 50% budget used
 
 ---
 
