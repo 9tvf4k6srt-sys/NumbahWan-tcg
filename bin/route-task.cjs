@@ -186,13 +186,25 @@ function route(taskStr) {
   const baseBudget = path_ === 'full-reasoning' ? 14000 : path_ === 'standard' ? 9000 : 5000;
   const suggestedBudget = visual ? baseBudget + 3000 : baseBudget;
 
+  // smallest-capable-model tier (EFFICIENCY.md §model-tier): spend the
+  // expensive mind only where the task's failure cost exceeds its price.
+  // fast→cheap, standard→mid, full-reasoning→capable. Escalation is a
+  // feature, not a failure — a cheap attempt that produces a clean error
+  // is the cheapest possible signal that the task needed the bigger mind.
+  const modelTier = path_ === 'full-reasoning' ? 'capable' : path_ === 'standard' ? 'mid' : 'cheap';
+  const escalateOn = path_ === 'full-reasoning'
+    ? null // already at the ceiling
+    : 'escalate on: 2 failed attempts · empty/degenerate output · guard/preship still red after one fix';
+
   // what to actually do, in order — references tools we own.
   const steps = [];
   steps.push(`ai task "${taskStr.slice(0, 60)}${taskStr.length > 60 ? '…' : ''}"  # context firewall`);
   if (path_ !== 'fast') steps.push(`ai budget declare "${taskClass}" --budget=${suggestedBudget}`);
+  steps.push(`run on the ${modelTier} tier${escalateOn ? ' — ' + escalateOn : ' (ceiling)'}`);
   if (path_ === 'full-reasoning') steps.push('reason in the open (CoT/ToT); name 2-3 options on design calls');
   if (visual) steps.push('ai preship <files>  # MANDATORY before any visual ship (the #1 token sink)');
   steps.push(`ai technique log ${taskClass} ${technique} <clean|rework|fail>  # close the evidence loop`);
+  steps.push('handoff crossing? ai memory handoff \'{"task":..,"done":[..],"next":..,"confidence":..,"verify":..}\'  # distilled packet, never the trace');
 
   return {
     task: taskStr,
@@ -201,6 +213,8 @@ function route(taskStr) {
     complexitySignals: cx.signals,
     categories: cx.categories,
     path: path_,
+    modelTier,
+    escalateOn,
     technique,
     techniqueSource,
     techniqueEvidence,
@@ -227,6 +241,7 @@ function render(r) {
         ? `${C.dim}downgraded for fast path (evidenced pick was too heavy for this task)${C.r}`
         : `${C.dim}default (no evidence yet — log outcomes to earn one)${C.r}`;
   console.log(`  technique   ${C.cyan}${r.technique}${C.r}  ${ev}`);
+  console.log(`  model       ${C.cyan}${r.modelTier}${C.r} tier${r.escalateOn ? `  ${C.dim}(escalate: ${r.escalateOn})${C.r}` : `  ${C.dim}(ceiling)${C.r}`}`);
   console.log(`  budget      ~${r.suggestedBudget} tokens`);
   console.log(`\n${C.b}Plan${C.r}`);
   for (const s of r.plan) console.log(`  ${C.dim}›${C.r} ${s}`);
@@ -238,6 +253,7 @@ function help() {
   ${C.cyan}ai route "<task>"${C.r}   classify + score complexity + pick technique + plan
 
   ${C.dim}paths:  fast (<20) · standard (20-44) · full-reasoning (>=45)${C.r}
+  ${C.dim}tiers:  cheap · mid · capable — smallest capable model, escalate on failure${C.r}
   ${C.dim}flags:  --json${C.r}`);
 }
 

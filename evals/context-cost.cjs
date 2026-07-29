@@ -73,6 +73,20 @@ const TASKS = [
     naive: ['PROJECT.md', 'AGENT-CONTEXT.md', 'AI_PLAYBOOK.md', 'README.md'],
     harness: ['AGENTS.md', { file: 'AI_PLAYBOOK.md', section: /^## 1\. The 30-Second Brief/m }],
   },
+  {
+    // The handoff contract's golden proof (EFFICIENCY.md): resuming a multi-step
+    // task after compaction WITHOUT the handoff means replaying the reasoning
+    // — re-reading every doc the original session touched to reconstruct state.
+    // WITH it, the receiver accepts the distilled packet and runs `next` —
+    // the packet is the whole resume cost. This scenario exists to keep the
+    // handoff honest: if its bytes ever balloon toward a history replay, the
+    // saving collapses and the eval shows it.
+    id: 'resume-after-compaction',
+    task: 'Resume a multi-step task after a chat compaction',
+    topic: /resume|handoff|checkpoint|compaction|wip/i,
+    naive: ['CLAUDE.md', 'AI_PLAYBOOK.md', 'AGENT-CONTEXT.md', 'EFFICIENCY.md'],
+    harness: [{ file: '.mycelium/handoff.json' }],
+  },
 ];
 
 const BYTES_PER_TOKEN = 4;

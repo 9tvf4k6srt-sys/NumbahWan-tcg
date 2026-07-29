@@ -72,6 +72,66 @@ The rule of thumb: **read less to know more, write once, verify once.**
 - Reuse what exists. Before writing a helper, `grep` for it. The shared lib
   `tools/lib/aitell-common.cjs` already holds colors / strip / cjk / json / git.
 
+---
+
+## The handoff contract (cross-agent / cross-session)
+
+Every hand-off — to another agent, to a new session, or across a compaction —
+is a **distilled packet**, never a reasoning trace. The receiving agent does
+not re-derive the work; it accepts the packet and runs the next action.
+
+```bash
+node bin/ai.cjs memory handoff '{"task":"...","done":["..."],"next":"...","confidence":"high","verify":"npm run eval"}'
+```
+
+The packet is size-capped (~350 tokens) and **requires `next`** — the single
+next action *is* the packet. Five fields, nothing else:
+
+- **task** — what this is (one line)
+- **done** — accepted decisions only (≤5), the *what*, not the argument
+- **next** — the one action to run. If you can't name it, you're not distilled yet
+- **confidence** — high / medium / low. Low = tell the receiver to verify first
+- **verify** — the one command that proves "done" claims (Honesty Gate)
+
+Keep the *why* only if it's still load-bearing — otherwise it lives in
+`memory decide`, not in the packet. The packet surfaces at the top of
+`.mycelium-context` (`!!HANDOFF!!`). Replaying history into a fresh context is
+the failure mode this exists to kill: a 10-turn argument becomes ~350 tokens of
+decisions, and the receiver starts at *doing*, not at *re-reading*.
+
+## Mid-session diagnostic (run at breakpoints, every ~8–12 turns)
+
+Ask these six before the next call. Any "no" → intervene *now*, not at the end:
+
+1. Is this still the same atomic task? (If it drifted → handoff → fresh context)
+2. Am I carrying only the final accepted artifact forward?
+3. Have I minimized file payloads to the lightest useful form (grep/section, not whole file)?
+4. What fraction of recent turns was reused history vs new signal?
+5. Would a cheaper model handle this sub-step?
+6. Is my context the lightest useful representation of the state I actually need?
+
+## Smallest capable model + escalate (the model-tier rule)
+
+`route-task` now names a **tier** for every task: `cheap` / `mid` / `capable`.
+Run the smallest tier whose failure cost exceeds its price. Escalation is a
+*feature, not a failure*: a cheap attempt that produces a clean error is the
+cheapest possible proof the task needed the bigger mind.
+
+- **fast → cheap** — lookups, one-liners, boilerplate, syntax checks
+- **standard → mid** — normal edits with a clear pattern
+- **full-reasoning → capable** — architecture, ambiguity, irreversible calls
+- **escalate on**: 2 failed attempts · empty/degenerate output · gate still red
+  after one fix. Never escalate a fast task past `capable` — that IS the ceiling.
+
+## Signal-first ordering
+
+Put the highest-signal information first in every artifact the next agent reads
+(handoff, checkpoint, brief, PR). Decisions before context, the `next` action
+before the `done` list, the blocker before the narrative. An agent that reads
+the first 200 tokens should already know what to do — the rest is evidence, not
+prerequisites. This is why `!!HANDOFF!!` renders above `!!RESUME!!` in
+`.mycelium-context`.
+
 ## Anti-patterns that quietly burn credits
 
 - Reading a file you already read this session because you forgot a detail.

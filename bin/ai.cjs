@@ -176,14 +176,15 @@ const COMMANDS = {
         println(`  ${C.cyan}broke "<area>" "<what happened>"${C.r}   Record a breakage`);
         println(`  ${C.cyan}learned "<area>" "<lesson>"${C.r}        Record a fix-learning`);
         println(`  ${C.cyan}checkpoint '<json>'${C.r}               Save multi-step task state`);
+        println(`  ${C.cyan}handoff '<json>'${C.r}                  Distilled cross-agent packet (task/done/next/confidence/verify)`);
         println(`  ${C.cyan}wip "<text>"${C.r}                      Quick single-step WIP`);
-        println(`  ${C.cyan}wip-done${C.r}                          Clear checkpoint + WIP`);
+        println(`  ${C.cyan}wip-done${C.r}                          Clear checkpoint + WIP + handoff`);
         return;
       }
       // All memory subcommands map to mycelium.cjs --flag
       const FLAG = { decide:'--decide', constraint:'--constraint', broke:'--broke',
         learned:'--learned', query:'--query', status:'--status',
-        checkpoint:'--checkpoint', wip:'--wip', 'wip-done':'--wip-done',
+        checkpoint:'--checkpoint', handoff:'--handoff', wip:'--wip', 'wip-done':'--wip-done',
         'wip-append':'--wip-append', postfix:'--postfix' };
       const flag = FLAG[sub];
       if (!flag) {
