@@ -1,4 +1,9 @@
-# Architecture
+# System Architecture
+
+> **Naming split:** this is the deep *system* reference (stack, routing, data
+> flow). The root [`ARCHITECTURE.md`](../ARCHITECTURE.md) is the LIVE /
+> GENERATED / LEGACY **status map** — read that first if you're disoriented
+> about what a file or directory *is*.
 
 ## System Overview
 
@@ -147,7 +152,7 @@ See [README.md](../README.md#mycelium--self-healing-codebase) for the full break
 
 ```bash
 npm run build              # Vite build → dist/
-npm run deploy:prod        # Cloudflare Pages deploy
+npm run deploy             # Vite build + wrangler pages deploy
 node sentinel.cjs          # Health check
 node mycelium-eval.cjs     # Learning system evaluation
 node tests/run-tests.cjs   # Full test suite
@@ -278,7 +283,7 @@ done
 
 #### Design Preferences
 - **Quality bar**: "AAA-looking" — not flat/minimal. Game-icons.net level detail but more premium
-- **SVG icons**: Must be "full-on beautiful drawings using SVG", intricate, detailed, comparable to professional game UI
+- **SVG icons**: Must be "full-on beautiful drawings using SVG", richly detailed, comparable to professional game UI
 - **Style**: Fantasy RPG, golden gradients, glow effects, premium feel
 - **Acceptable**: AI-generated WebP backgrounds behind feature cards
 - **Unacceptable**: Simple/flat emoji-style SVGs, minimalist line icons
@@ -292,7 +297,7 @@ done
 
 #### Workflow Preferences
 - **Review Dashboard**: `/dev/icon-review.html` — all icons at large scale with approve/flag buttons
-- **Screenshot Helper**: `dev-screenshot.cjs` — quick section screenshots (`node dev-screenshot.cjs [section]`)
+- **Screenshot Helper**: retired — fossilized at `legacy/scripts/dev-screenshot.cjs` (never run). Use Backstop (`npm run backstop`) for visual regression.
 - **Batch feedback**: User flags icons on dashboard → pastes feedback → AI fixes all at once
 - **Auto-commit**: Background watcher for change batching
 

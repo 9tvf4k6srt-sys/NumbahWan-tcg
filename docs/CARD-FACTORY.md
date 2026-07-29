@@ -17,7 +17,7 @@ Just edit `/public/static/data/cards.json` and add to the `cards` array:
 }
 ```
 
-Then rebuild: `npm run build && pm2 restart numbahwan-guild`
+Then rebuild: `npm run build` (refresh the `npm run dev` tab)
 
 ---
 
@@ -98,7 +98,7 @@ When user says "Add these cards: [list]", AI should:
 ```bash
 # 1. Edit cards.json - add the card object
 # 2. Rebuild
-npm run build && pm2 restart numbahwan-guild
+npm run build   # then refresh the dev tab
 ```
 
 ### Adding 10+ Cards (2 minutes):
@@ -106,7 +106,7 @@ npm run build && pm2 restart numbahwan-guild
 # 1. Prepare card list in JSON format
 # 2. AI batch-edits cards.json
 # 3. Rebuild once
-npm run build && pm2 restart numbahwan-guild
+npm run build   # then refresh the dev tab
 ```
 
 ### Adding Cards WITH Images:
@@ -115,7 +115,7 @@ npm run build && pm2 restart numbahwan-guild
 # 2. Save to /public/static/cards/
 # 3. Add card entries to cards.json
 # 4. Rebuild once
-npm run build && pm2 restart numbahwan-guild
+npm run build   # then refresh the dev tab
 ```
 
 ---

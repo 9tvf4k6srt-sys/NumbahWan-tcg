@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0">
+<title>Harness — this repo improves itself, with receipts</title>
+<meta name="description" content="Live proof from the NumbahWan repo's self-improvement harness: per-merge verdicts, eval trends, token savings computed from real files.">
+<style>
+  @font-face { font-family: 'Orbitron'; src: url('/static/fonts/orbitron-variable.woff2') format('woff2'); font-display: swap; }
+  @font-face { font-family: 'Inter'; src: url('/static/fonts/inter-variable.woff2') format('woff2'); font-display: swap; }
+  :root {
+    --bg: #0a0a0f; --bg2: #12121a; --card: #0e0e18; --border: #1e1e3a;
+    --primary: #ff6b00; --cyan: #00d4ff; --green: #00d26a; --red: #ff4757;
+    --gold: #ffd700; --text: #f0ece0; --dim: #8a8678;
+  }
+  html, body { overflow-x: hidden; max-width: 100vw; }
+  * { max-width: 100vw; box-sizing: border-box; margin: 0; padding: 0; }
+  img { max-width: 100%; height: auto; display: block; }
+  body {
+    background: var(--bg); color: var(--text);
+    font-family: 'Inter', -apple-system, sans-serif;
+    font-size: 15px; line-height: 1.55;
+  }
+  .wrap { max-width: 860px; margin: 0 auto; padding: 28px 16px 64px; }
+  header { margin-bottom: 28px; }
+  .kicker {
+    font-family: 'Orbitron', monospace; font-size: 11px; letter-spacing: 3px;
+    color: var(--primary); text-transform: uppercase; margin-bottom: 8px;
+  }
+  h1 {
+    font-family: 'Orbitron', monospace; font-weight: 700;
+    font-size: clamp(22px, 6vw, 34px); line-height: 1.2; margin-bottom: 10px;
+  }
+  h1 em { color: var(--primary); font-style: normal; }
+  .sub { color: var(--dim); max-width: 60ch; }
+  .grid { display: grid; gap: 12px; grid-template-columns: 1fr; margin-top: 24px; }
+  .card {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 12px; padding: 18px;
+  }
+  .card h2 {
+    font-family: 'Orbitron', monospace; font-size: 12px; letter-spacing: 2px;
+    text-transform: uppercase; color: var(--dim); margin-bottom: 12px;
+  }
+  .big {
+    font-family: 'Orbitron', monospace; font-size: clamp(28px, 8vw, 44px);
+    font-weight: 700; line-height: 1;
+  }
+  .big.green { color: var(--green); } .big.gold { color: var(--gold); }
+  .big.cyan { color: var(--cyan); } .big.red { color: var(--red); }
+  .note { color: var(--dim); font-size: 13px; margin-top: 8px; }
+  .pill {
+    display: inline-block; font-family: 'Orbitron', monospace; font-size: 11px;
+    padding: 3px 10px; border-radius: 999px; border: 1px solid var(--border);
+    margin-right: 6px; margin-top: 6px;
+  }
+  .pill.IMPROVED { color: var(--green); border-color: var(--green); }
+  .pill.STEADY, .pill.FIRST-RUN { color: var(--dim); }
+  .pill.REGRESSED { color: var(--red); border-color: var(--red); }
+  .bar-row { display: flex; align-items: center; gap: 10px; margin-top: 8px; }
+  .bar-label { font-size: 12px; color: var(--dim); width: 92px; flex: none; }
+  .bar-track { flex: 1; height: 14px; background: var(--bg2); border-radius: 7px; overflow: hidden; }
+  .bar-fill { height: 100%; border-radius: 7px; }
+  .bar-val { font-family: 'Orbitron', monospace; font-size: 12px; width: 76px; text-align: right; flex: none; }
+  ul.tight { list-style: none; }
+  ul.tight li { padding: 8px 0; border-top: 1px solid var(--border); font-size: 14px; }
+  ul.tight li:first-child { border-top: 0; }
+  .mono { font-family: 'Orbitron', monospace; font-size: 12px; color: var(--cyan); }
+  .empty { color: var(--dim); font-style: italic; padding: 12px 0; }
+  footer { margin-top: 32px; color: var(--dim); font-size: 12px; border-top: 1px solid var(--border); padding-top: 16px; }
+  a { color: var(--cyan); }
+  .spark { width: 100%; height: 56px; }
+  @media (min-width: 768px) {
+    .grid.two { grid-template-columns: 1fr 1fr; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="kicker">NumbahWan · agentic engineering</div>
+    <h1>This repo improves itself.<br><em>These are the receipts.</em></h1>
+    <p class="sub">
+      Every merge is measured against the one before it. Recurring problems earn
+      human-gated doctrine edits. Token savings are computed from real files,
+      not claimed. All numbers below come from
+      <span class="mono">/static/data/harness-report.json</span>, regenerated at build time.
+    </p>
+  </header>
+
+  <div id="loading" class="card"><p class="empty">Loading live data…</p></div>
+  <div id="app" style="display:none">
+
+    <div class="grid two">
+      <div class="card">
+        <h2>Token cost per task — naive vs harness</h2>
+        <div id="golden-big"><span class="big green">—</span></div>
+        <div id="golden-detail" class="note">computed by evals/context-cost.cjs from real doc files</div>
+      </div>
+      <div class="card">
+        <h2>Latest merge verdict</h2>
+        <div id="latest-verdict"><span class="big cyan">—</span></div>
+        <div id="latest-kpis" class="note"></div>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:12px">
+      <h2>Merge verdicts over time</h2>
+      <svg id="verdict-spark" class="spark" viewBox="0 0 600 56" preserveAspectRatio="none" aria-label="verdict timeline"></svg>
+      <div id="verdict-pills"></div>
+    </div>
+
+    <div class="grid two" style="margin-top:12px">
+      <div class="card">
+        <h2>Health eval (mycelium)</h2>
+        <div id="eval-big"><span class="big gold">—</span></div>
+        <svg id="eval-spark" class="spark" viewBox="0 0 600 56" preserveAspectRatio="none" aria-label="eval trend"></svg>
+        <div id="eval-note" class="note"></div>
+      </div>
+      <div class="card">
+        <h2>Efficiency leanness trend</h2>
+        <svg id="lean-spark" class="spark" viewBox="0 0 600 56" preserveAspectRatio="none" aria-label="leanness trend"></svg>
+        <div class="note">0–100 per-commit leanness from the efficiency ledger (guidance, never a gate)</div>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:12px">
+      <h2>Open improvement proposals (human-gated)</h2>
+      <ul class="tight" id="proposals"></ul>
+      <div class="note">Recurring trends earn one doctrine-edit proposal at a time. Nothing self-edits — a human approves each.</div>
+    </div>
+
+    <div class="card" style="margin-top:12px">
+      <h2>How the loop works</h2>
+      <ul class="tight">
+        <li><span class="mono">commit/merge</span> → observers snapshot telemetry, efficiency, trends</li>
+        <li><span class="mono">merge-diff</span> → IMPROVED / STEADY / REGRESSED vs the previous merge</li>
+        <li><span class="mono">improve-proposer</span> → a trend firing 3+ runs earns one doctrine-edit proposal</li>
+        <li><span class="mono">human</span> → approves; the doctrine (and the next agent) gets smarter</li>
+        <li><span class="mono">golden eval</span> → <span class="mono">evals/</span> recomputes the token savings and re-checks doctrine against reality (6 checks)</li>
+      </ul>
+    </div>
+  </div>
+
+  <div id="error" style="display:none" class="card">
+    <h2>No live data yet</h2>
+    <p class="sub">The harness report hasn't been generated on this deployment yet.
+    It appears after the first build that runs <span class="mono">node tools/harness-report.cjs</span>.</p>
+  </div>
+
+  <footer>
+    Data: <span class="mono">.mycelium/</span> → <span class="mono">tools/harness-report.cjs</span> ·
+    Proof: <span class="mono">evals/</span> · Router: <span class="mono">AGENTS.md</span><br>
+    <span id="gen-at"></span>
+  </footer>
+</div>
+
+<script>
+(function () {
+  var COLORS = { IMPROVED: '#00d26a', STEADY: '#8a8678', REGRESSED: '#ff4757', 'FIRST-RUN': '#00d4ff' };
+
+  /* No innerHTML anywhere below: the mined-pattern guard flags
+     innerHTML-with-data from past breakages, so every dynamic node is
+     built with createElement / textContent / setAttribute instead. */
+  function sparkline(el, points, color) {
+    el.replaceChildren();
+    if (!points.length) return;
+    var w = 600, h = 56, pad = 4;
+    var vals = points.map(function (p) { return p.v; });
+    var min = Math.min.apply(null, vals), max = Math.max.apply(null, vals);
+    var span = (max - min) || 1;
+    var step = points.length > 1 ? (w - pad * 2) / (points.length - 1) : 0;
+    var d = points.map(function (p, i) {
+      var x = pad + i * step;
+      var y = h - pad - ((p.v - min) / span) * (h - pad * 2);
+      return (i === 0 ? 'M' : 'L') + x.toFixed(1) + ',' + y.toFixed(1);
+    }).join(' ');
+    var path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    path.setAttribute('d', d);
+    path.setAttribute('fill', 'none');
+    path.setAttribute('stroke', color);
+    path.setAttribute('stroke-width', '2');
+    el.appendChild(path);
+  }
+
+  /* el: target; parts: array of {text, cls, style} -> spans, or plain strings. */
+  function fill(el, parts) {
+    el.replaceChildren();
+    parts.forEach(function (p) {
+      if (typeof p === 'string') { el.appendChild(document.createTextNode(p)); return; }
+      var s = document.createElement('span');
+      if (p.cls) s.className = p.cls;
+      if (p.style) s.setAttribute('style', p.style);
+      s.textContent = p.text;
+      el.appendChild(s);
+    });
+  }
+
+  fetch('/static/data/harness-report.json', { cache: 'no-store' }).then(function (r) {
+    if (!r.ok) throw new Error('http ' + r.status);
+    return r.json();
+  }).then(function (d) {
+      document.getElementById('loading').style.display = 'none';
+      document.getElementById('app').style.display = 'block';
+
+      /* Golden eval */
+      if (d.goldenEval) {
+        fill(document.getElementById('golden-big'),
+          [{ text: '−' + d.goldenEval.savedPct + '%', cls: 'big green' }]);
+        document.getElementById('golden-detail').textContent =
+          d.goldenEval.naiveTokens.toLocaleString() + ' → ' + d.goldenEval.harnessTokens.toLocaleString() +
+          ' tokens across ' + d.goldenEval.tasks + ' standard tasks (saved ' +
+          d.goldenEval.savedTokens.toLocaleString() + '). Computed from real files by evals/context-cost.cjs.';
+      }
+
+      /* Latest verdict */
+      if (d.latest) {
+        var v = d.latest;
+        fill(document.getElementById('latest-verdict'),
+          [{ text: v.verdict, cls: 'big', style: 'color:' + (COLORS[v.verdict] || '#8a8678') }]);
+        if (v.kpis) {
+          document.getElementById('latest-kpis').textContent =
+            v.date + ' · leanness ' + (v.kpis.leanness == null ? '—' : v.kpis.leanness) +
+            ' · eval ' + (v.kpis.evalOverall == null ? '—' : v.kpis.evalOverall) +
+            ' · bundle ' + (v.kpis.bundleKB == null ? '—' : v.kpis.bundleKB + 'KB');
+        }
+      }
+
+      /* Verdict history */
+      var pills = document.getElementById('verdict-pills');
+      if (d.verdicts && d.verdicts.length) {
+        /* DOM-built, not innerHTML: list rendering from data is the shape
+           the mined-pattern guard (correctly) flags from past breakages. */
+        d.verdicts.forEach(function (x) {
+          var pill = document.createElement('span');
+          pill.className = 'pill ' + String(x.verdict || '').replace(/[^A-Z-]/g, '');
+          pill.textContent = x.date + ' ' + x.verdict;
+          pills.appendChild(pill);
+        });
+        sparkline(document.getElementById('verdict-spark'),
+          d.verdicts.map(function (x) { return { v: x.score || 0 }; }), '#ff6b00');
+      } else {
+        var vpEmpty = document.createElement('span');
+        vpEmpty.className = 'empty';
+        vpEmpty.textContent = 'Verdicts appear after merges accumulate.';
+        pills.appendChild(vpEmpty);
+      }
+
+      /* Eval */
+      if (d.eval) {
+        fill(document.getElementById('eval-big'), [
+          { text: d.eval.overall, cls: 'big gold' },
+          { text: '/ 100 (' + (d.eval.grade || '—') + ')', cls: 'note' }
+        ]);
+        document.getElementById('eval-note').textContent =
+          'bundle ' + (d.eval.bundleKB == null ? '—' : d.eval.bundleKB + 'KB') +
+          ' · fix rate ' + (d.eval.fixRate == null ? '—' : Math.round(d.eval.fixRate * 100) + '%');
+      }
+      if (d.evalTrend && d.evalTrend.length) {
+        sparkline(document.getElementById('eval-spark'),
+          d.evalTrend.map(function (e) { return { v: e.overall || 0 }; }), '#ffd700');
+      }
+
+      /* Leanness */
+      if (d.leanness && d.leanness.length) {
+        sparkline(document.getElementById('lean-spark'),
+          d.leanness.map(function (e) { return { v: e.leanness || 0 }; }), '#00d4ff');
+      }
+
+      /* Proposals */
+      var ul = document.getElementById('proposals');
+      if (d.proposals && d.proposals.items && d.proposals.items.length) {
+        d.proposals.items.forEach(function (p) {
+          var li = document.createElement('li');
+          var id = document.createElement('span');
+          id.className = 'mono';
+          id.textContent = p.id;
+          li.appendChild(id);
+          li.appendChild(document.createTextNode(' [' + p.severity + '] fired ' +
+            p.firedCount + '× → ' + p.targetDoc));
+          li.appendChild(document.createElement('br'));
+          li.appendChild(document.createTextNode(p.summary || ''));
+          ul.appendChild(li);
+        });
+      } else {
+        var noneLi = document.createElement('li');
+        noneLi.className = 'empty';
+        noneLi.textContent = 'None pending — either no trend has persisted 3+ runs, or the queue is clear.';
+        ul.appendChild(noneLi);
+      }
+
+      document.getElementById('gen-at').textContent = 'generated ' + (d.generatedAt || '—');
+    })
+    .catch(function () {
+      document.getElementById('loading').style.display = 'none';
+      document.getElementById('error').style.display = 'block';
+    });
+})();
+</script>
+</body>
+</html>

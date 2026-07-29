@@ -1,0 +1,114 @@
+{
+  "description": "THE style contract — single source of truth for what NumbahWan work looks and reads like. Three consumers: (1) tools/generation-contract.cjs injects it into every generation prompt as a negative-constraint + voice block, (2) the linters (ai-tell-corpus.json, ai-layout-lint, code-slop-lint) are its enforcement backstop, (3) the author agent's self-critique checklist is generated from it. Rule added ONCE here propagates to all three ends. Positive instruction (voice, decisions, specificity) lives here; negative regex enforcement stays in the linter corpora — the contract REFERENCES them, never duplicates patterns.",
+  "version": "1.0.0",
+  "lastUpdated": "2026-07-29",
+
+  "principle": "Work passes as professional human work when it contains visible evidence of decisions made under constraints: specific numbers, named places, deliberate asymmetry, opinions with reasons. Slop is decision-avoidance — the statistical center. The contract's job is to force the decisions upstream so the linters have nothing to catch.",
+
+  "voice": {
+    "summary": "Direct, specific, grounded in the game's actual economy and Taipei-inspired city. States numbers and reasons. No throat-clearing, no hype, no narration of its own structure.",
+    "do": [
+      "lead with the fact or the number, not the framing",
+      "name the place, set, mechanic, or constraint specifically",
+      "state WHY when making a claim (because supply is fixed / because drop-day load spikes 429s)",
+      "vary sentence length and rhythm; short sentences are allowed",
+      "let the market ledger, patch notes, and drop rates do the persuading"
+    ],
+    "bannedRuleRefs": {
+      "high": ["AIT-EN-FILLER", "AIT-EN-BLACKLIST-2026", "AIT-EN-NOT-X-BUT-Y", "AIT-EN-HEDGE-VOCAB", "AIT-ZH-CALQUE", "AIT-JA-CALQUE", "AIT-JA-MACHINE-CADENCE", "AIT-TH-CALQUE", "AIT-EN-CHAT-LEAK"],
+      "medium": ["AIT-EN-EXALTATION", "AIT-EN-EMDASH-BAN", "AIT-ZH-AI-BUZZ", "AIT-JA-OVERFORMAL", "AIT-TH-OVERFORMAL", "AIT-EN-CHAT-LEAK-SOFT"],
+      "low": ["AIT-EN-EMDASH-FLOOD", "AIT-EN-TRICOLON", "AIT-EN-SUPERFICIAL-ING", "AIT-EN-PROMO-VOICE", "AIT-EN-DIDACTIC", "AIT-EN-CHALLENGE-FORMULA"]
+    }
+  },
+
+  "mediums": {
+    "text": {
+      "mustInclude": [
+        "at least one specific number, name, or constraint drawn from the brief or live game data (price, drop rate, district, set name, date) per section",
+        "one concrete reason (a 'because') for any evaluative claim"
+      ],
+      "neverDo": [
+        "open with a framing sentence ('In the realm of', 'Let's delve into')",
+        "not-x-but-y contrast formulas",
+        "promo/puffery voice (nestled, hidden gem, world-class, vibrant)",
+        "didactic disclaimers (it's important to note)",
+        "spaced em-dashes — close them up or use a comma/colon",
+        "chat-assistant leakage (I hope this helps, let me know if)"
+      ],
+      "selfCritique": [
+        "Could this sentence appear on any other card game's site? If yes, rewrite with a NumbahWan-specific fact.",
+        "Is there a number or named thing in every section? If no, add one from the brief.",
+        "Did I state WHY anywhere, or only WHAT? Add the reason.",
+        "Read it aloud: does the rhythm vary, or does every sentence march at the same length?"
+      ]
+    },
+    "code": {
+      "mustInclude": [
+        "comments that explain WHY (constraint, observed behavior, deliberate choice), never WHAT the next line does",
+        "deliberate error handling: rethrow, return a fallback, report stderr, or a comment stating why silence is correct"
+      ],
+      "neverDo": [
+        "narrative comments that restate the code below (// increment the counter)",
+        "empty or log-only catch blocks",
+        "`as any` or @ts-ignore/@ts-nocheck to silence the type system",
+        "doc-free silence at a decision point"
+      ],
+      "selfCritique": [
+        "Does every comment answer WHY (or document a route/boundary), or does some comment just narrate? Delete narration.",
+        "If this catch is silent, is that a decision with a stated reason, or a place failure disappears?",
+        "Did I narrow the type or just cast it away?"
+      ]
+    },
+    "layout": {
+      "mustInclude": [
+        "palette-grounded color (the game's green/gold, not stock indigo-purple)",
+        "a compositional anchor: something left-aligned, off-center, or rhythm-breaking",
+        "icon system: inline SVG or icon font, never emoji-as-chrome"
+      ],
+      "neverDo": [
+        "emoji used as button/link/heading icons (colour emoji in chrome)",
+        "the default indigo→purple gradient (#6366f1 / #8b5cf6 / #a855f7 family)",
+        "framework-default shadow ladders pasted verbatim (rgba(0,0,0,.1))",
+        "opacity-only motion (choose HOW it moves: rise, scale, slide)",
+        "a grid of 8+ structurally identical cloned cards (drive from data, vary shape)",
+        "everything centered (dead-center template symmetry)"
+      ],
+      "selfCritique": [
+        "Is any colour emoji doing icon work in chrome? Swap for SVG.",
+        "Is any color here the model's default palette rather than ours?",
+        "Does anything move? Does it move a WAY, or just fade?",
+        "Would this layout read as hand-composed, or as a template with content poured in?"
+      ]
+    },
+    "image": {
+      "mustInclude": [
+        "a Taiwan-specific cue (night market, temple roofline, betel-nut stall, MRT signage, mountain haze)",
+        "a camera/lens/exposure spec (35mm, f/1.8, golden hour, shallow depth)",
+        "palette anchored to the scene, not to 'vibrant cinematic'"
+      ],
+      "neverDo": [
+        "generic slop adjectives (stunning, breathtaking, masterpiece, 8k, cinematic, epic, award winning, trending on artstation)",
+        "CGI/render tells (octane render, unreal engine, hyper-detailed)",
+        "luxury cliché vocabulary with no scene behind it"
+      ],
+      "selfCritique": [
+        "Is there a real place and a real camera in this prompt, or only adjectives?",
+        "Could this prompt describe any city on earth? Anchor it to Taiwan."
+      ]
+    }
+  },
+
+  "exemplars": {
+    "note": "Golden files — generation calls anchor to the nearest exemplar (few-shot imitation beats prohibition). Each is hand-locked: it passes all linters clean and demonstrates the contract's positive voice. Files live in evals/style-exemplars/ — outside public/ so --all sweeps skip them, but NOT path-exempt: the pre-commit gate re-lints them on every edit, so an exemplar that stops passing clean is itself a defect (gold standard, continuously re-verified).",
+    "text": ["evals/style-exemplars/text/about-copy.md", "evals/style-exemplars/text/patch-note.md"],
+    "code": ["evals/style-exemplars/code/service-module.js"],
+    "layout": ["evals/style-exemplars/layout/landing-section.html"],
+    "image": ["evals/style-exemplars/image/harbor-ward-card.md"]
+  },
+
+  "enforcement": {
+    "upstream": "tools/generation-contract.cjs builds the prompt block (--medium), self-critique checklist (--critique), and exemplar anchor (--exemplar) from this file for every generation call in the harness",
+    "gate": "pre-commit runs ai-tell-lint + ai-layout-lint (blocking) — the backstop, not the primary defense",
+    "proof": "npm run eval:linter grades the detectors; npm run eval (verify-tasks) proves the contract files stay wired"
+  }
+}

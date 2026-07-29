@@ -36,10 +36,41 @@ The full audits are archived, with context, in the new repo:
 
 ## Status
 
-The game is still developed here. The self-healing machinery
-(`mycelium.cjs`, `sentinel.cjs`, doctrine docs) is preserved in git history
-for the record, but is superseded by the standalone library and is no longer
-the headline of this repo.
+The game is still developed here, and this repo still **dogfoods the harness
+daily** — the root `mycelium.cjs` / `sentinel.cjs` / observers run on every
+commit as the live test instance. What graduated to the standalone
+**[mycelium](https://github.com/9tvf4k6srt-sys/mycelium)** library is the
+*experiment's learnings*, rebuilt from first principles — not these files.
+
+Confused about what's live vs. historical? That's the one question
+**[ARCHITECTURE.md](./ARCHITECTURE.md)** exists to answer: every file and
+directory classified LIVE / GENERATED / LEGACY, with the wiring diagram.
+Historical audits and orphaned scripts now live in [`legacy/`](./legacy/)
+— preserved, never run.
+
+## The harness, with receipts
+
+This repo still dogfoods the current-generation agent harness — and now
+proves it works instead of claiming it:
+
+- **`/harness`** — a live dashboard rendered from real `.mycelium/` state:
+  per-merge IMPROVED / STEADY / REGRESSED verdicts, eval and leanness
+  trends, pending human-gated improvement proposals.
+- **`evals/`** — the golden eval suite. `node evals/context-cost.cjs`
+  *computes* the harness's token savings from real doc files (−89% across
+  5 standard tasks at last receipt); `node evals/verify-tasks.cjs` checks
+  that the doctrine docs still match reality (13 mechanical checks);
+  `node evals/outcome-eval.cjs` is the **output-side** proof — it asks a
+  live model repo-memory questions with vs without the memory briefing and
+  grades the answers mechanically (no LLM judge). It refuses to write a
+  receipt if the API call fails, so it can never record a misleading result.
+- **`docs/case-studies/`** — the loop working on real data, starting with
+  [001: the pipeline that was quietly getting slower](./docs/case-studies/001-pipeline-slowdown.md).
+- **`AGENTS.md`** — the router any AI agent reads first: read ~3K tokens
+  for the task at hand, not ~30K of doctrine.
+
+Reproduce any number on the dashboard: `npm run eval` ·
+`npm run merge-diff` · `npm run improve:list` · `npm run trends`.
 
 ## Stack
 

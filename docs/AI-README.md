@@ -1,6 +1,6 @@
 > ⚠️ **DEPRECATED — this file is kept for archival only.**
 > **Canonical AI entry point is now [`AI_PLAYBOOK.md`](../AI_PLAYBOOK.md)** at repo root.
-> CLI: `node bin/ai.cjs` · Audit: [`AUDIT-2026-04.md`](../AUDIT-2026-04.md)
+> CLI: `node bin/ai.cjs` · Audit: [`AUDIT-2026-04.md`](../legacy/audits/AUDIT-2026-04.md)
 >
 > Content below may be stale. Trust the playbook.
 
@@ -23,10 +23,10 @@ npm install
 
 # 3. Build and start
 npm run build
-pm2 start ecosystem.config.cjs
+npm run dev
 
-# 4. Verify
-curl http://localhost:3000/api/debug
+# 4. Verify (Vite dev server runs on port 5173)
+curl http://localhost:5173/api/debug
 ```
 
 ## Project Structure
@@ -58,7 +58,7 @@ curl http://localhost:3000/api/debug
 │       ├── icons/         # Currency & UI icons
 │       ├── images/        # Merch, memes, etc.
 │       └── regina/        # Hotel images
-├── ecosystem.config.cjs   # PM2 config
+├── legacy/scripts/ecosystem.config.cjs  # RETIRED PM2 config (historical, never run)
 ├── wrangler.jsonc         # Cloudflare config
 ├── package.json
 └── AI-README.md           # This file
@@ -99,14 +99,14 @@ curl -X POST "http://localhost:3000/api/admin/cards/batch" \
 // Edit /public/static/data/cards.json, add to "cards" array:
 { "id": 999, "name": "New Card", "rarity": "epic", "img": "new-card.jpg", "set": "custom" }
 ```
-Then: `npm run build && pm2 restart numbahwan-guild`
+Then: `npm run build` (refresh the `npm run dev` tab, or redeploy)
 
 #### Method 3: With Image Generation
 ```
 1. Generate image using template from /api/card-factory
 2. Save to /public/static/cards/{rarity}-{id}-{slug}.jpg
 3. Add card via batch API or JSON
-4. npm run build && pm2 restart numbahwan-guild
+4. npm run build (refresh the dev tab, or redeploy)
 ```
 
 #### Image Prompt Templates (for AI)
@@ -178,14 +178,13 @@ curl "http://localhost:3000/api/card-factory"
 ```bash
 cd /home/user/webapp
 npm run build
-pm2 restart numbahwan-guild
-# Or if not running:
-pm2 start ecosystem.config.cjs
+npm run dev        # Vite + Hono dev server on port 5173 (Ctrl-C to stop, re-run to restart)
 ```
 
 ### Check Logs
 ```bash
-pm2 logs numbahwan-guild --nostream
+# Logs print to the terminal running `npm run dev`
+# (The retired PM2 sandbox workflow is fossilized at legacy/scripts/ecosystem.config.cjs — never run.)
 ```
 
 ### Test All Pages
@@ -207,7 +206,7 @@ cd /home/user/webapp
 rm -rf dist node_modules
 npm install
 npm run build
-pm2 restart numbahwan-guild
+npm run dev        # restart the dev server (Ctrl-C the old one first)
 ```
 
 ## Troubleshooting
@@ -215,10 +214,10 @@ pm2 restart numbahwan-guild
 ### Page returns 404
 1. Check if HTML file exists: `ls public/*.html`
 2. Check if route is in `staticPages` array in `src/index.tsx`
-3. Rebuild: `npm run build && pm2 restart numbahwan-guild`
+3. Rebuild: `npm run build`, then refresh the `npm run dev` tab
 
 ### API returns error
-1. Check logs: `pm2 logs --nostream`
+1. Check logs in the terminal running `npm run dev`
 2. Test endpoint: `curl -v http://localhost:3000/api/endpoint`
 3. Check `src/index.tsx` for route definition
 
@@ -246,7 +245,7 @@ pm2 restart numbahwan-guild
 - `nw-tokens.css`: Design tokens (colors, spacing)
 
 ### Configuration
-- `ecosystem.config.cjs`: PM2 process manager config
+- `legacy/scripts/ecosystem.config.cjs`: RETIRED PM2 process config (historical — do not run)
 - `wrangler.jsonc`: Cloudflare deployment config
 - `package.json`: Dependencies and scripts
 
@@ -300,7 +299,7 @@ When user says → AI does:
 | "What's the next ID?" | `curl /api/admin/cards/next-ids?gmKey=numbahwan-gm-2026` |
 | "Show card stats" | `curl /api/cards/stats` |
 | "Debug the system" | `curl /api/debug` |
-| "Restore from backup" | Download tar, extract, npm install, build, pm2 start |
+| "Restore from backup" | Download tar, extract, npm install, `npm run build`, `npm run dev` |
 
 ---
 

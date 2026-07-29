@@ -151,6 +151,6 @@ battle, forge, i18n, nav, economy, collection, wallet, cards, tabletop, emoji, d
 modules, font, memory, workflow, oracle, sentinel, lore, discoverability, absurd, exchange
 
 ## Project Architecture
-Moved to **`docs/ARCHITECTURE.md`** (system overview + working reference: stack, key files,
+Moved to **`docs/SYSTEM-ARCHITECTURE.md`** (system overview + working reference: stack, key files,
 i18n internals, routing, dev commands). Read it ONLY when your task touches those areas —
 `task-brief` will point you at the relevant parts.

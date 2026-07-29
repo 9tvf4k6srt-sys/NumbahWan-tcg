@@ -1,6 +1,6 @@
 > ⚠️ **DEPRECATED — this file is kept for archival only.**
 > **Canonical AI entry point is now [`AI_PLAYBOOK.md`](../AI_PLAYBOOK.md)** at repo root.
-> CLI: `node bin/ai.cjs` · Audit: [`AUDIT-2026-04.md`](../AUDIT-2026-04.md)
+> CLI: `node bin/ai.cjs` · Audit: [`AUDIT-2026-04.md`](../legacy/audits/AUDIT-2026-04.md)
 >
 > Content below may be stale. Trust the playbook.
 
@@ -18,7 +18,7 @@
 
 ### Start/Restart Server
 ```bash
-cd /home/user/webapp && npm run build && pm2 restart numbahwan-guild --silent
+cd /home/user/webapp && npm run build   # refresh the `npm run dev` tab
 ```
 
 ### Test URL
@@ -259,10 +259,10 @@ const url = getThumbUrl(card.img, card.rarity);
 
 ```bash
 # Build & restart
-cd /home/user/webapp && npm run build && pm2 restart numbahwan-guild --silent
+cd /home/user/webapp && npm run build   # refresh the `npm run dev` tab
 
 # Check logs
-pm2 logs numbahwan-guild --nostream
+# logs print to the terminal running `npm run dev`
 
 # Kill port if stuck
 fuser -k 3000/tcp 2>/dev/null || true

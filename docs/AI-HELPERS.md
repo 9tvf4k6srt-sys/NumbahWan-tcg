@@ -1,6 +1,6 @@
 > ⚠️ **DEPRECATED — this file is kept for archival only.**
 > **Canonical AI entry point is now [`AI_PLAYBOOK.md`](../AI_PLAYBOOK.md)** at repo root.
-> CLI: `node bin/ai.cjs` · Audit: [`AUDIT-2026-04.md`](../AUDIT-2026-04.md)
+> CLI: `node bin/ai.cjs` · Audit: [`AUDIT-2026-04.md`](../legacy/audits/AUDIT-2026-04.md)
 >
 > Content below may be stale. Trust the playbook.
 
@@ -141,7 +141,7 @@ npm run debug          # Check project health
 ```bash
 npm run debug:fix      # Fix any issues
 npm run build          # Rebuild
-pm2 restart numbahwan-guild
+npm run dev            # Restart the dev server (Vite, port 5173)
 ```
 
 ### After Adding New Cards

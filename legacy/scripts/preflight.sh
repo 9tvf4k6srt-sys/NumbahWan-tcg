@@ -1,4 +1,7 @@
 #!/bin/bash
+# ░░ LEGACY — preserved for history, NEVER run. Zero live references.
+# ░░ See legacy/README.md. Rules: ARCHITECTURE.md invariants 3 and 5.
+
 # ============================================
 # Preflight Check Script v1.0
 # Run before deploy to verify everything works

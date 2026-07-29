@@ -1,4 +1,7 @@
 #!/usr/bin/env node
+// ░░ LEGACY — preserved for history, NEVER run. Zero live references.
+// ░░ See legacy/README.md. Rules: ARCHITECTURE.md invariants 3 and 5.
+
 /**
  * ══════════════════════════════════════════════════════════════════
  *   Mycelium Upgrade — Test Generator & Autopsy Engine

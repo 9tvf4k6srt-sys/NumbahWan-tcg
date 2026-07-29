@@ -1,0 +1,39 @@
+{
+  "description": "Golden fixtures for evals/linter-eval.cjs. Each fixture pairs a hand-authored file with a KNOWN correct verdict, so the anti-slop linters can be graded mechanically (no LLM judge). Three shapes, same discipline as the outcome eval: positive (planted slop — expected rule must fire: recall), negative (clean content — nothing may fire: precision), adversarial (looks like a violation but is legitimate — nothing may fire). Fixtures live outside public/ so they never pollute --all sweeps or the pre-commit pipeline.",
+  "version": "1.0.0",
+  "addedAt": "2026-07-29",
+  "layers": {
+    "text": [
+      { "file": "evals/linter-fixtures/text/tx-filler.md", "shape": "positive", "expect": ["AIT-EN-FILLER", "AIT-EN-HEDGE-VOCAB"], "note": "corpus also lists 'delve' under HEDGE-VOCAB — both fire" },
+      { "file": "evals/linter-fixtures/text/tx-blacklist.md", "shape": "positive", "expect": ["AIT-EN-BLACKLIST-2026", "AIT-EN-FILLER"], "note": "corpus also lists 'stands as a beacon' under FILLER — both fire" },
+      { "file": "evals/linter-fixtures/text/tx-notxbuty.md", "shape": "positive", "expect": ["AIT-EN-NOT-X-BUT-Y"] },
+      { "file": "evals/linter-fixtures/text/tx-hedge.md", "shape": "positive", "expect": ["AIT-EN-HEDGE-VOCAB"] },
+      { "file": "evals/linter-fixtures/text/tx-chatleak.md", "shape": "positive", "expect": ["AIT-EN-CHAT-LEAK"] },
+      { "file": "evals/linter-fixtures/text/tx-medium-tells.md", "shape": "positive", "expect": ["AIT-EN-EXALTATION", "AIT-EN-EMDASH-BAN", "AIT-EN-CHAT-LEAK-SOFT"] },
+      { "file": "evals/linter-fixtures/text/tx-low-tells.md", "shape": "positive", "expect": ["AIT-EN-PROMO-VOICE", "AIT-EN-DIDACTIC", "AIT-EN-SUPERFICIAL-ING", "AIT-EN-CHALLENGE-FORMULA", "AIT-EN-TRICOLON", "AIT-EN-FILLER"], "note": "'vibrant community' is also a FILLER pattern. CHALLENGE-FORMULA was INERT on first eval run (',\b' cannot match when a space follows the comma) — corpus fixed 2026-07-29, this fixture is its regression test" },
+      { "file": "evals/linter-fixtures/text/tx-clean.md", "shape": "negative", "expect": [] },
+      { "file": "evals/linter-fixtures/text/tx-adversarial.md", "shape": "adversarial", "expect": [], "note": "Closed em-dashes (corpus bans spaced ones), 'the important part' (not didactic formula), 'did not respond' (no not-x-but-y), 'hardest challenge' (no despite+faces)" }
+    ],
+    "layout": [
+      { "file": "evals/linter-fixtures/layout/ly-emoji.html", "shape": "positive", "expect": ["L1 EMOJI-AS-ICON"] },
+      { "file": "evals/linter-fixtures/layout/ly-gradient.html", "shape": "positive", "expect": ["L2 GENERIC-GRADIENT"] },
+      { "file": "evals/linter-fixtures/layout/ly-shadow.html", "shape": "positive", "expect": ["L3 DEFAULT-SHADOW"] },
+      { "file": "evals/linter-fixtures/layout/ly-opacity.html", "shape": "positive", "expect": ["L4 OPACITY-ONLY-MOTION"] },
+      { "file": "evals/linter-fixtures/layout/ly-cookie.html", "shape": "positive", "expect": ["L5 COOKIE-CUTTER"] },
+      { "file": "evals/linter-fixtures/layout/ly-center.html", "shape": "positive", "expect": ["L6 DEAD-CENTER"] },
+      { "file": "evals/linter-fixtures/layout/ly-clean.html", "shape": "negative", "expect": [] },
+      { "file": "evals/linter-fixtures/layout/ly-adversarial.html", "shape": "adversarial", "expect": [], "note": "ONE tell hex (L2 needs 2), ONE default shadow (L3 needs 3), ONE opacity-only transition (L4 needs 2), SEVEN identical cards (L5 needs 8), prose emoji (L1 is chrome-only), one centered headline (L6 needs 12+)" },
+      { "file": "evals/linter-fixtures/layout/ly-multi.html", "shape": "positive", "expect": ["L1 EMOJI-AS-ICON", "L2 GENERIC-GRADIENT"] }
+    ],
+    "code": [
+      { "file": "evals/linter-fixtures/code/cd-narrative.js", "shape": "positive", "expect": ["CS1-NARRATIVE-COMMENT"] },
+      { "file": "evals/linter-fixtures/code/cd-swallow-empty.js", "shape": "positive", "expect": ["CS2-SWALLOWED-EXCEPTION"] },
+      { "file": "evals/linter-fixtures/code/cd-swallow-log.js", "shape": "positive", "expect": ["CS2-SWALLOWED-EXCEPTION"] },
+      { "file": "evals/linter-fixtures/code/cd-asany.ts", "shape": "positive", "expect": ["CS3-AS-ANY-CAST"] },
+      { "file": "evals/linter-fixtures/code/cd-clean.js", "shape": "negative", "expect": [] },
+      { "file": "evals/linter-fixtures/code/cd-adversarial.js", "shape": "adversarial", "expect": [], "note": "route-doc comment (// GET /api/...), documented-silence catch (comment explains WHY), stderr-reporting catch — all deliberate" },
+      { "file": "evals/linter-fixtures/code/cd-adv2.js", "shape": "adversarial", "expect": [], "note": "comment mentions typing at a validated JSON boundary without using as-any — prose about types is not a cast" },
+      { "file": "evals/linter-fixtures/code/cd-multi.js", "shape": "positive", "expect": ["CS1-NARRATIVE-COMMENT", "CS2-SWALLOWED-EXCEPTION", "CS3-AS-ANY-CAST"] }
+    ]
+  }
+}
