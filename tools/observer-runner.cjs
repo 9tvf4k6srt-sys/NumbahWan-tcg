@@ -56,6 +56,10 @@ const REGISTRY = {
   keeper:       { cmd: 'node', args: ['tools/freshness-keeper.cjs', '--quiet'],     optional: false, timeoutMs: 90000 },
   learn:        { cmd: 'node', args: ['tools/learning-loop.cjs', '--quiet'],        optional: false, timeoutMs: 10000 },
   trends:       { cmd: 'node', args: ['tools/trend-detector.cjs', '--quiet'],       optional: false, timeoutMs: 10000 },
+  /* merge-diff: the per-merge reflex. Compares KPIs (leanness, eval,
+     bundle, trends) against the previous merge snapshot and records an
+     IMPROVED / STEADY / REGRESSED verdict. Advisory — exit code always 0. */
+  mergeDiff:    { cmd: 'node', args: ['tools/merge-diff.cjs', '--quiet'],           optional: true,  timeoutMs: 15000 },
 }
 
 /* ─── Profiles ─────────────────────────────────────────────── */
@@ -64,7 +68,7 @@ const PROFILES = {
      the new "smart" signal we want on every commit. keeper goes in
      post-merge because TTL refreshes are heavier. */
   'post-commit': ['watch', 'mycelium', 'fix', 'mine', 'validate', 'telemetry', 'testTel', 'depGraph', 'events', 'trim', 'learn', 'trends'],
-  'post-merge':  ['mine', 'validate', 'events', 'trim', 'keeper', 'learn', 'trends'],
+  'post-merge':  ['mine', 'validate', 'events', 'trim', 'keeper', 'learn', 'trends', 'mergeDiff'],
   'ci':          ['tsc', 'vitest', 'lint', 'trends'],
   'factory':     ['events', 'lint', 'learn'],
   'keeper':      ['keeper', 'events', 'learn', 'trends'],
