@@ -26,6 +26,7 @@
  *   --import-shared                  # Import lessons from shared library
  *   --wip "task"                     # Save work-in-progress (survives chat compaction)
  *   --wip-done                       # Clear WIP after task complete
+ *   --handoff '{json}'               # Distilled cross-agent packet (task/done/next/confidence/verify)
  *   --token-check [files...]         # Token budget audit + cost optimization advice
  *   --cost-plan <files...>           # Cheapest approach for reading/editing specific files
  */
@@ -2549,7 +2550,25 @@ function brief() {
   // §6 Output Optimization: structured compact format, no filler
   lines.push('# CTX (auto|cat .mycelium-context)');
 
-  // CHECKPOINT: structured task state — HIGHEST priority, MUST appear first
+  // HANDOFF: distilled cross-agent packet — HIGHEST signal, appears first.
+  // Contract (EFFICIENCY.md): task + done + next + confidence + verify, nothing
+  // else. The receiving agent accepts the packet and runs NEXT; it does NOT
+  // replay the reasoning trace that produced it.
+  const handoffPath = path.join(__dirname, '.mycelium', 'handoff.json');
+  if (fs.existsSync(handoffPath)) {
+    try {
+      const h = JSON.parse(fs.readFileSync(handoffPath, 'utf8'));
+      lines.push(`# !!HANDOFF!! (${h.savedAt.slice(0, 16)} — accept packet, run NEXT; do NOT re-derive)`);
+      lines.push(`  TASK: ${h.task}`);
+      if (h.done && h.done.length) lines.push(`  DONE: ${h.done.join(' | ')}`);
+      lines.push(`  NEXT: ${h.next}`);
+      lines.push(`  CONF: ${h.confidence}${h.verify ? ` · VERIFY: ${h.verify}` : ''}`);
+      if (h.blockers && h.blockers.length) lines.push(`  BLOCKED: ${h.blockers.join(' | ')}`);
+      if (h.files && h.files.length) lines.push(`  FILES: ${h.files.slice(0, 8).join(', ')}`);
+    } catch (e) { /* corrupted handoff, skip */ }
+  }
+
+  // CHECKPOINT: structured task state — MUST appear before general intel
   // This survives chat compaction and tells the AI exactly what to resume
   const checkpointPath = path.join(__dirname, '.mycelium', 'checkpoint.json');
   if (fs.existsSync(checkpointPath)) {
@@ -3873,6 +3892,7 @@ ${breakageCount} breakages, ${decisionCount} decisions, and ${learningCount} lea
   --gen-tests                                 # generate regression tests from past breakages
   --wip "task description"                    # save work-in-progress (survives chat compaction)
   --wip-done                                  # clear WIP when done
+  --handoff '{"task":"...","next":"..."}'       # distilled cross-agent packet (task/done/next/confidence/verify)
 
 ## Key insight:
   Every breakage, constraint, and decision you record makes the NEXT session smarter.
@@ -5114,7 +5134,7 @@ if (arg === '--help' || arg === '-h' || arg === 'help') {
     ['Learning',  [['--decide "<area>" "<what>" "<why>"','record a choice'],['--constraint "<area>" "<fact>"','record a hard rule'],['--broke "<area>" "<what>"','record a breakage'],['--learned "<area>" "<lesson>"','record a fix-learning']]],
     ['Query',     [['--query','full intel dump'],['--premortem <area>','what broke here'],['--whyfile <path>','file history + decisions'],['--areamap','file→area map']]],
     ['Health',    [['--health','scored health'],['--eval','run mycelium eval'],['--reflect','deep pattern analysis'],['--sharpen','auto-tune']]],
-    ['Checkpoint',[['--checkpoint \'<json>\'','save multi-step task state'],['--checkpoint','read current'],['--wip "<text>"','quick WIP'],['--wip-done','clear checkpoint+WIP']]],
+    ['Checkpoint',[['--checkpoint \'<json>\'','save multi-step task state'],['--checkpoint','read current'],['--wip "<text>"','quick WIP'],['--wip-done','clear checkpoint+WIP+handoff'],['--handoff \'{json}\'','distilled cross-agent packet (task/done/next/confidence/verify)']]],
     ['Self-care', [['--heal','auto-fix issues'],['--auto-trim','compact memory'],['--deep-compress','aggressive compact'],['--token-check','file-size audit']]],
     ['Deploy',    [['ship "<msg>"','atomic deploy (use: node bin/mycelium.cjs ship)']]],
   ];
@@ -5304,6 +5324,61 @@ if (arg === '--help' || arg === '-h' || arg === 'help') {
     cp.completedAt = new Date().toISOString();
     fs.writeFileSync(checkpointPath, JSON.stringify(cp, null, 2));
     console.log('[mycelium] Checkpoint marked completed.');
+  }
+  const handoffPath = path.join(__dirname, '.mycelium', 'handoff.json');
+  if (fs.existsSync(handoffPath)) {
+    fs.unlinkSync(handoffPath);
+    console.log('[mycelium] Handoff cleared.');
+  }
+} else if (arg === '--handoff') {
+  // Distilled handoff packet — the cross-agent / cross-session contract.
+  // Rule (EFFICIENCY.md): every hand-off = distilled artifact + confidence +
+  // next action ONLY. Never a reasoning trace. The packet is size-capped:
+  // one that busts its budget is a history replay in disguise and is rejected.
+  const handoffPath = path.join(__dirname, '.mycelium', 'handoff.json');
+  const HANDOFF_BUDGET = 1400; // bytes — ~350 tokens, the price of a cheap brief
+  if (!process.argv[3]) {
+    // Read mode: show current packet
+    if (fs.existsSync(handoffPath)) {
+      console.log(fs.readFileSync(handoffPath, 'utf8'));
+    } else {
+      console.log('[mycelium] No handoff packet. Create: --handoff \'{"task":"...","next":"..."}\'');
+    }
+  } else {
+    let payload;
+    try {
+      payload = JSON.parse(process.argv[3]);
+    } catch (e) {
+      console.error('[mycelium] Invalid JSON. Usage: --handoff \'{"task":"...","done":["..."],"next":"...","confidence":"high","verify":"npm run eval"}\'');
+      console.error('  Error:', e.message);
+      process.exit(1);
+    }
+    const packet = {
+      savedAt: new Date().toISOString(),
+      task: String(payload.task || 'unnamed task').slice(0, 160),
+      done: (payload.done || []).slice(0, 5).map((s) => String(s).slice(0, 120)),
+      next: String(payload.next || '').slice(0, 200),
+      confidence: ['high', 'medium', 'low'].includes(payload.confidence) ? payload.confidence : 'medium',
+      verify: String(payload.verify || '').slice(0, 160),
+      files: (payload.files || []).slice(0, 8),
+      blockers: (payload.blockers || []).slice(0, 3).map((s) => String(s).slice(0, 120)),
+    };
+    if (!packet.next) {
+      console.error('[mycelium] handoff requires "next" — the single next action IS the packet. If you cannot name it, the work is not distilled yet.');
+      process.exit(1);
+    }
+    const raw = JSON.stringify(packet, null, 1);
+    const bytes = Buffer.byteLength(raw);
+    if (bytes > HANDOFF_BUDGET) {
+      console.error(`[mycelium] handoff packet is ${bytes}B > ${HANDOFF_BUDGET}B budget. Distill harder — drop the reasoning, keep the decisions.`);
+      process.exit(1);
+    }
+    fs.writeFileSync(handoffPath, raw);
+    console.log(`[mycelium] Handoff saved (${bytes}B): ${packet.task}`);
+    console.log(`  NEXT: ${packet.next}`);
+    console.log(`  CONF: ${packet.confidence}${packet.verify ? ` · VERIFY: ${packet.verify}` : ''}`);
+    console.log('  Read with: node mycelium.cjs --handoff');
+    console.log('  Clear with: node mycelium.cjs --wip-done');
   }
 } else if (arg === '--checkpoint') {
   // Structured checkpoint that survives compaction — richer than --wip
