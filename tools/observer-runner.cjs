@@ -60,6 +60,9 @@ const REGISTRY = {
      bundle, trends) against the previous merge snapshot and records an
      IMPROVED / STEADY / REGRESSED verdict. Advisory — exit code always 0. */
   mergeDiff:    { cmd: 'node', args: ['tools/merge-diff.cjs', '--quiet'],           optional: true,  timeoutMs: 15000 },
+  /* improve: closes the loop. Trends that persist across merges earn a
+     human-gated doctrine edit proposal (never auto-edits docs). */
+  improve:      { cmd: 'node', args: ['tools/improve-proposer.cjs', '--quiet'],     optional: true,  timeoutMs: 15000 },
 }
 
 /* ─── Profiles ─────────────────────────────────────────────── */
@@ -68,7 +71,7 @@ const PROFILES = {
      the new "smart" signal we want on every commit. keeper goes in
      post-merge because TTL refreshes are heavier. */
   'post-commit': ['watch', 'mycelium', 'fix', 'mine', 'validate', 'telemetry', 'testTel', 'depGraph', 'events', 'trim', 'learn', 'trends'],
-  'post-merge':  ['mine', 'validate', 'events', 'trim', 'keeper', 'learn', 'trends', 'mergeDiff'],
+  'post-merge':  ['mine', 'validate', 'events', 'trim', 'keeper', 'learn', 'trends', 'mergeDiff', 'improve'],
   'ci':          ['tsc', 'vitest', 'lint', 'trends'],
   'factory':     ['events', 'lint', 'learn'],
   'keeper':      ['keeper', 'events', 'learn', 'trends'],
