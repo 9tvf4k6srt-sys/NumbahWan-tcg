@@ -88,3 +88,35 @@ for (const [rel, re, label] of REQUIRED) {
 
 console.log(`\n═══ ${pass} passed, ${fail} failed ═══`);
 if (fail) { console.log("FAILURES:\n" + failures.map((f) => "  - " + f).join("\n")); process.exit(1); }
+
+/* --selftest: prove every BANNED pattern actually fires.
+   Writes one line per pattern into a TEMP file under os.tmpdir(),
+   scans it, requires ≥1 hit per pattern, then deletes the file.
+   NEVER mutates tracked files (the old manual self-test appended
+   a banned phrase to src/index.tsx and reverted with git checkout,
+   which also wiped real fixes in the same file — that bug caused
+   the '6 failed / copy rolled back' incident of 2026-08-02). */
+if (process.argv.includes("--selftest")) {
+  const os = require("os");
+  const tmp = path.join(os.tmpdir(), "warroom-lint-selftest.txt");
+  const probes = BANNED.map(([re]) => "PROBE " + re.source + " -> " + (re.__sample || ""));
+  // derive a sample string that matches each pattern by using the label text is unreliable;
+  // instead test that the pattern source is a non-empty regex and spot-fire it against known samples below
+  const KNOWN_SAMPLES = [
+    "xun-deng", "訊號燈", "Signal Lab", "TAIEX WAVE DESK", "traffic light",
+    "廢話", "水晶球", "crystal ball", "fortune-telling", "作弊", "神準",
+    "神器 秘密武器 穩賺 躺著賺 躺平 韭菜 無腦 一鍵搞定", "先說個笑話",
+    "兩種下場", "同樣的錢，不同的結局", "two-outcome", "自己看", "speaks for itself",
+    "不是天天贏", "不是X，是你不在場", "off the field when the shelling starts",
+    "lorem ipsum", "TODO: fix me",
+  ];
+  fs.writeFileSync(tmp, KNOWN_SAMPLES.join("\n"), "utf8");
+  const src = fs.readFileSync(tmp, "utf8");
+  let miss = 0;
+  BANNED.forEach(([re, label]) => {
+    if (!re.test(src)) { miss++; console.log("  ✗ selftest: pattern never fires — " + label); }
+  });
+  fs.unlinkSync(tmp);
+  if (miss) { console.log("SELFTEST FAILED: " + miss + " pattern(s) dead"); process.exit(1); }
+  console.log("  ✓ selftest: all " + BANNED.length + " banned patterns fire on known samples (temp file, no tracked files touched)");
+}
