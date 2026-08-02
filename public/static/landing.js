@@ -1,4 +1,4 @@
-/* 訊號燈 XunDeng — landing interactions */
+/* 台股戰情室 TWSE warroom — landing interactions */
 (function () {
   "use strict";
 

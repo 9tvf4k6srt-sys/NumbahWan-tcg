@@ -1,11 +1,11 @@
-# 訊號燈 XunDeng — 台股戰情室 / TWSE War Room
+# 台股戰情室 TWSE warroom
 
 ## Project Overview
-- **Name**: 訊號燈 XunDeng — TAIEX Wave Desk + 台股戰情室 (TWSE War Room)
-- **Goal**: Honest, no-fortune-telling TAIEX wave-trading signal product: red = exit next open, green = re-enter next open, with the full report card (wins and misses) on the page.
+- **Name**: 台股戰情室 TWSE warroom — TAIEX signal command
+- **Goal**: Honest, intel-driven TAIEX wave-trading signal warroom: red = retreat next open, green = re-enter next open, with the full battle record (wins and misses) on the page.
 - **Features**:
   - Award-tier bilingual (zh/en) landing page: hero, equity curve, 5-light signal board, walk-forward proof, method, CTA
-  - **台股戰情室 TWSE War Room** — full-screen military radar console overlay: PPI scope with phosphor-persistence physics, HUD readouts, military scan sequence, classified-style intel brief verdict
+  - **台股戰情室 TWSE warroom** — full-screen military radar console overlay: PPI scope with phosphor-persistence physics, HUD readouts, military scan sequence, classified-style intel brief verdict
   - Live TAIEX quote via TWSE mis API with session detection (pre-open/trading/closed/weekend) and full timestamp provenance on every answer
   - WebAudio sound design: sonar sweep ping, radio static, target lock-on chirp (synthesized, no audio files, iOS-gesture-safe)
   - Rigorous test suite: radar-math unit tests, API contract tests, in-browser pixel tests, and full E2E click-process tests (desktop + mobile)

@@ -3,18 +3,18 @@ import { Hono } from 'hono'
 const app = new Hono()
 
 // ─────────────────────────────────────────────────────────────
-// 訊號燈 XunDeng — Signal Lab landing page
-// Identity: scientific signal desk with wit. Honesty is the brand.
+// 台股戰情室 TWSE warroom — landing page
+// Identity: military intel room for TAIEX wave orders. Honesty is the brand.
 // ─────────────────────────────────────────────────────────────
 
 const Head = () => (
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>訊號燈 XunDeng — 台股進出燈號 | TAIEX signal lights</title>
+    <title>台股戰情室 TWSE warroom — 台股波段指令 | TAIEX wave orders</title>
     <meta
       name="description"
-      content="紅燈賣、綠燈買，隔天開盤執行。Walk-forward 樣本外 +16.8%，最大回落 −12% vs 只抱 −29%。誠實的台股波段燈號。"
+      content="紅燈撤退、綠燈回防，隔天開盤執行。Walk-forward 樣本外 +16.8%，最大回落 −12% vs 只抱 −29%。台股波段戰情室，戰績全公開。"
     />
     <meta name="theme-color" content="#08090b" />
     <link
@@ -31,7 +31,7 @@ const Head = () => (
   </head>
 )
 
-// silence browser /favicon.ico requests — serve the inline traffic-light SVG
+// silence browser /favicon.ico requests — serve the inline three-light signal SVG
 const FAVICON_SVG =
   '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect x="8" y="4" width="48" height="56" rx="14" fill="#000"/><circle cx="32" cy="18" r="8" fill="#ff5c5c"/><circle cx="32" cy="32" r="8" fill="#ffb84d"/><circle cx="32" cy="46" r="8" fill="#3ddc97"/></svg>'
 app.get('/favicon.ico', (c) =>
@@ -108,7 +108,7 @@ app.get('/api/market-now', async (c) => {
   }
   try {
     const res = await fetch(TWSE_URL, {
-      headers: { 'user-agent': 'xundeng-signal-desk/1.0', accept: 'application/json' },
+      headers: { 'user-agent': 'twse-warroom/1.0', accept: 'application/json' },
       cf: { cacheTtl: 25, cacheEverything: true },
     } as RequestInit)
     if (!res.ok) throw new Error(`twse http ${res.status}`)
@@ -156,9 +156,9 @@ app.get('/', (c) => {
               <i class="dot dot-r" /><i class="dot dot-a" /><i class="dot dot-g" />
             </span>
             <span class="brand-word">
-              <span class="zh">訊號燈</span><span class="en">XunDeng</span>
+              <span class="zh">台股戰情室</span><span class="en">TWSE warroom</span>
             </span>
-            <span class="brand-sub mono">TAIEX WAVE DESK</span>
+            <span class="brand-sub mono">TAIEX SIGNAL COMMAND</span>
           </a>
           <nav class="nav-links">
             <a href="#lights"><span class="zh">燈號</span><span class="en">Lights</span></a>
@@ -185,17 +185,17 @@ app.get('/', (c) => {
                 <span class="line reveal d1"><span class="zh">紅燈賣。</span><span class="en">Red: sell.</span></span>
                 <span class="line reveal d2"><span class="zh">綠燈買。</span><span class="en">Green: buy.</span></span>
                 <span class="line serif reveal d3 accent">
-                  <span class="zh">廢話不多說。</span><span class="en">No fortune-telling.</span>
+                  <span class="zh">指令就這麼短。</span><span class="en">Orders stay this short.</span>
                 </span>
               </h1>
               <p class="hero-sub reveal d4">
                 <span class="zh">
-                  別人給你水晶球，我們給你紅綠燈。隔天開盤照著做，
-                  崩盤前先下車、低點附近再上車——成績單全部貼在下面，輸贏都誠實。
+                  沒有預言，只有情資。收盤後運算燈號，隔天開盤執行——
+                  崩盤前撤退，低點附近回防。全部戰績如下，輸贏如實上報。
                 </span>
                 <span class="en">
-                  Others sell crystal balls. We give you a traffic light. Act at next open,
-                  step off before corrections, re-enter near lows — the full report card is below, wins and misses alike.
+                  No prophecy — only intel. Signals computed after close, executed at next open:
+                  retreat before corrections, re-enter near lows. Full battle record below, wins and misses reported alike.
                 </span>
               </p>
               <div class="hero-cta reveal d5">
@@ -218,7 +218,7 @@ app.get('/', (c) => {
                     </span>
                   </div>
                   <div class="chart-legend mono">
-                    <span class="lg lg-st"><i />XunDeng <b id="legend-st">+895%</b></span>
+                    <span class="lg lg-st"><i />TWSE warroom <b id="legend-st">+895%</b></span>
                     <span class="lg lg-bh"><i /><span class="zh">只抱</span><span class="en">B&amp;H</span> <b id="legend-bh">+351%</b></span>
                   </div>
                 </div>
@@ -239,7 +239,7 @@ app.get('/', (c) => {
                     <em class="m-g">GREEN = RE-ENTER NEAR LOWS</em><i>◆</i>
                     <em>WALK-FORWARD OOS +16.8%</em><i>◆</i>
                     <em class="m-a">MAX DD −12% vs −29%</em><i>◆</i>
-                    <em>NOT A CRYSTAL BALL</em><i>◆</i>
+                    <em>INTEL, NOT PROPHECY</em><i>◆</i>
                   </span>
                 ))}
               </div>
@@ -249,7 +249,7 @@ app.get('/', (c) => {
           {/* ── PAIN / WIT ── */}
           <section class="section pain" id="pain">
             <div class="wrap">
-              <p class="kicker mono reveal"><span class="zh">先說個笑話</span><span class="en">A joke first</span></p>
+              <p class="kicker mono reveal"><span class="zh">前線實錄</span><span class="en">Field reports</span></p>
               <h2 class="h2 reveal d1">
                 <span class="zh">「這次我一定抱得住。」</span>
                 <span class="en">“This time I'll just hold through it.”</span>
@@ -271,7 +271,7 @@ app.get('/', (c) => {
                 </div>
                 <div class="pain-card reveal d4">
                   <span class="pain-num mono accent-g">−12%</span>
-                  <p><span class="zh">同一期間訊號燈策略的最大回落。躲過的跌，就是賺到的。</span>
+                  <p><span class="zh">同一期間戰情室策略的最大回落。躲過的跌，就是賺到的。</span>
                      <span class="en">Max drawdown for the signal strategy over the same period. Dodged drops are earned returns.</span></p>
                 </div>
               </div>
@@ -281,7 +281,7 @@ app.get('/', (c) => {
           {/* ── LIGHTS ── */}
           <section class="section lights" id="lights">
             <div class="wrap">
-              <p class="kicker mono reveal"><span class="zh">整個產品就五個字</span><span class="en">The whole product in five words</span></p>
+              <p class="kicker mono reveal"><span class="zh">全部指令，五個字</span><span class="en">All orders: five words</span></p>
               <h2 class="h2 reveal d1">
                 <span class="zh">賣、空、減、抱、買</span>
                 <span class="en">Sell · Cash · Trim · Hold · Buy</span>
@@ -329,14 +329,14 @@ app.get('/', (c) => {
           {/* ── PROOF ── */}
           <section class="section proof" id="proof">
             <div class="wrap">
-              <p class="kicker mono reveal"><span class="zh">誠實成績單</span><span class="en">The honest report card</span></p>
+              <p class="kicker mono reveal"><span class="zh">戰績報告</span><span class="en">Battle record</span></p>
               <h2 class="h2 reveal d1">
                 <span class="zh">贏要貼，輸也要貼</span>
                 <span class="en">Wins posted. Losses too.</span>
               </h2>
               <p class="sub reveal d2">
-                <span class="zh">規則只用「樣本外」walk-forward 挑出來——先考試，後翻書是作弊，我們不作弊。</span>
-                <span class="en">Rules are selected on out-of-sample walk-forward only. Peeking at the test set is cheating; we don't cheat.</span>
+                <span class="zh">規則只用樣本外 walk-forward 篩選——拿沒見過的年份驗證，沒通過的戰術不上線。</span>
+                <span class="en">Rules are screened on out-of-sample walk-forward only — validated on years the model never saw. Tactics that fail don't deploy.</span>
               </p>
 
               {/* big stat row */}
@@ -423,15 +423,15 @@ app.get('/', (c) => {
             <div class="wrap">
               <p class="kicker mono reveal"><span class="zh">為什麼可以信</span><span class="en">Why it's trustworthy</span></p>
               <h2 class="h2 reveal d1">
-                <span class="zh">不神準，但誠實</span>
-                <span class="en">Not magic. Just honest.</span>
+                <span class="zh">不預言，只回報</span>
+                <span class="en">No prophecy. Just intel.</span>
               </h2>
               <div class="method-grid">
                 <article class="m-card reveal d2">
                   <span class="m-idx mono">01</span>
                   <h3><span class="zh">Walk-forward 樣本外</span><span class="en">Walk-forward OOS</span></h3>
-                  <p><span class="zh">規則只用過去資料挑，在沒看過的年份考試。四個考區全過才准出廠，過不了就繼續關在實驗室。</span>
-                     <span class="en">Rules are picked on the past and tested on unseen years. All four folds must pass before shipping; failures stay in the lab.</span></p>
+                  <p><span class="zh">規則只用過去資料篩選，在沒看過的年份驗證。四個考區全過才准部署，沒過的戰術不上前線。</span>
+                     <span class="en">Rules are screened on the past and validated on unseen years. All four folds must pass before deployment; failures never reach the front line.</span></p>
                 </article>
                 <article class="m-card reveal d3">
                   <span class="m-idx mono">02</span>
@@ -448,8 +448,8 @@ app.get('/', (c) => {
                 <article class="m-card reveal d5">
                   <span class="m-idx mono">04</span>
                   <h3><span class="zh">認輸機制</span><span class="en">Built-in humility</span></h3>
-                  <p><span class="zh">每月把最新行情記進 live-paper 日誌，連續兩輪改進 &lt;1% 就宣布高原期，不硬凹。</span>
-                     <span class="en">Each month logs fresh live-paper results; two improvement rounds under 1% and we call a plateau. No forcing it.</span></p>
+                  <p><span class="zh">每月把最新行情記進 live-paper 日誌，連續兩輪改進 &lt;1% 就宣布高原期，如實上報。</span>
+                     <span class="en">Each month logs fresh live-paper results; two improvement rounds under 1% and a plateau is officially declared. Reported as-is.</span></p>
                 </article>
               </div>
 
@@ -490,20 +490,20 @@ app.get('/', (c) => {
             <div class="wrap footer-inner">
               <div class="footer-brand">
                 <span class="brand-light" aria-hidden="true"><i class="dot dot-r" /><i class="dot dot-a" /><i class="dot dot-g" /></span>
-                <span class="zh">訊號燈 XunDeng</span><span class="en">XunDeng</span>
+                <span class="zh">台股戰情室</span><span class="en">TWSE warroom</span>
               </div>
               <p class="footer-disclaimer">
                 <span class="zh">
-                  研究與教育工具，不是投資建議。歷史績效不代表未來。你的部位，你的風險——
-                  賺了不用分我們，賠了……嗯，這就是為什麼有紅燈。
+                  研究與教育工具，不是投資建議。歷史績效不代表未來。部位是你的，風險也是你的——
+                  本戰情室只負責一件事：如實回報燈號。
                 </span>
                 <span class="en">
                   Research &amp; education tool — not investment advice. Past performance doesn't guarantee the future.
-                  Your positions, your risk. Profits are yours to keep; losses… well, that's what the red light is for.
+                  Your positions, your risk. This warroom has exactly one job: report the signal as-is.
                 </span>
               </p>
               <p class="footer-meta mono">
-                TAIEX WAVE DESK · WALK-FORWARD VERIFIED · <span id="year">2026</span>
+                TAIEX SIGNAL COMMAND · WALK-FORWARD VERIFIED · <span id="year">2026</span>
               </p>
             </div>
           </footer>
