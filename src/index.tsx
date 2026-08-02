@@ -168,7 +168,7 @@ app.get('/', (c) => {
           <div class="nav-actions">
             <button id="lang-toggle" class="lang-toggle mono" type="button" aria-label="switch language">EN</button>
             <button class="btn btn-primary btn-nav" type="button" data-desk-open>
-              <span class="zh">進入戰情室</span><span class="en">Enter war room</span>
+              <span class="zh">進入戰情室</span><span class="en">Enter TWSE warroom</span>
             </button>
           </div>
         </header>
@@ -200,7 +200,7 @@ app.get('/', (c) => {
               </p>
               <div class="hero-cta reveal d5">
                 <button class="btn btn-primary btn-lg" type="button" data-desk-open>
-                  <span class="zh">進入台股戰情室</span><span class="en">Enter the war room</span>
+                  <span class="zh">進入台股戰情室</span><span class="en">Enter TWSE warroom</span>
                   <span class="btn-arrow" aria-hidden="true">→</span>
                 </button>
                 <a class="btn btn-ghost btn-lg" href="#proof">
@@ -510,7 +510,7 @@ app.get('/', (c) => {
         </main>
 
         {/* ── 台股戰情室 TWSE WAR ROOM OVERLAY ── */}
-        <div class="wr" id="warroom" role="dialog" aria-modal="true" aria-label="台股戰情室 TWSE war room" hidden>
+        <div class="wr" id="warroom" role="dialog" aria-modal="true" aria-label="台股戰情室 TWSE warroom" hidden>
           <div class="wr-bg" aria-hidden="true" />
           <div class="wr-scanlines" aria-hidden="true" />
           <div class="wr-frame">
@@ -518,7 +518,7 @@ app.get('/', (c) => {
               <div class="wr-top-left">
                 <span class="wr-dot" aria-hidden="true" />
                 <span class="mono wr-title">
-                  <span class="zh">台股戰情室</span><span class="en">TWSE WAR ROOM</span>
+                  <span class="zh">台股戰情室</span><span class="en">TWSE warroom</span>
                 </span>
                 <span class="mono wr-class">
                   <span class="zh">公開情資 // 僅供研究</span>

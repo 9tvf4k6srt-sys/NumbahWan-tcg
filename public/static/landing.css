@@ -528,9 +528,15 @@ body.desk-locked { overflow: hidden; }
   gap: 14px;
 }
 @media (max-width: 900px) {
-  /* fixed console row keeps the radar square stable while brief content grows */
-  .wr-main { grid-template-columns: 1fr; grid-template-rows: auto minmax(0, 1fr); overflow-y: auto; }
-  .wr-console { min-height: 0; }
+  /* Mobile: single natural page flow. The brief grows to its FULL content height
+     inside the same scroll — no nested scroll-trap, nothing locked. Topbar pins. */
+  .wr-main {
+    display: flex; flex-direction: column;
+    overflow-y: auto; -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+  }
+  .wr-console { flex: none; min-height: 0; }
+  .wr-topbar { position: sticky; top: 0; z-index: 6; }
 }
 
 /* ── console (radar) ── */
@@ -662,6 +668,13 @@ body.desk-locked { overflow: hidden; }
 .wr .ds-k { color: var(--mil-dim); }
 .wr .ds-v { color: rgba(199, 214, 204, 0.75); }
 .wr .desk-stamp { color: var(--mil-dim); }
+
+/* Mobile brief override — MUST come after the base .wr-brief rule
+   (equal specificity, later source order wins) or the brief stays a
+   nested scroll-trap on iPhone. */
+@media (max-width: 900px) {
+  .wr-brief { flex: none; overflow-y: visible; }
+}
 
 @media (prefers-reduced-motion: reduce) {
   .wr-dot, .wr-standby-big, .wr-scan:disabled { animation: none; }

@@ -203,6 +203,44 @@ function t(name, cond) {
     Math.abs(mRadarSettled.w - mRadarSettled.h) < 1.5);
   t("mobile: scope size stable open→verdict (Δ=" + Math.abs(mRadarSettled.w - mRadarOpen.w).toFixed(1) + "px)",
     Math.abs(mRadarSettled.w - mRadarOpen.w) < 25);
+
+  // REGRESSION (user report: "report area very very small, locked, can't scroll on iPhone").
+  // Wise fix: brief grows to full content height; .wr-main is the single natural scroller.
+  const scrollInfo = await mob.evaluate(() => {
+    const main = document.querySelector(".wr-main");
+    const brief = document.querySelector(".wr-brief");
+    const cs = getComputedStyle(brief);
+    return {
+      briefOverflow: cs.overflowY,
+      briefFitsNaturally: brief.scrollHeight <= brief.clientHeight + 2,
+      mainScrollable: main.scrollHeight > main.clientHeight + 10,
+      mainClientH: main.clientHeight,
+    };
+  });
+  t("mobile: brief is NOT a nested scroll-trap (overflow=" + scrollInfo.briefOverflow + ")",
+    scrollInfo.briefOverflow === "visible" && scrollInfo.briefFitsNaturally);
+  t("mobile: full report flows in one scroller (page height " + scrollInfo.mainClientH + "px)",
+    scrollInfo.mainScrollable);
+
+  // scroll to the very bottom of the war room — the provenance stamps must be reachable
+  await mob.evaluate(() => {
+    const main = document.querySelector(".wr-main");
+    main.scrollTo({ top: main.scrollHeight, behavior: "instant" });
+  });
+  await mob.waitForTimeout(300);
+  const bottomInfo = await mob.evaluate(() => {
+    const stamps = document.querySelector("#desk-result .desk-stamps");
+    const topbar = document.querySelector(".wr-topbar");
+    const sr = stamps.getBoundingClientRect();
+    const tr = topbar.getBoundingClientRect();
+    return {
+      stampsVisible: sr.bottom <= window.innerHeight + 2 && sr.top > 0,
+      topbarPinned: Math.abs(tr.top - document.querySelector(".wr-frame").getBoundingClientRect().top - 14) < 24,
+    };
+  });
+  t("mobile: scroll down reaches report bottom (provenance stamps visible)", bottomInfo.stampsVisible);
+  t("mobile: topbar stays pinned while scrolling the report", bottomInfo.topbarPinned);
+
   await mob.screenshot({ path: "scripts/warroom-mobile.png" });
   console.log("  (screenshot: scripts/warroom-mobile.png)");
   t("mobile: no JS errors", merr.length === 0);
