@@ -57,6 +57,14 @@ grep -q 'radar-core.js' /tmp/wr_home.html; check "radar-core script included" $?
 grep -q 'warroom.js' /tmp/wr_home.html; check "warroom script included" $?
 grep -q '台股戰情室' /tmp/wr_home.html; check "台股戰情室 title present" $?
 
+echo "— compare section present —"
+grep -q 'id="compare"' /tmp/wr_home.html; check "compare section exists" $?
+grep -q '434 萬\|+334%' /tmp/wr_home.html; check "post-2023 comparison numbers (with system)" $?
+grep -q '303 萬\|+203%' /tmp/wr_home.html; check "post-2023 comparison numbers (without)" $?
+grep -q '1,057 萬\|+957%' /tmp/wr_home.html; check "2019 comparison numbers (with system)" $?
+grep -q '45,734\|39,933' /tmp/wr_home.html; check "July 2026 live episode numbers" $?
+grep -q '我們怎麼比\|How we compare' /tmp/wr_home.html; check "honesty methodology block" $?
+
 echo ""
 echo "═══ $pass passed, $fail failed ═══"
 [ "$fail" -eq 0 ]

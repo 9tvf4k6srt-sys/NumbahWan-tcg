@@ -423,6 +423,108 @@ app.get('/', (c) => {
             </div>
           </section>
 
+          {/* ── COMPARE: with vs without ── */}
+          <section class="section compare" id="compare">
+            <div class="wrap">
+              <p class="kicker mono reveal"><span class="zh">用 vs 不用</span><span class="en">With vs without</span></p>
+              <h2 class="h2 reveal d1">
+                <span class="zh">同一筆錢，兩種下場</span>
+                <span class="en">Same money, two outcomes</span>
+              </h2>
+              <p class="sub reveal d2">
+                <span class="zh">左邊：照戰情室燈號進出。右邊：什麼都不做、只抱。同一段時間、同一個市場、成本照扣——差距自己看。</span>
+                <span class="en">Left: follow warroom signals. Right: do nothing, just hold. Same period, same market, costs included — the gap speaks for itself.</span>
+              </p>
+
+              {/* post-2023 board */}
+              <div class="vs-board reveal d3">
+                <p class="vs-period mono">
+                  <span class="zh">2023 至今 · 近三年</span><span class="en">Post-2023 · last ~3 years</span>
+                </p>
+                <div class="vs-table">
+                  <div class="vs-row vs-head mono">
+                    <span />
+                    <span><i class="dot dot-g" /><span class="zh">用戰情室</span><span class="en">With warroom</span></span>
+                    <span><i class="dot dot-r" /><span class="zh">不用 · 只抱</span><span class="en">Without · B&amp;H</span></span>
+                  </div>
+                  <div class="vs-row">
+                    <span class="vs-k"><span class="zh">100 萬變成</span><span class="en">NT$1M became</span></span>
+                    <span class="vs-v vs-win mono">434 萬<b class="vs-tag">+334%</b></span>
+                    <span class="vs-v mono">303 萬<b class="vs-tag">+203%</b></span>
+                  </div>
+                  <div class="vs-row">
+                    <span class="vs-k"><span class="zh">最慘的時刻</span><span class="en">Worst moment</span></span>
+                    <span class="vs-v vs-win mono">−8%<b class="vs-tag"><span class="zh">剩 92 萬</span><span class="en">920k left</span></b></span>
+                    <span class="vs-v mono">−29%<b class="vs-tag"><span class="zh">剩 71 萬</span><span class="en">710k left</span></b></span>
+                  </div>
+                  <div class="vs-row vs-total">
+                    <span class="vs-k"><span class="zh">多賺的</span><span class="en">Extra gained</span></span>
+                    <span class="vs-v vs-win mono">+131 萬<b class="vs-tag"><span class="zh">來自躲過的下跌</span><span class="en">from dodged drawdowns</span></b></span>
+                    <span class="vs-v mono">—</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* 2019 board */}
+              <div class="vs-board reveal d4">
+                <p class="vs-period mono">
+                  <span class="zh">2019 至今 · 完整回測</span><span class="en">2019 → now · full backtest</span>
+                </p>
+                <div class="vs-table">
+                  <div class="vs-row">
+                    <span class="vs-k"><span class="zh">100 萬變成</span><span class="en">NT$1M became</span></span>
+                    <span class="vs-v vs-win mono">1,057 萬<b class="vs-tag">+957%</b></span>
+                    <span class="vs-v mono">451 萬<b class="vs-tag">+351%</b></span>
+                  </div>
+                  <div class="vs-row">
+                    <span class="vs-k"><span class="zh">最慘的時刻</span><span class="en">Worst moment</span></span>
+                    <span class="vs-v vs-win mono">−13%<b class="vs-tag"><span class="zh">剩 87 萬</span><span class="en">870k left</span></b></span>
+                    <span class="vs-v mono">−32%<b class="vs-tag"><span class="zh">剩 68 萬</span><span class="en">680k left</span></b></span>
+                  </div>
+                  <div class="vs-row vs-total">
+                    <span class="vs-k"><span class="zh">多賺的</span><span class="en">Extra gained</span></span>
+                    <span class="vs-v vs-win mono">+606 萬<b class="vs-tag"><span class="zh">約 6 倍本金</span><span class="en">~6× principal</span></b></span>
+                    <span class="vs-v mono">—</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* live episode — July 2026 */}
+              <div class="vs-live reveal d5">
+                <p class="vs-period mono">
+                  <span class="zh">實測 · 就在上個月</span><span class="en">Live fire · just last month</span>
+                </p>
+                <div class="vs-live-grid">
+                  <div class="vs-live-col">
+                    <span class="vs-live-tag mono"><i class="dot dot-g" /><span class="zh">戰情室</span><span class="en">Warroom</span></span>
+                    <p><span class="zh">07-08 紅燈全數撤退 @45,734 → 空手待命。一個月後：本金 100% 完整。</span>
+                       <span class="en">Full retreat on red 07-08 @45,734 → stood by in cash. A month later: principal 100% intact.</span></p>
+                  </div>
+                  <div class="vs-live-col">
+                    <span class="vs-live-tag mono"><i class="dot dot-r" /><span class="zh">只抱</span><span class="en">Buy &amp; hold</span></span>
+                    <p><span class="zh">原地不動 → 07-30 最低 39,933（−12.7%）；月底 43,120（−5.7%），100 萬剩 94.3 萬。</span>
+                       <span class="en">Sat still → low 39,933 on 07-30 (−12.7%); ended the month at 43,120 (−5.7%), NT$1M became 943k.</span></p>
+                  </div>
+                </div>
+                <p class="vs-live-note mono">
+                  <span class="zh">系統的價值不是天天贏——是大跌來的時候，你不在場。</span>
+                  <span class="en">The edge isn't winning every day — it's being off the field when the shelling starts.</span>
+                </p>
+              </div>
+
+              {/* honesty methodology */}
+              <div class="vs-honest reveal d6">
+                <p class="folds-title mono"><span class="zh">我們怎麼比，才算誠實</span><span class="en">How we compare — honestly</span></p>
+                <ul class="vs-rules">
+                  <li><b class="mono">01</b><span><span class="zh">同一段時間、同一個市場、同一套數據。不挑區間，不換標的。</span><span class="en">Same period, same market, same data. No cherry-picked windows, no swapped benchmarks.</span></span></li>
+                  <li><b class="mono">02</b><span><span class="zh">規則只用樣本外驗證：拿沒看過的年份考試，考過才部署。</span><span class="en">Rules validated out-of-sample only: tested on years the model never saw, deployed only after passing.</span></span></li>
+                  <li><b class="mono">03</b><span><span class="zh">成本照算：每次進出扣 15bps，隔天開盤才成交。回測不打折。</span><span class="en">Costs included: 15bps per flip, filled at next open. No discounted backtests.</span></span></li>
+                  <li><b class="mono">04</b><span><span class="zh">輸的也貼：2023 年打平只抱（+0.0%），照常留在榜上。</span><span class="en">Losses posted too: 2023 tied buy &amp; hold (+0.0%) and stays on the board.</span></span></li>
+                </ul>
+              </div>
+            </div>
+          </section>
+
           {/* ── METHOD ── */}
           <section class="section method" id="method">
             <div class="wrap">
