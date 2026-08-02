@@ -42,6 +42,13 @@ const BANNED = [
   [/神準/, "hype word '神準'"],
   [/神器|秘密武器|穩賺|躺著賺|躺平|韭菜|無腦|一鍵搞定/, "hype-word blacklist"],
   [/先說個笑話/, "off-tone section intro '先說個笑話'"],
+  // AI-sheen aphorisms — punchline patterns LLM copy defaults to
+  [/兩種下場|同樣的錢.*不同的/, "AI aphorism '兩種下場' pattern"],
+  [/two[\s\-]*outcome/i, "AI aphorism 'two outcomes' pattern"],
+  [/自己看/, "AI sign-off '差距自己看' — state facts, never 'see for yourself'"],
+  [/speaks for itself/i, "AI sign-off 'speaks for itself'"],
+  [/不是天天贏|不是.*是.*你不在場/, "AI aphorism '不是天天贏——是你不在場'"],
+  [/off the field|when the shelling/i, "AI dramatic metaphor 'off the field when the shelling starts'"],
   // placeholder filler
   [/lorem[\s\-]*ipsum/i, "placeholder 'lorem ipsum'"],
   [/TODO[:：]/, "leftover TODO marker"],

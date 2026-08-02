@@ -428,12 +428,12 @@ app.get('/', (c) => {
             <div class="wrap">
               <p class="kicker mono reveal"><span class="zh">用 vs 不用</span><span class="en">With vs without</span></p>
               <h2 class="h2 reveal d1">
-                <span class="zh">同一筆錢，兩種下場</span>
-                <span class="en">Same money, two outcomes</span>
+                <span class="zh">用戰情室 vs 只抱不動</span>
+                <span class="en">With warroom vs buy &amp; hold</span>
               </h2>
               <p class="sub reveal d2">
-                <span class="zh">左邊：照戰情室燈號進出。右邊：什麼都不做、只抱。同一段時間、同一個市場、成本照扣——差距自己看。</span>
-                <span class="en">Left: follow warroom signals. Right: do nothing, just hold. Same period, same market, costs included — the gap speaks for itself.</span>
+                <span class="zh">左邊：照戰情室燈號進出。右邊：買進持有、什麼都不做。同一期間、同一市場，成本已扣除。</span>
+                <span class="en">Left: entries and exits follow warroom signals. Right: buy and hold, untouched. Same period, same market, costs included.</span>
               </p>
 
               {/* post-2023 board */}
@@ -507,8 +507,8 @@ app.get('/', (c) => {
                   </div>
                 </div>
                 <p class="vs-live-note mono">
-                  <span class="zh">系統的價值不是天天贏——是大跌來的時候，你不在場。</span>
-                  <span class="en">The edge isn't winning every day — it's being off the field when the shelling starts.</span>
+                  <span class="zh">這個月，燈號讓部位避開 −12.7% 的低點；月底結算，兩邊相差 5.7 個百分點。</span>
+                  <span class="en">This month, the signal kept the position out of a −12.7% drop; at month-end the two sides were 5.7 percentage points apart.</span>
                 </p>
               </div>
 
