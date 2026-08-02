@@ -450,3 +450,208 @@ body.desk-locked { overflow: hidden; }
 }
 .desk-snd:hover { color: var(--fg); border-color: var(--fg-muted); }
 .desk-snd.off { opacity: 0.5; }
+
+/* ══════════════════ 台股戰情室 TWSE WAR ROOM ══════════════════ */
+:root {
+  --mil: #39ff6a;            /* phosphor green */
+  --mil-dim: rgba(57, 255, 106, 0.55);
+  --mil-faint: rgba(57, 255, 106, 0.18);
+  --mil-line: rgba(57, 255, 106, 0.28);
+  --mil-bg: #020604;
+  --mil-panel: #04100a;
+  --mil-amber: #ffb84d;
+  --mil-red: #ff5c5c;
+}
+
+.wr { position: fixed; inset: 0; z-index: 100; background: var(--mil-bg); }
+.wr[hidden] { display: none; }
+
+/* dimmed console-room backdrop art (asset: /static/img/warroom-bg.jpg) */
+.wr-bg {
+  position: absolute; inset: 0;
+  background: var(--mil-bg) url("/static/img/warroom-bg.jpg") center / cover no-repeat;
+  opacity: 0.16; filter: saturate(0.7) brightness(0.8);
+}
+.wr-bg::after {
+  content: ""; position: absolute; inset: 0;
+  background: radial-gradient(ellipse at 50% 42%, transparent 20%, rgba(2, 6, 4, 0.92) 78%);
+}
+
+/* CRT scanlines + vignette */
+.wr-scanlines {
+  position: absolute; inset: 0; pointer-events: none; z-index: 3;
+  background: repeating-linear-gradient(
+    0deg, rgba(0, 0, 0, 0.16) 0 1px, transparent 1px 3px
+  );
+  mix-blend-mode: multiply;
+}
+.wr-scanlines::after {
+  content: ""; position: absolute; inset: 0;
+  box-shadow: inset 0 0 180px rgba(0, 0, 0, 0.85);
+}
+
+.wr-frame {
+  position: relative; z-index: 4; height: 100dvh; display: flex; flex-direction: column;
+  padding: 14px 18px calc(16px + env(safe-area-inset-bottom));
+  opacity: 0; transform: scale(0.985); transition: opacity 0.4s var(--ease), transform 0.4s var(--ease);
+}
+.wr.open .wr-frame { opacity: 1; transform: none; }
+
+/* top bar */
+.wr-topbar {
+  display: flex; justify-content: space-between; align-items: center; gap: 12px;
+  border: 1px solid var(--mil-line); border-radius: 10px;
+  background: rgba(4, 16, 10, 0.82); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+  padding: 10px 16px; margin-bottom: 12px; flex-shrink: 0;
+}
+.wr-top-left { display: flex; align-items: center; gap: 12px; min-width: 0; }
+.wr-dot {
+  width: 10px; height: 10px; border-radius: 50%; background: var(--mil); flex-shrink: 0;
+  box-shadow: 0 0 12px var(--mil); animation: wrpulse 2s ease-in-out infinite;
+}
+@keyframes wrpulse { 50% { opacity: 0.35; box-shadow: 0 0 4px var(--mil); } }
+.wr-title { color: var(--mil); font-size: 14px; letter-spacing: 0.16em; font-weight: 700; white-space: nowrap; }
+.wr-class { color: var(--mil-dim); font-size: 10px; letter-spacing: 0.14em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+@media (max-width: 640px) { .wr-class { display: none; } }
+.wr-top-right { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+.wr-clock { color: var(--mil-dim); font-size: 12px; letter-spacing: 0.08em; }
+@media (max-width: 480px) { .wr-clock { display: none; } }
+.wr-x {
+  background: transparent; border: 1px solid var(--mil-line); color: var(--mil-dim);
+  width: 40px; height: 40px; border-radius: 8px; font-size: 15px; cursor: pointer; transition: all 0.2s;
+}
+.wr-x:hover { color: var(--mil); border-color: var(--mil); box-shadow: 0 0 14px rgba(57, 255, 106, 0.25); }
+
+/* main split: console | brief */
+.wr-main {
+  flex: 1; min-height: 0; display: grid; grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+  gap: 14px;
+}
+@media (max-width: 900px) {
+  .wr-main { grid-template-columns: 1fr; overflow-y: auto; }
+}
+
+/* ── console (radar) ── */
+.wr-console {
+  border: 1px solid var(--mil-line); border-radius: 12px; background: rgba(3, 10, 6, 0.86);
+  padding: 16px; display: flex; flex-direction: column; gap: 12px; min-height: 0;
+  position: relative;
+}
+/* HUD corner brackets */
+.wr-console::before, .wr-brief::before {
+  content: ""; position: absolute; inset: 6px; pointer-events: none;
+  background:
+    linear-gradient(var(--mil), var(--mil)) left top / 16px 2px,
+    linear-gradient(var(--mil), var(--mil)) left top / 2px 16px,
+    linear-gradient(var(--mil), var(--mil)) right top / 16px 2px,
+    linear-gradient(var(--mil), var(--mil)) right top / 2px 16px,
+    linear-gradient(var(--mil), var(--mil)) left bottom / 16px 2px,
+    linear-gradient(var(--mil), var(--mil)) left bottom / 2px 16px,
+    linear-gradient(var(--mil), var(--mil)) right bottom / 16px 2px,
+    linear-gradient(var(--mil), var(--mil)) right bottom / 2px 16px;
+  background-repeat: no-repeat; opacity: 0.5;
+}
+.wr-scope-wrap { flex: 1; min-height: 240px; position: relative; }
+#wr-radar { width: 100%; height: 100%; display: block; }
+.wr-scope-tag {
+  position: absolute; left: 8px; bottom: 6px; font-size: 9px; letter-spacing: 0.12em;
+  color: var(--mil-dim); pointer-events: none;
+}
+
+.wr-readouts {
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; flex-shrink: 0;
+}
+.wr-ro {
+  border: 1px solid var(--mil-line); border-radius: 8px; padding: 8px 10px;
+  background: rgba(4, 16, 10, 0.7); display: flex; flex-direction: column; gap: 3px;
+}
+.wr-ro-k { font-size: 9px; letter-spacing: 0.16em; color: var(--mil-dim); }
+.wr-ro-v { font-size: 15px; color: var(--mil); font-weight: 700; letter-spacing: 0.04em; }
+
+.wr-scan {
+  flex-shrink: 0; border: 1px solid var(--mil); border-radius: 10px; cursor: pointer;
+  background: linear-gradient(180deg, rgba(57, 255, 106, 0.14), rgba(57, 255, 106, 0.05));
+  color: var(--mil); font-size: 15px; font-weight: 700; letter-spacing: 0.14em;
+  padding: 16px; min-height: 56px; transition: all 0.2s;
+  text-shadow: 0 0 12px rgba(57, 255, 106, 0.5);
+}
+.wr-scan:hover:not(:disabled) { background: rgba(57, 255, 106, 0.2); box-shadow: 0 0 24px rgba(57, 255, 106, 0.25); }
+.wr-scan:disabled { opacity: 0.75; cursor: wait; animation: wrpulse 1.2s ease-in-out infinite; }
+
+/* ── intel brief ── */
+.wr-brief {
+  position: relative; border: 1px solid var(--mil-line); border-radius: 12px;
+  background: rgba(3, 10, 6, 0.86); padding: 18px; overflow-y: auto; min-height: 0;
+}
+.wr-brief-head {
+  display: flex; justify-content: space-between; align-items: baseline; gap: 10px;
+  color: var(--mil); font-size: 12px; letter-spacing: 0.16em; font-weight: 700;
+  border-bottom: 1px solid var(--mil-line); padding-bottom: 12px; margin-bottom: 14px;
+}
+.wr-brief-id { color: var(--mil-dim); font-size: 10px; letter-spacing: 0.1em; }
+
+.wr-standby { text-align: center; padding: 40px 12px; }
+.wr-standby-big { color: var(--mil-dim); font-size: 20px; letter-spacing: 0.4em; margin-bottom: 16px; animation: wrpulse 2.6s ease-in-out infinite; }
+.wr-standby-sub { color: rgba(199, 214, 204, 0.65); font-size: 14px; line-height: 1.8; }
+
+.wr-log { list-style: none; display: flex; flex-direction: column; gap: 8px; margin-bottom: 16px; }
+.wr-log[hidden] { display: none; }
+.wr-log li {
+  color: var(--mil-dim); font-size: 12px; letter-spacing: 0.05em;
+  border-left: 2px solid var(--mil-line); padding: 5px 10px;
+  animation: wrlogin 0.25s ease-out both;
+}
+@keyframes wrlogin { from { opacity: 0; transform: translateX(-8px); } }
+
+/* verdict brief */
+.wr-verdict[hidden] { display: none; }
+.wr-verdict.reveal-in { animation: wrbrief 0.5s var(--ease) both; }
+@keyframes wrbrief { from { opacity: 0; transform: translateY(14px); } }
+
+.wr-threat {
+  display: flex; align-items: center; gap: 12px;
+  border: 1px solid var(--mil-line); border-radius: 8px; padding: 10px 14px; margin-bottom: 18px;
+  background: rgba(4, 16, 10, 0.75);
+}
+.wr-threat-k { font-size: 10px; letter-spacing: 0.18em; color: var(--mil-dim); }
+.wr-threat-v { font-size: 13px; font-weight: 700; color: var(--mil); letter-spacing: 0.08em; margin-left: auto; }
+.wr-threat[data-level="low"] { border-color: var(--mil-line); }
+.wr-threat[data-level="low"] .wr-threat-v { color: var(--mil); }
+
+.wr-order-sub { font-size: 10px; letter-spacing: 0.2em; color: var(--mil-dim); margin-bottom: 8px; }
+.wr-order {
+  font-size: clamp(2.1rem, 5vw, 3rem); font-weight: 900; letter-spacing: 0.04em;
+  color: var(--mil); text-shadow: 0 0 26px rgba(57, 255, 106, 0.45); margin-bottom: 10px;
+  line-height: 1.15;
+}
+.wr-order-detail { color: rgba(199, 214, 204, 0.8); font-size: 14.5px; line-height: 1.7; margin-bottom: 18px; }
+
+.wr-live { margin-bottom: 16px; }
+.wr-live .dl-label { color: var(--mil-dim); }
+
+/* intel trail */
+.wr-intel { list-style: none; display: flex; flex-direction: column; gap: 10px; margin-bottom: 16px; }
+.wr-intel li {
+  display: flex; gap: 10px; align-items: flex-start;
+  border: 1px solid var(--mil-line); border-radius: 8px; padding: 10px 12px;
+  background: rgba(4, 16, 10, 0.6);
+}
+.wr-intel-tag {
+  flex-shrink: 0; font-size: 9px; letter-spacing: 0.08em; padding: 3px 7px; border-radius: 4px;
+  border: 1px solid; margin-top: 1px;
+}
+.tag-red { color: var(--mil-red); border-color: rgba(255, 92, 92, 0.45); }
+.tag-amber { color: var(--mil-amber); border-color: rgba(255, 184, 77, 0.45); }
+.tag-green { color: var(--mil); border-color: var(--mil-line); }
+.wr-intel-txt { color: rgba(199, 214, 204, 0.82); font-size: 13px; line-height: 1.55; }
+
+/* war-room tinted provenance */
+.wr .desk-stamps { border-top-color: var(--mil-line); }
+.wr .ds-k { color: var(--mil-dim); }
+.wr .ds-v { color: rgba(199, 214, 204, 0.75); }
+.wr .desk-stamp { color: var(--mil-dim); }
+
+@media (prefers-reduced-motion: reduce) {
+  .wr-dot, .wr-standby-big, .wr-scan:disabled { animation: none; }
+  .wr-frame { transition: opacity 0.2s; }
+}

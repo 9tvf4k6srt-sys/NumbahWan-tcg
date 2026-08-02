@@ -168,7 +168,7 @@ app.get('/', (c) => {
           <div class="nav-actions">
             <button id="lang-toggle" class="lang-toggle mono" type="button" aria-label="switch language">EN</button>
             <button class="btn btn-primary btn-nav" type="button" data-desk-open>
-              <span class="zh">看今天的燈</span><span class="en">Today's light</span>
+              <span class="zh">進入戰情室</span><span class="en">Enter war room</span>
             </button>
           </div>
         </header>
@@ -200,7 +200,7 @@ app.get('/', (c) => {
               </p>
               <div class="hero-cta reveal d5">
                 <button class="btn btn-primary btn-lg" type="button" data-desk-open>
-                  <span class="zh">開啟燈號台</span><span class="en">Open the desk</span>
+                  <span class="zh">進入台股戰情室</span><span class="en">Enter the war room</span>
                   <span class="btn-arrow" aria-hidden="true">→</span>
                 </button>
                 <a class="btn btn-ghost btn-lg" href="#proof">
@@ -475,7 +475,7 @@ app.get('/', (c) => {
                 <span class="en">One glance before the open. That's all it takes.</span>
               </p>
               <button class="btn btn-primary btn-xl" type="button" data-desk-open>
-                <span class="zh">免費看燈號</span><span class="en">See the light — free</span>
+                <span class="zh">免費啟動掃描</span><span class="en">Run a scan — free</span>
                 <span class="btn-arrow" aria-hidden="true">→</span>
               </button>
               <p class="fineprint mono">
@@ -509,112 +509,192 @@ app.get('/', (c) => {
           </footer>
         </main>
 
-        {/* ── SIGNAL DESK OVERLAY ── */}
-        <div class="desk" id="desk" role="dialog" aria-modal="true" aria-label="signal desk" hidden>
-          <div class="desk-backdrop" data-desk-close />
-          <div class="desk-panel">
-            <div class="desk-head">
-              <span class="mono desk-title">
-                <span class="zh">訊號燈台</span><span class="en">SIGNAL DESK</span>
-              </span>
-              <div class="desk-head-btns">
+        {/* ── 台股戰情室 TWSE WAR ROOM OVERLAY ── */}
+        <div class="wr" id="warroom" role="dialog" aria-modal="true" aria-label="台股戰情室 TWSE war room" hidden>
+          <div class="wr-bg" aria-hidden="true" />
+          <div class="wr-scanlines" aria-hidden="true" />
+          <div class="wr-frame">
+            <header class="wr-topbar">
+              <div class="wr-top-left">
+                <span class="wr-dot" aria-hidden="true" />
+                <span class="mono wr-title">
+                  <span class="zh">台股戰情室</span><span class="en">TWSE WAR ROOM</span>
+                </span>
+                <span class="mono wr-class">
+                  <span class="zh">公開情資 // 僅供研究</span>
+                  <span class="en">PUBLIC INTEL // RESEARCH ONLY</span>
+                </span>
+              </div>
+              <div class="wr-top-right">
+                <span class="mono wr-clock" id="wr-clock">--:--:--</span>
                 <button class="desk-snd mono" type="button" id="desk-sound" aria-label="sound">SOUND ON</button>
-                <button class="desk-x" type="button" data-desk-close aria-label="close">✕</button>
+                <button class="wr-x mono" type="button" data-desk-close aria-label="close">✕</button>
               </div>
-            </div>
+            </header>
 
-            {/* reading sequence */}
-            <div class="desk-reading" id="desk-reading">
-              <div class="desk-scanner" aria-hidden="true"><i /></div>
-              <ol class="desk-stages mono" id="desk-stages">
-                <li data-stage><span class="zh">連線台股資料…</span><span class="en">Connecting TAIEX feed…</span></li>
-                <li data-stage><span class="zh">計算壓力分數…</span><span class="en">Computing pressure score…</span></li>
-                <li data-stage><span class="zh">比對波段低點條件…</span><span class="en">Checking swing-low gates…</span></li>
-                <li data-stage><span class="zh">讀取燈號…</span><span class="en">Reading the light…</span></li>
-              </ol>
-            </div>
-
-            {/* result */}
-            <div class="desk-result" id="desk-result" hidden>
-              <div class="desk-lampwrap" aria-hidden="true">
-                <i class="desk-lamp dl-r" /><i class="desk-lamp dl-a" /><i class="desk-lamp dl-h on" />
-              </div>
-              <p class="desk-verdict">
-                <span class="zh">抱 · 維持</span><span class="en">HOLD · stay long</span>
-              </p>
-              <p class="desk-do">
-                <span class="zh">目前部位：做多。什麼都不用做，燈號變了再動。</span>
-                <span class="en">Current position: LONG. Do nothing until the light changes.</span>
-              </p>
-
-              {/* live quote strip — filled by JS from /api/market-now */}
-              <div class="desk-live" id="desk-live" data-state="loading">
-                <div class="dl-row">
-                  <span class="dl-label mono"><span class="zh">大盤即時</span><span class="en">TAIEX live</span></span>
-                  <span class="dl-price mono" id="dl-price">—</span>
-                  <span class="dl-chg mono" id="dl-chg" />
+            <div class="wr-main">
+              {/* LEFT — radar console */}
+              <section class="wr-console" aria-label="radar console">
+                <div class="wr-scope-wrap">
+                  <canvas id="wr-radar" aria-label="PPI radar scope" />
+                  <div class="wr-scope-tag mono">AN/TAIEX-26 · PPI SCOPE · 加權指數波段</div>
                 </div>
-                <div class="dl-meta mono" id="dl-meta">
-                  <span class="zh">連線交易所中…</span><span class="en">Contacting exchange…</span>
+                <div class="wr-readouts mono">
+                  <div class="wr-ro"><span class="wr-ro-k">BRG</span><span class="wr-ro-v" id="wr-brg">000.0°</span></div>
+                  <div class="wr-ro"><span class="wr-ro-k">SWEEP</span><span class="wr-ro-v" id="wr-swp">9.0s</span></div>
+                  <div class="wr-ro"><span class="wr-ro-k">CONTACTS</span><span class="wr-ro-v" id="wr-contacts">—</span></div>
+                  <div class="wr-ro"><span class="wr-ro-k">MODE</span><span class="wr-ro-v" id="wr-mode">STANDBY</span></div>
                 </div>
-              </div>
-
-              {/* signal lineage — why this answer, with dates */}
-              <ul class="desk-facts">
-                <li>
-                  <span class="zh">2026-06-05 紅燈出場（TAIEX 45,071）→ 之後 5 日最低 −4.3%，躲過</span>
-                  <span class="en">2026-06-05 red exit (TAIEX 45,071) → next 5d low −4.3%, dodged</span>
-                </li>
-                <li>
-                  <span class="zh">空手滿 15 個交易日上限 → 約六月底依規則強制回補（short_term 模式）</span>
-                  <span class="en">15-trading-day cash cap hit → mandatory re-entry ~late June (short_term mode)</span>
-                </li>
-                <li>
-                  <span class="zh">從那之後沒有新紅燈 → 部位維持做多 → 現在的燈：抱</span>
-                  <span class="en">No new red since → position stays long → current light: HOLD</span>
-                </li>
-              </ul>
-
-              <p class="desk-wit serif">
-                <span class="zh">抱著不動聽起來無聊——但無聊常常是獲利的形狀。</span>
-                <span class="en">Doing nothing sounds boring — but boring is often the shape of profit.</span>
-              </p>
-
-              {/* provenance stamps */}
-              <div class="desk-stamps mono">
-                <div class="ds-row">
-                  <span class="ds-k"><span class="zh">訊號依據</span><span class="en">Signal basis</span></span>
-                  <span class="ds-v" id="ds-policy">trade-mode.json · 2026-08-01 16:15 UTC</span>
-                </div>
-                <div class="ds-row">
-                  <span class="ds-k"><span class="zh">行情時間</span><span class="en">Quote as of</span></span>
-                  <span class="ds-v" id="ds-quote">—</span>
-                </div>
-                <div class="ds-row">
-                  <span class="ds-k"><span class="zh">本次讀取</span><span class="en">This read</span></span>
-                  <span class="ds-v" id="ds-read">—</span>
-                </div>
-              </div>
-
-              <p class="desk-stamp mono">
-                <span class="zh">盤中燈號為參考值：正式燈號以收盤計算、隔天開盤執行。</span>
-                <span class="en">Intraday lights are reference-only: official lights are computed at close, executed next open.</span>
-              </p>
-              <div class="desk-actions">
-                <button class="btn btn-ghost btn-lg" type="button" id="desk-again">
-                  <span class="zh">再讀一次</span><span class="en">Read again</span>
+                <button class="wr-scan mono" id="wr-scan" type="button">
+                  <span class="zh">▶ 啟動掃描 INITIATE SWEEP</span>
+                  <span class="en">▶ INITIATE SWEEP</span>
                 </button>
-                <button class="btn btn-primary btn-lg" type="button" data-desk-close>
-                  <span class="zh">收到</span><span class="en">Got it</span>
-                </button>
-              </div>
+              </section>
+
+              {/* RIGHT — intel brief */}
+              <aside class="wr-brief" aria-label="intel brief">
+                <div class="wr-brief-head mono">
+                  <span><span class="zh">情資簡報</span><span class="en">INTEL BRIEF</span></span>
+                  <span class="wr-brief-id">№ 2026-08 · TAIEX</span>
+                </div>
+
+                <div class="wr-standby" id="wr-standby">
+                  <p class="mono wr-standby-big">— STANDBY —</p>
+                  <p class="wr-standby-sub">
+                    <span class="zh">雷達待命。按下「啟動掃描」，讀取今日燈號與最新指令。</span>
+                    <span class="en">Scope on standby. Hit INITIATE SWEEP to read today's signal and standing order.</span>
+                  </p>
+                </div>
+
+                <ol class="wr-log mono" id="wr-log" hidden />
+
+                {/* verdict — id kept as desk-result so quote/provenance plumbing stays intact */}
+                <div class="wr-verdict" id="desk-result" hidden>
+                  <div class="wr-threat mono" id="wr-threat" data-level="low">
+                    <span class="wr-threat-k">THREAT LEVEL</span>
+                    <span class="wr-threat-v" id="wr-threat-v">
+                      <span class="zh">低 · 無新紅燈</span><span class="en">LOW · no new red</span>
+                    </span>
+                  </div>
+                  <p class="wr-order-sub mono">
+                    <span class="zh">當前指令 CURRENT ORDER</span><span class="en">CURRENT ORDER</span>
+                  </p>
+                  <p class="wr-order">
+                    <span class="zh">維持持倉</span><span class="en">HOLD POSITION</span>
+                  </p>
+                  <p class="wr-order-detail">
+                    <span class="zh">部位做多中。雷達未偵測到新紅燈——原地不動，就是現在的戰術。</span>
+                    <span class="en">Position LONG. No new red contact on scope — holding position is the maneuver.</span>
+                  </p>
+
+                  {/* live quote strip — filled by JS from /api/market-now */}
+                  <div class="desk-live wr-live" id="desk-live" data-state="loading">
+                    <div class="dl-row">
+                      <span class="dl-label mono"><span class="zh">大盤即時</span><span class="en">TAIEX live</span></span>
+                      <span class="dl-price mono" id="dl-price">—</span>
+                      <span class="dl-chg mono" id="dl-chg" />
+                    </div>
+                    <div class="dl-meta mono" id="dl-meta">
+                      <span class="zh">連線交易所中…</span><span class="en">Contacting exchange…</span>
+                    </div>
+                  </div>
+
+                  {/* intel trail — why this order, with dates */}
+                  <ul class="wr-intel">
+                    <li>
+                      <span class="mono wr-intel-tag tag-red">2026-06-05</span>
+                      <span class="wr-intel-txt">
+                        <span class="zh">紅燈出場（TAIEX 45,071）→ 5 日最低 −4.3%，成功規避</span>
+                        <span class="en">Red exit (TAIEX 45,071) → next 5d low −4.3%, dodged</span>
+                      </span>
+                    </li>
+                    <li>
+                      <span class="mono wr-intel-tag tag-amber">15D CAP</span>
+                      <span class="wr-intel-txt">
+                        <span class="zh">空手滿 15 交易日上限 → 六月底依規則強制回補</span>
+                        <span class="en">15-trading-day cash cap hit → mandatory re-entry ~late June</span>
+                      </span>
+                    </li>
+                    <li>
+                      <span class="mono wr-intel-tag tag-green">NOW</span>
+                      <span class="wr-intel-txt">
+                        <span class="zh">無新紅燈 → 部位持續做多 → 指令：維持</span>
+                        <span class="en">No new red → still long → order: HOLD</span>
+                      </span>
+                    </li>
+                  </ul>
+
+                  {/* provenance stamps */}
+                  <div class="desk-stamps mono">
+                    <div class="ds-row">
+                      <span class="ds-k"><span class="zh">訊號依據</span><span class="en">Signal basis</span></span>
+                      <span class="ds-v" id="ds-policy">trade-mode.json · 2026-08-01 16:15 UTC</span>
+                    </div>
+                    <div class="ds-row">
+                      <span class="ds-k"><span class="zh">行情時間</span><span class="en">Quote as of</span></span>
+                      <span class="ds-v" id="ds-quote">—</span>
+                    </div>
+                    <div class="ds-row">
+                      <span class="ds-k"><span class="zh">本次讀取</span><span class="en">This read</span></span>
+                      <span class="ds-v" id="ds-read">—</span>
+                    </div>
+                  </div>
+                  <p class="desk-stamp mono">
+                    <span class="zh">盤中讀數為參考值：正式燈號以收盤計算、隔天開盤執行。</span>
+                    <span class="en">Intraday readings are reference-only: official signals computed at close, executed next open.</span>
+                  </p>
+                </div>
+              </aside>
             </div>
           </div>
         </div>
 
         <script src="/static/landing.js" defer />
+        <script src="/static/radar-core.js" defer />
+        <script src="/static/warroom.js" defer />
       </body>
     </html>,
+  )
+})
+
+// In-browser pixel test rig — open /__test__ in a real browser.
+// Draws a deterministic radar frame via RadarCore and asserts on actual pixels.
+app.get('/__test__', (c) => {
+  return c.html(
+    '<!DOCTYPE html><html><head><meta charset="utf-8"><title>warroom pixel tests</title></head>' +
+    '<body style="background:#000;color:#39ff6a;font-family:monospace">' +
+    '<canvas id="t" width="160" height="160"></canvas>' +
+    '<pre id="out">RUNNING</pre>' +
+    '<script src="/static/radar-core.js"></' + 'script>' +
+    '<script>(function(){' +
+    'var R=window.RadarCore,out=[],ok=true;' +
+    'function t(n,c){out.push({name:n,pass:!!c});if(!c)ok=false;}' +
+    'try{' +
+    'var cv=document.getElementById("t"),g=cv.getContext("2d",{willReadFrequently:true});' +
+    'g.fillStyle="#000";g.fillRect(0,0,160,160);' +
+    'var cx=80,cy=80,r=70;' +
+    'var tip=R.polarToCartesian(cx,cy,r,90);' +
+    'g.strokeStyle="#39ff6a";g.lineWidth=2;' +
+    'g.beginPath();g.moveTo(cx,cy);g.lineTo(tip.x,tip.y);g.stroke();' +
+    'g.beginPath();g.arc(cx,cy,r,0,Math.PI*2);g.stroke();' +
+    'function px(x,y){var d=g.getImageData(Math.round(x),Math.round(y),1,1).data;return{r:d[0],g:d[1],b:d[2]};}' +
+    'var mid=R.polarToCartesian(cx,cy,r*0.5,90),pm=px(mid.x,mid.y);' +
+    'var ring=px(cx,cy-r),corner=px(4,4),ctr=px(cx,cy);' +
+    't("RadarCore loaded",!!R&&typeof R.sweepAngle==="function");' +
+    't("90deg bearing renders due east",Math.abs(tip.x-(cx+r))<0.6&&Math.abs(tip.y-cy)<0.6);' +
+    't("beam origin painted at center",ctr.g>40);' +
+    't("sweep ray visible at mid-radius (green dominant)",pm.g>60&&pm.g>pm.r&&pm.g>pm.b);' +
+    't("range ring visible at 12 oclock",ring.g>60&&ring.g>ring.r);' +
+    't("corner pixel stays dark",corner.g<25&&corner.r<25&&corner.b<25);' +
+    't("blipIntensity zero ahead of sweep",R.blipIntensity(180,90,28)===0);' +
+    't("blipIntensity hot just behind sweep",R.blipIntensity(88,90,28)>0.85);' +
+    't("phosphor decay is monotonic",R.phosphorDecay(10,30)>R.phosphorDecay(20,30));' +
+    '}catch(e){ok=false;out.push({name:"exception: "+e.message,pass:false});}' +
+    'var payload={suite:"warroom-pixel",pass:ok,checks:out};' +
+    'document.getElementById("out").textContent=JSON.stringify(payload,null,2);' +
+    'console.log("[WR-TEST]"+JSON.stringify(payload));' +
+    'document.title=(ok?"PASS":"FAIL")+" warroom pixel tests";' +
+    '})();</' + 'script></body></html>',
   )
 })
 
