@@ -138,7 +138,7 @@
 
       // synthetic but shape-honest paths:
       // B&H: 0% -> +351%, dips to -32% dd zone mid-way
-      // Strategy: 0% -> +895%, shallow dips (max -13%), steps aside at corrections
+      // Strategy: 0% -> +957%, shallow dips (max -13%), steps aside at corrections
       var N = 220;
       function bhPath(i) {
         var t = i / N;
@@ -150,7 +150,7 @@
       }
       function stPath(i) {
         var t = i / N;
-        var base = 895 * Math.pow(t, 0.94);
+        var base = 957 * Math.pow(t, 0.94);
         var wave = Math.sin(t * 9.2) * 12 * (1 - t * 0.4) + Math.sin(t * 21) * 5;
         var dodge = -Math.exp(-Math.pow((t - 0.62) / 0.09, 2)) * 22;   // shallow dip where BH crashed
         var dodge2 = -Math.exp(-Math.pow((t - 0.3) / 0.07, 2)) * 14;

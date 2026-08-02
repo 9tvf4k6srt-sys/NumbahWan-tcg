@@ -141,7 +141,7 @@ function t(name, cond) {
   t("intel log recorded 4 scan steps", logCount === 4);
 
   const order = await page.textContent(".wr-order");
-  t("order reads HOLD POSITION (維持持倉)", /維持持倉|HOLD POSITION/.test(order || ""));
+  t("order reads STAND BY IN CASH (空手待命)", /空手待命|STAND BY IN CASH/.test(order || ""));
 
   // live quote strip populated from /api/market-now
   await page.waitForFunction(() => {
@@ -156,7 +156,7 @@ function t(name, cond) {
   const dsRead = await page.textContent("#ds-read");
   t("read timestamp stamped", (dsRead || "").trim().length > 4);
   const dsPolicy = await page.textContent("#ds-policy");
-  t("policy provenance stamped", /trade-mode\.json/.test(dsPolicy || ""));
+  t("policy provenance stamped", /active-policy\.json.*hi1000_ft4/.test(dsPolicy || ""));
 
   await page.screenshot({ path: "scripts/warroom-verdict.png", fullPage: false });
   console.log("  (screenshot: scripts/warroom-verdict.png)");

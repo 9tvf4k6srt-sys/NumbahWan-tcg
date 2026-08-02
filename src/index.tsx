@@ -14,7 +14,7 @@ const Head = () => (
     <title>台股戰情室 TWSE warroom — 台股波段指令 | TAIEX wave orders</title>
     <meta
       name="description"
-      content="紅燈撤退、綠燈回防，隔天開盤執行。Walk-forward 樣本外 +16.8%，最大回落 −12% vs 只抱 −29%。台股波段戰情室，戰績全公開。"
+      content="紅燈撤退、綠燈回防，隔天開盤執行。Walk-forward 樣本外 +23.6%，最大回落 −13% vs 只抱 −32%。台股波段戰情室，戰績全公開。"
     />
     <meta name="theme-color" content="#08090b" />
     <link
@@ -218,7 +218,7 @@ app.get('/', (c) => {
                     </span>
                   </div>
                   <div class="chart-legend mono">
-                    <span class="lg lg-st"><i />TWSE warroom <b id="legend-st">+895%</b></span>
+                    <span class="lg lg-st"><i />TWSE warroom <b id="legend-st">+957%</b></span>
                     <span class="lg lg-bh"><i /><span class="zh">只抱</span><span class="en">B&amp;H</span> <b id="legend-bh">+351%</b></span>
                   </div>
                 </div>
@@ -237,8 +237,8 @@ app.get('/', (c) => {
                   <span class="marquee-seq">
                     <em class="m-r">RED = EXIT NEXT OPEN</em><i>◆</i>
                     <em class="m-g">GREEN = RE-ENTER NEAR LOWS</em><i>◆</i>
-                    <em>WALK-FORWARD OOS +16.8%</em><i>◆</i>
-                    <em class="m-a">MAX DD −12% vs −29%</em><i>◆</i>
+                    <em>WALK-FORWARD OOS +23.6%</em><i>◆</i>
+                    <em class="m-a">MAX DD −13% vs −32%</em><i>◆</i>
                     <em>INTEL, NOT PROPHECY</em><i>◆</i>
                   </span>
                 ))}
@@ -261,8 +261,8 @@ app.get('/', (c) => {
               <div class="pain-grid">
                 <div class="pain-card reveal d2">
                   <span class="pain-num mono">−29%</span>
-                  <p><span class="zh">2024 年只抱者的最大回落。抱得很緊，跌得很深。</span>
-                     <span class="en">Max drawdown for buy-and-holders in 2024. Held tight, fell hard.</span></p>
+                  <p><span class="zh">2023 之後只抱者的最大回落。抱得很緊，跌得很深。</span>
+                     <span class="en">Max drawdown for buy-and-holders post-2023. Held tight, fell hard.</span></p>
                 </div>
                 <div class="pain-card reveal d3">
                   <span class="pain-num mono">−32%</span>
@@ -270,9 +270,9 @@ app.get('/', (c) => {
                      <span class="en">Max drawdown for buy &amp; hold since 2019. Time is your friend; waves are not.</span></p>
                 </div>
                 <div class="pain-card reveal d4">
-                  <span class="pain-num mono accent-g">−12%</span>
+                  <span class="pain-num mono accent-g">−13%</span>
                   <p><span class="zh">同一期間戰情室策略的最大回落。躲過的跌，就是賺到的。</span>
-                     <span class="en">Max drawdown for the signal strategy over the same period. Dodged drops are earned returns.</span></p>
+                     <span class="en">Max drawdown for the warroom strategy over the same period. Dodged drops are earned returns.</span></p>
                 </div>
               </div>
             </div>
@@ -342,16 +342,16 @@ app.get('/', (c) => {
               {/* big stat row */}
               <div class="stat-row reveal d3">
                 <div class="stat">
-                  <span class="stat-num mono" data-count="16.8" data-suffix="%">0%</span>
+                  <span class="stat-num mono" data-count="23.6" data-suffix="%">0%</span>
                   <span class="stat-label"><span class="zh">樣本外平均超額（出廠門檻）</span><span class="en">Mean out-of-sample excess (ship gate)</span></span>
                 </div>
                 <div class="stat">
-                  <span class="stat-num mono" data-count="78" data-prefix="+" data-suffix="%">0</span>
-                  <span class="stat-label"><span class="zh">2023 後超額（+281% vs +203%）</span><span class="en">Post-2023 excess (+281% vs +203%)</span></span>
+                  <span class="stat-num mono" data-count="131" data-prefix="+" data-suffix="%">0</span>
+                  <span class="stat-label"><span class="zh">2023 後超額（+334% vs +203%）</span><span class="en">Post-2023 excess (+334% vs +203%)</span></span>
                 </div>
                 <div class="stat">
-                  <span class="stat-num mono" data-count="544" data-prefix="+" data-suffix="%">0</span>
-                  <span class="stat-label"><span class="zh">2019 至今超額（+895% vs +351%）</span><span class="en">Since-2019 excess (+895% vs +351%)</span></span>
+                  <span class="stat-num mono" data-count="605" data-prefix="+" data-suffix="%">0</span>
+                  <span class="stat-label"><span class="zh">2019 至今超額（+957% vs +351%）</span><span class="en">Since-2019 excess (+957% vs +351%)</span></span>
                 </div>
                 <div class="stat">
                   <span class="stat-num mono" data-count="100" data-suffix="%">0</span>
@@ -363,10 +363,10 @@ app.get('/', (c) => {
               <div class="folds reveal d4">
                 <p class="folds-title mono"><span class="zh">逐年樣本外超額（%）</span><span class="en">Out-of-sample excess by fold (%)</span></p>
                 <div class="fold-bars">
-                  <div class="fold"><span class="fold-val mono">+25.6</span><div class="fold-bar"><i style="--h:81%" /></div><span class="fold-yr mono">2022</span></div>
+                  <div class="fold"><span class="fold-val mono">+23.7</span><div class="fold-bar"><i style="--h:41%" /></div><span class="fold-yr mono">2022</span></div>
                   <div class="fold"><span class="fold-val mono">0.0</span><div class="fold-bar"><i class="flat" style="--h:3%" /></div><span class="fold-yr mono">2023</span></div>
-                  <div class="fold"><span class="fold-val mono">+10.1</span><div class="fold-bar"><i style="--h:32%" /></div><span class="fold-yr mono">2024</span></div>
-                  <div class="fold"><span class="fold-val mono">+31.5</span><div class="fold-bar"><i style="--h:100%" /></div><span class="fold-yr mono">2025+</span></div>
+                  <div class="fold"><span class="fold-val mono">+12.2</span><div class="fold-bar"><i style="--h:21%" /></div><span class="fold-yr mono">2024</span></div>
+                  <div class="fold"><span class="fold-val mono">+58.4</span><div class="fold-bar"><i style="--h:100%" /></div><span class="fold-yr mono">2025+</span></div>
                 </div>
                 <p class="fineprint mono">
                   <span class="zh">2023 打平只抱——我們把它留在榜上，因為誠實比好看重要。</span>
@@ -391,7 +391,7 @@ app.get('/', (c) => {
                   <li class="tl-item tl-r">
                     <span class="tl-date mono">2025-02-26</span>
                     <span class="tl-kind"><i class="dot dot-r" /><span class="zh">紅燈 · 出場</span><span class="en">RED · exit</span></span>
-                    <span class="tl-out"><span class="zh">之後 10 日 </span><span class="en">Next 10d </span><b class="neg">−6.2%</b> <span class="zh">· 躲過</span><span class="en">· dodged</span></span>
+                    <span class="tl-out"><span class="zh">軟紅減碼 → 03-04 全退；之後 10 日 </span><span class="en">Soft red trim → full exit 03-04; next 10d </span><b class="neg">−6.2%</b> <span class="zh">· 躲過</span><span class="en">· dodged</span></span>
                   </li>
                   <li class="tl-item tl-g">
                     <span class="tl-date mono">2025-04-10</span>
@@ -412,6 +412,11 @@ app.get('/', (c) => {
                     <span class="tl-date mono">2026-06-05</span>
                     <span class="tl-kind"><i class="dot dot-r" /><span class="zh">紅燈 · 出場</span><span class="en">RED · exit</span></span>
                     <span class="tl-out"><span class="zh">之後 5 日最低 </span><span class="en">Next 5d low </span><b class="neg">−4.3%</b> <span class="zh">· 躲過</span><span class="en">· dodged</span></span>
+                  </li>
+                  <li class="tl-item tl-r">
+                    <span class="tl-date mono">2026-07-08</span>
+                    <span class="tl-kind"><i class="dot dot-r" /><span class="zh">紅燈 · 全數撤退</span><span class="en">RED · full retreat</span></span>
+                    <span class="tl-out"><span class="zh">07-06 軟紅減碼 → 07-08 空手；只抱其後最深 </span><span class="en">Soft red 07-06 → cash 07-08; B&amp;H max drop since </span><b class="neg">−11.9%</b></span>
                   </li>
                 </ol>
               </div>
@@ -570,21 +575,21 @@ app.get('/', (c) => {
 
                 {/* verdict — id kept as desk-result so quote/provenance plumbing stays intact */}
                 <div class="wr-verdict" id="desk-result" hidden>
-                  <div class="wr-threat mono" id="wr-threat" data-level="low">
+                  <div class="wr-threat mono" id="wr-threat" data-level="high">
                     <span class="wr-threat-k">THREAT LEVEL</span>
                     <span class="wr-threat-v" id="wr-threat-v">
-                      <span class="zh">低 · 無新紅燈</span><span class="en">LOW · no new red</span>
+                      <span class="zh">高 · 紅燈已撤退</span><span class="en">HIGH · red exit done</span>
                     </span>
                   </div>
                   <p class="wr-order-sub mono">
                     <span class="zh">當前指令 CURRENT ORDER</span><span class="en">CURRENT ORDER</span>
                   </p>
                   <p class="wr-order">
-                    <span class="zh">維持持倉</span><span class="en">HOLD POSITION</span>
+                    <span class="zh">空手待命</span><span class="en">STAND BY IN CASH</span>
                   </p>
                   <p class="wr-order-detail">
-                    <span class="zh">部位做多中。雷達未偵測到新紅燈——原地不動，就是現在的戰術。</span>
-                    <span class="en">Position LONG. No new red contact on scope — holding position is the maneuver.</span>
+                    <span class="zh">07-06 軟紅減碼，07-08 全數撤退。空手觀望——等綠燈回防訊號，再進場。</span>
+                    <span class="en">Soft red trimmed on 07-06, full retreat to cash on 07-08. Standing by — next green re-entry signal brings us back in.</span>
                   </p>
 
                   {/* live quote strip — filled by JS from /api/market-now */}
@@ -609,17 +614,17 @@ app.get('/', (c) => {
                       </span>
                     </li>
                     <li>
-                      <span class="mono wr-intel-tag tag-amber">15D CAP</span>
+                      <span class="mono wr-intel-tag tag-red">2026-07-08</span>
                       <span class="wr-intel-txt">
-                        <span class="zh">空手滿 15 交易日上限 → 六月底依規則強制回補</span>
-                        <span class="en">15-trading-day cash cap hit → mandatory re-entry ~late June</span>
+                        <span class="zh">軟紅兩日不轉強 → 全數撤退空手；只抱其後最深 −11.9%，成功規避</span>
+                        <span class="en">Soft red stayed weak 2 sessions → full retreat to cash; B&amp;H fell up to −11.9% since, dodged</span>
                       </span>
                     </li>
                     <li>
-                      <span class="mono wr-intel-tag tag-green">NOW</span>
+                      <span class="mono wr-intel-tag tag-amber">NOW</span>
                       <span class="wr-intel-txt">
-                        <span class="zh">無新紅燈 → 部位持續做多 → 指令：維持</span>
-                        <span class="en">No new red → still long → order: HOLD</span>
+                        <span class="zh">空手觀望中 → 等底部綠燈（反彈 +0.8% 且接近波段低點）→ 指令：待命</span>
+                        <span class="en">In cash, scope sweeping → awaiting bottom green (+0.8% bounce near swing low) → order: STAND BY</span>
                       </span>
                     </li>
                   </ul>
@@ -628,7 +633,7 @@ app.get('/', (c) => {
                   <div class="desk-stamps mono">
                     <div class="ds-row">
                       <span class="ds-k"><span class="zh">訊號依據</span><span class="en">Signal basis</span></span>
-                      <span class="ds-v" id="ds-policy">trade-mode.json · 2026-08-01 16:15 UTC</span>
+                      <span class="ds-v" id="ds-policy">active-policy.json · hi1000_ft4 · 2026-08-02 UTC</span>
                     </div>
                     <div class="ds-row">
                       <span class="ds-k"><span class="zh">行情時間</span><span class="en">Quote as of</span></span>

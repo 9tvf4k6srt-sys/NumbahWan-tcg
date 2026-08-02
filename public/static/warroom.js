@@ -27,6 +27,8 @@
   var verdictEl = document.getElementById("desk-result");
 
   /* Real signal events → radar contacts (from data/champion-signal-dates.json, post-2023) */
+  /* New champion hi1000_ft4: same signal dates + July 2026 retreat pair.
+     07-06 soft red (size→0.4) plotted amber; 07-08 full retreat plotted red. */
   var EVENTS = [
     { date: "2024-07-18", kind: "red" },
     { date: "2024-09-06", kind: "green" },
@@ -35,6 +37,8 @@
     { date: "2026-03-04", kind: "red" },
     { date: "2026-03-10", kind: "green" },
     { date: "2026-06-05", kind: "red" },
+    { date: "2026-07-06", kind: "amber" },
+    { date: "2026-07-08", kind: "red" },
   ];
 
   var SWEEP_MS = 9000;          // idle sweep period
@@ -161,7 +165,7 @@
       if (inten <= 0.01) return;
       lit++;
       var p = R.polarToCartesian(cx, cy, radius * c.radius, c.bearing);
-      var col = c.kind === "red" ? "255,92,92" : "57,255,106";
+      var col = c.kind === "red" ? "255,92,92" : c.kind === "amber" ? "255,184,77" : "57,255,106";
       var sz = 3 + inten * 2.5;
       ctx.fillStyle = "rgba(" + col + "," + (0.25 + inten * 0.75).toFixed(3) + ")";
       ctx.beginPath(); ctx.arc(p.x, p.y, sz, 0, R.TAU); ctx.fill();
@@ -218,7 +222,7 @@
     { zh: "▸ 建立台股資料鏈路… OK", en: "▸ UPLINK TAIEX FEED… OK" },
     { zh: "▸ 運算壓力分數… 完成", en: "▸ PRESSURE SCORE… COMPUTED" },
     { zh: "▸ 比對波段低點閘門… 通過", en: "▸ SWING-LOW GATES… PASS" },
-    { zh: "▸ 鎖定燈號… 維持持倉", en: "▸ SIGNAL LOCK… HOLD POSITION" },
+    { zh: "▸ 鎖定燈號… 空手待命", en: "▸ SIGNAL LOCK… STAND BY IN CASH" },
   ];
 
   function clearTimers() { timers.forEach(clearTimeout); timers = []; }
