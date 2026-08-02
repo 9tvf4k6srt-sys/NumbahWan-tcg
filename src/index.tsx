@@ -38,6 +38,108 @@ app.get('/favicon.ico', (c) =>
   c.body(FAVICON_SVG, 200, { 'content-type': 'image/svg+xml', 'cache-control': 'public, max-age=86400' }),
 )
 
+// ─────────────────────────────────────────────────────────────
+// /api/market-now — live TAIEX snapshot with full timestamp provenance.
+// Source: TWSE mis API (official exchange feed). Cached 30s at the edge.
+// ─────────────────────────────────────────────────────────────
+
+const TWSE_URL =
+  'https://mis.twse.com.tw/stock/api/getStockInfo.jsp?ex_ch=tse_t00.tw&json=1&delay=0'
+
+type MarketNow = {
+  ok: boolean
+  source: 'twse-mis'
+  fetchedAtUtc: string
+  fetchedAtTaipei: string
+  session: 'pre-open' | 'trading' | 'closed' | 'weekend'
+  quote: {
+    date: string | null // exchange trade date, e.g. 20260731
+    time: string | null // exchange print time, e.g. 13:33:00
+    price: number | null
+    open: number | null
+    high: number | null
+    low: number | null
+    prevClose: number | null
+    changePct: number | null
+    isRealtime: boolean // true if exchange print is from today's session
+  }
+  error?: string
+}
+
+function taipeiNow(): { date: Date; iso: string; hm: string; ymd: string; weekday: number } {
+  const now = new Date()
+  const parts = new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Asia/Taipei',
+    year: 'numeric', month: '2-digit', day: '2-digit',
+    hour: '2-digit', minute: '2-digit', hour12: false, weekday: 'short',
+  }).formatToParts(now)
+  const get = (t: string) => parts.find((p) => p.type === t)?.value ?? ''
+  const ymd = `${get('year')}${get('month')}${get('day')}`
+  const hm = `${get('hour')}:${get('minute')}`
+  const wdMap: Record<string, number> = { Sun: 0, Mon: 1, Tue: 2, Wed: 3, Thu: 4, Fri: 5, Sat: 6 }
+  return {
+    date: now,
+    iso: `${get('year')}-${get('month')}-${get('day')} ${get('hour')}:${get('minute')}`,
+    hm,
+    ymd,
+    weekday: wdMap[get('weekday')] ?? 1,
+  }
+}
+
+function sessionOf(tp: { hm: string; weekday: number }): MarketNow['session'] {
+  if (tp.weekday === 0 || tp.weekday === 6) return 'weekend'
+  const [h, m] = tp.hm.split(':').map(Number)
+  const mins = h * 60 + m
+  if (mins < 9 * 60) return 'pre-open'
+  if (mins <= 13 * 60 + 33) return 'trading'
+  return 'closed'
+}
+
+app.get('/api/market-now', async (c) => {
+  const tp = taipeiNow()
+  const fetchedAtUtc = new Date().toISOString()
+  const base: MarketNow = {
+    ok: false,
+    source: 'twse-mis',
+    fetchedAtUtc,
+    fetchedAtTaipei: `${tp.iso} (台北)`,
+    session: sessionOf(tp),
+    quote: { date: null, time: null, price: null, open: null, high: null, low: null, prevClose: null, changePct: null, isRealtime: false },
+  }
+  try {
+    const res = await fetch(TWSE_URL, {
+      headers: { 'user-agent': 'xundeng-signal-desk/1.0', accept: 'application/json' },
+      cf: { cacheTtl: 25, cacheEverything: true },
+    } as RequestInit)
+    if (!res.ok) throw new Error(`twse http ${res.status}`)
+    const j = (await res.json()) as { msgArray?: Array<Record<string, string>> }
+    const row = j.msgArray?.[0]
+    if (!row) throw new Error('twse empty payload')
+    const num = (v: string | undefined) => {
+      const n = Number(v)
+      return Number.isFinite(n) ? n : null
+    }
+    const price = num(row.z)
+    const prev = num(row.y)
+    base.ok = true
+    base.quote = {
+      date: row.d ?? null,
+      time: row.t ?? row['%'] ?? null,
+      price,
+      open: num(row.o),
+      high: num(row.h),
+      low: num(row.l),
+      prevClose: prev,
+      changePct: price != null && prev ? +(((price - prev) / prev) * 100).toFixed(2) : null,
+      isRealtime: row.d === tp.ymd,
+    }
+    return c.json(base, 200, { 'cache-control': 'public, max-age=20' })
+  } catch (e) {
+    base.error = e instanceof Error ? e.message : 'fetch failed'
+    return c.json(base, 502)
+  }
+})
+
 app.get('/', (c) => {
   return c.html(
     <html lang="zh-Hant">
@@ -415,7 +517,10 @@ app.get('/', (c) => {
               <span class="mono desk-title">
                 <span class="zh">訊號燈台</span><span class="en">SIGNAL DESK</span>
               </span>
-              <button class="desk-x" type="button" data-desk-close aria-label="close">✕</button>
+              <div class="desk-head-btns">
+                <button class="desk-snd mono" type="button" id="desk-sound" aria-label="sound">SOUND ON</button>
+                <button class="desk-x" type="button" data-desk-close aria-label="close">✕</button>
+              </div>
             </div>
 
             {/* reading sequence */}
@@ -432,27 +537,68 @@ app.get('/', (c) => {
             {/* result */}
             <div class="desk-result" id="desk-result" hidden>
               <div class="desk-lampwrap" aria-hidden="true">
-                <i class="desk-lamp dl-r" /><i class="desk-lamp dl-a" /><i class="desk-lamp dl-c on" />
+                <i class="desk-lamp dl-r" /><i class="desk-lamp dl-a" /><i class="desk-lamp dl-h on" />
               </div>
               <p class="desk-verdict">
-                <span class="zh">空手 · 等綠</span><span class="en">CASH · wait green</span>
+                <span class="zh">抱 · 維持</span><span class="en">HOLD · stay long</span>
               </p>
               <p class="desk-do">
-                <span class="zh">已經出場：什麼都不用做，耐心等綠燈。</span>
-                <span class="en">Already out — do nothing, wait for green.</span>
+                <span class="zh">目前部位：做多。什麼都不用做，燈號變了再動。</span>
+                <span class="en">Current position: LONG. Do nothing until the light changes.</span>
               </p>
+
+              {/* live quote strip — filled by JS from /api/market-now */}
+              <div class="desk-live" id="desk-live" data-state="loading">
+                <div class="dl-row">
+                  <span class="dl-label mono"><span class="zh">大盤即時</span><span class="en">TAIEX live</span></span>
+                  <span class="dl-price mono" id="dl-price">—</span>
+                  <span class="dl-chg mono" id="dl-chg" />
+                </div>
+                <div class="dl-meta mono" id="dl-meta">
+                  <span class="zh">連線交易所中…</span><span class="en">Contacting exchange…</span>
+                </div>
+              </div>
+
+              {/* signal lineage — why this answer, with dates */}
               <ul class="desk-facts">
-                <li><span class="zh">上次紅燈：2026-06-05 出場（TAIEX 45,071）</span><span class="en">Last red: exited 2026-06-05 (TAIEX 45,071)</span></li>
-                <li><span class="zh">之後 5 日最低 −4.3% —— 躲過</span><span class="en">Next 5d low −4.3% — dodged</span></li>
-                <li><span class="zh">綠燈條件：深跌後反彈、接近波段低點，隔天開盤進場</span><span class="en">Green trigger: deep-dip bounce near swing low, enter next open</span></li>
+                <li>
+                  <span class="zh">2026-06-05 紅燈出場（TAIEX 45,071）→ 之後 5 日最低 −4.3%，躲過</span>
+                  <span class="en">2026-06-05 red exit (TAIEX 45,071) → next 5d low −4.3%, dodged</span>
+                </li>
+                <li>
+                  <span class="zh">空手滿 15 個交易日上限 → 約六月底依規則強制回補（short_term 模式）</span>
+                  <span class="en">15-trading-day cash cap hit → mandatory re-entry ~late June (short_term mode)</span>
+                </li>
+                <li>
+                  <span class="zh">從那之後沒有新紅燈 → 部位維持做多 → 現在的燈：抱</span>
+                  <span class="en">No new red since → position stays long → current light: HOLD</span>
+                </li>
               </ul>
+
               <p class="desk-wit serif">
-                <span class="zh">空手最難。這也是它值錢的原因。</span>
-                <span class="en">Doing nothing is the hardest trade. That's why it pays.</span>
+                <span class="zh">抱著不動聽起來無聊——但無聊常常是獲利的形狀。</span>
+                <span class="en">Doing nothing sounds boring — but boring is often the shape of profit.</span>
               </p>
+
+              {/* provenance stamps */}
+              <div class="desk-stamps mono">
+                <div class="ds-row">
+                  <span class="ds-k"><span class="zh">訊號依據</span><span class="en">Signal basis</span></span>
+                  <span class="ds-v" id="ds-policy">trade-mode.json · 2026-08-01 16:15 UTC</span>
+                </div>
+                <div class="ds-row">
+                  <span class="ds-k"><span class="zh">行情時間</span><span class="en">Quote as of</span></span>
+                  <span class="ds-v" id="ds-quote">—</span>
+                </div>
+                <div class="ds-row">
+                  <span class="ds-k"><span class="zh">本次讀取</span><span class="en">This read</span></span>
+                  <span class="ds-v" id="ds-read">—</span>
+                </div>
+              </div>
+
               <p class="desk-stamp mono">
-                <span class="zh">以最新已驗證冠軍訊號重播 · 即時連線版即將上線</span>
-                <span class="en">Replay of latest verified champion signal · live feed coming</span>
+                <span class="zh">盤中燈號為參考值：正式燈號以收盤計算、隔天開盤執行。</span>
+                <span class="en">Intraday lights are reference-only: official lights are computed at close, executed next open.</span>
               </p>
               <div class="desk-actions">
                 <button class="btn btn-ghost btn-lg" type="button" id="desk-again">

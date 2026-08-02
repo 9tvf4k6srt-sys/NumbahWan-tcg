@@ -241,6 +241,80 @@
   if (yr) yr.textContent = String(new Date().getFullYear());
 })();
 
+/* ── SOUND DESIGN (WebAudio, synthesized — no audio files) ── */
+var SOUND = (function () {
+  "use strict";
+  var ctx = null;
+  var enabled = true;
+  try { enabled = localStorage.getItem("xd-sound") !== "off"; } catch (e) {}
+
+  function ac() {
+    if (!ctx) {
+      var AC = window.AudioContext || window.webkitAudioContext;
+      if (!AC) return null;
+      ctx = new AC();
+    }
+    if (ctx.state === "suspended") ctx.resume();
+    return ctx;
+  }
+
+  function tone(opts) {
+    if (!enabled) return;
+    var c = ac();
+    if (!c) return;
+    var t0 = c.currentTime + (opts.delay || 0);
+    var osc = c.createOscillator();
+    var gain = c.createGain();
+    osc.type = opts.type || "sine";
+    osc.frequency.setValueAtTime(opts.freq, t0);
+    if (opts.glide) osc.frequency.exponentialRampToValueAtTime(opts.glide, t0 + (opts.dur || 0.12));
+    gain.gain.setValueAtTime(0.0001, t0);
+    gain.gain.exponentialRampToValueAtTime(opts.vol || 0.12, t0 + 0.012);
+    gain.gain.exponentialRampToValueAtTime(0.0001, t0 + (opts.dur || 0.12));
+    osc.connect(gain).connect(c.destination);
+    osc.start(t0);
+    osc.stop(t0 + (opts.dur || 0.12) + 0.05);
+  }
+
+  return {
+    isEnabled: function () { return enabled; },
+    toggle: function () {
+      enabled = !enabled;
+      try { localStorage.setItem("xd-sound", enabled ? "on" : "off"); } catch (e) {}
+      return enabled;
+    },
+    click: function () { tone({ freq: 620, type: "triangle", dur: 0.07, vol: 0.08 }); },
+    tick: function (i) { tone({ freq: 440 + i * 90, type: "sine", dur: 0.09, vol: 0.07 }); },
+    reveal: function () {
+      tone({ freq: 523.25, type: "sine", dur: 0.22, vol: 0.11 });          // C5
+      tone({ freq: 784.0, type: "sine", dur: 0.3, vol: 0.09, delay: 0.09 }); // G5
+    },
+    close: function () { tone({ freq: 520, glide: 300, type: "triangle", dur: 0.14, vol: 0.07 }); },
+    whoosh: function () {
+      if (!enabled) return;
+      var c = ac();
+      if (!c) return;
+      var t0 = c.currentTime;
+      var len = 0.35;
+      var buf = c.createBuffer(1, c.sampleRate * len, c.sampleRate);
+      var data = buf.getChannelData(0);
+      for (var i = 0; i < data.length; i++) data[i] = (Math.random() * 2 - 1) * (1 - i / data.length);
+      var src = c.createBufferSource();
+      src.buffer = buf;
+      var filter = c.createBiquadFilter();
+      filter.type = "bandpass";
+      filter.frequency.setValueAtTime(400, t0);
+      filter.frequency.exponentialRampToValueAtTime(2600, t0 + len);
+      filter.Q.value = 1.2;
+      var g = c.createGain();
+      g.gain.setValueAtTime(0.14, t0);
+      g.gain.exponentialRampToValueAtTime(0.0001, t0 + len);
+      src.connect(filter).connect(g).connect(c.destination);
+      src.start(t0);
+    }
+  };
+})();
+
 /* ── SIGNAL DESK overlay ── */
 (function () {
   "use strict";
@@ -250,8 +324,56 @@
   var result = document.getElementById("desk-result");
   var stages = Array.prototype.slice.call(desk.querySelectorAll("[data-stage]"));
   var timers = [];
+  var isEn = function () { return document.body.classList.contains("lang-en"); };
 
   function clearTimers() { timers.forEach(clearTimeout); timers = []; }
+
+  function fmtNum(n) {
+    return n == null ? "—" : n.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  }
+
+  /* live quote with provenance stamps */
+  function loadQuote() {
+    var strip = document.getElementById("desk-live");
+    var priceEl = document.getElementById("dl-price");
+    var chgEl = document.getElementById("dl-chg");
+    var metaEl = document.getElementById("dl-meta");
+    var dsQuote = document.getElementById("ds-quote");
+    var dsRead = document.getElementById("ds-read");
+    if (!strip) return;
+    strip.setAttribute("data-state", "loading");
+    if (dsRead) dsRead.textContent = new Date().toLocaleString(isEn() ? "en-US" : "zh-TW", { hour12: false });
+    fetch("/api/market-now", { cache: "no-store" })
+      .then(function (r) { return r.json(); })
+      .then(function (d) {
+        if (!d || !d.ok) throw new Error((d && d.error) || "no data");
+        var q = d.quote;
+        if (priceEl) priceEl.textContent = fmtNum(q.price);
+        if (chgEl && q.changePct != null) {
+          var up = q.changePct >= 0;
+          chgEl.textContent = (up ? "▲ +" : "▼ ") + q.changePct.toFixed(2) + "%";
+          chgEl.className = "dl-chg mono " + (up ? "up" : "down");
+        }
+        var quoteStamp = (q.date || "?") + " " + (q.time || "");
+        var sessionZh = { "pre-open": "開盤前", trading: "盤中", closed: "已收盤", weekend: "休市" };
+        var sessionEn = { "pre-open": "pre-open", trading: "TRADING", closed: "closed", weekend: "weekend" };
+        var sLabel = isEn() ? sessionEn[d.session] : sessionZh[d.session];
+        var stale = !q.isRealtime;
+        strip.setAttribute("data-state", stale ? "stale" : "live");
+        if (metaEl) {
+          metaEl.textContent = isEn()
+            ? sLabel + " · exchange print " + quoteStamp + " · fetched " + d.fetchedAtTaipei
+            : sLabel + " · 交易所時間 " + quoteStamp + " · 讀取於 " + d.fetchedAtTaipei;
+        }
+        if (dsQuote) dsQuote.textContent = quoteStamp + (stale ? (isEn() ? " (last close)" : "（最近收盤）") : " (live)");
+      })
+      .catch(function (err) {
+        strip.setAttribute("data-state", "error");
+        if (priceEl) priceEl.textContent = "—";
+        if (metaEl) metaEl.textContent = isEn() ? "Live feed unreachable — signal basis still valid" : "即時行情連不上——訊號依據仍然有效";
+        if (dsQuote) dsQuote.textContent = isEn() ? "unavailable" : "無法取得";
+      });
+  }
 
   function resetStages() {
     stages.forEach(function (s) { s.classList.remove("active", "done"); });
@@ -261,27 +383,30 @@
 
   function runSequence() {
     resetStages();
+    loadQuote();
     var step = 650; // ms per stage
     stages.forEach(function (s, i) {
       timers.push(setTimeout(function () {
         if (i > 0) { stages[i - 1].classList.remove("active"); stages[i - 1].classList.add("done"); }
         s.classList.add("active");
+        SOUND.tick(i);
       }, 250 + i * step));
     });
     timers.push(setTimeout(function () {
       stages.forEach(function (s) { s.classList.remove("active"); s.classList.add("done"); });
       if (reading) reading.hidden = true;
       if (result) { result.hidden = false; result.classList.add("reveal-in"); }
+      SOUND.reveal();
       try { if (navigator.vibrate) navigator.vibrate(18); } catch (e) {}
     }, 250 + stages.length * step + 500));
   }
 
   function openDesk() {
     desk.hidden = false;
-    // force reflow so transition plays
-    void desk.offsetWidth;
+    void desk.offsetWidth; // force reflow so transition plays
     desk.classList.add("open");
     document.body.classList.add("desk-locked");
+    SOUND.whoosh();
     runSequence();
   }
 
@@ -289,18 +414,37 @@
     clearTimers();
     desk.classList.remove("open");
     document.body.classList.remove("desk-locked");
+    SOUND.close();
     timers.push(setTimeout(function () { desk.hidden = true; resetStages(); }, 420));
   }
 
   document.querySelectorAll("[data-desk-open]").forEach(function (btn) {
-    btn.addEventListener("click", function (e) { e.preventDefault(); openDesk(); });
+    btn.addEventListener("click", function (e) { e.preventDefault(); SOUND.click(); openDesk(); });
   });
   desk.querySelectorAll("[data-desk-close]").forEach(function (el) {
     el.addEventListener("click", function (e) { e.preventDefault(); closeDesk(); });
   });
   var again = document.getElementById("desk-again");
-  if (again) again.addEventListener("click", function () { runSequence(); });
+  if (again) again.addEventListener("click", function () { SOUND.click(); runSequence(); });
   document.addEventListener("keydown", function (e) {
     if (e.key === "Escape" && !desk.hidden) closeDesk();
   });
+})();
+
+/* sound toggle button wiring */
+(function () {
+  "use strict";
+  var btn = document.getElementById("desk-sound");
+  if (!btn || typeof SOUND === "undefined") return;
+  function paint() {
+    var on = SOUND.isEnabled();
+    btn.textContent = on ? "SOUND ON" : "SOUND OFF";
+    btn.classList.toggle("off", !on);
+  }
+  btn.addEventListener("click", function () {
+    var on = SOUND.toggle();
+    paint();
+    if (on) SOUND.click();
+  });
+  paint();
 })();
