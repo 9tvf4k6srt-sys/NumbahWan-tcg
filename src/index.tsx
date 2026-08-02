@@ -65,9 +65,9 @@ app.get('/', (c) => {
           </nav>
           <div class="nav-actions">
             <button id="lang-toggle" class="lang-toggle mono" type="button" aria-label="switch language">EN</button>
-            <a class="btn btn-primary btn-nav" href="#cta">
+            <button class="btn btn-primary btn-nav" type="button" data-desk-open>
               <span class="zh">看今天的燈</span><span class="en">Today's light</span>
-            </a>
+            </button>
           </div>
         </header>
 
@@ -97,10 +97,10 @@ app.get('/', (c) => {
                 </span>
               </p>
               <div class="hero-cta reveal d5">
-                <a class="btn btn-primary btn-lg" href="#cta">
+                <button class="btn btn-primary btn-lg" type="button" data-desk-open>
                   <span class="zh">開啟燈號台</span><span class="en">Open the desk</span>
                   <span class="btn-arrow" aria-hidden="true">→</span>
-                </a>
+                </button>
                 <a class="btn btn-ghost btn-lg" href="#proof">
                   <span class="zh">先看誠實成績單</span><span class="en">See the honest proof</span>
                 </a>
@@ -372,10 +372,10 @@ app.get('/', (c) => {
                 <span class="zh">開盤前看一眼，就夠了。</span>
                 <span class="en">One glance before the open. That's all it takes.</span>
               </p>
-              <a class="btn btn-primary btn-xl" href="#top" data-app-link>
+              <button class="btn btn-primary btn-xl" type="button" data-desk-open>
                 <span class="zh">免費看燈號</span><span class="en">See the light — free</span>
                 <span class="btn-arrow" aria-hidden="true">→</span>
-              </a>
+              </button>
               <p class="fineprint mono">
                 <span class="zh">不用信用卡。不用個資。只需要面對現實的勇氣。</span>
                 <span class="en">No credit card. No personal data. Just the courage to face reality.</span>
@@ -406,6 +406,65 @@ app.get('/', (c) => {
             </div>
           </footer>
         </main>
+
+        {/* ── SIGNAL DESK OVERLAY ── */}
+        <div class="desk" id="desk" role="dialog" aria-modal="true" aria-label="signal desk" hidden>
+          <div class="desk-backdrop" data-desk-close />
+          <div class="desk-panel">
+            <div class="desk-head">
+              <span class="mono desk-title">
+                <span class="zh">訊號燈台</span><span class="en">SIGNAL DESK</span>
+              </span>
+              <button class="desk-x" type="button" data-desk-close aria-label="close">✕</button>
+            </div>
+
+            {/* reading sequence */}
+            <div class="desk-reading" id="desk-reading">
+              <div class="desk-scanner" aria-hidden="true"><i /></div>
+              <ol class="desk-stages mono" id="desk-stages">
+                <li data-stage><span class="zh">連線台股資料…</span><span class="en">Connecting TAIEX feed…</span></li>
+                <li data-stage><span class="zh">計算壓力分數…</span><span class="en">Computing pressure score…</span></li>
+                <li data-stage><span class="zh">比對波段低點條件…</span><span class="en">Checking swing-low gates…</span></li>
+                <li data-stage><span class="zh">讀取燈號…</span><span class="en">Reading the light…</span></li>
+              </ol>
+            </div>
+
+            {/* result */}
+            <div class="desk-result" id="desk-result" hidden>
+              <div class="desk-lampwrap" aria-hidden="true">
+                <i class="desk-lamp dl-r" /><i class="desk-lamp dl-a" /><i class="desk-lamp dl-c on" />
+              </div>
+              <p class="desk-verdict">
+                <span class="zh">空手 · 等綠</span><span class="en">CASH · wait green</span>
+              </p>
+              <p class="desk-do">
+                <span class="zh">已經出場：什麼都不用做，耐心等綠燈。</span>
+                <span class="en">Already out — do nothing, wait for green.</span>
+              </p>
+              <ul class="desk-facts">
+                <li><span class="zh">上次紅燈：2026-06-05 出場（TAIEX 45,071）</span><span class="en">Last red: exited 2026-06-05 (TAIEX 45,071)</span></li>
+                <li><span class="zh">之後 5 日最低 −4.3% —— 躲過</span><span class="en">Next 5d low −4.3% — dodged</span></li>
+                <li><span class="zh">綠燈條件：深跌後反彈、接近波段低點，隔天開盤進場</span><span class="en">Green trigger: deep-dip bounce near swing low, enter next open</span></li>
+              </ul>
+              <p class="desk-wit serif">
+                <span class="zh">空手最難。這也是它值錢的原因。</span>
+                <span class="en">Doing nothing is the hardest trade. That's why it pays.</span>
+              </p>
+              <p class="desk-stamp mono">
+                <span class="zh">以最新已驗證冠軍訊號重播 · 即時連線版即將上線</span>
+                <span class="en">Replay of latest verified champion signal · live feed coming</span>
+              </p>
+              <div class="desk-actions">
+                <button class="btn btn-ghost btn-lg" type="button" id="desk-again">
+                  <span class="zh">再讀一次</span><span class="en">Read again</span>
+                </button>
+                <button class="btn btn-primary btn-lg" type="button" data-desk-close>
+                  <span class="zh">收到</span><span class="en">Got it</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
 
         <script src="/static/landing.js" defer />
       </body>

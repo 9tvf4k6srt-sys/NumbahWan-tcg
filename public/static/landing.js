@@ -240,3 +240,67 @@
   var yr = document.getElementById("year");
   if (yr) yr.textContent = String(new Date().getFullYear());
 })();
+
+/* ── SIGNAL DESK overlay ── */
+(function () {
+  "use strict";
+  var desk = document.getElementById("desk");
+  if (!desk) return;
+  var reading = document.getElementById("desk-reading");
+  var result = document.getElementById("desk-result");
+  var stages = Array.prototype.slice.call(desk.querySelectorAll("[data-stage]"));
+  var timers = [];
+
+  function clearTimers() { timers.forEach(clearTimeout); timers = []; }
+
+  function resetStages() {
+    stages.forEach(function (s) { s.classList.remove("active", "done"); });
+    if (reading) reading.hidden = false;
+    if (result) { result.hidden = true; result.classList.remove("reveal-in"); }
+  }
+
+  function runSequence() {
+    resetStages();
+    var step = 650; // ms per stage
+    stages.forEach(function (s, i) {
+      timers.push(setTimeout(function () {
+        if (i > 0) { stages[i - 1].classList.remove("active"); stages[i - 1].classList.add("done"); }
+        s.classList.add("active");
+      }, 250 + i * step));
+    });
+    timers.push(setTimeout(function () {
+      stages.forEach(function (s) { s.classList.remove("active"); s.classList.add("done"); });
+      if (reading) reading.hidden = true;
+      if (result) { result.hidden = false; result.classList.add("reveal-in"); }
+      try { if (navigator.vibrate) navigator.vibrate(18); } catch (e) {}
+    }, 250 + stages.length * step + 500));
+  }
+
+  function openDesk() {
+    desk.hidden = false;
+    // force reflow so transition plays
+    void desk.offsetWidth;
+    desk.classList.add("open");
+    document.body.classList.add("desk-locked");
+    runSequence();
+  }
+
+  function closeDesk() {
+    clearTimers();
+    desk.classList.remove("open");
+    document.body.classList.remove("desk-locked");
+    timers.push(setTimeout(function () { desk.hidden = true; resetStages(); }, 420));
+  }
+
+  document.querySelectorAll("[data-desk-open]").forEach(function (btn) {
+    btn.addEventListener("click", function (e) { e.preventDefault(); openDesk(); });
+  });
+  desk.querySelectorAll("[data-desk-close]").forEach(function (el) {
+    el.addEventListener("click", function (e) { e.preventDefault(); closeDesk(); });
+  });
+  var again = document.getElementById("desk-again");
+  if (again) again.addEventListener("click", function () { runSequence(); });
+  document.addEventListener("keydown", function (e) {
+    if (e.key === "Escape" && !desk.hidden) closeDesk();
+  });
+})();
