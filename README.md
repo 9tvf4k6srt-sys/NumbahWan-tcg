@@ -42,7 +42,9 @@ npm run test:e2e  # 24 E2E click-process tests (playwright, desktop + mobile)
 Latest: **82/82 green**. E2E pixel assertions verify the scope from compositor screenshots (headless SwiftShader `getImageData` readback is nondeterministic — documented in `scripts/test-e2e.cjs`).
 
 ## Deployment
-- **Platform**: Cloudflare Pages (Hono + TypeScript + Vite + Wrangler)
-- **Status**: ❌ Not deployed — `gsk hosted deploy` action was user-rejected; resubmit only on explicit user request
+- **Platform**: Cloudflare Workers for Platform via `gsk hosted deploy` (Hono + TypeScript + Vite + Wrangler)
+- **Production**: https://1b14e018-f344-4c49-9508-f190297ff2ae.vip.gensparksite.com
+- **Status**: ✅ Live (deployed 2026-08-02, user-approved)
 - **Dev**: `npm run build && pm2 start ecosystem.config.cjs` (wrangler pages dev dist, port 3000)
+- **Redeploy**: `gsk hosted deploy` (requires user approval each time)
 - **Last Updated**: 2026-08-02
