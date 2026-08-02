@@ -62,6 +62,32 @@ function t(name, cond) {
   t("radar canvas has visible size", radarInfo.w > 200 && radarInfo.h > 200);
   t("radar canvas DPR-backed backing store", radarInfo.bw >= Math.floor(radarInfo.w));
 
+  // REGRESSION (reported iOS bug): scope must be an exact square at all times.
+  // Old bug: flex-stretched CSS box vs once-measured backing store → scope
+  // rendered tall at open, snapped square when the verdict brief appeared.
+  t("radar scope is square at open (aspect 1:1)", Math.abs(radarInfo.w - radarInfo.h) < 1.5);
+
+  // REGRESSION (sweep-jump bug): sample the bearing readout across the auto-scan
+  // speed change (idle 9s → combat 1.6s at ~+900ms). The phase-accumulator sweep
+  // must never move the beam backward; 359→0 wraps are normalised out.
+  const sweepSamples = await page.evaluate(async () => {
+    const el = document.getElementById("wr-brg");
+    const out = [];
+    const t0 = performance.now();
+    while (performance.now() - t0 < 2600) {
+      out.push(parseFloat(el.textContent));
+      await new Promise((r) => setTimeout(r, 90));
+    }
+    return out;
+  });
+  let backJumps = 0;
+  for (let si = 1; si < sweepSamples.length; si++) {
+    const d = (sweepSamples[si] - sweepSamples[si - 1] + 360) % 360;
+    if (d > 200) backJumps++; // huge apparent forward step within 90ms = backward motion
+  }
+  t("sweep never jumps backward across speed change (" + sweepSamples.length + " samples, " + backJumps + " jumps)",
+    sweepSamples.length > 15 && backJumps === 0);
+
   // radar painting + animates — verified from compositor screenshots.
   // Rationale: the compositor render path has painted correctly in every run,
   // while headless SwiftShader getImageData readback flips per-session (proven
@@ -96,6 +122,17 @@ function t(name, cond) {
   console.log("\n— auto-scan → verdict —");
   await page.waitForSelector("#desk-result:not([hidden])", { timeout: 12000 });
   t("verdict brief appears after auto-scan", true);
+
+  // REGRESSION: scope must stay square AND keep its size after the verdict
+  // reveal — the exact moment the iOS distortion used to snap in.
+  await page.waitForTimeout(600); // reveal transition + ResizeObserver settle
+  const radarInfoAfter = await page.evaluate(() => {
+    const r = document.getElementById("wr-radar").getBoundingClientRect();
+    return { w: r.width, h: r.height };
+  });
+  t("radar scope still square after verdict reveal", Math.abs(radarInfoAfter.w - radarInfoAfter.h) < 1.5);
+  t("radar scope size stable open→verdict (Δ=" + Math.abs(radarInfoAfter.w - radarInfo.w).toFixed(1) + "px)",
+    Math.abs(radarInfoAfter.w - radarInfo.w) < 20);
 
   const mode = await page.textContent("#wr-mode");
   t("mode readout flips to LOCK", (mode || "").trim() === "LOCK");
@@ -145,6 +182,11 @@ function t(name, cond) {
   await mob.tap(".nav [data-desk-open]");
   await mob.waitForSelector("#warroom.open", { timeout: 4000 });
   t("mobile: war room opens on tap", true);
+  const mRadarOpen = await mob.evaluate(() => {
+    const r = document.getElementById("wr-radar").getBoundingClientRect();
+    return { w: r.width, h: r.height };
+  });
+  t("mobile: scope square at open", Math.abs(mRadarOpen.w - mRadarOpen.h) < 1.5);
   const roFit = await mob.evaluate(() => {
     const el = document.querySelector(".wr-readouts");
     return el.getBoundingClientRect().width <= window.innerWidth - 8;
@@ -152,6 +194,15 @@ function t(name, cond) {
   t("mobile: readout grid fits viewport", roFit);
   await mob.waitForSelector("#desk-result:not([hidden])", { timeout: 14000 });
   t("mobile: auto-scan verdict appears", true);
+  await mob.waitForTimeout(700); // reveal transition + ResizeObserver settle
+  const mRadarSettled = await mob.evaluate(() => {
+    const r = document.getElementById("wr-radar").getBoundingClientRect();
+    return { w: r.width, h: r.height };
+  });
+  t("mobile: scope stays square after verdict (the reported iOS bug)",
+    Math.abs(mRadarSettled.w - mRadarSettled.h) < 1.5);
+  t("mobile: scope size stable open→verdict (Δ=" + Math.abs(mRadarSettled.w - mRadarOpen.w).toFixed(1) + "px)",
+    Math.abs(mRadarSettled.w - mRadarOpen.w) < 25);
   await mob.screenshot({ path: "scripts/warroom-mobile.png" });
   console.log("  (screenshot: scripts/warroom-mobile.png)");
   t("mobile: no JS errors", merr.length === 0);

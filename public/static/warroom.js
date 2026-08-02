@@ -45,27 +45,43 @@
   var running = false;
   var scanning = false;
   var rafId = 0;
-  var t0 = 0;
   var lastAngle = 0;
-  var lastPingAngle = -999;
   var timers = [];
   var clockTimer = 0;
 
-  /* ── sizing (DPR-aware, square scope) ── */
+  /* ── sizing: JS locks the scope to an EXACT square, centered in the wrap.
+     Fixes iOS bug where flex-stretched CSS box + fixed backing store made the
+     scope start tall and snap to normal size when the verdict brief appeared. ── */
   var cw = 0, ch = 0, cx = 0, cy = 0, radius = 0;
   function resize() {
-    var rect = canvas.getBoundingClientRect();
+    var wrap = canvas.parentElement;
+    if (!wrap) return;
+    var rect = wrap.getBoundingClientRect();
     var dpr = Math.min(window.devicePixelRatio || 1, 2);
-    cw = Math.max(120, Math.floor(rect.width));
-    ch = Math.max(120, Math.floor(rect.height));
-    canvas.width = cw * dpr;
-    canvas.height = ch * dpr;
+    var side = Math.max(200, Math.floor(Math.min(rect.width, rect.height)));
+    if (rect.width < 4 || rect.height < 4) return; // hidden — nothing to measure
+    if (cw === side && ch === side) return;        // already square at this size
+    cw = side;
+    ch = side;
+    canvas.style.width = side + "px";
+    canvas.style.height = side + "px";
+    canvas.width = Math.floor(side * dpr);
+    canvas.height = Math.floor(side * dpr);
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     cx = cw / 2;
     cy = ch / 2;
-    radius = Math.min(cw, ch) / 2 - 10;
+    radius = side / 2 - 10;
     if (!running) drawFrame(0);
   }
+
+  /* re-square on ANY layout shift: verdict reveal, iOS URL-bar collapse, rotation */
+  var ro = null;
+  try {
+    if (typeof ResizeObserver !== "undefined" && canvas.parentElement) {
+      ro = new ResizeObserver(function () { resize(); });
+      ro.observe(canvas.parentElement);
+    }
+  } catch (e) {}
 
   /* ── draw one frame. sweepDeg: beam bearing in degrees ── */
   function drawFrame(sweepDeg) {
@@ -162,12 +178,20 @@
     if (contactsEl) contactsEl.textContent = String(lit);
   }
 
-  /* ── animation loop ── */
+  /* ── animation loop: phase-accumulator sweep.
+     Angle advances by (dt × current speed) each frame — so switching between
+     idle (9s) and combat (1.6s) sweep changes VELOCITY, never position.
+     Fixes the visible beam jump when a scan starts/ends. ── */
+  var phase = 0;      // accumulated sweep angle in degrees, 0..360
+  var lastTs = 0;     // last rAF timestamp
   function frame(now) {
     if (!running) return;
-    if (!t0) t0 = now;
+    if (!lastTs) lastTs = now;
+    var dt = Math.min(now - lastTs, 100); // clamp tab-switch gaps
+    lastTs = now;
     var period = scanning ? SCAN_SWEEP_MS : SWEEP_MS;
-    var angle = reduced ? 0 : R.sweepAngle(now - t0, period);
+    phase = (phase + (dt / period) * 360) % 360;
+    var angle = reduced ? 0 : phase;
     drawFrame(angle);
 
     /* sonar ping each time the beam crosses 12 o'clock */
@@ -181,7 +205,7 @@
   function startLoop() {
     if (running || reduced) { if (reduced) drawFrame(0); return; }
     running = true;
-    t0 = 0;
+    lastTs = 0;
     rafId = requestAnimationFrame(frame);
   }
   function stopLoop() {

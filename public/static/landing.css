@@ -528,7 +528,9 @@ body.desk-locked { overflow: hidden; }
   gap: 14px;
 }
 @media (max-width: 900px) {
-  .wr-main { grid-template-columns: 1fr; overflow-y: auto; }
+  /* fixed console row keeps the radar square stable while brief content grows */
+  .wr-main { grid-template-columns: 1fr; grid-template-rows: auto minmax(0, 1fr); overflow-y: auto; }
+  .wr-console { min-height: 0; }
 }
 
 /* ── console (radar) ── */
@@ -551,8 +553,18 @@ body.desk-locked { overflow: hidden; }
     linear-gradient(var(--mil), var(--mil)) right bottom / 2px 16px;
   background-repeat: no-repeat; opacity: 0.5;
 }
-.wr-scope-wrap { flex: 1; min-height: 240px; position: relative; }
-#wr-radar { width: 100%; height: 100%; display: block; }
+.wr-scope-wrap {
+  flex: 1; min-height: 240px; position: relative;
+  display: flex; align-items: center; justify-content: center;
+}
+#wr-radar { display: block; } /* JS locks the scope to an exact square */
+@media (max-width: 900px) {
+  /* square scope on mobile: viewport width minus chrome — no flex stretching */
+  .wr-scope-wrap {
+    flex: none; min-height: 0;
+    height: min(calc(100vw - 100px), 420px);
+  }
+}
 .wr-scope-tag {
   position: absolute; left: 8px; bottom: 6px; font-size: 9px; letter-spacing: 0.12em;
   color: var(--mil-dim); pointer-events: none;
