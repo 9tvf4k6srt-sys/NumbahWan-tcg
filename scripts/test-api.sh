@@ -74,6 +74,13 @@ grep -q '78%' /tmp/wr_home.html; check "range position value 78% displayed" $?
 grep -q '空手天數\|Cash days' /tmp/wr_home.html; check "cash-days gate listed" $?
 grep -q 'wr-gate-marker\|wr-gates' /home/user/webapp/public/static/landing.css; check "gate CSS present" $?
 
+echo "— capital flows strip present —"
+grep -q 'wr-flows' /tmp/wr_home.html; check "capital flows strip exists" $?
+grep -q '籌碼面\|CAPITAL FLOWS' /tmp/wr_home.html; check "capital flows title" $?
+grep -q '外資 5 日累計\|Foreign 5d net' /tmp/wr_home.html; check "foreign 5d net chip" $?
+grep -q '融資餘額\|Margin balance' /tmp/wr_home.html; check "margin balance chip" $?
+grep -q '1,349' /tmp/wr_home.html; check "foreign net value 1,349億 displayed" $?
+
 echo ""
 echo "═══ $pass passed, $fail failed ═══"
 [ "$fail" -eq 0 ]

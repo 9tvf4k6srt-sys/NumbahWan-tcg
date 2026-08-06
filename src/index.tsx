@@ -735,6 +735,20 @@ app.get('/', (c) => {
                       <span class="wr-gate-val">78% <b class="wr-gate-pill no">✗ <span class="zh">未達</span><span class="en">NOT MET</span></b></span>
                     </div>
 
+                    <div class="wr-flows">
+                      <span class="wr-flows-title">
+                        <span class="zh">籌碼面 · 威脅評分七路中的兩路（非進場閘門）</span><span class="en">CAPITAL FLOWS · 2 OF 7 SCORE CHANNELS (NOT ENTRY GATES)</span>
+                      </span>
+                      <div class="wr-flows-row">
+                        <span class="wr-flow-chip"><i class="dot dot-g" /><span class="zh">外資 5 日累計</span><span class="en">Foreign 5d net</span><b class="mono">+1,349.6 <span class="zh">億</span><span class="en">Yi</span></b><em class="mono wr-flow-sub">07-31 → 08-06 · 08-05 單日 +903 億</em></span>
+                        <span class="wr-flow-chip"><i class="dot dot-a" /><span class="zh">融資餘額</span><span class="en">Margin balance</span><b class="mono">5,234.9 <span class="zh">億</span><span class="en">Yi</span></b><em class="mono wr-flow-sub">08-05 · 近 3 日 +3.2% · 高於 5,000 億擁擠線</em></span>
+                      </div>
+                      <p class="wr-flows-note mono">
+                        <span class="zh">這兩路每天在威脅評分裡計分（權重 1.05 / 0.65）：外資連賣推升燈號風險，融資急殺或擁擠同樣加分。目前外資轉買是降溫訊號；融資過熱是反向訊號——互相抵銷，系統不偏聽任何一路。</span>
+                        <span class="en">Both channels feed the threat score daily (weights 1.05 / 0.65): foreign selling streaks raise threat, margin flushes or crowding add pressure too. Right now foreign buying cools the score while crowded margin pushes back — they offset; the model never listens to one channel alone.</span>
+                      </p>
+                    </div>
+
                     <p class="wr-gates-note">
                       <span class="zh">數據截至 2026-08-06 收盤；系統於每次收盤後重算。五道全綠 → 試單 0.4 倉；其後 7 日內回測不破低 → 補滿。另有「評分降溫」路徑：未再破低且威脅評分降至 46 以下，可不經回測直接回場。</span>
                       <span class="en">Data as of 2026-08-06 close; recomputed after every close. All five gates green → 0.4 probe position; no new low within 7 sessions → full size. A separate score-cooldown path re-enters without a retest once threat score falls to 46 or below.</span>
