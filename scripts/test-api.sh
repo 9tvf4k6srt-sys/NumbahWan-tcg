@@ -65,6 +65,15 @@ grep -q '1,057 萬\|+957%' /tmp/wr_home.html; check "2019 comparison numbers (wi
 grep -q '45,734\|39,933' /tmp/wr_home.html; check "July 2026 live episode numbers" $?
 grep -q '我們怎麼比\|How we compare' /tmp/wr_home.html; check "honesty methodology block" $?
 
+echo "— re-entry pre-flight gates present —"
+grep -q 'id="wr-gates"' /tmp/wr_home.html; check "re-entry gate gauge exists" $?
+grep -q '回防進度\|RE-ENTRY PRE-FLIGHT' /tmp/wr_home.html; check "gate gauge title" $?
+grep -q '2/5' /tmp/wr_home.html; check "gate score 2/5 displayed" $?
+grep -q '五日漲跌\|5-day return' /tmp/wr_home.html; check "5-day return gate listed" $?
+grep -q '78%' /tmp/wr_home.html; check "range position value 78% displayed" $?
+grep -q '空手天數\|Cash days' /tmp/wr_home.html; check "cash-days gate listed" $?
+grep -q 'wr-gate-marker\|wr-gates' /home/user/webapp/public/static/landing.css; check "gate CSS present" $?
+
 echo ""
 echo "═══ $pass passed, $fail failed ═══"
 [ "$fail" -eq 0 ]

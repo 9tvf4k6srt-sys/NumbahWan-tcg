@@ -694,6 +694,53 @@ app.get('/', (c) => {
                     <span class="en">Soft red trimmed on 07-06, full retreat to cash on 07-08. Standing by — next green re-entry signal brings us back in.</span>
                   </p>
 
+                  {/* re-entry pre-flight — five gates, exact values vs thresholds */}
+                  <div class="wr-gates mono" id="wr-gates">
+                    <div class="wr-gates-head">
+                      <span class="wr-gates-title">
+                        <span class="zh">回防進度 · 五道閘門</span><span class="en">RE-ENTRY PRE-FLIGHT · 5 GATES</span>
+                      </span>
+                      <span class="wr-gates-status" data-state="waiting">
+                        <span class="zh">2/5 就位 · 尚未達到回防條件</span><span class="en">2/5 IN PLACE · RE-ENTRY NOT MET</span>
+                      </span>
+                    </div>
+
+                    <div class="wr-gate ok">
+                      <span class="wr-gate-name"><span class="zh">空手天數 ≥ 3 天</span><span class="en">Cash days ≥ 3</span></span>
+                      <span class="wr-gate-track"><i class="wr-gate-zone" style="left:15%;width:85%" /><i class="wr-gate-tick" style="left:15%" /><i class="wr-gate-marker" style="left:100%" /></span>
+                      <span class="wr-gate-val">20 <span class="zh">天</span><span class="en">sessions</span> <b class="wr-gate-pill ok">✓ <span class="zh">就位</span><span class="en">MET</span></b></span>
+                    </div>
+
+                    <div class="wr-gate ok">
+                      <span class="wr-gate-name"><span class="zh">SOX 單日 &gt; −2%</span><span class="en">SOX 1d &gt; −2%</span></span>
+                      <span class="wr-gate-track"><i class="wr-gate-zone" style="left:33.3%;width:66.7%" /><i class="wr-gate-tick" style="left:33.3%" /><i class="wr-gate-marker" style="left:38.3%" /></span>
+                      <span class="wr-gate-val">−1.4% <b class="wr-gate-pill ok">✓ <span class="zh">就位</span><span class="en">MET</span></b></span>
+                    </div>
+
+                    <div class="wr-gate no">
+                      <span class="wr-gate-name"><span class="zh">今日收綠 ≥ +0.8%</span><span class="en">Green day ≥ +0.8%</span></span>
+                      <span class="wr-gate-track"><i class="wr-gate-zone" style="left:63.3%;width:36.7%" /><i class="wr-gate-tick" style="left:63.3%" /><i class="wr-gate-marker" style="left:42%" /></span>
+                      <span class="wr-gate-val">−0.5% <b class="wr-gate-pill no">✗ <span class="zh">未達</span><span class="en">NOT MET</span></b></span>
+                    </div>
+
+                    <div class="wr-gate no">
+                      <span class="wr-gate-name"><span class="zh">五日漲跌 ≤ −3.5%</span><span class="en">5-day return ≤ −3.5%</span></span>
+                      <span class="wr-gate-track"><i class="wr-gate-zone" style="left:0;width:13.9%" /><i class="wr-gate-tick" style="left:13.9%" /><i class="wr-gate-marker" style="left:95.4%" /></span>
+                      <span class="wr-gate-val">+11.2% <b class="wr-gate-pill no">✗ <span class="zh">未達</span><span class="en">NOT MET</span></b></span>
+                    </div>
+
+                    <div class="wr-gate no">
+                      <span class="wr-gate-name"><span class="zh">20 日區間位置 ≤ 40%</span><span class="en">20d range position ≤ 40%</span></span>
+                      <span class="wr-gate-track"><i class="wr-gate-zone" style="left:0;width:40%" /><i class="wr-gate-tick" style="left:40%" /><i class="wr-gate-marker" style="left:78.3%" /></span>
+                      <span class="wr-gate-val">78% <b class="wr-gate-pill no">✗ <span class="zh">未達</span><span class="en">NOT MET</span></b></span>
+                    </div>
+
+                    <p class="wr-gates-note">
+                      <span class="zh">數據截至 2026-08-06 收盤；系統於每次收盤後重算。五道全綠 → 試單 0.4 倉；其後 7 日內回測不破低 → 補滿。另有「評分降溫」路徑：未再破低且威脅評分降至 46 以下，可不經回測直接回場。</span>
+                      <span class="en">Data as of 2026-08-06 close; recomputed after every close. All five gates green → 0.4 probe position; no new low within 7 sessions → full size. A separate score-cooldown path re-enters without a retest once threat score falls to 46 or below.</span>
+                    </p>
+                  </div>
+
                   {/* live quote strip — filled by JS from /api/market-now */}
                   <div class="desk-live wr-live" id="desk-live" data-state="loading">
                     <div class="dl-row">
