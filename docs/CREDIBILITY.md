@@ -1,102 +1,118 @@
-# CREDIBILITY — Verified, Reproducible Numbers
+# Evidence, scope, and limitations
 
-> Every claim in this repo's README should be something a reviewer can reproduce
-> in under two minutes. This file is the audit trail: the exact command, the
-> measured result, and the date it was measured. If a number here is wrong,
-> the command next to it will prove it wrong — which is the point.
+A result is meaningful only with its command, environment, and exclusions.
+This page separates current measurements from historical claims. It is not a
+self-assigned engineering score.
 
-Last verified: **2026-06-17**
+## Local verification: 2026-09-07
 
-> **These checks run in CI on every push and PR** via
-> [`.github/workflows/ci.yml`](.github/workflows/ci.yml). The live CI badge at
-> the top of the README turns red the moment any claim below stops being true —
-> so this audit can't silently rot. A green badge *is* the proof.
+Environment: Linux, Node.js v22.23.2, installed repository dependencies.
+The initial workspace contained existing application/generated-file changes;
+they are not part of the orchestration implementation.
 
----
+| Check | Command | Observed result | Scope |
+|---|---|---|---|
+| Orchestration regression | `node --test tests/orchestration.test.cjs` | 48 passed, 0 failed | Offline assertions plus real subprocess boundary tests; no LLM |
+| Runnable demonstration | `node bin/orchestrator.cjs --demo --json` | 3 subprocesses; `awaiting_review` | Synthetic tasks, no file writes or model calls |
+| Existing unit suite baseline | `npm run test:unit` | 263 passed, 2 skipped, 23 files | Application/tooling tests; not the separate Node orchestration suite |
+| Root TypeScript | `npm run typecheck` | Exit 0 | Root `src/` scope; not every independent subproject |
+| Context/doctrine checks | `npm run eval` | Exit 0; 21/21 doctrine checks | File-derived context estimates and mechanical consistency, not model outcomes |
+| Full integration suite without server | `npm test` | Exit 1; 29 failures | Includes HTTP checks; no app server was running. Not reported as passing |
+| Whole-workspace ship gate | `npm run ship` | Blocked on pre-existing `public/example-cinematic.html` i18n failure | 15 orphaned keys; the unrelated page was preserved, not fixed or added to this PR |
 
-## Why this file exists
+The orchestration suite is wired into `bin/ship-gate.cjs`, which the existing
+[PR Gate workflow](../.github/workflows/pr-gate.yml) invokes. A workflow's
+existence is not proof that a particular commit passed; inspect that commit's
+[Actions run](https://github.com/9tvf4k6srt-sys/NumbahWan-tcg/actions/workflows/pr-gate.yml).
+No workflow-permission change or manual CI installation is needed for this
+added gate.
 
-A self-improving build system is only as credible as its weakest unverified
-claim. A reviewer who finds one inflated badge stops trusting all of them. So
-the policy here is simple: **no claim ships without a one-line command that
-reproduces it.** Numbers below were captured by running those commands on a
-clean checkout.
+## What the reliability suite actually checks
 
----
+The tests are in [`tests/orchestration.test.cjs`](../tests/orchestration.test.cjs).
+They use the same [`workflow-runtime.cjs`](../tools/lib/workflow-runtime.cjs)
+as the real factory, not a separately implemented demonstration engine.
 
-## Verified claims
+- **Graph integrity:** missing dependencies, cycles, duplicate IDs and unknown
+  tools fail before execution; unsorted DAGs still respect dependencies.
+- **Outcome integrity:** nonzero exits remain failures even if stdout says
+  `PASS`; malformed results and rejected output contracts cannot become success.
+- **Failure propagation:** exhaustive enumeration of all 16 failure subsets of
+  a four-check fan-out; final dependent work runs only when all checks succeed.
+- **Bounded work:** exact retry counts, permanent-failure non-retry, shared call
+  budgets, deadlines, cancellation and combined subprocess output bounds.
+- **Scheduling:** concurrent readers, bounded fan-out, and writer exclusion.
+- **Authority boundaries:** literal shell metacharacters, spec-path traversal
+  and symlink escape rejection, no implicit execution, no deploy capability.
+- **Evidence hygiene:** contiguous event sequence numbers, one terminal event,
+  observer isolation and omission of raw input/output from receipts.
 
-| Claim | Command | Measured (2026-06-17) | Status |
-|-------|---------|------------------------|--------|
-| TypeScript: 0 errors | `npx tsc --noEmit` | 0 errors | ✅ true |
-| Unit tests pass | `npx vitest run` | 145 passed, 2 skipped (147 total), 13 files | ✅ true |
-| aitell detector tests | `cd packages/aitell && npx vitest run` | 40 passed, 3 files | ✅ true |
-| Production build | `npm run build` | exits 0, `dist/_worker.js` ~529 KB | ✅ true |
-| Learning-engine eval | `node mycelium.cjs --eval` | Combined 60/100 (C); Mycelium 75/100 (B) | ✅ true (honest) |
-| Dashboard data present | `node scripts/gen-mycelium-eval.cjs` | writes `mycelium-eval.json` (77/B) | ✅ true |
+Dependency and verdict tests inject controlled tool results. Process tests
+launch real Node children. Both are useful; neither substitutes for a full
+production run of page generation and its downstream checks.
 
----
-
-## What the TypeScript fix actually was (full disclosure)
-
-The README badge said "TSC 0 Errors." On audit, `npx tsc --noEmit` reported
-**142 errors.** That gap is the single most damaging thing a senior reviewer
-can find, so here is exactly what happened and how it was fixed — no
-hand-waving:
-
-1. **Root cause #1 — config scoping (141 of 142 errors).** The root
-   `tsconfig.json` had no `include`/`exclude`, so it swept the independent
-   `rulai-temple/` sub-project (which has its own tsconfig and a DOM runtime)
-   plus test files that reference `document`/`HTMLElement`. Fix: scoped the
-   root config to `include: ["src"]` and excluded sub-projects/tests. Each
-   sub-project keeps its own tsconfig — they are typechecked on their own terms.
-
-2. **Root cause #2 — missing Node types (uncovered after scoping).** Once the
-   noise was gone, the *real* `src/` errors surfaced: the Worker code uses
-   `node:fs`, `node:path`, and `process`, but the config only declared
-   `vite/client` and `@cloudflare/workers-types`. Fix: added `"node"` to
-   `types` (the `@types/node` dependency was already installed).
-
-3. **Root cause #3 — uncommitted build artifact (1 error).**
-   `src/routes/sentinel.ts` imported `public/static/data/mycelium-eval.json`,
-   which no generator produced and which was not committed. Fix: added
-   `scripts/gen-mycelium-eval.cjs` (derives the file from the live
-   `.mycelium/eval-history.json`) and wired it into `npm run build` so the
-   artifact can never silently go missing again.
-
-**Result: 142 → 0.** Critically, the fix did not *hide* the sub-project errors;
-it *uncovered and resolved* the real `src/` errors the old broad config was
-masking. The repo is now genuinely clean, not cosmetically clean.
-
----
-
-## Honest scores (we do not round these up)
-
-The learning-engine self-evaluation reports **60/100 (C) combined** today. We
-report it as-is. The score is low *on purpose*: the "watcher" half scores
-44/100 because a handful of files still repeat-break, and the engine refuses to
-inflate the number to hide that. An honest C that improves beats a fake A that
-lies. This is the same discipline that makes the rest of the numbers
-trustworthy.
-
-| Sub-score | Value | Why |
-|-----------|-------|-----|
-| Mycelium (learner) | 75/100 (B) | Knowledge capture and constraint coverage are strong |
-| Watcher | 44/100 (D) | Repeat-break files drag it down — a real, measured weakness |
-| Combined | 60/100 (C) | Reported unrounded |
-
----
-
-## How to reproduce everything in one pass
+### Reproduce without installing anything
 
 ```bash
-npm install
-npx tsc --noEmit                         # expect: 0 errors
-npx vitest run                           # expect: 145 passed, 2 skipped
-( cd packages/aitell && npx vitest run ) # expect: 40 passed
-npm run build                            # expect: exit 0, dist/_worker.js built
-node mycelium.cjs --eval                 # expect: Combined 60/100 (C)
+node --test tests/orchestration.test.cjs
+node bin/orchestrator.cjs --demo --json
 ```
 
-If any line above disagrees with this document, the document is wrong — open an
-issue and we will fix the claim, not the command.
+### Broader checks with dependencies
+
+```bash
+npm ci
+npm run test:unit
+npm run typecheck
+npm run eval
+npm run ship
+```
+
+The factory's real `--execute` mode mutates the local worktree and may encounter
+existing quality debt. Inspect the plan and use a disposable worktree. It was
+not used to regenerate user pages during this hardening pass.
+
+## What these results do not establish
+
+- No measured model-quality improvement, hiring outcome, production SLO, or
+  superiority to other agent frameworks.
+- No throughput/latency benchmark: concurrent read scheduling is tested as a
+  behavior, not advertised as a speedup.
+- No claimed dollar or billed-token savings from the new runtime. The existing
+  context-cost script estimates document tokens; estimates are not invoices.
+- No crash-safe resume, exactly-once writes, signed audit log, OS sandbox, or
+  authenticated approval system. See the
+  [trust boundaries](../ARCHITECTURE.md#factory-workflow-control-plane).
+- No production build/deployment or live paid model eval was run for this pass.
+  The game UI was not changed or browser-tested.
+
+## Model evals are a separate evidence layer
+
+[`evals/outcome-eval.cjs`](../evals/outcome-eval.cjs) asks repo-memory questions
+with and without a briefing and grades answers mechanically. Its dry run can
+be inspected without provider access:
+
+```bash
+npm run eval:outcome:dry
+```
+
+A future model-quality claim needs fresh successful provider responses,
+recorded model/configuration, repeated paired trials, a held-out task set,
+uncertainty estimates, actual usage, and review for leakage or grader exploits.
+Passing deterministic regression tests is not a replacement for that evidence.
+
+This distinction follows the regression-vs-capability and outcome-vs-transcript
+separation in [Anthropic's January 2026 agent-evaluation guidance (engineering index)](https://www.anthropic.com/engineering).
+
+## Historical measurements are not current guarantees
+
+The prior version of this page recorded June 2026 counts and referred to a
+`ci.yml` workflow and README badge that are absent from this checkout. Those
+statements have been replaced by the commands above, not silently treated as
+fresh evidence. Git history preserves that earlier report and the root
+TypeScript scoping investigation.
+
+Likewise, the earlier learning-system scores and the audits that prompted the
+standalone [mycelium redesign](https://github.com/9tvf4k6srt-sys/mycelium) are
+historical evidence. A cached score or heartbeat is not an observed successful
+run. If code and prose disagree, rerun the check and correct the claim.

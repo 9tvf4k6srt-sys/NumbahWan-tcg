@@ -1,286 +1,188 @@
 #!/usr/bin/env node
+'use strict';
+
 /**
- * NW Factory Orchestrator v2.0
- * 
- * The central nervous system of the Dark Factory.
- * Coordinates all agents via the event bus and manages the full lifecycle:
- *   Intent → Spec → Generate → Translate → Test → Gate → Deploy
- *
- * v2.0 improvements:
- *   - Uses factory-core shared utilities
- *   - Per-step timing and structured results  
- *   - Retry logic for transient failures
- *   - Event bus integration for all steps
- *   - Better error messages with fix suggestions
- *
- * Usage:
- *   node bin/orchestrator.cjs "Add a DLC about fire dragons"     # full auto pipeline
- *   node bin/orchestrator.cjs --from-spec specs/dlc-12.yaml      # from existing spec
- *   node bin/orchestrator.cjs --monitor                           # continuous monitoring
- *   node bin/orchestrator.cjs --status                            # show system status
- *   node bin/orchestrator.cjs --dry-run "Add a landing page"     # preview without executing
+ * Factory workflow: plan -> generate -> verify -> HUMAN REVIEW.
+ * Deterministic orchestration, not an autonomous LLM planner. No deployment tool.
+ * Default is plan-only; --execute explicitly authorizes local generation.
+ * See ARCHITECTURE.md for the trust boundary and known limitations.
  */
+const fs = require('node:fs');
+const path = require('node:path');
+const { runWorkflow, executeNode, digest } = require('../tools/lib/workflow-runtime.cjs');
+const ROOT = path.resolve(__dirname, '..');
 
-const fs = require('fs');
-const path = require('path');
-
-const core = require('./factory-core.cjs');
-const { ROOT, ok, fail, info, warn, header, emit, timer, humanDuration,
-        run: coreRun, ensureDir, readJSON, B, G, R, Y, C, X } = core;
-
-function run(cmd, timeout = 60000) {
-  return coreRun(cmd, { timeout });
+function validateSpec(specPath, root = ROOT) {
+  if (typeof specPath !== 'string' || !specPath || specPath.includes('\0')) throw new Error('A spec path is required');
+  const resolved = fs.realpathSync(path.resolve(root, specPath));
+  const relative = path.relative(path.join(fs.realpathSync(root), 'specs'), resolved);
+  if (relative === '..' || relative.startsWith(`..${path.sep}`) || path.isAbsolute(relative) ||
+      !/\.ya?ml$/i.test(relative) || !fs.statSync(resolved).isFile()) {
+    throw new Error('Spec must be a regular YAML file inside specs/ (including symlink target)');
+  }
+  return path.relative(root, resolved);
 }
 
-// Retry wrapper for transient failures
-function runWithRetry(cmd, label, maxRetries = 2, timeout = 60000) {
-  for (let attempt = 1; attempt <= maxRetries; attempt++) {
-    const r = run(cmd, timeout);
-    if (r.ok) return r;
-    if (attempt < maxRetries) {
-      warn(`${label} failed (attempt ${attempt}/${maxRetries}) — retrying...`);
-      emit('orchestrator', 'retry', { step: label, attempt });
-    }
-  }
-  return run(cmd, timeout); // last attempt
+function scorecardAccept(result) {
+  // Frozen existing gate thresholds: average >=85 and no page below 70.
+  // Missing / malformed measurements are not passes; stdout prose is not authority.
+  const rows = JSON.parse(result.stdout);
+  return Array.isArray(rows) && rows.length > 0 &&
+    rows.every(r => Number.isFinite(r.score) && r.score >= 70 && r.score <= 100) &&
+    Math.round(rows.reduce((sum, r) => sum + r.score, 0) / rows.length) >= 85;
 }
 
-// ── Full Pipeline: Intent → Deploy (v2.0 with timing + retry) ──
-function fullPipeline(intentText, opts = {}) {
-  header('🏭', 'NW Factory Orchestrator v2.0');
-  console.log(`  ${C}Intent:${X} "${intentText}"\n`);
-
-  const clock = timer();
-  const results = { steps: [], success: true };
-  emit('orchestrator', 'pipeline_start', { intent: intentText });
-
-  function step(name, fn) {
-    const stepClock = timer();
-    info(`[${results.steps.length + 1}] ${name}...`);
-    emit('orchestrator', 'step_start', { step: name });
-    try {
-      const result = fn();
-      const elapsed = stepClock.human();
-      if (result.ok !== false) {
-        ok(`${name} — ${elapsed}${result.msg ? ': ' + result.msg : ''}`);
-        results.steps.push({ name, status: 'done', msg: result.msg, duration: elapsed });
-        emit('orchestrator', 'step_done', { step: name, duration_ms: stepClock.ms() });
-      } else {
-        if (result.blocking) {
-          fail(`${name} — failed (${elapsed}): ${result.msg}`);
-          results.steps.push({ name, status: 'failed', msg: result.msg, duration: elapsed });
-          results.success = false;
-          emit('orchestrator', 'step_failed', { step: name, error: result.msg });
-          if (result.fix) info(`Fix: ${result.fix}`);
-          return false;
-        } else {
-          warn(`${name} — warning (${elapsed}): ${result.msg}`);
-          results.steps.push({ name, status: 'warn', msg: result.msg, duration: elapsed });
-        }
-      }
-    } catch (e) {
-      fail(`${name} — error: ${e.message}`);
-      results.steps.push({ name, status: 'error', msg: e.message });
-      results.success = false;
-      return false;
-    }
-    return true;
+function createWorkflow({ intent, specPath, root = ROOT } = {}) {
+  if ((typeof intent === 'string') === (typeof specPath === 'string')) {
+    throw new Error('Supply exactly one intent or specPath');
   }
-
-  // Step 1: Parse intent → spec YAML
-  let specPath;
-  if (!step('Parse Intent', () => {
-    const r = run(`node bin/intent-parser.cjs ${JSON.stringify(intentText)}`);
-    if (!r.ok) return { ok: false, msg: 'Intent parsing failed', blocking: true, fix: 'Check intent text or create spec manually with: node bin/factory-init.cjs' };
-    const m = r.stdout.match(/specs\/([^\s]+\.yaml)/);
-    if (m) { specPath = `specs/${m[1]}`; return { msg: specPath }; }
-    return { ok: false, msg: 'No spec file generated', blocking: true, fix: 'Use factory-init.cjs to scaffold a spec' };
-  })) return results;
-
-  // Step 2: Generate page from spec
-  if (!step('Generate Page', () => {
-    const r = runWithRetry(`node bin/page-gen.cjs ${specPath}`, 'Generate Page');
-    if (!r.ok) return { ok: false, msg: 'Page generation failed', blocking: true, fix: `Check spec: node bin/page-gen.cjs ${specPath} --validate` };
-    const m = r.stdout.match(/(\d+) i18n keys/);
-    return { msg: m ? `${m[1]} i18n keys` : 'page created' };
-  })) return results;
-
-  // Step 3: Auto-translate
-  step('Translate', () => {
-    const r = run('node scripts/i18n-translate.cjs 2>&1');
-    return { msg: 'translation pass complete' };
-  });
-
-  // Step 4: Inject translations
-  step('Inject i18n', () => {
-    const r = run('node scripts/i18n-inject.cjs 2>&1');
-    if (!r.ok) return { ok: false, msg: 'some translations missing (non-blocking)' };
-    return { msg: 'injected' };
-  });
-
-  // Step 5: Run agent loop for auto-fixes
-  step('Agent Auto-Fix', () => {
-    run('node bin/agent-loop.cjs 2>&1');
-    return { msg: 'cycle complete' };
-  });
-
-  // Step 6: Quality scorecard
-  step('Scorecard', () => {
-    const r = run('node bin/quality-scorecard.cjs 2>&1 | tail -3');
-    const m = r.out?.match(/avg (\d+)\/100/);
-    return { msg: m ? `avg ${m[1]}/100` : 'scored' };
-  });
-
-  // Step 7: Deploy gate
-  step('Deploy Gate', () => {
-    const r = run('node bin/deploy-gate.cjs 2>&1 | tail -5');
-    if (r.out?.includes('PASS')) return { msg: 'all checks green' };
-    return { ok: false, msg: 'gate blocked — needs review' };
-  });
-
-  // Step 8: Generate context for next session
-  step('Update Context', () => {
-    run('node bin/gen-context.cjs 2>&1');
-    return { msg: '.mycelium-context updated' };
-  });
-
-  // Summary with timing
-  const elapsed = clock.human();
-  const doneSteps = results.steps.filter(s => s.status === 'done').length;
-  const failedSteps = results.steps.filter(s => s.status === 'failed').length;
-
-  console.log('');
-  if (results.success) {
-    console.log(`  ${G}${B}🏭 Pipeline Complete${X} — ${doneSteps}/${results.steps.length} steps in ${elapsed}`);
-    if (specPath) info(`Spec: ${specPath}`);
-    info(`Ready for human review or auto-merge`);
-  } else {
-    console.log(`  ${R}${B}🏭 Pipeline Blocked${X} — ${failedSteps} step(s) failed in ${elapsed}`);
-    results.steps.filter(s => s.status === 'failed').forEach(s => {
-      console.log(`    ${R}✗${X} ${s.name}: ${s.msg}`);
-    });
+  if (intent !== undefined && (!intent.trim() || intent.length > 8000 || intent.startsWith('-') || intent.includes('\0'))) {
+    throw new Error('Intent must contain 1–8000 characters and must not start with a flag');
   }
-  console.log('');
-
-  emit('orchestrator', 'pipeline_complete', { success: results.success, elapsed, steps: results.steps.length });
-  return results;
-}
-
-// ── From existing spec (v2.0 with timing) ──
-function fromSpec(specPath) {
-  header('🏭', 'NW Factory Orchestrator v2.0');
-  console.log(`  ${C}Spec:${X} ${specPath}\n`);
-
-  if (!fs.existsSync(path.resolve(ROOT, specPath))) {
-    fail(`Spec not found: ${specPath}`);
-    info('Create one with: node bin/factory-init.cjs <type> <slug>');
-    process.exit(1);
-  }
-
-  const clock = timer();
-  const steps = [
-    { name: 'Generate', cmd: `node bin/page-gen.cjs ${specPath}` },
-    { name: 'Translate', cmd: 'node scripts/i18n-translate.cjs 2>&1' },
-    { name: 'Inject', cmd: 'node scripts/i18n-inject.cjs 2>&1' },
-    { name: 'Scorecard', cmd: 'node bin/quality-scorecard.cjs 2>&1 | tail -3' },
-    { name: 'Gate', cmd: 'node bin/deploy-gate.cjs 2>&1 | tail -5' },
+  let spec = specPath === undefined ? undefined : validateSpec(specPath, root);
+  const tool = (script, effect, argv = [], accept) => ({
+    argv: [script, ...argv], effect, timeoutMs: 120000,
+    maxAttempts: 1, retryExitCodes: [], ...(accept ? { accept } : {}),
+  });
+  const tools = {
+    parse: tool('bin/intent-parser.cjs', 'write', [], result => {
+      const matches = [...result.stdout.matchAll(/Spec written: (specs\/[^\r\n]+\.yaml)/g)];
+      if (matches.length !== 1) return false;
+      spec = validateSpec(matches[0][1], root);
+      return true;
+    }),
+    generate: {
+      ...tool('bin/page-gen.cjs', 'write'),
+      // A trusted adapter resolves a validated artifact, not a model-authored command.
+      resolveArgs: () => [validateSpec(spec, root)],
+    },
+    translate: tool('scripts/i18n-translate.cjs', 'write'),
+    inject: tool('scripts/i18n-inject.cjs', 'write'),
+    scorecard: tool('bin/quality-scorecard.cjs', 'read', ['--json'], scorecardAccept),
+    i18n: tool('scripts/i18n-inject.cjs', 'read', ['--check']),
+    tests: tool('tests/run-tests.cjs', 'read'),
+    types: tool('node_modules/typescript/bin/tsc', 'read', ['--noEmit']),
+    context: tool('bin/gen-context.cjs', 'write'),
+  };
+  const step = (id, needs = [], args = []) => ({ id, tool: id, needs, args });
+  const plan = [
+    ...(intent !== undefined ? [step('parse', [], [intent])] : []),
+    step('generate', intent !== undefined ? ['parse'] : []),
+    step('translate', ['generate']),
+    step('inject', ['translate']),
+    step('scorecard', ['inject']), step('i18n', ['inject']),
+    step('tests', ['inject']), step('types', ['inject']),
+    step('context', ['scorecard', 'i18n', 'tests', 'types']),
   ];
-
-  for (const s of steps) {
-    const stepClock = timer();
-    info(`${s.name}...`);
-    const r = run(s.cmd);
-    const elapsed = stepClock.human();
-    if (r.ok) ok(`${s.name} (${elapsed})`);
-    else warn(`${s.name}: ${r.stdout?.split('\n').slice(-1)[0] || 'issues'} (${elapsed})`);
-  }
-  console.log(`\n  ${G}${B}✓ Spec pipeline complete in ${clock.human()}${X}\n`);
+  return { plan, tools };
 }
 
-// ── System status (v2.0) ──
-function showStatus() {
-  header('🏭', 'Factory Orchestrator — System Status');
+function describeWorkflow(workflow) {
+  return {
+    version: 1, status: 'planned', executed: false,
+    steps: workflow.plan.map(s => ({
+      id: s.id, tool: s.tool, needs: s.needs,
+      effect: workflow.tools[s.tool].effect, timeoutMs: workflow.tools[s.tool].timeoutMs,
+    })),
+    terminal: 'awaiting_review',
+    note: 'No tools run. --execute authorizes local writes, not deployment or merge.',
+  };
+}
 
-  // Git
-  const branch = run('git branch --show-current').stdout;
-  const ahead = run('git rev-list --count origin/main..HEAD 2>/dev/null').stdout || '?';
-  const dirty = run('git status --porcelain').stdout?.split('\n').filter(Boolean).length || 0;
-  info(`Git: ${branch} (${ahead} ahead, ${dirty} uncommitted)`);
+async function fullPipeline(intent, opts = {}) {
+  return executeWorkflow(createWorkflow({ intent, root: opts.root }), opts);
+}
+async function fromSpec(specPath, opts = {}) {
+  return executeWorkflow(createWorkflow({ specPath, root: opts.root }), opts);
+}
+async function executeWorkflow(workflow, opts) {
+  if (opts.execute !== true) return describeWorkflow(workflow);
+  return runWorkflow(workflow.plan, workflow.tools, {
+    cwd: opts.root || ROOT, deadlineMs: 300000, maxCalls: 12, concurrency: 2,
+    signal: opts.signal, onEvent: opts.onEvent,
+    ...(opts.executor ? { execute: opts.executor } : {}),
+  });
+}
 
-  // Scorecard summary
-  const sc = run('node bin/quality-scorecard.cjs 2>&1 | tail -1');
-  if (sc.stdout) info(`Scorecard: ${sc.stdout.replace(/\s+/g,' ').trim()}`);
+function persistReceipt(result) {
+  const dir = path.join(ROOT, '.mycelium', 'workflow-runs');
+  fs.mkdirSync(dir, { recursive: true });
+  const file = path.join(dir, `${result.runId}.json`);
+  // IDs come from randomUUID(), never from the CLI. Exclusive create preserves
+  // prior receipts. This local artifact is not signed or tamper-proof.
+  fs.writeFileSync(file, JSON.stringify(result, null, 2) + '\n', { flag: 'wx', mode: 0o600 });
+  return path.relative(ROOT, file);
+}
 
-  // Memory
+async function main(args = process.argv.slice(2)) {
+  const json = args.includes('--json');
+  const report = value => console.log(json ? JSON.stringify(value, null, 2) :
+    `${value.status}: ${value.note || value.runId}${value.receipt ? `\nReceipt: ${value.receipt}` : ''}`);
+  if (args.includes('--status')) {
+    report({ status: 'idle', note: 'Inspect .mycelium/workflow-runs/ for individual run receipts; no cached health score is treated as execution evidence.' });
+    return 0;
+  }
+  if (args.includes('--monitor')) {
+    throw new Error('Unattended repair has been removed from the factory. Use agent:diagnose for advisory diagnostics; inspect findings before acting.');
+  }
+  if (args.includes('--help') || !args.length) {
+    console.log('Factory workflow (plan-only by default)\n' +
+      '  node bin/orchestrator.cjs "Add a DLC about fire dragons" [--execute] [--json]\n' +
+      '  node bin/orchestrator.cjs --from-spec specs/example.yaml [--execute] [--json]\n' +
+      '  node bin/orchestrator.cjs --demo [--json]\n' +
+      'No automatic fixes, deployment, or merge. --dry-run explicitly selects plan-only.');
+    return 0;
+  }
+  if (args.includes('--execute') && args.includes('--dry-run')) throw new Error('Choose --execute or --dry-run, not both');
+  const known = new Set(['--json', '--execute', '--dry-run', '--demo', '--from-spec']);
+  for (const arg of args) if (arg.startsWith('--') && !known.has(arg)) throw new Error(`Unknown option: ${arg}`);
+  if (args.includes('--demo')) {
+    const result = await demo();
+    report(result);
+    return result.success ? 0 : 1;
+  }
+  const positional = args.filter(a => !known.has(a));
+  if (args.includes('--from-spec') && positional.length !== 1) throw new Error('--from-spec requires exactly one path');
+  const controller = new AbortController();
+  const cancel = () => controller.abort();
+  process.once('SIGINT', cancel);
+  process.once('SIGTERM', cancel);
   try {
-    const mem = require('./factory-memory.cjs').loadMemory();
-    info(`Memory: ${mem.stats.totalBuilds} builds, ${mem.stats.totalLessons} lessons, Gen ${mem.templateDNA.generation}`);
-  } catch {}
-
-  // Available specs
-  const specs = run('ls specs/*.yaml 2>/dev/null').stdout;
-  if (specs) info(`Specs: ${specs.split('\n').length} available`);
-
-  // Supported types
-  info(`Supported types: ${Object.keys(core.SPEC_TYPES).join(', ')}`);
-
-  console.log('');
-}
-
-// ── Continuous monitor ──
-function monitor() {
-  console.log(`${B}🏭 Factory Orchestrator — Monitor Mode${X}`);
-  info('Checking every 120s. Ctrl+C to stop.\n');
-
-  function cycle() {
-    const r = run('node bin/agent-loop.cjs --diagnose 2>&1 | tail -10');
-    const issueMatch = r.out?.match(/Issues Found: (\d+)/);
-    const count = issueMatch ? parseInt(issueMatch[1]) : 0;
-    
-    if (count > 0) {
-      warn(`${count} issue(s) detected — running auto-fix...`);
-      run('node bin/agent-loop.cjs 2>&1');
-      ok('Auto-fix cycle complete');
-    } else {
-      ok(`${new Date().toLocaleTimeString()} — healthy, 0 issues`);
-    }
+    const options = { execute: args.includes('--execute'), signal: controller.signal };
+    const result = args.includes('--from-spec')
+      ? await fromSpec(positional[0], options) : await fullPipeline(positional.join(' '), options);
+    if (result.executed === false) { report(result); return 0; }
+    result.receipt = persistReceipt(result);
+    report(result);
+    return result.success ? 0 : 1;
+  } finally {
+    process.removeListener('SIGINT', cancel);
+    process.removeListener('SIGTERM', cancel);
   }
-
-  cycle();
-  setInterval(cycle, 120000);
 }
 
-// ── CLI (v2.0 with --dry-run) ──
-const args = process.argv.slice(2);
-const command = args[0];
-
-if (command === '--status') {
-  showStatus();
-} else if (command === '--monitor') {
-  monitor();
-} else if (command === '--from-spec') {
-  fromSpec(args[1]);
-} else if (command === '--dry-run') {
-  const intent = args.slice(1).filter(a => !a.startsWith('--')).join(' ');
-  header('🏭', 'NW Factory Orchestrator v2.0 [DRY RUN]');
-  info(`Intent: "${intent}"`);
-  info('[DRY] Would parse intent → generate spec YAML');
-  info('[DRY] Would generate page from spec');
-  info('[DRY] Would translate, inject i18n, run agent fixes');
-  info('[DRY] Would run scorecard + deploy gate');
-  info('[DRY] Would update context for next session');
-  info('No files changed.');
-} else if (command && !command.startsWith('--')) {
-  const intent = args.filter(a => !a.startsWith('--')).join(' ');
-  fullPipeline(intent);
-} else {
-  header('🏭', 'NW Factory Orchestrator v2.0');
-  console.log(`  The complete Intent → Deploy pipeline.\n`);
-  console.log(`Usage:`);
-  console.log(`  node bin/orchestrator.cjs "Add a DLC about fire dragons"  # full auto`);
-  console.log(`  node bin/orchestrator.cjs --from-spec specs/dlc.yaml      # from spec`);
-  console.log(`  node bin/orchestrator.cjs --dry-run "Add a landing page" # preview`);
-  console.log(`  node bin/orchestrator.cjs --status                        # system status`);
-  console.log(`  node bin/orchestrator.cjs --monitor                       # continuous`);
-  console.log(`\n  Supported types: ${Object.keys(core.SPEC_TYPES).join(', ')}`);
+async function demo() {
+  // Real Node subprocesses, synthetic work: exercises scheduling without API
+  // keys, repository writes, or a paid/model-quality claim.
+  const tools = Object.fromEntries(['draft', 'check-a', 'check-b'].map(id => [id, {
+    argv: ['-e', 'process.stdout.write("fixture-ok")'],
+    effect: 'read', timeoutMs: 2000, maxAttempts: 1, retryExitCodes: [],
+    accept: result => result.stdout === 'fixture-ok',
+  }]));
+  const plan = [
+    { id: 'draft', tool: 'draft', needs: [], args: [] },
+    { id: 'check-a', tool: 'check-a', needs: ['draft'], args: [] },
+    { id: 'check-b', tool: 'check-b', needs: ['draft'], args: [] },
+  ];
+  return { ...(await runWorkflow(plan, tools, { cwd: ROOT, execute: executeNode })),
+    mode: 'synthetic-subprocess-demo', planHash: digest(plan),
+    note: 'Real subprocesses; synthetic tasks. No model calls, files written, or deployment.' };
 }
+
+if (require.main === module) {
+  main().then(code => { process.exitCode = code; }).catch(error => {
+    console.error(JSON.stringify({ status: 'failed', error: error.message }));
+    process.exitCode = 1;
+  });
+}
+module.exports = { validateSpec, scorecardAccept, createWorkflow, describeWorkflow, fullPipeline, fromSpec, demo, main };

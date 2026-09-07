@@ -27,7 +27,8 @@
  *                    public pages must score >= 70                  BLOCKING
  *   5. i18n          tests/nw-i18n-guard.cjs per changed top-level
  *                    public/*.html page                             BLOCKING
- *   6. smoke         tests/smoke-test.cjs (needs live server),
+ *   6. orchestration  offline fault-injection + process tests          BLOCKING
+ *   7. smoke         tests/smoke-test.cjs (needs live server),
  *                    only with --smoke                              OPT-IN
  *
  * Usage:
@@ -138,6 +139,14 @@ function gateSyntax(files) {
   return failures.length
     ? { status: 'fail', detail: `${failures.length}/${targets.length} files broken`, failures }
     : { status: 'pass', detail: `${targets.length} file(s) parse clean` };
+}
+
+function gateOrchestration() {
+  const r = sh(process.execPath, ['--test', 'tests/orchestration.test.cjs'], { timeout: 30000 });
+  const summary = r.out.split('\n').filter(line => /^# (tests|pass|fail) /.test(line)).join(' · ');
+  return r.code === 0
+    ? { status: 'pass', detail: summary || 'offline orchestration checks passed' }
+    : { status: 'fail', detail: 'orchestration regression', failures: r.out.split('\n').filter(line => /not ok|error:/.test(line)).slice(0, 12) };
 }
 
 function gateLandingLint() {
@@ -252,6 +261,7 @@ function main() {
 
   const gates = [
     ['syntax', () => gateSyntax(files)],
+    ['orchestration', gateOrchestration],
     ['landing-lint', gateLandingLint],
     ['aitell', () => gateAitell(files)],
     ['scorecard', () => gateScorecard(files)],
